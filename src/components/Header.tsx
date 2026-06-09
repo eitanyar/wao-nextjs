@@ -28,10 +28,10 @@ export default function Header() {
         inset: "0 0 auto 0",
         zIndex: 200,
         transition: "background 0.35s ease, border-color 0.35s ease, backdrop-filter 0.35s ease",
-        backgroundColor: scrolled ? "rgba(6,7,9,0.92)" : "transparent",
-        backdropFilter: scrolled ? "blur(16px)" : "none",
-        WebkitBackdropFilter: scrolled ? "blur(16px)" : "none",
-        borderBottom: `1px solid ${scrolled ? "var(--border)" : "transparent"}`,
+        backgroundColor: (scrolled || open) ? "rgba(6,7,9,0.97)" : "transparent",
+        backdropFilter: (scrolled || open) ? "blur(16px)" : "none",
+        WebkitBackdropFilter: (scrolled || open) ? "blur(16px)" : "none",
+        borderBottom: `1px solid ${(scrolled || open) ? "var(--border)" : "transparent"}`,
       }}
     >
       <div className="wao-container">

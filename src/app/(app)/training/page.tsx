@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import GT from "@/components/GlossaryTerm";
 
 export const metadata: Metadata = {
   title: "קורסים חינמיים לשיווק דיגיטלי | WAO",
@@ -341,7 +342,7 @@ export default function TrainingHub() {
                     </span>
                   </div>
                   <p style={{ color: "var(--muted)", fontSize: "0.95rem", lineHeight: 1.7, fontFamily: "var(--font-body), sans-serif", marginBottom: "20px" }}>
-                    18 שיעורי וידאו: מבנה חשבון, Smart Bidding, Performance Max, Landing Pages ואסטרטגיית Pareto.
+                    18 שיעורי וידאו: מבנה חשבון, <GT term="Smart Bidding">Smart Bidding</GT>, <GT term="Performance Max">Performance Max</GT>, <GT term="Landing Page">Landing Pages</GT> ואסטרטגיית Pareto.
                     הקורס לניהול Google Ads ב-2026 — מ-15 שיעורים זמינים לצפייה עכשיו.
                   </p>
                   <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>

@@ -12,24 +12,43 @@ export default function GlossaryTerm({
   children: React.ReactNode;
 }) {
   const [visible, setVisible] = useState(false);
+  const [nudge, setNudge] = useState(0);
   const hideTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const tooltipRef = useRef<HTMLSpanElement>(null);
   const id = useId();
   const entry = GLOSSARY[term];
 
   if (!entry) return <>{children}</>;
 
+  const adjustPosition = () => {
+    requestAnimationFrame(() => {
+      if (!tooltipRef.current) return;
+      const rect = tooltipRef.current.getBoundingClientRect();
+      const vw = window.innerWidth;
+      const GAP = 12;
+      if (rect.right > vw - GAP) {
+        setNudge(vw - GAP - rect.right); // negative → shift left
+      } else if (rect.left < GAP) {
+        setNudge(GAP - rect.left); // positive → shift right
+      }
+    });
+  };
+
   const show = () => {
     if (hideTimer.current) clearTimeout(hideTimer.current);
+    setNudge(0);
     setVisible(true);
+    adjustPosition();
   };
 
   const hide = () => {
     hideTimer.current = setTimeout(() => setVisible(false), 120);
   };
 
+  const toggleMobile = () => (visible ? setVisible(false) : show());
+
   return (
     <span style={{ position: "relative", display: "inline" }}>
-      {/* The underlined term */}
       <span
         role="button"
         tabIndex={0}
@@ -38,7 +57,8 @@ export default function GlossaryTerm({
         onMouseLeave={hide}
         onFocus={show}
         onBlur={hide}
-        onKeyDown={(e) => e.key === "Enter" && setVisible((v) => !v)}
+        onClick={toggleMobile}
+        onKeyDown={(e) => e.key === "Enter" && toggleMobile()}
         style={{
           borderBottom: "1px dashed rgba(74,227,181,0.7)",
           cursor: "help",
@@ -49,9 +69,9 @@ export default function GlossaryTerm({
         {children}
       </span>
 
-      {/* Tooltip */}
       <span
         id={id}
+        ref={tooltipRef}
         role="tooltip"
         aria-hidden={!visible}
         onMouseEnter={show}
@@ -59,7 +79,7 @@ export default function GlossaryTerm({
         style={{
           position: "absolute",
           bottom: "calc(100% + 10px)",
-          left: "50%",
+          left: `calc(50% + ${nudge}px)`,
           transform: "translateX(-50%)",
           width: "272px",
           background: "rgba(10,14,18,0.97)",
@@ -78,13 +98,13 @@ export default function GlossaryTerm({
           transition: "opacity 0.13s ease, visibility 0.13s ease",
         }}
       >
-        {/* Arrow */}
+        {/* Arrow counter-adjusted to keep pointing at the term */}
         <span
           aria-hidden
           style={{
             position: "absolute",
             bottom: "-6px",
-            left: "50%",
+            left: `calc(50% - ${nudge}px)`,
             marginLeft: "-6px",
             width: 0,
             height: 0,
@@ -94,7 +114,6 @@ export default function GlossaryTerm({
           }}
         />
 
-        {/* Term name */}
         <span
           style={{
             display: "block",
@@ -109,7 +128,6 @@ export default function GlossaryTerm({
           {entry.short}
         </span>
 
-        {/* Definition */}
         <span
           style={{
             display: "block",
@@ -122,7 +140,6 @@ export default function GlossaryTerm({
           {entry.body}
         </span>
 
-        {/* Knowledge link */}
         {entry.knowledgeSlug && (
           <Link
             href={`/knowledge/${entry.knowledgeSlug}`}

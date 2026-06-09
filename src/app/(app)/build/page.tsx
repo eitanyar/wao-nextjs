@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import GT from "@/components/GlossaryTerm";
 
 export const metadata: Metadata = {
   title: "בניית אתרים ב-Next.js — קרוב | WAO",
@@ -27,7 +28,7 @@ export default function BuildPage() {
             marginBottom: "20px",
           }}
         >
-          אתרי Next.js עם{" "}
+          אתרי <GT term="Next.js">Next.js</GT> עם{" "}
           <span className="text-gradient">ביצועי SEO מושלמים</span>
         </h1>
         <p

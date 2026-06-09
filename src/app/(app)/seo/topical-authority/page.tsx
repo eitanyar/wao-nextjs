@@ -336,7 +336,7 @@ export default function TopicalAuthorityPage() {
                 מהי Topical Authority?
               </h2>
               <p style={BODY}>
-                <strong style={{ color: "var(--text)" }}>Topical Authority (סמכות נושאית)</strong>{" "}
+                <strong style={{ color: "var(--text)" }}><GT term="Topical Authority">Topical Authority</GT> (סמכות נושאית)</strong>{" "}
                 היא רמת האמון שגוגל מייחסת לאתר בתחום נושא מסוים. אתר עם Topical
                 Authority גבוהה בתחום "קידום אתרים" יקבל דירוגים גבוהים יותר עבור כל
                 שאילתה בתחום — גם עבור דפים שפורסמו רק לאחרונה.

@@ -243,8 +243,8 @@ function StaticGuide() {
               marginBottom: "32px",
             }}
           >
-            כל מה שצריך לדעת על SEO מודרני: מ-Topical Authority ו-AI Overviews ועד
-            Technical SEO, E-E-A-T ו-Core Web Vitals. מדריך מעשי שמתעדכן כדי לשקף
+            כל מה שצריך לדעת על SEO מודרני: מ-Topical Authority ו-<GT term="AI Overviews">AI Overviews</GT> ועד
+            <GT term="Technical SEO">Technical SEO</GT>, <GT term="E-E-A-T">E-E-A-T</GT> ו-<GT term="Core Web Vitals">Core Web Vitals</GT>. מדריך מעשי שמתעדכן כדי לשקף
             את המציאות של החיפוש ב-2026/2027.
           </p>
 

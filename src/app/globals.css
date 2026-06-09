@@ -65,6 +65,7 @@ html { scroll-behavior: smooth; }
 :focus:not(:focus-visible) { outline: none; }
 
 html { overflow-x: clip; }
+body { overflow-x: hidden; }
 
 body {
   background-color: var(--bg);

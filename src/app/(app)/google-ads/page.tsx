@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import GT from "@/components/GlossaryTerm";
 
 const CANONICAL = "https://www.wao.co.il/google-ads";
 
@@ -195,7 +196,7 @@ export default function GoogleAdsPage() {
             }}
           >
             פרסום בגוגל שמחזיר{" "}
-            <span className="text-gradient">ROI מדיד</span>
+            <span className="text-gradient"><GT term="ROI">ROI</GT> מדיד</span>
             <br className="hidden md:block" />
             {" "}— לא רק קליקים
           </h1>

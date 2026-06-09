@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import GT from "@/components/GlossaryTerm";
 
 const CANONICAL = "https://www.wao.co.il/about";
 
@@ -153,7 +154,7 @@ export default function AboutPage() {
         <div className="wao-container" style={{ position: "relative", zIndex: 1, maxWidth: "860px" }}>
           <div className="badge" style={{ marginBottom: "28px" }}>
             <span className="badge-dot" />
-            סוכנות בוטיק B2C מאז 2006
+            סוכנות בוטיק <GT term="B2C">B2C</GT> מאז 2006
           </div>
           <h1
             style={{

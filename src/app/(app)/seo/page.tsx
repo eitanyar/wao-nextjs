@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import GT from "@/components/GlossaryTerm";
 
 const CANONICAL = "https://www.wao.co.il/seo";
 
@@ -203,7 +204,7 @@ export default function SeoPage() {
             {" "}— לא רק תנועה
           </h1>
           <p style={{ ...bodyStyle, fontSize: "clamp(1rem,1.8vw,1.2rem)", marginBottom: "40px", maxWidth: "620px" }}>
-            ב-2026, גוגל מציג AI Overviews לפני כל תוצאה. עסקים שלא מאמצים SEO מודרני — נעלמים. אנחנו בונים לכם את הנוכחות הדיגיטלית שמביאה לקוחות מוכנים לרכישה.
+            ב-2026, גוגל מציג <GT term="AI Overviews">AI Overviews</GT> לפני כל תוצאה. עסקים שלא מאמצים SEO מודרני — נעלמים. אנחנו בונים לכם את הנוכחות הדיגיטלית שמביאה לקוחות מוכנים לרכישה.
           </p>
           <div style={{ display: "flex", gap: "14px", flexWrap: "wrap" }}>
             <a href="tel:0526148860" className="btn-primary" style={{ fontSize: "1.05rem", padding: "15px 36px" }}>
@@ -237,7 +238,7 @@ export default function SeoPage() {
           <div style={{ marginBottom: "60px" }}>
             <div className="eyebrow">שיטת WAO ל-SEO</div>
             <h2 style={{ ...h2Style, fontSize: "clamp(1.6rem,3vw,2.4rem)" }}>
-              5 עמודות ה-<span className="text-gradient">Topical Authority</span>
+              5 עמודות ה-<span className="text-gradient"><GT term="Topical Authority">Topical Authority</GT></span>
             </h2>
             <p style={{ ...bodyStyle, marginTop: "12px", maxWidth: "580px" }}>
               כל עמוד נדרש. SEO שנשען רק על מילות מפתח ב-2026 כמו בניית בית ללא יסודות.

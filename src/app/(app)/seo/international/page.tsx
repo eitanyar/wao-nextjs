@@ -237,7 +237,7 @@ export default function SeoInternationalPage() {
             }}
           >
             <strong style={{ color: "var(--accent)", display: "block", marginBottom: "6px" }}>בקצרה — מה חשוב לדעת</strong>
-            קידום אתרים בחו&quot;ל דורש יותר מתרגום תוכן. hreflang שגוי, מחקר מילות מפתח מקומי, מבנה URL נכון ו-CDN בינלאומי הם הבסיס. בלעדיהם — Google מגישה את הדף הלא-נכון לקהל הלא-נכון.
+            קידום אתרים בחו&quot;ל דורש יותר מתרגום תוכן. hreflang שגוי, מחקר מילות מפתח מקומי, מבנה URL נכון ו-<GT term="CDN">CDN</GT> בינלאומי הם הבסיס. בלעדיהם — Google מגישה את הדף הלא-נכון לקהל הלא-נכון.
           </div>
 
           <div style={{ display: "flex", gap: "14px", flexWrap: "wrap" }}>

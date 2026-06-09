@@ -96,6 +96,7 @@ export default function SiloNav({ currentPath }: { currentPath: string }) {
             scrollbar-width: none;
             padding-bottom: 6px;
             padding-inline-end: 24px;
+            width: 100%;
           }
           .silo-nav::-webkit-scrollbar { display: none; }
           .silo-nav-wrap {
