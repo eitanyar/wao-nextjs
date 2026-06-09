@@ -196,7 +196,7 @@ export default function GoogleAdsPage() {
             }}
           >
             פרסום בגוגל שמחזיר{" "}
-            <span className="text-gradient"><GT term="ROI">ROI</GT> מדיד</span>
+            <span className="text-gradient">ROI מדיד</span>
             <br className="hidden md:block" />
             {" "}— לא רק קליקים
           </h1>

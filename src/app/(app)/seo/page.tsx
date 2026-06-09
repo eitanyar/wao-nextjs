@@ -238,7 +238,7 @@ export default function SeoPage() {
           <div style={{ marginBottom: "60px" }}>
             <div className="eyebrow">שיטת WAO ל-SEO</div>
             <h2 style={{ ...h2Style, fontSize: "clamp(1.6rem,3vw,2.4rem)" }}>
-              5 עמודות ה-<span className="text-gradient"><GT term="Topical Authority">Topical Authority</GT></span>
+              5 עמודות ה-<span className="text-gradient">Topical Authority</span>
             </h2>
             <p style={{ ...bodyStyle, marginTop: "12px", maxWidth: "580px" }}>
               כל עמוד נדרש. SEO שנשען רק על מילות מפתח ב-2026 כמו בניית בית ללא יסודות.

@@ -452,7 +452,7 @@ function StaticGuide() {
                 תוכן שאינו תואם לכוונת החיפוש לא יידרג — גם אם הוא מכיל את מילת המפתח.
               </p>
               <h3 style={{ ...HEADING, fontSize: "1.2rem" }}>
-                <GT term="Long-Tail">Long-Tail</GT> מול ביטויי ראש
+                Long-Tail מול ביטויי ראש
               </h3>
               <p style={BODY}>
                 ביטויי Long-Tail — ארוכים וספציפיים — מביאים תנועה מצומצמת יותר, אך כוונת
