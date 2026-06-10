@@ -206,7 +206,7 @@ function StaticPage() {
             <span className="text-gradient">מנוסה</span>
             {" "}—{" "}
             <br className="hidden md:block" />
-            שיודע לסגור פערים אמיתיים בשדה
+            שיודע לסגור פערים אמיתיים בשטח
           </h1>
 
           <p

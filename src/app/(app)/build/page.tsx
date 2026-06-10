@@ -246,9 +246,7 @@ export default function BuildPage() {
           </p>
           <p style={{ ...bodyStyle, fontSize: "clamp(1rem,1.8vw,1.15rem)", marginBottom: "40px", maxWidth: "660px" }}>
             אנחנו לא רק מפתחים — אנחנו מביאים 20+ שנות ניסיון ב-SEO לכל שורת קוד. האתר יוצא מהפיתוח עם{" "}
-            <Link href="/knowledge/core-web-vitals" style={{ color: "var(--accent)", textDecoration: "none", borderBottom: "1px dashed rgba(74,227,181,0.5)" }}>
-              <GT term="Core Web Vitals">Core Web Vitals</GT>
-            </Link>{" "}
+            <GT term="Core Web Vitals">Core Web Vitals</GT>{" "}
             ירוקים, Structured Data מובנה, ומבנה שגוגל וסיכומי AI של{" "}
             <GT term="AI Overviews">גוגל</GT> יעדיפו.
           </p>
@@ -293,7 +291,7 @@ export default function BuildPage() {
                 title: "איטיות שעולה לקוחות",
                 body: (
                   <>
-                    גוגל מוריד דירוגים לאתרים עם <Link href="/knowledge/lcp" style={{ color: "var(--accent)", textDecoration: "none", borderBottom: "1px dashed rgba(74,227,181,0.5)" }}><GT term="LCP">LCP</GT></Link> גבוה. כשגולש מחכה 5 שניות לטעינה — 70% עוזבים לפני שראו שורה אחת. המתחרים שלכם נמצאים שם.
+                    גוגל מוריד דירוגים לאתרים עם <GT term="LCP">LCP</GT> גבוה. כשגולש מחכה 5 שניות לטעינה — 70% עוזבים לפני שראו שורה אחת. המתחרים שלכם נמצאים שם.
                   </>
                 ),
               },
