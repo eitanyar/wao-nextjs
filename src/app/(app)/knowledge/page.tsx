@@ -5,7 +5,7 @@ import { KNOWLEDGE_ARTICLES, CATEGORY_LABELS, type KnowledgeCategory } from "@/d
 export const revalidate = 86400;
 
 export const metadata: Metadata = {
-  title: "מאגר ידע SEO — כל מה שצריך לדעת | WAO",
+  title: "מאגר ידע — כל מה שצריך לדעת",
   description: "מדריכים קצרים ומקצועיים על כל נושאי SEO: טכני, On-Page, תוכן, אלגוריתמים, AI, ביצועים, קישורים, SEO מקומי ובינלאומי.",
   alternates: { canonical: "https://wao.co.il/knowledge" },
 };
@@ -101,14 +101,15 @@ export default function KnowledgePage() {
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "CollectionPage",
-    name: "מאגר ידע SEO",
+    name: "מאגר ידע",
     description: "מדריכים קצרים ומקצועיים על כל נושאי SEO",
     url: "https://wao.co.il/knowledge",
     numberOfItems: totalArticles,
     publisher: {
       "@type": "Organization",
-      name: "WAO Digital Marketing",
-      url: "https://wao.co.il",
+      "@id": "https://www.wao.co.il/#org",
+      name: "WAO",
+      url: "https://www.wao.co.il",
     },
   };
 
@@ -158,7 +159,7 @@ export default function KnowledgePage() {
               marginBottom: "16px",
             }}
           >
-            מאגר ידע SEO
+            מאגר ידע
           </h1>
           <p
             style={{

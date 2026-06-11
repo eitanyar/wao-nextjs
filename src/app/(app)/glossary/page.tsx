@@ -3,7 +3,7 @@ import Link from "next/link";
 import { GLOSSARY, CATEGORY_LABELS, CATEGORY_COLORS, type GlossaryCategory } from "@/data/glossary";
 
 export const metadata: Metadata = {
-  title: "מילון מונחי שיווק דיגיטלי | WAO",
+  title: "מילון מונחי שיווק דיגיטלי",
   description:
     "מילון מקיף של מונחי SEO, Google Ads, Analytics וטכנולוגיה — הסברים קצרים וברורים בעברית לבעלי עסקים ואנשי שיווק.",
   alternates: { canonical: "https://www.wao.co.il/glossary" },

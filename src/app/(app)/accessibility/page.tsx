@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 export const metadata: Metadata = {
-  title: "הצהרת נגישות | WAO",
+  title: "הצהרת נגישות",
   description: "הצהרת הנגישות של אתר WAO — רמת הנגישות, מגבלות ידועות ודרכי יצירת קשר לפניות נגישות.",
   robots: { index: false, follow: true },
 };

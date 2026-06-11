@@ -4,7 +4,7 @@ import SiloNav from "@/components/SiloNav";
 import GT from "@/components/GlossaryTerm";
 
 export const metadata: Metadata = {
-  title: "קידום אתרים בחו\"ל — International SEO מקצועי | WAO",
+  title: "קידום אתרים בחו\"ל — International SEO מקצועי",
   description:
     "קידום אתרים בחו\"ל שונה לגמרי מקידום בישראל. 7 הדברים שאנשי SEO מפספסים — hreflang, מחקר מילות מפתח מקומי, מבנה URL נכון וביצועים בינלאומיים. WAO מלווה עסקים ישראלים בקידום גלובלי.",
   alternates: { canonical: "https://www.wao.co.il/seo/international" },

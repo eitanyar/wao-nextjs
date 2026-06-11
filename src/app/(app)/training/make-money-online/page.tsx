@@ -4,7 +4,7 @@ import GT from "@/components/GlossaryTerm";
 import LessonGrid from "@/components/LessonGrid";
 
 export const metadata: Metadata = {
-  title: "40 דרכים להרוויח כסף מהבית — מה באמת עובד ב-2026 | WAO",
+  title: "40 דרכים להרוויח כסף מהבית — מה באמת עובד ב-2026",
   description:
     "מדריך ישיר על הדרכים הנפוצות להרוויח כסף מהאינטרנט — מסקרים בתשלום ועד עסק דיגיטלי אמיתי. ללא מכירת חלומות, עם מפת הדרכים האמיתית.",
   alternates: { canonical: "https://www.wao.co.il/training/make-money-online" },

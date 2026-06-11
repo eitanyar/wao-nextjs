@@ -4,7 +4,7 @@ import ContactForm from "@/components/ContactForm";
 const CANONICAL = "https://www.wao.co.il/contact";
 
 export const metadata: Metadata = {
-  title: "צור קשר — ייעוץ ראשון ללא עלות | WAO שיווק דיגיטלי",
+  title: "צור קשר — ייעוץ ראשון ללא עלות",
   description:
     "צרו קשר עם WAO לייעוץ שיווק דיגיטלי ראשון ללא עלות. מגיבים תוך 24 שעות. טלפון: 052-614-8860. מתמחים בעסקי B2C בלבד.",
   alternates: { canonical: CANONICAL },

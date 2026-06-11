@@ -4,7 +4,7 @@ import { readFileSync } from "fs";
 import { join } from "path";
 
 export const metadata: Metadata = {
-  title: "בלוג שיווק דיגיטלי | WAO",
+  title: "בלוג שיווק דיגיטלי",
   description: "מאמרים מקצועיים על SEO, Google Ads, שיווק תוכן, פרנסה דיגיטלית וניהול כסף — מ-17 שנות ניסיון ישיר בשטח.",
   alternates: { canonical: "https://www.wao.co.il/blog" },
   openGraph: {

@@ -1,4 +1,5 @@
 import React from "react";
+import Link from "next/link";
 import GT from "@/components/GlossaryTerm";
 import { withGlossary } from "@/lib/withGlossary";
 
@@ -13,9 +14,17 @@ function processNode(node: React.ReactNode): React.ReactNode {
     return node;
   }
 
-  // Arrays — recurse each child
+  // Arrays — recurse each child. Mapping turns static JSX siblings into a
+  // dynamic list, so assign keys to any processed element that lacks one
+  // (the tree is static, so index keys are safe here).
   if (Array.isArray(node)) {
-    return node.map((child) => processNode(child));
+    return node.map((child, i) => {
+      const processed = processNode(child);
+      if (React.isValidElement(processed) && processed.key == null) {
+        return React.cloneElement(processed, { key: i });
+      }
+      return processed;
+    });
   }
 
   if (React.isValidElement(node)) {
@@ -23,6 +32,10 @@ function processNode(node: React.ReactNode): React.ReactNode {
 
     // Already a GT wrapper — don't recurse (avoid double-wrapping)
     if (el.type === GT) return node;
+
+    // Skip anchors / links — a GT renders its own <a>, so glossarizing
+    // text inside a link would nest <a> inside <a> (hydration error).
+    if (el.type === Link || el.type === "a") return node;
 
     // Skip elements that embed raw HTML or code
     if (el.props["dangerouslySetInnerHTML"]) return node;

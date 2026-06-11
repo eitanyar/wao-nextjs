@@ -38,7 +38,7 @@ export const metadata: Metadata = {
     "שיווק תוכן",
     "ישראל",
   ],
-  authors: [{ name: "WAO Digital Marketing" }],
+  authors: [{ name: "איתן יריב", url: "https://www.wao.co.il/about" }],
   creator: "WAO",
   openGraph: {
     type: "website",

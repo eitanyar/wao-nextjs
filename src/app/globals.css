@@ -509,14 +509,12 @@ p { margin: 0; }
   width: 72px;
   height: 72px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #4AE3B5, #00C3FF);
+  background: url("/eitan-yariv.avif") center / cover no-repeat;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-family: var(--font-heading), sans-serif;
-  font-weight: 800;
-  font-size: 1.3rem;
-  color: var(--bg);
+  font-size: 0;
+  color: transparent;
   flex-shrink: 0;
 }
 .author-meta { flex: 1; }
@@ -568,7 +566,7 @@ p { margin: 0; }
   .content-2col { grid-template-columns: 1fr !important; gap: 32px; }
   .content-3col { grid-template-columns: 1fr !important; }
   .author-bio { flex-direction: column; }
-  .author-avatar { width: 56px; height: 56px; font-size: 1rem; }
+  .author-avatar { width: 56px; height: 56px; }
   .section-title { font-size: clamp(1.8rem, 5vw, 2.6rem); }
 }
 

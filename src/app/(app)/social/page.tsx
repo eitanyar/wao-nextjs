@@ -5,7 +5,7 @@ import GT from "@/components/GlossaryTerm";
 const CANONICAL = "https://www.wao.co.il/social";
 
 export const metadata: Metadata = {
-  title: "ניהול מדיה חברתית מקצועי — תוצאות, לא רק לייקים | WAO",
+  title: "ניהול מדיה חברתית מקצועי — תוצאות, לא רק לייקים",
   description:
     "ניהול מדיה חברתית מקצועי: אסטרטגיה, יצירת תוכן, קמפיינים ממומנים וניהול קהילה. Meta, TikTok, LinkedIn. WAO — 20+ שנות ניסיון.",
   alternates: { canonical: CANONICAL },

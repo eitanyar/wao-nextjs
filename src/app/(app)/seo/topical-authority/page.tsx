@@ -16,7 +16,7 @@ const SAME_AS     = [
 ];
 
 export const metadata: Metadata = {
-  title: "Topical Authority ומבנה אתר SEO — המדריך המלא 2026/2027 | WAO",
+  title: "Topical Authority ומבנה אתר SEO — המדריך המלא 2026/2027",
   description:
     'מדריך Topical Authority מקיף ל-2026: Hub & Spoke Model, Content Silos, מבנה URL, ה-Internal Linking האסטרטגי ומיפוי פערי תוכן. כך הופכים לסמכות נושאית שגוגל מדרגת ראשון. נכתב ע"י איתן יריב.',
   alternates: { canonical: CANONICAL },
@@ -803,7 +803,8 @@ export default function TopicalAuthorityPage() {
             {/* ── Author bio ── */}
             <section style={{ marginTop: "3rem" }} aria-label="הסמכות המקצועית" itemScope itemType="https://schema.org/Person">
               <div className="author-bio">
-                <div className="author-avatar" aria-hidden>א.י</div>
+                <meta itemProp="image" content="https://www.wao.co.il/eitan-yariv.avif" />
+                <div className="author-avatar" role="img" aria-label="איתן יריב" />
                 <div className="author-meta">
                   <div className="author-name" itemProp="name">{AUTHOR_NAME}</div>
                   <div className="author-title" itemProp="jobTitle">

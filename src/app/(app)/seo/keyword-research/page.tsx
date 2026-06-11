@@ -16,7 +16,7 @@ const SAME_AS     = [
 ];
 
 export const metadata: Metadata = {
-  title: "מחקר מילות מפתח — המדריך המלא 2026/2027 | WAO",
+  title: "מחקר מילות מפתח — המדריך המלא 2026/2027",
   description:
     'מדריך מחקר מילות מפתח מקיף ל-2026: כוונת חיפוש, כלים חינמיים (GSC, Keyword Planner, Trends) ובתשלום (Ahrefs, SEMrush), Long-Tail, ניתוח תחרותי ו-Keyword Clustering. נכתב ע"י איתן יריב — 20+ שנות ניסיון.',
   alternates: { canonical: CANONICAL },
@@ -787,7 +787,8 @@ export default function KeywordResearchPage() {
             {/* ── Author bio ── */}
             <section style={{ marginTop: "3rem" }} aria-label="הסמכות המקצועית" itemScope itemType="https://schema.org/Person">
               <div className="author-bio">
-                <div className="author-avatar" aria-hidden>א.י</div>
+                <meta itemProp="image" content="https://www.wao.co.il/eitan-yariv.avif" />
+                <div className="author-avatar" role="img" aria-label="איתן יריב" />
                 <div className="author-meta">
                   <div className="author-name" itemProp="name">{AUTHOR_NAME}</div>
                   <div className="author-title" itemProp="jobTitle">

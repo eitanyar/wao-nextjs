@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 export const metadata: Metadata = {
-  title: "מדיניות פרטיות | WAO",
+  title: "מדיניות פרטיות",
   description: "מדיניות הפרטיות של WAO — איזה מידע נאסף, לשם מה, כיצד הוא מאוחסן וכיצד ניתן לממש זכויות בנוגע אליו.",
   robots: { index: false, follow: true },
 };

@@ -11,7 +11,7 @@ const SAME_AS = [
 
 // ── Static metadata fallback ────────────────────────────────────────────────
 const STATIC_META = {
-  title: "יועץ קידום אתרים מנוסה — 20+ שנות ניסיון | WAO",
+  title: "יועץ קידום אתרים מנוסה — 20+ שנות ניסיון",
   description:
     "איתן יריב — יועץ SEO עם 20+ שנות ניסיון. ייעוץ אישי ומעשי: Topical Authority, Core Web Vitals, AI Overviews ו-Technical SEO. מנטורינג חודשי ב-950 ₪ ללא חוזה.",
 };
@@ -43,6 +43,7 @@ const webPageSchema = {
     "@type": "Person",
     "@id": "https://www.wao.co.il/about#person",
     name: "איתן יריב",
+    image: "https://www.wao.co.il/eitan-yariv.avif",
     sameAs: SAME_AS,
   },
 };
@@ -61,6 +62,7 @@ const consultingServiceSchema = {
     "@id": "https://www.wao.co.il/about#person",
     name: "איתן יריב",
     jobTitle: "מייסד WAO ויועץ SEO בכיר",
+    image: "https://www.wao.co.il/eitan-yariv.avif",
     url: "https://www.wao.co.il/about",
     worksFor: { "@type": "Organization", "@id": "https://www.wao.co.il/#org" },
     sameAs: SAME_AS,
@@ -550,7 +552,8 @@ function StaticPage() {
         <div className="wao-container" style={{ maxWidth: "800px" }}>
           <div className="eyebrow" id="author-bio-h">הסמכות המקצועית</div>
           <div className="author-bio" itemScope itemType="https://schema.org/Person">
-            <div className="author-avatar" aria-hidden>א.י</div>
+            <meta itemProp="image" content="https://www.wao.co.il/eitan-yariv.avif" />
+            <div className="author-avatar" role="img" aria-label="איתן יריב" />
             <div className="author-meta">
               <div className="author-name" itemProp="name">איתן יריב</div>
               <div className="author-title" itemProp="jobTitle">

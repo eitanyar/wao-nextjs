@@ -63,7 +63,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const title = decodeTitle(staticPost.title);
   const canonical = `https://www.wao.co.il/blog/${staticPost.slug}`;
   return {
-    title: `${title} | WAO`,
+    title: `${title}`,
     description: staticPost.excerpt.replace(/<[^>]+>/g, "").replace(/\[[^\]]+\]/g, "").slice(0, 160),
     alternates: { canonical },
     openGraph: { title, url: canonical, type: "article" },

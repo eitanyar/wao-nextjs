@@ -5,7 +5,7 @@ import GT from "@/components/GlossaryTerm";
 import { WithGlossaryDeep } from "@/lib/WithGlossaryDeep";
 
 const STATIC_META = {
-  title: "מדריך קידום אתרים אורגני בגוגל 2026/2027 — המדריך המלא | WAO",
+  title: "מדריך קידום אתרים אורגני בגוגל 2026/2027 — המדריך המלא",
   description:
     "מדריך קידום אתרים מקיף ומעודכן ל-2026/2027: AI Overviews, Topical Authority, E-E-A-T, Technical SEO ו-Core Web Vitals. כתוב ע\"י איתן יריב — 20+ שנות ניסיון.",
 };
@@ -243,9 +243,8 @@ function StaticGuide() {
               marginBottom: "32px",
             }}
           >
-            כל מה שצריך לדעת על SEO מודרני: מ-Topical Authority ו-<GT term="AI Overviews">AI Overviews</GT> ועד
-            <GT term="Technical SEO">Technical SEO</GT>, <GT term="E-E-A-T">E-E-A-T</GT> ו-<GT term="Core Web Vitals">Core Web Vitals</GT>. מדריך מעשי שמתעדכן כדי לשקף
-            את המציאות של החיפוש ב-2026/2027.
+            כל מה שאתם חייבים לדעת על SEO מודרני בעידן של <GT term="AI Overviews">AI Overviews</GT> וסמכות נושאית
+            (<GT term="Topical Authority">Topical Authority</GT>). מדריך פרקטי לחוקי המשחק החדשים ב-2026/2027.
           </p>
 
           <div
@@ -298,24 +297,22 @@ function StaticGuide() {
                 מה זה קידום אתרים (SEO)?
               </h2>
               <p style={BODY}>
-                <strong style={{ color: "var(--text)" }}>קידום אתרים (SEO — Search Engine Optimization)</strong>{" "}
-                הוא מכלול הפעולות שמגדילות את הנראות של אתר אינטרנט בתוצאות החיפוש
-                האורגניות של גוגל — ללא תשלום ישיר לגוגל על כל קליק.
+                <strong style={{ color: "var(--text)" }}>קידום אתרים (SEO)</strong>{" "}
+                הוא אוסף המהלכים שמקפיצים את האתר שלכם לראש התוצאות האורגניות
+                של גוגל – בלי לשלם אגורה על קליקים.
               </p>
               <p style={BODY}>
-                בניגוד ל-Google Ads שמביאה תנועה מיידית אך נעצרת ברגע שמפסיקים לשלם,
-                SEO בונה <strong style={{ color: "var(--text)" }}>נכס דיגיטלי</strong> שמביא
-                תנועה חינם לאורך זמן. אתר שמדורג גבוה היום ממשיך לקבל לידים גם מחר,
-                בשבוע הבא, ובשנה הבאה.
+                בניגוד לממומן שמביא קליקים מהר אבל נעלם ברגע שסגרתם את הברז התקציבי,
+                SEO בונה לכם <strong style={{ color: "var(--text)" }}>נכס נדל״ני דיגיטלי</strong>. אתר
+                שממוקם טוב היום ימשיך להזרים לכם לידים בחינם גם בשנה הבאה.
               </p>
               <div style={CALLOUT}>
                 <strong>📌 בקצרה:</strong> SEO = להופיע ראשון כשלקוח מחפש מה שאתם מוכרים — בלי לשלם לגוגל על כל קליק.
               </div>
               <p style={BODY}>
-                ב-2026, הגדרת SEO הורחבה. גוגל משתמשת ב-AI מתקדם (Gemini) כדי להבין
-                כוונת חיפוש, ומציגה <strong style={{ color: "var(--text)" }}>AI Overviews</strong>{" "}
-                — תשובות AI ישירות — לפני התוצאות האורגניות. SEO מודרני חייב לכלול
-                אופטימיזציה גם לתוצאות ה-AI האלה.
+                ב-2026 חוקי המשחק השתנו. גוגל מפעילה את מודל ה-AI שלה (Gemini) כדי להבין
+                מה הגולש באמת מחפש, ומציגה תשובות ישירות (<strong style={{ color: "var(--text)" }}>AI Overviews</strong>)
+                מעל הכל. SEO מודרני פשוט חייב לפצח גם את הבלוק הזה.
               </p>
             </section>
 
@@ -325,9 +322,8 @@ function StaticGuide() {
                 איך גוגל מדרג אתרים ב-2026/2027
               </h2>
               <p style={BODY}>
-                גוגל משתמשת ביותר מ-200 גורמי דירוג. אבל ב-2026/2027 ישנן{" "}
-                <strong style={{ color: "var(--text)" }}>5 מערכות ליבה</strong> שמשפיעות
-                יותר מכל על הדירוג:
+                גוגל מצהירה על מאות גורמי דירוג, אבל בפועל, ב-2026/2027 הכל מתנקז
+                ל-<strong style={{ color: "var(--text)" }}>5 מערכות ליבה</strong> מרכזיות:
               </p>
               <ol style={{ ...BODY, paddingInlineStart: "1.4rem", marginBottom: "1.6rem" }}>
                 <li style={{ marginBottom: "12px" }}>
@@ -387,15 +383,15 @@ function StaticGuide() {
                 <span className="text-gradient">המהפכה של 2026</span>
               </h2>
               <p style={BODY}>
-                <strong style={{ color: "var(--text)" }}>AI Overviews</strong> (לשעבר SGE)
-                הוא הבלוק של גוגל שמציג תשובות AI ישירות בראש תוצאות החיפוש. נכון ל-2026,
-                הוא מוצג ב-63%+ מהחיפושים הגנריים — וצפוי להגיע ל-80%+ ב-2027.
+                בלוק ה-<strong style={{ color: "var(--text)" }}>AI Overviews</strong> כבר מזמן לא ניסוי
+                טכנולוגי. ב-2026 הוא מופיע ביותר מ-63% מהחיפושים ומספק לגולשים תשובה מיידית,
+                והמספרים האלה רק ימשיכו לצמוח.
               </p>
               <p style={BODY}>
-                חשוב להבין: AI Overviews לא <em>מחליפים</em> SEO — הם{" "}
-                <strong style={{ color: "var(--text)" }}>מגדילים</strong> את חשיבותו.
-                גוגל מצטטת מקורות ספציפיים ב-AI Overview. אתרים שמצוטטים מקבלים
-                Brand Visibility אדירה — גם ללא קליק.
+                אל תטעו: ה-AI לא <em>הורג</em> את ה-SEO, הוא פשוט הופך אותו{" "}
+                <strong style={{ color: "var(--text)" }}>לחשוב פי כמה</strong>.
+                גוגל חייבת לבסס את התשובות שלה על אתרים סמכותיים, ומי שמצוטט שם
+                זוכה לחשיפת מותג מטורפת בחינם.
               </p>
               <div style={CALLOUT}>
                 <strong>🤖 איך להופיע ב-AI Overviews:</strong>
@@ -437,9 +433,9 @@ function StaticGuide() {
                 מחקר מילות מפתח וכוונת חיפוש
               </h2>
               <p style={BODY}>
-                לפני שכותבים מילה אחת, צריך לדעת מה הלקוח הפוטנציאלי מחפש — ולמה.{" "}
-                <strong style={{ color: "var(--text)" }}>מחקר מילות מפתח</strong> הוא הצעד המחבר
-                בין העסק לבין שאלות אמיתיות שאנשים מקלידים בגוגל.
+                לפני שנוגעים במקלדת, אתם חייבים לדעת מה הלקוחות שלכם באמת מקלידים – ומה עובר להם בראש.{" "}
+                <strong style={{ color: "var(--text)" }}>מחקר מילות מפתח</strong> הוא הגשר שמחבר
+                בין השירות שלכם לשאלות האמיתיות של האנשים.
               </p>
               <h3 style={{ ...HEADING, fontSize: "1.2rem" }}>כוונת חיפוש — ה-Why מאחורי הביטוי</h3>
               <p style={BODY}>
@@ -660,11 +656,11 @@ function StaticGuide() {
                 },
                 {
                   title: "Content Depth & Length",
-                  content: "אין אורך מושלם — אבל תוכן שמכסה נושא לעומק תמיד מדורג גבוה יותר. מחקרו: מה יש בדפים המתחרים? מה חסר? כתבו את הדף הטוב ביותר בנושא.",
+                  content: "אין אורך מושלם — אבל תוכן שמכסה נושא לעומק תמיד מדורג גבוה יותר. הנוסחה פשוטה: בדקו מה יש בדפים המתחרים, מצאו מה חסר בהם, וכתבו את הדף המקיף והטוב ביותר ברשת.",
                 },
                 {
                   title: "Internal Linking",
-                  content: "קשרו דפים רלוונטיים זה לזה עם Anchor Text תיאורי. Internal Links מחלקים PageRank, עוזרים לגוגל להבין את מבנה האתר ומגדילים Session Duration.",
+                  content: "קשרו דפים רלוונטיים זה לזה עם Anchor Text תיאורי. Internal Links מחלקים PageRank, עוזרים לגוגל להבין את מבנה האתר ומאריכים את זמן השהייה באתר.",
                 },
               ].map((item) => (
                 <div key={item.title} style={SURFACE}>
@@ -900,7 +896,7 @@ function StaticGuide() {
                 מדידה וכלים — איך יודעים שה-SEO עובד?
               </h2>
               <p style={BODY}>
-                SEO ללא מדידה הוא ניחוש. ארבעה כלים חיוניים שכל מי שעוסק ב-SEO צריך להכיר:
+                לעשות SEO בלי למדוד נתונים זה פשוט לירות באפילה. ארבעה כלים חיוניים שכל מי שעוסק ב-SEO צריך להכיר:
               </p>
               <div style={{ display: "flex", flexDirection: "column", gap: "12px", marginBottom: "1.6rem" }}>
                 {[
@@ -1021,7 +1017,8 @@ function StaticGuide() {
               itemType="https://schema.org/Person"
             >
               <div className="author-bio">
-                <div className="author-avatar" aria-hidden>א.י</div>
+                <meta itemProp="image" content="https://www.wao.co.il/eitan-yariv.avif" />
+                <div className="author-avatar" role="img" aria-label="איתן יריב" />
                 <div className="author-meta">
                   <div className="author-name" itemProp="name">{AUTHOR_NAME}</div>
                   <div className="author-title" itemProp="jobTitle">

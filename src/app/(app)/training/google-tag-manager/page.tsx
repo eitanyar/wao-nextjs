@@ -4,7 +4,7 @@ import GT from "@/components/GlossaryTerm";
 import LessonGrid from "@/components/LessonGrid";
 
 export const metadata: Metadata = {
-  title: "קורס Google Tag Manager חינם — לפרסומאים ב-2026 | WAO",
+  title: "קורס Google Tag Manager חינם — לפרסומאים ב-2026",
   description:
     "11 שיעורי וידאו חינמיים: Conversion Tracking, מעקב קליקי טלפון, Exit Intent, Scroll Tracking, Cookie ו-Dynamic Content — ללא קוד. GTM לפרסומאים.",
   alternates: { canonical: "https://www.wao.co.il/training/google-tag-manager" },

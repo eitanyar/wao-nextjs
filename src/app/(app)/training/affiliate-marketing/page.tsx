@@ -4,7 +4,7 @@ import GT from "@/components/GlossaryTerm";
 import LessonGrid from "@/components/LessonGrid";
 
 export const metadata: Metadata = {
-  title: "מדריך שיווק שותפים המלא 2026 — מאפס לעסק דיגיטלי | WAO",
+  title: "מדריך שיווק שותפים המלא 2026 — מאפס לעסק דיגיטלי",
   description:
     "המדריך המקיף לשיווק שותפים בישראל: תוכניות BOX, Amazon, Booking ו-KSP, אסטרטגיות תנועה, כלים חיוניים ואיך לגדול מהכנסה פסיבית לעסק דיגיטלי אמיתי.",
   alternates: { canonical: "https://www.wao.co.il/training/affiliate-marketing" },

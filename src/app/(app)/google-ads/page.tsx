@@ -5,7 +5,7 @@ import GT from "@/components/GlossaryTerm";
 const CANONICAL = "https://www.wao.co.il/google-ads";
 
 export const metadata: Metadata = {
-  title: "פרסום בגוגל (Google Ads) — ROI מדיד | WAO מומחי Google Ads מאז 2007",
+  title: "פרסום בגוגל (Google Ads) — ROI מדיד | מומחי Google Ads מאז 2007",
   description:
     "ניהול Google Ads מקצועי: Search, Performance Max, YouTube Ads. 200–400% ROI ממוצע. 60% הפחתה ב-CPA. WAO — מומחי Google Ads מאז 2007.",
   alternates: { canonical: CANONICAL },
@@ -76,25 +76,25 @@ const STEPS = [
   {
     n: "01",
     title: "Audit & Strategy — מבחן 50 נקודות",
-    desc: "בדיקה מלאה של המצב הקיים: מבנה קמפיינים, ציוני איכות, Conversion Tracking, תחרות ורשימות מילות מפתח. מגדירים יעדי CPA ו-ROAS ריאליים לפני שמוציאים שקל.",
+    desc: "אנחנו הופכים את החשבון שלכם כדי להבין איפה הכסף שלכם בורח ואיך מערכת מעקב ההמרות שלכם מתפקדת. רק אחרי שמגדירים יעדי רווחיות ברורים, מתחילים להזרים תקציב.",
     tags: ["Google Ads Audit", "CPA Target", "ROAS", "Competitor Analysis"],
   },
   {
     n: "02",
     title: "Campaign Architecture — מבנה שמביא תוצאות",
-    desc: "בונים היררכיה נכונה: Search Campaigns לכוונות גבוהות, Performance Max לכיסוי רחב, YouTube לבניית מותג, Demand Gen לרימרקטינג. כל קמפיין עם מבנה Ad Groups נכון ו-Negative Keywords מלאות.",
+    desc: "בונים ארכיטקטורה חכמה: קמפיינים ממוקדים בגוגל למי שמחפש אתכם ברגע זה, נוכחות רחבה בכל נכסי הרשת למי שעדיין מתלבט, ווידאו ביוטיוב לבניית מותג, ומהלכי רימרקטינג מדויקים.",
     tags: ["Performance Max", "Search Campaigns", "YouTube Ads", "Demand Gen"],
   },
   {
     n: "03",
     title: "AI Bidding & Audience Signals",
-    desc: "מגדירים Target CPA/ROAS עם Audience Signals מדויקים: רשימות לקוחות קיימים, דמוגרפיה, התנהגות גלישה. ה-AI של גוגל לומד מהר יותר עם הנתונים הנכונים — אנחנו מספקים אותם.",
+    desc: "אנחנו מזינים לאלגוריתם של גוגל את ”אותות הקהל” המדויקים ביותר: מי הלקוחות שלכם ואיך הם מתנהגים ברשת. כשה-AI מקבל דאטה איכותית מהרגע הראשון, הוא פשוט מביא תוצאות מהר יותר.",
     tags: ["Smart Bidding", "Target ROAS", "Audience Signals", "First-Party Data"],
   },
   {
     n: "04",
     title: "Creative Workshop — מודעות שממירות",
-    desc: "כותבים RSA (Responsive Search Ads) עם 15 Headlines ו-4 Descriptions מגוונים. מפיקים Assets לקמפייני Performance Max: תמונות, לוגואים, סרטונים. A/B Testing מתמיד על קריאייטיב.",
+    desc: "מנסחים מודעות עם קופי חד ומפיקים את כל חומרי הוויזואל והווידאו שהקמפיינים שלכם צריכים. משם, אנחנו מנהלים בדיקות השוואה בלתי פוסקות כדי לגלות מה באמת גורם לגולשים להקליק ולקנות.",
     tags: ["RSA", "PMax Assets", "Ad Copy", "A/B Testing"],
   },
   {
@@ -127,7 +127,7 @@ const FAQS = [
   },
   {
     q: "מה ההבדל בין Google Ads ל-SEO?",
-    a: "Google Ads = תוצאות מיידיות, תשלום לכל קליק. ברגע שמפסיקים לשלם — התנועה נעצרת. SEO = בניית נכס לטווח ארוך, תנועה אורגנית ללא תשלום לקליק. הגישה המנצחת: Ads לתוצאות מיידיות בזמן שה-SEO בונה.",
+    a: "גוגל אדס מביא לקוחות כאן ועכשיו, אבל ברגע שסוגרים את הברז התקציבי – התנועה נעצרת. SEO, לעומת זאת, הוא בניית נכס נדל״ני שמביא גולשים בחינם בטווח הארוך. השילוב המושלם? להביא מכירות כבר היום מהממומן, בזמן שהאורגני בונה את המחר.",
   },
   {
     q: "מה זה Performance Max ולמה זה חשוב?",
@@ -135,7 +135,7 @@ const FAQS = [
   },
   {
     q: "כמה זמן עד שרואים תוצאות?",
-    a: "השבועות הראשונים הם תקופת Learning של ה-AI — הביצועים מתייצבים. תוצאות ראשונות ב-2–4 שבועות, ביצועים מלאים ב-60–90 יום. חשוב לא לשנות קמפיינים בתקופת ה-Learning — זה מאפס את תהליך הלמידה.",
+    a: "השבועות הראשונים מוקדשים ללמידה של האלגוריתם, שבה הביצועים מתייצבים. תוצאות ראשונות רואים תוך שבועיים עד חודש, והמערכת מגיעה לשיא הכוח שלה תוך 60 עד 90 יום. הסוד הוא לתת למנוע לרוץ בלי לגעת – כל שינוי קטן פשוט מאפס את הלמידה שלו.",
   },
   {
     q: "האם WAO עובדת ללא חוזה ארוך טווח?",
@@ -197,11 +197,10 @@ export default function GoogleAdsPage() {
           >
             פרסום בגוגל שמחזיר{" "}
             <span className="text-gradient">ROI מדיד</span>
-            <br className="hidden md:block" />
             {" "}— לא רק קליקים
           </h1>
           <p style={{ ...bodyStyle, fontSize: "clamp(1rem,1.8vw,1.2rem)", marginBottom: "40px", maxWidth: "620px" }}>
-            קמפיינים ב-Google Ads שבונים על AI ו-First-Party Data. אנחנו מנהלים את התקציב שלכם כאילו הוא שלנו — עם שקיפות מלאה ומדידה אמיתית בכל שקל.
+            קמפיינים חכמים ב-Google Ads שממנפים את הדאטה שלכם בעזרת AI. אנחנו מנהלים את התקציב שלכם כאילו יצא מהכיס שלנו – בשקיפות מוחלטת ובמדידה של כל שקל.
           </p>
           <div style={{ display: "flex", gap: "14px", flexWrap: "wrap" }}>
             <a href="tel:0526148860" className="btn-primary" style={{ fontSize: "1.05rem", padding: "15px 36px" }}>

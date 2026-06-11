@@ -5,7 +5,7 @@ import GT from "@/components/GlossaryTerm";
 const CANONICAL = "https://www.wao.co.il/seo";
 
 export const metadata: Metadata = {
-  title: "קידום אתרים (SEO) — שיטת WAO | Topical Authority ו-AI Overviews | WAO",
+  title: "קידום אתרים (SEO) — שיטת WAO | Topical Authority ו-AI Overviews",
   description:
     "קידום אתרים ב-2026: Topical Authority, AI Overviews ו-Technical SEO. WAO בונים נוכחות דיגיטלית שמביאה לקוחות מוכנים לרכישה — לא רק תנועה. 20+ שנות ניסיון.",
   alternates: { canonical: CANONICAL },
@@ -83,19 +83,19 @@ const STEPS = [
   {
     n: "01",
     title: "Technical SEO — הבסיס שלא רואים",
-    desc: "Core Web Vitals, מהירות טעינה, Crawlability, Schema.org Markup ו-Mobile-First. גוגל לא יציג אתר שבור — הבסיס הטכני הוא תנאי הכרחי לכל שאר המאמצים.",
+    desc: "Core Web Vitals, מהירות טעינה, Crawlability, Schema.org Markup ו-Mobile-First. האלגוריתם פשוט לא יספור אתר שבור. הבסיס הטכני הוא תנאי סף לפני שזזים קדימה.",
     tags: ["Core Web Vitals", "Schema.org", "Mobile-First", "Indexing"],
   },
   {
     n: "02",
     title: "Topical Authority — להיות הסמכות בנושא",
-    desc: "במקום מאמרים מפוזרים — בונים Content Clusters: מפת תוכן מקיפה שמכסה כל היבט של הנישה שלכם. גוגל ו-AI מתגמלים עסקים שמדברים על נושא לעומק.",
+    desc: "במקום לירות מאמרים לכל עבר, אנחנו בונים מפת תוכן חכמה (Content Clusters) שמכסה כל פינה בנישה שלכם. מנועי החיפוש וה-AI מתגמלים רק מי שמפגין עומק.",
     tags: ["Content Clusters", "Pillar Pages", "Internal Linking", "Topical Map"],
   },
   {
     n: "03",
     title: "E-E-A-T — ניסיון, מומחיות, אמינות, אמון",
-    desc: "גוגל 2026 שואל: האם זה מומחה אמיתי? אנחנו בונים את הסיגנלים שמוכיחים זאת: Author Bios, Citations, About Page חזק, ביקורות, Press Mentions ו-Social Proof.",
+    desc: "גוגל מחפש בעיקר דבר אחד: להבין אם מאחורי האתר עומד מומחה בשר ודם. אנחנו מייצרים עבורכם את האותיות והסיגנלים שמוכיחים את זה: Author Bios, Citations, About Page חזק, ביקורות, Press Mentions ו-Social Proof.",
     tags: ["Author Authority", "Trust Signals", "Citations", "Reviews"],
   },
   {
@@ -107,7 +107,7 @@ const STEPS = [
   {
     n: "05",
     title: "Link Building — בניית אמינות חיצונית",
-    desc: "קישורים נכנסים מאתרים רלוונטיים ומהימנים בנישה שלכם. לא Bulk Links — Links אסטרטגיים שמחזקים את ה-Domain Authority ואת ה-Topical Relevance.",
+    desc: "קישורים נכנסים מאתרים רלוונטיים ומהימנים בנישה שלכם. בלי ”חבילות קישורים” תעשייתיות – אלא רק קישורים אסטרטגיים שמקפיצים את ה-Domain Authority ואת ה-Topical Relevance.",
     tags: ["Domain Authority", "Relevant Links", "Digital PR", "Guest Posts"],
   },
 ];
@@ -124,7 +124,7 @@ const INCLUDED = [
 const FAQS = [
   {
     q: "כמה זמן לוקח לראות תוצאות בקידום אתרים?",
-    a: "תוצאות ראשונות — שיפור מיקומים ועלייה בתנועה — מורגשות בדרך כלל תוך 3–4 חודשים. שיפורים משמעותיים מגיעים בין 6 ל-12 חודשים. קידום אתרים הוא השקעה לטווח ארוך: לאחר שמגיעים למיקום גבוה, התנועה ממשיכה ללא תשלום נוסף לקליק.",
+    a: "בשטח, את הניצוצות הראשונים – כמו שיפור מיקומים ותחילת עליה בתנועה – רואים כבר תוך 3–4 חודשים. שיפורים משמעותיים מגיעים בין 6 ל-12 חודשים. קידום אתרים הוא השקעה לטווח ארוך: לאחר שמגיעים למיקום גבוה, התנועה ממשיכה ללא תשלום נוסף לקליק.",
   },
   {
     q: "כמה עולה קידום אתרים בישראל?",
@@ -136,11 +136,11 @@ const FAQS = [
   },
   {
     q: "מה ההבדל בין SEO ל-Google Ads?",
-    a: "Google Ads = תשלום לכל קליק — ברגע שמפסיקים לשלם, התנועה נעצרת. SEO = בנייה של נכס דיגיטלי — לאחר שמגיעים לראש, התנועה ממשיכה ללא תשלום. הגישה האופטימלית משלבת את שניהם.",
+    a: "Google Ads = תשלום לכל קליק — ברגע שסוגרים את הברז התקציבי, התנועה נעלמת. SEO, לעומת זאת, הוא נכס נדל״ני: ברגע שכבשתם את הפסגה, הגולשים ממשיכים להגיע בחינם. הגישה האופטימלית משלבת את שניהם.",
   },
   {
     q: "האם WAO עובדת ללא חוזה ארוך טווח?",
-    a: "כן. אנחנו לא מאמינים בנעילת לקוחות. עובדים בהסכמי חודש-חודש — הלקוחות שלנו נשארים כי הם רואים תוצאות, לא כי הם חייבים.",
+    a: "כן. אנחנו לא מאמינים בנעילת לקוחות. אנחנו עובדים חודש-בחודשו. הלקוחות שלנו בוחרים להישאר פשוט כי הם רואים תוצאות, לא כי מישהו כובל אותם.",
   },
 ];
 
@@ -200,7 +200,6 @@ export default function SeoPage() {
           >
             קידום אתרים שמביא{" "}
             <span className="text-gradient">לקוחות</span>
-            <br className="hidden md:block" />
             {" "}— לא רק תנועה
           </h1>
           <p style={{ ...bodyStyle, fontSize: "clamp(1rem,1.8vw,1.2rem)", marginBottom: "40px", maxWidth: "620px" }}>
@@ -241,7 +240,7 @@ export default function SeoPage() {
               5 עמודות ה-<span className="text-gradient">Topical Authority</span>
             </h2>
             <p style={{ ...bodyStyle, marginTop: "12px", maxWidth: "580px" }}>
-              כל עמוד נדרש. SEO שנשען רק על מילות מפתח ב-2026 כמו בניית בית ללא יסודות.
+              לעשות היום SEO שנשען רק על מילות מפתח, זה כמו לבנות בית בלי יסודות. כל עמודה כאן קריטית.
             </p>
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>

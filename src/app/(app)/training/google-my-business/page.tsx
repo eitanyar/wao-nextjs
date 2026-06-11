@@ -4,7 +4,7 @@ import GT from "@/components/GlossaryTerm";
 import LessonGrid from "@/components/LessonGrid";
 
 export const metadata: Metadata = {
-  title: "קורס Google My Business חינם — Local SEO 2026 | WAO",
+  title: "קורס Google My Business חינם — Local SEO 2026",
   description:
     "14 שיעורים לאופטימיזציה של פרופיל Google My Business: קטגוריה נכונה, תמונות, ביקורות, GMB Posts ו-Local Pack. קורס מעשי לעסקים מקומיים.",
   alternates: { canonical: "https://www.wao.co.il/training/google-my-business" },

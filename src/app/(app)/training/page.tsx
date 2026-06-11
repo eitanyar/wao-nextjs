@@ -3,7 +3,7 @@ import Link from "next/link";
 import GT from "@/components/GlossaryTerm";
 
 export const metadata: Metadata = {
-  title: "קורסים חינמיים לשיווק דיגיטלי | WAO",
+  title: "קורסים חינמיים לשיווק דיגיטלי",
   description:
     "קורסי וידאו חינמיים בשיווק דיגיטלי: Google Ads, Google Tag Manager, SEO, Google My Business ושיווק שותפים — ממתחיל ועד מתקדם.",
   alternates: { canonical: "https://www.wao.co.il/training" },
@@ -77,7 +77,7 @@ const TRACKS: Track[] = [
       {
         title: "Google Tag Manager",
         subtitle: "לפרסומאים — ללא קוד",
-        desc: "11 שיעורי וידאו: Conversion Tracking, GA4, מעקב גלילה, Click-to-Call ו-Exit Intent — בלי לגעת בקוד.",
+        desc: "11 שיעורים מעשיים שילמדו אתכם איך לעקוב אחרי המרות, להתקין GA4 ולהבין מה הגולשים עושים באתר – בלי לגעת בשורת קוד אחת.",
         href: "/training/google-tag-manager",
         lessons: 11,
         totalLessons: 11,
@@ -93,7 +93,7 @@ const TRACKS: Track[] = [
     icon: "🔍",
     label: "קידום אורגני",
     color: "#a78bfa",
-    desc: "SEO מודרני, Local SEO ו-AI Overviews — תנועה שלא תלויה בתקציב",
+    desc: "SEO מודרני, Local SEO ופיצוח AI Overviews – הדרך להביא תנועה חמה בלי לשלם על קליקים",
     courses: [
       {
         title: "קורס SEO",
@@ -110,7 +110,7 @@ const TRACKS: Track[] = [
       {
         title: "Google My Business",
         subtitle: "קידום עסק מקומי",
-        desc: "אופטימיזציה של פרופיל GMB, אסטרטגיית ביקורות, Local Pack ו-Local SEO — לעסקים שמכוונים ללקוחות מקומיים.",
+        desc: "איך לאלף את פרופיל העסק שלכם בגוגל, לבנות אסטרטגיית ביקורות מנצחת ולהשתלט על המפה המקומית.",
         href: "/training/google-my-business",
         lessons: null,
         totalLessons: null,
@@ -132,7 +132,7 @@ const TRACKS: Track[] = [
       {
         title: "מדריך שיווק שותפים",
         subtitle: "מאפס לעסק דיגיטלי",
-        desc: "22 מאמרים מהשטח: תוכניות BOX, Amazon, Booking ו-KSP, אסטרטגיות תנועה, כלים חיוניים וסקייל עם Google Ads.",
+        desc: "22 מדריכים שנכתבו בדם מהשטח: תוכניות שותפים של אמזון, בוקינג ועד KSP, שיטות להזרמת תנועה ודרכים לעשות לזה סקייל באדס.",
         href: "/training/affiliate-marketing",
         lessons: 5,
         totalLessons: 5,
@@ -144,7 +144,7 @@ const TRACKS: Track[] = [
       {
         title: "40 דרכים להרוויח מהבית",
         subtitle: "מה באמת עובד ב-2026",
-        desc: "מסקרים בתשלום ועד עסק דיגיטלי — הדירוג הישיר לפי פוטנציאל, עם הגשר לשיווק שמכפיל כל שיטה.",
+        desc: "מסקרים קטנים ועד הקמת אימפריה דיגיטלית – דירוג אמיתי וכנה לפי פוטנציאל הרווח בשטח.",
         href: "/training/make-money-online",
         lessons: null,
         totalLessons: null,
@@ -232,7 +232,7 @@ export default function TrainingHub() {
           <div style={{ display: "flex", gap: "10px", flexWrap: "wrap", marginBottom: "24px", marginTop: "16px" }}>
             <span className="badge"><span className="badge-dot" />חינם לחלוטין</span>
             <span style={{ display: "inline-flex", alignItems: "center", gap: "6px", padding: "4px 12px", borderRadius: "var(--radius-pill)", fontSize: "0.78rem", fontWeight: 600, background: "rgba(74,227,181,0.1)", color: "var(--accent)", border: "1px solid rgba(74,227,181,0.2)", fontFamily: "var(--font-body), sans-serif" }}>
-              {totalLive} קורס זמין מתוך {totalCourses}
+              {totalLive} קורסים זמינים מתוך {totalCourses}
             </span>
           </div>
 
@@ -261,7 +261,7 @@ export default function TrainingHub() {
             }}
           >
             שיעורי וידאו מעשיים — Google Ads, Tag Manager, SEO, Google My Business ושיווק שותפים.
-            מ-17 שנות ניסיון ישיר בשטח, לא מהספרים.
+            הכל מבוסס על 17 שנות ניסיון מעשי בשטח, בלי תיאוריות מהספרים.
           </p>
 
           <div style={{ display: "flex", gap: "14px", flexWrap: "wrap" }}>
@@ -306,7 +306,7 @@ export default function TrainingHub() {
               זמין עכשיו
             </p>
             <h2 style={{ fontFamily: "var(--font-rubik), sans-serif", fontWeight: 900, fontSize: "clamp(1.6rem,3vw,2.3rem)", letterSpacing: "-0.02em" }}>
-              הקורס הזמין — <span className="text-gradient">התחילו היום</span>
+              החומרים כבר באוויר — <span className="text-gradient">התחילו ללמוד היום</span>
             </h2>
           </div>
 
@@ -343,7 +343,7 @@ export default function TrainingHub() {
                   </div>
                   <p style={{ color: "var(--muted)", fontSize: "0.95rem", lineHeight: 1.7, fontFamily: "var(--font-body), sans-serif", marginBottom: "20px" }}>
                     18 שיעורי וידאו: מבנה חשבון, <GT term="Smart Bidding">Smart Bidding</GT>, <GT term="Performance Max">Performance Max</GT>, <GT term="Landing Page">Landing Pages</GT> ואסטרטגיית Pareto.
-                    הקורס לניהול Google Ads ב-2026 — מ-15 שיעורים זמינים לצפייה עכשיו.
+                    כל מה שצריך כדי לנהל קמפיינים בגוגל ב-2026 – 15 שיעורים ראשונים כבר מחכים לכם.
                   </p>
                   <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
                     {["15 שיעורים זמינים", "18 שיעורים סה\"כ", "מתחיל עד מתקדם", "Google Ads"].map((tag) => (
@@ -552,7 +552,7 @@ export default function TrainingHub() {
                 icon: "🏷️",
                 color: "#4ae3b5",
                 title: "Google Tag Manager — 11 שיעורים זמינים",
-                body: "לפני שמוציאים שקל על פרסום — חייבים למדוד נכון. GTM מאפשר להגדיר Conversion Tracking, GA4 ו-Facebook Pixel בלי לגעת בקוד. הקורס זמין עכשיו — 11 שיעורי וידאו מהשטח.",
+                body: "לפני ששורפים שקל על פרסום, חייבים לוודא שהכל נמדד כמו שצריך. תג מנג'ר מאפשר לכם להרים מערך מעקב מלא (כולל פיקסלים ו-GA4) לגמרי לבד. 11 שיעורים ראשונים כבר זמינים.",
                 cta: "לקורס GTM",
                 href: "/training/google-tag-manager",
               },
@@ -560,7 +560,7 @@ export default function TrainingHub() {
                 icon: "📍",
                 color: "#a78bfa",
                 title: "Google My Business — Local SEO",
-                body: "עסקים מקומיים שמופיעים ב-Local Pack מקבלים 40%+ מהקליקים. פרופיל GMB מאופטמז, אסטרטגיית ביקורות ו-Local SEO הם לעתים קרובות ה-ROI הגבוה ביותר לעסק פיזי. יש לנו תוכן מהשטח — הקורס בדרך.",
+                body: "עסקים מקומיים שמשתלטים על המפה של גוגל גורפים קרוב לחצי מהקליקים בנישה שלהם. בניית פרופיל נכון היא המפתח להחזר השקעה מהיר לעסק פיזי. אנחנו עובדים על קורס מקיף, השאירו פרטים שנעדכן אתכם.",
                 cta: "עדכנו אותי",
                 href: "/training/google-my-business",
               },

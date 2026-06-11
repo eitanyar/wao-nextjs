@@ -113,7 +113,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     ? lesson.excerpt.replace(/<[^>]+>/g, "").replace(/\[[^\]]+\]/g, "").slice(0, 160)
     : undefined;
   return {
-    title: `${title} | WAO`,
+    title: `${title}`,
     description: desc,
     alternates: { canonical },
     openGraph: { title, description: desc, url: canonical, type: "article" },

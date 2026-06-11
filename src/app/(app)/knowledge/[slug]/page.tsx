@@ -1,7 +1,14 @@
 import type { Metadata } from "next";
+import { Fragment } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { KNOWLEDGE_ARTICLES, CATEGORY_LABELS, type KnowledgeCategory } from "@/data/knowledge";
+
+const AUTHOR_IMG = "https://www.wao.co.il/eitan-yariv.avif";
+const AUTHOR_SAME_AS = [
+  "https://www.linkedin.com/in/eitanyariv/",
+  "https://qa.askpavel.co.il/user/%D7%90%D7%99%D7%AA%D7%9F+%D7%99%D7%A8%D7%99%D7%91",
+];
 
 export const revalidate = 86400;
 
@@ -18,7 +25,9 @@ export async function generateMetadata({
   const article = KNOWLEDGE_ARTICLES.find((a) => a.slug === slug);
   if (!article) return {};
   return {
-    title: `${article.title} | מאגר ידע SEO | WAO`,
+    title: article.metaTitle
+      ? { absolute: article.metaTitle }
+      : `${article.title} | מאגר ידע`,
     description: article.summary,
     alternates: { canonical: `https://wao.co.il/knowledge/${slug}` },
     openGraph: {
@@ -86,11 +95,11 @@ function renderMixed(text: string): React.ReactNode {
   let match: RegExpExecArray | null;
   let key = 0;
   while ((match = re.exec(text)) !== null) {
-    if (match.index > last) segments.push(text.slice(last, match.index));
+    if (match.index > last) segments.push(<Fragment key={key++}>{text.slice(last, match.index)}</Fragment>);
     segments.push(<bdi key={key++} dir="ltr">{match[0]}</bdi>);
     last = re.lastIndex;
   }
-  if (last < text.length) segments.push(text.slice(last));
+  if (last < text.length) segments.push(<Fragment key={key++}>{text.slice(last)}</Fragment>);
   return <>{segments}</>;
 }
 
@@ -143,11 +152,11 @@ function renderWithInlineCode(text: string): React.ReactNode {
   let match: RegExpExecArray | null;
   let key = 0;
   while ((match = re.exec(text)) !== null) {
-    if (match.index > last) segments.push(renderMixed(text.slice(last, match.index)));
+    if (match.index > last) segments.push(<Fragment key={key++}>{renderMixed(text.slice(last, match.index))}</Fragment>);
     segments.push(<code key={key++} style={INLINE_CODE_STYLE}>{match[1]}</code>);
     last = re.lastIndex;
   }
-  if (last < text.length) segments.push(renderMixed(text.slice(last)));
+  if (last < text.length) segments.push(<Fragment key={key++}>{renderMixed(text.slice(last))}</Fragment>);
   return <>{segments}</>;
 }
 
@@ -212,12 +221,17 @@ export default async function KnowledgeArticlePage({
     url: `https://wao.co.il/knowledge/${article.slug}`,
     publisher: {
       "@type": "Organization",
-      name: "WAO Digital Marketing",
-      url: "https://wao.co.il",
+      "@id": "https://www.wao.co.il/#org",
+      name: "WAO",
+      url: "https://www.wao.co.il",
     },
     author: {
-      "@type": "Organization",
-      name: "WAO Digital Marketing",
+      "@type": "Person",
+      "@id": "https://www.wao.co.il/about#person",
+      name: "איתן יריב",
+      image: AUTHOR_IMG,
+      url: "https://www.wao.co.il/about",
+      sameAs: AUTHOR_SAME_AS,
     },
     mainEntityOfPage: {
       "@type": "WebPage",
@@ -381,7 +395,7 @@ export default async function KnowledgeArticlePage({
                   month: "long",
                 })}
               </span>
-              <span>WAO Digital</span>
+              <span>נכתב ע״י איתן יריב</span>
             </div>
 
             {/* Summary */}
@@ -462,6 +476,38 @@ export default async function KnowledgeArticlePage({
                 </div>
               </div>
             )}
+
+            {/* Author bio */}
+            <section style={{ marginTop: "48px" }} aria-label="הסמכות המקצועית">
+              <div className="author-bio" itemScope itemType="https://schema.org/Person">
+                <meta itemProp="image" content={AUTHOR_IMG} />
+                <div className="author-avatar" role="img" aria-label="איתן יריב" />
+                <div className="author-meta">
+                  <div className="author-name" itemProp="name">איתן יריב</div>
+                  <div className="author-title" itemProp="jobTitle">
+                    מייסד WAO | מומחה SEO ושיווק דיגיטלי מאז 2006
+                  </div>
+                  <p className="author-text" itemProp="description">
+                    כל תכני מאגר הידע נכתבים ונערכים על ידי איתן יריב — מייסד WAO ויועץ SEO
+                    בכיר עם 20+ שנות ניסיון. מ-2006 מלווה עסקים ישראלים בקידום אורגני, ומבסס
+                    כל מאמר על ניסיון מעשי בשטח — לא תיאוריה.
+                  </p>
+                  <div style={{ display: "flex", gap: "14px", marginTop: "12px", flexWrap: "wrap" }}>
+                    <a href={AUTHOR_SAME_AS[0]} target="_blank" rel="noopener noreferrer" itemProp="sameAs"
+                      style={{ display: "inline-flex", alignItems: "center", gap: "6px", fontSize: "0.82rem", color: "var(--muted)", fontFamily: "var(--font-body),sans-serif" }}>
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+                        <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 0 1-2.063-2.065 2.064 2.064 0 1 1 2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
+                      </svg>
+                      LinkedIn
+                    </a>
+                    <a href={AUTHOR_SAME_AS[1]} target="_blank" rel="noopener noreferrer" itemProp="sameAs"
+                      style={{ fontSize: "0.82rem", color: "var(--muted)", fontFamily: "var(--font-body),sans-serif" }}>
+                      AskPavel
+                    </a>
+                  </div>
+                </div>
+              </div>
+            </section>
 
             {/* Related Articles */}
             {related.length > 0 && (

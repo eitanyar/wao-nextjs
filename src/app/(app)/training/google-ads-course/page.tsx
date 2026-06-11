@@ -4,7 +4,7 @@ import GT from "@/components/GlossaryTerm";
 import LessonGrid from "@/components/LessonGrid";
 
 export const metadata: Metadata = {
-  title: "קורס Google Ads חינם — אסטרטגיה ב-2026/2027 | WAO",
+  title: "קורס Google Ads חינם — אסטרטגיה ב-2026/2027",
   description:
     "18 שיעורי וידאו חינמיים: מבנה חשבון, Smart Bidding, Performance Max ואיך להפעיל את ה-20% שלא נוגעים ל-AI. קורס מדריך Google Ads ב-2026 — ממתחיל ועד ניהול תקציבים מורכבים.",
   alternates: { canonical: "https://www.wao.co.il/training/google-ads-course" },
