@@ -66,31 +66,35 @@ const BODY: React.CSSProperties = {
 };
 
 // Wrap Latin runs in <bdi dir="ltr"> so they render correctly inside an RTL paragraph.
+// Core principle: isolate only the Latin sub-runs. Brackets are pulled into an LTR island
+// ONLY when the whole bracket group is Hebrew-free; a bracket group that mixes Hebrew with
+// Latin/digits keeps its ( ) in the RTL flow so the BiDi algorithm mirrors the pair naturally
+// around the isolated Latin inside. This fixes "(Moz Spam Score 8 ומעלה)" — previously the
+// opening ( was dragged into the LTR island while the ) was left behind, breaking the pair.
 // Rules:
 //   • Full URLs (http/https) — captured as a single atom so `:` doesn't split them.
 //   • Relative paths (/slug, /parent/child/) — leading `/` is a neutral BiDi char; without
 //     wrapping it drifts to the wrong visual end in RTL. Captured as one LTR atom.
-//   • Number-only parens like (50%–60%) — digit-leading, no Latin or Hebrew letters inside.
-//     Without this, the Unicode Bidi algorithm treats the en-dash as RTL-neutral and reverses
-//     the numbers. Wrapping as a single LTR atom preserves the correct (50%–60%) order.
-//   • Latin runs optionally preceded by ( [ { — all one island so "(Anchor Text)" stays correct.
-//   • Comma+space separator so "(Chrome, Firefox, Edge)" becomes one island.
+//   • Hebrew-free bracket groups — "(Anchor Text)", "(.com, .org)", "(50%–60%)" wrapped whole
+//     so brackets, commas and en-dashes keep LTR order. Requires ≥1 Latin/digit inside.
+//   • Maximal Latin run — NOT including surrounding ( ); optional leading dot for ".com"/".co.il".
+//   • Comma+space separator so "Chrome, Firefox, Edge" stays one island.
 //   • Internal dot allowed only when followed by a letter/digit (example.com, v2.0).
-//   • Standalone bracket/brace fallback for unmatched brackets before Hebrew text.
-//   • () excluded from fallback so Hebrew parentheticals get natural BiDi mirroring.
+//   • Standalone [ ] { } fallback for unmatched brackets before Hebrew text.
+//   • ( ) excluded from fallback so Hebrew (and mixed) parentheticals get natural BiDi mirroring.
 function renderMixed(text: string): React.ReactNode {
   const segments: React.ReactNode[] = [];
   // Five alternatives, in priority order:
   // 1. Full URLs — single atom so `:` in the URL doesn't split it.
   // 2. Relative paths — /slug or /parent/child/; leading `/` must stay with the Latin slug.
-  // 3. Number-only parens — digit-leading, content has no letters (Latin or Hebrew).
-  //    The Unicode BiDi algorithm would mirror brackets when numbers (weak chars) default to
-  //    RTL base direction, reversing 50%–60% to 60%–50%. LTR wrapping fixes both issues.
-  // 4. Latin runs optionally preceded/followed by ( [ { } ] — one island.
-  // 5. Standalone bracket/brace fallback — excludes () so Hebrew parentheticals
+  // 3. Hebrew-free bracket group — "[([{] ... [)\]}]" with no Hebrew inside and ≥1 alnum.
+  //    Wrapped whole so pure-Latin/number parens (incl. en-dash ranges) keep LTR order.
+  // 4. Maximal Latin run — Latin/digit run WITHOUT enclosing brackets, optional leading dot.
+  //    For mixed parens this catches only the Latin part; the ( ) stay in RTL and mirror.
+  // 5. Standalone [ ] { } fallback — excludes ( ) so Hebrew/mixed parentheticals
   //    are left for the BiDi algorithm to mirror naturally in RTL context.
   const re =
-    /(https?:\/\/[^\s<>]*|\/[A-Za-z][A-Za-z0-9\-_.]*(?:\/[A-Za-z0-9\-_.]*)*\/?|\(\d[^)a-zA-Z֐-׿]*\)|[([{]*[A-Za-z][A-Za-z0-9\-\/='"{}]*(?:\.(?=[A-Za-z0-9])[A-Za-z0-9\-\/='"{}]*)*(?:[,]?[ ]+[A-Za-z][A-Za-z0-9\-\/='"{}]*(?:\.(?=[A-Za-z0-9])[A-Za-z0-9\-\/='"{}]*)*)*[)\]]*|[[\]{}])/g;
+    /(https?:\/\/[^\s<>]*|\/[A-Za-z][A-Za-z0-9\-_.]*(?:\/[A-Za-z0-9\-_.]*)*\/?|[([{][^()[\]{}֐-׿]*[A-Za-z0-9][^()[\]{}֐-׿]*[)\]}]|\.?[A-Za-z][A-Za-z0-9\-\/='"{}]*(?:\.(?=[A-Za-z0-9])[A-Za-z0-9\-\/='"{}]*)*(?:[,]?[ ]+\.?[A-Za-z][A-Za-z0-9\-\/='"{}]*(?:\.(?=[A-Za-z0-9])[A-Za-z0-9\-\/='"{}]*)*)*|[[\]{}])/g;
   let last = 0;
   let match: RegExpExecArray | null;
   let key = 0;
