@@ -35,6 +35,9 @@ const legacyRedirects = [
   { source: "/שיווק-בטוויטר/",                          destination: "/social",     permanent: true },
   { source: "/שיווק-בפינטרסט",                          destination: "/social",     permanent: true },
   { source: "/שיווק-בפינטרסט/",                         destination: "/social",     permanent: true },
+  { source: "/שיווק_ברשתות_  חברתיות",  destination: "/social",     permanent: true },
+  { source: "/שיווק_ברשתות_  חברתיות/", destination: "/social",     permanent: true },
+  { source: "/%d7%a9%d7%99%d7%95%d7%95%d7%a7_%d7%91%d7%a8%d7%a9%d7%aa%d7%95%d7%aa_%20%20%d7%97%d7%91%d7%a8%d7%aa%d7%99%d7%95%d7%aa",  destination: "/social",     permanent: true },
 
   // ── Training pages ──
   { source: "/מסלולי-הכשרה",                             destination: "/training",   permanent: true },

@@ -63,7 +63,7 @@ const MIGRATION_PACKAGES = [
     name: "מיגרציה — סטנדרט",
     nameEn: "WordPress Migration Standard",
     price: 7650,
-    tag: "עד 100 עמודים",
+    tag: "עד 50 עמודים",
     desc: "העברה מלאה מ-WordPress ל-Next.js",
     items: [
       "העברת כל התוכן (עמודים, פוסטים, תמונות)",
@@ -80,11 +80,11 @@ const MIGRATION_PACKAGES = [
     name: "מיגרציה — גדול",
     nameEn: "WordPress Migration Large",
     price: null,
-    tag: "100+ עמודים",
+    tag: "50+ עמודים",
     desc: "לאתרים גדולים עם היסטוריית SEO עשירה",
     items: [
       "הכל מ׳מיגרציה סטנדרט׳ +",
-      "העברת 100-500 עמודים + ארכיון",
+      "העברת 50-500 עמודים + ארכיון",
       "מיפוי מלא של redirects ואיתור שגיאות",
       "ניקוי Indexing Bloat לפני ואחרי",
       "תכנון Content Silos מחדש",

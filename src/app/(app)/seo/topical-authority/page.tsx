@@ -16,7 +16,7 @@ const SAME_AS     = [
 ];
 
 export const metadata: Metadata = {
-  title: "Topical Authority ומבנה אתר SEO — המדריך המלא 2026/2027",
+  title: "מה זה Topical Authority ואיך בונים סמכות נושאית? | מאגר ידע",
   description:
     'מדריך Topical Authority מקיף ל-2026: Hub & Spoke Model, Content Silos, מבנה URL, ה-Internal Linking האסטרטגי ומיפוי פערי תוכן. כך הופכים לסמכות נושאית שגוגל מדרגת ראשון. נכתב ע"י איתן יריב.',
   alternates: { canonical: CANONICAL },
@@ -342,9 +342,9 @@ export default function TopicalAuthorityPage() {
                 שאילתה בתחום — גם עבור דפים שפורסמו רק לאחרונה.
               </p>
               <p style={BODY}>
-                הגיון ה-Topical Authority הוא פשוט: גוגל מעדיפה לשלוח משתמשים לאתרים
-                שהוכיחו כי הם <em>מכסים נושא לעומק ומכל הזוויות</em>, ולא לאתרים עם
-                מאמר מושלם אחד ושתיים-שלוש מאמרים רלוונטיים נוספים.
+                ההיגיון מאחורי Topical Authority פשוט: גוגל מעדיפה לשלוח גולשים לאתרים
+                שהוכיחו שהם <em>מכסים נושא שלם מכל זווית אפשרית</em>, ולא למי שהעלה
+                מאמר אחד מושלם ועוד שניים-שלושה טקסטים קצרים בצד.
               </p>
               <div style={CALLOUT}>
                 <strong>📌 הדוגמה הקלאסית:</strong> אם WebMD מפרסם מאמר על "כאב ראש" —
@@ -415,7 +415,7 @@ export default function TopicalAuthorityPage() {
                     🏛️ Pillar Page
                   </h3>
                   <ul style={{ ...BODY, paddingInlineStart: "1.2rem", marginBottom: 0, fontSize: "0.88rem", lineHeight: 1.7 }}>
-                    <li style={{ marginBottom: "6px" }}>מכסה נושא רחב בסקירה מקיפה</li>
+                    <li style={{ marginBottom: "6px" }}>מכסה נושא שלם ומעניק סקירת עומק רחבה</li>
                     <li style={{ marginBottom: "6px" }}>3,000–5,000 מילים בדרך כלל</li>
                     <li style={{ marginBottom: "6px" }}>Primary Keyword כללי (למשל: "קידום אתרים")</li>
                     <li style={{ marginBottom: "6px" }}>מקשר לכל ה-Cluster Pages</li>
@@ -427,7 +427,7 @@ export default function TopicalAuthorityPage() {
                     📄 Cluster Page
                   </h3>
                   <ul style={{ ...BODY, paddingInlineStart: "1.2rem", marginBottom: 0, fontSize: "0.88rem", lineHeight: 1.7 }}>
-                    <li style={{ marginBottom: "6px" }}>מעמיק בתת-נושא ספציפי</li>
+                    <li style={{ marginBottom: "6px" }}>צולל פנימה ומפרק תת-נושא ספציפי</li>
                     <li style={{ marginBottom: "6px" }}>1,500–3,000 מילים בדרך כלל</li>
                     <li style={{ marginBottom: "6px" }}>Primary Keyword ספציפי (למשל: "מחקר מילות מפתח")</li>
                     <li style={{ marginBottom: "6px" }}>מקשר חזרה ל-Pillar + Clusters אחרים</li>
@@ -598,7 +598,7 @@ export default function TopicalAuthorityPage() {
                 Internal Linking אסטרטגי — העורקים של ה-Silo
               </h2>
               <p style={BODY}>
-                אם Content Silos הם עצמות הארכיטקטורה,{" "}
+                אם Content Silos הם השלד של האתר שלכם,{" "}
                 <GT term="Internal Linking">Internal Links</GT> הם העורקים שמזרימים
                 <GT term="PageRank">PageRank</GT> (ערך קישור) בין הדפים. קישור פנימי נכון משרת שלוש מטרות:
                 עוזר לגוגל לגלות דפים חדשים, מחלק PageRank, ומחזק את הקשר הנושאי בין
@@ -682,17 +682,17 @@ export default function TopicalAuthorityPage() {
                 מיפוי פערי תוכן — Content Gap Audit
               </h2>
               <p style={BODY}>
-                לאחר שבניתם את ה-Silo הראשוני, השלב הבא הוא{" "}
+                אחרי שהרמתם את הסילו הראשוני, מגיע השלב של{" "}
                 <strong style={{ color: "var(--text)" }}>Content Gap Audit</strong> —
-                בחינה שיטתית של מה חסר ב-Cluster שלכם. Topical Authority אינה אחד ל-אחד:
-                היא נמדדת ביחס למה שהמתחרים שלכם כיסו.
+                סריקה יסודית שמגלה מה באמת חסר באשכולות שלכם. הרי סמכות נושאית לא נמדדת
+                בוואקום, היא תמיד נבחנת מול מה שהמתחרים שלכם כבר הספיקו לכסות.
               </p>
               <h3 style={{ ...HEADING, fontSize: "1.2rem" }}>
                 תהליך Content Gap Audit — 5 שלבים
               </h3>
               <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "1.6rem" }}>
                 {[
-                  { step: "1", title: "מיפוי מתחרים", desc: "זהו 3–5 אתרים שמדורגים עבור מילות המפתח המרכזיות שלכם. אלו ה'מתחרים הנושאיים' שלכם — לאו דווקא המתחרים העסקיים." },
+                  { step: "1", title: "מיפוי מתחרים", desc: "סמנו 3–5 אתרים שמככבים בביטויים המרכזיים שלכם. אלו ”המתחרים הנושאיים” שלכם – גם אם הם לא מתחרים בכם ישירות בקופת העסק." },
                   { step: "2", title: "Keyword Gap Tool", desc: "ב-Ahrefs (Content Gap) או SEMrush (Keyword Gap) — הכניסו את המתחרים וגלו אילו מילות מפתח הם מדורגים עליהן שאתם לא." },
                   { step: "3", title: "מיפוי לנושאים", desc: "קבצו את מילות המפתח החסרות ל-Clusters נושאיים. כל Cluster = נושא פוטנציאלי לדף חדש." },
                   { step: "4", title: "תעדוף לפי כוונה+נפח", desc: "דרגו את ה-Clusters לפי: נפח חיפוש, כוונת חיפוש עסקית, ו-Keyword Difficulty. התחילו ממה שהמשתמשים הכי צריכים." },
