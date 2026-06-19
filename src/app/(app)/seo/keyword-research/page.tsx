@@ -795,9 +795,9 @@ export default function KeywordResearchPage() {
                 {renderMixed("מייסד WAO | מומחה SEO ושיווק דיגיטלי מאז 2006")}
               </div>
                   <p className="author-text" itemProp="description">
-                    מחקר מילות מפתח הוא הבסיס לכל פרויקט SEO שאני מוביל — מ-2006 ועד היום.
-                    המדריך הזה מבוסס על מאות מחקרים שביצעתי לעסקים ישראלים בתחומים
-                    מגוונים: רפואה, פיננסים, טכנולוגיה ומסחר אלקטרוני.
+                    מחקר מילות מפתח הוא הבסיס לכל פרויקט SEO שאני מוביל — מאז 2006 ועד היום.
+                    המדריך הזה מבוסס על מאות מחקרים שביצעתי עבור עסקים ישראלים במגוון תעשיות:
+                    בריאות ורפואה, פיננסים, הייטק ואיקומרס.
                   </p>
                   <div style={{ display: "flex", gap: "14px", marginTop: "12px", flexWrap: "wrap" }}>
                     <a href={SAME_AS[0]} target="_blank" rel="noopener noreferrer" itemProp="sameAs"

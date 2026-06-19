@@ -1182,9 +1182,9 @@ function StaticCourse({ chapters }: { chapters: typeof CHAPTERS }) {
                 {renderMixed("מומחה Google Ads ו-SEO | מייסד WAO | 20+ שנות ניסיון")}
               </div>
               <p className="author-text" itemProp="description">
-                ניהלתי קמפיינים ב-Google Ads מאז 2007 — עוד לפני שקראו לזה Adwords. ניהלתי תקציבים של מאות אלפי
-                שקלים בחודש, ב-20+ שנות עבודה עם עסקים ישראלים מכל הסקטורים. הקורס הזה הוא תמצות של מה שעובד —
-                לא תיאוריה, לא טפסי Google.
+                ניהלתי קמפיינים ב-Google Ads מאז 2007 — עוד כשקראו לזה AdWords. ניהלתי תקציבים של מאות אלפי
+                שקלים בחודש לאורך מעל 20 שנות עבודה עם עסקים ישראלים מכל הסקטורים. הקורס הזה הוא תמצות של מה שעובד בשטח —
+                בלי תיאוריות יבשות, ובלי המלצות גנריות של גוגל שרק שורפות תקציב.
               </p>
               <div style={{ display: "flex", gap: "14px", marginTop: "12px", flexWrap: "wrap" }}>
                 <a

@@ -486,7 +486,7 @@ export default function AffiliateMarketingGuide() {
                 {renderMixed("מומחה שיווק דיגיטלי | מייסד WAO | 20+ שנות ניסיון")}
               </div>
               <p className="author-text" itemProp="description">
-                עוסק בשיווק דיגיטלי מ-2007. ניהלתי קמפיינים שמשלבים SEO אורגני עם תנועה ממומנת לאתרי שותפים — ויכולתי לראות מקרוב מי מצליח ולמה. המדריך הזה הוא תמצות של מה שעובד בשטח הישראלי.
+                עוסק בשיווק דיגיטלי מאז 2007. לאורך השנים ניהלתי קמפיינים המשלבים קידום אורגני (SEO) עם תנועה ממומנת לנכסי שותפים, מה שאיפשר לי לראות מקרוב מי באמת מצליח לעשות מזה כסף. המדריך הזה הוא תמצות של מה שעובד בשטח הישראלי.
               </p>
               <div style={{ display: "flex", gap: "14px", marginTop: "12px", flexWrap: "wrap" }}>
                 <a href="https://www.linkedin.com/in/eitanyariv/" target="_blank" rel="noopener noreferrer" itemProp="sameAs" style={{ display: "inline-flex", alignItems: "center", gap: "6px", fontSize: "0.82rem", color: "var(--muted)", fontFamily: "var(--font-body), sans-serif" }}>

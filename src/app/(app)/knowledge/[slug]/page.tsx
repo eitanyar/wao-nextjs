@@ -461,8 +461,8 @@ export default async function KnowledgeArticlePage({
               </div>
                   <p className="author-text" itemProp="description">
                     כל תכני מאגר הידע נכתבים ונערכים על ידי איתן יריב — מייסד WAO ויועץ SEO
-                    בכיר עם 20+ שנות ניסיון. מ-2006 מלווה עסקים ישראלים בקידום אורגני, ומבסס
-                    כל מאמר על ניסיון מעשי בשטח — לא תיאוריה.
+                    בכיר. איתן מלווה עסקים ישראלים בקידום אורגני מאז 2006, ומבסס כל מדריך ומאמר
+                    על ניסיון מעשי בשטח — לא על תיאוריות יבשות.
                   </p>
                   <div style={{ display: "flex", gap: "14px", marginTop: "12px", flexWrap: "wrap" }}>
                     <a href={AUTHOR_SAME_AS[0]} target="_blank" rel="noopener noreferrer" itemProp="sameAs"

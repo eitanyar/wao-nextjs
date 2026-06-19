@@ -372,7 +372,7 @@ function StaticCourse({ totalLessons }: { totalLessons: number }) {
                 {renderMixed("מומחה Google Ads ו-GTM | מייסד WAO | 20+ שנות ניסיון")}
               </div>
               <p className="author-text" itemProp="description">
-                פיתחתי את שיטות ה-GTM האלה תוך כדי ניהול קמפיינים אמיתיים — כשגיליתי שרוב הבעיות בביצועי Google Ads נובעות מ-Tracking שגוי, לא מהמודעות עצמן.
+                פיתחתי את שיטות העבודה האלו ב-GTM מתוך השטח, תוך כדי ניהול קמפיינים אמיתיים — כשראיתי שרוב בעיות הביצועים ב-Google Ads נובעות בכלל ממעקב המרות לקוי, ולא מהמודעות עצמן.
               </p>
               <div style={{ display: "flex", gap: "14px", marginTop: "12px", flexWrap: "wrap" }}>
                 <a href="https://www.linkedin.com/in/eitanyariv/" target="_blank" rel="noopener noreferrer" itemProp="sameAs" style={{ display: "inline-flex", alignItems: "center", gap: "6px", fontSize: "0.82rem", color: "var(--muted)", fontFamily: "var(--font-body), sans-serif" }}>

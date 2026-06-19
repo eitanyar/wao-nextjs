@@ -407,7 +407,7 @@ export default async function LessonPage({ params }: Props) {
                 {renderMixed("מומחה שיווק דיגיטלי | מייסד WAO | 20+ שנות ניסיון")}
               </div>
               <p className="author-text" itemProp="description">
-                מלווה עסקים ישראלים בצמיחה דיגיטלית מאז ראשית ימי קידום אתרים בגוגל ישראל. מנטור ויועץ מנוסה ל-SEO ו-Google Ads.
+                מלווה עסקים ישראלים בצמיחה דיגיטלית מאז ימיו הראשונים של קידום האתרים בארץ. יועץ ומנטור מנוסה לקידום אורגני (SEO) וממומן (Google Ads).
               </p>
               <div style={{ display: "flex", gap: "14px", marginTop: "12px", flexWrap: "wrap" }}>
                 <a href="https://www.linkedin.com/in/eitanyariv/" target="_blank" rel="noopener noreferrer" itemProp="sameAs" style={{ display: "inline-flex", alignItems: "center", gap: "6px", fontSize: "0.8rem", color: "var(--muted)", fontFamily: "var(--font-body), sans-serif" }}>

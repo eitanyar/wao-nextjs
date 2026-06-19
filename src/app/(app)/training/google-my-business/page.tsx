@@ -561,8 +561,7 @@ function StaticCourse({ totalLessons }: { totalLessons: number }) {
                 {renderMixed("מומחה שיווק דיגיטלי ו-Local SEO | מייסד WAO | 20+ שנות ניסיון")}
               </div>
               <p className="author-text" itemProp="description">
-                ליוויתי מאות עסקים מקומיים בישראל — מחנות בודדת ועד רשת סניפים — בבניית נוכחות מקומית חזקה.
-                Google My Business הוא לעתים קרובות ההשקעה עם ה-<GT term="ROI">ROI</GT> הגבוה ביותר שאני רואה בשטח.
+                ליוויתי מאות עסקים מקומיים בישראל — מחנות שכונתית ועד רשתות ארציות — בבניית נוכחות דיגיטלית מקומית שמביאה לקוחות. פרופיל העסק בגוגל (GMB) הוא לרוב ערוץ השיווק עם ה-<GT term="ROI">ROI</GT> הגבוה ביותר שאני פוגש בשטח.
               </p>
               <div style={{ display: "flex", gap: "14px", marginTop: "12px", flexWrap: "wrap" }}>
                 <a href="https://www.linkedin.com/in/eitanyariv/" target="_blank" rel="noopener noreferrer" itemProp="sameAs" style={{ display: "inline-flex", alignItems: "center", gap: "6px", fontSize: "0.82rem", color: "var(--muted)", fontFamily: "var(--font-body), sans-serif" }}>
