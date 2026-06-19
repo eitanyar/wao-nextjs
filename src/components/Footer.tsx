@@ -21,6 +21,7 @@ const footerLinks = [
   {
     title: "שירותים נוספים",
     links: [
+      { label: 'מערכת "מה עובד" (CRM)', href: "/maoved" },
       { label: "בניית אתרים ו-LP", href: "/build" },
       { label: "מדיה חברתית", href: "/social" },
       { label: "הכשרות שיווק", href: "/training" },

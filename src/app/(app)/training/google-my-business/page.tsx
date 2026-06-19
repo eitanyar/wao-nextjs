@@ -496,7 +496,7 @@ function StaticCourse({ totalLessons }: { totalLessons: number }) {
                 3 תוצאות על המפה — 40% מכל הקליקים
               </h3>
               <p style={{ color: "var(--muted)", lineHeight: 1.8, fontSize: "0.95rem", fontFamily: "var(--font-body), sans-serif", margin: 0 }}>
-                כשמישהו בתל אביב מחפש "שיפוצניק קרוב אליי" או "רופא שיניים בראשון לציון" — הוא לא גולל לתוצאות האורגניות.
+                כשמישהו בתל אביב מחפש &quot;שיפוצניק קרוב אליי&quot; או &quot;רופא שיניים בראשון לציון&quot; — הוא לא גולל לתוצאות האורגניות.
                 הוא לוחץ על אחד מ-3 העסקים ב-<GT term="Local Pack">Local Pack</GT>.{" "}
                 <strong style={{ color: "var(--text)" }}>כל קליק הוא חינם.</strong>{" "}
                 אין <GT term="CPC">CPC</GT>, אין תקציב יומי, אין <GT term="Smart Bidding">Smart Bidding</GT> — רק פרופיל GMB שעובד.
@@ -551,27 +551,27 @@ function StaticCourse({ totalLessons }: { totalLessons: number }) {
           <div style={{ fontSize: "0.75rem", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--muted)", fontFamily: "var(--font-body), sans-serif", marginBottom: "20px" }} id="author-heading">
             הסמכות המקצועית
           </div>
-          <div style={{ display: "flex", gap: "24px", alignItems: "flex-start", flexWrap: "wrap" }}>
-            <div aria-hidden style={{ width: "72px", height: "72px", borderRadius: "50%", background: "linear-gradient(135deg, var(--accent), #a78bfa)", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "var(--font-rubik), sans-serif", fontWeight: 900, fontSize: "1.4rem", color: "var(--bg)", flexShrink: 0, border: "2px solid var(--accent-border)" }}>
-              א.י
-            </div>
-            <div style={{ flex: 1, minWidth: "220px" }}>
-              <div itemProp="name" style={{ fontFamily: "var(--font-rubik), sans-serif", fontWeight: 800, fontSize: "1.15rem", marginBottom: "4px" }}>
-                איתן יריב
-              </div>
-              <div itemProp="jobTitle" style={{ color: "var(--muted)", fontSize: "0.85rem", fontFamily: "var(--font-body), sans-serif", marginBottom: "12px" }}>
+          <div className="author-bio">
+            <meta itemProp="image" content="https://www.wao.co.il/eitan-yariv.avif" />
+            <div className="author-avatar" role="img" aria-label="איתן יריב" />
+            <div className="author-meta">
+              <div className="author-name" itemProp="name">איתן יריב</div>
+              <div className="author-title" itemProp="jobTitle">
                 מומחה שיווק דיגיטלי ו-Local SEO | מייסד WAO | 20+ שנות ניסיון
               </div>
-              <p itemProp="description" style={{ color: "var(--muted)", lineHeight: 1.75, fontSize: "0.93rem", fontFamily: "var(--font-body), sans-serif", marginBottom: "16px" }}>
+              <p className="author-text" itemProp="description">
                 ליוויתי מאות עסקים מקומיים בישראל — מחנות בודדת ועד רשת סניפים — בבניית נוכחות מקומית חזקה.
                 Google My Business הוא לעתים קרובות ההשקעה עם ה-<GT term="ROI">ROI</GT> הגבוה ביותר שאני רואה בשטח.
               </p>
-              <div style={{ display: "flex", gap: "16px", flexWrap: "wrap" }}>
-                <a href="https://www.linkedin.com/in/eitan-yariv" target="_blank" rel="noopener noreferrer" itemProp="sameAs" style={{ display: "inline-flex", alignItems: "center", gap: "6px", fontSize: "0.82rem", color: "var(--muted)", fontFamily: "var(--font-body), sans-serif" }}>
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+              <div style={{ display: "flex", gap: "14px", marginTop: "12px", flexWrap: "wrap" }}>
+                <a href="https://www.linkedin.com/in/eitanyariv/" target="_blank" rel="noopener noreferrer" itemProp="sameAs" style={{ display: "inline-flex", alignItems: "center", gap: "6px", fontSize: "0.82rem", color: "var(--muted)", fontFamily: "var(--font-body), sans-serif" }}>
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
                     <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 0 1-2.063-2.065 2.064 2.064 0 1 1 2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
                   </svg>
                   LinkedIn
+                </a>
+                <a href="https://qa.askpavel.co.il/user/%D7%90%D7%99%D7%AA%D7%9F+%D7%99%D7%A8%D7%99%D7%91" target="_blank" rel="noopener noreferrer" itemProp="sameAs" style={{ fontSize: "0.82rem", color: "var(--muted)", fontFamily: "var(--font-body), sans-serif" }}>
+                  AskPavel
                 </a>
                 <Link href="/about" style={{ fontSize: "0.82rem", color: "var(--muted)", fontFamily: "var(--font-body), sans-serif" }}>
                   קראו עוד →

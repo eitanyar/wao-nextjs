@@ -5,6 +5,7 @@ import "../globals.css";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import CookieBanner from "@/components/CookieBanner";
+import ExitSurveyPopup from "@/components/ExitSurveyPopup";
 
 const rubik = Rubik({
   subsets: ["hebrew", "latin"],
@@ -24,7 +25,9 @@ export const metadata: Metadata = {
   metadataBase: new URL("https://www.wao.co.il"),
   title: {
     default: "WAO | שיווק דיגיטלי שמביא תוצאות",
-    template: "%s | WAO",
+    // RLM (‏) after %s anchors the title's end to RTL before the Latin brand, so a
+    // title ending in a Latin token (…SEO/…URL) can't bidi-swap with "WAO" in RTL SERPs.
+    template: "%s‏ | WAO",
   },
   description:
     "סוכנות שיווק דיגיטלי מובילה בישראל עם 20+ שנות ניסיון. קידום אתרים, פרסום בגוגל, שיווק תוכן ויעוץ אסטרטגי — ללא חוזה, עם תוצאות.",
@@ -119,6 +122,7 @@ export default function RootLayout({
         <main id="main-content" style={{ flex: 1 }}>{children}</main>
         <Footer />
         <CookieBanner />
+        <ExitSurveyPopup />
         {/* Google Tag Manager */}
         <Script
           id="gtm"

@@ -43,3 +43,13 @@ next-env.d.ts
 payload.db
 payload-types.ts
 src/payload-types.ts
+
+# local secrets and credentials
+client_secrets.json*
+
+# workspace settings and temporary agents
+.claude/
+scratch/
+
+# large generated video assets
+public/videos/

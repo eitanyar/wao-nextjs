@@ -123,7 +123,7 @@ export default function MakeMoneyOnline() {
 
           <div style={{ marginTop: "28px", marginBottom: "32px", padding: "20px 24px", borderRadius: "12px", background: "rgba(245,158,11,0.06)", border: "1px solid rgba(245,158,11,0.2)" }}>
             <p style={{ color: "var(--text)", lineHeight: 1.78, fontSize: "0.95rem", fontFamily: "var(--font-body), sans-serif", margin: 0 }}>
-              <strong style={{ color: "#f59e0b" }}>גילוי נאות ראשון:</strong> רוב המדריכים על "הרוויח כסף מהבית" מרוויחים כסף ממכירת הקורסים שלהם — לא מהשיטות שהם מלמדים.
+              <strong style={{ color: "#f59e0b" }}>גילוי נאות ראשון:</strong> רוב המדריכים על &quot;הרוויח כסף מהבית&quot; מרוויחים כסף ממכירת הקורסים שלהם — לא מהשיטות שהם מלמדים.
               המדריך הזה נכתב מ-17 שנות שיווק דיגיטלי — לא כדי למכור לכם כלום, אלא כדי שתדעו{" "}
               <strong style={{ color: "var(--text)" }}>מה לבחור ולמה.</strong>
             </p>

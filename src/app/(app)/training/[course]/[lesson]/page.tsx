@@ -3,6 +3,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { readFileSync } from "fs";
 import { join } from "path";
+import LessonDashboard from "@/components/LessonDashboard";
+import { renderMixed } from "@/lib/bidi";
 
 export const revalidate = false;
 
@@ -19,7 +21,30 @@ interface Lesson {
   excerpt: string;
   rawHtml: string;
   videoIds?: string[];
-  links?: { label: string; href: string }[];
+  localVideoUrl?: string;
+  links?: { label: string; href: string; isMustWatch?: boolean }[];
+  prerequisites?: string[];
+  activeTask?: string;
+  retrievalCheck?: {
+    question: string;
+    options: string[];
+    correctAnswer: number;
+    explanation?: string;
+  } | {
+    question: string;
+    options: string[];
+    correctAnswer: number;
+    explanation?: string;
+  }[];
+  uiNavigator?: {
+    actionSequence: string[];
+    hebrewGuideUrl: string;
+    hebrewGuideLabel?: string;
+    demoVideoUrl?: string;
+    demoVideoLabel?: string;
+    geminiPrompt: string;
+    troubleshootingExamples: string[];
+  };
 }
 
 type LessonsByCourse = Record<string, Lesson[]>;
@@ -63,7 +88,12 @@ function findLesson(
   const videoEntry = videoLessons.find((v) => decodeURIComponent(v.slug) === decoded);
   if (videoEntry) {
     lesson.videoIds = videoEntry.videoIds;
-    lesson.links = videoEntry.links;
+    lesson.localVideoUrl = videoEntry.localVideoUrl;
+    lesson.links = (videoEntry.links || []).filter((l: any) => !l.href.includes("placeholder-"));
+    lesson.prerequisites = videoEntry.prerequisites || [];
+    lesson.activeTask = videoEntry.activeTask || "";
+    lesson.retrievalCheck = videoEntry.retrievalCheck || undefined;
+    lesson.uiNavigator = videoEntry.uiNavigator || undefined;
   }
 
   return { lesson, lessons };
@@ -131,7 +161,8 @@ export default async function LessonPage({ params }: Props) {
   const canonical = `https://www.wao.co.il/training/${course}/${lesson.slug}`;
   const cleanedHtml = cleanWpHtml(lesson.rawHtml ?? "");
   const readTime = lesson.wordCount > 0 ? `${Math.ceil(lesson.wordCount / 200)} דקות קריאה` : null;
-  const isVideoLesson = (lesson.videoIds?.length ?? 0) > 0 && lesson.wordCount < 150;
+  const hasValidYoutube = (lesson.videoIds ?? []).some(vid => !vid.startsWith("placeholder-"));
+  const isVideoLesson = hasValidYoutube || !!lesson.localVideoUrl;
 
   // Up to 3 other lessons in same course
   const related = lessons
@@ -168,9 +199,58 @@ export default async function LessonPage({ params }: Props) {
     ],
   };
 
+  let graphSchema: Record<string, unknown> | null = null;
+  if (course === "google-ads-course") {
+    const learningResource: Record<string, unknown> = {
+      "@type": "LearningResource",
+      "@id": `${canonical}#resource`,
+      "name": title,
+      "description": lesson.excerpt ? lesson.excerpt.replace(/<[^>]+>/g, "").replace(/\[[^\]]+\]/g, "") : title,
+      "isPartOf": {
+        "@type": "Course",
+        "@id": "https://www.wao.co.il/training/google-ads-course#course",
+        "name": "קורס Google Ads חינם",
+        "description": "קורס Google Ads אסטרטגי מעשי לבעלי עסקים B2C ומשווקים.",
+        "coursePrerequisites": lesson.prerequisites && lesson.prerequisites.length > 0
+          ? lesson.prerequisites.map(p => `https://www.wao.co.il/training/google-ads-course/${p}`)
+          : []
+      }
+    };
+
+    if (lesson.links && lesson.links.length > 0) {
+      learningResource.mentions = lesson.links.map(l => ({
+        "@type": "WebPage",
+        "name": l.label,
+        "url": l.href
+      }));
+    }
+
+    const videoObjects = (lesson.videoIds ?? []).filter(vid => !vid.startsWith("placeholder-")).map((videoId) => ({
+      "@type": "VideoObject",
+      "@id": `${canonical}#video-${videoId}`,
+      "name": title,
+      "description": lesson.excerpt ? lesson.excerpt.replace(/<[^>]+>/g, "").replace(/\[[^\]]+\]/g, "") : title,
+      "thumbnailUrl": `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`,
+      "uploadDate": lesson.date,
+      "embedUrl": `https://www.youtube-nocookie.com/embed/${videoId}`,
+    }));
+
+    graphSchema = {
+      "@context": "https://schema.org",
+      "@graph": [
+        learningResource,
+        ...videoObjects
+      ]
+    };
+  }
+
   return (
     <>
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(articleSchema) }} />
+      {graphSchema ? (
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(graphSchema) }} />
+      ) : (
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(articleSchema) }} />
+      )}
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }} />
 
       {/* ── Hero ── */}
@@ -183,14 +263,14 @@ export default async function LessonPage({ params }: Props) {
             <span className="breadcrumb-sep" aria-hidden>›</span>
             <Link href="/training">הדרכות</Link>
             <span className="breadcrumb-sep" aria-hidden>›</span>
-            <Link href={`/training/${course}`}>{courseLabel}</Link>
+            <Link href={`/training/${course}`}>{renderMixed(courseLabel)}</Link>
             <span className="breadcrumb-sep" aria-hidden>›</span>
-            <span aria-current="page">{title}</span>
+            <span aria-current="page">{renderMixed(title)}</span>
           </nav>
 
           <div style={{ display: "flex", gap: "12px", alignItems: "center", marginBottom: "24px", flexWrap: "wrap" }}>
             <span style={{ padding: "4px 12px", borderRadius: "var(--radius-pill)", background: "var(--accent-dim)", border: "1px solid var(--accent-border)", fontSize: "0.78rem", color: "var(--accent)", fontFamily: "var(--font-body), sans-serif", fontWeight: 600 }}>
-              {courseLabel}
+              {renderMixed(courseLabel)}
             </span>
             <time dateTime={lesson.date} style={{ fontSize: "0.85rem", color: "var(--muted)", fontFamily: "var(--font-body), sans-serif" }}>
               {new Date(lesson.date).toLocaleDateString("he-IL", { day: "numeric", month: "long", year: "numeric" })}
@@ -208,7 +288,7 @@ export default async function LessonPage({ params }: Props) {
           </div>
 
           <h1 style={{ fontFamily: "var(--font-rubik), sans-serif", fontWeight: 900, fontSize: "clamp(1.8rem,4vw,3rem)", lineHeight: 1.12, letterSpacing: "-0.02em" }}>
-            {title}
+            {renderMixed(title)}
           </h1>
         </div>
       </section>
@@ -217,8 +297,22 @@ export default async function LessonPage({ params }: Props) {
       <section style={{ paddingBottom: "clamp(56px,7vw,80px)", background: "var(--surface)" }}>
         <div className="wao-container" style={{ maxWidth: "780px" }}>
 
+          {/* Local MP4 video player */}
+          {lesson.localVideoUrl && (
+            <div
+              style={{ position: "relative", paddingBottom: "56.25%", height: 0, overflow: "hidden", borderRadius: "var(--radius-md)", marginBottom: "2rem", background: "#000" }}
+            >
+              <video
+                src={lesson.localVideoUrl}
+                controls
+                preload="metadata"
+                style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", borderRadius: "var(--radius-md)" }}
+              />
+            </div>
+          )}
+
           {/* YouTube embeds for video lessons */}
-          {(lesson.videoIds ?? []).map((videoId) => (
+          {(lesson.videoIds ?? []).filter(vid => !vid.startsWith("placeholder-")).map((videoId) => (
             <div
               key={videoId}
               style={{ position: "relative", paddingBottom: "56.25%", height: 0, overflow: "hidden", borderRadius: "var(--radius-md)", marginBottom: "2rem" }}
@@ -233,6 +327,21 @@ export default async function LessonPage({ params }: Props) {
               />
             </div>
           ))}
+
+          {/* Lesson Dashboard (Tabs: Prerequisites, Active Task, UI Guides) */}
+          {course === "google-ads-course" && (
+            <div style={{ marginBottom: "2.5rem" }}>
+              <LessonDashboard
+                key={lesson.slug}
+                currentLessonSlug={lesson.slug}
+                lessons={lessons.map((l) => ({ title: decodeTitle(l.title), slug: l.slug }))}
+                uiGuides={lesson.links}
+                activeTask={lesson.activeTask}
+                retrievalCheck={lesson.retrievalCheck}
+                uiNavigator={lesson.uiNavigator}
+              />
+            </div>
+          )}
 
           {cleanedHtml ? (
             <div
@@ -253,7 +362,7 @@ export default async function LessonPage({ params }: Props) {
         <section style={{ padding: "clamp(48px,6vw,72px) 0", background: "var(--elevated)", borderTop: "1px solid var(--border)" }}>
           <div className="wao-container" style={{ maxWidth: "780px" }}>
             <h2 style={{ fontFamily: "var(--font-rubik), sans-serif", fontWeight: 900, fontSize: "clamp(1.1rem,2vw,1.4rem)", letterSpacing: "-0.02em", marginBottom: "20px" }}>
-              שיעורים נוספים ב{courseLabel}
+              שיעורים נוספים ב{renderMixed(courseLabel)}
             </h2>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))", gap: "12px" }}>
               {related.map((l) => (
@@ -263,7 +372,7 @@ export default async function LessonPage({ params }: Props) {
                   style={{ display: "block", background: "var(--surface)", border: "1px solid var(--border)", borderRadius: "var(--radius)", padding: "16px 18px", textDecoration: "none" }}
                 >
                   <div style={{ fontFamily: "var(--font-rubik), sans-serif", fontWeight: 700, fontSize: "0.88rem", color: "var(--text)", lineHeight: 1.45, marginBottom: "6px" }}>
-                    {decodeTitle(l.title)}
+                    {renderMixed(decodeTitle(l.title))}
                   </div>
                   <div style={{ fontSize: "0.75rem", color: "var(--muted)", fontFamily: "var(--font-body), sans-serif" }}>
                     {l.wordCount > 0 ? `${Math.ceil(l.wordCount / 200)} דקות קריאה` : "שיעור וידאו"}
@@ -276,7 +385,7 @@ export default async function LessonPage({ params }: Props) {
                 href={`/training/${course}`}
                 style={{ fontSize: "0.88rem", color: "var(--accent)", fontFamily: "var(--font-body), sans-serif", fontWeight: 600 }}
               >
-                ← כל השיעורים ב{courseLabel}
+                ← כל השיעורים ב{renderMixed(courseLabel)}
               </Link>
             </div>
           </div>
@@ -284,20 +393,28 @@ export default async function LessonPage({ params }: Props) {
       )}
 
       {/* ── Author bio ── */}
-      <section style={{ padding: "clamp(48px,6vw,64px) 0", borderTop: "1px solid var(--border)" }} aria-label="על הכותב">
+      <section style={{ padding: "clamp(48px,6vw,64px) 0", borderTop: "1px solid var(--border)" }} aria-label="על הכותב" itemScope itemType="https://schema.org/Person">
         <div className="wao-container" style={{ maxWidth: "780px" }}>
           <div style={{ fontSize: "0.72rem", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--muted)", fontFamily: "var(--font-body), sans-serif", marginBottom: "16px" }}>
             הסמכות המקצועית
           </div>
-          <div style={{ display: "flex", gap: "20px", alignItems: "flex-start", flexWrap: "wrap" }}>
-            <div aria-hidden style={{ width: "60px", height: "60px", borderRadius: "50%", background: "linear-gradient(135deg, var(--accent), #a78bfa)", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "var(--font-rubik), sans-serif", fontWeight: 900, fontSize: "1.1rem", color: "var(--bg)", flexShrink: 0, border: "2px solid var(--accent-border)" }}>
-              א.י
-            </div>
-            <div style={{ flex: 1, minWidth: "200px" }}>
-              <div style={{ fontFamily: "var(--font-rubik), sans-serif", fontWeight: 800, fontSize: "1rem", marginBottom: "3px" }}>איתן יריב</div>
-              <div style={{ color: "var(--muted)", fontSize: "0.82rem", fontFamily: "var(--font-body), sans-serif", marginBottom: "8px" }}>מומחה שיווק דיגיטלי | מייסד ל-WAO | 20+ שנות ניסיון</div>
-              <div style={{ display: "flex", gap: "14px", flexWrap: "wrap" }}>
-                <a href="https://www.linkedin.com/in/eitanyariv/" target="_blank" rel="noopener noreferrer" style={{ fontSize: "0.8rem", color: "var(--muted)", fontFamily: "var(--font-body), sans-serif" }}>LinkedIn</a>
+          <div className="author-bio">
+            <meta itemProp="image" content="https://www.wao.co.il/eitan-yariv.avif" />
+            <div className="author-avatar" role="img" aria-label="איתן יריב" />
+            <div className="author-meta">
+              <div className="author-name" itemProp="name">איתן יריב</div>
+              <div className="author-title" itemProp="jobTitle">מומחה שיווק דיגיטלי | מייסד WAO | 20+ שנות ניסיון</div>
+              <p className="author-text" itemProp="description">
+                מלווה עסקים ישראלים בצמיחה דיגיטלית מאז ראשית ימי קידום אתרים בגוגל ישראל. מנטור ויועץ מנוסה ל-SEO ו-Google Ads.
+              </p>
+              <div style={{ display: "flex", gap: "14px", marginTop: "12px", flexWrap: "wrap" }}>
+                <a href="https://www.linkedin.com/in/eitanyariv/" target="_blank" rel="noopener noreferrer" itemProp="sameAs" style={{ display: "inline-flex", alignItems: "center", gap: "6px", fontSize: "0.8rem", color: "var(--muted)", fontFamily: "var(--font-body), sans-serif" }}>
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" aria-hidden><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 0 1-2.063-2.065 2.064 2.064 0 1 1 2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" /></svg>
+                  LinkedIn
+                </a>
+                <a href="https://qa.askpavel.co.il/user/%D7%90%D7%99%D7%AA%D7%9F+%D7%99%D7%A8%D7%99%D7%91" target="_blank" rel="noopener noreferrer" itemProp="sameAs" style={{ fontSize: "0.8rem", color: "var(--muted)", fontFamily: "var(--font-body), sans-serif" }}>
+                  AskPavel
+                </a>
                 <Link href="/about" style={{ fontSize: "0.8rem", color: "var(--muted)", fontFamily: "var(--font-body), sans-serif" }}>קראו עוד →</Link>
               </div>
             </div>
