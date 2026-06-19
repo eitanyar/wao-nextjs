@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { renderMixed } from "@/lib/bidi";
 import Link from "next/link";
 import GT from "@/components/GlossaryTerm";
 import LessonGrid from "@/components/LessonGrid";
@@ -481,7 +482,9 @@ export default function AffiliateMarketingGuide() {
             <div className="author-avatar" role="img" aria-label="איתן יריב" />
             <div className="author-meta">
               <div className="author-name" itemProp="name">איתן יריב</div>
-              <div className="author-title" itemProp="jobTitle">מומחה שיווק דיגיטלי | מייסד WAO | 20+ שנות ניסיון</div>
+              <div className="author-title" itemProp="jobTitle">
+                {renderMixed("מומחה שיווק דיגיטלי | מייסד WAO | 20+ שנות ניסיון")}
+              </div>
               <p className="author-text" itemProp="description">
                 עוסק בשיווק דיגיטלי מ-2007. ניהלתי קמפיינים שמשלבים SEO אורגני עם תנועה ממומנת לאתרי שותפים — ויכולתי לראות מקרוב מי מצליח ולמה. המדריך הזה הוא תמצות של מה שעובד בשטח הישראלי.
               </p>

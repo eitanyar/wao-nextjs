@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { renderMixed } from "@/lib/bidi";
 import Link from "next/link";
 import GT from "@/components/GlossaryTerm";
 import LessonGrid from "@/components/LessonGrid";
@@ -557,7 +558,7 @@ function StaticCourse({ totalLessons }: { totalLessons: number }) {
             <div className="author-meta">
               <div className="author-name" itemProp="name">איתן יריב</div>
               <div className="author-title" itemProp="jobTitle">
-                מומחה שיווק דיגיטלי ו-Local SEO | מייסד WAO | 20+ שנות ניסיון
+                {renderMixed("מומחה שיווק דיגיטלי ו-Local SEO | מייסד WAO | 20+ שנות ניסיון")}
               </div>
               <p className="author-text" itemProp="description">
                 ליוויתי מאות עסקים מקומיים בישראל — מחנות בודדת ועד רשת סניפים — בבניית נוכחות מקומית חזקה.

@@ -403,7 +403,9 @@ export default async function LessonPage({ params }: Props) {
             <div className="author-avatar" role="img" aria-label="איתן יריב" />
             <div className="author-meta">
               <div className="author-name" itemProp="name">איתן יריב</div>
-              <div className="author-title" itemProp="jobTitle">מומחה שיווק דיגיטלי | מייסד WAO | 20+ שנות ניסיון</div>
+              <div className="author-title" itemProp="jobTitle">
+                {renderMixed("מומחה שיווק דיגיטלי | מייסד WAO | 20+ שנות ניסיון")}
+              </div>
               <p className="author-text" itemProp="description">
                 מלווה עסקים ישראלים בצמיחה דיגיטלית מאז ראשית ימי קידום אתרים בגוגל ישראל. מנטור ויועץ מנוסה ל-SEO ו-Google Ads.
               </p>

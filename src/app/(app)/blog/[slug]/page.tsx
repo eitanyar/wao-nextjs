@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { renderMixed } from "@/lib/bidi";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { readFileSync } from "fs";
@@ -193,7 +194,9 @@ export default async function PostPage({ params }: Props) {
             <div className="author-avatar" role="img" aria-label="איתן יריב" />
             <div className="author-meta">
               <div className="author-name" itemProp="name">איתן יריב</div>
-              <div className="author-title" itemProp="jobTitle">מומחה שיווק דיגיטלי | מייסד WAO | 20+ שנות ניסיון</div>
+              <div className="author-title" itemProp="jobTitle">
+                {renderMixed("מומחה שיווק דיגיטלי | מייסד WAO | 20+ שנות ניסיון")}
+              </div>
               <p className="author-text" itemProp="description">
                 מלווה עסקים ישראלים בצמיחה דיגיטלית מאז ראשית ימי קידום אתרים בגוגל ישראל. מנטור ויועץ מנוסה ל-SEO ו-Google Ads.
               </p>

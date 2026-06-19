@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { renderMixed } from "@/lib/bidi";
 import Link from "next/link";
 import GT from "@/components/GlossaryTerm";
 import LessonGrid from "@/components/LessonGrid";
@@ -367,7 +368,9 @@ function StaticCourse({ totalLessons }: { totalLessons: number }) {
             <div className="author-avatar" role="img" aria-label="איתן יריב" />
             <div className="author-meta">
               <div className="author-name" itemProp="name">איתן יריב</div>
-              <div className="author-title" itemProp="jobTitle">מומחה Google Ads ו-GTM | מייסד WAO | 20+ שנות ניסיון</div>
+              <div className="author-title" itemProp="jobTitle">
+                {renderMixed("מומחה Google Ads ו-GTM | מייסד WAO | 20+ שנות ניסיון")}
+              </div>
               <p className="author-text" itemProp="description">
                 פיתחתי את שיטות ה-GTM האלה תוך כדי ניהול קמפיינים אמיתיים — כשגיליתי שרוב הבעיות בביצועי Google Ads נובעות מ-Tracking שגוי, לא מהמודעות עצמן.
               </p>

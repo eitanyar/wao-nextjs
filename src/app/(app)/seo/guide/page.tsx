@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { renderMixed } from "@/lib/bidi";
 import Link from "next/link";
 import SiloNav from "@/components/SiloNav";
 import GT from "@/components/GlossaryTerm";
@@ -1022,8 +1023,8 @@ function StaticGuide() {
                 <div className="author-meta">
                   <div className="author-name" itemProp="name">{AUTHOR_NAME}</div>
                   <div className="author-title" itemProp="jobTitle">
-                    מייסד WAO | מומחה SEO ושיווק דיגיטלי מאז 2006
-                  </div>
+                {renderMixed("מייסד WAO | מומחה SEO ושיווק דיגיטלי מאז 2006")}
+              </div>
                   <p className="author-text" itemProp="description">
                     מלווה עסקים ישראלים בצמיחה דיגיטלית מאז ראשית ימי קידום אתרים בגוגל ישראל.
                     מדריך זה מבוסס על ניסיון מעשי עם מאות פרויקטי SEO ב-20+ שנה —

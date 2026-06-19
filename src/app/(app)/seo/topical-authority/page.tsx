@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { renderMixed } from "@/lib/bidi";
 import Link from "next/link";
 import SiloNav from "@/components/SiloNav";
 import GT from "@/components/GlossaryTerm";
@@ -808,8 +809,8 @@ export default function TopicalAuthorityPage() {
                 <div className="author-meta">
                   <div className="author-name" itemProp="name">{AUTHOR_NAME}</div>
                   <div className="author-title" itemProp="jobTitle">
-                    מייסד WAO | מומחה SEO ושיווק דיגיטלי מאז 2006
-                  </div>
+                {renderMixed("מייסד WAO | מומחה SEO ושיווק דיגיטלי מאז 2006")}
+              </div>
                   <p className="author-text" itemProp="description">
                     בניתי Topical Authority לעשרות עסקים ישראלים בתחומים מגוונים.
                     המדריך הזה מסכם את השיטות שעבדו — ואת הטעויות שלמדתי לא לחזור עליהן.

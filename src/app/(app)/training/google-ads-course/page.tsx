@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { renderMixed } from "@/lib/bidi";
 import Link from "next/link";
 import GT from "@/components/GlossaryTerm";
 import LessonGrid from "@/components/LessonGrid";
@@ -1178,7 +1179,7 @@ function StaticCourse({ chapters }: { chapters: typeof CHAPTERS }) {
             <div className="author-meta">
               <div className="author-name" itemProp="name">איתן יריב</div>
               <div className="author-title" itemProp="jobTitle">
-                מומחה Google Ads ו-SEO | מייסד WAO | 20+ שנות ניסיון
+                {renderMixed("מומחה Google Ads ו-SEO | מייסד WAO | 20+ שנות ניסיון")}
               </div>
               <p className="author-text" itemProp="description">
                 ניהלתי קמפיינים ב-Google Ads מאז 2007 — עוד לפני שקראו לזה Adwords. ניהלתי תקציבים של מאות אלפי

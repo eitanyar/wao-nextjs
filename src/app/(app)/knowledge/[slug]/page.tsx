@@ -457,8 +457,8 @@ export default async function KnowledgeArticlePage({
                 <div className="author-meta">
                   <div className="author-name" itemProp="name">איתן יריב</div>
                   <div className="author-title" itemProp="jobTitle">
-                    מייסד WAO | מומחה SEO ושיווק דיגיטלי מאז 2006
-                  </div>
+                {renderMixed("מייסד WAO | מומחה SEO ושיווק דיגיטלי מאז 2006")}
+              </div>
                   <p className="author-text" itemProp="description">
                     כל תכני מאגר הידע נכתבים ונערכים על ידי איתן יריב — מייסד WAO ויועץ SEO
                     בכיר עם 20+ שנות ניסיון. מ-2006 מלווה עסקים ישראלים בקידום אורגני, ומבסס

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { renderMixed } from "@/lib/bidi";
 import Link from "next/link";
 import SiloNav from "@/components/SiloNav";
 import GT from "@/components/GlossaryTerm";
@@ -557,7 +558,7 @@ function StaticPage() {
             <div className="author-meta">
               <div className="author-name" itemProp="name">איתן יריב</div>
               <div className="author-title" itemProp="jobTitle">
-                מייסד WAO | יועץ SEO בכיר ומנחה מאז 2007
+                {renderMixed("מייסד WAO | יועץ SEO בכיר ומנחה מאז 2007")}
               </div>
               <p className="author-text" itemProp="description">
                 מנהל SEO מאז ימי ה-PageRank הידני. ניהל פרויקטי קידום עבור דפי זהב (כיום
