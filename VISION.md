@@ -23,12 +23,50 @@ It is not a chatbot that teaches. It is not a course. It is an AI agent that:
 2. **Educates simply** — Explains each decision in plain language a non-expert understands
 3. **Gets approval** — Requires only a "continue" from the owner
 4. **Executes fully** — Buys the domain, sets the DNS, launches the campaign, optimizes the ad
+## Infrastructure Model — WAO-Managed via Client OAuth
+
+**The rule:** WAO operates everything. Clients own everything.
+
+Each client goes through a **one-time onboarding session** (~10 minutes):
+- Create their own accounts on each required service (bot guides, step by step)
+- Authorize WAO via OAuth or API key (one click per service)
+- Bot stores credentials securely and operates via API forever after
+- Client never touches a technical interface again
+
+**Why this works at 10,000 clients:**
+- Each client's free tier is theirs — not WAO's
+- 10,000 clients = 10,000 separate Cloudflare accounts, each with their own limits
+- WAO's own accounts stay at near-zero usage
+- No infrastructure cost for WAO at any scale
+
+**The property manager model:**
+> WAO holds the keys (OAuth tokens). Each client pays their own utilities (free tiers). WAO manages the property.
+
+**What requires OAuth / API key (one-time setup):**
+- Cloudflare Pages (site deployment)
+- GitHub (version control)
+- Resend / email provider (transactional email)
+- Google Search Console + Analytics (SEO tracking)
+
+**What requires human action (unavoidable, one-time):**
+- Google My Business verification (Google mails a postcard or calls)
+- Google Ads account (TOS agreement + billing)
+- Meta Business account (ID verification for ads)
+- Domain purchase (identity + payment — bot guides, client approves)
+
+---
 
 The interaction model is exactly like Antigravity: the owner says "yes" and things get done.
 
 ### Platform Scope (Execution Layer)
 - Domain registration & DNS management
-- Website / hosting setup
+- Website / hosting setup — **Next.js + Cloudflare Pages**
+  - The bot generates the site from conversation (vibe coding)
+  - GitHub = version control layer (bot handles all commits)
+  - Cloudflare Pages = deployment layer (auto-deploys, free forever)
+  - **The bot IS the CMS** — owner never logs into a dashboard; all updates through conversation
+  - **Scales with subscription tier:** static export (Tier 1) → dynamic blog (Tier 2) → full Next.js app (Tier 3)
+  - Same codebase, same repo — no rebuild needed when client upgrades
 - Google Ads (Search, PMax, Shopping, Display)
 - SEO (technical, on-page, content)
 - Google My Business / GEO
