@@ -812,9 +812,9 @@ export default function TopicalAuthorityPage() {
                 {renderMixed("מייסד WAO | מומחה SEO ושיווק דיגיטלי מאז 2006")}
               </div>
                   <p className="author-text" itemProp="description">
-                    בניתי Topical Authority לעשרות עסקים ישראלים בתחומים מגוונים.
-                    המדריך הזה מסכם את השיטות שעבדו — ואת הטעויות שלמדתי לא לחזור עליהן.
-                    ארכיטקטורת Content Silo היא ההשקעה הטובה ביותר ב-SEO ב-2026.
+                    בניתי אסטרטגיות סמכות נושאית (Topical Authority) עבור עשרות עסקים ישראלים במגוון תחומים.
+                    המדריך הזה מסכם את שיטות העבודה שעובדות בשטח — ואת הטעויות שלמדתי להימנע מהן.
+                    ארכיטקטורת Content Silo נכונה היא ההשקעה הטובה ביותר שתוכלו לעשות עבור ה-SEO שלכם ב-2026.
                   </p>
                   <div style={{ display: "flex", gap: "14px", marginTop: "12px", flexWrap: "wrap" }}>
                     <a href={SAME_AS[0]} target="_blank" rel="noopener noreferrer" itemProp="sameAs"

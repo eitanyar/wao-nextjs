@@ -1026,9 +1026,9 @@ function StaticGuide() {
                 {renderMixed("מייסד WAO | מומחה SEO ושיווק דיגיטלי מאז 2006")}
               </div>
                   <p className="author-text" itemProp="description">
-                    מלווה עסקים ישראלים בצמיחה דיגיטלית מאז ראשית ימי קידום אתרים בגוגל ישראל.
-                    מדריך זה מבוסס על ניסיון מעשי עם מאות פרויקטי SEO ב-20+ שנה —
-                    מאינדקסים ראשונים ועד AI Overviews.
+                    מלווה עסקים ישראלים בצמיחה דיגיטלית מאז ראשית ימי ה-SEO בארץ.
+                    מדריך זה מבוסס על ניסיון מעשי עם מאות פרויקטי קידום לאורך מעל 20 שנה —
+                    מימי האינדקסים הראשונים ועד לעידן ה-AI Overviews.
                   </p>
                   <div style={{ display: "flex", gap: "14px", marginTop: "12px", flexWrap: "wrap" }}>
                     <a href={SAME_AS[0]} target="_blank" rel="noopener noreferrer" itemProp="sameAs"
