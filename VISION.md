@@ -106,6 +106,21 @@ International (English-speaking markets)
 - [ ] Build the approval/execution loop ("continue" UX)
 - [ ] Connect first platform integrations (Domain registrar + Google Ads API)
 
+### Phase 1 — Trust & Funnel (Parallel to Bot Build)
+
+> **Priority course: "Agentic Website Building + SEO in the Age of AI"**
+> This is the highest-priority content mission — even more foundational than the Google Ads course.
+>
+> **Why:** It targets the exact SMB audience the bot is built for. Someone who watches this course and builds their site with AI guidance is experiencing — manually — the exact flow the bot will automate for them. The course is simultaneously:
+> - The trust layer (demonstrates WAO's expertise)
+> - The funnel top (drives the right audience)
+> - A live prototype of Bot Flow A (domain → website → SEO)
+
+- [ ] Design curriculum: Agentic Website Building + SEO (hands-on, AI-native, zero jargon)
+- [ ] Produce course (Dror/Yonatan brief → Gil scripts → Noa QA → ElevenLabs → publish)
+- [ ] Build course landing page on WAO
+
+
 ### Phase 2 — Trial & Validation
 - [ ] Launch free limited trial
 - [ ] Run mass webinar onboarding
