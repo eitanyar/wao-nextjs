@@ -58,6 +58,21 @@ Each client goes through a **one-time onboarding session** (~10 minutes):
 
 The interaction model is exactly like Antigravity: the owner says "yes" and things get done.
 
+### Interaction Model — Voice First
+
+> **הדרך המועדפת לדבר עם הסוכן החכם של WAO היא קולית.**
+> הקלדה היא fallback — רק כשאין ברירה אחרת.
+
+The WAO bot is designed to be operated primarily by voice. This is not a UX preference — it is a product principle:
+
+- A small business owner driving between jobs, waiting in a clinic, or finishing a meeting should be able to say **"WAO, תבדוק לי את הקמפיין"** and get a spoken response.
+- The orchestrator agent manages all sub-agents and executes the full digital stack — all of this should be triggerable and reviewable without the owner ever touching a keyboard.
+- Voice removes the last friction point: even a non-technical owner can operate an AI CMO.
+
+**Design constraint for Phase 1:**
+Every bot flow must be completable end-to-end by voice. Text input is a valid fallback but must never be the only path.
+
+
 ### Platform Scope (Execution Layer)
 - Domain registration & DNS management
 - Website / hosting setup — **Next.js + Cloudflare Pages**
