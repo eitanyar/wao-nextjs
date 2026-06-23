@@ -90,7 +90,7 @@ const TRACKS: Track[] = [
         title: 'קורס "מה עובד"',
         subtitle: "מעקב המרות וניהול לידים",
         desc: "איך להטמיע את מערכת 'מה עובד', לחבר מספרים וירטואליים דינמיים, לעקוב אחר טפסים ולשדר ערך המרה אמיתי לגוגל Ads ופייסבוק.",
-        href: "/training/maoved-course",
+        href: null,
         lessons: null,
         totalLessons: null,
         level: "מתחיל",

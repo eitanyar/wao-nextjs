@@ -65,6 +65,7 @@ Hard Rules for Editing Narration (Video Pipeline):
    - **ניקוד סלקטיבי ממוקד**: הוספת ניקוד סלקטיבי למילים בעלות עמימות גבוהה שאין דרך לעקוף אותן במילים נרדפות. (למשל: `לוּחַ` למניעת הגייה כחולם, `היכֵרות` לווידוא צירה בכ', `רְשום` לווידוא שווא ב-ר').
    - **ו"ו החיבור בשורוק (Conjunctive Vav)**: לפני אותיות עם שווא (כמו "ולידים") או אותיות בומ"פ, יש לנקד את ו"ו החיבור בשורוק (`וּלידים`, `וּבנוסף`, `וּלחסום`) כדי לוודא הגייה של "U".
    - **מעקף מילים בעייתיות (Synonym Bypasses)**: אם מילה מסוימת נוטה להתעוות ב-TTS וקשה לנקד אותה (כמו "מילא" בתוך "מילא טופס"), יש להחליפה במילה נרדפת טבעית וחד-משמעית להגייה (כמו "השאיר פרטים" או "שלח טופס").
+6. **Slide-Level Audio Feedback Gate (Google TTS)**: When testing with Google TTS, Eitan will provide an audio file with the exact desired pronunciation if the TTS fails. You MUST listen to this audio file, understand the specific phonetic correction Eitan is requesting, and apply "Phonetic Patches" to the Marp markdown. A Phonetic Patch might involve spelling a Hebrew word with English letters, adding specific Niqqud, or replacing the word entirely, just to force Google TTS to pronounce it the way Eitan spoke it in the audio file.
 
 Constraints:
 - DO NOT change the pedagogy, the slide titles, the bullet points, or the markdown structure. Touch ONLY the `🎙️ Narration` blocks.
@@ -346,3 +347,81 @@ Position in the Team
 - Receives mission proposals from Eitan (directly) or from Adam (when Adam is unsure what to work on next)
 - Hands ranked, dependency-checked mission briefs to Adam for execution routing
 - Reports blockers and strategic drift back to Eitan only
+
+---
+
+# Pipeline Hard Rules (Course Production)
+
+## QA Language Rule — MANDATORY
+All Hebrew language QA must use the noa-voice-director typed subagent exclusively.
+- NEVER use self type for language/TTS QA — it inherits the wrong system prompt and model
+- noa-voice-director = Claude 3.5 Sonnet + dedicated Hebrew TTS system prompt
+- This applies even for quick re-proofs or minor edits — no exceptions
+- Violation: missed errors like ambiguous words (e.g. 'prt' instead of 'prtzu') that cost ElevenLabs credits to re-render
+
+## TTS Test Rule — Credit Protection
+TTS spike tests must use a maximum of 1-2 sentences, not a full slide.
+- Test text: a fixed short Hebrew sentence only
+- Confirm short test works before running any full narration block
+- Never run full slides to test voice or model settings
+
+## ElevenLabs Technical Rules
+- Direct HTTP requests only — SDK v2.53.0 corrupts audio output
+- Voice ID: bfGb7JTLUnZebZRiFYyq (Adam)
+- Model: eleven_v3
+- Stability: 0.5, similarity_boost: 0.75
+- Do NOT use eleven_multilingual_v2 or eleven_multilingual_v3
+
+## Render Pipeline Rules
+- Video assembly: ffmpeg concat demuxer only (MoviePy takes 14+ hours — do not use)
+- Slide PNG mapping: content slides at index i*2+1 (0-based). Index 0 and last index are blank Marp artifacts
+- Never re-run TTS for slides whose narration text was not changed
+
+## Marp v4 Rule
+Frontmatter --- must be the absolute first bytes of the .md file.
+Any HTML comment, blank line, or text before it silently breaks all CSS (no background, no RTL).
+All lesson templates must start with --- on line 1.
+
+## Lesson Format Standard (All Courses)
+Narration belongs inside Marp native presenter notes — NOT in separate --- slides.
+
+Correct format:
+
+
+Why:
+- marp --html gives a full RTL presenter view for QA (press P in browser)
+- Marp renders only content slides as PNGs — no i*2 mapping problem ever again
+- Works identically across Google Ads course, website course, all future courses
+
+QA flow for every lesson:
+1. marp --html lesson.md -o scratch/lesson-preview.html
+2. Open in Chrome, press P for presenter mode
+3. Review narration in Hebrew RTL alongside each slide
+4. Fix issues BEFORE any ElevenLabs call
+
+This replaces the custom view_narration.py approach.
+
+
+## Lesson Format Standard (All Courses)
+Narration belongs inside Marp native presenter notes, NOT in separate --- slides.
+
+Correct format per slide:
+
+  ## Slide Title
+  - bullet 1
+  - bullet 2
+
+  <!-- narration text here, one sentence per line -->
+
+  ---
+
+Benefits:
+- marp --html generates a full RTL presenter view for QA (open in Chrome, press P)
+- Marp renders ONLY content slides as PNGs - no slide/audio mismatch ever again
+- Works identically across all courses
+
+QA flow for every lesson (mandatory before any ElevenLabs call):
+1. marp --html lesson.md -o scratch/lesson-preview.html
+2. Open in Chrome, press P for presenter mode
+3. Read narration in Hebrew RTL alongside each slide
+4. Fix all issues BEFORE spending credits

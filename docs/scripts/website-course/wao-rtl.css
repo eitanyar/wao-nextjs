@@ -1,0 +1,23 @@
+/* @theme wao-rtl */
+/* WAO course dark RTL theme for Marp */
+
+@import 'default';
+
+section {
+  direction: rtl;
+  text-align: right;
+  font-family: 'Arial', 'DejaVu Sans', 'Liberation Sans', sans-serif;
+  background-color: #0b0f19;
+  color: #eee9e2;
+  font-size: 28px;
+  padding: 40px;
+}
+h1 { color: #4ae3b5; font-size: 48px; text-align: right; }
+h2 { color: #4ae3b5; font-size: 36px; text-align: right; }
+h3 { color: #ffd000; font-size: 28px; text-align: right; }
+ul, ol { margin-right: 35px; margin-left: 0; text-align: right; }
+li { margin-bottom: 12px; }
+table { width: 100%; border-collapse: collapse; margin-top: 20px; background-color: #131620; }
+th { background-color: #131620; color: #4ae3b5; border: 1px solid #181B27; padding: 10px; }
+td { background-color: #131620; color: #eee9e2; border: 1px solid #181B27; padding: 10px; }
+tr:nth-child(2n) td { background-color: #181b27; }

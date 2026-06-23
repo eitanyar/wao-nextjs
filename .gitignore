@@ -52,4 +52,13 @@ client_secrets.json*
 scratch/
 
 # large generated video assets
-public/videos/
+/public/videos/
+
+# render pipeline working directory
+/output/
+
+# temp/backup files
+*.bak
+*.mp4
+__pycache__/
+*.pyc
