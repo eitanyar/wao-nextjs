@@ -47,7 +47,7 @@ const courseListSchema = {
 // ── Course data ────────────────────────────────────────────────────────────────
 
 interface Course {
-  title: string; subtitle: string; desc: string; href: string;
+  title: string; subtitle: string; desc: string; href: string | null;
   lessons: number | null; totalLessons: number | null;
   level: string; live: boolean; icon: string; tags: string[];
   isNew?: boolean;
@@ -432,8 +432,8 @@ export default function TrainingHub() {
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))", gap: "16px" }}>
                 {track.courses.map((course) => (
                   <Link
-                    key={course.href}
-                    href={course.href}
+                    key={course.href ?? course.title}
+                    href={course.href ?? "#"}
                     style={{
                       display: "flex",
                       flexDirection: "column",
