@@ -41,31 +41,52 @@ export default function ExitSurveyPopup() {
     const hasBeenShown = sessionStorage.getItem('wao_exit_survey_shown');
     if (hasBeenShown === 'true') return;
 
-    // 1. Exit intent trigger (desktop mouse leave)
-    const handleMouseLeave = (e: MouseEvent) => {
-      // If the mouse is moving into an iframe (like a YouTube video embed), do not trigger exit intent
-      const target = e.relatedTarget as HTMLElement | null;
-      if (target && target.tagName === 'IFRAME') {
-        return;
-      }
+    const isMobile =
+      typeof navigator !== 'undefined' &&
+      (/Mobi|Android/i.test(navigator.userAgent) || window.innerWidth < 768);
 
-      if (e.clientY < 20) {
+    // Minimum time on page before any trigger (15 seconds)
+    const pageLoadTime = Date.now();
+    const MIN_TIME_MS = 15_000;
+
+    if (!isMobile) {
+      // ── Desktop: exit intent ────────────────────────────────────────────
+      // Only fires when the cursor truly exits the viewport from the TOP
+      // (i.e. heading toward the browser address bar / tab bar).
+      // clientY <= 0 means the cursor crossed the very top edge of the viewport.
+      const handleMouseLeave = (e: MouseEvent) => {
+        // Ignore moves into iframes (e.g. YouTube embeds)
+        const target = e.relatedTarget as HTMLElement | null;
+        if (target && target.tagName === 'IFRAME') return;
+
+        // Must be exiting from the top edge only
+        if (e.clientY > 0) return;
+
+        // Must have spent at least 15 s on the page
+        if (Date.now() - pageLoadTime < MIN_TIME_MS) return;
+
         openPopup();
-      }
-    };
+      };
 
-    // 2. Mobile trigger (time delay of 30 seconds)
-    const mobileTimeout = setTimeout(() => {
-      openPopup();
-    }, 30000);
+      document.addEventListener('mouseleave', handleMouseLeave);
+      return () => document.removeEventListener('mouseleave', handleMouseLeave);
+    } else {
+      // ── Mobile: time-based only (60 s), with scroll-depth guard ─────────
+      // mouseleave is NOT used on mobile — touch events fire it unreliably
+      // during normal scrolling and swipe gestures.
+      // The popup only appears after 60 seconds AND if the user has scrolled
+      // at least 30% of the page (proving genuine engagement, not a bounce).
+      const mobileTimeout = setTimeout(() => {
+        const scrollDepth = window.scrollY / (document.body.scrollHeight - window.innerHeight || 1);
+        if (scrollDepth >= 0.30) {
+          openPopup();
+        }
+      }, 60_000);
 
-    document.addEventListener('mouseleave', handleMouseLeave);
-
-    return () => {
-      document.removeEventListener('mouseleave', handleMouseLeave);
-      clearTimeout(mobileTimeout);
-    };
+      return () => clearTimeout(mobileTimeout);
+    }
   }, []);
+
 
   // Accessibility: Handle escape key and focus trap
   useEffect(() => {
