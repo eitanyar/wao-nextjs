@@ -7,6 +7,15 @@ This version has breaking changes — APIs, conventions, and file structure may 
 # This is NOT the Next.js you know
 
 This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` before writing any code. Heed deprecation notices.
+# Communication Language — Hard Rule
+
+**All agent responses MUST be written in English.**
+
+- Eitan may ask in Hebrew, English, or any mix — agents always respond in English.
+- This applies to ALL agents: Antigravity, subagents, orchestrator, and all named WAO agents.
+- No exceptions. Mixed Hebrew/English responses create confusion and are not acceptable.
+- Hebrew text is only permitted inside content being *created* (e.g., a narration script, copy for the Israeli site, an SSML patch) — never in the agent's own prose response to Eitan.
+
 # WAO Agent Team — Full Definitions
 
 ---
