@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { renderMixed } from "@/lib/bidi";
-import { WEBSITE_COURSE_MODULES } from "@/data/website-course-data";
+import { WEBSITE_COURSE_MODULES, WEBSITE_COURSE_LESSONS } from "@/data/website-course-data";
+import WebsiteCourseModuleList from "@/components/WebsiteCourseModuleList";
 
 export const metadata: Metadata = {
   title: "קורס בניית אתרים + קידום עם AI — WAO",
@@ -18,9 +19,9 @@ export const metadata: Metadata = {
   },
 };
 
-const totalLessons = WEBSITE_COURSE_MODULES.reduce((n, m) => n + m.lessons.length, 0);
-
 export default function WebsiteCoursePage() {
+  const totalLessons = WEBSITE_COURSE_LESSONS.length;
+
   return (
     <>
       {/* ── Hero ── */}
@@ -56,7 +57,7 @@ export default function WebsiteCoursePage() {
             <span aria-current="page">קורס בניית אתרים + AI</span>
           </nav>
 
-          {/* Badge */}
+          {/* Badges */}
           <div style={{ display: "flex", gap: "12px", flexWrap: "wrap", marginBottom: "24px" }}>
             <span
               style={{
@@ -116,162 +117,10 @@ export default function WebsiteCoursePage() {
         </div>
       </section>
 
-      {/* ── Modules ── */}
+      {/* ── Modules (client component for hover effects) ── */}
       <section style={{ paddingBottom: "clamp(56px,7vw,80px)", background: "var(--surface)" }}>
         <div className="wao-container" style={{ maxWidth: "820px" }}>
-          {WEBSITE_COURSE_MODULES.map((module) => (
-            <div key={module.num} style={{ marginBottom: "3rem" }}>
-              {/* Module header */}
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "14px",
-                  marginBottom: "1.5rem",
-                  paddingBottom: "1rem",
-                  borderBottom: `2px solid ${module.color}22`,
-                }}
-              >
-                <span style={{ fontSize: "1.8rem" }}>{module.icon}</span>
-                <div>
-                  <div
-                    style={{
-                      fontSize: "0.72rem",
-                      fontWeight: 700,
-                      letterSpacing: "0.08em",
-                      color: module.color,
-                      textTransform: "uppercase",
-                      fontFamily: "var(--font-body), sans-serif",
-                      marginBottom: "2px",
-                    }}
-                  >
-                    מודול {module.num} — {module.subtitle}
-                  </div>
-                  <div
-                    style={{
-                      fontFamily: "var(--font-rubik), sans-serif",
-                      fontWeight: 700,
-                      fontSize: "1.15rem",
-                    }}
-                  >
-                    {renderMixed(module.title)}
-                  </div>
-                </div>
-              </div>
-
-              {/* Lessons */}
-              <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-                {module.lessons.map((lesson, idx) => (
-                  <Link
-                    key={lesson.slug}
-                    href={`/training/website-course/${lesson.slug}`}
-                    style={{ textDecoration: "none" }}
-                  >
-                    <div
-                      style={{
-                        background: "var(--card)",
-                        border: "1px solid var(--border)",
-                        borderRadius: "var(--radius-md)",
-                        padding: "20px 24px",
-                        display: "flex",
-                        gap: "20px",
-                        alignItems: "center",
-                        transition: "border-color 0.2s, box-shadow 0.2s",
-                        cursor: "pointer",
-                      }}
-                      onMouseEnter={(e) => {
-                        (e.currentTarget as HTMLElement).style.borderColor = module.color + "88";
-                        (e.currentTarget as HTMLElement).style.boxShadow = `0 4px 24px ${module.color}15`;
-                      }}
-                      onMouseLeave={(e) => {
-                        (e.currentTarget as HTMLElement).style.borderColor = "var(--border)";
-                        (e.currentTarget as HTMLElement).style.boxShadow = "none";
-                      }}
-                    >
-                      {/* Thumbnail */}
-                      <div
-                        style={{
-                          flexShrink: 0,
-                          width: "120px",
-                          height: "68px",
-                          borderRadius: "var(--radius-sm)",
-                          overflow: "hidden",
-                          background: "#0b0f19",
-                          position: "relative",
-                        }}
-                      >
-                        <img
-                          src={lesson.thumbnail}
-                          alt={lesson.title}
-                          style={{ width: "100%", height: "100%", objectFit: "cover" }}
-                        />
-                        <div
-                          style={{
-                            position: "absolute",
-                            inset: 0,
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            background: "rgba(0,0,0,0.25)",
-                          }}
-                        >
-                          <span style={{ fontSize: "1.4rem" }}>▶</span>
-                        </div>
-                      </div>
-
-                      {/* Text */}
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <div
-                          style={{
-                            fontSize: "0.75rem",
-                            color: module.color,
-                            fontWeight: 600,
-                            marginBottom: "4px",
-                            fontFamily: "var(--font-body), sans-serif",
-                          }}
-                        >
-                          שיעור {idx + 1} · {lesson.duration}
-                        </div>
-                        <div
-                          style={{
-                            fontFamily: "var(--font-rubik), sans-serif",
-                            fontWeight: 700,
-                            fontSize: "1rem",
-                            marginBottom: "6px",
-                            whiteSpace: "nowrap",
-                            overflow: "hidden",
-                            textOverflow: "ellipsis",
-                          }}
-                        >
-                          {renderMixed(lesson.title)}
-                        </div>
-                        <div
-                          style={{
-                            fontSize: "0.85rem",
-                            color: "var(--muted)",
-                            fontFamily: "var(--font-body), sans-serif",
-                            whiteSpace: "nowrap",
-                            overflow: "hidden",
-                            textOverflow: "ellipsis",
-                          }}
-                        >
-                          {renderMixed(lesson.description)}
-                        </div>
-                      </div>
-
-                      {/* Arrow */}
-                      <span
-                        style={{ color: "var(--muted)", fontSize: "1.2rem", flexShrink: 0 }}
-                        aria-hidden
-                      >
-                        ‹
-                      </span>
-                    </div>
-                  </Link>
-                ))}
-              </div>
-            </div>
-          ))}
+          <WebsiteCourseModuleList modules={WEBSITE_COURSE_MODULES} />
         </div>
       </section>
     </>
