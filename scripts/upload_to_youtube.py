@@ -131,8 +131,11 @@ def main():
         print(f"Error: Lesson '{args.slug}' does not have a localVideoUrl configured.")
         sys.exit(1)
         
-    # Standardize path: localVideoUrl has a leading slash, resolve relative to public/
-    full_video_path = os.path.join("public", local_video_path.lstrip("/"))
+    # Standardize path: if absolute filesystem path use directly; otherwise resolve relative to public/
+    if os.path.isabs(local_video_path):
+        full_video_path = local_video_path
+    else:
+        full_video_path = os.path.join("public", local_video_path.lstrip("/"))
     if not os.path.exists(full_video_path):
         print(f"Error: Video file {full_video_path} not found.")
         sys.exit(1)
@@ -145,19 +148,21 @@ def main():
     if len(title) > 100:
         title = title[:97] + "..."
     
-    # Generate description incorporating resources/links
-    description_lines = [
-        f"שיעור מתוך קורס Google Ads המעשי.",
-        "",
-        target_entry.get("activeTask", ""),
-        "",
-        "קישורים ומשאבים המוזכרים בשיעור:"
-    ]
-    for link in target_entry.get("links", []):
-        description_lines.append(f"- {link['label']}: {link['href']}")
-        
-    description = "\n".join(description_lines)
-    tags = ["גוגל אדס", "פרסום בגוגל", "Google Ads", "שיווק דיגיטלי"]
+    # Use custom description from entry if present
+    if target_entry.get("description"):
+        description = target_entry["description"]
+    else:
+        description_lines = [
+            f"שיעור מתוך קורס Google Ads המעשי.",
+            "",
+            target_entry.get("activeTask", ""),
+            "",
+            "קישורים ומשאבים המוזכרים בשיעור:"
+        ]
+        for link in target_entry.get("links", []):
+            description_lines.append(f"- {link['label']}: {link['href']}")
+        description = "\n".join(description_lines)
+    tags = target_entry.get("tags") or ["גוגל אדס", "פרסום בגוגל", "Google Ads", "שיווק דיגיטלי"]
     
     # 5. Upload video
     video_id = upload_video(youtube, full_video_path, title, description, tags)
