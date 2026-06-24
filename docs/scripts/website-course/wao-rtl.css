@@ -15,6 +15,7 @@ section {
 h1 { color: #4ae3b5; font-size: 48px; text-align: right; }
 h2 { color: #4ae3b5; font-size: 36px; text-align: right; }
 h3 { color: #ffd000; font-size: 28px; text-align: right; }
+h4 { color: #4ae3b5; font-size: 24px; text-align: right; font-weight: 600; }
 ul, ol { margin-right: 35px; margin-left: 0; text-align: right; }
 li { margin-bottom: 12px; }
 table { width: 100%; border-collapse: collapse; margin-top: 20px; background-color: #131620; }
