@@ -171,7 +171,7 @@ export default async function WebsiteLessonPage({ params }: Props) {
             }}
           >
             <iframe
-              src={`https://www.youtube-nocookie.com/embed/${lesson.videoId}`}
+              src={`https://www.youtube.com/embed/${lesson.videoId}`}
               title={lesson.title}
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
               allowFullScreen
