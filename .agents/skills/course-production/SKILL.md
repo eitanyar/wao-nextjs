@@ -326,11 +326,28 @@ published               → YouTube uploaded + website embedded
 
 | Priority | Step | Current | Target |
 |----------|------|---------|--------|
-| 🔴 High | Thumbnail 16:9 resize | Manual Python | Add as Step E.5 in render_lesson.py |
-| 🟡 Med | YouTube upload | Manual | YouTube Data API v3 (10/day limit → graceful fallback) |
-| 🟡 Med | Website embed | Manual file edit | Script patches video-map.json with YouTube ID |
+| ✅ Done | Thumbnail 16:9 resize | Pillow in render_lesson.py | ✅ Automated |
+| ✅ Done | YouTube upload | `scripts/upload_to_youtube.py` | ✅ API (10/day limit) |
+| ✅ Done | Website embed | `website-course-data.ts` + auto-page | ✅ Add slug to data file → done |
 | 🟢 Low | ASR verification | Not done | Whisper ASR vs. input narration text |
 | 🟢 Low | Pre-render lint | Manual review | Auto-flag slides with >4 bullets before Marp render |
 
-**Priority 1** (thumbnail resize) is 5 lines of Pillow code in `render_lesson.py`.
-It should be the next code change to the render script.
+---
+
+## DEPLOY
+
+After committing and pushing all changes, deploy to production via SSH:
+
+```bash
+ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=no wao@91.98.195.242 \
+  'bash /home/wao/htdocs/www.wao.co.il/deploy.sh'
+```
+
+- Server: `91.98.195.242` (origin behind Cloudflare — use IP directly, not domain)
+- User: `wao`
+- Key: `~/.ssh/id_ed25519` (WSL)
+- Script path: `/home/wao/htdocs/www.wao.co.il/deploy.sh`
+- The script: `git pull` → `npm ci` → `npm run build` → copy static → `pm2 restart wao-app`
+- Build takes ~3–4 minutes on the server (1 worker vs 7 local)
+- Verify after deploy: `curl -sI https://www.wao.co.il/training/website-course | grep HTTP` → expect `HTTP/2 200`
+
