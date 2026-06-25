@@ -11,7 +11,7 @@ from googleapiclient.discovery import build
 from googleapiclient.http import MediaFileUpload
 
 # Scopes required for uploading to YouTube
-SCOPES = ['https://www.googleapis.com/auth/youtube.upload']
+SCOPES = ['https://www.googleapis.com/auth/youtube', 'https://www.googleapis.com/auth/youtube.upload']
 
 def get_authenticated_service(client_secrets_file, token_file):
     creds = None
@@ -35,12 +35,8 @@ def get_authenticated_service(client_secrets_file, token_file):
                 print("Please follow the instructions to download client_secrets.json from Google Cloud Console.")
                 sys.exit(1)
             flow = InstalledAppFlow.from_client_secrets_file(client_secrets_file, SCOPES)
-            # Run local server for auth
-            creds = flow.run_local_server(
-                port=0, 
-                authorization_prompt_message="Please visit this URL to authorize YouTube upload: {url}",
-                success_message="The authorization flow was completed. You can close this window."
-            )
+            # Console flow — WSL compatible (prints URL, user pastes code)
+            creds = flow.run_console()
         # Save the credentials for the next run
         os.makedirs(os.path.dirname(token_file), exist_ok=True)
         with open(token_file, 'w', encoding='utf-8') as f:
@@ -62,7 +58,8 @@ def upload_video(youtube, file_path, title, description, tags=None):
             'categoryId': '27' # Education category
         },
         'status': {
-            'privacyStatus': 'public', # Make it public
+            'privacyStatus': 'public',
+            'embeddable': True,          # Required — prevents Error 153 in embedded player
             'selfDeclaredMadeForKids': False
         }
     }
