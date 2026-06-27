@@ -62,3 +62,6 @@ scratch/
 *.mp4
 __pycache__/
 *.pyc
+
+# CRM data — never overwrite production leads on deploy
+src/data/leads.json
