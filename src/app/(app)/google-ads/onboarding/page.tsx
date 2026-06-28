@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
+import type { CollectedData } from "@/lib/bot/prompts";
 
 interface Message {
   role: "user" | "assistant" | "system";
@@ -28,16 +29,12 @@ export default function OnboardingPage() {
     {
       role: "assistant",
       content:
-        "שלום! אני אדם, מנהל ה-Google Ads הדיגיטלי שלך ב-WAO. בוא נקים לך קמפיין מנצח שמביא לקוחות משלמים. בשלב ראשון, ספר לי בבקשה - מה העסק שלך או איזה שירות נרצה לקדם?",
+        "שלום, אני אדם — מנהל ה-Google Ads שלך כאן ב-WAO. בוא נבנה לך קמפיין ביחד: אני אשאל אותך כמה שאלות קצרות, ומהתשובות שלך ניצור קמפיין שמביא לקוחות משלמים, לא סתם קליקים. אז נתחיל מהבסיס — במה העסק שלך עוסק, ואיזה שירות נרצה לקדם?",
     },
   ]);
   const [inputValue, setInputValue] = useState("");
   const [currentState, setCurrentState] = useState<"DIAGNOSING" | "STRATEGIZING" | "REVIEWING" | "COMPLETED">("DIAGNOSING");
-  const [collectedData, setCollectedData] = useState<{
-    businessNiche?: string;
-    targetLocation?: string;
-    monthlyBudget?: number;
-  }>({});
+  const [collectedData, setCollectedData] = useState<CollectedData>({});
 
   const [strategy, setStrategy] = useState<CampaignStrategy | null>(null);
   const [copy, setCopy] = useState<CampaignCopy | null>(null);
@@ -184,7 +181,7 @@ export default function OnboardingPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           amount: 9.9,
-          businessName: collectedData.businessNiche || "קמפיין Google Ads"
+          businessName: collectedData.businessName || collectedData.businessNiche || "קמפיין Google Ads"
         }),
       });
 
@@ -441,76 +438,79 @@ export default function OnboardingPage() {
               <h3 style={{ fontSize: "1.05rem", fontWeight: 700, marginBottom: "16px" }}>
                 שלבי אפיון הקמפיין
               </h3>
-              <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                  <div
-                    style={{
-                      width: "20px",
-                      height: "20px",
-                      borderRadius: "50%",
-                      background: collectedData.businessNiche ? "var(--accent)" : "var(--border)",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      fontSize: "0.75rem",
-                      color: "var(--bg)",
-                      fontWeight: "bold",
-                    }}
-                  >
-                    {collectedData.businessNiche ? "✓" : "1"}
+              <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                {[
+                  {
+                    label: "פרטי העסק",
+                    done: !!collectedData.businessNiche,
+                    value: collectedData.businessName
+                      ? `${collectedData.businessName} (${collectedData.businessNiche})`
+                      : collectedData.businessNiche,
+                    num: 1,
+                  },
+                  {
+                    label: "מיקום ומודל שירות",
+                    done: !!collectedData.targetLocation,
+                    value: collectedData.targetLocation,
+                    num: 2,
+                  },
+                  {
+                    label: "פרופיל לקוח ובידול",
+                    done: !!collectedData.usp,
+                    value: collectedData.usp ? collectedData.usp.slice(0, 40) + (collectedData.usp.length > 40 ? "…" : "") : undefined,
+                    num: 3,
+                  },
+                  {
+                    label: "תקציב ופיננסים",
+                    done: !!collectedData.monthlyBudget,
+                    value: collectedData.monthlyBudget
+                      ? `₪${collectedData.monthlyBudget.toLocaleString()} / חודש${collectedData.feasibilityBranch ? ` (ענף ${collectedData.feasibilityBranch})` : ""}`
+                      : undefined,
+                    num: 4,
+                  },
+                  {
+                    label: "נכסי אמון",
+                    done: !!collectedData.hasTrustAssets,
+                    value: collectedData.starRating ? `${collectedData.starRating} כוכבים בגוגל` : collectedData.hasTrustAssets ? "יש ביקורות" : undefined,
+                    num: 5,
+                  },
+                  {
+                    label: "פרטי קשר",
+                    done: !!collectedData.phone,
+                    value: collectedData.phone,
+                    num: 6,
+                  },
+                ].map(({ label, done, value, num }) => (
+                  <div key={num} style={{ display: "flex", alignItems: "flex-start", gap: "10px" }}>
+                    <div
+                      style={{
+                        width: "20px",
+                        height: "20px",
+                        borderRadius: "50%",
+                        background: done ? "var(--accent)" : "var(--border)",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        fontSize: "0.75rem",
+                        color: done ? "var(--bg)" : "var(--muted)",
+                        fontWeight: "bold",
+                        flexShrink: 0,
+                        marginTop: "2px",
+                      }}
+                    >
+                      {done ? "✓" : num}
+                    </div>
+                    <span style={{ fontSize: "0.85rem", color: done ? "var(--text)" : "var(--muted)", lineHeight: 1.4 }}>
+                      {label}
+                      {value && (
+                        <>
+                          {": "}
+                          <strong style={{ color: done ? "var(--accent)" : "var(--muted)" }}>{value}</strong>
+                        </>
+                      )}
+                    </span>
                   </div>
-                  <span style={{ fontSize: "0.9rem", color: collectedData.businessNiche ? "var(--text)" : "var(--muted)" }}>
-                    הגדרת סוג העסק והשירות:{" "}
-                    <strong>{collectedData.businessNiche || "טרם הוגדר"}</strong>
-                  </span>
-                </div>
-
-                <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                  <div
-                    style={{
-                      width: "20px",
-                      height: "20px",
-                      borderRadius: "50%",
-                      background: collectedData.targetLocation ? "var(--accent)" : "var(--border)",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      fontSize: "0.75rem",
-                      color: "var(--bg)",
-                      fontWeight: "bold",
-                    }}
-                  >
-                    {collectedData.targetLocation ? "✓" : "2"}
-                  </div>
-                  <span style={{ fontSize: "0.9rem", color: collectedData.targetLocation ? "var(--text)" : "var(--muted)" }}>
-                    מיקום גיאוגרפי: <strong>{collectedData.targetLocation || "טרם הוגדר"}</strong>
-                  </span>
-                </div>
-
-                <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                  <div
-                    style={{
-                      width: "20px",
-                      height: "20px",
-                      borderRadius: "50%",
-                      background: collectedData.monthlyBudget ? "var(--accent)" : "var(--border)",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      fontSize: "0.75rem",
-                      color: "var(--bg)",
-                      fontWeight: "bold",
-                    }}
-                  >
-                    {collectedData.monthlyBudget ? "✓" : "3"}
-                  </div>
-                  <span style={{ fontSize: "0.9rem", color: collectedData.monthlyBudget ? "var(--text)" : "var(--muted)" }}>
-                    תקציב חודשי מוגדר:{" "}
-                    <strong>
-                      {collectedData.monthlyBudget ? `₪${collectedData.monthlyBudget.toLocaleString()}` : "טרם הוגדר"}
-                    </strong>
-                  </span>
-                </div>
+                ))}
               </div>
             </div>
 
