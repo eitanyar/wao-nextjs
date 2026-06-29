@@ -40,7 +40,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return {
     title: `${name}${location ? ` — ${location}` : ''} | WAO`,
     description: record.copy.heroSubheadline,
-    robots: { index: false, follow: false },  // LP pages are private by default
+    robots: { index: false, follow: false },
   };
 }
 
