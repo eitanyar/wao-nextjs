@@ -42,6 +42,8 @@ export default function OnboardingPage() {
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [isSimulation, setIsSimulation] = useState(true);
   const [acceptedTerms, setAcceptedTerms] = useState(false);
+  const [lpUrl, setLpUrl] = useState<string | null>(null);
+  const [lpGenerating, setLpGenerating] = useState(false);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const speechUttRef = useRef<SpeechSynthesisUtterance | null>(null);
@@ -90,28 +92,54 @@ export default function OnboardingPage() {
       const triggerCampaignLaunch = async () => {
         setIsSubmitting(true);
         try {
+          // Step 1: Close the bot conversation
           const updatedMessages = [...messages, { role: "user" as const, content: "אשר והפעל קמפיין" }];
           setMessages(updatedMessages);
 
-          const response = await fetch("/api/bot", {
+          const botRes = await fetch("/api/bot", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ messages: updatedMessages, currentState: "REVIEWING", collectedData }),
+          });
+          const botData = await botRes.json();
+          setMessages((prev) => [...prev, { role: "assistant", content: botData.response }]);
+          setCurrentState(botData.currentState);
+          speakText(botData.response);
+
+          // Step 2: Generate the landing page
+          setLpGenerating(true);
+          const lpRes = await fetch("/api/lp-generate", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ collectedData }),
+          });
+          const lpData = await lpRes.json();
+          setLpGenerating(false);
+
+          if (lpData.success && lpData.url) {
+            setLpUrl(lpData.url);
+            const lpMsg = `הדף שלך מוכן! 🎉\n\nכל מי שילחץ על המודעה בגוגל יגיע לכאן:\n👉 wao.co.il${lpData.url}\n\nשמור את הקישור הזה — אפשר לשתף אותו גם ישירות בוואטסאפ.`;
+            setMessages((prev) => [...prev, { role: "assistant", content: lpMsg }]);
+            speakText(lpMsg);
+          }
+
+          // Step 3: Store the lead for CRM
+          await fetch("/api/lead", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-              messages: updatedMessages,
-              currentState: "REVIEWING",
-              collectedData,
+              name: collectedData.ownerName || collectedData.businessName || "לקוח חדש",
+              phone: collectedData.phone,
+              service: "google-ads",
+              message: `עסק: ${collectedData.businessName || collectedData.businessNiche} | תקציב: ₪${collectedData.monthlyBudget} | LP: ${lpData.url || "N/A"} | ענף: ${collectedData.feasibilityBranch || "—"}`,
+              source: "bot-onboarding-v6",
             }),
-          });
+          }).catch(() => {}); // non-fatal — SMTP may not be configured
 
-          const data = await response.json();
-          setMessages((prev) => [...prev, { role: "assistant", content: data.response }]);
-          setCurrentState(data.currentState);
-          speakText(data.response);
-          
-          // Clear query params from the URL bar so it doesn't trigger on refresh
           window.history.replaceState({}, document.title, window.location.pathname);
         } catch (err) {
           console.error(err);
+          setLpGenerating(false);
         } finally {
           setIsSubmitting(false);
         }
@@ -792,19 +820,36 @@ export default function OnboardingPage() {
                   )}
 
                   {currentState === "COMPLETED" && (
-                    <div
-                      style={{
-                        background: "rgba(74, 227, 181, 0.1)",
-                        border: "1px solid var(--accent-border)",
-                        borderRadius: "var(--radius-sm)",
-                        padding: "16px",
-                        color: "var(--accent)",
-                        textAlign: "center",
-                        fontWeight: "bold",
-                        fontSize: "0.95rem",
-                      }}
-                    >
-                      🎉 הקמפיין באוויר! בדוק את תיבת המייל שלך להזמנת הניהול.
+                    <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                      {lpGenerating && (
+                        <div style={{ background: "rgba(74,227,181,0.06)", border: "1px solid var(--accent-border)", borderRadius: "var(--radius-sm)", padding: "16px", textAlign: "center", color: "var(--muted)", fontSize: "0.9rem" }}>
+                          <div style={{ marginBottom: "8px", fontSize: "1.2rem" }}>⚙️</div>
+                          בונה את הדף שלך... זה ייקח כמה שניות
+                        </div>
+                      )}
+                      {lpUrl && (
+                        <div style={{ background: "rgba(74,227,181,0.10)", border: "1px solid var(--accent-border)", borderRadius: "var(--radius-sm)", padding: "20px", display: "flex", flexDirection: "column", gap: "12px" }}>
+                          <div style={{ color: "var(--accent)", fontWeight: 800, fontSize: "1rem", textAlign: "center" }}>
+                            🎉 הדף שלך מוכן!
+                          </div>
+                          <a
+                            href={lpUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            style={{ background: "var(--accent)", color: "var(--bg)", padding: "12px 20px", borderRadius: "var(--radius-pill)", fontWeight: 700, fontSize: "0.95rem", textAlign: "center", textDecoration: "none", display: "block" }}
+                          >
+                            👉 צפה בדף הנחיתה שלך
+                          </a>
+                          <div style={{ fontSize: "0.75rem", color: "var(--muted)", textAlign: "center", wordBreak: "break-all" }}>
+                            wao.co.il{lpUrl}
+                          </div>
+                        </div>
+                      )}
+                      {!lpGenerating && !lpUrl && (
+                        <div style={{ background: "rgba(74,227,181,0.08)", border: "1px solid var(--accent-border)", borderRadius: "var(--radius-sm)", padding: "16px", color: "var(--accent)", textAlign: "center", fontWeight: "bold", fontSize: "0.95rem" }}>
+                          🎉 הקמפיין באוויר! בדוק את תיבת המייל שלך להזמנת הניהול.
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
