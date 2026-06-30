@@ -319,8 +319,42 @@ export default function OnboardingPage() {
               </span>
             )}
             {" | "}
-            בנה קמפיין ממומן בגוגל תוך כמה דקות — WAO מנהלת את הכל עבורך.
+            קמפיין חי בגוגל, דף נחיתה בכתובת משלך, וניהול מקצועי שוטף — הכל מוקם כאן תוך דקות.
           </p>
+
+          {/* Value block + price anchor */}
+          <div style={{
+            marginTop: "28px",
+            background: "rgba(13,15,21,0.6)",
+            border: "1px solid var(--border)",
+            borderRadius: "var(--radius-md)",
+            padding: "24px 28px",
+            display: "flex",
+            flexDirection: "column",
+            gap: "14px",
+          }}>
+            {[
+              "קמפיין פרסום חי בגוגל — המודעות שלך מופיעות בדיוק ברגע שהלקוח מחפש את מה שאתה מוכר.",
+              "דף נחיתה מעוצב בכתובת משלך — בנוי כדי להפוך כל גולש לפנייה אמיתית, לא לעוד קליק.",
+              "צוות WAO מנהל לך את הקמפיין מהיום הראשון — מכוון, מתקן ומשפר, בלי שתצטרך לגעת בכלום.",
+            ].map((bullet, i) => (
+              <div key={i} style={{ display: "flex", gap: "12px", alignItems: "flex-start" }}>
+                <span style={{ color: "var(--accent)", fontWeight: 700, flexShrink: 0, marginTop: "1px" }}>✓</span>
+                <span style={{ fontSize: "0.92rem", color: "var(--text)", lineHeight: 1.6 }}>{bullet}</span>
+              </div>
+            ))}
+            <div style={{
+              marginTop: "6px",
+              paddingTop: "16px",
+              borderTop: "1px solid var(--border)",
+              fontSize: "0.88rem",
+              color: "var(--muted)",
+              lineHeight: 1.6,
+            }}>
+              הקמה אצל פרילנסר עולה אלפי שקלים, וניהול חודשי עולה 1,500 ₪.{" "}
+              <strong style={{ color: "var(--text)" }}>אצלך זה מתחיל ב-9.90 ₪. כן, קראת נכון.</strong>
+            </div>
+          </div>
         </div>
 
         {/* Dashboard Grid */}
