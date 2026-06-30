@@ -335,7 +335,7 @@ export default function OnboardingPage() {
               ...glass,
               display: "flex",
               flexDirection: "column",
-              height: "600px",
+              height: "clamp(380px, 55dvh, 600px)",
               overflow: "hidden",
             }}
           >
@@ -379,13 +379,19 @@ export default function OnboardingPage() {
             <div
               style={{
                 flex: 1,
-                padding: "24px",
                 overflowY: "auto",
-                display: "flex",
-                flexDirection: "column",
-                gap: "16px",
+                padding: "24px",
               }}
             >
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "16px",
+                  justifyContent: "flex-end",
+                  minHeight: "100%",
+                }}
+              >
               {messages.map((msg, i) => (
                 <div
                   key={i}
@@ -426,6 +432,7 @@ export default function OnboardingPage() {
                 </div>
               )}
               <div ref={messagesEndRef} />
+              </div>
             </div>
 
             {/* Chat Input Form */}
