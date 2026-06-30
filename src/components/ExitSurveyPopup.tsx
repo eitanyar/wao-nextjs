@@ -2,10 +2,15 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 
 type NicheBucket = 'clinic' | 'lawyer' | 'ecommerce' | 'other';
 
+const COURSE_PATHS = ['/training/google-ads-course'];
+
 export default function ExitSurveyPopup() {
+  const pathname = usePathname();
+  if (COURSE_PATHS.some((p) => pathname?.startsWith(p))) return null;
   const [isOpen, setIsOpen] = useState(false);
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);

@@ -285,6 +285,9 @@ export default function OnboardingPage() {
           >
             אשף הקמת קמפיין <span className="text-gradient">Google Ads</span>
           </h1>
+          <p style={{ color: "var(--muted)", fontSize: "0.88rem", marginBottom: "8px" }}>
+            ההקמה לוקחת דקות, לא שבועות — אבל תן לתוצאות כמה שבועות להבשיל.
+          </p>
           <p style={{ color: "var(--muted)", fontSize: "0.95rem" }}>
             {isSimulation ? (
               <span

@@ -3,6 +3,7 @@ import { renderMixed } from "@/lib/bidi";
 import Link from "next/link";
 import GT from "@/components/GlossaryTerm";
 import LessonGrid from "@/components/LessonGrid";
+import CourseExitGate from "@/components/CourseExitGate";
 import { readFileSync } from "fs";
 import { join } from "path";
 
@@ -669,6 +670,21 @@ function StaticCourse({ chapters }: { chapters: typeof CHAPTERS }) {
         </div>
       </section>
 
+      {/* ── PMax prerequisite notice ─────────────────────────────────────── */}
+      <section style={{ background: 'rgba(74,227,181,0.04)', borderTop: '1px solid rgba(74,227,181,0.15)', borderBottom: '1px solid rgba(74,227,181,0.15)', padding: 'clamp(20px,3vw,28px) 0' }}>
+        <div className="wao-container" style={{ maxWidth: '800px', display: 'flex', gap: '16px', alignItems: 'flex-start' }}>
+          <div style={{ fontSize: '1.4rem', flexShrink: 0, marginTop: '2px' }}>💡</div>
+          <div>
+            <div style={{ fontFamily: 'var(--font-rubik), sans-serif', fontWeight: 700, fontSize: '0.95rem', color: 'var(--accent)', marginBottom: '6px' }}>לפני שאתה צולל פנימה</div>
+            <p style={{ fontFamily: 'var(--font-body), sans-serif', fontSize: '0.9rem', color: 'var(--muted)', lineHeight: 1.7, margin: 0 }}>
+              הקורס הזה מניח שכבר יש לך קמפיין חיפוש פעיל עם קצת היסטוריית המרות, כי על הבסיס הזה Performance Max לומד ומשתפר.
+              אם אתה ממש בהתחלה ועוד לא הרצת קמפיין, זה לגמרי בסדר — פשוט כדאי שתבנה קודם את היסודות.
+              {' '}<Link href="/google-ads/onboarding" style={{ color: 'var(--accent)', fontWeight: 700, textDecoration: 'underline' }}>בוא נבנה את הבסיס שלך →</Link>
+            </p>
+          </div>
+        </div>
+      </section>
+
       {/* ── Stats strip ──────────────────────────────────────────────────── */}
       <section
         style={{
@@ -1275,6 +1291,7 @@ function StaticCourse({ chapters }: { chapters: typeof CHAPTERS }) {
           </div>
         </div>
       </section>
+      <CourseExitGate />
     </>
   );
 }

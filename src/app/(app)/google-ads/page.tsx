@@ -207,8 +207,8 @@ export default function GoogleAdsPage() {
               קבל ייעוץ Google Ads חינם
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
             </a>
-            <Link href="/seo" className="btn-outline" style={{ fontSize: "1rem" }}>
-              ← גם SEO? לחצו כאן
+            <Link href="/google-ads/onboarding" className="btn-outline" style={{ fontSize: "1rem" }}>
+              דקות לקמפיין הראשון שלך ←
             </Link>
           </div>
         </div>
