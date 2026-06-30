@@ -1,3 +1,5 @@
+'use client';
+
 import type { VerticalTheme } from '@/lib/lp/verticalThemes';
 import type { VerticalAssets } from '@/lib/lp/verticalAssets';
 import type { LPCopy } from '@/lib/lp/lpCopyPrompt';

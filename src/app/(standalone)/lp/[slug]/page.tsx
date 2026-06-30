@@ -18,7 +18,8 @@ interface LPRecord {
 
 function loadLP(slug: string): LPRecord | null {
   try {
-    const filePath = path.join(process.cwd(), 'data', 'lps', `${slug}.json`);
+    const decoded = decodeURIComponent(slug);
+    const filePath = path.join(process.cwd(), 'data', 'lps', `${decoded}.json`);
     const raw = fs.readFileSync(filePath, 'utf-8');
     return JSON.parse(raw) as LPRecord;
   } catch {
