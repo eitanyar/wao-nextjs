@@ -44,11 +44,12 @@ export default function OnboardingPage() {
   const [lpUrl, setLpUrl] = useState<string | null>(null);
   const [lpGenerating, setLpGenerating] = useState(false);
 
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
 
-  // Auto-scroll to the bottom of the chat list
+  // Scroll only the chat box — never the page
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    const el = messagesContainerRef.current;
+    if (el) el.scrollTop = el.scrollHeight;
   }, [messages]);
 
   // Listen for the callback redirect from the Ya'ad payment sandbox
@@ -414,6 +415,7 @@ export default function OnboardingPage() {
 
             {/* Chat Messages */}
             <div
+              ref={messagesContainerRef}
               style={{
                 flex: 1,
                 overflowY: "auto",
@@ -468,7 +470,6 @@ export default function OnboardingPage() {
                   </div>
                 </div>
               )}
-              <div ref={messagesEndRef} />
               </div>
             </div>
 
