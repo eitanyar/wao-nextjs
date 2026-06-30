@@ -284,7 +284,7 @@ export default function OnboardingPage() {
               marginBottom: "8px",
             }}
           >
-            אשף הקמת קמפיין <span className="text-gradient">Google Ads</span>
+            לקוחות חדשים מ-<span className="text-gradient">Google Ads</span>
           </h1>
           <p style={{ color: "var(--muted)", fontSize: "0.88rem", marginBottom: "8px" }}>
             ההקמה לוקחת דקות, לא שבועות — אבל תן לתוצאות כמה שבועות להבשיל.
@@ -320,7 +320,7 @@ export default function OnboardingPage() {
               </span>
             )}
             {" | "}
-            קמפיין חי בגוגל, דף נחיתה בכתובת משלך, וניהול מקצועי שוטף — הכל מוקם כאן תוך דקות.
+            קמפיין חי בגוגל, דף נחיתה בכתובת משלך, ואדם ששומר עליהם בשבילך — הכל מתחיל כאן תוך דקות.
           </p>
 
           {/* Value block + price anchor */}
@@ -335,9 +335,9 @@ export default function OnboardingPage() {
             gap: "14px",
           }}>
             {[
-              "קמפיין פרסום חי בגוגל — המודעות שלך מופיעות בדיוק ברגע שהלקוח מחפש את מה שאתה מוכר.",
+              "קמפיין חי בגוגל — המודעה שלך מופיעה בדיוק ברגע שהלקוח מחפש את מה שאתה מוכר.",
               "דף נחיתה מעוצב בכתובת משלך — בנוי כדי להפוך כל גולש לפנייה אמיתית, לא לעוד קליק.",
-              "צוות WAO מנהל לך את הקמפיין מהיום הראשון — מכוון, מתקן ומשפר, בלי שתצטרך לגעת בכלום.",
+              "אדם מנהל לך את הקמפיין מהיום הראשון — עוקב, מתריע ומשפר, בלי שתצטרך לגעת בכלום.",
             ].map((bullet, i) => (
               <div key={i} style={{ display: "flex", gap: "12px", alignItems: "flex-start" }}>
                 <span style={{ color: "var(--accent)", fontWeight: 700, flexShrink: 0, marginTop: "1px" }}>✓</span>
@@ -352,8 +352,8 @@ export default function OnboardingPage() {
               color: "var(--muted)",
               lineHeight: 1.6,
             }}>
-              הקמה אצל פרילנסר עולה אלפי שקלים, וניהול חודשי עולה 1,500 ₪.{" "}
-              <strong style={{ color: "var(--text)" }}>אצלך זה מתחיל ב-9.90 ₪. כן, קראת נכון.</strong>
+              הקמה אצל פרילנסר עולה אלפי שקלים, וניהול חודשי עולה בקלות 1,500 ₪.{" "}
+              <strong style={{ color: "var(--text)" }}>אצלך ההקמה ב-9.90 ₪, חודש הניהול הראשון חינם, ומשם 249 ₪ בחודש. כן, קראת נכון.</strong>
             </div>
           </div>
         </div>
@@ -820,9 +820,9 @@ export default function OnboardingPage() {
                       gap: "16px"
                     }}>
                       <div style={{ textAlign: "center" }}>
-                        <div style={{ fontSize: "0.9rem", color: "var(--muted)" }}>דמי הקמה ותקופת ניסיון</div>
+                        <div style={{ fontSize: "0.9rem", color: "var(--muted)" }}>דמי הקמה חד-פעמיים</div>
                         <div style={{ fontSize: "2rem", fontWeight: 800, color: "var(--text)", margin: "4px 0" }}>9.90 ₪</div>
-                        <div style={{ fontSize: "0.8rem", color: "var(--muted)" }}>תשלום חד-פעמי להפעלת הקמפיין ודף הנחיתה</div>
+                        <div style={{ fontSize: "0.8rem", color: "var(--muted)" }}>תשלום אחד שמקים לך את הקמפיין ודף הנחיתה. חודש הניהול הראשון חינם, ומהחודש השני 249 ₪ בחודש.</div>
                       </div>
                       
                       <label style={{ display: "flex", alignItems: "flex-start", gap: "10px", cursor: "pointer" }}>

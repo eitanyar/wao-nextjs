@@ -12,48 +12,80 @@ interface RequestData {
   collectedData: CollectedData;
 }
 
-// ── CPC lookup ────────────────────────────────────────────────────────────────
+// ── Industry cluster budgets (Dror-verified, WordStream/LocaliQ 2025-2026) ────
+// CPCs: US benchmark × ~0.5 IL factor × ₪3.0/$ (USD/ILS 30 Jun 2026).
+// Budgets sized for Phase 1 Maximize Clicks (~20 leads/month = meaningful signal).
+// Smart Bidding optimization phase requires 3× budget (see VISION.md Option B gate).
 
-const VERTICAL_CPC: Array<{ keywords: string[]; cpc: number }> = [
-  { keywords: ["עורך דין נזיקין", "נזיקין"], cpc: 35 },
-  { keywords: ["עורך דין", "עו\"ד", "משפט"], cpc: 28 },
-  { keywords: ["רופא שיניים", "שיניים", "אורתודונט"], cpc: 20 },
-  { keywords: ["צלם", "צלמת", "צילום"], cpc: 20 },
-  { keywords: ["מנעולן", "מנעול"], cpc: 20 },
-  { keywords: ["אינסטלטור", "שרברב", "נזיל"], cpc: 15 },
-  { keywords: ["קוסמטיק", "אסתטיק"], cpc: 14 },
-  { keywords: ["חשמלאי", "חשמל"], cpc: 14 },
-  { keywords: ["גנן", "גינה", "גינון"], cpc: 12 },
-  { keywords: ["שיפוצניק", "שיפוץ"], cpc: 11 },
-  { keywords: ["מדביר", "הדבר", "מזיק"], cpc: 10 },
-  { keywords: ["מכונאי", "מוסך", "רכב תיקון"], cpc: 10 },
-  { keywords: ["פסיכולוג", "קואצ'ר", "טיפול נפש"], cpc: 13 },
-  { keywords: ["רואה חשבון", "חשבונאי", "ביקורת"], cpc: 15 },
-  { keywords: ["מורה פרטי", "שיעורים פרטי", "מורה"], cpc: 8 },
-  { keywords: ["מאמן כושר", "כושר", "אישי"], cpc: 8 },
-  { keywords: ["טכנאי מחשב", "מחשב", "IT"], cpc: 9 },
-];
+interface VerticalBudget {
+  min: number;
+  recommended: number;
+  aggressive: number;
+  cpc: number;
+  lpCvr: number;
+  closeRateDefault: number;
+  ltvMultiplier: number;
+}
+
+type ClusterKey =
+  | "emergencyTrades" | "medicalRehab" | "wellnessTherapy" | "legal"
+  | "beautyAesthetics" | "homeImprovement" | "education" | "professionalSvc";
+
+const BUDGET_CLUSTERS: Record<ClusterKey, VerticalBudget> = {
+  // cpc × 20 leads = recommended;  cpc × 10 leads = min
+  emergencyTrades:  { cpc: 11, lpCvr: 0.09, min: 1500, recommended: 2500, aggressive: 5000, closeRateDefault: 0.40, ltvMultiplier: 1.3 },
+  medicalRehab:     { cpc: 8,  lpCvr: 0.10, min: 1000, recommended: 2000, aggressive: 3500, closeRateDefault: 0.35, ltvMultiplier: 2.5 },
+  wellnessTherapy:  { cpc: 9,  lpCvr: 0.06, min: 1500, recommended: 3000, aggressive: 6000, closeRateDefault: 0.25, ltvMultiplier: 3.0 },
+  legal:            { cpc: 22, lpCvr: 0.05, min: 2500, recommended: 4000, aggressive: 8000, closeRateDefault: 0.25, ltvMultiplier: 1.8 },
+  beautyAesthetics: { cpc: 8,  lpCvr: 0.08, min: 1200, recommended: 2000, aggressive: 4000, closeRateDefault: 0.30, ltvMultiplier: 3.0 },
+  homeImprovement:  { cpc: 10, lpCvr: 0.06, min: 1800, recommended: 3500, aggressive: 7000, closeRateDefault: 0.20, ltvMultiplier: 2.0 },
+  education:        { cpc: 7,  lpCvr: 0.10, min: 800,  recommended: 1500, aggressive: 3000, closeRateDefault: 0.35, ltvMultiplier: 3.0 },
+  professionalSvc:  { cpc: 9,  lpCvr: 0.05, min: 1800, recommended: 3500, aggressive: 7000, closeRateDefault: 0.30, ltvMultiplier: 2.5 },
+};
+
+const CLUSTER_KEYWORDS: Record<ClusterKey, string[]> = {
+  emergencyTrades:  ["אינסטל", "שרברב", "נזיל", "חשמלאי", "מזגן", "גז", "דוד", "גנרטור", "מדביר", "הדבר", "ג'וקים", "עכברים", "מנעולן", "מנעול", "פריצה"],
+  medicalRehab:     ["פיזיות", "פיזיוט", "ריפוי בעיסוק", "קלינאי תקשורת", "אורתופד", "כירופרקט", "אוסטאו", "דיאטנ", "תזונ", "שיניים", "דנטל", "אורתודונט", "אופטומטר"],
+  wellnessTherapy:  ["פסיכולוג", "קואצ'ר", "nlp", "טיפול רגשי", "טיפול נפש", "דמיון מודרך", "מדיטציה", "מיינדפולנס", "טיפול זוגי", "יעוץ נפש", "פסיכותרפ", "הדרכת הורים"],
+  legal:            ["עורך דין", "עו\"ד", "משפט", "פלילי", "גירושין", "נוטריון", "בוררות", "נזיקין", "צוואה"],
+  beautyAesthetics: ["קוסמט", "אסתט", "בוטוקס", "פילינג", "לייזר", "שיער", "טיפול פנים", "מניקור", "פדיקור", "ריסים", "גבות", "אפיל", "מסאז"],
+  homeImprovement:  ["שיפוץ", "קבלן", "גנן", "גינ", "ניקיון", "ניקוי", "צביע", "ריצוף", "נגר", "אלומיניום", "פרקט", "גג", "חלונות", "מוסך", "רכב", "פחים"],
+  education:        ["מורה פרטי", "שיעורי", "אנגלית", "מתמטיקה", "עברית", "ערבית", "פיזיקה", "בגרות", "פסיכומטר", "ייעוץ לימוד", "כושר", "פילאטיס", "יוגה", "אימון אישי"],
+  professionalSvc:  ["רואה חשבון", "חשבונאי", "מס", "צלמ", "מחשב", "it", "טכנאי", "ייעוץ עסקי", "שיווק", "גרפיק", "תרגום", "ביטוח", "סוכן"],
+};
+
+function detectCluster(niche: string): ClusterKey {
+  const lower = niche.toLowerCase();
+  for (const [cluster, keywords] of Object.entries(CLUSTER_KEYWORDS) as [ClusterKey, string[]][]) {
+    if (keywords.some(k => lower.includes(k))) return cluster;
+  }
+  return "professionalSvc";
+}
+
+function detectVerticalBudget(niche: string): VerticalBudget {
+  return BUDGET_CLUSTERS[detectCluster(niche)];
+}
+
+function getClusterCloseRateDefault(niche: string): number {
+  return BUDGET_CLUSTERS[detectCluster(niche)].closeRateDefault;
+}
 
 function detectCPC(niche: string): number {
-  const lower = niche.toLowerCase();
-  for (const entry of VERTICAL_CPC) {
-    if (entry.keywords.some(k => lower.includes(k))) return entry.cpc;
-  }
-  return 15;
+  return detectVerticalBudget(niche).cpc;
 }
 
 function parseCloseRate(text: string): number {
-  // "3 מתוך 10" or "30%" or "שלושה"
   const pct = text.match(/(\d+)\s*%/);
   if (pct) return parseInt(pct[1]) / 100;
-  const fraction = text.match(/(\d+)\s*מתוך\s*(\d+)/);
+  // Handle "X מתוך Y" and "X ל-Y" / "X ל Y"
+  const fraction = text.match(/(\d+)\s*(?:מתוך|ל-?)\s*(\d+)/);
   if (fraction) return parseInt(fraction[1]) / parseInt(fraction[2]);
   const single = text.match(/^(\d+)$/);
   if (single) {
     const n = parseInt(single[1]);
     return n > 10 ? n / 100 : n / 10;
   }
-  return 0.3; // fallback
+  return 0.3;
 }
 
 function parseNumber(text: string): number | null {
@@ -62,9 +94,6 @@ function parseNumber(text: string): number | null {
   return isNaN(n) ? null : n;
 }
 
-function computeExpectedClients(budget: number, closeRate: number, cpc: number): number {
-  return (budget * 0.10 * closeRate) / cpc;
-}
 
 // ── Turn questions for simulation ─────────────────────────────────────────────
 
@@ -72,26 +101,27 @@ const TURN_QUESTIONS: Record<number, string> = {
   0: "יאללה, בוא נתחיל — ספר לי קצת על העסק שלך. ומכל מה שאתה עושה, מה הכי מכניס לך כסף?",
   1: "ואיך קוראים לעסק? ומה שמך הפרטי?\n(אם אין שם עסק — השם שלך הוא המותג)",
   2: "ומלבד השירות הראשי — מה עוד אתה מציע? תן לי 3-5 שירותים נוספים שלקוחות פונים אליך בשבילם.",
-  3: "יופי. ואיך זה עובד בדרך כלל — אתה מגיע אל הלקוח, הלקוח מגיע אליך, שניהם, או שאתה עובד על אירועים / מרחוק?",
-  4: "לאילו ערים ושכונות ספציפיות אתה מגיע? (ככל שתפרט יותר, כך גוגל ידרג אותך טוב יותר)",
+  3: "יופי. ואיך זה עובד בדרך כלל — אתה מגיע אל הלקוח, הלקוח מגיע אליך, שניהם, או שאתה עובד באירועים / מרחוק?",
+  4: "באילו ערים ושכונות ספציפיות אתה נותן שירות? (ככל שתפרט יותר, כך גוגל ידרג אותך טוב יותר)",
   5: "תחשוב על לקוח טוב שפנה אליך לאחרונה — מי זה?\nומה הכי הטריד אותו רגע לפני שהרים אליך טלפון?",
-  6: "מה הם שואלים אותך הכי הרבה ברגע שמתקשרים? תן לי 2-3 שאלות שחוזרות.",
+  6: "מה הכי שואלים אותך ברגע שמתקשרים? תן לי 2-3 שאלות שחוזרות.",
   7: "ובכנות גמורה — למה שיבחרו דווקא בך, ולא במישהו אחר שעושה אותו דבר?",
-  8: "כמה שנים אתה בתחום? ויש לך אחריות על העבודה — לכמה זמן, ומה קורה אם לקוח לא מרוצה?",
+  8: "כמה שנים אתה בתחום? ויש לך אחריות על השירות שלך — לכמה זמן, ומה קורה אם לקוח לא מרוצה?",
   9: "התחום שלך דורש רישוי רשמי כלשהו?\nלמשל רישיון ממשרד ממשלתי, חברות בלשכה מקצועית, או תעודה מוכרת?\nאם כן — מה זה ומה המספר? אם לא — פשוט תגיד ״לא״.",
   10: "יש סוגי פניות שאתה מעדיף לא לקבל?\nשירות שאתה לא מציע, סוג לקוח שאתה לא עובד איתו, או אזורים שאתה לא מגיע אליהם?",
   11: "והלקוחות שלך — רובם צריכים אותך כאן ועכשיו,\nזה משהו שהם בודקים לפני שמחליטים,\nאו שהם מתכננים מראש שבועות וחודשים קדימה?",
-  12: "אתה נותן הצעת מחיר חינם לפני שמתחילים?\nיש דמי הגעה אם לא נסגרת עסקה?",
-  13: "עיקר ההכנסה שלך מגיעה מ —\nעבודה חד-פעמית לכל לקוח, חוזה שוטף/חוזר, או שניהם?",
-  14: "שאלה על כסף, רק כדי שנשמור על התקציב שלך —\nכמה שווה לך לקוח אחד בממוצע בעבודה הראשונה, בגדול?",
+  12: "אתה נותן הצעת מחיר חינם לפני שמתחילים?\nיש דמי הגעה אם בסוף לא נסגרה עסקה?",
+  13: "עיקר ההכנסה שלך מגיעה מ —\nשירות חד-פעמי לכל לקוח, חוזה שוטף/חוזר, או שניהם?",
+  14: "שאלה על כסף, רק כדי שנשמור על התקציב שלך —\nכמה שווה לך לקוח חדש בממוצע, בפעם הראשונה שהוא משלם לך?",
   15: "יופי. עכשיו בוא נבדוק כמה קל לך לסגור אותו.\nתחשוב על עשרה אנשים שמתקשרים אליך —\nכמה מהם, בסוף, הופכים ללקוחות שמשלמים?\n(כולל כל השלבים — מהשיחה הראשונה עד סגירה בפועל)",
-  16: "וכמה חשבת לשים על פרסום בחודש?",
-  17: "ורגע אחורה — הלקוחות שמגיעים אליך היום, מאיפה הם בעצם מגיעים?\nמהמלצות, מפה לאוזן, מגוגל, מאינסטגרם?\n\nויש לך פרופיל גוגל עסקי פעיל עם ביקורות?",
-  18: "נשמע שאתה עושה עבודה טובה — אז בטוח יש לך לקוחות מרוצים.\nיש לך ביקורות או המלצות איפשהו?\nבגוגל, בוואטסאפ, צילומי מסך — כל דבר.\nואם יש לך גם תמונות מהעבודה — זה ממש זהב בשבילנו.",
-  19: "מעולה. תביא לי ביקורת אחת או שתיים מגוגל שאתה גאה בהן —\nהעתק-הדבק בדיוק מה שהלקוח כתב.\nומה הדירוג שלך בגוגל? (לדוגמה: 4.9 כוכבים, 64 ביקורות)",
-  20: "ובאמת — אם מחר יתחילו להגיע אליך עוד פניות, אתה יכול לקחת אותן עכשיו?\nכמה זה בערך — פניות בשבוע, פרויקטים בחודש, או תאריכים בשנה?",
-  21: "ואחרון — איך הכי נוח לך שיתפסו אותך?\nשיתקשרו, וואטסאפ, שימלאו טופס, או שיכתבו באינסטגרם?",
-  22: "מה המספר שיופיע על כפתור ״התקשר עכשיו״?\nומה מספר הוואטסאפ?\n(יכולים להיות זהים — רק תגיד לי)",
+  16: "תגיד לי — לקוח שעשית לו עבודה טובה, בדרך כלל חוזר אליך?\nמתקשר שוב כשמתפוצץ לו משהו אחר, או שולח אליך שכנים וחברים?",
+  17: "רגע לפני שנדבר על תקציב — יש לך ביקורות בגוגל?\nאם כן, כמה ביקורות יש לך ומה הדירוג? (לדוגמה: 4.9 כוכבים, 35 ביקורות)\nאם עדיין אין — פשוט תגיד ״אין״.",
+  18: "__budget_recommendation__",
+  19: "נשמע שאתה עושה עבודה טובה — אז בטוח יש לך לקוחות מרוצים.\nיש לך ביקורות או המלצות איפשהו?\nבגוגל, בוואטסאפ, צילומי מסך — כל דבר.\nואם יש לך גם תמונות מהעבודה — זה ממש זהב בשבילנו.",
+  20: "מעולה. תביא לי ביקורת אחת או שתיים מגוגל שאתה גאה בהן —\nהעתק-הדבק בדיוק מה שהלקוח כתב.\nומה הדירוג שלך בגוגל? (לדוגמה: 4.9 כוכבים, 64 ביקורות)",
+  21: "ובאמת — אם מחר יתחילו להגיע אליך עוד פניות, אתה יכול לקחת אותן עכשיו?\nכמה זה בערך — פניות בשבוע, פרויקטים בחודש, או תאריכים בשנה?",
+  22: "ואחרון — איך הכי נוח לך שיתפסו אותך?\nשיתקשרו, וואטסאפ, שימלאו טופס, או שיכתבו באינסטגרם?",
+  23: "מה המספר שיופיע על כפתור ״התקשר עכשיו״?\nומה מספר הוואטסאפ?\n(יכולים להיות זהים — רק תגיד לי)",
 };
 
 // ── Simulation handler ────────────────────────────────────────────────────────
@@ -181,69 +211,139 @@ function handleSimulation(
         data.closeRate = parseCloseRate(text);
         break;
       case 16: {
-        const budget = parseNumber(text);
-        if (!budget || budget < 100) {
-          response = "אני צריך מספר תקציב חודשי תקין (למשל: 2000). כמה חשבת לשים על פרסום בחודש?";
-          return NextResponse.json({ response, currentState, collectedData: data, isSimulation: true });
-        }
-        data.monthlyBudget = budget;
+        // Capture LTV / repeat-client signal
+        const repeatSignals = ["כן", "חוזרים", "חוזר", "ממליצים", "מפנים", "בטח", "תמיד", "ברוב", "לרוב", "הרבה"];
+        data.hasRepeatClients = repeatSignals.some(s => text.includes(s));
+        break;
+      }
+      case 17: {
+        // Capture organic presence — feeds into budget recommendation
+        const reviewCountMatch = text.match(/(\d+)\s*(ביקורות?)/);
+        if (reviewCountMatch) data.reviewCount = parseInt(reviewCountMatch[1]);
+        const ratingMatch = text.match(/(\d[\d.]*)\s*(כוכב|★|\*)/);
+        if (ratingMatch) data.starRating = ratingMatch[1];
+        data.hasGoogleBusiness = !text.includes("אין") && !text.includes("לא");
 
-        const cpc = detectCPC(data.businessNiche || "");
-        const closeRate = data.closeRate ?? 0.3;
-        const expected = computeExpectedClients(budget, closeRate, cpc);
-        const avgJobValue = data.avgJobValue ?? 500;
-        const closingsNeeded = Math.ceil(1 / closeRate);
+        // Compute budget recommendation adjusted for organic presence
+        const vb = detectVerticalBudget(data.businessNiche || "");
+        let lpCvr = vb.lpCvr;
+        const reviewCount16 = data.reviewCount || 0;
+        const starRating16 = parseFloat(data.starRating || "0");
+        if (reviewCount16 >= 50 && starRating16 >= 4.5) lpCvr = Math.min(lpCvr * 1.25, 0.12);
+        else if (reviewCount16 >= 10 && starRating16 >= 4.0) lpCvr = Math.min(lpCvr * 1.10, 0.12);
+        else if (reviewCount16 < 5) lpCvr = lpCvr * 0.85;
 
-        if (expected < 1) {
-          data.feasibilityBranch = "C";
-          data.turnIndex = 99; // mark as declined
+        // Locksmith redirect — Google Search PPC doesn't work for this vertical
+        const isLocksmith = ["מנעולן", "מנעול", "פריצה"].some(k => (data.businessNiche || "").includes(k));
+        if (isLocksmith) {
+          data.turnIndex = 18;
           return NextResponse.json({
-            response: `תקשיב, אני רוצה להיות איתך לגמרי ישר, כי זה מה שמגיע לך.\nעם ${budget} שקל בחודש, ובתחום שלך שבו כל קליק עולה בערך ${cpc} שקל,\nהמספרים פשוט לא מסתדרים.\nבקצב הזה, גם אם תסגור כמעט כל פנייה שנכנסת אליך,\nהתקציב לא יספיק כדי להביא לך אפילו לקוח אחד בחודש.\nואני לא מוכן לקחת ממך כסף על קמפיין שאני כבר יודע מראש שלא יחזיר לך אותו —\nזה פשוט לא הוגן כלפיך.\nאז בוא נעשה ככה: ביום שתוכל להשקיע קצת יותר, אני כאן,\nונבנה לך משהו שבאמת יעבוד.\nבינתיים — עדיף שהכסף יישאר אצלך בכיס.`,
-            currentState: "COMPLETED",
+            response: `רגע, לפני שנמשיך — יש משהו חשוב שאני חייב לשתף איתך.\n\nתחום המנעולנות הוא מהאתגרים הגדולים בגוגל Search: עלות הקליק גבוהה, העבודה הממוצעת נמוכה יחסית, ורוב הלקוחות לא חוזרים. המתמטיקה לא מטיבה עם Search רגיל.\n\nמה שעובד טוב יותר למנעולן זה **Google Local Services Ads** — אתה משלם רק על שיחות אמיתיות, מופיע עם תג ״מאומת על ידי גוגל״, ועלות לפנייה נמוכה בהרבה. רוצה שנדבר על איך להקים את זה במקום?`,
+            currentState,
             collectedData: data,
             isSimulation: true,
           });
         }
 
-        data.feasibilityBranch = expected >= 3 ? "A" : "B";
+        const rec = vb.recommended;
+        const minB = vb.min;
+        const avgJobVal = data.avgJobValue || 500;
+        const closeRate = data.closeRate || getClusterCloseRateDefault(data.businessNiche || "");
+        const paidCloseRate = Math.max(0.05, Math.min(closeRate * 0.8, 0.35));
+        const expectedLeads = Math.max(1, Math.round((rec * lpCvr) / vb.cpc));
+        const clientsPerMonth = Math.max(0.2, expectedLeads * paidCloseRate);
+        const breakEvenClients = Math.ceil(rec / avgJobVal);
+        const paybackMonths = Math.ceil(breakEvenClients / clientsPerMonth);
 
-        if (expected >= 3) {
-          response = `מעולה. עם ${budget} שקל בחודש, ולקוח ששווה לך ${avgJobValue.toLocaleString()} שקל —\nמספיק שתסגור פנייה אחת מכל ${closingsNeeded} כדי להחזיר את כל עלות הפרסום.\nוזה לגמרי בהישג יד. בוא נמשיך.\n\n`;
-        } else {
-          response = `אוקיי, בוא נדבר רגע בכנות.\nעם ${budget} שקל בחודש, כדי שזה ישתלם לך תצטרך לסגור בערך פנייה אחת מכל ${closingsNeeded}.\nאפשרי לגמרי — אבל זה אומר שאין לך הרבה מקום לטעות, כל פנייה כאן חשובה.\n\n`;
-        }
+        const leadsStr = expectedLeads === 1 ? "פנייה אחת" : `${expectedLeads} פניות`;
+        const closeRatioNum = Math.round(1 / closeRate);
+        const paybackStr = paybackMonths === 1 ? "חודש אחד" : `${paybackMonths} חודשים`;
+        const clientsStr = clientsPerMonth < 1
+          ? "פחות מלקוח אחד"
+          : `${Math.round(clientsPerMonth * 10) / 10} לקוחות`;
+        const ltvLine = data.hasRepeatClients
+          ? `\n\nאבל בוא נסתכל על התמונה הגדולה — לקוח שחוזר ומפנה שווה לך פי כמה מהעבודה הראשונה, וכל חודש שאתה רץ בגוגל, עוד אנשים באזור מתחילים לזהות את השם שלך.`
+          : "";
 
-        data.turnIndex = 17;
-        response += TURN_QUESTIONS[17];
-        return NextResponse.json({ response, currentState, collectedData: data, isSimulation: true });
-      }
-      case 17: {
-        const hasGoogle = text.includes("כן") || text.includes("יש") || text.includes("פרופיל");
-        data.hasGoogleBusiness = hasGoogle;
-        data.noDigitalFootprint = !hasGoogle;
-        break;
+        data.turnIndex = 18;
+        return NextResponse.json({
+          response: `בתקציב של ₪${rec.toLocaleString()} אתה אמור לקבל בסביבות ${leadsStr} בחודש, ובשיעור סגירה של 1 ל-${closeRatioNum} — בערך ${clientsStr} חדשים. אני לא הולך למכור לך חלומות: בחודש הראשון אתה פחות או יותר מתאזן, והרווח האמיתי מתחיל מהחודש השני.${ltvLine}\n\nואגב — לחשבונות חדשים גוגל בדרך כלל נותנת קרדיט פרסום בחודשים הראשונים. כשניפתח את החשבון תראה אם יש הצעה פעילה עבורך — זה בונוס שיכול לכסות חלק מהחודש הראשון.\n\nכמה נוח לך? תגיד לי סכום — ואני אתאים את הקמפיין בהתאם.`,
+          currentState,
+          collectedData: data,
+          isSimulation: true,
+        });
       }
       case 18: {
+        // Budget confirmation / adjustment — never terminate
+        const vb17 = detectVerticalBudget(data.businessNiche || "");
+        const isApproval = ["כן", "בסדר", "סבבה", "מסכים", "אוקיי", "בטח", "יאללה", "מעולה"].some(w => text.includes(w));
+        let budget17 = parseNumber(text);
+
+        if (!budget17 || budget17 < 100) {
+          if (isApproval) {
+            budget17 = vb17.recommended;
+          } else {
+            return NextResponse.json({
+              response: `כמה בחודש אתה חושב להשקיע? (גם ₪${vb17.min.toLocaleString()} — אני אסביר מה אפשר לצפות ממנו)`,
+              currentState,
+              collectedData: data,
+              isSimulation: true,
+            });
+          }
+        }
+
+        data.monthlyBudget = budget17;
+        const avgJobVal17 = data.avgJobValue || 500;
+        const closeRate17 = data.closeRate || 0.3;
+        const paidCloseRate17 = Math.max(0.05, Math.min(closeRate17 * 0.8, 0.35));
+        const expectedLeads17 = Math.max(1, Math.round((budget17 * vb17.lpCvr * 0.9) / vb17.cpc));
+        const clientsPerMonth17 = Math.max(0.2, expectedLeads17 * paidCloseRate17);
+        const breakEven17 = Math.ceil(budget17 / avgJobVal17);
+        const paybackMonths17 = Math.ceil(breakEven17 / clientsPerMonth17);
+        const paybackStr17 = paybackMonths17 === 1 ? "חודש אחד" : `${paybackMonths17} חודשים`;
+
+        let budgetResponse: string;
+        if (budget17 >= vb17.recommended) {
+          data.feasibilityBranch = "A";
+          budgetResponse = `מעולה — ₪${budget17.toLocaleString()} זה תקציב שעובד בתחום שלך. עם הקצב הזה, תחזיר את עלות הפרסום תוך כ-${paybackStr17} — וכל שאר הלקוחות רווח נקי.`;
+        } else if (budget17 >= vb17.min) {
+          data.feasibilityBranch = "B";
+          budgetResponse = `אוקיי, ₪${budget17.toLocaleString()} — tight אבל אפשרי. תקבל פחות פניות, אז כל אחת חשובה. נתכנן קמפיין מאוד ממוקד.`;
+        } else {
+          data.feasibilityBranch = "B";
+          budgetResponse = `הבנתי, ₪${budget17.toLocaleString()}. זה מתחת למינימום שאני ממליץ בתחום שלך (₪${vb17.min.toLocaleString()}), אבל בוא נצא לדרך — נתכנן קמפיין מאוד סלקטיבי ונבדוק אם זה מביא תוצאות.`;
+        }
+
+        data.turnIndex = 19;
+        return NextResponse.json({
+          response: `${budgetResponse}\n\n${TURN_QUESTIONS[19]}`,
+          currentState,
+          collectedData: data,
+          isSimulation: true,
+        });
+      }
+      case 19: {
         const hasAssets = !text.includes("אין") && !text.includes("לא") && text.length > 5;
         data.hasTrustAssets = hasAssets;
         if (!hasAssets) {
+          data.turnIndex = 21; // skip review-quote question, go to capacity
           return NextResponse.json({
-            response: "הבנתי. בלי ביקורות ותמונות, הדף לא יהיה אפקטיבי — לקוחות ישראלים לא ממירים בלי הוכחות.\nבוא תאסוף 2-3 ביקורות מלקוחות מרוצים ותחזור אלי — אני כאן.",
-            currentState: "COMPLETED",
+            response: `הבנתי — אין עדיין ביקורות. לא נורא, נבנה דף נחיתה חזק גם בלי זה, ואחרי שייצאו הלקוחות הראשונים מהקמפיין — נוסיף ביקורות ונשפר.\n\n${TURN_QUESTIONS[21]}`,
+            currentState,
             collectedData: data,
             isSimulation: true,
           });
         }
         break;
       }
-      case 19:
+      case 20:
         data.reviewQuote = text;
         {
           const rating = text.match(/(\d[\d.]*)\s*(כוכב|★|\*)/);
           if (rating) data.starRating = rating[1];
         }
         break;
-      case 20: {
+      case 21: {
         const booked = text.includes("עמוס") || text.includes("לא יכול") || text.includes("מלא");
         data.capacityAvailable = !booked;
         data.capacityUnit = text;
@@ -257,10 +357,10 @@ function handleSimulation(
         }
         break;
       }
-      case 21:
+      case 22:
         data.contactMethod = text;
         break;
-      case 22: {
+      case 23: {
         data.phone = text;
         data.whatsappNumber = text;
 
@@ -268,7 +368,7 @@ function handleSimulation(
         const generated = generateMockCampaign(data);
         strategy = generated.strategy;
         copy = generated.copy;
-        data.turnIndex = 23;
+        data.turnIndex = 24;
 
         return NextResponse.json({
           response: `מצוין! אספתי את כל הפרטים שצריך.\nבנינו עבורך תוכנית קמפיין מותאמת אישית — הכוללת דף נחיתה שמבוסס על כל מה שסיפרת לי.\nאתה יכול לראות את כל הפרטים בכרטיסייה.\n\nהאם הכל נראה לך טוב ואתה מאשר להמשיך לתשלום של 9.9 ש״ח?`,
@@ -288,7 +388,7 @@ function handleSimulation(
     // Adapt location question (T4) based on service model
     if (nextTurn === 4 && data.serviceModel) {
       const locationQ: Record<string, string> = {
-        field: "לאילו ערים ושכונות ספציפיות אתה מגיע?\n(ככל שתפרט יותר, כך גוגל ידרג אותך טוב יותר)",
+        field: "באילו ערים ושכונות ספציפיות אתה נותן שירות?\n(ככל שתפרט יותר, כך גוגל ידרג אותך טוב יותר)",
         location: "מה הכתובת המדויקת של העסק?",
         event: "לאילו אזורים אתה מגיע לאירועים? (לדוגמה: גוש דן, השרון)",
         remote: "אתה עובד עם לקוחות מכל הארץ, או מאזור מסוים בלבד?",
@@ -303,8 +403,8 @@ function handleSimulation(
     const isApproved = approvals.some(w => text.toLowerCase().includes(w));
 
     if (isApproved) {
-      nextState = "COMPLETED";
-      response = `מזל טוב! הקמפיין שלך מוכן לשיגור!\n1. יצרתי עבורך חשבון מפרסם חדש ב-Google Ads המשויך ל-MCC של WAO.\n2. הגדרתי את בונוס השותפים: קבל $500 החזר מול הוצאה של $500.\n3. שלחתי לך הזמנת ניהול ישירות למייל.\n\nהקמפיין יתחיל לרוץ ברגע שתאשר את הזמנת הניהול ותגדיר אמצעי תשלום. בהצלחה!`;
+      nextState = "REVIEWING"; // stays REVIEWING until Ya'ad payment callback fires
+      response = `מצוין — הכל נראה טוב.\n\nכדי להפעיל את הקמפיין ולהעלות את דף הנחיתה שלך, לחץ על כפתור **"🚀 לתשלום (9.9 ₪)"** שמופיע בצד ימין של המסך.\n\nזה מה שמתניע את הכל — החשבון, הקמפיין, והדף.`;
     } else {
       response = "הבנתי. אם תרצה לשנות משהו — תקציב, מיקוד, נוסח המודעה — פשוט תגיד לי. אם הכל בסדר, תגיד ״אישור״ כדי שנתקדם.";
     }
@@ -451,8 +551,8 @@ async function handleAzureOpenAI(
   apiKey: string,
   endpoint: string
 ) {
-  const deploymentName = process.env.AZURE_OPENAI_DEPLOYMENT_NAME || "o4-mini";
-  const url = `${endpoint}/openai/deployments/${deploymentName}/chat/completions?api-version=2024-02-15-preview`;
+  const deploymentName = process.env.AZURE_OPENAI_DEPLOYMENT_NAME || "gpt-5.4-mini";
+  const url = `${endpoint}/chat/completions?api-version=2024-05-01-preview`;
 
   if (currentState === "STRATEGIZING") {
     const brief = `
@@ -491,6 +591,7 @@ Phone: ${collectedData.phone}
         method: "POST",
         headers: { "Content-Type": "application/json", "api-key": apiKey },
         body: JSON.stringify({
+          model: deploymentName,
           messages: [{ role: "system", content: DROR_SYSTEM_PROMPT }, { role: "user", content: brief }],
           response_format: { type: "json_object" },
           temperature: 0.3,
@@ -500,6 +601,7 @@ Phone: ${collectedData.phone}
         method: "POST",
         headers: { "Content-Type": "application/json", "api-key": apiKey },
         body: JSON.stringify({
+          model: deploymentName,
           messages: [{ role: "system", content: TAMAR_SYSTEM_PROMPT }, { role: "user", content: brief }],
           response_format: { type: "json_object" },
           temperature: 0.5,
@@ -526,6 +628,7 @@ Descriptions: ${tamarData.descriptions?.join(" | ")}
       method: "POST",
       headers: { "Content-Type": "application/json", "api-key": apiKey },
       body: JSON.stringify({
+        model: deploymentName,
         messages: [{ role: "system", content: ADAM_SYSTEM_PROMPT }, { role: "user", content: presentPrompt }],
         response_format: { type: "json_object" },
         temperature: 0.5,
@@ -544,15 +647,58 @@ Descriptions: ${tamarData.descriptions?.join(" | ")}
     });
   }
 
+  // Pre-compute budget numbers server-side so the LLM never does math.
+  // Inject as a system hint when we have enough data but no budget yet.
+  let budgetHint = "";
+  if (collectedData.avgJobValue && !collectedData.monthlyBudget) {
+    const vbHint = detectVerticalBudget(collectedData.businessNiche || "");
+    let lpCvrHint = vbHint.lpCvr;
+    const rc = collectedData.reviewCount || 0;
+    const sr = parseFloat(collectedData.starRating || "0");
+    if (rc >= 50 && sr >= 4.5) lpCvrHint = Math.min(lpCvrHint * 1.25, 0.12);
+    else if (rc >= 10 && sr >= 4.0) lpCvrHint = Math.min(lpCvrHint * 1.10, 0.12);
+    else if (rc < 5) lpCvrHint = lpCvrHint * 0.85;
+
+    const hintCloseRate = collectedData.closeRate || getClusterCloseRateDefault(collectedData.businessNiche || "");
+    const hintLeads = Math.max(1, Math.round((vbHint.recommended * lpCvrHint) / vbHint.cpc));
+    const hintPaidClose = Math.max(0.05, Math.min(hintCloseRate * 0.8, 0.35));
+    const hintClients = Math.max(0.2, hintLeads * hintPaidClose);
+    const hintBreakEven = Math.ceil(vbHint.recommended / collectedData.avgJobValue);
+    const hintPayback = Math.ceil(hintBreakEven / hintClients);
+    const hintRatio = Math.round(1 / hintCloseRate);
+
+    budgetHint = `\n\n[SYSTEM PRE-COMPUTED — use these exact numbers, do not recalculate]:
+Vertical: ${collectedData.businessNiche} | Recommended: ₪${vbHint.recommended} | Min: ₪${vbHint.min}
+expectedLeads = ${hintLeads} per month (budget ₪${vbHint.recommended} ÷ CPC ₪${vbHint.cpc} × ${(lpCvrHint * 100).toFixed(1)}% CVR)
+clientsPerMonth ≈ ${hintClients.toFixed(1)} (${hintLeads} leads × ${(hintPaidClose * 100).toFixed(0)}% paid close rate)
+paybackMonths = ${hintPayback} (need ${hintBreakEven} clients at ₪${collectedData.avgJobValue} avg job)
+closeRatioDisplay = "1 ל-${hintRatio}"
+Present as: "בסביבות ${hintLeads} פניות בחודש. עם שיעור סגירה של 1 ל-${hintRatio}, זה אומר כ-${hintClients < 1 ? "פחות מלקוח אחד" : hintClients.toFixed(1) + " לקוחות"} בחודש — ותחזיר את ההשקעה תוך כ-${hintPayback === 1 ? "חודש אחד" : hintPayback + " חודשים"}. כל שאר הלקוחות — רווח נקי."`;
+  }
+
+  // Build a "do not re-ask" guard from whatever collectedData already has
+  const alreadyCollected: string[] = [];
+  if (collectedData.businessNiche) alreadyCollected.push(`businessNiche = "${collectedData.businessNiche}"`);
+  if (collectedData.ownerName) alreadyCollected.push(`ownerName = "${collectedData.ownerName}"`);
+  if (collectedData.businessName) alreadyCollected.push(`businessName = "${collectedData.businessName}"`);
+  if (collectedData.serviceModel) alreadyCollected.push(`serviceModel = "${collectedData.serviceModel}"`);
+  if (collectedData.targetLocation) alreadyCollected.push(`targetLocation = "${collectedData.targetLocation}"`);
+  if (collectedData.avgJobValue) alreadyCollected.push(`avgJobValue = ₪${collectedData.avgJobValue}`);
+  if (collectedData.closeRate) alreadyCollected.push(`closeRate = ${Math.round(collectedData.closeRate * 100)}%`);
+  if (collectedData.phone) alreadyCollected.push(`phone = "${collectedData.phone}"`);
+  const alreadyGuard = alreadyCollected.length > 0
+    ? `\n\n[ALREADY COLLECTED — do NOT ask about these again: ${alreadyCollected.join(", ")}]`
+    : "";
+
   const apiMessages = [
-    { role: "system", content: ADAM_SYSTEM_PROMPT },
+    { role: "system", content: ADAM_SYSTEM_PROMPT + budgetHint + alreadyGuard },
     ...messages.map(m => ({ role: m.role, content: m.content })),
   ];
 
   const res = await fetch(url, {
     method: "POST",
     headers: { "Content-Type": "application/json", "api-key": apiKey },
-    body: JSON.stringify({ messages: apiMessages, response_format: { type: "json_object" }, temperature: 0.7 }),
+    body: JSON.stringify({ model: deploymentName, messages: apiMessages, response_format: { type: "json_object" }, temperature: 0.7 }),
   });
 
   const data = await res.json();

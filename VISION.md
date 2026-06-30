@@ -110,11 +110,29 @@ The courses are **not** the product. They are the **marketing** for the product.
 Their purpose: build enough trust that a small business owner hands over their accounts.
 
 ### Monetization
-- **Not decided yet — by design.**
-- A free/limited Trial will be used to discover what users desperately want unlocked.
-- That friction point becomes the pricing model.
-- Goal for Year 1: reach break-even, then grow.
-- Likely direction: subscription (SaaS) + tiered access by capability.
+
+**Starting hypothesis (to be validated in Phase 2):**
+
+| Stage | What client pays | What they get |
+|-------|-----------------|---------------|
+| **Setup** | ₪9.90 (one-time) | Onboarding session + campaign structure + landing page |
+| **Month 1 (trial)** | ₪0 WAO fee | Bot monitors passively; Google new-account credit offsets most ad spend |
+| **Month 2+ (subscription)** | ₪249/month | Proactive bot management: weekly digest, budget pacing, optimization alerts, retention nudges |
+
+Client always pays their Google Ads budget directly to Google — WAO never touches ad spend.
+
+**Why this structure:**
+- ₪9.90 creates real commitment (billing info, psychological skin in the game) without feeling like a purchase
+- Month 1 free aligns with the Google credit window — client sees results before paying subscription
+- ₪249/month is anchored to demonstrated ROI, not a promise
+- At 1,000 active subscribers: ₪249,000 MRR — viable without outside funding
+
+**What must exist before Month 2 can be sold** → see Proactive Management Loop below.
+
+**Open questions for Phase 2 validation:**
+- What is the actual churn trigger? (price? lack of results? no communication from WAO?)
+- Should there be a Tier 2 (₪499/month) for multi-channel or higher ad spend clients?
+- Does the ₪9.90 need to be higher to filter unserious leads?
 
 ### Growth Model
 ```
@@ -155,7 +173,7 @@ International (English-speaking markets)
 - [ ] Define the bot's first 3 "complete flows" end-to-end
   - Flow A: New business onboarding (domain → website → GMB → first ad)
   - Flow B: Existing business audit → priority action plan
-  - Flow C: Google Ads setup and first campaign launch
+  - Flow C: Google Ads setup and first campaign launch ← **before marking done: run `node scripts/test-cf-deploy.mjs` to verify Cloudflare Pages deploy + subdomain DNS end-to-end**
 - [ ] Build the approval/execution loop ("continue" UX)
 - [ ] Connect first platform integrations (Domain registrar + Google Ads API)
 
@@ -174,14 +192,141 @@ International (English-speaking markets)
 - [ ] Build course landing page on WAO
 
 
+### Phase 1.5 — Proactive Management Loop (RETENTION PREREQUISITE)
+
+> **Must exist before the ₪249/month subscription can be sold.**
+> Without this, clients onboard and go dark. Churn after month 1 is near-certain.
+
+The bot checks each active client's campaign weekly and sends a proactive message — no human involved. This is what justifies the ongoing subscription fee and is WAO's primary retention mechanism.
+
+**Minimum viable management loop (what to build):**
+
+| Trigger | Bot action |
+|---------|-----------|
+| Weekly (every Monday) | Send performance digest: impressions, clicks, leads this week vs last week |
+| Budget pacing off (>20% over/under) | Alert: "הקמפיין שלך מוציא [יותר/פחות] ממה שציפינו — הנה מה שאני מציע" |
+| Zero conversions in 7 days | Alert + diagnosis: check LP, check ad quality, check geo targeting |
+| Lead closed (client logs it) | Celebrate + prompt: "כל הכבוד! כמה שווה היה הלקוח הזה? נעדכן את המודל" |
+| 30 days without client login | Churn-risk flag → WAO internal alert (not bot message) |
+
+**Implementation owners:**
+- Bot monitoring logic → Eitan-Dev (`src/lib/crm/intelligence.ts`)
+- Message channel → existing bot voice/text (no new UI)
+- Weekly cron → already in VISION.md Phase 3.5; pull it forward to here
+- Google Ads data source → Google Ads API reporting (requires Developer Token)
+
+**Gate:** This loop must be working for at least 10 pilot clients before Phase 2 (mass onboarding) opens. Selling a subscription without delivering ongoing value is churn baked in.
+
+---
+
 ### Phase 2 — Trial & Validation
 - [ ] Launch free limited trial
 - [ ] Run mass webinar onboarding
 - [ ] Identify the pricing trigger (what do users want unlocked?)
+- [ ] Validate ₪249/month conversion rate from trial → subscription
+
+#### Budget Estimation — Keyword Planner API (Option B)
+
+The onboarding bot's current budget model uses industry cluster averages (CPC midpoints + CVR estimates). This is accurate enough for Phase 1, but the right long-term answer is live Keyword Planner data.
+
+**Trigger:** First client completes Google Ads OAuth (grants WAO manager access via MCC).
+
+**How it works:**
+- At turn 0 (niche collection), the bot extracts 2–3 Hebrew keywords from the business niche + city
+- Bot calls Google Ads Keyword Planner API (`GenerateKeywordIdeas`) with those terms, `geo_target = Israel`, `language = Hebrew`
+- API returns live CPC estimates in ILS — no manual table needed, covers any niche, always current
+- Result is injected into the budget hint as `cpc` → all downstream math uses real numbers
+
+**Work when triggered (owner: Eitan-Dev):**
+- `src/lib/ads/keywordPlanner.ts` — `getEstimatedCPC(keywords: string[], city: string): Promise<number>` using the Google Ads API client
+- Call it in `/api/bot/route.ts` Azure path after niche is collected; inject result into `budgetHint`
+- Cache results in `data/cpc-cache.json` keyed by `${niche}:${city}` with a 30-day TTL to avoid redundant API calls
+- Simulation path continues using cluster table (no API call needed for simulation)
+
+**Why this matters:** Replaces all manual CPC guesswork. A physiotherapist in Tel Aviv gets a different CPC than one in Dimona — Keyword Planner knows; our cluster table doesn't.
+
+---
+
+#### Google Ads API — Hard Gates Before Scaling (Developer Token Production Approval)
+
+Google's ToS and Required Minimum Functionality (RMF) policy require these before WAO can hold a production Developer Token at scale:
+
+- [ ] **Campaign dashboard** — every client must be able to see their own campaign structure, live spend, impressions, and conversions inside WAO's UI. Google may audit the interface at any time; "voice-only with no data visibility" fails RMF.
+- [ ] **Consent log** — every budget change, campaign toggle, or billing action taken by the bot on a client's behalf must write an immutable record (timestamp, client ID, action, approval method) to the CRM. Required for indemnification under API ToS §11.
+- [ ] **Billing isolation** — each client sub-account under WAO's MCC must have its own billing linked (client owns the spend liability). WAO fronting all billing is fine for MVP/trial; it is a liability and ToS risk at scale.
+- [ ] **Human TOS gate for each new account** — the bot can scaffold the Google Ads sub-account, but the client must manually accept Google's billing terms. This gate already exists in the payment flow; confirm it persists as account creation moves to the API.
+- [ ] **Per-client OAuth audit trail** — WAO authenticates as manager (MCC model, single Developer Token + WAO OAuth). This is correct and compliant. Document explicitly in the codebase that WAO never impersonates the client's identity in API calls — WAO acts as authorized manager only.
 
 ### Phase 3 — Scale
 - [ ] Open to English-speaking markets
 - [ ] Eitan operates as Visionary only — agent teams run execution
+
+#### Google Ads Conversion Pipeline — Pre-Ship Gates
+
+These features are **built but intentionally incomplete** pending external gates. Each one has a clear trigger — when the trigger arrives, the work listed is what gets done.
+
+---
+
+**Gate 1 — Enhanced Conversions for Leads (ECL)**
+*What it is:* Sends a hashed phone number to Google as a fallback match signal for iOS/Safari visitors who click an ad and call from a saved number days later on a different device. Recovers attribution that gclid/wbraid misses.
+*Why it's blocked:* Israel's Privacy Protection Law Amendment 13 (in force Aug 14, 2025) requires **explicit, granular, unbundled consent** for sending online identifiers and hashed PII to third parties for direct marketing. The current LP consent checkbox is bundled ("I agree to marketing"). ECL is sending hashed phone → Google — that requires a specific consent statement.
+*Trigger:* When you decide to add ECL to the LP.
+*Work when triggered:*
+- Tamar writes granular consent copy: "אני מסכים לקבל שיווק ישיר מ-[שם עסק] ולשיתוף פרטי קשר מוצפנים עם Google לצורך ייעול פרסום" — then Noa proofs it
+- Eitan / legal signs off on the lawful-basis + opt-out/deletion path
+- Eitan-Dev wires the ECL tag to the LP (hashed phone sent with form submit + click events)
+- Note: ECL uses a 63-day attribution window vs 90 days for raw gclid
+
+---
+
+**Gate 2 — Primary/Secondary Conversion Action Flip**
+*What it is:* When a client account accumulates enough "ליד מאומת" offline conversions to move from Phase A (bidding on expected-value verified leads) to Phase B (bidding on real closed-deal revenue), "עסקה סגורה" must become the **only primary** conversion action. If both "ליד מאומת" and "עסקה סגורה" are primary simultaneously, one ₪3,000 deal gets counted twice → tROAS becomes fiction.
+*Trigger:* When you (WAO) decide a specific client is ready for Phase B — typically ~30+ closed deals logged in the CRM, stable revenue values.
+*Work when triggered:*
+- Build a WAO admin route: `POST /api/google-ads/set-primary-conversion` — takes `{ customerId, primaryAction: 'verified-lead' | 'closed-deal' }` and updates the campaign's conversion goals via the Google Ads API
+- Add a Phase toggle to the WAO account-management dashboard (not the client-facing CRM)
+
+---
+
+**Gate 3 — Portfolio tROAS (Scale)**
+*What it is:* A single local service client gets ~20–50 clicks/month, closing ~1–5 deals. Google needs ~50 valued conversions/month for tROAS to work reliably. Individual accounts will never reach this. The solution: group similar-vertical clients under a **shared MCC portfolio bid strategy** (e.g., all plumbers in the same budget tier share one tROAS strategy) so the collective signal is large enough.
+*Trigger:* When WAO has 10+ clients in the same vertical active simultaneously.
+*Work when triggered:*
+- Dror defines vertical groupings and target ROAS values per vertical
+- Eitan-Dev builds the portfolio strategy creation route under the MCC
+- Campaign creation route updated to attach new clients to the appropriate portfolio strategy instead of account-level bidding
+
+---
+
+**Standing rule:** Until Gate 2 is triggered, "ליד מאומת" is the primary bidding signal and "עסקה סגורה" is observation-only. This prevents double-counting and is the correct default for all new accounts.
+
+### Phase 3.5 — CRM Intelligence & Proactive Bot
+
+The architecture already supports this. Every lead has `slug`, `customerId`, `orderId`, `revenue`, `closedAt`, and a gclid linking back to a specific Google Ads click. The CRM is the signal source — the intelligence lives in the bot/orchestrator, not the CRM itself. This is also WAO's strongest retention mechanism: a client who sees their revenue history improving and gets proactive suggestions from the bot isn't going anywhere.
+
+#### Automatic Triggers (no-brainer — implement when CRM has real data)
+
+These fire from the bot when thresholds are crossed. No manual admin.
+
+| Trigger | Bot message |
+|---------|------------|
+| Client closes 10 deals | "סגרת 10 עסקאות מהקמפיין — הגיע הזמן לשקול הגדלת תקציב" |
+| Close rate exceeds 30% | "הקמפיין לא מספיק לך — כל ₪1 שתוסיף לתקציב אמור להחזיר ₪X לפי הנתונים שלך" |
+| Attributed revenue hits ₪50K | "הגעת ל-₪50K הכנסה מהקמפיין — הגיע הזמן לשקול קמפיין שני לשירות נוסף" |
+| Seasonality (pre-holiday period) | "לפני החגים — זה הזמן להגדיל תקציב. שרברבים ברמה שלך מכפילים הכנסות בתקופה הזו" |
+| Client stops logging closes for 3+ weeks | Internal WAO flag → account manager follow-up (churn signal) |
+
+#### Longer-Term Intelligence (Phase 3.5+)
+
+- **Cross-client benchmarking** — "שרברבים דומים לך סוגרים 40% מהלידים — אתה על 22%. הנה מה שהם עושים אחרת." Requires 10+ clients in the same vertical with sufficient CRM data.
+- **Lifetime value tracking per client** — cumulative revenue attributed via offline conversions, tracked per `customerId`.
+- **Churn prediction** — client stops logging closes → flag to WAO account manager before they cancel.
+
+#### What to build when ready
+- `src/lib/crm/intelligence.ts` — pure functions: `checkTriggers(slug)`, `getCloseRate(slug)`, `getAttributedRevenue(slug)`, `detectSeasonality()`
+- Bot/orchestrator calls `checkTriggers` after every `markClosed` and on a weekly cron
+- Trigger messages route through the existing bot voice/text channel — no new UI needed
+- Benchmarking requires an aggregation query across `data/leads.json` per vertical — straightforward once 10+ clients exist
 
 ### Phase 4 — Content Automation (2027)
 - [ ] Business owner supplies raw material: voice note, photos, short phone video
