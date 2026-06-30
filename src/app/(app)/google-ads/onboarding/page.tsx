@@ -39,50 +39,17 @@ export default function OnboardingPage() {
   const [strategy, setStrategy] = useState<CampaignStrategy | null>(null);
   const [copy, setCopy] = useState<CampaignCopy | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isSpeaking, setIsSpeaking] = useState(false);
   const [isSimulation, setIsSimulation] = useState(true);
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [lpUrl, setLpUrl] = useState<string | null>(null);
   const [lpGenerating, setLpGenerating] = useState(false);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const speechUttRef = useRef<SpeechSynthesisUtterance | null>(null);
 
   // Auto-scroll to the bottom of the chat list
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
-
-  // Handle browser TTS (Web Speech API) fallback for vocal experience
-  const speakText = (text: string) => {
-    if (typeof window === "undefined" || !window.speechSynthesis) return;
-
-    // Stop current speech
-    window.speechSynthesis.cancel();
-
-    // Create new utterance
-    const cleanText = text.replace(/[*#]/g, ""); // strip markdown characters
-    const utterance = new SpeechSynthesisUtterance(cleanText);
-    utterance.lang = "he-IL";
-    utterance.rate = 1.0;
-
-    utterance.onstart = () => setIsSpeaking(true);
-    utterance.onend = () => setIsSpeaking(false);
-    utterance.onerror = () => setIsSpeaking(false);
-
-    speechUttRef.current = utterance;
-    window.speechSynthesis.speak(utterance);
-  };
-
-  // Speak the initial message on load (after user interaction is permitted)
-  useEffect(() => {
-    const handleInitialSpeak = () => {
-      speakText(messages[0].content);
-      window.removeEventListener("click", handleInitialSpeak);
-    };
-    window.addEventListener("click", handleInitialSpeak);
-    return () => window.removeEventListener("click", handleInitialSpeak);
-  }, []);
 
   // Listen for the callback redirect from the Ya'ad payment sandbox
   useEffect(() => {
@@ -104,26 +71,65 @@ export default function OnboardingPage() {
           const botData = await botRes.json();
           setMessages((prev) => [...prev, { role: "assistant", content: botData.response }]);
           setCurrentState(botData.currentState);
-          speakText(botData.response);
 
-          // Step 2: Generate the landing page
+          // Step 2: Create Google Ads sub-account + conversion actions
+          let adsData: any = null;
+          if (strategy && copy) {
+            const adsRes = await fetch("/api/google-ads/create-campaign", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                collectedData,
+                strategy,
+                copy,
+                consentTimestamp: new Date().toISOString(),
+              }),
+            });
+            adsData = await adsRes.json();
+            if (adsData.success) {
+              const adsMsg = `יצרתי לך חשבון Google Ads חדש תחת WAO 🚀\n\nמספר חשבון: ${adsData.customerId}\nהקמפיין ממתין לקישור אמצעי תשלום.`;
+              setMessages((prev) => [...prev, { role: "assistant", content: adsMsg }]);
+            }
+          }
+
+          // Step 3: Generate LP copy and save to server
           setLpGenerating(true);
           const lpRes = await fetch("/api/lp-generate", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ collectedData }),
+            body: JSON.stringify({ collectedData, slug: adsData?.slug }),
           });
           const lpData = await lpRes.json();
+
+          // Step 4: Deploy static LP to Cloudflare Pages
+          let deployedUrl: string | null = null;
+          if (lpData.success && lpData.slug) {
+            const deployRes = await fetch("/api/cloudflare-pages/deploy", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                slug: lpData.slug,
+                googleAdsCustomerId: adsData?.customerId,
+                gtagSnippet: adsData?.gtagSnippet,
+                formConversionLabel: adsData?.formConversionLabel,
+                phoneConversionLabel: adsData?.phoneConversionLabel,
+                whatsappConversionLabel: adsData?.whatsappConversionLabel,
+              }),
+            });
+            const deployData = await deployRes.json();
+            if (deployData.success) {
+              deployedUrl = deployData.url;
+            }
+          }
           setLpGenerating(false);
 
-          if (lpData.success && lpData.url) {
-            setLpUrl(lpData.url);
-            const lpMsg = `הדף שלך מוכן! 🎉\n\nכל מי שילחץ על המודעה בגוגל יגיע לכאן:\n👉 wao.co.il${lpData.url}\n\nשמור את הקישור הזה — אפשר לשתף אותו גם ישירות בוואטסאפ.`;
+          if (deployedUrl) {
+            setLpUrl(deployedUrl);
+            const lpMsg = `הדף שלך באוויר! 🎉\n\n${deployedUrl}\n\nכל מי שילחץ על המודעה בגוגל יגיע לדף הזה. שמור את הקישור — אפשר לשתף אותו גם ישירות בוואטסאפ.`;
             setMessages((prev) => [...prev, { role: "assistant", content: lpMsg }]);
-            speakText(lpMsg);
           }
 
-          // Step 3: Store the lead for CRM
+          // Step 5: Store the lead for CRM
           await fetch("/api/lead", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -131,7 +137,7 @@ export default function OnboardingPage() {
               name: collectedData.ownerName || collectedData.businessName || "לקוח חדש",
               phone: collectedData.phone,
               service: "google-ads",
-              message: `עסק: ${collectedData.businessName || collectedData.businessNiche} | תקציב: ₪${collectedData.monthlyBudget} | LP: ${lpData.url || "N/A"} | ענף: ${collectedData.feasibilityBranch || "—"}`,
+              message: `עסק: ${collectedData.businessName || collectedData.businessNiche} | תקציב: ₪${collectedData.monthlyBudget} | LP: ${deployedUrl || lpData.url || "N/A"} | ענף: ${collectedData.feasibilityBranch || "—"} | חשבון גוגל: ${adsData?.customerId || "—"}`,
               source: "bot-onboarding-v6",
             }),
           }).catch(() => {}); // non-fatal — SMTP may not be configured
@@ -182,15 +188,33 @@ export default function OnboardingPage() {
       setCollectedData(data.collectedData);
       setIsSimulation(data.isSimulation !== false);
 
-      if (data.strategy) {
-        setStrategy(data.strategy);
-      }
-      if (data.copy) {
-        setCopy(data.copy);
-      }
+      if (data.strategy) setStrategy(data.strategy);
+      if (data.copy) setCopy(data.copy);
 
-      // Speak response aloud
-      speakText(data.response);
+      // Auto-fire STRATEGIZING when Adam signals callSpecialists
+      if (data.currentState === "STRATEGIZING" && data.callSpecialists) {
+        setIsSubmitting(true);
+        try {
+          const stratRes = await fetch("/api/bot", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              messages: [...updatedMessages, { role: "assistant", content: data.response }],
+              currentState: "STRATEGIZING",
+              collectedData: data.collectedData,
+            }),
+          });
+          const stratData = await stratRes.json();
+          if (stratData.response) {
+            setMessages((prev) => [...prev, { role: "assistant", content: stratData.response }]);
+          }
+          setCurrentState(stratData.currentState ?? "REVIEWING");
+          if (stratData.strategy) setStrategy(stratData.strategy);
+          if (stratData.copy) setCopy(stratData.copy);
+        } catch {
+          // non-fatal — user can still proceed to payment
+        }
+      }
     } catch (err: any) {
       setMessages((prev) => [
         ...prev,
@@ -274,7 +298,7 @@ export default function OnboardingPage() {
                   fontWeight: "bold",
                 }}
               >
-                ● מצב סימולציה (הדמיה מקומית)
+                ● מצב הדגמה
               </span>
             ) : (
               <span
@@ -288,11 +312,11 @@ export default function OnboardingPage() {
                   fontWeight: "bold",
                 }}
               >
-                ● מחובר ל-Azure OpenAI
+                ● מחובר ופעיל
               </span>
             )}
             {" | "}
-            בנה קמפיין ממומן בגוגל בצורה קולית ומאובטחת תחת ה-MCC של WAO.
+            בנה קמפיין ממומן בגוגל תוך כמה דקות — WAO מנהלת את הכל עבורך.
           </p>
         </div>
 
@@ -345,22 +369,10 @@ export default function OnboardingPage() {
                 </div>
                 <div>
                   <div style={{ fontWeight: 700, fontSize: "1rem" }}>אדם - יועץ Google Ads</div>
-                  <div style={{ fontSize: "0.75rem", color: "var(--accent)" }}>
-                    {isSpeaking ? "מדבר כעת..." : "מחובר ומקשיב"}
-                  </div>
+                  <div style={{ fontSize: "0.75rem", color: "var(--accent)" }}>מחובר ומקשיב</div>
                 </div>
               </div>
 
-              {/* Animated Soundwave */}
-              {isSpeaking && (
-                <div style={{ display: "flex", gap: "3px", alignItems: "center" }}>
-                  <div className="soundwave-bar" style={{ animationDelay: "0.1s" }} />
-                  <div className="soundwave-bar" style={{ animationDelay: "0.3s", height: "18px" }} />
-                  <div className="soundwave-bar" style={{ animationDelay: "0.2s" }} />
-                  <div className="soundwave-bar" style={{ animationDelay: "0.4s", height: "22px" }} />
-                  <div className="soundwave-bar" style={{ animationDelay: "0.5s" }} />
-                </div>
-              )}
             </div>
 
             {/* Chat Messages */}
@@ -545,7 +557,7 @@ export default function OnboardingPage() {
             {/* Campaign Plan Details Panel */}
             <div style={{ ...glass, padding: "24px", flex: 1, display: "flex", flexDirection: "column", gap: "20px" }}>
               <h3 style={{ fontSize: "1.15rem", fontWeight: 700, borderBottom: "1px solid var(--border)", paddingBottom: "12px" }}>
-                אסטרטגיית קמפיין מוצעת (Dror & Tamar)
+                אסטרטגיית הקמפיין שלך
               </h3>
 
               {currentState === "DIAGNOSING" && (
@@ -563,10 +575,10 @@ export default function OnboardingPage() {
                 >
                   <div style={{ fontSize: "2.5rem", marginBottom: "16px" }}>⚙️</div>
                   <p style={{ fontWeight: 600, color: "var(--text)", marginBottom: "8px" }}>
-                    ממתין להשלמת האפיון בצ'אט
+                    ממתין להשלמת האפיון בצ׳אט
                   </p>
                   <p style={{ fontSize: "0.85rem", maxWidth: "260px" }}>
-                    ברגע שנאסוף את כל הפרטים, ה-Specialists ייצרו עבורך את הקמפיין באופן מיידי.
+                    ברגע שנאסוף את כל הפרטים, המערכת תבנה עבורך את הקמפיין באופן מיידי.
                   </p>
                 </div>
               )}
@@ -606,7 +618,7 @@ export default function OnboardingPage() {
                   {/* Keywords Block */}
                   <div>
                     <h4 style={{ fontSize: "0.9rem", fontWeight: 700, marginBottom: "8px" }}>
-                      🎯 מילות מפתח ממוקדות (Search Term)
+                      🎯 מילות מפתח ממוקדות
                     </h4>
                     <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
                       {strategy?.keywords.map((kw, idx) => (
@@ -717,51 +729,36 @@ export default function OnboardingPage() {
                   {/* Landing Page Preview */}
                   <div>
                     <h4 style={{ fontSize: "0.9rem", fontWeight: 700, marginBottom: "8px", color: "var(--accent)" }}>
-                      📱 תצוגה מקדימה לדף הנחיתה
+                      📱 דף הנחיתה שלך
                     </h4>
                     <div style={{
-                      background: "rgba(13, 15, 21, 0.6)",
                       border: "1px solid var(--border)",
                       borderRadius: "12px",
-                      padding: "16px",
+                      overflow: "hidden",
+                      height: "340px",
                       display: "flex",
-                      flexDirection: "column",
-                      gap: "12px",
-                      position: "relative",
-                      overflow: "hidden"
+                      alignItems: "center",
+                      justifyContent: "center",
+                      background: "rgba(13, 15, 21, 0.6)",
                     }}>
-                      <div style={{ display: "flex", justifyContent: "space-between", borderBottom: "1px solid rgba(255,255,255,0.1)", paddingBottom: "8px" }}>
-                        <div style={{ fontSize: "0.8rem", fontWeight: "bold" }}>{collectedData.businessNiche || "העסק שלך"}</div>
-                        <div style={{ fontSize: "0.8rem", color: "var(--muted)" }}>☰</div>
-                      </div>
-                      <div style={{ textAlign: "center", marginTop: "12px" }}>
-                        <h1 style={{ fontSize: "1.4rem", fontWeight: 900, marginBottom: "8px", lineHeight: 1.2 }}>
-                          {copy?.headlines[0] || "הכותרת המנצחת שלך תופיע כאן"}
-                        </h1>
-                        <p style={{ fontSize: "0.9rem", color: "var(--muted)", marginBottom: "16px" }}>
-                          {copy?.descriptions[0] || "כאן יופיע טקסט משכנע המבוסס על ה-USP שלך"}
-                        </p>
-                        <button style={{
-                          background: "linear-gradient(135deg, #4AE3B5, #00C3FF)",
-                          color: "var(--bg)",
-                          border: "none",
-                          padding: "10px 24px",
-                          borderRadius: "20px",
-                          fontWeight: "bold",
-                          fontSize: "0.95rem",
-                          width: "80%"
-                        }}>
-                          התקשר עכשיו
-                        </button>
-                      </div>
-                      <div style={{ marginTop: "16px", background: "rgba(255,255,255,0.03)", borderRadius: "8px", padding: "12px", textAlign: "center" }}>
-                        <div style={{ fontSize: "0.8rem", color: "var(--muted)", marginBottom: "8px" }}>לקוחות ממליצים בוואטסאפ:</div>
-                        <div style={{ display: "flex", gap: "8px", justifyContent: "center" }}>
-                          <div style={{ width: "60px", height: "80px", background: "var(--border)", borderRadius: "4px", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.7rem", color: "var(--muted)" }}>צילום 1</div>
-                          <div style={{ width: "60px", height: "80px", background: "var(--border)", borderRadius: "4px", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.7rem", color: "var(--muted)" }}>צילום 2</div>
-                          <div style={{ width: "60px", height: "80px", background: "var(--border)", borderRadius: "4px", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.7rem", color: "var(--muted)" }}>צילום 3</div>
+                      {lpUrl ? (
+                        <iframe
+                          src={lpUrl}
+                          style={{ width: "100%", height: "100%", border: "none" }}
+                          title="דף הנחיתה שלך"
+                        />
+                      ) : lpGenerating ? (
+                        <div style={{ textAlign: "center", color: "var(--muted)", padding: "24px" }}>
+                          <div style={{ fontSize: "1.8rem", marginBottom: "12px" }}>⚙️</div>
+                          <div style={{ fontWeight: 600, color: "var(--text)", marginBottom: "6px" }}>בונה את הדף שלך...</div>
+                          <div style={{ fontSize: "0.82rem" }}>זה ייקח כמה שניות</div>
                         </div>
-                      </div>
+                      ) : (
+                        <div style={{ textAlign: "center", color: "var(--muted)", padding: "24px" }}>
+                          <div style={{ fontSize: "1.8rem", marginBottom: "12px" }}>🖥️</div>
+                          <div style={{ fontSize: "0.85rem" }}>הדף ייבנה אוטומטית לאחר התשלום</div>
+                        </div>
+                      )}
                     </div>
                   </div>
 
@@ -791,8 +788,8 @@ export default function OnboardingPage() {
                           style={{ marginTop: "4px", accentColor: "var(--accent)", width: "16px", height: "16px" }}
                         />
                         <span style={{ fontSize: "0.85rem", color: "var(--muted)", lineHeight: "1.4" }}>
-                          אני מאשר/ת את <strong>תנאי השימוש</strong> ומסכים/ה שהשירות מסופק "As-Is".
-                          ידוע לי שההוצאה היומית לגוגל תשולם ישירות מחשבון ה-Ads שייפתח עבורי.
+                          אני מאשר/ת את <strong>תנאי השימוש</strong> ומסכים/ה לתנאי השירות.
+                          ידוע לי שהתקציב הפרסומי לגוגל ייגבה ישירות מאמצעי התשלום שאקשר לחשבון.
                         </span>
                       </label>
 
@@ -833,7 +830,7 @@ export default function OnboardingPage() {
                             🎉 הדף שלך מוכן!
                           </div>
                           <a
-                            href={lpUrl}
+                            href={lpUrl || '#'}
                             target="_blank"
                             rel="noopener noreferrer"
                             style={{ background: "var(--accent)", color: "var(--bg)", padding: "12px 20px", borderRadius: "var(--radius-pill)", fontWeight: 700, fontSize: "0.95rem", textAlign: "center", textDecoration: "none", display: "block" }}
@@ -841,7 +838,7 @@ export default function OnboardingPage() {
                             👉 צפה בדף הנחיתה שלך
                           </a>
                           <div style={{ fontSize: "0.75rem", color: "var(--muted)", textAlign: "center", wordBreak: "break-all" }}>
-                            wao.co.il{lpUrl}
+                            {lpUrl}
                           </div>
                         </div>
                       )}
@@ -866,24 +863,6 @@ export default function OnboardingPage() {
         </div>
       </div>
 
-      {/* Embedded CSS for custom styling (soundwave bars, etc) */}
-      <style jsx global>{`
-        .soundwave-bar {
-          width: 3px;
-          height: 10px;
-          background-color: var(--accent);
-          border-radius: 2px;
-          animation: pulse 1s ease-in-out infinite alternate;
-        }
-        @keyframes pulse {
-          0% {
-            transform: scaleY(1);
-          }
-          100% {
-            transform: scaleY(1.8);
-          }
-        }
-      `}</style>
     </div>
   );
 }
