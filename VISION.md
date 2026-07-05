@@ -10,6 +10,8 @@
 > The bot has full execution access. The business owner approves. The bot does the work.
 >
 > WAO is simultaneously opening to English-speaking markets and Eitan is operating as a Visionary, with agent teams advancing the product to its next phase.
+>
+> **Google first** — the go-to for businesses who want control of their Google exposure. Other platforms later.
 
 ---
 
@@ -23,6 +25,24 @@ It is not a chatbot that teaches. It is not a course. It is an AI agent that:
 2. **Educates simply** — Explains each decision in plain language a non-expert understands
 3. **Gets approval** — Requires only a "continue" from the owner
 4. **Executes fully** — Buys the domain, sets the DNS, launches the campaign, optimizes the ad
+
+### Product Shape — the Google Bot Suite
+
+Four independently sellable bots, one unified client portal (`/client/dashboard`):
+
+| Bot | Price | What it does |
+|-----|-------|-------------|
+| **GEO Bot** | ₪199/mo | GSC → Pareto → AIO content → action page → verify loop — *for content-ready SMBs: accountants, coaches, clinics, lawyers, architects (30+ pages, existing GSC data)* |
+| **Ads Bot** | ₪249/mo | Google Ads onboarding → campaign management → monthly recommendations |
+| **Content Bot** | ₪490/mo | SEO content plan → keyword cluster → article pipeline → publish |
+| **Site Bot** | ₪1,490–1,990 one-time | Domain → Next.js scaffold → deployed → SEO-ready — *the front door for micro-SMBs (plumbers, tutors, photographers)* |
+
+Each bot is an agentic pipeline, not a human-delivered service. The LP markets the bot; the delivery IS the agent flow. Clients subscribe to individual bots or bundle (Organic Growth Stack: GEO + Content ~₪580/mo). The ₪9.90 trial is once per client, not per bot — **trial entry point is Site Bot, not GEO Bot.**
+
+**Buyer routing (validated by Lior, July 2026 — updated upsell ladder confirmed July 2026):**
+- **Micro-SMB** (plumber, tutor, photographer): Site Bot first → **GMB Bot ₪149 at month 1** (site completion) → Content Bot ₪490 at month 6 → GEO Bot ₪199 once ≥15 pages exist. GEO Bot is NOT the month-3 attach for 5-page Site Bot buyers — their transactional queries trigger Local Pack, not AI Overview; a 5-page site has no surface for GEO Bot to work on.
+- **Content-ready SMB** (accountant, coach, clinic, lawyer, architect): GEO Bot directly. Informational search precedes their purchase decisions; AIO dominates their query space; 30+ pages give the pipeline real leverage.
+
 ## Infrastructure Model — WAO-Managed via Client OAuth
 
 **The rule:** WAO operates everything. Clients own everything.
@@ -134,6 +154,9 @@ Client always pays their Google Ads budget directly to Google — WAO never touc
 - Should there be a Tier 2 (₪499/month) for multi-channel or higher ad spend clients?
 - Does the ₪9.90 need to be higher to filter unserious leads?
 
+**Phase 2 pricing trigger — Site Bot subscription model (DEFERRED, decision July 2026):**
+Site Bot is currently priced at ₪1,490 one-time (keep, confirmed July 2026 — supply-constrained at WoZ stage, cutting price buys nothing). The subscription model (₪249–299/mo, includes build + ongoing edit-via-chat + GSC/GMB health checks) is the right long-term frame but requires edit-via-chat to be bot-executed, not WoZ-manual. **Trigger to revisit:** when Eitan-Dev ships automated edit-via-chat (bot redeploys on client request without manual Eitan involvement). At that point, re-evaluate Option C as the primary Site Bot pricing model — it creates the strongest moat (churn requires actively cancelling ongoing value) and aligns with the "bot IS the CMS" vision above.
+
 ### Growth Model
 ```
 SEO/Content traffic
@@ -169,11 +192,60 @@ International (English-speaking markets)
 - [x] Establish agent team (Tamar, Gil, Dror, Yonatan, Maya, Eitan-Dev)
 - [ ] Define bot architecture and MVP scope
 
+### Phase 1R — GEO/AIO Managed Service (Standalone Revenue Product)
+
+> **A growing need for any business owner who cares about their organic presence.**
+> As Google shifts to AI Overviews and answer-engine results, ranking alone is not enough — the business must *be the answer*. This is WAO's managed service for that gap.
+
+**What it is:** A done-for-you monthly service. WAO pulls the client's Google Search Console data, identifies the top keyword opportunities that are one content addition away from being cited in AI Overviews, writes the Hebrew content (FAQ blocks, definition boxes, schema), sends it to the client for approval via WhatsApp, and verifies it landed on the site.
+
+**The loop (continuous):**
+```
+GSC data → Pareto scoring + intent filter → Hebrew content (Tamar→Noa pipeline)
+  → WhatsApp approval link → client action page (copy + paste instructions)
+  → client marks done → automated verification crawler → next action surfaced
+```
+
+**Pricing tiers:**
+| Tier | Price | Scope | Who implements |
+|------|-------|-------|----------------|
+| GEO Bot | ₪199/month | Automated loop: content written, action page, verify | You (self-serve) |
+| Managed | ₪590/month | Full loop + WAO oversight, 1 revision per action, personal WhatsApp | You, guided by WAO |
+| Pro | ₪1,290/month | Full loop + WAO implements directly (WordPress API / CMS access) | WAO |
+
+*(Radar tier retired — GEO Bot replaces it at a lower price point with full automation.)*
+
+**Right buyer:** content-ready SMBs with 30+ pages and existing GSC data (accountants, coaches, clinics, lawyers, architects). GEO Bot is NOT the right product for micro-SMBs on 5-page sites — Local Pack, not AI Overview, answers their queries. Micro-SMBs enter via Site Bot and add GEO Bot in month 3.
+
+**Delivery model (first 5 clients — Wizard of Oz):**
+- Manual GSC pull via `node scripts/gsc-pareto.mjs`
+- Manual content generation via `node scripts/geo-generate-content.mjs`
+- Manual WhatsApp send via Eitan's dashboard (`/geo/dashboard`)
+- Automated from client's side: action page, copy buttons, mark-done, verification
+
+**What's built (as of July 2026):**
+- [x] Pareto engine with intent filter (positions 4–25, LLM scoring)
+- [x] Tamar→Noa two-pass Hebrew content generation
+- [x] Immutable approval log (`data/geo-logs/{clientId}/log.jsonl`)
+- [x] Verification crawler (content fingerprint + JSON-LD schema check)
+- [x] WhatsApp delivery (wa.me deep links, no Business API needed)
+- [x] Eitan's send dashboard (`/geo/dashboard`)
+- [x] Client-facing action page (`/geo/action/[actionId]`) — copy, placement, mark-done
+- [x] Pilot client: retter.co.il (20 actions generated, pending first send)
+- [ ] First complete cycle: send → client implements → verified
+- [ ] Auth on dashboard + action pages before public deploy
+- [ ] Genderized copy (currently hardcoded feminine for Hadas/retter)
+- [ ] Self-serve GSC OAuth (for clients post-payment)
+
+**Relationship to the bot:** Phase 1R IS GEO Bot v1, delivered Wizard-of-Oz. It proves the execute-verify pattern for the full suite. Every other bot follows the same loop.
+
+---
+
 ### Phase 1 — MVP Bot (Next)
 - [ ] Define the bot's first 3 "complete flows" end-to-end
-  - Flow A: New business onboarding (domain → website → GMB → first ad)
+  - **Site Bot MVP** *(was Flow A)*: New business onboarding (domain → website → GMB → first ad)
   - Flow B: Existing business audit → priority action plan
-  - Flow C: Google Ads setup and first campaign launch ← **before marking done: run `node scripts/test-cf-deploy.mjs` to verify Cloudflare Pages deploy + subdomain DNS end-to-end**
+  - **Ads Bot MVP** *(was Flow C)*: Google Ads setup and first campaign launch ← **before marking done: run `node scripts/test-cf-deploy.mjs` to verify Cloudflare Pages deploy + subdomain DNS end-to-end**
 - [ ] Build the approval/execution loop ("continue" UX)
 - [ ] Connect first platform integrations (Domain registrar + Google Ads API)
 
@@ -251,7 +323,7 @@ The onboarding bot's current budget model uses industry cluster averages (CPC mi
 
 Google's ToS and Required Minimum Functionality (RMF) policy require these before WAO can hold a production Developer Token at scale:
 
-- [ ] **Campaign dashboard** — every client must be able to see their own campaign structure, live spend, impressions, and conversions inside WAO's UI. Google may audit the interface at any time; "voice-only with no data visibility" fails RMF.
+- [ ] **Campaign dashboard** — every client must be able to see their own campaign structure, live spend, impressions, and conversions inside WAO's UI. Google may audit the interface at any time; "voice-only with no data visibility" fails RMF. **Note: `/client/dashboard` (already built for GEO Bot) serves double duty — client task portal AND this RMF compliance requirement. Two mandates, one build.**
 - [ ] **Consent log** — every budget change, campaign toggle, or billing action taken by the bot on a client's behalf must write an immutable record (timestamp, client ID, action, approval method) to the CRM. Required for indemnification under API ToS §11.
 - [ ] **Billing isolation** — each client sub-account under WAO's MCC must have its own billing linked (client owns the spend liability). WAO fronting all billing is fine for MVP/trial; it is a liability and ToS risk at scale.
 - [ ] **Human TOS gate for each new account** — the bot can scaffold the Google Ads sub-account, but the client must manually accept Google's billing terms. This gate already exists in the payment flow; confirm it persists as account creation moves to the API.
@@ -334,6 +406,7 @@ These fire from the bot when thresholds are crossed. No manual admin.
 - [ ] Owner reviews and approves
 - [ ] Bot publishes simultaneously across all connected platforms (YouTube, Meta, TikTok, Spotify)
 - [ ] WAO's internal course pipeline (Gil → Noa → ElevenLabs → MoviePy → YouTube API) becomes the prototype for this — it already works for WAO's own content
+- [ ] **Content Bot:** GEO Bot's Tamar→Noa content pipeline is the Content Bot prototype — extend, don't rebuild.
 
 ---
 

@@ -3610,7 +3610,7 @@ export const KNOWLEDGE_ARTICLES: KnowledgeArticle[] = [
     ],
     pillarLinks: [
       { label: "GEO — אופטימיזציה למנועי AI", href: "/knowledge/generative-engine-optimization" },
-      { label: "חיפושים ללא הקלקה — תנועה ללא לחיצה", href: "/knowledge/zero-click-searches" },
+      { label: "להיכנס לתשובות ה-AI של גוגל — שירות GEO Bot", href: "/geo" },
     ],
     relatedSlugs: ["generative-engine-optimization", "zero-click-searches", "featured-snippets", "entity-seo", "google-discover", "ai-search-engines"],
     glossaryTerms: ["AI Overviews", "SGE", "Zero-Click", "E-E-A-T", "Source Attribution"],
@@ -3678,7 +3678,7 @@ export const KNOWLEDGE_ARTICLES: KnowledgeArticle[] = [
       },
     ],
     pillarLinks: [
-      { label: "AI Overviews — ה-GEO של גוגל", href: "/knowledge/ai-overviews" },
+      { label: "שירות GEO לעסקים — הבוט שעושה את זה בשבילך", href: "/geo" },
       { label: "קידום ישויות — הבסיס ל-GEO", href: "/knowledge/entity-seo" },
     ],
     relatedSlugs: ["ai-overviews", "entity-seo", "llm-citation-seo", "eeat", "llms-txt", "aeo"],
@@ -3885,7 +3885,7 @@ export const KNOWLEDGE_ARTICLES: KnowledgeArticle[] = [
       },
     ],
     pillarLinks: [
-      { label: "GEO — אופטימיזציה למנועי AI", href: "/knowledge/generative-engine-optimization" },
+      { label: "רוצה שגוגל יצטט אותך? כך עובד GEO Bot", href: "/geo" },
       { label: "קידום ישויות — הבסיס לציטוטים", href: "/knowledge/entity-seo" },
     ],
     relatedSlugs: ["generative-engine-optimization", "entity-seo", "ai-overviews", "eeat"],
@@ -4024,7 +4024,7 @@ export const KNOWLEDGE_ARTICLES: KnowledgeArticle[] = [
     ],
     pillarLinks: [
       { label: "AI Overviews — גורם לחיפושים ללא הקלקה", href: "/knowledge/ai-overviews" },
-      { label: "GEO — להפיק ערך מ-AI", href: "/knowledge/generative-engine-optimization" },
+      { label: "GEO Bot — להפיק לקוחות גם בלי הקלקה", href: "/geo" },
     ],
     relatedSlugs: ["ai-overviews", "generative-engine-optimization", "featured-snippets", "voice-search-seo"],
     glossaryTerms: ["Zero-Click Searches", "Featured Snippets", "AI Overviews", "CTR", "Knowledge Panel"],
@@ -4139,7 +4139,7 @@ export const KNOWLEDGE_ARTICLES: KnowledgeArticle[] = [
     ],
     pillarLinks: [
       { label: "GEO — אופטימיזציה למנועי AI", href: "/knowledge/generative-engine-optimization" },
-      { label: "AI Overviews — כיצד להופיע", href: "/knowledge/ai-overviews" },
+      { label: "שירות GEO Bot — להפוך למקור שה-AI בוחר", href: "/geo" },
     ],
     relatedSlugs: ["generative-engine-optimization", "ai-overviews", "featured-snippets", "voice-search-seo", "llms-txt", "zero-click-searches", "ai-search-engines"],
     glossaryTerms: ["AEO", "GEO", "Featured Snippets"],
@@ -4210,7 +4210,7 @@ export const KNOWLEDGE_ARTICLES: KnowledgeArticle[] = [
     updatedDate: "2026-06-12",
     pillarLinks: [
       { label: "AEO", href: "/knowledge/aeo" },
-      { label: "GEO", href: "/knowledge/generative-engine-optimization" },
+      { label: "GEO Bot — להופיע בתשובות של מנועי ה-AI", href: "/geo" },
     ],
   },
 
@@ -5376,7 +5376,7 @@ export const KNOWLEDGE_ARTICLES: KnowledgeArticle[] = [
     ],
     pillarLinks: [
       { label: "אופטימיזציה מלאה של גוגל לעסק שלי", href: "/knowledge/google-my-business" },
-      { label: "כיצד להיכנס לשלושת הראשונים בתיבת המפה", href: "/knowledge/local-pack" },
+      { label: "ניהול גוגל לעסק שלי על אוטומט — GMB Bot", href: "/google-business" },
     ],
     relatedSlugs: ["google-my-business", "nap-consistency", "local-pack"],
     glossaryTerms: ["קידום מקומי", "Local SEO", "תיבת המפה", "Local Pack", "NAP", "Citation"],
@@ -5444,7 +5444,7 @@ export const KNOWLEDGE_ARTICLES: KnowledgeArticle[] = [
     ],
     pillarLinks: [
       { label: "קידום מקומי — המדריך המלא", href: "/knowledge/local-seo" },
-      { label: "תיבת המפה — כיצד להיכנס לשלושת הראשונים", href: "/knowledge/local-pack" },
+      { label: "בוט שמנהל את הפרופיל בגוגל בשבילך — ₪149 לחודש", href: "/google-business" },
     ],
     relatedSlugs: ["local-seo", "local-pack", "nap-consistency", "google-knowledge-panel"],
     glossaryTerms: ["גוגל לעסק שלי", "Google Business Profile", "תיבת המפה", "Knowledge Panel"],
@@ -5512,7 +5512,7 @@ export const KNOWLEDGE_ARTICLES: KnowledgeArticle[] = [
     ],
     pillarLinks: [
       { label: "קידום מקומי — הבסיס", href: "/knowledge/local-seo" },
-      { label: "גוגל לעסק שלי — עקביות הפרופיל", href: "/knowledge/google-my-business" },
+      { label: "GMB Bot — פרופיל גוגל מעודכן תמיד", href: "/google-business" },
     ],
     relatedSlugs: ["local-seo", "google-my-business", "local-pack"],
     glossaryTerms: ["עקביות פרטי העסק", "NAP", "Citation", "LocalBusiness Schema"],
@@ -5580,7 +5580,7 @@ export const KNOWLEDGE_ARTICLES: KnowledgeArticle[] = [
     ],
     pillarLinks: [
       { label: "גוגל לעסק שלי — אופטימיזציה", href: "/knowledge/google-my-business" },
-      { label: "קידום מקומי — המדריך המלא", href: "/knowledge/local-seo" },
+      { label: "GMB Bot — פרופיל פעיל שמכניס אותך לתיבת המפה", href: "/google-business" },
     ],
     relatedSlugs: ["local-seo", "google-my-business", "nap-consistency"],
     glossaryTerms: ["תיבת המפה", "Local Pack", "Prominence", "Relevance", "Distance"],

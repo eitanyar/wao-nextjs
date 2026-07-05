@@ -1,0 +1,40 @@
+{
+  "slug": "test",
+  "collectedData": {
+    "businessNiche": "test"
+  },
+  "copy": {
+    "heroHeadline": "אתה לא חייב להישאר תקוע — יש פתרון",
+    "heroSubheadline": "שירות מקצועי, יחס אישי ותוצאה שמרגישים מהר.",
+    "heroCta": "התקשר עכשיו",
+    "trustBarItems": [
+      "ניסיון רב",
+      "שירות אישי",
+      "זמינות גבוהה",
+      "ללא התחייבות"
+    ],
+    "aboutBlurb": "אני נותן לך ליווי ברור, עבודה מסודרת ותשומת לב לכל פרט, בלי בלגן ובלי לחץ.",
+    "servicesHeadline": "מה אפשר לקבל כאן",
+    "serviceItems": [
+      "אבחון מדויק",
+      "טיפול מקצועי",
+      "ליווי עד הסוף",
+      "מענה מהיר"
+    ],
+    "faqHeadline": "שאלות נפוצות",
+    "faqItems": [
+      {
+        "q": "איך מתחילים?",
+        "a": "מתקשרים, מסבירים מה צריך, ומקבלים כיוון ברור להמשך."
+      }
+    ],
+    "guaranteeBlock": "יש לך גב לאורך כל הדרך, עם עבודה נקייה ושקופה.",
+    "reviewFeatured": "",
+    "reviewContext": "",
+    "responseTimeBadge": null,
+    "scarcityLine": null,
+    "formHeadline": "רוצה לדבר עכשיו?",
+    "stickyBarLine": "התקשר עכשיו ותקבל מענה מהיר"
+  },
+  "createdAt": "2026-06-30T07:09:32.514Z"
+}

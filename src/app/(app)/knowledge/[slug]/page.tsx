@@ -545,52 +545,77 @@ export default async function KnowledgeArticlePage({
             )}
 
             {/* CTA */}
-            <div
-              style={{
-                marginTop: "48px",
-                padding: "24px",
-                background: "var(--surface)",
-                borderRadius: "var(--radius-md)",
-                border: "1px solid var(--border)",
-                display: "flex",
-                alignItems: "center",
-                gap: "20px",
-                flexWrap: "wrap",
-              }}
-            >
-              <div style={{ flex: 1, minWidth: "200px" }}>
-                <p
+            {(() => {
+              const cta =
+                article.category === "ai"
+                  ? {
+                      headline: "הבינה המלאכותית עונה לגולשים. שהיא תצטט אותך.",
+                      body: "GEO Bot מטייב את התוכן שלך, כדי שהתשובות של Google יפנו אליך. הכול אוטומטי, ב-₪199 בחודש.",
+                      buttonText: "רוצה שיצטטו אותי",
+                      href: "/geo",
+                    }
+                  : article.category === "local"
+                  ? {
+                      headline: "הלקוחות מחפשים לידך. תהיה מי שקופץ ראשון.",
+                      body: "GMB Bot מנהל לך את הפרופיל העסקי בגוגל. פוסטים, ביקורות ותובנות, אוטומטית, ב-₪149 בחודש.",
+                      buttonText: "לשלוט בפרופיל שלי",
+                      href: "/google-business",
+                    }
+                  : {
+                      headline: "רוצים יישום מקצועי?",
+                      body: "המדריכים שלנו הם הבסיס — WAO מיישמת עבורכם.",
+                      buttonText: "ייעוץ SEO ←",
+                      href: "/seo/consulting",
+                    };
+              return (
+                <div
                   style={{
-                    ...HEADING,
-                    fontSize: "1rem",
-                    fontWeight: 700,
-                    marginBottom: "4px",
+                    marginTop: "48px",
+                    padding: "24px",
+                    background: "var(--surface)",
+                    borderRadius: "var(--radius-md)",
+                    border: "1px solid var(--border)",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "20px",
+                    flexWrap: "wrap",
                   }}
                 >
-                  רוצים יישום מקצועי?
-                </p>
-                <p style={{ ...BODY, fontSize: "0.85rem", color: "var(--muted)" }}>
-                  המדריכים שלנו הם הבסיס — WAO מיישמת עבורכם.
-                </p>
-              </div>
-              <Link
-                href="/seo/consulting"
-                style={{
-                  display: "inline-block",
-                  padding: "10px 22px",
-                  borderRadius: "var(--radius-pill)",
-                  background: "var(--accent)",
-                  color: "var(--bg)",
-                  fontWeight: 700,
-                  textDecoration: "none",
-                  fontSize: "0.88rem",
-                  fontFamily: "var(--font-body), sans-serif",
-                  whiteSpace: "nowrap",
-                }}
-              >
-                ייעוץ SEO ←
-              </Link>
-            </div>
+                  <div style={{ flex: 1, minWidth: "200px" }}>
+                    <p
+                      style={{
+                        ...HEADING,
+                        fontSize: "1rem",
+                        fontWeight: 700,
+                        marginBottom: "4px",
+                      }}
+                    >
+                      {renderMixed(cta.headline)}
+                    </p>
+                    <p style={{ ...BODY, fontSize: "0.85rem", color: "var(--muted)" }}>
+                      {renderMixed(cta.body)}
+                    </p>
+                  </div>
+                  <Link
+                    href={cta.href}
+                    style={{
+                      display: "inline-block",
+                      padding: "10px 22px",
+                      borderRadius: "var(--radius-pill)",
+                      background: "var(--accent)",
+                      color: "var(--bg)",
+                      fontWeight: 700,
+                      textDecoration: "none",
+                      fontSize: "0.88rem",
+                      fontFamily: "var(--font-body), sans-serif",
+                      whiteSpace: "nowrap",
+                    }}
+                  >
+                    {cta.buttonText}
+                  </Link>
+                </div>
+              );
+            })()}
           </article>
 
           {/* Sidebar */}

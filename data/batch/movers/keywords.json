@@ -1,0 +1,180 @@
+{
+  "vertical": "movers",
+  "hebrewName": "הובלות ומעבר דירה",
+  "primaryKeywords": [
+    {
+      "kw": "הובלות דירה",
+      "intent": "research",
+      "volume": "high"
+    },
+    {
+      "kw": "הובלת דירה",
+      "intent": "research",
+      "volume": "high"
+    },
+    {
+      "kw": "חברת הובלות",
+      "intent": "comparison",
+      "volume": "high"
+    },
+    {
+      "kw": "חברת הובלות לדירה",
+      "intent": "comparison",
+      "volume": "medium"
+    },
+    {
+      "kw": "מובילים לדירה",
+      "intent": "comparison",
+      "volume": "medium"
+    },
+    {
+      "kw": "שירותי הובלה לדירה",
+      "intent": "research",
+      "volume": "medium"
+    },
+    {
+      "kw": "הובלות קטנות",
+      "intent": "comparison",
+      "volume": "high"
+    },
+    {
+      "kw": "הובלות עם אריזה",
+      "intent": "comparison",
+      "volume": "medium"
+    },
+    {
+      "kw": "הובלות עם מנוף",
+      "intent": "comparison",
+      "volume": "medium"
+    },
+    {
+      "kw": "הובלת דירה כולל אריזה",
+      "intent": "comparison",
+      "volume": "medium"
+    },
+    {
+      "kw": "הובלת דירה כולל פירוק והרכבה",
+      "intent": "comparison",
+      "volume": "low"
+    },
+    {
+      "kw": "הובלת דירת 2 חדרים",
+      "intent": "comparison",
+      "volume": "medium"
+    },
+    {
+      "kw": "הובלת דירת 3 חדרים",
+      "intent": "comparison",
+      "volume": "medium"
+    },
+    {
+      "kw": "הובלת דירת 4 חדרים",
+      "intent": "comparison",
+      "volume": "medium"
+    },
+    {
+      "kw": "הובלה בין עירונית",
+      "intent": "comparison",
+      "volume": "medium"
+    },
+    {
+      "kw": "הובלות בתל אביב",
+      "intent": "comparison",
+      "volume": "high"
+    },
+    {
+      "kw": "הובלות ברמת גן",
+      "intent": "comparison",
+      "volume": "medium"
+    },
+    {
+      "kw": "הובלות בגבעתיים",
+      "intent": "comparison",
+      "volume": "medium"
+    },
+    {
+      "kw": "הובלות בפתח תקווה",
+      "intent": "comparison",
+      "volume": "medium"
+    },
+    {
+      "kw": "הובלות בראשון לציון",
+      "intent": "comparison",
+      "volume": "medium"
+    },
+    {
+      "kw": "הובלות בירושלים",
+      "intent": "comparison",
+      "volume": "medium"
+    },
+    {
+      "kw": "הובלות בחיפה",
+      "intent": "comparison",
+      "volume": "medium"
+    },
+    {
+      "kw": "הובלה מהיום להיום",
+      "intent": "urgent",
+      "volume": "medium"
+    },
+    {
+      "kw": "הובלה דחופה",
+      "intent": "urgent",
+      "volume": "medium"
+    }
+  ],
+  "exactMatch": [
+    "הובלות דירה",
+    "הובלת דירה",
+    "חברת הובלות",
+    "חברת הובלות לדירה",
+    "מובילים לדירה",
+    "הובלות עם אריזה",
+    "הובלות עם מנוף",
+    "הובלת דירת 2 חדרים",
+    "הובלת דירת 3 חדרים",
+    "הובלת דירת 4 חדרים",
+    "הובלות בתל אביב",
+    "הובלות בפתח תקווה",
+    "הובלות בירושלים",
+    "הובלות בחיפה",
+    "הובלת דירה כולל פירוק והרכבה"
+  ],
+  "negativeKeywords": [
+    "קורס",
+    "לימודים",
+    "הכשרה",
+    "דרושים",
+    "משרה",
+    "משרות",
+    "עבודה",
+    "משכורת",
+    "שכר",
+    "מחיר",
+    "מחירים",
+    "מחירון",
+    "עלות",
+    "זול",
+    "השוואת מחירים",
+    "המלצות",
+    "ביקורות",
+    "חוות דעת",
+    "פורום",
+    "ויקיפדיה",
+    "יוטיוב",
+    "עשה זאת בעצמך",
+    "איך",
+    "טיפים",
+    "מדריך",
+    "קרטונים חינם",
+    "השכרת משאית",
+    "השכרת טנדר",
+    "יד 2",
+    "חינם"
+  ],
+  "bidStrategy": "tCPA",
+  "urgencyProfile": "low",
+  "geoNote": "כדאי לפצל לפי אזורי שירות מרכזיים כמו גוש דן, ירושלים, חיפה והשרון, עם דגש על ערים שבהן יש זמינות צוותים ותמחור שונה לפי מרחק וגישה לבניין.",
+  "seasonalNote": "הביקוש עולה בקיץ, סביב סוף ותחילת חודש ולפני חגים; מומלץ להעלות תקציב ולהרחיב כיסוי 2-3 שבועות לפני מועדי מעבר נפוצים.",
+  "generatedAt": "2026-07-02T09:45:41.178Z"
+}

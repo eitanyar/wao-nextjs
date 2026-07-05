@@ -1,4 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
+
+function corsHeaders(req: NextRequest): Record<string, string> {
+  const origin = req.headers.get('origin') || '';
+  const allowed = origin.endsWith('.wao.co.il') || origin === 'https://wao.co.il';
+  return {
+    'Access-Control-Allow-Origin': allowed ? origin : 'https://wao.co.il',
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type',
+  };
+}
+
+export async function OPTIONS(req: NextRequest) {
+  return new NextResponse(null, { status: 204, headers: corsHeaders(req) });
+}
 import nodemailer from "nodemailer";
 
 async function sendLeadEmail(data: {
@@ -66,9 +80,9 @@ export async function POST(req: NextRequest) {
     // Fire-and-forget — don't fail the request if email fails
     sendLeadEmail(leadData).catch(() => {});
 
-    return NextResponse.json({ ok: true });
+    return NextResponse.json({ ok: true }, { headers: corsHeaders(req) });
   } catch {
-    return NextResponse.json({ ok: false }, { status: 500 });
+    return NextResponse.json({ ok: false }, { status: 500, headers: corsHeaders(req) });
   }
 }
 

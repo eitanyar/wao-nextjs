@@ -1,0 +1,179 @@
+{
+  "vertical": "locksmith",
+  "hebrewName": "מנעולן",
+  "primaryKeywords": [
+    {
+      "kw": "מנעולן",
+      "intent": "urgent",
+      "volume": "high"
+    },
+    {
+      "kw": "מנעולן 24 שעות",
+      "intent": "urgent",
+      "volume": "high"
+    },
+    {
+      "kw": "מנעולן חירום",
+      "intent": "urgent",
+      "volume": "medium"
+    },
+    {
+      "kw": "מנעולן עכשיו",
+      "intent": "urgent",
+      "volume": "medium"
+    },
+    {
+      "kw": "מנעולן קרוב",
+      "intent": "urgent",
+      "volume": "medium"
+    },
+    {
+      "kw": "מנעולן בשבת",
+      "intent": "urgent",
+      "volume": "medium"
+    },
+    {
+      "kw": "מנעולן תל אביב",
+      "intent": "urgent",
+      "volume": "high"
+    },
+    {
+      "kw": "מנעולן ירושלים",
+      "intent": "urgent",
+      "volume": "medium"
+    },
+    {
+      "kw": "מנעולן חיפה",
+      "intent": "urgent",
+      "volume": "medium"
+    },
+    {
+      "kw": "מנעולן פתח תקווה",
+      "intent": "urgent",
+      "volume": "medium"
+    },
+    {
+      "kw": "מנעולן ראשון לציון",
+      "intent": "urgent",
+      "volume": "medium"
+    },
+    {
+      "kw": "מנעולן באר שבע",
+      "intent": "urgent",
+      "volume": "low"
+    },
+    {
+      "kw": "פורץ מנעולים",
+      "intent": "urgent",
+      "volume": "medium"
+    },
+    {
+      "kw": "פריצת דלת",
+      "intent": "urgent",
+      "volume": "high"
+    },
+    {
+      "kw": "פתיחת דלת טרוקה",
+      "intent": "urgent",
+      "volume": "medium"
+    },
+    {
+      "kw": "פריצת דלת פלדלת",
+      "intent": "urgent",
+      "volume": "medium"
+    },
+    {
+      "kw": "פריצת דלת רב בריח",
+      "intent": "urgent",
+      "volume": "medium"
+    },
+    {
+      "kw": "החלפת צילינדר",
+      "intent": "research",
+      "volume": "medium"
+    },
+    {
+      "kw": "החלפת מנעול",
+      "intent": "research",
+      "volume": "medium"
+    },
+    {
+      "kw": "תיקון מנעול דלת",
+      "intent": "research",
+      "volume": "medium"
+    },
+    {
+      "kw": "פריצת רכב",
+      "intent": "urgent",
+      "volume": "medium"
+    },
+    {
+      "kw": "מנעולן לרכב",
+      "intent": "urgent",
+      "volume": "medium"
+    },
+    {
+      "kw": "פורץ רכבים",
+      "intent": "urgent",
+      "volume": "medium"
+    },
+    {
+      "kw": "מנעולן מוסמך",
+      "intent": "comparison",
+      "volume": "medium"
+    }
+  ],
+  "exactMatch": [
+    "מנעולן",
+    "מנעולן 24 שעות",
+    "מנעולן חירום",
+    "מנעולן בשבת",
+    "פורץ מנעולים",
+    "פריצת דלת",
+    "פתיחת דלת טרוקה",
+    "פריצת דלת פלדלת",
+    "פריצת דלת רב בריח",
+    "החלפת צילינדר",
+    "פריצת רכב",
+    "מנעולן לרכב",
+    "מנעולן תל אביב",
+    "מנעולן ירושלים",
+    "מנעולן חיפה"
+  ],
+  "negativeKeywords": [
+    "קורס מנעולן",
+    "לימודי מנעולנות",
+    "הכשרת מנעולנים",
+    "תעודת מנעולן",
+    "דרושים מנעולן",
+    "עבודה מנעולן",
+    "משרות מנעולן",
+    "שכר מנעולן",
+    "משכורת מנעולן",
+    "יד 2",
+    "יד2",
+    "עשה זאת בעצמך",
+    "תיקון לבד",
+    "פתרון לבד",
+    "איך לפרוץ דלת",
+    "איך לפתוח דלת",
+    "מדריך",
+    "סרטון",
+    "יוטיוב",
+    "ויקיפדיה",
+    "פורום",
+    "חוות דעת",
+    "ביקורות",
+    "דירוג",
+    "מחירים",
+    "מחירון",
+    "כמה עולה",
+    "חינם",
+    "תמונות"
+  ],
+  "bidStrategy": "Maximize Conversions",
+  "urgencyProfile": "high",
+  "geoNote": "מומלץ לפצל לפי אזורי הגעה מהירים: גוש דן, ירושלים, חיפה והקריות, באר שבע; להפעיל מודעות רק באזורים עם טכנאי זמין לשירות מהיר.",
+  "seasonalNote": "עונתיות נמוכה יחסית; שיאי ביקוש בלילות, סופי שבוע, חגים ותקופות מעבר דירה.",
+  "generatedAt": "2026-07-02T09:34:34.353Z"
+}

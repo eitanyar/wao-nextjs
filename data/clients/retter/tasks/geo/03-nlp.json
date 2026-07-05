@@ -1,0 +1,80 @@
+{
+  "actionId": "retter-3-nlp",
+  "clientId": "retter",
+  "rank": 3,
+  "query": "nlp",
+  "rankingUrl": "https://www.retter.co.il/petah-tikva-branch/",
+  "implementationMode": "enhance",
+  "actionType": "faq_block",
+  "priority": "MEDIUM",
+  "score": 16995,
+  "impressions": 911,
+  "clicks": 3,
+  "ctr": 0.3,
+  "status": "generated",
+  "generatedAt": "2026-07-03T00:54:57.865Z",
+  "vocabSource": "page",
+  "vocabConfidence": "high",
+  "content": {
+    "hebrewContent": "<section>\n  <h2>שאלות נפוצות על לימודי NLP בסניף פתח תקווה</h2>\n  <div>\n    <h3>איפה מתקיימים לימודי NLP בסניף פתח תקווה?</h3>\n    <p>לימודי NLP של מכללת רטר לימודי מתקיימים בסניף פתח תקווה, במקום נגיש ונוח להגעה.</p>\n  </div>\n  <div>\n    <h3>איך מגיעים לסניף פתח תקווה?</h3>\n    <p>ההגעה לסניף פתח תקווה נוחה בתחבורה ציבורית וברכב. מומלץ לבדוק מראש את מסלול ההגעה ביום הלימוד.</p>\n  </div>\n  <div>\n    <h3>האם יש גם לימודי NLP אונליין?</h3>\n    <p>כן. מכללת רטר לימודי מציעה גם לימודי NLP אונליין, לצד הלימודים בסניף פתח תקווה.</p>\n  </div>\n  <div>\n    <h3>מתי נפתח המחזור הבא בסניף פתח תקווה?</h3>\n    <p>מועדי פתיחת המחזורים משתנים לפי השנה. כדאי ליצור קשר עם סניף פתח תקווה ולקבל עדכון מדויק.</p>\n  </div>\n  <div>\n    <h3>האם יש ליווי אישי בלימודי NLP?</h3>\n    <p>כן. בלימודי NLP של מכללת רטר לימודי יש ליווי אישי לאורך כל הדרך, גם בסניף פתח תקווה.</p>\n  </div>\n</section>",
+    "placementInstruction": "להוסיף את בלוק ה-FAQ בסוף התוכן בעמוד /petah-tikva-branch/, אחרי פירוט הסניף והלימודים.",
+    "metaDescription": "שאלות נפוצות על לימודי NLP בסניף פתח תקווה של מכללת רטר לימודי. מידע על הגעה, מחזורים, אונליין וליווי אישי.",
+    "jsonLd": {
+      "@type": "LocalBusiness",
+      "name": "סניף פתח תקווה",
+      "areaServed": "פתח תקווה",
+      "address": {
+        "@type": "PostalAddress",
+        "addressLocality": "פתח תקווה",
+        "addressCountry": "IL"
+      },
+      "hasOfferCatalog": {
+        "@type": "OfferCatalog",
+        "name": "לימודי",
+        "itemListElement": [
+          {
+            "@type": "Course",
+            "name": "לימודי NLP פרקטישנר",
+            "provider": {
+              "@type": "Organization",
+              "name": "מכללת רטר לימודי"
+            },
+            "location": {
+              "@type": "Place",
+              "name": "סניף פתח תקווה",
+              "address": {
+                "@type": "PostalAddress",
+                "addressLocality": "פתח תקווה",
+                "addressCountry": "IL"
+              }
+            }
+          },
+          {
+            "@type": "Course",
+            "name": "לימודי NLP מאסטר",
+            "provider": {
+              "@type": "Organization",
+              "name": "מכללת רטר לימודי"
+            },
+            "location": {
+              "@type": "Place",
+              "name": "סניף פתח תקווה",
+              "address": {
+                "@type": "PostalAddress",
+                "addressLocality": "פתח תקווה",
+                "addressCountry": "IL"
+              }
+            }
+          }
+        ]
+      }
+    },
+    "tamarNotes": "שמרתי רק על מונחי העסק מהעמוד: סניף פתח תקווה, לימודי, מכללת רטר לימודי. לא הוספתי הגדרות כלליות ל-NLP. כדאי לוודא בעמוד עצמו שה-FAQ מתאים לנוסח הקיים ושיש אזכור ברור למחזור הבא.",
+    "noaChanges": "לא בוצעו תיקוני שפה מהותיים. תוקן רק ניסוח קל ב-metaDescription וב-placementInstruction לצורך אחידות ותקינות.",
+    "vocabViolations": [
+      "FAQ",
+      "NLP",
+      "אונליין"
+    ]
+  }
+}

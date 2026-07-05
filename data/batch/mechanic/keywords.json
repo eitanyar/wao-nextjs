@@ -1,0 +1,180 @@
+{
+  "vertical": "mechanic",
+  "hebrewName": "מוסך — מכונאי",
+  "primaryKeywords": [
+    {
+      "kw": "מוסך",
+      "intent": "comparison",
+      "volume": "high"
+    },
+    {
+      "kw": "מכונאי רכב",
+      "intent": "urgent",
+      "volume": "high"
+    },
+    {
+      "kw": "מוסך קרוב אליי",
+      "intent": "urgent",
+      "volume": "high"
+    },
+    {
+      "kw": "מוסך פתוח עכשיו",
+      "intent": "urgent",
+      "volume": "high"
+    },
+    {
+      "kw": "מוסך 24 שעות",
+      "intent": "urgent",
+      "volume": "medium"
+    },
+    {
+      "kw": "מוסך חירום",
+      "intent": "urgent",
+      "volume": "medium"
+    },
+    {
+      "kw": "מכונאי רכב דחוף",
+      "intent": "urgent",
+      "volume": "medium"
+    },
+    {
+      "kw": "מוסך לרכב דחוף",
+      "intent": "urgent",
+      "volume": "low"
+    },
+    {
+      "kw": "מוסך בתל אביב",
+      "intent": "urgent",
+      "volume": "high"
+    },
+    {
+      "kw": "מוסך בירושלים",
+      "intent": "urgent",
+      "volume": "medium"
+    },
+    {
+      "kw": "מוסך בחיפה",
+      "intent": "urgent",
+      "volume": "medium"
+    },
+    {
+      "kw": "מוסך בפתח תקווה",
+      "intent": "urgent",
+      "volume": "medium"
+    },
+    {
+      "kw": "מוסך בראשון לציון",
+      "intent": "urgent",
+      "volume": "medium"
+    },
+    {
+      "kw": "מכונאי רכב בתל אביב",
+      "intent": "urgent",
+      "volume": "medium"
+    },
+    {
+      "kw": "מכונאי רכב בחיפה",
+      "intent": "urgent",
+      "volume": "low"
+    },
+    {
+      "kw": "טיפול לרכב במוסך",
+      "intent": "comparison",
+      "volume": "medium"
+    },
+    {
+      "kw": "מוסך לטיפול 10000",
+      "intent": "comparison",
+      "volume": "medium"
+    },
+    {
+      "kw": "דיאגנוסטיקה לרכב",
+      "intent": "urgent",
+      "volume": "medium"
+    },
+    {
+      "kw": "בדיקת מחשב לרכב",
+      "intent": "urgent",
+      "volume": "medium"
+    },
+    {
+      "kw": "תיקון בלמים לרכב",
+      "intent": "urgent",
+      "volume": "medium"
+    },
+    {
+      "kw": "החלפת שמן מנוע",
+      "intent": "research",
+      "volume": "medium"
+    },
+    {
+      "kw": "מוסך לתיקון מנוע",
+      "intent": "urgent",
+      "volume": "medium"
+    },
+    {
+      "kw": "מוסך מורשה",
+      "intent": "comparison",
+      "volume": "high"
+    },
+    {
+      "kw": "מוסך לדיאגנוסטיקה",
+      "intent": "urgent",
+      "volume": "low"
+    }
+  ],
+  "exactMatch": [
+    "מוסך קרוב אליי",
+    "מוסך פתוח עכשיו",
+    "מוסך 24 שעות",
+    "מוסך חירום",
+    "מכונאי רכב דחוף",
+    "מוסך לרכב דחוף",
+    "מוסך בתל אביב",
+    "מוסך בירושלים",
+    "מוסך בחיפה",
+    "מוסך בפתח תקווה",
+    "טיפול לרכב במוסך",
+    "מוסך לטיפול 10000",
+    "דיאגנוסטיקה לרכב",
+    "בדיקת מחשב לרכב",
+    "תיקון בלמים לרכב"
+  ],
+  "negativeKeywords": [
+    "קורס",
+    "לימודים",
+    "לימודי מכונאות רכב",
+    "קורס מכונאות רכב",
+    "קורס מכונאי רכב",
+    "דרושים",
+    "משרות",
+    "עבודה",
+    "עבודה במוסך",
+    "שכר",
+    "משכורת",
+    "להתקבל לעבודה",
+    "סטאז'",
+    "עשה זאת בעצמך",
+    "לתקן לבד",
+    "מדריך",
+    "סרטון",
+    "יוטיוב",
+    "ספר רכב",
+    "פורום",
+    "ויקיפדיה",
+    "חוות דעת",
+    "ביקורות",
+    "המלצות",
+    "מחירון",
+    "מחירים",
+    "כמה עולה",
+    "זול",
+    "חינם",
+    "שרטוט"
+  ],
+  "bidStrategy": "Maximize Conversions",
+  "urgencyProfile": "high",
+  "geoNote": "לפצל לפי ערים מרכזיות ולשלב רדיוס סביב המוסך בפועל; לחזק במיוחד גוש דן, ירושלים, חיפה והשפלה לפי אזור השירות.",
+  "seasonalNote": "ביקוש עולה לפני חגים ונסיעות, בקיץ בגלל התחממות ומיזוג, בחורף בגלל מצבר והתנעה, וגם סביב מועדי טסט וטיפולים תקופתיים.",
+  "generatedAt": "2026-07-02T16:07:57.897Z"
+}

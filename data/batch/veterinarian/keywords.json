@@ -1,0 +1,185 @@
+{
+  "vertical": "veterinarian",
+  "hebrewName": "וטרינר",
+  "primaryKeywords": [
+    {
+      "kw": "וטרינר",
+      "intent": "research",
+      "volume": "high"
+    },
+    {
+      "kw": "וטרינר קרוב",
+      "intent": "urgent",
+      "volume": "high"
+    },
+    {
+      "kw": "וטרינר פתוח עכשיו",
+      "intent": "urgent",
+      "volume": "medium"
+    },
+    {
+      "kw": "וטרינר חירום",
+      "intent": "urgent",
+      "volume": "high"
+    },
+    {
+      "kw": "וטרינר תורן",
+      "intent": "urgent",
+      "volume": "medium"
+    },
+    {
+      "kw": "וטרינר 24 שעות",
+      "intent": "urgent",
+      "volume": "medium"
+    },
+    {
+      "kw": "וטרינר בשבת",
+      "intent": "urgent",
+      "volume": "medium"
+    },
+    {
+      "kw": "בית חולים וטרינרי",
+      "intent": "urgent",
+      "volume": "medium"
+    },
+    {
+      "kw": "מרפאה וטרינרית",
+      "intent": "research",
+      "volume": "medium"
+    },
+    {
+      "kw": "וטרינר ביקור בית",
+      "intent": "urgent",
+      "volume": "medium"
+    },
+    {
+      "kw": "מיון וטרינרי",
+      "intent": "urgent",
+      "volume": "low"
+    },
+    {
+      "kw": "וטרינר לכלב",
+      "intent": "research",
+      "volume": "medium"
+    },
+    {
+      "kw": "וטרינר לחתול",
+      "intent": "research",
+      "volume": "medium"
+    },
+    {
+      "kw": "וטרינר חירום לכלב",
+      "intent": "urgent",
+      "volume": "low"
+    },
+    {
+      "kw": "וטרינר חירום לחתול",
+      "intent": "urgent",
+      "volume": "low"
+    },
+    {
+      "kw": "וטרינר תל אביב",
+      "intent": "comparison",
+      "volume": "high"
+    },
+    {
+      "kw": "וטרינר רמת גן",
+      "intent": "comparison",
+      "volume": "medium"
+    },
+    {
+      "kw": "וטרינר גבעתיים",
+      "intent": "comparison",
+      "volume": "low"
+    },
+    {
+      "kw": "וטרינר פתח תקווה",
+      "intent": "comparison",
+      "volume": "medium"
+    },
+    {
+      "kw": "וטרינר ראשון לציון",
+      "intent": "comparison",
+      "volume": "medium"
+    },
+    {
+      "kw": "וטרינר חיפה",
+      "intent": "comparison",
+      "volume": "medium"
+    },
+    {
+      "kw": "וטרינר ירושלים",
+      "intent": "comparison",
+      "volume": "medium"
+    },
+    {
+      "kw": "וטרינר באר שבע",
+      "intent": "comparison",
+      "volume": "low"
+    },
+    {
+      "kw": "וטרינר חירום תל אביב",
+      "intent": "urgent",
+      "volume": "medium"
+    },
+    {
+      "kw": "וטרינר תורן תל אביב",
+      "intent": "urgent",
+      "volume": "low"
+    }
+  ],
+  "exactMatch": [
+    "וטרינר חירום",
+    "וטרינר תורן",
+    "וטרינר פתוח עכשיו",
+    "וטרינר 24 שעות",
+    "וטרינר בשבת",
+    "וטרינר קרוב",
+    "בית חולים וטרינרי",
+    "מיון וטרינרי",
+    "וטרינר ביקור בית",
+    "וטרינר חירום תל אביב",
+    "וטרינר תורן תל אביב",
+    "וטרינר חירום רמת גן",
+    "וטרינר חירום פתח תקווה",
+    "וטרינר חירום חיפה",
+    "וטרינר חירום ירושלים"
+  ],
+  "negativeKeywords": [
+    "קורס",
+    "לימודים",
+    "הכשרה",
+    "התמחות",
+    "אוניברסיטה",
+    "מכללה",
+    "פקולטה",
+    "סטאז",
+    "דרושים",
+    "משרה",
+    "משרות",
+    "עבודה",
+    "שכר",
+    "קורות חיים",
+    "התנדבות",
+    "מאמר",
+    "מדריך",
+    "ויקיפדיה",
+    "תמונות",
+    "סרטון",
+    "יוטיוב",
+    "פורום",
+    "המלצות",
+    "חוות דעת",
+    "ביקורת",
+    "מחיר",
+    "מחירים",
+    "זול",
+    "חינם",
+    "עשה זאת בעצמך"
+  ],
+  "bidStrategy": "Maximize Conversions",
+  "urgencyProfile": "high",
+  "geoNote": "כדאי לבנות קמפיינים לפי אזורי שירות ורדיוס סביב המרפאה, עם קבוצות נפרדות לגוש דן, ירושלים, חיפה ובאר שבע; בחיפושי חירום לתת עדיפות למונחים כמו 'קרוב' ו'פתוח עכשיו'.",
+  "seasonalNote": "הביקוש הדחוף עולה בלילות, סופי שבוע וחגים כשהמרפאות הרגילות סגורות; בקיץ יש יותר מקרי מכת חום, קרציות ועקיצות.",
+  "generatedAt": "2026-07-02T13:44:59.644Z"
+}

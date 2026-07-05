@@ -1,0 +1,169 @@
+{
+  "vertical": "carpenter",
+  "hebrewName": "נגר",
+  "primaryKeywords": [
+    {
+      "kw": "נגר",
+      "intent": "research",
+      "volume": "high"
+    },
+    {
+      "kw": "נגר מומלץ",
+      "intent": "comparison",
+      "volume": "high"
+    },
+    {
+      "kw": "נגר פרטי",
+      "intent": "comparison",
+      "volume": "medium"
+    },
+    {
+      "kw": "נגר בהתאמה אישית",
+      "intent": "research",
+      "volume": "medium"
+    },
+    {
+      "kw": "נגר בתל אביב",
+      "intent": "comparison",
+      "volume": "medium"
+    },
+    {
+      "kw": "נגר בירושלים",
+      "intent": "comparison",
+      "volume": "medium"
+    },
+    {
+      "kw": "נגר בחיפה",
+      "intent": "comparison",
+      "volume": "medium"
+    },
+    {
+      "kw": "נגר בפתח תקווה",
+      "intent": "comparison",
+      "volume": "low"
+    },
+    {
+      "kw": "נגר בראשון לציון",
+      "intent": "comparison",
+      "volume": "low"
+    },
+    {
+      "kw": "נגר בהרצליה",
+      "intent": "comparison",
+      "volume": "low"
+    },
+    {
+      "kw": "נגר לארונות",
+      "intent": "research",
+      "volume": "medium"
+    },
+    {
+      "kw": "נגר לארונות קיר",
+      "intent": "research",
+      "volume": "medium"
+    },
+    {
+      "kw": "נגר לחדר ארונות",
+      "intent": "research",
+      "volume": "medium"
+    },
+    {
+      "kw": "נגר למטבחים",
+      "intent": "research",
+      "volume": "medium"
+    },
+    {
+      "kw": "נגר למדפים",
+      "intent": "research",
+      "volume": "medium"
+    },
+    {
+      "kw": "נגר לספריית קיר",
+      "intent": "research",
+      "volume": "low"
+    },
+    {
+      "kw": "נגר לרהיטים בהתאמה אישית",
+      "intent": "research",
+      "volume": "medium"
+    },
+    {
+      "kw": "נגר לשולחן עבודה בהתאמה אישית",
+      "intent": "research",
+      "volume": "low"
+    },
+    {
+      "kw": "נגר לחדרי ילדים",
+      "intent": "research",
+      "volume": "low"
+    },
+    {
+      "kw": "נגר לעבודות עץ בבית",
+      "intent": "research",
+      "volume": "medium"
+    },
+    {
+      "kw": "נגר לתיקון ארון",
+      "intent": "urgent",
+      "volume": "low"
+    },
+    {
+      "kw": "נגר דחוף",
+      "intent": "urgent",
+      "volume": "low"
+    }
+  ],
+  "exactMatch": [
+    "נגר מומלץ",
+    "נגר פרטי",
+    "נגר בהתאמה אישית",
+    "נגר לארונות קיר",
+    "נגר לחדר ארונות",
+    "נגר למטבחים",
+    "נגר לרהיטים בהתאמה אישית",
+    "נגר למדפים",
+    "נגר לעבודות עץ בבית",
+    "נגר בתל אביב",
+    "נגר בירושלים",
+    "נגר בחיפה",
+    "נגר בפתח תקווה",
+    "נגר דחוף"
+  ],
+  "negativeKeywords": [
+    "קורס",
+    "סדנה",
+    "לימודי נגרות",
+    "קורס נגרות",
+    "נגרות למתחילים",
+    "בית ספר לנגרות",
+    "הכשרה מקצועית",
+    "דרושים",
+    "משרה",
+    "משרות",
+    "קורות חיים",
+    "משכורת",
+    "שכר",
+    "התלמדות",
+    "עשה זאת בעצמך",
+    "עשה לבד",
+    "איך לבנות",
+    "מדריך",
+    "הדרכה",
+    "יוטיוב",
+    "סרטון",
+    "תוכניות",
+    "שרטוט",
+    "יד 2",
+    "למכירה",
+    "מחירון",
+    "מחירים",
+    "כמה עולה",
+    "חוות דעת",
+    "ביקורות"
+  ],
+  "bidStrategy": "Maximize Conversions",
+  "urgencyProfile": "low",
+  "geoNote": "כדאי לפצל לפי אזורי שירות בפועל; הביקוש המשמעותי ביותר לרוב מגיע מגוש דן, השרון, ירושלים וחיפה.",
+  "seasonalNote": "הביקוש נוטה לעלות סביב מעברי דירה, שיפוצים ובחודשי הקיץ; פרויקטים של נגרות בהתאמה אישית נסגרים לרוב אחרי מחקר של מספר ימים עד שבועות.",
+  "generatedAt": "2026-07-02T11:05:14.916Z"
+}

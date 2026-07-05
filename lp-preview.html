@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>מנעולן דניאל — תל אביב ומרכז</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Secular+One&family=Assistant:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+
+  <style>
+    /* ── Reset & base ───────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; }
+    body {
+      font-family: "Assistant", sans-serif;
+      background-color: #F0F4F8;
+      color: #0D1B2A;
+      min-height: 100vh;
+      padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px));
+      direction: rtl;
+    }
+    a { text-decoration: none; }
+    h1, h2, h3 {
+      font-family: "Secular One", "Assistant", sans-serif;
+      font-weight: 900;
+    }
+
+    /* ── Tokens ─────────────────────────────────────────── */
+    :root {
+      --primary:      #1B3A5C;
+      --accent:       #FF6B35;
+      --accent-dark:  #C43C08;
+      --cta-grad:     linear-gradient(135deg, #C43C08 0%, #A82E00 100%);
+      --bg:           #F0F4F8;
+      --surface:      #FFFFFF;
+      --surface-alt:  #EBF0F6;
+      --text:         #0D1B2A;
+      --muted:        #4A6580;
+      --border:       #D1DCE8;
+      --trust-bg:     rgba(27,58,92,0.08);
+      --r-sm:         6px;
+      --r-md:         10px;
+    }
+
+    /* ── Header ─────────────────────────────────────────── */
+    .site-header {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 12px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    }
+    .site-header .brand {
+      font-family: "Secular One", sans-serif;
+      font-weight: 900;
+      font-size: 1.1rem;
+      color: var(--primary);
+    }
+    .site-header .cta-btn {
+      background: var(--cta-grad);
+      color: #fff;
+      padding: 15px 18px;
+      border-radius: var(--r-sm);
+      font-weight: 700;
+      font-size: 0.9rem;
+      white-space: nowrap;
+      min-height: 44px;
+      display: flex;
+      align-items: center;
+    }
+
+    /* ── Hero ───────────────────────────────────────────── */
+    .hero {
+      position: relative;
+      min-height: 340px;
+      background:
+        linear-gradient(to bottom, rgba(27,58,92,0.88) 0%, rgba(13,27,42,0.80) 100%),
+        /* Simulated dark emergency night scene */
+        linear-gradient(160deg, #0a1628 0%, #1b3a5c 40%, #0d2240 70%, #070e1c 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 0 20px;
+    }
+    /* decorative texture dots */
+    .hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image: radial-gradient(rgba(255,107,53,0.08) 1px, transparent 1px);
+      background-size: 28px 28px;
+      pointer-events: none;
+    }
+    .hero-inner {
+      position: relative;
+      z-index: 1;
+      max-width: 600px;
+      padding: 48px 0;
+    }
+    .response-badge {
+      display: inline-block;
+      background: var(--accent);
+      color: #fff;
+      padding: 6px 16px;
+      border-radius: var(--r-sm);
+      font-size: 0.85rem;
+      font-weight: 700;
+      margin-bottom: 18px;
+      font-family: "Assistant", sans-serif;
+      letter-spacing: 0.02em;
+    }
+    .hero h1 {
+      font-size: clamp(1.7rem, 5.5vw, 2.6rem);
+      color: #FFFFFF;
+      line-height: 1.2;
+      margin-bottom: 16px;
+    }
+    .hero p {
+      font-size: clamp(1rem, 3vw, 1.15rem);
+      color: rgba(255,255,255,0.88);
+      margin-bottom: 28px;
+      line-height: 1.6;
+    }
+    .hero-ctas {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    .btn-primary {
+      background: var(--cta-grad);
+      color: #fff;
+      padding: 15px 28px;
+      border-radius: var(--r-sm);
+      font-weight: 800;
+      font-size: 1.05rem;
+      display: inline-block;
+      min-height: 44px;
+    }
+    .btn-whatsapp {
+      background: #25D366;
+      color: #fff;
+      padding: 15px 28px;
+      border-radius: var(--r-sm);
+      font-weight: 800;
+      font-size: 1.05rem;
+      display: inline-block;
+      min-height: 44px;
+    }
+
+    /* ── Trust Bar ──────────────────────────────────────── */
+    .trust-bar {
+      background: var(--primary);
+      padding: 14px 20px;
+    }
+    .trust-bar-inner {
+      max-width: 720px;
+      margin: 0 auto;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: center;
+    }
+    .trust-chip {
+      background: rgba(255,255,255,0.13);
+      color: #fff;
+      padding: 6px 14px;
+      border-radius: var(--r-sm);
+      font-size: 0.82rem;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    /* ── Rating Bar ─────────────────────────────────────── */
+    .rating-bar {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 13px 20px;
+      text-align: center;
+      font-family: "Assistant", sans-serif;
+    }
+    .stars { color: #F5A623; font-size: 1.15rem; }
+    .rating-text { font-weight: 700; color: var(--text); margin-right: 6px; }
+
+    /* ── Section wrapper ────────────────────────────────── */
+    .section { padding: 40px 20px; }
+    .section-alt { background: var(--surface-alt); }
+    .section-white { background: var(--surface); }
+    .section-inner {
+      max-width: 700px;
+      margin: 0 auto;
+    }
+    .section-heading {
+      font-size: 1.4rem;
+      color: var(--primary);
+      margin-bottom: 20px;
+      text-align: center;
+    }
+
+    /* ── Services Grid ──────────────────────────────────── */
+    .services-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 12px;
+    }
+    .service-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--r-md);
+      padding: 14px 16px;
+      font-weight: 600;
+      font-size: 0.9rem;
+      color: var(--text);
+      text-align: center;
+      border-inline-start: 3px solid var(--accent);
+    }
+
+    /* ── Guarantee + Review ─────────────────────────────── */
+    .trust-card {
+      background: var(--trust-bg);
+      border: 1px solid var(--border);
+      border-radius: var(--r-md);
+      padding: 24px 20px;
+      border-inline-start: 4px solid var(--accent-dark);
+    }
+    .trust-card + .trust-card { margin-top: 16px; }
+    .trust-card h3 {
+      font-weight: 700;
+      font-size: 1rem;
+      color: var(--primary);
+      margin-bottom: 8px;
+      font-family: "Assistant", sans-serif;
+    }
+    .trust-card p {
+      color: var(--muted);
+      font-size: 0.9rem;
+      line-height: 1.6;
+    }
+    .review-quote {
+      font-style: italic;
+      font-size: 1.05rem;
+      color: var(--text);
+      line-height: 1.7;
+      margin-bottom: 10px;
+    }
+    .review-meta { font-size: 0.85rem; color: var(--muted); }
+    .review-meta .stars { font-size: 0.9rem; }
+
+    /* ── FAQ ────────────────────────────────────────────── */
+    .faq-list { display: flex; flex-direction: column; gap: 10px; }
+    details {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--r-md);
+      overflow: hidden;
+    }
+    summary {
+      font-weight: 700;
+      color: var(--primary);
+      padding: 16px 18px;
+      cursor: pointer;
+      list-style: none;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      font-size: 0.95rem;
+    }
+    summary::-webkit-details-marker { display: none; }
+    summary::after {
+      content: '▼';
+      font-size: 0.7rem;
+      color: var(--muted);
+      transition: transform 0.2s;
+      flex-shrink: 0;
+    }
+    details[open] summary::after { transform: rotate(180deg); }
+    .faq-answer {
+      padding: 0 18px 16px;
+      color: var(--muted);
+      font-size: 0.9rem;
+      line-height: 1.6;
+    }
+
+    /* ── About ──────────────────────────────────────────── */
+    .about-section { text-align: center; padding: 36px 20px; background: var(--surface); }
+    .avatar {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      background: var(--cta-grad);
+      margin: 0 auto 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-weight: 900;
+      font-size: 1.5rem;
+      font-family: "Secular One", sans-serif;
+    }
+    .about-text {
+      max-width: 520px;
+      margin: 0 auto;
+      color: var(--muted);
+      font-size: 0.95rem;
+      line-height: 1.7;
+    }
+
+    /* ── Lead Form ──────────────────────────────────────── */
+    .form-section { padding: 40px 20px; background: var(--surface-alt); }
+    .form-inner { max-width: 480px; margin: 0 auto; }
+    .form-inner h2 { text-align: center; font-size: 1.3rem; color: var(--primary); margin-bottom: 20px; }
+    .lead-form { display: flex; flex-direction: column; gap: 14px; }
+    .lead-form input[type="text"],
+    .lead-form input[type="tel"] {
+      padding: 14px 16px;
+      border-radius: var(--r-sm);
+      border: 1px solid var(--border);
+      font-size: 1rem;
+      font-family: "Assistant", sans-serif;
+      color: var(--text);
+      background: var(--surface);
+      width: 100%;
+      direction: rtl;
+    }
+    .lead-form input[type="tel"] { direction: ltr; text-align: right; }
+    .lead-form input:focus {
+      outline: 2px solid var(--accent-dark);
+      outline-offset: 1px;
+      border-color: var(--accent-dark);
+    }
+    .consent-row {
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+    }
+    .consent-row input[type="checkbox"] {
+      margin-top: 3px;
+      accent-color: var(--accent-dark);
+      flex-shrink: 0;
+      width: 18px;
+      height: 18px;
+    }
+    .consent-row span {
+      font-size: 0.8rem;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+    .submit-btn {
+      padding: 15px;
+      background: var(--cta-grad);
+      color: #fff;
+      border: none;
+      border-radius: var(--r-sm);
+      font-weight: 800;
+      font-size: 1.05rem;
+      cursor: pointer;
+      font-family: "Assistant", sans-serif;
+      min-height: 44px;
+      width: 100%;
+    }
+    .form-links {
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      margin-top: 18px;
+      font-size: 0.75rem;
+    }
+    .form-links a { color: var(--muted); padding: 8px 6px; }
+
+    /* ── Sticky Bar ─────────────────────────────────────── */
+    .sticky-bar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      padding-top: 10px;
+      padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+      padding-left: 16px;
+      padding-right: 16px;
+      z-index: 50;
+      box-shadow: 0 -2px 12px rgba(0,0,0,0.08);
+    }
+    .sticky-bar p {
+      text-align: center;
+      font-size: 0.78rem;
+      color: var(--muted);
+      margin-bottom: 8px;
+      font-weight: 600;
+    }
+    .sticky-btns { display: flex; gap: 10px; }
+    .sticky-btns a {
+      flex: 1;
+      border: none;
+      padding: 14px;
+      border-radius: var(--r-sm);
+      font-weight: 800;
+      font-size: 1rem;
+      text-align: center;
+      display: block;
+      color: #fff;
+      min-height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+    .sticky-call { background: var(--cta-grad); }
+    .sticky-wa   { background: #25D366; }
+
+    /* ── Responsive ─────────────────────────────────────── */
+    @media (max-width: 400px) {
+      .hero h1 { font-size: 1.5rem; }
+      .btn-primary, .btn-whatsapp { padding: 13px 20px; font-size: 0.95rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ── Header ─────────────────────────────────────────── -->
+  <header class="site-header">
+    <div class="brand">מנעולן דניאל</div>
+    <a href="tel:0501234567" class="cta-btn">📞 050-123-4567</a>
+  </header>
+
+  <!-- ── Hero ───────────────────────────────────────────── -->
+  <section class="hero">
+    <div class="hero-inner">
+      <div class="response-badge">⚡ מגיע תוך 20 דקות</div>
+      <h1>נעול מהדלת?<br>דניאל כבר בדרך.</h1>
+      <p>מנעולן מורשה בתל אביב ומרכז — 24/7, כולל שבתות.<br>לא פתחנו — לא שילמתם.</p>
+      <div class="hero-ctas">
+        <a href="tel:0501234567" class="btn-primary">📞 התקשר עכשיו</a>
+        <a href="https://wa.me/9720501234567" target="_blank" rel="noopener noreferrer" aria-label="וואטסאפ (נפתח בחלון חדש)" class="btn-whatsapp">💬 וואטסאפ</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Trust Bar ────────────────────────────────────────── -->
+  <section class="trust-bar">
+    <div class="trust-bar-inner">
+      <div class="trust-chip">✓ רישיון מנעולן מס׳ 4821</div>
+      <div class="trust-chip">⚡ הגעה תוך 20 דקות</div>
+      <div class="trust-chip">★ 4.9 כוכבים — 147 ביקורות</div>
+      <div class="trust-chip">🛡 לא פתחתי — לא שילמת</div>
+      <div class="trust-chip">🔧 14 שנות ניסיון</div>
+    </div>
+  </section>
+
+  <!-- ── Rating Bar ────────────────────────────────────────── -->
+  <div class="rating-bar">
+    <span class="stars" aria-label="דירוג 5 כוכבים">★★★★★</span>
+    <span class="rating-text">4.9 כוכבים — 147 לקוחות מרוצים בגוגל</span>
+  </div>
+
+  <!-- ── Services ──────────────────────────────────────────── -->
+  <section class="section section-alt">
+    <div class="section-inner">
+      <h2 class="section-heading">מה אנחנו עושים</h2>
+      <div class="services-grid">
+        <div class="service-card">🔓 פתיחת דלתות נעולות</div>
+        <div class="service-card">🔑 החלפת מנעולים</div>
+        <div class="service-card">🗄 פריצת כספות</div>
+        <div class="service-card">🚗 מנעול לרכב</div>
+        <div class="service-card">🏢 מנעולים לעסקים</div>
+        <div class="service-card">🔩 התקנת מנעולים</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Guarantee + Review ──────────────────────────────── -->
+  <section class="section section-white">
+    <div class="section-inner">
+
+      <div class="trust-card">
+        <h3>🛡 לא פתחנו — לא שילמתם</h3>
+        <p>אם לא הצלחנו לפתוח את הדלת — העבודה חינם, ללא כל תנאי. לא בגלל שאנחנו צריכים לכתוב את זה, אלא כי ב-14 שנה עוד לא קרה.</p>
+      </div>
+
+      <div class="trust-card">
+        <p class="review-quote">״דניאל הגיע תוך 18 דקות בחצות. פתח את הדלת ולא השאיר שריטה אחת. מקצועי, מהיר ומחיר הוגן — ממליצה בחום!״</p>
+        <div class="review-meta">
+          <span class="stars" aria-label="דירוג 5 כוכבים">★★★★★</span>
+          <span style="margin-right: 6px;">רחל ל. — גבעתיים</span>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ── FAQ ───────────────────────────────────────────────── -->
+  <section class="section section-alt">
+    <div class="section-inner">
+      <h2 class="section-heading">שאלות שכולם שואלים</h2>
+      <div class="faq-list">
+
+        <details>
+          <summary>❓ כמה עולה פתיחת דלת?</summary>
+          <div class="faq-answer">המחיר תלוי בסוג המנעול — בין ₪150 ל-₪350 כולל חומר. המחיר הסופי נקבע במקום, לפני שמתחילים. לא מתמחרים טלפונית כדי לא להפתיע אתכם.</div>
+        </details>
+
+        <details>
+          <summary>❓ כמה זמן לוקחת הפתיחה?</summary>
+          <div class="faq-answer">דלת רגילה נפתחת תוך 5 עד 15 דקות. מנעולים מיוחדים כמו מולטילוק או אבטחה גבוהה יכולים לקחת קצת יותר — אבל תמיד מבלי לפגוע בדלת.</div>
+        </details>
+
+        <details>
+          <summary>❓ עובדים גם בשעות הלילה?</summary>
+          <div class="faq-answer">כן — 24 שעות ביממה, 7 ימים בשבוע, כולל שבתות וחגים. אין תוספת מחיר לשעות הלילה.</div>
+        </details>
+
+        <details>
+          <summary>❓ מגיעים לאילו אזורים?</summary>
+          <div class="faq-answer">תל אביב, גבעתיים, רמת גן, בני ברק, פתח תקווה, הרצליה, רמת השרון, אור יהודה וסביבות.</div>
+        </details>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ── About ─────────────────────────────────────────────── -->
+  <section class="about-section">
+    <div class="avatar">ד</div>
+    <p class="about-text">
+      דניאל כהן הוא מנעולן מורשה עם 14 שנות ניסיון בתל אביב ומרכז.
+      כל עבודה מלווה באחריות מלאה ובמחיר שנקבע מראש — בלי הפתעות, בלי כוכביות,
+      בלי "זה לא כלול".
+    </p>
+  </section>
+
+  <!-- ── Lead Form ─────────────────────────────────────────── -->
+  <section class="form-section">
+    <div class="form-inner">
+      <h2 id="lead-form-heading">השאר פרטים ונחזור תוך דקה</h2>
+      <form class="lead-form" aria-labelledby="lead-form-heading" onsubmit="return false;">
+        <input type="text" placeholder="שם מלא" aria-label="שם מלא" required />
+        <input type="tel" placeholder="050-0000000" aria-label="מספר טלפון" required />
+        <label class="consent-row">
+          <input type="checkbox" required />
+          <span>
+            אני מאשר/ת קבלת הודעות שיווקיות בהתאם לחוק הספאם ומסכים/ה ל<strong>מדיניות הפרטיות</strong>.
+          </span>
+        </label>
+        <button type="submit" class="submit-btn">📞 התקשר עכשיו</button>
+      </form>
+      <div class="form-links">
+        <a href="#">מדיניות פרטיות</a>
+        <a href="#">הצהרת נגישות</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Sticky Bottom Bar ─────────────────────────────────── -->
+  <div class="sticky-bar">
+    <p>זמינים עכשיו — גם בשעה 3 בלילה</p>
+    <div class="sticky-btns">
+      <a href="tel:0501234567" class="sticky-call">📞 התקשר</a>
+      <a href="https://wa.me/9720501234567" target="_blank" rel="noopener noreferrer" aria-label="וואטסאפ (נפתח בחלון חדש)" class="sticky-wa">💬 וואטסאפ</a>
+    </div>
+  </div>
+
+</body>
+</html>

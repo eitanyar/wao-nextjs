@@ -1,0 +1,169 @@
+{
+  "vertical": "yoga-teacher",
+  "hebrewName": "מורה ליוגה",
+  "primaryKeywords": [
+    {
+      "kw": "מורה ליוגה",
+      "intent": "research",
+      "volume": "high"
+    },
+    {
+      "kw": "מדריכת יוגה",
+      "intent": "research",
+      "volume": "high"
+    },
+    {
+      "kw": "מדריך יוגה פרטי",
+      "intent": "comparison",
+      "volume": "medium"
+    },
+    {
+      "kw": "מדריכת יוגה פרטית",
+      "intent": "comparison",
+      "volume": "medium"
+    },
+    {
+      "kw": "שיעור יוגה פרטי",
+      "intent": "comparison",
+      "volume": "high"
+    },
+    {
+      "kw": "שיעורי יוגה פרטיים",
+      "intent": "research",
+      "volume": "medium"
+    },
+    {
+      "kw": "מורה ליוגה בבית",
+      "intent": "comparison",
+      "volume": "medium"
+    },
+    {
+      "kw": "מדריכת יוגה בבית",
+      "intent": "comparison",
+      "volume": "medium"
+    },
+    {
+      "kw": "מורה ליוגה אונליין",
+      "intent": "research",
+      "volume": "medium"
+    },
+    {
+      "kw": "שיעור יוגה בזום",
+      "intent": "research",
+      "volume": "medium"
+    },
+    {
+      "kw": "מורה ליוגה למתחילים",
+      "intent": "research",
+      "volume": "high"
+    },
+    {
+      "kw": "מדריכת יוגה לנשים",
+      "intent": "research",
+      "volume": "medium"
+    },
+    {
+      "kw": "מורה ליוגה בהריון",
+      "intent": "comparison",
+      "volume": "medium"
+    },
+    {
+      "kw": "מורה ליוגה אישית",
+      "intent": "comparison",
+      "volume": "medium"
+    },
+    {
+      "kw": "מורה ליוגה בתל אביב",
+      "intent": "comparison",
+      "volume": "medium"
+    },
+    {
+      "kw": "מורה ליוגה בירושלים",
+      "intent": "comparison",
+      "volume": "medium"
+    },
+    {
+      "kw": "מורה ליוגה בחיפה",
+      "intent": "comparison",
+      "volume": "medium"
+    },
+    {
+      "kw": "מורה ליוגה ברמת גן",
+      "intent": "comparison",
+      "volume": "medium"
+    },
+    {
+      "kw": "מורה ליוגה בראשון לציון",
+      "intent": "comparison",
+      "volume": "medium"
+    },
+    {
+      "kw": "מורה ליוגה בהרצליה",
+      "intent": "comparison",
+      "volume": "low"
+    },
+    {
+      "kw": "מורה ליוגה קרוב אליי",
+      "intent": "urgent",
+      "volume": "low"
+    },
+    {
+      "kw": "שיעור יוגה פרטי היום",
+      "intent": "urgent",
+      "volume": "low"
+    }
+  ],
+  "exactMatch": [
+    "מורה ליוגה",
+    "מדריכת יוגה",
+    "מדריך יוגה פרטי",
+    "מדריכת יוגה פרטית",
+    "שיעור יוגה פרטי",
+    "שיעורי יוגה פרטיים",
+    "מורה ליוגה בבית",
+    "מורה ליוגה אונליין",
+    "מורה ליוגה למתחילים",
+    "מדריכת יוגה לנשים",
+    "מורה ליוגה בהריון",
+    "מורה ליוגה בתל אביב",
+    "מורה ליוגה בירושלים",
+    "מורה ליוגה בחיפה"
+  ],
+  "negativeKeywords": [
+    "קורס",
+    "קורסים",
+    "הכשרת",
+    "הסמכה",
+    "תעודה",
+    "לימודים",
+    "לימודי",
+    "משרה",
+    "משרות",
+    "דרושים",
+    "עבודה",
+    "עבודות",
+    "שכר",
+    "משכורת",
+    "חינם",
+    "יוטיוב",
+    "סרטון",
+    "סרטונים",
+    "וידאו",
+    "אפליקציה",
+    "תרגילים",
+    "תנוחות",
+    "תמונות",
+    "ויקיפדיה",
+    "פורום",
+    "מחיר",
+    "מחירים",
+    "עלות",
+    "ביקורות",
+    "חוות דעת"
+  ],
+  "bidStrategy": "Maximize Conversions",
+  "urgencyProfile": "low",
+  "geoNote": "כדאי לפצל לפי אזורי ביקוש חזקים: גוש דן, ירושלים, חיפה והשרון; חיפושים מקומיים עם שם עיר עובדים טוב במיוחד בשירות אישי ובבית.",
+  "seasonalNote": "הביקוש מתחזק בינואר-פברואר סביב החלטות לשנה חדשה, אחרי החגים ולפני הקיץ; בתקופות חזרה לשגרה יש עלייה גם בביקוש לשיעורים פרטיים ובזום.",
+  "generatedAt": "2026-07-02T16:34:13.784Z"
+}

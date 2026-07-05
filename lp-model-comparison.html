@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Tamar Model Comparison — מנעולן דניאל</title>
+  <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@400;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: "Assistant", sans-serif; background: #f0f2f5; padding: 24px; direction: rtl; }
+    h1  { font-size: 1.2rem; color: #1b3a5c; margin-bottom: 6px; }
+    .subtitle { color: #666; font-size: 0.85rem; margin-bottom: 24px; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
+    .col { background: #fff; border-radius: 10px; border: 1px solid #dce3ee; overflow: hidden; }
+    .col-header { background: #1b3a5c; color: #fff; padding: 12px 16px; font-weight: 800; font-size: 0.9rem; display: flex; justify-content: space-between; align-items: center; }
+    .ms { font-weight: 400; opacity: 0.7; font-size: 0.8rem; }
+    .field-label { background: #f7f9fc; color: #8a9bb0; font-size: 0.7rem; font-weight: 700; padding: 6px 16px 2px; text-transform: uppercase; letter-spacing: 0.05em; border-top: 1px solid #eaeff5; }
+    .field { padding: 8px 16px 12px; color: #0d1b2a; font-size: 0.95rem; line-height: 1.5; }
+    .field.h1 { font-size: 1.25rem; font-weight: 900; color: #1b3a5c; }
+    .field.cta { display: inline-block; background: linear-gradient(135deg,#c43c08,#a82e00); color: #fff; border-radius: 6px; font-weight: 800; padding: 10px 18px; margin: 4px 16px 12px; }
+    .field.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+    .chip { background: rgba(27,58,92,0.08); color: #1b3a5c; padding: 4px 10px; border-radius: 4px; font-size: 0.78rem; font-weight: 600; }
+    .field.faq-a { background: #f7f9fc; color: #4a6580; font-size: 0.87rem; border-top: none; padding-top: 2px; }
+    .field.urgency { color: #c43c08; font-weight: 700; }
+    .error { border-color: #f5c6cb; }
+    .err { padding: 16px; color: #721c24; background: #f8d7da; font-size: 0.85rem; }
+  </style>
+</head>
+<body>
+  <h1>Tamar Model Comparison</h1>
+  <p class="subtitle">Persona: מנעולן דניאל · מנעולן · תל אביב, גבעתיים, רמת גן</p>
+  <div class="grid"><div class="col error"><h2>Azure / gpt-chat-latest</h2><p class="err">❌ {"error":{"code":"404","message":"Resource not found"}}</p></div><div class="col error"><h2>Claude Sonnet 4.6</h2><p class="err">❌ ANTHROPIC_API_KEY not set in .env.local</p></div></div>
+</body>
+</html>

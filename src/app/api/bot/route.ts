@@ -94,14 +94,33 @@ function parseNumber(text: string): number | null {
   return isNaN(n) ? null : n;
 }
 
+function generateFallbackStrategyAndCopy(data: CollectedData) {
+  const budget = data.monthlyBudget ?? 1000;
+  const daily = Math.round(budget / 30);
+  const location = Array.isArray(data.specificCities) ? data.specificCities.join(", ") : (data.specificCities ?? "ישראל");
+  const niche = data.businessNiche ?? data.businessName ?? "שירות";
+  return {
+    strategy: {
+      targetLocation: location,
+      suggestedDailyBudget: daily,
+      biddingStrategy: "Maximize Clicks",
+      keywords: [`${niche}`, `${niche} מחיר`, `${niche} מקצועי`, `שירות ${niche}`],
+      strategyRationale: `קמפיין חיפוש ממוקד בשלב איסוף נתונים (Maximize Clicks). תקציב יומי ₪${daily} בהתאם לתקציב החודשי.`,
+    },
+    copy: {
+      headlines: [`${niche} מקצועי`, `${location} | שירות מהיר`, `התקשר עכשיו — מענה מיידי`],
+      descriptions: [`שירות אמין ומקצועי בתחום ${niche}. פנה אלינו לקבלת הצעת מחיר ללא התחייבות.`, `ניסיון, מקצועיות ואמינות. ${data.usp ?? "צור קשר עוד היום."}`],
+    },
+  };
+}
 
 // ── Turn questions for simulation ─────────────────────────────────────────────
 
 const TURN_QUESTIONS: Record<number, string> = {
   0: "יאללה, בוא נתחיל — ספר לי קצת על העסק שלך. ומכל מה שאתה עושה, מה הכי מכניס לך כסף?",
-  1: "ואיך קוראים לעסק? ומה שמך הפרטי?\n(אם אין שם עסק — השם שלך הוא המותג)",
-  2: "ומלבד השירות הראשי — מה עוד אתה מציע? תן לי 3-5 שירותים נוספים שלקוחות פונים אליך בשבילם.",
-  3: "יופי. ואיך זה עובד בדרך כלל — אתה מגיע אל הלקוח, הלקוח מגיע אליך, שניהם, או שאתה עובד באירועים / מרחוק?",
+  1: "ואיך קוראים לעסק?\n(אם אין שם עסק — השם שלך הוא המותג)",
+  2: "יש עוד שירותים שאתה נותן? לא ניגע בהם עכשיו, אבל הם מחזקים את הדף שלך ונחזור אליהם בהמשך.",
+  3: "יופי. ואיך זה עובד בדרך כלל — אתה מגיע אל הלקוח, הלקוח מגיע אליך, שניהם, או מרחוק?",
   4: "באילו ערים ושכונות ספציפיות אתה נותן שירות? (ככל שתפרט יותר, כך גוגל ידרג אותך טוב יותר)",
   5: "תחשוב על לקוח טוב שפנה אליך לאחרונה — מי זה?\nומה הכי הטריד אותו רגע לפני שהרים אליך טלפון?",
   6: "מה הכי שואלים אותך ברגע שמתקשרים? תן לי 2-3 שאלות שחוזרות.",
@@ -149,7 +168,13 @@ function handleSimulation(
           return NextResponse.json({ response, currentState: nextState, collectedData: data, isSimulation: true });
         }
         data.businessNiche = text;
-        break;
+        data.turnIndex = 1;
+        return NextResponse.json({
+          response: `יופי, ${text} — קלטתי. ${TURN_QUESTIONS[1]}`,
+          currentState: nextState,
+          collectedData: data,
+          isSimulation: true,
+        });
       case 1:
         data.businessName = text;
         break;
@@ -594,7 +619,6 @@ Phone: ${collectedData.phone}
           model: deploymentName,
           messages: [{ role: "system", content: DROR_SYSTEM_PROMPT }, { role: "user", content: brief }],
           response_format: { type: "json_object" },
-          temperature: 0.3,
         }),
       }).then(r => r.json()),
       fetch(url, {
@@ -604,17 +628,24 @@ Phone: ${collectedData.phone}
           model: deploymentName,
           messages: [{ role: "system", content: TAMAR_SYSTEM_PROMPT }, { role: "user", content: brief }],
           response_format: { type: "json_object" },
-          temperature: 0.5,
         }),
       }).then(r => r.json()),
     ]);
 
-    const drorData = JSON.parse(drorRes.choices[0].message.content);
-    const tamarData = JSON.parse(tamarRes.choices[0].message.content);
+    let drorData: Record<string, any>;
+    let tamarData: Record<string, any>;
+    try {
+      drorData = JSON.parse(drorRes.choices[0].message.content);
+      tamarData = JSON.parse(tamarRes.choices[0].message.content);
+    } catch {
+      const fallback = generateFallbackStrategyAndCopy(collectedData);
+      drorData = fallback.strategy as unknown as Record<string, any>;
+      tamarData = fallback.copy as unknown as Record<string, any>;
+    }
 
     const presentPrompt = `
 Present this Google Ads campaign plan to the business owner in warm, expert Sabra Hebrew.
-Reference what they see in the panel on screen. Ask for approval to proceed.
+The strategy panel is visible on screen — do NOT repeat every detail. Just highlight 1-2 key decisions, then confirm the campaign is ready.
 
 Strategy: Location ${drorData.targetLocation}, daily budget ₪${drorData.suggestedDailyBudget}, bidding: ${drorData.biddingStrategy}
 Keywords: ${drorData.keywords?.join(", ")}
@@ -622,6 +653,9 @@ Rationale: ${drorData.strategyRationale}
 
 Ad Copy: ${tamarData.headlines?.join(" | ")}
 Descriptions: ${tamarData.descriptions?.join(" | ")}
+
+IMPORTANT: End your message with EXACTLY this sentence (no variation):
+"אם הכל נראה טוב — כתוב ״אישור״ ואנחנו מתניעים."
 `;
 
     const adamRes = await fetch(url, {
@@ -631,7 +665,6 @@ Descriptions: ${tamarData.descriptions?.join(" | ")}
         model: deploymentName,
         messages: [{ role: "system", content: ADAM_SYSTEM_PROMPT }, { role: "user", content: presentPrompt }],
         response_format: { type: "json_object" },
-        temperature: 0.5,
       }),
     }).then(r => r.json());
 
@@ -648,9 +681,10 @@ Descriptions: ${tamarData.descriptions?.join(" | ")}
   }
 
   // Pre-compute budget numbers server-side so the LLM never does math.
-  // Inject as a system hint when we have enough data but no budget yet.
+  // Always inject once avgJobValue is known — stays in the prompt even after monthlyBudget is set
+  // so the LLM can't re-derive different numbers on follow-up turns.
   let budgetHint = "";
-  if (collectedData.avgJobValue && !collectedData.monthlyBudget) {
+  if (collectedData.avgJobValue) {
     const vbHint = detectVerticalBudget(collectedData.businessNiche || "");
     let lpCvrHint = vbHint.lpCvr;
     const rc = collectedData.reviewCount || 0;
@@ -669,23 +703,50 @@ Descriptions: ${tamarData.descriptions?.join(" | ")}
 
     budgetHint = `\n\n[SYSTEM PRE-COMPUTED — use these exact numbers, do not recalculate]:
 Vertical: ${collectedData.businessNiche} | Recommended: ₪${vbHint.recommended} | Min: ₪${vbHint.min}
-expectedLeads = ${hintLeads} per month (budget ₪${vbHint.recommended} ÷ CPC ₪${vbHint.cpc} × ${(lpCvrHint * 100).toFixed(1)}% CVR)
-clientsPerMonth ≈ ${hintClients.toFixed(1)} (${hintLeads} leads × ${(hintPaidClose * 100).toFixed(0)}% paid close rate)
-paybackMonths = ${hintPayback} (need ${hintBreakEven} clients at ₪${collectedData.avgJobValue} avg job)
-closeRatioDisplay = "1 ל-${hintRatio}"
-Present as: "בסביבות ${hintLeads} פניות בחודש. עם שיעור סגירה של 1 ל-${hintRatio}, זה אומר כ-${hintClients < 1 ? "פחות מלקוח אחד" : hintClients.toFixed(1) + " לקוחות"} בחודש — ותחזיר את ההשקעה תוך כ-${hintPayback === 1 ? "חודש אחד" : hintPayback + " חודשים"}. כל שאר הלקוחות — רווח נקי."`;
+At ₪${vbHint.recommended}/month: expectedLeads = ${hintLeads}, clientsPerMonth ≈ ${hintClients.toFixed(1)}, paybackMonths = ${hintPayback}, closeRatioDisplay = "1 ל-${hintRatio}"
+Present ₪${vbHint.recommended} as: "בסביבות ${hintLeads} פניות בחודש. עם שיעור סגירה של 1 ל-${hintRatio}, זה אומר כ-${hintClients < 1 ? "פחות מלקוח אחד" : hintClients.toFixed(1) + " לקוחות"} בחודש — ותחזיר את ההשקעה תוך כ-${hintPayback === 1 ? "חודש אחד" : hintPayback + " חודשים"}. כל שאר הלקוחות — רווח נקי."`;
+
+    // If user already chose a different budget, pre-compute their numbers too
+    const chosenBudget = collectedData.monthlyBudget;
+    if (chosenBudget && chosenBudget !== vbHint.recommended) {
+      const chosenLeads = Math.max(1, Math.round((chosenBudget * lpCvrHint) / vbHint.cpc));
+      const chosenClients = Math.max(0.2, chosenLeads * hintPaidClose);
+      const chosenBreakEven = Math.ceil(chosenBudget / collectedData.avgJobValue);
+      const chosenPayback = Math.ceil(chosenBreakEven / chosenClients);
+      budgetHint += `\nAt ₪${chosenBudget}/month (user's choice): chosenLeads = ${chosenLeads}, chosenClients ≈ ${chosenClients.toFixed(1)}, chosenPayback = ${chosenPayback} months
+Present ₪${chosenBudget} as: "עם ₪${chosenBudget} תקבל בסביבות ${chosenLeads} פניות בחודש — כ-${chosenClients < 1 ? "פחות מלקוח אחד" : chosenClients.toFixed(1) + " לקוחות"} בחודש, החזר תוך כ-${chosenPayback === 1 ? "חודש אחד" : chosenPayback + " חודשים"}."`;
+    }
+  }
+
+  // The opening message in page.tsx already covers T1 (business type + top earner).
+  // If businessNiche isn't stored yet, extract it from the first user message so the
+  // LLM doesn't re-ask T1 on the very first reply.
+  const enrichedData = { ...collectedData };
+  if (!enrichedData.businessNiche) {
+    const firstUserMsg = messages.find(m => m.role === "user");
+    if (firstUserMsg && firstUserMsg.content.length > 3) {
+      enrichedData.businessNiche = firstUserMsg.content;
+    }
   }
 
   // Build a "do not re-ask" guard from whatever collectedData already has
   const alreadyCollected: string[] = [];
-  if (collectedData.businessNiche) alreadyCollected.push(`businessNiche = "${collectedData.businessNiche}"`);
-  if (collectedData.ownerName) alreadyCollected.push(`ownerName = "${collectedData.ownerName}"`);
-  if (collectedData.businessName) alreadyCollected.push(`businessName = "${collectedData.businessName}"`);
-  if (collectedData.serviceModel) alreadyCollected.push(`serviceModel = "${collectedData.serviceModel}"`);
-  if (collectedData.targetLocation) alreadyCollected.push(`targetLocation = "${collectedData.targetLocation}"`);
-  if (collectedData.avgJobValue) alreadyCollected.push(`avgJobValue = ₪${collectedData.avgJobValue}`);
-  if (collectedData.closeRate) alreadyCollected.push(`closeRate = ${Math.round(collectedData.closeRate * 100)}%`);
-  if (collectedData.phone) alreadyCollected.push(`phone = "${collectedData.phone}"`);
+  if (enrichedData.businessNiche) alreadyCollected.push(`businessNiche = "${enrichedData.businessNiche}"`);
+  if (enrichedData.ownerName) alreadyCollected.push(`ownerName = "${enrichedData.ownerName}"`);
+  if (enrichedData.businessName) alreadyCollected.push(`businessName = "${enrichedData.businessName}"`);
+  if (enrichedData.serviceModel) alreadyCollected.push(`serviceModel = "${enrichedData.serviceModel}"`);
+  if (enrichedData.targetLocation) alreadyCollected.push(`targetLocation = "${enrichedData.targetLocation}"`);
+  if (enrichedData.avgJobValue) alreadyCollected.push(`avgJobValue = ₪${enrichedData.avgJobValue}`);
+  if (enrichedData.closeRate) alreadyCollected.push(`closeRate = ${Math.round(enrichedData.closeRate * 100)}%`);
+  if (enrichedData.phone) alreadyCollected.push(`phone = "${enrichedData.phone}"`);
+  if (enrichedData.starRating) alreadyCollected.push(`starRating = ${enrichedData.starRating}`);
+  if (enrichedData.reviewCount) alreadyCollected.push(`reviewCount = ${enrichedData.reviewCount}`);
+  if (enrichedData.monthlyBudget) alreadyCollected.push(`monthlyBudget = ₪${enrichedData.monthlyBudget}`);
+  if (enrichedData.specificCities) alreadyCollected.push(`specificCities = "${enrichedData.specificCities}"`);
+  if (enrichedData.usp) alreadyCollected.push(`usp = "${enrichedData.usp}"`);
+  if (enrichedData.email) alreadyCollected.push(`email = "${enrichedData.email}"`);
+  if (enrichedData.trustAssetUrls?.length) alreadyCollected.push(`uploadedImages = ${enrichedData.trustAssetUrls.length} images uploaded`);
+  if (enrichedData.profilePhotoUrl) alreadyCollected.push(`profilePhotoUrl = uploaded`);
   const alreadyGuard = alreadyCollected.length > 0
     ? `\n\n[ALREADY COLLECTED — do NOT ask about these again: ${alreadyCollected.join(", ")}]`
     : "";
@@ -698,7 +759,7 @@ Present as: "בסביבות ${hintLeads} פניות בחודש. עם שיעור 
   const res = await fetch(url, {
     method: "POST",
     headers: { "Content-Type": "application/json", "api-key": apiKey },
-    body: JSON.stringify({ model: deploymentName, messages: apiMessages, response_format: { type: "json_object" }, temperature: 0.7 }),
+    body: JSON.stringify({ model: deploymentName, messages: apiMessages, response_format: { type: "json_object" } }),
   });
 
   const data = await res.json();

@@ -1,0 +1,175 @@
+{
+  "vertical": "personal-organizer",
+  "hebrewName": "מארגנת בית",
+  "primaryKeywords": [
+    {
+      "kw": "מארגנת בית",
+      "intent": "comparison",
+      "volume": "medium"
+    },
+    {
+      "kw": "מארגנת בתים",
+      "intent": "comparison",
+      "volume": "medium"
+    },
+    {
+      "kw": "מסדרת בתים",
+      "intent": "comparison",
+      "volume": "low"
+    },
+    {
+      "kw": "סידור בתים מקצועי",
+      "intent": "comparison",
+      "volume": "medium"
+    },
+    {
+      "kw": "ארגון בית מקצועי",
+      "intent": "comparison",
+      "volume": "medium"
+    },
+    {
+      "kw": "שירות סידור בית",
+      "intent": "comparison",
+      "volume": "medium"
+    },
+    {
+      "kw": "סידור וארגון הבית",
+      "intent": "research",
+      "volume": "medium"
+    },
+    {
+      "kw": "מארגנת בית בתל אביב",
+      "intent": "comparison",
+      "volume": "low"
+    },
+    {
+      "kw": "מארגנת בית בירושלים",
+      "intent": "comparison",
+      "volume": "low"
+    },
+    {
+      "kw": "מארגנת בית בחיפה",
+      "intent": "comparison",
+      "volume": "low"
+    },
+    {
+      "kw": "מארגנת בית במרכז",
+      "intent": "comparison",
+      "volume": "low"
+    },
+    {
+      "kw": "מארגנת בית בשרון",
+      "intent": "comparison",
+      "volume": "low"
+    },
+    {
+      "kw": "מארגנת בית ברמת גן",
+      "intent": "comparison",
+      "volume": "low"
+    },
+    {
+      "kw": "מארגנת בית דחוף",
+      "intent": "urgent",
+      "volume": "low"
+    },
+    {
+      "kw": "מארגנת בית בהתראה קצרה",
+      "intent": "urgent",
+      "volume": "low"
+    },
+    {
+      "kw": "מארגנת ארונות",
+      "intent": "comparison",
+      "volume": "low"
+    },
+    {
+      "kw": "סידור ארונות מקצועי",
+      "intent": "comparison",
+      "volume": "medium"
+    },
+    {
+      "kw": "ארגון מטבח מקצועי",
+      "intent": "comparison",
+      "volume": "low"
+    },
+    {
+      "kw": "סידור חדר ילדים מקצועי",
+      "intent": "comparison",
+      "volume": "low"
+    },
+    {
+      "kw": "סידור בית לפני מעבר דירה",
+      "intent": "comparison",
+      "volume": "low"
+    },
+    {
+      "kw": "סידור בית אחרי מעבר דירה",
+      "intent": "comparison",
+      "volume": "low"
+    },
+    {
+      "kw": "מסדרת ארונות מקצועית",
+      "intent": "comparison",
+      "volume": "low"
+    },
+    {
+      "kw": "ארגון וסידור ארונות",
+      "intent": "research",
+      "volume": "medium"
+    }
+  ],
+  "exactMatch": [
+    "מארגנת בית",
+    "מארגנת בתים",
+    "סידור בתים מקצועי",
+    "ארגון בית מקצועי",
+    "שירות סידור בית",
+    "מארגנת בית בתל אביב",
+    "מארגנת בית בירושלים",
+    "מארגנת בית בחיפה",
+    "מארגנת בית במרכז",
+    "מארגנת בית בשרון",
+    "מארגנת ארונות",
+    "סידור ארונות מקצועי",
+    "ארגון מטבח מקצועי",
+    "סידור בית לפני מעבר דירה",
+    "סידור בית אחרי מעבר דירה"
+  ],
+  "negativeKeywords": [
+    "קורס",
+    "קורסים",
+    "לימודים",
+    "הכשרה",
+    "סדנה",
+    "סדנאות",
+    "תעודה",
+    "ללמוד",
+    "דרושים",
+    "משרה",
+    "משרות",
+    "עבודה",
+    "שכר",
+    "משכורת",
+    "התנדבות",
+    "חינם",
+    "בחינם",
+    "עשה זאת בעצמך",
+    "איך לסדר",
+    "טיפים",
+    "רעיונות",
+    "מדריך",
+    "מחירון",
+    "כמה עולה",
+    "מחירים",
+    "ביקורות",
+    "חוות דעת",
+    "המלצות",
+    "יוטיוב",
+    "פינטרסט"
+  ],
+  "bidStrategy": "Maximize Conversions",
+  "urgencyProfile": "low",
+  "geoNote": "למקד לפי אזורי שירות בפועל, עם דגש על גוש דן, השרון, ירושלים וחיפה; מומלץ לפצל קמפיינים או קבוצות מודעות לפי עיר/אזור כשיש דף נחיתה מותאם.",
+  "seasonalNote": "הביקוש נוטה לעלות לפני פסח, בתקופות מעבר דירה ובתחילת עונות סידור הבית; כדאי להעלות תקציב ולהרחיב כיסוי כ-4-8 שבועות לפני פסח.",
+  "generatedAt": "2026-07-02T15:14:05.219Z"
+}

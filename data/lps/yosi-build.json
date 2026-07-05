@@ -1,0 +1,54 @@
+{
+  "slug": "yosi-build",
+  "collectedData": {
+    "businessNiche": "שיפוצניק",
+    "businessName": "יוסי שיפוצים",
+    "phone": "0501234567",
+    "preferredSlug": "yosi-build",
+    "targetLocation": "תל אביב וסביבה",
+    "usp": "20 שנות ניסיון",
+    "starRating": 4.9,
+    "reviewCount": 42,
+    "monthlyBudget": 1500,
+    "avgJobValue": 3000,
+    "contactMethod": "טלפון"
+  },
+  "copy": {
+    "heroHeadline": "נמאס מעיכובים ושיפוץ לא מקצועי? תקבל עבודה איכותית",
+    "heroSubheadline": "יוסי שיפוצים בתל אביב והסביבה. 20 שנות ניסיון בשיפוצים לבית ולעסק.",
+    "heroCta": "התקשר עכשיו",
+    "trustBarItems": [
+      "20 שנות ניסיון",
+      "שירות בתל אביב",
+      "זמינות ונוחות",
+      "דירוג 4.9 כוכבים"
+    ],
+    "aboutBlurb": "יוסי שיפוצים מבצע עבודות שיפוץ עם ניסיון של 20 שנה, יחס אישי והקפדה על גימור נקי.",
+    "servicesHeadline": "שירותי השיפוץ שלנו",
+    "serviceItems": [
+      "שיפוץ דירות",
+      "שיפוץ חדרי רחצה",
+      "עבודות צבע",
+      "תיקוני שיפוץ"
+    ],
+    "faqHeadline": "שאלות נפוצות",
+    "faqItems": [
+      {
+        "q": "באילו אזורים אתה עובד?",
+        "a": "בתל אביב והסביבה."
+      },
+      {
+        "q": "כמה ניסיון יש לך?",
+        "a": "20 שנות ניסיון בתחום השיפוצים."
+      }
+    ],
+    "guaranteeBlock": "ניסיון של 20 שנה ויחס אישי לאורך כל העבודה.",
+    "reviewFeatured": "",
+    "reviewContext": "4.9 כוכבים בגוגל",
+    "responseTimeBadge": null,
+    "scarcityLine": null,
+    "formHeadline": "דבר איתנו על השיפוץ שלך",
+    "stickyBarLine": "יוסי שיפוצים בתל אביב והסביבה • התקשר עכשיו"
+  },
+  "createdAt": "2026-07-02T03:17:42.408Z"
+}

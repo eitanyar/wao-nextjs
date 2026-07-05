@@ -1,0 +1,185 @@
+{
+  "vertical": "tiler",
+  "hebrewName": "שיש ואריחים",
+  "primaryKeywords": [
+    {
+      "kw": "שיש למטבח",
+      "intent": "research",
+      "volume": "high"
+    },
+    {
+      "kw": "משטחי שיש למטבח",
+      "intent": "research",
+      "volume": "high"
+    },
+    {
+      "kw": "שיש קיסר למטבח",
+      "intent": "comparison",
+      "volume": "high"
+    },
+    {
+      "kw": "שיש גרניט פורצלן למטבח",
+      "intent": "comparison",
+      "volume": "medium"
+    },
+    {
+      "kw": "משטח קוורץ למטבח",
+      "intent": "comparison",
+      "volume": "medium"
+    },
+    {
+      "kw": "התקנת שיש למטבח",
+      "intent": "research",
+      "volume": "medium"
+    },
+    {
+      "kw": "חידוש שיש למטבח",
+      "intent": "research",
+      "volume": "medium"
+    },
+    {
+      "kw": "חברת שיש",
+      "intent": "comparison",
+      "volume": "medium"
+    },
+    {
+      "kw": "מתקין שיש",
+      "intent": "research",
+      "volume": "medium"
+    },
+    {
+      "kw": "קבלן ריצוף",
+      "intent": "research",
+      "volume": "medium"
+    },
+    {
+      "kw": "שיש למדרגות",
+      "intent": "research",
+      "volume": "medium"
+    },
+    {
+      "kw": "חנות אריחים",
+      "intent": "comparison",
+      "volume": "medium"
+    },
+    {
+      "kw": "אריחים למטבח",
+      "intent": "research",
+      "volume": "medium"
+    },
+    {
+      "kw": "אריחים לאמבטיה",
+      "intent": "research",
+      "volume": "high"
+    },
+    {
+      "kw": "קרמיקה לאמבטיה",
+      "intent": "research",
+      "volume": "high"
+    },
+    {
+      "kw": "ריצוף לבית",
+      "intent": "research",
+      "volume": "high"
+    },
+    {
+      "kw": "ריצוף גרניט פורצלן",
+      "intent": "comparison",
+      "volume": "medium"
+    },
+    {
+      "kw": "חיפוי קיר למטבח",
+      "intent": "research",
+      "volume": "medium"
+    },
+    {
+      "kw": "התקנת אריחים לבית",
+      "intent": "research",
+      "volume": "low"
+    },
+    {
+      "kw": "שיש למטבח תל אביב",
+      "intent": "comparison",
+      "volume": "medium"
+    },
+    {
+      "kw": "שיש למטבח ראשון לציון",
+      "intent": "comparison",
+      "volume": "low"
+    },
+    {
+      "kw": "חנות אריחים פתח תקווה",
+      "intent": "comparison",
+      "volume": "low"
+    },
+    {
+      "kw": "קרמיקה לאמבטיה ירושלים",
+      "intent": "comparison",
+      "volume": "low"
+    },
+    {
+      "kw": "מתקין שיש דחוף",
+      "intent": "urgent",
+      "volume": "low"
+    },
+    {
+      "kw": "התקנת אריחים דחוף",
+      "intent": "urgent",
+      "volume": "low"
+    }
+  ],
+  "exactMatch": [
+    "שיש למטבח",
+    "משטחי שיש למטבח",
+    "התקנת שיש למטבח",
+    "שיש קיסר למטבח",
+    "שיש גרניט פורצלן למטבח",
+    "מתקין שיש",
+    "חברת שיש",
+    "קבלן ריצוף",
+    "חנות אריחים",
+    "אריחים לאמבטיה",
+    "קרמיקה לאמבטיה",
+    "ריצוף גרניט פורצלן",
+    "חיפוי קיר למטבח",
+    "התקנת אריחים לבית",
+    "שיש למטבח תל אביב"
+  ],
+  "negativeKeywords": [
+    "קורס",
+    "לימודים",
+    "הכשרה",
+    "סדנה",
+    "דרושים",
+    "משרות",
+    "משכורת",
+    "קורות חיים",
+    "התמחות",
+    "עשה זאת בעצמך",
+    "התקנה עצמית",
+    "מדריך",
+    "הוראות",
+    "איך עושים",
+    "טיפים",
+    "סרטון",
+    "יוטיוב",
+    "ויקיפדיה",
+    "פורום",
+    "בלוג",
+    "תמונות",
+    "פינטרסט",
+    "ביקורות",
+    "חוות דעת",
+    "מחירון",
+    "כמה עולה",
+    "זול",
+    "יד שניה",
+    "מצבה",
+    "קבר"
+  ],
+  "bidStrategy": "Maximize Conversions",
+  "urgencyProfile": "low",
+  "geoNote": "מומלץ לפצל קבוצות מודעות לפי אזורי שירות בפועל ולבנות וריאציות לעיר: גוש דן, השרון, ירושלים, חיפה, השפלה והדרום.",
+  "seasonalNote": "הביקוש מתחזק בתקופות שיפוץ ובנייה, בעיקר באביב, בקיץ ולפני פסח וחגי תשרי.",
+  "generatedAt": "2026-07-02T15:56:21.373Z"
+}

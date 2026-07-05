@@ -1,0 +1,185 @@
+{
+  "vertical": "pest-control",
+  "hebrewName": "הדברה",
+  "primaryKeywords": [
+    {
+      "kw": "הדברה",
+      "intent": "research",
+      "volume": "high"
+    },
+    {
+      "kw": "מדביר",
+      "intent": "urgent",
+      "volume": "high"
+    },
+    {
+      "kw": "חברת הדברה",
+      "intent": "comparison",
+      "volume": "medium"
+    },
+    {
+      "kw": "מדביר דחוף",
+      "intent": "urgent",
+      "volume": "medium"
+    },
+    {
+      "kw": "הדברה דחופה",
+      "intent": "urgent",
+      "volume": "medium"
+    },
+    {
+      "kw": "מדביר עכשיו",
+      "intent": "urgent",
+      "volume": "low"
+    },
+    {
+      "kw": "מדביר 24 שעות",
+      "intent": "urgent",
+      "volume": "low"
+    },
+    {
+      "kw": "ריסוס דירה",
+      "intent": "urgent",
+      "volume": "medium"
+    },
+    {
+      "kw": "הדברה לבית",
+      "intent": "urgent",
+      "volume": "medium"
+    },
+    {
+      "kw": "הדברת ג'וקים",
+      "intent": "urgent",
+      "volume": "high"
+    },
+    {
+      "kw": "הדברת תיקנים",
+      "intent": "urgent",
+      "volume": "medium"
+    },
+    {
+      "kw": "הדברת נמלים",
+      "intent": "urgent",
+      "volume": "high"
+    },
+    {
+      "kw": "הדברת פשפש המיטה",
+      "intent": "urgent",
+      "volume": "medium"
+    },
+    {
+      "kw": "הדברת פרעושים",
+      "intent": "urgent",
+      "volume": "medium"
+    },
+    {
+      "kw": "הדברת חולדות",
+      "intent": "urgent",
+      "volume": "medium"
+    },
+    {
+      "kw": "הדברת עכברים",
+      "intent": "urgent",
+      "volume": "medium"
+    },
+    {
+      "kw": "הדברת טרמיטים",
+      "intent": "urgent",
+      "volume": "medium"
+    },
+    {
+      "kw": "הדברת צרעות",
+      "intent": "urgent",
+      "volume": "medium"
+    },
+    {
+      "kw": "מדביר בתל אביב",
+      "intent": "urgent",
+      "volume": "high"
+    },
+    {
+      "kw": "הדברה בתל אביב",
+      "intent": "comparison",
+      "volume": "high"
+    },
+    {
+      "kw": "מדביר בירושלים",
+      "intent": "urgent",
+      "volume": "medium"
+    },
+    {
+      "kw": "מדביר בחיפה",
+      "intent": "urgent",
+      "volume": "medium"
+    },
+    {
+      "kw": "מדביר בראשון לציון",
+      "intent": "urgent",
+      "volume": "medium"
+    },
+    {
+      "kw": "מדביר בפתח תקווה",
+      "intent": "urgent",
+      "volume": "medium"
+    },
+    {
+      "kw": "מדביר בנתניה",
+      "intent": "urgent",
+      "volume": "medium"
+    }
+  ],
+  "exactMatch": [
+    "מדביר דחוף",
+    "הדברה דחופה",
+    "מדביר 24 שעות",
+    "ריסוס דירה",
+    "מדביר בתל אביב",
+    "מדביר בירושלים",
+    "מדביר בחיפה",
+    "הדברת ג'וקים",
+    "הדברת נמלים",
+    "הדברת פשפש המיטה",
+    "הדברת פרעושים",
+    "הדברת חולדות",
+    "הדברת עכברים",
+    "הדברת טרמיטים",
+    "הדברת צרעות"
+  ],
+  "negativeKeywords": [
+    "קורס",
+    "קורסים",
+    "לימודים",
+    "לימודי",
+    "הכשרה",
+    "תעודה",
+    "עבודה",
+    "דרושים",
+    "משרות",
+    "שכר",
+    "משכורת",
+    "איך",
+    "לבד",
+    "עשה זאת בעצמך",
+    "ביתי",
+    "טבעי",
+    "תרסיס",
+    "חומרי הדברה",
+    "חומר הדברה",
+    "חנות",
+    "לקנות",
+    "מחיר",
+    "מחירים",
+    "מחירון",
+    "עלות",
+    "כמה עולה",
+    "ביקורות",
+    "חוות דעת",
+    "המלצות",
+    "ויקיפדיה"
+  ],
+  "bidStrategy": "Maximize Conversions",
+  "urgencyProfile": "high",
+  "geoNote": "מומלץ לפצל קמפיינים לפי ערים ורדיוסי שירות, עם דגש על גוש דן, ירושלים, חיפה והקריות, השרון והשפלה; לשלב נכסי שיחה ולתעדף נוכחות בשעות זמינות מיידית.",
+  "seasonalNote": "שיא ביקוש באביב ובקיץ לג'וקים, נמלים וצרעות; לפני פסח יש עלייה בחיפושי ריסוס דירה והדברה לבית; בחורף מתחזק ביקוש לחולדות ולעכברים.",
+  "generatedAt": "2026-07-02T09:44:43.430Z"
+}

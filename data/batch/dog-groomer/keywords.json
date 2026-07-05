@@ -1,0 +1,179 @@
+{
+  "vertical": "dog-groomer",
+  "hebrewName": "מספרת כלבים",
+  "primaryKeywords": [
+    {
+      "kw": "מספרת כלבים",
+      "intent": "research",
+      "volume": "high"
+    },
+    {
+      "kw": "ספר כלבים",
+      "intent": "research",
+      "volume": "high"
+    },
+    {
+      "kw": "תספורת לכלב",
+      "intent": "research",
+      "volume": "high"
+    },
+    {
+      "kw": "טיפוח כלבים",
+      "intent": "research",
+      "volume": "medium"
+    },
+    {
+      "kw": "מספרת כלבים תל אביב",
+      "intent": "research",
+      "volume": "medium"
+    },
+    {
+      "kw": "מספרת כלבים ירושלים",
+      "intent": "research",
+      "volume": "medium"
+    },
+    {
+      "kw": "מספרת כלבים חיפה",
+      "intent": "research",
+      "volume": "medium"
+    },
+    {
+      "kw": "מספרת כלבים ראשון לציון",
+      "intent": "research",
+      "volume": "medium"
+    },
+    {
+      "kw": "מספרת כלבים פתח תקווה",
+      "intent": "research",
+      "volume": "medium"
+    },
+    {
+      "kw": "מספרת כלבים נתניה",
+      "intent": "research",
+      "volume": "medium"
+    },
+    {
+      "kw": "מספרת כלבים באר שבע",
+      "intent": "research",
+      "volume": "medium"
+    },
+    {
+      "kw": "מספרת כלבים קרוב אליי",
+      "intent": "urgent",
+      "volume": "medium"
+    },
+    {
+      "kw": "ספר כלבים קרוב אליי",
+      "intent": "urgent",
+      "volume": "medium"
+    },
+    {
+      "kw": "תספורת לכלב היום",
+      "intent": "urgent",
+      "volume": "low"
+    },
+    {
+      "kw": "מספרת כלבים פתוחה עכשיו",
+      "intent": "urgent",
+      "volume": "low"
+    },
+    {
+      "kw": "רחצה ותספורת לכלבים",
+      "intent": "research",
+      "volume": "medium"
+    },
+    {
+      "kw": "גזירת ציפורניים לכלב",
+      "intent": "research",
+      "volume": "medium"
+    },
+    {
+      "kw": "דילול פרווה לכלב",
+      "intent": "research",
+      "volume": "low"
+    },
+    {
+      "kw": "מקלחת לכלב ותספורת",
+      "intent": "research",
+      "volume": "low"
+    },
+    {
+      "kw": "ספר כלבים מומלץ",
+      "intent": "comparison",
+      "volume": "low"
+    },
+    {
+      "kw": "מספרת כלבים מומלצת",
+      "intent": "comparison",
+      "volume": "low"
+    },
+    {
+      "kw": "ספר כלבים מקצועי",
+      "intent": "comparison",
+      "volume": "low"
+    },
+    {
+      "kw": "תספורת לכלב קטן",
+      "intent": "research",
+      "volume": "low"
+    },
+    {
+      "kw": "תספורת לכלב גדול",
+      "intent": "research",
+      "volume": "low"
+    }
+  ],
+  "exactMatch": [
+    "מספרת כלבים",
+    "ספר כלבים",
+    "תספורת לכלב",
+    "מספרת כלבים תל אביב",
+    "מספרת כלבים ירושלים",
+    "מספרת כלבים חיפה",
+    "מספרת כלבים ראשון לציון",
+    "מספרת כלבים פתח תקווה",
+    "מספרת כלבים נתניה",
+    "מספרת כלבים באר שבע",
+    "מספרת כלבים קרוב אליי",
+    "רחצה ותספורת לכלבים",
+    "גזירת ציפורניים לכלב",
+    "ספר כלבים מומלץ"
+  ],
+  "negativeKeywords": [
+    "קורס",
+    "קורסים",
+    "לימודים",
+    "הכשרה",
+    "תעודה",
+    "סדנה",
+    "דרושים",
+    "עבודה",
+    "משרה",
+    "משכורת",
+    "שכר",
+    "יד שניה",
+    "יד 2",
+    "מכונה",
+    "מכונת תספורת",
+    "מספריים",
+    "מסרק",
+    "שמפו",
+    "ציוד",
+    "עשה זאת בעצמך",
+    "איך לספר כלב",
+    "מדריך",
+    "יוטיוב",
+    "ויקיפדיה",
+    "חינם",
+    "מחירון",
+    "מחירים",
+    "זול",
+    "ביקורות",
+    "חוות דעת"
+  ],
+  "bidStrategy": "Maximize Conversions",
+  "urgencyProfile": "low",
+  "geoNote": "להפעיל לפי אזור השירות בפועל ולבנות קבוצות מודעות נפרדות לפי ערים מרכזיות בישראל בלבד, עם הרחבה לרדיוס סביב הסניף או אזור האיסוף.",
+  "seasonalNote": "הביקוש נוטה להתחזק לפני חגים, בקיץ ובעונות נשירה; כדאי להגדיל תקציב ולשפר זמינות תורים בתקופות עומס.",
+  "generatedAt": "2026-07-02T16:45:35.322Z"
+}

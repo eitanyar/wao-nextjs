@@ -7,6 +7,7 @@ import type { CollectedData } from "@/lib/bot/prompts";
 interface Message {
   role: "user" | "assistant" | "system";
   content: string;
+  images?: string[]; // uploaded image URLs shown inline
 }
 
 interface CampaignStrategy {
@@ -29,7 +30,7 @@ export default function OnboardingPage() {
     {
       role: "assistant",
       content:
-        "שלום, אני אדם — מנהל ה-Google Ads שלך כאן ב-WAO. בוא נבנה לך קמפיין ביחד: אני אשאל אותך כמה שאלות קצרות, ומהתשובות שלך ניצור קמפיין שמביא לקוחות משלמים, לא סתם קליקים. אז נתחיל מהבסיס — במה העסק שלך עוסק, ואיזה שירות נרצה לקדם?",
+        "היי, אני אדם, מנהל הקמפיינים שלך בגוגל אדס ב-WAO. עוד כמה שאלות ואני מרים לך קמפיין שמביא לקוחות שמשלמים, לא רק כניסות לאתר. במה אתה עוסק? ומאיזה שירות אתה מרוויח הכי הרבה? נתחיל ממנו — זה הדבר הכי נכון לנו כרגע. את השאר נוסיף בהמשך, ברגע שהראשון עובד.",
     },
   ]);
   const [inputValue, setInputValue] = useState("");
@@ -43,6 +44,10 @@ export default function OnboardingPage() {
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [lpUrl, setLpUrl] = useState<string | null>(null);
   const [lpGenerating, setLpGenerating] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const [awaitingProfilePhoto, setAwaitingProfilePhoto] = useState(false);
+  const sessionIdRef = useRef(`s-${Date.now()}-${Math.random().toString(36).slice(2)}`);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const messagesContainerRef = useRef<HTMLDivElement>(null);
 
@@ -52,105 +57,108 @@ export default function OnboardingPage() {
     if (el) el.scrollTop = el.scrollHeight;
   }, [messages]);
 
-  // Listen for the callback redirect from the Ya'ad payment sandbox
+  // Post-payment flow — shared by Yaad Sarig redirect and bypass button
+  const triggerCampaignLaunch = async () => {
+    if (isSubmitting) return;
+    setIsSubmitting(true);
+    try {
+      // Step 1: Close the bot conversation
+      const updatedMessages = [...messages, { role: "user" as const, content: "אשר והפעל קמפיין" }];
+      setMessages(updatedMessages);
+
+      const botRes = await fetch("/api/bot", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ messages: updatedMessages, currentState: "REVIEWING", collectedData }),
+      });
+      const botData = await botRes.json();
+      setMessages((prev) => [...prev, { role: "assistant", content: botData.response }]);
+      setCurrentState(botData.currentState);
+
+      // Step 2: Create Google Ads sub-account + conversion actions
+      let adsData: any = null;
+      if (strategy && copy) {
+        const adsRes = await fetch("/api/google-ads/create-campaign", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            collectedData,
+            strategy,
+            copy,
+            consentTimestamp: new Date().toISOString(),
+          }),
+        });
+        adsData = await adsRes.json();
+        if (adsData.success) {
+          const adsMsg = `יצרתי לך חשבון Google Ads חדש תחת WAO 🚀\n\nמספר חשבון: ${adsData.customerId}\nהקמפיין ממתין לקישור אמצעי תשלום.`;
+          setMessages((prev) => [...prev, { role: "assistant", content: adsMsg }]);
+        }
+      }
+
+      // Step 3: Generate LP copy and save to server
+      setLpGenerating(true);
+      const lpRes = await fetch("/api/lp-generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ collectedData, slug: adsData?.slug || collectedData.preferredSlug || undefined }),
+      });
+      const lpData = await lpRes.json();
+
+      // Step 4: Deploy static LP to Cloudflare Pages
+      let deployedUrl: string | null = null;
+      if (lpData.success && lpData.slug) {
+        const deployRes = await fetch("/api/cloudflare-pages/deploy", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            slug: lpData.slug,
+            googleAdsCustomerId: adsData?.customerId,
+            gtagSnippet: adsData?.gtagSnippet,
+            formConversionLabel: adsData?.formConversionLabel,
+            phoneConversionLabel: adsData?.phoneConversionLabel,
+            whatsappConversionLabel: adsData?.whatsappConversionLabel,
+          }),
+        });
+        const deployData = await deployRes.json();
+        if (deployData.success) {
+          deployedUrl = deployData.url;
+        }
+      }
+      setLpGenerating(false);
+
+      if (deployedUrl) {
+        setLpUrl(deployedUrl);
+        const lpMsg = `הדף שלך באוויר! 🎉\n\n${deployedUrl}\n\nכל מי שילחץ על המודעה בגוגל יגיע לדף הזה. שמור את הקישור — אפשר לשתף אותו גם ישירות בוואטסאפ.`;
+        setMessages((prev) => [...prev, { role: "assistant", content: lpMsg }]);
+      }
+
+      // Step 5: Store the lead for CRM
+      await fetch("/api/lead", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: collectedData.ownerName || collectedData.businessName || "לקוח חדש",
+          phone: collectedData.phone,
+          service: "google-ads",
+          message: `עסק: ${collectedData.businessName || collectedData.businessNiche} | תקציב: ₪${collectedData.monthlyBudget} | LP: ${deployedUrl || lpData.url || "N/A"} | ענף: ${collectedData.feasibilityBranch || "—"} | חשבון גוגל: ${adsData?.customerId || "—"}`,
+          source: "bot-onboarding-v6",
+        }),
+      }).catch(() => {});
+
+      window.history.replaceState({}, document.title, window.location.pathname);
+    } catch (err) {
+      console.error(err);
+      setLpGenerating(false);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // Listen for the callback redirect from Yaad Sarig
   useEffect(() => {
     if (typeof window === "undefined") return;
     const params = new URLSearchParams(window.location.search);
     if (params.get("payment") === "success" && currentState !== "COMPLETED") {
-      const triggerCampaignLaunch = async () => {
-        setIsSubmitting(true);
-        try {
-          // Step 1: Close the bot conversation
-          const updatedMessages = [...messages, { role: "user" as const, content: "אשר והפעל קמפיין" }];
-          setMessages(updatedMessages);
-
-          const botRes = await fetch("/api/bot", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ messages: updatedMessages, currentState: "REVIEWING", collectedData }),
-          });
-          const botData = await botRes.json();
-          setMessages((prev) => [...prev, { role: "assistant", content: botData.response }]);
-          setCurrentState(botData.currentState);
-
-          // Step 2: Create Google Ads sub-account + conversion actions
-          let adsData: any = null;
-          if (strategy && copy) {
-            const adsRes = await fetch("/api/google-ads/create-campaign", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                collectedData,
-                strategy,
-                copy,
-                consentTimestamp: new Date().toISOString(),
-              }),
-            });
-            adsData = await adsRes.json();
-            if (adsData.success) {
-              const adsMsg = `יצרתי לך חשבון Google Ads חדש תחת WAO 🚀\n\nמספר חשבון: ${adsData.customerId}\nהקמפיין ממתין לקישור אמצעי תשלום.`;
-              setMessages((prev) => [...prev, { role: "assistant", content: adsMsg }]);
-            }
-          }
-
-          // Step 3: Generate LP copy and save to server
-          setLpGenerating(true);
-          const lpRes = await fetch("/api/lp-generate", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ collectedData, slug: adsData?.slug }),
-          });
-          const lpData = await lpRes.json();
-
-          // Step 4: Deploy static LP to Cloudflare Pages
-          let deployedUrl: string | null = null;
-          if (lpData.success && lpData.slug) {
-            const deployRes = await fetch("/api/cloudflare-pages/deploy", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                slug: lpData.slug,
-                googleAdsCustomerId: adsData?.customerId,
-                gtagSnippet: adsData?.gtagSnippet,
-                formConversionLabel: adsData?.formConversionLabel,
-                phoneConversionLabel: adsData?.phoneConversionLabel,
-                whatsappConversionLabel: adsData?.whatsappConversionLabel,
-              }),
-            });
-            const deployData = await deployRes.json();
-            if (deployData.success) {
-              deployedUrl = deployData.url;
-            }
-          }
-          setLpGenerating(false);
-
-          if (deployedUrl) {
-            setLpUrl(deployedUrl);
-            const lpMsg = `הדף שלך באוויר! 🎉\n\n${deployedUrl}\n\nכל מי שילחץ על המודעה בגוגל יגיע לדף הזה. שמור את הקישור — אפשר לשתף אותו גם ישירות בוואטסאפ.`;
-            setMessages((prev) => [...prev, { role: "assistant", content: lpMsg }]);
-          }
-
-          // Step 5: Store the lead for CRM
-          await fetch("/api/lead", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              name: collectedData.ownerName || collectedData.businessName || "לקוח חדש",
-              phone: collectedData.phone,
-              service: "google-ads",
-              message: `עסק: ${collectedData.businessName || collectedData.businessNiche} | תקציב: ₪${collectedData.monthlyBudget} | LP: ${deployedUrl || lpData.url || "N/A"} | ענף: ${collectedData.feasibilityBranch || "—"} | חשבון גוגל: ${adsData?.customerId || "—"}`,
-              source: "bot-onboarding-v6",
-            }),
-          }).catch(() => {}); // non-fatal — SMTP may not be configured
-
-          window.history.replaceState({}, document.title, window.location.pathname);
-        } catch (err) {
-          console.error(err);
-          setLpGenerating(false);
-        } finally {
-          setIsSubmitting(false);
-        }
-      };
       triggerCampaignLaunch();
     }
   }, [currentState]);
@@ -191,6 +199,7 @@ export default function OnboardingPage() {
 
       if (data.strategy) setStrategy(data.strategy);
       if (data.copy) setCopy(data.copy);
+      if (typeof data.awaitingProfilePhoto === "boolean") setAwaitingProfilePhoto(data.awaitingProfilePhoto);
 
       // Auto-fire STRATEGIZING when Adam signals callSpecialists
       if (data.currentState === "STRATEGIZING" && data.callSpecialists) {
@@ -223,6 +232,60 @@ export default function OnboardingPage() {
       ]);
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    if (!files.length) return;
+    setIsUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append("sessionId", sessionIdRef.current);
+      files.slice(0, 6).forEach(f => formData.append("files", f));
+      const res = await fetch("/api/upload", { method: "POST", body: formData });
+      const { urls } = await res.json();
+      if (!urls?.length) return;
+
+      const isProfile = awaitingProfilePhoto;
+      const profileUrl = isProfile ? urls[0] : undefined;
+
+      // Show thumbnails as a user message
+      const uploadMsg: Message = {
+        role: "user",
+        content: isProfile ? "העלאתי תמונת פרופיל" : `העלאתי ${urls.length} תמונות`,
+        images: isProfile ? [urls[0]] : urls,
+      };
+      const updatedMessages = [...messages, uploadMsg];
+      setMessages(updatedMessages);
+
+      // Store in collectedData — profile photo gets its own field
+      const updatedData: CollectedData = isProfile
+        ? { ...collectedData, profilePhotoUrl: profileUrl }
+        : {
+            ...collectedData,
+            trustAssetUrls: [...(collectedData.trustAssetUrls || []), ...urls],
+            hasTrustAssets: true,
+          };
+      setCollectedData(updatedData);
+
+      // Let the bot acknowledge the upload
+      setIsSubmitting(true);
+      const botRes = await fetch("/api/bot", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ messages: updatedMessages, currentState, collectedData: updatedData }),
+      });
+      const data = await botRes.json();
+      if (data.response) setMessages(prev => [...prev, { role: "assistant", content: data.response }]);
+      if (data.collectedData) setCollectedData(data.collectedData);
+      if (data.currentState) setCurrentState(data.currentState);
+      if (typeof data.awaitingProfilePhoto === "boolean") setAwaitingProfilePhoto(data.awaitingProfilePhoto);
+      else if (isProfile) setAwaitingProfilePhoto(false); // auto-clear after profile upload
+    } finally {
+      setIsUploading(false);
+      setIsSubmitting(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
     }
   };
 
@@ -460,6 +523,18 @@ export default function OnboardingPage() {
                     }}
                   >
                     {msg.content}
+                    {msg.images && msg.images.length > 0 && (
+                      <div style={{ display: "flex", flexWrap: "wrap", gap: "6px", marginTop: "8px" }}>
+                        {msg.images.map((url, idx) => (
+                          <img
+                            key={idx}
+                            src={url}
+                            alt={`תמונה ${idx + 1}`}
+                            style={{ width: "72px", height: "72px", objectFit: "cover", borderRadius: "8px", border: "1px solid var(--border)" }}
+                          />
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </div>
               ))}
@@ -468,6 +543,73 @@ export default function OnboardingPage() {
                   <div style={{ color: "var(--muted)", fontSize: "0.85rem", padding: "8px" }}>
                     אדם חושב...
                   </div>
+                </div>
+              )}
+
+              {/* Inline payment CTA — appears in chat so user never needs to scroll */}
+              {currentState === "REVIEWING" && (
+                <div style={{
+                  margin: "8px 0",
+                  padding: "16px 20px",
+                  borderRadius: "14px",
+                  border: "1px solid var(--accent-border)",
+                  background: "linear-gradient(135deg, rgba(74,227,181,0.10) 0%, rgba(0,195,255,0.10) 100%)",
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "12px",
+                }}>
+                  <div style={{ fontSize: "0.9rem", color: "var(--muted)", textAlign: "center" }}>
+                    דמי הקמה חד-פעמיים — <strong style={{ color: "var(--text)" }}>9.90 ₪</strong>
+                  </div>
+                  <label style={{ display: "flex", alignItems: "flex-start", gap: "10px", cursor: "pointer" }}>
+                    <input
+                      type="checkbox"
+                      checked={acceptedTerms}
+                      onChange={(e) => setAcceptedTerms(e.target.checked)}
+                      style={{ marginTop: "3px", accentColor: "var(--accent)", width: "16px", height: "16px", flexShrink: 0 }}
+                    />
+                    <span style={{ fontSize: "0.82rem", color: "var(--muted)", lineHeight: "1.4", direction: "rtl" }}>
+                      אני מאשר/ת את <strong>תנאי השימוש</strong> ומסכים/ה לתנאי השירות.
+                    </span>
+                  </label>
+                  <button
+                    onClick={handleApprove}
+                    disabled={isSubmitting || !acceptedTerms}
+                    className="btn-primary"
+                    style={{
+                      width: "100%",
+                      padding: "14px",
+                      justifyContent: "center",
+                      fontSize: "1rem",
+                      background: acceptedTerms ? "linear-gradient(135deg, #4AE3B5, #00C3FF)" : "var(--border)",
+                      color: acceptedTerms ? "var(--bg)" : "var(--muted)",
+                      cursor: acceptedTerms ? "pointer" : "not-allowed",
+                      border: "none",
+                      borderRadius: "8px",
+                      fontWeight: "bold",
+                      transition: "all 0.3s ease",
+                    }}
+                  >
+                    🚀 לתשלום (9.9 ₪) והפעלת קמפיין
+                  </button>
+                  {process.env.NEXT_PUBLIC_PAYMENT_BYPASS === "true" && (
+                    <button
+                      onClick={triggerCampaignLaunch}
+                      disabled={isSubmitting}
+                      style={{
+                        width: "100%",
+                        padding: "10px",
+                        border: "1px dashed #f59e0b",
+                        borderRadius: "8px",
+                        background: "rgba(245,158,11,0.08)",
+                        color: "#f59e0b",
+                        fontSize: "0.8rem",
+                        cursor: isSubmitting ? "not-allowed" : "pointer",
+                      }}
+                    >
+                      🧪 דלג על תשלום (בדיקה בלבד)
+                    </button>
+                  )}
                 </div>
               )}
               </div>
@@ -480,10 +622,43 @@ export default function OnboardingPage() {
                 padding: "16px",
                 borderTop: "1px solid var(--border)",
                 display: "flex",
-                gap: "12px",
+                gap: "8px",
+                alignItems: "center",
                 background: "rgba(13, 15, 21, 0.4)",
               }}
             >
+              {/* Hidden file input — single file for profile photo, multi otherwise */}
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/jpeg,image/png,image/webp,image/gif"
+                multiple={!awaitingProfilePhoto}
+                style={{ display: "none" }}
+                onChange={handleUpload}
+              />
+              {/* Upload button */}
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={isSubmitting || isUploading || currentState === "COMPLETED"}
+                title={awaitingProfilePhoto ? "העלה תמונה מקצועית אחת שלך" : "העלה תמונות וצילומי מסך"}
+                style={{
+                  background: "var(--subtle)",
+                  border: "1px solid var(--border)",
+                  borderRadius: "50%",
+                  width: "42px",
+                  height: "42px",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  cursor: "pointer",
+                  fontSize: "1.1rem",
+                  flexShrink: 0,
+                  opacity: (isSubmitting || isUploading || currentState === "COMPLETED") ? 0.4 : 1,
+                }}
+              >
+                {isUploading ? "⏳" : "📎"}
+              </button>
               <input
                 type="text"
                 placeholder="הקלד כאן הודעה (למשל: אינסטלטור בתל אביב...)"
@@ -771,50 +946,13 @@ export default function OnboardingPage() {
                     </div>
                   </div>
 
-                  {/* Landing Page Preview */}
-                  <div>
-                    <h4 style={{ fontSize: "0.9rem", fontWeight: 700, marginBottom: "8px", color: "var(--accent)" }}>
-                      📱 דף הנחיתה שלך
-                    </h4>
-                    <div style={{
-                      border: "1px solid var(--border)",
-                      borderRadius: "12px",
-                      overflow: "hidden",
-                      height: "340px",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      background: "rgba(13, 15, 21, 0.6)",
-                    }}>
-                      {lpUrl ? (
-                        <iframe
-                          src={lpUrl}
-                          style={{ width: "100%", height: "100%", border: "none" }}
-                          title="דף הנחיתה שלך"
-                        />
-                      ) : lpGenerating ? (
-                        <div style={{ textAlign: "center", color: "var(--muted)", padding: "24px" }}>
-                          <div style={{ fontSize: "1.8rem", marginBottom: "12px" }}>⚙️</div>
-                          <div style={{ fontWeight: 600, color: "var(--text)", marginBottom: "6px" }}>בונה את הדף שלך...</div>
-                          <div style={{ fontSize: "0.82rem" }}>זה ייקח כמה שניות</div>
-                        </div>
-                      ) : (
-                        <div style={{ textAlign: "center", color: "var(--muted)", padding: "24px" }}>
-                          <div style={{ fontSize: "1.8rem", marginBottom: "12px" }}>🖥️</div>
-                          <div style={{ fontSize: "0.85rem" }}>הדף ייבנה אוטומטית לאחר התשלום</div>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Checkout & Action CTA */}
+                  {/* Checkout & Action CTA — above LP placeholder so it is visible without scrolling */}
                   {currentState === "REVIEWING" && (
                     <div style={{
                       background: "rgba(13, 15, 21, 0.4)",
                       border: "1px solid var(--accent-border)",
                       padding: "20px",
                       borderRadius: "12px",
-                      marginTop: "10px",
                       display: "flex",
                       flexDirection: "column",
                       gap: "16px"
@@ -824,10 +962,10 @@ export default function OnboardingPage() {
                         <div style={{ fontSize: "2rem", fontWeight: 800, color: "var(--text)", margin: "4px 0" }}>9.90 ₪</div>
                         <div style={{ fontSize: "0.8rem", color: "var(--muted)" }}>תשלום אחד שמקים לך את הקמפיין ודף הנחיתה. חודש הניהול הראשון חינם, ומהחודש השני 249 ₪ בחודש.</div>
                       </div>
-                      
+
                       <label style={{ display: "flex", alignItems: "flex-start", gap: "10px", cursor: "pointer" }}>
-                        <input 
-                          type="checkbox" 
+                        <input
+                          type="checkbox"
                           checked={acceptedTerms}
                           onChange={(e) => setAcceptedTerms(e.target.checked)}
                           style={{ marginTop: "4px", accentColor: "var(--accent)", width: "16px", height: "16px" }}
@@ -858,6 +996,72 @@ export default function OnboardingPage() {
                       >
                         🚀 לתשלום (9.9 ₪) והפעלת קמפיין
                       </button>
+                      {process.env.NEXT_PUBLIC_PAYMENT_BYPASS === "true" && (
+                        <button
+                          onClick={triggerCampaignLaunch}
+                          disabled={isSubmitting}
+                          style={{
+                            width: "100%",
+                            padding: "10px",
+                            border: "1px dashed #f59e0b",
+                            borderRadius: "8px",
+                            background: "rgba(245,158,11,0.08)",
+                            color: "#f59e0b",
+                            fontSize: "0.8rem",
+                            cursor: isSubmitting ? "not-allowed" : "pointer",
+                          }}
+                        >
+                          🧪 דלג על תשלום (בדיקה בלבד)
+                        </button>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Landing Page Preview — 340px iframe/spinner only when there is content; compact note otherwise */}
+                  {(lpUrl || lpGenerating) ? (
+                    <div>
+                      <h4 style={{ fontSize: "0.9rem", fontWeight: 700, marginBottom: "8px", color: "var(--accent)" }}>
+                        📱 דף הנחיתה שלך
+                      </h4>
+                      <div style={{
+                        border: "1px solid var(--border)",
+                        borderRadius: "12px",
+                        overflow: "hidden",
+                        height: "340px",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        background: "rgba(13, 15, 21, 0.6)",
+                      }}>
+                        {lpUrl ? (
+                          <iframe
+                            src={lpUrl}
+                            style={{ width: "100%", height: "100%", border: "none" }}
+                            title="דף הנחיתה שלך"
+                          />
+                        ) : (
+                          <div style={{ textAlign: "center", color: "var(--muted)", padding: "24px" }}>
+                            <div style={{ fontSize: "1.8rem", marginBottom: "12px" }}>⚙️</div>
+                            <div style={{ fontWeight: 600, color: "var(--text)", marginBottom: "6px" }}>בונה את הדף שלך...</div>
+                            <div style={{ fontSize: "0.82rem" }}>זה ייקח כמה שניות</div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ) : (
+                    <div style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "8px",
+                      padding: "10px 14px",
+                      borderRadius: "8px",
+                      background: "rgba(13, 15, 21, 0.4)",
+                      border: "1px solid var(--border)",
+                      color: "var(--muted)",
+                      fontSize: "0.85rem",
+                    }}>
+                      <span>🖥️</span>
+                      <span>הדף ייבנה אוטומטית לאחר התשלום</span>
                     </div>
                   )}
 
@@ -889,7 +1093,7 @@ export default function OnboardingPage() {
                       )}
                       {!lpGenerating && !lpUrl && (
                         <div style={{ background: "rgba(74,227,181,0.08)", border: "1px solid var(--accent-border)", borderRadius: "var(--radius-sm)", padding: "16px", color: "var(--accent)", textAlign: "center", fontWeight: "bold", fontSize: "0.95rem" }}>
-                          🎉 הקמפיין באוויר! בדוק את תיבת המייל שלך להזמנת הניהול.
+                          🎉 הקמפיין באוויר! בדוק את תיבת המייל שלך לסיכום ופרטים על מה קורה עכשיו.
                         </div>
                       )}
                     </div>

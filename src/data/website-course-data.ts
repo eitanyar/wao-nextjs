@@ -7,7 +7,10 @@ export interface WebsiteLesson {
   title: string;
   description: string;
   duration: string;
-  videoId: string;
+  /** YouTube video ID — used when the lesson is hosted on YouTube. */
+  videoId?: string;
+  /** Local self-hosted video path (public/media/videos/...) — used before/instead of a YouTube upload. */
+  videoSrc?: string;
   thumbnail: string;
   activeTask: string;
   uiGuides: { label: string; href: string }[];
@@ -60,6 +63,51 @@ export const WEBSITE_COURSE_MODULES: WebsiteModule[] = [
           { label: "▶ ChatGPT — יצירת שמות דומיין", href: "https://www.chatgpt.com" },
           { label: "▶ GoDaddy — בדיקת זמינות דומיין", href: "https://www.godaddy.com/he-il/domains" },
         ],
+      },
+    ],
+  },
+  {
+    num: 2,
+    title: "הסבירו את העסק ל-AI",
+    subtitle: "Business Description for AI",
+    icon: "🤖",
+    color: "#60a5fa",
+    lessons: [
+      {
+        slug: "website-lesson-3",
+        title: "שיעור 1: איך מתארים את העסק שלך ל-AI",
+        description:
+          "שלושה מרכיבים למשפט תיאור עסק מדויק, דוגמה חיה של אינסטלטור, ותבנית מלאה לניסוח המשפט שיבנה את כל האתר שלך",
+        duration: "3:11",
+        videoId: "E3DTE23P7RY",
+        thumbnail: "/media/thumbnails/website-lesson-3.png",
+        activeTask:
+          "תמלא את התבנית מהשיעור. תשמור את המשפט — תצטרך אותו בשיעור הבא.",
+        uiGuides: [],
+      },
+      {
+        slug: "website-lesson-4",
+        title: "שיעור 2: הפרומפט הראשון שלך ל-AI",
+        description:
+          "איך להפוך את תיאור העסק שלך לפרומפט ראשון, לקבל טיוטת עמוד בית תוך שניות, ולבדוק אם היא נשמעת כמוך",
+        duration: "3:52",
+        videoId: "aqd8TLdFeK0",
+        thumbnail: "/media/thumbnails/website-lesson-4.png",
+        activeTask:
+          "תדביק את המשפט שלך ל-AI ותריץ את שלוש הבדיקות. תשמור את הטיוטה — תצטרך אותה בשיעור הבא.",
+        uiGuides: [],
+      },
+      {
+        slug: "website-lesson-5",
+        title: "שיעור 3: מהטיוטה הראשונה לגרסה שנשמעת כמוך",
+        description:
+          "שלוש שאלות לבדיקת כל טיוטה, נוסחת פרומפט תיקון, וכמה סבבים צריך עד שמגיעים לתוצאה אמיתית",
+        duration: "3:41",
+        videoId: "Ced8AUpk4e4",
+        thumbnail: "/media/thumbnails/website-lesson-5.png",
+        activeTask:
+          "תעביר את הטיוטה דרך שלוש השאלות ותכתוב פרומפט תיקון אחד. תשמור את הגרסה החדשה.",
+        uiGuides: [],
       },
     ],
   },

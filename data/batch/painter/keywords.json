@@ -1,0 +1,180 @@
+{
+  "vertical": "painter",
+  "hebrewName": "צבעי בניין",
+  "primaryKeywords": [
+    {
+      "kw": "צבעי בניין",
+      "intent": "research",
+      "volume": "medium"
+    },
+    {
+      "kw": "צבעי דירות",
+      "intent": "research",
+      "volume": "high"
+    },
+    {
+      "kw": "צבעי לדירה",
+      "intent": "research",
+      "volume": "high"
+    },
+    {
+      "kw": "צבעי לבית",
+      "intent": "research",
+      "volume": "medium"
+    },
+    {
+      "kw": "צביעת דירה",
+      "intent": "research",
+      "volume": "high"
+    },
+    {
+      "kw": "סיוד דירה",
+      "intent": "research",
+      "volume": "medium"
+    },
+    {
+      "kw": "צביעת קירות",
+      "intent": "research",
+      "volume": "medium"
+    },
+    {
+      "kw": "תיקוני צבע בדירה",
+      "intent": "comparison",
+      "volume": "medium"
+    },
+    {
+      "kw": "תיקוני שפכטל וצבע",
+      "intent": "comparison",
+      "volume": "medium"
+    },
+    {
+      "kw": "חידוש צבע לדירה",
+      "intent": "comparison",
+      "volume": "medium"
+    },
+    {
+      "kw": "צביעת דירה לפני כניסה",
+      "intent": "comparison",
+      "volume": "medium"
+    },
+    {
+      "kw": "צביעת דירה אחרי שיפוץ",
+      "intent": "comparison",
+      "volume": "medium"
+    },
+    {
+      "kw": "צביעת דירת 3 חדרים",
+      "intent": "comparison",
+      "volume": "medium"
+    },
+    {
+      "kw": "צביעת דירת 4 חדרים",
+      "intent": "comparison",
+      "volume": "low"
+    },
+    {
+      "kw": "צבעי בתל אביב",
+      "intent": "research",
+      "volume": "medium"
+    },
+    {
+      "kw": "צבעי ברמת גן",
+      "intent": "research",
+      "volume": "medium"
+    },
+    {
+      "kw": "צבעי בפתח תקווה",
+      "intent": "research",
+      "volume": "medium"
+    },
+    {
+      "kw": "צבעי בראשון לציון",
+      "intent": "research",
+      "volume": "medium"
+    },
+    {
+      "kw": "צבעי בחיפה",
+      "intent": "research",
+      "volume": "medium"
+    },
+    {
+      "kw": "צבעי בירושלים",
+      "intent": "research",
+      "volume": "medium"
+    },
+    {
+      "kw": "צבעי בנתניה",
+      "intent": "research",
+      "volume": "low"
+    },
+    {
+      "kw": "צבעי לעבודות קטנות",
+      "intent": "comparison",
+      "volume": "medium"
+    },
+    {
+      "kw": "צבעי לבתים פרטיים",
+      "intent": "research",
+      "volume": "low"
+    },
+    {
+      "kw": "צבעי דחוף",
+      "intent": "urgent",
+      "volume": "low"
+    }
+  ],
+  "exactMatch": [
+    "צבעי לדירה",
+    "צבעי לבית",
+    "צביעת דירה",
+    "סיוד דירה",
+    "צביעת קירות",
+    "תיקוני צבע בדירה",
+    "תיקוני שפכטל וצבע",
+    "צביעת דירה לפני כניסה",
+    "צביעת דירה אחרי שיפוץ",
+    "צביעת דירת 3 חדרים",
+    "צבעי בתל אביב",
+    "צבעי ברמת גן",
+    "צבעי בפתח תקווה",
+    "צבעי בראשון לציון",
+    "צבעי בירושלים"
+  ],
+  "negativeKeywords": [
+    "קורס צבעי",
+    "לימודי צבעי",
+    "קורס צביעה",
+    "הכשרת צבעי",
+    "דרושים צבעי",
+    "עבודה לצבעי",
+    "משרות צבעי",
+    "שכר צבעי",
+    "משכורת צבעי",
+    "צבעי בלי ניסיון",
+    "עשה זאת בעצמך",
+    "איך לצבוע",
+    "מדריך צביעה",
+    "סרטון צביעה",
+    "יוטיוב",
+    "טיפים לצביעה",
+    "חומרי צביעה",
+    "ציוד צביעה",
+    "רולר צבע",
+    "מברשת צבע",
+    "צבע לקיר",
+    "קניית צבע",
+    "מחירון",
+    "מחירים",
+    "עלות",
+    "כמה עולה",
+    "חוות דעת",
+    "ביקורות",
+    "פורום",
+    "דירוג"
+  ],
+  "bidStrategy": "Maximize Conversions",
+  "urgencyProfile": "low",
+  "geoNote": "כדאי לפצל קמפיינים לפי אזורי שירות מרכזיים כמו גוש דן, ירושלים, חיפה והשרון, ולשלב את שם העיר בכותרות המודעות ובנכסי המיקום.",
+  "seasonalNote": "הביקוש עולה לפני פסח, בחודשי הקיץ, לפני כניסה לדירה חדשה או לקראת החזרת דירה שכורה; בחורף קצב החיפושים לרוב מתון יותר.",
+  "generatedAt": "2026-07-02T15:40:50.989Z"
+}

@@ -1,0 +1,185 @@
+{
+  "vertical": "gardener",
+  "hebrewName": "גנן",
+  "primaryKeywords": [
+    {
+      "kw": "גנן",
+      "intent": "comparison",
+      "volume": "high"
+    },
+    {
+      "kw": "גננים",
+      "intent": "research",
+      "volume": "high"
+    },
+    {
+      "kw": "שירותי גינון",
+      "intent": "comparison",
+      "volume": "high"
+    },
+    {
+      "kw": "גנן באזור המרכז",
+      "intent": "comparison",
+      "volume": "medium"
+    },
+    {
+      "kw": "גנן בתל אביב",
+      "intent": "comparison",
+      "volume": "medium"
+    },
+    {
+      "kw": "גנן בירושלים",
+      "intent": "comparison",
+      "volume": "medium"
+    },
+    {
+      "kw": "גנן בחיפה",
+      "intent": "comparison",
+      "volume": "medium"
+    },
+    {
+      "kw": "גנן בפתח תקווה",
+      "intent": "comparison",
+      "volume": "low"
+    },
+    {
+      "kw": "גנן ברמת גן",
+      "intent": "comparison",
+      "volume": "low"
+    },
+    {
+      "kw": "גנן בראשון לציון",
+      "intent": "comparison",
+      "volume": "low"
+    },
+    {
+      "kw": "גנן בהרצליה",
+      "intent": "comparison",
+      "volume": "low"
+    },
+    {
+      "kw": "גנן דחוף",
+      "intent": "urgent",
+      "volume": "medium"
+    },
+    {
+      "kw": "גנן להיום",
+      "intent": "urgent",
+      "volume": "low"
+    },
+    {
+      "kw": "גנן לגינה פרטית",
+      "intent": "comparison",
+      "volume": "medium"
+    },
+    {
+      "kw": "גנן לבית משותף",
+      "intent": "comparison",
+      "volume": "medium"
+    },
+    {
+      "kw": "אחזקת גינות",
+      "intent": "comparison",
+      "volume": "high"
+    },
+    {
+      "kw": "אחזקת גינות לבית פרטי",
+      "intent": "comparison",
+      "volume": "medium"
+    },
+    {
+      "kw": "תחזוקת גינה",
+      "intent": "comparison",
+      "volume": "medium"
+    },
+    {
+      "kw": "טיפול שוטף בגינה",
+      "intent": "research",
+      "volume": "medium"
+    },
+    {
+      "kw": "הקמת גינות",
+      "intent": "comparison",
+      "volume": "medium"
+    },
+    {
+      "kw": "שיקום גינה",
+      "intent": "comparison",
+      "volume": "medium"
+    },
+    {
+      "kw": "ניקוי גינה",
+      "intent": "comparison",
+      "volume": "medium"
+    },
+    {
+      "kw": "התקנת מערכת השקיה לגינה",
+      "intent": "comparison",
+      "volume": "medium"
+    },
+    {
+      "kw": "כיסוח דשא בגינה",
+      "intent": "research",
+      "volume": "medium"
+    },
+    {
+      "kw": "גיזום שיחים בגינה",
+      "intent": "research",
+      "volume": "low"
+    }
+  ],
+  "exactMatch": [
+    "גנן לגינה פרטית",
+    "אחזקת גינות לבית פרטי",
+    "תחזוקת גינה שוטפת",
+    "הקמת גינות לבית פרטי",
+    "שיקום גינה",
+    "ניקוי גינה",
+    "התקנת מערכת השקיה לגינה",
+    "כיסוח דשא בגינה",
+    "גיזום שיחים בגינה",
+    "גנן לבית משותף",
+    "גנן בתל אביב",
+    "גנן בירושלים",
+    "גנן בחיפה",
+    "גנן באזור המרכז",
+    "שירותי גינון"
+  ],
+  "negativeKeywords": [
+    "קורס גינון",
+    "לימודי גינון",
+    "קורס גנן",
+    "הכשרת גננים",
+    "תעודת גנן",
+    "עבודה גנן",
+    "דרושים גנן",
+    "משרות גנן",
+    "שכר גנן",
+    "משכורת גנן",
+    "קורות חיים גנן",
+    "מדריך גינון",
+    "מדריכים לגינון",
+    "איך להקים גינה",
+    "עשה זאת בעצמך",
+    "מחירון גינון",
+    "כמה עולה גנן",
+    "עלות אחזקת גינה",
+    "גנן זול",
+    "חוות דעת גנן",
+    "ביקורות גנן",
+    "פורום גינון",
+    "גננת",
+    "גן ילדים",
+    "סייעת לגן",
+    "פעוטון",
+    "מעון יום",
+    "גן חובה",
+    "כלי גינון",
+    "מכסחת דשא"
+  ],
+  "bidStrategy": "Maximize Conversions",
+  "urgencyProfile": "low",
+  "geoNote": "מומלץ לפצל לפי אזורי שירות בפועל: גוש דן, השרון, ירושלים, חיפה והקריות, עם רדיוס ממוקד סביב היישובים שבהם העסק נותן שירות.",
+  "seasonalNote": "הביקוש עולה באביב, לפני פסח ובתקופות מעבר. בחורף הביקוש לרוב נמוך יותר, למעט ניקוי, שיקום וגיזום אחרי סערות.",
+  "generatedAt": "2026-07-02T11:05:01.499Z"
+}

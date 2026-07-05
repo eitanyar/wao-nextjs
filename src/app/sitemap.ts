@@ -1,6 +1,7 @@
 import type { MetadataRoute } from "next";
 import { readFileSync } from "fs";
 import { join } from "path";
+import { KNOWLEDGE_ARTICLES } from "@/data/knowledge";
 
 const BASE = "https://www.wao.co.il";
 
@@ -32,6 +33,15 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${BASE}/seo/consulting`,        lastModified: now, changeFrequency: "monthly", priority: 0.85 },
     { url: `${BASE}/seo/international`,     lastModified: now, changeFrequency: "monthly", priority: 0.8 },
     { url: `${BASE}/google-ads`,            lastModified: now, changeFrequency: "weekly",  priority: 0.9 },
+    { url: `${BASE}/geo`,                   lastModified: now, changeFrequency: "weekly",  priority: 0.9 },
+    { url: `${BASE}/google-business`,       lastModified: now, changeFrequency: "weekly",  priority: 0.9 },
+    { url: `${BASE}/site-bot`,              lastModified: now, changeFrequency: "weekly",  priority: 0.9 },
+    { url: `${BASE}/build`,                 lastModified: now, changeFrequency: "monthly", priority: 0.8 },
+    { url: `${BASE}/consulting`,            lastModified: now, changeFrequency: "monthly", priority: 0.8 },
+    { url: `${BASE}/content`,               lastModified: now, changeFrequency: "monthly", priority: 0.8 },
+    { url: `${BASE}/social`,                lastModified: now, changeFrequency: "monthly", priority: 0.8 },
+    { url: `${BASE}/maoved`,                lastModified: now, changeFrequency: "monthly", priority: 0.8 },
+    { url: `${BASE}/knowledge`,             lastModified: now, changeFrequency: "weekly",  priority: 0.85 },
     { url: `${BASE}/training`,              lastModified: now, changeFrequency: "weekly",  priority: 0.85 },
     { url: `${BASE}/training/google-ads-course`,   lastModified: now, changeFrequency: "monthly", priority: 0.8 },
     { url: `${BASE}/training/google-my-business`,  lastModified: now, changeFrequency: "monthly", priority: 0.8 },
@@ -68,5 +78,18 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: 0.6,
   }));
 
-  return [...staticPages, ...lessonPages, ...blogPages];
+  // ── Knowledge articles ──────────────────────────────────────────────────────
+  const knowledgePages: MetadataRoute.Sitemap = KNOWLEDGE_ARTICLES.map((a) => {
+    const entry: MetadataRoute.Sitemap[number] = {
+      url: `${BASE}/knowledge/${a.slug}`,
+      changeFrequency: "monthly",
+      priority: 0.7,
+    };
+    if (a.updatedDate) {
+      entry.lastModified = new Date(a.updatedDate).toISOString();
+    }
+    return entry;
+  });
+
+  return [...staticPages, ...lessonPages, ...blogPages, ...knowledgePages];
 }

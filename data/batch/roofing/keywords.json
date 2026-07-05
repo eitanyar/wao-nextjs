@@ -1,0 +1,179 @@
+{
+  "vertical": "roofing",
+  "hebrewName": "גגן — איטום וגגות",
+  "primaryKeywords": [
+    {
+      "kw": "איטום גגות",
+      "intent": "urgent",
+      "volume": "high"
+    },
+    {
+      "kw": "קבלן איטום גגות",
+      "intent": "comparison",
+      "volume": "medium"
+    },
+    {
+      "kw": "גגן",
+      "intent": "urgent",
+      "volume": "medium"
+    },
+    {
+      "kw": "גגן דחוף",
+      "intent": "urgent",
+      "volume": "low"
+    },
+    {
+      "kw": "איטום גג דחוף",
+      "intent": "urgent",
+      "volume": "medium"
+    },
+    {
+      "kw": "זיפות גגות",
+      "intent": "urgent",
+      "volume": "medium"
+    },
+    {
+      "kw": "זיפות גג",
+      "intent": "urgent",
+      "volume": "medium"
+    },
+    {
+      "kw": "תיקון גגות",
+      "intent": "urgent",
+      "volume": "medium"
+    },
+    {
+      "kw": "תיקון נזילה מהגג",
+      "intent": "urgent",
+      "volume": "medium"
+    },
+    {
+      "kw": "איתור נזילה בגג",
+      "intent": "urgent",
+      "volume": "medium"
+    },
+    {
+      "kw": "איטום גג מרוצף",
+      "intent": "comparison",
+      "volume": "low"
+    },
+    {
+      "kw": "איטום גג שטוח",
+      "intent": "research",
+      "volume": "medium"
+    },
+    {
+      "kw": "איטום גגות ביריעות ביטומניות",
+      "intent": "comparison",
+      "volume": "medium"
+    },
+    {
+      "kw": "תיקון גג רעפים",
+      "intent": "urgent",
+      "volume": "medium"
+    },
+    {
+      "kw": "איטום גגות בתל אביב",
+      "intent": "urgent",
+      "volume": "medium"
+    },
+    {
+      "kw": "קבלן איטום גגות בתל אביב",
+      "intent": "comparison",
+      "volume": "low"
+    },
+    {
+      "kw": "איטום גגות בירושלים",
+      "intent": "urgent",
+      "volume": "medium"
+    },
+    {
+      "kw": "איטום גגות בחיפה",
+      "intent": "urgent",
+      "volume": "medium"
+    },
+    {
+      "kw": "גגן בפתח תקווה",
+      "intent": "urgent",
+      "volume": "low"
+    },
+    {
+      "kw": "איטום גגות בראשון לציון",
+      "intent": "urgent",
+      "volume": "low"
+    },
+    {
+      "kw": "גגן ברמת גן",
+      "intent": "urgent",
+      "volume": "low"
+    },
+    {
+      "kw": "איטום גגות בנתניה",
+      "intent": "urgent",
+      "volume": "low"
+    },
+    {
+      "kw": "תיקון גג דולף",
+      "intent": "urgent",
+      "volume": "low"
+    },
+    {
+      "kw": "איטום גג לפני החורף",
+      "intent": "research",
+      "volume": "low"
+    }
+  ],
+  "exactMatch": [
+    "איטום גגות",
+    "קבלן איטום גגות",
+    "איטום גג דחוף",
+    "גגן דחוף",
+    "זיפות גגות",
+    "תיקון גגות",
+    "תיקון נזילה מהגג",
+    "איתור נזילה בגג",
+    "איטום גג מרוצף",
+    "איטום גגות ביריעות ביטומניות",
+    "תיקון גג רעפים",
+    "איטום גגות בתל אביב",
+    "איטום גגות בירושלים",
+    "איטום גגות בחיפה"
+  ],
+  "negativeKeywords": [
+    "קורס",
+    "קורסים",
+    "לימודים",
+    "הכשרה",
+    "הסמכה",
+    "דרושים",
+    "משרות",
+    "עבודה",
+    "משכורת",
+    "שכר",
+    "התלמדות",
+    "סטאז׳",
+    "עשה זאת בעצמך",
+    "איך עושים",
+    "מדריך",
+    "הדרכה",
+    "יוטיוב",
+    "סרטון",
+    "ויקיפדיה",
+    "פורום",
+    "פורומים",
+    "מאמר",
+    "חינם",
+    "יד 2",
+    "מחירון",
+    "עלויות",
+    "ביקורות",
+    "חוות דעת",
+    "תמונות",
+    "שרטוט"
+  ],
+  "bidStrategy": "Maximize Conversions",
+  "urgencyProfile": "high",
+  "geoNote": "כדאי לפצל קמפיינים לפי אזורי שירות עם דגש על גוש דן, ירושלים, חיפה והשרון, ולהוסיף וריאציות עירוניות רק לערים שבהן יש זמינות הגעה מהירה.",
+  "seasonalNote": "הביקוש מזנק לפני החורף, בתחילת הגשמים ואחרי סערות; מומלץ להעלות תקציב והצעות מחיר בימי גשם ובחודשי הסתיו-חורף.",
+  "generatedAt": "2026-07-02T15:50:57.935Z"
+}

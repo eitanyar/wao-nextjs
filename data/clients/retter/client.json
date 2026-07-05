@@ -1,0 +1,18 @@
+{
+  "clientId": "retter",
+  "siteUrl": "https://www.retter.co.il/",
+  "cmsType": "wordpress",
+  "businessNiche": "מכון להכשרת מטפלים ומאמנים ב-NLP",
+  "topService": "קורסי NLP פרקטישנר ומאסטר",
+  "targetLocation": "פתח תקווה, קריית ביאליק, נס ציונה — ואונליין",
+  "usp": "הכשרה מוכרת ומקצועית שהופכת אנשים לכלים — עם ליווי אישי לאורך כל הדרך",
+  "clientQuestions": "מה זה NLP? כמה עולה קורס? כמה זמן לוקח? האם זה מוכר? האם אפשר אונליין?",
+  "exclusions": "",
+  "approvalContact": "הדס",
+  "approvalWhatsapp": "972504406461",
+  "tone": "מקצועי, חם, מעצים — לא אקדמי ולא שיווקי מדי",
+  "pin": "7291",
+  "entitlements": [
+    "geo"
+  ]
+}

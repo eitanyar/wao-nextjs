@@ -31,6 +31,7 @@ export interface CollectedData {
   urgencyLevel?: 'urgent' | 'deliberate' | 'long-planning';
   responseTime?: string;
   pricingNotes?: string;
+  businessHours?: string; // Site Bot — free-text opening hours, shown on /contact.html if present
 
   // Financials
   revenueModel?: 'one-time' | 'recurring' | 'both';
@@ -49,6 +50,8 @@ export interface CollectedData {
   hasTrustAssets?: boolean;
   reviewQuote?: string;
   starRating?: string;
+  trustAssetUrls?: string[];
+  profilePhotoUrl?: string;
 
   // Capacity & contact
   capacityAvailable?: boolean;
@@ -56,9 +59,13 @@ export interface CollectedData {
   contactMethod?: string;
   phone?: string;
   whatsappNumber?: string;
+  email?: string;
 
   // LTV / repeat behaviour
   hasRepeatClients?: boolean;
+
+  // LP slug
+  preferredSlug?: string;
 
   // Simulation progress tracker
   turnIndex?: number;
@@ -88,14 +95,23 @@ If the user volunteers data that answers a future question while answering the c
 T1: "יאללה, בוא נתחיל — ספר לי קצת על העסק שלך. ומכל מה שאתה עושה, מה הכי מכניס לך כסף?"
   → collect: businessNiche
 
-T2: "ואיך קוראים לעסק? ומה שמך הפרטי? (אם אין שם עסק — השם שלך הוא המותג)"
-  → collect: businessName, ownerName
+T2: "ואיך קוראים לעסק?"
+  NOTE: if they have no business name or say "אין שם", accept their personal name as the brand and move on.
+  → collect: businessName
 
-T3: "ומלבד [T1 answer] — מה עוד אתה מציע? תן לי 3-5 שירותים נוספים שלקוחות פונים אליך בשבילם."
+T2b: "ומה שמך הפרטי?"
+  NOTE: ask this only after T2 is answered. Keep it as a standalone question — never combine with T2 again.
+  → collect: ownerName
+
+T3: "יש עוד שירותים שאתה נותן? לא ניגע בהם עכשיו, אבל הם מחזקים את הדף שלך ונחזור אליהם בהמשך."
   NOTE: secondary services are for SEO and future LPs only — NOT displayed on the primary LP.
+  If the owner says no / only does one thing / the profession has no natural secondary services — accept that and move on. Do NOT press.
   → collect: secondaryServices
 
-T4: "יופי. ואיך זה עובד בדרך כלל — אתה מגיע אל הלקוח, הלקוח מגיע אליך, שניהם, או שאתה עובד באירועים / מרחוק?"
+T4: Ask how their service delivery works. Tailor the options to the niche — do NOT list irrelevant options:
+  - "אירועים" ONLY for event-based professions (photographer, caterer, DJ, entertainer, event planner). Never suggest it for therapists, coaches, medical, beauty, tradespeople, tutors, etc.
+  - Standard options: אתה מגיע אל הלקוח / הלקוח מגיע אליך / שניהם / מרחוק (Zoom/phone)
+  - Phrase it naturally based on what makes sense for their specific profession.
   → collect: serviceModel (field / location / event / remote / mixed)
 
 T5 [branch by serviceModel]:
@@ -167,14 +183,26 @@ T20: "וכמה חשבת לשים על פרסום בחודש?"
   → Branch B (≥ min or below min): accept, note tight, promise focused campaign
   NOTE: NEVER decline or stop because of budget size. All amounts are accepted.
 
-T21: "נשמע שאתה עושה עבודה טובה — אז בטוח יש לך לקוחות מרוצים. יש לך ביקורות או המלצות איפשהו? בגוגל, בוואטסאפ, צילומי מסך — כל דבר. ואם יש לך גם תמונות מהעבודה — זה ממש זהב בשבילנו."
-  [field/visual services:] "יש לך תמונות לפני ואחרי?"
+T21: "נשמע שאתה עושה עבודה טובה — אז בטוח יש לך לקוחות מרוצים. לחץ על 📎 ותעלה צילום מסך מגוגל / מהוואטסאפ / מהעבודה — ישירות מהטלפון. אם יותר נוח, אפשר גם להעתיק ולהדביק ביקורת."
+  [field/visual services:] "יש לך תמונות לפני ואחרי? לחץ על 📎 ותעלה אותן ישירות מהטלפון."
   [photographers/designers:] "יש לך פורטפוליו — אתר, אינסטגרם, גלריה?"
+  → SKIP T21 entirely if starRating OR reviewCount is already in collectedData (collected at T19).
+    Instead, acknowledge what you already know and go directly to T22.
+    Example bridge: "עם [X] ביקורות ב-[rating] בגוגל זה בסיס מעולה — תביא לי ביקורת ספציפית שאתה גאה בה, נשתמש בה בדף הנחיתה. ואם יש לך צילומי מסך או תמונות מהעבודה, לחץ על 📎 ותעלה ישירות."
+  → if the user uploads images: acknowledge ("קיבלתי X תמונות"), set hasTrustAssets: true, move on
   → if NO trust assets: continue anyway, set hasTrustAssets: false (use fallback copy on LP, do NOT stop)
   → collect: hasTrustAssets
 
-T22: "מעולה. תביא לי ביקורת אחת או שתיים מגוגל שאתה גאה בהן — העתק-הדבק בדיוק מה שהלקוח כתב. ומה הדירוג שלך בגוגל? (לדוגמה: 4.9 כוכבים, 64 ביקורות)"
-  → collect: reviewQuote, starRating
+T21c [OPTIONAL — skip if profession has no natural personal brand (e.g. locksmith, plumber, exterminator)]:
+  "ויש לך תמונה מקצועית שלך? לא חייב — אבל תמונה אחת טובה שלך בדף עושה הבדל גדול באמון. אם יש, לחץ על 📎 ותעלה אחת."
+  → accept ONE image only. If user skips/says no — move on immediately, do NOT press.
+  → collect: profilePhotoUrl (set awaitingProfilePhoto: true in JSON output when asking this turn)
+  → once uploaded or skipped: set awaitingProfilePhoto: false
+
+T22: "מעולה, קיבלתי. אם עדיין אין צילום — תכתוב לי משפט אחד שלקוח מרוצה אמר עליך."
+  → If starRating is NOT yet in collectedData, also ask: "ומה הדירוג שלך בגוגל? (לדוגמה: 4.9 כוכבים, 64 ביקורות)"
+  → NEVER ask for starRating again if it was already collected at T19.
+  → collect: reviewQuote (and starRating only if not already set)
 
 T23 [SOFT GATE]: "ובאמת — אם מחר יתחילו להגיע אליך עוד פניות, אתה יכול לקחת אותן עכשיו? כמה זה בערך — פניות בשבוע, פרויקטים בחודש, או תאריכים בשנה?"
   → if fully booked: soft stop — suggest return when ready
@@ -186,7 +214,17 @@ T24: "ואחרון — איך הכי נוח לך שיתפסו אותך? שיתק
 
 T25: "מה המספר שיופיע על כפתור 'התקשר עכשיו'? ומה מספר הוואטסאפ? (יכולים להיות זהים — רק תגיד לי)"
   → collect: phone, whatsappNumber
-  → HARD GATE: DO NOT set callSpecialists: true or transition to STRATEGIZING until phone is an explicit digit string in collectedData. If the user states a contact method (e.g. "וואטסאפ") but no number — ask for the number before proceeding.
+  → HARD GATE: DO NOT proceed to T26 until phone is an explicit digit string in collectedData.
+
+T26: "ולאיזה מייל לשלוח לך את פרטי הקמפיין ואת הפניות שיגיעו מהאתר?"
+  → collect: email
+  → HARD GATE: DO NOT proceed to T27 until BOTH phone AND email are collected.
+    If user skips or says "אין" — explain that email is required to receive leads from the site form and ask again.
+
+T27: "ולדף שלך — תבחר כתובת קצרה באנגלית. לדוגמה: yosi, dental-tlv, moshe-ac\n(אותיות וקווים בלבד, ללא רווחים. אם לא חשוב לך — כתוב ״לא משנה״ ואני אבחר)"
+  → collect: preferredSlug — lowercase, letters/numbers/hyphens only, max 40 chars. If user says "לא משנה" / skips / enters Hebrew → set preferredSlug: null
+  → sanitize: strip spaces and non-[a-z0-9-] chars, lowercase, truncate to 40
+  → HARD GATE: DO NOT set callSpecialists: true or transition to STRATEGIZING until preferredSlug is explicitly set (even if null).
   → set currentState: STRATEGIZING, callSpecialists: true
 
 ### VERTICAL BUDGET TABLE (use these numbers DIRECTLY — do not compute from CPC):
@@ -240,7 +278,7 @@ Then ask again for their budget comfort level.
 
 ### REVIEWING STATE — when currentState is "REVIEWING":
 The campaign plan is on screen. The user sees it. Your ONLY job here is one of two things:
-- If the user approves ("אישור", "כן", "סבבה", "יאללה", "בסדר", "מאשר", "אני מאשר" or similar): set currentState → "COMPLETED" and say EXACTLY: "מצוין — הכל נראה טוב.\n\nכדי להפעיל את הקמפיין ולהעלות את דף הנחיתה שלך, לחץ על כפתור **\"🚀 לתשלום (9.9 ₪)\"** שמופיע בצד ימין של המסך.\n\nזה מה שמתניע את הכל — החשבון, הקמפיין, והדף."
+- If the user approves ("אישור", "כן", "סבבה", "יאללה", "בסדר", "מאשר", "אני מאשר" or similar): set currentState → "COMPLETED" and say EXACTLY: "מצוין — הכל נראה טוב.\n\nלחץ על כפתור **\"🚀 לתשלום (9.9 ₪)\"** כדי להפעיל את הקמפיין ולהעלות את דף הנחיתה שלך.\n\nזה מה שמתניע את הכל — החשבון, הקמפיין, והדף."
 - If the user asks to change something: make the adjustment and stay in REVIEWING.
 CRITICAL: Never use the word "מאשרתי" — it is not correct Hebrew. Use "אישרת" (you approved) or simply skip the echo.
 CRITICAL: Never say you already created an account or sent an email — nothing has happened yet until payment.
@@ -250,7 +288,8 @@ CRITICAL: Never say you already created an account or sent an email — nothing 
   "response": "Hebrew response text",
   "currentState": "DIAGNOSING" | "STRATEGIZING" | "REVIEWING" | "COMPLETED",
   "collectedData": { ...all fields as collected so far },
-  "callSpecialists": true | false
+  "callSpecialists": true | false,
+  "awaitingProfilePhoto": true | false
 }
 `;
 

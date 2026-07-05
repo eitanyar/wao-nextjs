@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { renderMixed } from "@/lib/bidi";
 
 const footerLinks = [
   {
@@ -8,6 +9,8 @@ const footerLinks = [
       { label: "פרסום בגוגל", href: "/google-ads" },
       { label: "שיווק תוכן", href: "/content" },
       { label: "יועץ שיווקי", href: "/consulting" },
+      { label: "GEO Bot — קידום בתשובות AI", href: "/geo" },
+      { label: "בוט גוגל לעסק שלי", href: "/google-business" },
     ],
   },
   {
@@ -130,7 +133,7 @@ export default function Footer() {
               <nav aria-label={col.title}>
                 {col.links.map((link) => (
                   <Link key={link.href} href={link.href} className="footer-link">
-                    {link.label}
+                    {renderMixed(link.label)}
                   </Link>
                 ))}
               </nav>

@@ -1,0 +1,175 @@
+{
+  "vertical": "photographer",
+  "hebrewName": "צלם אירועים",
+  "primaryKeywords": [
+    {
+      "kw": "צלם אירועים",
+      "intent": "research",
+      "volume": "high"
+    },
+    {
+      "kw": "צלם לאירועים",
+      "intent": "research",
+      "volume": "high"
+    },
+    {
+      "kw": "צילום אירועים",
+      "intent": "research",
+      "volume": "high"
+    },
+    {
+      "kw": "צלמת אירועים",
+      "intent": "research",
+      "volume": "medium"
+    },
+    {
+      "kw": "צלם אירועים מומלץ",
+      "intent": "comparison",
+      "volume": "medium"
+    },
+    {
+      "kw": "צלם אירועים בתל אביב",
+      "intent": "research",
+      "volume": "medium"
+    },
+    {
+      "kw": "צלם אירועים בירושלים",
+      "intent": "research",
+      "volume": "medium"
+    },
+    {
+      "kw": "צלם אירועים בחיפה",
+      "intent": "research",
+      "volume": "medium"
+    },
+    {
+      "kw": "צלם אירועים בפתח תקווה",
+      "intent": "research",
+      "volume": "low"
+    },
+    {
+      "kw": "צלם אירועים בראשון לציון",
+      "intent": "research",
+      "volume": "low"
+    },
+    {
+      "kw": "צלם לבר מצווה",
+      "intent": "research",
+      "volume": "high"
+    },
+    {
+      "kw": "צלם לבת מצווה",
+      "intent": "research",
+      "volume": "medium"
+    },
+    {
+      "kw": "צלם לברית",
+      "intent": "research",
+      "volume": "medium"
+    },
+    {
+      "kw": "צלם לבריתה",
+      "intent": "research",
+      "volume": "low"
+    },
+    {
+      "kw": "צלם לחינה",
+      "intent": "research",
+      "volume": "medium"
+    },
+    {
+      "kw": "צלם ליום הולדת",
+      "intent": "research",
+      "volume": "medium"
+    },
+    {
+      "kw": "צלם לחתונה",
+      "intent": "research",
+      "volume": "high"
+    },
+    {
+      "kw": "צלם לאירוע קטן",
+      "intent": "research",
+      "volume": "medium"
+    },
+    {
+      "kw": "צלם מגנטים לאירועים",
+      "intent": "comparison",
+      "volume": "medium"
+    },
+    {
+      "kw": "צלם וידאו לאירועים",
+      "intent": "comparison",
+      "volume": "medium"
+    },
+    {
+      "kw": "צילום סטילס לאירועים",
+      "intent": "comparison",
+      "volume": "low"
+    },
+    {
+      "kw": "צלם אירועים בהתראה קצרה",
+      "intent": "urgent",
+      "volume": "low"
+    },
+    {
+      "kw": "צלם אירועים זמין היום",
+      "intent": "urgent",
+      "volume": "low"
+    }
+  ],
+  "exactMatch": [
+    "צלם אירועים",
+    "צלם לאירועים",
+    "צילום אירועים",
+    "צלמת אירועים",
+    "צלם אירועים מומלץ",
+    "צלם אירועים בתל אביב",
+    "צלם אירועים בירושלים",
+    "צלם לבר מצווה",
+    "צלם לבת מצווה",
+    "צלם לברית",
+    "צלם לחינה",
+    "צלם ליום הולדת",
+    "צלם לחתונה",
+    "צלם מגנטים לאירועים",
+    "צלם וידאו לאירועים"
+  ],
+  "negativeKeywords": [
+    "קורס צילום",
+    "לימודי צילום",
+    "בית ספר לצילום",
+    "סדנת צילום",
+    "מדריך צילום",
+    "הדרכת צילום",
+    "טיפים לצילום",
+    "עשה זאת בעצמך",
+    "עשה בעצמך",
+    "דרושים",
+    "משרה",
+    "משרות",
+    "עבודה",
+    "משכורת",
+    "שכר",
+    "יד שניה",
+    "מצלמה",
+    "מצלמות",
+    "עדשה",
+    "פוטושופ",
+    "לייטרום",
+    "עריכת תמונות",
+    "עריכת וידאו",
+    "חינם",
+    "חינמי",
+    "להורדה",
+    "אפליקציה",
+    "מחירון",
+    "השוואת מחירים",
+    "ביקורות"
+  ],
+  "bidStrategy": "Maximize Conversions",
+  "urgencyProfile": "low",
+  "geoNote": "כדאי לפצל לפי אזורי ביקוש עיקריים: גוש דן, ירושלים, חיפה והשרון, עם דגש על חיפושים סביב אולמות וגני אירועים.",
+  "seasonalNote": "הביקוש מתחזק באביב ובקיץ ובעונות של חתונות, בר ובת מצווה וחגים; מומלץ להעלות תקציב 4-8 שבועות לפני תקופות שיא.",
+  "generatedAt": "2026-07-02T14:11:26.183Z"
+}

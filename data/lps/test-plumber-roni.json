@@ -1,0 +1,61 @@
+{
+  "slug": "test-plumber-roni",
+  "collectedData": {
+    "businessNiche": "שרברב ואינסטלטור",
+    "businessName": "שרברב מהיר",
+    "ownerName": "משה כהן",
+    "serviceModel": "field",
+    "targetLocation": "תל אביב, רמת גן",
+    "idealClientFear": "נזילה תגרום נזק לרצפה",
+    "usp": "20 שנה ניסיון",
+    "yearsInField": "20",
+    "guarantee": "אחריות שנה",
+    "urgencyLevel": "urgent",
+    "avgJobValue": 800,
+    "closeRate": 0.7,
+    "monthlyBudget": 2000,
+    "phone": "052-1234567",
+    "contactMethod": "וואטסאפ",
+    "reviewQuote": "שירות מצוין",
+    "starRating": "4.8",
+    "hasTrustAssets": true
+  },
+  "copy": {
+    "heroHeadline": "נזילה תגרום נזק לרצפה? פותרים מהר",
+    "heroSubheadline": "שרברב מהיר בתל אביב ורמת גן, עם 20 שנה ניסיון ואחריות לשנה.",
+    "heroCta": "שלח וואטסאפ",
+    "trustBarItems": [
+      "20 שנה ניסיון",
+      "אחריות שנה",
+      "4.8 כוכבים",
+      "תל אביב ורמת גן"
+    ],
+    "aboutBlurb": "אני משה כהן, שרברב ואינסטלטור עם 20 שנה ניסיון. מגיע אליך מהר, מאתר את הבעיה ומטפל בה בלי סיבוכים.",
+    "servicesHeadline": "מה אני מטפל בו",
+    "serviceItems": [
+      "איתור נזילות",
+      "תיקון צנרת",
+      "פתיחת סתימות",
+      "החלפת ברזים"
+    ],
+    "faqHeadline": "שאלות נפוצות",
+    "faqItems": [
+      {
+        "q": "אתה מגיע מהר?",
+        "a": "כן, כשיש נזילה או סתימה אני נותן מענה מהיר באזור תל אביב ורמת גן."
+      },
+      {
+        "q": "יש אחריות על העבודה?",
+        "a": "כן, אתה מקבל אחריות לשנה על העבודה."
+      }
+    ],
+    "guaranteeBlock": "אתה מקבל עבודה מקצועית עם אחריות לשנה ושקט נפשי אחרי התיקון.",
+    "reviewFeatured": "שירות מצוין",
+    "reviewContext": "4.8 כוכבים בגוגל",
+    "responseTimeBadge": "מענה מהיר בוואטסאפ",
+    "scarcityLine": null,
+    "formHeadline": "רוצה שאבדוק את זה עכשיו?",
+    "stickyBarLine": "נזילה או סתימה? שלח וואטסאפ עכשיו"
+  },
+  "createdAt": "2026-06-30T06:57:18.257Z"
+}

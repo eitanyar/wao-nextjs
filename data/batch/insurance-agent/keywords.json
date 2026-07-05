@@ -1,0 +1,179 @@
+{
+  "vertical": "insurance-agent",
+  "hebrewName": "סוכן ביטוח",
+  "primaryKeywords": [
+    {
+      "kw": "סוכן ביטוח",
+      "intent": "research",
+      "volume": "high"
+    },
+    {
+      "kw": "סוכן ביטוח מומלץ",
+      "intent": "comparison",
+      "volume": "high"
+    },
+    {
+      "kw": "סוכנת ביטוח",
+      "intent": "research",
+      "volume": "medium"
+    },
+    {
+      "kw": "סוכן ביטוח פרטי",
+      "intent": "research",
+      "volume": "medium"
+    },
+    {
+      "kw": "סוכן ביטוח אישי",
+      "intent": "comparison",
+      "volume": "medium"
+    },
+    {
+      "kw": "סוכן ביטוח בתל אביב",
+      "intent": "comparison",
+      "volume": "medium"
+    },
+    {
+      "kw": "סוכן ביטוח בירושלים",
+      "intent": "comparison",
+      "volume": "medium"
+    },
+    {
+      "kw": "סוכן ביטוח בחיפה",
+      "intent": "comparison",
+      "volume": "medium"
+    },
+    {
+      "kw": "סוכן ביטוח בראשון לציון",
+      "intent": "comparison",
+      "volume": "low"
+    },
+    {
+      "kw": "סוכן ביטוח בבאר שבע",
+      "intent": "comparison",
+      "volume": "low"
+    },
+    {
+      "kw": "סוכן ביטוח רכב",
+      "intent": "research",
+      "volume": "high"
+    },
+    {
+      "kw": "סוכן ביטוח דירה",
+      "intent": "research",
+      "volume": "medium"
+    },
+    {
+      "kw": "סוכן ביטוח בריאות",
+      "intent": "research",
+      "volume": "medium"
+    },
+    {
+      "kw": "סוכן ביטוח בריאות פרטי",
+      "intent": "research",
+      "volume": "low"
+    },
+    {
+      "kw": "סוכן ביטוח חיים",
+      "intent": "research",
+      "volume": "medium"
+    },
+    {
+      "kw": "סוכן ביטוח משכנתא",
+      "intent": "research",
+      "volume": "medium"
+    },
+    {
+      "kw": "סוכן ביטוח לפנסיה",
+      "intent": "research",
+      "volume": "medium"
+    },
+    {
+      "kw": "סוכן ביטוח נסיעות לחו\"ל",
+      "intent": "urgent",
+      "volume": "medium"
+    },
+    {
+      "kw": "סוכן ביטוח לכל המשפחה",
+      "intent": "research",
+      "volume": "low"
+    },
+    {
+      "kw": "סוכן ביטוח זמין",
+      "intent": "urgent",
+      "volume": "low"
+    },
+    {
+      "kw": "סוכן ביטוח עכשיו",
+      "intent": "urgent",
+      "volume": "low"
+    },
+    {
+      "kw": "סוכן ביטוח לידי",
+      "intent": "comparison",
+      "volume": "medium"
+    },
+    {
+      "kw": "סוכן ביטוח לייעוץ",
+      "intent": "research",
+      "volume": "low"
+    },
+    {
+      "kw": "סוכן ביטוח אונליין",
+      "intent": "research",
+      "volume": "low"
+    }
+  ],
+  "exactMatch": [
+    "סוכן ביטוח",
+    "סוכן ביטוח מומלץ",
+    "סוכן ביטוח פרטי",
+    "סוכן ביטוח אישי",
+    "סוכנת ביטוח",
+    "סוכן ביטוח רכב",
+    "סוכן ביטוח בריאות",
+    "סוכן ביטוח דירה",
+    "סוכן ביטוח חיים",
+    "סוכן ביטוח משכנתא",
+    "סוכן ביטוח לפנסיה",
+    "סוכן ביטוח בתל אביב",
+    "סוכן ביטוח בירושלים",
+    "סוכן ביטוח בחיפה",
+    "סוכן ביטוח לידי"
+  ],
+  "negativeKeywords": [
+    "קורס",
+    "קורסים",
+    "לימודים",
+    "הכשרה",
+    "תעודה",
+    "מבחן",
+    "מבחנים",
+    "בחינות",
+    "דרושים",
+    "משרות",
+    "משרה",
+    "קריירה",
+    "שכר",
+    "משכורת",
+    "התמחות",
+    "סילבוס",
+    "חינם",
+    "טופס",
+    "טפסים",
+    "מסמך",
+    "אקסל",
+    "דוגמה",
+    "דוגמאות",
+    "ויקיפדיה",
+    "פורום",
+    "ביקורות",
+    "מחירון",
+    "השוואת מחירים",
+    "מחשבון"
+  ],
+  "bidStrategy": "tCPA",
+  "urgencyProfile": "low",
+  "geoNote": "מומלץ למקד ארצית ולפצל קבוצות לפי ערים גדולות ואזורי שירות, עם דגש על תל אביב, ירושלים, חיפה, ראשון לציון ובאר שבע.",
+  "seasonalNote": "יש עלייה בביקוש סביב חידושי ביטוח רכב ודירה, סוף שנה בנושאי פנסיה ובריאות, ולפני חופשות בביטוח נסיעות לחו\"ל.",
+  "generatedAt": "2026-07-02T10:16:43.899Z"
+}

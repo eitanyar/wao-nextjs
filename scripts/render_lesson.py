@@ -99,14 +99,24 @@ def extract_narrations(md_path: Path) -> list:
             narration_text = mic_match.group(1).strip()
 
         # --- Format 2: Marp presenter notes (HTML comment) ---
+        # A single slide's narration may be split across MULTIPLE consecutive
+        # HTML comments (Gil's authoring style groups narration into short
+        # paragraph chunks for readability). Concatenate ALL valid narration
+        # comments in document order -- do not just take the last one, or
+        # earlier chunks are silently dropped (lost TTS content).
         if not narration_text:
-            # Find all <!-- ... --> blocks in this slide
             comments = re.findall(r"<!--(.*?)-->", block, flags=re.DOTALL)
-            for cand in reversed(comments):
-                cand_str = cand.strip()
-                if cand_str and "SLIDE " not in cand_str and "OBJECTIVE" not in cand_str and "CHECKLIST" not in cand_str:
-                    narration_text = cand_str
-                    break
+            META_MARKERS = (
+                "SLIDE ", "OBJECTIVE", "CHECKLIST", "fact-checked",
+                "PREREQUISITE", "NET-NEW", "OUT OF SCOPE", "CONTINUITY",
+                "====",
+            )
+            valid_chunks = [
+                cand.strip() for cand in comments
+                if cand.strip() and not any(m in cand for m in META_MARKERS)
+            ]
+            if valid_chunks:
+                narration_text = "\n".join(valid_chunks)
 
         # Is this block purely a narration slide? (Old format standalone slide)
         visible = re.sub(r"<!--.*?-->", "", block, flags=re.DOTALL).strip()

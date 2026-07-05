@@ -21,14 +21,19 @@ Checklist (fix silently — no explanations):
 
 Return: corrected JSON object only. No prose.`;
 
-function slugify(name: string): string {
-  return name
+function slugify(name: string, phone?: string): string {
+  // Try Latin-only slug first (valid Cloudflare Pages project name)
+  const latin = name
     .toLowerCase()
-    .replace(/[^֐-׿a-z0-9\s-]/g, '')
+    .replace(/[^a-z0-9\s-]/g, '')
     .replace(/\s+/g, '-')
     .replace(/-+/g, '-')
-    .slice(0, 50)
-    .replace(/-$/, '');
+    .slice(0, 40)
+    .replace(/^-|-$/g, '');
+  if (latin.length >= 3) return latin;
+  // Hebrew/non-Latin name — use timestamp + last-4 of phone for uniqueness
+  const suffix = (phone || '').replace(/\D/g, '').slice(-4) || Date.now().toString(36).slice(-4);
+  return `wao-client-${suffix}`;
 }
 
 async function callAzure(systemPrompt: string, userMessage: string, model = 'haiku'): Promise<string> {
@@ -41,21 +46,23 @@ async function callAzure(systemPrompt: string, userMessage: string, model = 'hai
     ? (process.env.AZURE_OPENAI_DEPLOYMENT_FAST || 'gpt-4o-mini')
     : (process.env.AZURE_OPENAI_DEPLOYMENT_NAME || 'o4-mini');
 
-  const url = `${endpoint}/openai/deployments/${deployment}/chat/completions?api-version=2024-02-15-preview`;
+  const url = `${endpoint}/chat/completions?api-version=2024-05-01-preview`;
 
   const res = await fetch(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'api-key': apiKey },
     body: JSON.stringify({
+      model: deployment,
       messages: [
         { role: 'system', content: systemPrompt },
         { role: 'user', content: userMessage },
       ],
       response_format: { type: 'json_object' },
-      temperature: model === 'haiku' ? 0.1 : 0.5,
+      max_completion_tokens: 2000,
     }),
   });
   const data = await res.json();
+  if (data.error) throw new Error(`Azure OpenAI (${deployment}): ${data.error.message ?? data.error.code ?? JSON.stringify(data.error)}`);
   return data.choices[0].message.content;
 }
 
@@ -101,7 +108,10 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'collectedData.businessNiche is required' }, { status: 400 });
     }
 
-    const slug = body.slug || slugify(collectedData.businessName || collectedData.businessNiche || 'my-business');
+    const rawSlug = body.slug || collectedData.preferredSlug;
+    const slug = rawSlug
+      ? rawSlug.toLowerCase().replace(/[^a-z0-9-]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '').slice(0, 40) || slugify(collectedData.businessName || collectedData.businessNiche || 'my-business', collectedData.phone)
+      : slugify(collectedData.businessName || collectedData.businessNiche || 'my-business', collectedData.phone);
     let copy: LPCopy;
 
     const apiKey = process.env.AZURE_OPENAI_KEY;

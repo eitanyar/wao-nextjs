@@ -65,7 +65,9 @@ export default async function WebsiteLessonPage({ params }: Props) {
     name: lesson.title,
     description: lesson.description,
     thumbnailUrl: `https://www.wao.co.il${lesson.thumbnail}`,
-    embedUrl: `https://www.youtube.com/embed/${lesson.videoId}`,
+    ...(lesson.videoId
+      ? { embedUrl: `https://www.youtube.com/embed/${lesson.videoId}` }
+      : { contentUrl: `https://www.wao.co.il${lesson.videoSrc}` }),
     uploadDate: new Date().toISOString().split("T")[0],
     publisher: { "@type": "Organization", name: "WAO", url: "https://www.wao.co.il" },
   };
@@ -158,7 +160,7 @@ export default async function WebsiteLessonPage({ params }: Props) {
       <section style={{ paddingBottom: "clamp(56px,7vw,80px)", background: "var(--surface)" }}>
         <div className="wao-container" style={{ maxWidth: "780px" }}>
 
-          {/* YouTube embed */}
+          {/* Video — self-hosted MP4 or YouTube embed */}
           <div
             style={{
               position: "relative",
@@ -170,22 +172,41 @@ export default async function WebsiteLessonPage({ params }: Props) {
               background: "#0b0f19",
             }}
           >
-            <iframe
-              src={`https://www.youtube.com/embed/${lesson.videoId}`}
-              title={lesson.title}
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              allowFullScreen
-              loading="lazy"
-              style={{
-                position: "absolute",
-                top: 0,
-                left: 0,
-                width: "100%",
-                height: "100%",
-                border: 0,
-                borderRadius: "var(--radius-md)",
-              }}
-            />
+            {lesson.videoSrc ? (
+              <video
+                src={lesson.videoSrc}
+                poster={lesson.thumbnail}
+                controls
+                preload="metadata"
+                style={{
+                  position: "absolute",
+                  top: 0,
+                  left: 0,
+                  width: "100%",
+                  height: "100%",
+                  border: 0,
+                  borderRadius: "var(--radius-md)",
+                  background: "#000",
+                }}
+              />
+            ) : (
+              <iframe
+                src={`https://www.youtube.com/embed/${lesson.videoId}`}
+                title={lesson.title}
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+                loading="lazy"
+                style={{
+                  position: "absolute",
+                  top: 0,
+                  left: 0,
+                  width: "100%",
+                  height: "100%",
+                  border: 0,
+                  borderRadius: "var(--radius-md)",
+                }}
+              />
+            )}
           </div>
 
           {/* LessonDashboard — Prereqs / Task / Guides tabs */}

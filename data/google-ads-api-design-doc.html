@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>WAO Automation Platform — Google Ads API Design Document</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: Arial, sans-serif;
+    font-size: 11pt;
+    line-height: 1.6;
+    color: #1a1a1a;
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 48px 40px;
+  }
+  h1 { font-size: 20pt; color: #0f4c81; margin-bottom: 4px; }
+  h2 { font-size: 13pt; color: #0f4c81; margin: 28px 0 8px; border-bottom: 1px solid #cde; padding-bottom: 4px; }
+  h3 { font-size: 11pt; color: #333; margin: 16px 0 6px; }
+  p { margin-bottom: 10px; }
+  ul, ol { margin: 8px 0 12px 24px; }
+  li { margin-bottom: 4px; }
+  .meta { font-size: 10pt; color: #555; margin-bottom: 32px; }
+  .meta span { margin-left: 24px; }
+  table { width: 100%; border-collapse: collapse; margin: 12px 0 20px; font-size: 10pt; }
+  th { background: #0f4c81; color: #fff; padding: 7px 10px; text-align: left; }
+  td { padding: 6px 10px; border-bottom: 1px solid #e0e0e0; vertical-align: top; }
+  tr:nth-child(even) td { background: #f5f8fc; }
+  code { background: #f0f4f8; padding: 1px 5px; border-radius: 3px; font-family: Courier New, monospace; font-size: 9.5pt; }
+  .box { background: #f5f8fc; border-left: 3px solid #0f4c81; padding: 10px 14px; margin: 12px 0; border-radius: 0 4px 4px 0; }
+  .page-break { page-break-before: always; }
+  footer { margin-top: 48px; font-size: 9pt; color: #999; border-top: 1px solid #e0e0e0; padding-top: 10px; }
+</style>
+</head>
+<body>
+
+<h1>WAO Automation Platform</h1>
+<h2 style="border:none; margin-top:4px; font-size:14pt; color:#333;">Google Ads API — Application Design Document</h2>
+<div class="meta">
+  Prepared by: Eitan Yariv, WAO Digital Marketing Agency
+  <span>Date: July 2026</span>
+  <span>App URL: https://www.wao.co.il/google-ads/onboarding</span>
+</div>
+
+<h2>1. Executive Summary</h2>
+<p>
+  WAO is an Israeli digital marketing agency managing Google Ads campaigns for small and medium-sized B2C businesses.
+  The WAO Automation Platform is an internal agency tool that streamlines the end-to-end onboarding of new clients
+  onto Google Ads — from initial intake through campaign launch — using the Google Ads API.
+</p>
+<p>
+  The platform operates exclusively under WAO's existing MCC (Manager Account). It does not expose Google Ads
+  data or controls to end clients; all campaign management remains in WAO's hands as the authorized agency.
+</p>
+
+<h2>2. Application Overview</h2>
+
+<h3>2.1 App Name</h3>
+<p>WAO Automation Platform</p>
+
+<h3>2.2 App URL</h3>
+<p>https://www.wao.co.il/google-ads/onboarding</p>
+
+<h3>2.3 Purpose</h3>
+<p>
+  The platform automates three operations that WAO currently performs manually for each new client:
+</p>
+<ol>
+  <li>Creating a new Google Ads sub-account linked to WAO's MCC</li>
+  <li>Creating conversion actions (form submission, phone call, WhatsApp click)</li>
+  <li>Creating and publishing the initial Search campaign with a Responsive Search Ad</li>
+</ol>
+<p>
+  These three steps currently take 45–90 minutes per client when done manually in the Google Ads UI.
+  The API integration reduces this to under 2 minutes, allowing WAO to scale from 10 to 100+ active clients
+  without proportionally increasing operational headcount.
+</p>
+
+<h3>2.4 Users</h3>
+<p>
+  Internal use only. The platform is operated exclusively by WAO staff and the WAO automated pipeline.
+  No end clients have access to the platform or to the Google Ads API credentials.
+</p>
+
+<h2>3. Google Ads API Usage</h2>
+
+<h3>3.1 API Operations Used</h3>
+<table>
+  <thead>
+    <tr><th>Operation</th><th>API Service / Method</th><th>Purpose</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Create client sub-account</td>
+      <td><code>CustomerService.CreateCustomerClient</code></td>
+      <td>Creates a new managed Google Ads account under WAO's MCC for each new client. Currency: ILS, timezone: Asia/Jerusalem.</td>
+    </tr>
+    <tr>
+      <td>Create conversion actions</td>
+      <td><code>ConversionActionService.MutateConversionActions</code></td>
+      <td>Creates three conversion actions per account: form lead, phone call, WhatsApp click. Values are set based on client's average job value collected during onboarding.</td>
+    </tr>
+    <tr>
+      <td>Get conversion action tags</td>
+      <td><code>ConversionActionService.GetConversionAction</code></td>
+      <td>Retrieves the gtag snippet and event snippet for embedding in the client's landing page.</td>
+    </tr>
+    <tr>
+      <td>Create campaign budget</td>
+      <td><code>CampaignBudgetService.MutateCampaignBudgets</code></td>
+      <td>Creates a shared budget using the client's agreed monthly spend divided by 30.</td>
+    </tr>
+    <tr>
+      <td>Create Search campaign</td>
+      <td><code>CampaignService.MutateCampaigns</code></td>
+      <td>Creates a Search campaign with Maximize Clicks bidding, Hebrew language targeting, and geo targeting to the client's service cities.</td>
+    </tr>
+    <tr>
+      <td>Create ad group</td>
+      <td><code>AdGroupService.MutateAdGroups</code></td>
+      <td>Creates a single ad group per campaign during the initial launch phase.</td>
+    </tr>
+    <tr>
+      <td>Create keywords</td>
+      <td><code>AdGroupCriterionService.MutateAdGroupCriteria</code></td>
+      <td>Adds Hebrew-language keyword list (generated by WAO's strategy AI) as Exact and Phrase match. Adds negative keywords to filter irrelevant traffic.</td>
+    </tr>
+    <tr>
+      <td>Create Responsive Search Ad</td>
+      <td><code>AdGroupAdService.MutateAdGroupAds</code></td>
+      <td>Creates an RSA using headlines and descriptions generated by WAO's copy AI (3 headlines minimum, 2 descriptions).</td>
+    </tr>
+    <tr>
+      <td>Add geo targets</td>
+      <td><code>AdGroupCriterionService.MutateAdGroupCriteria</code> (geo)</td>
+      <td>Targets the specific Israeli cities provided by the client during onboarding.</td>
+    </tr>
+  </tbody>
+</table>
+
+<h3>3.2 Account Hierarchy</h3>
+<div class="box">
+  WAO MCC (Manager Account) → Client Sub-Account (created per client) → Campaign → Ad Group → RSA + Keywords
+</div>
+<p>
+  All sub-accounts are created under WAO's single MCC. WAO retains manager access and billing control.
+  The client is aware that WAO manages their Google Ads account on their behalf.
+</p>
+
+<h3>3.3 Data Flow</h3>
+<ol>
+  <li>Business owner completes WAO's onboarding chatbot (collects: business type, service cities, budget, contact info, USP, reviews).</li>
+  <li>WAO's AI generates campaign strategy (keywords, bidding, geo targets) and ad copy (headlines, descriptions).</li>
+  <li>Client reviews and approves the plan on-screen.</li>
+  <li>Client pays the one-time setup fee (₪9.90 via Yaad Sarig payment gateway).</li>
+  <li>Platform calls Google Ads API: creates sub-account → conversion actions → budget → campaign → ad group → keywords → RSA.</li>
+  <li>Platform generates a static landing page and deploys it to Cloudflare Pages.</li>
+  <li>Google Ads conversion tags (from step 5) are embedded in the deployed landing page.</li>
+  <li>WAO team reviews the account before enabling the campaign.</li>
+</ol>
+
+<h2 class="page-break">4. Account Management &amp; Scale</h2>
+
+<h3>4.1 Current Portfolio</h3>
+<p>
+  WAO currently manages Google Ads campaigns for multiple client accounts under the same MCC
+  used for this API integration. The developer token is associated with this active MCC.
+</p>
+
+<h3>4.2 Projected Scale</h3>
+<table>
+  <thead>
+    <tr><th>Timeframe</th><th>New Accounts/Month</th><th>Total Active Accounts</th><th>API Calls/Month (est.)</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>Launch (Month 1–3)</td><td>5–15</td><td>5–45</td><td>~500–4,000</td></tr>
+    <tr><td>Growth (Month 4–12)</td><td>15–50</td><td>45–250</td><td>~4,000–25,000</td></tr>
+    <tr><td>Scale (Year 2)</td><td>50–100</td><td>250–800</td><td>~25,000–80,000</td></tr>
+  </tbody>
+</table>
+<p>
+  API calls per onboarding: approximately 15–20 mutate operations (account + conversion actions + campaign structure).
+  Ongoing operations (bid adjustments, pause/enable, budget changes) are performed manually through the Google Ads UI.
+</p>
+
+<h2>5. Security &amp; Compliance</h2>
+
+<h3>5.1 Credential Handling</h3>
+<ul>
+  <li>Google Ads API credentials (client ID, client secret, developer token, refresh token) are stored exclusively in server-side environment variables — never in client-side code or version control.</li>
+  <li>The refresh token is scoped to WAO's own Google account (MCC owner) only.</li>
+  <li>No end clients have access to WAO's API credentials or the automation platform.</li>
+</ul>
+
+<h3>5.2 Data Storage</h3>
+<ul>
+  <li>Campaign configuration data (business name, phone, cities, budget) is stored on WAO's private server in a JSON file per client.</li>
+  <li>No Google Ads performance data (impressions, clicks, conversions) is stored externally — it remains in the Google Ads platform.</li>
+  <li>Client personal data is handled in accordance with Israel's Privacy Protection Law (חוק הגנת הפרטיות).</li>
+</ul>
+
+<h3>5.3 Client Consent</h3>
+<p>
+  Before campaign creation, clients explicitly accept WAO's terms of service, which include authorization
+  for WAO to create and manage a Google Ads account on their behalf. A consent timestamp is recorded
+  and stored with each campaign record.
+</p>
+
+<h2>6. Technology Stack</h2>
+<table>
+  <thead>
+    <tr><th>Component</th><th>Technology</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>Platform</td><td>Next.js (App Router), deployed on Linux VPS</td></tr>
+    <tr><td>Google Ads API Client</td><td><code>google-ads-api</code> Node.js library (v24.x)</td></tr>
+    <tr><td>AI Strategy Generation</td><td>Azure OpenAI (GPT family) — internal WAO tool</td></tr>
+    <tr><td>Landing Page Deploy</td><td>Cloudflare Pages via Wrangler CLI</td></tr>
+    <tr><td>Payment Processing</td><td>Yaad Sarig (Israeli payment gateway)</td></tr>
+    <tr><td>Server</td><td>Private VPS, Israel (91.98.195.242)</td></tr>
+  </tbody>
+</table>
+
+<h2>7. Contact Information</h2>
+<table>
+  <thead>
+    <tr><th>Field</th><th>Details</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>Developer / Agency</td><td>WAO Digital Marketing</td></tr>
+    <tr><td>Contact Name</td><td>Eitan Yariv</td></tr>
+    <tr><td>Contact Email</td><td>eitan@wao.co.il</td></tr>
+    <tr><td>Website</td><td>https://www.wao.co.il</td></tr>
+    <tr><td>MCC Customer ID</td><td>415-589-3363</td></tr>
+    <tr><td>Google Partner</td><td>Yes</td></tr>
+  </tbody>
+</table>
+
+<footer>
+  WAO Digital Marketing — Google Ads API Design Document — Confidential — July 2026
+</footer>
+
+</body>
+</html>
