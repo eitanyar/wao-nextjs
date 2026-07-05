@@ -1,0 +1,18 @@
+{
+  "clientId": "ajudaica",
+  "siteUrl": "https://www.ajudaica.com/",
+  "cmsType": "unknown",
+  "businessNiche": "Judaica gifts and religious items — e-commerce",
+  "topService": "Judaica gifts, menorahs, mezuzot, Jewish art",
+  "targetLocation": "USA (ships worldwide)",
+  "usp": "Curated Judaica for every occasion — gifts, home decor, religious items",
+  "clientQuestions": "What makes a good Hanukkah gift? What mezuzah do I need? Do you ship internationally?",
+  "exclusions": "",
+  "approvalContact": "Dina",
+  "approvalWhatsapp": "972526148860",
+  "tone": "warm, knowledgeable, Jewish-cultural context",
+  "pin": "4488",
+  "entitlements": [
+    "geo"
+  ]
+}
