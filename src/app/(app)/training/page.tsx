@@ -186,6 +186,19 @@ const TRACKS: Track[] = [
         icon: "💡",
         tags: ["AI", "DIY", "Local Marketing"],
       },
+      {
+        title: "בנייה ו-SEO בעידן ה-AI",
+        subtitle: "מדומיין לאתר שמביא לקוחות",
+        desc: "5 שיעורי וידאו: דומיין, תיאור העסק ל-AI, תוכן שגוגל אוהב ועמודי שירות שממירים. הקורס שמלמד לבנות נוכחות דיגיטלית אמיתית מאפס — בלי מתכנת.",
+        href: "/training/website-course",
+        lessons: 5,
+        totalLessons: null,
+        level: "מתחיל",
+        live: true,
+        icon: "🌐",
+        tags: ["AI", "אתר", "SEO", "תוכן"],
+        isNew: true,
+      },
     ],
   },
 ];
@@ -314,9 +327,9 @@ export default function TrainingHub() {
         <div className="wao-container">
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: "24px", textAlign: "center" }}>
             {[
-              { val: "15+", label: "שיעורי וידאו זמינים" },
+              { val: "20+", label: "שיעורי וידאו זמינים" },
               { val: String(totalCourses), label: "קורסים בסך הכל" },
-              { val: "3", label: "מסלולי לימוד" },
+              { val: String(TRACKS.length), label: "מסלולי לימוד" },
               { val: "חינם", label: "לצפייה מיידית" },
             ].map((s) => (
               <div key={s.label}>
@@ -406,8 +419,8 @@ export default function TrainingHub() {
               קטלוג קורסים
             </p>
             <h2 style={{ fontFamily: "var(--font-rubik), sans-serif", fontWeight: 900, fontSize: "clamp(1.6rem,3vw,2.3rem)", letterSpacing: "-0.02em" }}>
-              3 מסלולי לימוד ·{" "}
-              <span className="text-gradient">6 קורסים</span>
+              {TRACKS.length} מסלולי לימוד ·{" "}
+              <span className="text-gradient">{totalCourses} קורסים</span>
             </h2>
           </div>
 
