@@ -116,16 +116,25 @@ const INLINE_CODE_STYLE: React.CSSProperties = {
   color: "var(--text)",
 };
 
-// Renders text with inline `backtick code` support, then bidi-wraps the rest.
+// Renders text with inline `backtick code` and [label](href) markdown-link support,
+// then bidi-wraps the remaining prose runs.
 function renderWithInlineCode(text: string): React.ReactNode {
   const segments: React.ReactNode[] = [];
-  const re = /`([^`]+)`/g;
+  const re = /`([^`]+)`|\[([^\]]+)\]\((\/[^)]+)\)/g;
   let last = 0;
   let match: RegExpExecArray | null;
   let key = 0;
   while ((match = re.exec(text)) !== null) {
     if (match.index > last) segments.push(<Fragment key={key++}>{renderMixed(text.slice(last, match.index))}</Fragment>);
-    segments.push(<code key={key++} style={INLINE_CODE_STYLE}>{match[1]}</code>);
+    if (match[1] !== undefined) {
+      segments.push(<code key={key++} style={INLINE_CODE_STYLE}>{match[1]}</code>);
+    } else {
+      segments.push(
+        <Link key={key++} href={match[3]} style={{ color: "var(--accent)", fontWeight: 700, textDecoration: "underline" }}>
+          {match[2]}
+        </Link>
+      );
+    }
     last = re.lastIndex;
   }
   if (last < text.length) segments.push(<Fragment key={key++}>{renderMixed(text.slice(last))}</Fragment>);

@@ -13,6 +13,7 @@
   "tone": "מקצועי, חם, מעצים — לא אקדמי ולא שיווקי מדי",
   "pin": "7291",
   "entitlements": [
-    "geo"
+    "geo",
+    "advisor:internal"
   ]
 }

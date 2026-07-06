@@ -241,6 +241,14 @@ GSC data → Pareto scoring + intent filter → Hebrew content (Tamar→Noa pipe
 
 ---
 
+### Foresight — 3-Month Ambitious Goals (living doc, re-read every 2-3 weeks)
+Prepared by Lior 2026-07-06: generalized lead-magnet plays beyond the GEO Audit (AI-search-readiness scanner, GBP review-comparison, Ads-waste checker, AI-citation checker), what's beyond SEO/GEO/Ads scope (and what got cut and why), and where the AI capability curve actually flips something in this specific 90-day window. Includes a priority table and checkpoint schedule.
+Artifact: https://claude.ai/code/artifact/a3b6983c-39bd-48bf-b4ca-480fa355c3a3
+
+### Foresight — 1-Year Structural View (living doc, re-read quarterly)
+Companion to the 3-month doc, different altitude: what has to be true each quarter (Q1 load-bearing facts → Q2 proof-driven positioning + the frozen specialist/agency fork decision point → Q3 scaling stress-test/WoZ ceiling → Q4 ARR-ceiling reality check + English go/no-go). Names the single-founder bottleneck bluntly, the 12-month AI-curve bet with an explicit fallback, and a 3-tier moat analysis (evidence base > Hebrew-native quality > switching costs — tools/content/pricing are NOT a moat).
+Artifact: https://claude.ai/code/artifact/1dbfd8a3-4adf-4d0b-ae29-e00702723a09
+
 ### Phase 1 — MVP Bot (Next)
 - [ ] Define the bot's first 3 "complete flows" end-to-end
   - **Site Bot MVP** *(was Flow A)*: New business onboarding (domain → website → GMB → first ad)

@@ -1,0 +1,290 @@
+{
+  "site": "https://www.ajudaica.com/",
+  "generatedAt": "2026-07-06T10:47:08.363Z",
+  "sourceFile": "data/clients/ajudaica/pareto.json",
+  "mode": "SUGGEST_ONLY_NO_PUSH_NO_COPY",
+  "ctrCurveSource": "Blended industry-benchmark organic CTR-by-position curve (Backlinko / Advanced Web Ranking style studies), with a flat 45% AI-Overview/Shopping-suppression discount applied to broad/commercial queries (Yonatan seo-strategist review; Ahrefs Dec 2025 + Seer Interactive Sep 2025 AIO-CTR-suppression data). NOT WAO first-party click data. `directionalPriorityScore` is a ranking signal ONLY, not a promised recoverable-clicks forecast, until WAO has first-party historical CTR data to calibrate against.",
+  "positionWindow": {
+    "min": 4,
+    "max": 15
+  },
+  "stats": {
+    "totalOpportunitiesScanned": 20,
+    "inPositionWindow": 20,
+    "skippedForCannibalization": 4,
+    "candidatesFound": 16,
+    "returned": 16
+  },
+  "candidates": [
+    {
+      "query": "jewish prayer shawl",
+      "page": "https://www.ajudaica.com/category/4/Tallit/",
+      "position": 4.7,
+      "impressions": 6802,
+      "clicks": 1,
+      "currentCtr": 0,
+      "expectedCtrAtPosition": 6.3,
+      "queryType": "long_tail",
+      "ctrGap": 6.3,
+      "directionalPriorityScore": 429,
+      "suggestedTitle": null,
+      "status": "NEEDS_TITLE_COPY",
+      "rank": 1
+    },
+    {
+      "query": "buy sukkot",
+      "page": "https://www.ajudaica.com/category/388/Sukkot/",
+      "position": 9,
+      "impressions": 13004,
+      "clicks": 0,
+      "currentCtr": 0,
+      "expectedCtrAtPosition": 2.9,
+      "queryType": "long_tail",
+      "ctrGap": 2.9,
+      "directionalPriorityScore": 377,
+      "suggestedTitle": null,
+      "status": "NEEDS_TITLE_COPY",
+      "rank": 2
+    },
+    {
+      "query": "judaica gifts from israel",
+      "page": "https://www.ajudaica.com/",
+      "position": 6.6,
+      "impressions": 6544,
+      "clicks": 3,
+      "currentCtr": 0,
+      "expectedCtrAtPosition": 3.9,
+      "queryType": "long_tail",
+      "ctrGap": 3.9,
+      "directionalPriorityScore": 255,
+      "suggestedTitle": null,
+      "status": "NEEDS_TITLE_COPY",
+      "rank": 3
+    },
+    {
+      "query": "apropo",
+      "page": "https://www.ajudaica.com/Apropo-Cone-Shaped-Corn-Snack-by-Osem-Medium/item17409",
+      "position": 10.4,
+      "impressions": 12770,
+      "clicks": 0,
+      "currentCtr": 0,
+      "expectedCtrAtPosition": 1.4,
+      "queryType": "broad_commercial",
+      "ctrGap": 1.4,
+      "directionalPriorityScore": 179,
+      "suggestedTitle": null,
+      "status": "NEEDS_TITLE_COPY",
+      "rank": 4
+    },
+    {
+      "query": "shofar horn",
+      "page": "https://www.ajudaica.com/category/128/Shofar/",
+      "position": 8.3,
+      "impressions": 9255,
+      "clicks": 41,
+      "currentCtr": 0.4,
+      "expectedCtrAtPosition": 1.8,
+      "queryType": "broad_commercial",
+      "ctrGap": 1.4,
+      "directionalPriorityScore": 130,
+      "suggestedTitle": null,
+      "status": "NEEDS_TITLE_COPY",
+      "rank": 5
+    },
+    {
+      "query": "tallit",
+      "page": "https://www.ajudaica.com/category/4/Tallit/",
+      "position": 11.1,
+      "impressions": 14958,
+      "clicks": 31,
+      "currentCtr": 0.2,
+      "expectedCtrAtPosition": 1,
+      "queryType": "broad_commercial",
+      "ctrGap": 0.8,
+      "directionalPriorityScore": 120,
+      "suggestedTitle": null,
+      "status": "NEEDS_TITLE_COPY",
+      "rank": 6
+    },
+    {
+      "query": "judaica",
+      "page": "https://www.ajudaica.com/",
+      "position": 8.8,
+      "impressions": 9922,
+      "clicks": 58,
+      "currentCtr": 0.6,
+      "expectedCtrAtPosition": 1.6,
+      "queryType": "broad_commercial",
+      "ctrGap": 1,
+      "directionalPriorityScore": 99,
+      "suggestedTitle": null,
+      "status": "NEEDS_TITLE_COPY",
+      "rank": 7
+    },
+    {
+      "query": "tallit katan",
+      "page": "https://www.ajudaica.com/category/45/Tallit-Katan/",
+      "position": 4.3,
+      "impressions": 2541,
+      "clicks": 27,
+      "currentCtr": 1.1,
+      "expectedCtrAtPosition": 4.4,
+      "queryType": "broad_commercial",
+      "ctrGap": 3.3,
+      "directionalPriorityScore": 84,
+      "suggestedTitle": null,
+      "status": "NEEDS_TITLE_COPY",
+      "rank": 8
+    },
+    {
+      "query": "judaica web store",
+      "page": "https://www.ajudaica.com/",
+      "position": 6.1,
+      "impressions": 1857,
+      "clicks": 11,
+      "currentCtr": 0.6,
+      "expectedCtrAtPosition": 4.9,
+      "queryType": "long_tail",
+      "ctrGap": 4.3,
+      "directionalPriorityScore": 80,
+      "suggestedTitle": null,
+      "status": "NEEDS_TITLE_COPY",
+      "rank": 9
+    },
+    {
+      "query": "kippah",
+      "page": "https://www.ajudaica.com/category/22/Kippot/",
+      "position": 10.6,
+      "impressions": 5926,
+      "clicks": 7,
+      "currentCtr": 0.1,
+      "expectedCtrAtPosition": 1,
+      "queryType": "broad_commercial",
+      "ctrGap": 0.9,
+      "directionalPriorityScore": 53,
+      "suggestedTitle": null,
+      "status": "NEEDS_TITLE_COPY",
+      "rank": 10
+    },
+    {
+      "query": "dreidel",
+      "page": "https://www.ajudaica.com/category/106/Dreidels/",
+      "position": 13.7,
+      "impressions": 6918,
+      "clicks": 1,
+      "currentCtr": 0,
+      "expectedCtrAtPosition": 0.7,
+      "queryType": "broad_commercial",
+      "ctrGap": 0.7,
+      "directionalPriorityScore": 48,
+      "suggestedTitle": null,
+      "status": "NEEDS_TITLE_COPY",
+      "rank": 11
+    },
+    {
+      "query": "tefillin",
+      "page": "https://www.ajudaica.com/category/3/Tefillin/",
+      "position": 12.1,
+      "impressions": 6344,
+      "clicks": 14,
+      "currentCtr": 0.2,
+      "expectedCtrAtPosition": 0.9,
+      "queryType": "broad_commercial",
+      "ctrGap": 0.7,
+      "directionalPriorityScore": 44,
+      "suggestedTitle": null,
+      "status": "NEEDS_TITLE_COPY",
+      "rank": 12
+    },
+    {
+      "query": "tefilin",
+      "page": "https://www.ajudaica.com/category/3/Tefillin/",
+      "position": 8.5,
+      "impressions": 2546,
+      "clicks": 10,
+      "currentCtr": 0.4,
+      "expectedCtrAtPosition": 1.6,
+      "queryType": "broad_commercial",
+      "ctrGap": 1.2,
+      "directionalPriorityScore": 31,
+      "suggestedTitle": null,
+      "status": "NEEDS_TITLE_COPY",
+      "rank": 13
+    },
+    {
+      "query": "shofar",
+      "page": "https://www.ajudaica.com/category/128/Shofar/",
+      "position": 12.3,
+      "impressions": 3689,
+      "clicks": 7,
+      "currentCtr": 0.2,
+      "expectedCtrAtPosition": 0.9,
+      "queryType": "broad_commercial",
+      "ctrGap": 0.7,
+      "directionalPriorityScore": 26,
+      "suggestedTitle": null,
+      "status": "NEEDS_TITLE_COPY",
+      "rank": 14
+    },
+    {
+      "query": "jewish candle",
+      "page": "https://www.ajudaica.com/category/158/Candles/",
+      "position": 11.3,
+      "impressions": 2204,
+      "clicks": 1,
+      "currentCtr": 0,
+      "expectedCtrAtPosition": 1,
+      "queryType": "broad_commercial",
+      "ctrGap": 1,
+      "directionalPriorityScore": 22,
+      "suggestedTitle": null,
+      "status": "NEEDS_TITLE_COPY",
+      "rank": 15
+    },
+    {
+      "query": "talit",
+      "page": "https://www.ajudaica.com/Noy-Talit/item268",
+      "position": 10.8,
+      "impressions": 2323,
+      "clicks": 2,
+      "currentCtr": 0.1,
+      "expectedCtrAtPosition": 1,
+      "queryType": "broad_commercial",
+      "ctrGap": 0.9,
+      "directionalPriorityScore": 21,
+      "suggestedTitle": null,
+      "status": "NEEDS_TITLE_COPY",
+      "rank": 16
+    }
+  ],
+  "skippedForCannibalization": [
+    {
+      "query": "star of david",
+      "page": "https://www.ajudaica.com/judaica101/star-of-david-meaning-complete-guide/",
+      "reasons": [
+        "MULTI_URL"
+      ]
+    },
+    {
+      "query": "judaica store",
+      "page": "https://www.ajudaica.com/",
+      "reasons": [
+        "MULTI_URL"
+      ]
+    },
+    {
+      "query": "judaica store",
+      "page": "https://www.ajudaica.com/category/412/Judaica-Kids/",
+      "reasons": [
+        "MULTI_URL"
+      ]
+    },
+    {
+      "query": "double star of david",
+      "page": "https://www.ajudaica.com/Sterling-Silver-Pendant-Necklace-Double-Star-of-David-Outline/item22625",
+      "reasons": [
+        "MULTI_URL"
+      ]
+    }
+  ]
+}

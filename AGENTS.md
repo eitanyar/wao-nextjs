@@ -63,7 +63,7 @@ Receives intent/keyword briefs from Yonatan → writes copy → Noa proofs → E
 2. Noa — Language QA
 
 Agent name: noa-voice-director
-Model: Claude 3.5 Sonnet
+Model: Sonnet 5 (claude-sonnet-5)
 Tools: Read, Write, Edit
 
 Responsibilities
@@ -202,7 +202,7 @@ Hard Rules
 6. Eitan-Dev — Next.js Engineer
 
 Agent name: nextjs-engineer
-Model: Gemini 3.5 Pro (Fallback to Claude 3.5 Sonnet for complex code/debugging)
+Model: Sonnet 5 (claude-sonnet-5)
 Tools: Read, Edit, Write, Bash, Grep, Glob, WebFetch
 
 Responsibilities

@@ -105,9 +105,13 @@ export default function SiloNav({ currentPath }: { currentPath: string }) {
           .silo-nav-wrap::before {
             content: '';
             position: absolute;
-            top: 0; bottom: 0; left: 0;
+            top: 0; bottom: 0;
+            /* RTL page: inline-end is the physical left edge, where the
+               scrollable list overflows (padding-inline-end above) — this
+               is intentionally the same physical side, not a blind mirror. */
+            inset-inline-end: 0;
             width: 40px;
-            background: linear-gradient(to right, var(--bg, #fff) 30%, transparent 100%);
+            background: linear-gradient(to right, var(--bg, #060709) 30%, transparent 100%);
             pointer-events: none;
             z-index: 1;
           }

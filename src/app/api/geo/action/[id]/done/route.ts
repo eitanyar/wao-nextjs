@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
+import { cookies } from 'next/headers';
 import { findActionById, updateActionStatus } from '@/lib/geo/actions';
 import { appendEntry, makeEntryId } from '@/lib/geo/approvalLog';
+import { verifySessionToken, COOKIE_NAME } from '@/lib/client-auth';
 
 export async function POST(
   _req: Request,
@@ -13,6 +15,13 @@ export async function POST(
   const action = findActionById(actionId);
   if (!action) {
     return NextResponse.json({ error: 'Action not found' }, { status: 404 });
+  }
+
+  // Ownership check: middleware only confirms SOME valid session exists.
+  const jar = await cookies();
+  const sessionClientId = await verifySessionToken(jar.get(COOKIE_NAME)?.value ?? '');
+  if (!sessionClientId || sessionClientId !== action.clientId) {
+    return NextResponse.json({ error: 'not found' }, { status: 404 });
   }
 
   updateActionStatus(actionId, 'done');
@@ -53,6 +62,13 @@ export async function DELETE(
   const actionId = decodeURIComponent(id);
   const action = findActionById(actionId);
   if (!action) return NextResponse.json({ error: 'Action not found' }, { status: 404 });
+
+  const jar = await cookies();
+  const sessionClientId = await verifySessionToken(jar.get(COOKIE_NAME)?.value ?? '');
+  if (!sessionClientId || sessionClientId !== action.clientId) {
+    return NextResponse.json({ error: 'not found' }, { status: 404 });
+  }
+
   updateActionStatus(actionId, 'generated');
   return NextResponse.json({ success: true, actionId, status: 'generated' });
 }

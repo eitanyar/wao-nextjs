@@ -98,6 +98,7 @@ export default function Header() {
               onClick={() => setOpen(!open)}
               aria-label={open ? "סגור תפריט" : "פתח תפריט"}
               aria-expanded={open}
+              aria-controls="mobile-nav-menu"
               style={{ cursor: "pointer", padding: "6px", background: "none", border: "none" }}
               className="md:hidden"
             >
@@ -132,9 +133,14 @@ export default function Header() {
 
         {/* Mobile menu */}
         <div
+          id="mobile-nav-menu"
           style={{
             overflow: "hidden",
-            maxHeight: open ? "360px" : "0",
+            // Generous cap for transition purposes only, not a real item-count limit.
+            // height: auto can't animate with CSS transitions, so we cap high enough
+            // to comfortably fit ~15 nav items + CTA before it'd look visually awkward.
+            // Not tied to the current 6-item + CTA count — safe for future nav additions.
+            maxHeight: open ? "1000px" : "0",
             transition: "max-height 0.35s ease",
           }}
           className="md:hidden"

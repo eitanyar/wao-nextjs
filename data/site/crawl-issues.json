@@ -1,0 +1,355 @@
+{
+  "generatedAt": "2026-07-06T12:26:57.227Z",
+  "site": "https://www.wao.co.il/",
+  "sitemapUrl": "https://www.wao.co.il/sitemap.xml",
+  "dataSource": "search-analytics-visibility-proxy",
+  "period": {
+    "startDate": "2026-04-04",
+    "endDate": "2026-07-03",
+    "days": 90
+  },
+  "sitemapUrlCount": 232,
+  "pagesWithGscData": 300,
+  "zeroVisibility": {
+    "count": 66,
+    "note": "Sitemap URLs with zero GSC impressions in this window. This is a PROXY, not a confirmed \"not indexed\" verdict — could mean too new, genuinely no search demand, or GSC reporting lag. Manual review recommended before acting.",
+    "urls": [
+      {
+        "url": "https://www.wao.co.il",
+        "impressions": 0,
+        "clicks": 0
+      },
+      {
+        "url": "https://www.wao.co.il/geo",
+        "impressions": 0,
+        "clicks": 0
+      },
+      {
+        "url": "https://www.wao.co.il/google-business",
+        "impressions": 0,
+        "clicks": 0
+      },
+      {
+        "url": "https://www.wao.co.il/site-bot",
+        "impressions": 0,
+        "clicks": 0
+      },
+      {
+        "url": "https://www.wao.co.il/knowledge",
+        "impressions": 0,
+        "clicks": 0
+      },
+      {
+        "url": "https://www.wao.co.il/training/make-money-online/how-much-from-paid-surveys",
+        "impressions": 0,
+        "clicks": 0
+      },
+      {
+        "url": "https://www.wao.co.il/training/make-money-online/make-money-of-youtube",
+        "impressions": 0,
+        "clicks": 0
+      },
+      {
+        "url": "https://www.wao.co.il/training/make-money-online/selling-products-online",
+        "impressions": 0,
+        "clicks": 0
+      },
+      {
+        "url": "https://www.wao.co.il/training/make-money-online/financial-independence-dream-or-myth",
+        "impressions": 0,
+        "clicks": 0
+      },
+      {
+        "url": "https://www.wao.co.il/training/make-money-online/network-marketing-and-work-opportunities",
+        "impressions": 0,
+        "clicks": 0
+      },
+      {
+        "url": "https://www.wao.co.il/training/make-money-online/what-it-takes-to-work-from-home",
+        "impressions": 0,
+        "clicks": 0
+      },
+      {
+        "url": "https://www.wao.co.il/training/make-money-online/video-editing-for-money",
+        "impressions": 0,
+        "clicks": 0
+      },
+      {
+        "url": "https://www.wao.co.il/training/make-money-online/music-creator-work-from-home",
+        "impressions": 0,
+        "clicks": 0
+      },
+      {
+        "url": "https://www.wao.co.il/training/make-money-online/app-developer-work-from-home",
+        "impressions": 0,
+        "clicks": 0
+      },
+      {
+        "url": "https://www.wao.co.il/training/make-money-online/video-transcription-work-from-home",
+        "impressions": 0,
+        "clicks": 0
+      },
+      {
+        "url": "https://www.wao.co.il/training/make-money-online/online-courses-earn-money",
+        "impressions": 0,
+        "clicks": 0
+      },
+      {
+        "url": "https://www.wao.co.il/training/make-money-online/photoshop-freelance-earn-money",
+        "impressions": 0,
+        "clicks": 0
+      },
+      {
+        "url": "https://www.wao.co.il/training/make-money-online/fiverr-earn-money-from-home",
+        "impressions": 0,
+        "clicks": 0
+      },
+      {
+        "url": "https://www.wao.co.il/training/make-money-online/home-chef-earn-money",
+        "impressions": 0,
+        "clicks": 0
+      },
+      {
+        "url": "https://www.wao.co.il/training/make-money-online/virtual-assistant-work-from-home",
+        "impressions": 0,
+        "clicks": 0
+      },
+      {
+        "url": "https://www.wao.co.il/training/make-money-online/health-and-wellness-profession",
+        "impressions": 0,
+        "clicks": 0
+      },
+      {
+        "url": "https://www.wao.co.il/training/make-money-online/website-reviewer-earn-money",
+        "impressions": 0,
+        "clicks": 0
+      },
+      {
+        "url": "https://www.wao.co.il/training/make-money-online/download-apps-earn-money",
+        "impressions": 0,
+        "clicks": 0
+      },
+      {
+        "url": "https://www.wao.co.il/training/make-money-online/read-emails-earn-money",
+        "impressions": 0,
+        "clicks": 0
+      },
+      {
+        "url": "https://www.wao.co.il/training/make-money-online/seo-website-promotion",
+        "impressions": 0,
+        "clicks": 0
+      },
+      {
+        "url": "https://www.wao.co.il/training/make-money-online/play-games-for-money",
+        "impressions": 0,
+        "clicks": 0
+      },
+      {
+        "url": "https://www.wao.co.il/training/make-money-online/web-designer-earn-money",
+        "impressions": 0,
+        "clicks": 0
+      },
+      {
+        "url": "https://www.wao.co.il/training/make-money-online/stock-market-trading",
+        "impressions": 0,
+        "clicks": 0
+      },
+      {
+        "url": "https://www.wao.co.il/training/make-money-online/blogging-earn-money",
+        "impressions": 0,
+        "clicks": 0
+      },
+      {
+        "url": "https://www.wao.co.il/training/make-money-online/youtube-channel-earn-money",
+        "impressions": 0,
+        "clicks": 0
+      },
+      {
+        "url": "https://www.wao.co.il/training/make-money-online/content-writing-earn-money",
+        "impressions": 0,
+        "clicks": 0
+      },
+      {
+        "url": "https://www.wao.co.il/training/make-money-online/affiliate-marketing-complete-guide",
+        "impressions": 0,
+        "clicks": 0
+      },
+      {
+        "url": "https://www.wao.co.il/training/google-tag-manager/gtm-change-h1-by-keyword",
+        "impressions": 0,
+        "clicks": 0
+      },
+      {
+        "url": "https://www.wao.co.il/training/google-tag-manager/gtm-hour-of-day-trigger",
+        "impressions": 0,
+        "clicks": 0
+      },
+      {
+        "url": "https://www.wao.co.il/training/google-tag-manager/gtm-click-to-call",
+        "impressions": 0,
+        "clicks": 0
+      },
+      {
+        "url": "https://www.wao.co.il/training/google-tag-manager/gtm-change-hidden-field-value",
+        "impressions": 0,
+        "clicks": 0
+      },
+      {
+        "url": "https://www.wao.co.il/training/google-tag-manager/gtm-stop-copied-content",
+        "impressions": 0,
+        "clicks": 0
+      },
+      {
+        "url": "https://www.wao.co.il/training/google-tag-manager/google-tag-manager-exit-intent",
+        "impressions": 0,
+        "clicks": 0
+      },
+      {
+        "url": "https://www.wao.co.il/training/google-tag-manager/change-text-with-gtm",
+        "impressions": 0,
+        "clicks": 0
+      },
+      {
+        "url": "https://www.wao.co.il/training/google-tag-manager/scroll-tracking-in-google-tag-manager",
+        "impressions": 0,
+        "clicks": 0
+      },
+      {
+        "url": "https://www.wao.co.il/training/google-tag-manager/create-cookies-google-tag-manager",
+        "impressions": 0,
+        "clicks": 0
+      },
+      {
+        "url": "https://www.wao.co.il/training/google-ads-course/account-structure",
+        "impressions": 0,
+        "clicks": 0
+      },
+      {
+        "url": "https://www.wao.co.il/training/google-ads-course/google-ads-keyword-match-types",
+        "impressions": 0,
+        "clicks": 0
+      },
+      {
+        "url": "https://www.wao.co.il/training/google-ads-course/google-ads-conversion-code",
+        "impressions": 0,
+        "clicks": 0
+      },
+      {
+        "url": "https://www.wao.co.il/training/google-ads-course/google-ads-call-only-ads",
+        "impressions": 0,
+        "clicks": 0
+      },
+      {
+        "url": "https://www.wao.co.il/training/google-ads-course/google-ads-desicion-making",
+        "impressions": 0,
+        "clicks": 0
+      },
+      {
+        "url": "https://www.wao.co.il/training/google-ads-course/shopping-campaigns",
+        "impressions": 0,
+        "clicks": 0
+      },
+      {
+        "url": "https://www.wao.co.il/training/google-ads-course/reporting-looker-studio",
+        "impressions": 0,
+        "clicks": 0
+      },
+      {
+        "url": "https://www.wao.co.il/training/google-ads-course/scaling-pareto",
+        "impressions": 0,
+        "clicks": 0
+      },
+      {
+        "url": "https://www.wao.co.il/training/google-my-business/how-to-open-google-my-business",
+        "impressions": 0,
+        "clicks": 0
+      },
+      {
+        "url": "https://www.wao.co.il/knowledge/mobile-first-indexing",
+        "impressions": 0,
+        "clicks": 0
+      },
+      {
+        "url": "https://www.wao.co.il/knowledge/log-file-analysis",
+        "impressions": 0,
+        "clicks": 0
+      },
+      {
+        "url": "https://www.wao.co.il/knowledge/title-tag",
+        "impressions": 0,
+        "clicks": 0
+      },
+      {
+        "url": "https://www.wao.co.il/knowledge/pillar-cluster-model",
+        "impressions": 0,
+        "clicks": 0
+      },
+      {
+        "url": "https://www.wao.co.il/knowledge/keyword-clustering",
+        "impressions": 0,
+        "clicks": 0
+      },
+      {
+        "url": "https://www.wao.co.il/knowledge/helpful-content-system",
+        "impressions": 0,
+        "clicks": 0
+      },
+      {
+        "url": "https://www.wao.co.il/knowledge/content-pruning",
+        "impressions": 0,
+        "clicks": 0
+      },
+      {
+        "url": "https://www.wao.co.il/knowledge/page-experience-update",
+        "impressions": 0,
+        "clicks": 0
+      },
+      {
+        "url": "https://www.wao.co.il/knowledge/site-reputation-abuse",
+        "impressions": 0,
+        "clicks": 0
+      },
+      {
+        "url": "https://www.wao.co.il/knowledge/hilltop-algorithm",
+        "impressions": 0,
+        "clicks": 0
+      },
+      {
+        "url": "https://www.wao.co.il/knowledge/rankbrain",
+        "impressions": 0,
+        "clicks": 0
+      },
+      {
+        "url": "https://www.wao.co.il/knowledge/mum-algorithm",
+        "impressions": 0,
+        "clicks": 0
+      },
+      {
+        "url": "https://www.wao.co.il/knowledge/ai-content-seo",
+        "impressions": 0,
+        "clicks": 0
+      },
+      {
+        "url": "https://www.wao.co.il/knowledge/zero-click-searches",
+        "impressions": 0,
+        "clicks": 0
+      },
+      {
+        "url": "https://www.wao.co.il/knowledge/llms-txt",
+        "impressions": 0,
+        "clicks": 0
+      },
+      {
+        "url": "https://www.wao.co.il/knowledge/core-web-vitals",
+        "impressions": 0,
+        "clicks": 0
+      }
+    ]
+  },
+  "statusCheck": {
+    "sampled": 58,
+    "totalUrls": 232,
+    "fullyChecked": false,
+    "notOk": []
+  }
+}

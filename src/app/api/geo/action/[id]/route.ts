@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
+import { cookies } from 'next/headers';
 import { findActionById } from '@/lib/geo/actions';
 import { getClientRecord } from '@/lib/geo/client';
+import { verifySessionToken, COOKIE_NAME } from '@/lib/client-auth';
 
 /**
  * GET /api/geo/action/[id]
@@ -18,6 +20,13 @@ export async function GET(
 
   if (!action) {
     return NextResponse.json({ error: 'Action not found' }, { status: 404 });
+  }
+
+  // Ownership check: middleware only confirms SOME valid session exists.
+  const jar = await cookies();
+  const sessionClientId = await verifySessionToken(jar.get(COOKIE_NAME)?.value ?? '');
+  if (!sessionClientId || sessionClientId !== action.clientId) {
+    return NextResponse.json({ error: 'not found' }, { status: 404 });
   }
 
   const client = getClientRecord(action.clientId);

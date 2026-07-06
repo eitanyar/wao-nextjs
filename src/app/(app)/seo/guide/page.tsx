@@ -342,8 +342,8 @@ function StaticGuide() {
                   הוא מהימן.
                 </li>
                 <li style={{ marginBottom: "12px" }}>
-                  <strong style={{ color: "var(--text)" }}>Page Experience</strong> —
-                  <GT term="Core Web Vitals">Core Web Vitals</GT>, מהירות, מובייל ו-HTTPS.
+                  <strong style={{ color: "var(--text)" }}><bdi dir="ltr">Page Experience</bdi></strong> —
+                  <bdi dir="ltr"><GT term="Core Web Vitals">Core Web Vitals</GT></bdi>, מהירות, מובייל ו-HTTPS.
                 </li>
                 <li style={{ marginBottom: "12px" }}>
                   <strong style={{ color: "var(--text)" }}>Link Authority</strong> —
@@ -400,10 +400,16 @@ function StaticGuide() {
                   <li style={{ marginBottom: "6px" }}>כתבו <strong>Direct Answers</strong> ברורים לשאלות נפוצות</li>
                   <li style={{ marginBottom: "6px" }}>הוסיפו <strong>סיכום קצר (בקצרה)</strong> בתחילת כל מאמר</li>
                   <li style={{ marginBottom: "6px" }}>השתמשו ב-<strong>FAQ Schema</strong> עם שאלות ותשובות מבוססות</li>
-                  <li style={{ marginBottom: "6px" }}>בנו <strong>Topical Authority</strong> — AI מצטט מקורות שהוא מזהה כסמכותיים</li>
+                  <li style={{ marginBottom: "6px" }}>בנו <strong><bdi dir="ltr">Topical Authority</bdi></strong> — <bdi dir="ltr">AI</bdi> מצטט מקורות שהוא מזהה כסמכותיים</li>
                   <li>חזקו <strong>E-E-A-T</strong> — מחבר מומחה + מקורות ממוספרים</li>
                 </ul>
               </div>
+              <p style={BODY}>
+                רוצים לראות את זה על הנתונים שלכם?{" "}
+                <Link href="/geo/audit" style={{ color: "var(--accent)", fontWeight: 600 }}>
+                  גלו איפה אתם מופיעים ב-AI Overviews
+                </Link>.
+              </p>
               <p style={BODY}>
                 מנועי AI נוספים שמשפיעים על תנועה ב-2026:{" "}
                 <strong style={{ color: "var(--text)" }}>Perplexity AI</strong> (מצטט מקורות

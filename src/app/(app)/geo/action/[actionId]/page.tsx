@@ -1,7 +1,9 @@
 import type { Metadata } from 'next';
+import { cookies } from 'next/headers';
 import { notFound } from 'next/navigation';
 import { findActionById, getClientActions } from '@/lib/geo/actions';
 import { getClientRecord } from '@/lib/geo/client';
+import { verifySessionToken, COOKIE_NAME } from '@/lib/client-auth';
 import CopyAnnouncer   from '@/components/geo/CopyAnnouncer';
 import StatusBar       from '@/components/geo/StatusBar';
 import ActionHeader    from '@/components/geo/ActionHeader';
@@ -29,6 +31,13 @@ export default async function GeoActionPage({
   const actionId = decodeURIComponent(rawId);
   const action = findActionById(actionId);
   if (!action) notFound();
+
+  // Ownership check: the session's client may only view its own actions.
+  // Middleware only confirms SOME valid session — not that it matches this actionId.
+  const jar         = await cookies();
+  const token       = jar.get(COOKIE_NAME)?.value ?? '';
+  const sessionClientId = await verifySessionToken(token);
+  if (!sessionClientId || sessionClientId !== action.clientId) notFound();
 
   const client        = getClientRecord(action.clientId);
   const wpConnected    = client?.wpConnected ?? false;

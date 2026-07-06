@@ -13,6 +13,10 @@
   "tone": "warm, knowledgeable, Jewish-cultural context",
   "pin": "4488",
   "entitlements": [
-    "geo"
+    "geo",
+    "title-bot:internal",
+    "pareto:internal",
+    "anomaly:internal",
+    "advisor:internal"
   ]
 }
