@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { renderMixed } from "@/lib/bidi";
+import SiloNav from "@/components/SiloNav";
 
 const CANONICAL = "https://www.wao.co.il/geo";
 
@@ -122,6 +123,8 @@ export default function GeoPage() {
         <div aria-hidden style={{ position: "absolute", inset: 0, background: "radial-gradient(ellipse 70% 55% at 50% 0%, rgba(74,227,181,0.08) 0%, transparent 70%)", pointerEvents: "none" }} />
         <div className="hero-grid" />
         <div className="wao-container" style={{ position: "relative", zIndex: 1, maxWidth: "860px" }}>
+          <SiloNav currentPath="/geo" />
+
           <p className="badge" style={{ marginBottom: "28px" }}>
             <span className="badge-dot" />
             {renderMixed("GEO · אופטימיזציה ל-AI Overviews")}

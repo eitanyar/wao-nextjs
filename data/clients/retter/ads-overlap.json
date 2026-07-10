@@ -1,0 +1,521 @@
+{
+  "site": "https://www.retter.co.il/",
+  "generatedAt": "2026-07-07T13:52:37.321Z",
+  "period": {
+    "startDate": "2026-04-08",
+    "endDate": "2026-07-07",
+    "days": 90
+  },
+  "positionWindow": {
+    "minPos": 1,
+    "maxPos": 3
+  },
+  "minImpressionsThreshold": 100,
+  "minClicksThreshold": 5,
+  "thresholdNote": "Dror's (ppc-strategist) real v1 brief: position ≤3 AND impressions ≥100 AND clicks ≥5 over trailing 90 days, combined AND filter — see script comment for rationale.",
+  "brandTokens": [
+    "retter",
+    "nlp",
+    "בשילוב",
+    "דמיון"
+  ],
+  "brandTokensNote": "Heuristic v1 tokens applied (domain root + homepage title words). Flag-only, not exclusion — see script comment for known transliteration limitation.",
+  "totalInRange": 26,
+  "distinctLandingPageCount": 10,
+  "sitelinksViable": true,
+  "sitelinksViableNote": "Informational only (v1 concession per Lior's deferred-sitelinks decision) — NOT sitelink generation. Counts distinct 'page' URLs across this run's opportunity list; Google's stated minimum distinct URLs for sitelinks to be eligible to show is 4. Not used by this script for any logic; recorded for future v2 input.",
+  "opportunities": [
+    {
+      "rank": 1,
+      "query": "nlp",
+      "page": "https://www.retter.co.il/nlp/",
+      "position": 2.7,
+      "impressions": 11630,
+      "clicks": 445,
+      "ctr": 3.8,
+      "score": 11630,
+      "ctr_flag": "below_avg_for_position",
+      "brand_match": "heuristic_v1",
+      "brand_match_token": "nlp",
+      "recommendedMatchType": "phrase",
+      "recommendedDailyBudgetILS": 25,
+      "recommendedBiddingStrategy": "manual_cpc_or_maximize_clicks",
+      "draftHeadlines": [
+        "nlp",
+        "מכון להכשרת מטפלים ומאמנים ב-…",
+        "הכשרה מוכרת ומקצועית שהופכת א…"
+      ],
+      "draftDescriptions": [
+        "מכון להכשרת מטפלים ומאמנים ב-NLP — הכשרה מוכרת ומקצועית שהופכת אנשים לכלים. השאירו פרטים…",
+        "הכשרה מוכרת ומקצועית שהופכת אנשים לכלים — עם ליווי אישי לאורך כל הדרך"
+      ],
+      "draftStatus": "AUTO_DRAFT"
+    },
+    {
+      "rank": 2,
+      "query": "nlp מה זה",
+      "page": "https://www.retter.co.il/nlp/",
+      "position": 2,
+      "impressions": 4230,
+      "clicks": 304,
+      "ctr": 7.2,
+      "score": 4230,
+      "ctr_flag": "below_avg_for_position",
+      "brand_match": "heuristic_v1",
+      "brand_match_token": "nlp",
+      "recommendedMatchType": "phrase",
+      "recommendedDailyBudgetILS": 25,
+      "recommendedBiddingStrategy": "manual_cpc_or_maximize_clicks",
+      "draftHeadlines": [
+        "nlp מה זה",
+        "מכון להכשרת מטפלים ומאמנים ב-…",
+        "הכשרה מוכרת ומקצועית שהופכת א…"
+      ],
+      "draftDescriptions": [
+        "מכון להכשרת מטפלים ומאמנים ב-NLP — הכשרה מוכרת ומקצועית שהופכת אנשים לכלים. השאירו פרטים…",
+        "הכשרה מוכרת ומקצועית שהופכת אנשים לכלים — עם ליווי אישי לאורך כל הדרך"
+      ],
+      "draftStatus": "AUTO_DRAFT"
+    },
+    {
+      "rank": 3,
+      "query": "מה זה nlp",
+      "page": "https://www.retter.co.il/nlp/",
+      "position": 2,
+      "impressions": 2159,
+      "clicks": 182,
+      "ctr": 8.4,
+      "score": 2159,
+      "brand_match": "heuristic_v1",
+      "brand_match_token": "nlp",
+      "recommendedMatchType": "phrase",
+      "recommendedDailyBudgetILS": 25,
+      "recommendedBiddingStrategy": "manual_cpc_or_maximize_clicks",
+      "draftHeadlines": [
+        "מה זה nlp",
+        "מכון להכשרת מטפלים ומאמנים ב-…",
+        "הכשרה מוכרת ומקצועית שהופכת א…"
+      ],
+      "draftDescriptions": [
+        "מכון להכשרת מטפלים ומאמנים ב-NLP — הכשרה מוכרת ומקצועית שהופכת אנשים לכלים. השאירו פרטים…",
+        "הכשרה מוכרת ומקצועית שהופכת אנשים לכלים — עם ליווי אישי לאורך כל הדרך"
+      ],
+      "draftStatus": "AUTO_DRAFT"
+    },
+    {
+      "rank": 4,
+      "query": "מכללת רטר",
+      "page": "https://www.retter.co.il/",
+      "position": 1,
+      "impressions": 1069,
+      "clicks": 176,
+      "ctr": 16.5,
+      "score": 1069,
+      "recommendedMatchType": "phrase",
+      "recommendedDailyBudgetILS": 25,
+      "recommendedBiddingStrategy": "manual_cpc_or_maximize_clicks",
+      "draftHeadlines": [
+        "מכללת רטר",
+        "מכון להכשרת מטפלים ומאמנים ב-…",
+        "הכשרה מוכרת ומקצועית שהופכת א…"
+      ],
+      "draftDescriptions": [
+        "מכון להכשרת מטפלים ומאמנים ב-NLP — הכשרה מוכרת ומקצועית שהופכת אנשים לכלים. השאירו פרטים…",
+        "הכשרה מוכרת ומקצועית שהופכת אנשים לכלים — עם ליווי אישי לאורך כל הדרך"
+      ],
+      "draftStatus": "AUTO_DRAFT"
+    },
+    {
+      "rank": 5,
+      "query": "מכללת רטר",
+      "page": "https://www.retter.co.il/branches/",
+      "position": 1,
+      "impressions": 1063,
+      "clicks": 13,
+      "ctr": 1.2,
+      "score": 1063,
+      "ctr_flag": "below_avg_for_position",
+      "recommendedMatchType": "phrase",
+      "recommendedDailyBudgetILS": 25,
+      "recommendedBiddingStrategy": "manual_cpc_or_maximize_clicks",
+      "draftHeadlines": [
+        "מכללת רטר",
+        "מכון להכשרת מטפלים ומאמנים ב-…",
+        "הכשרה מוכרת ומקצועית שהופכת א…"
+      ],
+      "draftDescriptions": [
+        "מכון להכשרת מטפלים ומאמנים ב-NLP — הכשרה מוכרת ומקצועית שהופכת אנשים לכלים. השאירו פרטים…",
+        "הכשרה מוכרת ומקצועית שהופכת אנשים לכלים — עם ליווי אישי לאורך כל הדרך"
+      ],
+      "draftStatus": "AUTO_DRAFT"
+    },
+    {
+      "rank": 6,
+      "query": "מכללת רטר",
+      "page": "https://www.retter.co.il/%D7%93%D7%9E%D7%99%D7%95%D7%A0%D7%95%D7%AA-%D7%9E%D7%95%D7%93%D7%A8%D7%9B%D7%99%D7%9D/",
+      "position": 1,
+      "impressions": 1058,
+      "clicks": 5,
+      "ctr": 0.5,
+      "score": 1058,
+      "ctr_flag": "below_avg_for_position",
+      "recommendedMatchType": "phrase",
+      "recommendedDailyBudgetILS": 25,
+      "recommendedBiddingStrategy": "manual_cpc_or_maximize_clicks",
+      "draftHeadlines": [
+        "מכללת רטר",
+        "מכון להכשרת מטפלים ומאמנים ב-…",
+        "הכשרה מוכרת ומקצועית שהופכת א…"
+      ],
+      "draftDescriptions": [
+        "מכון להכשרת מטפלים ומאמנים ב-NLP — הכשרה מוכרת ומקצועית שהופכת אנשים לכלים. השאירו פרטים…",
+        "הכשרה מוכרת ומקצועית שהופכת אנשים לכלים — עם ליווי אישי לאורך כל הדרך"
+      ],
+      "draftStatus": "AUTO_DRAFT"
+    },
+    {
+      "rank": 7,
+      "query": "סימור לוזון",
+      "page": "https://www.retter.co.il/%D7%9C%D7%94%D7%A2%D7%96-%D7%9C%D7%94%D7%99%D7%95%D7%AA-2/",
+      "position": 2.3,
+      "impressions": 748,
+      "clicks": 82,
+      "ctr": 11,
+      "score": 748,
+      "recommendedMatchType": "phrase",
+      "recommendedDailyBudgetILS": 25,
+      "recommendedBiddingStrategy": "manual_cpc_or_maximize_clicks",
+      "draftHeadlines": [
+        "סימור לוזון",
+        "מכון להכשרת מטפלים ומאמנים ב-…",
+        "הכשרה מוכרת ומקצועית שהופכת א…"
+      ],
+      "draftDescriptions": [
+        "מכון להכשרת מטפלים ומאמנים ב-NLP — הכשרה מוכרת ומקצועית שהופכת אנשים לכלים. השאירו פרטים…",
+        "הכשרה מוכרת ומקצועית שהופכת אנשים לכלים — עם ליווי אישי לאורך כל הדרך"
+      ],
+      "draftStatus": "AUTO_DRAFT"
+    },
+    {
+      "rank": 8,
+      "query": "רטר",
+      "page": "https://www.retter.co.il/",
+      "position": 1.1,
+      "impressions": 596,
+      "clicks": 212,
+      "ctr": 35.6,
+      "score": 596,
+      "recommendedMatchType": "phrase",
+      "recommendedDailyBudgetILS": 25,
+      "recommendedBiddingStrategy": "manual_cpc_or_maximize_clicks",
+      "draftHeadlines": [
+        "רטר",
+        "מכון להכשרת מטפלים ומאמנים ב-…",
+        "הכשרה מוכרת ומקצועית שהופכת א…"
+      ],
+      "draftDescriptions": [
+        "מכון להכשרת מטפלים ומאמנים ב-NLP — הכשרה מוכרת ומקצועית שהופכת אנשים לכלים. השאירו פרטים…",
+        "הכשרה מוכרת ומקצועית שהופכת אנשים לכלים — עם ליווי אישי לאורך כל הדרך"
+      ],
+      "draftStatus": "AUTO_DRAFT"
+    },
+    {
+      "rank": 9,
+      "query": "רטר",
+      "page": "https://www.retter.co.il/study/",
+      "position": 1.1,
+      "impressions": 591,
+      "clicks": 8,
+      "ctr": 1.4,
+      "score": 591,
+      "ctr_flag": "below_avg_for_position",
+      "recommendedMatchType": "phrase",
+      "recommendedDailyBudgetILS": 25,
+      "recommendedBiddingStrategy": "manual_cpc_or_maximize_clicks",
+      "draftHeadlines": [
+        "רטר",
+        "מכון להכשרת מטפלים ומאמנים ב-…",
+        "הכשרה מוכרת ומקצועית שהופכת א…"
+      ],
+      "draftDescriptions": [
+        "מכון להכשרת מטפלים ומאמנים ב-NLP — הכשרה מוכרת ומקצועית שהופכת אנשים לכלים. השאירו פרטים…",
+        "הכשרה מוכרת ומקצועית שהופכת אנשים לכלים — עם ליווי אישי לאורך כל הדרך"
+      ],
+      "draftStatus": "AUTO_DRAFT"
+    },
+    {
+      "rank": 10,
+      "query": "קליברציה",
+      "page": "https://www.retter.co.il/%D7%A7%D7%9C%D7%99%D7%91%D7%A8%D7%A6%D7%99%D7%94/",
+      "position": 2.3,
+      "impressions": 516,
+      "clicks": 12,
+      "ctr": 2.3,
+      "score": 516,
+      "ctr_flag": "below_avg_for_position",
+      "recommendedMatchType": "phrase",
+      "recommendedDailyBudgetILS": 25,
+      "recommendedBiddingStrategy": "manual_cpc_or_maximize_clicks",
+      "draftHeadlines": [
+        "קליברציה",
+        "מכון להכשרת מטפלים ומאמנים ב-…",
+        "הכשרה מוכרת ומקצועית שהופכת א…"
+      ],
+      "draftDescriptions": [
+        "מכון להכשרת מטפלים ומאמנים ב-NLP — הכשרה מוכרת ומקצועית שהופכת אנשים לכלים. השאירו פרטים…",
+        "הכשרה מוכרת ומקצועית שהופכת אנשים לכלים — עם ליווי אישי לאורך כל הדרך"
+      ],
+      "draftStatus": "AUTO_DRAFT"
+    },
+    {
+      "rank": 11,
+      "query": "קורס nlp מומלץ",
+      "page": "https://www.retter.co.il/%D7%90%D7%99%D7%A4%D7%94-%D7%9C%D7%9C%D7%9E%D7%95%D7%93-nlp/",
+      "position": 2.7,
+      "impressions": 390,
+      "clicks": 6,
+      "ctr": 1.5,
+      "score": 390,
+      "ctr_flag": "below_avg_for_position",
+      "brand_match": "heuristic_v1",
+      "brand_match_token": "nlp",
+      "recommendedMatchType": "phrase",
+      "recommendedDailyBudgetILS": 25,
+      "recommendedBiddingStrategy": "manual_cpc_or_maximize_clicks",
+      "draftHeadlines": [
+        "קורס nlp מומלץ",
+        "מכון להכשרת מטפלים ומאמנים ב-…",
+        "הכשרה מוכרת ומקצועית שהופכת א…"
+      ],
+      "draftDescriptions": [
+        "מכון להכשרת מטפלים ומאמנים ב-NLP — הכשרה מוכרת ומקצועית שהופכת אנשים לכלים. השאירו פרטים…",
+        "הכשרה מוכרת ומקצועית שהופכת אנשים לכלים — עם ליווי אישי לאורך כל הדרך"
+      ],
+      "draftStatus": "AUTO_DRAFT"
+    },
+    {
+      "rank": 12,
+      "query": "שיטת nlp",
+      "page": "https://www.retter.co.il/nlp/",
+      "position": 1.5,
+      "impressions": 335,
+      "clicks": 25,
+      "ctr": 7.5,
+      "score": 335,
+      "ctr_flag": "below_avg_for_position",
+      "brand_match": "heuristic_v1",
+      "brand_match_token": "nlp",
+      "recommendedMatchType": "phrase",
+      "recommendedDailyBudgetILS": 25,
+      "recommendedBiddingStrategy": "manual_cpc_or_maximize_clicks",
+      "draftHeadlines": [
+        "שיטת nlp",
+        "מכון להכשרת מטפלים ומאמנים ב-…",
+        "הכשרה מוכרת ומקצועית שהופכת א…"
+      ],
+      "draftDescriptions": [
+        "מכון להכשרת מטפלים ומאמנים ב-NLP — הכשרה מוכרת ומקצועית שהופכת אנשים לכלים. השאירו פרטים…",
+        "הכשרה מוכרת ומקצועית שהופכת אנשים לכלים — עם ליווי אישי לאורך כל הדרך"
+      ],
+      "draftStatus": "AUTO_DRAFT"
+    },
+    {
+      "rank": 13,
+      "query": "מילטון אריקסון",
+      "page": "https://www.retter.co.il/milton-model/",
+      "position": 2.8,
+      "impressions": 291,
+      "clicks": 14,
+      "ctr": 4.8,
+      "score": 291,
+      "ctr_flag": "below_avg_for_position",
+      "recommendedMatchType": "phrase",
+      "recommendedDailyBudgetILS": 25,
+      "recommendedBiddingStrategy": "manual_cpc_or_maximize_clicks",
+      "draftHeadlines": [
+        "מילטון אריקסון",
+        "מכון להכשרת מטפלים ומאמנים ב-…",
+        "הכשרה מוכרת ומקצועית שהופכת א…"
+      ],
+      "draftDescriptions": [
+        "מכון להכשרת מטפלים ומאמנים ב-NLP — הכשרה מוכרת ומקצועית שהופכת אנשים לכלים. השאירו פרטים…",
+        "הכשרה מוכרת ומקצועית שהופכת אנשים לכלים — עם ליווי אישי לאורך כל הדרך"
+      ],
+      "draftStatus": "AUTO_DRAFT"
+    },
+    {
+      "rank": 14,
+      "query": "אן אל פי",
+      "page": "https://www.retter.co.il/nlp/",
+      "position": 2,
+      "impressions": 273,
+      "clicks": 25,
+      "ctr": 9.2,
+      "score": 273,
+      "recommendedMatchType": "phrase",
+      "recommendedDailyBudgetILS": 25,
+      "recommendedBiddingStrategy": "manual_cpc_or_maximize_clicks",
+      "draftHeadlines": [
+        "אן אל פי",
+        "מכון להכשרת מטפלים ומאמנים ב-…",
+        "הכשרה מוכרת ומקצועית שהופכת א…"
+      ],
+      "draftDescriptions": [
+        "מכון להכשרת מטפלים ומאמנים ב-NLP — הכשרה מוכרת ומקצועית שהופכת אנשים לכלים. השאירו פרטים…",
+        "הכשרה מוכרת ומקצועית שהופכת אנשים לכלים — עם ליווי אישי לאורך כל הדרך"
+      ],
+      "draftStatus": "AUTO_DRAFT"
+    },
+    {
+      "rank": 15,
+      "query": "ואזו וגאלי",
+      "page": "https://www.retter.co.il/library/%D7%94%D7%AA%D7%A7%D7%A3-%D7%95%D7%90%D7%96%D7%95-%D7%95%D7%92%D7%90%D7%9C%D7%99/",
+      "position": 2.5,
+      "impressions": 236,
+      "clicks": 7,
+      "ctr": 3,
+      "score": 236,
+      "ctr_flag": "below_avg_for_position",
+      "recommendedMatchType": "phrase",
+      "recommendedDailyBudgetILS": 25,
+      "recommendedBiddingStrategy": "manual_cpc_or_maximize_clicks",
+      "draftHeadlines": [
+        "ואזו וגאלי",
+        "מכון להכשרת מטפלים ומאמנים ב-…",
+        "הכשרה מוכרת ומקצועית שהופכת א…"
+      ],
+      "draftDescriptions": [
+        "מכון להכשרת מטפלים ומאמנים ב-NLP — הכשרה מוכרת ומקצועית שהופכת אנשים לכלים. השאירו פרטים…",
+        "הכשרה מוכרת ומקצועית שהופכת אנשים לכלים — עם ליווי אישי לאורך כל הדרך"
+      ],
+      "draftStatus": "AUTO_DRAFT"
+    },
+    {
+      "rank": 16,
+      "query": "נלפ",
+      "page": "https://www.retter.co.il/nlp/",
+      "position": 1.9,
+      "impressions": 232,
+      "clicks": 14,
+      "ctr": 6,
+      "score": 232,
+      "ctr_flag": "below_avg_for_position",
+      "recommendedMatchType": "phrase",
+      "recommendedDailyBudgetILS": 25,
+      "recommendedBiddingStrategy": "manual_cpc_or_maximize_clicks",
+      "draftHeadlines": [
+        "נלפ",
+        "מכון להכשרת מטפלים ומאמנים ב-…",
+        "הכשרה מוכרת ומקצועית שהופכת א…"
+      ],
+      "draftDescriptions": [
+        "מכון להכשרת מטפלים ומאמנים ב-NLP — הכשרה מוכרת ומקצועית שהופכת אנשים לכלים. השאירו פרטים…",
+        "הכשרה מוכרת ומקצועית שהופכת אנשים לכלים — עם ליווי אישי לאורך כל הדרך"
+      ],
+      "draftStatus": "AUTO_DRAFT"
+    },
+    {
+      "rank": 17,
+      "query": "מזה nlp",
+      "page": "https://www.retter.co.il/nlp/",
+      "position": 1.9,
+      "impressions": 171,
+      "clicks": 15,
+      "ctr": 8.8,
+      "score": 171,
+      "brand_match": "heuristic_v1",
+      "brand_match_token": "nlp",
+      "recommendedMatchType": "phrase",
+      "recommendedDailyBudgetILS": 25,
+      "recommendedBiddingStrategy": "manual_cpc_or_maximize_clicks",
+      "draftHeadlines": [
+        "מזה nlp",
+        "מכון להכשרת מטפלים ומאמנים ב-…",
+        "הכשרה מוכרת ומקצועית שהופכת א…"
+      ],
+      "draftDescriptions": [
+        "מכון להכשרת מטפלים ומאמנים ב-NLP — הכשרה מוכרת ומקצועית שהופכת אנשים לכלים. השאירו פרטים…",
+        "הכשרה מוכרת ומקצועית שהופכת אנשים לכלים — עם ליווי אישי לאורך כל הדרך"
+      ],
+      "draftStatus": "AUTO_DRAFT"
+    },
+    {
+      "rank": 18,
+      "query": "מכללת רטר nlp",
+      "page": "https://www.retter.co.il/",
+      "position": 1,
+      "impressions": 153,
+      "clicks": 84,
+      "ctr": 54.9,
+      "score": 153,
+      "brand_match": "heuristic_v1",
+      "brand_match_token": "nlp",
+      "recommendedMatchType": "phrase",
+      "recommendedDailyBudgetILS": 25,
+      "recommendedBiddingStrategy": "manual_cpc_or_maximize_clicks",
+      "draftHeadlines": [
+        "מכללת רטר nlp",
+        "מכון להכשרת מטפלים ומאמנים ב-…",
+        "הכשרה מוכרת ומקצועית שהופכת א…"
+      ],
+      "draftDescriptions": [
+        "מכון להכשרת מטפלים ומאמנים ב-NLP — הכשרה מוכרת ומקצועית שהופכת אנשים לכלים. השאירו פרטים…",
+        "הכשרה מוכרת ומקצועית שהופכת אנשים לכלים — עם ליווי אישי לאורך כל הדרך"
+      ],
+      "draftStatus": "AUTO_DRAFT"
+    },
+    {
+      "rank": 19,
+      "query": "איפה מומלץ ללמוד nlp",
+      "page": "https://www.retter.co.il/%D7%90%D7%99%D7%A4%D7%94-%D7%9C%D7%9C%D7%9E%D7%95%D7%93-nlp/",
+      "position": 2.8,
+      "impressions": 152,
+      "clicks": 11,
+      "ctr": 7.2,
+      "score": 152,
+      "ctr_flag": "below_avg_for_position",
+      "brand_match": "heuristic_v1",
+      "brand_match_token": "nlp",
+      "recommendedMatchType": "phrase",
+      "recommendedDailyBudgetILS": 25,
+      "recommendedBiddingStrategy": "manual_cpc_or_maximize_clicks",
+      "draftHeadlines": [
+        "איפה מומלץ ללמוד nlp",
+        "מכון להכשרת מטפלים ומאמנים ב-…",
+        "הכשרה מוכרת ומקצועית שהופכת א…"
+      ],
+      "draftDescriptions": [
+        "מכון להכשרת מטפלים ומאמנים ב-NLP — הכשרה מוכרת ומקצועית שהופכת אנשים לכלים. השאירו פרטים…",
+        "הכשרה מוכרת ומקצועית שהופכת אנשים לכלים — עם ליווי אישי לאורך כל הדרך"
+      ],
+      "draftStatus": "AUTO_DRAFT"
+    },
+    {
+      "rank": 20,
+      "query": "מכללת רטר nlp",
+      "page": "https://www.retter.co.il/study/",
+      "position": 1.1,
+      "impressions": 150,
+      "clicks": 8,
+      "ctr": 5.3,
+      "score": 150,
+      "ctr_flag": "below_avg_for_position",
+      "brand_match": "heuristic_v1",
+      "brand_match_token": "nlp",
+      "recommendedMatchType": "phrase",
+      "recommendedDailyBudgetILS": 25,
+      "recommendedBiddingStrategy": "manual_cpc_or_maximize_clicks",
+      "draftHeadlines": [
+        "מכללת רטר nlp",
+        "מכון להכשרת מטפלים ומאמנים ב-…",
+        "הכשרה מוכרת ומקצועית שהופכת א…"
+      ],
+      "draftDescriptions": [
+        "מכון להכשרת מטפלים ומאמנים ב-NLP — הכשרה מוכרת ומקצועית שהופכת אנשים לכלים. השאירו פרטים…",
+        "הכשרה מוכרת ומקצועית שהופכת אנשים לכלים — עם ליווי אישי לאורך כל הדרך"
+      ],
+      "draftStatus": "AUTO_DRAFT"
+    }
+  ],
+  "disclaimer": "READ-ONLY GSC analysis. No Google Ads API calls made. draftHeadlines/draftDescriptions are fast, deterministic, template-based rough drafts generated from client.json (businessNiche/usp) — NOT Tamar's polished ad copy, and not launch-ready. draftStatus is PENDING_BUSINESS_DETAILS where those client.json fields are still placeholders."
+}

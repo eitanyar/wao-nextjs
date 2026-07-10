@@ -1,0 +1,668 @@
+{
+  "site": "https://www.merlo-c.co.il/",
+  "generatedAt": "2026-07-07T08:54:54.799Z",
+  "period": {
+    "startDate": "2026-04-08",
+    "endDate": "2026-07-07",
+    "days": 90
+  },
+  "totalInRange": 547,
+  "opportunities": [
+    {
+      "rank": 1,
+      "query": "קייטרינג לחתונה",
+      "rankingUrl": "https://www.merlo-c.co.il/%D7%A2%D7%9C%D7%95%D7%AA-%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%9C%D7%97%D7%AA%D7%95%D7%A0%D7%94/",
+      "implementationMode": "enhance",
+      "position": 5,
+      "impressions": 1486,
+      "clicks": 17,
+      "ctr": 1.1,
+      "score": 31266,
+      "intentScore": 3,
+      "intentFlag": "review",
+      "intentReason": "classification failed",
+      "priority": "HIGH",
+      "actionType": "faq_block",
+      "cannibalFlag": "REVIEW",
+      "cannibalReasons": [
+        "MULTI_URL"
+      ],
+      "cannibalUrls": [
+        {
+          "url": "https://www.merlo-c.co.il/%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%9C%D7%97%D7%AA%D7%95%D7%A0%D7%94-%D7%A7%D7%98%D7%A0%D7%94/",
+          "impressions": 906,
+          "position": 18.8
+        },
+        {
+          "url": "https://www.merlo-c.co.il/%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%9C%D7%97%D7%AA%D7%95%D7%A0%D7%94-%D7%91%D7%91%D7%99%D7%AA/",
+          "impressions": 862,
+          "position": 20.5
+        },
+        {
+          "url": "https://www.merlo-c.co.il/%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%9C%D7%97%D7%AA%D7%95%D7%A0%D7%94-%D7%91%D7%98%D7%91%D7%A2/",
+          "impressions": 561,
+          "position": 36
+        }
+      ]
+    },
+    {
+      "rank": 2,
+      "query": "קייטרינג בשרי כשר למהדרין",
+      "rankingUrl": "https://www.merlo-c.co.il/%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%91%D7%99%D7%A8%D7%95%D7%A9%D7%9C%D7%99%D7%9D/",
+      "implementationMode": "enhance",
+      "position": 8.5,
+      "impressions": 1038,
+      "clicks": 6,
+      "ctr": 0.6,
+      "score": 18168,
+      "intentScore": 3,
+      "intentFlag": "review",
+      "intentReason": "classification failed",
+      "priority": "MEDIUM",
+      "actionType": "faq_block",
+      "cannibalFlag": "REVIEW",
+      "cannibalReasons": [
+        "MULTI_URL"
+      ],
+      "cannibalUrls": [
+        {
+          "url": "https://www.merlo-c.co.il/%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%91%D7%A9%D7%A8%D7%99-%D7%9B%D7%A9%D7%A8-%D7%9C%D7%9E%D7%94%D7%93%D7%A8%D7%99%D7%9F/",
+          "impressions": 519,
+          "position": 27.7
+        },
+        {
+          "url": "https://www.merlo-c.co.il/%D7%9B%D7%A9%D7%A8%D7%95%D7%AA-%D7%91%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%9E%D7%A8%D7%9C%D7%95/",
+          "impressions": 453,
+          "position": 30.6
+        },
+        {
+          "url": "https://www.merlo-c.co.il/%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%9C%D7%91%D7%A8-%D7%9E%D7%A6%D7%95%D7%95%D7%94/",
+          "impressions": 367,
+          "position": 36.3
+        }
+      ]
+    },
+    {
+      "rank": 3,
+      "query": "קייטרינג לשבת חתן",
+      "rankingUrl": "https://www.merlo-c.co.il/%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%9C%D7%A9%D7%91%D7%AA-%D7%97%D7%AA%D7%9F/",
+      "implementationMode": "enhance",
+      "position": 14.9,
+      "impressions": 1180,
+      "clicks": 3,
+      "ctr": 0.3,
+      "score": 13114,
+      "intentScore": 3,
+      "intentFlag": "review",
+      "intentReason": "classification failed",
+      "priority": "LOW",
+      "actionType": "faq_block"
+    },
+    {
+      "rank": 4,
+      "query": "קייטרינג לאירועים עסקיים",
+      "rankingUrl": "https://www.merlo-c.co.il/%D7%90%D7%99%D7%A8%D7%95%D7%A2%D7%99%D7%9D-%D7%A2%D7%A1%D7%A7%D7%99%D7%99%D7%9D/",
+      "implementationMode": "enhance",
+      "position": 6.9,
+      "impressions": 600,
+      "clicks": 0,
+      "ctr": 0,
+      "score": 11487,
+      "intentScore": 3,
+      "intentFlag": "review",
+      "intentReason": "classification failed",
+      "priority": "MEDIUM",
+      "actionType": "faq_block",
+      "cannibalFlag": "REVIEW",
+      "cannibalReasons": [
+        "MULTI_URL"
+      ],
+      "cannibalUrls": [
+        {
+          "url": "https://www.merlo-c.co.il/%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%9C%D7%90%D7%99%D7%A8%D7%95%D7%A2%D7%99-%D7%97%D7%91%D7%A8%D7%94/",
+          "impressions": 246,
+          "position": 51.1
+        },
+        {
+          "url": "https://www.merlo-c.co.il/%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%91%D7%A9%D7%A8%D7%99-%D7%9E%D7%97%D7%99%D7%A8%D7%99%D7%9D/",
+          "impressions": 215,
+          "position": 41.8
+        },
+        {
+          "url": "https://www.merlo-c.co.il/%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%91%D7%99%D7%A8%D7%95%D7%A9%D7%9C%D7%99%D7%9D/",
+          "impressions": 204,
+          "position": 67.9
+        }
+      ]
+    },
+    {
+      "rank": 5,
+      "query": "קייטרינג לאירועים",
+      "rankingUrl": "https://www.merlo-c.co.il/",
+      "implementationMode": "create",
+      "position": 17.8,
+      "impressions": 1382,
+      "clicks": 4,
+      "ctr": 0.3,
+      "score": 11397,
+      "intentScore": 3,
+      "intentFlag": "review",
+      "intentReason": "classification failed",
+      "priority": "LOW",
+      "actionType": "faq_block",
+      "cannibalFlag": "REVIEW",
+      "cannibalReasons": [
+        "MULTI_URL"
+      ],
+      "cannibalUrls": [
+        {
+          "url": "https://www.merlo-c.co.il/%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%9C%D7%90%D7%99%D7%A8%D7%95%D7%A2%D7%99%D7%9D-%D7%A7%D7%98%D7%A0%D7%99%D7%9D/",
+          "impressions": 973,
+          "position": 42.5
+        },
+        {
+          "url": "https://www.merlo-c.co.il/%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%91%D7%99%D7%A8%D7%95%D7%A9%D7%9C%D7%99%D7%9D/",
+          "impressions": 804,
+          "position": 53.8
+        },
+        {
+          "url": "https://www.merlo-c.co.il/%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%91%D7%A9%D7%A8%D7%99-%D7%9E%D7%97%D7%99%D7%A8%D7%99%D7%9D/",
+          "impressions": 785,
+          "position": 52.9
+        }
+      ]
+    },
+    {
+      "rank": 6,
+      "query": "קייטרינג בנתניה",
+      "rankingUrl": "https://www.merlo-c.co.il/%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%91%D7%A0%D7%AA%D7%A0%D7%99%D7%94/",
+      "implementationMode": "enhance",
+      "position": 6.1,
+      "impressions": 564,
+      "clicks": 7,
+      "ctr": 1.2,
+      "score": 11218,
+      "intentScore": 3,
+      "intentFlag": "review",
+      "intentReason": "classification failed",
+      "priority": "MEDIUM",
+      "actionType": "faq_block"
+    },
+    {
+      "rank": 7,
+      "query": "קייטרינג לבר מצווה",
+      "rankingUrl": "https://www.merlo-c.co.il/%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%9C%D7%91%D7%A8-%D7%9E%D7%A6%D7%95%D7%95%D7%94/",
+      "implementationMode": "enhance",
+      "position": 17.8,
+      "impressions": 1319,
+      "clicks": 0,
+      "ctr": 0,
+      "score": 10756,
+      "intentScore": 3,
+      "intentFlag": "review",
+      "intentReason": "classification failed",
+      "priority": "LOW",
+      "actionType": "faq_block",
+      "cannibalFlag": "REVIEW",
+      "cannibalReasons": [
+        "MULTI_URL"
+      ],
+      "cannibalUrls": [
+        {
+          "url": "https://www.merlo-c.co.il/%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%91%D7%A9%D7%A8%D7%99-%D7%9E%D7%97%D7%99%D7%A8%D7%99%D7%9D/",
+          "impressions": 281,
+          "position": 54.4
+        },
+        {
+          "url": "https://www.merlo-c.co.il/%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%91%D7%99%D7%A8%D7%95%D7%A9%D7%9C%D7%99%D7%9D/",
+          "impressions": 245,
+          "position": 50.2
+        },
+        {
+          "url": "https://www.merlo-c.co.il/%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%9C%D7%97%D7%AA%D7%95%D7%A0%D7%94-%D7%A7%D7%98%D7%A0%D7%94/",
+          "impressions": 108,
+          "position": 77.3
+        }
+      ]
+    },
+    {
+      "rank": 8,
+      "query": "קייטרינג בשרי לאירועים",
+      "rankingUrl": "https://www.merlo-c.co.il/",
+      "implementationMode": "create",
+      "position": 12.1,
+      "impressions": 696,
+      "clicks": 1,
+      "ctr": 0.1,
+      "score": 9708,
+      "intentScore": 3,
+      "intentFlag": "review",
+      "intentReason": "classification failed",
+      "priority": "LOW",
+      "actionType": "faq_block",
+      "cannibalFlag": "REVIEW",
+      "cannibalReasons": [
+        "MULTI_URL"
+      ],
+      "cannibalUrls": [
+        {
+          "url": "https://www.merlo-c.co.il/%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%91%D7%99%D7%A8%D7%95%D7%A9%D7%9C%D7%99%D7%9D/",
+          "impressions": 523,
+          "position": 29.1
+        },
+        {
+          "url": "https://www.merlo-c.co.il/%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%9C%D7%90%D7%99%D7%A8%D7%95%D7%A2%D7%99%D7%9D-%D7%A7%D7%98%D7%A0%D7%99%D7%9D/",
+          "impressions": 478,
+          "position": 32.2
+        },
+        {
+          "url": "https://www.merlo-c.co.il/%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%91%D7%A9%D7%A8%D7%99-%D7%9E%D7%97%D7%99%D7%A8%D7%99%D7%9D/",
+          "impressions": 473,
+          "position": 33.8
+        }
+      ]
+    },
+    {
+      "rank": 9,
+      "query": "קייטרינג בשרי מומלץ",
+      "rankingUrl": "https://www.merlo-c.co.il/",
+      "implementationMode": "create",
+      "position": 11.6,
+      "impressions": 672,
+      "clicks": 0,
+      "ctr": 0,
+      "score": 9661,
+      "intentScore": 3,
+      "intentFlag": "review",
+      "intentReason": "classification failed",
+      "priority": "LOW",
+      "actionType": "faq_block",
+      "cannibalFlag": "REVIEW",
+      "cannibalReasons": [
+        "MULTI_URL"
+      ],
+      "cannibalUrls": [
+        {
+          "url": "https://www.merlo-c.co.il/%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%91%D7%A9%D7%A8%D7%99-%D7%9B%D7%A9%D7%A8-%D7%9C%D7%9E%D7%94%D7%93%D7%A8%D7%99%D7%9F/",
+          "impressions": 391,
+          "position": 21.3
+        },
+        {
+          "url": "https://www.merlo-c.co.il/%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%91%D7%99%D7%A8%D7%95%D7%A9%D7%9C%D7%99%D7%9D/",
+          "impressions": 264,
+          "position": 30.4
+        },
+        {
+          "url": "https://www.merlo-c.co.il/%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%91%D7%A9%D7%A8%D7%99-%D7%9E%D7%97%D7%99%D7%A8%D7%99%D7%9D/",
+          "impressions": 254,
+          "position": 34.4
+        }
+      ]
+    },
+    {
+      "rank": 10,
+      "query": "קייטרינג כשר לאירועים קטנים",
+      "rankingUrl": "https://www.merlo-c.co.il/%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%9C%D7%90%D7%99%D7%A8%D7%95%D7%A2%D7%99%D7%9D-%D7%A7%D7%98%D7%A0%D7%99%D7%9D/",
+      "implementationMode": "enhance",
+      "position": 13.9,
+      "impressions": 783,
+      "clicks": 0,
+      "ctr": 0,
+      "score": 9513,
+      "intentScore": 3,
+      "intentFlag": "review",
+      "intentReason": "classification failed",
+      "priority": "LOW",
+      "actionType": "faq_block",
+      "cannibalFlag": "REVIEW",
+      "cannibalReasons": [
+        "MULTI_URL"
+      ],
+      "cannibalUrls": [
+        {
+          "url": "https://www.merlo-c.co.il/%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%9C%D7%97%D7%AA%D7%95%D7%A0%D7%94-%D7%A7%D7%98%D7%A0%D7%94/",
+          "impressions": 500,
+          "position": 39.5
+        },
+        {
+          "url": "https://www.merlo-c.co.il/%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%91%D7%99%D7%A8%D7%95%D7%A9%D7%9C%D7%99%D7%9D/",
+          "impressions": 467,
+          "position": 43.7
+        },
+        {
+          "url": "https://www.merlo-c.co.il/%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%91%D7%A9%D7%A8%D7%99-%D7%9E%D7%97%D7%99%D7%A8%D7%99%D7%9D/",
+          "impressions": 383,
+          "position": 54.4
+        }
+      ]
+    },
+    {
+      "rank": 11,
+      "query": "קייטרינג לאירועים קטנים מחיר",
+      "rankingUrl": "https://www.merlo-c.co.il/%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%9C%D7%90%D7%99%D7%A8%D7%95%D7%A2%D7%99%D7%9D-%D7%A7%D7%98%D7%A0%D7%99%D7%9D/",
+      "implementationMode": "enhance",
+      "position": 8,
+      "impressions": 514,
+      "clicks": 2,
+      "ctr": 0.4,
+      "score": 9240,
+      "intentScore": 3,
+      "intentFlag": "review",
+      "intentReason": "classification failed",
+      "priority": "MEDIUM",
+      "actionType": "faq_block",
+      "cannibalFlag": "REVIEW",
+      "cannibalReasons": [
+        "MULTI_URL"
+      ],
+      "cannibalUrls": [
+        {
+          "url": "https://www.merlo-c.co.il/%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%91%D7%A9%D7%A8%D7%99-%D7%9E%D7%97%D7%99%D7%A8%D7%99%D7%9D/",
+          "impressions": 346,
+          "position": 20.1
+        },
+        {
+          "url": "https://www.merlo-c.co.il/%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%9C%D7%97%D7%AA%D7%95%D7%A0%D7%94-%D7%A7%D7%98%D7%A0%D7%94/",
+          "impressions": 162,
+          "position": 35.6
+        },
+        {
+          "url": "https://www.merlo-c.co.il/%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%9C%D7%97%D7%AA%D7%95%D7%A0%D7%94-%D7%91%D7%91%D7%99%D7%AA/",
+          "impressions": 82,
+          "position": 49.3
+        }
+      ]
+    },
+    {
+      "rank": 12,
+      "query": "קייטרינג לאירועים קטנים בבית",
+      "rankingUrl": "https://www.merlo-c.co.il/%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%9C%D7%90%D7%99%D7%A8%D7%95%D7%A2%D7%99%D7%9D-%D7%A7%D7%98%D7%A0%D7%99%D7%9D/",
+      "implementationMode": "enhance",
+      "position": 12.5,
+      "impressions": 677,
+      "clicks": 0,
+      "ctr": 0,
+      "score": 9129,
+      "intentScore": 3,
+      "intentFlag": "review",
+      "intentReason": "classification failed",
+      "priority": "LOW",
+      "actionType": "faq_block",
+      "cannibalFlag": "REVIEW",
+      "cannibalReasons": [
+        "MULTI_URL"
+      ],
+      "cannibalUrls": [
+        {
+          "url": "https://www.merlo-c.co.il/%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%9C%D7%97%D7%AA%D7%95%D7%A0%D7%94-%D7%A7%D7%98%D7%A0%D7%94/",
+          "impressions": 374,
+          "position": 45.2
+        },
+        {
+          "url": "https://www.merlo-c.co.il/%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%9C%D7%90%D7%99%D7%A8%D7%95%D7%A2%D7%99%D7%9D-%D7%91%D7%91%D7%99%D7%AA/",
+          "impressions": 279,
+          "position": 40.1
+        },
+        {
+          "url": "https://www.merlo-c.co.il/%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%9C%D7%97%D7%AA%D7%95%D7%A0%D7%94-%D7%91%D7%91%D7%99%D7%AA/",
+          "impressions": 241,
+          "position": 27
+        }
+      ]
+    },
+    {
+      "rank": 13,
+      "query": "קייטרינג לאירוע חברה",
+      "rankingUrl": "https://www.merlo-c.co.il/%D7%90%D7%99%D7%A8%D7%95%D7%A2%D7%99%D7%9D-%D7%A2%D7%A1%D7%A7%D7%99%D7%99%D7%9D/",
+      "implementationMode": "enhance",
+      "position": 9.6,
+      "impressions": 555,
+      "clicks": 0,
+      "ctr": 0,
+      "score": 9110,
+      "intentScore": 3,
+      "intentFlag": "review",
+      "intentReason": "classification failed",
+      "priority": "MEDIUM",
+      "actionType": "faq_block",
+      "cannibalFlag": "REVIEW",
+      "cannibalReasons": [
+        "MULTI_URL"
+      ],
+      "cannibalUrls": [
+        {
+          "url": "https://www.merlo-c.co.il/%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%9C%D7%90%D7%99%D7%A8%D7%95%D7%A2%D7%99-%D7%97%D7%91%D7%A8%D7%94/",
+          "impressions": 392,
+          "position": 35
+        },
+        {
+          "url": "https://www.merlo-c.co.il/%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%9C%D7%97%D7%AA%D7%95%D7%A0%D7%94-%D7%A7%D7%98%D7%A0%D7%94/",
+          "impressions": 321,
+          "position": 61.8
+        },
+        {
+          "url": "https://www.merlo-c.co.il/%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%91%D7%99%D7%A8%D7%95%D7%A9%D7%9C%D7%99%D7%9D/",
+          "impressions": 312,
+          "position": 48.7
+        }
+      ]
+    },
+    {
+      "rank": 14,
+      "query": "קייטרינג בכפר סבא",
+      "rankingUrl": "https://www.merlo-c.co.il/%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%91%D7%9B%D7%A4%D7%A8-%D7%A1%D7%91%D7%90/",
+      "implementationMode": "enhance",
+      "position": 9.9,
+      "impressions": 564,
+      "clicks": 2,
+      "ctr": 0.4,
+      "score": 9102,
+      "intentScore": 3,
+      "intentFlag": "review",
+      "intentReason": "classification failed",
+      "priority": "MEDIUM",
+      "actionType": "faq_block"
+    },
+    {
+      "rank": 15,
+      "query": "קייטרינג ברמת גן",
+      "rankingUrl": "https://www.merlo-c.co.il/%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%91%D7%A8%D7%9E%D7%AA-%D7%92%D7%9F/",
+      "implementationMode": "enhance",
+      "position": 5.4,
+      "impressions": 437,
+      "clicks": 3,
+      "ctr": 0.7,
+      "score": 9013,
+      "intentScore": 3,
+      "intentFlag": "review",
+      "intentReason": "classification failed",
+      "priority": "HIGH",
+      "actionType": "faq_block",
+      "cannibalFlag": "REVIEW",
+      "cannibalReasons": [
+        "MULTI_URL"
+      ],
+      "cannibalUrls": [
+        {
+          "url": "https://www.merlo-c.co.il/%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%91%D7%A9%D7%A8%D7%99-%D7%9E%D7%97%D7%99%D7%A8%D7%99%D7%9D/",
+          "impressions": 137,
+          "position": 71.2
+        },
+        {
+          "url": "https://www.merlo-c.co.il/%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%9C%D7%97%D7%AA%D7%95%D7%A0%D7%94-%D7%91%D7%91%D7%99%D7%AA/",
+          "impressions": 109,
+          "position": 58.4
+        },
+        {
+          "url": "https://www.merlo-c.co.il/%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%91%D7%99%D7%A8%D7%95%D7%A9%D7%9C%D7%99%D7%9D/",
+          "impressions": 85,
+          "position": 84.2
+        }
+      ]
+    },
+    {
+      "rank": 16,
+      "query": "קייטרינג בשרי",
+      "rankingUrl": "https://www.merlo-c.co.il/%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%91%D7%99%D7%A8%D7%95%D7%A9%D7%9C%D7%99%D7%9D/",
+      "implementationMode": "enhance",
+      "position": 19.1,
+      "impressions": 967,
+      "clicks": 0,
+      "ctr": 0,
+      "score": 6670,
+      "intentScore": 3,
+      "intentFlag": "review",
+      "intentReason": "classification failed",
+      "priority": "LOW",
+      "actionType": "faq_block",
+      "cannibalFlag": "REVIEW",
+      "cannibalReasons": [
+        "MULTI_URL"
+      ],
+      "cannibalUrls": [
+        {
+          "url": "https://www.merlo-c.co.il/",
+          "impressions": 811,
+          "position": 19.9
+        },
+        {
+          "url": "https://www.merlo-c.co.il/%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%91%D7%A9%D7%A8%D7%99-%D7%9E%D7%97%D7%99%D7%A8%D7%99%D7%9D/",
+          "impressions": 772,
+          "position": 21.2
+        },
+        {
+          "url": "https://www.merlo-c.co.il/%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%91%D7%A9%D7%A8%D7%99-%D7%9B%D7%A9%D7%A8-%D7%9C%D7%9E%D7%94%D7%93%D7%A8%D7%99%D7%9F/",
+          "impressions": 669,
+          "position": 62.7
+        }
+      ]
+    },
+    {
+      "rank": 17,
+      "query": "קייטרינג לאירועי חברה",
+      "rankingUrl": "https://www.merlo-c.co.il/%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%9C%D7%90%D7%99%D7%A8%D7%95%D7%A2%D7%99-%D7%97%D7%91%D7%A8%D7%94/",
+      "implementationMode": "enhance",
+      "position": 13.8,
+      "impressions": 545,
+      "clicks": 0,
+      "ctr": 0,
+      "score": 6642,
+      "intentScore": 3,
+      "intentFlag": "review",
+      "intentReason": "classification failed",
+      "priority": "LOW",
+      "actionType": "faq_block",
+      "cannibalFlag": "REVIEW",
+      "cannibalReasons": [
+        "MULTI_URL"
+      ],
+      "cannibalUrls": [
+        {
+          "url": "https://www.merlo-c.co.il/%D7%90%D7%99%D7%A8%D7%95%D7%A2%D7%99%D7%9D-%D7%A2%D7%A1%D7%A7%D7%99%D7%99%D7%9D/",
+          "impressions": 261,
+          "position": 40.6
+        },
+        {
+          "url": "https://www.merlo-c.co.il/%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%91%D7%99%D7%A8%D7%95%D7%A9%D7%9C%D7%99%D7%9D/",
+          "impressions": 165,
+          "position": 53.3
+        },
+        {
+          "url": "https://www.merlo-c.co.il/%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%91%D7%A9%D7%A8%D7%99-%D7%9E%D7%97%D7%99%D7%A8%D7%99%D7%9D/",
+          "impressions": 126,
+          "position": 41.9
+        }
+      ]
+    },
+    {
+      "rank": 18,
+      "query": "קייטרינג ברחובות",
+      "rankingUrl": "https://www.merlo-c.co.il/%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%91%D7%A8%D7%97%D7%95%D7%91%D7%95%D7%AA/",
+      "implementationMode": "enhance",
+      "position": 12.1,
+      "impressions": 470,
+      "clicks": 2,
+      "ctr": 0.4,
+      "score": 6539,
+      "intentScore": 3,
+      "intentFlag": "review",
+      "intentReason": "classification failed",
+      "priority": "LOW",
+      "actionType": "faq_block"
+    },
+    {
+      "rank": 19,
+      "query": "קייטרינג לחתונה",
+      "rankingUrl": "https://www.merlo-c.co.il/%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%9C%D7%97%D7%AA%D7%95%D7%A0%D7%94-%D7%A7%D7%98%D7%A0%D7%94/",
+      "implementationMode": "enhance",
+      "position": 18.8,
+      "impressions": 906,
+      "clicks": 1,
+      "ctr": 0.1,
+      "score": 6485,
+      "intentScore": 3,
+      "intentFlag": "review",
+      "intentReason": "classification failed",
+      "priority": "LOW",
+      "actionType": "faq_block",
+      "cannibalFlag": "REVIEW",
+      "cannibalReasons": [
+        "MULTI_URL"
+      ],
+      "cannibalUrls": [
+        {
+          "url": "https://www.merlo-c.co.il/%D7%A2%D7%9C%D7%95%D7%AA-%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%9C%D7%97%D7%AA%D7%95%D7%A0%D7%94/",
+          "impressions": 1486,
+          "position": 5
+        },
+        {
+          "url": "https://www.merlo-c.co.il/%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%9C%D7%97%D7%AA%D7%95%D7%A0%D7%94-%D7%91%D7%91%D7%99%D7%AA/",
+          "impressions": 862,
+          "position": 20.5
+        },
+        {
+          "url": "https://www.merlo-c.co.il/%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%9C%D7%97%D7%AA%D7%95%D7%A0%D7%94-%D7%91%D7%98%D7%91%D7%A2/",
+          "impressions": 561,
+          "position": 36
+        }
+      ]
+    },
+    {
+      "rank": 20,
+      "query": "קייטרינג לאירועים קטנים",
+      "rankingUrl": "https://www.merlo-c.co.il/%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%9C%D7%90%D7%99%D7%A8%D7%95%D7%A2%D7%99%D7%9D-%D7%A7%D7%98%D7%A0%D7%99%D7%9D/",
+      "implementationMode": "enhance",
+      "position": 18.9,
+      "impressions": 901,
+      "clicks": 6,
+      "ctr": 0.7,
+      "score": 6371,
+      "intentScore": 3,
+      "intentFlag": "review",
+      "intentReason": "classification failed",
+      "priority": "LOW",
+      "actionType": "faq_block",
+      "cannibalFlag": "REVIEW",
+      "cannibalReasons": [
+        "MULTI_URL"
+      ],
+      "cannibalUrls": [
+        {
+          "url": "https://www.merlo-c.co.il/%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%9C%D7%97%D7%AA%D7%95%D7%A0%D7%94-%D7%A7%D7%98%D7%A0%D7%94/",
+          "impressions": 583,
+          "position": 33.7
+        },
+        {
+          "url": "https://www.merlo-c.co.il/%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%91%D7%99%D7%A8%D7%95%D7%A9%D7%9C%D7%99%D7%9D/",
+          "impressions": 442,
+          "position": 68.1
+        },
+        {
+          "url": "https://www.merlo-c.co.il/%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%91%D7%A9%D7%A8%D7%99-%D7%9E%D7%97%D7%99%D7%A8%D7%99%D7%9D/",
+          "impressions": 368,
+          "position": 54
+        }
+      ]
+    }
+  ]
+}

@@ -14,6 +14,10 @@
   "pin": "7291",
   "entitlements": [
     "geo",
+    "title-bot:internal",
+    "pareto:internal",
+    "anomaly:internal",
+    "ads-overlap:internal",
     "advisor:internal"
   ]
 }

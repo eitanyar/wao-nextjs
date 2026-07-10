@@ -1,0 +1,179 @@
+{
+  "site": "https://aaasada.com/",
+  "generatedAt": "2026-07-07T08:54:27.446Z",
+  "sourceFile": "data/clients/aasada/pareto.json",
+  "mode": "SUGGEST_ONLY_NO_PUSH_NO_COPY",
+  "ctrCurveSource": "Blended industry-benchmark organic CTR-by-position curve (Backlinko / Advanced Web Ranking style studies), with a flat 45% AI-Overview/Shopping-suppression discount applied to broad/commercial queries (Yonatan seo-strategist review; Ahrefs Dec 2025 + Seer Interactive Sep 2025 AIO-CTR-suppression data). NOT WAO first-party click data. `directionalPriorityScore` is a ranking signal ONLY, not a promised recoverable-clicks forecast, until WAO has first-party historical CTR data to calibrate against.",
+  "positionWindow": {
+    "min": 4,
+    "max": 15
+  },
+  "stats": {
+    "totalOpportunitiesScanned": 20,
+    "inPositionWindow": 19,
+    "skippedForCannibalization": 16,
+    "candidatesFound": 3,
+    "returned": 3
+  },
+  "candidates": [
+    {
+      "query": "קייטרינג בשרי כשר למהדרין",
+      "page": "https://aaasada.com/%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%91%D7%A9%D7%A8%D7%99-%D7%9B%D7%A9%D7%A8-%D7%9C%D7%9E%D7%94%D7%93%D7%A8%D7%99%D7%9F/",
+      "position": 9.2,
+      "impressions": 802,
+      "clicks": 2,
+      "currentCtr": 0.2,
+      "expectedCtrAtPosition": 2.9,
+      "queryType": "long_tail",
+      "ctrGap": 2.7,
+      "directionalPriorityScore": 22,
+      "suggestedTitle": null,
+      "status": "NEEDS_TITLE_COPY",
+      "rank": 1
+    },
+    {
+      "query": "אוכל מוכן אשקלון",
+      "page": "https://aaasada.com/%D7%90%D7%95%D7%9B%D7%9C-%D7%9E%D7%95%D7%9B%D7%9F-%D7%91%D7%90%D7%A9%D7%A7%D7%9C%D7%95%D7%9F/",
+      "position": 7.4,
+      "impressions": 500,
+      "clicks": 6,
+      "currentCtr": 1.2,
+      "expectedCtrAtPosition": 3.9,
+      "queryType": "long_tail",
+      "ctrGap": 2.7,
+      "directionalPriorityScore": 14,
+      "suggestedTitle": null,
+      "status": "NEEDS_TITLE_COPY",
+      "rank": 2
+    },
+    {
+      "query": "אוכל מוכן לראש השנה",
+      "page": "https://aaasada.com/%D7%AA%D7%A4%D7%A8%D7%99%D7%98-%D7%A8%D7%90%D7%A9-%D7%94%D7%A9%D7%A0%D7%94/",
+      "position": 10.8,
+      "impressions": 489,
+      "clicks": 0,
+      "currentCtr": 0,
+      "expectedCtrAtPosition": 1.9,
+      "queryType": "long_tail",
+      "ctrGap": 1.9,
+      "directionalPriorityScore": 9,
+      "suggestedTitle": null,
+      "status": "NEEDS_TITLE_COPY",
+      "rank": 3
+    }
+  ],
+  "skippedForCannibalization": [
+    {
+      "query": "קייטרינג",
+      "page": "https://aaasada.com/",
+      "reasons": [
+        "MULTI_URL"
+      ]
+    },
+    {
+      "query": "קייטרינג לחינה",
+      "page": "https://aaasada.com/%D7%AA%D7%A4%D7%A8%D7%99%D7%98-%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%9C%D7%97%D7%99%D7%A0%D7%94/",
+      "reasons": [
+        "MULTI_URL"
+      ]
+    },
+    {
+      "query": "קייטרינג לאזכרה",
+      "page": "https://aaasada.com/%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%90%D7%95%D7%9B%D7%9C-%D7%9E%D7%95%D7%9B%D7%9F-%D7%9C%D7%90%D7%96%D7%9B%D7%A8%D7%94/",
+      "reasons": [
+        "MULTI_URL"
+      ]
+    },
+    {
+      "query": "קייטרינג לאירועים",
+      "page": "https://aaasada.com/",
+      "reasons": [
+        "MULTI_URL"
+      ]
+    },
+    {
+      "query": "קייטרינג באשדוד",
+      "page": "https://aaasada.com/%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%91%D7%90%D7%A9%D7%93%D7%95%D7%93-%D7%9E%D7%97%D7%99%D7%A8%D7%99%D7%9D/",
+      "reasons": [
+        "MULTI_URL"
+      ]
+    },
+    {
+      "query": "קייטרינג לבר מצווה",
+      "page": "https://aaasada.com/%D7%AA%D7%A4%D7%A8%D7%99%D7%98-%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%9C%D7%91%D7%A8-%D7%9E%D7%A6%D7%95%D7%95%D7%94/",
+      "reasons": [
+        "MULTI_URL"
+      ]
+    },
+    {
+      "query": "קייטרינג בירושלים",
+      "page": "https://aaasada.com/%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%91%D7%99%D7%A8%D7%95%D7%A9%D7%9C%D7%99%D7%9D-%D7%9E%D7%97%D7%99%D7%A8%D7%99%D7%9D/",
+      "reasons": [
+        "MULTI_URL"
+      ]
+    },
+    {
+      "query": "קייטרינג בפתח תקווה",
+      "page": "https://aaasada.com/%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%9C%D7%90%D7%96%D7%9B%D7%A8%D7%95%D7%AA-%D7%91%D7%A4%D7%AA%D7%97-%D7%AA%D7%A7%D7%95%D7%95%D7%94/",
+      "reasons": [
+        "MULTI_URL"
+      ]
+    },
+    {
+      "query": "קייטרינג כשר למהדרין",
+      "page": "https://aaasada.com/%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%91%D7%A9%D7%A8%D7%99-%D7%9B%D7%A9%D7%A8-%D7%9C%D7%9E%D7%94%D7%93%D7%A8%D7%99%D7%9F/",
+      "reasons": [
+        "MULTI_URL"
+      ]
+    },
+    {
+      "query": "קייטרינג לברית",
+      "page": "https://aaasada.com/%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%9C%D7%91%D7%A8%D7%99%D7%AA-%D7%9B%D7%95%D7%9C%D7%9C-%D7%94%D7%92%D7%A9%D7%94/",
+      "reasons": [
+        "MULTI_URL"
+      ]
+    },
+    {
+      "query": "קייטרינג כשר לשבת חתן",
+      "page": "https://aaasada.com/%D7%AA%D7%A4%D7%A8%D7%99%D7%98-%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%9C%D7%A9%D7%91%D7%AA-%D7%97%D7%AA%D7%9F/",
+      "reasons": [
+        "MULTI_URL"
+      ]
+    },
+    {
+      "query": "קייטרינג בשרי לשבת חתן",
+      "page": "https://aaasada.com/%D7%AA%D7%A4%D7%A8%D7%99%D7%98-%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%9C%D7%A9%D7%91%D7%AA-%D7%97%D7%AA%D7%9F/",
+      "reasons": [
+        "MULTI_URL"
+      ]
+    },
+    {
+      "query": "אוכל מוכן כפר סבא",
+      "page": "https://aaasada.com/%D7%90%D7%95%D7%9B%D7%9C-%D7%9E%D7%95%D7%9B%D7%9F-%D7%91%D7%9B%D7%A4%D7%A8-%D7%A1%D7%91%D7%90/",
+      "reasons": [
+        "MULTI_URL"
+      ]
+    },
+    {
+      "query": "קייטרינג בכפר סבא",
+      "page": "https://aaasada.com/%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%91%D7%9B%D7%A4%D7%A8-%D7%A1%D7%91%D7%90/",
+      "reasons": [
+        "MULTI_URL"
+      ]
+    },
+    {
+      "query": "אוכל מוכן באשדוד",
+      "page": "https://aaasada.com/%D7%90%D7%95%D7%9B%D7%9C-%D7%9E%D7%95%D7%9B%D7%9F-%D7%91%D7%90%D7%A9%D7%93%D7%95%D7%93/",
+      "reasons": [
+        "MULTI_URL"
+      ]
+    },
+    {
+      "query": "קייטרינג לראש השנה",
+      "page": "https://aaasada.com/%D7%AA%D7%A4%D7%A8%D7%99%D7%98-%D7%A8%D7%90%D7%A9-%D7%94%D7%A9%D7%A0%D7%94/",
+      "reasons": [
+        "MULTI_URL"
+      ]
+    }
+  ]
+}

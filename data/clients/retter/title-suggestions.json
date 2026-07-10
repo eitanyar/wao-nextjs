@@ -1,0 +1,192 @@
+{
+  "site": "https://www.retter.co.il/",
+  "generatedAt": "2026-07-07T08:53:36.967Z",
+  "sourceFile": "data/clients/retter/pareto.json",
+  "mode": "SUGGEST_ONLY_NO_PUSH_NO_COPY",
+  "ctrCurveSource": "Blended industry-benchmark organic CTR-by-position curve (Backlinko / Advanced Web Ranking style studies), with a flat 45% AI-Overview/Shopping-suppression discount applied to broad/commercial queries (Yonatan seo-strategist review; Ahrefs Dec 2025 + Seer Interactive Sep 2025 AIO-CTR-suppression data). NOT WAO first-party click data. `directionalPriorityScore` is a ranking signal ONLY, not a promised recoverable-clicks forecast, until WAO has first-party historical CTR data to calibrate against.",
+  "positionWindow": {
+    "min": 4,
+    "max": 15
+  },
+  "stats": {
+    "totalOpportunitiesScanned": 20,
+    "inPositionWindow": 20,
+    "skippedForCannibalization": 7,
+    "candidatesFound": 8,
+    "returned": 8
+  },
+  "candidates": [
+    {
+      "query": "מה זה מטאפורה",
+      "page": "https://www.retter.co.il/%D7%9E%D7%98%D7%90%D7%A4%D7%95%D7%A8%D7%95%D7%AA-%D7%95%D7%93%D7%99%D7%9E%D7%95%D7%99%D7%99%D7%9D/",
+      "position": 6.8,
+      "impressions": 561,
+      "clicks": 0,
+      "currentCtr": 0,
+      "expectedCtrAtPosition": 3.9,
+      "queryType": "long_tail",
+      "ctrGap": 3.9,
+      "directionalPriorityScore": 22,
+      "suggestedTitle": null,
+      "status": "NEEDS_TITLE_COPY",
+      "rank": 1
+    },
+    {
+      "query": "סוגי אמונות מגבילות",
+      "page": "https://www.retter.co.il/%D7%A9%D7%99%D7%A0%D7%95%D7%99-%D7%90%D7%9E%D7%95%D7%A0%D7%95%D7%AA-%D7%90%D7%9E%D7%95%D7%A0%D7%95%D7%AA-%D7%9E%D7%92%D7%91%D7%99%D7%9C%D7%95%D7%AA/",
+      "position": 5.1,
+      "impressions": 339,
+      "clicks": 1,
+      "currentCtr": 0.3,
+      "expectedCtrAtPosition": 6.3,
+      "queryType": "long_tail",
+      "ctrGap": 6,
+      "directionalPriorityScore": 20,
+      "suggestedTitle": null,
+      "status": "NEEDS_TITLE_COPY",
+      "rank": 2
+    },
+    {
+      "query": "מטאפורה פירוש",
+      "page": "https://www.retter.co.il/%D7%9E%D7%98%D7%90%D7%A4%D7%95%D7%A8%D7%95%D7%AA-%D7%95%D7%93%D7%99%D7%9E%D7%95%D7%99%D7%99%D7%9D/",
+      "position": 7.4,
+      "impressions": 950,
+      "clicks": 1,
+      "currentCtr": 0.1,
+      "expectedCtrAtPosition": 2.1,
+      "queryType": "broad_commercial",
+      "ctrGap": 2,
+      "directionalPriorityScore": 19,
+      "suggestedTitle": null,
+      "status": "NEEDS_TITLE_COPY",
+      "rank": 3
+    },
+    {
+      "query": "זה לא פייר",
+      "page": "https://www.retter.co.il/%D7%9E%D7%94-%D7%9C%D7%A2%D7%A9%D7%95%D7%AA-%D7%9B%D7%A9%D7%94%D7%99%D7%9C%D7%93-%D7%90%D7%95%D7%9E%D7%A8-%D7%96%D7%94-%D7%9C%D7%90-%D7%A4%D7%99%D7%99%D7%A8/",
+      "position": 8.1,
+      "impressions": 316,
+      "clicks": 0,
+      "currentCtr": 0,
+      "expectedCtrAtPosition": 3.3,
+      "queryType": "long_tail",
+      "ctrGap": 3.3,
+      "directionalPriorityScore": 10,
+      "suggestedTitle": null,
+      "status": "NEEDS_TITLE_COPY",
+      "rank": 4
+    },
+    {
+      "query": "מטאפורה",
+      "page": "https://www.retter.co.il/%D7%9E%D7%98%D7%90%D7%A4%D7%95%D7%A8%D7%95%D7%AA-%D7%95%D7%93%D7%99%D7%9E%D7%95%D7%99%D7%99%D7%9D/",
+      "position": 6.5,
+      "impressions": 451,
+      "clicks": 0,
+      "currentCtr": 0,
+      "expectedCtrAtPosition": 2.1,
+      "queryType": "broad_commercial",
+      "ctrGap": 2.1,
+      "directionalPriorityScore": 9,
+      "suggestedTitle": null,
+      "status": "NEEDS_TITLE_COPY",
+      "rank": 5
+    },
+    {
+      "query": "תסמונת המתחזה",
+      "page": "https://www.retter.co.il/%D7%90%D7%99%D7%9A-%D7%9C%D7%94%D7%AA%D7%92%D7%91%D7%A8-%D7%A2%D7%9C-%D7%AA%D7%A1%D7%9E%D7%95%D7%A0%D7%AA-%D7%94%D7%9E%D7%AA%D7%97%D7%96%D7%94-%D7%95%D7%9C%D7%90%D7%9E%D7%A5-%D7%90%D7%AA-%D7%94%D7%90/",
+      "position": 7,
+      "impressions": 313,
+      "clicks": 1,
+      "currentCtr": 0.3,
+      "expectedCtrAtPosition": 2.1,
+      "queryType": "broad_commercial",
+      "ctrGap": 1.8,
+      "directionalPriorityScore": 6,
+      "suggestedTitle": null,
+      "status": "NEEDS_TITLE_COPY",
+      "rank": 6
+    },
+    {
+      "query": "משעמם",
+      "page": "https://www.retter.co.il/%D7%90%D7%9E%D7%90-%D7%9E%D7%A9%D7%A2%D7%9E%D7%9D-%D7%9C%D7%99-%D7%9E%D7%94-%D7%A2%D7%95%D7%A9%D7%99%D7%9D-%D7%90%D7%99%D7%9A-%D7%94%D7%95%D7%A4%D7%9B%D7%99%D7%9D-%D7%90%D7%AA-%D7%94/",
+      "position": 10.2,
+      "impressions": 392,
+      "clicks": 2,
+      "currentCtr": 0.5,
+      "expectedCtrAtPosition": 1.4,
+      "queryType": "broad_commercial",
+      "ctrGap": 0.9,
+      "directionalPriorityScore": 4,
+      "suggestedTitle": null,
+      "status": "NEEDS_TITLE_COPY",
+      "rank": 7
+    },
+    {
+      "query": "תת מודע",
+      "page": "https://www.retter.co.il/nlp-%D7%AA%D7%AA-%D7%9E%D7%95%D7%93%D7%A2/",
+      "position": 10.2,
+      "impressions": 392,
+      "clicks": 3,
+      "currentCtr": 0.8,
+      "expectedCtrAtPosition": 1.4,
+      "queryType": "broad_commercial",
+      "ctrGap": 0.6,
+      "directionalPriorityScore": 2,
+      "suggestedTitle": null,
+      "status": "NEEDS_TITLE_COPY",
+      "rank": 8
+    }
+  ],
+  "skippedForCannibalization": [
+    {
+      "query": "nlp",
+      "page": "https://www.retter.co.il/petah-tikva-branch/",
+      "reasons": [
+        "MULTI_URL",
+        "HEAD_TERM_ON_LOCATION"
+      ]
+    },
+    {
+      "query": "nlp",
+      "page": "https://www.retter.co.il/kiryat-bialik-branch/",
+      "reasons": [
+        "MULTI_URL"
+      ]
+    },
+    {
+      "query": "קורס nlp אונליין",
+      "page": "https://www.retter.co.il/%D7%9C%D7%99%D7%9E%D7%95%D7%93%D7%99-nlp-%D7%90%D7%95%D7%A0%D7%9C%D7%99%D7%99%D7%9F/",
+      "reasons": [
+        "MULTI_URL"
+      ]
+    },
+    {
+      "query": "לימודי nlp",
+      "page": "https://www.retter.co.il/ness-ziona-branch/",
+      "reasons": [
+        "MULTI_URL"
+      ]
+    },
+    {
+      "query": "nlp לילדים",
+      "page": "https://www.retter.co.il/%D7%98%D7%99%D7%A4%D7%95%D7%9C-nlp-%D7%9C%D7%99%D7%9C%D7%93%D7%99%D7%9D/",
+      "reasons": [
+        "MULTI_URL"
+      ]
+    },
+    {
+      "query": "קורס nlp",
+      "page": "https://www.retter.co.il/ness-ziona-branch/",
+      "reasons": [
+        "MULTI_URL"
+      ]
+    },
+    {
+      "query": "קורס דמיון מודרך",
+      "page": "https://www.retter.co.il/%D7%93%D7%9E%D7%99%D7%95%D7%9F-%D7%9E%D7%95%D7%93%D7%A8%D7%9A/",
+      "reasons": [
+        "MULTI_URL"
+      ]
+    }
+  ]
+}

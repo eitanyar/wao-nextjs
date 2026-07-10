@@ -1,0 +1,460 @@
+{
+  "site": "https://www.retter.co.il/",
+  "generatedAt": "2026-07-07T08:53:32.136Z",
+  "period": {
+    "startDate": "2026-04-08",
+    "endDate": "2026-07-07",
+    "days": 90
+  },
+  "totalInRange": 618,
+  "opportunities": [
+    {
+      "rank": 1,
+      "query": "מטאפורה פירוש",
+      "rankingUrl": "https://www.retter.co.il/%D7%9E%D7%98%D7%90%D7%A4%D7%95%D7%A8%D7%95%D7%AA-%D7%95%D7%93%D7%99%D7%9E%D7%95%D7%99%D7%99%D7%9D/",
+      "implementationMode": "enhance",
+      "position": 7.4,
+      "impressions": 950,
+      "clicks": 1,
+      "ctr": 0.1,
+      "score": 17698,
+      "intentScore": 3,
+      "intentFlag": "review",
+      "intentReason": "classification failed",
+      "priority": "MEDIUM",
+      "actionType": "faq_block"
+    },
+    {
+      "rank": 2,
+      "query": "nlp",
+      "rankingUrl": "https://www.retter.co.il/petah-tikva-branch/",
+      "implementationMode": "enhance",
+      "position": 7.3,
+      "impressions": 932,
+      "clicks": 3,
+      "ctr": 0.3,
+      "score": 17444,
+      "intentScore": 3,
+      "intentFlag": "review",
+      "intentReason": "classification failed",
+      "priority": "MEDIUM",
+      "actionType": "faq_block",
+      "cannibalFlag": "REVIEW",
+      "cannibalReasons": [
+        "MULTI_URL",
+        "HEAD_TERM_ON_LOCATION"
+      ],
+      "cannibalUrls": [
+        {
+          "url": "https://www.retter.co.il/nlp/",
+          "impressions": 11630,
+          "position": 2.7
+        },
+        {
+          "url": "https://www.retter.co.il/kiryat-bialik-branch/",
+          "impressions": 652,
+          "position": 9.6
+        }
+      ]
+    },
+    {
+      "rank": 3,
+      "query": "קונכיית הקסם",
+      "rankingUrl": "https://www.retter.co.il/library/%D7%A7%D7%95%D7%A0%D7%9B%D7%99%D7%95%D7%AA-%D7%94%D7%A7%D7%A1%D7%9D/",
+      "implementationMode": "enhance",
+      "position": 6.1,
+      "impressions": 781,
+      "clicks": 52,
+      "ctr": 6.7,
+      "score": 15542,
+      "intentScore": 3,
+      "intentFlag": "review",
+      "intentReason": "classification failed",
+      "priority": "MEDIUM",
+      "actionType": "faq_block"
+    },
+    {
+      "rank": 4,
+      "query": "hsp",
+      "rankingUrl": "https://www.retter.co.il/library/%D7%90%D7%A0%D7%A9%D7%99%D7%9D-%D7%91%D7%A2%D7%9C%D7%99-%D7%A8%D7%92%D7%99%D7%A9%D7%95%D7%AA-%D7%92%D7%91%D7%95%D7%94%D7%94-highly-sensitive-person-h-s-p/",
+      "implementationMode": "enhance",
+      "position": 9.4,
+      "impressions": 723,
+      "clicks": 10,
+      "ctr": 1.4,
+      "score": 11987,
+      "intentScore": 3,
+      "intentFlag": "review",
+      "intentReason": "classification failed",
+      "priority": "MEDIUM",
+      "actionType": "faq_block"
+    },
+    {
+      "rank": 5,
+      "query": "מה זה מטאפורה",
+      "rankingUrl": "https://www.retter.co.il/%D7%9E%D7%98%D7%90%D7%A4%D7%95%D7%A8%D7%95%D7%AA-%D7%95%D7%93%D7%99%D7%9E%D7%95%D7%99%D7%99%D7%9D/",
+      "implementationMode": "enhance",
+      "position": 6.8,
+      "impressions": 561,
+      "clicks": 0,
+      "ctr": 0,
+      "score": 10762,
+      "intentScore": 3,
+      "intentFlag": "review",
+      "intentReason": "classification failed",
+      "priority": "MEDIUM",
+      "actionType": "definition_box"
+    },
+    {
+      "rank": 6,
+      "query": "nlp",
+      "rankingUrl": "https://www.retter.co.il/kiryat-bialik-branch/",
+      "implementationMode": "enhance",
+      "position": 9.6,
+      "impressions": 652,
+      "clicks": 0,
+      "ctr": 0,
+      "score": 10681,
+      "intentScore": 3,
+      "intentFlag": "review",
+      "intentReason": "classification failed",
+      "priority": "MEDIUM",
+      "actionType": "faq_block",
+      "cannibalFlag": "REVIEW",
+      "cannibalReasons": [
+        "MULTI_URL"
+      ],
+      "cannibalUrls": [
+        {
+          "url": "https://www.retter.co.il/nlp/",
+          "impressions": 11630,
+          "position": 2.7
+        },
+        {
+          "url": "https://www.retter.co.il/petah-tikva-branch/",
+          "impressions": 932,
+          "position": 7.3
+        }
+      ]
+    },
+    {
+      "rank": 7,
+      "query": "קורס nlp אונליין",
+      "rankingUrl": "https://www.retter.co.il/%D7%9C%D7%99%D7%9E%D7%95%D7%93%D7%99-nlp-%D7%90%D7%95%D7%A0%D7%9C%D7%99%D7%99%D7%9F/",
+      "implementationMode": "enhance",
+      "position": 6.6,
+      "impressions": 488,
+      "clicks": 8,
+      "ctr": 1.6,
+      "score": 9468,
+      "intentScore": 3,
+      "intentFlag": "review",
+      "intentReason": "classification failed",
+      "priority": "MEDIUM",
+      "actionType": "faq_block",
+      "cannibalFlag": "REVIEW",
+      "cannibalReasons": [
+        "MULTI_URL"
+      ],
+      "cannibalUrls": [
+        {
+          "url": "https://www.retter.co.il/%D7%A7%D7%95%D7%A8%D7%A1-nlp-%D7%91%D7%97%D7%99%D7%A0%D7%9D/",
+          "impressions": 64,
+          "position": 21.9
+        }
+      ]
+    },
+    {
+      "rank": 8,
+      "query": "לימודי nlp",
+      "rankingUrl": "https://www.retter.co.il/ness-ziona-branch/",
+      "implementationMode": "enhance",
+      "position": 4.5,
+      "impressions": 430,
+      "clicks": 1,
+      "ctr": 0.2,
+      "score": 9248,
+      "intentScore": 3,
+      "intentFlag": "review",
+      "intentReason": "classification failed",
+      "priority": "HIGH",
+      "actionType": "faq_block",
+      "cannibalFlag": "REVIEW",
+      "cannibalReasons": [
+        "MULTI_URL"
+      ],
+      "cannibalUrls": [
+        {
+          "url": "https://www.retter.co.il/study/",
+          "impressions": 697,
+          "position": 20.4
+        },
+        {
+          "url": "https://www.retter.co.il/",
+          "impressions": 353,
+          "position": 28.8
+        },
+        {
+          "url": "https://www.retter.co.il/nlp/",
+          "impressions": 290,
+          "position": 1.5
+        }
+      ]
+    },
+    {
+      "rank": 9,
+      "query": "מטאפורה",
+      "rankingUrl": "https://www.retter.co.il/%D7%9E%D7%98%D7%90%D7%A4%D7%95%D7%A8%D7%95%D7%AA-%D7%95%D7%93%D7%99%D7%9E%D7%95%D7%99%D7%99%D7%9D/",
+      "implementationMode": "enhance",
+      "position": 6.5,
+      "impressions": 451,
+      "clicks": 0,
+      "ctr": 0,
+      "score": 8794,
+      "intentScore": 3,
+      "intentFlag": "review",
+      "intentReason": "classification failed",
+      "priority": "MEDIUM",
+      "actionType": "faq_block"
+    },
+    {
+      "rank": 10,
+      "query": "nlp לילדים",
+      "rankingUrl": "https://www.retter.co.il/%D7%98%D7%99%D7%A4%D7%95%D7%9C-nlp-%D7%9C%D7%99%D7%9C%D7%93%D7%99%D7%9D/",
+      "implementationMode": "enhance",
+      "position": 4.6,
+      "impressions": 378,
+      "clicks": 3,
+      "ctr": 0.8,
+      "score": 8081,
+      "intentScore": 3,
+      "intentFlag": "review",
+      "intentReason": "classification failed",
+      "priority": "HIGH",
+      "actionType": "faq_block",
+      "cannibalFlag": "REVIEW",
+      "cannibalReasons": [
+        "MULTI_URL"
+      ],
+      "cannibalUrls": [
+        {
+          "url": "https://www.retter.co.il/%D7%90%D7%99%D7%9A-%D7%9C%D7%A9%D7%9B%D7%A0%D7%A2-%D7%99%D7%9C%D7%93-%D7%9C%D7%A2%D7%91%D7%95%D7%A8-%D7%98%D7%99%D7%A4%D7%95%D7%9C-nlp/",
+          "impressions": 179,
+          "position": 31.9
+        },
+        {
+          "url": "https://www.retter.co.il/kids/",
+          "impressions": 93,
+          "position": 70.4
+        },
+        {
+          "url": "https://www.retter.co.il/%D7%98%D7%99%D7%A4%D7%95%D7%9C-nlp-%D7%9C%D7%A0%D7%95%D7%A2%D7%A8/",
+          "impressions": 53,
+          "position": 82.9
+        }
+      ]
+    },
+    {
+      "rank": 11,
+      "query": "איילה מצגר",
+      "rankingUrl": "https://www.retter.co.il/%D7%94%D7%9B%D7%90%D7%91-%D7%A9%D7%94%D7%A4%D7%9A-%D7%9C%D7%A9%D7%9C%D7%99%D7%97%D7%95%D7%AA/",
+      "implementationMode": "enhance",
+      "position": 5.7,
+      "impressions": 394,
+      "clicks": 10,
+      "ctr": 2.5,
+      "score": 7996,
+      "intentScore": 3,
+      "intentFlag": "review",
+      "intentReason": "classification failed",
+      "priority": "HIGH",
+      "actionType": "faq_block"
+    },
+    {
+      "rank": 12,
+      "query": "סוגי אמונות מגבילות",
+      "rankingUrl": "https://www.retter.co.il/%D7%A9%D7%99%D7%A0%D7%95%D7%99-%D7%90%D7%9E%D7%95%D7%A0%D7%95%D7%AA-%D7%90%D7%9E%D7%95%D7%A0%D7%95%D7%AA-%D7%9E%D7%92%D7%91%D7%99%D7%9C%D7%95%D7%AA/",
+      "implementationMode": "enhance",
+      "position": 5.1,
+      "impressions": 339,
+      "clicks": 1,
+      "ctr": 0.3,
+      "score": 7090,
+      "intentScore": 3,
+      "intentFlag": "review",
+      "intentReason": "classification failed",
+      "priority": "HIGH",
+      "actionType": "faq_block"
+    },
+    {
+      "rank": 13,
+      "query": "דמיון מודרך",
+      "rankingUrl": "https://www.retter.co.il/%D7%93%D7%9E%D7%99%D7%95%D7%9F-%D7%9E%D7%95%D7%93%D7%A8%D7%9A/",
+      "implementationMode": "enhance",
+      "position": 10.4,
+      "impressions": 427,
+      "clicks": 9,
+      "ctr": 2.1,
+      "score": 6658,
+      "intentScore": 3,
+      "intentFlag": "review",
+      "intentReason": "classification failed",
+      "priority": "LOW",
+      "actionType": "faq_block"
+    },
+    {
+      "rank": 14,
+      "query": "קורס nlp",
+      "rankingUrl": "https://www.retter.co.il/ness-ziona-branch/",
+      "implementationMode": "enhance",
+      "position": 5.2,
+      "impressions": 314,
+      "clicks": 1,
+      "ctr": 0.3,
+      "score": 6521,
+      "intentScore": 3,
+      "intentFlag": "review",
+      "intentReason": "classification failed",
+      "priority": "HIGH",
+      "actionType": "faq_block",
+      "cannibalFlag": "REVIEW",
+      "cannibalReasons": [
+        "MULTI_URL"
+      ],
+      "cannibalUrls": [
+        {
+          "url": "https://www.retter.co.il/study/",
+          "impressions": 1034,
+          "position": 26.6
+        },
+        {
+          "url": "https://www.retter.co.il/%D7%90%D7%99%D7%A4%D7%94-%D7%9C%D7%9C%D7%9E%D7%95%D7%93-nlp/",
+          "impressions": 433,
+          "position": 29.1
+        },
+        {
+          "url": "https://www.retter.co.il/nlp/",
+          "impressions": 335,
+          "position": 3.2
+        }
+      ]
+    },
+    {
+      "rank": 15,
+      "query": "תת מודע",
+      "rankingUrl": "https://www.retter.co.il/nlp-%D7%AA%D7%AA-%D7%9E%D7%95%D7%93%D7%A2/",
+      "implementationMode": "enhance",
+      "position": 10.2,
+      "impressions": 392,
+      "clicks": 3,
+      "ctr": 0.8,
+      "score": 6207,
+      "intentScore": 3,
+      "intentFlag": "review",
+      "intentReason": "classification failed",
+      "priority": "LOW",
+      "actionType": "faq_block"
+    },
+    {
+      "rank": 16,
+      "query": "משעמם",
+      "rankingUrl": "https://www.retter.co.il/%D7%90%D7%9E%D7%90-%D7%9E%D7%A9%D7%A2%D7%9E%D7%9D-%D7%9C%D7%99-%D7%9E%D7%94-%D7%A2%D7%95%D7%A9%D7%99%D7%9D-%D7%90%D7%99%D7%9A-%D7%94%D7%95%D7%A4%D7%9B%D7%99%D7%9D-%D7%90%D7%AA-%D7%94/",
+      "implementationMode": "enhance",
+      "position": 10.2,
+      "impressions": 392,
+      "clicks": 2,
+      "ctr": 0.5,
+      "score": 6183,
+      "intentScore": 3,
+      "intentFlag": "review",
+      "intentReason": "classification failed",
+      "priority": "LOW",
+      "actionType": "faq_block"
+    },
+    {
+      "rank": 17,
+      "query": "קורס דמיון מודרך",
+      "rankingUrl": "https://www.retter.co.il/%D7%93%D7%9E%D7%99%D7%95%D7%9F-%D7%9E%D7%95%D7%93%D7%A8%D7%9A/",
+      "implementationMode": "enhance",
+      "position": 7.7,
+      "impressions": 327,
+      "clicks": 2,
+      "ctr": 0.6,
+      "score": 5990,
+      "intentScore": 3,
+      "intentFlag": "review",
+      "intentReason": "classification failed",
+      "priority": "MEDIUM",
+      "actionType": "faq_block",
+      "cannibalFlag": "REVIEW",
+      "cannibalReasons": [
+        "MULTI_URL"
+      ],
+      "cannibalUrls": [
+        {
+          "url": "https://www.retter.co.il/",
+          "impressions": 205,
+          "position": 38.5
+        },
+        {
+          "url": "https://www.retter.co.il/nlp-%D7%9E%D7%93%D7%99%D7%98%D7%A6%D7%99%D7%94-%D7%95%D7%93%D7%9E%D7%99%D7%95%D7%9F-%D7%9E%D7%95%D7%93%D7%A8%D7%9A/",
+          "impressions": 147,
+          "position": 82.2
+        },
+        {
+          "url": "https://www.retter.co.il/%D7%9E%D7%93%D7%A8%D7%99%D7%9A-%D7%9C%D7%93%D7%9E%D7%99%D7%95%D7%9F-%D7%9E%D7%95%D7%93%D7%A8%D7%9A/",
+          "impressions": 60,
+          "position": 92.1
+        }
+      ]
+    },
+    {
+      "rank": 18,
+      "query": "תסמונת המתחזה",
+      "rankingUrl": "https://www.retter.co.il/%D7%90%D7%99%D7%9A-%D7%9C%D7%94%D7%AA%D7%92%D7%91%D7%A8-%D7%A2%D7%9C-%D7%AA%D7%A1%D7%9E%D7%95%D7%A0%D7%AA-%D7%94%D7%9E%D7%AA%D7%97%D7%96%D7%94-%D7%95%D7%9C%D7%90%D7%9E%D7%A5-%D7%90%D7%AA-%D7%94%D7%90/",
+      "implementationMode": "enhance",
+      "position": 7,
+      "impressions": 313,
+      "clicks": 1,
+      "ctr": 0.3,
+      "score": 5955,
+      "intentScore": 3,
+      "intentFlag": "review",
+      "intentReason": "classification failed",
+      "priority": "MEDIUM",
+      "actionType": "faq_block"
+    },
+    {
+      "rank": 19,
+      "query": "אמונות מגבילות",
+      "rankingUrl": "https://www.retter.co.il/%D7%A9%D7%99%D7%A0%D7%95%D7%99-%D7%90%D7%9E%D7%95%D7%A0%D7%95%D7%AA-%D7%90%D7%9E%D7%95%D7%A0%D7%95%D7%AA-%D7%9E%D7%92%D7%91%D7%99%D7%9C%D7%95%D7%AA/",
+      "implementationMode": "enhance",
+      "position": 7.6,
+      "impressions": 310,
+      "clicks": 6,
+      "ctr": 1.9,
+      "score": 5710,
+      "intentScore": 3,
+      "intentFlag": "review",
+      "intentReason": "classification failed",
+      "priority": "MEDIUM",
+      "actionType": "faq_block"
+    },
+    {
+      "rank": 20,
+      "query": "זה לא פייר",
+      "rankingUrl": "https://www.retter.co.il/%D7%9E%D7%94-%D7%9C%D7%A2%D7%A9%D7%95%D7%AA-%D7%9B%D7%A9%D7%94%D7%99%D7%9C%D7%93-%D7%90%D7%95%D7%9E%D7%A8-%D7%96%D7%94-%D7%9C%D7%90-%D7%A4%D7%99%D7%99%D7%A8/",
+      "implementationMode": "enhance",
+      "position": 8.1,
+      "impressions": 316,
+      "clicks": 0,
+      "ctr": 0,
+      "score": 5648,
+      "intentScore": 3,
+      "intentFlag": "review",
+      "intentReason": "classification failed",
+      "priority": "MEDIUM",
+      "actionType": "faq_block"
+    }
+  ]
+}

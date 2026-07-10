@@ -25,6 +25,14 @@ export const SILOS: Record<string, Silo> = {
       { label: "יועץ SEO",             href: "/seo/consulting",         icon: "🎯", badge: "ייעוץ"  },
     ],
   },
+  "/geo": {
+    label: "סדרת GEO",
+    hub: { label: "GEO", href: "/geo", icon: "🤖" },
+    spokes: [
+      { label: "בדיקת נראות ב-AI", href: "/geo/audit", icon: "🔎", badge: "בדיקה חינם" },
+      { label: "סריקה מיידית", href: "/geo/scan", icon: "⚡", badge: "מיידי" },
+    ],
+  },
 };
 
 function getSilo(currentPath: string): { silo: Silo; isHub: boolean } | null {

@@ -1,0 +1,102 @@
+{
+  "site": "https://aaasada.com/",
+  "generatedAt": "2026-07-07T13:52:12.575Z",
+  "period": {
+    "startDate": "2026-04-08",
+    "endDate": "2026-07-07",
+    "days": 90
+  },
+  "positionWindow": {
+    "minPos": 1,
+    "maxPos": 3
+  },
+  "minImpressionsThreshold": 100,
+  "minClicksThreshold": 5,
+  "thresholdNote": "Dror's (ppc-strategist) real v1 brief: position ≤3 AND impressions ≥100 AND clicks ≥5 over trailing 90 days, combined AND filter — see script comment for rationale.",
+  "brandTokens": [
+    "aaasada",
+    "קייטרינג",
+    "לאירועים",
+    "אוכל"
+  ],
+  "brandTokensNote": "Heuristic v1 tokens applied (domain root + homepage title words). Flag-only, not exclusion — see script comment for known transliteration limitation.",
+  "totalInRange": 4,
+  "distinctLandingPageCount": 4,
+  "sitelinksViable": true,
+  "sitelinksViableNote": "Informational only (v1 concession per Lior's deferred-sitelinks decision) — NOT sitelink generation. Counts distinct 'page' URLs across this run's opportunity list; Google's stated minimum distinct URLs for sitelinks to be eligible to show is 4. Not used by this script for any logic; recorded for future v2 input.",
+  "opportunities": [
+    {
+      "rank": 1,
+      "query": "קייטרינג לשבת חתן עם מלצרים",
+      "page": "https://aaasada.com/%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%9C%D7%A9%D7%91%D7%AA-%D7%97%D7%AA%D7%9F-%D7%9B%D7%95%D7%9C%D7%9C-%D7%9E%D7%9C%D7%A6%D7%A8%D7%99%D7%9D/",
+      "position": 2.3,
+      "impressions": 514,
+      "clicks": 30,
+      "ctr": 5.8,
+      "score": 514,
+      "ctr_flag": "below_avg_for_position",
+      "brand_match": "heuristic_v1",
+      "brand_match_token": "קייטרינג",
+      "recommendedMatchType": "phrase",
+      "recommendedDailyBudgetILS": 25,
+      "recommendedBiddingStrategy": "manual_cpc_or_maximize_clicks",
+      "draftHeadlines": [],
+      "draftDescriptions": [],
+      "draftStatus": "PENDING_BUSINESS_DETAILS"
+    },
+    {
+      "rank": 2,
+      "query": "קייטרינג טעם מהודר",
+      "page": "https://aaasada.com/",
+      "position": 2,
+      "impressions": 145,
+      "clicks": 35,
+      "ctr": 24.1,
+      "score": 145,
+      "brand_match": "heuristic_v1",
+      "brand_match_token": "קייטרינג",
+      "recommendedMatchType": "phrase",
+      "recommendedDailyBudgetILS": 25,
+      "recommendedBiddingStrategy": "manual_cpc_or_maximize_clicks",
+      "draftHeadlines": [],
+      "draftDescriptions": [],
+      "draftStatus": "PENDING_BUSINESS_DETAILS"
+    },
+    {
+      "rank": 3,
+      "query": "קייטרינג טעם מהודר",
+      "page": "https://aaasada.com/%D7%AA%D7%A4%D7%A8%D7%99%D7%98-%D7%90%D7%95%D7%9B%D7%9C-%D7%9E%D7%95%D7%9B%D7%9F-%D7%9C%D7%90%D7%99%D7%A8%D7%95%D7%A2%D7%99%D7%9D/",
+      "position": 1.9,
+      "impressions": 140,
+      "clicks": 7,
+      "ctr": 5,
+      "score": 140,
+      "ctr_flag": "below_avg_for_position",
+      "brand_match": "heuristic_v1",
+      "brand_match_token": "קייטרינג",
+      "recommendedMatchType": "phrase",
+      "recommendedDailyBudgetILS": 25,
+      "recommendedBiddingStrategy": "manual_cpc_or_maximize_clicks",
+      "draftHeadlines": [],
+      "draftDescriptions": [],
+      "draftStatus": "PENDING_BUSINESS_DETAILS"
+    },
+    {
+      "rank": 4,
+      "query": "סעודת סיום שבעה תפריט",
+      "page": "https://aaasada.com/%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%90%D7%95%D7%9B%D7%9C-%D7%9E%D7%95%D7%9B%D7%9F-%D7%9C%D7%90%D7%96%D7%9B%D7%A8%D7%94/",
+      "position": 1.6,
+      "impressions": 108,
+      "clicks": 12,
+      "ctr": 11.1,
+      "score": 108,
+      "recommendedMatchType": "phrase",
+      "recommendedDailyBudgetILS": 25,
+      "recommendedBiddingStrategy": "manual_cpc_or_maximize_clicks",
+      "draftHeadlines": [],
+      "draftDescriptions": [],
+      "draftStatus": "PENDING_BUSINESS_DETAILS"
+    }
+  ],
+  "disclaimer": "READ-ONLY GSC analysis. No Google Ads API calls made. draftHeadlines/draftDescriptions are fast, deterministic, template-based rough drafts generated from client.json (businessNiche/usp) — NOT Tamar's polished ad copy, and not launch-ready. draftStatus is PENDING_BUSINESS_DETAILS where those client.json fields are still placeholders."
+}

@@ -32,6 +32,18 @@ export async function verifyAdminSecret(entered: string): Promise<boolean> {
   return entered === secret;
 }
 
+/**
+ * Master-admin username+password gate (/admin/login) — separate credential
+ * pair from ADMIN_SECRET, but issues the SAME wao-admin token/cookie. Used
+ * for Eitan's cross-client login-as-any-client flow (/admin/clients).
+ */
+export async function verifyAdminCredentials(username: string, password: string): Promise<boolean> {
+  const expectedUser = process.env.ADMIN_USERNAME ?? '';
+  const expectedPass = process.env.ADMIN_PASSWORD ?? '';
+  if (!expectedUser || !expectedPass) return false;
+  return username === expectedUser && password === expectedPass;
+}
+
 export async function createAdminToken(): Promise<string> {
   const secret = getAdminSecret();
   const payload = `${Date.now() + EXPIRY_MS}`;

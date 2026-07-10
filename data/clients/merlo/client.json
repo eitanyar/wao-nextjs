@@ -1,0 +1,22 @@
+{
+  "clientId": "merlo",
+  "siteUrl": "https://www.merlo-c.co.il/",
+  "cmsType": "unknown",
+  "businessNiche": "קייטרינג יוקרתי ואירועים יוקרתיים — חתונות ואירועי שיא, בנוסף קייטרינג לחברות (מגזר עסקי בעל תקציב גבוה)",
+  "topService": "קייטרינג פרימיום לחתונות ולאירועי שיא; קייטרינג עסקי לחברות",
+  "targetLocation": "unknown — to be assessed",
+  "usp": "מיצוב יוקרתי ואיכותי — ללקוחות שמשקיעים יותר באירועי שיא (חתונות) ולעסקים עם תקציב קייטרינג גבוה",
+  "clientQuestions": "",
+  "exclusions": "",
+  "approvalContact": "Dina",
+  "approvalWhatsapp": "972526148860",
+  "tone": "unknown — to be assessed",
+  "pin": "3807",
+  "entitlements": [
+    "ads-overlap:internal",
+    "title-bot:internal",
+    "pareto:internal",
+    "anomaly:internal",
+    "advisor:internal"
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "clientId": "aasada",
+  "siteUrl": "https://aaasada.com/",
+  "cmsType": "next.js (static export, Cloudflare Pages)",
+  "businessNiche": "Catering — small business in financial difficulty, low order volume. High-priority client for Eitan personally.",
+  "topService": "unknown — to be assessed",
+  "targetLocation": "unknown — to be assessed",
+  "usp": "unknown — to be assessed",
+  "clientQuestions": "",
+  "exclusions": "",
+  "approvalContact": "Dina",
+  "approvalWhatsapp": "972526148860",
+  "tone": "unknown — to be assessed",
+  "pin": "4247",
+  "entitlements": [
+    "ads-overlap:internal",
+    "title-bot:internal",
+    "pareto:internal",
+    "anomaly:internal",
+    "advisor:internal"
+  ]
+}

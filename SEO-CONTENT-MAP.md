@@ -107,3 +107,21 @@ When a WP site dump arrives:
 ---
 
 _Counts: Technical 16 · On-Page 9 · Content 12 · Links 7 · Performance 7 · Algorithms 10 · AI 7 · Local 4 · International 4 · Tools 5 = **81 knowledge** + **6 /seo** = **87 URLs**._
+
+---
+
+## 6. Lead-magnet tool pair — GEO cluster (2026-07-07, Yonatan)
+
+Two free public tools now sit in the AI/GEO cluster, deliberately split by depth/friction — not
+competing:
+
+| URL | Mechanism | Friction | Data source | Depth |
+|---|---|---|---|---|
+| `/geo/scan` *(new, spec below)* | Instant public crawl of 5-10 pages | **Zero** — URL only, no form, no login | Live page fetch only (no OAuth) | Shallow, structural/heuristic signals |
+| `/geo/audit` *(existing)* | Lead form + WAO-run analysis | **Medium** — leaves contact + grants read-only GSC access | Real Search Console impressions/queries | Deep, real-query-level opportunities |
+
+Explicit differentiator to preserve: `/geo/scan` = "instant self-serve signal check anyone can run
+right now"; `/geo/audit` = "the real analysis against your actual search data, done by us." Do not
+let `/geo/scan` grow GSC-dependent checks — that's `/geo/audit`'s job. Do not let `/geo/audit`'s
+copy start competing on "instant" — it should lean into "real data, done for you, worth the wait."
+Cross-link both directions (see full spec delivered 2026-07-07 to Eitan-Dev/Tamar for build details).

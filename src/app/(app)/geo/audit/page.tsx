@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { renderMixed } from "@/lib/bidi";
+import SiloNav from "@/components/SiloNav";
 
 const CANONICAL = "https://www.wao.co.il/geo/audit";
 
@@ -76,6 +77,8 @@ export default function GeoAuditPage() {
         <div aria-hidden style={{ position: "absolute", inset: 0, background: "radial-gradient(ellipse 70% 55% at 50% 0%, rgba(74,227,181,0.08) 0%, transparent 70%)", pointerEvents: "none" }} />
         <div className="hero-grid" />
         <div className="wao-container" style={{ position: "relative", zIndex: 1, maxWidth: "860px" }}>
+          <SiloNav currentPath="/geo/audit" />
+
           <p className="badge" style={{ marginBottom: "28px" }}>
             <span className="badge-dot" />
             {renderMixed("GEO · בדיקה חינמית")}
@@ -107,6 +110,13 @@ export default function GeoAuditPage() {
           >
             {renderMixed("תשאיר פרטים ותקבל את 3 ההזדמנויות שלך ←")}
           </a>
+
+          <p style={{ marginTop: "14px", fontSize: "0.9rem", color: "var(--muted)", fontFamily: "var(--font-body), sans-serif" }}>
+            {renderMixed("עוד לא בטוח? ")}
+            <Link href="/geo/scan" style={{ color: "var(--accent)" }}>
+              {renderMixed("תתחיל מהסריקה החינמית והמיידית — בלי להתחבר ל-Search Console ובלי למסור פרטים.")}
+            </Link>
+          </p>
 
           <p style={{ marginTop: "18px", fontSize: "0.85rem", color: "var(--muted)", fontFamily: "var(--font-body), sans-serif" }}>
             {renderMixed(

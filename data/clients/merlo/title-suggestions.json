@@ -1,0 +1,159 @@
+{
+  "site": "https://www.merlo-c.co.il/",
+  "generatedAt": "2026-07-07T08:54:59.211Z",
+  "sourceFile": "data/clients/merlo/pareto.json",
+  "mode": "SUGGEST_ONLY_NO_PUSH_NO_COPY",
+  "ctrCurveSource": "Blended industry-benchmark organic CTR-by-position curve (Backlinko / Advanced Web Ranking style studies), with a flat 45% AI-Overview/Shopping-suppression discount applied to broad/commercial queries (Yonatan seo-strategist review; Ahrefs Dec 2025 + Seer Interactive Sep 2025 AIO-CTR-suppression data). NOT WAO first-party click data. `directionalPriorityScore` is a ranking signal ONLY, not a promised recoverable-clicks forecast, until WAO has first-party historical CTR data to calibrate against.",
+  "positionWindow": {
+    "min": 4,
+    "max": 15
+  },
+  "stats": {
+    "totalOpportunitiesScanned": 20,
+    "inPositionWindow": 15,
+    "skippedForCannibalization": 11,
+    "candidatesFound": 4,
+    "returned": 4
+  },
+  "candidates": [
+    {
+      "query": "קייטרינג בכפר סבא",
+      "page": "https://www.merlo-c.co.il/%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%91%D7%9B%D7%A4%D7%A8-%D7%A1%D7%91%D7%90/",
+      "position": 9.9,
+      "impressions": 564,
+      "clicks": 2,
+      "currentCtr": 0.4,
+      "expectedCtrAtPosition": 2.5,
+      "queryType": "long_tail",
+      "ctrGap": 2.1,
+      "directionalPriorityScore": 12,
+      "suggestedTitle": null,
+      "status": "NEEDS_TITLE_COPY",
+      "rank": 1
+    },
+    {
+      "query": "קייטרינג לשבת חתן",
+      "page": "https://www.merlo-c.co.il/%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%9C%D7%A9%D7%91%D7%AA-%D7%97%D7%AA%D7%9F/",
+      "position": 14.9,
+      "impressions": 1180,
+      "clicks": 3,
+      "currentCtr": 0.3,
+      "expectedCtrAtPosition": 1.1,
+      "queryType": "long_tail",
+      "ctrGap": 0.8,
+      "directionalPriorityScore": 9,
+      "suggestedTitle": null,
+      "status": "NEEDS_TITLE_COPY",
+      "rank": 2
+    },
+    {
+      "query": "קייטרינג בנתניה",
+      "page": "https://www.merlo-c.co.il/%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%91%D7%A0%D7%AA%D7%A0%D7%99%D7%94/",
+      "position": 6.1,
+      "impressions": 564,
+      "clicks": 7,
+      "currentCtr": 1.2,
+      "expectedCtrAtPosition": 2.7,
+      "queryType": "broad_commercial",
+      "ctrGap": 1.5,
+      "directionalPriorityScore": 8,
+      "suggestedTitle": null,
+      "status": "NEEDS_TITLE_COPY",
+      "rank": 3
+    },
+    {
+      "query": "קייטרינג ברחובות",
+      "page": "https://www.merlo-c.co.il/%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%91%D7%A8%D7%97%D7%95%D7%91%D7%95%D7%AA/",
+      "position": 12.1,
+      "impressions": 470,
+      "clicks": 2,
+      "currentCtr": 0.4,
+      "expectedCtrAtPosition": 0.9,
+      "queryType": "broad_commercial",
+      "ctrGap": 0.5,
+      "directionalPriorityScore": 2,
+      "suggestedTitle": null,
+      "status": "NEEDS_TITLE_COPY",
+      "rank": 4
+    }
+  ],
+  "skippedForCannibalization": [
+    {
+      "query": "קייטרינג לחתונה",
+      "page": "https://www.merlo-c.co.il/%D7%A2%D7%9C%D7%95%D7%AA-%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%9C%D7%97%D7%AA%D7%95%D7%A0%D7%94/",
+      "reasons": [
+        "MULTI_URL"
+      ]
+    },
+    {
+      "query": "קייטרינג בשרי כשר למהדרין",
+      "page": "https://www.merlo-c.co.il/%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%91%D7%99%D7%A8%D7%95%D7%A9%D7%9C%D7%99%D7%9D/",
+      "reasons": [
+        "MULTI_URL"
+      ]
+    },
+    {
+      "query": "קייטרינג לאירועים עסקיים",
+      "page": "https://www.merlo-c.co.il/%D7%90%D7%99%D7%A8%D7%95%D7%A2%D7%99%D7%9D-%D7%A2%D7%A1%D7%A7%D7%99%D7%99%D7%9D/",
+      "reasons": [
+        "MULTI_URL"
+      ]
+    },
+    {
+      "query": "קייטרינג בשרי לאירועים",
+      "page": "https://www.merlo-c.co.il/",
+      "reasons": [
+        "MULTI_URL"
+      ]
+    },
+    {
+      "query": "קייטרינג בשרי מומלץ",
+      "page": "https://www.merlo-c.co.il/",
+      "reasons": [
+        "MULTI_URL"
+      ]
+    },
+    {
+      "query": "קייטרינג כשר לאירועים קטנים",
+      "page": "https://www.merlo-c.co.il/%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%9C%D7%90%D7%99%D7%A8%D7%95%D7%A2%D7%99%D7%9D-%D7%A7%D7%98%D7%A0%D7%99%D7%9D/",
+      "reasons": [
+        "MULTI_URL"
+      ]
+    },
+    {
+      "query": "קייטרינג לאירועים קטנים מחיר",
+      "page": "https://www.merlo-c.co.il/%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%9C%D7%90%D7%99%D7%A8%D7%95%D7%A2%D7%99%D7%9D-%D7%A7%D7%98%D7%A0%D7%99%D7%9D/",
+      "reasons": [
+        "MULTI_URL"
+      ]
+    },
+    {
+      "query": "קייטרינג לאירועים קטנים בבית",
+      "page": "https://www.merlo-c.co.il/%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%9C%D7%90%D7%99%D7%A8%D7%95%D7%A2%D7%99%D7%9D-%D7%A7%D7%98%D7%A0%D7%99%D7%9D/",
+      "reasons": [
+        "MULTI_URL"
+      ]
+    },
+    {
+      "query": "קייטרינג לאירוע חברה",
+      "page": "https://www.merlo-c.co.il/%D7%90%D7%99%D7%A8%D7%95%D7%A2%D7%99%D7%9D-%D7%A2%D7%A1%D7%A7%D7%99%D7%99%D7%9D/",
+      "reasons": [
+        "MULTI_URL"
+      ]
+    },
+    {
+      "query": "קייטרינג ברמת גן",
+      "page": "https://www.merlo-c.co.il/%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%91%D7%A8%D7%9E%D7%AA-%D7%92%D7%9F/",
+      "reasons": [
+        "MULTI_URL"
+      ]
+    },
+    {
+      "query": "קייטרינג לאירועי חברה",
+      "page": "https://www.merlo-c.co.il/%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%9C%D7%90%D7%99%D7%A8%D7%95%D7%A2%D7%99-%D7%97%D7%91%D7%A8%D7%94/",
+      "reasons": [
+        "MULTI_URL"
+      ]
+    }
+  ]
+}

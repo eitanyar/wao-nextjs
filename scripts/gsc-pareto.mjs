@@ -17,6 +17,9 @@
 import fs   from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { Agent, setGlobalDispatcher } from 'undici';
+
+setGlobalDispatcher(new Agent({ connect: { family: 4 } }));
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const env = {};

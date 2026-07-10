@@ -1,0 +1,184 @@
+{
+  "site": "https://www.merlo-c.co.il/",
+  "generatedAt": "2026-07-07T13:52:28.001Z",
+  "period": {
+    "startDate": "2026-04-08",
+    "endDate": "2026-07-07",
+    "days": 90
+  },
+  "positionWindow": {
+    "minPos": 1,
+    "maxPos": 3
+  },
+  "minImpressionsThreshold": 100,
+  "minClicksThreshold": 5,
+  "thresholdNote": "Dror's (ppc-strategist) real v1 brief: position ≤3 AND impressions ≥100 AND clicks ≥5 over trailing 90 days, combined AND filter — see script comment for rationale.",
+  "brandTokens": [
+    "merlo-c",
+    "קייטרינג",
+    "לאירועים",
+    "יוקרתיים,"
+  ],
+  "brandTokensNote": "Heuristic v1 tokens applied (domain root + homepage title words). Flag-only, not exclusion — see script comment for known transliteration limitation.",
+  "totalInRange": 6,
+  "distinctLandingPageCount": 5,
+  "sitelinksViable": true,
+  "sitelinksViableNote": "Informational only (v1 concession per Lior's deferred-sitelinks decision) — NOT sitelink generation. Counts distinct 'page' URLs across this run's opportunity list; Google's stated minimum distinct URLs for sitelinks to be eligible to show is 4. Not used by this script for any logic; recorded for future v2 input.",
+  "opportunities": [
+    {
+      "rank": 1,
+      "query": "קייטרינג לשבת חתן עם מלצרים",
+      "page": "https://www.merlo-c.co.il/%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%9C%D7%A9%D7%91%D7%AA-%D7%97%D7%AA%D7%9F/",
+      "position": 1.8,
+      "impressions": 599,
+      "clicks": 21,
+      "ctr": 3.5,
+      "score": 599,
+      "ctr_flag": "below_avg_for_position",
+      "brand_match": "heuristic_v1",
+      "brand_match_token": "קייטרינג",
+      "recommendedMatchType": "phrase",
+      "recommendedDailyBudgetILS": 25,
+      "recommendedBiddingStrategy": "manual_cpc_or_maximize_clicks",
+      "draftHeadlines": [
+        "קייטרינג לשבת חתן עם מלצרים",
+        "קייטרינג יוקרתי ואירועים יוקר…",
+        "מיצוב יוקרתי ואיכותי"
+      ],
+      "draftDescriptions": [
+        "קייטרינג יוקרתי ואירועים יוקרתיים — מיצוב יוקרתי ואיכותי. השאירו פרטים עוד היום.",
+        "מיצוב יוקרתי ואיכותי — ללקוחות שמשקיעים יותר באירועי שיא (חתונות) ולעסקים עם תקציב קייטרי…"
+      ],
+      "draftStatus": "AUTO_DRAFT"
+    },
+    {
+      "rank": 2,
+      "query": "קייטרינג יוקרתי",
+      "page": "https://www.merlo-c.co.il/",
+      "position": 1.4,
+      "impressions": 303,
+      "clicks": 7,
+      "ctr": 2.3,
+      "score": 303,
+      "ctr_flag": "below_avg_for_position",
+      "brand_match": "heuristic_v1",
+      "brand_match_token": "קייטרינג",
+      "recommendedMatchType": "phrase",
+      "recommendedDailyBudgetILS": 25,
+      "recommendedBiddingStrategy": "manual_cpc_or_maximize_clicks",
+      "draftHeadlines": [
+        "קייטרינג יוקרתי",
+        "קייטרינג יוקרתי ואירועים יוקר…",
+        "מיצוב יוקרתי ואיכותי"
+      ],
+      "draftDescriptions": [
+        "קייטרינג יוקרתי ואירועים יוקרתיים — מיצוב יוקרתי ואיכותי. השאירו פרטים עוד היום.",
+        "מיצוב יוקרתי ואיכותי — ללקוחות שמשקיעים יותר באירועי שיא (חתונות) ולעסקים עם תקציב קייטרי…"
+      ],
+      "draftStatus": "AUTO_DRAFT"
+    },
+    {
+      "rank": 3,
+      "query": "קייטרינג מרלו",
+      "page": "https://www.merlo-c.co.il/%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%9C%D7%90%D7%99%D7%A8%D7%95%D7%A2%D7%99%D7%9D-%D7%A7%D7%98%D7%A0%D7%99%D7%9D/",
+      "position": 1.4,
+      "impressions": 221,
+      "clicks": 6,
+      "ctr": 2.7,
+      "score": 221,
+      "ctr_flag": "below_avg_for_position",
+      "brand_match": "heuristic_v1",
+      "brand_match_token": "קייטרינג",
+      "recommendedMatchType": "phrase",
+      "recommendedDailyBudgetILS": 25,
+      "recommendedBiddingStrategy": "manual_cpc_or_maximize_clicks",
+      "draftHeadlines": [
+        "קייטרינג מרלו",
+        "קייטרינג יוקרתי ואירועים יוקר…",
+        "מיצוב יוקרתי ואיכותי"
+      ],
+      "draftDescriptions": [
+        "קייטרינג יוקרתי ואירועים יוקרתיים — מיצוב יוקרתי ואיכותי. השאירו פרטים עוד היום.",
+        "מיצוב יוקרתי ואיכותי — ללקוחות שמשקיעים יותר באירועי שיא (חתונות) ולעסקים עם תקציב קייטרי…"
+      ],
+      "draftStatus": "AUTO_DRAFT"
+    },
+    {
+      "rank": 4,
+      "query": "קייטרינג מרלו",
+      "page": "https://www.merlo-c.co.il/",
+      "position": 1,
+      "impressions": 220,
+      "clicks": 45,
+      "ctr": 20.5,
+      "score": 220,
+      "brand_match": "heuristic_v1",
+      "brand_match_token": "קייטרינג",
+      "recommendedMatchType": "phrase",
+      "recommendedDailyBudgetILS": 25,
+      "recommendedBiddingStrategy": "manual_cpc_or_maximize_clicks",
+      "draftHeadlines": [
+        "קייטרינג מרלו",
+        "קייטרינג יוקרתי ואירועים יוקר…",
+        "מיצוב יוקרתי ואיכותי"
+      ],
+      "draftDescriptions": [
+        "קייטרינג יוקרתי ואירועים יוקרתיים — מיצוב יוקרתי ואיכותי. השאירו פרטים עוד היום.",
+        "מיצוב יוקרתי ואיכותי — ללקוחות שמשקיעים יותר באירועי שיא (חתונות) ולעסקים עם תקציב קייטרי…"
+      ],
+      "draftStatus": "AUTO_DRAFT"
+    },
+    {
+      "rank": 5,
+      "query": "קייטרינג לחתונה קטנה",
+      "page": "https://www.merlo-c.co.il/%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%9C%D7%97%D7%AA%D7%95%D7%A0%D7%94-%D7%A7%D7%98%D7%A0%D7%94/",
+      "position": 1,
+      "impressions": 210,
+      "clicks": 5,
+      "ctr": 2.4,
+      "score": 210,
+      "ctr_flag": "below_avg_for_position",
+      "brand_match": "heuristic_v1",
+      "brand_match_token": "קייטרינג",
+      "recommendedMatchType": "phrase",
+      "recommendedDailyBudgetILS": 25,
+      "recommendedBiddingStrategy": "manual_cpc_or_maximize_clicks",
+      "draftHeadlines": [
+        "קייטרינג לחתונה קטנה",
+        "קייטרינג יוקרתי ואירועים יוקר…",
+        "מיצוב יוקרתי ואיכותי"
+      ],
+      "draftDescriptions": [
+        "קייטרינג יוקרתי ואירועים יוקרתיים — מיצוב יוקרתי ואיכותי. השאירו פרטים עוד היום.",
+        "מיצוב יוקרתי ואיכותי — ללקוחות שמשקיעים יותר באירועי שיא (חתונות) ולעסקים עם תקציב קייטרי…"
+      ],
+      "draftStatus": "AUTO_DRAFT"
+    },
+    {
+      "rank": 6,
+      "query": "קייטרינג לחתונות שטח",
+      "page": "https://www.merlo-c.co.il/%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%9C%D7%97%D7%AA%D7%95%D7%A0%D7%94-%D7%91%D7%98%D7%91%D7%A2/",
+      "position": 2.3,
+      "impressions": 106,
+      "clicks": 15,
+      "ctr": 14.2,
+      "score": 106,
+      "brand_match": "heuristic_v1",
+      "brand_match_token": "קייטרינג",
+      "recommendedMatchType": "phrase",
+      "recommendedDailyBudgetILS": 25,
+      "recommendedBiddingStrategy": "manual_cpc_or_maximize_clicks",
+      "draftHeadlines": [
+        "קייטרינג לחתונות שטח",
+        "קייטרינג יוקרתי ואירועים יוקר…",
+        "מיצוב יוקרתי ואיכותי"
+      ],
+      "draftDescriptions": [
+        "קייטרינג יוקרתי ואירועים יוקרתיים — מיצוב יוקרתי ואיכותי. השאירו פרטים עוד היום.",
+        "מיצוב יוקרתי ואיכותי — ללקוחות שמשקיעים יותר באירועי שיא (חתונות) ולעסקים עם תקציב קייטרי…"
+      ],
+      "draftStatus": "AUTO_DRAFT"
+    }
+  ],
+  "disclaimer": "READ-ONLY GSC analysis. No Google Ads API calls made. draftHeadlines/draftDescriptions are fast, deterministic, template-based rough drafts generated from client.json (businessNiche/usp) — NOT Tamar's polished ad copy, and not launch-ready. draftStatus is PENDING_BUSINESS_DETAILS where those client.json fields are still placeholders."
+}
