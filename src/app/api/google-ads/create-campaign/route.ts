@@ -1,13 +1,24 @@
 import { NextResponse } from 'next/server';
+import { cookies } from 'next/headers';
 import { GoogleAdsApi, enums, services } from 'google-ads-api';
 import fs from 'fs';
 import path from 'path';
 import type { CollectedData } from '@/lib/bot/prompts';
 import { detectVertical } from '@/lib/lp/verticalDetect';
+import { bindCampaignToClient } from '@/lib/crm/intelligence';
+import { COOKIE_NAME, verifySessionToken } from '@/lib/client-auth';
+import { resolveGoogleAdsMutationAccess } from '@/lib/google-ads/access-policy';
 
 export interface CampaignConfig {
+  clientId?: string;
+  mode?: CampaignMode;
   customerId: string;
   slug: string;
+  businessName: string;
+  businessNiche: string;
+  targetLocation: string;
+  targetDailyBudget: number;
+  targetMonthlyBudget: number;
   avgJobValue: number;
   closeRateEstimate: number;
   verifiedLeadConversionResourceName: string | null;
@@ -28,11 +39,31 @@ interface CampaignCopy {
   callToAction: string;
 }
 
+type CampaignMode = 'test' | 'live';
+
 interface CreateCampaignRequest {
   collectedData: CollectedData;
   strategy: CampaignStrategy;
   copy: CampaignCopy;
   consentTimestamp: string;
+  clientId?: string;
+  mode?: CampaignMode;
+}
+
+interface ConversionTagSnippet {
+  global_site_tag?: string;
+  event_snippet?: string;
+}
+
+interface ConversionActionRow {
+  conversion_action?: {
+    name?: string;
+    tag_snippets?: ConversionTagSnippet[];
+  };
+}
+
+interface GoogleAdsApiError extends Error {
+  errors?: unknown;
 }
 
 function buildClient() {
@@ -45,6 +76,24 @@ function buildClient() {
     client_secret: GOOGLE_ADS_CLIENT_SECRET,
     developer_token: GOOGLE_ADS_DEVELOPER_TOKEN,
   });
+}
+
+function resolveAdsAccount(mode: CampaignMode) {
+  if (mode === 'test') {
+    const refreshToken = process.env.GOOGLE_ADS_TEST_REFRESH_TOKEN || process.env.GOOGLE_ADS_REFRESH_TOKEN;
+    const mccId = (process.env.GOOGLE_ADS_TEST_MCC_CUSTOMER_ID || process.env.GOOGLE_ADS_MCC_CUSTOMER_ID)?.replace(/-/g, '');
+    if (!refreshToken || !mccId) {
+      throw new Error('Test mode requires GOOGLE_ADS_TEST_REFRESH_TOKEN and GOOGLE_ADS_TEST_MCC_CUSTOMER_ID');
+    }
+    return { refreshToken, mccId, clientId: process.env.GOOGLE_ADS_SANDBOX_CLIENT_ID || 'google-ads-sandbox' };
+  }
+
+  const refreshToken = process.env.GOOGLE_ADS_REFRESH_TOKEN;
+  const mccId = process.env.GOOGLE_ADS_MCC_CUSTOMER_ID?.replace(/-/g, '');
+  if (!refreshToken || !mccId) {
+    throw new Error('Live mode requires GOOGLE_ADS_REFRESH_TOKEN and GOOGLE_ADS_MCC_CUSTOMER_ID');
+  }
+  return { refreshToken, mccId, clientId: undefined };
 }
 
 function trim(s: string, max: number) {
@@ -74,23 +123,40 @@ export async function POST(req: Request) {
   try {
     const body: CreateCampaignRequest = await req.json();
     const { collectedData, strategy, copy, consentTimestamp } = body;
+    const mode: CampaignMode = body.mode === 'test' ? 'test' : 'live';
+    const sandboxClientId = process.env.GOOGLE_ADS_SANDBOX_CLIENT_ID || 'google-ads-sandbox';
+    const requestedClientId = body.clientId?.trim() || (mode === 'test' ? sandboxClientId : '');
+    const jar = await cookies();
+    const sessionClientId = await verifySessionToken(jar.get(COOKIE_NAME)?.value ?? '');
+    const access = resolveGoogleAdsMutationAccess({
+      sessionClientId,
+      requestedClientId,
+      mode,
+      sandboxClientId,
+      liveModeEnabled: process.env.GOOGLE_ADS_ENABLE_LIVE_MODE === 'true',
+    });
+
+    if (!access.allowed) {
+      return NextResponse.json({ error: access.error }, { status: access.status });
+    }
+
+    const adsAccount = resolveAdsAccount(mode);
+    const effectiveClientId = requestedClientId || adsAccount.clientId;
 
     if (!collectedData?.businessNiche) {
       return NextResponse.json({ error: 'collectedData.businessNiche is required' }, { status: 400 });
     }
 
     const client = buildClient();
-    const refreshToken = process.env.GOOGLE_ADS_REFRESH_TOKEN!;
-    const mccId = process.env.GOOGLE_ADS_MCC_CUSTOMER_ID!.replace(/-/g, '');
     const businessName = collectedData.businessName || collectedData.businessNiche || 'New Business';
     const slug = slugify(businessName, collectedData.businessNiche, collectedData.phone);
 
     // ── Step 1: Create sub-account under MCC ─────────────────────────────────
-    const mccCustomer = client.Customer({ customer_id: mccId, refresh_token: refreshToken });
+    const mccCustomer = client.Customer({ customer_id: adsAccount.mccId, refresh_token: adsAccount.refreshToken });
 
     const createResult = await mccCustomer.customers.createCustomerClient(
       new services.CreateCustomerClientRequest({
-        customer_id: mccId,
+        customer_id: adsAccount.mccId,
         customer_client: {
           descriptive_name: businessName,
           currency_code: 'ILS',
@@ -104,8 +170,8 @@ export async function POST(req: Request) {
 
     const newCustomer = client.Customer({
       customer_id: newCustomerId,
-      login_customer_id: mccId,
-      refresh_token: refreshToken,
+      login_customer_id: adsAccount.mccId,
+      refresh_token: adsAccount.refreshToken,
     });
 
     // ── Step 2: Create conversion actions ────────────────────────────────────
@@ -149,7 +215,7 @@ export async function POST(req: Request) {
         // Phase A bidding signal — uploaded within 7 days of lead creation (inside Smart Bidding window).
         // Value = expected value (avgJobValue × close-rate). Human marks GOOD in CRM → triggers upload.
         name: 'ליד מאומת',
-        category: enums.ConversionActionCategory.IMPORTED_LEAD,
+        category: enums.ConversionActionCategory.QUALIFIED_LEAD,
         type: enums.ConversionActionType.UPLOAD_CLICKS,
         status: enums.ConversionActionStatus.ENABLED,
         counting_type: enums.ConversionActionCountingType.ONE_PER_CLICK,
@@ -161,7 +227,7 @@ export async function POST(req: Request) {
         // Readable by bidding within 90 days of click regardless of deal duration.
         // Value = real CRM revenue entered by client.
         name: 'עסקה סגורה',
-        category: enums.ConversionActionCategory.IMPORTED_LEAD,
+        category: enums.ConversionActionCategory.CONVERTED_LEAD,
         type: enums.ConversionActionType.UPLOAD_CLICKS,
         status: enums.ConversionActionStatus.ENABLED,
         counting_type: enums.ConversionActionCountingType.ONE_PER_CLICK,
@@ -180,23 +246,24 @@ export async function POST(req: Request) {
     let whatsappConversionLabel: string | undefined;
 
     try {
-      const conversionRows = await newCustomer.query(
+      const conversionRows = (await newCustomer.query(
         `SELECT conversion_action.id, conversion_action.name, conversion_action.tag_snippets
          FROM conversion_action WHERE conversion_action.status = 'ENABLED'`
-      ) as any[];
+      )) as ConversionActionRow[];
 
       for (const row of conversionRows) {
         const action = row.conversion_action;
-        const snippets: any[] = action?.tag_snippets || [];
+        if (!action) continue;
+        const snippets = action.tag_snippets || [];
 
         // Global site tag is the same for all actions — grab from first available
         if (!gtagSnippet) {
-          const globalTag = snippets.find((s: any) => s.global_site_tag)?.global_site_tag;
+          const globalTag = snippets.find((s) => s.global_site_tag)?.global_site_tag;
           if (globalTag) gtagSnippet = globalTag;
         }
 
         // Event snippets — find the onclick variant for labels
-        const eventSnippet = snippets.find((s: any) => s.event_snippet)?.event_snippet || '';
+        const eventSnippet = snippets.find((s) => s.event_snippet)?.event_snippet || '';
         const sendTo = extractSendTo(eventSnippet);
 
         if (!sendTo) continue;
@@ -224,18 +291,21 @@ export async function POST(req: Request) {
       advertising_channel_type: enums.AdvertisingChannelType.SEARCH,
       status: enums.CampaignStatus.PAUSED,
       campaign_budget: budgetResourceName,
-      bidding_strategy_type: enums.BiddingStrategyType.TARGET_SPEND, // = Maximize Clicks
+      target_spend: { cpc_bid_ceiling_micros: 15_000_000 },
+      contains_eu_political_advertising: enums.EuPoliticalAdvertisingStatus.DOES_NOT_CONTAIN_EU_POLITICAL_ADVERTISING,
       network_settings: {
         target_google_search: true,
         target_search_network: true,
         target_content_network: false,
         target_partner_search_network: false,
       },
-      ...(({ start_date: new Date().toISOString().slice(0, 10).replace(/-/g, '') }) as any),
+      ...{
+        start_date: new Date().toISOString().slice(0, 10).replace(/-/g, ''),
+      },
     }]);
 
     const campaignResourceName = campaignRes.results[0].resource_name!;
-    const campaignId = campaignResourceName.split('/').pop();
+    const campaignId = campaignResourceName.split('/').pop() || newCustomerId;
 
     // ── Step 6: Geo target — Israel (2376) ───────────────────────────────────
     await newCustomer.campaignCriteria.create([{
@@ -285,8 +355,15 @@ export async function POST(req: Request) {
 
     // ── Step 10: Save campaign config for offline conversion uploads ──────────
     const campaignConfig: CampaignConfig = {
+      clientId: effectiveClientId,
+      mode,
       customerId: newCustomerId,
       slug,
+      businessName,
+      businessNiche: collectedData.businessNiche,
+      targetLocation: strategy.targetLocation,
+      targetDailyBudget: strategy.suggestedDailyBudget,
+      targetMonthlyBudget: strategy.suggestedDailyBudget * 30.4,
       avgJobValue,
       closeRateEstimate,
       verifiedLeadConversionResourceName,
@@ -296,6 +373,14 @@ export async function POST(req: Request) {
     const configDir = path.join(process.cwd(), 'data', 'campaigns');
     fs.mkdirSync(configDir, { recursive: true });
     fs.writeFileSync(path.join(configDir, `${slug}.json`), JSON.stringify(campaignConfig, null, 2));
+    if (effectiveClientId) {
+      bindCampaignToClient({
+        clientId: effectiveClientId,
+        campaign: campaignConfig,
+        campaignId,
+        finalUrl,
+      });
+    }
 
     // ── Step 11: Consent log → CRM ───────────────────────────────────────────
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
@@ -322,6 +407,7 @@ export async function POST(req: Request) {
     return NextResponse.json({
       success: true,
       customerId: newCustomerId,
+      clientId: effectiveClientId ?? null,
       campaignId,
       slug,
       finalUrl,
@@ -334,10 +420,11 @@ export async function POST(req: Request) {
       closedDealConversionResourceName,
     });
 
-  } catch (error: any) {
-    console.error('Google Ads campaign creation error:', error);
+  } catch (error: unknown) {
+    const err = error as GoogleAdsApiError;
+    console.error('Google Ads campaign creation error:', err);
     return NextResponse.json(
-      { error: error.message || 'Campaign creation failed', details: error?.errors ?? null },
+      { error: err.message || 'Campaign creation failed', details: err.errors ?? null },
       { status: 500 }
     );
   }

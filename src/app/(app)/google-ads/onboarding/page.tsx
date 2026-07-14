@@ -25,7 +25,49 @@ interface CampaignCopy {
   copywritingRationale: string;
 }
 
+interface SandboxVerificationResponse {
+  success?: boolean;
+  customer?: { name?: string | null };
+  campaign?: { name?: string | null };
+  error?: string;
+}
+
+const DEMO_PROFILE: CollectedData = {
+  businessNiche: "אינסטלטור בתל אביב",
+  businessName: "אינסטלטור תל אביב מהיר",
+  ownerName: "דני",
+  serviceModel: "field",
+  targetLocation: "תל אביב והסביבה",
+  specificCities: "תל אביב, רמת גן, גבעתיים, חולון",
+  idealClient: "משקי בית ובעלי דירות עם תקלה דחופה",
+  idealClientFear: "לשבת בלי מים חמים או עם נזילה",
+  usp: "הגעה מהירה, זמינות גבוהה, ואפשרות לטיפול באותו יום",
+  yearsInField: "12",
+  guarantee: "אחריות על התיקון",
+  urgencyLevel: "urgent",
+  responseTime: "עד שעה",
+  pricingNotes: "מחיר ביקור שקוף, לפי תקלה",
+  revenueModel: "one-time",
+  avgJobValue: 650,
+  closeRate: 0.28,
+  monthlyBudget: 1800,
+  hasGoogleBusiness: true,
+  reviewCount: 67,
+  hasTrustAssets: true,
+  starRating: "4.8",
+  capacityAvailable: true,
+  capacityUnit: "קריאות ביום",
+  contactMethod: "טלפון ו-WhatsApp",
+  phone: "052-614-8860",
+  whatsappNumber: "052-614-8860",
+  preferredSlug: "demo-plumber-tel-aviv",
+  turnIndex: 12,
+};
+
 export default function OnboardingPage() {
+  const [clientId, setClientId] = useState<string | undefined>(undefined);
+  const [mode, setMode] = useState<"test" | "live">("test");
+  const [isDemo, setIsDemo] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
     {
       role: "assistant",
@@ -46,10 +88,70 @@ export default function OnboardingPage() {
   const [lpGenerating, setLpGenerating] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [awaitingProfilePhoto, setAwaitingProfilePhoto] = useState(false);
+  const [sandboxVerificationStatus, setSandboxVerificationStatus] = useState<"idle" | "checking" | "ready" | "error">("idle");
+  const [sandboxVerificationMessage, setSandboxVerificationMessage] = useState<string | null>(null);
   const sessionIdRef = useRef(`s-${Date.now()}-${Math.random().toString(36).slice(2)}`);
+  const inputPlaceholder =
+    currentState === "COMPLETED"
+      ? ""
+      : currentState === "DIAGNOSING"
+        ? "כתוב כאן את התשובה שלך"
+        : currentState === "STRATEGIZING"
+          ? "אפשר להוסיף עוד פרטים על העסק"
+          : currentState === "REVIEWING"
+            ? "כתוב הערה אחרונה לפני ההפעלה"
+            : "המשך כאן אם תרצה לשנות משהו";
+  const inputHelperText =
+    currentState === "DIAGNOSING"
+      ? (() => {
+          switch (collectedData.turnIndex ?? 0) {
+            case 0:
+              return "תענה בקצרה. גם משפט אחד מספיק.";
+            case 1:
+              return "אם יש שם לעסק, תכתוב אותו.";
+            case 2:
+              return "אם יש עוד שירותים, תוסיף אותם.";
+            case 3:
+              return "תספר איך זה קורה בפועל אצלך.";
+            default:
+              return "תמשיך עם הפרטים הבאים. כל פרט קטן עוזר.";
+          }
+        })()
+      : currentState === "STRATEGIZING"
+        ? "אם יש עוד פרט קטן — תקציב, עיר, או יתרון מול המתחרים — תוסיף אותו פה."
+        : currentState === "REVIEWING"
+          ? "אם יש עוד תיקון קטן לפני ההפעלה, תכתוב אותו עכשיו."
+          : "אם משהו השתנה, תכתוב ונעדכן יחד.";
+  const progressTotal = 24;
+  const progressTurn = Math.min((collectedData.turnIndex ?? 0) + 1, progressTotal);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const messagesContainerRef = useRef<HTMLDivElement>(null);
+
+  const verifySandboxConnection = async () => {
+    setSandboxVerificationStatus("checking");
+    setSandboxVerificationMessage(null);
+
+    try {
+      const response = await fetch("/api/google-ads/sandbox-verify");
+      const data = await response.json() as SandboxVerificationResponse;
+
+      if (!response.ok || !data.success) {
+        if (response.status === 401) {
+          throw new Error("בדיקת ה-Sandbox זמינה רק מתוך ההתחברות הפנימית של WAO.");
+        }
+        throw new Error(data.error || "לא הצלחנו לאמת את חיבור ה-Sandbox.");
+      }
+
+      const accountName = data.customer?.name || "חשבון הבדיקה";
+      const campaignName = data.campaign?.name || "קמפיין הבדיקה";
+      setSandboxVerificationStatus("ready");
+      setSandboxVerificationMessage(`חיבור ה-Sandbox תקין: ${accountName}, ${campaignName}.`);
+    } catch (error) {
+      setSandboxVerificationStatus("error");
+      setSandboxVerificationMessage(error instanceof Error ? error.message : "לא הצלחנו לאמת את חיבור ה-Sandbox.");
+    }
+  };
 
   // Scroll only the chat box — never the page
   useEffect(() => {
@@ -77,6 +179,7 @@ export default function OnboardingPage() {
 
       // Step 2: Create Google Ads sub-account + conversion actions
       let adsData: any = null;
+      const resolvedClientId = clientId || (mode === "test" ? "google-ads-sandbox" : undefined);
       if (strategy && copy) {
         const adsRes = await fetch("/api/google-ads/create-campaign", {
           method: "POST",
@@ -86,6 +189,8 @@ export default function OnboardingPage() {
             strategy,
             copy,
             consentTimestamp: new Date().toISOString(),
+            clientId: resolvedClientId,
+            mode,
           }),
         });
         adsData = await adsRes.json();
@@ -161,7 +266,7 @@ export default function OnboardingPage() {
     if (params.get("payment") === "success" && currentState !== "COMPLETED") {
       triggerCampaignLaunch();
     }
-  }, [currentState]);
+  }, [currentState, triggerCampaignLaunch]);
 
   const handleSendMessage = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
@@ -352,6 +457,11 @@ export default function OnboardingPage() {
           <p style={{ color: "var(--muted)", fontSize: "0.88rem", marginBottom: "8px" }}>
             ההקמה לוקחת דקות, לא שבועות — אבל תן לתוצאות כמה שבועות להבשיל.
           </p>
+          {isDemo && (
+            <p style={{ color: "#FFAA00", fontSize: "0.9rem", fontWeight: 700, marginBottom: "6px" }}>
+              מצב הדגמה פעיל. הכנסתי לך עסק לדוגמה, כדי שתוכל לראות את הזרימה בלי חשבון אמיתי.
+            </p>
+          )}
           <p style={{ color: "var(--muted)", fontSize: "0.95rem" }}>
             {isSimulation ? (
               <span
@@ -383,8 +493,75 @@ export default function OnboardingPage() {
               </span>
             )}
             {" | "}
-            קמפיין חי בגוגל, דף נחיתה בכתובת משלך, ואדם ששומר עליהם בשבילך — הכל מתחיל כאן תוך דקות.
+            {mode === "test"
+              ? "אתה במצב בדיקה פנימי. אין פרסום חי, חיוב או גישה לחשבון לקוח."
+              : "מצב Live נעול עד להשלמת בדיקות ה-Sandbox."
+            }
           </p>
+          <div style={{ display: "flex", gap: "10px", flexWrap: "wrap", marginTop: "14px", marginBottom: "12px" }}>
+            <button
+              type="button"
+              onClick={() => {
+                setMode("test");
+                setSandboxVerificationStatus("idle");
+                setSandboxVerificationMessage(null);
+              }}
+              className="btn-outline"
+              style={{
+                padding: "8px 14px",
+                fontSize: "0.9rem",
+                borderColor: mode === "test" ? "var(--accent)" : "var(--border)",
+                color: mode === "test" ? "var(--accent)" : "var(--muted)",
+              }}
+            >
+              Sandbox
+            </button>
+            <button
+              type="button"
+              className="btn-outline"
+              disabled
+              aria-disabled="true"
+              title="Live mode stays locked until sandbox validation is complete."
+              style={{
+                padding: "8px 14px",
+                fontSize: "0.9rem",
+                borderColor: "var(--border)",
+                color: "var(--muted)",
+                cursor: "not-allowed",
+                opacity: 0.65,
+              }}
+            >
+              Live (locked)
+            </button>
+            <button
+              type="button"
+              onClick={verifySandboxConnection}
+              className="btn-outline"
+              disabled={sandboxVerificationStatus === "checking"}
+              style={{
+                padding: "8px 14px",
+                fontSize: "0.9rem",
+                borderColor: "#FFAA00",
+                color: "#FFAA00",
+              }}
+            >
+              {sandboxVerificationStatus === "checking" ? "בודק את ה-Sandbox..." : "בדיקת חיבור Sandbox"}
+            </button>
+          </div>
+          {sandboxVerificationMessage && (
+            <p
+              role="status"
+              aria-live="polite"
+              style={{
+                color: sandboxVerificationStatus === "ready" ? "var(--accent)" : "#FF8A80",
+                fontSize: "0.85rem",
+                fontWeight: 700,
+                marginTop: "-4px",
+              }}
+            >
+              {sandboxVerificationMessage}
+            </p>
+          )}
 
           {/* Value block + price anchor */}
           <div style={{
@@ -397,11 +574,16 @@ export default function OnboardingPage() {
             flexDirection: "column",
             gap: "14px",
           }}>
-            {[
-              "קמפיין חי בגוגל — המודעה שלך מופיעה בדיוק ברגע שהלקוח מחפש את מה שאתה מוכר.",
-              "דף נחיתה מעוצב בכתובת משלך — בנוי כדי להפוך כל גולש לפנייה אמיתית, לא לעוד קליק.",
-              "אדם מנהל לך את הקמפיין מהיום הראשון — עוקב, מתריע ומשפר, בלי שתצטרך לגעת בכלום.",
-            ].map((bullet, i) => (
+            {(mode === "test"
+              ? [
+                  "מצב Sandbox מבודד. כל הבדיקות נשארות בחשבון הבדיקה של WAO.",
+                  "אין מודעות פעילות, חיובים או נתוני לקוחות אמיתיים.",
+                  "לפני כל פעולה, אפשר לאמת שהחיבור לחשבון ולקמפיין הבדיקה תקין.",
+                ]
+              : [
+                  "מצב Live נשאר נעול עד שהבדיקות ב-Sandbox הושלמו.",
+                ]
+            ).map((bullet, i) => (
               <div key={i} style={{ display: "flex", gap: "12px", alignItems: "flex-start" }}>
                 <span style={{ color: "var(--accent)", fontWeight: 700, flexShrink: 0, marginTop: "1px" }}>✓</span>
                 <span style={{ fontSize: "0.92rem", color: "var(--text)", lineHeight: 1.6 }}>{bullet}</span>
@@ -622,72 +804,105 @@ export default function OnboardingPage() {
                 padding: "16px",
                 borderTop: "1px solid var(--border)",
                 display: "flex",
-                gap: "8px",
-                alignItems: "center",
+                flexDirection: "column",
+                gap: "10px",
                 background: "rgba(13, 15, 21, 0.4)",
               }}
             >
-              {/* Hidden file input — single file for profile photo, multi otherwise */}
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/jpeg,image/png,image/webp,image/gif"
-                multiple={!awaitingProfilePhoto}
-                style={{ display: "none" }}
-                onChange={handleUpload}
-              />
-              {/* Upload button */}
-              <button
-                type="button"
-                onClick={() => fileInputRef.current?.click()}
-                disabled={isSubmitting || isUploading || currentState === "COMPLETED"}
-                title={awaitingProfilePhoto ? "העלה תמונה מקצועית אחת שלך" : "העלה תמונות וצילומי מסך"}
-                style={{
-                  background: "var(--subtle)",
-                  border: "1px solid var(--border)",
-                  borderRadius: "50%",
-                  width: "42px",
-                  height: "42px",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  cursor: "pointer",
-                  fontSize: "1.1rem",
-                  flexShrink: 0,
-                  opacity: (isSubmitting || isUploading || currentState === "COMPLETED") ? 0.4 : 1,
-                }}
-              >
-                {isUploading ? "⏳" : "📎"}
-              </button>
-              <input
-                type="text"
-                placeholder="הקלד כאן הודעה (למשל: אינסטלטור בתל אביב...)"
-                value={inputValue}
-                onChange={(e) => setInputValue(e.target.value)}
-                disabled={isSubmitting || currentState === "COMPLETED"}
-                style={{
-                  flex: 1,
-                  background: "var(--bg)",
-                  border: "1px solid var(--border)",
-                  borderRadius: "var(--radius-pill)",
-                  padding: "12px 20px",
-                  color: "var(--text)",
-                  fontFamily: "var(--font-body), sans-serif",
-                  fontSize: "0.95rem",
-                }}
-              />
-              <button
-                type="submit"
-                disabled={isSubmitting || !inputValue.trim() || currentState === "COMPLETED"}
-                className="btn-primary"
-                style={{
-                  padding: "12px 24px",
-                  fontSize: "0.9rem",
-                  borderRadius: "var(--radius-pill)",
-                }}
-              >
-                שלח
-              </button>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "12px" }}>
+                <div style={{ fontSize: "0.78rem", color: "var(--muted)" }}>
+                  שאלה {progressTurn} מתוך {progressTotal}
+                </div>
+                <div style={{ flex: 1, height: "6px", background: "rgba(255,255,255,0.06)", borderRadius: "999px", overflow: "hidden" }}>
+                  <div
+                    style={{
+                      width: `${Math.round((progressTurn / progressTotal) * 100)}%`,
+                      height: "100%",
+                      background: "linear-gradient(135deg, #4AE3B5, #00C3FF)",
+                      borderRadius: "999px",
+                    }}
+                  />
+                </div>
+              </div>
+              <div style={{ fontSize: "0.82rem", color: "var(--text)", lineHeight: 1.5 }}>
+                {inputHelperText}
+              </div>
+              <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+                {/* Hidden file input — single file for profile photo, multi otherwise */}
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp,image/gif"
+                  multiple={!awaitingProfilePhoto}
+                  style={{ display: "none" }}
+                  onChange={handleUpload}
+                />
+                {/* Upload button */}
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={isSubmitting || isUploading || currentState === "COMPLETED"}
+                  title={awaitingProfilePhoto ? "העלה תמונה מקצועית אחת שלך" : "העלה תמונות וצילומי מסך"}
+                  style={{
+                    background: "var(--subtle)",
+                    border: "1px solid var(--border)",
+                    borderRadius: "50%",
+                    width: "42px",
+                    height: "42px",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    cursor: "pointer",
+                    fontSize: "1.1rem",
+                    flexShrink: 0,
+                    opacity: (isSubmitting || isUploading || currentState === "COMPLETED") ? 0.4 : 1,
+                  }}
+                >
+                  {isUploading ? "⏳" : "📎"}
+                </button>
+                <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "6px" }}>
+                  <input
+                    type="text"
+                    placeholder={inputPlaceholder}
+                    value={inputValue}
+                    onChange={(e) => setInputValue(e.target.value)}
+                    disabled={isSubmitting || currentState === "COMPLETED"}
+                    aria-describedby="onboarding-input-helper"
+                    style={{
+                      width: "100%",
+                      background: "var(--bg)",
+                      border: "1px solid var(--border)",
+                      borderRadius: "var(--radius-pill)",
+                      padding: "12px 20px",
+                      color: "var(--text)",
+                      fontFamily: "var(--font-body), sans-serif",
+                      fontSize: "0.95rem",
+                    }}
+                  />
+                  <div
+                    id="onboarding-input-helper"
+                    style={{
+                      fontSize: "0.78rem",
+                      color: "var(--muted)",
+                      lineHeight: 1.5,
+                    }}
+                  >
+                    {inputHelperText}
+                  </div>
+                </div>
+                <button
+                  type="submit"
+                  disabled={isSubmitting || !inputValue.trim() || currentState === "COMPLETED"}
+                  className="btn-primary"
+                  style={{
+                    padding: "12px 24px",
+                    fontSize: "0.9rem",
+                    borderRadius: "var(--radius-pill)",
+                  }}
+                >
+                  שלח
+                </button>
+              </div>
             </form>
           </div>
 

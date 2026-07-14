@@ -1,0 +1,15 @@
+{
+  "clientId": "google-ads-sandbox",
+  "primarySlug": "google-ads-sandbox",
+  "primaryCustomerId": "5304679517",
+  "primaryCampaignId": "24033654166",
+  "updatedAt": "2026-07-14T04:50:53.403483Z",
+  "campaigns": [
+    {
+      "slug": "google-ads-sandbox",
+      "customerId": "5304679517",
+      "campaignId": "24033654166",
+      "createdAt": "2026-07-13T00:00:00.000Z"
+    }
+  ]
+}

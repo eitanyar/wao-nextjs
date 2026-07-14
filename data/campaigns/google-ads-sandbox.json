@@ -1,0 +1,16 @@
+{
+  "clientId": "google-ads-sandbox",
+  "mode": "test",
+  "customerId": "5304679517",
+  "slug": "google-ads-sandbox",
+  "businessName": "WAO Google Ads Sandbox",
+  "businessNiche": "Internal Google Ads test account",
+  "targetLocation": "Internal QA only",
+  "targetDailyBudget": 50,
+  "targetMonthlyBudget": 1500,
+  "avgJobValue": 650,
+  "closeRateEstimate": 0.2,
+  "verifiedLeadConversionResourceName": null,
+  "closedDealConversionResourceName": null,
+  "createdAt": "2026-07-13T00:00:00.000Z"
+}

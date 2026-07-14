@@ -10,7 +10,12 @@ export const COOKIE_NAME = 'wao-client';
 const EXPIRY_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
 
 function getSecret(): string {
-  return process.env.CLIENT_PORTAL_SECRET ?? 'wao-dev-secret-change-in-production';
+  const secret = process.env.CLIENT_PORTAL_SECRET;
+  if (secret) return secret;
+  if (process.env.NODE_ENV === 'production') {
+    throw new Error('CLIENT_PORTAL_SECRET must be configured in production');
+  }
+  return 'wao-dev-secret-change-in-production';
 }
 
 async function hmacHex(data: string): Promise<string> {
