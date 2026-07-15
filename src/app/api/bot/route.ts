@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { ADAM_SYSTEM_PROMPT, DROR_SYSTEM_PROMPT, TAMAR_SYSTEM_PROMPT, CollectedData } from "@/lib/bot/prompts";
+import { getEstimatedCPC } from "@/lib/ads/keywordPlanner";
 
 interface Message {
   role: "user" | "assistant" | "system";
@@ -68,10 +69,6 @@ function detectVerticalBudget(niche: string): VerticalBudget {
 
 function getClusterCloseRateDefault(niche: string): number {
   return BUDGET_CLUSTERS[detectCluster(niche)].closeRateDefault;
-}
-
-function detectCPC(niche: string): number {
-  return detectVerticalBudget(niche).cpc;
 }
 
 function parseCloseRate(text: string): number {
@@ -143,6 +140,13 @@ const TURN_QUESTIONS: Record<number, string> = {
   23: "מה המספר שיופיע על כפתור ״התקשר עכשיו״?\nומה מספר הוואטסאפ?\n(יכולים להיות זהים — רק תגיד לי)",
 };
 
+function isFieldServiceNiche(niche: string): boolean {
+  return [
+    "אינסטל", "שרברב", "נזיל", "חשמלא", "מזגן", "הדבר", "מדביר",
+    "מנעול", "דוד", "ביוב", "ניקוי", "טכנאי", "שיפוצ",
+  ].some(keyword => niche.includes(keyword));
+}
+
 // ── Simulation handler ────────────────────────────────────────────────────────
 
 function handleSimulation(
@@ -180,6 +184,16 @@ function handleSimulation(
         break;
       case 2:
         data.secondaryServices = text;
+        if (isFieldServiceNiche(data.businessNiche || "")) {
+          data.serviceModel = "field";
+          data.turnIndex = 4;
+          return NextResponse.json({
+            response: "מעולה. אצלך השירות הוא בבית או בעסק של הלקוח, אז לא נעכב אותך בשאלה מיותרת. באילו ערים ושכונות ספציפיות אתה נותן שירות?",
+            currentState: nextState,
+            collectedData: data,
+            isSimulation: true,
+          });
+        }
         break;
       case 3:
         if (text.includes("מגיע") && text.includes("לקוח")) data.serviceModel = "field";
@@ -271,7 +285,6 @@ function handleSimulation(
         }
 
         const rec = vb.recommended;
-        const minB = vb.min;
         const avgJobVal = data.avgJobValue || 500;
         const closeRate = data.closeRate || getClusterCloseRateDefault(data.businessNiche || "");
         const paidCloseRate = Math.max(0.05, Math.min(closeRate * 0.8, 0.35));
@@ -282,7 +295,6 @@ function handleSimulation(
 
         const leadsStr = expectedLeads === 1 ? "פנייה אחת" : `${expectedLeads} פניות`;
         const closeRatioNum = Math.round(1 / closeRate);
-        const paybackStr = paybackMonths === 1 ? "חודש אחד" : `${paybackMonths} חודשים`;
         const clientsStr = clientsPerMonth < 1
           ? "פחות מלקוח אחד"
           : `${Math.round(clientsPerMonth * 10) / 10} לקוחות`;
@@ -694,7 +706,19 @@ IMPORTANT: End your message with EXACTLY this sentence (no variation):
     else if (rc < 5) lpCvrHint = lpCvrHint * 0.85;
 
     const hintCloseRate = collectedData.closeRate || getClusterCloseRateDefault(collectedData.businessNiche || "");
-    const hintLeads = Math.max(1, Math.round((vbHint.recommended * lpCvrHint) / vbHint.cpc));
+    const citySeed = (collectedData.specificCities || collectedData.targetLocation || "ישראל").split(/[,،\n]/)[0].trim();
+    const seedKeywords = [
+      collectedData.businessNiche || "",
+      citySeed ? `${collectedData.businessNiche || ""} ${citySeed}` : "",
+      collectedData.idealClientFear ? `${collectedData.businessNiche || ""} ${collectedData.idealClientFear}` : "",
+    ].filter(Boolean);
+    const liveCpc = await getEstimatedCPC(seedKeywords, citySeed);
+    const effectiveCpc = liveCpc && liveCpc > 0 ? liveCpc : vbHint.cpc;
+    const cpcLabel = liveCpc
+      ? `Live Keyword Planner CPC ≈ ₪${liveCpc.toFixed(2)}`
+      : `Cluster CPC ≈ ₪${vbHint.cpc}`;
+
+    const hintLeads = Math.max(1, Math.round((vbHint.recommended * lpCvrHint) / effectiveCpc));
     const hintPaidClose = Math.max(0.05, Math.min(hintCloseRate * 0.8, 0.35));
     const hintClients = Math.max(0.2, hintLeads * hintPaidClose);
     const hintBreakEven = Math.ceil(vbHint.recommended / collectedData.avgJobValue);
@@ -703,13 +727,14 @@ IMPORTANT: End your message with EXACTLY this sentence (no variation):
 
     budgetHint = `\n\n[SYSTEM PRE-COMPUTED — use these exact numbers, do not recalculate]:
 Vertical: ${collectedData.businessNiche} | Recommended: ₪${vbHint.recommended} | Min: ₪${vbHint.min}
+${cpcLabel}
 At ₪${vbHint.recommended}/month: expectedLeads = ${hintLeads}, clientsPerMonth ≈ ${hintClients.toFixed(1)}, paybackMonths = ${hintPayback}, closeRatioDisplay = "1 ל-${hintRatio}"
 Present ₪${vbHint.recommended} as: "בסביבות ${hintLeads} פניות בחודש. עם שיעור סגירה של 1 ל-${hintRatio}, זה אומר כ-${hintClients < 1 ? "פחות מלקוח אחד" : hintClients.toFixed(1) + " לקוחות"} בחודש — ותחזיר את ההשקעה תוך כ-${hintPayback === 1 ? "חודש אחד" : hintPayback + " חודשים"}. כל שאר הלקוחות — רווח נקי."`;
 
     // If user already chose a different budget, pre-compute their numbers too
     const chosenBudget = collectedData.monthlyBudget;
     if (chosenBudget && chosenBudget !== vbHint.recommended) {
-      const chosenLeads = Math.max(1, Math.round((chosenBudget * lpCvrHint) / vbHint.cpc));
+      const chosenLeads = Math.max(1, Math.round((chosenBudget * lpCvrHint) / effectiveCpc));
       const chosenClients = Math.max(0.2, chosenLeads * hintPaidClose);
       const chosenBreakEven = Math.ceil(chosenBudget / collectedData.avgJobValue);
       const chosenPayback = Math.ceil(chosenBreakEven / chosenClients);

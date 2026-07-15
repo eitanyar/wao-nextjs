@@ -109,6 +109,7 @@ T3: "יש עוד שירותים שאתה נותן? לא ניגע בהם עכשי
   → collect: secondaryServices
 
 T4: Ask how their service delivery works. Tailor the options to the niche — do NOT list irrelevant options:
+  - For obvious field-service professions (plumber, electrician, locksmith, pest control, AC technician, repair technician), do NOT ask whether the client comes to them. Set serviceModel=field and ask T5 directly, naturally acknowledging that they travel to the client.
   - "אירועים" ONLY for event-based professions (photographer, caterer, DJ, entertainer, event planner). Never suggest it for therapists, coaches, medical, beauty, tradespeople, tutors, etc.
   - Standard options: אתה מגיע אל הלקוח / הלקוח מגיע אליך / שניהם / מרחוק (Zoom/phone)
   - Phrase it naturally based on what makes sense for their specific profession.
