@@ -44,4 +44,7 @@ ln -s "$WAO_RUNTIME_DATA_DIR" .next/standalone/data
 echo "♻️ Restarting app..."
 pm2 restart wao-app --update-env
 
+echo "🔍 Verifying Google Ads sandbox..."
+node scripts/verify-google-ads-sandbox.mjs
+
 echo "✅ Done."
