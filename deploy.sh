@@ -33,6 +33,14 @@ echo "📁 Copying static files..."
 cp -r public .next/standalone/
 cp -r .next/static .next/standalone/.next/
 
+WAO_RUNTIME_DATA_DIR="${WAO_RUNTIME_DATA_DIR:-/home/wao/wao-runtime-data}"
+mkdir -p "$WAO_RUNTIME_DATA_DIR"
+if [[ -d .next/standalone/data ]]; then
+  cp -an .next/standalone/data/. "$WAO_RUNTIME_DATA_DIR"/
+fi
+rm -rf .next/standalone/data
+ln -s "$WAO_RUNTIME_DATA_DIR" .next/standalone/data
+
 echo "♻️ Restarting app..."
 pm2 restart wao-app --update-env
 
