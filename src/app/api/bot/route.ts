@@ -140,11 +140,14 @@ const TURN_QUESTIONS: Record<number, string> = {
   23: "מה המספר שיופיע על כפתור ״התקשר עכשיו״?\nומה מספר הוואטסאפ?\n(יכולים להיות זהים — רק תגיד לי)",
 };
 
-function isFieldServiceNiche(niche: string): boolean {
-  return [
-    "אינסטל", "שרברב", "נזיל", "חשמלא", "מזגן", "הדבר", "מדביר",
-    "מנעול", "דוד", "ביוב", "ניקוי", "טכנאי", "שיפוצ",
-  ].some(keyword => niche.includes(keyword));
+type InferredServiceModel = "field" | "location" | "event" | "remote" | null;
+
+function inferServiceModel(niche: string): InferredServiceModel {
+  if (["צלם", "צילום", "קייטרינג", "דיג'יי", "אירוע", "חתונ"].some(keyword => niche.includes(keyword))) return "event";
+  if (["אונליין", "זום", "דיגיטל", "קידום אתרים", "seo", "שיווק דיגיטלי"].some(keyword => niche.toLowerCase().includes(keyword))) return "remote";
+  if (["שיניים", "רופא", "מרפאה", "פיזיותרפ", "קוסמט", "אסתט", "תספורת", "ציפורנ", "מניקור", "פילאטיס", "יוגה"].some(keyword => niche.includes(keyword))) return "location";
+  if (["אינסטל", "שרברב", "נזיל", "חשמלא", "מזגן", "הדבר", "מדביר", "מנעול", "דוד", "ביוב", "ניקוי", "טכנאי", "שיפוצ"].some(keyword => niche.includes(keyword))) return "field";
+  return null;
 }
 
 // ── Simulation handler ────────────────────────────────────────────────────────
@@ -184,11 +187,19 @@ function handleSimulation(
         break;
       case 2:
         data.secondaryServices = text;
-        if (isFieldServiceNiche(data.businessNiche || "")) {
-          data.serviceModel = "field";
+        const inferredServiceModel = inferServiceModel(data.businessNiche || "");
+        if (inferredServiceModel) {
+          data.serviceModel = inferredServiceModel;
           data.turnIndex = 4;
+          const nextQuestion = inferredServiceModel === "field"
+            ? "מעולה. אצלך השירות הוא בבית או בעסק של הלקוח. באילו ערים ושכונות ספציפיות אתה נותן שירות?"
+            : inferredServiceModel === "location"
+              ? "מעולה. הלקוחות מגיעים אליך לעסק או לקליניקה. מה הכתובת המדויקת, ומאילו אזורים בדרך כלל מגיעים אליך?"
+              : inferredServiceModel === "event"
+                ? "מעולה. אתה מגיע לאירועים. באילו אזורים אתה עובד בדרך כלל?"
+                : "מעולה. אתה עובד מרחוק. אתה פונה ללקוחות מכל הארץ, או לאזור מסוים בלבד?";
           return NextResponse.json({
-            response: "מעולה. אצלך השירות הוא בבית או בעסק של הלקוח, אז לא נעכב אותך בשאלה מיותרת. באילו ערים ושכונות ספציפיות אתה נותן שירות?",
+            response: nextQuestion,
             currentState: nextState,
             collectedData: data,
             isSimulation: true,
@@ -752,6 +763,10 @@ Present ₪${chosenBudget} as: "עם ₪${chosenBudget} תקבל בסביבות 
     if (firstUserMsg && firstUserMsg.content.length > 3) {
       enrichedData.businessNiche = firstUserMsg.content;
     }
+  }
+  if (!enrichedData.serviceModel && enrichedData.businessNiche) {
+    const inferredServiceModel = inferServiceModel(enrichedData.businessNiche);
+    if (inferredServiceModel) enrichedData.serviceModel = inferredServiceModel;
   }
 
   // Build a "do not re-ask" guard from whatever collectedData already has
