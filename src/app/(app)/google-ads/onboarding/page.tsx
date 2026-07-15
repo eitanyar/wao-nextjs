@@ -326,6 +326,27 @@ export default function OnboardingPage() {
           setCurrentState(stratData.currentState ?? "REVIEWING");
           if (stratData.strategy) setStrategy(stratData.strategy);
           if (stratData.copy) setCopy(stratData.copy);
+
+          // Build the internal LP preview before approval. The client and WAO
+          // operator must be able to inspect the full ad-to-page journey before
+          // payment, Google Ads account creation, or any deployment occurs.
+          if ((stratData.currentState ?? "REVIEWING") === "REVIEWING") {
+            setLpGenerating(true);
+            try {
+              const lpRes = await fetch("/api/lp-generate", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  collectedData: data.collectedData,
+                  slug: data.collectedData.preferredSlug || undefined,
+                }),
+              });
+              const lpData = await lpRes.json();
+              if (lpRes.ok && lpData.success && lpData.url) setLpUrl(lpData.url);
+            } finally {
+              setLpGenerating(false);
+            }
+          }
         } catch {
           // non-fatal — user can still proceed to payment
         }
