@@ -135,7 +135,7 @@ const TURN_QUESTIONS: Record<number, string> = {
   18: "__budget_recommendation__",
   19: "נשמע שאתה עושה עבודה טובה — אז בטוח יש לך לקוחות מרוצים.\nיש לך ביקורות או המלצות איפשהו?\nבגוגל, בוואטסאפ, צילומי מסך — כל דבר.\nואם יש לך גם תמונות מהעבודה — זה ממש זהב בשבילנו.",
   20: "מעולה. תביא לי ביקורת אחת או שתיים מגוגל שאתה גאה בהן —\nהעתק-הדבק בדיוק מה שהלקוח כתב.\nומה הדירוג שלך בגוגל? (לדוגמה: 4.9 כוכבים, 64 ביקורות)",
-  21: "ובאמת — אם מחר יתחילו להגיע אליך עוד פניות, אתה יכול לקחת אותן עכשיו?\nכמה זה בערך — פניות בשבוע, פרויקטים בחודש, או תאריכים בשנה?",
+  21: "אם יתחילו לפנות אליך עוד לקוחות, כמה עבודה נוספת אתה באמת יכול לקחת בלי לפגוע בשירות?\nאפשר לענות למשל: 3 עבודות בשבוע, 10 תורים בחודש, או 2 פרויקטים בחודש.",
   22: "ואחרון — איך הכי נוח לך שיתפסו אותך?\nשיתקשרו, וואטסאפ, שימלאו טופס, או שיכתבו באינסטגרם?",
   23: "מה המספר שיופיע על כפתור ״התקשר עכשיו״?\nומה מספר הוואטסאפ?\n(יכולים להיות זהים — רק תגיד לי)",
 };
@@ -174,6 +174,7 @@ function handleSimulation(
           response = TURN_QUESTIONS[0];
           return NextResponse.json({ response, currentState: nextState, collectedData: data, isSimulation: true });
         }
+        data.primaryService = text;
         data.businessNiche = text;
         data.turnIndex = 1;
         return NextResponse.json({
@@ -187,7 +188,7 @@ function handleSimulation(
         break;
       case 2:
         data.secondaryServices = text;
-        const inferredServiceModel = inferServiceModel(data.businessNiche || "");
+        const inferredServiceModel = data.serviceModel || inferServiceModel(data.businessNiche || "");
         if (inferredServiceModel) {
           data.serviceModel = inferredServiceModel;
           data.turnIndex = 4;
@@ -315,9 +316,18 @@ function handleSimulation(
 
         data.turnIndex = 18;
         return NextResponse.json({
-          response: `בתקציב של ₪${rec.toLocaleString()} אתה אמור לקבל בסביבות ${leadsStr} בחודש, ובשיעור סגירה של 1 ל-${closeRatioNum} — בערך ${clientsStr} חדשים. אני לא הולך למכור לך חלומות: בחודש הראשון אתה פחות או יותר מתאזן, והרווח האמיתי מתחיל מהחודש השני.${ltvLine}\n\nואגב — לחשבונות חדשים גוגל בדרך כלל נותנת קרדיט פרסום בחודשים הראשונים. כשניפתח את החשבון תראה אם יש הצעה פעילה עבורך — זה בונוס שיכול לכסות חלק מהחודש הראשון.\n\nכמה נוח לך? תגיד לי סכום — ואני אתאים את הקמפיין בהתאם.`,
+          response: "הכנתי לך המלצת תקציב מסודרת בכרטיסייה ליד. כמה נוח לך להשקיע בפרסום בכל חודש?",
           currentState,
           collectedData: data,
+          budgetRecommendation: {
+            monthlyBudget: rec,
+            estimatedCpc: vb.cpc,
+            expectedLeads,
+            closeRatioNum,
+            expectedClients: clientsStr,
+            paybackMonths,
+            hasRepeatClients: Boolean(data.hasRepeatClients),
+          },
           isSimulation: true,
         });
       }
@@ -473,19 +483,19 @@ function handleSimulation(
 // ── Mock campaign generator ───────────────────────────────────────────────────
 
 function generateMockCampaign(data: CollectedData) {
-  const niche = data.businessNiche || "";
+  const niche = data.primaryService || data.businessNiche || "";
   const location = data.targetLocation || "אזור המרכז";
   const budget = data.monthlyBudget || 1500;
   const dailyBudget = Math.round(budget / 30.4);
   const usp = data.usp || "";
   const urgency = data.urgencyLevel || "deliberate";
 
-  const isPlumber = niche.includes("אינסטל") || niche.includes("שרברב") || niche.includes("נזיל");
-  const isCosmetics = niche.includes("קוסמט") || niche.includes("יופי") || niche.includes("פנים");
-  const isLawyer = niche.includes("עורך דין") || niche.includes("עו\"ד") || niche.includes("משפט");
-  const isExterminator = niche.includes("מדביר") || niche.includes("הדבר");
-  const isGardener = niche.includes("גנן") || niche.includes("גינ");
-  const isTech = niche.includes("מחשב") || niche.includes("טכנאי");
+  const isPlumber = !data.primaryService && (niche.includes("אינסטל") || niche.includes("שרברב") || niche.includes("נזיל"));
+  const isCosmetics = !data.primaryService && (niche.includes("קוסמט") || niche.includes("יופי") || niche.includes("פנים"));
+  const isLawyer = !data.primaryService && (niche.includes("עורך דין") || niche.includes("עו\"ד") || niche.includes("משפט"));
+  const isExterminator = !data.primaryService && (niche.includes("מדביר") || niche.includes("הדבר"));
+  const isGardener = !data.primaryService && (niche.includes("גנן") || niche.includes("גינ"));
+  const isTech = !data.primaryService && (niche.includes("מחשב") || niche.includes("טכנאי"));
 
   let keywords: string[] = [];
   let negativeKeywords: string[] = [];
@@ -605,6 +615,7 @@ async function handleAzureOpenAI(
   if (currentState === "STRATEGIZING") {
     const brief = `
 Business Details:
+Primary Service: ${collectedData.primaryService}
 Niche: ${collectedData.businessNiche}
 Business Name: ${collectedData.businessName}
 Owner: ${collectedData.ownerName}

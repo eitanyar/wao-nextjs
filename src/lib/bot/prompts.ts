@@ -6,6 +6,7 @@
 export interface CollectedData {
   // Business basics
   businessNiche?: string;
+  primaryService?: string;
   businessName?: string;
   ownerName?: string;
   secondaryServices?: string;
@@ -205,7 +206,7 @@ T22: "מעולה, קיבלתי. אם עדיין אין צילום — תכתוב
   → NEVER ask for starRating again if it was already collected at T19.
   → collect: reviewQuote (and starRating only if not already set)
 
-T23 [SOFT GATE]: "ובאמת — אם מחר יתחילו להגיע אליך עוד פניות, אתה יכול לקחת אותן עכשיו? כמה זה בערך — פניות בשבוע, פרויקטים בחודש, או תאריכים בשנה?"
+T23 [SOFT GATE]: "אם יתחילו לפנות אליך עוד לקוחות, כמה עבודה נוספת אתה באמת יכול לקחת בלי לפגוע בשירות? אפשר לענות למשל: 3 עבודות בשבוע, 10 תורים בחודש, או 2 פרויקטים בחודש."
   → if fully booked: soft stop — suggest return when ready
   → collect: capacityAvailable, capacityUnit
   NOTE: "X תאריכים פנויים" = scarcity trigger for LP (photographers, event services)
@@ -298,12 +299,12 @@ export const DROR_SYSTEM_PROMPT = `
 You are Dror, WAO's Paid-Media (PPC) Strategist.
 Design a Google Search campaign (NOT PMax — Search-first until conversion data accumulates) for an Israeli local/lead-gen business.
 
-INPUT DATA AVAILABLE: businessNiche, serviceModel, targetLocation, specificCities, idealClient, idealClientFear, usp, exclusions, urgencyLevel, responseTime, avgJobValue, closeRate, monthlyBudget, noDigitalFootprint, feasibilityBranch.
+INPUT DATA AVAILABLE: primaryService, businessNiche, serviceModel, targetLocation, specificCities, idealClient, idealClientFear, usp, exclusions, urgencyLevel, responseTime, avgJobValue, closeRate, monthlyBudget, noDigitalFootprint, feasibilityBranch.
 
 RULES:
 1. Search campaign only — no PMax until 30+ conversions/month.
 2. Daily budget = monthlyBudget / 30.4. Flag if buys fewer than 5 clicks/day.
-3. One tight intent cluster (3–5 keywords). No mixed intents.
+3. One tight intent cluster (3–5 keywords) built from primaryService only. No mixed services or adjacent intents.
 4. Small city: no city in keyword → use radius targeting.
 5. Use exclusions to populate negative keywords.
 6. Generic negatives: דרושים, חינם, קורס, לימודים, איך לעשות, מדריך, עבודה, שכר, יד שניה, מחיר.
@@ -334,10 +335,10 @@ export const TAMAR_SYSTEM_PROMPT = `
 You are Tamar, WAO's Sabra Conversion Copywriter.
 Write high-converting Google Ads RSA copy for an Israeli local/lead-gen business.
 
-INPUT DATA AVAILABLE: businessNiche, ownerName, usp, idealClientFear, faqQuestions, guarantee, yearsInField, reviewQuote, starRating, urgencyLevel, responseTime, pricingNotes, targetLocation.
+INPUT DATA AVAILABLE: primaryService, businessNiche, ownerName, usp, idealClientFear, faqQuestions, guarantee, yearsInField, reviewQuote, starRating, urgencyLevel, responseTime, pricingNotes, targetLocation.
 
 RULES:
-- Headlines (3–5): max 30 chars each. Include primary keyword in H1. Hook from idealClientFear.
+- Headlines (3–5): max 30 chars each. Include primaryService, not a different service, in H1. Hook from idealClientFear.
 - Descriptions (2–3): max 90 chars each. USP + trust signal (years/guarantee/license) + CTA.
 - Use responseTime if urgencyLevel=urgent and it's available.
 - If urgencyLevel=long-planning → emphasize quality, credentials, portfolio.

@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import type { CollectedData } from "@/lib/bot/prompts";
+import { deliveryModelFollowUp, deliveryModelOptions } from "@/lib/bot/delivery-model";
 
 interface Message {
   role: "user" | "assistant" | "system";
@@ -68,11 +69,11 @@ export default function OnboardingPage() {
   const [clientId, setClientId] = useState<string | undefined>(undefined);
   const [mode, setMode] = useState<"test" | "live">("test");
   const [isDemo, setIsDemo] = useState(false);
+  const [deliveryModelSelected, setDeliveryModelSelected] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
     {
       role: "assistant",
-      content:
-        "היי, אני אדם, מנהל הקמפיינים שלך בגוגל אדס ב-WAO. עוד כמה שאלות ואני מרים לך קמפיין שמביא לקוחות שמשלמים, לא רק כניסות לאתר. במה אתה עוסק? ומאיזה שירות אתה מרוויח הכי הרבה? נתחיל ממנו — זה הדבר הכי נכון לנו כרגע. את השאר נוסיף בהמשך, ברגע שהראשון עובד.",
+      content: "היי, אני אדם, מנהל הקמפיינים שלך בגוגל אדס ב-WAO. לפני שנדבר על העסק, בוא נבין איך השירות שלך מתבצע בפועל.",
     },
   ]);
   const [inputValue, setInputValue] = useState("");
@@ -112,7 +113,11 @@ export default function OnboardingPage() {
             case 2:
               return "אם יש עוד שירותים, תוסיף אותם.";
             case 3:
-              return "תספר איך זה קורה בפועל אצלך.";
+              return "בחרנו כבר איך השירות מתבצע, אז השאלה הבאה תתמקד באזור השירות שלך.";
+            case 7:
+              return "אפשר לחשוב על: מהירות הגעה, ותק, מחיר שקוף, אחריות, זמינות, רישיון, התמחות, ביקורות, או יחס אישי. גם תשובה פשוטה לגמרי טובה.";
+            case 19:
+              return "ענה קודם: ״יש לי״ או ״אין לי כרגע״. אם יש לך, העלה אחר כך צילום מסך אחד של ביקורת Google, הודעת WhatsApp או תמונת לפני/אחרי דרך סמל המהדק.";
             default:
               return "תמשיך עם הפרטים הבאים. כל פרט קטן עוזר.";
           }
@@ -153,10 +158,29 @@ export default function OnboardingPage() {
     }
   };
 
-  // Scroll only the chat box — never the page
+  const selectDeliveryModel = (serviceModel: CollectedData["serviceModel"]) => {
+    if (!serviceModel) return;
+    const label = deliveryModelOptions.find(option => option.value === serviceModel)?.label || "";
+    setCollectedData({ serviceModel, turnIndex: 0 });
+    setMessages((prev) => [...prev, { role: "user", content: label }, { role: "assistant", content: deliveryModelFollowUp(serviceModel) }]);
+    setDeliveryModelSelected(true);
+  };
+
+  // New user messages stay at the bottom; new assistant questions begin at the
+  // top of the reading area so long prompts never open on their final line.
   useEffect(() => {
     const el = messagesContainerRef.current;
-    if (el) el.scrollTop = el.scrollHeight;
+    if (!el) return;
+
+    const latestMessage = messages[messages.length - 1];
+    if (latestMessage?.role === "assistant") {
+      const assistantMessages = el.querySelectorAll<HTMLElement>("[data-chat-role='assistant']");
+      const latestAssistant = assistantMessages[assistantMessages.length - 1];
+      if (latestAssistant) el.scrollTop = Math.max(0, latestAssistant.offsetTop - 16);
+      return;
+    }
+
+    el.scrollTop = el.scrollHeight;
   }, [messages]);
 
   // Post-payment flow — shared by Yaad Sarig redirect and bypass button
@@ -697,8 +721,24 @@ export default function OnboardingPage() {
                   minHeight: "100%",
                 }}
               >
+              {!deliveryModelSelected && (
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px", direction: "rtl" }}>
+                  {deliveryModelOptions.map(option => (
+                    <button
+                      key={option.value}
+                      type="button"
+                      onClick={() => selectDeliveryModel(option.value as CollectedData["serviceModel"])}
+                      style={{ padding: "14px", textAlign: "right", borderRadius: "10px", border: "1px solid var(--accent-border)", background: "rgba(74,227,181,0.06)", color: "var(--text)", cursor: "pointer" }}
+                    >
+                      <strong style={{ display: "block" }}>{option.label}</strong>
+                      <span style={{ fontSize: "0.75rem", color: "var(--muted)" }}>{option.description}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
               {messages.map((msg, i) => (
                 <div
+                  data-chat-role={msg.role}
                   key={i}
                   style={{
                     display: "flex",
@@ -887,7 +927,7 @@ export default function OnboardingPage() {
                     placeholder={inputPlaceholder}
                     value={inputValue}
                     onChange={(e) => setInputValue(e.target.value)}
-                    disabled={isSubmitting || currentState === "COMPLETED"}
+                    disabled={isSubmitting || currentState === "COMPLETED" || !deliveryModelSelected}
                     aria-describedby="onboarding-input-helper"
                     style={{
                       width: "100%",
