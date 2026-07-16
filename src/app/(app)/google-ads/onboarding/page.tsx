@@ -26,6 +26,16 @@ interface CampaignCopy {
   copywritingRationale: string;
 }
 
+interface BudgetRecommendation {
+  monthlyBudget: number;
+  estimatedCpc: number;
+  expectedLeads: number;
+  closeRatioNum: number;
+  expectedClients: string;
+  paybackMonths: number;
+  hasRepeatClients: boolean;
+}
+
 interface SandboxVerificationResponse {
   success?: boolean;
   customer?: { name?: string | null };
@@ -82,6 +92,8 @@ export default function OnboardingPage() {
 
   const [strategy, setStrategy] = useState<CampaignStrategy | null>(null);
   const [copy, setCopy] = useState<CampaignCopy | null>(null);
+  const [budgetRecommendation, setBudgetRecommendation] = useState<BudgetRecommendation | null>(null);
+  const [showBudgetCalculation, setShowBudgetCalculation] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSimulation, setIsSimulation] = useState(true);
   const [acceptedTerms, setAcceptedTerms] = useState(false);
@@ -328,6 +340,7 @@ export default function OnboardingPage() {
 
       if (data.strategy) setStrategy(data.strategy);
       if (data.copy) setCopy(data.copy);
+      if (data.budgetRecommendation) setBudgetRecommendation(data.budgetRecommendation as BudgetRecommendation);
       if (typeof data.awaitingProfilePhoto === "boolean") setAwaitingProfilePhoto(data.awaitingProfilePhoto);
 
       // Auto-fire STRATEGIZING when Adam signals callSpecialists
@@ -1056,7 +1069,22 @@ export default function OnboardingPage() {
                 אסטרטגיית הקמפיין שלך
               </h3>
 
-              {currentState === "DIAGNOSING" && (
+              {budgetRecommendation && (
+                <div style={{ border: "1px solid var(--accent-border)", background: "rgba(74,227,181,0.06)", borderRadius: "12px", padding: "16px", direction: "rtl" }}>
+                  <div style={{ color: "var(--muted)", fontSize: "0.8rem" }}>תקציב חודשי מומלץ</div>
+                  <div style={{ color: "var(--accent)", fontSize: "1.7rem", fontWeight: 800, margin: "4px 0 12px" }}>₪{budgetRecommendation.monthlyBudget.toLocaleString()}</div>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px", fontSize: "0.82rem" }}>
+                    <div>כ־{budgetRecommendation.expectedLeads} פניות בחודש</div>
+                    <div>בערך {budgetRecommendation.expectedClients}</div>
+                  </div>
+                  <button type="button" onClick={() => setShowBudgetCalculation(value => !value)} style={{ marginTop: "14px", border: 0, background: "transparent", color: "var(--accent)", cursor: "pointer", padding: 0 }}>
+                    {showBudgetCalculation ? "הסתר את החישוב" : "הצג את החישוב"}
+                  </button>
+                  {showBudgetCalculation && <div style={{ marginTop: "12px", color: "var(--muted)", fontSize: "0.82rem", lineHeight: 1.6 }}>מחיר קליק משוער: ₪{budgetRecommendation.estimatedCpc}. שיעור סגירה משוער: 1 ל-{budgetRecommendation.closeRatioNum}. זמן החזר משוער: כ־{budgetRecommendation.paybackMonths} חודשים.</div>}
+                </div>
+              )}
+
+              {currentState === "DIAGNOSING" && !budgetRecommendation && (
                 <div
                   style={{
                     flex: 1,
