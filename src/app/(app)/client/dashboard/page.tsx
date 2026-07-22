@@ -14,6 +14,10 @@ import {
   rankAdvisorItems,
   TOOL_LABEL,
 } from '@/lib/advisor';
+import GoogleAdsOperatorPanel from '@/components/google-ads-operator-panel';
+import { buildGoogleAdsOperatorTasks, readGoogleAdsApprovals } from '@/lib/google-ads/operator';
+import { hasOperatorAccess, operatorAccessSource } from '@/lib/operator/flags';
+import { buildWeeklyDigest, loadClientGoogleAdsIndex, loadCampaignConfigBySlug, type CampaignConfig, type WeeklyDigest } from '@/lib/crm/intelligence';
 
 // ---------------------------------------------------------------------------
 // Title-bot section — entitlement-gated, read-only display.
@@ -211,6 +215,54 @@ function loadAdsOverlapData(clientId: string): AdsOverlapData | null {
   }
 }
 
+function normalizeText(value: string | undefined | null): string {
+  return (value || '').trim().toLowerCase();
+}
+
+function loadGoogleAdsDigest(clientRecord: ReturnType<typeof getClientRecord>): { campaign: CampaignConfig; digest: WeeklyDigest } | null {
+  const explicitIndex = clientRecord?.clientId ? loadClientGoogleAdsIndex(clientRecord.clientId) : null;
+  if (explicitIndex) {
+    const campaign = loadCampaignConfigBySlug(explicitIndex.primarySlug);
+    if (campaign) {
+      return { campaign, digest: buildWeeklyDigest({ campaign }) };
+    }
+  }
+
+  const clientNiche = normalizeText(clientRecord?.businessNiche);
+  const clientService = normalizeText(clientRecord?.topService);
+  const campaignsDir = path.join(process.cwd(), 'data', 'campaigns');
+  if (!fs.existsSync(campaignsDir)) return null;
+
+  const campaigns = fs.readdirSync(campaignsDir)
+    .filter(name => name.endsWith('.json'))
+    .map(name => {
+      const file = path.join(campaignsDir, name);
+      try {
+        return JSON.parse(fs.readFileSync(file, 'utf8')) as CampaignConfig;
+      } catch {
+        return null;
+      }
+    })
+    .filter((campaign): campaign is CampaignConfig => Boolean(campaign));
+
+  const matches = campaigns.filter(campaign => {
+    const niche = normalizeText(campaign.businessNiche);
+    const business = normalizeText(campaign.businessName);
+    const target = normalizeText(campaign.targetLocation);
+    return Boolean(
+      (clientNiche && (niche.includes(clientNiche) || clientNiche.includes(niche))) ||
+      (clientService && (business.includes(clientService) || clientService.includes(business))) ||
+      (clientNiche && target.includes(clientNiche))
+    );
+  });
+
+  const sorted = matches.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  const campaign = sorted[0];
+  if (!campaign) return null;
+
+  return { campaign, digest: buildWeeklyDigest({ campaign }) };
+}
+
 export const metadata = { robots: { index: false }, title: 'המשימות שלי | WAO' };
 
 const PRIORITY_ORDER = { HIGH: 0, MEDIUM: 1, LOW: 2 };
@@ -254,6 +306,11 @@ export default async function DashboardPage() {
   const anomalyData    = showAnomaly ? loadAnomalyData(clientId) : null;
   const showAdsOverlap = hasEntitlement(clientRecord?.entitlements, 'ads-overlap');
   const adsOverlapData = showAdsOverlap ? loadAdsOverlapData(clientId) : null;
+  const googleAdsData = loadGoogleAdsDigest(clientRecord);
+  const showGoogleAdsOperator = hasOperatorAccess(clientId, clientRecord?.entitlements) && Boolean(googleAdsData);
+  const googleAdsOperatorSource = showGoogleAdsOperator ? operatorAccessSource(clientId, clientRecord?.entitlements) : null;
+  const googleAdsOperatorTasks = showGoogleAdsOperator && googleAdsData ? buildGoogleAdsOperatorTasks({ clientId, digest: googleAdsData.digest }) : [];
+  const googleAdsOperatorApprovals = showGoogleAdsOperator ? readGoogleAdsApprovals(clientId) : [];
 
   const all     = getClientActions(clientId);
   const pending = all
@@ -440,6 +497,94 @@ export default async function DashboardPage() {
               )}
             </>
           )}
+        </section>
+      )}
+
+      {/* ── Google Ads Weekly Digest (campaign-linked, read-only) ─────────── */}
+      {googleAdsData && (
+        <section className="mt-12" dir="ltr">
+          <div className="flex items-center gap-2 flex-wrap mb-1">
+            <h2 className="text-xs font-semibold text-[var(--muted)] uppercase tracking-wider">
+              Google Ads Weekly Digest
+            </h2>
+            <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full border border-white/10 bg-white/5 text-[var(--muted)]">
+              {googleAdsData.campaign.mode === 'test' ? 'Sandbox' : 'Live'}
+            </span>
+          </div>
+          <p dir="rtl" lang="he" className="text-sm text-[var(--foreground)]/90 leading-relaxed mb-2 max-w-xl">
+            זה הדופק השבועי של הקמפיין שלך. אתה רואה מה נכנס, מה נסגר, ואיפה הביצועים בורחים לפני שזה נהיה יקר.
+          </p>
+          <p className="text-[10px] text-[var(--muted)] mb-4 max-w-xl">
+            Internal preview — weekly pacing, lead volume, conversion health, and next actions derived from the current campaign config.
+          </p>
+
+          <div className="grid gap-3 sm:grid-cols-3 mb-4 max-w-3xl">
+            <div className="rounded-xl border border-white/10 bg-white/5 px-4 py-3">
+              <div className="text-[10px] text-[var(--muted)] mb-1">Leads this week</div>
+              <div className="text-2xl font-bold">{googleAdsData.digest.totals.leads}</div>
+            </div>
+            <div className="rounded-xl border border-white/10 bg-white/5 px-4 py-3">
+              <div className="text-[10px] text-[var(--muted)] mb-1">Closed deals</div>
+              <div className="text-2xl font-bold">{googleAdsData.digest.totals.closedDeals}</div>
+            </div>
+            <div className="rounded-xl border border-white/10 bg-white/5 px-4 py-3">
+              <div className="text-[10px] text-[var(--muted)] mb-1">Pacing</div>
+              <div className="text-2xl font-bold capitalize">{googleAdsData.digest.pacing.status.replace('_', ' ')}</div>
+            </div>
+          </div>
+
+          {googleAdsData.digest.alerts.length > 0 && (
+            <div className="rounded-xl border border-white/10 bg-white/5 p-4 mb-4">
+              <p className="text-sm font-semibold mb-2">Alerts</p>
+              <ul className="space-y-2 text-sm text-[var(--muted)]">
+                {googleAdsData.digest.alerts.map((alert, i) => (
+                  <li key={`${alert.type}-${i}`}>
+                    <span className="font-medium text-[var(--foreground)]">{alert.title}:</span> {alert.message}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          <div className="rounded-xl border border-white/10 bg-white/5 p-4">
+            <p className="text-sm font-semibold mb-2">Next actions</p>
+            <ul className="list-disc pl-5 space-y-1 text-sm text-[var(--muted)]">
+              {googleAdsData.digest.nextActions.map((action, i) => (
+                <li key={i}>{action}</li>
+              ))}
+            </ul>
+          </div>
+        </section>
+      )}
+
+      {showGoogleAdsOperator && googleAdsData && (
+        <section className="mt-12" dir="ltr">
+          <div className="flex items-center gap-2 flex-wrap mb-1">
+            <h2 className="text-xs font-semibold text-[var(--muted)] uppercase tracking-wider">
+              Google Ads Operator
+            </h2>
+            <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full border border-[var(--accent)]/30 bg-[var(--accent)]/10 text-[var(--accent)]">
+              Internal only
+            </span>
+            {googleAdsOperatorSource && (
+              <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full border border-white/10 bg-white/5 text-[var(--muted)]">
+                {googleAdsOperatorSource === 'allowlist' ? 'Allowlist' : 'Entitlement'}
+              </span>
+            )}
+          </div>
+          <p dir="rtl" lang="he" className="text-sm text-[var(--foreground)]/90 leading-relaxed mb-2 max-w-xl">
+            זה תור הפעולות שהבוט מציע לשנות בחשבון. הוא מסביר למה זה נחוץ, מחכה לאישור מפורש, ואז יבצע רק את המשימה שאישרת.
+          </p>
+          <p className="text-[10px] text-[var(--muted)] mb-4 max-w-xl">
+            Internal preview — approval-gated operator queue. Read-only in this phase.
+            Low-risk tasks such as copy refresh, negative keywords, pacing, and search-term cleanup will land here first.
+          </p>
+
+          <GoogleAdsOperatorPanel
+            clientId={clientId}
+            tasks={googleAdsOperatorTasks}
+            approvals={googleAdsOperatorApprovals}
+          />
         </section>
       )}
 

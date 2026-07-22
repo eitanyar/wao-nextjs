@@ -22,7 +22,7 @@ This version has breaking changes — APIs, conventions, and file structure may 
 1. Tamar — Copywriter
 
 Agent name: conversion-copywriter
-Model: gpt-5.6-terra
+Model: gemini-3.5-thinking
 Tools: Read, Write, Edit
 
 Responsibilities
@@ -63,7 +63,7 @@ Receives intent/keyword briefs from Yonatan → writes copy → Noa proofs → E
 2. Noa — Language QA
 
 Agent name: noa-voice-director
-Model: gpt-5.6-terra
+Model: gemini-3.5-flash
 Tools: Read, Write, Edit
 
 Responsibilities
@@ -97,7 +97,7 @@ Constraints:
 3. Yonatan — SEO / GEO / AEO Strategist
 
 Agent name: seo-strategist
-Model: gpt-5.6-luna
+Model: gemini-3.5-flash
 Tools: Read, Edit, Grep, Glob, WebSearch, WebFetch
 
 Responsibilities
@@ -132,7 +132,7 @@ Hard Rules
 4. Maya — UX / RTL / Accessibility
 
 Agent name: ux
-Model: gpt-5.6-terra
+Model: gemini-3.5-flash
 Tools: Read, Edit, Grep, Glob, Bash
 
 Responsibilities
@@ -166,7 +166,7 @@ Handoffs
 5. Dror — PPC Strategist
 
 Agent name: ppc-strategist
-Model: gpt-5.6-luna
+Model: gemini-3.5-flash
 Tools: Read, Edit, Grep, Glob, WebSearch, WebFetch
 
 Responsibilities
@@ -202,7 +202,7 @@ Hard Rules
 6. Eitan-Dev — Next.js Engineer & Local Automation Grunt
 
 Agent name: nextjs-engineer
-Model: gpt-5.6-terra [Cloud Strategy] & ollama/qwen2.5-coder:7b [Local Zero-Cost Execution]
+Model: gemini-2.5-pro [Cloud Strategy] & ollama/qwen2.5-coder:7b [Local Zero-Cost Execution]
 Tools: Read, Edit, Write, Bash, Grep, Glob, WebFetch, Local Ollama API (`http://localhost:11434`)
 
 Responsibilities
@@ -241,7 +241,7 @@ Hard Rules
 7. Roni — Verifier
 
 Agent name: verifier
-Model: o4-mini
+Model: gemini-3.1-flash-lite
 Tools: Read, Bash, Grep, Glob
 
 Responsibilities
@@ -276,7 +276,7 @@ Hard Rules
 8. Gil — Instructional Designer
 
 Agent name: instructional-designer
-Model: gpt-5.6-terra
+Model: gemini-3.5-flash
 Voice: ElevenLabs Suburb (Model: Eleven Multilingual v3)
 Tools: Read, Write, Edit, Grep, Glob
 
@@ -305,7 +305,7 @@ Hard Rules
 Orchestration: Adam (main session)
 
 Agent name: orchestrator
-Model: gpt-5.6-terra
+Model: gemini-3.5-pro
 Tools: Read, Edit, Write, Bash, Grep, Glob
 
 Responsibilities
@@ -338,7 +338,7 @@ Hybrid framework: Unclear or multi-step requests require a complete task list an
 9. Lior — Mission Planner
 
 Agent name: mission-planner
-Model: gpt-5.6-terra
+Model: gemini-3.1-pro
 Tools: Read, WebSearch
 
 Responsibilities

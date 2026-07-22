@@ -105,11 +105,11 @@ const server = http.createServer(async (req, res) => {
   }
 
   console.log('\n✅ Success! Add these to your .env file:\n');
-  console.log(`GOOGLE_ADS_DEVELOPER_TOKEN=DCM-gQoNu6zU-rohLiWY8Q`);
+  console.log(`GOOGLE_ADS_DEVELOPER_TOKEN=${process.env.GOOGLE_ADS_DEVELOPER_TOKEN || 'YOUR_DEVELOPER_TOKEN'}`);
   console.log(`GOOGLE_ADS_CLIENT_ID=${CLIENT_ID}`);
   console.log(`GOOGLE_ADS_CLIENT_SECRET=${CLIENT_SECRET}`);
   console.log(`GOOGLE_ADS_REFRESH_TOKEN=${tokens.refresh_token}`);
-  console.log(`GOOGLE_ADS_MCC_CUSTOMER_ID=4155893363`);
+  console.log(`GOOGLE_ADS_MCC_CUSTOMER_ID=${process.env.GOOGLE_ADS_MCC_CUSTOMER_ID || 'YOUR_MCC_ID'}`);
   console.log('\nRefresh token (copy this):\n');
   console.log(tokens.refresh_token);
 });

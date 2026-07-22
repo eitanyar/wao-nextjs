@@ -1,0 +1,23 @@
+{
+  "clientId": "google-ads-sandbox",
+  "siteUrl": "https://sandbox.wao.local/",
+  "cmsType": "sandbox",
+  "businessNiche": "WAO Google Ads sandbox client for internal testing",
+  "topService": "Google Ads test account",
+  "targetLocation": "Internal QA only",
+  "usp": "No billing, no real client, safe test hierarchy for onboarding and account setup",
+  "clientQuestions": "",
+  "exclusions": "",
+  "approvalContact": "WAO",
+  "approvalWhatsapp": "0000000000",
+  "tone": "internal sandbox",
+  "pin": "0000",
+  "entitlements": [
+    "title-bot:internal",
+    "pareto:internal",
+    "anomaly:internal",
+    "ads-overlap:internal",
+    "advisor:internal",
+    "google-ads-operator"
+  ]
+}
