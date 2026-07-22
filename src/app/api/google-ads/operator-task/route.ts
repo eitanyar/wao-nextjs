@@ -6,11 +6,14 @@ import { buildWeeklyDigest, loadCampaignConfigBySlug, loadClientGoogleAdsIndex }
 import { hasOperatorAccess } from '@/lib/operator/flags';
 import {
   appendGoogleAdsApproval,
+  updateGoogleAdsApproval,
   buildApprovalRecord,
   buildGoogleAdsOperatorTasks,
   readGoogleAdsApprovals,
+  GoogleAdsOperatorApproval,
 } from '@/lib/google-ads/operator';
 import { sendGoogleAdsOperatorApprovalEmail } from '@/lib/mail';
+import { executeGoogleAdsOperatorTask } from '@/lib/google-ads/executor';
 
 interface OperatorTaskApprovalRequest {
   taskId?: string;
@@ -74,27 +77,67 @@ export async function POST(req: Request) {
     const approval = buildApprovalRecord(task, sessionClientId, digest.windowEnd);
     appendGoogleAdsApproval(approval);
 
+    const campaignId = index.primaryCampaignId;
+    if (!campaignId) {
+      const failedApproval: GoogleAdsOperatorApproval = {
+        ...approval,
+        status: 'failed',
+        executedAt: new Date().toISOString(),
+        error: 'Campaign ID missing from client index',
+      };
+      updateGoogleAdsApproval(failedApproval);
+      return NextResponse.json(
+        {
+          success: false,
+          task: failedApproval,
+          error: 'Campaign ID missing from client index',
+        },
+        { status: 500 }
+      );
+    }
+
+    const executionResult = await executeGoogleAdsOperatorTask({
+      task,
+      campaignConfig: campaign,
+      campaignId,
+    });
+
+    const finalStatus: GoogleAdsOperatorApproval = {
+      ...approval,
+      status: executionResult.success ? 'executed' : 'failed',
+      executedAt: new Date().toISOString(),
+      error: executionResult.success ? undefined : executionResult.error,
+    };
+
+    updateGoogleAdsApproval(finalStatus);
+
     try {
       await sendGoogleAdsOperatorApprovalEmail({
         clientId: sessionClientId,
         title: task.title,
         recommendedAction: task.recommendedAction,
         approvedBy: sessionClientId,
+        status: finalStatus.status,
+        error: finalStatus.error,
       });
     } catch {
       // Notification failure is non-fatal. The approval record remains durable.
     }
 
+    const message = executionResult.success
+      ? 'Task approved and executed successfully.'
+      : `Task approved but execution failed: ${executionResult.error}.`;
+
     return NextResponse.json({
-      success: true,
-      task: approval,
-      queued: true,
-      message: 'Task approved and queued for the operator.',
+      success: executionResult.success,
+      task: finalStatus,
+      queued: false,
+      message,
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error('[google-ads/operator-task] error:', error);
     return NextResponse.json(
-      { error: 'Failed to approve operator task' },
+      { error: error?.message || 'Failed to approve operator task' },
       { status: 500 }
     );
   }

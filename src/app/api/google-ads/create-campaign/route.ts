@@ -23,6 +23,7 @@ export interface CampaignConfig {
   closeRateEstimate: number;
   verifiedLeadConversionResourceName: string | null;
   closedDealConversionResourceName: string | null;
+  adGroupResourceName?: string;
   createdAt: string;
 }
 
@@ -368,6 +369,7 @@ export async function POST(req: Request) {
       closeRateEstimate,
       verifiedLeadConversionResourceName,
       closedDealConversionResourceName,
+      adGroupResourceName,
       createdAt: new Date().toISOString(),
     };
     const configDir = path.join(process.cwd(), 'data', 'campaigns');

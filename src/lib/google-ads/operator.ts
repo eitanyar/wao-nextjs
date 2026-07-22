@@ -242,6 +242,14 @@ export function appendGoogleAdsApproval(entry: GoogleAdsOperatorApproval): void 
   fs.appendFileSync(approvalsPath(entry.clientId), `${JSON.stringify(entry)}\n`, 'utf8');
 }
 
+export function updateGoogleAdsApproval(entry: GoogleAdsOperatorApproval): void {
+  const file = approvalsPath(entry.clientId);
+  const all = readGoogleAdsApprovals(entry.clientId);
+  const next = all.map((existing) => (existing.taskId === entry.taskId ? entry : existing));
+  ensureTaskDir(entry.clientId);
+  fs.writeFileSync(file, next.map((r) => JSON.stringify(r)).join('\n') + (next.length ? '\n' : ''), 'utf8');
+}
+
 export function buildApprovalRecord(task: GoogleAdsOperatorTask, approvedBy: string, digestWindowEnd: string): GoogleAdsOperatorApproval {
   const now = new Date().toISOString();
   return {

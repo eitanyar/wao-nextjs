@@ -57,16 +57,26 @@ export async function sendGoogleAdsOperatorApprovalEmail(params: {
   title: string;
   recommendedAction: string;
   approvedBy: string;
+  status?: string;
+  error?: string;
 }) {
+  const isFailed = params.status === 'failed';
+  const statusHeading = isFailed ? 'פעולת Google Ads נכשלה ❌' : 'פעולת Google Ads אושרה ✅';
+  const statusText = isFailed
+    ? `בוט הקמפיינים ניסה ליישם את המשימה אך נתקל בשגיאה: ${params.error || 'שגיאה לא ידועה'}`
+    : 'בוט הקמפיינים קיבל אישור מפורש ויישם בהצלחה את המשימה הבאה:';
+
   const htmlContent = `
     <div dir="rtl" style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
-      <h2 style="color: #2c3e50;">פעולת Google Ads אושרה ✅</h2>
-      <p>בוט הקמפיינים קיבל אישור מפורש ויישם את המשימה הבאה:</p>
+      <h2 style="color: ${isFailed ? '#c0392b' : '#2c3e50'};">${statusHeading}</h2>
+      <p>${statusText}</p>
       <div style="background-color: #f8f9fa; padding: 15px; border-radius: 5px; border: 1px solid #e9ecef;">
         <p><strong>לקוח:</strong> ${params.clientId}</p>
         <p><strong>משימה:</strong> ${params.title}</p>
         <p><strong>מה הוחלט:</strong> ${params.recommendedAction}</p>
         <p><strong>אושר על ידי:</strong> ${params.approvedBy}</p>
+        ${params.status ? `<p><strong>סטטוס ביצוע:</strong> ${params.status}</p>` : ''}
+        ${params.error ? `<p><strong>שגיאה:</strong> ${params.error}</p>` : ''}
       </div>
       <p style="margin-top: 20px;">המשימה נשמרה בתור ההפעלה הפנימי של WAO.</p>
     </div>
@@ -75,8 +85,8 @@ export async function sendGoogleAdsOperatorApprovalEmail(params: {
   try {
     await sendResendEmail({
       from: "WAO Operator <ads@wao.co.il>",
-      to: ["eitan@wao.co.il", "ads@wao.co.il"],
-      subject: `Google Ads operator approved: ${params.title}`,
+      to: ["eitan@wao.co.il", "leads@wao.co.il"],
+      subject: `Google Ads operator status [${params.status || 'approved'}]: ${params.title}`,
       html: htmlContent,
     });
 

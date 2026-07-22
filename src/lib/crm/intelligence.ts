@@ -36,6 +36,7 @@ export interface CampaignConfig {
   closeRateEstimate: number;
   verifiedLeadConversionResourceName: string | null;
   closedDealConversionResourceName: string | null;
+  adGroupResourceName?: string;
   createdAt: string;
 }
 
