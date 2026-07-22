@@ -2,6 +2,8 @@ import fs   from 'fs';
 import path from 'path';
 import SendButton from '@/components/geo/SendButton';
 import { buildApprovalLink } from '@/lib/geo/whatsapp';
+import { buildAllClientDigests } from '@/lib/google-ads/weekly-digest-batch';
+import { buildWeeklyDigestWhatsAppLink } from '@/lib/google-ads/whatsapp-digest';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 interface ClientData {
@@ -70,6 +72,7 @@ const ACTION_LABELS: Record<string, string> = {
 // ── Page ─────────────────────────────────────────────────────────────────────
 export default function GeoDashboard() {
   const clients = listClients();
+  const adsDigests = buildAllClientDigests();
 
   return (
     <main className="min-h-screen px-4 py-10 max-w-4xl mx-auto" dir="rtl">
@@ -84,8 +87,9 @@ export default function GeoDashboard() {
 
       {clients.map(clientId => {
         const client  = loadClient(clientId);
+        if (!client) return null;
         const actions = loadActions(clientId);
-        if (!client || actions.length === 0) return null;
+        const adsResult = adsDigests.find((d) => d.clientId === clientId);
 
         const hasPhone   = !!client.approvalWhatsapp;
         const totalScore = actions.reduce((s, a) => s + a.score, 0);
@@ -111,67 +115,93 @@ export default function GeoDashboard() {
               </div>
             )}
 
+            {/* Google Ads Weekly Digest Section */}
+            {adsResult?.status === 'ok' && adsResult.campaign && adsResult.digest && (
+              <div className="mb-6 rounded-lg border border-[var(--border)] bg-[var(--surface)] p-4">
+                <div className="flex items-center justify-between gap-4 flex-wrap mb-2">
+                  <div>
+                    <span className="font-medium">Google Ads — סיכום שבועי</span>
+                    <span className="text-xs text-[var(--muted)] mr-2">
+                      {adsResult.digest.totals.leads} לידים · {adsResult.digest.alerts.length} התראות · תקציב: {adsResult.digest.pacing.status}
+                    </span>
+                  </div>
+                  <SendButton
+                    waLink={buildWeeklyDigestWhatsAppLink({
+                      contactPhone: client.approvalWhatsapp,
+                      contactName: client.approvalContact || 'שלום',
+                      campaignName: adsResult.campaign.businessName || adsResult.campaign.slug,
+                      digest: adsResult.digest,
+                    })}
+                    label={`שלח סיכום ל${client.approvalContact || 'לקוח'}`}
+                    disabled={!hasPhone}
+                  />
+                </div>
+              </div>
+            )}
+
             {/* Actions list */}
-            <div className="space-y-3">
-              {actions.map((action, i) => {
-                const pageSlug = decodeURIComponent(action.rankingUrl.replace(client.siteUrl.replace(/\/$/, ''), '') || '/');
-                const waLink   = buildApprovalLink({
-                  contactName:  client.approvalContact || 'שלום',
-                  contactPhone: client.approvalWhatsapp,
-                  actionId:     action.actionId,
-                  query:        action.query,
-                  rankingUrl:   action.rankingUrl,
-                  actionType:   action.actionType,
-                  priority:     action.priority,
-                  impressions:  action.impressions,
-                  batchIndex:   i + 1,
-                  batchTotal:   actions.length,
-                });
+            {actions.length > 0 && (
+              <div className="space-y-3">
+                {actions.map((action, i) => {
+                  const pageSlug = decodeURIComponent(action.rankingUrl.replace(client.siteUrl.replace(/\/$/, ''), '') || '/');
+                  const waLink   = buildApprovalLink({
+                    contactName:  client.approvalContact || 'שלום',
+                    contactPhone: client.approvalWhatsapp,
+                    actionId:     action.actionId,
+                    query:        action.query,
+                    rankingUrl:   action.rankingUrl,
+                    actionType:   action.actionType,
+                    priority:     action.priority,
+                    impressions:  action.impressions,
+                    batchIndex:   i + 1,
+                    batchTotal:   actions.length,
+                  });
 
-                return (
-                  <div
-                    key={action.actionId}
-                    className="rounded-lg border border-[var(--border)] bg-[var(--surface)] p-4"
-                  >
-                    <div className="flex items-start justify-between gap-4 flex-wrap">
-                      {/* Left: info */}
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1 flex-wrap">
-                          <span className="font-medium">{action.query}</span>
-                          <span className={`rounded px-2 py-0.5 text-xs font-medium ${PRIORITY_COLORS[action.priority]}`}>
-                            {action.priority}
-                          </span>
-                          <span className="rounded bg-[var(--elevated)] px-2 py-0.5 text-xs text-[var(--muted)]">
-                            {ACTION_LABELS[action.actionType] ?? action.actionType}
+                  return (
+                    <div
+                      key={action.actionId}
+                      className="rounded-lg border border-[var(--border)] bg-[var(--surface)] p-4"
+                    >
+                      <div className="flex items-start justify-between gap-4 flex-wrap">
+                        {/* Left: info */}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-1 flex-wrap">
+                            <span className="font-medium">{action.query}</span>
+                            <span className={`rounded px-2 py-0.5 text-xs font-medium ${PRIORITY_COLORS[action.priority]}`}>
+                              {action.priority}
+                            </span>
+                            <span className="rounded bg-[var(--elevated)] px-2 py-0.5 text-xs text-[var(--muted)]">
+                              {ACTION_LABELS[action.actionType] ?? action.actionType}
+                            </span>
+                          </div>
+                          <div className="text-xs text-[var(--muted)] space-y-0.5">
+                            <div dir="ltr" className="font-mono">{pageSlug}</div>
+                            <div>{action.impressions.toLocaleString('he-IL')} חשיפות · ציון {action.score.toLocaleString('he-IL')}</div>
+                            <div className="text-[var(--muted)]/70">{action.content.placementInstruction}</div>
+                          </div>
+                        </div>
+
+                        {/* Right: action */}
+                        <div className="flex flex-col items-end gap-2 shrink-0">
+                          <SendButton
+                            waLink={waLink}
+                            label={`שלח ל${client.approvalContact || 'לקוח'}`}
+                            disabled={!hasPhone}
+                          />
+                          <span className={`text-xs px-2 py-0.5 rounded ${
+                            action.status === 'generated'
+                              ? 'bg-blue-500/20 text-blue-400'
+                              : 'bg-[var(--elevated)] text-[var(--muted)]'
+                          }`}>
+                            {action.status}
                           </span>
                         </div>
-                        <div className="text-xs text-[var(--muted)] space-y-0.5">
-                          <div dir="ltr" className="font-mono">{pageSlug}</div>
-                          <div>{action.impressions.toLocaleString('he-IL')} חשיפות · ציון {action.score.toLocaleString('he-IL')}</div>
-                          <div className="text-[var(--muted)]/70">{action.content.placementInstruction}</div>
-                        </div>
-                      </div>
-
-                      {/* Right: action */}
-                      <div className="flex flex-col items-end gap-2 shrink-0">
-                        <SendButton
-                          waLink={waLink}
-                          label={`שלח ל${client.approvalContact || 'לקוח'}`}
-                          disabled={!hasPhone}
-                        />
-                        <span className={`text-xs px-2 py-0.5 rounded ${
-                          action.status === 'generated'
-                            ? 'bg-blue-500/20 text-blue-400'
-                            : 'bg-[var(--elevated)] text-[var(--muted)]'
-                        }`}>
-                          {action.status}
-                        </span>
                       </div>
                     </div>
-                  </div>
-                );
-              })}
-            </div>
+                  );
+                })}
+              </div>
+            )}
           </section>
         );
       })}
