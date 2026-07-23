@@ -21,7 +21,7 @@ export async function POST(req: Request) {
   }
 
   try {
-    const digestResults: ClientDigestResult[] = buildAllClientDigests();
+    const digestResults: ClientDigestResult[] = await buildAllClientDigests();
     const runResults: CronRunResult[] = [];
 
     for (const result of digestResults) {

@@ -6,7 +6,9 @@ import {
   loadCampaignConfigBySlug,
   type CampaignConfig,
   type WeeklyDigest,
+  type PerformanceSnapshot,
 } from '@/lib/crm/intelligence';
+import { resolveCustomer } from '@/lib/google-ads/mutations';
 
 const CLIENTS_DIR = path.join(process.cwd(), 'data', 'clients');
 
@@ -31,27 +33,58 @@ export function listGoogleAdsBoundClientIds(): string[] {
     .filter((clientId) => fs.existsSync(path.join(CLIENTS_DIR, clientId, 'google-ads.json')));
 }
 
-export function buildAllClientDigests(now?: Date): ClientDigestResult[] {
-  return listGoogleAdsBoundClientIds().map((clientId) => {
+export async function buildAllClientDigests(now?: Date): Promise<ClientDigestResult[]> {
+  const results: ClientDigestResult[] = [];
+  const clientIds = listGoogleAdsBoundClientIds();
+
+  for (const clientId of clientIds) {
     try {
       const index = loadClientGoogleAdsIndex(clientId);
-      if (!index?.primarySlug) {
-        return { clientId, status: 'unbound' as const, error: 'google-ads.json present but primarySlug missing' };
+      if (!index?.primarySlug || !index?.primaryCampaignId) {
+        results.push({ clientId, status: 'unbound', error: 'google-ads.json present but primarySlug or primaryCampaignId missing' });
+        continue;
       }
 
       const campaign = loadCampaignConfigBySlug(index.primarySlug);
       if (!campaign) {
-        return { clientId, status: 'unbound' as const, error: `Campaign config not found for slug: ${index.primarySlug}` };
+        results.push({ clientId, status: 'unbound', error: `Campaign config not found for slug: ${index.primarySlug}` });
+        continue;
       }
 
-      const digest = buildWeeklyDigest({ campaign, now });
-      return { clientId, status: 'ok' as const, campaign, digest };
+      let performance: PerformanceSnapshot | undefined = undefined;
+      try {
+        const customer = resolveCustomer(campaign);
+        const query = `SELECT metrics.impressions, metrics.clicks, metrics.cost_micros FROM campaign WHERE campaign.id = ${index.primaryCampaignId} AND segments.date DURING LAST_7_DAYS`;
+        const rows = (await customer.query(query)) as Array<{
+          metrics?: {
+            impressions?: string | number | null;
+            clicks?: string | number | null;
+            cost_micros?: string | number | null;
+          };
+        }>;
+
+        const row = rows?.[0];
+        if (row?.metrics) {
+          performance = {
+            impressions: row.metrics.impressions !== undefined && row.metrics.impressions !== null ? Number(row.metrics.impressions) : undefined,
+            clicks: row.metrics.clicks !== undefined && row.metrics.clicks !== null ? Number(row.metrics.clicks) : undefined,
+            spendMicros: row.metrics.cost_micros !== undefined && row.metrics.cost_micros !== null ? Number(row.metrics.cost_micros) : undefined,
+          };
+        }
+      } catch (err) {
+        console.error(`[weekly-digest-batch] Failed to fetch live metrics for client ${clientId}, campaign ${index.primaryCampaignId}:`, err);
+      }
+
+      const digest = buildWeeklyDigest({ campaign, now, performance });
+      results.push({ clientId, status: 'ok', campaign, digest });
     } catch (error) {
-      return {
+      results.push({
         clientId,
-        status: 'error' as const,
+        status: 'error',
         error: error instanceof Error ? error.message : 'Unknown error building digest',
-      };
+      });
     }
-  });
+  }
+
+  return results;
 }
