@@ -22,7 +22,7 @@ export interface LPCopy {
   reviewFeatured: string;        // EXACT text from reviewQuote field. No edits.
   reviewContext: string;         // e.g. "4.9 כוכבים | 64 ביקורות בגוגל"
   responseTimeBadge: string | null;  // e.g. "מגיע תוך 20 דקות" — null if not applicable
-  scarcityLine: string | null;   // e.g. "נותרו 3 תאריכים פנויים" — null if not applicable
+  scarcityLine: string | null;   // Always null for now — no vertical-gated allow-list is wired up. INTERNAL ONLY capacity fields like capacityUnit must NEVER be surfaced verbatim here if this is ever built out.
   formHeadline: string;          // Max 35 chars. Urgency-aware.
   stickyBarLine: string;         // Max 25 chars. Above sticky CTA buttons.
 }
@@ -36,9 +36,15 @@ export interface SiteCopy extends LPCopy {
 }
 
 export function buildLpCopyPrompt(data: CollectedData): string {
-  const contactLabel = data.contactMethod?.includes('וואטסאפ')
+  const hasPhone = data.contactMethod?.includes('טלפון') || data.contactMethod?.includes('להתקשר');
+  const hasWhatsapp = data.contactMethod?.includes('וואטסאפ');
+  const hasForm = data.contactMethod?.includes('טופס');
+
+  const contactLabel = hasPhone
+    ? 'התקשר עכשיו'
+    : hasWhatsapp
     ? 'שלח וואטסאפ'
-    : data.contactMethod?.includes('טופס')
+    : hasForm
     ? 'השאר פרטים'
     : 'התקשר עכשיו';
 
@@ -52,6 +58,7 @@ HARD RULES:
 - Never use: על מנת, כיצד, במידה ו, עם זאת, מהו, ניתן ל (prefer: אפשר).
 - Tone: warm Sabra expert talking directly to a stressed client. Not salesy. Not corporate.
 - reviewFeatured: copy EXACTLY from the Review Quote field — do not rephrase a single word.
+- scarcityLine: always output null. INTERNAL ONLY capacity fields (capacityUnit) must NEVER be surfaced verbatim here.
 
 ABOUT SECTION (aboutBlurb) — most important field:
 - First-person voice. Open with: "שמי ${ownerFirstName}," or "אני ${ownerFirstName},"
@@ -64,6 +71,8 @@ ABOUT SECTION (aboutBlurb) — most important field:
 - Max 320 chars. Zero generic filler phrases like "אנו מחויבים ללקוח" or "שירות מקצועי ואיכותי".
 
 HERO:
+- primaryService: explicit required term: "${data.primaryService || data.businessNiche || ''}"
+- QUALITY SCORE RELEVANCE RULE: heroHeadline or heroSubheadline MUST contain the exact literal primaryService term (or a natural Hebrew inflection of it). This is a strict Google Ads Quality Score relevance requirement, not a style preference.
 - heroHeadline: open with the client's fear/problem, close with the relief. Max 68 chars.
 - heroSubheadline: one specific, credible USP. Not a list — one sharp promise. Max 90 chars.
 

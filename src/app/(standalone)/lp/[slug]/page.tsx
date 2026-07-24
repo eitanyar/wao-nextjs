@@ -56,12 +56,24 @@ export default async function LPPage({ params }: Props) {
   const assets = VERTICAL_ASSETS[verticalKey];
   const heroImageUrl = assets.heroImages[0].url;
 
+  // Pass only the fields LandingPage actually renders — it's a client
+  // component, so the full CollectedData record (capacityUnit, avgJobValue,
+  // closeRate, pricingNotes, exclusions, etc.) must never be handed to it;
+  // see docs/missions/lp-site-bot-qa-fixes-2026-07.md (BUG 4).
+  const publicData = {
+    phone: collectedData.phone,
+    whatsappNumber: collectedData.whatsappNumber,
+    businessName: collectedData.businessName,
+    businessNiche: collectedData.businessNiche,
+    ownerName: collectedData.ownerName,
+  };
+
   return (
     <LandingPage
       theme={theme}
       assets={assets}
       copy={copy}
-      data={collectedData}
+      data={publicData}
       heroImageUrl={heroImageUrl}
     />
   );

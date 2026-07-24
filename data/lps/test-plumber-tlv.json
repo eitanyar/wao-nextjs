@@ -1,0 +1,54 @@
+{
+  "slug": "test-plumber-tlv",
+  "collectedData": {
+    "businessNiche": "אינסטלטור",
+    "businessName": "יוסי אינסטלציה",
+    "ownerName": "יוסי",
+    "targetLocation": "תל אביב",
+    "idealClientFear": "הצפה בבית באמצע הלילה",
+    "usp": "מגיע תוך 20 דקות",
+    "yearsInField": "15 שנה",
+    "guarantee": "אחריות מלאה",
+    "license": "מס 4821",
+    "secondaryServices": "פתיחת סתימות, תיקון נזילות, דודי שמש",
+    "reviewQuote": "יוסי הציל אותי בלילה!",
+    "starRating": "4.9",
+    "capacityUnit": "10 פניות בשבוע",
+    "contactMethod": "טלפון או וואטסאפ",
+    "phone": "050-1234567",
+    "preferredSlug": "test-plumber-tlv"
+  },
+  "copy": {
+    "heroHeadline": "הצפה בבית באמצע הלילה? יש לנו פתרון",
+    "heroSubheadline": "מגיע תוך 20 דקות",
+    "heroCta": "התקשר עכשיו",
+    "trustBarItems": [
+      "15 שנה ניסיון",
+      "4.9★ בגוגל",
+      "מורשה ומוסמך",
+      "אחריות מלאה"
+    ],
+    "aboutBlurb": "יוסי אינסטלציה מציעים שירות מקצועי בתל אביב. מגיע תוך 20 דקות",
+    "servicesHeadline": "השירותים שלנו",
+    "serviceItems": [
+      "פתיחת סתימות",
+      "תיקון נזילות",
+      "דודי שמש"
+    ],
+    "faqHeadline": "שאלות נפוצות",
+    "faqItems": [
+      {
+        "q": "איך יוצרים קשר?",
+        "a": "ניתן להתקשר ל-050-1234567 או לשלוח וואטסאפ."
+      }
+    ],
+    "guaranteeBlock": "אחריות מלאה",
+    "reviewFeatured": "יוסי הציל אותי בלילה!",
+    "reviewContext": "4.9 כוכבים בגוגל",
+    "responseTimeBadge": "זמינים 24/7",
+    "scarcityLine": null,
+    "formHeadline": "השאר פרטים ונחזור אליך בהקדם",
+    "stickyBarLine": "זמינים עכשיו לשירותך"
+  },
+  "createdAt": "2026-07-23T07:38:32.204Z"
+}

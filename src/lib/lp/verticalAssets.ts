@@ -32,11 +32,11 @@ export const VERTICAL_ASSETS: Record<VerticalKey, VerticalAssets> = {
   'emergency-trades': {
     key: 'emergency-trades',
     heroImages: [
-      { url: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=1400&q=80', alt: 'אינסטלטור מקצועי עובד', credit: 'Sigmund' },
+      { url: 'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?w=1400&q=80', alt: 'תיקון צנרת ונזילות מקצועי', credit: 'Public Domain' },
       { url: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=1400&q=80', alt: 'חשמלאי עובד על לוח חשמל', credit: 'Randal Honold' },
       { url: 'https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=1400&q=80', alt: 'כלי עבודה מקצועיים', credit: 'Theme Photos' },
     ],
-    unsplashQuery: 'plumber electrician tradesman professional tools',
+    unsplashQuery: 'plumber pipe leak repair professional tools',
     trustIcons: { years: 'clock', rating: 'star', license: 'badge-check', responseTime: 'bolt', guarantee: 'shield-check' },
     badgeEmoji: '🛡️',
   },

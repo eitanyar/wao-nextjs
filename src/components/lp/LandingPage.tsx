@@ -3,13 +3,26 @@
 import type { VerticalTheme } from '@/lib/lp/verticalThemes';
 import type { VerticalAssets } from '@/lib/lp/verticalAssets';
 import type { LPCopy } from '@/lib/lp/lpCopyPrompt';
-import type { CollectedData } from '@/lib/bot/prompts';
+
+// Deliberately narrow — NOT the full CollectedData record. This component is
+// 'use client', so anything on this type ships to the browser in page source
+// (Next.js serializes client-component props into flight data). Only the
+// fields actually rendered below belong here; internal ops/pricing fields
+// (capacityUnit, avgJobValue, closeRate, pricingNotes, exclusions, etc.)
+// must never be added to this interface — see docs/missions/lp-site-bot-qa-fixes-2026-07.md (BUG 4).
+export interface LandingPagePublicData {
+  phone?: string;
+  whatsappNumber?: string;
+  businessName?: string;
+  businessNiche?: string;
+  ownerName?: string;
+}
 
 interface LandingPageProps {
   theme: VerticalTheme;
   assets: VerticalAssets;
   copy: LPCopy;
-  data: CollectedData;
+  data: LandingPagePublicData;
   heroImageUrl: string;
 }
 
@@ -40,8 +53,7 @@ export default function LandingPage({ theme, assets, copy, data, heroImageUrl }:
       </header>
 
       {/* ── Hero ────────────────────────────────────────────────── */}
-      {/* Hero image is purely atmospheric (gradient overlay hides most of it) — decorative, no alt needed */}
-      <section style={{ position: 'relative', minHeight: '300px', backgroundImage: `url(${heroImageUrl})`, backgroundSize: 'cover', backgroundPosition: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', textAlign: t.heroTextAlign, padding: '0 20px' }}>
+      <section style={{ position: 'relative', minHeight: '380px', backgroundImage: `url(${heroImageUrl})`, backgroundSize: 'cover', backgroundPosition: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', textAlign: t.heroTextAlign, padding: '0 20px' }}>
         {/* Overlay */}
         <div style={{ position: 'absolute', inset: 0, background: t.heroGradient }} />
 
@@ -183,11 +195,11 @@ export default function LandingPage({ theme, assets, copy, data, heroImageUrl }:
             <label style={{ display: 'flex', gap: '8px', alignItems: 'flex-start', cursor: 'pointer' }}>
               <input type="checkbox" required style={{ marginTop: '3px', accentColor: t.accent, flexShrink: 0 }} />
               <span style={{ fontSize: '0.8rem', color: t.textMuted, lineHeight: 1.4 }}>
-                אני מאשר/ת קבלת הודעות שיווקיות בהתאם לחוק הספאם ומסכים/ה ל<strong>מדיניות הפרטיות</strong>.
+                אני מסכים/ה ל<strong>מדיניות הפרטיות</strong>.
               </span>
             </label>
             <button type="submit" style={{ padding: '15px', background: t.ctaGradient, color: '#fff', border: 'none', borderRadius: t.radiusSm, fontWeight: 800, fontSize: '1.05rem', cursor: 'pointer', fontFamily: t.fontBody }}>
-              {copy.heroCta}
+              שלח, לחזרה מהירה
             </button>
           </form>
           <div style={{ display: 'flex', justifyContent: 'center', gap: '20px', marginTop: '20px', fontSize: '0.75rem', color: t.textMuted }}>

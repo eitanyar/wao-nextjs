@@ -69,7 +69,10 @@ function generateFallbackCopy(collectedData: CollectedData): SiteCopy {
   const name = collectedData.businessName || collectedData.businessNiche || 'העסק שלנו';
   const location = collectedData.targetLocation || 'האזור שלך';
   const usp = collectedData.usp || 'שירות מקצועי ואיכותי';
-  const contactLabel = collectedData.contactMethod?.includes('וואטסאפ') ? 'שלח וואטסאפ' : 'התקשר עכשיו';
+  const hasPhone = collectedData.contactMethod?.includes('טלפון') || collectedData.contactMethod?.includes('להתקשר');
+  const hasWhatsapp = collectedData.contactMethod?.includes('וואטסאפ');
+  const hasForm = collectedData.contactMethod?.includes('טופס');
+  const contactLabel = hasPhone ? 'התקשר עכשיו' : hasWhatsapp ? 'שלח וואטסאפ' : hasForm ? 'השאר פרטים' : 'התקשר עכשיו';
   const serviceNames = (collectedData.secondaryServices || collectedData.businessNiche || 'שירות')
     .split(/[,،\n]/).map(s => s.trim()).filter(Boolean).slice(0, 6);
 
@@ -93,7 +96,7 @@ function generateFallbackCopy(collectedData: CollectedData): SiteCopy {
     guaranteeBlock: collectedData.guarantee || `${name} מחויבים לשביעות רצון מלאה של כל לקוח.`,
     reviewFeatured: collectedData.reviewQuote || 'שירות מצוין ומקצועי, ממליץ בחום.',
     reviewContext: collectedData.starRating ? `${collectedData.starRating} כוכבים בגוגל` : '',
-    responseTimeBadge: collectedData.responseTime || null,
+    responseTimeBadge: collectedData.responseTime || 'זמינים 24/7',
     scarcityLine: null,
     formHeadline: 'השאר פרטים ונחזור אליך בהקדם',
     stickyBarLine: 'זמינים עכשיו לשירותך',
