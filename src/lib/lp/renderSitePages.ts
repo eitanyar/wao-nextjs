@@ -153,7 +153,7 @@ function leadFormSection(t: VerticalTheme, headline: string, ctaLabel: string): 
         <input type="tel" id="f-phone" placeholder="050-0000000" aria-label="מספר טלפון" dir="ltr" required style="padding:14px 16px;border-radius:${t.radiusSm};border:1px solid ${t.border};font-size:1rem;color:${t.textPrimary};background:${t.surface};text-align:right;" />
         <label style="display:flex;gap:8px;align-items:flex-start;cursor:pointer;">
           <input type="checkbox" id="f-consent" required style="margin-top:3px;flex-shrink:0;" />
-          <span style="font-size:0.8rem;color:${t.textMuted};line-height:1.4;">אני מאשר/ת קבלת הודעות שיווקיות בהתאם לחוק הספאם ומסכים/ה למדיניות הפרטיות.</span>
+          <span style="font-size:0.8rem;color:${t.textMuted};line-height:1.4;">אני מסכים/ה למדיניות הפרטיות.</span>
         </label>
         <div id="form-error">שגיאה בשליחה — נסה שוב או התקשר ישירות.</div>
         <button type="submit" class="submit-btn">${esc(ctaLabel)}</button>

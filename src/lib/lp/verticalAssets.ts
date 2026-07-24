@@ -7,7 +7,11 @@ import type { VerticalKey } from './verticalThemes';
 
 export interface VerticalAssets {
   key: VerticalKey;
-  // Hero: 3 options so the LP can rotate or A/B test. Use [0] as default.
+  // Hero: 3 curated options per vertical. Only [0] is rendered today — [1]/[2]
+  // are intentional future capacity (rotation/A-B testing), not dead code.
+  // Explicitly deferred 2026-07-24 (Lior): no A-B loop exists yet to consume
+  // a test result at current traffic volume; revisit if Content Bot or
+  // seasonal LP variants need multiple hero images per vertical.
   heroImages: Array<{
     url: string;              // Unsplash image URL (w=1400&q=80)
     alt: string;              // Hebrew alt text

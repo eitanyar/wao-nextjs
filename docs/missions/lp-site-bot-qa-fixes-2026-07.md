@@ -193,9 +193,14 @@ none are referenced. Capacity (Bug 1) was the only leak found in this pass.
       **PASS** — `heroImages[0]` is now
       `photo-1584622650111-993a426fbf0a`, alt "תיקון צנרת ונזילות מקצועי",
       confirmed live in the rendered page's background-image.
-- [ ] Decision recorded (fix or explicit defer) on unused
-      `heroImages[1]`/`[2]` rotation. **NOT DONE** — no rotation logic was
-      added and no defer decision was written anywhere. Still open.
+- [x] Decision recorded (fix or explicit defer) on unused
+      `heroImages[1]`/`[2]` rotation. **CLOSED — explicitly deferred**
+      (2026-07-24, Lior/mission-planner): no rotation/A-B logic built. No A-B
+      loop exists yet to consume a test result at current WoZ-stage traffic
+      volume, and trimming the manifest would destroy curated assets for no
+      benefit. Comment updated in `verticalAssets.ts:10-13` to mark [1]/[2] as
+      intentional future capacity, not dead code. Revisit only if Content Bot
+      or seasonal LP variants need multiple hero images per vertical.
 
 ---
 
