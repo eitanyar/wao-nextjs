@@ -1,0 +1,24 @@
+{
+  "$comment": "Training charter — the ONE manual artifact in the trainer (spec §3b). DRAFT seeded by Lior 26.7.2026 — Eitan: review and edit before first M2 session; everything else in data/trainer/ is generated.",
+  "owner": "Eitan",
+  "goal": "Maximize spoken articulation, persuasion, and emotional intelligence in Hebrew, in service of selling WAO's AI-funnel marketing services to Israeli SMB owners.",
+  "trackWeights": { "T1_wao_funnel_selling": 0.7, "T2_professional_networking": 0.2, "T3_social_general": 0.1 },
+  "sessionLengthMin": 8,
+  "sessionsPerWeek": 5,
+  "language": "he",
+  "personaRealism": "Real Israeli SMB owners — spoken register, dialect, impatience, real objections from the WAO pipeline verticals. Never caricatures, never polite-textbook Hebrew.",
+  "redLines": [
+    "Never train manipulative or deceptive persuasion tactics — pressure, false scarcity, feigned agreement, dark patterns.",
+    "Never generate scenarios that rehearse lying to a client about results, pricing, or capabilities.",
+    "Personas may be rude or hostile (that's the training), but no slurs, no sexual content, no personal-identity attacks."
+  ],
+  "tonePreferences": [
+    "Feedback should be blunt and specific — quote the exact utterance, no participation trophies.",
+    "Prefer scenarios that end in a concrete next step (meeting booked, objection resolved, boundary held) over open-ended chat."
+  ],
+  "focusHints": [
+    "Discovery questions before pitching — the Danny lesson.",
+    "Holding price without defensiveness.",
+    "Labeling the other side's emotion before answering content."
+  ]
+}

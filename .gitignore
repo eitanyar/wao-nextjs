@@ -68,3 +68,16 @@ src/data/leads.json
 
 # Generated batch data — expensive Azure output, tracked once as backup; new runs stay local
 data/batch/
+
+# Onboarding multi-run driver evidence — transcripts + per-turn screenshots,
+# regenerated on every run, not source
+scripts/onboarding-personas/output/
+
+# Articulation & EQ Trainer — generated engine cache + local session transcripts,
+# never source (spec: docs/specs/articulation-trainer.md)
+data/trainer/engine.json
+data/trainer/sessions/
+data/trainer/generated/
+data/trainer/probe/
+data/trainer/profile.json
+data/trainer/memos.jsonl
