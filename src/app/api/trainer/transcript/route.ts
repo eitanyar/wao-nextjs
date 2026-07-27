@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { isStaff } from '@/lib/trainer/auth';
 import { getConversation, type ConversationRecord } from '@/lib/trainer/elevenlabs';
 import { DANNY_PERSONA } from '@/lib/trainer/persona';
+import { loadGeneratedSession } from '@/lib/trainer/coach';
 
 export const dynamic = 'force-dynamic';
 
@@ -17,6 +18,28 @@ interface GeminiTranscriptTurn {
 
 function sleep(ms: number): Promise<void> {
   return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+/**
+ * Resolves the session's real identity from the request instead of stamping
+ * DANNY_PERSONA.id blindly (M2). `personaId` is validated — not trusted — when
+ * `generatedId` is given: it must match the cache entry that generatedId names.
+ */
+function resolveSessionIdentity(body: Record<string, unknown>): { personaId: string; generatedId?: string; level?: number } {
+  const generatedId = typeof body.generatedId === 'string' ? body.generatedId : undefined;
+  const claimedPersonaId = typeof body.personaId === 'string' ? body.personaId : undefined;
+
+  if (generatedId) {
+    const generated = loadGeneratedSession(generatedId);
+    if (generated && (!claimedPersonaId || claimedPersonaId === generated.persona.id)) {
+      return { personaId: generated.persona.id, generatedId, level: generated.level };
+    }
+  }
+
+  return {
+    personaId: claimedPersonaId ?? DANNY_PERSONA.id,
+    level: typeof body.level === 'number' ? body.level : undefined,
+  };
 }
 
 /** ElevenLabs finishes processing the transcript a few seconds after the call ends. */
@@ -68,9 +91,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'missing-turns' }, { status: 400 });
     }
 
+    const identity = resolveSessionIdentity(body);
     const line = {
       engine: 'gemini' as const,
-      personaId: DANNY_PERSONA.id,
+      ...identity,
       model: typeof body.model === 'string' ? body.model : undefined,
       startedAt: typeof body.startedAt === 'string' ? body.startedAt : undefined,
       endedAt: new Date().toISOString(),
@@ -98,7 +122,7 @@ export async function POST(request: NextRequest) {
 
     appendSessionLine({
       engine: 'elevenlabs' as const,
-      personaId: DANNY_PERSONA.id,
+      ...resolveSessionIdentity(body),
       conversationId: record.conversation_id,
       agentId: record.agent_id,
       status: record.status,

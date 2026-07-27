@@ -1,0 +1,2344 @@
+[
+  {
+    "id": 1,
+    "vertical": "plumber (אינסטלטור)",
+    "deliveryModelButton": "field",
+    "paymentMode": "full",
+    "testing": "full happy-path baseline run, both revenue streams, no-skip trust-asset bridge",
+    "turns": [
+      {
+        "type": "text",
+        "value": "יש לי עסק אינסטלטציה בתל אביב, עובד לבד כבר כמה שנים. הכי מכניס לי כסף זה קריאות דחופות — סתימות, נזילות, בעיות בוילר."
+      },
+      {
+        "type": "text",
+        "value": "אינסטלטציה בר-און"
+      },
+      {
+        "type": "text",
+        "value": "אורי"
+      },
+      {
+        "type": "text",
+        "value": "לפעמים אני גם עושה החלפת דודי שמש ותיקוני ביוב כלליים, אבל זה לא העיקר."
+      },
+      {
+        "type": "text",
+        "value": "אני עובד בעיקר בתל אביב, רמת גן, גבעתיים ובת ים."
+      },
+      {
+        "type": "text",
+        "value": "לקוחה שהתקשרה בלילה כי הייתה לה נזילה מתחת לכיור והיא פחדה שהמים יגיעו לשכנים למטה."
+      },
+      {
+        "type": "text",
+        "value": "כמה זה יעלה, כמה זמן ייקח, ואם אני מגיע היום."
+      },
+      {
+        "type": "text",
+        "value": "אני מגיע מהר, לא משאיר בלגן אחרי, ותמיד אומר מחיר לפני שמתחילים לעבוד."
+      },
+      {
+        "type": "text",
+        "value": "אני בתחום כבר 14 שנה, ונותן שנה אחריות על כל עבודה — אם משהו חוזר, אני בא לתקן בלי לגבות שוב."
+      },
+      {
+        "type": "text",
+        "value": "יש לי רישיון אינסטלטור מוסמך ממשרד העבודה."
+      },
+      {
+        "type": "text",
+        "value": "אני לא עושה עבודות ביוב תת-קרקעיות גדולות, וזה בעיקר בגוש דן — לא יוצא צפונה או דרומה."
+      },
+      {
+        "type": "skip",
+        "reason": "urgency obvious from T1 (emergency calls)."
+      },
+      {
+        "type": "text",
+        "value": "אני חוזר לשיחה תוך כמה דקות, ומגיע תוך שעה בממוצע."
+      },
+      {
+        "type": "text",
+        "value": "אני נותן הערכת מחיר חינם בטלפון, ואם בסוף לא סוגרים אין דמי הגעה."
+      },
+      {
+        "type": "text",
+        "value": "רוב זה עבודות חד-פעמיות, אבל יש לי גם כמה לקוחות עסקיים עם חוזה תחזוקה קבוע."
+      },
+      {
+        "type": "text",
+        "value": "עבודה ממוצעת בסביבות 450 שקל בפעם הראשונה. ולקוח עם חוזה תחזוקה שווה לי בערך 2,000 שקל בשנה."
+      },
+      {
+        "type": "text",
+        "value": "מתוך עשרה שמתקשרים, בערך שבעה הופכים ללקוחות משלמים."
+      },
+      {
+        "type": "text",
+        "value": "כן, ממש הרבה חוזרים אליי, ומעבירים גם לשכנים ולמשפחה."
+      },
+      {
+        "type": "text",
+        "value": "יש לי 4.8 כוכבים עם 42 ביקורות בגוגל."
+      },
+      {
+        "type": "text",
+        "value": "חשבתי משהו כמו 2,000 שקל בחודש."
+      },
+      {
+        "type": "text",
+        "value": "כן, בסדר, יאללה נתחיל."
+      },
+      {
+        "type": "skip",
+        "reason": "starRating/reviewCount already collected at T19; bot bridges straight to T22."
+      },
+      {
+        "type": "text",
+        "value": "לקוחה כתבה לי בוואטסאפ: 'הצלת אותי בלילה, תודה ענקית, ממליצה בעיניים עצומות.'"
+      },
+      {
+        "type": "skip",
+        "reason": "plumber is explicitly listed as a no-natural-personal-brand profession; not asked."
+      },
+      {
+        "type": "text",
+        "value": "אני יכול לקחת בערך 5 עבודות נוספות בשבוע בלי בעיה."
+      },
+      {
+        "type": "text",
+        "value": "הכי נוח שיתקשרו או שיכתבו בוואטסאפ."
+      },
+      {
+        "type": "text",
+        "value": "המספר הוא 050-1234567, אותו מספר גם לוואטסאפ."
+      },
+      {
+        "type": "text",
+        "value": "אפשר לשלוח למייל oribaron.plumbing@gmail.com"
+      },
+      {
+        "type": "text",
+        "value": "אפשר oribaron-plumbing"
+      },
+      {
+        "type": "text",
+        "value": "מאשר, יאללה בואו נתחיל."
+      }
+    ]
+  },
+  {
+    "id": 2,
+    "vertical": "electrician (חשמלאי)",
+    "deliveryModelButton": "field",
+    "paymentMode": "bypass",
+    "testing": "terse/monosyllabic answers stress-testing no-repeat/skip resilience under minimal input",
+    "turns": [
+      {
+        "type": "text",
+        "value": "חשמלאי בתל אביב. בעיקר קריאות דחופות בלוח חשמל."
+      },
+      {
+        "type": "text",
+        "value": "בר-חשמל"
+      },
+      {
+        "type": "text",
+        "value": "רועי"
+      },
+      {
+        "type": "text",
+        "value": "לא."
+      },
+      {
+        "type": "text",
+        "value": "תל אביב, גבעתיים."
+      },
+      {
+        "type": "text",
+        "value": "בעיה בלוח חשמל. פחד מהתחשמלות."
+      },
+      {
+        "type": "text",
+        "value": "מחיר. זמן הגעה."
+      },
+      {
+        "type": "text",
+        "value": "מהיר ואמין."
+      },
+      {
+        "type": "text",
+        "value": "שמונה שנים. שנה אחריות."
+      },
+      {
+        "type": "text",
+        "value": "כן, רישיון חשמלאי מוסמך."
+      },
+      {
+        "type": "text",
+        "value": "לא עובד עם תעשייה כבדה. גם לא יוצא מחוץ לגוש דן."
+      },
+      {
+        "type": "skip",
+        "reason": "urgent obvious from T1."
+      },
+      {
+        "type": "text",
+        "value": "עשרים דקות."
+      },
+      {
+        "type": "text",
+        "value": "כן, הצעת מחיר בטלפון. אין דמי הגעה."
+      },
+      {
+        "type": "text",
+        "value": "חד-פעמי."
+      },
+      {
+        "type": "text",
+        "value": "בערך 400 שקל."
+      },
+      {
+        "type": "text",
+        "value": "שבע מתוך עשר."
+      },
+      {
+        "type": "text",
+        "value": "כן, חוזרים."
+      },
+      {
+        "type": "text",
+        "value": "אין ביקורות עדיין."
+      },
+      {
+        "type": "text",
+        "value": "1,500 שקל."
+      },
+      {
+        "type": "text",
+        "value": "בסדר, נראה טוב."
+      },
+      {
+        "type": "text",
+        "value": "אין לי כרגע."
+      },
+      {
+        "type": "skip",
+        "reason": "electrician is a field trade with no natural personal-brand angle; not asked."
+      },
+      {
+        "type": "text",
+        "value": "'תיקן מהר, מחיר הוגן.' ואין לי דירוג עדיין בגוגל."
+      },
+      {
+        "type": "text",
+        "value": "שלוש עבודות בשבוע."
+      },
+      {
+        "type": "text",
+        "value": "וואטסאפ."
+      },
+      {
+        "type": "text",
+        "value": "050-2223344, אותו מספר."
+      },
+      {
+        "type": "text",
+        "value": "roi.electric@gmail.com"
+      },
+      {
+        "type": "text",
+        "value": "לא משנה"
+      },
+      {
+        "type": "text",
+        "value": "מאשר."
+      }
+    ]
+  },
+  {
+    "id": 3,
+    "vertical": "locksmith (מנעולן)",
+    "deliveryModelButton": "field",
+    "paymentMode": "none",
+    "expectedEarlyTermination": true,
+    "terminationReason": "Locksmith redirect rule (businessNiche contains 'מנעולן') must fire right after reviews (T19) and route to Local Services Ads messaging instead of proceeding to budget/T20. Run intentionally ends in DIAGNOSING — REVIEWING/COMPLETED/payment must NEVER be reached. Driver must treat non-arrival at REVIEWING as the expected/PASS outcome for this persona, not an error.",
+    "testing": "locksmith redirect rule must fire and hold even against a cooperative, high-budget-offering user",
+    "turns": [
+      {
+        "type": "text",
+        "value": "יש לי עסק פריצת דלתות ומנעולים, מנעולן בכל גוש דן. עובד הכי הרבה על קריאות פריצה דחופות ופתיחת דלתות שנעולות."
+      },
+      {
+        "type": "text",
+        "value": "מנעולן אבי כהן"
+      },
+      {
+        "type": "text",
+        "value": "אבי"
+      },
+      {
+        "type": "text",
+        "value": "גם מתקין צילינדרים חדשים ומערכות אבטחה, אבל זה פחות."
+      },
+      {
+        "type": "text",
+        "value": "גוש דן כולו — תל אביב, רמת גן, חולון, בת ים."
+      },
+      {
+        "type": "text",
+        "value": "בחורה שנעלה את עצמה מחוץ לדירה בשתיים בלילה, ממש בפאניקה."
+      },
+      {
+        "type": "text",
+        "value": "כמה זמן ייקח להגיע, וכמה זה יעלה."
+      },
+      {
+        "type": "text",
+        "value": "אני מגיע הכי מהר באזור, ולא שובר דלתות בלי צורך."
+      },
+      {
+        "type": "text",
+        "value": "אני בתחום 11 שנה, ונותן חצי שנה אחריות על כל צילינדר שאני מחליף."
+      },
+      {
+        "type": "text",
+        "value": "אין רישוי רשמי לתחום, אבל אני חבר בפורום מנעולנים מוסמכים."
+      },
+      {
+        "type": "text",
+        "value": "לא פותח לרכבים, רק דלתות בית ומשרד. גם לא יוצא מחוץ לגוש דן."
+      },
+      {
+        "type": "skip",
+        "reason": "urgent obvious."
+      },
+      {
+        "type": "text",
+        "value": "אני מגיע תוך עשרים וחמש דקות בממוצע."
+      },
+      {
+        "type": "text",
+        "value": "כן, נותן הערכת מחיר בטלפון, ואם בסוף לא סוגרים אין דמי הגעה."
+      },
+      {
+        "type": "text",
+        "value": "כמעט הכל חד-פעמי."
+      },
+      {
+        "type": "text",
+        "value": "עבודה ממוצעת בסביבות 350 שקל."
+      },
+      {
+        "type": "text",
+        "value": "שמונה מתוך עשרה סוגרים בסוף."
+      },
+      {
+        "type": "text",
+        "value": "כן, ממש הרבה חוזרים ומפנים חברים."
+      },
+      {
+        "type": "text",
+        "value": "יש לי 4.7 כוכבים עם 20 ביקורות."
+      },
+      {
+        "type": "text",
+        "value": "אני לא בטוח שאני מבין — אני בכל מקרה מוכן לשים תקציב גבוה, נגיד 5,000 שקל בחודש, זה לא בעיה בשבילי. אפשר פשוט להריץ קמפיין רגיל?"
+      },
+      {
+        "type": "text",
+        "value": "בסדר, אז ספר לי על ה-Local Services הזה."
+      }
+    ]
+  },
+  {
+    "id": 4,
+    "vertical": "pest control (מדביר)",
+    "deliveryModelButton": "field",
+    "paymentMode": "none",
+    "expectedEarlyTermination": true,
+    "terminationReason": "Soft-stop capacity gate fires at T23 ('אין לי יכולת לקחת עוד עבודות בחודש הקרוב'). Flow must NOT continue to T24/contact info/REVIEWING/payment. Driver must treat non-arrival at REVIEWING as the expected/PASS outcome for this persona, not an error.",
+    "testing": "capacity/soft-stop gate",
+    "turns": [
+      {
+        "type": "text",
+        "value": "יש לי עסק הדברה בשרון, מדביר מוסמך. הכי מכניס לי זה טיפולי ג'וקים ונמלים בבתים פרטיים."
+      },
+      {
+        "type": "text",
+        "value": "הדברת השרון"
+      },
+      {
+        "type": "text",
+        "value": "יובל"
+      },
+      {
+        "type": "text",
+        "value": "גם עושה טיפולי מכרסמים ומניעת יתושים בגינה, אבל בהיקף קטן יותר."
+      },
+      {
+        "type": "text",
+        "value": "רעננה, כפר סבא, הרצליה."
+      },
+      {
+        "type": "text",
+        "value": "משפחה שראתה ג'וקים בבוקר במטבח ופחדה שהילדים יסתכנו."
+      },
+      {
+        "type": "text",
+        "value": "אם החומר בטיחותי לילדים ולחיות מחמד, וכמה זמן צריך לפנות את הבית."
+      },
+      {
+        "type": "text",
+        "value": "אני משתמש בחומרים בטיחותיים ומסביר בדיוק מה קורה בכל שלב."
+      },
+      {
+        "type": "text",
+        "value": "אני בתחום 9 שנים, ונותן חודשיים אחריות — אם חוזר, אני בא שוב בלי לגבות."
+      },
+      {
+        "type": "text",
+        "value": "כן, יש לי רישיון הדברה ממשרד הבריאות."
+      },
+      {
+        "type": "text",
+        "value": "רוב הפניות דחופות, אבל יש גם חוזים שנתיים."
+      },
+      {
+        "type": "text",
+        "value": "אני מגיע באותו יום, לרוב תוך שעתיים-שלוש."
+      },
+      {
+        "type": "text",
+        "value": "לא מטפל במבני תעשייה גדולים, ולא יוצא מעבר לשרון."
+      },
+      {
+        "type": "text",
+        "value": "יש הערכת מחיר בטלפון בחינם, ואין דמי הגעה."
+      },
+      {
+        "type": "text",
+        "value": "גם וגם — יש טיפול חד-פעמי, ויש גם חוזי תחזוקה שנתיים."
+      },
+      {
+        "type": "text",
+        "value": "טיפול בודד בסביבות 380 שקל. וחוזה שנתי שווה לי בערך 1,400 שקל."
+      },
+      {
+        "type": "text",
+        "value": "שישה מתוך עשרה סוגרים."
+      },
+      {
+        "type": "text",
+        "value": "כן, לקוחות עם חוזה מתקשרים כל שנה מחדש, וגם מפנים שכנים."
+      },
+      {
+        "type": "text",
+        "value": "יש לי 4.6 כוכבים עם 15 ביקורות."
+      },
+      {
+        "type": "text",
+        "value": "1,500 שקל בחודש."
+      },
+      {
+        "type": "text",
+        "value": "כן, נשמע הגיוני, בואו נתקדם."
+      },
+      {
+        "type": "skip",
+        "reason": "reviews already collected → bridges straight to T22."
+      },
+      {
+        "type": "text",
+        "value": "לקוח כתב: 'הגיע מהר, הסביר הכל, והג'וקים נעלמו תוך יומיים.'"
+      },
+      {
+        "type": "skip",
+        "reason": "exterminator explicitly listed as a no-natural-personal-brand profession."
+      },
+      {
+        "type": "text",
+        "value": "האמת שאני ממש עמוס עכשיו, אין לי יכולת לקחת עוד עבודות בחודש הקרוב."
+      }
+    ]
+  },
+  {
+    "id": 5,
+    "vertical": "gardener (גנן)",
+    "deliveryModelButton": "field",
+    "paymentMode": "bypass",
+    "testing": "NO-REPEAT rule — phone volunteered unprompted at T1 must not be re-asked at T25",
+    "turns": [
+      {
+        "type": "text",
+        "value": "יש לי עסק גינון ותחזוקת גינות בשרון. הכי מכניס לי זה חוזי תחזוקה חודשיים לבתים פרטיים. אגב, אם צריך ליצור איתי קשר ישר, המספר שלי הוא 052-9876543."
+      },
+      {
+        "type": "text",
+        "value": "גינות ניר"
+      },
+      {
+        "type": "text",
+        "value": "ניר"
+      },
+      {
+        "type": "text",
+        "value": "גם בונה גינות מאפס ומתקין השקיה, אבל פחות תדיר."
+      },
+      {
+        "type": "text",
+        "value": "רעננה, הוד השרון, כפר סבא."
+      },
+      {
+        "type": "text",
+        "value": "זוג שקנה בית עם חצר מוזנחת וממש לא ידעו מאיפה להתחיל."
+      },
+      {
+        "type": "text",
+        "value": "כמה עולה תחזוקה חודשית, ומה כלול בה."
+      },
+      {
+        "type": "text",
+        "value": "אני מגיע קבוע כל שבועיים ולא מבטל אף פעם בלי להתריע מראש."
+      },
+      {
+        "type": "text",
+        "value": "אני בתחום 6 שנים. אין לי ׳אחריות׳ קלאסית, אבל אם משהו לא בסדר בביקור אני מתקן בביקור הבא בלי תוספת."
+      },
+      {
+        "type": "text",
+        "value": "אין רישוי מיוחד לגינון, זה לא תחום מוסדר."
+      },
+      {
+        "type": "text",
+        "value": "רוב הלקוחות מתכננים מראש — קובעים חוזה תחזוקה ולא צריכים אותי דחוף."
+      },
+      {
+        "type": "skip",
+        "reason": "not urgent."
+      },
+      {
+        "type": "text",
+        "value": "לא עושה עבודות עצים גבוהים עם מנוף, ולא יוצא מחוץ לשרון."
+      },
+      {
+        "type": "text",
+        "value": "יש הערכת מחיר חינם בביקור ראשון, ואין דמי הגעה."
+      },
+      {
+        "type": "text",
+        "value": "בעיקר חוזי תחזוקה חודשיים, אבל יש גם עבודות חד-פעמיות כמו עיצוב גינה."
+      },
+      {
+        "type": "text",
+        "value": "חוזה חודשי שווה לי בערך 300 שקל בפעם הראשונה. ובמשך שנה זה יוצא בערך 3,000 שקל ללקוח."
+      },
+      {
+        "type": "text",
+        "value": "חמש מתוך עשר הופכות ללקוחות."
+      },
+      {
+        "type": "text",
+        "value": "כן, ממש הרבה נשארים שנים, וגם מפנים שכנים בקאנטרי."
+      },
+      {
+        "type": "text",
+        "value": "אין לי עדיין ביקורות בגוגל."
+      },
+      {
+        "type": "text",
+        "value": "1,200 שקל בחודש."
+      },
+      {
+        "type": "text",
+        "value": "מקובל עליי, בואו נתקדם."
+      },
+      {
+        "type": "text",
+        "value": "יש לי תמונות של גינות לפני ואחרי, אני מעלה עכשיו."
+      },
+      {
+        "type": "file_upload",
+        "filePath": "scripts/onboarding-personas/assets/sample-trust-asset.jpg"
+      },
+      {
+        "type": "text",
+        "value": "כן, יש לי תמונה טובה שלי בגינה, מעלה."
+      },
+      {
+        "type": "file_upload",
+        "filePath": "scripts/onboarding-personas/assets/sample-trust-asset.jpg"
+      },
+      {
+        "type": "text",
+        "value": "לקוחה אמרה לי: 'הגינה שלי סוף סוף נראית כמו במגזין.' אין לי עדיין דירוג בגוגל, פתחתי פרופיל רק לאחרונה."
+      },
+      {
+        "type": "text",
+        "value": "אני יכול לקחת בערך שלושה לקוחות חדשים בחודש."
+      },
+      {
+        "type": "text",
+        "value": "הכי נוח וואטסאפ."
+      },
+      {
+        "type": "skip",
+        "reason": "phone already volunteered at T1 ('052-9876543'). Bot should acknowledge and move directly to T26 without re-asking."
+      },
+      {
+        "type": "text",
+        "value": "אפשר לשלוח למייל nirgardens@gmail.com"
+      },
+      {
+        "type": "text",
+        "value": "אפשר גינות-ניר, באנגלית פשוט."
+      },
+      {
+        "type": "text",
+        "value": "מאשר, יאללה."
+      }
+    ]
+  },
+  {
+    "id": 6,
+    "vertical": "dentist (רופא שיניים)",
+    "deliveryModelButton": "location",
+    "paymentMode": "full",
+    "testing": "location model + mid-tier budget baseline happy path",
+    "turns": [
+      {
+        "type": "text",
+        "value": "יש לי קליניקת שיניים בפתח תקווה. הכי מכניס לי זה טיפולי שורש ויישור שיניים למבוגרים."
+      },
+      {
+        "type": "text",
+        "value": "מרפאת שיניים ד״ר לוי"
+      },
+      {
+        "type": "text",
+        "value": "רון"
+      },
+      {
+        "type": "text",
+        "value": "גם עושה הלבנות ושתלים, אבל זה פחות מרכזי מהעיקר."
+      },
+      {
+        "type": "text",
+        "value": "רחוב ההסתדרות 45, פתח תקווה."
+      },
+      {
+        "type": "text",
+        "value": "מטופל שהגיע עם כאב שיניים חזק ופחד נורא מרופאי שיניים אחרי חוויה גרועה בעבר."
+      },
+      {
+        "type": "text",
+        "value": "אם זה כואב, כמה זה יעלה, וכמה זמן לוקח הטיפול."
+      },
+      {
+        "type": "text",
+        "value": "אני מסביר כל שלב בתהליך ולא ממהר מטופל שמפחד."
+      },
+      {
+        "type": "text",
+        "value": "אני בתחום 16 שנה, ונותן שנתיים אחריות על עבודות שחזור וכתרים."
+      },
+      {
+        "type": "text",
+        "value": "כן, יש לי רישיון רופא שיניים ממשרד הבריאות."
+      },
+      {
+        "type": "skip",
+        "reason": "deliberate obvious (dentist appointments)."
+      },
+      {
+        "type": "text",
+        "value": "לא מקבל ילדים מתחת לגיל 12, וגם לא מבצע ניתוחי לסת מורכבים."
+      },
+      {
+        "type": "text",
+        "value": "פגישת אבחון ראשונה חינם, טיפולים בתשלום לפי הצעת מחיר."
+      },
+      {
+        "type": "text",
+        "value": "גם וגם — יש טיפולים חד-פעמיים, ויש מטופלים שחוזרים לבדיקות תקופתיות."
+      },
+      {
+        "type": "text",
+        "value": "טיפול ממוצע בסביבות 1,800 שקל. ובדיקה שנתית שווה לי בערך 600 שקל לשנה."
+      },
+      {
+        "type": "text",
+        "value": "שש מתוך עשר פונים הופכים למטופלים."
+      },
+      {
+        "type": "text",
+        "value": "כן, רוב המטופלים חוזרים לבדיקות וגם ממליצים למשפחה."
+      },
+      {
+        "type": "text",
+        "value": "יש לי 4.9 כוכבים עם 80 ביקורות בגוגל."
+      },
+      {
+        "type": "text",
+        "value": "2,500 שקל בחודש."
+      },
+      {
+        "type": "text",
+        "value": "מעולה, זה בדיוק מה שתכננתי."
+      },
+      {
+        "type": "skip",
+        "reason": "reviews already known → bridges to T22."
+      },
+      {
+        "type": "text",
+        "value": "מטופלת כתבה: 'הרופא הכי סבלני שפגשתי, ולראשונה לא פחדתי מטיפול שורש.'"
+      },
+      {
+        "type": "text",
+        "value": "כן, יש לי תמונה מקצועית שלי בקליניקה, מעלה עכשיו."
+      },
+      {
+        "type": "file_upload",
+        "filePath": "scripts/onboarding-personas/assets/sample-trust-asset.jpg"
+      },
+      {
+        "type": "text",
+        "value": "אני יכול לקבל בערך 10 מטופלים חדשים בחודש בלי בעיה."
+      },
+      {
+        "type": "text",
+        "value": "שיתקשרו או שימלאו טופס באתר."
+      },
+      {
+        "type": "text",
+        "value": "המספר הוא 03-9871234, ולוואטסאפ 054-4561234."
+      },
+      {
+        "type": "text",
+        "value": "אפשר לשלוח למייל info@drlevy-dental.co.il"
+      },
+      {
+        "type": "text",
+        "value": "dr-levy-dental"
+      },
+      {
+        "type": "text",
+        "value": "מאשר, הכל נראה מצוין."
+      }
+    ]
+  },
+  {
+    "id": 7,
+    "vertical": "cosmetic clinic (קליניקת יופי)",
+    "deliveryModelButton": "location",
+    "paymentMode": "bypass",
+    "testing": "objection handler ('יקר מדי') at the budget stage",
+    "turns": [
+      {
+        "type": "text",
+        "value": "יש לי קליניקת יופי ואסתטיקה ברמת גן. הכי מכניס לי זה טיפולי בוטוקס וחומצה היאלורונית."
+      },
+      {
+        "type": "text",
+        "value": "קליניקת גלאם"
+      },
+      {
+        "type": "text",
+        "value": "מיכל"
+      },
+      {
+        "type": "text",
+        "value": "גם עושה טיפולי פנים וקילוף כימי, אבל זה משני."
+      },
+      {
+        "type": "text",
+        "value": "רחוב ביאליק 12, רמת גן."
+      },
+      {
+        "type": "text",
+        "value": "אישה בת 45 שרצתה להיראות רעננה יותר אבל פחדה להיראות ׳עשויה מדי׳."
+      },
+      {
+        "type": "text",
+        "value": "אם זה כואב, כמה זמן זה מחזיק, ואם יש תופעות לוואי."
+      },
+      {
+        "type": "text",
+        "value": "אני מזריקה תוצאה טבעית, לא ׳פרוזן פייס׳, וזה מה שמייחד אותי."
+      },
+      {
+        "type": "text",
+        "value": "אני בתחום 10 שנים, ונותנת פגישת מעקב חינם אם התוצאה לא כמו שסוכם."
+      },
+      {
+        "type": "text",
+        "value": "כן, אני אחות מוסמכת עם הכשרה באסתטיקה רפואית."
+      },
+      {
+        "type": "text",
+        "value": "רוב הלקוחות בודקות ומתלבטות כמה שבועות לפני שהן מחליטות, זה לא דחוף."
+      },
+      {
+        "type": "text",
+        "value": "לא מטפלת בנשים בהריון, וגם לא בגילאי 18 מתחת."
+      },
+      {
+        "type": "text",
+        "value": "פגישת ייעוץ ראשונה חינם, בלי התחייבות."
+      },
+      {
+        "type": "text",
+        "value": "גם וגם — יש טיפול בודד, ויש גם לקוחות שחוזרות כל כמה חודשים."
+      },
+      {
+        "type": "text",
+        "value": "טיפול ממוצע בסביבות 1,200 שקל. ולקוחה שחוזרת שווה לי בערך 4,000 שקל בשנה."
+      },
+      {
+        "type": "text",
+        "value": "ארבע מתוך עשר פונות הופכות ללקוחות משלמות."
+      },
+      {
+        "type": "text",
+        "value": "כן, ממש הרבה חוזרות כל 4-6 חודשים."
+      },
+      {
+        "type": "text",
+        "value": "יש לי 4.7 כוכבים עם 55 ביקורות."
+      },
+      {
+        "type": "text",
+        "value": "זה נשמע לי יקר מדי, לא בטוחה שזה שווה את זה."
+      },
+      {
+        "type": "text",
+        "value": "אוקיי, בואו ננסה בקטן — 1,500 שקל בחודש."
+      },
+      {
+        "type": "text",
+        "value": "בסדר, מוכנה לנסות ככה בינתיים."
+      },
+      {
+        "type": "skip",
+        "reason": "reviews already known → bridges to T22."
+      },
+      {
+        "type": "text",
+        "value": "לקוחה כתבה: 'התוצאה נראית טבעית לגמרי, אף אחד לא שם לב שעשיתי משהו — רק שאני נראית טוב.'"
+      },
+      {
+        "type": "text",
+        "value": "כן, יש לי תמונה מקצועית שלי, מעלה."
+      },
+      {
+        "type": "file_upload",
+        "filePath": "scripts/onboarding-personas/assets/sample-trust-asset.jpg"
+      },
+      {
+        "type": "text",
+        "value": "אני יכולה לקבל בערך 8 לקוחות חדשות בחודש."
+      },
+      {
+        "type": "text",
+        "value": "שיתקשרו או שיכתבו באינסטגרם."
+      },
+      {
+        "type": "text",
+        "value": "המספר הוא 03-6547890, ולוואטסאפ 052-3216549."
+      },
+      {
+        "type": "text",
+        "value": "glam.clinic.rg@gmail.com"
+      },
+      {
+        "type": "text",
+        "value": "glam-clinic-ramat-gan"
+      },
+      {
+        "type": "text",
+        "value": "מאשרת, בואו נתחיל."
+      }
+    ]
+  },
+  {
+    "id": 8,
+    "vertical": "barber/gym (מספרה/חדר כושר)",
+    "deliveryModelButton": "location",
+    "paymentMode": "bypass",
+    "testing": "T9 alt branch (confidence-signal question, no natural guarantee)",
+    "turns": [
+      {
+        "type": "text",
+        "value": "יש לי מספרת גברים ברעננה. הכי מכניס לי זה תספורות קבועות ועיצוב זקן."
+      },
+      {
+        "type": "text",
+        "value": "מספרת הבמבו"
+      },
+      {
+        "type": "text",
+        "value": "טל"
+      },
+      {
+        "type": "text",
+        "value": "גם עושה טיפולי פילינג לפנים, אבל זה תוספת קטנה."
+      },
+      {
+        "type": "text",
+        "value": "רחוב אחוזה 88, רעננה."
+      },
+      {
+        "type": "text",
+        "value": "בחור שהגיע לפני ראיון עבודה חשוב וממש רצה להיראות טוב."
+      },
+      {
+        "type": "text",
+        "value": "כמה זמן לוקח, ואם צריך תור מראש."
+      },
+      {
+        "type": "text",
+        "value": "אני מקשיב בדיוק למה שהלקוח רוצה, לא עושה ׳העתק-הדבק׳ מהאינסטגרם."
+      },
+      {
+        "type": "text",
+        "value": "מה שנותן לי ביטחון זה שאני עובד באותה מספרה כבר 7 שנים, ואם לקוח לא מרוצה, אני מסדר בחינם באותו רגע."
+      },
+      {
+        "type": "text",
+        "value": "אין רישוי מיוחד לספרות."
+      },
+      {
+        "type": "text",
+        "value": "רוב הלקוחות קובעים תור כמה ימים מראש, זה לא ממש דחוף."
+      },
+      {
+        "type": "skip",
+        "reason": "deliberate."
+      },
+      {
+        "type": "text",
+        "value": "לא עושה תספורות ילדים מתחת לגיל 10."
+      },
+      {
+        "type": "text",
+        "value": "אין פגישת ייעוץ, זה תספורת ישר — המחיר קבוע וידוע מראש."
+      },
+      {
+        "type": "text",
+        "value": "רוב זה חד-פעמי לפי תור, אבל יש לי גם לקוחות קבועים שמגיעים כל חודש."
+      },
+      {
+        "type": "text",
+        "value": "תספורת בסביבות 90 שקל. לקוח קבוע שווה לי בערך 900 שקל בשנה."
+      },
+      {
+        "type": "text",
+        "value": "שמונה מתוך עשרה שמתקשרים קובעים תור בסוף."
+      },
+      {
+        "type": "text",
+        "value": "כן, יש לי הרבה לקוחות קבועים שמגיעים כל 3-4 שבועות."
+      },
+      {
+        "type": "text",
+        "value": "אין לי עדיין ביקורות בגוגל, פתחנו את המספרה לפני חצי שנה."
+      },
+      {
+        "type": "text",
+        "value": "1,000 שקל בחודש."
+      },
+      {
+        "type": "text",
+        "value": "בסדר, בואו ננסה ככה קודם."
+      },
+      {
+        "type": "text",
+        "value": "יש לי כמה תגובות טובות בוואטסאפ מלקוחות, אני מעתיק ומדביק אחת."
+      },
+      {
+        "type": "text",
+        "value": "כן, יש לי תמונה טובה שלי בסלון, מעלה."
+      },
+      {
+        "type": "file_upload",
+        "filePath": "scripts/onboarding-personas/assets/sample-trust-asset.jpg"
+      },
+      {
+        "type": "text",
+        "value": "לקוח כתב לי: 'הכי טוב שהייתי אצלו, בדיוק מה שרציתי בלי מילה אחת מיותרת.' אין לי עדיין דירוג, ממש טרי בגוגל."
+      },
+      {
+        "type": "text",
+        "value": "אני יכול לקבל בערך 15 תורים נוספים בחודש."
+      },
+      {
+        "type": "text",
+        "value": "שיתקשרו או שיקבעו תור באינסטגרם."
+      },
+      {
+        "type": "text",
+        "value": "המספר 054-7778899, אותו דבר לוואטסאפ."
+      },
+      {
+        "type": "text",
+        "value": "bamboo.barber.raanana@gmail.com"
+      },
+      {
+        "type": "text",
+        "value": "bamboo-barber"
+      },
+      {
+        "type": "text",
+        "value": "מאשר, סבבה."
+      }
+    ]
+  },
+  {
+    "id": 9,
+    "vertical": "personal-injury lawyer (עורך דין נזיקין)",
+    "deliveryModelButton": "remote",
+    "paymentMode": "full",
+    "testing": "top-tier budget acceptance baseline happy path",
+    "turns": [
+      {
+        "type": "text",
+        "value": "יש לי משרד עורכי דין המתמחה בנזיקין ותאונות דרכים בתל אביב. הכי מכניס לי זה תביעות ביטוח לאומי ותאונות עבודה."
+      },
+      {
+        "type": "text",
+        "value": "משרד עו״ד כהן ושות׳"
+      },
+      {
+        "type": "text",
+        "value": "אלון"
+      },
+      {
+        "type": "text",
+        "value": "גם מטפל בתביעות רשלנות רפואית, אבל זה פחות תדיר."
+      },
+      {
+        "type": "text",
+        "value": "אני עובד עם לקוחות מכל הארץ, לא מוגבל לאזור."
+      },
+      {
+        "type": "text",
+        "value": "אדם שנפגע בתאונת עבודה ופחד שיאבד את מקור הפרנסה שלו."
+      },
+      {
+        "type": "text",
+        "value": "כמה זמן לוקח התהליך, וכמה זה עולה לי אם אני מפסיד."
+      },
+      {
+        "type": "text",
+        "value": "אני עובד ׳לפי הצלחה׳ — אין תשלום מראש, ורק אם מנצחים."
+      },
+      {
+        "type": "text",
+        "value": "אני בתחום 18 שנה, ואין לי ׳אחריות׳ קלאסית, אבל אני לא גובה שקל אם לא זכינו בתביעה."
+      },
+      {
+        "type": "text",
+        "value": "כן, אני חבר בלשכת עורכי הדין, מספר רישיון 34521."
+      },
+      {
+        "type": "text",
+        "value": "רוב הפניות דחופות יחסית, כי יש מגבלת התיישנות על תביעות."
+      },
+      {
+        "type": "skip",
+        "reason": "remote model, T13 only applies to field/mixed."
+      },
+      {
+        "type": "text",
+        "value": "לא מטפל בתביעות קטנות מתחת ל-20 אלף שקל, וגם לא בתאונות ים."
+      },
+      {
+        "type": "text",
+        "value": "פגישת ייעוץ ראשונה חינם, בלי התחייבות."
+      },
+      {
+        "type": "text",
+        "value": "כמעט הכל חד-פעמי, לפי תיק."
+      },
+      {
+        "type": "text",
+        "value": "תיק ממוצע שווה לי בסביבות 15,000 שקל."
+      },
+      {
+        "type": "text",
+        "value": "שלושה מתוך עשר פניות הופכות ללקוחות בסוף."
+      },
+      {
+        "type": "text",
+        "value": "לא ממש, רוב הלקוחות מגיעים פעם אחת, אבל כן מפנים חברים אם הרווחתי להם."
+      },
+      {
+        "type": "text",
+        "value": "יש לי 4.9 כוכבים עם 30 ביקורות בגוגל."
+      },
+      {
+        "type": "text",
+        "value": "6,000 שקל בחודש."
+      },
+      {
+        "type": "text",
+        "value": "מעולה, בוא נתקדם ברצינות."
+      },
+      {
+        "type": "skip",
+        "reason": "reviews already known → bridges to T22."
+      },
+      {
+        "type": "text",
+        "value": "לקוח כתב: 'אלון נלחם בשבילי כאילו זה התיק שלו, וקיבלתי הרבה יותר ממה שציפיתי.'"
+      },
+      {
+        "type": "text",
+        "value": "כן, יש לי תמונה מקצועית מהמשרד, מעלה עכשיו."
+      },
+      {
+        "type": "file_upload",
+        "filePath": "scripts/onboarding-personas/assets/sample-trust-asset.jpg"
+      },
+      {
+        "type": "text",
+        "value": "אני יכול לקחת בערך 5 תיקים חדשים בחודש."
+      },
+      {
+        "type": "text",
+        "value": "שיתקשרו או שימלאו טופס באתר."
+      },
+      {
+        "type": "text",
+        "value": "המספר 03-5554321, ולוואטסאפ 050-9998877."
+      },
+      {
+        "type": "text",
+        "value": "office@cohen-law.co.il"
+      },
+      {
+        "type": "text",
+        "value": "cohen-law-tlv"
+      },
+      {
+        "type": "text",
+        "value": "מאשר, הכל נראה מדויק."
+      }
+    ]
+  },
+  {
+    "id": 10,
+    "vertical": "accountant (רואה חשבון)",
+    "deliveryModelButton": "remote",
+    "paymentMode": "bypass",
+    "testing": "NO-REPEAT rule stress — verbose over-answering volunteers multiple future-turn fields in single responses",
+    "notes": "Persona volunteers businessName (T1), years+guarantee (T1), license (T6), and revenueModel (T6) ahead of the bot asking — the corresponding later turns (T2, T9, T10, T15) are scripted as skips to test the NO-REPEAT rule.",
+    "turns": [
+      {
+        "type": "text",
+        "value": "יש לי משרד ראיית חשבון ברמת גן בשם ׳כספים נאמנים בע״מ׳, אני עובד בתחום כבר 13 שנה ונותן חצי שנה אחריות על כל דוח שאני מגיש — אם יש טעות שלי, אני מתקן בחינם. הכי מכניס לי זה ליווי שוטף לעצמאים וחברות קטנות, כולל דוחות שנתיים ומע״מ."
+      },
+      {
+        "type": "skip",
+        "reason": "businessName already given at T1."
+      },
+      {
+        "type": "text",
+        "value": "אמיר"
+      },
+      {
+        "type": "text",
+        "value": "גם עושה ליווי בהקמת חברות חדשות ותכנון מס, אבל זה תוספת ולא הליבה."
+      },
+      {
+        "type": "text",
+        "value": "אני עובד עם לקוחות מכל הארץ, בעיקר בשיחות זום."
+      },
+      {
+        "type": "text",
+        "value": "עצמאי שפתח עסק חדש ופחד שהוא ישלם קנסות אם הוא לא מגיש בזמן. דרך אגב, יש לי גם רישיון רואה חשבון ממשרד המשפטים, מספר 45872, ורוב ההכנסה שלי מגיעה מליווי שוטף חודשי, לא מעבודות חד-פעמיות."
+      },
+      {
+        "type": "text",
+        "value": "אם אני זמין כל השנה או רק בעונת הדוחות, וכמה עולה ליווי חודשי."
+      },
+      {
+        "type": "text",
+        "value": "אני עונה תוך יום עסקים אחד, לא נעלם באמצע השנה כמו כמה רואי חשבון."
+      },
+      {
+        "type": "skip",
+        "reason": "years+guarantee already given at T1."
+      },
+      {
+        "type": "skip",
+        "reason": "license already given at T6."
+      },
+      {
+        "type": "text",
+        "value": "רוב הלקוחות שלי לא ממש דחופים, חוץ מסביב הגשת דוחות שנתיים — אז כן יש עומס עונתי."
+      },
+      {
+        "type": "text",
+        "value": "לא עובד עם חברות ציבוריות גדולות, רק עצמאים ועסקים קטנים-בינוניים."
+      },
+      {
+        "type": "text",
+        "value": "פגישת ייעוץ ראשונה חינם."
+      },
+      {
+        "type": "skip",
+        "reason": "revenueModel (recurring) already given at T6."
+      },
+      {
+        "type": "text",
+        "value": "ליווי חודשי שווה לי בסביבות 800 שקל לחודש. ובשנה זה יוצא בערך 9,600 שקל ללקוח."
+      },
+      {
+        "type": "text",
+        "value": "חמישה מתוך עשרה פונים הופכים ללקוחות."
+      },
+      {
+        "type": "text",
+        "value": "כן, לקוחות נשארים איתי שנים, זה כמעט אף פעם לא חד-פעמי."
+      },
+      {
+        "type": "text",
+        "value": "יש לי 4.8 כוכבים עם 22 ביקורות."
+      },
+      {
+        "type": "text",
+        "value": "3,500 שקל בחודש."
+      },
+      {
+        "type": "text",
+        "value": "מצוין, זה בדיוק מה שתכננתי."
+      },
+      {
+        "type": "skip",
+        "reason": "reviews already known → bridges to T22."
+      },
+      {
+        "type": "text",
+        "value": "לקוח כתב: 'אמיר שם לי סדר בבלגן של שלוש שנים, ולראשונה אני לא מפחד מרשות המסים.'"
+      },
+      {
+        "type": "text",
+        "value": "כן, יש לי תמונה מקצועית שלי, מעלה עכשיו."
+      },
+      {
+        "type": "file_upload",
+        "filePath": "scripts/onboarding-personas/assets/sample-trust-asset.jpg"
+      },
+      {
+        "type": "text",
+        "value": "אני יכול לקחת בערך 6 לקוחות חדשים בחודש."
+      },
+      {
+        "type": "text",
+        "value": "שיתקשרו או שימלאו טופס באתר."
+      },
+      {
+        "type": "text",
+        "value": "המספר 03-7778899, ולוואטסאפ 052-1112233."
+      },
+      {
+        "type": "text",
+        "value": "amir@neemanim-finance.co.il"
+      },
+      {
+        "type": "text",
+        "value": "neemanim-finance"
+      },
+      {
+        "type": "text",
+        "value": "מאשר, מושלם."
+      }
+    ]
+  },
+  {
+    "id": 11,
+    "vertical": "psychologist/life coach (פסיכולוג/מאמן)",
+    "deliveryModelButton": "remote",
+    "paymentMode": "bypass",
+    "testing": "hasTrustAssets:false fallback path — declines all trust assets and personal photo",
+    "notes": "Tamar's script for this persona has no explicit T20/budget turn — preserved as-authored rather than inventing one; flagged here for Roni in case it's an authoring gap rather than intentional.",
+    "turns": [
+      {
+        "type": "text",
+        "value": "אני פסיכולוג קליני עם קליניקה פרטית, עובד גם פרונטלי וגם בזום. הכי מכניס לי כסף זה טיפול פרטני למבוגרים עם חרדה ודיכאון."
+      },
+      {
+        "type": "text",
+        "value": "אין שם מסחרי, זה על שמי."
+      },
+      {
+        "type": "text",
+        "value": "יובל"
+      },
+      {
+        "type": "text",
+        "value": "גם עושה ליווי זוגי, אבל זה משני."
+      },
+      {
+        "type": "text",
+        "value": "אני עובד עם לקוחות מכל הארץ, בעיקר בזום."
+      },
+      {
+        "type": "text",
+        "value": "מישהו שהתלבט חודשים אם לפנות לטיפול בכלל, מפחד שיחשבו שהוא ׳לא נורמלי׳."
+      },
+      {
+        "type": "text",
+        "value": "אם זה באמת עוזר, וכמה זמן לוקח לראות שינוי."
+      },
+      {
+        "type": "text",
+        "value": "אני לא עובד לפי סקריפט — מתאים את הגישה לאדם שמולי, לא הפוך."
+      },
+      {
+        "type": "text",
+        "value": "מה שנותן ביטחון זה שיחת היכרות קצרה וחינמית לפני שמתחילים, כדי לראות שיש כימיה."
+      },
+      {
+        "type": "text",
+        "value": "כן, יש לי רישיון פסיכולוג ממשרד הבריאות."
+      },
+      {
+        "type": "text",
+        "value": "רוב האנשים מתלבטים הרבה זמן לפני שהם פונים בכלל, זה לא החלטה של רגע."
+      },
+      {
+        "type": "skip",
+        "reason": "deliberate."
+      },
+      {
+        "type": "text",
+        "value": "לא מטפל בילדים, וגם לא במקרים פסיכיאטריים אקוטיים — אני מפנה למקום המתאים."
+      },
+      {
+        "type": "text",
+        "value": "שיחת היכרות ראשונה של 15 דקות חינם."
+      },
+      {
+        "type": "text",
+        "value": "כמעט הכל שוטף — טיפול נמשך בממוצע חצי שנה ומעלה."
+      },
+      {
+        "type": "text",
+        "value": "פגישה שווה לי בסביבות 400 שקל. לקוח ממוצע שווה לי בערך 8,000 שקל לאורך תקופת הטיפול."
+      },
+      {
+        "type": "text",
+        "value": "ארבעה מתוך עשרה שפונים הופכים ללקוחות קבועים."
+      },
+      {
+        "type": "text",
+        "value": "לפעמים כן חוזרים בהמשך החיים כשמשהו אחר עולה, אבל זה לא הכלל."
+      },
+      {
+        "type": "text",
+        "value": "אין לי ביקורות בגוגל — זה תחום רגיש ואנשים לא אוהבים לכתוב בפומבי שהם בטיפול."
+      },
+      {
+        "type": "text",
+        "value": "אני מעדיף לא להעלות כלום, זה לא הוגן ללקוחות שלי לבקש מהם המלצה פומבית בתחום כזה."
+      },
+      {
+        "type": "text",
+        "value": "גם תמונה שלי אני מעדיף שלא, אני שומר על זה מינימלי."
+      },
+      {
+        "type": "text",
+        "value": "אני מעדיף שלא לצטט לקוחות, גם בלי שם — זה עניין של סודיות מקצועית."
+      },
+      {
+        "type": "text",
+        "value": "אני יכול לקבל בערך 2 לקוחות חדשים בחודש, אני שומר על עומס מטופלים סביר."
+      },
+      {
+        "type": "text",
+        "value": "שיתקשרו או שימלאו טופס באתר, לא אינסטגרם."
+      },
+      {
+        "type": "text",
+        "value": "המספר 054-3216549, ולוואטסאפ אותו מספר."
+      },
+      {
+        "type": "text",
+        "value": "yuval.eshkenazi.psy@gmail.com"
+      },
+      {
+        "type": "text",
+        "value": "dr-yuval-eshkenazi"
+      },
+      {
+        "type": "text",
+        "value": "מאשר."
+      }
+    ]
+  },
+  {
+    "id": 12,
+    "vertical": "online tutor (מורה פרטי אונליין)",
+    "deliveryModelButton": "remote",
+    "paymentMode": "bypass",
+    "testing": "below-minimum-budget acceptance/framing branch",
+    "turns": [
+      {
+        "type": "text",
+        "value": "אני מורה פרטי למתמטיקה ואנגלית, מלמד אונליין דרך זום. הכי מכניס לי זה הכנה לבגרויות בכיתות י׳-י״ב."
+      },
+      {
+        "type": "text",
+        "value": "אין שם עסקי, על שמי."
+      },
+      {
+        "type": "text",
+        "value": "עידן"
+      },
+      {
+        "type": "text",
+        "value": "גם מלמד הכנה לפסיכומטרי, אבל פחות."
+      },
+      {
+        "type": "text",
+        "value": "אני מלמד תלמידים מכל הארץ, הכל בזום."
+      },
+      {
+        "type": "text",
+        "value": "תלמידה שהייתה בפאניקה חודש לפני בגרות במתמטיקה ופחדה שהיא תיכשל."
+      },
+      {
+        "type": "text",
+        "value": "כמה שיעורים צריך, וכמה זה עולה לשעה."
+      },
+      {
+        "type": "text",
+        "value": "אני לא רק מסביר חומר — אני בונה תוכנית עבודה מסודרת עד הבגרות."
+      },
+      {
+        "type": "text",
+        "value": "מה שנותן ביטחון זה שיעור ניסיון ראשון בחצי מחיר, כדי לראות שיש התאמה."
+      },
+      {
+        "type": "text",
+        "value": "אין רישוי מיוחד להוראה פרטית."
+      },
+      {
+        "type": "text",
+        "value": "רוב ההורים מתכננים מראש, פונים כמה שבועות לפני מבחן או בגרות."
+      },
+      {
+        "type": "skip",
+        "reason": "deliberate."
+      },
+      {
+        "type": "text",
+        "value": "לא מלמד מתחת לכיתה ז׳, ולא מקצועות מדעים מלבד מתמטיקה."
+      },
+      {
+        "type": "text",
+        "value": "שיעור ראשון בחצי מחיר, לא חינם לגמרי."
+      },
+      {
+        "type": "text",
+        "value": "שוטף — רוב התלמידים ממשיכים כמה חודשים ברצף."
+      },
+      {
+        "type": "text",
+        "value": "שיעור בודד שווה לי בסביבות 130 שקל. תלמיד ממוצע שווה לי בערך 1,500 שקל לעונה."
+      },
+      {
+        "type": "text",
+        "value": "חמישה מתוך עשרה הורים שפונים הופכים לתלמידים קבועים."
+      },
+      {
+        "type": "text",
+        "value": "כן, הרבה חוזרים כל שנה לקראת מבחנים, וגם ממליצים להורים אחרים."
+      },
+      {
+        "type": "text",
+        "value": "יש לי 4.9 כוכבים עם 12 ביקורות."
+      },
+      {
+        "type": "text",
+        "value": "400 שקל בחודש."
+      },
+      {
+        "type": "text",
+        "value": "אוקיי, מקווה שזה מספיק בהתחלה."
+      },
+      {
+        "type": "skip",
+        "reason": "reviews already known → bridges to T22."
+      },
+      {
+        "type": "text",
+        "value": "הורה כתב: 'עידן הפך את הבן שלי מ-60 ל-90 במתמטיקה תוך חודשיים.'"
+      },
+      {
+        "type": "text",
+        "value": "כן, יש לי תמונה שלי מהזום, מעלה."
+      },
+      {
+        "type": "file_upload",
+        "filePath": "scripts/onboarding-personas/assets/sample-trust-asset.jpg"
+      },
+      {
+        "type": "text",
+        "value": "אני יכול לקחת בערך 4 תלמידים חדשים בחודש."
+      },
+      {
+        "type": "text",
+        "value": "שיכתבו וואטסאפ או שימלאו טופס."
+      },
+      {
+        "type": "text",
+        "value": "המספר 052-6667788, אותו מספר לוואטסאפ."
+      },
+      {
+        "type": "text",
+        "value": "idan.tutor.math@gmail.com"
+      },
+      {
+        "type": "text",
+        "value": "idan-math-tutor"
+      },
+      {
+        "type": "text",
+        "value": "מאשר."
+      }
+    ]
+  },
+  {
+    "id": 13,
+    "vertical": "photographer / event vendor (צלם/ת אירועים)",
+    "deliveryModelButton": "mixed",
+    "paymentMode": "bypass",
+    "testing": "deliberately probes the missing-event-button bug in delivery-model.js — prompts.ts defines a serviceModel:'event' branch that has no corresponding UI button, so this persona is forced to click 'mixed' as the closest-but-inaccurate option",
+    "buttonSelectionNote": "Before T1, persona reviews the delivery-model buttons ('אני מגיע ללקוח' / 'הלקוח מגיע אליי' / 'מרחוק' / 'גם וגם') and remarks none of them accurately describe an event photographer — not a home visit, not remote. Persona picks 'גם וגם' (mixed) as the closest available option, explicitly noting the inaccuracy. This is pre-turn context, not a chat message, and is captured here as metadata rather than a turns[] entry — the actual button click is what deliveryModelButton:'mixed' drives in the schema.",
+    "turns": [
+      {
+        "type": "text",
+        "value": "אני צלם אירועים — חתונות, בר מצוות, אירועי חברות. הכי מכניס לי כסף זה חתונות, בלי ספק."
+      },
+      {
+        "type": "text",
+        "value": "עומר גל צילום"
+      },
+      {
+        "type": "text",
+        "value": "עומר"
+      },
+      {
+        "type": "text",
+        "value": "גם עושה סשנים משפחתיים וצילומי הריון, אבל זה תוספת קטנה."
+      },
+      {
+        "type": "text",
+        "value": "אני עובד בעיקר במרכז — תל אביב, השרון, וגם יוצא לירושלים ולצפון לפי בקשה."
+      },
+      {
+        "type": "text",
+        "value": "זוג שהתחתן וממש פחד שהתמונות ייצאו ׳מלאכותיות׳ כמו בהרבה חתונות אחרות."
+      },
+      {
+        "type": "text",
+        "value": "כמה תמונות מקבלים בסוף, וכמה זמן לוקח לקבל את החומר."
+      },
+      {
+        "type": "text",
+        "value": "אני מצלם רגעים אמיתיים, לא פוזות מבוימות — זה מה שאנשים אוהבים אצלי."
+      },
+      {
+        "type": "text",
+        "value": "מה שנותן ביטחון זה חוזה חתום מראש עם כל הפרטים, וגם פגישת היכרות לפני שסוגרים."
+      },
+      {
+        "type": "text",
+        "value": "אין רישוי מיוחד לצילום."
+      },
+      {
+        "type": "skip",
+        "reason": "obvious long-planning (weddings booked months ahead)."
+      },
+      {
+        "type": "skip",
+        "reason": "not urgent."
+      },
+      {
+        "type": "text",
+        "value": "לא מצלם בבתי כנסת אורתודוקסים עם הגבלות על צלמים גברים, וגם לא יוצא לאילת."
+      },
+      {
+        "type": "text",
+        "value": "כן, אני נותן הצעת מחיר לפי סוג האירוע, ויש מקדמה לשריון תאריך."
+      },
+      {
+        "type": "text",
+        "value": "כמעט הכל חד-פעמי, לפי אירוע."
+      },
+      {
+        "type": "text",
+        "value": "אירוע חתונה ממוצע שווה לי בסביבות 6,000 שקל."
+      },
+      {
+        "type": "text",
+        "value": "שלושה מתוך עשרה שפונים בסוף סוגרים איתי."
+      },
+      {
+        "type": "text",
+        "value": "לא ממש — כל חתונה זה לקוח חדש, אבל כן מגיעים דרך המלצות מזוגות קודמים."
+      },
+      {
+        "type": "text",
+        "value": "יש לי 4.9 כוכבים עם 45 ביקורות."
+      },
+      {
+        "type": "text",
+        "value": "1,500 שקל בחודש."
+      },
+      {
+        "type": "text",
+        "value": "מעולה, בוא נתקדם."
+      },
+      {
+        "type": "text",
+        "value": "כן, האינסטגרם שלי הוא @omergal.photo, שם רוב העבודות שלי."
+      },
+      {
+        "type": "text",
+        "value": "כן, יש לי תמונה שלי מאחורי המצלמה, מעלה."
+      },
+      {
+        "type": "file_upload",
+        "filePath": "scripts/onboarding-personas/assets/sample-trust-asset.jpg"
+      },
+      {
+        "type": "text",
+        "value": "זוג כתב לי: 'עומר תפס רגעים שאפילו לא ידענו שקרו, ובכינו כשראינו את התמונות.'"
+      },
+      {
+        "type": "text",
+        "value": "יש לי בערך 3 תאריכים פנויים בחודש הקרוב."
+      },
+      {
+        "type": "text",
+        "value": "שיכתבו באינסטגרם או שימלאו טופס באתר."
+      },
+      {
+        "type": "text",
+        "value": "המספר 050-1119922, אותו מספר לוואטסאפ."
+      },
+      {
+        "type": "text",
+        "value": "omer@omergalphoto.com"
+      },
+      {
+        "type": "text",
+        "value": "omer-gal-photography"
+      },
+      {
+        "type": "text",
+        "value": "מאשר, נראה מעולה."
+      }
+    ]
+  },
+  {
+    "id": 14,
+    "vertical": "personal trainer (מאמן כושר אישי)",
+    "deliveryModelButton": "mixed",
+    "paymentMode": "bypass",
+    "testing": "real image upload at T21 (non-text action)",
+    "turns": [
+      {
+        "type": "text",
+        "value": "אני מאמן כושר אישי, עובד גם בבית הלקוח וגם בסטודיו קטן שיש לי. הכי מכניס לי כסף זה אימונים אישיים לירידה במשקל."
+      },
+      {
+        "type": "text",
+        "value": "פיט עם רועי"
+      },
+      {
+        "type": "text",
+        "value": "רועי"
+      },
+      {
+        "type": "text",
+        "value": "גם מעביר אימוני קבוצות קטנות, אבל זה משני."
+      },
+      {
+        "type": "text",
+        "value": "אני עובד בגבעתיים, תל אביב ורמת גן."
+      },
+      {
+        "type": "text",
+        "value": "אישה בת 50 שרצתה לחזור לכושר אחרי הריון ופחדה שהיא ׳כבר מאוחר מדי׳."
+      },
+      {
+        "type": "text",
+        "value": "כמה זמן לוקח לראות תוצאה, וכמה עולה חבילת אימונים."
+      },
+      {
+        "type": "text",
+        "value": "אני בונה תוכנית לפי המגבלות של כל אחד, לא תוכנית אחידה מהאינטרנט."
+      },
+      {
+        "type": "text",
+        "value": "אני בתחום 8 שנים. אין לי אחריות פורמלית, אבל אם אחרי חודש אין שינוי אני משנה גישה בלי תוספת תשלום."
+      },
+      {
+        "type": "text",
+        "value": "כן, יש לי תעודת מאמן כושר מוסמך ממכון וינגייט."
+      },
+      {
+        "type": "text",
+        "value": "רוב האנשים מתלבטים כמה שבועות לפני שהם מתחילים, זה לא החלטה של רגע."
+      },
+      {
+        "type": "skip",
+        "reason": "deliberate."
+      },
+      {
+        "type": "skip",
+        "reason": "not urgent."
+      },
+      {
+        "type": "text",
+        "value": "לא עובד עם מתאמנים עם בעיות לב לא מאוזנות, זה דורש אישור רפואי קודם."
+      },
+      {
+        "type": "text",
+        "value": "יש שיעור ניסיון בחצי מחיר, ואין דמי הגעה."
+      },
+      {
+        "type": "text",
+        "value": "גם וגם — יש חבילות חודשיות, ויש גם אימונים בודדים."
+      },
+      {
+        "type": "text",
+        "value": "אימון בודד שווה לי בסביבות 150 שקל. לקוח בחבילה חודשית שווה לי בערך 1,800 שקל בשנה."
+      },
+      {
+        "type": "text",
+        "value": "שישה מתוך עשרה שפונים נרשמים לאימונים."
+      },
+      {
+        "type": "text",
+        "value": "כן, ממש הרבה נשארים חצי שנה ומעלה, וגם מפנים חברים."
+      },
+      {
+        "type": "text",
+        "value": "אין לי ביקורות בגוגל עדיין, אני עובד בעיקר דרך המלצות."
+      },
+      {
+        "type": "text",
+        "value": "1,100 שקל בחודש."
+      },
+      {
+        "type": "text",
+        "value": "מעולה, בוא נתחיל."
+      },
+      {
+        "type": "text",
+        "value": "יש לי כמה תמונות לפני-אחרי ממתאמנים שהסכימו שאשתף, מעלה עכשיו."
+      },
+      {
+        "type": "file_upload",
+        "filePath": "scripts/onboarding-personas/assets/sample-trust-asset.jpg"
+      },
+      {
+        "type": "text",
+        "value": "כן, יש לי תמונה שלי מהסטודיו, מעלה."
+      },
+      {
+        "type": "file_upload",
+        "filePath": "scripts/onboarding-personas/assets/sample-trust-asset.jpg"
+      },
+      {
+        "type": "text",
+        "value": "מתאמנת כתבה: 'רועי שינה לי את היחס לאוכל ולאימונים, ירדתי 12 קילו ולא חזרתי אליהם.' אין לי דירוג בגוגל עדיין."
+      },
+      {
+        "type": "text",
+        "value": "אני יכול לקחת בערך 5 מתאמנים חדשים בחודש."
+      },
+      {
+        "type": "text",
+        "value": "שיכתבו וואטסאפ."
+      },
+      {
+        "type": "text",
+        "value": "המספר 053-4448899, אותו מספר לוואטסאפ."
+      },
+      {
+        "type": "text",
+        "value": "roy.fit.trainer@gmail.com"
+      },
+      {
+        "type": "text",
+        "value": "roy-personal-training"
+      },
+      {
+        "type": "text",
+        "value": "מאשר, סבבה."
+      }
+    ]
+  },
+  {
+    "id": 15,
+    "vertical": "IT technician / computer repair (טכנאי מחשבים)",
+    "deliveryModelButton": "mixed",
+    "paymentMode": "bypass",
+    "testing": "T21c upload started, cancelled mid-way, then reconsidered",
+    "notes": "Driver has no native 'cancel a file chooser mid-way' primitive, so Tamar's cancel/reconsider beat is modeled as sequential text turns representing the persona narrating hesitation, followed by the actual completed file_upload turn once they commit.",
+    "turns": [
+      {
+        "type": "text",
+        "value": "יש לי עסק לתיקוני מחשבים, גם מגיע הביתה וגם יש לי דוכן קטן בקניון. הכי מכניס לי כסף זה שחזור מידע ותיקוני מחשבים ניידים."
+      },
+      {
+        "type": "text",
+        "value": "טכנוקום"
+      },
+      {
+        "type": "text",
+        "value": "דניאל"
+      },
+      {
+        "type": "text",
+        "value": "גם מתקין רשתות ומצלמות אבטחה לעסקים קטנים, אבל זה פחות."
+      },
+      {
+        "type": "text",
+        "value": "אני נותן שירות בתל אביב, חולון ובת ים."
+      },
+      {
+        "type": "text",
+        "value": "בעל עסק קטן שהמחשב שלו קרס יום לפני שהיה צריך להגיש הצעת מחיר דחופה."
+      },
+      {
+        "type": "text",
+        "value": "כמה זמן ייקח, ואם אפשר להציל את הקבצים."
+      },
+      {
+        "type": "text",
+        "value": "אני מסביר בעברית פשוטה, לא במונחים טכניים, ולא מוכר שדרוגים מיותרים."
+      },
+      {
+        "type": "text",
+        "value": "אני בתחום 9 שנים, ונותן שלושה חודשים אחריות על כל תיקון."
+      },
+      {
+        "type": "text",
+        "value": "אין רישוי מיוחד לתיקוני מחשבים."
+      },
+      {
+        "type": "text",
+        "value": "יש כאלה שזה דחוף להם ברגע שהמחשב קורס, ויש כאלה שמתכננים שדרוג מראש."
+      },
+      {
+        "type": "text",
+        "value": "אני מגיע או עונה תוך שעה בממוצע."
+      },
+      {
+        "type": "text",
+        "value": "לא מתקן קונסולות משחקים, ולא יוצא מעבר לגוש דן."
+      },
+      {
+        "type": "text",
+        "value": "יש הערכת מחיר חינם בטלפון, ואם זה לא ניתן לתיקון אין חיוב."
+      },
+      {
+        "type": "text",
+        "value": "בעיקר חד-פעמי, אבל יש לי גם כמה עסקים עם חוזה תחזוקה חודשי."
+      },
+      {
+        "type": "text",
+        "value": "תיקון ממוצע שווה לי בסביבות 280 שקל. לקוח עסקי עם חוזה שווה לי בערך 2,400 שקל בשנה."
+      },
+      {
+        "type": "text",
+        "value": "חמישה מתוך עשרה שמתקשרים סוגרים."
+      },
+      {
+        "type": "text",
+        "value": "כן, חוזרים כל פעם שמשהו נשבר, וגם ממליצים לעסקים אחרים."
+      },
+      {
+        "type": "text",
+        "value": "יש לי 4.5 כוכבים עם 10 ביקורות."
+      },
+      {
+        "type": "text",
+        "value": "1,500 שקל בחודש."
+      },
+      {
+        "type": "text",
+        "value": "מקובל עליי, בוא נתקדם."
+      },
+      {
+        "type": "skip",
+        "reason": "reviews already known → bridges to T22."
+      },
+      {
+        "type": "text",
+        "value": "לקוח כתב: 'הציל לי קבצים שחשבתי שאבדו לתמיד, ממש הציל אותי.'"
+      },
+      {
+        "type": "text",
+        "value": "רגע, אני מעלה עכשיו..."
+      },
+      {
+        "type": "text",
+        "value": "האמת שאולי עדיף בלי, זה לא כזה חשוב לתחום שלי."
+      },
+      {
+        "type": "text",
+        "value": "לא, רגע, בוא כן — יש לי תמונה סבירה, אני מעלה."
+      },
+      {
+        "type": "file_upload",
+        "filePath": "scripts/onboarding-personas/assets/sample-trust-asset.jpg"
+      },
+      {
+        "type": "text",
+        "value": "אני יכול לקחת בערך 6 עבודות נוספות בחודש."
+      },
+      {
+        "type": "text",
+        "value": "שיתקשרו או שיכתבו וואטסאפ."
+      },
+      {
+        "type": "text",
+        "value": "המספר 052-7773311, אותו מספר לוואטסאפ."
+      },
+      {
+        "type": "text",
+        "value": "daniel@technocom-it.co.il"
+      },
+      {
+        "type": "text",
+        "value": "technocom-it"
+      },
+      {
+        "type": "text",
+        "value": "מאשר."
+      }
+    ]
+  },
+  {
+    "id": 16,
+    "vertical": "mobile fitness trainer / general mixed (מאמן מובייל)",
+    "deliveryModelButton": "mixed",
+    "paymentMode": "full",
+    "testing": "no digital footprint at all — flow must complete anyway",
+    "turns": [
+      {
+        "type": "text",
+        "value": "אני מאמן כושר מובייל, מגיע לבתים ולפארקים באזור המרכז. הכי מכניס לי כסף זה אימוני חוץ קבוצתיים קטנים."
+      },
+      {
+        "type": "text",
+        "value": "אין שם עסקי עדיין, עובד על שמי בינתיים."
+      },
+      {
+        "type": "text",
+        "value": "גיא"
+      },
+      {
+        "type": "text",
+        "value": "גם מלווה תזונה בסיסית, אבל לא מקצועי, רק ליווי כללי."
+      },
+      {
+        "type": "text",
+        "value": "אני עובד בפארק הירקון, גבעתיים ורמת גן."
+      },
+      {
+        "type": "text",
+        "value": "אישה שרצתה להתאמן אבל התביישה ללכת לחדר כושר רגיל."
+      },
+      {
+        "type": "text",
+        "value": "כמה זה עולה, ואם צריך ציוד."
+      },
+      {
+        "type": "text",
+        "value": "אני מביא את כל הציוד, לא צריך שום דבר מלבד בגדי ספורט."
+      },
+      {
+        "type": "text",
+        "value": "אני בתחום 4 שנים. אין לי אחריות פורמלית, אבל אם מתאמן לא מרוצה אחרי אימון ראשון, אני לא גובה עליו."
+      },
+      {
+        "type": "text",
+        "value": "אין רישוי מיוחד, יש לי הכשרת מאמן אישי."
+      },
+      {
+        "type": "text",
+        "value": "רוב האנשים מתלבטים קצת לפני שהם מתחילים, זה לא דחוף."
+      },
+      {
+        "type": "skip",
+        "reason": "deliberate."
+      },
+      {
+        "type": "skip",
+        "reason": "not urgent."
+      },
+      {
+        "type": "text",
+        "value": "לא עובד עם מתאמנים עם פציעות גב פעילות בלי אישור רופא."
+      },
+      {
+        "type": "text",
+        "value": "יש אימון ניסיון בחצי מחיר, אין דמי הגעה."
+      },
+      {
+        "type": "text",
+        "value": "גם וגם — יש חבילות חודשיות, ויש גם אימונים בודדים."
+      },
+      {
+        "type": "text",
+        "value": "אימון בודד שווה לי בסביבות 120 שקל. מתאמן בחבילה חודשית שווה לי בערך 1,200 שקל בשנה."
+      },
+      {
+        "type": "text",
+        "value": "ארבעה מתוך עשרה שפונים נרשמים."
+      },
+      {
+        "type": "text",
+        "value": "כן, נשארים כמה חודשים בממוצע, ומפנים חברים מהפארק."
+      },
+      {
+        "type": "text",
+        "value": "אין לי כלום — אין לי אפילו פרופיל עסקי בגוגל, ואין ביקורות. רק התחלתי."
+      },
+      {
+        "type": "text",
+        "value": "1,100 שקל בחודש."
+      },
+      {
+        "type": "text",
+        "value": "מעולה, בוא נתחיל."
+      },
+      {
+        "type": "text",
+        "value": "אין לי כרגע שום דבר להעלות, אין לי אפילו לקוחות שכתבו לי משהו בכתב."
+      },
+      {
+        "type": "text",
+        "value": "אין לי תמונה מקצועית עדיין, רק סלפי מהטלפון — לא חושב שזה מספיק טוב."
+      },
+      {
+        "type": "text",
+        "value": "אין לי גם ציטוט מלקוח כרגע, זה ממש עסק חדש. אין לי דירוג בגוגל, כי אין לי בכלל פרופיל עסקי."
+      },
+      {
+        "type": "text",
+        "value": "אני יכול לקחת בערך 8 מתאמנים חדשים בחודש, יש לי הרבה זמן פנוי כרגע."
+      },
+      {
+        "type": "text",
+        "value": "שיכתבו וואטסאפ."
+      },
+      {
+        "type": "text",
+        "value": "המספר 050-2223399, אותו מספר לוואטסאפ."
+      },
+      {
+        "type": "text",
+        "value": "guy.mobile.fitness@gmail.com"
+      },
+      {
+        "type": "text",
+        "value": "guy-mobile-fitness"
+      },
+      {
+        "type": "text",
+        "value": "מאשר, יאללה קדימה."
+      }
+    ]
+  },
+  {
+    "id": 17,
+    "vertical": "electrician, field vertical reuse (חשמלאי, באר שבע)",
+    "deliveryModelButton": "field",
+    "paymentMode": "bypass",
+    "testing": "slug sanitization at T27 with messy Hebrew/symbol input",
+    "turns": [
+      {
+        "type": "text",
+        "value": "יש לי עסק חשמלאות בבאר שבע. הכי מכניס לי כסף זה תיקוני תקלות דחופות בבתים פרטיים."
+      },
+      {
+        "type": "text",
+        "value": "חשמל יוסי"
+      },
+      {
+        "type": "text",
+        "value": "יוסי"
+      },
+      {
+        "type": "text",
+        "value": "גם מתקין מזגנים, אבל זה תוספת."
+      },
+      {
+        "type": "text",
+        "value": "באר שבע, אומר, לוד."
+      },
+      {
+        "type": "text",
+        "value": "משפחה שנשארה בלי חשמל בכל הבית ביום שישי אחר הצהריים."
+      },
+      {
+        "type": "text",
+        "value": "כמה זמן ייקח להגיע, וכמה זה יעלה."
+      },
+      {
+        "type": "text",
+        "value": "אני עונה גם בשישי-שבת, לא רק בימי חול."
+      },
+      {
+        "type": "text",
+        "value": "אני בתחום 12 שנה, ונותן שנה אחריות על כל עבודה."
+      },
+      {
+        "type": "text",
+        "value": "כן, יש לי רישיון חשמלאי מוסמך."
+      },
+      {
+        "type": "text",
+        "value": "לא עובד עם מתח גבוה תעשייתי, וגם לא יוצא מעבר לבאר שבע והסביבה."
+      },
+      {
+        "type": "skip",
+        "reason": "urgent obvious."
+      },
+      {
+        "type": "text",
+        "value": "אני מגיע תוך שעה בממוצע, גם בסופ״ש."
+      },
+      {
+        "type": "text",
+        "value": "הצעת מחיר חינם בטלפון, אין דמי הגעה."
+      },
+      {
+        "type": "text",
+        "value": "כמעט הכל חד-פעמי."
+      },
+      {
+        "type": "text",
+        "value": "עבודה ממוצעת בסביבות 400 שקל."
+      },
+      {
+        "type": "text",
+        "value": "שבע מתוך עשר סוגרים."
+      },
+      {
+        "type": "text",
+        "value": "כן, חוזרים ומפנים שכנים."
+      },
+      {
+        "type": "text",
+        "value": "יש לי 4.7 כוכבים עם 25 ביקורות."
+      },
+      {
+        "type": "text",
+        "value": "2,000 שקל בחודש."
+      },
+      {
+        "type": "text",
+        "value": "מעולה, בוא נתקדם."
+      },
+      {
+        "type": "skip",
+        "reason": "reviews already known → bridges to T22."
+      },
+      {
+        "type": "text",
+        "value": "לקוח כתב: 'הגיע בשישי בערב בלי לבטל, ממש הציל לנו את השבת.'"
+      },
+      {
+        "type": "skip",
+        "reason": "electrician, field trade, no natural personal-brand angle."
+      },
+      {
+        "type": "text",
+        "value": "אני יכול לקחת בערך 5 עבודות נוספות בשבוע."
+      },
+      {
+        "type": "text",
+        "value": "שיתקשרו או שיכתבו וואטסאפ."
+      },
+      {
+        "type": "text",
+        "value": "המספר 050-8887766, אותו מספר לוואטסאפ."
+      },
+      {
+        "type": "text",
+        "value": "yossi.electric.bs@gmail.com"
+      },
+      {
+        "type": "text",
+        "value": "האתר הכי טוב של יוסי!!!"
+      },
+      {
+        "type": "text",
+        "value": "מאשר, סבבה."
+      }
+    ]
+  },
+  {
+    "id": 18,
+    "vertical": "divorce/family lawyer, remote vertical reuse (עורך דין דיני משפחה)",
+    "deliveryModelButton": "remote",
+    "paymentMode": "bypass",
+    "testing": "hard-gate enforcement at T25 (phone) and T26 (email) — evasive 2-3 rounds before compliance",
+    "turns": [
+      {
+        "type": "text",
+        "value": "אני עורכת דין דיני משפחה וגירושין, עובדת מרחוק ובפגישות זום. הכי מכניס לי כסף זה הליכי גירושין מורכבים עם משמורת ילדים."
+      },
+      {
+        "type": "text",
+        "value": "משרד עו״ד רות שני"
+      },
+      {
+        "type": "text",
+        "value": "רות"
+      },
+      {
+        "type": "text",
+        "value": "גם עושה הסכמי ממון לפני חתונה, אבל זה משני."
+      },
+      {
+        "type": "text",
+        "value": "אני עובדת עם לקוחות מכל הארץ."
+      },
+      {
+        "type": "text",
+        "value": "אישה באמצע הליך גירושין קשה שפחדה שהיא תפסיד את המשמורת על הילדים."
+      },
+      {
+        "type": "text",
+        "value": "כמה זמן ייקח התהליך, וכמה זה יעלה לי בסוף."
+      },
+      {
+        "type": "text",
+        "value": "אני נלחמת על מה שחשוב באמת, לא מנפחת תיקים כדי לגבות יותר שעות."
+      },
+      {
+        "type": "text",
+        "value": "אני בתחום 15 שנה. אין לי אחריות קלאסית, אבל אני תמיד זמינה ועונה תוך יום."
+      },
+      {
+        "type": "text",
+        "value": "כן, אני חברה בלשכת עורכי הדין, מספר רישיון 28934."
+      },
+      {
+        "type": "text",
+        "value": "רוב הפניות דחופות יחסית, כי יש כבר עימות בבית כשפונים אליי."
+      },
+      {
+        "type": "skip",
+        "reason": "remote, doesn't apply."
+      },
+      {
+        "type": "text",
+        "value": "לא מטפלת בתיקי פלילי, רק דיני משפחה."
+      },
+      {
+        "type": "text",
+        "value": "פגישת ייעוץ ראשונה חינם, 30 דקות."
+      },
+      {
+        "type": "text",
+        "value": "כמעט הכל חד-פעמי, לפי תיק."
+      },
+      {
+        "type": "text",
+        "value": "תיק ממוצע שווה לי בסביבות 12,000 שקל."
+      },
+      {
+        "type": "text",
+        "value": "ארבעה מתוך עשרה שפונים הופכים ללקוחות."
+      },
+      {
+        "type": "text",
+        "value": "לא ממש, אבל מפנות חברות שעוברות תהליך דומה."
+      },
+      {
+        "type": "text",
+        "value": "יש לי 4.8 כוכבים עם 38 ביקורות."
+      },
+      {
+        "type": "text",
+        "value": "3,500 שקל בחודש."
+      },
+      {
+        "type": "text",
+        "value": "מעולה, בואו נתקדם."
+      },
+      {
+        "type": "skip",
+        "reason": "reviews already known → bridges to T22."
+      },
+      {
+        "type": "text",
+        "value": "לקוחה כתבה: 'רות לחמה בשבילי כשלא היה לי כוח להילחם בעצמי, ויצאתי עם משמורת מלאה.'"
+      },
+      {
+        "type": "text",
+        "value": "כן, יש לי תמונה מקצועית מהמשרד, מעלה."
+      },
+      {
+        "type": "file_upload",
+        "filePath": "scripts/onboarding-personas/assets/sample-trust-asset.jpg"
+      },
+      {
+        "type": "text",
+        "value": "אני יכולה לקחת בערך 4 תיקים חדשים בחודש."
+      },
+      {
+        "type": "text",
+        "value": "שיתקשרו או שימלאו טופס."
+      },
+      {
+        "type": "text",
+        "value": "אני מעדיפה לא לתת מספר טלפון ישיר כרגע, אפשר רק דרך הטופס באתר?"
+      },
+      {
+        "type": "text",
+        "value": "האמת שאני לא אוהבת לתת את המספר האישי שלי לאתר ציבורי, יש דרך אחרת?"
+      },
+      {
+        "type": "text",
+        "value": "בסדר, בסדר — 03-6667788, ולוואטסאפ 052-9990011."
+      },
+      {
+        "type": "text",
+        "value": "צריך באמת גם מייל? אפשר בלי?"
+      },
+      {
+        "type": "text",
+        "value": "אני לא כל כך אוהבת לתת מייל, אפשר שהלקוחות פשוט יתקשרו?"
+      },
+      {
+        "type": "text",
+        "value": "טוב, בסדר — ruth@shani-law.co.il"
+      },
+      {
+        "type": "text",
+        "value": "shani-law-family"
+      },
+      {
+        "type": "text",
+        "value": "מאשרת."
+      }
+    ]
+  }
+]

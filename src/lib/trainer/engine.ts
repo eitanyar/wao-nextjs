@@ -8,6 +8,7 @@
  */
 import type { GeminiSessionConfig } from './gemini';
 import type { ElevenLabsSessionConfig } from './elevenlabs';
+import type { TrainerPersona } from './persona';
 
 export type TrainerEngine = 'gemini' | 'elevenlabs';
 
@@ -19,12 +20,12 @@ export function getTrainerEngine(): TrainerEngine {
 export type TrainerSessionConfig = GeminiSessionConfig | ElevenLabsSessionConfig;
 
 /** Mints a session config for whichever engine is configured via TRAINER_ENGINE. */
-export async function mintTrainerSession(): Promise<TrainerSessionConfig> {
+export async function mintTrainerSession(persona: TrainerPersona): Promise<TrainerSessionConfig> {
   const engine = getTrainerEngine();
   if (engine === 'elevenlabs') {
     const { mintElevenLabsSession } = await import('./elevenlabs');
-    return mintElevenLabsSession();
+    return mintElevenLabsSession(persona);
   }
   const { mintGeminiSession } = await import('./gemini');
-  return mintGeminiSession();
+  return mintGeminiSession(persona);
 }

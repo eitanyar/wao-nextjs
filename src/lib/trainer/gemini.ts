@@ -11,7 +11,7 @@
  * documented as supported for the Gemini Developer API, v1alpha only.
  */
 import { GoogleGenAI } from '@google/genai';
-import { DANNY_PERSONA } from './persona';
+import type { TrainerPersona } from './persona';
 
 const DEFAULT_MODEL = 'gemini-3.1-flash-live-preview';
 
@@ -50,7 +50,7 @@ export interface GeminiSessionConfig {
  * firstMessage) is not secret — it's already sent to the client today for
  * the ElevenLabs path via `overrides`.
  */
-export async function mintGeminiSession(): Promise<GeminiSessionConfig> {
+export async function mintGeminiSession(persona: TrainerPersona): Promise<GeminiSessionConfig> {
   const apiKey = getApiKey();
   const ai = new GoogleGenAI({ apiKey, httpOptions: { apiVersion: 'v1alpha' } });
 
@@ -71,12 +71,12 @@ export async function mintGeminiSession(): Promise<GeminiSessionConfig> {
     ephemeralToken: token.name,
     model: getGeminiModel(),
     persona: {
-      id: DANNY_PERSONA.id,
-      name: DANNY_PERSONA.name,
-      situation: DANNY_PERSONA.situation,
+      id: persona.id,
+      name: persona.name,
+      situation: persona.situation,
     },
-    systemPrompt: DANNY_PERSONA.systemPrompt,
-    firstMessage: DANNY_PERSONA.firstMessage,
-    timeCapMin: DANNY_PERSONA.timeCapMin,
+    systemPrompt: persona.systemPrompt,
+    firstMessage: persona.firstMessage,
+    timeCapMin: persona.timeCapMin,
   };
 }

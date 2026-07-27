@@ -25,6 +25,9 @@ interface Props {
   personaName: string;
   situation: string;
   timeCapMin: number;
+  personaId: string;
+  generatedId?: string;
+  level: number;
 }
 
 type Phase = 'idle' | 'connecting' | 'live' | 'ended';
@@ -56,7 +59,7 @@ export default function ElevenLabsSessionRoom(props: Props) {
   );
 }
 
-function ElevenLabsSessionRoomInner({ personaName, situation, timeCapMin }: Props) {
+function ElevenLabsSessionRoomInner({ personaName, situation, timeCapMin, personaId, generatedId, level }: Props) {
   const [phase, setPhase] = useState<Phase>('idle');
   const [elapsedSec, setElapsedSec] = useState(0);
   const [liveTranscript, setLiveTranscript] = useState<TranscriptTurn[]>([]);
@@ -93,7 +96,7 @@ function ElevenLabsSessionRoomInner({ personaName, situation, timeCapMin }: Prop
       const res = await fetch('/api/trainer/transcript', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ engine: 'elevenlabs', conversationId }),
+        body: JSON.stringify({ engine: 'elevenlabs', conversationId, personaId, generatedId, level }),
       });
       const data = await res.json();
       if (res.ok && Array.isArray(data.transcript)) {
@@ -108,7 +111,7 @@ function ElevenLabsSessionRoomInner({ personaName, situation, timeCapMin }: Prop
     } catch (err) {
       console.error('[trainer] transcript fetch failed', err);
     }
-  }, []);
+  }, [personaId, generatedId, level]);
 
   const handleStop = useCallback(() => {
     stopTimer();
@@ -130,7 +133,11 @@ function ElevenLabsSessionRoomInner({ personaName, situation, timeCapMin }: Prop
     conversationIdRef.current = null;
 
     try {
-      const res = await fetch('/api/trainer/session', { method: 'POST' });
+      const res = await fetch('/api/trainer/session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ generatedId }),
+      });
       const data = (await res.json()) as SessionResponse;
       if (!res.ok) {
         throw new Error(data.message ?? data.error ?? 'session mint failed');
@@ -158,7 +165,7 @@ function ElevenLabsSessionRoomInner({ personaName, situation, timeCapMin }: Prop
       setPhase('idle');
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [conversation, hardCapSec]);
+  }, [conversation, hardCapSec, generatedId]);
 
   useEffect(() => {
     return () => {

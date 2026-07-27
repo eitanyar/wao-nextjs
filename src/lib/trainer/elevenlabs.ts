@@ -8,7 +8,7 @@
  */
 import fs from 'fs';
 import path from 'path';
-import { DANNY_PERSONA } from './persona';
+import { DANNY_PERSONA, type TrainerPersona } from './persona';
 
 const API_BASE = 'https://api.elevenlabs.io/v1';
 const ENGINE_FILE = path.join(process.cwd(), 'data', 'trainer', 'engine.json');
@@ -159,8 +159,13 @@ export interface ElevenLabsSessionConfig {
   timeCapMin: number;
 }
 
-/** Fallback engine (per §3, demoted from M1 default) — behind the engine.ts abstraction. */
-export async function mintElevenLabsSession(): Promise<ElevenLabsSessionConfig> {
+/**
+ * Fallback engine (per §3, demoted from M1 default) — behind the engine.ts
+ * abstraction. The cached agent shell (created once, per-call `overrides`
+ * below) can be bootstrapped from any persona; per-session content always
+ * comes from `overrides`, so a generated (M2) persona works the same as Danny.
+ */
+export async function mintElevenLabsSession(persona: TrainerPersona): Promise<ElevenLabsSessionConfig> {
   const agentId = await ensureTrainerAgentId();
   const conversationToken = await mintConversationToken(agentId);
 
@@ -169,17 +174,17 @@ export async function mintElevenLabsSession(): Promise<ElevenLabsSessionConfig> 
     conversationToken,
     agentId,
     persona: {
-      id: DANNY_PERSONA.id,
-      name: DANNY_PERSONA.name,
-      situation: DANNY_PERSONA.situation,
+      id: persona.id,
+      name: persona.name,
+      situation: persona.situation,
     },
     overrides: {
       agent: {
         language: 'he',
-        firstMessage: DANNY_PERSONA.firstMessage,
-        prompt: { prompt: DANNY_PERSONA.systemPrompt },
+        firstMessage: persona.firstMessage,
+        prompt: { prompt: persona.systemPrompt },
       },
     },
-    timeCapMin: DANNY_PERSONA.timeCapMin,
+    timeCapMin: persona.timeCapMin,
   };
 }

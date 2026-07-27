@@ -1,0 +1,25 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": false,
+    "incremental": false,
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "outDir": "./dist",
+    "rootDir": "./src"
+  },
+  "//": "Runtime trainer source imports are extensionless (Next/Turbopack resolves .ts). This test build emits CommonJS, where extensionless relative imports resolve under Node. Include only the pure, testable subgraph — NOT the Next-coupled files (auth.ts→next/headers, gemini.ts→@google/genai) which would fail under classic node resolution.",
+  "include": [
+    "src/lib/trainer/metrics.ts",
+    "src/lib/trainer/prompts.ts",
+    "src/lib/trainer/llm.ts",
+    "src/lib/trainer/judge.ts",
+    "src/lib/trainer/profile.ts",
+    "src/lib/trainer/persona.ts",
+    "src/lib/trainer/coach.ts",
+    "src/lib/trainer/metrics.test.ts",
+    "src/lib/trainer/judge.test.ts",
+    "src/lib/trainer/profile.test.ts",
+    "src/lib/trainer/coach.test.ts"
+  ]
+}

@@ -25,6 +25,9 @@ interface Props {
   personaName: string;
   situation: string;
   timeCapMin: number;
+  personaId: string;
+  generatedId?: string;
+  level: number;
 }
 
 type Phase = 'idle' | 'connecting' | 'live' | 'ended';
@@ -94,7 +97,7 @@ function downsampleTo16k(input: Float32Array, inputSampleRate: number): Int16Arr
  * Output audio (24kHz PCM16) is decoded and scheduled on a dedicated playback
  * AudioContext; `interrupted` events (barge-in) flush the pending queue.
  */
-export default function GeminiSessionRoom({ personaName, situation, timeCapMin }: Props) {
+export default function GeminiSessionRoom({ personaName, situation, timeCapMin, personaId, generatedId, level }: Props) {
   const [phase, setPhase] = useState<Phase>('idle');
   const [elapsedSec, setElapsedSec] = useState(0);
   const [transcript, setTranscript] = useState<TranscriptTurn[]>([]);
@@ -185,10 +188,13 @@ export default function GeminiSessionRoom({ personaName, situation, timeCapMin }
         engine: 'gemini',
         model: modelRef.current,
         startedAt: startedAtRef.current,
+        personaId,
+        generatedId,
+        level,
         turns,
       }),
     }).catch(err => console.error('[trainer][gemini] transcript post failed', err));
-  }, []);
+  }, [personaId, generatedId, level]);
 
   const teardownAudio = useCallback(() => {
     micProcessorRef.current?.disconnect();
@@ -238,7 +244,11 @@ export default function GeminiSessionRoom({ personaName, situation, timeCapMin }
     setStatusLabel('מתחבר…');
 
     try {
-      const res = await fetch('/api/trainer/session', { method: 'POST' });
+      const res = await fetch('/api/trainer/session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ generatedId }),
+      });
       const data = (await res.json()) as GeminiSessionResponse;
       if (!res.ok) {
         throw new Error(data.message ?? data.error ?? 'session mint failed');
@@ -354,7 +364,7 @@ export default function GeminiSessionRoom({ personaName, situation, timeCapMin }
       teardownAudio();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [hardCapSec, handleStop, flushPlaybackQueue, playChunk, pushTurn, teardownAudio, personaName]);
+  }, [hardCapSec, handleStop, flushPlaybackQueue, playChunk, pushTurn, teardownAudio, personaName, generatedId]);
 
   useEffect(() => {
     return () => {

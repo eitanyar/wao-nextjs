@@ -81,3 +81,8 @@ data/trainer/generated/
 data/trainer/probe/
 data/trainer/profile.json
 data/trainer/memos.jsonl
+
+# trainer test build output
+dist/
+
+data/trainer/results/

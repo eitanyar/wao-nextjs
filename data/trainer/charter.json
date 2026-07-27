@@ -2,7 +2,7 @@
   "$comment": "Training charter — the ONE manual artifact in the trainer (spec §3b). DRAFT seeded by Lior 26.7.2026 — Eitan: review and edit before first M2 session; everything else in data/trainer/ is generated.",
   "owner": "Eitan",
   "goal": "Maximize spoken articulation, persuasion, and emotional intelligence in Hebrew, in service of selling WAO's AI-funnel marketing services to Israeli SMB owners.",
-  "trackWeights": { "T1_wao_funnel_selling": 0.7, "T2_professional_networking": 0.2, "T3_social_general": 0.1 },
+  "trackWeights": { "T1_wao_funnel_selling": 0.65, "T2_professional_networking": 0.2, "T3_social_general": 0.15 },
   "sessionLengthMin": 8,
   "sessionsPerWeek": 5,
   "language": "he",

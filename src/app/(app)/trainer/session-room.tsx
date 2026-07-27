@@ -9,6 +9,9 @@ interface Props {
   personaName: string;
   situation: string;
   timeCapMin: number;
+  personaId: string;
+  generatedId?: string;
+  level: number;
 }
 
 const ENGINE_LABEL: Record<TrainerEngine, string> = {

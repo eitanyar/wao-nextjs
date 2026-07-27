@@ -41,7 +41,7 @@ export const DEFAULT_RUBRIC: RubricItem[] = [
   { skill: 'brevity_pacing', labelHe: 'קצב ותמציתיות', weight: 1.0,
     description: 'Answers were tight; did not force the other side to re-ask for the bottom line. Grounded by avgUserTurnChars / longestUserTurnChars.' },
   { skill: 'closing', labelHe: 'סגירה', weight: 1.2,
-    description: 'Drove toward a concrete next step (meeting, decision, written follow-up) rather than trailing off.' },
+    description: 'Drove toward a concrete next step — proposed a meeting/call, asked for a decision, or offered a written follow-up. Score this HIGH (8-10) whenever the trainee clearly ASKS for that next step and names what it is, even if the persona has not yet signed anything or fully committed — credit the close attempt itself, not whether the deal is contractually done. Only score low if the trainee trails off, changes subject, or ends the conversation without ever proposing a next step.' },
 ];
 
 export const JUDGE_SYSTEM_PROMPT = `You are a demanding sales-conversation and EQ coach for WAO, an Israeli B2C marketing agency. You score a training role-play in which the trainee (role "user") tried to move an Israeli small-business owner (role "agent", played by a persona) toward WAO's services.
@@ -52,6 +52,7 @@ HOW TO SCORE (0-10 per rubric skill):
 - The persona's HIDDEN OBJECTIVE is the scoring key. If the persona softens/opens only when a specific move is made (e.g. their fear is labeled before any pitch) and the trainee never made that move, the relevant skills MUST score low (0-4) no matter how smooth the trainee sounded. Charm that never unlocked the persona is a failure, not a pass.
 - Use the objective metrics as ground truth for listening_ratio and brevity_pacing — do NOT re-estimate talk time or count fillers yourself; the numbers are given.
 - Be blunt and discriminating. Do NOT cluster scores around 6. A skill the trainee genuinely did well is 8-10; a skill they missed the point on is 1-4. Reserve 5-7 for genuinely mixed execution.
+- Do not under-score a skill just because the conversation ended without a fully signed/confirmed outcome. A role-play is a snapshot — judge the trainee's MOVE (did they attempt the right thing at the right moment), not whether the persona had time to fully resolve it in the transcript's remaining turns.
 - Every weakness and strength MUST quote an exact Hebrew utterance from the transcript as evidence. No unquoted claims.
 
 OUTPUT — strict JSON only, no markdown fence, this exact shape:
@@ -94,6 +95,44 @@ ${metricLines}
 
 TRANSCRIPT:
 ${convo}`;
+}
+
+/** Builds the Coach user turn. Keep the executor's wiring trivial. */
+export function buildCoachUserPrompt(input: {
+  charter: {
+    goal: string;
+    personaRealism: string;
+    redLines: string[];
+    tonePreferences: string[];
+    focusHints: string[];
+  };
+  corpusSample: { vertical: string; turns: string[] }[];
+  track: string;
+  level: 1 | 2 | 3;
+}): string {
+  const corpusLines = input.corpusSample
+    .map((p) => `- ${p.vertical}: ${p.turns.slice(0, 4).join(' / ')}`)
+    .join('\n');
+  return `CHARTER:
+Goal: ${input.charter.goal}
+Persona realism: ${input.charter.personaRealism}
+Red lines (absolute, never violate):
+${input.charter.redLines.map((r) => `- ${r}`).join('\n')}
+Tone preferences:
+${input.charter.tonePreferences.map((t) => `- ${t}`).join('\n')}
+Focus hints:
+${input.charter.focusHints.map((f) => `- ${f}`).join('\n')}
+
+REAL VERTICAL SAMPLE (ground the persona in one of these, do not invent a generic buyer):
+${corpusLines || '(none sampled — invent a realistic Israeli SMB owner consistent with the charter)'}
+
+TARGET TRACK: ${input.track}
+TARGET DIFFICULTY LEVEL: L${input.level}`;
+}
+
+/** Builds the QA-gate user turn — persona text only, no scenario/rubric noise. */
+export function buildQaUserPrompt(input: { systemPrompt: string; firstMessage: string }): string {
+  return `systemPrompt:\n${input.systemPrompt}\n\nfirstMessage:\n${input.firstMessage}`;
 }
 
 /* ============================== COACH ============================== */
