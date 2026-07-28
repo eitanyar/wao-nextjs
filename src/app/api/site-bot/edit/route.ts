@@ -24,30 +24,27 @@ interface SiteRecord {
 
 const SITE_EDIT_PARSER_PROMPT = `You are a site-edit parser. Given a SiteCopy JSON and an edit instruction in Hebrew or English, return ONLY a JSON object: { "fieldPath": "copy.heroHeadline", "newValue": "..." }. Use dot notation for fieldPath. For array edits, return the full new array value. Never return prose.`;
 
-async function callAzureFast(systemPrompt: string, userMessage: string): Promise<string> {
-  const apiKey = process.env.AZURE_OPENAI_KEY;
-  const endpoint = process.env.AZURE_OPENAI_ENDPOINT;
-  if (!apiKey || !endpoint) throw new Error('Azure OpenAI not configured');
+async function callGeminiFast(systemPrompt: string, userMessage: string): Promise<string> {
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) throw new Error('Gemini not configured');
 
-  const deployment = process.env.AZURE_OPENAI_DEPLOYMENT_FAST || 'gpt-4o-mini';
-  const url = `${endpoint}/chat/completions?api-version=2024-05-01-preview`;
+  const modelName = process.env.GEMINI_MODEL_NAME || 'gemini-3.5-flash';
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent`;
 
   const res = await fetch(url, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'api-key': apiKey },
+    headers: { 'Content-Type': 'application/json', 'x-goog-api-key': apiKey },
     body: JSON.stringify({
-      model: deployment,
-      messages: [
-        { role: 'system', content: systemPrompt },
-        { role: 'user', content: userMessage },
-      ],
-      response_format: { type: 'json_object' },
-      max_completion_tokens: 1500,
+      systemInstruction: { role: 'system', parts: [{ text: systemPrompt }] },
+      contents: [{ role: 'user', parts: [{ text: userMessage }] }],
+      generationConfig: { responseMimeType: 'application/json' },
     }),
   });
   const data = await res.json();
-  if (data.error) throw new Error(`Azure OpenAI (${deployment}): ${data.error.message ?? data.error.code ?? JSON.stringify(data.error)}`);
-  return data.choices[0].message.content;
+  if (!res.ok) throw new Error(`Gemini API error (${res.status}): ${JSON.stringify(data)}`);
+  const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+  if (typeof text !== 'string') throw new Error(`Gemini API returned unexpected shape: ${JSON.stringify(data)}`);
+  return text;
 }
 
 // Simple dot-notation setter — e.g. "copy.heroHeadline" or "heroHeadline" both
@@ -84,20 +81,16 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: `Site data not found for slug: ${slug}` }, { status: 404 });
     }
 
-    // ── Step 2: Parse the edit instruction via Azure (fast/haiku) ───────────
+    // ── Step 2: Parse the edit instruction via Gemini ────────────────────────
     const userMessage = `Current copy: ${JSON.stringify(record.copy)}\n\nEdit instruction: ${instruction}`;
-    let fieldPath: string;
-    let newValue: unknown;
 
-    const apiKey = process.env.AZURE_OPENAI_KEY;
-    if (apiKey) {
-      const raw = await callAzureFast(SITE_EDIT_PARSER_PROMPT, userMessage);
-      const parsed = JSON.parse(raw) as { fieldPath: string; newValue: unknown };
-      fieldPath = parsed.fieldPath;
-      newValue = parsed.newValue;
-    } else {
-      return NextResponse.json({ error: 'Azure OpenAI not configured — edit requires the LLM parser' }, { status: 500 });
+    if (!process.env.GEMINI_API_KEY) {
+      return NextResponse.json({ error: 'Gemini not configured — edit requires the LLM parser' }, { status: 500 });
     }
+    const raw = await callGeminiFast(SITE_EDIT_PARSER_PROMPT, userMessage);
+    const parsed = JSON.parse(raw) as { fieldPath: string; newValue: unknown };
+    const fieldPath = parsed.fieldPath;
+    const newValue = parsed.newValue;
 
     if (!fieldPath) {
       return NextResponse.json({ error: 'Parser returned no fieldPath' }, { status: 500 });

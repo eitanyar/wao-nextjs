@@ -600,18 +600,57 @@ function generateMockCampaign(data: CollectedData) {
   };
 }
 
-// ── Azure OpenAI handler ──────────────────────────────────────────────────────
+// ── Gemini handler ─────────────────────────────────────────────────────────────
+//
+// Gemini's generateContent API differs structurally from Azure/OpenAI Chat
+// Completions:
+//   - No `role: "system"` message in the array — system prompts go in a
+//     top-level `systemInstruction` field.
+//   - `contents[].role` is only "user" | "model" (never "assistant" or "system").
+//   - Strict JSON output is requested via `generationConfig.responseMimeType:
+//     "application/json"` (NOT an OpenAI-style `response_format` param).
+//   - The response text lives at
+//     `candidates[0].content.parts[0].text` (a JSON *string* to be parsed),
+//     not `choices[0].message.content`.
 
-async function handleAzureOpenAI(
+const GEMINI_MODEL_NAME = process.env.GEMINI_MODEL_NAME || "gemini-3.5-flash";
+
+function toGeminiRole(role: Message["role"]): "user" | "model" {
+  return role === "assistant" ? "model" : "user";
+}
+
+async function callGemini(
+  apiKey: string,
+  systemInstruction: string,
+  contents: { role: "user" | "model"; parts: { text: string }[] }[]
+): Promise<any> {
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL_NAME}:generateContent`;
+  const res = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "x-goog-api-key": apiKey },
+    body: JSON.stringify({
+      systemInstruction: { role: "system", parts: [{ text: systemInstruction }] },
+      contents,
+      generationConfig: { responseMimeType: "application/json" },
+    }),
+  });
+  const data = await res.json();
+  if (!res.ok) {
+    throw new Error(`Gemini API error (${res.status}): ${JSON.stringify(data)}`);
+  }
+  const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+  if (typeof text !== "string") {
+    throw new Error(`Gemini API returned unexpected shape: ${JSON.stringify(data)}`);
+  }
+  return JSON.parse(text);
+}
+
+async function handleGemini(
   messages: Message[],
   currentState: string,
   collectedData: CollectedData,
-  apiKey: string,
-  endpoint: string
+  apiKey: string
 ) {
-  const deploymentName = process.env.AZURE_OPENAI_DEPLOYMENT_NAME || "gpt-5.4-mini";
-  const url = `${endpoint}/chat/completions?api-version=2024-05-01-preview`;
-
   if (currentState === "STRATEGIZING") {
     const brief = `
 Business Details:
@@ -645,32 +684,13 @@ Contact Method: ${collectedData.contactMethod}
 Phone: ${collectedData.phone}
 `;
 
-    const [drorRes, tamarRes] = await Promise.all([
-      fetch(url, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "api-key": apiKey },
-        body: JSON.stringify({
-          model: deploymentName,
-          messages: [{ role: "system", content: DROR_SYSTEM_PROMPT }, { role: "user", content: brief }],
-          response_format: { type: "json_object" },
-        }),
-      }).then(r => r.json()),
-      fetch(url, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "api-key": apiKey },
-        body: JSON.stringify({
-          model: deploymentName,
-          messages: [{ role: "system", content: TAMAR_SYSTEM_PROMPT }, { role: "user", content: brief }],
-          response_format: { type: "json_object" },
-        }),
-      }).then(r => r.json()),
-    ]);
-
     let drorData: Record<string, any>;
     let tamarData: Record<string, any>;
     try {
-      drorData = JSON.parse(drorRes.choices[0].message.content);
-      tamarData = JSON.parse(tamarRes.choices[0].message.content);
+      [drorData, tamarData] = await Promise.all([
+        callGemini(apiKey, DROR_SYSTEM_PROMPT, [{ role: "user", parts: [{ text: brief }] }]),
+        callGemini(apiKey, TAMAR_SYSTEM_PROMPT, [{ role: "user", parts: [{ text: brief }] }]),
+      ]);
     } catch {
       const fallback = generateFallbackStrategyAndCopy(collectedData);
       drorData = fallback.strategy as unknown as Record<string, any>;
@@ -692,17 +712,9 @@ IMPORTANT: End your message with EXACTLY this sentence (no variation):
 "אם הכל נראה טוב — כתוב ״אישור״ ואנחנו מתניעים."
 `;
 
-    const adamRes = await fetch(url, {
-      method: "POST",
-      headers: { "Content-Type": "application/json", "api-key": apiKey },
-      body: JSON.stringify({
-        model: deploymentName,
-        messages: [{ role: "system", content: ADAM_SYSTEM_PROMPT }, { role: "user", content: presentPrompt }],
-        response_format: { type: "json_object" },
-      }),
-    }).then(r => r.json());
-
-    const adamData = JSON.parse(adamRes.choices[0].message.content);
+    const adamData = await callGemini(apiKey, ADAM_SYSTEM_PROMPT, [
+      { role: "user", parts: [{ text: presentPrompt }] },
+    ]);
 
     return NextResponse.json({
       response: adamData.response,
@@ -802,19 +814,12 @@ Present ₪${chosenBudget} as: "עם ₪${chosenBudget} תקבל בסביבות 
     ? `\n\n[ALREADY COLLECTED — do NOT ask about these again: ${alreadyCollected.join(", ")}]`
     : "";
 
-  const apiMessages = [
-    { role: "system", content: ADAM_SYSTEM_PROMPT + budgetHint + alreadyGuard },
-    ...messages.map(m => ({ role: m.role, content: m.content })),
-  ];
+  const systemInstruction = ADAM_SYSTEM_PROMPT + budgetHint + alreadyGuard;
+  const geminiContents = messages
+    .filter(m => m.role !== "system")
+    .map(m => ({ role: toGeminiRole(m.role), parts: [{ text: m.content }] }));
 
-  const res = await fetch(url, {
-    method: "POST",
-    headers: { "Content-Type": "application/json", "api-key": apiKey },
-    body: JSON.stringify({ model: deploymentName, messages: apiMessages, response_format: { type: "json_object" } }),
-  });
-
-  const data = await res.json();
-  const content = JSON.parse(data.choices[0].message.content);
+  const content = await callGemini(apiKey, systemInstruction, geminiContents);
 
   return NextResponse.json({ ...content, isSimulation: false });
 }
@@ -827,11 +832,10 @@ export async function POST(req: Request) {
     const { messages, currentState, collectedData } = body;
     const lastUserMessage = messages[messages.length - 1]?.content || "";
 
-    const apiKey = process.env.AZURE_OPENAI_KEY;
-    const endpoint = process.env.AZURE_OPENAI_ENDPOINT;
+    const apiKey = process.env.GEMINI_API_KEY;
 
-    if (apiKey && endpoint) {
-      return await handleAzureOpenAI(messages, currentState, collectedData, apiKey, endpoint);
+    if (apiKey) {
+      return await handleGemini(messages, currentState, collectedData, apiKey);
     }
 
     return handleSimulation(lastUserMessage, currentState, collectedData);
