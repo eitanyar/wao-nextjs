@@ -8,11 +8,13 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test": "tsc -p tsconfig.test.json && node -e \"require('fs').writeFileSync('dist/package.json',JSON.stringify({type:'commonjs'}))\" && node --test dist/lib/trainer/*.test.js"
+    "test": "tsc -p tsconfig.test.json && node -e \"require('fs').writeFileSync('dist/package.json',JSON.stringify({type:'commonjs'}))\" && node --test dist/lib/trainer/*.test.js dist/lib/payments/*.test.js dist/lib/payments/providers/*.test.js"
   },
   "dependencies": {
     "@elevenlabs/react": "^1.10.2",
     "@google/genai": "^2.13.0",
+    "better-sqlite3": "^13.0.2",
+    "date-fns": "^4.4.0",
     "google-ads-api": "^24.1.0",
     "next": "16.2.6",
     "nodemailer": "^8.0.10",
@@ -21,6 +23,7 @@
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
+    "@types/better-sqlite3": "^7.6.13",
     "@types/node": "^20",
     "@types/nodemailer": "^8.0.0",
     "@types/react": "^19",

@@ -86,3 +86,9 @@ data/trainer/memos.jsonl
 dist/
 
 data/trainer/results/
+
+# Billing engine — local SQLite dev DB; production uses BILLING_DB_PATH inside
+# $WAO_RUNTIME_DATA_DIR (persistent, outside the git tree), never this path.
+data/billing.db
+data/billing.db-wal
+data/billing.db-shm
