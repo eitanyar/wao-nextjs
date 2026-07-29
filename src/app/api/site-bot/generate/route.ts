@@ -5,6 +5,7 @@ import type { CollectedData } from '@/lib/bot/prompts';
 import type { SiteCopy } from '@/lib/lp/lpCopyPrompt';
 import { buildSiteCopyPrompt } from '@/lib/lp/lpCopyPrompt';
 import { TAMAR_SYSTEM_PROMPT } from '@/lib/bot/prompts';
+import { callGeminiJSON } from '@/lib/ai/gemini-fast';
 
 // Noa's QA prompt — LOW effort, Haiku, checklist only.
 // Same checklist as lp-generate's NOA_LP_QA_PROMPT — kept in sync manually since
@@ -34,35 +35,6 @@ function slugify(name: string, phone?: string): string {
   if (latin.length >= 3) return latin;
   const suffix = (phone || '').replace(/\D/g, '').slice(-4) || Date.now().toString(36).slice(-4);
   return `wao-client-${suffix}`;
-}
-
-async function callAzure(systemPrompt: string, userMessage: string, model = 'haiku'): Promise<string> {
-  const apiKey = process.env.AZURE_OPENAI_KEY;
-  const endpoint = process.env.AZURE_OPENAI_ENDPOINT;
-  if (!apiKey || !endpoint) throw new Error('Azure OpenAI not configured');
-
-  const deployment = model === 'haiku'
-    ? (process.env.AZURE_OPENAI_DEPLOYMENT_FAST || 'gpt-4o-mini')
-    : (process.env.AZURE_OPENAI_DEPLOYMENT_NAME || 'o4-mini');
-
-  const url = `${endpoint}/chat/completions?api-version=2024-05-01-preview`;
-
-  const res = await fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'api-key': apiKey },
-    body: JSON.stringify({
-      model: deployment,
-      messages: [
-        { role: 'system', content: systemPrompt },
-        { role: 'user', content: userMessage },
-      ],
-      response_format: { type: 'json_object' },
-      max_completion_tokens: 2400,
-    }),
-  });
-  const data = await res.json();
-  if (data.error) throw new Error(`Azure OpenAI (${deployment}): ${data.error.message ?? data.error.code ?? JSON.stringify(data.error)}`);
-  return data.choices[0].message.content;
 }
 
 function generateFallbackCopy(collectedData: CollectedData): SiteCopy {
@@ -124,16 +96,14 @@ export async function POST(req: Request) {
 
     let copy: SiteCopy;
 
-    const apiKey = process.env.AZURE_OPENAI_KEY;
-
-    if (apiKey) {
-      // Tamar — MEDIUM effort (standard deployment)
+    if (process.env.GEMINI_API_KEY) {
+      // Tamar — write the site copy
       const tamarPrompt = buildSiteCopyPrompt(collectedData);
-      const tamarRaw = await callAzure(TAMAR_SYSTEM_PROMPT, tamarPrompt, 'standard');
+      const tamarRaw = await callGeminiJSON(TAMAR_SYSTEM_PROMPT, tamarPrompt);
       const tamarCopy = JSON.parse(tamarRaw) as SiteCopy;
 
-      // Noa — LOW effort (fast/cheap deployment)
-      const noaRaw = await callAzure(NOA_SITE_QA_PROMPT, JSON.stringify(tamarCopy), 'haiku');
+      // Noa — QA pass on Tamar's copy
+      const noaRaw = await callGeminiJSON(NOA_SITE_QA_PROMPT, JSON.stringify(tamarCopy));
       copy = JSON.parse(noaRaw) as SiteCopy;
     } else {
       // Simulation fallback — no LLM cost

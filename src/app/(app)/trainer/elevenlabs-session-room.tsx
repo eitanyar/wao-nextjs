@@ -116,6 +116,9 @@ function ElevenLabsSessionRoomInner({ personaName, situation, timeCapMin, person
   const handleStop = useCallback(() => {
     stopTimer();
     setPhase('ended');
+    // Long calls leave the user scrolled down at the transcript; bring them
+    // back to the status card so the "start a new call" button is visible.
+    window.scrollTo({ top: 0, behavior: 'smooth' });
     conversation.endSession();
 
     const conversationId = conversationIdRef.current;

@@ -9,6 +9,7 @@ import { VERTICAL_THEMES } from '@/lib/lp/verticalThemes';
 import { VERTICAL_ASSETS } from '@/lib/lp/verticalAssets';
 import type { CollectedData } from '@/lib/bot/prompts';
 import type { SiteCopy } from '@/lib/lp/lpCopyPrompt';
+import { callGeminiJSON } from '@/lib/ai/gemini-fast';
 
 interface EditRequest {
   slug: string;
@@ -23,29 +24,6 @@ interface SiteRecord {
 }
 
 const SITE_EDIT_PARSER_PROMPT = `You are a site-edit parser. Given a SiteCopy JSON and an edit instruction in Hebrew or English, return ONLY a JSON object: { "fieldPath": "copy.heroHeadline", "newValue": "..." }. Use dot notation for fieldPath. For array edits, return the full new array value. Never return prose.`;
-
-async function callGeminiFast(systemPrompt: string, userMessage: string): Promise<string> {
-  const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey) throw new Error('Gemini not configured');
-
-  const modelName = process.env.GEMINI_MODEL_NAME || 'gemini-3.5-flash';
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent`;
-
-  const res = await fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'x-goog-api-key': apiKey },
-    body: JSON.stringify({
-      systemInstruction: { role: 'system', parts: [{ text: systemPrompt }] },
-      contents: [{ role: 'user', parts: [{ text: userMessage }] }],
-      generationConfig: { responseMimeType: 'application/json' },
-    }),
-  });
-  const data = await res.json();
-  if (!res.ok) throw new Error(`Gemini API error (${res.status}): ${JSON.stringify(data)}`);
-  const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
-  if (typeof text !== 'string') throw new Error(`Gemini API returned unexpected shape: ${JSON.stringify(data)}`);
-  return text;
-}
 
 // Simple dot-notation setter — e.g. "copy.heroHeadline" or "heroHeadline" both
 // resolve against the `copy` object (the LLM sometimes includes/omits the
@@ -87,7 +65,7 @@ export async function POST(req: Request) {
     if (!process.env.GEMINI_API_KEY) {
       return NextResponse.json({ error: 'Gemini not configured — edit requires the LLM parser' }, { status: 500 });
     }
-    const raw = await callGeminiFast(SITE_EDIT_PARSER_PROMPT, userMessage);
+    const raw = await callGeminiJSON(SITE_EDIT_PARSER_PROMPT, userMessage);
     const parsed = JSON.parse(raw) as { fieldPath: string; newValue: unknown };
     const fieldPath = parsed.fieldPath;
     const newValue = parsed.newValue;

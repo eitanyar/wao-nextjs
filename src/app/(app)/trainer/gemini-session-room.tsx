@@ -219,6 +219,9 @@ export default function GeminiSessionRoom({ personaName, situation, timeCapMin, 
     stopTimer();
     setPhase('ended');
     setStatusLabel('לא מחובר');
+    // Long calls leave the user scrolled down at the transcript; bring them
+    // back to the status card so the "start a new call" button is visible.
+    window.scrollTo({ top: 0, behavior: 'smooth' });
 
     // Flush any in-flight (not yet turnComplete) fragments so nothing is lost.
     if (inputBufferRef.current.trim()) pushTurn('user', inputBufferRef.current);
