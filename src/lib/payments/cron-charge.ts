@@ -53,6 +53,7 @@ import { decryptToken } from './crypto';
 import { getPaymentProvider } from './get-provider';
 import { generateMagicLinkToken } from './magic-link';
 import { buildCancelUrl } from './subscriptions';
+import { issueInvoiceForCharge } from './invoicing';
 import {
   sendRenewalChargeConfirmationEmail,
   sendCardUpdateNeededEmail,
@@ -170,12 +171,13 @@ export async function chargeOneSubscription(row: SubscriptionRow, now: Date): Pr
        WHERE id = @id`
     ).run({ id: row.id, next_charge_at: nextChargeAt, updated_at: timestamp });
 
-    insertCharge(db, {
-      id: crypto.randomUUID(),
+    const chargeId = crypto.randomUUID();
+    const chargeRow = {
+      id: chargeId,
       subscription_id: row.id,
       idempotency_key: idempotencyKey,
       amount,
-      status: 'succeeded',
+      status: 'succeeded' as const,
       attempt_number: attemptNumber,
       provider_transaction_id: result.providerTransactionId ?? null,
       error_code: null,
@@ -183,7 +185,8 @@ export async function chargeOneSubscription(row: SubscriptionRow, now: Date): Pr
       invoice_id: null,
       charged_at: timestamp,
       created_at: timestamp,
-    });
+    };
+    insertCharge(db, chargeRow);
 
     insertSubscriptionEvent(db, {
       id: crypto.randomUUID(),
@@ -192,6 +195,10 @@ export async function chargeOneSubscription(row: SubscriptionRow, now: Date): Pr
       metadata: JSON.stringify({ amount, providerTransactionId: result.providerTransactionId, attemptNumber }),
       created_at: timestamp,
     });
+
+    // Invoice issuance is best-effort and must never block/fail the charge
+    // itself — see `invoicing.ts` doc comment.
+    await issueInvoiceForCharge(chargeRow, row);
 
     try {
       const { token: magicLinkToken } = generateMagicLinkToken(row.id);

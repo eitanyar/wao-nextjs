@@ -19,6 +19,7 @@ import { encryptToken } from './crypto';
 import { getPaymentProvider } from './get-provider';
 import { generateMagicLinkToken, validateAndConsumeMagicLinkToken } from './magic-link';
 import { sendTrialChargeConfirmationEmail, sendMagicLinkCancelEmail } from './email';
+import { issueInvoiceForCharge } from './invoicing';
 
 function nowIso(): string {
   return new Date().toISOString();
@@ -218,12 +219,12 @@ export async function applyTokenizationCallback(
   });
 
   const idempotencyKey = buildIdempotencyKey(subscriptionId, 'trial', 1);
-  insertCharge(db, {
+  const chargeRow = {
     id: crypto.randomUUID(),
     subscription_id: subscriptionId,
     idempotency_key: idempotencyKey,
     amount: subscription.trial_amount ?? 0,
-    status: 'succeeded',
+    status: 'succeeded' as const,
     attempt_number: 1,
     provider_transaction_id: result.providerTransactionId ?? null,
     error_code: null,
@@ -231,7 +232,8 @@ export async function applyTokenizationCallback(
     invoice_id: null,
     charged_at: timestamp,
     created_at: timestamp,
-  });
+  };
+  insertCharge(db, chargeRow);
 
   insertSubscriptionEvent(db, {
     id: crypto.randomUUID(),
@@ -240,6 +242,10 @@ export async function applyTokenizationCallback(
     metadata: JSON.stringify({ amount: subscription.trial_amount, providerTransactionId: result.providerTransactionId }),
     created_at: timestamp,
   });
+
+  // Invoice issuance is best-effort and must never block/fail the charge
+  // itself — see `invoicing.ts` doc comment.
+  await issueInvoiceForCharge(chargeRow, subscription);
 
   // Cancel link must ship with every charge-confirmation email by default.
   const { token: magicLinkToken } = generateMagicLinkToken(subscriptionId);

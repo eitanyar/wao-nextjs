@@ -43,6 +43,14 @@
     "src/lib/payments/card-update.ts",
     "src/lib/payments/card-update.test.ts",
     "src/lib/payments/cron-card-expiry.ts",
-    "src/lib/payments/cron-card-expiry.test.ts"
+    "src/lib/payments/cron-card-expiry.test.ts",
+    "src/lib/payments/invoice-provider.ts",
+    "src/lib/payments/providers/mock-invoice.ts",
+    "src/lib/payments/providers/mock-invoice.test.ts",
+    "src/lib/payments/providers/pending-queue-invoice.ts",
+    "src/lib/payments/providers/pending-queue-invoice.test.ts",
+    "src/lib/payments/get-invoice-provider.ts",
+    "src/lib/payments/invoicing.ts",
+    "src/lib/payments/invoicing.test.ts"
   ]
 }

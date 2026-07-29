@@ -88,6 +88,29 @@ function migrate(db: Database.Database): void {
     CREATE INDEX IF NOT EXISTS idx_subscription_events_subscription_id ON subscription_events(subscription_id);
     CREATE INDEX IF NOT EXISTS idx_subscriptions_next_charge_at ON subscriptions(next_charge_at);
   `);
+
+  // Additive migration (invoicing task): the "manual issuance" fallback queue
+  // used by `providers/pending-queue-invoice.ts` when no real invoicing-service
+  // API is wired up yet. See `src/lib/payments/invoice-provider.ts` doc comment
+  // for the abstraction this backs.
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS pending_invoices (
+      id                  TEXT PRIMARY KEY,
+      charge_id           TEXT NOT NULL REFERENCES charges(id),
+      customer_name       TEXT NOT NULL,
+      customer_email      TEXT NOT NULL,
+      amount              REAL NOT NULL,
+      description         TEXT NOT NULL,
+      status              TEXT NOT NULL DEFAULT 'pending',
+      provider_invoice_id TEXT,
+      pdf_url             TEXT,
+      created_at          TEXT NOT NULL,
+      issued_at           TEXT
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_pending_invoices_charge_id ON pending_invoices(charge_id);
+    CREATE INDEX IF NOT EXISTS idx_pending_invoices_status ON pending_invoices(status);
+  `);
 }
 
 /** Opens (or reuses) the singleton billing DB connection. */
@@ -156,6 +179,20 @@ export interface ChargeRow {
   invoice_id: string | null;
   charged_at: string | null;
   created_at: string;
+}
+
+export interface PendingInvoiceRow {
+  id: string;
+  charge_id: string;
+  customer_name: string;
+  customer_email: string;
+  amount: number;
+  description: string;
+  status: 'pending' | 'issued' | 'failed';
+  provider_invoice_id: string | null;
+  pdf_url: string | null;
+  created_at: string;
+  issued_at: string | null;
 }
 
 export interface SubscriptionEventRow {
@@ -228,4 +265,32 @@ export function insertSubscriptionEvent(db: Database.Database, row: Subscription
       @id, @subscription_id, @event_type, @metadata, @created_at
     )`
   ).run(row);
+}
+
+export function insertPendingInvoice(db: Database.Database, row: PendingInvoiceRow): void {
+  db.prepare(
+    `INSERT INTO pending_invoices (
+      id, charge_id, customer_name, customer_email, amount, description,
+      status, provider_invoice_id, pdf_url, created_at, issued_at
+    ) VALUES (
+      @id, @charge_id, @customer_name, @customer_email, @amount, @description,
+      @status, @provider_invoice_id, @pdf_url, @created_at, @issued_at
+    )`
+  ).run(row);
+}
+
+export function getPendingInvoiceById(db: Database.Database, id: string): PendingInvoiceRow | null {
+  const row = db.prepare(`SELECT * FROM pending_invoices WHERE id = ?`).get(id) as
+    | PendingInvoiceRow
+    | undefined;
+  return row ?? null;
+}
+
+/** Updates row status to `charge_id`'s corresponding charges row — used to
+ * write back the resulting `invoiceId` after invoice creation succeeds. */
+export function setChargeInvoiceId(db: Database.Database, chargeId: string, invoiceId: string): void {
+  db.prepare(`UPDATE charges SET invoice_id = @invoice_id WHERE id = @id`).run({
+    id: chargeId,
+    invoice_id: invoiceId,
+  });
 }
