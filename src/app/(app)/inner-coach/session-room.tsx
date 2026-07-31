@@ -115,6 +115,7 @@ export default function InnerCoachSessionRoom({ mode, personaName, situation, ti
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [reflectResult, setReflectResult] = useState<ReflectResponse | null>(null);
   const [reflectPending, setReflectPending] = useState(false);
+  const [reflectError, setReflectError] = useState<string | null>(null);
 
   const hardCapSec = timeCapMin * 60;
 
@@ -136,6 +137,7 @@ export default function InnerCoachSessionRoom({ mode, personaName, situation, ti
   const outputBufferRef = useRef('');
   const sessionStartMsRef = useRef(0);
   const transcriptRef = useRef<TranscriptTurn[]>([]);
+  const resultsRef = useRef<HTMLDivElement | null>(null);
 
   const stopTimer = useCallback(() => {
     if (timerRef.current) {
@@ -191,6 +193,29 @@ export default function InnerCoachSessionRoom({ mode, personaName, situation, ti
     setTranscript(transcriptRef.current);
   }, []);
 
+  const runReflect = useCallback(async (turns: TranscriptTurn[]) => {
+    setReflectPending(true);
+    setReflectError(null);
+    try {
+      const res = await fetch('/api/inner-coach/reflect', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ transcript: turns, mode, beliefId }),
+      });
+      const data = (await res.json()) as ReflectResponse & { message?: string };
+      if (res.ok) {
+        setReflectResult(data);
+      } else {
+        setReflectError(data.message ?? 'ניתוח השיחה נכשל.');
+      }
+    } catch (err) {
+      console.error('[inner-coach][gemini] reflect post failed', err);
+      setReflectError('ניתוח השיחה נכשל — בדוק חיבור ונסה שוב.');
+    } finally {
+      setReflectPending(false);
+    }
+  }, [mode, beliefId]);
+
   const postTranscriptAndReflect = useCallback(async (turns: TranscriptTurn[]) => {
     if (turns.length === 0) return;
 
@@ -207,21 +232,12 @@ export default function InnerCoachSessionRoom({ mode, personaName, situation, ti
       }),
     }).catch(err => console.error('[inner-coach][gemini] transcript post failed', err));
 
-    setReflectPending(true);
-    try {
-      const res = await fetch('/api/inner-coach/reflect', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ transcript: turns, mode, beliefId }),
-      });
-      const data = (await res.json()) as ReflectResponse;
-      if (res.ok) setReflectResult(data);
-    } catch (err) {
-      console.error('[inner-coach][gemini] reflect post failed', err);
-    } finally {
-      setReflectPending(false);
-    }
-  }, [personaId, mode, beliefId]);
+    await runReflect(turns);
+  }, [personaId, mode, beliefId, runReflect]);
+
+  const retryReflect = useCallback(() => {
+    runReflect(transcriptRef.current);
+  }, [runReflect]);
 
   const teardownAudio = useCallback(() => {
     micProcessorRef.current?.disconnect();
@@ -246,7 +262,6 @@ export default function InnerCoachSessionRoom({ mode, personaName, situation, ti
     stopTimer();
     setPhase('ended');
     setStatusLabel('לא מחובר');
-    window.scrollTo({ top: 0, behavior: 'smooth' });
 
     if (inputBufferRef.current.trim()) pushTurn('user', inputBufferRef.current);
     if (outputBufferRef.current.trim()) pushTurn('agent', outputBufferRef.current);
@@ -264,6 +279,7 @@ export default function InnerCoachSessionRoom({ mode, personaName, situation, ti
     setErrorMsg(null);
     setTranscript([]);
     setReflectResult(null);
+    setReflectError(null);
     transcriptRef.current = [];
     inputBufferRef.current = '';
     outputBufferRef.current = '';
@@ -399,8 +415,27 @@ export default function InnerCoachSessionRoom({ mode, personaName, situation, ti
     };
   }, [stopTimer, teardownAudio]);
 
+  // Once the call ends, the analysis card renders below the transcript —
+  // bring it into view so it's never mistaken for "nothing happened".
+  useEffect(() => {
+    if (phase === 'ended' && (reflectPending || reflectResult || reflectError)) {
+      resultsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }, [phase, reflectPending, reflectResult, reflectError]);
+
   return (
     <div className="space-y-6">
+      {phase === 'live' && (
+        <div
+          className="fixed top-3 inset-x-0 z-50 flex justify-center pointer-events-none"
+          dir="rtl"
+        >
+          <div className="pointer-events-auto rounded-full border border-white/10 bg-black/80 backdrop-blur px-4 py-1.5 text-sm font-semibold tabular-nums shadow-lg">
+            {formatClock(Math.max(hardCapSec - elapsedSec, 0))} נותרו
+          </div>
+        </div>
+      )}
+
       <div className="rounded-2xl border border-white/10 bg-white/5 p-6">
         <h2 className="font-bold text-lg mb-2">היום</h2>
         <p className="text-sm leading-relaxed text-[var(--muted)]">{situation}</p>
@@ -455,17 +490,31 @@ export default function InnerCoachSessionRoom({ mode, personaName, situation, ti
         </div>
       )}
 
-      {phase === 'ended' && reflectPending && (
-        <p className="text-sm text-center text-[var(--muted)]">מנתח את השיחה…</p>
-      )}
+      <div ref={resultsRef}>
+        {phase === 'ended' && reflectPending && (
+          <p className="text-sm text-center text-[var(--muted)]">מנתח את השיחה…</p>
+        )}
 
-      {phase === 'ended' && reflectResult?.mode === 'intake' && reflectResult.draftBeliefs && (
-        <IntakeApproval draftBeliefs={reflectResult.draftBeliefs} />
-      )}
+        {phase === 'ended' && reflectResult?.mode === 'intake' && reflectResult.draftBeliefs && (
+          <IntakeApproval draftBeliefs={reflectResult.draftBeliefs} />
+        )}
 
-      {phase === 'ended' && reflectResult?.reflection && (
-        <ReflectionCard reflection={reflectResult.reflection} ledgerUpdated={reflectResult.ledgerUpdated} beliefStatus={reflectResult.beliefStatus} />
-      )}
+        {phase === 'ended' && reflectResult?.reflection && (
+          <ReflectionCard reflection={reflectResult.reflection} ledgerUpdated={reflectResult.ledgerUpdated} beliefStatus={reflectResult.beliefStatus} />
+        )}
+
+        {phase === 'ended' && reflectError && (
+          <div className="rounded-2xl border border-red-500/30 bg-red-500/10 p-6 text-center space-y-3">
+            <p className="text-sm text-red-300">{reflectError}</p>
+            <button
+              onClick={retryReflect}
+              className="rounded-lg bg-[var(--accent)] text-white font-semibold py-2 px-5 text-sm hover:opacity-90 transition-opacity"
+            >
+              נסה לנתח שוב
+            </button>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
