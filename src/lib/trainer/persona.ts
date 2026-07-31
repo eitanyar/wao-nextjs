@@ -18,6 +18,8 @@ export interface TrainerPersona {
   /** What actually moves/convinces him — used by the (future) Judge. */
   hiddenObjective: string;
   timeCapMin: number;
+  /** Gemini prebuilt voice name (e.g. 'Kore'). Omit for the engine default. */
+  voice?: string;
 }
 
 export const DANNY_PERSONA: TrainerPersona = {

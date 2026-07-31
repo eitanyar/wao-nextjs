@@ -35,6 +35,8 @@ export interface GeminiSessionConfig {
   systemPrompt: string;
   firstMessage: string;
   timeCapMin: number;
+  /** Gemini prebuilt voice name, forwarded from TrainerPersona.voice when set. */
+  voice?: string;
 }
 
 /**
@@ -78,5 +80,6 @@ export async function mintGeminiSession(persona: TrainerPersona): Promise<Gemini
     systemPrompt: persona.systemPrompt,
     firstMessage: persona.firstMessage,
     timeCapMin: persona.timeCapMin,
+    voice: persona.voice,
   };
 }

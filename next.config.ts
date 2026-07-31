@@ -326,6 +326,10 @@ const legacyRedirects = [
 
 const nextConfig: NextConfig = {
   output: "standalone",
+  // Tailscale IPs/hostname used to reach the dev server remotely (not localhost) —
+  // without this, Next 16 dev mode silently blocks HMR/RSC dev-asset requests from
+  // that origin, which breaks client hydration (buttons render but onClick never wires up).
+  allowedDevOrigins: ["100.102.160.114", "100.83.177.51", "msi-1.tailc496b2.ts.net"],
   async redirects() {
     return [...legacyRedirects];
   },
