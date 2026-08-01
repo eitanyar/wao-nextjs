@@ -401,10 +401,11 @@ RULES:
   - pricingNotes  → "הצעת מחיר חינם" / "בלי דמי הגעה"  (only if actually true)
 - Native spoken Israeli Hebrew. No translated-from-English phrasing, no jargon.
 
-Output JSON:
+Output JSON — ONLY this key, no other keys (no rationale/explanation field — a free-text
+prose field after the array has been observed to corrupt the JSON output; keep the response
+to structured data only):
 {
-  "callouts": ["4–8 Hebrew callouts ≤25 chars, no punctuation, each a distinct trust signal"],
-  "rationale": "Brief Hebrew explanation"
+  "callouts": ["4–8 Hebrew callouts ≤25 chars, no punctuation, each a distinct trust signal"]
 }
 `;
 
@@ -435,10 +436,11 @@ RULES:
 - Return the header as its English enum value (the API maps it to the Hebrew label); return the
   values themselves in Hebrew.
 
-Output JSON:
+Output JSON — ONLY these keys, no other keys (no rationale/explanation field — a free-text
+prose field after the array has been observed to corrupt the JSON output; keep the response
+to structured data only):
 {
   "header": "Service catalog" | "Types" | "Brands",
-  "values": ["3–10 Hebrew service names ≤25 chars each, or [] if fewer than 3 exist"],
-  "rationale": "Brief Hebrew explanation"
+  "values": ["3–10 Hebrew service names ≤25 chars each, or [] if fewer than 3 exist"]
 }
 `;

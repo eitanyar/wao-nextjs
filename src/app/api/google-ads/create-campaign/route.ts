@@ -101,6 +101,20 @@ function resolveAdsAccount(mode: CampaignMode) {
   return { refreshToken, mccId, clientId: undefined };
 }
 
+// TEMP: verbose, non-swallowed asset-error logging for live sandbox debugging
+// (Adam's bug report, 2026-08-01). `JSON.stringify(e, Object.getOwnPropertyNames(e))`
+// only allowlists the TOP-level object's own properties — it does NOT recurse
+// into nested objects, so the google-ads-api library's `err.errors` array
+// (each entry a GoogleAdsError with error_code/message/location) collapses to
+// `[{}]`. Surface `err.errors` explicitly instead — proven to serialize fine
+// at the top-level route catch. Keep this verbose until asset-verification
+// work (see route report) is fully confirmed against real API error text.
+function logAssetError(label: string, e: unknown) {
+  const err = e as GoogleAdsApiError;
+  const detail = err?.errors ?? err?.message ?? err;
+  console.error(`${label} (non-fatal):`, JSON.stringify(detail, null, 2));
+}
+
 function trim(s: string, max: number) {
   return s.length > max ? s.slice(0, max - 1) + '…' : s;
 }
@@ -129,6 +143,34 @@ function extractSendTo(eventSnippet: string): string | undefined {
 // without every asset type is better than failing the whole campaign over
 // one optional asset. Each helper logs a warning and returns quietly on error.
 
+// Gemini's JSON-mode output for these two prompts was observed (2026-08-01
+// diagnosis, see route report) to occasionally corrupt the JSON even with a
+// schema containing only constrained short fields. Two distinct failure
+// modes seen on the real sandbox path: (a) valid JSON with trailing junk
+// after it — handled durably now by extractJsonSpan() in gemini-fast.ts,
+// which callGeminiJSON applies to every caller; (b) genuinely malformed
+// JSON mid-object (e.g. "Expected ',' or '}' after property value") that no
+// amount of post-processing can repair — a real generation glitch, not a
+// parsing bug. For (b), only a fresh model call helps. A single retry left
+// residual failures in real testing (2026-08-01), so this now allows up to
+// 2 retries (3 attempts total) before giving up — these two asset types are
+// fail-soft by design, so a final failure still just logs and skips
+// (masking would require this to fail on ALL 3 attempts, which would also
+// indicate a real prompt/schema regression worth investigating).
+async function callGeminiJSONWithRetry(systemPrompt: string, userMessage: string): Promise<string> {
+  let lastError: unknown;
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    try {
+      const raw = await callGeminiJSON(systemPrompt, userMessage);
+      JSON.parse(raw);
+      return raw;
+    } catch (e) {
+      lastError = e;
+    }
+  }
+  throw lastError;
+}
+
 interface CalloutPromptResult {
   callouts?: string[];
 }
@@ -144,16 +186,22 @@ interface StructuredSnippetPromptResult {
 // more reliable than a model call for something that's always the same 4
 // destinations. Noa should still spot-check this static Hebrew before it
 // goes live with real clients (mechanical copy, not full gate cycle).
-const SITELINK_ANCHORS: Array<{ anchor: string; linkText: string; description1: string }> = [
-  { anchor: 'services', linkText: 'השירותים שלנו', description1: 'כל השירותים במקום אחד' },
-  { anchor: 'reviews', linkText: 'ביקורות', description1: 'מה הלקוחות אומרים עלינו' },
-  { anchor: 'faq', linkText: 'שאלות נפוצות', description1: 'התשובות לשאלות הנפוצות ביותר' },
-  { anchor: 'contact', linkText: 'צור קשר', description1: 'השאירו פרטים ונחזור אליכם' },
+const SITELINK_ANCHORS: Array<{ anchor: string; linkText: string; description1: string; description2: string }> = [
+  { anchor: 'services', linkText: 'השירותים שלנו', description1: 'כל השירותים במקום אחד', description2: 'פתרון מלא לכל צורך' },
+  { anchor: 'reviews', linkText: 'ביקורות', description1: 'מה הלקוחות אומרים עלינו', description2: 'חוות דעת אמיתיות מלקוחות' },
+  { anchor: 'faq', linkText: 'שאלות נפוצות', description1: 'התשובות לשאלות הנפוצות ביותר', description2: 'כל מה שרציתם לדעת' },
+  { anchor: 'contact', linkText: 'צור קשר', description1: 'השאירו פרטים ונחזור אליכם', description2: 'זמינים גם בטלפון ובווטסאפ' },
 ];
 
 async function createCallAsset(newCustomer: ReturnType<GoogleAdsApi['Customer']>, campaignResourceName: string, phone: string) {
   try {
-    const digits = phone.replace(/[^0-9]/g, '');
+    // Real API error (2026-08-01 diagnosis): CALL_PHONE_NUMBER_NOT_SUPPORTED_FOR_COUNTRY
+    // when sending the Israeli local-dial form "0501234567" alongside
+    // country_code: 'IL'. Google's phone-number validation (libphonenumber)
+    // expects the NATIONAL SIGNIFICANT NUMBER — i.e. without the domestic
+    // trunk prefix "0" — since the trunk prefix is implied by country_code.
+    // Strip a single leading trunk zero after digit extraction.
+    const digits = phone.replace(/[^0-9]/g, '').replace(/^0+/, '');
     if (!digits) return;
     const assetRes = await newCustomer.assets.create([{
       type: enums.AssetType.CALL,
@@ -171,7 +219,7 @@ async function createCallAsset(newCustomer: ReturnType<GoogleAdsApi['Customer']>
       field_type: enums.AssetFieldType.CALL,
     }]);
   } catch (e) {
-    console.warn('Call asset creation failed (non-fatal):', e);
+    logAssetError('Call asset creation failed', e);
   }
 }
 
@@ -185,7 +233,7 @@ starRating: ${collectedData.starRating ?? ''}
 responseTime: ${collectedData.responseTime ?? ''}
 pricingNotes: ${collectedData.pricingNotes ?? ''}
 `;
-    const raw = await callGeminiJSON(TAMAR_CALLOUT_SYSTEM_PROMPT, brief);
+    const raw = await callGeminiJSONWithRetry(TAMAR_CALLOUT_SYSTEM_PROMPT, brief);
     const parsed = JSON.parse(raw) as CalloutPromptResult;
     const callouts = (parsed.callouts ?? []).filter(c => c && c.length <= 25).slice(0, 8);
     if (!callouts.length) return;
@@ -206,7 +254,7 @@ pricingNotes: ${collectedData.pricingNotes ?? ''}
       }));
     if (links.length) await newCustomer.campaignAssets.create(links);
   } catch (e) {
-    console.warn('Callout asset creation failed (non-fatal):', e);
+    logAssetError('Callout asset creation failed', e);
   }
 }
 
@@ -217,7 +265,7 @@ primaryService: ${collectedData.primaryService ?? ''}
 secondaryServices: ${collectedData.secondaryServices ?? ''}
 businessNiche: ${collectedData.businessNiche ?? ''}
 `;
-    const raw = await callGeminiJSON(TAMAR_STRUCTURED_SNIPPET_SYSTEM_PROMPT, brief);
+    const raw = await callGeminiJSONWithRetry(TAMAR_STRUCTURED_SNIPPET_SYSTEM_PROMPT, brief);
     const parsed = JSON.parse(raw) as StructuredSnippetPromptResult;
     const values = (parsed.values ?? []).filter(v => v && v.length <= 25).slice(0, 10);
     // Prompt's own rule: skip silently if fewer than 3 genuine values exist.
@@ -236,7 +284,7 @@ businessNiche: ${collectedData.businessNiche ?? ''}
       field_type: enums.AssetFieldType.STRUCTURED_SNIPPET,
     }]);
   } catch (e) {
-    console.warn('Structured snippet asset creation failed (non-fatal):', e);
+    logAssetError('Structured snippet asset creation failed', e);
   }
 }
 
@@ -246,7 +294,7 @@ async function createSitelinkAssets(newCustomer: ReturnType<GoogleAdsApi['Custom
       SITELINK_ANCHORS.map(s => ({
         type: enums.AssetType.SITELINK,
         final_urls: [`${finalUrl}#${s.anchor}`],
-        sitelink_asset: { link_text: s.linkText, description1: s.description1 },
+        sitelink_asset: { link_text: s.linkText, description1: s.description1, description2: s.description2 },
       }))
     );
     const links = assetRes.results
@@ -259,7 +307,7 @@ async function createSitelinkAssets(newCustomer: ReturnType<GoogleAdsApi['Custom
       }));
     if (links.length) await newCustomer.campaignAssets.create(links);
   } catch (e) {
-    console.warn('Sitelink asset creation failed (non-fatal):', e);
+    logAssetError('Sitelink asset creation failed', e);
   }
 }
 
@@ -293,7 +341,7 @@ async function createImageAssets(newCustomer: ReturnType<GoogleAdsApi['Customer'
       }));
     if (links.length) await newCustomer.campaignAssets.create(links);
   } catch (e) {
-    console.warn('Image asset creation failed (non-fatal):', e);
+    logAssetError('Image asset creation failed', e);
   }
 }
 
@@ -305,7 +353,9 @@ async function createWhatsAppMessageAsset(newCustomer: ReturnType<GoogleAdsApi['
   try {
     const whatsappNumber = collectedData.whatsappNumber || collectedData.phone;
     if (!whatsappNumber) return;
-    const digits = whatsappNumber.replace(/[^0-9]/g, '');
+    // Same national-significant-number rule as createCallAsset — strip the
+    // domestic trunk "0" before pairing with country_code: 'IL'.
+    const digits = whatsappNumber.replace(/[^0-9]/g, '').replace(/^0+/, '');
     if (!digits) return;
 
     const assetRes = await newCustomer.assets.create([{
@@ -324,7 +374,7 @@ async function createWhatsAppMessageAsset(newCustomer: ReturnType<GoogleAdsApi['
       field_type: enums.AssetFieldType.BUSINESS_MESSAGE,
     }]);
   } catch (e) {
-    console.warn('WhatsApp message asset creation failed (non-fatal):', e);
+    logAssetError('WhatsApp message asset creation failed', e);
   }
 }
 

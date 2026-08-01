@@ -1,10 +1,38 @@
 {
   "clientId": "google-ads-sandbox",
-  "primarySlug": "google-ads-sandbox",
-  "primaryCustomerId": "5304679517",
-  "primaryCampaignId": "24033654166",
-  "updatedAt": "2026-07-14T04:50:53.403483Z",
+  "primarySlug": "emergency-trades-4567",
+  "primaryCustomerId": "1725891566",
+  "primaryCampaignId": "24087833715",
+  "updatedAt": "2026-08-01T15:20:29.361Z",
   "campaigns": [
+    {
+      "slug": "emergency-trades-4567",
+      "customerId": "1725891566",
+      "campaignId": "24087833715",
+      "createdAt": "2026-08-01T15:20:29.359Z",
+      "finalUrl": "https://emergency-trades-4567.wao.co.il"
+    },
+    {
+      "slug": "skilled-trades-2222",
+      "customerId": "9085627947",
+      "campaignId": "24097740385",
+      "createdAt": "2026-08-01T15:05:00.830Z",
+      "finalUrl": "https://skilled-trades-2222.wao.co.il"
+    },
+    {
+      "slug": "stellas-beauty-salon",
+      "customerId": "9205431178",
+      "campaignId": "24087774888",
+      "createdAt": "2026-08-01T14:36:19.577Z",
+      "finalUrl": "https://stellas-beauty-salon.wao.co.il"
+    },
+    {
+      "slug": "skilled-trades-1234",
+      "customerId": "9124716586",
+      "campaignId": "24087689742",
+      "createdAt": "2026-08-01T13:46:08.916Z",
+      "finalUrl": "https://skilled-trades-1234.wao.co.il"
+    },
     {
       "slug": "google-ads-sandbox",
       "customerId": "5304679517",
