@@ -207,7 +207,7 @@ export default function OnboardingPage() {
       const botRes = await fetch("/api/bot", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ messages: updatedMessages, currentState: "REVIEWING", collectedData }),
+        body: JSON.stringify({ messages: updatedMessages, currentState: "REVIEWING", collectedData, sessionId: sessionIdRef.current }),
       });
       const botData = await botRes.json();
       setMessages((prev) => [...prev, { role: "assistant", content: botData.response }]);
@@ -323,6 +323,7 @@ export default function OnboardingPage() {
           messages: updatedMessages,
           currentState,
           collectedData,
+          sessionId: sessionIdRef.current,
         }),
       });
 
@@ -354,6 +355,7 @@ export default function OnboardingPage() {
               messages: [...updatedMessages, { role: "assistant", content: data.response }],
               currentState: "STRATEGIZING",
               collectedData: data.collectedData,
+              sessionId: sessionIdRef.current,
             }),
           });
           const stratData = await stratRes.json();
@@ -437,7 +439,7 @@ export default function OnboardingPage() {
       const botRes = await fetch("/api/bot", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ messages: updatedMessages, currentState, collectedData: updatedData }),
+        body: JSON.stringify({ messages: updatedMessages, currentState, collectedData: updatedData, sessionId: sessionIdRef.current }),
       });
       const data = await botRes.json();
       if (data.response) setMessages(prev => [...prev, { role: "assistant", content: data.response }]);

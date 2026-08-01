@@ -54,7 +54,11 @@ export default async function LPPage({ params }: Props) {
   const verticalKey = detectVertical(collectedData.businessNiche || '');
   const theme = VERTICAL_THEMES[verticalKey];
   const assets = VERTICAL_ASSETS[verticalKey];
-  const heroImageUrl = assets.heroImages[0].url;
+  // Prefer the client's own photo (trust asset first — usually the strongest
+  // "real local provider" shot per Dror's audit — then profile photo) over
+  // generic vertical stock. Stock stays as the non-blocking fallback so the
+  // LP never stalls on a missing upload.
+  const heroImageUrl = collectedData.trustAssetUrls?.[0] || collectedData.profilePhotoUrl || assets.heroImages[0].url;
 
   // Pass only the fields LandingPage actually renders — it's a client
   // component, so the full CollectedData record (capacityUnit, avgJobValue,

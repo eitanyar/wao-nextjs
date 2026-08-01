@@ -114,7 +114,7 @@ export default function LandingPage({ theme, assets, copy, data, heroImageUrl }:
       )}
 
       {/* ── Services ────────────────────────────────────────────── */}
-      <section style={{ padding: '40px 20px', backgroundColor: t.surfaceAlt }}>
+      <section id="services" style={{ padding: '40px 20px', backgroundColor: t.surfaceAlt }}>
         <div style={{ maxWidth: '700px', margin: '0 auto' }}>
           <h2 style={{ fontFamily: t.fontHeading, fontWeight: t.headingWeight, fontSize: '1.4rem', color: t.primary, marginBottom: '20px', textAlign: 'center' }}>
             {copy.servicesHeadline}
@@ -130,7 +130,7 @@ export default function LandingPage({ theme, assets, copy, data, heroImageUrl }:
       </section>
 
       {/* ── Why Us / Guarantee ──────────────────────────────────── */}
-      <section style={{ padding: '40px 20px', backgroundColor: t.surface }}>
+      <section id="reviews" style={{ padding: '40px 20px', backgroundColor: t.surface }}>
         <div style={{ maxWidth: '700px', margin: '0 auto' }}>
           <div style={{ background: t.trustBadgeBg, border: `1px solid ${t.border}`, borderRadius: t.radiusMd, padding: '24px 20px', marginBottom: '24px', borderInlineStart: `4px solid ${t.accent}` }}>
             <h3 style={{ fontWeight: 700, fontSize: '1rem', color: t.primary, marginBottom: '8px', margin: '0 0 8px' }}>
@@ -156,7 +156,7 @@ export default function LandingPage({ theme, assets, copy, data, heroImageUrl }:
 
       {/* ── FAQ ─────────────────────────────────────────────────── */}
       {copy.faqItems.length > 0 && (
-        <section style={{ padding: '40px 20px', backgroundColor: t.surfaceAlt }}>
+        <section id="faq" style={{ padding: '40px 20px', backgroundColor: t.surfaceAlt }}>
           <div style={{ maxWidth: '700px', margin: '0 auto' }}>
             <h2 style={{ fontFamily: t.fontHeading, fontWeight: t.headingWeight, fontSize: '1.3rem', color: t.primary, marginBottom: '20px', textAlign: 'center' }}>
               {copy.faqHeadline}
@@ -184,7 +184,7 @@ export default function LandingPage({ theme, assets, copy, data, heroImageUrl }:
       </section>
 
       {/* ── Lead Form ───────────────────────────────────────────── */}
-      <section style={{ padding: '40px 20px', backgroundColor: t.surfaceAlt }}>
+      <section id="contact" style={{ padding: '40px 20px', backgroundColor: t.surfaceAlt }}>
         <div style={{ maxWidth: '480px', margin: '0 auto' }}>
           <h2 id="lead-form-heading" style={{ fontFamily: t.fontHeading, fontWeight: t.headingWeight, fontSize: '1.35rem', color: t.primary, marginBottom: '20px', textAlign: 'center' }}>
             {copy.formHeadline}

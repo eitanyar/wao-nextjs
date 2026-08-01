@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { ADAM_SYSTEM_PROMPT, DROR_SYSTEM_PROMPT, TAMAR_SYSTEM_PROMPT, CollectedData } from "@/lib/bot/prompts";
+import { ADAM_SYSTEM_PROMPT, DROR_SYSTEM_PROMPT, TAMAR_SYSTEM_PROMPT, T21_PHOTO_ASK_VERSION, CollectedData } from "@/lib/bot/prompts";
 import { getEstimatedCPC } from "@/lib/ads/keywordPlanner";
 
 interface Message {
@@ -11,6 +11,52 @@ interface RequestData {
   messages: Message[];
   currentState: "DIAGNOSING" | "STRATEGIZING" | "REVIEWING" | "COMPLETED";
   collectedData: CollectedData;
+  // Client-generated UUID, created once per chat session and carried on every
+  // /api/bot turn. Used only for session-level instrumentation (log.jsonl) —
+  // never persisted as PII, never echoed back to the client.
+  sessionId?: string;
+}
+
+// ── Bot-session instrumentation (append-only, fire-and-forget) ────────────────
+// Per Lior's instrumentation plan: one JSONL line per turn, field NAMES only
+// (never values) so we can measure intake completion rate / drop-off without
+// duplicating PII into a second store. A logging failure must never affect the
+// actual bot response — always caught and swallowed.
+
+interface BotSessionLogEntry {
+  ts: string;
+  sessionId?: string;
+  state: string;
+  msgCount: number;
+  collectedFields: string[];
+  questionVersions?: Record<string, string>;
+}
+
+async function logBotTurn(entry: Omit<BotSessionLogEntry, "ts">): Promise<void> {
+  try {
+    const { appendFile, mkdir } = await import("fs/promises");
+    const path = await import("path");
+    const dir = path.join(process.cwd(), "data", "bot-sessions");
+    await mkdir(dir, { recursive: true });
+    const line = JSON.stringify({ ts: new Date().toISOString(), ...entry } satisfies BotSessionLogEntry) + "\n";
+    await appendFile(path.join(dir, "log.jsonl"), line, "utf8");
+  } catch (err) {
+    console.warn("bot-session log write failed (non-fatal):", err);
+  }
+}
+
+// Heuristic detection of the T21 photo-ask firing in the live (Gemini) path —
+// route.ts has no scripted per-turn text for T21 (only industry-keyword logic
+// elsewhere), so we tag by the wording markers that are always present in the
+// T21 ask (the 📎 upload icon plus a photo/review/portfolio keyword).
+function detectQuestionVersions(responseText: string): Record<string, string> | undefined {
+  if (!responseText) return undefined;
+  const hasUploadIcon = responseText.includes("📎");
+  const hasPhotoOrReviewKeyword = ["תמונ", "ביקורת", "פורטפול", "צילום"].some(k => responseText.includes(k));
+  if (hasUploadIcon && hasPhotoOrReviewKeyword) {
+    return { T21: T21_PHOTO_ASK_VERSION };
+  }
+  return undefined;
 }
 
 // ── Industry cluster budgets (Dror-verified, WordStream/LocaliQ 2025-2026) ────
@@ -829,16 +875,34 @@ Present ₪${chosenBudget} as: "עם ₪${chosenBudget} תקבל בסביבות 
 export async function POST(req: Request) {
   try {
     const body: RequestData = await req.json();
-    const { messages, currentState, collectedData } = body;
+    const { messages, currentState, collectedData, sessionId } = body;
     const lastUserMessage = messages[messages.length - 1]?.content || "";
 
     const apiKey = process.env.GEMINI_API_KEY;
 
-    if (apiKey) {
-      return await handleGemini(messages, currentState, collectedData, apiKey);
-    }
+    const result = apiKey
+      ? await handleGemini(messages, currentState, collectedData, apiKey)
+      : handleSimulation(lastUserMessage, currentState, collectedData);
 
-    return handleSimulation(lastUserMessage, currentState, collectedData);
+    // Fire-and-forget session logging — never await, never block/fail the
+    // actual response. Clone the response so we can inspect its JSON body
+    // without consuming the one returned to the client.
+    result
+      .clone()
+      .json()
+      .then((payload: any) => {
+        const mergedCollectedData = payload?.collectedData ?? collectedData ?? {};
+        logBotTurn({
+          sessionId,
+          state: payload?.currentState || currentState,
+          msgCount: messages.length,
+          collectedFields: Object.keys(mergedCollectedData),
+          questionVersions: detectQuestionVersions(payload?.response || ""),
+        });
+      })
+      .catch(() => {});
+
+    return result;
   } catch (error: any) {
     console.error("Bot API error:", error);
     return NextResponse.json({ error: error.message || "Internal server error" }, { status: 500 });

@@ -96,3 +96,4 @@ data/billing.db-shm
 # Inner Coach — entire dir git-ignored (D2 hardening rider, docs/specs/inner-coach-workplan.md
 # §2/§8): the Belief Ledger and session transcripts are intimate, Eitan-only, never source.
 data/inner-coach/
+data/bot-sessions/

@@ -4,11 +4,14 @@ import { GoogleAdsApi, enums, services } from 'google-ads-api';
 import fs from 'fs';
 import path from 'path';
 import type { CollectedData } from '@/lib/bot/prompts';
+import { TAMAR_CALLOUT_SYSTEM_PROMPT, TAMAR_STRUCTURED_SNIPPET_SYSTEM_PROMPT } from '@/lib/bot/prompts';
 import { detectVertical } from '@/lib/lp/verticalDetect';
 import { bindCampaignToClient } from '@/lib/crm/intelligence';
 import { COOKIE_NAME, verifySessionToken } from '@/lib/client-auth';
 import { resolveGoogleAdsMutationAccess } from '@/lib/google-ads/access-policy';
 import { appendGoogleAdsDirectActionAudit } from '@/lib/google-ads/direct-action-audit';
+import { callGeminiJSON } from '@/lib/ai/gemini-fast';
+import { buildImageAssetCrops } from '@/lib/google-ads/imageCrop';
 
 export interface CampaignConfig {
   clientId?: string;
@@ -119,6 +122,210 @@ function slugify(name: string, fallbackNiche?: string, phone?: string): string {
 function extractSendTo(eventSnippet: string): string | undefined {
   const m = eventSnippet.match(/send_to['":\s]+([A-Z0-9\-_/]+)/i);
   return m?.[1];
+}
+
+// ── Tier 1 / sitelink / image / message asset helpers ───────────────────────
+// All of these are deliberately fail-soft: campaign creation succeeding
+// without every asset type is better than failing the whole campaign over
+// one optional asset. Each helper logs a warning and returns quietly on error.
+
+interface CalloutPromptResult {
+  callouts?: string[];
+}
+
+interface StructuredSnippetPromptResult {
+  header?: 'Service catalog' | 'Types' | 'Brands';
+  values?: string[];
+}
+
+// Fixed, mechanical sitelink anchor set — see route report / Adam's mission
+// doc for the architecture decision. Labels are static (not LLM-generated):
+// the anchor set never varies by business, so a deterministic mapping is
+// more reliable than a model call for something that's always the same 4
+// destinations. Noa should still spot-check this static Hebrew before it
+// goes live with real clients (mechanical copy, not full gate cycle).
+const SITELINK_ANCHORS: Array<{ anchor: string; linkText: string; description1: string }> = [
+  { anchor: 'services', linkText: 'השירותים שלנו', description1: 'כל השירותים במקום אחד' },
+  { anchor: 'reviews', linkText: 'ביקורות', description1: 'מה הלקוחות אומרים עלינו' },
+  { anchor: 'faq', linkText: 'שאלות נפוצות', description1: 'התשובות לשאלות הנפוצות ביותר' },
+  { anchor: 'contact', linkText: 'צור קשר', description1: 'השאירו פרטים ונחזור אליכם' },
+];
+
+async function createCallAsset(newCustomer: ReturnType<GoogleAdsApi['Customer']>, campaignResourceName: string, phone: string) {
+  try {
+    const digits = phone.replace(/[^0-9]/g, '');
+    if (!digits) return;
+    const assetRes = await newCustomer.assets.create([{
+      type: enums.AssetType.CALL,
+      call_asset: {
+        country_code: 'IL',
+        phone_number: digits,
+        call_conversion_reporting_state: enums.CallConversionReportingState.DISABLED,
+      },
+    }]);
+    const assetResourceName = assetRes.results[0]?.resource_name;
+    if (!assetResourceName) return;
+    await newCustomer.campaignAssets.create([{
+      campaign: campaignResourceName,
+      asset: assetResourceName,
+      field_type: enums.AssetFieldType.CALL,
+    }]);
+  } catch (e) {
+    console.warn('Call asset creation failed (non-fatal):', e);
+  }
+}
+
+async function createCalloutAssets(newCustomer: ReturnType<GoogleAdsApi['Customer']>, campaignResourceName: string, collectedData: CollectedData) {
+  try {
+    const brief = `
+guarantee: ${collectedData.guarantee ?? ''}
+yearsInField: ${collectedData.yearsInField ?? ''}
+license: ${collectedData.license ?? ''}
+starRating: ${collectedData.starRating ?? ''}
+responseTime: ${collectedData.responseTime ?? ''}
+pricingNotes: ${collectedData.pricingNotes ?? ''}
+`;
+    const raw = await callGeminiJSON(TAMAR_CALLOUT_SYSTEM_PROMPT, brief);
+    const parsed = JSON.parse(raw) as CalloutPromptResult;
+    const callouts = (parsed.callouts ?? []).filter(c => c && c.length <= 25).slice(0, 8);
+    if (!callouts.length) return;
+
+    const assetRes = await newCustomer.assets.create(
+      callouts.map(text => ({
+        type: enums.AssetType.CALLOUT,
+        callout_asset: { callout_text: text },
+      }))
+    );
+    const links = assetRes.results
+      .map(r => r.resource_name)
+      .filter((name): name is string => Boolean(name))
+      .map(asset => ({
+        campaign: campaignResourceName,
+        asset,
+        field_type: enums.AssetFieldType.CALLOUT,
+      }));
+    if (links.length) await newCustomer.campaignAssets.create(links);
+  } catch (e) {
+    console.warn('Callout asset creation failed (non-fatal):', e);
+  }
+}
+
+async function createStructuredSnippetAsset(newCustomer: ReturnType<GoogleAdsApi['Customer']>, campaignResourceName: string, collectedData: CollectedData) {
+  try {
+    const brief = `
+primaryService: ${collectedData.primaryService ?? ''}
+secondaryServices: ${collectedData.secondaryServices ?? ''}
+businessNiche: ${collectedData.businessNiche ?? ''}
+`;
+    const raw = await callGeminiJSON(TAMAR_STRUCTURED_SNIPPET_SYSTEM_PROMPT, brief);
+    const parsed = JSON.parse(raw) as StructuredSnippetPromptResult;
+    const values = (parsed.values ?? []).filter(v => v && v.length <= 25).slice(0, 10);
+    // Prompt's own rule: skip silently if fewer than 3 genuine values exist.
+    if (values.length < 3) return;
+    const header = parsed.header || 'Service catalog';
+
+    const assetRes = await newCustomer.assets.create([{
+      type: enums.AssetType.STRUCTURED_SNIPPET,
+      structured_snippet_asset: { header, values },
+    }]);
+    const assetResourceName = assetRes.results[0]?.resource_name;
+    if (!assetResourceName) return;
+    await newCustomer.campaignAssets.create([{
+      campaign: campaignResourceName,
+      asset: assetResourceName,
+      field_type: enums.AssetFieldType.STRUCTURED_SNIPPET,
+    }]);
+  } catch (e) {
+    console.warn('Structured snippet asset creation failed (non-fatal):', e);
+  }
+}
+
+async function createSitelinkAssets(newCustomer: ReturnType<GoogleAdsApi['Customer']>, campaignResourceName: string, finalUrl: string) {
+  try {
+    const assetRes = await newCustomer.assets.create(
+      SITELINK_ANCHORS.map(s => ({
+        type: enums.AssetType.SITELINK,
+        final_urls: [`${finalUrl}#${s.anchor}`],
+        sitelink_asset: { link_text: s.linkText, description1: s.description1 },
+      }))
+    );
+    const links = assetRes.results
+      .map(r => r.resource_name)
+      .filter((name): name is string => Boolean(name))
+      .map(asset => ({
+        campaign: campaignResourceName,
+        asset,
+        field_type: enums.AssetFieldType.SITELINK,
+      }));
+    if (links.length) await newCustomer.campaignAssets.create(links);
+  } catch (e) {
+    console.warn('Sitelink asset creation failed (non-fatal):', e);
+  }
+}
+
+async function createImageAssets(newCustomer: ReturnType<GoogleAdsApi['Customer']>, campaignResourceName: string, collectedData: CollectedData) {
+  try {
+    const sourceUrls = [
+      ...(collectedData.trustAssetUrls ?? []),
+      ...(collectedData.profilePhotoUrl ? [collectedData.profilePhotoUrl] : []),
+    ].slice(0, 4); // Google recommends 4+ for full serving eligibility; cap the intake ask covers this
+    if (!sourceUrls.length) return;
+
+    const assetOperations: Array<{ type: number; image_asset: { data: Buffer; mime_type: number } }> = [];
+    for (const url of sourceUrls) {
+      const crops = await buildImageAssetCrops(url);
+      if (!crops) continue;
+      assetOperations.push({ type: enums.AssetType.IMAGE, image_asset: { data: crops.square, mime_type: enums.MimeType.IMAGE_JPEG } });
+      if (crops.landscape) {
+        assetOperations.push({ type: enums.AssetType.IMAGE, image_asset: { data: crops.landscape, mime_type: enums.MimeType.IMAGE_JPEG } });
+      }
+    }
+    if (!assetOperations.length) return;
+
+    const assetRes = await newCustomer.assets.create(assetOperations);
+    const links = assetRes.results
+      .map(r => r.resource_name)
+      .filter((name): name is string => Boolean(name))
+      .map(asset => ({
+        campaign: campaignResourceName,
+        asset,
+        field_type: enums.AssetFieldType.AD_IMAGE,
+      }));
+    if (links.length) await newCustomer.campaignAssets.create(links);
+  } catch (e) {
+    console.warn('Image asset creation failed (non-fatal):', e);
+  }
+}
+
+// WhatsApp message asset — beta as of July 2026 per Dror's research. Mapping
+// is built now but gated behind an explicit env flag so it never fires live
+// until Google GAs the asset type for this account.
+async function createWhatsAppMessageAsset(newCustomer: ReturnType<GoogleAdsApi['Customer']>, campaignResourceName: string, collectedData: CollectedData) {
+  if (!process.env.ENABLE_WHATSAPP_MESSAGE_ASSETS) return;
+  try {
+    const whatsappNumber = collectedData.whatsappNumber || collectedData.phone;
+    if (!whatsappNumber) return;
+    const digits = whatsappNumber.replace(/[^0-9]/g, '');
+    if (!digits) return;
+
+    const assetRes = await newCustomer.assets.create([{
+      type: enums.AssetType.BUSINESS_MESSAGE,
+      business_message_asset: {
+        message_provider: enums.BusinessMessageProvider.WHATSAPP,
+        starter_message: `שלום! אשמח לעזור — ${collectedData.businessName || ''}`.trim(),
+        whatsapp_info: { country_code: 'IL', phone_number: digits },
+      },
+    }]);
+    const assetResourceName = assetRes.results[0]?.resource_name;
+    if (!assetResourceName) return;
+    await newCustomer.campaignAssets.create([{
+      campaign: campaignResourceName,
+      asset: assetResourceName,
+      field_type: enums.AssetFieldType.BUSINESS_MESSAGE,
+    }]);
+  } catch (e) {
+    console.warn('WhatsApp message asset creation failed (non-fatal):', e);
+  }
 }
 
 export async function POST(req: Request) {
@@ -354,6 +561,19 @@ export async function POST(req: Request) {
         responsive_search_ad: { headlines, descriptions },
       },
     }]);
+
+    // ── Step 9b: Ad Strength assets — call, callout, structured snippet,
+    // sitelinks, image, WhatsApp message. Every one of these is fail-soft:
+    // a failure here must never abort campaign creation (see helpers above).
+    // Run independent ones in parallel; they don't depend on each other.
+    await Promise.all([
+      collectedData.phone ? createCallAsset(newCustomer, campaignResourceName, collectedData.phone) : Promise.resolve(),
+      createCalloutAssets(newCustomer, campaignResourceName, collectedData),
+      createStructuredSnippetAsset(newCustomer, campaignResourceName, collectedData),
+      createSitelinkAssets(newCustomer, campaignResourceName, finalUrl),
+      createImageAssets(newCustomer, campaignResourceName, collectedData),
+      createWhatsAppMessageAsset(newCustomer, campaignResourceName, collectedData),
+    ]);
 
     // ── Step 10: Save campaign config for offline conversion uploads ──────────
     const campaignConfig: CampaignConfig = {

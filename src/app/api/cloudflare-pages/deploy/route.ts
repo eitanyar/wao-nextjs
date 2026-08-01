@@ -65,7 +65,10 @@ export async function POST(req: Request) {
     const verticalKey = detectVertical(collectedData.businessNiche || '');
     const theme = VERTICAL_THEMES[verticalKey];
     const assets = VERTICAL_ASSETS[verticalKey];
-    const heroImageUrl = assets.heroImages[0].url;
+    // Prefer the client's own photo over generic vertical stock — see the
+    // identical fix in app/(standalone)/lp/[slug]/page.tsx (internal preview).
+    // Stock stays the non-blocking fallback when no upload exists.
+    const heroImageUrl = collectedData.trustAssetUrls?.[0] || collectedData.profilePhotoUrl || assets.heroImages[0].url;
 
     // ── Step 2: Render static HTML ────────────────────────────────────────────
     const htmlContent = renderStaticHtml({

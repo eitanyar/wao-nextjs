@@ -65,7 +65,7 @@ export async function POST(req: Request) {
     const verticalKey = detectVertical(collectedData.businessNiche || '');
     const theme = VERTICAL_THEMES[verticalKey];
     const assets = VERTICAL_ASSETS[verticalKey];
-    const heroImageUrl = assets.heroImages[0].url;
+    const heroImageUrl = collectedData.trustAssetUrls?.[0] || collectedData.profilePhotoUrl || assets.heroImages[0].url;
     const siteUrl = `https://${slug}.wao.co.il`;
 
     // ── Step 2: Render the 5 static pages ──────────────────────────────────

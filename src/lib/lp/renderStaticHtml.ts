@@ -149,7 +149,7 @@ export function renderStaticHtml(p: RenderStaticHtmlParams): string {
   </section>` : ''}
 
   <!-- Services -->
-  <section style="padding:40px 20px;background:${t.surfaceAlt};">
+  <section id="services" style="padding:40px 20px;background:${t.surfaceAlt};">
     <div style="max-width:700px;margin:0 auto;">
       <h2 style="font-family:'Secular One',sans-serif;font-weight:${t.headingWeight};font-size:1.4rem;color:${t.primary};margin-bottom:20px;text-align:center;">${esc(copy.servicesHeadline)}</h2>
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;">
@@ -159,7 +159,7 @@ export function renderStaticHtml(p: RenderStaticHtmlParams): string {
   </section>
 
   <!-- Guarantee + Review -->
-  <section style="padding:40px 20px;background:${t.surface};">
+  <section id="reviews" style="padding:40px 20px;background:${t.surface};">
     <div style="max-width:700px;margin:0 auto;">
       <div style="background:${t.trustBadgeBg};border:1px solid ${t.border};border-radius:${t.radiusMd};padding:24px 20px;margin-bottom:24px;border-inline-start:4px solid ${t.accent};">
         <h3 style="font-weight:700;font-size:1rem;color:${t.primary};margin:0 0 8px;">${assets.badgeEmoji} ${esc(copy.guaranteeBlock.split('.')[0])}</h3>
@@ -174,7 +174,7 @@ export function renderStaticHtml(p: RenderStaticHtmlParams): string {
 
   <!-- FAQ -->
   ${copy.faqItems.length > 0 ? `
-  <section style="padding:40px 20px;background:${t.surfaceAlt};">
+  <section id="faq" style="padding:40px 20px;background:${t.surfaceAlt};">
     <div style="max-width:700px;margin:0 auto;">
       <h2 style="font-family:'Secular One',sans-serif;font-weight:${t.headingWeight};font-size:1.3rem;color:${t.primary};margin-bottom:20px;text-align:center;">${esc(copy.faqHeadline)}</h2>
       <div style="display:flex;flex-direction:column;gap:12px;">${faqHtml}</div>
@@ -192,7 +192,7 @@ export function renderStaticHtml(p: RenderStaticHtmlParams): string {
   </section>
 
   <!-- Lead Form -->
-  <section style="padding:40px 20px;background:${t.surfaceAlt};">
+  <section id="contact" style="padding:40px 20px;background:${t.surfaceAlt};">
     <div style="max-width:480px;margin:0 auto;">
       <h2 style="font-family:'Secular One',sans-serif;font-weight:${t.headingWeight};font-size:1.35rem;color:${t.primary};margin-bottom:20px;text-align:center;">${esc(copy.formHeadline)}</h2>
       <form id="lead-form" style="display:flex;flex-direction:column;gap:14px;">
