@@ -4,7 +4,12 @@ import path from 'path';
 import type { CollectedData } from '@/lib/bot/prompts';
 import type { LPCopy } from '@/lib/lp/lpCopyPrompt';
 import { buildLpCopyPrompt } from '@/lib/lp/lpCopyPrompt';
-import { TAMAR_SYSTEM_PROMPT } from '@/lib/bot/prompts';
+import { callGeminiJSON } from '@/lib/ai/gemini-fast';
+
+// buildLpCopyPrompt() is a complete, self-contained instruction set — unlike
+// the Ads Bot's TAMAR_SYSTEM_PROMPT (RSA headline/description schema), which
+// must NOT be reused here. See the identical fix in site-bot/generate/route.ts.
+const LP_COPY_SYSTEM_PROMPT = 'You are a Hebrew copywriter executing the exact instructions and JSON schema given in the user message. Return only the JSON object described there — no prose, no markdown fences.';
 
 // Noa's QA prompt — LOW effort, Haiku, checklist only
 const NOA_LP_QA_PROMPT = `You are Noa, Hebrew language QA editor.
@@ -18,6 +23,11 @@ Checklist (fix silently — no explanations):
 5. Plural male address → singular male (replace "אתם" with "אתה", "תוכלו" with "תוכל", etc.)
 6. Translated-Hebrew calques like "עשה לייק", "לחץ כאן" (too digital) → natural Hebrew
 7. "heroHeadline" must end in a noun or active verb — remove trailing "..." if present
+
+Rules 2 and 3 apply ONLY inside Hebrew text content (JSON string values). Never
+alter the JSON structural characters themselves — every property name and every
+string value must remain wrapped in exactly one pair of standard ASCII double
+quotes ("). The result must be syntactically valid JSON, parseable by JSON.parse.
 
 Return: corrected JSON object only. No prose.`;
 
@@ -34,36 +44,6 @@ function slugify(name: string, phone?: string): string {
   // Hebrew/non-Latin name — use timestamp + last-4 of phone for uniqueness
   const suffix = (phone || '').replace(/\D/g, '').slice(-4) || Date.now().toString(36).slice(-4);
   return `wao-client-${suffix}`;
-}
-
-async function callAzure(systemPrompt: string, userMessage: string, model = 'haiku'): Promise<string> {
-  const apiKey = process.env.AZURE_OPENAI_KEY;
-  const endpoint = process.env.AZURE_OPENAI_ENDPOINT;
-  if (!apiKey || !endpoint) throw new Error('Azure OpenAI not configured');
-
-  // Use mini for Tamar (medium effort), Haiku-equivalent for Noa
-  const deployment = model === 'haiku'
-    ? (process.env.AZURE_OPENAI_DEPLOYMENT_FAST || 'gpt-4o-mini')
-    : (process.env.AZURE_OPENAI_DEPLOYMENT_NAME || 'o4-mini');
-
-  const url = `${endpoint}/chat/completions?api-version=2024-05-01-preview`;
-
-  const res = await fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'api-key': apiKey },
-    body: JSON.stringify({
-      model: deployment,
-      messages: [
-        { role: 'system', content: systemPrompt },
-        { role: 'user', content: userMessage },
-      ],
-      response_format: { type: 'json_object' },
-      max_completion_tokens: 2000,
-    }),
-  });
-  const data = await res.json();
-  if (data.error) throw new Error(`Azure OpenAI (${deployment}): ${data.error.message ?? data.error.code ?? JSON.stringify(data.error)}`);
-  return data.choices[0].message.content;
 }
 
 function generateFallbackCopy(collectedData: CollectedData): LPCopy {
@@ -117,17 +97,22 @@ export async function POST(req: Request) {
       : slugify(collectedData.businessName || collectedData.businessNiche || 'my-business', collectedData.phone);
     let copy: LPCopy;
 
-    const apiKey = process.env.AZURE_OPENAI_KEY;
-
-    if (apiKey) {
-      // Tamar — MEDIUM effort (standard deployment)
+    if (process.env.GEMINI_API_KEY) {
+      // Tamar — write the LP copy
       const tamarPrompt = buildLpCopyPrompt(collectedData);
-      const tamarRaw = await callAzure(TAMAR_SYSTEM_PROMPT, tamarPrompt, 'standard');
+      const tamarRaw = await callGeminiJSON(LP_COPY_SYSTEM_PROMPT, tamarPrompt);
       const tamarCopy = JSON.parse(tamarRaw) as LPCopy;
 
-      // Noa — LOW effort (fast/cheap deployment)
-      const noaRaw = await callAzure(NOA_LP_QA_PROMPT, JSON.stringify(tamarCopy), 'haiku');
-      copy = JSON.parse(noaRaw) as LPCopy;
+      // Noa — QA pass. Fail-soft: fall back to Tamar's copy rather than
+      // failing the whole generation over a polish step (see identical
+      // fix in site-bot/generate/route.ts for why this is fail-soft).
+      try {
+        const noaRaw = await callGeminiJSON(NOA_LP_QA_PROMPT, JSON.stringify(tamarCopy));
+        copy = JSON.parse(noaRaw) as LPCopy;
+      } catch (e: any) {
+        console.warn('LP Noa QA pass failed, using unreviewed Tamar copy:', e.message);
+        copy = tamarCopy;
+      }
     } else {
       // Simulation fallback — no LLM cost
       copy = generateFallbackCopy(collectedData);

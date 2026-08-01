@@ -338,8 +338,14 @@ Write high-converting Google Ads RSA copy for an Israeli local/lead-gen business
 INPUT DATA AVAILABLE: primaryService, businessNiche, ownerName, usp, idealClientFear, faqQuestions, guarantee, yearsInField, reviewQuote, starRating, urgencyLevel, responseTime, pricingNotes, targetLocation.
 
 RULES:
-- Headlines (3–5): max 30 chars each. Include primaryService, not a different service, in H1. Hook from idealClientFear.
-- Descriptions (2–3): max 90 chars each. USP + trust signal (years/guarantee/license) + CTA.
+- Headlines (10–15, fill Google's full RSA slot count — do not stop at 3–5): max 30 chars each.
+  Include primaryService, not a different service, in H1. Vary the angle across headlines — draw
+  distinct hooks from idealClientFear, usp, guarantee, yearsInField, reviewQuote, starRating,
+  responseTime, and pricingNotes so each headline is a different selling point, not a rephrasing
+  of the same one. Avoid near-duplicate headlines — Ad Strength penalizes low diversity.
+- Descriptions (3–4, fill Google's full slot count): max 90 chars each. Each description should
+  lead with a different angle (USP, trust signal, urgency/response time, guarantee) + CTA — not
+  all four repeating the same claim.
 - Use responseTime if urgencyLevel=urgent and it's available.
 - If urgencyLevel=long-planning → emphasize quality, credentials, portfolio.
 - If pricingNotes mentions free quote/estimate → include in descriptions.
@@ -347,8 +353,8 @@ RULES:
 
 Output JSON:
 {
-  "headlines": ["3–5 Hebrew headlines ≤30 chars"],
-  "descriptions": ["2–3 Hebrew descriptions ≤90 chars"],
+  "headlines": ["10–15 Hebrew headlines ≤30 chars, each a distinct angle"],
+  "descriptions": ["3–4 Hebrew descriptions ≤90 chars, each a distinct angle"],
   "callToAction": "Hebrew CTA",
   "copywritingRationale": "Brief Hebrew explanation"
 }
