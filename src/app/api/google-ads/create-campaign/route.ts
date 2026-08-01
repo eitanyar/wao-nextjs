@@ -8,6 +8,7 @@ import { detectVertical } from '@/lib/lp/verticalDetect';
 import { bindCampaignToClient } from '@/lib/crm/intelligence';
 import { COOKIE_NAME, verifySessionToken } from '@/lib/client-auth';
 import { resolveGoogleAdsMutationAccess } from '@/lib/google-ads/access-policy';
+import { appendGoogleAdsDirectActionAudit } from '@/lib/google-ads/direct-action-audit';
 
 export interface CampaignConfig {
   clientId?: string;
@@ -405,6 +406,18 @@ export async function POST(req: Request) {
         source: 'google-ads-api-v1',
       }),
     }).catch(() => {});
+
+    if (effectiveClientId) {
+      appendGoogleAdsDirectActionAudit({
+        clientId: effectiveClientId,
+        actionType: 'campaign_creation',
+        actorClientId: sessionClientId ?? effectiveClientId,
+        campaignId,
+        status: 'success',
+        metadata: { customerId: newCustomerId, slug, businessName, dailyBudgetIls: strategy.suggestedDailyBudget },
+        createdAt: new Date().toISOString(),
+      });
+    }
 
     return NextResponse.json({
       success: true,

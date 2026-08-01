@@ -4,6 +4,7 @@ import { COOKIE_NAME, verifySessionToken } from '@/lib/client-auth';
 import { loadCampaignConfigBySlug, loadClientGoogleAdsIndex } from '@/lib/crm/intelligence';
 import { resolveGoogleAdsMutationAccess } from '@/lib/google-ads/access-policy';
 import { addNegativeKeywords } from '@/lib/google-ads/mutations';
+import { appendGoogleAdsDirectActionAudit } from '@/lib/google-ads/direct-action-audit';
 
 interface NegativeKeywordsRequest {
   keywords: string[];
@@ -78,6 +79,17 @@ export async function POST(req: Request) {
       adGroupResourceName,
       keywords,
       matchType,
+    });
+
+    appendGoogleAdsDirectActionAudit({
+      clientId: requestedClientId,
+      actionType: 'negative_keywords',
+      actorClientId: sessionClientId,
+      campaignId,
+      status: result.success ? 'success' : 'failed',
+      error: result.success ? undefined : result.error,
+      metadata: { keywords, matchType },
+      createdAt: new Date().toISOString(),
     });
 
     if (!result.success) {

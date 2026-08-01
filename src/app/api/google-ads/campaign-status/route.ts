@@ -4,6 +4,7 @@ import { COOKIE_NAME, verifySessionToken } from '@/lib/client-auth';
 import { loadCampaignConfigBySlug, loadClientGoogleAdsIndex } from '@/lib/crm/intelligence';
 import { resolveGoogleAdsMutationAccess } from '@/lib/google-ads/access-policy';
 import { setCampaignStatus } from '@/lib/google-ads/mutations';
+import { appendGoogleAdsDirectActionAudit } from '@/lib/google-ads/direct-action-audit';
 
 interface CampaignStatusRequest {
   action: 'pause' | 'resume';
@@ -58,6 +59,17 @@ export async function POST(req: Request) {
       campaignConfig,
       campaignId,
       status,
+    });
+
+    appendGoogleAdsDirectActionAudit({
+      clientId: requestedClientId,
+      actionType: 'pause_resume',
+      actorClientId: sessionClientId,
+      campaignId,
+      status: result.success ? 'success' : 'failed',
+      error: result.success ? undefined : result.error,
+      metadata: { action: body.action, status },
+      createdAt: new Date().toISOString(),
     });
 
     if (!result.success) {
