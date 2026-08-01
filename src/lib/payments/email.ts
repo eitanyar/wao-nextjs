@@ -2,24 +2,16 @@
  * Outbound transactional email for the billing engine (trial-charge
  * confirmation, magic-link cancel requests).
  *
- * ## Gap being stubbed
- * There is no dedicated transactional-email service in this repo yet. The
- * only existing precedent is `src/app/api/exit-survey/route.ts`, which uses
- * `nodemailer` with plain SMTP creds (`SMTP_HOST`/`SMTP_USER`/`SMTP_PASS`)
- * and silently no-ops if they're unset. This module follows the exact same
- * pattern/env vars for consistency, so real sending "just works" the moment
- * those env vars are set in production — but until then (and in local dev),
- * every email is also unconditionally logged to the console with a clear
- * `[billing-email]` tag AND appended to a local JSONL file
- * (`data/payments/email-outbox.jsonl`) so its content — including the cancel
- * link — is inspectable without needing real SMTP. This is a stub, not a
- * real email pipeline: no retries, no bounce handling, no templating engine,
- * no delivery guarantees. Flagged explicitly in the handoff report.
+ * Uses Resend (https://resend.com) for email sending. Requires `RESEND_API_KEY`
+ * env var; silently logs locally if unset (for dev). Every email is logged to
+ * the console with a `[billing-email]` tag AND appended to a local JSONL file
+ * (`data/payments/email-outbox.jsonl`) so its content — including any links —
+ * is inspectable in dev/test.
  */
 
 import fs from 'fs';
 import path from 'path';
-import nodemailer from 'nodemailer';
+import { Resend } from 'resend';
 
 export interface BillingEmailPayload {
   to: string;
@@ -43,30 +35,28 @@ function logToOutbox(payload: BillingEmailPayload, sent: boolean): void {
 }
 
 async function sendBillingEmail(payload: BillingEmailPayload): Promise<void> {
-  const smtpHost = process.env.SMTP_HOST;
-  const smtpUser = process.env.SMTP_USER;
-  const smtpPass = process.env.SMTP_PASS;
+  const apiKey = process.env.RESEND_API_KEY;
 
-  if (!smtpHost || !smtpUser || !smtpPass) {
+  if (!apiKey) {
     logToOutbox(payload, false);
     return;
   }
 
-  const transporter = nodemailer.createTransport({
-    host: smtpHost,
-    port: Number(process.env.SMTP_PORT ?? 587),
-    secure: process.env.SMTP_SECURE === 'true',
-    auth: { user: smtpUser, pass: smtpPass },
-  });
+  const resend = new Resend(apiKey);
 
-  await transporter.sendMail({
-    from: `"WAO" <${smtpUser}>`,
-    to: payload.to,
-    subject: payload.subject,
-    text: payload.text,
-  });
-
-  logToOutbox(payload, true);
+  try {
+    await resend.emails.send({
+      from: 'billing@wao.co.il',
+      to: payload.to,
+      subject: payload.subject,
+      text: payload.text,
+    });
+    logToOutbox(payload, true);
+  } catch (err) {
+    console.error('[billing-email] Failed to send via Resend:', err);
+    logToOutbox(payload, false);
+    throw err;
+  }
 }
 
 /**
@@ -109,8 +99,8 @@ export async function sendMagicLinkCancelEmail(params: {
 }
 
 // ---------------------------------------------------------------------------
-// Added for the cron recurring-charge engine (task #9). Same stub posture as
-// the rest of this module (console + JSONL outbox, real SMTP if configured).
+// Added for the cron recurring-charge engine (task #9). Same posture as
+// the rest of this module (console + JSONL outbox, real Resend if configured).
 // ---------------------------------------------------------------------------
 
 /**
