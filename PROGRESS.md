@@ -8,14 +8,33 @@ only checked/unchecked state and the headline signals below.
 
 ## At a glance
 
-🔥 Verified-shipped streak: 2  *(Priority 4 — live payment verification, Priority 5 — live-readiness consent UI; both closed PASS by Roni on 2026-07-24)*
-🎯 Proactive-loop pilot clients: 0 / 10  *(Phase 1.5 gate — see below)*
-📊 Phase 1 MVP flows: [----------] 0/3 verified
+🔥 Verified-shipped streak: 3  *(Priority 4 — live payment verification, Priority 5 — live-readiness consent UI, both PASS by Roni 2026-07-24; Ads Bot 100/100 Ad Strength mission, 5/6 PASS by Roni 2026-08-01, 1 item BLOCKED pending live Google Ads sandbox credentials — external blocker, not a failure)*
+🎯 Proactive-loop pilot clients: 0 / 10  *(Phase 1.5 gate — see below; a formal admission scorecard now exists, see `docs/specs/pilot-client-gating.md`, but has not yet been run against any real candidate)*
+📊 Phase 1 MVP flows: [###-------] 1/3 built, verification depth still open — see Site Bot MVP note below
+
+## Out of scope — tracked here only so it isn't mistaken for roadmap progress
+- **Inner Coach** (`/inner-coach`, shipped 2026-08-01) — admin-gated, noindexed personal
+  self-development tool. Not a WAO product, not in VISION.md's four-bot suite, zero
+  weight toward any phase gate above. Flagged by Lior's 2026-08-01 reassessment as
+  scope creep to watch, not a crisis — but should consume no further agent hours.
 
 ## Phase 0 — Foundation
 - [x] SEO/course trust layer
 - [x] Agent team established
 - [ ] Bot architecture + MVP scope defined
+- [x] Legal foundation: WAO's own Terms of Service / Privacy Policy / Data Processing
+      Addendum, lawyer-approved 2026-08-01 (`docs/legal/`). Base scope is the Ads Bot's
+      permission profile; Site Bot and GEO Bot permissions drafts exist and are also
+      lawyer-approved (`docs/legal/site-bot-permissions-draft.md`,
+      `docs/legal/geo-bot-permissions-draft.md`). Content Bot has no equivalent yet —
+      correctly deferred, no code exists for that product.
+- [x] Subscription/recurring-billing consumer legal copy, lawyer-approved 2026-07-30
+      (`docs/legal/subscription-legal-copy-final.md`) — cancellation window, refund
+      mechanics, unfair-terms review all signed off, written provider-agnostic.
+- [x] Client-site legal disclosure pages (privacy.html always, accessibility.html
+      gated on the `vatStatus` exemption ladder) — wording lawyer-approved 2026-08-01,
+      wired into both Site Bot's 5-page output and the Ads Bot LP deploy path.
+      **Not yet committed** — pending Roni's runtime verification pass (in progress).
 
 ## Phase 1R — GEO/AIO Managed Service (Standalone Revenue Product)
 - [x] Pareto engine w/ intent filter (positions 4-25, LLM scoring)
@@ -32,11 +51,29 @@ only checked/unchecked state and the headline signals below.
 - [ ] Self-serve GSC OAuth (post-payment)
 
 ## Phase 1 — MVP Bot Flows
-- [ ] Site Bot MVP (domain → website → GMB → first ad)
+- [ ] Site Bot MVP — chat intake → generate → deploy pipeline built and Roni-verified
+      end-to-end (no domain registrar or GMB step yet — sites ship on
+      `{slug}.wao.co.il` subdomains, not client-purchased domains; GitHub is not
+      wired in either, despite VISION.md's mention). **Open question, unresolved:**
+      was the end-to-end verification exercised against the live Gemini brain or the
+      no-cost simulation fallback? `GEMINI_API_KEY` is confirmed live in `.env` as of
+      2026-08-01 (used successfully for real LP-copy generation), so any verification
+      run from this date forward is real-AI by default — but earlier verification
+      runs' mode is not confirmed. Do not mark this item `[x]` until that's settled.
+      LP copy-generation pipeline itself was found silently broken (dead Azure key,
+      falling back to template strings) and fixed 2026-08-01 — see commit `511728d`.
 - [ ] Flow B: existing business audit → priority action plan
-- [ ] Ads Bot MVP (Google Ads setup + first campaign launch)
+- [ ] Ads Bot MVP — campaign creation exists (`create-campaign/route.ts`) with RSA
+      + call + callout + structured-snippet + sitelink + image assets wired
+      (2026-08-01, commit `2229ce2`), fail-soft per asset type. **Not fully verified
+      live** — 5 API-shape uncertainties (asset-type enum handling, image field-type
+      naming, call-conversion setting, method signatures, sitelink URL fragments)
+      confirmed correct against library typings but need a real Google Ads sandbox
+      account to confirm the API actually accepts them; no sandbox credentials exist
+      in this environment yet.
 - [ ] Approval/execution loop ("continue" UX)
-- [ ] First platform integrations (domain registrar + Google Ads API)
+- [ ] First platform integrations (domain registrar + Google Ads API — Ads API is
+      partially wired per above, not yet live-confirmed; domain registrar untouched)
 
 ## Phase 1 — Trust & Funnel (parallel to bot build)
 - [ ] Design curriculum: "Agentic Website Building + SEO in the Age of AI"
@@ -64,10 +101,23 @@ WAO's bot tooling against his own pre-existing clients' live campaigns for advis
 insight or manual-triggered execution. Valuable dogfooding, zero weight toward the
 Phase 1.5 gate. Do not merge this category with pilot-funnel progress in future updates.
 
-**Candidates checked in `data/clients/` (2026-07-24):** aasada, ajudaica, merlo,
-retter, google-ads-sandbox. None qualify — google-ads-sandbox is a test/QA account
-(live-readiness files created by a verifier QA run, not client onboarding); the other
-three have no confirmed onboarding/subscription/live-loop record yet.
+**Candidates checked in `data/clients/` (2026-07-24, re-confirmed 2026-08-01):** aasada,
+ajudaica, merlo, retter, google-ads-sandbox. None qualify — google-ads-sandbox is a
+test/QA account (live-readiness files created by a verifier QA run, not client
+onboarding); retter is internal/advisory (see above); aasada, ajudaica, merlo are
+existing GEO Bot advisory clients (Dina-approved, entitlement-gated) with SEO/content
+data only — no budget, no niche CPC, no Ads Bot data at all, so they don't fit
+`docs/specs/pilot-client-gating.md`'s framework (which is Ads-Bot-specific). Aasada is
+additionally flagged in its own client record as "financial difficulty, low order
+volume" — not a paid-pilot candidate regardless.
+
+**Payment provider status affects this gate directly:** the ₪249/mo subscription
+funnel this gate measures cannot go live without a working charge-a-stored-token API.
+Takbull (the prior pick) never got a token-charge test past a decline (CCode=3);
+decision reopened 2026-08-01, Payme.io and Grow (Meshulam) both under evaluation
+(outreach sent to both). Grow's charging API looks structurally better than Takbull's
+on paper, but its invoice-generation is not callable per-charge — same problem that
+ruled out iFreelance. See `docs/specs/subscription-billing-provider-decision.md`.
 
 **Minimum viable loop (what must be built, per VISION.md):**
 - [ ] Weekly Monday performance digest

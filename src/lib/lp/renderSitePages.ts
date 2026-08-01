@@ -8,6 +8,7 @@ import type { VerticalAssets } from './verticalAssets';
 import type { SiteCopy } from './lpCopyPrompt';
 import type { CollectedData } from '@/lib/bot/prompts';
 import { renderStaticHtml, type RenderStaticHtmlParams } from './renderStaticHtml';
+import { buildPrivacyHtml, buildAccessibilityHtml, isAccessibilityExempt } from './legalPages';
 
 export interface RenderSitePagesParams extends Omit<RenderStaticHtmlParams, 'copy' | 'mode' | 'siteUrl'> {
   copy: SiteCopy;
@@ -18,14 +19,24 @@ export interface RenderSitePagesParams extends Omit<RenderStaticHtmlParams, 'cop
 
 export function renderSitePages(p: RenderSitePagesParams): Record<string, string> {
   const siteUrl = p.siteUrl.replace(/\/$/, '');
+  const exempt = isAccessibilityExempt(p.data.vatStatus);
 
-  return {
+  const pages: Record<string, string> = {
     'index.html': buildIndexHtml(p, siteUrl),
     'about.html': buildAboutHtml(p, siteUrl),
     'services.html': buildServicesHtml(p, siteUrl),
     'contact.html': buildContactHtml(p, siteUrl),
+    'privacy.html': buildPrivacyHtml({ theme: p.theme, data: p.data, canonicalUrl: `${siteUrl}/privacy.html`, homeHref: '/' }),
     'sitemap.xml': buildSitemap(siteUrl),
   };
+
+  // No exemption exists for the privacy page — always built. Accessibility
+  // is gated: absent entirely (not a stub) when the client is exempt.
+  if (!exempt) {
+    pages['accessibility.html'] = buildAccessibilityHtml({ theme: p.theme, data: p.data, canonicalUrl: `${siteUrl}/accessibility.html`, homeHref: '/' });
+  }
+
+  return pages;
 }
 
 // ─────────────────────────────────────────────────────────────────────────
@@ -44,7 +55,7 @@ function buildIndexHtml(p: RenderSitePagesParams, siteUrl: string): string {
 
   const withFooter = withNav.replace(
     '  <!-- Sticky Bottom Bar -->',
-    `${footerBadge(t)}\n\n  <!-- Sticky Bottom Bar -->`
+    `${footerBadge(t, isAccessibilityExempt(p.data.vatStatus))}\n\n  <!-- Sticky Bottom Bar -->`
   );
 
   return withFooter;
@@ -89,8 +100,12 @@ function navBar(t: VerticalTheme): string {
   </nav>`;
 }
 
-function footerBadge(t: VerticalTheme): string {
+function footerBadge(t: VerticalTheme, exempt: boolean): string {
   return `  <footer style="text-align:center;padding:24px 20px 32px;background:${t.surface};border-top:1px solid ${t.border};font-size:0.8rem;color:${t.textMuted};">
+    <div style="margin-bottom:10px;display:flex;gap:14px;justify-content:center;">
+      <a href="/privacy.html" style="color:${t.textMuted};">מדיניות פרטיות</a>
+      ${exempt ? '' : '<a href="/accessibility.html" style="color:' + t.textMuted + ';">הצהרת נגישות</a>'}
+    </div>
     <a href="https://wao.co.il" style="color:${t.textMuted};text-decoration:none;">נבנה עם <strong>WAO</strong> 🚀</a>
   </footer>`;
 }
@@ -153,7 +168,7 @@ function leadFormSection(t: VerticalTheme, headline: string, ctaLabel: string): 
         <input type="tel" id="f-phone" placeholder="050-0000000" aria-label="מספר טלפון" dir="ltr" required style="padding:14px 16px;border-radius:${t.radiusSm};border:1px solid ${t.border};font-size:1rem;color:${t.textPrimary};background:${t.surface};text-align:right;" />
         <label style="display:flex;gap:8px;align-items:flex-start;cursor:pointer;">
           <input type="checkbox" id="f-consent" required style="margin-top:3px;flex-shrink:0;" />
-          <span style="font-size:0.8rem;color:${t.textMuted};line-height:1.4;">אני מסכים/ה למדיניות הפרטיות.</span>
+          <span style="font-size:0.8rem;color:${t.textMuted};line-height:1.4;">אני מסכים/ה ל<a href="/privacy.html" style="color:${t.textMuted};text-decoration:underline;">מדיניות הפרטיות</a>.</span>
         </label>
         <div id="form-error">שגיאה בשליחה — נסה שוב או התקשר ישירות.</div>
         <button type="submit" class="submit-btn">${esc(ctaLabel)}</button>
@@ -307,7 +322,7 @@ ${pageScript({
     includeLeadForm: false,
   })}`;
 
-  return assembleDocument(t, head, body, p.gtagSnippet);
+  return assembleDocument(t, head, body, p.gtagSnippet, data);
 }
 
 // ─────────────────────────────────────────────────────────────────────────
@@ -358,7 +373,7 @@ ${pageScript({
     includeLeadForm: true,
   })}`;
 
-  return assembleDocument(t, head, body, p.gtagSnippet);
+  return assembleDocument(t, head, body, p.gtagSnippet, data);
 }
 
 // ─────────────────────────────────────────────────────────────────────────
@@ -409,12 +424,12 @@ ${pageScript({
     includeLeadForm: true,
   })}`;
 
-  return assembleDocument(t, head, body, p.gtagSnippet);
+  return assembleDocument(t, head, body, p.gtagSnippet, data);
 }
 
 // Assembles <head> + <body> with nav bar (top) and footer badge (bottom) for
 // the 3 standalone pages (index.html has its own injection path above).
-function assembleDocument(t: VerticalTheme, head: string, bodyInner: string, gtagSnippet?: string): string {
+function assembleDocument(t: VerticalTheme, head: string, bodyInner: string, gtagSnippet: string | undefined, data: CollectedData): string {
   const headWithGtag = gtagSnippet ? head.replace('</head>', `  ${gtagSnippet}\n</head>`) : head;
   return `<!DOCTYPE html>
 <html lang="he" dir="rtl">
@@ -424,7 +439,7 @@ ${navBar(t)}
 
 ${bodyInner}
 
-${footerBadge(t)}
+${footerBadge(t, isAccessibilityExempt(data.vatStatus))}
 </body>
 </html>`;
 }

@@ -4,8 +4,14 @@ import path from 'path';
 import type { CollectedData } from '@/lib/bot/prompts';
 import type { SiteCopy } from '@/lib/lp/lpCopyPrompt';
 import { buildSiteCopyPrompt } from '@/lib/lp/lpCopyPrompt';
-import { TAMAR_SYSTEM_PROMPT } from '@/lib/bot/prompts';
 import { callGeminiJSON } from '@/lib/ai/gemini-fast';
+
+// buildSiteCopyPrompt() is already a complete, self-contained instruction set
+// (persona, hard rules, and the exact output schema) — unlike the Ads Bot's
+// TAMAR_SYSTEM_PROMPT (which targets a totally different RSA headline/description
+// schema and must NOT be reused here, see prompts.ts). This system instruction
+// only needs to tell Gemini to follow the user message's instructions verbatim.
+const SITE_COPY_SYSTEM_PROMPT = 'You are a Hebrew copywriter executing the exact instructions and JSON schema given in the user message. Return only the JSON object described there — no prose, no markdown fences.';
 
 // Noa's QA prompt — LOW effort, Haiku, checklist only.
 // Same checklist as lp-generate's NOA_LP_QA_PROMPT — kept in sync manually since
@@ -21,6 +27,11 @@ Checklist (fix silently — no explanations):
 5. Plural male address → singular male (replace "אתם" with "אתה", "תוכלו" with "תוכל", etc.)
 6. Translated-Hebrew calques like "עשה לייק", "לחץ כאן" (too digital) → natural Hebrew
 7. "heroHeadline" and "aboutPageHeadline" must end in a noun or active verb — remove trailing "..." if present
+
+Rules 2 and 3 apply ONLY inside Hebrew text content (JSON string values). Never
+alter the JSON structural characters themselves — every property name and every
+string value must remain wrapped in exactly one pair of standard ASCII double
+quotes ("). The result must be syntactically valid JSON, parseable by JSON.parse.
 
 Return: corrected JSON object only. No prose.`;
 
@@ -99,21 +110,36 @@ export async function POST(req: Request) {
     if (process.env.GEMINI_API_KEY) {
       // Tamar — write the site copy
       const tamarPrompt = buildSiteCopyPrompt(collectedData);
-      const tamarRaw = await callGeminiJSON(TAMAR_SYSTEM_PROMPT, tamarPrompt);
+      const tamarRaw = await callGeminiJSON(SITE_COPY_SYSTEM_PROMPT, tamarPrompt);
       const tamarCopy = JSON.parse(tamarRaw) as SiteCopy;
 
-      // Noa — QA pass on Tamar's copy
-      const noaRaw = await callGeminiJSON(NOA_SITE_QA_PROMPT, JSON.stringify(tamarCopy));
-      copy = JSON.parse(noaRaw) as SiteCopy;
+      // Noa — QA pass on Tamar's copy. If it comes back malformed (rare —
+      // the quote-style checklist can occasionally trip over JSON's own
+      // structural quotes), fall back to Tamar's copy rather than failing
+      // the whole generation over a polish step.
+      try {
+        const noaRaw = await callGeminiJSON(NOA_SITE_QA_PROMPT, JSON.stringify(tamarCopy));
+        copy = JSON.parse(noaRaw) as SiteCopy;
+      } catch (e: any) {
+        console.warn('Site Bot Noa QA pass failed, using unreviewed Tamar copy:', e.message);
+        copy = tamarCopy;
+      }
     } else {
       // Simulation fallback — no LLM cost
       copy = generateFallbackCopy(collectedData);
     }
 
+    // Record the vatStatus collection timestamp — auditable basis for the
+    // accessibility-page exemption decision. Missing/unclear vatStatus is
+    // left undefined here, which renderSitePages treats as non-exempt.
+    const stampedData: CollectedData = collectedData.vatStatus
+      ? { ...collectedData, vatStatusCollectedAt: collectedData.vatStatusCollectedAt || new Date().toISOString() }
+      : collectedData;
+
     // Persist to filesystem
     const sitesDir = path.join(process.cwd(), 'data', 'sites');
     fs.mkdirSync(sitesDir, { recursive: true });
-    const record = { slug, collectedData, copy, createdAt: new Date().toISOString() };
+    const record = { slug, collectedData: stampedData, copy, createdAt: new Date().toISOString() };
     fs.writeFileSync(path.join(sitesDir, `${slug}.json`), JSON.stringify(record, null, 2));
 
     return NextResponse.json({ success: true, slug });

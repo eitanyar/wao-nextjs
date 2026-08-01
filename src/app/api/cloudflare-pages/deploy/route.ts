@@ -4,6 +4,7 @@ import { mkdirSync, writeFileSync, rmSync, readFileSync } from 'fs';
 import { tmpdir } from 'os';
 import path from 'path';
 import { renderStaticHtml } from '@/lib/lp/renderStaticHtml';
+import { buildPrivacyHtml, buildAccessibilityHtml, isAccessibilityExempt } from '@/lib/lp/legalPages';
 import { detectVertical } from '@/lib/lp/verticalDetect';
 import { VERTICAL_THEMES } from '@/lib/lp/verticalThemes';
 import { VERTICAL_ASSETS } from '@/lib/lp/verticalAssets';
@@ -89,6 +90,14 @@ export async function POST(req: Request) {
     const tmpDir = path.join(tmpdir(), `wao-lp-${Date.now()}`);
     mkdirSync(tmpDir, { recursive: true });
     writeFileSync(path.join(tmpDir, 'index.html'), htmlContent, 'utf-8');
+
+    // Legal disclosure pages — same requirement as Site Bot's 5-page output.
+    // Privacy has no exemption; accessibility is gated on vatStatus.
+    const legalOpts = { theme, data: collectedData, canonicalUrl: '', homeHref: '/' };
+    writeFileSync(path.join(tmpDir, 'privacy.html'), buildPrivacyHtml({ ...legalOpts, canonicalUrl: `https://${slug}.wao.co.il/privacy.html` }), 'utf-8');
+    if (!isAccessibilityExempt(collectedData.vatStatus)) {
+      writeFileSync(path.join(tmpDir, 'accessibility.html'), buildAccessibilityHtml({ ...legalOpts, canonicalUrl: `https://${slug}.wao.co.il/accessibility.html` }), 'utf-8');
+    }
 
     const env = {
       ...process.env,

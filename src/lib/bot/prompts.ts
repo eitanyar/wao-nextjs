@@ -68,6 +68,13 @@ export interface CollectedData {
   // LP slug
   preferredSlug?: string;
 
+  // Legal/compliance — accessibility-statement exemption basis (Israeli
+  // Standard 5568 revenue-tier ladder). See docs/specs/client-site-privacy-
+  // accessibility-minimal.md. Missing/unclear answer must be treated as
+  // non-exempt, never silently skipped.
+  vatStatus?: 'osek_patur' | 'under_120k' | 'between_120k_1m' | 'over_1m';
+  vatStatusCollectedAt?: string;
+
   // Simulation progress tracker
   turnIndex?: number;
 }

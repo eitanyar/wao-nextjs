@@ -73,6 +73,19 @@ const STEPS: Step[] = [
     },
   },
   {
+    question: 'רק כדי לדעת מה נדרש מבחינה חוקית באתר — אתה עוסק פטור, או שהמחזור השנתי שלך מעל 120 אלף ש״ח?',
+    apply: (text, data) => {
+      const t = text.trim();
+      const vatStatus: CollectedData["vatStatus"] =
+        t.includes("פטור") ? "osek_patur" :
+        /מיליון/.test(t) || /1,?000,?000/.test(t) ? "over_1m" :
+        /לא|מתחת|נמוך/.test(t) ? "under_120k" :
+        /מעל|כן|יותר/.test(t) ? "between_120k_1m" :
+        undefined; // unclear answer — left undefined, treated as non-exempt downstream
+      return vatStatus ? { ...data, vatStatus, vatStatusCollectedAt: new Date().toISOString() } : data;
+    },
+  },
+  {
     question: 'רוצה כתובת מותאמת לאתר (למשל wao-plumber-ta)? אפשר גם לכתוב "דלג" ואני אבחר בשבילך',
     apply: (text, data) => (text.includes("דלג") ? data : { ...data, preferredSlug: text }),
   },
