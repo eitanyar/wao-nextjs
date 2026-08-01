@@ -51,6 +51,8 @@
     "src/lib/payments/providers/pending-queue-invoice.test.ts",
     "src/lib/payments/get-invoice-provider.ts",
     "src/lib/payments/invoicing.ts",
-    "src/lib/payments/invoicing.test.ts"
+    "src/lib/payments/invoicing.test.ts",
+    "src/lib/payments/refund.ts",
+    "src/lib/payments/refund.test.ts"
   ]
 }

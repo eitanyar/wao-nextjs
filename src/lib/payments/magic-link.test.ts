@@ -37,6 +37,9 @@ function makeSubscription(id: string) {
     failed_attempts: 0,
     created_at: nowIso(),
     updated_at: nowIso(),
+    joined_at: nowIso(),
+    extended_cancellation_flag: null,
+    extended_flag_basis: null,
   };
 }
 

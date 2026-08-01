@@ -44,6 +44,9 @@ test('PendingQueueInvoiceProvider.createInvoice inserts a pending_invoices row l
     failed_attempts: 0,
     created_at: timestamp,
     updated_at: timestamp,
+    joined_at: timestamp,
+    extended_cancellation_flag: null,
+    extended_flag_basis: null,
   };
   insertSubscription(getDb(), subscription);
   insertCharge(getDb(), {
@@ -59,6 +62,9 @@ test('PendingQueueInvoiceProvider.createInvoice inserts a pending_invoices row l
     invoice_id: null,
     charged_at: timestamp,
     created_at: timestamp,
+    refunded_at: null,
+    refund_amount: null,
+    refund_provider_ref: null,
   });
 
   const provider = new PendingQueueInvoiceProvider();

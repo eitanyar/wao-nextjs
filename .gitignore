@@ -97,3 +97,4 @@ data/billing.db-shm
 # §2/§8): the Belief Ledger and session transcripts are intimate, Eitan-only, never source.
 data/inner-coach/
 data/bot-sessions/
+data/payments/

@@ -111,6 +111,38 @@ function migrate(db: Database.Database): void {
     CREATE INDEX IF NOT EXISTS idx_pending_invoices_charge_id ON pending_invoices(charge_id);
     CREATE INDEX IF NOT EXISTS idx_pending_invoices_status ON pending_invoices(status);
   `);
+
+  // Additive migration (subscription-billing task #15): the attorney-approved
+  // refund model (see docs/specs/subscription-legal-copy-final.md, "מודל
+  // נתונים"). `subscriptions.joined_at` is the single anchor timestamp both
+  // refund windows (14-day / extended 4-month) are computed from — there is
+  // deliberately no per-charge refund-eligibility-window column. Existing
+  // tables predate these columns, so they're added via guarded
+  // `ALTER TABLE ... ADD COLUMN` (SQLite has no `ADD COLUMN IF NOT EXISTS`),
+  // checked against `PRAGMA table_info` for idempotency across restarts.
+  addColumnIfMissing(db, 'subscriptions', 'joined_at', 'TEXT');
+  addColumnIfMissing(db, 'subscriptions', 'extended_cancellation_flag', 'INTEGER');
+  addColumnIfMissing(db, 'subscriptions', 'extended_flag_basis', 'TEXT');
+  addColumnIfMissing(db, 'charges', 'refunded_at', 'TEXT');
+  addColumnIfMissing(db, 'charges', 'refund_amount', 'REAL');
+  addColumnIfMissing(db, 'charges', 'refund_provider_ref', 'TEXT');
+}
+
+/** Adds `column` to `table` (as `columnDefSql`, e.g. `'TEXT'`) if it doesn't
+ * already exist. SQLite has no `ALTER TABLE ... ADD COLUMN IF NOT EXISTS`, so
+ * this checks `PRAGMA table_info` first — the guard that keeps additive
+ * column migrations idempotent/re-runnable on every `getDb()` call. */
+function addColumnIfMissing(
+  db: Database.Database,
+  table: string,
+  column: string,
+  columnDefSql: string
+): void {
+  const columns = db.prepare(`PRAGMA table_info(${table})`).all() as Array<{ name: string }>;
+  const exists = columns.some((c) => c.name === column);
+  if (!exists) {
+    db.exec(`ALTER TABLE ${table} ADD COLUMN ${column} ${columnDefSql}`);
+  }
 }
 
 /** Opens (or reuses) the singleton billing DB connection. */
@@ -164,6 +196,19 @@ export interface SubscriptionRow {
   failed_attempts: number;
   created_at: string;
   updated_at: string;
+  // Refund-model additions (task #15, docs/specs/subscription-legal-copy-final.md).
+  // `joined_at` is the single anchor timestamp both refund windows (14-day
+  // always; up to 4-month if `extended_cancellation_flag` is set) are
+  // computed from — set once at subscription creation, alongside
+  // `created_at` (see `createPendingSubscription` in subscriptions.ts).
+  // Nullable to accommodate rows that existed before this migration.
+  joined_at: string | null;
+  // Manually set in admin once eligibility for the extended cancellation
+  // window is verified — not set at insert time.
+  extended_cancellation_flag: number | null;
+  // Free text: the eligibility basis/evidence shown (e.g. disability
+  // certificate, ID, new-immigrant certificate) — admin-set alongside the flag.
+  extended_flag_basis: string | null;
 }
 
 export interface ChargeRow {
@@ -179,6 +224,12 @@ export interface ChargeRow {
   invoice_id: string | null;
   charged_at: string | null;
   created_at: string;
+  // Refund-model additions (task #15) — set by `recordChargeRefund` once a
+  // refund is actually issued via `PaymentProvider.refund()`. Not set at
+  // insert time.
+  refunded_at: string | null;
+  refund_amount: number | null;
+  refund_provider_ref: string | null;
 }
 
 export interface PendingInvoiceRow {
@@ -236,11 +287,13 @@ export function insertSubscription(db: Database.Database, row: SubscriptionRow):
     `INSERT INTO subscriptions (
       id, user_id, status, provider, provider_token, card_last4, card_expiry,
       trial_amount, recurring_amount, currency, next_charge_at, canceled_at,
-      cancel_reason, failed_attempts, created_at, updated_at
+      cancel_reason, failed_attempts, created_at, updated_at,
+      joined_at, extended_cancellation_flag, extended_flag_basis
     ) VALUES (
       @id, @user_id, @status, @provider, @provider_token, @card_last4, @card_expiry,
       @trial_amount, @recurring_amount, @currency, @next_charge_at, @canceled_at,
-      @cancel_reason, @failed_attempts, @created_at, @updated_at
+      @cancel_reason, @failed_attempts, @created_at, @updated_at,
+      @joined_at, @extended_cancellation_flag, @extended_flag_basis
     )`
   ).run(row);
 }
@@ -249,12 +302,57 @@ export function insertCharge(db: Database.Database, row: ChargeRow): void {
   db.prepare(
     `INSERT INTO charges (
       id, subscription_id, idempotency_key, amount, status, attempt_number,
-      provider_transaction_id, error_code, error_message, invoice_id, charged_at, created_at
+      provider_transaction_id, error_code, error_message, invoice_id, charged_at, created_at,
+      refunded_at, refund_amount, refund_provider_ref
     ) VALUES (
       @id, @subscription_id, @idempotency_key, @amount, @status, @attempt_number,
-      @provider_transaction_id, @error_code, @error_message, @invoice_id, @charged_at, @created_at
+      @provider_transaction_id, @error_code, @error_message, @invoice_id, @charged_at, @created_at,
+      @refunded_at, @refund_amount, @refund_provider_ref
     )`
   ).run(row);
+}
+
+/** Admin-set: marks a subscription eligible for the extended (4-month)
+ * cancellation window, and records the eligibility basis/evidence shown.
+ * Per spec, every invocation must also be recorded as a `subscription_events`
+ * row by the caller (route handler) — this function only writes the columns. */
+export function setSubscriptionExtendedCancellation(
+  db: Database.Database,
+  subscriptionId: string,
+  params: { extendedCancellationFlag: boolean; extendedFlagBasis: string | null }
+): void {
+  db.prepare(
+    `UPDATE subscriptions
+     SET extended_cancellation_flag = @extended_cancellation_flag,
+         extended_flag_basis = @extended_flag_basis
+     WHERE id = @id`
+  ).run({
+    id: subscriptionId,
+    extended_cancellation_flag: params.extendedCancellationFlag ? 1 : 0,
+    extended_flag_basis: params.extendedFlagBasis,
+  });
+}
+
+/** Records that a charge was refunded (via `PaymentProvider.refund()`).
+ * Not wired into any route/cron yet — this is the write primitive future
+ * refund-flow work will call. */
+export function recordChargeRefund(
+  db: Database.Database,
+  chargeId: string,
+  params: { refundedAt: string; refundAmount: number; refundProviderRef: string | null }
+): void {
+  db.prepare(
+    `UPDATE charges
+     SET refunded_at = @refunded_at,
+         refund_amount = @refund_amount,
+         refund_provider_ref = @refund_provider_ref
+     WHERE id = @id`
+  ).run({
+    id: chargeId,
+    refunded_at: params.refundedAt,
+    refund_amount: params.refundAmount,
+    refund_provider_ref: params.refundProviderRef,
+  });
 }
 
 export function insertSubscriptionEvent(db: Database.Database, row: SubscriptionEventRow): void {

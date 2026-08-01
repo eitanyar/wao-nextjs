@@ -185,6 +185,9 @@ export async function chargeOneSubscription(row: SubscriptionRow, now: Date): Pr
       invoice_id: null,
       charged_at: timestamp,
       created_at: timestamp,
+      refunded_at: null,
+      refund_amount: null,
+      refund_provider_ref: null,
     };
     insertCharge(db, chargeRow);
 
@@ -231,6 +234,9 @@ export async function chargeOneSubscription(row: SubscriptionRow, now: Date): Pr
     invoice_id: null,
     charged_at: null,
     created_at: timestamp,
+    refunded_at: null,
+    refund_amount: null,
+    refund_provider_ref: null,
   });
 
   if (result.isRetryable) {

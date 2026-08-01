@@ -120,6 +120,11 @@ export async function createPendingSubscription(
     failed_attempts: 0,
     created_at: timestamp,
     updated_at: timestamp,
+    // joined_at is the refund-window anchor — set once, here, alongside
+    // created_at (see docs/specs/subscription-legal-copy-final.md).
+    joined_at: timestamp,
+    extended_cancellation_flag: null,
+    extended_flag_basis: null,
   };
   insertSubscription(db, row);
 
@@ -232,6 +237,9 @@ export async function applyTokenizationCallback(
     invoice_id: null,
     charged_at: timestamp,
     created_at: timestamp,
+    refunded_at: null,
+    refund_amount: null,
+    refund_provider_ref: null,
   };
   insertCharge(db, chargeRow);
 

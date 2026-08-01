@@ -61,6 +61,9 @@ function makeSubscription(overrides: Partial<SubscriptionRow> & { token: string 
     failed_attempts: overrides.failed_attempts ?? 0,
     created_at: timestamp,
     updated_at: timestamp,
+    joined_at: overrides.joined_at ?? timestamp,
+    extended_cancellation_flag: overrides.extended_cancellation_flag ?? null,
+    extended_flag_basis: overrides.extended_flag_basis ?? null,
   };
   if ('next_charge_at' in overrides) {
     row.next_charge_at = overrides.next_charge_at as string | null;
@@ -146,6 +149,9 @@ test('issueInvoiceForCharge itself swallows a throwing provider without throwing
     invoice_id: null,
     charged_at: isoNow(),
     created_at: isoNow(),
+    refunded_at: null,
+    refund_amount: null,
+    refund_provider_ref: null,
   };
 
   await assert.doesNotReject(issueInvoiceForCharge(fakeCharge, sub));

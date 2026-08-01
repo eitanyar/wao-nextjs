@@ -54,6 +54,9 @@ function makeSubscription(overrides: Partial<SubscriptionRow> & { token: string 
     failed_attempts: overrides.failed_attempts ?? 0,
     created_at: timestamp,
     updated_at: timestamp,
+    joined_at: overrides.joined_at ?? timestamp,
+    extended_cancellation_flag: overrides.extended_cancellation_flag ?? null,
+    extended_flag_basis: overrides.extended_flag_basis ?? null,
   };
   insertSubscription(getDb(), row);
   return row;
