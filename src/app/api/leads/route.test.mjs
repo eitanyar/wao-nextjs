@@ -28,3 +28,29 @@ test('proxy.ts protects the /leads admin page with the same admin-cookie gate as
   assert.match(proxyCode, /ADMIN_PROTECTED\s*=\s*\[[^\]]*'\/leads'/);
   assert.match(proxyCode, /matcher:\s*\[[^\]]*'\/leads\/:path\*'/);
 });
+
+// Regression: `isClickStub` used to check `body.type === 'click-stub'`, a
+// value LandingPage.tsx's pingClick() never actually sends (it sends
+// 'phone-click' / 'whatsapp-click'), so every lead — including click stubs —
+// silently got status: "חדש". Extracts and re-executes the real isClickStub
+// expression against representative payloads so the assertion tracks the
+// actual route logic rather than duplicating it by hand.
+test("POST /api/leads: isClickStub matches the real 'phone-click'/'whatsapp-click' values pingClick() sends, producing status: 'לחיצה'", () => {
+  const exprMatch = routeCode.match(/const isClickStub = ([^;]+);/);
+  assert.ok(exprMatch, 'isClickStub assignment should exist');
+
+  const evalIsClickStub = (type) => {
+    const body = { type };
+    // eslint-disable-next-line no-eval
+    return eval(exprMatch[1]);
+  };
+
+  assert.equal(evalIsClickStub('phone-click'), true);
+  assert.equal(evalIsClickStub('whatsapp-click'), true);
+  assert.equal(evalIsClickStub('form'), false);
+  assert.equal(evalIsClickStub(undefined), false);
+  // The old (dead) literal must no longer be what the check matches against.
+  assert.equal(evalIsClickStub('click-stub'), false);
+
+  assert.match(routeCode, /status: isClickStub \? "לחיצה" : "חדש"/);
+});

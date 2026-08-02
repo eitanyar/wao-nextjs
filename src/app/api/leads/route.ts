@@ -124,7 +124,9 @@ export async function POST(req: Request) {
       }
     }
 
-    const isClickStub = body.type === 'click-stub';
+    // pingClick() in LandingPage.tsx sends 'phone-click' / 'whatsapp-click',
+    // never the literal 'click-stub' — match the real values it sends.
+    const isClickStub = body.type === 'phone-click' || body.type === 'whatsapp-click';
     const newLead: LeadRecord = {
       id: Date.now(),
       orderId: body.orderId || `wao-${Date.now()}`,

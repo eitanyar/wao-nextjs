@@ -23,16 +23,49 @@ async function sendResendEmail(params: { subject: string; html: string; to: stri
   }
 }
 
+/**
+ * `lead.type` distinguishes real form-fills ("form", or unset for backward
+ * compat) from click-stub leads ("phone-click" / "whatsapp-click" — fired by
+ * `pingClick()` in `LandingPage.tsx`, no name/phone ever captured). The email
+ * template and subject branch on it so a click-stub doesn't misleadingly read
+ * as an abandoned form ("name: not entered, phone: not entered"). Icon/label
+ * phrasing mirrors `SOURCE_ICON`/`SOURCE_LABEL` in `LeadsTable.tsx` for
+ * consistency across the CRM UI and this notification email.
+ */
 export async function sendLeadNotificationEmail(lead: any) {
-  const htmlContent = `
-    <div dir="rtl" style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
-      <h2 style="color: #2c3e50;">ליד חדש נכנס! 🚀</h2>
-      <p>היי! יש לך ליד חדש שממתין לטיפול.</p>
-      <div style="background-color: #f8f9fa; padding: 15px; border-radius: 5px; border: 1px solid #e9ecef;">
+  const type = lead.type || "form";
+
+  let heading: string;
+  let bodyFields: string;
+  let subject: string;
+
+  if (type === "phone-click") {
+    heading = "📞 מישהו לחץ להתקשר מדף הנחיתה!";
+    bodyFields = `
+        <p><strong>קמפיין / מקור:</strong> ${lead.businessNiche || "דף נחיתה WAO"}</p>
+        <p><strong>תאריך:</strong> ${lead.date}</p>`;
+    subject = "ליד חדש: לחיצה על טלפון";
+  } else if (type === "whatsapp-click") {
+    heading = "💬 מישהו לחץ על וואטסאפ מדף הנחיתה!";
+    bodyFields = `
+        <p><strong>קמפיין / מקור:</strong> ${lead.businessNiche || "דף נחיתה WAO"}</p>
+        <p><strong>תאריך:</strong> ${lead.date}</p>`;
+    subject = "ליד חדש: לחיצה על וואטסאפ";
+  } else {
+    heading = "ליד חדש נכנס! 🚀";
+    bodyFields = `
         <p><strong>שם מלא:</strong> ${lead.name || "לא הוזן"}</p>
         <p><strong>טלפון:</strong> <a href="tel:${lead.phone}">${lead.phone || "לא הוזן"}</a></p>
         <p><strong>קמפיין / מקור:</strong> ${lead.businessNiche || "דף נחיתה WAO"}</p>
-        <p><strong>תאריך:</strong> ${lead.date}</p>
+        <p><strong>תאריך:</strong> ${lead.date}</p>`;
+    subject = `ליד חדש התקבל: ${lead.name || "לקוח פוטנציאלי"}`;
+  }
+
+  const htmlContent = `
+    <div dir="rtl" style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+      <h2 style="color: #2c3e50;">${heading}</h2>
+      <p>היי! יש לך ליד חדש שממתין לטיפול.</p>
+      <div style="background-color: #f8f9fa; padding: 15px; border-radius: 5px; border: 1px solid #e9ecef;">${bodyFields}
       </div>
       <p style="margin-top: 20px;">
         <a href="https://wao.co.il/leads" style="background-color: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block;">למעבר למערכת הניהול (Mini-CRM)</a>
@@ -44,7 +77,7 @@ export async function sendLeadNotificationEmail(lead: any) {
     await sendResendEmail({
       from: "WAO Leads <leads@wao.co.il>",
       to: ["eitan@wao.co.il", "leads@wao.co.il"],
-      subject: `ליד חדש התקבל: ${lead.name || "לקוח פוטנציאלי"}`,
+      subject,
       html: htmlContent,
     });
 
