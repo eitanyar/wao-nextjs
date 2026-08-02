@@ -1,0 +1,17 @@
+{
+  "clientId": "google-ads-sandbox",
+  "mode": "test",
+  "customerId": "9124716586",
+  "slug": "skilled-trades-1234",
+  "businessName": "דני - גנון מקצועי",
+  "businessNiche": "landscaping-gardening",
+  "targetLocation": "תל אביב",
+  "targetDailyBudget": 80,
+  "targetMonthlyBudget": 2432,
+  "avgJobValue": 2500,
+  "closeRateEstimate": 0.2,
+  "verifiedLeadConversionResourceName": "customers/9124716586/conversionActions/7705465623",
+  "closedDealConversionResourceName": "customers/9124716586/conversionActions/7705465626",
+  "adGroupResourceName": "customers/9124716586/adGroups/197580330366",
+  "createdAt": "2026-08-01T13:46:08.916Z"
+}

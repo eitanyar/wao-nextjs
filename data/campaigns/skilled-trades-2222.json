@@ -1,0 +1,17 @@
+{
+  "clientId": "google-ads-sandbox",
+  "mode": "test",
+  "customerId": "9085627947",
+  "slug": "skilled-trades-2222",
+  "businessName": "בדיקת שיחה בלבד",
+  "businessNiche": "call-asset-only-test",
+  "targetLocation": "חיפה",
+  "targetDailyBudget": 50,
+  "targetMonthlyBudget": 1520,
+  "avgJobValue": 500,
+  "closeRateEstimate": 0.2,
+  "verifiedLeadConversionResourceName": "customers/9085627947/conversionActions/7705663168",
+  "closedDealConversionResourceName": "customers/9085627947/conversionActions/7705663171",
+  "adGroupResourceName": "customers/9085627947/adGroups/198774562773",
+  "createdAt": "2026-08-01T15:05:00.830Z"
+}

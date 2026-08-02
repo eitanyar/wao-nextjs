@@ -1,0 +1,71 @@
+{
+  "slug": "wao-client-8vxf",
+  "collectedData": {
+    "serviceModel": "field",
+    "turnIndex": 24,
+    "primaryService": "אני אינסטלטור בתל אביב, מטפל בנזילות ותקלות דחופות",
+    "businessNiche": "אני אינסטלטור בתל אביב, מטפל בנזילות ותקלות דחופות",
+    "businessName": "אינסטלטור תל אביב מהיר",
+    "secondaryServices": "גם התקנת דודי שמש ותיקון ביוב",
+    "targetLocation": "תל אביב, רמת גן, גבעתיים, חולון",
+    "specificCities": "תל אביב, רמת גן, גבעתיים, חולון",
+    "idealClientFear": "לשבת בלי מים חמים או עם נזילה שלא נעצרת",
+    "faqQuestions": "כמה זה עולה, כמה זמן לוקח להגיע, יש אחריות?",
+    "usp": "הגעה מהירה, זמינות גבוהה, טיפול באותו יום",
+    "yearsInField": "12 שנה בתחום, עם אחריות על כל תיקון",
+    "guarantee": "12 שנה בתחום, עם אחריות על כל תיקון",
+    "license": "כן, יש לי רישיון מספר 4821",
+    "exclusions": "לא עובד על מערכות מים חמים תעשייתיות",
+    "urgencyLevel": "urgent",
+    "pricingNotes": "מחיר ביקור שקוף, לפי תקלה",
+    "revenueModel": "one-time",
+    "avgJobValue": 650,
+    "closeRate": 0.3,
+    "hasRepeatClients": true,
+    "reviewCount": 67,
+    "starRating": "4.8",
+    "hasGoogleBusiness": true,
+    "monthlyBudget": 1800,
+    "feasibilityBranch": "B",
+    "trustAssetUrls": [
+      "/uploads/s-1784903083309-re238fgm7jh/1784903131818-ix7ix68qt6.jpg"
+    ],
+    "hasTrustAssets": false,
+    "capacityAvailable": true,
+    "capacityUnit": "יש לי, ואני מעלה גם צילום מסך של ביקורת",
+    "contactMethod": "בערך 10 קריאות ביום בלי לפגוע בשירות",
+    "phone": "הכי נוח טלפון או וואטסאפ",
+    "whatsappNumber": "הכי נוח טלפון או וואטסאפ"
+  },
+  "copy": {
+    "heroHeadline": "לשבת בלי מים חמים או עם נזילה שלא נעצרת? יש לנו פתרון",
+    "heroSubheadline": "הגעה מהירה, זמינות גבוהה, טיפול באותו יום",
+    "heroCta": "התקשר עכשיו",
+    "trustBarItems": [
+      "12 שנה בתחום, עם אחריות על כל תיקון ניסיון",
+      "4.8★ בגוגל",
+      "מורשה ומוסמך",
+      "אחריות מלאה"
+    ],
+    "aboutBlurb": "אינסטלטור תל אביב מהיר מציעים שירות מקצועי בתל אביב, רמת גן, גבעתיים, חולון. הגעה מהירה, זמינות גבוהה, טיפול באותו יום",
+    "servicesHeadline": "השירותים שלנו",
+    "serviceItems": [
+      "גם התקנת דודי שמש ותיקון ביוב"
+    ],
+    "faqHeadline": "שאלות נפוצות",
+    "faqItems": [
+      {
+        "q": "איך יוצרים קשר?",
+        "a": "ניתן להתקשר ל-הכי נוח טלפון או וואטסאפ או לשלוח וואטסאפ."
+      }
+    ],
+    "guaranteeBlock": "12 שנה בתחום, עם אחריות על כל תיקון",
+    "reviewFeatured": "שירות מצוין ומקצועי, ממליץ בחום.",
+    "reviewContext": "4.8 כוכבים בגוגל",
+    "responseTimeBadge": "זמינים 24/7",
+    "scarcityLine": null,
+    "formHeadline": "השאר פרטים ונחזור אליך בהקדם",
+    "stickyBarLine": "זמינים עכשיו לשירותך"
+  },
+  "createdAt": "2026-07-24T14:25:43.588Z"
+}

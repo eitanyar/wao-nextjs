@@ -183,6 +183,14 @@ export function buildWeeklyDigestWhatsAppLink(params: {
 
 ### 2.3 `src/app/api/google-ads/weekly-digest-cron/route.ts` (NEW)
 
+> **Update (post-implementation):** the auth header shown below (`x-cron-secret`)
+> was later migrated to `Authorization: Bearer <CRON_SECRET>` to unify with
+> the billing cron routes' convention (`src/lib/payments/cron-auth.ts`). The
+> `CRON_SECRET` env var name and fail-closed posture are unchanged — only the
+> header shape moved. See the live route file for the current implementation;
+> the code snippet and crontab example below are left as-authored for
+> historical record.
+
 `POST /api/google-ads/weekly-digest-cron` — the scheduled-job entry point. No session cookie involved; this is a system-to-system call, gated by a shared secret header, following the same "internal secret, plain equality, fail closed if unset" convention already established by `verifyAdminSecret` (`src/lib/admin-auth.ts:28-32` — plain `===`, returns `false` if the env var is empty). Do not introduce a different auth convention (e.g. HMAC-signed payloads) for this one endpoint; that would add complexity Eitan's crontab `curl` line would then also need to replicate, for no meaningful security gain over the existing convention on an internal-only, non-mutating (email-only) endpoint.
 
 ```ts

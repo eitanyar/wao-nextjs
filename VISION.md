@@ -43,6 +43,15 @@ Each bot is an agentic pipeline, not a human-delivered service. The LP markets t
 - **Micro-SMB** (plumber, tutor, photographer): Site Bot first → **GMB Bot ₪149 at month 1** (site completion) → Content Bot ₪490 at month 6 → GEO Bot ₪199 once ≥15 pages exist. GEO Bot is NOT the month-3 attach for 5-page Site Bot buyers — their transactional queries trigger Local Pack, not AI Overview; a 5-page site has no surface for GEO Bot to work on.
 - **Content-ready SMB** (accountant, coach, clinic, lawyer, architect): GEO Bot directly. Informational search precedes their purchase decisions; AIO dominates their query space; 30+ pages give the pipeline real leverage.
 
+### Client-Facing Orchestrator (decided Aug 2026 — Phase 2/3, build deferred)
+
+The suite is sold modularly; the client experiences **one agent**. Bots are capabilities — the orchestrator is the product. There is deliberately no dashboard as the primary surface; the conversation is the unified surface, consistent with "the bot IS the CMS" (see Platform Scope below) and Voice First (§ Interaction Model).
+
+- **Proactive by default, steerable by voice.** The orchestrator prioritizes across a client's owned bots in advance and brings recommendations to the client ("this month your money is better spent on reviews than ads — I've re-paced the budget, say yes"). Voice steering is the override path, not the required path. Zero decisions required, one "continue."
+- **Cross-bot recommendations are the upsell path.** The orchestrator managing one bot surfaces the client's next bottleneck and offers the next bot as advice, not marketing — this is the mechanism behind the upsell ladder above (e.g. Site Bot → GMB Bot).
+- **Build trigger: first client owning 2+ bots.** Until then, the orchestrator is Wizard-of-Oz — Eitan, on WhatsApp — and those conversations are the training data for what the real orchestrator should say. Building the conductor before the orchestra exists is premature.
+- **International note:** the conversational orchestrator is the portable layer for later-stage markets; per-market localization applies to bot content pipelines, not to the product concept — a dashboard's information architecture would drag Hebrew-market assumptions with it in a way conversation doesn't.
+
 ## Infrastructure Model — WAO-Managed via Client OAuth
 
 **The rule:** WAO operates everything. Clients own everything.

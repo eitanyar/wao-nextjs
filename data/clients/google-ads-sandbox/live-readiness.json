@@ -1,0 +1,9 @@
+{
+  "clientAccountOwned": true,
+  "clientBillingAccepted": false,
+  "mccInvitationAccepted": false,
+  "approvalContactConfirmed": false,
+  "liveConsentRecorded": true,
+  "auditLogEnabled": false,
+  "liveConsentEvidence": "Roni verifier runtime QA test — sandbox client, WhatsApp confirmation simulated from test approval contact, 2026-07-24"
+}

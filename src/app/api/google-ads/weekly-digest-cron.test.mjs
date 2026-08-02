@@ -9,9 +9,14 @@ const routePath = path.join(baseDir, 'weekly-digest-cron/route.ts');
 const routeCode = fs.readFileSync(routePath, 'utf8');
 
 test('weekly-digest-cron route implements secret auth and batch email sending', () => {
-  assert.match(routeCode, /x-cron-secret/);
+  assert.match(routeCode, /authorization/);
+  assert.match(routeCode, /Bearer/);
   assert.match(routeCode, /CRON_SECRET/);
   assert.match(routeCode, /buildAllClientDigests/);
   assert.match(routeCode, /sendGoogleAdsWeeklyDigestEmail/);
   assert.match(routeCode, /email_failed/);
+});
+
+test('weekly-digest-cron route no longer uses the old x-cron-secret header convention', () => {
+  assert.doesNotMatch(routeCode, /x-cron-secret/);
 });

@@ -1,0 +1,2 @@
+{"timestamp":"2026-07-24T12:02:26.249Z","source":"admin-ui","clientId":"google-ads-sandbox","changes":[{"key":"clientAccountOwned","from":false,"to":true}]}
+{"timestamp":"2026-07-24T12:02:40.665Z","source":"admin-ui","clientId":"google-ads-sandbox","changes":[{"key":"liveConsentRecorded","from":false,"to":true}],"liveConsentEvidence":"Roni verifier runtime QA test — sandbox client, WhatsApp confirmation simulated from test approval contact, 2026-07-24"}

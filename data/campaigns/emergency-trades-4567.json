@@ -1,0 +1,17 @@
+{
+  "clientId": "google-ads-sandbox",
+  "mode": "test",
+  "customerId": "1725891566",
+  "slug": "emergency-trades-4567",
+  "businessName": "בדיקת מערכת",
+  "businessNiche": "אינסטלציה",
+  "targetLocation": "תל אביב",
+  "targetDailyBudget": 100,
+  "targetMonthlyBudget": 3040,
+  "avgJobValue": 500,
+  "closeRateEstimate": 0.2,
+  "verifiedLeadConversionResourceName": "customers/1725891566/conversionActions/7705676785",
+  "closedDealConversionResourceName": "customers/1725891566/conversionActions/7705676848",
+  "adGroupResourceName": "customers/1725891566/adGroups/196075692182",
+  "createdAt": "2026-08-01T15:20:29.359Z"
+}

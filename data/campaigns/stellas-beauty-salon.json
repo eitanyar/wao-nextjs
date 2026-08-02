@@ -1,0 +1,17 @@
+{
+  "clientId": "google-ads-sandbox",
+  "mode": "test",
+  "customerId": "9205431178",
+  "slug": "stellas-beauty-salon",
+  "businessName": "Stella's Beauty Salon",
+  "businessNiche": "Beauty Salon",
+  "targetLocation": "Tel Aviv",
+  "targetDailyBudget": 30,
+  "targetMonthlyBudget": 912,
+  "avgJobValue": 500,
+  "closeRateEstimate": 0.2,
+  "verifiedLeadConversionResourceName": "customers/9205431178/conversionActions/7705633858",
+  "closedDealConversionResourceName": "customers/9205431178/conversionActions/7705633861",
+  "adGroupResourceName": "customers/9205431178/adGroups/197572034814",
+  "createdAt": "2026-08-01T14:36:19.577Z"
+}
