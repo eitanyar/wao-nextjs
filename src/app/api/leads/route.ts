@@ -1,7 +1,9 @@
 import { NextResponse } from "next/server";
+import { cookies } from "next/headers";
 import fs from "fs/promises";
 import path from "path";
 import { sendLeadNotificationEmail } from "@/lib/mail";
+import { ADMIN_COOKIE_NAME, verifyAdminToken } from "@/lib/admin-auth";
 
 async function uploadConversion(leadId: number, type: "verified-lead" | "closed-deal") {
   const base = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
@@ -31,7 +33,27 @@ async function writeLeads(leads: any[]) {
   await fs.writeFile(leadsFilePath, JSON.stringify(leads, null, 2), "utf-8");
 }
 
+/**
+ * Auth: same admin-cookie convention as `/geo/dashboard`
+ * (`src/lib/admin-auth.ts` — `verifyAdminToken` / `ADMIN_COOKIE_NAME`).
+ * This is WAO's own internal Mini-CRM, not a client-scoped view — GET
+ * returns every client's leads, so it must never be reachable without the
+ * admin cookie. Route-level check is required even though `/leads` (the
+ * page) is also gated via `src/proxy.ts`, because this route is directly
+ * reachable via curl regardless of page-level protection. Fails closed if
+ * `ADMIN_SECRET` isn't configured (same posture as `verifyAdminSecret`).
+ */
+async function isAdminAuthorized(): Promise<boolean> {
+  const jar = await cookies();
+  const token = jar.get(ADMIN_COOKIE_NAME)?.value ?? "";
+  return verifyAdminToken(token);
+}
+
 export async function GET() {
+  if (!(await isAdminAuthorized())) {
+    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
+  }
+
   try {
     const leads = await readLeads();
     return NextResponse.json({ success: true, leads });

@@ -3,7 +3,12 @@ import { verifySessionToken, COOKIE_NAME } from '@/lib/client-auth';
 import { ADMIN_COOKIE_NAME, verifyAdminToken } from '@/lib/admin-auth';
 
 const CLIENT_PROTECTED = ['/client', '/geo/action', '/api/geo/action'];
-const ADMIN_PROTECTED  = ['/geo/dashboard'];
+// Note: '/api/leads' is deliberately NOT listed here — its POST handler is
+// the public lead-capture endpoint hit by landing-page forms. Only its GET
+// (the admin CRM read) is gated, and that's done inside the route itself
+// (src/app/api/leads/route.ts) so it can allow POST through unauthenticated
+// while still requiring the admin cookie for GET.
+const ADMIN_PROTECTED  = ['/geo/dashboard', '/leads'];
 const MASTER_ADMIN_PROTECTED = ['/admin/clients'];
 const LOGIN_PATH       = '/client/login';
 const ADMIN_LOGIN_PATH = '/geo/login';
@@ -62,5 +67,5 @@ export async function proxy(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/client/:path*', '/geo/action/:path*', '/api/geo/action/:path*', '/geo/dashboard/:path*', '/admin/clients/:path*'],
+  matcher: ['/client/:path*', '/geo/action/:path*', '/api/geo/action/:path*', '/geo/dashboard/:path*', '/admin/clients/:path*', '/leads/:path*'],
 };
