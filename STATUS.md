@@ -1,61 +1,93 @@
 # WAO — Status Handoff
-*Last updated: 2026-08-01, end of session*
+*Last updated: 2026-08-02, end of session*
 
 For Lior (mission-planner) to open with tomorrow: what shipped, the real leverage point,
 and the one open loop that needs Eitan's action first thing.
 
 ## Today in one line
-The technical foundation across legal, payments, and Ads Bot got proven for real —
-against a live Google Ads sandbox and a real Gemini pipeline, not simulation — and
-several silent failures were caught and fixed in the process. The bottleneck is no
-longer "does the tech work," it's acquisition and one provider decision.
+Started as a priorities/vision check-in, turned into a full pre-pilot audit of the lead
+pipeline — and it's a good thing it did. Testing the Ads Bot's "brain" against a real
+account surfaced a chain of silent failures (broken conversion tracking, an intake data
+bug, an unauthenticated cross-client data leak, a dead Google Ads API pathway) that would
+otherwise have hit pilot client #1 invisibly. All of it got root-caused and fixed today,
+live-verified, not just unit-tested. The bottleneck is unchanged from yesterday — it's
+acquisition and the payment decision — but the foundation under acquisition is now
+materially more trustworthy than it was this morning.
 
-## Shipped today (commits `e056aef`..`011ad1c`)
-- **Legal foundation**: WAO's own ToS/Privacy/DPA + subscription billing terms +
-  Site Bot/GEO Bot permission drafts, all lawyer-approved. Client-site privacy/
-  accessibility disclosure pages too (also lawyer-approved wording).
-- **Root-caused why LPs looked weak**: the copy-generation pipeline was silently
-  falling back to template strings (dead Azure key never migrated to Gemini). Fixed —
-  confirmed real Gemini copy is now materially better (verified live).
-- **Ads Bot asset completeness**: call/callout/structured-snippet/sitelink/image
-  assets built, then debugged for real against a live sandbox account — found and
-  fixed a sitelink schema bug, a Gemini JSON-truncation bug (added robust extraction
-  that helps every Gemini caller, not just these two), and discovered CALL assets are
-  blocked by a genuine Google platform restriction on this test MCC (not a code bug —
-  documented, not chased further).
-- **Payments**: pro-rata refund logic shipped; two divergent debug scripts merged into
-  one real reusable verification tool (21/21 sub-tests passing).
-- Repo hygiene: dead scratch scripts cleared, PROGRESS.md reconciled against all of
-  the above.
+## Shipped today (commits `635944b`..`5702c08`)
+- **VISION.md**: added the "Client-Facing Orchestrator" concept — client experiences one
+  conversational agent across owned bots, proactive by default, cross-bot recommendations
+  are the upsell path. Documented as vision only; build explicitly deferred until a client
+  owns 2+ bots.
+- **Priority 2 — weekly proactive digest cron**: shipped and Roni-verified live (auth
+  enforced, real client data, WhatsApp send button working). This is VISION's own named
+  subscription-revenue gate ("clients onboard and go dark" — closed).
+- **Found and fixed a chain of pre-pilot defects**, prompted by Eitan's push to validate
+  suggestion quality against real accounts before selling to strangers:
+  - **Onboarding intake bug**: the fallback bot's turn-index drifted out of sync with the
+    live question sequence, corrupting `collectedData` on two real generated LPs (city
+    names in the wrong field, upload-status text landing in `phone`). Root-caused to a
+    missing turn case + a second bug where upload-acknowledgment messages were consumed
+    as real answers. Fixed, 60/60 tests.
+  - **Generated LPs had zero conversion tracking** — no gclid/wbraid/gbraid capture, an
+    inert lead form, no click tracking on phone/WhatsApp CTAs. Ported the working
+    reference implementation from the static-site pipeline into the actual React
+    component serving `/lp/[slug]`. Roni verified gclid round-tripping into real lead
+    records for form, phone, and WhatsApp lead types.
+  - **Security**: `GET /api/leads` was fully unauthenticated — any client's leads
+    (name, phone, gclid, revenue, deal status) readable by anyone. Gated behind the
+    existing admin-cookie convention.
+  - **Priority 3 gate-minimum**: extended the existing Mini-CRM (`/leads`) into a new
+    session-gated, ownership-scoped `/client/leads` view so a client can grade only their
+    own leads. Fixed a pre-existing bug as a byproduct: the CRM's offline-conversion
+    trigger silently 401'd every time because it self-fetched a session-gated route
+    without forwarding the cookie — now called in-process. Idempotent lead capture by
+    `orderId` added.
+  - **Notification polish**: WAO's internal "new lead" email said "name: not entered,
+    phone: not entered" for a bare WhatsApp/phone click — read like an abandoned form,
+    not a successful click event. Now branches by lead type. Fixed a related dead status
+    check while there.
+- **Confirmed live, empirically**: WAO's Google Ads developer token is **not
+  grandfathered** — a real test call to the classic API's offline-conversion-upload
+  returned Google's "use the Data Manager API" rejection. This wasn't theoretical; it was
+  silently broken in production already (grepped 39MB of production logs — the pathway
+  had simply never fired, consistent with 0 paying clients, so nothing was lost, but
+  nothing was working either).
+- **Priority 4 — migrated to the Data Manager API**: new Testing-status OAuth client
+  set up (separate from the production `adwords` client, so nothing already-working got
+  touched), live `datamanager`-scoped refresh token minted, `uploadLeadConversion()`'s
+  internals swapped with the function signature preserved. **Two real successful uploads
+  against Google's live API today**, both conversion types, real `requestId`s returned.
+  Roni independently reproduced both and confirmed the critical guarantee still holds on
+  the new path: a client's CRM lead-grading write never fails or rolls back because the
+  Google upload failed (tested with a deliberately invalid token).
+- Pilot shortlist produced (Dror): 8 named, scored Tier-1 trades candidates, ready to
+  call — see `docs/specs/pilot-client-gating.md` for the scorecard used.
 
 ## Pareto read — what actually moves the needle next
 20% of remaining work carrying 80% of the value, in order:
-1. **A named pilot client.** Every technical thread converges now — Site Bot, Ads Bot
-   asset completeness, legal pages, payments — and none of it produces revenue without
-   a real business going through real onboarding. This is the single highest-leverage
-   open item and has been open for weeks. Lior: worth a harder push tomorrow on turning
-   the gating scorecard (`docs/specs/pilot-client-gating.md`) into an actual candidate
-   name, not just a framework.
-2. **Payment provider decision** (see reminder below) — blocks the ₪249/mo funnel
-   regardless of how ready everything else is.
-3. Everything else shipped today (asset completeness, legal, LP quality) was
-   necessary but is now sufficient — further polish there is not the bottleneck.
+1. **A named pilot client.** Unchanged from yesterday, still the single highest-leverage
+   open item, and now genuinely lower-risk to pursue than it was this morning — the lead
+   pipeline that would have silently failed a real client's first week is fixed and
+   live-verified. The shortlist exists (`docs/specs/pilot-client-gating.md`); nobody has
+   been called yet.
+2. **Payment provider decision** — see reminder below, still open, still the second
+   blocker on the ₪249/mo funnel.
+3. **Priority 3 Full-spec tier** (`docs/specs/priority-3-lead-capture-reliability-and-client-feedback.md`)
+   — sendBeacon/keepalive reliability on the click-tracking calls, and the per-row
+   "send lead to client via WhatsApp" deep link. Deliberately scoped to trail pilot
+   outreach, not block it — flag if it's been sitting untouched more than a week or two.
 
 ## Reminder for tomorrow — payment provider
-Outreach is out to both **Payme.io** and **Grow (Meshulam)** (same 4 questions each:
-token-charge API, pricing, invoice-per-charge API, sandbox availability). Grow's
-developer docs were already assessed — charging API looks better than Takbull's
-(synchronous, no stall), but invoicing is not callable per-charge, same disqualifier
-that ruled out iFreelance. **First thing tomorrow: check for replies from both and
-make the call** — this has been open long enough that it's now the second-biggest
-blocker after pilot acquisition. See `docs/specs/subscription-billing-provider-decision.md`
-for full state (marked REOPENED, Takbull ruled out — CCode=3, never issued a token).
+Still open. Outreach was out to both **Payme.io** and **Grow (Meshulam)** as of
+yesterday; unclear if either replied since — check first thing.  See
+`docs/specs/subscription-billing-provider-decision.md` for full state.
 
 ## Steering question for Lior
-Is WAO still pointed at the right target? The technical bet (Site Bot → Ads Bot →
-GEO Bot pipeline) has now been proven to actually work end-to-end today, for the
-first time with real evidence rather than assumption. That changes the calculus:
-the risk this month is no longer "will the tech work" but "can we get even one real
-client through it." Worth Lior explicitly re-checking tomorrow whether effort should
-shift harder toward acquisition/outreach rather than further engineering polish, now
-that the polish has real proof behind it.
+Eitan pushed hard today on a principle worth keeping as a standing check, not a one-off:
+*"no client should be onboarded before basic lead tracking + grading works, even in
+Wizard-of-Oz form — every contact channel must produce a gradeable trace, no silent
+losses."* That instinct caught four real, otherwise-invisible defects today. Worth
+Lior explicitly re-running that same audit lens (not just this specific checklist) against
+whatever ships next before it goes near a real client — it found more in one afternoon
+than the existing test suite had caught on its own.
