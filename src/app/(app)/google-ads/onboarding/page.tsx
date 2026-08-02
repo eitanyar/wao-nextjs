@@ -117,18 +117,27 @@ export default function OnboardingPage() {
   const inputHelperText =
     currentState === "DIAGNOSING"
       ? (() => {
+          // NOTE: these case numbers are turnIndex values and MUST stay in sync
+          // with the TURN_QUESTIONS table / switch(turn) in
+          // src/app/api/bot/route.ts (handleSimulation) and the T-numbered
+          // sequence in src/lib/bot/prompts.ts. A drift here doesn't corrupt
+          // data (it only mislabels the helper hint), but it's the same class
+          // of bug that caused the turnIndex mapping corruption — keep it
+          // index-for-index accurate.
           switch (collectedData.turnIndex ?? 0) {
             case 0:
               return "תענה בקצרה. גם משפט אחד מספיק.";
             case 1:
               return "אם יש שם לעסק, תכתוב אותו.";
             case 2:
-              return "אם יש עוד שירותים, תוסיף אותם.";
+              return "השם הפרטי שלך, כדי שנפנה אליך אישית.";
             case 3:
+              return "אם יש עוד שירותים, תוסיף אותם.";
+            case 4:
               return "בחרנו כבר איך השירות מתבצע, אז השאלה הבאה תתמקד באזור השירות שלך.";
-            case 7:
+            case 8:
               return "אפשר לחשוב על: מהירות הגעה, ותק, מחיר שקוף, אחריות, זמינות, רישיון, התמחות, ביקורות, או יחס אישי. גם תשובה פשוטה לגמרי טובה.";
-            case 19:
+            case 20:
               return "ענה קודם: ״יש לי״ או ״אין לי כרגע״. אם יש לך, העלה אחר כך צילום מסך אחד של ביקורת Google, הודעת WhatsApp או תמונת לפני/אחרי דרך סמל המהדק.";
             default:
               return "תמשיך עם הפרטים הבאים. כל פרט קטן עוזר.";
@@ -139,7 +148,7 @@ export default function OnboardingPage() {
         : currentState === "REVIEWING"
           ? "אם יש עוד תיקון קטן לפני ההפעלה, תכתוב אותו עכשיו."
           : "אם משהו השתנה, תכתוב ונעדכן יחד.";
-  const progressTotal = 24;
+  const progressTotal = 25;
   const progressTurn = Math.min((collectedData.turnIndex ?? 0) + 1, progressTotal);
   const fileInputRef = useRef<HTMLInputElement>(null);
 

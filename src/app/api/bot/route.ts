@@ -137,6 +137,24 @@ function parseNumber(text: string): number | null {
   return isNaN(n) ? null : n;
 }
 
+// Safety guard (defense-in-depth): a phone/whatsapp answer must contain
+// enough consecutive-ish digits to plausibly be an Israeli phone number.
+// Rejects stray free text (upload-status strings, sentences, etc.) that a
+// turn-index misalignment — or any other future bug — might otherwise route
+// into the `phone` field. This does NOT replace fixing the actual mapping
+// bug; it only stops obviously-wrong values from being persisted.
+export function isPlausiblePhoneAnswer(text: string): boolean {
+  const digitsOnly = text.replace(/\D/g, "");
+  if (digitsOnly.length < 7 || digitsOnly.length > 15) return false;
+  // Reject answers that are mostly prose around a handful of digits
+  // (e.g. "העלאתי 1 תמונות" has 1 digit — already caught by length check
+  // above, but guard against longer sentences that happen to contain a
+  // run of digits, e.g. an address or a review count).
+  const nonDigitChars = text.replace(/[\d\s\-+().]/g, "");
+  if (nonDigitChars.length > 4) return false;
+  return true;
+}
+
 function generateFallbackStrategyAndCopy(data: CollectedData) {
   const budget = data.monthlyBudget ?? 1000;
   const daily = Math.round(budget / 30);
@@ -159,31 +177,38 @@ function generateFallbackStrategyAndCopy(data: CollectedData) {
 
 // ── Turn questions for simulation ─────────────────────────────────────────────
 
+// NOTE: this table AND the switch(turn) below in handleSimulation() must stay
+// index-for-index in sync with the T-numbered question sequence in
+// src/lib/bot/prompts.ts (ADAM_SYSTEM_PROMPT). A question present in prompts.ts
+// but missing here (or vice versa) causes every subsequent answer to land one
+// slot off from where it belongs — this exact drift (missing T2b/ownerName)
+// corrupted real intake sessions; see wao-client-1.json / wao-client-8vxf.json.
 const TURN_QUESTIONS: Record<number, string> = {
   0: "יאללה, בוא נתחיל — ספר לי קצת על העסק שלך. ומכל מה שאתה עושה, מה הכי מכניס לך כסף?",
   1: "ואיך קוראים לעסק?\n(אם אין שם עסק — השם שלך הוא המותג)",
-  2: "יש עוד שירותים שאתה נותן? לא ניגע בהם עכשיו, אבל הם מחזקים את הדף שלך ונחזור אליהם בהמשך.",
-  3: "יופי. ואיך זה עובד בדרך כלל — אתה מגיע אל הלקוח, הלקוח מגיע אליך, שניהם, או מרחוק?",
-  4: "באילו ערים ושכונות ספציפיות אתה נותן שירות? (ככל שתפרט יותר, כך גוגל ידרג אותך טוב יותר)",
-  5: "תחשוב על לקוח טוב שפנה אליך לאחרונה — מי זה?\nומה הכי הטריד אותו רגע לפני שהרים אליך טלפון?",
-  6: "מה הכי שואלים אותך ברגע שמתקשרים? תן לי 2-3 שאלות שחוזרות.",
-  7: "ובכנות גמורה — למה שיבחרו דווקא בך, ולא במישהו אחר שעושה אותו דבר?",
-  8: "כמה שנים אתה בתחום? ויש לך אחריות על השירות שלך — לכמה זמן, ומה קורה אם לקוח לא מרוצה?",
-  9: "התחום שלך דורש רישוי רשמי כלשהו?\nלמשל רישיון ממשרד ממשלתי, חברות בלשכה מקצועית, או תעודה מוכרת?\nאם כן — מה זה ומה המספר? אם לא — פשוט תגיד ״לא״.",
-  10: "יש סוגי פניות שאתה מעדיף לא לקבל?\nשירות שאתה לא מציע, סוג לקוח שאתה לא עובד איתו, או אזורים שאתה לא מגיע אליהם?",
-  11: "והלקוחות שלך — רובם צריכים אותך כאן ועכשיו,\nזה משהו שהם בודקים לפני שמחליטים,\nאו שהם מתכננים מראש שבועות וחודשים קדימה?",
-  12: "אתה נותן הצעת מחיר חינם לפני שמתחילים?\nיש דמי הגעה אם בסוף לא נסגרה עסקה?",
-  13: "עיקר ההכנסה שלך מגיעה מ —\nשירות חד-פעמי לכל לקוח, חוזה שוטף/חוזר, או שניהם?",
-  14: "שאלה על כסף, רק כדי שנשמור על התקציב שלך —\nכמה שווה לך לקוח חדש בממוצע, בפעם הראשונה שהוא משלם לך?",
-  15: "יופי. עכשיו בוא נבדוק כמה קל לך לסגור אותו.\nתחשוב על עשרה אנשים שמתקשרים אליך —\nכמה מהם, בסוף, הופכים ללקוחות שמשלמים?\n(כולל כל השלבים — מהשיחה הראשונה עד סגירה בפועל)",
-  16: "תגיד לי — לקוח שעשית לו עבודה טובה, בדרך כלל חוזר אליך?\nמתקשר שוב כשמתפוצץ לו משהו אחר, או שולח אליך שכנים וחברים?",
-  17: "רגע לפני שנדבר על תקציב — יש לך ביקורות בגוגל?\nאם כן, כמה ביקורות יש לך ומה הדירוג? (לדוגמה: 4.9 כוכבים, 35 ביקורות)\nאם עדיין אין — פשוט תגיד ״אין״.",
-  18: "__budget_recommendation__",
-  19: "נשמע שאתה עושה עבודה טובה — אז בטוח יש לך לקוחות מרוצים.\nיש לך ביקורות או המלצות איפשהו?\nבגוגל, בוואטסאפ, צילומי מסך — כל דבר.\nואם יש לך גם תמונות מהעבודה — זה ממש זהב בשבילנו.",
-  20: "מעולה. תביא לי ביקורת אחת או שתיים מגוגל שאתה גאה בהן —\nהעתק-הדבק בדיוק מה שהלקוח כתב.\nומה הדירוג שלך בגוגל? (לדוגמה: 4.9 כוכבים, 64 ביקורות)",
-  21: "אם יתחילו לפנות אליך עוד לקוחות, כמה עבודה נוספת אתה באמת יכול לקחת בלי לפגוע בשירות?\nאפשר לענות למשל: 3 עבודות בשבוע, 10 תורים בחודש, או 2 פרויקטים בחודש.",
-  22: "ואחרון — איך הכי נוח לך שיתפסו אותך?\nשיתקשרו, וואטסאפ, שימלאו טופס, או שיכתבו באינסטגרם?",
-  23: "מה המספר שיופיע על כפתור ״התקשר עכשיו״?\nומה מספר הוואטסאפ?\n(יכולים להיות זהים — רק תגיד לי)",
+  2: "ומה שמך הפרטי?",
+  3: "יש עוד שירותים שאתה נותן? לא ניגע בהם עכשיו, אבל הם מחזקים את הדף שלך ונחזור אליהם בהמשך.",
+  4: "יופי. ואיך זה עובד בדרך כלל — אתה מגיע אל הלקוח, הלקוח מגיע אליך, שניהם, או מרחוק?",
+  5: "באילו ערים ושכונות ספציפיות אתה נותן שירות? (ככל שתפרט יותר, כך גוגל ידרג אותך טוב יותר)",
+  6: "תחשוב על לקוח טוב שפנה אליך לאחרונה — מי זה?\nומה הכי הטריד אותו רגע לפני שהרים אליך טלפון?",
+  7: "מה הכי שואלים אותך ברגע שמתקשרים? תן לי 2-3 שאלות שחוזרות.",
+  8: "ובכנות גמורה — למה שיבחרו דווקא בך, ולא במישהו אחר שעושה אותו דבר?",
+  9: "כמה שנים אתה בתחום? ויש לך אחריות על השירות שלך — לכמה זמן, ומה קורה אם לקוח לא מרוצה?",
+  10: "התחום שלך דורש רישוי רשמי כלשהו?\nלמשל רישיון ממשרד ממשלתי, חברות בלשכה מקצועית, או תעודה מוכרת?\nאם כן — מה זה ומה המספר? אם לא — פשוט תגיד ״לא״.",
+  11: "יש סוגי פניות שאתה מעדיף לא לקבל?\nשירות שאתה לא מציע, סוג לקוח שאתה לא עובד איתו, או אזורים שאתה לא מגיע אליהם?",
+  12: "והלקוחות שלך — רובם צריכים אותך כאן ועכשיו,\nזה משהו שהם בודקים לפני שמחליטים,\nאו שהם מתכננים מראש שבועות וחודשים קדימה?",
+  13: "אתה נותן הצעת מחיר חינם לפני שמתחילים?\nיש דמי הגעה אם בסוף לא נסגרה עסקה?",
+  14: "עיקר ההכנסה שלך מגיעה מ —\nשירות חד-פעמי לכל לקוח, חוזה שוטף/חוזר, או שניהם?",
+  15: "שאלה על כסף, רק כדי שנשמור על התקציב שלך —\nכמה שווה לך לקוח חדש בממוצע, בפעם הראשונה שהוא משלם לך?",
+  16: "יופי. עכשיו בוא נבדוק כמה קל לך לסגור אותו.\nתחשוב על עשרה אנשים שמתקשרים אליך —\nכמה מהם, בסוף, הופכים ללקוחות שמשלמים?\n(כולל כל השלבים — מהשיחה הראשונה עד סגירה בפועל)",
+  17: "תגיד לי — לקוח שעשית לו עבודה טובה, בדרך כלל חוזר אליך?\nמתקשר שוב כשמתפוצץ לו משהו אחר, או שולח אליך שכנים וחברים?",
+  18: "רגע לפני שנדבר על תקציב — יש לך ביקורות בגוגל?\nאם כן, כמה ביקורות יש לך ומה הדירוג? (לדוגמה: 4.9 כוכבים, 35 ביקורות)\nאם עדיין אין — פשוט תגיד ״אין״.",
+  19: "__budget_recommendation__",
+  20: "נשמע שאתה עושה עבודה טובה — אז בטוח יש לך לקוחות מרוצים.\nיש לך ביקורות או המלצות איפשהו?\nבגוגל, בוואטסאפ, צילומי מסך — כל דבר.\nואם יש לך גם תמונות מהעבודה — זה ממש זהב בשבילנו.",
+  21: "מעולה. תביא לי ביקורת אחת או שתיים מגוגל שאתה גאה בהן —\nהעתק-הדבק בדיוק מה שהלקוח כתב.\nומה הדירוג שלך בגוגל? (לדוגמה: 4.9 כוכבים, 64 ביקורות)",
+  22: "אם יתחילו לפנות אליך עוד לקוחות, כמה עבודה נוספת אתה באמת יכול לקחת בלי לפגוע בשירות?\nאפשר לענות למשל: 3 עבודות בשבוע, 10 תורים בחודש, או 2 פרויקטים בחודש.",
+  23: "ואחרון — איך הכי נוח לך שיתפסו אותך?\nשיתקשרו, וואטסאפ, שימלאו טופס, או שיכתבו באינסטגרם?",
+  24: "מה המספר שיופיע על כפתור ״התקשר עכשיו״?\nומה מספר הוואטסאפ?\n(יכולים להיות זהים — רק תגיד לי)",
 };
 
 type InferredServiceModel = "field" | "location" | "event" | "remote" | null;
@@ -198,7 +223,7 @@ function inferServiceModel(niche: string): InferredServiceModel {
 
 // ── Simulation handler ────────────────────────────────────────────────────────
 
-function handleSimulation(
+export function handleSimulation(
   lastUserMessage: string,
   currentState: string,
   collectedData: CollectedData
@@ -212,6 +237,28 @@ function handleSimulation(
 
   if (currentState === "DIAGNOSING") {
     const turn = data.turnIndex ?? 0;
+
+    // ── Upload-acknowledgment guard ─────────────────────────────────────────
+    // src/app/(app)/google-ads/onboarding/page.tsx's handleUpload() posts a
+    // synthetic "העלאתי N תמונות" / "העלאתי תמונת פרופיל" message to /api/bot
+    // right after a file upload, purely so the bot can acknowledge it in the
+    // transcript. It is NOT an answer to whatever question is currently
+    // pending. Without this guard the switch(turn) below stores that string
+    // into the current field (e.g. capacityUnit/phone) and advances turnIndex
+    // as if it were a real answer — corrupting every field after it. This
+    // exact pattern (capacityUnit/phone = "העלאתי 1 תמונות") was found in
+    // data/lps/wao-client-1.json. trustAssetUrls/hasTrustAssets/
+    // profilePhotoUrl are already merged into `collectedData` client-side
+    // before this request is sent, so there is nothing to store here — just
+    // acknowledge and re-ask the still-pending question without consuming a turn.
+    if (/^העלאתי (\d+ תמונות|תמונת פרופיל)$/.test(text.trim())) {
+      return NextResponse.json({
+        response: `קיבלתי, תודה! ${TURN_QUESTIONS[turn] || ""}`.trim(),
+        currentState: nextState,
+        collectedData: data,
+        isSimulation: true,
+      });
+    }
 
     // ── Store this turn's answer ──────────────────────────────────────────────
     switch (turn) {
@@ -233,11 +280,14 @@ function handleSimulation(
         data.businessName = text;
         break;
       case 2:
+        data.ownerName = text;
+        break;
+      case 3:
         data.secondaryServices = text;
         const inferredServiceModel = data.serviceModel || inferServiceModel(data.businessNiche || "");
         if (inferredServiceModel) {
           data.serviceModel = inferredServiceModel;
-          data.turnIndex = 4;
+          data.turnIndex = 5;
           const nextQuestion = inferredServiceModel === "field"
             ? "מעולה. אצלך השירות הוא בבית או בעסק של הלקוח. באילו ערים ושכונות ספציפיות אתה נותן שירות?"
             : inferredServiceModel === "location"
@@ -253,7 +303,7 @@ function handleSimulation(
           });
         }
         break;
-      case 3:
+      case 4:
         if (text.includes("מגיע") && text.includes("לקוח")) data.serviceModel = "field";
         else if (text.includes("לקוח מגיע") || text.includes("מגיע אלי")) data.serviceModel = "location";
         else if (text.includes("אירוע") || text.includes("חתונה")) data.serviceModel = "event";
@@ -261,59 +311,59 @@ function handleSimulation(
         else if (text.includes("שניהם") || text.includes("גם")) data.serviceModel = "mixed";
         else data.serviceModel = "field";
         break;
-      case 4:
+      case 5:
         data.targetLocation = text;
         data.specificCities = text;
         break;
-      case 5:
+      case 6:
         data.idealClientFear = text;
         break;
-      case 6:
+      case 7:
         data.faqQuestions = text;
         break;
-      case 7:
+      case 8:
         data.usp = text;
         break;
-      case 8:
+      case 9:
         data.yearsInField = text;
         data.guarantee = text;
         break;
-      case 9:
+      case 10:
         data.license = text.toLowerCase().includes("לא") ? undefined : text;
         break;
-      case 10:
+      case 11:
         data.exclusions = text;
         break;
-      case 11:
+      case 12:
         if (text.includes("עכשיו") || text.includes("דחוף") || text.includes("מיידי")) data.urgencyLevel = "urgent";
         else if (text.includes("מראש") || text.includes("חודש") || text.includes("שבועות")) data.urgencyLevel = "long-planning";
         else data.urgencyLevel = "deliberate";
         break;
-      case 12:
+      case 13:
         data.pricingNotes = text;
         break;
-      case 13:
+      case 14:
         if (text.includes("שוטף") || text.includes("חוזר") || text.includes("חוזה")) {
           data.revenueModel = text.includes("שניהם") || text.includes("גם") ? "both" : "recurring";
         } else {
           data.revenueModel = "one-time";
         }
         break;
-      case 14: {
+      case 15: {
         const val = parseNumber(text);
         if (val) data.avgJobValue = val;
         break;
       }
-      case 15:
+      case 16:
         data.closeRate = parseCloseRate(text);
         break;
-      case 16: {
+      case 17: {
         // Capture LTV / repeat-client signal
         const repeatSignals = ["כן", "חוזרים", "חוזר", "ממליצים", "מפנים", "בטח", "תמיד", "ברוב", "לרוב", "הרבה"];
         data.hasRepeatClients = repeatSignals.some(s => text.includes(s));
         break;
       }
-      case 17: {
+      case 18: {
         // Capture organic presence — feeds into budget recommendation
         const reviewCountMatch = text.match(/(\d+)\s*(ביקורות?)/);
         if (reviewCountMatch) data.reviewCount = parseInt(reviewCountMatch[1]);
@@ -333,7 +383,7 @@ function handleSimulation(
         // Locksmith redirect — Google Search PPC doesn't work for this vertical
         const isLocksmith = ["מנעולן", "מנעול", "פריצה"].some(k => (data.businessNiche || "").includes(k));
         if (isLocksmith) {
-          data.turnIndex = 18;
+          data.turnIndex = 19;
           return NextResponse.json({
             response: `רגע, לפני שנמשיך — יש משהו חשוב שאני חייב לשתף איתך.\n\nתחום המנעולנות הוא מהאתגרים הגדולים בגוגל Search: עלות הקליק גבוהה, העבודה הממוצעת נמוכה יחסית, ורוב הלקוחות לא חוזרים. המתמטיקה לא מטיבה עם Search רגיל.\n\nמה שעובד טוב יותר למנעולן זה **Google Local Services Ads** — אתה משלם רק על שיחות אמיתיות, מופיע עם תג ״מאומת על ידי גוגל״, ועלות לפנייה נמוכה בהרבה. רוצה שנדבר על איך להקים את זה במקום?`,
             currentState,
@@ -360,7 +410,7 @@ function handleSimulation(
           ? `\n\nאבל בוא נסתכל על התמונה הגדולה — לקוח שחוזר ומפנה שווה לך פי כמה מהעבודה הראשונה, וכל חודש שאתה רץ בגוגל, עוד אנשים באזור מתחילים לזהות את השם שלך.`
           : "";
 
-        data.turnIndex = 18;
+        data.turnIndex = 19;
         return NextResponse.json({
           response: "הכנתי לך המלצת תקציב מסודרת בכרטיסייה ליד. כמה נוח לך להשקיע בפרסום בכל חודש?",
           currentState,
@@ -377,7 +427,7 @@ function handleSimulation(
           isSimulation: true,
         });
       }
-      case 18: {
+      case 19: {
         // Budget confirmation / adjustment — never terminate
         const vb17 = detectVerticalBudget(data.businessNiche || "");
         const isApproval = ["כן", "בסדר", "סבבה", "מסכים", "אוקיי", "בטח", "יאללה", "מעולה"].some(w => text.includes(w));
@@ -418,21 +468,21 @@ function handleSimulation(
           budgetResponse = `הבנתי, ₪${budget17.toLocaleString()}. זה מתחת למינימום שאני ממליץ בתחום שלך (₪${vb17.min.toLocaleString()}), אבל בוא נצא לדרך — נתכנן קמפיין מאוד סלקטיבי ונבדוק אם זה מביא תוצאות.`;
         }
 
-        data.turnIndex = 19;
+        data.turnIndex = 20;
         return NextResponse.json({
-          response: `${budgetResponse}\n\n${TURN_QUESTIONS[19]}`,
+          response: `${budgetResponse}\n\n${TURN_QUESTIONS[20]}`,
           currentState,
           collectedData: data,
           isSimulation: true,
         });
       }
-      case 19: {
+      case 20: {
         const hasAssets = !text.includes("אין") && !text.includes("לא") && text.length > 5;
         data.hasTrustAssets = hasAssets;
         if (!hasAssets) {
-          data.turnIndex = 21; // skip review-quote question, go to capacity
+          data.turnIndex = 22; // skip review-quote question, go to capacity
           return NextResponse.json({
-            response: `הבנתי — אין עדיין ביקורות. לא נורא, נבנה דף נחיתה חזק גם בלי זה, ואחרי שייצאו הלקוחות הראשונים מהקמפיין — נוסיף ביקורות ונשפר.\n\n${TURN_QUESTIONS[21]}`,
+            response: `הבנתי — אין עדיין ביקורות. לא נורא, נבנה דף נחיתה חזק גם בלי זה, ואחרי שייצאו הלקוחות הראשונים מהקמפיין — נוסיף ביקורות ונשפר.\n\n${TURN_QUESTIONS[22]}`,
             currentState,
             collectedData: data,
             isSimulation: true,
@@ -440,14 +490,14 @@ function handleSimulation(
         }
         break;
       }
-      case 20:
+      case 21:
         data.reviewQuote = text;
         {
           const rating = text.match(/(\d[\d.]*)\s*(כוכב|★|\*)/);
           if (rating) data.starRating = rating[1];
         }
         break;
-      case 21: {
+      case 22: {
         const booked = text.includes("עמוס") || text.includes("לא יכול") || text.includes("מלא");
         data.capacityAvailable = !booked;
         data.capacityUnit = text;
@@ -461,10 +511,23 @@ function handleSimulation(
         }
         break;
       }
-      case 22:
+      case 23:
         data.contactMethod = text;
         break;
-      case 23: {
+      case 24: {
+        // Safety guard (defense-in-depth, not a substitute for the T25
+        // question/answer being correctly aligned — see the ownerName-drift
+        // fix above): phone/whatsapp must contain enough digits to plausibly
+        // be a phone number. Reject upload-status strings or other stray
+        // free text (e.g. "העלאתי 1 תמונות") from ever landing in `phone`.
+        if (!isPlausiblePhoneAnswer(text)) {
+          return NextResponse.json({
+            response: "זה לא נראה לי כמו מספר טלפון תקין — אפשר לכתוב את המספר שיופיע על כפתור ההתקשרות? (למשל 050-1234567)",
+            currentState,
+            collectedData: data,
+            isSimulation: true,
+          });
+        }
         data.phone = text;
         data.whatsappNumber = text;
 
@@ -472,7 +535,7 @@ function handleSimulation(
         const generated = generateMockCampaign(data);
         strategy = generated.strategy;
         copy = generated.copy;
-        data.turnIndex = 24;
+        data.turnIndex = 25;
 
         return NextResponse.json({
           response: `מצוין! אספתי את כל הפרטים שצריך.\nבנינו עבורך תוכנית קמפיין מותאמת אישית — הכוללת דף נחיתה שמבוסס על כל מה שסיפרת לי.\nאתה יכול לראות את כל הפרטים בכרטיסייה.\n\nהאם הכל נראה לך טוב ואתה מאשר להמשיך לתשלום של 9.9 ש״ח?`,
@@ -489,8 +552,8 @@ function handleSimulation(
     const nextTurn = (data.turnIndex ?? 0) + 1;
     data.turnIndex = nextTurn;
 
-    // Adapt location question (T4) based on service model
-    if (nextTurn === 4 && data.serviceModel) {
+    // Adapt location question (T5) based on service model
+    if (nextTurn === 5 && data.serviceModel) {
       const locationQ: Record<string, string> = {
         field: "באילו ערים ושכונות ספציפיות אתה נותן שירות?\n(ככל שתפרט יותר, כך גוגל ידרג אותך טוב יותר)",
         location: "מה הכתובת המדויקת של העסק?",
@@ -498,7 +561,7 @@ function handleSimulation(
         remote: "אתה עובד עם לקוחות מכל הארץ, או מאזור מסוים בלבד?",
         mixed: "לאן אתה מגיע, ואיפה הסטודיו/הסדנה/המשרד שלך?",
       };
-      response = locationQ[data.serviceModel] || TURN_QUESTIONS[4];
+      response = locationQ[data.serviceModel] || TURN_QUESTIONS[5];
     } else {
       response = TURN_QUESTIONS[nextTurn] || "תודה! נמשיך לשלב הבא.";
     }

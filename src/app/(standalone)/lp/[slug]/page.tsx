@@ -79,6 +79,7 @@ export default async function LPPage({ params }: Props) {
       copy={copy}
       data={publicData}
       heroImageUrl={heroImageUrl}
+      slug={slug}
     />
   );
 }

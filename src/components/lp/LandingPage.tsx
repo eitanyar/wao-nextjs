@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect, useRef, useState } from 'react';
 import type { VerticalTheme } from '@/lib/lp/verticalThemes';
 import type { VerticalAssets } from '@/lib/lp/verticalAssets';
 import type { LPCopy } from '@/lib/lp/lpCopyPrompt';
@@ -24,9 +25,20 @@ interface LandingPageProps {
   copy: LPCopy;
   data: LandingPagePublicData;
   heroImageUrl: string;
+  /** Used as `source: 'lp-<slug>'` on lead records and passed through to /api/leads. */
+  slug?: string;
 }
 
-export default function LandingPage({ theme, assets, copy, data, heroImageUrl }: LandingPageProps) {
+// Click identifier captured from the URL — gclid (desktop/Android) or wbraid/gbraid
+// (iOS/Safari). Never send more than one; Google Ads throws GBRAID_WBRAID_BOTH_SET
+// if multiple are present. Precedence: gclid > wbraid > gbraid.
+type ClickId = { gclid?: string } | { wbraid?: string } | { gbraid?: string } | Record<string, never>;
+
+function uid() {
+  return Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+}
+
+export default function LandingPage({ theme, assets, copy, data, heroImageUrl, slug = '' }: LandingPageProps) {
   const phone = data.phone || '';
   const whatsapp = data.whatsappNumber || data.phone || '';
   const whatsappHref = `https://wa.me/972${whatsapp.replace(/^0/, '').replace(/[^0-9]/g, '')}`;
@@ -37,6 +49,61 @@ export default function LandingPage({ theme, assets, copy, data, heroImageUrl }:
 
   const t = theme; // alias for brevity
 
+  // Captured once on mount and reused for every lead-creation call for the
+  // lifetime of this page view (form submit + phone/WhatsApp click pings).
+  const clickIdRef = useRef<ClickId>({});
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const gclid = params.get('gclid');
+    const wbraid = params.get('wbraid');
+    const gbraid = params.get('gbraid');
+    clickIdRef.current = gclid ? { gclid } : wbraid ? { wbraid } : gbraid ? { gbraid } : {};
+  }, []);
+
+  function pingClick(type: 'phone-click' | 'whatsapp-click') {
+    fetch('/api/leads', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        source: `lp-${slug}`,
+        orderId: uid(),
+        slug,
+        type,
+        businessNiche: data.businessNiche || '',
+        ...clickIdRef.current,
+      }),
+    }).catch(() => {});
+  }
+
+  const nameInputRef = useRef<HTMLInputElement>(null);
+  const phoneInputRef = useRef<HTMLInputElement>(null);
+  const [formStatus, setFormStatus] = useState<'idle' | 'submitting' | 'success' | 'error'>('idle');
+
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    setFormStatus('submitting');
+    try {
+      const res = await fetch('/api/leads', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: nameInputRef.current?.value || '',
+          phone: phoneInputRef.current?.value || '',
+          source: `lp-${slug}`,
+          orderId: uid(),
+          slug,
+          type: 'form',
+          businessNiche: data.businessNiche || '',
+          ...clickIdRef.current,
+        }),
+      });
+      if (!res.ok) throw new Error('server error');
+      setFormStatus('success');
+    } catch {
+      setFormStatus('error');
+    }
+  }
+
   return (
     <div dir="rtl" style={{ backgroundColor: t.bg, minHeight: '100vh', fontFamily: t.fontBody, color: t.textPrimary, paddingBottom: 'calc(80px + env(safe-area-inset-bottom, 0px))' }}>
 
@@ -46,7 +113,7 @@ export default function LandingPage({ theme, assets, copy, data, heroImageUrl }:
           {businessName}
         </div>
         {showPhone && (
-          <a href={phoneHref} style={{ background: t.ctaGradient, color: '#fff', padding: '15px 18px', borderRadius: t.radiusSm, fontWeight: 700, fontSize: '0.9rem', textDecoration: 'none', whiteSpace: 'nowrap' }}>
+          <a href={phoneHref} onClick={() => pingClick('phone-click')} style={{ background: t.ctaGradient, color: '#fff', padding: '15px 18px', borderRadius: t.radiusSm, fontWeight: 700, fontSize: '0.9rem', textDecoration: 'none', whiteSpace: 'nowrap' }}>
             📞 {phone}
           </a>
         )}
@@ -74,12 +141,12 @@ export default function LandingPage({ theme, assets, copy, data, heroImageUrl }:
 
           <div style={{ display: 'flex', gap: '12px', justifyContent: t.heroTextAlign === 'center' ? 'center' : 'flex-start', flexWrap: 'wrap' }}>
             {showPhone && (
-              <a href={phoneHref} style={{ background: t.ctaGradient, color: '#fff', padding: '14px 28px', borderRadius: t.radiusSm, fontWeight: 800, fontSize: '1.05rem', textDecoration: 'none', display: 'inline-block' }}>
+              <a href={phoneHref} onClick={() => pingClick('phone-click')} style={{ background: t.ctaGradient, color: '#fff', padding: '14px 28px', borderRadius: t.radiusSm, fontWeight: 800, fontSize: '1.05rem', textDecoration: 'none', display: 'inline-block' }}>
                 📞 {copy.heroCta}
               </a>
             )}
             {showWhatsApp && (
-              <a href={whatsappHref} target="_blank" rel="noopener noreferrer" aria-label="וואטסאפ (נפתח בחלון חדש)" style={{ background: '#25D366', color: '#fff', padding: '14px 28px', borderRadius: t.radiusSm, fontWeight: 800, fontSize: '1.05rem', textDecoration: 'none', display: 'inline-block' }}>
+              <a href={whatsappHref} target="_blank" rel="noopener noreferrer" aria-label="וואטסאפ (נפתח בחלון חדש)" onClick={() => pingClick('whatsapp-click')} style={{ background: '#25D366', color: '#fff', padding: '14px 28px', borderRadius: t.radiusSm, fontWeight: 800, fontSize: '1.05rem', textDecoration: 'none', display: 'inline-block' }}>
                 💬 וואטסאפ
               </a>
             )}
@@ -189,19 +256,30 @@ export default function LandingPage({ theme, assets, copy, data, heroImageUrl }:
           <h2 id="lead-form-heading" style={{ fontFamily: t.fontHeading, fontWeight: t.headingWeight, fontSize: '1.35rem', color: t.primary, marginBottom: '20px', textAlign: 'center' }}>
             {copy.formHeadline}
           </h2>
-          <form aria-labelledby="lead-form-heading" style={{ display: 'flex', flexDirection: 'column', gap: '14px' }} onSubmit={e => e.preventDefault()}>
-            <input type="text" placeholder="שם מלא" aria-label="שם מלא" required style={{ padding: '14px 16px', borderRadius: t.radiusSm, border: `1px solid ${t.border}`, fontSize: '1rem', fontFamily: t.fontBody, color: t.textPrimary, background: t.surface }} />
-            <input type="tel" placeholder="050-0000000" aria-label="מספר טלפון" dir="ltr" required style={{ padding: '14px 16px', borderRadius: t.radiusSm, border: `1px solid ${t.border}`, fontSize: '1rem', fontFamily: t.fontBody, color: t.textPrimary, background: t.surface, textAlign: 'right' }} />
-            <label style={{ display: 'flex', gap: '8px', alignItems: 'flex-start', cursor: 'pointer' }}>
-              <input type="checkbox" required style={{ marginTop: '3px', accentColor: t.accent, flexShrink: 0 }} />
-              <span style={{ fontSize: '0.8rem', color: t.textMuted, lineHeight: 1.4 }}>
-                אני מסכים/ה ל<strong>מדיניות הפרטיות</strong>.
-              </span>
-            </label>
-            <button type="submit" style={{ padding: '15px', background: t.ctaGradient, color: '#fff', border: 'none', borderRadius: t.radiusSm, fontWeight: 800, fontSize: '1.05rem', cursor: 'pointer', fontFamily: t.fontBody }}>
-              שלח, לחזרה מהירה
-            </button>
-          </form>
+          {formStatus === 'success' ? (
+            <div style={{ background: t.surface, border: `1px solid ${t.border}`, borderRadius: t.radiusMd, padding: '20px', textAlign: 'center', color: t.textPrimary, fontWeight: 700 }}>
+              ✅ תודה! נחזור אליך בהקדם.
+            </div>
+          ) : (
+            <form aria-labelledby="lead-form-heading" style={{ display: 'flex', flexDirection: 'column', gap: '14px' }} onSubmit={handleSubmit}>
+              <input ref={nameInputRef} type="text" placeholder="שם מלא" aria-label="שם מלא" required style={{ padding: '14px 16px', borderRadius: t.radiusSm, border: `1px solid ${t.border}`, fontSize: '1rem', fontFamily: t.fontBody, color: t.textPrimary, background: t.surface }} />
+              <input ref={phoneInputRef} type="tel" placeholder="050-0000000" aria-label="מספר טלפון" dir="ltr" required style={{ padding: '14px 16px', borderRadius: t.radiusSm, border: `1px solid ${t.border}`, fontSize: '1rem', fontFamily: t.fontBody, color: t.textPrimary, background: t.surface, textAlign: 'right' }} />
+              <label style={{ display: 'flex', gap: '8px', alignItems: 'flex-start', cursor: 'pointer' }}>
+                <input type="checkbox" required style={{ marginTop: '3px', accentColor: t.accent, flexShrink: 0 }} />
+                <span style={{ fontSize: '0.8rem', color: t.textMuted, lineHeight: 1.4 }}>
+                  אני מסכים/ה ל<strong>מדיניות הפרטיות</strong>.
+                </span>
+              </label>
+              {formStatus === 'error' && (
+                <div style={{ color: '#c0392b', fontSize: '0.85rem', textAlign: 'center' }}>
+                  שגיאה בשליחה — נסה שוב או התקשר ישירות.
+                </div>
+              )}
+              <button type="submit" disabled={formStatus === 'submitting'} style={{ padding: '15px', background: t.ctaGradient, color: '#fff', border: 'none', borderRadius: t.radiusSm, fontWeight: 800, fontSize: '1.05rem', cursor: formStatus === 'submitting' ? 'default' : 'pointer', fontFamily: t.fontBody, opacity: formStatus === 'submitting' ? 0.7 : 1 }}>
+                {formStatus === 'submitting' ? 'שולח...' : 'שלח, לחזרה מהירה'}
+              </button>
+            </form>
+          )}
           <div style={{ display: 'flex', justifyContent: 'center', gap: '20px', marginTop: '20px', fontSize: '0.75rem', color: t.textMuted }}>
             <a href="/privacy" style={{ color: t.textMuted, padding: '8px 6px' }}>מדיניות פרטיות</a>
             <a href="/accessibility" style={{ color: t.textMuted, padding: '8px 6px' }}>הצהרת נגישות</a>
@@ -214,12 +292,12 @@ export default function LandingPage({ theme, assets, copy, data, heroImageUrl }:
         <p style={{ textAlign: 'center', fontSize: '0.78rem', color: t.textMuted, marginBottom: '8px', fontWeight: 600 }}>{copy.stickyBarLine}</p>
         <div style={{ display: 'flex', gap: '10px' }}>
           {showPhone && (
-            <a href={phoneHref} style={{ flex: 1, background: t.ctaGradient, color: '#fff', border: 'none', padding: '14px', borderRadius: t.radiusSm, fontWeight: 800, fontSize: '1rem', textDecoration: 'none', textAlign: 'center', display: 'block' }}>
+            <a href={phoneHref} onClick={() => pingClick('phone-click')} style={{ flex: 1, background: t.ctaGradient, color: '#fff', border: 'none', padding: '14px', borderRadius: t.radiusSm, fontWeight: 800, fontSize: '1rem', textDecoration: 'none', textAlign: 'center', display: 'block' }}>
               📞 התקשר
             </a>
           )}
           {showWhatsApp && (
-            <a href={whatsappHref} target="_blank" rel="noopener noreferrer" aria-label="וואטסאפ (נפתח בחלון חדש)" style={{ flex: 1, background: '#25D366', color: '#fff', border: 'none', padding: '14px', borderRadius: t.radiusSm, fontWeight: 800, fontSize: '1rem', textDecoration: 'none', textAlign: 'center', display: 'block' }}>
+            <a href={whatsappHref} target="_blank" rel="noopener noreferrer" aria-label="וואטסאפ (נפתח בחלון חדש)" onClick={() => pingClick('whatsapp-click')} style={{ flex: 1, background: '#25D366', color: '#fff', border: 'none', padding: '14px', borderRadius: t.radiusSm, fontWeight: 800, fontSize: '1rem', textDecoration: 'none', textAlign: 'center', display: 'block' }}>
               💬 וואטסאפ
             </a>
           )}
