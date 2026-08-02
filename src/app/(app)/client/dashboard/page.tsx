@@ -347,6 +347,20 @@ export default async function DashboardPage() {
         <span className="text-3xl font-black tracking-tight text-[var(--accent)]">WAO</span>
       </div>
 
+      {/* ── Leads CTA (discoverability link to /client/leads — §3.7) ──────── */}
+      <div className="mb-8">
+        <Link
+          href="/client/leads"
+          className="flex items-center justify-between gap-4 rounded-xl border border-[var(--accent)]/30 bg-[var(--accent)]/10 px-4 py-4 hover:border-[var(--accent)]/60 transition-all"
+        >
+          <div>
+            <p className="font-semibold">הלידים שלי</p>
+            <p className="text-[var(--muted)] text-xs mt-0.5">כל הפניות מהקמפיין שלך — סמן איכות ועדכן עסקאות שנסגרו</p>
+          </div>
+          <span className="text-[var(--muted)] text-lg">←</span>
+        </Link>
+      </div>
+
       {/* ── Progress bar ────────────────────────────────────────────────── */}
       {all.length > 0 && (
         <div className="mb-8">

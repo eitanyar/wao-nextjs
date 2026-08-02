@@ -1,5 +1,6 @@
 import fs from 'fs';
 import path from 'path';
+import { leadMatchesClientIndex } from '@/lib/crm/ownership';
 
 export interface LeadRecord {
   id: number;
@@ -294,6 +295,22 @@ export function buildWeeklyDigest(input: {
     alerts,
     nextActions,
   };
+}
+
+/**
+ * Deliberately stricter, separate ownership check from `buildWeeklyDigest`'s
+ * own scoping filter (above, `!lead.slug || ...`) — that leniency is correct
+ * and harmless for a read-only aggregate digest, but not acceptable for a
+ * mutation endpoint, where the same wildcard would let any authenticated
+ * client edit any unscoped legacy lead. Returns `false` for a lead with
+ * neither `slug` nor `customerId` set, and checks membership against ALL of
+ * the client's bound campaigns (`GoogleAdsClientIndex.campaigns[]`), not just
+ * `primarySlug`. Does not touch `buildWeeklyDigest`'s filter above.
+ * See docs/specs/priority-3-lead-capture-reliability-and-client-feedback.md §1.2.
+ */
+export function isLeadOwnedByClient(lead: LeadRecord, clientId: string): boolean {
+  const clientIndex = loadClientGoogleAdsIndex(clientId);
+  return leadMatchesClientIndex(lead, clientIndex);
 }
 
 export function loadCampaignConfigBySlug(slug: string): CampaignConfig | null {

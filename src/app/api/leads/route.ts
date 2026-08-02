@@ -1,36 +1,26 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
-import fs from "fs/promises";
-import path from "path";
 import { sendLeadNotificationEmail } from "@/lib/mail";
 import { ADMIN_COOKIE_NAME, verifyAdminToken } from "@/lib/admin-auth";
+import { readLeads, writeLeads, findLeadById } from "@/lib/crm/leadsStore";
+import { uploadLeadConversion, type ConversionType } from "@/lib/google-ads/conversion-upload";
+import type { LeadRecord } from "@/lib/crm/intelligence";
 
-async function uploadConversion(leadId: number, type: "verified-lead" | "closed-deal") {
-  const base = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
-  const res = await fetch(`${base}/api/google-ads/import-conversion`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ leadId, type }),
-  });
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({}));
-    console.error(`[uploadConversion] ${type} failed for lead ${leadId}:`, err);
-  }
-}
-
-const leadsFilePath = path.join(process.cwd(), "src/data/leads.json");
-
-async function readLeads() {
+/**
+ * In-process call to `uploadLeadConversion()` (`@/lib/google-ads/conversion-upload`).
+ * Replaces the old self-`fetch()` to `/api/google-ads/import-conversion`,
+ * which never forwarded the `wao-client` session cookie and therefore got a
+ * silent 401 on every attempt (docs/specs/priority-3 §0/§1.2/§3.2).
+ */
+async function uploadConversion(leadId: number, type: ConversionType) {
   try {
-    const data = await fs.readFile(leadsFilePath, "utf-8");
-    return JSON.parse(data);
-  } catch (error) {
-    return [];
+    const result = await uploadLeadConversion({ leadId, type });
+    if ("success" in result && result.success === false) {
+      console.error(`[uploadConversion] ${type} failed for lead ${leadId}:`, result);
+    }
+  } catch (err) {
+    console.error(`[uploadConversion] ${type} threw for lead ${leadId}:`, err);
   }
-}
-
-async function writeLeads(leads: any[]) {
-  await fs.writeFile(leadsFilePath, JSON.stringify(leads, null, 2), "utf-8");
 }
 
 /**
@@ -70,12 +60,12 @@ export async function POST(req: Request) {
     // Check if it's an update request or a new lead creation
     if (body.action === "updateQuality") {
       const { id, quality } = body;
-      const updatedLeads = leads.map((l: any) => l.id === id ? { ...l, quality } : l);
+      const updatedLeads = leads.map((l) => l.id === id ? { ...l, quality } : l);
       await writeLeads(updatedLeads);
 
       // When a lead is marked GOOD → upload "ליד מאומת" offline conversion
       if (quality === "GOOD") {
-        const lead = leads.find((l: any) => l.id === id);
+        const lead = findLeadById(leads, id);
         if (lead?.gclid || lead?.wbraid || lead?.gbraid) {
           uploadConversion(id, "verified-lead").catch(console.error);
         }
@@ -86,7 +76,7 @@ export async function POST(req: Request) {
 
     if (body.action === "updateRevenue") {
       const { id, revenue } = body;
-      const updatedLeads = leads.map((l: any) => l.id === id ? { ...l, revenue } : l);
+      const updatedLeads = leads.map((l) => l.id === id ? { ...l, revenue } : l);
       await writeLeads(updatedLeads);
       return NextResponse.json({ success: true, message: "Lead revenue updated" });
     }
@@ -94,7 +84,7 @@ export async function POST(req: Request) {
     if (body.action === "enrichStub") {
       // Client fills in name + phone for a phone/WhatsApp click stub
       const { id, name, phone } = body;
-      const updatedLeads = leads.map((l: any) =>
+      const updatedLeads = leads.map((l) =>
         l.id === id ? { ...l, name, phone, status: "חדש" } : l
       );
       await writeLeads(updatedLeads);
@@ -104,13 +94,13 @@ export async function POST(req: Request) {
     if (body.action === "markClosed") {
       const { id, revenue } = body;
       const closedAt = new Date().toISOString();
-      const updatedLeads = leads.map((l: any) =>
+      const updatedLeads = leads.map((l) =>
         l.id === id ? { ...l, closed: true, closedAt, revenue, quality: "GOOD" } : l
       );
       await writeLeads(updatedLeads);
 
       // Upload "עסקה סגורה" as a fresh offline conversion with real revenue
-      const lead = leads.find((l: any) => l.id === id);
+      const lead = findLeadById(leads, id);
       if (lead?.gclid || lead?.wbraid || lead?.gbraid) {
         uploadConversion(id, "closed-deal").catch(console.error);
       }
@@ -118,9 +108,24 @@ export async function POST(req: Request) {
       return NextResponse.json({ success: true, closedAt, message: "Lead marked closed" });
     }
 
-    // Otherwise, create a new lead
+    // Otherwise, create a new lead — upsert by orderId (idempotency key for
+    // the sendBeacon/keepalive retry path in LandingPage.tsx, and for any
+    // accidental double-submit): if a lead with this orderId already exists,
+    // return it unchanged instead of pushing a duplicate.
+    // See docs/specs/priority-3-lead-capture-reliability-and-client-feedback.md §1.1/§3.2.
+    if (body.orderId) {
+      const existing = leads.find((l) => l.orderId === body.orderId);
+      if (existing) {
+        return NextResponse.json({
+          success: true,
+          message: "Lead safely routed to WAO CRM",
+          lead: existing,
+        });
+      }
+    }
+
     const isClickStub = body.type === 'click-stub';
-    const newLead = {
+    const newLead: LeadRecord = {
       id: Date.now(),
       orderId: body.orderId || `wao-${Date.now()}`,
       name: body.name || null,
@@ -150,15 +155,15 @@ export async function POST(req: Request) {
     // Fire and forget email notification
     sendLeadNotificationEmail(newLead);
 
-    return NextResponse.json({ 
-      success: true, 
+    return NextResponse.json({
+      success: true,
       message: "Lead safely routed to WAO CRM",
       lead: newLead
     });
   } catch (error: any) {
     console.error("Error processing lead:", error);
     return NextResponse.json(
-      { success: false, error: "Failed to route lead" }, 
+      { success: false, error: "Failed to route lead" },
       { status: 500 }
     );
   }
