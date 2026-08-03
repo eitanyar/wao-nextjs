@@ -380,6 +380,7 @@ These features are **built but intentionally incomplete** pending external gates
 **Gate 3 — Portfolio tROAS (Scale)**
 *What it is:* A single local service client gets ~20–50 clicks/month, closing ~1–5 deals. Google needs ~50 valued conversions/month for tROAS to work reliably. Individual accounts will never reach this. The solution: group similar-vertical clients under a **shared MCC portfolio bid strategy** (e.g., all plumbers in the same budget tier share one tROAS strategy) so the collective signal is large enough.
 *Trigger:* When WAO has 10+ clients in the same vertical active simultaneously.
+*Durability screen (before scaling into a new vertical):* Physical/local/trust-based service verticals (plumbers, locksmiths, clinics) are structurally durable — proceed. A vertical that is software-only or commodity knowledge-work must pass a single trial-client validation cycle before WAO scales into it, since AI disruption can erode its lead economics faster than the portfolio pays back.
 *Work when triggered:*
 - Dror defines vertical groupings and target ROAS values per vertical
 - Eitan-Dev builds the portfolio strategy creation route under the MCC
