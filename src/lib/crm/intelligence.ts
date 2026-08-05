@@ -1,6 +1,6 @@
 import fs from 'fs';
 import path from 'path';
-import { leadMatchesClientIndex } from '@/lib/crm/ownership';
+import { leadMatchesClientIndex } from './ownership';
 
 export interface LeadRecord {
   id: number;
@@ -39,6 +39,15 @@ export interface CampaignConfig {
   closedDealConversionResourceName: string | null;
   adGroupResourceName?: string;
   createdAt: string;
+  /**
+   * Hard per-client CPL ceiling (₪ per verified lead), per
+   * docs/specs/priority-3-search-term-cleanup-scoring.md §4A.1. Should become a required
+   * field once a client is actually bound with real economics — until then this is left
+   * optional and `deriveCplCeilingIls()` / the per-client placeholder map in
+   * `@/lib/google-ads/cpl-ceiling` fill the gap. Not set on any of today's sandbox/test
+   * CampaignConfig records.
+   */
+  cplCeilingIls?: number;
 }
 
 export interface GoogleAdsCampaignLink {
@@ -62,6 +71,19 @@ export interface PerformanceSnapshot {
   impressions?: number;
   clicks?: number;
   spendMicros?: number;
+  /**
+   * Live Google Ads conversion count (`metrics.conversions` — the standard "primary
+   * conversion actions" count) for the same window as `spendMicros`, pulled via GAQL
+   * upstream. Only meaningful for clients whose real leads are tracked by Google Ads' own
+   * native conversion tracking rather than WAO's internal CRM (`leads.json`) — e.g. clients
+   * running on their own domain (retter.co.il, aaasada.com) rather than a WAO-hosted
+   * `/lp/[slug]` landing page, where `leads.json` is correctly always empty. When supplied,
+   * `buildWeeklyDigest` treats this as the source of truth for `totals.verifiedLeads`/
+   * `totals.leads` instead of the CRM-derived count (Aug 2026 accuracy fix — see
+   * `buildWeeklyDigest`'s doc comment below). Optional and additive: omitting it leaves the
+   * existing CRM-only behavior completely unchanged.
+   */
+  conversions?: number;
 }
 
 export interface DigestAlert {
@@ -87,6 +109,25 @@ export interface WeeklyDigest {
     previousLeads: number;
     leadChangePct: number | null;
     revenueChangePct: number | null;
+    /**
+     * Live ad spend (₪) over the digest window, only populated when `input.performance`
+     * carries `spendMicros` (i.e. a live GAQL pull happened upstream — see
+     * `weekly-digest-batch.ts` for the existing pattern). Undefined in "estimated" pacing
+     * mode, same condition as `pacing.mode === 'estimated'`.
+     */
+    spendIls?: number;
+    /**
+     * Campaign-scope trailing cost-per-verified-lead (₪), per
+     * docs/specs/priority-3-search-term-cleanup-scoring.md §4A.4 ("CPL(scope, window) =
+     * SUM(cost) / SUM(conversions)"). "Conversions" here is CRM-verified leads
+     * (`totals.verifiedLeads`), matching §4A's "every CPL figure in this section is cost
+     * per verified lead, not cost per closed sale" — deliberately reusing the same
+     * verified-lead count already computed above rather than a separate Ads-side
+     * conversions metric. Undefined whenever `spendIls` is unavailable or
+     * `verifiedLeads === 0` (SUM(conversions) == 0 is out of scope for this ceiling test,
+     * per §4A — that case belongs to §4's wasted-spend logic instead).
+     */
+    cpl?: number;
   };
   pacing: {
     mode: 'live' | 'estimated';
@@ -131,11 +172,24 @@ function pctChange(current: number, previous: number): number | null {
   return clampPct(((current - previous) / previous) * 100);
 }
 
-function estimateWeeklyLeadTarget(campaign: CampaignConfig): number {
-  const dailyBudget = campaign.targetDailyBudget ?? Math.max(0, Math.round((campaign.targetMonthlyBudget ?? 0) / 30.4));
+/**
+ * Reusable "what should a lead reasonably cost given this client's economics" anchor.
+ * Originally inlined in `estimateWeeklyLeadTarget` below; extracted and exported per
+ * docs/specs/priority-3-search-term-cleanup-scoring.md §4A.1, which explicitly calls this
+ * formula out as "the existing, precedented anchor" that the CPL-ceiling gate should reuse
+ * rather than inventing a second, inconsistent methodology. The ₪45 floor is preserved for
+ * the same reason cited there (no realistic Israeli PPC vertical CPL should price below it,
+ * as of Aug 2026).
+ */
+export function deriveCplCeilingIls(campaign: CampaignConfig): number {
   const avgJobValue = campaign.avgJobValue || 500;
   const closeRate = Math.max(0.05, Math.min(campaign.closeRateEstimate || 0.2, 0.8));
-  const assumedCostPerLead = Math.max(45, Math.round(avgJobValue * closeRate * 0.3));
+  return Math.max(45, Math.round(avgJobValue * closeRate * 0.3));
+}
+
+function estimateWeeklyLeadTarget(campaign: CampaignConfig): number {
+  const dailyBudget = campaign.targetDailyBudget ?? Math.max(0, Math.round((campaign.targetMonthlyBudget ?? 0) / 30.4));
+  const assumedCostPerLead = deriveCplCeilingIls(campaign);
   const raw = Math.round((dailyBudget * 7) / assumedCostPerLead);
   return Math.max(1, raw);
 }
@@ -236,7 +290,19 @@ export function buildWeeklyDigest(input: {
   const windowStart = new Date(now.getTime() - windowDays * 24 * 60 * 60 * 1000);
   const previousStart = new Date(windowStart.getTime() - windowDays * 24 * 60 * 60 * 1000);
 
-  const scopedLeads = leads.filter(lead => !lead.slug || lead.slug === input.campaign.slug || lead.customerId === input.campaign.customerId);
+  // Strict match only — a lead with neither `slug` nor `customerId` set must
+  // NOT match this (or any) client's digest. Previously `!lead.slug` treated
+  // any untagged lead as belonging to every campaign, which silently merged
+  // WAO's own untagged/test lead pool into every real client's "actual
+  // leads" pacing number (confirmed root cause, Aug 2026 data-quality
+  // incident — Retter and AAAsada showed identical pacing because both
+  // digests were matching the same 2 untagged records). An untagged lead now
+  // matches no client's scoped digest; it still exists in `leads.json` for
+  // the WAO-internal `/leads` admin view, just not attributed anywhere.
+  const scopedLeads = leads.filter(lead =>
+    lead.slug === input.campaign.slug ||
+    (!!lead.customerId && lead.customerId === input.campaign.customerId)
+  );
   const windowLeads = scopedLeads.filter(lead => {
     const leadDate = parseDate(lead.closedAt || lead.date || null);
     return leadDate ? leadDate >= windowStart && leadDate <= now : false;
@@ -248,11 +314,33 @@ export function buildWeeklyDigest(input: {
 
   const revenue = windowLeads.reduce((sum, lead) => sum + (Number(lead.revenue) || 0), 0);
   const previousRevenue = previousLeads.reduce((sum, lead) => sum + (Number(lead.revenue) || 0), 0);
-  const verifiedLeads = windowLeads.filter(lead => lead.quality === 'GOOD').length;
+  const crmVerifiedLeads = windowLeads.filter(lead => lead.quality === 'GOOD').length;
   const closedDeals = windowLeads.filter(lead => Boolean(lead.closed) || lead.status === 'סגור' || lead.status === 'closed').length;
+
+  // Aug 2026 accuracy fix: for clients whose real leads are tracked by Google Ads' own
+  // native conversion tracking rather than WAO's internal CRM (Retter, AAAsada — both
+  // running on their own domain, not a WAO-hosted `/lp/[slug]` page, so `leads.json` is
+  // correctly always empty for them), `windowLeads`/`crmVerifiedLeads` is structurally
+  // always 0/undefined — not because there are no leads, but because this client's leads
+  // were never going to be in that file. When a live conversion count was pulled upstream
+  // (`input.performance.conversions` — see `PerformanceSnapshot` doc comment), it is the
+  // ground truth and takes over `leads`/`verifiedLeads` for this digest, entirely replacing
+  // (not blending with) the CRM-derived count for that field — blending the two would double
+  // count for a client who has both, and there is no such client today. Additive/opt-in:
+  // when `performance.conversions` is not supplied, behavior is byte-for-byte unchanged from
+  // before this fix (CRM-only, `crmVerifiedLeads`/`windowLeads.length`).
+  const liveConversions = input.performance?.conversions;
+  const verifiedLeads = liveConversions !== undefined ? Math.round(liveConversions) : crmVerifiedLeads;
+  const leadsCount = liveConversions !== undefined ? Math.round(liveConversions) : windowLeads.length;
 
   const pacing = buildPacing(input.campaign, windowLeads.length, input.performance);
   const alerts = buildAlerts(input.campaign, windowLeads, previousLeads, pacing);
+
+  // §4A.4 campaign-scope CPL — only computable when a live spend figure was pulled upstream.
+  const spendIls = input.performance?.spendMicros !== undefined
+    ? input.performance.spendMicros / 1_000_000
+    : undefined;
+  const cpl = spendIls !== undefined && verifiedLeads > 0 ? spendIls / verifiedLeads : undefined;
 
   const nextActions: string[] = [];
   if (windowLeads.length === 0) {
@@ -282,7 +370,14 @@ export function buildWeeklyDigest(input: {
     windowStart: windowStart.toISOString(),
     windowEnd: now.toISOString(),
     totals: {
-      leads: windowLeads.length,
+      // `leads` and `verifiedLeads` both resolve to the live Google Ads conversion count
+      // when `input.performance.conversions` was supplied (see `liveConversions` above) —
+      // there is no separate CRM "leads vs. verified leads" distinction to preserve once the
+      // CRM isn't the source of truth for this client. `newLeads`/`leadChangePct` below stay
+      // CRM-window-derived (trend fields; no live previous-period conversion count was
+      // fetched upstream for this fix's scope) — same as before this change whether or not
+      // live conversions are supplied.
+      leads: leadsCount,
       verifiedLeads,
       closedDeals,
       revenue,
@@ -290,6 +385,8 @@ export function buildWeeklyDigest(input: {
       previousLeads: previousLeads.length,
       leadChangePct: pctChange(windowLeads.length, previousLeads.length),
       revenueChangePct: pctChange(revenue, previousRevenue),
+      spendIls,
+      cpl,
     },
     pacing,
     alerts,
@@ -298,14 +395,13 @@ export function buildWeeklyDigest(input: {
 }
 
 /**
- * Deliberately stricter, separate ownership check from `buildWeeklyDigest`'s
- * own scoping filter (above, `!lead.slug || ...`) — that leniency is correct
- * and harmless for a read-only aggregate digest, but not acceptable for a
- * mutation endpoint, where the same wildcard would let any authenticated
- * client edit any unscoped legacy lead. Returns `false` for a lead with
- * neither `slug` nor `customerId` set, and checks membership against ALL of
- * the client's bound campaigns (`GoogleAdsClientIndex.campaigns[]`), not just
- * `primarySlug`. Does not touch `buildWeeklyDigest`'s filter above.
+ * Separate ownership check from `buildWeeklyDigest`'s own scoping filter
+ * (above) — both are strict (no untagged-lead wildcard) as of the Aug 2026
+ * data-quality fix, but this one checks membership against ALL of a
+ * client's bound campaigns (`GoogleAdsClientIndex.campaigns[]`), not just a
+ * single `CampaignConfig`'s slug/customerId, so a multi-campaign client
+ * isn't locked out of leads from a non-primary campaign. Returns `false` for
+ * a lead with neither `slug` nor `customerId` set — no wildcard bypass.
  * See docs/specs/priority-3-lead-capture-reliability-and-client-feedback.md §1.2.
  */
 export function isLeadOwnedByClient(lead: LeadRecord, clientId: string): boolean {

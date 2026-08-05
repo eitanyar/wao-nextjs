@@ -54,18 +54,24 @@ test('no client index at all → false (fail closed)', () => {
   assert.equal(leadMatchesClientIndex(lead, null), false);
 });
 
-// ── Regression guard: buildWeeklyDigest's own (deliberately lenient) filter
-// must remain untouched by this change. Re-assert its documented behavior —
-// an unattributed lead (no slug/customerId) IS included, unlike the strict
-// isLeadOwnedByClient/leadMatchesClientIndex above — directly from source,
-// since buildWeeklyDigest itself has its own dedicated test suite
+// ── Regression guard: buildWeeklyDigest's own scoping filter must stay
+// strict (Aug 2026 fix — an untagged lead with `!lead.slug` used to match
+// EVERY client's digest, which is the confirmed root cause of Retter and
+// AAAsada showing identical "actual leads" pacing off the same 2 untagged
+// leftover/test records in leads.json). Assert directly from source, since
+// buildWeeklyDigest itself has its own dedicated test suite
 // (weekly-digest-batch.test.mjs) that this must not duplicate or risk. ──────
-test("buildWeeklyDigest's own scoping filter is untouched (still lenient — different security semantics, on purpose)", () => {
+test("buildWeeklyDigest's own scoping filter is strict — no untagged-lead wildcard (Aug 2026 data-quality fix)", () => {
   const baseDir = path.dirname(fileURLToPath(import.meta.url));
   const intelligenceCode = fs.readFileSync(path.join(baseDir, 'intelligence.ts'), 'utf8');
+  assert.doesNotMatch(
+    intelligenceCode,
+    /const scopedLeads = leads\.filter\(lead => !lead\.slug \|\|/,
+    'buildWeeklyDigest must not reintroduce the `!lead.slug` wildcard that let an untagged lead match every client\'s digest'
+  );
   assert.match(
     intelligenceCode,
-    /const scopedLeads = leads\.filter\(lead => !lead\.slug \|\| lead\.slug === input\.campaign\.slug \|\| lead\.customerId === input\.campaign\.customerId\);/,
-    'buildWeeklyDigest\'s lenient scoping predicate must remain exactly as shipped — isLeadOwnedByClient is a separate, stricter helper, not a replacement'
+    /const scopedLeads = leads\.filter\(lead =>\s*\n\s*lead\.slug === input\.campaign\.slug \|\|\s*\n\s*\(!!lead\.customerId && lead\.customerId === input\.campaign\.customerId\)\s*\n\s*\);/,
+    'buildWeeklyDigest\'s scoping predicate should require an exact slug or customerId match — no wildcard for untagged leads'
   );
 });

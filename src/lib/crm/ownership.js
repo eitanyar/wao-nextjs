@@ -1,15 +1,13 @@
 /**
  * Pure client-ownership check for a lead.
  *
- * Deliberately stricter than `buildWeeklyDigest`'s own scoping filter in
- * `intelligence.ts` (`!lead.slug || ...` — treats an unattributed lead as
- * belonging to every client, which is fine for a read-only aggregate digest
- * but not for a mutation endpoint). This helper returns `false` for a lead
- * with neither `slug` nor `customerId` set — no wildcard bypass — and checks
- * membership against ALL of a client's bound campaigns
- * (`GoogleAdsClientIndex.campaigns[]`), not just `primarySlug`, so a client
- * with more than one campaign isn't wrongly locked out of leads from a
- * non-primary one.
+ * Same strictness as `buildWeeklyDigest`'s own scoping filter in
+ * `intelligence.ts` as of the Aug 2026 data-quality fix (no untagged-lead
+ * wildcard on either) — this helper returns `false` for a lead with neither
+ * `slug` nor `customerId` set, and additionally checks membership against
+ * ALL of a client's bound campaigns (`GoogleAdsClientIndex.campaigns[]`),
+ * not just `primarySlug`, so a client with more than one campaign isn't
+ * wrongly locked out of leads from a non-primary one.
  *
  * See docs/specs/priority-3-lead-capture-reliability-and-client-feedback.md §1.2.
  *
