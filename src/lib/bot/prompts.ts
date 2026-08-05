@@ -8,6 +8,13 @@ export interface CollectedData {
   businessNiche?: string;
   primaryService?: string;
   businessName?: string;
+  // Turn-0 keyword-extraction seam (VISION.md:324) — 2-3 natural Hebrew
+  // variants derived from businessNiche at turn 0 (city not yet known that
+  // early, so patterns are {niche} / {niche} מחיר / similar). Not yet wired
+  // to getEstimatedCPC (no OAuth) — this only exists so the future call site
+  // becomes getEstimatedCPC(data.extractedKeywords, data.city), a swap-in
+  // rather than a rebuild, once Option B (live Keyword Planner data) lands.
+  extractedKeywords?: string[];
   ownerName?: string;
   secondaryServices?: string;
 

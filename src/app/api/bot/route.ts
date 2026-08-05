@@ -74,9 +74,16 @@ interface VerticalBudget {
   ltvMultiplier: number;
 }
 
+// Dror's cluster-precision audit (2026-08-03, "lior-mission-doubts" mission):
+// education → academicTutoring / fitnessTraining; professionalSvc →
+// businessProfessionalSvc / creativeVisualSvc; homeImprovement → homeImprovement
+// (unchanged) + autoServices. Mechanical keyword split — see mission notes for
+// per-vertical rationale.
 type ClusterKey =
   | "emergencyTrades" | "medicalRehab" | "wellnessTherapy" | "legal"
-  | "beautyAesthetics" | "homeImprovement" | "education" | "professionalSvc";
+  | "beautyAesthetics" | "homeImprovement" | "autoServices"
+  | "academicTutoring" | "fitnessTraining"
+  | "businessProfessionalSvc" | "creativeVisualSvc";
 
 const BUDGET_CLUSTERS: Record<ClusterKey, VerticalBudget> = {
   // cpc × 20 leads = recommended;  cpc × 10 leads = min
@@ -86,8 +93,25 @@ const BUDGET_CLUSTERS: Record<ClusterKey, VerticalBudget> = {
   legal:            { cpc: 22, lpCvr: 0.05, min: 2500, recommended: 4000, aggressive: 8000, closeRateDefault: 0.25, ltvMultiplier: 1.8 },
   beautyAesthetics: { cpc: 8,  lpCvr: 0.08, min: 1200, recommended: 2000, aggressive: 4000, closeRateDefault: 0.30, ltvMultiplier: 3.0 },
   homeImprovement:  { cpc: 10, lpCvr: 0.06, min: 1800, recommended: 3500, aggressive: 7000, closeRateDefault: 0.20, ltvMultiplier: 2.0 },
-  education:        { cpc: 7,  lpCvr: 0.10, min: 800,  recommended: 1500, aggressive: 3000, closeRateDefault: 0.35, ltvMultiplier: 3.0 },
-  professionalSvc:  { cpc: 9,  lpCvr: 0.05, min: 1800, recommended: 3500, aggressive: 7000, closeRateDefault: 0.30, ltvMultiplier: 2.5 },
+  // Split off homeImprovement (auto repair + waste removal — unrelated buyer
+  // intent/urgency/deal size). min/recommended/aggressive inherited unchanged
+  // from the parent bucket, same as lpCvr's low-confidence status below —
+  // flag for future revisit once this vertical gets real volume.
+  autoServices:     { cpc: 10, lpCvr: 0.07, min: 1800, recommended: 3500, aggressive: 7000, closeRateDefault: 0.20, ltvMultiplier: 2.0 },
+  // Split off education (academic tutoring side) — values carried over unchanged
+  // from the former `education` cluster (cpc ₪7 / lpCvr 0.10 matches WordStream
+  // "Education & Instruction" benchmark well).
+  academicTutoring: { cpc: 7,  lpCvr: 0.10, min: 800,  recommended: 1500, aggressive: 3000, closeRateDefault: 0.35, ltvMultiplier: 3.0 },
+  // Split off education (fitness/training side) — membership sale, not a
+  // one-off session, so closeRateDefault and ltvMultiplier differ from
+  // academicTutoring even though cpc/lpCvr/budget tier are similar in shape.
+  fitnessTraining:  { cpc: 10, lpCvr: 0.11, min: 800,  recommended: 1500, aggressive: 3000, closeRateDefault: 0.20, ltvMultiplier: 4.0 },
+  // Split off professionalSvc (transactional/urgency-driven side) — values
+  // carried over unchanged from the former `professionalSvc` cluster.
+  businessProfessionalSvc: { cpc: 9, lpCvr: 0.05, min: 1800, recommended: 3500, aggressive: 7000, closeRateDefault: 0.30, ltvMultiplier: 2.5 },
+  // Split off professionalSvc (portfolio-driven/comparison-shopping side) —
+  // mostly one-off jobs, hence the lower ltvMultiplier vs. businessProfessionalSvc.
+  creativeVisualSvc: { cpc: 8, lpCvr: 0.09, min: 1800, recommended: 3500, aggressive: 7000, closeRateDefault: 0.25, ltvMultiplier: 1.5 },
 };
 
 const CLUSTER_KEYWORDS: Record<ClusterKey, string[]> = {
@@ -96,9 +120,17 @@ const CLUSTER_KEYWORDS: Record<ClusterKey, string[]> = {
   wellnessTherapy:  ["פסיכולוג", "קואצ'ר", "nlp", "טיפול רגשי", "טיפול נפש", "דמיון מודרך", "מדיטציה", "מיינדפולנס", "טיפול זוגי", "יעוץ נפש", "פסיכותרפ", "הדרכת הורים"],
   legal:            ["עורך דין", "עו\"ד", "משפט", "פלילי", "גירושין", "נוטריון", "בוררות", "נזיקין", "צוואה"],
   beautyAesthetics: ["קוסמט", "אסתט", "בוטוקס", "פילינג", "לייזר", "שיער", "טיפול פנים", "מניקור", "פדיקור", "ריסים", "גבות", "אפיל", "מסאז"],
-  homeImprovement:  ["שיפוץ", "קבלן", "גנן", "גינ", "ניקיון", "ניקוי", "צביע", "ריצוף", "נגר", "אלומיניום", "פרקט", "גג", "חלונות", "מוסך", "רכב", "פחים"],
-  education:        ["מורה פרטי", "שיעורי", "אנגלית", "מתמטיקה", "עברית", "ערבית", "פיזיקה", "בגרות", "פסיכומטר", "ייעוץ לימוד", "כושר", "פילאטיס", "יוגה", "אימון אישי"],
-  professionalSvc:  ["רואה חשבון", "חשבונאי", "מס", "צלמ", "מחשב", "it", "טכנאי", "ייעוץ עסקי", "שיווק", "גרפיק", "תרגום", "ביטוח", "סוכן"],
+  homeImprovement:  ["שיפוץ", "קבלן", "גנן", "גינ", "ניקיון", "ניקוי", "צביע", "ריצוף", "נגר", "אלומיניום", "פרקט", "גג", "חלונות"],
+  autoServices:     ["מוסך", "רכב", "פחים"],
+  academicTutoring: ["מורה פרטי", "שיעורי", "אנגלית", "מתמטיקה", "עברית", "ערבית", "פיזיקה", "בגרות", "פסיכומטר", "ייעוץ לימוד"],
+  fitnessTraining:  ["כושר", "פילאטיס", "יוגה", "אימון אישי"],
+  businessProfessionalSvc: ["רואה חשבון", "חשבונאי", "מס", "מחשב", "it", "טכנאי", "ייעוץ עסקי", "שיווק", "ביטוח", "סוכן"],
+  // NOTE: "צלמ" alone (regular mem) never matches the bare word "צלם"
+  // (photographer — final mem ם), only inflected forms like "צלמת"/"צלמים".
+  // Pre-existing bug inherited from the old professionalSvc list, found while
+  // verifying the photographer pilot case — added "צלם" (final mem) alongside
+  // it so the root word itself matches.
+  creativeVisualSvc: ["צלם", "צלמ", "גרפיק", "תרגום"],
 };
 
 function detectCluster(niche: string): ClusterKey {
@@ -106,11 +138,40 @@ function detectCluster(niche: string): ClusterKey {
   for (const [cluster, keywords] of Object.entries(CLUSTER_KEYWORDS) as [ClusterKey, string[]][]) {
     if (keywords.some(k => lower.includes(k))) return cluster;
   }
-  return "professionalSvc";
+  return "businessProfessionalSvc";
 }
 
-function detectVerticalBudget(niche: string): VerticalBudget {
-  return BUDGET_CLUSTERS[detectCluster(niche)];
+// ── City-tier CPC multiplier (stopgap, directional estimate — sourced from an
+// Israeli PPC-agency blog, not Google-official) ───────────────────────────────
+// Applies ONLY to cpc; lpCvr/closeRateDefault/ltvMultiplier are offer/UX-driven,
+// not geography-driven, and must stay untouched. Structured as a single narrow
+// multiplier + one city→tier lookup so it's a clean no-op swap once live
+// per-geo Keyword Planner data (Option B, VISION.md:317-335) lands — do not
+// build a second parallel table.
+const CITY_TIER_CPC_MULTIPLIER: Record<1 | 2 | 3, number> = { 1: 1.20, 2: 1.00, 3: 0.80 };
+
+const CITY_TIER_LOOKUP: Record<string, 1 | 2 | 3> = {
+  "תל אביב": 1, "תל אביב יפו": 1, "גוש דן": 1, "הרצליה": 1, "רמת גן": 1, "נתניה": 1,
+  "חיפה": 2, "ירושלים": 2,
+  "דימונה": 3, "שדרות": 3, "קרית שמונה": 3, "קריית שמונה": 3, "אופקים": 3, "ירוחם": 3,
+};
+
+function cityTier(city: string): 1 | 2 | 3 {
+  const normalized = (city || "").trim();
+  for (const [name, tier] of Object.entries(CITY_TIER_LOOKUP)) {
+    if (normalized.includes(name)) return tier;
+  }
+  return 2; // baseline/default for unlisted cities (Haifa/Jerusalem-tier)
+}
+
+function applyCityCpc(cpc: number, city: string): number {
+  return cpc * CITY_TIER_CPC_MULTIPLIER[cityTier(city)];
+}
+
+function detectVerticalBudget(niche: string, city?: string): VerticalBudget {
+  const base = BUDGET_CLUSTERS[detectCluster(niche)];
+  if (!city) return base;
+  return { ...base, cpc: applyCityCpc(base.cpc, city) };
 }
 
 function getClusterCloseRateDefault(niche: string): number {
@@ -269,6 +330,9 @@ export function handleSimulation(
         }
         data.primaryService = text;
         data.businessNiche = text;
+        // Turn-0 keyword-extraction seam — city isn't known yet at this turn,
+        // so we skip the {niche} {city} variant here (natural variant per spec).
+        data.extractedKeywords = [text, `${text} מחיר`].filter(Boolean);
         data.turnIndex = 1;
         return NextResponse.json({
           response: `יופי, ${text} — קלטתי. ${TURN_QUESTIONS[1]}`,
@@ -372,7 +436,7 @@ export function handleSimulation(
         data.hasGoogleBusiness = !text.includes("אין") && !text.includes("לא");
 
         // Compute budget recommendation adjusted for organic presence
-        const vb = detectVerticalBudget(data.businessNiche || "");
+        const vb = detectVerticalBudget(data.businessNiche || "", data.specificCities);
         let lpCvr = vb.lpCvr;
         const reviewCount16 = data.reviewCount || 0;
         const starRating16 = parseFloat(data.starRating || "0");
@@ -429,7 +493,7 @@ export function handleSimulation(
       }
       case 19: {
         // Budget confirmation / adjustment — never terminate
-        const vb17 = detectVerticalBudget(data.businessNiche || "");
+        const vb17 = detectVerticalBudget(data.businessNiche || "", data.specificCities);
         const isApproval = ["כן", "בסדר", "סבבה", "מסכים", "אוקיי", "בטח", "יאללה", "מעולה"].some(w => text.includes(w));
         let budget17 = parseNumber(text);
 
@@ -840,7 +904,8 @@ IMPORTANT: End your message with EXACTLY this sentence (no variation):
   // so the LLM can't re-derive different numbers on follow-up turns.
   let budgetHint = "";
   if (collectedData.avgJobValue) {
-    const vbHint = detectVerticalBudget(collectedData.businessNiche || "");
+    const citySeed = (collectedData.specificCities || collectedData.targetLocation || "ישראל").split(/[,،\n]/)[0].trim();
+    const vbHint = detectVerticalBudget(collectedData.businessNiche || "", citySeed);
     let lpCvrHint = vbHint.lpCvr;
     const rc = collectedData.reviewCount || 0;
     const sr = parseFloat(collectedData.starRating || "0");
@@ -849,7 +914,6 @@ IMPORTANT: End your message with EXACTLY this sentence (no variation):
     else if (rc < 5) lpCvrHint = lpCvrHint * 0.85;
 
     const hintCloseRate = collectedData.closeRate || getClusterCloseRateDefault(collectedData.businessNiche || "");
-    const citySeed = (collectedData.specificCities || collectedData.targetLocation || "ישראל").split(/[,،\n]/)[0].trim();
     const seedKeywords = [
       collectedData.businessNiche || "",
       citySeed ? `${collectedData.businessNiche || ""} ${citySeed}` : "",
