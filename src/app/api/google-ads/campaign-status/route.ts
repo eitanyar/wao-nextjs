@@ -8,6 +8,9 @@ import { appendGoogleAdsDirectActionAudit } from '@/lib/google-ads/direct-action
 
 interface CampaignStatusRequest {
   action: 'pause' | 'resume';
+  /** §8.3 point 5 — see the identical field's doc comment in negative-keywords/route.ts:
+   * explicit target campaign, falls back to the legacy `index.primaryCampaignId` when omitted. */
+  campaignId?: string;
 }
 
 export async function POST(req: Request) {
@@ -50,7 +53,9 @@ export async function POST(req: Request) {
     }
 
     const status = body.action === 'pause' ? 'PAUSED' : 'ENABLED';
-    const campaignId = index.primaryCampaignId;
+    // §8.3 point 5 — explicit `campaignId` from the caller wins; falls back to the legacy
+    // `index.primaryCampaignId` only when not provided.
+    const campaignId = body.campaignId?.trim() || index.primaryCampaignId;
     if (!campaignId) {
       return NextResponse.json({ error: 'Campaign ID missing from client index' }, { status: 409 });
     }

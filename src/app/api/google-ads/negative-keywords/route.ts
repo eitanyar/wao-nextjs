@@ -9,6 +9,17 @@ import { appendGoogleAdsDirectActionAudit } from '@/lib/google-ads/direct-action
 interface NegativeKeywordsRequest {
   keywords: string[];
   matchType?: 'BROAD' | 'PHRASE' | 'EXACT';
+  /**
+   * §8.3 point 5 — this client can now have multiple enumerated live campaigns
+   * (docs/specs/priority-3-search-term-cleanup-scoring.md §8.0). This route is driven by an
+   * explicit user/review action, so the caller should pass the exact campaign it means to
+   * target rather than the route silently defaulting to `index.primaryCampaignId`. Optional
+   * for now, with a documented legacy fallback below — flagged to Eitan-Dev: a campaign-picker
+   * UI (which specific campaign a "negative keyword" review action targets) is a UX/Maya
+   * decision, out of scope for this engineering pass; until that ships, callers that don't
+   * pass this explicitly get the pre-existing single-campaign behavior, unchanged.
+   */
+  campaignId?: string;
 }
 
 export async function POST(req: Request) {
@@ -68,7 +79,9 @@ export async function POST(req: Request) {
       );
     }
 
-    const campaignId = index.primaryCampaignId;
+    // §8.3 point 5 — explicit `campaignId` from the caller wins; falls back to the legacy
+    // `index.primaryCampaignId` only when not provided.
+    const campaignId = body.campaignId?.trim() || index.primaryCampaignId;
     if (!campaignId) {
       return NextResponse.json({ error: 'Campaign ID missing from client index' }, { status: 409 });
     }

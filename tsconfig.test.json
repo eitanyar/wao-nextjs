@@ -53,6 +53,16 @@
     "src/lib/payments/invoicing.ts",
     "src/lib/payments/invoicing.test.ts",
     "src/lib/payments/refund.ts",
-    "src/lib/payments/refund.test.ts"
+    "src/lib/payments/refund.test.ts",
+    "src/lib/crm/ownership.js",
+    "src/lib/crm/intelligence.ts",
+    "src/lib/crm/intelligence.test.ts",
+    "src/lib/google-ads/mutations.ts",
+    "src/lib/google-ads/cpl-ceiling.ts",
+    "src/lib/google-ads/cpl-ceiling.test.ts",
+    "src/lib/google-ads/campaign-enumeration.ts",
+    "src/lib/google-ads/campaign-enumeration.test.ts",
+    "src/lib/google-ads/operator.ts",
+    "src/lib/google-ads/operator.test.ts"
   ]
 }

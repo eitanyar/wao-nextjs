@@ -1,0 +1,16 @@
+{
+  "clientId": "retter",
+  "primarySlug": "retter",
+  "primaryCustomerId": "8344335641",
+  "primaryCampaignId": "23402666112",
+  "updatedAt": "2026-08-04T11:40:07.000Z",
+  "campaigns": [
+    {
+      "slug": "retter",
+      "customerId": "8344335641",
+      "campaignId": "23402666112",
+      "createdAt": "2026-08-04T11:40:07.000Z",
+      "finalUrl": "https://www.retter.co.il/"
+    }
+  ]
+}

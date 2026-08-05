@@ -1,5 +1,5 @@
 import { GoogleAdsApi, enums } from 'google-ads-api';
-import type { CampaignConfig } from '@/lib/crm/intelligence';
+import type { CampaignConfig } from '../crm/intelligence';
 
 export interface MutationResult {
   success: boolean;
@@ -43,6 +43,27 @@ export function resolveCustomer(campaignConfig: CampaignConfig, clientInstance?:
   const client = clientInstance || buildClient();
   return client.Customer({
     customer_id: campaignConfig.customerId,
+    login_customer_id: adsAccount.mccId,
+    refresh_token: adsAccount.refreshToken,
+  });
+}
+
+/**
+ * Resolves a `Customer` keyed directly by `customerId`, not by a bound `CampaignConfig`/slug —
+ * needed for spec §8.3's `enumerateEnabledCampaigns`, which must enumerate every ENABLED
+ * campaign under a client's live `customerId` (including founder-managed campaigns that have
+ * no WAO `CampaignConfig`/slug at all, e.g. AAAsada's 5 live campaigns). Same credential
+ * resolution as `resolveCustomer` above, just not tied to any one campaign's config record.
+ */
+export function resolveCustomerById(
+  customerId: string,
+  mode: 'test' | 'live' = 'live',
+  clientInstance?: ReturnType<typeof buildClient>
+) {
+  const adsAccount = resolveAdsAccount(mode);
+  const client = clientInstance || buildClient();
+  return client.Customer({
+    customer_id: customerId,
     login_customer_id: adsAccount.mccId,
     refresh_token: adsAccount.refreshToken,
   });

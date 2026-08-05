@@ -45,7 +45,7 @@ function getTestAccountCredentials(): { refreshToken: string; mccCustomerId: str
   return { refreshToken, mccCustomerId };
 }
 
-export async function GET() {
+export async function GET(req: Request) {
   try {
     const sandboxClientId = process.env.GOOGLE_ADS_SANDBOX_CLIENT_ID || 'google-ads-sandbox';
     const jar = await cookies();
@@ -72,7 +72,16 @@ export async function GET() {
       return NextResponse.json({ error: 'Sandbox campaign configuration is missing or is not marked as test mode.' }, { status: 409 });
     }
 
-    if (!/^\d+$/.test(index.primaryCampaignId) || !/^\d+$/.test(index.primaryCustomerId)) {
+    // §8.3 point 5 — this route's purpose is verifying a *specific* bound sandbox campaign
+    // (a diagnostics check of the configured binding), so defaulting to
+    // `index.primaryCampaignId` is correct by design here, unlike the other three mutation
+    // routes' "pick one" ambiguity. Still accept an explicit override so a caller can verify a
+    // different enumerated campaign under the same sandbox customerId without a second route.
+    const url = new URL(req.url);
+    const requestedCampaignId = url.searchParams.get('campaignId')?.trim();
+    const targetCampaignId = requestedCampaignId || index.primaryCampaignId;
+
+    if (!/^\d+$/.test(targetCampaignId) || !/^\d+$/.test(index.primaryCustomerId)) {
       return NextResponse.json({ error: 'Sandbox campaign binding has an invalid Google Ads identifier.' }, { status: 409 });
     }
 
@@ -88,7 +97,7 @@ export async function GET() {
       'SELECT customer.id, customer.descriptive_name FROM customer LIMIT 1'
     )) as CustomerRow[];
     const campaignRows = (await customer.query(
-      `SELECT campaign.id, campaign.name, campaign.status, campaign.advertising_channel_type FROM campaign WHERE campaign.id = ${index.primaryCampaignId} LIMIT 1`
+      `SELECT campaign.id, campaign.name, campaign.status, campaign.advertising_channel_type FROM campaign WHERE campaign.id = ${targetCampaignId} LIMIT 1`
     )) as CampaignRow[];
     const campaign = campaignRows[0]?.campaign;
 
@@ -104,7 +113,7 @@ export async function GET() {
         name: customerRows[0]?.customer?.descriptive_name ?? null,
       },
       campaign: {
-        id: String(campaign.id ?? index.primaryCampaignId),
+        id: String(campaign.id ?? targetCampaignId),
         name: campaign.name ?? null,
         status: campaign.status ?? null,
         channel: campaign.advertising_channel_type ?? null,

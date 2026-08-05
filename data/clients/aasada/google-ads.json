@@ -1,0 +1,16 @@
+{
+  "clientId": "aasada",
+  "primarySlug": "aasada",
+  "primaryCustomerId": "4553722804",
+  "primaryCampaignId": "409939703",
+  "updatedAt": "2026-08-04T11:40:07.000Z",
+  "campaigns": [
+    {
+      "slug": "aasada",
+      "customerId": "4553722804",
+      "campaignId": "409939703",
+      "createdAt": "2026-08-04T11:40:07.000Z",
+      "finalUrl": "https://aaasada.com/"
+    }
+  ]
+}

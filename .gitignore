@@ -98,3 +98,6 @@ data/billing.db-shm
 data/inner-coach/
 data/bot-sessions/
 data/payments/
+
+# Site-bot chat image uploads — session-scoped runtime user data, never source
+/public/uploads/

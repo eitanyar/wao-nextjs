@@ -37,24 +37,45 @@ export async function POST(req: Request) {
     const runResults: CronRunResult[] = [];
 
     for (const result of digestResults) {
-      if (result.status !== 'ok' || !result.campaign || !result.digest) {
+      if (result.status !== 'ok' || !result.campaign) {
         runResults.push({ clientId: result.clientId, status: 'unbound', error: result.error });
         continue;
       }
 
-      try {
-        await sendGoogleAdsWeeklyDigestEmail({
-          clientId: result.clientId,
-          campaignName: result.campaign.businessName || result.campaign.slug,
-          digest: result.digest,
-        });
+      // §8.3 — one email per enumerated campaign (not one blended client-level email), so a
+      // broken campaign's numbers are never averaged away inside a healthy one. Falls back to
+      // the legacy single `digest` field when enumeration produced nothing this cycle
+      // (fail-soft degrade already applied upstream in `buildAllClientDigests`).
+      const perCampaign = result.digests && result.digests.length
+        ? result.digests
+        : result.digest
+        ? [{ campaignId: undefined, campaignName: result.campaign.businessName || result.campaign.slug, type: undefined, digest: result.digest }]
+        : [];
+
+      if (!perCampaign.length) {
+        runResults.push({ clientId: result.clientId, status: 'unbound', error: 'No enumerated campaign digest available' });
+        continue;
+      }
+
+      let anyFailed = false;
+      for (const cd of perCampaign) {
+        try {
+          await sendGoogleAdsWeeklyDigestEmail({
+            clientId: result.clientId,
+            campaignName: cd.campaignName || result.campaign.businessName || result.campaign.slug,
+            digest: cd.digest,
+          });
+        } catch (error) {
+          anyFailed = true;
+          runResults.push({
+            clientId: result.clientId,
+            status: 'email_failed',
+            error: error instanceof Error ? error.message : 'Unknown email error',
+          });
+        }
+      }
+      if (!anyFailed) {
         runResults.push({ clientId: result.clientId, status: 'sent' });
-      } catch (error) {
-        runResults.push({
-          clientId: result.clientId,
-          status: 'email_failed',
-          error: error instanceof Error ? error.message : 'Unknown email error',
-        });
       }
     }
 

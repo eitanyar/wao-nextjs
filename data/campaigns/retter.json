@@ -1,0 +1,16 @@
+{
+  "clientId": "retter",
+  "mode": "live",
+  "customerId": "8344335641",
+  "slug": "retter",
+  "businessName": "רטר",
+  "businessNiche": "מכון להכשרת מטפלים ומאמנים ב-NLP",
+  "targetLocation": "פתח תקווה, קריית ביאליק, נס ציונה — ואונליין",
+  "targetDailyBudget": 500,
+  "targetMonthlyBudget": 15000,
+  "avgJobValue": 24500,
+  "closeRateEstimate": 0.05,
+  "verifiedLeadConversionResourceName": null,
+  "closedDealConversionResourceName": null,
+  "createdAt": "2026-08-04T11:40:07.000Z"
+}

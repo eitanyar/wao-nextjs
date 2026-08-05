@@ -1,0 +1,16 @@
+{
+  "clientId": "aasada",
+  "mode": "live",
+  "customerId": "4553722804",
+  "slug": "aasada",
+  "businessName": "טעם מהודר קייטרינג",
+  "businessNiche": "Catering — small business in financial difficulty, low order volume. High-priority client for Eitan personally.",
+  "targetLocation": "ערים קרובות למיקום העסק — פירוט מדויק לא מתועד, יש לאמת מול הלקוח (ראו client.json)",
+  "targetDailyBudget": 500,
+  "targetMonthlyBudget": 15000,
+  "avgJobValue": 2100,
+  "closeRateEstimate": 0.1,
+  "verifiedLeadConversionResourceName": null,
+  "closedDealConversionResourceName": null,
+  "createdAt": "2026-08-04T11:40:07.000Z"
+}

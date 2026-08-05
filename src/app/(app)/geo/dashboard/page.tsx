@@ -136,6 +136,17 @@ export default async function GeoDashboard() {
                     disabled={!hasPhone}
                   />
                 </div>
+                {/* §8.5 — display-only blended roll-up across every enumerated campaign, shown
+                    alongside (never instead of) the per-campaign digest above. Never a gating
+                    input; labeled explicitly as a roll-up, not a health metric. */}
+                {adsResult.digests && adsResult.digests.length > 1 && adsResult.blended && (
+                  <p className="text-xs text-[var(--muted)]">
+                    סה״כ {adsResult.digests.length} קמפיינים פעילים ·{' '}
+                    {adsResult.blended.cpl !== undefined
+                      ? `₪${adsResult.blended.cpl.toFixed(2)}/ליד (ראה פילוח לפי קמפיין)`
+                      : 'אין המרות בחלון הנוכחי'}
+                  </p>
+                )}
               </div>
             )}
 
