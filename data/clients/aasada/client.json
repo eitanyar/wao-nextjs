@@ -4,7 +4,7 @@
   "cmsType": "next.js (static export, Cloudflare Pages)",
   "businessNiche": "Catering — small business in financial difficulty, low order volume. High-priority client for Eitan personally.",
   "topService": "unknown — to be assessed",
-  "targetLocation": "unknown — to be assessed",
+  "targetLocation": "ערים קרובות למיקום העסק — קמפיין חי בשם \"ערים קרובות\" מרמז על טווח גיאוגרפי מבוסס-מרחק, אך הרשימה המדויקת של הערים לא מתועדת כאן; טרם אומת מול הלקוח (Eitan, 2026-08-04, מ-GAQL בלבד — לא נבדק ידנית).",
   "usp": "unknown — to be assessed",
   "clientQuestions": "",
   "exclusions": "",
@@ -17,6 +17,7 @@
     "title-bot:internal",
     "pareto:internal",
     "anomaly:internal",
-    "advisor:internal"
+    "advisor:internal",
+    "google-ads-operator:internal"
   ]
 }

@@ -60,7 +60,7 @@ const schemas = [
     provider: {
       "@type": "Organization",
       name: "WAO",
-      url: "https://wao.co.il",
+      url: "https://www.wao.co.il",
     },
     areaServed: "IL",
     offers: [

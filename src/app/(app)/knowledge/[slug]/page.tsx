@@ -30,11 +30,11 @@ export async function generateMetadata({
       ? { absolute: article.metaTitle }
       : article.title,
     description: article.summary,
-    alternates: { canonical: `https://wao.co.il/knowledge/${slug}` },
+    alternates: { canonical: `https://www.wao.co.il/knowledge/${slug}` },
     openGraph: {
       title: article.title,
       description: article.summary,
-      url: `https://wao.co.il/knowledge/${slug}`,
+      url: `https://www.wao.co.il/knowledge/${slug}`,
       type: "article",
       publishedTime: article.updatedDate,
     },
@@ -199,7 +199,7 @@ export default async function KnowledgeArticlePage({
     description: article.summary,
     dateModified: article.updatedDate,
     datePublished: article.updatedDate,
-    url: `https://wao.co.il/knowledge/${article.slug}`,
+    url: `https://www.wao.co.il/knowledge/${article.slug}`,
     publisher: {
       "@type": "Organization",
       "@id": "https://www.wao.co.il/#org",
@@ -216,7 +216,7 @@ export default async function KnowledgeArticlePage({
     },
     mainEntityOfPage: {
       "@type": "WebPage",
-      "@id": `https://wao.co.il/knowledge/${article.slug}`,
+      "@id": `https://www.wao.co.il/knowledge/${article.slug}`,
     },
   };
 
@@ -224,13 +224,13 @@ export default async function KnowledgeArticlePage({
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
     itemListElement: [
-      { "@type": "ListItem", position: 1, name: "ראשי", item: "https://wao.co.il" },
-      { "@type": "ListItem", position: 2, name: "מאגר ידע", item: "https://wao.co.il/knowledge" },
+      { "@type": "ListItem", position: 1, name: "ראשי", item: "https://www.wao.co.il" },
+      { "@type": "ListItem", position: 2, name: "מאגר ידע", item: "https://www.wao.co.il/knowledge" },
       {
         "@type": "ListItem",
         position: 3,
         name: article.titleShort,
-        item: `https://wao.co.il/knowledge/${article.slug}`,
+        item: `https://www.wao.co.il/knowledge/${article.slug}`,
       },
     ],
   };

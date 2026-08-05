@@ -7,7 +7,7 @@ export const revalidate = 86400;
 export const metadata: Metadata = {
   title: "מאגר ידע — כל מה שצריך לדעת",
   description: "מדריכים קצרים ומקצועיים על כל נושאי SEO: טכני, On-Page, תוכן, אלגוריתמים, AI, ביצועים, קישורים, SEO מקומי ובינלאומי.",
-  alternates: { canonical: "https://wao.co.il/knowledge" },
+  alternates: { canonical: "https://www.wao.co.il/knowledge" },
 };
 
 const HEADING: React.CSSProperties = {
@@ -103,7 +103,7 @@ export default function KnowledgePage() {
     "@type": "CollectionPage",
     name: "מאגר ידע",
     description: "מדריכים קצרים ומקצועיים על כל נושאי SEO",
-    url: "https://wao.co.il/knowledge",
+    url: "https://www.wao.co.il/knowledge",
     numberOfItems: totalArticles,
     publisher: {
       "@type": "Organization",

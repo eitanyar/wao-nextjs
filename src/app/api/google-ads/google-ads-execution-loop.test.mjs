@@ -35,12 +35,15 @@ test('mutations.ts provides setCampaignStatus, setCampaignDailyBudget, and addNe
   assert.match(mutationsCode, /success:\s*false/);
 });
 
-test('executor.ts handles budget_tune with +15% and search_term_cleanup with non-mutation error', () => {
+test('executor.ts handles budget_tune with +15% and search_term_cleanup with real scoring + negative-add', () => {
   assert.match(executorCode, /case 'budget_tune':/);
   assert.match(executorCode, /1\.15/);
   assert.match(executorCode, /case 'search_term_cleanup':/);
   assert.match(executorCode, /success:\s*false/);
-  assert.match(executorCode, /GAQL search-term reporting/);
+  assert.match(executorCode, /fetchSearchTermReport/);
+  assert.match(executorCode, /scoreSearchTerms/);
+  assert.match(executorCode, /addNegativeKeywords/);
+  assert.match(executorCode, /confidence === 'high'/);
 });
 
 test('operator.ts provides updateGoogleAdsApproval', () => {

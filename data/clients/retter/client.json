@@ -18,6 +18,7 @@
     "pareto:internal",
     "anomaly:internal",
     "ads-overlap:internal",
-    "advisor:internal"
+    "advisor:internal",
+    "google-ads-operator:internal"
   ]
 }

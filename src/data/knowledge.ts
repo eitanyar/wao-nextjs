@@ -4047,7 +4047,7 @@ export const KNOWLEDGE_ARTICLES: KnowledgeArticle[] = [
       },
       {
         heading: "מה כולל קובץ llms.txt?",
-        content: "הפורמט הוא Markdown פשוט — קריא לאדם ולמכונה.\n\nמבנה טיפוסי:\n\n# שם הארגון\n\n> תיאור קצר של מה הארגון עושה — שורה אחת.\n\n## Documents\n\n- [שם הדף](/url): תיאור קצר\n- [שם הדף 2](/url2): תיאור קצר\n\n**כותרת H1** — שם הארגון. **תיאור** (אחרי >) — מה אתם עושים בשורה אחת. **קטגוריות** (H2) — אזורי תוכן ראשיים עם קישורים.\n\nניתן גם ליצור **llms-full.txt** עם גרסה מפורטת שכוללת תוכן מלא של דפים מרכזיים.",
+        content: "הפורמט הוא Markdown פשוט — קריא לאדם ולמכונה.\n\nמבנה טיפוסי:\n\n# שם הארגון\n\n> תיאור קצר של מה הארגון עושה — שורה אחת.\n\n## Documents\n\n- `[שם הדף](/url)`: תיאור קצר\n- `[שם הדף 2](/url2)`: תיאור קצר\n\n**כותרת H1** — שם הארגון. **תיאור** (אחרי >) — מה אתם עושים בשורה אחת. **קטגוריות** (H2) — אזורי תוכן ראשיים עם קישורים.\n\nניתן גם ליצור **llms-full.txt** עם גרסה מפורטת שכוללת תוכן מלא של דפים מרכזיים.",
       },
       {
         heading: "האם LLMs ממש קוראים את זה?",
@@ -5982,7 +5982,7 @@ export const KNOWLEDGE_ARTICLES: KnowledgeArticle[] = [
       },
     ],
     pillarLinks: [
-      { label: "מחקר מילות מפתח — המדריך", href: "/knowledge/keyword-research" },
+      { label: "מחקר מילות מפתח — המדריך", href: "/seo/keyword-research" },
       { label: "כוונת חיפוש — Search Intent", href: "/knowledge/search-intent" },
     ],
     relatedSlugs: ["keyword-research", "search-intent", "rank-tracking", "competitive-analysis"],
@@ -6170,7 +6170,7 @@ export const KNOWLEDGE_ARTICLES: KnowledgeArticle[] = [
       },
     ],
     pillarLinks: [
-      { label: "מחקר מילות מפתח — המדריך", href: "/knowledge/keyword-research" },
+      { label: "מחקר מילות מפתח — המדריך", href: "/seo/keyword-research" },
       { label: "קישורים חיצוניים — Backlinks", href: "/knowledge/backlinks" },
     ],
     relatedSlugs: ["keyword-research", "backlinks", "serp-analysis", "rank-tracking", "content-gap-analysis"],

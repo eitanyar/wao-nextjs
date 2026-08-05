@@ -78,10 +78,58 @@ materially more trustworthy than it was this morning.
    "send lead to client via WhatsApp" deep link. Deliberately scoped to trail pilot
    outreach, not block it — flag if it's been sitting untouched more than a week or two.
 
+## Reprioritization — 2026-08-03 (mission-planning session, "lior-mission-doubts")
+
+**Retter's GEO cycle is on hold ~1 month** — external, client-side: Retter is migrating to a
+different CMS on their own timeline, not a WAO execution gap. This freezes the 3-Month Foresight
+doc's own priority-#1 item (close Retter's send→implement→verify cycle) for that window. **Re-check
+Retter status around 2026-09-03.**
+
+**Google Ads pilot outreach is the active top founder-hours lane for this window** — not a
+permanent reprioritization of GEO Bot, just the one lane not externally blocked right now. GEO Bot
+resumes its prior priority once Retter unblocks. Full plan: `docs/specs/grade-a-outreach-playbook.md`
+(Grade-A archetypes, Tier 1/2 channel map, cadence, the free GBP review-comparison magnet as opener,
+GMB Bot pricing deferred until a real prospect asks for it).
+
+**Tier-1 Week 1 is cleared to start now** — no remaining gate. The pre-pilot pipeline defects fixed
+yesterday were the real blocker; that's done and Roni-verified.
+
 ## Reminder for tomorrow — payment provider
 Still open. Outreach was out to both **Payme.io** and **Grow (Meshulam)** as of
 yesterday; unclear if either replied since — check first thing.  See
 `docs/specs/subscription-billing-provider-decision.md` for full state.
+
+## Payment/pricing decision — open loop
+
+Eitan raised today whether the ₪9.90→₪249 trial-jump model (VISION.md Monetization table)
+leaves the real revenue exposed to chargebacks, triggered by Takbull confirming 3D Secure
+never covers recurring/token charges — only the initial authorization.
+
+**Verdict: DROP pursuing 3DS as a mitigation, DEFER the flat-₪99 alternative.**
+- 3DS was never a lever here — it doesn't cover recurring charges regardless of price
+  structure, so the trigger doesn't actually change the risk calculus.
+- Flat ₪99 from charge #1 looks safer but isn't the better move: cuts ARPU ~60% vs the
+  vision's ₪249 anchor (₪249K MRR at 1,000 subs vs ₪99K flat), raises entry friction 10x
+  (₪9.9→₪99, against the low-friction trial-funnel purpose) — and since per-user variable
+  LLM/API cost is still unmeasured, flat ₪99 could be the economically riskier option, not
+  the safer one, if it doesn't even cover a heavy user.
+- Real chargeback defense is expectation-consistency, not price structure: the month-2
+  reminder email (already shipped), "WAO" as the statement descriptor (needs live
+  confirmation with Takbull — not yet verified), and the immutable consent log — all
+  already required anyway for Google Ads ToS §11 indemnification (see Phase 3 gates).
+
+**Recommended path:** ship the vision-consistent ₪9.90→₪249 model to the pilot cohort only.
+Instrument two things before it scales: (a) per-user variable cost P95 — extractable from
+existing pilot logs, route to Eitan-Dev; (b) month-2 dispute/decline rate. Pre-commit a
+dispute-rate switch threshold *now*, before the pilot runs, not after seeing the data.
+
+**Discrepancy flagged:** VISION.md's Monetization table says ₪249/month; Eitan's original
+framing today used ₪299. Need to confirm which is the deliberate current number and update
+VISION.md if ₪299 is intentional.
+
+**Open question for Eitan:** what dispute/decline rate at month 2 actually triggers
+switching to flat pricing? That number needs to be pre-registered now — not decided
+retroactively once pilot data is in.
 
 ## Steering question for Lior
 Eitan pushed hard today on a principle worth keeping as a standing check, not a one-off:
@@ -91,3 +139,4 @@ losses."* That instinct caught four real, otherwise-invisible defects today. Wor
 Lior explicitly re-running that same audit lens (not just this specific checklist) against
 whatever ships next before it goes near a real client — it found more in one afternoon
 than the existing test suite had caught on its own.
+
