@@ -5,17 +5,91 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
 type NicheBucket = 'clinic' | 'lawyer' | 'ecommerce' | 'other';
+type PopupVariant = 'course' | 'commercial';
 
-const COURSE_PATHS = ['/training/google-ads-course'];
+// Reuses the same WhatsApp deep link used across the site (see Header.tsx, CtaBanner.tsx).
+const WHATSAPP_URL = 'https://wa.me/972526148860';
+
+// ── Persistent suppression gate (localStorage — survives reloads/new tabs/new sessions) ──
+const GATE_KEY = 'wao_exit_survey_state';
+const DISMISS_SUPPRESS_MS = 14 * 24 * 60 * 60 * 1000; // 14 days
+
+type GateStatus = 'dismissed' | 'submitted';
+interface GateState {
+  status: GateStatus;
+  ts: number;
+}
+
+function readGateState(): GateState | null {
+  try {
+    const raw = localStorage.getItem(GATE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (parsed && (parsed.status === 'dismissed' || parsed.status === 'submitted') && typeof parsed.ts === 'number') {
+      return parsed as GateState;
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+function writeGateState(status: GateStatus) {
+  try {
+    localStorage.setItem(GATE_KEY, JSON.stringify({ status, ts: Date.now() }));
+  } catch {
+    // localStorage unavailable (private mode, quota, etc.) — fail silently, non-critical.
+  }
+}
+
+function isGateSuppressed(): boolean {
+  const state = readGateState();
+  if (!state) return false;
+  if (state.status === 'submitted') return true; // converted — never show again
+  if (state.status === 'dismissed' && Date.now() - state.ts < DISMISS_SUPPRESS_MS) return true;
+  return false;
+}
+
+// ── Page routing: which pages get no popup, the course survey, or the commercial variant ──
+// Internal / auth-gated / transactional tools and legal pages — never show any exit popup.
+const NO_POPUP_PATHS = [
+  '/training/google-ads-course',
+  '/contact',
+  '/account',
+  '/admin',
+  '/client',
+  '/checkout',
+  '/leads',
+  '/trainer',
+  '/privacy',
+  '/accessibility',
+  '/preview-lp',
+];
+
+// Content/learning pages keep the existing 4-step course-lead survey.
+const COURSE_VARIANT_PATHS = ['/training', '/blog', '/knowledge', '/glossary', '/about'];
+
+function getVariant(pathname: string | null): PopupVariant | null {
+  if (!pathname) return null;
+  if (NO_POPUP_PATHS.some((p) => pathname === p || pathname.startsWith(p + '/') || pathname.startsWith(p))) {
+    return null;
+  }
+  if (COURSE_VARIANT_PATHS.some((p) => pathname === p || pathname.startsWith(p + '/'))) {
+    return 'course';
+  }
+  // Default: home, /seo, /consulting, and every other commercial/service page.
+  return 'commercial';
+}
 
 export default function ExitSurveyPopup() {
   const pathname = usePathname();
-  if (COURSE_PATHS.some((p) => pathname?.startsWith(p))) return null;
+  const variant = getVariant(pathname);
+
   const [isOpen, setIsOpen] = useState(false);
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
 
-  // Form states
+  // Form states (course variant only)
   const [niche, setNiche] = useState<NicheBucket | ''>('');
   const [challenge, setChallenge] = useState('');
   const [aiUsage, setAiUsage] = useState('');
@@ -28,6 +102,7 @@ export default function ExitSurveyPopup() {
 
   const modalRef = useRef<HTMLDivElement>(null);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
+
   const openPopup = () => {
     setIsOpen(true);
     sessionStorage.setItem('wao_exit_survey_shown', 'true');
@@ -41,10 +116,34 @@ export default function ExitSurveyPopup() {
     document.body.style.overflow = '';
   };
 
+  // Closed without converting (X / Escape / backdrop) — mark dismissed, suppress 14 days.
+  const dismissPopup = () => {
+    writeGateState('dismissed');
+    closePopup();
+  };
+
+  // Converted (course step-5 success, or commercial primary CTA click) — never show again.
+  const markSubmitted = () => {
+    writeGateState('submitted');
+  };
+
   useEffect(() => {
-    // Check if popup was already shown in this session
-    const hasBeenShown = sessionStorage.getItem('wao_exit_survey_shown');
-    if (hasBeenShown === 'true') return;
+    if (!variant) return; // page excluded from all exit popups
+
+    // Dev/QA bypass: append ?no_exit_popup=1 to any URL to fully disable the popup for
+    // that page load. Deliberately query-param based (not an automatic NODE_ENV skip) so
+    // the popup can still be exercised end-to-end against `npm run dev`.
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('no_exit_popup') === '1') return;
+    }
+
+    // Same-tab cheap guard (not the source of truth — see localStorage gate below).
+    const hasBeenShownThisSession = sessionStorage.getItem('wao_exit_survey_shown');
+    if (hasBeenShownThisSession === 'true') return;
+
+    // Persistent gate: submitted → never again; dismissed → suppressed for 14 days.
+    if (isGateSuppressed()) return;
 
     const isMobile =
       typeof navigator !== 'undefined' &&
@@ -55,10 +154,36 @@ export default function ExitSurveyPopup() {
     const MIN_TIME_MS = 15_000;
 
     if (!isMobile) {
-      // ── Desktop: exit intent ────────────────────────────────────────────
-      // Only fires when the cursor truly exits the viewport from the TOP
-      // (i.e. heading toward the browser address bar / tab bar).
-      // clientY <= 0 means the cursor crossed the very top edge of the viewport.
+      // ── Desktop: exit intent with a trajectory guard ──────────────────────
+      // A raw `clientY <= 0` mouseleave fires on tab-switches, address-bar
+      // clicks, and incidental top-edge grazes — none of which are genuine
+      // exit intent. We track recent mousemove samples and only treat the
+      // top-edge mouseleave as real if the cursor had meaningful net upward
+      // velocity over the preceding ~300ms.
+      const TRAJECTORY_WINDOW_MS = 300;
+      const MIN_UPWARD_DISTANCE_PX = 20;
+      const MIN_UPWARD_VELOCITY = 0.15; // px/ms moving upward (negative deltaY)
+
+      let samples: { y: number; t: number }[] = [];
+
+      const handleMouseMove = (e: MouseEvent) => {
+        const now = Date.now();
+        samples.push({ y: e.clientY, t: now });
+        // Keep only samples within the trajectory window.
+        samples = samples.filter((s) => now - s.t <= TRAJECTORY_WINDOW_MS);
+      };
+
+      const hasGenuineUpwardTrajectory = (): boolean => {
+        if (samples.length < 2) return false;
+        const first = samples[0];
+        const last = samples[samples.length - 1];
+        const dt = last.t - first.t;
+        if (dt <= 0) return false;
+        const dy = last.y - first.y; // negative = moved up
+        const velocity = dy / dt; // negative px/ms moving up
+        return dy <= -MIN_UPWARD_DISTANCE_PX && velocity <= -MIN_UPWARD_VELOCITY;
+      };
+
       const handleMouseLeave = (e: MouseEvent) => {
         // Ignore moves into iframes (e.g. YouTube embeds)
         const target = e.relatedTarget as HTMLElement | null;
@@ -70,11 +195,18 @@ export default function ExitSurveyPopup() {
         // Must have spent at least 15 s on the page
         if (Date.now() - pageLoadTime < MIN_TIME_MS) return;
 
+        // Must show genuine upward velocity, not a tab-switch / incidental graze
+        if (!hasGenuineUpwardTrajectory()) return;
+
         openPopup();
       };
 
+      document.addEventListener('mousemove', handleMouseMove);
       document.addEventListener('mouseleave', handleMouseLeave);
-      return () => document.removeEventListener('mouseleave', handleMouseLeave);
+      return () => {
+        document.removeEventListener('mousemove', handleMouseMove);
+        document.removeEventListener('mouseleave', handleMouseLeave);
+      };
     } else {
       // ── Mobile: time-based only (60 s), with scroll-depth guard ─────────
       // mouseleave is NOT used on mobile — touch events fire it unreliably
@@ -90,7 +222,8 @@ export default function ExitSurveyPopup() {
 
       return () => clearTimeout(mobileTimeout);
     }
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [variant]);
 
 
   // Accessibility: Handle escape key and focus trap
@@ -99,7 +232,7 @@ export default function ExitSurveyPopup() {
 
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
-        closePopup();
+        dismissPopup();
       }
       if (e.key === 'Tab' && modalRef.current) {
         const focusableElements = modalRef.current.querySelectorAll(
@@ -127,6 +260,7 @@ export default function ExitSurveyPopup() {
     closeButtonRef.current?.focus();
 
     return () => document.removeEventListener('keydown', handleKeyDown);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen]);
 
   const handleNextStep = () => {
@@ -187,6 +321,7 @@ export default function ExitSurveyPopup() {
       if (result.ok) {
         // Save selected niche to localStorage to customize training portal layout
         localStorage.setItem('wao_user_niche', niche);
+        markSubmitted(); // converted — never show the exit popup again
         setStep(5);
       } else {
         setError(result.error ?? 'חלה שגיאה בשליחת הטופס. אנא נסה שנית.');
@@ -198,14 +333,86 @@ export default function ExitSurveyPopup() {
     }
   };
 
-  if (!isOpen) return null;
+  const handleCommercialCtaClick = () => {
+    markSubmitted(); // primary CTA click counts as a conversion, not a dismissal
+    closePopup();
+  };
 
+  if (!isOpen || !variant) return null;
+
+  // ── Commercial variant: single-step, no survey, no form POST ──────────────
+  if (variant === 'commercial') {
+    return (
+      <div
+        className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="exit-commercial-title"
+        onClick={(e) => {
+          if (e.target === e.currentTarget) dismissPopup();
+        }}
+      >
+        <div
+          ref={modalRef}
+          dir="rtl"
+          className="relative w-full max-w-[520px] bg-[var(--surface)] border border-[var(--border)] rounded-[var(--radius-lg)] p-6 md:p-8 shadow-[var(--shadow-card)] text-[var(--text)] transition-all overflow-hidden text-center"
+        >
+          {/* Glow decoration */}
+          <div className="absolute top-0 right-1/4 w-96 h-96 bg-[var(--accent)]/10 rounded-full blur-[80px] pointer-events-none" />
+
+          {/* Close Button */}
+          <button
+            ref={closeButtonRef}
+            onClick={dismissPopup}
+            className="absolute top-4 left-4 w-8 h-8 flex items-center justify-center rounded-full border border-[var(--border)] hover:border-[var(--accent)] text-[var(--muted)] hover:text-[var(--text)] transition-colors cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--accent)]"
+            aria-label="סגור חלון"
+          >
+            ✕
+          </button>
+
+          <div className="space-y-4 pt-2">
+            <h2 id="exit-commercial-title" className="text-xl md:text-2xl font-bold font-rubik">
+              רגע לפני שאתה סוגר — ב-₪9.90 הבוט כבר מתחיל לבנות לך אתר
+            </h2>
+            <p className="text-sm md:text-base text-[var(--muted)] max-w-md mx-auto">
+              את כל מה שקראת כאן, הבוט של WAO עושה בשבילך — ואתה רק מאשר.
+              משלם ₪9.90, מקבל אתר חי תוך 24 שעות, וממשיך רק אם אהבת.
+            </p>
+
+            <div className="pt-4 space-y-3">
+              <Link
+                href="/site-bot"
+                onClick={handleCommercialCtaClick}
+                className="btn-primary block w-full px-8 py-3.5 text-sm md:text-base font-semibold text-center rounded-[var(--radius-pill)] cursor-pointer"
+              >
+                שהבוט יבנה לי ב-₪9.90
+              </Link>
+              <a
+                href={WHATSAPP_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={dismissPopup}
+                className="block text-xs md:text-sm text-[var(--muted)] hover:text-[var(--text)] underline underline-offset-2 transition-colors cursor-pointer"
+              >
+                מעדיף לדבר עם בן אדם קודם? דבר איתנו בוואטסאפ
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ── Course variant: existing 4-step survey ────────────────────────────────
   return (
     <div
       className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in"
       role="dialog"
       aria-modal="true"
       aria-labelledby="exit-survey-title"
+      onClick={(e) => {
+        if (e.target === e.currentTarget && step < 5) dismissPopup();
+      }}
     >
       <div
         ref={modalRef}
@@ -218,7 +425,7 @@ export default function ExitSurveyPopup() {
         {/* Close Button */}
         <button
           ref={closeButtonRef}
-          onClick={closePopup}
+          onClick={step < 5 ? dismissPopup : closePopup}
           className="absolute top-4 left-4 w-8 h-8 flex items-center justify-center rounded-full border border-[var(--border)] hover:border-[var(--accent)] text-[var(--muted)] hover:text-[var(--text)] transition-colors cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--accent)]"
           aria-label="סגור חלון"
         >

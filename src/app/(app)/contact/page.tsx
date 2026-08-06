@@ -164,7 +164,7 @@ export default function ContactPage() {
         <div className="wao-container">
           <div className="content-2col" style={{ display: "grid", gridTemplateColumns: "1.1fr 1fr", gap: "64px", alignItems: "start" }}>
             {/* Form */}
-            <div>
+            <div id="contact-form" style={{ scrollMarginTop: "72px" }}>
               <h2 style={{ ...h2Style, marginBottom: "28px" }}>שלח פנייה</h2>
               <ContactForm source="contact-page" />
             </div>

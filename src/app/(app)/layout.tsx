@@ -24,7 +24,10 @@ const assistant = Assistant({
 export const metadata: Metadata = {
   metadataBase: new URL("https://www.wao.co.il"),
   title: {
-    default: "WAO | שיווק דיגיטלי שמביא תוצאות",
+    // title.template does not apply to the layout's own segment (only to child pages),
+    // so the RLM-anchored brand suffix is hardcoded here literally — same pattern as
+    // the "‏ | WAO" suffix used via title.absolute in geo/page.tsx and site-bot/page.tsx.
+    default: "שיווק דיגיטלי ש-AI מריץ — טוב יותר מסוכנות פרסום‏ | WAO",
     // RLM (‏) after %s anchors the title's end to RTL before the Latin brand, so a
     // title ending in a Latin token (…SEO/…URL) can't bidi-swap with "WAO" in RTL SERPs.
     template: "%s‏ | WAO",
@@ -48,7 +51,7 @@ export const metadata: Metadata = {
     locale: "he_IL",
     url: "https://www.wao.co.il",
     siteName: "WAO",
-    title: "WAO | שיווק דיגיטלי שמביא תוצאות",
+    title: "שיווק דיגיטלי ש-AI מריץ — טוב יותר מסוכנות פרסום‏ | WAO",
     description:
       "סוכנות שיווק דיגיטלי מובילה בישראל עם 20+ שנות ניסיון.",
   },
@@ -64,6 +67,17 @@ export const metadata: Metadata = {
     },
   },
   alternates: { canonical: "https://www.wao.co.il" },
+  manifest: "/manifest.webmanifest",
+  icons: {
+    // favicon.ico is served via the src/app/favicon.ico file convention
+    // (auto-injected by Next.js) — not duplicated here.
+    icon: [
+      { url: "/favicon.svg", type: "image/svg+xml" },
+      { url: "/icon-192.png", sizes: "192x192", type: "image/png" },
+      { url: "/icon-512.png", sizes: "512x512", type: "image/png" },
+    ],
+    apple: [{ url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" }],
+  },
 };
 
 const schema = {

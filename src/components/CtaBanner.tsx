@@ -2,14 +2,13 @@
 type Props = { data?: any };
 
 const DEFAULTS = {
-  eyebrow: "מוכנים להתחיל?",
-  headingPre: "שיחה קצרה שיכולה לשנות",
-  headingAccent: "את הכיוון של העסק שלך",
-  subheading: "ייעוץ ראשון ללא עלות וללא התחייבות. נבין את האתגרים שלך ונספר לך בדיוק מה אפשר לעשות.",
+  eyebrow: "עדיין מתלבט?",
+  headingPre: "לא בטוח איזה בוט",
+  headingAccent: "מתאים לעסק שלך?",
+  subheading: "Site Bot בונה לך אתר מאפס. GEO Bot מכניס אתר קיים לתשובות של גוגל. לא בטוח מאיפה להתחיל? דבר איתנו ונכוון אותך לבוט הנכון.",
   phone: "052-614-8860",
   phoneHref: "0526148860",
   email: "eitan@wao.co.il",
-  trustLine: "✓ ייעוץ ראשון חינם · ✓ ללא חוזה · ✓ מענה תוך 24 שעות",
 };
 
 export default function CtaBanner({ data }: Props) {
@@ -32,13 +31,10 @@ export default function CtaBanner({ data }: Props) {
               <a href={`tel:${d.phoneHref}`} className="btn-primary" style={{ fontSize: "1.05rem", padding: "16px 40px" }}>
                 📞 {d.phone}
               </a>
-              <a href={`mailto:${d.email}`} className="btn-outline" style={{ fontSize: "1.05rem", padding: "16px 40px" }}>
-                שלח הודעה
+              <a href="https://wa.me/972526148860" target="_blank" rel="noopener noreferrer" className="btn-outline" style={{ fontSize: "1.05rem", padding: "16px 40px" }}>
+                💬 וואטסאפ
               </a>
             </div>
-            <p style={{ marginTop: "28px", fontSize: "0.82rem", color: "var(--muted)", fontFamily: "var(--font-body), sans-serif" }}>
-              {d.trustLine}
-            </p>
           </div>
         </div>
       </div>

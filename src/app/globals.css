@@ -233,6 +233,38 @@ p { margin: 0; }
   background: var(--surface);
 }
 
+.wao-header-inner {
+  height: 70px;
+}
+@media (max-width: 767px) {
+  .wao-header-inner { height: 56px; }
+}
+
+/* Tailwind's `hidden`/`md:inline-flex` utilities live in @layer utilities and
+   lose the cascade to unlayered custom classes like .btn-primary (unlayered
+   CSS always beats layered CSS regardless of source order/specificity), so
+   the header CTA's mobile-hide/desktop-show needs its own unlayered rule. */
+.wao-cta-desktop-only {
+  display: none;
+}
+@media (min-width: 768px) {
+  .wao-cta-desktop-only {
+    display: inline-flex;
+  }
+}
+
+.wao-mobile-action-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  background: none;
+  border: none;
+}
+
 /* ─── Cards ─── */
 .service-card {
   background: var(--surface);

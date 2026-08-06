@@ -4,18 +4,19 @@ import Link from "next/link";
 type Props = { data?: any };
 
 const DEFAULTS = {
-  badge: "17 שנות ניסיון בשיווק דיגיטלי",
+  badge: "בוטי AI שמנהלים לך את השיווק הדיגיטלי",
   headlinePre: "שיווק דיגיטלי",
-  headlineAccent: "שמביא תוצאות",
-  headlinePost: "משמעותיות יותר",
+  headlineAccent: "שבוטי AI מריצים",
+  headlinePost: "מ-₪9.90 לחודש, בלי לכתוב שורת קוד",
   subheadline: "אנחנו לא סוכנות שיווק רגילה. בוואו בונים אסטרטגיות מדויקות שמניעות צמיחה אמיתית — עם שיטות מוכחות ו-AI מתקדם, ללא התחייבות לחוזים ארוכי טווח.",
-  ctaPrimary: "קבל ייעוץ חינם",
-  ctaSecondary: "הכר את השירותים",
-  ctaSecondaryHref: "/seo",
+  ctaPrimary: "בניית אתר — מתחילים ב-₪9.90",
+  ctaPrimaryHref: "/site-bot",
+  ctaSecondary: "כבר יש לך אתר עם תוכן?",
+  ctaSecondaryHref: "/geo",
   phone: "0526148860",
   stats: [
-    { number: "20+", label: "שנות ניסיון" },
-    { number: "500+", label: "לקוחות מרוצים" },
+    { number: "20+", label: "שנות ניסיון מאחורי הבוט" },
+    { number: "500+", label: "לקוחות שהבוט למד מהם" },
     { number: "4X", label: "ROI ממוצע ללקוח" },
     { number: "ללא", label: "חוזה ארוך טווח" },
   ],
@@ -50,10 +51,10 @@ export default function Hero({ data }: Props) {
           </p>
 
           <div style={{ display: "flex", gap: "16px", flexWrap: "wrap", alignItems: "center" }}>
-            <a href={`tel:${d.phone}`} className="btn-primary" style={{ fontSize: "1.05rem", padding: "16px 36px" }}>
+            <Link href={d.ctaPrimaryHref ?? "/site-bot"} className="btn-primary" style={{ fontSize: "1.05rem", padding: "16px 36px" }}>
               {d.ctaPrimary}
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
-            </a>
+            </Link>
             <Link href={d.ctaSecondaryHref ?? "/seo"} className="btn-outline" style={{ fontSize: "1.05rem", padding: "16px 36px" }}>
               {d.ctaSecondary}
             </Link>
