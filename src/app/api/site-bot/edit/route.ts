@@ -65,8 +65,23 @@ export async function POST(req: Request) {
     if (!process.env.GEMINI_API_KEY) {
       return NextResponse.json({ error: 'Gemini not configured — edit requires the LLM parser' }, { status: 500 });
     }
-    const raw = await callGeminiJSON(SITE_EDIT_PARSER_PROMPT, userMessage);
-    const parsed = JSON.parse(raw) as { fieldPath: string; newValue: unknown };
+    // LLM JSON output occasionally comes back malformed — retry once before
+    // giving up, same tolerance as the generate route's Tamar pass. There's
+    // no deterministic fallback for an arbitrary edit instruction, so a
+    // second failure is a real error, not silently swallowed.
+    let parsed: { fieldPath: string; newValue: unknown };
+    try {
+      const raw = await callGeminiJSON(SITE_EDIT_PARSER_PROMPT, userMessage);
+      parsed = JSON.parse(raw);
+    } catch (e: any) {
+      console.warn('Site Bot edit parser failed to parse, retrying once:', e.message);
+      try {
+        const retryRaw = await callGeminiJSON(SITE_EDIT_PARSER_PROMPT, userMessage);
+        parsed = JSON.parse(retryRaw);
+      } catch (e2: any) {
+        return NextResponse.json({ error: `Edit parser failed twice: ${e2.message}` }, { status: 500 });
+      }
+    }
     const fieldPath = parsed.fieldPath;
     const newValue = parsed.newValue;
 

@@ -108,10 +108,25 @@ export async function POST(req: Request) {
     let copy: SiteCopy;
 
     if (process.env.GEMINI_API_KEY) {
-      // Tamar — write the site copy
+      // Tamar — write the site copy. LLM JSON output occasionally comes back
+      // malformed (truncated array, stray token) — retry once before falling
+      // back to the deterministic template, same tolerance the Noa pass below
+      // already has, rather than failing the whole request over one bad parse.
       const tamarPrompt = buildSiteCopyPrompt(collectedData);
-      const tamarRaw = await callGeminiJSON(SITE_COPY_SYSTEM_PROMPT, tamarPrompt);
-      const tamarCopy = JSON.parse(tamarRaw) as SiteCopy;
+      let tamarCopy: SiteCopy;
+      try {
+        const tamarRaw = await callGeminiJSON(SITE_COPY_SYSTEM_PROMPT, tamarPrompt);
+        tamarCopy = JSON.parse(tamarRaw) as SiteCopy;
+      } catch (e: any) {
+        console.warn('Site Bot Tamar pass failed to parse, retrying once:', e.message);
+        try {
+          const tamarRetryRaw = await callGeminiJSON(SITE_COPY_SYSTEM_PROMPT, tamarPrompt);
+          tamarCopy = JSON.parse(tamarRetryRaw) as SiteCopy;
+        } catch (e2: any) {
+          console.warn('Site Bot Tamar retry also failed, using fallback template:', e2.message);
+          tamarCopy = generateFallbackCopy(collectedData);
+        }
+      }
 
       // Noa — QA pass on Tamar's copy. If it comes back malformed (rare —
       // the quote-style checklist can occasionally trip over JSON's own

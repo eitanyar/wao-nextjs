@@ -4,10 +4,10 @@ import Link from "next/link";
 type Props = { data?: any };
 
 const DEFAULTS = {
-  badge: "בוטי AI שמנהלים לך את השיווק הדיגיטלי",
+  badge: "שיווק דיגיטלי מתקדם עם AI ותפטר את סוכנות הפרסום שלך",
   headlinePre: "שיווק דיגיטלי",
-  headlineAccent: "שבוטי AI מריצים",
-  headlinePost: "מ-₪9.90 לחודש, בלי לכתוב שורת קוד",
+  headlineAccent: "מתקדם עם AI",
+  headlinePost: "הגיע הזמן שתפטר את הסוכנות שלך",
   subheadline: "אנחנו לא סוכנות שיווק רגילה. בוואו בונים אסטרטגיות מדויקות שמניעות צמיחה אמיתית — עם שיטות מוכחות ו-AI מתקדם, ללא התחייבות לחוזים ארוכי טווח.",
   ctaPrimary: "בניית אתר — מתחילים ב-₪9.90",
   ctaPrimaryHref: "/site-bot",
