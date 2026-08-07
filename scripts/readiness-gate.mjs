@@ -143,7 +143,7 @@ export function buildPresentableReportText({ businessName, city, gbp, targetName
   lines.push(`📊 דוח מיפוי לקוח פוטנציאלי — ${targetName || businessName} (${city})`);
   lines.push('');
   lines.push(`🏢 ${targetName || businessName}`);
-  lines.push(`⭐ ${rating} מתוך 5  |  💬 ${gbp.reviewCount} ביקורות בסך הכל`);
+  lines.push(`⭐ ${rating} מתוך 5 | 💬 ${gbp.reviewCount} ביקורות בסך הכל`);
   lines.push(
     `📈 קצב אחרון (מדגם של ${gbp.sampleSize} ביקורות): ${gbp.recentPace.d30} ב-30 יום | ${gbp.recentPace.d60} ב-60 יום | ${gbp.recentPace.d90} ב-90 יום`,
   );
