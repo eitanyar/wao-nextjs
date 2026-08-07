@@ -163,3 +163,38 @@ https://claude.ai/code/artifact/ad18631f-d8e1-40c8-b31e-c713cdf5c72f
   consent/audit log (ToS §11, hard gate before Ads scales). **Reassigned:** review-velocity is GMB,
   not GEO. Re-read the board when Gate A or B closes.
 
+## Queued follow-on mission — self-serve GBP magnet (Lior, 2026-08-07) — HIGH PRIORITY
+
+Eitan flagged that running the GBP comparison magnet manually (script + WhatsApp send, per
+prospect) is tedious and asked whether a prospect could self-serve it, gated or not. Lior's call:
+
+- **Mechanism: plain form, not Google sign-in.** The magnet already does a WAO-keyed public
+  Places lookup — no client OAuth exists or is needed. Asking a cold prospect to authenticate
+  with Google before they've seen any value is pure top-of-funnel friction and belongs to
+  VISION's post-payment onboarding pattern, not pre-sale lead capture. A form (business name +
+  city + category) posting to a server route running the same lookup gets Eitan out of the loop
+  for less build than OAuth, zero trust cost.
+- **Split, don't gate the whole report.** Gating the entire magnet undercuts its job as a
+  zero-ask Touch-1 opener. Shape: **ungated instant preview** (rating + review count) → **full
+  report** (adds recent-pace comparison + next-step line) **unlocked by name/phone/email** — a
+  real value exchange, not a paywall on the opener.
+- **Sequencing — explicitly NOT part of the in-flight Readiness Gate build.** `readiness-gate.md`
+  §9 excludes a client-facing self-serve surface; its Definition of Done has no public route/UI.
+  This is a distinct follow-on mission, **queued behind Readiness Gate shipping + Roni-verified**
+  — the Places-client refactor happening in that build is what makes this mission cheap once it
+  lands (`scripts/lib/places-client.mjs` becomes shared/reusable).
+- **Priority — HIGH, confirmed by Eitan (2026-08-07) with a concrete trigger.** Lior's own framing
+  was conditional: high-priority only if captured leads are treated as **funnel-filling** (Decision
+  Framework #2), not merely build-capacity work. Eitan supplied the trigger that satisfies it: he
+  wants to **drive cheap paid traffic to the magnet page to test it** — not passive hope that leads
+  show up, an active commitment to generate and work them. That test *requires* self-serve to be
+  meaningful: without it, every click still needs a manual script run + personal WhatsApp send,
+  which (a) doesn't scale even at "cheap" traffic volume, (b) burns exactly the founder-hours the
+  "Now stays protected" rule exists to defend, and (c) would actually test "magnet + Eitan's
+  personal touch" rather than the magnet itself, telling him nothing about real-volume behavior.
+  Sequencing is unchanged by this — the traffic test still needs the ungated/gated split built
+  first, and still benefits from the in-flight Places-client refactor landing — so this stays
+  queued right behind Readiness Gate shipping, just no longer a someday item.
+  Route to Dror (form copy/UX logic) → Tamar/Noa (ungated-preview vs. gated-full-report copy
+  split) → Eitan-Dev, once Readiness Gate ships.
+
