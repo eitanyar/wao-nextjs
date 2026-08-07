@@ -46,15 +46,7 @@
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import dns from 'dns';
-import { Agent, setGlobalDispatcher } from 'undici';
-
-// This sandbox/host environment has a broken IPv6 route to Google's APIs,
-// which makes Node's default happy-eyeballs dual-stack fetch burn its whole
-// timeout budget on IPv6 before falling back to IPv4. Forcing IPv4 here is an
-// environment workaround (see scripts/ads-overlap.mjs for the same pattern).
-dns.setDefaultResultOrder('ipv4first');
-setGlobalDispatcher(new Agent({ connect: { family: 4 } }));
+import { textSearch, placeDetails, buildEntrySignals } from './lib/places-client.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -69,16 +61,6 @@ if (fs.existsSync(envPath)) {
 }
 
 const API_KEY = env.GOOGLE_MAPS_API_KEY || process.env.GOOGLE_MAPS_API_KEY;
-
-if (!API_KEY) {
-  console.error(
-    '\n[gbp-comparison-report] Missing GOOGLE_MAPS_API_KEY.\n' +
-    'Set GOOGLE_MAPS_API_KEY in .env.local (Places API (New) must also be\n' +
-    'enabled on the GCP project — this is a one-time console/billing step,\n' +
-    'not a code change). Aborting before making any request.\n'
-  );
-  process.exit(1);
-}
 
 // ── CLI args ─────────────────────────────────────────────────────────────
 const args = Object.fromEntries(
@@ -96,93 +78,28 @@ const CITY = args.city;
 const CATEGORY = args.category;
 const OUT = args.out;
 
-if (!CITY || !CATEGORY) {
-  console.error('\nUsage:\n' +
-    '  node scripts/gbp-comparison-report.mjs --name="<business name>" --city="<city>" --category="<category>"\n' +
-    '  node scripts/gbp-comparison-report.mjs --place-id=<PlaceID> --city="<city>" --category="<category>"\n');
-  process.exit(1);
-}
-if (!TARGET_NAME && !TARGET_PLACE_ID) {
-  console.error('\nMust supply either --name or --place-id for the target business.\n');
-  process.exit(1);
-}
+// Places API (New) calls now go through the shared client
+// (scripts/lib/places-client.mjs, docs/specs/readiness-gate.md §4) — no
+// second copy of textSearch()/placeDetails()/recentPace() here.
 
-const PLACES_BASE = 'https://places.googleapis.com/v1';
-
-// ── Places API (New) helpers ────────────────────────────────────────────
-async function textSearch(query, { maxResults = 5 } = {}) {
-  const res = await fetch(`${PLACES_BASE}/places:searchText`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'X-Goog-Api-Key': API_KEY,
-      'X-Goog-FieldMask': 'places.id,places.displayName,places.formattedAddress',
-    },
-    body: JSON.stringify({
-      textQuery: query,
-      languageCode: 'he',
-      maxResultCount: maxResults,
-    }),
-  });
-  if (!res.ok) {
-    const body = await res.text();
-    throw new Error(`Text Search failed (${res.status}) for query "${query}": ${body}`);
-  }
-  const data = await res.json();
-  return data.places || [];
-}
-
-async function placeDetails(placeId) {
-  const fieldMask = ['id', 'displayName', 'rating', 'userRatingCount', 'reviews', 'formattedAddress'].join(',');
-  const res = await fetch(`${PLACES_BASE}/places/${placeId}`, {
-    method: 'GET',
-    headers: {
-      'X-Goog-Api-Key': API_KEY,
-      'X-Goog-FieldMask': fieldMask,
-    },
-  });
-  if (!res.ok) {
-    const body = await res.text();
-    throw new Error(`Place Details failed (${res.status}) for place ${placeId}: ${body}`);
-  }
-  return res.json();
-}
-
-// ── recent-review-pace proxy ────────────────────────────────────────────
-// Counts how many of the (<=5) reviews Google's Details response surfaces
-// fall within the last 30/60/90 days. This is a SMALL-SAMPLE ESTIMATE, not
-// true review velocity — Places API only ever returns up to 5 reviews,
-// regardless of how many the business actually has.
-function recentPace(reviews) {
-  const now = Date.now();
-  const DAY = 24 * 60 * 60 * 1000;
-  const counts = { d30: 0, d60: 0, d90: 0 };
-  for (const r of reviews || []) {
-    if (!r.publishTime) continue;
-    const ageDays = (now - new Date(r.publishTime).getTime()) / DAY;
-    if (ageDays <= 30) counts.d30++;
-    if (ageDays <= 60) counts.d60++;
-    if (ageDays <= 90) counts.d90++;
-  }
-  return counts;
-}
-
-function formatEntry(label, details) {
+// Exported (not just used internally) so the regression test in
+// scripts/lib/places-client.test.mjs can assert this pure formatting layer
+// is byte-identical to the pre-refactor formula without importing `main()`
+// (which is argv/network/process.exit-coupled and unsafe to import directly).
+export function formatEntry(label, details) {
   const name = details.displayName?.text || label;
-  const rating = typeof details.rating === 'number' ? details.rating.toFixed(1) : 'אין דירוג';
-  const count = details.userRatingCount ?? 0;
-  const pace = recentPace(details.reviews);
-  const sampleSize = (details.reviews || []).length;
+  const signals = buildEntrySignals(details);
+  const rating = typeof signals.rating === 'number' ? signals.rating.toFixed(1) : 'אין דירוג';
   return {
     name,
     rating,
-    count,
-    pace,
-    sampleSize,
+    count: signals.reviewCount,
+    pace: signals.recentPace,
+    sampleSize: signals.sampleSize,
   };
 }
 
-function renderEntryBlock(entry, isTarget) {
+export function renderEntryBlock(entry, isTarget) {
   const header = isTarget ? `🏢 ${entry.name} (העסק שלך)` : `▫️ ${entry.name}`;
   return [
     header,
@@ -196,7 +113,7 @@ async function main() {
   // 1. Resolve target place
   let targetPlaceId = TARGET_PLACE_ID;
   if (!targetPlaceId) {
-    const results = await textSearch(`${TARGET_NAME} ${CITY}`, { maxResults: 1 });
+    const results = await textSearch(API_KEY, `${TARGET_NAME} ${CITY}`, { maxResults: 1 });
     if (!results.length) {
       console.error(`\nCould not resolve target business "${TARGET_NAME}" in "${CITY}" via Text Search. Try --place-id instead.\n`);
       process.exit(1);
@@ -204,12 +121,12 @@ async function main() {
     targetPlaceId = results[0].id;
   }
 
-  const targetDetails = await placeDetails(targetPlaceId);
+  const targetDetails = await placeDetails(API_KEY, targetPlaceId);
   const targetEntry = formatEntry(TARGET_NAME || targetDetails.displayName?.text, targetDetails);
 
   // 2. Find competitors
   const competitorQuery = `${CATEGORY} ב${CITY}`;
-  const competitorResults = await textSearch(competitorQuery, { maxResults: 8 });
+  const competitorResults = await textSearch(API_KEY, competitorQuery, { maxResults: 8 });
   const competitorCandidates = competitorResults.filter(p => p.id !== targetPlaceId).slice(0, 3);
 
   if (competitorCandidates.length === 0) {
@@ -218,7 +135,7 @@ async function main() {
 
   const competitorEntries = [];
   for (const c of competitorCandidates) {
-    const details = await placeDetails(c.id);
+    const details = await placeDetails(API_KEY, c.id);
     competitorEntries.push(formatEntry(c.displayName?.text, details));
   }
 
@@ -249,7 +166,33 @@ async function main() {
   }
 }
 
-main().catch(err => {
-  console.error(`\n[gbp-comparison-report] Failed: ${err.message}\n`);
-  process.exit(1);
-});
+// Guarded so importing this module (e.g. to reuse the pure formatEntry()/
+// renderEntryBlock() functions from a test) never triggers CLI validation,
+// process.exit(), or a live network call — only running the file directly does.
+const isDirectRun = path.resolve(process.argv[1] || '') === path.resolve(__dirname, 'gbp-comparison-report.mjs');
+if (isDirectRun) {
+  if (!API_KEY) {
+    console.error(
+      '\n[gbp-comparison-report] Missing GOOGLE_MAPS_API_KEY.\n' +
+      'Set GOOGLE_MAPS_API_KEY in .env.local (Places API (New) must also be\n' +
+      'enabled on the GCP project — this is a one-time console/billing step,\n' +
+      'not a code change). Aborting before making any request.\n'
+    );
+    process.exit(1);
+  }
+  if (!CITY || !CATEGORY) {
+    console.error('\nUsage:\n' +
+      '  node scripts/gbp-comparison-report.mjs --name="<business name>" --city="<city>" --category="<category>"\n' +
+      '  node scripts/gbp-comparison-report.mjs --place-id=<PlaceID> --city="<city>" --category="<category>"\n');
+    process.exit(1);
+  }
+  if (!TARGET_NAME && !TARGET_PLACE_ID) {
+    console.error('\nMust supply either --name or --place-id for the target business.\n');
+    process.exit(1);
+  }
+
+  main().catch(err => {
+    console.error(`\n[gbp-comparison-report] Failed: ${err.message}\n`);
+    process.exit(1);
+  });
+}

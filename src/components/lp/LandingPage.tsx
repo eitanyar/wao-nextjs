@@ -60,48 +60,99 @@ export default function LandingPage({ theme, assets, copy, data, heroImageUrl, s
     clickIdRef.current = gclid ? { gclid } : wbraid ? { wbraid } : gbraid ? { gbraid } : {};
   }, []);
 
+  // "Zero silent drops" for phone/WhatsApp click pings — a bare fetch() can
+  // be cancelled mid-flight by the tel:/wa.me navigation that follows the
+  // click. navigator.sendBeacon() is purpose-built for exactly this: the
+  // browser guarantees a queued POST survives the page unload. Fallback to
+  // fetch(..., { keepalive: true }) only if sendBeacon is unavailable or its
+  // per-page quota is exhausted (it returns false, not an accepted queue).
+  // See docs/specs/priority-3-lead-capture-reliability-and-client-feedback.md §1.1.
   function pingClick(type: 'phone-click' | 'whatsapp-click') {
-    fetch('/api/leads', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        source: `lp-${slug}`,
-        orderId: uid(),
-        slug,
-        type,
-        businessNiche: data.businessNiche || '',
-        ...clickIdRef.current,
-      }),
-    }).catch(() => {});
+    const payload = JSON.stringify({
+      source: `lp-${slug}`,
+      orderId: uid(),
+      slug,
+      type,
+      businessNiche: data.businessNiche || '',
+      ...clickIdRef.current,
+    });
+
+    let accepted = false;
+    if (typeof navigator !== 'undefined' && typeof navigator.sendBeacon === 'function') {
+      const blob = new Blob([payload], { type: 'application/json' });
+      accepted = navigator.sendBeacon('/api/leads', blob);
+    }
+    if (!accepted) {
+      fetch('/api/leads', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        keepalive: true,
+        body: payload,
+      }).catch(() => {});
+    }
   }
 
   const nameInputRef = useRef<HTMLInputElement>(null);
   const phoneInputRef = useRef<HTMLInputElement>(null);
   const [formStatus, setFormStatus] = useState<'idle' | 'submitting' | 'success' | 'error'>('idle');
 
+  // Generated once per form-fill attempt (not a fresh uid() per handleSubmit
+  // call) so the one automatic retry below — and any accidental double-submit
+  // — reuses the same orderId. /api/leads upserts by orderId, so this makes
+  // a retry/double-submit idempotent instead of creating a duplicate lead.
+  // See priority-3 spec §1.1.
+  const formOrderIdRef = useRef<string | null>(null);
+
+  function buildFormPayload(orderId: string) {
+    return JSON.stringify({
+      name: nameInputRef.current?.value || '',
+      phone: phoneInputRef.current?.value || '',
+      source: `lp-${slug}`,
+      orderId,
+      slug,
+      type: 'form',
+      businessNiche: data.businessNiche || '',
+      ...clickIdRef.current,
+    });
+  }
+
+  function submitLead(orderId: string) {
+    return fetch('/api/leads', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      keepalive: true, // survives the tab closing before the response resolves
+      body: buildFormPayload(orderId),
+    });
+  }
+
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setFormStatus('submitting');
+
+    if (!formOrderIdRef.current) formOrderIdRef.current = uid();
+    const orderId = formOrderIdRef.current;
+
+    let res: Response;
     try {
-      const res = await fetch('/api/leads', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: nameInputRef.current?.value || '',
-          phone: phoneInputRef.current?.value || '',
-          source: `lp-${slug}`,
-          orderId: uid(),
-          slug,
-          type: 'form',
-          businessNiche: data.businessNiche || '',
-          ...clickIdRef.current,
-        }),
-      });
-      if (!res.ok) throw new Error('server error');
-      setFormStatus('success');
+      res = await submitLead(orderId);
     } catch {
-      setFormStatus('error');
+      // Network-level failure (not a server error response) — flaky mobile
+      // networks are the dominant real-world failure mode here, so exactly
+      // one automatic retry after a short delay, no backoff tier.
+      await new Promise((resolve) => setTimeout(resolve, 1500));
+      try {
+        res = await submitLead(orderId);
+      } catch {
+        setFormStatus('error');
+        return;
+      }
     }
+
+    if (!res.ok) {
+      setFormStatus('error');
+      return;
+    }
+    setFormStatus('success');
   }
 
   return (
