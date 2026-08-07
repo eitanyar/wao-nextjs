@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import path from "path";
 
 // ─── Permanent 308 redirects (Google treats 308 = 301 for PageRank) ──────────
 // Sources: decoded Hebrew paths from the legacy WordPress site.
@@ -326,6 +327,18 @@ const legacyRedirects = [
 
 const nextConfig: NextConfig = {
   output: "standalone",
+  turbopack: {
+    // Next misdetects the workspace root as /home/eitanya (a stray package-lock.json
+    // lives there) instead of this repo, which makes Turbopack try to resolve
+    // venv/bin/python's symlink outside that assumed root and panic. Pin it explicitly.
+    root: path.join(__dirname),
+  },
+  outputFileTracingExcludes: {
+    // venv/bin/python3 is an absolute symlink to /usr/bin/python3, outside the project
+    // root — Turbopack's file-tracing panics trying to resolve it. Python here is only
+    // ever invoked as a subprocess (never bundled), so it's safe to exclude entirely.
+    "/*": ["venv/**/*"],
+  },
   // Tailscale IPs/hostname used to reach the dev server remotely (not localhost) —
   // without this, Next 16 dev mode silently blocks HMR/RSC dev-asset requests from
   // that origin, which breaks client hydration (buttons render but onClick never wires up).

@@ -69,7 +69,7 @@ test('phone/whatsapp turn (case 24) is guarded by isPlausiblePhoneAnswer before 
 // ── Unit test the phone-plausibility guard logic directly (TS-stripped) ────
 function loadIsPlausiblePhoneAnswer() {
   const match = routeCode.match(
-    /export function isPlausiblePhoneAnswer\(text: string\): boolean \{([\s\S]*?)\n\}/
+    /function isPlausiblePhoneAnswer\(text: string\): boolean \{([\s\S]*?)\n\}/
   );
   assert.ok(match, 'isPlausiblePhoneAnswer function not found in route.ts');
   const body = match[1];

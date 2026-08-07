@@ -204,7 +204,7 @@ function parseNumber(text: string): number | null {
 // turn-index misalignment — or any other future bug — might otherwise route
 // into the `phone` field. This does NOT replace fixing the actual mapping
 // bug; it only stops obviously-wrong values from being persisted.
-export function isPlausiblePhoneAnswer(text: string): boolean {
+function isPlausiblePhoneAnswer(text: string): boolean {
   const digitsOnly = text.replace(/\D/g, "");
   if (digitsOnly.length < 7 || digitsOnly.length > 15) return false;
   // Reject answers that are mostly prose around a handful of digits
@@ -284,7 +284,7 @@ function inferServiceModel(niche: string): InferredServiceModel {
 
 // ── Simulation handler ────────────────────────────────────────────────────────
 
-export function handleSimulation(
+function handleSimulation(
   lastUserMessage: string,
   currentState: string,
   collectedData: CollectedData
