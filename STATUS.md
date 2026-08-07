@@ -1,10 +1,54 @@
 # WAO — Status Handoff
-*Last updated: 2026-08-05, end of session*
+*Last updated: 2026-08-07, end of session*
 
 For Lior (mission-planner) to open with tomorrow: what shipped, the real leverage point,
 and the one open loop that needs Eitan's action first thing.
 
-## Today in one line
+## 2026-08-07 — Bot-suite dev-parity sprint (commits `56ee16f`..`ce6119a`)
+Eitan's north star: every lead magnet self-serve, zero Eitan in the loop, blocked only on
+payment. A survey found the real state was worse than "just waiting on Takbull" — Ads Bot had
+a live security hole, GEO Bot had no self-serve entry at all, GMB Bot was spec-only. Closed all
+three, gate-overridden on GMB Bot per Eitan's explicit call, then hit and fixed an unrelated
+repo-wide build blocker along the way. All four independently Roni-verified PASS, no
+regressions, `npm run build`/`npm test` clean.
+
+- **Ads Bot fail-closed fix** (`56ee16f`) — `GET /api/checkout/callback` signature verification
+  was opt-in via `YAAD_VERIFY_SIGNATURE`, unset in prod: any unauthenticated callback claiming
+  `status=success` could trigger a live Google Ads campaign launch with zero payment. Now
+  unconditional whenever live mode, via Hyp's API-based VERIFY round-trip (not a local HMAC per
+  `docs/specs/priority-4-live-payment-integration.md` §1a), fails closed if `YAAD_PASSP` is
+  unset (still is — needs sourcing from Hyp support before this path takes real traffic).
+  **Flag for Dror:** that spec's framing is now stale — `docs/specs/subscription-billing-provider-decision.md`
+  confirms Takbull supersedes this direct-Hyp path once the 8/10 meeting resolves CCode=3; this
+  fix is a safety bridge, not the final architecture.
+- **GEO Bot self-serve signup + checkout + GSC OAuth** (`d92cf2f`) — GEO Bot had zero self-serve
+  entry point (the ₪9.90 trial is Site Bot-only; GEO Bot sells direct at ₪199/mo, VISION.md:40).
+  New `/geo/signup` → mock checkout (same `getPaymentProvider()` pattern as Site Bot) → client
+  record with `entitlements: ['geo']` → self-serve GSC OAuth (closes the unchecked TODO at
+  VISION.md:247). WoZ delivery loop (dashboard/action-page approve-and-post) intentionally
+  untouched — stays human-in-loop per Phase 1R. **Needs a manual step:** register
+  `{origin}/api/geo/gsc/oauth/callback` as an Authorized redirect URI in Google Cloud Console
+  (localhost + prod).
+- **GMB Bot built, gate overridden** (`4862f53`) — spec said "do not build until Site Bot MVP
+  confirmed closed"; Eitan explicitly overrode that today to build in parallel rather than
+  block on it. Full WoZ approval pipeline (client approve/edit/reject → staff post-live → log),
+  read-only NAP/completeness diagnostics automated, `log.jsonl` schema generalized into a shared
+  multi-bot module (`src/lib/shared/approvalLog.ts`) without touching GEO Bot's own log. GBP API
+  client built against the documented contract — no live credentials yet, smoke test correctly
+  reports every scope `skipped-no-credentials`.
+- **Build blocker, unrelated to the above, hit and fixed** (`ce6119a`) — a stray
+  `/home/eitanya/package-lock.json` made Turbopack infer the workspace root one level too high,
+  and the (empty, unused) `venv/`'s out-of-root python3 symlink then panicked Turbopack's
+  project-wide file scan on every build. Pinned `turbopack.root`, relocated `venv/` to
+  `/home/eitanya/wao-venv` (nothing in-repo referenced it by path). Also fixed a pre-existing,
+  unrelated typecheck failure — `src/app/api/bot/route.ts` had two internal helpers exported
+  for no reason, which Next 16's route-export-shape check rejects.
+
+**Net effect on the north star:** every bot except Content Bot (explicitly deferred, unchanged)
+now has a self-serve dev path built and Roni-verified. Everything left is external, not code:
+`YAAD_PASSP`, the GCP OAuth redirect URI, GBP API credentials, and the 8/10 Takbull meeting.
+
+## Today in one line (2026-08-05)
 Dror's cluster-precision audit and a mission-planner review both landed today, and the
 mission-planner review found a real bug: the client→campaign binding layer has only ever
 resolved to **one** `primaryCampaignId` per client, so every downstream consumer (operator
