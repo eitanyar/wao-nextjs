@@ -204,3 +204,13 @@ prospect) is tedious and asked whether a prospect could self-serve it, gated or 
   Route to Dror (form copy/UX logic) → Tamar/Noa (ungated-preview vs. gated-full-report copy
   split) → Eitan-Dev, once Readiness Gate ships.
 
+**SPEC DONE 08-07** — Dror wrote `docs/specs/self-serve-gbp-magnet.md`: two-call funnel (ungated
+preview → gated unlock) so the full report can't be scraped without contact info; reuses
+`places-client.mjs` and the `LeadRecord`/`/api/leads` pattern (with gclid/wbraid/gbraid capture,
+same as `LandingPage.tsx`, for the paid-traffic attribution trace); rate-limits via the existing
+`rate-limit.ts` limiter + a `previewToken` binding + a daily Places-call ceiling; `{{GBP_MAGNET_*}}`
+copy placeholders only. Not yet routed to Tamar/copy or build — holding for Lior/Eitan to
+prioritize against the rest of the backlog. Dror's open questions: who owns page/nav placement
+(Maya vs. Eitan-Dev), does Maya need an explicit bidi sign-off, any in-flight freeze blocking start,
+any undocumented reason `LeadRecord.email` was never added.
+
