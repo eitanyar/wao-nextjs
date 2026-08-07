@@ -227,7 +227,7 @@ export default function ContentPage() {
             בכל רגע נתון, הלקוחות שלכם מחפשים בגוגל תשובות לשאלות שרק אתם יודעים לענות עליהן. אם אתם לא שם כדי לענות – הם פשוט יקנו מהמתחרים.
           </p>
           <p style={{ ...bodyStyle, fontSize: "clamp(1rem,1.8vw,1.15rem)", marginBottom: "40px", maxWidth: "640px" }}>
-            שיווק תוכן מוודא שתהיו שם בשבילם. לא עם מודעה ממומנת שנעלמת ברגע שנגמר התקציב, אלא עם נכס ידע שמזרים אליכם לקוחות חודש אחרי חודש. בעידן שבו גוגל מציג <GT term="AI Overviews">סיכומי AI</GT> לפני כל תוצאה, עסקים שיש להם תוכן מוסמך ועמוק — מופיעים ראשונים.
+            שיווק תוכן מוודא שתהיו שם בשבילם. לא עם מודעה ממומנת שנעלמת ברגע שנגמר התקציב, אלא עם נכס ידע שמזרים אליכם לקוחות חודש אחרי חודש. בעידן שבו גוגל מציג <GT term="AI Overviews">סיכומי AI</GT> לפני כל תוצאה, עסקים שיש להם תוכן מוסמך ועמוק — מופיעים ראשונים. כבר יש לכם 30+ עמודים באתר ונתוני Search Console? ה-GEO Bot העצמאי שלנו עושה בדיוק את זה בלולאה אוטומטית, ב-₪199 לחודש.
           </p>
           <div style={{ display: "flex", gap: "14px", flexWrap: "wrap" }}>
             <a href="tel:0526148860" className="btn-primary" style={{ fontSize: "1.05rem", padding: "15px 36px" }}>
@@ -524,8 +524,8 @@ export default function ContentPage() {
                 <a href="tel:0526148860" className="btn-primary" style={{ fontSize: "1.05rem", padding: "16px 40px" }}>
                   📞 052-614-8860
                 </a>
-                <Link href="/contact" className="btn-outline" style={{ fontSize: "1rem" }}>
-                  שלח פנייה
+                <Link href="/geo" className="btn-outline" style={{ fontSize: "1rem" }}>
+                  או התחילו לבד עם GEO Bot ←
                 </Link>
               </div>
               <p style={{ marginTop: "20px", fontSize: "0.8rem", color: "var(--muted)", fontFamily: "var(--font-body), sans-serif" }}>

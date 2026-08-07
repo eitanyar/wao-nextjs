@@ -200,7 +200,7 @@ export default function GoogleAdsPage() {
             {" "}— לא רק קליקים
           </h1>
           <p style={{ ...bodyStyle, fontSize: "clamp(1rem,1.8vw,1.2rem)", marginBottom: "40px", maxWidth: "620px" }}>
-            קמפיינים חכמים ב-Google Ads שממנפים את הדאטה שלכם בעזרת AI. אנחנו מנהלים את התקציב שלכם כאילו יצא מהכיס שלנו – בשקיפות מוחלטת ובמדידה של כל שקל.
+            קמפיינים חכמים ב-Google Ads שממנפים את הדאטה שלכם בעזרת AI. אנחנו מנהלים את התקציב שלכם כאילו יצא מהכיס שלנו – בשקיפות מוחלטת ובמדידה של כל שקל. באותה טכנולוגיית AI אנחנו מריצים גם את ה-Ads Bot העצמאי שלנו — לעסקים שרוצים להתחיל לבד.
           </p>
           <div style={{ display: "flex", gap: "14px", flexWrap: "wrap" }}>
             <a href="tel:0526148860" className="btn-primary" style={{ fontSize: "1.05rem", padding: "15px 36px" }}>
@@ -332,8 +332,8 @@ export default function GoogleAdsPage() {
                 <a href="tel:0526148860" className="btn-primary" style={{ fontSize: "1.05rem", padding: "16px 40px" }}>
                   📞 052-614-8860
                 </a>
-                <Link href="/contact" className="btn-outline" style={{ fontSize: "1rem" }}>
-                  שלח פנייה
+                <Link href="/google-ads/onboarding" className="btn-outline" style={{ fontSize: "1rem" }}>
+                  התחל עם ה-Ads Bot לבד ←
                 </Link>
               </div>
               <p style={{ marginTop: "20px", fontSize: "0.8rem", color: "var(--muted)", fontFamily: "var(--font-body), sans-serif" }}>

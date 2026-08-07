@@ -171,7 +171,7 @@ export default function AboutPage() {
             <span className="text-gradient">בפחות כסף</span>
           </h1>
           <p style={{ ...bodyStyle, fontSize: "clamp(1rem,1.8vw,1.2rem)", marginBottom: "40px", maxWidth: "620px" }}>
-            כדי לגרום לך לומר וואו, זה עובד! מאז 2006, אנחנו בונים שיווק דיגיטלי שמביא לקוחות מוכנים לרכישה — לא סתם תנועה ולייקים.
+            כדי לגרום לך לומר וואו, זה עובד! מאז 2006, אנחנו בונים שיווק דיגיטלי שמביא לקוחות מוכנים לרכישה — לא סתם תנועה ולייקים. היום אנחנו עושים את זה גם בעזרת חבילת בוטי AI משלנו — שבונה אתרים, מנהלת קמפיינים וכותבת תוכן, בפיקוח הצוות שלנו.
           </p>
           <div style={{ display: "flex", gap: "14px", flexWrap: "wrap" }}>
             <a href="tel:0526148860" className="btn-primary" style={{ fontSize: "1.05rem", padding: "15px 36px" }}>

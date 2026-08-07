@@ -71,7 +71,7 @@ const COURSE_VARIANT_PATHS = ['/training', '/blog', '/knowledge', '/glossary', '
 
 function getVariant(pathname: string | null): PopupVariant | null {
   if (!pathname) return null;
-  if (NO_POPUP_PATHS.some((p) => pathname === p || pathname.startsWith(p + '/') || pathname.startsWith(p))) {
+  if (NO_POPUP_PATHS.some((p) => pathname === p || pathname.startsWith(p + '/'))) {
     return null;
   }
   if (COURSE_VARIANT_PATHS.some((p) => pathname === p || pathname.startsWith(p + '/'))) {
