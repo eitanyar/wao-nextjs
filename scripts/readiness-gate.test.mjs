@@ -251,16 +251,28 @@ test('prospectSlug: different inputs produce different slugs', () => {
   assert.notEqual(prospectSlug('א', 'חיפה'), prospectSlug('ב', 'חיפה'));
 });
 
-// ── selectRoutingLineMarker() / presentable text — placeholders only ────
-test('selectRoutingLineMarker: maps every named rule to its §8 placeholder marker', () => {
-  assert.equal(selectRoutingLineMarker({ ruleFired: 'rule-1-no-site' }), '{{ROUTING_LINE_SITE_BOT}}');
-  assert.equal(selectRoutingLineMarker({ ruleFired: 'rule-2-thin-site' }), '{{ROUTING_LINE_SITE_BOT}}');
-  assert.equal(selectRoutingLineMarker({ ruleFired: 'rule-3-micro-smb-near-geo-threshold' }), '{{ROUTING_LINE_SITE_BOT_GMB_UPSELL}}');
-  assert.equal(selectRoutingLineMarker({ ruleFired: 'rule-4-thin-content-ready-smb' }), '{{ROUTING_LINE_GEO_BOT_THIN_CONTENT}}');
-  assert.equal(selectRoutingLineMarker({ ruleFired: 'rule-5-geo-direct' }), '{{ROUTING_LINE_GEO_BOT}}');
+// ── selectRoutingLineMarker() / presentable text — Tamar's §8 copy ─────
+test('selectRoutingLineMarker: maps every named rule to its §8 Hebrew routing line, each distinct and mentioning its bot', () => {
+  const siteBot = selectRoutingLineMarker({ ruleFired: 'rule-1-no-site' });
+  const siteBot2 = selectRoutingLineMarker({ ruleFired: 'rule-2-thin-site' });
+  const gmbUpsell = selectRoutingLineMarker({ ruleFired: 'rule-3-micro-smb-near-geo-threshold' });
+  const geoThin = selectRoutingLineMarker({ ruleFired: 'rule-4-thin-content-ready-smb' });
+  const geoDirect = selectRoutingLineMarker({ ruleFired: 'rule-5-geo-direct' });
+
+  assert.equal(siteBot, siteBot2);
+  assert.match(siteBot, /Site Bot/);
+  assert.match(gmbUpsell, /GMB Bot/);
+  assert.match(geoThin, /GEO Bot/);
+  assert.match(geoDirect, /GEO Bot/);
+  assert.notEqual(geoThin, geoDirect);
+
+  for (const line of [siteBot, gmbUpsell, geoThin, geoDirect]) {
+    assert.match(line, /^🧭/);
+    assert.doesNotMatch(line, /\{\{.*\}\}/);
+  }
 });
 
-test('buildPresentableReportText never contains Dror/engineer-authored Hebrew routing copy — placeholder markers only', () => {
+test('buildPresentableReportText embeds the real Hebrew routing copy, not a placeholder marker', () => {
   const text = buildPresentableReportText({
     businessName: 'גליל אינסטלציה',
     city: 'חיפה',
@@ -269,10 +281,11 @@ test('buildPresentableReportText never contains Dror/engineer-authored Hebrew ro
     routing: { ruleFired: 'rule-5-geo-direct' },
     adsFit: { hardFail: false },
   });
-  assert.match(text, /\{\{ROUTING_LINE_GEO_BOT\}\}/);
+  assert.match(text, /GEO Bot/);
+  assert.doesNotMatch(text, /\{\{.*\}\}/);
 });
 
-test('buildPresentableReportText appends the ads-not-ready marker when adsFit hard-failed', () => {
+test('buildPresentableReportText appends the ads-not-ready Hebrew copy when adsFit hard-failed', () => {
   const text = buildPresentableReportText({
     businessName: 'x', city: 'y',
     gbp: { rating: null, reviewCount: 0, recentPace: { d30: 0, d60: 0, d90: 0 }, sampleSize: 0 },
@@ -280,5 +293,6 @@ test('buildPresentableReportText appends the ads-not-ready marker when adsFit ha
     routing: { ruleFired: 'rule-1-no-site' },
     adsFit: { hardFail: true },
   });
-  assert.match(text, /\{\{ROUTING_LINE_ADS_NOT_READY\}\}/);
+  assert.match(text, /⛔/);
+  assert.doesNotMatch(text, /\{\{.*\}\}/);
 });

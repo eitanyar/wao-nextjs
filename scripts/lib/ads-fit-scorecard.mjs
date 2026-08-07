@@ -38,8 +38,8 @@ export const ADMISSION_MAX_SCORE = 16;
 // granular" per readiness-gate.md §3.4 — coach is content-ready-SMB for
 // Site/GEO routing purposes but Tier 3 (score 0) for AI-resistance, and
 // that distinction is pilot-client-gating.md's, not this file's to resolve.
-const TIER_1_KEYWORDS = ['אינסטלטור', 'שרברב', 'חשמלאי', 'מנעולן', 'מיזוג', 'מזגן', 'מוסך', 'מכונאי', 'פיזיותרפ', 'רופא שיניים', 'שיניים'];
-const TIER_2_KEYWORDS = ['רואה חשבון', 'חשבונאי', 'עורך דין', 'עו"ד', 'משפט', 'אדריכל', 'קוסמט', 'אסתט', 'מרפאה', 'קליניקה'];
+const TIER_1_KEYWORDS = ['אינסטלטור', 'שרברב', 'חשמלאי', 'מנעולן', 'מיזוג', 'מזגן', 'מוסך', 'מכונאי'];
+const TIER_2_KEYWORDS = ['רואה חשבון', 'חשבונאי', 'עורך דין', 'עו"ד', 'משפט', 'אדריכל', 'קוסמט', 'אסתט', 'מרפאה', 'קליניקה', 'פיזיותרפ', 'רופא שיניים', 'שיניים'];
 const TIER_3_KEYWORDS = ['מאמן', 'קואצ', 'coach', 'מורה פרטי', 'שיעורי', 'ייעוץ עסקי'];
 
 function aiResistanceTierScore(category) {

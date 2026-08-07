@@ -88,30 +88,43 @@ export function prospectSlug(businessName, city) {
   return ascii ? `${ascii}-${hash}` : hash;
 }
 
+// ── §8 client-facing routing-line copy (Tamar, authored; Noa, QA'd) ────────
+// Do not edit this Hebrew freehand — copy changes go back through Tamar/Noa.
+const ROUTING_LINE_SITE_BOT =
+  '🧭 השורה התחתונה בשבילך: הבסיס הדיגיטלי עדיין לא במקום. או שאין אתר, או שהוא קטן מכדי שגוגל יתייחס אליו ברצינות — וזה כמו לפתוח עסק מעולה בקומה שלישית בלי שלט בכניסה. מי שכבר מכיר אותך מגיע; כל השאר פשוט לא מוצאים אותך. הצעד הראשון הוא בית אמיתי באינטרנט: אתר ממוקד שגוגל יודע להציג ולקוחות יודעים לסמוך עליו. זה בדיוק מה ש-Site Bot בונה לך — ומהר.';
+const ROUTING_LINE_SITE_BOT_GMB_UPSELL =
+  '🧭 השורה התחתונה בשבילך: יש לך כבר אתר אמיתי, והוא בכיוון הנכון — עוד קצת והוא מגיע למסה שפותחת דלתות חדשות. אבל הזירה שבה נשפטים עסקים כמו שלך היא לא (עדיין) האתר — היא המפה של גוגל, חלון הראווה שקופץ ראשון כשמישהו בסביבה מחפש אותך. שם המשחק הבא הוא הדירוג והביקורות בפרופיל העסקי שלך. זה בדיוק המגרש של GMB Bot.';
+const ROUTING_LINE_GEO_BOT =
+  '🧭 השורה התחתונה בשבילך: יש לך אתר עשיר עם תוכן אמיתי — נכס שרוב המתחרים שלך פשוט לא טרחו לבנות. אצל לקוחות כמוך ההחלטה מתחילה בחיפוש מידע הרבה לפני הפגישה, ובדיוק שם גוגל וה-AI כבר מגישים תשובות מוכנות. השאלה היחידה היא אם התשובה שהם מגישים היא שלך — או של המתחרה. זה בדיוק מה ש-GEO Bot עושה: הופך את התוכן שכבר יש לך למקור שממנו גוגל וה-AI שואבים.';
+const ROUTING_LINE_GEO_BOT_THIN_CONTENT =
+  '🧭 השורה התחתונה בשבילך: אתה בדיוק סוג העסק שמנצח במשחק של תשובות ה-AI — לקוחות כמוך מחפשים מידע לפני שהם בוחרים, וגוגל וה-AI כבר מגישים להם תשובות. הבשורה הכנה: כרגע האתר שלך עדיין רזה מכדי להזין את המנוע הזה במלוא הכוח, אז ההתחלה תהיה טיפה איטית יותר — את הבסיס נבנה תוך כדי תנועה. אבל הכיוון ברור, וזה בדיוק המגרש של GEO Bot.';
+const ROUTING_LINE_ADS_NOT_READY =
+  '⛔ ומילה כנה על פרסום בגוגל: כרגע לא היינו ממליצים לך לשים שקל על מודעות. פרסום ממומן הוא כמו להזרים דלק למנוע — אם הבסיס עוד לא מוכן, אתה פשוט שורף כסף מהר יותר. קודם מסדרים את היסודות; לפרסום נגיע כשהוא באמת יחזיר לך את ההשקעה. עדיף שנגיד לך את זה עכשיו מאשר בעוד חודשיים.';
+
 /**
- * Selects which client-facing routing-line placeholder marker fires for a
- * given routing decision. This is trigger LOGIC only — the Hebrew phrasing
- * behind each marker is Tamar's to write, Noa's to QA (§8). Do not fill
- * these in with Dror-authored or engineer-authored Hebrew.
+ * Selects which client-facing routing-line text fires for a given routing
+ * decision. This is trigger LOGIC only — the Hebrew phrasing behind each
+ * line is Tamar's to write, Noa's to QA (§8). Do not fill these in with
+ * Dror-authored or engineer-authored Hebrew.
  */
 export function selectRoutingLineMarker(routing) {
   switch (routing.ruleFired) {
     case 'rule-1-no-site':
     case 'rule-2-thin-site':
-      return '{{ROUTING_LINE_SITE_BOT}}';
+      return ROUTING_LINE_SITE_BOT;
     case 'rule-3-micro-smb-near-geo-threshold':
-      return '{{ROUTING_LINE_SITE_BOT_GMB_UPSELL}}';
+      return ROUTING_LINE_SITE_BOT_GMB_UPSELL;
     case 'rule-4-thin-content-ready-smb':
-      return '{{ROUTING_LINE_GEO_BOT_THIN_CONTENT}}';
+      return ROUTING_LINE_GEO_BOT_THIN_CONTENT;
     case 'rule-5-geo-direct':
-      return '{{ROUTING_LINE_GEO_BOT}}';
+      return ROUTING_LINE_GEO_BOT;
     default:
       // rule 6 / unclassified — VISION never named this case, deferred to
       // human review (routing.flagForHumanReview). The safest client-facing
       // default matches primaryBotRoute (always 'site-bot' for these two
       // rules) but this report should not go out to a prospect without a
       // human look first — that's what flagForHumanReview in the JSON is for.
-      return '{{ROUTING_LINE_SITE_BOT}}';
+      return ROUTING_LINE_SITE_BOT;
   }
 }
 
@@ -137,7 +150,7 @@ export function buildPresentableReportText({ businessName, city, gbp, targetName
   lines.push('');
   lines.push(selectRoutingLineMarker(routing));
   if (adsFit.hardFail) {
-    lines.push('{{ROUTING_LINE_ADS_NOT_READY}}');
+    lines.push(ROUTING_LINE_ADS_NOT_READY);
   }
   lines.push('');
   lines.push('* "קצב אחרון" הוא הערכה על מדגם קטן (עד 5 הביקורות האחרונות שגוגל חושף לכל עסק) — לא מדד מהירות ביקורות מדויק.');
