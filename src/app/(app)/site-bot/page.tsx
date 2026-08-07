@@ -158,13 +158,13 @@ export default function SiteBotPage() {
             )}
           </p>
 
-          <a
-            href="tel:0526148860"
+          <Link
+            href="/site-bot/start"
             className="btn-primary w-full sm:w-auto justify-center"
             style={{ fontSize: "1.05rem", padding: "16px 40px" }}
           >
             {renderMixed("בונים לי אתר — מתחילים ב-₪9.90")}
-          </a>
+          </Link>
 
           <p style={{ marginTop: "18px", fontSize: "0.85rem", color: "var(--muted)", fontFamily: "var(--font-body), sans-serif" }}>
             {renderMixed("שיחה אחת בצ׳אט, והאתר באוויר. מתחילים ב-₪9.90.")}
@@ -258,13 +258,13 @@ export default function SiteBotPage() {
             )}
           </p>
 
-          <a
-            href="tel:0526148860"
+          <Link
+            href="/site-bot/start"
             className="btn-primary w-full sm:w-auto justify-center"
             style={{ fontSize: "1.05rem", padding: "16px 40px", marginBottom: "18px" }}
           >
             {renderMixed("בונים לי אתר — מתחילים ב-₪9.90")}
-          </a>
+          </Link>
 
           <p style={{ ...bodyStyle, fontSize: "0.95rem", color: "var(--text)", marginTop: "18px" }}>
             {renderMixed(
@@ -449,13 +449,13 @@ export default function SiteBotPage() {
                 {renderMixed("שיחה אחת בצ׳אט, והאתר באוויר. מתחילים ב-₪9.90.")}
               </p>
               <div style={{ display: "flex", gap: "16px", justifyContent: "center", flexWrap: "wrap" }}>
-                <a
-                  href="tel:0526148860"
+                <Link
+                  href="/site-bot/start"
                   className="btn-primary w-full sm:w-auto justify-center"
                   style={{ fontSize: "1.05rem", padding: "16px 40px" }}
                 >
                   {renderMixed("בונים לי אתר — מתחילים ב-₪9.90")}
-                </a>
+                </Link>
                 <Link href="/contact" className="btn-outline w-full sm:w-auto justify-center" style={{ fontSize: "1rem" }}>
                   שלח פנייה
                 </Link>

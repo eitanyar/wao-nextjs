@@ -2,6 +2,7 @@
 
 import { useRef, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import type { CollectedData } from "@/lib/bot/prompts";
 import { renderMixed } from "@/lib/bidi";
 
@@ -10,9 +11,10 @@ import { renderMixed } from "@/lib/bidi";
 // fields buildSiteCopyPrompt() actually reads. No budget/close-rate/Ads
 // fields here — those belong to the Ads Bot conversation, not this one.
 //
-// Payment is intentionally NOT wired here — see docs/specs/priority-4-live-
-// payment-integration.md. This page proves the generate → deploy pipeline
-// end to end; the ₪9.90 checkout gate gets added once a provider is picked.
+// Payment: once the chat is done, collected data is handed to
+// /api/site-bot/checkout/init and the user is routed to /site-bot/pay/[sessionId],
+// which owns charging + triggering generate/deploy (see that route). This page
+// no longer calls generate/deploy directly.
 
 interface Message {
   role: "assistant" | "user";
@@ -91,16 +93,16 @@ const STEPS: Step[] = [
   },
 ];
 
-type Phase = "chat" | "generating" | "deploying" | "done" | "error";
+type Phase = "chat" | "routing" | "error";
 
 export default function SiteBotStartPage() {
+  const router = useRouter();
   const [messages, setMessages] = useState<Message[]>([{ role: "assistant", content: STEPS[0].question }]);
   const [stepIndex, setStepIndex] = useState(0);
   const [collectedData, setCollectedData] = useState<CollectedData>({});
   const [inputValue, setInputValue] = useState("");
   const [phase, setPhase] = useState<Phase>("chat");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [liveUrl, setLiveUrl] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   function scrollDown() {
@@ -108,27 +110,16 @@ export default function SiteBotStartPage() {
   }
 
   async function finish(data: CollectedData) {
-    setPhase("generating");
+    setPhase("routing");
     try {
-      const genRes = await fetch("/api/site-bot/generate", {
+      const res = await fetch("/api/site-bot/checkout/init", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ collectedData: data, slug: data.preferredSlug }),
+        body: JSON.stringify({ collectedData: data }),
       });
-      const genJson = await genRes.json();
-      if (!genRes.ok || !genJson.slug) throw new Error(genJson.error || "יצירת האתר נכשלה");
-
-      setPhase("deploying");
-      const deployRes = await fetch("/api/site-bot/deploy", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ slug: genJson.slug }),
-      });
-      const deployJson = await deployRes.json();
-      if (!deployRes.ok || !deployJson.url) throw new Error(deployJson.error || "העלאת האתר נכשלה");
-
-      setLiveUrl(deployJson.url);
-      setPhase("done");
+      const json = await res.json();
+      if (!res.ok || !json.sessionId) throw new Error(json.error || "יצירת התשלום נכשלה");
+      router.push(`/site-bot/pay/${json.sessionId}`);
     } catch (err: any) {
       setErrorMessage(err.message || "משהו השתבש");
       setPhase("error");
@@ -208,31 +199,15 @@ export default function SiteBotStartPage() {
             </div>
           ))}
 
-          {phase !== "chat" && phase !== "done" && phase !== "error" && (
+          {phase === "routing" && (
             <div style={{ color: "var(--muted)", fontFamily: "var(--font-body), sans-serif", padding: "0 4px" }}>
-              {renderMixed(phase === "generating" ? "כותב את התוכן..." : "מעלה את האתר...")}
+              {renderMixed("מעביר אותך לתשלום...")}
             </div>
           )}
 
           {phase === "error" && (
             <div style={{ color: "#e05555", fontFamily: "var(--font-body), sans-serif", padding: "0 4px" }}>
               {renderMixed(`קרתה תקלה: ${errorMessage}. אפשר לרענן ולנסות שוב.`)}
-            </div>
-          )}
-
-          {phase === "done" && liveUrl && (
-            <div
-              style={{
-                border: "1px solid var(--accent)",
-                borderRadius: "var(--radius-md)",
-                padding: "16px",
-                fontFamily: "var(--font-body), sans-serif",
-              }}
-            >
-              <p style={{ marginBottom: "12px", color: "var(--text)" }}>{renderMixed("האתר שלך באוויר!")}</p>
-              <a href={liveUrl} target="_blank" rel="noreferrer" className="btn-primary" style={{ display: "inline-block" }}>
-                {liveUrl}
-              </a>
             </div>
           )}
         </div>
