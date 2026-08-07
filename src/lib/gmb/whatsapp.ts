@@ -42,16 +42,16 @@ export function buildGmbApprovalMessage(opts: GmbWaMessageOptions): string {
   return [
     `שלום ${contactName} 👋`,
     ``,
-    `יש לנו ${batchLine} מוכן לאישור בפרופיל ה-Google Business שלך:`,
+    `הכנו עבורך ${batchLine} לאישור בפרופיל ה-Google Business שלך:`,
     ``,
     `📌 *${typeLabel}*`,
     ...(contextLine ? [contextLine] : []),
     `טיוטה: "${draftPreview}${draftPreview.length >= 100 ? '…' : ''}"`,
     ``,
-    `👉 לצפייה, עריכה ואישור:`,
+    `👉 לצפייה, לעריכה ולאישור:`,
     actionUrl,
     ``,
-    `לחצי ✅ לאישור, ✏️ לעריכה, או ❌ לדחייה.`,
+    `לחץ ✅ לאישור, ✏️ לעריכה או ❌ לדחייה.`,
   ].join('\n');
 }
 
