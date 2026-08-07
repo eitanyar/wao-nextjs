@@ -1,5 +1,10 @@
 @import "tailwindcss";
 
+@keyframes wao-pulse {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 1; }
+}
+
 /* ─── Design Tokens ─── */
 :root {
   --bg: #060709;

@@ -165,10 +165,11 @@ export function renderStaticHtml(p: RenderStaticHtmlParams): string {
         <h3 style="font-weight:700;font-size:1rem;color:${t.primary};margin:0 0 8px;">${assets.badgeEmoji} ${esc(copy.guaranteeBlock.split('.')[0])}</h3>
         <p style="color:${t.textMuted};font-size:0.9rem;line-height:1.5;">${esc(copy.guaranteeBlock)}</p>
       </div>
+      ${copy.reviewFeatured ? `
       <div style="background:${t.trustBadgeBg};border:1px solid ${t.border};border-radius:${t.radiusMd};padding:24px 20px;border-inline-start:4px solid ${t.accent};">
         <p style="font-style:italic;font-size:1.05rem;color:${t.textPrimary};line-height:1.6;margin-bottom:12px;">״${esc(copy.reviewFeatured)}״</p>
         ${copy.reviewContext ? `<div style="font-size:0.85rem;color:${t.textMuted};"><span style="color:#F5A623;">★★★★★</span> ${esc(copy.reviewContext)}</div>` : ''}
-      </div>
+      </div>` : ''}
     </div>
   </section>
 
@@ -299,5 +300,5 @@ export function renderStaticHtml(p: RenderStaticHtmlParams): string {
 }
 
 function esc(s: string): string {
-  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  return (s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }

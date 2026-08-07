@@ -22,6 +22,7 @@ export interface CollectedData {
   serviceModel?: 'field' | 'location' | 'event' | 'remote' | 'mixed';
   targetLocation?: string;
   specificCities?: string;
+  streetAddress?: string; // Site Bot — only asked when serviceModel is storefront-based; feeds LocalBusiness schema
 
   // Client profile
   idealClient?: string;

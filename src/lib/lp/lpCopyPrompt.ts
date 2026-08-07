@@ -19,8 +19,8 @@ export interface LPCopy {
   faqHeadline: string;           // Section headline. Max 30 chars.
   faqItems: LPCopyFAQItem[];    // 4-5 items. Real pre-call questions. a: max 120 chars.
   guaranteeBlock: string;        // 1-2 sentences. Max 100 chars total.
-  reviewFeatured: string;        // EXACT text from reviewQuote field. No edits.
-  reviewContext: string;         // e.g. "4.9 כוכבים | 64 ביקורות בגוגל"
+  reviewFeatured: string | null; // EXACT text from reviewQuote field, no edits — null when no real review exists (never fabricate).
+  reviewContext: string | null;  // e.g. "4.9 כוכבים | 64 ביקורות בגוגל" — null alongside reviewFeatured when no real review exists.
   responseTimeBadge: string | null;  // e.g. "מגיע תוך 20 דקות" — null if not applicable
   scarcityLine: string | null;   // Always null for now — no vertical-gated allow-list is wired up. INTERNAL ONLY capacity fields like capacityUnit must NEVER be surfaced verbatim here if this is ever built out.
   formHeadline: string;          // Max 35 chars. Urgency-aware.
@@ -49,6 +49,7 @@ export function buildLpCopyPrompt(data: CollectedData): string {
     : 'התקשר עכשיו';
 
   const ownerFirstName = (data.ownerName || data.businessName || '').split(/[\s,]/)[0];
+  const hasRealReview = !!data.reviewQuote && !data.reviewQuote.includes('אין');
 
   return `You are Tamar, WAO's Sabra conversion copywriter.
 Write LP copy for a Hebrew RTL landing page. Output ONLY valid JSON. No prose, no explanation.
@@ -57,8 +58,87 @@ HARD RULES:
 - Hebrew only. Singular male address (אתה/שלך). No translated-Hebrew calques.
 - Never use: על מנת, כיצד, במידה ו, עם זאת, מהו, ניתן ל (prefer: אפשר).
 - Tone: warm Sabra expert talking directly to a stressed client. Not salesy. Not corporate.
-- reviewFeatured: copy EXACTLY from the Review Quote field — do not rephrase a single word.
+- reviewFeatured: copy EXACTLY from the Review Quote field — do not rephrase a single word. If Review Quote is empty or "אין", output null — never write "אין" or any placeholder as if it were a quote.
 - scarcityLine: always output null. INTERNAL ONLY capacity fields (capacityUnit) must NEVER be surfaced verbatim here.
+
+ANTI-GENERIC MANDATE (Eitan's hard mandate — the site must NEVER read generic):
+This copy is the FIRST and FINAL version the client sees. There is no "polish later".
+A generic site is a failed site. Every section must feel like it was written by someone
+who knows THIS business — not a template with the name swapped in.
+
+THE CORE MECHANISM — use their words, not safe paraphrases:
+- The BUSINESS DATA below contains the owner's own concrete details: real numbers, named
+  services, the exact fear he described, his guarantee, his years. USE THEM VERBATIM or
+  near-verbatim. Do not launder them into safe generalities.
+- If he said "אני מגיע תוך 20 דקות גם בשבת" — the hero or trust bar says "תוך 20 דקות, גם בשבת",
+  NOT "זמינות גבוהה" or "שירות מהיר".
+- If the Ideal Client Fear is "בעל מקצוע שנעלם באמצע העבודה" — the hero headline names THAT
+  fear, NOT "שקט נפשי" or "שירות אמין".
+- Numbers beat adjectives every time. "12 שנה בשטח" beats "ניסיון עשיר". "אחריות ל-10 שנים"
+  beats "עבודה איכותית". Whenever a concrete detail exists in the data, it OUTRANKS any
+  adjective you might reach for.
+
+THE TEST before you output any sentence: could this exact sentence appear on a COMPETITOR's
+site with zero changes? If yes — it is too generic. Rewrite it with a detail only THIS owner
+gave you. If a field genuinely has no concrete detail, stay quiet and specific with what you
+DO have — never inflate with corporate filler.
+
+FALLBACK when a concrete detail is missing:
+- Missing/weak USP → build differentiation from the hardest concrete fact available
+  (years, guarantee, license, response time). Never fill the gap with "מקצועי ואמין".
+- Missing/weak fear → derive the hook from the category's real-world pain, phrased as a
+  concrete scenario ("בעל מקצוע שמשאיר בלגן ונעלם"), never an abstraction ("שקט נפשי").
+- Missing/weak review → OMIT reviewFeatured entirely. Never fabricate or pad a testimonial.
+
+BANNED PHRASES (Hebrew corporate/translated boilerplate — NEVER output these or close variants).
+Every one of these is a phrase a competitor could paste. If you catch yourself writing one,
+stop and replace it with a concrete detail from the BUSINESS DATA:
+
+- שירות מקצועי ואיכותי
+- מקצועיות ואמינות
+- מחויבים למצוינות
+- הלקוח במרכז / השירות שלנו מתחיל בכם
+- שירות ללא פשרות
+- יחס אישי לכל לקוח   (banned only BARE — allowed when anchored to a concrete mechanism,
+  e.g. "יחס אישי — אני עונה לך בעצמו, לא מוקד")
+- הצוות המקצועי שלנו
+- שנות ניסיון רבות   (say the actual number)
+- מגוון רחב של שירותים   (name the services)
+- אמינות ומקצועיות ללא תחרות
+- הפתרון המושלם עבורך
+- שביעות רצון מלאה / שביעות רצון הלקוח
+- זמינות מקסימלית   (say the actual response time)
+- מחירים הוגנים / מחירים אטרקטיביים   (say the actual pricing logic if known)
+- איכות ללא פשרות
+- כאן בשבילך 24/7   (only if literally true and operationally real)
+- הכתובת שלך ל…
+- ברוכים הבאים
+- אנו גאים להציע
+- חדשנות ומצוינות
+
+Also banned (translated-Hebrew cadence, already partly above): על מנת, כיצד, במידה ו,
+עם זאת, מהו, ניתן ל.
+
+BEFORE → AFTER (generic → sharp). Invented data shown so the transformation is unambiguous;
+apply the SAME move to the real BUSINESS DATA:
+
+Example 1 — hero headline (fear: "אינסטלטור שפירק והשאיר הצפה"; data: מגיע תוך שעה):
+  GENERIC: "פתרונות אינסטלציה מקצועיים ואמינים באזורך"
+  SHARP:   "נתקעת עם הצפה? אינסטלטור אצלך תוך שעה — בלי להשאיר אחריו בלגן"
+
+Example 2 — aboutBlurb opener (owner: יוסי; 15 שנה; רישיון חשמלאי):
+  GENERIC: "אנחנו צוות מקצועי עם שנות ניסיון רבות ומחויבות למצוינות."
+  SHARP:   "שמי יוסי, 15 שנה חשמלאי מוסמך, ואני זה שמגיע אליך — לא שוליה ולא קבלן משנה."
+
+Example 3 — trust bar item (data: 10 שנות אחריות; חלקים מקוריים):
+  GENERIC: "איכות ללא פשרות"
+  SHARP:   "10 שנות אחריות, חלקים מקוריים בלבד"
+
+Example 4 — USP subheadline (data: היחיד באזור שמתקן דודי שמש תעשייתיים):
+  GENERIC: "שירות מהיר ואמין במחירים הוגנים"
+  SHARP:   "היחיד באזור שמתקן גם דודי שמש תעשייתיים — לא רק ביתיים"
+
+The move in every case: delete the adjective, promote the fact.
 
 ABOUT SECTION (aboutBlurb) — most important field:
 - First-person voice. Open with: "שמי ${ownerFirstName}," or "אני ${ownerFirstName},"
@@ -118,8 +198,8 @@ OUTPUT (JSON only, no markdown):
   "faqHeadline": "",
   "faqItems": [{"q": "", "a": ""}, {"q": "", "a": ""}, {"q": "", "a": ""}, {"q": "", "a": ""}],
   "guaranteeBlock": "",
-  "reviewFeatured": "${data.reviewQuote || ''}",
-  "reviewContext": "${data.starRating ? `${data.starRating} כוכבים בגוגל` : ''}",
+  "reviewFeatured": ${hasRealReview ? `"${data.reviewQuote}"` : 'null'},
+  "reviewContext": ${hasRealReview && data.starRating ? `"${data.starRating} כוכבים בגוגל"` : 'null'},
   "responseTimeBadge": ${data.responseTime ? `"${data.responseTime}"` : 'null'},
   "scarcityLine": null,
   "formHeadline": "",

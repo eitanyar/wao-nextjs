@@ -47,8 +47,14 @@ export function renderSitePages(p: RenderSitePagesParams): Record<string, string
 function buildIndexHtml(p: RenderSitePagesParams, siteUrl: string): string {
   const html = renderStaticHtml({ ...p, mode: 'site', siteUrl });
   const t = p.theme;
+  const { businessName } = contacts(p.data);
 
-  const withNav = html.replace(
+  const withSchema = html.replace(
+    '</head>',
+    `  ${localBusinessSchema(p.data, businessName, siteUrl, p.heroImageUrl)}\n</head>`
+  );
+
+  const withNav = withSchema.replace(
     '<body>\n\n  <!-- Header -->',
     `<body>\n${navBar(t)}\n\n  <!-- Header -->`
   );
@@ -117,14 +123,46 @@ function stickyHeader(t: VerticalTheme, businessName: string, phone: string, pho
   </header>`;
 }
 
+// LocalBusiness JSON-LD — NOT AggregateRating/Review: Google's structured-data
+// policy disqualifies (and risks a manual action on) self-hosted review schema
+// where the business controls the reviews about itself, which is exactly this
+// case. starRating/reviewCount stay visible page copy only, never schema.
+function localBusinessSchema(data: CollectedData, businessName: string, siteUrl: string, ogImage: string): string {
+  const address = data.streetAddress
+    ? {
+        '@type': 'PostalAddress',
+        streetAddress: data.streetAddress,
+        addressLocality: data.targetLocation || undefined,
+        addressCountry: 'IL',
+      }
+    : undefined;
+
+  const schema: Record<string, unknown> = {
+    '@context': 'https://schema.org',
+    '@type': 'LocalBusiness',
+    name: businessName,
+    url: siteUrl,
+    image: ogImage,
+    ...(data.phone ? { telephone: data.phone } : {}),
+    ...(address ? { address } : {}),
+    ...(!address && (data.targetLocation || data.specificCities)
+      ? { areaServed: data.specificCities || data.targetLocation }
+      : {}),
+    ...(data.businessHours ? { openingHours: data.businessHours } : {}),
+  };
+
+  return `<script type="application/ld+json">${JSON.stringify(schema)}</script>`;
+}
+
 function pageHead(opts: {
   t: VerticalTheme;
   title: string;
   description: string;
   canonicalUrl: string;
   ogImage: string;
+  schema?: string;
 }): string {
-  const { t, title, description, canonicalUrl, ogImage } = opts;
+  const { t, title, description, canonicalUrl, ogImage, schema } = opts;
   return `<head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
@@ -142,6 +180,7 @@ function pageHead(opts: {
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Secular+One&family=Assistant:wght@400;600;700;800&display=swap" rel="stylesheet" />
   ${styleBlock(t)}
+  ${schema || ''}
 </head>`;
 }
 
@@ -287,6 +326,7 @@ function buildAboutHtml(p: RenderSitePagesParams, siteUrl: string): string {
     description: copy.aboutPageBody,
     canonicalUrl,
     ogImage: heroImageUrl,
+    schema: localBusinessSchema(data, businessName, siteUrl, heroImageUrl),
   });
 
   const trustBar = trustBarSection(t, copy.trustBarItems);
@@ -340,6 +380,7 @@ function buildServicesHtml(p: RenderSitePagesParams, siteUrl: string): string {
     description: copy.heroSubheadline,
     canonicalUrl,
     ogImage: heroImageUrl,
+    schema: localBusinessSchema(data, businessName, siteUrl, heroImageUrl),
   });
 
   const cards = copy.serviceDetails.map(s => `
@@ -391,6 +432,7 @@ function buildContactHtml(p: RenderSitePagesParams, siteUrl: string): string {
     description: copy.heroSubheadline,
     canonicalUrl,
     ogImage: heroImageUrl,
+    schema: localBusinessSchema(data, businessName, siteUrl, heroImageUrl),
   });
 
   const hoursHtml = data.businessHours
