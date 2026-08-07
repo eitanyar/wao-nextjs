@@ -2,13 +2,17 @@ import { NextRequest, NextResponse } from 'next/server';
 import { verifySessionToken, COOKIE_NAME } from '@/lib/client-auth';
 import { ADMIN_COOKIE_NAME, verifyAdminToken } from '@/lib/admin-auth';
 
-const CLIENT_PROTECTED = ['/client', '/geo/action', '/api/geo/action'];
+// '/gmb/action' + '/api/gmb/action' reuse the same client-session cookie as
+// '/geo/action' — one client portal session gates both bots' action pages.
+const CLIENT_PROTECTED = ['/client', '/geo/action', '/api/geo/action', '/gmb/action', '/api/gmb/action'];
 // Note: '/api/leads' is deliberately NOT listed here — its POST handler is
 // the public lead-capture endpoint hit by landing-page forms. Only its GET
 // (the admin CRM read) is gated, and that's done inside the route itself
 // (src/app/api/leads/route.ts) so it can allow POST through unauthenticated
 // while still requiring the admin cookie for GET.
-const ADMIN_PROTECTED  = ['/geo/dashboard', '/leads'];
+// '/gmb/dashboard' reuses the same admin cookie/login as '/geo/dashboard' —
+// one staff login gates both bots' WoZ dashboards.
+const ADMIN_PROTECTED  = ['/geo/dashboard', '/gmb/dashboard', '/leads'];
 const MASTER_ADMIN_PROTECTED = ['/admin/clients'];
 const LOGIN_PATH       = '/client/login';
 const ADMIN_LOGIN_PATH = '/geo/login';
@@ -67,5 +71,5 @@ export async function proxy(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/client/:path*', '/geo/action/:path*', '/api/geo/action/:path*', '/geo/dashboard/:path*', '/admin/clients/:path*', '/leads/:path*'],
+  matcher: ['/client/:path*', '/geo/action/:path*', '/api/geo/action/:path*', '/geo/dashboard/:path*', '/gmb/action/:path*', '/api/gmb/action/:path*', '/gmb/dashboard/:path*', '/admin/clients/:path*', '/leads/:path*'],
 };
