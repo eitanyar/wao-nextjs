@@ -85,3 +85,40 @@ export async function verifyYaadCallbackViaHyp({ callbackParams, terminal, apiKe
     return false;
   }
 }
+
+/**
+ * Pure decision function for `GET /api/checkout/callback` — resolves whether
+ * a callback should be treated as a genuine success or an error, without any
+ * Next.js/Response coupling (so it's directly unit-testable; see
+ * `yaad-verify.test.mjs` and docs/specs/priority-4-live-payment-integration.md §2).
+ *
+ * In live mode, verification is mandatory and fail-closed: a callback is
+ * only ever resolved as 'success' if `verifyYaadCallbackViaHyp` returns true
+ * (which itself fails closed on a missing Sign, missing PassP, non-zero
+ * CCode, or a fetch error). Sandbox mode (isLive === false) has no real Hyp
+ * server to verify against, so it resolves purely off the callback's own
+ * `status`/`CCode` params, matching the pre-existing sandbox fixture
+ * behavior at `/checkout/yaad-sandbox`.
+ *
+ * @param {object} params
+ * @param {URLSearchParams} params.searchParams - the callback's query params.
+ * @param {boolean} params.isLive - result of the same isLive check `checkout/route.ts` computes.
+ * @param {string} params.terminal
+ * @param {string} params.apiKey
+ * @param {string|undefined} params.passP
+ * @param {typeof fetch} [params.fetchImpl]
+ * @returns {Promise<{ outcome: 'success' | 'error', reason?: string }>}
+ */
+export async function resolveCallbackOutcome({ searchParams, isLive, terminal, apiKey, passP, fetchImpl = fetch }) {
+  const status = searchParams.get('status');
+  const claimsSuccess = status === 'success' || status === '0' || searchParams.get('CCode') === '0';
+
+  if (isLive) {
+    const isValid = await verifyYaadCallbackViaHyp({ callbackParams: searchParams, terminal, apiKey, passP, fetchImpl });
+    if (!isValid) {
+      return { outcome: 'error', reason: 'invalid_signature' };
+    }
+  }
+
+  return claimsSuccess ? { outcome: 'success' } : { outcome: 'error' };
+}

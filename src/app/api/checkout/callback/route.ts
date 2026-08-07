@@ -1,12 +1,11 @@
 import { NextResponse } from 'next/server';
 import * as fs from 'fs';
 import * as path from 'path';
-import { isLiveYaadMode, verifyYaadCallbackViaHyp } from '@/lib/checkout/yaad-verify';
+import { isLiveYaadMode, resolveCallbackOutcome } from '@/lib/checkout/yaad-verify';
 
 export async function GET(req: Request) {
   try {
     const url = new URL(req.url);
-    const status = url.searchParams.get('status');
     const slug = url.searchParams.get('slug') || 'campaign';
     const transactionId = url.searchParams.get('Id') || url.searchParams.get('key') || 'TX-' + Date.now();
 
@@ -26,43 +25,39 @@ export async function GET(req: Request) {
     // without a valid Hyp VERIFY response is treated as a failure. Sandbox
     // mode (no real Hyp terminal configured) has no real Hyp server issuing
     // Sign at all, so it keeps bypassing this check — see
-    // isLiveYaadMode / checkout/route.ts.
-    if (isLiveYaadMode()) {
-      const isValid = await verifyYaadCallbackViaHyp({
-        callbackParams: url.searchParams,
-        terminal: terminalNumber,
-        apiKey: apiKey || '',
-        passP,
-      });
+    // isLiveYaadMode / checkout/route.ts. The decision itself lives in the
+    // pure, unit-tested resolveCallbackOutcome (see yaad-verify.test.mjs).
+    const { outcome, reason } = await resolveCallbackOutcome({
+      searchParams: url.searchParams,
+      isLive: isLiveYaadMode(),
+      terminal: terminalNumber,
+      apiKey: apiKey || '',
+      passP,
+    });
 
-      if (!isValid) {
-        console.error('[checkout/callback] Missing or invalid Hyp VERIFY result in live mode');
-        return NextResponse.redirect(new URL('/google-ads/onboarding?payment=error&reason=invalid_signature', req.url));
-      }
+    if (outcome === 'error') {
+      console.error('[checkout/callback] Callback resolved as error' + (reason ? ` (${reason})` : ''));
+      return NextResponse.redirect(new URL(`/google-ads/onboarding?payment=error${reason ? `&reason=${reason}` : ''}&slug=${encodeURIComponent(slug)}`, req.url));
     }
 
-    if (status === 'success' || status === '0' || url.searchParams.get('CCode') === '0') {
-      try {
-        const paymentLogDir = path.join(process.cwd(), 'data', 'payments');
-        fs.mkdirSync(paymentLogDir, { recursive: true });
-        fs.writeFileSync(
-          path.join(paymentLogDir, `${slug}-${Date.now()}.json`),
-          JSON.stringify({
-            slug,
-            transactionId,
-            status: 'success',
-            timestamp: new Date().toISOString(),
-            query: Object.fromEntries(url.searchParams.entries()),
-          }, null, 2)
-        );
-      } catch (logErr) {
-        console.warn('[checkout/callback] Failed to write payment log:', logErr);
-      }
-
-      return NextResponse.redirect(new URL(`/google-ads/onboarding?payment=success&slug=${encodeURIComponent(slug)}`, req.url));
-    } else {
-      return NextResponse.redirect(new URL(`/google-ads/onboarding?payment=error&slug=${encodeURIComponent(slug)}`, req.url));
+    try {
+      const paymentLogDir = path.join(process.cwd(), 'data', 'payments');
+      fs.mkdirSync(paymentLogDir, { recursive: true });
+      fs.writeFileSync(
+        path.join(paymentLogDir, `${slug}-${Date.now()}.json`),
+        JSON.stringify({
+          slug,
+          transactionId,
+          status: 'success',
+          timestamp: new Date().toISOString(),
+          query: Object.fromEntries(url.searchParams.entries()),
+        }, null, 2)
+      );
+    } catch (logErr) {
+      console.warn('[checkout/callback] Failed to write payment log:', logErr);
     }
+
+    return NextResponse.redirect(new URL(`/google-ads/onboarding?payment=success&slug=${encodeURIComponent(slug)}`, req.url));
   } catch (error: any) {
     console.error('[checkout/callback] Error processing payment callback:', error);
     return NextResponse.redirect(new URL('/google-ads/onboarding?payment=error', req.url));
