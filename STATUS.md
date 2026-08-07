@@ -72,10 +72,16 @@ checkpoint.
    today's work and priority-3/4 actually going live. Do this before more building on top.
 3. **Payment provider decision** — see reminder below, still open, still the second
    blocker on the ₪249/mo funnel.
-4. **Priority 3 Full-spec tier** (`docs/specs/priority-3-lead-capture-reliability-and-client-feedback.md`)
-   — sendBeacon/keepalive reliability on the click-tracking calls, and the per-row
-   "send lead to client via WhatsApp" deep link. Deliberately scoped to trail pilot
-   outreach, not block it — flag if it's been sitting untouched more than a week or two.
+4. **Priority 3 Full-spec Part A** (`docs/specs/priority-3-lead-capture-reliability-and-client-feedback.md`)
+   — sendBeacon/keepalive reliability on the click-tracking calls (`LandingPage.tsx`'s
+   `pingClick()` still fires a bare `fetch(...).catch(()=>{})`; `handleSubmit()` still lacks
+   keepalive/retry and regenerates `orderId` per call), plus the per-row "send lead to client
+   via WhatsApp" deep link. **Bumped up from "trails pilot outreach" — no longer deferrable.**
+   Lior found (2026-08-07, `docs/specs/readiness-gate.md` §"Lior's Resolution") that the
+   Readiness Gate's Phase 2 onboarding checklist — greenlit for full near-term build — has one
+   of its six go/no-go items (delivery reliability) hard-depend on this exact work; every real
+   client will show that item failing until Part A ships. Do this alongside the Readiness Gate
+   build, not after it.
 
 ## Reprioritization — 2026-08-03 (mission-planning session, "lior-mission-doubts")
 
