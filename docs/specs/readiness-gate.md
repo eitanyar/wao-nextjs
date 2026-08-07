@@ -639,3 +639,58 @@ to the dispute-rate switch threshold he already owes per STATUS.md): e.g. "one
 provable slip-through, or one near-miss with a paying client → v2 hard block."
 Pre-committing this *before* the checklist runs prevents a retroactive over-correction
 under pressure — the exact failure mode Lior's charter guards against.
+
+### Q1 escalation trigger — resolved by delegation, 2026-08-07
+Eitan handed this decision back to Lior ("On questions — Lior"), converting the
+deferred item above into a Lior call rather than an open question. Resolved and
+pre-registered *before* the checklist runs — matching the rigor of the dispute-rate
+switch threshold (STATUS.md), the CPL-ceiling gate, and Priority-3 §8.6, not a looser
+standard because it's being decided faster.
+
+**The threshold is severity-split, not a flat count** — because the two slip-through
+shapes carry radically different stakes and a single number would either be too twitchy
+for the benign case or too slow for the catastrophic one.
+
+**Class A — money moved without a provable trace (catastrophic): ONE occurrence trips
+the hard block, immediately.**
+A client with live ad spend OR an active recurring charge went live while their LTPC
+`overallPass` was `false`, or any lead-tracking item was `fail`/`not-checked`, or an
+item marked `pass` is later found to rest on falsified/stale evidence. This is the exact
+near-miss that motivated the feature: real money burning with zero attribution. A single
+confirmed Class A is enough — not twitchy, because the visible gate has demonstrably
+failed at its one job in its highest-stakes case, which is precisely the revisit
+condition §9 already names.
+
+**Class B — bot provisioned without a trace, but no money at risk yet (moderate): TWO
+within a rolling 90 days.**
+E.g. a Site Bot build published with an untracked contact mechanism, pre-billing, no ad
+spend. A real defect, but nothing is burning. The first is logged and the staff gate is
+tuned (why did the green banner get bypassed, or miss it?); a second inside 90 days
+escalates to the Class A response. A Class B that later has spend or billing switched on
+before the failing item is fixed converts to Class A on that event. The rolling window
+ensures one early WoZ stumble doesn't count against WAO forever.
+
+**How a slip-through is counted (closing the "found is vague" gap Dror flagged):** it
+counts when surfaced by (a) Roni's runtime pass, (b) a client-reported missing/lost
+lead, or (c) a retrospective audit finding an onboarding where the runbook's green
+`overallPass` banner was bypassed, or was green on falsified/stale evidence. "Provable"
+means documented: which client, which item, and the spend/billing state at go-live.
+
+**What happens operationally the moment it's crossed (a confirmed Class A, or a 2nd Class
+B in 90 days):**
+1. **Same day** — Eitan is notified directly (single-founder stage: a flag to Eitan plus
+   a new STATUS.md open loop entry).
+2. **Immediately** — interim manual freeze: no new client is provisioned with ad spend or
+   billing until Eitan personally confirms that client's LTPC is green. This closes the
+   exposure window during the gap before the code block ships.
+3. **Next mission cycle** — §9's out-of-scope "hard, code-level enforcement of the LTPC
+   gate" is promoted to an active Priority spec (a guard inside the
+   provisioning/billing/`create-campaign` routes that refuses to proceed unless
+   `overallPass === true`), scheduled as the next build after the current in-flight
+   mission — not queued behind the general backlog.
+
+Rationale in one line: a single catastrophic slip justifies the build because it proves
+the visible gate failed exactly where money and attribution were on the line, while a
+single benign slip does not — forcing the hard-block build before the checklist is proven
+against real prospects is the premature-rigidity cost the v1 posture was deliberately
+chosen to avoid.
