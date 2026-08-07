@@ -157,6 +157,12 @@ https://claude.ai/code/artifact/ad18631f-d8e1-40c8-b31e-c713cdf5c72f
   onboarding until lead-tracking is provable — the standing "no silent losses" rule as a product
   surface). **Eitan's call 08-07: full near-term build, parallel to outreach** (the one exception to
   the protected window). Route Dror → Tamar/Noa → Eitan-Dev.
+  **SHIPPED 08-07** — Places-client refactor, Phase 1 routing CLI, Phase 2 LTPC admin gate, and
+  Priority-3 Part A all built and committed (`ab5d4ad`, `9504688`, `3b6da2b`). Roni verified PASS
+  at runtime. Dror caught a dental/physio Tier-1/2 scoring bug (fixed) and confirmed the
+  routing-tree rule ordering as correct. Tamar wrote the five `{{ROUTING_LINE_*}}` Hebrew lines;
+  Noa proofed clean; Maya confirmed no bidi risk in WhatsApp or the future RTL-rooted admin page
+  (guardrail: don't wrap the report text in an LTR-forced container).
 - **Cheap Now guardrails greenlit:** prerequisite warnings, custom pixels + callback, account-health
   audit. **Spec-now:** the shared "Explain + Remedy" card (VISION "Educates simply" pillar).
 - **Mandated but un-brainstormed** (flag before scale): voice-first flow completion; a unified
