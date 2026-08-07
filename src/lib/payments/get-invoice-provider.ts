@@ -3,32 +3,37 @@
  * `PaymentProvider`. Nothing else should import a `providers/*-invoice`
  * class directly; call `getInvoiceProvider()` instead.
  *
- * Selection: `INVOICE_PROVIDER=mock|pending-queue`.
+ * Selection: `INVOICE_PROVIDER=mock|pending-queue|takbull`.
  *   - Non-production, unset  -> `mock` (easy local/dev testing).
- *   - Production, unset      -> `pending-queue` (the safe default per the
- *     spec: queue-and-issue-manually until a real invoicing-service API is
- *     wired up — never silently fabricate a fake "issued" invoice in prod).
- *   - Either value can be set explicitly regardless of NODE_ENV.
- *
- * A future real provider (once the business picks one) slots in here as a
- * third case — this module is the single place that will need to change.
+ *   - Production, unset      -> `pending-queue` (the safe default: queue-
+ *     and-issue-manually until Takbull's real invoicing API contract is
+ *     confirmed — never silently fabricate a fake "issued" invoice in prod).
+ *   - `takbull`              -> the decided, final provider
+ *     (`docs/specs/subscription-billing-provider-decision.md`, 2026-08-07),
+ *     but `TakbullInvoiceProvider` (`providers/takbull.ts`) still throws
+ *     until its real API contract is confirmed — expected after Eitan's
+ *     2026-08-10 meeting with Takbull. Don't set this in production before
+ *     that guard is removed from the class.
+ *   - Any value can be set explicitly regardless of NODE_ENV.
  */
 
 import type { InvoiceProvider } from './invoice-provider';
 import { MockInvoiceProvider } from './providers/mock-invoice';
 import { PendingQueueInvoiceProvider } from './providers/pending-queue-invoice';
+import { TakbullInvoiceProvider } from './providers/takbull';
 
 let instance: InvoiceProvider | null = null;
 
-function resolveProviderName(): 'mock' | 'pending-queue' {
+function resolveProviderName(): 'mock' | 'pending-queue' | 'takbull' {
   const configured = process.env.INVOICE_PROVIDER;
-  if (configured === 'mock' || configured === 'pending-queue') return configured;
+  if (configured === 'mock' || configured === 'pending-queue' || configured === 'takbull') return configured;
   return process.env.NODE_ENV === 'production' ? 'pending-queue' : 'mock';
 }
 
 export function getInvoiceProvider(): InvoiceProvider {
   if (!instance) {
-    instance = resolveProviderName() === 'mock' ? new MockInvoiceProvider() : new PendingQueueInvoiceProvider();
+    const name = resolveProviderName();
+    instance = name === 'mock' ? new MockInvoiceProvider() : name === 'takbull' ? new TakbullInvoiceProvider() : new PendingQueueInvoiceProvider();
   }
   return instance;
 }

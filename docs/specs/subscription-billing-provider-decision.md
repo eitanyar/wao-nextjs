@@ -1,13 +1,38 @@
-# Payment/Invoicing Provider Decision Log — Recurring Subscription Billing Engine
+# Payment/Invoicing Provider Decision Log — All Payment Channels
 
-Status: **REOPENED (2026-08-01)** — Eitan is now weighing **Payme.io** and **Grow (Meshulam)**
-against the prior Takbull pick; nothing below should be treated as final. The Takbull decision
-was never fully unblocked in the first place (task #13's `ChargeToken` test kept declining with
-CCode=3 — see below), so this reopening isn't a reversal of a working integration, it's widening
-the search before committing engineering time to any one provider's real (non-mock) wiring. Do
-not build further against Takbull specifically until a provider is re-selected. The
+Status: **DECIDED, FINAL (2026-08-07)** — **Takbull, for both charging and invoicing, across all
+payment channels for all bots** — not scoped to the recurring subscription engine alone. This
+supersedes the "reopened" evaluation of Payme.io/Grow below (kept for history — neither ever beat
+Takbull, the reopening was purely about the unresolved CCode=3 decline, not a preference shift).
+It also supersedes the old split noted further down that kept the one-time Site Bot/Google-Ads
+checkout (`src/app/api/checkout/*`, Yaad Sarig/Hyp Pay) on a separate provider — that split no
+longer applies. Takbull is now the single processor for: the recurring subscription engine, the
+Site Bot ₪9.90 one-time checkout, and the Google Ads onboarding checkout. Eitan is meeting Takbull
+Sunday (2026-08-10, when they reopen) to sort the business/account side; the CCode=3 sandbox
+decline (task #13) is expected to get resolved in that conversation. Until then, do not wire the
+real (non-mock) `TakbullPaymentProvider` — the mock stays in place across all channels. The
 provider-agnostic `PaymentProvider`/`InvoiceProvider` interfaces already in `src/lib/payments/`
-mean none of the engine code built so far needs to change regardless of which provider wins.
+mean none of the engine code built so far needs to change; this decision only selects which
+concrete provider class gets written and plugged into `get-provider.ts` / `get-invoice-provider.ts`.
+
+**Scaffolded 2026-08-07 (`src/lib/payments/providers/takbull.ts`):** `TakbullPaymentProvider` /
+`TakbullInvoiceProvider` classes exist, implementing both interfaces, selected via
+`PAYMENT_PROVIDER=takbull` / `INVOICE_PROVIDER=takbull` (default stays mock/pending-queue). Every
+method currently throws `TakbullNotConfiguredError` — the decision log above documents the auth
+model and method names (`ChargeToken`, `CreateDocument`) but never captured exact endpoint URLs
+or request/response field names, since CCode=3 blocked the sandbox test before a real payload was
+ever inspected. Fill in the `TODO(takbull-api)` spots in that file from Takbull's real API
+docs/Postman collection after the 2026-08-10 meeting, then remove the guard. Also fixed the same
+day: Site Bot's checkout callback (`src/app/api/site-bot/checkout/callback/route.ts`) now calls
+`getInvoiceProvider()` after a successful charge (previously issued no invoice/receipt at all).
+
+---
+
+### Prior "reopened" evaluation (superseded, kept for history)
+
+Eitan briefly weighed **Payme.io** and **Grow (Meshulam)** against Takbull after task #13's
+`ChargeToken` test kept declining with CCode=3 — see below. Neither displaced Takbull; the CCode=3
+issue is being resolved directly with Takbull instead (see status banner above).
 
 ---
 

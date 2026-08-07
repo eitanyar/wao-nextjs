@@ -3,6 +3,7 @@ import fs from 'fs';
 import path from 'path';
 import type { CollectedData } from '@/lib/bot/prompts';
 import { getPaymentProvider } from '@/lib/payments/get-provider';
+import { getInvoiceProvider } from '@/lib/payments/get-invoice-provider';
 
 const SITE_BOT_PRICE = 9.9;
 
@@ -40,6 +41,24 @@ export async function POST(req: Request) {
     });
     if (!charge.success) {
       return NextResponse.json({ error: charge.errorMessage || 'החיוב נכשל', retryable: charge.isRetryable }, { status: 402 });
+    }
+
+    // Invoice issuance must never block or fail the already-succeeded charge
+    // (same invariant as invoicing.ts's issueInvoiceForCharge — this flow
+    // can't reuse that helper directly since it writes to the subscription
+    // engine's charges/subscriptions DB tables, which this one-time,
+    // DB-less checkout doesn't have rows in).
+    try {
+      const invoiceProvider = getInvoiceProvider();
+      await invoiceProvider.createInvoice({
+        customerName: pending.collectedData.businessName || pending.collectedData.ownerName || sessionId,
+        customerEmail: pending.collectedData.email || '',
+        amount: SITE_BOT_PRICE,
+        description: 'WAO Site Bot — בניית אתר',
+        externalId: charge.providerTransactionId || sessionId,
+      });
+    } catch (err) {
+      console.error(`[site-bot checkout] Failed to issue invoice for session=${sessionId}:`, err);
     }
 
     // ── Trigger the already-proven generate → deploy pipeline ────────────────
