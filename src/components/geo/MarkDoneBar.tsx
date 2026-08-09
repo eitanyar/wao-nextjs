@@ -45,6 +45,7 @@ export default function MarkDoneBar({ actionId, initialDone, nextActionId }: Pro
     return (
       <div
         ref={confirmRef}
+        id="action-cta"
         role="status"
         tabIndex={-1}
         className="mt-8 rounded-xl border border-[var(--accent)]/30 bg-[var(--accent)]/10 px-6 py-4 text-center outline-none"
@@ -70,7 +71,7 @@ export default function MarkDoneBar({ actionId, initialDone, nextActionId }: Pro
   }
 
   return (
-    <div className="sticky bottom-0 start-0 end-0 mt-8 border-t border-[var(--border)] bg-[var(--bg)]/90 px-4 py-3 backdrop-blur">
+    <div id="action-cta" className="sticky bottom-0 start-0 end-0 mt-8 border-t border-[var(--border)] bg-[var(--bg)]/90 px-4 py-3 backdrop-blur">
       <button
         onClick={handleDone}
         disabled={state === 'loading'}

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import GT from "@/components/GlossaryTerm";
+import PhoneReveal from "@/components/PhoneReveal";
 
 const CANONICAL = "https://www.wao.co.il/google-ads";
 
@@ -329,9 +330,12 @@ export default function GoogleAdsPage() {
                 שיחה של 30 דקות עם מומחה Google Ads. נבדוק את הקמפיינים הקיימים ונזהה את בזבוז התקציב.
               </p>
               <div style={{ display: "flex", gap: "16px", justifyContent: "center", flexWrap: "wrap" }}>
-                <a href="tel:0526148860" className="btn-primary" style={{ fontSize: "1.05rem", padding: "16px 40px" }}>
-                  📞 052-614-8860
-                </a>
+                <PhoneReveal
+                  source="google-ads-bottom-cta"
+                  className="btn-primary"
+                  style={{ fontSize: "1.05rem", padding: "16px 40px" }}
+                  icon="📞 "
+                />
                 <Link href="/google-ads/onboarding" className="btn-outline" style={{ fontSize: "1rem" }}>
                   התחל עם ה-Ads Bot לבד ←
                 </Link>

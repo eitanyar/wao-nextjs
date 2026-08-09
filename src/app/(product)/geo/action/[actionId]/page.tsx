@@ -7,6 +7,7 @@ import { verifySessionToken, COOKIE_NAME } from '@/lib/client-auth';
 import CopyAnnouncer   from '@/components/geo/CopyAnnouncer';
 import StatusBar       from '@/components/geo/StatusBar';
 import ActionHeader    from '@/components/geo/ActionHeader';
+import StickyActionIndicator from '@/components/geo/StickyActionIndicator';
 import PathCard        from '@/components/geo/PathCard';
 import AutoPathPanel   from '@/components/geo/AutoPathPanel';
 import PlatformSelect  from '@/components/geo/PlatformSelect';
@@ -44,7 +45,12 @@ export default async function GeoActionPage({
   const platform       = client?.platform ?? null;
   const publishMode: 'auto' | 'manual' = action.publishMode ?? 'manual';
   const isDone         = action.status === 'done';
-  const isPathA        = wpConnected && publishMode === 'auto';
+  const hasCannibalRisk = (action.cannibalReasons?.length ?? 0) > 0;
+  // Cannibalization is a real SEO-quality risk to a paying client — never let
+  // auto-publish (Path A) ship a flagged action unattended. Force manual
+  // review/approval instead. Server-side enforced too, see
+  // src/app/api/geo/action/[id]/mode/route.ts.
+  const isPathA        = wpConnected && publishMode === 'auto' && !hasCannibalRisk;
   const locked         = isDone && publishMode === 'auto';
 
   const allActions = getClientActions(action.clientId);
@@ -62,6 +68,12 @@ export default async function GeoActionPage({
 
   return (
     <CopyAnnouncer>
+      <StickyActionIndicator
+        title={action.query}
+        current={currentIdx + 1}
+        total={allActions.length}
+        done={isDone}
+      />
       <main className="mx-auto min-h-screen max-w-2xl px-4 pt-8 pb-32" dir="rtl">
         <StatusBar
           status={isDone ? 'done' : 'pending'}
@@ -71,11 +83,33 @@ export default async function GeoActionPage({
 
         <ActionHeader title={action.query} url={placementUrl} />
 
+        {hasCannibalRisk && (
+          <div className="mb-6 rounded-xl border border-amber-500/40 bg-amber-500/10 p-4 text-sm">
+            <p className="mb-1 font-semibold text-amber-400">
+              ⚠ סיכון קניבליזציה (WAO internal) — {action.cannibalReasons!.join(' + ')}
+            </p>
+            <p className="text-[var(--muted)]">
+              עמוד אחר באתר כבר מתחרה על השאילתה הזו. אל תפרסמי הגדרה כללית של &quot;{action.query}&quot; —
+              בדקי את התוכן שוב לפני אישור. פרסום אוטומטי חסום לפעולה הזו.
+            </p>
+            {action.cannibalUrls?.length ? (
+              <ul className="mt-2 space-y-0.5 text-xs text-[var(--muted)]" dir="ltr">
+                {action.cannibalUrls.map((u) => (
+                  <li key={u.url}>
+                    {u.url} — {u.impressions.toLocaleString('he-IL')} imp, pos {u.position}
+                  </li>
+                ))}
+              </ul>
+            ) : null}
+          </div>
+        )}
+
         <PathCard
           actionId={actionId}
           wpConnected={wpConnected}
           mode={publishMode}
           locked={locked}
+          autoDisabled={hasCannibalRisk}
         />
 
         {isPathA ? (

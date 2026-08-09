@@ -92,6 +92,19 @@ export default function LandingPage({ theme, assets, copy, data, heroImageUrl, s
     }
   }
 
+  const [menuOpen, setMenuOpen] = useState(false);
+  const HEADER_HEIGHT = 56;
+
+  // In-page nav — only linking to sections that actually render for this
+  // client (faq is conditional on copy.faqItems.length). "Why Us / Reviews"
+  // is one combined section (id="reviews") in this component today.
+  const navItems: { href: string; label: string }[] = [
+    { href: '#services', label: 'שירותים' },
+    { href: '#reviews', label: 'למה אנחנו' },
+    ...(copy.faqItems.length > 0 ? [{ href: '#faq', label: 'שאלות נפוצות' }] : []),
+    { href: '#contact', label: 'יצירת קשר' },
+  ];
+
   const nameInputRef = useRef<HTMLInputElement>(null);
   const phoneInputRef = useRef<HTMLInputElement>(null);
   const [formStatus, setFormStatus] = useState<'idle' | 'submitting' | 'success' | 'error'>('idle');
@@ -156,19 +169,119 @@ export default function LandingPage({ theme, assets, copy, data, heroImageUrl, s
   }
 
   return (
-    <div dir="rtl" style={{ backgroundColor: t.bg, minHeight: '100vh', fontFamily: t.fontBody, color: t.textPrimary, paddingBottom: 'calc(80px + env(safe-area-inset-bottom, 0px))' }}>
+    <div dir="rtl" style={{ backgroundColor: t.bg, minHeight: '100vh', fontFamily: t.fontBody, color: t.textPrimary, paddingTop: `${HEADER_HEIGHT}px` }}>
 
-      {/* ── Header ──────────────────────────────────────────────── */}
-      <header style={{ position: 'sticky', top: 0, zIndex: 50, backgroundColor: t.surface, borderBottom: `1px solid ${t.border}`, padding: '12px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', boxShadow: '0 2px 8px rgba(0,0,0,0.06)' }}>
-        <div style={{ fontFamily: t.fontHeading, fontWeight: t.headingWeight, fontSize: '1.1rem', color: t.primary }}>
+      {/* ── Header — fixed, minimal, icon-only CTAs (never a big colored
+           button competing with the hero/page CTAs below it) ──────── */}
+      <header
+        style={{
+          position: 'fixed',
+          insetInlineStart: 0,
+          insetInlineEnd: 0,
+          top: 0,
+          zIndex: 200,
+          height: `${HEADER_HEIGHT}px`,
+          backgroundColor: t.surface,
+          borderBottom: `1px solid ${t.border}`,
+          padding: '0 16px',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+        }}
+      >
+        <div style={{ fontFamily: t.fontHeading, fontWeight: t.headingWeight, fontSize: '1rem', color: t.primary, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
           {businessName}
         </div>
-        {showPhone && (
-          <a href={phoneHref} onClick={() => pingClick('phone-click')} style={{ background: t.ctaGradient, color: '#fff', padding: '15px 18px', borderRadius: t.radiusSm, fontWeight: 700, fontSize: '0.9rem', textDecoration: 'none', whiteSpace: 'nowrap' }}>
-            📞 {phone}
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: '18px' }}>
+          {showPhone && (
+            <a href={phoneHref} onClick={() => pingClick('phone-click')} aria-label={`התקשר — ${phone}`} style={{ color: t.primary, display: 'flex' }}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92Z" />
+              </svg>
+            </a>
+          )}
+          {showWhatsApp && (
+            <a href={whatsappHref} target="_blank" rel="noopener noreferrer" aria-label="וואטסאפ (נפתח בחלון חדש)" onClick={() => pingClick('whatsapp-click')} style={{ color: t.primary, display: 'flex' }}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                <path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.79.47 3.47 1.29 4.94L2 22l5.29-1.39a9.87 9.87 0 0 0 4.75 1.21h.01c5.46 0 9.9-4.45 9.9-9.91C21.96 6.45 17.5 2 12.04 2Zm0 18.05h-.01a8.15 8.15 0 0 1-4.15-1.14l-.3-.18-3.14.82.84-3.06-.19-.32a8.13 8.13 0 0 1-1.25-4.35c0-4.5 3.66-8.16 8.17-8.16 2.18 0 4.23.85 5.77 2.4a8.11 8.11 0 0 1 2.39 5.77c0 4.5-3.67 8.22-8.13 8.22Zm4.47-6.13c-.24-.12-1.44-.71-1.67-.79-.22-.08-.39-.12-.55.12-.16.24-.63.79-.78.95-.14.16-.28.18-.53.06-.24-.12-1.02-.38-1.94-1.2-.72-.64-1.2-1.43-1.34-1.67-.14-.24-.02-.37.11-.49.11-.11.24-.28.36-.42.12-.14.16-.24.24-.4.08-.16.04-.3-.02-.42-.06-.12-.55-1.33-.76-1.82-.2-.48-.4-.42-.55-.42-.14 0-.3-.02-.46-.02-.16 0-.42.06-.64.3-.22.24-.84.82-.84 2s.86 2.32.98 2.48c.12.16 1.7 2.6 4.12 3.64.58.25 1.03.4 1.38.51.58.18 1.11.16 1.53.1.47-.07 1.44-.59 1.64-1.16.2-.57.2-1.06.14-1.16-.06-.1-.22-.16-.46-.28Z" />
+              </svg>
+            </a>
+          )}
+          <a href="#contact" aria-label="קפיצה לטופס יצירת קשר" style={{ color: t.primary, display: 'flex' }}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <rect x="2.5" y="4.5" width="19" height="15" rx="2" />
+              <path d="M3 6.5l9 6.5 9-6.5" />
+            </svg>
           </a>
-        )}
+
+          {/* Hamburger — points to in-page sections instead of duplicating the CTA row */}
+          <button
+            onClick={() => setMenuOpen((v) => !v)}
+            aria-label={menuOpen ? 'סגור תפריט' : 'פתח תפריט'}
+            aria-expanded={menuOpen}
+            aria-controls="lp-nav-menu"
+            style={{ cursor: 'pointer', padding: '4px', background: 'none', border: 'none', display: 'flex' }}
+          >
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
+              {[0, 1, 2].map((i) => (
+                <span
+                  key={i}
+                  style={{
+                    display: 'block',
+                    width: '20px',
+                    height: '2px',
+                    background: t.primary,
+                    borderRadius: '2px',
+                    transition: 'all 0.3s ease',
+                    transformOrigin: 'center',
+                    transform: menuOpen
+                      ? i === 0
+                        ? 'rotate(45deg) translate(4px, 4px)'
+                        : i === 2
+                        ? 'rotate(-45deg) translate(4px, -4px)'
+                        : 'scaleX(0)'
+                      : 'none',
+                    opacity: menuOpen && i === 1 ? 0 : 1,
+                  }}
+                />
+              ))}
+            </div>
+          </button>
+        </div>
       </header>
+
+      {/* ── In-page nav dropdown ────────────────────────────────── */}
+      <div
+        id="lp-nav-menu"
+        style={{
+          position: 'fixed',
+          insetInlineStart: 0,
+          insetInlineEnd: 0,
+          top: `${HEADER_HEIGHT}px`,
+          zIndex: 199,
+          overflow: 'hidden',
+          maxHeight: menuOpen ? '400px' : '0',
+          transition: 'max-height 0.3s ease',
+          backgroundColor: t.surface,
+          borderBottom: menuOpen ? `1px solid ${t.border}` : 'none',
+          boxShadow: menuOpen ? '0 4px 12px rgba(0,0,0,0.1)' : 'none',
+        }}
+      >
+        <nav aria-label="ניווט בעמוד" style={{ display: 'flex', flexDirection: 'column', padding: '8px 16px 16px' }}>
+          {navItems.map((item) => (
+            <a
+              key={item.href}
+              href={item.href}
+              onClick={() => setMenuOpen(false)}
+              style={{ padding: '13px 8px', color: t.textPrimary, fontWeight: 600, fontSize: '0.95rem', borderBottom: `1px solid ${t.border}`, textDecoration: 'none' }}
+            >
+              {item.label}
+            </a>
+          ))}
+        </nav>
+      </div>
 
       {/* ── Hero ────────────────────────────────────────────────── */}
       <section style={{ position: 'relative', minHeight: '380px', backgroundImage: `url(${heroImageUrl})`, backgroundSize: 'cover', backgroundPosition: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', textAlign: t.heroTextAlign, padding: '0 20px' }}>
@@ -337,23 +450,6 @@ export default function LandingPage({ theme, assets, copy, data, heroImageUrl, s
           </div>
         </div>
       </section>
-
-      {/* ── Sticky Bottom Bar ───────────────────────────────────── */}
-      <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, backgroundColor: t.surface, borderTop: `1px solid ${t.border}`, paddingTop: '10px', paddingBottom: 'calc(10px + env(safe-area-inset-bottom, 0px))', paddingLeft: '16px', paddingRight: '16px', zIndex: 50, boxShadow: '0 -2px 12px rgba(0,0,0,0.08)' }}>
-        <p style={{ textAlign: 'center', fontSize: '0.78rem', color: t.textMuted, marginBottom: '8px', fontWeight: 600 }}>{copy.stickyBarLine}</p>
-        <div style={{ display: 'flex', gap: '10px' }}>
-          {showPhone && (
-            <a href={phoneHref} onClick={() => pingClick('phone-click')} style={{ flex: 1, background: t.ctaGradient, color: '#fff', border: 'none', padding: '14px', borderRadius: t.radiusSm, fontWeight: 800, fontSize: '1rem', textDecoration: 'none', textAlign: 'center', display: 'block' }}>
-              📞 התקשר
-            </a>
-          )}
-          {showWhatsApp && (
-            <a href={whatsappHref} target="_blank" rel="noopener noreferrer" aria-label="וואטסאפ (נפתח בחלון חדש)" onClick={() => pingClick('whatsapp-click')} style={{ flex: 1, background: '#25D366', color: '#fff', border: 'none', padding: '14px', borderRadius: t.radiusSm, fontWeight: 800, fontSize: '1rem', textDecoration: 'none', textAlign: 'center', display: 'block' }}>
-              💬 וואטסאפ
-            </a>
-          )}
-        </div>
-      </div>
     </div>
   );
 }

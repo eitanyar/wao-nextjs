@@ -1,4 +1,5 @@
 import { renderMixed } from '@/lib/bidi';
+import { safeDecode } from '@/lib/geo/safeDecode';
 
 interface Props {
   instruction: string;
@@ -17,7 +18,7 @@ export default function PlacementBlock({ instruction, url }: Props) {
       </div>
       <p className="mb-2 text-sm text-[var(--text)]">{renderMixed(instruction)}</p>
       <p className="text-xs text-[var(--muted)]">
-        עמוד: <bdi dir="ltr" className="font-mono">{url}</bdi>
+        עמוד: <bdi dir="ltr" className="font-mono">{safeDecode(url)}</bdi>
       </p>
     </li>
   );

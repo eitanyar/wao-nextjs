@@ -1,4 +1,5 @@
 import { renderMixed } from '@/lib/bidi';
+import { safeDecode } from '@/lib/geo/safeDecode';
 
 interface Props {
   title: string;
@@ -11,7 +12,7 @@ export default function ActionHeader({ title, url }: Props) {
       <h1 className="mb-1 text-2xl font-bold">{renderMixed(title)}</h1>
       {url && (
         <p className="text-sm text-[var(--muted)]">
-          <bdi dir="ltr" className="font-mono">{url}</bdi>
+          <bdi dir="ltr" className="font-mono">{safeDecode(url)}</bdi>
         </p>
       )}
     </header>

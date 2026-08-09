@@ -184,7 +184,7 @@ export default function GeoPage() {
           <a
             href="tel:0526148860"
             className="btn-primary w-full sm:w-auto justify-center"
-            style={{ fontSize: "1.05rem", padding: "16px 40px" }}
+            style={{ fontSize: "1.05rem", padding: "16px 40px", whiteSpace: "normal", textAlign: "center", lineHeight: 1.4 }}
           >
             {renderMixed("התחל עכשיו ב-199 ₪ לחודש — והפוך לתשובה שגוגל נותן ללקוח שלך.")}
           </a>
@@ -414,7 +414,7 @@ export default function GeoPage() {
                 <a
                   href="tel:0526148860"
                   className="btn-primary w-full sm:w-auto justify-center"
-                  style={{ fontSize: "1.05rem", padding: "16px 40px" }}
+                  style={{ fontSize: "1.05rem", padding: "16px 40px", whiteSpace: "normal", textAlign: "center", lineHeight: 1.4 }}
                 >
                   {renderMixed("התחל עכשיו ב-199 ₪ לחודש — והפוך לתשובה שגוגל נותן ללקוח שלך.")}
                 </a>

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { renderMixed } from "@/lib/bidi";
 import SiloNav from "@/components/SiloNav";
+import CallBookingCTA from "@/components/CallBookingCTA";
 
 const CANONICAL = "https://www.wao.co.il/geo/audit";
 
@@ -104,7 +105,7 @@ export default function GeoAuditPage() {
           </p>
 
           <a
-            href="/contact?ref=geo-audit"
+            href="/contact/quick?ref=geo-audit"
             className="btn-primary w-full sm:w-auto justify-center"
             style={{ fontSize: "1.05rem", padding: "16px 40px" }}
           >
@@ -123,6 +124,16 @@ export default function GeoAuditPage() {
               "כדי להריץ את הבדיקה אנחנו צריכים גישת קריאה בלבד לנתוני Search Console שלך. אנחנו לא נוגעים באתר ולא משנים כלום — רק קוראים את הנתונים. אחרי הבדיקה הגישה נסגרת."
             )}
           </p>
+
+          <p style={{ marginTop: "10px", fontSize: "0.85rem", color: "var(--muted)", fontFamily: "var(--font-body), sans-serif" }}>
+            {renderMixed(
+              "חלק מהבדיקה והשיחה כאן נעזר ב-AI (Gemini) כדי לנתח את הנתונים שלך מהר ולדייק את התשובות. וכדי שיהיה ברור לגמרי: אנחנו מדווחים לך רק על תוצאות שאנחנו יכולים להוכיח — לא ננפח לך מספרים שלא באמת נבדקו."
+            )}
+          </p>
+
+          <div style={{ marginTop: "32px", maxWidth: "480px" }}>
+            <CallBookingCTA source="geo-audit-hero" />
+          </div>
         </div>
       </section>
 
@@ -210,7 +221,7 @@ export default function GeoAuditPage() {
               </p>
               <div style={{ display: "flex", gap: "16px", justifyContent: "center", flexWrap: "wrap" }}>
                 <a
-                  href="/contact?ref=geo-audit"
+                  href="/contact/quick?ref=geo-audit"
                   className="btn-primary w-full sm:w-auto justify-center"
                   style={{ fontSize: "1.05rem", padding: "16px 40px" }}
                 >
