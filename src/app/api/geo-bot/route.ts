@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { GEO_ADAM_SYSTEM_PROMPT, GeoCollectedData } from '@/lib/geo/prompts';
 import { checkAioPresence } from '@/lib/geo/dataForSeo';
+import { extractJsonSpan } from '@/lib/ai/gemini-fast';
 
 interface Message {
   role: 'user' | 'assistant' | 'system';
@@ -30,21 +31,28 @@ const TURN_QUESTIONS: Record<number, string> = {
   10: 'מה המייל שלך? נשלח לך את תוכנית העבודה הראשונה שלנו ואת הדוח החודשי.',
 };
 
-function callAzure(systemPrompt: string, messages: Message[]): Promise<Response> {
-  const apiKey  = process.env.AZURE_OPENAI_KEY!;
-  const endpoint = process.env.AZURE_OPENAI_ENDPOINT!;
-  const deployment = process.env.AZURE_OPENAI_DEPLOYMENT_NAME!;
-  const url = `${endpoint}/chat/completions?api-version=2024-05-01-preview`;
+// ── Gemini caller — mirrors /api/bot's callGemini (multi-turn, JSON mode) ────
+const GEMINI_MODEL_NAME = process.env.GEMINI_MODEL_NAME || 'gemini-3.5-flash';
+
+function toGeminiRole(role: Message['role']): 'user' | 'model' {
+  return role === 'assistant' ? 'model' : 'user';
+}
+
+async function callGemini(systemPrompt: string, messages: Message[]): Promise<Response> {
+  const apiKey = process.env.GEMINI_API_KEY!;
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL_NAME}:generateContent`;
+
+  const contents = messages
+    .filter(m => m.role !== 'system')
+    .map(m => ({ role: toGeminiRole(m.role), parts: [{ text: m.content }] }));
 
   return fetch(url, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'api-key': apiKey },
+    headers: { 'Content-Type': 'application/json', 'x-goog-api-key': apiKey },
     body: JSON.stringify({
-      model: deployment,
-      messages: [{ role: 'system', content: systemPrompt }, ...messages],
-      response_format: { type: 'json_object' },
-      max_completion_tokens: 1000,
-      temperature: 0.7,
+      systemInstruction: { role: 'system', parts: [{ text: systemPrompt }] },
+      contents,
+      generationConfig: { responseMimeType: 'application/json' },
     }),
   });
 }
@@ -69,7 +77,7 @@ export async function POST(req: Request) {
       });
     }
 
-    // ── Live Azure mode ───────────────────────────────────────────────────────
+    // ── Live Gemini mode ──────────────────────────────────────────────────────
     const turn = collectedData.turnIndex ?? 0;
     let systemPrompt = GEO_ADAM_SYSTEM_PROMPT;
 
@@ -90,17 +98,19 @@ export async function POST(req: Request) {
       }
     }
 
-    const azureRes = await callAzure(systemPrompt, messages);
-    const azureData = await azureRes.json();
+    const geminiRes = await callGemini(systemPrompt, messages);
+    const geminiData = await geminiRes.json();
 
-    if (!azureRes.ok) {
-      throw new Error(`Azure error: ${JSON.stringify(azureData?.error)}`);
+    if (!geminiRes.ok) {
+      throw new Error(`Gemini error: ${JSON.stringify(geminiData)}`);
     }
 
-    const raw = azureData.choices?.[0]?.message?.content ?? '{}';
+    const raw = geminiData?.candidates?.[0]?.content?.parts?.[0]?.text ?? '{}';
     let parsed: { response?: string; currentState?: string; collectedData?: GeoCollectedData } = {};
 
-    try { parsed = JSON.parse(raw); } catch { parsed = { response: raw }; }
+    // Gemini occasionally emits valid JSON followed by trailing junk (see
+    // gemini-fast.ts extractJsonSpan) — extract the balanced span before parsing.
+    try { parsed = JSON.parse(extractJsonSpan(raw)); } catch { parsed = { response: raw }; }
 
     // Merge collected data and advance turn
     const merged: GeoCollectedData = {
