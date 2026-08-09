@@ -10,9 +10,11 @@ interface Props {
   mode:        PublishMode;
   /** True once auto-publish has actually executed — both radios lock. */
   locked:      boolean;
+  /** True when the action has an open cannibalization flag — auto-publish is blocked. */
+  autoDisabled?: boolean;
 }
 
-export default function PathCard({ actionId, wpConnected, mode, locked }: Props) {
+export default function PathCard({ actionId, wpConnected, mode, locked, autoDisabled }: Props) {
   const [current, setCurrent] = useState<PublishMode>(mode);
   const [switchedFromAuto, setSwitchedFromAuto] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -63,13 +65,17 @@ export default function PathCard({ actionId, wpConnected, mode, locked }: Props)
             name={`publish-mode-${actionId}`}
             value="auto"
             checked={current === 'auto'}
-            disabled={locked || saving || !wpConnected}
+            disabled={locked || saving || !wpConnected || autoDisabled}
             onChange={() => handleChange('auto')}
             className="mt-1 h-4 w-4 accent-[var(--accent)]"
           />
           <span>
             <span className="block text-sm font-medium">פרסום אוטומטי</span>
-            <span className="block text-xs text-[var(--muted)]">אנחנו מפרסמים במקומך — האתר מחובר.</span>
+            <span className="block text-xs text-[var(--muted)]">
+              {autoDisabled
+                ? 'חסום — נדרשת בדיקה ידנית בגלל סיכון קניבליזציה.'
+                : 'אנחנו מפרסמים במקומך — האתר מחובר.'}
+            </span>
           </span>
         </label>
 

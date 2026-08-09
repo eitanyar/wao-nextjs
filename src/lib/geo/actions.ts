@@ -22,6 +22,14 @@ export interface GeoAction {
    * used by the GSC/Pareto generation pipeline). Absent on older action files → treat as 'manual'.
    */
   publishMode?:       'auto' | 'manual';
+  /**
+   * Cannibalization diagnosis from scripts/gsc-pareto.mjs (checkCannibalization).
+   * Absent/undefined on actions generated before this was wired through, and
+   * on actions where no cannibalization signal was detected.
+   */
+  cannibalFlag?:      'REVIEW';
+  cannibalReasons?:   ('MULTI_URL' | 'HEAD_TERM_ON_LOCATION')[];
+  cannibalUrls?:      { url: string; impressions: number; position: number }[];
   content: {
     hebrewContent:        string;
     placementInstruction: string;

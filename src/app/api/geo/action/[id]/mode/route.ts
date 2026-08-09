@@ -49,6 +49,16 @@ export async function POST(
     );
   }
 
+  // Cannibalization guard, re-enforced server-side (client-side gate lives in
+  // PathCard's autoDisabled prop). Never let a flagged action switch to
+  // auto-publish.
+  if (mode === 'auto' && (action.cannibalReasons?.length ?? 0) > 0) {
+    return NextResponse.json(
+      { error: 'Auto-publish is disabled for this action — cannibalization risk requires manual review.' },
+      { status: 409 }
+    );
+  }
+
   updateActionPublishMode(actionId, mode);
   return NextResponse.json({ success: true, actionId, implementationMode: mode });
 }
