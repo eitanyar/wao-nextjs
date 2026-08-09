@@ -64,6 +64,15 @@ const NO_POPUP_PATHS = [
   '/privacy',
   '/accessibility',
   '/preview-lp',
+  // GEO Bot task/tool surfaces — signup flow, auth, scan/audit tools, dashboard, and
+  // per-action pages. NOT '/geo' itself, which is the marketing landing page and should
+  // keep the commercial exit-intent popup. See mobile-audit fix #1 (Maya, approved by Eitan).
+  '/geo/signup',
+  '/geo/login',
+  '/geo/scan',
+  '/geo/audit',
+  '/geo/action',
+  '/geo/dashboard',
 ];
 
 // Content/learning pages keep the existing 4-step course-lead survey.

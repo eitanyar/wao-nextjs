@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { renderMixed } from "@/lib/bidi";
+import PhoneReveal from "./PhoneReveal";
 
 const footerLinks = [
   {
@@ -91,14 +92,12 @@ export default function Footer() {
 
             {/* Contact */}
             <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-              <a
-                href="tel:0526148860"
+              <PhoneReveal
+                source="footer"
                 className="footer-link"
                 style={{ display: "flex", alignItems: "center", gap: "8px" }}
-              >
-                <span aria-hidden>📞</span>
-                <span dir="ltr">052-614-8860</span>
-              </a>
+                icon={<span aria-hidden>📞</span>}
+              />
               <span
                 style={{
                   fontSize: "0.9rem",

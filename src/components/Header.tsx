@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import PhoneReveal from "./PhoneReveal";
 
 const nav = [
   { label: "קידום אתרים", href: "/seo" },
@@ -77,18 +78,20 @@ export default function Header() {
 
           {/* Right side */}
           <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
-            <a
-              href="tel:0526148860"
+            <PhoneReveal
+              source="header"
+              showOnMobile={false}
+              desktopVisibleClassName="hidden lg:inline-flex"
               style={{
                 fontSize: "0.88rem",
                 color: "var(--muted)",
                 fontFamily: "var(--font-body), sans-serif",
                 direction: "ltr",
+                background: "none",
+                border: "none",
+                padding: 0,
               }}
-              className="hidden lg:block"
-            >
-              052-614-8860
-            </a>
+            />
 
             <Link
               href="/site-bot"

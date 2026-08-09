@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
-import Link from "next/link";
+import PrivacyConsent from "./PrivacyConsent";
+import { useLeadTracking } from "@/lib/useLeadTracking";
 
 const SERVICES = [
   { value: "seo", label: "קידום אתרים (SEO)" },
@@ -43,6 +44,7 @@ export default function ContactForm({ source = "contact-page" }: { source?: stri
   });
   const [privacyAccepted, setPrivacyAccepted] = useState(false);
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
+  const tracking = useLeadTracking();
 
   const set = (field: keyof typeof form) => (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
@@ -56,8 +58,19 @@ export default function ContactForm({ source = "contact-page" }: { source?: stri
       const res = await fetch("/api/lead", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...form, source }),
+        body: JSON.stringify({
+          ...form,
+          source,
+          ref: tracking.ref ?? undefined,
+          utm_source: tracking.utm_source ?? undefined,
+          utm_medium: tracking.utm_medium ?? undefined,
+          utm_campaign: tracking.utm_campaign ?? undefined,
+        }),
       });
+      if (res.ok) {
+        window.dataLayer = window.dataLayer || [];
+        window.dataLayer.push({ event: "lead_submit", source, ref: tracking.ref ?? undefined });
+      }
       setStatus(res.ok ? "success" : "error");
     } catch {
       setStatus("error");
@@ -212,22 +225,7 @@ export default function ContactForm({ source = "contact-page" }: { source?: stri
       </div>
 
       {/* Privacy consent — mandatory per Israeli Privacy Protection Law */}
-      <div style={{ display: "flex", gap: "10px", alignItems: "flex-start" }}>
-        <input
-          id="cf-privacy"
-          type="checkbox"
-          required
-          checked={privacyAccepted}
-          onChange={(e) => setPrivacyAccepted(e.target.checked)}
-          style={{ marginTop: "3px", accentColor: "var(--accent)", flexShrink: 0, width: "16px", height: "16px", cursor: "pointer" }}
-        />
-        <label htmlFor="cf-privacy" style={{ ...labelStyle, marginBottom: 0, fontWeight: 400, cursor: "pointer", lineHeight: 1.6 }}>
-          קראתי ומסכים/ת ל
-          <Link href="/privacy" style={{ color: "var(--accent)", fontWeight: 600 }}>מדיניות הפרטיות</Link>
-          {" "}של WAO. ידוע לי שהפרטים ישמשו ליצירת קשר בלבד ולא יועברו לצד שלישי.{" "}
-          <span style={{ color: "var(--accent)" }}>*</span>
-        </label>
-      </div>
+      <PrivacyConsent id="cf-privacy" checked={privacyAccepted} onChange={setPrivacyAccepted} />
 
       {status === "error" && (
         <p

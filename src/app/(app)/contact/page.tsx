@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import ContactForm from "@/components/ContactForm";
+import PhoneReveal from "@/components/PhoneReveal";
 
 const CANONICAL = "https://www.wao.co.il/contact";
 
@@ -173,8 +174,19 @@ export default function ContactPage() {
             <div>
               <h2 style={{ ...h2Style, marginBottom: "28px" }}>פרטי יצירת קשר</h2>
               <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+                {/* Phone — "reveal number" click-intent tracker on desktop, plain tel: on mobile */}
+                <div style={{ ...glass, padding: "18px 20px", display: "flex", gap: "16px", alignItems: "flex-start" }}>
+                  <span style={{ fontSize: "1.3rem", flexShrink: 0 }}>📞</span>
+                  <div>
+                    <div style={{ fontSize: "0.8rem", color: "var(--muted)", fontFamily: "var(--font-body), sans-serif", marginBottom: "4px" }}>טלפון</div>
+                    <PhoneReveal
+                      source="contact-page"
+                      style={{ fontFamily: "var(--font-rubik), sans-serif", fontWeight: 600, fontSize: "1rem", color: "var(--text)", background: "none", border: "none", padding: 0 }}
+                    />
+                  </div>
+                </div>
+
                 {[
-                  { icon: "📞", label: "טלפון", value: "052-614-8860", href: "tel:0526148860" },
                   { icon: "✉️", label: "אימייל", value: "dina@wao.co.il", href: "mailto:dina@wao.co.il" },
                   { icon: "📍", label: "כתובת", value: "ראשון לציון", href: null },
                   { icon: "🕒", label: "שעות פעילות", value: "ראשון–חמישי 9:00–18:00", href: null },
@@ -184,7 +196,7 @@ export default function ContactPage() {
                     <div>
                       <div style={{ fontSize: "0.8rem", color: "var(--muted)", fontFamily: "var(--font-body), sans-serif", marginBottom: "4px" }}>{c.label}</div>
                       {c.href ? (
-                        <a href={c.href} style={{ fontFamily: "var(--font-rubik), sans-serif", fontWeight: 600, fontSize: "1rem", color: "var(--text)" }} dir={c.label === "טלפון" ? "ltr" : undefined}>
+                        <a href={c.href} style={{ fontFamily: "var(--font-rubik), sans-serif", fontWeight: 600, fontSize: "1rem", color: "var(--text)" }}>
                           {c.value}
                         </a>
                       ) : (

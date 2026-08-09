@@ -22,6 +22,10 @@ async function sendLeadEmail(data: {
   service?: string;
   message?: string;
   source: string;
+  ref?: string;
+  utmSource?: string;
+  utmMedium?: string;
+  utmCampaign?: string;
 }) {
   const smtpHost = process.env.SMTP_HOST;
   const smtpUser = process.env.SMTP_USER;
@@ -46,6 +50,8 @@ async function sendLeadEmail(data: {
     other: "אחר",
   };
 
+  const hasUtm = data.utmSource || data.utmMedium || data.utmCampaign;
+
   const subject = `פנייה חדשה מ-WAO.co.il — ${data.name}`;
   const text = [
     `שם: ${data.name}`,
@@ -53,8 +59,14 @@ async function sendLeadEmail(data: {
     `אימייל: ${data.email ?? "—"}`,
     `שירות: ${serviceLabel[data.service ?? ""] ?? data.service ?? "—"}`,
     `מקור: ${data.source}`,
+    data.ref ? `ref: ${data.ref}` : "",
+    hasUtm
+      ? `קמפיין: utm_source=${data.utmSource ?? "—"} | utm_medium=${data.utmMedium ?? "—"} | utm_campaign=${data.utmCampaign ?? "—"}`
+      : "",
     data.message ? `\nהודעה:\n${data.message}` : "",
-  ].join("\n");
+  ]
+    .filter(Boolean)
+    .join("\n");
 
   await transporter.sendMail({
     from: `"WAO אתר" <${smtpUser}>`,
@@ -75,6 +87,10 @@ export async function POST(req: NextRequest) {
       service: body.service || undefined,
       message: String(body.message ?? "").trim() || undefined,
       source: String(body.source ?? "contact-page").trim(),
+      ref: String(body.ref ?? "").trim() || undefined,
+      utmSource: String(body.utm_source ?? "").trim() || undefined,
+      utmMedium: String(body.utm_medium ?? "").trim() || undefined,
+      utmCampaign: String(body.utm_campaign ?? "").trim() || undefined,
     };
 
     // Fire-and-forget — don't fail the request if email fails

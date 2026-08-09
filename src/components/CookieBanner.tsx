@@ -1,11 +1,22 @@
 "use client";
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 const STORAGE_KEY = "wao-privacy-consent";
 
+// The banner is `position: fixed` at the viewport bottom and can overlap
+// interactive elements (submit buttons, consent checkboxes) that sit near
+// the bottom of shorter lead-capture pages, on common mobile/laptop viewport
+// heights — silently blocking submission for first-time visitors (exactly
+// who cold-traffic campaigns land). Suppressed on these conversion routes;
+// disclosure is still shown on every other page, including the referring
+// page a visitor lands on before reaching the form.
+const SUPPRESS_ON = ["/contact", "/contact/quick"];
+
 export default function CookieBanner() {
   const [visible, setVisible] = useState(false);
+  const pathname = usePathname();
 
   useEffect(() => {
     if (!localStorage.getItem(STORAGE_KEY)) {
@@ -13,7 +24,7 @@ export default function CookieBanner() {
     }
   }, []);
 
-  if (!visible) return null;
+  if (!visible || SUPPRESS_ON.includes(pathname)) return null;
 
   function dismiss() {
     localStorage.setItem(STORAGE_KEY, "1");

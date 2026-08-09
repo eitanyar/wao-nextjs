@@ -66,6 +66,9 @@ __pycache__/
 # CRM data — never overwrite production leads on deploy
 src/data/leads.json
 
+# Phone-reveal click-intent log — runtime-generated, not source
+src/data/phone-reveals.json
+
 # Generated batch data — expensive Azure output, tracked once as backup; new runs stay local
 data/batch/
 
