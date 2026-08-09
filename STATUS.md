@@ -1,8 +1,70 @@
 # WAO — Status Handoff
-*Last updated: 2026-08-07, end of session*
+*Last updated: 2026-08-09, end of session*
 
 For Lior (mission-planner) to open with tomorrow: what shipped, the real leverage point,
 and the one open loop that needs Eitan's action first thing.
+
+## 2026-08-09 — DNI add-on close-out, live-call CTA, mobile UX audit (Roni verifying, not yet committed)
+
+**DNI (desktop call-attribution) add-on — full decision chain closed, written into VISION.md.**
+Vendor (WhatConverts) → product shape (opt-in add-on, Ads clients only, desktop-only) → real
+cost confirmed by Eitan directly against Dror's own research ($10/number + $0.045/min, not the
+initially-assumed $7) → pricing landed at ₪49/month, capped at ~150 included minutes, metered
+overage beyond the cap, high-call-frequency verticals (emergency/urgent services) hard-excluded
+regardless of ad-spend tier → upsell timing per Lior (free digest seed day-1, paid offer after
+month 1, renewal email as fallback only) → client-facing copy for both the seed line and the
+month-2 offer drafted by Tamar. Nothing left open on this one.
+
+**Live-call booking CTA shipped on `/geo/audit`.** `src/components/CallBookingCTA.tsx`, config-driven
+off `NEXT_PUBLIC_CALENDLY_URL` (now set to Eitan's real 15-min event link), fires a `call_scheduled`
+dataLayer event with full ref/UTM attribution on click; falls back to click-to-reveal phone if the
+env var is ever unset. Free Calendly plan — no API/webhook access, so conversion tracking is
+click-out only, not a real booked/no-show signal. Onboarding-disclosure copy (AI/Gemini-assist
+transparency line) also wired live onto `/geo/audit`, both QA'd by Noa.
+
+**Meta cold-traffic campaign copy finalized** (`meta-ad-copy-final.md`, 3 QA'd variants) — **not
+launched**. Known gap: Meta Pixel/Conversions API is not wired yet, so the campaign would run
+without a real conversion signal. Reminder set for 2026-08-10 09:00 to hand Eitan-Dev the Pixel ID
+and decide the consent-mode/CookieBanner gating approach.
+
+**Mobile UX audit (Maya's 5-item list) — built, self-tested, Roni's runtime pass in progress.**
+Root cause of the biggest scoping risk today: the original complaint (from the very start of this
+session) was about the **client-facing Google Ads LP template** (`src/components/lp/LandingPage.tsx`,
+rendered at `/lp/[slug]`, what real clients' visitors see on their Cloudflare Pages subdomains) —
+not WAO's own `/google-ads` marketing page. A summary-compaction earlier in the session dropped
+that specificity and the wrong page got targeted initially; caught via the user re-quoting the
+original ask, corrected mid-flight before the wrong fix shipped. Net result:
+- `LandingPage.tsx` — old dual-CTA design (big sticky header button + separate bottom bar)
+  replaced with one fixed minimal header: business name + 3 icon-only glyphs (phone/WhatsApp/
+  email), theme-colored, plus a hamburger opening in-page nav.
+- Route-group split — new `src/app/(product)/layout.tsx`, moved all authenticated/product routes
+  (`geo/action`, `geo/dashboard`, `geo/login`, `geo/signup*`, `gmb/*`, `account/subscription`,
+  `client/*`, `admin/*`, `checkout/*`, trainer/inner-coach session rooms) out from under marketing
+  chrome (Header/Footer/CookieBanner/ExitSurveyPopup). URLs unchanged.
+- Two `decodeURIComponent` bugs (raw percent-encoded Hebrew URLs rendering instead of decoded) found
+  and fixed in `ActionHeader.tsx` and `PlacementBlock.tsx`, consolidated into shared `safeDecode.ts`.
+- New `StickyActionIndicator.tsx` (mobile scroll-triggered jump-to-CTA on `/geo/action/[actionId]`),
+  `geo/signup` inline validation (per-field type/format/ARIA), `/geo` mobile CTA text-wrap fix
+  (was truncating), a `.next` cache-corruption root cause fixed (two concurrent dev servers).
+- A stray additive fix landed on WAO's own `/google-ads` page (`GoogleAdsStickyCta.tsx`) before the
+  scope correction — **to be removed**, not part of the real ask.
+
+**Roni dispatched** for the full runtime pass (mobile UX audit + the separately-flagged
+`docs/specs/priority-3-lead-capture-reliability-and-client-feedback.md`, which was built by an
+earlier session today, self-tested clean — 136/136 tests, build/lint clean after one real ESLint
+fix in `useLeadTracking.ts` — but never given a runtime pass). Once clean: remove
+`GoogleAdsStickyCta.tsx`, delete stray `scratchpad_signup_*.png` debug screenshots, commit and
+deploy together with two other same-session workstreams that were already Roni-verified earlier
+today but never committed — the **GEO cannibalization guard** (`PathCard.tsx`, `geo/actions.ts`,
+`geo/action/[id]/mode/route.ts`) and the **Azure→Gemini migration** on `/api/geo-bot`
+(`geo-bot/route.ts`, `gemini-fast.ts`). Left deliberately out of today's deploy: course/content
+authoring work (`docs/scripts/website-course/*.md`, thumbnails, `LessonDashboard.tsx` disclosure
+field) and the Retter GEO content-pipeline output (`pareto.json`, `03-nlp.json`, new page JSON) —
+neither reviewed nor code-tested by anyone today, no urgency to bundle them in.
+
+**Open loop — GrooveFunnels/nurture-email evaluation.** Blocked on three account-level checks only
+Eitan can do (BYO-SMTP tier availability, real API vs. Zapier-only, DPA availability) before any
+platform decision or nurture-copy work starts. Not actioned today.
 
 ## 2026-08-07 — Bot-suite dev-parity sprint (commits `56ee16f`..`ce6119a`)
 Eitan's north star: every lead magnet self-serve, zero Eitan in the loop, blocked only on
