@@ -105,3 +105,10 @@ data/sites-pending/
 
 # Site-bot chat image uploads — session-scoped runtime user data, never source
 /public/uploads/
+
+# Handoff dynamic files (folders stay tracked via .gitkeep)
+handoff/pending/*.md
+handoff/in-progress/*.md
+handoff/completed/*.md
+handoff/failed/*.md
+handoff/archive/*.md
