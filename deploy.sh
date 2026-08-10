@@ -20,9 +20,8 @@ if [[ -z "${CLIENT_PORTAL_SECRET:-}" ]]; then
   exit 1
 fi
 
-echo "⬇️ Checking out stable tag v1.0-pre-hermes..."
-git fetch origin tag v1.0-pre-hermes
-git checkout v1.0-pre-hermes
+echo "⬇️ Pulling latest code..."
+git pull origin draft/marketing
 
 echo "📦 Installing dependencies..."
 npm ci
