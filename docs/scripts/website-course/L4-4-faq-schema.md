@@ -8,7 +8,7 @@ lesson: 4
 title: "המתחרה שלך כבר מצוטט ב-AI. בוא נעקוף אותו"
 lang: he
 dir: rtl
-status: draft-pending-noa
+status: rendered
 author: Gil (instructional-designer)
 source-brief: "Yonatan (seo-strategist) verified brief, 2026-07-03 — FAQPage rich-result deprecation confirmed May 7, 2026 (no visible SERP feature since); FAQPage JSON-LD remains valid markup with no penalty and functions as a structural signal for AI Overviews/AI Mode/ChatGPT Search/Perplexity; freshness — content updated within 30 days cited ~3.2x more (Ahrefs, July 2026)."
 runtime-target: "5–6 דקות (~590 מילות קריינות)"
@@ -127,7 +127,7 @@ pipeline: "Noa (proof + TTS polish) → marp --html preview → Eitan-Dev (rende
 עכשיו נדבר על משהו שנקרא FAQPage schema.
 תשכח לרגע מהשם המסובך.
 תחשוב על תווית על ארון תיוק במשרד.
-בן אדם שנכנס לחדר, בכלל לא שם לב אליה.
+בן אדם שנכנס לחדר, בכלל לא שָׂם לב אליה.
 אבל מחשב שסורק את הארון, קורא אותה, ויודע מה בפנים.
 הסימון הזה עושה בדיוק את זה, לבלוק השאלות שלך.
 -->
@@ -229,5 +229,5 @@ pipeline: "Noa (proof + TTS polish) → marp --html preview → Eitan-Dev (rende
 דבר אחד אחרון. תוכן שמתעדכן מצוטט הרבה יותר.
 לקוח שאל שאלה חדשה? תוסיף אותה לבלוק.
 במודול הבא עולים לאוויר, עם דומיין משלך.
-נתראה שם.
+נתראה שָׁם.
 -->

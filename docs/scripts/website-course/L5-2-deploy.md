@@ -8,7 +8,7 @@ lesson: 2
 title: "האתר באוויר תוך עשר דקות — בלי לשלם על אחסון"
 lang: he
 dir: rtl
-status: draft-for-proof
+status: rendered
 author: Gil (instructional-designer)
 source-brief: "orchestrator brief, Module 5 curriculum map (docs/course-marketing/curriculum-map-modules-3-6.md, lesson 5.2) — no strategist (Yonatan) dependency; flagged for verifier to spot-check the 'free tier' claim is still current at render time"
 runtime-target: "5 דקות (~500 מילות קריינות)"
@@ -107,7 +107,7 @@ pipeline: "Noa (proof + TTS polish) → marp --html preview → Eitan-Dev (rende
 
 <!--
 תחשוב על זה כמו על משלוח חבילה בדואר.
-הקבצים שלך כבר ארוזים, וּמוכנים.
+הקבצים שלך כבר ארוזים וּמוכנים.
 Cloudflare Pages הוא הדואר.
 הוא לוקח את החבילה שלך, וּמפזר אותה בשרתים ברחבי העולם.
 אתה לא בונה שום תשתית בעצמך.
@@ -184,7 +184,7 @@ Cloudflare Pages הוא הדואר.
 אבל זו עדיין לא הכתובת שקנית בשיעור הקודם.
 בשיעור הבא נחבר בין שניהם.
 הדומיין והאתר יהפכו לדבר אחד.
-נתראה שם.
+נתראה שָׁם.
 -->
 
 ---

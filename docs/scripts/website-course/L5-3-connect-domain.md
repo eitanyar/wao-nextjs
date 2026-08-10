@@ -8,7 +8,7 @@ lesson: 3
 title: "לחבר את הדומיין: השלב שמפחיד את כולם ולוקח חמש דקות"
 lang: he
 dir: rtl
-status: draft-for-proof
+status: rendered
 author: Gil (instructional-designer)
 source-brief: "orchestrator brief, Module 5 curriculum map (docs/course-marketing/curriculum-map-modules-3-6.md, lesson 5.3) — no strategist (Yonatan) dependency for this lesson per the map; CTA slide content locked by Tamar (Noa-approved 2026-07-04), narration written by Gil per this task"
 runtime-target: "5–6 דקות (~550 מילות קריינות)"
@@ -97,7 +97,7 @@ pipeline: "Noa (proof + TTS polish) → marp --html preview → Eitan-Dev (rende
 
 <!--
 תחשוב על זה כמו על ספר טלפונים.
-יש לך שם. יש לך אתר, שיושב בכתובת אחרת לגמרי.
+יש לך שֵׁם. יש לך אתר, שיושב בכתובת אחרת לגמרי.
 מישהו צריך לחבר בין השם לבין הכתובת.
 זה בדיוק תפקיד ספר הטלפונים של האינטרנט.
 וכשמחליפים ספר טלפונים, לוקח זמן שכולם בעולם יעדכנו לגרסה החדשה.
@@ -206,7 +206,7 @@ pipeline: "Noa (proof + TTS polish) → marp --html preview → Eitan-Dev (rende
 ההמתנה שאחרי היא נורמלית לגמרי, ולא תלויה בך.
 בשיעור הבא תראה משהו מעניין.
 מה גוגל באמת חושב על האתר שלך.
-נתראה שם.
+נתראה שָׁם.
 -->
 
 ---

@@ -8,7 +8,7 @@ lesson: 1
 title: "הלקוח שואל, גוגל עונה — ואתה יכול להיות התשובה"
 lang: he
 dir: rtl
-status: draft-pending-noa
+status: rendered
 author: Gil (instructional-designer)
 source-brief: "Yonatan (seo-strategist) verified brief, 2026-07-03 — AI Overview citation mechanics: 76% of citations pull from pages that also rank organic top-10 (Ahrefs, 'Update: 38% of AI Overview Citations Pull From The Top 10,' July 2026). Mindset-shift lesson: the 'why' before the 'how' — no technical task yet."
 runtime-target: "4–5 דקות (~460 מילות קריינות)"
@@ -138,7 +138,7 @@ pipeline: "Noa (proof + TTS polish) → marp --html preview → Eitan-Dev (rende
 
 <!--
 למה זה חשוב יותר מהמקום הראשון הישן?
-כי אם אתה מצוטט, הלקוח רואה את השם שלך לפני שהוא נכנס לאתר.
+כי אם אתה מצוטט, הלקוח רואה את השם שלך לפני שהוא נכנס לדף.
 מחקר מ-2026 של חברת Ahrefs בדק את זה.
 שבעים ושישה אחוז מהציטוטים מגיעים מדפים שמדורגים גם בעשרה הראשונים בגוגל.
 המשמעות פשוטה.
@@ -218,7 +218,7 @@ pipeline: "Noa (proof + TTS polish) → marp --html preview → Eitan-Dev (rende
 גוגל בוחר תשובה ברורה, לא את מי שחזק או מוכר יותר.
 יש לך עכשיו שאלה אמיתית אחת, מלקוח אמיתי.
 בשיעור הבא נהפוך אותה לשאלת FAQ, בדיוק בשפה שגוגל אוהב.
-נתראה שם.
+נתראה שָׁם.
 -->
 </content>
 </invoke>

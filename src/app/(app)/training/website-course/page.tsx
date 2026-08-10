@@ -1,7 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { renderMixed } from "@/lib/bidi";
-import { WEBSITE_COURSE_MODULES, WEBSITE_COURSE_LESSONS } from "@/data/website-course-data";
+import {
+  WEBSITE_COURSE_MODULES,
+  WEBSITE_COURSE_LESSONS,
+  WEBSITE_COURSE_INTRO,
+} from "@/data/website-course-data";
 import WebsiteCourseModuleList from "@/components/WebsiteCourseModuleList";
 
 export const metadata: Metadata = {
@@ -114,6 +118,86 @@ export default function WebsiteCoursePage() {
               "שיעורי וידאו קצרים לבעלי עסקים קטנים: מדומיין ראשון ועד אתר שמביא לקוחות — עם AI. כל שיעור מסתיים במשימה אחת ברורה."
             )}
           </p>
+        </div>
+      </section>
+
+      {/* ── Pinned intro — Module 0, before the numbered curriculum ── */}
+      <section style={{ paddingBottom: "1rem" }}>
+        <div className="wao-container" style={{ maxWidth: "820px" }}>
+          <Link
+            href={`/training/website-course/${WEBSITE_COURSE_INTRO.slug}`}
+            style={{ textDecoration: "none" }}
+          >
+            <div
+              style={{
+                display: "flex",
+                gap: "20px",
+                alignItems: "center",
+                padding: "20px 24px",
+                marginBottom: "2.5rem",
+                background: "var(--card)",
+                border: "1px dashed var(--accent-border)",
+                borderRadius: "var(--radius-md)",
+              }}
+            >
+              <div
+                style={{
+                  flexShrink: 0,
+                  width: "120px",
+                  height: "68px",
+                  borderRadius: "var(--radius-sm)",
+                  overflow: "hidden",
+                  background: "#0b0f19",
+                  position: "relative",
+                }}
+              >
+                <img
+                  src={WEBSITE_COURSE_INTRO.thumbnail}
+                  alt={WEBSITE_COURSE_INTRO.title}
+                  style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                />
+                <div
+                  style={{
+                    position: "absolute",
+                    inset: 0,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    background: "rgba(0,0,0,0.28)",
+                  }}
+                >
+                  <span style={{ fontSize: "1.4rem" }}>▶</span>
+                </div>
+              </div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div
+                  style={{
+                    fontSize: "0.72rem",
+                    fontWeight: 700,
+                    letterSpacing: "0.08em",
+                    color: "var(--accent)",
+                    textTransform: "uppercase",
+                    fontFamily: "var(--font-body), sans-serif",
+                    marginBottom: "4px",
+                  }}
+                >
+                  לפני שמתחילים · היכרות · {WEBSITE_COURSE_INTRO.duration}
+                </div>
+                <div
+                  style={{
+                    fontFamily: "var(--font-rubik), sans-serif",
+                    fontWeight: 700,
+                    fontSize: "1.05rem",
+                  }}
+                >
+                  {renderMixed(WEBSITE_COURSE_INTRO.title)}
+                </div>
+              </div>
+              <span style={{ color: "var(--muted)", fontSize: "1.2rem", flexShrink: 0 }} aria-hidden>
+                ‹
+              </span>
+            </div>
+          </Link>
         </div>
       </section>
 

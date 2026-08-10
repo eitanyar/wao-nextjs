@@ -8,7 +8,7 @@ lesson: 4
 title: "עמוד לכל שירות: הטריק שמכפיל את החשיפה שלך בגוגל"
 lang: he
 dir: rtl
-status: draft-pending-noa
+status: rendered
 author: Gil (instructional-designer)
 source-brief: "Yonatan (seo-strategist) Module 3 brief, provided via orchestrator 2026-07-04 — topical depth (dedicated pages beat one mixed page); decision rule: would a customer search for this exact service by name?"
 runtime-target: "5–6 דקות (~560 מילות קריינות)"
@@ -118,7 +118,7 @@ pipeline: "Noa (proof + TTS polish) → marp --html preview → Eitan-Dev (rende
 <!--
 הנה הכלל שמכריע, בכל מקרה.
 תשאל את עצמך שאלה אחת פשוטה.
-לקוח יקליד את השם המדויק של השירות הזה בגוגל?
+לָקוֹחַ יקליד את השם המדויק של השירות הזה בגוגל?
 אם התשובה כן, השירות הזה מקבל עמוד משלו.
 אם התשובה לא, זו רק תוספת קטנה שאף אחד לא מחפש בשם.
 במקרה הזה, היא נשארת בתוך דף השירותים הכללי.
@@ -161,7 +161,7 @@ pipeline: "Noa (proof + TTS polish) → marp --html preview → Eitan-Dev (rende
 <!--
 עכשיו הפרומפט שהופך פסקה קטנה לעמוד שלם.
 אתה מעתיק אותו ל-AI, וּממלא בשם השירות שבחרת.
-קח את הפסקה על השירות הזה, מדף השירותים שלי.
+תיקח את הפסקה על השירות הזה מדף השירותים שלי.
 תבנה ממנה עמוד עצמאי ומלא. כותרת ראשית, כותרות משנה, ותוכן מורחב.
 תשתמש במילים שלקוחות באמת מחפשים, לא רק במונחים מקצועיים.
 בדיוק כמו שלמדת בשיעור הראשון של המודול הזה.
@@ -208,5 +208,5 @@ pipeline: "Noa (proof + TTS polish) → marp --html preview → Eitan-Dev (rende
 והיום החלטת אילו שירותים מקבלים עמוד נפרד משלהם.
 גוגל היום מבין אותך הרבה יותר טוב.
 במודול הבא נעבור שלב. נלמד איך גורמים למנועי AI לצטט אותך.
-נתראה שם.
+נתראה שָׁם.
 -->

@@ -6,7 +6,7 @@ lesson: 2
 title: "רבע שעה בחודש ששומרת על המקום שלך בגוגל"
 lang: he
 dir: rtl
-status: draft-for-noa
+status: rendered
 author: Gil (instructional-designer)
 source-brief: "orchestrator brief — Module 6 curriculum map (docs/course-marketing/curriculum-map-modules-3-6.md), lesson 6.2. No Yonatan dependency: reuses Module 5's Search Console dashboard and Module 4's FAQ-writing pattern only — no new claims introduced."
 runtime-target: "4–5 דקות (~500 מילות קריינות)"
@@ -92,7 +92,7 @@ pipeline: "Noa (proof + TTS polish) → marp --html preview → Eitan-Dev (rende
 שתי דקות, תיכנס ל-Search Console ותבדוק חיפושים חדשים.
 חמש דקות, תחפש שאלה שחוזרת אצל כמה לקוחות.
 עוד חמש דקות, אם מצאת כזאת, תוסיף לה שאלה ותשובה.
-וּשלוש דקות אחרונות, תעבור על האתר בעין, לוודא שהכול תקין.
+ושלוש דקות אחרונות, תעבור על האתר בעין, לוודא שהכול תקין.
 ביחד, זה בדיוק רבע שעה.
 -->
 
@@ -112,7 +112,7 @@ pipeline: "Noa (proof + TTS polish) → marp --html preview → Eitan-Dev (rende
 ב-Search Console הוא רואה חיפוש חוזר.
 נזילה מתחת לרצפה בלי לשבור.
 השאלה הזאת הופיעה שלוש פעמים בחודש.
-אז הוא הוסיף לה שאלה ותשובה חדשה, בעמוד.
+אז הוא הוסיף לה שאלה ותשובה חדשה בעמוד.
 בדיוק באותה שיטה שלמד במודול ארבע.
 רבע שעה, וגוגל מקבל תשובה מדויקת יותר על אָבִי.
 -->
@@ -135,7 +135,7 @@ pipeline: "Noa (proof + TTS polish) → marp --html preview → Eitan-Dev (rende
 תבדוק אם יש חיפוש שחוזר על עצמו יותר מפעם אחת.
 אם כן, תוסיף שאלה ותשובה אחת, עכשיו.
 תעבור על האתר בעין, לוודא שכלום לא שבור.
-ותוריד את הצ'ק ליסט מקישור השיעור.
+ותוריד את הצ׳ק ליסט מקישור השיעור.
 תשתמש בו שוב, כל חודש.
 -->
 
@@ -156,6 +156,5 @@ pipeline: "Noa (proof + TTS polish) → marp --html preview → Eitan-Dev (rende
 בשיעור הבא נשאל שאלה אחרת לגמרי.
 מתי כדאי להפסיק לעשות את זה לבד?
 והתשובה, כמו שתראה, מפתיעה.
-נתראה שם.
+נתראה שָׁם.
 -->
-</content>

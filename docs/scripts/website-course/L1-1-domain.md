@@ -36,7 +36,7 @@ theme: wao-rtl
   ============================================================
   OUT OF SCOPE FOR THIS LESSON
   ============================================================
-  - Buying the domain (Bot Flow A handles that)
+  - Buying the domain (manual step — bot guides, doesn't purchase; Module 5.1 = DIY)
   - DNS / nameservers (later module)
   - Hosting (Module 2)
   - WordPress / Next.js (too early)

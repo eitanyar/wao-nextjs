@@ -8,7 +8,7 @@ lesson: 3
 title: "גוגל קורא רק את הכותרות שלך — הנה מה לכתוב בהן"
 lang: he
 dir: rtl
-status: draft-pending-noa
+status: rendered
 author: Gil (instructional-designer)
 source-brief: "Yonatan (seo-strategist) Module 3 brief, provided via orchestrator 2026-07-04 — heading hierarchy as table of contents for human and machine; one H1 per page (matching the title's core term), H2s for sub-topics, no skipped levels, no keyword stuffing."
 runtime-target: "5–6 דקות (~560 מילות קריינות)"
@@ -217,5 +217,5 @@ pipeline: "Noa (proof + TTS polish) → marp --html preview → Eitan-Dev (rende
 בדקת את חמשת העמודים שלך, ותיקנת מה שנכשל.
 בשיעור הבא נדבר על החלטה אחרת.
 אילו שירותים אצלך מקבלים עמוד משלהם.
-נתראה שם.
+נתראה שָׁם.
 -->

@@ -6,7 +6,7 @@ lesson: 1
 title: "לעדכן את האתר בשיחה — כמו לשלוח הודעה לעובד"
 lang: he
 dir: rtl
-status: draft-for-noa
+status: rendered
 author: Gil (instructional-designer)
 source-brief: "orchestrator brief — Module 6 curriculum map (docs/course-marketing/curriculum-map-modules-3-6.md), lesson 6.1. No Yonatan dependency: reuses Module 2's AI-conversation workflow and Module 5's Cloudflare drag-and-drop redeploy mechanics only — no new domain facts introduced."
 runtime-target: "5–6 דקות (~600 מילות קריינות)"
@@ -75,10 +75,10 @@ pipeline: "Noa (proof + TTS polish) → marp --html preview → Eitan-Dev (rende
 
 <!--
 תזכור את השיחה שפתחת במודול שתיים.
-שם תיארת ל-AI מי אתה, וּמה אתה עושה.
-השיחה הזאת עדיין שם, וזוכרת הכול.
+שָׁם תיארת ל-AI מי אתה, וּמה אתה עושה.
+השיחה הזאת עדיין שָׁם, וזוכרת הכול.
 אז עדכון היום הוא לא פרויקט חדש.
-זה בדיוק כמו הודעה קצרה לעובד וותיק שכבר מכיר הכול.
+זה בדיוק כמו הודעה קצרה לעובד ותיק שכבר מכיר הכול.
 -->
 
 ---
@@ -138,7 +138,7 @@ pipeline: "Noa (proof + TTS polish) → marp --html preview → Eitan-Dev (rende
 המחיר לקריאת חירום עלה, אז הוא כתב שורה ברורה.
 תעדכן רק את המחיר בעמוד שירותים, למאה שמונים שקל.
 הוא הוסיף גם שעת פתיחה חדשה בימי שישי.
-וכשקיבל המלצה חדשה מלקוח, הוא ביקש להוסיף רק אותה.
+וּכשקיבל המלצה חדשה מִלָּקוֹחַ, הוא ביקש להוסיף רק אותה.
 בכל שלוש הפעמים, אותו עיקרון בדיוק. עדכון אחד, בלי לגעת בשאר.
 -->
 
@@ -161,7 +161,7 @@ pipeline: "Noa (proof + TTS polish) → marp --html preview → Eitan-Dev (rende
 תכתוב שורה אחת, לפי הנוסחה שלמדת.
 תשלח, ותבדוק שהעדכון נכנס נכון.
 תעלה מחדש, בדיוק כמו במודול חמש.
-ותבדוק באתר החי, שהשינוי באמת שם.
+ותבדוק באתר החי, שהשינוי באמת שָׁם.
 -->
 
 ---
@@ -182,7 +182,5 @@ pipeline: "Noa (proof + TTS polish) → marp --html preview → Eitan-Dev (rende
 הלולאה תמיד זהה. לתאר, לערוך, להעלות.
 בשיעור הבא נדבר על רבע שעה בחודש.
 זמן קצר ששומר על המקום שלך בגוגל.
-נתראה שם.
+נתראה שָׁם.
 -->
-</content>
-</invoke>

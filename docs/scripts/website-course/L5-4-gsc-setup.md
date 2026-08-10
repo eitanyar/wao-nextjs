@@ -8,7 +8,7 @@ lesson: 4
 title: "המסך שמראה לך מה גוגל באמת חושב על האתר שלך"
 lang: he
 dir: rtl
-status: draft-for-proof
+status: rendered
 author: Gil (instructional-designer)
 source-brief: "orchestrator brief, Module 5 curriculum map (docs/course-marketing/curriculum-map-modules-3-6.md, lesson 5.4) — LIGHT Yonatan dependency: GSC verification methods + data-lag timeline are time-sensitive and need a dated confirmation before this renders. Flagged inline below — do NOT send to TTS until confirmed."
 runtime-target: "5 דקות (~500 מילות קריינות)"
@@ -211,7 +211,7 @@ Search Console מאושר, והבעלות שלך מוכחת מול גוגל.
 שלושה מספרים לעקוב אחריהם מעכשיו. חשיפות, קליקים, וכיסוי.
 אבל יש בעיה קטנה שעוד לא פתרנו.
 גוגל עוד לא ממש יודע שהאתר החדש שלך קיים.
-בשיעור הבא נזרז אותו. נתראה שם.
+בשיעור הבא נזרז אותו. נתראה שָׁם.
 -->
 
 ---

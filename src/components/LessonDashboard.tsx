@@ -7,6 +7,8 @@ interface UIComponentLink {
   label: string;
   href: string;
   isMustWatch?: boolean;
+  /** Short, non-truncated fine-print line (e.g. affiliate disclosure) rendered under the label. */
+  disclosure?: string;
 }
 
 interface CourseNode {
@@ -25,6 +27,8 @@ interface RetrievalQuestion {
 interface LessonDashboardProps {
   currentLessonSlug: string;
   lessons: { title: string; slug: string }[];
+  /** Base path for prev/next lesson links (e.g. "training/website-course"). Defaults to the Google Ads course for backward compatibility. */
+  basePath?: string;
   uiGuides?: UIComponentLink[];
   activeTask?: string;
   retrievalCheck?: RetrievalQuestion | RetrievalQuestion[];
@@ -42,6 +46,7 @@ interface LessonDashboardProps {
 export default function LessonDashboard({
   currentLessonSlug,
   lessons,
+  basePath = 'training/google-ads-course',
   uiGuides = [],
   activeTask = '',
   retrievalCheck,
@@ -249,7 +254,7 @@ export default function LessonDashboard({
                       </span>
                     ) : (
                       <a
-                        href={`/training/google-ads-course/${node.slug}`}
+                        href={`/${basePath}/${node.slug}`}
                         className="block text-xs font-semibold truncate hover:text-[var(--accent)] text-[var(--muted)] hover:underline transition-colors"
                       >
                         {renderMixed(node.title.split(' - ')[0].split(' · ')[0])}
@@ -526,6 +531,11 @@ export default function LessonDashboard({
                           <span className="block text-xs sm:text-sm font-semibold text-[var(--text)] group-hover:text-[var(--accent)] transition-colors truncate">
                             {renderMixed(guide.label)}
                           </span>
+                          {guide.disclosure && (
+                            <span className="block text-[10px] text-[var(--muted)] leading-snug">
+                              {renderMixed(guide.disclosure)}
+                            </span>
+                          )}
                         </div>
                         <svg
                           className="w-4 h-4 text-[var(--muted)] group-hover:text-[var(--accent)] transition-colors shrink-0 ms-2"
@@ -573,6 +583,11 @@ export default function LessonDashboard({
                           <span className="block text-xs sm:text-sm font-semibold text-[var(--text)] group-hover:text-[var(--accent)] transition-colors truncate">
                             {renderMixed(guide.label)}
                           </span>
+                          {guide.disclosure && (
+                            <span className="block text-[10px] text-[var(--muted)] leading-snug">
+                              {renderMixed(guide.disclosure)}
+                            </span>
+                          )}
                         </div>
                         <svg
                           className="w-4 h-4 text-[var(--muted)] group-hover:text-[var(--accent)] transition-colors shrink-0 ms-2"

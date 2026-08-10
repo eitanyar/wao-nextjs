@@ -8,7 +8,7 @@ lesson: 5
 title: "גוגל עוד לא יודע שאתה קיים. ככה מזרזים אותו"
 lang: he
 dir: rtl
-status: draft-for-proof
+status: rendered
 author: Gil (instructional-designer)
 source-brief: "orchestrator brief, Module 5 curriculum map (docs/course-marketing/curriculum-map-modules-3-6.md, lesson 5.5) — LIGHT Yonatan dependency: sitemap/indexing-request mechanics and realistic timelines are time-sensitive and need a dated confirmation before this renders. Flagged inline below — do NOT send to TTS until confirmed."
 runtime-target: "5 דקות (~500 מילות קריינות)"
@@ -194,10 +194,10 @@ pipeline: "Noa (proof + TTS polish) → Yonatan (dated sitemap/indexing currency
 בוא נסכם, גם את השיעור וגם את המודול כולו.
 הרמת יד מול גוגל. מפת אתר נשלחה, ואינדוקס התבקש.
 דומיין, אחסון, ו-Search Console. כל אלה כבר מאחוריך.
-האתר שלך לא רק בנוי. הוא חי, וּמחובר לעולם.
+האתר שלך לא רק בנוי. הוא חי וּמחובר לעולם.
 במודול הבא נדבר על תחזוקה.
 איך שומרים על אתר חי, חודש אחרי חודש.
-נתראה שם.
+נתראה שָׁם.
 -->
 
 ---

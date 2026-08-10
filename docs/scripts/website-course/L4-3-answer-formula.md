@@ -8,7 +8,7 @@ lesson: 3
 title: "התשובה המושלמת: שלושה משפטים שגוגל בוחר להציג"
 lang: he
 dir: rtl
-status: draft-pending-noa
+status: rendered
 author: Gil (instructional-designer)
 source-brief: "Yonatan (seo-strategist) verified brief, 2026-07-03 — the FAQ answer formula (question → direct answer → supporting specific); no hedge openers; semantic completeness as the strongest content factor (an answer that stands alone); 55% of AIO citations pull from the top 30% of a page (Ahrefs, July 2026), which is why leading with the direct fact matters. Avi's price example given verbatim in the brief."
 runtime-target: "5–6 דקות (~560 מילות קריינות)"
@@ -218,5 +218,5 @@ pipeline: "Noa (proof + TTS polish) → marp --html preview → Eitan-Dev (rende
 תמיד להתחיל בעובדה, ולא במילים, זה תלוי.
 יש לך עכשיו שלושה זוגות שאלה ותשובה, מוכנים לגמרי.
 בשיעור הבא נלמד לסמן את זה, בשפה שמכונות מבינות.
-נתראה שם.
+נתראה שָׁם.
 -->

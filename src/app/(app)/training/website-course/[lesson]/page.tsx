@@ -5,6 +5,7 @@ import LessonDashboard from "@/components/LessonDashboard";
 import { renderMixed } from "@/lib/bidi";
 import {
   WEBSITE_COURSE_LESSONS,
+  WEBSITE_COURSE_INTRO,
   findWebsiteLesson,
 } from "@/data/website-course-data";
 
@@ -13,7 +14,7 @@ export const revalidate = false;
 type Props = { params: Promise<{ lesson: string }> };
 
 export async function generateStaticParams() {
-  return WEBSITE_COURSE_LESSONS.map((l) => ({ lesson: l.slug }));
+  return [...WEBSITE_COURSE_LESSONS, WEBSITE_COURSE_INTRO].map((l) => ({ lesson: l.slug }));
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -73,6 +74,16 @@ export default async function WebsiteLessonPage({ params }: Props) {
   };
 
   const lessonList = WEBSITE_COURSE_LESSONS.map((l) => ({ title: l.title, slug: l.slug }));
+
+  // Module 0 (pinned intro) isn't part of the numbered lessonList used for prev/next —
+  // give its dashboard a minimal, accurate progress view: itself as current, Lesson 1 as next.
+  const isIntro = lesson.slug === WEBSITE_COURSE_INTRO.slug;
+  const dashboardLessons = isIntro
+    ? [
+        { title: WEBSITE_COURSE_INTRO.title, slug: WEBSITE_COURSE_INTRO.slug },
+        ...(lessonList[0] ? [lessonList[0]] : []),
+      ]
+    : lessonList;
 
   return (
     <>
@@ -214,7 +225,8 @@ export default async function WebsiteLessonPage({ params }: Props) {
             <LessonDashboard
               key={lesson.slug}
               currentLessonSlug={lesson.slug}
-              lessons={lessonList}
+              basePath="training/website-course"
+              lessons={dashboardLessons}
               uiGuides={lesson.uiGuides}
               activeTask={lesson.activeTask}
             />

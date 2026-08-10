@@ -6,7 +6,7 @@ lesson: 3
 title: "מתי כדאי להפסיק לעשות את זה לבד — והתשובה מפתיעה"
 lang: he
 dir: rtl
-status: draft-for-noa
+status: rendered
 author: Gil (instructional-designer)
 source-brief: "orchestrator brief — Module 6 curriculum map (docs/course-marketing/curriculum-map-modules-3-6.md), lesson 6.3 [COURSE CTA]. Lead-in scripted by Gil; final CTA slide narration is LOCKED, Noa-approved 2026-07-03 (memory: project_lesson63_cta) — embedded verbatim, not authored here."
 runtime-target: "5–6 דקות, כולל ה-CTA (~650 מילות קריינות)"
@@ -202,4 +202,3 @@ pipeline: "Noa (proof + TTS polish — lead-in slides only, CTA slide is locked 
 <!--
 את החלק הקשה כבר עשית — יש לך חמישה עמודים של תוכן מלוטש, כתוב בדיוק לעסק שלך. מכאן הבוט לוקח את זה: הוא בונה מהתוכן שלך אתר מקצועי, שבו כל ה-SEO שלמדת בקורס מוטמע נכון מהיום הראשון, ומעלה אותו לאוויר על החשבון שלך ב-Cloudflare — בלי תשלום חודשי. האתר נפתח תוך שנייה, שתיים, לא חמש. לקוח שמצא אותך לא בורח לפני שהעמוד בכלל עולה. האתר עצמו מוכן בשיחה אחת, בלי מתכנת שמעכב אותך ובלי אתר שנראה חובבני — רק חיבור הדומיין קורה בנפרד, תוך כמה שעות. ומהרגע שהוא עולה, הוא כבר עובד בשבילך. מהיום הראשון גוגל יודעת שאתה קַיָּם, וכל חיפוש שמגיע אליך נרשם. כך שכשתרצה להתרחב, כבר יהיה ברור בדיוק מה להוסיף. זה נכס אמיתי, לא כאב ראש: בניגוד לאתר WordPress אין כאן דאגות עדכוני אבטחה, אין תוספים שנשברים ואין מצב שהאתר שלך נפרץ — והוא גדל איתך, לא כמו Wix שאתה עוזב אחרי שנתיים ובונה הכול מחדש. תתחיל בניסיון של 9.90 ש״ח, והסכום מתקזז במלואו מול העלות החד-פעמית של 1,490 ש״ח — אתר שהוא שלך, שאתה מעדכן בשיחה לפי הצורך.
 -->
-</content>

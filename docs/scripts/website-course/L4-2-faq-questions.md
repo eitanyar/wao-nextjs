@@ -8,7 +8,7 @@ lesson: 2
 title: "שאלות ותשובות: הבלוק שה-AI של גוגל מצטט הכי הרבה"
 lang: he
 dir: rtl
-status: draft-pending-noa
+status: rendered
 author: Gil (instructional-designer)
 source-brief: "Yonatan (seo-strategist) verified brief, 2026-07-03 — FAQ answer formula (question → direct answer → supporting specific), Avi's 5 real customer questions, 'cited vs. ignored' pattern (clear question heading is the first condition). This lesson covers ONLY the question-phrasing half; the answer formula is L4-3."
 runtime-target: "4–5 דקות (~470 מילות קריינות)"
@@ -132,7 +132,7 @@ pipeline: "Noa (proof + TTS polish) → marp --html preview → Eitan-Dev (rende
 אינסטלטור או שרברב, יש הבדל.
 תיקון נְזִילָה דורש לשבור קיר.
 כמה זמן לוקח לתקן נְזִילָה.
-שים לב, כל שאלה כתובה בדיוק כמו שלקוח שואל אותה.
+תשים לב, כל שאלה כתובה בדיוק כמו שלקוח שואל אותה.
 -->
 
 ---
@@ -193,5 +193,5 @@ pipeline: "Noa (proof + TTS polish) → marp --html preview → Eitan-Dev (rende
 שאלה טובה נשמעת כמו הלקוח שלך, לא כמו איש מקצוע.
 יש לך עכשיו שלוש שאלות FAQ, בניסוח הנכון.
 בשיעור הבא נלמד לכתוב את התשובה, שגוגל בוחר להציג.
-נתראה שם.
+נתראה שָׁם.
 -->

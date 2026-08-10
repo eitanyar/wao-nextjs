@@ -8,7 +8,7 @@ lesson: 2
 title: "הכותרת שמכניסה אותך לעמוד הראשון (וזו שקוברת אותך)"
 lang: he
 dir: rtl
-status: draft-pending-noa
+status: rendered
 author: Gil (instructional-designer)
 source-brief: "Yonatan (seo-strategist) Module 3 brief, provided via orchestrator 2026-07-04 — title tag = highest-leverage on-page element; formula [שירות] ב[עיר] | [יתרון/דחיפות] – [שם העסק]; 50–60 char rule; over 70 chars rewritten 99.9% of the time per Search Engine Land, 2025 study."
 runtime-target: "5–6 דקות (~600 מילות קריינות)"
@@ -136,7 +136,7 @@ pipeline: "Noa (proof + TTS polish) → marp --html preview → Eitan-Dev (rende
 תראה איך זה נראה אצל אבי.
 כותרת אחת: שרברב בחולון, תיקון נזילות נסתרות תוך ארבעים דקות, אבי השרברב.
 כותרת שנייה: אינסטלטור חירום בחולון, זמין תמיד יום ולילה, אבי השרברב.
-שים לב, שתי כותרות שונות, לשני עמודים שונים.
+תשים לב, שתי כותרות שונות, לשני עמודים שונים.
 כל אחת פונה לחיפוש אחר לגמרי.
 -->
 
@@ -219,5 +219,5 @@ pipeline: "Noa (proof + TTS polish) → marp --html preview → Eitan-Dev (rende
 לכל עמוד כותרת משלו. אף פעם לא אותה כותרת על כולם.
 בשיעור הבא נכנס פנימה לעמוד עצמו.
 נדבר על מבנה הכותרות שבתוכו.
-נתראה שם.
+נתראה שָׁם.
 -->
