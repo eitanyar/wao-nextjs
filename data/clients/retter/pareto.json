@@ -1,42 +1,26 @@
 {
   "site": "https://www.retter.co.il/",
-  "generatedAt": "2026-07-07T08:53:32.136Z",
+  "generatedAt": "2026-08-09T04:41:35.342Z",
   "period": {
-    "startDate": "2026-04-08",
-    "endDate": "2026-07-07",
+    "startDate": "2026-05-11",
+    "endDate": "2026-08-09",
     "days": 90
   },
-  "totalInRange": 618,
+  "totalInRange": 534,
   "opportunities": [
     {
       "rank": 1,
-      "query": "מטאפורה פירוש",
-      "rankingUrl": "https://www.retter.co.il/%D7%9E%D7%98%D7%90%D7%A4%D7%95%D7%A8%D7%95%D7%AA-%D7%95%D7%93%D7%99%D7%9E%D7%95%D7%99%D7%99%D7%9D/",
-      "implementationMode": "enhance",
-      "position": 7.4,
-      "impressions": 950,
-      "clicks": 1,
-      "ctr": 0.1,
-      "score": 17698,
-      "intentScore": 3,
-      "intentFlag": "review",
-      "intentReason": "classification failed",
-      "priority": "MEDIUM",
-      "actionType": "faq_block"
-    },
-    {
-      "rank": 2,
       "query": "nlp",
       "rankingUrl": "https://www.retter.co.il/petah-tikva-branch/",
       "implementationMode": "enhance",
-      "position": 7.3,
+      "position": 7.7,
       "impressions": 932,
       "clicks": 3,
       "ctr": 0.3,
-      "score": 17444,
-      "intentScore": 3,
-      "intentFlag": "review",
-      "intentReason": "classification failed",
+      "score": 17056,
+      "intentScore": 4,
+      "intentFlag": null,
+      "intentReason": "The broad category term, which is highly relevant but may also include searchers looking for NLP therapy instead of training.",
       "priority": "MEDIUM",
       "actionType": "faq_block",
       "cannibalFlag": "REVIEW",
@@ -47,110 +31,30 @@
       "cannibalUrls": [
         {
           "url": "https://www.retter.co.il/nlp/",
-          "impressions": 11630,
-          "position": 2.7
+          "impressions": 11233,
+          "position": 2.6
         },
         {
           "url": "https://www.retter.co.il/kiryat-bialik-branch/",
-          "impressions": 652,
-          "position": 9.6
+          "impressions": 634,
+          "position": 9.7
         }
       ]
     },
     {
-      "rank": 3,
-      "query": "קונכיית הקסם",
-      "rankingUrl": "https://www.retter.co.il/library/%D7%A7%D7%95%D7%A0%D7%9B%D7%99%D7%95%D7%AA-%D7%94%D7%A7%D7%A1%D7%9D/",
-      "implementationMode": "enhance",
-      "position": 6.1,
-      "impressions": 781,
-      "clicks": 52,
-      "ctr": 6.7,
-      "score": 15542,
-      "intentScore": 3,
-      "intentFlag": "review",
-      "intentReason": "classification failed",
-      "priority": "MEDIUM",
-      "actionType": "faq_block"
-    },
-    {
-      "rank": 4,
-      "query": "hsp",
-      "rankingUrl": "https://www.retter.co.il/library/%D7%90%D7%A0%D7%A9%D7%99%D7%9D-%D7%91%D7%A2%D7%9C%D7%99-%D7%A8%D7%92%D7%99%D7%A9%D7%95%D7%AA-%D7%92%D7%91%D7%95%D7%94%D7%94-highly-sensitive-person-h-s-p/",
-      "implementationMode": "enhance",
-      "position": 9.4,
-      "impressions": 723,
-      "clicks": 10,
-      "ctr": 1.4,
-      "score": 11987,
-      "intentScore": 3,
-      "intentFlag": "review",
-      "intentReason": "classification failed",
-      "priority": "MEDIUM",
-      "actionType": "faq_block"
-    },
-    {
-      "rank": 5,
-      "query": "מה זה מטאפורה",
-      "rankingUrl": "https://www.retter.co.il/%D7%9E%D7%98%D7%90%D7%A4%D7%95%D7%A8%D7%95%D7%AA-%D7%95%D7%93%D7%99%D7%9E%D7%95%D7%99%D7%99%D7%9D/",
-      "implementationMode": "enhance",
-      "position": 6.8,
-      "impressions": 561,
-      "clicks": 0,
-      "ctr": 0,
-      "score": 10762,
-      "intentScore": 3,
-      "intentFlag": "review",
-      "intentReason": "classification failed",
-      "priority": "MEDIUM",
-      "actionType": "definition_box"
-    },
-    {
-      "rank": 6,
-      "query": "nlp",
-      "rankingUrl": "https://www.retter.co.il/kiryat-bialik-branch/",
-      "implementationMode": "enhance",
-      "position": 9.6,
-      "impressions": 652,
-      "clicks": 0,
-      "ctr": 0,
-      "score": 10681,
-      "intentScore": 3,
-      "intentFlag": "review",
-      "intentReason": "classification failed",
-      "priority": "MEDIUM",
-      "actionType": "faq_block",
-      "cannibalFlag": "REVIEW",
-      "cannibalReasons": [
-        "MULTI_URL"
-      ],
-      "cannibalUrls": [
-        {
-          "url": "https://www.retter.co.il/nlp/",
-          "impressions": 11630,
-          "position": 2.7
-        },
-        {
-          "url": "https://www.retter.co.il/petah-tikva-branch/",
-          "impressions": 932,
-          "position": 7.3
-        }
-      ]
-    },
-    {
-      "rank": 7,
+      "rank": 2,
       "query": "קורס nlp אונליין",
       "rankingUrl": "https://www.retter.co.il/%D7%9C%D7%99%D7%9E%D7%95%D7%93%D7%99-nlp-%D7%90%D7%95%D7%A0%D7%9C%D7%99%D7%99%D7%9F/",
       "implementationMode": "enhance",
-      "position": 6.6,
-      "impressions": 488,
-      "clicks": 8,
-      "ctr": 1.6,
-      "score": 9468,
-      "intentScore": 3,
-      "intentFlag": "review",
-      "intentReason": "classification failed",
-      "priority": "MEDIUM",
+      "position": 5.9,
+      "impressions": 573,
+      "clicks": 10,
+      "ctr": 1.7,
+      "score": 11495,
+      "intentScore": 5,
+      "intentFlag": null,
+      "intentReason": "Direct intent to find online NLP courses, which matches the institute's core offering.",
+      "priority": "HIGH",
       "actionType": "faq_block",
       "cannibalFlag": "REVIEW",
       "cannibalReasons": [
@@ -159,24 +63,57 @@
       "cannibalUrls": [
         {
           "url": "https://www.retter.co.il/%D7%A7%D7%95%D7%A8%D7%A1-nlp-%D7%91%D7%97%D7%99%D7%A0%D7%9D/",
-          "impressions": 64,
-          "position": 21.9
+          "impressions": 100,
+          "position": 23.1
         }
       ]
     },
     {
-      "rank": 8,
+      "rank": 3,
+      "query": "nlp",
+      "rankingUrl": "https://www.retter.co.il/kiryat-bialik-branch/",
+      "implementationMode": "enhance",
+      "position": 9.7,
+      "impressions": 634,
+      "clicks": 0,
+      "ctr": 0,
+      "score": 10346,
+      "intentScore": 4,
+      "intentFlag": null,
+      "intentReason": "The broad category term, which is highly relevant but may also include searchers looking for NLP therapy instead of training.",
+      "priority": "MEDIUM",
+      "actionType": "faq_block",
+      "cannibalFlag": "REVIEW",
+      "cannibalReasons": [
+        "MULTI_URL",
+        "HEAD_TERM_ON_LOCATION"
+      ],
+      "cannibalUrls": [
+        {
+          "url": "https://www.retter.co.il/nlp/",
+          "impressions": 11233,
+          "position": 2.6
+        },
+        {
+          "url": "https://www.retter.co.il/petah-tikva-branch/",
+          "impressions": 932,
+          "position": 7.7
+        }
+      ]
+    },
+    {
+      "rank": 4,
       "query": "לימודי nlp",
       "rankingUrl": "https://www.retter.co.il/ness-ziona-branch/",
       "implementationMode": "enhance",
-      "position": 4.5,
-      "impressions": 430,
-      "clicks": 1,
-      "ctr": 0.2,
-      "score": 9248,
-      "intentScore": 3,
-      "intentFlag": "review",
-      "intentReason": "classification failed",
+      "position": 4.3,
+      "impressions": 463,
+      "clicks": 0,
+      "ctr": 0,
+      "score": 10042,
+      "intentScore": 5,
+      "intentFlag": null,
+      "intentReason": "Clear transactional intent for studying NLP, directly matching the training institute.",
       "priority": "HIGH",
       "actionType": "faq_block",
       "cannibalFlag": "REVIEW",
@@ -186,50 +123,71 @@
       "cannibalUrls": [
         {
           "url": "https://www.retter.co.il/study/",
-          "impressions": 697,
-          "position": 20.4
+          "impressions": 429,
+          "position": 32.5
         },
         {
           "url": "https://www.retter.co.il/",
-          "impressions": 353,
-          "position": 28.8
+          "impressions": 304,
+          "position": 30.1
         },
         {
-          "url": "https://www.retter.co.il/nlp/",
-          "impressions": 290,
-          "position": 1.5
+          "url": "https://www.retter.co.il/%D7%9C%D7%99%D7%9E%D7%95%D7%93%D7%99-nlp-%D7%90%D7%95%D7%A0%D7%9C%D7%99%D7%99%D7%9F/",
+          "impressions": 235,
+          "position": 37.8
         }
       ]
     },
     {
-      "rank": 9,
-      "query": "מטאפורה",
-      "rankingUrl": "https://www.retter.co.il/%D7%9E%D7%98%D7%90%D7%A4%D7%95%D7%A8%D7%95%D7%AA-%D7%95%D7%93%D7%99%D7%9E%D7%95%D7%99%D7%99%D7%9D/",
+      "rank": 5,
+      "query": "מאסטר nlp",
+      "rankingUrl": "https://www.retter.co.il/nlp-master-practitioner-course-2/",
       "implementationMode": "enhance",
-      "position": 6.5,
-      "impressions": 451,
-      "clicks": 0,
-      "ctr": 0,
-      "score": 8794,
-      "intentScore": 3,
-      "intentFlag": "review",
-      "intentReason": "classification failed",
-      "priority": "MEDIUM",
-      "actionType": "faq_block"
+      "position": 4.5,
+      "impressions": 401,
+      "clicks": 3,
+      "ctr": 0.7,
+      "score": 8640,
+      "intentScore": 5,
+      "intentFlag": null,
+      "intentReason": "Refers to the advanced level of NLP training (NLP Master Practitioner), a core course for this institute.",
+      "priority": "HIGH",
+      "actionType": "faq_block",
+      "cannibalFlag": "REVIEW",
+      "cannibalReasons": [
+        "MULTI_URL"
+      ],
+      "cannibalUrls": [
+        {
+          "url": "https://www.retter.co.il/study/",
+          "impressions": 154,
+          "position": 78.2
+        },
+        {
+          "url": "https://www.retter.co.il/jerusalem-branch/",
+          "impressions": 146,
+          "position": 86.4
+        },
+        {
+          "url": "https://www.retter.co.il/tel-aviv-branch/",
+          "impressions": 97,
+          "position": 75.5
+        }
+      ]
     },
     {
-      "rank": 10,
+      "rank": 6,
       "query": "nlp לילדים",
       "rankingUrl": "https://www.retter.co.il/%D7%98%D7%99%D7%A4%D7%95%D7%9C-nlp-%D7%9C%D7%99%D7%9C%D7%93%D7%99%D7%9D/",
       "implementationMode": "enhance",
-      "position": 4.6,
-      "impressions": 378,
-      "clicks": 3,
-      "ctr": 0.8,
-      "score": 8081,
+      "position": 4.8,
+      "impressions": 366,
+      "clicks": 2,
+      "ctr": 0.5,
+      "score": 7771,
       "intentScore": 3,
       "intentFlag": "review",
-      "intentReason": "classification failed",
+      "intentReason": "Could be parents seeking therapy for children or therapists looking for specialization, creating mixed intent.",
       "priority": "HIGH",
       "actionType": "faq_block",
       "cannibalFlag": "REVIEW",
@@ -239,82 +197,103 @@
       "cannibalUrls": [
         {
           "url": "https://www.retter.co.il/%D7%90%D7%99%D7%9A-%D7%9C%D7%A9%D7%9B%D7%A0%D7%A2-%D7%99%D7%9C%D7%93-%D7%9C%D7%A2%D7%91%D7%95%D7%A8-%D7%98%D7%99%D7%A4%D7%95%D7%9C-nlp/",
-          "impressions": 179,
-          "position": 31.9
+          "impressions": 176,
+          "position": 34
         },
         {
           "url": "https://www.retter.co.il/kids/",
-          "impressions": 93,
-          "position": 70.4
+          "impressions": 95,
+          "position": 62.7
         },
         {
           "url": "https://www.retter.co.il/%D7%98%D7%99%D7%A4%D7%95%D7%9C-nlp-%D7%9C%D7%A0%D7%95%D7%A2%D7%A8/",
-          "impressions": 53,
-          "position": 82.9
+          "impressions": 69,
+          "position": 78.1
         }
       ]
     },
     {
-      "rank": 11,
-      "query": "איילה מצגר",
-      "rankingUrl": "https://www.retter.co.il/%D7%94%D7%9B%D7%90%D7%91-%D7%A9%D7%94%D7%A4%D7%9A-%D7%9C%D7%A9%D7%9C%D7%99%D7%97%D7%95%D7%AA/",
+      "rank": 7,
+      "query": "קורס nlp",
+      "rankingUrl": "https://www.retter.co.il/petah-tikva-branch/",
       "implementationMode": "enhance",
-      "position": 5.7,
-      "impressions": 394,
-      "clicks": 10,
-      "ctr": 2.5,
-      "score": 7996,
-      "intentScore": 3,
-      "intentFlag": "review",
-      "intentReason": "classification failed",
-      "priority": "HIGH",
-      "actionType": "faq_block"
+      "position": 6.3,
+      "impressions": 383,
+      "clicks": 0,
+      "ctr": 0,
+      "score": 7542,
+      "intentScore": 5,
+      "intentFlag": null,
+      "intentReason": "An exact match for the core service of the business, targeting individuals looking to enroll in NLP training.",
+      "priority": "MEDIUM",
+      "actionType": "faq_block",
+      "cannibalFlag": "REVIEW",
+      "cannibalReasons": [
+        "MULTI_URL"
+      ],
+      "cannibalUrls": [
+        {
+          "url": "https://www.retter.co.il/study/",
+          "impressions": 751,
+          "position": 40.1
+        },
+        {
+          "url": "https://www.retter.co.il/%D7%A7%D7%95%D7%A8%D7%A1-nlp-%D7%91%D7%97%D7%99%D7%A0%D7%9D/",
+          "impressions": 501,
+          "position": 20
+        },
+        {
+          "url": "https://www.retter.co.il/%D7%90%D7%99%D7%A4%D7%94-%D7%9C%D7%9C%D7%9E%D7%95%D7%93-nlp/",
+          "impressions": 415,
+          "position": 28.3
+        }
+      ]
     },
     {
-      "rank": 12,
+      "rank": 8,
       "query": "סוגי אמונות מגבילות",
       "rankingUrl": "https://www.retter.co.il/%D7%A9%D7%99%D7%A0%D7%95%D7%99-%D7%90%D7%9E%D7%95%D7%A0%D7%95%D7%AA-%D7%90%D7%9E%D7%95%D7%A0%D7%95%D7%AA-%D7%9E%D7%92%D7%91%D7%99%D7%9C%D7%95%D7%AA/",
       "implementationMode": "enhance",
-      "position": 5.1,
-      "impressions": 339,
-      "clicks": 1,
-      "ctr": 0.3,
-      "score": 7090,
-      "intentScore": 3,
-      "intentFlag": "review",
-      "intentReason": "classification failed",
+      "position": 4.4,
+      "impressions": 332,
+      "clicks": 0,
+      "ctr": 0,
+      "score": 7170,
+      "intentScore": 4,
+      "intentFlag": null,
+      "intentReason": "Relevant cognitive coaching concept studied in NLP, attracting people interested in coaching and personal growth.",
       "priority": "HIGH",
       "actionType": "faq_block"
     },
     {
-      "rank": 13,
+      "rank": 9,
       "query": "דמיון מודרך",
       "rankingUrl": "https://www.retter.co.il/%D7%93%D7%9E%D7%99%D7%95%D7%9F-%D7%9E%D7%95%D7%93%D7%A8%D7%9A/",
       "implementationMode": "enhance",
-      "position": 10.4,
+      "position": 10.1,
       "impressions": 427,
-      "clicks": 9,
-      "ctr": 2.1,
-      "score": 6658,
-      "intentScore": 3,
-      "intentFlag": "review",
-      "intentReason": "classification failed",
+      "clicks": 8,
+      "ctr": 1.9,
+      "score": 6788,
+      "intentScore": 4,
+      "intentFlag": null,
+      "intentReason": "Guided imagery is highly relevant to NLP training, though the intent could range from seeking treatment to training.",
       "priority": "LOW",
       "actionType": "faq_block"
     },
     {
-      "rank": 14,
+      "rank": 10,
       "query": "קורס nlp",
       "rankingUrl": "https://www.retter.co.il/ness-ziona-branch/",
       "implementationMode": "enhance",
-      "position": 5.2,
-      "impressions": 314,
-      "clicks": 1,
-      "ctr": 0.3,
-      "score": 6521,
-      "intentScore": 3,
-      "intentFlag": "review",
-      "intentReason": "classification failed",
+      "position": 5.3,
+      "impressions": 309,
+      "clicks": 0,
+      "ctr": 0,
+      "score": 6383,
+      "intentScore": 5,
+      "intentFlag": null,
+      "intentReason": "An exact match for the core service of the business, targeting individuals looking to enroll in NLP training.",
       "priority": "HIGH",
       "actionType": "faq_block",
       "cannibalFlag": "REVIEW",
@@ -324,66 +303,50 @@
       "cannibalUrls": [
         {
           "url": "https://www.retter.co.il/study/",
-          "impressions": 1034,
-          "position": 26.6
+          "impressions": 751,
+          "position": 40.1
+        },
+        {
+          "url": "https://www.retter.co.il/%D7%A7%D7%95%D7%A8%D7%A1-nlp-%D7%91%D7%97%D7%99%D7%A0%D7%9D/",
+          "impressions": 501,
+          "position": 20
         },
         {
           "url": "https://www.retter.co.il/%D7%90%D7%99%D7%A4%D7%94-%D7%9C%D7%9C%D7%9E%D7%95%D7%93-nlp/",
-          "impressions": 433,
-          "position": 29.1
-        },
-        {
-          "url": "https://www.retter.co.il/nlp/",
-          "impressions": 335,
-          "position": 3.2
+          "impressions": 415,
+          "position": 28.3
         }
       ]
     },
     {
-      "rank": 15,
-      "query": "תת מודע",
-      "rankingUrl": "https://www.retter.co.il/nlp-%D7%AA%D7%AA-%D7%9E%D7%95%D7%93%D7%A2/",
+      "rank": 11,
+      "query": "אמונות מגבילות",
+      "rankingUrl": "https://www.retter.co.il/%D7%A9%D7%99%D7%A0%D7%95%D7%99-%D7%90%D7%9E%D7%95%D7%A0%D7%95%D7%AA-%D7%90%D7%9E%D7%95%D7%A0%D7%95%D7%AA-%D7%9E%D7%92%D7%91%D7%99%D7%9C%D7%95%D7%AA/",
       "implementationMode": "enhance",
-      "position": 10.2,
-      "impressions": 392,
-      "clicks": 3,
-      "ctr": 0.8,
-      "score": 6207,
-      "intentScore": 3,
-      "intentFlag": "review",
-      "intentReason": "classification failed",
-      "priority": "LOW",
+      "position": 7,
+      "impressions": 329,
+      "clicks": 7,
+      "ctr": 2.1,
+      "score": 6248,
+      "intentScore": 4,
+      "intentFlag": null,
+      "intentReason": "Limiting beliefs is a core NLP concept, highly relevant for attracting individuals interested in personal development and coaching.",
+      "priority": "MEDIUM",
       "actionType": "faq_block"
     },
     {
-      "rank": 16,
-      "query": "משעמם",
-      "rankingUrl": "https://www.retter.co.il/%D7%90%D7%9E%D7%90-%D7%9E%D7%A9%D7%A2%D7%9E%D7%9D-%D7%9C%D7%99-%D7%9E%D7%94-%D7%A2%D7%95%D7%A9%D7%99%D7%9D-%D7%90%D7%99%D7%9A-%D7%94%D7%95%D7%A4%D7%9B%D7%99%D7%9D-%D7%90%D7%AA-%D7%94/",
-      "implementationMode": "enhance",
-      "position": 10.2,
-      "impressions": 392,
-      "clicks": 2,
-      "ctr": 0.5,
-      "score": 6183,
-      "intentScore": 3,
-      "intentFlag": "review",
-      "intentReason": "classification failed",
-      "priority": "LOW",
-      "actionType": "faq_block"
-    },
-    {
-      "rank": 17,
+      "rank": 12,
       "query": "קורס דמיון מודרך",
       "rankingUrl": "https://www.retter.co.il/%D7%93%D7%9E%D7%99%D7%95%D7%9F-%D7%9E%D7%95%D7%93%D7%A8%D7%9A/",
       "implementationMode": "enhance",
       "position": 7.7,
-      "impressions": 327,
-      "clicks": 2,
-      "ctr": 0.6,
-      "score": 5990,
-      "intentScore": 3,
-      "intentFlag": "review",
-      "intentReason": "classification failed",
+      "impressions": 336,
+      "clicks": 1,
+      "ctr": 0.3,
+      "score": 6143,
+      "intentScore": 5,
+      "intentFlag": null,
+      "intentReason": "Directly targets courses in guided imagery, which is a key service or closely related offering of an NLP training institute.",
       "priority": "MEDIUM",
       "actionType": "faq_block",
       "cannibalFlag": "REVIEW",
@@ -393,67 +356,180 @@
       "cannibalUrls": [
         {
           "url": "https://www.retter.co.il/",
-          "impressions": 205,
-          "position": 38.5
+          "impressions": 191,
+          "position": 43.7
         },
         {
           "url": "https://www.retter.co.il/nlp-%D7%9E%D7%93%D7%99%D7%98%D7%A6%D7%99%D7%94-%D7%95%D7%93%D7%9E%D7%99%D7%95%D7%9F-%D7%9E%D7%95%D7%93%D7%A8%D7%9A/",
-          "impressions": 147,
-          "position": 82.2
+          "impressions": 163,
+          "position": 83.7
         },
         {
-          "url": "https://www.retter.co.il/%D7%9E%D7%93%D7%A8%D7%99%D7%9A-%D7%9C%D7%93%D7%9E%D7%99%D7%95%D7%9F-%D7%9E%D7%95%D7%93%D7%A8%D7%9A/",
-          "impressions": 60,
-          "position": 92.1
+          "url": "https://www.retter.co.il/petah-tikva-branch/",
+          "impressions": 57,
+          "position": 10
+        }
+      ]
+    },
+    {
+      "rank": 13,
+      "query": "להתגבר על אמונות מגבילות",
+      "rankingUrl": "https://www.retter.co.il/%D7%A9%D7%99%D7%A0%D7%95%D7%99-%D7%90%D7%9E%D7%95%D7%A0%D7%95%D7%AA-%D7%90%D7%9E%D7%95%D7%A0%D7%95%D7%AA-%D7%9E%D7%92%D7%91%D7%99%D7%9C%D7%95%D7%AA/",
+      "implementationMode": "enhance",
+      "position": 6.5,
+      "impressions": 301,
+      "clicks": 0,
+      "ctr": 0,
+      "score": 5878,
+      "intentScore": 4,
+      "intentFlag": null,
+      "intentReason": "Highly relevant intent for individuals looking to solve personal development issues, who make prime candidates for NLP training.",
+      "priority": "MEDIUM",
+      "actionType": "faq_block"
+    },
+    {
+      "rank": 14,
+      "query": "מודלינג",
+      "rankingUrl": "https://www.retter.co.il/%D7%9E%D7%95%D7%93%D7%9C%D7%99%D7%A0%D7%92/",
+      "implementationMode": "enhance",
+      "position": 7.5,
+      "impressions": 315,
+      "clicks": 3,
+      "ctr": 1,
+      "score": 5820,
+      "intentScore": 3,
+      "intentFlag": "review",
+      "intentReason": "Highly ambiguous term that usually refers to fashion modeling or 3D design, though it is also a core NLP concept.",
+      "priority": "MEDIUM",
+      "actionType": "faq_block"
+    },
+    {
+      "rank": 15,
+      "query": "תת מודע",
+      "rankingUrl": "https://www.retter.co.il/nlp-%D7%AA%D7%AA-%D7%9E%D7%95%D7%93%D7%A2/",
+      "implementationMode": "enhance",
+      "position": 9.5,
+      "impressions": 317,
+      "clicks": 3,
+      "ctr": 0.9,
+      "score": 5228,
+      "intentScore": 3,
+      "intentFlag": "review",
+      "intentReason": "A very broad concept that is relevant to NLP but widely searched in psychology, mysticism, and general contexts.",
+      "priority": "MEDIUM",
+      "actionType": "faq_block"
+    },
+    {
+      "rank": 16,
+      "query": "עיגון",
+      "rankingUrl": "https://www.retter.co.il/%D7%A2%D7%99%D7%92%D7%95%D7%9F/",
+      "implementationMode": "enhance",
+      "position": 6.4,
+      "impressions": 253,
+      "clicks": 1,
+      "ctr": 0.4,
+      "score": 4964,
+      "intentScore": 3,
+      "intentFlag": "review",
+      "intentReason": "An ambiguous term that means 'anchoring' in NLP, but also refers to legal anchoring or agunot in Hebrew.",
+      "priority": "MEDIUM",
+      "actionType": "faq_block"
+    },
+    {
+      "rank": 17,
+      "query": "nlp",
+      "rankingUrl": "https://www.retter.co.il/ness-ziona-branch/",
+      "implementationMode": "enhance",
+      "position": 7.1,
+      "impressions": 260,
+      "clicks": 0,
+      "ctr": 0,
+      "score": 4911,
+      "intentScore": 4,
+      "intentFlag": null,
+      "intentReason": "The broad category term, which is highly relevant but may also include searchers looking for NLP therapy instead of training.",
+      "priority": "MEDIUM",
+      "actionType": "faq_block",
+      "cannibalFlag": "REVIEW",
+      "cannibalReasons": [
+        "MULTI_URL",
+        "HEAD_TERM_ON_LOCATION"
+      ],
+      "cannibalUrls": [
+        {
+          "url": "https://www.retter.co.il/nlp/",
+          "impressions": 11233,
+          "position": 2.6
+        },
+        {
+          "url": "https://www.retter.co.il/petah-tikva-branch/",
+          "impressions": 932,
+          "position": 7.7
+        },
+        {
+          "url": "https://www.retter.co.il/kiryat-bialik-branch/",
+          "impressions": 634,
+          "position": 9.7
         }
       ]
     },
     {
       "rank": 18,
-      "query": "תסמונת המתחזה",
-      "rankingUrl": "https://www.retter.co.il/%D7%90%D7%99%D7%9A-%D7%9C%D7%94%D7%AA%D7%92%D7%91%D7%A8-%D7%A2%D7%9C-%D7%AA%D7%A1%D7%9E%D7%95%D7%A0%D7%AA-%D7%94%D7%9E%D7%AA%D7%97%D7%96%D7%94-%D7%95%D7%9C%D7%90%D7%9E%D7%A5-%D7%90%D7%AA-%D7%94%D7%90/",
+      "query": "איך לצאת מתקיעות בחיים",
+      "rankingUrl": "https://www.retter.co.il/%D7%AA%D7%97%D7%95%D7%A9%D7%AA-%D7%AA%D7%A7%D7%99%D7%A2%D7%95%D7%AA-%D7%91%D7%97%D7%99%D7%99%D7%9D-%D7%9E%D7%A7%D7%A4%D7%99%D7%90%D7%94-%D7%90%D7%AA%D7%9B%D7%9D-%D7%A7%D7%A8%D7%90%D7%95-%D7%9B%D7%99/",
       "implementationMode": "enhance",
       "position": 7,
-      "impressions": 313,
+      "impressions": 257,
       "clicks": 1,
-      "ctr": 0.3,
-      "score": 5955,
+      "ctr": 0.4,
+      "score": 4894,
       "intentScore": 3,
       "intentFlag": "review",
-      "intentReason": "classification failed",
+      "intentReason": "A general self-improvement query that may attract prospective coaching students, but is highly B2C therapy-oriented.",
       "priority": "MEDIUM",
       "actionType": "faq_block"
     },
     {
       "rank": 19,
-      "query": "אמונות מגבילות",
-      "rankingUrl": "https://www.retter.co.il/%D7%A9%D7%99%D7%A0%D7%95%D7%99-%D7%90%D7%9E%D7%95%D7%A0%D7%95%D7%AA-%D7%90%D7%9E%D7%95%D7%A0%D7%95%D7%AA-%D7%9E%D7%92%D7%91%D7%99%D7%9C%D7%95%D7%AA/",
+      "query": "ראפור פירוש",
+      "rankingUrl": "https://www.retter.co.il/%D7%A8%D7%90%D7%A4%D7%95%D7%A8/",
       "implementationMode": "enhance",
-      "position": 7.6,
-      "impressions": 310,
-      "clicks": 6,
-      "ctr": 1.9,
-      "score": 5710,
-      "intentScore": 3,
-      "intentFlag": "review",
-      "intentReason": "classification failed",
-      "priority": "MEDIUM",
-      "actionType": "faq_block"
+      "position": 5.7,
+      "impressions": 240,
+      "clicks": 3,
+      "ctr": 1.3,
+      "score": 4861,
+      "intentScore": 4,
+      "intentFlag": null,
+      "intentReason": "Rapport is a core NLP concept, and someone searching for its definition is likely interested in NLP or communication training.",
+      "priority": "HIGH",
+      "actionType": "faq_block",
+      "cannibalFlag": "REVIEW",
+      "cannibalReasons": [
+        "MULTI_URL"
+      ],
+      "cannibalUrls": [
+        {
+          "url": "https://www.retter.co.il/%D7%A8%D7%90%D7%A4%D7%95%D7%A8-2/",
+          "impressions": 24,
+          "position": 9.3
+        }
+      ]
     },
     {
       "rank": 20,
-      "query": "זה לא פייר",
-      "rankingUrl": "https://www.retter.co.il/%D7%9E%D7%94-%D7%9C%D7%A2%D7%A9%D7%95%D7%AA-%D7%9B%D7%A9%D7%94%D7%99%D7%9C%D7%93-%D7%90%D7%95%D7%9E%D7%A8-%D7%96%D7%94-%D7%9C%D7%90-%D7%A4%D7%99%D7%99%D7%A8/",
+      "query": "רפור",
+      "rankingUrl": "https://www.retter.co.il/%D7%A8%D7%90%D7%A4%D7%95%D7%A8/",
       "implementationMode": "enhance",
-      "position": 8.1,
-      "impressions": 316,
-      "clicks": 0,
-      "ctr": 0,
-      "score": 5648,
-      "intentScore": 3,
-      "intentFlag": "review",
-      "intentReason": "classification failed",
-      "priority": "MEDIUM",
+      "position": 5.6,
+      "impressions": 205,
+      "clicks": 6,
+      "ctr": 2.9,
+      "score": 4173,
+      "intentScore": 4,
+      "intentFlag": null,
+      "intentReason": "An alternative spelling of 'Rapport', a major concept taught in NLP training courses.",
+      "priority": "HIGH",
       "actionType": "faq_block"
     }
   ]

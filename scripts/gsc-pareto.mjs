@@ -18,6 +18,7 @@ import fs   from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { Agent, setGlobalDispatcher } from 'undici';
+import { extractJsonSpan } from './lib/json-repair.mjs';
 
 setGlobalDispatcher(new Agent({ connect: { family: 4 } }));
 
@@ -179,23 +180,14 @@ function loadClientContext() {
 // 1 = clearly wrong (entertainment/navigational/unrelated brand)
 // 3 = ambiguous / mixed intent → flag for WAO review
 // 5 = clearly matches business intent
-async function classifyIntentBatch(queries, businessNiche) {
-  const apiKey    = env.AZURE_OPENAI_KEY;
-  const endpoint  = env.AZURE_OPENAI_ENDPOINT;
-  const model     = env.AZURE_OPENAI_DEPLOYMENT_FAST; // fast model — scoring only, no depth needed
-  const url       = `${endpoint}/chat/completions?api-version=2024-05-01-preview`;
+async function classifyIntentBatchOnce(queries, businessNiche) {
+  const apiKey = env.GEMINI_API_KEY;
+  const model  = env.GEMINI_MODEL_NAME || 'gemini-3.5-flash';
+  const url    = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
 
   const queryList = queries.map((q, i) => `${i + 1}. "${q}"`).join('\n');
 
-  const res = await fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'api-key': apiKey },
-    body: JSON.stringify({
-      model,
-      messages: [
-        {
-          role: 'system',
-          content: `You are a search-intent classifier for an Israeli SEO agency.
+  const systemPrompt = `You are a search-intent classifier for an Israeli SEO agency.
 Given a business description and a list of Hebrew (or Latin-script) search queries,
 rate each query 1–5 for whether it matches the business's target audience.
 
@@ -206,26 +198,43 @@ rate each query 1–5 for whether it matches the business's target audience.
 5 = Clearly right: exact match to business's services or target audience
 
 Return ONLY a JSON array: [{"query":"...","score":1-5,"reason":"one sentence in English"}]
-No extra text, no markdown.`,
-        },
-        {
-          role: 'user',
-          content: `Business: ${businessNiche}\n\nQueries to classify:\n${queryList}`,
-        },
+No extra text, no markdown.`;
+
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'x-goog-api-key': apiKey },
+    body: JSON.stringify({
+      systemInstruction: { role: 'system', parts: [{ text: systemPrompt }] },
+      contents: [
+        { role: 'user', parts: [{ text: `Business: ${businessNiche}\n\nQueries to classify:\n${queryList}` }] },
       ],
-      max_completion_tokens: 800,
+      generationConfig: { responseMimeType: 'application/json' },
     }),
   });
 
   const data = await res.json();
-  if (!res.ok) throw new Error(`Intent API error ${res.status}: ${JSON.stringify(data?.error)}`);
+  if (!res.ok) throw new Error(`Intent API error ${res.status}: ${JSON.stringify(data)}`);
 
-  const raw = data.choices?.[0]?.message?.content ?? '{}';
-  const parsed = JSON.parse(raw);
+  const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+  if (typeof text !== 'string') throw new Error(`Gemini API returned unexpected shape: ${JSON.stringify(data)}`);
+  const parsed = JSON.parse(extractJsonSpan(text)); // throws on malformed JSON — caller retries
 
   // Model may return {results:[]} or just []
-  const arr = Array.isArray(parsed) ? parsed : (parsed.results ?? parsed.classifications ?? []);
-  return arr;
+  return Array.isArray(parsed) ? parsed : (parsed.results ?? parsed.classifications ?? []);
+}
+
+// A same-prompt retry reliably recovers from Gemini's occasional malformed
+// JSON-mode output (see scripts/lib/json-repair.mjs) — retry before failing.
+async function classifyIntentBatch(queries, businessNiche, attempts = 3) {
+  let lastErr;
+  for (let i = 0; i < attempts; i++) {
+    try {
+      return await classifyIntentBatchOnce(queries, businessNiche);
+    } catch (e) {
+      lastErr = e;
+    }
+  }
+  throw lastErr;
 }
 
 async function runIntentFilter(candidates, businessNiche) {
@@ -289,15 +298,41 @@ function isHeadTerm(query) {
   return false;
 }
 
-const LOCATION_URL_PATTERNS = [
-  /\/(branch|סניף|petah-tikva|tel-aviv|jerusalem|haifa|beer-sheva|rishon|netanya|herzliya|modiin|rehovot|kfar-saba|raanana|ashdod|ashkelon|eilat|holon|bat-yam|givatayim|ramat-gan)\b/i,
-];
+// General, no-hardcoded-city-list fallback: matches "branch"/"סניף" as a whole
+// path segment or hyphen-joined token (e.g. /branch/, /kiryat-bialik-branch/,
+// /petah-tikva-branch/, /סניף-חיפה/) — not a literal substring match, so it
+// won't false-positive on unrelated words that happen to contain "branch".
+const GENERIC_LOCATION_PATTERN = /(?:^|[-/])(?:branch|סניף)(?:[-/]|$)/i;
 
-function isLocationPage(url) {
-  return LOCATION_URL_PATTERNS.some(p => p.test(url));
+// Preferred signal: the client's own location/branch slugs, when known.
+// `client.locationSlugs` is an optional structured field (array of URL path
+// tokens, e.g. ["petah-tikva-branch", "kiryat-bialik-branch"]) that onboarding
+// may collect in the future. `client.targetLocation` today is free-text Hebrew
+// city names collected in the bot (see src/lib/geo/prompts.ts T4) — it isn't
+// URL-slug-shaped, so we can't reliably match it against Latin page slugs
+// without a transliteration table. Until such structured data exists, we fall
+// back to the generic pattern below rather than an enumerated city list.
+function clientLocationSlugs(clientCtx) {
+  if (!clientCtx) return [];
+  if (Array.isArray(clientCtx.locationSlugs)) {
+    return clientCtx.locationSlugs.map(s => String(s).toLowerCase()).filter(Boolean);
+  }
+  return [];
 }
 
-function checkCannibalization(query, rankingUrl, queryPagesMap) {
+function isLocationPage(url, locationSlugs = []) {
+  let pathname;
+  try {
+    pathname = decodeURIComponent(new URL(url).pathname).toLowerCase();
+  } catch {
+    pathname = String(url).toLowerCase();
+  }
+
+  if (locationSlugs.some(slug => pathname.includes(slug))) return true;
+  return GENERIC_LOCATION_PATTERN.test(pathname);
+}
+
+function checkCannibalization(query, rankingUrl, queryPagesMap, locationSlugs = []) {
   const allPages = queryPagesMap.get(query) || [];
 
   // Competing pages = same domain, different URL, impressions ≥ 5% of leader or ≥ 10 raw
@@ -309,7 +344,7 @@ function checkCannibalization(query, rankingUrl, queryPagesMap) {
 
   const reasons = [];
   if (competing.length >= 1)                    reasons.push('MULTI_URL');
-  if (isHeadTerm(query) && isLocationPage(rankingUrl)) reasons.push('HEAD_TERM_ON_LOCATION');
+  if (isHeadTerm(query) && isLocationPage(rankingUrl, locationSlugs)) reasons.push('HEAD_TERM_ON_LOCATION');
 
   if (!reasons.length) return null;
 
@@ -420,9 +455,11 @@ async function main() {
     intentFiltered = scored.map(r => ({ ...r, intentScore: null, intentReason: '' }));
   }
 
+  const locationSlugs = clientLocationSlugs(clientCtx);
+
   const topOpportunities = intentFiltered.slice(0, TOP_N).map((r, i) => {
     const mode   = inferImplementationMode(r.page, SITE);
-    const cannibal = checkCannibalization(r.query, r.page, queryPagesMap);
+    const cannibal = checkCannibalization(r.query, r.page, queryPagesMap, locationSlugs);
     return {
       rank:               i + 1,
       query:              r.query,

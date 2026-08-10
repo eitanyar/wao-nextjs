@@ -17,6 +17,7 @@ import fs   from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { extractLexicon, buildLexiconConstraint } from './lib/page-lexicon.mjs';
+import { extractJsonSpan } from './lib/json-repair.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const env = {};
@@ -41,31 +42,52 @@ const CLIENT_FILE = path.join(BASE_DIR, 'client.json');
 const ACTIONS_DIR = path.join(BASE_DIR, 'tasks', 'geo');
 const PAGES_DIR   = path.join(BASE_DIR, 'pages'); // lexicon cache per URL
 
-// ── Azure (gpt-chat-latest — fast, Hebrew-capable) ────────────────────────────
-const AZURE_ENDPOINT   = env.AZURE_OPENAI_ENDPOINT;   // .../models
-const AZURE_KEY        = env.AZURE_OPENAI_KEY;
-const AZURE_DEPLOYMENT = env.AZURE_OPENAI_DEPLOYMENT_FAST; // gpt-5.4-mini — fast model for AIO content volume
+// ── Gemini (fast, Hebrew-capable) — same caller shape as /api/bot & /api/site-bot ─
+const GEMINI_API_KEY   = env.GEMINI_API_KEY;
+const GEMINI_MODEL     = env.GEMINI_MODEL_NAME || 'gemini-3.5-flash';
 
-async function callAzure(systemPrompt, userMessage, maxTokens = 2000) {
-  const url = `${AZURE_ENDPOINT}/chat/completions?api-version=2024-05-01-preview`;
+// Note: unlike Azure's max_completion_tokens, we deliberately do NOT cap
+// maxOutputTokens here — matches the established pattern in gemini-fast.ts
+// and /api/bot's callGemini (neither caps it). A fixed budget carried over
+// from Azure's tokenizer truncated Hebrew JSON output mid-string (Gemini's
+// tokenizer + JSON-mode overhead differ). The `_legacyMaxTokens` param is
+// kept only so call sites don't need updating; it's intentionally unused.
+async function callGeminiOnce(systemPrompt, userMessage) {
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
   const res = await fetch(url, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'api-key': AZURE_KEY },
+    headers: { 'Content-Type': 'application/json', 'x-goog-api-key': GEMINI_API_KEY },
     body: JSON.stringify({
-      model: AZURE_DEPLOYMENT,
-      messages: [
-        { role: 'system',  content: systemPrompt },
-        { role: 'user',    content: userMessage },
-      ],
-      response_format: { type: 'json_object' },
-      max_completion_tokens: maxTokens,
+      systemInstruction: { role: 'system', parts: [{ text: systemPrompt }] },
+      contents: [{ role: 'user', parts: [{ text: userMessage }] }],
+      generationConfig: { responseMimeType: 'application/json' },
     }),
   });
 
   const data = await res.json();
-  if (!res.ok) throw new Error(`Azure error ${res.status}: ${JSON.stringify(data?.error)}`);
-  const raw = data.choices?.[0]?.message?.content ?? '{}';
-  try { return JSON.parse(raw); } catch { return { raw }; }
+  if (!res.ok) throw new Error(`Gemini error ${res.status}: ${JSON.stringify(data)}`);
+  if (process.env.DEBUG_GEMINI) console.error('[DEBUG_GEMINI] finishReason=', data?.candidates?.[0]?.finishReason, 'usage=', JSON.stringify(data?.usageMetadata));
+  const raw = data?.candidates?.[0]?.content?.parts?.[0]?.text ?? '{}';
+  return JSON.parse(extractJsonSpan(raw)); // throws on malformed JSON — caller retries
+}
+
+// Gemini occasionally emits malformed/unterminated JSON (stray trailing
+// commentary after the object, observed 2026-08-09 during the Azure→Gemini
+// migration) even in responseMimeType: 'application/json' mode. A same-
+// prompt retry reliably produces well-formed JSON on the next attempt, so
+// retry a few times before giving up — cheaper and simpler than trying to
+// heuristically repair a broken JSON string.
+async function callGemini(systemPrompt, userMessage, _legacyMaxTokens = 2000, attempts = 3) {
+  let lastErr;
+  for (let i = 0; i < attempts; i++) {
+    try {
+      return await callGeminiOnce(systemPrompt, userMessage);
+    } catch (e) {
+      lastErr = e;
+      if (process.env.DEBUG_GEMINI) console.error(`[DEBUG_GEMINI] attempt ${i + 1}/${attempts} failed:`, e.message);
+    }
+  }
+  throw lastErr;
 }
 
 // ── Tamar system prompt ───────────────────────────────────────────────────────
@@ -129,9 +151,15 @@ function buildUserMessage(opportunity, client, lexicon = null) {
   const { query, rankingUrl, implementationMode, actionType, priority } = opportunity;
   const urlSlug = rankingUrl.replace(client.siteUrl.replace(/\/$/, ''), '') || '/';
 
-  // If this is a head term on a location page (cannibalization risk),
-  // switch to geo-specific content instead of generic definitions.
-  const isGeoMode = opportunity.cannibalReasons?.includes('HEAD_TERM_ON_LOCATION');
+  // Cannibalization guard: react to ANY detected reason, not just
+  // HEAD_TERM_ON_LOCATION. MULTI_URL alone (no location page involved) still
+  // means another page on the site already owns this query's intent — generic
+  // FAQ/definition content would duplicate it. See scripts/gsc-pareto.mjs
+  // checkCannibalization() for how reasons are set.
+  const cannibalReasons  = opportunity.cannibalReasons ?? [];
+  const isLocationCannibal = cannibalReasons.includes('HEAD_TERM_ON_LOCATION');
+  const isMultiUrlCannibal = !isLocationCannibal && cannibalReasons.includes('MULTI_URL');
+  const isGeoMode = isLocationCannibal; // kept for existing log/console naming
   const locationSlug = urlSlug.replace(/\//g, '').replace(/-/g, ' ').trim();
 
   const geoFaqInstruction = `כתבי בלוק FAQ גאוגרפי עבור "${query}" בדגש על הסניף המקומי.
@@ -140,8 +168,21 @@ function buildUserMessage(opportunity, client, lexicon = null) {
 JSON-LD: סוג LocalBusiness עם כתובת וסכימת Course עם location.
 חשוב: אל תכתבי הגדרות כלליות של "${query}" — זה תפקיד העמוד הראשי.`;
 
+  // MULTI_URL-only cannibalization: another (non-location) page already
+  // ranks/splits impressions for this query. Steer toward a narrow, non-
+  // overlapping facet instead of a general definition of the query.
+  const multiUrlFaqInstruction = `כתבי בלוק FAQ ממוקד על היבט צר של "${query}" — לא הגדרה כללית של הנושא.
+בחרי זווית ספציפית לעמוד הזה (${urlSlug}) שלא חופפת לעמוד אחר באתר שמדבר על אותה שאילתה: פרט טכני, שלב בתהליך, או צד ייחודי של הנושא.
+דוגמאות לשאלות: "מה ההבדל בין [היבט א] ל[היבט ב]?", "מתי הכי מתאים ל${query}?", "מה חשוב לדעת לפני שמתחילים?"
+JSON-LD: סוג FAQPage עם mainEntity — בלי שאלת "מה זה ${query}?".
+חשוב: אל תכתבי הגדרות כלליות של "${query}" — זה תפקיד העמוד המרכזי שכבר מדורג עליו.`;
+
+  const cannibalInstruction = isLocationCannibal
+    ? geoFaqInstruction
+    : (isMultiUrlCannibal ? multiUrlFaqInstruction : null);
+
   const typeInstructions = {
-    faq_block: isGeoMode ? geoFaqInstruction : `כתבי בלוק שאלות ותשובות (FAQ) על "${query}".
+    faq_block: cannibalInstruction || `כתבי בלוק שאלות ותשובות (FAQ) על "${query}".
 פורמט HTML:
 <div class="faq-block">
   <h2>שאלות נפוצות על [נושא]</h2>
@@ -153,7 +194,7 @@ JSON-LD: סוג LocalBusiness עם כתובת וסכימת Course עם location.
 </div>
 JSON-LD: סוג FAQPage עם mainEntity.`,
 
-    definition_box: isGeoMode ? geoFaqInstruction : `כתבי תיבת הגדרה (definition box) על "${query}".
+    definition_box: cannibalInstruction || `כתבי תיבת הגדרה (definition box) על "${query}".
 פורמט HTML:
 <div class="definition-box">
   <h2>מה זה ${query}?</h2>
@@ -162,7 +203,7 @@ JSON-LD: סוג FAQPage עם mainEntity.`,
 </div>
 JSON-LD: סוג DefinedTerm או FAQPage עם שאלה אחת "מה זה ${query}?".`,
 
-    table: `כתבי טבלת השוואה על "${query}".
+    table: cannibalInstruction || `כתבי טבלת השוואה על "${query}".
 פורמט HTML: <table> עם <thead> ו-<tbody>.
 JSON-LD: סוג FAQPage עם שאלת השוואה.`,
   };
@@ -186,6 +227,44 @@ ${typeInstructions[actionType] || typeInstructions.faq_block}
 - JSON-LD צריך להיות אובייקט אחד תקין (לא מערך)`;
 }
 
+// ── Cannibalization safety net ───────────────────────────────────────────────
+// Even with the guarded instructions above, the model can still slip and emit
+// a general-definition heading or FAQPage question for the bare query — the
+// exact pattern that duplicates the intent of the page that should own it.
+// When cannibalReasons is non-empty, scan the generated output and refuse to
+// write the action file if this pattern is found.
+function detectGeneralDefinitionLeak(content, query) {
+  const normalizedQuery = query.trim().toLowerCase();
+
+  const defHeadingRe = /<h[23][^>]*>\s*(?:מה זה|מהו|מהי)\s+([^<]+?)\s*\??\s*<\/h[23]>/gi;
+  const html = content.hebrewContent || '';
+  for (const m of html.matchAll(defHeadingRe)) {
+    if (m[1].trim().toLowerCase() === normalizedQuery) {
+      return `heading "${m[0].replace(/<[^>]+>/g, '').trim()}"`;
+    }
+  }
+
+  const jsonLd = content.jsonLd;
+  const entities = [];
+  if (jsonLd) {
+    if (Array.isArray(jsonLd.mainEntity)) entities.push(...jsonLd.mainEntity);
+    else if (jsonLd.mainEntity) entities.push(jsonLd.mainEntity);
+    if (jsonLd['@type'] === 'Question' && jsonLd.name) entities.push(jsonLd);
+  }
+  for (const e of entities) {
+    const name = String(e?.name || '').trim();
+    const normName = name.toLowerCase();
+    if (!name) continue;
+    if (normName === normalizedQuery) return `JSON-LD Question.name "${name}"`;
+    const stripped = normName.replace(/^(מה זה|מהו|מהי)\s+/, '').replace(/\?+\s*$/, '').trim();
+    if (/^(מה זה|מהו|מהי)\s+/.test(normName) && stripped === normalizedQuery) {
+      return `JSON-LD Question.name "${name}"`;
+    }
+  }
+
+  return null;
+}
+
 // ── Slug from query ───────────────────────────────────────────────────────────
 function queryToSlug(query) {
   return query
@@ -206,9 +285,12 @@ async function generateAction(opportunity, client) {
     return null;
   }
 
-  const geoMode = opportunity.cannibalReasons?.includes('HEAD_TERM_ON_LOCATION');
-  if (geoMode) console.log(`  🔀 #${rank} "${query}" — HEAD_TERM_ON_LOCATION → switching to geo-FAQ mode`);
-  console.log(`  ⚙  #${rank} "${query}" [${actionType}${geoMode ? '/GEO' : ''}] → crawling ${rankingUrl}...`);
+  const cannibalReasons = opportunity.cannibalReasons ?? [];
+  const geoMode      = cannibalReasons.includes('HEAD_TERM_ON_LOCATION');
+  const multiUrlMode = !geoMode && cannibalReasons.includes('MULTI_URL');
+  if (geoMode)      console.log(`  🔀 #${rank} "${query}" — HEAD_TERM_ON_LOCATION → switching to geo-FAQ mode`);
+  else if (multiUrlMode) console.log(`  🔀 #${rank} "${query}" — MULTI_URL cannibalization → narrowing to non-overlapping facet`);
+  console.log(`  ⚙  #${rank} "${query}" [${actionType}${geoMode ? '/GEO' : multiUrlMode ? '/NARROW' : ''}] → crawling ${rankingUrl}...`);
 
   // Step 0: crawl the target page for vocabulary grounding
   const lexicon = await extractLexicon(rankingUrl, PAGES_DIR);
@@ -224,7 +306,7 @@ async function generateAction(opportunity, client) {
   // Step 1: Tamar generates content
   let tamarResult;
   try {
-    tamarResult = await callAzure(
+    tamarResult = await callGemini(
       tamarPrompt(client),
       buildUserMessage(opportunity, client, lexicon),
       2000
@@ -244,7 +326,7 @@ async function generateAction(opportunity, client) {
   // Step 2: Noa proofreads + vocab QA
   let noaResult;
   try {
-    noaResult = await callAzure(
+    noaResult = await callGemini(
       noaPrompt(lexicon),
       JSON.stringify({
         hebrewContent: tamarResult.hebrewContent,
@@ -273,6 +355,17 @@ async function generateAction(opportunity, client) {
     vocabViolations:      vocabViolations.length ? vocabViolations : undefined,
   };
 
+  // Safety net: refuse to ship a cannibalization-flagged action that still
+  // contains a bare general-definition pattern (see 07-nlp.json incident —
+  // "מהו NLP?" duplicating retter.co.il/nlp/'s intent).
+  if (cannibalReasons.length) {
+    const leak = detectGeneralDefinitionLeak(finalContent, query);
+    if (leak) {
+      console.error(`  ❌ #${rank} "${query}" — cannibalization safety net triggered: general-definition leak in ${leak}. Refusing to write action file.`);
+      return null;
+    }
+  }
+
   const action = {
     actionId:           `${CLIENT_ID}-${rank}-${slug}`,
     clientId:           CLIENT_ID,
@@ -290,6 +383,9 @@ async function generateAction(opportunity, client) {
     generatedAt:        new Date().toISOString(),
     vocabSource:        lexicon.source,
     vocabConfidence:    lexicon.source === 'page' ? 'high' : 'low',
+    cannibalFlag:       opportunity.cannibalFlag,
+    cannibalReasons:    cannibalReasons.length ? cannibalReasons : undefined,
+    cannibalUrls:       opportunity.cannibalUrls,
     content:            finalContent,
   };
 
