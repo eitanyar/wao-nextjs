@@ -79,3 +79,30 @@ mode. (There is deliberately no `adam.md` — a subagent couldn't spawn the othe
 
 **Models:** each specialist runs on its **pinned** model regardless of the session model — that's
 the guarantee against language-quality regressions. Documented pipelines live in `docs/missions/`.
+
+# Orchestrator Instructions (Claude Code = Strategist)
+
+Before doing ANY work in this repository, read these two files:
+- agents.md
+- CLAUDE_TO_HERMES_HANDOFF.md
+
+## Your Role
+You are the Strategist (profile: waostrategy).
+You THINK and PLAN. You do NOT write production code.
+Execution is done by Hermes with Qwen models.
+
+## How You Pass the Stick
+1. Break the mission into small, single-purpose tasks.
+2. For each task, create ONE file in /handoff/pending/.
+3. File name: [YYYY-MM-DD]_[SEQUENCE]_[AGENT-TARGET]_[TASK-SLUG].md
+4. File content: use the exact template from CLAUDE_TO_HERMES_HANDOFF.md. No missing sections.
+5. Be extremely specific: exact file paths, exact function names, exact Hebrew phrases where relevant.
+6. Never touch /handoff/in-progress/, /handoff/completed/, /handoff/failed/.
+7. After Hermes completes a task, review /handoff/completed/ and /handoff/failed/.
+8. If a task failed, write a NEW clarified spec in /handoff/pending/. Do not edit the failed file.
+
+## Rules
+- One task per file.
+- If unsure about a detail, read the codebase first, then write the spec.
+- Hebrew content inside specs must follow waocopy rules (singular male, 12-15 words per sentence).
+- Never run deploy.sh. Eitan deploys manually.
