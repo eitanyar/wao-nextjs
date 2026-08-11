@@ -3,10 +3,12 @@
 import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import type { CollectedData } from "@/lib/bot/prompts";
+import { deliveryModelFollowUp, deliveryModelOptions } from "@/lib/bot/delivery-model";
 
 interface Message {
   role: "user" | "assistant" | "system";
   content: string;
+  images?: string[]; // uploaded image URLs shown inline
 }
 
 interface CampaignStrategy {
@@ -24,12 +26,64 @@ interface CampaignCopy {
   copywritingRationale: string;
 }
 
+interface BudgetRecommendation {
+  monthlyBudget: number;
+  estimatedCpc: number;
+  expectedLeads: number;
+  closeRatioNum: number;
+  expectedClients: string;
+  paybackMonths: number;
+  hasRepeatClients: boolean;
+}
+
+interface SandboxVerificationResponse {
+  success?: boolean;
+  customer?: { name?: string | null };
+  campaign?: { name?: string | null };
+  error?: string;
+}
+
+const DEMO_PROFILE: CollectedData = {
+  businessNiche: "אינסטלטור בתל אביב",
+  businessName: "אינסטלטור תל אביב מהיר",
+  ownerName: "דני",
+  serviceModel: "field",
+  targetLocation: "תל אביב והסביבה",
+  specificCities: "תל אביב, רמת גן, גבעתיים, חולון",
+  idealClient: "משקי בית ובעלי דירות עם תקלה דחופה",
+  idealClientFear: "לשבת בלי מים חמים או עם נזילה",
+  usp: "הגעה מהירה, זמינות גבוהה, ואפשרות לטיפול באותו יום",
+  yearsInField: "12",
+  guarantee: "אחריות על התיקון",
+  urgencyLevel: "urgent",
+  responseTime: "עד שעה",
+  pricingNotes: "מחיר ביקור שקוף, לפי תקלה",
+  revenueModel: "one-time",
+  avgJobValue: 650,
+  closeRate: 0.28,
+  monthlyBudget: 1800,
+  hasGoogleBusiness: true,
+  reviewCount: 67,
+  hasTrustAssets: true,
+  starRating: "4.8",
+  capacityAvailable: true,
+  capacityUnit: "קריאות ביום",
+  contactMethod: "טלפון ו-WhatsApp",
+  phone: "052-614-8860",
+  whatsappNumber: "052-614-8860",
+  preferredSlug: "demo-plumber-tel-aviv",
+  turnIndex: 12,
+};
+
 export default function OnboardingPage() {
+  const [clientId, setClientId] = useState<string | undefined>(undefined);
+  const [mode, setMode] = useState<"test" | "live">("test");
+  const [isDemo, setIsDemo] = useState(false);
+  const [deliveryModelSelected, setDeliveryModelSelected] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
     {
       role: "assistant",
-      content:
-        "יאללה, בוא נתחיל — ספר לי על התחום שלך. מה השם שכולם קוראים לו בזירת העבודה? (לא את התואר — אלא את השם האמיתי של התחום.)", 
+      content: "היי, אני אדם, מנהל הקמפיינים שלך בגוגל אדס ב-WAO. לפני שנדבר על העסק, בוא נבין איך השירות שלך מתבצע בפועל.",
     },
   ]);
   const [inputValue, setInputValue] = useState("");
@@ -38,115 +92,226 @@ export default function OnboardingPage() {
 
   const [strategy, setStrategy] = useState<CampaignStrategy | null>(null);
   const [copy, setCopy] = useState<CampaignCopy | null>(null);
+  const [budgetRecommendation, setBudgetRecommendation] = useState<BudgetRecommendation | null>(null);
+  const [showBudgetCalculation, setShowBudgetCalculation] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isSpeaking, setIsSpeaking] = useState(false);
   const [isSimulation, setIsSimulation] = useState(true);
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [lpUrl, setLpUrl] = useState<string | null>(null);
   const [lpGenerating, setLpGenerating] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const [awaitingProfilePhoto, setAwaitingProfilePhoto] = useState(false);
+  const [sandboxVerificationStatus, setSandboxVerificationStatus] = useState<"idle" | "checking" | "ready" | "error">("idle");
+  const [sandboxVerificationMessage, setSandboxVerificationMessage] = useState<string | null>(null);
+  const sessionIdRef = useRef(`s-${Date.now()}-${Math.random().toString(36).slice(2)}`);
+  const inputPlaceholder =
+    currentState === "COMPLETED"
+      ? ""
+      : currentState === "DIAGNOSING"
+        ? "כתוב כאן את התשובה שלך"
+        : currentState === "STRATEGIZING"
+          ? "אפשר להוסיף עוד פרטים על העסק"
+          : currentState === "REVIEWING"
+            ? "כתוב הערה אחרונה לפני ההפעלה"
+            : "המשך כאן אם תרצה לשנות משהו";
+  const inputHelperText =
+    currentState === "DIAGNOSING"
+      ? (() => {
+          // NOTE: these case numbers are turnIndex values and MUST stay in sync
+          // with the TURN_QUESTIONS table / switch(turn) in
+          // src/app/api/bot/route.ts (handleSimulation) and the T-numbered
+          // sequence in src/lib/bot/prompts.ts. A drift here doesn't corrupt
+          // data (it only mislabels the helper hint), but it's the same class
+          // of bug that caused the turnIndex mapping corruption — keep it
+          // index-for-index accurate.
+          switch (collectedData.turnIndex ?? 0) {
+            case 0:
+              return "תענה בקצרה. גם משפט אחד מספיק.";
+            case 1:
+              return "אם יש שם לעסק, תכתוב אותו.";
+            case 2:
+              return "השם הפרטי שלך, כדי שנפנה אליך אישית.";
+            case 3:
+              return "אם יש עוד שירותים, תוסיף אותם.";
+            case 4:
+              return "בחרנו כבר איך השירות מתבצע, אז השאלה הבאה תתמקד באזור השירות שלך.";
+            case 8:
+              return "אפשר לחשוב על: מהירות הגעה, ותק, מחיר שקוף, אחריות, זמינות, רישיון, התמחות, ביקורות, או יחס אישי. גם תשובה פשוטה לגמרי טובה.";
+            case 20:
+              return "ענה קודם: ״יש לי״ או ״אין לי כרגע״. אם יש לך, העלה אחר כך צילום מסך אחד של ביקורת Google, הודעת WhatsApp או תמונת לפני/אחרי דרך סמל המהדק.";
+            default:
+              return "תמשיך עם הפרטים הבאים. כל פרט קטן עוזר.";
+          }
+        })()
+      : currentState === "STRATEGIZING"
+        ? "אם יש עוד פרט קטן — תקציב, עיר, או יתרון מול המתחרים — תוסיף אותו פה."
+        : currentState === "REVIEWING"
+          ? "אם יש עוד תיקון קטן לפני ההפעלה, תכתוב אותו עכשיו."
+          : "אם משהו השתנה, תכתוב ונעדכן יחד.";
+  const progressTotal = 25;
+  const progressTurn = Math.min((collectedData.turnIndex ?? 0) + 1, progressTotal);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-  const speechUttRef = useRef<SpeechSynthesisUtterance | null>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
 
-  // Auto-scroll to the bottom of the chat list
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+  const verifySandboxConnection = async () => {
+    setSandboxVerificationStatus("checking");
+    setSandboxVerificationMessage(null);
 
-  // Handle browser TTS (Web Speech API) fallback for vocal experience
-  const speakText = (text: string) => {
-    if (typeof window === "undefined" || !window.speechSynthesis) return;
+    try {
+      const response = await fetch("/api/google-ads/sandbox-verify");
+      const data = await response.json() as SandboxVerificationResponse;
 
-    // Stop current speech
-    window.speechSynthesis.cancel();
+      if (!response.ok || !data.success) {
+        if (response.status === 401) {
+          throw new Error("בדיקת ה-Sandbox זמינה רק מתוך ההתחברות הפנימית של WAO.");
+        }
+        throw new Error(data.error || "לא הצלחנו לאמת את חיבור ה-Sandbox.");
+      }
 
-    // Create new utterance
-    const cleanText = text.replace(/[*#]/g, ""); // strip markdown characters
-    const utterance = new SpeechSynthesisUtterance(cleanText);
-    utterance.lang = "he-IL";
-    utterance.rate = 1.0;
-
-    utterance.onstart = () => setIsSpeaking(true);
-    utterance.onend = () => setIsSpeaking(false);
-    utterance.onerror = () => setIsSpeaking(false);
-
-    speechUttRef.current = utterance;
-    window.speechSynthesis.speak(utterance);
+      const accountName = data.customer?.name || "חשבון הבדיקה";
+      const campaignName = data.campaign?.name || "קמפיין הבדיקה";
+      setSandboxVerificationStatus("ready");
+      setSandboxVerificationMessage(`חיבור ה-Sandbox תקין: ${accountName}, ${campaignName}.`);
+    } catch (error) {
+      setSandboxVerificationStatus("error");
+      setSandboxVerificationMessage(error instanceof Error ? error.message : "לא הצלחנו לאמת את חיבור ה-Sandbox.");
+    }
   };
 
-  // Speak the initial message on load (after user interaction is permitted)
-  useEffect(() => {
-    const handleInitialSpeak = () => {
-      speakText(messages[0].content);
-      window.removeEventListener("click", handleInitialSpeak);
-    };
-    window.addEventListener("click", handleInitialSpeak);
-    return () => window.removeEventListener("click", handleInitialSpeak);
-  }, []);
+  const selectDeliveryModel = (serviceModel: CollectedData["serviceModel"]) => {
+    if (!serviceModel) return;
+    const label = deliveryModelOptions.find(option => option.value === serviceModel)?.label || "";
+    setCollectedData({ serviceModel, turnIndex: 0 });
+    setMessages((prev) => [...prev, { role: "user", content: label }, { role: "assistant", content: deliveryModelFollowUp(serviceModel) }]);
+    setDeliveryModelSelected(true);
+  };
 
-  // Listen for the callback redirect from the Ya'ad payment sandbox
+  // New user messages stay at the bottom; new assistant questions begin at the
+  // top of the reading area so long prompts never open on their final line.
+  useEffect(() => {
+    const el = messagesContainerRef.current;
+    if (!el) return;
+
+    const latestMessage = messages[messages.length - 1];
+    if (latestMessage?.role === "assistant") {
+      const assistantMessages = el.querySelectorAll<HTMLElement>("[data-chat-role='assistant']");
+      const latestAssistant = assistantMessages[assistantMessages.length - 1];
+      if (latestAssistant) el.scrollTop = Math.max(0, latestAssistant.offsetTop - 16);
+      return;
+    }
+
+    el.scrollTop = el.scrollHeight;
+  }, [messages]);
+
+  // Post-payment flow — shared by Yaad Sarig redirect and bypass button
+  const triggerCampaignLaunch = async () => {
+    if (isSubmitting) return;
+    setIsSubmitting(true);
+    try {
+      // Step 1: Close the bot conversation
+      const updatedMessages = [...messages, { role: "user" as const, content: "אשר והפעל קמפיין" }];
+      setMessages(updatedMessages);
+
+      const botRes = await fetch("/api/bot", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ messages: updatedMessages, currentState: "REVIEWING", collectedData, sessionId: sessionIdRef.current }),
+      });
+      const botData = await botRes.json();
+      setMessages((prev) => [...prev, { role: "assistant", content: botData.response }]);
+      setCurrentState(botData.currentState);
+
+      // Step 2: Create Google Ads sub-account + conversion actions
+      let adsData: any = null;
+      const resolvedClientId = clientId || (mode === "test" ? "google-ads-sandbox" : undefined);
+      if (strategy && copy) {
+        const adsRes = await fetch("/api/google-ads/create-campaign", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            collectedData,
+            strategy,
+            copy,
+            consentTimestamp: new Date().toISOString(),
+            clientId: resolvedClientId,
+            mode,
+          }),
+        });
+        adsData = await adsRes.json();
+        if (adsData.success) {
+          const adsMsg = `יצרתי לך חשבון Google Ads חדש תחת WAO 🚀\n\nמספר חשבון: ${adsData.customerId}\nהקמפיין ממתין לקישור אמצעי תשלום.`;
+          setMessages((prev) => [...prev, { role: "assistant", content: adsMsg }]);
+        }
+      }
+
+      // Step 3: Generate LP copy and save to server
+      setLpGenerating(true);
+      const lpRes = await fetch("/api/lp-generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ collectedData, slug: adsData?.slug || collectedData.preferredSlug || undefined }),
+      });
+      const lpData = await lpRes.json();
+
+      // Step 4: Deploy static LP to Cloudflare Pages
+      let deployedUrl: string | null = null;
+      if (lpData.success && lpData.slug) {
+        const deployRes = await fetch("/api/cloudflare-pages/deploy", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            slug: lpData.slug,
+            googleAdsCustomerId: adsData?.customerId,
+            gtagSnippet: adsData?.gtagSnippet,
+            formConversionLabel: adsData?.formConversionLabel,
+            phoneConversionLabel: adsData?.phoneConversionLabel,
+            whatsappConversionLabel: adsData?.whatsappConversionLabel,
+          }),
+        });
+        const deployData = await deployRes.json();
+        if (deployData.success) {
+          deployedUrl = deployData.url;
+        }
+      }
+      setLpGenerating(false);
+
+      if (deployedUrl) {
+        setLpUrl(deployedUrl);
+        const lpMsg = `הדף שלך באוויר! 🎉\n\n${deployedUrl}\n\nכל מי שילחץ על המודעה בגוגל יגיע לדף הזה. שמור את הקישור — אפשר לשתף אותו גם ישירות בוואטסאפ.`;
+        setMessages((prev) => [...prev, { role: "assistant", content: lpMsg }]);
+      }
+
+      // Step 5: Store the lead for CRM
+      await fetch("/api/lead", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: collectedData.ownerName || collectedData.businessName || "לקוח חדש",
+          phone: collectedData.phone,
+          service: "google-ads",
+          message: `עסק: ${collectedData.businessName || collectedData.businessNiche} | תקציב: ₪${collectedData.monthlyBudget} | LP: ${deployedUrl || lpData.url || "N/A"} | ענף: ${collectedData.feasibilityBranch || "—"} | חשבון גוגל: ${adsData?.customerId || "—"}`,
+          source: "bot-onboarding-v6",
+        }),
+      }).catch(() => {});
+
+      window.history.replaceState({}, document.title, window.location.pathname);
+    } catch (err) {
+      console.error(err);
+      setLpGenerating(false);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // Listen for the callback redirect from Yaad Sarig
   useEffect(() => {
     if (typeof window === "undefined") return;
     const params = new URLSearchParams(window.location.search);
     if (params.get("payment") === "success" && currentState !== "COMPLETED") {
-      const triggerCampaignLaunch = async () => {
-        setIsSubmitting(true);
-        try {
-          // Step 1: Close the bot conversation
-          const updatedMessages = [...messages, { role: "user" as const, content: "אשר והפעל קמפיין" }];
-          setMessages(updatedMessages);
-
-          const botRes = await fetch("/api/bot", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ messages: updatedMessages, currentState: "REVIEWING", collectedData }),
-          });
-          const botData = await botRes.json();
-          setMessages((prev) => [...prev, { role: "assistant", content: botData.response }]);
-          setCurrentState(botData.currentState);
-          speakText(botData.response);
-
-          // Step 2: Generate the landing page
-          setLpGenerating(true);
-          const lpRes = await fetch("/api/lp-generate", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ collectedData }),
-          });
-          const lpData = await lpRes.json();
-          setLpGenerating(false);
-
-          if (lpData.success && lpData.url) {
-            setLpUrl(lpData.url);
-            const lpMsg = `הדף שלך מוכן! 🎉\n\nכל מי שילחץ על המודעה בגוגל יגיע לכאן:\n👉 wao.co.il${lpData.url}\n\nשמור את הקישור הזה — אפשר לשתף אותו גם ישירות בוואטסאפ.`;
-            setMessages((prev) => [...prev, { role: "assistant", content: lpMsg }]);
-            speakText(lpMsg);
-          }
-
-          // Step 3: Store the lead for CRM
-          await fetch("/api/lead", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              name: collectedData.ownerName || collectedData.businessName || "לקוח חדש",
-              phone: collectedData.phone,
-              service: "google-ads",
-              message: `עסק: ${collectedData.businessName || collectedData.businessNiche} | תקציב: ₪${collectedData.monthlyBudget} | LP: ${lpData.url || "N/A"} | ענף: ${collectedData.feasibilityBranch || "—"}`,
-              source: "bot-onboarding-v6",
-            }),
-          }).catch(() => {}); // non-fatal — SMTP may not be configured
-
-          window.history.replaceState({}, document.title, window.location.pathname);
-        } catch (err) {
-          console.error(err);
-          setLpGenerating(false);
-        } finally {
-          setIsSubmitting(false);
-        }
-      };
       triggerCampaignLaunch();
     }
-  }, [currentState]);
+  }, [currentState, triggerCampaignLaunch]);
 
   const handleSendMessage = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
@@ -167,6 +332,7 @@ export default function OnboardingPage() {
           messages: updatedMessages,
           currentState,
           collectedData,
+          sessionId: sessionIdRef.current,
         }),
       });
 
@@ -182,15 +348,57 @@ export default function OnboardingPage() {
       setCollectedData(data.collectedData);
       setIsSimulation(data.isSimulation !== false);
 
-      if (data.strategy) {
-        setStrategy(data.strategy);
-      }
-      if (data.copy) {
-        setCopy(data.copy);
-      }
+      if (data.strategy) setStrategy(data.strategy);
+      if (data.copy) setCopy(data.copy);
+      if (data.budgetRecommendation) setBudgetRecommendation(data.budgetRecommendation as BudgetRecommendation);
+      if (typeof data.awaitingProfilePhoto === "boolean") setAwaitingProfilePhoto(data.awaitingProfilePhoto);
 
-      // Speak response aloud
-      speakText(data.response);
+      // Auto-fire STRATEGIZING when Adam signals callSpecialists
+      if (data.currentState === "STRATEGIZING" && data.callSpecialists) {
+        setIsSubmitting(true);
+        try {
+          const stratRes = await fetch("/api/bot", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              messages: [...updatedMessages, { role: "assistant", content: data.response }],
+              currentState: "STRATEGIZING",
+              collectedData: data.collectedData,
+              sessionId: sessionIdRef.current,
+            }),
+          });
+          const stratData = await stratRes.json();
+          if (stratData.response) {
+            setMessages((prev) => [...prev, { role: "assistant", content: stratData.response }]);
+          }
+          setCurrentState(stratData.currentState ?? "REVIEWING");
+          if (stratData.strategy) setStrategy(stratData.strategy);
+          if (stratData.copy) setCopy(stratData.copy);
+
+          // Build the internal LP preview before approval. The client and WAO
+          // operator must be able to inspect the full ad-to-page journey before
+          // payment, Google Ads account creation, or any deployment occurs.
+          if ((stratData.currentState ?? "REVIEWING") === "REVIEWING") {
+            setLpGenerating(true);
+            try {
+              const lpRes = await fetch("/api/lp-generate", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  collectedData: data.collectedData,
+                  slug: data.collectedData.preferredSlug || undefined,
+                }),
+              });
+              const lpData = await lpRes.json();
+              if (lpRes.ok && lpData.success && lpData.url) setLpUrl(lpData.url);
+            } finally {
+              setLpGenerating(false);
+            }
+          }
+        } catch {
+          // non-fatal — user can still proceed to payment
+        }
+      }
     } catch (err: any) {
       setMessages((prev) => [
         ...prev,
@@ -198,6 +406,60 @@ export default function OnboardingPage() {
       ]);
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    if (!files.length) return;
+    setIsUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append("sessionId", sessionIdRef.current);
+      files.slice(0, 6).forEach(f => formData.append("files", f));
+      const res = await fetch("/api/upload", { method: "POST", body: formData });
+      const { urls } = await res.json();
+      if (!urls?.length) return;
+
+      const isProfile = awaitingProfilePhoto;
+      const profileUrl = isProfile ? urls[0] : undefined;
+
+      // Show thumbnails as a user message
+      const uploadMsg: Message = {
+        role: "user",
+        content: isProfile ? "העלאתי תמונת פרופיל" : `העלאתי ${urls.length} תמונות`,
+        images: isProfile ? [urls[0]] : urls,
+      };
+      const updatedMessages = [...messages, uploadMsg];
+      setMessages(updatedMessages);
+
+      // Store in collectedData — profile photo gets its own field
+      const updatedData: CollectedData = isProfile
+        ? { ...collectedData, profilePhotoUrl: profileUrl }
+        : {
+            ...collectedData,
+            trustAssetUrls: [...(collectedData.trustAssetUrls || []), ...urls],
+            hasTrustAssets: true,
+          };
+      setCollectedData(updatedData);
+
+      // Let the bot acknowledge the upload
+      setIsSubmitting(true);
+      const botRes = await fetch("/api/bot", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ messages: updatedMessages, currentState, collectedData: updatedData, sessionId: sessionIdRef.current }),
+      });
+      const data = await botRes.json();
+      if (data.response) setMessages(prev => [...prev, { role: "assistant", content: data.response }]);
+      if (data.collectedData) setCollectedData(data.collectedData);
+      if (data.currentState) setCurrentState(data.currentState);
+      if (typeof data.awaitingProfilePhoto === "boolean") setAwaitingProfilePhoto(data.awaitingProfilePhoto);
+      else if (isProfile) setAwaitingProfilePhoto(false); // auto-clear after profile upload
+    } finally {
+      setIsUploading(false);
+      setIsSubmitting(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
     }
   };
 
@@ -259,8 +521,16 @@ export default function OnboardingPage() {
               marginBottom: "8px",
             }}
           >
-            אשף הקמת קמפיין <span className="text-gradient">Google Ads</span>
+            לקוחות חדשים מ-<span className="text-gradient">Google Ads</span>
           </h1>
+          <p style={{ color: "var(--muted)", fontSize: "0.88rem", marginBottom: "8px" }}>
+            ההקמה לוקחת דקות, לא שבועות — אבל תן לתוצאות כמה שבועות להבשיל.
+          </p>
+          {isDemo && (
+            <p style={{ color: "#FFAA00", fontSize: "0.9rem", fontWeight: 700, marginBottom: "6px" }}>
+              מצב הדגמה פעיל. הכנסתי לך עסק לדוגמה, כדי שתוכל לראות את הזרימה בלי חשבון אמיתי.
+            </p>
+          )}
           <p style={{ color: "var(--muted)", fontSize: "0.95rem" }}>
             {isSimulation ? (
               <span
@@ -274,7 +544,7 @@ export default function OnboardingPage() {
                   fontWeight: "bold",
                 }}
               >
-                ● מצב סימולציה (הדמיה מקומית)
+                ● מצב הדגמה
               </span>
             ) : (
               <span
@@ -288,12 +558,118 @@ export default function OnboardingPage() {
                   fontWeight: "bold",
                 }}
               >
-                ● מחובר ל-Azure OpenAI
+                ● מחובר ופעיל
               </span>
             )}
             {" | "}
-            בנה קמפיין ממומן בגוגל בצורה קולית ומאובטחת תחת ה-MCC של WAO.
+            {mode === "test"
+              ? "אתה במצב בדיקה פנימי. אין פרסום חי, חיוב או גישה לחשבון לקוח."
+              : "מצב Live נעול עד להשלמת בדיקות ה-Sandbox."
+            }
           </p>
+          <div style={{ display: "flex", gap: "10px", flexWrap: "wrap", marginTop: "14px", marginBottom: "12px" }}>
+            <button
+              type="button"
+              onClick={() => {
+                setMode("test");
+                setSandboxVerificationStatus("idle");
+                setSandboxVerificationMessage(null);
+              }}
+              className="btn-outline"
+              style={{
+                padding: "8px 14px",
+                fontSize: "0.9rem",
+                borderColor: mode === "test" ? "var(--accent)" : "var(--border)",
+                color: mode === "test" ? "var(--accent)" : "var(--muted)",
+              }}
+            >
+              Sandbox
+            </button>
+            <button
+              type="button"
+              className="btn-outline"
+              disabled
+              aria-disabled="true"
+              title="Live mode stays locked until sandbox validation is complete."
+              style={{
+                padding: "8px 14px",
+                fontSize: "0.9rem",
+                borderColor: "var(--border)",
+                color: "var(--muted)",
+                cursor: "not-allowed",
+                opacity: 0.65,
+              }}
+            >
+              Live (locked)
+            </button>
+            <button
+              type="button"
+              onClick={verifySandboxConnection}
+              className="btn-outline"
+              disabled={sandboxVerificationStatus === "checking"}
+              style={{
+                padding: "8px 14px",
+                fontSize: "0.9rem",
+                borderColor: "#FFAA00",
+                color: "#FFAA00",
+              }}
+            >
+              {sandboxVerificationStatus === "checking" ? "בודק את ה-Sandbox..." : "בדיקת חיבור Sandbox"}
+            </button>
+          </div>
+          {sandboxVerificationMessage && (
+            <p
+              role="status"
+              aria-live="polite"
+              style={{
+                color: sandboxVerificationStatus === "ready" ? "var(--accent)" : "#FF8A80",
+                fontSize: "0.85rem",
+                fontWeight: 700,
+                marginTop: "-4px",
+              }}
+            >
+              {sandboxVerificationMessage}
+            </p>
+          )}
+
+          {/* Value block + price anchor */}
+          <div style={{
+            marginTop: "28px",
+            background: "rgba(13,15,21,0.6)",
+            border: "1px solid var(--border)",
+            borderRadius: "var(--radius-md)",
+            padding: "24px 28px",
+            display: "flex",
+            flexDirection: "column",
+            gap: "14px",
+          }}>
+            {(mode === "test"
+              ? [
+                  "מצב Sandbox מבודד. כל הבדיקות נשארות בחשבון הבדיקה של WAO.",
+                  "אין מודעות פעילות, חיובים או נתוני לקוחות אמיתיים.",
+                  "לפני כל פעולה, אפשר לאמת שהחיבור לחשבון ולקמפיין הבדיקה תקין.",
+                ]
+              : [
+                  "מצב Live נשאר נעול עד שהבדיקות ב-Sandbox הושלמו.",
+                ]
+            ).map((bullet, i) => (
+              <div key={i} style={{ display: "flex", gap: "12px", alignItems: "flex-start" }}>
+                <span style={{ color: "var(--accent)", fontWeight: 700, flexShrink: 0, marginTop: "1px" }}>✓</span>
+                <span style={{ fontSize: "0.92rem", color: "var(--text)", lineHeight: 1.6 }}>{bullet}</span>
+              </div>
+            ))}
+            <div style={{
+              marginTop: "6px",
+              paddingTop: "16px",
+              borderTop: "1px solid var(--border)",
+              fontSize: "0.88rem",
+              color: "var(--muted)",
+              lineHeight: 1.6,
+            }}>
+              הקמה אצל פרילנסר עולה אלפי שקלים, וניהול חודשי עולה בקלות 1,500 ₪.{" "}
+              <strong style={{ color: "var(--text)" }}>אצלך ההקמה ב-9.90 ₪, חודש הניהול הראשון חינם, ומשם 249 ₪ בחודש. כן, קראת נכון.</strong>
+            </div>
+          </div>
         </div>
 
         {/* Dashboard Grid */}
@@ -311,7 +687,7 @@ export default function OnboardingPage() {
               ...glass,
               display: "flex",
               flexDirection: "column",
-              height: "600px",
+              height: "clamp(380px, 55dvh, 600px)",
               overflow: "hidden",
             }}
           >
@@ -345,37 +721,48 @@ export default function OnboardingPage() {
                 </div>
                 <div>
                   <div style={{ fontWeight: 700, fontSize: "1rem" }}>אדם - יועץ Google Ads</div>
-                  <div style={{ fontSize: "0.75rem", color: "var(--accent)" }}>
-                    {isSpeaking ? "מדבר כעת..." : "מחובר ומקשיב"}
-                  </div>
+                  <div style={{ fontSize: "0.75rem", color: "var(--accent)" }}>מחובר ומקשיב</div>
                 </div>
               </div>
 
-              {/* Animated Soundwave */}
-              {isSpeaking && (
-                <div style={{ display: "flex", gap: "3px", alignItems: "center" }}>
-                  <div className="soundwave-bar" style={{ animationDelay: "0.1s" }} />
-                  <div className="soundwave-bar" style={{ animationDelay: "0.3s", height: "18px" }} />
-                  <div className="soundwave-bar" style={{ animationDelay: "0.2s" }} />
-                  <div className="soundwave-bar" style={{ animationDelay: "0.4s", height: "22px" }} />
-                  <div className="soundwave-bar" style={{ animationDelay: "0.5s" }} />
-                </div>
-              )}
             </div>
 
             {/* Chat Messages */}
             <div
+              ref={messagesContainerRef}
               style={{
                 flex: 1,
-                padding: "24px",
                 overflowY: "auto",
-                display: "flex",
-                flexDirection: "column",
-                gap: "16px",
+                padding: "24px",
               }}
             >
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "16px",
+                  justifyContent: "flex-end",
+                  minHeight: "100%",
+                }}
+              >
+              {!deliveryModelSelected && (
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px", direction: "rtl" }}>
+                  {deliveryModelOptions.map(option => (
+                    <button
+                      key={option.value}
+                      type="button"
+                      onClick={() => selectDeliveryModel(option.value as CollectedData["serviceModel"])}
+                      style={{ padding: "14px", textAlign: "right", borderRadius: "10px", border: "1px solid var(--accent-border)", background: "rgba(74,227,181,0.06)", color: "var(--text)", cursor: "pointer" }}
+                    >
+                      <strong style={{ display: "block" }}>{option.label}</strong>
+                      <span style={{ fontSize: "0.75rem", color: "var(--muted)" }}>{option.description}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
               {messages.map((msg, i) => (
                 <div
+                  data-chat-role={msg.role}
                   key={i}
                   style={{
                     display: "flex",
@@ -403,6 +790,18 @@ export default function OnboardingPage() {
                     }}
                   >
                     {msg.content}
+                    {msg.images && msg.images.length > 0 && (
+                      <div style={{ display: "flex", flexWrap: "wrap", gap: "6px", marginTop: "8px" }}>
+                        {msg.images.map((url, idx) => (
+                          <img
+                            key={idx}
+                            src={url}
+                            alt={`תמונה ${idx + 1}`}
+                            style={{ width: "72px", height: "72px", objectFit: "cover", borderRadius: "8px", border: "1px solid var(--border)" }}
+                          />
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </div>
               ))}
@@ -413,7 +812,74 @@ export default function OnboardingPage() {
                   </div>
                 </div>
               )}
-              <div ref={messagesEndRef} />
+
+              {/* Inline payment CTA — appears in chat so user never needs to scroll */}
+              {currentState === "REVIEWING" && (
+                <div style={{
+                  margin: "8px 0",
+                  padding: "16px 20px",
+                  borderRadius: "14px",
+                  border: "1px solid var(--accent-border)",
+                  background: "linear-gradient(135deg, rgba(74,227,181,0.10) 0%, rgba(0,195,255,0.10) 100%)",
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "12px",
+                }}>
+                  <div style={{ fontSize: "0.9rem", color: "var(--muted)", textAlign: "center" }}>
+                    דמי הקמה חד-פעמיים — <strong style={{ color: "var(--text)" }}>9.90 ₪</strong>
+                  </div>
+                  <label style={{ display: "flex", alignItems: "flex-start", gap: "10px", cursor: "pointer" }}>
+                    <input
+                      type="checkbox"
+                      checked={acceptedTerms}
+                      onChange={(e) => setAcceptedTerms(e.target.checked)}
+                      style={{ marginTop: "3px", accentColor: "var(--accent)", width: "16px", height: "16px", flexShrink: 0 }}
+                    />
+                    <span style={{ fontSize: "0.82rem", color: "var(--muted)", lineHeight: "1.4", direction: "rtl" }}>
+                      אני מאשר/ת את <strong>תנאי השימוש</strong> ומסכים/ה לתנאי השירות.
+                    </span>
+                  </label>
+                  <button
+                    onClick={handleApprove}
+                    disabled={isSubmitting || !acceptedTerms}
+                    className="btn-primary"
+                    style={{
+                      width: "100%",
+                      padding: "14px",
+                      justifyContent: "center",
+                      fontSize: "1rem",
+                      background: acceptedTerms ? "linear-gradient(135deg, #4AE3B5, #00C3FF)" : "var(--border)",
+                      color: acceptedTerms ? "var(--bg)" : "var(--muted)",
+                      cursor: acceptedTerms ? "pointer" : "not-allowed",
+                      border: "none",
+                      borderRadius: "8px",
+                      fontWeight: "bold",
+                      transition: "all 0.3s ease",
+                    }}
+                  >
+                    🚀 לתשלום (9.9 ₪) והפעלת קמפיין
+                  </button>
+                  {process.env.NEXT_PUBLIC_PAYMENT_BYPASS === "true" && (
+                    <button
+                      onClick={triggerCampaignLaunch}
+                      disabled={isSubmitting}
+                      style={{
+                        width: "100%",
+                        padding: "10px",
+                        border: "1px dashed #f59e0b",
+                        borderRadius: "8px",
+                        background: "rgba(245,158,11,0.08)",
+                        color: "#f59e0b",
+                        fontSize: "0.8rem",
+                        cursor: isSubmitting ? "not-allowed" : "pointer",
+                      }}
+                    >
+                      🧪 דלג על תשלום (בדיקה בלבד)
+                    </button>
+                  )}
+                </div>
+              )}
+              </div>
             </div>
 
             {/* Chat Input Form */}
@@ -423,39 +889,105 @@ export default function OnboardingPage() {
                 padding: "16px",
                 borderTop: "1px solid var(--border)",
                 display: "flex",
-                gap: "12px",
+                flexDirection: "column",
+                gap: "10px",
                 background: "rgba(13, 15, 21, 0.4)",
               }}
             >
-              <input
-                type="text"
-                placeholder="הקלד כאן הודעה (למשל: אינסטלטור בתל אביב...)"
-                value={inputValue}
-                onChange={(e) => setInputValue(e.target.value)}
-                disabled={isSubmitting || currentState === "COMPLETED"}
-                style={{
-                  flex: 1,
-                  background: "var(--bg)",
-                  border: "1px solid var(--border)",
-                  borderRadius: "var(--radius-pill)",
-                  padding: "12px 20px",
-                  color: "var(--text)",
-                  fontFamily: "var(--font-body), sans-serif",
-                  fontSize: "0.95rem",
-                }}
-              />
-              <button
-                type="submit"
-                disabled={isSubmitting || !inputValue.trim() || currentState === "COMPLETED"}
-                className="btn-primary"
-                style={{
-                  padding: "12px 24px",
-                  fontSize: "0.9rem",
-                  borderRadius: "var(--radius-pill)",
-                }}
-              >
-                שלח
-              </button>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "12px" }}>
+                <div style={{ fontSize: "0.78rem", color: "var(--muted)" }}>
+                  שאלה {progressTurn} מתוך {progressTotal}
+                </div>
+                <div style={{ flex: 1, height: "6px", background: "rgba(255,255,255,0.06)", borderRadius: "999px", overflow: "hidden" }}>
+                  <div
+                    style={{
+                      width: `${Math.round((progressTurn / progressTotal) * 100)}%`,
+                      height: "100%",
+                      background: "linear-gradient(135deg, #4AE3B5, #00C3FF)",
+                      borderRadius: "999px",
+                    }}
+                  />
+                </div>
+              </div>
+              <div style={{ fontSize: "0.82rem", color: "var(--text)", lineHeight: 1.5 }}>
+                {inputHelperText}
+              </div>
+              <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+                {/* Hidden file input — single file for profile photo, multi otherwise */}
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp,image/gif"
+                  multiple={!awaitingProfilePhoto}
+                  style={{ display: "none" }}
+                  onChange={handleUpload}
+                />
+                {/* Upload button */}
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={isSubmitting || isUploading || currentState === "COMPLETED"}
+                  title={awaitingProfilePhoto ? "העלה תמונה מקצועית אחת שלך" : "העלה תמונות וצילומי מסך"}
+                  style={{
+                    background: "var(--subtle)",
+                    border: "1px solid var(--border)",
+                    borderRadius: "50%",
+                    width: "42px",
+                    height: "42px",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    cursor: "pointer",
+                    fontSize: "1.1rem",
+                    flexShrink: 0,
+                    opacity: (isSubmitting || isUploading || currentState === "COMPLETED") ? 0.4 : 1,
+                  }}
+                >
+                  {isUploading ? "⏳" : "📎"}
+                </button>
+                <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "6px" }}>
+                  <input
+                    type="text"
+                    placeholder={inputPlaceholder}
+                    value={inputValue}
+                    onChange={(e) => setInputValue(e.target.value)}
+                    disabled={isSubmitting || currentState === "COMPLETED" || !deliveryModelSelected}
+                    aria-describedby="onboarding-input-helper"
+                    style={{
+                      width: "100%",
+                      background: "var(--bg)",
+                      border: "1px solid var(--border)",
+                      borderRadius: "var(--radius-pill)",
+                      padding: "12px 20px",
+                      color: "var(--text)",
+                      fontFamily: "var(--font-body), sans-serif",
+                      fontSize: "0.95rem",
+                    }}
+                  />
+                  <div
+                    id="onboarding-input-helper"
+                    style={{
+                      fontSize: "0.78rem",
+                      color: "var(--muted)",
+                      lineHeight: 1.5,
+                    }}
+                  >
+                    {inputHelperText}
+                  </div>
+                </div>
+                <button
+                  type="submit"
+                  disabled={isSubmitting || !inputValue.trim() || currentState === "COMPLETED"}
+                  className="btn-primary"
+                  style={{
+                    padding: "12px 24px",
+                    fontSize: "0.9rem",
+                    borderRadius: "var(--radius-pill)",
+                  }}
+                >
+                  שלח
+                </button>
+              </div>
             </form>
           </div>
 
@@ -545,10 +1077,25 @@ export default function OnboardingPage() {
             {/* Campaign Plan Details Panel */}
             <div style={{ ...glass, padding: "24px", flex: 1, display: "flex", flexDirection: "column", gap: "20px" }}>
               <h3 style={{ fontSize: "1.15rem", fontWeight: 700, borderBottom: "1px solid var(--border)", paddingBottom: "12px" }}>
-                אסטרטגיית קמפיין מוצעת (Dror & Tamar)
+                אסטרטגיית הקמפיין שלך
               </h3>
 
-              {currentState === "DIAGNOSING" && (
+              {budgetRecommendation && (
+                <div style={{ border: "1px solid var(--accent-border)", background: "rgba(74,227,181,0.06)", borderRadius: "12px", padding: "16px", direction: "rtl" }}>
+                  <div style={{ color: "var(--muted)", fontSize: "0.8rem" }}>תקציב חודשי מומלץ</div>
+                  <div style={{ color: "var(--accent)", fontSize: "1.7rem", fontWeight: 800, margin: "4px 0 12px" }}>₪{budgetRecommendation.monthlyBudget.toLocaleString()}</div>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px", fontSize: "0.82rem" }}>
+                    <div>כ־{budgetRecommendation.expectedLeads} פניות בחודש</div>
+                    <div>בערך {budgetRecommendation.expectedClients}</div>
+                  </div>
+                  <button type="button" onClick={() => setShowBudgetCalculation(value => !value)} style={{ marginTop: "14px", border: 0, background: "transparent", color: "var(--accent)", cursor: "pointer", padding: 0 }}>
+                    {showBudgetCalculation ? "הסתר את החישוב" : "הצג את החישוב"}
+                  </button>
+                  {showBudgetCalculation && <div style={{ marginTop: "12px", color: "var(--muted)", fontSize: "0.82rem", lineHeight: 1.6 }}>מחיר קליק משוער: ₪{budgetRecommendation.estimatedCpc}. שיעור סגירה משוער: 1 ל-{budgetRecommendation.closeRatioNum}. זמן החזר משוער: כ־{budgetRecommendation.paybackMonths} חודשים.</div>}
+                </div>
+              )}
+
+              {currentState === "DIAGNOSING" && !budgetRecommendation && (
                 <div
                   style={{
                     flex: 1,
@@ -563,10 +1110,10 @@ export default function OnboardingPage() {
                 >
                   <div style={{ fontSize: "2.5rem", marginBottom: "16px" }}>⚙️</div>
                   <p style={{ fontWeight: 600, color: "var(--text)", marginBottom: "8px" }}>
-                    ממתין להשלמת האפיון בצ'אט
+                    ממתין להשלמת האפיון בצ׳אט
                   </p>
                   <p style={{ fontSize: "0.85rem", maxWidth: "260px" }}>
-                    ברגע שנאסוף את כל הפרטים, ה-Specialists ייצרו עבורך את הקמפיין באופן מיידי.
+                    ברגע שנאסוף את כל הפרטים, המערכת תבנה עבורך את הקמפיין באופן מיידי.
                   </p>
                 </div>
               )}
@@ -606,7 +1153,7 @@ export default function OnboardingPage() {
                   {/* Keywords Block */}
                   <div>
                     <h4 style={{ fontSize: "0.9rem", fontWeight: 700, marginBottom: "8px" }}>
-                      🎯 מילות מפתח ממוקדות (Search Term)
+                      🎯 מילות מפתח ממוקדות
                     </h4>
                     <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
                       {strategy?.keywords.map((kw, idx) => (
@@ -714,85 +1261,33 @@ export default function OnboardingPage() {
                     </div>
                   </div>
 
-                  {/* Landing Page Preview */}
-                  <div>
-                    <h4 style={{ fontSize: "0.9rem", fontWeight: 700, marginBottom: "8px", color: "var(--accent)" }}>
-                      📱 תצוגה מקדימה לדף הנחיתה
-                    </h4>
-                    <div style={{
-                      background: "rgba(13, 15, 21, 0.6)",
-                      border: "1px solid var(--border)",
-                      borderRadius: "12px",
-                      padding: "16px",
-                      display: "flex",
-                      flexDirection: "column",
-                      gap: "12px",
-                      position: "relative",
-                      overflow: "hidden"
-                    }}>
-                      <div style={{ display: "flex", justifyContent: "space-between", borderBottom: "1px solid rgba(255,255,255,0.1)", paddingBottom: "8px" }}>
-                        <div style={{ fontSize: "0.8rem", fontWeight: "bold" }}>{collectedData.businessNiche || "העסק שלך"}</div>
-                        <div style={{ fontSize: "0.8rem", color: "var(--muted)" }}>☰</div>
-                      </div>
-                      <div style={{ textAlign: "center", marginTop: "12px" }}>
-                        <h1 style={{ fontSize: "1.4rem", fontWeight: 900, marginBottom: "8px", lineHeight: 1.2 }}>
-                          {copy?.headlines[0] || "הכותרת המנצחת שלך תופיע כאן"}
-                        </h1>
-                        <p style={{ fontSize: "0.9rem", color: "var(--muted)", marginBottom: "16px" }}>
-                          {copy?.descriptions[0] || "כאן יופיע טקסט משכנע המבוסס על ה-USP שלך"}
-                        </p>
-                        <button style={{
-                          background: "linear-gradient(135deg, #4AE3B5, #00C3FF)",
-                          color: "var(--bg)",
-                          border: "none",
-                          padding: "10px 24px",
-                          borderRadius: "20px",
-                          fontWeight: "bold",
-                          fontSize: "0.95rem",
-                          width: "80%"
-                        }}>
-                          התקשר עכשיו
-                        </button>
-                      </div>
-                      <div style={{ marginTop: "16px", background: "rgba(255,255,255,0.03)", borderRadius: "8px", padding: "12px", textAlign: "center" }}>
-                        <div style={{ fontSize: "0.8rem", color: "var(--muted)", marginBottom: "8px" }}>לקוחות ממליצים בוואטסאפ:</div>
-                        <div style={{ display: "flex", gap: "8px", justifyContent: "center" }}>
-                          <div style={{ width: "60px", height: "80px", background: "var(--border)", borderRadius: "4px", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.7rem", color: "var(--muted)" }}>צילום 1</div>
-                          <div style={{ width: "60px", height: "80px", background: "var(--border)", borderRadius: "4px", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.7rem", color: "var(--muted)" }}>צילום 2</div>
-                          <div style={{ width: "60px", height: "80px", background: "var(--border)", borderRadius: "4px", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.7rem", color: "var(--muted)" }}>צילום 3</div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Checkout & Action CTA */}
+                  {/* Checkout & Action CTA — above LP placeholder so it is visible without scrolling */}
                   {currentState === "REVIEWING" && (
                     <div style={{
                       background: "rgba(13, 15, 21, 0.4)",
                       border: "1px solid var(--accent-border)",
                       padding: "20px",
                       borderRadius: "12px",
-                      marginTop: "10px",
                       display: "flex",
                       flexDirection: "column",
                       gap: "16px"
                     }}>
                       <div style={{ textAlign: "center" }}>
-                        <div style={{ fontSize: "0.9rem", color: "var(--muted)" }}>דמי הקמה ותקופת ניסיון</div>
+                        <div style={{ fontSize: "0.9rem", color: "var(--muted)" }}>דמי הקמה חד-פעמיים</div>
                         <div style={{ fontSize: "2rem", fontWeight: 800, color: "var(--text)", margin: "4px 0" }}>9.90 ₪</div>
-                        <div style={{ fontSize: "0.8rem", color: "var(--muted)" }}>תשלום חד-פעמי להפעלת הקמפיין ודף הנחיתה</div>
+                        <div style={{ fontSize: "0.8rem", color: "var(--muted)" }}>תשלום אחד שמקים לך את הקמפיין ודף הנחיתה. חודש הניהול הראשון חינם, ומהחודש השני 249 ₪ בחודש.</div>
                       </div>
-                      
+
                       <label style={{ display: "flex", alignItems: "flex-start", gap: "10px", cursor: "pointer" }}>
-                        <input 
-                          type="checkbox" 
+                        <input
+                          type="checkbox"
                           checked={acceptedTerms}
                           onChange={(e) => setAcceptedTerms(e.target.checked)}
                           style={{ marginTop: "4px", accentColor: "var(--accent)", width: "16px", height: "16px" }}
                         />
                         <span style={{ fontSize: "0.85rem", color: "var(--muted)", lineHeight: "1.4" }}>
-                          אני מאשר/ת את <strong>תנאי השימוש</strong> ומסכים/ה שהשירות מסופק "As-Is".
-                          ידוע לי שההוצאה היומית לגוגל תשולם ישירות מחשבון ה-Ads שייפתח עבורי.
+                          אני מאשר/ת את <strong>תנאי השימוש</strong> ומסכים/ה לתנאי השירות.
+                          ידוע לי שהתקציב הפרסומי לגוגל ייגבה ישירות מאמצעי התשלום שאקשר לחשבון.
                         </span>
                       </label>
 
@@ -816,6 +1311,72 @@ export default function OnboardingPage() {
                       >
                         🚀 לתשלום (9.9 ₪) והפעלת קמפיין
                       </button>
+                      {process.env.NEXT_PUBLIC_PAYMENT_BYPASS === "true" && (
+                        <button
+                          onClick={triggerCampaignLaunch}
+                          disabled={isSubmitting}
+                          style={{
+                            width: "100%",
+                            padding: "10px",
+                            border: "1px dashed #f59e0b",
+                            borderRadius: "8px",
+                            background: "rgba(245,158,11,0.08)",
+                            color: "#f59e0b",
+                            fontSize: "0.8rem",
+                            cursor: isSubmitting ? "not-allowed" : "pointer",
+                          }}
+                        >
+                          🧪 דלג על תשלום (בדיקה בלבד)
+                        </button>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Landing Page Preview — 340px iframe/spinner only when there is content; compact note otherwise */}
+                  {(lpUrl || lpGenerating) ? (
+                    <div>
+                      <h4 style={{ fontSize: "0.9rem", fontWeight: 700, marginBottom: "8px", color: "var(--accent)" }}>
+                        📱 דף הנחיתה שלך
+                      </h4>
+                      <div style={{
+                        border: "1px solid var(--border)",
+                        borderRadius: "12px",
+                        overflow: "hidden",
+                        height: "340px",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        background: "rgba(13, 15, 21, 0.6)",
+                      }}>
+                        {lpUrl ? (
+                          <iframe
+                            src={lpUrl}
+                            style={{ width: "100%", height: "100%", border: "none" }}
+                            title="דף הנחיתה שלך"
+                          />
+                        ) : (
+                          <div style={{ textAlign: "center", color: "var(--muted)", padding: "24px" }}>
+                            <div style={{ fontSize: "1.8rem", marginBottom: "12px" }}>⚙️</div>
+                            <div style={{ fontWeight: 600, color: "var(--text)", marginBottom: "6px" }}>בונה את הדף שלך...</div>
+                            <div style={{ fontSize: "0.82rem" }}>זה ייקח כמה שניות</div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ) : (
+                    <div style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "8px",
+                      padding: "10px 14px",
+                      borderRadius: "8px",
+                      background: "rgba(13, 15, 21, 0.4)",
+                      border: "1px solid var(--border)",
+                      color: "var(--muted)",
+                      fontSize: "0.85rem",
+                    }}>
+                      <span>🖥️</span>
+                      <span>הדף ייבנה אוטומטית לאחר התשלום</span>
                     </div>
                   )}
 
@@ -833,7 +1394,7 @@ export default function OnboardingPage() {
                             🎉 הדף שלך מוכן!
                           </div>
                           <a
-                            href={lpUrl}
+                            href={lpUrl || '#'}
                             target="_blank"
                             rel="noopener noreferrer"
                             style={{ background: "var(--accent)", color: "var(--bg)", padding: "12px 20px", borderRadius: "var(--radius-pill)", fontWeight: 700, fontSize: "0.95rem", textAlign: "center", textDecoration: "none", display: "block" }}
@@ -841,13 +1402,13 @@ export default function OnboardingPage() {
                             👉 צפה בדף הנחיתה שלך
                           </a>
                           <div style={{ fontSize: "0.75rem", color: "var(--muted)", textAlign: "center", wordBreak: "break-all" }}>
-                            wao.co.il{lpUrl}
+                            {lpUrl}
                           </div>
                         </div>
                       )}
                       {!lpGenerating && !lpUrl && (
                         <div style={{ background: "rgba(74,227,181,0.08)", border: "1px solid var(--accent-border)", borderRadius: "var(--radius-sm)", padding: "16px", color: "var(--accent)", textAlign: "center", fontWeight: "bold", fontSize: "0.95rem" }}>
-                          🎉 הקמפיין באוויר! בדוק את תיבת המייל שלך להזמנת הניהול.
+                          🎉 הקמפיין באוויר! בדוק את תיבת המייל שלך לסיכום ופרטים על מה קורה עכשיו.
                         </div>
                       )}
                     </div>
@@ -866,24 +1427,6 @@ export default function OnboardingPage() {
         </div>
       </div>
 
-      {/* Embedded CSS for custom styling (soundwave bars, etc) */}
-      <style jsx global>{`
-        .soundwave-bar {
-          width: 3px;
-          height: 10px;
-          background-color: var(--accent);
-          border-radius: 2px;
-          animation: pulse 1s ease-in-out infinite alternate;
-        }
-        @keyframes pulse {
-          0% {
-            transform: scaleY(1);
-          }
-          100% {
-            transform: scaleY(1.8);
-          }
-        }
-      `}</style>
     </div>
   );
 }
