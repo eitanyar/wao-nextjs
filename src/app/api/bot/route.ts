@@ -245,31 +245,32 @@ function generateFallbackStrategyAndCopy(data: CollectedData) {
 // slot off from where it belongs — this exact drift (missing T2b/ownerName)
 // corrupted real intake sessions; see wao-client-1.json / wao-client-8vxf.json.
 const TURN_QUESTIONS: Record<number, string> = {
-  0: "יאללה, בוא נתחיל — ספר לי קצת על העסק שלך. ומכל מה שאתה עושה, מה הכי מכניס לך כסף?",
-  1: "ואיך קוראים לעסק?\n(אם אין שם עסק — השם שלך הוא המותג)",
-  2: "ומה שמך הפרטי?",
+  0: "יאללה, בוא נתחיל — ספר לי על התחום שלך. מה השם שכולם קוראים לו בזירת העבודה? (לא את התואר — אלא את השם האמיתי של התחום.)",   1: "ואיך קוראים לעסק?\n(אם אין שם — השם שלך הוא המותג)\nיופי!",
+  2: "שם יפה! ומה שמך הפרטי?",
   3: "יש עוד שירותים שאתה נותן? לא ניגע בהם עכשיו, אבל הם מחזקים את הדף שלך ונחזור אליהם בהמשך.",
-  4: "יופי. ואיך זה עובד בדרך כלל — אתה מגיע אל הלקוח, הלקוח מגיע אליך, שניהם, או מרחוק?",
-  5: "באילו ערים ושכונות ספציפיות אתה נותן שירות? (ככל שתפרט יותר, כך גוגל ידרג אותך טוב יותר)",
-  6: "תחשוב על לקוח טוב שפנה אליך לאחרונה — מי זה?\nומה הכי הטריד אותו רגע לפני שהרים אליך טלפון?",
-  7: "מה הכי שואלים אותך ברגע שמתקשרים? תן לי 2-3 שאלות שחוזרות.",
-  8: "ובכנות גמורה — למה שיבחרו דווקא בך, ולא במישהו אחר שעושה אותו דבר?",
-  9: "כמה שנים אתה בתחום? ויש לך אחריות על השירות שלך — לכמה זמן, ומה קורה אם לקוח לא מרוצה?",
-  10: "התחום שלך דורש רישוי רשמי כלשהו?\nלמשל רישיון ממשרד ממשלתי, חברות בלשכה מקצועית, או תעודה מוכרת?\nאם כן — מה זה ומה המספר? אם לא — פשוט תגיד ״לא״.",
-  11: "יש סוגי פניות שאתה מעדיף לא לקבל?\nשירות שאתה לא מציע, סוג לקוח שאתה לא עובד איתו, או אזורים שאתה לא מגיע אליהם?",
-  12: "והלקוחות שלך — רובם צריכים אותך כאן ועכשיו,\nזה משהו שהם בודקים לפני שמחליטים,\nאו שהם מתכננים מראש שבועות וחודשים קדימה?",
-  13: "אתה נותן הצעת מחיר חינם לפני שמתחילים?\nיש דמי הגעה אם בסוף לא נסגרה עסקה?",
-  14: "עיקר ההכנסה שלך מגיעה מ —\nשירות חד-פעמי לכל לקוח, חוזה שוטף/חוזר, או שניהם?",
-  15: "שאלה על כסף, רק כדי שנשמור על התקציב שלך —\nכמה שווה לך לקוח חדש בממוצע, בפעם הראשונה שהוא משלם לך?",
-  16: "יופי. עכשיו בוא נבדוק כמה קל לך לסגור אותו.\nתחשוב על עשרה אנשים שמתקשרים אליך —\nכמה מהם, בסוף, הופכים ללקוחות שמשלמים?\n(כולל כל השלבים — מהשיחה הראשונה עד סגירה בפועל)",
-  17: "תגיד לי — לקוח שעשית לו עבודה טובה, בדרך כלל חוזר אליך?\nמתקשר שוב כשמתפוצץ לו משהו אחר, או שולח אליך שכנים וחברים?",
-  18: "רגע לפני שנדבר על תקציב — יש לך ביקורות בגוגל?\nאם כן, כמה ביקורות יש לך ומה הדירוג? (לדוגמה: 4.9 כוכבים, 35 ביקורות)\nאם עדיין אין — פשוט תגיד ״אין״.",
-  19: "__budget_recommendation__",
-  20: "נשמע שאתה עושה עבודה טובה — אז בטוח יש לך לקוחות מרוצים.\nיש לך ביקורות או המלצות איפשהו?\nבגוגל, בוואטסאפ, צילומי מסך — כל דבר.\nואם יש לך גם תמונות מהעבודה — זה ממש זהב בשבילנו.",
-  21: "מעולה. תביא לי ביקורת אחת או שתיים מגוגל שאתה גאה בהן —\nהעתק-הדבק בדיוק מה שהלקוח כתב.\nומה הדירוג שלך בגוגל? (לדוגמה: 4.9 כוכבים, 64 ביקורות)",
-  22: "אם יתחילו לפנות אליך עוד לקוחות, כמה עבודה נוספת אתה באמת יכול לקחת בלי לפגוע בשירות?\nאפשר לענות למשל: 3 עבודות בשבוע, 10 תורים בחודש, או 2 פרויקטים בחודש.",
-  23: "ואחרון — איך הכי נוח לך שיתפסו אותך?\nשיתקשרו, וואטסאפ, שימלאו טופס, או שיכתבו באינסטגרם?",
-  24: "מה המספר שיופיע על כפתור ״התקשר עכשיו״?\nומה מספר הוואטסאפ?\n(יכולים להיות זהים — רק תגיד לי)",
+  4: "איך זה עובד בדרך כלל? אתה מגיע ללקוח, הלקוח מגיע אליך, שניהם, או מרחוק?\nתגיד לי!",
+  5: "באילו ערים ושכונות ספציפיות אתה נותן שירות?\nתשמע!",
+  6: "נשמע מעולה! באזורים האלה — תחשוב על לקוח טוב שפנה אליך לאחרונה. מי זה?\nומה הכי הטריד אותו רגע לפני שהרים אליך טלפון?",
+  7: "מה נותן לך את התחושה שהיום היה יום טוב בתחום שלך?\n(לא צריך לענות עכשיו — אבל אם עולה בראש, תגיד לי.)",
+  8: "מה הכי שואלים אותך כשמתקשרים? תן לי 2–3 שאלות שחוזרות.",
+  9: "ובכנות גמורה — למה שיבחרו דווקא בך, ולא במישהו אחר שעושה אותו דבר?",
+  10: "כמה שנים אתה בתחום?",
+  11: "התחום שלך דורש רישוי רשמי? למשל רישיון ממשרד ממשלתי, חברות בלשכה מקצועית, או תעודה מוכרת?\nאם כן — מה זה ומה המספר? אם לא — פשוט תגיד ״לא״.",
+  12: "יש סוגי פניות שאתה מעדיף לא לקבל?\nשירות שאתה לא מציע? סוג לקוח שאתה לא עובד איתו? או אזורים שאתה לא מגיע אליהם?",
+  13: "אם היית מדבר עם מישהו מהתחום שלך שרק מתחיל — מה היית אומר לו על הדרך הכי טובה להיכנס אליו *כשאתה כבר פה*?",
+  14: "והלקוחות שלך — רובם צריכים אותך כאן ועכשיו,\nאו שהם מתכננים מראש?",
+  15: "אתה נותן הצעת מחיר חינם לפני שמתחילים?\nיש דמי הגעה אם בסוף לא נסגרה עסקה?",
+  16: "עיקר ההכנסה שלך מגיעה מ —\nשירות חד-פעמי לכל לקוח, חוזה שוטף/חוזר, או שניהם?",
+  17: "שאלה על כסף, רק כדי שנשמור על התקציב שלך —\nכמה שווה לך לקוח חדש בממוצע, בפעם הראשונה שהוא משלם לך?",
+  18: "יופי. עכשיו בוא נבדוק כמה קל לך לסגור אותו.\nתחשוב על עשרה אנשים שמתקשרים אליך —\nכמה מהם, בסוף, הופכים ללקוחות שמשלמים?\n(כולל כל השלבים — מהשיחה הראשונה עד סגירה בפועל)",
+  19: "תגיד לי — לקוח שעשית לו עבודה טובה, בדרך כלל חוזר אליך?\nמתקשר שוב כמתפוצץ לו משהו אחר, או שולח אליך שכנים וחברים?",
+  20: "נשמע מעולה! יש לך ביקורות בגוגל?\n(אם כן — כמה ויש מה הדירוג? אם לא — רק תגיד 'אין')",
+  21: "__budget_recommendation__",
+  22: "נשמע שאתה עושה עבודה טובה — אז בטוח יש לך לקוחות מרוצים.\nלחצ על 📎 ותעלה צילום מסך מגוגל / מהוואטסאפ / מהעבודה — ישירות מהטלפון.\nאם יותר נוח, אפשר גם להעתיק ולהדביק ביקורת.",
+  23: "מעולה. תביא לי ביקורת אחת או שתיים מגוגל שאתה גאה בהן —\nהעתק-הדבק בדיוק מה שהלקוח כתב.\nומה הדירוג שלך בגוגל? (לדוגמה: 4.9 כוכבים, 64 ביקורות)",
+  24: "אם יתחילו לפנות אליך עוד לקוחות — כמה עבודה נוספת תוכל לקחת? בלי לפגוע בשירות, כמובן.\nאפשר לענות למשל: 3 עבודות בשבוע, 10 תורים בחודש, או 2 פרויקטים בחודש.",
+  25: "ואחרון — איך הכי נוח לך שיתפסו אותך?\nשיתקשרו, וואטסאפ, שימלאו טופס, או שיכתבו באינסטגרם?",
+  26: "מה המספר שיופיע על כפתור 'התקשר עכשיו'?\nומה מספר הוואטסאפ?\n(יכולים להיות זהים — רק תגיד לי)",
 };
 
 type InferredServiceModel = "field" | "location" | "event" | "remote" | null;
@@ -365,8 +366,17 @@ function handleSimulation(
             collectedData: data,
             isSimulation: true,
           });
+        } else {
+          // Fallback: advance to next turn normally
+          data.turnIndex = 4;
+          return NextResponse.json({
+            response: TURN_QUESTIONS[4],
+            currentState: nextState,
+            collectedData: data,
+            isSimulation: true,
+          });
         }
-        break;
+
       case 4:
         if (text.includes("מגיע") && text.includes("לקוח")) data.serviceModel = "field";
         else if (text.includes("לקוח מגיע") || text.includes("מגיע אלי")) data.serviceModel = "location";
@@ -374,6 +384,40 @@ function handleSimulation(
         else if (text.includes("זום") || text.includes("מרחוק") || text.includes("טלפון")) data.serviceModel = "remote";
         else if (text.includes("שניהם") || text.includes("גם")) data.serviceModel = "mixed";
         else data.serviceModel = "field";
+
+        // ── PACE→LEAD CONNECTION MOMENTS (additive only, after service answer)
+        // Insert pace→lead moments only in turns 2-5, skip when uncertain
+        if (data.turnIndex === 4 && data.businessNiche && data.serviceModel) {
+          const nicheLower = data.businessNiche.toLowerCase();
+          let paceLeadResponse = "";
+          
+          // Hands-on trades (plumber, electrician, locksmith, mechanic, gardener, mover, AC)
+          if (["אינסטל", "שרברב", "נזיל", "חשמלא", "מזגן", "הדבר", "מדביר", "מנעול", "דוד", "ביוב", "ניקוי", "טכנאי", "שיפוצ"].some(k => nicheLower.includes(k))) {
+            paceLeadResponse = "את המקצוע שלך AI כנראה לא יחליף.\nאבל תראה איך הוא מחליף לך את הקמפיינר.";
+          }
+          // Creative professionals (photographer, designer, stylist)
+          else if (["צלם", "צילום", "עיצוב", "גרפיק", "עיצוב גרפי", "עיצוב פנים"].some(k => nicheLower.includes(k))) {
+            paceLeadResponse = "העיניכם זה המוצר — אף אחד לא יכול להעתיק את האינטואיציה שלכם.\nאז נבנה דף שמביא יותר אנשים לראות את מה שאתם רואים.";
+          }
+          // Human-connection professionals (trainer, tutor, therapist)
+          else if (["מורה", "מאמן", "מטפל", "יוגה", "פילאטיס", "פסיכולוג", "קואצ'ר", "הדרכה", "לימוד"].some(k => nicheLower.includes(k))) {
+            paceLeadResponse = "הלקוחות באים אליך כי מישהו סיפר עליך — לא בגלל פרסומת.\nאז נגביר את זה — נביא יותר אנשים שיביאו אותך לכולם.";
+          }
+          // Emergency-driven (locksmith, tow, AC repair)
+          else if (["מנעולן", "תעבורה", "מזגן", "הבהרה", "אחזקה"].some(k => nicheLower.includes(k))) {
+            paceLeadResponse = "הזמן הוא הכל — והלקוח מחפש אותך ברגע של לחץ, לא מראש.\nאז נשים אותך בדיוק שם — בראש תוצאות החיפוש ברגע שכולם מחפשים.";
+          }
+          
+          if (paceLeadResponse) {
+            response = `${paceLeadResponse}\n\n${TURN_QUESTIONS[5]}`;
+            return NextResponse.json({
+              response,
+              currentState: nextState,
+              collectedData: data,
+              isSimulation: true,
+            });
+          }
+        }
         break;
       case 5:
         data.targetLocation = text;
@@ -387,6 +431,22 @@ function handleSimulation(
         break;
       case 8:
         data.usp = text;
+        // Generate copy early — for RSA preview
+        console.log('DEBUG: data =', data);
+        if (data.businessNiche && data.specificCities && data.usp) {
+          const fallback = generateFallbackStrategyAndCopy(data);
+          copy = fallback.copy;
+          console.log('DEBUG: copy generated =', copy);
+        } else {
+          console.log('DEBUG: missing fields — businessNiche:', !!data.businessNiche, 'specificCities:', !!data.specificCities, 'usp:', !!data.usp);
+        }
+        return NextResponse.json({
+          response: TURN_QUESTIONS[9],
+          currentState,
+          collectedData: data,
+          copy,
+          isSimulation: true,
+        });
         break;
       case 9:
         data.yearsInField = text;
@@ -449,7 +509,7 @@ function handleSimulation(
         if (isLocksmith) {
           data.turnIndex = 19;
           return NextResponse.json({
-            response: `רגע, לפני שנמשיך — יש משהו חשוב שאני חייב לשתף איתך.\n\nתחום המנעולנות הוא מהאתגרים הגדולים בגוגל Search: עלות הקליק גבוהה, העבודה הממוצעת נמוכה יחסית, ורוב הלקוחות לא חוזרים. המתמטיקה לא מטיבה עם Search רגיל.\n\nמה שעובד טוב יותר למנעולן זה **Google Local Services Ads** — אתה משלם רק על שיחות אמיתיות, מופיע עם תג ״מאומת על ידי גוגל״, ועלות לפנייה נמוכה בהרבה. רוצה שנדבר על איך להקים את זה במקום?`,
+            response: `רגע, לפני שנמשיך — יש משהו חשוב שאני חייב לשתף איתך.\n\nתחום המנעולנות הוא מהאתגרים הגדולים בגוגל Search. עלות הקליק גבוהה, העבודה הממוצעת נמוכה יחסית, ורוב הלקוחות לא חוזרים. המתמטיקה לא מטיבה עם Search רגיל.\n\nמה שעובד טוב יותר למנעולן זה **Google Local Services Ads**. אתה משלם רק על שיחות אמיתיות. אתה מופיע עם תג ״מאומת על ידי גוגל״. ועלות לפנייה — נמוכה בהרבה. רוצה שנדבר על איך להקים את זה במקום?`,
             currentState,
             collectedData: data,
             isSimulation: true,
@@ -471,7 +531,7 @@ function handleSimulation(
           ? "פחות מלקוח אחד"
           : `${Math.round(clientsPerMonth * 10) / 10} לקוחות`;
         const ltvLine = data.hasRepeatClients
-          ? `\n\nאבל בוא נסתכל על התמונה הגדולה — לקוח שחוזר ומפנה שווה לך פי כמה מהעבודה הראשונה, וכל חודש שאתה רץ בגוגל, עוד אנשים באזור מתחילים לזהות את השם שלך.`
+          ? `\n\nאבל בוא נסתכל על התמונה הגדולה — לקוח שחוזר ומפנה שווה לך פי כמה מהעבודה הראשונה. וכל חודש שאתה רץ בגוגל, עוד אנשים באזור מתחילים לזהות את השם שלך.`
           : "";
 
         data.turnIndex = 19;
@@ -502,7 +562,7 @@ function handleSimulation(
             budget17 = vb17.recommended;
           } else {
             return NextResponse.json({
-              response: `כמה בחודש אתה חושב להשקיע? (גם ₪${vb17.min.toLocaleString()} — אני אסביר מה אפשר לצפות ממנו)`,
+              response: `כמה בחודש אתה חושב להשקיע? (גם ₪${vb17.min.toLocaleString()} — אני אشرح מה אפשר לצפות ממנו)`,
               currentState,
               collectedData: data,
               isSimulation: true,
@@ -526,10 +586,10 @@ function handleSimulation(
           budgetResponse = `מעולה — ₪${budget17.toLocaleString()} זה תקציב שעובד בתחום שלך. עם הקצב הזה, תחזיר את עלות הפרסום תוך כ-${paybackStr17} — וכל שאר הלקוחות רווח נקי.`;
         } else if (budget17 >= vb17.min) {
           data.feasibilityBranch = "B";
-          budgetResponse = `אוקיי, ₪${budget17.toLocaleString()} — tight אבל אפשרי. תקבל פחות פניות, אז כל אחת חשובה. נתכנן קמפיין מאוד ממוקד.`;
+          budgetResponse = `אוקי, ₪${budget17.toLocaleString()} — צמוד אבל אפשרי. תקבל פחות פניות, אז כל אחת חשובה. נתכנן קמפיין מאוד ממוקד.`;
         } else {
           data.feasibilityBranch = "B";
-          budgetResponse = `הבנתי, ₪${budget17.toLocaleString()}. זה מתחת למינימום שאני ממליץ בתחום שלך (₪${vb17.min.toLocaleString()}), אבל בוא נצא לדרך — נתכנן קמפיין מאוד סלקטיבי ונבדוק אם זה מביא תוצאות.`;
+          budgetResponse = `הבנתי, ₪${budget17.toLocaleString()}. זה מתחת למינימום שאני ממליץ בתחום שלך (₪${vb17.min.toLocaleString()}). אבל בוא נצא לדרך — נתכנן קמפיין מאוד סלקטיבי ונבדוק אם זה מביא תוצאות.`;
         }
 
         data.turnIndex = 20;
@@ -546,7 +606,7 @@ function handleSimulation(
         if (!hasAssets) {
           data.turnIndex = 22; // skip review-quote question, go to capacity
           return NextResponse.json({
-            response: `הבנתי — אין עדיין ביקורות. לא נורא, נבנה דף נחיתה חזק גם בלי זה, ואחרי שייצאו הלקוחות הראשונים מהקמפיין — נוסיף ביקורות ונשפר.\n\n${TURN_QUESTIONS[22]}`,
+            response: `הבנתי — אין עדיין ביקורות. לא נורא, נבנה דף נחיתה חזק גם בלי זה. ואחרי שייצאו הלקוחות הראשונים מהקמפיין — נוסיף ביקורות ונשפר.\n\n${TURN_QUESTIONS[22]}`,
             currentState,
             collectedData: data,
             isSimulation: true,
@@ -586,7 +646,7 @@ function handleSimulation(
         // free text (e.g. "העלאתי 1 תמונות") from ever landing in `phone`.
         if (!isPlausiblePhoneAnswer(text)) {
           return NextResponse.json({
-            response: "זה לא נראה לי כמו מספר טלפון תקין — אפשר לכתוב את המספר שיופיע על כפתור ההתקשרות? (למשל 050-1234567)",
+            response: "זה לא נראה לי כמו מספר טלפון תקין. אפשר לכתוב את המספר שיופיע על כפתור ההתקשרות? (למשל 050-1234567)",
             currentState,
             collectedData: data,
             isSimulation: true,
@@ -602,7 +662,7 @@ function handleSimulation(
         data.turnIndex = 25;
 
         return NextResponse.json({
-          response: `מצוין! אספתי את כל הפרטים שצריך.\nבנינו עבורך תוכנית קמפיין מותאמת אישית — הכוללת דף נחיתה שמבוסס על כל מה שסיפרת לי.\nאתה יכול לראות את כל הפרטים בכרטיסייה.\n\nהאם הכל נראה לך טוב ואתה מאשר להמשיך לתשלום של 9.9 ש״ח?`,
+          response: `מצוין! אספתי את כל הפרטים שצריך.\nהכנתי לך תוכנית קמפיין מותאמת אישית — כולל דף נחיתה שמבוסס על כל מה שסיפרת לי.\nאתה יכול לראות את כל הפרטים בכרטיסייה.\n\nהכל נראה לך טוב? אתה מאשר להמשיך לתשלום של 9.9 ש״ח?`,
           currentState: "REVIEWING",
           collectedData: data,
           strategy,
@@ -635,7 +695,7 @@ function handleSimulation(
 
     if (isApproved) {
       nextState = "REVIEWING"; // stays REVIEWING until Ya'ad payment callback fires
-      response = `מצוין — הכל נראה טוב.\n\nכדי להפעיל את הקמפיין ולהעלות את דף הנחיתה שלך, לחץ על כפתור **"🚀 לתשלום (9.9 ₪)"** שמופיע בצד ימין של המסך.\n\nזה מה שמתניע את הכל — החשבון, הקמפיין, והדף.`;
+      response = `מצוין — הכל נראה טוב.\n\nרוצה להפעיל את הקמפיין ולהעלות את דף הנחיתה? לחץ על כפתור **"🚀 לתשלום (9.9 ₪)"** שמופיע בצד ימין של המסך.\n\nזה מה שמתניע את הכל — החשבון, הקמפיין, והדף.`;
     } else {
       response = "הבנתי. אם תרצה לשנות משהו — תקציב, מיקוד, נוסח המודעה — פשוט תגיד לי. אם הכל בסדר, תגיד ״אישור״ כדי שנתקדם.";
     }
@@ -815,7 +875,44 @@ async function callGemini(
   if (typeof text !== "string") {
     throw new Error(`Gemini API returned unexpected shape: ${JSON.stringify(data)}`);
   }
-  return JSON.parse(text);
+
+  // Gemini sometimes returns JSON + trailing whitespace/comments/newlines
+  // Extract first valid JSON object from the string (ES5-compatible, balanced braces)
+  let depth = 0;
+  let start = -1;
+  let end = -1;
+
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    if (c === '{' && depth === 0) {
+      start = i;
+      depth++;
+    } else if (c === '{' && depth > 0) {
+      depth++;
+    } else if (c === '}') {
+      depth--;
+      if (depth === 0 && start !== -1) {
+        end = i;
+        break;
+      }
+    }
+  }
+
+  if (start === -1 || end === -1) {
+    throw new Error(`Gemini API returned text with no balanced JSON object: ${text.substring(0, 200)}`);
+  }
+
+  const jsonStr = text.substring(start, end + 1);
+
+  try {
+    return JSON.parse(jsonStr);
+  } catch (e) {
+    if (e instanceof Error) {
+      throw new Error(`Gemini API returned malformed JSON: ${jsonStr.substring(0, 200)} — ${e.message}`);
+    } else {
+      throw new Error(`Gemini API returned malformed JSON: ${jsonStr.substring(0, 200)} — unknown error`);
+    }
+  }
 }
 
 async function handleGemini(
@@ -936,7 +1033,7 @@ IMPORTANT: End your message with EXACTLY this sentence (no variation):
 Vertical: ${collectedData.businessNiche} | Recommended: ₪${vbHint.recommended} | Min: ₪${vbHint.min}
 ${cpcLabel}
 At ₪${vbHint.recommended}/month: expectedLeads = ${hintLeads}, clientsPerMonth ≈ ${hintClients.toFixed(1)}, paybackMonths = ${hintPayback}, closeRatioDisplay = "1 ל-${hintRatio}"
-Present ₪${vbHint.recommended} as: "בסביבות ${hintLeads} פניות בחודש. עם שיעור סגירה של 1 ל-${hintRatio}, זה אומר כ-${hintClients < 1 ? "פחות מלקוח אחד" : hintClients.toFixed(1) + " לקוחות"} בחודש — ותחזיר את ההשקעה תוך כ-${hintPayback === 1 ? "חודש אחד" : hintPayback + " חודשים"}. כל שאר הלקוחות — רווח נקי."`;
+Present ₪${vbHint.recommended} as: "בסביבות ${hintLeads} פניות בחודש. עם שיעור סגירה של 1 ל-${hintRatio} — זה אומר כ-${hintClients < 1 ? "פחות מלקוח אחד" : hintClients.toFixed(1) + " לקוחות"} בחודש. ותחזיר את ההשקעה תוך כ-${hintPayback === 1 ? "חודש אחד" : hintPayback + " חודשים"}. כל שאר הלקוחות — רווח נקי."`;
 
     // If user already chose a different budget, pre-compute their numbers too
     const chosenBudget = collectedData.monthlyBudget;
@@ -992,6 +1089,14 @@ Present ₪${chosenBudget} as: "עם ₪${chosenBudget} תקבל בסביבות 
     .filter(m => m.role !== "system")
     .map(m => ({ role: toGeminiRole(m.role), parts: [{ text: m.content }] }));
 
+  // Gemini requires at least one content item — guard against empty messages array
+  if (geminiContents.length === 0) {
+    geminiContents.push({
+      role: "user",
+      parts: [{ text: "היכלנו! בוא נתחיל את השיחה. מה שמו של העסק שלך?" }],
+    });
+  }
+
   const content = await callGemini(apiKey, systemInstruction, geminiContents);
 
   return NextResponse.json({ ...content, isSimulation: false });
@@ -1002,6 +1107,7 @@ Present ₪${chosenBudget} as: "עם ₪${chosenBudget} תקבל בסביבות 
 export async function POST(req: Request) {
   try {
     const body: RequestData = await req.json();
+    console.log("[BOT API] Incoming request body:", JSON.stringify(body, null, 2));
     const { messages, currentState, collectedData, sessionId } = body;
     const lastUserMessage = messages[messages.length - 1]?.content || "";
 
@@ -1029,7 +1135,9 @@ export async function POST(req: Request) {
       })
       .catch(() => {});
 
-    return result;
+    // Ensure clean JSON serialization — avoid partial writes
+    const jsonResponse = await result.json();
+    return NextResponse.json(jsonResponse);
   } catch (error: any) {
     console.error("Bot API error:", error);
     return NextResponse.json({ error: error.message || "Internal server error" }, { status: 500 });
