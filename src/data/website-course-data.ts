@@ -128,7 +128,7 @@ export const WEBSITE_COURSE_MODULES: WebsiteModule[] = [
         description:
           "הפער בין המילים שבהן אתה מתאר את העסק שלך לבין המילים שבהן הלקוח שלך מחפש בגוגל. שרברב מול אינסטלטור, ולמה שתי המילים שייכות לתוכן שלך",
         duration: "2:44",
-        videoSrc: "/media/videos/website-lesson-6.mp4",
+        videoId: "WODi7jcgHT4",
         thumbnail: "/media/thumbnails/website-lesson-6.jpg",
         activeTask:
           "תוריד את דף העבודה ״מתרגם השפה״ מקישור השיעור. הדף כולל את הדוגמאות של אבי, כדי שתבין את השיטה. תמלא את שתי העמודות במילים האמיתיות של העסק שלך. תשמור את הקובץ — תצטרך אותו בשיעור הבא.",
@@ -140,7 +140,7 @@ export const WEBSITE_COURSE_MODULES: WebsiteModule[] = [
         description:
           "נוסחת כותרת התג ב-5 חלקים: מילת מפתח, עיר, יתרון אחד, שם העסק בסוף, ובין 50 ל-60 תווים. איך לכתוב אותה מחדש לדף הבית עם פרומפט AI",
         duration: "1:59",
-        videoSrc: "/media/videos/website-lesson-7.mp4",
+        videoId: "Pc_1SYfZCmU",
         thumbnail: "/media/thumbnails/website-lesson-7.jpg",
         activeTask:
           "תפתח את דף הבית שבנית במודול 2. תשתמש בפרומפט ותכתוב שלוש גרסאות לכותרת. תבדוק כל גרסה לפי הנוסחה: מילת מפתח ראשונה, עיר, יתרון אחד, שם העסק בסוף. תספור תווים — בין 50 ל-60. תשמור את הכותרת שבחרת.",
@@ -152,7 +152,7 @@ export const WEBSITE_COURSE_MODULES: WebsiteModule[] = [
         description:
           "היררכיית כותרות בתוך העמוד (H1/H2/H3) כתוכן עניינים לבן אדם ולגוגל. כותרת ראשית אחת שתואמת את מילת המפתח, כותרות משנה ברורות, בלי דילוג רמות ובלי מילוי מילות מפתח",
         duration: "2:35",
-        videoSrc: "/media/videos/website-lesson-8.mp4",
+        videoId: "TVaxaaqvrw4",
         thumbnail: "/media/thumbnails/website-lesson-8.jpg",
         activeTask:
           "תפתח את העמוד הראשון מתוך החמישה שלך. תריץ עליו בדיקה: כותרת ראשית אחת, כותרות משנה ברורות, בלי דילוג רמות. נכשל באחד מהם? תשלח ל-AI את פרומפט התיקון. תחזור על התהליך על כל חמשת העמודים, ותשמור כל עמוד אחרי התיקון.",
@@ -164,7 +164,7 @@ export const WEBSITE_COURSE_MODULES: WebsiteModule[] = [
         description:
           "מתי כדאי לפצל שירות לעמוד נפרד ומתי להשאיר אותו ממוזג: כלל ההכרעה הוא האם לקוח מחפש את השירות הזה בשמו המדויק בגוגל",
         duration: "2:56",
-        videoSrc: "/media/videos/website-lesson-9.mp4",
+        videoId: "vNDJy8fFrAQ",
         thumbnail: "/media/thumbnails/website-lesson-9.jpg",
         activeTask:
           "תרשום רשימה של כל השירותים שהעסק שלך נותן. ליד כל אחד תסמן ״עמוד נפרד״ או ״ממוזג״. תבחר שירות אחד שסימנת ״עמוד נפרד״ ועדיין אין לו עמוד, ותריץ עליו את פרומפט הבנייה. תשמור את הטיוטה, ותעביר עליה כותרת וכותרות משנה לפי שני השיעורים הקודמים.",
@@ -185,7 +185,7 @@ export const WEBSITE_COURSE_MODULES: WebsiteModule[] = [
         description:
           "מה זה \"תשובת AI\" ואיך היא שונה מעמוד תוצאות עם עשרה קישורים כחולים. למה להיות המקור המצוטט חשוב היום כמו (ולפעמים יותר מ-) דירוג ראשון",
         duration: "2:39",
-        videoSrc: "/media/videos/website-lesson-10.mp4",
+        videoId: "k3jUIYvkt6o",
         thumbnail: "/media/thumbnails/website-lesson-10.jpg",
         activeTask:
           "תוריד את דף העבודה ״שאלת הלקוח שלי״ מקישור השיעור. תכתוב עליו שאלה אחת אמיתית, במילים של הלקוח ולא במילים שלך. תשמור אותו — תצטרך אותו בשיעור הבא, כשתהפוך אותו לשאלת FAQ.",
@@ -370,8 +370,8 @@ export const WEBSITE_COURSE_INTRO: WebsiteLesson = {
   title: "לפני שנתחיל: מי בעצם מדבר אליך",
   description:
     "לפני השיעור הראשון: היכרות קצרה עם הצוות שמלווה אותך לאורך הקורס, ועם הרעיון שעומד מאחורי WAO — לא סוכנות שיווק, אלא מערכת ההפעלה של העסק הקטן",
-  duration: "2:08",
-  videoSrc: "/media/videos/website-lesson-0.mp4",
+  duration: "1:38",
+  videoId: "HKb_PIjmQ58",
   thumbnail: "/media/thumbnails/website-lesson-0.jpg",
   activeTask: "",
   uiGuides: [],
