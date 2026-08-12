@@ -291,15 +291,34 @@ def get_or_create_playlist(yt):
     return pid
 
 
-def add_to_playlist(yt, playlist_id, video_id):
-    yt.playlistItems().insert(
-        part='snippet',
-        body={'snippet': {
-            'playlistId': playlist_id,
-            'resourceId': {'kind': 'youtube#video', 'videoId': video_id},
-        }}
-    ).execute()
-    print(f'  Added {video_id} to playlist.')
+def add_to_playlist(yt, playlist_id, video_id, position=None):
+    snippet = {
+        'playlistId': playlist_id,
+        'resourceId': {'kind': 'youtube#video', 'videoId': video_id},
+    }
+    if position is not None:
+        snippet['position'] = position
+    yt.playlistItems().insert(part='snippet', body={'snippet': snippet}).execute()
+    print(f'  Added {video_id} to playlist' +
+          (f' at position {position}.' if position is not None else '.'))
+
+
+def playlist_position_for(yt, playlist_id, my_num):
+    """Course-order position for lesson number my_num among current playlist
+    members, so uploads on different quota days still assemble in order
+    (intro 0 first, then 1..21) no matter when each lesson was uploaded."""
+    res = yt.playlistItems().list(
+        part='snippet', playlistId=playlist_id, maxResults=50).execute()
+    vids = [i['snippet']['resourceId']['videoId'] for i in res.get('items', [])]
+    with open(COURSE_DATA, encoding='utf-8') as f:
+        src = f.read()
+    num_of = {}
+    for m in re.finditer(
+            r'slug:\s*"website-lesson-(\d+)"(.*?)(?=slug:\s*"|$)', src, re.DOTALL):
+        v = re.search(r'videoId:\s*"([^"]+)"', m.group(2))
+        if v:
+            num_of[v.group(1)] = int(m.group(1))
+    return sum(1 for v in vids if num_of.get(v, 999) < my_num)
 
 
 # ── Upload ────────────────────────────────────────────────────────────────────
@@ -369,16 +388,22 @@ def patch_course_data(slug, video_id):
     with open(COURSE_DATA, 'r', encoding='utf-8') as f:
         src = f.read()
 
-    # Match the lesson block for this slug and replace videoSrc with videoId
-    old = re.search(
-        rf'(slug:\s*"{re.escape(slug)}".*?)(videoSrc:\s*"[^"]*")',
-        src, re.DOTALL
+    # Match ONLY inside this lesson's block (up to the next slug marker) --
+    # a lazy regex over the whole file would otherwise reach into a later
+    # lesson's block when this one has no videoSrc (already uploaded).
+    block = re.search(
+        rf'slug:\s*"{re.escape(slug)}"(.*?)(?=slug:\s*"|$)', src, re.DOTALL
     )
+    if not block:
+        print(f'  WARNING: slug {slug} not found in {COURSE_DATA} — update manually.')
+        return
+    old = re.search(r'videoSrc:\s*"[^"]*"', block.group(1))
     if not old:
-        print(f'  WARNING: could not find videoSrc for {slug} in {COURSE_DATA} — update manually.')
+        print(f'  WARNING: no videoSrc for {slug} in {COURSE_DATA} — update manually.')
         return
 
-    new_src = src[:old.start(2)] + f'videoId: "{video_id}"' + src[old.end(2):]
+    base = block.start(1)
+    new_src = src[:base + old.start()] + f'videoId: "{video_id}"' + src[base + old.end():]
     with open(COURSE_DATA, 'w', encoding='utf-8') as f:
         f.write(new_src)
     print(f'  {COURSE_DATA}: videoSrc → videoId ({video_id})')
@@ -438,7 +463,9 @@ def main():
 
         time.sleep(2)  # brief pause before thumbnail
         thumbnail_quota_used = upload_thumbnail(yt, video_id, lesson['thumbnail'], thumbnail_quota_used)
-        add_to_playlist(yt, playlist_id, video_id)
+        my_num = int(lesson['slug'].rsplit('-', 1)[1])
+        add_to_playlist(yt, playlist_id, video_id,
+                        playlist_position_for(yt, playlist_id, my_num))
         patch_course_data(lesson['slug'], video_id)
         print(f'  ✓ {lesson["slug"]} done → https://youtu.be/{video_id}')
 

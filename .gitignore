@@ -60,6 +60,7 @@ scratch/
 # temp/backup files
 *.bak
 *.mp4
+*.RESTITCHED
 __pycache__/
 *.pyc
 
