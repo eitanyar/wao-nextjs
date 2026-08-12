@@ -171,9 +171,10 @@ def build_thumbnail(lesson):
     max_text_width = 560
 
     lines = wrap_headline(draw, lesson["headline"], f_headline, max_text_width)
+    right_x = left_x + max_text_width
     y = 220
     for line in lines:
-        draw.text((left_x, y), rtl(line), font=f_headline, fill=WHITE, anchor="la")
+        draw.text((right_x, y), rtl(line), font=f_headline, fill=WHITE, anchor="ra")
         y += 68
 
     # teal divider
@@ -182,9 +183,9 @@ def build_thumbnail(lesson):
 
     # module | lesson label
     draw.text(
-        (left_x, div_y + 24),
+        (right_x, div_y + 24),
         rtl(f"שיעור {lesson['n']} | מודול {lesson['module']}"),
-        font=f_label, fill=TEAL, anchor="la",
+        font=f_label, fill=TEAL, anchor="ra",
     )
 
     # icon on the right, neon glow

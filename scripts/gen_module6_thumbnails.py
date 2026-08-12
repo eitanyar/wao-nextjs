@@ -272,9 +272,10 @@ def build_thumbnail(lesson, course=DEFAULT_COURSE):
         f_headline = load_font(50, bold=True)
         lines = wrap_headline(draw, lesson["headline"], f_headline, max_text_width)
 
+    right_x = left_x + max_text_width
     y = 220
     for line in lines:
-        draw.text((left_x, y), rtl(line), font=f_headline, fill=WHITE, anchor="la")
+        draw.text((right_x, y), rtl(line), font=f_headline, fill=WHITE, anchor="ra")
         y += 68
 
     # teal divider
@@ -285,9 +286,9 @@ def build_thumbnail(lesson, course=DEFAULT_COURSE):
     label = lesson.get("label")
     label_text = f"{label} | מודול {lesson['module']}" if label else f"שיעור {lesson['n']} | מודול {lesson['module']}"
     draw.text(
-        (left_x, div_y + 24),
+        (right_x, div_y + 24),
         rtl(label_text),
-        font=f_label, fill=TEAL, anchor="la",
+        font=f_label, fill=TEAL, anchor="ra",
     )
 
     # icon on the right, neon glow
