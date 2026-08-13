@@ -95,4 +95,14 @@ Required in `.env.local` (local dev) and `.env.production` (servers):
 
 ---
 
+## Direct Claude Code Tasks (Sonnet 5)
+
+The following tasks are implemented directly by Claude Code (Sonnet 5) instead of through Hermes, due to code quality, context efficiency, and API reliability:
+
+- **Panel Copy Audit & Hebrew Rewriting** (`src/lib/operators/hebrew-rewriter.ts`): Translates Google Ads operator task copy (titles, explanations, actions) from technical English to plain Hebrew for business owners. Calls Qwen 3.8 Max via DashScope for translation, cached in-memory. Implemented in Claude Code to avoid Hermes context budget constraints and improve iteration speed.
+
+- **Runtime Gemini Flash Model Detection** (planned): Auto-discovers latest available Gemini Flash version via Google's `/listModels` API, eliminating manual version hardcoding.
+
+---
+
 This file is the single source of truth for agent roles, mandates, and model configs.
