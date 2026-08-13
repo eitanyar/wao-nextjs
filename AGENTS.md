@@ -42,17 +42,25 @@ This version has breaking changes — APIs, conventions, and file structure may 
 |- **Voiceover Rule:** Modifies ONLY `🎙️ Narration` blocks in `.md` files.
 |- **Human gate:** Any founder-facing or voiceover Hebrew passes a human spot-check by Eitan before it ships, until the model has proven native Sabra register — grammatical correctness is not voice approval.
 
-## 4a. Roni / Maya — App Verifier (Profile: `waoverifier-app`)
-|- **Engine:** Qwen 3 VL Plus (via Hermes, DashScope API — vision)
-|- **Model Config:**
-  - model: qwen3-vl-plus
-  - context_length: 262144 (verified against the model registry 2026-08-13 — NOT 1M; a single full-page screenshot is token-expensive, budget for at most 1-2 screenshots per one-shot call)
-  - api_key_env: QWEN_API_KEY
-  - base_url_env: QWEN_BASE_URL
-  - temperature: 0.1
-|- **Role:** Runtime QA, RTL correct rendering via vision, Browser/HTTP smoke checks.
+## 4a. Roni / Maya — App Verifier
+|- **Structural/runtime checks (HTTP status, curl flows, grep scans, sim-conversation drives):**
+  Claude `verifier` subagent, **Sonnet 5**, spawned directly (not via Hermes).
+|- **Head/meta-tag checks only** (title/canonical/meta-description correctness) — offloaded to
+  local `qwen3:8b` via Ollama (`localhost:11434/api/chat`), validated 100% 2026-08-13. Zero cost,
+  6-17s/call. Details/prompt pattern: see memory `project_local_model_offload_results`. Does NOT
+  extend to redirects, sim-conversation, or video-pipeline checks — those stay on Sonnet 5.
+|- **Visual/RTL-rendering checks — two-tier, both called DIRECTLY via DashScope multimodal
+  endpoint** (`$QWEN_BASE_URL/chat/completions`, base64 image), not through any Hermes wrapper:
+  - **Quick/iterative checks:** `qwen3.5-omni-plus` — ~3s/call, 6/7 on benchmark, misses overflow.
+  - **Serious/pre-deploy/from-scratch checks:** `qwen3.8-max` — ~90-110s/call, 7/7, only model
+    that catches overflow. Superseded `waoverifier-app` (Qwen3-VL-Plus) 2026-08-13.
+  - Details/benchmark data: memory `project_local_vision_verifier_unreliable`.
+  - api_key_env: QWEN_API_KEY / base_url_env: QWEN_BASE_URL / temperature: 0.1
+|- **Role:** Runtime QA, RTL-correct rendering via vision, Browser/HTTP smoke checks.
 |- **Mandate:** Verification is runtime observation only (curl, browser execution, screenshots). Returns PASS / FAIL / BLOCKED with strict evidence. Does not fix code — reports failures back to `waoengineer`.
-|- **Spec-sizing rule:** the strategist must scope verification specs to fit this budget — split multi-scenario/multi-screenshot verification into one task per screenshot/heavy check rather than one task that bundles several, or run curl-only structural checks separately from the single vision check.
+|- **Spec-sizing rule:** one screenshot per call, narrow single-action prompt — same discipline as
+  the retired `waoverifier-app` dispatch pattern, now applied to the direct API call instead of a
+  Hermes spec file.
 
 ## 4b. Shira / Yael — Media Verifier (Profile: `waoverifier-media`)
 |- **Engine:** Qwen 3.5 Omni Plus (via Hermes, DashScope API — audio/video)
@@ -72,7 +80,7 @@ This version has breaking changes — APIs, conventions, and file structure may 
 |- **Code & Execution:** Hermes picks up from `/handoff/pending/` and executes with `qwen3-coder-next`.
 |- **Execution order:** Hermes processes pending files in ascending filename order, one task at a time; a task never starts before its listed Dependencies are in `/completed/`. Parallel only for dependency-free tasks with different target agents.
 |- **Content Generation:** Hermes uses `qwen3.8-max` for all Hebrew content (subject to the human gate above).
-|- **App Verification:** `qwen3-vl-plus` for UI/RTL runtime checks. **Media Verification:** `qwen3.5-omni-plus` for video/audio QA.
+|- **App Verification:** structural checks → Claude `verifier` (Sonnet 5, direct subagent, not Hermes). Visual/RTL checks → two-tier: `qwen3.5-omni-plus` (quick/iterative) or `qwen3.8-max` (serious/from-scratch, pre-deploy gate) via direct DashScope API call (see §4a). **Media Verification:** `qwen3.5-omni-plus` for video/audio QA.
 |- **Never push or deploy directly:** Eitan manually triggers `deploy.sh` after successful Verification.
 |- **Context-budget check:** before writing a spec that routes through a Hermes/Qwen profile, the strategist checks that profile's real context_length above (not an aspirational number) against the spec's expected payload (repo context + tool outputs + screenshots/JSON dumps it will produce). If a spec is likely to exceed it, split it into narrower tasks rather than write one large one and hope. New profiles must have a working `.env` (verify with `hermes profile show <name>` before dispatching to it) — a profile scaffolded via `hermes profile create` has no credentials until one is added.
 
