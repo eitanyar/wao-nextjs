@@ -12,29 +12,43 @@ This version has breaking changes — APIs, conventions, and file structure may 
 
 # WAO Agent Profiles (Hermes Architecture)
 
+Full model configs (context length, temperature, API env vars) live in `agents.md` — this
+section is the roster of record for roles and mandates. The two files MUST stay in sync.
+
 ## 1. Dror / Lior — Strategist (Profile: `waostrategy`)
-- **Engine:** Claude Opus 4.8 (via Hermes)
+- **Engine:** Claude Opus 4.8 (via Claude Code — the main session, not Hermes)
 - **Role:** System Architecture, Google Ads Bot Strategy, Codebase Analysis, Mission Planning.
-- **Mandate:** Writes Technical Specifications and Architecture diagrams. Analyzes A-Z progress. Does NOT write final production code. Defers all execution to `waoengineer`.
+- **Mandate:** Writes Technical Specifications and Architecture diagrams to `/handoff/pending/`. Analyzes A-Z progress. Does NOT write final production code. Defers all execution to `waoengineer`.
 
 ## 2. Eitan-Dev — Engineer / Executor (Profile: `waoengineer`)
-- **Engine:** Gemini Flash (via Hermes / Local execution)
+- **Engine:** Qwen 3 Coder Next (via Hermes, DashScope API)
 - **Role:** Next.js Code Implementation, Script Execution, Google Ads API Wiring.
-- **Mandate:** Receives Technical Specifications from `waostrategy` and implements them exactly. Runs tests (`node --test`), validates builds (`npm run build`). Never freelances on SEO/PPC logic.
+- **Mandate:** Receives Technical Specifications from `/handoff/pending/` and implements them exactly as written — no freelancing, no "improvements in passing" (improvements are a strategist decision made in the spec). Runs tests (`node --test`), validates builds (`npm run build`).
 - **Bot Turns:** Any bot turn change must update BOTH `src/app/api/bot/route.ts` (simulation) AND `src/lib/bot/prompts.ts` (live path).
 
 ## 3. Tamar / Gil / Noa — Content & Pedagogy (Profile: `waocopy`)
+- **Engine:** Qwen 3.8 Max (via Hermes, DashScope API)
 - **Role:** Landing Pages, Bot Scripts, Marp Video Lessons, Voiceover QA.
-- **Mandate:** Writes persuasive Israeli Hebrew (Singular Male always). No robotic or translated speech. Limits sentences to 12-15 words for ElevenLabs compatibility. 
+- **Mandate:** Writes persuasive Israeli Hebrew (Singular Male always). No robotic or translated speech. Limits sentences to 12-15 words for ElevenLabs compatibility.
 - **Voiceover Rule:** Modifies ONLY `🎙️ Narration` blocks in `.md` files.
+- **Human gate:** Any founder-facing or voiceover Hebrew passes a human spot-check by Eitan before it ships, until the model has proven native Sabra register — grammatical correctness is not voice approval.
 
-## 4. Roni / Maya — Verifier & UI (Profile: `waoverifier`)
-- **Role:** Runtime QA, RTL correct rendering, Test Execution.
-- **Mandate:** Verification is runtime observation only (curl, browser execution). Returns PASS / FAIL / BLOCKED with strict evidence. Does not fix code—reports failures back to `waoengineer`.
+## 4a. Roni / Maya — App Verifier (Profile: `waoverifier-app`)
+- **Engine:** Qwen 3 VL Plus (via Hermes, DashScope API — vision)
+- **Role:** Runtime QA, RTL correct rendering via vision, Browser/HTTP smoke checks.
+- **Mandate:** Verification is runtime observation only (curl, browser execution, screenshots). Returns PASS / FAIL / BLOCKED with strict evidence. Does not fix code — reports failures back to `waoengineer`.
+
+## 4b. Shira / Yael — Media Verifier (Profile: `waoverifier-media`)
+- **Engine:** Qwen 3.5 Omni Plus (via Hermes, DashScope API — audio/video)
+- **Role:** Video production QA, TTS/audio quality, banner and frame analysis.
+- **Mandate:** Processes video and audio natively. Returns PASS / FAIL / BLOCKED with strict evidence. Does not fix code — reports failures back to `waoengineer` or `waocopy`.
 
 ---
 
 # Workflow Rules
-- **Strategy & Specs:** Run under `hermes -p waostrategy` (Claude Sonnet-5).
-- **Code & Execution:** Run under `hermes -p waoengineer` (Gemini Flash) directly executing local operations.
+- **Strategy & Specs:** Run under Claude Code (Opus). Output goes to `/handoff/pending/` per `CLAUDE_TO_HERMES_HANDOFF.md`.
+- **Code & Execution:** Hermes picks up from `/handoff/pending/` and executes with `qwen3-coder-next`.
+- **Execution order:** Hermes processes pending files in ascending filename order, one task at a time; a task never starts before its listed Dependencies are in `/completed/`. Parallel only for dependency-free tasks with different target agents.
+- **Content Generation:** Hermes uses `qwen3.8-max` for all Hebrew content (subject to the human gate above).
+- **App Verification:** `qwen3-vl-plus` for UI/RTL runtime checks. **Media Verification:** `qwen3.5-omni-plus` for video/audio QA.
 - **Never push or deploy directly:** Eitan manually triggers `deploy.sh` after successful Verification.

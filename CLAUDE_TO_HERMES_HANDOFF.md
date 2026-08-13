@@ -39,8 +39,19 @@ Examples:
 Rules:
 - Date: today's date (YYYY-MM-DD)
 - Sequence: 3-digit counter, reset daily (001, 002, 003...)
-- Agent Target: one of waoengineer, waocopy, waoverifier
+- Agent Target: one of waoengineer, waocopy, waoverifier-app, waoverifier-media
 - Task Slug: kebab-case, max 5 words
+
+---
+
+## Execution Order
+
+Hermes processes /pending/ files in ascending filename order, ONE task at a time.
+- Never start a task whose Dependencies (see template) are not already in /completed/.
+- If a dependency sits in /failed/, move the dependent task to /failed/ too, with
+  a note naming the blocking task — do not attempt it.
+- Parallel execution is allowed ONLY for tasks with no dependency relationship
+  and different Target Agents.
 
 ---
 
@@ -53,7 +64,7 @@ Missing sections = Hermes rejects the file.
 
     ## Metadata
     - Task ID: [YYYY-MM-DD]_[SEQUENCE]
-    - Target Agent: [waoengineer | waocopy | waoverifier]
+    - Target Agent: [waoengineer | waocopy | waoverifier-app | waoverifier-media]
     - Priority: [P0-Critical | P1-High | P2-Medium | P3-Low]
     - Estimated Complexity: [Simple | Moderate | Complex]
     - Created By: Claude Opus (Strategist)

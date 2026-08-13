@@ -1,19 +1,3 @@
-# WAO Agent Configuration — Hermes + Qwen Architecture
-
-## Communication Language — Hard Rule
-All agent responses MUST be written in English.
-- Eitan may ask in Hebrew, English, or any mix — agents always respond in English.
-- Hebrew text is only permitted inside content being created (e.g., narration script, bot turn) — never in the agent's own prose response.
-
----
-
-## Architecture Overview
-
-Claude Code (Opus) = Plans, specs, architecture. Does NOT write production code.
-Hermes (Qwen) = Executes, codes, tests. Receives specs from Claude.
-
----
-
 ## Agent Profiles
 
 ### 1. Strategist — "Dror / Lior"
@@ -28,10 +12,11 @@ Hermes (Qwen) = Executes, codes, tests. Receives specs from Claude.
 - Output: Writes spec files to /handoff/pending/
 
 ### 2. Engineer / Executor — "Eitan-Dev"
-- Engine: Qwen Coder Plus (via Hermes, DashScope API)
+- Engine: Qwen 3 Coder Next (via Hermes, DashScope API)
 - Profile: waoengineer
 - Model Config:
-    model: qwen-coder-plus
+    model: qwen3-coder-next
+    context_length: 1000000
     api_key_env: QWEN_API_KEY
     base_url_env: QWEN_BASE_URL
     temperature: 0.2
@@ -46,10 +31,11 @@ Hermes (Qwen) = Executes, codes, tests. Receives specs from Claude.
   - src/lib/bot/prompts.ts (live path)
 
 ### 3. Content & Pedagogy — "Tamar / Gil / Noa"
-- Engine: Qwen Plus (via Hermes, DashScope API)
+- Engine: Qwen 3.8 Max (via Hermes, DashScope API)
 - Profile: waocopy
 - Model Config:
-    model: qwen-plus
+    model: qwen3.8-max
+    context_length: 1000000
     api_key_env: QWEN_API_KEY
     base_url_env: QWEN_BASE_URL
     temperature: 0.7
@@ -59,20 +45,38 @@ Hermes (Qwen) = Executes, codes, tests. Receives specs from Claude.
   - No robotic or translated speech
   - Limits sentences to 12-15 words for ElevenLabs compatibility
 - Voiceover Rule: Modifies ONLY the Narration blocks in .md files
+- Human Gate: founder-facing or voiceover Hebrew gets a human spot-check by Eitan before shipping, until the model proves native Sabra register
 
-### 4. Verifier & UI — "Roni / Maya"
-- Engine: Qwen Plus (via Hermes, DashScope API)
-- Profile: waoverifier
+### 4a. App Verifier — "Roni / Maya"
+- Engine: Qwen 3 VL Plus (via Hermes, DashScope API)
+- Profile: waoverifier-app
 - Model Config:
-    model: qwen-plus
+    model: qwen3-vl-plus
+    context_length: 1000000
     api_key_env: QWEN_API_KEY
     base_url_env: QWEN_BASE_URL
     temperature: 0.1
-- Role: Runtime QA, RTL correct rendering, Test Execution
+- Role: Runtime QA, RTL correct rendering via vision, Browser/HTTP smoke checks
 - Mandate:
-  - Verification is runtime observation only (curl, browser execution)
+  - Uses vision capabilities to verify UI rendering
+  - Verification is runtime observation only (curl, browser execution, screenshots)
   - Returns PASS / FAIL / BLOCKED with strict evidence
   - Does not fix code — reports failures back to waoengineer
+
+### 4b. Media Verifier — "Shira / Yael"
+- Engine: Qwen 3.5 Omni Plus (via Hermes, DashScope API)
+- Profile: waoverifier-media
+- Model Config:
+    model: qwen3.5-omni-plus
+    context_length: 1000000
+    api_key_env: QWEN_API_KEY
+    base_url_env: QWEN_BASE_URL
+    temperature: 0.1
+- Role: Video production QA, TTS/audio quality, banner and frame analysis
+- Mandate:
+  - Processes video and audio natively using omni capabilities
+  - Returns PASS / FAIL / BLOCKED with strict evidence
+  - Does not fix code — reports failures back to waoengineer or waocopy
 
 ---
 
@@ -80,7 +84,7 @@ Hermes (Qwen) = Executes, codes, tests. Receives specs from Claude.
 
 Required in .env.local (local dev) and .env.production (servers):
 
-    QWEN_API_KEY=sk-ws-H.DMIPERM.vufk.MEMCICpwfnYhORHnXtJ9hXGFjDdYhS8yw07J7vdeLZk1uR1CAh8l9f_3TSpmWYR_h0m0R5KGxiH4Q7X6bMqm4B3mZFMM
+    QWEN_API_KEY=<your-dashscope-singapore-api-key>
     QWEN_BASE_URL=https://dashscope-intl.aliyuncs.com/compatible-mode/v1
 
 ---
@@ -88,10 +92,13 @@ Required in .env.local (local dev) and .env.production (servers):
 ## Workflow Rules
 
 1. Strategy & Specs: Run under Claude Code with Opus. Output goes to /handoff/pending/.
-2. Code & Execution: Hermes picks up from /handoff/pending/, executes with Qwen models.
-3. Content Generation: Hermes uses Qwen Plus for all Hebrew content.
-4. Verification: Hermes uses Qwen Plus for runtime checks.
-5. Never push or deploy directly: Eitan manually triggers deploy.sh after successful Verification.
+2. Code & Execution: Hermes picks up from /handoff/pending/, executes with qwen3-coder-next.
+   Files are processed in ascending filename order, one task at a time; a task never starts
+   before its listed Dependencies are in /completed/.
+3. Content Generation: Hermes uses qwen3.8-max for all Hebrew content.
+4. App Verification: Hermes uses qwen3-vl-plus for UI/RTL runtime checks.
+5. Media Verification: Hermes uses qwen3.5-omni-plus for video/audio QA.
+6. Never push or deploy directly: Eitan manually triggers deploy.sh after successful Verification.
 
 ---
 
