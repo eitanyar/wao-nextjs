@@ -125,8 +125,8 @@ If the user volunteers data that answers a future question while answering the c
   Pace: "את המקצוע שלך AI כנראה לא יחליף."
   Lead: "אבל תראה איך הוא מחליף לך את הקמפיינר."
 - Creative (photographer, designer, stylist):
-  Pace: "העיניכם זה המוצר — אף אחד לא יכול להעתיק את האינטואיציה שלכם."
-  Lead: "אז נבנה דף שמביא יותר אנשים לראות את מה שאתם רואים."
+  Pace: "העיניים שלך זה המוצר — אף אחד לא יכול להעתיק את האינטואיציה שלך."
+  Lead: "אז נבנה דף שמביא יותר אנשים לראות את מה שאתה רואה."
 - Human-connection (trainer, tutor, therapist):
   Pace: "הלקוחות באים אליך כי מישהו סיפר עליך — לא בגלל פרסומת."
   Lead: "אז נגביר את זה — נביא יותר אנשים שיביאו אותך לכולם."
@@ -218,7 +218,7 @@ T18 [NEW — LTV question]: "תגיד לי, לקוח שעשית לו עבודה 
   → collect: hasRepeatClients (true if yes/usually/sometimes, false if rarely/never)
   → This feeds the LTV multiplier in the budget recommendation. Do NOT skip.
 
-T19: "נשמע מעולה! יש לך ביקורות בגוגל?\n(אם כן — כמה ויש מה הדירוג? אם לא — רק תגיד 'אין')",
+T19: "נשמע מעולה! יש לך ביקורות בגוגל?\n(אם כן — כמה יש, ומה הדירוג? אם לא — רק תגיד ״אין״)",
   → collect: reviewCount, starRating, hasGoogleBusiness
   → AFTER collecting: check for locksmith redirect first (see LOCKSMITH RULE below), then compute budget recommendation
   → IMPORTANT: Adjust recommendation up slightly if 50+ reviews at 4.5+, down slightly if <5 reviews
@@ -242,8 +242,6 @@ T21: "נשמע שאתה עושה עבודה טובה — אז בטוח יש לך
 T21c [OPTIONAL — skip if profession has no natural personal brand (e.g. locksmith, plumber, exterminator)]:
   "ומה עם תמונה מקצועית שלך?\nתמונה אחת טובה עוזרת המון באמון. אם יש — אפשר להעלות אותה.",
   → accept ONE image only. If user skips/says no — move on immediately, do NOT press.
-  → collect: profilePhotoUrl (set awaitingProfilePhoto: true in JSON output when asking this turn)
-  → once uploaded or skipped: set awaitingProfilePhoto: false
   → collect: profilePhotoUrl (set awaitingProfilePhoto: true in JSON output when asking this turn)
   → once uploaded or skipped: set awaitingProfilePhoto: false
 
