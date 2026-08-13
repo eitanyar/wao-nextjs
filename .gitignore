@@ -113,3 +113,4 @@ handoff/in-progress/*.md
 handoff/completed/*.md
 handoff/failed/*.md
 handoff/archive/*.md
+data/geo-leads/

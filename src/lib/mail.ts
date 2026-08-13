@@ -99,7 +99,7 @@ export async function sendGoogleAdsOperatorApprovalEmail(params: {
   const statusHeading = isFailed ? 'פעולת Google Ads נכשלה ❌' : 'פעולת Google Ads אושרה ✅';
   const statusText = isFailed
     ? `בוט הקמפיינים ניסה ליישם את המשימה אך נתקל בשגיאה: ${params.error || 'שגיאה לא ידועה'}`
-    : 'בוט הקמפיינים קיבל אישור מפורש ויישם בהצלחה את המשימה הבאה:';
+    : 'בוט הקמפיינים קיבל אישור מפורש וישם בהצלחה את המשימה הבאה:';
 
   const htmlContent = `
     <div dir="rtl" style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
@@ -128,6 +128,65 @@ export async function sendGoogleAdsOperatorApprovalEmail(params: {
     console.log("[WAO Mail] Google Ads operator approval email sent successfully!");
   } catch (error) {
     console.error("[WAO Mail] Error sending Google Ads operator approval email:", error);
+  }
+}
+
+const GEO_LEAD_HEADING = 'ליד GEO חדש מהבוט 🌱';
+
+export async function sendGeoLeadNotificationEmail(params: {
+  businessName: string;
+  businessNiche: string;
+  topService?: string;
+  targetLocation?: string;
+  siteUrl?: string;
+  hasSearchConsole?: boolean;
+  contentOwner?: string;
+  geoSophistication?: number;
+  recommendedTier?: string;
+  approvalContact?: string;
+  clientWaLink?: string;
+}): Promise<void> {
+  const { businessName, businessNiche, topService, targetLocation, siteUrl, hasSearchConsole, contentOwner, geoSophistication, recommendedTier, approvalContact, clientWaLink } = params;
+
+  const detailsHtml = `
+    <p><strong>שם העסק:</strong> ${businessName}</p>
+    <p><strong>תחום:</strong> ${businessNiche}</p>
+    ${topService ? `<p><strong> השירות המובטח:</strong> ${topService}</p>` : ''}
+    ${targetLocation ? `<p><strong>אזור:</strong> ${targetLocation}</p>` : ''}
+    ${siteUrl ? `<p><strong>כתובת אתר:</strong> <a href="${siteUrl}">${siteUrl}</a></p>` : ''}
+    ${hasSearchConsole ? `<p><strong>Google Search Console:</strong> מחובר</p>` : ''}
+    ${contentOwner ? `<p><strong>בעלות בתוכן:</strong> ${contentOwner}</p>` : ''}
+    ${geoSophistication !== undefined ? `<p><strong>ספיקת GEO:</strong> ${geoSophistication}</p>` : ''}
+    ${recommendedTier ? `<p><strong>שלב מומלץ:</strong> ${recommendedTier}</p>` : ''}
+    ${approvalContact ? `<p><strong>אישור ע״י:</strong> ${approvalContact}</p>` : ''}
+  `;
+
+  const waButtonHtml = clientWaLink
+    ? `<p style="margin-top: 20px;">
+        <a href="${clientWaLink}" style="background-color: #25D366; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block; font-weight: bold;">שלח וואטסאפ ללקוח</a>
+      </p>`
+    : '';
+
+  const htmlContent = `
+    <div dir="rtl" style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+      <h2 style="color: #2c3e50;">${GEO_LEAD_HEADING}</h2>
+      <p>בעל עסק סיים את שיחת האונבורדינג ל-GEO וממתין לחזרה שלך בוואטסאפ.</p>
+      <div style="background-color: #f8f9fa; padding: 15px; border-radius: 5px; border: 1px solid #e9ecef;">${detailsHtml}</div>
+      ${waButtonHtml}
+    </div>
+  `;
+
+  try {
+    await sendResendEmail({
+      from: "WAO GEO Bot <ads@wao.co.il>",
+      to: ["eitan@wao.co.il", "leads@wao.co.il"],
+      subject: `אונבורדינג GEO חדש: ${businessName}`,
+      html: htmlContent,
+    });
+
+    console.log("[WAO Mail] Geo lead notification email sent successfully!");
+  } catch (error) {
+    console.error("[WAO Mail] Error sending geo lead notification email:", error);
   }
 }
 
