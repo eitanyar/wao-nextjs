@@ -80,6 +80,7 @@ export async function POST(req: Request) {
     // ── Live Gemini mode ──────────────────────────────────────────────────────
     const turn = collectedData.turnIndex ?? 0;
     let systemPrompt = GEO_ADAM_SYSTEM_PROMPT;
+    let aioCost = 0;
 
     // Turn 7 AIO check — inject DataForSEO result before the model responds
     if (turn === 7 && collectedData.businessNiche && !collectedData.aioDetected !== undefined) {
@@ -87,6 +88,7 @@ export async function POST(req: Request) {
         const niche = collectedData.topService || collectedData.businessNiche || '';
         const loc   = collectedData.targetLocation || '';
         const aio   = await checkAioPresence(niche, loc);
+        aioCost = aio.callCount * 0.002; // $0.002 per DataForSEO Live SERP call (verified 2026-08-13)
 
         systemPrompt += `\n\n[AIO_CHECK] found=${aio.found} query="${aio.query}"`;
 
@@ -100,6 +102,16 @@ export async function POST(req: Request) {
 
     const geminiRes = await callGemini(systemPrompt, messages);
     const geminiData = await geminiRes.json();
+
+    // Cost tracking — Gemini 3.5 Flash pricing verified 2026-08-13: $1.50/M input, $9.00/M output
+    const GEMINI_INPUT_PER_TOKEN  = 1.50 / 1_000_000;
+    const GEMINI_OUTPUT_PER_TOKEN = 9.00 / 1_000_000;
+    const usageMetadata = geminiData?.usageMetadata;
+    const geminiCost = usageMetadata
+      ? (usageMetadata.promptTokenCount ?? 0) * GEMINI_INPUT_PER_TOKEN
+        + (usageMetadata.candidatesTokenCount ?? 0) * GEMINI_OUTPUT_PER_TOKEN
+      : 0;
+    const updatedCost = (collectedData.costUsd ?? 0) + geminiCost + aioCost;
 
     if (!geminiRes.ok) {
       throw new Error(`Gemini error: ${JSON.stringify(geminiData)}`);
@@ -117,6 +129,7 @@ export async function POST(req: Request) {
       ...collectedData,
       ...(parsed.collectedData ?? {}),
       turnIndex: turn + 1,
+      costUsd: updatedCost,
     };
 
     return NextResponse.json({

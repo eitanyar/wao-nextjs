@@ -11,6 +11,7 @@ const HEBREW_LANG      = 'he';
 export interface AioCheckResult {
   found: boolean;
   query: string;
+  callCount: number; // number of fetchSerp calls made (1 or 2)
 }
 
 export async function checkAioPresence(
@@ -20,21 +21,24 @@ export async function checkAioPresence(
   // Build Hebrew query from niche + location (city only, not full address)
   const city = location.split(/[,،\n]/)[0].trim();
   const query = city ? `${niche} ב${city}` : niche;
+  let callCount = 0;
 
   try {
     const result = await fetchSerp(query);
-    if (result) return { found: result, query };
+    callCount += 1;
+    if (result) return { found: result, query, callCount };
 
     // Fallback: try niche alone (no city) if city query had no AIO
     if (city) {
       const fallback = await fetchSerp(niche);
-      return { found: fallback, query: fallback ? niche : query };
+      callCount += 1;
+      return { found: fallback, query: fallback ? niche : query, callCount };
     }
   } catch (err) {
     console.error('[DataForSEO] AIO check failed:', err);
   }
 
-  return { found: false, query };
+  return { found: false, query, callCount };
 }
 
 async function fetchSerp(keyword: string): Promise<boolean> {

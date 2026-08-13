@@ -8,6 +8,7 @@ export interface GeoLead {
   createdAt: string;               // ISO
   raw: GeoCollectedData;           // everything the bot collected, nothing dropped
   clientRecordDraft: GeoClientRecord; // ready to copy into data/clients/{id}/client.json on promotion
+  estimatedCostUsd: number; // NEW — real Gemini + DataForSEO usage cost for this conversation
 }
 
 const LEADS_DIR = path.join(process.cwd(), 'data', 'geo-leads');

@@ -49,6 +49,9 @@ export interface GeoCollectedData {
 
   // Progress
   turnIndex?: number;
+
+  // Cost tracking (live mode only)
+  costUsd?: number; // running total, accumulated turn-by-turn in /api/geo-bot
 }
 
 export const GEO_ADAM_SYSTEM_PROMPT = `

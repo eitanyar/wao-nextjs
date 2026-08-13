@@ -39,6 +39,7 @@ export async function POST(req: Request) {
       createdAt: new Date().toISOString(),
       raw: collectedData,
       clientRecordDraft: draft,
+      estimatedCostUsd: collectedData.costUsd ?? 0,
     };
 
     writeGeoLead(lead);
