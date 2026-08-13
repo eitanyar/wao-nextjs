@@ -21,7 +21,7 @@ This version has breaking changes — APIs, conventions, and file structure may 
 |- **Engine:** Qwen 3 Coder Next (via Hermes, DashScope API)
 |- **Model Config:**
   - model: qwen3-coder-next
-  - context_length: 1000000
+  - context_length: 262144 (verified against the model registry 2026-08-13 — NOT 1M; keep spec scope, screenshots, and pasted JSON/logs small enough to fit)
   - api_key_env: QWEN_API_KEY
   - base_url_env: QWEN_BASE_URL
   - temperature: 0.2
@@ -33,7 +33,7 @@ This version has breaking changes — APIs, conventions, and file structure may 
 |- **Engine:** Qwen 3.8 Max (via Hermes, DashScope API)
 |- **Model Config:**
   - model: qwen3.8-max
-  - context_length: 1000000
+  - context_length: 1000000 (verified against the model registry 2026-08-13 — accurate)
   - api_key_env: QWEN_API_KEY
   - base_url_env: QWEN_BASE_URL
   - temperature: 0.7
@@ -46,18 +46,19 @@ This version has breaking changes — APIs, conventions, and file structure may 
 |- **Engine:** Qwen 3 VL Plus (via Hermes, DashScope API — vision)
 |- **Model Config:**
   - model: qwen3-vl-plus
-  - context_length: 1000000
+  - context_length: 262144 (verified against the model registry 2026-08-13 — NOT 1M; a single full-page screenshot is token-expensive, budget for at most 1-2 screenshots per one-shot call)
   - api_key_env: QWEN_API_KEY
   - base_url_env: QWEN_BASE_URL
   - temperature: 0.1
 |- **Role:** Runtime QA, RTL correct rendering via vision, Browser/HTTP smoke checks.
 |- **Mandate:** Verification is runtime observation only (curl, browser execution, screenshots). Returns PASS / FAIL / BLOCKED with strict evidence. Does not fix code — reports failures back to `waoengineer`.
+|- **Spec-sizing rule:** the strategist must scope verification specs to fit this budget — split multi-scenario/multi-screenshot verification into one task per screenshot/heavy check rather than one task that bundles several, or run curl-only structural checks separately from the single vision check.
 
 ## 4b. Shira / Yael — Media Verifier (Profile: `waoverifier-media`)
 |- **Engine:** Qwen 3.5 Omni Plus (via Hermes, DashScope API — audio/video)
 |- **Model Config:**
   - model: qwen3.5-omni-plus
-  - context_length: 1000000
+  - context_length: UNVERIFIED as of 2026-08-13 — not found in the model registry under the `alibaba`/`alibaba-cn` providers this profile actually uses (only a `nano-gpt`-provider entry exists, ~983K, which is a different gateway and not reliable evidence for this profile). Treat as ~256K-scale until confirmed; keep specs narrow (one media artifact per check) until verified.
   - api_key_env: QWEN_API_KEY
   - base_url_env: QWEN_BASE_URL
   - temperature: 0.1
@@ -73,6 +74,7 @@ This version has breaking changes — APIs, conventions, and file structure may 
 |- **Content Generation:** Hermes uses `qwen3.8-max` for all Hebrew content (subject to the human gate above).
 |- **App Verification:** `qwen3-vl-plus` for UI/RTL runtime checks. **Media Verification:** `qwen3.5-omni-plus` for video/audio QA.
 |- **Never push or deploy directly:** Eitan manually triggers `deploy.sh` after successful Verification.
+|- **Context-budget check:** before writing a spec that routes through a Hermes/Qwen profile, the strategist checks that profile's real context_length above (not an aspirational number) against the spec's expected payload (repo context + tool outputs + screenshots/JSON dumps it will produce). If a spec is likely to exceed it, split it into narrower tasks rather than write one large one and hope. New profiles must have a working `.env` (verify with `hermes profile show <name>` before dispatching to it) — a profile scaffolded via `hermes profile create` has no credentials until one is added.
 
 ---
 
