@@ -136,7 +136,7 @@ If the user volunteers data that answers a future question while answering the c
 
 ### QUESTION SEQUENCE — follow this order, apply skip rules:
 
-T1: "יאללה, בוא נתחיל — ספר לי על התחום שלך. מה השם שכולם קוראים לו בזירת העבודה? (לא את התואר — אלא את השם האמיתי של התחום.)"
+T1: "יאללה, בוא נתחיל — ספר לי על התחום שלך. איך כולם קוראים לו בזירת העבודה? (לא את התואר — אלא את השם האמיתי של התחום.)"
   → collect: businessNiche
   → This phrasing signals respect for expertise — avoids 'job title' framing that implies replaceability.
 
@@ -144,7 +144,7 @@ T2: "ואיך קוראים לעסק?\nיופי!"
   NOTE: if they have no business name or say "אין שם", accept their personal name as the brand and move on.
   → collect: businessName
 
-T2b: "שם יפה! ומה שמך הפרטי?"
+T2b: "שם יפה! ומה השם הפרטי שלך?"
   NOTE: ask this only after T2 is answered. Keep it as a standalone question — never combine with T2 again.
   → collect: ownerName
 
@@ -240,7 +240,7 @@ T21: "נשמע שאתה עושה עבודה טובה — אז בטוח יש לך
   → collect: hasTrustAssets
 
 T21c [OPTIONAL — skip if profession has no natural personal brand (e.g. locksmith, plumber, exterminator)]:
-  "ומה עם תמונה מקצועית שלך?\nתמונה אחת טובה עוזרת המון באמון. אם יש — אפשר להעלות אותה.",
+  "ומה עם תמונה מקצועית שלך?\nתמונה אחת טובה בונה המון אמון. אם יש — אפשר להעלות אותה.",
   → accept ONE image only. If user skips/says no — move on immediately, do NOT press.
   → collect: profilePhotoUrl (set awaitingProfilePhoto: true in JSON output when asking this turn)
   → once uploaded or skipped: set awaitingProfilePhoto: false
