@@ -9,14 +9,8 @@ import type { GoogleAdsOperatorTask } from '../google-ads/operator';
 
 const TRANSLATION_CACHE = new Map<string, GoogleAdsOperatorTask>();
 
-async function callQwenTranslator(task: GoogleAdsOperatorTask): Promise<string> {
-  const qwenApiKey = process.env.QWEN_API_KEY;
-  const qwenBaseUrl = process.env.QWEN_BASE_URL;
-
-  if (!qwenApiKey || !qwenBaseUrl) {
-    console.warn('[hebrew-rewriter] Missing QWEN_API_KEY or QWEN_BASE_URL, skipping translation');
-    return '';
-  }
+async function callOllamaTranslator(task: GoogleAdsOperatorTask): Promise<string> {
+  const ollamaUrl = process.env.OLLAMA_URL || 'http://localhost:11434/api/chat';
 
   const systemPrompt = `אתה מתרגם מומחה בתוכן Google Ads לעברית טבעית.
 תפקידך: לתרגם בקשות טכניות מסבוכות להוראות פשוטות וברורות לבעלי עסקים.
@@ -44,34 +38,31 @@ async function callQwenTranslator(task: GoogleAdsOperatorTask): Promise<string> 
   });
 
   try {
-    const response = await fetch(`${qwenBaseUrl}/chat/completions`, {
+    const response = await fetch(ollamaUrl, {
       method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${qwenApiKey}`,
-        'Content-Type': 'application/json',
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        model: 'qwen3.8-max',
+        model: 'qwen3:8b',
         messages: [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: userMessage },
         ],
         temperature: 0.7,
-        response_format: { type: 'json_object' },
+        stream: false,
       }),
     });
 
     if (!response.ok) {
-      const error = await response.json();
-      console.warn(`[hebrew-rewriter] Qwen API error: ${response.status}`, error);
+      const error = await response.text();
+      console.warn(`[hebrew-rewriter] Ollama error: ${response.status}`, error);
       return '';
     }
 
     const data = await response.json();
-    const translatedText = data.choices?.[0]?.message?.content;
+    const translatedText = data.message?.content;
 
     if (!translatedText) {
-      console.warn('[hebrew-rewriter] Empty response from Qwen');
+      console.warn('[hebrew-rewriter] Empty response from Ollama');
       return '';
     }
 
@@ -90,7 +81,7 @@ export async function translateTaskToHebrew(task: GoogleAdsOperatorTask): Promis
   }
 
   try {
-    const translatedJson = await callQwenTranslator(task);
+    const translatedJson = await callOllamaTranslator(task);
 
     if (!translatedJson) {
       // Fallback: return original task
