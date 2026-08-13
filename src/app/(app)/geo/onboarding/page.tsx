@@ -110,7 +110,7 @@ export default function GeoOnboardingPage() {
     } catch (err: any) {
       setMessages((prev) => [
         ...prev,
-        { role: "assistant", content: "אוי, נראה שיש לנו תקלת תקשורת קלה. בוא נ偡ים שוב!" },
+        { role: "assistant", content: "אוי, נראה שיש לנו תקלת תקשורת קלה. בוא ננסה שוב!" },
       ]);
     } finally {
       setIsSubmitting(false);
@@ -123,7 +123,7 @@ export default function GeoOnboardingPage() {
     { label: "כתובת אתר", field: "siteUrl" as keyof GeoCollectedData },
     { label: "אזור שירות", field: "targetLocation" as keyof GeoCollectedData },
     { label: "שאלות לקוחות", field: "clientQuestions" as keyof GeoCollectedData },
-    { label: "בדיקת AI	bgogle", field: "aioDetected" as keyof GeoCollectedData },
+    { label: "בדיקת AI בגוגל", field: "aioDetected" as keyof GeoCollectedData },
     { label: "אישור WHATSAPP", field: "approvalWhatsapp" as keyof GeoCollectedData },
   ];
 
@@ -164,11 +164,11 @@ export default function GeoOnboardingPage() {
             נוכחות שגוגל וה-AI <span className="text-gradient">ימליצו</span> עליך
           </h1>
           <p style={{ color: "var(--muted)", fontSize: "0.88rem", marginBottom: "8px" }}>
-            הבוט אסף את הפרטים הנדרשים顺着溪流.
+            הבוט אוסף את הפרטים הנדרשים.
           </p>
           {simulate && (
             <p style={{ color: "#FFAA00", fontSize: "0.9rem", fontWeight: 700, marginBottom: "6px" }}>
-              מצב דגמה פעיל. הapus את התשובות דרך הזרימה המוכנה.
+              מצב הדגמה פעיל. התשובות רצות דרך הזרימה המוכנה.
             </p>
           )}
           <p style={{ color: "var(--muted)", fontSize: "0.95rem", marginBottom: "16px" }}>
@@ -350,7 +350,7 @@ export default function GeoOnboardingPage() {
                 <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "6px" }}>
                   <input
                     type="text"
-                    placeholder=" continuar here"
+                    placeholder="כתוב כאן…"
                     value={inputValue}
                     onChange={(e) => setInputValue(e.target.value)}
                     disabled={isSubmitting || currentState === "COMPLETED"}
@@ -433,10 +433,10 @@ export default function GeoOnboardingPage() {
             {/* Info Panel */}
             <div style={{ ...glass, padding: "24px" }}>
               <h3 style={{ fontSize: "1.15rem", fontWeight: 700, marginBottom: "12px" }}>
-                sobre GEO/AIO?
+                מה זה GEO/AIO?
               </h3>
               <p style={{ fontSize: "0.9rem", color: "var(--muted)", lineHeight: 1.6 }}>
-                GEO = Generative Engine Optimization. AIO = AI Overview (התשובה של גוגל על TOUTS).
+                GEO = Generative Engine Optimization. AIO = AI Overview (התשובה של גוגל בראש התוצאות).
               </p>
               <p style={{ fontSize: "0.88rem", color: "var(--muted)", lineHeight: 1.8 }}>
                 הבוט אוסף את הפרטים הנדרשים כדי לבנות נוכחות שגוגל וה-AI ימליצו עליך. אין תשלום.
