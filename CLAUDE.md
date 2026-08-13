@@ -83,7 +83,7 @@ the guarantee against language-quality regressions. Documented pipelines live in
 # Orchestrator Instructions (Claude Code = Strategist)
 
 Before doing ANY work in this repository, read these two files:
-- agents.md
+- AGENTS.md
 - CLAUDE_TO_HERMES_HANDOFF.md
 
 ## Your Role

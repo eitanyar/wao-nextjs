@@ -5,16 +5,12 @@ import { loadProfile, loadMemos } from '@/lib/trainer/profile';
 import { loadHistory, loadUnscoredSessions } from '@/lib/trainer/history';
 import { averageMastery, rankBandFor } from '@/lib/trainer/rank';
 import { peekTodaysSession } from '@/lib/trainer/coach';
-import { DEFAULT_RUBRIC } from '@/lib/trainer/prompts';
+import { SKILL_LABELS_HE } from '@/lib/trainer/scenarios';
 import SkillRadar, { SkillRadarTable } from './skill-radar';
 import AnalyzeButton from './analyze-button';
 import SessionOfDayCard from './session-of-day';
 
 export const metadata = { robots: { index: false }, title: 'לוח התקדמות | מאמן ניסוח ו-EQ | WAO' };
-
-const SKILL_LABEL: Record<string, string> = Object.fromEntries(
-  DEFAULT_RUBRIC.map((s) => [s.skill, s.labelHe]),
-);
 
 function formatDate(iso: string): string {
   try {
@@ -51,7 +47,7 @@ export default async function TrainerDashboardPage() {
 
         <section className="text-center space-y-1">
           <p className="text-sm text-[var(--muted)]">
-            {profile.sessions} שיחות תורגלו · דירוג נוכחי
+            {profile.sessions} שיחות תורגלו · דירוג punkי
           </p>
           <p className="text-2xl font-bold">
             {band.labelHe} <span className="text-[var(--muted)] font-normal text-base">(ממוצע {avg}/100)</span>
@@ -96,7 +92,7 @@ export default async function TrainerDashboardPage() {
             <ul className="space-y-2">
               {liveMemos.map((m) => (
                 <li key={m.id} className="rounded-lg border border-white/10 p-3 text-sm">
-                  <span className="text-[var(--muted)]">{SKILL_LABEL[m.skill] ?? m.skill}: </span>
+                  <span className="text-[var(--muted)]">{SKILL_LABELS_HE[m.skill] ?? m.skill}: </span>
                   {m.text}
                   <div className="text-xs text-[var(--muted)] mt-1">״{m.quoteHe}״</div>
                 </li>
@@ -107,7 +103,7 @@ export default async function TrainerDashboardPage() {
 
         {unscored.length > 0 && (
           <section>
-            <h2 className="text-lg font-semibold mb-3">שיחות שמחכות לניתוח</h2>
+            <h2 className="text-lg font-semibold mb-3">שיחות שמחכות לanalysis</h2>
             <ul className="space-y-2">
               {unscored.map((s) => (
                 <li

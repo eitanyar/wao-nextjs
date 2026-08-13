@@ -37,12 +37,12 @@ interface DebriefRecord {
   memos: JudgeMemoItem[];
 }
 
-/** Resolve the scoring key (hiddenObjective) + optional scenario rubric.
- *  M1/seed → Danny. M2 generated persona → the cached scenario (forward-compat). */
+/** Resolve the scoring key (hiddenObjective) + optional scenario rubric + track.
+ *  M1/seed → Danny (no track ⇒sales). M2 generated persona → the cached scenario. */
 function resolvePersonaContext(
   personaId: string,
   generatedId?: string,
-): { hiddenObjective: string; rubric?: RubricItem[] } | null {
+): { hiddenObjective: string; rubric?: RubricItem[]; track?: string } | null {
   if (personaId === DANNY_PERSONA.id) {
     return { hiddenObjective: DANNY_PERSONA.hiddenObjective };
   }
@@ -52,9 +52,10 @@ function resolvePersonaContext(
       const gen = JSON.parse(raw) as {
         persona?: { id?: string; hiddenObjective?: string };
         scenario?: { rubric?: RubricItem[] };
+        track?: string;
       };
       if (gen.persona?.id === personaId && typeof gen.persona.hiddenObjective === 'string') {
-        return { hiddenObjective: gen.persona.hiddenObjective, rubric: gen.scenario?.rubric };
+        return { hiddenObjective: gen.persona.hiddenObjective, rubric: gen.scenario?.rubric, track: gen.track };
       }
     } catch {
       return null;
@@ -164,7 +165,7 @@ export async function POST(request: NextRequest) {
   // Layer 2 — the Judge. Any failure here ⇒ 502 and NOTHING is persisted.
   let judge: JudgeResult;
   try {
-    judge = await runJudge({ transcript, rubric: ctx.rubric, metrics, hiddenObjective: ctx.hiddenObjective });
+    judge = await runJudge({ transcript, rubric: ctx.rubric, metrics, hiddenObjective: ctx.hiddenObjective, track: ctx.track });
   } catch (err) {
     console.error('[trainer/debrief] judge failed', err);
     const message = err instanceof Error ? err.message : 'unknown error';

@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { SCENARIOS, getScenario, type ScenarioKey } from '@/lib/trainer/scenarios';
 
 interface SessionOfDay {
   generatedId: string;
@@ -22,21 +23,24 @@ const LEVELS: { value: 1 | 2 | 3; labelHe: string }[] = [
   { value: 3, labelHe: 'L3 — קשוח' },
 ];
 
+const SCENARIO_LIST = Object.values(SCENARIOS);
+
 export default function SessionOfDayCard({ initialSession }: Props) {
   const router = useRouter();
   const [session, setSession] = useState(initialSession);
   const [level, setLevel] = useState<1 | 2 | 3>(initialSession?.level ?? 2);
+  const [scenario, setScenario] = useState<ScenarioKey>(getScenario(initialSession?.track).key);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  async function generate(fresh: boolean) {
+  async function generate(fresh: boolean, track?: ScenarioKey) {
     setBusy(true);
     setError(null);
     try {
       const res = await fetch('/api/trainer/next', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ fresh, level }),
+        body: JSON.stringify({ fresh, level, track: track ?? scenario }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -53,19 +57,39 @@ export default function SessionOfDayCard({ initialSession }: Props) {
 
   return (
     <div className="rounded-2xl border border-white/10 bg-white/5 p-6 space-y-4">
-      <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold">שיחה של היום</h2>
-        <div className="flex gap-1">
-          {LEVELS.map((l) => (
+      <div className="space-y-3">
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-semibold">שיחה של היום</h2>
+          <div className="flex gap-1">
+            {LEVELS.map((l) => (
+              <button
+                key={l.value}
+                type="button"
+                onClick={() => setLevel(l.value)}
+                className={`rounded-md px-2 py-1 text-xs ${
+                  level === l.value ? 'bg-[var(--accent,#6ee7b7)] text-black' : 'border border-white/10 text-[var(--muted)]'
+                }`}
+              >
+                {l.labelHe}
+              </button>
+            ))}
+          </div>
+        </div>
+        <div className="flex gap-2 justify-end">
+          {SCENARIO_LIST.map((s) => (
             <button
-              key={l.value}
+              key={s.key}
               type="button"
-              onClick={() => setLevel(l.value)}
+              onClick={() => {
+                setScenario(s.key);
+                generate(false, s.key);
+              }}
+              disabled={busy}
               className={`rounded-md px-2 py-1 text-xs ${
-                level === l.value ? 'bg-[var(--accent,#6ee7b7)] text-black' : 'border border-white/10 text-[var(--muted)]'
-              }`}
+                scenario === s.key ? 'bg-[var(--accent,#6ee7b7)] text-black' : 'border border-white/10 text-[var(--muted)]'
+              } disabled:opacity-50`}
             >
-              {l.labelHe}
+              {s.labelHe}
             </button>
           ))}
         </div>
@@ -74,12 +98,12 @@ export default function SessionOfDayCard({ initialSession }: Props) {
       {session ? (
         <>
           <p className="text-sm text-[var(--muted)]">
-            מסלול: {session.track} · רמה {session.level}
+            מסלול: {getScenario(session.track).labelHe} · רמה {session.level}
           </p>
           <p className="text-sm leading-relaxed">{session.persona.situation}</p>
           <p className="text-sm text-[var(--muted)]">מטרה: {session.scenario.goal}</p>
           {session.qaFlagged && (
-            <p className="text-xs text-amber-400">שים לב: הניסוח לא עבר את בדיקת האיכות האוטומטית — עדיין ניתן לתרגל.</p>
+            <p className="text-xs text-amber-400">שים לב: הניסוח לאעבר את בדיקה האוטומטית — עדיין ניתן לתרגל.</p>
           )}
           <div className="flex items-center gap-3">
             <a

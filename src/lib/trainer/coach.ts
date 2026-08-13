@@ -1,8 +1,9 @@
 import fs from 'fs';
 import path from 'path';
 import { generateJson } from './llm';
-import { COACH_SYSTEM_PROMPT, QA_GATE_PROMPT, buildCoachUserPrompt, buildQaUserPrompt, type RubricItem } from './prompts';
+import { COACH_SYSTEM_PROMPT, QA_GATE_PROMPT, buildCoachUserPrompt, buildQaUserPrompt, buildCoachSystemPrompt, type RubricItem } from './prompts';
 import type { TrainerPersona } from './persona';
+import { getScenario } from './scenarios';
 
 const CHARTER_PATH = path.join(process.cwd(), 'data', 'trainer', 'charter.json');
 const CORPUS_PATH = path.join(process.cwd(), 'scripts', 'onboarding-personas.json');
@@ -146,11 +147,12 @@ async function runQaGate(persona: RawCoachOutput['persona']): Promise<{ pass: bo
 export async function generateSession(opts: { track?: string; level?: 1 | 2 | 3 } = {}): Promise<CoachResult> {
   const charter = loadCharter();
   const track = opts.track ?? pickTrack(charter.trackWeights);
+  const scenario = getScenario(track);
   const level = opts.level ?? 2;
-  const corpusSample = loadCorpusSample();
-  const userPrompt = buildCoachUserPrompt({ charter, corpusSample, track, level });
+  const corpusSample = scenario.useCorpus ? loadCorpusSample() : [];
+  const userPrompt = buildCoachUserPrompt({ charter, corpusSample, track, level, scenario });
 
-  let raw: RawCoachOutput = requireValidCoachOutput(await generateJson(COACH_SYSTEM_PROMPT, userPrompt));
+  let raw: RawCoachOutput = requireValidCoachOutput(await generateJson(buildCoachSystemPrompt(scenario), userPrompt));
 
   let qa = await runQaGate(raw.persona);
   let qaFlagged = false;
@@ -158,7 +160,7 @@ export async function generateSession(opts: { track?: string; level?: 1 | 2 | 3 
   if (!qa.pass) {
     try {
       const retryPrompt = `${userPrompt}\n\nQA NOTES FROM THE PREVIOUS ATTEMPT (fix these in this regeneration):\n${qa.issues.map((i) => `- ${i}`).join('\n')}`;
-      const retryRaw = await generateJson(COACH_SYSTEM_PROMPT, retryPrompt);
+      const retryRaw = await generateJson(buildCoachSystemPrompt(scenario), retryPrompt);
       if (isValidCoachOutput(retryRaw)) {
         raw = retryRaw;
         qa = await runQaGate(raw.persona);
@@ -180,7 +182,7 @@ export async function generateSession(opts: { track?: string; level?: 1 | 2 | 3 
     timeCapMin: raw.scenario.timeCapMin || charter.sessionLengthMin || 8,
   };
 
-  const scenario: TrainerScenario = {
+  const scenarioResult: TrainerScenario = {
     id: raw.scenario.id,
     title: raw.scenario.title,
     level,
@@ -199,7 +201,7 @@ export async function generateSession(opts: { track?: string; level?: 1 | 2 | 3 
     track,
     level,
     persona,
-    scenario,
+    scenario: scenarioResult,
     qaFlagged,
     createdAt: new Date().toISOString(),
   };
@@ -246,13 +248,22 @@ export function loadGeneratedSession(generatedId: string): CoachResult | null {
 /**
  * POST /api/trainer/next's core: returns today's cached session unless `fresh`
  * is set or none exists yet — one generation call per day on the happy path.
+ * If a cached session exists but its track differs from opts.track, skip the cache and generate fresh.
  */
 export async function getOrGenerateTodaysSession(
   opts: { fresh?: boolean; track?: string; level?: 1 | 2 | 3 } = {},
 ): Promise<CoachResult> {
   if (!opts.fresh) {
     const cached = peekTodaysSession();
-    if (cached) return cached;
+    if (cached) {
+      // If opts.track is set and cached.track differs, skip cache and generate fresh
+      if (opts.track !== undefined && cached.track !== opts.track) {
+        const session = await generateSession(opts);
+        saveCache(session);
+        return session;
+      }
+      return cached;
+    }
   }
   const session = await generateSession(opts);
   saveCache(session);

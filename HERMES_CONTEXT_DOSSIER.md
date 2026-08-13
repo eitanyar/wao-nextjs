@@ -164,19 +164,20 @@ Three-bot brainstorm (Site 25 / Ads 21 / GEO 14 ideas) scored `(Impact×Urgency)
 **Top synthesized idea:** Readiness Gate (scores prospect for right bot AND refuses onboarding until lead-tracking provable)
 **SHIPPED 2026-08-07:** Places-client refactor, Phase 1 routing CLI, Phase 2 LTPC admin gate, Priority-3 Part A (commits `ab5d4ad`, `9504688`, `3b6da2b`)
 
-## Agent Architecture (from agents.md)
+## Agent Architecture
 
 1. **waostrategy** (Claude Opus 4.8) — Plans, specs, architecture. Does NOT write code.
-2. **waoengineer** (Qwen Coder Plus) — Executes code implementation, tests, builds.
-3. **waocopy** (Qwen Plus) — Content: landing pages, bot scripts, voiceover.
-4. **waoverifier** (Qwen Plus) — Runtime QA, returns PASS/FAIL/BLOCKED.
+2. **waoengineer** (Qwen Coder Next) — Executes code implementation, tests, builds.
+3. **waocopy** (Qwen 3.8 Max) — Content: landing pages, bot scripts, voiceover.
+4. **waoverifier-app** (Qwen 3 VL Plus) — Runtime QA, returns PASS/FAIL/BLOCKED.
+5. **waoverifier-media** (Qwen 3.5 Omni Plus) — Video/audio QA, returns PASS/FAIL/BLOCKED.
 
 ## Key Files
 - `src/lib/bot/prompts.ts` — Live path system prompt + question library
 - `src/app/api/bot/route.ts` — Simulation path + turn logic
 - `src/lib/bot/delivery-model.ts` — 4 delivery model cards
 - `src/app/(app)/google-ads/onboarding/page.tsx` — Full UI
-- `agents.md` — Agent configuration
+- `AGENTS.md` — Agent configuration and model configs
 - `CLAUDE_TO_HERMES_HANDOFF.md` — Handoff protocol
 - `STATUS.md` — Detailed work history and open loops
 - `VISION.md` — Product vision and architecture

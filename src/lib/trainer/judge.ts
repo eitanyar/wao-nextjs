@@ -20,16 +20,19 @@ export interface JudgeResult {
   memos: JudgeMemoItem[];
 }
 
-import { JUDGE_SYSTEM_PROMPT, DEFAULT_RUBRIC, buildJudgeUserPrompt, RubricItem } from './prompts';
+import { JUDGE_SYSTEM_PROMPT, DEFAULT_RUBRIC, buildJudgeUserPrompt, RubricItem, buildJudgeSystemPrompt } from './prompts';
 import { generateJson } from './llm';
 import { computeMetrics, ObjectiveMetrics } from './metrics';
+import { getScenario } from './scenarios';
 
 export async function runJudge(input: {
   transcript: { role: string; text: string }[];
   rubric?: RubricItem[];
   metrics?: ObjectiveMetrics;
   hiddenObjective: string;
+  track?: string;
 }): Promise<JudgeResult> {
+  const scenario = getScenario(input.track);
   const rubric = input.rubric || DEFAULT_RUBRIC;
   const metrics = input.metrics || computeMetrics(input.transcript);
 
@@ -40,6 +43,6 @@ export async function runJudge(input: {
     transcript: input.transcript,
   });
 
-  const parsed = (await generateJson(JUDGE_SYSTEM_PROMPT, userPrompt)) as JudgeResult;
+  const parsed = (await generateJson(buildJudgeSystemPrompt(scenario), userPrompt)) as JudgeResult;
   return parsed;
 }

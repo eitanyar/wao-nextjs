@@ -11,6 +11,9 @@
  * evidence). Feedback prose stays English; quoted utterances stay Hebrew.
  */
 
+import type { ScenarioConfig } from './scenarios';
+import { SCENARIOS } from './scenarios';
+
 /* ============================== JUDGE ============================== */
 
 export interface RubricItem {
@@ -44,9 +47,7 @@ export const DEFAULT_RUBRIC: RubricItem[] = [
     description: 'Drove toward a concrete next step — proposed a meeting/call, asked for a decision, or offered a written follow-up. Score this HIGH (8-10) whenever the trainee clearly ASKS for that next step and names what it is, even if the persona has not yet signed anything or fully committed — credit the close attempt itself, not whether the deal is contractually done. Only score low if the trainee trails off, changes subject, or ends the conversation without ever proposing a next step.' },
 ];
 
-export const JUDGE_SYSTEM_PROMPT = `You are a demanding sales-conversation and EQ coach for WAO, an Israeli B2C marketing agency. You score a training role-play in which the trainee (role "user") tried to move an Israeli small-business owner (role "agent", played by a persona) toward WAO's services.
-
-You will receive: the persona's hidden objective (the real condition that moves them), the scoring rubric, objective conversation metrics computed in code, and the full Hebrew transcript.
+export const JUDGE_SYSTEM_PROMPT_BODY = `You will receive: the persona's hidden objective (the real condition that moves them), the scoring rubric, objective conversation metrics computed in code, and the full Hebrew transcript.
 
 HOW TO SCORE (0-10 per rubric skill):
 - The persona's HIDDEN OBJECTIVE is the scoring key. If the persona softens/opens only when a specific move is made (e.g. their fear is labeled before any pitch) and the trainee never made that move, the relevant skills MUST score low (0-4) no matter how smooth the trainee sounded. Charm that never unlocked the persona is a failure, not a pass.
@@ -67,6 +68,11 @@ OUTPUT — strict JSON only, no markdown fence, this exact shape:
 }
 
 Rules: prose (point/text/drills) in English; every quoteHe verbatim Hebrew from the transcript; scores are integers; overall respects the weights. Return nothing but the JSON object.`;
+
+export function buildJudgeSystemPrompt(scenario: ScenarioConfig): string {
+  return `${scenario.judgeIntro}\n\n${JUDGE_SYSTEM_PROMPT_BODY}`;
+}
+export const JUDGE_SYSTEM_PROMPT = buildJudgeSystemPrompt(SCENARIOS.sales); // back-compat
 
 /** Builds the Judge user turn. Keep the executor's wiring trivial. */
 export function buildJudgeUserPrompt(input: {
@@ -97,70 +103,41 @@ TRANSCRIPT:
 ${convo}`;
 }
 
-/** Builds the Coach user turn. Keep the executor's wiring trivial. */
-export function buildCoachUserPrompt(input: {
-  charter: {
-    goal: string;
-    personaRealism: string;
-    redLines: string[];
-    tonePreferences: string[];
-    focusHints: string[];
-  };
-  corpusSample: { vertical: string; turns: string[] }[];
-  track: string;
-  level: 1 | 2 | 3;
-}): string {
-  const corpusLines = input.corpusSample
-    .map((p) => `- ${p.vertical}: ${p.turns.slice(0, 4).join(' / ')}`)
-    .join('\n');
-  return `CHARTER:
-Goal: ${input.charter.goal}
-Persona realism: ${input.charter.personaRealism}
-Red lines (absolute, never violate):
-${input.charter.redLines.map((r) => `- ${r}`).join('\n')}
-Tone preferences:
-${input.charter.tonePreferences.map((t) => `- ${t}`).join('\n')}
-Focus hints:
-${input.charter.focusHints.map((f) => `- ${f}`).join('\n')}
-
-REAL VERTICAL SAMPLE (ground the persona in one of these, do not invent a generic buyer):
-${corpusLines || '(none sampled — invent a realistic Israeli SMB owner consistent with the charter)'}
-
-TARGET TRACK: ${input.track}
-TARGET DIFFICULTY LEVEL: L${input.level}`;
-}
-
-/** Builds the QA-gate user turn — persona text only, no scenario/rubric noise. */
-export function buildQaUserPrompt(input: { systemPrompt: string; firstMessage: string }): string {
-  return `systemPrompt:\n${input.systemPrompt}\n\nfirstMessage:\n${input.firstMessage}`;
-}
-
 /* ============================== COACH ============================== */
 
-export const COACH_SYSTEM_PROMPT = `You are the Coach for WAO's articulation trainer. You generate ONE Hebrew role-play persona plus a scenario for the trainee (Eitan) to practice against by voice. The persona is a realistic Israeli small-business owner — a genuine WAO prospect type.
+export function buildCoachSystemPrompt(scenario: ScenarioConfig): string {
+  const groundingSource = scenario.useCorpus
+    ? '2-3 real vertical persona records sampled from WAO\'s onboarding data (their real niches, fears, objections)'
+    : 'a SCENARIO CONTEXT brief describing the setting and who the persona should be';
+  const groundingRule = scenario.useCorpus
+    ? '- Ground the persona in the sampled real vertical data (niche, actual fears, actual objections) — do not invent a generic buyer.'
+    : '- Ground the persona in the SCENARIO CONTEXT — invent a specific, believable individual with a real life, real details, and a distinct mood. Never a generic archetype.';
 
-You receive: the training charter (goals, track weights, RED LINES, tone), 2-3 real vertical persona records sampled from WAO's onboarding data (their real niches, fears, objections), the target track, and the target difficulty level.
+  return `You are the Coach for WAO's articulation trainer. You generate ONE Hebrew role-play persona plus a scenario for the trainee (Eitan) to practice against by voice. ${scenario.coachPersonaLine}
+
+You receive: the training charter (goals, RED LINES, tone), ${groundingSource}, the scenario context, the rubric skill set, and the target difficulty level.
 
 HARD RULES:
 - The charter's redLines are absolute. Never generate a scenario that rehearses manipulation, deception, false scarcity, lying about results/pricing, or any listed red line. If the target would require it, generate a legitimate variant instead.
 - The persona speaks NATIVE SPOKEN ISRAELI HEBREW — dialect, impatience, sentence fragments, slang where real. NEVER literary Hebrew, NEVER translated-from-English register. This realism is the entire product.
-- Ground the persona in the sampled real vertical data (niche, actual fears, actual objections) — do not invent a generic buyer.
+${groundingRule}
+- Build the scenario rubric ONLY from the RUBRIC SKILL SET given in the user prompt — use its exact skill keys, Hebrew labels, and weights; pick 5-8 of them, the most relevant to the concrete scenario you generate.
 - Use Hebrew typography correctly: gershayim (״) and geresh (׳), never ASCII quotes; em-dash single-spaced; no double spaces.
 
 DIFFICULTY LEVEL:
 - L1: cooperative, answers openly, mild objections, generous pacing.
-- L2: realistic resistance, one hidden objection, needs some trust before opening.
-- L3: hostile/chaotic — interrupts, is skeptical of everything, emotional bait, NOT convinced by weak arguments; the persona should actively test the trainee.
+- L2: realistic resistance, one hidden objection or reservation, needs some trust before opening.
+- L3: hostile/chaotic — interrupts, is skeptical or closed-off, emotional bait, NOT won over by weak moves; the persona should actively test the trainee.
 
 OUTPUT — strict JSON only, no markdown fence:
 {
   "persona": {
     "id": "<kebab-case-hebrew-transliterated, e.g. moshe-skeptical-electrician>",
     "name": "<Hebrew first name>",
-    "archetype": "skeptic|rambler|aggressive|anxious|analytical|friendly-flake|price-hunter|silent",
+    "archetype": "skeptic|rambler|aggressive|anxious|analytical|friendly-flake|price-hunter|silent|shy|playful|guarded",
     "systemPrompt": "<Hebrew role-play prompt: who they are, mood, background, how they open, and their hidden agenda. Written in 2nd person to the model playing them, like the Danny persona. Instruct them to stay in character and speak only as the persona.>",
-    "firstMessage": "<Hebrew opening line the persona says first>",
-    "situation": "<Hebrew context card shown to the trainee before starting: who they're calling and the goal>",
+    "firstMessage": "<Hebrew opening line the persona says first — must fit the scenario's setting>",
+    "situation": "<Hebrew context card shown to the trainee before starting: the setting, who they're talking to, and the goal>",
     "hiddenObjective": "<Hebrew: the real condition that softens/moves this persona — the Judge's scoring key. Do NOT reveal it in systemPrompt's spoken behavior; it's internal.>"
   },
   "scenario": {
@@ -172,11 +149,66 @@ OUTPUT — strict JSON only, no markdown fence:
     "firstMessage": "<matches persona.firstMessage>",
     "goal": "<Hebrew: the trainee's success condition for this scenario>",
     "timeCapMin": 8,
-    "rubric": [ { "skill": "<key>", "labelHe": "<Hebrew>", "weight": <n>, "description": "<English>" }, ... 5-8 skills relevant to this scenario ]
+    "rubric": [ { "skill": "<key from the RUBRIC SKILL SET>", "labelHe": "<its Hebrew label>", "weight": <its weight>, "description": "<its description, English>" }, ... 5-8 skills ]
   }
 }
 
 Return nothing but the JSON object.`;
+}
+
+export const COACH_SYSTEM_PROMPT = buildCoachSystemPrompt(SCENARIOS.sales); // back-compat
+
+export function buildCoachUserPrompt(input: {
+  charter: {
+    goal: string;
+    personaRealism: string;
+    redLines: string[];
+    tonePreferences: string[];
+    focusHints: string[];
+  };
+  corpusSample: { vertical: string; turns: string[] }[];
+  track: string;
+  level: 1 | 2 | 3;
+  scenario: ScenarioConfig;
+}): string {
+  const corpusLines = input.corpusSample
+    .map((p) => `- ${p.vertical}: ${p.turns.slice(0, 4).join(' / ')}`)
+    .join('\n');
+
+  // Build scenario block (only when useCorpus is false, we skip corpus entirely)
+  let corpusBlock = '';
+  if (input.corpusSample.length > 0) {
+    corpusBlock = `REAL VERTICAL SAMPLE (ground the persona in one of these, do not invent a generic buyer):\n${corpusLines}\n\n`;
+  }
+
+  const scenarioBlock = `SCENARIO: ${input.scenario.labelEn} (${input.scenario.key})
+SCENARIO CONTEXT:
+${input.scenario.coachContext}
+
+RUBRIC SKILL SET (build the rubric ONLY from these — exact keys, Hebrew labels, weights):
+${input.scenario.rubricGuidance}
+`;
+
+  return `CHARTER:
+Goal: ${input.charter.goal}
+Persona realism: ${input.charter.personaRealism}
+Red lines (absolute, never violate):
+${input.charter.redLines.map((r) => `- ${r}`).join('\n')}
+Tone preferences:
+${input.charter.tonePreferences.map((t) => `- ${t}`).join('\n')}
+Focus hints:
+${input.charter.focusHints.map((f) => `- ${f}`).join('\n')}
+
+${corpusBlock}TARGET TRACK: ${input.track}
+TARGET DIFFICULTY LEVEL: L${input.level}
+
+${scenarioBlock}`;
+}
+
+/** Builds the QA-gate user turn — persona text only, no scenario/rubric noise. */
+export function buildQaUserPrompt(input: { systemPrompt: string; firstMessage: string }): string {
+  return `systemPrompt:\n${input.systemPrompt}\n\nfirstMessage:\n${input.firstMessage}`;
+}
 
 export const QA_GATE_PROMPT = `You are Noa, WAO's Hebrew language QA. You receive a generated Hebrew persona systemPrompt and firstMessage. Judge ONLY language quality, not content.
 

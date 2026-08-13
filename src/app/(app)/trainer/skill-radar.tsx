@@ -1,4 +1,4 @@
-import { DEFAULT_RUBRIC } from '@/lib/trainer/prompts';
+import { SKILL_LABELS_HE } from '@/lib/trainer/scenarios';
 
 interface Props {
   mastery: Record<string, number>;
@@ -18,7 +18,35 @@ function point(cx: number, cy: number, r: number, angle: number): [number, numbe
  * (also serves as the accessible/table-view fallback for screen readers).
  */
 export default function SkillRadar({ mastery, size = 280 }: Props) {
-  const skills = DEFAULT_RUBRIC;
+  // Reuse DEFAULT_RUBRIC for the skill keys/order, but use SKILL_LABELS_HE for Hebrew labels
+  const skills = [
+    { skill: 'emotion_labeling', labelHe: SKILL_LABELS_HE['emotion_labeling'] || 'שיקוף רגש' },
+    { skill: 'listening_ratio', labelHe: SKILL_LABELS_HE['listening_ratio'] || 'הקשבה' },
+    { skill: 'question_quality', labelHe: SKILL_LABELS_HE['question_quality'] || 'איכות שאלות' },
+    { skill: 'objection_handling', labelHe: SKILL_LABELS_HE['objection_handling'] || 'טיפול בהתנגדויות' },
+    { skill: 'framing_analogy', labelHe: SKILL_LABELS_HE['framing_analogy'] || 'מסגור והסבר' },
+    { skill: 'boundary_setting', labelHe: SKILL_LABELS_HE['boundary_setting'] || 'הצבת גבולות' },
+    { skill: 'brevity_pacing', labelHe: SKILL_LABELS_HE['brevity_pacing'] || 'קצב ותמציתיות' },
+    { skill: 'closing', labelHe: SKILL_LABELS_HE['closing'] || 'סגירה' },
+    { skill: 'opening_naturalness', labelHe: SKILL_LABELS_HE['opening_naturalness'] || 'פתיחה טבעית' },
+    { skill: 'active_listening', labelHe: SKILL_LABELS_HE['active_listening'] || 'הקשבה פעילה' },
+    { skill: 'followup_questions', labelHe: SKILL_LABELS_HE['followup_questions'] || 'שאלות המשך' },
+    { skill: 'self_disclosure', labelHe: SKILL_LABELS_HE['self_disclosure'] || 'שיתוף עצמי' },
+    { skill: 'topic_transitions', labelHe: SKILL_LABELS_HE['topic_transitions'] || 'מעברי נושא' },
+    { skill: 'warmth_positivity', labelHe: SKILL_LABELS_HE['warmth_positivity'] || 'חום וחיוביות' },
+    { skill: 'graceful_exit', labelHe: SKILL_LABELS_HE['graceful_exit'] || 'סיום חינני' },
+    { skill: 'self_intro_clarity', labelHe: SKILL_LABELS_HE['self_intro_clarity'] || 'הצגה עצמית' },
+    { skill: 'mutual_value_discovery', labelHe: SKILL_LABELS_HE['mutual_value_discovery'] || 'זיהוי ערך הדדי' },
+    { skill: 'memorability', labelHe: SKILL_LABELS_HE['memorability'] || 'זכירות' },
+    { skill: 'followup_close', labelHe: SKILL_LABELS_HE['followup_close'] || 'סגירת המשך' },
+    { skill: 'warmth_authenticity', labelHe: SKILL_LABELS_HE['warmth_authenticity'] || 'חום ואותנטיות' },
+    { skill: 'emotional_attunement', labelHe: SKILL_LABELS_HE['emotional_attunement'] || 'כוונון רגשי' },
+    { skill: 'curiosity_questions', labelHe: SKILL_LABELS_HE['curiosity_questions'] || 'שאלות מסקרנות' },
+    { skill: 'disclosure_reciprocity', labelHe: SKILL_LABELS_HE['disclosure_reciprocity'] || 'הדדיות בשיתוף' },
+    { skill: 'humor_playfulness', labelHe: SKILL_LABELS_HE['humor_playfulness'] || 'הומור וקלילות' },
+    { skill: 'confident_pacing', labelHe: SKILL_LABELS_HE['confident_pacing'] || 'ביטחון וקצב' },
+    { skill: 'boundary_respect', labelHe: SKILL_LABELS_HE['boundary_respect'] || 'כיבוד גבולות' },
+  ];
   const n = skills.length;
   const cx = size / 2;
   const cy = size / 2;
@@ -37,7 +65,7 @@ export default function SkillRadar({ mastery, size = 280 }: Props) {
       height="auto"
       style={{ maxWidth: size }}
       role="img"
-      aria-label={`מפת מיומנויות: ${skills.map((s) => `${s.labelHe} ${Math.round(mastery[s.skill] ?? 0)} מתוך 100`).join(', ')}`}
+      aria-label={`מפת מיומנויות: ${skills.map((s) => `${s.labelHe} ${Math.round(mastery[s.skill] ?? 0)} מתוך 100}`).join(', ')}`}
     >
       {RINGS.map((r) => {
         const ring = skills.map((_, i) => point(cx, cy, maxR * r, i * angleStep));
@@ -83,11 +111,39 @@ export default function SkillRadar({ mastery, size = 280 }: Props) {
 
 /** Accessible table-view fallback for the radar — same data, exact numbers. */
 export function SkillRadarTable({ mastery }: { mastery: Record<string, number> }) {
+  const skills = [
+    { skill: 'emotion_labeling', labelHe: SKILL_LABELS_HE['emotion_labeling'] || 'שיקוף רגש' },
+    { skill: 'listening_ratio', labelHe: SKILL_LABELS_HE['listening_ratio'] || 'הקשבה' },
+    { skill: 'question_quality', labelHe: SKILL_LABELS_HE['question_quality'] || 'איכות שאלות' },
+    { skill: 'objection_handling', labelHe: SKILL_LABELS_HE['objection_handling'] || 'טיפול בהתנגדויות' },
+    { skill: 'framing_analogy', labelHe: SKILL_LABELS_HE['framing_analogy'] || 'מסגור והסבר' },
+    { skill: 'boundary_setting', labelHe: SKILL_LABELS_HE['boundary_setting'] || 'הצבת גבולות' },
+    { skill: 'brevity_pacing', labelHe: SKILL_LABELS_HE['brevity_pacing'] || 'קצב ותמציתיות' },
+    { skill: 'closing', labelHe: SKILL_LABELS_HE['closing'] || 'סגירה' },
+    { skill: 'opening_naturalness', labelHe: SKILL_LABELS_HE['opening_naturalness'] || 'פתיחה טבעית' },
+    { skill: 'active_listening', labelHe: SKILL_LABELS_HE['active_listening'] || 'הקשבה פעילה' },
+    { skill: 'followup_questions', labelHe: SKILL_LABELS_HE['followup_questions'] || 'שאלות המשך' },
+    { skill: 'self_disclosure', labelHe: SKILL_LABELS_HE['self_disclosure'] || 'שיתוף עצמי' },
+    { skill: 'topic_transitions', labelHe: SKILL_LABELS_HE['topic_transitions'] || 'מעברי נושא' },
+    { skill: 'warmth_positivity', labelHe: SKILL_LABELS_HE['warmth_positivity'] || 'חום וחיוביות' },
+    { skill: 'graceful_exit', labelHe: SKILL_LABELS_HE['graceful_exit'] || 'סיום חינני' },
+    { skill: 'self_intro_clarity', labelHe: SKILL_LABELS_HE['self_intro_clarity'] || 'הצגה עצמית' },
+    { skill: 'mutual_value_discovery', labelHe: SKILL_LABELS_HE['mutual_value_discovery'] || 'זיהוי ערך הדדי' },
+    { skill: 'memorability', labelHe: SKILL_LABELS_HE['memorability'] || 'זכירות' },
+    { skill: 'followup_close', labelHe: SKILL_LABELS_HE['followup_close'] || 'סגירת המשך' },
+    { skill: 'warmth_authenticity', labelHe: SKILL_LABELS_HE['warmth_authenticity'] || 'חום ואותנטיות' },
+    { skill: 'emotional_attunement', labelHe: SKILL_LABELS_HE['emotional_attunement'] || 'כוונון רגשי' },
+    { skill: 'curiosity_questions', labelHe: SKILL_LABELS_HE['curiosity_questions'] || 'שאלות מסקרנות' },
+    { skill: 'disclosure_reciprocity', labelHe: SKILL_LABELS_HE['disclosure_reciprocity'] || 'הדדיות בשיתוף' },
+    { skill: 'humor_playfulness', labelHe: SKILL_LABELS_HE['humor_playfulness'] || 'הומור וקלילות' },
+    { skill: 'confident_pacing', labelHe: SKILL_LABELS_HE['confident_pacing'] || 'ביטחון וקצב' },
+    { skill: 'boundary_respect', labelHe: SKILL_LABELS_HE['boundary_respect'] || 'כיבוד גבולות' },
+  ];
   return (
     <table className="w-full text-sm">
       <caption className="sr-only">מיומנויות ורמת שליטה מתוך 100</caption>
       <tbody>
-        {DEFAULT_RUBRIC.map((s) => (
+        {skills.map((s) => (
           <tr key={s.skill} className="border-b border-white/5 last:border-0">
             <th scope="row" className="py-1.5 text-start font-normal text-[var(--muted)]">
               {s.labelHe}
