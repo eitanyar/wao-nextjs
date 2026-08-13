@@ -115,6 +115,26 @@ Missing sections = Hermes rejects the file.
 
 ---
 
+## Hebrew-Safety Rule (non-negotiable, added 2026-08-13)
+
+**`waoengineer` (Qwen3-Coder-Next) must NEVER type a single Hebrew byte into a file.** It is a code
+model, not a language model, and reliably corrupts Hebrew/mixed-script text — including short
+single-word labels — when asked to type it from memory. Caught in production on task 011: only 2 of
+9 Hebrew strings were tokenized, and the coder corrupted all 7 of the untokenized ones (injected
+Chinese/Portuguese fragments, garbled words) while the file still passed `tsc` cleanly.
+
+**Rule for any spec touching a file with Hebrew text:**
+1. Tokenize **every** Hebrew string in the file with an ASCII placeholder (`"__FOO__"`), not just
+   the "important" ones.
+2. Author the real Hebrew separately — default to `waocopy` (Qwen 3.8 Max), falling back to Claude's
+   `copywriter` subagent when DashScope is rate-limited or the string count is trivial.
+3. Substitute via a small Python `str.replace` patch script, asserting each token's count before
+   writing. The coder runs this script as its final build step; it never edits the Hebrew directly.
+4. Verification must scan the served HTML for non-Hebrew/non-Latin scripts (CJK/Arabic/Cyrillic
+   Unicode ranges) and known garbage tokens as a standard check, not a spot-check of a few strings.
+
+---
+
 ## Quick Reference
 
 | Action | Directory | Who Does It |
