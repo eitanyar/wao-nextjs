@@ -2,22 +2,24 @@
   "clientId": "aasada",
   "siteUrl": "https://aaasada.com/",
   "cmsType": "next.js (static export, Cloudflare Pages)",
-  "businessNiche": "Catering — small business in financial difficulty, low order volume. High-priority client for Eitan personally.",
-  "topService": "unknown — to be assessed",
-  "targetLocation": "ערים קרובות למיקום העסק — קמפיין חי בשם \"ערים קרובות\" מרמז על טווח גיאוגרפי מבוסס-מרחק, אך הרשימה המדויקת של הערים לא מתועדת כאן; טרם אומת מול הלקוח (Eitan, 2026-08-04, מ-GAQL בלבד — לא נבדק ידנית).",
-  "usp": "unknown — to be assessed",
+  "businessNiche": "קייטרינג בשרי כשר למהדרין לאירועי משפחה — שמחות ואבלות. עסק קטן בקושי כלכלי, נפח הזמנות נמוך. לקוח בעדיפות אישית גבוהה לאיתן.",
+  "topService": "ארוחות בשריות חמות מוכנות, מוגשות במיכלים תרמיים להגשה עצמית — לבר מצווה, ברית, שבת חתן, אזכרה ושבעה. מינימום הזמנה 30 סועדים, החל מ-58 ש״ח לסועד.",
+  "targetLocation": "ירושלים, אשדוד, באר שבע, ראשון לציון, פתח תקווה — ערים מאומתות מנתוני GSC בפועל (פארטו, 2026-08-14). קמפיין חי בשם \"ערים קרובות\" מרמז על טווח רחב יותר מבוסס-מרחק, אך הרשימה המלאה טרם אומתה ידנית מול הלקוח (Eitan, 2026-08-04).",
+  "usp": "עד 60% חיסכון לעומת קייטרינג מסורתי — בלי עלות צוות הגשה. מוגש חם ומוכן במיכלים תרמיים, שפע וטעם ביתי חם. בהשגחת כשרות של הרב שלום מחפוד. מקור: הטקסט באתר הלקוח עצמו (aaasada.com), 2026-08-15.",
   "clientQuestions": "",
   "exclusions": "",
   "approvalContact": "Dina",
   "approvalWhatsapp": "972526148860",
-  "tone": "unknown — to be assessed",
+  "tone": "חם, קהילתי, מכבד את האירוע המשפחתי (שמחה או אבל) — לא שיווקי אגרסיבי. מקור: טון האתר הקיים.",
   "pin": "4247",
   "entitlements": [
+    "geo",
     "ads-overlap:internal",
     "title-bot:internal",
     "pareto:internal",
     "anomaly:internal",
     "advisor:internal",
     "google-ads-operator:internal"
-  ]
+  ],
+  "brandName": "קייטרינג טעם מהודר"
 }

@@ -1,27 +1,27 @@
 {
   "site": "https://aaasada.com/",
-  "generatedAt": "2026-07-07T08:54:22.952Z",
+  "generatedAt": "2026-08-14T11:54:34.664Z",
   "period": {
-    "startDate": "2026-04-08",
-    "endDate": "2026-07-07",
+    "startDate": "2026-05-16",
+    "endDate": "2026-08-14",
     "days": 90
   },
-  "totalInRange": 1170,
+  "totalInRange": 1399,
   "opportunities": [
     {
       "rank": 1,
-      "query": "קייטרינג",
-      "rankingUrl": "https://aaasada.com/",
-      "implementationMode": "create",
-      "position": 13.3,
-      "impressions": 1550,
-      "clicks": 19,
-      "ctr": 1.2,
-      "score": 19663,
-      "intentScore": 3,
-      "intentFlag": "review",
-      "intentReason": "classification failed",
-      "priority": "LOW",
+      "query": "קייטרינג לבר מצווה",
+      "rankingUrl": "https://aaasada.com/bar-mitzvah",
+      "implementationMode": "enhance",
+      "position": 5.2,
+      "impressions": 948,
+      "clicks": 8,
+      "ctr": 0.8,
+      "score": 19705,
+      "intentScore": 5,
+      "intentFlag": null,
+      "intentReason": "Highly targeted transactional query for Bar Mitzvah catering services.",
+      "priority": "HIGH",
       "actionType": "faq_block",
       "cannibalFlag": "REVIEW",
       "cannibalReasons": [
@@ -29,26 +29,36 @@
       ],
       "cannibalUrls": [
         {
-          "url": "https://aaasada.com/azkarot",
-          "impressions": 130,
-          "position": 23.4
+          "url": "https://aaasada.com/%D7%AA%D7%A4%D7%A8%D7%99%D7%98-%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%9C%D7%91%D7%A8-%D7%9E%D7%A6%D7%95%D7%95%D7%94/",
+          "impressions": 607,
+          "position": 10.8
+        },
+        {
+          "url": "https://aaasada.com/city/petah-tikva/bar-mitzvah",
+          "impressions": 64,
+          "position": 66.6
+        },
+        {
+          "url": "https://aaasada.com/%D7%A9%D7%99%D7%A8%D7%95%D7%AA%D7%99-%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%9C%D7%91%D7%A8-%D7%9E%D7%A6%D7%95%D7%95%D7%94-%D7%91%D7%91%D7%99%D7%AA-%D7%9B%D7%A0%D7%A1%D7%AA/",
+          "impressions": 57,
+          "position": 36.1
         }
       ]
     },
     {
       "rank": 2,
-      "query": "קייטרינג לחינה",
-      "rankingUrl": "https://aaasada.com/%D7%AA%D7%A4%D7%A8%D7%99%D7%98-%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%9C%D7%97%D7%99%D7%A0%D7%94/",
+      "query": "קייטרינג בירושלים",
+      "rankingUrl": "https://aaasada.com/city/jerusalem",
       "implementationMode": "enhance",
-      "position": 5.7,
-      "impressions": 829,
-      "clicks": 12,
-      "ctr": 1.4,
-      "score": 16842,
-      "intentScore": 3,
-      "intentFlag": "review",
-      "intentReason": "classification failed",
-      "priority": "HIGH",
+      "position": 8.8,
+      "impressions": 682,
+      "clicks": 4,
+      "ctr": 0.6,
+      "score": 11750,
+      "intentScore": 4,
+      "intentFlag": null,
+      "intentReason": "High-intent local search for catering in Jerusalem, highly relevant if the business can service this geographic area.",
+      "priority": "MEDIUM",
       "actionType": "faq_block",
       "cannibalFlag": "REVIEW",
       "cannibalReasons": [
@@ -56,35 +66,25 @@
       ],
       "cannibalUrls": [
         {
-          "url": "https://aaasada.com/%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%9C%D7%97%D7%99%D7%A0%D7%94-%D7%91%D7%90%D7%A9%D7%A7%D7%9C%D7%95%D7%9F/",
-          "impressions": 517,
-          "position": 18.4
-        },
-        {
-          "url": "https://aaasada.com/%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%9C%D7%97%D7%99%D7%A0%D7%94-%D7%91%D7%90%D7%A9%D7%93%D7%95%D7%93/",
-          "impressions": 378,
-          "position": 47.7
-        },
-        {
-          "url": "https://aaasada.com/%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%9C%D7%97%D7%99%D7%A0%D7%94-%D7%91%D7%A0%D7%AA%D7%A0%D7%99%D7%94/",
-          "impressions": 308,
-          "position": 58.7
+          "url": "https://aaasada.com/%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%91%D7%99%D7%A8%D7%95%D7%A9%D7%9C%D7%99%D7%9D-%D7%9E%D7%97%D7%99%D7%A8%D7%99%D7%9D/",
+          "impressions": 496,
+          "position": 9.8
         }
       ]
     },
     {
       "rank": 3,
-      "query": "קייטרינג לאזכרה",
-      "rankingUrl": "https://aaasada.com/%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%90%D7%95%D7%9B%D7%9C-%D7%9E%D7%95%D7%9B%D7%9F-%D7%9C%D7%90%D7%96%D7%9B%D7%A8%D7%94/",
+      "query": "קייטרינג באשדוד",
+      "rankingUrl": "https://aaasada.com/city/ashdod",
       "implementationMode": "enhance",
-      "position": 4.8,
-      "impressions": 749,
-      "clicks": 11,
-      "ctr": 1.5,
-      "score": 15856,
-      "intentScore": 3,
-      "intentFlag": "review",
-      "intentReason": "classification failed",
+      "position": 6,
+      "impressions": 516,
+      "clicks": 5,
+      "ctr": 1,
+      "score": 10302,
+      "intentScore": 4,
+      "intentFlag": null,
+      "intentReason": "High-intent local search for catering in Ashdod, relevant depending on the business's geographic service radius.",
       "priority": "HIGH",
       "actionType": "faq_block",
       "cannibalFlag": "REVIEW",
@@ -93,35 +93,72 @@
       ],
       "cannibalUrls": [
         {
-          "url": "https://aaasada.com/%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%9C%D7%90%D7%96%D7%9B%D7%A8%D7%95%D7%AA-%D7%91%D7%A4%D7%AA%D7%97-%D7%AA%D7%A7%D7%95%D7%95%D7%94/",
-          "impressions": 508,
-          "position": 18.4
+          "url": "https://aaasada.com/%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%91%D7%90%D7%A9%D7%93%D7%95%D7%93-%D7%9E%D7%97%D7%99%D7%A8%D7%99%D7%9D/",
+          "impressions": 327,
+          "position": 5
         },
         {
-          "url": "https://aaasada.com/%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%9C%D7%90%D7%96%D7%9B%D7%A8%D7%95%D7%AA-%D7%91%D7%91%D7%90%D7%A8-%D7%A9%D7%91%D7%A2/",
-          "impressions": 306,
-          "position": 46.2
+          "url": "https://aaasada.com/city/ashdod/shabbat-chatan",
+          "impressions": 129,
+          "position": 32.2
         },
         {
-          "url": "https://aaasada.com/%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%9C%D7%90%D7%96%D7%9B%D7%A8%D7%95%D7%AA-%D7%91%D7%99%D7%A8%D7%95%D7%A9%D7%9C%D7%99%D7%9D/",
-          "impressions": 290,
-          "position": 61.1
+          "url": "https://aaasada.com/city/ashdod/azkarot",
+          "impressions": 127,
+          "position": 74.3
         }
       ]
     },
     {
       "rank": 4,
-      "query": "קייטרינג לאירועים",
-      "rankingUrl": "https://aaasada.com/",
-      "implementationMode": "create",
-      "position": 11.5,
-      "impressions": 1041,
-      "clicks": 5,
-      "ctr": 0.5,
-      "score": 15062,
-      "intentScore": 3,
-      "intentFlag": "review",
-      "intentReason": "classification failed",
+      "query": "קייטרינג לברית",
+      "rankingUrl": "https://aaasada.com/brit",
+      "implementationMode": "enhance",
+      "position": 7.6,
+      "impressions": 553,
+      "clicks": 1,
+      "ctr": 0.2,
+      "score": 10156,
+      "intentScore": 5,
+      "intentFlag": null,
+      "intentReason": "Direct search for event catering services for a circumcision ceremony, representing a high-value lead.",
+      "priority": "MEDIUM",
+      "actionType": "faq_block",
+      "cannibalFlag": "REVIEW",
+      "cannibalReasons": [
+        "MULTI_URL"
+      ],
+      "cannibalUrls": [
+        {
+          "url": "https://aaasada.com/city/petah-tikva/brit",
+          "impressions": 316,
+          "position": 22.8
+        },
+        {
+          "url": "https://aaasada.com/%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%9C%D7%91%D7%A8%D7%99%D7%AA-%D7%9B%D7%95%D7%9C%D7%9C-%D7%94%D7%92%D7%A9%D7%94/",
+          "impressions": 310,
+          "position": 12.3
+        },
+        {
+          "url": "https://aaasada.com/%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%9C%D7%91%D7%A8%D7%99%D7%AA-%D7%9E%D7%99%D7%9C%D7%94-%D7%91%D7%A8%D7%97%D7%95%D7%91%D7%95%D7%AA/",
+          "impressions": 226,
+          "position": 50.6
+        }
+      ]
+    },
+    {
+      "rank": 5,
+      "query": "קייטרינג לשבת חתן",
+      "rankingUrl": "https://aaasada.com/shabbat-chatan",
+      "implementationMode": "enhance",
+      "position": 14.8,
+      "impressions": 894,
+      "clicks": 1,
+      "ctr": 0.1,
+      "score": 9977,
+      "intentScore": 5,
+      "intentFlag": null,
+      "intentReason": "Directly targets customers looking for catering for a major family celebration, which fits the business model perfectly.",
       "priority": "LOW",
       "actionType": "faq_block",
       "cannibalFlag": "REVIEW",
@@ -130,26 +167,36 @@
       ],
       "cannibalUrls": [
         {
-          "url": "https://aaasada.com/category/%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%9C%D7%90%D7%99%D7%A8%D7%95%D7%A2%D7%99%D7%9D/",
-          "impressions": 60,
-          "position": 77.4
+          "url": "https://aaasada.com/%D7%AA%D7%A4%D7%A8%D7%99%D7%98-%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%9C%D7%A9%D7%91%D7%AA-%D7%97%D7%AA%D7%9F/",
+          "impressions": 527,
+          "position": 17.8
+        },
+        {
+          "url": "https://aaasada.com/",
+          "impressions": 506,
+          "position": 3.7
+        },
+        {
+          "url": "https://aaasada.com/city/rishon-lezion/shabbat-chatan",
+          "impressions": 494,
+          "position": 9.5
         }
       ]
     },
     {
-      "rank": 5,
-      "query": "קייטרינג באשדוד",
-      "rankingUrl": "https://aaasada.com/%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%91%D7%90%D7%A9%D7%93%D7%95%D7%93-%D7%9E%D7%97%D7%99%D7%A8%D7%99%D7%9D/",
+      "rank": 6,
+      "query": "קייטרינג באר שבע",
+      "rankingUrl": "https://aaasada.com/city/beer-sheva",
       "implementationMode": "enhance",
-      "position": 5.9,
-      "impressions": 735,
+      "position": 9,
+      "impressions": 545,
       "clicks": 10,
-      "ctr": 1.4,
-      "score": 14809,
-      "intentScore": 3,
-      "intentFlag": "review",
-      "intentReason": "classification failed",
-      "priority": "HIGH",
+      "ctr": 1.8,
+      "score": 9259,
+      "intentScore": 4,
+      "intentFlag": null,
+      "intentReason": "Highly relevant search for local catering services in Beer Sheva.",
+      "priority": "MEDIUM",
       "actionType": "faq_block",
       "cannibalFlag": "REVIEW",
       "cannibalReasons": [
@@ -157,51 +204,30 @@
       ],
       "cannibalUrls": [
         {
-          "url": "https://aaasada.com/%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%91%D7%90%D7%A9%D7%93%D7%95%D7%93/",
-          "impressions": 203,
-          "position": 51.2
+          "url": "https://aaasada.com/%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%9C%D7%90%D7%96%D7%9B%D7%A8%D7%95%D7%AA-%D7%91%D7%91%D7%90%D7%A8-%D7%A9%D7%91%D7%A2/",
+          "impressions": 153,
+          "position": 11.9
         },
         {
-          "url": "https://aaasada.com/%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%9C%D7%A9%D7%91%D7%AA-%D7%97%D7%AA%D7%9F-%D7%91%D7%90%D7%A9%D7%93%D7%95%D7%93/",
-          "impressions": 159,
-          "position": 52.2
-        },
-        {
-          "url": "https://aaasada.com/city/ashdod",
-          "impressions": 132,
-          "position": 8.4
+          "url": "https://aaasada.com/%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%9C%D7%A9%D7%91%D7%AA-%D7%97%D7%AA%D7%9F-%D7%91%D7%91%D7%90%D7%A8-%D7%A9%D7%91%D7%A2-%D7%9E%D7%97%D7%99%D7%A8%D7%99%D7%9D/",
+          "impressions": 43,
+          "position": 17
         }
       ]
-    },
-    {
-      "rank": 6,
-      "query": "קייטרינג בשרי כשר למהדרין",
-      "rankingUrl": "https://aaasada.com/%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%91%D7%A9%D7%A8%D7%99-%D7%9B%D7%A9%D7%A8-%D7%9C%D7%9E%D7%94%D7%93%D7%A8%D7%99%D7%9F/",
-      "implementationMode": "enhance",
-      "position": 9.2,
-      "impressions": 802,
-      "clicks": 2,
-      "ctr": 0.2,
-      "score": 13482,
-      "intentScore": 3,
-      "intentFlag": "review",
-      "intentReason": "classification failed",
-      "priority": "MEDIUM",
-      "actionType": "faq_block"
     },
     {
       "rank": 7,
       "query": "קייטרינג לבר מצווה",
       "rankingUrl": "https://aaasada.com/%D7%AA%D7%A4%D7%A8%D7%99%D7%98-%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%9C%D7%91%D7%A8-%D7%9E%D7%A6%D7%95%D7%95%D7%94/",
       "implementationMode": "enhance",
-      "position": 14.2,
-      "impressions": 1112,
+      "position": 10.8,
+      "impressions": 607,
       "clicks": 1,
-      "ctr": 0.1,
-      "score": 13169,
-      "intentScore": 3,
-      "intentFlag": "review",
-      "intentReason": "classification failed",
+      "ctr": 0.2,
+      "score": 9252,
+      "intentScore": 5,
+      "intentFlag": null,
+      "intentReason": "Highly targeted transactional query for Bar Mitzvah catering services.",
       "priority": "LOW",
       "actionType": "faq_block",
       "cannibalFlag": "REVIEW",
@@ -211,35 +237,146 @@
       "cannibalUrls": [
         {
           "url": "https://aaasada.com/bar-mitzvah",
-          "impressions": 281,
-          "position": 8.6
+          "impressions": 948,
+          "position": 5.2
         },
         {
-          "url": "https://aaasada.com/%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%9C%D7%91%D7%A8-%D7%9E%D7%A6%D7%95%D7%95%D7%94-%D7%91%D7%91%D7%A0%D7%99-%D7%91%D7%A8%D7%A7/",
-          "impressions": 226,
-          "position": 22.3
+          "url": "https://aaasada.com/city/petah-tikva/bar-mitzvah",
+          "impressions": 64,
+          "position": 66.6
         },
         {
-          "url": "https://aaasada.com/%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%9C%D7%91%D7%A8-%D7%9E%D7%A6%D7%95%D7%95%D7%94-%D7%91%D7%90%D7%95%D7%A8-%D7%99%D7%94%D7%95%D7%93%D7%94/",
-          "impressions": 193,
-          "position": 76.7
+          "url": "https://aaasada.com/%D7%A9%D7%99%D7%A8%D7%95%D7%AA%D7%99-%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%9C%D7%91%D7%A8-%D7%9E%D7%A6%D7%95%D7%95%D7%94-%D7%91%D7%91%D7%99%D7%AA-%D7%9B%D7%A0%D7%A1%D7%AA/",
+          "impressions": 57,
+          "position": 36.1
         }
       ]
     },
     {
       "rank": 8,
+      "query": "קייטרינג בראשון לציון",
+      "rankingUrl": "https://aaasada.com/city/rishon-lezion",
+      "implementationMode": "enhance",
+      "position": 9.2,
+      "impressions": 533,
+      "clicks": 4,
+      "ctr": 0.8,
+      "score": 8962,
+      "intentScore": 4,
+      "intentFlag": null,
+      "intentReason": "Highly relevant search for local catering services in Rishon LeZion.",
+      "priority": "MEDIUM",
+      "actionType": "faq_block",
+      "cannibalFlag": "REVIEW",
+      "cannibalReasons": [
+        "MULTI_URL"
+      ],
+      "cannibalUrls": [
+        {
+          "url": "https://aaasada.com/%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%9C%D7%A9%D7%91%D7%AA-%D7%97%D7%AA%D7%9F-%D7%91%D7%A8%D7%90%D7%A9%D7%95%D7%9F-%D7%9C%D7%A6%D7%99%D7%95%D7%9F/",
+          "impressions": 271,
+          "position": 16.7
+        },
+        {
+          "url": "https://aaasada.com/city/rishon-lezion/shabbat-chatan",
+          "impressions": 240,
+          "position": 21.2
+        },
+        {
+          "url": "https://aaasada.com/%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%91%D7%A8%D7%90%D7%A9%D7%95%D7%9F-%D7%9C%D7%A6%D7%99%D7%95%D7%9F/",
+          "impressions": 200,
+          "position": 37.6
+        }
+      ]
+    },
+    {
+      "rank": 9,
+      "query": "קייטרינג לאזכרה",
+      "rankingUrl": "https://aaasada.com/%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%90%D7%95%D7%9B%D7%9C-%D7%9E%D7%95%D7%9B%D7%9F-%D7%9C%D7%90%D7%96%D7%9B%D7%A8%D7%94/",
+      "implementationMode": "enhance",
+      "position": 4.3,
+      "impressions": 396,
+      "clicks": 8,
+      "ctr": 2,
+      "score": 8579,
+      "intentScore": 5,
+      "intentFlag": null,
+      "intentReason": "A highly targeted, high-intent service search for memorial event catering.",
+      "priority": "HIGH",
+      "actionType": "faq_block",
+      "cannibalFlag": "REVIEW",
+      "cannibalReasons": [
+        "MULTI_URL"
+      ],
+      "cannibalUrls": [
+        {
+          "url": "https://aaasada.com/azkarot",
+          "impressions": 463,
+          "position": 3.1
+        },
+        {
+          "url": "https://aaasada.com/%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%9C%D7%90%D7%96%D7%9B%D7%A8%D7%95%D7%AA-%D7%91%D7%A4%D7%AA%D7%97-%D7%AA%D7%A7%D7%95%D7%95%D7%94/",
+          "impressions": 286,
+          "position": 15.8
+        },
+        {
+          "url": "https://aaasada.com/%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%9C%D7%90%D7%96%D7%9B%D7%A8%D7%95%D7%AA-%D7%91%D7%91%D7%90%D7%A8-%D7%A9%D7%91%D7%A2/",
+          "impressions": 169,
+          "position": 47.9
+        }
+      ]
+    },
+    {
+      "rank": 10,
+      "query": "קייטרינג לשבת חתן",
+      "rankingUrl": "https://aaasada.com/city/rishon-lezion/shabbat-chatan",
+      "implementationMode": "enhance",
+      "position": 9.5,
+      "impressions": 494,
+      "clicks": 8,
+      "ctr": 1.6,
+      "score": 8171,
+      "intentScore": 5,
+      "intentFlag": null,
+      "intentReason": "Directly targets customers looking for catering for a major family celebration, which fits the business model perfectly.",
+      "priority": "MEDIUM",
+      "actionType": "faq_block",
+      "cannibalFlag": "REVIEW",
+      "cannibalReasons": [
+        "MULTI_URL"
+      ],
+      "cannibalUrls": [
+        {
+          "url": "https://aaasada.com/shabbat-chatan",
+          "impressions": 894,
+          "position": 14.8
+        },
+        {
+          "url": "https://aaasada.com/%D7%AA%D7%A4%D7%A8%D7%99%D7%98-%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%9C%D7%A9%D7%91%D7%AA-%D7%97%D7%AA%D7%9F/",
+          "impressions": 527,
+          "position": 17.8
+        },
+        {
+          "url": "https://aaasada.com/",
+          "impressions": 506,
+          "position": 3.7
+        }
+      ]
+    },
+    {
+      "rank": 11,
       "query": "קייטרינג בירושלים",
       "rankingUrl": "https://aaasada.com/%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%91%D7%99%D7%A8%D7%95%D7%A9%D7%9C%D7%99%D7%9D-%D7%9E%D7%97%D7%99%D7%A8%D7%99%D7%9D/",
       "implementationMode": "enhance",
-      "position": 11.1,
-      "impressions": 844,
-      "clicks": 6,
-      "ctr": 0.7,
-      "score": 12541,
-      "intentScore": 3,
-      "intentFlag": "review",
-      "intentReason": "classification failed",
-      "priority": "LOW",
+      "position": 9.8,
+      "impressions": 496,
+      "clicks": 4,
+      "ctr": 0.8,
+      "score": 8011,
+      "intentScore": 4,
+      "intentFlag": null,
+      "intentReason": "High-intent local search for catering in Jerusalem, highly relevant if the business can service this geographic area.",
+      "priority": "MEDIUM",
       "actionType": "faq_block",
       "cannibalFlag": "REVIEW",
       "cannibalReasons": [
@@ -248,142 +385,25 @@
       "cannibalUrls": [
         {
           "url": "https://aaasada.com/city/jerusalem",
-          "impressions": 122,
-          "position": 15.2
-        }
-      ]
-    },
-    {
-      "rank": 9,
-      "query": "קייטרינג בפתח תקווה",
-      "rankingUrl": "https://aaasada.com/%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%9C%D7%90%D7%96%D7%9B%D7%A8%D7%95%D7%AA-%D7%91%D7%A4%D7%AA%D7%97-%D7%AA%D7%A7%D7%95%D7%95%D7%94/",
-      "implementationMode": "enhance",
-      "position": 11.2,
-      "impressions": 817,
-      "clicks": 3,
-      "ctr": 0.4,
-      "score": 12095,
-      "intentScore": 3,
-      "intentFlag": "review",
-      "intentReason": "classification failed",
-      "priority": "LOW",
-      "actionType": "faq_block",
-      "cannibalFlag": "REVIEW",
-      "cannibalReasons": [
-        "MULTI_URL"
-      ],
-      "cannibalUrls": [
-        {
-          "url": "https://aaasada.com/%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%91%D7%A4%D7%AA%D7%97-%D7%AA%D7%A7%D7%95%D7%95%D7%94/",
-          "impressions": 462,
-          "position": 56.9
-        },
-        {
-          "url": "https://aaasada.com/%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%9C%D7%A9%D7%91%D7%AA-%D7%97%D7%AA%D7%9F-%D7%91%D7%A4%D7%AA%D7%97-%D7%AA%D7%A7%D7%95%D7%95%D7%94/",
-          "impressions": 360,
-          "position": 48.2
-        },
-        {
-          "url": "https://aaasada.com/%D7%90%D7%95%D7%9B%D7%9C-%D7%9E%D7%95%D7%9B%D7%9F-%D7%91%D7%A4%D7%AA%D7%97-%D7%AA%D7%A7%D7%95%D7%95%D7%94/",
-          "impressions": 161,
-          "position": 88
-        }
-      ]
-    },
-    {
-      "rank": 10,
-      "query": "קייטרינג כשר למהדרין",
-      "rankingUrl": "https://aaasada.com/%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%91%D7%A9%D7%A8%D7%99-%D7%9B%D7%A9%D7%A8-%D7%9C%D7%9E%D7%94%D7%93%D7%A8%D7%99%D7%9F/",
-      "implementationMode": "enhance",
-      "position": 8.4,
-      "impressions": 605,
-      "clicks": 1,
-      "ctr": 0.2,
-      "score": 10631,
-      "intentScore": 3,
-      "intentFlag": "review",
-      "intentReason": "classification failed",
-      "priority": "MEDIUM",
-      "actionType": "faq_block",
-      "cannibalFlag": "REVIEW",
-      "cannibalReasons": [
-        "MULTI_URL"
-      ],
-      "cannibalUrls": [
-        {
-          "url": "https://aaasada.com/",
-          "impressions": 63,
-          "position": 20.2
-        }
-      ]
-    },
-    {
-      "rank": 11,
-      "query": "קייטרינג לשבת חתן",
-      "rankingUrl": "https://aaasada.com/%D7%AA%D7%A4%D7%A8%D7%99%D7%98-%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%9C%D7%A9%D7%91%D7%AA-%D7%97%D7%AA%D7%9F/",
-      "implementationMode": "enhance",
-      "position": 17,
-      "impressions": 1049,
-      "clicks": 15,
-      "ctr": 1.4,
-      "score": 9479,
-      "intentScore": 3,
-      "intentFlag": "review",
-      "intentReason": "classification failed",
-      "priority": "LOW",
-      "actionType": "faq_block",
-      "cannibalFlag": "REVIEW",
-      "cannibalReasons": [
-        "MULTI_URL"
-      ],
-      "cannibalUrls": [
-        {
-          "url": "https://aaasada.com/%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%9C%D7%A9%D7%91%D7%AA-%D7%97%D7%AA%D7%9F-%D7%91%D7%A8%D7%90%D7%A9%D7%95%D7%9F-%D7%9C%D7%A6%D7%99%D7%95%D7%9F/",
-          "impressions": 1066,
-          "position": 26.2
-        },
-        {
-          "url": "https://aaasada.com/%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%9C%D7%A9%D7%91%D7%AA-%D7%97%D7%AA%D7%9F-%D7%9B%D7%95%D7%9C%D7%9C-%D7%9E%D7%9C%D7%A6%D7%A8%D7%99%D7%9D/",
-          "impressions": 416,
-          "position": 59.2
-        },
-        {
-          "url": "https://aaasada.com/",
-          "impressions": 400,
-          "position": 3.9
+          "impressions": 682,
+          "position": 8.8
         }
       ]
     },
     {
       "rank": 12,
-      "query": "אוכל מוכן אשקלון",
-      "rankingUrl": "https://aaasada.com/%D7%90%D7%95%D7%9B%D7%9C-%D7%9E%D7%95%D7%9B%D7%9F-%D7%91%D7%90%D7%A9%D7%A7%D7%9C%D7%95%D7%9F/",
+      "query": "קייטרינג בפתח תקווה",
+      "rankingUrl": "https://aaasada.com/%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%9C%D7%90%D7%96%D7%9B%D7%A8%D7%95%D7%AA-%D7%91%D7%A4%D7%AA%D7%97-%D7%AA%D7%A7%D7%95%D7%95%D7%94/",
       "implementationMode": "enhance",
-      "position": 7.4,
-      "impressions": 500,
-      "clicks": 6,
-      "ctr": 1.2,
-      "score": 9295,
-      "intentScore": 3,
-      "intentFlag": "review",
-      "intentReason": "classification failed",
+      "position": 7.3,
+      "impressions": 428,
+      "clicks": 2,
+      "ctr": 0.5,
+      "score": 7999,
+      "intentScore": 4,
+      "intentFlag": null,
+      "intentReason": "Duplicate query targeting catering in Petah Tikva, highly relevant assuming the business has local delivery coverage.",
       "priority": "MEDIUM",
-      "actionType": "faq_block"
-    },
-    {
-      "rank": 13,
-      "query": "קייטרינג לברית",
-      "rankingUrl": "https://aaasada.com/%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%9C%D7%91%D7%A8%D7%99%D7%AA-%D7%9B%D7%95%D7%9C%D7%9C-%D7%94%D7%92%D7%A9%D7%94/",
-      "implementationMode": "enhance",
-      "position": 12.6,
-      "impressions": 627,
-      "clicks": 6,
-      "ctr": 1,
-      "score": 8391,
-      "intentScore": 3,
-      "intentFlag": "review",
-      "intentReason": "classification failed",
-      "priority": "LOW",
       "actionType": "faq_block",
       "cannibalFlag": "REVIEW",
       "cannibalReasons": [
@@ -391,35 +411,72 @@
       ],
       "cannibalUrls": [
         {
-          "url": "https://aaasada.com/%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%9C%D7%91%D7%A8%D7%99%D7%AA-%D7%9E%D7%99%D7%9C%D7%94-%D7%91%D7%A8%D7%97%D7%95%D7%91%D7%95%D7%AA/",
-          "impressions": 433,
-          "position": 46.4
+          "url": "https://aaasada.com/city/petah-tikva/azkarot",
+          "impressions": 453,
+          "position": 8.9
         },
         {
-          "url": "https://aaasada.com/%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%9C%D7%91%D7%A8%D7%99%D7%AA-%D7%9E%D7%99%D7%9C%D7%94-%D7%91%D7%91%D7%99%D7%AA-%D7%A9%D7%9E%D7%A9/",
-          "impressions": 199,
-          "position": 46.5
+          "url": "https://aaasada.com/city/petah-tikva",
+          "impressions": 266,
+          "position": 49
         },
         {
-          "url": "https://aaasada.com/%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%9C%D7%91%D7%A8%D7%99%D7%AA-%D7%9E%D7%99%D7%9C%D7%94-%D7%91%D7%A4%D7%AA%D7%97-%D7%AA%D7%A7%D7%95%D7%95%D7%94/",
-          "impressions": 175,
-          "position": 46.1
+          "url": "https://aaasada.com/%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%91%D7%A4%D7%AA%D7%97-%D7%AA%D7%A7%D7%95%D7%95%D7%94/",
+          "impressions": 232,
+          "position": 60.5
+        }
+      ]
+    },
+    {
+      "rank": 13,
+      "query": "קייטרינג בפתח תקווה",
+      "rankingUrl": "https://aaasada.com/city/petah-tikva/azkarot",
+      "implementationMode": "enhance",
+      "position": 8.9,
+      "impressions": 453,
+      "clicks": 0,
+      "ctr": 0,
+      "score": 7746,
+      "intentScore": 4,
+      "intentFlag": null,
+      "intentReason": "Duplicate query targeting catering in Petah Tikva, highly relevant assuming the business has local delivery coverage.",
+      "priority": "MEDIUM",
+      "actionType": "faq_block",
+      "cannibalFlag": "REVIEW",
+      "cannibalReasons": [
+        "MULTI_URL"
+      ],
+      "cannibalUrls": [
+        {
+          "url": "https://aaasada.com/%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%9C%D7%90%D7%96%D7%9B%D7%A8%D7%95%D7%AA-%D7%91%D7%A4%D7%AA%D7%97-%D7%AA%D7%A7%D7%95%D7%95%D7%94/",
+          "impressions": 428,
+          "position": 7.3
+        },
+        {
+          "url": "https://aaasada.com/city/petah-tikva",
+          "impressions": 266,
+          "position": 49
+        },
+        {
+          "url": "https://aaasada.com/%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%91%D7%A4%D7%AA%D7%97-%D7%AA%D7%A7%D7%95%D7%95%D7%94/",
+          "impressions": 232,
+          "position": 60.5
         }
       ]
     },
     {
       "rank": 14,
-      "query": "קייטרינג כשר לשבת חתן",
-      "rankingUrl": "https://aaasada.com/%D7%AA%D7%A4%D7%A8%D7%99%D7%98-%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%9C%D7%A9%D7%91%D7%AA-%D7%97%D7%AA%D7%9F/",
+      "query": "קייטרינג לשבעה",
+      "rankingUrl": "https://aaasada.com/azkarot",
       "implementationMode": "enhance",
-      "position": 6.6,
-      "impressions": 416,
-      "clicks": 0,
-      "ctr": 0,
-      "score": 8052,
-      "intentScore": 3,
-      "intentFlag": "review",
-      "intentReason": "classification failed",
+      "position": 6.1,
+      "impressions": 365,
+      "clicks": 5,
+      "ctr": 1.4,
+      "score": 7258,
+      "intentScore": 5,
+      "intentFlag": null,
+      "intentReason": "High-intent, urgent event catering query that represents immediate transactional intent and fast conversion.",
       "priority": "MEDIUM",
       "actionType": "faq_block",
       "cannibalFlag": "REVIEW",
@@ -428,35 +485,35 @@
       ],
       "cannibalUrls": [
         {
-          "url": "https://aaasada.com/%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%9C%D7%A9%D7%91%D7%AA-%D7%97%D7%AA%D7%9F-%D7%91%D7%A8%D7%90%D7%A9%D7%95%D7%9F-%D7%9C%D7%A6%D7%99%D7%95%D7%9F/",
-          "impressions": 234,
-          "position": 30
+          "url": "https://aaasada.com/%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%9C%D7%90%D7%96%D7%9B%D7%A8%D7%95%D7%AA-%D7%91%D7%91%D7%90%D7%A8-%D7%A9%D7%91%D7%A2/",
+          "impressions": 178,
+          "position": 20
         },
         {
-          "url": "https://aaasada.com/%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%9C%D7%A9%D7%91%D7%AA-%D7%97%D7%AA%D7%9F-%D7%9B%D7%95%D7%9C%D7%9C-%D7%9E%D7%9C%D7%A6%D7%A8%D7%99%D7%9D/",
-          "impressions": 210,
-          "position": 52.5
+          "url": "https://aaasada.com/%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%90%D7%95%D7%9B%D7%9C-%D7%9E%D7%95%D7%9B%D7%9F-%D7%9C%D7%90%D7%96%D7%9B%D7%A8%D7%94/",
+          "impressions": 165,
+          "position": 27.5
         },
         {
-          "url": "https://aaasada.com/%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%9C%D7%A9%D7%91%D7%AA-%D7%97%D7%AA%D7%9F-%D7%91%D7%99%D7%A8%D7%95%D7%A9%D7%9C%D7%99%D7%9D/",
-          "impressions": 116,
-          "position": 83.4
+          "url": "https://aaasada.com/city/petah-tikva/azkarot",
+          "impressions": 154,
+          "position": 46.5
         }
       ]
     },
     {
       "rank": 15,
-      "query": "קייטרינג בשרי לשבת חתן",
-      "rankingUrl": "https://aaasada.com/%D7%AA%D7%A4%D7%A8%D7%99%D7%98-%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%9C%D7%A9%D7%91%D7%AA-%D7%97%D7%AA%D7%9F/",
+      "query": "קייטרינג בשרי בירושלים",
+      "rankingUrl": "https://aaasada.com/city/jerusalem",
       "implementationMode": "enhance",
-      "position": 11.3,
-      "impressions": 536,
-      "clicks": 0,
-      "ctr": 0,
-      "score": 7897,
-      "intentScore": 3,
-      "intentFlag": "review",
-      "intentReason": "classification failed",
+      "position": 10.5,
+      "impressions": 463,
+      "clicks": 5,
+      "ctr": 1.1,
+      "score": 7190,
+      "intentScore": 4,
+      "intentFlag": null,
+      "intentReason": "Specific culinary style and location query, highly relevant if the catering business serves meat in the Jerusalem area.",
       "priority": "LOW",
       "actionType": "faq_block",
       "cannibalFlag": "REVIEW",
@@ -465,116 +522,68 @@
       ],
       "cannibalUrls": [
         {
-          "url": "https://aaasada.com/%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%9C%D7%A9%D7%91%D7%AA-%D7%97%D7%AA%D7%9F-%D7%91%D7%A8%D7%90%D7%A9%D7%95%D7%9F-%D7%9C%D7%A6%D7%99%D7%95%D7%9F/",
-          "impressions": 263,
-          "position": 42.3
+          "url": "https://aaasada.com/%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%91%D7%99%D7%A8%D7%95%D7%A9%D7%9C%D7%99%D7%9D-%D7%9E%D7%97%D7%99%D7%A8%D7%99%D7%9D/",
+          "impressions": 204,
+          "position": 16.1
         },
         {
-          "url": "https://aaasada.com/%D7%AA%D7%A4%D7%A8%D7%99%D7%98-%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%9C%D7%A9%D7%91%D7%AA-%D7%97%D7%AA%D7%9F-%D7%9B%D7%95%D7%9C%D7%9C-%D7%94%D7%92%D7%A9%D7%94/",
-          "impressions": 95,
-          "position": 84.1
-        },
-        {
-          "url": "https://aaasada.com/",
+          "url": "https://aaasada.com/%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%91%D7%A9%D7%A8%D7%99-%D7%9B%D7%A9%D7%A8-%D7%9C%D7%9E%D7%94%D7%93%D7%A8%D7%99%D7%9F/",
           "impressions": 87,
-          "position": 5.1
+          "position": 56.8
         }
       ]
     },
     {
       "rank": 16,
-      "query": "אוכל מוכן לראש השנה",
-      "rankingUrl": "https://aaasada.com/%D7%AA%D7%A4%D7%A8%D7%99%D7%98-%D7%A8%D7%90%D7%A9-%D7%94%D7%A9%D7%A0%D7%94/",
+      "query": "קייטרינג בשרי כשר למהדרין",
+      "rankingUrl": "https://aaasada.com/%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%91%D7%A9%D7%A8%D7%99-%D7%9B%D7%A9%D7%A8-%D7%9C%D7%9E%D7%94%D7%93%D7%A8%D7%99%D7%9F/",
       "implementationMode": "enhance",
-      "position": 10.8,
-      "impressions": 489,
-      "clicks": 0,
-      "ctr": 0,
-      "score": 7413,
-      "intentScore": 3,
-      "intentFlag": "review",
-      "intentReason": "classification failed",
-      "priority": "LOW",
-      "actionType": "faq_block"
+      "position": 8.5,
+      "impressions": 410,
+      "clicks": 1,
+      "ctr": 0.2,
+      "score": 7160,
+      "intentScore": 5,
+      "intentFlag": null,
+      "intentReason": "Highly specific and high-intent query for strictly kosher meat catering, which is a major target audience in Israel.",
+      "priority": "MEDIUM",
+      "actionType": "faq_block",
+      "cannibalFlag": "REVIEW",
+      "cannibalReasons": [
+        "MULTI_URL"
+      ],
+      "cannibalUrls": [
+        {
+          "url": "https://aaasada.com/city/modiin",
+          "impressions": 156,
+          "position": 27.3
+        },
+        {
+          "url": "https://aaasada.com/",
+          "impressions": 96,
+          "position": 12.2
+        },
+        {
+          "url": "https://aaasada.com/city/raanana",
+          "impressions": 47,
+          "position": 13.2
+        }
+      ]
     },
     {
       "rank": 17,
-      "query": "אוכל מוכן כפר סבא",
-      "rankingUrl": "https://aaasada.com/%D7%90%D7%95%D7%9B%D7%9C-%D7%9E%D7%95%D7%9B%D7%9F-%D7%91%D7%9B%D7%A4%D7%A8-%D7%A1%D7%91%D7%90/",
+      "query": "קייטרינג באשדוד",
+      "rankingUrl": "https://aaasada.com/%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%91%D7%90%D7%A9%D7%93%D7%95%D7%93-%D7%9E%D7%97%D7%99%D7%A8%D7%99%D7%9D/",
       "implementationMode": "enhance",
-      "position": 9,
-      "impressions": 421,
-      "clicks": 2,
-      "ctr": 0.5,
-      "score": 7138,
-      "intentScore": 3,
-      "intentFlag": "review",
-      "intentReason": "classification failed",
-      "priority": "MEDIUM",
-      "actionType": "faq_block",
-      "cannibalFlag": "REVIEW",
-      "cannibalReasons": [
-        "MULTI_URL"
-      ],
-      "cannibalUrls": [
-        {
-          "url": "https://aaasada.com/city/kfar-saba",
-          "impressions": 47,
-          "position": 9.7
-        }
-      ]
-    },
-    {
-      "rank": 18,
-      "query": "קייטרינג בכפר סבא",
-      "rankingUrl": "https://aaasada.com/%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%91%D7%9B%D7%A4%D7%A8-%D7%A1%D7%91%D7%90/",
-      "implementationMode": "enhance",
-      "position": 11.2,
-      "impressions": 479,
-      "clicks": 2,
-      "ctr": 0.4,
-      "score": 7104,
-      "intentScore": 3,
-      "intentFlag": "review",
-      "intentReason": "classification failed",
-      "priority": "LOW",
-      "actionType": "faq_block",
-      "cannibalFlag": "REVIEW",
-      "cannibalReasons": [
-        "MULTI_URL"
-      ],
-      "cannibalUrls": [
-        {
-          "url": "https://aaasada.com/%D7%90%D7%95%D7%9B%D7%9C-%D7%9E%D7%95%D7%9B%D7%9F-%D7%91%D7%9B%D7%A4%D7%A8-%D7%A1%D7%91%D7%90/",
-          "impressions": 157,
-          "position": 68
-        },
-        {
-          "url": "https://aaasada.com/city/kfar-saba",
-          "impressions": 83,
-          "position": 12.8
-        },
-        {
-          "url": "https://aaasada.com/%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%9C%D7%90%D7%96%D7%9B%D7%A8%D7%95%D7%AA-%D7%91%D7%9B%D7%A4%D7%A8-%D7%A1%D7%91%D7%90/",
-          "impressions": 66,
-          "position": 50.7
-        }
-      ]
-    },
-    {
-      "rank": 19,
-      "query": "אוכל מוכן באשדוד",
-      "rankingUrl": "https://aaasada.com/%D7%90%D7%95%D7%9B%D7%9C-%D7%9E%D7%95%D7%9B%D7%9F-%D7%91%D7%90%D7%A9%D7%93%D7%95%D7%93/",
-      "implementationMode": "enhance",
-      "position": 8,
-      "impressions": 394,
-      "clicks": 7,
-      "ctr": 1.8,
-      "score": 7079,
-      "intentScore": 3,
-      "intentFlag": "review",
-      "intentReason": "classification failed",
-      "priority": "MEDIUM",
+      "position": 5,
+      "impressions": 327,
+      "clicks": 3,
+      "ctr": 0.9,
+      "score": 6854,
+      "intentScore": 4,
+      "intentFlag": null,
+      "intentReason": "High-intent local search for catering in Ashdod, relevant depending on the business's geographic service radius.",
+      "priority": "HIGH",
       "actionType": "faq_block",
       "cannibalFlag": "REVIEW",
       "cannibalReasons": [
@@ -583,25 +592,109 @@
       "cannibalUrls": [
         {
           "url": "https://aaasada.com/city/ashdod",
-          "impressions": 53,
-          "position": 10.3
+          "impressions": 516,
+          "position": 6
+        },
+        {
+          "url": "https://aaasada.com/city/ashdod/shabbat-chatan",
+          "impressions": 129,
+          "position": 32.2
+        },
+        {
+          "url": "https://aaasada.com/city/ashdod/azkarot",
+          "impressions": 127,
+          "position": 74.3
+        }
+      ]
+    },
+    {
+      "rank": 18,
+      "query": "קייטרינג לשבת",
+      "rankingUrl": "https://aaasada.com/shabbat-chatan",
+      "implementationMode": "enhance",
+      "position": 8.5,
+      "impressions": 387,
+      "clicks": 2,
+      "ctr": 0.5,
+      "score": 6773,
+      "intentScore": 5,
+      "intentFlag": null,
+      "intentReason": "High-volume transactional search for weekend catering, which can provide a steady stream of orders.",
+      "priority": "MEDIUM",
+      "actionType": "faq_block",
+      "cannibalFlag": "REVIEW",
+      "cannibalReasons": [
+        "MULTI_URL"
+      ],
+      "cannibalUrls": [
+        {
+          "url": "https://aaasada.com/city/rishon-lezion/shabbat-chatan",
+          "impressions": 199,
+          "position": 7.2
+        },
+        {
+          "url": "https://aaasada.com/city/bat-yam",
+          "impressions": 141,
+          "position": 32.1
+        },
+        {
+          "url": "https://aaasada.com/city/beer-sheva",
+          "impressions": 84,
+          "position": 18.8
+        }
+      ]
+    },
+    {
+      "rank": 19,
+      "query": "קייטרינג בשרי לשבת חתן",
+      "rankingUrl": "https://aaasada.com/shabbat-chatan",
+      "implementationMode": "enhance",
+      "position": 6.9,
+      "impressions": 348,
+      "clicks": 1,
+      "ctr": 0.3,
+      "score": 6657,
+      "intentScore": 5,
+      "intentFlag": null,
+      "intentReason": "Clearly right, targeting a high-value, specific event catering service with high order volume potential.",
+      "priority": "MEDIUM",
+      "actionType": "faq_block",
+      "cannibalFlag": "REVIEW",
+      "cannibalReasons": [
+        "MULTI_URL"
+      ],
+      "cannibalUrls": [
+        {
+          "url": "https://aaasada.com/%D7%AA%D7%A4%D7%A8%D7%99%D7%98-%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%9C%D7%A9%D7%91%D7%AA-%D7%97%D7%AA%D7%9F/",
+          "impressions": 222,
+          "position": 11.3
+        },
+        {
+          "url": "https://aaasada.com/%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%9C%D7%A9%D7%91%D7%AA-%D7%97%D7%AA%D7%9F-%D7%91%D7%A8%D7%90%D7%A9%D7%95%D7%9F-%D7%9C%D7%A6%D7%99%D7%95%D7%9F/",
+          "impressions": 85,
+          "position": 47.8
+        },
+        {
+          "url": "https://aaasada.com/",
+          "impressions": 79,
+          "position": 4.9
         }
       ]
     },
     {
       "rank": 20,
-      "query": "קייטרינג לראש השנה",
-      "rankingUrl": "https://aaasada.com/%D7%AA%D7%A4%D7%A8%D7%99%D7%98-%D7%A8%D7%90%D7%A9-%D7%94%D7%A9%D7%A0%D7%94/",
+      "query": "קייטרינג כשר למהדרין",
+      "rankingUrl": "https://aaasada.com/%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%91%D7%A9%D7%A8%D7%99-%D7%9B%D7%A9%D7%A8-%D7%9C%D7%9E%D7%94%D7%93%D7%A8%D7%99%D7%9F/",
       "implementationMode": "enhance",
-      "position": 13.4,
-      "impressions": 544,
+      "position": 5.5,
+      "impressions": 313,
       "clicks": 0,
       "ctr": 0,
-      "score": 6874,
-      "intentScore": 3,
-      "intentFlag": "review",
-      "intentReason": "classification failed",
-      "priority": "LOW",
+      "score": 6412,
+      "intentScore": 5,
+      "intentFlag": null,
+      "intentReason": "Targeted query for strictly kosher catering, matching a core requirement for a large segment of the Israeli event market.",
+      "priority": "HIGH",
       "actionType": "faq_block",
       "cannibalFlag": "REVIEW",
       "cannibalReasons": [
@@ -610,18 +703,18 @@
       "cannibalUrls": [
         {
           "url": "https://aaasada.com/",
-          "impressions": 81,
-          "position": 78.8
+          "impressions": 174,
+          "position": 18.5
         },
         {
-          "url": "https://aaasada.com/azkarot",
-          "impressions": 57,
-          "position": 47.8
+          "url": "https://aaasada.com/city/ramat-gan",
+          "impressions": 28,
+          "position": 17.9
         },
         {
-          "url": "https://aaasada.com/%D7%AA%D7%A4%D7%A8%D7%99%D7%98-%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%9C%D7%97%D7%99%D7%A0%D7%94/",
-          "impressions": 37,
-          "position": 97.4
+          "url": "https://aaasada.com/city/modiin",
+          "impressions": 25,
+          "position": 26.8
         }
       ]
     }

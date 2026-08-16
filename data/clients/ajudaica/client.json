@@ -18,5 +18,6 @@
     "pareto:internal",
     "anomaly:internal",
     "advisor:internal"
-  ]
+  ],
+  "brandName": "aJudaica"
 }
