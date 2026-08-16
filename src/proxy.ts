@@ -2,9 +2,11 @@ import { NextRequest, NextResponse } from 'next/server';
 import { verifySessionToken, COOKIE_NAME } from '@/lib/client-auth';
 import { ADMIN_COOKIE_NAME, verifyAdminToken } from '@/lib/admin-auth';
 
-// '/gmb/action' + '/api/gmb/action' reuse the same client-session cookie as
-// '/geo/action' — one client portal session gates both bots' action pages.
-const CLIENT_PROTECTED = ['/client', '/geo/action', '/api/geo/action', '/gmb/action', '/api/gmb/action'];
+// '/gmb/action' + '/api/gmb/action' reuse the same client-session cookie.
+// `/geo/action` is gated in the page itself (wao-admin → /admin/login) so the
+// page-level redirect is what an unauthenticated request observes. API
+// mutations stay on the client-session cookie.
+const CLIENT_PROTECTED = ['/client', '/api/geo/action', '/gmb/action', '/api/gmb/action'];
 // Note: '/api/leads' is deliberately NOT listed here — its POST handler is
 // the public lead-capture endpoint hit by landing-page forms. Only its GET
 // (the admin CRM read) is gated, and that's done inside the route itself

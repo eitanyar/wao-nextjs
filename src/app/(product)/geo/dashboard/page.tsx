@@ -1,9 +1,14 @@
 import fs   from 'fs';
 import path from 'path';
+import { cookies } from 'next/headers';
+import { redirect } from 'next/navigation';
+import { ADMIN_COOKIE_NAME, verifyAdminToken } from '@/lib/admin-auth';
 import SendButton from '@/components/geo/SendButton';
 import { buildApprovalLink } from '@/lib/geo/whatsapp';
 import { buildAllClientDigests } from '@/lib/google-ads/weekly-digest-batch';
 import { buildWeeklyDigestWhatsAppLink } from '@/lib/google-ads/whatsapp-digest';
+
+export const metadata = { robots: { index: false } };
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 interface ClientData {
@@ -71,6 +76,12 @@ const ACTION_LABELS: Record<string, string> = {
 
 // ── Page ─────────────────────────────────────────────────────────────────────
 export default async function GeoDashboard() {
+  const jar = await cookies();
+  const isAdmin = await verifyAdminToken(jar.get(ADMIN_COOKIE_NAME)?.value ?? '');
+  if (!isAdmin) {
+    redirect('/admin/login?next=/geo/dashboard');
+  }
+
   const clients = listClients();
   const adsDigests = await buildAllClientDigests();
 

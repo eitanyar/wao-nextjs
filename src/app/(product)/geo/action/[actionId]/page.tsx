@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { cookies } from 'next/headers';
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
+import { ADMIN_COOKIE_NAME, verifyAdminToken } from '@/lib/admin-auth';
 import { findActionById, getClientActions } from '@/lib/geo/actions';
 import { getClientRecord } from '@/lib/geo/client';
 import { verifySessionToken, COOKIE_NAME } from '@/lib/client-auth';
@@ -30,15 +31,22 @@ export default async function GeoActionPage({
 }) {
   const { actionId: rawId } = await params;
   const actionId = decodeURIComponent(rawId);
+
+  const jar = await cookies();
+  const isAdmin = await verifyAdminToken(jar.get(ADMIN_COOKIE_NAME)?.value ?? '');
+  if (!isAdmin) {
+    redirect('/admin/login?next=/geo/action/' + actionId);
+  }
+
   const action = findActionById(actionId);
   if (!action) notFound();
 
   // Ownership check: the session's client may only view its own actions.
   // Middleware only confirms SOME valid session — not that it matches this actionId.
-  const jar         = await cookies();
+  // Staff with a valid wao-admin cookie may view any action.
   const token       = jar.get(COOKIE_NAME)?.value ?? '';
   const sessionClientId = await verifySessionToken(token);
-  if (!sessionClientId || sessionClientId !== action.clientId) notFound();
+  if (!isAdmin && (!sessionClientId || sessionClientId !== action.clientId)) notFound();
 
   const client        = getClientRecord(action.clientId);
   const wpConnected    = client?.wpConnected ?? false;
