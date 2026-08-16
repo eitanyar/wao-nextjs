@@ -87,7 +87,7 @@ export async function callGeminiJSON(systemPrompt: string, userMessage: string):
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) throw new Error('Gemini not configured');
 
-  const modelName = process.env.GEMINI_MODEL_NAME || 'gemini-3.5-flash';
+  const modelName = process.env.GEMINI_MODEL_NAME || 'gemini-3.7-flash';
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent`;
 
   const res = await fetch(url, {
@@ -96,7 +96,7 @@ export async function callGeminiJSON(systemPrompt: string, userMessage: string):
     body: JSON.stringify({
       systemInstruction: { role: 'system', parts: [{ text: systemPrompt }] },
       contents: [{ role: 'user', parts: [{ text: userMessage }] }],
-      generationConfig: { responseMimeType: 'application/json' },
+      generationConfig: { responseMimeType: 'application/json', thinkingConfig: { thinkingLevel: 'LOW' } },
     }),
   });
   const data = await res.json();

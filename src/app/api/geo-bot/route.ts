@@ -32,7 +32,7 @@ const TURN_QUESTIONS: Record<number, string> = {
 };
 
 // ── Gemini caller — mirrors /api/bot's callGemini (multi-turn, JSON mode) ────
-const GEMINI_MODEL_NAME = process.env.GEMINI_MODEL_NAME || 'gemini-3.5-flash';
+const GEMINI_MODEL_NAME = process.env.GEMINI_MODEL_NAME || 'gemini-3.7-flash';
 
 function toGeminiRole(role: Message['role']): 'user' | 'model' {
   return role === 'assistant' ? 'model' : 'user';
@@ -52,7 +52,7 @@ async function callGemini(systemPrompt: string, messages: Message[]): Promise<Re
     body: JSON.stringify({
       systemInstruction: { role: 'system', parts: [{ text: systemPrompt }] },
       contents,
-      generationConfig: { responseMimeType: 'application/json' },
+      generationConfig: { responseMimeType: 'application/json', thinkingConfig: { thinkingLevel: 'LOW' } },
     }),
   });
 }

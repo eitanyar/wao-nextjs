@@ -846,7 +846,7 @@ function generateMockCampaign(data: CollectedData) {
 //     `candidates[0].content.parts[0].text` (a JSON *string* to be parsed),
 //     not `choices[0].message.content`.
 
-const GEMINI_MODEL_NAME = process.env.GEMINI_MODEL_NAME || "gemini-3.5-flash";
+const GEMINI_MODEL_NAME = process.env.GEMINI_MODEL_NAME || "gemini-3.7-flash";
 
 function toGeminiRole(role: Message["role"]): "user" | "model" {
   return role === "assistant" ? "model" : "user";
@@ -864,7 +864,7 @@ async function callGemini(
     body: JSON.stringify({
       systemInstruction: { role: "system", parts: [{ text: systemInstruction }] },
       contents,
-      generationConfig: { responseMimeType: "application/json" },
+      generationConfig: { responseMimeType: "application/json", thinkingConfig: { thinkingLevel: "LOW" } },
     }),
   });
   const data = await res.json();

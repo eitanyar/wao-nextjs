@@ -4,7 +4,7 @@ import path from 'path';
 import type { CollectedData } from '@/lib/bot/prompts';
 import type { SiteCopy } from '@/lib/lp/lpCopyPrompt';
 import { buildSiteCopyPrompt } from '@/lib/lp/lpCopyPrompt';
-import { callGeminiJSON } from '@/lib/ai/gemini-fast';
+import { callQwenJSON } from '@/lib/ai/qwen-fast';
 
 // buildSiteCopyPrompt() is already a complete, self-contained instruction set
 // (persona, hard rules, and the exact output schema) — unlike the Ads Bot's
@@ -115,12 +115,12 @@ export async function POST(req: Request) {
       const tamarPrompt = buildSiteCopyPrompt(collectedData);
       let tamarCopy: SiteCopy;
       try {
-        const tamarRaw = await callGeminiJSON(SITE_COPY_SYSTEM_PROMPT, tamarPrompt);
+        const tamarRaw = await callQwenJSON(SITE_COPY_SYSTEM_PROMPT, tamarPrompt, { thinkingBudget: 1500 });
         tamarCopy = JSON.parse(tamarRaw) as SiteCopy;
       } catch (e: any) {
         console.warn('Site Bot Tamar pass failed to parse, retrying once:', e.message);
         try {
-          const tamarRetryRaw = await callGeminiJSON(SITE_COPY_SYSTEM_PROMPT, tamarPrompt);
+          const tamarRetryRaw = await callQwenJSON(SITE_COPY_SYSTEM_PROMPT, tamarPrompt, { thinkingBudget: 1500 });
           tamarCopy = JSON.parse(tamarRetryRaw) as SiteCopy;
         } catch (e2: any) {
           console.warn('Site Bot Tamar retry also failed, using fallback template:', e2.message);
@@ -133,7 +133,7 @@ export async function POST(req: Request) {
       // structural quotes), fall back to Tamar's copy rather than failing
       // the whole generation over a polish step.
       try {
-        const noaRaw = await callGeminiJSON(NOA_SITE_QA_PROMPT, JSON.stringify(tamarCopy));
+        const noaRaw = await callQwenJSON(NOA_SITE_QA_PROMPT, JSON.stringify(tamarCopy), { think: false });
         copy = JSON.parse(noaRaw) as SiteCopy;
       } catch (e: any) {
         console.warn('Site Bot Noa QA pass failed, using unreviewed Tamar copy:', e.message);

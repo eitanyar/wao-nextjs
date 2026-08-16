@@ -3,7 +3,7 @@ export let generateJson = async function(systemPrompt: string, userPrompt: strin
   if (!apiKey) {
     throw new Error("GEMINI_API_KEY environment variable is not set.");
   }
-  const modelName = process.env.GEMINI_MODEL_NAME || "gemini-3.5-flash";
+  const modelName = process.env.GEMINI_MODEL_NAME || "gemini-3.7-flash";
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
 
   const payload = {
