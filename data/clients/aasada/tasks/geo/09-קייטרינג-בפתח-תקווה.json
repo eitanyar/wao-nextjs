@@ -1,0 +1,78 @@
+{
+  "actionId": "aasada-9-קייטרינג-בפתח-תקווה",
+  "clientId": "aasada",
+  "rank": 9,
+  "query": "קייטרינג בפתח תקווה",
+  "rankingUrl": "https://aaasada.com/city/petah-tikva/azkarot",
+  "implementationMode": "enhance",
+  "actionType": "faq_block",
+  "priority": "MEDIUM",
+  "score": 8301,
+  "impressions": 479,
+  "clicks": 1,
+  "ctr": 0.2,
+  "status": "generated",
+  "shipDecision": "autoship",
+  "confidence": 100,
+  "generatedAt": "2026-08-16T06:58:20.963Z",
+  "vocabSource": "page",
+  "vocabConfidence": "high",
+  "cannibalFlag": "REVIEW",
+  "cannibalReasons": [
+    "MULTI_URL"
+  ],
+  "cannibalUrls": [
+    {
+      "url": "https://aaasada.com/city/petah-tikva",
+      "impressions": 278,
+      "position": 48.9
+    },
+    {
+      "url": "https://aaasada.com/%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%91%D7%A4%D7%AA%D7%97-%D7%AA%D7%A7%D7%95%D7%95%D7%94/",
+      "impressions": 219,
+      "position": 61.8
+    }
+  ],
+  "content": {
+    "hebrewContent": "<section class=\"faq-section\">\n  <h2>שאלות נפוצות על הזמנת אוכל מוכן לאזכרות בפתח תקווה</h2>\n  <div class=\"faq-item\">\n    <h3>איך מגיע האוכל של קייטרינג טעם מהודר לאזכרה בפתח תקווה?</h3>\n    <p>האוכל מגיע חם ומוכן בתוך מיכלים תרמיים ששומרים על החום. מניחים את המיכלים על השולחן להגשה עצמית נוחה — בלי צורך בצוות הגשה.</p>\n  </div>\n  <div class=\"faq-item\">\n    <h3>מה הכשרות של קייטרינג לאזכרה בפתח תקווה?</h3>\n    <p>קייטרינג טעם מהודר מספק מנות בשריות בכשרות מהדרין בהשגחת הרב שלום מחפוד. כל המנות מבושלות בטעם ביתי עשיר ומכבד.</p>\n  </div>\n  <div class=\"faq-item\">\n    <h3>מהי כמות המנות המינימלית להזמנת אוכל מוכן לאזכרות?</h3>\n    <p>מינימום ההזמנה הוא 30 סועדים. המחיר מתחיל מ־58 ש״ח לסועד, ומאפשר חיסכון של עד 60% לעומת קייטרינג מסורתי.</p>\n  </div>\n</section>",
+    "placementInstruction": "יש להוסיף את בלוק ה-FAQ בחלק התחתון של העמוד /city/petah-tikva/azkarot, ישירות מתחת לתפריטי האזכרה ולפני הפוטר.",
+    "metaDescription": "קייטרינג לאזכרה בפתח תקווה עם קייטרינג טעם מהודר — אוכל מוכן לאזכרות בכשרות הרב שלום מחפוד, מוגש חם במיכלים תרמיים החל מ־58 ש״ח למנה.",
+    "jsonLd": {
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "איך מגיע האוכל של קייטרינג טעם מהודר לאזכרה בפתח תקווה?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "האוכל מגיע חם ומוכן בתוך מיכלים תרמיים ששומרים על החום. מניחים את המיכלים על השולחן להגשה עצמית נוחה, בלי צורך בצוות הגשה."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "מה הכשרות של קייטרינג לאזכרה בפתח תקווה?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "קייטרינג טעם מהודר מספק מנות בשריות בכשרות מהדרין בהשגחת הרב שלום מחפוד. כל המנות מבושלות בטעם ביתי עשיר ומכבד."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "מהי כמות המנות המינימלית להזמנת אוכל מוכן לאזכרות?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "מינימום ההזמנה הוא 30 סועדים. המחיר מתחיל מ-58 ש\"ח לסועד, ומאפשר חיסכון של עד 60% לעומת קייטרינג מסורתי."
+          }
+        }
+      ]
+    },
+    "tamarNotes": "השאלות נבנו בצורה ממוקדת מאוד להיבט התפעולי של אזכרות בפתח תקווה (מיכלים תרמיים, כשרות הרב מחפוד, מינימום מנות ומחיר מדויק). נשמרו הכללים המחמירים של שפה טבעית, משפטים קצרים ושימוש בשם המותג הרשמי בלבד.",
+    "noaChanges": "החלפת גרשיים כפולות סטנדרטיות (\"\") בגרשיים עבריים תקניים (ש״ח), הוספת מקף em-dash (—) לריווח תחבירי טבעי, והשלמת שם הרב לשלום מחפוד בהתאם להקשר המאומת.",
+    "registerScore": 100,
+    "groundingRisk": "low",
+    "generatedVia": "primary:gemini-3.7-flash",
+    "schemaValid": true,
+    "confidence": 100,
+    "shipDecision": "autoship"
+  }
+}

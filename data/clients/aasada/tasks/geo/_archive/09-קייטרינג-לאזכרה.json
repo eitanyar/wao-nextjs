@@ -11,7 +11,7 @@
   "impressions": 396,
   "clicks": 8,
   "ctr": 2,
-  "status": "generated",
+  "status": "superseded",
   "shipDecision": "autoship",
   "confidence": 100,
   "generatedAt": "2026-08-15T12:17:52.592Z",
@@ -87,5 +87,6 @@
     "schemaValid": true,
     "confidence": 100,
     "shipDecision": "autoship"
-  }
+  },
+  "supersededAt": "2026-08-16T06:57:52.564Z"
 }

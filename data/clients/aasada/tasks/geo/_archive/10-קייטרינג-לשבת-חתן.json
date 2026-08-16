@@ -1,0 +1,85 @@
+{
+  "actionId": "aasada-10-קייטרינג-לשבת-חתן",
+  "clientId": "aasada",
+  "rank": 10,
+  "query": "קייטרינג לשבת חתן",
+  "rankingUrl": "https://aaasada.com/city/rishon-lezion/shabbat-chatan",
+  "implementationMode": "enhance",
+  "actionType": "faq_block",
+  "priority": "MEDIUM",
+  "score": 8171,
+  "impressions": 494,
+  "clicks": 8,
+  "ctr": 1.6,
+  "status": "superseded",
+  "shipDecision": "autoship",
+  "confidence": 100,
+  "generatedAt": "2026-08-15T12:17:54.095Z",
+  "vocabSource": "page",
+  "vocabConfidence": "high",
+  "cannibalFlag": "REVIEW",
+  "cannibalReasons": [
+    "MULTI_URL"
+  ],
+  "cannibalUrls": [
+    {
+      "url": "https://aaasada.com/shabbat-chatan",
+      "impressions": 894,
+      "position": 14.8
+    },
+    {
+      "url": "https://aaasada.com/%D7%AA%D7%A4%D7%A8%D7%99%D7%98-%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%9C%D7%A9%D7%91%D7%AA-%D7%97%D7%AA%D7%9F/",
+      "impressions": 527,
+      "position": 17.8
+    },
+    {
+      "url": "https://aaasada.com/",
+      "impressions": 506,
+      "position": 3.7
+    }
+  ],
+  "content": {
+    "hebrewContent": "<section class=\"faq-section\">\n  <h2>שאלות נפוצות על קייטרינג לשבת חתן בראשון לציון</h2>\n  <div class=\"faq-item\">\n    <h3>איך האוכל נשמר חם במהלך השבת?</h3>\n    <p>קייטרינג טעם מהודר מספק את המנות במיכלים תרמיים ששומרים על חום האוכל. המיכלים מתאימים להגשה עצמית נוחה לכל המשפחה.</p>\n  </div>\n  <div class=\"faq-item\">\n    <h3>מה הכשרות של קייטרינג לשבת חתן בראשון לציון?</h3>\n    <p>כל התפריט הבשרי מוכן בכשרות מהדרין בהשגחת הרב שלום מחפוד. האוכל מתאים לכל האורחים באירוע.</p>\n  </div>\n  <div class=\"faq-item\">\n    <h3>איפה אפשר לראות תפריט ומחירים לשבת חתן?</h3>\n    <p>אפשר לבחור מנות ישירות בעמוד תפריט ומחירים. מינימום ההזמנה הוא 30 סועדים, החל מ-58 ש״ח למנה.</p>\n  </div>\n</section>",
+    "placementInstruction": "יש להטמיע את בלוק השאלות הנפוצות בתחתית העמוד /city/rishon-lezion/shabbat-chatan, מתחת לפירוט המנות ולפני הפוטר.",
+    "metaDescription": "מחפשים קייטרינג לשבת חתן בראשון לציון? קייטרינג טעם מהודר מציע אוכל בשרי כשר למהדרין במיכלים תרמיים. היכנסו לעמוד תפריט ומחירים — החל מ-58 ש״ח.",
+    "jsonLd": {
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "איך האוכל נשמר חם במהלך השבת?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "קייטרינג טעם מהודר מספק את המנות במיכלים תרמיים ששומרים על חום האוכל. המיכלים מתאימים להגשה עצמית נוחה לכל המשפחה."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "מה הכשרות של קייטרינג לשבת חתן בראשון לציון?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "כל התפריט הבשרי מוכן בכשרות מהדרין בהשגחת הרב שלום מחפוד. האוכל מתאים לכל האורחים באירוע."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "איפה אפשר לראות תפריט ומחירים לשבת חתן?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "תוכל לבחור מנות ישירות בעמוד תפריט ומחירים. ההזמנה מתחילה מ-30 סועדים ובעלות של החל מ-58 ש״ח למנה."
+          }
+        }
+      ]
+    },
+    "tamarNotes": "התמקדתי בזווית התפעולית והלוגיסטית של שבת חתן בראשון לציון (שמירה על חום במיכלים תרמיים, כשרות הרב מחפוד ותמחור מדויק). השתמשתי אך ורק במילות המפתח המאושרות והעובדות המאומתות.",
+    "noaChanges": "1. שינוי פנייה ישירה ביחיד ('תוכל', 'מחפש', 'צפה') לפנייה טבעית וכוללת ('אפשר', 'מחפשים', 'היכנסו'). 2. שיפור ניסוח: 'מינימום ההזמנה הוא 30 סועדים' במקום מבנה מסורבל. 3. הוספת מקף עברי (em-dash) במטא-דסקריפשן.",
+    "registerScore": 98,
+    "groundingRisk": "low",
+    "generatedVia": "primary:gemini-3.7-flash",
+    "schemaValid": true,
+    "confidence": 100,
+    "shipDecision": "autoship"
+  },
+  "supersededAt": "2026-08-16T06:58:16.948Z",
+  "supersededBy": "aasada-10-קייטרינג-לשבת-חתן"
+}

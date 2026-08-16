@@ -1,0 +1,85 @@
+{
+  "actionId": "aasada-1-קייטרינג-לבר-מצווה",
+  "clientId": "aasada",
+  "rank": 1,
+  "query": "קייטרינג לבר מצווה",
+  "rankingUrl": "https://aaasada.com/bar-mitzvah",
+  "implementationMode": "enhance",
+  "actionType": "faq_block",
+  "priority": "HIGH",
+  "score": 19705,
+  "impressions": 948,
+  "clicks": 8,
+  "ctr": 0.8,
+  "status": "superseded",
+  "shipDecision": "autoship",
+  "confidence": 100,
+  "generatedAt": "2026-08-15T12:17:25.023Z",
+  "vocabSource": "page",
+  "vocabConfidence": "high",
+  "cannibalFlag": "REVIEW",
+  "cannibalReasons": [
+    "MULTI_URL"
+  ],
+  "cannibalUrls": [
+    {
+      "url": "https://aaasada.com/%D7%AA%D7%A4%D7%A8%D7%99%D7%98-%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%9C%D7%91%D7%A8-%D7%9E%D7%A6%D7%95%D7%95%D7%94/",
+      "impressions": 607,
+      "position": 10.8
+    },
+    {
+      "url": "https://aaasada.com/city/petah-tikva/bar-mitzvah",
+      "impressions": 64,
+      "position": 66.6
+    },
+    {
+      "url": "https://aaasada.com/%D7%A9%D7%99%D7%A8%D7%95%D7%AA%D7%99-%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%9C%D7%91%D7%A8-%D7%9E%D7%A6%D7%95%D7%95%D7%94-%D7%91%D7%91%D7%99%D7%AA-%D7%9B%D7%A0%D7%A1%D7%AA/",
+      "impressions": 57,
+      "position": 36.1
+    }
+  ],
+  "content": {
+    "hebrewContent": "<section class=\"faq-section\">\n  <h2>שאלות נפוצות על קייטרינג לבר מצווה</h2>\n  <div class=\"faq-item\">\n    <h3>איך האוכל נשאר חם לאורך כל אירוע בר המצווה?</h3>\n    <p>בקייטרינג טעם מהודר האוכל מגיע במיכלים תרמיים מבודדים. המיכלים שומרים על חום וטריות המנות שעות ארוכות ללא צורך בחימום נוסף. כך אתם נהנים מהגשה עצמית פשוטה — בלי לשלם על צוות מלצרים — וחוסכים עד 60% מהעלויות.</p>\n  </div>\n  <div class=\"faq-item\">\n    <h3>מהי רמת הכשרות של המנות לאירוע?</h3>\n    <p>כל המנות של קייטרינג טעם מהודר הן כשר למהדרין בד״ץ בהשגחת הרב שלום מחפוד. ההשגחה מקיפה את כל סוגי הבשרים, התוספות והסלטים, ומאפשרת לכל האורחים לחגוג בלב שקט.</p>\n  </div>\n  <div class=\"faq-item\">\n    <h3>לאילו ערים ניתן להזמין קייטרינג לבר מצווה?</h3>\n    <p>השירות של קייטרינג טעם מהודר מגיע לירושלים, אשדוד, באר שבע, ראשון לציון ופתח תקווה. המינימום להזמנה הוא 30 סועדים, במחיר שמתחיל מ־58 ש״ח למנה.</p>\n  </div>\n</section>",
+    "placementInstruction": "להוסיף בתחתית העמוד /bar-mitzvah, מיד אחרי פירוט התפריטים הבשריים ולפני טופס יצירת הקשר.",
+    "metaDescription": "מחפשים קייטרינג לבר מצווה? קייטרינג טעם מהודר מציע אוכל בשרי חם במיכלים תרמיים, כשר למהדרין בד״ץ מחפוד, מ־58 ש״ח למנה. חיסכון של עד 60% בעלויות.",
+    "jsonLd": {
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "איך האוכל נשאר חם לאורך כל אירוע בר המצווה?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "בקייטרינג טעם מהודר האוכל מגיע במיכלים תרמיים מבודדים ששומרים על חום וטריות המנות לשעות ארוכות ללא חימום נוסף, בהגשה עצמית שחוסכת עד 60% מעלויות האירוע."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "מהי רמת הכשרות של המנות לאירוע?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "המנות של קייטרינג טעם מהודר הן כשר למהדרין בד\"ץ בהשגחת הרב שלום מחפוד עבור כל התפריט הבשרי והתוספות."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "לאילו ערים ניתן להזמין קייטרינג לבר מצווה?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "השירות פעיל בירושלים, אשדוד, באר שבע, ראשון לציון ופתח תקווה, בהזמנה מראש החל מ-30 סועדים ומ-58 ש\"ח לסועד."
+          }
+        }
+      ]
+    },
+    "tamarNotes": "הדגשתי את הפתרון של המיכלים התרמיים וכשרות הרב מחפוד בלי הגדרות כלליות, כדי לתת מענה ישיר לשאלות של הורים שמחפשים חיסכון בלי להתפשר על כשרות וטריות.",
+    "noaChanges": "1. החלפת גרשיים ASCII בגרשיים עבריים תקניים (בד״ץ, ש״ח).\n2. החלפת פסיקים מסביב למשפט הסגר במקף מפריד (em-dash).\n3. החלפת מקף ASCII בטווח מחיר במקף עברי תקני (מ־58).",
+    "registerScore": 100,
+    "groundingRisk": "low",
+    "generatedVia": "primary:gemini-3.7-flash",
+    "schemaValid": true,
+    "confidence": 100,
+    "shipDecision": "autoship"
+  },
+  "supersededAt": "2026-08-16T06:57:52.565Z",
+  "supersededBy": "aasada-1-קייטרינג-לבר-מצווה"
+}

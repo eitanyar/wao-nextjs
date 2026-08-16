@@ -11,7 +11,7 @@
   "impressions": 894,
   "clicks": 1,
   "ctr": 0.1,
-  "status": "generated",
+  "status": "superseded",
   "shipDecision": "autoship",
   "confidence": 100,
   "generatedAt": "2026-08-15T12:17:31.959Z",
@@ -79,5 +79,7 @@
     "schemaValid": true,
     "confidence": 100,
     "shipDecision": "autoship"
-  }
+  },
+  "supersededAt": "2026-08-16T06:57:52.563Z",
+  "supersededBy": "aasada-4-קייטרינג-לשבת-חתן"
 }

@@ -11,7 +11,7 @@
   "impressions": 533,
   "clicks": 4,
   "ctr": 0.8,
-  "status": "generated",
+  "status": "superseded",
   "shipDecision": "autoship",
   "confidence": 100,
   "generatedAt": "2026-08-15T12:17:48.561Z",
@@ -79,5 +79,7 @@
     "schemaValid": true,
     "confidence": 100,
     "shipDecision": "autoship"
-  }
+  },
+  "supersededAt": "2026-08-16T06:57:52.563Z",
+  "supersededBy": "aasada-7-קייטרינג-בראשון-לציון"
 }

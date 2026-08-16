@@ -1,0 +1,92 @@
+{
+  "actionId": "aasada-7-קייטרינג-בראשון-לציון",
+  "clientId": "aasada",
+  "rank": 7,
+  "query": "קייטרינג בראשון לציון",
+  "rankingUrl": "https://aaasada.com/city/rishon-lezion",
+  "implementationMode": "enhance",
+  "actionType": "faq_block",
+  "priority": "MEDIUM",
+  "score": 9579,
+  "impressions": 564,
+  "clicks": 4,
+  "ctr": 0.7,
+  "status": "generated",
+  "shipDecision": "review",
+  "confidence": 100,
+  "generatedAt": "2026-08-16T06:58:15.452Z",
+  "vocabSource": "page",
+  "vocabConfidence": "high",
+  "cannibalFlag": "REVIEW",
+  "cannibalReasons": [
+    "MULTI_URL"
+  ],
+  "cannibalUrls": [
+    {
+      "url": "https://aaasada.com/%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%9C%D7%A9%D7%91%D7%AA-%D7%97%D7%AA%D7%9F-%D7%91%D7%A8%D7%90%D7%A9%D7%95%D7%9F-%D7%9C%D7%A6%D7%99%D7%95%D7%9F/",
+      "impressions": 253,
+      "position": 16.8
+    },
+    {
+      "url": "https://aaasada.com/city/rishon-lezion/shabbat-chatan",
+      "impressions": 250,
+      "position": 21.3
+    }
+  ],
+  "content": {
+    "hebrewContent": "<section class=\"faq-section\">\n  <h2>שאלות נפוצות על שירותי קייטרינג בראשון לציון</h2>\n  <div class=\"faq-item\">\n    <h3>איך האוכל מגיע ואיך שומרים עליו חם באירוע?</h3>\n    <p>קייטרינג טעם מהודר מספק ארוחות חמות בתוך מיכלים תרמיים מיוחדים. המיכלים שומרים על חום האוכל שעות ארוכות ללא צורך בחימום נוסף. המנות מגיעות מוכנות להגשה עצמית פשוטה ונוחה.</p>\n  </div>\n  <div class=\"faq-item\">\n    <h3>לאילו סוגי אירועים בראשון לציון השירות מתאים?</h3>\n    <p>השירות מתאים לשמחות משפחתיות כמו שבת חתן, ברית ובר מצווה. בנוסף, קייטרינג טעם מהודר מספק מענה מותאם לאירועי אבל כמו סעודות הבראה, שבעה ואזכרה.</p>\n  </div>\n  <div class=\"faq-item\">\n    <h3>מהי רמת הכשרות של המנות הבשריות?</h3>\n    <p>האוכל כשר למהדרין בשרי בהשגחת הרב שלום מחפוד. כל המנות מוכנות ברמת כשרות קפדנית ובאיכות גבוהה.</p>\n  </div>\n  <div class=\"faq-item\">\n    <h3>מהי כמות המינימום להזמנה בראשון לציון?</h3>\n    <p>ההזמנה מתאימה לאירועים החל מ-30 סועדים. המחיר משתלם במיוחד ומתחיל מ-58 ש״ח לסועד — עם חיסכון משמעותי בעלויות ההגשה.</p>\n  </div>\n</section>",
+    "placementInstruction": "יש להוסיף את בלוק השאלות והתשובות בתחתית העמוד /city/rishon-lezion, לפני אזור יצירת הקשר.",
+    "metaDescription": "מחפשים קייטרינג בראשון לציון? קייטרינג טעם מהודר מציע תפריט כשר למהדרין בשרי במיכלים תרמיים החל מ-58 ש״ח למנה — לשמחות, שבתות ואזכרות.",
+    "jsonLd": {
+      "type": "FAQPage",
+      "mainEntity": [
+        {
+          "type": "Question",
+          "name": "איך האוכל מגיע ואיך שומרים עליו חם באירוע?",
+          "acceptedAnswer": {
+            "type": "Answer",
+            "text": "קייטרינג טעם מהודר מספק ארוחות חמות בתוך מיכלים תרמיים מיוחדים. המיכלים שומרים על חום האוכל שעות ארוכות ללא צורך בחימום נוסף. המנות מגיעות מוכנות להגשה עצמית פשוטה ונוחה."
+          }
+        },
+        {
+          "type": "Question",
+          "name": "לאילו סוגי אירועים בראשון לציון השירות מתאים?",
+          "acceptedAnswer": {
+            "type": "Answer",
+            "text": "השירות מתאים לשמחות משפחתיות כמו שבת חתן, ברית ובר מצווה. בנוסף, קייטרינג טעם מהודר מספק מענה מותאם לאירועי אבל כמו סעודות הבראה, שבעה ואזכרה."
+          }
+        },
+        {
+          "type": "Question",
+          "name": "מהי רמת הכשרות של המנות הבשריות?",
+          "acceptedAnswer": {
+            "type": "Answer",
+            "text": "האוכל כשר למהדרין בשרי בהשגחת הרב שלום מחפוד. כל המנות מוכנות ברמת כשרות קפדנית ובאיכות גבוהה."
+          }
+        },
+        {
+          "type": "Question",
+          "name": "מהי כמות המינימום להזמנה בראשון לציון?",
+          "acceptedAnswer": {
+            "type": "Answer",
+            "text": "ההזמנה מתאימה לאירועים החל מ-30 סועדים. המחיר משתלם במיוחד ומתחיל מ-58 ש״ח לסועד, עם חיסכון משמעותי בעלויות ההגשה."
+          }
+        }
+      ]
+    },
+    "tamarNotes": "נשמר שימוש קפדני בשם המותג הרשמי 'קייטרינג טעם מהודר' ובמונחים המאומתים (כשר למהדרין בשרי, מיכלים תרמיים, כשרות הרב מחפוד, מינימום 30 סועדים ומחיר החל מ-58 ש״ח). הניסוח תמציתי ומדויק ל-AI Overview.",
+    "noaChanges": "החלפת פסיקים וקווים רגילים בקו מפריד עברי (em-dash) במקומות הנדרשים, ליטוש קל של הניסוח במטא-דיסקריפשן לשפה טבעית יותר.",
+    "registerScore": 98,
+    "groundingRisk": "low",
+    "generatedVia": "primary:gemini-3.7-flash",
+    "schemaValid": false,
+    "schemaErrors": [
+      "jsonLd missing @type"
+    ],
+    "confidence": 100,
+    "shipDecision": "review",
+    "reviewReasons": [
+      "BLOCKER: schema invalid (jsonLd missing @type)"
+    ]
+  }
+}

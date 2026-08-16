@@ -1,0 +1,88 @@
+{
+  "actionId": "aasada-6-קייטרינג-באר-שבע",
+  "clientId": "aasada",
+  "rank": 6,
+  "query": "קייטרינג באר שבע",
+  "rankingUrl": "https://aaasada.com/city/beer-sheva",
+  "implementationMode": "enhance",
+  "actionType": "faq_block",
+  "priority": "MEDIUM",
+  "score": 9259,
+  "impressions": 545,
+  "clicks": 10,
+  "ctr": 1.8,
+  "status": "superseded",
+  "shipDecision": "autoship",
+  "confidence": 100,
+  "generatedAt": "2026-08-15T12:17:46.146Z",
+  "vocabSource": "page",
+  "vocabConfidence": "high",
+  "cannibalFlag": "REVIEW",
+  "cannibalReasons": [
+    "MULTI_URL"
+  ],
+  "cannibalUrls": [
+    {
+      "url": "https://aaasada.com/%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%9C%D7%90%D7%96%D7%9B%D7%A8%D7%95%D7%AA-%D7%91%D7%91%D7%90%D7%A8-%D7%A9%D7%91%D7%A2/",
+      "impressions": 153,
+      "position": 11.9
+    },
+    {
+      "url": "https://aaasada.com/%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%9C%D7%A9%D7%91%D7%AA-%D7%97%D7%AA%D7%9F-%D7%91%D7%91%D7%90%D7%A8-%D7%A9%D7%91%D7%A2-%D7%9E%D7%97%D7%99%D7%A8%D7%99%D7%9D/",
+      "impressions": 43,
+      "position": 17
+    }
+  ],
+  "content": {
+    "hebrewContent": "<h2>שאלות נפוצות על הזמנת קייטרינג בבאר שבע</h2><div class=\"faq-item\"><h3>איך האוכל מגיע חם לאירוע בבאר שבע?</h3><p>קייטרינג טעם מהודר מספק את המנות במיכלים תרמיים ששומרים על החום — האוכל נשאר חם, טרי ומוכן להגשה עצמית ישר לשולחן.</p></div><div class=\"faq-item\"><h3>לאילו אירועים השירות מתאים?</h3><p>התפריט מתאים במיוחד עבור כשר למהדרין לשבתות, חתן ואירועים קטנים — וכן לאזכרות, שבעה, בריתות ובר מצווה.</p></div><div class=\"faq-item\"><h3>מהי הכשרות של המנות?</h3><p>כל המנות הבשריות מוכנות ברמת כשר למהדרין בהשגחת הרב שלום מחפוד.</p></div><div class=\"faq-item\"><h3>מה כמות המנות המינימלית להזמנה בבאר שבע?</h3><p>מינימום ההזמנה הוא 30 סועדים. המחיר מתחיל מ־58 ש״ח למנה — ללא עלויות של צוות מלצרים או הגשה.</p></div>",
+    "placementInstruction": "להוסיף את בלוק השאלות והתשובות בתחתית העמוד /city/beer-sheva לפני הפוטר.",
+    "metaDescription": "מחפשים קייטרינג בבאר שבע? קייטרינג טעם מהודר מציע תפריט כשר למהדרין לשבתות, חתן ואירועים קטנים — אוכל חם במיכלים תרמיים החל מ־58 ש״ח למנה.",
+    "jsonLd": {
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "איך האוכל מגיע חם לאירוע בבאר שבע?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "קייטרינג טעם מהודר מספק את המנות במיכלים תרמיים מבודדים. האוכל נשאר חם, טרי ומוכן להגשה עצמית ישר לשולחן."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "לאילו אירועים השירות מתאים?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "התפריט מתאים במיוחד עבור כשר למהדרין לשבתות, חתן ואירועים קטנים. אנחנו ערוכים גם לאזכרות, שבעה, בריתות ובר מצווה."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "מהי הכשרות של המנות?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "כל המנות הבשריות מוכנות ברמת כשר למהדרין בהשגחת הרב שלום מחפוד."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "מה כמות המנות המינימלית להזמנה בבאר שבע?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "מינימום ההזמנה הוא 30 סועדים. המחיר מתחיל מ-58 ש״ח למנה, ללא עלויות של צוות מלצרים."
+          }
+        }
+      ]
+    },
+    "tamarNotes": "הקפדתי על אוצר המילים המדויק מהעמוד (קייטרינג בבאר שבע, כשר למהדרין לשבתות, חתן ואירועים קטנים), שילבתי את שם המותג הרשמי ונתונים מאומתים בלבד (הרב מחפוד, 58 ש״ח, 30 מנות, מיכלים תרמיים).",
+    "noaChanges": "החלפת מקפים ל-em-dash (—) ולמקף עברי (־) בצמוד למחיר, שיפור זרימת המשפטים כדי להישמע טבעיים וקולחים יותר בעברית ישראלית, וידוא שימוש מדויק בגרשיים עבריים תקניים.",
+    "registerScore": 98,
+    "groundingRisk": "low",
+    "generatedVia": "primary:gemini-3.7-flash",
+    "schemaValid": true,
+    "confidence": 100,
+    "shipDecision": "autoship"
+  },
+  "supersededAt": "2026-08-16T06:58:05.843Z",
+  "supersededBy": "aasada-6-קייטרינג-באר-שבע"
+}
