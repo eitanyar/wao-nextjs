@@ -4,11 +4,11 @@ import Link from "next/link";
 type Props = { data?: any };
 
 const DEFAULTS = {
-  badge: "שיווק דיגיטלי מתקדם עם AI ותפטר את סוכנות הפרסום שלך",
-  headlinePre: "שיווק דיגיטלי",
-  headlineAccent: "מתקדם עם AI",
-  headlinePost: "הגיע הזמן שתפטר את הסוכנות שלך",
-  subheadline: "אנחנו לא סוכנות שיווק רגילה. בוואו בונים אסטרטגיות מדויקות שמניעות צמיחה אמיתית — עם שיטות מוכחות ו-AI מתקדם, ללא התחייבות לחוזים ארוכי טווח.",
+  badge: "שיווק דיגיטלי מתקדם עם AI. תפטר את סוכנות הפרסום שלך.",
+  headlinePre: "שיווק דיגיטלי מתקדם עם AI.",
+  headlineAccent: "תפטר את הסוכנות שלך.",
+  headlinePost: "הגיע הזמן.",
+  subheadline: "תחשוב עלינו כעל מנהל שיווק בכיר עם צוות בוטים שמבצע בשבילו 24/7 — אותן תוצאות של סוכנות, בלי החוזה ובלי פגישות הסטטוס.",
   ctaPrimary: "בניית אתר — מתחילים ב-₪9.90",
   ctaPrimaryHref: "/site-bot",
   ctaSecondary: "כבר יש לך אתר עם תוכן?",
@@ -42,7 +42,8 @@ export default function Hero({ data }: Props) {
           </div>
 
           <h1 style={{ fontFamily: "var(--font-rubik), sans-serif", fontWeight: 900, fontSize: "clamp(2.6rem, 6vw, 5.5rem)", lineHeight: 1.08, letterSpacing: "-0.025em", marginBottom: "28px" }}>
-            {d.headlinePre}{" "}<span className="text-gradient">{d.headlineAccent}</span>
+            {d.headlinePre}
+            <br /><span className="text-gradient">{d.headlineAccent}</span>
             <br />{d.headlinePost}
           </h1>
 

@@ -4,11 +4,11 @@ import Link from "next/link";
 type Props = { data?: any };
 
 const DEFAULT_ITEMS = [
-  { icon: "🔍", title: "קידום אתרים (SEO)", desc: "אסטרטגיית SEO מבוססת נתונים שמעלה אתכם לראש תוצאות גוגל ומשאירה אתכם שם.", href: "/seo" },
+  { icon: "🔍", title: "קידום אתרים (SEO)", desc: "אסטרטגיית SEO מבוססת נתונים שמעלה אותך לראש תוצאות גוגל ומשאירה אותך שם.", href: "/seo" },
   { icon: "📢", title: "פרסום בגוגל", desc: "קמפיינים ממוקדים ב-Google Ads ו-YouTube שממקסמים את ה-ROI בכל שקל שיווקי.", href: "/google-ads" },
   { icon: "✍️", title: "שיווק תוכן", desc: "תוכן שמושך קוראים, בונה סמכות ומניע להמרה — מאמרים, עמודים ואינפוגרפיקות.", href: "/content" },
   { icon: "📱", title: "מדיה חברתית", desc: "נוכחות ממותגת בפייסבוק, אינסטגרם ולינקדאין שמגדילה קהל ויוצרת קשר אמיתי.", href: "/social" },
-  { icon: "🎓", title: "הכשרות שיווק", desc: "ורקשופים וקורסים מעשיים לצוותים ומנהלים — שיווק דיגיטלי, SEO ו-Google Ads.", href: "/training" },
+  { icon: "🎓", title: "הכשרות שיווק", desc: "סדנאות וקורסים מעשיים לצוותים ומנהלים — שיווק דיגיטלי, SEO ו-Google Ads.", href: "/training" },
   { icon: "🧭", title: "יעוץ שיווקי", desc: "ייעוץ אסטרטגי אישי ממומחה עם 20+ שנות ניסיון — לבניית תכנית שיווק שמניעה צמיחה.", href: "/consulting" },
   { icon: "🤖", title: "בניית אתר (Site Bot)", desc: "בוט שבונה אתר עסקי מקצועי מתוך שיחה בצ׳אט — אתר חי תוך 24 שעות, בלי מעצב ובלי טפסים. מתחילים ב-₪9.90.", href: "/site-bot" },
   { icon: "🧠", title: "קידום בתשובות AI (GEO Bot)", desc: "בוט שמזהה מה לקוחות מחפשים בגוגל, כותב תוכן מוכן לאישור בוואטסאפ, ומכניס את האתר לתשובות ה-AI של גוגל. ₪199 לחודש.", href: "/geo" },
@@ -18,7 +18,7 @@ export default function Services({ data }: Props) {
   const eyebrow = data?.eyebrow ?? "השירותים שלנו";
   const titlePre = data?.titlePre ?? "כל מה שצריך כדי לצמוח";
   const titleAccent = data?.titleAccent ?? "דיגיטלית";
-  const subtitle = data?.subtitle ?? "פתרונות שיווק דיגיטלי מלאים תחת קורת גג אחת. אנחנו בוחרים את שילוב הערוצים הנכון בדיוק עבורכם.";
+  const subtitle = data?.subtitle ?? "פתרונות שיווק דיגיטלי מלאים תחת קורת גג אחת. אנחנו בוחרים את שילוב הערוצים הנכון לעסק שלך.";
   const items = (data?.items?.length ? data.items : DEFAULT_ITEMS) as { icon?: string | null; title?: string | null; desc?: string | null; href?: string | null }[];
 
   return (

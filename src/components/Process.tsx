@@ -11,7 +11,7 @@ export default function Process({ data }: Props) {
   const eyebrow = data?.eyebrow ?? "איך אנחנו עובדים";
   const titlePre = data?.titlePre ?? "שיטת עבודה שמניעה";
   const titleAccent = data?.titleAccent ?? "תוצאות מוכחות";
-  const subtitle = data?.subtitle ?? "17 שנה בתחום לימדו אותנו שתהליך נכון שווה יותר מכל טכנולוגיה או טרנד.";
+  const subtitle = data?.subtitle ?? "20 שנה בתחום לימדו אותנו שתהליך נכון שווה יותר מכל טכנולוגיה או טרנד.";
   const steps = (data?.steps?.length ? data.steps : DEFAULT_STEPS) as { n?: string | null; title?: string | null; desc?: string | null; tags?: string | null }[];
 
   return (

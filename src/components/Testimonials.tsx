@@ -11,7 +11,7 @@ export default function Testimonials({ data }: Props) {
   const eyebrow = data?.eyebrow ?? "לקוחות מספרים";
   const titlePre = data?.titlePre ?? "תוצאות";
   const titleAccent = data?.titleAccent ?? "אמיתיות";
-  const titlePost = data?.titlePost ?? "מלקוחות אמיתיים";
+  const titlePost = data?.titlePost ?? "מלקוחות";
   const items = (data?.items?.length ? data.items : DEFAULT_ITEMS) as { quote?: string | null; name?: string | null; role?: string | null; initials?: string | null }[];
 
   return (

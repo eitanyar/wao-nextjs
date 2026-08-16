@@ -3,9 +3,9 @@ type Props = { data?: any };
 
 const DEFAULTS = {
   eyebrow: "עדיין מתלבט?",
-  headingPre: "לא בטוח איזה בוט",
-  headingAccent: "מתאים לעסק שלך?",
-  subheading: "Site Bot בונה לך אתר מאפס. GEO Bot מכניס אתר קיים לתשובות של גוגל. לא בטוח מאיפה להתחיל? דבר איתנו ונכוון אותך לבוט הנכון.",
+  headingPre: "אתה לא חייב",
+  headingAccent: "לעשות את זה לבד.",
+  subheading: "Site Bot בונה לך אתר מקצועי, GEO Bot מכניס אותך לתשובות של גוגל. Ads Bot מריץ לך קמפיין מושלם בגוגל כולל דף נחיתה. שיחה קצרה בוואטסאפ ותבין הכל.",
   phone: "052-614-8860",
   phoneHref: "0526148860",
   email: "eitan@wao.co.il",
