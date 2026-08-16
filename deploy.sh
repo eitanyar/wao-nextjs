@@ -20,8 +20,20 @@ if [[ -z "${CLIENT_PORTAL_SECRET:-}" ]]; then
   exit 1
 fi
 
-echo "⬇️ Pulling latest code..."
-git pull origin hermes-migration
+# Deploy target: branch or tag, defaults to hermes-migration (production).
+TARGET=${1:-hermes-migration}
+
+echo "🔄 Fetching all branches and tags..."
+git fetch --all --tags
+
+if git show-ref --verify --quiet refs/heads/"$TARGET" || git show-ref --verify --quiet refs/remotes/origin/"$TARGET"; then
+  echo "⬇️ Pulling branch: $TARGET..."
+  git checkout "$TARGET"
+  git pull origin "$TARGET"
+else
+  echo "⬇️ Checking out tag: $TARGET..."
+  git checkout "$TARGET"
+fi
 
 echo "📦 Installing dependencies..."
 npm ci
@@ -47,4 +59,4 @@ pm2 restart wao --update-env
 echo "🔍 Verifying Google Ads sandbox..."
 node scripts/verify-google-ads-sandbox.mjs
 
-echo "✅ Done."
+echo "✅ Done. Successfully deployed: $TARGET"
