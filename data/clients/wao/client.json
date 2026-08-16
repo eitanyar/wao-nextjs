@@ -1,0 +1,22 @@
+{
+  "clientId": "wao",
+  "siteUrl": "https://www.wao.co.il/",
+  "cmsType": "nextjs",
+  "businessNiche": "סוכנות שיווק דיגיטלי מובילה - AI",
+  "topService": "קידום אתרים, פרסום בגוגל, שיווק תוכן ויעוץ אסטרטגי",
+  "targetLocation": "ישראל - כלל הארץ, אונליין",
+  "usp": "סוכנות שיווק דיגיטלי מובילה בישראל עם 20+ שנות ניסיון - ללא חוזה, עם תוצאות",
+  "clientQuestions": "",
+  "exclusions": "",
+  "approvalContact": "איתן",
+  "approvalWhatsapp": "972528664646",
+  "tone": "מקצועי, ישיר, מבוסס על נתונים - לא מנופעואליסטי ולא אגרסיבי",
+  "pin": "1947",
+  "entitlements": [
+    "geo",
+    "pareto:internal",
+    "anomaly:internal",
+    "advisor:internal"
+  ],
+  "brandName": "WAO"
+}

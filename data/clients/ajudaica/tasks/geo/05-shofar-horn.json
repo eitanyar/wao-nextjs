@@ -1,0 +1,62 @@
+{
+  "actionId": "ajudaica-5-shofar-horn",
+  "clientId": "ajudaica",
+  "rank": 5,
+  "query": "shofar horn",
+  "rankingUrl": "https://www.ajudaica.com/category/128/Shofar/",
+  "implementationMode": "create",
+  "actionType": "faq_block",
+  "priority": "LOW",
+  "score": 85886,
+  "impressions": 5778,
+  "clicks": 16,
+  "ctr": 0.3,
+  "status": "generated",
+  "shipDecision": "autoship",
+  "confidence": 100,
+  "generatedAt": "2026-08-15T12:08:24.008Z",
+  "vocabSource": "fallback-js-rendered",
+  "vocabConfidence": "low",
+  "content": {
+    "hebrewContent": "<div class=\"faq-block\">\n  <h2>שאלות נפוצות על שופרות ורכישת שופר</h2>\n  <div class=\"faq-item\">\n    <h3>מאיזה סוגי קרנות מכינים שופר?</h3>\n    <p>שופר קלאסי מיוצר מקרן של איל. ניתן למצוא גם שופרות תימניים ארוכים מקרן קודו. ב-aJudaica תמצאו שופרות כשרים ואיכותיים מכל הסוגים.</p>\n  </div>\n  <div class=\"faq-item\">\n    <h3>איך בוחרים שופר שמתאים לתקיעה נוחה?</h3>\n    <p>חשוב לבדוק את גודל הפייה ואת נוחות האחיזה. שופר בגודל בינוני או שופר תימני לרוב מאפשרים תקיעה קלה וחלקה יותר. הקולקציה של aJudaica כוללת מגוון גדלים וגימורים לבחירה.</p>\n  </div>\n  <div class=\"faq-item\">\n    <h3>האם שופר מתאים גם כמתנת יודאיקה או פריט עיצובי?</h3>\n    <p>בהחלט. מעבר לשימוש ההלכתי, שופר הוא פריט יודאיקה מרשים ומתנה בעלת משמעות עמוקה. באתר aJudaica יש שופרות מלוטשים, טבעיים ומעוטרים שמתאימים לכל אירוע.</p>\n  </div>\n</div>",
+    "placementInstruction": "יש להטמיע את בלוק השאלות והתשובות בתחתית עמוד הקטגוריה /category/128/Shofar/ מתחת לרשימת המוצרים.",
+    "metaDescription": "מחפשים שופר כשר ואיכותי? גלו מגוון שופרות איל ושופרות תימניים באתר aJudaica — פריטי יודאיקה ומתנות ייחודיות עם משלוח מהיר לכל העולם.",
+    "jsonLd": {
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "מאיזה סוגי קרנות מכינים שופר?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "שופר קלאסי מיוצר מקרן של איל. ניתן למצוא גם שופרות תימניים ארוכים מקרן קודו. ב-aJudaica תמצאו שופרות כשרים ואיכותיים מכל הסוגים."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "איך בוחרים שופר שמתאים לתקיעה נוחה?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "חשוב לבדוק את גודל הפייה ואת נוחות האחיזה. שופר בגודל בינוני או שופר תימני לרוב מאפשרים תקיעה קלה וחלקה יותר. הקולקציה של aJudaica כוללת מגוון גדלים וגימורים לבחירה."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "האם שופר מתאים גם כמתנת יודאיקה או פריט עיצובי?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "בהחלט. מעבר לשימוש ההלכתי, שופר מהווה פריט יודאיקה מרשים ומתנה בעלת משמעות עמוקה. באתר aJudaica יש שופרות מלוטשים, טבעיים ומעוטרים שמתאימים לכל אירוע."
+          }
+        }
+      ]
+    },
+    "tamarNotes": "נכתבו תשובות ממוקדות ומדויקות בהתאם לדרישות השפה והמבנה, תוך שילוב טבעי של המותג aJudaica ומתן דגש על שופרות כמתנות ויודאיקה.",
+    "noaChanges": "שינוי 'מהווה פריט' ל'הוא פריט' לשפה טבעית וקולחת יותר, והוספת מקף em-dash (—) במטא דסקריפשן לחיבור המשפטים.",
+    "registerScore": 98,
+    "groundingRisk": "low",
+    "generatedVia": "primary:gemini-3.7-flash",
+    "schemaValid": true,
+    "confidence": 100,
+    "shipDecision": "autoship"
+  }
+}

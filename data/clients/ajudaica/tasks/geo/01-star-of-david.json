@@ -1,0 +1,73 @@
+{
+  "actionId": "ajudaica-1-star-of-david",
+  "clientId": "ajudaica",
+  "rank": 1,
+  "query": "star of david",
+  "rankingUrl": "https://www.ajudaica.com/judaica101/star-of-david-meaning-complete-guide/",
+  "implementationMode": "enhance",
+  "actionType": "faq_block",
+  "priority": "HIGH",
+  "score": 486038,
+  "impressions": 23127,
+  "clicks": 8,
+  "ctr": 0,
+  "status": "generated",
+  "shipDecision": "autoship",
+  "confidence": 100,
+  "generatedAt": "2026-08-15T12:08:10.298Z",
+  "vocabSource": "fallback-js-rendered",
+  "vocabConfidence": "low",
+  "cannibalFlag": "REVIEW",
+  "cannibalReasons": [
+    "MULTI_URL"
+  ],
+  "cannibalUrls": [
+    {
+      "url": "https://www.ajudaica.com/judaica101/star-of-david/",
+      "impressions": 3438,
+      "position": 1.7
+    }
+  ],
+  "content": {
+    "hebrewContent": "<section class=\"faq-section\">\n  <h2>שאלות נפוצות על שילוב מגן דוד ביודאיקה ועיצוב</h2>\n  <div class=\"faq-item\">\n    <h3>מה ההבדל בין שילוב מגן דוד בתכשיטים לבין שימוש בו בחפצי קודש?</h3>\n    <p>בתכשיטים מגן דוד משמש בעיקר כסמל לזהות יהודית ולגאווה אישית. לעומת זאת, בחפצי קודש כמו מזוזות או מנורות, העיטור מדגיש את המסורת ואת הקדושה של הפריט. באתר aJudaica תמצאו את שתי האפשרויות בעיצובים ייחודיים.</p>\n  </div>\n  <div class=\"faq-item\">\n    <h3>מתי הכי מתאים להעניק פריט יודאיקה עם סמל מגן דוד כמתנה?</h3>\n    <p>פריטים אלה מושלמים לציוני דרך משמעותיים כמו בר מצווה, בת מצווה, חתונה או חנוכת בית. המגוון הרחב של aJudaica מציע מתנות יודאיקה מעוצבות שמתאימות לכל אירוע כזה.</p>\n  </div>\n  <div class=\"faq-item\">\n    <h3>איך לבחור יצירת אמנות יהודית עם מגן דוד לעיצוב הבית?</h3>\n    <p>כדאי להתאים את סגנון היצירה לעיצוב החלל — מודרני או קלאסי. ב-aJudaica אפשר לבחור מתוך אוסף פריטי אמנות יהודית שמשלבים את הסמל באופן אלגנטי ומרשים.</p>\n  </div>\n</section>",
+    "placementInstruction": "יש להוסיף את בלוק ה-FAQ בסוף המדריך, ממש לפני אזור יצירת הקשר או ההמלצות על מוצרים.",
+    "metaDescription": "שאלות ותשובות על מגן דוד ביודאיקה, מתנות ועיצוב הבית. גלו מתי להעניק מתנה עם הסמל ואיך לבחור פריטי אמנות יהודית איכותיים מבית aJudaica.",
+    "jsonLd": {
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "מה ההבדל בין שילוב מגן דוד בתכשיטים לבין שימוש בו בחפצי קודש?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "בתכשיטים מגן דוד משמש בעיקר כסמל לזהות יהודית וגאווה אישית. לעומת זאת, בחפצי קודש כמו מזוזות או מנורות, העיטור מדגיש את המסורת והקדושה של הפריט. באתר aJudaica תמצאו את שתי האפשרויות בעיצובים ייחודיים."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "מתי הכי מתאים להעניק פריט יודאיקה עם סמל מגן דוד כמתנה?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "פריטים אלה מושלמים לציוני דרך משמעותיים כמו בר מצווה, בת מצווה, חתונה או חנוכת בית. המגוון הרחב של aJudaica מציע מתנות יודאיקה מעוצבות שמתאימות לכל אירוע כזה."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "איך לבחור יצירת אמנות יהודית עם מגן דוד לעיצוב הבית?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "כדאי להתאים את סגנון היצירה לעיצוב החלל, מודרני או קלאסי. ב-aJudaica אפשר לבחור מתוך אוסף פריטי אמנות יהודית שמשלבים את הסמל באופן אלגנטי ומרשים."
+          }
+        }
+      ]
+    },
+    "tamarNotes": "התמקדתי בזווית היישומית של סמל מגן דוד ביודאיקה, מתנות ועיצוב הבית כדי למנוע חפיפה עם הגדרות היסטוריות כלליות, תוך שילוב טבעי ומדויק של שם המותג aJudaica.",
+    "noaChanges": "הוספת מילת היחס 'את' לפני מושא ישיר מיודע ('ואת הקדושה'), הוספת אות יחס מתאימה ('ולגאווה'), החלפת פסיק במקף מפריד (em-dash) לחלוקה רעיונית ברורה ('לחלל — מודרני').",
+    "registerScore": 98,
+    "groundingRisk": "low",
+    "generatedVia": "primary:gemini-3.7-flash",
+    "schemaValid": true,
+    "confidence": 100,
+    "shipDecision": "autoship"
+  }
+}

@@ -1,0 +1,83 @@
+{
+  "actionId": "retter-10-קורס-nlp",
+  "clientId": "retter",
+  "rank": 10,
+  "query": "קורס nlp",
+  "rankingUrl": "https://www.retter.co.il/ness-ziona-branch/",
+  "implementationMode": "enhance",
+  "actionType": "faq_block",
+  "priority": "HIGH",
+  "score": 6383,
+  "impressions": 309,
+  "clicks": 0,
+  "ctr": 0,
+  "status": "generated",
+  "shipDecision": "autoship",
+  "confidence": 100,
+  "generatedAt": "2026-08-15T11:36:43.924Z",
+  "vocabSource": "page",
+  "vocabConfidence": "high",
+  "cannibalFlag": "REVIEW",
+  "cannibalReasons": [
+    "MULTI_URL"
+  ],
+  "cannibalUrls": [
+    {
+      "url": "https://www.retter.co.il/study/",
+      "impressions": 751,
+      "position": 40.1
+    },
+    {
+      "url": "https://www.retter.co.il/%D7%A7%D7%95%D7%A8%D7%A1-nlp-%D7%91%D7%97%D7%99%D7%A0%D7%9D/",
+      "impressions": 501,
+      "position": 20
+    },
+    {
+      "url": "https://www.retter.co.il/%D7%90%D7%99%D7%A4%D7%94-%D7%9C%D7%9C%D7%9E%D7%95%D7%93-nlp/",
+      "impressions": 415,
+      "position": 28.3
+    }
+  ],
+  "content": {
+    "hebrewContent": "<section class=\"faq-section\">\n  <h2>שאלות נפוצות על לימודי NLP בסניף נס ציונה</h2>\n  <div class=\"faq-item\">\n    <h3>למי מתאים קורס NLP במסלול פרקטישנר בסניף נס ציונה?</h3>\n    <p>המסלול מתאים למי שרוצה לרכוש מקצוע טיפולי וגם למי שמחפש התפתחות אישית. מכללת רטר מציעה בסניף נס ציונה הכשרה מעשית עם ליווי אישי.</p>\n  </div>\n  <div class=\"faq-item\">\n    <h3>מה ההבדל בין שלב פרקטישנר לשלב מאסטר בלימודי NLP?</h3>\n    <p>שלב הפרקטישנר מקנה את כלי הבסיס לשינוי דפוסי חשיבה והתנהגות, ושלב המאסטר מעמיק בטכניקות מתקדמות ומכשיר אותך לדרגת מטפל מוסמך ובכיר.</p>\n  </div>\n  <div class=\"faq-item\">\n    <h3>איזו תעודה מקבלים בסיום קורס NLP בסניף?</h3>\n    <p>בסיום המסלול בסניף נס ציונה מקבלים תעודת הסמכה מוכרת. התעודה מאפשרת להתחיל לטפל וללוות תהליכי שינוי באופן מקצועי.</p>\n  </div>\n</section>",
+    "placementInstruction": "יש להוסיף את בלוק השאלות והתשובות בתחתית עמוד סניף נס ציונה, לפני אזור טופס יצירת הקשר.",
+    "metaDescription": "מתעניין בלימודי NLP? מכללת רטר בסניף נס ציונה מזמינה אותך לקורס פרקטישנר ומאסטר עם תעודה מוכרת וליווי אישי. כל התשובות כאן.",
+    "jsonLd": {
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "למי מתאים קורס NLP במסלול פרקטישנר בסניף נס ציונה?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "המסלול מתאים למי שרוצה לרכוש מקצוע טיפולי וגם למי שמחפש התפתחות אישית. מכללת רטר לימודי NLP מציעה בסניף נס ציונה הכשרה מעשית עם ליווי אישי."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "מה ההבדל בין שלב פרקטישנר לשלב מאסטר בלימודי NLP?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "שלב הפרקטישנר מקנה את כלי הבסיס לשינוי דפוסי חשיבה והתנהגות. שלב המאסטר מעמיק בטכניקות מתקדמות ומכשיר אותך לדרגת מטפל מוסמך ובכיר."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "איזו תעודה מקבלים בסיום קורס NLP בסניף?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "בסיום המסלול בסניף נס ציונה מקבלים תעודת הסמכה מוכרת. התעודה מאפשרת להתחיל לטפל וללוות תהליכי שינוי באופן מקצועי."
+          }
+        }
+      ]
+    },
+    "tamarNotes": "התמקדתי בהבדלים בין השלבים ובתעודה עבור סניף נס ציונה כדי לייצר ערך AIO ממוקד בלי להגדיר מה זה NLP באופן גנרי.",
+    "noaChanges": "הסרת כפילות לא טבעית של 'לימודי NLP' מיד אחרי שם המכללה, חיבור משפטים לזרימה טבעית יותר בעברית.",
+    "registerScore": 98,
+    "groundingRisk": "low",
+    "generatedVia": "primary:gemini-3.7-flash",
+    "schemaValid": true,
+    "confidence": 100,
+    "shipDecision": "autoship"
+  }
+}

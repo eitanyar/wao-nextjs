@@ -1,0 +1,78 @@
+{
+  "actionId": "wao-10-יעוץ-קידום-אתרים",
+  "clientId": "wao",
+  "rank": 10,
+  "query": "יעוץ קידום אתרים",
+  "rankingUrl": "https://www.wao.co.il/seo/consulting",
+  "implementationMode": "enhance",
+  "actionType": "faq_block",
+  "priority": "LOW",
+  "score": 3374,
+  "impressions": 333,
+  "clicks": 0,
+  "ctr": 0,
+  "status": "generated",
+  "shipDecision": "autoship",
+  "confidence": 100,
+  "generatedAt": "2026-08-15T12:09:45.969Z",
+  "vocabSource": "page",
+  "vocabConfidence": "high",
+  "cannibalFlag": "REVIEW",
+  "cannibalReasons": [
+    "MULTI_URL"
+  ],
+  "cannibalUrls": [
+    {
+      "url": "https://www.wao.co.il/%D7%99%D7%95%D7%A2%D7%A5-%D7%A7%D7%99%D7%93%D7%95%D7%9D-%D7%90%D7%AA%D7%A8%D7%99%D7%9D/",
+      "impressions": 231,
+      "position": 26.2
+    },
+    {
+      "url": "https://www.wao.co.il/%D7%9E%D7%93%D7%A8%D7%99%D7%9A-%D7%A7%D7%99%D7%93%D7%95%D7%9D-%D7%90%D7%AA%D7%A8%D7%99%D7%9D-%D7%90%D7%95%D7%A8%D7%92%D7%A0%D7%99-%D7%91%D7%92%D7%95%D7%92%D7%9C/",
+      "impressions": 72,
+      "position": 83.4
+    }
+  ],
+  "content": {
+    "hebrewContent": "<section class=\"faq-section\">\n  <h2>שאלות נפוצות על יעוץ קידום אתרים</h2>\n  <div class=\"faq-item\">\n    <h3>מתי עדיף לבחור יעוץ קידום אתרים במקום ניהול שוטף?</h3>\n    <p>יעוץ מתאים כשיש לך צוות פנימי שיכול לבצע את המשימות. יועץ קידום אתרים של WAO בונה תוכנית פעולה, מנתח את האתר ומכוון את הצוות שלך לתוצאות מדויקות.</p>\n  </div>\n  <div class=\"faq-item\">\n    <h3>מה כולל תהליך היעוץ עם יועץ קידום אתרים מנוסה?</h3>\n    <p>התהליך כולל אבחון טכני של האתר, מחקר מתחרים ובניית אסטרטגיית תוכן חכמה. הצוות ב-WAO מביא מעל 20 שנות ניסיון לכל פרויקט, ללא התחייבות לחוזה ארוך טווח.</p>\n  </div>\n  <div class=\"faq-item\">\n    <h3>איך מודדים את ההצלחה של יעוץ SEO?</h3>\n    <p>ההצלחה נמדדת בעלייה בתנועה האורגנית, שיפור בדירוגים בגוגל ועלייה בהמרות. יועץ קידום אתרים מנוסה מגדיר יעדים ברורים ובודק את הנתונים באופן שוטף.</p>\n  </div>\n</section>",
+    "placementInstruction": "להוסיף בתחתית עמוד שירותי היעוץ (/seo/consulting), מעל אזור יצירת הקשר.",
+    "metaDescription": "יעוץ קידום אתרים מקצועי עם יועץ קידום אתרים מנוסה מחברת WAO. מעל 20 שנות ניסיון בבניית אסטרטגיית SEO מנצחת להגדלת התנועה והמכירות — ללא חוזה מחייב.",
+    "jsonLd": {
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "מתי עדיף לבחור יעוץ קידום אתרים במקום ניהול שוטף?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "יעוץ מתאים כשיש לך צוות פנימי שיכול לבצע את המשימות. יועץ קידום אתרים של WAO בונה תוכנית פעולה, מנתח את האתר ומכוון את הצוות שלך לתוצאות מדויקות."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "מה כולל תהליך היעוץ עם יועץ קידום אתרים מנוסה?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "התהליך כולל אבחון טכני של האתר, מחקר מתחרים, ובניית אסטרטגיית תוכן חכמה. הצוות ב-WAO מביא מעל 20 שנות ניסיון לכל פרויקט, ללא התחייבות לחוזה ארוך טווח."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "איך מודדים את ההצלחה של יעוץ SEO?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "ההצלחה נמדדת בעלייה בתנועה האורגנית, שיפור בדירוגים בגוגל ועלייה בהמרות. יועץ קידום אתרים מנוסה מגדיר יעדים ברורים ובודק את הנתונים באופן שוטף."
+          }
+        }
+      ]
+    },
+    "tamarNotes": "התמקדתי בהבדל בין ייעוץ לביצוע ובאופן המדידה, ללא הגדרות כלליות של SEO. שמרתי על מונחי העוגן המותרים: יועץ קידום אתרים, מנוסה, שנות ניסיון, ושם המותג WAO.",
+    "noaChanges": "הסרת פסיק מיותר לפני ו' החיבור (מחקר מתחרים, ובניית -> מחקר מתחרים ובניית), החלפת מקף רגיל ב-em-dash במטא-תיאור.",
+    "registerScore": 98,
+    "groundingRisk": "low",
+    "generatedVia": "primary:gemini-3.7-flash",
+    "schemaValid": true,
+    "confidence": 100,
+    "shipDecision": "autoship"
+  }
+}

@@ -1,0 +1,70 @@
+{
+  "actionId": "ajudaica-10-tallit-katan",
+  "clientId": "ajudaica",
+  "rank": 10,
+  "query": "tallit katan",
+  "rankingUrl": "https://www.ajudaica.com/category/45/Tallit-Katan/",
+  "implementationMode": "create",
+  "actionType": "faq_block",
+  "priority": "HIGH",
+  "score": 52489,
+  "impressions": 2516,
+  "clicks": 40,
+  "ctr": 1.6,
+  "status": "generated",
+  "shipDecision": "autoship",
+  "confidence": 100,
+  "generatedAt": "2026-08-15T12:08:56.196Z",
+  "vocabSource": "fallback-js-rendered",
+  "vocabConfidence": "low",
+  "content": {
+    "hebrewContent": "<div class=\"faq-block\">\n  <h2>שאלות נפוצות על טלית קטן (Tallit Katan)</h2>\n  <div class=\"faq-item\">\n    <h3>מה זה טלית קטן ולמה לובשים אותו?</h3>\n    <p>טלית קטן הוא בגד בעל ארבע כנפות עם ציציות. לובשים אותו מתחת לחולצה כדי לקיים את מצוות הציצית לאורך כל היום.</p>\n  </div>\n  <div class=\"faq-item\">\n    <h3>אילו סוגי בדים של טלית קטן תמצאו ב-aJudaica?</h3>\n    <p>באתר aJudaica תמצאו טלית קטן מצמר טהור, מכותנה נושמת או מבד רשת קל. הבדים מותאמים ללבישה יומיומית נוחה בכל עונה.</p>\n  </div>\n  <div class=\"faq-item\">\n    <h3>איך בוחרים את המידה הנכונה של טלית קטן?</h3>\n    <p>בוחרים לפי גובה, מבנה גוף ונוחות אישית. ב-aJudaica יש מגוון מידות לילדים, לנוער ולמבוגרים עם הסבר ברור על המידות.</p>\n  </div>\n  <div class=\"faq-item\">\n    <h3>האם אפשר להזמין טלית קטן במשלוח לכל מקום?</h3>\n    <p>כן, חנות aJudaica מציעה משלוחים בינלאומיים מהירים בארה״ב ולכל העולם ישירות עד הבית.</p>\n  </div>\n</div>",
+    "placementInstruction": "יש להטמיע את בלוק השאלות והתשובות בתחתית עמוד הקטגוריה /category/45/Tallit-Katan/ מתחת לרשימת המוצרים.",
+    "metaDescription": "מחפשים טלית קטן (Tallit Katan)? באתר aJudaica תמצאו מבחר מידות מבדי צמר, כותנה ורשת איכותיים, כולל משלוחים מהירים לכל העולם.",
+    "jsonLd": {
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "מה זה טלית קטן ולמה לובשים אותו?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "טלית קטן הוא בגד בעל ארבע כנפות עם ציציות. לובשים אותו מתחת לחולצה כדי לקיים את מצוות הציצית לאורך כל היום."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "איזה סוגי בדים של טלית קטן תמצאו ב-aJudaica?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "באתר aJudaica תמצאו טלית קטן מצמר טהור, מכותנה נושמת או מבד רשת קל. הבדים מותאמים ללבישה יומיומית נוחה בכל עונה."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "איך בוחרים את המידה הנכונה של טלית קטן?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "בוחרים לפי גובה, מבנה גוף ונוחות אישית. ב-aJudaica יש מגוון מידות לילדים, נוער ומבוגרים עם הסבר ברור על המידות."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "האם אפשר להזמין טלית קטן במשלוח לכל מקום?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "כן, חנות aJudaica מציעה משלוחים בינלאומיים מהירים בארה\"ב ולכל העולם ישירות עד הבית."
+          }
+        }
+      ]
+    },
+    "tamarNotes": "הטקסט כתוב בשפה ישירה, בהירה ותמציתית לפי ההנחיות. שילבתי את שם המותג aJudaica בדיוק כפי שהוגדר, לצד התייחסות למשלוחים הבינלאומיים של החנות.",
+    "noaChanges": "1. תיקון 'איזה סוגי בדים' ל-'אילו סוגי בדים' (התאם דקדוקי של מילת השאלה לרבים).\n2. הוספת אות היחס 'ל-' ברשימה ('לילדים, לנוער ולמבוגרים').\n3. החלפת גרשיים ASCII בגרשיים עבריים תקניים (בארה״ב).",
+    "registerScore": 98,
+    "groundingRisk": "low",
+    "generatedVia": "primary:gemini-3.7-flash",
+    "schemaValid": true,
+    "confidence": 100,
+    "shipDecision": "autoship"
+  }
+}

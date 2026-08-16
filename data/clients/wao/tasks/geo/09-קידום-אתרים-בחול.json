@@ -1,0 +1,73 @@
+{
+  "actionId": "wao-9-קידום-אתרים-בחול",
+  "clientId": "wao",
+  "rank": 9,
+  "query": "קידום אתרים בחו\"ל",
+  "rankingUrl": "https://www.wao.co.il/seo/international",
+  "implementationMode": "enhance",
+  "actionType": "faq_block",
+  "priority": "LOW",
+  "score": 3735,
+  "impressions": 442,
+  "clicks": 1,
+  "ctr": 0.2,
+  "status": "generated",
+  "shipDecision": "autoship",
+  "confidence": 100,
+  "generatedAt": "2026-08-15T12:09:42.286Z",
+  "vocabSource": "page",
+  "vocabConfidence": "high",
+  "cannibalFlag": "REVIEW",
+  "cannibalReasons": [
+    "MULTI_URL"
+  ],
+  "cannibalUrls": [
+    {
+      "url": "https://www.wao.co.il/seo-and-marketing-abroad/",
+      "impressions": 90,
+      "position": 33.4
+    }
+  ],
+  "content": {
+    "hebrewContent": "<section class=\"faq-section\">\n  <h2>שאלות ותשובות על אופטימיזציה גלובלית</h2>\n  <div class=\"faq-item\">\n    <h3>מה ההבדל בין שימוש בספריית משנה (Subdirectory) לדומיין מקומי (ccTLD)?</h3>\n    <p>ספריית משנה מרכזת את כל הסמכות בדומיין הראשי וחוסכת עלויות ניהול. לעומת זאת, דומיין מקומי משדר אמינות גבוהה יותר למנועי חיפוש מקומיים. הבחירה תלויה במשאבים וביעדי החדירה לשוק.</p>\n  </div>\n  <div class=\"faq-item\">\n    <h3>איך תגיות hreflang מונעות בעיות של תוכן משוכפל?</h3>\n    <p>תגיות hreflang מסמנות לגוגל לאיזו שפה ומדינה מיועד כל עמוד. כך מנוע החיפוש מציג את הגרסה הנכונה למשתמש — מה שמונע פגיעה בדירוגים בגלל תוכן זהה באנגלית.</p>\n  </div>\n  <div class=\"faq-item\">\n    <h3>מה חשוב לבדוק לפני התאמת תוכן לשווקים בינלאומיים?</h3>\n    <p>יש לבצע מחקר מילות מפתח מקומי לפי הרגלי החיפוש בכל שוק, שכן תרגום מילולי אינו מספיק. צוות WAO מבצע התאמה תרבותית מלאה לכל קהל יעד כדי להבטיח מענה מדויק לכוונת החיפוש.</p>\n  </div>\n</section>",
+    "placementInstruction": "יש להטמיע את בלוק השאלות והתשובות בתחתית העמוד /seo/international, לפני אזור ההנעה לפעולה (Footer CTA).",
+    "metaDescription": "שאלות ותשובות מקצועיות על קידום אתרים בחו״ל עם WAO: ארכיטקטורת אתר בינלאומית, הטמעת תגיות hreflang והתאמת תוכן מדויקת לשווקים גלובליים.",
+    "jsonLd": {
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "מה ההבדל בין שימוש בספריית משנה (Subdirectory) לדומיין מקומי (ccTLD)?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "ספריית משנה מרכזת את כל הסמכות בדומיין הראשי. היא חוסכת עלויות ניהול. דומיין מקומי משדר אמינות גבוהה יותר למנועי חיפוש מקומיים. הבחירה תלויה במשאבים וביעדי החדירה לשוק."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "איך תגיות hreflang מונעות בעיות של תוכן משוכפל?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "תגיות hreflang מסמנות לגוגל לאיזו שפה ומדינה מיועד כל עמוד. כך מנוע החיפוש מציג את הגרסה הנכונה למשתמש. המהלך מונע פגיעה בדירוגים בגלל תוכן זהה באנגלית."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "מה חשוב לבדוק לפני התאמת תוכן לשווקים בינלאומיים?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "יש לבצע מחקר מילות מפתח מקומי לפי הרגלי החיפוש בכל שוק. תרגום מילולי אינו מספיק. צוות WAO מבצע התאמה תרבותית מלאה לכל קהל יעד כדי להבטיח מענה מדויק לכוונת החיפוש."
+          }
+        }
+      ]
+    },
+    "tamarNotes": "השאלות מתמקדות בהיבטים טכניים ואסטרטגיים צרים של קידום בינלאומי (מבנה URL, Hreflang, לוקליזציה) ללא הגדרות כלליות, בהתאם לדרישות ה-GEO.",
+    "noaChanges": "חיבור משפטים קטועים לקריאה טבעית וזורמת יותר, החלפת גרשיים ASCII בגרשיים עבריים תקניים (בחו״ל), שימוש בקו מפריד תקין (—).",
+    "registerScore": 95,
+    "groundingRisk": "low",
+    "generatedVia": "primary:gemini-3.7-flash",
+    "schemaValid": true,
+    "confidence": 100,
+    "shipDecision": "autoship"
+  }
+}

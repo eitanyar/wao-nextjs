@@ -1,0 +1,62 @@
+{
+  "actionId": "ajudaica-9-judaica-gifts-from-israel",
+  "clientId": "ajudaica",
+  "rank": 9,
+  "query": "judaica gifts from israel",
+  "rankingUrl": "https://www.ajudaica.com/",
+  "implementationMode": "create",
+  "actionType": "faq_block",
+  "priority": "MEDIUM",
+  "score": 63046,
+  "impressions": 3405,
+  "clicks": 4,
+  "ctr": 0.1,
+  "status": "generated",
+  "shipDecision": "autoship",
+  "confidence": 100,
+  "generatedAt": "2026-08-15T12:08:52.562Z",
+  "vocabSource": "fallback-js-rendered",
+  "vocabConfidence": "low",
+  "content": {
+    "hebrewContent": "<div class=\"faq-block\">\n  <h2>שאלות נפוצות על מתנות יודאיקה</h2>\n  <div class=\"faq-item\">\n    <h3>אילו סוגי מתנות יודאיקה אפשר למצוא באתר aJudaica?</h3>\n    <p>באתר aJudaica תמצאו מבחר עשיר של פריטי יודאיקה. הקטלוג כולל מזוזות, חנוכיות, אמנות יהודית ופריטי עיצוב לבית לכל אירוע.</p>\n  </div>\n  <div class=\"faq-item\">\n    <h3>האם aJudaica מבצעת משלוחים של מתנות יודאיקה לכל העולם?</h3>\n    <p>כן, חברת aJudaica פועלת בארה״ב ושולחת פריטי יודאיקה לכל יעד ברחבי העולם בצורה בטוחה.</p>\n  </div>\n  <div class=\"faq-item\">\n    <h3>איך לבחור מתנת יודאיקה מתאימה לחגים ולאירועים מיוחדים?</h3>\n    <p>צוות aJudaica מציע אוסף נבחר של מתנות לפי אירוע. תוכלו לבחור בקלות פריטי מסורת, חנוכיות לחגים או תשמישי קדושה לחנוכת בית.</p>\n  </div>\n</div>",
+    "placementInstruction": "יש להטמיע את הבלוק בתחתית עמוד הבית מעל אזור הפוטר.",
+    "metaDescription": "מחפשים מתנות יודאיקה ייחודיות? באתר aJudaica תמצאו מגוון חנוכיות, מזוזות, פריטי אמנות יהודית ועיצוב לבית עם משלוחים לכל רחבי העולם.",
+    "jsonLd": {
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "איזה סוגי מתנות יודאיקה אפשר למצוא באתר aJudaica?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "באתר aJudaica תמצא מבחר עשיר של פריטי יודאיקה. הקטלוג כולל מזוזות, חנוכיות, אמנות יהודית ופריטי עיצוב לבית לכל אירוע."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "האם aJudaica מבצעת משלוחים של מתנות יודאיקה לכל העולם?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "כן, חברת aJudaica פועלת בארה\"ב ושולחת פריטי יודאיקה לכל יעד ברחבי העולם בצורה בטוחה."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "איך לבחור מתנת יודאיקה מתאימה לחגים ואירועים מיוחדים?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "צוות aJudaica מציע אוסף נבחר של מתנות לפי אירוע. תוכל לבחור בקלות פריטי מסורת, חנוכיות לחגים או תשמישי קדושה לחנוכת בית."
+          }
+        }
+      ]
+    },
+    "tamarNotes": "הדגשתי את הפריטים המרכזיים (חנוכיות, מזוזות, אמנות יהודית) ואת יכולת המשלוח הבינלאומית בהתאם לנתוני המותג המדויקים, תוך שמירה על משפטים קצרים ומבנה מותאם ל-AI Overviews.",
+    "noaChanges": "תיקון גרשיים לגרשיים עבריים (ארה״ב), תיקון 'איזה סוגי' ל-'אילו סוגי', מעבר לפנייה טבעית ברבים/יוניסקס (תמצאו, תוכלו, מחפשים), הוספת ו' החיבור (ולאירועים), והסרת הציון 'מישראל' בכותרת מאחר שהחברה ממוקמת בארה״ב לפי ההקשר המאומת.",
+    "registerScore": 95,
+    "groundingRisk": "low",
+    "generatedVia": "primary:gemini-3.7-flash",
+    "schemaValid": true,
+    "confidence": 100,
+    "shipDecision": "autoship"
+  }
+}

@@ -1,0 +1,70 @@
+{
+  "actionId": "ajudaica-4-judaica",
+  "clientId": "ajudaica",
+  "rank": 4,
+  "query": "judaica",
+  "rankingUrl": "https://www.ajudaica.com/",
+  "implementationMode": "create",
+  "actionType": "faq_block",
+  "priority": "LOW",
+  "score": 88612,
+  "impressions": 5925,
+  "clicks": 26,
+  "ctr": 0.4,
+  "status": "generated",
+  "shipDecision": "autoship",
+  "confidence": 100,
+  "generatedAt": "2026-08-15T12:08:19.487Z",
+  "vocabSource": "fallback-js-rendered",
+  "vocabConfidence": "low",
+  "content": {
+    "hebrewContent": "<div class=\"faq-block\">\n  <h2>שאלות נפוצות על מוצרי יודאיקה (Judaica)</h2>\n  <div class=\"faq-item\">\n    <h3>מה כולל עולם היודאיקה?</h3>\n    <p>תחום היודאיקה כולל פריטי מסורת, אמנות יהודית ותשמישי קדושה. באתר aJudaica תמצאו מבחר חנוכיות, מזוזות, פריטי עיצוב לבית ומתנות לכל אירוע יהודי.</p>\n  </div>\n  <div class=\"faq-item\">\n    <h3>איך בוחרים מתנת יודאיקה לאירועים מיוחדים?</h3>\n    <p>מומלץ להתאים את הפריט לאופי האירוע — למשל מזוזה מעוצבת לחנוכת בית, או חנוכיות וכלי כסף לחגים. הקולקציה של aJudaica מציעה פריטים נבחרים ומותאמים לכל חגיגה.</p>\n  </div>\n  <div class=\"faq-item\">\n    <h3>האם אפשר להזמין מוצרי Judaica לכל העולם?</h3>\n    <p>כן. החנות של aJudaica פועלת בארה״ב ומספקת משלוחים בינלאומיים לכל העולם, ישירות לבית הלקוח.</p>\n  </div>\n  <div class=\"faq-item\">\n    <h3>מה מייחד את פריטי היודאיקה של aJudaica?</h3>\n    <p>ב-aJudaica תמצאו אוצרות קפדנית של אמנות יהודית: פריטים המשלבים חיבור תרבותי עמוק, עיצוב ייחודי ואיכות גבוהה לבית ולמסורת.</p>\n  </div>\n</div>",
+    "placementInstruction": "יש להטמיע את בלוק השאלות והתשובות בתחתית עמוד הבית (/), ממש לפני הפוטר.",
+    "metaDescription": "מחפשים פריטי יודאיקה ייחודיים? ב-aJudaica תמצאו מבחר מזוזות, חנוכיות, מתנות ואמנות יהודית עם משלוחים לכל העולם. היכנסו לקטלוג.",
+    "jsonLd": {
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "מה כולל עולם ה-Judaica?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "תחום ה-Judaica כולל פריטי מסורת, אמנות יהודית ותשמישי קדושה. באתר aJudaica תמצאו מבחר של חנוכיות, מזוזות, פריטי עיצוב לבית ומתנות לכל אירוע יהודי."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "איך בוחרים מתנת Judaica לאירועים מיוחדים?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "מומלץ להתאים את הפריט לאירוע. לחנוכת בית מתאימה מזוזה מעוצבת, ולחגים מתאימים כלי כסף או חנוכיות. הקולקציה של aJudaica מציעה פריטים נבחרים לכל חגיגה."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "האם אפשר להזמין מוצרי Judaica לכל העולם?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "כן. החנות של aJudaica פועלת בארה\"ב ומספקת משלוחים בינלאומיים לכל העולם, ישירות לבית הלקוח."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "מה מייחד את פריטי ה-Judaica של aJudaica?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "בחנות aJudaica תמצאו אוצרות קפדנית של אמנות יהודית. הפריטים משלבים חיבור תרבותי עמוק, עיצוב ייחודי ואיכות גבוהה לבית ולמסורת."
+          }
+        }
+      ]
+    },
+    "tamarNotes": "הדגשתי את מגוון המוצרים (מזוזות, חנוכיות, אמנות ומתנות) ואת השילוח הבינלאומי של aJudaica כדי לתת מענה ממוקד לשאילתות חיפוש ו-AI Overview.",
+    "noaChanges": "1. שימוש בגרשיים עבריים תקניים (ארה״ב במקום ארה\"ב).\n2. החלפת התייחסויות גולמיות באנגלית למונח העברי הטבעי 'יודאיקה' לצד שימור שם המותג aJudaica.\n3. זרימת משפטים טבעית יותר ושימוש בקו מפריד (em-dash).\n4. ליטוש קל ב-placementInstruction וב-metaDescription לטובת עברית שוטפת וקולחת.",
+    "registerScore": 98,
+    "groundingRisk": "low",
+    "generatedVia": "primary:gemini-3.7-flash",
+    "schemaValid": true,
+    "confidence": 100,
+    "shipDecision": "autoship"
+  }
+}

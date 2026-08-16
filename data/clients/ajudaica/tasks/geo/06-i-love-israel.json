@@ -1,0 +1,62 @@
+{
+  "actionId": "ajudaica-6-i-love-israel",
+  "clientId": "ajudaica",
+  "rank": 6,
+  "query": "i love israel",
+  "rankingUrl": "https://www.ajudaica.com/I-Love-Israel-T-Shirt/item2939",
+  "implementationMode": "enhance",
+  "actionType": "faq_block",
+  "priority": "HIGH",
+  "score": 82750,
+  "impressions": 3766,
+  "clicks": 3,
+  "ctr": 0.1,
+  "status": "generated",
+  "shipDecision": "autoship",
+  "confidence": 100,
+  "generatedAt": "2026-08-15T12:08:29.914Z",
+  "vocabSource": "fallback-js-rendered",
+  "vocabConfidence": "low",
+  "content": {
+    "hebrewContent": "<div class=\"faq-block\">\n  <h2>שאלות נפוצות על חולצות ומוצרי I Love Israel</h2>\n  <div class=\"faq-item\">\n    <h3>למי מתאימה חולצת I Love Israel?</h3>\n    <p>החולצה מתאימה לכל מי שאוהב את ישראל ורוצה להביע תמיכה וגאווה. באתר aJudaica תמצאו מגוון מידות ועיצובים שמתאימים ליום־יום או לאירועים מיוחדים.</p>\n  </div>\n  <div class=\"faq-item\">\n    <h3>האם ניתן להזמין משלוח של מוצרי I Love Israel לחו״ל?</h3>\n    <p>כן, חנות aJudaica שולחת מתנות יודאיקה, פריטי אמנות יהודית ומזכרות לכל רחבי העולם, כולל משלוחים מהירים לארה״ב.</p>\n  </div>\n  <div class=\"faq-item\">\n    <h3>אילו עוד פריטים עם הכיתוב I Love Israel אפשר למצוא באתר?</h3>\n    <p>באתר aJudaica תמצאו מבחר מתנות ייחודיות עם מסר של אהבה לישראל, לצד מזוזות, חנוכיות ומוצרי יודאיקה לבית.</p>\n  </div>\n</div>",
+    "placementInstruction": "יש להוסיף את הבלוק בתחתית עמוד המוצר /I-Love-Israel-T-Shirt/item2939 מתחת למפרט הפריט.",
+    "metaDescription": "מחפשים חולצת I Love Israel איכותית? ב-aJudaica תמצאו מגוון מתנות ויודאיקה עם משלוחים לכל העולם. היכנסו עכשיו להזמנה מהירה של פריטי תמיכה בישראל.",
+    "jsonLd": {
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "למי מתאימה חולצת I Love Israel?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "החולצה מתאימה לכל מי שאוהב את ישראל ורוצה להביע תמיכה וגאווה. באתר aJudaica תמצא מגוון מידות ועיצובים שמתאימים ליום-יום או לאירועים מיוחדים."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "האם ניתן להזמין משלוח של מוצרי I Love Israel לחו\"ל?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "כן, חנות aJudaica שולחת מתנות יודאיקה, פריטי אמנות יהודית ומזכרות לכל רחבי העולם, כולל משלוחים מהירים לארה\"ב."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "איזה עוד פריטים עם הכיתוב I Love Israel אפשר למצוא באתר?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "באתר aJudaica תמצא מבחר מתנות ייחודיות עם מסר של אהבה לישראל, לצד מזוזות, חנוכיות ומוצרי יודאיקה לבית."
+          }
+        }
+      ]
+    },
+    "tamarNotes": "הדגשתי את המותג aJudaica בהקשר של משלוחים בינלאומיים (יתרון מרכזי של המותג) ומענה ישיר לשאילתת החיפוש עבור דף המוצר.",
+    "noaChanges": "1. החלפת גרשיים כפולים פשוטים (ASCII) בגרשיים עבריים תקניים (לחו״ל, לארה״ב).\n2. תיקון שיבוש לשוני: החלפת 'איזה עוד פריטים' ב-'אילו עוד פריטים'.\n3. האחדת הפנייה לגוף רבים ('תמצאו', 'מחפשים', 'היכנסו') לטבעיות מרבית בעברית שיווקית ומסחרית.\n4. החלפת מקף רגיל במקף מחבר (יום־יום).",
+    "registerScore": 98,
+    "groundingRisk": "low",
+    "generatedVia": "primary:gemini-3.7-flash",
+    "schemaValid": true,
+    "confidence": 100,
+    "shipDecision": "autoship"
+  }
+}

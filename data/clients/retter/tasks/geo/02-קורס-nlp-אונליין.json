@@ -1,0 +1,82 @@
+{
+  "actionId": "retter-2-קורס-nlp-אונליין",
+  "clientId": "retter",
+  "rank": 2,
+  "query": "קורס nlp אונליין",
+  "rankingUrl": "https://www.retter.co.il/petah-tikva-branch/",
+  "implementationMode": "enhance",
+  "actionType": "faq_block",
+  "priority": "MEDIUM",
+  "score": 14268,
+  "impressions": 687,
+  "clicks": 2,
+  "ctr": 0.3,
+  "status": "generated",
+  "shipDecision": "autoship",
+  "confidence": 100,
+  "generatedAt": "2026-08-15T18:36:24.177Z",
+  "vocabSource": "page",
+  "vocabConfidence": "high",
+  "cannibalFlag": "REVIEW",
+  "cannibalReasons": [
+    "MULTI_URL",
+    "HEAD_TERM_ON_LOCATION"
+  ],
+  "cannibalUrls": [
+    {
+      "url": "https://www.retter.co.il/nlp/",
+      "impressions": 11233,
+      "position": 2.6
+    },
+    {
+      "url": "https://www.retter.co.il/kiryat-bialik-branch/",
+      "impressions": 634,
+      "position": 9.7
+    }
+  ],
+  "content": {
+    "hebrewContent": "<section class=\"faq-section\">\n  <h2>שאלות נפוצות על קורסי NLP אונליין</h2>\n  <div class=\"faq-item\">\n    <h3>אילו קורסי NLP אונליין קיימים בשוק?</h3>\n    <p>בשוק קיימים קורסי NLP אונליין רבים הנעים בין קורסים בסיסיים לתכניות הסמכה מתקדמות כמו אלה של מכללת רטר.</p>\n  </div>\n  <div class=\"faq-item\">\n    <h3>מה ההבדל בין קורס NLP אונליין לקורס בכיתה?</h3>\n    <p>קורסי NLP אונליין מציעים גמישות בזמן הלימוד ובקצב הלמידה, אך קורסי בכיתה מאפשרים יחסי גומלין אישיים עם המדריך והתלמידים האחרים.</p>\n  </div>\n  <div class=\"faq-item\">\n    <h3>האם מכללת רטר מציעה קורסי NLP אונליין?</h3>\n    <p>כן, מכללת רטר מציעה קורסי NLP אונליין מכוונים ותכניות הסמכה גם במתכונת אונליין עם ליווי מקצועי וסיוע התאמה.</p>\n  </div>\n</section>",
+    "placementInstruction": "יש להוסיף את בלוק השאלות הנפוצות בחלק התחתון של עמוד הקורסים האונליין או בעמוד הבית.",
+    "metaDescription": "חוקר קורסי NLP אונליין? מכללת רטר מציעה הכשרה מקצועית NLP בפורמט אונליין עם ליווי וסיוע התאמה. כל הפרטים כאן.",
+    "jsonLd": {
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "אילו קורסי NLP אונליין קיימים בשוק?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "בשוק קיימים קורסי NLP אונליין רבים הנעים בין קורסים בסיסיים לתכניות הסמכה מתקדמות כמו אלה של מכללת רטר."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "מה ההבדל בין קורס NLP אונליין לקורס בכיתה?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "קורסי NLP אונליין מציעים גמישות בזמן הלימוד ובקצב הלמידה, אך קורסי בכיתה מאפשרים יחסי גומלין אישיים עם המדריך והתלמידים האחרים."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "האם מכללת רטר מציעה קורסי NLP אונליין?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "כן, מכללת רטר מציעה קורסי NLP אונליין מכוונים ותכניות הסמכה גם במתכונת אונליין עם ליווי מקצועי וסיוע התאמה."
+          }
+        }
+      ]
+    },
+    "tamarNotes": "נשמר שימוש קפדני באוצר המילים המחייב ובשם המותג הרשמי, תוך מענה ממוקד וספציפי ללימודי NLP אונליין ללא המצאת זמנים או מחירים.",
+    "noaChanges": "תיקון 'אילו קורסים' ל'אילו קורסי' (יצירת סמיכות דקדוקית). מעבר מ'שוק ישנם' ל'בשוק קיימים' (שימוש בלשון עכשוויית ודינאמית). תיקון לשימוש עקבי בביטוי 'קורסי NLP אונליין' (לא 'לימודי NLP אונליין'). דיוק בניסוח 'תכניות הסמכה גם במתכונת אונליין' (הגדלת דיוק וצמצום טענות משפחתיות).",
+    "registerScore": 100,
+    "groundingRisk": "low",
+    "factualClaims": [
+      "מכללת רטר מציעה קורסי NLP אונליין"
+    ],
+    "generatedVia": "primary:gemini-3.7-flash",
+    "schemaValid": true,
+    "confidence": 100,
+    "shipDecision": "autoship"
+  }
+}

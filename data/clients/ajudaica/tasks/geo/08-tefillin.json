@@ -1,0 +1,76 @@
+{
+  "actionId": "ajudaica-8-tefillin",
+  "clientId": "ajudaica",
+  "rank": 8,
+  "query": "tefillin",
+  "rankingUrl": "https://www.ajudaica.com/category/3/Tefillin/",
+  "implementationMode": "create",
+  "actionType": "faq_block",
+  "priority": "LOW",
+  "score": 68281,
+  "impressions": 4926,
+  "clicks": 10,
+  "ctr": 0.2,
+  "status": "generated",
+  "shipDecision": "review",
+  "confidence": 100,
+  "generatedAt": "2026-08-15T12:08:38.862Z",
+  "vocabSource": "fallback-js-rendered",
+  "vocabConfidence": "low",
+  "content": {
+    "hebrewContent": "<div class=\"faq-block\">\n  <h2>שאלות נפוצות על תפילין</h2>\n  <div class=\"faq-item\">\n    <h3>איך בוחרים תפילין כשרות ואיכותיות?</h3>\n    <p>חשוב לוודא שהקלף נכתב בידי סופר סת״ם מוסמך וירא שמיים. בחנות aJudaica תמצאו סטים כשרים ומהודרים שעוברים בדיקה קפדנית.</p>\n  </div>\n  <div class=\"faq-item\">\n    <h3>מה ההבדל בין תפילין רש״י לתפילין רבנו תם?</h3>\n    <p>ההבדל העיקרי הוא בסדר הפרשיות בתוך הבתים. רוב האנשים מניחים תפילין של רש״י, ויש שנוהגים להניח גם רבנו תם. aJudaica מציעה את שני הסוגים.</p>\n  </div>\n  <div class=\"faq-item\">\n    <h3>אילו סוגי עור קיימים לבתי התפילין?</h3>\n    <p>ישנם בתי תפילין מעור בהמה דקה ומעור בהמה גסה. עור בהמה גסה עמיד וחזק יותר לאורך שנים. ניתן להזמין את כל הסוגים דרך aJudaica במשלוח ישיר.</p>\n  </div>\n  <div class=\"faq-item\">\n    <h3>איך שומרים ומגנים על התפילין לאורך זמן?</h3>\n    <p>מומלץ לאחסן את התפילין במקום קריר ויבש, בתוך נרתיק מגן מתאים. בנוסף, כדאי למסור אותן לבדיקה תקופתית אצל מגיה מוסמך.</p>\n  </div>\n</div>",
+    "placementInstruction": "יש להטמיע את בלוק השאלות והתשובות בתחתית עמוד הקטגוריה /category/3/Tefillin/.",
+    "metaDescription": "מחפשים תפילין כשרות ומהודרות? ב-aJudaica תמצאו סטים איכותיים לבר מצווה ולכל יום, מעור בהמה דקה וגסה, עם משלוח לכל העולם. היכנסו עכשיו!",
+    "jsonLd": {
+      "type": "FAQPage",
+      "mainEntity": [
+        {
+          "type": "Question",
+          "name": "איך בוחרים תפילין כשרות ואיכותיות?",
+          "acceptedAnswer": {
+            "type": "Answer",
+            "text": "חשוב לוודא שהקלף נכתב בידי סופר סת\"ם מוסמך וירא שמיים. בחנות aJudaica תמצאו סטים כשרים ומהודרים שעוברים בדיקה קפדנית."
+          }
+        },
+        {
+          "type": "Question",
+          "name": "מה ההבדל בין תפילין רש\"י לתפילין רבנו תם?",
+          "acceptedAnswer": {
+            "type": "Answer",
+            "text": "ההבדל העיקרי הוא בסדר הפרשיות בתוך הבתים. רוב האנשים מניחים תפילין של רש\"י, ויש שנוהגים להניח גם רבנו תם. aJudaica מציעה את שני הסוגים."
+          }
+        },
+        {
+          "type": "Question",
+          "name": "איזה סוגי עור קיימים לבתי התפילין?",
+          "acceptedAnswer": {
+            "type": "Answer",
+            "text": "ישנם בתי תפילין מעור בהמה דקה ומעור בהמה גסה. עור בהמה גסה עמיד וחזק יותר לאורך שנים רבות. ניתן להזמין את כל הסוגים דרך aJudaica במשלוח ישיר."
+          }
+        },
+        {
+          "type": "Question",
+          "name": "איך לשמור ולהגן על התפילין לאורך זמן?",
+          "acceptedAnswer": {
+            "type": "Answer",
+            "text": "מומלץ לאחסן את התפילין במקום קריר ויבש, בתוך נרתיק מגן מתאים. בנוסף, כדאי למסור אותן לבדיקה תקופתית אצל מגיה מוסמך."
+          }
+        }
+      ]
+    },
+    "tamarNotes": "נכתב במבנה מדויק עבור גוגל AIO תוך שמירה על משפטים קצרים ועברית טבעית, עם שילוב אותנטי של המותג aJudaica.",
+    "noaChanges": "1. החלפת גרשיים כפולות ASCII (\"\") בגרשיים עבריים תקניים (״) ברש״י וסת״ם.\n2. תיקון ״איזה סוגי עור״ ל-״אילו סוגי עור״ (התאם דקדוקי לרבים).\n3. תיקון ״איך לשמור ולהגן״ (שם פועל מנותק בכותרת) ל-״איך שומרים ומגנים״ לזרימה טבעית ומשפט תקין.\n4. ליטוש קל ב-Meta Description (״משלוח לכל העולם״ וסיום בסימן קריאה שיווקי).",
+    "registerScore": 98,
+    "groundingRisk": "low",
+    "generatedVia": "primary:gemini-3.7-flash",
+    "schemaValid": false,
+    "schemaErrors": [
+      "jsonLd missing @type"
+    ],
+    "confidence": 100,
+    "shipDecision": "review",
+    "reviewReasons": [
+      "BLOCKER: schema invalid (jsonLd missing @type)"
+    ]
+  }
+}

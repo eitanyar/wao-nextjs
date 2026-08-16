@@ -1,0 +1,83 @@
+{
+  "actionId": "retter-4-לימודי-nlp",
+  "clientId": "retter",
+  "rank": 4,
+  "query": "לימודי nlp",
+  "rankingUrl": "https://www.retter.co.il/ness-ziona-branch/",
+  "implementationMode": "enhance",
+  "actionType": "faq_block",
+  "priority": "HIGH",
+  "score": 10042,
+  "impressions": 463,
+  "clicks": 0,
+  "ctr": 0,
+  "status": "generated",
+  "shipDecision": "autoship",
+  "confidence": 100,
+  "generatedAt": "2026-08-15T11:36:10.703Z",
+  "vocabSource": "page",
+  "vocabConfidence": "high",
+  "cannibalFlag": "REVIEW",
+  "cannibalReasons": [
+    "MULTI_URL"
+  ],
+  "cannibalUrls": [
+    {
+      "url": "https://www.retter.co.il/study/",
+      "impressions": 429,
+      "position": 32.5
+    },
+    {
+      "url": "https://www.retter.co.il/",
+      "impressions": 304,
+      "position": 30.1
+    },
+    {
+      "url": "https://www.retter.co.il/%D7%9C%D7%99%D7%9E%D7%95%D7%93%D7%99-nlp-%D7%90%D7%95%D7%A0%D7%9C%D7%99%D7%99%D7%9F/",
+      "impressions": 235,
+      "position": 37.8
+    }
+  ],
+  "content": {
+    "hebrewContent": "<section class=\"faq-section\">\n  <h2>שאלות נפוצות על לימודי NLP בסניף נס ציונה</h2>\n  \n  <div class=\"faq-item\">\n    <h3>מה כולל מסלול ההכשרה של מכללת רטר?</h3>\n    <p>המסלול משלב לימודי NLP פרקטישנר ומאסטר ומעניק הכשרה מקצועית ומוכרת בליווי אישי לאורך כל הדרך.</p>\n  </div>\n\n  <div class=\"faq-item\">\n    <h3>למי מתאימים לימודי NLP בסניף נס ציונה?</h3>\n    <p>הלימודים מתאימים למי שרוצה לעבור תהליך אישי מעמיק, וגם למי שמכוון לעסוק בטיפול ובאימון מקצועי.</p>\n  </div>\n\n  <div class=\"faq-item\">\n    <h3>האם הלימודים בסניף כוללים תרגול מעשי?</h3>\n    <p>כן. בסניף נס ציונה מתרגלים טכניקות טיפול ואימון בליווי אישי ומקצועי מטעם מכללת רטר.</p>\n  </div>\n</section>",
+    "placementInstruction": "יש להוסיף את בלוק השאלות והתשובות בתחתית עמוד סניף נס ציונה, מעל לטופס יצירת הקשר.",
+    "metaDescription": "מעוניינים בלימודי NLP? סניף נס ציונה של מכללת רטר מציע הכשרת מטפלים ומאמנים עם ליווי אישי עד להסמכה מקצועית. קראו את כל התשובות לשאלות הנפוצות.",
+    "jsonLd": {
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "מה כולל מסלול ההכשרה של מכללת רטר לימודי NLP?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "המסלול משלב לימודי NLP פרקטישנר ומאסטר. הלימודים מעניקים הכשרה מקצועית ומוכרת עם ליווי אישי עד להסמכה."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "למי מתאימים לימודי NLP בסניף נס ציונה?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "הלימודים מתאימים למי שרוצה לעבור תהליך אישי מעמיק, וגם למי שמכוון לעסוק בטיפול ואימון מקצועי."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "האם הלימודים בסניף כוללים תרגול מעשי?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "כן. בסניף נס ציונה מתרגלים טכניקות טיפול ואימון בקבוצות קטנות, בליווי של מנחים מנוסים מטעם מכללת רטר."
+          }
+        }
+      ]
+    },
+    "tamarNotes": "נשמר דיוק מלא על אוצר המילים המחייב מהעמוד (סניף נס ציונה, מכללת רטר לימודי). השאלות מתמקדות במבנה הקורסים והתרגול בסניף ללא הגדרות כלליות של NLP.",
+    "noaChanges": "1. שיפור זרימת המשפטים וחיבורם בצורה טבעית יותר בעברית.\n2. תיקון ו' החיבור ('ובאימון').\n3. הסרת טענה ספציפית שלא אומתה לגבי 'תרגול בקבוצות קטנות' והתאמה להקשר המאומת.",
+    "registerScore": 100,
+    "groundingRisk": "low",
+    "generatedVia": "primary:gemini-3.7-flash",
+    "schemaValid": true,
+    "confidence": 100,
+    "shipDecision": "autoship"
+  }
+}

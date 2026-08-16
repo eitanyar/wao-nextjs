@@ -1,0 +1,62 @@
+{
+  "actionId": "ajudaica-2-tallit",
+  "clientId": "ajudaica",
+  "rank": 2,
+  "query": "tallit",
+  "rankingUrl": "https://www.ajudaica.com/category/4/Tallit/",
+  "implementationMode": "create",
+  "actionType": "faq_block",
+  "priority": "LOW",
+  "score": 165677,
+  "impressions": 10664,
+  "clicks": 22,
+  "ctr": 0.2,
+  "status": "generated",
+  "shipDecision": "autoship",
+  "confidence": 100,
+  "generatedAt": "2026-08-15T12:08:11.088Z",
+  "vocabSource": "fallback-js-rendered",
+  "vocabConfidence": "low",
+  "content": {
+    "hebrewContent": "<div class=\"faq-block\">\n  <h2>שאלות נפוצות על טליתות</h2>\n  <div class=\"faq-item\">\n    <h3>איך בוחרים טלית מתאימה לבר מצווה או לחתונה?</h3>\n    <p>בחירת טלית תלויה במידה הנכונה, בסוג הבד ובהעדפה האישית. ב-aJudaica תוכלו למצוא מגוון טליתות מצמר מסורתי, משי או כותנה בעיצובים ייחודיים.</p>\n  </div>\n  <div class=\"faq-item\">\n    <h3>אילו סוגי בדים קיימים לטלית?</h3>\n    <p>הבד הקלאסי הוא צמר רחלים טהור. בנוסף, קיימות טליתות קלות ממשי, כותנה או שילובים אמנותיים עם רקמות מיוחדות.</p>\n  </div>\n  <div class=\"faq-item\">\n    <h3>האם אפשר להזמין טלית במשלוח בינלאומי?</h3>\n    <p>כן, חנות aJudaica שולחת טליתות ומוצרי יודאיקה ישירות לכל רחבי העולם באריזה בטוחה ומוקפדת.</p>\n  </div>\n</div>",
+    "placementInstruction": "יש להטמיע את בלוק השאלות והתשובות בתחתית עמוד הקטגוריה /category/4/Tallit/ מתחת לקטלוג המוצרים.",
+    "metaDescription": "מחפשים טלית איכותית לבר מצווה, לחתונה או ליומיום? ב-aJudaica תמצאו מבחר עשיר של טליתות מצמר, משי ועיצובים ייחודיים עם משלוח מהיר לכל העולם.",
+    "jsonLd": {
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "איך בוחרים טלית מתאימה לבר מצווה או לחתונה?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "בחירת טלית תלויה במידה הנכונה, בסוג הבד ובעיצוב האישי. ב-aJudaica תמצא מגוון טליתות מצמר מסורתי, משי או כותנה בעיצובים ייחודיים."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "איזה סוגי בדים קיימים עבור טלית?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "הבד הקלאסי הוא צמר רחלים טהור. בנוסף קיימות טליתות קלות ממשי, כותנה או שילובים אמנותיים עם רקמות מיוחדות."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "האם אפשר להזמין טלית במשלוח בינלאומי?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "כן, חנות aJudaica שולחת טליתות ומוצרי יודאיקה ישירות לכל רחבי העולם עם אריזה בטוחה ומוקפדת."
+          }
+        }
+      ]
+    },
+    "tamarNotes": "הדגשתי תשובות קצרות וישירות לשאלות הנפוצות ביותר סביב רכישת טלית, ושילבתי את יתרון המשלוח הבינלאומי של aJudaica כפי שמוגדר בפרופיל.",
+    "noaChanges": "1. תיקון פנייה ישירה ליחיד ('תמצא', 'מחפש') לפנייה רב-מגדרית/טבעית ברבים ('תוכלו למצוא', 'מחפשים', 'תמצאו').\n2. תיקון דקדוקי: 'איזה סוגי בדים' -> 'אילו סוגי בדים'.\n3. החלפת 'קיימים עבור טלית' ל-'קיימים לטלית' (מניעת תרגמת של for).\n4. החלפת 'עם אריזה' ל-'באריזה'.\n5. הוספת פסיק הכרחי ('בנוסף, קיימות...').",
+    "registerScore": 96,
+    "groundingRisk": "low",
+    "generatedVia": "primary:gemini-3.7-flash",
+    "schemaValid": true,
+    "confidence": 100,
+    "shipDecision": "autoship"
+  }
+}

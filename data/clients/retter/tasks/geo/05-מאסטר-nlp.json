@@ -1,0 +1,83 @@
+{
+  "actionId": "retter-5-מאסטר-nlp",
+  "clientId": "retter",
+  "rank": 5,
+  "query": "מאסטר nlp",
+  "rankingUrl": "https://www.retter.co.il/nlp-master-practitioner-course-2/",
+  "implementationMode": "enhance",
+  "actionType": "faq_block",
+  "priority": "HIGH",
+  "score": 8640,
+  "impressions": 401,
+  "clicks": 3,
+  "ctr": 0.7,
+  "status": "generated",
+  "shipDecision": "autoship",
+  "confidence": 100,
+  "generatedAt": "2026-08-15T11:36:21.080Z",
+  "vocabSource": "page",
+  "vocabConfidence": "high",
+  "cannibalFlag": "REVIEW",
+  "cannibalReasons": [
+    "MULTI_URL"
+  ],
+  "cannibalUrls": [
+    {
+      "url": "https://www.retter.co.il/study/",
+      "impressions": 154,
+      "position": 78.2
+    },
+    {
+      "url": "https://www.retter.co.il/jerusalem-branch/",
+      "impressions": 146,
+      "position": 86.4
+    },
+    {
+      "url": "https://www.retter.co.il/tel-aviv-branch/",
+      "impressions": 97,
+      "position": 75.5
+    }
+  ],
+  "content": {
+    "hebrewContent": "<section class=\"faq-section\">\n  <h2>שאלות נפוצות על שלב המאסטר ב-NLP</h2>\n  <div class=\"faq-item\">\n    <h3>מה ההבדל המעשי בין שלב הפרקטישנר לשלב מאסטר NLP?</h3>\n    <p>בשלב הפרקטישנר לומדים את הכלים הבסיסיים לשינוי דפוסי חשיבה והתנהגות. שלב מאסטר NLP מעמיק לעבודה עם ערכים, אמונות שורש ומבני עומק של האישיות. ההכשרה לוקחת אותך מהצעד הראשון ועד לקליניקה משגשגת עם יכולת טיפול במקרים מורכבים.</p>\n  </div>\n  <div class=\"faq-item\">\n    <h3>מתי נכון להמשיך להכשרת מאסטר NLP?</h3>\n    <p>הזמן המתאים הוא מיד לאחר סיום שלב הפרקטישנר וקבלת ההסמכה הראשונית. כך שומרים על רצף הלמידה, מעמיקים את המיומנות ומתקדמים בליווי אישי ישירות לקראת פתיחת קליניקה עצמאית.</p>\n  </div>\n  <div class=\"faq-item\">\n    <h3>האם אפשר להשתתף בהכשרה במתכונת דיגיטלית?</h3>\n    <p>כן. מכללת רטר מציעה את ההכשרה במסלול פרונטלי בפתח תקווה, קריית ביאליק ונס ציונה — וגם במסלול אונליין מלא עם ליווי ותרגול מעשי חי.</p>\n  </div>\n</section>",
+    "placementInstruction": "יש להוסיף את מקטע השאלות והתשובות בתחתית עמוד הקורס, מעל טופס ההרשמה ויצירת הקשר.",
+    "metaDescription": "רוצים להתקדם לשלב מאסטר NLP? מכללת רטר מלווה אתכם מהצעד הראשון ועד לקליניקה משגשגת. לימודים בפריסה ארצית ובאונליין — עם הסמכה מקצועית וליווי אישי.",
+    "jsonLd": {
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "מה ההבדל המעשי בין שלב הפרקטישנר לשלב מאסטר NLP?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "בשלב הפרקטישנר לומדים את הכלים הבסיסיים לשינוי דפוסי חשיבה והתנהגות. שלב מאסטר NLP מעמיק לעבודה עם ערכים, אמונות שורש ומבני עומק של האישיות. ההכשרה לוקחת אותך מהצעד הראשון ועד לקליניקה משגשגת עם יכולת טיפול במקרים מורכבים."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "מתי נכון להמשיך להכשרת מאסטר NLP?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "הזמן המתאים הוא מיד לאחר סיום שלב הפרקטישנר וקבלת ההסמכה הראשונית. כך שומרים על רצף הלמידה, מעמיקים את המיומנות ומתקדמים בליווי אישי ישירות לקראת פתיחת קליניקה עצמאית."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "האם אפשר להשתתף בהכשרה במתכונת דיגיטלית?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "כן. מכללת רטר מציעה את ההכשרה במסלול פרונטלי בפתח תקווה, קריית ביאליק ונס ציונה, וגם במסלול אונליין מלא עם ליווי ותרגול מעשי חי."
+          }
+        }
+      ]
+    },
+    "tamarNotes": "נבחר פוקוס על ההבדל המעשי בין הרמות ומעבר לקליניקה, תוך שימוש מדויק בביטויי העוגן שנשלפו מהעמוד, בלי הגדרות 'מה זה' כלליות.",
+    "noaChanges": "החלפת לוכסן בחיבור טבעי (טופס ההרשמה ויצירת הקשר), הוספת מקף em-dash (—) לחיזוק הקריאות והפיסוק העברי.",
+    "registerScore": 98,
+    "groundingRisk": "low",
+    "generatedVia": "primary:gemini-3.7-flash",
+    "schemaValid": true,
+    "confidence": 100,
+    "shipDecision": "autoship"
+  }
+}

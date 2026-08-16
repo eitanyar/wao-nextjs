@@ -1,0 +1,82 @@
+{
+  "actionId": "retter-1-nlp",
+  "clientId": "retter",
+  "rank": 1,
+  "query": "nlp",
+  "rankingUrl": "https://www.retter.co.il/petah-tikva-branch/",
+  "implementationMode": "enhance",
+  "actionType": "faq_block",
+  "priority": "MEDIUM",
+  "score": 17056,
+  "impressions": 932,
+  "clicks": 3,
+  "ctr": 0.3,
+  "status": "generated",
+  "shipDecision": "autoship",
+  "confidence": 100,
+  "generatedAt": "2026-08-15T11:47:48.066Z",
+  "vocabSource": "page",
+  "vocabConfidence": "high",
+  "cannibalFlag": "REVIEW",
+  "cannibalReasons": [
+    "MULTI_URL",
+    "HEAD_TERM_ON_LOCATION"
+  ],
+  "cannibalUrls": [
+    {
+      "url": "https://www.retter.co.il/nlp/",
+      "impressions": 11233,
+      "position": 2.6
+    },
+    {
+      "url": "https://www.retter.co.il/kiryat-bialik-branch/",
+      "impressions": 634,
+      "position": 9.7
+    }
+  ],
+  "content": {
+    "hebrewContent": "<section class=\"faq-section\">\n  <h2>שאלות נפוצות על לימודי NLP בסניף פתח תקווה</h2>\n  <div class=\"faq-item\">\n    <h3>איפה מתקיימים לימודי NLP בסניף פתח תקווה?</h3>\n    <p>מכללת רטר לימודי NLP מפעילה את סניף פתח תקווה במיקום מרכזי ונגיש לתחבורה ציבורית.</p>\n  </div>\n  <div class=\"faq-item\">\n    <h3>אילו מסלולי לימודי NLP נלמדים בסניף פתח תקווה?</h3>\n    <p>בסניף תוכלו ללמוד קורסי NLP פרקטישנר ומאסטר עם ליווי אישי עד להסמכה מקצועית ומוכרת.</p>\n  </div>\n  <div class=\"faq-item\">\n    <h3>למי מתאימים לימודי NLP בסניף?</h3>\n    <p>הלימודים מתאימים למי שרוצה להתפתח מקצועית כמטפל ומאמן, וגם למי שמחפש כלים לצמיחה אישית.</p>\n  </div>\n</section>",
+    "placementInstruction": "יש להוסיף את בלוק השאלות הנפוצות בחלק התחתון של עמוד הסניף, לפני טופס ההרשמה.",
+    "metaDescription": "מעוניינים להצטרף ללימודי NLP בסניף פתח תקווה? מכללת רטר לימודי NLP מציעה הכשרת פרקטישנר ומאסטר עם ליווי אישי עד להסמכה מוכרת. כל הפרטים כאן.",
+    "jsonLd": {
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "איפה מתקיימים לימודי NLP בסניף פתח תקווה?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "מכללת רטר לימודי NLP מפעילה את סניף פתח תקווה במרכז העיר, במיקום נגיש לתחבורה ציבורית."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "איזה מסלולי לימודי NLP נלמדים בסניף פתח תקווה?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "בסניף תוכל ללמוד קורסי NLP פרקטישנר ומאסטר עם ליווי אישי עד להסמכה מקצועית ומוכרת."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "למי מתאימים לימודי NLP בסניף?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "הלימודים מתאימים למי שרוצה להתפתח מקצועית כמטפל ומאמן, וגם למי שמחפש כלים לצמיחה אישית."
+          }
+        }
+      ]
+    },
+    "tamarNotes": "נשמר שימוש קפדני באוצר המילים המחייב ובשם המותג הרשמי, תוך מענה ממוקד וספציפי לסניף פתח תקווה ללא המצאת זמנים או מחירים.",
+    "noaChanges": "תיקון 'איזה מסלולי' ל'אילו מסלולי' (התאמה דקדוקית לרבים). מעבר לפנייה טבעית ברבים ('תוכלו', 'מעוניינים'). תיקון 'להצטרף אל' ל'להצטרף ל-'. דיוק ניסוח המיקום ל'מיקום מרכזי ונגיש' כדי להימנע מקביעה עובדתית מחייבת שאינה מאומתת.",
+    "registerScore": 100,
+    "groundingRisk": "low",
+    "factualClaims": [
+      "סניף פתח תקווה ממוקם במרכז העיר ונגיש לתחבורה ציבורית"
+    ],
+    "generatedVia": "primary:gemini-3.7-flash",
+    "schemaValid": true,
+    "confidence": 100,
+    "shipDecision": "autoship"
+  }
+}

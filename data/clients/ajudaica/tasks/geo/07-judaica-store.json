@@ -1,0 +1,76 @@
+{
+  "actionId": "ajudaica-7-judaica-store",
+  "clientId": "ajudaica",
+  "rank": 7,
+  "query": "judaica store",
+  "rankingUrl": "https://www.ajudaica.com/",
+  "implementationMode": "create",
+  "actionType": "faq_block",
+  "priority": "HIGH",
+  "score": 75123,
+  "impressions": 3727,
+  "clicks": 48,
+  "ctr": 1.3,
+  "status": "generated",
+  "shipDecision": "autoship",
+  "confidence": 100,
+  "generatedAt": "2026-08-15T12:08:33.532Z",
+  "vocabSource": "fallback-js-rendered",
+  "vocabConfidence": "low",
+  "cannibalFlag": "REVIEW",
+  "cannibalReasons": [
+    "MULTI_URL"
+  ],
+  "cannibalUrls": [
+    {
+      "url": "https://www.ajudaica.com/category/38/Home-Decor/",
+      "impressions": 2028,
+      "position": 5.2
+    }
+  ],
+  "content": {
+    "hebrewContent": "<section class=\"faq-section\"><h2>שאלות נפוצות על רכישת יודאיקה אונליין</h2><div class=\"faq-item\"><h3>איך לבחור מתנת יודאיקה שתתאים בדיוק לאירוע?</h3><p>מומלץ להתאים את הפריט לאופי האירוע ולטעם של מקבלי המתנה. לחתונה או לחנוכת בית, מזוזות מעוצבות וחנוכיות הן בחירה קלאסית. באתר aJudaica תמצאו פריטי אמנות יהודית מסורתיים ומודרניים שמתאימים לכל שמחה.</p></div><div class=\"faq-item\"><h3>האם ניתן להזמין משלוחי יודאיקה לכל העולם?</h3><p>כן. חנות aJudaica פועלת בארה״ב ומספקת משלוחים מהירים לכל יעד בעולם. הפריטים נארזים בקפידה כדי להבטיח שיגיעו שלמים ותקינים.</p></div><div class=\"faq-item\"><h3>מה חשוב לבדוק לפני רכישת מזוזה או תשמישי קדושה?</h3><p>כדאי לוודא שהפריט מתאים במידותיו לחלל הבית ומיוצר מחומרים איכותיים ועמידים. ב-aJudaica כל פריט נבחר בקפידה כדי להבטיח איכות גבוהה וחיבור למסורת.</p></div></section>",
+    "placementInstruction": "להטמיע בחלק התחתון של דף הבית (/) לפני הפוטר.",
+    "metaDescription": "מחפשים מתנות יודאיקה, מזוזות, חנוכיות ואמנות יהודית? ב-aJudaica תיהנו ממבחר עשיר של תשמישי קדושה ועיצוב לבית עם משלוחים לכל העולם. היכנסו לבחור.",
+    "jsonLd": {
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "איך לבחור מתנת יודאיקה שתתאים בדיוק לאירוע?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "מומלץ להתאים את הפריט לאופי האירוע ולסגנון המקבל. לחתונה או חנוכת בית, מזוזות מעוצבות וחנוכיות הן בחירה קלאסית. באתר aJudaica תמצאו פריטי אמנות יהודית מסורתיים ומודרניים שמתאימים לכל שמחה."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "האם ניתן להזמין משלוחי יודאיקה לכל העולם?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "כן. חנות aJudaica פועלת בארה\"ב ומספקת משלוחים מהירים לכל יעד בעולם. הפריטים נארזים בקפידה כדי להבטיח שיגיעו שלמים ובטוחים."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "מה חשוב לבדוק לפני רכישת מזוזה או תשמישי קדושה?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "כדאי לוודא שהפריט כולל את המידות המתאימות לבית שלכם ומיוצר מחומרים עמידים. ב-aJudaica כל פריט נבחר בקפידה כדי להבטיח איכות גבוהה וחיבור למסורת."
+          }
+        }
+      ]
+    },
+    "tamarNotes": "בלוק השאלות נבנה סביב תהליך הבחירה של יודאיקה למתנות, שילוח בינלאומי ואיכות המוצרים בחנות aJudaica, ללא הגדרות כלליות, ובמשפטים קצרים וישירים.",
+    "noaChanges": "1. הוחלפו מירכאות ASCII בגרשיים עבריים תקניים (ארה״ב במקום ארה\"ב).\n2. לוטשה שפה טבעית יותר: ״לסגנון המקבל״ עודכן ל״לטעם של מקבלי המתנה״.\n3. תיקון קלקה/ניסוח: ״שלמים ובטוחים״ שונה ל״שלמים ותקינים״.\n4. שיפור זרימה: ״שהפריט כולל את המידות המתאימות לבית שלכם״ שונה ל״שהפריט מתאים במידותיו לחלל הבית״.",
+    "registerScore": 95,
+    "registerFlags": [
+      "בטוחים (במשמעות safe עבור פריטים פיזיים)"
+    ],
+    "groundingRisk": "low",
+    "generatedVia": "primary:gemini-3.7-flash",
+    "schemaValid": true,
+    "confidence": 100,
+    "shipDecision": "autoship"
+  }
+}

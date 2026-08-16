@@ -1,0 +1,83 @@
+{
+  "actionId": "aasada-5-קייטרינג-לשבת-חתן",
+  "clientId": "aasada",
+  "rank": 5,
+  "query": "קייטרינג לשבת חתן",
+  "rankingUrl": "https://aaasada.com/shabbat-chatan",
+  "implementationMode": "enhance",
+  "actionType": "faq_block",
+  "priority": "LOW",
+  "score": 9977,
+  "impressions": 894,
+  "clicks": 1,
+  "ctr": 0.1,
+  "status": "generated",
+  "shipDecision": "autoship",
+  "confidence": 100,
+  "generatedAt": "2026-08-15T12:17:31.959Z",
+  "vocabSource": "page",
+  "vocabConfidence": "high",
+  "cannibalFlag": "REVIEW",
+  "cannibalReasons": [
+    "MULTI_URL"
+  ],
+  "cannibalUrls": [
+    {
+      "url": "https://aaasada.com/%D7%AA%D7%A4%D7%A8%D7%99%D7%98-%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%9C%D7%A9%D7%91%D7%AA-%D7%97%D7%AA%D7%9F/",
+      "impressions": 527,
+      "position": 17.8
+    },
+    {
+      "url": "https://aaasada.com/",
+      "impressions": 506,
+      "position": 3.7
+    },
+    {
+      "url": "https://aaasada.com/city/rishon-lezion/shabbat-chatan",
+      "impressions": 494,
+      "position": 9.5
+    }
+  ],
+  "content": {
+    "hebrewContent": "<section class=\"faq-section\">\n  <h2>שאלות נפוצות על קייטרינג לשבת חתן</h2>\n  <div class=\"faq-item\">\n    <h3>איך האוכל נשאר חם לקראת סעודת השבת?</h3>\n    <p>בקייטרינג טעם מהודר האוכל מגיע במיכלים תרמיים מבודדים. המיכלים שומרים על חום המנות עד להגשה עצמית בשבת.</p>\n  </div>\n  <div class=\"faq-item\">\n    <h3>מהי רמת הכשרות של המנות לשבת?</h3>\n    <p>התפריט הבשרי כשר למהדרין בד״ץ בהשגחת הרב שלום מחפוד. ההשגחה מתאימה לכל האורחים באירוע.</p>\n  </div>\n  <div class=\"faq-item\">\n    <h3>מהי כמות המנות המינימלית להזמנה?</h3>\n    <p>אפשר להזמין קייטרינג לשבת חתן החל מ-30 סועדים. המחיר מתחיל מ-58 ש״ח לסועד, ללא עלות של צוות הגשה.</p>\n  </div>\n</section>",
+    "placementInstruction": "יש להוסיף את בלוק השאלות הנפוצות בתחתית עמוד /shabbat-chatan, לפני הפוטר.",
+    "metaDescription": "מחפשים קייטרינג לשבת חתן? קייטרינג טעם מהודר מציע תפריט בשרי כשר למהדרין בהשגחת הרב מחפוד. אוכל חם במיכלים תרמיים החל מ-58 ש״ח למנה.",
+    "jsonLd": {
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "איך האוכל נשאר חם לקראת סעודת השבת?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "בקייטרינג טעם מהודר האוכל מגיע במיכלים תרמיים מבודדים. המיכלים שומרים על חום המנות עד להגשה עצמית בשבת."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "מהי רמת הכשרות של המנות לשבת?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "התפריט הבשרי כשר למהדרין בד\"ץ בהשגחת הרב שלום מחפוד. ההשגחה מתאימה לכל האורחים באירוע."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "מהי כמות המנות המינימלית להזמנה?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "אפשר להזמין קייטרינג לשבת חתן החל מ-30 סועדים. המחיר מתחיל מ-58 ש״ח לסועד, ללא עלות של צוות הגשה."
+          }
+        }
+      ]
+    },
+    "tamarNotes": "התמקדתי בשאלות תפעוליות ספציפיות לשבת חתן (שמירת חום במיכלים תרמיים, כשרות הרב מחפוד, ומינימום 30 סועדים במחיר 58 ש״ח). שמרתי על משפטים קצרים ועברית טבעית.",
+    "noaChanges": "החלפת גרשיים מסוג ASCII (בד\"ץ, ש\"ח) בגרשיים עבריים תקניים (בד״ץ, ש״ח) בגוף הטקסט ובמטא-דסקריפשן.",
+    "registerScore": 100,
+    "groundingRisk": "low",
+    "generatedVia": "primary:gemini-3.7-flash",
+    "schemaValid": true,
+    "confidence": 100,
+    "shipDecision": "autoship"
+  }
+}

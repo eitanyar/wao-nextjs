@@ -1,0 +1,83 @@
+{
+  "actionId": "retter-7-קורס-nlp",
+  "clientId": "retter",
+  "rank": 7,
+  "query": "קורס nlp",
+  "rankingUrl": "https://www.retter.co.il/petah-tikva-branch/",
+  "implementationMode": "enhance",
+  "actionType": "faq_block",
+  "priority": "MEDIUM",
+  "score": 7542,
+  "impressions": 383,
+  "clicks": 0,
+  "ctr": 0,
+  "status": "generated",
+  "shipDecision": "autoship",
+  "confidence": 100,
+  "generatedAt": "2026-08-15T11:36:26.221Z",
+  "vocabSource": "page",
+  "vocabConfidence": "high",
+  "cannibalFlag": "REVIEW",
+  "cannibalReasons": [
+    "MULTI_URL"
+  ],
+  "cannibalUrls": [
+    {
+      "url": "https://www.retter.co.il/study/",
+      "impressions": 751,
+      "position": 40.1
+    },
+    {
+      "url": "https://www.retter.co.il/%D7%A7%D7%95%D7%A8%D7%A1-nlp-%D7%91%D7%97%D7%99%D7%A0%D7%9D/",
+      "impressions": 501,
+      "position": 20
+    },
+    {
+      "url": "https://www.retter.co.il/%D7%90%D7%99%D7%A4%D7%94-%D7%9C%D7%9C%D7%9E%D7%95%D7%93-nlp/",
+      "impressions": 415,
+      "position": 28.3
+    }
+  ],
+  "content": {
+    "hebrewContent": "<section class=\"faq-section\">\n  <h2>שאלות נפוצות על לימודי NLP בסניף פתח תקווה</h2>\n  <div class=\"faq-item\">\n    <h3>איזה מסלול מתאים למי שרוצה להתחיל ללמוד בסניף?</h3>\n    <p>במסגרת מכללת רטר לימודי NLP נפתחים במסלול פרקטישנר. המסלול מקנה כלים מעשיים לתקשורת ולשינוי דפוסי חשיבה. לאחר מכן אפשר להמשיך להכשרת מאסטר מתקדמת.</p>\n  </div>\n  <div class=\"faq-item\">\n    <h3>מה היתרון של לימודי NLP פרונטליים בסניף פתח תקווה?</h3>\n    <p>לימודים בסניף פתח תקווה מאפשרים תרגול מעשי בזוגות ובקבוצות. הסטודנטים מקבלים ליווי אישי ומשוב ישיר מהצוות לאורך כל הדרך.</p>\n  </div>\n  <div class=\"faq-item\">\n    <h3>למי מתאימים לימודי NLP בסניף?</h3>\n    <p>ההכשרה מתאימה לאנשים שרוצים לטפל, לאמן או לשפר מיומנויות אישיות ומקצועיות. סניף פתח תקווה מציע סביבת למידה חמה ומעצימה במרכז הארץ.</p>\n  </div>\n</section>",
+    "placementInstruction": "יש להוסיף את הבלוק בתחתית עמוד הסניף (/petah-tikva-branch/), מעל לחלק של טופס יצירת הקשר.",
+    "metaDescription": "מתעניינים בלימודי NLP במרכז? מכללת רטר לימודי NLP מציעה קורסי פרקטישנר ומאסטר בסניף פתח תקווה. הכשרה מקצועית ומוכרת עם ליווי אישי. לפרטים היכנסו.",
+    "jsonLd": {
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "איזה מסלול מתאים למי שרוצה להתחיל ללמוד בסניף?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "במסגרת מכללת רטר לימודי NLP נפתחים במסלול פרקטישנר. המסלול מקנה כלים מעשיים לתקשורת ולשינוי דפוסי חשיבה. לאחר מכן ניתן להמשיך להכשרת מאסטר מתקדמת."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "מה היתרון של לימודי NLP פרונטליים בסניף פתח תקווה?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "לימודים בסניף פתח תקווה מאפשרים תרגול מעשי בזוגות ובקבוצות. הסטודנטים מקבלים ליווי אישי ומשוב ישיר מהצוות לאורך כל הדרך."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "למי מתאימים לימודי NLP בסניף?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "ההכשרה מתאימה לאנשים שרוצים לטפל, לאמן או לשפר מיומנויות אישיות ומקצועיות. סניף פתח תקווה מציע סביבת למידה חמה ומעצימה במרכז הארץ."
+          }
+        }
+      ]
+    },
+    "tamarNotes": "התמקדתי בזווית הלוקאלית של סניף פתח תקווה ובמסלולי ההכשרה (פרקטישנר ומאסטר) כדי לא לחפוף להגדרות כלליות של NLP. עשיתי שימוש מדויק רק במונחים המאושרים.",
+    "noaChanges": "החלפת 'ניתן' ב-'אפשר' לזרימה טבעית יותר בעברית ישראלית מדוברת, והתאמת 'מתעניין' ללשון פנייה מכלילה וטבעית ('מתעניינים') במטא-דסקריפשן.",
+    "registerScore": 98,
+    "groundingRisk": "low",
+    "generatedVia": "primary:gemini-3.7-flash",
+    "schemaValid": true,
+    "confidence": 100,
+    "shipDecision": "autoship"
+  }
+}

@@ -1,0 +1,556 @@
+{
+  "site": "https://www.wao.co.il/",
+  "generatedAt": "2026-08-14T11:35:29.523Z",
+  "period": {
+    "startDate": "2026-05-16",
+    "endDate": "2026-08-14",
+    "days": 90
+  },
+  "totalInRange": 193,
+  "opportunities": [
+    {
+      "rank": 1,
+      "query": "יועץ seo",
+      "rankingUrl": "https://www.wao.co.il/seo/consulting",
+      "implementationMode": "enhance",
+      "position": 14,
+      "impressions": 1305,
+      "clicks": 0,
+      "ctr": 0,
+      "score": 15700,
+      "intentScore": 4,
+      "intentFlag": null,
+      "intentReason": "The user is looking for an SEO consultant, which is a key service a digital marketing agency can provide.",
+      "priority": "LOW",
+      "actionType": "faq_block",
+      "cannibalFlag": "REVIEW",
+      "cannibalReasons": [
+        "MULTI_URL"
+      ],
+      "cannibalUrls": [
+        {
+          "url": "https://www.wao.co.il/%D7%99%D7%95%D7%A2%D7%A5-%D7%A7%D7%99%D7%93%D7%95%D7%9D-%D7%90%D7%AA%D7%A8%D7%99%D7%9D/",
+          "impressions": 179,
+          "position": 42.7
+        }
+      ]
+    },
+    {
+      "rank": 2,
+      "query": "יועץ קידום אתרים",
+      "rankingUrl": "https://www.wao.co.il/seo/consulting",
+      "implementationMode": "enhance",
+      "position": 16.5,
+      "impressions": 1220,
+      "clicks": 1,
+      "ctr": 0.1,
+      "score": 11638,
+      "intentScore": 4,
+      "intentFlag": null,
+      "intentReason": "The query targets SEO consultancy, which directly aligns with the agency's professional offerings.",
+      "priority": "LOW",
+      "actionType": "faq_block",
+      "cannibalFlag": "REVIEW",
+      "cannibalReasons": [
+        "MULTI_URL"
+      ],
+      "cannibalUrls": [
+        {
+          "url": "https://www.wao.co.il/%D7%99%D7%95%D7%A2%D7%A5-%D7%A7%D7%99%D7%93%D7%95%D7%9D-%D7%90%D7%AA%D7%A8%D7%99%D7%9D/",
+          "impressions": 586,
+          "position": 26.8
+        }
+      ]
+    },
+    {
+      "rank": 3,
+      "query": "מומחה קידום אתרים",
+      "rankingUrl": "https://www.wao.co.il/seo/consulting",
+      "implementationMode": "enhance",
+      "position": 20.6,
+      "impressions": 1842,
+      "clicks": 0,
+      "ctr": 0,
+      "score": 9870,
+      "intentScore": 4,
+      "intentFlag": null,
+      "intentReason": "Businesses searching for an SEO expert represent a highly relevant target audience for a digital marketing agency.",
+      "priority": "LOW",
+      "actionType": "faq_block"
+    },
+    {
+      "rank": 4,
+      "query": "קידום אתרים בגוגל מדריך",
+      "rankingUrl": "https://www.wao.co.il/seo/guide",
+      "implementationMode": "enhance",
+      "position": 7,
+      "impressions": 393,
+      "clicks": 0,
+      "ctr": 0,
+      "score": 7481,
+      "intentScore": 3,
+      "intentFlag": "review",
+      "intentReason": "This is an informational query for a guide, which often attracts DIYers rather than paying agency clients.",
+      "priority": "MEDIUM",
+      "actionType": "faq_block",
+      "cannibalFlag": "REVIEW",
+      "cannibalReasons": [
+        "MULTI_URL"
+      ],
+      "cannibalUrls": [
+        {
+          "url": "https://www.wao.co.il/%D7%9E%D7%93%D7%A8%D7%99%D7%9A-%D7%A7%D7%99%D7%93%D7%95%D7%9D-%D7%90%D7%AA%D7%A8%D7%99%D7%9D-%D7%90%D7%95%D7%A8%D7%92%D7%A0%D7%99-%D7%91%D7%92%D7%95%D7%92%D7%9C/",
+          "impressions": 272,
+          "position": 30.8
+        }
+      ]
+    },
+    {
+      "rank": 5,
+      "query": "מדריך קידום אתרים",
+      "rankingUrl": "https://www.wao.co.il/%D7%9E%D7%93%D7%A8%D7%99%D7%9A-%D7%A7%D7%99%D7%93%D7%95%D7%9D-%D7%90%D7%AA%D7%A8%D7%99%D7%9D-%D7%90%D7%95%D7%A8%D7%92%D7%A0%D7%99-%D7%91%D7%92%D7%95%D7%92%D7%9C/",
+      "implementationMode": "enhance",
+      "position": 14.6,
+      "impressions": 611,
+      "clicks": 2,
+      "ctr": 0.3,
+      "score": 6976,
+      "intentScore": 3,
+      "intentFlag": "review",
+      "intentReason": "The user is seeking an SEO guide, indicating educational intent that may or may not lead to hiring an agency.",
+      "priority": "LOW",
+      "actionType": "faq_block",
+      "cannibalFlag": "REVIEW",
+      "cannibalReasons": [
+        "MULTI_URL"
+      ],
+      "cannibalUrls": [
+        {
+          "url": "https://www.wao.co.il/seo/guide",
+          "impressions": 806,
+          "position": 2.1
+        }
+      ]
+    },
+    {
+      "rank": 6,
+      "query": "קידום אתרים בינלאומי",
+      "rankingUrl": "https://www.wao.co.il/seo/international",
+      "implementationMode": "enhance",
+      "position": 13.4,
+      "impressions": 462,
+      "clicks": 0,
+      "ctr": 0,
+      "score": 5831,
+      "intentScore": 5,
+      "intentFlag": null,
+      "intentReason": "International SEO is a high-value, specialized service that perfectly matches the target audience of a leading marketing agency.",
+      "priority": "LOW",
+      "actionType": "faq_block",
+      "cannibalFlag": "REVIEW",
+      "cannibalReasons": [
+        "MULTI_URL"
+      ],
+      "cannibalUrls": [
+        {
+          "url": "https://www.wao.co.il/seo-and-marketing-abroad/",
+          "impressions": 123,
+          "position": 83.5
+        }
+      ]
+    },
+    {
+      "rank": 7,
+      "query": "ייעוץ קידום אתרים",
+      "rankingUrl": "https://www.wao.co.il/seo/consulting",
+      "implementationMode": "enhance",
+      "position": 16.7,
+      "impressions": 481,
+      "clicks": 0,
+      "ctr": 0,
+      "score": 4480,
+      "intentScore": 5,
+      "intentFlag": null,
+      "intentReason": "The user has direct commercial intent seeking professional SEO consulting services.",
+      "priority": "LOW",
+      "actionType": "faq_block",
+      "cannibalFlag": "REVIEW",
+      "cannibalReasons": [
+        "MULTI_URL"
+      ],
+      "cannibalUrls": [
+        {
+          "url": "https://www.wao.co.il/%D7%99%D7%95%D7%A2%D7%A5-%D7%A7%D7%99%D7%93%D7%95%D7%9D-%D7%90%D7%AA%D7%A8%D7%99%D7%9D/",
+          "impressions": 461,
+          "position": 36.2
+        },
+        {
+          "url": "https://www.wao.co.il/%D7%9E%D7%93%D7%A8%D7%99%D7%9A-%D7%A7%D7%99%D7%93%D7%95%D7%9D-%D7%90%D7%AA%D7%A8%D7%99%D7%9D-%D7%90%D7%95%D7%A8%D7%92%D7%A0%D7%99-%D7%91%D7%92%D7%95%D7%92%D7%9C/",
+          "impressions": 30,
+          "position": 90.7
+        }
+      ]
+    },
+    {
+      "rank": 8,
+      "query": "ייעוץ seo",
+      "rankingUrl": "https://www.wao.co.il/seo/consulting",
+      "implementationMode": "enhance",
+      "position": 18.6,
+      "impressions": 561,
+      "clicks": 0,
+      "ctr": 0,
+      "score": 4168,
+      "intentScore": 5,
+      "intentFlag": null,
+      "intentReason": "This query represents direct commercial intent for SEO consulting, which is a core offering of the agency.",
+      "priority": "LOW",
+      "actionType": "faq_block",
+      "cannibalFlag": "REVIEW",
+      "cannibalReasons": [
+        "MULTI_URL"
+      ],
+      "cannibalUrls": [
+        {
+          "url": "https://www.wao.co.il/seo",
+          "impressions": 93,
+          "position": 84.6
+        }
+      ]
+    },
+    {
+      "rank": 9,
+      "query": "קידום אתרים בחו\"ל",
+      "rankingUrl": "https://www.wao.co.il/seo/international",
+      "implementationMode": "enhance",
+      "position": 17.5,
+      "impressions": 442,
+      "clicks": 1,
+      "ctr": 0.2,
+      "score": 3735,
+      "intentScore": 5,
+      "intentFlag": null,
+      "intentReason": "Direct search for international SEO services, which a leading agency typically provides.",
+      "priority": "LOW",
+      "actionType": "faq_block",
+      "cannibalFlag": "REVIEW",
+      "cannibalReasons": [
+        "MULTI_URL"
+      ],
+      "cannibalUrls": [
+        {
+          "url": "https://www.wao.co.il/seo-and-marketing-abroad/",
+          "impressions": 90,
+          "position": 33.4
+        }
+      ]
+    },
+    {
+      "rank": 10,
+      "query": "יעוץ קידום אתרים",
+      "rankingUrl": "https://www.wao.co.il/seo/consulting",
+      "implementationMode": "enhance",
+      "position": 15.9,
+      "impressions": 333,
+      "clicks": 0,
+      "ctr": 0,
+      "score": 3374,
+      "intentScore": 5,
+      "intentFlag": null,
+      "intentReason": "Perfect match for businesses looking to hire professional SEO consulting services.",
+      "priority": "LOW",
+      "actionType": "faq_block",
+      "cannibalFlag": "REVIEW",
+      "cannibalReasons": [
+        "MULTI_URL"
+      ],
+      "cannibalUrls": [
+        {
+          "url": "https://www.wao.co.il/%D7%99%D7%95%D7%A2%D7%A5-%D7%A7%D7%99%D7%93%D7%95%D7%9D-%D7%90%D7%AA%D7%A8%D7%99%D7%9D/",
+          "impressions": 231,
+          "position": 26.2
+        },
+        {
+          "url": "https://www.wao.co.il/%D7%9E%D7%93%D7%A8%D7%99%D7%9A-%D7%A7%D7%99%D7%93%D7%95%D7%9D-%D7%90%D7%AA%D7%A8%D7%99%D7%9D-%D7%90%D7%95%D7%A8%D7%92%D7%A0%D7%99-%D7%91%D7%92%D7%95%D7%92%D7%9C/",
+          "impressions": 72,
+          "position": 83.4
+        }
+      ]
+    },
+    {
+      "rank": 11,
+      "query": "מדריך לקידום אתר",
+      "rankingUrl": "https://www.wao.co.il/seo/guide",
+      "implementationMode": "enhance",
+      "position": 12.4,
+      "impressions": 212,
+      "clicks": 0,
+      "ctr": 0,
+      "score": 2890,
+      "intentScore": 4,
+      "intentFlag": null,
+      "intentReason": "Highly relevant topic for attracting businesses researching how to promote their website, a core agency service.",
+      "priority": "LOW",
+      "actionType": "faq_block",
+      "cannibalFlag": "REVIEW",
+      "cannibalReasons": [
+        "MULTI_URL"
+      ],
+      "cannibalUrls": [
+        {
+          "url": "https://www.wao.co.il/%D7%9E%D7%93%D7%A8%D7%99%D7%9A-%D7%A7%D7%99%D7%93%D7%95%D7%9D-%D7%90%D7%AA%D7%A8%D7%99%D7%9D-%D7%90%D7%95%D7%A8%D7%92%D7%A0%D7%99-%D7%91%D7%92%D7%95%D7%92%D7%9C/",
+          "impressions": 130,
+          "position": 20.3
+        }
+      ]
+    },
+    {
+      "rank": 12,
+      "query": "מדריך לקידום אתרים",
+      "rankingUrl": "https://www.wao.co.il/seo/guide",
+      "implementationMode": "enhance",
+      "position": 8.1,
+      "impressions": 144,
+      "clicks": 0,
+      "ctr": 0,
+      "score": 2578,
+      "intentScore": 4,
+      "intentFlag": null,
+      "intentReason": "An SEO guide query is highly relevant to the agency's domain and works well for lead generation and building authority.",
+      "priority": "MEDIUM",
+      "actionType": "faq_block",
+      "cannibalFlag": "REVIEW",
+      "cannibalReasons": [
+        "MULTI_URL"
+      ],
+      "cannibalUrls": [
+        {
+          "url": "https://www.wao.co.il/%D7%9E%D7%93%D7%A8%D7%99%D7%9A-%D7%A7%D7%99%D7%93%D7%95%D7%9D-%D7%90%D7%AA%D7%A8%D7%99%D7%9D-%D7%90%D7%95%D7%A8%D7%92%D7%A0%D7%99-%D7%91%D7%92%D7%95%D7%92%D7%9C/",
+          "impressions": 101,
+          "position": 17.9
+        }
+      ]
+    },
+    {
+      "rank": 13,
+      "query": "קידום אתרים בחו ל",
+      "rankingUrl": "https://www.wao.co.il/seo/international",
+      "implementationMode": "enhance",
+      "position": 13.6,
+      "impressions": 201,
+      "clicks": 0,
+      "ctr": 0,
+      "score": 2488,
+      "intentScore": 5,
+      "intentFlag": null,
+      "intentReason": "Highly relevant query for businesses looking for international search engine optimization services.",
+      "priority": "LOW",
+      "actionType": "faq_block",
+      "cannibalFlag": "REVIEW",
+      "cannibalReasons": [
+        "MULTI_URL"
+      ],
+      "cannibalUrls": [
+        {
+          "url": "https://www.wao.co.il/seo-and-marketing-abroad/",
+          "impressions": 52,
+          "position": 28.4
+        },
+        {
+          "url": "https://www.wao.co.il/%D7%9E%D7%93%D7%A8%D7%99%D7%9A-%D7%A7%D7%99%D7%93%D7%95%D7%9D-%D7%90%D7%AA%D7%A8%D7%99%D7%9D-%D7%90%D7%95%D7%A8%D7%92%D7%A0%D7%99-%D7%91%D7%92%D7%95%D7%92%D7%9C/",
+          "impressions": 17,
+          "position": 75.9
+        }
+      ]
+    },
+    {
+      "rank": 14,
+      "query": "seo בינלאומי",
+      "rankingUrl": "https://www.wao.co.il/seo/international",
+      "implementationMode": "enhance",
+      "position": 11.1,
+      "impressions": 154,
+      "clicks": 0,
+      "ctr": 0,
+      "score": 2299,
+      "intentScore": 5,
+      "intentFlag": null,
+      "intentReason": "Exact match for international SEO, a high-value service offered by professional agencies.",
+      "priority": "LOW",
+      "actionType": "faq_block",
+      "cannibalFlag": "REVIEW",
+      "cannibalReasons": [
+        "MULTI_URL"
+      ],
+      "cannibalUrls": [
+        {
+          "url": "https://www.wao.co.il/knowledge/international-seo",
+          "impressions": 22,
+          "position": 48.7
+        }
+      ]
+    },
+    {
+      "rank": 15,
+      "query": "קידום אתרים מדריך",
+      "rankingUrl": "https://www.wao.co.il/%D7%9E%D7%93%D7%A8%D7%99%D7%9A-%D7%A7%D7%99%D7%93%D7%95%D7%9D-%D7%90%D7%AA%D7%A8%D7%99%D7%9D-%D7%90%D7%95%D7%A8%D7%92%D7%A0%D7%99-%D7%91%D7%92%D7%95%D7%92%D7%9C/",
+      "implementationMode": "enhance",
+      "position": 14.4,
+      "impressions": 180,
+      "clicks": 0,
+      "ctr": 0,
+      "score": 2096,
+      "intentScore": 3,
+      "intentFlag": "review",
+      "intentReason": "Educational search looking for an SEO guide, which might indicate a DIY user but still within the relevant field.",
+      "priority": "LOW",
+      "actionType": "faq_block",
+      "cannibalFlag": "REVIEW",
+      "cannibalReasons": [
+        "MULTI_URL"
+      ],
+      "cannibalUrls": [
+        {
+          "url": "https://www.wao.co.il/seo/guide",
+          "impressions": 279,
+          "position": 3.2
+        }
+      ]
+    },
+    {
+      "rank": 16,
+      "query": "יועץ לקידום אתרים",
+      "rankingUrl": "https://www.wao.co.il/seo/consulting",
+      "implementationMode": "enhance",
+      "position": 19.4,
+      "impressions": 314,
+      "clicks": 0,
+      "ctr": 0,
+      "score": 2066,
+      "intentScore": 5,
+      "intentFlag": null,
+      "intentReason": "High-intent search for an SEO consultant, directly matching the services of a digital marketing agency.",
+      "priority": "LOW",
+      "actionType": "faq_block",
+      "cannibalFlag": "REVIEW",
+      "cannibalReasons": [
+        "MULTI_URL"
+      ],
+      "cannibalUrls": [
+        {
+          "url": "https://www.wao.co.il/%D7%99%D7%95%D7%A2%D7%A5-%D7%A7%D7%99%D7%93%D7%95%D7%9D-%D7%90%D7%AA%D7%A8%D7%99%D7%9D/",
+          "impressions": 144,
+          "position": 27.1
+        }
+      ]
+    },
+    {
+      "rank": 17,
+      "query": "איך מקדמים אתרים",
+      "rankingUrl": "https://www.wao.co.il/seo/guide",
+      "implementationMode": "enhance",
+      "position": 9.6,
+      "impressions": 121,
+      "clicks": 0,
+      "ctr": 0,
+      "score": 1981,
+      "intentScore": 3,
+      "intentFlag": "review",
+      "intentReason": "Informational search on how to do SEO, which usually attracts DIYers but is relevant to the field.",
+      "priority": "MEDIUM",
+      "actionType": "faq_block",
+      "cannibalFlag": "REVIEW",
+      "cannibalReasons": [
+        "MULTI_URL"
+      ],
+      "cannibalUrls": [
+        {
+          "url": "https://www.wao.co.il/%D7%9E%D7%93%D7%A8%D7%99%D7%9A-%D7%A7%D7%99%D7%93%D7%95%D7%9D-%D7%90%D7%AA%D7%A8%D7%99%D7%9D-%D7%90%D7%95%D7%A8%D7%92%D7%A0%D7%99-%D7%91%D7%92%D7%95%D7%92%D7%9C/",
+          "impressions": 68,
+          "position": 36
+        }
+      ]
+    },
+    {
+      "rank": 18,
+      "query": "קידום אתרים אורגני מדריך",
+      "rankingUrl": "https://www.wao.co.il/seo/guide",
+      "implementationMode": "enhance",
+      "position": 8.8,
+      "impressions": 100,
+      "clicks": 0,
+      "ctr": 0,
+      "score": 1722,
+      "intentScore": 3,
+      "intentFlag": "review",
+      "intentReason": "An educational query seeking an organic SEO guide, flagging mixed intent between DIYers and potential clients.",
+      "priority": "MEDIUM",
+      "actionType": "faq_block",
+      "cannibalFlag": "REVIEW",
+      "cannibalReasons": [
+        "MULTI_URL"
+      ],
+      "cannibalUrls": [
+        {
+          "url": "https://www.wao.co.il/%D7%9E%D7%93%D7%A8%D7%99%D7%9A-%D7%A7%D7%99%D7%93%D7%95%D7%9D-%D7%90%D7%AA%D7%A8%D7%99%D7%9D-%D7%90%D7%95%D7%A8%D7%92%D7%A0%D7%99-%D7%91%D7%92%D7%95%D7%92%D7%9C/",
+          "impressions": 177,
+          "position": 32.7
+        }
+      ]
+    },
+    {
+      "rank": 19,
+      "query": "מדריך לקידום אתרים בגוגל",
+      "rankingUrl": "https://www.wao.co.il/seo/guide",
+      "implementationMode": "enhance",
+      "position": 17.5,
+      "impressions": 188,
+      "clicks": 0,
+      "ctr": 0,
+      "score": 1589,
+      "intentScore": 3,
+      "intentFlag": "review",
+      "intentReason": "An informational query about Google SEO guides, which is relevant to the field but usually indicates DIY intent.",
+      "priority": "LOW",
+      "actionType": "faq_block",
+      "cannibalFlag": "REVIEW",
+      "cannibalReasons": [
+        "MULTI_URL"
+      ],
+      "cannibalUrls": [
+        {
+          "url": "https://www.wao.co.il/%D7%9E%D7%93%D7%A8%D7%99%D7%9A-%D7%A7%D7%99%D7%93%D7%95%D7%9D-%D7%90%D7%AA%D7%A8%D7%99%D7%9D-%D7%90%D7%95%D7%A8%D7%92%D7%A0%D7%99-%D7%91%D7%92%D7%95%D7%92%D7%9C/",
+          "impressions": 116,
+          "position": 30.6
+        }
+      ]
+    },
+    {
+      "rank": 20,
+      "query": "מדריך קידום בגוגל",
+      "rankingUrl": "https://www.wao.co.il/seo/guide",
+      "implementationMode": "enhance",
+      "position": 5,
+      "impressions": 66,
+      "clicks": 0,
+      "ctr": 0,
+      "score": 1383,
+      "intentScore": 3,
+      "intentFlag": "review",
+      "intentReason": "An educational search for Google promotion guides, indicating informational intent in the relevant field.",
+      "priority": "MEDIUM",
+      "actionType": "faq_block",
+      "cannibalFlag": "REVIEW",
+      "cannibalReasons": [
+        "MULTI_URL"
+      ],
+      "cannibalUrls": [
+        {
+          "url": "https://www.wao.co.il/%D7%9E%D7%93%D7%A8%D7%99%D7%9A-%D7%A7%D7%99%D7%93%D7%95%D7%9D-%D7%90%D7%AA%D7%A8%D7%99%D7%9D-%D7%90%D7%95%D7%A8%D7%92%D7%A0%D7%99-%D7%91%D7%92%D7%95%D7%92%D7%9C/",
+          "impressions": 12,
+          "position": 20.3
+        }
+      ]
+    }
+  ]
+}
