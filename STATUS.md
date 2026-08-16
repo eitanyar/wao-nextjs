@@ -151,21 +151,13 @@ today too) and priority-4 pending a one-time reconciliation pass Eitan needs to 
   → `businessProfessionalSvc` / `creativeVisualSvc`. Also fixed a pre-existing keyword-match
   bug where the Hebrew "צלמ" prefix never matched the bare word "צלם" (photographer).
 
-## Open loop — search-term cleanup / priority-4 rollout freeze (blocking, added today)
+## RESOLVED — search-term cleanup / priority-4 rollout freeze (2026-08-16)
 Per mission-planner (Lior) review, `docs/specs/priority-3-search-term-cleanup-scoring.md`
-§8.6: the engine built today is **frozen from live mutation** (may not add a single negative
-keyword against a real client) until a one-time reconciliation pass is run and **signed off
-by Eitan**:
-1. **AAAsada** — re-run digest/CPL across all 5 now-enumerated campaigns, confirm the
-   blended figure lands near the founder's observed ~₪70/lead, confirm each campaign's
-   classification/gate status looks sane.
-2. **Retter** — same pass; confirm which campaign is bound today (expected: brand, the
-   inverted case), enumerate the rest, confirm true blended CPL comes out **higher** than
-   what Retter's dashboard has been showing.
-3. Both reconciliations reviewed and signed off by Eitan before `search_term_cleanup` can
-   execute a live mutation, and before priority-4 (Recommendations feed/DSA) resumes.
-This is now the actual gate on priority-3 going live — not build effort, a data-trust
-checkpoint.
+§8.6 froze the engine from live mutation until a one-time reconciliation pass was signed off.
+**Signed off by Eitan 2026-08-16.** Numbers (via `buildAllClientDigests()`, read-only):
+AAAsada blended CPL ₪69.51/lead (~₪70 observed, sane); Retter blended CPL ₪29.47/lead,
+confirmed higher than the brand-only ₪7.89/lead the old single-campaign binding showed.
+`search_term_cleanup` may now execute live mutations on approval; priority-4 resumes.
 
 ## Pareto read — what actually moves the needle next
 20% of remaining work carrying 80% of the value, in order:

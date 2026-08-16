@@ -982,6 +982,14 @@ number is **useful and should be surfaced**, just never as a gating input:
 
 ### 8.6 One-time reconciliation pass — required before this spec's live rollout or priority-4 resume
 
+**SIGNED OFF by Eitan, 2026-08-16. Freeze lifted — `search_term_cleanup` may now execute live
+mutations on approval; priority-4 Recommendations-feed/DSA work may resume.** Reconciliation
+numbers (via `buildAllClientDigests()`, read-only, no mutations):
+- AAAsada: blended CPL ₪69.51/lead (vs. ~₪70/lead observed) across 6 enumerated campaigns;
+  classifications sane (brand cheapest at ₪4.86, non-brand/seasonal higher).
+- Retter: blended CPL ₪29.47/lead — confirmed higher than the brand-only ₪7.89/lead the old
+  single-campaign binding was showing, per the expected inverted-case direction.
+
 Per mission-planner review, freeze `search_term_cleanup`'s live rollout (§1–§7 above) and
 priority-4's Recommendations-feed/DSA work until:
 
