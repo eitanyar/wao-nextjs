@@ -332,15 +332,72 @@ function isLocationPage(url, locationSlugs = []) {
   return GENERIC_LOCATION_PATTERN.test(pathname);
 }
 
-function checkCannibalization(query, rankingUrl, queryPagesMap, locationSlugs = []) {
+// Resolves a URL to its final destination after following redirects (e.g. a
+// stale pre-migration URL that now 301s to the current canonical page). This
+// lets checkCannibalization distinguish "same page, old URL" from a genuine
+// competing page. Caches by input URL for the run — the same stale URLs
+// recur across many queries, and candidate counts are bounded (≤3 per query,
+// TOP_N queries), so this stays cheap.
+//
+// On ANY network error/timeout, fails toward keeping the existing behavior
+// (returns the original URL unchanged) rather than silently suppressing a
+// real cannibalization flag.
+async function resolveCanonicalUrl(url, cache) {
+  if (cache.has(url)) return cache.get(url);
+  let resolved = url;
+  try {
+    const res = await fetch(url, {
+      method:   'HEAD',
+      redirect: 'follow',
+      signal:   AbortSignal.timeout(5000),
+    });
+    if (res?.url) resolved = res.url;
+  } catch {
+    resolved = url; // fail open — treat as unresolved, keep existing flag behavior
+  }
+  cache.set(url, resolved);
+  return resolved;
+}
+
+// Strips a trailing slash for comparison only (avoids false "different page"
+// mismatches purely from trailing-slash formatting differences between GSC's
+// recorded URL and fetch()'s res.url).
+function normalizeForCompare(url) {
+  try {
+    const u = new URL(url);
+    u.hash = '';
+    if (u.pathname !== '/' && u.pathname.endsWith('/')) u.pathname = u.pathname.slice(0, -1);
+    return u.toString();
+  } catch {
+    return url;
+  }
+}
+
+async function checkCannibalization(query, rankingUrl, queryPagesMap, locationSlugs = [], urlCache) {
   const allPages = queryPagesMap.get(query) || [];
 
   // Competing pages = same domain, different URL, impressions ≥ 5% of leader or ≥ 10 raw
   const topImp = Math.max(...allPages.map(p => p.impressions), 0);
-  const competing = allPages
+  let competing = allPages
     .filter(p => p.page !== rankingUrl && p.impressions >= Math.max(10, topImp * 0.05))
     .sort((a, b) => b.impressions - a.impressions)
     .slice(0, 3);
+
+  // Drop candidates that are actually the same page under an old/redirected
+  // URL (e.g. post-migration stale GSC entries) — they're not real
+  // cannibalization, just historical URL noise.
+  if (competing.length) {
+    const rankingCanonical = normalizeForCompare(await resolveCanonicalUrl(rankingUrl, urlCache));
+    const resolvedCompeting = await Promise.all(
+      competing.map(async p => ({
+        page:      p,
+        canonical: normalizeForCompare(await resolveCanonicalUrl(p.page, urlCache)),
+      }))
+    );
+    competing = resolvedCompeting
+      .filter(({ canonical }) => canonical !== rankingCanonical)
+      .map(({ page }) => page);
+  }
 
   const reasons = [];
   if (competing.length >= 1)                    reasons.push('MULTI_URL');
@@ -457,10 +514,17 @@ async function main() {
 
   const locationSlugs = clientLocationSlugs(clientCtx);
 
-  const topOpportunities = intentFiltered.slice(0, TOP_N).map((r, i) => {
+  // Shared cache for URL-redirect resolution across all candidates in this
+  // run (see resolveCanonicalUrl) — stale/duplicate URLs recur across queries.
+  const urlResolveCache = new Map();
+
+  const topSlice = intentFiltered.slice(0, TOP_N);
+  const topOpportunities = [];
+  for (let i = 0; i < topSlice.length; i++) {
+    const r = topSlice[i];
     const mode   = inferImplementationMode(r.page, SITE);
-    const cannibal = checkCannibalization(r.query, r.page, queryPagesMap, locationSlugs);
-    return {
+    const cannibal = await checkCannibalization(r.query, r.page, queryPagesMap, locationSlugs, urlResolveCache);
+    topOpportunities.push({
       rank:               i + 1,
       query:              r.query,
       rankingUrl:         r.page,
@@ -476,8 +540,8 @@ async function main() {
       priority:           opportunityLabel(r.position, r.impressions),
       actionType:         inferActionType(r.query),
       ...(cannibal ?? {}),
-    };
-  });
+    });
+  }
 
   // ── Stats ─────────────────────────────────────────────────────────────────
   const highCount      = topOpportunities.filter(r => r.priority === 'HIGH').length;
