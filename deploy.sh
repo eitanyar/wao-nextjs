@@ -21,7 +21,7 @@ if [[ -z "${CLIENT_PORTAL_SECRET:-}" ]]; then
 fi
 
 echo "⬇️ Pulling latest code..."
-git pull origin draft/marketing
+git pull origin hermes-migration
 
 echo "📦 Installing dependencies..."
 npm ci
