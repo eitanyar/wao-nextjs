@@ -41,6 +41,13 @@ export async function POST(
     return NextResponse.json({ error: 'mode must be "auto" or "manual"' }, { status: 400 });
   }
 
+  if (action.status === 'superseded') {
+    return NextResponse.json(
+      { error: 'This action has been superseded and can no longer be updated.' },
+      { status: 409 }
+    );
+  }
+
   const currentMode = action.publishMode ?? 'manual';
   if (action.status === 'done' && currentMode === 'auto') {
     return NextResponse.json(
@@ -59,6 +66,12 @@ export async function POST(
     );
   }
 
-  updateActionPublishMode(actionId, mode);
+  if (!updateActionPublishMode(actionId, mode)) {
+    return NextResponse.json(
+      { error: 'Failed to update action — it may have been archived or removed.' },
+      { status: 409 }
+    );
+  }
+
   return NextResponse.json({ success: true, actionId, implementationMode: mode });
 }

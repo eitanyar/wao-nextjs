@@ -14,8 +14,16 @@ export interface GeoAction {
   impressions:        number;
   clicks:             number;
   ctr:                number;
-  status:             'generated' | 'sent' | 'approved' | 'published' | 'verified' | 'done';
+  status:             'generated' | 'sent' | 'approved' | 'published' | 'verified' | 'done' | 'superseded';
   generatedAt:        string;
+  /**
+   * Set on actions moved into tasks/geo/_archive/ by
+   * scripts/geo-generate-content.mjs when a regeneration replaces them.
+   * The old actionId still resolves via findActionById (archive is a read
+   * fallback) so a late WhatsApp link never 404s.
+   */
+  supersededAt?:      string;
+  supersededBy?:      string;
   /**
    * Publish path for the /geo/action page (Path A auto-publish vs Path B manual).
    * Distinct from `implementationMode` above (enhance/create page content strategy —
@@ -42,6 +50,16 @@ export interface GeoAction {
 
 const CLIENTS_DIR = path.join(process.cwd(), 'data', 'clients');
 
+// A client's live actions live in tasks/geo/; superseded ones are moved to
+// tasks/geo/_archive/ by scripts/geo-generate-content.mjs rather than
+// deleted, so an old WhatsApp link still resolves. Live dir first so a live
+// action always wins over a same-id archived leftover.
+function actionDirsForClient(clientId: string): string[] {
+  const liveDir = path.join(CLIENTS_DIR, clientId, 'tasks', 'geo');
+  const archiveDir = path.join(liveDir, '_archive');
+  return [liveDir, archiveDir].filter(fs.existsSync);
+}
+
 export function findActionById(actionId: string): GeoAction | null {
   // actionId format: {clientId}-{rank}-{slug}
   // Extract clientId from the prefix before the first digit group
@@ -50,18 +68,24 @@ export function findActionById(actionId: string): GeoAction | null {
     : [];
 
   for (const clientId of clients) {
-    const actionsDir = path.join(CLIENTS_DIR, clientId, 'tasks', 'geo');
-    if (!fs.existsSync(actionsDir)) continue;
-    for (const file of fs.readdirSync(actionsDir).filter(f => f.endsWith('.json'))) {
-      const action = JSON.parse(
-        fs.readFileSync(path.join(actionsDir, file), 'utf8')
-      ) as GeoAction;
-      if (action.actionId === actionId) return action;
+    for (const actionsDir of actionDirsForClient(clientId)) {
+      for (const file of fs.readdirSync(actionsDir).filter(f => f.endsWith('.json'))) {
+        const action = JSON.parse(
+          fs.readFileSync(path.join(actionsDir, file), 'utf8')
+        ) as GeoAction;
+        if (action.actionId === actionId) return action;
+      }
     }
   }
   return null;
 }
 
+// Intentionally live-dir only (not archive): this list drives the client's
+// working stepper/progress UI (current-of-total, "all done" state), which
+// must reflect the current active batch, not superseded history.
+// findActionById above is the one that reaches into _archive/, so an old
+// actionId still resolves on its own action page even though it has dropped
+// out of this list.
 export function getClientActions(clientId: string): GeoAction[] {
   const dir = path.join(CLIENTS_DIR, clientId, 'tasks', 'geo');
   if (!fs.existsSync(dir)) return [];

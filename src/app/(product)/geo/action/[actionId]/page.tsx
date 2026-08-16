@@ -45,6 +45,14 @@ export default async function GeoActionPage({
   const platform       = client?.platform ?? null;
   const publishMode: 'auto' | 'manual' = action.publishMode ?? 'manual';
   const isDone         = action.status === 'done';
+  // A regeneration archived this action's actionId into tasks/geo/_archive/
+  // and superseded it with a fresh one — findActionById still resolves it
+  // (read-fallback into _archive/) so a late WhatsApp link never 404s, but
+  // it renders read-only here: content stays copy-pasteable, the interactive
+  // approve/mark-done/auto-path controls are hidden so a stale decision can
+  // never re-enter the live flow.
+  const isSuperseded    = action.status === 'superseded';
+  const supersededByAction = action.supersededBy ? findActionById(action.supersededBy) : null;
   const hasCannibalRisk = (action.cannibalReasons?.length ?? 0) > 0;
   // Cannibalization is a real SEO-quality risk to a paying client — never let
   // auto-publish (Path A) ship a flagged action unattended. Force manual
@@ -83,6 +91,20 @@ export default async function GeoActionPage({
 
         <ActionHeader title={action.query} url={placementUrl} />
 
+        {isSuperseded && (
+          <div className="mb-6 rounded-xl border border-sky-500/40 bg-sky-500/10 p-4 text-sm">
+            <p className="font-semibold text-sky-400">ההצעה הזו עודכנה</p>
+            {supersededByAction && (
+              <a
+                href={`/geo/action/${encodeURIComponent(action.supersededBy!)}`}
+                className="mt-1 inline-block text-sky-300 underline"
+              >
+                ← {supersededByAction.query}
+              </a>
+            )}
+          </div>
+        )}
+
         {hasCannibalRisk && (
           <div className="mb-6 rounded-xl border border-amber-500/40 bg-amber-500/10 p-4 text-sm">
             <p className="mb-1 font-semibold text-amber-400">
@@ -104,15 +126,26 @@ export default async function GeoActionPage({
           </div>
         )}
 
-        <PathCard
-          actionId={actionId}
-          wpConnected={wpConnected}
-          mode={publishMode}
-          locked={locked}
-          autoDisabled={hasCannibalRisk}
-        />
+        {!isSuperseded && (
+          <PathCard
+            actionId={actionId}
+            wpConnected={wpConnected}
+            mode={publishMode}
+            locked={locked}
+            autoDisabled={hasCannibalRisk}
+          />
+        )}
 
-        {isPathA ? (
+        {isSuperseded ? (
+          // Read-only: content stays copy-pasteable for a late owner, but no
+          // approve/mark-done/auto-path controls — a stale decision must
+          // never re-enter the live flow.
+          <InstructionSteps>
+            <ContentBlock html={contentHtml} platform={platform} />
+            <PlacementBlock instruction={action.content.placementInstruction} url={placementUrl} />
+            <CodeBlock json={schemaJson} platform={platform} />
+          </InstructionSteps>
+        ) : isPathA ? (
           <AutoPathPanel />
         ) : (
           <>
@@ -132,7 +165,7 @@ export default async function GeoActionPage({
           </>
         )}
 
-        {allDone && <NextActionLink />}
+        {allDone && !isSuperseded && <NextActionLink />}
       </main>
     </CopyAnnouncer>
   );
