@@ -23,6 +23,21 @@ Checklist (fix silently — no explanations):
 5. Plural male address → singular male (replace "אתם" with "אתה", "תוכלו" with "תוכל", etc.)
 6. Translated-Hebrew calques like "עשה לייק", "לחץ כאן" (too digital) → natural Hebrew
 7. "heroHeadline" must end in a noun or active verb — remove trailing "..." if present
+8. Enforce these max character lengths (Hebrew chars count 1 each). Any field over its
+   limit must be shortened to fit — cut filler words and redundant phrasing, never the
+   concrete detail/number/name that makes the line specific instead of generic:
+   - heroHeadline: max 68 chars
+   - heroSubheadline: max 90 chars
+   - heroCta: max 15 chars
+   - trustBarItems: each array item max 20 chars
+   - aboutBlurb: max 320 chars
+   - servicesHeadline: max 35 chars
+   - serviceItems: each array item max 25 chars
+   - faqHeadline: max 30 chars
+   - faqItems[].a: max 120 chars each (per FAQ answer)
+   - guaranteeBlock: max 100 chars total
+   - formHeadline: max 35 chars
+   - stickyBarLine: max 25 chars
 
 Rules 2 and 3 apply ONLY inside Hebrew text content (JSON string values). Never
 alter the JSON structural characters themselves — every property name and every
@@ -98,16 +113,17 @@ export async function POST(req: Request) {
     let copy: LPCopy;
 
     if (process.env.GEMINI_API_KEY) {
-      // Tamar — write the LP copy
+      // Tamar — write the LP copy. HIGH thinking: this is final, unattended-quality
+      // landing-page copy (not a live chat turn) — see [[feedback_thinking_budget_matches_workload]].
       const tamarPrompt = buildLpCopyPrompt(collectedData);
-      const tamarRaw = await callGeminiJSON(LP_COPY_SYSTEM_PROMPT, tamarPrompt);
+      const tamarRaw = await callGeminiJSON(LP_COPY_SYSTEM_PROMPT, tamarPrompt, { thinkingLevel: 'HIGH' });
       const tamarCopy = JSON.parse(tamarRaw) as LPCopy;
 
       // Noa — QA pass. Fail-soft: fall back to Tamar's copy rather than
       // failing the whole generation over a polish step (see identical
       // fix in site-bot/generate/route.ts for why this is fail-soft).
       try {
-        const noaRaw = await callGeminiJSON(NOA_LP_QA_PROMPT, JSON.stringify(tamarCopy));
+        const noaRaw = await callGeminiJSON(NOA_LP_QA_PROMPT, JSON.stringify(tamarCopy), { thinkingLevel: 'HIGH' });
         copy = JSON.parse(noaRaw) as LPCopy;
       } catch (e: any) {
         console.warn('LP Noa QA pass failed, using unreviewed Tamar copy:', e.message);

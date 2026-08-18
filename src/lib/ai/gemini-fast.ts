@@ -83,20 +83,31 @@ export function extractJsonSpan(text: string): string {
   return trimmed.slice(start, lastClose + 1);
 }
 
-export async function callGeminiJSON(systemPrompt: string, userMessage: string): Promise<string> {
+export async function callGeminiJSON(
+  systemPrompt: string,
+  userMessage: string,
+  opts: { thinkingLevel?: 'LOW' | 'HIGH' } = {}
+): Promise<string> {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) throw new Error('Gemini not configured');
 
   const modelName = process.env.GEMINI_MODEL_NAME || 'gemini-3.7-flash';
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent`;
 
+  // Default LOW — this helper is shared by live conversational callers (onboarding chat bots)
+  // where a person is waiting turn-by-turn; latency matters there. Callers writing final,
+  // unattended-quality copy (e.g. LP generation) pass thinkingLevel: 'HIGH' explicitly — see
+  // [[feedback_thinking_budget_matches_workload]].
   const res = await fetch(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'x-goog-api-key': apiKey },
     body: JSON.stringify({
       systemInstruction: { role: 'system', parts: [{ text: systemPrompt }] },
       contents: [{ role: 'user', parts: [{ text: userMessage }] }],
-      generationConfig: { responseMimeType: 'application/json', thinkingConfig: { thinkingLevel: 'LOW' } },
+      generationConfig: {
+        responseMimeType: 'application/json',
+        thinkingConfig: { thinkingLevel: opts.thinkingLevel || 'LOW' },
+      },
     }),
   });
   const data = await res.json();

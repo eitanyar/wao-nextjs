@@ -60,7 +60,7 @@ function envVal(name) {
 // ── Qwen 3.8 Max (Hebrew channel) — OpenAI-compatible DashScope ───────────────
 const QWEN_API_KEY  = envVal('QWEN_API_KEY');
 const QWEN_BASE_URL = envVal('QWEN_BASE_URL');
-const QWEN_MODEL    = 'qwen3.8-max';
+const QWEN_MODEL    = envVal('QWEN_MODEL_NAME') || 'qwen3.8-max';
 
 // ── Gemini 3.7 Flash (PRIMARY for unattended GEO gen) ─────────────────────────
 const GEMINI_API_KEY = envVal('GEMINI_API_KEY');
@@ -128,7 +128,12 @@ async function callGeminiOnce(systemPrompt, userMessage, opts = {}) {
     contents: [{ role: 'user', parts: [{ text: userMessage }] }],
     generationConfig: {
       responseMimeType: 'application/json',
-      thinkingConfig: { thinkingLevel: 'LOW' },
+      // HIGH, not LOW — this is unattended batch generation of permanent website copy, not a
+      // live chat turn. LOW was inherited by copy-paste from gemini-fast.ts's real-time chat
+      // path (where a user is waiting, so latency matters); that constraint doesn't apply here,
+      // and LOW measurably produced shallower, less fact-precise FAQ content on real Retter
+      // pages (2026-08-18 side-by-side test, Eitan's call).
+      thinkingConfig: { thinkingLevel: envVal('GEMINI_THINKING_LEVEL') || 'HIGH' },
     },
   };
   const res = await fetch(url, {

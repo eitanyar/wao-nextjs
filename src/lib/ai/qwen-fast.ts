@@ -11,6 +11,12 @@ import { extractJsonSpan } from './gemini-fast';
 export type CallQwenJSONOptions = {
   think?: boolean;
   thinkingBudget?: number;
+  /** Defaults to 'qwen3.8-max' (the established Hebrew-authoring model). Pass
+   * an explicit override for a different role — e.g. 'qwen3.7-plus' for the
+   * GEO distinctiveness critic (src/lib/geo/critic.ts), which deliberately
+   * wants a different vendor/family from the Gemini generator it critiques,
+   * not the authoring model used elsewhere in this file's call sites. */
+  model?: string;
 };
 
 export async function callQwenJSON(
@@ -23,7 +29,7 @@ export async function callQwenJSON(
   if (!apiKey || !baseUrl) throw new Error('Qwen not configured');
 
   const payload: Record<string, unknown> = {
-    model: 'qwen3.8-max',
+    model: opts.model || 'qwen3.8-max',
     temperature: 0.7,
     response_format: { type: 'json_object' },
     messages: [
