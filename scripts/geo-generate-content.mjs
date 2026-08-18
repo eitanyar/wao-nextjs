@@ -11,6 +11,15 @@
  *
  * Output: data/geo-logs/{client}/actions/{rank}-{slug}.json
  * Checkpointed: skips already-generated actions.
+ *
+ * Client record optional `facts` array. Each element:
+ *   id            string, ascii kebab-case
+ *   category      "person" | "credential" | "certifying_body" | "program" | "number" | "pricing" | "outcome"
+ *   value         string — the fact text as it will be used in the prompt
+ *   sourceQuote   string, optional — verbatim substring of the source page, present only for website-derived facts
+ *   sourceUrl     string, optional — page the fact was harvested from
+ *   source        "website:auto" | "questionnaire" | "manual"
+ *   confirmed     boolean
  */
 
 import fs   from 'fs';
@@ -173,6 +182,14 @@ function viaLogLabel(generatedVia) {
   return generatedVia;
 }
 
+function renderFactsBlock(facts) {
+  if (!Array.isArray(facts)) return null;
+  const lines = facts
+    .filter(f => f && f.confirmed === true && typeof f.value === 'string' && f.value.trim())
+    .map(f => '- ' + f.value.trim());
+  return lines.length ? lines.join('\n') : null;
+}
+
 // ── Tamar system prompt ───────────────────────────────────────────────────────
 function tamarPrompt(client) {
   return `אתה טמר, קופירייטר של WAO — מומחית בתוכן GEO/AIO לעסקים ישראלים.
@@ -187,6 +204,9 @@ function tamarPrompt(client) {
 - יתרון ייחודי: ${client.usp}
 - טון: ${client.tone}
 
+## עובדות ייחודיות מותרות
+${renderFactsBlock(client.facts) || `${client.usp}\n${client.topService}`}
+
 ## כללי כתיבה
 - עברית ישראלית מדוברת — לא מתורגמת מאנגלית
 - משפטים קצרים. מקסימום 12-15 מילה למשפט.
@@ -196,6 +216,7 @@ function tamarPrompt(client) {
 - תמיד לכלול את שם העסק/המותג בטבעיות
 - השתמשי אך ורק בשם המותג הרשמי כפי שהוא מופיע בפרומפט, ללא כל שינוי או וריאציה אחרת
 - היי ספציפית רק לגבי פרטים מאומתים מהקשר הלקוח (קורסים, יתרונות, מיקום, מותג). אל תמציאי פרטים תפעוליים כמו שעות, מחירים או חניה; אם המידע לא סופק – אל תכתבי אותו.
+- אל תשתמשי בשבחים כלליים בלי הוכחה: "המוביל בתחום", "איכות ללא פשרות", "השירות הטוב ביותר". כל שבח חייב להיצמד לעובדה קונקרטית (מספר, שם, תהליך) שמאמתת אותו באותו משפט.
 
 כתבי רק על הלקוח: רטר, קורסי NLP בישראל, קהל היעד, ההבדלים מהמתחרים, התוצאות שהקורס מביא.
 אל תכתבי הגדרות כלליות, פרסונות מעורפלות, מוטיבציה ריקה או משפטי פתיחה גנריים.
@@ -265,7 +286,8 @@ function buildUserMessage(opportunity, client, lexicon = null) {
 השאלות צריכות להיות ספציפיות למיקום — לא הגדרות כלליות של הנושא.
 דוגמאות לשאלות: "איפה מתקיים הקורס ב${locationSlug}?", "מה שעות הלימוד בסניף?", "כיצד מגיעים?", "מתי מתחיל המחזור הבא?"
 JSON-LD: סוג LocalBusiness עם כתובת וסכימת Course עם location.
-חשוב: אל תכתבי הגדרות כלליות של "${query}" — זה תפקיד העמוד הראשי.`;
+חשוב: אל תכתבי הגדרות כלליות של "${query}" — זה תפקיד העמוד הראשי.
+לפחות שאלה אחת מתוך ה-3-5 חייבת לענות עם עובדה שרק ${client.brandName || client.businessNiche} יכולה לתת — לא כל שאלה, ולא במחיר של גנריות בשאר השאלות.`;
 
   // MULTI_URL-only cannibalization: another (non-location) page already
   // ranks/splits impressions for this query. Steer toward a narrow, non-
@@ -274,7 +296,8 @@ JSON-LD: סוג LocalBusiness עם כתובת וסכימת Course עם location.
 בחרי זווית ספציפית לעמוד הזה (${urlSlug}) שלא חופפת לעמוד אחר באתר שמדבר על אותה שאילתה: פרט טכני, שלב בתהליך, או צד ייחודי של הנושא.
 דוגמאות לשאלות: "מה ההבדל בין [היבט א] ל[היבט ב]?", "מתי הכי מתאים ל${query}?", "מה חשוב לדעת לפני שמתחילים?"
 JSON-LD: סוג FAQPage עם mainEntity — בלי שאלת "מה זה ${query}?".
-חשוב: אל תכתבי הגדרות כלליות של "${query}" — זה תפקיד העמוד המרכזי שכבר מדורג עליו.`;
+חשוב: אל תכתבי הגדרות כלליות של "${query}" — זה תפקיד העמוד המרכזי שכבר מדורג עליו.
+לפחות שאלה אחת מתוך ה-3-5 חייבת לענות עם עובדה שרק ${client.brandName || client.businessNiche} יכולה לתת — לא כל שאלה, ולא במחיר של גנריות בשאר השאלות.`;
 
   const cannibalInstruction = isLocationCannibal
     ? geoFaqInstruction
@@ -291,7 +314,8 @@ JSON-LD: סוג FAQPage עם mainEntity — בלי שאלת "מה זה ${query}?
   </div>
   ... (3-5 שאלות)
 </div>
-JSON-LD: סוג FAQPage עם mainEntity.`,
+JSON-LD: סוג FAQPage עם mainEntity.
+לפחות שאלה אחת מתוך ה-3-5 חייבת לענות עם עובדה שרק ${client.brandName || client.businessNiche} יכולה לתת — לא כל שאלה, ולא במחיר של גנריות בשאר השאלות.`,
 
     definition_box: cannibalInstruction || `כתבי תיבת הגדרה (definition box) על "${query}".
 פורמט HTML:
@@ -300,7 +324,8 @@ JSON-LD: סוג FAQPage עם mainEntity.`,
   <p>[הגדרה קצרה וברורה — 2-3 משפטים]</p>
   <ul><li>נקודה 1</li><li>נקודה 2</li><li>נקודה 3</li></ul>
 </div>
-JSON-LD: סוג DefinedTerm או FAQPage עם שאלה אחת "מה זה ${query}?".`,
+JSON-LD: סוג DefinedTerm או FAQPage עם שאלה אחת "מה זה ${query}?".
+כללי את הפרט הייחודי ביותר של ${client.brandName || client.businessNiche} כבר במשפט הראשון של ההגדרה — לא רק בסוף.`,
 
     table: cannibalInstruction || `כתבי טבלת השוואה על "${query}".
 פורמט HTML: <table> עם <thead> ו-<tbody>.
@@ -393,6 +418,25 @@ function detectBoilerplatePatterns(content, priority) {
     return matched;
   }
   return null;
+}
+
+// Sibling to detectBoilerplatePatterns above — separate list, same
+// deterministic no-LLM design, but for unearned promotional hype rather
+// than generic filler. Distinctiveness patch (Yonatan, 2026-08-15 brief,
+// applied 2026-08-17): the prompt now bans these phrases explicitly; this
+// is the mechanical regression guard so a slip isn't only caught by an LLM
+// proofing pass.
+function detectPromotionalHype(content) {
+  const html = content.hebrewContent || '';
+  const patterns = [
+    "המוביל בתחום",
+    "איכות ללא פשרות",
+    "השירות הטוב ביותר",
+    "מהטובים בארץ",
+    "אין כמונו",
+  ];
+  const matched = patterns.filter(p => html.includes(p));
+  return matched.length ? matched : null;
 }
 
 // ── Schema.org JSON-LD validity gate ────────────────────────────────────────
@@ -675,9 +719,16 @@ async function generateAction(opportunity, client) {
     return null;
   }
 
+  const hypeHits = detectPromotionalHype(tamarResult);
+  if (hypeHits) {
+    console.error(`  ❌ #${rank} "${query}" — promotional hype filter triggered: ${hypeHits.join(', ')}. Refusing to write action file.`);
+    return null;
+  }
+
   console.log(`     ✓ Tamar done (via ${viaLogLabel(tamarVia)}) → Noa...`);
 
-  const clientFacts = [client.brandName, client.businessNiche, client.topService, client.targetLocation, client.usp].filter(Boolean).join(' | ');
+  const factValues = Array.isArray(client.facts) ? client.facts.filter(f => f && f.confirmed === true && typeof f.value === 'string' && f.value.trim()).map(f => f.value.trim()) : [];
+  const clientFacts = [client.brandName, client.businessNiche, client.topService, client.targetLocation, client.usp, ...factValues].filter(Boolean).join(' | ');
 
   // Step 2: Noa proofreads + vocab QA (Gemini primary, Qwen fallback)
   let noaResult;
@@ -817,6 +868,22 @@ async function main() {
 
   const pareto  = JSON.parse(fs.readFileSync(PARETO_FILE, 'utf8'));
   const client  = JSON.parse(fs.readFileSync(CLIENT_FILE, 'utf8'));
+
+  // Fail-closed language guard: this pipeline's prompt and output contract
+  // (see the `hebrewContent` field throughout) is Hebrew-only. There is no
+  // English (or other-language) content owner or QA gate wired up yet, so
+  // silently generating Hebrew for a non-Hebrew client is a real defect —
+  // it already happened once (aJudaica, an English-market client). Absence
+  // of the field is NOT treated as "assume Hebrew"; it must be explicit.
+  if (client.contentLanguage !== 'he') {
+    throw new Error(
+      `Refusing to generate: client "${CLIENT_ID}" does not have contentLanguage: "he" set in `
+      + `client.json (found: ${JSON.stringify(client.contentLanguage ?? null)}). This pipeline `
+      + `only generates Hebrew content. If this client is genuinely a Hebrew-content client, add `
+      + `"contentLanguage": "he" to ${path.relative(process.cwd(), CLIENT_FILE)}. Non-Hebrew `
+      + `clients are not supported by this pipeline yet.`
+    );
+  }
 
   let opportunities = pareto.opportunities;
   if (ONLY_RANK) {

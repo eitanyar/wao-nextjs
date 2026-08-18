@@ -4,6 +4,10 @@ import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { ADMIN_COOKIE_NAME, verifyAdminToken } from '@/lib/admin-auth';
 import SendButton from '@/components/geo/SendButton';
+import ApproveControl from '@/components/geo/ApproveControl';
+import BatchApproveButton from '@/components/geo/BatchApproveButton';
+import EditQAPanel from '@/components/geo/EditQAPanel';
+import CriticPanel from '@/components/geo/CriticPanel';
 import { buildApprovalLink } from '@/lib/geo/whatsapp';
 import { buildAllClientDigests } from '@/lib/google-ads/weekly-digest-batch';
 import { buildWeeklyDigestWhatsAppLink } from '@/lib/google-ads/whatsapp-digest';
@@ -31,10 +35,31 @@ interface ActionFile {
   score:              number;
   status:             string;
   generatedAt:        string;
+  shipDecision?:      'autoship' | 'review';
+  cannibalFlag?:      'REVIEW';
+  approvedBy?:        string;
+  approvedAt?:        string;
+  criticResult?: {
+    distinctive:   boolean;
+    flags:         string[];
+    reasons:       string[];
+    citationNote:  string;
+    checkedAt:     string;
+    flagsActedOn?: boolean;
+  };
   content: {
     placementInstruction: string;
     noaChanges:           string | null;
+    groundingRisk?:       'low' | 'medium' | 'high';
   };
+}
+
+// Flag-driven triage (review queue, 2026-08-17): an action is "clean" only
+// if every static gate cleared — matches batchApproveClean's own criteria
+// in src/lib/geo/actions.ts exactly, so the badge shown here never lies
+// about what the batch-approve button will actually approve.
+function isClean(action: ActionFile): boolean {
+  return action.shipDecision === 'autoship' && !action.cannibalFlag && (action.content.groundingRisk ?? 'low') === 'low';
 }
 
 // ── Data loading ──────────────────────────────────────────────────────────────
@@ -161,10 +186,29 @@ export default async function GeoDashboard() {
               </div>
             )}
 
-            {/* Actions list */}
+            {/* Actions list — flagged-first triage, per Lior's review-queue speed requirement */}
             {actions.length > 0 && (
               <div className="space-y-3">
-                {actions.map((action, i) => {
+                {(() => {
+                  const cleanCount = actions.filter(a => !a.approvedBy && isClean(a)).length;
+                  return cleanCount > 0 ? (
+                    <BatchApproveButton clientId={clientId} cleanCount={cleanCount} />
+                  ) : null;
+                })()}
+                {[...actions]
+                  .sort((a, b) => {
+                    // Flagged (not clean, not yet approved) first — that's the whole point of
+                    // flag-driven triage: the reviewer's eye goes to what needs a human judgment
+                    // call, not what a checkbox will clear for them anyway.
+                    const aNeedsEyes = !a.approvedBy && !isClean(a);
+                    const bNeedsEyes = !b.approvedBy && !isClean(b);
+                    if (aNeedsEyes !== bNeedsEyes) return aNeedsEyes ? -1 : 1;
+                    return a.rank - b.rank;
+                  })
+                  .map((action) => {
+                  // Stable rank-based index for the client-facing "X of Y" WhatsApp message —
+                  // must NOT track the triage-sorted display order above.
+                  const rankIndex = actions.findIndex(a => a.actionId === action.actionId);
                   const pageSlug = decodeURIComponent(action.rankingUrl.replace(client.siteUrl.replace(/\/$/, ''), '') || '/');
                   const waLink   = buildApprovalLink({
                     contactName:  client.approvalContact || 'שלום',
@@ -175,7 +219,7 @@ export default async function GeoDashboard() {
                     actionType:   action.actionType,
                     priority:     action.priority,
                     impressions:  action.impressions,
-                    batchIndex:   i + 1,
+                    batchIndex:   rankIndex + 1,
                     batchTotal:   actions.length,
                   });
 
@@ -195,6 +239,13 @@ export default async function GeoDashboard() {
                             <span className="rounded bg-[var(--elevated)] px-2 py-0.5 text-xs text-[var(--muted)]">
                               {ACTION_LABELS[action.actionType] ?? action.actionType}
                             </span>
+                            {isClean(action) ? (
+                              <span className="rounded bg-green-500/20 px-2 py-0.5 text-xs text-green-400">✓ נקי</span>
+                            ) : (
+                              <span className="rounded bg-orange-500/20 px-2 py-0.5 text-xs text-orange-400">
+                                ⚑ {action.cannibalFlag ? 'קניבליזציה' : (action.content.groundingRisk === 'high' ? 'סיכון עובדתי' : 'לבדיקה')}
+                              </span>
+                            )}
                           </div>
                           <div className="text-xs text-[var(--muted)] space-y-0.5">
                             <div dir="ltr" className="font-mono">{pageSlug}</div>
@@ -203,13 +254,25 @@ export default async function GeoDashboard() {
                           </div>
                         </div>
 
-                        {/* Right: action */}
+                        {/* Right: action — review gate must clear before Send unlocks */}
                         <div className="flex flex-col items-end gap-2 shrink-0">
-                          <SendButton
-                            waLink={waLink}
-                            label={`שלח ל${client.approvalContact || 'לקוח'}`}
-                            disabled={!hasPhone}
-                          />
+                          {action.approvedBy ? (
+                            <>
+                              <SendButton
+                                waLink={waLink}
+                                label={`שלח ל${client.approvalContact || 'לקוח'}`}
+                                disabled={!hasPhone}
+                              />
+                              <span className="text-xs px-2 py-0.5 rounded bg-[var(--accent-dim)] text-[var(--accent)]">
+                                ✓ אושר ע״י {action.approvedBy}
+                              </span>
+                            </>
+                          ) : (
+                            <>
+                              <SendButton waLink={waLink} label="ממתין לאישור" disabled />
+                              <ApproveControl actionId={action.actionId} />
+                            </>
+                          )}
                           <span className={`text-xs px-2 py-0.5 rounded ${
                             action.status === 'generated'
                               ? 'bg-blue-500/20 text-blue-400'
@@ -219,6 +282,10 @@ export default async function GeoDashboard() {
                           </span>
                         </div>
                       </div>
+                      <EditQAPanel actionId={action.actionId} actionType={action.actionType} />
+                      {!isClean(action) && (
+                        <CriticPanel actionId={action.actionId} initialResult={action.criticResult} />
+                      )}
                     </div>
                   );
                 })}

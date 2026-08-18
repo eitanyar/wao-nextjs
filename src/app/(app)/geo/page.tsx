@@ -37,6 +37,18 @@ const FAQS = [
     q: "מה אני צריך לעשות בעצמי?",
     a: "כמעט כלום. הבוט חוקר, כותב את התוכן, ומאמת שעלה לאוויר. התפקיד שלך פשוט — לאשר ולהדביק. הכול קורה בוואטסאפ, בלי ללמוד מערכת חדשה. אתה מאשר בלחיצה, מדביק באתר, וסיימת.",
   },
+  {
+    q: "האם זה ״תוכן AI זבל״ שיפגע באתר שלי?",
+    a: "חד משמעית לא. בזכות מנגנון ה-Human-in-the-Loop, כל פלט עובר ביקורת אנושית של מומחה SEO עם 20 שנות ניסיון. אנחנו לא מפרסמים ״זבל״ — אנחנו מפרסמים תשובות מדויקות שעברו אימות.",
+  },
+  {
+    q: "מה קורה אם הסכמה נשברת?",
+    a: "בדיוק בשביל זה אתה משלם. המערכת מנטרת את הסכמות 24/7, ובמקרה של תקלה — המומחה שלנו מתקן אותה ידנית. אתה לא צריך לגעת בקוד.",
+  },
+  {
+    q: "למה שהבינה של גוגל תצטט דווקא אותי?",
+    a: "כי הבינה מחפשת מבנה. GEO Bot מספק לה בדיוק את המבנה (Schema ו-FAQ) שהיא מחפשת, בצורה נקייה וברורה יותר מהמתחרים שלך שעדיין תקועים בשיטות של 2018.",
+  },
 ];
 
 const schemas = [
@@ -88,6 +100,7 @@ const PRICING_TIERS = [
     price: "199",
     desc: "אתה מדביק בעצמך. אנחנו שולחים הכול מוכן, עם הוראות מדויקות.",
     popular: false,
+    launchNote: "מחיר השקה ל-50 הנרשמים הראשונים. אחר כך — 299 ₪.",
   },
   {
     name: "Managed",
@@ -137,11 +150,15 @@ export default function GeoPage() {
               fontWeight: 900,
               lineHeight: 1.15,
               letterSpacing: "-0.02em",
-              marginBottom: "24px",
+              marginBottom: "16px",
             }}
           >
-            גוגל עונה ללקוח במקומך. ומפנה אותו לאתר אחר.
+            הקליק הכחול מת. גוגל הפך ליעד.
           </h1>
+
+          <p style={{ ...bodyStyle, fontSize: "clamp(1rem,1.6vw,1.1rem)", fontWeight: 600, color: "var(--text)", marginBottom: "24px", maxWidth: "640px" }}>
+            {renderMixed("ה-SEO הישן מת. אפילו HubSpot איבדה עד 80% מהתנועה האורגנית שלה. הגיע הזמן לעבור ל-GEO.")}
+          </p>
 
           <p style={{ ...bodyStyle, fontSize: "clamp(1rem,1.8vw,1.2rem)", marginBottom: "24px", maxWidth: "640px" }}>
             בראש כל חיפוש יש עכשיו תשובה של בינה מלאכותית. היא בוחרת אתר אחד ומציגה אותו כמקור. אם המקור הוא לא אתה, הלקוח קיבל תשובה ולא הגיע.
@@ -149,7 +166,7 @@ export default function GeoPage() {
 
           <p style={{ ...bodyStyle, marginBottom: "32px", maxWidth: "640px" }}>
             {renderMixed(
-              "הבוט עוקב אחרי מה שהלקוחות מחפשים בגוגל. הוא מזהה שאלות שהתשובה עליהן בורחת לבינה המלאכותית. בשבילן הוא כותב תשובה מוכנה לעמוד קיים, ושולח לך בוואטסאפ. אתה מאשר ומדביק באתר — כמו מזכיר שעונה במקומך."
+              "אל תילחם בבינה המלאכותית של גוגל — תהיה התשובה שהיא מצטטת. GEO Bot של WAO לא מביא לך ״קליקים״. הוא מכניס את המותג שלך לתוך התשובה שהבינה נותנת ללקוח שלך. עם אישור אנושי מלא. בלי הפתעות."
             )}
           </p>
 
@@ -186,16 +203,39 @@ export default function GeoPage() {
             className="btn-primary w-full sm:w-auto justify-center"
             style={{ fontSize: "1.05rem", padding: "16px 40px", whiteSpace: "normal", textAlign: "center", lineHeight: 1.4 }}
           >
-            {renderMixed("התחל עכשיו ב-199 ₪ לחודש — והפוך לתשובה שגוגל נותן ללקוח שלך.")}
+            הצטרף להשקה ב-199 ₪ בלבד
           </a>
 
           <p style={{ marginTop: "18px", fontSize: "0.85rem", color: "var(--muted)", fontFamily: "var(--font-body), sans-serif" }}>
-            {renderMixed("אנחנו לא מנחשים. כל פעולה מבוססת על נתוני החיפוש של האתר שלך — ומאומתת שעלתה לאוויר.")}
+            ל-50 הנרשמים הראשונים בלבד. אחר כך המחיר עולה ל-299 ₪.
           </p>
         </div>
       </section>
 
-      {/* ── Definition box ── */}
+      {/* ── Problem statement ── */}
+      <section className="wao-section" style={{ paddingTop: 0 }}>
+        <div className="wao-container" style={{ maxWidth: "860px" }}>
+          <h2
+            style={{
+              fontFamily: "var(--font-rubik), sans-serif",
+              fontWeight: 800,
+              fontSize: "clamp(1.4rem,2.4vw,1.9rem)",
+              lineHeight: 1.25,
+              marginBottom: "16px",
+              color: "var(--text)",
+            }}
+          >
+            אתה לא הבעלים של התנועה שלך. אתה רק שוכר אותה.
+          </h2>
+          <p style={bodyStyle}>
+            {renderMixed(
+              "במשך שנים חשבת שאתה בונה ״נכס דיגיטלי״. האמת? שכרת קרקע מגוגל. ועכשיו בעל הבית שינה את החוקים. הנתונים מדברים: חברות ענק שמובילות את עולם ה-SEO רואות צניחה של עשרות אחוזים בתנועה האורגנית. למה? כי ה-AI Overviews של גוגל עונים על השאלה בתוך דף התוצאות — הלקוח מקבל את התשובה ולא צריך ללחוץ על הקישור שלך. ואם אתה לא שם — אתה שקוף."
+            )}
+          </p>
+        </div>
+      </section>
+
+      {/* ── Solution (definition box) ── */}
       <section className="wao-section" style={{ paddingTop: 0 }}>
         <div className="wao-container" style={{ maxWidth: "860px" }}>
           <div
@@ -216,14 +256,120 @@ export default function GeoPage() {
                 color: "var(--text)",
               }}
             >
-              {renderMixed("מה זה GEO")}
+              {renderMixed("Generative Engine Optimization (GEO)")}
             </h2>
             <p style={bodyStyle}>
               {renderMixed(
-                "GEO היא אופטימיזציה שמכינה את האתר שלך לתשובות הבינה המלאכותית בגוגל. במקום להופיע רק ברשימת התוצאות, האתר שלך הופך למקור שהבינה מצטטת. כך הלקוח מקבל תשובה — ומגיע דווקא אליך."
+                "בעידן החדש, המטרה היא לא ״להיות ראשון בגוגל״. המטרה היא להיות המקור שהבינה המלאכותית בוחרת לצטט. GEO Bot שלנו סורק את העסק שלך, מזהה את השאלות שהלקוחות שלך שואלים את הבינה, ומייצר עבורך סדרות FAQ וסכמות (Schema) מדויקות — בדיוק בפורמט שהבינה המלאכותית של גוגל ״אוהבת״ להעתיק לתשובות שלה."
               )}
             </p>
           </div>
+        </div>
+      </section>
+
+      {/* ── Trust layer ── */}
+      <section className="wao-section" style={{ paddingTop: 0 }}>
+        <div className="wao-container" style={{ maxWidth: "860px" }}>
+          <h2
+            style={{
+              fontFamily: "var(--font-rubik), sans-serif",
+              fontWeight: 800,
+              fontSize: "clamp(1.4rem,2.4vw,1.9rem)",
+              lineHeight: 1.25,
+              marginBottom: "16px",
+              color: "var(--text)",
+            }}
+          >
+            {renderMixed("הבוט כותב. המומחה חותם. (Human-in-the-Loop)")}
+          </h2>
+          <p style={{ ...bodyStyle, marginBottom: "24px" }}>
+            {renderMixed("שמעת על סוכנויות ש״מריצות אוטומציה מלאה״ והורסות ללקוחות את האתר? אצלנו זה לא יקרה.")}
+          </p>
+          <ul style={{ listStyle: "none", padding: 0, margin: "0 0 20px", display: "flex", flexDirection: "column", gap: "14px" }}>
+            {[
+              "כתיבה, עריכה ובקרה אנושית: כל תשובה נכתבת ונערכת בשני שלבים נפרדים ועוברת בדיקות אוטומטיות של דיוק עובדתי ומבנה — ואז אדם אמיתי ב-WAO עובר עליה ומאשר אותה ידנית, לפני שהיא מגיעה אליך בכלל.",
+              "תיקון סכמות ידני: הבוט מזהה בעיות טכניות, אבל מומחה אנושי ב-WAO עובר ומתקן את הסכמה לפני שהיא עולה לאוויר.",
+              "אישור הלקוח: שום דבר לא מתפרסם בלי האישור שלך בוואטסאפ.",
+            ].map((b) => (
+              <li key={b} style={{ display: "flex", alignItems: "flex-start", gap: "12px" }}>
+                <span
+                  aria-hidden
+                  style={{
+                    flexShrink: 0,
+                    width: "22px",
+                    height: "22px",
+                    borderRadius: "50%",
+                    background: "var(--accent-dim)",
+                    border: "1px solid var(--accent-border)",
+                    color: "var(--accent)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    fontSize: "0.72rem",
+                    fontWeight: 700,
+                    marginTop: "2px",
+                  }}
+                >
+                  ✓
+                </span>
+                <span style={{ ...bodyStyle, color: "var(--text)" }}>{renderMixed(b)}</span>
+              </li>
+            ))}
+          </ul>
+          <p style={{ fontFamily: "var(--font-rubik), sans-serif", fontWeight: 700, fontSize: "0.95rem", color: "var(--accent)" }}>
+            מהירות של בוט. אחריות של בן אדם.
+          </p>
+        </div>
+      </section>
+
+      {/* ── Features ── */}
+      <section className="wao-section" style={{ paddingTop: 0 }}>
+        <div className="wao-container" style={{ maxWidth: "860px" }}>
+          <h2
+            style={{
+              fontFamily: "var(--font-rubik), sans-serif",
+              fontWeight: 800,
+              fontSize: "clamp(1.4rem,2.4vw,1.9rem)",
+              lineHeight: 1.25,
+              marginBottom: "20px",
+              color: "var(--text)",
+            }}
+          >
+            מה מקבלים?
+          </h2>
+          <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: "14px" }}>
+            {[
+              "10 עמודי מפתח: אופטימיזציית GEO ל-10 העמודים החשובים ביותר באתר שלך.",
+              "10 סדרות FAQ אסטרטגיות: תוכן מובנה שנועד להיתפס על ידי ה-AI Overviews.",
+              "עדכון שבועי: התאמה מתמדת לשינויים באלגוריתם של גוגל.",
+              "תיקון סכמות טכני: ניקוי ה״ביוב״ הטכני שמונע מגוגל להבין אותך.",
+              "דוח שקיפות מלא: אתה רואה בדיוק מה הבוט כתב ומה המומחה אישר.",
+            ].map((f) => (
+              <li key={f} style={{ display: "flex", alignItems: "flex-start", gap: "12px" }}>
+                <span
+                  aria-hidden
+                  style={{
+                    flexShrink: 0,
+                    width: "22px",
+                    height: "22px",
+                    borderRadius: "50%",
+                    background: "var(--accent-dim)",
+                    border: "1px solid var(--accent-border)",
+                    color: "var(--accent)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    fontSize: "0.72rem",
+                    fontWeight: 700,
+                    marginTop: "2px",
+                  }}
+                >
+                  ✓
+                </span>
+                <span style={{ ...bodyStyle, color: "var(--text)" }}>{renderMixed(f)}</span>
+              </li>
+            ))}
+          </ul>
         </div>
       </section>
 
@@ -289,6 +435,19 @@ export default function GeoPage() {
                   <span style={{ fontSize: "0.95rem", color: "var(--muted)" }}> / לחודש</span>
                 </div>
                 <p style={{ ...bodyStyle, fontSize: "0.92rem" }}>{tier.desc}</p>
+                {tier.launchNote && (
+                  <p
+                    style={{
+                      marginTop: "12px",
+                      fontSize: "0.82rem",
+                      fontWeight: 700,
+                      color: "var(--accent)",
+                      fontFamily: "var(--font-body), sans-serif",
+                    }}
+                  >
+                    {tier.launchNote}
+                  </p>
+                )}
               </div>
             ))}
           </div>

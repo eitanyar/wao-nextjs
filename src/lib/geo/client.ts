@@ -68,6 +68,43 @@ export function setClientGscConnected(clientId: string, connected: boolean): boo
   return true;
 }
 
+export interface ReviewerNote {
+  note:         string;
+  reviewerName: string;
+  addedAt:      string;
+}
+
+function reviewerNotesFile(clientId: string): string {
+  return path.join(CLIENTS_DIR, clientId, 'geo-reviewer-notes.json');
+}
+
+/**
+ * Standing style/content conditions a human reviewer noticed during
+ * approval (review queue, 2026-08-17) — e.g. "position כשר differently in
+ * catering copy." Distinct from client.json's `tone`/`usp` (set once at
+ * intake): these accumulate over time from actual reviewed output, and get
+ * threaded into every future generation prompt for this client (see
+ * scripts/geo-generate-content.mjs) so the same correction doesn't have to
+ * be made by hand on every batch.
+ */
+export function getReviewerNotes(clientId: string): ReviewerNote[] {
+  const fp = reviewerNotesFile(clientId);
+  if (!fs.existsSync(fp)) return [];
+  try {
+    return JSON.parse(fs.readFileSync(fp, 'utf8')) as ReviewerNote[];
+  } catch {
+    return [];
+  }
+}
+
+export function appendReviewerNote(clientId: string, note: string, reviewerName: string): boolean {
+  if (!clientRecordExists(clientId)) return false;
+  const notes = getReviewerNotes(clientId);
+  notes.push({ note, reviewerName, addedAt: new Date().toISOString() });
+  fs.writeFileSync(reviewerNotesFile(clientId), JSON.stringify(notes, null, 2), 'utf8');
+  return true;
+}
+
 export function ensureClientsDir(): string {
   fs.mkdirSync(CLIENTS_DIR, { recursive: true });
   return CLIENTS_DIR;

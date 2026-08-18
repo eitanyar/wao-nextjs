@@ -119,8 +119,8 @@ export default async function GeoActionPage({
               ⚠ סיכון קניבליזציה (WAO internal) — {action.cannibalReasons!.join(' + ')}
             </p>
             <p className="text-[var(--muted)]">
-              עמוד אחר באתר כבר מתחרה על השאילתה הזו. אל תפרסמי הגדרה כללית של &quot;{action.query}&quot; —
-              בדקי את התוכן שוב לפני אישור. פרסום אוטומטי חסום לפעולה הזו.
+              עמוד אחר באתר כבר מתחרה על השאילתה הזו. אל תפרסם הגדרה כללית של &quot;{action.query}&quot; —
+              בדוק את התוכן שוב לפני אישור. פרסום אוטומטי חסום לפעולה הזו.
             </p>
             {action.cannibalUrls?.length ? (
               <ul className="mt-2 space-y-0.5 text-xs text-[var(--muted)]" dir="ltr">
