@@ -19,6 +19,7 @@ import {
   type GoogleAdsOperatorTask,
 } from '@/lib/google-ads/operator';
 import { buildSearchTermCleanupPreview } from '@/lib/google-ads/executor';
+import { translateTaskToHebrew } from '@/lib/operators/hebrew-rewriter';
 import { enumerateEnabledCampaigns } from '@/lib/google-ads/campaign-enumeration';
 import ReviewContext from '@/components/admin/review/ReviewContext';
 import RecommendationCard from '@/components/admin/review/RecommendationCard';
@@ -179,6 +180,10 @@ export default async function GoogleAdsReviewPage({
 
   const initialInquiries = readGoogleAdsOperatorInquiries(clientId, current.taskId);
 
+  // Internal review surface — qwen3.7-plus per Eitan's 2026-08-18 direction (no human-gate
+  // requirement, this text is never client-facing).
+  const translatedCurrent = await translateTaskToHebrew(current, { model: 'qwen3.7-plus' });
+
   return (
     <main dir="rtl" lang="he" className="mx-auto min-h-screen max-w-2xl px-4 pt-8 pb-32">
       <ReviewContext
@@ -190,9 +195,9 @@ export default async function GoogleAdsReviewPage({
       <RecommendationCard
         task={{
           taskId: current.taskId,
-          title: current.title,
-          whyNeeded: current.whyNeeded,
-          recommendedAction: current.recommendedAction,
+          title: translatedCurrent.title,
+          whyNeeded: translatedCurrent.whyNeeded,
+          recommendedAction: translatedCurrent.recommendedAction,
           risk: current.risk,
         }}
         queueDepth={queueDepth}

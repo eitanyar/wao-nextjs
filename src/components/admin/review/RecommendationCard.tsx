@@ -86,6 +86,11 @@ export default function RecommendationCard({ task, queueDepth, initialInquiries 
 
       <WhyDisclosure taskId={task.taskId} initialInquiries={initialInquiries} />
 
+      <p className="mt-4 rounded-lg bg-[var(--bg)] p-3 text-xs leading-relaxed text-[var(--muted)]">
+        באישור: השינוי יבוצע מיד בחשבון Google Ads החי שלך — זו לא סימולציה.
+        {task.risk === 'low' && ' אם לא תגיב תוך 72 שעות, ההמלצה הזו תאושר ותבוצע אוטומטית.'}
+      </p>
+
       <DecisionRow taskId={task.taskId} onResolved={setResolved} />
     </div>
   );

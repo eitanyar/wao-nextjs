@@ -9,7 +9,12 @@ import type { GoogleAdsOperatorTask } from '../google-ads/operator';
 
 const TRANSLATION_CACHE = new Map<string, GoogleAdsOperatorTask>();
 
-async function callQwenTranslator(task: GoogleAdsOperatorTask): Promise<string> {
+// Client-facing dashboard stays on qwen3.8-max (founder/client-facing Hebrew, per AGENTS.md's
+// human-gated authoring channel). Eitan's internal admin/review surface uses qwen3.7-plus per
+// his 2026-08-18 direction — internal-only text, no human-gate requirement.
+const DEFAULT_MODEL = 'qwen3.8-max';
+
+async function callQwenTranslator(task: GoogleAdsOperatorTask, model: string): Promise<string> {
   const qwenApiKey = process.env.QWEN_API_KEY;
   const qwenBaseUrl = process.env.QWEN_BASE_URL;
 
@@ -51,7 +56,7 @@ async function callQwenTranslator(task: GoogleAdsOperatorTask): Promise<string> 
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'qwen3.8-max',
+        model,
         messages: [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: userMessage },
@@ -82,15 +87,19 @@ async function callQwenTranslator(task: GoogleAdsOperatorTask): Promise<string> 
   }
 }
 
-export async function translateTaskToHebrew(task: GoogleAdsOperatorTask): Promise<GoogleAdsOperatorTask> {
-  // Cache key: taskId
-  const cacheKey = task.taskId;
+export async function translateTaskToHebrew(
+  task: GoogleAdsOperatorTask,
+  opts: { model?: string } = {}
+): Promise<GoogleAdsOperatorTask> {
+  const model = opts.model || DEFAULT_MODEL;
+  // Cache key: taskId + model (internal and client-facing surfaces can request different models).
+  const cacheKey = `${task.taskId}::${model}`;
   if (TRANSLATION_CACHE.has(cacheKey)) {
     return TRANSLATION_CACHE.get(cacheKey)!;
   }
 
   try {
-    const translatedJson = await callQwenTranslator(task);
+    const translatedJson = await callQwenTranslator(task, model);
 
     if (!translatedJson) {
       // Fallback: return original task
@@ -115,14 +124,17 @@ export async function translateTaskToHebrew(task: GoogleAdsOperatorTask): Promis
   }
 }
 
-export async function translateTasksToHebrew(tasks: GoogleAdsOperatorTask[]): Promise<GoogleAdsOperatorTask[]> {
+export async function translateTasksToHebrew(
+  tasks: GoogleAdsOperatorTask[],
+  opts: { model?: string } = {}
+): Promise<GoogleAdsOperatorTask[]> {
   // Translate in parallel, max 3 concurrent to avoid overwhelming API
   const results: GoogleAdsOperatorTask[] = [];
   const batchSize = 3;
 
   for (let i = 0; i < tasks.length; i += batchSize) {
     const batch = tasks.slice(i, i + batchSize);
-    const translated = await Promise.all(batch.map(translateTaskToHebrew));
+    const translated = await Promise.all(batch.map((t) => translateTaskToHebrew(t, opts)));
     results.push(...translated);
   }
 

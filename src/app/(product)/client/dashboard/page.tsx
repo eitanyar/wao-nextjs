@@ -16,6 +16,7 @@ import {
 } from '@/lib/advisor';
 import GoogleAdsOperatorPanel from '@/components/google-ads-operator-panel';
 import { buildGoogleAdsOperatorTasks, readGoogleAdsApprovals } from '@/lib/google-ads/operator';
+import { translateTasksToHebrew } from '@/lib/operators/hebrew-rewriter';
 import { hasOperatorAccess, operatorAccessSource } from '@/lib/operator/flags';
 import { buildWeeklyDigest, loadClientGoogleAdsIndex, loadCampaignConfigBySlug, type CampaignConfig, type WeeklyDigest } from '@/lib/crm/intelligence';
 
@@ -309,7 +310,10 @@ export default async function DashboardPage() {
   const googleAdsData = loadGoogleAdsDigest(clientRecord);
   const showGoogleAdsOperator = hasOperatorAccess(clientId, clientRecord?.entitlements) && Boolean(googleAdsData);
   const googleAdsOperatorSource = showGoogleAdsOperator ? operatorAccessSource(clientId, clientRecord?.entitlements) : null;
-  const googleAdsOperatorTasks = showGoogleAdsOperator && googleAdsData ? buildGoogleAdsOperatorTasks({ clientId, digest: googleAdsData.digest }) : [];
+  const googleAdsOperatorTasksRaw = showGoogleAdsOperator && googleAdsData ? buildGoogleAdsOperatorTasks({ clientId, digest: googleAdsData.digest }) : [];
+  const googleAdsOperatorTasks = googleAdsOperatorTasksRaw.length
+    ? await translateTasksToHebrew(googleAdsOperatorTasksRaw)
+    : googleAdsOperatorTasksRaw;
   const googleAdsOperatorApprovals = showGoogleAdsOperator ? readGoogleAdsApprovals(clientId) : [];
 
   const all     = getClientActions(clientId);
