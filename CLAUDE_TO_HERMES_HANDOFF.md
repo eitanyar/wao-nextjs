@@ -62,6 +62,18 @@ Missing sections = Hermes rejects the file.
 
     # [TASK TITLE]
 
+    ⚠️ HEBREW-SAFETY: waoengineer types ZERO Hebrew bytes in this task. Any Hebrew in scope is
+    either (a) pre-existing text left byte-identical, or (b) runtime data already sitting in a
+    .json file, read and passed through — never typed, retyped, reformatted, or invented from
+    memory. If the spec below doesn't hand you Hebrew text verbatim to copy, you don't write any.
+
+    ⚠️ EXECUTION SCOPE: run the Test Command below VERBATIM, character for character, exactly
+    once. Do not substitute it, extend it, drop its flags, or run any other command against
+    data/clients/ "to double-check" or "to verify end-to-end" — every client under data/clients/
+    is live production data (real client content, possibly already approved and published). If
+    the Test Command as written isn't enough to prove the acceptance criteria, that's a bug in
+    this spec — move the task to /failed/ and say so. Never improvise a broader verification run.
+
     ## Metadata
     - Task ID: [YYYY-MM-DD]_[SEQUENCE]
     - Target Agent: [waoengineer | waocopy | waoverifier-app | waoverifier-media]
@@ -102,16 +114,34 @@ Missing sections = Hermes rejects the file.
     - Anti-pattern to avoid
 
     ## Testing Requirements
-    - Test Command: [exact command to run]
+    - Test Command: [exact command to run — must be copy-paste runnable with no placeholders,
+      and scoped so it CANNOT write to any client's live data. Prefer node --check, unit
+      functions, or a --client/--urls scope small and inert enough that even a full run is
+      harmless. If proving the acceptance criteria genuinely requires exercising a pipeline
+      that writes into data/clients/<id>/tasks/ or data/clients/<id>/client.json's existing
+      fields, that client and exact flags are named explicitly here — never left to Hermes
+      to pick.]
 
     ## Handoff Instructions for Hermes
     1. Read this file completely before starting.
     2. Check that all files listed in Files to Read exist.
     3. If any dependency is missing, move this file to /failed/.
-    4. Execute the specification exactly as written.
-    5. Run the test command and verify all acceptance criteria.
-    6. If all criteria pass, move this file to /completed/.
-    7. If any criterion fails, move this file to /failed/ with a failure report.
+    4. Execute the specification EXACTLY as written — nothing added, nothing "helpfully"
+       extended. If you see a way to improve something beyond this spec's named Requirements,
+       do not do it; note it in your completion report instead so it can become its own spec.
+    5. Before writing any file: re-check the HEBREW-SAFETY banner at the top of this file. If
+       your planned edit would require typing a new Hebrew string that isn't already sitting
+       verbatim in a Requirement or an existing file, stop and move this file to /failed/ with
+       that named as the reason.
+    6. Before running anything: re-check the EXECUTION SCOPE banner. Run ONLY the Test Command
+       exactly as written. Do not run any other script, especially not a content-generation or
+       regeneration script, against any client under data/clients/ — not even "just to confirm,"
+       not even on a client the spec didn't mention. If the Test Command as given doesn't let
+       you verify an acceptance criterion, that is a spec defect: move to /failed/ and report
+       it, don't work around it by running something broader yourself.
+    7. Run the test command and verify all acceptance criteria.
+    8. If all criteria pass, move this file to /completed/.
+    9. If any criterion fails, move this file to /failed/ with a failure report.
 
 ---
 
@@ -132,6 +162,21 @@ Chinese/Portuguese fragments, garbled words) while the file still passed `tsc` c
    writing. The coder runs this script as its final build step; it never edits the Hebrew directly.
 4. Verification must scan the served HTML for non-Hebrew/non-Latin scripts (CJK/Arabic/Cyrillic
    Unicode ranges) and known garbage tokens as a standard check, not a spot-check of a few strings.
+
+---
+
+## Execution-Scope Rule (non-negotiable, added 2026-08-17)
+
+**waoengineer runs ONLY the literal Test Command given — never a broader one it invents to "be
+thorough" or "verify end-to-end."** `data/clients/` is live production data.
+
+Rule for every spec:
+1. Test Command must be provably inert on live client data, or must name the exact client +
+   flags if it can't be. Never leave scope to Hermes's judgment.
+2. "Verify end-to-end" is not authorization to run a generator/regeneration script. If real
+   end-to-end proof is needed, the strategist runs it personally, not Hermes as part of the task.
+3. After every `/completed/` move, the strategist runs `git diff` across `data/clients/` before
+   trusting the result — a clean acceptance-criteria checklist is not sufficient evidence alone.
 
 ---
 
