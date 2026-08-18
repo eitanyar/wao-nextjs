@@ -1,0 +1,89 @@
+{
+  "actionId": "merlo-4-קייטרינג-בשרי-מומלץ",
+  "clientId": "merlo",
+  "rank": 4,
+  "query": "קייטרינג בשרי מומלץ",
+  "rankingUrl": "https://www.merlo-c.co.il/",
+  "implementationMode": "create",
+  "actionType": "faq_block",
+  "priority": "LOW",
+  "score": 12393,
+  "impressions": 808,
+  "clicks": 5,
+  "ctr": 0.6,
+  "status": "generated",
+  "shipDecision": "review",
+  "confidence": 100,
+  "generatedAt": "2026-08-18T02:23:39.263Z",
+  "vocabSource": "page",
+  "vocabConfidence": "high",
+  "cannibalFlag": "REVIEW",
+  "cannibalReasons": [
+    "MULTI_URL"
+  ],
+  "cannibalUrls": [
+    {
+      "url": "https://www.merlo-c.co.il/%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%91%D7%A9%D7%A8%D7%99-%D7%9B%D7%A9%D7%A8-%D7%9C%D7%9E%D7%94%D7%93%D7%A8%D7%99%D7%9F/",
+      "impressions": 361,
+      "position": 21.5
+    },
+    {
+      "url": "https://www.merlo-c.co.il/%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%9C%D7%91%D7%A8-%D7%9E%D7%A6%D7%95%D7%95%D7%94/",
+      "impressions": 268,
+      "position": 25.2
+    },
+    {
+      "url": "https://www.merlo-c.co.il/%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%91%D7%99%D7%A8%D7%95%D7%A9%D7%9C%D7%99%D7%9D/",
+      "impressions": 221,
+      "position": 34.6
+    }
+  ],
+  "content": {
+    "hebrewContent": "<section class=\"faq-section\"><h2>שאלות על תפריט בשרי לאירועים</h2><div class=\"faq-item\"><h3>איך שומרים על איכות הבשר באירועי שיא וחתונות?</h3><p>הכנת הבשר נעשית במקום האירוע בזמן אמת. השף יוסי שבת מנהל את הצלייה של נתחים מובחרים. תהליך זה מבטיח עסיסיות מדויקת — לאירועים שזוכרים.</p></div><div class=\"faq-item\"><h3>מה ההבדל בין תפריט בשרי רגיל לתפריט פרימיום של קייטרינג מרלו?</h3><p>קייטרינג מרלו מתמחה בבניית תפריט שף עם טכניקות צלייה מתקדמות, עם דגש על קייטרינג לאירועים יוקרתיים ואירועי חברות בתקציב גבוה.</p></div><div class=\"faq-item\"><h3>איך מתאימים תפריט בשרי לאירוע חברה מרובה משתתפים?</h3><p>מתכננים חלוקה נכונה בין עמדות שף להגשה אישית. כך מונעים תורים ושומרים על קצב הגשה מהיר בכל קייטרינג לאירועים.</p></div></section>",
+    "placementInstruction": "יש להטמיע את בלוק השאלות והתשובות בתחתית עמוד הבית לפני הפוטר.",
+    "metaDescription": "מחפשים קייטרינג בשרי מומלץ לאירועי יוקרה וחתונות? קייטרינג מרלו בהובלת השף יוסי שבת מציע תפריט בשרי פרימיום לחברות ולאירועים שזוכרים.",
+    "jsonLd": {
+      "type": "FAQPage",
+      "mainEntity": [
+        {
+          "type": "Question",
+          "name": "איך שומרים על איכות הבשר באירועי שיא וחתונות?",
+          "acceptedAnswer": {
+            "type": "Answer",
+            "text": "הכנת הבשר נעשית במקום האירוע בזמן אמת. השף יוסי שבת מנהל את הצלייה בנתחים מובחרים. תהליך זה מבטיח עסיסיות מדויקת לאירועים שזוכרים."
+          }
+        },
+        {
+          "type": "Question",
+          "name": "מה ההבדל בין תפריט בשרי רגיל לתפריט פרימיום של קייטרינג מרלו?",
+          "acceptedAnswer": {
+            "type": "Answer",
+            "text": "קייטרינג מרלו מתמחה בבניית תפריט שף עם טכניקות צלייה מתקדמות. הדגש הוא על קייטרינג לאירועים יוקרתיים ואירועי חברות בתקציב גבוה."
+          }
+        },
+        {
+          "type": "Question",
+          "name": "איך מתאימים תפריט בשרי לאירוע חברה מרובה משתתפים?",
+          "acceptedAnswer": {
+            "type": "Answer",
+            "text": "מתכננים חלוקה נכונה בין עמדות שף לחלוקה אישית. כך מונעים תורים ושומרים על קצב הגשה מהיר בכל קייטרינג לאירועים."
+          }
+        }
+      ]
+    },
+    "tamarNotes": "נשמר שימוש קפדני באוצר המילים המותר, שולב השף יוסי שבת כעובדה ייחודית, והמשפטים קצרים וללא מילים אסורות.",
+    "noaChanges": "1. תוקן 'בנתחים מובחרים' ל-'של נתחים מובחרים' לטבעיות.\n2. הוסף מקף עברי (em-dash) לפני 'לאירועים שזוכרים'.\n3. תוקן 'לחלוקה אישית' ל-'להגשה אישית' כדי להישמע טבעי ומקצועי בעברית ישראלית.\n4. חובר המשפט 'הדגש הוא על...' למשפט זורם ותקין יותר.",
+    "registerScore": 95,
+    "groundingRisk": "low",
+    "generatedVia": "primary:gemini-3.7-flash",
+    "schemaValid": false,
+    "schemaErrors": [
+      "jsonLd missing @type"
+    ],
+    "confidence": 100,
+    "shipDecision": "review",
+    "reviewReasons": [
+      "BLOCKER: schema invalid (jsonLd missing @type)"
+    ]
+  }
+}

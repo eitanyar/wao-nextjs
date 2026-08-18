@@ -12,6 +12,7 @@
   "approvalWhatsapp": "972526148860",
   "tone": "חם, קהילתי, מכבד את האירוע המשפחתי (שמחה או אבל) — לא שיווקי אגרסיבי. מקור: טון האתר הקיים.",
   "pin": "4247",
+  "contentLanguage": "he",
   "entitlements": [
     "geo",
     "ads-overlap:internal",
@@ -21,5 +22,305 @@
     "advisor:internal",
     "google-ads-operator:internal"
   ],
-  "brandName": "קייטרינג טעם מהודר"
+  "brandName": "קייטרינג טעם מהודר",
+  "facts": [
+    {
+      "id": "program-dcbcee3d",
+      "category": "program",
+      "value": "קייטרינג 'טעם מהודר' – קייטרינג בשרי כשר למהדרין",
+      "sourceQuote": "טעם מהודר קייטרינג בשרי כשר למהדרין",
+      "sourceUrl": "https://aaasada.com/bar-mitzvah",
+      "source": "website:auto",
+      "confirmed": true,
+      "confirmedNote": "Core service: \"Taste Honored\" kosher catering for events"
+    },
+    {
+      "id": "person-1683ed02",
+      "category": "person",
+      "value": "תומר – נציג שירות/הזמנות",
+      "sourceQuote": "כבר בשיחת הטלפון הראשונה עם תומר קלטתי שמדובר בקטרינג איכותי",
+      "sourceUrl": "https://aaasada.com/city/petah-tikva/azkarot",
+      "source": "website:auto",
+      "confirmed": false
+    },
+    {
+      "id": "pricing-36f8fc73",
+      "category": "pricing",
+      "value": "מנה עשירה ומפנקת ב-₪58 בלבד",
+      "sourceQuote": "מנה עשירה ומפנקת במיוחד ב-₪58 בלבד!",
+      "sourceUrl": "https://aaasada.com/bar-mitzvah",
+      "source": "website:auto",
+      "confirmed": true,
+      "confirmedNote": "Rich dish at ₪58 — affordable core pricing"
+    },
+    {
+      "id": "pricing-86558b13",
+      "category": "pricing",
+      "value": "אסאדו ביין – תוספת ₪7 למנה",
+      "sourceQuote": "אסאדו ביין (+₪ 7 למנה )",
+      "sourceUrl": "https://aaasada.com/bar-mitzvah",
+      "source": "website:auto",
+      "confirmed": false
+    },
+    {
+      "id": "pricing-db79c13f",
+      "category": "pricing",
+      "value": "צלי בקר מס' 5 – תוספת ₪7 למנה",
+      "sourceQuote": "צלי בקר מס&#x27; 5 (+₪ 7 למנה )",
+      "sourceUrl": "https://aaasada.com/bar-mitzvah",
+      "source": "website:auto",
+      "confirmed": false
+    },
+    {
+      "id": "pricing-93d13f6c",
+      "category": "pricing",
+      "value": "מנות ביניים – תוספת ₪15 למנה (ניתן לפצל)",
+      "sourceQuote": "מנות ביניים (+₪ 15 | ניתן לפצל)",
+      "sourceUrl": "https://aaasada.com/bar-mitzvah",
+      "source": "website:auto",
+      "confirmed": false
+    },
+    {
+      "id": "pricing-e109282c",
+      "category": "pricing",
+      "value": "מנות ביניים פרימיום – תוספת ₪25 למנה (ניתן לפצל)",
+      "sourceQuote": "מנות ביניים פרימיום (+₪ 25 | ניתן לפצל)",
+      "sourceUrl": "https://aaasada.com/bar-mitzvah",
+      "source": "website:auto",
+      "confirmed": false
+    },
+    {
+      "id": "pricing-68dc10a8",
+      "category": "pricing",
+      "value": "לחמניות רגילות – תוספת ₪2 למנה",
+      "sourceQuote": "לחמניות רגילות (+₪ 2 למנה )",
+      "sourceUrl": "https://aaasada.com/bar-mitzvah",
+      "source": "website:auto",
+      "confirmed": false
+    },
+    {
+      "id": "pricing-03a3688f",
+      "category": "pricing",
+      "value": "לחמניות מתוקות – תוספת ₪2.5 למנה",
+      "sourceQuote": "לחמניות מתוקות (+₪ 2.5 למנה )",
+      "sourceUrl": "https://aaasada.com/bar-mitzvah",
+      "source": "website:auto",
+      "confirmed": false
+    },
+    {
+      "id": "pricing-e8c873d2",
+      "category": "pricing",
+      "value": "לחמניות פרנה – תוספת ₪3.5 למנה",
+      "sourceQuote": "לחמניות פרנה (+₪ 3.5 למנה )",
+      "sourceUrl": "https://aaasada.com/bar-mitzvah",
+      "source": "website:auto",
+      "confirmed": false
+    },
+    {
+      "id": "pricing-fde4dd8d",
+      "category": "pricing",
+      "value": "כלים חד-פעמיים רויאל – תוספת ₪10 למנה",
+      "sourceQuote": "כלים חד-פעמיים רויאל (+₪ 10 למנה )",
+      "sourceUrl": "https://aaasada.com/bar-mitzvah",
+      "source": "website:auto",
+      "confirmed": false
+    },
+    {
+      "id": "pricing-5ce6d3e5",
+      "category": "pricing",
+      "value": "שתייה קלה – תוספת ₪10 למנה",
+      "sourceQuote": "שתייה קלה (+₪ 10 למנה )",
+      "sourceUrl": "https://aaasada.com/bar-mitzvah",
+      "source": "website:auto",
+      "confirmed": false
+    },
+    {
+      "id": "pricing-5c2bc63e",
+      "category": "pricing",
+      "value": "מגש קינוחים (60 יחידות) – ₪180",
+      "sourceQuote": "מגש קינוחים (60 יחידות) (+₪ 180 )",
+      "sourceUrl": "https://aaasada.com/bar-mitzvah",
+      "source": "website:auto",
+      "confirmed": false
+    },
+    {
+      "id": "pricing-b2c08b59",
+      "category": "pricing",
+      "value": "מוס שוקולד / טרימיסו / קינוח הבית – תוספת ₪12 למנה",
+      "sourceQuote": "מוס שוקולד / טרימיסו / קינוח הבית (+₪ 12 למנה )",
+      "sourceUrl": "https://aaasada.com/bar-mitzvah",
+      "source": "website:auto",
+      "confirmed": false
+    },
+    {
+      "id": "pricing-31792024",
+      "category": "pricing",
+      "value": "חבילת שבת חתן 'הכל כלול' – ₪149 לסועד",
+      "sourceQuote": "חבילת שבת חתן \"הכל כלול\" ב-₪149 בלבד לסועד!",
+      "sourceUrl": "https://aaasada.com/city/rishon-lezion/shabbat-chatan",
+      "source": "website:auto",
+      "confirmed": false
+    },
+    {
+      "id": "number-bc76ea8a",
+      "category": "number",
+      "value": "מינימום הזמנה למשלוח אוכל מוכן: 30 איש",
+      "sourceQuote": "מינימום הזמנה למשלוח אוכל מוכן: 30 איש",
+      "sourceUrl": "https://aaasada.com/bar-mitzvah",
+      "source": "website:auto",
+      "confirmed": true,
+      "confirmedNote": "30-person minimum for delivery — operational"
+    },
+    {
+      "id": "number-648b3778",
+      "category": "number",
+      "value": "מינימום לאירועי הפקה מלאים: 100 אורחים ומעלה",
+      "sourceQuote": "המינימום הוא 100 אורחים ומעלה",
+      "sourceUrl": "https://aaasada.com/bar-mitzvah",
+      "source": "website:auto",
+      "confirmed": true,
+      "confirmedNote": "100+ guests minimum for full production — full-event spec"
+    },
+    {
+      "id": "number-69e72594",
+      "category": "number",
+      "value": "בחירה של 7 סלטים טריים",
+      "sourceQuote": "סלטים טריים (בחירה של 7 סלטים)",
+      "sourceUrl": "https://aaasada.com/bar-mitzvah",
+      "source": "website:auto",
+      "confirmed": false
+    },
+    {
+      "id": "number-24be1cc9",
+      "category": "number",
+      "value": "בחירה של 3 תוספות חמות",
+      "sourceQuote": "תוספות חמות (בחירה של 3 תתוספות)",
+      "sourceUrl": "https://aaasada.com/bar-mitzvah",
+      "source": "website:auto",
+      "confirmed": false
+    },
+    {
+      "id": "number-c32ca162",
+      "category": "number",
+      "value": "בחירה של 3 מנות עיקריות",
+      "sourceQuote": "מנות עיקריות (בחירה של 3 מנות)",
+      "sourceUrl": "https://aaasada.com/bar-mitzvah",
+      "source": "website:auto",
+      "confirmed": false
+    },
+    {
+      "id": "number-0ab828ad",
+      "category": "number",
+      "value": "30 שנה ניסיון",
+      "sourceQuote": "30 שנה",
+      "sourceUrl": "https://aaasada.com/bar-mitzvah",
+      "source": "website:auto",
+      "confirmed": true,
+      "confirmedNote": "30 years experience — track record"
+    },
+    {
+      "id": "number-1448d61e",
+      "category": "number",
+      "value": "4.9 דירוג | 184 המלצות",
+      "sourceQuote": "⭐⭐⭐⭐⭐ 4.9 | 184 המלצות",
+      "sourceUrl": "https://aaasada.com/city/petah-tikva/azkarot",
+      "source": "website:auto",
+      "confirmed": true,
+      "confirmedNote": "4.9 rating / 184 reviews — social proof"
+    },
+    {
+      "id": "number-c6b427e1",
+      "category": "number",
+      "value": "חיסכון של עד 60% מעלות הקייטרינג הרגילה",
+      "sourceQuote": "אנו חוסכים לכם עד 60% מעלות הקייטרינג הרגילה",
+      "sourceUrl": "https://aaasada.com/bar-mitzvah",
+      "source": "website:auto",
+      "confirmed": true,
+      "confirmedNote": "Up to 60% savings vs regular catering — value prop"
+    },
+    {
+      "id": "number-ff4b1496",
+      "category": "number",
+      "value": "מגש קינוחים כולל 60 יחידות",
+      "sourceQuote": "מגש קינוחים (60 יחידות)",
+      "sourceUrl": "https://aaasada.com/bar-mitzvah",
+      "source": "website:auto",
+      "confirmed": false
+    },
+    {
+      "id": "program-c78a9e59",
+      "category": "program",
+      "value": "חבילת שבת חתן 'הכל כלול' כוללת 3 סעודות: סעודת ליל שבת, סעודת יום שבת, סעודה שלישית",
+      "sourceQuote": "חבילת 3 סעודות השבת המלאה",
+      "sourceUrl": "https://aaasada.com/shabbat-chatan",
+      "source": "website:auto",
+      "confirmed": true,
+      "confirmedNote": "Shabbat groom \"all-inclusive\" package — signature offering"
+    },
+    {
+      "id": "program-023f3e92",
+      "category": "program",
+      "value": "סעודת ליל שבת: 7 סלטים, 3 תוספות חמות, 2 מנות ביניים, 3 מנות עיקריות, לחמנייה",
+      "sourceQuote": "🕯️ סעודת ליל שבת (ערב שבת)\n🥗 7 סלטים טריים לבחירה\n🍚 3 תוספות חמות לבחירה\n🍽️ 2 מנות ביניים לבחירה\n🥩 3 מנות עיקריות לבחירה\n🥖 לחמנייה טרייה לכל סועד",
+      "sourceUrl": "https://aaasada.com/shabbat-chatan",
+      "source": "website:auto",
+      "confirmed": false
+    },
+    {
+      "id": "program-1d89b747",
+      "category": "program",
+      "value": "סעודת יום שבת: 7 סלטים, 3 תוספות חמות, 3 מנות עיקריות, לחמנייה",
+      "sourceQuote": "☀️ סעודת יום שבת (שבת צהריים)\n🥗 7 סלטים טריים לבחירה\n🍚 3 תוספות חמות לבחירה\n🥩 3 מנות עיקריות לבחירה\n🥖 לחמנייה טרייה לכל סועד",
+      "sourceUrl": "https://aaasada.com/shabbat-chatan",
+      "source": "website:auto",
+      "confirmed": false
+    },
+    {
+      "id": "program-b9d57cf4",
+      "category": "program",
+      "value": "סעודה שלישית: 4 סלטים, דג מושט מטוגן, פשטידה חמה (קוגל), לחמנייה",
+      "sourceQuote": "🌅 סעודה שלישית (שבת אחה\"צ)\n🥗 4 סלטים טריים לבחירה\n🐟 דג מושט מטוגן פריך\n🥧 פשטידה חמה (קוגל)\n🥖 לחמנייה טרייה לכל סועד",
+      "sourceUrl": "https://aaasada.com/shabbat-chatan",
+      "source": "website:auto",
+      "confirmed": false
+    },
+    {
+      "id": "program-cf79dde8",
+      "category": "program",
+      "value": "שירותי הפקה מלאה: מלצרים, עריכה וניהול הגשה – לאירועים של 100 סועדים ומעלה",
+      "sourceQuote": "אירועי הפקה מלאה: שירותי מלצרים, עריכה וניהול הגשה מלאים זמינים לאירועים של 100 סועדים ומעלה.",
+      "sourceUrl": "https://aaasada.com/bar-mitzvah",
+      "source": "website:auto",
+      "confirmed": false
+    },
+    {
+      "id": "outcome-97659d33",
+      "category": "outcome",
+      "value": "האוכל מגיע חם במגשי אלומיניום אטומים בתוך ארגזים תרמיים מבודדים (תרמוקנים)",
+      "sourceQuote": "המגשים מובלים בתוך ארגזים תרמיים מבודדים (תרמוקנים) שומרי חום ומגיעים אליכם חמים",
+      "sourceUrl": "https://aaasada.com/bar-mitzvah",
+      "source": "website:auto",
+      "confirmed": false
+    },
+    {
+      "id": "outcome-7f02fbe9",
+      "category": "outcome",
+      "value": "משלוח מקורר בשישי לראשון לציון לשבת חתן",
+      "sourceQuote": "🚚 משלוח מקורר בשישי ל ראשון לציון",
+      "sourceUrl": "https://aaasada.com/city/rishon-lezion/shabbat-chatan",
+      "source": "website:auto",
+      "confirmed": true,
+      "confirmedNote": "Cooled delivery Friday-to-Saturday for Shabbat bride — service commitment"
+    },
+    {
+      "id": "number-911dc12b",
+      "category": "number",
+      "value": "טלפון ליצירת קשר: 052-6090930",
+      "sourceQuote": "חייגו 052-6090930",
+      "sourceUrl": "https://aaasada.com/bar-mitzvah",
+      "source": "website:auto",
+      "confirmed": true,
+      "confirmedNote": "Phone 052-6090930 — contact fact"
+    }
+  ]
 }

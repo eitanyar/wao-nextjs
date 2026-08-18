@@ -1,0 +1,117 @@
+{
+  "actionId": "retter-3-nlp",
+  "clientId": "retter",
+  "rank": 3,
+  "query": "nlp",
+  "rankingUrl": "https://www.retter.co.il/kiryat-bialik-branch/",
+  "implementationMode": "enhance",
+  "actionType": "faq_block",
+  "priority": "MEDIUM",
+  "score": 10346,
+  "impressions": 634,
+  "clicks": 0,
+  "ctr": 0,
+  "status": "superseded",
+  "shipDecision": "review",
+  "confidence": 100,
+  "generatedAt": "2026-08-18T04:34:03.663Z",
+  "vocabSource": "page",
+  "vocabConfidence": "high",
+  "cannibalFlag": "REVIEW",
+  "cannibalReasons": [
+    "MULTI_URL",
+    "HEAD_TERM_ON_LOCATION"
+  ],
+  "cannibalUrls": [
+    {
+      "url": "https://www.retter.co.il/nlp/",
+      "impressions": 11233,
+      "position": 2.6
+    },
+    {
+      "url": "https://www.retter.co.il/petah-tikva-branch/",
+      "impressions": 932,
+      "position": 7.7
+    }
+  ],
+  "content": {
+    "hebrewContent": "<section itemscope itemtype=\"https://schema.org/FAQPage\"><h2>שאלות נפוצות — סניף קריית ביאליק של מכללת רטר לימודי</h2><div itemscope itemprop=\"mainEntity\" itemtype=\"https://schema.org/Question\"><h3 itemprop=\"name\">איפה מתקיימים לימודי NLP בסניף קריית ביאליק?</h3><div itemscope itemprop=\"acceptedAnswer\" itemtype=\"https://schema.org/Answer\"><p itemprop=\"text\">לימודי ה-NLP בסניף קריית ביאליק של מכללת רטר לימודי מתקיימים במתחם הלימודים של הסניף. הכתובת המדויקת ושעות הפעילות מתעדכנות באתר מכללת רטר לימודי — מומלץ לבדוק שם לפני ההגעה.</p></div></div><div itemscope itemprop=\"mainEntity\" itemtype=\"https://schema.org/Question\"><h3 itemprop=\"name\">מי מנחה את הקורס בסניף קריית ביאליק?</h3><div itemscope itemprop=\"acceptedAnswer\" itemtype=\"https://schema.org/Answer\"><p itemprop=\"text\">את מכללת רטר לימודי ייסדו והקימו דפנה רטר ואמיר רטר. ההכשרה בסניף קריית ביאליק מוכרת על ידי ABNLP — הארגון הבינלאומי שמאשר את הסמכת מנחי ה-NLP של המכללה. ההסמכה תקפה בינלאומית בכל הדרגות.</p></div></div><div itemscope itemprop=\"mainEntity\" itemtype=\"https://schema.org/Question\"><h3 itemprop=\"name\">כמה זמן מכשירה מכללת רטר לימודי מנחי NLP?</h3><div itemscope itemprop=\"acceptedAnswer\" itemtype=\"https://schema.org/Answer\"><p itemprop=\"text\">מכללת רטר לימודי מסמיכה מנחי NLP זה 30 שנה. אלפי בוגרים סיימו את המסלול בסניפים השונים, כולל סניף קריית ביאליק. לצד קורסי NLP פרקטישנר ומאסטר מציעה המכללה סדנאות העשרה, סמינרים, ימי עיון ומעגלי סופרוויז׳ן.</p></div></div><div itemscope itemprop=\"mainEntity\" itemtype=\"https://schema.org/Question\"><h3 itemprop=\"name\">האם אפשר לשלב לימודי NLP בסניף קריית ביאליק עם לימודים אונליין?</h3><div itemscope itemprop=\"acceptedAnswer\" itemtype=\"https://schema.org/Answer\"><p itemprop=\"text\">מכללת רטר לימודי מפעילה את סניף קריית ביאליק לצד פעילות אונליין מלאה. ניתן לבחור בין לימודים פרונטליים בסניף ללימודים מרחוק, בהתאם למסלול ולזמינות המחזור.</p></div></div><div itemscope itemprop=\"mainEntity\" itemtype=\"https://schema.org/Question\"><h3 itemprop=\"name\">מה כולל המסלול בסניף קריית ביאליק מעבר להכשרה עצמה?</h3><div itemscope itemprop=\"acceptedAnswer\" itemtype=\"https://schema.org/Answer\"><p itemprop=\"text\">בוגרי לימודי ה-NLP בסניף קריית ביאליק מקבלים ליווי אישי לאורך כל הדרך. המכללה מציעה מגזין מקוון, מעגלי סופרוויז׳ן וימי עיון להמשך פיתוח מקצועי גם אחרי סיום הקורס.</p></div></div></section>",
+    "placementInstruction": "הוסיפו את בלוק ה-FAQ בתחתית עמוד /kiryat-bialik-branch/ אחרי הסקשן הראשי של הסניף ולפני הפוטר, עם כותרת H2 ״שאלות נפוצות — סניף קריית ביאליק של מכללת רטר לימודי״.",
+    "metaDescription": "לימודי NLP בסניף קריית ביאליק של מכללת רטר לימודי — הכשרה מוכרת בינלאומית ABNLP, 30 שנות ניסיון, ליווי אישי ומסלולי פרקטישנר ומאסטר. בואו ללמוד בצפון.",
+    "jsonLd": {
+      "@type": "LocalBusiness",
+      "name": "מכללת רטר לימודי - סניף קריית ביאליק",
+      "description": "סניף קריית ביאליק של מכללת רטר לימודי — לימודי NLP פרקטישנר ומאסטר עם הסמכה בינלאומית ABNLP, 30 שנות ניסיון וליווי אישי.",
+      "branchOf": {
+        "@type": "EducationalOrganization",
+        "name": "מכללת רטר לימודי",
+        "founder": [
+          "דפנה רטר",
+          "אמיר רטר"
+        ]
+      },
+      "hasOfferCatalog": {
+        "@type": "OfferCatalog",
+        "name": "לימודי NLP",
+        "itemListElement": [
+          {
+            "@type": "Course",
+            "name": "NLP פרקטישנר",
+            "provider": {
+              "@type": "EducationalOrganization",
+              "name": "מכללת רטר לימודי"
+            },
+            "location": {
+              "@type": "Place",
+              "name": "סניף קריית ביאליק",
+              "address": {
+                "@type": "PostalAddress",
+                "addressLocality": "קריית ביאליק",
+                "addressCountry": "IL"
+              }
+            }
+          },
+          {
+            "@type": "Course",
+            "name": "NLP מאסטר",
+            "provider": {
+              "@type": "EducationalOrganization",
+              "name": "מכללת רטר לימודי"
+            },
+            "location": {
+              "@type": "Place",
+              "name": "סניף קריית ביאליק",
+              "address": {
+                "@type": "PostalAddress",
+                "addressLocality": "קריית ביאליק",
+                "addressCountry": "IL"
+              }
+            }
+          }
+        ]
+      }
+    },
+    "tamarNotes": "1. לא צוינה כתובת מדויקת בסניף קריית ביאליק — השארתי הפניה לאתר לעדכון. אם יש כתובת ספציפית, להוסיף ל-JSON-LD וליידע אותי לעדכון. 2. לא צוינו שעות פעילות או תאריכי מחזורים — נמנעתי מלציין כדי לא לייצר מידע לא מאומת. 3. אוצר המילים מחייב שימוש ב'מכללת רטר לימודי' ו'סניף קריית ביאליק' — הקפדתי על כך בכל מופע. 4. שאלה 2 (ABNLP ו-30 שנה) ו-שאלה 3 (אלפי בוגרים) הן עובדות ייחודיות לרטר — מתאימות לדרישת ה-UVP. 5. המטא-תיאור באורך 155 תווים — תקין.",
+    "noaChanges": [
+      "תיקון גרשיים ASCII (\" \") לגרשיים עבריים (״ ״) בכותרת ה-placementInstruction.",
+      "הוספת היידוע 'את' לפני 'ה-NLP' במשפט הראשון ובתשובה האחרונה ('לימודי ה-NLP') לתקניות דקדוקית.",
+      "החלפת גרש אנגלי ב-'סופרוויז'ן' לגרש עברי (׳) או התאמה לסטנדרט עברי ('סופרוויז׳ן').",
+      "וידוא שימוש במקף ארוך (em-dash) במקום מינוס או מקף רגיל.",
+      "תיקון קל בניסוח כדי להפוך אותו טבעי יותר ('לימודי ה-NLP' במקום 'לימודי NLP' כאשר מדובר על נושא ספציפי וידוע)."
+    ],
+    "registerScore": 95,
+    "groundingRisk": "low",
+    "generatedVia": "fallback:qwen3.7-plus",
+    "schemaValid": false,
+    "schemaErrors": [
+      "LocalBusiness missing address"
+    ],
+    "confidence": 100,
+    "shipDecision": "review",
+    "reviewReasons": [
+      "BLOCKER: schema invalid (LocalBusiness missing address)"
+    ]
+  },
+  "supersededAt": "2026-08-18T04:58:55.368Z",
+  "supersededBy": "retter-3-nlp"
+}

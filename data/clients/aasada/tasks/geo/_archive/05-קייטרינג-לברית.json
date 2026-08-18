@@ -1,0 +1,80 @@
+{
+  "actionId": "aasada-5-קייטרינג-לברית",
+  "clientId": "aasada",
+  "rank": 5,
+  "query": "קייטרינג לברית",
+  "rankingUrl": "https://aaasada.com/brit",
+  "implementationMode": "enhance",
+  "actionType": "faq_block",
+  "priority": "MEDIUM",
+  "score": 10383,
+  "impressions": 570,
+  "clicks": 1,
+  "ctr": 0.2,
+  "status": "superseded",
+  "shipDecision": "autoship",
+  "confidence": 100,
+  "generatedAt": "2026-08-16T06:58:09.433Z",
+  "vocabSource": "page",
+  "vocabConfidence": "high",
+  "cannibalFlag": "REVIEW",
+  "cannibalReasons": [
+    "MULTI_URL"
+  ],
+  "cannibalUrls": [
+    {
+      "url": "https://aaasada.com/city/petah-tikva/brit",
+      "impressions": 327,
+      "position": 23
+    },
+    {
+      "url": "https://aaasada.com/%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%9C%D7%91%D7%A8%D7%99%D7%AA-%D7%9E%D7%99%D7%9C%D7%94-%D7%91%D7%A8%D7%97%D7%95%D7%91%D7%95%D7%AA/",
+      "impressions": 221,
+      "position": 50.4
+    }
+  ],
+  "content": {
+    "hebrewContent": "<section class=\"faq-section\">\n  <h2>שאלות נפוצות על הזמנת קייטרינג לברית</h2>\n  <div class=\"faq-item\">\n    <h3>איך האוכל נשאר חם לאורך כל אירוע הברית?</h3>\n    <p>בקייטרינג טעם מהודר האוכל מגיע בתוך מכלים תרמיים מקצועיים. המכלים שומרים על חום וטריות המנות שעות ארוכות — כך שאפשר לערוך את הברית בנחת, בלי תנורים ובלי לחץ.</p>\n  </div>\n  <div class=\"faq-item\">\n    <h3>מה הכשרות של המנות לברית?</h3>\n    <p>כל המנות הן גלאט כשר למהדרין בד״ץ יורה דעה בהשגחת הרב שלום מחפוד. הכשרות המהודרת מתאימה לכל האורחים והמשפחה באירוע.</p>\n  </div>\n  <div class=\"faq-item\">\n    <h3>איך השיטה חוסכת בהוצאות האירוע?</h3>\n    <p>המנות מגיעות מוכנות להגשה עצמית חמה ועשירה. חוסכים עד 60% מהעלות לעומת קייטרינג מסורתי או אולם, כיוון שאין תשלום על מלצרים וצוות הגשה.</p>\n  </div>\n</section>",
+    "placementInstruction": "יש להטמיע את בלוק השאלות והתשובות בתחתית עמוד /brit, ישירות מעל הפוטר או מעל טופס יצירת הקשר.",
+    "metaDescription": "מחפשים קייטרינג לברית כשר למהדרין? קייטרינג טעם מהודר בכשרות הרב מחפוד מציע אוכל חם במכלים תרמיים וחיסכון של עד 60%. היכנסו לתפריט.",
+    "jsonLd": {
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "איך האוכל נשאר חם לאורך כל אירוע הברית?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "בקייטרינג טעם מהודר האוכל מגיע בתוך מיכלים תרמיים מקצועיים. המיכלים שומרים על חום וטריות המנות שעות ארוכות. כך אפשר לערוך את הברית בנחת בלי תנורים ובלי לחץ."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "מה הכשרות של המנות לברית?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "כל המנות הן גלאט כשר למהדרין בהשגחת מחפוד (הרב שלום מחפוד). הכשרות המהודרת מתאימה לכל האורחים והמשפחה באירוע."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "איך השיטה חוסכת בהוצאות האירוע?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "המנות מגיעות מוכנות להגשה עצמית חמה ועשירה. חוסכים עד 60% מהעלות לעומת אולם כי אין תשלום על מלצרים וצוות."
+          }
+        }
+      ]
+    },
+    "tamarNotes": "נשמר דיוק מלא על מגבלות הלקוח: כשרות מחפוד, שמירה על חום במיכלים תרמיים, חיסכון בעלויות צוות, וללא מילים אסורות.",
+    "noaChanges": "1. כתיב תקני: תיקון 'מיכלים' ל-'מכלים' (כולל במטא-דסקריפשן).\n2. פיסוק ומקפים: הוספת em-dash (—) לחיבור טבעי במשפט הראשון.\n3. שימוש בגרשיים עבריים תקניים (בד״ץ).\n4. דיוק שפה: הוספת 'כיוון שאין' ושיפור זרימת המשפטים.",
+    "registerScore": 98,
+    "groundingRisk": "low",
+    "generatedVia": "primary:gemini-3.7-flash",
+    "schemaValid": true,
+    "confidence": 100,
+    "shipDecision": "autoship"
+  },
+  "supersededAt": "2026-08-18T03:03:19.056Z",
+  "supersededBy": "aasada-5-קייטרינג-לברית"
+}

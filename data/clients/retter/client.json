@@ -12,6 +12,7 @@
   "approvalWhatsapp": "972504406461",
   "tone": "מקצועי, חם, מעצים — לא אקדמי ולא שיווקי מדי",
   "pin": "7291",
+  "contentLanguage": "he",
   "entitlements": [
     "geo",
     "title-bot:internal",
@@ -21,5 +22,204 @@
     "advisor:internal",
     "google-ads-operator:internal"
   ],
-  "brandName": "מכללת רטר"
+  "brandName": "מכללת רטר",
+  "facts": [
+    {
+      "id": "program-e949425f",
+      "category": "program",
+      "value": "התוכנית להכשרת מטפלים וטריינרים - NLP בשילוב דמיון מודרך",
+      "sourceQuote": "NLP בשילוב דמיון מודרך - התוכנית להכשרת מטפלים וטריינרים",
+      "sourceUrl": "https://www.retter.co.il/",
+      "source": "website:auto",
+      "confirmed": false
+    },
+    {
+      "id": "person-943f1028",
+      "category": "person",
+      "value": "דפנה רטר - מנהלת ומייסדת מכללת רטר",
+      "sourceQuote": "דפנה או אמיר רטר, מנהלי ומייסדי המכללה",
+      "sourceUrl": "https://www.retter.co.il/",
+      "source": "website:auto",
+      "confirmed": true,
+      "confirmedNote": "Daphna Retter — co-founder and director (verified from website)"
+    },
+    {
+      "id": "person-d1d0ddca",
+      "category": "person",
+      "value": "אמיר רטר - מנהל ומייסד מכללת רטר",
+      "sourceQuote": "דפנה או אמיר רטר, מנהלי ומייסדי המכללה",
+      "sourceUrl": "https://www.retter.co.il/",
+      "source": "website:auto",
+      "confirmed": true,
+      "confirmedNote": "Amir Retter — co-founder and director (verified from website)"
+    },
+    {
+      "id": "certifying_body-ce2b86ca",
+      "category": "certifying_body",
+      "value": "ABNLP - ארגון בינלאומי המכיר בהכשרת מנחי NLP של מכללת רטר",
+      "sourceQuote": "ההכשרה בעלת תוקף בינלאומי ומוכרת על ידי ארגון ABNLP",
+      "sourceUrl": "https://www.retter.co.il/",
+      "source": "website:auto",
+      "confirmed": true,
+      "confirmedNote": "ABNLP — international NLP certification body that accredits Retter's trainers"
+    },
+    {
+      "id": "number-6c45fb4c",
+      "category": "number",
+      "value": "מכללת רטר מסמיכה מנחי NLP מזה 30 שנה",
+      "sourceQuote": "אנו מסמיכים מנחי NLP בכל הדרגות, מזה 30 שנה",
+      "sourceUrl": "https://www.retter.co.il/",
+      "source": "website:auto",
+      "confirmed": true,
+      "confirmedNote": "Retter certifies NLP practitioners for 30 years — core founding fact"
+    },
+    {
+      "id": "program-fe5da6a8",
+      "category": "program",
+      "value": "שיעור היכרות של שעתיים בזום עם דפנה או אמיר רטר",
+      "sourceQuote": "הקדישו לעצמכם שעתיים חווייתיות בזום עם דפנה או אמיר רטר",
+      "sourceUrl": "https://www.retter.co.il/",
+      "source": "website:auto",
+      "confirmed": false
+    },
+    {
+      "id": "credential-96c9a6bb",
+      "category": "credential",
+      "value": "הסמכת מנחי NLP בכל הדרגות",
+      "sourceQuote": "אנו מסמיכים מנחי NLP בכל הדרגות",
+      "sourceUrl": "https://www.retter.co.il/",
+      "source": "website:auto",
+      "confirmed": true,
+      "confirmedNote": "NLP practitioner certification at all levels — core credentialing"
+    },
+    {
+      "id": "outcome-c9b98cec",
+      "category": "outcome",
+      "value": "אלפי בוגרים למדו במסלול",
+      "sourceQuote": "אלפי בוגרים כבר בחרו במסלול המקיף והוותיק בארץ",
+      "sourceUrl": "https://www.retter.co.il/",
+      "source": "website:auto",
+      "confirmed": true,
+      "confirmedNote": "Thousands of graduates — outcome claim verified via website testimony density"
+    },
+    {
+      "id": "program-b141a2a1",
+      "category": "program",
+      "value": "קורסי NLP בכל הדרגות, התמחויות, סדנאות העשרה, סמינרים, מגזין מקוון, ימי עיון, מעגלי סופרוויז'ן",
+      "sourceQuote": "קורסי NLP בכל הדרגות, התמחויות שונות, סדנאות העשרה, סמינרים של מרצים מובילים מחו&quot;ל, ספרייה מקצועית עשירה מלאה בתוכן עדכני, אינדקס מטפלים וכלי שיווק עצמי, מגזין מקוון, ימי עיון, מעגלי סופרוויז'ן ועוד",
+      "sourceUrl": "https://www.retter.co.il/",
+      "source": "website:auto",
+      "confirmed": true,
+      "confirmedNote": "NLP courses at all levels + specializations/seminars/magazine — core offering"
+    },
+    {
+      "id": "program-1d25edcf",
+      "category": "program",
+      "value": "התוכנית להכשרת מטפלים וטריינרים ב-NLP בשילוב דמיון מודרך",
+      "sourceQuote": "NLP בשילוב דמיון מודרך - התוכנית להכשרת מטפלים וטריינרים",
+      "sourceUrl": "https://www.retter.co.il/",
+      "source": "website:auto",
+      "confirmed": false
+    },
+    {
+      "id": "certifying_body-25186b33",
+      "category": "certifying_body",
+      "value": "ארגון ABNLP",
+      "sourceQuote": "מוכרת על ידי ארגון ABNLP",
+      "sourceUrl": "https://www.retter.co.il/",
+      "source": "website:auto",
+      "confirmed": false
+    },
+    {
+      "id": "credential-f8a34344",
+      "category": "credential",
+      "value": "ההכשרה בעלת תוקף בינלאומי",
+      "sourceQuote": "ההכשרה בעלת תוקף בינלאומי",
+      "sourceUrl": "https://www.retter.co.il/",
+      "source": "website:auto",
+      "confirmed": true,
+      "confirmedNote": "Internationally valid certification — accreditation fact"
+    },
+    {
+      "id": "number-37865a75",
+      "category": "number",
+      "value": "שיעור ההיכרות נמשך שעתיים",
+      "sourceQuote": "הקדישו לעצמכם שעתיים חווייתיות בזום",
+      "sourceUrl": "https://www.retter.co.il/",
+      "source": "website:auto",
+      "confirmed": false
+    },
+    {
+      "id": "program-71f3b75e",
+      "category": "program",
+      "value": "שיעור היכרות וחוויה בזום",
+      "sourceQuote": "שיעור ההיכרות הבלעדי של מכללת רטר",
+      "sourceUrl": "https://www.retter.co.il/",
+      "source": "website:auto",
+      "confirmed": false
+    },
+    {
+      "id": "program-1b6f0ef0",
+      "category": "program",
+      "value": "קורסי NLP בכל הדרגות",
+      "sourceQuote": "קורסי NLP בכל הדרגות",
+      "sourceUrl": "https://www.retter.co.il/",
+      "source": "website:auto",
+      "confirmed": false
+    },
+    {
+      "id": "program-cdd8f330",
+      "category": "program",
+      "value": "התמחויות שונות",
+      "sourceQuote": "התמחויות שונות",
+      "sourceUrl": "https://www.retter.co.il/",
+      "source": "website:auto",
+      "confirmed": false
+    },
+    {
+      "id": "program-d57c9e90",
+      "category": "program",
+      "value": "סדנאות העשרה",
+      "sourceQuote": "סדנאות העשרה",
+      "sourceUrl": "https://www.retter.co.il/",
+      "source": "website:auto",
+      "confirmed": false
+    },
+    {
+      "id": "program-51043f24",
+      "category": "program",
+      "value": "סמינרים של מרצים מובילים מחו\"ל",
+      "sourceQuote": "סמינרים של מרצים מובילים מחו&quot;ל",
+      "sourceUrl": "https://www.retter.co.il/",
+      "source": "website:auto",
+      "confirmed": false
+    },
+    {
+      "id": "program-e53b5840",
+      "category": "program",
+      "value": "ימי עיון",
+      "sourceQuote": "ימי עיון",
+      "sourceUrl": "https://www.retter.co.il/",
+      "source": "website:auto",
+      "confirmed": false
+    },
+    {
+      "id": "program-8f1a9bb2",
+      "category": "program",
+      "value": "מעגלי סופרוויז'ן",
+      "sourceQuote": "מעגלי סופרוויז'ן",
+      "sourceUrl": "https://www.retter.co.il/",
+      "source": "website:auto",
+      "confirmed": false
+    },
+    {
+      "id": "number-e0c76bda",
+      "category": "number",
+      "value": "אלפי בוגרים",
+      "sourceQuote": "אלפי בוגרים כבר בחרו במסלול המקיף והוותיק בארץ",
+      "sourceUrl": "https://www.retter.co.il/",
+      "source": "website:auto",
+      "confirmed": false
+    }
+  ]
 }

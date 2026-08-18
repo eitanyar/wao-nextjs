@@ -3,76 +3,74 @@
   "clientId": "retter",
   "rank": 2,
   "query": "קורס nlp אונליין",
-  "rankingUrl": "https://www.retter.co.il/petah-tikva-branch/",
+  "rankingUrl": "https://www.retter.co.il/%D7%9C%D7%99%D7%9E%D7%95%D7%93%D7%99-nlp-%D7%90%D7%95%D7%A0%D7%9C%D7%99%D7%99%D7%9F/",
   "implementationMode": "enhance",
   "actionType": "faq_block",
-  "priority": "MEDIUM",
-  "score": 14268,
-  "impressions": 687,
-  "clicks": 2,
-  "ctr": 0.3,
+  "priority": "HIGH",
+  "score": 11495,
+  "impressions": 573,
+  "clicks": 10,
+  "ctr": 1.7,
   "status": "generated",
   "shipDecision": "autoship",
   "confidence": 100,
-  "generatedAt": "2026-08-15T18:36:24.177Z",
+  "generatedAt": "2026-08-18T04:58:55.465Z",
   "vocabSource": "page",
   "vocabConfidence": "high",
   "cannibalFlag": "REVIEW",
   "cannibalReasons": [
-    "MULTI_URL",
-    "HEAD_TERM_ON_LOCATION"
+    "MULTI_URL"
   ],
   "cannibalUrls": [
     {
-      "url": "https://www.retter.co.il/nlp/",
-      "impressions": 11233,
-      "position": 2.6
-    },
-    {
-      "url": "https://www.retter.co.il/kiryat-bialik-branch/",
-      "impressions": 634,
-      "position": 9.7
+      "url": "https://www.retter.co.il/%D7%A7%D7%95%D7%A8%D7%A1-nlp-%D7%91%D7%97%D7%99%D7%A0%D7%9D/",
+      "impressions": 100,
+      "position": 23.1
     }
   ],
   "content": {
-    "hebrewContent": "<section class=\"faq-section\">\n  <h2>שאלות נפוצות על קורסי NLP אונליין</h2>\n  <div class=\"faq-item\">\n    <h3>אילו קורסי NLP אונליין קיימים בשוק?</h3>\n    <p>בשוק קיימים קורסי NLP אונליין רבים הנעים בין קורסים בסיסיים לתכניות הסמכה מתקדמות כמו אלה של מכללת רטר.</p>\n  </div>\n  <div class=\"faq-item\">\n    <h3>מה ההבדל בין קורס NLP אונליין לקורס בכיתה?</h3>\n    <p>קורסי NLP אונליין מציעים גמישות בזמן הלימוד ובקצב הלמידה, אך קורסי בכיתה מאפשרים יחסי גומלין אישיים עם המדריך והתלמידים האחרים.</p>\n  </div>\n  <div class=\"faq-item\">\n    <h3>האם מכללת רטר מציעה קורסי NLP אונליין?</h3>\n    <p>כן, מכללת רטר מציעה קורסי NLP אונליין מכוונים ותכניות הסמכה גם במתכונת אונליין עם ליווי מקצועי וסיוע התאמה.</p>\n  </div>\n</section>",
-    "placementInstruction": "יש להוסיף את בלוק השאלות הנפוצות בחלק התחתון של עמוד הקורסים האונליין או בעמוד הבית.",
-    "metaDescription": "חוקר קורסי NLP אונליין? מכללת רטר מציעה הכשרה מקצועית NLP בפורמט אונליין עם ליווי וסיוע התאמה. כל הפרטים כאן.",
+    "hebrewContent": "<section class=\"faq-section\" itemscope itemtype=\"https://schema.org/FAQPage\">\n  <h2>שאלות נפוצות על קורס NLP אונליין</h2>\n  \n  <div class=\"faq-item\" itemscope itemprop=\"mainEntity\" itemtype=\"https://schema.org/Question\">\n    <h3 itemprop=\"name\">איך מתבצעים התרגולים המעשיים במסגרת קורס NLP אונליין?</h3>\n    <div itemscope itemprop=\"acceptedAnswer\" itemtype=\"https://schema.org/Answer\">\n      <p itemprop=\"text\">השיעורים מתקיימים בזום בשידור חי עם המנחה. במהלך המפגש מתחלקים לחדרי תרגול קטנים, שבהם מתרגלים טכניקות הנחיה בזוגות ובשלשות בליווי אסיסטנטים מנוסים.</p>\n    </div>\n  </div>\n\n  <div class=\"faq-item\" itemscope itemprop=\"mainEntity\" itemtype=\"https://schema.org/Question\">\n    <h3 itemprop=\"name\">האם קורס NLP בזום מעניק תעודה בינלאומית?</h3>\n    <div itemscope itemprop=\"acceptedAnswer\" itemtype=\"https://schema.org/Answer\">\n      <p itemprop=\"text\">כן. מכללת רטר מעניקה תעודה בעלת תוקף בינלאומי המוכרת על ידי ארגון ABNLP. דרישות ההסמכה באונליין זהות לחלוטין לדרישות במסלול הפרונטלי.</p>\n    </div>\n  </div>\n\n  <div class=\"faq-item\" itemscope itemprop=\"mainEntity\" itemtype=\"https://schema.org/Question\">\n    <h3 itemprop=\"name\">איזה ליווי מקבלים במהלך לימודי NLP אונליין?</h3>\n    <div itemscope itemprop=\"acceptedAnswer\" itemtype=\"https://schema.org/Answer\">\n      <p itemprop=\"text\">מעבר לשיעורים בשידור חי, מקבלים מעגלי סופרוויז'ן ומשוב אישי. מכללת רטר מסמיכה מנחי NLP מזה 30 שנה ומלווה כל תלמיד עד להצלחה.</p>\n    </div>\n  </div>\n</section>",
+    "placementInstruction": "יש להטמיע את בלוק השאלות והתשובות בתחתית עמוד לימודי NLP אונליין, לפני טופס יצירת הקשר.",
+    "metaDescription": "מתעניין בלימודי קורס NLP אונליין בזום שנותן הכשרה מעשית? קבל את כל התשובות על תרגול בשידור חי, ליווי אישי ותעודה בינלאומית של מכללת רטר.",
     "jsonLd": {
       "@type": "FAQPage",
       "mainEntity": [
         {
           "@type": "Question",
-          "name": "אילו קורסי NLP אונליין קיימים בשוק?",
+          "name": "איך מתבצעים התרגולים המעשיים במסגרת קורס NLP אונליין?",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "בשוק קיימים קורסי NLP אונליין רבים הנעים בין קורסים בסיסיים לתכניות הסמכה מתקדמות כמו אלה של מכללת רטר."
+            "text": "השיעורים מתקיימים בזום בשידור חי עם המנחה. במהלך המפגש מתחלקים לחדרי תרגול קטנים. שם מתרגלים טכניקות הנחיה בזוגות ובשלשות בליווי אסיסטנטים מנוסים."
           }
         },
         {
           "@type": "Question",
-          "name": "מה ההבדל בין קורס NLP אונליין לקורס בכיתה?",
+          "name": "האם קורס NLP בזום מעניק תעודה בינלאומית?",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "קורסי NLP אונליין מציעים גמישות בזמן הלימוד ובקצב הלמידה, אך קורסי בכיתה מאפשרים יחסי גומלין אישיים עם המדריך והתלמידים האחרים."
+            "text": "כן. מכללת רטר מעניקה תעודה בעלת תוקף בינלאומי שמוכרת על ידי ארגון ABNLP. דרישות ההסמכה באונליין זהות לחלוטין לדרישות במסלול הפרונטלי."
           }
         },
         {
           "@type": "Question",
-          "name": "האם מכללת רטר מציעה קורסי NLP אונליין?",
+          "name": "איזה ליווי מקבלים במהלך לימודי NLP אונליין?",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "כן, מכללת רטר מציעה קורסי NLP אונליין מכוונים ותכניות הסמכה גם במתכונת אונליין עם ליווי מקצועי וסיוע התאמה."
+            "text": "מעבר לשיעורים החיים, מקבלים מעגלי סופרוויז'ן ומשוב אישי. מכללת רטר מסמיכה מנחי NLP מזה 30 שנה ומלווה כל תלמיד עד להצלחה."
           }
         }
       ]
     },
-    "tamarNotes": "נשמר שימוש קפדני באוצר המילים המחייב ובשם המותג הרשמי, תוך מענה ממוקד וספציפי ללימודי NLP אונליין ללא המצאת זמנים או מחירים.",
-    "noaChanges": "תיקון 'אילו קורסים' ל'אילו קורסי' (יצירת סמיכות דקדוקית). מעבר מ'שוק ישנם' ל'בשוק קיימים' (שימוש בלשון עכשוויית ודינאמית). תיקון לשימוש עקבי בביטוי 'קורסי NLP אונליין' (לא 'לימודי NLP אונליין'). דיוק בניסוח 'תכניות הסמכה גם במתכונת אונליין' (הגדלת דיוק וצמצום טענות משפחתיות).",
-    "registerScore": 100,
+    "tamarNotes": "השאלות נבנו במיוחד לטיפול בהתנגדויות וספקות טכניים של לימודים מרחוק (איך מתרגלים בזום, תקפות התעודה ורמת הליווי). שילבתי את העובדות המאומתות של רטר (ותק של 30 שנה, הכרת ABNLP וסופרוויז'ן) כדי להבטיח ציטוט ישיר ב-AI Overview.",
+    "noaChanges": "תיקון מבנה משפט התרגול (חיבור בעזרת 'שבהם מתרגלים' במקום משפט קטוע), החלפת הביטוי המתורגם 'שיעורים חיים' / 'תרגולים חיים' ב'שיעורים בשידור חי' / 'תרגול בשידור חי', ודיוק תחבירי ('המוכרת על ידי').",
+    "registerScore": 92,
+    "registerFlags": [
+      "שיעורים חיים",
+      "תרגולים חיים"
+    ],
     "groundingRisk": "low",
     "factualClaims": [
-      "מכללת רטר מציעה קורסי NLP אונליין"
+      "חלוקה לחדרי זום לתרגול בזוגות ובשלשות בליווי אסיסטנטים מנוסים"
     ],
     "generatedVia": "primary:gemini-3.7-flash",
     "schemaValid": true,

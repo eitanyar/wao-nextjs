@@ -1,0 +1,91 @@
+{
+  "actionId": "retter-4-לימודי-nlp",
+  "clientId": "retter",
+  "rank": 4,
+  "query": "לימודי nlp",
+  "rankingUrl": "https://www.retter.co.il/ness-ziona-branch/",
+  "implementationMode": "enhance",
+  "actionType": "faq_block",
+  "priority": "HIGH",
+  "score": 10042,
+  "impressions": 463,
+  "clicks": 0,
+  "ctr": 0,
+  "status": "superseded",
+  "shipDecision": "autoship",
+  "confidence": 100,
+  "generatedAt": "2026-08-18T04:35:07.673Z",
+  "vocabSource": "page",
+  "vocabConfidence": "high",
+  "cannibalFlag": "REVIEW",
+  "cannibalReasons": [
+    "MULTI_URL"
+  ],
+  "cannibalUrls": [
+    {
+      "url": "https://www.retter.co.il/study/",
+      "impressions": 429,
+      "position": 32.5
+    },
+    {
+      "url": "https://www.retter.co.il/",
+      "impressions": 304,
+      "position": 30.1
+    },
+    {
+      "url": "https://www.retter.co.il/%D7%9C%D7%99%D7%9E%D7%95%D7%93%D7%99-nlp-%D7%90%D7%95%D7%A0%D7%9C%D7%99%D7%99%D7%9F/",
+      "impressions": 235,
+      "position": 37.8
+    }
+  ],
+  "content": {
+    "hebrewContent": "<section><h2>שאלות נפוצות על לימודי NLP בסניף נס ציונה</h2><div itemscope itemtype=\"https://schema.org/FAQPage\"><div itemscope itemprop=\"mainEntity\" itemtype=\"https://schema.org/Question\"><h3 itemprop=\"name\">מה כוללים לימודי NLP בסניף נס ציונה?</h3><div itemscope itemprop=\"acceptedAnswer\" itemtype=\"https://schema.org/Answer\"><p itemprop=\"text\">לימודי NLP בסניף נס ציונה של מכללת רטר כוללים הכשרה מלאה לפרקטישנר ולמאסטר. הסמכת מנחי NLP בכל הדרגות ניתנת במקום עם תוקף בינלאומי מטעם ABNLP. דפנה רטר ואמיר רטר מלווים את התהליך באופן אישי לאורך כל הדרך.</p></div></div><div itemscope itemprop=\"mainEntity\" itemtype=\"https://schema.org/Question\"><h3 itemprop=\"name\">איך לימודי NLP בסניף נס ציונה שונים מסניפים אחרים?</h3><div itemscope itemprop=\"acceptedAnswer\" itemtype=\"https://schema.org/Answer\"><p itemprop=\"text\">סניף נס ציונה פועל תחת אותה הכשרה מוכרת של מכללת רטר שמסמיכה מנחי NLP מזה 30 שנה. אלפי בוגרים למדו במסלול זה בכל הסניפים. ההכשרה בסניף נס ציונה כוללת גם מעגלי סופרוויז׳ן, ימי עיון ומגזין מקוון — מעטפת שממשיכה ללוות את הבוגרים גם אחרי סיום הלימודים.</p></div></div><div itemscope itemprop=\"mainEntity\" itemtype=\"https://schema.org/Question\"><h3 itemprop=\"name\">האם אפשר לשלב לימודי NLP בסניף נס ציונה עם מסלול אונליין?</h3><div itemscope itemprop=\"acceptedAnswer\" itemtype=\"https://schema.org/Answer\"><p itemprop=\"text\">מכללת רטר מציעה לימודי NLP גם אונליין, לצד הסניפים בפתח תקווה, קריית ביאליק ונס ציונה. בוגרי סניף נס ציונה מקבלים את אותה הסמכה בינלאומית של ABNLP כמו כל שאר הבוגרים, ללא הבדל במתכונת הלימודים.</p></div></div></div></section>",
+    "placementInstruction": "הוסיפו את בלוק השאלות הנפוצות בתחתית העמוד /ness-ziona-branch/, אחרי הסקשן הראשי של הסניף ולפני הטופס או כפתור יצירת הקשר.",
+    "metaDescription": "לימודי NLP בסניף נס ציונה של מכללת רטר — הכשרה בינלאומית של ABNLP, ליווי אישי של דפנה רטר ואמיר רטר, וסופרוויז׳ן גם אחרי סיום הקורס. בואו ללמוד.",
+    "jsonLd": {
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "מה כוללים לימודי NLP בסניף נס ציונה?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "לימודי NLP בסניף נס ציונה של מכללת רטר כוללים הכשרה מלאה לפרקטישנר ומאסטר. הסמכת מנחי NLP בכל הדרגות ניתנת במקום עם תוקף בינלאומי מטעם ABNLP. דפנה רטר ואמיר רטר מלווים את התהליך באופן אישי לאורך כל הדרך."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "איך לימודי NLP בסניף נס ציונה שונים מסניפים אחרים?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "סניף נס ציונה פועל תחת אותה הכשרה מוכרת של מכללת רטר שמסמיכה מנחי NLP מזה 30 שנה. אלפי בוגרים למדו במסלול זה בכל הסניפים. ההכשרה בסניף נס ציונה כוללת גם מעגלי סופרוויז'ן, ימי עיון ומגזין מקוון — מעטפת שממשיכה ללוות את הבוגרים גם אחרי סיום הלימודי."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "האם אפשר לשלב לימודי NLP בסניף נס ציונה עם מסלול אונליין?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "מכללת רטר מציעה לימודי NLP גם אונליין לצד הסניפים בפתח תקווה, קריית ביאליק ונס ציונה. בוגרי סניף נס ציונה מקבלים את אותה הסמכה בינלאומית של ABNLP כמו כל שאר הבוגרים, ללא הבדל במתכונת הלימודי."
+          }
+        }
+      ]
+    },
+    "tamarNotes": "בלוק ה-FAQ מתמקד בזווית ספציפית: מה מקבלים בלימודי NLP בסניף נס ציונה, מה ההבדל מסניפים אחרים, ואפשרות השילוב עם אונליין. כל שאלה מכילה עובדה מאומתת (ABNLP, 30 שנה, דפנה ואמיר רטר, סופרוויז'ן). לא נכתבה הגדרה כללית של NLP — זה תפקיד העמוד המרכזי. מונחי אוצר המילים (סניף נס ציונה, לימודי, מכללת רטר לימודי) שולבו באופן טבעי. יש לוודא שהטקסט לא חופף לתוכן קיים בעמוד — אם יש פסקה שמתארת את הסניף, ה-FAQ צריך להוסיף עליה ולא לחזור על אותן מילים.",
+    "noaChanges": [
+      "תיקון 'לימודי' ל'לימודים' בסוף משפטים (סיום הלימודים, מתכונת הלימודים) כדי להתאים לדקדוק התקני.",
+      "הוספת ו' החיבור לפני 'למאסטר' ברשימה ('לפרקטישנר ולמאסטר') לשיפור הזרימה.",
+      "החלפת גרשיים ASCII בגרשיים עבריים תקניים (״ ״) ובגרש בודד תקני (׳) במילה 'סופרוויז׳ן'.",
+      "החלפת מקף רגיל במקף ארוך (em-dash —) בהתאם להנחיות.",
+      "שינוי ניסוח 'הוסיפי' ל'הוסיפו' בהוראת המיקום לשפה תקנית ונטולת פנייה מגדרית ספציפית בהקשר טכני."
+    ],
+    "registerScore": 95,
+    "groundingRisk": "low",
+    "generatedVia": "fallback:qwen3.7-plus",
+    "schemaValid": true,
+    "confidence": 100,
+    "shipDecision": "autoship"
+  },
+  "supersededAt": "2026-08-18T04:58:55.466Z",
+  "supersededBy": "retter-4-לימודי-nlp"
+}

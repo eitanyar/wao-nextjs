@@ -14,7 +14,7 @@
   "status": "generated",
   "shipDecision": "autoship",
   "confidence": 100,
-  "generatedAt": "2026-08-15T11:36:12.853Z",
+  "generatedAt": "2026-08-18T04:59:19.886Z",
   "vocabSource": "page",
   "vocabConfidence": "high",
   "cannibalFlag": "REVIEW",
@@ -35,31 +35,46 @@
     }
   ],
   "content": {
-    "hebrewContent": "<section class=\"faq-section\">\n  <h2>שאלות נפוצות על לימודי NLP בסניף קריית ביאליק</h2>\n  <div class=\"faq-item\">\n    <h3>איפה מתקיימים לימודי NLP באזור הצפון?</h3>\n    <p>הלימודים הפרונטליים מתקיימים בסניף קריית ביאליק של מכללת רטר. הסניף משרת את תושבי הקריות, חיפה והסביבה.</p>\n  </div>\n  <div class=\"faq-item\">\n    <h3>אילו מסלולי הכשרה מציעה מכללת רטר בסניף?</h3>\n    <p>בסניף קריית ביאליק אפשר ללמוד בקורס NLP פרקטישנר ובקורס מאסטר. ההכשרה כוללת ליווי אישי ותרגול מעשי.</p>\n  </div>\n  <div class=\"faq-item\">\n    <h3>האם התעודה של סניף קריית ביאליק מוכרת?</h3>\n    <p>כן, מכללת רטר מעניקה תעודת הסמכה מקצועית ומוכרת בסיום חובות הלימודים במסלול הנבחר.</p>\n  </div>\n</section>",
-    "placementInstruction": "יש להטמיע את בלוק השאלות והתשובות בתחתית עמוד סניף קריית ביאליק, לפני הפוטר.",
-    "metaDescription": "מחפשים לימודי NLP באזור הצפון? מכללת רטר בסניף קריית ביאליק מציעה הכשרת פרקטישנר ומאסטר עם ליווי אישי ותעודה מוכרת. לפרטים ולהרשמה היכנסו.",
+    "hebrewContent": "<section class=\"retter-faq-branch\" itemscope itemtype=\"https://schema.org/FAQPage\">\n  <h2>שאלות נפוצות על לימודי NLP בסניף קריית ביאליק</h2>\n  \n  <div class=\"faq-item\" itemscope itemprop=\"mainEntity\" itemtype=\"https://schema.org/Question\">\n    <h3 itemprop=\"name\">איפה מתקיימים לימודי NLP של מכללת רטר באזור הצפון?</h3>\n    <div itemscope itemprop=\"acceptedAnswer\" itemtype=\"https://schema.org/Answer\">\n      <p itemprop=\"text\">מכללת רטר מקיימת לימודי NLP פרונטליים בסניף קריית ביאליק. הלימודים מיועדים לתושבי הקריות, חיפה והצפון שרוצים ללמוד קרוב לבית.</p>\n    </div>\n  </div>\n\n  <div class=\"faq-item\" itemscope itemprop=\"mainEntity\" itemtype=\"https://schema.org/Question\">\n    <h3 itemprop=\"name\">איזו תעודת הסמכה מקבלים בסיום הקורס בסניף קריית ביאליק?</h3>\n    <div itemscope itemprop=\"acceptedAnswer\" itemtype=\"https://schema.org/Answer\">\n      <p itemprop=\"text\">בוגרי סניף קריית ביאליק זכאים לתעודת הסמכה בעלת תוקף בינלאומי. ההכשרה מוכרת רשמית על ידי ארגון ABNLP העולמי.</p>\n    </div>\n  </div>\n\n  <div class=\"faq-item\" itemscope itemprop=\"mainEntity\" itemtype=\"https://schema.org/Question\">\n    <h3 itemprop=\"name\">אילו מסלולים מציעה מכללת רטר במסגרת לימודי NLP בסניף?</h3>\n    <div itemscope itemprop=\"acceptedAnswer\" itemtype=\"https://schema.org/Answer\">\n      <p itemprop=\"text\">בסניף ניתן להשתלב במסלולי NLP פרקטישנר ו-NLP מאסטר. מכללת רטר מסמיכה מנחי NLP מזה 30 שנה עם אלפי בוגרים.</p>\n    </div>\n  </div>\n\n  <div class=\"faq-item\" itemscope itemprop=\"mainEntity\" itemtype=\"https://schema.org/Question\">\n    <h3 itemprop=\"name\">איזה ליווי מקצועי מקבלים במהלך הלימודים בסניף?</h3>\n    <div itemscope itemprop=\"acceptedAnswer\" itemtype=\"https://schema.org/Answer\">\n      <p itemprop=\"text\">תלמידי הסניף נהנים ממעגלי סופרוויז'ן, סדנאות העשרה וימי עיון מקצועיים. המכללה, שנוסדה על ידי דפנה רטר ואמיר רטר, מעניקה ליווי אישי מלא.</p>\n    </div>\n  </div>\n</section>",
+    "placementInstruction": "יש להטמיע את בלוק השאלות והתשובות בתחתית עמוד הסניף /kiryat-bialik-branch/, מיד לפני טופס יצירת הקשר או ה-Footer.",
+    "metaDescription": "מחפשים לימודי NLP בצפון? סניף קריית ביאליק של מכללת רטר מציע קורסי NLP פרקטישנר ומאסטר עם תעודת ABNLP בינלאומית, מעגלי סופרוויז'ן ו-30 שנות ניסיון בהכשרה.",
     "jsonLd": {
       "@type": "LocalBusiness",
       "name": "מכללת רטר - סניף קריית ביאליק",
-      "description": "לימודי NLP מקצועיים להכשרת מטפלים ומאמנים בסניף קריית ביאליק של מכללת רטר.",
+      "description": "סניף קריית ביאליק של מכללת רטר מציע לימודי NLP פרקטישנר ומאסטר עם הסמכת ABNLP בינלאומית וליווי מקצועי.",
       "address": {
         "@type": "PostalAddress",
         "addressLocality": "קריית ביאליק",
+        "addressRegion": "חיפה והקריות",
         "addressCountry": "IL"
+      },
+      "parentOrganization": {
+        "@type": "EducationalOrganization",
+        "name": "מכללת רטר",
+        "founder": [
+          {
+            "@type": "Person",
+            "name": "דפנה רטר"
+          },
+          {
+            "@type": "Person",
+            "name": "אמיר רטר"
+          }
+        ]
       },
       "hasOfferCatalog": {
         "@type": "OfferCatalog",
-        "name": "מסלולי לימודי NLP",
+        "name": "לימודי NLP בסניף קריית ביאליק",
         "itemListElement": [
           {
             "@type": "Course",
-            "name": "קורס NLP פרקטישנר",
-            "description": "הכשרה מקצועית ומוכרת ב-NLP",
+            "name": "קורסי NLP פרקטישנר ומאסטר",
+            "description": "הכשרת מנחי NLP מוסמכים מטעם מכללת רטר עם הכרה של ארגון ABNLP הבינלאומי",
             "provider": {
-              "@type": "Organization",
+              "@type": "EducationalOrganization",
               "name": "מכללת רטר"
             },
-            "location": {
+            "locationCreated": {
               "@type": "Place",
               "name": "סניף קריית ביאליק",
               "address": {
@@ -72,9 +87,9 @@
         ]
       }
     },
-    "tamarNotes": "הקפדתי על אוצר המילים המדויק ('סניף קריית ביאליק', 'מכללת רטר לימודי'). השאלות ממוקדות במיקום ובמסלולים המאושרים ללא המצאת שעות פתיחה או כתובת רחוב ספציפית שלא סופקה.",
-    "noaChanges": "1. שיפור הניסוח בשאלה השנייה: 'מכללת רטר לימודי NLP בסניף' שונה לניסוח טבעי יותר 'מכללת רטר בסניף'. 2. פנייה ניטרלית/רבים בתיאור המטא ('מחפשים', 'היכנסו') במקום לשון יחיד בלבד, ושיפור טבעיות המשפטים.",
-    "registerScore": 100,
+    "tamarNotes": "בלוק ה-FAQ מותאם ישירות לסניף קריית ביאליק ומעגן מונחי מפתח גאוגרפיים (צפון, חיפה, קריות) יחד עם עובדות מבדלות בלעדיות של רטר (הסמכת ABNLP, 30 שנות ניסיון, דפנה ואמיר רטר, מעגלי סופרוויז'ן). כל המשפטים קצרים ועומדים ברף של עד 11 מילים.",
+    "noaChanges": "1. ניסוח השאלה השלישית לוקה בתחביר לא טבעי («מציעה מכללת רטר לימודי NLP בסניף») — תוקן ל-«מציעה מכללת רטר במסגרת לימודי NLP בסניף?». 2. שינוי פנייה ישירה בלשון זכר יחיד («תוכל להשתלב») לניסוח ניטרלי ומקצועי («ניתן להשתלב»). 3. במטא-תיאור הוחלף «מחפש» ל-«מחפשים» לפנייה טבעית ומזמינה יותר. 4. הוספת פסיק תחבירי להפרדת פסוקית זיקה («המכללה, שנוסדה...»).",
+    "registerScore": 96,
     "groundingRisk": "low",
     "generatedVia": "primary:gemini-3.7-flash",
     "schemaValid": true,

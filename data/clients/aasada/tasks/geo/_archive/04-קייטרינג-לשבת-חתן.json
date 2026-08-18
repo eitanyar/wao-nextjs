@@ -1,0 +1,80 @@
+{
+  "actionId": "aasada-4-קייטרינג-לשבת-חתן",
+  "clientId": "aasada",
+  "rank": 4,
+  "query": "קייטרינג לשבת חתן",
+  "rankingUrl": "https://aaasada.com/shabbat-chatan",
+  "implementationMode": "enhance",
+  "actionType": "faq_block",
+  "priority": "LOW",
+  "score": 10523,
+  "impressions": 924,
+  "clicks": 1,
+  "ctr": 0.1,
+  "status": "superseded",
+  "shipDecision": "autoship",
+  "confidence": 100,
+  "generatedAt": "2026-08-16T06:58:04.354Z",
+  "vocabSource": "page",
+  "vocabConfidence": "high",
+  "cannibalFlag": "REVIEW",
+  "cannibalReasons": [
+    "MULTI_URL"
+  ],
+  "cannibalUrls": [
+    {
+      "url": "https://aaasada.com/",
+      "impressions": 505,
+      "position": 3.7
+    },
+    {
+      "url": "https://aaasada.com/city/rishon-lezion/shabbat-chatan",
+      "impressions": 497,
+      "position": 9.5
+    }
+  ],
+  "content": {
+    "hebrewContent": "<section class=\"faq-section\">\n  <h2>שאלות נפוצות על קייטרינג לשבת חתן</h2>\n  <div class=\"faq-item\">\n    <h3>איך האוכל נשאר חם לאורך כל השבת?</h3>\n    <p>בקייטרינג טעם מהודר האוכל מגיע במיכלים תרמיים מבודדים — ששומרים על חום המנות עד לכניסת השבת וההגשה לשולחן.</p>\n  </div>\n  <div class=\"faq-item\">\n    <h3>מה כולל סידור המנות לקראת סעודות השבת?</h3>\n    <p>המנות מגיעות מוכנות להגשה עצמית — מה שחוסך את עלויות המלצרים ומאפשר לכם לנהל את סעודות שבת החתן בקצב שלכם וברוגע.</p>\n  </div>\n  <div class=\"faq-item\">\n    <h3>איזו כשרות יש למנות הבשריות?</h3>\n    <p>כל המנות הן כשר למהדרין בהשגחת בד״ץ הרב שלום מחפוד, כך שתוכלו לארח בראש שקט עם כשרות מוקפדת לכל האורחים בשמחה.</p>\n  </div>\n</section>",
+    "placementInstruction": "יש להטמיע את בלוק השאלות והתשובות בתחתית עמוד קייטרינג לשבת חתן, לפני הפוטר.",
+    "metaDescription": "מחפשים קייטרינג לשבת חתן? קייטרינג טעם מהודר מציע תפריט בשרי חם במיכלים תרמיים — כשר למהדרין בהשגחת בד״ץ מחפוד, להגשה עצמית פשוטה, טעימה ומשתלמת.",
+    "jsonLd": {
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "איך האוכל נשאר חם לאורך כל השבת?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "בקייטרינג טעם מהודר האוכל מגיע במיכלים תרמיים מבודדים. המיכלים שומרים על חום המנות עד לכניסת השבת וההגשה לשולחן."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "מה כולל סידור המנות לקראת סעודות השבת?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "המנות מגיעות מוכנות להגשה עצמית. זה חוסך את עלויות המלצרים ומאפשר לכם לנהל את סעודות שבת החתן בקצב שלכם."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "איזו כשרות יש למנות הבשריות?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "כל המנות הן כשר למהדרין בהשגחת הרב שלום מחפוד. התעודה מבטיחה כשרות קפדנית לכל האורחים בשמחה."
+          }
+        }
+      ]
+    },
+    "tamarNotes": "הדגשתי את הפתרון של מיכלים תרמיים לשמירת חום לאורך השבת וכשרות הרב מחפוד, ללא הגדרות כלליות, ובמשפטים קצרים וממוקדים ל-GEO.",
+    "noaChanges": "1. הוספת גרשיים עבריים תקניים (בד״ץ). 2. שימוש ב-em-dash (—) לחיבור רעיוני ומשפטים זורמים יותר. 3. שיוף קל של ניסוחים לזרימה טבעית של עברית ישראלית אותנטית.",
+    "registerScore": 98,
+    "groundingRisk": "low",
+    "generatedVia": "primary:gemini-3.7-flash",
+    "schemaValid": true,
+    "confidence": 100,
+    "shipDecision": "autoship"
+  },
+  "supersededAt": "2026-08-18T03:03:14.643Z",
+  "supersededBy": "aasada-4-קייטרינג-לשבת-חתן"
+}

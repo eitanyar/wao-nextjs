@@ -1,0 +1,83 @@
+{
+  "actionId": "merlo-1-קייטרינג-לחתונה",
+  "clientId": "merlo",
+  "rank": 1,
+  "query": "קייטרינג לחתונה",
+  "rankingUrl": "https://www.merlo-c.co.il/%D7%A2%D7%9C%D7%95%D7%AA-%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%9C%D7%97%D7%AA%D7%95%D7%A0%D7%94/",
+  "implementationMode": "enhance",
+  "actionType": "faq_block",
+  "priority": "HIGH",
+  "score": 25601,
+  "impressions": 1218,
+  "clicks": 11,
+  "ctr": 0.9,
+  "status": "generated",
+  "shipDecision": "autoship",
+  "confidence": 100,
+  "generatedAt": "2026-08-18T02:23:32.282Z",
+  "vocabSource": "page",
+  "vocabConfidence": "high",
+  "cannibalFlag": "REVIEW",
+  "cannibalReasons": [
+    "MULTI_URL"
+  ],
+  "cannibalUrls": [
+    {
+      "url": "https://www.merlo-c.co.il/%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%9C%D7%97%D7%AA%D7%95%D7%A0%D7%94-%D7%91%D7%91%D7%99%D7%AA/",
+      "impressions": 909,
+      "position": 16.6
+    },
+    {
+      "url": "https://www.merlo-c.co.il/%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%9C%D7%97%D7%AA%D7%95%D7%A0%D7%94-%D7%A7%D7%98%D7%A0%D7%94/",
+      "impressions": 758,
+      "position": 25.4
+    },
+    {
+      "url": "https://www.merlo-c.co.il/%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%9C%D7%97%D7%AA%D7%95%D7%A0%D7%94-%D7%91%D7%99%D7%A8%D7%95%D7%A9%D7%9C%D7%99%D7%9D/",
+      "impressions": 633,
+      "position": 35.4
+    }
+  ],
+  "content": {
+    "hebrewContent": "<section class=\"faq-section\">\n  <h2>שאלות נפוצות על עלות קייטרינג לחתונה</h2>\n  \n  <div class=\"faq-item\">\n    <h3>איך נקבע המחיר של קייטרינג לחתונה?</h3>\n    <p>העלות מושפעת מבחירת חומרי הגלם, סוג ההגשה ומספר האורחים באירוע. תפריט שף מורכב יותר מייקר את המנה.</p>\n  </div>\n\n  <div class=\"faq-item\">\n    <h3>איך בוחרים תפריט יוקרתי שמתאים לתקציב החתונה?</h3>\n    <p>כשבודקים איך בוחרים, כדאי להתמקד במנות דגל מדויקות במקום בריבוי עמדות. בצוות של קייטרינג מרלו, השף יוסי שבת בונה תפריטי יוקרה בהתאמה אישית לפי מסגרת התקציב.</p>\n  </div>\n\n  <div class=\"faq-item\">\n    <h3>כמה עולה קייטרינג לחתונה באירוע שיא?</h3>\n    <p>באירועי פרימיום העלות משקפת את רמת חומרי הגלם, כמות אנשי השירות ורמת ההפקה הקולינרית.</p>\n  </div>\n</section>",
+    "placementInstruction": "יש להטמיע את בלוק השאלות והתשובות בתחתית עמוד עלות קייטרינג לחתונה, מתחת לפירוט המחירים הראשי ולפני טופס יצירת הקשר.",
+    "metaDescription": "כמה עולה קייטרינג לחתונה ואיך בוחרים תפריט יוקרתי? כל המידע על עלויות קייטרינג לאירועי שיא וחתונות עם השף יוסי שבת מבית קייטרינג מרלו.",
+    "jsonLd": {
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "איך נקבע המחיר של קייטרינג לחתונה?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "העלות מושפעת מבחירת חומרי הגלם, סוג ההגשה ומספר האורחים באירוע. תפריט שף מורכב יותר מייקר את המנה."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "איך בוחרים תפריט יוקרתי שמתאים לתקציב החתונה?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "כאשר בודקים איך בוחרים, כדאי להתמקד במנות דגל מדויקות במקום בריבוי תחנות. בצוות של קייטרינג מרלו, השף יוסי שבת בונה תפריטי יוקרה בהתאמה אישית לפי מסגרת התקציב."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "כמה עולה קייטרינג לחתונה באירוע שיא?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "באירועי פרימיום העלות משקפת את רמת חומרי הגלם, כמות אנשי השירות ורמת ההפקה הקולינרית."
+          }
+        }
+      ]
+    },
+    "tamarNotes": "נשמרו כל כללי המותג, השפה המדוברת והמשפטים הקצרים. שולב השף יוסי שבת ואוצר המילים הייעודי של הדף (כמה עולה קייטרינג, לחתונה, איך בוחרים) ללא חריגות או מילים אסורות.",
+    "noaChanges": "שינוי 'כאשר בודקים' ל-'כשבודקים' ושינוי 'תחנות' ל-'עמדות' לקבלת עברית טבעית וזורמת יותר בתחום האירועים.",
+    "registerScore": 100,
+    "groundingRisk": "low",
+    "generatedVia": "primary:gemini-3.7-flash",
+    "schemaValid": true,
+    "confidence": 100,
+    "shipDecision": "autoship"
+  }
+}

@@ -1,0 +1,78 @@
+{
+  "actionId": "merlo-5-קייטרינג-בנתניה",
+  "clientId": "merlo",
+  "rank": 5,
+  "query": "קייטרינג בנתניה",
+  "rankingUrl": "https://www.merlo-c.co.il/%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%91%D7%A0%D7%AA%D7%A0%D7%99%D7%94/",
+  "implementationMode": "enhance",
+  "actionType": "faq_block",
+  "priority": "HIGH",
+  "score": 11313,
+  "impressions": 528,
+  "clicks": 8,
+  "ctr": 1.5,
+  "status": "generated",
+  "shipDecision": "autoship",
+  "confidence": 100,
+  "generatedAt": "2026-08-18T02:23:46.689Z",
+  "vocabSource": "page",
+  "vocabConfidence": "high",
+  "cannibalFlag": "REVIEW",
+  "cannibalReasons": [
+    "MULTI_URL"
+  ],
+  "cannibalUrls": [
+    {
+      "url": "https://www.merlo-c.co.il/%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%91%D7%99%D7%A8%D7%95%D7%A9%D7%9C%D7%99%D7%9D/",
+      "impressions": 51,
+      "position": 77.3
+    },
+    {
+      "url": "https://www.merlo-c.co.il/%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%91%D7%A9%D7%A8%D7%99-%D7%9E%D7%97%D7%99%D7%A8%D7%99%D7%9D/",
+      "impressions": 44,
+      "position": 74.3
+    }
+  ],
+  "content": {
+    "hebrewContent": "<section class=\"faq-section\">\n  <h2>שאלות נפוצות על שירותי קייטרינג בנתניה</h2>\n  <div class=\"faq-item\">\n    <h3>מי מוביל את התפריט הקולינרי באירועים בנתניה?</h3>\n    <p>השף יוסי שבת מוביל את התפריט של קייטרינג מרלו, ובונה תפריטי יוקרה בהתאמה אישית לחתונות ולאירועים עסקיים.</p>\n  </div>\n  <div class=\"faq-item\">\n    <h3>האם השירות כולל מענה לאירועים כשרים באזור השרון?</h3>\n    <p>כן. קייטרינג מרלו מספק קייטרינג כשר למהדרין בנתניה ומבטיח חווית פרימיום באירוע שלכם, בהתאם לדרישות הכשרות.</p>\n  </div>\n  <div class=\"faq-item\">\n    <h3>לאילו סוגי אירועים בנתניה מתאים השירות?</h3>\n    <p>השירות מיועד בעיקר לחתונות, לאירועי שיא פרטיים ולאירועים של חברות עם תקציב גבוה.</p>\n  </div>\n</section>",
+    "placementInstruction": "יש להטמיע את בלוק השאלות והתשובות בתחתית העמוד /קייטרינג-בנתניה/ לפני הפוטר.",
+    "metaDescription": "מחפשים קייטרינג בנתניה? קייטרינג מרלו בהובלת השף יוסי שבת מציע קייטרינג כשר למהדרין, חווית פרימיום באירוע שלכם, חתונות ואירועים עסקיים יוקרתיים.",
+    "jsonLd": {
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "מי מוביל את התפריט הקולינרי באירועים בנתניה?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "השף יוסי שבת מוביל את התפריט של קייטרינג מרלו. הוא בונה תפריטי יוקרה מותאמים אישית לחתונות ולאירועים עסקיים."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "האם השירות כולל מענה לאירועים כשרים באזור השרון?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "כן. קייטרינג מרלו מספק קייטרינג כשר למהדרין בנתניה ומבטיח חווית פרימיום באירוע לפי דרישות הכשרות."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "לאילו סוגי אירועים בנתניה מתאים השירות?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "השירות מיועד בעיקר לחתונות, אירועי שיא פרטיים ואירועים של חברות עם תקציב גבוה."
+          }
+        }
+      ]
+    },
+    "tamarNotes": "הבלוק כולל שאלות ממוקדות התואמות את אוצר המילים המחייב מהעמוד והעובדות המותרות (השף יוסי שבת). נמנעתי מהגדרות כלליות וממילים אסורות.",
+    "noaChanges": "חיבור משפטים קצרים לזרימה טבעית יותר (חיבור באמצעות ו' החיבור), הוספת ו' היחס (לאירועי שיא, ולאירועים), והתאמה מדויקת לרשימת המונחים המורשים.",
+    "registerScore": 98,
+    "groundingRisk": "low",
+    "generatedVia": "primary:gemini-3.7-flash",
+    "schemaValid": true,
+    "confidence": 100,
+    "shipDecision": "autoship"
+  }
+}

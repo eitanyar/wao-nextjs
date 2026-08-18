@@ -1,7 +1,7 @@
 {
   "clientId": "merlo",
   "siteUrl": "https://www.merlo-c.co.il/",
-  "cmsType": "unknown",
+  "cmsType": "wordpress",
   "businessNiche": "קייטרינג יוקרתי ואירועים יוקרתיים — חתונות ואירועי שיא, בנוסף קייטרינג לחברות (מגזר עסקי בעל תקציב גבוה)",
   "topService": "קייטרינג פרימיום לחתונות ולאירועי שיא; קייטרינג עסקי לחברות",
   "targetLocation": "unknown — to be assessed",
@@ -12,12 +12,341 @@
   "approvalWhatsapp": "972526148860",
   "tone": "unknown — to be assessed",
   "pin": "3807",
+  "contentLanguage": "he",
   "entitlements": [
+    "geo",
     "ads-overlap:internal",
     "title-bot:internal",
     "pareto:internal",
     "anomaly:internal",
     "advisor:internal"
   ],
-  "brandName": "קייטרינג מרלו"
+  "brandName": "קייטרינג מרלו",
+  "facts": [
+    {
+      "id": "pricing-821e87d3",
+      "category": "pricing",
+      "value": "250 ש\"ח מחיר ממוצע לחתונה",
+      "sourceQuote": "כששואלים אותנו מה המחיר הממוצע לחתונה אצלכם ואנו אומרים 250 ש\"ח",
+      "sourceUrl": "https://www.merlo-c.co.il/%D7%A2%D7%9C%D7%95%D7%AA-%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%9C%D7%97%D7%AA%D7%95%D7%A0%D7%94/",
+      "source": "website:auto",
+      "confirmed": false
+    },
+    {
+      "id": "pricing-bf2d8ab8",
+      "category": "pricing",
+      "value": "טווח מחירים למנה נע בין 200 ש\"ח ל-400 ש\"ח עבור קייטרינג בשרי איכותי",
+      "sourceQuote": "שטווח המחירים למנה נע בין 200 ש\"ח ל-400 ש\"ח עבור קייטרינג בשרי איכותי",
+      "sourceUrl": "https://www.merlo-c.co.il/%D7%A2%D7%9C%D7%95%D7%AA-%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%9C%D7%97%D7%AA%D7%95%D7%A0%D7%94/",
+      "source": "website:auto",
+      "confirmed": false
+    },
+    {
+      "id": "pricing-37b1bbd6",
+      "category": "pricing",
+      "value": "קייטרינג שף יעלה 400 ש\"ח ומעלה",
+      "sourceQuote": "קייטרינג שף יעלה הרבה יותר. 400 ש\"ח ומעלה!",
+      "sourceUrl": "https://www.merlo-c.co.il/%D7%A2%D7%9C%D7%95%D7%AA-%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%9C%D7%97%D7%AA%D7%95%D7%A0%D7%94/",
+      "source": "website:auto",
+      "confirmed": false
+    },
+    {
+      "id": "pricing-c9176984",
+      "category": "pricing",
+      "value": "המחיר לסועד הוא 250 ₪ בממוצע",
+      "sourceQuote": "אצלנו המחיר לסועד הוא 250 ₪ בממוצע",
+      "sourceUrl": "https://www.merlo-c.co.il/%D7%A2%D7%9C%D7%95%D7%AA-%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%9C%D7%97%D7%AA%D7%95%D7%A0%D7%94/",
+      "source": "website:auto",
+      "confirmed": false
+    },
+    {
+      "id": "credential-9922ba2a",
+      "category": "credential",
+      "value": "כשר למהדרין",
+      "sourceQuote": "קייטרינג פרמיום, כשר למהדרין",
+      "sourceUrl": "https://www.merlo-c.co.il/%D7%A2%D7%9C%D7%95%D7%AA-%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%9C%D7%97%D7%AA%D7%95%D7%A0%D7%94/",
+      "source": "website:auto",
+      "confirmed": false
+    },
+    {
+      "id": "certifying_body-09775224",
+      "category": "certifying_body",
+      "value": "בד\"ץ הרב שלמה מחפוד יורה דעה",
+      "sourceQuote": "הבשרים בהשגחת בד\"ץ הרב שלמה מחפוד יורה דעה",
+      "sourceUrl": "https://www.merlo-c.co.il/%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%91%D7%99%D7%A8%D7%95%D7%A9%D7%9C%D7%99%D7%9D/",
+      "source": "website:auto",
+      "confirmed": false
+    },
+    {
+      "id": "person-0ede3370",
+      "category": "person",
+      "value": "השף יוסי שבת",
+      "sourceQuote": "השף יוסי בן שבת, המאסטר, מביא איתו ניסיון ותשוקה",
+      "sourceUrl": "https://www.merlo-c.co.il/%D7%A2%D7%9C%D7%95%D7%AA-%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%9C%D7%97%D7%AA%D7%95%D7%A0%D7%94/",
+      "source": "website:auto",
+      "confirmed": true,
+      "confirmedNote": "Confirmed by Eitan 2026-08-18: chef is יוסי שבת (site text says יוסי בן שבת — that is a site typo, corrected here). Other extracted chef names (שלומי שבת, משה משה) are site errors, ignore."
+    },
+    {
+      "id": "person-d89863f2",
+      "category": "person",
+      "value": "מאור - מנהל הפקות",
+      "sourceQuote": "לפגישה עם מאור שהיה מקצועי מאוד",
+      "sourceUrl": "https://www.merlo-c.co.il/%D7%A2%D7%9C%D7%95%D7%AA-%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%9C%D7%97%D7%AA%D7%95%D7%A0%D7%94/",
+      "source": "website:auto",
+      "confirmed": false
+    },
+    {
+      "id": "person-c40576ac",
+      "category": "person",
+      "value": "שימי",
+      "sourceQuote": "מאור ושימי תודה על הכל",
+      "sourceUrl": "https://www.merlo-c.co.il/%D7%A2%D7%9C%D7%95%D7%AA-%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%9C%D7%97%D7%AA%D7%95%D7%A0%D7%94/",
+      "source": "website:auto",
+      "confirmed": false
+    },
+    {
+      "id": "number-98b9d562",
+      "category": "number",
+      "value": "הזמנות מחמישים אורחים ומעלה",
+      "sourceQuote": "הזמנות מחמישים אורחים ומעלה",
+      "sourceUrl": "https://www.merlo-c.co.il/%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%91%D7%99%D7%A8%D7%95%D7%A9%D7%9C%D7%99%D7%9D/",
+      "source": "website:auto",
+      "confirmed": false
+    },
+    {
+      "id": "number-322072f5",
+      "category": "number",
+      "value": "20 שנות ניסיון",
+      "sourceQuote": "20 שנות ניסיון וכבר מהשנה הראשונה",
+      "sourceUrl": "https://www.merlo-c.co.il/%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%91%D7%99%D7%A8%D7%95%D7%A9%D7%9C%D7%99%D7%9D/",
+      "source": "website:auto",
+      "confirmed": false
+    },
+    {
+      "id": "number-b1a70652",
+      "category": "number",
+      "value": "עשרים שנות ניסיון",
+      "sourceQuote": "קייטרינג מרלו מביא לשולחן שלכם עשרים שנות ניסיון",
+      "sourceUrl": "https://www.merlo-c.co.il/",
+      "source": "website:auto",
+      "confirmed": false
+    },
+    {
+      "id": "pricing-2b5c3440",
+      "category": "pricing",
+      "value": "ממוצע כללי לשירותי קייטרינג לרבות הגשה: ₪250 למנה",
+      "sourceQuote": "ממוצע כללי ולא מחייב לשירותי קייטרינג לרבות הגשה: ₪250 למנה",
+      "sourceUrl": "https://www.merlo-c.co.il/",
+      "source": "website:auto",
+      "confirmed": false
+    },
+    {
+      "id": "pricing-cbf7d12b",
+      "category": "pricing",
+      "value": "אוכל מוכן להגשה החל מ-100 ש\"ח למנה",
+      "sourceQuote": "אפשרות זאת עולה החל מ-100 ש\"ח למנה",
+      "sourceUrl": "https://www.merlo-c.co.il/",
+      "source": "website:auto",
+      "confirmed": false
+    },
+    {
+      "id": "pricing-7de31e53",
+      "category": "pricing",
+      "value": "חבילה ל-50 אורחים ב-10,000 ש\"ח",
+      "sourceQuote": "חבילה עם מחיר מבצע הכולל כל מה שצריך לארח ולפנק 50 אורחים, הכל רק ב-10,000 ש\"ח בלבד",
+      "sourceUrl": "https://www.merlo-c.co.il/%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%91%D7%9B%D7%A4%D7%A8-%D7%A1%D7%91%D7%90/",
+      "source": "website:auto",
+      "confirmed": false
+    },
+    {
+      "id": "pricing-784dd0be",
+      "category": "pricing",
+      "value": "קייטרינג למהדרין נפוץ עולה החל מ-120 ש\"ח",
+      "sourceQuote": "קייטרינג למהדרין נפוץ עולה החל מ-120 ש\"ח",
+      "sourceUrl": "https://www.merlo-c.co.il/%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%9C%D7%90%D7%99%D7%A8%D7%95%D7%A2%D7%99%D7%9D-%D7%A7%D7%98%D7%A0%D7%99%D7%9D/",
+      "source": "website:auto",
+      "confirmed": false
+    },
+    {
+      "id": "pricing-ec02990a",
+      "category": "pricing",
+      "value": "המינימום להפקה מלאה במחירים אלו הוא בתשלום עבור 70 סועדים",
+      "sourceQuote": "והמינימום להפקה מלאה במחירים אלו הוא בתשלום עבור 70 סועדים",
+      "sourceUrl": "https://www.merlo-c.co.il/%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%9C%D7%90%D7%99%D7%A8%D7%95%D7%A2%D7%99%D7%9D-%D7%A7%D7%98%D7%A0%D7%99%D7%9D/",
+      "source": "website:auto",
+      "confirmed": false
+    },
+    {
+      "id": "pricing-db0ee48a",
+      "category": "pricing",
+      "value": "מחיר ממוצע בחתונות גדולות בחצרות וילות החל מ-200 ש\"ח למנה",
+      "sourceQuote": "מחיר ממוצע בחתונות גדולות (בחצרות וילות למשל) הוא בסדרי גודל של החל מ-200 ש\"ח למנה",
+      "sourceUrl": "https://www.merlo-c.co.il/%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%9C%D7%97%D7%AA%D7%95%D7%A0%D7%94-%D7%91%D7%91%D7%99%D7%AA/",
+      "source": "website:auto",
+      "confirmed": false
+    },
+    {
+      "id": "pricing-5fcc696a",
+      "category": "pricing",
+      "value": "בחתונות קטנות מ-250 ש\"ח",
+      "sourceQuote": "בקטנות, מ-250 ש\"ח",
+      "sourceUrl": "https://www.merlo-c.co.il/%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%9C%D7%97%D7%AA%D7%95%D7%A0%D7%94-%D7%91%D7%91%D7%99%D7%AA/",
+      "source": "website:auto",
+      "confirmed": false
+    },
+    {
+      "id": "person-aa25cf3c",
+      "category": "person",
+      "value": "השף שלומי שבת",
+      "sourceQuote": "אומר השף שלומי שבת מקייטרינג מרלו",
+      "sourceUrl": "https://www.merlo-c.co.il/%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%91%D7%9B%D7%A4%D7%A8-%D7%A1%D7%91%D7%90/",
+      "source": "website:auto",
+      "confirmed": false
+    },
+    {
+      "id": "person-bf85c85e",
+      "category": "person",
+      "value": "שף משה משה",
+      "sourceQuote": "ממטבח השף יוסי שבת ושף משה משה",
+      "sourceUrl": "https://www.merlo-c.co.il/",
+      "source": "website:auto",
+      "confirmed": false
+    },
+    {
+      "id": "person-e860df4f",
+      "category": "person",
+      "value": "מאור מנהל ההפקות",
+      "sourceQuote": "התייעצו עם מאור מנהל ההפקות",
+      "sourceUrl": "https://www.merlo-c.co.il/%D7%90%D7%99%D7%A8%D7%95%D7%A2%D7%99%D7%9D-%D7%A2%D7%A1%D7%A7%D7%99%D7%99%D7%9D/",
+      "source": "website:auto",
+      "confirmed": false
+    },
+    {
+      "id": "number-546fffc2",
+      "category": "number",
+      "value": "054-7672422 מספר טלפון",
+      "sourceQuote": "התקשרו עכשיו 054-7672422",
+      "sourceUrl": "https://www.merlo-c.co.il/%D7%A2%D7%9C%D7%95%D7%AA-%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%9C%D7%97%D7%AA%D7%95%D7%A0%D7%94/",
+      "source": "website:auto",
+      "confirmed": false
+    },
+    {
+      "id": "number-c14a82d4",
+      "category": "number",
+      "value": "צומת ביל\"ו, רחובות - כתובת",
+      "sourceQuote": "054-7672422 צומת ביל״ו, רחובות",
+      "sourceUrl": "https://www.merlo-c.co.il/%D7%A2%D7%9C%D7%95%D7%AA-%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%9C%D7%97%D7%AA%D7%95%D7%A0%D7%94/",
+      "source": "website:auto",
+      "confirmed": false
+    },
+    {
+      "id": "program-56a4feb3",
+      "category": "program",
+      "value": "תפריט פרונטלי - הכנת מנות מול האורחים",
+      "sourceQuote": "תפריט פרונטלי ייחודי שבו אנו מרכיבים את המנות ממש אל מול האורחים שלכם",
+      "sourceUrl": "https://www.merlo-c.co.il/%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%91%D7%99%D7%A8%D7%95%D7%A9%D7%9C%D7%99%D7%9D/",
+      "source": "website:auto",
+      "confirmed": false
+    },
+    {
+      "id": "program-c522eeb3",
+      "category": "program",
+      "value": "תפריט freestyle - הכנת מנות מול העיניים",
+      "sourceQuote": "ה",
+      "sourceUrl": "https://www.merlo-c.co.il/%D7%A2%D7%9C%D7%95%D7%AA-%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%9C%D7%97%D7%AA%D7%95%D7%A0%D7%94/",
+      "source": "website:auto",
+      "confirmed": false
+    },
+    {
+      "id": "program-e37c13d2",
+      "category": "program",
+      "value": "קייטרינג כשר למהדרין ברמת גן",
+      "sourceQuote": "קייטרינג כשר למהדרין ברמת גן",
+      "sourceUrl": "https://www.merlo-c.co.il/%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%91%D7%A8%D7%9E%D7%AA-%D7%92%D7%9F/",
+      "source": "website:auto",
+      "confirmed": false
+    },
+    {
+      "id": "pricing-9aae688d",
+      "category": "pricing",
+      "value": "מחיר מבצע הכול כלול ל-50 אורחים ב-10,000 ש\"ח",
+      "sourceQuote": "מחיר מבצע הכול כלול ל-50 אורחים, ב-10,000 ש\"ח בלבד!",
+      "sourceUrl": "https://www.merlo-c.co.il/%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%91%D7%A8%D7%9E%D7%AA-%D7%92%D7%9F/",
+      "source": "website:auto",
+      "confirmed": false
+    },
+    {
+      "id": "number-c1e384cb",
+      "category": "number",
+      "value": "טלפון: 054-7672422",
+      "sourceQuote": "054-7672422",
+      "sourceUrl": "https://www.merlo-c.co.il/%D7%A2%D7%9C%D7%95%D7%AA-%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%9C%D7%97%D7%AA%D7%95%D7%A0%D7%94/",
+      "source": "website:auto",
+      "confirmed": false
+    },
+    {
+      "id": "program-d03e7d86",
+      "category": "program",
+      "value": "קייטרינג לאירועי חברה",
+      "sourceQuote": "קייטרינג לאירועי חברה",
+      "sourceUrl": "https://www.merlo-c.co.il/%D7%A2%D7%9C%D7%95%D7%AA-%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%9C%D7%97%D7%AA%D7%95%D7%A0%D7%94/",
+      "source": "website:auto",
+      "confirmed": false
+    },
+    {
+      "id": "number-0088c453",
+      "category": "number",
+      "value": "20 שנה של ליווי חברות",
+      "sourceQuote": "כבר 20 שנה שאנחנו מלווים את החברות המובילות במשק",
+      "sourceUrl": "https://www.merlo-c.co.il/%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%9C%D7%90%D7%99%D7%A8%D7%95%D7%A2%D7%99-%D7%97%D7%91%D7%A8%D7%94/",
+      "source": "website:auto",
+      "confirmed": false
+    },
+    {
+      "id": "program-7c1b0308",
+      "category": "program",
+      "value": "תפריט סושי, תפריט דוכני מזון, מנות מסתובבות, הגשה ובופה",
+      "sourceQuote": "תפריט סושי, תפריט דוכני מזון, מנות מסתובבות, הגשה וכמובן בופה",
+      "sourceUrl": "https://www.merlo-c.co.il/%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%9C%D7%90%D7%99%D7%A8%D7%95%D7%A2%D7%99-%D7%97%D7%91%D7%A8%D7%94/",
+      "source": "website:auto",
+      "confirmed": false
+    },
+    {
+      "id": "program-027eff7f",
+      "category": "program",
+      "value": "קייטרינג בשרי, על האש, טבעוני, צמחוני, חלבי",
+      "sourceQuote": "בשרי, על האש או דווקא טבעוני, צמחוני / חלבי",
+      "sourceUrl": "https://www.merlo-c.co.il/%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%9C%D7%90%D7%99%D7%A8%D7%95%D7%A2%D7%99-%D7%97%D7%91%D7%A8%D7%94/",
+      "source": "website:auto",
+      "confirmed": false
+    },
+    {
+      "id": "program-87c30c56",
+      "category": "program",
+      "value": "הפקת אירוע לבנק הפועלים",
+      "sourceQuote": "צפו בנו בעת הפקת אירוע לבנק הפועלים",
+      "sourceUrl": "https://www.merlo-c.co.il/%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%9C%D7%90%D7%99%D7%A8%D7%95%D7%A2%D7%99-%D7%97%D7%91%D7%A8%D7%94/",
+      "source": "website:auto",
+      "confirmed": false
+    },
+    {
+      "id": "number-630ce09a",
+      "category": "number",
+      "value": "כתובת: צומת ביל\"ו, רחובות",
+      "sourceQuote": "צומת ביל״ו, רחובות",
+      "sourceUrl": "https://www.merlo-c.co.il/%D7%A2%D7%9C%D7%95%D7%AA-%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%9C%D7%97%D7%AA%D7%95%D7%A0%D7%94/",
+      "source": "website:auto",
+      "confirmed": false
+    },
+    {
+      "id": "number-0abbf0a4",
+      "category": "number",
+      "value": "אימייל: info@merlo-c.co.il",
+      "sourceQuote": "info@merlo-c.co.il",
+      "sourceUrl": "https://www.merlo-c.co.il/%D7%A2%D7%9C%D7%95%D7%AA-%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%9C%D7%97%D7%AA%D7%95%D7%A0%D7%94/",
+      "source": "website:auto",
+      "confirmed": false
+    }
+  ]
 }

@@ -12,6 +12,7 @@
   "approvalWhatsapp": "972528664646",
   "tone": "מקצועי, ישיר, מבוסס על נתונים - לא מנופעואליסטי ולא אגרסיבי",
   "pin": "1947",
+  "contentLanguage": "he",
   "entitlements": [
     "geo",
     "pareto:internal",

@@ -1,0 +1,47 @@
+{
+  "actionId": "retter-2-קורס-nlp-אונליין",
+  "clientId": "retter",
+  "rank": 2,
+  "query": "קורס nlp אונליין",
+  "rankingUrl": "https://www.retter.co.il/%D7%9C%D7%99%D7%9E%D7%95%D7%93%D7%99-nlp-%D7%90%D7%95%D7%A0%D7%9C%D7%99%D7%99%D7%9F/",
+  "implementationMode": "enhance",
+  "actionType": "faq_block",
+  "priority": "HIGH",
+  "score": 11495,
+  "impressions": 573,
+  "clicks": 10,
+  "ctr": 1.7,
+  "status": "superseded",
+  "shipDecision": "review",
+  "confidence": 100,
+  "generatedAt": "2026-08-18T04:31:27.387Z",
+  "vocabSource": "page",
+  "vocabConfidence": "high",
+  "cannibalFlag": "REVIEW",
+  "cannibalReasons": [
+    "MULTI_URL"
+  ],
+  "cannibalUrls": [
+    {
+      "url": "https://www.retter.co.il/%D7%A7%D7%95%D7%A8%D7%A1-nlp-%D7%91%D7%97%D7%99%D7%A0%D7%9D/",
+      "impressions": 100,
+      "position": 23.1
+    }
+  ],
+  "content": {
+    "hebrewContent": "<section class=\"faq-block\">\n<h2>שאלות נפוצות על קורס NLP אונליין</h2>\n\n<details open>\n<summary>מה ההבדל בין קורס NLP אונליין לפרונטלי?</summary>\n<p>קורס NLP אונליין בזום שנותן הכשרה בינלאומית זהה בתוכן, בהיקף ובהסמכה למסלול הפרונטלי. מכללת רטר מעבירה את אותו חומר לימודי, אותם תרגילים ואותה הסמכה — דרך המסך. ההבדל היחיד הוא הגמישות: לומדים מהבית, בלי נסיעות, ועדיין מקבלים ליווי אישי מהמנחים.</p>\n</details>\n\n<details>\n<summary>איך נראה הליווי האישי בקורס אונליין?</summary>\n<p>מכללת רטר שומרת על קבוצות קטנות גם בלימודי אונליין. המנחים זמינים לשאלות בזמן השיעור ואחריו, ומתקיימים מעגלי סופרוויז׳ן מקוונים להעמקה. דפנה רטר ואמיר רטר מלווים את המסלול לאורך כל הדרך — בדיוק כמו בכיתה הפיזית.</p>\n</details>\n\n<details>\n<summary>ההסמכה בקורס NLP אונליין מוכרת בינלאומית?</summary>\n<p>כן. ההכשרה בקורס NLP אונליין של מכללת רטר מוכרת על ידי ABNLP — הארגון הבינלאומי שמאשר את הסמכת מנחי ה-NLP של המכללה. התעודה שמקבלים בסיום זהה לתעודת המסלול הפרונטלי, עם תוקף בינלאומי מלא.</p>\n</details>\n\n<details>\n<summary>למי הקורס NLP אונליין מתאים במיוחד?</summary>\n<p>לימודי NLP אונליין מתאימים למטפלים ומאמנים שרוצים הכשרה מקצועית בלי להתפשר על הליווי. זה מתאים במיוחד למי שגר רחוק מפתח תקווה, קריית ביאליק או נס ציונה — או למי שהלו",
+    "noaChanges": null,
+    "generatedVia": "fallback:qwen3.7-plus",
+    "schemaValid": false,
+    "schemaErrors": [
+      "jsonLd must be a non-null object, not an array"
+    ],
+    "confidence": 100,
+    "shipDecision": "review",
+    "reviewReasons": [
+      "BLOCKER: schema invalid (jsonLd must be a non-null object, not an array)"
+    ]
+  },
+  "supersededAt": "2026-08-18T04:58:38.522Z",
+  "supersededBy": "retter-2-קורס-nlp-אונליין"
+}

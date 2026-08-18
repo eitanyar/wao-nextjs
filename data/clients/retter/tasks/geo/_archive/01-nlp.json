@@ -1,0 +1,96 @@
+{
+  "actionId": "retter-1-nlp",
+  "clientId": "retter",
+  "rank": 1,
+  "query": "nlp",
+  "rankingUrl": "https://www.retter.co.il/petah-tikva-branch/",
+  "implementationMode": "enhance",
+  "actionType": "faq_block",
+  "priority": "MEDIUM",
+  "score": 17056,
+  "impressions": 932,
+  "clicks": 3,
+  "ctr": 0.3,
+  "status": "superseded",
+  "shipDecision": "autoship",
+  "confidence": 100,
+  "generatedAt": "2026-08-18T04:32:02.256Z",
+  "vocabSource": "page",
+  "vocabConfidence": "high",
+  "cannibalFlag": "REVIEW",
+  "cannibalReasons": [
+    "MULTI_URL",
+    "HEAD_TERM_ON_LOCATION"
+  ],
+  "cannibalUrls": [
+    {
+      "url": "https://www.retter.co.il/nlp/",
+      "impressions": 11233,
+      "position": 2.6
+    },
+    {
+      "url": "https://www.retter.co.il/kiryat-bialik-branch/",
+      "impressions": 634,
+      "position": 9.7
+    }
+  ],
+  "content": {
+    "hebrewContent": "<section itemscope itemtype=\"https://schema.org/FAQPage\"><h2>שאלות נפוצות על לימודי NLP בסניף פתח תקווה</h2><div itemprop=\"mainEntity\" itemscope itemtype=\"https://schema.org/Question\"><h3 itemprop=\"name\">איפה מתקיימים לימודי NLP בסניף פתח תקווה?</h3><div itemprop=\"acceptedAnswer\" itemscope itemtype=\"https://schema.org/Answer\"><p itemprop=\"text\">לימודי NLP של מכללת רטר מתקיימים בסניף פתח תקווה, במתחם נגיש ומוכר. מכללת רטר מפעילה את הסניף לצד סניפי קריית ביאליק ונס ציונה, ומציעה גם מסלול אונליין מלא למי שמחפש גמישות.</p></div></div><div itemprop=\"mainEntity\" itemscope itemtype=\"https://schema.org/Question\"><h3 itemprop=\"name\">מי מנחה את קורסי ה-NLP בסניף פתח תקווה?</h3><div itemprop=\"acceptedAnswer\" itemscope itemtype=\"https://schema.org/Answer\"><p itemprop=\"text\">את לימודי ה-NLP בסניף פתח תקווה מנחים דפנה רטר ואמיר רטר, מייסדי מכללת רטר. ההכשרה מוכרת על ידי ABNLP — הארגון הבינלאומי המכיר בהכשרת מנחי NLP — ומעניקה תעודה בתוקף בינלאומי. מכללת רטר מסמיכה מנחי NLP בכל הדרגות מזה 30 שנה.</p></div></div><div itemprop=\"mainEntity\" itemscope itemtype=\"https://schema.org/Question\"><h3 itemprop=\"name\">מה כוללים לימודי ה-NLP בסניף פתח תקווה מעבר לקורס עצמו?</h3><div itemprop=\"acceptedAnswer\" itemscope itemtype=\"https://schema.org/Answer\"><p itemprop=\"text\">לימודי ה-NLP בסניף פתח תקווה כוללים ליווי אישי לאורך כל ההכשרה, מעגלי סופרוויז׳ן, ימי עיון וסמינרים. בוגרי מכללת רטר מצטרפים לאלפי בוגרים שלמדו במסלול, וממשיכים לקבל כלים מקצועיים גם אחרי סיום הקורס דרך המגזין המקוון של המכללה.</p></div></div><div itemprop=\"mainEntity\" itemscope itemtype=\"https://schema.org/Question\"><h3 itemprop=\"name\">האם לימודי ה-NLP בסניף פתח תקווה מתאימים גם למי שלא גר באזור?</h3><div itemprop=\"acceptedAnswer\" itemscope itemtype=\"https://schema.org/Answer\"><p itemprop=\"text\">כן. מכללת רטר מציעה את לימודי ה-NLP גם במסלול אונליין, כך שניתן להצטרף לסניף פתח תקווה או לבחור ללמוד מרחוק. ההכשרה זהה בתוכנה ובתוקפה, והליווי האישי ניתן בשני המסלולים.</p></div></div></section>",
+    "placementInstruction": "הוסיפי את בלוק ה-FAQ בסוף עמוד /petah-tikva-branch/, אחרי הטקסט הראשי של הסניף ולפני הפוטר, כדי שגוגל יזהה אותו כמבנה שאלות-תשובות רלוונטי למיקום.",
+    "metaDescription": "לימודי NLP בסניף פתח תקווה של מכללת רטר — הכשרה בינלאומית מוכרת מטעם ABNLP, עם דפנה ואמיר רטר. ליווי אישי, סופרוויז׳ן ואלפי בוגרים.",
+    "jsonLd": {
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "איפה מתקיימים לימודי NLP בסניף פתח תקווה?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "לימודי NLP של מכללת רטר מתקיימים בסניף פתח תקווה במתחם מוכר ונגיש. מכללת רטר מפעילה את הסניף לצד סניפי קריית ביאליק ונס ציונה, ומציעה גם מסלול אונליין מלא למי שרוצה גמישות."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "מי מנחה את קורסי NLP בסניף פתח תקווה?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "את לימודי NLP בסניף פתח תקווה מנחים דפנה רטר ואמיר רטר, מייסדי מכללת רטר. ההכשרה מוכרת על ידי ABNLP, הארגון הבינלאומי למאמני NLP, ומעניקה תעודה בתוקף בינלאומי. מכללת רטר מסמיכה מנחי NLP בכל הדרגות מזה 30 שנה."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "מה כוללים לימודי NLP בסניף פתח תקווה מעבר לקורס עצמו?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "לימודי NLP בסניף פתח תקווה כוללים ליווי אישי לאורך כל ההכשרה, מעגלי סופרוויז'ן, ימי עיון וסמינרים. בוגרי מכללת רטר מצטרפים לאלפי בוגרים שלמדו במסלול, וממשיכים לקבל כלים מקצועיים גם אחרי סיום הקורס דרך המגזין המקוון של מכללת רטר."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "האם לימודי NLP בסניף פתח תקווה מתאימים גם למי שלא גר באזור?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "כן. מכללת רטר מציעה את לימודי NLP גם במסלול אונליין, כך שניתן להצטרף לסניף פתח תקווה או לבחור למוד מרחוק. ההכשרה זהה בתוכנה ובתוקפה, והליווי האישי ניתן בשני המסלולים."
+          }
+        }
+      ]
+    },
+    "tamarNotes": "1. לא צוינה כתובת מדויקת בסניף פתח תקווה — לא המצאתי פרטים תפעוליים. אם יש כתובת ספציפית, להוסיף לתשובה הראשונה ולעדכן את ה-LocalBusiness schema. 2. לא צוינו שעות לימוד או תאריכי מחזורים — נמנעתי מלציין אותם. 3. אוצר המילים מהעמוד מגביל ל'סניף פתח תקווה', 'לימודי', 'מכללת רטר לימודי' — השתמשתי בצורות אלה בלבד ולא הוספתי כינויים כמו 'מכון' או 'בית ספר'. 4. שאלה 2 (הנחיה + ABNLP + 30 שנה) היא השאלה הייחודית שרק מכללת רטר יכולה לענות עליה — היא מחזירה עובדות מאומתות ומבדלות. 5. ה-JSON-LD מוגדר כ-FAQPage בלבד — לא שילבתי LocalBusiness כי אין כתובת מאומתת להזין בו. ברגע שתתקבל כתובת, להוסיף אובייקט LocalBusiness נפרד עם geo ו-address.",
+    "noaChanges": [
+      "תיקון מבנים תחביריים: החלפת 'מי שרוצה' ב-'מי שמחפש' לטבעיות רבה יותר.",
+      "הוספת היידוע 'את' לפני 'לימודי ה-NLP' במקומות הרלוונטיים (מושא ישיר מיודע).",
+      "החלפת מקפים רגילים במקף ארוך (em-dash —) בהסבר על ABNLP.",
+      "החלפת גרשיים ASCII בגרשיים עבריים תקניים (״ ״) ובגרש בודד (׳) במילה סופרוויז׳ן.",
+      "תיקון שגיאת הקלדה: 'למוד' תוקן ל-'ללמוד'.",
+      "התאמת ניסוחים לתרגום טבעי יותר: 'מצטרפים לאלפי בוגרים' שומר על המשמעות אך זורם טוב יותר בעברית מדוברת/שיווקית."
+    ],
+    "registerScore": 95,
+    "groundingRisk": "low",
+    "generatedVia": "fallback:qwen3.7-plus",
+    "schemaValid": true,
+    "confidence": 100,
+    "shipDecision": "autoship"
+  },
+  "supersededAt": "2026-08-18T04:58:38.519Z",
+  "supersededBy": "retter-1-nlp"
+}
