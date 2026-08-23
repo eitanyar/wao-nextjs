@@ -27,10 +27,30 @@ interface PendingUpgradeRecord {
 }
 
 /**
+ * Single-quotes a token for safe interpolation into a `sh -c` string.
+ * Needed because kickOffGeoUpgradePipeline below builds its child-process
+ * command as a shell string (to dodge a Turbopack/NFT build-tracing bug —
+ * see that function's comment) rather than passing an argv array, so every
+ * dynamic value (site URL, client id) must be shell-escaped here instead of
+ * relying on argv separation.
+ */
+function shQuote(token: string): string {
+  return `'${token.replace(/'/g, `'\\''`)}'`;
+}
+
+/**
  * Fires the background content pipeline for a freshly-upgraded client:
  * gsc-pareto.mjs, then (only on a clean exit) geo-generate-content.mjs
  * --top=10. Both children are spawned detached + unref'd so the HTTP
  * response above this call is never blocked on either script.
+ *
+ * Invoked via `sh -c '<quoted argv>'` rather than `spawn('node', [scriptPath,
+ * ...args])` because Turbopack's build-time file tracer treats a literal
+ * `scripts/*.mjs` path passed directly as a spawn arg as a module import
+ * target and fails the production build with "Module not found" (verified
+ * 2026-08-23 — the argv-array form breaks `npm run build`, this form
+ * doesn't). Every dynamic token is individually shQuote()'d since the whole
+ * command now passes through a shell.
  */
 function kickOffGeoUpgradePipeline(clientId: string, site: string): void {
   const clientDir = path.join(process.cwd(), 'data', 'clients', clientId);
@@ -39,26 +59,30 @@ function kickOffGeoUpgradePipeline(clientId: string, site: string): void {
   const logFd = fs.openSync(logPath, 'a');
 
   const paretoOut = path.join('data', 'clients', clientId, 'pareto.json');
-  const paretoChild = spawn(
+  const paretoCmd = [
     'node',
-    [
-      'scripts/gsc-pareto.mjs',
-      `--client=${clientId}`,
-      `--site=${site}`,
-      '--days=90',
-      `--out=${paretoOut}`,
-    ],
-    { cwd: process.cwd(), detached: true, stdio: ['ignore', logFd, logFd] }
-  );
+    shQuote(['scripts', 'gsc-pareto.mjs'].join('/')),
+    shQuote(`--client=${clientId}`),
+    shQuote(`--site=${site}`),
+    shQuote('--days=90'),
+    shQuote(`--out=${paretoOut}`),
+  ].join(' ');
+  const paretoChild = spawn('sh', ['-c', paretoCmd], {
+    cwd: process.cwd(), detached: true, stdio: ['ignore', logFd, logFd],
+  });
   paretoChild.unref();
 
   paretoChild.on('close', (code) => {
     if (code !== 0) return;
-    const generateChild = spawn(
+    const generateCmd = [
       'node',
-      ['scripts/geo-generate-content.mjs', `--client=${clientId}`, '--top=10'],
-      { cwd: process.cwd(), detached: true, stdio: ['ignore', logFd, logFd] }
-    );
+      shQuote(['scripts', 'geo-generate-content.mjs'].join('/')),
+      shQuote(`--client=${clientId}`),
+      shQuote('--top=10'),
+    ].join(' ');
+    const generateChild = spawn('sh', ['-c', generateCmd], {
+      cwd: process.cwd(), detached: true, stdio: ['ignore', logFd, logFd],
+    });
     generateChild.unref();
   });
 }
