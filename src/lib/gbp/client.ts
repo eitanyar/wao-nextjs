@@ -3,9 +3,18 @@
  * contract, gated on credentials. Mirrors the GOOGLE_ADS_* env-var naming pattern already
  * used in this repo (see .env.local) so ops can add real creds the same way.
  *
- * Required env vars (none are currently set — see runGbpScopeSmokeTest()):
+ * Required env vars for credentials (may be present in .env.local ahead of Google's
+ * Business Profile API access approval for this Cloud Project — see
+ * memory: project_gbp_quota_request_2026_08_21):
  *   GBP_CLIENT_ID, GBP_CLIENT_SECRET, GBP_REFRESH_TOKEN
  *   (OAuth scope needed: https://www.googleapis.com/auth/business.manage)
+ *
+ * Credentials being present does NOT mean it is safe to make a live call — the Cloud
+ * Project may not yet be approved for Business Profile API access. A second, independent
+ * gate — GBP_INTEGRATION_ENABLED=true — must also be explicitly set before any live-call
+ * path proceeds. Use `isGbpLive()` (creds present AND the flag is 'true') to guard any
+ * code path that calls out to Google; `hasGbpCredentials()` alone only tells you the vars
+ * are populated, not that it is safe/approved to use them.
  *
  * Endpoints used (current GBP API surface, split across three services):
  *   - Account Management API  — mybusinessaccountmanagement.googleapis.com/v1/accounts
@@ -31,9 +40,23 @@ export function hasGbpCredentials(): boolean {
   );
 }
 
-async function getAccessToken(): Promise<string> {
+/**
+ * Combined live-call gate: creds present AND explicit operator opt-in via
+ * GBP_INTEGRATION_ENABLED=true. Credentials alone are not sufficient — they may be
+ * populated ahead of Google approving this Cloud Project for Business Profile API access.
+ * Any code path that would make a live network call to Google must check this, not just
+ * `hasGbpCredentials()`.
+ */
+export function isGbpLive(): boolean {
+  return hasGbpCredentials() && process.env.GBP_INTEGRATION_ENABLED === 'true';
+}
+
+export async function getAccessToken(): Promise<string> {
   if (!hasGbpCredentials()) {
     throw new Error('GBP credentials not configured (GBP_CLIENT_ID/GBP_CLIENT_SECRET/GBP_REFRESH_TOKEN)');
+  }
+  if (!isGbpLive()) {
+    throw new Error('GBP integration not enabled (set GBP_INTEGRATION_ENABLED=true once API access is approved)');
   }
   const res = await fetch(TOKEN_URL, {
     method: 'POST',
@@ -63,7 +86,8 @@ export async function listAccounts(token: string) {
 }
 
 export async function getLocation(token: string, accountId: string, locationId: string) {
-  return gbpFetch(`${BUSINESS_INFO_BASE}/accounts/${accountId}/locations/${locationId}`, token);
+  const readMask = 'name,title,phoneNumbers,storefrontAddress,categories,websiteUri';
+  return gbpFetch(`${BUSINESS_INFO_BASE}/locations/${locationId}?readMask=${readMask}`, token);
 }
 
 export async function listReviews(token: string, accountId: string, locationId: string) {
