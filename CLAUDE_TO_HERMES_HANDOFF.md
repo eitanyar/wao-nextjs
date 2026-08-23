@@ -44,6 +44,36 @@ Rules:
 
 ---
 
+## Execution Mode Switch
+
+`/handoff/EXECUTION_MODE` is a one-line file: either `hermes` or `claude-subagents`. It is the
+on/off switch for which engine actually runs pending tasks, and it is binding — check it before
+dispatching, don't guess or default from memory.
+
+Before dispatching any pending file that does NOT already declare its own execution mode in an
+explicit banner at the top (see next paragraph), read `/handoff/EXECUTION_MODE` and dispatch
+accordingly:
+- **`hermes`** → Bash-dispatch `hermes -z ...` against the Hermes profile named in the file's
+  `Target Agent` field (`waoengineer`, `waocopy`, `waoverifier-app`, `waoverifier-media`), per
+  AGENTS.md's model configs.
+- **`claude-subagents`** → call the matching Claude subagent via the Agent tool (`nextjs-engineer`,
+  `copywriter`, `language-qa`, `seo-strategist`, `ppc-strategist`, `ux`, `verifier`,
+  `instructional-designer`, etc.), using any model override the task file specifies, else the
+  subagent's own charter default.
+
+A task file may override the global switch for itself with an explicit `⚠️ EXECUTION MODE:` banner
+at the top (see `2026-08-20_001_copywriter_blue-ocean-sabra-pass.md` for the pattern) — an explicit
+per-task banner always wins over the global file. Use this when a task must run a specific way
+regardless of whatever the switch is set to when it's eventually picked up.
+
+In `claude-subagents` mode, there is no autonomous watcher process — the picking-up session itself
+must read the pending file, invoke the subagent, append the completion report, and move the file to
+`/completed/` or `/failed/`. In `hermes` mode, the orchestrating session still runs the `hermes -z`
+dispatch itself via Bash (per `feedback_orchestrator_runs_hermes_directly` — Claude Code executes
+Hermes dispatches directly, it is not handed off as a script for the user to run).
+
+---
+
 ## Execution Order
 
 Hermes processes /pending/ files in ascending filename order, ONE task at a time.

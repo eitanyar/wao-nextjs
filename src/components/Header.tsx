@@ -5,7 +5,6 @@ import PhoneReveal from "./PhoneReveal";
 
 const nav = [
   { label: "קידום אתרים", href: "/seo" },
-  { label: "GEO", href: "/geo" },
   { label: "פרסום בגוגל", href: "/google-ads" },
   { label: "הכשרות", href: "/training" },
   { label: "יועץ שיווקי", href: "/consulting" },

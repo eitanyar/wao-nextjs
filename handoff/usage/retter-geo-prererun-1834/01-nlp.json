@@ -1,0 +1,64 @@
+{
+  "actionId": "retter-1-nlp",
+  "clientId": "retter",
+  "rank": 1,
+  "query": "nlp",
+  "rankingUrl": "https://www.retter.co.il/petah-tikva-branch/",
+  "implementationMode": "enhance",
+  "actionType": "faq_block",
+  "priority": "MEDIUM",
+  "score": 17056,
+  "impressions": 932,
+  "clicks": 3,
+  "ctr": 0.3,
+  "status": "generated",
+  "shipDecision": "autoship",
+  "confidence": 100,
+  "generatedAt": "2026-08-15T11:30:03.178Z",
+  "vocabSource": "page",
+  "vocabConfidence": "high",
+  "cannibalFlag": "REVIEW",
+  "cannibalReasons": [
+    "MULTI_URL",
+    "HEAD_TERM_ON_LOCATION"
+  ],
+  "cannibalUrls": [
+    {
+      "url": "https://www.retter.co.il/nlp/",
+      "impressions": 11233,
+      "position": 2.6
+    },
+    {
+      "url": "https://www.retter.co.il/kiryat-bialik-branch/",
+      "impressions": 634,
+      "position": 9.7
+    }
+  ],
+  "content": {
+    "hebrewContent": "<h3>שאלות נפוצות על לימודי NLP בסניף פתח תקווה</h3><div class=\"faq-item\"><h4>איפה בדיוק מתקיים הקורס של מכללת רטר לימודי בפתח תקווה?</h4><p>הלימודים מתקיימים במיקום נגיש בפתח תקווה. הסניף מציע כיתות מרווחות ואווירה לימודית מעצימה ואינטימית.</p></div><div class=\"faq-item\"><h4>מה מקבלים בסיום לימודי ה-NLP בסניף?</h4><p>בסיום הלימודים מקבלים תעודה מקצועית ומוכרת מטעם מכללת רטר לימודי. הלימודים מעניקים כלים פרקטיים לטיפול ולאימון.</p></div><div class=\"faq-item\"><h4>האם סניף פתח תקווה מציע ליווי אישי?</h4><p>כן. כל סטודנט של מכללת רטר לימודי בסניף פתח תקווה מקבל ליווי אישי לאורך כל הדרך המקצועית שלו.</p></div>",
+    "placementInstruction": "יש להוסיף את בלוק השאלות והתשובות בתחתית עמוד סניף פתח תקווה, מתחת לטבלת מועדי הקורסים.",
+    "metaDescription": "מחפשים לימודי NLP בפתח תקווה? מכללת רטר לימודי מציעה קורס NLP מקצועי וחם בסניף פתח תקווה עם ליווי אישי בדרך להכשרת מטפלים. היכנסו לפרטים.",
+    "jsonLd": {
+      "@type": "Course",
+      "name": "קורס NLP במכללת רטר לימודי - סניף פתח תקווה",
+      "description": "לימודי NLP פרקטישנר ומאסטר מעשיים עם ליווי אישי של מכללת רטר לימודי בסניף פתח תקווה.",
+      "provider": {
+        "@type": "LocalBusiness",
+        "name": "מכללת רטר לימודי - סניף פתח תקווה",
+        "address": {
+          "@type": "PostalAddress",
+          "addressLocality": "פתח תקווה",
+          "addressCountry": "IL"
+        }
+      }
+    },
+    "tamarNotes": "עורכת יקרה, השתמשתי אך ורק במונחים המאושרים: 'מכללת רטר לימודי', 'סניף', 'פתח תקווה' ו'לימודי'. נמנעתי לחלוטין ממילים כמו 'מכון' או 'בית ספר'. השאלות ממוקדות מקום ומותאמות ל-GEO.",
+    "noaChanges": "שינוי פנייה ישירה בלשון זכר יחיד (תקבל, מחפש, היכנס) לשון רבים/ניטרלית (מקבלים, מחפשים, היכנסו) כדי לשמור על טבעיות ופנייה רחבה ומזמינה יותר. תיקון הוספת ו' החיבור (לטיפול ולאימון).",
+    "registerScore": 95,
+    "groundingRisk": "low",
+    "generatedVia": "primary:gemini-3.5-flash",
+    "schemaValid": true,
+    "confidence": 100,
+    "shipDecision": "autoship"
+  }
+}

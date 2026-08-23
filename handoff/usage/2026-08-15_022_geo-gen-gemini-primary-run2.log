@@ -1,0 +1,109 @@
+
+=== WAO GEO Content Generation ===
+Client: retter
+
+Generating 10 action(s) with concurrency 2...
+
+  🔀 #1 "nlp" — HEAD_TERM_ON_LOCATION → switching to geo-FAQ mode
+  ⚙  #1 "nlp" [faq_block/GEO] → crawling https://www.retter.co.il/petah-tikva-branch/...
+  🔀 #2 "קורס nlp אונליין" — MULTI_URL cannibalization → narrowing to non-overlapping facet
+  ⚙  #2 "קורס nlp אונליין" [faq_block/NARROW] → crawling https://www.retter.co.il/%D7%9C%D7%99%D7%9E%D7%95%D7%93%D7%99-nlp-%D7%90%D7%95%D7%A0%D7%9C%D7%99%D7%99%D7%9F/...
+     ✓ lexicon: selfRef=[סניף פתח תקווה, לימודי, מכללת רטר לימודי] services=[לימודי, סניף, פתח, תקווה]
+     → Tamar...
+     ✓ lexicon: selfRef=[אונליין, קורס, בזום שנותן הכשרה] services=[לימודי, אונליין, קורס, בזום, שנותן]
+     → Tamar...
+[DEBUG_GEMINI] modelVersion= gemini-3.7-flash usage= {"promptTokenCount":1243,"candidatesTokenCount":887,"totalTokenCount":2130,"promptTokensDetails":[{"modality":"TEXT","tokenCount":1243}],"serviceTier":"standard"}
+     ✓ Tamar done (via gemini-3.7-flash) → Noa...
+[DEBUG_GEMINI] modelVersion= gemini-3.7-flash usage= {"promptTokenCount":1168,"candidatesTokenCount":550,"totalTokenCount":1718,"promptTokensDetails":[{"modality":"TEXT","tokenCount":1168}],"serviceTier":"standard"}
+     ✓ Noa done (via gemini-3.7-flash)
+     ✅ confidence 100 — auto-ship
+     ✅ #1 saved → data/clients/retter/tasks/geo/01-nlp.json
+  🔀 #3 "nlp" — HEAD_TERM_ON_LOCATION → switching to geo-FAQ mode
+  ⚙  #3 "nlp" [faq_block/GEO] → crawling https://www.retter.co.il/kiryat-bialik-branch/...
+     ✓ lexicon: selfRef=[סניף קריית ביאליק, לימודי, מכללת רטר לימודי] services=[לימודי, סניף, קריית, ביאליק]
+     → Tamar...
+[DEBUG_GEMINI] modelVersion= gemini-3.7-flash usage= {"promptTokenCount":1554,"candidatesTokenCount":1002,"totalTokenCount":2556,"promptTokensDetails":[{"modality":"TEXT","tokenCount":1554}],"serviceTier":"standard"}
+     ✓ Tamar done (via gemini-3.7-flash) → Noa...
+[DEBUG_GEMINI] modelVersion= gemini-3.7-flash usage= {"promptTokenCount":1238,"candidatesTokenCount":595,"totalTokenCount":1833,"promptTokensDetails":[{"modality":"TEXT","tokenCount":1238}],"serviceTier":"standard"}
+     ✓ Noa done (via gemini-3.7-flash)
+     ✅ confidence 100 — auto-ship
+     ✅ #2 saved → data/clients/retter/tasks/geo/02-קורס-nlp-אונליין.json
+  🔀 #4 "לימודי nlp" — MULTI_URL cannibalization → narrowing to non-overlapping facet
+  ⚙  #4 "לימודי nlp" [faq_block/NARROW] → crawling https://www.retter.co.il/ness-ziona-branch/...
+     ✓ lexicon: selfRef=[סניף נס ציונה, לימודי, מכללת רטר לימודי] services=[לימודי, סניף, ציונה]
+     → Tamar...
+[DEBUG_GEMINI] modelVersion= gemini-3.7-flash usage= {"promptTokenCount":1304,"candidatesTokenCount":878,"totalTokenCount":2182,"promptTokensDetails":[{"modality":"TEXT","tokenCount":1304}],"serviceTier":"standard"}
+     ✓ Tamar done (via gemini-3.7-flash) → Noa...
+[DEBUG_GEMINI] modelVersion= gemini-3.7-flash usage= {"promptTokenCount":1245,"candidatesTokenCount":848,"totalTokenCount":2093,"promptTokensDetails":[{"modality":"TEXT","tokenCount":1245}],"serviceTier":"standard"}
+     ✓ Tamar done (via gemini-3.7-flash) → Noa...
+[DEBUG_GEMINI] modelVersion= gemini-3.7-flash usage= {"promptTokenCount":1171,"candidatesTokenCount":565,"totalTokenCount":1736,"promptTokensDetails":[{"modality":"TEXT","tokenCount":1171}],"serviceTier":"standard"}
+     ✓ Noa done (via gemini-3.7-flash)
+     ✅ confidence 100 — auto-ship
+     ✅ #4 saved → data/clients/retter/tasks/geo/04-לימודי-nlp.json
+  🔀 #5 "מאסטר nlp" — MULTI_URL cannibalization → narrowing to non-overlapping facet
+  ⚙  #5 "מאסטר nlp" [faq_block/NARROW] → crawling https://www.retter.co.il/nlp-master-practitioner-course-2/...
+     ✓ lexicon: selfRef=[קורס, מהצעד הראשון ועד, לקליניקה משגשגת] services=[]
+     → Tamar...
+[DEBUG_GEMINI] modelVersion= gemini-3.7-flash usage= {"promptTokenCount":1166,"candidatesTokenCount":579,"totalTokenCount":1745,"promptTokensDetails":[{"modality":"TEXT","tokenCount":1166}],"serviceTier":"standard"}
+     ✓ Noa done (via gemini-3.7-flash)
+     ✅ confidence 100 — auto-ship
+     ✅ #3 saved → data/clients/retter/tasks/geo/03-nlp.json
+  🔀 #6 "nlp לילדים" — MULTI_URL cannibalization → narrowing to non-overlapping facet
+  ⚙  #6 "nlp לילדים" [faq_block/NARROW] → crawling https://www.retter.co.il/%D7%98%D7%99%D7%A4%D7%95%D7%9C-nlp-%D7%9C%D7%99%D7%9C%D7%93%D7%99%D7%9D/...
+     ✓ lexicon: selfRef=[טיפול, לילדים טיפול, לילדים] services=[טיפול, לילדים]
+     → Tamar...
+[DEBUG_GEMINI] modelVersion= gemini-3.7-flash usage= {"promptTokenCount":1298,"candidatesTokenCount":1053,"totalTokenCount":2351,"promptTokensDetails":[{"modality":"TEXT","tokenCount":1298}],"serviceTier":"standard"}
+     ✓ Tamar done (via gemini-3.7-flash) → Noa...
+[DEBUG_GEMINI] modelVersion= gemini-3.7-flash usage= {"promptTokenCount":1241,"candidatesTokenCount":634,"totalTokenCount":1875,"promptTokensDetails":[{"modality":"TEXT","tokenCount":1241}],"serviceTier":"standard"}
+     ✓ Noa done (via gemini-3.7-flash)
+     ✅ confidence 100 — auto-ship
+     ✅ #5 saved → data/clients/retter/tasks/geo/05-מאסטר-nlp.json
+  🔀 #7 "קורס nlp" — MULTI_URL cannibalization → narrowing to non-overlapping facet
+  ⚙  #7 "קורס nlp" [faq_block/NARROW] → crawling https://www.retter.co.il/petah-tikva-branch/...
+     ✓ lexicon: selfRef=[סניף פתח תקווה, לימודי, מכללת רטר לימודי] services=[לימודי, סניף, פתח, תקווה]
+     → Tamar...
+[DEBUG_GEMINI] modelVersion= gemini-3.7-flash usage= {"promptTokenCount":1472,"candidatesTokenCount":1024,"totalTokenCount":2496,"promptTokensDetails":[{"modality":"TEXT","tokenCount":1472}],"serviceTier":"standard"}
+     ✓ Tamar done (via gemini-3.7-flash) → Noa...
+[DEBUG_GEMINI] modelVersion= gemini-3.7-flash usage= {"promptTokenCount":1193,"candidatesTokenCount":588,"totalTokenCount":1781,"promptTokensDetails":[{"modality":"TEXT","tokenCount":1193}],"serviceTier":"standard"}
+     ✓ Noa done (via gemini-3.7-flash)
+     ✅ confidence 100 — auto-ship
+     ✅ #6 saved → data/clients/retter/tasks/geo/06-nlp-לילדים.json
+  ⚙  #8 "סוגי אמונות מגבילות" [faq_block] → crawling https://www.retter.co.il/%D7%A9%D7%99%D7%A0%D7%95%D7%99-%D7%90%D7%9E%D7%95%D7%A0%D7%95%D7%AA-%D7%90%D7%9E%D7%95%D7%A0%D7%95%D7%AA-%D7%9E%D7%92%D7%91%D7%99%D7%9C%D7%95%D7%AA/...
+     ✓ lexicon: selfRef=[אמונות מגבילות, שינוי אמונות, מכללת רטר שינוי] services=[אמונות, שינוי, מגבילות]
+     → Tamar...
+[DEBUG_GEMINI] modelVersion= gemini-3.7-flash usage= {"promptTokenCount":1306,"candidatesTokenCount":973,"totalTokenCount":2279,"promptTokensDetails":[{"modality":"TEXT","tokenCount":1306}],"serviceTier":"standard"}
+     ✓ Tamar done (via gemini-3.7-flash) → Noa...
+[DEBUG_GEMINI] modelVersion= gemini-3.7-flash usage= {"promptTokenCount":1214,"candidatesTokenCount":611,"totalTokenCount":1825,"promptTokensDetails":[{"modality":"TEXT","tokenCount":1214}],"serviceTier":"standard"}
+     ✓ Noa done (via gemini-3.7-flash)
+     ✅ confidence 100 — auto-ship
+     ✅ #7 saved → data/clients/retter/tasks/geo/07-קורס-nlp.json
+  ⚙  #9 "דמיון מודרך" [faq_block] → crawling https://www.retter.co.il/%D7%93%D7%9E%D7%99%D7%95%D7%9F-%D7%9E%D7%95%D7%93%D7%A8%D7%9A/...
+     ✓ lexicon: selfRef=[דמיון מודרך, מדריך למתחילים ואוסף, לטיפול בדמיון מודרך] services=[דמיון, מודרך, וכיצד, משפיע, התודעה]
+     → Tamar...
+[DEBUG_GEMINI] modelVersion= gemini-3.7-flash usage= {"promptTokenCount":1474,"candidatesTokenCount":1047,"totalTokenCount":2521,"promptTokensDetails":[{"modality":"TEXT","tokenCount":1474}],"serviceTier":"standard"}
+     ✓ Tamar done (via gemini-3.7-flash) → Noa...
+[DEBUG_GEMINI] modelVersion= gemini-3.7-flash usage= {"promptTokenCount":1324,"candidatesTokenCount":1121,"totalTokenCount":2445,"promptTokensDetails":[{"modality":"TEXT","tokenCount":1324}],"serviceTier":"standard"}
+     ✓ Tamar done (via gemini-3.7-flash) → Noa...
+[DEBUG_GEMINI] modelVersion= gemini-3.7-flash usage= {"promptTokenCount":1314,"candidatesTokenCount":686,"totalTokenCount":2000,"promptTokensDetails":[{"modality":"TEXT","tokenCount":1314}],"serviceTier":"standard"}
+     ✓ Noa done (via gemini-3.7-flash)
+     ✅ confidence 100 — auto-ship
+     ✅ #9 saved → data/clients/retter/tasks/geo/09-דמיון-מודרך.json
+  🔀 #10 "קורס nlp" — MULTI_URL cannibalization → narrowing to non-overlapping facet
+  ⚙  #10 "קורס nlp" [faq_block/NARROW] → crawling https://www.retter.co.il/ness-ziona-branch/...
+     ✓ lexicon: selfRef=[סניף נס ציונה, לימודי, מכללת רטר לימודי] services=[לימודי, סניף, ציונה]
+     → Tamar...
+[DEBUG_GEMINI] modelVersion= gemini-3.7-flash usage= {"promptTokenCount":1300,"candidatesTokenCount":961,"totalTokenCount":2261,"promptTokensDetails":[{"modality":"TEXT","tokenCount":1300}],"serviceTier":"standard"}
+     ✓ Tamar done (via gemini-3.7-flash) → Noa...
+[DEBUG_GEMINI] modelVersion= gemini-3.7-flash usage= {"promptTokenCount":1259,"candidatesTokenCount":649,"totalTokenCount":1908,"promptTokensDetails":[{"modality":"TEXT","tokenCount":1259}],"serviceTier":"standard"}
+     ✓ Noa done (via gemini-3.7-flash)
+     ✅ confidence 100 — auto-ship
+     ✅ #8 saved → data/clients/retter/tasks/geo/08-סוגי-אמונות-מגבילות.json
+[DEBUG_GEMINI] modelVersion= gemini-3.7-flash usage= {"promptTokenCount":1216,"candidatesTokenCount":578,"totalTokenCount":1794,"promptTokensDetails":[{"modality":"TEXT","tokenCount":1216}],"serviceTier":"standard"}
+     ✓ Noa done (via gemini-3.7-flash)
+     ✅ confidence 100 — auto-ship
+     ✅ #10 saved → data/clients/retter/tasks/geo/10-קורס-nlp.json
+
+─────────────────────────────────
+Done. Generated: 10 | Skipped: 0
+Providers this run: Gemini-primary: 10 | Qwen-fallback: 0
+Output: data/clients/retter/tasks/geo/

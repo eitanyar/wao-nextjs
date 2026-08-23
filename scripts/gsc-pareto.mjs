@@ -19,6 +19,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { Agent, setGlobalDispatcher } from 'undici';
 import { extractJsonSpan } from './lib/json-repair.mjs';
+import { decryptToken } from './lib/gsc-token-decrypt.mjs';
 
 setGlobalDispatcher(new Agent({ connect: { family: 4 } }));
 
@@ -32,6 +33,7 @@ fs.readFileSync(path.resolve(__dirname, '../.env.local'), 'utf-8').split('\n').f
 const CLIENT_ID     = env.GOOGLE_ADS_CLIENT_ID;
 const CLIENT_SECRET = env.GOOGLE_ADS_CLIENT_SECRET;
 const REFRESH_TOKEN = env.GSC_REFRESH_TOKEN;
+const TOKEN_ENCRYPTION_KEY = env.TOKEN_ENCRYPTION_KEY;
 
 // ── CLI args ──────────────────────────────────────────────────────────────────
 const args = Object.fromEntries(
@@ -69,16 +71,40 @@ function dateRange(days) {
   };
 }
 
+// ── Refresh token resolution ─────────────────────────────────────────────────
+// Self-serve GEO/Site-Bot clients connect their own Google account via
+// /api/geo/gsc/oauth/callback and get a per-client encrypted token at
+// data/clients/{clientId}/gsc-token.json (see src/lib/geo/gsc-token.ts). When
+// present for the --client passed on the CLI, use it instead of the single
+// WAO-wide GSC_REFRESH_TOKEN. Otherwise, fall back to GSC_REFRESH_TOKEN exactly
+// as before (WAO-managed clients like retter/ajudaica/wao have no token file).
+function loadRefreshToken() {
+  if (CLIENT_ID_ARG) {
+    const tokenFile = path.resolve(__dirname, `../data/clients/${CLIENT_ID_ARG}/gsc-token.json`);
+    if (fs.existsSync(tokenFile)) {
+      const record = JSON.parse(fs.readFileSync(tokenFile, 'utf-8'));
+      if (!TOKEN_ENCRYPTION_KEY) {
+        throw new Error(
+          `TOKEN_ENCRYPTION_KEY not set in .env.local — cannot decrypt gsc-token.json for client "${CLIENT_ID_ARG}".`
+        );
+      }
+      return decryptToken(record.refreshToken, TOKEN_ENCRYPTION_KEY);
+    }
+  }
+  return REFRESH_TOKEN;
+}
+
 // ── OAuth access token ────────────────────────────────────────────────────────
 async function getAccessToken() {
-  if (!REFRESH_TOKEN) throw new Error('GSC_REFRESH_TOKEN not set in .env.local. Run: node scripts/gsc-get-token.mjs');
+  const refreshToken = loadRefreshToken();
+  if (!refreshToken) throw new Error('GSC_REFRESH_TOKEN not set in .env.local. Run: node scripts/gsc-get-token.mjs');
 
   const res = await fetch('https://oauth2.googleapis.com/token', {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body: new URLSearchParams({
       grant_type:    'refresh_token',
-      refresh_token: REFRESH_TOKEN,
+      refresh_token: refreshToken,
       client_id:     CLIENT_ID,
       client_secret: CLIENT_SECRET,
     }),

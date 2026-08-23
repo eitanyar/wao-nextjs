@@ -10,7 +10,6 @@ const footerLinks = [
       { label: "פרסום בגוגל", href: "/google-ads" },
       { label: "שיווק תוכן", href: "/content" },
       { label: "יועץ שיווקי", href: "/consulting" },
-      { label: "GEO Bot — קידום בתשובות AI", href: "/geo" },
       { label: "בוט גוגל לעסק שלי", href: "/google-business" },
     ],
   },

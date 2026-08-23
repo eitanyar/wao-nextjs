@@ -71,11 +71,11 @@ function buildIndexHtml(p: RenderSitePagesParams, siteUrl: string): string {
 // Shared building blocks — same CSS variables, header, nav, footer as index.
 // ─────────────────────────────────────────────────────────────────────────
 
-function esc(s: string): string {
+export function esc(s: string): string {
   return (s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
-function contacts(data: CollectedData) {
+export function contacts(data: CollectedData) {
   const phone = data.phone || '';
   const whatsapp = data.whatsappNumber || data.phone || '';
   const whatsappHref = `https://wa.me/972${whatsapp.replace(/^0/, '').replace(/[^0-9]/g, '')}`;
@@ -84,7 +84,7 @@ function contacts(data: CollectedData) {
   return { phone, whatsapp, whatsappHref, phoneHref, businessName };
 }
 
-function styleBlock(t: VerticalTheme): string {
+export function styleBlock(t: VerticalTheme): string {
   return `<style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: '${t.fontBody.split(',')[0].replace(/['"]/g, '')}', Assistant, sans-serif; background: ${t.bg}; color: ${t.textPrimary}; min-height: 100vh; padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px)); }
@@ -97,7 +97,7 @@ function styleBlock(t: VerticalTheme): string {
   </style>`;
 }
 
-function navBar(t: VerticalTheme): string {
+export function navBar(t: VerticalTheme): string {
   return `  <nav style="background:${t.surface};border-bottom:1px solid ${t.border};padding:10px 20px;display:flex;gap:20px;justify-content:flex-end;font-size:0.9rem;">
     <a href="/">בית</a>
     <a href="/services.html">שירותים</a>
@@ -106,7 +106,7 @@ function navBar(t: VerticalTheme): string {
   </nav>`;
 }
 
-function footerBadge(t: VerticalTheme, exempt: boolean): string {
+export function footerBadge(t: VerticalTheme, exempt: boolean): string {
   return `  <footer style="text-align:center;padding:24px 20px 32px;background:${t.surface};border-top:1px solid ${t.border};font-size:0.8rem;color:${t.textMuted};">
     <div style="margin-bottom:10px;display:flex;gap:14px;justify-content:center;">
       <a href="/privacy.html" style="color:${t.textMuted};">מדיניות פרטיות</a>
@@ -116,7 +116,7 @@ function footerBadge(t: VerticalTheme, exempt: boolean): string {
   </footer>`;
 }
 
-function stickyHeader(t: VerticalTheme, businessName: string, phone: string, phoneHref: string): string {
+export function stickyHeader(t: VerticalTheme, businessName: string, phone: string, phoneHref: string): string {
   return `  <header style="position:sticky;top:0;z-index:50;background:${t.surface};border-bottom:1px solid ${t.border};padding:12px 20px;display:flex;justify-content:space-between;align-items:center;box-shadow:0 2px 8px rgba(0,0,0,0.06);">
     <div style="font-family:'Secular One',sans-serif;font-weight:${t.headingWeight};font-size:1.1rem;color:${t.primary};">${esc(businessName)}</div>
     ${phone ? `<a href="${phoneHref}" style="background:${t.ctaGradient};color:#fff;padding:10px 18px;border-radius:${t.radiusSm};font-weight:700;font-size:0.9rem;white-space:nowrap;">📞 ${esc(phone)}</a>` : ''}
@@ -127,7 +127,7 @@ function stickyHeader(t: VerticalTheme, businessName: string, phone: string, pho
 // policy disqualifies (and risks a manual action on) self-hosted review schema
 // where the business controls the reviews about itself, which is exactly this
 // case. starRating/reviewCount stay visible page copy only, never schema.
-function localBusinessSchema(data: CollectedData, businessName: string, siteUrl: string, ogImage: string): string {
+export function localBusinessSchema(data: CollectedData, businessName: string, siteUrl: string, ogImage: string): string {
   const address = data.streetAddress
     ? {
         '@type': 'PostalAddress',
@@ -154,7 +154,7 @@ function localBusinessSchema(data: CollectedData, businessName: string, siteUrl:
   return `<script type="application/ld+json">${JSON.stringify(schema)}</script>`;
 }
 
-function pageHead(opts: {
+export function pageHead(opts: {
   t: VerticalTheme;
   title: string;
   description: string;
@@ -185,7 +185,7 @@ function pageHead(opts: {
 }
 
 // Trust bar (same items as homepage) — reusable section.
-function trustBarSection(t: VerticalTheme, items: string[]): string {
+export function trustBarSection(t: VerticalTheme, items: string[]): string {
   const html = items.map(item => `
     <div style="background:rgba(255,255,255,0.12);color:#fff;padding:6px 14px;border-radius:${t.radiusSm};font-size:0.85rem;font-weight:600;white-space:nowrap;">
       ${esc(item)}
@@ -198,7 +198,7 @@ function trustBarSection(t: VerticalTheme, items: string[]): string {
 }
 
 // Lead form section (same markup/behavior as renderStaticHtml's Lead Form).
-function leadFormSection(t: VerticalTheme, headline: string, ctaLabel: string): string {
+export function leadFormSection(t: VerticalTheme, headline: string, ctaLabel: string): string {
   return `  <section style="padding:40px 20px;background:${t.surfaceAlt};">
     <div style="max-width:480px;margin:0 auto;">
       <h2 style="font-family:'Secular One',sans-serif;font-weight:${t.headingWeight};font-size:1.35rem;color:${t.primary};margin-bottom:20px;text-align:center;">${esc(headline)}</h2>
@@ -219,7 +219,7 @@ function leadFormSection(t: VerticalTheme, headline: string, ctaLabel: string): 
 
 // Wires the lead-form submit handler + tel/wa click-stub pings.
 // Mirrors renderStaticHtml's inline <script> so /api/lead + conversion labels behave identically.
-function pageScript(opts: {
+export function pageScript(opts: {
   slug: string;
   businessName: string;
   googleAdsCustomerId: string;
@@ -471,7 +471,7 @@ ${pageScript({
 
 // Assembles <head> + <body> with nav bar (top) and footer badge (bottom) for
 // the 3 standalone pages (index.html has its own injection path above).
-function assembleDocument(t: VerticalTheme, head: string, bodyInner: string, gtagSnippet: string | undefined, data: CollectedData): string {
+export function assembleDocument(t: VerticalTheme, head: string, bodyInner: string, gtagSnippet: string | undefined, data: CollectedData): string {
   const headWithGtag = gtagSnippet ? head.replace('</head>', `  ${gtagSnippet}\n</head>`) : head;
   return `<!DOCTYPE html>
 <html lang="he" dir="rtl">
@@ -490,8 +490,12 @@ ${footerBadge(t, isAccessibilityExempt(data.vatStatus))}
 // sitemap.xml
 // ─────────────────────────────────────────────────────────────────────────
 
-function buildSitemap(siteUrl: string): string {
-  const urls = ['', 'about.html', 'services.html', 'contact.html'];
+// `extraPaths` — additional relative paths (e.g. core-30 `sherut/{id}.html`
+// entries) appended after the 4 static pages. Optional and backward
+// compatible: existing callers passing nothing still get the original
+// 4-URL-only sitemap, byte-identical to before this parameter existed.
+export function buildSitemap(siteUrl: string, extraPaths: string[] = []): string {
+  const urls = ['', 'about.html', 'services.html', 'contact.html', ...extraPaths];
   const entries = urls.map(u => `  <url>
     <loc>${siteUrl}/${u}</loc>
   </url>`).join('\n');

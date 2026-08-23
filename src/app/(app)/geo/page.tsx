@@ -9,16 +9,16 @@ export const metadata: Metadata = {
   // title.absolute bypasses the root "%s‏ | WAO" template — this string already
   // ends in the RLM-anchored "‏ | WAO" suffix, so the template must not append a second one.
   title: {
-    absolute: "שירות GEO לעסקים — להיכנס לתשובות ה-AI של גוגל‏ | WAO",
+    absolute: "GEO Bot — להיכנס לתשובות ה-AI של גוגל‏ | WAO",
   },
   description:
-    "GEO Bot עוקב אחרי נתוני החיפוש שלך, מזהה הזדמנויות ב-AI Overviews, וכותב תוכן מוכן לאישורך בוואטסאפ. ₪199 לחודש.",
+    "GEO Bot עוקב אחרי נתוני החיפוש של האתר שלך, מזהה הזדמנויות בתשובות ה-AI של גוגל, וכותב תוכן מוכן לאישורך בוואטסאפ — בליווי צמוד של מומחה WAO.",
   alternates: { canonical: CANONICAL },
   robots: { index: true, follow: true },
   openGraph: {
-    title: "שירות GEO לעסקים — להיכנס לתשובות ה-AI של גוגל",
+    title: "GEO Bot — להיכנס לתשובות ה-AI של גוגל",
     description:
-      "GEO Bot עוקב אחרי נתוני החיפוש שלך, מזהה הזדמנויות ב-AI Overviews, וכותב תוכן מוכן לאישורך בוואטסאפ.",
+      "GEO Bot עוקב אחרי נתוני החיפוש של האתר שלך, מזהה הזדמנויות בתשובות ה-AI של גוגל, וכותב תוכן מוכן לאישורך בוואטסאפ — בליווי צמוד של מומחה WAO.",
     url: CANONICAL,
     type: "website",
   },
@@ -27,7 +27,7 @@ export const metadata: Metadata = {
 const FAQS = [
   {
     q: "האם GEO Bot מתאים לכל עסק?",
-    a: "לא, וזה בסדר. עסק מקומי קטן — מספרה, מוסך, בית קפה — שייך למקום אחר. הוא צריך קודם כל נוכחות במפת גוגל, לא אצלנו. GEO Bot בנוי לעסקים עם הרבה תוכן באתר. לדוגמה: רואה חשבון, מאמן, קליניקה, עורך דין, מטפל. אם יש לך 30 עמודים ומעלה — זה בשבילך.",
+    a: "התנאי היחיד פשוט: צריך אתר קיים עם תוכן אמיתי. GEO Bot לא בונה אתר מאפס — הוא לוקח את העמודים שכבר יש לך ומחזק אותם, כדי שהבינה של גוגל תבחר לצטט דווקא אותך. אם יש לך אתר מבוסס עם תנועה אמיתית, או שאתה כבר לקוח Site Bot עם אתר מלא — זה בדיוק בשבילך. GEO Bot לא נמכר כמנוי שמפעילים לבד. אנחנו מריצים אותו איתך, בליווי צמוד, כחלק מעבודה שוטפת מול WAO. רוצה לדעת אם האתר שלך מוכן? דבר איתנו.",
   },
   {
     q: "כמה זמן לוקח לראות תוצאות?",
@@ -63,15 +63,6 @@ const schemas = [
       url: "https://www.wao.co.il",
     },
     areaServed: "IL",
-    offers: {
-      "@type": "Offer",
-      price: "199",
-      priceCurrency: "ILS",
-      priceSpecification: {
-        "@type": "UnitPriceSpecification",
-        billingDuration: "P1M",
-      },
-    },
   },
   {
     "@context": "https://schema.org",
@@ -92,28 +83,6 @@ const BENEFITS = [
   "אתה מפסיק לאבד לקוחות שקיבלו תשובה מהבינה המלאכותית ולא הגיעו.",
   "העמודים הקיימים שלך הופכים למקור שגוגל בוחר להציג.",
   "אתה לא כותב תוכן חדש — הבוט עושה את העבודה.",
-];
-
-const PRICING_TIERS = [
-  {
-    name: "GEO Bot",
-    price: "199",
-    desc: "אתה מדביק בעצמך. אנחנו שולחים הכול מוכן, עם הוראות מדויקות.",
-    popular: false,
-    launchNote: "מחיר השקה ל-50 הנרשמים הראשונים. אחר כך — 299 ₪.",
-  },
-  {
-    name: "Managed",
-    price: "590",
-    desc: "מתלבט איפה להדביק? אנחנו מלווים אותך בכל שלב.",
-    popular: true,
-  },
-  {
-    name: "Pro",
-    price: "1,290",
-    desc: "אין לך זמן להתעסק? אנחנו נכנסים למערכת ומבצעים במקומך.",
-    popular: false,
-  },
 ];
 
 export default function GeoPage() {
@@ -198,17 +167,13 @@ export default function GeoPage() {
             ))}
           </ul>
 
-          <a
-            href="tel:0526148860"
+          <Link
+            href="/contact"
             className="btn-primary w-full sm:w-auto justify-center"
             style={{ fontSize: "1.05rem", padding: "16px 40px", whiteSpace: "normal", textAlign: "center", lineHeight: 1.4 }}
           >
-            הצטרף להשקה ב-199 ₪ בלבד
-          </a>
-
-          <p style={{ marginTop: "18px", fontSize: "0.85rem", color: "var(--muted)", fontFamily: "var(--font-body), sans-serif" }}>
-            ל-50 הנרשמים הראשונים בלבד. אחר כך המחיר עולה ל-299 ₪.
-          </p>
+            שלח פנייה
+          </Link>
         </div>
       </section>
 
@@ -373,87 +338,6 @@ export default function GeoPage() {
         </div>
       </section>
 
-      {/* ── Pricing ── */}
-      <section className="wao-section">
-        <div className="wao-container" style={{ maxWidth: "1000px" }}>
-          <div style={{ textAlign: "center", marginBottom: "48px" }}>
-            <div className="eyebrow" style={{ marginInline: "auto" }}>מסלולים</div>
-            <h2
-              style={{
-                fontFamily: "var(--font-rubik), sans-serif",
-                fontWeight: 800,
-                fontSize: "clamp(1.5rem,2.5vw,2rem)",
-                lineHeight: 1.2,
-                marginTop: "12px",
-                color: "var(--text)",
-              }}
-            >
-              בחר את רמת המעורבות שמתאימה לך
-            </h2>
-          </div>
-
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: "24px", alignItems: "stretch" }}>
-            {PRICING_TIERS.map((tier) => (
-              <div
-                key={tier.name}
-                style={{
-                  background: "var(--surface)",
-                  border: tier.popular ? "2px solid var(--accent)" : "1px solid var(--border)",
-                  borderRadius: "var(--radius-md)",
-                  padding: "32px 28px",
-                  display: "flex",
-                  flexDirection: "column",
-                  position: "relative",
-                  transform: tier.popular ? "scale(1.02)" : "none",
-                }}
-              >
-                {tier.popular && (
-                  <span
-                    style={{
-                      position: "absolute",
-                      top: "16px",
-                      insetInlineStart: "16px",
-                      background: "var(--accent)",
-                      color: "var(--background)",
-                      fontSize: "0.75rem",
-                      fontWeight: 700,
-                      padding: "4px 12px",
-                      borderRadius: "12px",
-                      fontFamily: "var(--font-rubik), sans-serif",
-                    }}
-                  >
-                    הכי נבחר
-                  </span>
-                )}
-                <h3 style={{ fontFamily: "var(--font-rubik), sans-serif", fontWeight: 800, fontSize: "1.2rem", color: "var(--text)", marginBottom: "12px" }}>
-                  {renderMixed(tier.name)}
-                </h3>
-                <div style={{ marginBottom: "16px" }}>
-                  <span className="text-gradient" style={{ fontSize: "2.2rem", fontWeight: 900, fontFamily: "var(--font-rubik), sans-serif" }}>
-                    ₪{tier.price}
-                  </span>
-                  <span style={{ fontSize: "0.95rem", color: "var(--muted)" }}> / לחודש</span>
-                </div>
-                <p style={{ ...bodyStyle, fontSize: "0.92rem" }}>{tier.desc}</p>
-                {tier.launchNote && (
-                  <p
-                    style={{
-                      marginTop: "12px",
-                      fontSize: "0.82rem",
-                      fontWeight: 700,
-                      color: "var(--accent)",
-                      fontFamily: "var(--font-body), sans-serif",
-                    }}
-                  >
-                    {tier.launchNote}
-                  </p>
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
       {/* ── FAQ ── */}
       <section className="wao-section" style={{ background: "var(--surface)" }}>
         <div className="wao-container" style={{ maxWidth: "800px" }}>
@@ -533,7 +417,7 @@ export default function GeoPage() {
                 lineHeight: 1.6,
               }}
             >
-              {renderMixed("העסק שלך מקומי ובלי אתר גדול? GMB Bot מתאים לך יותר.")}
+              {renderMixed("העסק שלך מקומי ובלי אתר גדול? חיזוק הפרופיל העסקי שלך בגוגל מתאים לך יותר.")}
             </Link>
             <Link
               href="/site-bot"
@@ -564,19 +448,19 @@ export default function GeoPage() {
             <div aria-hidden style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%,-50%)", width: "60%", height: "100%", background: "radial-gradient(ellipse at center, rgba(74,227,181,0.06) 0%, transparent 70%)", pointerEvents: "none" }} />
             <div style={{ position: "relative", zIndex: 1 }}>
               <p style={{ fontFamily: "var(--font-rubik), sans-serif", fontWeight: 900, fontSize: "clamp(1.6rem,3.5vw,2.6rem)", lineHeight: 1.15, marginBottom: "16px", color: "var(--text)" }}>
-                {renderMixed("GEO Bot")} — <span className="text-gradient">₪199 לחודש</span>
+                {renderMixed("האתר שלך כבר קיים. הגיע הזמן שגוגל יצטט אותו.")}
               </p>
               <p style={{ color: "var(--muted)", fontFamily: "var(--font-body), sans-serif", marginBottom: "32px", maxWidth: "480px", margin: "0 auto 32px", lineHeight: 1.75 }}>
                 {renderMixed("אנחנו לא מנחשים. כל פעולה מבוססת על נתוני החיפוש של האתר שלך — ומאומתת שעלתה לאוויר.")}
               </p>
               <div style={{ display: "flex", gap: "16px", justifyContent: "center", flexWrap: "wrap" }}>
-                <a
-                  href="tel:0526148860"
+                <Link
+                  href="/contact"
                   className="btn-primary w-full sm:w-auto justify-center"
                   style={{ fontSize: "1.05rem", padding: "16px 40px", whiteSpace: "normal", textAlign: "center", lineHeight: 1.4 }}
                 >
-                  {renderMixed("התחל עכשיו ב-199 ₪ לחודש — והפוך לתשובה שגוגל נותן ללקוח שלך.")}
-                </a>
+                  {renderMixed("בוא נבדוק אם GEO מתאים לך")}
+                </Link>
                 <Link href="/contact" className="btn-outline w-full sm:w-auto justify-center" style={{ fontSize: "1rem" }}>
                   שלח פנייה
                 </Link>

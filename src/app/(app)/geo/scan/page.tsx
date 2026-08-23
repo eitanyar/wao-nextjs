@@ -161,10 +161,10 @@ export default function GeoScanPage() {
           >
             <p style={bodyStyle}>
               {renderMixed(
-                "זו בדיקת סימני מוכנות מבנית בלבד — היא לא חוזה אם דף יופיע ב-AI Overviews, ולא משווה אותך לאתרים אחרים. לניתוח אמיתי מול נתוני החיפוש שלך, יש את "
+                "זו בדיקת סימני מוכנות מבנית בלבד — היא לא חוזה אם דף יופיע ב-AI Overviews, ולא משווה אותך לאתרים אחרים. רוצה שגוגל באמת יצטט אותך? זה כבר לא משהו שמריצים לבד — אנחנו בודקים אם האתר שלך מתאים ומריצים איתך את "
               )}
-              <a href="/geo/audit" style={{ color: "var(--accent)" }}>
-                {renderMixed("בדיקת נראות ב-AI Overviews")}
+              <a href="/geo" style={{ color: "var(--accent)" }}>
+                {renderMixed("GEO Bot בליווי צמוד")}
               </a>
               {renderMixed(".")}
             </p>

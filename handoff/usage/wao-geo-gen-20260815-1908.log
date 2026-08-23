@@ -1,0 +1,113 @@
+
+=== WAO GEO Content Generation ===
+Client: wao
+
+Generating 10 action(s) with concurrency 2...
+
+  🔀 #1 "יועץ seo" — MULTI_URL cannibalization → narrowing to non-overlapping facet
+  ⚙  #1 "יועץ seo" [faq_block/NARROW] → crawling https://www.wao.co.il/seo/consulting...
+  🔀 #2 "יועץ קידום אתרים" — MULTI_URL cannibalization → narrowing to non-overlapping facet
+  ⚙  #2 "יועץ קידום אתרים" [faq_block/NARROW] → crawling https://www.wao.co.il/seo/consulting...
+     ✓ lexicon: selfRef=[יועץ קידום אתרים, מנוסה, שנות ניסיון] services=[]
+     → Tamar...
+     ✓ lexicon: selfRef=[יועץ קידום אתרים, מנוסה, שנות ניסיון] services=[]
+     → Tamar...
+[DEBUG_GEMINI] modelVersion= gemini-3.7-flash usage= {"promptTokenCount":1290,"candidatesTokenCount":1242,"totalTokenCount":2532,"promptTokensDetails":[{"modality":"TEXT","tokenCount":1290}],"serviceTier":"standard"}
+     ✓ Tamar done (via gemini-3.7-flash) → Noa...
+[DEBUG_GEMINI] modelVersion= gemini-3.7-flash usage= {"promptTokenCount":1310,"candidatesTokenCount":976,"totalTokenCount":2286,"promptTokensDetails":[{"modality":"TEXT","tokenCount":1310}],"serviceTier":"standard"}
+     ✓ Tamar done (via gemini-3.7-flash) → Noa...
+[DEBUG_GEMINI] modelVersion= gemini-3.7-flash usage= {"promptTokenCount":1205,"candidatesTokenCount":625,"totalTokenCount":1830,"promptTokensDetails":[{"modality":"TEXT","tokenCount":1205}],"serviceTier":"standard"}
+     ✓ Noa done (via gemini-3.7-flash)
+     ✅ confidence 100 — auto-ship
+     ✅ #2 saved → data/clients/wao/tasks/geo/02-יועץ-קידום-אתרים.json
+  ⚙  #3 "מומחה קידום אתרים" [faq_block] → crawling https://www.wao.co.il/seo/consulting...
+     ✓ lexicon: selfRef=[יועץ קידום אתרים, מנוסה, שנות ניסיון] services=[]
+     → Tamar...
+[DEBUG_GEMINI] modelVersion= gemini-3.7-flash usage= {"promptTokenCount":1324,"candidatesTokenCount":757,"totalTokenCount":2081,"promptTokensDetails":[{"modality":"TEXT","tokenCount":1324}],"serviceTier":"standard"}
+     ✓ Noa done (via gemini-3.7-flash)
+     ⚠ vocab violations: יועץ seo
+     ✅ confidence 95 — auto-ship
+     ✅ #1 saved → data/clients/wao/tasks/geo/01-יועץ-seo.json
+  🔀 #4 "קידום אתרים בגוגל מדריך" — MULTI_URL cannibalization → narrowing to non-overlapping facet
+  ⚙  #4 "קידום אתרים בגוגל מדריך" [faq_block/NARROW] → crawling https://www.wao.co.il/seo/guide...
+     ✓ lexicon: selfRef=[מדריך קידום אתרים, אורגני בגוגל, המדריך המלא] services=[]
+     → Tamar...
+[DEBUG_GEMINI] modelVersion= gemini-3.7-flash usage= {"promptTokenCount":1320,"candidatesTokenCount":1039,"totalTokenCount":2359,"promptTokensDetails":[{"modality":"TEXT","tokenCount":1320}],"serviceTier":"standard"}
+     ✓ Tamar done (via gemini-3.7-flash) → Noa...
+[DEBUG_GEMINI] modelVersion= gemini-3.7-flash usage= {"promptTokenCount":1194,"candidatesTokenCount":1207,"totalTokenCount":2401,"promptTokensDetails":[{"modality":"TEXT","tokenCount":1194}],"serviceTier":"standard"}
+     ✓ Tamar done (via gemini-3.7-flash) → Noa...
+[DEBUG_GEMINI] modelVersion= gemini-3.7-flash usage= {"promptTokenCount":1230,"candidatesTokenCount":624,"totalTokenCount":1854,"promptTokensDetails":[{"modality":"TEXT","tokenCount":1230}],"serviceTier":"standard"}
+     ✓ Noa done (via gemini-3.7-flash)
+     ✅ confidence 100 — auto-ship
+     ✅ #4 saved → data/clients/wao/tasks/geo/04-קידום-אתרים-בגוגל-מדריך.json
+  🔀 #5 "מדריך קידום אתרים" — MULTI_URL cannibalization → narrowing to non-overlapping facet
+  ⚙  #5 "מדריך קידום אתרים" [faq_block/NARROW] → crawling https://www.wao.co.il/%D7%9E%D7%93%D7%A8%D7%99%D7%9A-%D7%A7%D7%99%D7%93%D7%95%D7%9D-%D7%90%D7%AA%D7%A8%D7%99%D7%9D-%D7%90%D7%95%D7%A8%D7%92%D7%A0%D7%99-%D7%91%D7%92%D7%95%D7%92%D7%9C/...
+     ✓ lexicon: selfRef=[מדריך קידום אתרים, אורגני בגוגל, המדריך המלא] services=[]
+     → Tamar...
+[DEBUG_GEMINI] modelVersion= gemini-3.7-flash usage= {"promptTokenCount":1285,"candidatesTokenCount":701,"totalTokenCount":1986,"promptTokensDetails":[{"modality":"TEXT","tokenCount":1285}],"serviceTier":"standard"}
+     ✓ Noa done (via gemini-3.7-flash)
+     ⚠ vocab violations: מומחה קידום אתרים, מומחים
+     ✅ confidence 90 — auto-ship
+     ✅ #3 saved → data/clients/wao/tasks/geo/03-מומחה-קידום-אתרים.json
+  🔀 #6 "קידום אתרים בינלאומי" — MULTI_URL cannibalization → narrowing to non-overlapping facet
+  ⚙  #6 "קידום אתרים בינלאומי" [faq_block/NARROW] → crawling https://www.wao.co.il/seo/international...
+     ✓ lexicon: selfRef=[קידום אתרים בחו, מקצועי] services=[]
+     → Tamar...
+[DEBUG_GEMINI] modelVersion= gemini-3.7-flash usage= {"promptTokenCount":1304,"candidatesTokenCount":1145,"totalTokenCount":2449,"promptTokensDetails":[{"modality":"TEXT","tokenCount":1304}],"serviceTier":"standard"}
+     ✓ Tamar done (via gemini-3.7-flash) → Noa...
+[DEBUG_GEMINI] modelVersion= gemini-3.7-flash usage= {"promptTokenCount":1763,"candidatesTokenCount":1115,"totalTokenCount":2878,"promptTokensDetails":[{"modality":"TEXT","tokenCount":1763}],"serviceTier":"standard"}
+     ✓ Tamar done (via gemini-3.7-flash) → Noa...
+[DEBUG_GEMINI] modelVersion= gemini-3.7-flash usage= {"promptTokenCount":1267,"candidatesTokenCount":668,"totalTokenCount":1935,"promptTokensDetails":[{"modality":"TEXT","tokenCount":1267}],"serviceTier":"standard"}
+     ✓ Noa done (via gemini-3.7-flash)
+     ✅ confidence 100 — auto-ship
+     ✅ #5 saved → data/clients/wao/tasks/geo/05-מדריך-קידום-אתרים.json
+  🔀 #7 "ייעוץ קידום אתרים" — MULTI_URL cannibalization → narrowing to non-overlapping facet
+  ⚙  #7 "ייעוץ קידום אתרים" [faq_block/NARROW] → crawling https://www.wao.co.il/seo/consulting...
+     ✓ lexicon: selfRef=[יועץ קידום אתרים, מנוסה, שנות ניסיון] services=[]
+     → Tamar...
+[DEBUG_GEMINI] modelVersion= gemini-3.7-flash usage= {"promptTokenCount":1314,"candidatesTokenCount":1059,"totalTokenCount":2373,"promptTokensDetails":[{"modality":"TEXT","tokenCount":1314}],"serviceTier":"standard"}
+     ✓ Tamar done (via gemini-3.7-flash) → Noa...
+[DEBUG_GEMINI] modelVersion= gemini-3.7-flash usage= {"promptTokenCount":1263,"candidatesTokenCount":657,"totalTokenCount":1920,"promptTokensDetails":[{"modality":"TEXT","tokenCount":1263}],"serviceTier":"standard"}
+     ✓ Noa done (via gemini-3.7-flash)
+     ✅ confidence 100 — auto-ship
+     ✅ #6 saved → data/clients/wao/tasks/geo/06-קידום-אתרים-בינלאומי.json
+  🔀 #8 "ייעוץ seo" — MULTI_URL cannibalization → narrowing to non-overlapping facet
+  ⚙  #8 "ייעוץ seo" [faq_block/NARROW] → crawling https://www.wao.co.il/seo/consulting...
+     ✓ lexicon: selfRef=[יועץ קידום אתרים, מנוסה, שנות ניסיון] services=[]
+     → Tamar...
+[DEBUG_GEMINI] modelVersion= gemini-3.7-flash usage= {"promptTokenCount":1237,"candidatesTokenCount":637,"totalTokenCount":1874,"promptTokensDetails":[{"modality":"TEXT","tokenCount":1237}],"serviceTier":"standard"}
+     ✓ Noa done (via gemini-3.7-flash)
+     ✅ confidence 100 — auto-ship
+     ✅ #7 saved → data/clients/wao/tasks/geo/07-ייעוץ-קידום-אתרים.json
+  🔀 #9 "קידום אתרים בחו"ל" — MULTI_URL cannibalization → narrowing to non-overlapping facet
+  ⚙  #9 "קידום אתרים בחו"ל" [faq_block/NARROW] → crawling https://www.wao.co.il/seo/international...
+     ✓ lexicon: selfRef=[קידום אתרים בחו, מקצועי] services=[]
+     → Tamar...
+[DEBUG_GEMINI] modelVersion= gemini-3.7-flash usage= {"promptTokenCount":1294,"candidatesTokenCount":981,"totalTokenCount":2275,"promptTokensDetails":[{"modality":"TEXT","tokenCount":1294}],"serviceTier":"standard"}
+     ✓ Tamar done (via gemini-3.7-flash) → Noa...
+[DEBUG_GEMINI] modelVersion= gemini-3.7-flash usage= {"promptTokenCount":1304,"candidatesTokenCount":1047,"totalTokenCount":2351,"promptTokensDetails":[{"modality":"TEXT","tokenCount":1304}],"serviceTier":"standard"}
+     ✓ Tamar done (via gemini-3.7-flash) → Noa...
+[DEBUG_GEMINI] modelVersion= gemini-3.7-flash usage= {"promptTokenCount":1183,"candidatesTokenCount":601,"totalTokenCount":1784,"promptTokensDetails":[{"modality":"TEXT","tokenCount":1183}],"serviceTier":"standard"}
+     ✓ Noa done (via gemini-3.7-flash)
+     ✅ confidence 100 — auto-ship
+     ✅ #8 saved → data/clients/wao/tasks/geo/08-ייעוץ-seo.json
+  🔀 #10 "יעוץ קידום אתרים" — MULTI_URL cannibalization → narrowing to non-overlapping facet
+  ⚙  #10 "יעוץ קידום אתרים" [faq_block/NARROW] → crawling https://www.wao.co.il/seo/consulting...
+     ✓ lexicon: selfRef=[יועץ קידום אתרים, מנוסה, שנות ניסיון] services=[]
+     → Tamar...
+[DEBUG_GEMINI] modelVersion= gemini-3.7-flash usage= {"promptTokenCount":1228,"candidatesTokenCount":636,"totalTokenCount":1864,"promptTokensDetails":[{"modality":"TEXT","tokenCount":1228}],"serviceTier":"standard"}
+     ✓ Noa done (via gemini-3.7-flash)
+     ✅ confidence 100 — auto-ship
+     ✅ #9 saved → data/clients/wao/tasks/geo/09-קידום-אתרים-בחול.json
+[DEBUG_GEMINI] modelVersion= gemini-3.7-flash usage= {"promptTokenCount":1313,"candidatesTokenCount":1019,"totalTokenCount":2332,"promptTokensDetails":[{"modality":"TEXT","tokenCount":1313}],"serviceTier":"standard"}
+     ✓ Tamar done (via gemini-3.7-flash) → Noa...
+[DEBUG_GEMINI] modelVersion= gemini-3.7-flash usage= {"promptTokenCount":1215,"candidatesTokenCount":609,"totalTokenCount":1824,"promptTokensDetails":[{"modality":"TEXT","tokenCount":1215}],"serviceTier":"standard"}
+     ✓ Noa done (via gemini-3.7-flash)
+     ✅ confidence 100 — auto-ship
+     ✅ #10 saved → data/clients/wao/tasks/geo/10-יעוץ-קידום-אתרים.json
+
+─────────────────────────────────
+Done. Generated: 10 | Skipped: 0
+Providers this run: Gemini-primary: 10 | Qwen-fallback: 0
+Output: data/clients/wao/tasks/geo/
+EXIT=0

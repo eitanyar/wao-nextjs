@@ -405,9 +405,9 @@ function StaticGuide() {
                 </ul>
               </div>
               <p style={BODY}>
-                רוצים לראות את זה על הנתונים שלכם?{" "}
-                <Link href="/geo/audit" style={{ color: "var(--accent)", fontWeight: 600 }}>
-                  גלו איפה אתם מופיעים ב-AI Overviews
+                רוצים שהעסק שלכם יופיע שם?{" "}
+                <Link href="/geo" style={{ color: "var(--accent)", fontWeight: 600 }}>
+                  בדקו אם GEO Bot מתאים לעסק שלכם
                 </Link>.
               </p>
               <p style={BODY}>

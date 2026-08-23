@@ -1,0 +1,17 @@
+{
+  "estimated_cost_usd": 0.0,
+  "cost_status": "unknown",
+  "cost_source": "none",
+  "input_tokens": 43563,
+  "output_tokens": 26410,
+  "cache_read_tokens": 530361,
+  "cache_write_tokens": 0,
+  "reasoning_tokens": 19078,
+  "total_tokens": 600334,
+  "api_calls": 17,
+  "model": "qwen3.8-max",
+  "provider": "alibaba",
+  "session_id": "20260816_190237_f018de",
+  "completed": true,
+  "failed": false
+}

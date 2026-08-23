@@ -104,10 +104,10 @@ const STEPS = [
     desc: (
       <>
         לא מנחשים מבחוץ. אנחנו מתחברים ל-<bdi dir="ltr">Search Console</bdi> שלכם ורואים מה גוגל באמת מציג לאתר — אילו שאילתות, באילו מיקומים. על בסיס הנתונים האמיתיים האלה אנחנו בונים את התוכן שגוגל יכול לצטט ב-<bdi dir="ltr">AI Overview</bdi> — כולל ה-<bdi dir="ltr">FAQ Schema</bdi> הנכון — ולא את המתחרה.{" "}
-        <Link href="/geo/audit" style={{ color: "var(--accent)", textDecoration: "underline" }}>
-          בדקו את הנראות של האתר שלכם
+        <Link href="/geo" style={{ color: "var(--accent)", textDecoration: "underline" }}>
+          בדקו אם GEO Bot מתאים לאתר שלכם
         </Link>{" "}
-        ותראו את זה על הנתונים שלכם.
+        — ואם כן, נריץ אותו איתכם.
       </>
     ),
     tags: ["AI Overviews", "Featured Snippets", "FAQ Schema", "Direct Answers"],

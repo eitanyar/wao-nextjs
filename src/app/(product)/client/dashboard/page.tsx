@@ -5,7 +5,8 @@ import { redirect }        from 'next/navigation';
 import Link                from 'next/link';
 import { verifySessionToken, COOKIE_NAME } from '@/lib/client-auth';
 import { getClientActions } from '@/lib/geo/actions';
-import { getClientRecord }  from '@/lib/geo/client';
+import { getClientRecord, checkGeoUpgradeEligibility } from '@/lib/geo/client';
+import GeoUpgradeCard from '@/components/GeoUpgradeCard';
 import {
   adaptAnomalies,
   adaptParetoOpportunities,
@@ -307,6 +308,7 @@ export default async function DashboardPage() {
   const anomalyData    = showAnomaly ? loadAnomalyData(clientId) : null;
   const showAdsOverlap = hasEntitlement(clientRecord?.entitlements, 'ads-overlap');
   const adsOverlapData = showAdsOverlap ? loadAdsOverlapData(clientId) : null;
+  const showGeoUpgrade = checkGeoUpgradeEligibility(clientRecord).eligible;
   const googleAdsData = loadGoogleAdsDigest(clientRecord);
   const showGoogleAdsOperator = hasOperatorAccess(clientId, clientRecord?.entitlements) && Boolean(googleAdsData);
   const googleAdsOperatorSource = showGoogleAdsOperator ? operatorAccessSource(clientId, clientRecord?.entitlements) : null;
@@ -352,6 +354,11 @@ export default async function DashboardPage() {
       </div>
 
       {/* ── Leads CTA (discoverability link to /client/leads — §3.7) ──────── */}
+      {/* Gated: only clients with a linked Google Ads campaign see this card.
+          A GEO-only client has no campaign (googleAdsData === null), so this
+          Ads "leads" card is hidden for them. Fixes QA finding F-03 (Ads copy
+          contamination on a GEO dashboard). */}
+      {googleAdsData && (
       <div className="mb-8">
         <Link
           href="/client/leads"
@@ -364,6 +371,13 @@ export default async function DashboardPage() {
           <span className="text-[var(--muted)] text-lg">←</span>
         </Link>
       </div>
+      )}
+
+      {/* ── GEO Bot month-4 self-serve upgrade card ────────────────────────
+          Eligibility: checkGeoUpgradeEligibility — 90+ days of GSC data,
+          not already entitled to GEO Bot (docs/missions/
+          site-bot-single-segment-pivot-2026-08-21.md, Spec B). ────────── */}
+      {showGeoUpgrade && <GeoUpgradeCard />}
 
       {/* ── Progress bar ────────────────────────────────────────────────── */}
       {all.length > 0 && (
@@ -443,9 +457,21 @@ export default async function DashboardPage() {
       )}
 
       {all.length === 0 && (
-        <div className="text-center py-20 text-[var(--muted)]">
-          <p className="text-4xl mb-4">📋</p>
-          <p>אין משימות עדיין. WAO יעדכן אותך בקרוב.</p>
+        <div className="rounded-2xl border border-white/10 bg-white/5 px-5 py-8 text-center">
+          <p className="text-4xl mb-4">🚀</p>
+          <h2 className="text-lg font-bold mb-2">המשימות הראשונות שלך כבר בהכנה</h2>
+          <p className="text-[var(--muted)] text-sm leading-relaxed max-w-md mx-auto mb-2">הצוות שלנו מנתח עכשיו את האתר ואת נתוני החיפוש שלך. תוך 24 שעות עבודה תקבל את שלוש הפעולות הראשונות לשיפור הנוכחות שלך במנועי החיפוש החכמים.</p>
+          <p className="text-[var(--muted)] text-sm leading-relaxed max-w-md mx-auto mb-6">נעדכן אותך כאן בלוח וגם בהודעת וואטסאפ, כדי שתוכל לאשר כל פעולה בלחיצה אחת.</p>
+          {!clientRecord?.gscConnected ? (
+            <a
+              href={`/api/geo/gsc/oauth/start?clientId=${encodeURIComponent(clientId)}`}
+              className="inline-block rounded-xl border border-[var(--accent)]/40 bg-[var(--accent)]/10 px-5 py-3 font-semibold text-[var(--accent)] hover:border-[var(--accent)]/70 transition-all"
+            >
+              חבר את Search Console כדי שנתחיל לנתח
+            </a>
+          ) : (
+            <p className="text-green-400 text-sm">Search Console מחובר — כבר אוספים נתונים בשבילך.</p>
+          )}
         </div>
       )}
 

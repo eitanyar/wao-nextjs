@@ -33,7 +33,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${BASE}/seo/consulting`,        lastModified: now, changeFrequency: "monthly", priority: 0.85 },
     { url: `${BASE}/seo/international`,     lastModified: now, changeFrequency: "monthly", priority: 0.8 },
     { url: `${BASE}/google-ads`,            lastModified: now, changeFrequency: "weekly",  priority: 0.9 },
-    { url: `${BASE}/geo`,                   lastModified: now, changeFrequency: "weekly",  priority: 0.9 },
+    { url: `${BASE}/geo`,                   lastModified: now, changeFrequency: "weekly",  priority: 0.3 },
     { url: `${BASE}/google-business`,       lastModified: now, changeFrequency: "weekly",  priority: 0.9 },
     { url: `${BASE}/site-bot`,              lastModified: now, changeFrequency: "weekly",  priority: 0.9 },
     { url: `${BASE}/build`,                 lastModified: now, changeFrequency: "monthly", priority: 0.8 },

@@ -70,7 +70,6 @@ const NO_POPUP_PATHS = [
   '/geo/signup',
   '/geo/login',
   '/geo/scan',
-  '/geo/audit',
   '/geo/action',
   '/geo/dashboard',
 ];

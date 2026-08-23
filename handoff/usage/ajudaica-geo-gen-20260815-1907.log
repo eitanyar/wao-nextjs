@@ -1,0 +1,105 @@
+
+=== WAO GEO Content Generation ===
+Client: ajudaica
+
+Generating 10 action(s) with concurrency 2...
+
+  🔀 #1 "star of david" — MULTI_URL cannibalization → narrowing to non-overlapping facet
+  ⚙  #1 "star of david" [faq_block/NARROW] → crawling https://www.ajudaica.com/judaica101/star-of-david-meaning-complete-guide/...
+  ⚙  #2 "tallit" [faq_block] → crawling https://www.ajudaica.com/category/4/Tallit/...
+     ⚠ lexicon fallback (fallback-js-rendered) — using client.json only
+     → Tamar...
+     ⚠ lexicon fallback (fallback-js-rendered) — using client.json only
+     → Tamar...
+[DEBUG_GEMINI] modelVersion= gemini-3.7-flash usage= {"promptTokenCount":1146,"candidatesTokenCount":1101,"totalTokenCount":2247,"promptTokensDetails":[{"modality":"TEXT","tokenCount":1146}],"serviceTier":"standard"}
+     ✓ Tamar done (via gemini-3.7-flash) → Noa...
+[DEBUG_GEMINI] modelVersion= gemini-3.7-flash usage= {"promptTokenCount":1002,"candidatesTokenCount":863,"totalTokenCount":1865,"promptTokensDetails":[{"modality":"TEXT","tokenCount":1002}],"serviceTier":"standard"}
+     ✓ Tamar done (via gemini-3.7-flash) → Noa...
+[DEBUG_GEMINI] modelVersion= gemini-3.7-flash usage= {"promptTokenCount":1138,"candidatesTokenCount":678,"totalTokenCount":1816,"promptTokensDetails":[{"modality":"TEXT","tokenCount":1138}],"serviceTier":"standard"}
+     ✓ Noa done (via gemini-3.7-flash)
+     ✅ confidence 100 — auto-ship
+     ✅ #1 saved → data/clients/ajudaica/tasks/geo/01-star-of-david.json
+  ⚙  #3 "hamsa" [faq_block] → crawling https://www.ajudaica.com/judaica101/hamsa/...
+[DEBUG_GEMINI] modelVersion= gemini-3.7-flash usage= {"promptTokenCount":1021,"candidatesTokenCount":647,"totalTokenCount":1668,"promptTokensDetails":[{"modality":"TEXT","tokenCount":1021}],"serviceTier":"standard"}
+     ✓ Noa done (via gemini-3.7-flash)
+     ✅ confidence 100 — auto-ship
+     ✅ #2 saved → data/clients/ajudaica/tasks/geo/02-tallit.json
+  ⚙  #4 "judaica" [faq_block] → crawling https://www.ajudaica.com/...
+     ⚠ lexicon fallback (fallback-js-rendered) — using client.json only
+     → Tamar...
+     ⚠ lexicon fallback (fallback-js-rendered) — using client.json only
+     → Tamar...
+[DEBUG_GEMINI] modelVersion= gemini-3.7-flash usage= {"promptTokenCount":1011,"candidatesTokenCount":960,"totalTokenCount":1971,"promptTokensDetails":[{"modality":"TEXT","tokenCount":1011}],"serviceTier":"standard"}
+     ✓ Tamar done (via gemini-3.7-flash) → Noa...
+[DEBUG_GEMINI] modelVersion= gemini-3.7-flash usage= {"promptTokenCount":990,"candidatesTokenCount":1124,"totalTokenCount":2114,"promptTokensDetails":[{"modality":"TEXT","tokenCount":990}],"serviceTier":"standard"}
+     ✓ Tamar done (via gemini-3.7-flash) → Noa...
+[DEBUG_GEMINI] modelVersion= gemini-3.7-flash usage= {"promptTokenCount":1067,"candidatesTokenCount":659,"totalTokenCount":1726,"promptTokensDetails":[{"modality":"TEXT","tokenCount":1067}],"serviceTier":"standard"}
+     ✓ Noa done (via gemini-3.7-flash)
+     ✅ confidence 100 — auto-ship
+     ✅ #3 saved → data/clients/ajudaica/tasks/geo/03-hamsa.json
+  ⚙  #5 "shofar horn" [faq_block] → crawling https://www.ajudaica.com/category/128/Shofar/...
+     ⚠ lexicon fallback (fallback-js-rendered) — using client.json only
+     → Tamar...
+[DEBUG_GEMINI] modelVersion= gemini-3.7-flash usage= {"promptTokenCount":1137,"candidatesTokenCount":723,"totalTokenCount":1860,"promptTokensDetails":[{"modality":"TEXT","tokenCount":1137}],"serviceTier":"standard"}
+     ✓ Noa done (via gemini-3.7-flash)
+     ✅ confidence 100 — auto-ship
+     ✅ #4 saved → data/clients/ajudaica/tasks/geo/04-judaica.json
+  ⚙  #6 "i love israel" [faq_block] → crawling https://www.ajudaica.com/I-Love-Israel-T-Shirt/item2939...
+     ⚠ lexicon fallback (fallback-js-rendered) — using client.json only
+     → Tamar...
+[DEBUG_GEMINI] modelVersion= gemini-3.7-flash usage= {"promptTokenCount":1008,"candidatesTokenCount":989,"totalTokenCount":1997,"promptTokensDetails":[{"modality":"TEXT","tokenCount":1008}],"serviceTier":"standard"}
+     ✓ Tamar done (via gemini-3.7-flash) → Noa...
+[DEBUG_GEMINI] modelVersion= gemini-3.7-flash usage= {"promptTokenCount":1023,"candidatesTokenCount":886,"totalTokenCount":1909,"promptTokensDetails":[{"modality":"TEXT","tokenCount":1023}],"serviceTier":"standard"}
+     ✓ Tamar done (via gemini-3.7-flash) → Noa...
+[DEBUG_GEMINI] modelVersion= gemini-3.7-flash usage= {"promptTokenCount":1086,"candidatesTokenCount":601,"totalTokenCount":1687,"promptTokensDetails":[{"modality":"TEXT","tokenCount":1086}],"serviceTier":"standard"}
+     ✓ Noa done (via gemini-3.7-flash)
+     ✅ confidence 100 — auto-ship
+     ✅ #5 saved → data/clients/ajudaica/tasks/geo/05-shofar-horn.json
+  🔀 #7 "judaica store" — MULTI_URL cannibalization → narrowing to non-overlapping facet
+  ⚙  #7 "judaica store" [faq_block/NARROW] → crawling https://www.ajudaica.com/...
+     ⚠ lexicon fallback (fallback-js-rendered) — using client.json only
+     → Tamar...
+[DEBUG_GEMINI] modelVersion= gemini-3.7-flash usage= {"promptTokenCount":1091,"candidatesTokenCount":946,"totalTokenCount":2037,"promptTokensDetails":[{"modality":"TEXT","tokenCount":1091}],"serviceTier":"standard"}
+     ✓ Tamar done (via gemini-3.7-flash) → Noa...
+[DEBUG_GEMINI] modelVersion= gemini-3.7-flash usage= {"promptTokenCount":1037,"candidatesTokenCount":640,"totalTokenCount":1677,"promptTokensDetails":[{"modality":"TEXT","tokenCount":1037}],"serviceTier":"standard"}
+     ✓ Noa done (via gemini-3.7-flash)
+     ✅ confidence 100 — auto-ship
+     ✅ #6 saved → data/clients/ajudaica/tasks/geo/06-i-love-israel.json
+  ⚙  #8 "tefillin" [faq_block] → crawling https://www.ajudaica.com/category/3/Tefillin/...
+     ⚠ lexicon fallback (fallback-js-rendered) — using client.json only
+     → Tamar...
+[DEBUG_GEMINI] modelVersion= gemini-3.7-flash usage= {"promptTokenCount":1042,"candidatesTokenCount":679,"totalTokenCount":1721,"promptTokensDetails":[{"modality":"TEXT","tokenCount":1042}],"serviceTier":"standard"}
+     ✓ Noa done (via gemini-3.7-flash)
+     ✅ confidence 100 — auto-ship
+     ✅ #7 saved → data/clients/ajudaica/tasks/geo/07-judaica-store.json
+  ⚙  #9 "judaica gifts from israel" [faq_block] → crawling https://www.ajudaica.com/...
+     ⚠ lexicon fallback (fallback-js-rendered) — using client.json only
+     → Tamar...
+[DEBUG_GEMINI] modelVersion= gemini-3.7-flash usage= {"promptTokenCount":1006,"candidatesTokenCount":1146,"totalTokenCount":2152,"promptTokensDetails":[{"modality":"TEXT","tokenCount":1006}],"serviceTier":"standard"}
+     ✓ Tamar done (via gemini-3.7-flash) → Noa...
+[DEBUG_GEMINI] modelVersion= gemini-3.7-flash usage= {"promptTokenCount":1157,"candidatesTokenCount":783,"totalTokenCount":1940,"promptTokensDetails":[{"modality":"TEXT","tokenCount":1157}],"serviceTier":"standard"}
+     ✓ Noa done (via gemini-3.7-flash)
+     ⚠ schema invalid: jsonLd missing @type
+     🔶 confidence 100 — needs review: BLOCKER: schema invalid (jsonLd missing @type)
+     ✅ #8 saved → data/clients/ajudaica/tasks/geo/08-tefillin.json
+  ⚙  #10 "tallit katan" [faq_block] → crawling https://www.ajudaica.com/category/45/Tallit-Katan/...
+     ⚠ lexicon fallback (fallback-js-rendered) — using client.json only
+     → Tamar...
+[DEBUG_GEMINI] modelVersion= gemini-3.7-flash usage= {"promptTokenCount":1014,"candidatesTokenCount":1043,"totalTokenCount":2057,"promptTokensDetails":[{"modality":"TEXT","tokenCount":1014}],"serviceTier":"standard"}
+     ✓ Tamar done (via gemini-3.7-flash) → Noa...
+[DEBUG_GEMINI] modelVersion= gemini-3.7-flash usage= {"promptTokenCount":996,"candidatesTokenCount":893,"totalTokenCount":1889,"promptTokensDetails":[{"modality":"TEXT","tokenCount":996}],"serviceTier":"standard"}
+     ✓ Tamar done (via gemini-3.7-flash) → Noa...
+[DEBUG_GEMINI] modelVersion= gemini-3.7-flash usage= {"promptTokenCount":1019,"candidatesTokenCount":594,"totalTokenCount":1613,"promptTokensDetails":[{"modality":"TEXT","tokenCount":1019}],"serviceTier":"standard"}
+     ✓ Noa done (via gemini-3.7-flash)
+     ✅ confidence 100 — auto-ship
+     ✅ #9 saved → data/clients/ajudaica/tasks/geo/09-judaica-gifts-from-israel.json
+[DEBUG_GEMINI] modelVersion= gemini-3.7-flash usage= {"promptTokenCount":1100,"candidatesTokenCount":659,"totalTokenCount":1759,"promptTokensDetails":[{"modality":"TEXT","tokenCount":1100}],"serviceTier":"standard"}
+     ✓ Noa done (via gemini-3.7-flash)
+     ✅ confidence 100 — auto-ship
+     ✅ #10 saved → data/clients/ajudaica/tasks/geo/10-tallit-katan.json
+
+─────────────────────────────────
+Done. Generated: 10 | Skipped: 0
+Providers this run: Gemini-primary: 10 | Qwen-fallback: 0
+Output: data/clients/ajudaica/tasks/geo/
+EXIT=0

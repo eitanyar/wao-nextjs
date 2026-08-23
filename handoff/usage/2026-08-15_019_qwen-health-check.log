@@ -1,0 +1,15 @@
+Verification is in. The new cron scripts are clean; repo-wide lint noise is pre-existing and not from this change.
+
+Passed
+- npm run test — 135/135
+- npm run build — compiled, TypeScript finished, 339 static pages
+- Targeted eslint on scripts/qwen-health-check.mjs — 0 errors
+- Spec checks already done: live OK run, 1s-timeout FAIL+ALERT, missing-env abort, node --check / bash -n
+
+Not a regression
+- npm run lint — 444 problems (360 errors, 84 warnings). All in existing dist/ and src/ files. None in the new health-check scripts. .sh is ignored by eslint (no matching config).
+
+No commit, no crontab install. Eitan still installs:
+
+  CRON_TZ=Asia/Jerusalem
+  0 8 * * * /home/wao/htdocs/www.wao.co.il/scripts/cron/qwen-health-check.sh >/dev/null

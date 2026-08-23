@@ -29,7 +29,6 @@ export const SILOS: Record<string, Silo> = {
     label: "סדרת GEO",
     hub: { label: "GEO", href: "/geo", icon: "🤖" },
     spokes: [
-      { label: "בדיקת נראות ב-AI", href: "/geo/audit", icon: "🔎", badge: "בדיקה חינם" },
       { label: "סריקה מיידית", href: "/geo/scan", icon: "⚡", badge: "מיידי" },
     ],
   },

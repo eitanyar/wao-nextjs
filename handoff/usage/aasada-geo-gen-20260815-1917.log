@@ -1,0 +1,112 @@
+
+=== WAO GEO Content Generation ===
+Client: aasada
+
+Generating 10 action(s) with concurrency 2...
+
+  🔀 #1 "קייטרינג לבר מצווה" — MULTI_URL cannibalization → narrowing to non-overlapping facet
+  ⚙  #1 "קייטרינג לבר מצווה" [faq_block/NARROW] → crawling https://aaasada.com/bar-mitzvah...
+  🔀 #2 "קייטרינג בירושלים" — MULTI_URL cannibalization → narrowing to non-overlapping facet
+  ⚙  #2 "קייטרינג בירושלים" [faq_block/NARROW] → crawling https://aaasada.com/city/jerusalem...
+     ✓ lexicon: selfRef=[קייטרינג בירושלים לאירועים, קטנים ושבתות חתן, כשר בד] services=[]
+     → Tamar...
+     ✓ lexicon: selfRef=[קייטרינג לבר מצווה, כשר למהדרין בד, מחפוד] services=[]
+     → Tamar...
+[DEBUG_GEMINI] modelVersion= gemini-3.7-flash usage= {"promptTokenCount":1616,"candidatesTokenCount":1130,"totalTokenCount":2746,"promptTokensDetails":[{"modality":"TEXT","tokenCount":1616}],"serviceTier":"standard"}
+     ✓ Tamar done (via gemini-3.7-flash) → Noa...
+[DEBUG_GEMINI] modelVersion= gemini-3.7-flash usage= {"promptTokenCount":1616,"candidatesTokenCount":1010,"totalTokenCount":2626,"promptTokensDetails":[{"modality":"TEXT","tokenCount":1616}],"serviceTier":"standard"}
+     ✓ Tamar done (via gemini-3.7-flash) → Noa...
+[DEBUG_GEMINI] modelVersion= gemini-3.7-flash usage= {"promptTokenCount":1558,"candidatesTokenCount":764,"totalTokenCount":2322,"promptTokensDetails":[{"modality":"TEXT","tokenCount":1558}],"serviceTier":"standard"}
+     ✓ Noa done (via gemini-3.7-flash)
+     ✅ confidence 100 — auto-ship
+     ✅ #2 saved → data/clients/aasada/tasks/geo/02-קייטרינג-בירושלים.json
+  🔀 #3 "קייטרינג באשדוד" — MULTI_URL cannibalization → narrowing to non-overlapping facet
+  ⚙  #3 "קייטרינג באשדוד" [faq_block/NARROW] → crawling https://aaasada.com/city/ashdod...
+     ✓ lexicon: selfRef=[קייטרינג באשדוד כשר, למהדרין בשרי, מגשי אוכל מוכן] services=[]
+     → Tamar...
+[DEBUG_GEMINI] modelVersion= gemini-3.7-flash usage= {"promptTokenCount":1618,"candidatesTokenCount":910,"totalTokenCount":2528,"promptTokensDetails":[{"modality":"TEXT","tokenCount":1618}],"serviceTier":"standard"}
+     ✓ Tamar done (via gemini-3.7-flash) → Noa...
+[DEBUG_GEMINI] modelVersion= gemini-3.7-flash usage= {"promptTokenCount":1555,"candidatesTokenCount":682,"totalTokenCount":2237,"promptTokensDetails":[{"modality":"TEXT","tokenCount":1555}],"serviceTier":"standard"}
+     ✓ Noa done (via gemini-3.7-flash)
+     ✅ confidence 100 — auto-ship
+     ✅ #1 saved → data/clients/aasada/tasks/geo/01-קייטרינג-לבר-מצווה.json
+  🔀 #4 "קייטרינג לברית" — MULTI_URL cannibalization → narrowing to non-overlapping facet
+  ⚙  #4 "קייטרינג לברית" [faq_block/NARROW] → crawling https://aaasada.com/brit...
+     ✓ lexicon: selfRef=[קייטרינג לברית כשר, למהדרין בד, מחפוד] services=[]
+     → Tamar...
+[DEBUG_GEMINI] modelVersion= gemini-3.7-flash usage= {"promptTokenCount":1440,"candidatesTokenCount":535,"totalTokenCount":1975,"promptTokensDetails":[{"modality":"TEXT","tokenCount":1440}],"serviceTier":"standard"}
+     ✓ Noa done (via gemini-3.7-flash)
+     ✅ confidence 100 — auto-ship
+     ✅ #3 saved → data/clients/aasada/tasks/geo/03-קייטרינג-באשדוד.json
+  🔀 #5 "קייטרינג לשבת חתן" — MULTI_URL cannibalization → narrowing to non-overlapping facet
+  ⚙  #5 "קייטרינג לשבת חתן" [faq_block/NARROW] → crawling https://aaasada.com/shabbat-chatan...
+     ✓ lexicon: selfRef=[קייטרינג לשבת חתן, כשר למהדרין בד, מחפוד] services=[]
+     → Tamar...
+[DEBUG_GEMINI] modelVersion= gemini-3.7-flash usage= {"promptTokenCount":1616,"candidatesTokenCount":860,"totalTokenCount":2476,"promptTokensDetails":[{"modality":"TEXT","tokenCount":1616}],"serviceTier":"standard"}
+     ✓ Tamar done (via gemini-3.7-flash) → Noa...
+[DEBUG_GEMINI] modelVersion= gemini-3.7-flash usage= {"promptTokenCount":1592,"candidatesTokenCount":1005,"totalTokenCount":2597,"promptTokensDetails":[{"modality":"TEXT","tokenCount":1592}],"serviceTier":"standard"}
+     ✓ Tamar done (via gemini-3.7-flash) → Noa...
+[DEBUG_GEMINI] modelVersion= gemini-3.7-flash usage= {"promptTokenCount":1506,"candidatesTokenCount":648,"totalTokenCount":2154,"promptTokensDetails":[{"modality":"TEXT","tokenCount":1506}],"serviceTier":"standard"}
+     ✓ Noa done (via gemini-3.7-flash)
+     ✅ confidence 100 — auto-ship
+     ✅ #4 saved → data/clients/aasada/tasks/geo/04-קייטרינג-לברית.json
+  🔀 #6 "קייטרינג באר שבע" — MULTI_URL cannibalization → narrowing to non-overlapping facet
+  ⚙  #6 "קייטרינג באר שבע" [faq_block/NARROW] → crawling https://aaasada.com/city/beer-sheva...
+[DEBUG_GEMINI] modelVersion= gemini-3.7-flash usage= {"promptTokenCount":1429,"candidatesTokenCount":525,"totalTokenCount":1954,"promptTokensDetails":[{"modality":"TEXT","tokenCount":1429}],"serviceTier":"standard"}
+     ✓ Noa done (via gemini-3.7-flash)
+     ✅ confidence 100 — auto-ship
+     ✅ #5 saved → data/clients/aasada/tasks/geo/05-קייטרינג-לשבת-חתן.json
+  🔀 #7 "קייטרינג לבר מצווה" — MULTI_URL cannibalization → narrowing to non-overlapping facet
+  ⚙  #7 "קייטרינג לבר מצווה" [faq_block/NARROW] → crawling https://aaasada.com/%D7%AA%D7%A4%D7%A8%D7%99%D7%98-%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%9C%D7%91%D7%A8-%D7%9E%D7%A6%D7%95%D7%95%D7%94/...
+     ✓ lexicon: selfRef=[קייטרינג בבאר שבע, כשר למהדרין לשבתות, חתן ואירועים קטנים] services=[]
+     → Tamar...
+     ✓ lexicon: selfRef=[קייטרינג לבר מצווה, כשר למהדרין בד, מחפוד] services=[]
+     → Tamar...
+[DEBUG_GEMINI] modelVersion= gemini-3.7-flash usage= {"promptTokenCount":1628,"candidatesTokenCount":990,"totalTokenCount":2618,"promptTokensDetails":[{"modality":"TEXT","tokenCount":1628}],"serviceTier":"standard"}
+     ✓ Tamar done (via gemini-3.7-flash) → Noa...
+[DEBUG_GEMINI] modelVersion= gemini-3.7-flash usage= {"promptTokenCount":1978,"candidatesTokenCount":1062,"totalTokenCount":3040,"promptTokensDetails":[{"modality":"TEXT","tokenCount":1978}],"serviceTier":"standard"}
+     ✓ Tamar done (via gemini-3.7-flash) → Noa...
+[DEBUG_GEMINI] modelVersion= gemini-3.7-flash usage= {"promptTokenCount":1540,"candidatesTokenCount":634,"totalTokenCount":2174,"promptTokensDetails":[{"modality":"TEXT","tokenCount":1540}],"serviceTier":"standard"}
+     ✓ Noa done (via gemini-3.7-flash)
+     ✅ confidence 100 — auto-ship
+     ✅ #7 saved → data/clients/aasada/tasks/geo/07-קייטרינג-לבר-מצווה.json
+  🔀 #8 "קייטרינג בראשון לציון" — MULTI_URL cannibalization → narrowing to non-overlapping facet
+  ⚙  #8 "קייטרינג בראשון לציון" [faq_block/NARROW] → crawling https://aaasada.com/city/rishon-lezion...
+     ✓ lexicon: selfRef=[קייטרינג בראשון לציון, כשר למהדרין בשרי, מגשי אוכל מוכן] services=[]
+     → Tamar...
+[DEBUG_GEMINI] modelVersion= gemini-3.7-flash usage= {"promptTokenCount":1639,"candidatesTokenCount":1032,"totalTokenCount":2671,"promptTokensDetails":[{"modality":"TEXT","tokenCount":1639}],"serviceTier":"standard"}
+     ✓ Tamar done (via gemini-3.7-flash) → Noa...
+[DEBUG_GEMINI] modelVersion= gemini-3.7-flash usage= {"promptTokenCount":1461,"candidatesTokenCount":573,"totalTokenCount":2034,"promptTokensDetails":[{"modality":"TEXT","tokenCount":1461}],"serviceTier":"standard"}
+     ✓ Noa done (via gemini-3.7-flash)
+     ✅ confidence 100 — auto-ship
+     ✅ #6 saved → data/clients/aasada/tasks/geo/06-קייטרינג-באר-שבע.json
+  🔀 #9 "קייטרינג לאזכרה" — MULTI_URL cannibalization → narrowing to non-overlapping facet
+  ⚙  #9 "קייטרינג לאזכרה" [faq_block/NARROW] → crawling https://aaasada.com/%D7%A7%D7%99%D7%99%D7%98%D7%A8%D7%99%D7%A0%D7%92-%D7%90%D7%95%D7%9B%D7%9C-%D7%9E%D7%95%D7%9B%D7%9F-%D7%9C%D7%90%D7%96%D7%9B%D7%A8%D7%94/...
+     ✓ lexicon: selfRef=[קייטרינג לאזכרה כשר, למהדרין בד, הרב מחפוד] services=[]
+     → Tamar...
+[DEBUG_GEMINI] modelVersion= gemini-3.7-flash usage= {"promptTokenCount":1509,"candidatesTokenCount":635,"totalTokenCount":2144,"promptTokensDetails":[{"modality":"TEXT","tokenCount":1509}],"serviceTier":"standard"}
+     ✓ Noa done (via gemini-3.7-flash)
+     ✅ confidence 100 — auto-ship
+     ✅ #8 saved → data/clients/aasada/tasks/geo/08-קייטרינג-בראשון-לציון.json
+  🔀 #10 "קייטרינג לשבת חתן" — MULTI_URL cannibalization → narrowing to non-overlapping facet
+  ⚙  #10 "קייטרינג לשבת חתן" [faq_block/NARROW] → crawling https://aaasada.com/city/rishon-lezion/shabbat-chatan...
+     ✓ lexicon: selfRef=[קייטרינג לשבת חתן, בראשון לציון, תפריט ומחירים] services=[]
+     → Tamar...
+[DEBUG_GEMINI] modelVersion= gemini-3.7-flash usage= {"promptTokenCount":2001,"candidatesTokenCount":1106,"totalTokenCount":3107,"promptTokensDetails":[{"modality":"TEXT","tokenCount":2001}],"serviceTier":"standard"}
+     ✓ Tamar done (via gemini-3.7-flash) → Noa...
+[DEBUG_GEMINI] modelVersion= gemini-3.7-flash usage= {"promptTokenCount":1642,"candidatesTokenCount":900,"totalTokenCount":2542,"promptTokensDetails":[{"modality":"TEXT","tokenCount":1642}],"serviceTier":"standard"}
+     ✓ Tamar done (via gemini-3.7-flash) → Noa...
+[DEBUG_GEMINI] modelVersion= gemini-3.7-flash usage= {"promptTokenCount":1605,"candidatesTokenCount":735,"totalTokenCount":2340,"promptTokensDetails":[{"modality":"TEXT","tokenCount":1605}],"serviceTier":"standard"}
+     ✓ Noa done (via gemini-3.7-flash)
+     ✅ confidence 100 — auto-ship
+     ✅ #9 saved → data/clients/aasada/tasks/geo/09-קייטרינג-לאזכרה.json
+[DEBUG_GEMINI] modelVersion= gemini-3.7-flash usage= {"promptTokenCount":1460,"candidatesTokenCount":609,"totalTokenCount":2069,"promptTokensDetails":[{"modality":"TEXT","tokenCount":1460}],"serviceTier":"standard"}
+     ✓ Noa done (via gemini-3.7-flash)
+     ✅ confidence 100 — auto-ship
+     ✅ #10 saved → data/clients/aasada/tasks/geo/10-קייטרינג-לשבת-חתן.json
+
+─────────────────────────────────
+Done. Generated: 10 | Skipped: 0
+Providers this run: Gemini-primary: 10 | Qwen-fallback: 0
+Output: data/clients/aasada/tasks/geo/
+EXIT=0

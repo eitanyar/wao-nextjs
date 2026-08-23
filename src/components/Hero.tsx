@@ -11,8 +11,8 @@ const DEFAULTS = {
   subheadline: "תחשוב עלינו כעל מנהל שיווק בכיר עם צוות בוטים שמבצע בשבילו 24/7 — אותן תוצאות של סוכנות, בלי החוזה ובלי פגישות הסטטוס.",
   ctaPrimary: "בניית אתר — מתחילים ב-₪9.90",
   ctaPrimaryHref: "/site-bot",
-  ctaSecondary: "כבר יש לך אתר עם תוכן?",
-  ctaSecondaryHref: "/geo",
+  ctaSecondary: "כבר יש לך אתר? בוא נדבר",
+  ctaSecondaryHref: "/consulting",
   phone: "0526148860",
   stats: [
     { number: "20+", label: "שנות ניסיון מאחורי הבוט" },

@@ -1,0 +1,17 @@
+{
+  "estimated_cost_usd": 0.0,
+  "cost_status": "unknown",
+  "cost_source": "none",
+  "input_tokens": 153550,
+  "output_tokens": 16683,
+  "cache_read_tokens": 1056640,
+  "cache_write_tokens": 0,
+  "reasoning_tokens": 11106,
+  "total_tokens": 1226873,
+  "api_calls": 19,
+  "model": "grok-4.6",
+  "provider": "xai",
+  "session_id": "20260814_141612_fda7ae",
+  "completed": true,
+  "failed": false
+}

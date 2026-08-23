@@ -1,0 +1,94 @@
+[2026-08-14T22:42:19+07:00] AUTO-RETRY armed. Context: qwen3.8-max degraded ~22:00-23:00 IL on 2026-08-14
+  (single solo generation call >180s timeout; trivial 5-token probe 1.6s). Polling every 10min,
+  realistic FAQ payload, threshold 90s, max 12h. On recovery: backup+clear+regen retter --top=10.
+[2026-08-14T22:42:19+07:00] attempt 1/72: HTTP=200 time=5.931867s bodylen=1421
+[2026-08-14T22:42:25+07:00] RECOVERED after ~0 min of polling (probe 200 in 5.931867s). Regenerating retter --top=10...
+
+=== WAO GEO Content Generation ===
+Client: retter
+
+Generating 10 action(s) with concurrency 2...
+
+  🔀 #1 "nlp" — HEAD_TERM_ON_LOCATION → switching to geo-FAQ mode
+  ⚙  #1 "nlp" [faq_block/GEO] → crawling https://www.retter.co.il/petah-tikva-branch/...
+  🔀 #2 "קורס nlp אונליין" — MULTI_URL cannibalization → narrowing to non-overlapping facet
+  ⚙  #2 "קורס nlp אונליין" [faq_block/NARROW] → crawling https://www.retter.co.il/%D7%9C%D7%99%D7%9E%D7%95%D7%93%D7%99-nlp-%D7%90%D7%95%D7%A0%D7%9C%D7%99%D7%99%D7%9F/...
+     ✓ lexicon: selfRef=[סניף פתח תקווה, לימודי, מכללת רטר לימודי] services=[לימודי, סניף, פתח, תקווה]
+     → Tamar...
+     ✓ lexicon: selfRef=[אונליין, קורס, בזום שנותן הכשרה] services=[לימודי, אונליין, קורס, בזום, שנותן]
+     → Tamar...
+[DEBUG_QWEN] attempt 1/3 failed: The operation was aborted due to timeout
+[DEBUG_QWEN] attempt 1/3 failed: The operation was aborted due to timeout
+[DEBUG_QWEN] attempt 2/3 failed: The operation was aborted due to timeout
+[DEBUG_QWEN] attempt 2/3 failed: The operation was aborted due to timeout
+[DEBUG_QWEN] attempt 3/3 failed: The operation was aborted due to timeout
+  ❌ Tamar failed for #1: The operation was aborted due to timeout
+  🔀 #3 "nlp" — HEAD_TERM_ON_LOCATION → switching to geo-FAQ mode
+  ⚙  #3 "nlp" [faq_block/GEO] → crawling https://www.retter.co.il/kiryat-bialik-branch/...
+     ✓ lexicon: selfRef=[סניף קריית ביאליק, לימודי, מכללת רטר לימודי] services=[לימודי, סניף, קריית, ביאליק]
+     → Tamar...
+[DEBUG_QWEN] attempt 3/3 failed: The operation was aborted due to timeout
+  ❌ Tamar failed for #2: The operation was aborted due to timeout
+  🔀 #4 "לימודי nlp" — MULTI_URL cannibalization → narrowing to non-overlapping facet
+  ⚙  #4 "לימודי nlp" [faq_block/NARROW] → crawling https://www.retter.co.il/ness-ziona-branch/...
+     ✓ lexicon: selfRef=[סניף נס ציונה, לימודי, מכללת רטר לימודי] services=[לימודי, סניף, ציונה]
+     → Tamar...
+[DEBUG_QWEN] attempt 1/3 failed: The operation was aborted due to timeout
+[DEBUG_QWEN] attempt 1/3 failed: The operation was aborted due to timeout
+[DEBUG_QWEN] attempt 2/3 failed: The operation was aborted due to timeout
+[DEBUG_QWEN] attempt 2/3 failed: The operation was aborted due to timeout
+[DEBUG_QWEN] attempt 3/3 failed: The operation was aborted due to timeout
+  ❌ Tamar failed for #3: The operation was aborted due to timeout
+  🔀 #5 "מאסטר nlp" — MULTI_URL cannibalization → narrowing to non-overlapping facet
+  ⚙  #5 "מאסטר nlp" [faq_block/NARROW] → crawling https://www.retter.co.il/nlp-master-practitioner-course-2/...
+     ✓ lexicon: selfRef=[קורס, מהצעד הראשון ועד, לקליניקה משגשגת] services=[]
+     → Tamar...
+[DEBUG_QWEN] attempt 3/3 failed: The operation was aborted due to timeout
+  ❌ Tamar failed for #4: The operation was aborted due to timeout
+  🔀 #6 "nlp לילדים" — MULTI_URL cannibalization → narrowing to non-overlapping facet
+  ⚙  #6 "nlp לילדים" [faq_block/NARROW] → crawling https://www.retter.co.il/%D7%98%D7%99%D7%A4%D7%95%D7%9C-nlp-%D7%9C%D7%99%D7%9C%D7%93%D7%99%D7%9D/...
+     ✓ lexicon: selfRef=[טיפול, לילדים טיפול, לילדים] services=[טיפול, לילדים]
+     → Tamar...
+[DEBUG_QWEN] attempt 1/3 failed: The operation was aborted due to timeout
+[DEBUG_QWEN] attempt 1/3 failed: The operation was aborted due to timeout
+[DEBUG_QWEN] attempt 2/3 failed: The operation was aborted due to timeout
+[DEBUG_QWEN] attempt 2/3 failed: The operation was aborted due to timeout
+[DEBUG_QWEN] attempt 3/3 failed: The operation was aborted due to timeout
+  ❌ Tamar failed for #5: The operation was aborted due to timeout
+  🔀 #7 "קורס nlp" — MULTI_URL cannibalization → narrowing to non-overlapping facet
+  ⚙  #7 "קורס nlp" [faq_block/NARROW] → crawling https://www.retter.co.il/petah-tikva-branch/...
+     ✓ lexicon: selfRef=[סניף פתח תקווה, לימודי, מכללת רטר לימודי] services=[לימודי, סניף, פתח, תקווה]
+     → Tamar...
+[DEBUG_QWEN] attempt 3/3 failed: The operation was aborted due to timeout
+  ❌ Tamar failed for #6: The operation was aborted due to timeout
+  ⚙  #8 "סוגי אמונות מגבילות" [faq_block] → crawling https://www.retter.co.il/%D7%A9%D7%99%D7%A0%D7%95%D7%99-%D7%90%D7%9E%D7%95%D7%A0%D7%95%D7%AA-%D7%90%D7%9E%D7%95%D7%A0%D7%95%D7%AA-%D7%9E%D7%92%D7%91%D7%99%D7%9C%D7%95%D7%AA/...
+     ✓ lexicon: selfRef=[אמונות מגבילות, שינוי אמונות, מכללת רטר שינוי] services=[אמונות, שינוי, מגבילות]
+     → Tamar...
+[DEBUG_QWEN] attempt 1/3 failed: fetch failed
+[DEBUG_QWEN] attempt 1/3 failed: fetch failed
+[DEBUG_QWEN] attempt 2/3 failed: The operation was aborted due to timeout
+[DEBUG_QWEN] attempt 2/3 failed: The operation was aborted due to timeout
+[DEBUG_QWEN] attempt 3/3 failed: The operation was aborted due to timeout
+  ❌ Tamar failed for #7: The operation was aborted due to timeout
+  ⚙  #9 "דמיון מודרך" [faq_block] → crawling https://www.retter.co.il/%D7%93%D7%9E%D7%99%D7%95%D7%9F-%D7%9E%D7%95%D7%93%D7%A8%D7%9A/...
+     ✓ lexicon: selfRef=[דמיון מודרך, מדריך למתחילים ואוסף, לטיפול בדמיון מודרך] services=[דמיון, מודרך, וכיצד, משפיע, התודעה]
+     → Tamar...
+[DEBUG_QWEN] attempt 3/3 failed: The operation was aborted due to timeout
+  ❌ Tamar failed for #8: The operation was aborted due to timeout
+  🔀 #10 "קורס nlp" — MULTI_URL cannibalization → narrowing to non-overlapping facet
+  ⚙  #10 "קורס nlp" [faq_block/NARROW] → crawling https://www.retter.co.il/ness-ziona-branch/...
+     ✓ lexicon: selfRef=[סניף נס ציונה, לימודי, מכללת רטר לימודי] services=[לימודי, סניף, ציונה]
+     → Tamar...
+[DEBUG_QWEN] attempt 1/3 failed: The operation was aborted due to timeout
+[DEBUG_QWEN] attempt 1/3 failed: The operation was aborted due to timeout
+[DEBUG_QWEN] attempt 2/3 failed: The operation was aborted due to timeout
+[DEBUG_QWEN] attempt 2/3 failed: The operation was aborted due to timeout
+[DEBUG_QWEN] attempt 3/3 failed: The operation was aborted due to timeout
+  ❌ Tamar failed for #9: The operation was aborted due to timeout
+[DEBUG_QWEN] attempt 3/3 failed: The operation was aborted due to timeout
+  ❌ Tamar failed for #10: The operation was aborted due to timeout
+
+─────────────────────────────────
+Done. Generated: 0 | Skipped: 10
+Output: data/clients/retter/tasks/geo/
+[2026-08-15T08:44:29+07:00] REGEN PRODUCED 0 FILES (exit 0) — restored backup. Qwen re-degraded mid-run.

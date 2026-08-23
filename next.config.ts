@@ -323,6 +323,10 @@ const legacyRedirects = [
   { source: '/training/google-ads-course/%d7%a4%d7%a8%d7%a1%d7%95%d7%9d-%d7%9c%d7%99%d7%9c%d7%93%d7%99%d7%9d-%d7%95%d7%a0%d7%95%d7%a2%d7%a8-%d7%91%d7%90%d7%99%d7%a0%d7%98%d7%a8%d7%a0%d7%98-%d7%9e%d7%95%d7%93%d7%9c-2014', destination: '/training/google-ads-course/advertising-to-children-online', permanent: true },
   { source: '/main', destination: '/', permanent: true },
   { source: '/%d7%a9%d7%99%d7%95%d7%95%d7%a7-%d7%a9%d7%95%d7%aa%d7%a4%d7%99%d7%9d-%d7%9e%d7%94-%d7%97%d7%9d-2023', destination: '/training/affiliate-marketing/affiliate-marketing-whats-hot-2026', permanent: true },
+
+  // ── GEO Bot: retired cold-acquisition funnels → /geo (2026-08-22) ──────────
+  { source: "/geo/audit", destination: "/geo", permanent: true },
+  { source: "/geo/onboarding", destination: "/geo", permanent: true },
 ] as const;
 
 const nextConfig: NextConfig = {

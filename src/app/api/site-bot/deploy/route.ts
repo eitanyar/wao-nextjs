@@ -3,12 +3,20 @@ import { execSync } from 'child_process';
 import { mkdirSync, writeFileSync, rmSync, readFileSync } from 'fs';
 import { tmpdir } from 'os';
 import path from 'path';
-import { renderSitePages } from '@/lib/lp/renderSitePages';
+import { cookies } from 'next/headers';
+import { renderSitePages, buildSitemap } from '@/lib/lp/renderSitePages';
 import { detectVertical } from '@/lib/lp/verticalDetect';
 import { VERTICAL_THEMES } from '@/lib/lp/verticalThemes';
 import { VERTICAL_ASSETS } from '@/lib/lp/verticalAssets';
 import type { CollectedData } from '@/lib/bot/prompts';
 import type { SiteCopy } from '@/lib/lp/lpCopyPrompt';
+import type { CoreThirtyNode } from '@/lib/lp/coreThirty';
+import type { CoreThirtyPageCopy } from '@/lib/lp/coreThirtyCopy';
+import { checkNearDuplicates } from '@/lib/lp/duplicateCheck';
+import type { DuplicateCheckPage } from '@/lib/lp/duplicateCheck';
+import { renderCoreThirtyPages, buildCoreThirtySitemapUrls } from '@/lib/lp/renderCoreThirtyPages';
+import { ensureSiteBotClientRecord, clientRecordExists } from '@/lib/geo/client';
+import { createSessionToken, COOKIE_NAME } from '@/lib/client-auth';
 
 interface DeployRequest {
   slug: string;
@@ -23,6 +31,8 @@ interface SiteRecord {
   collectedData: CollectedData;
   copy: SiteCopy;
   slug: string;
+  coreThirtyNodes?: CoreThirtyNode[];
+  coreThirtyCopies?: Record<string, CoreThirtyPageCopy>;
 }
 
 const CF_BASE = 'https://api.cloudflare.com/client/v4';
@@ -84,11 +94,80 @@ export async function POST(req: Request) {
       siteUrl,
     });
 
+    // ── Step 2b: Render the core-30 supplementary local-SEO pages ───────────
+    // Deploy-time never regenerates copy — only reads what generate/route.ts
+    // already persisted, keeping deploy fast/deterministic with no LLM calls.
+    let allPages: Record<string, string> = pages;
+    const nodes: CoreThirtyNode[] = record.coreThirtyNodes || [];
+    const copiesMap = new Map(Object.entries(record.coreThirtyCopies || {}));
+
+    if (nodes.length > 0) {
+      const duplicateCheckPages: DuplicateCheckPage[] = nodes
+        .filter((n) => copiesMap.has(n.id))
+        .map((n) => {
+          const c = copiesMap.get(n.id)!;
+          return {
+            id: n.id,
+            narrative: c.narrative,
+            faqItems: c.faqItems,
+            metaDescription: c.metaDescription,
+          };
+        });
+
+      const findings = checkNearDuplicates(duplicateCheckPages);
+
+      // Policy (VISION.md Gate 1, product-safety decision — implemented
+      // exactly, not redesigned here): never hard-block the whole deploy over
+      // a near-duplicate finding. Exclude at the page level instead — drop
+      // the second id in every flagged pair, keep the first.
+      const excludedIds = new Set(findings.map((f) => f.bId));
+      for (const f of findings) {
+        console.warn(
+          `Core-30 near-duplicate finding (field=${f.field}, score=${f.score.toFixed(3)}): ${f.aId} <-> ${f.bId} — excluding ${f.bId}`
+        );
+      }
+
+      const filteredNodes = nodes.filter((n) => !excludedIds.has(n.id));
+
+      if (excludedIds.size > 0) {
+        // Non-fatal audit-trail write — must never fail the deploy, same
+        // forgiving pattern as the dashboard-bridge step below.
+        try {
+          const updatedRecord = { ...record, coreThirtyDuplicateExclusions: Array.from(excludedIds) };
+          writeFileSync(sitePath, JSON.stringify(updatedRecord, null, 2), 'utf-8');
+        } catch (err) {
+          console.warn('Core-30 duplicate-exclusion audit-trail write (non-fatal):', err);
+        }
+      }
+
+      if (filteredNodes.length > 0) {
+        const coreThirtyPages = renderCoreThirtyPages({
+          nodes: filteredNodes,
+          copies: copiesMap,
+          theme,
+          assets,
+          data: collectedData,
+          heroImageUrl,
+          slug,
+          siteUrl,
+          googleAdsCustomerId,
+          phoneConversionLabel,
+          whatsappConversionLabel,
+          gtagSnippet,
+          formConversionLabel,
+        });
+        allPages = { ...pages, ...coreThirtyPages };
+        allPages['sitemap.xml'] = buildSitemap(siteUrl, buildCoreThirtySitemapUrls(filteredNodes, copiesMap));
+      }
+    }
+
     // ── Step 3: Write to a tmp dir ──────────────────────────────────────────
     const tmpDir = path.join(tmpdir(), `wao-site-${Date.now()}`);
     mkdirSync(tmpDir, { recursive: true });
-    for (const [filename, content] of Object.entries(pages)) {
-      writeFileSync(path.join(tmpDir, filename), content, 'utf-8');
+    for (const [filename, content] of Object.entries(allPages)) {
+      const filePath = path.join(tmpDir, filename);
+      mkdirSync(path.dirname(filePath), { recursive: true });
+      writeFileSync(filePath, content, 'utf-8');
     }
 
     const env = {
@@ -150,6 +229,42 @@ export async function POST(req: Request) {
       }
     } else {
       rmSync(tmpDir, { recursive: true, force: true });
+    }
+
+    // ── Step 4: Bridge to the client-dashboard record ──────────────────────
+    // Site Bot previously had no data/clients/{slug}/client.json at all, so
+    // clients had no /client/dashboard account. This creates one on first
+    // deploy only (idempotent on redeploy) and auto-logs in a brand-new
+    // client the same way geo/signup/callback does. Must never block/fail
+    // the deploy response — same forgiving pattern as the custom-domain
+    // registration warning above.
+    try {
+      const isFirstTimeRecord = !clientRecordExists(slug);
+
+      ensureSiteBotClientRecord({
+        clientId: slug,
+        siteUrl,
+        businessNiche: collectedData.businessNiche || '',
+        topService: collectedData.secondaryServices?.split(/[,\n،]/)[0]?.trim() || undefined,
+        targetLocation: collectedData.targetLocation,
+        usp: collectedData.usp,
+        approvalContact: collectedData.ownerName || collectedData.businessName,
+        approvalWhatsapp: collectedData.whatsappNumber || collectedData.phone,
+      });
+
+      if (isFirstTimeRecord) {
+        const token = await createSessionToken(slug);
+        const jar = await cookies();
+        jar.set(COOKIE_NAME, token, {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === 'production',
+          sameSite: 'lax',
+          maxAge: 30 * 24 * 60 * 60,
+          path: '/',
+        });
+      }
+    } catch (err) {
+      console.warn('Site Bot -> client-dashboard bridge (non-fatal):', err);
     }
 
     return NextResponse.json({ success: true, url: siteUrl, projectName: slug });

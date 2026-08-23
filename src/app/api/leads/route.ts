@@ -4,7 +4,11 @@ import { sendLeadNotificationEmail } from "@/lib/mail";
 import { ADMIN_COOKIE_NAME, verifyAdminToken } from "@/lib/admin-auth";
 import { readLeads, writeLeads, findLeadById } from "@/lib/crm/leadsStore";
 import { uploadLeadConversion, type ConversionType } from "@/lib/google-ads/conversion-upload";
-import type { LeadRecord } from "@/lib/crm/intelligence";
+import { loadCampaignConfigBySlug, type LeadRecord } from "@/lib/crm/intelligence";
+import { loadClient } from "@/lib/shared/clients";
+import { buildReviewRequestOwnerNotification } from "@/lib/crm/reviewFlywheelCopy";
+import { buildWaLink } from "@/lib/gmb/whatsapp";
+import { appendReviewFlywheelQueueItem } from "@/lib/crm/reviewFlywheelStore";
 
 /**
  * In-process call to `uploadLeadConversion()` (`@/lib/google-ads/conversion-upload`).
@@ -20,6 +24,56 @@ async function uploadConversion(leadId: number, type: ConversionType) {
     }
   } catch (err) {
     console.error(`[uploadConversion] ${type} threw for lead ${leadId}:`, err);
+  }
+}
+
+/**
+ * Review-generation flywheel hook (handoff/completed/2026-08-22_007_*.md) — fires after a lead
+ * is marked closed. Opt-in only (`client.reviewFlywheelEnabled`); every failure path skips
+ * silently (warn at most) rather than throwing, so it can never block the existing markClosed
+ * response or the conversion-upload logic that runs before it. No live send — this only
+ * generates a wa.me link and appends it to the client's review-flywheel queue file for a future
+ * dashboard surface to display (see src/lib/crm/reviewFlywheelStore.ts).
+ */
+export function maybeQueueReviewFlywheelRequest(lead: LeadRecord): void {
+  try {
+    if (!lead.slug) return;
+    const campaign = loadCampaignConfigBySlug(lead.slug);
+    const clientId = campaign?.clientId;
+    if (!clientId) return;
+
+    const client = loadClient(clientId);
+    if (!client?.reviewFlywheelEnabled) return;
+
+    if (!client.reviewLink) {
+      console.warn(
+        `[reviewFlywheel] enabled for client "${clientId}" but reviewLink is missing — skipping lead ${lead.id}`
+      );
+      return;
+    }
+    if (!client.approvalWhatsapp) {
+      console.warn(
+        `[reviewFlywheel] enabled for client "${clientId}" but approvalWhatsapp is missing — skipping lead ${lead.id}`
+      );
+      return;
+    }
+
+    const message = buildReviewRequestOwnerNotification({
+      ownerName: client.approvalContact || "בעל העסק",
+      businessName: client.brandName || clientId,
+      customerName: lead.name || "הלקוח",
+      reviewLink: client.reviewLink,
+    });
+    const waLink = buildWaLink(client.approvalWhatsapp, message);
+
+    appendReviewFlywheelQueueItem({
+      leadId: lead.id,
+      clientId,
+      waLink,
+      generatedAt: new Date().toISOString(),
+    });
+  } catch (err) {
+    console.error(`[reviewFlywheel] hook threw for lead ${lead.id}:`, err);
   }
 }
 
@@ -103,6 +157,11 @@ export async function POST(req: Request) {
       const lead = findLeadById(leads, id);
       if (lead?.gclid || lead?.wbraid || lead?.gbraid) {
         uploadConversion(id, "closed-deal").catch(console.error);
+      }
+
+      // Review-generation flywheel — opt-in only, fails safe, never blocks this response.
+      if (lead) {
+        maybeQueueReviewFlywheelRequest(lead);
       }
 
       return NextResponse.json({ success: true, closedAt, message: "Lead marked closed" });

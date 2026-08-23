@@ -1,0 +1,81 @@
+{
+  "actionId": "retter-3-nlp",
+  "clientId": "retter",
+  "rank": 3,
+  "query": "nlp",
+  "rankingUrl": "https://www.retter.co.il/kiryat-bialik-branch/",
+  "implementationMode": "enhance",
+  "actionType": "faq_block",
+  "priority": "MEDIUM",
+  "score": 10346,
+  "impressions": 634,
+  "clicks": 0,
+  "ctr": 0,
+  "status": "generated",
+  "shipDecision": "review",
+  "confidence": 100,
+  "generatedAt": "2026-08-15T11:30:10.590Z",
+  "vocabSource": "page",
+  "vocabConfidence": "high",
+  "cannibalFlag": "REVIEW",
+  "cannibalReasons": [
+    "MULTI_URL",
+    "HEAD_TERM_ON_LOCATION"
+  ],
+  "cannibalUrls": [
+    {
+      "url": "https://www.retter.co.il/nlp/",
+      "impressions": 11233,
+      "position": 2.6
+    },
+    {
+      "url": "https://www.retter.co.il/petah-tikva-branch/",
+      "impressions": 932,
+      "position": 7.7
+    }
+  ],
+  "content": {
+    "hebrewContent": "<h3>שאלות נפוצות על לימודי NLP בסניף קריית ביאליק</h3>\n<div class=\"faq-item\">\n  <h4>איפה בדיוק מתקיים הקורס של מכללת רטר בקריית ביאליק?</h4>\n  <p>הלימודים של מכללת רטר מתקיימים במיקום מרכזי ונגיש בקריית ביאליק. הסניף מציע כיתות לימוד מרווחות, אווירה אינטימית וגישה נוחה לתחבורה ציבורית ולצירי תנועה ראשיים באזור הקריות והצפון.</p>\n</div>\n<div class=\"faq-item\">\n  <h4>מה כולל מסלול הלימודים בסניף קריית ביאליק?</h4>\n  <p>סניף קריית ביאליק מציע תוכנית הכשרה מקצועית ומקיפה הכוללת את דרגות NLP פרקטישנר ומאסטר. הלימודים משלבים תיאוריה מעמיקה לצד תרגול מעשי רב וליווי אישי של צוות המרצים של מכללת רטר.</p>\n</div>\n<div class=\"faq-item\">\n  <h4>למי מתאימים לימודי ה—NLP של מכללת רטר בצפון?</h4>\n  <p>המסלול מתאים לתושבי קריית ביאליק והסביבה שרוצים לרכוש מקצוע טיפולי מבוקש, למטפלים ומאמנים שרוצים להרחיב את סל הכלים שלהם — ולכל אדם שמחפש לעבור תהליך התפתחות אישית משמעותי.</p>\n</div>",
+    "placementInstruction": "יש להוסיף את בלוק השאלות והתשובות ישירות מתחת לאזור הסילבוס או קהל היעד בדף סניף קריית ביאליק.",
+    "metaDescription": "רוצה ללמוד NLP בצפון? מכללת רטר מציעה לימודי NLP מקצועיים בסניף קריית ביאליק. היכנסי לפרטים על מסלול ההכשרה שיעניק לך כלים טיפוליים חזקים.",
+    "jsonLd": {
+      "type": "EducationOrganization",
+      "name": "מכללת רטר",
+      "description": "לימודי NLP מקצועיים בסניף קריית ביאליק של מכללת רטר. הכשרת מטפלים ומאמנים ברמה הגבוהה ביותר.",
+      "address": {
+        "type": "PostalAddress",
+        "addressLocality": "קריית ביאליק",
+        "addressCountry": "IL"
+      },
+      "hasOfferCatalog": {
+        "type": "OfferCatalog",
+        "name": "קורסי NLP",
+        "itemListElement": [
+          {
+            "type": "Course",
+            "name": "קורס NLP פרקטישנר ומאסטר",
+            "description": "הכשרה מקצועית ב-NLP בסניף קריית ביאליק של מכללת רטר",
+            "provider": {
+              "type": "Organization",
+              "name": "מכללת רטר"
+            }
+          }
+        ]
+      }
+    },
+    "tamarNotes": "עורכת יקרה, השתמשתי בדיוק במונחים 'סניף קריית ביאליק', 'לימודי' ו'מכללת רטר' כפי שמופיעים בעמוד. נמנעתי לחלוטין מהמצאת פרטים כמו שעות או מחירים מדויקים שלא סופקו, ושמרתי על שפה ישראלית מדוברת וזורמת בגובה העיניים.",
+    "noaChanges": "החלפת מקפי מינוס במקפי em-dash תקניים (—) בשאלות הנפוצות. פנייה מותאמת ומזמינה יותר במטא-דיסקריפשן.",
+    "registerScore": 100,
+    "groundingRisk": "low",
+    "generatedVia": "primary:gemini-3.5-flash",
+    "schemaValid": false,
+    "schemaErrors": [
+      "jsonLd missing @type"
+    ],
+    "confidence": 100,
+    "shipDecision": "review",
+    "reviewReasons": [
+      "BLOCKER: schema invalid (jsonLd missing @type)"
+    ]
+  }
+}

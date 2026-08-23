@@ -32,23 +32,22 @@ Four independently sellable bots, one unified client portal (`/client/dashboard`
 
 | Bot | Price | What it does |
 |-----|-------|-------------|
-| **GEO Bot** | ₪199/mo | GSC → Pareto → AIO content → action page → verify loop — *for content-ready SMBs: accountants, coaches, clinics, lawyers, architects (30+ pages, existing GSC data)* |
-| **Ads Bot** | ₪249/mo | Google Ads onboarding → campaign management → monthly recommendations |
-| **Content Bot** | ₪490/mo | SEO content plan → keyword cluster → article pipeline → publish |
-| **Site Bot** | ₪1,490–1,990 one-time | Domain → Next.js scaffold → deployed → SEO-ready — *the front door for micro-SMBs (plumbers, tutors, photographers)* |
+| **Site Bot** | ₪199/month retainer (locked Eitan, 2026-08-21 — supersedes the prior ₪1,490–1,990 one-time price; WoZ-invoiced at pilot) | Domain → ~30-page core local-SEO site (service × city) → GBP claim/optimize → deployed → SEO-ready, **plus an ongoing monthly bundle**: page growth/refresh batch (2-4 new or refreshed core-30 pages/month via the same engine, re-gated through `duplicateCheck.ts` each run — not a one-time cap), GBP monitoring/upkeep, and a client-dashboard monthly digest (leads + new pages) that also primes GSC-connection for the month-4 GEO Bot upgrade — **the single MVP product; GBP/GMB is merged in as step one of delivery** (see Phase 1 wedge) |
+| **Ads Bot** | ₪249/mo | Google Ads onboarding → campaign management → monthly recommendations (deferred behind Site Bot proof) |
+| **Content Bot** | ₪490/mo | SEO content plan → keyword cluster → article pipeline → publish (later-stage upsell) |
 
-Each bot is an agentic pipeline, not a human-delivered service. The LP markets the bot; the delivery IS the agent flow. Clients subscribe to individual bots or bundle (Organic Growth Stack: GEO + Content ~₪580/mo). The ₪9.90 trial is once per client, not per bot — **trial entry point is Site Bot, not GEO Bot.**
+Each bot is an agentic pipeline, not a human-delivered service. The LP markets the bot; the delivery IS the agent flow. **GEO Bot is retired as a separate acquisition channel (Eitan, 2026-08-21 — "kill it fully")** — WAO does not go to market for a second, content-ready-SMB buyer. Its content-authoring engine (`scripts/geo-generate-content.mjs` + `scripts/gsc-pareto.mjs`) is repurposed two ways: (1) core-30 page authorship under the Gate-1 content-safety rules, and (2) **restored as a late-stage upsell for WAO's own Site Bot clients** (Eitan, 2026-08-21) — see below. It is not sold to external content-ready SMBs. The single current *acquisition* product is Site Bot; Ads Bot and Content Bot are deferred behind Site Bot proof. The ₪9.90 trial is once per client, not per bot. **Pricing fork resolved (Eitan, 2026-08-21):** ₪9.90 trial → generate-only preview (cheap, ~₪2 LLM cost, no live deploy/GBP claim) → **₪199/month retainer unlocks the actual deploy** (live core-30 site + GBP claim + the recurring growth/GBP-monitoring/digest bundle, see Bots table above) → **₪299/month GEO Bot upgrade at month 4** once GSC has ≥90 days of real data. This replaces the old one-time ₪1,490–1,990 Site Bot price and the previously-deferred "Phase 2 pricing trigger" (see Monetization § below, now superseded) — it does not require bot-executed edit-via-chat, since the recurring value is the batch page-growth/GBP/digest bundle, not conversational editing.
 
-**Buyer routing (validated by Lior, July 2026 — updated upsell ladder confirmed July 2026):**
-- **Micro-SMB** (plumber, tutor, photographer): Site Bot first → **GMB Bot ₪149 at month 1** (site completion) → Content Bot ₪490 at month 6 → GEO Bot ₪199 once ≥15 pages exist. GEO Bot is NOT the month-3 attach for 5-page Site Bot buyers — their transactional queries trigger Local Pack, not AI Overview; a 5-page site has no surface for GEO Bot to work on.
-- **Content-ready SMB** (accountant, coach, clinic, lawyer, architect): GEO Bot directly. Informational search precedes their purchase decisions; AIO dominates their query space; 30+ pages give the pipeline real leverage.
+**Buyer routing (superseded 2026-08-21 by the single-segment wedge — see Phase 1):**
+- **Single target segment: no-website micro-business** (fixed-location plumber/electrician-class, in-home tutor, photographer). Enters via **Site Bot** (core-30 + GBP merged). Upsell ladder: **Content Bot once ≥15 pages exist → GEO Bot at ~month 4**, gated on (a) Google Search Console verified/installed on the client's own core-30 site at launch, and (b) ≥90 days of real GSC click/impression data accumulated (`gsc-pareto.mjs`'s hard data floor — confirmed earlier this session it cannot run without it) — ~4 months gives buffer past that floor. This is a same-client lifecycle upsell, not a re-opened acquisition channel — do not market GEO Bot externally or route new content-ready-SMB leads to it. Ads Bot deferred behind Site Bot proof.
+- The prior content-ready-SMB branch (accountant/coach/clinic/lawyer/architect → GEO Bot directly as an acquisition path) and the GMB Bot ₪149 month-1 attach are **retired** — that segment is demoted out of the roadmap as an acquisition target and survives only as retter.co.il case study / referral lane (Phase 1 wedge).
 
 ### Client-Facing Orchestrator (decided Aug 2026 — Phase 2/3, build deferred)
 
 The suite is sold modularly; the client experiences **one agent**. Bots are capabilities — the orchestrator is the product. There is deliberately no dashboard as the primary surface; the conversation is the unified surface, consistent with "the bot IS the CMS" (see Platform Scope below) and Voice First (§ Interaction Model).
 
 - **Proactive by default, steerable by voice.** The orchestrator prioritizes across a client's owned bots in advance and brings recommendations to the client ("this month your money is better spent on reviews than ads — I've re-paced the budget, say yes"). Voice steering is the override path, not the required path. Zero decisions required, one "continue."
-- **Cross-bot recommendations are the upsell path.** The orchestrator managing one bot surfaces the client's next bottleneck and offers the next bot as advice, not marketing — this is the mechanism behind the upsell ladder above (e.g. Site Bot → GMB Bot).
+- **Cross-bot recommendations are the upsell path.** The orchestrator managing one bot surfaces the client's next bottleneck and offers the next bot as advice, not marketing — this is the mechanism behind the upsell ladder above (e.g. Site Bot → Content Bot).
 - **Build trigger: first client owning 2+ bots.** Until then, the orchestrator is Wizard-of-Oz — Eitan, on WhatsApp — and those conversations are the training data for what the real orchestrator should say. Building the conductor before the orchestra exists is premature.
 - **International note:** the conversational orchestrator is the portable layer for later-stage markets; per-market localization applies to bot content pipelines, not to the product concept — a dashboard's information architecture would drag Hebrew-market assumptions with it in a way conversation doesn't.
 
@@ -163,8 +162,8 @@ Client always pays their Google Ads budget directly to Google — WAO never touc
 - Should there be a Tier 2 (₪499/month) for multi-channel or higher ad spend clients?
 - Does the ₪9.90 need to be higher to filter unserious leads?
 
-**Phase 2 pricing trigger — Site Bot subscription model (DEFERRED, decision July 2026):**
-Site Bot is currently priced at ₪1,490 one-time (keep, confirmed July 2026 — supply-constrained at WoZ stage, cutting price buys nothing). The subscription model (₪249–299/mo, includes build + ongoing edit-via-chat + GSC/GMB health checks) is the right long-term frame but requires edit-via-chat to be bot-executed, not WoZ-manual. **Trigger to revisit:** when Eitan-Dev ships automated edit-via-chat (bot redeploys on client request without manual Eitan involvement). At that point, re-evaluate Option C as the primary Site Bot pricing model — it creates the strongest moat (churn requires actively cancelling ongoing value) and aligns with the "bot IS the CMS" vision above.
+**Phase 2 pricing trigger — Site Bot subscription model (SUPERSEDED 2026-08-21 — locked, not deferred):**
+~~Site Bot is currently priced at ₪1,490 one-time (keep, confirmed July 2026 — supply-constrained at WoZ stage, cutting price buys nothing). The subscription model (₪249–299/mo, includes build + ongoing edit-via-chat + GSC/GMB health checks) is the right long-term frame but requires edit-via-chat to be bot-executed, not WoZ-manual. **Trigger to revisit:** when Eitan-Dev ships automated edit-via-chat.~~ **Locked instead (Eitan, 2026-08-21): ₪199/month**, below the previously-floated ₪249–299/mo range, because the recurring deliverable that justifies "retainer" doesn't need edit-via-chat automation — it's the batch page-growth engine (already built this session) + GBP monitoring + a dashboard digest, all of which are batch/WoZ-executable today. Same moat logic applies (churn requires cancelling ongoing value, not just declining a rebuild), reached without waiting on the edit-via-chat trigger. See Bots table and Buyer routing § above for the full ladder.
 
 ### Growth Model
 ```
@@ -201,52 +200,14 @@ International (English-speaking markets)
 - [x] Establish agent team (Tamar, Gil, Dror, Yonatan, Maya, Eitan-Dev)
 - [ ] Define bot architecture and MVP scope
 
-### Phase 1R — GEO/AIO Managed Service (Standalone Revenue Product)
+### Phase 1R — GEO/AIO: retired as a product, engine repurposed (superseded 2026-08-21, via Lior)
 
-> **A growing need for any business owner who cares about their organic presence.**
-> As Google shifts to AI Overviews and answer-engine results, ranking alone is not enough — the business must *be the answer*. This is WAO's managed service for that gap.
+GEO Bot is **no longer a standalone revenue product** (Eitan, 2026-08-21 — "kill it fully"). The prior framing here — ₪199/590/1,290 self-serve/Managed/Pro tiers, content-ready-SMB buyer profile, done-for-you monthly service — is **retired in full**. What survives is the **engine and the execute-verify pattern**, repurposed for the single-segment Site Bot wedge (see Phase 1 — MVP Bot):
 
-**What it is:** A done-for-you monthly service. WAO pulls the client's Google Search Console data, identifies the top keyword opportunities that are one content addition away from being cited in AI Overviews, writes the Hebrew content (FAQ blocks, definition boxes, schema), sends it to the client for approval via WhatsApp, and verifies it landed on the site.
-
-**The loop (continuous):**
-```
-GSC data → Pareto scoring + intent filter → Hebrew content (Tamar→Noa pipeline)
-  → WhatsApp approval link → client action page (copy + paste instructions)
-  → client marks done → automated verification crawler → next action surfaced
-```
-
-**Pricing tiers:**
-| Tier | Price | Scope | Who implements |
-|------|-------|-------|----------------|
-| GEO Bot | ₪199/month | Automated loop: content written, action page, verify | You (self-serve) |
-| Managed | ₪590/month | Full loop + WAO oversight, 1 revision per action, personal WhatsApp | You, guided by WAO |
-| Pro | ₪1,290/month | Full loop + WAO implements directly (WordPress API / CMS access) | WAO |
-
-*(Radar tier retired — GEO Bot replaces it at a lower price point with full automation.)*
-
-**Right buyer:** content-ready SMBs with 30+ pages and existing GSC data (accountants, coaches, clinics, lawyers, architects). GEO Bot is NOT the right product for micro-SMBs on 5-page sites — Local Pack, not AI Overview, answers their queries. Micro-SMBs enter via Site Bot and add GEO Bot in month 3.
-
-**Delivery model (first 5 clients — Wizard of Oz):**
-- Manual GSC pull via `node scripts/gsc-pareto.mjs`
-- Manual content generation via `node scripts/geo-generate-content.mjs`
-- Manual WhatsApp send via Eitan's dashboard (`/geo/dashboard`)
-- Automated from client's side: action page, copy buttons, mark-done, verification
-
-**What's built (as of July 2026):**
-- [x] Pareto engine with intent filter (positions 4–25, LLM scoring)
-- [x] Tamar→Noa two-pass Hebrew content generation
-- [x] Immutable approval log (`data/geo-logs/{clientId}/log.jsonl`)
-- [x] Verification crawler (content fingerprint + JSON-LD schema check)
-- [x] WhatsApp delivery (wa.me deep links, no Business API needed)
-- [x] Eitan's send dashboard (`/geo/dashboard`)
-- [x] Client-facing action page (`/geo/action/[actionId]`) — copy, placement, mark-done
-- [x] Pilot client: retter.co.il (20 actions generated, pending first send)
-- [ ] First complete cycle: send → client implements → verified
-- [ ] Auth on dashboard + action pages before public deploy
-- [ ] Genderized copy (currently hardcoded feminine for Hadas/retter)
-- [ ] Self-serve GSC OAuth (for clients post-payment)
-
-**Relationship to the bot:** Phase 1R IS GEO Bot v1, delivered Wizard-of-Oz. It proves the execute-verify pattern for the full suite. Every other bot follows the same loop.
+- **Content-authoring engine** — `scripts/geo-generate-content.mjs` + `scripts/gsc-pareto.mjs` — repurposed two ways: (1) core-30 Site Bot page authorship, now **bound by the Gate-1 content-safety rules** (per-page Hebrew authorship by Tamar, no `{service}×{city}` template substitution, facts-intake gate, Roni duplicate/near-duplicate check — see Phase 1 wedge); (2) **restored as a ~month-4 upsell for WAO's own Site Bot clients** (Eitan, 2026-08-21) once their own core-30 site has ≥90 days of real GSC data (`gsc-pareto.mjs`'s hard floor) — **not** re-opened as an external content-ready-SMB acquisition product. **Build implication: GSC verification/install must be part of Site Bot's own delivery checklist**, not an afterthought, or the month-4 clock never starts.
+- **Reusable proven assets (keep):** Pareto engine + intent filter, Tamar→Noa two-pass Hebrew generation, immutable approval log (`data/geo-logs/{clientId}/log.jsonl`), verification crawler (fingerprint + JSON-LD), WhatsApp delivery (wa.me deep links), client action page (`/geo/action/[actionId]`).
+- **retter.co.il** — the former pilot client — survives only as a **case study / quiet referral lane** (warm intros only, no further product build for that segment).
+- **The execute-verify pattern this proved** (GSC → score → author → approve → verify → next action) remains the template every bot's loop follows.
 
 ---
 
@@ -260,31 +221,37 @@ Artifact: https://claude.ai/code/artifact/1dbfd8a3-4adf-4d0b-ae29-e00702723a09
 
 ### Phase 1 — MVP Bot (Next)
 
-**Wedge decision (locked 2026-08-08, via Lior + Grok cross-check):** the first end-to-end flow built is **Flow B — the diagnosis→prioritized-plan→"continue"→execute loop** — not Site Bot, not Ads Bot. Rationale: it proves the core diagnose→approve→execute pattern every other bot inherits, at the lowest WoZ risk (no big-bang delivery to fail loudly on), and it's the cheapest way to grow the evidence-base moat. Site Bot and Ads Bot are **acquisition/volume** plays — sequenced *after* the loop is proven (trigger: 8–12 successful WoZ diagnosis loops), not proof plays. Do not conflate proof-flow with acquisition-flow.
+**Wedge decision (superseded 2026-08-21, via Lior — supersedes the locked 2026-08-08 two-branch decision below):** WAO commits to a **single target segment**: the micro-business with **no existing website**. The prior two-branch, risk-weighted wedge (content-ready/GEO branch run "first and harder," GBP branch as a 30%-odds probe) is **collapsed to one branch.** The content-ready segment (accountants, lawyers, clinics, coaches, architects) is **demoted out of the product roadmap** and survives only as:
+- (a) a **reusable content-authoring engine** — `scripts/geo-generate-content.mjs` — repurposed to author the micro-business's pages, not sold as GEO Bot to content-ready SMBs; and
+- (b) **retter.co.il as a case study / quiet referral lane** — one closed reference relationship, warm intros only, **no further product build for that segment.**
 
-**Flow B is segment-agnostic — two branches, not one:**
-- **Content-ready SMB branch** (accountant, coach, clinic, lawyer, architect — existing site + GSC): GSC/GEO audit → Pareto content gaps → prioritized plan. ~80% built already; retter.co.il is the live pilot (20 actions generated, pending first send). **Immediate next action: close this loop before starting new ones** — one finished end-to-end cycle is worth more than five new starts.
-- **No-website micro-SMB branch** (plumber, tutor, photographer — WAO's actual North-Star volume, per the 10,000-client target "from scratch or on top of existing assets"): anchor the diagnosis on **Google Business Profile / local presence**, not site+GSC (they have nothing to audit there). Diagnose GBP completeness, review gap vs. local competitors, Local Pack position → prioritized plan → "continue" → WAO executes step one manually. This branch is what keeps the evidence base built on the segment WAO actually needs to scale to, not just the segment that's easiest to prove on.
+Rationale: the two-branch structure split a single founder's WoZ throughput across two buyer journeys, two diagnosis templates, and two acquisition lanes — the GEO branch was the easier proof but the wrong-volume segment; the no-website branch is the actual North-Star segment ("from scratch," 10,000-client target) but was being run as a thin probe. One segment, run to real depth, beats two run shallow.
 
-Both branches stay inside single-founder WoZ throughput — diagnosis + a plan, not autonomous execution.
+**Product shape — core-30 is Site Bot's primary shape, not a deferred acquisition play:** the no-website micro-business's local visibility is won by a **~30-page core local-SEO site** (service × city coverage) that surfaces in the **Local Pack**, plus a claimed/optimized Google Business Profile. This is what Site Bot builds and is Site Bot's *first* delivery, not a Phase-2 volume play sequenced after some other proof flow. **GMB Bot is merged into Site Bot** — it is no longer a separate ₪149 SKU. Claiming/optimizing the GBP is step one of the Site Bot delivery, not a distinct product; the unified deliverable is "you go from invisible to found in the map + a real site behind it."
 
-**Risk-weighted sequencing within the wedge (added 2026-08-08, Lior + business-risk review):** the two branches carry very different risk. The content-ready/GEO branch is the strong bet (~70%+ odds as a proof vehicle — nearly built, retter.co.il is one closed loop from being real evidence) and should be run first and harder: close retter, then run 3–4 more GEO diagnoses. The no-website/GBP branch is a **probe, not a commitment** (~30% odds as a volume engine this quarter) — its diagnosis payload is thin (a business owner with no site usually already knows they're invisible; low information asymmetry means low perceived value), and it naturally funnels toward the exact big-bang Site Bot delivery already deferred as too risky in WoZ. Run it as 1–2 test clients only, with the first delivered step kept deliberately tiny (claim/optimize the GMB profile — never "here's your finished site"), to test whether the diagnosis creates real perceived value before scaling it. Do not let the no-website volume opportunity (real, but a Phase 2 question) preempt banking Phase 1 proof on the path that's already built.
+**Two binding content-safety gates (Yonatan, verified 2026-08-21 — verdict CAUTION→PROCEED, both gates are build constraints, not options):** the core-30 mechanism holds in Hebrew and GBP-dominance stats confirm at US-comparable magnitude, BUT Google's **June 2026 global spam update explicitly targets templated city/service doorway pages** — exactly what a naive `{service}×{city}` string-substitution generator produces. Therefore:
+1. **Every core-30 page requires genuine per-page Hebrew authorship (Tamar), never template substitution.** This is doubly required: Hebrew construct-state phrasing does not token-swap cleanly (grammar), and per-page authorship is the doorway-page defense (policy). A generator that fills a template with `{service}`/`{city}` is a build failure, not a shortcut.
+2. **"2 weeks to top-3" is an unproven hypothesis for Israel and stays out of all marketing copy** until measured. Track real before/after Local Pack position on the first 1–2 pilot clients; only a measured Israeli result may ever become a timeline claim.
 
-**Competitive note:** aggressive GEO/AIO market hype threatens content-ready branch **acquisition cost only** (competing for the same keywords/attention) — not product quality, delivery, or the retter.co.il relationship. Read on the hype itself (Lior, 2026-08-08): a solo founder cannot out-spend or out-shout a hyped category, so treat it as **crowded/noisy, not a closing window** — the correct response is not to retreat from GEO, but to stop contesting it *publicly*.
+**Gate 1 enforcement — per-page content minimums (Yonatan, spec dated 2026-08-21, binding build gate, not a checklist to skim):** the `geo-generate-content.mjs` core-30 fork must not run as a `{service}×{city}` matrix job. Every page requires: a locally-specific service narrative sourced from real client facts (not generated from a slot-fill prompt), a distinct FAQ (not a shared block reused across pages), a real client scenario per service page, a unique image per page (no reused stock hero), differentiated meta-description logic, an internal-linking pattern that varies by genuine local relevance (not a mechanically identical link graph), and honest physical/service-area transparency per page (no implied storefront in a city with no fixed base). A per-node facts-intake gate blocks generation when real local facts are missing — an empty node does not get a filler page. Roni (verifier) adds a same-tier duplicate/near-duplicate check (FAQ block, narrative, image) to the pre-deploy gate for this content type specifically. Owners: Tamar authors against the facts-intake template; Eitan-Dev builds the facts-intake gate + duplicate-check into the pipeline; Roni wires the pre-deploy similarity check. Full spec in session record — do not build the fork before this gate exists in the pipeline.
 
-**Resulting acquisition-channel split:** market the **GBP/no-website branch publicly** as WAO's first-touch face — it's the uncontested lane, hype doesn't touch it. Pursue the **GEO/content-ready branch quietly** — warm intros, direct outreach, referral, the retter.co.il case study — never public ad/content spend competing on "GEO"/"AI Overview optimization" keywords, where funded players will always outbid a single founder. This is an acquisition-channel decision only; it does not change proof sequencing — retter still closes first, GEO diagnoses still run before GBP scales, per above.
+**Segment scope, resolved for launch (Yonatan + Gil, 2026-08-21):** GBP has a structural split — **fixed-location** listings (plumber, electrician: van/service-radius model) vs. **service-area** listings (behave differently for Local-Pack relevance). "Tutor" (מורה פרטי) is not one coherent persona under this product — it splits into in-home (plumber-shaped, fits core-30 cleanly), fixed-location/storefront (needs one location page, not N city pages), and online-only (no local relevance — core-30 would be wasted effort and reads as thin/spammy). Photographer is a hybrid (fixed studio + on-location shoots) that needs a `locationType` conditional per page (studio-vs-service-area framing) — a small template addition, not a redesign. **Launch scope, narrowed not deferred: fixed-location micro-business (plumber, electrician-class), in-home tutors, and photographer (with the `locationType` conditional built in)** — all structurally buildable off the core-30 template today. Storefront-tutor and online-only-tutor are **out of this wave** until their own page/GBP structure is designed — do not port the plumber template to them.
 
-**Unresolved design fork, flagged as decisive (Lior):** conversion odds for this wedge (~45–55%, vs. ~80% for proving the loop as a demonstration) hinge almost entirely on one unanswered question — what does the client pay the moment a diagnosis lands and they feel the value, not on diagnosis quality. Resolve this pricing/conversion mechanic before the 5–7 WoZ pilots start.
+**Delivery is buildable now — payment is the only real blocker, and it does not block the pilot (verified against the codebase 2026-08-21, not from stale specs):** Site Bot's generate→deploy→edit pipeline is **actually built and testable** (`scripts/test-site-bot.mjs`; generate/deploy/checkout are wired in git history; Cloudflare deploy is live-credentialed). The one live gap is **payment**: checkout defaults to `MockPaymentProvider`, and `TakbullPaymentProvider` still throws pending real endpoint docs from Takbull post-meeting — Takbull is **not closed yet** (Eitan, 2026-08-21), everything else advances in the meantime. **Consequence for the pilot:** the first 1–2 pilot clients run **WoZ-invoiced (manual billing)**; live self-serve billing is not a prerequisite for delivering the pilot and must not be treated as one.
 
-**Israeli-market verification (Yonatan, web-verified 2026-08-08):** confirmed — GEO/AIO is a real, current, dated Hebrew-language agency trend (8–10+ established Israeli SEO agencies now run live GEO service pages, mainstream press coverage e.g. Maariv). But it sharpens the read favorably: visible competitors are priced ₪3,000–9,500/mo (full-service agency model, sales-call-driven) — 15–48x WAO's ₪199/mo — a different buyer journey than a self-serve diagnosis product, and likely a different customer (WAO's content-ready SMB target is too small for these agencies to bother quoting). Hebrew AI Overviews independently confirmed live since Google I/O May 2025 (~15 months runway), so the GEO premise holds in Hebrew search. **Two open follow-ups, medium priority, not blocking:** (1) ppc-strategist (Dror) to check actual CPC data on GEO-related Hebrew keywords before assuming paid-search cannibalization is a real cost, not just theoretical; (2) a GSC/manual AI-Overview trigger-rate sample across the five target verticals' local-intent queries — Hebrew AI Overviews are confirmed to *exist*, but how often they actually *fire* for WAO's target query types is still unverified and is the number that would validate near-term GEO-branch ROI.
+**Separately blocking, GBP-side (Eitan-Dev, verified live 2026-08-21):** `GBP_CLIENT_ID` / `GBP_CLIENT_SECRET` / `GBP_REFRESH_TOKEN` are **not present** in `.env.local` — the "just granted" access never made it into this environment (or exists only server-side and was never synced). `runGbpScopeSmokeTest()` already exists in `src/lib/gbp/client.ts` and is ready to run the moment credentials land; nothing GBP-write (categories, services, completeness scoring — the core of the merged Site Bot deliverable) can start until then. This is now the **critical-path blocker**, ahead of payment.
 
-- [ ] Define the bot's first 3 "complete flows" end-to-end
-  - **Site Bot MVP** *(was Flow A)*: New business onboarding (domain → website → GMB → first ad) — **deferred to acquisition-scale, after Flow B is proven**
-  - **Flow B (the wedge): existing-business audit OR no-website visibility diagnosis → priority action plan** — build this first
-  - **Ads Bot MVP** *(was Flow C)*: Google Ads setup and first campaign launch ← **before marking done: run `node scripts/test-cf-deploy.mjs` to verify Cloudflare Pages deploy + subdomain DNS end-to-end** — deferred, same reason as Site Bot
-- [ ] Build the approval/execution loop ("continue" UX)
-- [ ] Connect first platform integrations (Domain registrar + Google Ads API)
-- [ ] **Next concrete mission:** define the two-branch diagnosis template (GSC/GEO branch + GBP/local-presence branch), then run 5–7 WoZ diagnoses over 3–4 weeks to seed the evidence base. Open forks to decide before routing: diagnosis pricing (free lead-magnet vs. paid vs. bundled into GEO Bot's first month) and the segment split of the first cohort.
+**Pricing/conversion fork — RESOLVED 2026-08-21 (Eitan):** ₪9.90 trial → generate-only preview → **₪199/month retainer unlocks deploy** (live site + GBP claim + recurring growth/GBP-monitoring/digest bundle) → ₪299/month GEO Bot upgrade at month 4. See Bots table (top of doc) and Buyer routing § for the full ladder and rationale. **Build implication, not yet done:** `checkout`/payment gating currently sits on `deploy/route.ts` per the pilot's WoZ-invoiced flow (see below) — it needs to reflect a recurring ₪199/mo charge, not a one-time ₪1,490–1,990 charge, before this is wired to real billing (Takbull, still not closed as of 2026-08-21).
+
+- [ ] **Site Bot (core-30 + GBP) is the single MVP flow** — build and deliver it end-to-end to the first fixed-location micro-business (plumber/electrician-class) or in-home tutor.
+  - Per-page Hebrew authored by Tamar (Gate 1) — no template substitution.
+  - GBP claim/optimize is step one of delivery (GMB Bot merged in) — **blocked on GBP credentials, see above.**
+  - **GSC verification/install is part of delivery, not an afterthought** — starts the clock toward the month-4 GEO Bot upsell (Product Shape, buyer routing).
+  - First 1–2 clients: WoZ-invoiced, `MockPaymentProvider` acceptable until Takbull ships.
+  - Before "done": `node scripts/test-site-bot.mjs` green, GBP smoke test (`runGbpScopeSmokeTest()`) green, and record real before/after Local Pack position (Gate 2).
+- [ ] Build the approval/execution loop ("continue" UX) around the Site Bot delivery.
+- [ ] Connect first platform integrations (Domain registrar + Cloudflare Pages deploy — already live-credentialed; Google Business Profile — blocked on credentials).
+- [ ] **Next concrete mission:** get GBP credentials into `.env.local`/`.env.production` and re-run the smoke test; define the single Site-Bot delivery template (core-30 authored pages + GBP claim/optimize) for the fixed-location/in-home-tutor segment; run the first WoZ delivery — pending resolution of the pricing fork (item 5 above).
 
 ### Phase 1 — Trust & Funnel (Parallel to Bot Build)
 
@@ -294,7 +261,7 @@ Both branches stay inside single-founder WoZ throughput — diagnosis + a plan, 
 > **Why:** It targets the exact SMB audience the bot is built for. Someone who watches this course and builds their site with AI guidance is experiencing — manually — the exact flow the bot will automate for them. The course is simultaneously:
 > - The trust layer (demonstrates WAO's expertise)
 > - The funnel top (drives the right audience)
-> - A live prototype of Bot Flow A (domain → website → SEO)
+> - A live prototype of the Site Bot flow (domain → core-30 site → GBP → SEO)
 
 - [ ] Design curriculum: Agentic Website Building + SEO (hands-on, AI-native, zero jargon)
 - [ ] Produce course (Dror/Yonatan brief → Gil scripts → Noa QA → ElevenLabs → publish)
@@ -410,7 +377,7 @@ These features are **built but intentionally incomplete** pending external gates
 
 **Gate — Desktop Call Attribution (DNI)**
 *What it is:* Dynamic Number Insertion (DNI) / call-tracking for desktop paid traffic (e.g. CallRail-style swap numbers per session/campaign), to attribute desktop phone calls that currently leave no trackable trail. Mobile click-to-call is already natively trackable; desktop text-displayed numbers are not.
-*Status:* **DEFERRED** (as of 2026-08-09, Lior's mission-planner assessment) — not a Phase 1 priority. Current wedge (GEO Bot, retter loop, Meta cold-traffic test) doesn't depend on desktop call attribution; Ads Bot itself (the eventual consumer of this capability) is still deferred behind Flow-B proof.
+*Status:* **DEFERRED** (as of 2026-08-09, Lior's mission-planner assessment) — not a Phase 1 priority. Current wedge (Site Bot core-30 + GBP) doesn't depend on desktop call attribution; Ads Bot itself (the eventual consumer of this capability) is still deferred behind Site Bot proof.
 *Trigger:* First call-dependent Ads Bot client who genuinely requires desktop targeting — i.e. whose core commercial queries skew desktop/considered rather than mobile/transactional. A per-vertical device-split check, separately commissioned to seo-strategist, determines this.
 *Buy vs. build:* Buy only (e.g. CallRail or an Israeli equivalent) — never build in-house. This is a telephony/SIP/call-recording domain with zero strategic differentiation for WAO.
 *Cost-model flag:* DNI is a recurring per-number cost that scales with client count — it breaks the near-zero-marginal-cost free-tier infrastructure model the rest of the stack (Cloudflare, GitHub, etc.) relies on. Must be factored into Ads Bot pricing before DNI is ever built, not discovered after.

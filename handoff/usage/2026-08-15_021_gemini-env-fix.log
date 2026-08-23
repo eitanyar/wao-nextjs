@@ -1,0 +1,21 @@
+Task 2026-08-15_021 completed. Spec is at /home/eitanya/wao/handoff/completed/2026-08-15_021_waoengineer_fix-gemini-model-env.md
+
+What changed
+- `.env.local` line 32 only: `GEMINI_MODEL_NAME="gemini-3.5-flash"` → `GEMINI_MODEL_NAME="gemini-3.7-flash"`
+- No source edits. Code defaults already used `gemini-3.7-flash` in `src/app/api/bot/route.ts:849`, `src/lib/ai/gemini-fast.ts:90`, and `src/lib/ai/gemini-model-resolver.ts`
+- `.env.local.backup` left untouched
+
+Acceptance
+- Test command: `GEMINI_MODEL_NAME="gemini-3.7-flash"`
+- Live POST to `gemini-3.7-flash:generateContent` returned HTTP 200 with `modelVersion='gemini-3.7-flash'`
+
+Stray `gemini-3.5-flash` (not changed, per spec)
+- `scripts/gsc-pareto.mjs:185` — fallback default only; a set `GEMINI_MODEL_NAME` already overrides it. Your call whether to bump that script default.
+- Remaining hits are historical handoff docs only.
+
+Production follow-up (manual)
+This checkout has no `.env.production`. Apply the same one-line env fix on the production server, then restart the app, before the cheaper model takes effect there:
+
+`GEMINI_MODEL_NAME="gemini-3.7-flash"`
+
+Nothing was committed or deployed.

@@ -17,6 +17,21 @@ export interface SharedClientRecord {
   approvalContact?: string;
   approvalWhatsapp?: string;
   entitlements?:    string[];
+  /**
+   * Display name used in owner/customer-facing copy (e.g. review-flywheel WhatsApp
+   * templates). Already present as hand-maintained data in several client.json files
+   * (e.g. data/clients/aasada/client.json) but was untyped here until now -- added
+   * alongside reviewLink/reviewFlywheelEnabled since buildReviewRequestOwnerNotification
+   * requires it. See handoff/completed/2026-08-22_007_nextjs-engineer_review-flywheel-trigger-wiring.md.
+   */
+  brandName?: string;
+  /**
+   * Review-generation flywheel (handoff/completed/2026-08-22_007_*.md) -- both fields are
+   * manually entered per client, optional, and default to disabled/undefined. No client
+   * should receive the review-request nudge unannounced.
+   */
+  reviewLink?: string;
+  reviewFlywheelEnabled?: boolean;
 }
 
 const CLIENTS_DIR = path.join(process.cwd(), 'data', 'clients');

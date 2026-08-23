@@ -5,6 +5,27 @@ import type { CollectedData } from '@/lib/bot/prompts';
 import type { SiteCopy } from '@/lib/lp/lpCopyPrompt';
 import { buildSiteCopyPrompt } from '@/lib/lp/lpCopyPrompt';
 import { callQwenJSON } from '@/lib/ai/qwen-fast';
+import { buildCoreThirtyNodes } from '@/lib/lp/coreThirty';
+import type { CoreThirtyPageCopy } from '@/lib/lp/coreThirtyCopy';
+import { generateCoreThirtyPageCopy } from '@/lib/lp/coreThirtyCopy';
+
+// Small local async pool — mirrors scripts/geo-generate-content.mjs's
+// runWithConcurrency helper. Keeps concurrent Qwen calls bounded instead of
+// firing all ~30 core-30 node generations in parallel.
+async function runWithConcurrency<T>(tasks: (() => Promise<T>)[], limit: number): Promise<T[]> {
+  const results: T[] = [];
+  let i = 0;
+
+  async function runNext(): Promise<void> {
+    if (i >= tasks.length) return;
+    const idx = i++;
+    results[idx] = await tasks[idx]();
+    await runNext();
+  }
+
+  await Promise.all(Array.from({ length: limit }, runNext));
+  return results;
+}
 
 // buildSiteCopyPrompt() is already a complete, self-contained instruction set
 // (persona, hard rules, and the exact output schema) — unlike the Ads Bot's
@@ -144,6 +165,29 @@ export async function POST(req: Request) {
       copy = generateFallbackCopy(collectedData);
     }
 
+    // Core-30 (service x city) supplementary local-SEO pages — pure node list
+    // is always safe to compute (fail-closed to [] internally). LLM copy
+    // generation only runs under the same live-LLM gate the site-wide copy
+    // above uses; in simulation/offline mode this layer has no deterministic
+    // Hebrew fallback template (coreThirtyCopy.ts's own doc comment), so it
+    // must never be attempted without a real API key.
+    const coreThirtyNodes = buildCoreThirtyNodes(collectedData);
+    const coreThirtyCopies: Record<string, CoreThirtyPageCopy> = {};
+
+    if (process.env.GEMINI_API_KEY && coreThirtyNodes.length > 0) {
+      const tasks = coreThirtyNodes.map((node) => async () => {
+        try {
+          const nodeCopy = await generateCoreThirtyPageCopy(node, collectedData);
+          coreThirtyCopies[node.id] = nodeCopy;
+        } catch (e: any) {
+          console.warn(`Core-30 generation failed for node ${node.id}, omitting from this site:`, e.message);
+        }
+      });
+      // Bounded concurrency — same limit=2 pattern as geo-generate-content.mjs's
+      // Qwen calls; never fire all ~30 node generations in parallel.
+      await runWithConcurrency(tasks, 2);
+    }
+
     // Record the vatStatus collection timestamp — auditable basis for the
     // accessibility-page exemption decision. Missing/unclear vatStatus is
     // left undefined here, which renderSitePages treats as non-exempt.
@@ -154,7 +198,14 @@ export async function POST(req: Request) {
     // Persist to filesystem
     const sitesDir = path.join(process.cwd(), 'data', 'sites');
     fs.mkdirSync(sitesDir, { recursive: true });
-    const record = { slug, collectedData: stampedData, copy, createdAt: new Date().toISOString() };
+    const record = {
+      slug,
+      collectedData: stampedData,
+      copy,
+      createdAt: new Date().toISOString(),
+      coreThirtyNodes,
+      coreThirtyCopies,
+    };
     fs.writeFileSync(path.join(sitesDir, `${slug}.json`), JSON.stringify(record, null, 2));
 
     return NextResponse.json({ success: true, slug });

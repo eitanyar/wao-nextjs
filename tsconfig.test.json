@@ -63,6 +63,25 @@
     "src/lib/google-ads/campaign-enumeration.ts",
     "src/lib/google-ads/campaign-enumeration.test.ts",
     "src/lib/google-ads/operator.ts",
-    "src/lib/google-ads/operator.test.ts"
+    "src/lib/google-ads/operator.test.ts",
+    "src/lib/bot/prompts.ts",
+    "src/lib/lp/coreThirty.ts",
+    "src/lib/lp/coreThirty.test.ts",
+    "src/lib/lp/duplicateCheck.ts",
+    "src/lib/lp/duplicateCheck.test.ts",
+    "src/lib/ai/gemini-fast.ts",
+    "src/lib/ai/qwen-fast.ts",
+    "src/lib/lp/coreThirtyCopy.ts",
+    "src/lib/lp/coreThirtyCopy.test.ts",
+    "src/lib/lp/verticalThemes.ts",
+    "src/lib/lp/verticalAssets.ts",
+    "src/lib/lp/lpCopyPrompt.ts",
+    "src/lib/lp/renderStaticHtml.ts",
+    "src/lib/lp/legalPages.ts",
+    "src/lib/lp/renderSitePages.ts",
+    "src/lib/lp/renderCoreThirtyPages.ts",
+    "src/lib/lp/renderCoreThirtyPages.test.ts",
+    "src/lib/geo/client.ts",
+    "src/lib/geo/client.test.ts"
   ]
 }

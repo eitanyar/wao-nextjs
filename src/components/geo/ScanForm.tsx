@@ -179,11 +179,11 @@ export default function ScanForm() {
 
           <div style={{ marginTop: "20px" }}>
             <Link
-              href="/geo/audit"
+              href="/geo"
               className="btn-outline w-full sm:w-auto justify-center"
               style={{ fontSize: "1rem" }}
             >
-              {renderMixed("רוצה את הניתוח האמיתי? חבר את נתוני ה-Search Console שלך ←")}
+              {renderMixed("רוצה שגוגל יצטט אותך? בוא נבדוק אם GEO Bot מתאים לך ←")}
             </Link>
           </div>
         </div>
