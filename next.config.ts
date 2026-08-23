@@ -350,6 +350,19 @@ const nextConfig: NextConfig = {
   async redirects() {
     return [...legacyRedirects];
   },
+  async headers() {
+    return [
+      {
+        source: "/:path*",
+        headers: [
+          {
+            key: "Referrer-Policy",
+            value: "strict-origin-when-cross-origin",
+          },
+        ],
+      },
+    ];
+  },
 };
 
 export default nextConfig;

@@ -83,7 +83,7 @@ export const WEBSITE_COURSE_MODULES: WebsiteModule[] = [
         description:
           "שלושה מרכיבים למשפט תיאור עסק מדויק, דוגמה חיה של אינסטלטור, ותבנית מלאה לניסוח המשפט שיבנה את כל האתר שלך",
         duration: "3:11",
-        videoId: "E3DTE23P7RY",
+        videoId: "x50b8fiEvRY",
         thumbnail: "/media/thumbnails/website-lesson-3.png",
         activeTask:
           "תמלא את התבנית מהשיעור. תשמור את המשפט — תצטרך אותו בשיעור הבא.",
@@ -95,7 +95,7 @@ export const WEBSITE_COURSE_MODULES: WebsiteModule[] = [
         description:
           "איך להפוך את תיאור העסק שלך לפרומפט ראשון, לקבל טיוטת עמוד בית תוך שניות, ולבדוק אם היא נשמעת כמוך",
         duration: "3:52",
-        videoId: "aqd8TLdFeK0",
+        videoId: "FwjViB_3k7I",
         thumbnail: "/media/thumbnails/website-lesson-4.png",
         activeTask:
           "תדביק את המשפט שלך ל-AI ותריץ את שלוש הבדיקות. תשמור את הטיוטה — תצטרך אותה בשיעור הבא.",
@@ -107,7 +107,7 @@ export const WEBSITE_COURSE_MODULES: WebsiteModule[] = [
         description:
           "שלוש שאלות לבדיקת כל טיוטה, נוסחת פרומפט תיקון, וכמה סבבים צריך עד שמגיעים לתוצאה אמיתית",
         duration: "3:41",
-        videoId: "Ced8AUpk4e4",
+        videoId: "7Ei4p1jTAJs",
         thumbnail: "/media/thumbnails/website-lesson-5.png",
         activeTask:
           "תעביר את הטיוטה דרך שלוש השאלות ותכתוב פרומפט תיקון אחד. תשמור את הגרסה החדשה.",
