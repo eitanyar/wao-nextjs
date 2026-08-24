@@ -82,6 +82,16 @@
     "src/lib/lp/renderCoreThirtyPages.ts",
     "src/lib/lp/renderCoreThirtyPages.test.ts",
     "src/lib/geo/client.ts",
-    "src/lib/geo/client.test.ts"
+    "src/lib/geo/client.test.ts",
+    "src/lib/shared/clients.ts",
+    "src/lib/gbp/reviewStore.ts",
+    "src/lib/gbp/reviewPoll.ts",
+    "src/lib/gbp/reviewPoll.test.ts",
+    "src/lib/gbp/reviewReplyPrompt.ts",
+    "src/lib/gbp/reviewResponderStore.ts",
+    "src/lib/gbp/reviewResponder.ts",
+    "src/lib/gbp/reviewResponder.test.ts",
+    "src/lib/gbp/editDistance.ts",
+    "src/lib/gbp/editDistance.test.ts"
   ]
 }

@@ -1,0 +1,21 @@
+{
+  "clientId": "northlight-digital-qa-labs",
+  "siteUrl": "https://www.wao.co.il",
+  "cmsType": "unknown",
+  "businessNiche": "סוכנות שיווק דיגיטלי",
+  "topService": "קידום אורגני וקמפיינים בגוגל",
+  "targetLocation": "כל הארץ, אונליין",
+  "usp": "20 שנות ניסיון, בלי התחייבות, לפי תוצאות",
+  "clientQuestions": "",
+  "exclusions": "",
+  "approvalContact": "Northlight QA",
+  "approvalWhatsapp": "972500000000",
+  "tone": "unknown — to be assessed",
+  "pin": "3670",
+  "entitlements": [
+    "geo"
+  ],
+  "wpConnected": false,
+  "platform": null,
+  "gscConnected": false
+}

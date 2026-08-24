@@ -1,0 +1,200 @@
+<title>Running Tasks with Hermes — Operator Guide</title>
+<style>
+  :root{
+    --bg:#faf9fc; --panel:#ffffff; --ink:#1c1826; --muted:#6a6280;
+    --rail:#e9e4f2; --rail-strong:#d8d0ea;
+    --accent:#7c5cde; --accent-soft:#efeafc;
+    --term-bg:#1d1930; --term-ink:#e7e2f6; --term-accent:#b7a3f7;
+    --ok:#1f915f; --ok-soft:#e2f4ec; --warn:#b7791f; --warn-soft:#fbf1dd;
+    --stop:#c2463d; --stop-soft:#fbe7e5;
+    --run:#5a6ff0; --run-soft:#e8eafd;
+    --shadow:0 1px 2px rgba(28,24,38,.06),0 8px 24px rgba(28,24,38,.06);
+  }
+  @media (prefers-color-scheme:dark){
+    :root{
+      --bg:#141220; --panel:#1c1930; --ink:#e9e6f4; --muted:#a49bc0;
+      --rail:#2b2740; --rail-strong:#3a3457;
+      --accent:#a892f5; --accent-soft:#241f3d;
+      --term-bg:#0f0d1a; --term-ink:#e7e2f6; --term-accent:#b7a3f7;
+      --ok:#4cc38a; --ok-soft:#16281f; --warn:#e0b25a; --warn-soft:#2b2312;
+      --stop:#f0857a; --stop-soft:#2c1715; --run:#8f9dfa; --run-soft:#181c33;
+      --shadow:0 1px 2px rgba(0,0,0,.3),0 10px 30px rgba(0,0,0,.35);
+    }
+  }
+  :root[data-theme="light"]{
+    --bg:#faf9fc; --panel:#ffffff; --ink:#1c1826; --muted:#6a6280;
+    --rail:#e9e4f2; --rail-strong:#d8d0ea; --accent:#7c5cde; --accent-soft:#efeafc;
+    --term-bg:#1d1930; --term-ink:#e7e2f6; --term-accent:#b7a3f7;
+    --ok:#1f915f; --ok-soft:#e2f4ec; --warn:#b7791f; --warn-soft:#fbf1dd;
+    --stop:#c2463d; --stop-soft:#fbe7e5; --run:#5a6ff0; --run-soft:#e8eafd;
+  }
+  :root[data-theme="dark"]{
+    --bg:#141220; --panel:#1c1930; --ink:#e9e6f4; --muted:#a49bc0;
+    --rail:#2b2740; --rail-strong:#3a3457; --accent:#a892f5; --accent-soft:#241f3d;
+    --term-bg:#0f0d1a; --term-ink:#e7e2f6; --term-accent:#b7a3f7;
+    --ok:#4cc38a; --ok-soft:#16281f; --warn:#e0b25a; --warn-soft:#2b2312;
+    --stop:#f0857a; --stop-soft:#2c1715; --run:#8f9dfa; --run-soft:#181c33;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0;background:var(--bg);color:var(--ink);
+    font-family:ui-sans-serif,-apple-system,"Segoe UI",Roboto,system-ui,sans-serif;
+    line-height:1.6;-webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:760px;margin:0 auto;padding:56px 24px 96px}
+  code,kbd,.term{font-family:ui-monospace,"SF Mono","Cascadia Code",Menlo,Consolas,monospace}
+  .eyebrow{font-size:12.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);font-weight:650;margin:0 0 14px}
+  h1{font-size:clamp(30px,5vw,42px);line-height:1.1;margin:0 0 12px;font-weight:750;letter-spacing:-.02em;text-wrap:balance}
+  .lede{font-size:18px;color:var(--muted);margin:0 0 8px;max-width:60ch}
+  h2{font-size:22px;font-weight:700;letter-spacing:-.01em;margin:52px 0 6px;text-wrap:balance}
+  h2 .n{color:var(--accent);font-variant-numeric:tabular-nums;margin-inline-end:.5ch}
+  h3{font-size:15.5px;font-weight:680;margin:26px 0 4px}
+  p{margin:10px 0}
+  .sub{color:var(--muted);margin-top:2px}
+  hr{border:0;border-top:1px solid var(--rail);margin:0}
+  .card{background:var(--panel);border:1px solid var(--rail);border-radius:14px;padding:22px 24px;box-shadow:var(--shadow)}
+  .mental{display:grid;gap:12px;margin-top:18px}
+  .mental .row{display:grid;grid-template-columns:132px 1fr;gap:16px;align-items:baseline;padding:12px 0;border-top:1px solid var(--rail)}
+  .mental .row:first-child{border-top:0}
+  .mental .term-word{font-weight:680;color:var(--ink)}
+  .mental .term-word small{display:block;color:var(--muted);font-weight:500;font-size:12.5px;letter-spacing:.04em;text-transform:uppercase;margin-top:2px}
+  .term{background:var(--term-bg);color:var(--term-ink);border-radius:12px;padding:14px 16px;margin:12px 0;overflow-x:auto;font-size:13.5px;line-height:1.65;border:1px solid rgba(183,163,247,.16)}
+  .term .c{color:var(--term-accent)}
+  .term .cmt{color:#8f86ad}
+  .term .p{color:#6f6690;user-select:none}
+  .steps{counter-reset:s;list-style:none;padding:0;margin:20px 0 0}
+  .steps>li{position:relative;padding:0 0 22px 52px;margin:0}
+  .steps>li:not(:last-child)::after{content:"";position:absolute;left:17px;top:34px;bottom:2px;width:2px;background:var(--rail-strong)}
+  .steps>li::before{counter-increment:s;content:counter(s);position:absolute;left:0;top:0;width:34px;height:34px;border-radius:50%;
+    background:var(--accent-soft);color:var(--accent);border:1.5px solid var(--accent);font-weight:700;font-size:15px;
+    display:grid;place-items:center;font-variant-numeric:tabular-nums}
+  .steps h3{margin:4px 0 2px}
+  .pills{display:flex;flex-wrap:wrap;gap:8px;margin:16px 0}
+  .pill{display:inline-flex;align-items:center;gap:7px;font-size:13px;font-weight:620;padding:5px 12px;border-radius:999px;border:1px solid transparent}
+  .pill::before{content:"";width:8px;height:8px;border-radius:50%;background:currentColor}
+  .pill.ready{color:var(--muted);background:var(--rail);border-color:var(--rail-strong)}
+  .pill.run{color:var(--run);background:var(--run-soft)}
+  .pill.review{color:var(--warn);background:var(--warn-soft)}
+  .pill.done{color:var(--ok);background:var(--ok-soft)}
+  .pill.blocked{color:var(--stop);background:var(--stop-soft)}
+  table{width:100%;border-collapse:collapse;margin:16px 0;font-size:14.5px}
+  th,td{text-align:start;padding:11px 12px;border-bottom:1px solid var(--rail);vertical-align:top}
+  th{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:650}
+  td code{background:var(--accent-soft);color:var(--accent);padding:1px 6px;border-radius:6px;font-size:12.5px;white-space:nowrap}
+  .note{border-inline-start:3px solid var(--accent);background:var(--accent-soft);border-radius:0 10px 10px 0;padding:14px 18px;margin:18px 0}
+  .note.warn{border-color:var(--warn);background:var(--warn-soft)}
+  .note b{font-weight:680}
+  .foot{margin-top:56px;padding-top:20px;border-top:1px solid var(--rail);color:var(--muted);font-size:13.5px}
+  .foot code{color:var(--accent)}
+</style>
+
+<div class="wrap">
+  <p class="eyebrow">WAO · Hermes Kanban</p>
+  <h1>Running your AI tasks without babysitting them</h1>
+  <p class="lede">You hand jobs to a shared board. An engine picks each one up, runs the right AI worker, and files the result. This is how to operate that, start to finish.</p>
+
+  <h2><span class="n">1.</span> The four words to know</h2>
+  <p class="sub">Everything here is just these four things working together.</p>
+  <div class="card mental" style="margin-top:18px">
+    <div class="row"><div class="term-word">Board<small>the list</small></div><div>A named to-do list stored on your machine. Your current one is <code>sitebot-research</code>. Unrelated work goes on its own board so nothing collides.</div></div>
+    <div class="row"><div class="term-word">Task<small>one job</small></div><div>A single job on the board — "run this research spec." It carries who should do it and where the output goes.</div></div>
+    <div class="row"><div class="term-word">Profile<small>the worker</small></div><div>Which AI does the job. <code>waoengineer</code> reads code and writes reports; <code>waocopy</code> writes Hebrew. All run Qwen&nbsp;3.8&nbsp;Max now.</div></div>
+    <div class="row"><div class="term-word">Dispatcher<small>the engine</small></div><div>The loop that actually runs tasks. It wakes on a timer, finds ready jobs, and starts a worker for each. <b>Nothing runs until it is on.</b></div></div>
+  </div>
+
+  <div class="note">
+    <b>The one rule that trips everyone up:</b> a task sitting in <span class="pill ready" style="padding:2px 10px">ready</span> is <i>not</i> running — it is waiting for the engine. If jobs never move, the engine is off. That is almost always the problem.
+  </div>
+
+  <h2><span class="n">2.</span> Turn the engine on</h2>
+  <p>The engine lives inside the Hermes <b>gateway</b>. First check whether it is already on:</p>
+  <div class="term"><span class="p">$ </span><span class="c">hermes status</span>            <span class="cmt"># is the gateway running?</span>
+<span class="p">$ </span><span class="c">hermes kanban list</span>       <span class="cmt"># do you see your tasks?</span></div>
+  <p>If the gateway is running, you are done — tasks move on their own. If it is off, start it once and leave it:</p>
+  <div class="term"><span class="p">$ </span><span class="c">hermes gateway start</span>     <span class="cmt"># starts the gateway + its dispatcher</span></div>
+  <p class="sub">No gateway available on this machine? Run the standalone engine instead: <code>hermes kanban daemon --force</code>. Use one or the other — never both, or they fight over the same tasks.</p>
+
+  <h2><span class="n">3.</span> Watch the work happen</h2>
+  <ol class="steps">
+    <li>
+      <h3>See the board any time</h3>
+      <p class="sub">A snapshot of every task and its status.</p>
+      <div class="term"><span class="p">$ </span><span class="c">hermes kanban list</span></div>
+    </li>
+    <li>
+      <h3>Follow it live</h3>
+      <p class="sub">A running feed — tasks starting, finishing, or failing as it happens. <kbd>Ctrl-C</kbd> to stop watching (this does not stop the work).</p>
+      <div class="term"><span class="p">$ </span><span class="c">hermes kanban watch</span></div>
+    </li>
+    <li>
+      <h3>Open one task in detail</h3>
+      <p class="sub">The full history, the worker's notes, and why it passed or failed. Use the short id from the list, e.g. <code>t_29c8500f</code>.</p>
+      <div class="term"><span class="p">$ </span><span class="c">hermes kanban show</span> t_29c8500f</div>
+    </li>
+    <li>
+      <h3>Read the result</h3>
+      <p class="sub">These tasks write their reports here. Open them like any file.</p>
+      <div class="term"><span class="p">$ </span><span class="c">ls</span> docs/research/site-bot/</div>
+    </li>
+  </ol>
+
+  <h2><span class="n">4.</span> What the colours mean</h2>
+  <p class="sub">The status word next to each task tells you exactly where it is.</p>
+  <div class="pills">
+    <span class="pill ready">ready — waiting for the engine</span>
+    <span class="pill run">running — a worker is on it now</span>
+    <span class="pill review">review — finished, awaiting a check</span>
+    <span class="pill done">done — complete, output filed</span>
+    <span class="pill blocked">blocked / failed — needs you</span>
+  </div>
+  <p>A healthy task walks left to right: <b>ready → running → review → done</b>. If it lands on <b>blocked</b> or <b>failed</b>, that is the engine asking for a human — open it with <code>show</code> and read the note.</p>
+
+  <h2><span class="n">5.</span> When something looks wrong</h2>
+  <table>
+    <thead><tr><th>What you see</th><th>What it means</th><th>What to do</th></tr></thead>
+    <tbody>
+      <tr><td>Tasks stuck on <b>ready</b> forever</td><td>The engine is off.</td><td>Run <code>hermes gateway start</code> (Step&nbsp;2).</td></tr>
+      <tr><td>A task went <b>failed</b> / <b>blocked</b></td><td>The worker hit a real problem or a guardrail.</td><td><code>hermes kanban show &lt;id&gt;</code>, read the reason, fix the spec, then retry.</td></tr>
+      <tr><td>You want to re-run a task</td><td>It needs another attempt.</td><td><code>hermes kanban reclaim &lt;id&gt;</code> to release it, or <code>reassign &lt;id&gt; &lt;profile&gt;</code>.</td></tr>
+      <tr><td>Something is running away</td><td>You want everything to stop, now.</td><td>Stop the engine — see Step&nbsp;7. Tasks freeze where they are; no data is lost.</td></tr>
+      <tr><td>Same task keeps crashing, log shows <code>HTTP 401 invalid_api_key</code></td><td>The worker's profile is missing a credential the engine actually reads. See the box below — it is two layers deep and not obvious.</td><td><code>hermes kanban log &lt;id&gt;</code> to see the real error under the "protocol violation" label, then follow the fix below.</td></tr>
+    </tbody>
+  </table>
+
+  <div class="note warn">
+    <b>The 401-that-looks-like-a-crash trap.</b> When a task keeps failing with <i>"worker exited without calling kanban_complete"</i>, that message can be a red herring — the worker may have died from a bad API key before it ever got to do anything. Two things to check, in order:
+    <br>① <b>Wrong variable name.</b> A profile's <code>.env</code> can hold <code>QWEN_API_KEY</code> correctly, yet Hermes' own credential cache (<code>profiles/&lt;name&gt;/auth.json</code>) may be wired to read <code>DASHSCOPE_API_KEY</code> instead — a leftover from an earlier setup. Add <b>both</b> names with the same value to be safe.
+    <br>② <b>Stale gateway.</b> If the gateway (Step&nbsp;2) was already running when you edited a profile's <code>.env</code>, it keeps using the old environment for every worker it spawns — editing the file alone does nothing. Run <code>hermes gateway restart</code> after any <code>.env</code> change, then retry the task.
+    <br>To retry a task after fixing this: <code>hermes kanban unblock &lt;id&gt;</code>.
+  </div>
+
+  <h2><span class="n">6.</span> Start a brand-new batch next time</h2>
+  <p>When Lior hands you a fresh set of specs, the whole cycle is three moves:</p>
+  <div class="term"><span class="cmt"># 1 — make (or switch to) a board for this batch</span>
+<span class="p">$ </span><span class="c">hermes kanban boards create</span> my-new-batch --switch
+
+<span class="cmt"># 2 — add one task per spec. Two things make it actually run (see box below).</span>
+<span class="p">$ </span><span class="c">hermes kanban create</span> "short title" --assignee waoengineer \
+      --workspace dir:/home/eitanya/wao \
+      --body "Your working dir is the repo. Read handoff/pending/&lt;spec&gt;.md and \
+              execute it exactly. When done, call kanban_complete with a summary \
+              (or kanban_block if you get stuck)."
+
+<span class="cmt"># 3 — make sure the engine is on (Step 2). That's it — it runs itself.</span></div>
+  <div class="note warn">
+    <b>The two things every task needs</b> — learned the hard way, both easy to forget:
+    <br>① <code>--workspace dir:/home/eitanya/wao</code> so the worker can actually see the repo. Without it the task runs in an empty scratch folder, finds nothing, and fails.
+    <br>② A body that tells the worker to <b>call <code>kanban_complete</code> when done</b> (or <code>kanban_block</code> if stuck). A worker that just finishes and exits is marked crashed.
+  </div>
+  <p class="sub">To hop between existing boards: <code>hermes kanban boards list</code>, then <code>hermes kanban boards switch &lt;slug&gt;</code>.</p>
+
+  <h2><span class="n">7.</span> Stop cleanly when you're done</h2>
+  <p>You can leave the gateway running — it is quiet when the board is empty. To stop it deliberately:</p>
+  <div class="term"><span class="p">$ </span><span class="c">hermes gateway stop</span>       <span class="cmt"># or Ctrl-C in its window; standalone daemon: just Ctrl-C</span></div>
+
+  <div class="note warn">
+    <b>Two safety habits.</b> These tasks are read-only research, but make them muscle memory for everything: after a task finishes, run <code>git status</code> to confirm it only added its own report — nothing else changed. And never point a build task's workspace at the live repo without a spec that says exactly what it may touch.
+  </div>
+
+  <p class="foot">Your batch lives on board <code>sitebot-research</code> · reports land in <code>docs/research/site-bot/</code> · specs come from <code>handoff/pending/</code>. When in doubt, <code>hermes kanban list</code> tells you the truth about where everything stands.</p>
+</div>

@@ -1,0 +1,36 @@
+[
+  {
+    "reviewId": "review-001",
+    "reviewer": { "displayName": "Alex Johnson" },
+    "starRating": "FIVE",
+    "comment": "Fast, professional, and friendly service. Highly recommend.",
+    "createTime": "2026-08-01T09:00:00Z",
+    "updateTime": "2026-08-01T09:00:00Z",
+    "reviewReply": { "comment": "Thank you so much, Alex!" }
+  },
+  {
+    "reviewId": "review-002",
+    "reviewer": { "displayName": "Sam Rivera" },
+    "starRating": "FIVE",
+    "comment": "Great work, showed up on time and fixed the issue quickly.",
+    "createTime": "2026-08-02T10:30:00Z",
+    "updateTime": "2026-08-02T10:30:00Z"
+  },
+  {
+    "reviewId": "review-003",
+    "reviewer": { "displayName": "Jamie Lee" },
+    "starRating": "TWO",
+    "comment": "Technician was late and the problem came back the next day.",
+    "createTime": "2026-08-03T14:15:00Z",
+    "updateTime": "2026-08-03T14:15:00Z"
+  },
+  {
+    "reviewId": "review-004",
+    "reviewer": { "displayName": "Morgan Blake" },
+    "starRating": "THREE",
+    "comment": "Service was okay, a bit overpriced for what was done.",
+    "createTime": "2026-08-04T16:45:00Z",
+    "updateTime": "2026-08-04T16:45:00Z",
+    "reviewReply": { "comment": "Thanks for the feedback, Morgan — we'll take a look at our pricing." }
+  }
+]

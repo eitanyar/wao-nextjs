@@ -1,0 +1,14 @@
+{
+  "clientId": "test-core30-verify",
+  "siteUrl": "https://test-core30-verify.wao.co.il",
+  "businessNiche": "אינסטלטור",
+  "topService": "אינסטלציה",
+  "approvalContact": "בדיקה-core30",
+  "approvalWhatsapp": "050-1111111",
+  "pin": "1335",
+  "entitlements": [],
+  "wpConnected": false,
+  "platform": null,
+  "gscConnected": false,
+  "siteBotLaunchedAt": "2026-08-21T08:42:18.861Z"
+}

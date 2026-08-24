@@ -2,6 +2,8 @@ import type { Metadata } from 'next';
 import SendButton from '@/components/geo/SendButton';
 import { listClients, loadClient } from '@/lib/shared/clients';
 import { getReviewFlywheelQueue } from '@/lib/crm/reviewFlywheelStore';
+import { getReviewResponderQueue } from '@/lib/gbp/reviewResponderStore';
+import ReviewResponderPanel from '@/components/gbp/ReviewResponderPanel';
 
 // Tokenized staff-only surface — never indexed. Same posture as /gmb/dashboard
 // and /geo/dashboard (open-but-unindexed, no auth at this path tier).
@@ -73,6 +75,23 @@ export default async function ReviewFlywheelDashboard() {
                 ))}
               </div>
             )}
+
+            {(() => {
+              const responderQueue = getReviewResponderQueue(clientId);
+              if (responderQueue.length === 0) return null;
+              return (
+                <div className="mt-8">
+                  <h3 className="text-base font-semibold mb-3">
+                    ביקורות שליליות — טיוטות תגובה
+                  </h3>
+                  <div className="space-y-3">
+                    {responderQueue.map((item) => (
+                      <ReviewResponderPanel key={item.reviewId} item={item} />
+                    ))}
+                  </div>
+                </div>
+              );
+            })()}
           </section>
         );
       })}

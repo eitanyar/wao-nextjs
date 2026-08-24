@@ -1,0 +1,13 @@
+[
+  {
+    "reviewId": "review-003",
+    "clientId": "test-plumber-tlv",
+    "reviewerName": "Jamie Lee",
+    "starRating": 2,
+    "reviewComment": "Technician was late and the problem came back the next day.",
+    "draftReply": "[FIXTURE-DRAFT] reply for: Technician was late and the problem came back the next day.",
+    "ownerNotifyWaLink": "https://wa.me/0501234567?text=%D7%94%D7%99%D7%99%20%D7%99%D7%95%D7%A1%D7%99%20%D7%9B%D7%94%D7%9F%20%2F%20test-plumber-tlv%0A%0A%D7%A0%D7%9B%D7%A0%D7%A1%D7%94%20%D7%A2%D7%9B%D7%A9%D7%99%D7%95%20%D7%91%D7%99%D7%A7%D7%95%D7%A8%D7%AA%20%D7%A4%D7%97%D7%95%D7%AA%20%D7%98%D7%95%D7%91%D7%94%20%D7%91%D7%92%D7%95%D7%92%D7%9C%2C%20%D7%95%D7%9C%D7%90%20%D7%94%D7%99%D7%99%D7%AA%D7%99%20%D7%A8%D7%95%D7%A6%D7%94%20%D7%A9%D7%AA%D7%99%D7%A9%D7%90%D7%A8%20%D7%91%D7%9C%D7%99%20%D7%9E%D7%A2%D7%A0%D7%94.%20%D7%96%D7%90%D7%AA%20%D7%94%D7%91%D7%99%D7%A7%D7%95%D7%A8%D7%AA%20%D7%A9%D7%94%D7%AA%D7%A7%D7%91%D7%9C%D7%94%2C%20%D7%95%D7%9E%D7%AA%D7%97%D7%AA%D7%99%D7%94%20%D7%AA%D7%A9%D7%95%D7%91%D7%94%20%D7%A8%D7%92%D7%95%D7%A2%D7%94%20%D7%A9%D7%94%D7%9B%D7%A0%D7%AA%D7%99%20%D7%91%D7%A9%D7%9E%D7%9A%3A%0AJamie%20Lee%20(2)%3A%20Technician%20was%20late%20and%20the%20problem%20came%20back%20the%20next%20day.%0A%5BFIXTURE-DRAFT%5D%20reply%20for%3A%20Technician%20was%20late%20and%20the%20problem%20came%20back%20the%20next%20day.%0A%0A%D7%A8%D7%95%D7%A6%D7%94%20%D7%A9%D7%90%D7%A9%D7%9C%D7%97%20%D7%90%D7%95%D7%AA%D7%94%20%D7%9B%D7%9E%D7%95%20%D7%A9%D7%94%D7%99%D7%90%3F%20%D7%AA%D7%A2%D7%A0%D7%94%20%D7%9C%D7%99%20%D7%B4%D7%9B%D7%9F%D7%B4%20%D7%95%D7%90%D7%A0%D7%99%20%D7%9E%D7%A4%D7%A8%D7%A1%D7%9D.%20%D7%90%D7%9D%20%D7%9E%D7%A9%D7%94%D7%95%20%D7%9C%D7%90%20%D7%9E%D7%93%D7%95%D7%99%D7%A7%2C%20%D7%9B%D7%AA%D7%95%D7%91%20%D7%9C%D7%99%20%D7%9E%D7%94%20%D7%9C%D7%AA%D7%A7%D7%9F%20%D7%95%D7%90%D7%A9%D7%A0%D7%94.",
+    "status": "drafted",
+    "generatedAt": "2026-08-23T13:17:24.597Z"
+  }
+]

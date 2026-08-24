@@ -1,5 +1,5 @@
 # WAO — Vision Document
-*Last updated: June 2026*
+*Last updated: 2026-08-23 (Purple-Cow amendments — see § Product Shape)*
 
 ---
 
@@ -32,15 +32,41 @@ Four independently sellable bots, one unified client portal (`/client/dashboard`
 
 | Bot | Price | What it does |
 |-----|-------|-------------|
-| **Site Bot** | ₪199/month retainer (locked Eitan, 2026-08-21 — supersedes the prior ₪1,490–1,990 one-time price; WoZ-invoiced at pilot) | Domain → ~30-page core local-SEO site (service × city) → GBP claim/optimize → deployed → SEO-ready, **plus an ongoing monthly bundle**: page growth/refresh batch (2-4 new or refreshed core-30 pages/month via the same engine, re-gated through `duplicateCheck.ts` each run — not a one-time cap), GBP monitoring/upkeep, and a client-dashboard monthly digest (leads + new pages) that also primes GSC-connection for the month-4 GEO Bot upgrade — **the single MVP product; GBP/GMB is merged in as step one of delivery** (see Phase 1 wedge) |
-| **Ads Bot** | ₪249/mo | Google Ads onboarding → campaign management → monthly recommendations (deferred behind Site Bot proof) |
-| **Content Bot** | ₪490/mo | SEO content plan → keyword cluster → article pipeline → publish (later-stage upsell) |
+| **Site Bot** | ₪199/month retainer (locked Eitan, 2026-08-21 — supersedes the prior ₪1,490–1,990 one-time price; WoZ-invoiced at pilot) | Domain → ~30-page core local-SEO site (service × city) → GBP claim/optimize → deployed → SEO-ready, **plus an ongoing monthly bundle**: page growth/refresh batch (2-4 new or refreshed core-30 pages/month via the same engine, re-gated through `duplicateCheck.ts` each run — not a one-time cap), GBP monitoring/upkeep, and a client-dashboard monthly digest (leads + new pages) that also primes GSC-connection for the month-4 GEO Bot upgrade — **bundle fattened 2026-08-23, same price: Proof Engine + Reputation Loop + Local-Pack Sports Score added to the base rung (see § Purple-Cow amendments below)** — **the single MVP product; GBP/GMB is merged in as step one of delivery** (see Phase 1 wedge) |
+| **Phone Bot** (NEW — product #2, 2026-08-23) | ₪149–249/mo range, add-on territory — Dror to price; anchor "one saved job pays the month" | Captured-demand rescue, staged: **v1** = missed-call WhatsApp rescue + photo-quote with owner approval (async, WoZ-friendly, no real-time infra); v2 = AI qualification dialogue; v3 = Hebrew voice receptionist (Phase-2/3 orchestrator's first customer-facing voice surface). **Gated on a missed-call-detection technical spike before any build commitment** — if the spike fails, v1 pivots to photo-quote-first (customer-initiated, no number plumbing) and rescue follows later. The ₪199 digest starts seeding Phone Bot now (the proven DNI digest-seeding pattern). |
+| **Ads Bot** | ₪249/mo | Google Ads onboarding → campaign management → monthly recommendations (**demoted to product #3, 2026-08-23** — deferred behind Phone Bot: capture before amplification; arrives once the answer + attribution fabric can prove its ROI honestly, and it carries the roadmap's heaviest external gates — Developer Token production approval, RMF dashboard, billing isolation) |
+| **Content Bot** | ₪490/mo | SEO content plan → keyword cluster → article pipeline → publish (later-stage upsell; front door pivoting toward the Proof Engine — jobs/photos/voice-notes as the content input, per PURPLE_COW_OFFER_STRATEGY.md Part A) |
 
-Each bot is an agentic pipeline, not a human-delivered service. The LP markets the bot; the delivery IS the agent flow. **GEO Bot is retired as a separate acquisition channel (Eitan, 2026-08-21 — "kill it fully")** — WAO does not go to market for a second, content-ready-SMB buyer. Its content-authoring engine (`scripts/geo-generate-content.mjs` + `scripts/gsc-pareto.mjs`) is repurposed two ways: (1) core-30 page authorship under the Gate-1 content-safety rules, and (2) **restored as a late-stage upsell for WAO's own Site Bot clients** (Eitan, 2026-08-21) — see below. It is not sold to external content-ready SMBs. The single current *acquisition* product is Site Bot; Ads Bot and Content Bot are deferred behind Site Bot proof. The ₪9.90 trial is once per client, not per bot. **Pricing fork resolved (Eitan, 2026-08-21):** ₪9.90 trial → generate-only preview (cheap, ~₪2 LLM cost, no live deploy/GBP claim) → **₪199/month retainer unlocks the actual deploy** (live core-30 site + GBP claim + the recurring growth/GBP-monitoring/digest bundle, see Bots table above) → **₪299/month GEO Bot upgrade at month 4** once GSC has ≥90 days of real data. This replaces the old one-time ₪1,490–1,990 Site Bot price and the previously-deferred "Phase 2 pricing trigger" (see Monetization § below, now superseded) — it does not require bot-executed edit-via-chat, since the recurring value is the batch page-growth/GBP/digest bundle, not conversational editing.
+Each bot is an agentic pipeline, not a human-delivered service. The LP markets the bot; the delivery IS the agent flow. **GEO Bot is retired as a separate acquisition channel (Eitan, 2026-08-21 — "kill it fully")** — WAO does not go to market for a second, content-ready-SMB buyer. Its content-authoring engine (`scripts/geo-generate-content.mjs` + `scripts/gsc-pareto.mjs`) is repurposed two ways: (1) core-30 page authorship under the Gate-1 content-safety rules, and (2) **restored as a late-stage upsell for WAO's own Site Bot clients** (Eitan, 2026-08-21) — see below. It is not sold to external content-ready SMBs. The single current *acquisition* product is Site Bot; **product #2 is Phone Bot (2026-08-23, supersedes Ads Bot's presumptive #2 slot)**; Ads Bot (#3) and Content Bot are deferred behind Phone Bot proof. The ₪9.90 trial is once per client, not per bot. **Pricing fork resolved (Eitan, 2026-08-21):** ₪9.90 trial → generate-only preview (cheap, ~₪2 LLM cost, no live deploy/GBP claim) → **₪199/month retainer unlocks the actual deploy** (live core-30 site + GBP claim + the recurring growth/GBP-monitoring/digest bundle, see Bots table above) → **₪299/month GEO Bot upgrade at month 4** once GSC has ≥90 days of real data. This replaces the old one-time ₪1,490–1,990 Site Bot price and the previously-deferred "Phase 2 pricing trigger" (see Monetization § below, now superseded) — it does not require bot-executed edit-via-chat, since the recurring value is the batch page-growth/GBP/digest bundle, not conversational editing.
 
 **Buyer routing (superseded 2026-08-21 by the single-segment wedge — see Phase 1):**
 - **Single target segment: no-website micro-business** (fixed-location plumber/electrician-class, in-home tutor, photographer). Enters via **Site Bot** (core-30 + GBP merged). Upsell ladder: **Content Bot once ≥15 pages exist → GEO Bot at ~month 4**, gated on (a) Google Search Console verified/installed on the client's own core-30 site at launch, and (b) ≥90 days of real GSC click/impression data accumulated (`gsc-pareto.mjs`'s hard data floor — confirmed earlier this session it cannot run without it) — ~4 months gives buffer past that floor. This is a same-client lifecycle upsell, not a re-opened acquisition channel — do not market GEO Bot externally or route new content-ready-SMB leads to it. Ads Bot deferred behind Site Bot proof.
 - The prior content-ready-SMB branch (accountant/coach/clinic/lawyer/architect → GEO Bot directly as an acquisition path) and the GMB Bot ₪149 month-1 attach are **retired** — that segment is demoted out of the roadmap as an acquisition target and survives only as retter.co.il case study / referral lane (Phase 1 wedge).
+
+### Purple-Cow amendments (2026-08-23 — three forks resolved by Lior-on-Fable, decision delegated by Eitan; full reasoning in `PURPLE_COW_OFFER_STRATEGY.md`)
+
+1. **Product #2 = Phone Bot, not Ads Bot.** Capture before amplification: Site Bot makes the
+   phone ring; Phone Bot makes ringing become jobs. Ads Bot moves to #3 (see Bots table).
+   Escape hatch: if the missed-call-detection spike fails, v1 pivots to photo-quote-first.
+2. **Fat ₪199 rung — over-deliver at the churn-critical rung, monetize at rungs 2+.** The base
+   retainer now bundles, at the same price: **Proof Engine** (owner's job photos/voice-notes →
+   authored pages, GBP posts, review-asks — replaces "2–4 refreshed pages/month" as the story
+   and feeds Gate 1's facts-intake as a byproduct of working), **Reputation Loop** (review
+   flywheel + bad-review first-responder; flywheel v1 shipped in git `828f45e`), and the
+   **Local-Pack Sports Score** (weekly map-position league table as the digest's spine).
+   Rationale: all three are near-pure plumbing reuse; à-la-carte pricing would capture little
+   margin while adding cancellation decisions. Revisit only if pilot delivery cost per client
+   proves not-near-zero. **Digest denomination rule:** every digest line is denominated in
+   **calls, jobs, and shekels** (map positions allowed) — never impressions/clicks.
+3. **Courses/webinars demoted to internal-capability status.** Existing course assets stay live
+   (sunk, residual SEO); the course pipeline survives as the Phase-4 content-automation
+   prototype; **no new course build; mass webinars are out of the growth model.** The funnel
+   top becomes **receipts**: the ₪9.90 preview (+ AI-visibility snapshot per Card 9), live
+   client case studies, and referrals. The Iceberg's "visible" layer and the Phase-1
+   "Trust & Funnel" course mission below are superseded accordingly (kept for history).
+4. Rung 0/2 packaging (from the same pass): the ₪9.90 preview additionally bundles a read-once
+   **AI-visibility snapshot** ("here's what Google Maps + ChatGPT say about you today —
+   nothing"); the month-4 ₪299 upgrade is sold as **"תופיע גם כשה-AI עונה"**, never as "GEO".
 
 ### Client-Facing Orchestrator (decided Aug 2026 — Phase 2/3, build deferred)
 
@@ -124,8 +150,8 @@ Every bot flow must be completable end-to-end by voice. Text input is a valid fa
 ## The Business Model (Iceberg)
 
 ```
-VISIBLE (Trust & Discovery):
-  Courses → Blog → SEO content → Webinars → Brand authority
+VISIBLE (Trust & Discovery — amended 2026-08-23):
+  Receipts: ₪9.90 preview + AI-visibility snapshot → live client case studies → referrals
 
 ─────────────────────────────────────────────────────────────────
 
@@ -134,8 +160,11 @@ HIDDEN (The Real Product):
   → Automated, supervised, and approved by the business owner
 ```
 
-The courses are **not** the product. They are the **marketing** for the product.  
-Their purpose: build enough trust that a small business owner hands over their accounts.
+~~The courses are **not** the product. They are the **marketing** for the product.
+Their purpose: build enough trust that a small business owner hands over their accounts.~~
+**Superseded 2026-08-23 (Purple-Cow fork 3):** for the locked persona (near-zero time,
+allergic to jargon), a course is homework — trust is built with **receipts**, not education.
+Courses/webinars are internal capability only; existing assets stay live for residual SEO.
 
 ### Monetization
 
@@ -165,15 +194,15 @@ Client always pays their Google Ads budget directly to Google — WAO never touc
 **Phase 2 pricing trigger — Site Bot subscription model (SUPERSEDED 2026-08-21 — locked, not deferred):**
 ~~Site Bot is currently priced at ₪1,490 one-time (keep, confirmed July 2026 — supply-constrained at WoZ stage, cutting price buys nothing). The subscription model (₪249–299/mo, includes build + ongoing edit-via-chat + GSC/GMB health checks) is the right long-term frame but requires edit-via-chat to be bot-executed, not WoZ-manual. **Trigger to revisit:** when Eitan-Dev ships automated edit-via-chat.~~ **Locked instead (Eitan, 2026-08-21): ₪199/month**, below the previously-floated ₪249–299/mo range, because the recurring deliverable that justifies "retainer" doesn't need edit-via-chat automation — it's the batch page-growth engine (already built this session) + GBP monitoring + a dashboard digest, all of which are batch/WoZ-executable today. Same moat logic applies (churn requires cancelling ongoing value, not just declining a rebuild), reached without waiting on the edit-via-chat trigger. See Bots table and Buyer routing § above for the full ladder.
 
-### Growth Model
+### Growth Model (amended 2026-08-23 — mass webinars removed, Purple-Cow fork 3; a webinar funnel selects *against* the target owner)
 ```
-SEO/Content traffic
+Receipts (₪9.90 preview + AI-visibility snapshot, case studies, referrals)
        ↓
-Free Trial (limited bot)
+WhatsApp-native onboarding
        ↓
-Mass Webinar Onboarding
+₪199/mo retainer (fat bundle)
        ↓
-Paid Subscription
+Phone Bot rung → month-4 ₪299 AI-visibility upgrade
        ↓
 International (English-speaking markets)
 ```
@@ -255,6 +284,11 @@ Rationale: the two-branch structure split a single founder's WoZ throughput acro
 
 ### Phase 1 — Trust & Funnel (Parallel to Bot Build)
 
+> **SUPERSEDED 2026-08-23 (Purple-Cow fork 3):** the course mission below is demoted to
+> internal-capability status — no new course build, no webinar funnel. The trust layer for the
+> locked persona is receipts (preview + snapshot, case studies, referrals). The pipeline
+> survives as the Phase-4 prototype. Section kept for history.
+
 > **Priority course: "Agentic Website Building + SEO in the Age of AI"**
 > This is the highest-priority content mission — even more foundational than the Google Ads course.
 >
@@ -297,7 +331,7 @@ The bot checks each active client's campaign weekly and sends a proactive messag
 
 ### Phase 2 — Trial & Validation
 - [ ] Launch free limited trial
-- [ ] Run mass webinar onboarding
+- [ ] ~~Run mass webinar onboarding~~ (removed 2026-08-23, Purple-Cow fork 3 — WhatsApp-native onboarding + referrals instead)
 - [ ] Identify the pricing trigger (what do users want unlocked?)
 - [ ] Validate ₪249/month conversion rate from trial → subscription
 

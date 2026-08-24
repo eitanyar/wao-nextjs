@@ -32,6 +32,14 @@ export interface SharedClientRecord {
    */
   reviewLink?: string;
   reviewFlywheelEnabled?: boolean;
+  /**
+   * GBP review-polling sensor (handoff/pending/2026-08-23_002_*.md) -- manually entered per
+   * client, optional, same posture as reviewLink. Required by pollClientReviews() to know
+   * which GBP account/location to poll; absent for clients not yet wired to the reputation
+   * loop's read side.
+   */
+  gbpAccountId?: string;
+  gbpLocationId?: string;
 }
 
 const CLIENTS_DIR = path.join(process.cwd(), 'data', 'clients');

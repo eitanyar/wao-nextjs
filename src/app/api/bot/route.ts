@@ -264,7 +264,7 @@ const TURN_QUESTIONS: Record<number, string> = {
   17: "שאלה על כסף, רק כדי שנשמור על התקציב שלך —\nכמה שווה לך לקוח חדש בממוצע, בפעם הראשונה שהוא משלם לך?",
   18: "יופי. עכשיו בוא נבדוק כמה קל לך לסגור אותו.\nתחשוב על עשרה אנשים שמתקשרים אליך —\nכמה מהם, בסוף, הופכים ללקוחות שמשלמים?\n(כולל כל השלבים — מהשיחה הראשונה עד סגירה בפועל)",
   19: "תגיד לי — לקוח שעשית לו עבודה טובה, בדרך כלל חוזר אליך?\nמתקשר שוב כמתפוצץ לו משהו אחר, או שולח אליך שכנים וחברים?",
-  20: "נשמע מעולה! יש לך ביקורות בגוגל?\n(אם כן — כמה יש, ומה הדירוג? אם לא — רק תגיד ״אין״)",
+  20: "נשמע מעולה! יש לך ביקורות בגוגל?\n(אם כן — כמה יש, ומה הדירוג? אם לא — רק תגיד ״אין״)\nועוד דבר אחד — כשאתה מחפש את העסק שלך בגוגל מפות, הוא כבר מופיע?",
   21: "__budget_recommendation__",
   22: "נשמע שאתה עושה עבודה טובה — אז בטוח יש לך לקוחות מרוצים.\nלחץ על 📎 ותעלה צילום מסך מגוגל / מהוואטסאפ / מהעבודה — ישירות מהטלפון.\nאם יותר נוח, אפשר גם להעתיק ולהדביק ביקורת.",
   23: "מעולה. תביא לי ביקורת אחת או שתיים מגוגל שאתה גאה בהן —\nהעתק-הדבק בדיוק מה שהלקוח כתב.\nומה הדירוג שלך בגוגל? (לדוגמה: 4.9 כוכבים, 64 ביקורות)",
@@ -494,6 +494,14 @@ function handleSimulation(
         const ratingMatch = text.match(/(\d[\d.]*)\s*(כוכב|★|\*)/);
         if (ratingMatch) data.starRating = ratingMatch[1];
         data.hasGoogleBusiness = !text.includes("אין") && !text.includes("לא");
+
+        if (data.hasGoogleBusiness) {
+          const gbpVerifiedSignals = ["כן", "מופיע", "רואה", "יש", "קופץ", "בטח"];
+          const gbpUnverifiedSignals = ["לא", "עדיין לא", "לא יודע"];
+          if (gbpVerifiedSignals.some(s => text.includes(s))) data.gbpVerified = true;
+          else if (gbpUnverifiedSignals.some(s => text.includes(s))) data.gbpVerified = false;
+          // else leave undefined — genuinely unclear, don't force a guess
+        }
 
         // Compute budget recommendation adjusted for organic presence
         const vb = detectVerticalBudget(data.businessNiche || "", data.specificCities);
@@ -948,6 +956,7 @@ Monthly Budget: ${collectedData.monthlyBudget}
 Feasibility Branch: ${collectedData.feasibilityBranch}
 No Digital Footprint: ${collectedData.noDigitalFootprint}
 Has Google Business: ${collectedData.hasGoogleBusiness}
+GBP Verified: ${collectedData.gbpVerified}
 Review Quote: ${collectedData.reviewQuote}
 Star Rating: ${collectedData.starRating}
 Contact Method: ${collectedData.contactMethod}

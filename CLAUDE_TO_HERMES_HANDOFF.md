@@ -152,6 +152,30 @@ Missing sections = Hermes rejects the file.
       fields, that client and exact flags are named explicitly here — never left to Hermes
       to pick.]
 
+    ## Verification Checklist (waoengineer Final Gate)
+    waoengineer assumes NOTHING works until all four are verified. Report status + evidence:
+
+    - [ ] **npm run build** — Zero TypeScript / lint errors. Attach build log or excerpt proving success.
+    - [ ] **npm run test** — All tests pass. Attach test output or failed test names if any fail.
+    - [ ] **Dev server smoke test** — `npm run dev` → curl/visit changed routes, HTTP 200 + expected content. List routes tested + curl evidence.
+    - [ ] **Evidence screenshots** — If UI changes, attach before/after or runtime screenshots proving the change rendered correctly.
+
+    **Report Outcome:** Mark PASS only when ALL four checks complete successfully + evidence provided. If any fail, report FAIL with root cause.
+
+    ### Escalation Routing (waoengineer decision)
+    After self-verification, assess if deeper specialist verification is needed:
+
+    - **waoverifier** (runtime smoke checks) — Route here if: HTTP status codes, redirects, API response structure need deeper validation
+    - **waoverifier-app** (RTL/rendering via vision) — Route here if: Hebrew bidi, mixed-script rendering, mobile layout, visual regressions need verification
+    - **waoverifier-media** (video/audio QA) — Route here if: TTS quality, video pipeline output (MP4 frames, embeds), audio transcoding needs validation
+
+    **If escalation needed:** Create a new `/handoff/pending/` spec with:
+    - Task name: `[YYYY-MM-DD]_[SEQ+1]_[waoverifier|waoverifier-app|waoverifier-media]_[task-slug]`
+    - Reference: "Escalated from [original-task-id] — waoengineer self-verify passed, requesting specialist gate"
+    - Scope: Name exact routes, files, or media assets to verify
+
+    **If NO escalation needed:** Append to completion report: "**Escalation:** None — all checks self-sufficient."
+
     ## Handoff Instructions for Hermes
     1. Read this file completely before starting.
     2. Check that all files listed in Files to Read exist.
@@ -170,8 +194,10 @@ Missing sections = Hermes rejects the file.
        you verify an acceptance criterion, that is a spec defect: move to /failed/ and report
        it, don't work around it by running something broader yourself.
     7. Run the test command and verify all acceptance criteria.
-    8. If all criteria pass, move this file to /completed/.
-    9. If any criterion fails, move this file to /failed/ with a failure report.
+    8. **FULL SELF-VERIFICATION (waoengineer only):** Complete all four checks in the Verification Checklist above. Do NOT move to /completed/ without evidence for all four. Assume nothing works until proven.
+    9. **ESCALATION ROUTING (waoengineer decision):** After self-verification passes, assess whether specialist verification is needed (see Escalation Routing section). If yes, create a new escalation spec and note it in completion report. If no, append "Escalation: None" to report.
+    10. If all criteria + all verification checks pass + escalation routed (or noted as unnecessary), move this file to /completed/ with full checklist evidence + escalation status.
+    11. If any criterion or verification check fails, move this file to /failed/ with a detailed failure report naming which check(s) failed.
 
 ---
 

@@ -17,7 +17,7 @@
 import { NextResponse } from 'next/server';
 import { listGmbClients } from '@/lib/shared/clients';
 import { getConnection, saveConnection, getQueue, saveNapScan, saveCompletenessScore } from '@/lib/gmb/store';
-import { hasGbpCredentials, listReviews } from '@/lib/gbp/client';
+import { isGbpLive, listReviews } from '@/lib/gbp/client';
 
 function isAuthorized(req: Request): boolean {
   const expected = process.env.CRON_SECRET;
@@ -56,7 +56,7 @@ export async function POST(req: Request) {
 
       // Review pull → queue draft items. Requires live GBP credentials; without them
       // this cycle is a no-op for this client (nothing to draft against).
-      if (hasGbpCredentials()) {
+      if (isGbpLive()) {
         // NOTE: accountId is not yet part of GmbConnection — spec §4 only lists
         // locationId. Until an account-resolution step is added, this call is
         // deliberately left unexercised (would need accountId to target the right

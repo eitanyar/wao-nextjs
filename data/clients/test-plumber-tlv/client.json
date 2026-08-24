@@ -1,0 +1,20 @@
+{
+  "clientId": "test-plumber-tlv",
+  "siteUrl": "https://test-plumber-tlv.wao.co.il",
+  "businessNiche": "אינסטלטור",
+  "topService": "תיקון נזילות",
+  "targetLocation": "תל אביב",
+  "usp": "מגיע תוך 20 דקות, 24 שעות ביממה",
+  "approvalContact": "יוסי כהן",
+  "approvalWhatsapp": "050-1234567",
+  "pin": "2663",
+  "entitlements": [],
+  "wpConnected": false,
+  "platform": null,
+  "gscConnected": false,
+  "siteBotLaunchedAt": "2026-08-21T07:41:54.020Z",
+  "reviewFlywheelEnabled": true,
+  "reviewLink": "https://g.page/r/test-plumber-tlv/review",
+  "gbpAccountId": "TEST-ACCOUNT",
+  "gbpLocationId": "TEST-LOCATION"
+}

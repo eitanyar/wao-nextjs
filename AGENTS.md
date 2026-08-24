@@ -12,25 +12,28 @@ This version has breaking changes — APIs, conventions, and file structure may 
 
 # WAO Agent Profiles (Hermes Architecture)
 
-## 1. Dror / Lior — Strategist (Profile: `waostrategy`)
-|- **Engine:** Claude Opus 4.8 (via Claude Code — the main session, not Hermes)
+## 1. Dror / Lior — Strategist (no Hermes profile)
+|- **Engine:** Claude Opus 4.8 (via Claude Code — the main session). Deliberately no Hermes
+  profile: a `waostrategy` Hermes profile existed briefly, duplicated the `seo-strategist` /
+  `ppc-strategist` subagents below, and collided with this same name in CLAUDE.md's own
+  self-reference ("You are the Strategist, profile: `waostrategy`"). Deleted 2026-08-24.
 |- **Role:** System Architecture, Google Ads Bot Strategy, Codebase Analysis, Mission Planning.
 |- **Mandate:** Writes Technical Specifications and Architecture diagrams to `/handoff/pending/`. Analyzes A-Z progress. Does NOT write final production code. Defers all execution to `waoengineer`.
 
 ## 2. Eitan-Dev — Engineer / Executor (Profile: `waoengineer`)
-|- **Engine:** Grok 4.6 (via Hermes, xAI API) — swapped from Qwen 3 Coder Next 2026-08-14 for coding quality + speed; xAI bills it "flagship for code and everything else."
+|- **Engine:** Qwen 3.8 Max (via Hermes, DashScope API) — unified onto Qwen 2026-08-24, replacing Grok 4.6/xAI.
 |- **Model Config:**
-  - model: grok-4.6 (verified live via `POST https://api.x.ai/v1/chat/completions` 2026-08-14 — the id returned is exactly `grok-4.6`)
-  - provider: xai (Hermes native `xai` provider; OpenAI-compatible base `https://api.x.ai/v1`)
-  - context_length: 500000 MAX — BUT the rate DOUBLES above 200K (input $2→$4, output $6→$12 per 1M). Keep every spec's total payload (repo context + pasted logs + screenshots) ≤200K to stay in the $2/$6 band. Same narrow-spec discipline as before, tighter ceiling.
-  - api_key_env: XAI_API_KEY (in `~/.hermes/.env`)
+  - model: qwen3.8-max
+  - provider: alibaba (Hermes DashScope provider)
+  - context_length: 1000000 — flat rate to the cap, no cost-tier cliff (unlike the retired Grok config). Keep narrow single-task specs anyway for output quality, not cost.
+  - api_key_env: QWEN_API_KEY (also requires DASHSCOPE_API_KEY set to the same value — Hermes' credential-pool cache resolves this profile's `alibaba` provider via `DASHSCOPE_API_KEY`, not `QWEN_API_KEY`; both must be present in the profile's `.env`)
+  - base_url_env: QWEN_BASE_URL
   - temperature: 0.2
-  - reasoning: CONFIGURABLE — this is the per-task cost dial. Reasoning tokens bill at the $6/1M output rate (a trivial 1-word reply spent 102 reasoning tokens in testing). Set high for real implementation; set minimal for mechanical/rote edits.
 |- **Role:** Next.js Code Implementation, Script Execution, Google Ads API Wiring.
 |- **Mandate:** Receives Technical Specifications from `/handoff/pending/` and implements them exactly as written — no freelancing, no "improvements in passing" (improvements are a strategist decision made in the spec). Runs tests (`node --test`), validates builds (`npm run build`).
 |- **Bot Turns:** Any bot turn change must update BOTH `src/app/api/bot/route.ts` (simulation) AND `src/lib/bot/prompts.ts` (live path).
 
-## 3. Tamar / Gil / Noa — Content & Pedagogy (Profile: `waocopy`)
+## 3. Tamar / Gil — Content & Pedagogy (Profile: `waocopy`)
 |- **Engine:** Qwen 3.8 Max (via Hermes, DashScope API)
 |- **Model Config:**
   - model: qwen3.8-max
@@ -38,10 +41,21 @@ This version has breaking changes — APIs, conventions, and file structure may 
   - api_key_env: QWEN_API_KEY
   - base_url_env: QWEN_BASE_URL
   - temperature: 0.7
-|- **Role:** Landing Pages, Bot Scripts, Marp Video Lessons, Voiceover QA.
-|- **Mandate:** Writes persuasive Israeli Hebrew (Singular Male always). No robotic or translated speech. Limits sentences to 12-15 words for ElevenLabs compatibility.
+|- **Role:** Landing Pages, Bot Scripts, Marp Video Lessons — drafting only.
+|- **Mandate:** Writes persuasive Israeli Hebrew (Singular Male always). No robotic or translated speech. Limits sentences to 12-15 words for ElevenLabs compatibility. Does NOT self-QA — that is `waohebrewqa` (§3b).
 |- **Voiceover Rule:** Modifies ONLY `🎙️ Narration` blocks in `.md` files.
 |- **Human gate:** Any founder-facing or voiceover Hebrew passes a human spot-check by Eitan before it ships, until the model has proven native Sabra register — grammatical correctness is not voice approval.
+
+## 3b. Noa — Hebrew QA & Voice Director (Profile: `waohebrewqa`)
+|- **Engine:** Qwen 3.8 Max (via Hermes, DashScope API)
+|- **Model Config:** same shape as `waocopy` — model: qwen3.8-max, api_key_env: QWEN_API_KEY
+  (+ DASHSCOPE_API_KEY, see §2's credential-pool note), base_url_env: QWEN_BASE_URL.
+|- **Role:** QA pass on Hermes-authored Hebrew — Sabra naturalness, TTS/narration readiness, final
+  language review.
+|- **Mandate:** Reviews `waocopy`'s output before it is handed back; does not draft original copy.
+  This is the in-Hermes QA step for Hermes-dispatched pipelines (e.g. kanban/swarm flows). For
+  anything Claude Code/Adam authors or touches directly, the gate is the `language-qa` Claude
+  subagent (Noa's other seat) instead — same person, two seats for two different pipelines.
 
 ## 4a. Roni / Maya — App Verifier
 |- **Structural/runtime checks (HTTP status, curl flows, grep scans, sim-conversation drives):**
@@ -58,7 +72,8 @@ This version has breaking changes — APIs, conventions, and file structure may 
   endpoint** (`$QWEN_BASE_URL/chat/completions`, base64 image), not through any Hermes wrapper:
   - **Quick/iterative checks:** `qwen3.5-omni-plus` — ~3s/call, 6/7 on benchmark, misses overflow.
   - **Serious/pre-deploy/from-scratch checks:** `qwen3.8-max` — ~90-110s/call, 7/7, only model
-    that catches overflow. Superseded `waoverifier-app` (Qwen3-VL-Plus) 2026-08-13.
+    that catches overflow. Superseded `waoverifier-app` (Qwen3-VL-Plus) 2026-08-13; that profile
+    archived 2026-08-24 (moved to `~/.hermes/profiles.archived-20260824/`, not deleted).
   - Details/benchmark data: memory `project_local_vision_verifier_unreliable`.
   - api_key_env: QWEN_API_KEY / base_url_env: QWEN_BASE_URL / temperature: 0.1
 |- **Role:** Runtime QA, RTL-correct rendering via vision, Browser/HTTP smoke checks.
@@ -66,43 +81,74 @@ This version has breaking changes — APIs, conventions, and file structure may 
 |- **Spec-sizing rule:** one screenshot per call, narrow single-action prompt — same discipline as
   the retired `waoverifier-app` dispatch pattern, now applied to the direct API call instead of a
   Hermes spec file.
+|- **Hermes-native verifier profile (`waoverifier`):** separate from the direct-API pattern above —
+  for Hermes-orchestrated flows (e.g. kanban `swarm`) that need an in-Hermes verifier profile
+  rather than a direct API call. Reconfigured 2026-08-24 from `qwen3.8-max` to **Gemini 3.7 Flash**
+  specifically to restore model-family independence: the prior same-family Qwen config meant the
+  verifier could grade its own family's work, defeating the point of an independent gate.
+  model: gemini-3.7-flash / provider: gemini / api_key_env: GEMINI_API_KEY / base_url:
+  `https://generativelanguage.googleapis.com/v1beta/openai` / context_length: 1000000.
 
 ## 4b. Shira / Yael — Media Verifier (Profile: `waoverifier-media`)
-|- **Engine:** Qwen 3.5 Omni Plus (via Hermes, DashScope API — audio/video)
+|- **Engine:** Gemini 3.7 Flash (via Hermes, Google API) — reconfigured 2026-08-24 from Qwen 3.5
+  Omni Plus. The prior config had drifted to plain `qwen3.8-max` (text-only, could not actually
+  process media) with a generic unconfigured system prompt; Gemini restores real multimodal
+  capability and keeps model-family independence from `waoengineer`/`waocopy`.
 |- **Model Config:**
-  - model: qwen3.5-omni-plus
-  - context_length: UNVERIFIED as of 2026-08-13 — not found in the model registry under the `alibaba`/`alibaba-cn` providers this profile actually uses (only a `nano-gpt`-provider entry exists, ~983K, which is a different gateway and not reliable evidence for this profile). Treat as ~256K-scale until confirmed; keep specs narrow (one media artifact per check) until verified.
-  - api_key_env: QWEN_API_KEY
-  - base_url_env: QWEN_BASE_URL
+  - model: gemini-3.7-flash
+  - provider: gemini
+  - base_url: https://generativelanguage.googleapis.com/v1beta/openai
+  - context_length: 1000000
+  - api_key_env: GEMINI_API_KEY
   - temperature: 0.1
 |- **Role:** Video production QA, TTS/audio quality, banner and frame analysis.
 |- **Mandate:** Processes video and audio natively. Returns PASS / FAIL / BLOCKED with strict evidence. Does not fix code — reports failures back to `waoengineer` or `waocopy`.
+
+## 4c. Real-User QA Tester (Profile: `waouxtester`)
+|- **Engine:** Gemini 3.7 Flash (via Hermes, Google API) — reconfigured 2026-08-24. Originally
+  scoped as an Opus 4.8 + computer-use profile for live browser-driven QA, but that setup was
+  never actually wired (config had drifted to plain `qwen3.8-max`, no computer-use, generic
+  system prompt). Gemini 3.7 Flash vision gives multimodal screenshot inspection at a fraction of
+  computer-use cost; live browser driving is not part of this profile's current scope.
+|- **Model Config:**
+  - model: gemini-3.7-flash
+  - provider: gemini
+  - base_url: https://generativelanguage.googleapis.com/v1beta/openai
+  - context_length: 1000000
+  - api_key_env: GEMINI_API_KEY
+  - temperature: 0.1
+|- **Role:** Visual QA on real product flows via screenshot inspection — RTL/BiDi layout, mobile
+  overflow, UI regressions.
+|- **Mandate:** Returns PASS / FAIL / BLOCKED with strict evidence. Does not fix code — reports
+  failures back to `waoengineer`.
 
 ---
 
 # Workflow Rules
 |- **Strategy & Specs:** Run under Claude Code (Opus). Output goes to `/handoff/pending/` per `CLAUDE_TO_HERMES_HANDOFF.md`.
-|- **Code & Execution:** Hermes picks up from `/handoff/pending/` and executes with `grok-4.6` (xAI). Keep each dispatch's total payload ≤200K tokens — see Cost & Context Hygiene below.
+|- **Code & Execution:** Hermes picks up from `/handoff/pending/` and executes with `qwen3.8-max` (DashScope). No cost-tier ceiling — see Cost & Context Hygiene below.
 |- **Execution order:** Hermes processes pending files in ascending filename order, one task at a time; a task never starts before its listed Dependencies are in `/completed/`. Parallel only for dependency-free tasks with different target agents.
 |- **Content Generation:** Hermes uses `qwen3.8-max` for all Hebrew content (subject to the human gate above) — **except GEO opportunity generation** (`scripts/geo-generate-content.mjs`), where `gemini-3.7-flash` is PRIMARY and `qwen3.8-max` is the fallback. Both Tamar and Noa calls try Gemini first; Qwen only if Gemini's attempts are exhausted. Every saved action is stamped `generatedVia: "primary:gemini-3.7-flash"` or `"fallback:qwen3.8-max"`. Applies to every GEO-entitled client (`retter`, `ajudaica`, `wao`).
-|- **App Verification:** structural checks → Claude `verifier` (Haiku 4.5, direct subagent, not Hermes; escalate to Sonnet 5 only if Haiku misses a hard drive). Visual/RTL checks → two-tier: `qwen3.5-omni-plus` (quick/iterative) or `qwen3.8-max` (serious/from-scratch, pre-deploy gate) via direct DashScope API call (see §4a). **Media Verification:** `qwen3.5-omni-plus` for video/audio QA.
+|- **App Verification:** structural checks → Claude `verifier` (Haiku 4.5, direct subagent, not Hermes; escalate to Sonnet 5 only if Haiku misses a hard drive). Visual/RTL checks → two-tier: `qwen3.5-omni-plus` (quick/iterative) or `qwen3.8-max` (serious/from-scratch, pre-deploy gate) via direct DashScope API call (see §4a); for real-user flow QA via screenshot inspection, `waouxtester` (Gemini 3.7 Flash, §4c). **Media Verification:** `waoverifier-media` (Gemini 3.7 Flash, §4b) for video/audio QA. **Hermes-orchestrated flows** (kanban `swarm`) use the `waoverifier` profile (Gemini 3.7 Flash, §4a) as their in-Hermes verifier.
 |- **Never push or deploy directly:** Eitan manually triggers `deploy.sh` after successful Verification.
 |- **Context-budget check:** before writing a spec that routes through a Hermes/Qwen profile, the strategist checks that profile's real context_length above (not an aspirational number) against the spec's expected payload (repo context + tool outputs + screenshots/JSON dumps it will produce). If a spec is likely to exceed it, split it into narrower tasks rather than write one large one and hope. New profiles must have a working `.env` (verify with `hermes profile show <name>` before dispatching to it) — a profile scaffolded via `hermes profile create` has no credentials until one is added.
 
 ## Cost & Context Hygiene
 
-Both engines run stateless one-shot `-z` — no caching/compaction to manage. Rationale + verified
+All Hermes engines run stateless one-shot `-z` — no caching/compaction to manage. Rationale + verified
 pricing: [[project_model_cost_geometry]].
 
-**Qwen 3.8 Max (Hebrew):** flat rate to 1M — **no length cap on Tamar**. Gate on quality/voice only, never cost.
-
-**Grok 4.6 (coder):** keep every dispatch **≤200K** (§2 — rate doubles above). Enforce:
+**Qwen 3.8 Max** (`waoengineer`, `waocopy`, `waohebrewqa`, `orchestrator`): flat rate to 1M — no
+length-driven cost tier, no cap. Gate specs on quality/scope, never cost. Still enforce:
 - One scoped task per `/handoff/pending/` MD; name exact paths/functions; never dump whole files or the repo.
 - `knowledge.ts` edits = surgical Python `str.replace` patches only (file never loaded whole).
-- No Hebrew in the coder's context — tokenize/placeholder all strings; Hebrew edits arrive as byte-exact patches Qwen authored ([[feedback_hebrew_edits_need_patch_not_retype]]).
-- Keep the `waoengineer` profile lean; put the per-task MD at the tail.
-- Reasoning dial: minimal for rote edits, high for real implementation.
-- Dispatch with `--usage-file`; split any task trending past ~150K.
+- No Hebrew in the coder's (`waoengineer`) context — tokenize/placeholder all strings; Hebrew edits arrive as byte-exact patches Qwen (`waocopy`) authored ([[feedback_hebrew_edits_need_patch_not_retype]]).
+- Dispatch with `--usage-file` for visibility even though there's no ceiling to enforce.
+
+**Gemini 3.7 Flash** (`waoverifier`, `waoverifier-media`, `waouxtester` — the verification tier,
+consolidated 2026-08-24): separate billing from the Qwen profiles above; chosen for these three
+specifically to keep model-family independence from the Qwen coder/copywriter and for native
+multimodal (vision/audio/video) input.
 
 ---
 
@@ -112,6 +158,12 @@ Required in `.env.local` (local dev) and `.env.production` (servers):
 
     QWEN_API_KEY=<your-dashscope-singapore-api-key>
     QWEN_BASE_URL=https://dashscope-intl.aliyuncs.com/compatible-mode/v1
+    GEMINI_API_KEY=<your-google-ai-studio-key>
+
+For any Hermes profile on `alibaba`/Qwen: both `QWEN_API_KEY` and `DASHSCOPE_API_KEY` must be set
+to the same value in that profile's own `.env` — Hermes' credential-pool cache resolves the
+`alibaba` provider via `DASHSCOPE_API_KEY` specifically (see §2). For any profile on `gemini`:
+`GEMINI_API_KEY` alone is sufficient; base_url is `https://generativelanguage.googleapis.com/v1beta/openai`.
 
 ---
 

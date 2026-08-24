@@ -52,6 +52,10 @@ export interface CollectedData {
 
   // Digital presence
   hasGoogleBusiness?: boolean;
+  gbpVerified?: boolean; // true = client's GBP listing already shows on Maps/Search (fast-track
+    // Manager-access onboarding); false = not yet claimed/verified (needs owner-driven Google
+    // verification before WAO's GBP tooling can connect). Only meaningful when hasGoogleBusiness
+    // is true.
   noDigitalFootprint?: boolean;
   reviewCount?: number;
 
@@ -218,8 +222,8 @@ T18 [NEW — LTV question]: "תגיד לי, לקוח שעשית לו עבודה 
   → collect: hasRepeatClients (true if yes/usually/sometimes, false if rarely/never)
   → This feeds the LTV multiplier in the budget recommendation. Do NOT skip.
 
-T19: "נשמע מעולה! יש לך ביקורות בגוגל?\n(אם כן — כמה יש, ומה הדירוג? אם לא — רק תגיד ״אין״)",
-  → collect: reviewCount, starRating, hasGoogleBusiness
+T19: "נשמע מעולה! יש לך ביקורות בגוגל?\n(אם כן — כמה יש, ומה הדירוג? אם לא — רק תגיד ״אין״)\nועוד דבר אחד — כשאתה מחפש את העסק שלך בגוגל מפות, הוא כבר מופיע?",
+  → collect: reviewCount, starRating, hasGoogleBusiness, gbpVerified
   → AFTER collecting: check for locksmith redirect first (see LOCKSMITH RULE below), then compute budget recommendation
   → IMPORTANT: Adjust recommendation up slightly if 50+ reviews at 4.5+, down slightly if <5 reviews
 
