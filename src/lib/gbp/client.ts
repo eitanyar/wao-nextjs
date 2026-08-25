@@ -86,7 +86,8 @@ export async function listAccounts(token: string) {
 }
 
 export async function getLocation(token: string, accountId: string, locationId: string) {
-  const readMask = 'name,title,phoneNumbers,storefrontAddress,categories,websiteUri';
+  const readMask =
+    'name,title,phoneNumbers,storefrontAddress,categories,websiteUri,regularHours,specialHours';
   return gbpFetch(`${BUSINESS_INFO_BASE}/locations/${locationId}?readMask=${readMask}`, token);
 }
 
@@ -112,6 +113,31 @@ export async function createLocalPost(
     `${LEGACY_V4_BASE}/accounts/${accountId}/locations/${locationId}/localPosts`,
     token,
     { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }
+  );
+}
+
+export interface GbpLocationPatch {
+  description?: string;
+  websiteUri?: string;
+  phoneNumbers?: Array<{ number: string }>;
+  regularHours?: unknown;
+  categories?: Array<{ displayName?: string; categoryId: string }>;
+}
+
+export async function updateLocation(
+  token: string,
+  locationId: string,
+  patch: GbpLocationPatch,
+  fieldMask: string
+) {
+  return gbpFetch(
+    `${BUSINESS_INFO_BASE}/locations/${locationId}?updateMask=${fieldMask}`,
+    token,
+    {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(patch),
+    }
   );
 }
 

@@ -1,10 +1,12 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import type { CollectedData } from "@/lib/bot/prompts";
 import { renderMixed } from "@/lib/bidi";
+import { SCORECARD_COPY } from "@/lib/site-bot/scorecardCopy";
+import { seedFromAudit } from "@/lib/site-bot/seedPrefill";
 
 // Site Bot intake — a sequential chat that collects only the fields
 // buildSiteCopyPrompt() / renderSitePages() actually read. Redesigned per the
@@ -166,8 +168,37 @@ const STEPS: Step[] = [
 
 type Phase = "chat" | "routing" | "error";
 
-export default function SiteBotStartPage() {
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+function getStepPrefillValue(key: string, prefill?: Partial<CollectedData>): string | undefined {
+  if (!prefill) return undefined;
+  if (key === "contact") {
+    return prefill.phone;
+  }
+  const val = (prefill as Record<string, unknown>)[key];
+  if (val !== undefined && val !== null && String(val).trim() !== "") {
+    return String(val);
+  }
+  return undefined;
+}
+
+function getQuestionText(step: Step, prefillData?: Partial<CollectedData>): string {
+  let text = step.question;
+  const prefillVal = getStepPrefillValue(step.key, prefillData);
+  if (prefillVal !== undefined) {
+    const hint = (SCORECARD_COPY.PREFILL_HINT || "").replace("__VALUE__", prefillVal);
+    text = `${text}\n${hint}`;
+  }
+  return text;
+}
+
+function SiteBotStartContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const auditId = searchParams.get("auditId");
+  const [prefill, setPrefill] = useState<Partial<CollectedData> | undefined>(undefined);
+  const fetchedRef = useRef(false);
+
   const [messages, setMessages] = useState<Message[]>([{ role: "assistant", content: STEPS[0].question }]);
   const [stepIndex, setStepIndex] = useState(0);
   const [collectedData, setCollectedData] = useState<CollectedData>({});
@@ -177,6 +208,33 @@ export default function SiteBotStartPage() {
   const [probedKeys, setProbedKeys] = useState<Set<string>>(new Set());
   const [pendingAnswer, setPendingAnswer] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!auditId || !UUID_REGEX.test(auditId) || fetchedRef.current) return;
+    fetchedRef.current = true;
+
+    fetch(`/api/site-bot/audit-result?auditId=${encodeURIComponent(auditId)}&withPlace=1`)
+      .then((res) => {
+        if (!res.ok) return null;
+        return res.json();
+      })
+      .then((data) => {
+        if (data && data.place) {
+          const seeded = seedFromAudit(data.place);
+          setPrefill(seeded);
+          setCollectedData((prev) => ({ ...prev, ...seeded }));
+          setMessages((prev) => {
+            if (prev.length === 1 && prev[0].role === "assistant") {
+              return [{ role: "assistant", content: getQuestionText(STEPS[0], seeded) }];
+            }
+            return prev;
+          });
+        }
+      })
+      .catch(() => {
+        // silent degradation
+      });
+  }, [auditId]);
 
   function scrollDown() {
     requestAnimationFrame(() => scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" }));
@@ -219,14 +277,16 @@ export default function SiteBotStartPage() {
     const finalText = pendingAnswer && step.combine ? step.combine(pendingAnswer, text) : text;
     setPendingAnswer(null);
 
-    const nextData = step.apply(finalText, collectedData);
+    const isKeep = text === (SCORECARD_COPY.PREFILL_KEEP_WORD || "").trim();
+    const hasPrefill = getStepPrefillValue(step.key, prefill) !== undefined;
+    const nextData = isKeep && hasPrefill ? collectedData : step.apply(finalText, collectedData);
     setCollectedData(nextData);
 
     let nextIndex = stepIndex + 1;
     while (nextIndex < STEPS.length && STEPS[nextIndex].skip?.(nextData)) nextIndex++;
 
     if (nextIndex < STEPS.length) {
-      setMessages((prev) => [...prev, userMsg, { role: "assistant", content: STEPS[nextIndex].question }]);
+      setMessages((prev) => [...prev, userMsg, { role: "assistant", content: getQuestionText(STEPS[nextIndex], prefill) }]);
       setStepIndex(nextIndex);
       scrollDown();
     } else {
@@ -358,5 +418,13 @@ export default function SiteBotStartPage() {
         </p>
       </div>
     </section>
+  );
+}
+
+export default function SiteBotStartPage() {
+  return (
+    <Suspense fallback={null}>
+      <SiteBotStartContent />
+    </Suspense>
   );
 }

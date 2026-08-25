@@ -114,3 +114,7 @@ handoff/completed/*.md
 handoff/failed/*.md
 handoff/archive/*.md
 data/geo-leads/
+data/audit-logs/
+data/audits/*
+!data/audits/.gitkeep
+

@@ -64,6 +64,9 @@
     "src/lib/google-ads/campaign-enumeration.test.ts",
     "src/lib/google-ads/operator.ts",
     "src/lib/google-ads/operator.test.ts",
+    "src/lib/google-ads/campaignAge.ts",
+    "src/lib/google-ads/searchTermHarvest.ts",
+    "src/lib/google-ads/operatorPhase2.test.ts",
     "src/lib/bot/prompts.ts",
     "src/lib/lp/coreThirty.ts",
     "src/lib/lp/coreThirty.test.ts",
@@ -84,6 +87,8 @@
     "src/lib/geo/client.ts",
     "src/lib/geo/client.test.ts",
     "src/lib/shared/clients.ts",
+    "src/lib/site-bot/seedPrefill.ts",
+    "src/lib/site-bot/seedPrefill.test.ts",
     "src/lib/places/client.ts",
     "src/lib/places/client.test.ts",
     "src/lib/gbp/reviewStore.ts",
@@ -96,6 +101,15 @@
     "src/lib/gbp/editDistance.ts",
     "src/lib/gbp/editDistance.test.ts",
     "src/lib/gbp/auditScore.ts",
-    "src/lib/gbp/auditScore.test.ts"
+    "src/lib/gbp/auditScore.test.ts",
+    "src/lib/gbp/fixPlan.ts",
+    "src/lib/gbp/fixPlan.test.ts",
+    "src/lib/shared/approvalLog.ts",
+    "src/lib/site-bot/fixLog.ts",
+    "src/lib/site-bot/fixLog.test.ts",
+    "src/lib/site-bot/auditStore.ts",
+    "src/lib/site-bot/auditStore.test.ts",
+    "src/lib/site-bot/shareUtils.ts",
+    "src/lib/site-bot/shareUtils.test.ts"
   ]
 }
