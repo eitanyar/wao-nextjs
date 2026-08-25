@@ -13,6 +13,10 @@ by a Hermes agent from a spec in `/handoff/`.
 | `006_onboarding-decision-set-autofill.md` | Every question onboarding forces, and the irreducible floor after GBP autofill. |
 | `007_referral-attribution-feasibility.md` | Minimal schema/hook to attribute a referral and grant a reward on first real charge. |
 | `008_retention-interview-script.md` | Hebrew 5-question interview script to surface perceived switching cost (human-gated). |
+| `skira-transcript.md` | Verbatim Hebrew transcript of the investor-facing "סקירת מוצר ומפת דרכים" deck (source: Drive PDF / Claude artifact 02edbc3d). |
+| `skira-sabra-rewrite.md` | The same deck rewritten in native Sabra Hebrew by `waocopy` (human-gated). |
+| `009_ulku-local-ranking-fact-check.md` | Is Caleb Ulku's local+AI ranking method real? Full-transcript analysis, evidence grading, and the adopt/adapt/reject list for site-bot. |
+| `010_audit-first-wedge-build-plan.md` | Build plan turning §8's audit-first-wedge decision into the 13-task spec decomposition in `handoff/pending/` (dependency graph + open items). |
 
 ## Feeds these open decisions (strategist-owned)
 - Cancellation policy — down / freeze / buyout (memory `project_site_bot_cancellation_policy_open`).

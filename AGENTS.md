@@ -12,13 +12,18 @@ This version has breaking changes — APIs, conventions, and file structure may 
 
 # WAO Agent Profiles (Hermes Architecture)
 
-## 1. Dror / Lior — Strategist (no Hermes profile)
-|- **Engine:** Claude Opus 4.8 (via Claude Code — the main session). Deliberately no Hermes
-  profile: a `waostrategy` Hermes profile existed briefly, duplicated the `seo-strategist` /
-  `ppc-strategist` subagents below, and collided with this same name in CLAUDE.md's own
-  self-reference ("You are the Strategist, profile: `waostrategy`"). Deleted 2026-08-24.
-|- **Role:** System Architecture, Google Ads Bot Strategy, Codebase Analysis, Mission Planning.
-|- **Mandate:** Writes Technical Specifications and Architecture diagrams to `/handoff/pending/`. Analyzes A-Z progress. Does NOT write final production code. Defers all execution to `waoengineer`.
+## 1. Dror / Lior — Strategist (Profile: `waostrategy`)
+|- **Engine:** Qwen 3.8 Max (via Hermes, DashScope API) — migrated off Claude Code/Opus 2026-08-24
+  by Eitan's direction; no Claude seat remains in the strategist role. (History: an earlier
+  `waostrategy` profile on claude-sonnet-5 was created and deleted the same day over
+  duplication/collision concerns; recreated on Qwen 2026-08-24 as the permanent strategist seat.)
+|- **Model Config:**
+  - model: qwen3.8-max
+  - provider: alibaba (Hermes DashScope provider)
+  - api_key_env: QWEN_API_KEY (+ DASHSCOPE_API_KEY, see §2 credential-pool note)
+  - base_url_env: QWEN_BASE_URL
+|- **Role:** System Architecture, Google Ads Bot Strategy, Site-Bot retention/growth strategy, Codebase Analysis, Mission Planning.
+|- **Mandate:** Writes Technical Specifications and Architecture diagrams to `/handoff/pending/`. Analyzes A-Z progress. Does NOT write final production code or Hebrew marketing copy. Defers all execution to `waoengineer` / `waocopy`.
 
 ## 2. Eitan-Dev — Engineer / Executor (Profile: `waoengineer`)
 |- **Engine:** Qwen 3.8 Max (via Hermes, DashScope API) — unified onto Qwen 2026-08-24, replacing Grok 4.6/xAI.
@@ -125,7 +130,7 @@ This version has breaking changes — APIs, conventions, and file structure may 
 ---
 
 # Workflow Rules
-|- **Strategy & Specs:** Run under Claude Code (Opus). Output goes to `/handoff/pending/` per `CLAUDE_TO_HERMES_HANDOFF.md`.
+|- **Strategy & Specs:** Run under Hermes profile `waostrategy` (Qwen 3.8 Max). Output goes to `/handoff/pending/` per `CLAUDE_TO_HERMES_HANDOFF.md`.
 |- **Code & Execution:** Hermes picks up from `/handoff/pending/` and executes with `qwen3.8-max` (DashScope). No cost-tier ceiling — see Cost & Context Hygiene below.
 |- **Execution order:** Hermes processes pending files in ascending filename order, one task at a time; a task never starts before its listed Dependencies are in `/completed/`. Parallel only for dependency-free tasks with different target agents.
 |- **Content Generation:** Hermes uses `qwen3.8-max` for all Hebrew content (subject to the human gate above) — **except GEO opportunity generation** (`scripts/geo-generate-content.mjs`), where `gemini-3.7-flash` is PRIMARY and `qwen3.8-max` is the fallback. Both Tamar and Noa calls try Gemini first; Qwen only if Gemini's attempts are exhausted. Every saved action is stamped `generatedVia: "primary:gemini-3.7-flash"` or `"fallback:qwen3.8-max"`. Applies to every GEO-entitled client (`retter`, `ajudaica`, `wao`).

@@ -84,6 +84,8 @@
     "src/lib/geo/client.ts",
     "src/lib/geo/client.test.ts",
     "src/lib/shared/clients.ts",
+    "src/lib/places/client.ts",
+    "src/lib/places/client.test.ts",
     "src/lib/gbp/reviewStore.ts",
     "src/lib/gbp/reviewPoll.ts",
     "src/lib/gbp/reviewPoll.test.ts",
@@ -92,6 +94,8 @@
     "src/lib/gbp/reviewResponder.ts",
     "src/lib/gbp/reviewResponder.test.ts",
     "src/lib/gbp/editDistance.ts",
-    "src/lib/gbp/editDistance.test.ts"
+    "src/lib/gbp/editDistance.test.ts",
+    "src/lib/gbp/auditScore.ts",
+    "src/lib/gbp/auditScore.test.ts"
   ]
 }

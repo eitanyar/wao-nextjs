@@ -1,13 +1,16 @@
 # Claude to Hermes Handoff Protocol
 
 ## Purpose
-This document defines how Claude Code (running Opus) structures its output
-so that Hermes (running Qwen models) can pick up work seamlessly.
+This document defines how the Strategist seat structures its output
+so that the Hermes execution profiles (running Qwen models) can pick up work seamlessly.
+As of 2026-08-24 the Strategist seat itself is a Hermes profile (`waostrategy`, Qwen 3.8 Max),
+migrated off Claude Code/Opus by Eitan's direction. The protocol below still applies —
+"the Strategist" writes specs; the execution profiles write code and copy.
 
 ## The Golden Rule
-Claude THINKS and PLANS. Hermes EXECUTES.
-Claude never writes production code directly.
-Claude writes SPECIFICATIONS. Hermes writes CODE.
+The Strategist THINKS and PLANS. The execution profiles EXECUTE.
+The Strategist never writes production code directly.
+The Strategist writes SPECIFICATIONS. `waoengineer` writes CODE, `waocopy` writes Hebrew copy.
 
 ---
 
@@ -16,10 +19,10 @@ Claude writes SPECIFICATIONS. Hermes writes CODE.
 All handoff files live in this structure:
 
     /handoff/
-      /pending/          <- Claude writes here
-      /in-progress/      <- Hermes moves files here when it starts
-      /completed/        <- Hermes moves files here when done
-      /failed/           <- Hermes moves files here if blocked
+      /pending/          <- The Strategist (waostrategy) writes here
+      /in-progress/      <- Execution profiles move files here when they start
+      /completed/        <- Execution profiles move files here when done
+      /failed/           <- Execution profiles move files here if blocked
       /archive/          <- Old completed tasks (cleanup weekly)
 
 ---
@@ -68,9 +71,10 @@ regardless of whatever the switch is set to when it's eventually picked up.
 
 In `claude-subagents` mode, there is no autonomous watcher process — the picking-up session itself
 must read the pending file, invoke the subagent, append the completion report, and move the file to
-`/completed/` or `/failed/`. In `hermes` mode, the orchestrating session still runs the `hermes -z`
-dispatch itself via Bash (per `feedback_orchestrator_runs_hermes_directly` — Claude Code executes
-Hermes dispatches directly, it is not handed off as a script for the user to run).
+`/completed/` or `/failed/`. In `hermes` mode, the orchestrating session performs the dispatch
+itself: either `hermes kanban create` against the named profile's board (current pattern,
+2026-08-24 onward) or a direct one-shot `hermes -z` Bash dispatch — the orchestrator executes the
+dispatch directly, it is never handed off as a script for the user to run.
 
 ---
 
@@ -109,7 +113,7 @@ Missing sections = Hermes rejects the file.
     - Target Agent: [waoengineer | waocopy | waoverifier-app | waoverifier-media]
     - Priority: [P0-Critical | P1-High | P2-Medium | P3-Low]
     - Estimated Complexity: [Simple | Moderate | Complex]
-    - Created By: Claude Opus (Strategist)
+    - Created By: waostrategy (Strategist, Qwen 3.8 Max)
     - Created At: [ISO 8601 timestamp]
     - Status: pending
 
@@ -240,8 +244,8 @@ Rule for every spec:
 
 | Action | Directory | Who Does It |
 |---|---|---|
-| Create new task | /handoff/pending/ | Claude |
+| Create new task | /handoff/pending/ | Strategist (waostrategy) |
 | Start working | /handoff/in-progress/ | Hermes |
 | Task complete | /handoff/completed/ | Hermes |
 | Task failed | /handoff/failed/ | Hermes |
-| Clean up old tasks | /handoff/archive/ | Claude (weekly) |
+| Clean up old tasks | /handoff/archive/ | Strategist (weekly) |

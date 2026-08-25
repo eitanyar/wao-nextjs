@@ -1,0 +1,64 @@
+{
+  "operatorEmail": {
+    "subjectPrefix": "עדכון משימת Google Ads",
+    "labels": {
+      "client": "לקוח",
+      "task": "משימה",
+      "decision": "מה הוחלט",
+      "approvedBy": "מי אישר",
+      "executionStatus": "סטטוס ביצוע",
+      "error": "שגיאה"
+    },
+    "statusLabels": {
+      "approved": "אושר",
+      "executed": "בוצע",
+      "failed": "נכשל",
+      "rejected": "נדחה"
+    },
+    "closing": "המשימה נשמרה במעקב הפנימי של WAO."
+  },
+  "digestEmail": {
+    "subjectPrefix": "סיכום שבועי Google Ads",
+    "headingTemplate": "סיכום שבועי — __CAMPAIGN__ 📊",
+    "labels": {
+      "client": "לקוח",
+      "leadsThisWeek": "לידים השבוע",
+      "closedDeals": "עסקאות שנסגרו",
+      "budgetPacing": "קצב תקציב"
+    },
+    "pacingLabels": {
+      "on_track": "עומד ביעד",
+      "under": "מתחת ליעד",
+      "over": "מעל היעד"
+    },
+    "alertsHeading": "דברים שדורשים תשומת לב",
+    "noAlerts": "אין התראות פתוחות השבוע.",
+    "closingTemplate": "המשימה הבאה של הלקוח מחכה לאישור שלך כאן: __LINK__"
+  },
+  "alerts": {
+    "no_leads": {
+      "title": "אין לידים חדשים",
+      "message": "לא נכנס אף ליד בתקופה האחרונה. שווה לבדוק מיד את דף הנחיתה, ביטויי החיפוש ומעקב הטלפון והטפסים."
+    },
+    "no_conversions": {
+      "title": "לידים נכנסים, אבל שום דבר לא נסגר",
+      "message": "יש לידים, אבל אף עסקה לא נסגרה. כדאי לבדוק את מענה השיחות, מהירות החזרה ללידים והאיכות שלהם."
+    },
+    "budget_pacing_over": {
+      "title": "קצב התקציב מעל היעד",
+      "messageTemplate": "קצב התקציב גבוה מהיעד ב-__DEVIATION__ אחוזים. יעד שבועי משוער: __EXPECTED__ לידים; בפועל: __ACTUAL__."
+    },
+    "budget_pacing_under": {
+      "title": "קצב התקציב מתחת ליעד",
+      "messageTemplate": "קצב התקציב נמוך מהיעד ב-__DEVIATION__ אחוזים. יעד שבועי משוער: __EXPECTED__ לידים; בפועל: __ACTUAL__."
+    },
+    "data_quality": {
+      "title": "אף ליד לא סומן כטוב",
+      "message": "אף ליד לא סומן כטוב בתקופה הזו. אם אלה לידים אמיתיים, כדאי לבדוק את תהליך הסינון הפנימי."
+    },
+    "small_budget": {
+      "title": "תקציב יומי נמוך מאוד",
+      "message": "התקציב היומי נמוך מאוד. זה יגביל את כמות הלידים ויאט את הלמידה של הקמפיין."
+    }
+  }
+}

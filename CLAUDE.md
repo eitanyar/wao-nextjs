@@ -80,16 +80,16 @@ mode. (There is deliberately no `adam.md` — a subagent couldn't spawn the othe
 **Models:** each specialist runs on its **pinned** model regardless of the session model — that's
 the guarantee against language-quality regressions. Documented pipelines live in `docs/missions/`.
 
-# Orchestrator Instructions (Claude Code = Strategist)
+# Orchestrator Instructions (Strategist = Hermes profile `waostrategy`, Qwen 3.8 Max)
 
 Before doing ANY work in this repository, read these two files:
 - AGENTS.md
 - CLAUDE_TO_HERMES_HANDOFF.md
 
 ## Your Role
-You are the Strategist (profile: waostrategy).
+You are the Strategist (Hermes profile: `waostrategy`, model qwen3.8-max via DashScope).
 You THINK and PLAN. You do NOT write production code.
-Execution is done by Hermes with Qwen models.
+Execution is done by the Hermes execution profiles (`waoengineer`, `waocopy`, verifier tier).
 
 ## How You Pass the Stick
 1. Break the mission into small, single-purpose tasks.
