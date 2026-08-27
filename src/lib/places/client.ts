@@ -23,9 +23,9 @@
 const SEARCH_TEXT_URL = 'https://places.googleapis.com/v1/places:searchText';
 const LEGACY_DETAILS_URL = 'https://maps.googleapis.com/maps/api/place/details/json';
 
-// Byte-exact field mask from spec 2026-08-25_001 Requirement 1 — do not add fields.
+// Byte-exact field mask from spec 2026-08-25_001 Requirement 1 + places.location (spec 2026-08-27_001).
 const FIELD_MASK =
-  'places.id,places.displayName,places.formattedAddress,places.nationalPhoneNumber,places.internationalPhoneNumber,places.primaryType,places.primaryTypeDisplayName,places.types,places.businessStatus,places.websiteUri,places.regularOpeningHours,places.specialOpeningHours,places.rating,places.userRatingCount,places.editorialSummary,places.googleMapsUri,places.addressComponents';
+  'places.id,places.displayName,places.formattedAddress,places.nationalPhoneNumber,places.internationalPhoneNumber,places.primaryType,places.primaryTypeDisplayName,places.types,places.businessStatus,places.websiteUri,places.regularOpeningHours,places.specialOpeningHours,places.rating,places.userRatingCount,places.editorialSummary,places.googleMapsUri,places.addressComponents,places.location';
 
 export function hasPlacesKey(): boolean {
   return !!process.env.PLACES_API_KEY;
@@ -55,6 +55,7 @@ interface RawPlace {
   editorialSummary?: { text?: string };
   googleMapsUri?: string;
   addressComponents?: RawAddressComponent[];
+  location?: { latitude?: number; longitude?: number };
 }
 
 /**
@@ -80,6 +81,7 @@ export interface NormalizedPlace {
   googleMapsUri?: string;
   city?: string; // locality longText from addressComponents (first entry whose types include 'locality')
   photos?: { fetched: boolean; count: number };
+  location?: { lat: number; lng: number };
 }
 
 /**
@@ -117,7 +119,7 @@ export async function getPlacePhotos(placeId: string): Promise<{ fetched: boolea
   }
 }
 
-function mapPlace(p: RawPlace): NormalizedPlace {
+export function mapPlace(p: RawPlace): NormalizedPlace {
   const locality = Array.isArray(p?.addressComponents)
     ? p.addressComponents.find((c) => Array.isArray(c?.types) && c.types.includes('locality'))
     : undefined;
@@ -147,6 +149,9 @@ function mapPlace(p: RawPlace): NormalizedPlace {
   if (typeof p.editorialSummary?.text === 'string') out.editorialSummary = p.editorialSummary.text;
   if (typeof p.googleMapsUri === 'string') out.googleMapsUri = p.googleMapsUri;
   if (typeof locality?.longText === 'string') out.city = locality.longText;
+  if (p.location && typeof p.location.latitude === 'number' && typeof p.location.longitude === 'number') {
+    out.location = { lat: p.location.latitude, lng: p.location.longitude };
+  }
 
   return out;
 }

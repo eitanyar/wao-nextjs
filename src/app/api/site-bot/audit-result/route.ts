@@ -60,6 +60,10 @@ export async function GET(req: Request) {
         businessName: candidate.displayName,
         score,
         googleMapsUri: candidate.googleMapsUri ?? null,
+        location: candidate.location ?? null,
+        primaryCategory: candidate.primaryTypeDisplayName || candidate.primaryType || null,
+        placeId: candidate.placeId,
+        phone: candidate.nationalPhoneNumber || candidate.internationalPhoneNumber || null,
         ...(withPlace ? { place: candidate } : {}),
       });
     }
@@ -76,6 +80,10 @@ export async function GET(req: Request) {
         businessName: candidate.displayName,
         score,
         googleMapsUri: candidate.googleMapsUri ?? null,
+        location: candidate.location ?? null,
+        primaryCategory: candidate.primaryTypeDisplayName || candidate.primaryType || null,
+        placeId: candidate.placeId,
+        phone: candidate.nationalPhoneNumber || candidate.internationalPhoneNumber || null,
         ...(withPlace ? { place: candidate } : {}),
       });
     }

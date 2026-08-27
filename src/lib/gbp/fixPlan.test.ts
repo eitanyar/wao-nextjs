@@ -82,7 +82,7 @@ test('all-unknown audit -> empty fix plan', () => {
   assert.deepEqual(plan, []);
 });
 
-test('item types and payload hints match specifications', () => {
+test('item types and payload hints match specifications with resolved categories', () => {
   const neglectedPlace = makePlace({
     types: ['plumber'],
     nationalPhoneNumber: '03-1234567',
@@ -99,7 +99,7 @@ test('item types and payload hints match specifications', () => {
   assert.equal(categories?.type, 'write_categories');
   assert.equal(
     categories?.payloadHint,
-    'set primary + secondary categories (owner confirms list; categoryId mapping is WoZ)'
+    'set primary (gcid:plumber) + 7 secondary categories'
   );
   assert.equal(categories?.dimension, 'categories');
   assert.equal(categories?.reason, 'categories:1');
@@ -148,4 +148,23 @@ test('item types and payload hints match specifications', () => {
   );
   assert.equal(description?.dimension, 'description');
   assert.equal(description?.reason, 'description:absent');
+});
+
+test('category fix fallback when place is unresolvable or missing', () => {
+  const unresolvableScore = {
+    total: 6,
+    passed: 5,
+    failed: 1,
+    unknown: 0,
+    dimensions: [
+      { key: 'categories', status: 'fail' as const, evidence: 'categories:1', copyToken: 'DIM_CATEGORIES_TITLE' },
+    ],
+  };
+
+  const plan = deriveFixPlan(unresolvableScore);
+  assert.equal(plan.length, 1);
+  assert.equal(
+    plan[0].payloadHint,
+    'set primary + secondary categories (owner confirms list; categoryId mapping is WoZ)'
+  );
 });

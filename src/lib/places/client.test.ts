@@ -1,9 +1,20 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { normalizePhone, searchPlacesByName } from './client';
+import { normalizePhone, searchPlacesByName, mapPlace } from './client';
 
 // Pure-helper tests only — no network calls, no PLACES_API_KEY required.
 // Fixtures: Latin script only (spec 2026-08-25_001 HEBREW-SAFETY banner).
+
+test('mapPlace maps location coordinates correctly', () => {
+  const raw = {
+    id: 'places/ChIJ123',
+    displayName: { text: 'Test Business' },
+    formattedAddress: 'Tel Aviv, Israel',
+    location: { latitude: 32.0853, longitude: 34.7818 },
+  };
+  const mapped = mapPlace(raw);
+  assert.deepEqual(mapped.location, { lat: 32.0853, lng: 34.7818 });
+});
 
 test('normalizePhone strips separators from a local mobile number', () => {
   assert.equal(normalizePhone('052-1234567'), '0521234567');

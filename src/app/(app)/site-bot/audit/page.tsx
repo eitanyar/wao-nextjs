@@ -3,8 +3,12 @@
 import React, { Suspense, useState, useEffect, useCallback } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
+import { ACQUISITION_COPY } from '@/lib/site-bot/acquisitionCopy';
 import { SCORECARD_COPY } from '@/lib/site-bot/scorecardCopy';
 import type { AuditResult, AuditDimension } from '@/lib/gbp/auditScore';
+import { GeoGridVisualizer } from '@/components/geo/GeoGridVisualizer';
+import { ScorecardShareSection } from '@/components/site-bot/ScorecardShareSection';
+import type { GridRankReport } from '@/lib/geo/gridRank';
 
 interface Candidate {
   placeId: string;
@@ -39,10 +43,73 @@ function AuditContent() {
   const [auditResult, setAuditResult] = useState<AuditResult | null>(null);
   const [businessName, setBusinessName] = useState<string>('');
   const [copied, setCopied] = useState(false);
+  const [gridReport, setGridReport] = useState<GridRankReport | null>(null);
+  const [isGridLoading, setIsGridLoading] = useState(false);
+  const [gridError, setGridError] = useState<string | null>(null);
+  const [gridParams, setGridParams] = useState<{
+    businessName: string;
+    keyword: string;
+    lat: number;
+    lng: number;
+    placeId?: string;
+    phone?: string;
+  } | null>(null);
+
+  const fetchGridScan = useCallback(
+    async (candidateData: {
+      businessName: string;
+      keyword: string;
+      lat: number;
+      lng: number;
+      placeId?: string;
+      phone?: string;
+    }) => {
+      setIsGridLoading(true);
+      setGridError(null);
+      setGridParams(candidateData);
+      try {
+        const res = await fetchWithTimeout(
+          '/api/site-bot/grid-scan',
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              businessName: candidateData.businessName,
+              keyword: candidateData.keyword,
+              lat: candidateData.lat,
+              lng: candidateData.lng,
+              radiusKm: 5,
+              gridSize: 3,
+              placeId: candidateData.placeId,
+              phone: candidateData.phone,
+            }),
+          },
+          30000
+        );
+        if (!res.ok) {
+          setGridError('SCAN_ERROR');
+          return;
+        }
+        const data = await res.json();
+        if (data && Array.isArray(data.nodes) && data.summary) {
+          setGridReport(data);
+        } else {
+          setGridError('SCAN_ERROR');
+        }
+      } catch {
+        setGridError('SCAN_ERROR');
+      } finally {
+        setIsGridLoading(false);
+      }
+    },
+    []
+  );
 
   const fetchResult = useCallback(async (auditId: string, placeId?: string | null) => {
     setState('loading');
     setErrorKey(null);
+    setGridReport(null);
+    setGridError(null);
     try {
       const query = new URLSearchParams({ auditId });
       if (placeId) query.set('placeId', placeId);
@@ -67,6 +134,18 @@ function AuditContent() {
         setBusinessName(data.businessName || '');
         setCurrentAuditId(auditId);
         setState('ready');
+
+        if (data.location && typeof data.location.lat === 'number' && typeof data.location.lng === 'number') {
+          const keyword = data.primaryCategory || data.businessName || '';
+          fetchGridScan({
+            businessName: data.businessName || '',
+            keyword,
+            lat: data.location.lat,
+            lng: data.location.lng,
+            placeId: data.placeId,
+            phone: data.phone,
+          });
+        }
       } else if (data.status === 'pick' && Array.isArray(data.candidates)) {
         setCandidates(data.candidates);
         setCurrentAuditId(auditId);
@@ -81,7 +160,7 @@ function AuditContent() {
       setErrorKey('FORM_ERROR_GENERIC');
       setState('form');
     }
-  }, []);
+  }, [fetchGridScan]);
 
   useEffect(() => {
     const auditIdParam = searchParams.get('auditId');
@@ -302,99 +381,186 @@ function AuditContent() {
 
   return (
     <section className="wao-section">
-      <div className="wao-container" style={{ maxWidth: '640px' }}>
+      <div className="wao-container" style={{ maxWidth: '680px' }}>
         {state === 'form' && (
-          <div
-            style={{
-              border: '1px solid var(--border)',
-              borderRadius: 'var(--radius-md)',
-              background: 'var(--surface)',
-              padding: '24px',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '20px',
-            }}
-          >
-            <h1
-              style={{
-                fontFamily: 'var(--font-rubik), sans-serif',
-                fontWeight: 900,
-                fontSize: 'clamp(1.3rem, 2.5vw, 1.8rem)',
-                color: 'var(--text)',
-                margin: 0,
-              }}
-            >
-              {SCORECARD_COPY.FORM_TITLE}
-            </h1>
-
-            <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                <label style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--text)' }}>
-                  {SCORECARD_COPY.FORM_NAME_LABEL}
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={businessNameInput}
-                  onChange={(e) => setBusinessNameInput(e.target.value)}
-                  placeholder={SCORECARD_COPY.FORM_NAME_PLACEHOLDER}
-                  disabled={isSubmitting}
-                  style={{
-                    padding: '12px 16px',
-                    borderRadius: 'var(--radius-md)',
-                    border: '1px solid var(--border)',
-                    background: 'var(--bg)',
-                    color: 'var(--text)',
-                    fontFamily: 'var(--font-body), sans-serif',
-                    fontSize: '1rem',
-                  }}
-                />
-              </div>
-
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                <label style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--text)' }}>
-                  {SCORECARD_COPY.FORM_PHONE_LABEL}
-                </label>
-                <input
-                  type="tel"
-                  value={phoneInput}
-                  onChange={(e) => setPhoneInput(e.target.value)}
-                  placeholder={SCORECARD_COPY.FORM_PHONE_PLACEHOLDER}
-                  disabled={isSubmitting}
-                  style={{
-                    padding: '12px 16px',
-                    borderRadius: 'var(--radius-md)',
-                    border: '1px solid var(--border)',
-                    background: 'var(--bg)',
-                    color: 'var(--text)',
-                    fontFamily: 'var(--font-body), sans-serif',
-                    fontSize: '1rem',
-                  }}
-                />
-              </div>
-
-              {errorKey && (
-                <div style={{ color: '#ef4444', fontSize: '0.9rem', lineHeight: 1.5 }}>
-                  {SCORECARD_COPY[errorKey] || SCORECARD_COPY.FORM_ERROR_GENERIC}
-                </div>
-              )}
-
-              <button
-                type="submit"
-                disabled={isSubmitting}
-                className="btn-primary"
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', gap: '14px' }}>
+              <div
                 style={{
-                  padding: '14px 24px',
-                  justifyContent: 'center',
-                  width: '100%',
-                  marginTop: '6px',
-                  opacity: isSubmitting ? 0.7 : 1,
-                  cursor: isSubmitting ? 'not-allowed' : 'pointer',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  padding: '6px 16px',
+                  borderRadius: 'var(--radius-pill)',
+                  background: 'rgba(74, 222, 128, 0.08)',
+                  border: '1px solid rgba(74, 222, 128, 0.25)',
+                  color: 'var(--accent)',
+                  fontSize: '0.88rem',
+                  fontWeight: 600,
                 }}
               >
-                {isSubmitting ? SCORECARD_COPY.FORM_LOADING : SCORECARD_COPY.FORM_SUBMIT}
-              </button>
-            </form>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                </svg>
+                <span>{ACQUISITION_COPY.ENTRY_TRUST_BADGE}</span>
+              </div>
+
+              <h1
+                style={{
+                  fontFamily: 'var(--font-rubik), sans-serif',
+                  fontWeight: 900,
+                  fontSize: 'clamp(1.5rem, 3.5vw, 2.2rem)',
+                  lineHeight: 1.25,
+                  color: 'var(--text)',
+                  margin: 0,
+                }}
+              >
+                {ACQUISITION_COPY.ENTRY_HERO_HEADLINE}
+              </h1>
+
+              <p
+                style={{
+                  fontSize: '1.05rem',
+                  lineHeight: 1.6,
+                  color: 'var(--muted)',
+                  margin: 0,
+                  maxWidth: '560px',
+                }}
+              >
+                {ACQUISITION_COPY.ENTRY_HERO_SUBTITLE}
+              </p>
+            </div>
+
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+                gap: '12px',
+              }}
+            >
+              {[
+                ACQUISITION_COPY.ENTRY_VALUE_PROP_1,
+                ACQUISITION_COPY.ENTRY_VALUE_PROP_2,
+                ACQUISITION_COPY.ENTRY_VALUE_PROP_3,
+              ].map((propText, idx) => (
+                <div
+                  key={idx}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'flex-start',
+                    gap: '10px',
+                    padding: '14px 16px',
+                    borderRadius: 'var(--radius-md)',
+                    background: 'var(--surface)',
+                    border: '1px solid var(--border)',
+                  }}
+                >
+                  <div
+                    style={{
+                      width: '20px',
+                      height: '20px',
+                      borderRadius: '50%',
+                      background: 'rgba(74, 222, 128, 0.15)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      flexShrink: 0,
+                      marginTop: '2px',
+                    }}
+                  >
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                      <polyline points="20 6 9 17 4 12" />
+                    </svg>
+                  </div>
+                  <span style={{ fontSize: '0.88rem', lineHeight: 1.45, color: 'var(--text)' }}>
+                    {propText}
+                  </span>
+                </div>
+              ))}
+            </div>
+
+            <div
+              style={{
+                border: '1px solid var(--border)',
+                borderRadius: 'var(--radius-md)',
+                background: 'var(--surface)',
+                padding: '24px',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '20px',
+              }}
+            >
+              <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                  <label style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--text)' }}>
+                    {SCORECARD_COPY.FORM_NAME_LABEL}
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={businessNameInput}
+                    onChange={(e) => setBusinessNameInput(e.target.value)}
+                    placeholder={SCORECARD_COPY.FORM_NAME_PLACEHOLDER}
+                    disabled={isSubmitting}
+                    style={{
+                      padding: '12px 16px',
+                      borderRadius: 'var(--radius-md)',
+                      border: '1px solid var(--border)',
+                      background: 'var(--bg)',
+                      color: 'var(--text)',
+                      fontFamily: 'var(--font-body), sans-serif',
+                      fontSize: '1rem',
+                    }}
+                  />
+                </div>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                  <label style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--text)' }}>
+                    {SCORECARD_COPY.FORM_PHONE_LABEL}
+                  </label>
+                  <input
+                    type="tel"
+                    value={phoneInput}
+                    onChange={(e) => setPhoneInput(e.target.value)}
+                    placeholder={SCORECARD_COPY.FORM_PHONE_PLACEHOLDER}
+                    disabled={isSubmitting}
+                    style={{
+                      padding: '12px 16px',
+                      borderRadius: 'var(--radius-md)',
+                      border: '1px solid var(--border)',
+                      background: 'var(--bg)',
+                      color: 'var(--text)',
+                      fontFamily: 'var(--font-body), sans-serif',
+                      fontSize: '1rem',
+                    }}
+                  />
+                </div>
+
+                {errorKey && (
+                  <div style={{ color: '#ef4444', fontSize: '0.9rem', lineHeight: 1.5 }}>
+                    {SCORECARD_COPY[errorKey] || SCORECARD_COPY.FORM_ERROR_GENERIC}
+                  </div>
+                )}
+
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="btn-primary"
+                  style={{
+                    padding: '14px 24px',
+                    justifyContent: 'center',
+                    width: '100%',
+                    marginTop: '6px',
+                    fontSize: '1.05rem',
+                    fontWeight: 700,
+                    opacity: isSubmitting ? 0.7 : 1,
+                    cursor: isSubmitting ? 'not-allowed' : 'pointer',
+                  }}
+                >
+                  {isSubmitting ? SCORECARD_COPY.FORM_LOADING : ACQUISITION_COPY.ENTRY_CTA_BUTTON}
+                </button>
+              </form>
+            </div>
           </div>
         )}
 
@@ -525,6 +691,13 @@ function AuditContent() {
                 .replace('__TOTAL__', String(auditResult.total))}
             </div>
 
+            <GeoGridVisualizer
+              report={gridReport}
+              isLoading={isGridLoading}
+              error={gridError}
+              onRetry={gridParams ? () => fetchGridScan(gridParams) : undefined}
+            />
+
             {auditResult.dimensions.some((d) => d.status === 'pass') && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                 <h2
@@ -587,6 +760,12 @@ function AuditContent() {
                 </div>
               </div>
             )}
+
+            <ScorecardShareSection
+              auditId={currentAuditId || ''}
+              auditResult={auditResult}
+              businessName={businessName}
+            />
 
             <div
               style={{

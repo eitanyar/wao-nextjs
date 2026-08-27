@@ -35,6 +35,7 @@ export interface AuditResult {
   failed: number;
   unknown: number;
   dimensions: AuditDimension[];
+  place?: NormalizedPlace;
 }
 
 // Explicit literal mapping per spec Requirement 1 — no string concatenation.
@@ -162,7 +163,7 @@ export function scoreAudit(place: NormalizedPlace): AuditResult {
     else unknown++;
   }
 
-  return { total: dimensions.length, passed, failed, unknown, dimensions };
+  return { total: dimensions.length, passed, failed, unknown, dimensions, place };
 }
 
 /** Alias for scoreAudit — keeps call-site naming natural; single implementation. */

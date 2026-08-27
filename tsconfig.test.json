@@ -86,6 +86,10 @@
     "src/lib/lp/renderCoreThirtyPages.test.ts",
     "src/lib/geo/client.ts",
     "src/lib/geo/client.test.ts",
+    "src/lib/geo/gridRank.ts",
+    "src/lib/geo/gridRank.test.ts",
+    "src/lib/geo/gridRankDisplay.ts",
+    "src/lib/geo/gridRankDisplay.test.ts",
     "src/lib/shared/clients.ts",
     "src/lib/site-bot/seedPrefill.ts",
     "src/lib/site-bot/seedPrefill.test.ts",
@@ -104,12 +108,19 @@
     "src/lib/gbp/auditScore.test.ts",
     "src/lib/gbp/fixPlan.ts",
     "src/lib/gbp/fixPlan.test.ts",
+    "src/lib/gbp/categoryTaxonomy.ts",
+    "src/lib/gbp/categoryTaxonomy.test.ts",
     "src/lib/shared/approvalLog.ts",
     "src/lib/site-bot/fixLog.ts",
     "src/lib/site-bot/fixLog.test.ts",
+    "src/lib/site-bot/scorecardCopy.ts",
     "src/lib/site-bot/auditStore.ts",
     "src/lib/site-bot/auditStore.test.ts",
     "src/lib/site-bot/shareUtils.ts",
-    "src/lib/site-bot/shareUtils.test.ts"
+    "src/lib/site-bot/shareUtils.test.ts",
+    "src/lib/site-bot/acquisitionCopy.ts",
+    "src/lib/site-bot/acquisitionCopy.test.ts",
+    "src/lib/site-bot/acquisitionShareDisplay.ts",
+    "src/lib/site-bot/acquisitionShareDisplay.test.ts"
   ]
 }

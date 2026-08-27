@@ -1,0 +1,4066 @@
+[
+  {
+    "categoryId": "gcid:plumber",
+    "primaryType": "plumber",
+    "enName": "Plumber",
+    "heName": "אינסטלטור",
+    "synonyms": [
+      "שרברב",
+      "אינסטלציה",
+      "תיקון נזילות",
+      "פתיחת סתימות",
+      "איתור נזילות"
+    ],
+    "relatedCategoryIds": [
+      "gcid:drainage_service",
+      "gcid:sewage_disposal_service",
+      "gcid:heating_contractor",
+      "gcid:bathroom_remodeler",
+      "gcid:water_damage_restoration_service",
+      "gcid:handyman",
+      "gcid:general_contractor"
+    ]
+  },
+  {
+    "categoryId": "gcid:drainage_service",
+    "primaryType": "drainage_service",
+    "enName": "Drainage Service",
+    "heName": "שירותי ניקוז וביוב",
+    "synonyms": [
+      "שאיבת ביוב",
+      "פתיחת סתימות ביוב",
+      "ביובית",
+      "צילום קווי ביוב"
+    ],
+    "relatedCategoryIds": [
+      "gcid:plumber",
+      "gcid:sewage_disposal_service",
+      "gcid:water_damage_restoration_service"
+    ]
+  },
+  {
+    "categoryId": "gcid:sewage_disposal_service",
+    "primaryType": "sewage_disposal_service",
+    "enName": "Sewage Disposal Service",
+    "heName": "שירותי פינוי שפכים וביוב",
+    "synonyms": [
+      "שאיבת בורות שומן",
+      "פינוי שפכים",
+      "שאיבות ביוב"
+    ],
+    "relatedCategoryIds": [
+      "gcid:drainage_service",
+      "gcid:plumber"
+    ]
+  },
+  {
+    "categoryId": "gcid:heating_contractor",
+    "primaryType": "heating_contractor",
+    "enName": "Heating Contractor",
+    "heName": "קבלן חימום והסקה",
+    "synonyms": [
+      "התקנת יונקרס",
+      "משאבות חום",
+      "חימום תת רצפתי",
+      "הסקה מרכזית"
+    ],
+    "relatedCategoryIds": [
+      "gcid:hvac_contractor",
+      "gcid:plumber",
+      "gcid:solar_energy_equipment_supplier"
+    ]
+  },
+  {
+    "categoryId": "gcid:bathroom_remodeler",
+    "primaryType": "bathroom_remodeler",
+    "enName": "Bathroom Remodeler",
+    "heName": "שיפוץ חדרי רחצה",
+    "synonyms": [
+      "שיפוץ מקלחת",
+      "חידוש אמבטיה",
+      "החלפת צנרת באמבטיה",
+      "ריצוף חדר רחצה"
+    ],
+    "relatedCategoryIds": [
+      "gcid:plumber",
+      "gcid:general_contractor",
+      "gcid:tile_contractor",
+      "gcid:painter"
+    ]
+  },
+  {
+    "categoryId": "gcid:water_damage_restoration_service",
+    "primaryType": "water_damage_restoration_service",
+    "enName": "Water Damage Restoration Service",
+    "heName": "שיקום נזקי מים",
+    "synonyms": [
+      "ייבוש תת רצפתי",
+      "איתור נזילות במצלמה תרמית",
+      "שיקום מבנים מנזקי הצפה"
+    ],
+    "relatedCategoryIds": [
+      "gcid:plumber",
+      "gcid:drainage_service",
+      "gcid:general_contractor"
+    ]
+  },
+  {
+    "categoryId": "gcid:electrician",
+    "primaryType": "electrician",
+    "enName": "Electrician",
+    "heName": "חשמלאי",
+    "synonyms": [
+      "חשמלאי מוסמך",
+      "עבודות חשמל",
+      "תיקון קצר",
+      "הגדלת חיבור חשמל",
+      "התקנת לוח חשמל",
+      "חשמלאי ראשי"
+    ],
+    "relatedCategoryIds": [
+      "gcid:electrical_installation_service",
+      "gcid:lighting_contractor",
+      "gcid:hvac_contractor",
+      "gcid:handyman",
+      "gcid:solar_energy_contractor"
+    ]
+  },
+  {
+    "categoryId": "gcid:electrical_installation_service",
+    "primaryType": "electrical_installation_service",
+    "enName": "Electrical Installation Service",
+    "heName": "התקנות חשמל ותשתיות",
+    "synonyms": [
+      "תשתיות חשמל",
+      "התקנת עמדות טעינה",
+      "עמדת טעינה לרכב חשמלי",
+      "חיווט חשמל"
+    ],
+    "relatedCategoryIds": [
+      "gcid:electrician",
+      "gcid:solar_energy_contractor",
+      "gcid:security_system_installer"
+    ]
+  },
+  {
+    "categoryId": "gcid:lighting_contractor",
+    "primaryType": "lighting_contractor",
+    "enName": "Lighting Contractor",
+    "heName": "קבלן תאורה והתקנת גופי תאורה",
+    "synonyms": [
+      "התקנת גופי תאורה",
+      "תאורת גינה",
+      "תאורת לד",
+      "עיצוב תאורה"
+    ],
+    "relatedCategoryIds": [
+      "gcid:electrician",
+      "gcid:electrical_installation_service"
+    ]
+  },
+  {
+    "categoryId": "gcid:locksmith",
+    "primaryType": "locksmith",
+    "enName": "Locksmith",
+    "heName": "מנעולן",
+    "synonyms": [
+      "פורץ מנעולים",
+      "החלפת צילינדר",
+      "תיקון דלתות",
+      "פריצת דלתות",
+      "שכפול מפתחות",
+      "פורץ רכבים",
+      "מנעולן מורשה"
+    ],
+    "relatedCategoryIds": [
+      "gcid:door_supplier",
+      "gcid:safe_and_vault_shop",
+      "gcid:handyman",
+      "gcid:security_system_installer"
+    ]
+  },
+  {
+    "categoryId": "gcid:door_supplier",
+    "primaryType": "door_supplier",
+    "enName": "Door Supplier & Installer",
+    "heName": "ספק ומתקין דלתות",
+    "synonyms": [
+      "דלתות כניסה",
+      "דלתות פנים",
+      "התקנת דלתות",
+      "דלתות פלדלת"
+    ],
+    "relatedCategoryIds": [
+      "gcid:locksmith",
+      "gcid:carpenter",
+      "gcid:general_contractor"
+    ]
+  },
+  {
+    "categoryId": "gcid:safe_and_vault_shop",
+    "primaryType": "safe_and_vault_shop",
+    "enName": "Safe & Vault Shop",
+    "heName": "מכירה ופריצת כספות",
+    "synonyms": [
+      "פריצת כספות",
+      "התקנת כספת",
+      "כספת ביתית",
+      "כספת למשרד"
+    ],
+    "relatedCategoryIds": [
+      "gcid:locksmith",
+      "gcid:security_system_installer"
+    ]
+  },
+  {
+    "categoryId": "gcid:hvac_contractor",
+    "primaryType": "hvac_contractor",
+    "enName": "HVAC Contractor",
+    "heName": "טכנאי מיזוג אוויר",
+    "synonyms": [
+      "מתקין מזגנים",
+      "תיקון מזגנים",
+      "מיזוג אוויר",
+      "מילוי גז למזגן",
+      "התקנת מזגן",
+      "טכנאי קירור"
+    ],
+    "relatedCategoryIds": [
+      "gcid:air_conditioning_repair_service",
+      "gcid:heating_contractor",
+      "gcid:electrician",
+      "gcid:appliance_repair_service"
+    ]
+  },
+  {
+    "categoryId": "gcid:air_conditioning_repair_service",
+    "primaryType": "air_conditioning_repair_service",
+    "enName": "Air Conditioning Repair Service",
+    "heName": "שירות תיקון מזגנים",
+    "synonyms": [
+      "תיקון מזגן",
+      "טכנאי מזגנים",
+      "ניקוי מזגנים",
+      "טיפול במזגן VRF"
+    ],
+    "relatedCategoryIds": [
+      "gcid:hvac_contractor",
+      "gcid:appliance_repair_service"
+    ]
+  },
+  {
+    "categoryId": "gcid:painter",
+    "primaryType": "painter",
+    "enName": "Painter",
+    "heName": "צבעי",
+    "synonyms": [
+      "צביעת דירה",
+      "עבודות צבע",
+      "צביעת בית",
+      "שפכטל אמריקאי",
+      "צביעת קירות",
+      "סיוד דירה"
+    ],
+    "relatedCategoryIds": [
+      "gcid:general_contractor",
+      "gcid:dry_wall_contractor",
+      "gcid:plasterer",
+      "gcid:handyman"
+    ]
+  },
+  {
+    "categoryId": "gcid:dry_wall_contractor",
+    "primaryType": "dry_wall_contractor",
+    "enName": "Dry Wall Contractor",
+    "heName": "קבלן גבס",
+    "synonyms": [
+      "עבודות גבס",
+      "בניית קירות גבס",
+      "תקרות גבס",
+      "מזנוני גבס",
+      "הנמכת תקרת גבס"
+    ],
+    "relatedCategoryIds": [
+      "gcid:painter",
+      "gcid:general_contractor",
+      "gcid:plasterer",
+      "gcid:insulation_contractor"
+    ]
+  },
+  {
+    "categoryId": "gcid:plasterer",
+    "primaryType": "plasterer",
+    "enName": "Plasterer",
+    "heName": "טייח",
+    "synonyms": [
+      "עבודות טיח",
+      "טיח פנים",
+      "טיח חוץ",
+      "שליכט צבעוני"
+    ],
+    "relatedCategoryIds": [
+      "gcid:painter",
+      "gcid:dry_wall_contractor",
+      "gcid:general_contractor",
+      "gcid:waterproofing_service"
+    ]
+  },
+  {
+    "categoryId": "gcid:general_contractor",
+    "primaryType": "general_contractor",
+    "enName": "General Contractor",
+    "heName": "קבלן שיפוצים",
+    "synonyms": [
+      "שיפוץ דירות",
+      "קבלן בניין",
+      "שיפוץ כללי",
+      "שיפוץ בתים",
+      "עבודות בינוי",
+      "קבלן רשום"
+    ],
+    "relatedCategoryIds": [
+      "gcid:bathroom_remodeler",
+      "gcid:painter",
+      "gcid:dry_wall_contractor",
+      "gcid:tile_contractor",
+      "gcid:plumber",
+      "gcid:electrician",
+      "gcid:carpenter"
+    ]
+  },
+  {
+    "categoryId": "gcid:tile_contractor",
+    "primaryType": "tile_contractor",
+    "enName": "Tile Contractor",
+    "heName": "רצף",
+    "synonyms": [
+      "עבודות ריצוף",
+      "הדבקת ריצוף",
+      "ריצוף חוץ",
+      "חיפוי קירות",
+      "התקנת פרקט",
+      "גרניט פורצלן"
+    ],
+    "relatedCategoryIds": [
+      "gcid:general_contractor",
+      "gcid:bathroom_remodeler",
+      "gcid:flooring_contractor"
+    ]
+  },
+  {
+    "categoryId": "gcid:flooring_contractor",
+    "primaryType": "flooring_contractor",
+    "enName": "Flooring Contractor",
+    "heName": "קבלן פרקטים ורצפות",
+    "synonyms": [
+      "התקנת פרקטים",
+      "פרקט למינציה",
+      "פרקט עץ",
+      "דקים ופרקטים",
+      "ליטוש פרקט"
+    ],
+    "relatedCategoryIds": [
+      "gcid:tile_contractor",
+      "gcid:carpenter",
+      "gcid:deck_builder"
+    ]
+  },
+  {
+    "categoryId": "gcid:carpenter",
+    "primaryType": "carpenter",
+    "enName": "Carpenter",
+    "heName": "נגר",
+    "synonyms": [
+      "נגריה",
+      "מטבחים בהתאמה אישית",
+      "ארונות קיר",
+      "נגרות בהתאמה",
+      "תיקון רהיטים",
+      "נגר רהיטים"
+    ],
+    "relatedCategoryIds": [
+      "gcid:kitchen_remodeler",
+      "gcid:furniture_maker",
+      "gcid:flooring_contractor",
+      "gcid:deck_builder",
+      "gcid:handyman"
+    ]
+  },
+  {
+    "categoryId": "gcid:kitchen_remodeler",
+    "primaryType": "kitchen_remodeler",
+    "enName": "Kitchen Remodeler",
+    "heName": "שיפוץ מטבחים",
+    "synonyms": [
+      "חידוש מטבח",
+      "החלפת דלתות מטבח",
+      "תכנון מטבחים",
+      "מטבחים מעוצבים"
+    ],
+    "relatedCategoryIds": [
+      "gcid:carpenter",
+      "gcid:general_contractor",
+      "gcid:countertop_store"
+    ]
+  },
+  {
+    "categoryId": "gcid:furniture_maker",
+    "primaryType": "furniture_maker",
+    "enName": "Furniture Maker",
+    "heName": "יצרן רהיטים",
+    "synonyms": [
+      "ייצור רהיטים",
+      "רהיטים לפי מידה",
+      "מזנונים",
+      "שולחנות עץ"
+    ],
+    "relatedCategoryIds": [
+      "gcid:carpenter",
+      "gcid:furniture_store"
+    ]
+  },
+  {
+    "categoryId": "gcid:deck_builder",
+    "primaryType": "deck_builder",
+    "enName": "Deck Builder",
+    "heName": "בונה דקים ופרגולות",
+    "synonyms": [
+      "בניית דק",
+      "התקנת פרגולה",
+      "פרגולות עץ",
+      "פרגולות אלומיניום",
+      "דק איפאה"
+    ],
+    "relatedCategoryIds": [
+      "gcid:carpenter",
+      "gcid:fence_contractor",
+      "gcid:landscape_designer"
+    ]
+  },
+  {
+    "categoryId": "gcid:fence_contractor",
+    "primaryType": "fence_contractor",
+    "enName": "Fence Contractor",
+    "heName": "קבלן גדרות ושערים",
+    "synonyms": [
+      "התקנת גדר",
+      "גדרות אלומיניום",
+      "גדרות עץ",
+      "שערים חשמליים",
+      "שער לחצר"
+    ],
+    "relatedCategoryIds": [
+      "gcid:deck_builder",
+      "gcid:metal_fabricator"
+    ]
+  },
+  {
+    "categoryId": "gcid:metal_fabricator",
+    "primaryType": "metal_fabricator",
+    "enName": "Metal Fabricator / Welder",
+    "heName": "מסגר",
+    "synonyms": [
+      "מסגריה",
+      "עבודות מסגרות",
+      "סורגים",
+      "מעקות ברזל",
+      "שערים מברזל",
+      "קונסטרוקציות פלדה"
+    ],
+    "relatedCategoryIds": [
+      "gcid:fence_contractor",
+      "gcid:deck_builder",
+      "gcid:window_installation_service"
+    ]
+  },
+  {
+    "categoryId": "gcid:glazier",
+    "primaryType": "glazier",
+    "enName": "Glazier",
+    "heName": "זגג",
+    "synonyms": [
+      "זגגות",
+      "מקלחונים",
+      "מעקות זכוכית",
+      "חיפוי זכוכית למטבח",
+      "מראות",
+      "החלפת זכוכית לחלון"
+    ],
+    "relatedCategoryIds": [
+      "gcid:window_installation_service",
+      "gcid:bathroom_remodeler"
+    ]
+  },
+  {
+    "categoryId": "gcid:window_installation_service",
+    "primaryType": "window_installation_service",
+    "enName": "Window Installation Service",
+    "heName": "התקנת חלונות ותריסים",
+    "synonyms": [
+      "עבודות אלומיניום",
+      "חלונות בלגיים",
+      "תריסים חשמליים",
+      "תיקון תריסים",
+      "קליל"
+    ],
+    "relatedCategoryIds": [
+      "gcid:glazier",
+      "gcid:metal_fabricator",
+      "gcid:handyman"
+    ]
+  },
+  {
+    "categoryId": "gcid:roofer",
+    "primaryType": "roofer",
+    "enName": "Roofing Contractor",
+    "heName": "גגן וקבלן גגות",
+    "synonyms": [
+      "תיקון גגות",
+      "גגות רעפים",
+      "החלפת רעפים",
+      "בניית גגות קלים",
+      "מרזבים"
+    ],
+    "relatedCategoryIds": [
+      "gcid:waterproofing_service",
+      "gcid:insulation_contractor",
+      "gcid:solar_energy_contractor"
+    ]
+  },
+  {
+    "categoryId": "gcid:waterproofing_service",
+    "primaryType": "waterproofing_service",
+    "enName": "Waterproofing Service",
+    "heName": "איטום גגות ומבנים",
+    "synonyms": [
+      "קבלן איטום",
+      "איטום ביריעות ביטומניות",
+      "זיפות גגות",
+      "איטום מרפסות",
+      "איטום קירות חיצוניים"
+    ],
+    "relatedCategoryIds": [
+      "gcid:roofer",
+      "gcid:general_contractor",
+      "gcid:plasterer"
+    ]
+  },
+  {
+    "categoryId": "gcid:insulation_contractor",
+    "primaryType": "insulation_contractor",
+    "enName": "Insulation Contractor",
+    "heName": "קבלן בידוד תרמי ואקוסטי",
+    "synonyms": [
+      "בידוד אקוסטי",
+      "בידוד תרמי",
+      "בידוד גגות",
+      "קירות מבודדים"
+    ],
+    "relatedCategoryIds": [
+      "gcid:roofer",
+      "gcid:dry_wall_contractor",
+      "gcid:waterproofing_service"
+    ]
+  },
+  {
+    "categoryId": "gcid:cleaner",
+    "primaryType": "cleaner",
+    "enName": "Cleaning Service",
+    "heName": "חברת ניקיון",
+    "synonyms": [
+      "ניקיון בתים",
+      "ניקיון אחרי שיפוץ",
+      "ניקיון משרדים",
+      "פוליש וניקיון",
+      "חברת פוליש",
+      "ניקוי דירות"
+    ],
+    "relatedCategoryIds": [
+      "gcid:carpet_cleaning_service",
+      "gcid:window_cleaning_service",
+      "gcid:pest_control_service",
+      "gcid:house_cleaning_service"
+    ]
+  },
+  {
+    "categoryId": "gcid:house_cleaning_service",
+    "primaryType": "house_cleaning_service",
+    "enName": "House Cleaning Service",
+    "heName": "עוזרות בית וניקיון בתים",
+    "synonyms": [
+      "עוזרת בית",
+      "מנקה לבית",
+      "ניקיון שוטף לבית"
+    ],
+    "relatedCategoryIds": [
+      "gcid:cleaner",
+      "gcid:carpet_cleaning_service"
+    ]
+  },
+  {
+    "categoryId": "gcid:carpet_cleaning_service",
+    "primaryType": "carpet_cleaning_service",
+    "enName": "Carpet & Upholstery Cleaning Service",
+    "heName": "ניקוי ספות ושטיחים",
+    "synonyms": [
+      "ניקוי ספות",
+      "ניקוי שטיחים",
+      "ניקוי מזרונים",
+      "ניקוי ריפודים",
+      "חידוש ספות"
+    ],
+    "relatedCategoryIds": [
+      "gcid:cleaner",
+      "gcid:house_cleaning_service"
+    ]
+  },
+  {
+    "categoryId": "gcid:window_cleaning_service",
+    "primaryType": "window_cleaning_service",
+    "enName": "Window Cleaning Service",
+    "heName": "ניקוי חלונות",
+    "synonyms": [
+      "ניקוי חלונות בסנפלינג",
+      "ניקוי חלונות לבתים",
+      "ניקוי חלונות ראווה"
+    ],
+    "relatedCategoryIds": [
+      "gcid:cleaner",
+      "gcid:glazier"
+    ]
+  },
+  {
+    "categoryId": "gcid:pest_control_service",
+    "primaryType": "pest_control_service",
+    "enName": "Pest Control Service",
+    "heName": "מדביר",
+    "synonyms": [
+      "הדברת מזיקים",
+      "הדברה ירוקה",
+      "הדברת ג'וקים",
+      "הדברת נמלים",
+      "הדברת טרמיטים",
+      "לוכד חולדות",
+      "הדברת פשפש המיטה"
+    ],
+    "relatedCategoryIds": [
+      "gcid:cleaner",
+      "gcid:waterproofing_service"
+    ]
+  },
+  {
+    "categoryId": "gcid:moving_company",
+    "primaryType": "moving_company",
+    "enName": "Moving Company",
+    "heName": "חברת הובלות",
+    "synonyms": [
+      "הובלת דירה",
+      "מובילים",
+      "הובלות קטנות",
+      "הובלה עם מנוף",
+      "הובלת משרדים",
+      "אריזה והובלה"
+    ],
+    "relatedCategoryIds": [
+      "gcid:storage_facility",
+      "gcid:handyman"
+    ]
+  },
+  {
+    "categoryId": "gcid:storage_facility",
+    "primaryType": "storage_facility",
+    "enName": "Storage Facility",
+    "heName": "מחסנים להשכרה ואחסון תכולה",
+    "synonyms": [
+      "אחסון דירות",
+      "השכרת מחסן",
+      "אחסון תכולת דירה",
+      "מחסנים לאחסון"
+    ],
+    "relatedCategoryIds": [
+      "gcid:moving_company"
+    ]
+  },
+  {
+    "categoryId": "gcid:handyman",
+    "primaryType": "handyman",
+    "enName": "Handyman",
+    "heName": "הנדימן",
+    "synonyms": [
+      "תיקונים לבית",
+      "איש תחזוקה",
+      "תליית טלוויזיה",
+      "הרכבת רהיטים",
+      "איקאה הרכבות",
+      "תיקונים קטנים"
+    ],
+    "relatedCategoryIds": [
+      "gcid:plumber",
+      "gcid:electrician",
+      "gcid:painter",
+      "gcid:carpenter",
+      "gcid:locksmith"
+    ]
+  },
+  {
+    "categoryId": "gcid:gardener",
+    "primaryType": "gardener",
+    "enName": "Gardener & Landscaper",
+    "heName": "גנן",
+    "synonyms": [
+      "עבודות גינון",
+      "הקמת גינות",
+      "תחזוקת גינות",
+      "מערכות השקיה",
+      "גיזום עצים",
+      "כריתת עצים",
+      "דשא סינטטי"
+    ],
+    "relatedCategoryIds": [
+      "gcid:landscape_designer",
+      "gcid:tree_service",
+      "gcid:deck_builder"
+    ]
+  },
+  {
+    "categoryId": "gcid:landscape_designer",
+    "primaryType": "landscape_designer",
+    "enName": "Landscape Designer",
+    "heName": "אדריכל נוף ועיצוב גינות",
+    "synonyms": [
+      "עיצוב גינות",
+      "תכנון נוף",
+      "פיתוח שטח",
+      "אדריכלות נוף"
+    ],
+    "relatedCategoryIds": [
+      "gcid:gardener",
+      "gcid:architect",
+      "gcid:deck_builder"
+    ]
+  },
+  {
+    "categoryId": "gcid:tree_service",
+    "primaryType": "tree_service",
+    "enName": "Tree Service",
+    "heName": "גיזום וכריתת עצים",
+    "synonyms": [
+      "גוזם עצים",
+      "כריתת עצים באישור",
+      "העתקת עצים",
+      "כרסום גדמים"
+    ],
+    "relatedCategoryIds": [
+      "gcid:gardener",
+      "gcid:landscape_designer"
+    ]
+  },
+  {
+    "categoryId": "gcid:solar_energy_contractor",
+    "primaryType": "solar_energy_contractor",
+    "enName": "Solar Energy Contractor",
+    "heName": "התקנת מערכות סולאריות",
+    "synonyms": [
+      "מערכות סולאריות",
+      "פאנלים סולאריים",
+      "אנרגיה סולארית",
+      "התקנת פאנל סולארי"
+    ],
+    "relatedCategoryIds": [
+      "gcid:solar_energy_equipment_supplier",
+      "gcid:electrician",
+      "gcid:roofer"
+    ]
+  },
+  {
+    "categoryId": "gcid:solar_energy_equipment_supplier",
+    "primaryType": "solar_energy_equipment_supplier",
+    "enName": "Solar Water Heater / Dud Shemesh",
+    "heName": "דודי שמש וחשמל",
+    "synonyms": [
+      "תיקון דוד שמש",
+      "התקנת דוד שמש",
+      "דוד חשמל",
+      "קולטים לדוד שמש",
+      "טכנאי דודים"
+    ],
+    "relatedCategoryIds": [
+      "gcid:plumber",
+      "gcid:solar_energy_contractor",
+      "gcid:heating_contractor"
+    ]
+  },
+  {
+    "categoryId": "gcid:appliance_repair_service",
+    "primaryType": "appliance_repair_service",
+    "enName": "Appliance Repair Service",
+    "heName": "טכנאי מוצרי חשמל",
+    "synonyms": [
+      "טכנאי מקררים",
+      "טכנאי מכונות כביסה",
+      "תיקון מדיח כלים",
+      "תיקון תנורים",
+      "תיקון מייבש כביסה"
+    ],
+    "relatedCategoryIds": [
+      "gcid:electrician",
+      "gcid:hvac_contractor"
+    ]
+  },
+  {
+    "categoryId": "gcid:security_system_installer",
+    "primaryType": "security_system_installer",
+    "enName": "Security System Installer",
+    "heName": "התקנת מצלמות אבטחה ואזעקות",
+    "synonyms": [
+      "מצלמות אבטחה",
+      "מערכות אזעקה",
+      "התקנת אינטרקום",
+      "קודן לדלת",
+      "בית חכם"
+    ],
+    "relatedCategoryIds": [
+      "gcid:electrician",
+      "gcid:locksmith",
+      "gcid:safe_and_vault_shop"
+    ]
+  },
+  {
+    "categoryId": "gcid:lawyer",
+    "primaryType": "lawyer",
+    "enName": "Lawyer / Attorney",
+    "heName": "עורך דין",
+    "synonyms": [
+      "עו\"ד",
+      "משרד עורכי דין",
+      "ייעוץ משפטי",
+      "עורכת דין"
+    ],
+    "relatedCategoryIds": [
+      "gcid:real_estate_attorney",
+      "gcid:family_law_attorney",
+      "gcid:labor_relations_attorney",
+      "gcid:criminal_defense_attorney",
+      "gcid:notary",
+      "gcid:personal_injury_attorney"
+    ]
+  },
+  {
+    "categoryId": "gcid:real_estate_attorney",
+    "primaryType": "real_estate_attorney",
+    "enName": "Real Estate Attorney",
+    "heName": "עורך דין מקרקעין ונדל\"ן",
+    "synonyms": [
+      "עו\"ד נדל\"ן",
+      "חוזה דירה",
+      "קניית דירה עו\"ד",
+      "הסכם שכירות",
+      "התחדשות עירונית עו\"ד",
+      "מיסוי מקרקעין"
+    ],
+    "relatedCategoryIds": [
+      "gcid:lawyer",
+      "gcid:real_estate_agency",
+      "gcid:notary"
+    ]
+  },
+  {
+    "categoryId": "gcid:family_law_attorney",
+    "primaryType": "family_law_attorney",
+    "enName": "Family Law Attorney",
+    "heName": "עורך דין לענייני משפחה וגירושין",
+    "synonyms": [
+      "עו\"ד גירושין",
+      "הסכם ממון",
+      "צוואות וירושות",
+      "ייפוי כוח מתמשך",
+      "מזונות ומשמורת",
+      "גישור גירושין"
+    ],
+    "relatedCategoryIds": [
+      "gcid:lawyer",
+      "gcid:notary",
+      "gcid:counselor"
+    ]
+  },
+  {
+    "categoryId": "gcid:labor_relations_attorney",
+    "primaryType": "labor_relations_attorney",
+    "enName": "Labor & Employment Attorney",
+    "heName": "עורך דין דיני עבודה",
+    "synonyms": [
+      "עו\"ד עבודה",
+      "פיצויי פיטורין",
+      "שימוע לפני פיטורין",
+      "זכויות עובדים",
+      "תביעת מעסיק"
+    ],
+    "relatedCategoryIds": [
+      "gcid:lawyer",
+      "gcid:accountant"
+    ]
+  },
+  {
+    "categoryId": "gcid:criminal_defense_attorney",
+    "primaryType": "criminal_defense_attorney",
+    "enName": "Criminal Defense Attorney",
+    "heName": "עורך דין פלילי",
+    "synonyms": [
+      "עו\"ד פלילי",
+      "עבירות תנועה",
+      "חקירה במשטרה",
+      "כתב אישום",
+      "מחיקת רישום פלילי",
+      "תעבורה"
+    ],
+    "relatedCategoryIds": [
+      "gcid:lawyer",
+      "gcid:notary"
+    ]
+  },
+  {
+    "categoryId": "gcid:personal_injury_attorney",
+    "primaryType": "personal_injury_attorney",
+    "enName": "Personal Injury Attorney",
+    "heName": "עורך דין נזקי גוף ותאונות",
+    "synonyms": [
+      "תאונות דרכים עו\"ד",
+      "רשלנות רפואית",
+      "תביעות ביטוח לאומי",
+      "אובדן כושר עבודה",
+      "נכי צה\"ל"
+    ],
+    "relatedCategoryIds": [
+      "gcid:lawyer",
+      "gcid:insurance_agency"
+    ]
+  },
+  {
+    "categoryId": "gcid:notary",
+    "primaryType": "notary",
+    "enName": "Notary",
+    "heName": "נוטריון",
+    "synonyms": [
+      "אימות חתימה",
+      "תרגום נוטריוני",
+      "אישור נוטריוני",
+      "אפוסטיל",
+      "צוואה נוטריונית"
+    ],
+    "relatedCategoryIds": [
+      "gcid:lawyer",
+      "gcid:translator"
+    ]
+  },
+  {
+    "categoryId": "gcid:accountant",
+    "primaryType": "accountant",
+    "enName": "Accountant / CPA",
+    "heName": "רואה חשבון",
+    "synonyms": [
+      "רו\"ח",
+      "הנהלת חשבונות",
+      "פתיחת עוסק מורשה",
+      "דוחות כספיים",
+      "החזרי מס",
+      "ייעוץ מס",
+      "יועץ מס"
+    ],
+    "relatedCategoryIds": [
+      "gcid:tax_consultant",
+      "gcid:bookkeeping_service",
+      "gcid:financial_planner",
+      "gcid:business_management_consultant"
+    ]
+  },
+  {
+    "categoryId": "gcid:tax_consultant",
+    "primaryType": "tax_consultant",
+    "enName": "Tax Consultant",
+    "heName": "יועץ מס",
+    "synonyms": [
+      "החזר מס לשכירים",
+      "תכנון מס",
+      "ייעוץ מס לפרישה",
+      "הצהרת הון"
+    ],
+    "relatedCategoryIds": [
+      "gcid:accountant",
+      "gcid:financial_planner",
+      "gcid:bookkeeping_service"
+    ]
+  },
+  {
+    "categoryId": "gcid:bookkeeping_service",
+    "primaryType": "bookkeeping_service",
+    "enName": "Bookkeeping Service",
+    "heName": "מנהל חשבונות",
+    "synonyms": [
+      "הנהלת חשבונות כפולה",
+      "חשבות שכר",
+      "הפקת תלושי שכר",
+      "דיווח למע\"מ"
+    ],
+    "relatedCategoryIds": [
+      "gcid:accountant",
+      "gcid:tax_consultant"
+    ]
+  },
+  {
+    "categoryId": "gcid:financial_planner",
+    "primaryType": "financial_planner",
+    "enName": "Financial Planner / Advisor",
+    "heName": "מתכנן פיננסי ופנסיוני",
+    "synonyms": [
+      "תכנון פרישה",
+      "יועץ פנסיוני",
+      "ייעוץ פיננסי",
+      "ניהול כלכלת המשפחה"
+    ],
+    "relatedCategoryIds": [
+      "gcid:mortgage_broker",
+      "gcid:insurance_agency",
+      "gcid:accountant"
+    ]
+  },
+  {
+    "categoryId": "gcid:mortgage_broker",
+    "primaryType": "mortgage_broker",
+    "enName": "Mortgage Broker",
+    "heName": "יועץ משכנתאות",
+    "synonyms": [
+      "ייעוץ משכנתא",
+      "מחזור משכנתא",
+      "משכנתא למחיר למשתכן",
+      "חיסכון במשכנתא",
+      "יועצת משכנתאות"
+    ],
+    "relatedCategoryIds": [
+      "gcid:financial_planner",
+      "gcid:real_estate_agency",
+      "gcid:insurance_agency"
+    ]
+  },
+  {
+    "categoryId": "gcid:real_estate_agency",
+    "primaryType": "real_estate_agency",
+    "enName": "Real Estate Agency / Realtor",
+    "heName": "משרד תיווך ונדל\"ן",
+    "synonyms": [
+      "מתווך דירות",
+      "סוכן נדל\"ן",
+      "דירות למכירה",
+      "דירות להשכרה",
+      "תיווך נדל\"ן"
+    ],
+    "relatedCategoryIds": [
+      "gcid:real_estate_attorney",
+      "gcid:real_estate_appraiser",
+      "gcid:mortgage_broker"
+    ]
+  },
+  {
+    "categoryId": "gcid:real_estate_appraiser",
+    "primaryType": "real_estate_appraiser",
+    "enName": "Real Estate Appraiser",
+    "heName": "שמאי מקרקעין",
+    "synonyms": [
+      "שומת מקרקעין",
+      "הערכת שווי דירה",
+      "היטל השבחה",
+      "שמאי דירות"
+    ],
+    "relatedCategoryIds": [
+      "gcid:real_estate_agency",
+      "gcid:real_estate_attorney",
+      "gcid:architect"
+    ]
+  },
+  {
+    "categoryId": "gcid:insurance_agency",
+    "primaryType": "insurance_agency",
+    "enName": "Insurance Agency / Broker",
+    "heName": "סוכן ביטוח",
+    "synonyms": [
+      "סוכנות ביטוח",
+      "ביטוח רכב",
+      "ביטוח דירה",
+      "ביטוח בריאות",
+      "ביטוח חיים",
+      "קרן פנסיה"
+    ],
+    "relatedCategoryIds": [
+      "gcid:financial_planner",
+      "gcid:mortgage_broker"
+    ]
+  },
+  {
+    "categoryId": "gcid:architect",
+    "primaryType": "architect",
+    "enName": "Architect",
+    "heName": "אדריכל",
+    "synonyms": [
+      "אדריכלות ועיצוב",
+      "היתרי בנייה",
+      "תכנון אדריכלי",
+      "אדריכלית",
+      "תכנון בתים פרטיים"
+    ],
+    "relatedCategoryIds": [
+      "gcid:interior_designer",
+      "gcid:landscape_designer",
+      "gcid:general_contractor",
+      "gcid:engineering_consultant"
+    ]
+  },
+  {
+    "categoryId": "gcid:interior_designer",
+    "primaryType": "interior_designer",
+    "enName": "Interior Designer",
+    "heName": "מעצב פנים",
+    "synonyms": [
+      "עיצוב פנים",
+      "מעצבת פנים",
+      "הום סטיילינג",
+      "עיצוב דירות",
+      "תכנון חללים"
+    ],
+    "relatedCategoryIds": [
+      "gcid:architect",
+      "gcid:general_contractor",
+      "gcid:carpenter",
+      "gcid:kitchen_remodeler"
+    ]
+  },
+  {
+    "categoryId": "gcid:engineering_consultant",
+    "primaryType": "engineering_consultant",
+    "enName": "Structural Engineer / Consultant",
+    "heName": "מהנדס קונסטרוקציה ובניין",
+    "synonyms": [
+      "מהנדס בניין",
+      "קונסטרוקטור",
+      "בדיקת מבנים",
+      "אישור מהנדס להריסת קיר"
+    ],
+    "relatedCategoryIds": [
+      "gcid:architect",
+      "gcid:general_contractor",
+      "gcid:real_estate_appraiser"
+    ]
+  },
+  {
+    "categoryId": "gcid:translator",
+    "primaryType": "translator",
+    "enName": "Translator / Translation Service",
+    "heName": "מתרגם ושירותי תרגום",
+    "synonyms": [
+      "תרגום מסמכים",
+      "תרגום לאנגלית",
+      "תרגום משפטי",
+      "מתורגמן",
+      "תרגום סימולטני"
+    ],
+    "relatedCategoryIds": [
+      "gcid:notary",
+      "gcid:lawyer"
+    ]
+  },
+  {
+    "categoryId": "gcid:private_investigator",
+    "primaryType": "private_investigator",
+    "enName": "Private Investigator",
+    "heName": "חוקר פרטי",
+    "synonyms": [
+      "משרד חקירות",
+      "מעקבים",
+      "בגידות וגירושין",
+      "חקירות כלכליות",
+      "גילוי האזנות"
+    ],
+    "relatedCategoryIds": [
+      "gcid:lawyer",
+      "gcid:family_law_attorney"
+    ]
+  },
+  {
+    "categoryId": "gcid:marketing_agency",
+    "primaryType": "marketing_agency",
+    "enName": "Marketing Agency",
+    "heName": "משרד פרסום ושיווק דיגיטלי",
+    "synonyms": [
+      "שיווק דיגיטלי",
+      "קידום אתרים",
+      "פרסום בגוגל",
+      "ניהול סושיאל",
+      "קמפיינר",
+      "פרסום בפייסבוק",
+      "SEO"
+    ],
+    "relatedCategoryIds": [
+      "gcid:website_designer",
+      "gcid:graphic_designer",
+      "gcid:public_relations_firm"
+    ]
+  },
+  {
+    "categoryId": "gcid:website_designer",
+    "primaryType": "website_designer",
+    "enName": "Website Designer & Developer",
+    "heName": "בונה אתרים ומעצב אתרים",
+    "synonyms": [
+      "בניית אתרים",
+      "פיתוח אתרים",
+      "עיצוב אתרים",
+      "וורדפרס",
+      "חנויות איקומרס",
+      "UI UX"
+    ],
+    "relatedCategoryIds": [
+      "gcid:marketing_agency",
+      "gcid:graphic_designer"
+    ]
+  },
+  {
+    "categoryId": "gcid:graphic_designer",
+    "primaryType": "graphic_designer",
+    "enName": "Graphic Designer",
+    "heName": "מעצב גרפי",
+    "synonyms": [
+      "עיצוב גרפי",
+      "מיתוג עסקי",
+      "עיצוב לוגו",
+      "עיצוב פליירים",
+      "גרפיקאי",
+      "גרפיקאית"
+    ],
+    "relatedCategoryIds": [
+      "gcid:marketing_agency",
+      "gcid:website_designer",
+      "gcid:print_shop"
+    ]
+  },
+  {
+    "categoryId": "gcid:print_shop",
+    "primaryType": "print_shop",
+    "enName": "Print Shop",
+    "heName": "בית דפוס",
+    "synonyms": [
+      "דפוס דיגיטלי",
+      "הדפסת כרטיסי ביקור",
+      "הדפסת פוסטרים",
+      "הדפסה על חולצות",
+      "הדפסת שלטים",
+      "כריכיה"
+    ],
+    "relatedCategoryIds": [
+      "gcid:graphic_designer",
+      "gcid:marketing_agency"
+    ]
+  },
+  {
+    "categoryId": "gcid:public_relations_firm",
+    "primaryType": "public_relations_firm",
+    "enName": "Public Relations Firm",
+    "heName": "יחסי ציבור (יח\"צ)",
+    "synonyms": [
+      "משרד יח\"צ",
+      "דוברות",
+      "ניהול משברים",
+      "יחסי תקשורת"
+    ],
+    "relatedCategoryIds": [
+      "gcid:marketing_agency"
+    ]
+  },
+  {
+    "categoryId": "gcid:business_management_consultant",
+    "primaryType": "business_management_consultant",
+    "enName": "Business Management Consultant",
+    "heName": "יועץ עסקי",
+    "synonyms": [
+      "ייעוץ עסקי",
+      "פיתוח עסקי",
+      "ליווי עסקי",
+      "תוכנית עסקית",
+      "ייעוץ ארגוני"
+    ],
+    "relatedCategoryIds": [
+      "gcid:accountant",
+      "gcid:financial_planner",
+      "gcid:marketing_agency"
+    ]
+  },
+  {
+    "categoryId": "gcid:dentist",
+    "primaryType": "dentist",
+    "enName": "Dentist",
+    "heName": "רופא שיניים",
+    "synonyms": [
+      "מרפאת שיניים",
+      "השתלות שיניים",
+      "הלבנת שיניים",
+      "רופאת שיניים",
+      "רופא שיניים חירום",
+      "יישור שיניים"
+    ],
+    "relatedCategoryIds": [
+      "gcid:orthodontist",
+      "gcid:dental_clinic",
+      "gcid:pediatric_dentist",
+      "gcid:periodontist"
+    ]
+  },
+  {
+    "categoryId": "gcid:dental_clinic",
+    "primaryType": "dental_clinic",
+    "enName": "Dental Clinic",
+    "heName": "מרפאת שיניים",
+    "synonyms": [
+      "מרכז לרפואת שיניים",
+      "טיפולי שיניים",
+      "שיננית"
+    ],
+    "relatedCategoryIds": [
+      "gcid:dentist",
+      "gcid:orthodontist",
+      "gcid:pediatric_dentist"
+    ]
+  },
+  {
+    "categoryId": "gcid:orthodontist",
+    "primaryType": "orthodontist",
+    "enName": "Orthodontist",
+    "heName": "אורתודונט / יישור שיניים",
+    "synonyms": [
+      "גשר בשיניים",
+      "יישור שיניים שקוף",
+      "אינוויזליין",
+      "רופא מומחה ליישור שיניים"
+    ],
+    "relatedCategoryIds": [
+      "gcid:dentist",
+      "gcid:dental_clinic"
+    ]
+  },
+  {
+    "categoryId": "gcid:pediatric_dentist",
+    "primaryType": "pediatric_dentist",
+    "enName": "Pediatric Dentist",
+    "heName": "רופא שיניים לילדים",
+    "synonyms": [
+      "מרפאת שיניים לילדים",
+      "טיפולי שיניים בגז צחוק",
+      "רפואת שיניים לפעוטות"
+    ],
+    "relatedCategoryIds": [
+      "gcid:dentist",
+      "gcid:dental_clinic"
+    ]
+  },
+  {
+    "categoryId": "gcid:periodontist",
+    "primaryType": "periodontist",
+    "enName": "Periodontist",
+    "heName": "פריודונט / מומחה לחניכיים",
+    "synonyms": [
+      "רופא חניכיים",
+      "טיפול במחלות חניכיים",
+      "הקצעת שורשים",
+      "ניתוחי חניכיים"
+    ],
+    "relatedCategoryIds": [
+      "gcid:dentist",
+      "gcid:dental_clinic"
+    ]
+  },
+  {
+    "categoryId": "gcid:physiotherapist",
+    "primaryType": "physiotherapist",
+    "enName": "Physiotherapist",
+    "heName": "פיזיותרפיסט",
+    "synonyms": [
+      "מכון פיזיותרפיה",
+      "פיזיותרפיה",
+      "שיקום מפציעות",
+      "פיזיותרפיסט מוסמך",
+      "פיזיותרפיה לשיקום",
+      "רצפת אגן פיזיותרפיה"
+    ],
+    "relatedCategoryIds": [
+      "gcid:chiropractor",
+      "gcid:osteopath",
+      "gcid:massage_therapist",
+      "gcid:acupuncture_clinic"
+    ]
+  },
+  {
+    "categoryId": "gcid:chiropractor",
+    "primaryType": "chiropractor",
+    "enName": "Chiropractor",
+    "heName": "כירופרקט",
+    "synonyms": [
+      "כירופרקטיקה",
+      "טיפול בכאבי גב",
+      "יישור חוליות",
+      "כירופרקטור"
+    ],
+    "relatedCategoryIds": [
+      "gcid:physiotherapist",
+      "gcid:osteopath",
+      "gcid:massage_therapist"
+    ]
+  },
+  {
+    "categoryId": "gcid:osteopath",
+    "primaryType": "osteopath",
+    "enName": "Osteopath",
+    "heName": "אוסטאופת",
+    "synonyms": [
+      "אוסטאופתיה",
+      "טיפול בכאב",
+      "אוסטאופת מוסמך"
+    ],
+    "relatedCategoryIds": [
+      "gcid:physiotherapist",
+      "gcid:chiropractor",
+      "gcid:massage_therapist"
+    ]
+  },
+  {
+    "categoryId": "gcid:psychologist",
+    "primaryType": "psychologist",
+    "enName": "Psychologist",
+    "heName": "פסיכולוג",
+    "synonyms": [
+      "פסיכולוג קליני",
+      "טיפול פסיכולוגי",
+      "פסיכולוגית",
+      "טיפול בחרדות",
+      "פסיכותרפיה",
+      "טיפול CBT",
+      "פסיכולוג ילדים"
+    ],
+    "relatedCategoryIds": [
+      "gcid:counselor",
+      "gcid:psychiatrist",
+      "gcid:life_coach"
+    ]
+  },
+  {
+    "categoryId": "gcid:counselor",
+    "primaryType": "counselor",
+    "enName": "Counselor / Psychotherapist",
+    "heName": "פסיכותרפיסט ויועץ רגשי",
+    "synonyms": [
+      "מטפל רגשי",
+      "טיפול זוגי",
+      "ייעוץ זוגי",
+      "הדרכת הורים",
+      "פסיכותרפיה הוליסטית"
+    ],
+    "relatedCategoryIds": [
+      "gcid:psychologist",
+      "gcid:family_law_attorney",
+      "gcid:life_coach"
+    ]
+  },
+  {
+    "categoryId": "gcid:psychiatrist",
+    "primaryType": "psychiatrist",
+    "enName": "Psychiatrist",
+    "heName": "פסיכיאטר",
+    "synonyms": [
+      "פסיכיאטר פרטי",
+      "אבחון פסיכיאטרי",
+      "פסיכיאטרית",
+      "פסיכיאטר ילדים ונוער"
+    ],
+    "relatedCategoryIds": [
+      "gcid:psychologist",
+      "gcid:medical_clinic"
+    ]
+  },
+  {
+    "categoryId": "gcid:life_coach",
+    "primaryType": "life_coach",
+    "enName": "Life Coach / NLP Practitioner",
+    "heName": "מאמן אישי ו-NLP",
+    "synonyms": [
+      "קואוצ'ר",
+      "אימון אישי",
+      "אימון לקריירה",
+      "מטפל NLP",
+      "אימון להצלחה"
+    ],
+    "relatedCategoryIds": [
+      "gcid:counselor",
+      "gcid:psychologist",
+      "gcid:business_management_consultant"
+    ]
+  },
+  {
+    "categoryId": "gcid:veterinarian",
+    "primaryType": "veterinarian",
+    "enName": "Veterinarian",
+    "heName": "וטרינר",
+    "synonyms": [
+      "מרפאה וטרינרית",
+      "וטרינר חירום",
+      "רופא חיות",
+      "וטרינרית",
+      "חיסונים לכלבים וחתולים",
+      "עיקור וסירוס"
+    ],
+    "relatedCategoryIds": [
+      "gcid:pet_groomer",
+      "gcid:pet_supply_store",
+      "gcid:dog_trainer"
+    ]
+  },
+  {
+    "categoryId": "gcid:pet_groomer",
+    "primaryType": "pet_groomer",
+    "enName": "Pet Groomer",
+    "heName": "מספרת כלבים וחתולים",
+    "synonyms": [
+      "מספרת כלבים",
+      "תספורת לכלב",
+      "רחיצת כלבים",
+      "טיפוח חיות מחמד"
+    ],
+    "relatedCategoryIds": [
+      "gcid:veterinarian",
+      "gcid:pet_supply_store",
+      "gcid:dog_trainer"
+    ]
+  },
+  {
+    "categoryId": "gcid:dog_trainer",
+    "primaryType": "dog_trainer",
+    "enName": "Dog Trainer",
+    "heName": "מאלף כלבים",
+    "synonyms": [
+      "אילוף כלבים",
+      "פתרון בעיות התנהגות כלבים",
+      "חינוך גורים",
+      "מאלף מוסמך"
+    ],
+    "relatedCategoryIds": [
+      "gcid:veterinarian",
+      "gcid:pet_groomer",
+      "gcid:pet_supply_store"
+    ]
+  },
+  {
+    "categoryId": "gcid:pet_supply_store",
+    "primaryType": "pet_supply_store",
+    "enName": "Pet Supply Store",
+    "heName": "חנות חיות ומזון לבעלי חיים",
+    "synonyms": [
+      "חנות חיות",
+      "אוכל לכלבים",
+      "אוכל לחתולים",
+      "ציוד לבעלי חיים"
+    ],
+    "relatedCategoryIds": [
+      "gcid:veterinarian",
+      "gcid:pet_groomer",
+      "gcid:dog_trainer"
+    ]
+  },
+  {
+    "categoryId": "gcid:optometrist",
+    "primaryType": "optometrist",
+    "enName": "Optometrist / Optician",
+    "heName": "אופטומטריסט",
+    "synonyms": [
+      "בדיקת ראייה",
+      "אופטיקה",
+      "משקפי ראייה",
+      "עדשות מגע",
+      "משקפי שמש",
+      "אופטומטריסטית"
+    ],
+    "relatedCategoryIds": [
+      "gcid:ophthalmologist",
+      "gcid:medical_clinic"
+    ]
+  },
+  {
+    "categoryId": "gcid:ophthalmologist",
+    "primaryType": "ophthalmologist",
+    "enName": "Ophthalmologist (Eye Doctor)",
+    "heName": "רופא עיניים",
+    "synonyms": [
+      "מרפאת עיניים",
+      "ניתוחי לייזר להסרת משקפיים",
+      "בדיקת קרקעית עין",
+      "קטרקט"
+    ],
+    "relatedCategoryIds": [
+      "gcid:optometrist",
+      "gcid:medical_clinic"
+    ]
+  },
+  {
+    "categoryId": "gcid:dermatologist",
+    "primaryType": "dermatologist",
+    "enName": "Dermatologist",
+    "heName": "רופא עור",
+    "synonyms": [
+      "רופאת עור",
+      "בדיקת נקודות חן",
+      "טיפול באקנה",
+      "רפואת עור אסתטית"
+    ],
+    "relatedCategoryIds": [
+      "gcid:medical_clinic",
+      "gcid:beauty_salon",
+      "gcid:skin_care_clinic"
+    ]
+  },
+  {
+    "categoryId": "gcid:podiatrist",
+    "primaryType": "podiatrist",
+    "enName": "Podiatrist",
+    "heName": "פודיאטור / מומחה כף רגל",
+    "synonyms": [
+      "פודיאטריה",
+      "ציפורן חודרנית",
+      "פטרת ציפורניים",
+      "מדרסים אורתופדיים",
+      "כף רגל סוכרתית"
+    ],
+    "relatedCategoryIds": [
+      "gcid:medical_clinic",
+      "gcid:physiotherapist"
+    ]
+  },
+  {
+    "categoryId": "gcid:medical_clinic",
+    "primaryType": "medical_clinic",
+    "enName": "Medical Clinic",
+    "heName": "מרפאה פרטית / מרכז רפואי",
+    "synonyms": [
+      "רופא פרטי",
+      "מרפאת מומחים",
+      "רפואה פרטית",
+      "בדיקות רפואיות"
+    ],
+    "relatedCategoryIds": [
+      "gcid:dermatologist",
+      "gcid:optometrist",
+      "gcid:psychiatrist",
+      "gcid:dentist"
+    ]
+  },
+  {
+    "categoryId": "gcid:skin_care_clinic",
+    "primaryType": "skin_care_clinic",
+    "enName": "Skin Care Clinic / Aesthetician",
+    "heName": "קוסמטיקאית ומכון יופי",
+    "synonyms": [
+      "טיפול פנים",
+      "קוסמטיקה פרא רפואית",
+      "הסרת שיער בלייזר",
+      "הזרקות בוטוקס",
+      "עיבוי שפתיים",
+      "אנטי אייג'ינג"
+    ],
+    "relatedCategoryIds": [
+      "gcid:beauty_salon",
+      "gcid:dermatologist",
+      "gcid:spa"
+    ]
+  },
+  {
+    "categoryId": "gcid:beauty_salon",
+    "primaryType": "beauty_salon",
+    "enName": "Beauty Salon",
+    "heName": "סלון יופי",
+    "synonyms": [
+      "מכון יופי",
+      "מניקור פדיקור",
+      "בניית ציפורניים",
+      "לק ג'ל",
+      "עיצוב גבות",
+      "הרמת ריסים"
+    ],
+    "relatedCategoryIds": [
+      "gcid:skin_care_clinic",
+      "gcid:hair_salon",
+      "gcid:spa"
+    ]
+  },
+  {
+    "categoryId": "gcid:hair_salon",
+    "primaryType": "hair_salon",
+    "enName": "Hair Salon / Barber",
+    "heName": "מספרה ומעצב שיער",
+    "synonyms": [
+      "מספרת נשים",
+      "מעצב שיער",
+      "החלקת שיער",
+      "צבע וגוונים",
+      "תוספות שיער",
+      "תסרוקות ערב וכלה"
+    ],
+    "relatedCategoryIds": [
+      "gcid:barber_shop",
+      "gcid:beauty_salon"
+    ]
+  },
+  {
+    "categoryId": "gcid:barber_shop",
+    "primaryType": "barber_shop",
+    "enName": "Barber Shop",
+    "heName": "מספרת גברים / ברברשופ",
+    "synonyms": [
+      "ברברשופ",
+      "תספורת גברים",
+      "עיצוב זקן",
+      "ספר גברים"
+    ],
+    "relatedCategoryIds": [
+      "gcid:hair_salon",
+      "gcid:beauty_salon"
+    ]
+  },
+  {
+    "categoryId": "gcid:spa",
+    "primaryType": "spa",
+    "enName": "Day Spa & Wellness",
+    "heName": "ספא ומרכז בריאות",
+    "synonyms": [
+      "חבילת ספא",
+      "ספא בוטיק",
+      "סאונה וג'קוזי",
+      "ספא לזוגות"
+    ],
+    "relatedCategoryIds": [
+      "gcid:massage_therapist",
+      "gcid:beauty_salon",
+      "gcid:skin_care_clinic"
+    ]
+  },
+  {
+    "categoryId": "gcid:massage_therapist",
+    "primaryType": "massage_therapist",
+    "enName": "Massage Therapist",
+    "heName": "מעסה ומטפל במגע",
+    "synonyms": [
+      "עיסוי שוודי",
+      "עיסוי רקמות עמוק",
+      "מסאז'",
+      "רפלקסולוגיה",
+      "עיסוי עד הבית",
+      "מסאג'יסט"
+    ],
+    "relatedCategoryIds": [
+      "gcid:spa",
+      "gcid:physiotherapist",
+      "gcid:acupuncture_clinic"
+    ]
+  },
+  {
+    "categoryId": "gcid:acupuncture_clinic",
+    "primaryType": "acupuncture_clinic",
+    "enName": "Acupuncture Clinic / Alternative Medicine",
+    "heName": "דיקור סיני ורפואה משלימה",
+    "synonyms": [
+      "רפואה סינית",
+      "מדקר סיני",
+      "נטורופתיה",
+      "הומיאופתיה",
+      "צמחי מרפא"
+    ],
+    "relatedCategoryIds": [
+      "gcid:physiotherapist",
+      "gcid:massage_therapist"
+    ]
+  },
+  {
+    "categoryId": "gcid:gym",
+    "primaryType": "gym",
+    "enName": "Gym / Fitness Center",
+    "heName": "חדר כושר ומכון כושר",
+    "synonyms": [
+      "מכון כושר",
+      "קרוספיט",
+      "אימוני כושר",
+      "מנוי לחדר כושר",
+      "סטודיו לאימונים"
+    ],
+    "relatedCategoryIds": [
+      "gcid:personal_trainer",
+      "gcid:pilates_studio",
+      "gcid:yoga_studio"
+    ]
+  },
+  {
+    "categoryId": "gcid:personal_trainer",
+    "primaryType": "personal_trainer",
+    "enName": "Personal Trainer",
+    "heName": "מאמן כושר אישי",
+    "synonyms": [
+      "מאמנת כושר",
+      "אימון כושר אישי",
+      "מאמן כושר עד הבית",
+      "אימונים בקבוצות קטנות",
+      "אימון פונקציונלי"
+    ],
+    "relatedCategoryIds": [
+      "gcid:gym",
+      "gcid:pilates_studio",
+      "gcid:yoga_studio"
+    ]
+  },
+  {
+    "categoryId": "gcid:pilates_studio",
+    "primaryType": "pilates_studio",
+    "enName": "Pilates Studio",
+    "heName": "סטודיו פילאטיס",
+    "synonyms": [
+      "פילאטיס מכשירים",
+      "פילאטיס מזרן",
+      "שיעורי פילאטיס"
+    ],
+    "relatedCategoryIds": [
+      "gcid:yoga_studio",
+      "gcid:gym",
+      "gcid:personal_trainer"
+    ]
+  },
+  {
+    "categoryId": "gcid:yoga_studio",
+    "primaryType": "yoga_studio",
+    "enName": "Yoga Studio",
+    "heName": "סטודיו ליוגה",
+    "synonyms": [
+      "שיעורי יוגה",
+      "אשטנגה יוגה",
+      "ויניאסה",
+      "יוגה לנשים בהריון"
+    ],
+    "relatedCategoryIds": [
+      "gcid:pilates_studio",
+      "gcid:gym",
+      "gcid:personal_trainer"
+    ]
+  },
+  {
+    "categoryId": "gcid:auto_repair_shop",
+    "primaryType": "auto_repair_shop",
+    "enName": "Auto Repair Shop / Garage",
+    "heName": "מוסך רכב",
+    "synonyms": [
+      "מוסך",
+      "טיפול לרכב",
+      "הכנה לטסט",
+      "תיקון בלמים",
+      "מכונאות רכב",
+      "מוסך מורשה"
+    ],
+    "relatedCategoryIds": [
+      "gcid:car_repair_and_maintenance",
+      "gcid:auto_electrical_service",
+      "gcid:tire_shop",
+      "gcid:auto_body_shop",
+      "gcid:brake_shop"
+    ]
+  },
+  {
+    "categoryId": "gcid:car_repair_and_maintenance",
+    "primaryType": "car_repair_and_maintenance",
+    "enName": "Car Repair & Maintenance",
+    "heName": "מכונאות ותחזוקת רכב",
+    "synonyms": [
+      "החלפת שמנים ופילטרים",
+      "טיפול 10,000",
+      "החלפת רצועת טיימינג",
+      "בדיקת חורף לרכב"
+    ],
+    "relatedCategoryIds": [
+      "gcid:auto_repair_shop",
+      "gcid:auto_electrical_service",
+      "gcid:tire_shop"
+    ]
+  },
+  {
+    "categoryId": "gcid:auto_electrical_service",
+    "primaryType": "auto_electrical_service",
+    "enName": "Auto Electrical Service",
+    "heName": "חשמלאי רכב ומיזוג אוויר לרכב",
+    "synonyms": [
+      "חשמלאות רכב",
+      "מילוי גז למזגן ברכב",
+      "החלפת מצבר",
+      "מצבר עד הבית",
+      "תיקון סטרטר ואלטרנטור"
+    ],
+    "relatedCategoryIds": [
+      "gcid:auto_repair_shop",
+      "gcid:car_stereo_store"
+    ]
+  },
+  {
+    "categoryId": "gcid:tire_shop",
+    "primaryType": "tire_shop",
+    "enName": "Tire Shop / Pandocheria",
+    "heName": "פנצ'ריה וצמיגים",
+    "synonyms": [
+      "פנצ'ריה",
+      "החלפת צמיגים",
+      "תיקון פנצ'ר",
+      "כיוון פרונט",
+      "צמיגים לרכב",
+      "פנצ'ריה 24 שעות"
+    ],
+    "relatedCategoryIds": [
+      "gcid:auto_repair_shop",
+      "gcid:wheel_alignment_service"
+    ]
+  },
+  {
+    "categoryId": "gcid:wheel_alignment_service",
+    "primaryType": "wheel_alignment_service",
+    "enName": "Wheel Alignment Service",
+    "heName": "מכון פרונט וכיוון גלגלים",
+    "synonyms": [
+      "כיוון פרונט",
+      "איזון גלגלים",
+      "בדיקת מתלים"
+    ],
+    "relatedCategoryIds": [
+      "gcid:tire_shop",
+      "gcid:auto_repair_shop"
+    ]
+  },
+  {
+    "categoryId": "gcid:auto_body_shop",
+    "primaryType": "auto_body_shop",
+    "enName": "Auto Body Shop (Pachahut)",
+    "heName": "פחחות וצבע לרכב",
+    "synonyms": [
+      "פחחות רכב",
+      "צביעת רכב",
+      "תיקון תאונות",
+      "חידוש צבע לרכב",
+      "הסרת שריטות ברכב"
+    ],
+    "relatedCategoryIds": [
+      "gcid:auto_repair_shop",
+      "gcid:car_detailer",
+      "gcid:auto_glass_shop"
+    ]
+  },
+  {
+    "categoryId": "gcid:brake_shop",
+    "primaryType": "brake_shop",
+    "enName": "Brake Shop",
+    "heName": "החלפת בלמים ורפידות לרכב",
+    "synonyms": [
+      "החלפת ברקסים",
+      "צלחות בלם",
+      "בדיקת בלמים"
+    ],
+    "relatedCategoryIds": [
+      "gcid:auto_repair_shop",
+      "gcid:car_repair_and_maintenance"
+    ]
+  },
+  {
+    "categoryId": "gcid:car_wash",
+    "primaryType": "car_wash",
+    "enName": "Car Wash",
+    "heName": "שטיפת רכבים",
+    "synonyms": [
+      "רחיצת רכב",
+      "שטיפה ידנית",
+      "שטיפה במנהרה",
+      "ניקוי פנימי לרכב"
+    ],
+    "relatedCategoryIds": [
+      "gcid:car_detailer"
+    ]
+  },
+  {
+    "categoryId": "gcid:car_detailer",
+    "primaryType": "car_detailer",
+    "enName": "Car Detailer / Car Polishing",
+    "heName": "דיטיילינג וציפוי ננו לרכב",
+    "synonyms": [
+      "דיטיילינג לרכב",
+      "פוליש ווקס לרכב",
+      "ציפוי ננו קרמי",
+      "ניקוי ריפודים ברכב",
+      "השחרת חלונות לרכב"
+    ],
+    "relatedCategoryIds": [
+      "gcid:car_wash",
+      "gcid:auto_body_shop"
+    ]
+  },
+  {
+    "categoryId": "gcid:towing_service",
+    "primaryType": "towing_service",
+    "enName": "Towing Service",
+    "heName": "גרר ושירותי חילוץ רכב",
+    "synonyms": [
+      "גרר",
+      "שירותי גרירה",
+      "גרר 24 שעות",
+      "חילוץ רכבים",
+      "גרירת אופנועים"
+    ],
+    "relatedCategoryIds": [
+      "gcid:auto_repair_shop",
+      "gcid:tire_shop",
+      "gcid:auto_electrical_service"
+    ]
+  },
+  {
+    "categoryId": "gcid:auto_glass_shop",
+    "primaryType": "auto_glass_shop",
+    "enName": "Auto Glass Shop",
+    "heName": "זגגות רכב והחלפת שמשות",
+    "synonyms": [
+      "החלפת שמשה לרכב",
+      "תיקון שמשות",
+      "זגג רכב"
+    ],
+    "relatedCategoryIds": [
+      "gcid:auto_body_shop",
+      "gcid:auto_repair_shop"
+    ]
+  },
+  {
+    "categoryId": "gcid:car_rental_agency",
+    "primaryType": "car_rental_agency",
+    "enName": "Car Rental Agency",
+    "heName": "השכרת רכב",
+    "synonyms": [
+      "השכרת רכבים",
+      "השכרת רכב ליום",
+      "השכרת רכב לחודש",
+      "ליסינג פרטי"
+    ],
+    "relatedCategoryIds": [
+      "gcid:used_car_dealer",
+      "gcid:car_dealer"
+    ]
+  },
+  {
+    "categoryId": "gcid:used_car_dealer",
+    "primaryType": "used_car_dealer",
+    "enName": "Used Car Dealer / Trade-in",
+    "heName": "סוכנות רכב יד 2 וטרייד אין",
+    "synonyms": [
+      "מגרש רכבים",
+      "קניית רכב יד שניה",
+      "טרייד אין רכב",
+      "סוכנות רכב"
+    ],
+    "relatedCategoryIds": [
+      "gcid:car_dealer",
+      "gcid:car_rental_agency"
+    ]
+  },
+  {
+    "categoryId": "gcid:car_dealer",
+    "primaryType": "car_dealer",
+    "enName": "Car Dealer (New Cars)",
+    "heName": "יבואן וסוכנות רכב חדש",
+    "synonyms": [
+      "קניית רכב חדש",
+      "אולם תצוגה רכב",
+      "סוכנות רכבים חדשים"
+    ],
+    "relatedCategoryIds": [
+      "gcid:used_car_dealer",
+      "gcid:car_rental_agency"
+    ]
+  },
+  {
+    "categoryId": "gcid:driving_school",
+    "primaryType": "driving_school",
+    "enName": "Driving School / Instructor",
+    "heName": "מורה נהיגה ובית ספר לנהיגה",
+    "synonyms": [
+      "מורה נהיגה",
+      "לימודי נהיגה",
+      "מורה נהיגה על אוטומט",
+      "מורה נהיגה על ידני",
+      "טסט נהיגה"
+    ],
+    "relatedCategoryIds": [
+      "gcid:motorcycle_driving_school"
+    ]
+  },
+  {
+    "categoryId": "gcid:motorcycle_driving_school",
+    "primaryType": "motorcycle_driving_school",
+    "enName": "Motorcycle Driving School",
+    "heName": "מורה נהיגה לאופנוע",
+    "synonyms": [
+      "רישיון לאופנוע",
+      "לימוד נהיגה על קטנוע",
+      "רישיון A1"
+    ],
+    "relatedCategoryIds": [
+      "gcid:driving_school",
+      "gcid:motorcycle_repair_shop"
+    ]
+  },
+  {
+    "categoryId": "gcid:motorcycle_repair_shop",
+    "primaryType": "motorcycle_repair_shop",
+    "enName": "Motorcycle & Scooter Repair Shop",
+    "heName": "מוסך אופנועים וקטנועים",
+    "synonyms": [
+      "מוסך קטנועים",
+      "תיקון אופנוע",
+      "טיפול לקטנוע",
+      "צמיגים לאופנוע"
+    ],
+    "relatedCategoryIds": [
+      "gcid:auto_repair_shop",
+      "gcid:motorcycle_dealer"
+    ]
+  },
+  {
+    "categoryId": "gcid:motorcycle_dealer",
+    "primaryType": "motorcycle_dealer",
+    "enName": "Motorcycle & Scooter Dealer",
+    "heName": "סוכנות אופנועים וקטנועים",
+    "synonyms": [
+      "מכירת קטנועים",
+      "אופנוע יד 2",
+      "סוכנות קטנועים"
+    ],
+    "relatedCategoryIds": [
+      "gcid:motorcycle_repair_shop"
+    ]
+  },
+  {
+    "categoryId": "gcid:car_stereo_store",
+    "primaryType": "car_stereo_store",
+    "enName": "Car Stereo & Accessories Store",
+    "heName": "התקנת מערכות שמע ומולטימדיה לרכב",
+    "synonyms": [
+      "מערכת מולטימדיה לרכב",
+      "התקנת מצלמת רוורס",
+      "רמקולים לרכב",
+      "קודן לרכב",
+      "אביזרי רכב"
+    ],
+    "relatedCategoryIds": [
+      "gcid:auto_electrical_service",
+      "gcid:auto_repair_shop"
+    ]
+  },
+  {
+    "categoryId": "gcid:restaurant",
+    "primaryType": "restaurant",
+    "enName": "Restaurant",
+    "heName": "מסעדה",
+    "synonyms": [
+      "מסעדת שף",
+      "מסעדה בשרית",
+      "מסעדה חלבית",
+      "מסעדה כשרה",
+      "אוכל טוב",
+      "הזמנת שולחן במסעדה"
+    ],
+    "relatedCategoryIds": [
+      "gcid:cafe",
+      "gcid:catering_service",
+      "gcid:delivery_restaurant",
+      "gcid:israeli_restaurant",
+      "gcid:italian_restaurant"
+    ]
+  },
+  {
+    "categoryId": "gcid:israeli_restaurant",
+    "primaryType": "israeli_restaurant",
+    "enName": "Israeli Restaurant / Grill",
+    "heName": "שיפודיה ומסעדה ישראלית",
+    "synonyms": [
+      "שיפודים",
+      "בשרים על האש",
+      "חומוסיה",
+      "פלאפל",
+      "שווארמה",
+      "אוכל מזרחי"
+    ],
+    "relatedCategoryIds": [
+      "gcid:restaurant",
+      "gcid:catering_service"
+    ]
+  },
+  {
+    "categoryId": "gcid:italian_restaurant",
+    "primaryType": "italian_restaurant",
+    "enName": "Italian Restaurant",
+    "heName": "מסעדה איטלקית",
+    "synonyms": [
+      "פיצרייה",
+      "פסטה טרייה",
+      "אוכל איטלקי",
+      "פיצה"
+    ],
+    "relatedCategoryIds": [
+      "gcid:restaurant",
+      "gcid:pizza_restaurant"
+    ]
+  },
+  {
+    "categoryId": "gcid:pizza_restaurant",
+    "primaryType": "pizza_restaurant",
+    "enName": "Pizza Restaurant",
+    "heName": "פיצרייה",
+    "synonyms": [
+      "פיצה",
+      "משלוחי פיצה",
+      "פיצה כשרה",
+      "פיצה משפחתית"
+    ],
+    "relatedCategoryIds": [
+      "gcid:italian_restaurant",
+      "gcid:restaurant",
+      "gcid:delivery_restaurant"
+    ]
+  },
+  {
+    "categoryId": "gcid:sushi_restaurant",
+    "primaryType": "sushi_restaurant",
+    "enName": "Sushi Restaurant / Asian",
+    "heName": "מסעדה אסייתית וסושי",
+    "synonyms": [
+      "סושי",
+      "סושי בר",
+      "מסעדה סינית",
+      "מוקפץ",
+      "משלוחי סושי"
+    ],
+    "relatedCategoryIds": [
+      "gcid:restaurant",
+      "gcid:delivery_restaurant"
+    ]
+  },
+  {
+    "categoryId": "gcid:cafe",
+    "primaryType": "cafe",
+    "enName": "Cafe / Coffee Shop",
+    "heName": "בית קפה",
+    "synonyms": [
+      "קפה ומאפה",
+      "ארוחת בוקר",
+      "קפה שכונתי",
+      "בית קפה בוטיק"
+    ],
+    "relatedCategoryIds": [
+      "gcid:restaurant",
+      "gcid:bakery",
+      "gcid:pastry_shop"
+    ]
+  },
+  {
+    "categoryId": "gcid:bakery",
+    "primaryType": "bakery",
+    "enName": "Bakery",
+    "heName": "מאפייה",
+    "synonyms": [
+      "מאפיית לחמים",
+      "לחמי מחמצת",
+      "בורקס",
+      "פיתות חמות",
+      "חלות לשבת"
+    ],
+    "relatedCategoryIds": [
+      "gcid:pastry_shop",
+      "gcid:cafe"
+    ]
+  },
+  {
+    "categoryId": "gcid:pastry_shop",
+    "primaryType": "pastry_shop",
+    "enName": "Pastry Shop / Confectionery",
+    "heName": "קונדיטוריה ועוגות מעוצבות",
+    "synonyms": [
+      "קונדיטוריה",
+      "עוגות יום הולדת",
+      "עוגות מעוצבות",
+      "קינוחים",
+      "עוגיות בעבודת יד"
+    ],
+    "relatedCategoryIds": [
+      "gcid:bakery",
+      "gcid:cafe",
+      "gcid:catering_service"
+    ]
+  },
+  {
+    "categoryId": "gcid:catering_service",
+    "primaryType": "catering_service",
+    "enName": "Catering Service",
+    "heName": "חברת קייטרינג",
+    "synonyms": [
+      "קייטרינג לאירועים",
+      "קייטרינג בשרי",
+      "קייטרינג חלבי",
+      "קייטרינג לשבת חתן",
+      "מגשי אירוח",
+      "קייטרינג כשר"
+    ],
+    "relatedCategoryIds": [
+      "gcid:restaurant",
+      "gcid:event_planner",
+      "gcid:pastry_shop"
+    ]
+  },
+  {
+    "categoryId": "gcid:delivery_restaurant",
+    "primaryType": "delivery_restaurant",
+    "enName": "Delivery Restaurant",
+    "heName": "משלוחי אוכל",
+    "synonyms": [
+      "טייק אווי",
+      "אוכל מוכן לקחת",
+      "משלוחים"
+    ],
+    "relatedCategoryIds": [
+      "gcid:restaurant",
+      "gcid:pizza_restaurant",
+      "gcid:sushi_restaurant"
+    ]
+  },
+  {
+    "categoryId": "gcid:butcher_shop",
+    "primaryType": "butcher_shop",
+    "enName": "Butcher Shop",
+    "heName": "אטליז וקצביה",
+    "synonyms": [
+      "קצביה",
+      "אטליז כשר",
+      "בשר פרימיום",
+      "בשר טרי",
+      "נתחי בשר מובחרים"
+    ],
+    "relatedCategoryIds": [
+      "gcid:grocery_store",
+      "gcid:supermarket"
+    ]
+  },
+  {
+    "categoryId": "gcid:fish_store",
+    "primaryType": "fish_store",
+    "enName": "Fish Store / Fishmonger",
+    "heName": "חנות דגים / חנות דגי ים",
+    "synonyms": [
+      "דגים טריים",
+      "דגי ים",
+      "פילוט דגים",
+      "חנות דגים כשרה"
+    ],
+    "relatedCategoryIds": [
+      "gcid:grocery_store",
+      "gcid:supermarket"
+    ]
+  },
+  {
+    "categoryId": "gcid:florist",
+    "primaryType": "florist",
+    "enName": "Florist / Flower Shop",
+    "heName": "חנות פרחים",
+    "synonyms": [
+      "משלוחי פרחים",
+      "זרי פרחים",
+      "סידורי פרחים",
+      "עציצים",
+      "זרי כלה"
+    ],
+    "relatedCategoryIds": [
+      "gcid:gift_shop",
+      "gcid:event_planner"
+    ]
+  },
+  {
+    "categoryId": "gcid:supermarket",
+    "primaryType": "supermarket",
+    "enName": "Supermarket",
+    "heName": "סופרמרקט",
+    "synonyms": [
+      "סופר",
+      "מרכול",
+      "קניות לבית",
+      "מוצרי מזון"
+    ],
+    "relatedCategoryIds": [
+      "gcid:grocery_store",
+      "gcid:butcher_shop",
+      "gcid:fish_store"
+    ]
+  },
+  {
+    "categoryId": "gcid:grocery_store",
+    "primaryType": "grocery_store",
+    "enName": "Grocery Store / Makolet",
+    "heName": "מכולת שכונתית ומינימרקט",
+    "synonyms": [
+      "מכולת",
+      "מינימרקט",
+      "פיצוציה",
+      "קיוסק"
+    ],
+    "relatedCategoryIds": [
+      "gcid:supermarket",
+      "gcid:wine_store"
+    ]
+  },
+  {
+    "categoryId": "gcid:wine_store",
+    "primaryType": "wine_store",
+    "enName": "Wine & Liquor Store",
+    "heName": "חנות יין ואלכוהול",
+    "synonyms": [
+      "חנות משקאות",
+      "יינות בוטיק",
+      "בירות מיוחדות",
+      "אלכוהול לאירועים"
+    ],
+    "relatedCategoryIds": [
+      "gcid:grocery_store",
+      "gcid:gift_shop"
+    ]
+  },
+  {
+    "categoryId": "gcid:furniture_store",
+    "primaryType": "furniture_store",
+    "enName": "Furniture Store",
+    "heName": "חנות רהיטים",
+    "synonyms": [
+      "מערכות ישיבה",
+      "סלונים",
+      "חדרי שינה",
+      "פינות אוכל",
+      "מזנונים ושולחנות"
+    ],
+    "relatedCategoryIds": [
+      "gcid:mattress_store",
+      "gcid:home_goods_store",
+      "gcid:furniture_maker"
+    ]
+  },
+  {
+    "categoryId": "gcid:mattress_store",
+    "primaryType": "mattress_store",
+    "enName": "Mattress Store",
+    "heName": "חנות מזרנים ומיטות",
+    "synonyms": [
+      "מזרנים אורטופדיים",
+      "מיטות מתכווננות",
+      "מזרן זוגי",
+      "כריות אורטופדיות"
+    ],
+    "relatedCategoryIds": [
+      "gcid:furniture_store",
+      "gcid:home_goods_store"
+    ]
+  },
+  {
+    "categoryId": "gcid:home_goods_store",
+    "primaryType": "home_goods_store",
+    "enName": "Home Goods Store",
+    "heName": "חנות כלי בית ועיצוב הבית",
+    "synonyms": [
+      "כלי בית",
+      "אקססוריז לבית",
+      "טקסטיל לבית",
+      "סירים ומחבתות",
+      "מתנות לבית"
+    ],
+    "relatedCategoryIds": [
+      "gcid:furniture_store",
+      "gcid:gift_shop",
+      "gcid:lighting_store"
+    ]
+  },
+  {
+    "categoryId": "gcid:lighting_store",
+    "primaryType": "lighting_store",
+    "enName": "Lighting Store",
+    "heName": "חנות תאורה וגופי תאורה",
+    "synonyms": [
+      "גופי תאורה מעוצבים",
+      "נברשות",
+      "מנורות עומדות",
+      "ספוטים"
+    ],
+    "relatedCategoryIds": [
+      "gcid:home_goods_store",
+      "gcid:lighting_contractor",
+      "gcid:electrician"
+    ]
+  },
+  {
+    "categoryId": "gcid:clothing_store",
+    "primaryType": "clothing_store",
+    "enName": "Clothing Store / Boutique",
+    "heName": "חנות בגדים ובוטיק אופנה",
+    "synonyms": [
+      "בגדי נשים",
+      "בגדי גברים",
+      "בוטיק אופנה",
+      "אופנה",
+      "בגדי מעצבים"
+    ],
+    "relatedCategoryIds": [
+      "gcid:shoe_store",
+      "gcid:bridal_shop"
+    ]
+  },
+  {
+    "categoryId": "gcid:shoe_store",
+    "primaryType": "shoe_store",
+    "enName": "Shoe Store",
+    "heName": "חנות נעליים",
+    "synonyms": [
+      "נעלי נשים",
+      "נעלי גברים",
+      "נעלי ספורט",
+      "נעלי נוחות",
+      "סנדלים ומגפיים"
+    ],
+    "relatedCategoryIds": [
+      "gcid:clothing_store"
+    ]
+  },
+  {
+    "categoryId": "gcid:bridal_shop",
+    "primaryType": "bridal_shop",
+    "enName": "Bridal Shop / Wedding Dresses",
+    "heName": "סלון כלות ושמלות כלה",
+    "synonyms": [
+      "שמלות כלה",
+      "שמלות ערב",
+      "עיצוב שמלות כלה",
+      "שמלות לאירועים"
+    ],
+    "relatedCategoryIds": [
+      "gcid:clothing_store",
+      "gcid:jewelry_store",
+      "gcid:event_planner"
+    ]
+  },
+  {
+    "categoryId": "gcid:jewelry_store",
+    "primaryType": "jewelry_store",
+    "enName": "Jewelry Store",
+    "heName": "חנות תכשיטים ויהלומים",
+    "synonyms": [
+      "תכשיטי זהב",
+      "טבעות אירוסין",
+      "טבעות נישואין",
+      "יהלומים",
+      "שעוני יוקרה",
+      "תכשיטי כסף"
+    ],
+    "relatedCategoryIds": [
+      "gcid:watch_repair_service",
+      "gcid:gift_shop",
+      "gcid:bridal_shop"
+    ]
+  },
+  {
+    "categoryId": "gcid:watch_repair_service",
+    "primaryType": "watch_repair_service",
+    "enName": "Watch Repair Service / Clockmaker",
+    "heName": "שען ותיקון שעונים",
+    "synonyms": [
+      "תיקון שעוני יוקרה",
+      "החלפת סוללה לשעון",
+      "תיקון שעון",
+      "שעון קיר"
+    ],
+    "relatedCategoryIds": [
+      "gcid:jewelry_store"
+    ]
+  },
+  {
+    "categoryId": "gcid:gift_shop",
+    "primaryType": "gift_shop",
+    "enName": "Gift Shop",
+    "heName": "חנות מתנות ומזכרות",
+    "synonyms": [
+      "מתנות לגבר",
+      "מתנות לאישה",
+      "מארזי שי",
+      "מתנות לחג"
+    ],
+    "relatedCategoryIds": [
+      "gcid:florist",
+      "gcid:home_goods_store",
+      "gcid:wine_store"
+    ]
+  },
+  {
+    "categoryId": "gcid:book_store",
+    "primaryType": "book_store",
+    "enName": "Book Store / Sifria",
+    "heName": "חנות ספרים ומכשירי כתיבה",
+    "synonyms": [
+      "ספרי קריאה",
+      "ספרי לימוד",
+      "ציוד משרדי",
+      "חנות מכשירי כתיבה"
+    ],
+    "relatedCategoryIds": [
+      "gcid:toy_store",
+      "gcid:print_shop"
+    ]
+  },
+  {
+    "categoryId": "gcid:toy_store",
+    "primaryType": "toy_store",
+    "enName": "Toy Store",
+    "heName": "חנות צעצועים ומשחקים",
+    "synonyms": [
+      "צעצועים לילדים",
+      "משחקי קופסא",
+      "לגו",
+      "בובות",
+      "משחקי חשיבה"
+    ],
+    "relatedCategoryIds": [
+      "gcid:book_store",
+      "gcid:baby_goods_store"
+    ]
+  },
+  {
+    "categoryId": "gcid:baby_goods_store",
+    "primaryType": "baby_goods_store",
+    "enName": "Baby Goods Store",
+    "heName": "חנות מוצרי תינוקות",
+    "synonyms": [
+      "עגלות תינוק",
+      "חבילת לידה",
+      "מיטות תינוק",
+      "בגדי תינוקות",
+      "מוצרי בטיחות לרכב לתינוק"
+    ],
+    "relatedCategoryIds": [
+      "gcid:toy_store",
+      "gcid:clothing_store"
+    ]
+  },
+  {
+    "categoryId": "gcid:optical_products_store",
+    "primaryType": "optical_products_store",
+    "enName": "Optical Products Store",
+    "heName": "חנות אופטיקה ומשקפיים",
+    "synonyms": [
+      "אופטיקה",
+      "מסגרות למשקפיים",
+      "עדשות מולטיפוקל"
+    ],
+    "relatedCategoryIds": [
+      "gcid:optometrist"
+    ]
+  },
+  {
+    "categoryId": "gcid:cell_phone_store",
+    "primaryType": "cell_phone_store",
+    "enName": "Cell Phone Store & Repair",
+    "heName": "מעבדת סלולר ומכירת סמארטפונים",
+    "synonyms": [
+      "תיקון אייפון",
+      "תיקון מסך לסלולרי",
+      "מעבדת טלפונים",
+      "אביזרים לסלולר",
+      "מכירת סמארטפונים"
+    ],
+    "relatedCategoryIds": [
+      "gcid:computer_repair_service",
+      "gcid:electronics_store"
+    ]
+  },
+  {
+    "categoryId": "gcid:computer_repair_service",
+    "primaryType": "computer_repair_service",
+    "enName": "Computer Repair Service / Technician",
+    "heName": "טכנאי מחשבים ומעבדת מחשבים",
+    "synonyms": [
+      "טכנאי מחשבים עד הבית",
+      "תיקון מחשב נייד",
+      "פרמוט מחשב",
+      "שחזור מידע",
+      "רשתות תקשורת"
+    ],
+    "relatedCategoryIds": [
+      "gcid:cell_phone_store",
+      "gcid:electronics_store"
+    ]
+  },
+  {
+    "categoryId": "gcid:electronics_store",
+    "primaryType": "electronics_store",
+    "enName": "Electronics & Appliance Store",
+    "heName": "חנות מוצרי חשמל ואלקטרוניקה",
+    "synonyms": [
+      "מכשירי חשמל",
+      "טלוויזיות",
+      "מקררים",
+      "מכונות כביסה",
+      "רמקולים"
+    ],
+    "relatedCategoryIds": [
+      "gcid:cell_phone_store",
+      "gcid:computer_repair_service",
+      "gcid:appliance_repair_service"
+    ]
+  },
+  {
+    "categoryId": "gcid:event_planner",
+    "primaryType": "event_planner",
+    "enName": "Event Planner / Producer",
+    "heName": "מפיק אירועים ומארגן חתונות",
+    "synonyms": [
+      "הפקת אירועים",
+      "ארגון חתונה",
+      "הפקת בר מצווה",
+      "אירועי חברה",
+      "עיצוב אירועים"
+    ],
+    "relatedCategoryIds": [
+      "gcid:event_venue",
+      "gcid:catering_service",
+      "gcid:photographer",
+      "gcid:dj_service",
+      "gcid:florist"
+    ]
+  },
+  {
+    "categoryId": "gcid:event_venue",
+    "primaryType": "event_venue",
+    "enName": "Event Venue / Banquet Hall",
+    "heName": "אולם אירועים וגן אירועים",
+    "synonyms": [
+      "גן אירועים",
+      "אולם לחינה",
+      "מקום לאירוע קטן",
+      "מתחם אירועים",
+      "אולם בריתות"
+    ],
+    "relatedCategoryIds": [
+      "gcid:event_planner",
+      "gcid:catering_service",
+      "gcid:photographer",
+      "gcid:dj_service"
+    ]
+  },
+  {
+    "categoryId": "gcid:photographer",
+    "primaryType": "photographer",
+    "enName": "Photographer / Photo Studio",
+    "heName": "צלם וסטודיו לצילום",
+    "synonyms": [
+      "צלם חתונות",
+      "צילום אירועים",
+      "צילומי הריון",
+      "צילומי בוק בת מצווה",
+      "צילום תדמית",
+      "סטודיו לצילום"
+    ],
+    "relatedCategoryIds": [
+      "gcid:video_production_service",
+      "gcid:event_planner",
+      "gcid:event_venue"
+    ]
+  },
+  {
+    "categoryId": "gcid:video_production_service",
+    "primaryType": "video_production_service",
+    "enName": "Video Production Service / Videographer",
+    "heName": "צלם וידאו והפקת סרטונים",
+    "synonyms": [
+      "צילום וידאו לאירועים",
+      "סרטי תדמית",
+      "עריכת וידאו",
+      "קליפים לאירועים"
+    ],
+    "relatedCategoryIds": [
+      "gcid:photographer",
+      "gcid:marketing_agency",
+      "gcid:event_planner"
+    ]
+  },
+  {
+    "categoryId": "gcid:dj_service",
+    "primaryType": "dj_service",
+    "enName": "DJ Service / Disc Jockey",
+    "heName": "תקליטן ו-DJ לאירועים",
+    "synonyms": [
+      "די ג'יי לחתונה",
+      "תקליטן לבר מצווה",
+      "מוזיקה לאירועים",
+      "DJ"
+    ],
+    "relatedCategoryIds": [
+      "gcid:event_planner",
+      "gcid:event_venue",
+      "gcid:musician"
+    ]
+  },
+  {
+    "categoryId": "gcid:musician",
+    "primaryType": "musician",
+    "enName": "Musician / Live Band",
+    "heName": "הרכב מוזיקלי ונגנים לאירועים",
+    "synonyms": [
+      "להקה לחתונה",
+      "נגן סקסופון",
+      "כנריות לאירועים",
+      "זמר לאירוע"
+    ],
+    "relatedCategoryIds": [
+      "gcid:dj_service",
+      "gcid:event_planner"
+    ]
+  },
+  {
+    "categoryId": "gcid:music_school",
+    "primaryType": "music_school",
+    "enName": "Music School / Instructor",
+    "heName": "מורה למוזיקה ובית ספר לנגינה",
+    "synonyms": [
+      "שיעורי גיטרה",
+      "שיעורי פסנתר",
+      "שיעורי פיתוח קול",
+      "לימוד תופים"
+    ],
+    "relatedCategoryIds": [
+      "gcid:musician"
+    ]
+  },
+  {
+    "categoryId": "gcid:language_school",
+    "primaryType": "language_school",
+    "enName": "Language School / Tutor",
+    "heName": "בית ספר לשפות ומורה פרטי",
+    "synonyms": [
+      "לימודי אנגלית",
+      "מורה פרטי לאנגלית",
+      "קורס עברית / אולפן",
+      "לימוד ספרדית",
+      "מורה פרטי"
+    ],
+    "relatedCategoryIds": [
+      "gcid:tutoring_service",
+      "gcid:translator"
+    ]
+  },
+  {
+    "categoryId": "gcid:tutoring_service",
+    "primaryType": "tutoring_service",
+    "enName": "Tutoring Service / Private Lessons",
+    "heName": "מרכז שיעורים פרטיים והכנה לבגרויות",
+    "synonyms": [
+      "שיעורים פרטיים במתמטיקה",
+      "הכנה לבגרות",
+      "הכנה לפסיכומטרי",
+      "מורה פרטי למתמטיקה"
+    ],
+    "relatedCategoryIds": [
+      "gcid:language_school"
+    ]
+  },
+  {
+    "categoryId": "gcid:martial_arts_school",
+    "primaryType": "martial_arts_school",
+    "enName": "Martial Arts School / Krav Maga",
+    "heName": "אמנויות לחימה וקרב מגע",
+    "synonyms": [
+      "קרב מגע",
+      "חוג ג'ודו",
+      "קראטה",
+      "הגנה עצמית",
+      "ג'יו ג'יטסו",
+      "אגרוף תאילנדי"
+    ],
+    "relatedCategoryIds": [
+      "gcid:gym",
+      "gcid:personal_trainer"
+    ]
+  },
+  {
+    "categoryId": "gcid:dance_school",
+    "primaryType": "dance_school",
+    "enName": "Dance School / Studio",
+    "heName": "סטודיו ובית ספר לריקוד",
+    "synonyms": [
+      "חוג ריקוד",
+      "סלסה",
+      "בלט",
+      "היפ הופ",
+      "ריקוד חתן כלה",
+      "ריקודי עם"
+    ],
+    "relatedCategoryIds": [
+      "gcid:pilates_studio",
+      "gcid:yoga_studio",
+      "gcid:gym"
+    ]
+  },
+  {
+    "categoryId": "gcid:art_school",
+    "primaryType": "art_school",
+    "enName": "Art Studio / Painting Workshop",
+    "heName": "סדנאות אמנות וציור",
+    "synonyms": [
+      "חוג ציור",
+      "סדנת קרמיקה",
+      "פיסול",
+      "סדנאות יצירה"
+    ],
+    "relatedCategoryIds": [
+      "gcid:craft_store",
+      "gcid:graphic_designer"
+    ]
+  },
+  {
+    "categoryId": "gcid:craft_store",
+    "primaryType": "craft_store",
+    "enName": "Craft & Hobby Store",
+    "heName": "חנות חומרי יצירה ואמנות",
+    "synonyms": [
+      "חומרי יצירה",
+      "ציוד לאמנות",
+      "צבעי שמן ואקריליק",
+      "בדים ותפירה"
+    ],
+    "relatedCategoryIds": [
+      "gcid:art_school",
+      "gcid:book_store"
+    ]
+  },
+  {
+    "categoryId": "gcid:dry_cleaner",
+    "primaryType": "dry_cleaner",
+    "enName": "Dry Cleaner & Laundry",
+    "heName": "מכבסה וניקוי יבש",
+    "synonyms": [
+      "מכבסה",
+      "ניקוי יבש לחליפות",
+      "גיהוץ בגדים",
+      "שירותי כביסה"
+    ],
+    "relatedCategoryIds": [
+      "gcid:tailor",
+      "gcid:cleaner"
+    ]
+  },
+  {
+    "categoryId": "gcid:tailor",
+    "primaryType": "tailor",
+    "enName": "Tailor / Clothing Alterations",
+    "heName": "חייט ותיקון בגדים",
+    "synonyms": [
+      "מתפרה",
+      "קיצור מכנסיים",
+      "הצרת בגדים",
+      "חייטות לפי מידה",
+      "תופרת"
+    ],
+    "relatedCategoryIds": [
+      "gcid:dry_cleaner",
+      "gcid:clothing_store",
+      "gcid:bridal_shop"
+    ]
+  },
+  {
+    "categoryId": "gcid:shoe_repair_shop",
+    "primaryType": "shoe_repair_shop",
+    "enName": "Shoe Repair Shop / Cobbler",
+    "heName": "סנדלר ותיקון נעליים",
+    "synonyms": [
+      "סנדלריה",
+      "תיקון מגפיים",
+      "החלפת עקבים וסוליות",
+      "תיקון תיקים ומעילי עור"
+    ],
+    "relatedCategoryIds": [
+      "gcid:shoe_store",
+      "gcid:locksmith"
+    ]
+  },
+  {
+    "categoryId": "gcid:hardware_store",
+    "primaryType": "hardware_store",
+    "enName": "Hardware Store / Tambourit",
+    "heName": "טמבוריה וחנות חומרי בניין",
+    "synonyms": [
+      "טמבוריה",
+      "חומרי בניין",
+      "כלי עבודה",
+      "צבעים ודבקים",
+      "אינסטלציה וחשמל לחובבים"
+    ],
+    "relatedCategoryIds": [
+      "gcid:building_materials_store",
+      "gcid:handyman",
+      "gcid:painter",
+      "gcid:plumber",
+      "gcid:electrician"
+    ]
+  },
+  {
+    "categoryId": "gcid:building_materials_store",
+    "primaryType": "building_materials_store",
+    "enName": "Building Materials Supplier",
+    "heName": "ספק חומרי בניין",
+    "synonyms": [
+      "מחסן חומרי בניין",
+      "בלוקים ומלט",
+      "חול וחצץ",
+      "גבס ובידוד"
+    ],
+    "relatedCategoryIds": [
+      "gcid:hardware_store",
+      "gcid:general_contractor"
+    ]
+  },
+  {
+    "categoryId": "gcid:swimming_pool_contractor",
+    "primaryType": "swimming_pool_contractor",
+    "enName": "Swimming Pool Contractor",
+    "heName": "בנייה ותחזוקת בריכות שחייה",
+    "synonyms": [
+      "הקמת בריכות שחייה",
+      "בריכות ביתיות",
+      "תחזוקת בריכה",
+      "משאבות לבריכה",
+      "חיפוי בריכות"
+    ],
+    "relatedCategoryIds": [
+      "gcid:landscape_designer",
+      "gcid:general_contractor",
+      "gcid:plumber"
+    ]
+  },
+  {
+    "categoryId": "gcid:countertop_store",
+    "primaryType": "countertop_store",
+    "enName": "Countertop Store / Marble Supplier",
+    "heName": "שיש למטבח ומצבות",
+    "synonyms": [
+      "שיש קיסר",
+      "גרניט פורצלן למטבח",
+      "שיש לאמבטיה",
+      "מפעל שיש"
+    ],
+    "relatedCategoryIds": [
+      "gcid:kitchen_remodeler",
+      "gcid:tile_contractor",
+      "gcid:general_contractor"
+    ]
+  },
+  {
+    "categoryId": "gcid:tatoo_and_piercing_shop",
+    "primaryType": "tatoo_and_piercing_shop",
+    "enName": "Tattoo and Piercing Shop",
+    "heName": "סטודיו קעקועים ופירסינג",
+    "synonyms": [
+      "קעקועים",
+      "מקעקע",
+      "עגילים ופירסינג",
+      "קעקוע מותאם אישית"
+    ],
+    "relatedCategoryIds": [
+      "gcid:beauty_salon",
+      "gcid:skin_care_clinic"
+    ]
+  },
+  {
+    "categoryId": "gcid:pharmacy",
+    "primaryType": "pharmacy",
+    "enName": "Pharmacy / Drugstore",
+    "heName": "בית מרקחת ופארם",
+    "synonyms": [
+      "תרופות",
+      "בית מרקחת תורן",
+      "מוצרי היגיינה",
+      "קוסמטיקה וטיפוח",
+      "תוספי תזונה וויטמינים"
+    ],
+    "relatedCategoryIds": [
+      "gcid:medical_clinic",
+      "gcid:supermarket"
+    ]
+  },
+  {
+    "categoryId": "gcid:optician",
+    "primaryType": "optician",
+    "enName": "Optician",
+    "heName": "אופטיקאי",
+    "synonyms": [
+      "התאמת משקפיים",
+      "חיתוך עדשות",
+      "תיקון משקפיים"
+    ],
+    "relatedCategoryIds": [
+      "gcid:optometrist",
+      "gcid:optical_products_store"
+    ]
+  },
+  {
+    "categoryId": "gcid:gas_station",
+    "primaryType": "gas_station",
+    "enName": "Gas Station / Convenience Store",
+    "heName": "תחנת דלק וחנות נוחות",
+    "synonyms": [
+      "תדלוק",
+      "חנות נוחות 24/7",
+      "סולר ובנזין"
+    ],
+    "relatedCategoryIds": [
+      "gcid:car_wash",
+      "gcid:grocery_store"
+    ]
+  },
+  {
+    "categoryId": "gcid:parking_garage",
+    "primaryType": "parking_garage",
+    "enName": "Parking Garage / Lot",
+    "heName": "חניון מוסדר",
+    "synonyms": [
+      "חניון יומי",
+      "חניה בתשלום",
+      "חניון מקורה"
+    ],
+    "relatedCategoryIds": [
+      "gcid:car_wash"
+    ]
+  },
+  {
+    "categoryId": "gcid:hotel",
+    "primaryType": "hotel",
+    "enName": "Hotel / Boutique Hotel",
+    "heName": "מלון ומלון בוטיק",
+    "synonyms": [
+      "בית מלון",
+      "אירוח ונופש",
+      "חדרים להשכרה",
+      "מלון בוטיק"
+    ],
+    "relatedCategoryIds": [
+      "gcid:bed_and_breakfast",
+      "gcid:spa",
+      "gcid:restaurant"
+    ]
+  },
+  {
+    "categoryId": "gcid:bed_and_breakfast",
+    "primaryType": "bed_and_breakfast",
+    "enName": "Bed & Breakfast / Zimmer",
+    "heName": "צימר ואירוח כפרי",
+    "synonyms": [
+      "צימרים בצפון",
+      "צימר עם בריכה",
+      "בקתת עץ",
+      "צימרים לזוגות",
+      "אירוח כפרי"
+    ],
+    "relatedCategoryIds": [
+      "gcid:hotel",
+      "gcid:spa"
+    ]
+  },
+  {
+    "categoryId": "gcid:travel_agency",
+    "primaryType": "travel_agency",
+    "enName": "Travel Agency",
+    "heName": "סוכנות נסיעות ותיירות",
+    "synonyms": [
+      "סוכן נסיעות",
+      "חבילות נופש",
+      "טיסות לחו\"ל",
+      "טיולים מאורגנים",
+      "הזמנת מלונות בחו\"ל"
+    ],
+    "relatedCategoryIds": [
+      "gcid:hotel"
+    ]
+  },
+  {
+    "categoryId": "gcid:insurance_attorney",
+    "primaryType": "insurance_attorney",
+    "enName": "Insurance Claims Attorney",
+    "heName": "עורך דין תביעות ביטוח",
+    "synonyms": [
+      "עו\"ד ביטוח",
+      "תביעת ביטוח סיעודי",
+      "אובדן כושר עבודה תביעה",
+      "דחיית תביעת ביטוח"
+    ],
+    "relatedCategoryIds": [
+      "gcid:lawyer",
+      "gcid:personal_injury_attorney",
+      "gcid:insurance_agency"
+    ]
+  },
+  {
+    "categoryId": "gcid:tax_attorney",
+    "primaryType": "tax_attorney",
+    "enName": "Tax Attorney",
+    "heName": "עורך דין מיסים",
+    "synonyms": [
+      "עו\"ד מיסוי",
+      "עבירות מס",
+      "גילוי מרצון",
+      "חקירות מס הכנסה"
+    ],
+    "relatedCategoryIds": [
+      "gcid:lawyer",
+      "gcid:accountant",
+      "gcid:tax_consultant"
+    ]
+  },
+  {
+    "categoryId": "gcid:commercial_real_estate_agency",
+    "primaryType": "commercial_real_estate_agency",
+    "enName": "Commercial Real Estate Agency",
+    "heName": "תיווך נדל\"ן מסחרי",
+    "synonyms": [
+      "השכרת משרדים",
+      "מבני תעשיה",
+      "חנויות להשכרה",
+      "נדל\"ן מניב"
+    ],
+    "relatedCategoryIds": [
+      "gcid:real_estate_agency",
+      "gcid:real_estate_attorney",
+      "gcid:real_estate_appraiser"
+    ]
+  },
+  {
+    "categoryId": "gcid:environmental_consultant",
+    "primaryType": "environmental_consultant",
+    "enName": "Environmental / Asbestos Removal Consultant",
+    "heName": "פינוי אסבסט ויועץ סביבתי",
+    "synonyms": [
+      "פינוי אסבסט מורשה",
+      "סקר אסבסט",
+      "פינוי פסולת בניין",
+      "איכות הסביבה"
+    ],
+    "relatedCategoryIds": [
+      "gcid:general_contractor",
+      "gcid:roofer"
+    ]
+  },
+  {
+    "categoryId": "gcid:car_security_system_installer",
+    "primaryType": "car_security_system_installer",
+    "enName": "Car Security / Immobilizer Specialist",
+    "heName": "מיגון לרכב ואיתוראן",
+    "synonyms": [
+      "התקנת איתוראן",
+      "קודן לרכב",
+      "עלוקה לרכב",
+      "מיגון לביטוח רכב"
+    ],
+    "relatedCategoryIds": [
+      "gcid:auto_electrical_service",
+      "gcid:car_stereo_store"
+    ]
+  },
+  {
+    "categoryId": "gcid:auto_air_conditioning_service",
+    "primaryType": "auto_air_conditioning_service",
+    "enName": "Auto Air Conditioning Service",
+    "heName": "מזגנים לרכב",
+    "synonyms": [
+      "תיקון מזגן ברכב",
+      "מילוי גז לרכב",
+      "מדחס למזגן רכב"
+    ],
+    "relatedCategoryIds": [
+      "gcid:auto_electrical_service",
+      "gcid:auto_repair_shop"
+    ]
+  },
+  {
+    "categoryId": "gcid:ice_cream_shop",
+    "primaryType": "ice_cream_shop",
+    "enName": "Ice Cream Shop / Gelateria",
+    "heName": "גלידריה",
+    "synonyms": [
+      "גלידה איטלקית",
+      "פרוזן יוגורט",
+      "גלידה אמריקאית",
+      "וופל בלגי"
+    ],
+    "relatedCategoryIds": [
+      "gcid:cafe",
+      "gcid:pastry_shop"
+    ]
+  },
+  {
+    "categoryId": "gcid:bicycle_store",
+    "primaryType": "bicycle_store",
+    "enName": "Bicycle & Electric Bike Store",
+    "heName": "חנות אופניים ואופניים חשמליים",
+    "synonyms": [
+      "אופניים חשמליים",
+      "קורקינט חשמלי",
+      "תיקון אופניים",
+      "מעבדת קורקינטים",
+      "אופני הרים"
+    ],
+    "relatedCategoryIds": [
+      "gcid:bicycle_repair_shop"
+    ]
+  },
+  {
+    "categoryId": "gcid:bicycle_repair_shop",
+    "primaryType": "bicycle_repair_shop",
+    "enName": "Bicycle Repair Shop",
+    "heName": "תיקון אופניים וקורקינטים",
+    "synonyms": [
+      "תיקון פנצ'ר באופניים",
+      "סוללה לאופניים חשמליים",
+      "כיוון הילוכים באופניים"
+    ],
+    "relatedCategoryIds": [
+      "gcid:bicycle_store"
+    ]
+  },
+  {
+    "categoryId": "gcid:musical_instrument_store",
+    "primaryType": "musical_instrument_store",
+    "enName": "Musical Instrument Store",
+    "heName": "חנות כלי נגינה",
+    "synonyms": [
+      "גיטרות",
+      "פסנתרים",
+      "מערכות תופים",
+      "ציוד הגברה ואולפן"
+    ],
+    "relatedCategoryIds": [
+      "gcid:music_school",
+      "gcid:musician"
+    ]
+  },
+  {
+    "categoryId": "gcid:audiologist",
+    "primaryType": "audiologist",
+    "enName": "Audiologist / Hearing Aid Specialist",
+    "heName": "מכשירי שמיעה וקלינאי תקשורת",
+    "synonyms": [
+      "בדיקת שמיעה",
+      "התאמת מכשירי שמיעה",
+      "קלינאית תקשורת",
+      "מכון שמיעה"
+    ],
+    "relatedCategoryIds": [
+      "gcid:medical_clinic"
+    ]
+  },
+  {
+    "categoryId": "gcid:dietitian",
+    "primaryType": "dietitian",
+    "enName": "Dietitian / Nutritionist",
+    "heName": "דיאטנית ותזונאית",
+    "synonyms": [
+      "ייעוץ תזונה",
+      "תזונאי ספורט",
+      "תפריט תזונה לירידה במשקל",
+      "דיאטנית קלינית"
+    ],
+    "relatedCategoryIds": [
+      "gcid:medical_clinic",
+      "gcid:gym",
+      "gcid:personal_trainer"
+    ]
+  },
+  {
+    "categoryId": "gcid:self_defense_school",
+    "primaryType": "self_defense_school",
+    "enName": "Self Defense School",
+    "heName": "הגנה עצמית",
+    "synonyms": [
+      "סדנת הגנה עצמית לנשים",
+      "אימוני הגנה עצמית",
+      "קרב מגן ישראלי"
+    ],
+    "relatedCategoryIds": [
+      "gcid:martial_arts_school",
+      "gcid:gym"
+    ]
+  },
+  {
+    "categoryId": "gcid:party_equipment_rental_service",
+    "primaryType": "party_equipment_rental_service",
+    "enName": "Party Equipment Rental Service",
+    "heName": "השכרת ציוד לאירועים",
+    "synonyms": [
+      "השכרת שולחנות וכסאות",
+      "אוהלים לאירועים",
+      "מתנפחים להשכרה",
+      "גנרטור להשכרה",
+      "השכרת פטריות חימום"
+    ],
+    "relatedCategoryIds": [
+      "gcid:event_planner",
+      "gcid:catering_service"
+    ]
+  },
+  {
+    "categoryId": "gcid:curtain_store",
+    "primaryType": "curtain_store",
+    "enName": "Curtain & Blinds Store",
+    "heName": "וילונות והצללה לבית",
+    "synonyms": [
+      "תפירת וילונות",
+      "וילונות גלילה",
+      "וילונות בהתאמה אישית",
+      "טקסטיל לבית"
+    ],
+    "relatedCategoryIds": [
+      "gcid:interior_designer",
+      "gcid:home_goods_store"
+    ]
+  },
+  {
+    "categoryId": "gcid:naturopathic_practitioner",
+    "primaryType": "naturopathic_practitioner",
+    "enName": "Naturopathic Practitioner",
+    "heName": "נטורופת ורפואה טבעית",
+    "synonyms": [
+      "נטורופתיה",
+      "תזונה טבעית",
+      "צמחי מרפא",
+      "רפואה אלטרנטיבית"
+    ],
+    "relatedCategoryIds": [
+      "gcid:acupuncture_clinic",
+      "gcid:dietitian"
+    ]
+  },
+  {
+    "categoryId": "gcid:appraiser",
+    "primaryType": "appraiser",
+    "enName": "Appraiser / Valuer",
+    "heName": "שמאי רכב ורכוש",
+    "synonyms": [
+      "שמאי רכב",
+      "הערכת נזקי תאונות",
+      "שמאי ביטוח",
+      "שומת נזקים"
+    ],
+    "relatedCategoryIds": [
+      "gcid:real_estate_appraiser",
+      "gcid:insurance_agency",
+      "gcid:auto_repair_shop"
+    ]
+  },
+  {
+    "categoryId": "gcid:solar_panel_cleaning_service",
+    "primaryType": "solar_panel_cleaning_service",
+    "enName": "Solar Panel Cleaning Service",
+    "heName": "שטיפה וניקוי פאנלים סולאריים",
+    "synonyms": [
+      "ניקוי מערכות סולאריות",
+      "תחזוקת פאנלים סולאריים",
+      "שטיפת פאנלים סולאריים"
+    ],
+    "relatedCategoryIds": [
+      "gcid:solar_energy_contractor",
+      "gcid:cleaner",
+      "gcid:window_cleaning_service"
+    ]
+  },
+  {
+    "categoryId": "gcid:marble_contractor",
+    "primaryType": "marble_contractor",
+    "enName": "Marble Contractor",
+    "heName": "עבודות שיש ומצבות",
+    "synonyms": [
+      "קבלן שיש",
+      "בניית מצבות",
+      "ליטוש שיש",
+      "חיפוי שיש"
+    ],
+    "relatedCategoryIds": [
+      "gcid:countertop_store",
+      "gcid:tile_contractor"
+    ]
+  },
+  {
+    "categoryId": "gcid:fire_protection_service",
+    "primaryType": "fire_protection_service",
+    "enName": "Fire Protection Service & Extinguishers",
+    "heName": "בטיחות אש ומטפים",
+    "synonyms": [
+      "בדיקת מטפים שנתית",
+      "אישור כיבוי אש לעסקים",
+      "ספרינקלרים",
+      "מערכות גילוי וכיבוי אש"
+    ],
+    "relatedCategoryIds": [
+      "gcid:security_system_installer",
+      "gcid:general_contractor"
+    ]
+  },
+  {
+    "categoryId": "gcid:insulation_materials_store",
+    "primaryType": "insulation_materials_store",
+    "enName": "Insulation Materials Store",
+    "heName": "חומרי איטום ובידוד",
+    "synonyms": [
+      "יריעות ביטומניות",
+      "חומרי איטום",
+      "צמר סלעים",
+      "פוליאוריטן מוקצף"
+    ],
+    "relatedCategoryIds": [
+      "gcid:waterproofing_service",
+      "gcid:insulation_contractor",
+      "gcid:building_materials_store"
+    ]
+  },
+  {
+    "categoryId": "gcid:soundproofing_contractor",
+    "primaryType": "soundproofing_contractor",
+    "enName": "Soundproofing Contractor",
+    "heName": "בידוד אקוסטי ואקוסטיקה",
+    "synonyms": [
+      "השתקת רעשים",
+      "אקוסטיקה לחדרי מוזיקה",
+      "קירות מבודדי רעש",
+      "פנלים אקוסטיים"
+    ],
+    "relatedCategoryIds": [
+      "gcid:insulation_contractor",
+      "gcid:dry_wall_contractor"
+    ]
+  },
+  {
+    "categoryId": "gcid:awning_supplier",
+    "primaryType": "awning_supplier",
+    "enName": "Awning & Shade Supplier",
+    "heName": "סוככים ופתרונות הצללה",
+    "synonyms": [
+      "סוכך מרקיזה",
+      "סוכך זרועות",
+      "סוככים לחצר ולמרפסת",
+      "רשתות צל"
+    ],
+    "relatedCategoryIds": [
+      "gcid:deck_builder",
+      "gcid:curtain_store"
+    ]
+  },
+  {
+    "categoryId": "gcid:air_duct_cleaning_service",
+    "primaryType": "air_duct_cleaning_service",
+    "enName": "Air Duct Cleaning Service",
+    "heName": "ניקוי וחיטוי תעלות מיזוג אוויר",
+    "synonyms": [
+      "ניקוי תעלות מזגן",
+      "חיטוי מנדפים",
+      "ניקוי מנדפים למסעדות"
+    ],
+    "relatedCategoryIds": [
+      "gcid:hvac_contractor",
+      "gcid:cleaner"
+    ]
+  },
+  {
+    "categoryId": "gcid:flooring_store",
+    "primaryType": "flooring_store",
+    "enName": "Flooring & Parquet Store",
+    "heName": "חנות פרקטים וריצוף",
+    "synonyms": [
+      "אולם תצוגה קרמיקה",
+      "קניית פרקט",
+      "גרניט פורצלן",
+      "ריצופים"
+    ],
+    "relatedCategoryIds": [
+      "gcid:flooring_contractor",
+      "gcid:tile_contractor"
+    ]
+  },
+  {
+    "categoryId": "gcid:kitchen_furniture_store",
+    "primaryType": "kitchen_furniture_store",
+    "enName": "Kitchen Furniture Store",
+    "heName": "חנות ואולם תצוגה מטבחים",
+    "synonyms": [
+      "חברות מטבחים",
+      "מטבחים יוקרתיים",
+      "אי למטבח"
+    ],
+    "relatedCategoryIds": [
+      "gcid:kitchen_remodeler",
+      "gcid:carpenter"
+    ]
+  },
+  {
+    "categoryId": "gcid:window_tinting_service",
+    "primaryType": "window_tinting_service",
+    "enName": "Window Tinting Service",
+    "heName": "ציפוי והשחרת חלונות למבנים ורכבים",
+    "synonyms": [
+      "ציפוי מגן שמש",
+      "ציפוי ביטחון לחלונות",
+      "הכהיית שמשות"
+    ],
+    "relatedCategoryIds": [
+      "gcid:glazier",
+      "gcid:car_detailer"
+    ]
+  },
+  {
+    "categoryId": "gcid:crane_service",
+    "primaryType": "crane_service",
+    "enName": "Crane Service / Lifting",
+    "heName": "שירותי מנוף והרמות משא",
+    "synonyms": [
+      "מנוף הרמה",
+      "מנוף להובלות",
+      "עבודות מנוף",
+      "הרמת רהיטים במנוף"
+    ],
+    "relatedCategoryIds": [
+      "gcid:moving_company",
+      "gcid:general_contractor"
+    ]
+  },
+  {
+    "categoryId": "gcid:pool_cleaning_service",
+    "primaryType": "pool_cleaning_service",
+    "enName": "Pool Cleaning Service",
+    "heName": "אחזקה וניקוי בריכות שחייה",
+    "synonyms": [
+      "איזון כלור בבריכה",
+      "רובוט לבריכה",
+      "ניקוי בריכות שחיה"
+    ],
+    "relatedCategoryIds": [
+      "gcid:swimming_pool_contractor",
+      "gcid:cleaner"
+    ]
+  },
+  {
+    "categoryId": "gcid:generator_repair_service",
+    "primaryType": "generator_repair_service",
+    "enName": "Generator Repair & Maintenance",
+    "heName": "תיקון ותחזוקת גנרטורים",
+    "synonyms": [
+      "גנרטור חירום",
+      "בדיקת גנרטור לבניין",
+      "טיפול בגנרטור"
+    ],
+    "relatedCategoryIds": [
+      "gcid:electrician",
+      "gcid:electrical_installation_service"
+    ]
+  },
+  {
+    "categoryId": "gcid:asphalt_contractor",
+    "primaryType": "asphalt_contractor",
+    "enName": "Asphalt Contractor / Paving",
+    "heName": "סלילת כבישים ואספלט",
+    "synonyms": [
+      "סלילת אספלט",
+      "ריבוד כבישים",
+      "תיקון בורות אספלט",
+      "חניות אספלט"
+    ],
+    "relatedCategoryIds": [
+      "gcid:general_contractor"
+    ]
+  },
+  {
+    "categoryId": "gcid:concrete_contractor",
+    "primaryType": "concrete_contractor",
+    "enName": "Concrete Contractor / Sawing",
+    "heName": "ניסור וקידוח בטון",
+    "synonyms": [
+      "ניסור בטון ביהלום",
+      "קידוח בטון למזגנים",
+      "פתיחת דלת בבטון",
+      "הריסת קירות בטון"
+    ],
+    "relatedCategoryIds": [
+      "gcid:general_contractor",
+      "gcid:plumber",
+      "gcid:hvac_contractor"
+    ]
+  },
+  {
+    "categoryId": "gcid:scaffolding_rental_service",
+    "primaryType": "scaffolding_rental_service",
+    "enName": "Scaffolding Rental Service",
+    "heName": "השכרת פיגומים",
+    "synonyms": [
+      "פיגומים לבניין",
+      "הרכבת פיגומים",
+      "פיגומי אלומיניום"
+    ],
+    "relatedCategoryIds": [
+      "gcid:general_contractor",
+      "gcid:painter"
+    ]
+  },
+  {
+    "categoryId": "gcid:office_equipment_supplier",
+    "primaryType": "office_equipment_supplier",
+    "enName": "Office Equipment Supplier",
+    "heName": "ציוד משרדי ומדפסות לעסקים",
+    "synonyms": [
+      "השכרת מדפסות",
+      "מכונות צילום לעסקים",
+      "ראשי דיו וטונרים"
+    ],
+    "relatedCategoryIds": [
+      "gcid:print_shop",
+      "gcid:computer_repair_service"
+    ]
+  },
+  {
+    "categoryId": "gcid:recording_studio",
+    "primaryType": "recording_studio",
+    "enName": "Recording Studio",
+    "heName": "אולפן הקלטות",
+    "synonyms": [
+      "הקלטת שיר במתנה",
+      "הקלטת דרשה לבר מצווה",
+      "מאסטרינג ומיקס",
+      "אולפן פודקאסטים"
+    ],
+    "relatedCategoryIds": [
+      "gcid:music_school",
+      "gcid:musician",
+      "gcid:video_production_service"
+    ]
+  },
+  {
+    "categoryId": "gcid:sports_massage_therapist",
+    "primaryType": "sports_massage_therapist",
+    "enName": "Sports Massage Therapist",
+    "heName": "עיסוי ספורטאים ושיקום",
+    "synonyms": [
+      "עיסוי רפואי",
+      "טיפול בפציעות ספורט",
+      "שחרור שרירים תפוסים"
+    ],
+    "relatedCategoryIds": [
+      "gcid:massage_therapist",
+      "gcid:physiotherapist"
+    ]
+  },
+  {
+    "categoryId": "gcid:pediatrician",
+    "primaryType": "pediatrician",
+    "enName": "Pediatrician",
+    "heName": "רופא ילדים פרטי",
+    "synonyms": [
+      "רופאת ילדים",
+      "בדיקת התפתחות הילד",
+      "מומחה לרפואת ילדים"
+    ],
+    "relatedCategoryIds": [
+      "gcid:medical_clinic",
+      "gcid:pediatric_dentist"
+    ]
+  },
+  {
+    "categoryId": "gcid:gynecologist",
+    "primaryType": "gynecologist",
+    "enName": "Gynecologist / Obstetrician",
+    "heName": "רופא נשים וגינקולוג פרטי",
+    "synonyms": [
+      "גינקולוגית",
+      "מעקב הריון פרטי",
+      "סקירת מערכות",
+      "אולטרסאונד נשים",
+      "רופאת נשים"
+    ],
+    "relatedCategoryIds": [
+      "gcid:medical_clinic"
+    ]
+  },
+  {
+    "categoryId": "gcid:orthopedic_surgeon",
+    "primaryType": "orthopedic_surgeon",
+    "enName": "Orthopedic Surgeon / Specialist",
+    "heName": "רופא אורתופד פרטי",
+    "synonyms": [
+      "אורתופד מומחה",
+      "אורתופד ברכיים",
+      "אורתופד גב",
+      "חוות דעת אורתופדית"
+    ],
+    "relatedCategoryIds": [
+      "gcid:medical_clinic",
+      "gcid:physiotherapist"
+    ]
+  },
+  {
+    "categoryId": "gcid:ent_specialist",
+    "primaryType": "ent_specialist",
+    "enName": "ENT Specialist (Ear Nose Throat)",
+    "heName": "רופא אף אוזן גרון (אא\"ג)",
+    "synonyms": [
+      "אא\"ג פרטי",
+      "בדיקת מיתרי קול",
+      "רופא אא\"ג"
+    ],
+    "relatedCategoryIds": [
+      "gcid:medical_clinic",
+      "gcid:audiologist"
+    ]
+  },
+  {
+    "categoryId": "gcid:hair_transplantation_clinic",
+    "primaryType": "hair_transplantation_clinic",
+    "enName": "Hair Transplantation Clinic",
+    "heName": "מרפאת השתלת שיער",
+    "synonyms": [
+      "השתלת שיער בישראל",
+      "טיפול בנשירת שיער",
+      "FUE השתלת שיער",
+      "PRP לשיער"
+    ],
+    "relatedCategoryIds": [
+      "gcid:skin_care_clinic",
+      "gcid:dermatologist"
+    ]
+  },
+  {
+    "categoryId": "gcid:towing_equipment_provider",
+    "primaryType": "towing_equipment_provider",
+    "enName": "Emergency Roadside Assistance",
+    "heName": "שירותי דרך וחילוץ רכבים",
+    "synonyms": [
+      "החלפת גלגל בדרך",
+      "התנעת רכב עם כבלים",
+      "אספקת דלק בדרך",
+      "חילוץ שטח 4X4"
+    ],
+    "relatedCategoryIds": [
+      "gcid:towing_service",
+      "gcid:auto_electrical_service"
+    ]
+  },
+  {
+    "categoryId": "gcid:used_motorcycle_dealer",
+    "primaryType": "used_motorcycle_dealer",
+    "enName": "Used Motorcycle & Scooter Dealer",
+    "heName": "קטנועים ואופנועים יד 2",
+    "synonyms": [
+      "טרייד אין קטנועים",
+      "קניית אופנוע יד 2",
+      "בדיקת אופנוע לפני קניה"
+    ],
+    "relatedCategoryIds": [
+      "gcid:motorcycle_dealer",
+      "gcid:motorcycle_repair_shop"
+    ]
+  },
+  {
+    "categoryId": "gcid:car_locksmith",
+    "primaryType": "car_locksmith",
+    "enName": "Car Locksmith / Key Duplication",
+    "heName": "מנעולן רכב ושכפול מפתחות",
+    "synonyms": [
+      "שכפול מפתחות לרכב",
+      "קידוד שלט לרכב",
+      "פריצת רכב נעול",
+      "שחזור מפתח לרכב מאובדן"
+    ],
+    "relatedCategoryIds": [
+      "gcid:locksmith",
+      "gcid:auto_electrical_service"
+    ]
+  },
+  {
+    "categoryId": "gcid:auto_part_store",
+    "primaryType": "auto_part_store",
+    "enName": "Auto Parts Store",
+    "heName": "חנות חלקי חילוף לרכב",
+    "synonyms": [
+      "חלפים לרכב",
+      "חלקי חילוף מפירוק",
+      "מראות ופנסים לרכב",
+      "שמנים ונוזלי קירור לרכב"
+    ],
+    "relatedCategoryIds": [
+      "gcid:auto_repair_shop",
+      "gcid:car_stereo_store"
+    ]
+  },
+  {
+    "categoryId": "gcid:windshield_repair_service",
+    "primaryType": "windshield_repair_service",
+    "enName": "Windshield Repair & Replacement",
+    "heName": "תיקון שמשות וסדקים ברכב",
+    "synonyms": [
+      "איטום סדק בשמשה",
+      "תיקון פגיעת אבן בשמשה",
+      "החלפת שמשה קדמית"
+    ],
+    "relatedCategoryIds": [
+      "gcid:auto_glass_shop",
+      "gcid:auto_repair_shop"
+    ]
+  },
+  {
+    "categoryId": "gcid:customs_broker",
+    "primaryType": "customs_broker",
+    "enName": "Customs Broker / Freight Forwarder",
+    "heName": "עמילות מכס ושילוח בינלאומי",
+    "synonyms": [
+      "עמיל מכס",
+      "שילוח ימי ואווירי",
+      "יבוא אישי",
+      "שחרור ממכס"
+    ],
+    "relatedCategoryIds": [
+      "gcid:business_management_consultant"
+    ]
+  },
+  {
+    "categoryId": "gcid:copywriter",
+    "primaryType": "copywriter",
+    "enName": "Copywriter / Content Creator",
+    "heName": "קופירייטר וכותב תוכן",
+    "synonyms": [
+      "כתיבת תוכן לאתרים",
+      "קופירייטינג",
+      "כתיבה שיווקית",
+      "כתיבת דפי נחיתה",
+      "תוכן לרשתות חברתיות"
+    ],
+    "relatedCategoryIds": [
+      "gcid:marketing_agency",
+      "gcid:website_designer"
+    ]
+  },
+  {
+    "categoryId": "gcid:video_editor",
+    "primaryType": "video_editor",
+    "enName": "Video Editor",
+    "heName": "עורך וידאו",
+    "synonyms": [
+      "עריכת סרטונים",
+      "עריכת רילס וטיקטוק",
+      "אנימציה ומושן גרפיקס"
+    ],
+    "relatedCategoryIds": [
+      "gcid:video_production_service",
+      "gcid:marketing_agency"
+    ]
+  },
+  {
+    "categoryId": "gcid:commercial_photographer",
+    "primaryType": "commercial_photographer",
+    "enName": "Commercial / Product Photographer",
+    "heName": "צלם מוצרים ותדמית עסקית",
+    "synonyms": [
+      "צילום מוצרים לאיקומרס",
+      "צילום אוכל למסעדות",
+      "צילום אדריכלות ומבנים"
+    ],
+    "relatedCategoryIds": [
+      "gcid:photographer",
+      "gcid:marketing_agency"
+    ]
+  },
+  {
+    "categoryId": "gcid:patent_attorney",
+    "primaryType": "patent_attorney",
+    "enName": "Patent Attorney / IP Lawyer",
+    "heName": "עורך פטנטים וקניין רוחני",
+    "synonyms": [
+      "רישום פטנט",
+      "סימני מסחר",
+      "זכויות יוצרים",
+      "הגנת קניין רוחני"
+    ],
+    "relatedCategoryIds": [
+      "gcid:lawyer",
+      "gcid:business_management_consultant"
+    ]
+  },
+  {
+    "categoryId": "gcid:catering_equipment_rental_service",
+    "primaryType": "catering_equipment_rental_service",
+    "enName": "Catering Equipment Rental",
+    "heName": "השכרת כלי אוכל וציוד קייטרינג",
+    "synonyms": [
+      "השכרת כוסות וצלחות לאירועים",
+      "שפייפינגים לחימום אוכל",
+      "השכרת סכו\"ם"
+    ],
+    "relatedCategoryIds": [
+      "gcid:party_equipment_rental_service",
+      "gcid:catering_service"
+    ]
+  },
+  {
+    "categoryId": "gcid:balloon_artist",
+    "primaryType": "balloon_artist",
+    "enName": "Balloon Artist / Party Decorator",
+    "heName": "עיצוב בלונים וקישוט אירועים",
+    "synonyms": [
+      "סידור בלונים",
+      "קשת בלונים",
+      "בלונים לימי הולדת",
+      "משלוח בלונים"
+    ],
+    "relatedCategoryIds": [
+      "gcid:event_planner",
+      "gcid:gift_shop",
+      "gcid:florist"
+    ]
+  },
+  {
+    "categoryId": "gcid:magician",
+    "primaryType": "magician",
+    "enName": "Magician / Entertainer",
+    "heName": "קוסם ואמן חושים לאירועים",
+    "synonyms": [
+      "קוסם ליום הולדת",
+      "אמן חושים",
+      "מופע טלפתיה",
+      "הפעלות לילדים"
+    ],
+    "relatedCategoryIds": [
+      "gcid:event_planner",
+      "gcid:dj_service"
+    ]
+  },
+  {
+    "categoryId": "gcid:party_entertainer",
+    "primaryType": "party_entertainer",
+    "enName": "Children's Party Entertainer",
+    "heName": "מפעיל ימי הולדת ואירועי ילדים",
+    "synonyms": [
+      "הפעלת יום הולדת",
+      "ליצן",
+      "הפעלת הישרדות לילדים",
+      "סדנאות לילדים באירוע"
+    ],
+    "relatedCategoryIds": [
+      "gcid:magician",
+      "gcid:balloon_artist",
+      "gcid:event_planner"
+    ]
+  }
+]
