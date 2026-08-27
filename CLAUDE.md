@@ -11,7 +11,7 @@ craft lives in `.claude/agents/*.md`. *(Seed — being formalized as we build th
 - **Dev server:** `npm run dev` → http://localhost:3000.
   - `next.config.ts` changes require a **server restart** to take effect.
   - If routes 404 after a hard kill of the server, the `.next` dev cache is corrupt → `rm -rf .next` and restart.
-- **Deploy:** the user runs it — `ssh wao@91.98.195.242` → `cd ~/htdocs/www.wao.co.il` → `./deploy.sh`.
+- **Deploy:** Automated post-milestone by Lead Architect after verification — `ssh -i /home/eitanya/.ssh/id_ed25519_wao_hermes_deploy wao@91.98.195.242 "cd ~/htdocs/www.wao.co.il && ./deploy.sh"`. Manual fallback remains available.
 
 ## Hard constraints (violating these is a failure)
 - **`src/data/knowledge.ts`:** never edit with the Write tool or free-form. **Surgical Python
@@ -105,4 +105,4 @@ Execution is done by the Hermes execution profiles (`waoengineer`, `waocopy`, ve
 - One task per file.
 - If unsure about a detail, read the codebase first, then write the spec.
 - Hebrew content inside specs must follow waocopy rules (singular male, 12-15 words per sentence).
-- Never run deploy.sh. Eitan deploys manually.
+- Deployments run autonomously after passing the full independent verification gate (285+ tests, next build, zero-unauthorized-Hebrew check).
