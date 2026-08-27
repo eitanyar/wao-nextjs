@@ -121,6 +121,10 @@
     "src/lib/site-bot/acquisitionCopy.ts",
     "src/lib/site-bot/acquisitionCopy.test.ts",
     "src/lib/site-bot/acquisitionShareDisplay.ts",
-    "src/lib/site-bot/acquisitionShareDisplay.test.ts"
+    "src/lib/site-bot/acquisitionShareDisplay.test.ts",
+    "src/lib/site-bot/gbpOauthState.ts",
+    "src/lib/site-bot/gbpOauthState.test.ts",
+    "src/lib/site-bot/gbpConnect.ts",
+    "src/lib/site-bot/gbpConnectFlow.test.ts"
   ]
 }

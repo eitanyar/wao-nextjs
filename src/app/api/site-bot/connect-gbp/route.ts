@@ -1,12 +1,11 @@
 import { NextResponse } from 'next/server';
 import { checkRateLimit } from '@/lib/payments/rate-limit';
-import { appendEntry, readLog, makeEntryId, type ApprovalEntry } from '@/lib/site-bot/fixLog';
 import {
-  bindAuditLocation,
   readAuditRecord,
   UUID_REGEX,
   type AuditLocationBinding,
 } from '@/lib/site-bot/auditStore';
+import { connectAuditGbpLocation } from '@/lib/site-bot/gbpConnect';
 
 const LOCATION_ID_REGEX = /^(locations\/[0-9a-zA-Z_-]+|[0-9]+)$/;
 const VALID_CONNECTION_METHODS = ['oauth_direct', 'manager_invite', 'manual_override'] as const;
@@ -55,56 +54,16 @@ export async function POST(req: Request) {
       connectionMethod: connectionMethodRaw as AuditLocationBinding['connectionMethod'],
     };
 
-    const bound = await bindAuditLocation(auditId, binding);
-    if (!bound) {
+    const result = await connectAuditGbpLocation(auditId, binding);
+    if (!result.success) {
       return NextResponse.json({ error: 'not_found' }, { status: 404 });
-    }
-
-    const logEntries = readLog(auditId);
-    const itemLatestStatus = new Map<string, { status: string; approvedAt?: string }>();
-
-    for (const entry of logEntries) {
-      const itemId = (entry as unknown as { itemId?: string }).itemId || entry.actionId;
-      if (!itemId) continue;
-      const status = (entry as unknown as { status?: string }).status || entry.verificationNote || '';
-      itemLatestStatus.set(itemId, {
-        status,
-        approvedAt: entry.approvedAt,
-      });
-    }
-
-    let queuedItemsCount = 0;
-    const now = new Date().toISOString();
-
-    for (const [itemId, info] of itemLatestStatus.entries()) {
-      if (info.status === 'approved_pending_connection') {
-        const updateEntry: ApprovalEntry & { status: string; itemId: string; action: string } = {
-          entryId: makeEntryId(auditId),
-          clientId: auditId,
-          actionId: itemId,
-          actionType: 'mixed',
-          targetUrl: `site-bot/fix/${auditId}`,
-          contentSnippet: itemId,
-          tier: 'managed',
-          approvedBy: 'owner-self-serve',
-          approvedAt: info.approvedAt || now,
-          verificationResult: 'pending',
-          verificationNote: 'gbp_connected',
-          fixAttempts: 0,
-          status: 'ready_to_execute',
-          itemId,
-          action: 'connection_status_update',
-        };
-        appendEntry(updateEntry as unknown as ApprovalEntry);
-        queuedItemsCount++;
-      }
     }
 
     return NextResponse.json({
       success: true,
       auditId,
       gbpLocationId,
-      queuedItemsCount,
+      queuedItemsCount: result.queuedItemsCount,
     });
   } catch (error) {
     console.error('connect-gbp error:', error);

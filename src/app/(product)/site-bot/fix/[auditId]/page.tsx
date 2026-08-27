@@ -4,13 +4,12 @@ import fs from 'fs';
 import path from 'path';
 import { SCORECARD_COPY } from '@/lib/site-bot/scorecardCopy';
 import { readLog } from '@/lib/site-bot/fixLog';
+import { readAuditRecord, UUID_REGEX } from '@/lib/site-bot/auditStore';
 import type { FixItem } from '@/lib/gbp/fixPlan';
 
 export const metadata: Metadata = {
   robots: { index: false },
 };
-
-const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 const TYPE_TITLES: Record<string, string> = {
   write_location: SCORECARD_COPY.FIX_TYPE_LOCATION,
@@ -25,10 +24,13 @@ interface FixPlanData {
 
 export default async function SiteBotFixPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ auditId: string }>;
+  searchParams?: Promise<{ connected?: string; error?: string }>;
 }) {
   const { auditId: rawId } = await params;
+  const queryParams = searchParams ? await searchParams : undefined;
   const auditId = decodeURIComponent(rawId);
 
   if (!auditId || !UUID_REGEX.test(auditId)) {
@@ -48,6 +50,9 @@ export default async function SiteBotFixPage({
     notFound();
   }
 
+  const auditData = await readAuditRecord(auditId);
+  const isConnected = Boolean(auditData && typeof auditData.gbpLocationId === 'string' && auditData.gbpLocationId);
+
   const items: FixItem[] = Array.isArray(planData?.items) ? planData.items : [];
   const writeItems = items.filter((item) => item.type.startsWith('write_'));
   const manualItems = items.filter((item) => item.type === 'manual_owner_action');
@@ -63,6 +68,16 @@ export default async function SiteBotFixPage({
       .map((e) => e.actionId || (e as unknown as { itemId?: string }).itemId)
   );
 
+  const readyItemIds = new Set(
+    logEntries
+      .filter(
+        (e) =>
+          e.verificationNote === 'gbp_connected' ||
+          (e as unknown as { status?: string }).status === 'ready_to_execute'
+      )
+      .map((e) => e.actionId || (e as unknown as { itemId?: string }).itemId)
+  );
+
   return (
     <main className="mx-auto min-h-screen max-w-2xl px-4 pt-8 pb-32" dir="rtl">
       <div className="mb-6">
@@ -70,9 +85,60 @@ export default async function SiteBotFixPage({
         <p className="text-sm text-[var(--muted)]">{SCORECARD_COPY.FIX_PAGE_SUBTITLE}</p>
       </div>
 
+      {/* OAuth Connection & Execution Banner */}
+      {approvedItemIds.size > 0 && !isConnected && (
+        <div className="mb-6 rounded-xl border border-blue-200 bg-blue-50/70 p-4 dark:border-blue-900 dark:bg-blue-950/30">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div>
+              <p className="text-sm font-medium text-blue-950 dark:text-blue-200">
+                {SCORECARD_COPY.CTA_TRIAL}
+              </p>
+            </div>
+            <a
+              href={`/api/site-bot/gbp/oauth/start?auditId=${auditId}`}
+              className="inline-flex items-center justify-center rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:bg-blue-500 dark:hover:bg-blue-600 whitespace-nowrap"
+            >
+              Connect Google Account
+            </a>
+          </div>
+        </div>
+      )}
+
+      {isConnected && (
+        <div className="mb-6 rounded-xl border border-emerald-200 bg-emerald-50/70 p-4 dark:border-emerald-900 dark:bg-emerald-950/30">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div className="flex items-center gap-2">
+              <span className="inline-flex items-center rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-semibold text-emerald-800 dark:bg-emerald-900/60 dark:text-emerald-300">
+                {SCORECARD_COPY.STATUS_PASS}
+              </span>
+              <span className="text-xs font-mono text-[var(--muted)]">
+                {typeof auditData?.gbpLocationId === 'string' ? auditData.gbpLocationId : 'GBP Connected'}
+              </span>
+            </div>
+            {(readyItemIds.size > 0 || approvedItemIds.size > 0) && (
+              <form action="/api/site-bot/fix-execute" method="POST">
+                <input type="hidden" name="auditId" value={auditId} />
+                <button
+                  type="submit"
+                  className="inline-flex items-center justify-center rounded-lg bg-emerald-700 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-emerald-800 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 dark:bg-emerald-600 dark:hover:bg-emerald-700"
+                >
+                  Execute Fixes
+                </button>
+              </form>
+            )}
+          </div>
+        </div>
+      )}
+
+      {queryParams?.error && (
+        <div className="mb-6 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-800 dark:border-red-900 dark:bg-red-950/30 dark:text-red-300">
+          {SCORECARD_COPY.FORM_ERROR_GENERIC}
+        </div>
+      )}
+
       <div className="space-y-4 mb-8">
         {writeItems.map((item) => {
-          const isApproved = approvedItemIds.has(item.id);
+          const isApproved = approvedItemIds.has(item.id) || readyItemIds.has(item.id);
           const title = TYPE_TITLES[item.type] ?? item.type;
 
           return (
