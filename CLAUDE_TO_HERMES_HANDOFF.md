@@ -225,6 +225,16 @@ Chinese/Portuguese fragments, garbled words) while the file still passed `tsc` c
 
 ---
 
+## Spec Discipline for waocopy Tasks (added 2026-08-31)
+
+**When waostrategy writes specs for `waocopy` (Qwen 3.8 Max):**
+1. **Be concise and to the point** — do not explain the background rationale or meta-logic in the spec. Save tokens.
+2. **Provide the core inputs:** target persona, the specific offer/angle to weave into the copy, core entity anchors, and keyword research targets.
+3. **Trust waocopy's execution:** `waocopy` knows how to reach the exact persona and seamlessly weave the offer for maximum engagement.
+4. **Content length is waocopy's decision:** based on proven entities and keyword research needed to make pages shine and rank in Google SERPs and AI Overviews (AIO).
+
+---
+
 ## Execution-Scope Rule (non-negotiable, added 2026-08-17)
 
 **waoengineer runs ONLY the literal Test Command given — never a broader one it invents to "be

@@ -20,7 +20,7 @@ import {
   esc,
   contacts,
   stickyHeader,
-  localBusinessSchema,
+  localBusinessObject,
   pageHead,
   leadFormSection,
   pageScript,
@@ -71,6 +71,58 @@ export function buildCoreThirtySitemapUrls(
   return nodes.filter((n) => copies.has(n.id)).map((n) => `sherut/${n.id}.html`);
 }
 
+export function coreThirtyPageSchema(
+  node: CoreThirtyNode,
+  copy: CoreThirtyPageCopy,
+  data: CollectedData,
+  siteUrl: string,
+  heroImageUrl: string
+): string {
+  const cleanSiteUrl = siteUrl.replace(/\/$/, '');
+  const { businessName } = contacts(data);
+  const businessEntity = localBusinessObject(data, businessName, cleanSiteUrl, heroImageUrl);
+
+  const serviceEntity: Record<string, unknown> = {
+    '@type': 'Service',
+    '@id': `${cleanSiteUrl}/sherut/${node.id}.html#service`,
+    name: copy.pageHeadline,
+    serviceType: node.service,
+    provider: {
+      '@id': `${cleanSiteUrl}/#business`,
+    },
+    areaServed: {
+      '@type': 'City',
+      name: node.city,
+    },
+    description: copy.metaDescription,
+  };
+
+  const graph: Record<string, unknown>[] = [businessEntity, serviceEntity];
+
+  if (copy.faqItems && copy.faqItems.length > 0) {
+    const faqEntity: Record<string, unknown> = {
+      '@type': 'FAQPage',
+      '@id': `${cleanSiteUrl}/sherut/${node.id}.html#faq`,
+      mainEntity: copy.faqItems.map((item) => ({
+        '@type': 'Question',
+        name: item.q,
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: item.a,
+        },
+      })),
+    };
+    graph.push(faqEntity);
+  }
+
+  const rootSchema = {
+    '@context': 'https://schema.org',
+    '@graph': graph,
+  };
+
+  return `<script type="application/ld+json">${JSON.stringify(rootSchema)}</script>`;
+}
+
 function buildCoreThirtyNodeHtml(
   node: CoreThirtyNode,
   copy: CoreThirtyPageCopy,
@@ -87,7 +139,7 @@ function buildCoreThirtyNodeHtml(
     description: copy.metaDescription,
     canonicalUrl,
     ogImage: heroImageUrl,
-    schema: localBusinessSchema(data, businessName, siteUrl, heroImageUrl),
+    schema: coreThirtyPageSchema(node, copy, data, siteUrl, heroImageUrl),
   });
 
   // localRelevanceNote — visually distinct callout (not a trust-bar pill row,

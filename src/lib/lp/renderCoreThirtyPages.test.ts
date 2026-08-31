@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { renderCoreThirtyPages, buildCoreThirtySitemapUrls } from './renderCoreThirtyPages';
+import { renderCoreThirtyPages, buildCoreThirtySitemapUrls, coreThirtyPageSchema } from './renderCoreThirtyPages';
 import type { RenderCoreThirtyPagesParams } from './renderCoreThirtyPages';
 import { buildSitemap } from './renderSitePages';
 import { VERTICAL_THEMES } from './verticalThemes';
@@ -212,4 +212,92 @@ test('buildSitemap(siteUrl, extraPaths) appends the extra URLs after the static 
   assert.equal(urlCount, 6);
   assert.ok(xml.includes('<loc>https://example.wao.co.il/sherut/svc0-city0.html</loc>'));
   assert.ok(xml.includes('<loc>https://example.wao.co.il/sherut/svc1-city0.html</loc>'));
+});
+
+// ── coreThirtyPageSchema / Linked Schema Graph ──────────────────────────────
+
+test('coreThirtyPageSchema produces valid JSON-LD @graph with LocalBusiness, Service, and FAQPage', () => {
+  const node = makeNode({ id: 'svc0-city0', service: 'Test Service', city: 'Test City' });
+  const copy = makeCopy({
+    pageHeadline: 'Service in City',
+    metaDescription: 'Description of service in city',
+    faqItems: [
+      { q: 'Question 1?', a: 'Answer 1.' },
+      { q: 'Question 2?', a: 'Answer 2.' },
+    ],
+  });
+  const data: CollectedData = {
+    businessName: 'Business Name',
+    businessNiche: 'plumber',
+    phone: '050-1111111',
+  };
+
+  const scriptTag = coreThirtyPageSchema(node, copy, data, 'https://test.wao.co.il/', 'https://example.com/hero.jpg');
+  assert.ok(scriptTag.startsWith('<script type="application/ld+json">'));
+  assert.ok(scriptTag.endsWith('</script>'));
+
+  const jsonStr = scriptTag.replace('<script type="application/ld+json">', '').replace('</script>', '');
+  const parsed = JSON.parse(jsonStr);
+
+  assert.equal(parsed['@context'], 'https://schema.org');
+  assert.ok(Array.isArray(parsed['@graph']));
+  assert.equal(parsed['@graph'].length, 3);
+
+  const business = parsed['@graph'].find((e: Record<string, unknown>) => e['@type'] === 'Plumber');
+  assert.ok(business, 'expected Plumber entity in @graph');
+  assert.equal(business['@id'], 'https://test.wao.co.il/#business');
+  assert.equal(business.name, 'Business Name');
+  assert.equal(business.priceRange, '$$');
+  assert.equal(business.currenciesAccepted, 'ILS');
+  assert.deepEqual(business.paymentAccepted, ['Cash', 'Credit Card', 'Bit', 'PayBox']);
+
+  const service = parsed['@graph'].find((e: Record<string, unknown>) => e['@type'] === 'Service');
+  assert.ok(service, 'expected Service entity in @graph');
+  assert.equal(service['@id'], 'https://test.wao.co.il/sherut/svc0-city0.html#service');
+  assert.equal(service.name, 'Service in City');
+  assert.equal(service.serviceType, 'Test Service');
+  assert.deepEqual(service.provider, { '@id': 'https://test.wao.co.il/#business' });
+  assert.deepEqual(service.areaServed, { '@type': 'City', name: 'Test City' });
+  assert.equal(service.description, 'Description of service in city');
+
+  const faq = parsed['@graph'].find((e: Record<string, unknown>) => e['@type'] === 'FAQPage');
+  assert.ok(faq, 'expected FAQPage entity in @graph');
+  assert.equal(faq['@id'], 'https://test.wao.co.il/sherut/svc0-city0.html#faq');
+  assert.ok(Array.isArray(faq.mainEntity));
+  assert.equal(faq.mainEntity.length, 2);
+  assert.deepEqual(faq.mainEntity[0], {
+    '@type': 'Question',
+    name: 'Question 1?',
+    acceptedAnswer: { '@type': 'Answer', text: 'Answer 1.' },
+  });
+});
+
+test('coreThirtyPageSchema omits FAQPage when faqItems is empty', () => {
+  const node = makeNode({ id: 'svc0-city0' });
+  const copy = makeCopy({ faqItems: [] });
+  const data: CollectedData = { businessName: 'Test Business' };
+
+  const scriptTag = coreThirtyPageSchema(node, copy, data, 'https://test.wao.co.il', 'https://example.com/hero.jpg');
+  const jsonStr = scriptTag.replace('<script type="application/ld+json">', '').replace('</script>', '');
+  const parsed = JSON.parse(jsonStr);
+
+  assert.equal(parsed['@graph'].length, 2);
+  assert.ok(parsed['@graph'].some((e: Record<string, unknown>) => e['@id'] === 'https://test.wao.co.il/#business'));
+  assert.ok(parsed['@graph'].some((e: Record<string, unknown>) => e['@type'] === 'Service'));
+  assert.ok(!parsed['@graph'].some((e: Record<string, unknown>) => e['@type'] === 'FAQPage'));
+});
+
+test('rendered Core-30 HTML includes linked Schema graph with payment and currency metadata', () => {
+  const node = makeNode({ id: 'svc0-city0' });
+  const copy = makeCopy({
+    faqItems: [{ q: 'Q?', a: 'A.' }],
+  });
+  const pages = renderCoreThirtyPages(baseParams({ nodes: [node], copies: new Map([[node.id, copy]]) }));
+  const html = pages['sherut/svc0-city0.html'];
+
+  assert.ok(html.includes('"@graph":['), 'expected @graph in rendered html');
+  assert.ok(html.includes('"currenciesAccepted":"ILS"'), 'expected currenciesAccepted in rendered html');
+  assert.ok(html.includes('"paymentAccepted":["Cash","Credit Card","Bit","PayBox"]'), 'expected paymentAccepted in rendered html');
+  assert.ok(html.includes('"@type":"Service"'), 'expected Service in rendered html');
+  assert.ok(html.includes('"@type":"FAQPage"'), 'expected FAQPage in rendered html');
 });

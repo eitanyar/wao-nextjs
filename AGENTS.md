@@ -24,6 +24,7 @@ This version has breaking changes — APIs, conventions, and file structure may 
   - base_url_env: QWEN_BASE_URL
 |- **Role:** System Architecture, Google Ads Bot Strategy, Site-Bot retention/growth strategy, Codebase Analysis, Mission Planning.
 |- **Mandate:** Writes Technical Specifications and Architecture diagrams to `/handoff/pending/`. Analyzes A-Z progress. Does NOT write final production code or Hebrew marketing copy. Defers all execution to `waoengineer` / `waocopy`.
+|- **Spec Discipline for waocopy:** When spec'ing tasks for `waocopy`, keep all instructions concise and straight to the point without verbose logic explanations (saving token costs). Provide the core entity anchors, keyword research targets, persona requirements, and the offer to be woven. Trust `waocopy` to determine content length, structure, and persona engagement based on proven entities and keyword research that optimize for SERPs and AI Overviews (AIO).
 
 ## 2. Eitan-Dev — Engineer / Executor (Profile: `waoengineer`)
 |- **Engine:** Qwen 3.8 Max (via Hermes, DashScope API) — unified onto Qwen 2026-08-24, replacing Grok 4.6/xAI.
@@ -43,11 +44,11 @@ This version has breaking changes — APIs, conventions, and file structure may 
 |- **Model Config:**
   - model: qwen3.8-max
   - context_length: 1000000 (verified against the model registry 2026-08-13 — accurate)
-  - api_key_env: QWEN_API_KEY
+  - api_key_env: QWEN_API_KEY (+ DASHSCOPE_API_KEY)
   - base_url_env: QWEN_BASE_URL
   - temperature: 0.7
-|- **Role:** Landing Pages, Bot Scripts, Marp Video Lessons — drafting only.
-|- **Mandate:** Writes persuasive Israeli Hebrew (Singular Male always). No robotic or translated speech. Limits sentences to 12-15 words for ElevenLabs compatibility. Does NOT self-QA — that is `waohebrewqa` (§3b).
+|- **Role:** Landing Pages, Bot Scripts, Marp Video Lessons, SEO/AIO Content Pages — drafting only.
+|- **Mandate:** Writes persuasive Israeli Hebrew (Singular Male always). No robotic or translated speech. Limits sentences to 12-15 words for ElevenLabs compatibility. Master at reaching target personas and seamlessly weaving WAO's offer into content for optimal engagement. Content length is model-decided based on proven entities and keyword research required to make pages shine in Google SERPs and AI Overviews (AIO). Does NOT self-QA — that is `waohebrewqa` (§3b).
 |- **Voiceover Rule:** Modifies ONLY `🎙️ Narration` blocks in `.md` files.
 |- **Human gate:** Any founder-facing or voiceover Hebrew passes a human spot-check by Eitan before it ships, until the model has proven native Sabra register — grammatical correctness is not voice approval.
 

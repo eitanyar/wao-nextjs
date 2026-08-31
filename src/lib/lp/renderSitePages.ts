@@ -4,7 +4,6 @@
 // sharing the same theme tokens, header, nav, and footer.
 
 import type { VerticalTheme } from './verticalThemes';
-import type { VerticalAssets } from './verticalAssets';
 import type { SiteCopy } from './lpCopyPrompt';
 import type { CollectedData } from '@/lib/bot/prompts';
 import { renderStaticHtml, type RenderStaticHtmlParams } from './renderStaticHtml';
@@ -51,17 +50,17 @@ function buildIndexHtml(p: RenderSitePagesParams, siteUrl: string): string {
 
   const withSchema = html.replace(
     '</head>',
-    `  ${localBusinessSchema(p.data, businessName, siteUrl, p.heroImageUrl)}\n</head>`
+    () => `  ${localBusinessSchema(p.data, businessName, siteUrl, p.heroImageUrl)}\n</head>`
   );
 
   const withNav = withSchema.replace(
     '<body>\n\n  <!-- Header -->',
-    `<body>\n${navBar(t)}\n\n  <!-- Header -->`
+    () => `<body>\n${navBar(t)}\n\n  <!-- Header -->`
   );
 
   const withFooter = withNav.replace(
     '  <!-- Sticky Bottom Bar -->',
-    `${footerBadge(t, isAccessibilityExempt(p.data.vatStatus))}\n\n  <!-- Sticky Bottom Bar -->`
+    () => `${footerBadge(t, isAccessibilityExempt(p.data.vatStatus))}\n\n  <!-- Sticky Bottom Bar -->`
   );
 
   return withFooter;
@@ -123,11 +122,70 @@ export function stickyHeader(t: VerticalTheme, businessName: string, phone: stri
   </header>`;
 }
 
+// ─────────────────────────────────────────────────────────────────────────
+// Vertical Schema Subtype Mapping
+// ─────────────────────────────────────────────────────────────────────────
+
+const SCHEMA_ORG_NICHE_MAP: Array<{ keywords: string[]; schemaType: string }> = [
+  {
+    // Locksmith
+    keywords: ['locksmith', '\u05de\u05e0\u05e2\u05d5\u05dc\u05df', '\u05de\u05e0\u05e2\u05d5\u05dc'],
+    schemaType: 'Locksmith',
+  },
+  {
+    // Plumber
+    keywords: ['plumber', '\u05d0\u05d9\u05e0\u05e1\u05d8\u05dc\u05d8\u05d5\u05e8', '\u05e9\u05e8\u05d1\u05e8\u05d1', '\u05d0\u05d9\u05e0\u05e1\u05d8\u05dc'],
+    schemaType: 'Plumber',
+  },
+  {
+    // Electrician
+    keywords: ['electrician', '\u05d7\u05e9\u05de\u05dc\u05d0\u05d9', '\u05d7\u05e9\u05de\u05dc'],
+    schemaType: 'Electrician',
+  },
+  {
+    // HVAC
+    keywords: ['hvac', '\u05de\u05d9\u05d6\u05d5\u05d2 \u05d0\u05d5\u05d5\u05d9\u05e8', '\u05d8\u05db\u05e0\u05d0\u05d9 \u05de\u05d6\u05d2\u05e0\u05d9\u05dd', '\u05de\u05d6\u05d2\u05e0\u05d9\u05dd', '\u05de\u05d6\u05d2\u05df', '\u05de\u05d9\u05d6\u05d5\u05d2'],
+    schemaType: 'HVACBusiness',
+  },
+  {
+    // Roofing
+    keywords: ['roofing', '\u05d0\u05d9\u05d8\u05d5\u05dd', '\u05d2\u05d2\u05d5\u05ea'],
+    schemaType: 'RoofingContractor',
+  },
+  {
+    // Automotive
+    keywords: ['automotive', 'auto repair', 'auto', '\u05de\u05d5\u05e1\u05da', '\u05e8\u05db\u05d1'],
+    schemaType: 'AutoRepair',
+  },
+  {
+    // Medical / Clinic
+    keywords: ['medical', 'clinic', '\u05e8\u05d5\u05e4\u05d0', '\u05de\u05e8\u05e4\u05d0\u05d4', '\u05de\u05e8\u05e4\u05d0\u05ea'],
+    schemaType: 'MedicalBusiness',
+  },
+  {
+    // Home services / Handyman
+    keywords: ['home services', 'handyman', '\u05e9\u05d9\u05e4\u05d5\u05e6\u05d9\u05dd', '\u05e9\u05d9\u05e4\u05d5\u05e5', '\u05d4\u05e0\u05d3\u05d9\u05de\u05df'],
+    schemaType: 'HomeAndConstructionBusiness',
+  },
+];
+
+export function getSchemaOrgType(businessNiche?: string): string {
+  if (!businessNiche) return 'LocalBusiness';
+  const lower = businessNiche.toLowerCase();
+  for (const entry of SCHEMA_ORG_NICHE_MAP) {
+    if (entry.keywords.some(k => lower.includes(k))) {
+      return entry.schemaType;
+    }
+  }
+  return 'LocalBusiness';
+}
+
 // LocalBusiness JSON-LD — NOT AggregateRating/Review: Google's structured-data
 // policy disqualifies (and risks a manual action on) self-hosted review schema
 // where the business controls the reviews about itself, which is exactly this
 // case. starRating/reviewCount stay visible page copy only, never schema.
-export function localBusinessSchema(data: CollectedData, businessName: string, siteUrl: string, ogImage: string): string {
+export function localBusinessObject(data: CollectedData, businessName: string, siteUrl: string, ogImage: string): Record<string, unknown> {
+  const cleanSiteUrl = siteUrl.replace(/\/$/, '');
   const address = data.streetAddress
     ? {
         '@type': 'PostalAddress',
@@ -137,18 +195,28 @@ export function localBusinessSchema(data: CollectedData, businessName: string, s
       }
     : undefined;
 
-  const schema: Record<string, unknown> = {
-    '@context': 'https://schema.org',
-    '@type': 'LocalBusiness',
+  return {
+    '@type': getSchemaOrgType(data.businessNiche),
+    '@id': `${cleanSiteUrl}/#business`,
     name: businessName,
-    url: siteUrl,
+    url: cleanSiteUrl,
     image: ogImage,
+    priceRange: '$$',
+    currenciesAccepted: 'ILS',
+    paymentAccepted: ['Cash', 'Credit Card', 'Bit', 'PayBox'],
     ...(data.phone ? { telephone: data.phone } : {}),
     ...(address ? { address } : {}),
     ...(!address && (data.targetLocation || data.specificCities)
       ? { areaServed: data.specificCities || data.targetLocation }
       : {}),
     ...(data.businessHours ? { openingHours: data.businessHours } : {}),
+  };
+}
+
+export function localBusinessSchema(data: CollectedData, businessName: string, siteUrl: string, ogImage: string): string {
+  const schema: Record<string, unknown> = {
+    '@context': 'https://schema.org',
+    ...localBusinessObject(data, businessName, siteUrl, ogImage),
   };
 
   return `<script type="application/ld+json">${JSON.stringify(schema)}</script>`;
@@ -472,7 +540,7 @@ ${pageScript({
 // Assembles <head> + <body> with nav bar (top) and footer badge (bottom) for
 // the 3 standalone pages (index.html has its own injection path above).
 export function assembleDocument(t: VerticalTheme, head: string, bodyInner: string, gtagSnippet: string | undefined, data: CollectedData): string {
-  const headWithGtag = gtagSnippet ? head.replace('</head>', `  ${gtagSnippet}\n</head>`) : head;
+  const headWithGtag = gtagSnippet ? head.replace('</head>', () => `  ${gtagSnippet}\n</head>`) : head;
   return `<!DOCTYPE html>
 <html lang="he" dir="rtl">
 ${headWithGtag}

@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 
 import { scoreAudit } from './auditScore';
-import { deriveFixPlan } from './fixPlan';
+import { deriveFixPlan, deriveGbpAttributesPayload, FIX_MAPPINGS } from './fixPlan';
 import type { NormalizedPlace } from '../places/client';
 
 // All fixtures are Latin-script only (HEBREW-SAFETY banner).
@@ -167,4 +167,87 @@ test('category fix fallback when place is unresolvable or missing', () => {
     plan[0].payloadHint,
     'set primary + secondary categories (owner confirms list; categoryId mapping is WoZ)'
   );
+});
+
+// -- spec 2026-08-27_007: attributes derivation --
+
+test('FIX_MAPPINGS contains write_attributes mapping for attributes', () => {
+  assert.equal(FIX_MAPPINGS.attributes.type, 'write_attributes');
+  assert.equal(
+    FIX_MAPPINGS.attributes.payloadHint,
+    'set standard Israeli micro-business attributes (Bit, PayBox, cards, 24/7 emergency if applicable)'
+  );
+});
+
+test('deriveGbpAttributesPayload produces standard Israeli micro-business defaults', () => {
+  const payload = deriveGbpAttributesPayload({});
+  assert.equal(payload.has_payment_cash, true);
+  assert.equal(payload.has_payment_credit_card, true);
+  assert.equal(payload.has_payment_bit, true);
+  assert.equal(payload.has_payment_paybox, true);
+  assert.equal(payload.has_emergency_service_24_7, false);
+  assert.deepEqual(payload.languages_spoken, ['he']);
+});
+
+test('deriveGbpAttributesPayload honors emergency flag and extra languages', () => {
+  const payload = deriveGbpAttributesPayload({
+    isEmergency24_7: true,
+    languages: ['en', 'ru'],
+  });
+  assert.equal(payload.has_emergency_service_24_7, true);
+  assert.deepEqual(payload.languages_spoken, ['he', 'en', 'ru']);
+});
+
+test('deriveGbpAttributesPayload is deterministic and dedupes/ignores bad input', () => {
+  const a = deriveGbpAttributesPayload({ languages: ['he', 'en'], paymentMethods: ['bit'] });
+  const b = deriveGbpAttributesPayload({ languages: ['he', 'en'], paymentMethods: ['bit'] });
+  assert.deepEqual(a, b);
+  assert.deepEqual(a.languages_spoken, ['he', 'en']);
+  assert.equal(a.has_payment_bit, true);
+
+  const withNoise = deriveGbpAttributesPayload({
+    languages: ['', '  '],
+    paymentMethods: ['Google Pay!', '', '  '],
+  });
+  assert.deepEqual(withNoise.languages_spoken, ['he']);
+  assert.equal(withNoise.has_payment_google_pay, true);
+});
+
+test('deriveFixPlan emits write_attributes item for a failing attributes dimension', () => {
+  const score = {
+    total: 7,
+    passed: 6,
+    failed: 1,
+    unknown: 0,
+    dimensions: [
+      { key: 'attributes', status: 'fail' as const, evidence: 'attributes:absent', copyToken: 'DIM_ATTRIBUTES_TITLE' },
+    ],
+  };
+
+  const plan = deriveFixPlan(score);
+  assert.equal(plan.length, 1);
+
+  const item = plan[0];
+  assert.equal(item.id, 'attributes-fix');
+  assert.equal(item.dimension, 'attributes');
+  assert.equal(item.type, 'write_attributes');
+  assert.equal(item.reason, 'attributes:absent');
+  assert.equal(
+    item.payloadHint,
+    'set standard Israeli micro-business attributes (Bit, PayBox, cards, 24/7 emergency if applicable)'
+  );
+});
+
+test('deriveFixPlan stays backward compatible: scoreAudit suite never emits attributes item', () => {
+  const neglectedPlace = makePlace({
+    types: ['plumber'],
+    nationalPhoneNumber: '03-1234567',
+    photos: { fetched: true, count: 0 },
+    rating: 4.9,
+    userRatingCount: 2,
+  });
+  const score = scoreAudit(neglectedPlace);
+  const plan = deriveFixPlan(score);
+  assert.equal(plan.length, 6);
+  assert.ok(!plan.some((item) => item.dimension === 'attributes'));
 });

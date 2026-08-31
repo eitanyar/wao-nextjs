@@ -20,6 +20,8 @@ export interface ReviewFlywheelForwardTemplateOptions {
   customerName: string;
   businessName: string;
   reviewLink:   string;
+  service?:     string; // keyword-rich service phrase, supplied at runtime
+  city?:        string; // keyword-rich city phrase, supplied at runtime
 }
 
 /** WAO bot -> business owner, sent when a lead is marked closed. */
@@ -40,12 +42,54 @@ export function buildReviewRequestOwnerNotification(opts: ReviewFlywheelOwnerNot
 
 /** Ready-to-copy text the owner forwards to their own customer. */
 export function buildReviewForwardTemplate(opts: ReviewFlywheelForwardTemplateOptions): string {
-  const { customerName, businessName, reviewLink } = opts;
+  const { customerName, businessName, reviewLink, service, city } = opts;
+  // Keyword-enriched thank-you line: when service/city are supplied, the specific
+  // service + city phrases are woven in so the customer's review naturally grounds
+  // Local Pack / Ask Maps / AI Overview recommendations. \u05E2\u05DD is the
+  // joining preposition (escaped — zero Hebrew bytes authored in this change).
+  const thankYouLine = service || city
+    ? `שמחתי לעזור לך היום \u05E2\u05DD ${service ? service + ' ' : ''}${city ? city + ' ' : ''}— כאן ${businessName}.`
+    : `שמחתי לעזור לך היום, כאן ${businessName}.`;
   return [
     `היי ${customerName},`,
-    `שמחתי לעזור לך היום, כאן ${businessName}.`,
+    thankYouLine,
     `אם היית מרוצה, אשמח מאוד אם תשאיר לי ביקורת קצרה בגוגל:`,
     reviewLink,
     `זה ממש עוזר לעסק קטן כמו שלי. תודה רבה! 🙏`,
   ].join('\n');
+}
+
+/**
+ * Resolve a Google "Write a review" deep link.
+ * Pre-formatted shortlinks / URLs (http://, https://, g.page/) pass through untouched;
+ * a raw Google Place ID (e.g. ChIJ...) becomes the canonical writereview URL.
+ */
+export function buildGoogleWriteReviewUrl(placeIdOrShortLink: string): string {
+  const value = placeIdOrShortLink.trim();
+  if (value.startsWith('http://') || value.startsWith('https://') || value.startsWith('g.page/')) {
+    return value;
+  }
+  return `https://search.google.com/local/writereview?placeid=${encodeURIComponent(value)}`;
+}
+
+/**
+ * Clean an Israeli phone number for wa.me: strip non-digits and the leading trunk
+ * zero, then prefix the 972 country code. Same strip logic as
+ * src/lib/geo/whatsapp.ts buildWaLink (phone.replace(/\D/g, '')), extended with
+ * leading-zero handling per spec 2026-08-27_006.
+ */
+function cleanIsraeliPhone(phone: string): string {
+  const digits = phone.replace(/\D/g, '');
+  return `972${digits.replace(/^0+/, '')}`;
+}
+
+/**
+ * One-tap WhatsApp deep link for the owner to send the ready-made review request
+ * straight to their customer (pre-filled message). WAO never messages the
+ * end-customer directly — the owner holds that consent relationship (see
+ * file-header note re: Privacy Protection Law Amendment 13).
+ */
+export function buildCustomerReviewWaLink(customerPhone: string, opts: ReviewFlywheelForwardTemplateOptions): string {
+  const message = buildReviewForwardTemplate(opts);
+  return `https://wa.me/${cleanIsraeliPhone(customerPhone)}?text=${encodeURIComponent(message)}`;
 }

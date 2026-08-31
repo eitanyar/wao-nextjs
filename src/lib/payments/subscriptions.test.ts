@@ -4,6 +4,7 @@ import fs from 'fs';
 import os from 'os';
 import path from 'path';
 import crypto from 'crypto';
+import { addMonths } from 'date-fns';
 
 const tmpDbPath = path.join(os.tmpdir(), `wao-billing-test-subscriptions-${crypto.randomUUID()}.db`);
 process.env.BILLING_DB_PATH = tmpDbPath;
@@ -60,8 +61,11 @@ test('full signup -> tokenization callback -> subscription lands in trialing wit
 
   const createdAt = new Date(after!.created_at);
   const nextChargeAt = new Date(after!.next_charge_at!);
-  const expected = new Date(createdAt);
-  expected.setUTCMonth(expected.getUTCMonth() + 1);
+  // The implementation uses date-fns addMonths (subscriptions.ts), which clamps
+  // day overflow (e.g. Aug 31 + 1 month -> Sep 30). Plain JS setUTCMonth(+1)
+  // arithmetic overflows instead (Aug 31 -> Oct 1), so it must not compute the
+  // expectation on month-end run dates.
+  const expected = addMonths(createdAt, 1);
   // Allow a few ms of test-execution drift, but the calendar date/month must match exactly.
   assert.strictEqual(nextChargeAt.getUTCFullYear(), expected.getUTCFullYear());
   assert.strictEqual(nextChargeAt.getUTCMonth(), expected.getUTCMonth());
