@@ -9,17 +9,23 @@ export async function GET(req: Request) {
   const state = url.searchParams.get('state');
   const error = url.searchParams.get('error');
 
+  const forwardedHost = req.headers.get('x-forwarded-host');
+  const forwardedProto = req.headers.get('x-forwarded-proto') || 'https';
+  const origin = forwardedHost
+    ? `${forwardedProto}://${forwardedHost}`
+    : (process.env.NEXT_PUBLIC_BASE_URL || process.env.NEXT_PUBLIC_SITE_URL || url.origin);
+
   if (!state) {
-    return NextResponse.redirect(new URL('/site-bot/audit?error=invalid_state', url.origin));
+    return NextResponse.redirect(new URL('/site-bot/audit?error=invalid_state', origin));
   }
 
   const { valid, auditId } = verifyGbpOAuthState(state);
   if (!valid || !auditId) {
-    return NextResponse.redirect(new URL('/site-bot/audit?error=invalid_state', url.origin));
+    return NextResponse.redirect(new URL('/site-bot/audit?error=invalid_state', origin));
   }
 
   if (error || !code) {
-    return NextResponse.redirect(new URL(`/site-bot/fix/${auditId}?error=oauth_denied`, url.origin));
+    return NextResponse.redirect(new URL(`/site-bot/fix/${auditId}?error=oauth_denied`, origin));
   }
 
   const clientId = process.env.GOOGLE_ADS_CLIENT_ID || process.env.GBP_CLIENT_ID;
@@ -30,7 +36,7 @@ export async function GET(req: Request) {
 
   if (clientId && clientSecret && !code.startsWith('mock_') && process.env.NODE_ENV !== 'test') {
     try {
-      const redirectUri = `${url.origin}/api/site-bot/gbp/oauth/callback`;
+      const redirectUri = `${origin}/api/site-bot/gbp/oauth/callback`;
       const tokenRes = await fetch('https://oauth2.googleapis.com/token', {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },

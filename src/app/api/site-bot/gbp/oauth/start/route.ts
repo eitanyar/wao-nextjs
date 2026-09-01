@@ -16,7 +16,13 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: 'GBP OAuth is not configured on this server.' }, { status: 503 });
   }
 
-  const redirectUri = `${url.origin}/api/site-bot/gbp/oauth/callback`;
+  const forwardedHost = req.headers.get('x-forwarded-host');
+  const forwardedProto = req.headers.get('x-forwarded-proto') || 'https';
+  const origin = forwardedHost
+    ? `${forwardedProto}://${forwardedHost}`
+    : (process.env.NEXT_PUBLIC_BASE_URL || process.env.NEXT_PUBLIC_SITE_URL || url.origin);
+
+  const redirectUri = `${origin}/api/site-bot/gbp/oauth/callback`;
   const state = signGbpOAuthState(auditId);
 
   const authUrl = new URL('https://accounts.google.com/o/oauth2/v2/auth');
