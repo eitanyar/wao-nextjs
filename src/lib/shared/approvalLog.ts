@@ -51,7 +51,8 @@ export interface ApprovalEntry {
 }
 
 function logPath(baseDir: string, clientId: string): string {
-  const dir = path.join(process.cwd(), baseDir, clientId);
+  const cleanBase = baseDir.replace(/^data\/?/, '');
+  const dir = path.join(process.cwd(), 'data', cleanBase, clientId);
   fs.mkdirSync(dir, { recursive: true });
   return path.join(dir, 'log.jsonl');
 }
