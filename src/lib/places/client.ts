@@ -25,7 +25,7 @@ const LEGACY_DETAILS_URL = 'https://maps.googleapis.com/maps/api/place/details/j
 
 // Byte-exact field mask from spec 2026-08-25_001 Requirement 1 + places.location (spec 2026-08-27_001).
 const FIELD_MASK =
-  'places.id,places.displayName,places.formattedAddress,places.nationalPhoneNumber,places.internationalPhoneNumber,places.primaryType,places.primaryTypeDisplayName,places.types,places.businessStatus,places.websiteUri,places.regularOpeningHours,places.specialOpeningHours,places.rating,places.userRatingCount,places.editorialSummary,places.googleMapsUri,places.addressComponents,places.location';
+  'places.id,places.displayName,places.formattedAddress,places.nationalPhoneNumber,places.internationalPhoneNumber,places.primaryType,places.primaryTypeDisplayName,places.types,places.businessStatus,places.websiteUri,places.regularOpeningHours,places.rating,places.userRatingCount,places.editorialSummary,places.googleMapsUri,places.addressComponents,places.location';
 
 export function hasPlacesKey(): boolean {
   return !!process.env.PLACES_API_KEY;
