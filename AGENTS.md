@@ -13,27 +13,24 @@ This version has breaking changes — APIs, conventions, and file structure may 
 # WAO Agent Profiles (Hermes Architecture)
 
 ## 1. Dror / Lior — Strategist (Profile: `waostrategy`)
-|- **Engine:** Qwen 3.8 Max (via Hermes, DashScope API) — migrated off Claude Code/Opus 2026-08-24
-  by Eitan's direction; no Claude seat remains in the strategist role. (History: an earlier
-  `waostrategy` profile on claude-sonnet-5 was created and deleted the same day over
-  duplication/collision concerns; recreated on Qwen 2026-08-24 as the permanent strategist seat.)
+|- **Engine:** GPT-5.6 Sol (via Hermes, OpenAI Codex OAuth) — migrated 2026-09-01 for deep reasoning with medium effort.
 |- **Model Config:**
-  - model: qwen3.8-max
-  - provider: alibaba (Hermes DashScope provider)
-  - api_key_env: QWEN_API_KEY (+ DASHSCOPE_API_KEY, see §2 credential-pool note)
-  - base_url_env: QWEN_BASE_URL
+  - model: gpt-5.6-sol
+  - provider: openai-codex
+  - reasoning_effort: medium
+  - context_length: 1000000
+  - temperature: 0.2
 |- **Role:** System Architecture, Google Ads Bot Strategy, Site-Bot retention/growth strategy, Codebase Analysis, Mission Planning.
 |- **Mandate:** Writes Technical Specifications and Architecture diagrams to `/handoff/pending/`. Analyzes A-Z progress. Does NOT write final production code or Hebrew marketing copy. Defers all execution to `waoengineer` / `waocopy`.
 |- **Spec Discipline for waocopy:** When spec'ing tasks for `waocopy`, keep all instructions concise and straight to the point without verbose logic explanations (saving token costs). Provide the core entity anchors, keyword research targets, persona requirements, and the offer to be woven. Trust `waocopy` to determine content length, structure, and persona engagement based on proven entities and keyword research that optimize for SERPs and AI Overviews (AIO).
 
 ## 2. Eitan-Dev — Engineer / Executor (Profile: `waoengineer`)
-|- **Engine:** Gemini 3.7 Flash (via Hermes, Google API) — migrated to Gemini 3.7 Flash 2026-08-31 for fast and strict specification execution.
+|- **Engine:** GPT-5.6 Terra (via Hermes, OpenAI Codex OAuth) — migrated 2026-09-01 for fast, precise specification execution with medium reasoning effort.
 |- **Model Config:**
-  - model: gemini-3.7-flash
-  - provider: gemini
+  - model: gpt-5.6-terra
+  - provider: openai-codex
+  - reasoning_effort: medium
   - context_length: 1000000
-  - api_key_env: GEMINI_API_KEY
-  - base_url: https://generativelanguage.googleapis.com/v1beta/openai
   - temperature: 0.2
 |- **Role:** Next.js Code Implementation, Script Execution, Google Ads API Wiring.
 |- **Mandate:** Receives Technical Specifications from `/handoff/pending/` and implements them exactly as written — no freelancing, no "improvements in passing" (improvements are a strategist decision made in the spec). Runs tests (`node --test`), validates builds (`npm run build`).
@@ -53,9 +50,9 @@ This version has breaking changes — APIs, conventions, and file structure may 
 |- **Human gate:** Any founder-facing or voiceover Hebrew passes a human spot-check by Eitan before it ships, until the model has proven native Sabra register — grammatical correctness is not voice approval.
 
 ## 3b. Noa — Hebrew QA & Voice Director (Profile: `waohebrewqa`)
-|- **Engine:** Qwen 3.8 Max (via Hermes, DashScope API)
-|- **Model Config:** same shape as `waocopy` — model: qwen3.8-max, api_key_env: QWEN_API_KEY
-  (+ DASHSCOPE_API_KEY, see §2's credential-pool note), base_url_env: QWEN_BASE_URL.
+|- **Engine:** Gemini 3.7 Flash (via Hermes, Google API)
+|- **Model Config:** model: gemini-3.7-flash, provider: gemini, context_length: 1000000,
+  api_key_env: GEMINI_API_KEY, base_url: https://generativelanguage.googleapis.com/v1beta/openai.
 |- **Role:** QA pass on Hermes-authored Hebrew — Sabra naturalness, TTS/narration readiness, final
   language review.
 |- **Mandate:** Reviews `waocopy`'s output before it is handed back; does not draft original copy.
@@ -131,8 +128,8 @@ This version has breaking changes — APIs, conventions, and file structure may 
 ---
 
 # Workflow Rules
-|- **Strategy & Specs:** Run under Hermes profile `waostrategy` (Qwen 3.8 Max). Output goes to `/handoff/pending/` per `CLAUDE_TO_HERMES_HANDOFF.md`.
-|- **Code & Execution:** Hermes picks up from `/handoff/pending/` and executes with `waoengineer` on `gemini-3.7-flash` (Google API).
+|- **Strategy & Specs:** `waostrategy` alone decides scope, selects the executing profile, and writes the specific handoff spec under its pinned `gpt-5.6-sol` OpenAI Codex configuration. The orchestrator only dispatches the spec's explicit `Target Agent` without planning, selecting, rewriting, or expanding it. Output goes to `/handoff/pending/` per `CLAUDE_TO_HERMES_HANDOFF.md`.
+|- **Code & Execution:** Hermes picks up from `/handoff/pending/` and executes with `waoengineer` on `gpt-5.6-terra` (OpenAI Codex OAuth, medium reasoning effort).
 |- **Execution order:** Hermes processes pending files in ascending filename order, one task at a time; a task never starts before its listed Dependencies are in `/completed/`. Parallel only for dependency-free tasks with different target agents.
 |- **Content Generation:** Hermes uses `qwen3.8-max` for all Hebrew content (subject to the human gate above) — **except GEO opportunity generation** (`scripts/geo-generate-content.mjs`), where `gemini-3.7-flash` is PRIMARY and `qwen3.8-max` is the fallback. Both Tamar and Noa calls try Gemini first; Qwen only if Gemini's attempts are exhausted. Every saved action is stamped `generatedVia: "primary:gemini-3.7-flash"` or `"fallback:qwen3.8-max"`. Applies to every GEO-entitled client (`retter`, `ajudaica`, `wao`).
 |- **App Verification:** structural checks → Claude `verifier` (Haiku 4.5, direct subagent, not Hermes; escalate to Sonnet 5 only if Haiku misses a hard drive). Visual/RTL checks → two-tier: `qwen3.5-omni-plus` (quick/iterative) or `qwen3.8-max` (serious/from-scratch, pre-deploy gate) via direct DashScope API call (see §4a); for real-user flow QA via screenshot inspection, `waouxtester` (Gemini 3.7 Flash, §4c). **Media Verification:** `waoverifier-media` (Gemini 3.7 Flash, §4b) for video/audio QA. **Hermes-orchestrated flows** (kanban `swarm`) use the `waoverifier` profile (Gemini 3.7 Flash, §4a) as their in-Hermes verifier.
@@ -144,13 +141,15 @@ This version has breaking changes — APIs, conventions, and file structure may 
 All Hermes engines run stateless one-shot `-z` — no caching/compaction to manage. Rationale + verified
 pricing: [[project_model_cost_geometry]].
 
-**Qwen 3.8 Max** (`waostrategy`, `waocopy`, `orchestrator`): flat rate to 1M — deep reasoning for architecture and strategy, nuanced generation for Hebrew copy. Still enforce:
+**OpenAI Codex GPT-5.6** (`waostrategy` on `gpt-5.6-sol`, `waoengineer` on `gpt-5.6-terra`, `orchestrator` on `gpt-5.6-luna`): high capability reasoning and fast execution via Codex OAuth.
+
+**Qwen 3.8 Max** (`waocopy`): flat rate to 1M — deep reasoning and nuanced generation for Hebrew copy. Still enforce:
 - One scoped task per `/handoff/pending/` MD; name exact paths/functions; never dump whole files or the repo.
 - `knowledge.ts` edits = surgical Python `str.replace` patches only (file never loaded whole).
 - No Hebrew in the coder's (`waoengineer`) context — tokenize/placeholder all strings; Hebrew edits arrive as byte-exact patches Qwen (`waocopy`) authored ([[feedback_hebrew_edits_need_patch_not_retype]]).
 - Dispatch with `--usage-file` for visibility even though there's no ceiling to enforce.
 
-**Gemini 3.7 Flash** (`waoengineer`, `waohebrewqa`, `waoverifier`, `waoverifier-media`, `waouxtester`): fast, reliable specification following and verification tier with native multimodal (vision/audio/video) capability.
+**Gemini 3.7 Flash** (`waohebrewqa`, `waoverifier`, `waoverifier-media`, `waouxtester`): fast, reliable verification tier with native multimodal (vision/audio/video) capability.
 
 ---
 

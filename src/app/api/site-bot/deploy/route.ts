@@ -5,6 +5,7 @@ import { tmpdir } from 'os';
 import path from 'path';
 import { cookies } from 'next/headers';
 import { renderSitePages, buildSitemap } from '@/lib/lp/renderSitePages';
+import { renderResearchedSitePages, type ResearchedSitePage, type ResearchedSiteGraphEdge } from '@/lib/lp/researchedSite';
 import { detectVertical } from '@/lib/lp/verticalDetect';
 import { VERTICAL_THEMES } from '@/lib/lp/verticalThemes';
 import { VERTICAL_ASSETS } from '@/lib/lp/verticalAssets';
@@ -17,6 +18,8 @@ import type { DuplicateCheckPage } from '@/lib/lp/duplicateCheck';
 import { renderCoreThirtyPages, buildCoreThirtySitemapUrls } from '@/lib/lp/renderCoreThirtyPages';
 import { ensureSiteBotClientRecord, clientRecordExists } from '@/lib/geo/client';
 import { createSessionToken, COOKIE_NAME } from '@/lib/client-auth';
+import { assertDeployReady } from '@/lib/site-bot/research/pipelineState';
+import { readResearchDossier } from '@/lib/site-bot/research/researchStore';
 
 interface DeployRequest {
   slug: string;
@@ -25,12 +28,18 @@ interface DeployRequest {
   formConversionLabel?: string;
   phoneConversionLabel?: string;
   whatsappConversionLabel?: string;
+  testOnlyOfflineSimulationDeploy?: boolean;
 }
 
 interface SiteRecord {
   collectedData: CollectedData;
   copy: SiteCopy;
   slug: string;
+  researchId?: string;
+  researchedPages?: ResearchedSitePage[];
+  researchedGraphEdges?: ResearchedSiteGraphEdge[];
+  simulation?: boolean;
+  legacyCoreThirty?: boolean;
   coreThirtyNodes?: CoreThirtyNode[];
   coreThirtyCopies?: Record<string, CoreThirtyPageCopy>;
 }
@@ -71,6 +80,18 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: `Site data not found for slug: ${slug}` }, { status: 404 });
     }
 
+    if (record.simulation && !(body.testOnlyOfflineSimulationDeploy === true && process.env.NODE_ENV === 'test')) {
+      return NextResponse.json({ error: 'simulation_deploy_rejected' }, { status: 409 });
+    }
+    if (record.researchId && !record.simulation) {
+      const dossier = await readResearchDossier(record.researchId);
+      if (!dossier) return NextResponse.json({ error: 'research_dossier_required' }, { status: 409 });
+      const readiness = assertDeployReady(dossier);
+      if (!readiness.ready) {
+        return NextResponse.json({ error: 'deploy_not_ready', reasons: readiness.reasons }, { status: 409 });
+      }
+    }
+
     const { collectedData, copy } = record;
     const verticalKey = detectVertical(collectedData.businessNiche || '');
     const theme = VERTICAL_THEMES[verticalKey];
@@ -78,11 +99,9 @@ export async function POST(req: Request) {
     const heroImageUrl = collectedData.trustAssetUrls?.[0] || collectedData.profilePhotoUrl || assets.heroImages[0].url;
     const siteUrl = `https://${slug}.wao.co.il`;
 
-    // ── Step 2: Render the 5 static pages ──────────────────────────────────
-    const pages = renderSitePages({
+    const renderParams = {
       theme,
       assets,
-      copy,
       data: collectedData,
       heroImageUrl,
       slug,
@@ -92,13 +111,24 @@ export async function POST(req: Request) {
       phoneConversionLabel,
       whatsappConversionLabel,
       siteUrl,
-    });
+    };
+
+    // ── Step 2: Render researched or explicit legacy pages ─────────────────
+    // Paid research records must carry their selected hierarchy. Falling back
+    // to Core-30 for these records would recreate opaque, unapproved URLs.
+    const isResearchedRecord = Boolean(record.researchId) && !record.simulation && !record.legacyCoreThirty;
+    if (isResearchedRecord && !record.researchedPages?.length) {
+      return NextResponse.json({ error: 'researched_site_pages_required' }, { status: 409 });
+    }
+    const pages = isResearchedRecord
+      ? renderResearchedSitePages({ ...renderParams, pages: record.researchedPages!, graphEdges: record.researchedGraphEdges })
+      : renderSitePages({ ...renderParams, copy });
 
     // ── Step 2b: Render the core-30 supplementary local-SEO pages ───────────
     // Deploy-time never regenerates copy — only reads what generate/route.ts
     // already persisted, keeping deploy fast/deterministic with no LLM calls.
     let allPages: Record<string, string> = pages;
-    const nodes: CoreThirtyNode[] = record.coreThirtyNodes || [];
+    const nodes: CoreThirtyNode[] = record.legacyCoreThirty || record.simulation ? record.coreThirtyNodes || [] : [];
     const copiesMap = new Map(Object.entries(record.coreThirtyCopies || {}));
 
     if (nodes.length > 0) {
@@ -221,8 +251,8 @@ export async function POST(req: Request) {
             ttl: 1,
           }),
         });
-        const dnsData = await dnsRes.json();
-        if (!dnsRes.ok && !dnsData?.errors?.some((e: any) => e.code === 81053)) {
+        const dnsData = await dnsRes.json() as { errors?: Array<{ code?: number }> };
+        if (!dnsRes.ok && !dnsData?.errors?.some((entry) => entry.code === 81053)) {
           // 81053 = record already exists — safe to ignore
           console.warn('DNS record creation (non-fatal):', dnsData);
         }
@@ -269,10 +299,10 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ success: true, url: siteUrl, projectName: slug });
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Site Bot deploy error:', error);
     return NextResponse.json(
-      { error: error.message || 'Deploy failed' },
+      { error: error instanceof Error ? error.message : 'Deploy failed' },
       { status: 500 }
     );
   }

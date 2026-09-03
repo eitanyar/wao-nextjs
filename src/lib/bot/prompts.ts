@@ -17,12 +17,18 @@ export interface CollectedData {
   extractedKeywords?: string[];
   ownerName?: string;
   secondaryServices?: string;
+  priorityServices?: string[];
+  serviceAttributes?: Record<string, string>;
 
   // Service model + location
   serviceModel?: 'field' | 'location' | 'event' | 'remote' | 'mixed';
   targetLocation?: string;
   specificCities?: string;
   streetAddress?: string; // Site Bot — only asked when serviceModel is storefront-based; feeds LocalBusiness schema
+  travelBoundary?: string;
+  geographicExclusions?: string[];
+  researchGateApprovals?: Record<string, { evidenceDigest: string; approvedAt: string }>;
+  researchGateAnswers?: Record<string, unknown>;
 
   // Client profile
   idealClient?: string;

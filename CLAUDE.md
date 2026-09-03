@@ -51,25 +51,21 @@ Orchestration via **Adam** — see below.
 
 ## Orchestration (Adam)
 
-**Adam is the main session, not a subagent.** Subagents can't call each other or sub-delegate —
-they run isolated and report only to their caller. So *all* cross-agent flow goes through Adam: he
-is the conductor and the bus. "Talk to Adam" = talk to the main Claude Code session in orchestrator
-mode. (There is deliberately no `adam.md` — a subagent couldn't spawn the others.)
+**Adam/orchestrator is the main dispatch session, not a planning subagent.** It performs
+dependency-aware dispatch and status/result relay only. `waostrategy` alone decides strategy and
+scope, selects the executing profile, and authors the specific handoff spec. (There is deliberately
+no `adam.md` — a subagent couldn't spawn the others.)
 
-**Interaction model — hybrid:**
-- Multi-step or unsure who's needed → **Adam** plans, delegates, routes, and synthesizes.
-- A known single task → call the specialist directly (still bound by the seams/gates below).
+**Interaction model:** `waostrategy` prepares every mission and names the exact `Target Agent` in
+each completed spec. Adam/orchestrator only dispatches that target when dependencies permit.
 
 **How Adam runs a mission:**
-1. Read the request + this file + the relevant charters in `.claude/agents/`.
-2. Plan the stages and owners. Known mission → follow the documented pipeline in `docs/missions/`.
-   One-off → plan ad-hoc from the charters.
-3. Delegate one stage at a time; fan out **independent** stages in parallel, **dependent** stages
-   sequentially. Pass each specialist exactly what they need.
-4. Collect output → **enforce the gate** → route to the next owner.
-5. Report back: what each did, what's verified, what's left.
+1. Read the completed handoff spec and its explicit `Target Agent`.
+2. Confirm listed dependencies are complete.
+3. Dispatch only that exact target; fan out only independent, already-specified tasks.
+4. Relay status and results without planning, selecting owners, rewriting, or expanding scope.
 
-**Seams & gates Adam enforces (non-negotiable):**
+**Seams & gates in strategist-authored specs (non-negotiable):**
 - Any copy/script → **language-qa (Noa)** before it ships.
 - `knowledge.ts` → **nextjs-engineer (Eitan-Dev)** only, Python `str.replace`, asserted counts.
 - Keyword anchors / title formula → **seo-strategist (Yonatan)** sign-off.
@@ -80,14 +76,14 @@ mode. (There is deliberately no `adam.md` — a subagent couldn't spawn the othe
 **Models:** each specialist runs on its **pinned** model regardless of the session model — that's
 the guarantee against language-quality regressions. Documented pipelines live in `docs/missions/`.
 
-# Orchestrator Instructions (Strategist = Hermes profile `waostrategy`, Qwen 3.8 Max)
+# Orchestrator Instructions (Strategist = Hermes profile `waostrategy`, model gpt-5.6-sol via OpenAI Codex)
 
 Before doing ANY work in this repository, read these two files:
 - AGENTS.md
 - CLAUDE_TO_HERMES_HANDOFF.md
 
 ## Your Role
-You are the Strategist (Hermes profile: `waostrategy`, model qwen3.8-max via DashScope).
+You are the Strategist (Hermes profile: `waostrategy`, model gpt-5.6-sol via OpenAI Codex).
 You THINK and PLAN. You do NOT write production code.
 Execution is done by the Hermes execution profiles (`waoengineer`, `waocopy`, verifier tier).
 

@@ -7,6 +7,7 @@ import type { CollectedData } from "@/lib/bot/prompts";
 import { renderMixed } from "@/lib/bidi";
 import { SCORECARD_COPY } from "@/lib/site-bot/scorecardCopy";
 import { seedFromAudit } from "@/lib/site-bot/seedPrefill";
+import { RESEARCH_COPY } from "@/lib/site-bot/researchCopy";
 
 // Site Bot intake — a sequential chat that collects only the fields
 // buildSiteCopyPrompt() / renderSitePages() actually read. Redesigned per the
@@ -375,7 +376,7 @@ function SiteBotStartContent() {
 
           {phase === "routing" && (
             <div style={{ color: "var(--muted)", fontFamily: "var(--font-body), sans-serif", padding: "0 4px" }}>
-              {renderMixed("מעביר אותך לתשלום...")}
+              {renderMixed(RESEARCH_COPY.progress_truth)}
             </div>
           )}
 

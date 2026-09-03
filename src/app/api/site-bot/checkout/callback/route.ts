@@ -4,6 +4,9 @@ import path from 'path';
 import type { CollectedData } from '@/lib/bot/prompts';
 import { getPaymentProvider } from '@/lib/payments/get-provider';
 import { getInvoiceProvider } from '@/lib/payments/get-invoice-provider';
+import { deriveOpenResearchGates } from '@/lib/site-bot/research/gates';
+import { readResearchDossier } from '@/lib/site-bot/research/researchStore';
+import { runSiteResearch, type SiteResearchInput } from '@/lib/site-bot/research/runResearch';
 
 const SITE_BOT_PRICE = 9.9;
 
@@ -12,11 +15,51 @@ interface PendingRecord {
   createdAt: string;
 }
 
+function researchInput(sessionId: string, collectedData: CollectedData): SiteResearchInput {
+  const capturedAt = new Date().toISOString();
+  const owner = { sourceId: `checkout:${sessionId}`, capturedAt };
+  const serviceModel = collectedData.serviceModel === 'location'
+    ? 'fixed'
+    : collectedData.serviceModel === 'mixed'
+      ? 'hybrid'
+      : collectedData.serviceModel === 'event'
+        ? 'field'
+        : collectedData.serviceModel ?? 'remote';
+  const services = [collectedData.primaryService, ...(collectedData.secondaryServices ?? '').split(',')]
+    .map(value => value?.trim())
+    .filter((value): value is string => Boolean(value));
+  return {
+    businessTruth: {
+      businessName: collectedData.businessName ?? collectedData.ownerName ?? sessionId,
+      serviceModel,
+      confirmedServices: services.map(value => ({ value, owner })),
+      moneyPriorities: (collectedData.priorityServices ?? []).map(value => ({ value, owner })),
+      ...(collectedData.targetLocation ? { base: { value: collectedData.targetLocation, owner } } : {}),
+      ...(collectedData.travelBoundary ? { travelBoundary: { value: collectedData.travelBoundary, owner } } : {}),
+      servedAreas: (collectedData.specificCities ?? '').split(',').map(value => value.trim()).filter(Boolean).map(value => ({ value, owner })),
+      excludedAreas: (collectedData.geographicExclusions ?? []).map(value => ({ value, owner })),
+      ...(serviceModel === 'fixed' ? { customerTravel: { value: true, owner } } : {}),
+    },
+    seeds: services,
+  };
+}
+
 export async function POST(req: Request) {
   try {
     const body = await req.json();
     const sessionId: string = body.sessionId;
     if (!sessionId) return NextResponse.json({ error: 'sessionId is required' }, { status: 400 });
+
+    const existingDossier = await readResearchDossier(sessionId);
+    if (existingDossier) {
+      return NextResponse.json({
+        success: true,
+        charged: true,
+        researchId: sessionId,
+        status: existingDossier.status,
+        statusUrl: `/api/site-bot/research/status?researchId=${encodeURIComponent(sessionId)}`,
+      });
+    }
 
     const pendingPath = path.join(process.cwd(), 'data', 'sites-pending', `${sessionId}.json`);
     let pending: PendingRecord;
@@ -61,6 +104,18 @@ export async function POST(req: Request) {
       console.error(`[site-bot checkout] Failed to issue invoice for session=${sessionId}:`, err);
     }
 
+    const result = await runSiteResearch(sessionId, researchInput(sessionId, pending.collectedData));
+    const openResearchGateCount = deriveOpenResearchGates(sessionId, pending.collectedData).length;
+    fs.rmSync(pendingPath, { force: true });
+    return NextResponse.json({
+      success: true,
+      charged: true,
+      researchId: sessionId,
+      status: result.dossier.status,
+      statusUrl: `/api/site-bot/research/status?researchId=${encodeURIComponent(sessionId)}`,
+      openGateCount: openResearchGateCount + result.dossier.humanGates.filter(gate => gate.status !== 'approved').length,
+    });
+
     // ── Trigger the already-proven generate → deploy pipeline ────────────────
     const origin = new URL(req.url).origin;
 
@@ -84,11 +139,20 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: deployJson.error || 'העלאת האתר נכשלה לאחר החיוב, ניצור קשר', charged: true }, { status: 500 });
     }
 
+    const openResearchGates = deriveOpenResearchGates(sessionId, pending.collectedData);
+
     fs.rmSync(pendingPath, { force: true });
 
-    return NextResponse.json({ success: true, url: deployJson.url, slug: genJson.slug });
-  } catch (error: any) {
+    return NextResponse.json({
+      success: true,
+      url: deployJson.url,
+      slug: genJson.slug,
+      researchId: sessionId,
+      collectedData: pending.collectedData,
+      openResearchGates,
+    });
+  } catch (error: unknown) {
     console.error('Site Bot checkout callback error:', error);
-    return NextResponse.json({ error: error.message || 'Checkout failed' }, { status: 500 });
+    return NextResponse.json({ error: error instanceof Error ? error.message : 'Checkout failed' }, { status: 500 });
   }
 }

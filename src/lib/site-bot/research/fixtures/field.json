@@ -1,0 +1,21 @@
+{
+  "id": "field",
+  "serviceModel": "field",
+  "legacy": {
+    "businessNiche": "alpha repair",
+    "secondaryServices": "beta repair,gamma repair",
+    "specificCities": "north-town,south-town"
+  },
+  "research": {
+    "businessName": "Field Fixture",
+    "confirmedServices": ["alpha repair", "beta repair", "gamma repair"],
+    "moneyPriorities": ["alpha repair", "beta repair", "gamma repair"]
+  },
+  "candidates": [
+    {"id":"alpha","kind":"money_service","targetPath":"/services/alpha","intent":"commercial","ownerPriority":3,"businessValue":8,"capability":8,"demand":7,"serpOpportunity":7,"graphContribution":6,"expertise":7,"localFacts":7,"cannibalizationRisk":1,"doorwayScaledRisk":1,"maintenanceCost":2,"confidence":8},
+    {"id":"beta","kind":"money_service","targetPath":"/services/beta","intent":"commercial","ownerPriority":2,"businessValue":7,"capability":8,"demand":7,"serpOpportunity":6,"graphContribution":6,"expertise":7,"localFacts":7,"cannibalizationRisk":1,"doorwayScaledRisk":1,"maintenanceCost":2,"confidence":8},
+    {"id":"gamma","kind":"money_service","targetPath":"/services/gamma","intent":"commercial","ownerPriority":1,"businessValue":7,"capability":8,"demand":6,"serpOpportunity":6,"graphContribution":6,"expertise":7,"localFacts":7,"cannibalizationRisk":1,"doorwayScaledRisk":1,"maintenanceCost":2,"confidence":8},
+    {"id":"north","kind":"qualified_service_area","targetPath":"/services/alpha/north","serviceId":"alpha","areaId":"north","intent":"commercial","businessValue":6,"capability":8,"demand":6,"serpOpportunity":6,"graphContribution":6,"expertise":6,"localFacts":7,"cannibalizationRisk":1,"doorwayScaledRisk":1,"maintenanceCost":2,"confidence":8,"serviceability":true,"distinctIntent":true,"assertableLocalEvidence":true},
+    {"id":"south","kind":"qualified_service_area","targetPath":"/services/alpha/south","serviceId":"alpha","areaId":"south","intent":"commercial","businessValue":6,"capability":8,"demand":6,"serpOpportunity":6,"graphContribution":6,"expertise":6,"localFacts":2,"cannibalizationRisk":1,"doorwayScaledRisk":1,"maintenanceCost":2,"confidence":8,"serviceability":true,"distinctIntent":true,"assertableLocalEvidence":false}
+  ]
+}

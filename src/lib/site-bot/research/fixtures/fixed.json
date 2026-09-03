@@ -1,0 +1,21 @@
+{
+  "id": "fixed",
+  "serviceModel": "location",
+  "legacy": {
+    "businessNiche": "studio alpha",
+    "secondaryServices": "studio beta,studio gamma",
+    "specificCities": "central-city,east-city"
+  },
+  "research": {
+    "businessName": "Fixed Fixture",
+    "confirmedServices": ["studio alpha", "studio beta", "studio gamma"],
+    "moneyPriorities": ["studio alpha", "studio beta", "studio gamma"]
+  },
+  "candidates": [
+    {"id":"alpha","kind":"money_service","targetPath":"/services/alpha","intent":"commercial","ownerPriority":3,"businessValue":8,"capability":8,"demand":7,"serpOpportunity":7,"graphContribution":6,"expertise":7,"localFacts":7,"cannibalizationRisk":1,"doorwayScaledRisk":1,"maintenanceCost":2,"confidence":8},
+    {"id":"beta","kind":"money_service","targetPath":"/services/beta","intent":"commercial","ownerPriority":2,"businessValue":7,"capability":8,"demand":7,"serpOpportunity":6,"graphContribution":6,"expertise":7,"localFacts":7,"cannibalizationRisk":1,"doorwayScaledRisk":1,"maintenanceCost":2,"confidence":8},
+    {"id":"gamma","kind":"money_service","targetPath":"/services/gamma","intent":"commercial","ownerPriority":1,"businessValue":7,"capability":8,"demand":6,"serpOpportunity":6,"graphContribution":6,"expertise":7,"localFacts":7,"cannibalizationRisk":1,"doorwayScaledRisk":1,"maintenanceCost":2,"confidence":8},
+    {"id":"duplicate","kind":"money_service","targetPath":"/services/alpha","intent":"commercial","ownerPriority":0,"businessValue":6,"capability":8,"demand":6,"serpOpportunity":6,"graphContribution":6,"expertise":6,"localFacts":6,"cannibalizationRisk":9,"doorwayScaledRisk":1,"maintenanceCost":2,"confidence":8},
+    {"id":"uncertain","kind":"supporting","targetPath":"/guides/uncertain","intent":"informational","businessValue":4,"capability":7,"demand":5,"serpOpportunity":5,"graphContribution":5,"expertise":6,"localFacts":5,"cannibalizationRisk":1,"doorwayScaledRisk":1,"maintenanceCost":2,"confidence":6,"ambiguityReasons":["fixture ambiguity"]}
+  ]
+}

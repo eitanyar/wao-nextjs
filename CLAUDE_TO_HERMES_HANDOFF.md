@@ -2,9 +2,9 @@
 
 ## Purpose
 This document defines how the Strategist seat structures its output
-so that the Hermes execution profiles (running Qwen models) can pick up work seamlessly.
-As of 2026-08-24 the Strategist seat itself is a Hermes profile (`waostrategy`, Qwen 3.8 Max),
-migrated off Claude Code/Opus by Eitan's direction. The protocol below still applies —
+so that the Hermes execution profiles can pick up work seamlessly.
+The Strategist seat is the Hermes profile `waostrategy` (`gpt-5.6-sol` via OpenAI Codex).
+The protocol below still applies —
 "the Strategist" writes specs; the execution profiles write code and copy.
 
 ## The Golden Rule
@@ -37,12 +37,12 @@ Examples:
 
     2026-08-10_001_waoengineer_fix-bot-route-rtl.md
     2026-08-10_002_waocopy_rewrite-onboarding-hebrew.md
-    2026-08-10_003_waostrategy_google-ads-campaign-spec.md
+    2026-08-10_003_waohebrewqa_review-onboarding-copy.md
 
 Rules:
 - Date: today's date (YYYY-MM-DD)
 - Sequence: 3-digit counter, reset daily (001, 002, 003...)
-- Agent Target: one of waoengineer, waocopy, waoverifier-app, waoverifier-media
+- Agent Target: one of waoengineer, waocopy, waohebrewqa, waoverifier, waoverifier-media, waouxtester
 - Task Slug: kebab-case, max 5 words
 
 ---
@@ -57,7 +57,8 @@ Before dispatching any pending file that does NOT already declare its own execut
 explicit banner at the top (see next paragraph), read `/handoff/EXECUTION_MODE` and dispatch
 accordingly:
 - **`hermes`** → Bash-dispatch `hermes -z ...` against the Hermes profile named in the file's
-  `Target Agent` field (`waoengineer`, `waocopy`, `waoverifier-app`, `waoverifier-media`), per
+  `Target Agent` field (`waoengineer`, `waocopy`, `waohebrewqa`, `waoverifier`, `waoverifier-media`,
+  `waouxtester`), per
   AGENTS.md's model configs.
 - **`claude-subagents`** → call the matching Claude subagent via the Agent tool (`nextjs-engineer`,
   `copywriter`, `language-qa`, `seo-strategist`, `ppc-strategist`, `ux`, `verifier`,
@@ -110,10 +111,10 @@ Missing sections = Hermes rejects the file.
 
     ## Metadata
     - Task ID: [YYYY-MM-DD]_[SEQUENCE]
-    - Target Agent: [waoengineer | waocopy | waoverifier-app | waoverifier-media]
+    - Target Agent: [waoengineer | waocopy | waohebrewqa | waoverifier | waoverifier-media | waouxtester]
     - Priority: [P0-Critical | P1-High | P2-Medium | P3-Low]
     - Estimated Complexity: [Simple | Moderate | Complex]
-    - Created By: waostrategy (Strategist, Qwen 3.8 Max)
+    - Created By: waostrategy (Strategist, GPT-5.6 Sol)
     - Created At: [ISO 8601 timestamp]
     - Status: pending
 
@@ -170,11 +171,11 @@ Missing sections = Hermes rejects the file.
     After self-verification, assess if deeper specialist verification is needed:
 
     - **waoverifier** (runtime smoke checks) — Route here if: HTTP status codes, redirects, API response structure need deeper validation
-    - **waoverifier-app** (RTL/rendering via vision) — Route here if: Hebrew bidi, mixed-script rendering, mobile layout, visual regressions need verification
+    - **waouxtester** (Hermes-native screenshot inspection) — Route here if: Hebrew bidi, mixed-script rendering, mobile layout, visual regressions need verification
     - **waoverifier-media** (video/audio QA) — Route here if: TTS quality, video pipeline output (MP4 frames, embeds), audio transcoding needs validation
 
     **If escalation needed:** Create a new `/handoff/pending/` spec with:
-    - Task name: `[YYYY-MM-DD]_[SEQ+1]_[waoverifier|waoverifier-app|waoverifier-media]_[task-slug]`
+    - Task name: `[YYYY-MM-DD]_[SEQ+1]_[waoverifier|waoverifier-media|waouxtester]_[task-slug]`
     - Reference: "Escalated from [original-task-id] — waoengineer self-verify passed, requesting specialist gate"
     - Scope: Name exact routes, files, or media assets to verify
 
@@ -207,7 +208,7 @@ Missing sections = Hermes rejects the file.
 
 ## Hebrew-Safety Rule (non-negotiable, added 2026-08-13)
 
-**`waoengineer` (Qwen3-Coder-Next) must NEVER type a single Hebrew byte into a file.** It is a code
+**`waoengineer` (GPT-5.6 Terra) must NEVER type a single Hebrew byte into a file.** It is a code
 model, not a language model, and reliably corrupts Hebrew/mixed-script text — including short
 single-word labels — when asked to type it from memory. Caught in production on task 011: only 2 of
 9 Hebrew strings were tokenized, and the coder corrupted all 7 of the untokenized ones (injected
