@@ -1,6 +1,8 @@
 import fs from 'fs';
 import path from 'path';
 import { leadMatchesClientIndex } from './ownership';
+import type { PaidSearchDemandEvidenceSummary } from '../google-ads/demand-readiness';
+import type { AcquisitionChannel, AttributionConfidence } from './lead-attribution';
 
 export interface LeadRecord {
   id: number;
@@ -21,6 +23,21 @@ export interface LeadRecord {
   wbraid?: string | null;
   gbraid?: string | null;
   businessNiche?: string;
+  contactConsentAt?: string;
+  acquisitionChannel?: AcquisitionChannel;
+  attributionConfidence?: AttributionConfidence;
+  landingReferrer?: string;
+  utmSource?: string;
+  utmMedium?: string;
+  utmCampaign?: string;
+  firstResponseStatus?: 'not_eligible' | 'pending' | 'sending' | 'sent' | 'failed';
+  firstResponseAttempts?: number;
+  firstResponseAt?: string;
+  firstResponseProvider?: string;
+  firstResponseProviderMessageId?: string;
+  firstResponseLastError?: string;
+  firstResponseClaimId?: string;
+  firstResponseClaimedAt?: string;
 }
 
 export interface CampaignConfig {
@@ -48,6 +65,7 @@ export interface CampaignConfig {
    * CampaignConfig records.
    */
   cplCeilingIls?: number;
+  demandEvidence?: PaidSearchDemandEvidenceSummary;
 }
 
 export interface GoogleAdsCampaignLink {

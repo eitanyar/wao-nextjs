@@ -1,9 +1,11 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useLayoutEffect, useRef } from "react";
 import Link from "next/link";
 import type { CollectedData } from "@/lib/bot/prompts";
 import { deliveryModelFollowUp, deliveryModelOptions } from "@/lib/bot/delivery-model";
+import { AutonomyConsent } from "@/components/google-ads/AutonomyConsent";
+import { AUTONOMY_TERMS_VERSION } from "@/lib/google-ads/autonomyCopy";
 
 interface Message {
   role: "user" | "assistant" | "system";
@@ -189,9 +191,18 @@ export default function OnboardingPage() {
 
   // New user messages stay at the bottom; new assistant questions begin at the
   // top of the reading area so long prompts never open on their final line.
-  useEffect(() => {
+  useLayoutEffect(() => {
     const el = messagesContainerRef.current;
     if (!el) return;
+
+    if (currentState === "REVIEWING") {
+      const scrollToCompactConsent = () => {
+        el.scrollTop = el.scrollHeight;
+      };
+      scrollToCompactConsent();
+      const frame = requestAnimationFrame(scrollToCompactConsent);
+      return () => cancelAnimationFrame(frame);
+    }
 
     const latestMessage = messages[messages.length - 1];
     if (latestMessage?.role === "assistant") {
@@ -202,7 +213,7 @@ export default function OnboardingPage() {
     }
 
     el.scrollTop = el.scrollHeight;
-  }, [messages]);
+  }, [messages, currentState]);
 
   // Post-payment flow — shared by Yaad Sarig redirect and bypass button
   const triggerCampaignLaunch = async () => {
@@ -234,6 +245,11 @@ export default function OnboardingPage() {
             strategy,
             copy,
             consentTimestamp: new Date().toISOString(),
+            ...(acceptedTerms ? {
+              autonomyConsent: true,
+              autonomyConsentTimestamp: new Date().toISOString(),
+              autonomyTermsVersion: AUTONOMY_TERMS_VERSION,
+            } : {}),
             clientId: resolvedClientId,
             mode,
           }),
@@ -683,6 +699,7 @@ export default function OnboardingPage() {
         >
           {/* Right Column: Chat Assistant (Adam) */}
           <div
+            className={`onboarding-chat-card${currentState === "REVIEWING" ? " onboarding-chat-card-reviewing" : ""}`}
             style={{
               ...glass,
               display: "flex",
@@ -828,17 +845,7 @@ export default function OnboardingPage() {
                   <div style={{ fontSize: "0.9rem", color: "var(--muted)", textAlign: "center" }}>
                     דמי הקמה חד-פעמיים — <strong style={{ color: "var(--text)" }}>9.90 ₪</strong>
                   </div>
-                  <label style={{ display: "flex", alignItems: "flex-start", gap: "10px", cursor: "pointer" }}>
-                    <input
-                      type="checkbox"
-                      checked={acceptedTerms}
-                      onChange={(e) => setAcceptedTerms(e.target.checked)}
-                      style={{ marginTop: "3px", accentColor: "var(--accent)", width: "16px", height: "16px", flexShrink: 0 }}
-                    />
-                    <span style={{ fontSize: "0.82rem", color: "var(--muted)", lineHeight: "1.4", direction: "rtl" }}>
-                      אני מאשר/ת את <strong>תנאי השימוש</strong> ומסכים/ה לתנאי השירות.
-                    </span>
-                  </label>
+                  <AutonomyConsent checked={acceptedTerms} onChange={setAcceptedTerms} compact />
                   <button
                     onClick={handleApprove}
                     disabled={isSubmitting || !acceptedTerms}
@@ -1278,18 +1285,7 @@ export default function OnboardingPage() {
                         <div style={{ fontSize: "0.8rem", color: "var(--muted)" }}>תשלום אחד שמקים לך את הקמפיין ודף הנחיתה. חודש הניהול הראשון חינם, ומהחודש השני 249 ₪ בחודש.</div>
                       </div>
 
-                      <label style={{ display: "flex", alignItems: "flex-start", gap: "10px", cursor: "pointer" }}>
-                        <input
-                          type="checkbox"
-                          checked={acceptedTerms}
-                          onChange={(e) => setAcceptedTerms(e.target.checked)}
-                          style={{ marginTop: "4px", accentColor: "var(--accent)", width: "16px", height: "16px" }}
-                        />
-                        <span style={{ fontSize: "0.85rem", color: "var(--muted)", lineHeight: "1.4" }}>
-                          אני מאשר/ת את <strong>תנאי השימוש</strong> ומסכים/ה לתנאי השירות.
-                          ידוע לי שהתקציב הפרסומי לגוגל ייגבה ישירות מאמצעי התשלום שאקשר לחשבון.
-                        </span>
-                      </label>
+                      <AutonomyConsent checked={acceptedTerms} onChange={setAcceptedTerms} />
 
                       <button
                         onClick={handleApprove}

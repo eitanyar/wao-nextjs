@@ -20,6 +20,9 @@ import { ensureSiteBotClientRecord, clientRecordExists } from '@/lib/geo/client'
 import { createSessionToken, COOKIE_NAME } from '@/lib/client-auth';
 import { assertDeployReady } from '@/lib/site-bot/research/pipelineState';
 import { readResearchDossier } from '@/lib/site-bot/research/researchStore';
+import { createFraudBlockerClient } from '@/lib/fraud-blocker/client';
+import { fraudBlockerFailureState, provisionFraudBlockerDomain, recordFraudBlockerTrackerInstallation } from '@/lib/fraud-blocker/deployment';
+import { readFraudBlockerState, writeFraudBlockerState } from '@/lib/fraud-blocker/store';
 
 interface DeployRequest {
   slug: string;
@@ -98,6 +101,14 @@ export async function POST(req: Request) {
     const assets = VERTICAL_ASSETS[verticalKey];
     const heroImageUrl = collectedData.trustAssetUrls?.[0] || collectedData.profilePhotoUrl || assets.heroImages[0].url;
     const siteUrl = `https://${slug}.wao.co.il`;
+    const fraudBlockerRequired = Boolean(googleAdsCustomerId) || process.env.FRAUD_BLOCKER_REQUIRED_FOR_ORGANIC === 'true';
+    let fraudBlockerSid: string | undefined;
+    try {
+      fraudBlockerSid = await provisionFraudBlockerDomain({ clientId: slug, domain: `${slug}.wao.co.il`, client: createFraudBlockerClient() });
+    } catch (error) {
+      writeFraudBlockerState(fraudBlockerFailureState(slug, `${slug}.wao.co.il`, error));
+      if (fraudBlockerRequired) return NextResponse.json({ error: 'fraud_blocker_provisioning_required' }, { status: 424 });
+    }
 
     const renderParams = {
       theme,
@@ -111,6 +122,7 @@ export async function POST(req: Request) {
       phoneConversionLabel,
       whatsappConversionLabel,
       siteUrl,
+      fraudBlockerSid,
     };
 
     // ── Step 2: Render researched or explicit legacy pages ─────────────────
@@ -185,10 +197,19 @@ export async function POST(req: Request) {
           whatsappConversionLabel,
           gtagSnippet,
           formConversionLabel,
+          fraudBlockerSid,
         });
         allPages = { ...pages, ...coreThirtyPages };
         allPages['sitemap.xml'] = buildSitemap(siteUrl, buildCoreThirtySitemapUrls(filteredNodes, copiesMap));
       }
+    }
+
+    if (fraudBlockerSid && !recordFraudBlockerTrackerInstallation({
+      state: readFraudBlockerState(slug) ?? fraudBlockerFailureState(slug, `${slug}.wao.co.il`, new Error('Fraud Blocker state was not persisted.')),
+      pages: allPages,
+    })) {
+      writeFraudBlockerState(fraudBlockerFailureState(slug, `${slug}.wao.co.il`, new Error('Tracker verification failed.')));
+      if (fraudBlockerRequired) return NextResponse.json({ error: 'fraud_blocker_tracker_verification_failed' }, { status: 424 });
     }
 
     // ── Step 3: Write to a tmp dir ──────────────────────────────────────────

@@ -2,6 +2,7 @@ import type { VerticalTheme } from './verticalThemes';
 import type { VerticalAssets } from './verticalAssets';
 import type { LPCopy } from './lpCopyPrompt';
 import type { CollectedData } from '@/lib/bot/prompts';
+import { buildFraudBlockerTrackerHtml } from '../fraud-blocker/tracker';
 
 export interface RenderStaticHtmlParams {
   theme: VerticalTheme;
@@ -24,6 +25,7 @@ export interface RenderStaticHtmlParams {
   siteUrl?: string;
   /** Override the auto-generated <title>. Use keyword-first formula per Yonatan's sign-off. */
   pageTitle?: string;
+  fraudBlockerSid?: string;
 }
 
 export function renderStaticHtml(p: RenderStaticHtmlParams): string {
@@ -84,6 +86,7 @@ export function renderStaticHtml(p: RenderStaticHtmlParams): string {
   return `<!DOCTYPE html>
 <html lang="he" dir="rtl">
 <head>
+  ${p.fraudBlockerSid ? buildFraudBlockerTrackerHtml(p.fraudBlockerSid) : ''}
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>${resolvedTitle}</title>

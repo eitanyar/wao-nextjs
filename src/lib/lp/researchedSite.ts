@@ -177,6 +177,7 @@ function buildPageHtml(page: ResearchedSitePage, params: RenderResearchedSitePag
     canonicalUrl: pageUrl(siteUrl, output),
     ogImage: heroImageUrl,
     schema: schemaGraph(page, data, siteUrl, heroImageUrl, output),
+    fraudBlockerSid: params.fraudBlockerSid,
   });
   const body = `${stickyHeader(theme, businessName, phone, phoneHref)}
   <main>

@@ -1,7 +1,7 @@
 import type { GoogleAdsOperatorTask } from './operator';
-import type { CampaignConfig } from '@/lib/crm/intelligence';
-import { buildWeeklyDigest } from '@/lib/crm/intelligence';
-import { setCampaignDailyBudget, addNegativeKeywords, buildClient, resolveCustomer } from './mutations';
+import type { CampaignConfig } from '../crm/intelligence';
+import { buildWeeklyDigest } from '../crm/intelligence';
+import { setCampaignDailyBudget, addNegativeKeywords, addPositiveKeywords, buildClient, resolveCustomer } from './mutations';
 import {
   campaignType,
   resolveCplCeilingIls,
@@ -12,6 +12,7 @@ import {
 import { fetchSearchTermReport, fetchAdGroupBaselinesWithKeywords } from './search-term-fetch';
 import { scoreSearchTerms, type ScoredSearchTerm } from './search-term-scoring';
 import { resolveIntentDictionary } from './intent-dictionaries';
+import { evaluateSearchTermHarvesting } from './searchTermHarvest';
 import fs from 'fs';
 import path from 'path';
 
@@ -269,6 +270,77 @@ export async function executeGoogleAdsOperatorTask(params: {
         console.warn('Failed to update campaign config file after budget tune:', err);
       }
 
+      return { success: true };
+    }
+    case 'search_term_harvest': {
+      if (task.campaignPhase !== 'growth' && task.campaignPhase !== 'maturity') {
+        return {
+          success: false,
+          error: 'Search-term harvesting is only permitted for growth or maturity campaigns; no mutation performed.',
+        };
+      }
+
+      const windowDays = resolveSearchTermWindowDays(task.clientId);
+      let rows;
+      try {
+        rows = await fetchSearchTermReport({ campaignConfig, campaignId, windowDays, clientInstance });
+      } catch (err) {
+        return { success: false, error: `Failed to read search-term report: ${err instanceof Error ? err.message : String(err)}` };
+      }
+
+      const type = campaignType(rows[0]?.campaignName, task.clientId, campaignId);
+      const targetCplIls = resolveCplCeilingIls({ clientId: task.clientId, campaignConfig, type });
+      const candidates = evaluateSearchTermHarvesting({
+        campaignId,
+        targetCplIls,
+        searchTerms: rows.map((row) => ({
+          query: row.searchTerm,
+          conversions: row.conversions,
+          spendIls: row.costMicros / 1_000_000,
+          isExistingKeyword: row.isExistingKeyword,
+          hasNegativeKeywordConflict: row.hasNegativeKeywordConflict,
+          adGroupResourceName: row.adGroupResourceName,
+        })),
+      });
+
+      if (!candidates.length) {
+        return { success: true, error: 'No eligible profitable search-term candidates; no mutation performed.' };
+      }
+
+      const groups = new Map<string, { adGroupResourceName: string; matchType: 'EXACT' | 'PHRASE'; keywords: Set<string> }>();
+      for (const candidate of candidates) {
+        const matchType = candidate.recommendedMatchType.toUpperCase() as 'EXACT' | 'PHRASE';
+        const key = `${candidate.adGroupResourceName}|${matchType}`;
+        const group = groups.get(key) ?? { adGroupResourceName: candidate.adGroupResourceName, matchType, keywords: new Set<string>() };
+        group.keywords.add(candidate.query.trim());
+        groups.set(key, group);
+      }
+
+      const failures: string[] = [];
+      let addedCount = 0;
+      const candidateCount = [...groups.values()].reduce((count, group) => count + group.keywords.size, 0);
+      for (const group of groups.values()) {
+        const keywords = [...group.keywords];
+        const result = await addPositiveKeywords({
+          campaignConfig,
+          adGroupResourceName: group.adGroupResourceName,
+          keywords,
+          matchType: group.matchType,
+          clientInstance,
+        });
+        if (result.success) {
+          addedCount += keywords.length;
+        } else {
+          failures.push(`${group.adGroupResourceName} (${group.matchType}): ${result.error || 'unknown error'}`);
+        }
+      }
+
+      if (failures.length) {
+        return {
+          success: addedCount > 0,
+          error: `Added ${addedCount}/${candidateCount} positive keywords; ${failures.length} group(s) failed: ${failures.join('; ')}`,
+        };
+      }
       return { success: true };
     }
     case 'search_term_cleanup': {

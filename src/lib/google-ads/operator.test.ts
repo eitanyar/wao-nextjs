@@ -1,8 +1,15 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { buildGoogleAdsOperatorTasks } from './operator';
+import { buildGoogleAdsOperatorTasks as buildRawGoogleAdsOperatorTasks } from './operator';
 import { resetBrandCplBaseline } from './cpl-ceiling';
 import type { WeeklyDigest } from '../crm/intelligence';
+
+function buildGoogleAdsOperatorTasks(params: Parameters<typeof buildRawGoogleAdsOperatorTasks>[0]) {
+  return buildRawGoogleAdsOperatorTasks({
+    campaignAge: { ageDays: 30, phase: 'growth' },
+    ...params,
+  });
+}
 
 /**
  * Minimal WeeklyDigest fixture builder — only the fields buildGoogleAdsOperatorTasks actually

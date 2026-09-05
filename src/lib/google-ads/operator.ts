@@ -1,6 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import type { WeeklyDigest, CampaignConfig } from '../crm/intelligence';
+import type { CampaignAgeEvaluation, CampaignLifecyclePhase } from './campaignAge';
 import {
   campaignType,
   resolveCplCeilingIls,
@@ -81,10 +82,15 @@ export interface GoogleAdsOperatorTask {
    * approval-log record written before this field existed.
    */
   campaignId?: string;
+  /** Campaign lifecycle evidence captured when this task was generated. */
+  campaignPhase: CampaignLifecyclePhase;
+  /** Null means campaign age could not be established safely. */
+  campaignAgeDays: number | null;
   kind:
     | 'tracking_audit'
     | 'conversion_review'
     | 'search_term_cleanup'
+    | 'search_term_harvest'
     | 'budget_tune'
     | 'lead_followup'
     | 'general_review'
@@ -110,6 +116,9 @@ export interface GoogleAdsOperatorApproval {
   /** See `GoogleAdsOperatorTask.campaignId`'s doc comment — threaded through from the task
    * this approval was decided for, per §8.3's multi-campaign fix. */
   campaignId?: string;
+  /** Lifecycle evidence copied from the generated task for audit replay. */
+  campaignPhase?: CampaignLifecyclePhase;
+  campaignAgeDays?: number | null;
   kind: GoogleAdsOperatorTask['kind'];
   title: string;
   whyNeeded: string;
@@ -190,7 +199,7 @@ function uniqueId(clientId: string, kind: string, text: string, digestSeed: stri
  * setup") and WOULD collide across two different campaigns of a client. Extend the key to
  * include `campaignId` when present so per-campaign tasks never dedupe each other away.
  */
-function dedupe(tasks: GoogleAdsOperatorTask[]): GoogleAdsOperatorTask[] {
+function dedupe<T extends Pick<GoogleAdsOperatorTask, 'campaignId' | 'kind' | 'title'>>(tasks: T[]): T[] {
   const seen = new Set<string>();
   return tasks.filter((task) => {
     const key = `${task.campaignId ?? ''}|${task.kind}|${task.title}`;
@@ -209,6 +218,11 @@ export function buildGoogleAdsOperatorTasks(params: {
    * AAAsada gate correctly off `clientId` alone even when this is omitted.
    */
   campaignConfig?: CampaignConfig;
+  /**
+   * Campaign maturity evaluated from the persisted CampaignConfig.createdAt by the caller.
+   * When absent, task generation fails closed as unknown to prevent mutation proposals.
+   */
+  campaignAge?: CampaignAgeEvaluation;
   /**
    * The live Google Ads `campaign.id`/`campaign.name` this specific `digest` was computed
    * for — **not** `digest.campaignName` (which is `businessName || slug`, not the real Ads
@@ -248,8 +262,9 @@ export function buildGoogleAdsOperatorTasks(params: {
     wastedSpendIls: number;
   };
 }): GoogleAdsOperatorTask[] {
-  const { clientId, digest, campaignConfig, campaignId, campaignName, searchTermCleanupPreview } = params;
-  const tasks: GoogleAdsOperatorTask[] = [];
+  const { clientId, digest, campaignConfig, campaignId, campaignName, campaignAge, searchTermCleanupPreview } = params;
+  const lifecycle = campaignAge ?? { ageDays: null, phase: 'unknown' as const };
+  const tasks: Array<Omit<GoogleAdsOperatorTask, 'campaignPhase' | 'campaignAgeDays'>> = [];
 
   /**
    * §5's "12 search terms flagged for negative — ₪340 wasted spend, 0 conversions" style
@@ -527,6 +542,21 @@ export function buildGoogleAdsOperatorTasks(params: {
     }
   });
 
+  if ((lifecycle.phase === 'growth' || lifecycle.phase === 'maturity') && cplCeilingIls !== undefined) {
+    tasks.push({
+      taskId: uniqueId(clientId, 'search_term_harvest', `campaign-${campaignId ?? digest.slug}`, `${digest.slug}-${digest.windowDays}`),
+      clientId,
+      campaignId,
+      kind: 'search_term_harvest',
+      title: 'Promote profitable search queries to keywords',
+      whyNeeded: `The campaign has a resolved CPL ceiling of ₪${cplCeilingIls}; re-check recent search-term evidence before adding any exact or phrase keyword.`,
+      recommendedAction: 'Promote only queries with at least two conversions, CPL at or below the client ceiling, no enabled duplicate, and no negative-keyword conflict.',
+      risk: 'low',
+      source: 'next-action',
+      order: 40,
+    });
+  }
+
   if (!tasks.length) {
     tasks.push({
       taskId: uniqueId(clientId, 'general_review', digest.campaignName, `${digest.slug}-${digest.windowDays}`),
@@ -542,7 +572,23 @@ export function buildGoogleAdsOperatorTasks(params: {
     });
   }
 
-  return dedupe(tasks).sort((a, b) => a.order - b.order || a.title.localeCompare(b.title));
+  const allowsTask = (kind: GoogleAdsOperatorTask['kind']): boolean => {
+    if (lifecycle.phase === 'unknown') {
+      return kind === 'tracking_audit' || kind === 'conversion_review' || kind === 'cpl_ceiling_review';
+    }
+    if (lifecycle.phase === 'launch') {
+      return kind === 'tracking_audit'
+        || kind === 'conversion_review'
+        || kind === 'cpl_ceiling_review'
+        || kind === 'search_term_cleanup';
+    }
+    return true;
+  };
+
+  return dedupe(tasks)
+    .filter((task) => allowsTask(task.kind))
+    .map((task) => ({ ...task, campaignPhase: lifecycle.phase, campaignAgeDays: lifecycle.ageDays }))
+    .sort((a, b) => a.order - b.order || a.title.localeCompare(b.title));
 }
 
 const CLIENTS_ROOT = path.join(process.cwd(), 'data', 'clients');
@@ -609,6 +655,8 @@ export function buildApprovalRecord(
     taskId: task.taskId,
     clientId: task.clientId,
     campaignId: task.campaignId,
+    campaignPhase: task.campaignPhase,
+    campaignAgeDays: task.campaignAgeDays,
     kind: task.kind,
     title: task.title,
     whyNeeded: task.whyNeeded,

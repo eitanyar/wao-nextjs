@@ -13,12 +13,10 @@ import {
  * already present in reviewFlywheelCopy.ts:
  *   HAYY         = "hayy" (greeting, line opener)
  *   THANK_PREFIX = the "I was happy to help you today" thank-you prefix
- *   IM           = the joining preposition "with" (added by spec 2026-08-27_006)
  *   KAN          = "here" (business-name introducer)
  */
 const HAYY = '\u05D4\u05D9\u05D9';
 const THANK_PREFIX = '\u05E9\u05DE\u05D7\u05EA\u05D9 \u05DC\u05E2\u05D6\u05D5\u05E8 \u05DC\u05DA \u05D4\u05D9\u05D5\u05DD';
-const IM = '\u05E2\u05DD';
 const KAN = '\u05DB\u05D0\u05DF';
 
 describe('buildGoogleWriteReviewUrl', () => {
@@ -60,7 +58,23 @@ describe('buildReviewForwardTemplate', () => {
     reviewLink: 'https://g.page/r/CXyz123/review',
   };
 
-  it('retains the base format when no service/city are supplied', () => {
+  it('exposes only customer, business, and review-link options', () => {
+    const publicOptionShape: Record<keyof ReviewFlywheelForwardTemplateOptions, true> = {
+      customerName: true,
+      businessName: true,
+      reviewLink: true,
+    };
+    assert.deepEqual(Object.keys(publicOptionShape).sort(), ['businessName', 'customerName', 'reviewLink']);
+  });
+
+  it('does not render legacy content steering fields', () => {
+    const staleOptions = ({ ...base, service: 'SafeServicePhrase', city: 'CityPhrase' }) as unknown as ReviewFlywheelForwardTemplateOptions;
+    const out = buildReviewForwardTemplate(staleOptions);
+    assert.ok(!out.includes('SafeServicePhrase'));
+    assert.ok(!out.includes('CityPhrase'));
+  });
+
+  it('uses the generic thank-you line', () => {
     const out = buildReviewForwardTemplate(base);
     const baseLine = `${THANK_PREFIX}, ${KAN} ${base.businessName}.`;
     assert.ok(out.includes(baseLine), `expected base thank-you line, got: ${out}`);
@@ -68,29 +82,8 @@ describe('buildReviewForwardTemplate', () => {
     assert.ok(out.includes(base.reviewLink));
   });
 
-  it('weaves service and city into the thank-you line when both are supplied', () => {
-    const service = 'SafeServicePhrase';
-    const city = 'CityPhrase';
-    const out = buildReviewForwardTemplate({ ...base, service, city });
-    const enrichedLine = `${THANK_PREFIX} ${IM} ${service} ${city} \u2014 ${KAN} ${base.businessName}.`;
-    assert.ok(out.includes(enrichedLine), `expected enriched thank-you line, got: ${out}`);
-    assert.ok(out.includes(service));
-    assert.ok(out.includes(city));
-  });
 
-  it('handles service-only enrichment', () => {
-    const service = 'SafeServicePhrase';
-    const out = buildReviewForwardTemplate({ ...base, service });
-    const enrichedLine = `${THANK_PREFIX} ${IM} ${service} \u2014 ${KAN} ${base.businessName}.`;
-    assert.ok(out.includes(enrichedLine), `expected service-only thank-you line, got: ${out}`);
-  });
 
-  it('handles city-only enrichment', () => {
-    const city = 'CityPhrase';
-    const out = buildReviewForwardTemplate({ ...base, city });
-    const enrichedLine = `${THANK_PREFIX} ${IM} ${city} \u2014 ${KAN} ${base.businessName}.`;
-    assert.ok(out.includes(enrichedLine), `expected city-only thank-you line, got: ${out}`);
-  });
 });
 
 describe('buildCustomerReviewWaLink', () => {
@@ -98,8 +91,6 @@ describe('buildCustomerReviewWaLink', () => {
     customerName: 'Danny',
     businessName: 'Mozes Locks',
     reviewLink: 'https://g.page/r/CXyz123/review',
-    service: 'SafeServicePhrase',
-    city: 'CityPhrase',
   };
 
   it('formats an Israeli local-format phone into a valid wa.me link', () => {
@@ -123,7 +114,7 @@ describe('buildCustomerReviewWaLink', () => {
     assert.ok(decodeURIComponent(encodedText).includes(opts.reviewLink));
   });
 
-  it('uses the base template when no service/city are supplied', () => {
+  it('uses the generic template', () => {
     const plainOpts: ReviewFlywheelForwardTemplateOptions = {
       customerName: 'Danny',
       businessName: 'Mozes Locks',

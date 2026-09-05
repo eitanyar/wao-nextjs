@@ -83,22 +83,28 @@ export function extractJsonSpan(text: string): string {
   return trimmed.slice(start, lastClose + 1);
 }
 
-export async function callGeminiJSON(
-  systemPrompt: string,
-  userMessage: string,
-  opts: { thinkingLevel?: 'LOW' | 'HIGH' } = {}
-): Promise<string> {
+export type CallGeminiJSONOptions = {
+  thinkingLevel?: 'LOW' | 'HIGH';
+  model?: string;
+  signal?: AbortSignal;
+  timeoutMs?: number;
+  fetch?: typeof globalThis.fetch;
+  responseJsonSchema?: Record<string, unknown>;
+};
+
+function validateOptions(opts: CallGeminiJSONOptions) {
+  if (opts.timeoutMs !== undefined && (!Number.isFinite(opts.timeoutMs) || opts.timeoutMs <= 0)) throw new Error('Invalid Gemini timeout');
+}
+
+export async function callGeminiJSON(systemPrompt: string, userMessage: string, opts: CallGeminiJSONOptions = {}): Promise<string> {
+  validateOptions(opts);
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) throw new Error('Gemini not configured');
-
-  const modelName = process.env.GEMINI_MODEL_NAME || 'gemini-3.7-flash';
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent`;
-
-  // Default LOW — this helper is shared by live conversational callers (onboarding chat bots)
-  // where a person is waiting turn-by-turn; latency matters there. Callers writing final,
-  // unattended-quality copy (e.g. LP generation) pass thinkingLevel: 'HIGH' explicitly — see
-  // [[feedback_thinking_budget_matches_workload]].
-  const res = await fetch(url, {
+  if (opts.signal?.aborted) throw opts.signal.reason ?? new Error('Gemini request aborted');
+  const modelName = opts.model ?? (process.env.GEMINI_MODEL_NAME || 'gemini-3.8-flash');
+  const timeoutSignal = opts.timeoutMs === undefined ? undefined : AbortSignal.timeout(opts.timeoutMs);
+  const signal = timeoutSignal && opts.signal ? AbortSignal.any([opts.signal, timeoutSignal]) : opts.signal ?? timeoutSignal;
+  const res = await (opts.fetch ?? globalThis.fetch)(`https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'x-goog-api-key': apiKey },
     body: JSON.stringify({
@@ -107,12 +113,14 @@ export async function callGeminiJSON(
       generationConfig: {
         responseMimeType: 'application/json',
         thinkingConfig: { thinkingLevel: opts.thinkingLevel || 'LOW' },
+        ...(opts.responseJsonSchema === undefined ? {} : { responseJsonSchema: opts.responseJsonSchema }),
       },
     }),
+    signal,
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(`Gemini API error (${res.status}): ${JSON.stringify(data)}`);
+  if (!res.ok) throw new Error(`Gemini API error (${res.status})`);
   const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
-  if (typeof text !== 'string') throw new Error(`Gemini API returned unexpected shape: ${JSON.stringify(data)}`);
+  if (typeof text !== 'string') throw new Error('Gemini API returned unexpected shape');
   return extractJsonSpan(text);
 }

@@ -40,6 +40,10 @@ export interface SharedClientRecord {
    */
   gbpAccountId?: string;
   gbpLocationId?: string;
+  leadResponseEnabled?: boolean;
+  leadResponseTemplateName?: string;
+  leadResponseTemplateLanguage?: string;
+  leadResponseBusinessDisplayName?: string;
 }
 
 const CLIENTS_DIR = path.join(process.cwd(), 'data', 'clients');

@@ -8,6 +8,7 @@ import type { SiteCopy } from './lpCopyPrompt';
 import type { CollectedData } from '@/lib/bot/prompts';
 import { renderStaticHtml, type RenderStaticHtmlParams } from './renderStaticHtml';
 import { buildPrivacyHtml, buildAccessibilityHtml, isAccessibilityExempt } from './legalPages';
+import { buildFraudBlockerTrackerHtml } from '../fraud-blocker/tracker';
 
 export interface RenderSitePagesParams extends Omit<RenderStaticHtmlParams, 'copy' | 'mode' | 'siteUrl'> {
   copy: SiteCopy;
@@ -25,14 +26,14 @@ export function renderSitePages(p: RenderSitePagesParams): Record<string, string
     'about.html': buildAboutHtml(p, siteUrl),
     'services.html': buildServicesHtml(p, siteUrl),
     'contact.html': buildContactHtml(p, siteUrl),
-    'privacy.html': buildPrivacyHtml({ theme: p.theme, data: p.data, canonicalUrl: `${siteUrl}/privacy.html`, homeHref: '/' }),
+    'privacy.html': buildPrivacyHtml({ theme: p.theme, data: p.data, canonicalUrl: `${siteUrl}/privacy.html`, homeHref: '/', fraudBlockerSid: p.fraudBlockerSid }),
     'sitemap.xml': buildSitemap(siteUrl),
   };
 
   // No exemption exists for the privacy page — always built. Accessibility
   // is gated: absent entirely (not a stub) when the client is exempt.
   if (!exempt) {
-    pages['accessibility.html'] = buildAccessibilityHtml({ theme: p.theme, data: p.data, canonicalUrl: `${siteUrl}/accessibility.html`, homeHref: '/' });
+    pages['accessibility.html'] = buildAccessibilityHtml({ theme: p.theme, data: p.data, canonicalUrl: `${siteUrl}/accessibility.html`, homeHref: '/', fraudBlockerSid: p.fraudBlockerSid });
   }
 
   return pages;
@@ -229,9 +230,11 @@ export function pageHead(opts: {
   canonicalUrl: string;
   ogImage: string;
   schema?: string;
+  fraudBlockerSid?: string;
 }): string {
-  const { t, title, description, canonicalUrl, ogImage, schema } = opts;
+  const { t, title, description, canonicalUrl, ogImage, schema, fraudBlockerSid } = opts;
   return `<head>
+  ${fraudBlockerSid ? buildFraudBlockerTrackerHtml(fraudBlockerSid) : ''}
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>${esc(title)}</title>
@@ -395,6 +398,7 @@ function buildAboutHtml(p: RenderSitePagesParams, siteUrl: string): string {
     canonicalUrl,
     ogImage: heroImageUrl,
     schema: localBusinessSchema(data, businessName, siteUrl, heroImageUrl),
+    fraudBlockerSid: p.fraudBlockerSid,
   });
 
   const trustBar = trustBarSection(t, copy.trustBarItems);
@@ -449,6 +453,7 @@ function buildServicesHtml(p: RenderSitePagesParams, siteUrl: string): string {
     canonicalUrl,
     ogImage: heroImageUrl,
     schema: localBusinessSchema(data, businessName, siteUrl, heroImageUrl),
+    fraudBlockerSid: p.fraudBlockerSid,
   });
 
   const cards = copy.serviceDetails.map(s => `
@@ -501,6 +506,7 @@ function buildContactHtml(p: RenderSitePagesParams, siteUrl: string): string {
     canonicalUrl,
     ogImage: heroImageUrl,
     schema: localBusinessSchema(data, businessName, siteUrl, heroImageUrl),
+    fraudBlockerSid: p.fraudBlockerSid,
   });
 
   const hoursHtml = data.businessHours

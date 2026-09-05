@@ -5,6 +5,7 @@ import { getClientRecord } from '@/lib/geo/client';
 import { buildWeeklyDigest, loadCampaignConfigBySlug, loadClientGoogleAdsIndex } from '@/lib/crm/intelligence';
 import { hasOperatorAccess } from '@/lib/operator/flags';
 import { askGoogleAdsOperatorInquiry, buildGoogleAdsOperatorTasks, readGoogleAdsOperatorInquiries } from '@/lib/google-ads/operator';
+import { evaluateCampaignAge } from '@/lib/google-ads/campaignAge';
 
 /**
  * "Why?" thread endpoint — structurally separate from /api/google-ads/operator-task.
@@ -67,7 +68,12 @@ export async function POST(req: Request) {
     }
 
     const digest = buildWeeklyDigest({ campaign });
-    const tasks = buildGoogleAdsOperatorTasks({ clientId: sessionClientId, digest });
+    const tasks = buildGoogleAdsOperatorTasks({
+      clientId: sessionClientId,
+      digest,
+      campaignConfig: campaign,
+      campaignAge: evaluateCampaignAge({ startDate: campaign.createdAt }),
+    });
     const task = tasks.find((item) => item.taskId === taskId);
     if (!task) {
       return NextResponse.json(

@@ -9,6 +9,7 @@ import { loadClient } from "@/lib/shared/clients";
 import { buildReviewRequestOwnerNotification } from "@/lib/crm/reviewFlywheelCopy";
 import { buildWaLink } from "@/lib/gmb/whatsapp";
 import { appendReviewFlywheelQueueItem } from "@/lib/crm/reviewFlywheelStore";
+import { captureLead, type LeadCapturePayload } from "@/lib/crm/lead-capture";
 
 /**
  * In-process call to `uploadLeadConversion()` (`@/lib/google-ads/conversion-upload`).
@@ -183,31 +184,11 @@ export async function POST(req: Request) {
       }
     }
 
-    // pingClick() in LandingPage.tsx sends 'phone-click' / 'whatsapp-click',
-    // never the literal 'click-stub' — match the real values it sends.
-    const isClickStub = body.type === 'phone-click' || body.type === 'whatsapp-click';
-    const newLead: LeadRecord = {
-      id: Date.now(),
-      orderId: body.orderId || `wao-${Date.now()}`,
-      name: body.name || null,
-      phone: body.phone || null,
-      date: new Date().toISOString().replace("T", " ").substring(0, 16),
-      status: isClickStub ? "לחיצה" : "חדש",
-      quality: "PENDING",
-      revenue: 0,
-      closed: false,
-      closedAt: null,
-      type: body.type || "form",            // "form" | "phone-click" | "whatsapp-click"
-      source: body.source || "",
-      slug: body.slug || "",
-      customerId: body.customerId || "",     // Google Ads sub-account ID
-      // Click identifiers — exactly one will be set (gclid OR wbraid OR gbraid)
-      gclid:  body.gclid  || null,
-      wbraid: body.wbraid || null,
-      gbraid: body.gbraid || null,
-      businessNiche: body.businessNiche || ""
-    };
-
+    const captured = captureLead({
+      leads,
+      body: body as LeadCapturePayload,
+    });
+    const newLead = captured.lead;
     leads.push(newLead);
     await writeLeads(leads);
 

@@ -32,7 +32,7 @@ const TURN_QUESTIONS: Record<number, string> = {
 };
 
 // ── Gemini caller — mirrors /api/bot's callGemini (multi-turn, JSON mode) ────
-const GEMINI_MODEL_NAME = process.env.GEMINI_MODEL_NAME || 'gemini-3.7-flash';
+const GEMINI_MODEL_NAME = process.env.GEMINI_MODEL_NAME || 'gemini-3.8-flash';
 
 function toGeminiRole(role: Message['role']): 'user' | 'model' {
   return role === 'assistant' ? 'model' : 'user';

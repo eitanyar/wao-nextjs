@@ -112,6 +112,10 @@ export interface SearchTermReportRow {
   costMicros: number;
   conversions: number;
   triggeringMatchType: TriggeringMatchType;
+  /** Enabled positive keyword with identical normalized text in this ad group. */
+  isExistingKeyword?: boolean;
+  /** Existing negative criterion would prevent this query from serving. */
+  hasNegativeKeywordConflict?: boolean;
 }
 
 export interface AdGroupBaseline {

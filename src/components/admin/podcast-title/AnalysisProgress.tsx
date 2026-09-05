@@ -1,0 +1,2 @@
+import { uiCopy } from '@/lib/podcast-title/uiCopy';
+export function AnalysisProgress({ active }: { active: boolean }) { if (!active) return null; return <section aria-live="polite" dir="rtl" className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4"><p className="font-bold">{uiCopy.analysisInProgress}</p><ol className="mt-2 space-y-1 text-sm text-[var(--muted)]"><li>{uiCopy.stageTheme}</li><li>{uiCopy.stageKeywords}</li><li>{uiCopy.stageWriting}</li></ol></section>; }

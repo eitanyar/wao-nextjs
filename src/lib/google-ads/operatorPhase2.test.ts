@@ -31,9 +31,9 @@ describe('Google Ads Operator Phase 2 (campaignAge & searchTermHarvest)', () => 
     assert.equal(maturityRes.ageDays, 85);
     assert.equal(maturityRes.phase, 'maturity');
 
-    // Missing dates fallback -> growth
+    // Missing dates fail closed -> unknown
     const fallbackRes = evaluateCampaignAge({ referenceDate: refDate });
-    assert.equal(fallbackRes.phase, 'growth');
+    assert.equal(fallbackRes.phase, 'unknown');
   });
 
   it('harvests search terms meeting conversion & CPL criteria', () => {
@@ -41,11 +41,11 @@ describe('Google Ads Operator Phase 2 (campaignAge & searchTermHarvest)', () => 
       campaignId: 'camp-123',
       targetCplIls: 100,
       searchTerms: [
-        { query: 'leak locator tlv', conversions: 3, spendIls: 240, isExistingKeyword: false },
-        { query: 'emergency plumber', conversions: 5, spendIls: 400, isExistingKeyword: false },
-        { query: 'already existing kw', conversions: 10, spendIls: 500, isExistingKeyword: true },
-        { query: 'expensive non converter', conversions: 0, spendIls: 300, isExistingKeyword: false },
-        { query: 'high cpl query', conversions: 2, spendIls: 500, isExistingKeyword: false }, // cpl 250 > 120
+        { query: 'leak locator tlv', conversions: 3, spendIls: 240, isExistingKeyword: false, adGroupResourceName: 'customers/123/adGroups/1' },
+        { query: 'emergency plumber', conversions: 5, spendIls: 400, isExistingKeyword: false, adGroupResourceName: 'customers/123/adGroups/1' },
+        { query: 'already existing kw', conversions: 10, spendIls: 500, isExistingKeyword: true, adGroupResourceName: 'customers/123/adGroups/1' },
+        { query: 'expensive non converter', conversions: 0, spendIls: 300, isExistingKeyword: false, adGroupResourceName: 'customers/123/adGroups/1' },
+        { query: 'high cpl query', conversions: 2, spendIls: 500, isExistingKeyword: false, adGroupResourceName: 'customers/123/adGroups/1' },
       ],
     });
 
@@ -54,5 +54,11 @@ describe('Google Ads Operator Phase 2 (campaignAge & searchTermHarvest)', () => 
     assert.equal(candidates[0].recommendedMatchType, 'phrase');
     assert.equal(candidates[1].query, 'emergency plumber');
     assert.equal(candidates[1].recommendedMatchType, 'exact');
+  });
+
+  it('fails closed without a CPL ceiling or when a negative keyword conflicts', () => {
+    const searchTerms = [{ query: 'conflicted query', conversions: 3, spendIls: 150, adGroupResourceName: 'customers/123/adGroups/1', hasNegativeKeywordConflict: true }];
+    assert.deepEqual(evaluateSearchTermHarvesting({ campaignId: 'camp-123', searchTerms }), []);
+    assert.deepEqual(evaluateSearchTermHarvesting({ campaignId: 'camp-123', targetCplIls: 100, searchTerms }), []);
   });
 });

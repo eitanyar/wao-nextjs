@@ -40,7 +40,7 @@ async function queryGeminiModels(): Promise<string> {
 
   if (!apiKey) {
     console.warn('[gemini-model-resolver] Missing GEMINI_API_KEY, falling back to default');
-    return 'gemini-3.7-flash';
+    return 'gemini-3.8-flash';
   }
 
   try {
@@ -64,7 +64,7 @@ async function queryGeminiModels(): Promise<string> {
 
     if (flashModels.length === 0) {
       console.warn('[gemini-model-resolver] No Flash models found, falling back to default');
-      return 'gemini-3.7-flash';
+      return 'gemini-3.8-flash';
     }
 
     // Sort by version (descending) and pick the latest
@@ -83,7 +83,7 @@ async function queryGeminiModels(): Promise<string> {
       err instanceof Error ? err.message : String(err),
       '— falling back to default'
     );
-    return 'gemini-3.7-flash';
+    return 'gemini-3.8-flash';
   }
 }
 

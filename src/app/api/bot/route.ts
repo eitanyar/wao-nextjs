@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { ADAM_SYSTEM_PROMPT, DROR_SYSTEM_PROMPT, TAMAR_SYSTEM_PROMPT, T21_PHOTO_ASK_VERSION, CollectedData } from "@/lib/bot/prompts";
 import { getEstimatedCPC } from "@/lib/ads/keywordPlanner";
+import { resolveBoundedOnboardingResponse } from "@/lib/google-ads/onboarding-response";
 
 interface Message {
   role: "user" | "assistant" | "system";
@@ -854,7 +855,8 @@ function generateMockCampaign(data: CollectedData) {
 //     `candidates[0].content.parts[0].text` (a JSON *string* to be parsed),
 //     not `choices[0].message.content`.
 
-const GEMINI_MODEL_NAME = process.env.GEMINI_MODEL_NAME || "gemini-3.7-flash";
+const GEMINI_MODEL_NAME = process.env.GEMINI_MODEL_NAME || "gemini-3.8-flash";
+const GEMINI_TIMEOUT_MS = 12_000;
 
 function toGeminiRole(role: Message["role"]): "user" | "model" {
   return role === "assistant" ? "model" : "user";
@@ -869,6 +871,7 @@ async function callGemini(
   const res = await fetch(url, {
     method: "POST",
     headers: { "Content-Type": "application/json", "x-goog-api-key": apiKey },
+    signal: AbortSignal.timeout(GEMINI_TIMEOUT_MS),
     body: JSON.stringify({
       systemInstruction: { role: "system", parts: [{ text: systemInstruction }] },
       contents,
@@ -1122,9 +1125,15 @@ export async function POST(req: Request) {
 
     const apiKey = process.env.GEMINI_API_KEY;
 
-    const result = apiKey
-      ? await handleGemini(messages, currentState, collectedData, apiKey)
-      : handleSimulation(lastUserMessage, currentState, collectedData);
+    const result = apiKey && currentState === "DIAGNOSING"
+      ? await resolveBoundedOnboardingResponse({
+          live: () => handleGemini(messages, currentState, collectedData, apiKey),
+          fallback: () => handleSimulation(lastUserMessage, currentState, collectedData),
+          timeoutMs: GEMINI_TIMEOUT_MS,
+        })
+      : apiKey
+        ? await handleGemini(messages, currentState, collectedData, apiKey)
+        : handleSimulation(lastUserMessage, currentState, collectedData);
 
     // Fire-and-forget session logging — never await, never block/fail the
     // actual response. Clone the response so we can inspect its JSON body

@@ -10,6 +10,9 @@ import { VERTICAL_THEMES } from '@/lib/lp/verticalThemes';
 import { VERTICAL_ASSETS } from '@/lib/lp/verticalAssets';
 import type { CollectedData } from '@/lib/bot/prompts';
 import type { LPCopy } from '@/lib/lp/lpCopyPrompt';
+import { createFraudBlockerClient } from '@/lib/fraud-blocker/client';
+import { fraudBlockerFailureState, provisionFraudBlockerDomain, recordFraudBlockerTrackerInstallation } from '@/lib/fraud-blocker/deployment';
+import { readFraudBlockerState, writeFraudBlockerState } from '@/lib/fraud-blocker/store';
 
 interface DeployRequest {
   slug: string;
@@ -70,6 +73,16 @@ export async function POST(req: Request) {
     // identical fix in app/(standalone)/lp/[slug]/page.tsx (internal preview).
     // Stock stays the non-blocking fallback when no upload exists.
     const heroImageUrl = collectedData.trustAssetUrls?.[0] || collectedData.profilePhotoUrl || assets.heroImages[0].url;
+    const fraudDomain = `${slug}.wao.co.il`;
+    let fraudBlockerSid: string | undefined;
+    if (googleAdsCustomerId) {
+      try {
+        fraudBlockerSid = await provisionFraudBlockerDomain({ clientId: slug, domain: fraudDomain, client: createFraudBlockerClient() });
+      } catch (error) {
+        writeFraudBlockerState(fraudBlockerFailureState(slug, fraudDomain, error));
+        return NextResponse.json({ error: 'fraud_blocker_provisioning_required' }, { status: 424 });
+      }
+    }
 
     // ── Step 2: Render static HTML ────────────────────────────────────────────
     const htmlContent = renderStaticHtml({
@@ -84,6 +97,7 @@ export async function POST(req: Request) {
       formConversionLabel,
       phoneConversionLabel,
       whatsappConversionLabel,
+      fraudBlockerSid,
     });
 
     // ── Step 3: Ensure CF Pages project exists, then deploy ──────────────────
@@ -93,10 +107,21 @@ export async function POST(req: Request) {
 
     // Legal disclosure pages — same requirement as Site Bot's 5-page output.
     // Privacy has no exemption; accessibility is gated on vatStatus.
-    const legalOpts = { theme, data: collectedData, canonicalUrl: '', homeHref: '/' };
-    writeFileSync(path.join(tmpDir, 'privacy.html'), buildPrivacyHtml({ ...legalOpts, canonicalUrl: `https://${slug}.wao.co.il/privacy.html` }), 'utf-8');
+    const legalOpts = { theme, data: collectedData, canonicalUrl: '', homeHref: '/', fraudBlockerSid };
+    const legalPages: Record<string, string> = {
+      'privacy.html': buildPrivacyHtml({ ...legalOpts, canonicalUrl: `https://${slug}.wao.co.il/privacy.html` }),
+    };
+    writeFileSync(path.join(tmpDir, 'privacy.html'), legalPages['privacy.html'], 'utf-8');
     if (!isAccessibilityExempt(collectedData.vatStatus)) {
-      writeFileSync(path.join(tmpDir, 'accessibility.html'), buildAccessibilityHtml({ ...legalOpts, canonicalUrl: `https://${slug}.wao.co.il/accessibility.html` }), 'utf-8');
+      legalPages['accessibility.html'] = buildAccessibilityHtml({ ...legalOpts, canonicalUrl: `https://${slug}.wao.co.il/accessibility.html` });
+      writeFileSync(path.join(tmpDir, 'accessibility.html'), legalPages['accessibility.html'], 'utf-8');
+    }
+    if (fraudBlockerSid && !recordFraudBlockerTrackerInstallation({
+      state: readFraudBlockerState(slug) ?? fraudBlockerFailureState(slug, fraudDomain, new Error('Fraud Blocker state was not persisted.')),
+      pages: { 'index.html': htmlContent, ...legalPages },
+    })) {
+      rmSync(tmpDir, { recursive: true, force: true });
+      return NextResponse.json({ error: 'fraud_blocker_tracker_verification_failed' }, { status: 424 });
     }
 
     const env = {

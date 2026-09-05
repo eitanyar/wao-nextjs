@@ -178,3 +178,31 @@ export async function addNegativeKeywords(params: {
     };
   }
 }
+
+export async function addPositiveKeywords(params: {
+  campaignConfig: CampaignConfig;
+  adGroupResourceName: string;
+  keywords: string[];
+  matchType: 'EXACT' | 'PHRASE';
+  clientInstance?: ReturnType<typeof buildClient>;
+}): Promise<MutationResult> {
+  try {
+    const keywords = Array.from(new Set(params.keywords.map((keyword) => keyword.trim()).filter(Boolean)));
+    if (!keywords.length) return { success: true };
+
+    const customer = resolveCustomer(params.campaignConfig, params.clientInstance);
+    const matchTypeEnum =
+      params.matchType === 'EXACT' ? enums.KeywordMatchType.EXACT : enums.KeywordMatchType.PHRASE;
+    const operations = keywords.map((keyword) => ({
+      ad_group: params.adGroupResourceName,
+      status: enums.AdGroupCriterionStatus.ENABLED,
+      negative: false,
+      keyword: { text: keyword, match_type: matchTypeEnum },
+    }));
+    const res = await customer.adGroupCriteria.create(operations);
+    const resourceName = res?.results?.[0]?.resource_name;
+    return { success: true, resourceName: resourceName ? String(resourceName) : undefined };
+  } catch (error) {
+    return { success: false, error: error instanceof Error ? error.message : 'Failed to add positive keywords' };
+  }
+}

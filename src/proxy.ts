@@ -15,7 +15,7 @@ const CLIENT_PROTECTED = ['/client', '/api/geo/action', '/gmb/action', '/api/gmb
 // '/gmb/dashboard' reuses the same admin cookie/login as '/geo/dashboard' —
 // one staff login gates both bots' WoZ dashboards.
 const ADMIN_PROTECTED  = ['/geo/dashboard', '/gmb/dashboard', '/leads'];
-const MASTER_ADMIN_PROTECTED = ['/admin/clients'];
+const MASTER_ADMIN_PROTECTED = ['/admin/clients', '/admin/podcast-titles'];
 const LOGIN_PATH       = '/client/login';
 const ADMIN_LOGIN_PATH = '/geo/login';
 const MASTER_ADMIN_LOGIN_PATH = '/admin/login';
@@ -73,5 +73,5 @@ export async function proxy(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/client/:path*', '/geo/action/:path*', '/api/geo/action/:path*', '/geo/dashboard/:path*', '/gmb/action/:path*', '/api/gmb/action/:path*', '/gmb/dashboard/:path*', '/admin/clients/:path*', '/leads/:path*'],
+  matcher: ['/client/:path*', '/geo/action/:path*', '/api/geo/action/:path*', '/geo/dashboard/:path*', '/gmb/action/:path*', '/api/gmb/action/:path*', '/gmb/dashboard/:path*', '/admin/clients/:path*', '/admin/podcast-titles/:path*', '/leads/:path*'],
 };

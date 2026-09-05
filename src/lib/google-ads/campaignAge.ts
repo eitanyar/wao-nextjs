@@ -5,10 +5,10 @@
  * HEBREW-SAFETY: ZERO Hebrew bytes authored in this module. All identifiers are ASCII.
  */
 
-export type CampaignLifecyclePhase = 'launch' | 'growth' | 'maturity';
+export type CampaignLifecyclePhase = 'unknown' | 'launch' | 'growth' | 'maturity';
 
 export interface CampaignAgeEvaluation {
-  ageDays: number;
+  ageDays: number | null;
   phase: CampaignLifecyclePhase;
   startDate?: string;
   firstImpressionDate?: string;
@@ -22,16 +22,24 @@ export function evaluateCampaignAge(params: {
   const ref = params.referenceDate ?? new Date();
   const dateStr = params.startDate ?? params.firstImpressionDate;
 
-  if (!dateStr) {
+  if (!dateStr || Number.isNaN(ref.getTime())) {
     return {
-      ageDays: 30,
-      phase: 'growth',
+      ageDays: null,
+      phase: 'unknown',
       startDate: params.startDate,
       firstImpressionDate: params.firstImpressionDate,
     };
   }
 
   const start = new Date(dateStr);
+  if (Number.isNaN(start.getTime()) || start.getTime() > ref.getTime()) {
+    return {
+      ageDays: null,
+      phase: 'unknown',
+      startDate: params.startDate,
+      firstImpressionDate: params.firstImpressionDate,
+    };
+  }
   const diffMs = ref.getTime() - start.getTime();
   const ageDays = Math.max(0, Math.floor(diffMs / (1000 * 60 * 60 * 24)));
 

@@ -8,7 +8,7 @@
 export interface SearchTermHarvestCandidate {
   query: string;
   campaignId: string;
-  adGroupId?: string;
+  adGroupResourceName: string;
   conversions: number;
   spendIls: number;
   cplIls: number;
@@ -21,23 +21,25 @@ export function evaluateSearchTermHarvesting(params: {
     conversions: number;
     spendIls: number;
     isExistingKeyword?: boolean;
-    adGroupId?: string;
+    hasNegativeKeywordConflict?: boolean;
+    adGroupResourceName?: string;
   }>;
   targetCplIls?: number;
   campaignId: string;
 }): SearchTermHarvestCandidate[] {
-  const targetCpl = params.targetCplIls ?? 150;
+  const targetCpl = params.targetCplIls;
+  if (!Number.isFinite(targetCpl) || targetCpl === undefined || targetCpl <= 0) return [];
   const candidates: SearchTermHarvestCandidate[] = [];
 
   for (const term of params.searchTerms) {
-    if (term.isExistingKeyword) continue;
+    if (term.isExistingKeyword || term.hasNegativeKeywordConflict || !term.adGroupResourceName) continue;
     if (term.conversions >= 2) {
       const cpl = term.spendIls / term.conversions;
-      if (cpl <= targetCpl * 1.2) {
+      if (Number.isFinite(cpl) && cpl <= targetCpl) {
         candidates.push({
           query: term.query,
           campaignId: params.campaignId,
-          adGroupId: term.adGroupId,
+          adGroupResourceName: term.adGroupResourceName,
           conversions: term.conversions,
           spendIls: term.spendIls,
           cplIls: Math.round(cpl * 100) / 100,

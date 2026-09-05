@@ -19,7 +19,7 @@
  * `ad_group_criterion.keyword.match_type` all exist in that SDK's type definitions.
  */
 
-import type { CampaignConfig } from '@/lib/crm/intelligence';
+import type { CampaignConfig } from '../crm/intelligence';
 import { resolveCustomer, buildClient } from './mutations';
 import { tokenize, type AdGroupBaseline, type SearchTermReportRow, type TriggeringMatchType } from './search-term-scoring';
 
@@ -39,6 +39,68 @@ function toMatchType(raw: unknown): TriggeringMatchType {
   if (value === 'PHRASE') return 'PHRASE';
   if (value === 'EXACT') return 'EXACT';
   return 'UNKNOWN';
+}
+
+function normalizeKeywordText(value: string): string {
+  return value.trim().replace(/\s+/g, ' ').toLowerCase();
+}
+
+function conflictsWithNegativeKeyword(query: string, keyword: string, matchType: unknown): boolean {
+  const normalizedQuery = normalizeKeywordText(query);
+  const normalizedKeyword = normalizeKeywordText(keyword);
+  if (!normalizedQuery || !normalizedKeyword) return false;
+  const type = String(matchType ?? '').toUpperCase();
+  if (type === 'PHRASE') return normalizedQuery.includes(normalizedKeyword);
+  if (type === 'BROAD') {
+    const queryTerms = new Set(normalizedQuery.split(' '));
+    return normalizedKeyword.split(' ').every((term) => queryTerms.has(term));
+  }
+  return normalizedQuery === normalizedKeyword;
+}
+
+interface KeywordCriterionState {
+  text: string;
+  negative: boolean;
+  enabled: boolean;
+  matchType: unknown;
+}
+
+async function fetchAdGroupKeywordStates(params: FetchSearchTermReportParams): Promise<Map<string, KeywordCriterionState[]>> {
+  const { campaignConfig, campaignId, clientInstance } = params;
+  const customer = resolveCustomer(campaignConfig, clientInstance);
+  const query = `
+    SELECT ad_group.id, ad_group_criterion.negative, ad_group_criterion.status,
+      ad_group_criterion.keyword.text, ad_group_criterion.keyword.match_type
+    FROM ad_group_criterion
+    WHERE ad_group_criterion.type = 'KEYWORD'
+      AND campaign.advertising_channel_type = 'SEARCH'
+      AND campaign.id = ${campaignId}
+  `;
+  const rows = (await customer.query(query)) as Array<{
+    ad_group?: { id?: string | number };
+    ad_group_criterion?: {
+      negative?: boolean | null;
+      status?: unknown;
+      keyword?: { text?: string | null; match_type?: unknown };
+    };
+  }>;
+  const states = new Map<string, KeywordCriterionState[]>();
+  for (const row of rows) {
+    const adGroupId = row.ad_group?.id;
+    const criterion = row.ad_group_criterion;
+    const text = criterion?.keyword?.text;
+    if (adGroupId === undefined || !text) continue;
+    const key = String(adGroupId);
+    const current = states.get(key) ?? [];
+    current.push({
+      text,
+      negative: criterion?.negative === true,
+      enabled: String(criterion?.status ?? '').toUpperCase() === 'ENABLED',
+      matchType: criterion?.keyword?.match_type,
+    });
+    states.set(key, current);
+  }
+  return states;
 }
 
 export interface FetchSearchTermReportParams {
@@ -81,11 +143,17 @@ export async function fetchSearchTermReport(params: FetchSearchTermReportParams)
     };
   }>;
 
+  const keywordStates = await fetchAdGroupKeywordStates(params);
+
   return rows
     .filter((r) => r.search_term_view?.search_term && r.ad_group?.id !== undefined)
-    .map((r) => ({
-      searchTerm: String(r.search_term_view!.search_term),
-      adGroupId: String(r.ad_group!.id),
+    .map((r) => {
+      const searchTerm = String(r.search_term_view!.search_term);
+      const adGroupId = String(r.ad_group!.id);
+      const states = keywordStates.get(adGroupId) ?? [];
+      return {
+      searchTerm,
+      adGroupId,
       // Constructed directly rather than relying on `campaignConfig.adGroupResourceName`
       // (which only names the single default ad group created at campaign-creation time) —
       // a campaign can have multiple ad groups, and search terms span all of them. Standard
@@ -98,7 +166,14 @@ export async function fetchSearchTermReport(params: FetchSearchTermReportParams)
       costMicros: Number(r.metrics?.cost_micros ?? 0),
       conversions: Number(r.metrics?.all_conversions ?? 0),
       triggeringMatchType: toMatchType(r.segments?.search_term_match_type),
-    }));
+      isExistingKeyword: states.some(
+        (state) => !state.negative && state.enabled && normalizeKeywordText(state.text) === normalizeKeywordText(searchTerm)
+      ),
+      hasNegativeKeywordConflict: states.some(
+        (state) => state.negative && state.enabled && conflictsWithNegativeKeyword(searchTerm, state.text, state.matchType)
+      ),
+    };
+    });
 }
 
 export interface FetchAdGroupBaselinesParams {

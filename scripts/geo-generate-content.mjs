@@ -62,9 +62,9 @@ const QWEN_API_KEY  = envVal('QWEN_API_KEY');
 const QWEN_BASE_URL = envVal('QWEN_BASE_URL');
 const QWEN_MODEL    = envVal('QWEN_MODEL_NAME') || 'qwen3.8-max';
 
-// ── Gemini 3.7 Flash (PRIMARY for unattended GEO gen) ─────────────────────────
+// ── Gemini 3.8 Flash (PRIMARY for unattended GEO gen) ─────────────────────────
 const GEMINI_API_KEY = envVal('GEMINI_API_KEY');
-const GEMINI_MODEL   = envVal('GEMINI_MODEL_NAME') || 'gemini-3.7-flash';
+const GEMINI_MODEL   = envVal('GEMINI_MODEL_NAME') || 'gemini-3.8-flash';
 
 // Note: unlike Azure's max_completion_tokens, we deliberately do NOT cap
 // max_tokens here. A fixed budget carried over from Azure's tokenizer

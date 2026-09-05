@@ -41,6 +41,7 @@ export interface RenderCoreThirtyPagesParams {
   whatsappConversionLabel?: string;
   gtagSnippet?: string;
   formConversionLabel?: string;
+  fraudBlockerSid?: string;
 }
 
 const MAX_RELATED_LINKS = 3;
@@ -140,6 +141,7 @@ function buildCoreThirtyNodeHtml(
     canonicalUrl,
     ogImage: heroImageUrl,
     schema: coreThirtyPageSchema(node, copy, data, siteUrl, heroImageUrl),
+    fraudBlockerSid: params.fraudBlockerSid,
   });
 
   // localRelevanceNote — visually distinct callout (not a trust-bar pill row,

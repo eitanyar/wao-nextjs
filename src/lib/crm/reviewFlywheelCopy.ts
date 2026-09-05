@@ -20,8 +20,6 @@ export interface ReviewFlywheelForwardTemplateOptions {
   customerName: string;
   businessName: string;
   reviewLink:   string;
-  service?:     string; // keyword-rich service phrase, supplied at runtime
-  city?:        string; // keyword-rich city phrase, supplied at runtime
 }
 
 /** WAO bot -> business owner, sent when a lead is marked closed. */
@@ -42,14 +40,8 @@ export function buildReviewRequestOwnerNotification(opts: ReviewFlywheelOwnerNot
 
 /** Ready-to-copy text the owner forwards to their own customer. */
 export function buildReviewForwardTemplate(opts: ReviewFlywheelForwardTemplateOptions): string {
-  const { customerName, businessName, reviewLink, service, city } = opts;
-  // Keyword-enriched thank-you line: when service/city are supplied, the specific
-  // service + city phrases are woven in so the customer's review naturally grounds
-  // Local Pack / Ask Maps / AI Overview recommendations. \u05E2\u05DD is the
-  // joining preposition (escaped — zero Hebrew bytes authored in this change).
-  const thankYouLine = service || city
-    ? `שמחתי לעזור לך היום \u05E2\u05DD ${service ? service + ' ' : ''}${city ? city + ' ' : ''}— כאן ${businessName}.`
-    : `שמחתי לעזור לך היום, כאן ${businessName}.`;
+  const { customerName, businessName, reviewLink } = opts;
+  const thankYouLine = `שמחתי לעזור לך היום, כאן ${businessName}.`;
   return [
     `היי ${customerName},`,
     thankYouLine,

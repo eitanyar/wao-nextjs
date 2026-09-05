@@ -16,6 +16,7 @@ import {
 import { sendGoogleAdsOperatorApprovalEmail } from '@/lib/mail';
 import { executeGoogleAdsOperatorTask } from '@/lib/google-ads/executor';
 import { enumerateEnabledCampaigns } from '@/lib/google-ads/campaign-enumeration';
+import { evaluateCampaignAge } from '@/lib/google-ads/campaignAge';
 
 /**
  * §8.3 point 2 — enumerate every ENABLED campaign under this client's live `customerId`
@@ -38,6 +39,7 @@ async function buildMergedTasks(params: {
 }): Promise<{ tasks: GoogleAdsOperatorTask[]; digestsByCampaignId: Map<string | undefined, WeeklyDigest> }> {
   const { clientId, campaign, customerId } = params;
   if (!campaign) return { tasks: [], digestsByCampaignId: new Map() };
+  const campaignAge = evaluateCampaignAge({ startDate: campaign.createdAt });
 
   const enumerated = await enumerateEnabledCampaigns({
     customerId,
@@ -56,6 +58,7 @@ async function buildMergedTasks(params: {
       clientId,
       digest,
       campaignConfig: campaign,
+      campaignAge,
     });
     return { tasks, digestsByCampaignId };
   }
@@ -81,6 +84,7 @@ async function buildMergedTasks(params: {
       clientId,
       digest: mergedDigest,
       campaignConfig: campaign,
+      campaignAge,
       campaignId: c.campaignId,
       campaignName: c.campaignName,
     });

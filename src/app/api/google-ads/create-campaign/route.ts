@@ -9,9 +9,18 @@ import { detectVertical } from '@/lib/lp/verticalDetect';
 import { bindCampaignToClient } from '@/lib/crm/intelligence';
 import { COOKIE_NAME, verifySessionToken } from '@/lib/client-auth';
 import { resolveGoogleAdsMutationAccess } from '@/lib/google-ads/access-policy';
+import { buildOnboardingAutonomyPolicy } from '@/lib/google-ads/autonomy-consent';
+import { writeAutonomyPolicy } from '@/lib/google-ads/autonomy';
 import { appendGoogleAdsDirectActionAudit } from '@/lib/google-ads/direct-action-audit';
 import { callGeminiJSON } from '@/lib/ai/gemini-fast';
 import { buildImageAssetCrops } from '@/lib/google-ads/imageCrop';
+import { getKeywordDemand } from '@/lib/ads/keywordPlanner';
+import {
+  evaluatePaidSearchReadiness,
+  paidSearchReadinessBlockedResponse,
+  type PaidSearchDemandEvidenceSummary,
+} from '@/lib/google-ads/demand-readiness';
+import { deriveCplCeilingIls } from '@/lib/crm/intelligence';
 
 export interface CampaignConfig {
   clientId?: string;
@@ -29,6 +38,7 @@ export interface CampaignConfig {
   closedDealConversionResourceName: string | null;
   adGroupResourceName?: string;
   createdAt: string;
+  demandEvidence?: PaidSearchDemandEvidenceSummary;
 }
 
 interface CampaignStrategy {
@@ -36,6 +46,7 @@ interface CampaignStrategy {
   suggestedDailyBudget: number;
   keywords: string[];
   negativeKeywords: string[];
+  estimatedLeadConversionRate?: number;
 }
 
 interface CampaignCopy {
@@ -51,6 +62,9 @@ interface CreateCampaignRequest {
   strategy: CampaignStrategy;
   copy: CampaignCopy;
   consentTimestamp: string;
+  autonomyConsent?: boolean;
+  autonomyConsentTimestamp?: string;
+  autonomyTermsVersion?: string;
   clientId?: string;
   mode?: CampaignMode;
 }
@@ -406,6 +420,22 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'collectedData.businessNiche is required' }, { status: 400 });
     }
 
+    const commercialSeeds = [...(strategy?.keywords ?? []), ...(collectedData.extractedKeywords ?? [])];
+    const avgJobValue = collectedData.avgJobValue || 500;
+    const closeRateEstimate = 0.20;
+    const cplCeilingIls = deriveCplCeilingIls({ avgJobValue, closeRateEstimate } as CampaignConfig);
+    const demand = mode === 'test' ? null : await getKeywordDemand(commercialSeeds, strategy.targetLocation);
+    const readiness = evaluatePaidSearchReadiness({
+      mode,
+      commercialSeeds,
+      demand,
+      minMonthlySearches: Number(process.env.GOOGLE_ADS_MIN_MONTHLY_SEARCHES),
+      dailyBudgetIls: strategy.suggestedDailyBudget,
+      estimatedLeadConversionRate: strategy.estimatedLeadConversionRate,
+      cplCeilingIls,
+    });
+    if (!readiness.ready) return paidSearchReadinessBlockedResponse(readiness);
+
     const client = buildClient();
     const businessName = collectedData.businessName || collectedData.businessNiche || 'New Business';
     const slug = slugify(businessName, collectedData.businessNiche, collectedData.phone);
@@ -434,11 +464,9 @@ export async function POST(req: Request) {
     });
 
     // ── Step 2: Create conversion actions ────────────────────────────────────
-    const avgJobValue = collectedData.avgJobValue || 500;
     // Tiered expected values — a click is not a closed job.
     // Estimated close rate for cold local-service leads ≈ 20%.
     // Calibrated per-account from real CRM closes over time.
-    const closeRateEstimate = 0.20;
     const formExpectedValue = Math.round(avgJobValue * closeRateEstimate * 100) / 100;
     const verifiedLeadExpectedValue = Math.round(avgJobValue * closeRateEstimate * 100) / 100;
 
@@ -642,6 +670,7 @@ export async function POST(req: Request) {
       closedDealConversionResourceName,
       adGroupResourceName,
       createdAt: new Date().toISOString(),
+      demandEvidence: readiness.evidence,
     };
     const configDir = path.join(process.cwd(), 'data', 'campaigns');
     fs.mkdirSync(configDir, { recursive: true });
@@ -653,6 +682,19 @@ export async function POST(req: Request) {
         campaignId,
         finalUrl,
       });
+      const autonomyPolicy = buildOnboardingAutonomyPolicy({
+        clientId: effectiveClientId,
+        mode,
+        autonomyConsent: body.autonomyConsent,
+        autonomyConsentTimestamp: body.autonomyConsentTimestamp,
+        autonomyTermsVersion: body.autonomyTermsVersion,
+        dailyBudgetIls: strategy.suggestedDailyBudget,
+        authorizedBy: sessionClientId ?? effectiveClientId,
+        legalTermsVersion: process.env.GOOGLE_ADS_AUTONOMY_LEGAL_VERSION,
+      });
+      if (autonomyPolicy && !writeAutonomyPolicy(autonomyPolicy)) {
+        throw new Error('Unable to persist autonomy policy after campaign binding');
+      }
     }
 
     // ── Step 11: Consent log → CRM ───────────────────────────────────────────

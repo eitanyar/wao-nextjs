@@ -50,8 +50,8 @@ This version has breaking changes — APIs, conventions, and file structure may 
 |- **Human gate:** Any founder-facing or voiceover Hebrew passes a human spot-check by Eitan before it ships, until the model has proven native Sabra register — grammatical correctness is not voice approval.
 
 ## 3b. Noa — Hebrew QA & Voice Director (Profile: `waohebrewqa`)
-|- **Engine:** Gemini 3.7 Flash (via Hermes, Google API)
-|- **Model Config:** model: gemini-3.7-flash, provider: gemini, context_length: 1000000,
+|- **Engine:** Gemini 3.8 Flash (via Hermes, Google API)
+|- **Model Config:** model: gemini-3.8-flash, provider: gemini, context_length: 1000000,
   api_key_env: GEMINI_API_KEY, base_url: https://generativelanguage.googleapis.com/v1beta/openai.
 |- **Role:** QA pass on Hermes-authored Hebrew — Sabra naturalness, TTS/narration readiness, final
   language review.
@@ -86,19 +86,19 @@ This version has breaking changes — APIs, conventions, and file structure may 
   Hermes spec file.
 |- **Hermes-native verifier profile (`waoverifier`):** separate from the direct-API pattern above —
   for Hermes-orchestrated flows (e.g. kanban `swarm`) that need an in-Hermes verifier profile
-  rather than a direct API call. Reconfigured 2026-08-24 from `qwen3.8-max` to **Gemini 3.7 Flash**
+  rather than a direct API call. Reconfigured 2026-08-24 from `qwen3.8-max` to **Gemini 3.8 Flash**
   specifically to restore model-family independence: the prior same-family Qwen config meant the
   verifier could grade its own family's work, defeating the point of an independent gate.
-  model: gemini-3.7-flash / provider: gemini / api_key_env: GEMINI_API_KEY / base_url:
+  model: gemini-3.8-flash / provider: gemini / api_key_env: GEMINI_API_KEY / base_url:
   `https://generativelanguage.googleapis.com/v1beta/openai` / context_length: 1000000.
 
 ## 4b. Shira / Yael — Media Verifier (Profile: `waoverifier-media`)
-|- **Engine:** Gemini 3.7 Flash (via Hermes, Google API) — reconfigured 2026-08-24 from Qwen 3.5
+|- **Engine:** Gemini 3.8 Flash (via Hermes, Google API) — reconfigured 2026-08-24 from Qwen 3.5
   Omni Plus. The prior config had drifted to plain `qwen3.8-max` (text-only, could not actually
   process media) with a generic unconfigured system prompt; Gemini restores real multimodal
   capability and keeps model-family independence from `waoengineer`/`waocopy`.
 |- **Model Config:**
-  - model: gemini-3.7-flash
+  - model: gemini-3.8-flash
   - provider: gemini
   - base_url: https://generativelanguage.googleapis.com/v1beta/openai
   - context_length: 1000000
@@ -108,17 +108,14 @@ This version has breaking changes — APIs, conventions, and file structure may 
 |- **Mandate:** Processes video and audio natively. Returns PASS / FAIL / BLOCKED with strict evidence. Does not fix code — reports failures back to `waoengineer` or `waocopy`.
 
 ## 4c. Real-User QA Tester (Profile: `waouxtester`)
-|- **Engine:** Gemini 3.7 Flash (via Hermes, Google API) — reconfigured 2026-08-24. Originally
-  scoped as an Opus 4.8 + computer-use profile for live browser-driven QA, but that setup was
-  never actually wired (config had drifted to plain `qwen3.8-max`, no computer-use, generic
-  system prompt). Gemini 3.7 Flash vision gives multimodal screenshot inspection at a fraction of
-  computer-use cost; live browser driving is not part of this profile's current scope.
+|- **Engine:** GPT-5.6 Sol (via Hermes, OpenAI Codex OAuth) — reconfigured 2026-09-04 after
+  live validation showed Gemini's OpenAI-compatible endpoint rejecting Hermes image tool results,
+  while Codex accepted the same screenshot natively and completed detailed RTL/BiDi visual QA.
 |- **Model Config:**
-  - model: gemini-3.7-flash
-  - provider: gemini
-  - base_url: https://generativelanguage.googleapis.com/v1beta/openai
+  - model: gpt-5.6-sol
+  - provider: openai-codex
+  - reasoning_effort: medium
   - context_length: 1000000
-  - api_key_env: GEMINI_API_KEY
   - temperature: 0.1
 |- **Role:** Visual QA on real product flows via screenshot inspection — RTL/BiDi layout, mobile
   overflow, UI regressions.
@@ -131,8 +128,8 @@ This version has breaking changes — APIs, conventions, and file structure may 
 |- **Strategy & Specs:** `waostrategy` alone decides scope, selects the executing profile, and writes the specific handoff spec under its pinned `gpt-5.6-sol` OpenAI Codex configuration. The orchestrator only dispatches the spec's explicit `Target Agent` without planning, selecting, rewriting, or expanding it. Output goes to `/handoff/pending/` per `CLAUDE_TO_HERMES_HANDOFF.md`.
 |- **Code & Execution:** Hermes picks up from `/handoff/pending/` and executes with `waoengineer` on `gpt-5.6-terra` (OpenAI Codex OAuth, medium reasoning effort).
 |- **Execution order:** Hermes processes pending files in ascending filename order, one task at a time; a task never starts before its listed Dependencies are in `/completed/`. Parallel only for dependency-free tasks with different target agents.
-|- **Content Generation:** Hermes uses `qwen3.8-max` for all Hebrew content (subject to the human gate above) — **except GEO opportunity generation** (`scripts/geo-generate-content.mjs`), where `gemini-3.7-flash` is PRIMARY and `qwen3.8-max` is the fallback. Both Tamar and Noa calls try Gemini first; Qwen only if Gemini's attempts are exhausted. Every saved action is stamped `generatedVia: "primary:gemini-3.7-flash"` or `"fallback:qwen3.8-max"`. Applies to every GEO-entitled client (`retter`, `ajudaica`, `wao`).
-|- **App Verification:** structural checks → Claude `verifier` (Haiku 4.5, direct subagent, not Hermes; escalate to Sonnet 5 only if Haiku misses a hard drive). Visual/RTL checks → two-tier: `qwen3.5-omni-plus` (quick/iterative) or `qwen3.8-max` (serious/from-scratch, pre-deploy gate) via direct DashScope API call (see §4a); for real-user flow QA via screenshot inspection, `waouxtester` (Gemini 3.7 Flash, §4c). **Media Verification:** `waoverifier-media` (Gemini 3.7 Flash, §4b) for video/audio QA. **Hermes-orchestrated flows** (kanban `swarm`) use the `waoverifier` profile (Gemini 3.7 Flash, §4a) as their in-Hermes verifier.
+|- **Content Generation:** Hermes uses `qwen3.8-max` for all Hebrew content (subject to the human gate above) — **except GEO opportunity generation** (`scripts/geo-generate-content.mjs`), where `gemini-3.8-flash` is PRIMARY and `qwen3.8-max` is the fallback. Both Tamar and Noa calls try Gemini first; Qwen only if Gemini's attempts are exhausted. Every saved action is stamped `generatedVia: "primary:gemini-3.8-flash"` or `"fallback:qwen3.8-max"`. Applies to every GEO-entitled client (`retter`, `ajudaica`, `wao`).
+|- **App Verification:** structural checks → Claude `verifier` (Haiku 4.5, direct subagent, not Hermes; escalate to Sonnet 5 only if Haiku misses a hard drive). Visual/RTL checks → two-tier: `qwen3.5-omni-plus` (quick/iterative) or `qwen3.8-max` (serious/from-scratch, pre-deploy gate) via direct DashScope API call (see §4a); for real-user flow QA via screenshot inspection, `waouxtester` (GPT-5.6 Sol, §4c). **Media Verification:** `waoverifier-media` (Gemini 3.8 Flash, §4b) for video/audio QA. **Hermes-orchestrated flows** (kanban `swarm`) use the `waoverifier` profile (Gemini 3.8 Flash, §4a) as their in-Hermes verifier.
 |- **Autonomous milestone push & deploy:** Post-milestone completion, the Lead Architect auto-commits, pushes to `hermes-migration`, and triggers `./deploy.sh` via SSH key once independent verification (tests, build, scope checks) passes.
 |- **Context-budget check:** before writing a spec that routes through a Hermes/Qwen profile, the strategist checks that profile's real context_length above (not an aspirational number) against the spec's expected payload (repo context + tool outputs + screenshots/JSON dumps it will produce). If a spec is likely to exceed it, split it into narrower tasks rather than write one large one and hope. New profiles must have a working `.env` (verify with `hermes profile show <name>` before dispatching to it) — a profile scaffolded via `hermes profile create` has no credentials until one is added.
 
@@ -141,7 +138,7 @@ This version has breaking changes — APIs, conventions, and file structure may 
 All Hermes engines run stateless one-shot `-z` — no caching/compaction to manage. Rationale + verified
 pricing: [[project_model_cost_geometry]].
 
-**OpenAI Codex GPT-5.6** (`waostrategy` on `gpt-5.6-sol`, `waoengineer` on `gpt-5.6-terra`, `orchestrator` on `gpt-5.6-luna`): high capability reasoning and fast execution via Codex OAuth.
+**OpenAI Codex GPT-5.6** (`waostrategy` and `waouxtester` on `gpt-5.6-sol`, `waoengineer` on `gpt-5.6-terra`, `orchestrator` on `gpt-5.6-luna`): high capability reasoning, native screenshot analysis, and fast execution via Codex OAuth.
 
 **Qwen 3.8 Max** (`waocopy`): flat rate to 1M — deep reasoning and nuanced generation for Hebrew copy. Still enforce:
 - One scoped task per `/handoff/pending/` MD; name exact paths/functions; never dump whole files or the repo.
@@ -149,7 +146,7 @@ pricing: [[project_model_cost_geometry]].
 - No Hebrew in the coder's (`waoengineer`) context — tokenize/placeholder all strings; Hebrew edits arrive as byte-exact patches Qwen (`waocopy`) authored ([[feedback_hebrew_edits_need_patch_not_retype]]).
 - Dispatch with `--usage-file` for visibility even though there's no ceiling to enforce.
 
-**Gemini 3.7 Flash** (`waohebrewqa`, `waoverifier`, `waoverifier-media`, `waouxtester`): fast, reliable verification tier with native multimodal (vision/audio/video) capability.
+**Gemini 3.8 Flash** (`waohebrewqa`, `waoverifier`, `waoverifier-media`): fast verification tier with native multimodal capability where each profile's transport supports its required modality.
 
 ---
 

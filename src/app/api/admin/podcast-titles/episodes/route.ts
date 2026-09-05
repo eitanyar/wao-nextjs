@@ -1,0 +1,6 @@
+import { NextResponse } from 'next/server';
+import { isStaff } from '@/lib/trainer/auth';
+import { listEpisodeAnalyses, readEpisodeAnalysis } from '@/lib/podcast-title/store';
+import { episodeSummary, validId } from '@/lib/podcast-title/adminApi';
+export const runtime = 'nodejs'; export const dynamic = 'force-dynamic';
+export async function GET(request: Request) { if (!await isStaff()) return NextResponse.json({ error: 'unauthorized' }, { status: 401 }); const url = new URL(request.url); const profileId = url.searchParams.get('profileId'); const episodeId = url.searchParams.get('episodeId'); if (!validId(profileId) || (episodeId !== null && !validId(episodeId))) return NextResponse.json({ error: 'invalid_id' }, { status: 400 }); try { if (episodeId) { const episode = await readEpisodeAnalysis(profileId, episodeId); return episode ? NextResponse.json({ episode }) : NextResponse.json({ error: 'episode_not_found' }, { status: 404 }); } const ids = await listEpisodeAnalyses(profileId); const episodes = (await Promise.all(ids.map(id => readEpisodeAnalysis(profileId, id)))).filter((episode): episode is NonNullable<typeof episode> => Boolean(episode)).sort((a, b) => b.createdAt.localeCompare(a.createdAt)).map(episodeSummary); return NextResponse.json({ episodes }); } catch { return NextResponse.json({ error: 'storage_unavailable' }, { status: 500 }); } }

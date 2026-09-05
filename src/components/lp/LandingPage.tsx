@@ -34,6 +34,13 @@ interface LandingPageProps {
 // if multiple are present. Precedence: gclid > wbraid > gbraid.
 type ClickId = { gclid?: string } | { wbraid?: string } | { gbraid?: string } | Record<string, never>;
 
+type LandingAttribution = ClickId & {
+  landingReferrer?: string;
+  utmSource?: string;
+  utmMedium?: string;
+  utmCampaign?: string;
+};
+
 function uid() {
   return Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
 }
@@ -51,13 +58,19 @@ export default function LandingPage({ theme, assets, copy, data, heroImageUrl, s
 
   // Captured once on mount and reused for every lead-creation call for the
   // lifetime of this page view (form submit + phone/WhatsApp click pings).
-  const clickIdRef = useRef<ClickId>({});
+  const attributionRef = useRef<LandingAttribution>({});
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const gclid = params.get('gclid');
     const wbraid = params.get('wbraid');
     const gbraid = params.get('gbraid');
-    clickIdRef.current = gclid ? { gclid } : wbraid ? { wbraid } : gbraid ? { gbraid } : {};
+    attributionRef.current = {
+      ...(gclid ? { gclid } : wbraid ? { wbraid } : gbraid ? { gbraid } : {}),
+      ...(document.referrer ? { landingReferrer: document.referrer } : {}),
+      ...(params.get('utm_source') ? { utmSource: params.get('utm_source')! } : {}),
+      ...(params.get('utm_medium') ? { utmMedium: params.get('utm_medium')! } : {}),
+      ...(params.get('utm_campaign') ? { utmCampaign: params.get('utm_campaign')! } : {}),
+    };
   }, []);
 
   // "Zero silent drops" for phone/WhatsApp click pings — a bare fetch() can
@@ -74,7 +87,7 @@ export default function LandingPage({ theme, assets, copy, data, heroImageUrl, s
       slug,
       type,
       businessNiche: data.businessNiche || '',
-      ...clickIdRef.current,
+      ...attributionRef.current,
     });
 
     let accepted = false;
@@ -107,6 +120,7 @@ export default function LandingPage({ theme, assets, copy, data, heroImageUrl, s
 
   const nameInputRef = useRef<HTMLInputElement>(null);
   const phoneInputRef = useRef<HTMLInputElement>(null);
+  const consentCheckboxRef = useRef<HTMLInputElement>(null);
   const [formStatus, setFormStatus] = useState<'idle' | 'submitting' | 'success' | 'error'>('idle');
 
   // Generated once per form-fill attempt (not a fresh uid() per handleSubmit
@@ -115,6 +129,7 @@ export default function LandingPage({ theme, assets, copy, data, heroImageUrl, s
   // a retry/double-submit idempotent instead of creating a duplicate lead.
   // See priority-3 spec §1.1.
   const formOrderIdRef = useRef<string | null>(null);
+  const formContactConsentAtRef = useRef<string | null>(null);
 
   function buildFormPayload(orderId: string) {
     return JSON.stringify({
@@ -125,7 +140,8 @@ export default function LandingPage({ theme, assets, copy, data, heroImageUrl, s
       slug,
       type: 'form',
       businessNiche: data.businessNiche || '',
-      ...clickIdRef.current,
+      ...(formContactConsentAtRef.current ? { contactConsentAt: formContactConsentAtRef.current } : {}),
+      ...attributionRef.current,
     });
   }
 
@@ -143,6 +159,11 @@ export default function LandingPage({ theme, assets, copy, data, heroImageUrl, s
     setFormStatus('submitting');
 
     if (!formOrderIdRef.current) formOrderIdRef.current = uid();
+    if (!consentCheckboxRef.current?.checked) {
+      setFormStatus('error');
+      return;
+    }
+    if (!formContactConsentAtRef.current) formContactConsentAtRef.current = new Date().toISOString();
     const orderId = formOrderIdRef.current;
 
     let res: Response;
@@ -429,7 +450,7 @@ export default function LandingPage({ theme, assets, copy, data, heroImageUrl, s
               <input ref={nameInputRef} type="text" placeholder="שם מלא" aria-label="שם מלא" required style={{ padding: '14px 16px', borderRadius: t.radiusSm, border: `1px solid ${t.border}`, fontSize: '1rem', fontFamily: t.fontBody, color: t.textPrimary, background: t.surface }} />
               <input ref={phoneInputRef} type="tel" placeholder="050-0000000" aria-label="מספר טלפון" dir="ltr" required style={{ padding: '14px 16px', borderRadius: t.radiusSm, border: `1px solid ${t.border}`, fontSize: '1rem', fontFamily: t.fontBody, color: t.textPrimary, background: t.surface, textAlign: 'right' }} />
               <label style={{ display: 'flex', gap: '8px', alignItems: 'flex-start', cursor: 'pointer' }}>
-                <input type="checkbox" required style={{ marginTop: '3px', accentColor: t.accent, flexShrink: 0 }} />
+                <input ref={consentCheckboxRef} type="checkbox" required style={{ marginTop: '3px', accentColor: t.accent, flexShrink: 0 }} />
                 <span style={{ fontSize: '0.8rem', color: t.textMuted, lineHeight: 1.4 }}>
                   אני מסכים/ה ל<strong>מדיניות הפרטיות</strong>.
                 </span>

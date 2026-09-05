@@ -7,6 +7,7 @@
 
 import type { VerticalTheme } from './verticalThemes';
 import type { CollectedData } from '@/lib/bot/prompts';
+import { buildFraudBlockerTrackerHtml } from '../fraud-blocker/tracker';
 
 function esc(s: string): string {
   return (s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
@@ -26,6 +27,7 @@ interface LegalPageOpts {
   canonicalUrl: string;
   /** Relative href back to the home page, e.g. '/' or '/index.html' */
   homeHref: string;
+  fraudBlockerSid?: string;
 }
 
 function contactLine(data: CollectedData): { ownerName: string; phone: string; email?: string } {
@@ -43,6 +45,7 @@ function legalDocument(opts: LegalPageOpts, title: string, bodyHtml: string): st
   return `<!DOCTYPE html>
 <html lang="he" dir="rtl">
 <head>
+  ${opts.fraudBlockerSid ? buildFraudBlockerTrackerHtml(opts.fraudBlockerSid) : ''}
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>${esc(title)} — ${businessName}</title>

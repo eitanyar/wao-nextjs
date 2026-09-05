@@ -21,6 +21,7 @@ import {
 import { buildSearchTermCleanupPreview } from '@/lib/google-ads/executor';
 import { translateTaskToHebrew } from '@/lib/operators/hebrew-rewriter';
 import { enumerateEnabledCampaigns } from '@/lib/google-ads/campaign-enumeration';
+import { evaluateCampaignAge } from '@/lib/google-ads/campaignAge';
 import ReviewContext from '@/components/admin/review/ReviewContext';
 import RecommendationCard from '@/components/admin/review/RecommendationCard';
 
@@ -42,6 +43,7 @@ async function buildMergedTasks(params: {
 }): Promise<GoogleAdsOperatorTask[]> {
   const { clientId, campaign, customerId } = params;
   if (!campaign) return [];
+  const campaignAge = evaluateCampaignAge({ startDate: campaign.createdAt });
 
   const enumerated = await enumerateEnabledCampaigns({
     customerId,
@@ -51,7 +53,7 @@ async function buildMergedTasks(params: {
 
   if (!enumerated.length) {
     const digest = buildWeeklyDigest({ campaign });
-    return buildGoogleAdsOperatorTasks({ clientId, digest, campaignConfig: campaign });
+    return buildGoogleAdsOperatorTasks({ clientId, digest, campaignConfig: campaign, campaignAge });
   }
 
   const allTasks: GoogleAdsOperatorTask[] = [];
@@ -74,6 +76,7 @@ async function buildMergedTasks(params: {
       clientId,
       digest: mergedDigest,
       campaignConfig: campaign,
+      campaignAge,
       campaignId: c.campaignId,
       campaignName: c.campaignName,
     });
@@ -93,6 +96,7 @@ async function buildMergedTasks(params: {
           clientId,
           digest: mergedDigest,
           campaignConfig: campaign,
+          campaignAge,
           campaignId: c.campaignId,
           campaignName: c.campaignName,
           searchTermCleanupPreview,
