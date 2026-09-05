@@ -40,7 +40,18 @@ test('omits transcript and description from summaries', () => {
     input: { transcript: 'private', currentDescription: 'private' }, theme: { format: 'mixed', theme: 'theme', supportingTopics: [], examples: [], excludedTopics: [], listenerIntent: 'intent', listenerPromise: 'promise', seeds: [], confidence: 80 },
     providerUsage: [], result: { decision: 'CHANGE', reason: 'reason', theme: { format: 'mixed', theme: 'theme', supportingTopics: [], examples: [], excludedTopics: [], listenerIntent: 'intent', listenerPromise: 'promise', seeds: [], confidence: 80 }, keywordEvidence: [], titles: [], description: 'private', currentTitleScore: 10, recommendedTitleScore: 80, fallbackUsed: false, llmCallsUsed: 2 },
   });
+  if (!summary) throw new Error('expected completed summary');
   assert.deepEqual(Object.keys(summary).sort(), ['confidence', 'createdAt', 'currentTitle', 'decision', 'episodeId', 'recommendedTitle', 'searchVolume', 'selectedKeyword', 'theme']);
   assert.equal(JSON.stringify(summary).includes('private'), false);
   assert.equal(profileSummary(createProfileFromRequest({ id: 'demo-1', name: 'Demo', podcastName: 'Show', targetAudience: 'Owners', podcastDomain: 'Business', writingStyle: 'clear', brandPhrases: [], topicScope: ['growth'], benefitTitlePreference: false, targetCountry: 'IL', targetLanguage: 'he', titleLimit: 80, descriptionLimit: 160 })!).id, 'demo-1');
+});
+
+test('excludes legacy operational records from episode summaries', () => {
+  const theme = { format: 'mixed' as const, theme: 'theme', supportingTopics: [], examples: [], excludedTopics: [], listenerIntent: 'intent', listenerPromise: 'promise', seeds: [], confidence: 80 };
+  const summary = episodeSummary({
+    schemaVersion: 1, profileId: 'demo-1', episodeId: 'episode-failed', transcriptDigest: 'digest', createdAt: '2026-01-01T00:00:00.000Z', updatedAt: '2026-01-01T00:00:00.000Z',
+    input: { transcript: 'private' }, theme, providerUsage: [],
+    result: { decision: 'HUMAN_REVIEW', reason: 'legacy failure', theme, keywordEvidence: [], titles: [], description: '', currentTitleScore: 0, recommendedTitleScore: 0, fallbackUsed: false, llmCallsUsed: 0, failure: { stage: 'keywords', code: 'unavailable' } },
+  });
+  assert.equal(summary, null);
 });

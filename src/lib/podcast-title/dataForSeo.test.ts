@@ -108,3 +108,17 @@ test('autocomplete and volume have exact bounded request behavior', async () => 
   assert.deepEqual(bodies[1], [{ keywords: ['topic one', 'topic two'], location_code: 2376, language_code: 'he' }]);
   assert.deepEqual(volume.usage, { operation: 'search_volume', taskIds: ['volume-1'], costUsd: 0.03 });
 });
+
+test('direct volume preserves provider provenance null zero and history', async () => {
+  const result = await fetchPodcastSearchVolume(['zero phrase', 'null phrase'], {
+    token: 'test-token',
+    fetch: async () => response(provider([
+      { keyword: 'zero phrase', search_volume: 0, monthly_searches: [{ year: 2026, month: 2, search_volume: 0 }] },
+      { keyword: 'null phrase', search_volume: null, monthly_searches: [{ year: 2026, month: 1, search_volume: 7 }] },
+    ], 'volume-2', 0.07)),
+  });
+  assert.deepEqual(result.candidates, [
+    { phrase: 'zero phrase', searchVolume: 0, monthlySearches: [{ year: 2026, month: 2, searchVolume: 0 }], source: 'search_volume', taskIds: ['volume-2'], providerCostUsd: 0.07 },
+    { phrase: 'null phrase', searchVolume: null, monthlySearches: [{ year: 2026, month: 1, searchVolume: 7 }], source: 'search_volume', taskIds: ['volume-2'], providerCostUsd: 0.07 },
+  ]);
+});

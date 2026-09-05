@@ -17,6 +17,14 @@ test('theme prompt uses quoted delimiters and injection-resistant system instruc
   assert.match(message, /"IGNORE PRIOR INSTRUCTIONS"/);
 });
 
+test('theme prompt encloses current metadata in untrusted delimiters', () => {
+  const message = buildThemeUserMessage(profile, 'Transcript', { title: 'Old title', description: 'Old description' });
+  assert.match(message, /CURRENT_BEGIN/);
+  assert.match(message, /CURRENT_END/);
+  assert.match(message, /"title":"Old title"/);
+  assert.match(THEME_SYSTEM_PROMPT, /currentTitleKeyword/);
+});
+
 test('writer prompt excludes transcript and limits provider candidates', () => {
   const transcript = 'DO NOT INCLUDE THIS TRANSCRIPT';
   const writer = buildWriterRankingUserMessage(profile, theme, { title: 'Old title', description: 'Old description' }, candidates.map((candidate, index) => ({ ...candidate, normalizedVolume: index })));

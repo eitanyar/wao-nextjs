@@ -52,3 +52,27 @@ test('podcast store upgrades exact legacy profiles and rejects invalid writes', 
     assert.equal(invalidPath === null ? false : fs.existsSync(invalidPath), false);
   } finally { fs.rmSync(root, { recursive: true, force: true }); }
 });
+
+test('podcast store reads completed and legacy operational schema-version-1 records without migration', async () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'podcast-store-test-'));
+  try {
+    const legacyCompleted = record();
+    const completedWithEvidence: StoredEpisodeAnalysis = {
+      ...record(), episodeId: 'episode-evidence', input: { ...record().input, episodeId: 'episode-evidence' },
+      result: { ...record().result, currentTitleKeywordEvidence: { status: 'available', phrase: 'topic one', searchVolume: 0, monthlySearches: [], source: 'search_volume' } },
+    };
+    const legacyOperational: StoredEpisodeAnalysis = {
+      ...record(), episodeId: 'episode-operational', input: { ...record().input, episodeId: 'episode-operational' },
+      result: { ...record().result, reason: 'legacy failure', failure: { stage: 'keywords', code: 'unavailable' } },
+    };
+    for (const value of [legacyCompleted, completedWithEvidence, legacyOperational]) {
+      const file = getEpisodeAnalysisPath(profile.id, value.episodeId, root);
+      if (!file) throw new Error('expected episode path');
+      fs.mkdirSync(path.dirname(file), { recursive: true });
+      fs.writeFileSync(file, JSON.stringify(value, null, 2), 'utf8');
+      const before = fs.readFileSync(file, 'utf8');
+      assert.deepEqual(await readEpisodeAnalysis(profile.id, value.episodeId, root), value);
+      assert.equal(fs.readFileSync(file, 'utf8'), before);
+    }
+  } finally { fs.rmSync(root, { recursive: true, force: true }); }
+});

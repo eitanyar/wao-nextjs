@@ -4,6 +4,7 @@ import {
   calculateKeywordScore,
   decideTitleChange,
   normalizeSearchVolume,
+  selectBestAvailableKeyword,
   selectKeyword,
 } from './scoring';
 
@@ -16,6 +17,20 @@ test('scoring applies weights and refuses volume rescue for irrelevant keywords'
     { phrase: 'supported phrase', score: 70, themeRelevance: 70 },
   ]);
   assert.equal(selected?.phrase, 'supported phrase');
+});
+
+test('best available keyword deterministically prefers relevance score volume then provider order', () => {
+  const candidates = [
+    { phrase: 'first null', score: 80, searchVolume: null, components: { themeRelevance: 75 } },
+    { phrase: 'second finite', score: 80, searchVolume: 0, components: { themeRelevance: 75 } },
+    { phrase: 'higher relevance', score: 80, searchVolume: null, components: { themeRelevance: 76 } },
+    { phrase: 'irrelevant high', score: 99, searchVolume: 100, components: { themeRelevance: 69 } },
+  ];
+  const snapshot = structuredClone(candidates);
+  assert.equal(selectBestAvailableKeyword(candidates)?.phrase, 'higher relevance');
+  assert.deepEqual(candidates, snapshot);
+  assert.equal(selectBestAvailableKeyword(candidates.filter(candidate => candidate.components.themeRelevance < 70))?.phrase, 'irrelevant high');
+  assert.equal(selectBestAvailableKeyword(candidates.slice(0, 2))?.phrase, 'second finite');
 });
 
 test('title change decision honors the deterministic ten point threshold', () => {

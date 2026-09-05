@@ -24,8 +24,9 @@ export const PODCAST_THEME_RESPONSE_JSON_SCHEMA = {
     listenerPromise: { type: 'string' },
     seeds: { type: 'array', items: { type: 'string' }, minItems: 2, maxItems: 3 },
     confidence: { type: 'number', minimum: 0, maximum: 100 },
+    currentTitleKeyword: { type: 'string' },
   },
-  required: ['format', 'theme', 'supportingTopics', 'examples', 'excludedTopics', 'listenerIntent', 'listenerPromise', 'seeds', 'confidence'],
+  required: ['format', 'theme', 'supportingTopics', 'examples', 'excludedTopics', 'listenerIntent', 'listenerPromise', 'seeds', 'confidence', 'currentTitleKeyword'],
 } as const;
 
 export const PODCAST_WRITER_RANKING_RESPONSE_JSON_SCHEMA = {

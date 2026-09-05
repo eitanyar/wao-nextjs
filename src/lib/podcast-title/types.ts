@@ -13,13 +13,23 @@ export interface PodcastProfile {
   seedKeywords: string[];
 }
 export interface EpisodeAnalysisInput { episodeId?: string; transcript: string; currentTitle?: string; currentDescription?: string; }
-export interface ThemeAnalysis { format: EpisodeFormat; theme: string; supportingTopics: string[]; examples: string[]; excludedTopics: string[]; listenerIntent: string; listenerPromise: string; seeds: string[]; confidence: number; }
-export interface KeywordCandidate { phrase: string; searchVolume: number | null; monthlySearches: Array<{ year: number; month: number; searchVolume: number }>; source: 'keyword_ideas' | 'autocomplete'; taskIds: string[]; providerCostUsd: number; }
+export interface ThemeAnalysis { format: EpisodeFormat; theme: string; supportingTopics: string[]; examples: string[]; excludedTopics: string[]; listenerIntent: string; listenerPromise: string; seeds: string[]; confidence: number; currentTitleKeyword?: string; }
+export interface KeywordCandidate { phrase: string; searchVolume: number | null; monthlySearches: Array<{ year: number; month: number; searchVolume: number }>; source: 'keyword_ideas' | 'autocomplete' | 'search_volume'; taskIds: string[]; providerCostUsd: number; }
 export interface KeywordScoreComponents { themeRelevance: number; intentMatch: number; normalizedVolume: number; titleNaturalness: number; clickPotential: number; }
 export interface ScoredKeyword extends KeywordCandidate { components: KeywordScoreComponents; score: number; relevant: boolean; }
 export interface TitleCandidate { role: TitleRole; title: string; primaryPhrase: string; }
-export interface PodcastTitleResult { decision: Decision; reason: string; theme: ThemeAnalysis; keywordEvidence: ScoredKeyword[]; selectedKeyword?: ScoredKeyword; titles: TitleCandidate[]; description: string; currentTitleScore: number; recommendedTitleScore: number; fallbackUsed: boolean; llmCallsUsed: number; failure?: { stage: 'theme' | 'keywords' | 'writer'; code: 'timeout' | 'aborted' | 'unavailable' | 'invalid_output'; step?: 'ranking' | 'draft' }; }
+export type CurrentTitleKeywordEvidence =
+  | { status: 'available'; phrase: string; searchVolume: number | null; monthlySearches: Array<{ year: number; month: number; searchVolume: number }>; source: 'keyword_ideas' | 'search_volume'; }
+  | { status: 'not_extractable'; }
+  | { status: 'provider_no_data'; }
+  | { status: 'provider_unavailable'; };
+export interface PodcastOperationalFailure { stage: 'theme' | 'keywords' | 'writer'; code: 'timeout' | 'aborted' | 'unavailable' | 'invalid_output'; step?: 'ranking' | 'draft'; }
+export interface PodcastTitleResult { decision: Decision; reason: string; theme: ThemeAnalysis; keywordEvidence: ScoredKeyword[]; selectedKeyword?: ScoredKeyword; titles: TitleCandidate[]; description: string; currentTitleScore: number; recommendedTitleScore: number; fallbackUsed: boolean; llmCallsUsed: number; currentTitleKeywordEvidence?: CurrentTitleKeywordEvidence; failure?: PodcastOperationalFailure; }
 export interface ProviderUsageEntry { operation: string; taskIds: string[]; costUsd: number; }
+export type CompletedPodcastTitleResult = Omit<PodcastTitleResult, 'failure'>;
+export type PodcastAnalysisOutcome =
+  | { status: 'completed'; result: CompletedPodcastTitleResult; providerUsage: ProviderUsageEntry[]; }
+  | { status: 'failed'; failure: PodcastOperationalFailure; providerUsage: ProviderUsageEntry[]; };
 export interface StoredEpisodeAnalysis { schemaVersion: 1; profileId: string; episodeId: string; input: EpisodeAnalysisInput; transcriptDigest: string; theme: ThemeAnalysis; result: PodcastTitleResult; providerUsage: ProviderUsageEntry[]; createdAt: string; updatedAt: string; }
 export interface WriterRankingOutput { keywordScores: Array<{ phrase: string; components: KeywordScoreComponents }>; naturalSearchLanguageMismatch?: boolean; }
 export interface WriterDraftOutput { currentTitleComponents?: KeywordScoreComponents; recommendedTitleComponents?: KeywordScoreComponents; titles: [TitleCandidate, TitleCandidate, TitleCandidate]; description: string; reason: string; }
