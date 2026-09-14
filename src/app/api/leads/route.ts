@@ -107,60 +107,133 @@ export async function GET() {
   }
 }
 
+const ADMIN_MUTATION_ACTIONS = new Set([
+  "updateQuality",
+  "updateRevenue",
+  "enrichStub",
+  "markClosed",
+]);
+const LEAD_QUALITIES = new Set(["PENDING", "GOOD", "JUNK"]);
+const MAX_STUB_NAME_LENGTH = 200;
+const MAX_STUB_PHONE_LENGTH = 64;
+
+type AdminMutationAction = "updateQuality" | "updateRevenue" | "enrichStub" | "markClosed";
+type JsonRecord = Record<string, unknown>;
+
+function isJsonRecord(value: unknown): value is JsonRecord {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function isValidLeadId(value: unknown): value is number {
+  return typeof value === "number" && Number.isSafeInteger(value) && value > 0;
+}
+
+function isValidRevenue(value: unknown): value is number {
+  return typeof value === "number" && Number.isFinite(value) && value >= 0;
+}
+
+function isBoundedString(value: unknown, maxLength: number): value is string {
+  return typeof value === "string" && value.length <= maxLength;
+}
+
+function isAdminMutationAction(value: unknown): value is AdminMutationAction {
+  return typeof value === "string" && ADMIN_MUTATION_ACTIONS.has(value);
+}
+
+function isValidMutationPayload(action: AdminMutationAction, body: JsonRecord): boolean {
+  if (!isValidLeadId(body.id)) return false;
+
+  switch (action) {
+    case "updateQuality":
+      return typeof body.quality === "string" && LEAD_QUALITIES.has(body.quality);
+    case "updateRevenue":
+    case "markClosed":
+      return isValidRevenue(body.revenue);
+    case "enrichStub":
+      return isBoundedString(body.name, MAX_STUB_NAME_LENGTH)
+        && isBoundedString(body.phone, MAX_STUB_PHONE_LENGTH);
+  }
+}
+
 export async function POST(req: Request) {
+  let body: unknown;
   try {
-    const body = await req.json();
-    const leads = await readLeads();
+    body = await req.json();
+  } catch {
+    return NextResponse.json({ success: false, error: "Invalid JSON body" }, { status: 400 });
+  }
 
-    // Check if it's an update request or a new lead creation
-    if (body.action === "updateQuality") {
-      const { id, quality } = body;
-      const updatedLeads = leads.map((l) => l.id === id ? { ...l, quality } : l);
-      await writeLeads(updatedLeads);
+  const bodyRecord = isJsonRecord(body) ? body : undefined;
+  const hasAction = Boolean(bodyRecord && Object.prototype.hasOwnProperty.call(bodyRecord, "action"));
+  let action: AdminMutationAction | undefined;
+  if (hasAction && bodyRecord) {
+    if (!isAdminMutationAction(bodyRecord.action)) {
+      return NextResponse.json({ success: false, error: "Unsupported action" }, { status: 400 });
+    }
 
-      // When a lead is marked GOOD → upload "ליד מאומת" offline conversion
-      if (quality === "GOOD") {
-        const lead = findLeadById(leads, id);
-        if (lead?.gclid || lead?.wbraid || lead?.gbraid) {
-          uploadConversion(id, "verified-lead").catch(console.error);
+    if (!(await isAdminAuthorized())) {
+      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
+    }
+
+    if (!isValidMutationPayload(bodyRecord.action, bodyRecord)) {
+      return NextResponse.json({ success: false, error: "Invalid mutation payload" }, { status: 400 });
+    }
+
+    action = bodyRecord.action;
+  }
+
+  try {
+    if (action && bodyRecord) {
+      const leads = await readLeads();
+
+      if (action === "updateQuality") {
+        const id = bodyRecord.id as number;
+        const quality = bodyRecord.quality as string;
+        const updatedLeads = leads.map((lead) => lead.id === id ? { ...lead, quality } : lead);
+        await writeLeads(updatedLeads);
+
+        if (quality === "GOOD") {
+          const lead = findLeadById(leads, id);
+          if (lead?.gclid || lead?.wbraid || lead?.gbraid) {
+            uploadConversion(id, "verified-lead").catch(console.error);
+          }
         }
+
+        return NextResponse.json({ success: true, message: "Lead quality updated" });
       }
 
-      return NextResponse.json({ success: true, message: "Lead quality updated" });
-    }
+      if (action === "updateRevenue") {
+        const id = bodyRecord.id as number;
+        const revenue = bodyRecord.revenue as number;
+        const updatedLeads = leads.map((lead) => lead.id === id ? { ...lead, revenue } : lead);
+        await writeLeads(updatedLeads);
+        return NextResponse.json({ success: true, message: "Lead revenue updated" });
+      }
 
-    if (body.action === "updateRevenue") {
-      const { id, revenue } = body;
-      const updatedLeads = leads.map((l) => l.id === id ? { ...l, revenue } : l);
-      await writeLeads(updatedLeads);
-      return NextResponse.json({ success: true, message: "Lead revenue updated" });
-    }
+      if (action === "enrichStub") {
+        const id = bodyRecord.id as number;
+        const name = bodyRecord.name as string;
+        const phone = bodyRecord.phone as string;
+        const updatedLeads = leads.map((lead) =>
+          lead.id === id ? { ...lead, name, phone, status: "חדש" } : lead
+        );
+        await writeLeads(updatedLeads);
+        return NextResponse.json({ success: true, message: "Stub enriched" });
+      }
 
-    if (body.action === "enrichStub") {
-      // Client fills in name + phone for a phone/WhatsApp click stub
-      const { id, name, phone } = body;
-      const updatedLeads = leads.map((l) =>
-        l.id === id ? { ...l, name, phone, status: "חדש" } : l
-      );
-      await writeLeads(updatedLeads);
-      return NextResponse.json({ success: true, message: "Stub enriched" });
-    }
-
-    if (body.action === "markClosed") {
-      const { id, revenue } = body;
+      const id = bodyRecord.id as number;
+      const revenue = bodyRecord.revenue as number;
       const closedAt = new Date().toISOString();
-      const updatedLeads = leads.map((l) =>
-        l.id === id ? { ...l, closed: true, closedAt, revenue, quality: "GOOD" } : l
+      const updatedLeads = leads.map((lead) =>
+        lead.id === id ? { ...lead, closed: true, closedAt, revenue, quality: "GOOD" } : lead
       );
       await writeLeads(updatedLeads);
 
-      // Upload "עסקה סגורה" as a fresh offline conversion with real revenue
       const lead = findLeadById(leads, id);
       if (lead?.gclid || lead?.wbraid || lead?.gbraid) {
         uploadConversion(id, "closed-deal").catch(console.error);
       }
 
-      // Review-generation flywheel — opt-in only, fails safe, never blocks this response.
       if (lead) {
         maybeQueueReviewFlywheelRequest(lead);
       }
@@ -168,13 +241,11 @@ export async function POST(req: Request) {
       return NextResponse.json({ success: true, closedAt, message: "Lead marked closed" });
     }
 
-    // Otherwise, create a new lead — upsert by orderId (idempotency key for
-    // the sendBeacon/keepalive retry path in LandingPage.tsx, and for any
-    // accidental double-submit): if a lead with this orderId already exists,
-    // return it unchanged instead of pushing a duplicate.
-    // See docs/specs/priority-3-lead-capture-reliability-and-client-feedback.md §1.1/§3.2.
-    if (body.orderId) {
-      const existing = leads.find((l) => l.orderId === body.orderId);
+    const leadBody = body as LeadCapturePayload;
+    const leads = await readLeads();
+
+    if (leadBody.orderId) {
+      const existing = leads.find((lead) => lead.orderId === leadBody.orderId);
       if (existing) {
         return NextResponse.json({
           success: true,
@@ -184,25 +255,20 @@ export async function POST(req: Request) {
       }
     }
 
-    const captured = captureLead({
-      leads,
-      body: body as LeadCapturePayload,
-    });
+    const captured = captureLead({ leads, body: leadBody });
     const newLead = captured.lead;
     leads.push(newLead);
     await writeLeads(leads);
 
     console.log("[WAO CRM] New Lead Captured & Saved:", newLead);
-
-    // Fire and forget email notification
     sendLeadNotificationEmail(newLead);
 
     return NextResponse.json({
       success: true,
       message: "Lead safely routed to WAO CRM",
-      lead: newLead
+      lead: newLead,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error processing lead:", error);
     return NextResponse.json(
       { success: false, error: "Failed to route lead" },
