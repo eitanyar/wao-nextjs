@@ -115,6 +115,7 @@ handoff/failed/*.md
 handoff/archive/*.md
 data/geo-leads/
 data/audit-logs/
+data/expired-domain-research/
 data/audits/*
 !data/audits/.gitkeep
 

@@ -230,6 +230,18 @@
     "src/lib/podcast-title/store.test.ts",
     "src/lib/podcast-title/adminApi.ts",
     "src/lib/podcast-title/adminApi.test.ts",
+    "src/lib/expired-domain-research/types.ts",
+    "src/lib/expired-domain-research/types.test.ts",
+    "src/lib/expired-domain-research/validation.ts",
+    "src/lib/expired-domain-research/validation.test.ts",
+    "src/lib/expired-domain-research/scoring.ts",
+    "src/lib/expired-domain-research/scoring.test.ts",
+    "src/lib/expired-domain-research/store.ts",
+    "src/lib/expired-domain-research/store.test.ts",
+    "src/lib/expired-domain-research/riskPolicy.ts",
+    "src/lib/expired-domain-research/riskPolicy.test.ts",
+    "src/lib/expired-domain-research/runResearch.ts",
+    "src/lib/expired-domain-research/runResearch.test.ts",
     "src/lib/site-bot/checkout/researchCompletion.ts",
     "src/lib/site-bot/checkout/researchCompletion.test.ts"
   ]

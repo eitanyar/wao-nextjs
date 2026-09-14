@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "runId": "fixture-run-1",
+  "createdAt": "2026-01-01T00:00:00.000Z",
+  "updatedAt": "2026-01-01T00:00:00.000Z",
+  "stage": "stored",
+  "disposition": "manual_due_diligence_required",
+  "input": {
+    "runId": "fixture-run-1",
+    "keywords": ["\u05d1\u05d3\u05d9\u05e7\u05ea \u05e0\u05d5\u05e9\u05d0"],
+    "waybackUrls": ["https://web.archive.org/web/*/complete.test"],
+    "requestedCandidates": ["complete.test", "missing-metric.test", "risky-redirect.test", "unknown-status.test"],
+    "requestedAt": "2026-01-01T00:00:00.000Z"
+  },
+  "candidates": [
+    { "hostname": "complete.test", "topicalFit": 80, "businessFit": 80, "historicalEvidence": [], "domainStatusEvidence": [], "openSeoEvidence": [], "mozAuthorityEvidence": [], "riskGates": [] },
+    { "hostname": "missing-metric.test", "topicalFit": 80, "businessFit": 80, "historicalEvidence": [], "domainStatusEvidence": [], "openSeoEvidence": [], "mozAuthorityEvidence": [], "riskGates": [] },
+    { "hostname": "risky-redirect.test", "topicalFit": 80, "businessFit": 80, "historicalEvidence": [], "domainStatusEvidence": [], "openSeoEvidence": [], "mozAuthorityEvidence": [], "riskGates": [{ "id": "risky_redirect", "status": "fail", "reason": "synthetic", "evidenceIds": [] }] },
+    { "hostname": "unknown-status.test", "topicalFit": 80, "businessFit": 80, "historicalEvidence": [], "domainStatusEvidence": [], "openSeoEvidence": [], "mozAuthorityEvidence": [], "riskGates": [] }
+  ],
+  "scores": [],
+  "providerUsage": []
+}
