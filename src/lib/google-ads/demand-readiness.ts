@@ -63,6 +63,13 @@ export interface PaidSearchReadinessDecision {
   evidence: PaidSearchDemandEvidenceSummary;
 }
 
+export function shouldBlockCampaignCreationForReadiness(
+  mode: 'test' | 'live',
+  decision: PaidSearchReadinessDecision
+): boolean {
+  return mode === 'live' && !decision.ready;
+}
+
 function positiveFinite(value: number | undefined | null): value is number {
   return typeof value === 'number' && Number.isFinite(value) && value > 0;
 }

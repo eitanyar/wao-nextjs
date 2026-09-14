@@ -26,6 +26,7 @@ const promptsLib = read('src/lib/bot/prompts.ts');
 const createCampaignRoute = read('src/app/api/google-ads/create-campaign/route.ts');
 const checkoutRoute = read('src/app/api/checkout/route.ts');
 const cloudflarePagesDeploy = read('src/app/api/cloudflare-pages/deploy/route.ts');
+const onboardingPage = read('src/app/(app)/google-ads/onboarding/page.tsx');
 const siteBotDeploy = read('src/app/api/site-bot/deploy/route.ts');
 const siteBotEdit = read('src/app/api/site-bot/edit/route.ts');
 const lpSlugPage = read('src/app/(standalone)/lp/[slug]/page.tsx');
@@ -55,6 +56,41 @@ test('image asset pipeline crops before upload and never force-crops portrait to
   assert.match(imageCropLib, /buildImageAssetCrops/);
   assert.match(imageCropLib, /LANDSCAPE_MIN_ASPECT/);
   assert.match(createCampaignRoute, /buildImageAssetCrops\(url\)/);
+});
+
+test('create-campaign applies route-specific readiness policy before creating a Google Ads client', () => {
+  const preliminaryReadiness = createCampaignRoute.indexOf('const preliminaryReadiness = evaluatePaidSearchReadiness');
+  const demandLookup = createCampaignRoute.indexOf("await getKeywordDemand(commercialSeeds, strategy.targetLocation)");
+  const readinessCheck = createCampaignRoute.indexOf('shouldBlockCampaignCreationForReadiness(mode, readiness)');
+  const clientBuild = createCampaignRoute.indexOf('const client = buildClient();');
+
+  assert.ok(preliminaryReadiness >= 0, 'create-campaign must calculate local readiness before a provider lookup');
+  assert.ok(demandLookup >= 0, 'create-campaign must retain a live-only demand lookup');
+  assert.ok(readinessCheck >= 0, 'create-campaign must use the route-specific readiness helper');
+  assert.ok(clientBuild >= 0, 'create-campaign must create the Google Ads client after readiness evaluation');
+  assert.ok(preliminaryReadiness < demandLookup, 'create-campaign must block incomplete local live readiness before a provider lookup');
+  assert.ok(readinessCheck < clientBuild, 'create-campaign must evaluate readiness before creating a Google Ads client');
+});
+
+test('create-campaign keeps sandbox and live credential resolution explicitly separate', () => {
+  const testBranch = createCampaignRoute.match(/if \(mode === 'test'\) \{([\s\S]*?)\n  \}\n\n  const refreshToken/);
+  const liveBranch = createCampaignRoute.match(/\n  const refreshToken = process\.env\.GOOGLE_ADS_REFRESH_TOKEN;([\s\S]*?)\n  return \{ refreshToken, mccId, clientId: undefined \};/);
+
+  assert.ok(testBranch, 'create-campaign must retain an explicit test credential branch');
+  assert.ok(liveBranch, 'create-campaign must retain an explicit live credential branch');
+  assert.match(testBranch[1], /process\.env\.GOOGLE_ADS_TEST_REFRESH_TOKEN/);
+  assert.match(testBranch[1], /process\.env\.GOOGLE_ADS_TEST_MCC_CUSTOMER_ID/);
+  assert.doesNotMatch(testBranch[1], /process\.env\.GOOGLE_ADS_REFRESH_TOKEN\b/);
+  assert.doesNotMatch(testBranch[1], /process\.env\.GOOGLE_ADS_MCC_CUSTOMER_ID\b/);
+  assert.match(liveBranch[0], /process\.env\.GOOGLE_ADS_REFRESH_TOKEN/);
+  assert.match(liveBranch[0], /process\.env\.GOOGLE_ADS_MCC_CUSTOMER_ID/);
+  assert.doesNotMatch(liveBranch[0], /GOOGLE_ADS_TEST_REFRESH_TOKEN|GOOGLE_ADS_TEST_MCC_CUSTOMER_ID/);
+});
+
+test('onboarding keeps test mode visibly labeled as Sandbox simulation', () => {
+  assert.match(onboardingPage, /mode === "test" \|\| isSimulation/);
+  assert.match(onboardingPage, /Sandbox \/ מצב הדגמה/);
+  assert.match(onboardingPage, /Live \(locked\)/);
 });
 
 test('LP hero image wiring is identical (real photo > stock fallback) across every render/deploy call site', () => {

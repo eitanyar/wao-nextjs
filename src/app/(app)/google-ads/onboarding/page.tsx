@@ -548,7 +548,7 @@ export default function OnboardingPage() {
             </p>
           )}
           <p style={{ color: "var(--muted)", fontSize: "0.95rem" }}>
-            {isSimulation ? (
+            {mode === "test" || isSimulation ? (
               <span
                 style={{
                   background: "rgba(255, 170, 0, 0.1)",
@@ -560,7 +560,7 @@ export default function OnboardingPage() {
                   fontWeight: "bold",
                 }}
               >
-                ● מצב הדגמה
+                ● Sandbox / מצב הדגמה
               </span>
             ) : (
               <span

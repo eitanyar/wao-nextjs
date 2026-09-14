@@ -6,6 +6,7 @@ import {
   evaluatePaidSearchReadiness,
   executePaidSearchMutationIfReady,
   paidSearchReadinessBlockedResponse,
+  shouldBlockCampaignCreationForReadiness,
 } from './demand-readiness';
 
 test('keyword demand normalizes mocked provider evidence without a live request', async () => {
@@ -135,4 +136,40 @@ test('simulation is explicitly simulation-only and never ready', () => {
 
   assert.equal(decision.status, 'simulation_only');
   assert.equal(decision.ready, false);
+});
+
+test('campaign creation readiness blocks only non-ready live decisions', () => {
+  const simulation = evaluatePaidSearchReadiness({
+    mode: 'test',
+    commercialSeeds: ['alpha'],
+    demand: null,
+    dailyBudgetIls: 100,
+  });
+  const blockedLive = evaluatePaidSearchReadiness({
+    mode: 'live',
+    commercialSeeds: ['alpha'],
+    demand: null,
+    dailyBudgetIls: 100,
+  });
+  const readyLive = evaluatePaidSearchReadiness({
+    mode: 'live',
+    commercialSeeds: ['alpha'],
+    demand: {
+      providerEvidence: true,
+      ideas: [{ text: 'alpha', avgMonthlySearches: 200, competition: 'HIGH', lowTopOfPageBidIls: 3, highTopOfPageBidIls: 5 }],
+      aggregate: { monthlySearches: 200, lowTopOfPageBidIls: 3, highTopOfPageBidIls: 5 },
+      retrievedAt: '2026-09-03T00:00:00.000Z',
+      geoTargetId: '2376',
+      languageId: '1000',
+    },
+    minMonthlySearches: 100,
+    dailyBudgetIls: 100,
+    estimatedLeadConversionRate: 0.1,
+    cplCeilingIls: 60,
+  });
+
+  assert.equal(simulation.status, 'simulation_only');
+  assert.equal(shouldBlockCampaignCreationForReadiness('test', simulation), false);
+  assert.equal(shouldBlockCampaignCreationForReadiness('live', blockedLive), true);
+  assert.equal(shouldBlockCampaignCreationForReadiness('live', readyLive), false);
 });

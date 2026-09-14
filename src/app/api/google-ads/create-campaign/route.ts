@@ -18,6 +18,7 @@ import { getKeywordDemand } from '@/lib/ads/keywordPlanner';
 import {
   evaluatePaidSearchReadiness,
   paidSearchReadinessBlockedResponse,
+  shouldBlockCampaignCreationForReadiness,
   type PaidSearchDemandEvidenceSummary,
 } from '@/lib/google-ads/demand-readiness';
 import { deriveCplCeilingIls } from '@/lib/crm/intelligence';
@@ -99,8 +100,8 @@ function buildClient() {
 
 function resolveAdsAccount(mode: CampaignMode) {
   if (mode === 'test') {
-    const refreshToken = process.env.GOOGLE_ADS_TEST_REFRESH_TOKEN || process.env.GOOGLE_ADS_REFRESH_TOKEN;
-    const mccId = (process.env.GOOGLE_ADS_TEST_MCC_CUSTOMER_ID || process.env.GOOGLE_ADS_MCC_CUSTOMER_ID)?.replace(/-/g, '');
+    const refreshToken = process.env.GOOGLE_ADS_TEST_REFRESH_TOKEN;
+    const mccId = process.env.GOOGLE_ADS_TEST_MCC_CUSTOMER_ID?.replace(/-/g, '');
     if (!refreshToken || !mccId) {
       throw new Error('Test mode requires GOOGLE_ADS_TEST_REFRESH_TOKEN and GOOGLE_ADS_TEST_MCC_CUSTOMER_ID');
     }
@@ -413,9 +414,6 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: access.error }, { status: access.status });
     }
 
-    const adsAccount = resolveAdsAccount(mode);
-    const effectiveClientId = requestedClientId || adsAccount.clientId;
-
     if (!collectedData?.businessNiche) {
       return NextResponse.json({ error: 'collectedData.businessNiche is required' }, { status: 400 });
     }
@@ -424,6 +422,21 @@ export async function POST(req: Request) {
     const avgJobValue = collectedData.avgJobValue || 500;
     const closeRateEstimate = 0.20;
     const cplCeilingIls = deriveCplCeilingIls({ avgJobValue, closeRateEstimate } as CampaignConfig);
+    const preliminaryReadiness = evaluatePaidSearchReadiness({
+      mode,
+      commercialSeeds,
+      demand: null,
+      minMonthlySearches: Number(process.env.GOOGLE_ADS_MIN_MONTHLY_SEARCHES),
+      dailyBudgetIls: strategy.suggestedDailyBudget,
+      estimatedLeadConversionRate: strategy.estimatedLeadConversionRate,
+      cplCeilingIls,
+    });
+    if (shouldBlockCampaignCreationForReadiness(mode, preliminaryReadiness)) {
+      return paidSearchReadinessBlockedResponse(preliminaryReadiness);
+    }
+
+    // Do not construct a Google Ads client or start demand retrieval until the
+    // request's local readiness prerequisites have already passed.
     const demand = mode === 'test' ? null : await getKeywordDemand(commercialSeeds, strategy.targetLocation);
     const readiness = evaluatePaidSearchReadiness({
       mode,
@@ -434,8 +447,12 @@ export async function POST(req: Request) {
       estimatedLeadConversionRate: strategy.estimatedLeadConversionRate,
       cplCeilingIls,
     });
-    if (!readiness.ready) return paidSearchReadinessBlockedResponse(readiness);
+    if (shouldBlockCampaignCreationForReadiness(mode, readiness)) {
+      return paidSearchReadinessBlockedResponse(readiness);
+    }
 
+    const adsAccount = resolveAdsAccount(mode);
+    const effectiveClientId = requestedClientId || adsAccount.clientId;
     const client = buildClient();
     const businessName = collectedData.businessName || collectedData.businessNiche || 'New Business';
     const slug = slugify(businessName, collectedData.businessNiche, collectedData.phone);
