@@ -240,6 +240,8 @@
     "src/lib/expired-domain-research/store.test.ts",
     "src/lib/expired-domain-research/wayback.ts",
     "src/lib/expired-domain-research/wayback.test.ts",
+    "src/lib/expired-domain-research/domainStatus.ts",
+    "src/lib/expired-domain-research/domainStatus.test.ts",
     "src/lib/expired-domain-research/riskPolicy.ts",
     "src/lib/expired-domain-research/riskPolicy.test.ts",
     "src/lib/expired-domain-research/runResearch.ts",
