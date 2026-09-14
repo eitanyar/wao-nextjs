@@ -229,6 +229,8 @@
     "src/lib/podcast-title/analyzeEpisode.test.ts",
     "src/lib/podcast-title/store.test.ts",
     "src/lib/podcast-title/adminApi.ts",
-    "src/lib/podcast-title/adminApi.test.ts"
+    "src/lib/podcast-title/adminApi.test.ts",
+    "src/lib/site-bot/checkout/researchCompletion.ts",
+    "src/lib/site-bot/checkout/researchCompletion.test.ts"
   ]
 }

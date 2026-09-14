@@ -7,6 +7,7 @@ import { getInvoiceProvider } from '@/lib/payments/get-invoice-provider';
 import { deriveOpenResearchGates } from '@/lib/site-bot/research/gates';
 import { readResearchDossier } from '@/lib/site-bot/research/researchStore';
 import { runSiteResearch, type SiteResearchInput } from '@/lib/site-bot/research/runResearch';
+import { completePaidCheckoutResearch } from '@/lib/site-bot/checkout/researchCompletion';
 
 const SITE_BOT_PRICE = 9.9;
 
@@ -104,53 +105,13 @@ export async function POST(req: Request) {
       console.error(`[site-bot checkout] Failed to issue invoice for session=${sessionId}:`, err);
     }
 
-    const result = await runSiteResearch(sessionId, researchInput(sessionId, pending.collectedData));
-    const openResearchGateCount = deriveOpenResearchGates(sessionId, pending.collectedData).length;
-    fs.rmSync(pendingPath, { force: true });
-    return NextResponse.json({
-      success: true,
-      charged: true,
-      researchId: sessionId,
-      status: result.dossier.status,
-      statusUrl: `/api/site-bot/research/status?researchId=${encodeURIComponent(sessionId)}`,
-      openGateCount: openResearchGateCount + result.dossier.humanGates.filter(gate => gate.status !== 'approved').length,
+    const response = await completePaidCheckoutResearch({
+      sessionId,
+      runResearch: () => runSiteResearch(sessionId, researchInput(sessionId, pending.collectedData)),
+      openResearchGateCount: deriveOpenResearchGates(sessionId, pending.collectedData).length,
+      removePending: () => fs.rmSync(pendingPath, { force: true }),
     });
-
-    // ── Trigger the already-proven generate → deploy pipeline ────────────────
-    const origin = new URL(req.url).origin;
-
-    const genRes = await fetch(`${origin}/api/site-bot/generate`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ collectedData: pending.collectedData, slug: pending.collectedData.preferredSlug }),
-    });
-    const genJson = await genRes.json();
-    if (!genRes.ok || !genJson.slug) {
-      return NextResponse.json({ error: genJson.error || 'יצירת האתר נכשלה לאחר החיוב, ניצור קשר', charged: true }, { status: 500 });
-    }
-
-    const deployRes = await fetch(`${origin}/api/site-bot/deploy`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ slug: genJson.slug }),
-    });
-    const deployJson = await deployRes.json();
-    if (!deployRes.ok || !deployJson.url) {
-      return NextResponse.json({ error: deployJson.error || 'העלאת האתר נכשלה לאחר החיוב, ניצור קשר', charged: true }, { status: 500 });
-    }
-
-    const openResearchGates = deriveOpenResearchGates(sessionId, pending.collectedData);
-
-    fs.rmSync(pendingPath, { force: true });
-
-    return NextResponse.json({
-      success: true,
-      url: deployJson.url,
-      slug: genJson.slug,
-      researchId: sessionId,
-      collectedData: pending.collectedData,
-      openResearchGates,
-    });
+    return NextResponse.json(response);
   } catch (error: unknown) {
     console.error('Site Bot checkout callback error:', error);
     return NextResponse.json({ error: error instanceof Error ? error.message : 'Checkout failed' }, { status: 500 });

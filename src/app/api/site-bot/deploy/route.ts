@@ -107,7 +107,7 @@ export async function POST(req: Request) {
       fraudBlockerSid = await provisionFraudBlockerDomain({ clientId: slug, domain: `${slug}.wao.co.il`, client: createFraudBlockerClient() });
     } catch (error) {
       writeFraudBlockerState(fraudBlockerFailureState(slug, `${slug}.wao.co.il`, error));
-      if (fraudBlockerRequired) return NextResponse.json({ error: 'fraud_blocker_provisioning_required' }, { status: 424 });
+      return NextResponse.json({ error: 'fraud_blocker_provisioning_required' }, { status: 424 });
     }
 
     const renderParams = {
@@ -209,7 +209,7 @@ export async function POST(req: Request) {
       pages: allPages,
     })) {
       writeFraudBlockerState(fraudBlockerFailureState(slug, `${slug}.wao.co.il`, new Error('Tracker verification failed.')));
-      if (fraudBlockerRequired) return NextResponse.json({ error: 'fraud_blocker_tracker_verification_failed' }, { status: 424 });
+      return NextResponse.json({ error: 'fraud_blocker_tracker_verification_failed' }, { status: 424 });
     }
 
     // ── Step 3: Write to a tmp dir ──────────────────────────────────────────

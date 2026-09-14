@@ -23,4 +23,5 @@ test('tracker installation state is written only after every HTML page verifies'
   assert.equal(writes[0]?.status, 'tracker_installed');
   assert.equal(writes[0]?.trackerInstalledAt, now());
   assert.equal(recordFraudBlockerTrackerInstallation({ state, pages: { ...validPages, 'privacy.html': '<html><head></head></html>' }, writeState: () => true, now }), false);
+  assert.equal(recordFraudBlockerTrackerInstallation({ state, pages: validPages, writeState: () => false, now }), false);
 });
