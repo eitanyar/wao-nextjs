@@ -1,0 +1,4 @@
+[
+  {"name":"Example","link":"https://example.test/","snippet":"historic topic","first_captured":"20100101","last_captured":"20200101","capture":"20200101"},
+  {"name":"Broken","link":"not-a-url"}
+]
