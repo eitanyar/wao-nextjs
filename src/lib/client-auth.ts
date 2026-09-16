@@ -1,58 +1,14 @@
-/**
- * Edge-compatible session token signing for the client portal.
- * Uses Web Crypto API (available in both edge middleware and Node.js).
- *
- * Token format: {clientId}.{expiryMs}.{hmac-hex}
- * Cookie name:  wao-client
- */
+import { timingSafeEqual } from 'node:crypto';
+import { readClientAuthRecord } from './client-auth-store';
 
 export const COOKIE_NAME = 'wao-client';
-const EXPIRY_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
-
-function getSecret(): string {
-  const secret = process.env.CLIENT_PORTAL_SECRET;
-  if (secret) return secret;
-  if (process.env.NODE_ENV === 'production') {
-    throw new Error('CLIENT_PORTAL_SECRET must be configured in production');
-  }
-  return 'wao-dev-secret-change-in-production';
+const EXPIRY_MS = 30 * 24 * 60 * 60 * 1000;
+export type ClientSessionScope = 'full' | 'change-pin' | 'admin-impersonation';
+export type ClientSessionClaim = { clientId: string; sessionVersion: number; expiry: number; scope: ClientSessionScope };
+function getSecret(): string { if (process.env.CLIENT_PORTAL_SECRET) return process.env.CLIENT_PORTAL_SECRET; if (process.env.NODE_ENV === 'production') throw new Error('CLIENT_PORTAL_SECRET must be configured in production'); return 'wao-dev-secret-change-in-production'; }
+async function hmacHex(data: string, secret = getSecret()): Promise<string> { const key = await crypto.subtle.importKey('raw', new TextEncoder().encode(secret), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']); const signature = await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(data)); return Array.from(new Uint8Array(signature)).map((byte) => byte.toString(16).padStart(2, '0')).join(''); }
+export async function createSessionToken(clientId: string, options: { sessionVersion: number; scope?: ClientSessionScope; expiry?: number; secret?: string }): Promise<string> { const claim: ClientSessionClaim = { clientId, sessionVersion: options.sessionVersion, expiry: options.expiry ?? Date.now() + EXPIRY_MS, scope: options.scope ?? 'full' }; const payload = Buffer.from(JSON.stringify(claim)).toString('base64url'); return `${payload}.${await hmacHex(payload, options.secret)}`; }
+export async function verifyClientSession(token: string, options: { scopes?: ClientSessionScope[]; root?: string; secret?: string } = {}): Promise<ClientSessionClaim | null> {
+  try { const [payload, signature, extra] = token.split('.'); if (!payload || !signature || extra || !/^[a-f0-9]{64}$/.test(signature)) return null; const expected = Buffer.from(await hmacHex(payload, options.secret), 'hex'); const actual = Buffer.from(signature, 'hex'); if (actual.length !== expected.length || !timingSafeEqual(actual, expected)) return null; const claim: unknown = JSON.parse(Buffer.from(payload, 'base64url').toString('utf8')); if (!claim || typeof claim !== 'object') return null; const value = claim as ClientSessionClaim; if (typeof value.clientId !== 'string' || !Number.isInteger(value.sessionVersion) || value.sessionVersion <= 0 || !Number.isFinite(value.expiry) || !['full', 'change-pin', 'admin-impersonation'].includes(value.scope) || Date.now() > value.expiry || (options.scopes && !options.scopes.includes(value.scope))) return null; const current = readClientAuthRecord(value.clientId, options.root); if (!current || current.sessionVersion !== value.sessionVersion || (current.mustChangePin && value.scope !== 'change-pin')) return null; return value; } catch { return null; }
 }
-
-async function hmacHex(data: string): Promise<string> {
-  const key = await crypto.subtle.importKey(
-    'raw',
-    new TextEncoder().encode(getSecret()),
-    { name: 'HMAC', hash: 'SHA-256' },
-    false,
-    ['sign'],
-  );
-  const sig = await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(data));
-  return Array.from(new Uint8Array(sig)).map(b => b.toString(16).padStart(2, '0')).join('');
-}
-
-export async function createSessionToken(clientId: string): Promise<string> {
-  const expiry  = Date.now() + EXPIRY_MS;
-  const payload = `${clientId}.${expiry}`;
-  const sig     = await hmacHex(payload);
-  return `${payload}.${sig}`;
-}
-
-export async function verifySessionToken(token: string): Promise<string | null> {
-  if (!token) return null;
-  const lastDot = token.lastIndexOf('.');
-  if (lastDot === -1) return null;
-
-  const payload = token.slice(0, lastDot);
-  const sig     = token.slice(lastDot + 1);
-
-  const parts = payload.split('.');
-  if (parts.length !== 2) return null;
-  const [clientId, expiryStr] = parts;
-
-  if (Date.now() > parseInt(expiryStr, 10)) return null;
-
-  const expected = await hmacHex(payload);
-  if (sig !== expected) return null;
-
-  return clientId;
-}
+export async function verifySessionToken(token: string): Promise<string | null> { const claim = await verifyClientSession(token, { scopes: ['full', 'admin-impersonation'] }); return claim?.clientId ?? null; }

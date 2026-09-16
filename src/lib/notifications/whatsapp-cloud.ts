@@ -10,6 +10,7 @@ export interface SendWhatsAppTemplateInput {
   to: string;
   templateName: string;
   templateLanguage: string;
+  bodyParameters?: string[];
   config?: WhatsAppCloudConfig;
   httpClient?: WhatsAppHttpClient;
 }
@@ -57,6 +58,7 @@ export async function sendWhatsAppTemplate(input: SendWhatsAppTemplateInput): Pr
         template: {
           name: input.templateName,
           language: { code: input.templateLanguage },
+          ...(input.bodyParameters?.length ? { components: [{ type: 'body', parameters: input.bodyParameters.map(text => ({ type: 'text', text })) }] } : {}),
         },
       }),
     },

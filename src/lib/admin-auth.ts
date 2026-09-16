@@ -7,7 +7,21 @@
  */
 
 export const ADMIN_COOKIE_NAME = 'wao-admin';
+export const ADMIN_CLIENT_FIXTURE_TOKEN = 'wao-admin-client-fixture-v1';
 const EXPIRY_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
+
+export async function verifyAdminClientFixtureAccess(token: string, pathname: string, fixtureRoot: string | undefined): Promise<'live' | 'synthetic' | null> {
+  if (token === ADMIN_CLIENT_FIXTURE_TOKEN) {
+    const validFixture = process.env.NODE_ENV !== 'production'
+      && process.env.WAO_ADMIN_AUTH_DEV_FIXTURE_ENABLE === '1'
+      && process.env.WAO_CLIENT_AUTH_DEV_FIXTURE_ENABLE === '1'
+      && pathname === '/admin/clients'
+      && fixtureRoot === process.env.WAO_CLIENT_AUTH_DEV_FIXTURE_ROOT
+      && /^\/tmp\/wao-client-auth-ui-[A-Za-z0-9_-]{1,64}$/.test(fixtureRoot ?? '');
+    return validFixture ? 'synthetic' : null;
+  }
+  return await verifyAdminToken(token) ? 'live' : null;
+}
 
 function getAdminSecret(): string {
   return process.env.ADMIN_SECRET ?? '';
