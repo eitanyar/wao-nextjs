@@ -1,17 +1,19 @@
 import { NextResponse } from 'next/server';
+import { randomInt } from 'node:crypto';
 import fs from 'fs';
 import path from 'path';
 import { cookies } from 'next/headers';
 import { getPaymentProvider } from '@/lib/payments/get-provider';
 import { getInvoiceProvider } from '@/lib/payments/get-invoice-provider';
 import { writeClientRecord, clientRecordExists, type GeoClientRecord } from '@/lib/geo/client';
+import { provisionClientAuth } from '@/lib/client-auth-store';
 import { createSessionToken, COOKIE_NAME } from '@/lib/client-auth';
 
 const GEO_PRICE = 199;
 
 interface PendingRecord {
   clientId: string;
-  pin: string;
+
   input: {
     businessName: string;
     siteUrl: string;
@@ -79,13 +81,15 @@ export async function POST(req: Request) {
       approvalContact: pending.input.approvalContact,
       approvalWhatsapp: pending.input.approvalWhatsapp,
       tone: pending.input.tone || 'unknown — to be assessed',
-      pin: pending.pin,
+
       entitlements: ['geo'],
       wpConnected: false,
       platform: null,
       gscConnected: false,
     };
     writeClientRecord(record);
+    const bootstrapPin = String(randomInt(100000, 1_000_000));
+    const auth = await provisionClientAuth(pending.clientId, bootstrapPin, undefined, { mustChangePin: true });
 
     // Invoice issuance must never block or fail the already-succeeded charge
     // (same invariant as site-bot's checkout callback / invoicing.ts).
@@ -105,7 +109,7 @@ export async function POST(req: Request) {
     // Auto-login the client into the same portal /client/login uses (pin-based,
     // wao-client cookie) so they land straight in the GSC-connect step without
     // re-entering the PIN they were just handed.
-    const token = await createSessionToken(pending.clientId);
+    const token = await createSessionToken(pending.clientId, { sessionVersion: auth.sessionVersion, scope: 'change-pin' });
     const jar = await cookies();
     jar.set(COOKIE_NAME, token, {
       httpOnly: true,
@@ -117,9 +121,9 @@ export async function POST(req: Request) {
 
     fs.rmSync(pendingPath, { force: true });
 
-    return NextResponse.json({ success: true, clientId: pending.clientId, pin: pending.pin });
-  } catch (error: any) {
+    return NextResponse.json({ success: true, clientId: pending.clientId });
+  } catch (error: unknown) {
     console.error('GEO Bot signup callback error:', error);
-    return NextResponse.json({ error: error.message || 'Signup failed' }, { status: 500 });
+    return NextResponse.json({ error: error instanceof Error ? error.message : 'Signup failed' }, { status: 500 });
   }
 }

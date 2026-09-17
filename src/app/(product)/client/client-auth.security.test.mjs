@@ -142,3 +142,37 @@ test('development fixture seam and podcast fixture selector fail closed independ
   assert.match(store, /process\.env\.NODE_ENV === 'production'/);
   assert.match(store, /\^wao-client-auth-ui-\[A-Za-z0-9_-\]\{1,64\}\$/);
 });
+
+function assertGeoSignupCallbackTokenBoundary(source) {
+  const provision = "const auth = await provisionClientAuth(pending.clientId, bootstrapPin, undefined, { mustChangePin: true });";
+  const token = "const token = await createSessionToken(pending.clientId, { sessionVersion: auth.sessionVersion, scope: 'change-pin' });";
+  const response = "return NextResponse.json({ success: true, clientId: pending.clientId });";
+
+  assert.match(source, /randomInt\(100000, 1_000_000\)/);
+  assert.match(source, /const bootstrapPin = String\(randomInt\(100000, 1_000_000\)\);/);
+  assert.ok(source.includes(provision), 'provisions a must-change-PIN auth record');
+  assert.ok(source.includes(token), 'mints only a versioned change-pin token from the provisioned record');
+  assert.ok(source.indexOf(provision) < source.indexOf(token), 'provisions auth before token minting');
+  assert.doesNotMatch(source, /createSessionToken\(\s*pending\.clientId\s*\)/);
+  assert.doesNotMatch(source, /readClientAuthRecord/);
+  assert.doesNotMatch(source, /scope:\s*['"](?:full|admin-impersonation)['"]/);
+  assert.ok(source.includes(response), 'does not expose a PIN in the successful callback JSON');
+  assert.doesNotMatch(source, /return NextResponse\.json\(\{[^\n}]*\bpin\b/);
+}
+
+test('GEO signup callback mints only the provisioned current-version change-pin token', () => {
+  const callback = read('src/app/api/geo/signup/callback/route.ts');
+  const provision = "const auth = await provisionClientAuth(pending.clientId, bootstrapPin, undefined, { mustChangePin: true });";
+  const token = "const token = await createSessionToken(pending.clientId, { sessionVersion: auth.sessionVersion, scope: 'change-pin' });";
+  assertGeoSignupCallbackTokenBoundary(callback);
+
+  const mutations = [
+    callback.replace(token, 'const token = await createSessionToken(pending.clientId);'),
+    callback.replace('auth.sessionVersion', '1'),
+    callback.replace("scope: 'change-pin'", "scope: 'full'"),
+    callback.replace(provision, '__PROVISION__').replace(token, `${token}\n    ${provision}`).replace('__PROVISION__\n    ', ''),
+    callback.replace(`${provision}\n`, ''),
+    callback.replace('return NextResponse.json({ success: true, clientId: pending.clientId });', 'return NextResponse.json({ success: true, clientId: pending.clientId, pin: bootstrapPin });'),
+  ];
+  for (const mutation of mutations) assert.throws(() => assertGeoSignupCallbackTokenBoundary(mutation));
+});
