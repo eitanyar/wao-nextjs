@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { randomInt } from 'node:crypto';
 import { execSync } from 'child_process';
 import { mkdirSync, writeFileSync, rmSync, readFileSync } from 'fs';
 import { tmpdir } from 'os';
@@ -17,6 +18,7 @@ import { checkNearDuplicates } from '@/lib/lp/duplicateCheck';
 import type { DuplicateCheckPage } from '@/lib/lp/duplicateCheck';
 import { renderCoreThirtyPages, buildCoreThirtySitemapUrls } from '@/lib/lp/renderCoreThirtyPages';
 import { ensureSiteBotClientRecord, clientRecordExists } from '@/lib/geo/client';
+import { provisionClientAuth } from '@/lib/client-auth-store';
 import { createSessionToken, COOKIE_NAME } from '@/lib/client-auth';
 import { assertDeployReady } from '@/lib/site-bot/research/pipelineState';
 import { readResearchDossier } from '@/lib/site-bot/research/researchStore';
@@ -304,7 +306,9 @@ export async function POST(req: Request) {
       });
 
       if (isFirstTimeRecord) {
-        const token = await createSessionToken(slug);
+        const bootstrapPin = String(randomInt(100000, 1_000_000));
+        const auth = await provisionClientAuth(slug, bootstrapPin, undefined, { mustChangePin: true });
+        const token = await createSessionToken(slug, { sessionVersion: auth.sessionVersion, scope: 'change-pin' });
         const jar = await cookies();
         jar.set(COOKIE_NAME, token, {
           httpOnly: true,
