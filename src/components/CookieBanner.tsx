@@ -12,7 +12,7 @@ const STORAGE_KEY = "wao-privacy-consent";
 // who cold-traffic campaigns land). Suppressed on these conversion routes;
 // disclosure is still shown on every other page, including the referring
 // page a visitor lands on before reaching the form.
-const SUPPRESS_ON = ["/contact", "/contact/quick"];
+const SUPPRESS_ON = ["/contact", "/contact/quick", "/site-bot/audit"];
 
 export default function CookieBanner() {
   const [visible, setVisible] = useState(false);

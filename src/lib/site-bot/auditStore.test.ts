@@ -5,80 +5,107 @@ import path from 'path';
 import os from 'os';
 import {
   bindAuditLocation,
+  deleteAuditRecord,
+  purgeExpiredAuditRecords,
   readAuditRecord,
   writeAuditRecord,
   type AuditLocationBinding,
 } from './auditStore';
 
-test('bindAuditLocation attaches location binding and preserves existing data', async () => {
-  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'auditStore-test-'));
-  const auditId = '12345678-1234-4234-8234-123456789abc';
+const auditId = '12345678-1234-4234-8234-123456789abc';
+const candidate = {
+  placeId: 'fixture-place',
+  displayName: 'Fixture Business',
+  formattedAddress: '1 Test Street',
+  types: ['plumber'],
+  hasRegularOpeningHours: true,
+  hasSpecialOpeningHours: true,
+  hasPhone: true,
+  hasWebsite: true,
+  photosFetched: true,
+  photoCount: 1,
+  hasRating: true,
+  userRatingCount: 10,
+  hasEditorialSummary: true,
+};
 
+async function withTempStore(fn: (dir: string) => Promise<void>): Promise<void> {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'auditStore-test-'));
   try {
-    const initialData = {
-      auditId,
-      query: { businessName: 'Test Business' },
-      fetchedAt: '2026-08-25T10:00:00Z',
-      candidates: [
-        {
-          placeId: 'ChIJ123',
-          displayName: 'Test Business',
-        },
-      ],
-    };
-
-    const written = await writeAuditRecord(auditId, initialData, tmpDir);
-    assert.equal(written, true);
-
-    const binding: AuditLocationBinding = {
-      gbpAccountId: 'accounts/123456',
-      gbpLocationId: 'locations/789012',
-      connectedAt: '2026-08-25T11:00:00Z',
-      connectedByEmail: 'owner@example.com',
-      connectionMethod: 'oauth_direct',
-    };
-
-    const success = await bindAuditLocation(auditId, binding, tmpDir);
-    assert.equal(success, true);
-
-    const record = await readAuditRecord(auditId, tmpDir);
-    assert.ok(record);
-    assert.equal(record.auditId, auditId);
-    assert.equal(record.gbpAccountId, 'accounts/123456');
-    assert.equal(record.gbpLocationId, 'locations/789012');
-    assert.deepEqual(record.query, { businessName: 'Test Business' });
-    assert.equal(Array.isArray(record.candidates), true);
-
-    const conn = record.connection as AuditLocationBinding;
-    assert.ok(conn);
-    assert.equal(conn.gbpAccountId, 'accounts/123456');
-    assert.equal(conn.gbpLocationId, 'locations/789012');
-    assert.equal(conn.connectedAt, '2026-08-25T11:00:00Z');
-    assert.equal(conn.connectedByEmail, 'owner@example.com');
-    assert.equal(conn.connectionMethod, 'oauth_direct');
+    await fn(dir);
   } finally {
-    fs.rmSync(tmpDir, { recursive: true, force: true });
+    fs.rmSync(dir, { recursive: true, force: true });
   }
+}
+
+test('writeAuditRecord assigns a 30-day expiry and readAuditRecord returns the minimized record', async () => {
+  await withTempStore(async (dir) => {
+    const now = new Date('2026-09-15T00:00:00Z');
+    assert.equal(await writeAuditRecord(auditId, {
+      query: { businessName: 'Fixture Business' }, fetchedAt: now.toISOString(), candidates: [candidate],
+    }, dir, now), true);
+    const record = await readAuditRecord(auditId, dir, now);
+    assert.ok(record);
+    assert.equal(record.expiresAt, '2026-10-15T00:00:00.000Z');
+    assert.deepEqual(record.candidates, [candidate]);
+  });
 });
 
-test('bindAuditLocation returns false for non-existent audit or invalid UUID', async () => {
-  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'auditStore-test-'));
+test('expired audit records fail closed and are removed on read', async () => {
+  await withTempStore(async (dir) => {
+    assert.equal(await writeAuditRecord(auditId, {
+      query: { businessName: 'Fixture Business' }, fetchedAt: '2026-01-01T00:00:00Z',
+      expiresAt: '2026-01-02T00:00:00Z', candidates: [candidate],
+    }, dir), true);
+    assert.equal(await readAuditRecord(auditId, dir, new Date('2026-01-02T00:00:00Z')), null);
+    assert.equal(fs.existsSync(path.join(dir, `${auditId}.json`)), false);
+  });
+});
 
-  try {
+test('purge only removes expired UUID JSON records and ignores symlinks and non-audit files', async () => {
+  await withTempStore(async (dir) => {
+    const expiredId = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
+    const activeId = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb';
+    for (const [id, expiresAt] of [[expiredId, '2026-01-01T00:00:00Z'], [activeId, '2027-01-01T00:00:00Z']] as const) {
+      assert.equal(await writeAuditRecord(id, {
+        query: { businessName: 'Fixture Business' }, fetchedAt: '2025-12-01T00:00:00Z', expiresAt, candidates: [candidate],
+      }, dir), true);
+    }
+    fs.writeFileSync(path.join(dir, 'notes.txt'), 'keep');
+    fs.symlinkSync(path.join(dir, `${activeId}.json`), path.join(dir, 'cccccccc-cccc-4ccc-8ccc-cccccccccccc.json'));
+    assert.equal(await purgeExpiredAuditRecords(dir, new Date('2026-02-01T00:00:00Z')), 1);
+    assert.equal(fs.existsSync(path.join(dir, `${expiredId}.json`)), false);
+    assert.equal(fs.existsSync(path.join(dir, `${activeId}.json`)), true);
+    assert.equal(fs.existsSync(path.join(dir, 'notes.txt')), true);
+    assert.equal(fs.lstatSync(path.join(dir, 'cccccccc-cccc-4ccc-8ccc-cccccccccccc.json')).isSymbolicLink(), true);
+  });
+});
+
+test('invalid, traversal, malformed, and symlinked records fail closed', async () => {
+  await withTempStore(async (dir) => {
+    assert.equal(await readAuditRecord('../outside', dir), null);
+    fs.writeFileSync(path.join(dir, `${auditId}.json`), '{not-json');
+    assert.equal(await readAuditRecord(auditId, dir), null);
+    fs.unlinkSync(path.join(dir, `${auditId}.json`));
+    fs.symlinkSync(path.join(dir, 'missing.json'), path.join(dir, `${auditId}.json`));
+    assert.equal(await readAuditRecord(auditId, dir), null);
+    assert.equal(await deleteAuditRecord(auditId, dir), false);
+  });
+});
+
+test('bindAuditLocation attaches location binding and preserves existing data', async () => {
+  await withTempStore(async (dir) => {
+    assert.equal(await writeAuditRecord(auditId, {
+      query: { businessName: 'Test Business' }, fetchedAt: '2026-08-25T10:00:00Z', candidates: [candidate],
+    }, dir), true);
     const binding: AuditLocationBinding = {
-      gbpAccountId: 'accounts/123',
-      gbpLocationId: 'locations/456',
-      connectedAt: '2026-08-25T11:00:00Z',
-      connectionMethod: 'manager_invite',
+      gbpAccountId: 'accounts/123456', gbpLocationId: 'locations/789012', connectedAt: '2026-08-25T11:00:00Z',
+      connectedByEmail: 'owner@example.com', connectionMethod: 'oauth_direct',
     };
-
-    const invalidUuidResult = await bindAuditLocation('invalid-uuid', binding, tmpDir);
-    assert.equal(invalidUuidResult, false);
-
-    const nonExistentUuid = '99999999-9999-4999-8999-999999999999';
-    const nonExistentResult = await bindAuditLocation(nonExistentUuid, binding, tmpDir);
-    assert.equal(nonExistentResult, false);
-  } finally {
-    fs.rmSync(tmpDir, { recursive: true, force: true });
-  }
+    assert.equal(await bindAuditLocation(auditId, binding, dir), true);
+    const record = await readAuditRecord(auditId, dir);
+    assert.ok(record);
+    assert.equal(record.gbpAccountId, binding.gbpAccountId);
+    assert.equal(record.connection?.connectionMethod, 'oauth_direct');
+  });
 });

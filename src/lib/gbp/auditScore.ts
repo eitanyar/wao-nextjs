@@ -1,24 +1,10 @@
 /**
- * GBP audit checklist v0 — scoring engine (spec 2026-08-25_002).
- *
- * Pure, offline rubric over the NormalizedPlace shape from task 2026-08-25_001
- * (src/lib/places/client.ts). Six dimensions, fixed order, each scored
- * pass / fail / unknown. `unknown` means "not observable from the public API"
- * and is distinct from `fail` — never score what you cannot see.
- *
- * v0 has NO weights: total is the raw count of dimensions (always 6);
- * passed / failed / unknown are raw integer counts of each status, never
- * percentages. Rubric rationale: docs/research/site-bot/
- * 009_ulku-local-ranking-fact-check.md §8.
- *
- * HEBREW-SAFETY: this module contains ZERO Hebrew bytes. User-facing strings
- * live in SCORECARD_COPY (authored in tasks 2026-08-25_003/004/005); this
- * engine emits ASCII copyToken keys only and never concatenates copy tokens —
- * the page derives per-dimension status tokens (e.g. `DIM_CATEGORIES_FAIL`)
- * at render time.
+ * GBP audit checklist v0 — pure offline six-dimension scoring.
+ * HEBREW-SAFETY: this module contains ZERO Hebrew bytes.
  */
 
 import type { NormalizedPlace } from '../places/client';
+import type { AuditCandidateSnapshot } from '../site-bot/auditStore';
 
 export type DimStatus = 'pass' | 'fail' | 'unknown';
 
@@ -38,16 +24,11 @@ export interface AuditResult {
   place?: NormalizedPlace;
 }
 
-// Explicit literal mapping per spec Requirement 1 — no string concatenation.
-const DIM_COPY_TOKENS: Record<
-  | 'categories'
-  | 'hours'
-  | 'phone_website'
-  | 'photos'
-  | 'reviews'
-  | 'description',
-  string
-> = {
+type AuditScorablePlace = NormalizedPlace | AuditCandidateSnapshot;
+
+type DimensionKey = 'categories' | 'hours' | 'phone_website' | 'photos' | 'reviews' | 'description';
+
+const DIM_COPY_TOKENS: Record<DimensionKey, string> = {
   categories: 'DIM_CATEGORIES_TITLE',
   hours: 'DIM_HOURS_TITLE',
   phone_website: 'DIM_PHONE_WEBSITE_TITLE',
@@ -56,117 +37,83 @@ const DIM_COPY_TOKENS: Record<
   description: 'DIM_DESCRIPTION_TITLE',
 };
 
-/**
- * Score one normalized place against audit checklist v0. Pure: no I/O, no env
- * reads, no clock reads. Dimensions are scored in the fixed order:
- * categories, hours, phone_website, photos, reviews, description.
- */
-export function scoreAudit(place: NormalizedPlace): AuditResult {
-  const dimensions: AuditDimension[] = [];
-
-  // 1. categories — Ulku Step 0: up to 10 categories; exactly one category is
-  // the classic neglected-profile signature; zero means the API returned none
-  // (not observable, never scored).
-  {
-    const n = place.types.length;
-    const status: DimStatus = n >= 2 ? 'pass' : n === 1 ? 'fail' : 'unknown';
-    dimensions.push({
-      key: 'categories',
-      status,
-      evidence: `categories:${n}`,
-      copyToken: DIM_COPY_TOKENS.categories,
-    });
-  }
-
-  // 2. hours — regular periods present AND special (holiday) hours present is
-  // the only pass; Ulku flags the 2-3-holiday window, and specialOpeningHours
-  // presence proves at least the next holidays were set.
-  {
-    const regularPresent =
-      !!place.regularOpeningHours?.periods && place.regularOpeningHours.periods.length > 0;
-    const specialPresent = !!place.specialOpeningHours && place.specialOpeningHours.length > 0;
-    const status: DimStatus = regularPresent && specialPresent ? 'pass' : 'fail';
-    dimensions.push({
-      key: 'hours',
-      status,
-      evidence: `hours:regular=${regularPresent ? 'present' : 'absent'},special=${
-        specialPresent ? 'present' : 'absent'
-      }`,
-      copyToken: DIM_COPY_TOKENS.hours,
-    });
-  }
-
-  // 3. phone_website — both a phone (national OR international) and a website
-  // must be present; exactly one or neither is a fail.
-  {
-    const phonePresent = !!place.nationalPhoneNumber || !!place.internationalPhoneNumber;
-    const websitePresent = !!place.websiteUri;
-    const status: DimStatus = phonePresent && websitePresent ? 'pass' : 'fail';
-    dimensions.push({
-      key: 'phone_website',
-      status,
-      evidence: `phone:${phonePresent ? 'present' : 'absent'},website:${
-        websitePresent ? 'present' : 'absent'
-      }`,
-      copyToken: DIM_COPY_TOKENS.phone_website,
-    });
-  }
-
-  // 4. photos — only scored when the photo lookup actually ran (fetched).
-  {
-    const fetched = place.photos?.fetched === true;
-    const count = place.photos?.count ?? 0;
-    const status: DimStatus = !fetched ? 'unknown' : count > 0 ? 'pass' : 'fail';
-    dimensions.push({
-      key: 'photos',
-      status,
-      evidence: `photos:count=${count},fetched=${fetched}`,
-      copyToken: DIM_COPY_TOKENS.photos,
-    });
-  }
-
-  // 5. reviews — userRatingCount is the only threshold in v0 (>= 10 passes);
-  // both fields undefined means the API exposed nothing (unknown).
-  {
-    const count = place.userRatingCount;
-    const rating = place.rating;
-    const status: DimStatus =
-      rating !== undefined && count !== undefined ? (count >= 10 ? 'pass' : 'fail') : 'unknown';
-    dimensions.push({
-      key: 'reviews',
-      status,
-      evidence: `reviews:count=${count ?? 'na'},rating=${
-        rating !== undefined ? rating.toFixed(1) : 'na'
-      }`,
-      copyToken: DIM_COPY_TOKENS.reviews,
-    });
-  }
-
-  // 6. description — editorialSummary present and non-empty after trim.
-  {
-    const present = !!place.editorialSummary && place.editorialSummary.trim().length > 0;
-    const status: DimStatus = present ? 'pass' : 'fail';
-    dimensions.push({
-      key: 'description',
-      status,
-      evidence: `description:${present ? 'present' : 'absent'}`,
-      copyToken: DIM_COPY_TOKENS.description,
-    });
-  }
-
-  let passed = 0;
-  let failed = 0;
-  let unknown = 0;
-  for (const d of dimensions) {
-    if (d.status === 'pass') passed++;
-    else if (d.status === 'fail') failed++;
-    else unknown++;
-  }
-
-  return { total: dimensions.length, passed, failed, unknown, dimensions, place };
+function isSnapshot(place: AuditScorablePlace): place is AuditCandidateSnapshot {
+  return 'hasRegularOpeningHours' in place;
 }
 
-/** Alias for scoreAudit — keeps call-site naming natural; single implementation. */
-export function auditPlace(place: NormalizedPlace): AuditResult {
+/** Scores either a transient provider object or the minimized persisted snapshot. */
+export function scoreAudit(place: AuditScorablePlace): AuditResult {
+  const snapshot = isSnapshot(place) ? place : null;
+  const providerPlace: NormalizedPlace | null = snapshot ? null : (place as NormalizedPlace);
+  const dimensions: AuditDimension[] = [];
+
+  const categoryCount = place.types.length;
+  dimensions.push({
+    key: 'categories',
+    status: categoryCount >= 2 ? 'pass' : categoryCount === 1 ? 'fail' : 'unknown',
+    evidence: `categories:${categoryCount}`,
+    copyToken: DIM_COPY_TOKENS.categories,
+  });
+
+  const regularPresent = snapshot
+    ? snapshot.hasRegularOpeningHours
+    : Boolean(providerPlace?.regularOpeningHours?.periods && providerPlace.regularOpeningHours.periods.length > 0);
+  const specialPresent = snapshot
+    ? snapshot.hasSpecialOpeningHours
+    : Boolean(providerPlace?.specialOpeningHours && providerPlace.specialOpeningHours.length > 0);
+  dimensions.push({
+    key: 'hours',
+    status: regularPresent && specialPresent ? 'pass' : 'fail',
+    evidence: `hours:regular=${regularPresent ? 'present' : 'absent'},special=${specialPresent ? 'present' : 'absent'}`,
+    copyToken: DIM_COPY_TOKENS.hours,
+  });
+
+  const phonePresent = snapshot ? snapshot.hasPhone : Boolean(providerPlace?.nationalPhoneNumber || providerPlace?.internationalPhoneNumber);
+  const websitePresent = snapshot ? snapshot.hasWebsite : Boolean(providerPlace?.websiteUri);
+  dimensions.push({
+    key: 'phone_website',
+    status: phonePresent && websitePresent ? 'pass' : 'fail',
+    evidence: `phone:${phonePresent ? 'present' : 'absent'},website:${websitePresent ? 'present' : 'absent'}`,
+    copyToken: DIM_COPY_TOKENS.phone_website,
+  });
+
+  const photosFetched = snapshot ? snapshot.photosFetched : providerPlace?.photos?.fetched === true;
+  const photoCount = snapshot ? snapshot.photoCount : providerPlace?.photos?.count ?? 0;
+  dimensions.push({
+    key: 'photos',
+    status: !photosFetched ? 'unknown' : photoCount > 0 ? 'pass' : 'fail',
+    evidence: `photos:count=${photoCount},fetched=${photosFetched}`,
+    copyToken: DIM_COPY_TOKENS.photos,
+  });
+
+  const ratingPresent = snapshot ? snapshot.hasRating : providerPlace?.rating !== undefined;
+  const ratingCount = snapshot ? snapshot.userRatingCount : providerPlace?.userRatingCount;
+  const ratingEvidence = snapshot
+    ? (ratingPresent ? 'present' : 'na')
+    : (providerPlace?.rating !== undefined ? providerPlace.rating.toFixed(1) : 'na');
+  dimensions.push({
+    key: 'reviews',
+    status: ratingPresent && ratingCount !== undefined ? (ratingCount >= 10 ? 'pass' : 'fail') : 'unknown',
+    evidence: `reviews:count=${ratingCount ?? 'na'},rating=${ratingEvidence}`,
+    copyToken: DIM_COPY_TOKENS.reviews,
+  });
+
+  const descriptionPresent = snapshot
+    ? snapshot.hasEditorialSummary
+    : Boolean(providerPlace?.editorialSummary && providerPlace.editorialSummary.trim().length > 0);
+  dimensions.push({
+    key: 'description',
+    status: descriptionPresent ? 'pass' : 'fail',
+    evidence: `description:${descriptionPresent ? 'present' : 'absent'}`,
+    copyToken: DIM_COPY_TOKENS.description,
+  });
+
+  const passed = dimensions.filter((dimension) => dimension.status === 'pass').length;
+  const failed = dimensions.filter((dimension) => dimension.status === 'fail').length;
+  const unknown = dimensions.filter((dimension) => dimension.status === 'unknown').length;
+  return { total: dimensions.length, passed, failed, unknown, dimensions, ...(providerPlace ? { place: providerPlace } : {}) };
+}
+
+export function auditPlace(place: AuditScorablePlace): AuditResult {
   return scoreAudit(place);
 }
