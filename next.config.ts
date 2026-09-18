@@ -7,6 +7,13 @@ const podcastFixtureDistDir = typeof podcastFixtureDistDirCandidate === "string"
   ? podcastFixtureDistDirCandidate
   : undefined;
 
+const deploymentDistDirCandidate = process.env.WAO_DEPLOY_DIST_DIR;
+const deploymentDistDir = typeof deploymentDistDirCandidate === "string"
+  && /^(?:\.?[A-Za-z0-9_-]+\/)*\.?[A-Za-z0-9_-]+$/.test(deploymentDistDirCandidate)
+  && !deploymentDistDirCandidate.split('/').includes('..')
+  ? deploymentDistDirCandidate
+  : undefined;
+
 // ─── Permanent 308 redirects (Google treats 308 = 301 for PageRank) ──────────
 // Sources: decoded Hebrew paths from the legacy WordPress site.
 // Next.js matches `source` against the PERCENT-ENCODED request path — Hebrew sources
@@ -337,7 +344,13 @@ const legacyRedirects = [
 
 const nextConfig: NextConfig = {
   output: "standalone",
-  distDir: podcastFixtureDistDir,
+  // Next uses this environment-provided value to hard-reload clients that hold a
+  // different release's assets. Production deploys supply it from the exact commit;
+  // local development and ordinary builds remain intentionally unset.
+  deploymentId: process.env.NEXT_DEPLOYMENT_ID,
+  ...(deploymentDistDir
+    ? { distDir: deploymentDistDir }
+    : { distDir: podcastFixtureDistDir }),
   turbopack: {
     // Next misdetects the workspace root as /home/eitanya (a stray package-lock.json
     // lives there) instead of this repo, which makes Turbopack try to resolve

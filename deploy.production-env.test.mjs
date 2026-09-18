@@ -6,10 +6,13 @@ import { fileURLToPath } from 'node:url';
 
 const deployScript = fs.readFileSync(path.join(path.dirname(fileURLToPath(import.meta.url)), 'deploy.sh'), 'utf8');
 
-test('loads server-local production environment and refuses a missing portal secret', () => {
+test('loads server-local production environment and rejects missing deployment secrets', () => {
   assert.match(deployScript, /source \.env\.production/);
-  assert.match(deployScript, /CLIENT_PORTAL_SECRET must be set in \.env\.production/);
-  assert.match(deployScript, /WAO_RUNTIME_DATA_DIR/);
-  assert.match(deployScript, /ln -s "\$WAO_RUNTIME_DATA_DIR" \.next\/standalone\/data/);
-  assert.match(deployScript, /pm2 restart wao-app --update-env/);
+  assert.match(deployScript, /CLIENT_PORTAL_SECRET must be set/);
+  assert.match(deployScript, /NEXT_SERVER_ACTIONS_ENCRYPTION_KEY must be set/);
+  assert.match(deployScript, /validate_server_actions_key/);
+  assert.match(deployScript, /NEXT_DEPLOYMENT_ID/);
+  assert.match(deployScript, /pm2 stop wao/);
+  assert.match(deployScript, /pm2 start .*--name wao --update-env/);
+  assert.doesNotMatch(deployScript, /pm2 restart wao-app/);
 });

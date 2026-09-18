@@ -1,7 +1,10 @@
 'use client';
 
 import { useActionState } from 'react';
-import { changeClientPinAction, initialChangePinActionState } from './action';
+import { changeClientPinAction } from './action';
+
+type ChangePinActionState = { status: 'idle' | 'mismatch' | 'policy-failure' | 'current-failure' | 'generic-failure' };
+const initialChangePinActionState: ChangePinActionState = { status: 'idle' };
 
 type ChangeCopy = {
   currentPinLabel: string;

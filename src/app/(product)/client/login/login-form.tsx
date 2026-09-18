@@ -2,7 +2,10 @@
 
 import Link from 'next/link';
 import { useActionState } from 'react';
-import { initialLoginActionState, loginAction } from './action';
+import { loginAction } from './action';
+
+type LoginActionState = { status: 'idle' | 'failure' };
+const initialLoginActionState: LoginActionState = { status: 'idle' };
 
 type LoginCopy = {
   clientIdLabel: string;

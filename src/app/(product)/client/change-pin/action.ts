@@ -9,8 +9,7 @@ import { appendClientSecurityAudit } from '@/lib/client-security-audit';
 import { validateClientPinPolicy } from '@/lib/client-pin';
 import { checkRateLimit } from '@/lib/payments/rate-limit';
 
-export type ChangePinActionState = { status: 'idle' | 'mismatch' | 'policy-failure' | 'current-failure' | 'generic-failure' };
-export const initialChangePinActionState: ChangePinActionState = { status: 'idle' };
+type ChangePinActionState = { status: 'idle' | 'mismatch' | 'policy-failure' | 'current-failure' | 'generic-failure' };
 
 function pseudonymize(value: string): string { return createHash('sha256').update(value).digest('hex'); }
 

@@ -9,8 +9,7 @@ import { appendClientSecurityAudit } from '@/lib/client-security-audit';
 import { checkRateLimit } from '@/lib/payments/rate-limit';
 
 const WINDOW_MS = 15 * 60 * 1000;
-export type LoginActionState = { status: 'idle' | 'failure' };
-export const initialLoginActionState: LoginActionState = { status: 'idle' };
+type LoginActionState = { status: 'idle' | 'failure' };
 
 function pseudonymize(value: string): string {
   return createHash('sha256').update(value).digest('hex');
