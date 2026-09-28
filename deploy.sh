@@ -70,11 +70,71 @@ for (const reference of files) {
 NODE
 }
 
+replace_wao_process() {
+  local release="$1"
+  local standalone="$release/.next/standalone"
+
+  [[ -d "$standalone" && -s "$standalone/server.js" ]] || return 1
+  pm2 delete wao >/dev/null 2>&1 || true
+  # Do not reintroduce `pm2 stop wao`: deletion is required to remove duplicates.
+  pm2 start "$standalone/server.js" --name wao --update-env --cwd "$standalone"
+}
+
+verify_active_release() {
+  local release="$1"
+
+  pm2 jlist | node -e '
+const fs = require("node:fs");
+const path = require("node:path");
+const release = fs.realpathSync(process.argv[1]);
+const standalone = path.join(release, ".next", "standalone");
+const expectedEntry = path.join(standalone, "server.js");
+const processes = JSON.parse(fs.readFileSync(0, "utf8")).filter((process) => process.name === "wao");
+if (processes.length !== 1 || processes[0].pm2_env?.status !== "online") process.exit(1);
+const processInfo = processes[0].pm2_env ?? {};
+if (fs.realpathSync(processInfo.pm_exec_path) !== expectedEntry || fs.realpathSync(processInfo.pm_cwd) !== standalone) process.exit(1);
+' "$release"
+}
+
+verify_homepage_assets() {
+  local homepage asset expected
+  homepage="$(curl --fail --silent --show-error --max-time 15 http://127.0.0.1:3000/)" || return 1
+
+  while IFS=$'\t' read -r asset expected; do
+    [[ -n "$asset" && "$asset" == /_next/* ]] || return 1
+    curl --fail --silent --show-error --max-time 15 -D - "http://127.0.0.1:3000$asset" | node -e '
+      const fs = require("node:fs");
+      const expected = process.argv[1];
+      const response = fs.readFileSync(0);
+      const separator = response.indexOf(Buffer.from("\r\n\r\n"));
+      const fallback = response.indexOf(Buffer.from("\n\n"));
+      const boundary = separator >= 0 ? separator + 4 : fallback >= 0 ? fallback + 2 : -1;
+      if (boundary < 0) process.exit(1);
+      const headers = response.subarray(0, boundary).toString("latin1");
+      const body = response.subarray(boundary);
+      const contentType = (headers.match(/^content-type:\s*([^;\r\n]+)/im) || [])[1] || "";
+      if (body.length === 0 || /^\s*</.test(body.toString("utf8")) || (expected === "css" ? !/^text\/css$/i.test(contentType) : !/^(?:application|text)\/(?:javascript|ecmascript)$/i.test(contentType))) process.exit(1);
+    ' "$expected" || return 1
+  done < <(printf '%s' "$homepage" | node -e '
+    const fs = require("node:fs");
+    const html = fs.readFileSync(0, "utf8");
+    const references = [];
+    for (const match of html.matchAll(/<link\b[^>]*\brel=["\x27]stylesheet["\x27][^>]*\bhref=["\x27]([^"\x27]+)["\x27][^>]*>/gi)) if (match[1].startsWith("/_next/")) references.push([match[1], "css"]);
+    for (const match of html.matchAll(/<script\b[^>]*\bsrc=["\x27]([^"\x27]+)["\x27][^>]*>/gi)) if (match[1].startsWith("/_next/")) references.push([match[1], "js"]);
+    if (!references.some(([, expected]) => expected === "css")) process.exit(1);
+    for (const reference of references) process.stdout.write(`${reference.join("\t")}\n`);
+  ')
+}
+
 restore_previous_release() {
   local previous="$1"
   [[ -n "$previous" && -d "$previous" && -s "$previous/.next/standalone/server.js" ]] || return 1
+  pm2 delete wao >/dev/null 2>&1 || true
   ln -sfn "$previous" "$CURRENT_RELEASE"
-  pm2 start "$previous/.next/standalone/server.js" --name wao --update-env
+  replace_wao_process "$previous" \
+    && verify_active_release "$previous" \
+    && curl --fail --silent --show-error --max-time 15 --output /dev/null http://127.0.0.1:3000/client/login \
+    && verify_homepage_assets
 }
 
 cd "$DEPLOY_ROOT"
@@ -145,13 +205,14 @@ RELEASE="$RELEASES_DIR/release-${COMMIT:0:12}-$(date +%s)"
 mv "$CANDIDATE" "$RELEASE"
 CANDIDATE=""
 
-pm2 stop wao
 ln -sfn "$RELEASE" "$CURRENT_RELEASE"
-if ! pm2 start "$RELEASE/.next/standalone/server.js" --name wao --update-env \
+if ! replace_wao_process "$RELEASE" \
+  || ! verify_active_release "$RELEASE" \
   || ! curl --fail --silent --show-error --max-time 15 --output /dev/null http://127.0.0.1:3000/client/login \
+  || ! verify_homepage_assets \
   || ! node scripts/verify-google-ads-sandbox.mjs; then
   printf 'Activation failed; restoring the previous release.\n' >&2
-  restore_previous_release "$PREVIOUS_RELEASE" || fail 'activation failed and rollback could not restart the previous release.'
+  restore_previous_release "$PREVIOUS_RELEASE" || fail 'activation failed and rollback verification failed.'
   exit 1
 fi
 

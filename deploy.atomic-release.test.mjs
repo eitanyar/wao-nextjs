@@ -20,8 +20,8 @@ function fixture({ failure = '' } = {}) {
   const releases = path.join(repo, 'releases');
   const runtime = path.join(root, 'runtime');
   const log = path.join(root, 'commands.log');
+  const state = path.join(root, 'pm2-state');
   fs.mkdirSync(bin, { recursive: true });
-  fs.mkdirSync(repo, { recursive: true });
   fs.mkdirSync(releases, { recursive: true });
   fs.mkdirSync(runtime, { recursive: true });
   fs.writeFileSync(path.join(repo, '.env.production'), 'CLIENT_PORTAL_SECRET=synthetic\n');
@@ -29,12 +29,13 @@ function fixture({ failure = '' } = {}) {
   fs.mkdirSync(path.join(repo, 'public'));
   fs.writeFileSync(path.join(repo, 'public', 'asset.txt'), 'public');
   fs.mkdirSync(path.join(repo, 'scripts'), { recursive: true });
-  fs.writeFileSync(path.join(repo, 'scripts', 'verify-google-ads-sandbox.mjs'), 'process.exit(0)');
+  fs.writeFileSync(path.join(repo, 'scripts', 'verify-google-ads-sandbox.mjs'), 'process.exit(process.env.WAO_TEST_FAILURE === "verifier" ? 7 : 0)');
 
   const previous = path.join(releases, 'release-previous');
   fs.mkdirSync(path.join(previous, '.next', 'standalone', 'data'), { recursive: true });
   fs.writeFileSync(path.join(previous, '.next', 'standalone', 'server.js'), 'previous');
   fs.symlinkSync(previous, path.join(releases, 'current'));
+  fs.writeFileSync(state, `${path.join(previous, '.next', 'standalone', 'server.js')}|${path.join(previous, '.next', 'standalone')}\n`);
 
   writeExecutable(path.join(bin, 'git'), `#!/bin/sh
 printf 'git %s\\n' "$*" >> "$WAO_TEST_LOG"
@@ -51,9 +52,9 @@ exit 90
 printf 'npm %s NODE_OPTIONS=%s\\n' "$*" "$NODE_OPTIONS" >> "$WAO_TEST_LOG"
 [ "$1" = ci ] && exit 0
 [ "$1" = run ] && [ "$2" = build ] || exit 90
-[ "${failure}" = build ] && exit 7
+[ "$WAO_TEST_FAILURE" = build ] && exit 7
 base="$WAO_DEPLOY_DIST_DIR"
-printf '{"fixture":"mutated"}\n' > tsconfig.json
+printf '{"fixture":"mutated"}\\n' > tsconfig.json
 mkdir -p "$base/standalone/.next/static/chunks" "$base/standalone/data" "$base/server/app" "$base/static/chunks"
 printf 'build-id' > "$base/BUILD_ID"
 printf 'server' > "$base/standalone/server.js"
@@ -61,32 +62,48 @@ printf 'chunk' > "$base/server/app/chunk.js"
 printf 'chunk' > "$base/static/chunks/app.js"
 printf '{"pages":{"/client/login":["static/chunks/app.js"]}}' > "$base/build-manifest.json"
 printf '{"/client/login":"app/chunk.js"}' > "$base/server/app-paths-manifest.json"
-[ "${failure}" = validation ] && rm -f "$base/static/chunks/app.js"
+[ "$WAO_TEST_FAILURE" = validation ] && rm -f "$base/static/chunks/app.js"
 exit 0
 `);
   writeExecutable(path.join(bin, 'pm2'), `#!/bin/sh
 printf 'pm2 %s\\n' "$*" >> "$WAO_TEST_LOG"
 case "$1" in
-  describe) exit 0 ;;
-  stop) [ "${failure}" = stop ] && exit 8; exit 0 ;;
-  start) [ "${failure}" = start ] && exit 8; exit 0 ;;
-  delete) exit 0 ;;
+  delete) : > "$WAO_PM2_STATE"; exit 0 ;;
+  start)
+    [ "$WAO_TEST_FAILURE" = start ] && exit 8
+    entry="$2"; shift 2
+    cwd=""
+    while [ "$#" -gt 0 ]; do [ "$1" = --cwd ] && { cwd="$2"; break; }; shift; done
+    printf '%s|%s\\n' "$entry" "$cwd" > "$WAO_PM2_STATE"
+    [ "$WAO_TEST_FAILURE" = duplicate ] && printf '%s' "$entry" | grep -q release-deadbeefdead && printf '%s|%s\\n' "$entry" "$cwd" >> "$WAO_PM2_STATE"
+    exit 0 ;;
+  jlist)
+    "$WAO_REAL_NODE" -e 'const fs=require("node:fs"); const rows=fs.readFileSync(process.env.WAO_PM2_STATE,"utf8").trim().split("\\n").filter(Boolean); console.log(JSON.stringify(rows.map((row)=>{const [pm_exec_path,pm_cwd]=row.split("|"); return {name:"wao",pm2_env:{status:"online",pm_exec_path,pm_cwd}};})))'
+    exit 0 ;;
 esac
 exit 90
 `);
   writeExecutable(path.join(bin, 'curl'), `#!/bin/sh
 printf 'curl %s\\n' "$*" >> "$WAO_TEST_LOG"
-[ "${failure}" = health ] && exit 7
-printf 200
+for last; do :; done
+case "$last" in
+  */client/login) [ "$WAO_TEST_FAILURE" = health ] && exit 7; printf 'ok'; exit 0 ;;
+  */) [ "$WAO_TEST_FAILURE" = homepage ] && exit 7; printf '%s' '<link rel="stylesheet" href="/_next/static/app.css?v=1"><script src="/_next/static/app.js?v=2"></script>'; exit 0 ;;
+  */_next/static/app.css?v=1)
+    [ "$WAO_TEST_FAILURE" = asset-empty ] && { printf 'HTTP/1.1 200 OK\\r\\nContent-Type: text/css\\r\\n\\r\\n'; exit 0; }
+    [ "$WAO_TEST_FAILURE" = asset-type ] && { printf 'HTTP/1.1 200 OK\\r\\nContent-Type: text/html\\r\\n\\r\\nbody{}'; exit 0; }
+    printf 'HTTP/1.1 200 OK\\r\\nContent-Type: text/css; charset=utf-8\\r\\n\\r\\nbody{}'; exit 0 ;;
+  */_next/static/app.js?v=2) printf 'HTTP/1.1 200 OK\\r\\nContent-Type: application/javascript\\r\\n\\r\\nconsole.log(1)'; exit 0 ;;
+esac
+exit 7
 `);
   writeExecutable(path.join(bin, 'node'), `#!/bin/sh
 if [ "$1" = -e ] || [ "$1" = - ]; then exec "$WAO_REAL_NODE" "$@"; fi
 printf 'node %s\\n' "$*" >> "$WAO_TEST_LOG"
-[ "${failure}" = verifier ] && exit 7
-exit 0
+exec "$WAO_REAL_NODE" "$@"
 `);
 
-  return { root, repo, releases, runtime, log, bin };
+  return { root, repo, releases, runtime, log, state, bin };
 }
 
 function runFixture(options = {}, envExtra = {}) {
@@ -101,19 +118,24 @@ function runFixture(options = {}, envExtra = {}) {
       WAO_RELEASES_DIR: f.releases,
       WAO_RUNTIME_DATA_DIR: f.runtime,
       WAO_TEST_LOG: f.log,
+      WAO_PM2_STATE: f.state,
       WAO_REAL_NODE: process.execPath,
       CLIENT_PORTAL_SECRET: 'synthetic',
       NEXT_SERVER_ACTIONS_ENCRYPTION_KEY: Buffer.alloc(32, 7).toString('base64'),
       NODE_OPTIONS: '',
+      WAO_TEST_FAILURE: options.failure ?? '',
       ...envExtra,
     },
   });
-  const log = fs.existsSync(f.log) ? fs.readFileSync(f.log, 'utf8') : '';
-  return { ...f, result, log };
+  return { ...f, result, log: fs.existsSync(f.log) ? fs.readFileSync(f.log, 'utf8') : '' };
 }
 
 function cleanup(root) {
   fs.rmSync(root, { recursive: true, force: true });
+}
+
+function currentProcess(f) {
+  return fs.readFileSync(f.state, 'utf8').trim().split('\n').filter(Boolean);
 }
 
 test('rejects missing or malformed Server Action keys before external commands', () => {
@@ -122,41 +144,75 @@ test('rejects missing or malformed Server Action keys before external commands',
     try {
       assert.notEqual(f.result.status, 0);
       assert.equal(f.log, '');
-      assert.equal(fs.readlinkSync(path.join(f.releases, 'current')), path.join(f.releases, 'release-previous'));
-    } finally {
-      cleanup(f.root);
-    }
+    } finally { cleanup(f.root); }
   }
 });
 
-test('builds an inactive complete release then activates only wao with exact runtime link', () => {
+test('activates exactly one process with release-local entrypoint and cwd after homepage assets pass', () => {
   const f = runFixture();
   try {
-    const originalTsconfig = Buffer.from('{"fixture":"original"}\n');
     assert.equal(f.result.status, 0, f.result.stderr);
     const active = fs.realpathSync(path.join(f.releases, 'current'));
-    assert.match(path.basename(active), /^release-deadbeefdead-/);
-    assert.equal(fs.readlinkSync(path.join(active, '.next', 'standalone', 'data')), f.runtime);
-    assert.equal(fs.readFileSync(path.join(active, '.next', 'standalone', 'package.json'), 'utf8'), '{"type":"commonjs"}\n');
-    assert.deepEqual(fs.readFileSync(path.join(f.repo, 'tsconfig.json')), originalTsconfig);
-    assert.match(f.log, /npm ci NODE_OPTIONS=[\s\S]*npm run build -- --webpack NODE_OPTIONS=--max-old-space-size=1536[\s\S]*pm2 stop wao[\s\S]*pm2 start .*server\.js --name wao --update-env/);
-    assert.doesNotMatch(f.log, /wao-app/);
-  } finally {
-    cleanup(f.root);
+    const processes = currentProcess(f);
+    assert.equal(processes.length, 1);
+    const [entry, cwd] = processes[0].split('|');
+    assert.equal(entry, path.join(active, '.next', 'standalone', 'server.js'));
+    assert.equal(cwd, path.join(active, '.next', 'standalone'));
+    assert.match(f.log, /pm2 delete wao[\s\S]*pm2 start .*server\.js --name wao --update-env --cwd .*standalone/);
+    assert.match(f.log, /app\.css\?v=1[\s\S]*app\.js\?v=2[\s\S]*node scripts\/verify-google-ads-sandbox\.mjs/);
+    assert.deepEqual(fs.readFileSync(path.join(f.repo, 'tsconfig.json')), Buffer.from('{"fixture":"original"}\n'));
+  } finally { cleanup(f.root); }
+});
+
+test('duplicate PM2 entries fail activation then delete the candidate before starting one previous process', () => {
+  const f = runFixture({ failure: 'duplicate' });
+  try {
+    assert.notEqual(f.result.status, 0);
+    assert.equal(fs.realpathSync(path.join(f.releases, 'current')), path.join(f.releases, 'release-previous'));
+    assert.deepEqual(currentProcess(f), [`${path.join(f.releases, 'release-previous', '.next', 'standalone', 'server.js')}|${path.join(f.releases, 'release-previous', '.next', 'standalone')}`]);
+    assert.match(f.log, /pm2 delete wao[\s\S]*pm2 start .*release-deadbeefdead[\s\S]*pm2 delete wao[\s\S]*pm2 delete wao[\s\S]*pm2 start .*release-previous/);
+  } finally { cleanup(f.root); }
+});
+
+test('homepage asset failures roll back and preserve query-string asset coverage', () => {
+  for (const failure of ['asset-empty', 'asset-type']) {
+    const f = runFixture({ failure });
+    try {
+      assert.notEqual(f.result.status, 0);
+      assert.equal(fs.realpathSync(path.join(f.releases, 'current')), path.join(f.releases, 'release-previous'));
+      assert.equal(currentProcess(f).length, 1);
+      assert.match(f.log, /app\.css\?v=1/);
+    } finally { cleanup(f.root); }
   }
 });
 
-test('preserves non-conflicting NODE_OPTIONS and applies a valid heap override to the Webpack build', () => {
-  const f = runFixture({}, {
-    NODE_OPTIONS: '--trace-warnings',
-    WAO_BUILD_MAX_OLD_SPACE_MB: '2048',
-  });
+test('post-switch health failure removes the candidate and restores exactly one previous process', () => {
+  const f = runFixture({ failure: 'health' });
+  try {
+    assert.notEqual(f.result.status, 0);
+    assert.equal(fs.realpathSync(path.join(f.releases, 'current')), path.join(f.releases, 'release-previous'));
+    assert.deepEqual(currentProcess(f), [`${path.join(f.releases, 'release-previous', '.next', 'standalone', 'server.js')}|${path.join(f.releases, 'release-previous', '.next', 'standalone')}`]);
+    assert.match(f.log, /client\/login[\s\S]*pm2 delete wao[\s\S]*pm2 start .*release-previous/);
+  } finally { cleanup(f.root); }
+});
+
+test('verifier failure rolls back with one verified previous process and no candidate survivor', () => {
+  const f = runFixture({ failure: 'verifier' });
+  try {
+    assert.notEqual(f.result.status, 0);
+    assert.equal(fs.realpathSync(path.join(f.releases, 'current')), path.join(f.releases, 'release-previous'));
+    assert.equal(currentProcess(f).length, 1);
+    assert.doesNotMatch(currentProcess(f)[0], /release-deadbeefdead/);
+    assert.match(f.log, /node scripts\/verify-google-ads-sandbox\.mjs[\s\S]*pm2 delete wao[\s\S]*pm2 start .*release-previous/);
+  } finally { cleanup(f.root); }
+});
+
+test('preserves non-conflicting NODE_OPTIONS and applies a valid heap override', () => {
+  const f = runFixture({}, { NODE_OPTIONS: '--trace-warnings', WAO_BUILD_MAX_OLD_SPACE_MB: '2048' });
   try {
     assert.equal(f.result.status, 0, f.result.stderr);
     assert.match(f.log, /npm run build -- --webpack NODE_OPTIONS=--trace-warnings --max-old-space-size=2048/);
-  } finally {
-    cleanup(f.root);
-  }
+  } finally { cleanup(f.root); }
 });
 
 test('rejects malformed heap overrides before package, build, or process commands', () => {
@@ -165,44 +221,18 @@ test('rejects malformed heap overrides before package, build, or process command
     try {
       assert.notEqual(f.result.status, 0);
       assert.equal(f.log, '');
-      assert.equal(fs.readlinkSync(path.join(f.releases, 'current')), path.join(f.releases, 'release-previous'));
-    } finally {
-      cleanup(f.root);
-    }
+    } finally { cleanup(f.root); }
   }
 });
 
-test('pre-activation failure preserves the previous current release and never stops wao', () => {
-  const f = runFixture({ failure: 'build' });
-  try {
-    assert.notEqual(f.result.status, 0);
-    assert.equal(fs.readlinkSync(path.join(f.releases, 'current')), path.join(f.releases, 'release-previous'));
-    assert.doesNotMatch(f.log, /pm2 stop/);
-  } finally {
-    cleanup(f.root);
-  }
-});
-
-test('post-stop health failure rolls back to the previous release and restarts wao', () => {
-  const f = runFixture({ failure: 'health' });
-  try {
-    assert.notEqual(f.result.status, 0);
-    assert.equal(fs.readlinkSync(path.join(f.releases, 'current')), path.join(f.releases, 'release-previous'));
-    assert.match(f.log, /pm2 stop wao[\s\S]*pm2 start .*release-previous\/\.next\/standalone\/server\.js --name wao --update-env/);
-  } finally {
-    cleanup(f.root);
-  }
-});
-
-test('post-build validation failure removes the candidate, restores tsconfig, and keeps wao running', () => {
-  const f = runFixture({ failure: 'validation' });
-  try {
-    assert.notEqual(f.result.status, 0);
-    assert.equal(fs.readlinkSync(path.join(f.releases, 'current')), path.join(f.releases, 'release-previous'));
-    assert.deepEqual(fs.readFileSync(path.join(f.repo, 'tsconfig.json')), Buffer.from('{"fixture":"original"}\n'));
-    assert.deepEqual(fs.readdirSync(f.releases).filter((entry) => entry.startsWith('.candidate-')), []);
-    assert.doesNotMatch(f.log, /pm2 stop/);
-  } finally {
-    cleanup(f.root);
+test('pre-switch build and validation failures retain the previous active process', () => {
+  for (const failure of ['build', 'validation']) {
+    const f = runFixture({ failure });
+    try {
+      assert.notEqual(f.result.status, 0);
+      assert.equal(fs.realpathSync(path.join(f.releases, 'current')), path.join(f.releases, 'release-previous'));
+      assert.deepEqual(currentProcess(f), [`${path.join(f.releases, 'release-previous', '.next', 'standalone', 'server.js')}|${path.join(f.releases, 'release-previous', '.next', 'standalone')}`]);
+      assert.doesNotMatch(f.log, /pm2 delete wao/);
+    } finally { cleanup(f.root); }
   }
 });
