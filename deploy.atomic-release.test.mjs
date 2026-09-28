@@ -48,7 +48,7 @@ esac
 exit 90
 `);
   writeExecutable(path.join(bin, 'npm'), `#!/bin/sh
-printf 'npm %s\\n' "$*" >> "$WAO_TEST_LOG"
+printf 'npm %s NODE_OPTIONS=%s\\n' "$*" "$NODE_OPTIONS" >> "$WAO_TEST_LOG"
 [ "$1" = ci ] && exit 0
 [ "$1" = run ] && [ "$2" = build ] || exit 90
 [ "${failure}" = build ] && exit 7
@@ -104,6 +104,7 @@ function runFixture(options = {}, envExtra = {}) {
       WAO_REAL_NODE: process.execPath,
       CLIENT_PORTAL_SECRET: 'synthetic',
       NEXT_SERVER_ACTIONS_ENCRYPTION_KEY: Buffer.alloc(32, 7).toString('base64'),
+      NODE_OPTIONS: '',
       ...envExtra,
     },
   });
@@ -138,10 +139,36 @@ test('builds an inactive complete release then activates only wao with exact run
     assert.equal(fs.readlinkSync(path.join(active, '.next', 'standalone', 'data')), f.runtime);
     assert.equal(fs.readFileSync(path.join(active, '.next', 'standalone', 'package.json'), 'utf8'), '{"type":"commonjs"}\n');
     assert.deepEqual(fs.readFileSync(path.join(f.repo, 'tsconfig.json')), originalTsconfig);
-    assert.match(f.log, /npm ci[\s\S]*npm run build[\s\S]*pm2 stop wao[\s\S]*pm2 start .*server\.js --name wao --update-env/);
+    assert.match(f.log, /npm ci NODE_OPTIONS=[\s\S]*npm run build -- --webpack NODE_OPTIONS=--max-old-space-size=1536[\s\S]*pm2 stop wao[\s\S]*pm2 start .*server\.js --name wao --update-env/);
     assert.doesNotMatch(f.log, /wao-app/);
   } finally {
     cleanup(f.root);
+  }
+});
+
+test('preserves non-conflicting NODE_OPTIONS and applies a valid heap override to the Webpack build', () => {
+  const f = runFixture({}, {
+    NODE_OPTIONS: '--trace-warnings',
+    WAO_BUILD_MAX_OLD_SPACE_MB: '2048',
+  });
+  try {
+    assert.equal(f.result.status, 0, f.result.stderr);
+    assert.match(f.log, /npm run build -- --webpack NODE_OPTIONS=--trace-warnings --max-old-space-size=2048/);
+  } finally {
+    cleanup(f.root);
+  }
+});
+
+test('rejects malformed heap overrides before package, build, or process commands', () => {
+  for (const limit of ['511', '1536.0', 'zero', '3073']) {
+    const f = runFixture({}, { WAO_BUILD_MAX_OLD_SPACE_MB: limit });
+    try {
+      assert.notEqual(f.result.status, 0);
+      assert.equal(f.log, '');
+      assert.equal(fs.readlinkSync(path.join(f.releases, 'current')), path.join(f.releases, 'release-previous'));
+    } finally {
+      cleanup(f.root);
+    }
   }
 });
 

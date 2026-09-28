@@ -8,6 +8,7 @@ RELEASES_DIR="${WAO_RELEASES_DIR:-$DEPLOY_ROOT/releases}"
 CURRENT_RELEASE="$RELEASES_DIR/current"
 RUNTIME_DATA_DIR="${WAO_RUNTIME_DATA_DIR:-/home/wao/wao-runtime-data}"
 TARGET="${1:-hermes-migration}"
+BUILD_MAX_OLD_SPACE_MB="${WAO_BUILD_MAX_OLD_SPACE_MB:-1536}"
 
 fail() {
   printf 'Deployment aborted: %s\n' "$1" >&2
@@ -21,6 +22,14 @@ validate_server_actions_key() {
     const decoded = Buffer.from(value, "base64");
     if (![16, 24, 32].includes(decoded.length)) process.exit(1);
   ' || fail 'NEXT_SERVER_ACTIONS_ENCRYPTION_KEY must be base64 for a 16, 24, or 32 byte AES key.'
+}
+
+validate_build_memory_limit() {
+  [[ "$BUILD_MAX_OLD_SPACE_MB" =~ ^[1-9][0-9]{2,3}$ ]] \
+    && (( 10#$BUILD_MAX_OLD_SPACE_MB >= 512 && 10#$BUILD_MAX_OLD_SPACE_MB <= 3072 )) \
+    || fail 'WAO_BUILD_MAX_OLD_SPACE_MB must be an integer from 512 through 3072.'
+  [[ ! "${NODE_OPTIONS:-}" =~ (^|[[:space:]])--max-old-space-size(=|[[:space:]]|$) ]] \
+    || fail 'NODE_OPTIONS must not set --max-old-space-size; use WAO_BUILD_MAX_OLD_SPACE_MB.'
 }
 
 validate_candidate() {
@@ -77,6 +86,8 @@ set +a
 [[ -n "${CLIENT_PORTAL_SECRET:-}" ]] || fail 'CLIENT_PORTAL_SECRET must be set.'
 [[ -n "${NEXT_SERVER_ACTIONS_ENCRYPTION_KEY:-}" ]] || fail 'NEXT_SERVER_ACTIONS_ENCRYPTION_KEY must be set.'
 validate_server_actions_key
+validate_build_memory_limit
+BUILD_NODE_OPTIONS="${NODE_OPTIONS:+$NODE_OPTIONS }--max-old-space-size=$BUILD_MAX_OLD_SPACE_MB"
 
 # Do not resolve or switch a target from a dirty checkout: an immutable release must map
 # to a single exact source commit.
@@ -118,7 +129,8 @@ cleanup_candidate() {
 trap cleanup_candidate EXIT
 
 npm ci
-WAO_DEPLOY_DIST_DIR="$DEPLOY_DIST_DIR" npm run build
+printf 'Building with Webpack and Node old-space limit %s MiB\n' "$BUILD_MAX_OLD_SPACE_MB"
+WAO_DEPLOY_DIST_DIR="$DEPLOY_DIST_DIR" NODE_OPTIONS="$BUILD_NODE_OPTIONS" npm run build -- --webpack
 mkdir -p "$CANDIDATE/.next/standalone/.next"
 cp -a public "$CANDIDATE/.next/standalone/public"
 cp -a "$CANDIDATE/.next/static" "$CANDIDATE/.next/standalone/.next/static"

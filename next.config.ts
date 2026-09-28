@@ -344,6 +344,9 @@ const legacyRedirects = [
 
 const nextConfig: NextConfig = {
   output: "standalone",
+  experimental: {
+    webpackMemoryOptimizations: true,
+  },
   // Next uses this environment-provided value to hard-reload clients that hold a
   // different release's assets. Production deploys supply it from the exact commit;
   // local development and ordinary builds remain intentionally unset.
