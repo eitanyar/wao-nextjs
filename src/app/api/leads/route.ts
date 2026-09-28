@@ -36,7 +36,7 @@ async function uploadConversion(leadId: number, type: ConversionType) {
  * generates a wa.me link and appends it to the client's review-flywheel queue file for a future
  * dashboard surface to display (see src/lib/crm/reviewFlywheelStore.ts).
  */
-export function maybeQueueReviewFlywheelRequest(lead: LeadRecord): void {
+function maybeQueueReviewFlywheelRequest(lead: LeadRecord): void {
   try {
     if (!lead.slug) return;
     const campaign = loadCampaignConfigBySlug(lead.slug);

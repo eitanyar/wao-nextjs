@@ -86,6 +86,12 @@ test('GET /api/leads requires the admin cookie', () => {
   assert.match(routeCode, /status: 401/);
 });
 
+test('review flywheel helper remains internal to the App Route module', () => {
+  assert.doesNotMatch(routeCode, /export function maybeQueueReviewFlywheelRequest/);
+  assert.match(routeCode, /function maybeQueueReviewFlywheelRequest\(lead: LeadRecord\): void/);
+  assert.match(routeCode, /maybeQueueReviewFlywheelRequest\(lead\);/);
+});
+
 test('POST keeps no-action public lead capture separate from the admin gate', () => {
   const post = postHandler();
   assert.match(post, /const bodyRecord = isJsonRecord\(body\) \? body : undefined/);
