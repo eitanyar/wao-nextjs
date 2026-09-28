@@ -106,8 +106,14 @@ PREVIOUS_RELEASE="$(readlink -f "$CURRENT_RELEASE")"
 CANDIDATE="$(mktemp -d "$RELEASES_DIR/.candidate-${COMMIT:0:12}-XXXXXX")"
 [[ "$CANDIDATE" == "$DEPLOY_ROOT/"* ]] || fail 'release directory must remain under the deployment root.'
 DEPLOY_DIST_DIR="${CANDIDATE#"$DEPLOY_ROOT"/}/.next"
+TSCONFIG_BACKUP="$(mktemp "$DEPLOY_ROOT/.tsconfig-deploy-XXXXXX")"
+cp -p tsconfig.json "$TSCONFIG_BACKUP"
 cleanup_candidate() {
   [[ -d "$CANDIDATE" && "$(dirname "$CANDIDATE")" == "$RELEASES_DIR" && "$(basename "$CANDIDATE")" == .candidate-* ]] && rm -rf -- "$CANDIDATE"
+  if [[ -f "$TSCONFIG_BACKUP" ]]; then
+    cmp -s "$TSCONFIG_BACKUP" tsconfig.json || cp -p "$TSCONFIG_BACKUP" tsconfig.json
+    rm -f -- "$TSCONFIG_BACKUP"
+  fi
 }
 trap cleanup_candidate EXIT
 
@@ -119,13 +125,13 @@ cp -a "$CANDIDATE/.next/static" "$CANDIDATE/.next/standalone/.next/static"
 # The application package is ESM, while Next's generated standalone server is
 # CommonJS. Keep the release-local runtime boundary explicit.
 printf '{"type":"commonjs"}\n' > "$CANDIDATE/.next/standalone/package.json"
+rm -rf -- "$CANDIDATE/.next/standalone/data"
 ln -s "$RUNTIME_DATA_DIR" "$CANDIDATE/.next/standalone/data"
 validate_candidate "$CANDIDATE"
 
 RELEASE="$RELEASES_DIR/release-${COMMIT:0:12}-$(date +%s)"
 mv "$CANDIDATE" "$RELEASE"
 CANDIDATE=""
-trap - EXIT
 
 pm2 stop wao
 ln -sfn "$RELEASE" "$CURRENT_RELEASE"

@@ -25,6 +25,7 @@ function fixture({ failure = '' } = {}) {
   fs.mkdirSync(releases, { recursive: true });
   fs.mkdirSync(runtime, { recursive: true });
   fs.writeFileSync(path.join(repo, '.env.production'), 'CLIENT_PORTAL_SECRET=synthetic\n');
+  fs.writeFileSync(path.join(repo, 'tsconfig.json'), '{"fixture":"original"}\n');
   fs.mkdirSync(path.join(repo, 'public'));
   fs.writeFileSync(path.join(repo, 'public', 'asset.txt'), 'public');
   fs.mkdirSync(path.join(repo, 'scripts'), { recursive: true });
@@ -52,13 +53,15 @@ printf 'npm %s\\n' "$*" >> "$WAO_TEST_LOG"
 [ "$1" = run ] && [ "$2" = build ] || exit 90
 [ "${failure}" = build ] && exit 7
 base="$WAO_DEPLOY_DIST_DIR"
-mkdir -p "$base/standalone/.next/static/chunks" "$base/server/app" "$base/static/chunks"
+printf '{"fixture":"mutated"}\n' > tsconfig.json
+mkdir -p "$base/standalone/.next/static/chunks" "$base/standalone/data" "$base/server/app" "$base/static/chunks"
 printf 'build-id' > "$base/BUILD_ID"
 printf 'server' > "$base/standalone/server.js"
 printf 'chunk' > "$base/server/app/chunk.js"
 printf 'chunk' > "$base/static/chunks/app.js"
 printf '{"pages":{"/client/login":["static/chunks/app.js"]}}' > "$base/build-manifest.json"
 printf '{"/client/login":"app/chunk.js"}' > "$base/server/app-paths-manifest.json"
+[ "${failure}" = validation ] && rm -f "$base/static/chunks/app.js"
 exit 0
 `);
   writeExecutable(path.join(bin, 'pm2'), `#!/bin/sh
@@ -128,11 +131,13 @@ test('rejects missing or malformed Server Action keys before external commands',
 test('builds an inactive complete release then activates only wao with exact runtime link', () => {
   const f = runFixture();
   try {
+    const originalTsconfig = Buffer.from('{"fixture":"original"}\n');
     assert.equal(f.result.status, 0, f.result.stderr);
     const active = fs.realpathSync(path.join(f.releases, 'current'));
     assert.match(path.basename(active), /^release-deadbeefdead-/);
     assert.equal(fs.readlinkSync(path.join(active, '.next', 'standalone', 'data')), f.runtime);
     assert.equal(fs.readFileSync(path.join(active, '.next', 'standalone', 'package.json'), 'utf8'), '{"type":"commonjs"}\n');
+    assert.deepEqual(fs.readFileSync(path.join(f.repo, 'tsconfig.json')), originalTsconfig);
     assert.match(f.log, /npm ci[\s\S]*npm run build[\s\S]*pm2 stop wao[\s\S]*pm2 start .*server\.js --name wao --update-env/);
     assert.doesNotMatch(f.log, /wao-app/);
   } finally {
@@ -157,6 +162,19 @@ test('post-stop health failure rolls back to the previous release and restarts w
     assert.notEqual(f.result.status, 0);
     assert.equal(fs.readlinkSync(path.join(f.releases, 'current')), path.join(f.releases, 'release-previous'));
     assert.match(f.log, /pm2 stop wao[\s\S]*pm2 start .*release-previous\/\.next\/standalone\/server\.js --name wao --update-env/);
+  } finally {
+    cleanup(f.root);
+  }
+});
+
+test('post-build validation failure removes the candidate, restores tsconfig, and keeps wao running', () => {
+  const f = runFixture({ failure: 'validation' });
+  try {
+    assert.notEqual(f.result.status, 0);
+    assert.equal(fs.readlinkSync(path.join(f.releases, 'current')), path.join(f.releases, 'release-previous'));
+    assert.deepEqual(fs.readFileSync(path.join(f.repo, 'tsconfig.json')), Buffer.from('{"fixture":"original"}\n'));
+    assert.deepEqual(fs.readdirSync(f.releases).filter((entry) => entry.startsWith('.candidate-')), []);
+    assert.doesNotMatch(f.log, /pm2 stop/);
   } finally {
     cleanup(f.root);
   }
