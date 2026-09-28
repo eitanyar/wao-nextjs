@@ -1,0 +1,174 @@
+{
+  "metadata": {
+    "artifact": "astra-homepage-copy",
+    "task_id": "2026-09-22_002",
+    "kanban_task": "t_5ec6ef7d",
+    "direction": "Astra homepage redesign (owner-approved)",
+    "version": "1.0.0",
+    "created_at": "2026-09-22",
+    "language": "he-IL",
+    "audience": "בעלי מקצוע ונותני שירות בישראל — בבית הלקוח, בקליניקה, בסטודיו, במשרד או מרחוק",
+    "voice": "לשון יחיד זכר, עברית סברית ישירה ומכבדת; משפטים עד כ-15 מילים; קריאת העידוד הסלנגית מופיעה פעם אחת בלבד בקופי המרונדר (proof.cta)",
+    "section_order": [
+      "hero",
+      "proof",
+      "paths",
+      "low_price",
+      "lead_handling",
+      "ai_search",
+      "people",
+      "faq",
+      "final_cta"
+    ],
+    "seo": {
+      "homepage_title_tag_current": "שיווק דיגיטלי ש-AI מריץ — טוב יותר מסוכנות פרסום | WAO",
+      "h1_policy": "H1 אחד בלבד; שתי השורות הן עוגן שאושר על ידי הבעלים, עם שבירת שורה ויזואלית ביניהן",
+      "title_tag_policy": "תג ה-title הקיים נשמר עד אישור SEO מפורש — ראו artifact ההמלצות"
+    },
+    "truth_constraints": [
+      "ההטמעה של Ads פועלת כברירת מחדל במצב בדיקה/הדגמה פנימי ו-Live נעול; הקופי מסמן מצב הדגמה ואינו מרמז על הפעלה חיה לציבור",
+      "מחירי Ads החדשים (9.90 הקמה, חודש ראשון חינם, 249 לחודש) אינם מרונדרים בהומפייג' — הם סותרים את דף /google-ads הפומבי שמציג ניהול מ-1,500 לחודש; ראו המלצות",
+      "Site Bot: רק ניסיון ₪9.90 ועמוד בית חי אחד לפני התחייבות נוספת; תנאי המשך, מע״מ, חיוב, אחסון והחזרים לא הומצאו",
+      "לא נטען מספר שאלות כלשהו; ה-intake מגדיר 14 שלבים וכתובת מדלגת מותנית",
+      "Google Business ₪149 לחודש ו-Maoved מ-₪160 לחודש מוצגות כהרחבות אופציונליות בלבד",
+      "אין המלצות לקוחות, מונים, דירוגים, הבטחות, ROI, מספרי לקוחות, הבטחות החזר או תוצאות אורגניות מיידיות",
+      "פרופש מאושר אחד בלבד: /eitan-yariv.avif; כל הדגמה אחרת מסומנת במפורש כהדגמה בדיונית"
+    ]
+  },
+  "navigation": {
+    "separator_display": " · ",
+    "links": [
+      { "label": "איך זה עובד", "target_section": "proof", "href": "/#proof" },
+      { "label": "המסלולים והמחירים", "target_section": "paths", "href": "/#paths" },
+      { "label": "מי אנחנו", "target_section": "people", "href": "/#people" }
+    ],
+    "primary_cta": { "label": "תראה לי את המודעה שלי", "href": "/google-ads/onboarding" },
+    "help_link": { "label": "יש שאלה? דבר איתנו", "href": "/contact#contact-form" },
+    "footer_move_note": "בלוג, הכשרות ושירותים משלימים עוברים לנווט הראשי לפוטר — לא נמחקים, רק יורדים מהניווט הראשי"
+  },
+  "hero": {
+    "eyebrow": "שיווק בגוגל לבעלי מקצוע ונותני שירות",
+    "h1_line1": "יותר לקוחות מגוגל.",
+    "h1_line2": "פחות שיווק על הראש.",
+    "body": "כשמישהו מחפש את השירות שלך, כדאי שימצא עסק שנראה בדיוק בשבילו. WAO בונה לך את הדרך אליו: מודעות ודף נחיתה, או אתר ונוכחות מקומית בגוגל. מתחילים פשוט, במחיר שמתאים גם לעסק קטן.",
+    "primary_cta": { "label": "תראה לי את המודעה שלי", "href": "/google-ads/onboarding" },
+    "supporting_line": "מודעה ודף נחיתה לעסק שלך, בתצוגה מקדימה לפני שמתחייבים לשלם.",
+    "demo_note": "התצוגה המקדימה פועלת כרגע במצב הדגמה — בלי פרסום חי ובלי חיוב.",
+    "secondary_cta": { "label": "רוצה לבנות נוכחות מקומית? מתחילים כאן", "href": "/site-bot/start" },
+    "mechanism_line": "מנהל שיווק מבוסס AI, עם הניסיון והאנשים של WAO מאחוריו."
+  },
+  "proof": {
+    "heading": "בוא נראה איך העסק שלך יכול להיראות בגוגל.",
+    "explain_lines": [
+      "מספרים לנו מה אתה עושה, באיזה אזור ואיזה לקוחות אתה רוצה.",
+      "WAO מחדדת את ההצעה שלך ובונה מודעה ודף נחיתה תואמים.",
+      "אתה רואה את הכיוון על העסק שלך, לפני כל החלטה."
+    ],
+    "demo_label": "הדגמה: עסק בדיוני אחד עם מודעה ודף נחיתה תואמים. לא לקוח אמיתי ולא תוצאה אמיתית.",
+    "cta": { "label": "יאללה, תראה לי", "href": "/google-ads/onboarding" },
+    "asset_guidance": "No approved matching product asset exists. Engineer builds a clean UI demonstration — ad preview plus landing-page preview for the same fictional business — visibly labelled with demo_label. Never fabricate screenshots, leads, rankings, or results, and never style demo data as a real customer result."
+  },
+  "paths": {
+    "heading": "מאיפה מביאים את הלקוח הבא שלך?",
+    "intro": "שני מסלולים נפרדים. בוחרים את המתאים לך עכשיו — לא חייבים את שניהם.",
+    "path_ads": {
+      "eyebrow": "מסלול 1: מודעות בגוגל",
+      "need": "מתאים לך אם אתה רוצה להגיע לאנשים שמחפשים אותך עכשיו.",
+      "deliverable": "מודעת חיפוש ממוקדת בגוגל ודף נחיתה — סביב השירות, האזור והסיבה לבחור בך.",
+      "emphasis": "קודם תראה איך זה נראה על העסק שלך.",
+      "status_note": "כרגע במצב הדגמה: רואים את המודעה ואת דף הנחיתה על העסק שלך. בלי פרסום חי ובלי חיוב.",
+      "cta": { "label": "תראה לי את המודעה שלי", "href": "/google-ads/onboarding" },
+      "pricing_guidance": "Rendered pricing intentionally omitted. Owner-reported terms (9.90 setup, first management month free, 249 per month, media budget separate) conflict with the public /google-ads page showing legacy 1,500 per month management. Resolve the conflict before any Ads price appears on the homepage."
+    },
+    "path_local": {
+      "eyebrow": "מסלול 2: אתר ונוכחות מקומית",
+      "need": "מתאים לך אם חשוב לך שיותר לקוחות מקומיים יכירו את העסק.",
+      "deliverable": "אתר שמציג את המקצוע, השירותים ואזור השירות — ואיתו חיזוק נוכחות מקומית לפי המסלול.",
+      "emphasis": "יש לך עסק טוב. בוא ניתן לו נוכחות בהתאם.",
+      "trial_line": "מתחילים בניסיון של ₪9.90: עמוד בית חי אחד, בכתובת של WAO, לפני כל התחייבות נוספת.",
+      "continuation_line": "מה מקבלים אחר כך ואיך ממשיכים? בדף השירות תראה את האפשרויות הקיימות לפני שתחליט.",
+      "not_included_line": "ניהול שוטף של פרופיל גוגל עסקי הוא שירות נפרד — לא כלול במסלול הזה.",
+      "cta": { "label": "בוא נבנה את האתר שלי", "href": "/site-bot/start" },
+      "details_link": { "label": "מה מקבלים ואיך ממשיכים?", "href": "/site-bot" },
+      "intake_guidance": "Do not state a question count anywhere. The intake defines 14 steps and the address step is conditionally skipped, so any fixed number is wrong in at least one flow."
+    }
+  },
+  "low_price": {
+    "heading": "איך זה עובד במחיר שמתאים לעסק קטן?",
+    "lines": [
+      "את השיטה מובילים אנשי השיווק של WAO, עם ניסיון אמיתי בשטח.",
+      "סוכני AI מבצעים חלק גדול מהמחקר, מהכתיבה ומההקמה.",
+      "ככה מתאפשר מחיר כניסה נמוך, בלי לוותר על המקצועיות."
+    ],
+    "human_seam_line": "התוצאה עוברת בדיקה אנושית לפני שאתה רואה אותה, וצוות WAO זמין בשאלות. חשוב שתדע: זה לא מנהל שיווק אישי צמוד.",
+    "ai_once_guidance": "AI is explained once, here and in hero.mechanism_line, as capability and affordability only. It is never the hero subject and no other section reintroduces it as an offer."
+  },
+  "lead_handling": {
+    "heading": "ומה קורה כשהטלפון מתחיל לצלצל?",
+    "lines": [
+      "הפניות מגיעות אליך ישירות — לטלפון, לוואטסאפ או לטופס.",
+      "רוצה לדעת איזו מודעה הביאה כל שיחה? יש לנו הרחבה מתאימה.",
+      "מעקב שיחות וניהול לידים פשוט — הרחבות לפי המסלול, בתשלום נפרד.",
+      "מערכת הלידים שלנו, ״מה עובד״, מתחילה מ-₪160 לחודש."
+    ],
+    "not_included_line": "שום הרחבה לא כלולה אוטומטית במחיר הכניסה.",
+    "cta": { "label": "פרטים על מערכת הלידים", "href": "/maoved" },
+    "asset_guidance": "Show only real product UI or explicitly labelled demo data. Never imply a full CRM is included in any entry price."
+  },
+  "ai_search": {
+    "heading": "ושימצאו אותך גם כששואלים AI",
+    "lines": [
+      "היום לקוחות שואלים גם עוזרי AI, לא רק את גוגל.",
+      "אנחנו בונים תוכן שעונה ללקוחות בשפה שלהם, ומוסיפים נתונים מובנים כשצריך.",
+      "חשוב לדייק: אין כאן הבטחה להופיע בתוצאות ה-AI של אף ספק."
+    ],
+    "positioning_guidance": "Concise supporting section only — never a third hero offer."
+  },
+  "people": {
+    "heading": "מי עומד מאחורי WAO?",
+    "intro": "מאחורי המערכת יש אנשים אמיתיים, עם ניסיון בשיווק דיגיטלי מאז 2006.",
+    "person": {
+      "photo": "/eitan-yariv.avif",
+      "name": "איתן יריב",
+      "role": "מייסד WAO, יועץ שיווק ופרסום בגוגל",
+      "bio": "איתן בנה את השיטה של WAO: שיווק מדויק לעסקים קטנים, בלי מונחים גבוהים ובלי חוזים מסובכים."
+    },
+    "cta": { "label": "להכיר אותנו", "href": "/about" },
+    "case_study_guidance": "Case study omitted: no repository evidence supports owner, city, need, work, period, result, and measurement together. Do not invent testimony, and do not use large-company logos or testimonials as main proof for this audience. Photo must be the existing approved asset only — no generated people imagery."
+  },
+  "faq": {
+    "heading": "שאלות שבעלי עסקים שואלים",
+    "items": [
+      {
+        "q": "יש לי כבר אתר. זה רלוונטי אליי?",
+        "a": "בהחלט. מסלול המודעות מביא לקוחות לאתר שיש לך — או לדף נחיתה חדש וממוקד יותר."
+      },
+      {
+        "q": "מה צריך להכין לפני שמתחילים?",
+        "a": "רק את הפרטים הבסיסיים של העסק: מה אתה עושה, איפה אתה נותן שירות ואיך ליצור איתך קשר. את השאר נשלים יחד."
+      },
+      {
+        "q": "אין לי רקע בשיווק. זה בעיה?",
+        "a": "להפך — בשביל זה אנחנו כאן. אתה איש המקצוע, ואנחנו מטפלים בצד השיווקי. אתה לא צריך ללמוד מקצוע נוסף."
+      },
+      {
+        "q": "מתי יתחילו להגיע פניות?",
+        "a": "זה תלוי במסלול, בביקוש, בתחרות, בתקציב ובהצעה שלך. במודעות — הקצב תלוי בחשיפה. בנוכחות אורגנית — זה גדל בהדרגה, לא בן לילה."
+      },
+      {
+        "q": "מה עולה אחרי שמתחילים?",
+        "a": "האתר מתחיל בניסיון של ₪9.90. אפשרויות ההמשך מופיעות בדף השירות ואינן כלולות במחיר הניסיון. במסלול המודעות, תקציב הפרסום לגוגל נפרד מדמי הניהול."
+      },
+      {
+        "q": "יש התחייבות או חוזה ארוך טווח?",
+        "a": "התנאים המעודכנים מופיעים בדף כל שירות. בדוק אותם לפני שאתה מאשר תשלום."
+      }
+    ]
+  },
+  "final_cta": {
+    "heading": "בוא נראה איך זה נראה על העסק שלך.",
+    "body": "מתחילים מכמה פרטים על העסק — ומקבלים משהו קונקרטי לראות. שני המסלולים פתוחים לפניך, ובוחרים רק את מה שמתאים.",
+    "primary_cta": { "label": "תראה לי את המודעה שלי", "href": "/google-ads/onboarding" },
+    "secondary_cta": { "label": "רוצה לבנות נוכחות מקומית? מתחילים כאן", "href": "/site-bot/start" }
+  }
+}

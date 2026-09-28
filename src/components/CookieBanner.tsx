@@ -33,6 +33,7 @@ export default function CookieBanner() {
 
   return (
     <div
+      className="wao-cookie-banner"
       role="dialog"
       aria-label="הודעת עוגיות ופרטיות"
       style={{

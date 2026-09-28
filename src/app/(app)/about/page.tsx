@@ -35,6 +35,7 @@ const schemas = [
     name: "WAO",
     url: "https://www.wao.co.il",
     foundingDate: "2006",
+    sameAs: ["https://partnersdirectory.withgoogle.com/partners/7030100386"],
     description: "סוכנות שיווק דיגיטלי בוטיק B2C — SEO, Google Ads, ייעוץ שיווקי",
     areaServed: { "@type": "Country", name: "Israel" },
     founder: {

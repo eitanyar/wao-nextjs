@@ -1,6 +1,24 @@
 import Link from "next/link";
 import { renderMixed } from "@/lib/bidi";
+import copy from "@/content/astra-homepage-copy.json";
 import PhoneReveal from "./PhoneReveal";
+
+function PhoneIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.79 19.79 0 0 1 2.12 4.18 2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.69 2.8a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.33 1.85.56 2.81.69A2 2 0 0 1 22 16.92Z" />
+    </svg>
+  );
+}
+
+function LocationIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M20 10c0 5-8 12-8 12S4 15 4 10a8 8 0 1 1 16 0Z" />
+      <circle cx="12" cy="10" r="2.5" />
+    </svg>
+  );
+}
 
 const footerLinks = [
   {
@@ -11,6 +29,8 @@ const footerLinks = [
       { label: "שיווק תוכן", href: "/content" },
       { label: "יועץ שיווקי", href: "/consulting" },
       { label: "בוט גוגל לעסק שלי", href: "/google-business" },
+      { label: copy.paths.path_local.details_link.label, href: copy.paths.path_local.details_link.href },
+      { label: copy.navigation.primary_cta.label, href: copy.navigation.primary_cta.href },
     ],
   },
   {
@@ -85,8 +105,7 @@ export default function Footer() {
                 fontFamily: "var(--font-body), sans-serif",
               }}
             >
-              סוכנות שיווק דיגיטלי מובילה בישראל מאז 2006. עוזרים לעסקים לצמוח
-              עם SEO, Google Ads ואסטרטגיית תוכן מותאמת.
+              {copy.low_price.lines[0]} {copy.low_price.lines[1]} {copy.people.intro}
             </p>
 
             {/* Contact */}
@@ -95,7 +114,7 @@ export default function Footer() {
                 source="footer"
                 className="footer-link"
                 style={{ display: "flex", alignItems: "center", gap: "8px" }}
-                icon={<span aria-hidden>📞</span>}
+                icon={<PhoneIcon />}
               />
               <span
                 style={{
@@ -107,7 +126,7 @@ export default function Footer() {
                   gap: "8px",
                 }}
               >
-                <span aria-hidden>📍</span>
+                <LocationIcon />
                 ראשון לציון, ישראל
               </span>
             </div>

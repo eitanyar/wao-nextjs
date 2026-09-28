@@ -1,21 +1,13 @@
-import Hero from "@/components/Hero";
-import Services from "@/components/Services";
-import Process from "@/components/Process";
-import WhyWao from "@/components/WhyWao";
-import Testimonials from "@/components/Testimonials";
-import BlogPreview from "@/components/BlogPreview";
-import CtaBanner from "@/components/CtaBanner";
+import type { Metadata } from "next";
+import AstraHome from "@/components/home/AstraHome";
+import copy from "@/content/astra-homepage-copy.json";
+import finalCopy from "@/content/astra-authority-first-homepage-copy.json";
+
+export const metadata: Metadata = {
+  title: { absolute: copy.metadata.seo.homepage_title_tag_current },
+  description: finalCopy.hero.body,
+};
 
 export default function HomePage() {
-  return (
-    <>
-      <Hero />
-      <Services />
-      <Process />
-      <WhyWao />
-      <Testimonials />
-      <BlogPreview />
-      <CtaBanner />
-    </>
-  );
+  return <AstraHome />;
 }

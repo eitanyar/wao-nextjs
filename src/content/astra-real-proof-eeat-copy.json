@@ -1,0 +1,156 @@
+{
+  "metadata": {
+    "artifact": "astra-real-proof-eeat-copy",
+    "version": "1.0.0",
+    "date": "2026-09-24",
+    "language": "he-IL",
+    "task_id": "2026-09-24_002",
+    "kanban_task": "t_cbe46987",
+    "source_decision": "docs/research/astra-real-proof-eeat-decision-2026-09-24.md",
+    "base_copy_artifact": "docs/copy/astra-homepage-copy.json",
+    "target_persona": "בעל עסק שירותי או איש מקצוע בישראל. עסוק, ממוקד תוצאה עסקית, לא טכני. בוחר מסלול התחלה אחד בלבד.",
+    "changed_scope": "מחרוזות חדשות לראש הדף בלבד. הן מכסות בעלות אחראית אמיתית בהירו והוכחת וידאו אמיתית עם הסכמת לחיצה. עוד מכוסים: מדריך בחירה בין שני מסלולים, חשיפת סטטוס Google Partner ובדיקה אנושית אחראית. נוספו גם תוויות נגישות, כולל סרגל נגישות בסיסי. כל שאר קופי דף הבית נשאר בארת'פקט astra-homepage-copy.json. כותרת ה-title, ה-H1 ותג ההירו המאושרים לא משתנים כאן. שום קובץ קופי קודם לא נערך.",
+    "supersedes": "מחרוזות הוכחה בדיוניות בראש הדף בלבד; ארת'פקטים היסטוריים נשארים כשהיו",
+    "prohibited_claims": [
+      "אין להמציא ציטוט, שם לקוח, עסק או תוצאה מתוך סרטון ההמלצות",
+      "אין לטעון הכנסה, לידים, דירוג, ROI או תוצאת קמפיין כלשהי",
+      "אין להציג את ההופעה בספריית השותפים כהמלצה או אישור של גוגל",
+      "אין להוסיף לאיתן מספרי ניסיון, מספרי לקוחות או הסמכות מעבר לעובדות המוכחות",
+      "אין לרמוז שאיתן מופיע בסרטון או שהתמונה שלו מוכיחה תוצאות",
+      "אין לטעון עמידה בחוק הנגישות, תאימות WCAG או הגנה משפטית כלשהי",
+      "אין לטעון שסרגל הנגישות לבדו הופך את האתר לנגיש"
+    ],
+    "destinations": {
+      "owner_photo": "/eitan-yariv.avif",
+      "video_embed_after_consent": "https://www.youtube-nocookie.com/embed/zrgqx7OOtcc",
+      "video_direct_link": "https://www.youtube.com/watch?v=zrgqx7OOtcc",
+      "video_channel": "https://www.youtube.com/@WaoIlMarketing",
+      "google_ads_primary_cta": "/google-ads/onboarding",
+      "google_ads_supporting": "/google-ads",
+      "site_bot_primary_cta": "/site-bot/start",
+      "site_bot_supporting": "/site-bot",
+      "about_reviewer": "/about",
+      "contact": "/contact#contact-form",
+      "accessibility_statement": "/accessibility",
+      "partner_directory": "https://partnersdirectory.withgoogle.com/partners/7030100386",
+      "partner_badge_local_asset": "/google-partner-badge.svg"
+    },
+    "toolbar_scope_note": "תוויות סרגל הנגישות הבסיסי נוספו לפי הנחיית מפעיל מ-2026-09-24. הן נמצאות בתוך מפתח accessibility הקיים בלבד. היקף הארת'פקט לא הורחב."
+  },
+  "hero_owner": {
+    "label": "הפנים שמאחורי WAO",
+    "name": "איתן יריב",
+    "role": "מייסד WAO, יועץ שיווק ופרסום בגוגל",
+    "accountability_lines": [
+      "איתן יריב הקים את WAO ומוביל אותה עד היום.",
+      "הוא האחראי המקצועי על מה ש-WAO בונה לך."
+    ],
+    "photo": "/eitan-yariv.avif",
+    "usage_boundary": "This card proves accountable ownership only, using the approved photo and repository-proven identity facts. Do not imply Eitan appears in the recommendations video, and never present the photo as evidence of campaign outcomes."
+  },
+  "video_proof": {
+    "heading": "לקוחות ממליצים על WAO — בסרטון",
+    "context_line": "זהו סרטון המלצות לקוחות, שפורסם בערוץ היוטיוב הרשמי של WAO.",
+    "consent_label": "הסרטון ייטען מיוטיוב רק כשתלחץ. עד אז לא נשלחת לשם אף בקשה.",
+    "load_button": {
+      "label": "טעינת הסרטון",
+      "href": "https://www.youtube-nocookie.com/embed/zrgqx7OOtcc"
+    },
+    "direct_link": {
+      "label": "פתח את הסרטון ביוטיוב",
+      "href": "https://www.youtube.com/watch?v=zrgqx7OOtcc"
+    },
+    "noscript_label": "בלי JavaScript אפשר לצפות בסרטון ישירות ביוטיוב.",
+    "boundary_line": "WAO לא מצטטת מתוך הסרטון ולא מציגה ממנו תוצאות או הבטחות.",
+    "usage_boundary": "No iframe, thumbnail, preconnect, or third-party request before activation. After activation load exactly the youtube-nocookie embed URL above, without autoplay parameters. Never name, quote, or characterize any person in the video, and never present the publisher title as proof of a result."
+  },
+  "decision_guide": {
+    "heading": "אז מאיפה מתחילים?",
+    "intro_lines": [
+      "שיווק דיגיטלי לעסק קטן לא חייב להתחיל מהכול.",
+      "מספיק צעד אחד נכון, שמתאים לצורך שלך עכשיו."
+    ],
+    "path_search_demand": {
+      "label": "יש כבר אנשים שמחפשים אותך בגוגל",
+      "description": "רוצה להגיע למי שמחפש את השירות שלך עכשיו? פרסום בגוגל עם מודעה ודף נחיתה ממוקדים מתאים לך.",
+      "primary_cta": {
+        "label": "מתחילים עם מודעה בגוגל",
+        "href": "/google-ads/onboarding"
+      },
+      "supporting_link": {
+        "label": "איך עובד מסלול Google Ads?",
+        "href": "/google-ads"
+      }
+    },
+    "path_site_presence": {
+      "label": "חסר לך בית דיגיטלי לעסק",
+      "description": "חשוב לך שלקוחות באזור יכירו אותך? אתר לעסק עם נוכחות מקומית ברורה הוא הצעד הראשון שלך.",
+      "primary_cta": {
+        "label": "בונים אתר ונוכחות מקומית",
+        "href": "/site-bot/start"
+      },
+      "supporting_link": {
+        "label": "מה כולל מסלול האתר?",
+        "href": "/site-bot"
+      }
+    },
+    "unsure_prompt": {
+      "line": "לא בטוח מה מתאים לך עכשיו? השווה בין שני הצרכים ודבר איתנו. נעזור לך לבחור כיוון, בלי התחייבות.",
+      "contact_cta": {
+        "label": "יש שאלה? דבר איתנו",
+        "href": "/contact#contact-form"
+      }
+    },
+    "structure_boundary": "Exactly two paths; both primary conversion destinations stay unchanged; no third offer anywhere in this section. The unsure prompt routes to the existing contact form only."
+  },
+  "partner_proof": {
+    "heading": "WAO בספריית Google Partner",
+    "status_line": "ספריית השותפים הרשמית מציגה את WAO כ-Google Partner בישראל.",
+    "coverage_line": "הספרייה מציגה הסמכות בתחומי החיפוש (Search) והתצוגה (Display).",
+    "directory_link": {
+      "label": "לדף WAO בספריית השותפים",
+      "href": "https://partnersdirectory.withgoogle.com/partners/7030100386"
+    },
+    "disclosure_line": "ההופעה בספרייה נועדה לעיון בלבד — היא אינה המלצה או אישור של גוגל.",
+    "no_performance_line": "סטטוס Partner או הסמכה לא מבטיחים תוצאות, דירוגים או ביצועי קמפיינים.",
+    "badge_boundary": "Render only the official locally stored badge at /google-partner-badge.svg, linked to the exact directory URL above. Never hotlink, recreate, or restyle the badge, and never turn certification coverage into an outcome claim."
+  },
+  "accountable_review": {
+    "heading": "ומי בודק את העבודה?",
+    "lines": [
+      "איתן יריב מוביל את הבדיקה המקצועית של העבודה.",
+      "האחראי על הבדיקה: איתן יריב, מייסד WAO ויועץ שיווק ופרסום בגוגל."
+    ],
+    "reviewer": {
+      "name": "איתן יריב",
+      "role": "מייסד WAO, יועץ שיווק ופרסום בגוגל"
+    },
+    "about_link": {
+      "label": "להכיר את איתן ואת WAO",
+      "href": "/about"
+    },
+    "fact_boundary": "Only repository-proven facts: founder of WAO, marketing and Google Ads consultant. No experience totals, client counts, extra certifications, rankings, or outcome claims."
+  },
+  "accessibility": {
+    "owner_image_alt": "איתן יריב, מייסד WAO ויועץ שיווק ופרסום בגוגל",
+    "video_iframe_title": "סרטון המלצות לקוחות על WAO — נגן יוטיוב מוטמע",
+    "consent_control_label": "כפתור טעינת סרטון ההמלצות מיוטיוב — נטען רק אחרי לחיצה מודעת",
+    "external_video_link_label": "פתיחת סרטון ההמלצות ישירות ביוטיוב — קישור חיצוני",
+    "partner_badge_alt": "תג Google Partner של WAO",
+    "partner_badge_link_label": "דף WAO בספריית שותפי גוגל — קישור חיצוני לאימות סטטוס Google Partner",
+    "basic_toolbar": {
+      "floating_control_label": "כלי נגישות בסיסיים",
+      "open_panel_label": "פתיחת פאנל הנגישות",
+      "close_panel_label": "סגירת פאנל הנגישות",
+      "increase_text_label": "הגדלת טקסט",
+      "high_contrast_label": "ניגודיות גבוהה",
+      "underline_links_label": "הדגשת קישורים בקו תחתון",
+      "reset_label": "איפוס הגדרות הנגישות",
+      "honest_link": {
+        "label": "להצהרת הנגישות של WAO",
+        "href": "/accessibility"
+      }
+    },
+    "toolbar_claims_boundary": "Toolbar labels must not state or imply legal compliance, legal protection, WCAG conformance, or that the toolbar alone makes the site accessible. The /accessibility destination is operator-directed (correction comment, 2026-09-24); use it exactly, do not substitute another route."
+  }
+}

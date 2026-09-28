@@ -1,0 +1,39 @@
+{
+  "schema_version": "1.0.0",
+  "video": {
+    "source_url": "https://www.youtube.com/watch?v=zrgqx7OOtcc",
+    "video_id": "zrgqx7OOtcc",
+    "privacy_embed_url": "https://www.youtube-nocookie.com/embed/zrgqx7OOtcc",
+    "retrieval_date": "2026-09-24",
+    "oembed_observed_title": "Customer recommendations about WAO internet marketing (publisher-supplied Hebrew title; not a verified testimonial)",
+    "oembed_observed_channel": "WAO official channel",
+    "channel_url": "https://www.youtube.com/@WaoIlMarketing",
+    "provider": "YouTube",
+    "thumbnail_url": "https://i.ytimg.com/vi/zrgqx7OOtcc/hqdefault.jpg",
+    "source_provider": "Eitan Yariv",
+    "owner_authorization": "Eitan supplied the video for homepage embedding behind explicit click-to-load consent only; no thumbnail or footage reuse authorized.",
+    "placement": "Homepage proof section; owner accountability is separately shown in hero using the existing approved portrait.",
+    "transcript_status": "unavailable",
+    "quotation_boundary": "No quotation or paraphrase of customer testimony, identity, results, or claims from an unreviewed video.",
+    "media_use_boundary": "No download, crop, still extraction, local thumbnail copy, or republication of video or thumbnail.",
+    "thumbnail_review": "One adult-presenting person visible, no minor visible in the supplied thumbnail; identity not inferred.",
+    "full_video_people_minors_review": "Not independently reviewed. Independent visual review and Eitan founder source-use spot-check required before publication."
+  },
+  "partner": {
+    "directory_url": "https://partnersdirectory.withgoogle.com/partners/7030100386",
+    "observation_date": "2026-09-24",
+    "observed_name": "WAO Internet Marketing",
+    "observed_country": "Israel",
+    "observed_status": "Google Partner",
+    "observed_certification_coverage": ["Search", "Display"],
+    "non_endorsement_boundary": "Directory listing is for reference and does not imply Google endorsement or performance results.",
+    "official_badge_source_url": "https://partnersdirectory.withgoogle.com/assets/badges/google-partner-26.min.svg",
+    "badge_retrieval_date": "2026-09-27",
+    "badge_sha256": "dfde4673e983c7ed7318e6d2ff237af2f11e01e37a49e30b092756e68690e622",
+    "badge_local_public_path": "/google-partner-badge.svg",
+    "badge_owner_authorization": "Eitan approved local use of the official badge in the homepage accountable-review area, linked to the directory listing.",
+    "badge_bytes_unmodified": true,
+    "badge_placement_link": "Homepage choose_path accountable-review area; badge links to the exact verified directory URL.",
+    "badge_use_boundary": "No hotlink, redraw, optimization, directory screenshots, or endcap imagery."
+  }
+}
