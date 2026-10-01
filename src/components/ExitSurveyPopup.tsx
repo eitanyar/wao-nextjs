@@ -91,7 +91,7 @@ function getVariant(pathname: string | null): PopupVariant | null {
 
 export default function ExitSurveyPopup() {
   const pathname = usePathname();
-  const variant = getVariant(pathname);
+  const variant = pathname === '/' ? null : getVariant(pathname);
 
   const [isOpen, setIsOpen] = useState(false);
   const [step, setStep] = useState(1);
@@ -346,7 +346,7 @@ export default function ExitSurveyPopup() {
     closePopup();
   };
 
-  if (!isOpen || !variant) return null;
+  if (pathname === '/' || !isOpen || !variant) return null;
 
   // ── Commercial variant: single-step, no survey, no form POST ──────────────
   if (variant === 'commercial') {

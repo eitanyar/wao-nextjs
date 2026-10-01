@@ -6,7 +6,7 @@ import AstraProofVideo from "./AstraProofVideo";
 
 function ArrowIcon() {
   return (
-    <svg viewBox="0 0 24 24" aria-hidden="true" className="astra-icon">
+    <svg viewBox="0 0 24 24" aria-hidden="true" className="astra-icon astra-arrow">
       <path d="M5 12h14M13 6l6 6-6 6" />
     </svg>
   );
@@ -26,14 +26,6 @@ function SiteIcon() {
     <svg viewBox="0 0 24 24" aria-hidden="true" className="astra-icon astra-icon-large">
       <rect x="3" y="4" width="18" height="16" rx="2" />
       <path d="M3 9h18M7 6.5h.01M10 6.5h.01" />
-    </svg>
-  );
-}
-
-function CheckIcon() {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true" className="astra-icon">
-      <path d="m5 12 4 4L19 6" />
     </svg>
   );
 }
@@ -115,55 +107,6 @@ export default function AstraHome() {
           <div className="astra-choice-help">
             <p>{finalCopy.paths.choosing_help.line}</p>
             <TextLink href={finalCopy.paths.choosing_help.link.href}>{finalCopy.paths.choosing_help.link.label}</TextLink>
-          </div>
-        </div>
-      </section>
-
-      <section id="low_price" className="astra-section astra-dark-card-section">
-        <div className="astra-container astra-explainer-grid">
-          <SectionHeading>{copy.low_price.heading}</SectionHeading>
-          <div>
-            <ul className="astra-check-list astra-check-list-dark">
-              {copy.low_price.lines.map((line) => (
-                <li key={line}>
-                  <CheckIcon />
-                  <span>{line}</span>
-                </li>
-              ))}
-            </ul>
-            <p className="astra-callout">{copy.low_price.human_seam_line}</p>
-          </div>
-        </div>
-      </section>
-
-      <section id="lead_handling" className="astra-section astra-light">
-        <div className="astra-container astra-split">
-          <div>
-            <SectionHeading>{copy.lead_handling.heading}</SectionHeading>
-            <div className="astra-line-stack">
-              {copy.lead_handling.lines.map((line) => <p key={line}>{line}</p>)}
-            </div>
-            <p className="astra-boundary-note">{copy.lead_handling.not_included_line}</p>
-            <Link href={copy.lead_handling.cta.href} className="astra-button astra-button-primary">
-              {copy.lead_handling.cta.label}
-              <ArrowIcon />
-            </Link>
-          </div>
-          <div className="astra-signal-card" aria-hidden="true">
-            <span className="astra-signal-ring" />
-            <span className="astra-signal-ring astra-signal-ring-two" />
-            <span className="astra-signal-line" />
-            <span className="astra-signal-line astra-signal-line-short" />
-            <span className="astra-signal-line" />
-          </div>
-        </div>
-      </section>
-
-      <section id="ai_search" className="astra-section astra-soft">
-        <div className="astra-container astra-centered">
-          <SectionHeading>{copy.ai_search.heading}</SectionHeading>
-          <div className="astra-line-stack">
-            {copy.ai_search.lines.map((line) => <p key={line}>{line}</p>)}
           </div>
         </div>
       </section>

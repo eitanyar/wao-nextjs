@@ -18,25 +18,26 @@ const headerPath = "src/components/Header.tsx";
 const footerPath = "src/components/Footer.tsx";
 const cssPath = "src/app/globals.css";
 const expectedHash = "2c859866cc013bbdc2fe5e8187fb1e24cf603bb183ae177d1ae71112979a2ef2";
-const finalSourcePath = "docs/copy/astra-authority-first-homepage-copy.json";
+const finalSourcePath = "docs/copy/astra-authority-first-homepage-copy.qwen38-v3-2026-09-30.json";
 const finalContentPath = "src/content/astra-authority-first-homepage-copy.json";
-const finalHash = "4668a79f686a2807f3628c8006555600ad8b91ca44d5f235af1633629eab5e51";
+const finalHash = "6d33903daf80329a6cef0e6dc3475aa75d752b0c8299c40cc11332945b6b37d2";
 const finalBytes = read(finalSourcePath);
 const finalCopy = JSON.parse(finalBytes.toString("utf8"));
 
 const sourceBytes = read(sourcePath);
 const contentBytes = read(contentPath);
 const copy = JSON.parse(sourceBytes.toString("utf8"));
+const activeCopy = JSON.parse(contentBytes.toString("utf8"));
 const page = text(pagePath);
 const component = text(componentPath);
 const header = text(headerPath);
 const footer = text(footerPath);
 const css = text(cssPath);
 
-test("the approved copy artifact is copied byte-for-byte", () => {
+test("approved base copy changes only in navigation links; final copy is byte-for-byte", () => {
   assert.equal(sha256(sourceBytes), expectedHash);
-  assert.equal(sha256(contentBytes), expectedHash);
-  assert.deepEqual(contentBytes, sourceBytes);
+  assert.deepEqual(activeCopy.navigation.links.map(({ href }) => href), ["/google-ads", "/site-bot", "/about"]);
+  assert.deepEqual({ ...activeCopy, navigation: { ...activeCopy.navigation, links: copy.navigation.links } }, { ...copy, faq: { ...copy.faq, items: copy.faq.items.filter((_, index) => index !== 4) } });
   assert.equal(sha256(finalBytes), finalHash);
   assert.equal(sha256(read(finalContentPath)), finalHash);
   assert.deepEqual(read(finalContentPath), finalBytes);
@@ -60,27 +61,29 @@ test("the homepage renders the Astra component without legacy sales modules", ()
 });
 
 test("the approved story sections and CTA destinations are wired", () => {
-  for (const id of copy.metadata.section_order) {
+  const retired = ["low_price", "lead_handling", "ai_search"];
+  for (const id of copy.metadata.section_order.filter((id) => !retired.includes(id))) {
     assert.match(component, new RegExp(`id=[{]?['\"]${id}['\"]`), `missing section ${id}`);
   }
+  for (const id of retired) assert.doesNotMatch(component, new RegExp(`<section id="${id}"|copy\\.${id}\\.`), `retired section ${id} must not render`);
+  assert.deepEqual(activeCopy.navigation.links.map(({ href }) => href), ["/google-ads", "/site-bot", "/about"]);
 
   const hrefs = new Set([
-    copy.navigation.primary_cta.href,
-    copy.navigation.help_link.href,
+    activeCopy.navigation.primary_cta.href,
+    activeCopy.navigation.help_link.href,
     copy.hero.primary_cta.href,
     finalCopy.paths.google_ads.supporting_link.href,
     finalCopy.paths.business_website.primary_cta.href,
     finalCopy.paths.business_website.supporting_link.href,
     finalCopy.paths.choosing_help.link.href,
-    copy.lead_handling.cta.href,
     finalCopy.founder_authority.about_link.href,
     finalCopy.final_cta.primary_cta.href,
-    ...copy.navigation.links.map((item) => item.href),
+    ...activeCopy.navigation.links.map((item) => item.href),
   ]);
 
   const shellAndPage = `${component}\n${header}\n${footer}`;
   for (const href of hrefs) {
-    assert.ok(JSON.stringify(copy).includes(href) || JSON.stringify(finalCopy).includes(href), `copy key missing for ${href}`);
+    assert.ok(JSON.stringify(activeCopy).includes(href) || JSON.stringify(finalCopy).includes(href), `copy key missing for ${href}`);
     assert.match(shellAndPage, /copy\.|finalCopy\./, `copy data is not consumed for ${href}`);
   }
 });
@@ -141,7 +144,7 @@ test("corrected proof bytes and reviewed fields are exact", () => {
 
 test("final roles appear once at their assigned sections without old duplicate frames", () => {
   const sections = [...component.matchAll(/<section id="([^"]+)"/g)].map((match) => match[1]);
-  assert.deepEqual(sections, copy.metadata.section_order);
+  assert.deepEqual(sections, copy.metadata.section_order.filter((id) => !["low_price", "lead_handling", "ai_search"].includes(id)));
   assert.doesNotMatch(component, /choose_path|decision_guide|hero_owner|accountable_review|copy\.people|copy\.paths|copy\.proof|copy\.final_cta|copy\.hero\.(body|primary_cta|secondary_cta|supporting_line|mechanism_line)/);
   assert.doesNotMatch(component, /consent_label|boundary_line|figcaption|video-consent|video-boundary|privacy/i);
   assert.doesNotMatch(component, /admin\/astra-copy-review|astra-copy-review/);

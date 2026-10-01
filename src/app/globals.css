@@ -934,6 +934,7 @@ p { margin: 0; }
 }
 
 .astra-icon-large { width: 30px; height: 30px; }
+.astra-home .astra-arrow { transform: scaleX(-1); }
 
 .astra-supporting {
   margin-top: 18px;
@@ -1366,9 +1367,24 @@ p { margin: 0; }
 @media (max-width: 420px) {
   .astra-header .wao-container { padding-inline: 16px; }
   .astra-logo { font-size: 1.55rem; }
+  .astra-paths-section .astra-container,
+  .astra-partner-proof { padding-inline-end: 48px; }
   .astra-path-card { padding: 26px 22px; }
   .astra-video-proof { padding: 14px; }
   .astra-person-photo { min-height: 340px; }
+}
+
+@media (max-width: 480px) {
+  .astra-home .astra-button { max-width: calc(100% - 60px); margin-inline-end: 60px; }
+  .astra-home .astra-section-copy,
+  .astra-home .astra-section-intro,
+  .astra-home .astra-faq-section h2 { padding-inline-end: 60px; }
+  .astra-home .astra-container,
+  .astra-home .astra-faq-item,
+  .astra-home .astra-section-copy,
+  .astra-home .astra-section-intro,
+  .astra-home .astra-owner-card,
+  footer .wao-container { padding-inline-end: 64px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -1382,12 +1398,11 @@ p { margin: 0; }
   }
 }
 
-.wao-a11y-control { position: fixed; right: 16px; z-index: 9000; display: grid; justify-items: start; gap: 8px; max-width: calc(100vw - 32px); }
+.wao-a11y-control { position: fixed; left: 16px; z-index: 9000; display: grid; justify-items: start; gap: 8px; max-width: calc(100vw - 32px); }
 .wao-a11y-trigger { display: grid; place-items: center; width: 48px; height: 48px; border: 2px solid #fff; border-radius: 10px; background: #0755bd; color: #fff; box-shadow: 0 3px 12px #0006; cursor: pointer; }
 .wao-a11y-trigger svg { width: 29px; height: 29px; }
 .wao-a11y-panel { display: grid; gap: 8px; width: min(300px, calc(100vw - 32px)); max-height: min(420px, calc(100dvh - 160px)); overflow-y: auto; padding: 14px; border: 1px solid #667587; border-radius: 12px; background: #fff; color: #122438; box-shadow: 0 8px 30px #0005; }
 body:has(.wao-cookie-banner) .wao-a11y-panel { position: fixed; top: 80px; left: 16px; max-height: min(270px, calc(100dvh - 160px)); }
-@media (max-width: 420px) { body:has(.wao-cookie-banner) .wao-a11y-panel { left: auto; right: 16px; } }
 .wao-a11y-panel button { border: 1px solid #58708b; border-radius: 7px; padding: 9px; background: #fff; color: #122438; text-align: start; cursor: pointer; }
 .wao-a11y-panel button[aria-pressed="true"] { background: #0755bd; color: #fff; }
 .wao-a11y-panel .wao-a11y-close { justify-self: end; }
