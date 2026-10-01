@@ -260,6 +260,8 @@
     "src/lib/expired-domain-research/riskPolicy.test.ts",
     "src/lib/expired-domain-research/runResearch.ts",
     "src/lib/expired-domain-research/runResearch.test.ts",
+    "src/lib/expired-domain-research/openSeoMcp.ts",
+    "src/lib/expired-domain-research/openSeoMcp.test.ts",
     "src/lib/site-bot/checkout/researchCompletion.ts",
     "src/lib/site-bot/checkout/researchCompletion.test.ts"
   ]

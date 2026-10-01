@@ -1,0 +1,1 @@
+{"unauthorized":{"status":401,"code":"unauthorized"},"payment":{"status":402,"code":"payment_required"},"rateLimit":{"status":429,"code":"rate_limited"},"timeout":{"code":"timeout"}}
