@@ -40,6 +40,7 @@ validate_candidate() {
   [[ -s "$dist/BUILD_ID" ]] || fail 'candidate BUILD_ID is missing or empty.'
   [[ -s "$standalone/server.js" ]] || fail 'candidate standalone entrypoint is missing or empty.'
   [[ -d "$dist/static" ]] || fail 'candidate static tree is missing.'
+  [[ -s "$standalone/public/eitan-yariv.avif" ]] || fail 'candidate standalone public assets are missing or nested.'
   [[ -L "$standalone/data" && "$(readlink "$standalone/data")" == "$RUNTIME_DATA_DIR" ]] || fail 'candidate runtime-data link is invalid.'
 
   node - "$dist" <<'NODE' || fail 'candidate manifest references a missing or invalid chunk.'
@@ -192,7 +193,8 @@ npm ci
 printf 'Building with Webpack and Node old-space limit %s MiB\n' "$BUILD_MAX_OLD_SPACE_MB"
 WAO_DEPLOY_DIST_DIR="$DEPLOY_DIST_DIR" NODE_OPTIONS="$BUILD_NODE_OPTIONS" npm run build -- --webpack
 mkdir -p "$CANDIDATE/.next/standalone/.next"
-cp -a public "$CANDIDATE/.next/standalone/public"
+mkdir -p "$CANDIDATE/.next/standalone/public"
+cp -a public/. "$CANDIDATE/.next/standalone/public/"
 cp -a "$CANDIDATE/.next/static" "$CANDIDATE/.next/standalone/.next/static"
 # The application package is ESM, while Next's generated standalone server is
 # CommonJS. Keep the release-local runtime boundary explicit.

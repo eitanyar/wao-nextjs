@@ -28,6 +28,7 @@ function fixture({ failure = '' } = {}) {
   fs.writeFileSync(path.join(repo, 'tsconfig.json'), '{"fixture":"original"}\n');
   fs.mkdirSync(path.join(repo, 'public'));
   fs.writeFileSync(path.join(repo, 'public', 'asset.txt'), 'public');
+  fs.writeFileSync(path.join(repo, 'public', 'eitan-yariv.avif'), 'fixture');
   fs.mkdirSync(path.join(repo, 'scripts'), { recursive: true });
   fs.writeFileSync(path.join(repo, 'scripts', 'verify-google-ads-sandbox.mjs'), 'process.exit(process.env.WAO_TEST_FAILURE === "verifier" ? 7 : 0)');
 
@@ -234,5 +235,39 @@ test('pre-switch build and validation failures retain the previous active proces
       assert.deepEqual(currentProcess(f), [`${path.join(f.releases, 'release-previous', '.next', 'standalone', 'server.js')}|${path.join(f.releases, 'release-previous', '.next', 'standalone')}`]);
       assert.doesNotMatch(f.log, /pm2 delete wao/);
     } finally { cleanup(f.root); }
+  }
+});
+
+test('public assets copy into an existing standalone public directory without nesting', () => {
+  const script = fs.readFileSync(deployScript, 'utf8');
+  const lines = script.split('\n');
+  const copyLines = lines.filter((line) => /^cp -a public\b/.test(line));
+  assert.equal(copyLines.length, 1, 'expected exactly one live public copy command');
+  const copyIndex = lines.indexOf(copyLines[0]);
+  const commands = [lines[copyIndex - 1], copyLines[0]];
+  assert.match(script, /\[\[ -s "\$standalone\/public\/eitan-yariv\.avif" \]\] \|\| fail 'candidate standalone public assets are missing or nested\.'/);
+
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'wao-public-copy-test-'));
+  try {
+    const publicDir = path.join(root, 'public');
+    const destination = path.join(root, '.next', 'standalone', 'public');
+    fs.mkdirSync(path.join(publicDir, 'uploads'), { recursive: true });
+    fs.writeFileSync(path.join(publicDir, 'eitan-yariv.avif'), 'fixture');
+    fs.writeFileSync(path.join(publicDir, 'uploads', 'marker.txt'), 'new');
+    fs.mkdirSync(path.join(destination, 'uploads'), { recursive: true });
+    fs.writeFileSync(path.join(destination, 'uploads', 'old.txt'), 'old');
+
+    const result = spawnSync('bash', ['-e', '-c', commands.join('\n')], {
+      cwd: root,
+      encoding: 'utf8',
+      env: { ...process.env, CANDIDATE: root },
+    });
+    assert.equal(result.status, 0, result.stderr);
+    assert.ok(fs.statSync(path.join(destination, 'eitan-yariv.avif')).isFile());
+    assert.ok(fs.existsSync(path.join(destination, 'uploads', 'marker.txt')));
+    assert.ok(fs.existsSync(path.join(destination, 'uploads', 'old.txt')));
+    assert.equal(fs.existsSync(path.join(destination, 'public')), false);
+  } finally {
+    cleanup(root);
   }
 });
