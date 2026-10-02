@@ -48,6 +48,12 @@ Phase 1 local implementation executed 2026-10-01 under Kanban card t_1deb1703; i
 - Per-run credit ceiling approved in advance by the budget planner; every skipped planned call persisted (spec 034 §5-6 already defines this).
 - Advisory only. No mutation of client properties. Fits the existing "audit-only" posture proven by the Site-Bot scorecard (c78c9ce).
 
+## Phase 1b — location/language market filter (2026-10-02)
+- Task t_e05b25b8 threads per-call market overrides through the operator advisor without creating another OpenSEO project.
+- Both keys select an explicit pair; location alone uses its default language; language alone uses the project location; neither uses the project default.
+- Advisor allowlist: US 2840 with en/es; IL 2376 with he/ar. Language alone fails closed in the advisor until a location is selected.
+- UI dropdown is the gated follow-on in spec 2026-10-02_005, not part of this adapter/CLI task.
+
 ## Phase 2 — Public `/seo-advisor` conversational bot (funnel front-end)
 - Prospect enters a domain; bot runs a heavily budgeted free mini-diagnosis and gives real advice, converting to WAO SEO/GEO services. Voice/persona: reuse the geo-bot conversational patterns (`docs/specs/geo-bot-conversational-design-brief.md`) — same audience, relief-not-threat register, singular male Hebrew, TTS ≤15-word sentences. Hebrew copy = waocopy + waohebrewqa gate; bot-turn changes land in BOTH the API route and prompts lib per the Bot Turns Rule.
 - Hard cost guardrails (metered credits on a public surface): one cached domain-overview per domain per day; result cache shared across prospects; preflight budget ceiling; Fraud Blocker + rate limiting; anonymous gating before any metered call; fallback to cached/expired evidence with an explicit freshness label.

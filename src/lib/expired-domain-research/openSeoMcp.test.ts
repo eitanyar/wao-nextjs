@@ -4,7 +4,7 @@ import path from 'node:path';
 import test from 'node:test';
 import type { Transport } from '@modelcontextprotocol/sdk/shared/transport.js';
 import type { JSONRPCMessage } from '@modelcontextprotocol/sdk/types.js';
-import { callAllowedOpenSeoTool, closeOpenSeoMcpClient, createOpenSeoMcpClient, estimateOpenSeoPlan, preflightOpenSeo, runOpenSeoResearch } from './openSeoMcp';
+import { callAllowedOpenSeoTool, closeOpenSeoMcpClient, createOpenSeoMcpClient, estimateOpenSeoPlan, preflightOpenSeo, resolveAdvisorMarket, runOpenSeoResearch } from './openSeoMcp';
 import type { OpenSeoClient, OpenSeoToolResult } from './openSeoMcp';
 
 const fixture = (name: string): Record<string, unknown> => JSON.parse(fs.readFileSync(path.join(process.cwd(), 'fixtures', 'expired-domain-research', 'openseo', name), 'utf8')) as Record<string, unknown>;
@@ -80,6 +80,52 @@ test('calculates worst-case plan with ranked keywords and bounded prefixes', () 
   assert.equal(full.calls.every(call => call.arguments.projectId === 'project-1'), true);
   assert.equal(full.calls.filter(call => call.tool === 'get_ranked_keywords').length, 3);
   assert.deepEqual(estimateOpenSeoPlan({ projectId: 'project-1', candidates: ['one.test'], approvedCap: 700 }).calls.map(call => call.tool), ['get_domain_overview', 'get_ranked_keywords']);
+});
+
+test('advisor market allowlist accepts US and IL languages and fails closed otherwise', () => {
+  for (const [locationCode, languageCode] of [[2840, 'en'], [2840, 'es'], [2376, 'he'], [2376, 'ar']] as const) {
+    assert.deepEqual(resolveAdvisorMarket({ locationCode, languageCode }), { status: 'ok', locationCode, languageCode });
+  }
+  for (const [locationCode, languageCode] of [[2840, 'he'], [2376, 'en']] as const) {
+    assert.equal(resolveAdvisorMarket({ locationCode, languageCode }).status, 'unsupported');
+  }
+  assert.match(resolveAdvisorMarket({ locationCode: 9999 }).reason ?? '', /9999/u);
+  assert.deepEqual(resolveAdvisorMarket({ languageCode: 'en' }), { status: 'unsupported', reason: 'language requires location for the advisor allowlist' });
+  assert.deepEqual(resolveAdvisorMarket({}), { status: 'ok' });
+  assert.deepEqual(resolveAdvisorMarket({ locationCode: 2840 }), { status: 'ok', locationCode: 2840 });
+});
+
+test('plan threads an explicit market through every domain tool and preserves default-market costs', () => {
+  const options = { projectId: 'project-1', candidates: ['one.test'], approvedCap: 1000 };
+  const selected = estimateOpenSeoPlan({ ...options, locationCode: 2840, languageCode: 'en' });
+  const fallback = estimateOpenSeoPlan(options);
+  for (const tool of ['get_domain_overview', 'get_domain_keyword_suggestions', 'get_ranked_keywords']) {
+    const explicit = selected.calls.find(call => call.tool === tool);
+    assert.equal(explicit?.arguments.locationCode, 2840);
+    assert.equal(explicit?.arguments.languageCode, 'en');
+    const omitted = fallback.calls.find(call => call.tool === tool);
+    assert.equal(Object.hasOwn(omitted?.arguments ?? {}, 'locationCode'), false);
+    assert.equal(Object.hasOwn(omitted?.arguments ?? {}, 'languageCode'), false);
+  }
+  assert.equal(selected.totalCredits, fallback.totalCredits);
+  assert.equal(estimateOpenSeoPlan({ projectId: 'project-1', approvedCap: 2000 }).totalCredits, 2740);
+  for (const invalid of [{ locationCode: 0 }, { locationCode: Number.MAX_SAFE_INTEGER + 1 }, { languageCode: 'english' }]) {
+    assert.throws(() => estimateOpenSeoPlan({ ...options, ...invalid }));
+  }
+  for (const unsupported of [{ locationCode: 9999 }, { locationCode: 2840, languageCode: 'he' }, { languageCode: 'en' }]) {
+    assert.throws(() => estimateOpenSeoPlan({ ...options, ...unsupported }));
+  }
+});
+
+test('research carries the market from options to the fake transport', async () => {
+  const client = new FakeClient();
+  const result = await runOpenSeoResearch({ client, projectId: 'project-1', candidates: ['one.test'], approvedCap: 900, locationCode: 2840, languageCode: 'en', now: day });
+  for (const tool of ['get_domain_overview', 'get_domain_keyword_suggestions', 'get_ranked_keywords']) {
+    const input = client.inputs.find(item => item.name === tool);
+    assert.equal(input?.arguments.locationCode, 2840);
+    assert.equal(input?.arguments.languageCode, 'en');
+  }
+  assert.equal(result.plan.totalCredits, 980);
 });
 
 test('research stops before insufficient remaining credits, normalizes evidence, and closes in finally', async () => {

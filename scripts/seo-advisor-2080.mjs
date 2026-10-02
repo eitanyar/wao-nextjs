@@ -2,32 +2,41 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { isIP } from 'node:net';
-import { createOpenSeoMcpClient, closeOpenSeoMcpClient, estimateOpenSeoPlan, preflightOpenSeo, runOpenSeoResearch } from '../dist/lib/expired-domain-research/openSeoMcp.js';
+import { createOpenSeoMcpClient, closeOpenSeoMcpClient, estimateOpenSeoPlan, preflightOpenSeo, resolveAdvisorMarket, runOpenSeoResearch } from '../dist/lib/expired-domain-research/openSeoMcp.js';
 
 const defaultProject = '46b14fdf-859c-40e4-be3c-b161a481e1e6';
 const host = value => typeof value === 'string' && isIP(value) === 0 && value.length <= 253 && /^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?)+$/iu.test(value);
 const args = process.argv.slice(2);
-const parsed = { domain: null, projectId: defaultProject, cap: 1000, offline: false };
+const parsed = { domain: null, projectId: defaultProject, cap: 1000, offline: false, locationCode: undefined, languageCode: undefined };
 for (let i = 0; i < args.length; i += 1) {
   const arg = args[i];
   if (arg === '--offline-fixture') parsed.offline = true;
-  else if (['--domain', '--project', '--cap'].includes(arg) && i + 1 < args.length) {
+  else if (['--domain', '--project', '--cap', '--location', '--language'].includes(arg) && i + 1 < args.length) {
     const value = args[++i];
     if (arg === '--domain') parsed.domain = value;
     if (arg === '--project') parsed.projectId = value;
     if (arg === '--cap') parsed.cap = Number(value);
+    if (arg === '--location') parsed.locationCode = /^\d+$/u.test(value) ? Number(value) : NaN;
+    if (arg === '--language') parsed.languageCode = value;
   } else throw new Error('invalid_arguments');
 }
-if (!host(parsed.domain) || !parsed.projectId || !Number.isSafeInteger(parsed.cap) || parsed.cap < 0) throw new Error('invalid_arguments');
+if (!host(parsed.domain) || !parsed.projectId || !Number.isSafeInteger(parsed.cap) || parsed.cap < 0 ||
+  (parsed.locationCode !== undefined && (!Number.isSafeInteger(parsed.locationCode) || parsed.locationCode <= 0)) ||
+  (parsed.languageCode !== undefined && !/^[a-z]{2}$/iu.test(parsed.languageCode))) throw new Error('invalid_arguments');
+const market = resolveAdvisorMarket({ locationCode: parsed.locationCode, languageCode: parsed.languageCode });
 
-function report(status, observedCredits, skipped, actions) {
-  console.log(JSON.stringify({ status, projectId: parsed.projectId, domain: parsed.domain, observedCredits, skipped, actions }, null, 2));
+function report(status, observedCredits, skipped, actions, plan) {
+  console.log(JSON.stringify({ status, projectId: parsed.projectId, domain: parsed.domain, observedCredits, skipped, actions,
+    ...(plan ? { plannedCalls: plan.calls.map(call => ({ tool: call.tool, arguments: call.arguments })) } : {}) }, null, 2));
   console.log(`SEO advisor: ${status}; ${actions.length} actions; observedCredits ${observedCredits}.`);
   for (const item of actions.slice(0, 5)) console.log(`${item.rank}. ${item.action}`);
   console.log('program ceiling $20 (owner-tracked)');
 }
 
-if (parsed.cap > 2000) {
+if (market.status === 'unsupported') {
+  console.log(JSON.stringify({ status: 'unsupported_market', reason: market.reason }));
+  process.exitCode = 1;
+} else if (parsed.cap > 2000) {
   report('budget_confirmation_required', 0, [], []);
   process.exitCode = 1;
 } else {
@@ -56,13 +65,13 @@ if (parsed.cap > 2000) {
     if (preflight.status !== 'ok') {
       report(preflight.status, 0, [], []); process.exitCode = 1;
     } else {
-      const plan = estimateOpenSeoPlan({ projectId: parsed.projectId, candidates: [parsed.domain], approvedCap: parsed.cap });
+      const plan = estimateOpenSeoPlan({ projectId: parsed.projectId, candidates: [parsed.domain], approvedCap: parsed.cap, locationCode: market.locationCode, languageCode: market.languageCode });
       if (plan.status !== 'ready') {
         report(plan.status, 0, plan.omitted, []); process.exitCode = 1;
       } else {
         const handle = parsed.offline ? { client: fixtureClient(), transport: fakeTransport, mode: 'local', origin: 'http://127.0.0.1:3001' } : await createOpenSeoMcpClient(connection);
         let result;
-        try { result = await runOpenSeoResearch({ client: handle.client, projectId: parsed.projectId, candidates: [parsed.domain], approvedCap: parsed.cap }); }
+        try { result = await runOpenSeoResearch({ client: handle.client, projectId: parsed.projectId, candidates: [parsed.domain], approvedCap: parsed.cap, locationCode: market.locationCode, languageCode: market.languageCode }); }
         finally { await closeOpenSeoMcpClient(handle); }
         const ranked = result.evidence.find(item => item.tool === 'get_ranked_keywords');
         const overview = result.evidence.find(item => item.tool === 'get_domain_overview');
@@ -75,7 +84,7 @@ if (parsed.cap > 2000) {
         if (overview?.organicKeywords > 0 && rows.length === 0) actions.push({ action: 'pull ranked-keyword detail', evidence: { tool: 'get_domain_overview', organicKeywords: overview.organicKeywords, rankedKeywordRows: 0 } });
         if (backlinks?.referringDomains < 10) actions.push({ action: 'authority gap: backlinks are the constraint', evidence: { tool: 'get_backlinks_overview', referringDomains: backlinks.referringDomains } });
         if (actions.length === 0) actions.push({ action: 'collect baseline: rerun after changes, evidence cached 12h', evidence: { organicTraffic: overview?.organicTraffic ?? null, organicKeywords: overview?.organicKeywords ?? null, rankedKeywordRows: rows.length } });
-        report(result.status, parsed.offline ? 0 : result.observedCredits, result.skipped, actions.map((item, index) => ({ rank: index + 1, ...item })));
+        report(result.status, parsed.offline ? 0 : result.observedCredits, result.skipped, actions.map((item, index) => ({ rank: index + 1, ...item })), plan);
         if (result.skipped.some(item => item.reason === 'provider_failure')) process.exitCode = 1;
       }
     }

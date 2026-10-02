@@ -24,8 +24,8 @@ export interface OpenSeoPreflightOptions extends OpenSeoClientOptions { projectI
 export interface OpenSeoPreflightResult { status: 'ok' | 'capability_missing' | 'project_missing' | 'unavailable'; mode: OpenSeoMode; scopes: string[]; projectMarket: string | null; creditsRemaining: number | null; toolNames: string[]; serverOrigin: string; retrievedAt: string; networkCalls: number; meteredCalls: number; }
 export interface OpenSeoPlanCall { tool: MeteredTool; arguments: Record<string, unknown>; cost: number; }
 export interface OpenSeoPlan { status: 'ready' | 'budget_confirmation_required' | 'insufficient_budget'; totalCredits: number; approvedCap: number; calls: OpenSeoPlanCall[]; omitted: Array<{ tool: MeteredTool; reason: string }>; }
-export interface OpenSeoPlanOptions { projectId: string; seed?: string; candidates?: string[]; approvedCap?: number; explicitPlanCredits?: number; }
-export interface OpenSeoResearchOptions { client: OpenSeoClient; projectId: string; seed?: string; candidates?: string[]; approvedCap: number; remainingCredits?: number; now?: () => Date; }
+export interface OpenSeoPlanOptions { projectId: string; seed?: string; candidates?: string[]; approvedCap?: number; explicitPlanCredits?: number; locationCode?: number; languageCode?: string; }
+export interface OpenSeoResearchOptions { client: OpenSeoClient; projectId: string; seed?: string; candidates?: string[]; approvedCap: number; remainingCredits?: number; now?: () => Date; locationCode?: number; languageCode?: string; }
 export interface OpenSeoResearchResult { status: 'complete' | 'partial' | 'budget_confirmation_required' | 'insufficient_budget'; plan: OpenSeoPlan; observedCredits: number; evidence: Array<Record<string, unknown>>; skipped: Array<{ tool: MeteredTool; reason: string }>; }
 
 function record(value: unknown): value is Record<string, unknown> { return Boolean(value) && typeof value === 'object' && !Array.isArray(value); }
@@ -95,15 +95,30 @@ export async function preflightOpenSeo(options: OpenSeoPreflightOptions): Promis
   } finally { if (handle) await closeOpenSeoMcpClient(handle); }
 }
 
+export function resolveAdvisorMarket(input: { locationCode?: number; languageCode?: string }): { status: 'ok' | 'unsupported'; locationCode?: number; languageCode?: string; reason?: string } {
+  const { locationCode, languageCode } = input;
+  if (locationCode === undefined && languageCode === undefined) return { status: 'ok' };
+  const languages = locationCode === 2840 ? ['en', 'es'] : locationCode === 2376 ? ['he', 'ar'] : null;
+  if (locationCode === undefined) return { status: 'unsupported', reason: 'language requires location for the advisor allowlist' };
+  if (!languages) return { status: 'unsupported', reason: `unsupported location code: ${locationCode}` };
+  if (languageCode !== undefined && !languages.includes(languageCode)) return { status: 'unsupported', reason: `unsupported language ${languageCode} for location ${locationCode}` };
+  return { status: 'ok', locationCode, ...(languageCode === undefined ? {} : { languageCode }) };
+}
+
 export function estimateOpenSeoPlan(options: OpenSeoPlanOptions): OpenSeoPlan {
   if (typeof options.projectId !== 'string' || options.projectId.length === 0) throw new Error('Invalid OpenSEO projectId');
+  if (options.locationCode !== undefined && (!Number.isSafeInteger(options.locationCode) || options.locationCode <= 0)) throw new Error('Invalid OpenSEO locationCode');
+  if (options.languageCode !== undefined && (typeof options.languageCode !== 'string' || !/^[a-z]{2}$/iu.test(options.languageCode))) throw new Error('Invalid OpenSEO languageCode');
+  const market = resolveAdvisorMarket(options);
+  if (market.status === 'unsupported') throw new Error(market.reason);
   const seed = options.seed ?? 'research'; const candidates = (options.candidates ?? ['one.test', 'two.test', 'three.test']).filter(hostname).slice(0, 3);
   const projectId = options.projectId;
+  const marketArgs = { ...(options.locationCode === undefined ? {} : { locationCode: options.locationCode }), ...(options.languageCode === undefined ? {} : { languageCode: options.languageCode }) };
   const all: OpenSeoPlanCall[] = [
     ...(options.candidates && !options.seed ? [] : [{ tool: 'research_keywords' as const, arguments: { projectId, seed, clickstream: false }, cost: COSTS.research_keywords }]),
-    ...candidates.map(domain => ({ tool: 'get_domain_overview' as const, arguments: { projectId, domain }, cost: COSTS.get_domain_overview })),
-    ...candidates.map(target => ({ tool: 'get_ranked_keywords' as const, arguments: { projectId, target, locationCode: 2376, languageCode: 'he', limit: 50, maxRank: 20 }, cost: COSTS.get_ranked_keywords })),
-    ...candidates.slice(0, 2).map(domain => ({ tool: 'get_domain_keyword_suggestions' as const, arguments: { projectId, domain }, cost: COSTS.get_domain_keyword_suggestions })),
+    ...candidates.map(domain => ({ tool: 'get_domain_overview' as const, arguments: { projectId, domain, ...marketArgs }, cost: COSTS.get_domain_overview })),
+    ...candidates.map(target => ({ tool: 'get_ranked_keywords' as const, arguments: { projectId, target, ...marketArgs, limit: 50, maxRank: 20 }, cost: COSTS.get_ranked_keywords })),
+    ...candidates.slice(0, 2).map(domain => ({ tool: 'get_domain_keyword_suggestions' as const, arguments: { projectId, domain, ...marketArgs }, cost: COSTS.get_domain_keyword_suggestions })),
     ...candidates.map(target => ({ tool: 'get_backlinks_overview' as const, arguments: { projectId, target }, cost: COSTS.get_backlinks_overview })),
     ...candidates.map(target => ({ tool: 'get_backlinks_profile' as const, arguments: { projectId, target, page: 1 }, cost: COSTS.get_backlinks_profile })),
   ];
@@ -139,7 +154,7 @@ function normalize(tool: MeteredTool, result: OpenSeoOrdinaryToolResult, retriev
 }
 
 export async function runOpenSeoResearch(options: OpenSeoResearchOptions): Promise<OpenSeoResearchResult> {
-  const plan = estimateOpenSeoPlan({ projectId: options.projectId, seed: options.seed, candidates: options.candidates, approvedCap: options.approvedCap });
+  const plan = estimateOpenSeoPlan({ projectId: options.projectId, seed: options.seed, candidates: options.candidates, approvedCap: options.approvedCap, locationCode: options.locationCode, languageCode: options.languageCode });
   if (plan.status !== 'ready') return { status: plan.status, plan, observedCredits: 0, evidence: [], skipped: plan.omitted };
   let remaining = options.remainingCredits ?? options.approvedCap; let observedCredits = 0; const evidence: Array<Record<string, unknown>> = []; const skipped = [...plan.omitted]; const now = options.now ?? (() => new Date());
   try {
