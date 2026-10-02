@@ -6,14 +6,18 @@ import PhoneReveal from "@/components/PhoneReveal";
 const CANONICAL = "https://www.wao.co.il/google-ads";
 
 export const metadata: Metadata = {
-  title: "פרסום בגוגל (Google Ads) — ROI מדיד | מומחי Google Ads מאז 2007",
+  title: {
+    // title.absolute bypasses the root "%s‏ | WAO" template — this string
+    // already ends in the RLM-anchored "‏ | WAO" suffix (same pattern as site-bot/page.tsx).
+    absolute: "פרסום בגוגל בחשבון שלך — ניהול Google Ads מ-₪1,500 לחודש‏ | WAO",
+  },
   description:
-    "ניהול Google Ads מקצועי: Search, Performance Max, YouTube Ads. 200–400% ROI ממוצע. 60% הפחתה ב-CPA. WAO — מומחי Google Ads מאז 2007.",
+    "ניהול קמפיינים בגוגל בחשבון שבבעלותך, דרך MCC. דמי ניהול מ-₪1,500 לחודש; תקציב הפרסום שלך נפרד.",
   alternates: { canonical: CANONICAL },
   robots: { index: true, follow: true },
   openGraph: {
-    title: "פרסום בגוגל (Google Ads) — ROI מדיד | WAO",
-    description: "ניהול Google Ads מקצועי: 200–400% ROI ממוצע, 60% הפחתה ב-CPA. WAO מאז 2007.",
+    title: "פרסום בגוגל בחשבון שלך — ניהול Google Ads | WAO",
+    description: "ניהול Google Ads בחשבון שלך, בלי חוזה ארוך. דמי ניהול מ-₪1,500 לחודש, תקציב המדיה נפרד.",
     url: CANONICAL,
     type: "website",
   },
@@ -25,8 +29,8 @@ const schemas = [
     "@type": "WebPage",
     "@id": `${CANONICAL}#webpage`,
     url: CANONICAL,
-    name: "פרסום בגוגל (Google Ads) — WAO",
-    description: "שירות ניהול Google Ads מקצועי עם ROI מדיד",
+    name: "פרסום בגוגל בחשבון בבעלותך — WAO",
+    description: "ניהול Google Ads דרך MCC בחשבון ובפרופיל תשלומים בבעלות הלקוח",
     isPartOf: { "@type": "WebSite", "@id": "https://www.wao.co.il/#website" },
   },
   {
@@ -34,8 +38,8 @@ const schemas = [
     "@type": "Service",
     "@id": `${CANONICAL}#service`,
     serviceType: "Google Ads Management",
-    name: "ניהול פרסום בגוגל",
-    description: "ניהול קמפיינים בגוגל: Search, Performance Max, YouTube Ads. דמי ניהול מ-1,500 ₪/חודש.",
+    name: "ניהול קמפיינים בגוגל בחשבון של הלקוח",
+    description: "ניהול Google Ads בחשבון הלקוח דרך MCC, החל מ-₪1,500 לחודש; תקציב מדיה נפרד.",
     url: CANONICAL,
     provider: { "@type": "Organization", "@id": "https://www.wao.co.il/#org" },
     areaServed: { "@type": "Country", name: "Israel" },
@@ -47,18 +51,18 @@ const schemas = [
     mainEntity: [
       {
         "@type": "Question",
-        name: "כמה עולה ניהול Google Ads?",
+        name: "כמה עולה ניהול קמפיינים בגוגל, ומי משלם על המודעות?",
         acceptedAnswer: {
           "@type": "Answer",
-          text: "דמי ניהול WAO מתחילים מ-1,500 ₪ לחודש. תקציב מדיה מינימלי מומלץ: 3,000–5,000 ₪ לחודש.",
+          text: "דמי הניהול מתחילים ב-₪1,500 לחודש; תקציב המדיה נפרד ומשולם על ידך. חשבון Google Ads ופרופיל התשלומים בבעלותך, ו-WAO מנהלת דרך MCC.",
         },
       },
       {
         "@type": "Question",
-        name: "כמה זמן עד שרואים תוצאות Google Ads?",
+        name: "איך יודעים אם הפרסום בגוגל מביא פניות אמיתיות?",
         acceptedAnswer: {
           "@type": "Answer",
-          text: "תוצאות ראשונות ב-2–4 שבועות, ביצועים מלאים ב-60–90 יום.",
+          text: "אין תאריך קבוע לתוצאות או מספר פניות שאפשר להבטיח. מחברים GA4 ו-Google Tag Manager, ואז בודקים פניות מול ההוצאה.",
         },
       },
     ],
@@ -76,71 +80,71 @@ const schemas = [
 const STEPS = [
   {
     n: "01",
-    title: "Audit & Strategy — מבחן 50 נקודות",
-    desc: "אנחנו הופכים את החשבון שלכם כדי להבין איפה הכסף שלכם בורח ואיך מערכת מעקב ההמרות שלכם מתפקדת. רק אחרי שמגדירים יעדי רווחיות ברורים, מתחילים להזרים תקציב.",
+    title: "קודם בודקים לאן הכסף הולך",
+    desc: "כבר שילמת על קליקים ולא ידעת מי פנה? מתחילים בבדיקת החשבון וההמרות. מגדירים מה נחשב פנייה, ורק אז מחליטים איפה נכון לפרסם.",
     tags: ["Google Ads Audit", "CPA Target", "ROAS", "Competitor Analysis"],
   },
   {
     n: "02",
-    title: "Campaign Architecture — מבנה שמביא תוצאות",
-    desc: "בונים ארכיטקטורה חכמה: קמפיינים ממוקדים בגוגל למי שמחפש אתכם ברגע זה, נוכחות רחבה בכל נכסי הרשת למי שעדיין מתלבט, ווידאו ביוטיוב לבניית מותג, ומהלכי רימרקטינג מדויקים.",
+    title: "מפרסמים במקום שבו הלקוח מחפש",
+    desc: "מפרידים בין חיפוש ממוקד ב-Search לבין חשיפה רחבה יותר ב-Performance Max. כשזה מתאים לעסק, בוחנים גם YouTube Ads מול המטרה והתקציב שלך.",
     tags: ["Performance Max", "Search Campaigns", "YouTube Ads", "Demand Gen"],
   },
   {
     n: "03",
-    title: "AI Bidding & Audience Signals",
-    desc: "אנחנו מזינים לאלגוריתם של גוגל את ”אותות הקהל” המדויקים ביותר: מי הלקוחות שלכם ואיך הם מתנהגים ברשת. כשה-AI מקבל דאטה איכותית מהרגע הראשון, הוא פשוט מביא תוצאות מהר יותר.",
+    title: "מחליטים לפי נתוני העסק, לא לפי תחושת בטן",
+    desc: "המערכת צריכה לדעת איזו פנייה חשובה לך, ולא רק מי לחץ. בודקים את נתוני ההמרות לפני שמשנים הצעות מחיר או מרחיבים קמפיין.",
     tags: ["Smart Bidding", "Target ROAS", "Audience Signals", "First-Party Data"],
   },
   {
     n: "04",
-    title: "Creative Workshop — מודעות שממירות",
-    desc: "מנסחים מודעות עם קופי חד ומפיקים את כל חומרי הוויזואל והווידאו שהקמפיינים שלכם צריכים. משם, אנחנו מנהלים בדיקות השוואה בלתי פוסקות כדי לגלות מה באמת גורם לגולשים להקליק ולקנות.",
+    title: "מודעות שמדברות ללקוח הנכון",
+    desc: "המודעה שלך צריכה לענות על מה שהלקוח מחפש באותו רגע. בוחנים ניסוחים ונכסים לפי הפניות שהם מביאים, לא לפי קליקים בלבד.",
     tags: ["RSA", "PMax Assets", "Ad Copy", "A/B Testing"],
   },
   {
     n: "05",
-    title: "Conversion Tracking & Attribution",
-    desc: "הגדרת Conversion Tracking מדויק ב-Google Tag Manager + GA4: שיחות טלפון, טפסים, רכישות, ביקורים בחנות. Attribution Model נכון שנותן קרדיט לכל נקודת מגע במסע הלקוח.",
+    title: "מעקב המרות לפני עוד שקל על פרסום",
+    desc: "מחברים GA4 ו-Google Tag Manager כדי למדוד מה קורה אחרי הקליק. כך אפשר לבדוק אם הקמפיין מביא פניות מול הכסף שאתה מוציא.",
     tags: ["GA4", "Conversion Tracking", "GTM", "Attribution"],
   },
 ];
 
 const INCLUDED = [
-  { icon: "🔬", title: "Google Ads Audit מקיף", desc: "בדיקת 50+ נקודות: מבנה, ציוני איכות, Conversion Tracking וניתוח מתחרים." },
-  { icon: "🎯", title: "ניהול Search + Performance Max", desc: "קמפיינים ממוקדים בכוונת רכישה גבוהה עם AI Bidding ואופטימיזציה יומיומית." },
-  { icon: "▶️", title: "YouTube Ads & Demand Gen", desc: "פרסום בוידאו ו-Demand Gen לבניית מותג, רימרקטינג וחשיפה לקהל חדש." },
-  { icon: "📊", title: "Conversion Tracking מלא (GA4)", desc: "מעקב מדויק על כל המרה: טפסים, שיחות, רכישות. Attribution Model נכון." },
-  { icon: "✍️", title: "Creative & Copywriting", desc: "כתיבת מודעות RSA, יצירת Assets לפרסום תמונות וקריאות לפעולה שממירות." },
-  { icon: "📈", title: "דיווח חודשי + שיחת עדכון", desc: "Dashboard חי עם כל המדדים, דוח חודשי מפורט ושיחת אסטרטגיה עם המומחה." },
+  { icon: "🔬", title: "בדיקת חשבון Google Ads", desc: "בודקים את מבנה הקמפיינים ואת מדידת ההמרות לפני החלטות על התקציב. Fraud Blocker מסייע בהגנה מפני הונאת קליקים." },
+  { icon: "🎯", title: "ניהול Search ו-Performance Max", desc: "מתאימים את סוג הקמפיין לחיפוש, למטרה ולתקציב שלך; לא מפעילים הכול אוטומטית." },
+  { icon: "▶️", title: "YouTube Ads כשזה מתאים לעסק", desc: "בוחנים גם פרסום בווידאו כשהקהל והמטרה שלך מצדיקים את תקציב המדיה." },
+  { icon: "📊", title: "מדידת המרות עם GA4 ו-GTM", desc: "מחברים GA4 ו-Google Tag Manager כדי לראות פניות והמרות לצד ההוצאה." },
+  { icon: "✍️", title: "ניסוח מודעות ובדיקת מסרים", desc: "בוחנים איזה ניסוח מדבר ללקוחות שלך ומביא פניות, לא רק חשיפות." },
+  { icon: "📈", title: "החלטות לפי נתונים מהחשבון שלך", desc: "חשבון Google Ads נשאר שלך; אתה יכול לראות בעצמך את ההוצאה והביצועים." },
 ];
 
 const STATS = [
-  { n: "200–400%", l: "ROI ממוצע ללקוחות WAO", sub: "נתונים פנימיים WAO 2025" },
-  { n: "60%", l: "הפחתה ב-CPA אחרי 90 יום", sub: "נתונים פנימיים WAO 2025" },
-  { n: "8:1", l: "ROAS ממוצע בקמפיינים מנוהלים", sub: "Google Ads Benchmarks 2025" },
+  { n: "200–400%", l: "ROI מדווח ללקוחות WAO", sub: "נתונים פנימיים WAO 2025" },
+  { n: "60%", l: "ירידה מדווחת ב-CPA", sub: "נתונים פנימיים WAO 2025" },
+  { n: "8:1", l: "ROAS לפי בנצ'מרק ענפי, לא נתון מהחשבון שלך", sub: "Google Ads Benchmarks 2025" },
 ];
 
 const FAQS = [
   {
-    q: "כמה עולה ניהול Google Ads?",
-    a: "דמי ניהול WAO מתחילים מ-1,500 ₪ לחודש (לא כולל תקציב המדיה). תקציב מדיה מינימלי מומלץ: 3,000–5,000 ₪ לחודש לקמפיין Search בסיסי, 8,000+ ₪ לקמפיין Performance Max מלא. מחיר סופי לפי היקף ותחרותיות.",
+    q: "כמה עולה ניהול קמפיינים בגוגל, ומי משלם על המודעות?",
+    a: "דמי הניהול מתחילים ב-₪1,500 לחודש; תקציב המדיה נפרד ומשולם על ידך. חשבון Google Ads ופרופיל התשלומים בבעלותך, ו-WAO מנהלת דרך MCC.",
   },
   {
-    q: "מה ההבדל בין Google Ads ל-SEO?",
-    a: "גוגל אדס מביא לקוחות כאן ועכשיו, אבל ברגע שסוגרים את הברז התקציבי – התנועה נעצרת. SEO, לעומת זאת, הוא בניית נכס נדל״ני שמביא גולשים בחינם בטווח הארוך. השילוב המושלם? להביא מכירות כבר היום מהממומן, בזמן שהאורגני בונה את המחר.",
+    q: "מה ההבדל בין פרסום בגוגל לבין קידום אורגני?",
+    a: "בקידום ממומן אתה משלם על תנועה מהמודעות, והיא תלויה בתקציב. קידום אורגני אינו מחייב תשלום לקליק, אבל דורש עבודה וזמן. בוחרים ערוץ לפי העסק שלך, לא לפי הבטחה לתוצאות מיידיות.",
   },
   {
-    q: "מה זה Performance Max ולמה זה חשוב?",
-    a: "Performance Max (PMax) הוא פורמט הקמפיין החדש של גוגל שמפיץ מודעות על כל נכסי גוגל — Search, YouTube, Display, Gmail, Maps — באמצעות AI. כשמגדירים אותו נכון עם Audience Signals ו-Assets איכותיים, הוא מניב את ה-ROI הגבוה ביותר.",
+    q: "מה זה Performance Max, והאם הוא מתאים לעסק שלך?",
+    a: "Performance Max הוא סוג קמפיין שמציג מודעות בכמה ערוצים של Google. הוא לא מתאים אוטומטית לכל עסק; בודקים נתוני המרות, מטרה ותקציב לפני שבוחרים בו.",
   },
   {
-    q: "כמה זמן עד שרואים תוצאות?",
-    a: "השבועות הראשונים מוקדשים ללמידה של האלגוריתם, שבה הביצועים מתייצבים. תוצאות ראשונות רואים תוך שבועיים עד חודש, והמערכת מגיעה לשיא הכוח שלה תוך 60 עד 90 יום. הסוד הוא לתת למנוע לרוץ בלי לגעת – כל שינוי קטן פשוט מאפס את הלמידה שלו.",
+    q: "איך יודעים אם הפרסום בגוגל מביא פניות אמיתיות?",
+    a: "אין תאריך קבוע לתוצאות או מספר פניות שאפשר להבטיח. מחברים GA4 ו-Google Tag Manager, ואז בודקים פניות מול ההוצאה.",
   },
   {
-    q: "האם WAO עובדת ללא חוזה ארוך טווח?",
-    a: "כן. עובדים בהסכמי חודש-חודש. הלקוחות שלנו נשארים כי הם רואים ROI, לא כי הם חייבים. ניהול Google Ads מצריך זמן לאופטימיזציה — מומלץ מינימום 3 חודשים לתוצאות מלאות, אבל בלי התחייבות.",
+    q: "האם אתה חייב להתחייב לניהול ארוך טווח?",
+    a: "לא. אין חוזה ארוך טווח. חשבון Google Ads ופרופיל התשלומים נשארים בבעלותך; WAO פועלת דרך MCC. תקציב הפרסום משולם בנפרד מדמי הניהול.",
   },
 ];
 
@@ -184,7 +188,7 @@ export default function GoogleAdsPage() {
         <div className="wao-container" style={{ position: "relative", zIndex: 1, maxWidth: "860px" }}>
           <div className="badge" style={{ marginBottom: "28px" }}>
             <span className="badge-dot" />
-            מומחי Google Ads מאז 2007
+            החשבון שלך. התקציב שלך. אנחנו מנהלים דרך MCC.
           </div>
           <h1
             style={{
@@ -196,23 +200,23 @@ export default function GoogleAdsPage() {
               marginBottom: "24px",
             }}
           >
-            פרסום בגוגל שמחזיר{" "}
-            <span className="text-gradient">ROI מדיד</span>
-            {" "}— לא רק קליקים
+            פרסום בגוגל, בחשבון{" "}
+            <span className="text-gradient">שנשאר שלך</span>
+            {" "}— בלי להינעל על סוכנות
           </h1>
           <p style={{ ...bodyStyle, fontSize: "clamp(1rem,1.8vw,1.2rem)", marginBottom: "40px", maxWidth: "620px" }}>
-            קמפיינים חכמים ב-Google Ads שממנפים את הדאטה שלכם בעזרת AI. אנחנו מנהלים את התקציב שלכם כאילו יצא מהכיס שלנו – בשקיפות מוחלטת ובמדידה של כל שקל. באותה טכנולוגיית AI אנחנו מריצים גם את ה-Ads Bot העצמאי שלנו — לעסקים שרוצים להתחיל לבד.
+            כבר שילמת על קליקים בלי לדעת כמה פניות קיבלת? החשבון ופרופיל התשלומים נשארים שלך; WAO מנהלת את הקמפיינים דרך MCC. מתחילים ממדידת המרות עם GA4 ו-Google Tag Manager. מעדיף להתחיל בעצמך? בדוק את אפשרות ה-Ads Bot.
           </p>
           <div style={{ display: "flex", gap: "14px", flexWrap: "wrap" }}>
             <a href="tel:0526148860" className="btn-primary" style={{ fontSize: "1.05rem", padding: "15px 36px" }}>
-              קבל ייעוץ Google Ads חינם
+              דבר איתנו 30 דקות, בחינם
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
             </a>
             <Link href="/google-ads/onboarding?demo=1&mode=test&clientId=google-ads-sandbox" className="btn-outline" style={{ fontSize: "1rem" }}>
-              נסה הדגמת Sandbox ←
+              ראה הדגמת Sandbox בלי תקציב חי ←
             </Link>
             <Link href="/google-ads/onboarding" className="btn-outline" style={{ fontSize: "1rem" }}>
-              דקות לקמפיין הראשון שלך ←
+              בדוק את מסלול ה-Ads Bot ←
             </Link>
           </div>
         </div>
@@ -221,7 +225,7 @@ export default function GoogleAdsPage() {
       {/* ── Stats ── */}
       <section style={{ background: "var(--surface)", paddingBlock: "clamp(48px,6vw,72px)" }}>
         <div className="wao-container">
-          <div className="eyebrow" style={{ justifyContent: "center", marginBottom: "40px" }}>בגוגל Ads ב-2026 — המספרים שחשוב לדעת</div>
+          <div className="eyebrow" style={{ justifyContent: "center", marginBottom: "40px" }}>נתוני עבר מדווחים — לא הבטחה לקמפיין שלך</div>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "24px" }}>
             {STATS.map((s) => (
               <div key={s.n} style={{ ...glass, padding: "32px 28px", textAlign: "center" }}>
@@ -238,10 +242,10 @@ export default function GoogleAdsPage() {
       <section className="wao-section">
         <div className="wao-container">
           <div style={{ marginBottom: "60px" }}>
-            <div className="eyebrow">שיטת WAO ל-Google Ads</div>
+            <div className="eyebrow">כך ניגשים לחשבון שלך</div>
             <h2 style={{ ...h2Style, fontSize: "clamp(1.6rem,3vw,2.4rem)" }}>
-              5 שכבות ניהול שמביאות{" "}
-              <span className="text-gradient">תוצאות</span>
+              חמישה צעדים בדרך להחלטות{" "}
+              <span className="text-gradient">מבוססות נתונים</span>
             </h2>
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
@@ -275,10 +279,10 @@ export default function GoogleAdsPage() {
       <section className="wao-section" style={{ background: "var(--surface)" }}>
         <div className="wao-container">
           <div style={{ marginBottom: "56px" }}>
-            <div className="eyebrow">מה כולל הניהול</div>
+            <div className="eyebrow">מה עושים בפועל</div>
             <h2 style={{ ...h2Style, fontSize: "clamp(1.6rem,3vw,2.4rem)" }}>
-              שירות Google Ads מלא —{" "}
-              <span className="text-gradient">ללא הפתעות</span>
+              ניהול קמפיינים בגוגל —{" "}
+              <span className="text-gradient">בחשבון שלך</span>
             </h2>
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "1px", background: "var(--border)", borderRadius: "var(--radius-md)", overflow: "hidden", border: "1px solid var(--border)" }}>
@@ -298,7 +302,7 @@ export default function GoogleAdsPage() {
         <div className="wao-container" style={{ maxWidth: "800px" }}>
           <div className="eyebrow">שאלות נפוצות</div>
           <h2 style={{ ...h2Style, fontSize: "clamp(1.6rem,3vw,2.4rem)", marginBottom: "48px" }}>
-            כל מה שרציתם לדעת על{" "}
+            כל מה שאתה צריך לדעת על{" "}
             <span className="text-gradient">Google Ads</span>
           </h2>
           <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
@@ -321,13 +325,13 @@ export default function GoogleAdsPage() {
           <div className="cta-banner" style={{ padding: "clamp(48px,8vw,80px) clamp(24px,6vw,64px)", textAlign: "center", position: "relative", overflow: "hidden" }}>
             <div aria-hidden style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%,-50%)", width: "60%", height: "100%", background: "radial-gradient(ellipse at center, rgba(74,227,181,0.06) 0%, transparent 70%)", pointerEvents: "none" }} />
             <div style={{ position: "relative", zIndex: 1 }}>
-              <div className="eyebrow" style={{ justifyContent: "center" }}>מוכנים להפסיק לבזבז על קמפיינים שלא עובדים?</div>
+              <div className="eyebrow" style={{ justifyContent: "center" }}>משלם על קליקים, ולא יודע כמה פניות הגיעו?</div>
               <h2 style={{ fontFamily: "var(--font-rubik), sans-serif", fontWeight: 900, fontSize: "clamp(1.6rem,3.5vw,2.6rem)", lineHeight: 1.15, marginBottom: "16px" }}>
-                ייעוץ Google Ads חינם —{" "}
-                <span className="text-gradient">נגיד לכם בדיוק מה צריך לשנות</span>
+                שיחת ייעוץ של 30 דקות —{" "}
+                <span className="text-gradient">נבדוק יחד לאן התקציב הולך</span>
               </h2>
               <p style={{ color: "var(--muted)", fontFamily: "var(--font-body), sans-serif", marginBottom: "32px", maxWidth: "480px", margin: "0 auto 32px", lineHeight: 1.75 }}>
-                שיחה של 30 דקות עם מומחה Google Ads. נבדוק את הקמפיינים הקיימים ונזהה את בזבוז התקציב.
+                בשיחה חינמית של 30 דקות נבחן את החשבון ואת מדידת ההמרות. תראה מה כדאי לבדוק לפני שאתה מוסיף עוד כסף לפרסום.
               </p>
               <div style={{ display: "flex", gap: "16px", justifyContent: "center", flexWrap: "wrap" }}>
                 <PhoneReveal
@@ -337,11 +341,11 @@ export default function GoogleAdsPage() {
                   icon="📞 "
                 />
                 <Link href="/google-ads/onboarding" className="btn-outline" style={{ fontSize: "1rem" }}>
-                  התחל עם ה-Ads Bot לבד ←
+                  מעדיף להתחיל לבד? בדוק את Ads Bot ←
                 </Link>
               </div>
               <p style={{ marginTop: "20px", fontSize: "0.8rem", color: "var(--muted)", fontFamily: "var(--font-body), sans-serif" }}>
-                ✓ ייעוץ ראשון חינם · ✓ ללא חוזה · ✓ מענה תוך 24 שעות
+                ✓ שיחת ייעוץ חינם, 30 דקות · ✓ בלי חוזה ארוך · ✓ החשבון שלך
               </p>
             </div>
           </div>
