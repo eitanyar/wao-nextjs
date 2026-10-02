@@ -1399,6 +1399,8 @@ p { margin: 0; }
 }
 
 .wao-a11y-control { position: fixed; left: 16px; z-index: 9000; display: grid; justify-items: start; gap: 8px; max-width: calc(100vw - 32px); }
+/* An open toolbar occupies its own top band instead of covering the page at any scroll position. */
+body:has(.wao-a11y-panel) .wao-a11y-control { position: static; order: -1; align-self: flex-end; margin: 16px; }
 .wao-a11y-trigger { display: grid; place-items: center; width: 48px; height: 48px; border: 2px solid #fff; border-radius: 10px; background: #0755bd; color: #fff; box-shadow: 0 3px 12px #0006; cursor: pointer; }
 .wao-a11y-trigger svg { width: 29px; height: 29px; }
 @media (max-width: 600px) {
@@ -1406,8 +1408,14 @@ p { margin: 0; }
   .wao-a11y-trigger { width: 40px; height: 40px; box-shadow: none; }
   .wao-a11y-trigger svg { width: 26px; height: 26px; }
 }
+@media (max-width: 360px) {
+  /* Keep the collapsed control clear of full-width hero actions at narrow widths. */
+  .wao-a11y-control:not(:has(.wao-a11y-panel)) { top: 72px; }
+  /* Only the inline consulting action needs to wrap; full-width hero actions keep their geometry. */
+  a.btn-primary[href="/consulting"]:not(.w-full) { max-width: 100%; white-space: normal; text-align: center; }
+}
 .wao-a11y-panel { display: grid; gap: 8px; width: min(300px, calc(100vw - 32px)); max-height: min(420px, calc(100dvh - 160px)); overflow-y: auto; padding: 14px; border: 1px solid #667587; border-radius: 12px; background: #fff; color: #122438; box-shadow: 0 8px 30px #0005; }
-body:has(.wao-cookie-banner) .wao-a11y-panel { position: fixed; top: 16px; left: 16px; max-height: min(200px, calc(100dvh - 160px)); }
+body:has(.wao-cookie-banner) .wao-a11y-panel { max-height: min(200px, calc(100dvh - 160px)); }
 .wao-a11y-panel button { border: 1px solid #58708b; border-radius: 7px; padding: 9px; background: #fff; color: #122438; text-align: start; cursor: pointer; }
 .wao-a11y-panel button[aria-pressed="true"] { background: #0755bd; color: #fff; }
 .wao-a11y-panel .wao-a11y-close { justify-self: end; }
