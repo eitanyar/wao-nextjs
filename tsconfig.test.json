@@ -270,6 +270,7 @@
     "src/lib/expired-domain-research/domainStatus.test.ts",
     "src/lib/expired-domain-research/openSeoMcp.ts",
     "src/lib/expired-domain-research/openSeoMcp.test.ts",
+    "src/lib/seo-advisor-panel.test.ts",
     "src/lib/expired-domain-research/mozMetrics.ts",
     "src/lib/expired-domain-research/mozMetrics.test.ts",
     "src/lib/expired-domain-research/runResearch.ts",
