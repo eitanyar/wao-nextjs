@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { randomInt } from 'node:crypto';
-import { execSync } from 'child_process';
-import { mkdirSync, writeFileSync, rmSync, readFileSync } from 'fs';
+import { execFileSync } from 'child_process';
+import { mkdirSync, mkdtempSync, writeFileSync, rmSync, readFileSync } from 'fs';
 import { tmpdir } from 'os';
 import path from 'path';
 import { cookies } from 'next/headers';
@@ -20,11 +20,13 @@ import { renderCoreThirtyPages, buildCoreThirtySitemapUrls } from '@/lib/lp/rend
 import { ensureSiteBotClientRecord, clientRecordExists } from '@/lib/geo/client';
 import { provisionClientAuth } from '@/lib/client-auth-store';
 import { createSessionToken, COOKIE_NAME } from '@/lib/client-auth';
+import { ADMIN_COOKIE_NAME, verifyAdminToken } from '@/lib/admin-auth';
 import { assertDeployReady } from '@/lib/site-bot/research/pipelineState';
 import { readResearchDossier } from '@/lib/site-bot/research/researchStore';
 import { createFraudBlockerClient } from '@/lib/fraud-blocker/client';
 import { fraudBlockerFailureState, provisionFraudBlockerDomain, recordFraudBlockerTrackerInstallation } from '@/lib/fraud-blocker/deployment';
 import { readFraudBlockerState, writeFraudBlockerState } from '@/lib/fraud-blocker/store';
+import { isSafeDeploymentSlug } from '@/lib/deployment/deploy-access';
 
 interface DeployRequest {
   slug: string;
@@ -69,10 +71,16 @@ async function cfPost(path: string, body: unknown) {
 
 export async function POST(req: Request) {
   try {
+    const authCookies = await cookies();
+    const adminAuthorized = await verifyAdminToken(authCookies.get(ADMIN_COOKIE_NAME)?.value ?? '');
+    if (!adminAuthorized) {
+      return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
+    }
+
     const body: DeployRequest = await req.json();
     const { slug, googleAdsCustomerId, gtagSnippet, formConversionLabel, phoneConversionLabel, whatsappConversionLabel } = body;
 
-    if (!slug) return NextResponse.json({ error: 'slug is required' }, { status: 400 });
+    if (!isSafeDeploymentSlug(slug)) return NextResponse.json({ error: 'invalid_deployment_slug' }, { status: 400 });
 
     const accountId = process.env.CLOUDFLARE_ACCOUNT_ID!;
 
@@ -103,7 +111,6 @@ export async function POST(req: Request) {
     const assets = VERTICAL_ASSETS[verticalKey];
     const heroImageUrl = collectedData.trustAssetUrls?.[0] || collectedData.profilePhotoUrl || assets.heroImages[0].url;
     const siteUrl = `https://${slug}.wao.co.il`;
-    const fraudBlockerRequired = Boolean(googleAdsCustomerId) || process.env.FRAUD_BLOCKER_REQUIRED_FOR_ORGANIC === 'true';
     let fraudBlockerSid: string | undefined;
     try {
       fraudBlockerSid = await provisionFraudBlockerDomain({ clientId: slug, domain: `${slug}.wao.co.il`, client: createFraudBlockerClient() });
@@ -215,11 +222,14 @@ export async function POST(req: Request) {
     }
 
     // ── Step 3: Write to a tmp dir ──────────────────────────────────────────
-    const tmpDir = path.join(tmpdir(), `wao-site-${Date.now()}`);
-    mkdirSync(tmpDir, { recursive: true });
+    const tmpDir = mkdtempSync(path.join(tmpdir(), 'wao-site-'));
+    try {
     for (const [filename, content] of Object.entries(allPages)) {
       const filePath = path.join(tmpDir, filename);
-      mkdirSync(path.dirname(filePath), { recursive: true });
+      const parentPath = path.dirname(filePath);
+      if (parentPath !== tmpDir) {
+        mkdirSync(parentPath, { recursive: true });
+      }
       writeFileSync(filePath, content, 'utf-8');
     }
 
@@ -233,22 +243,12 @@ export async function POST(req: Request) {
     const hasCfToken = !!process.env.CLOUDFLARE_API_TOKEN;
     if (hasCfToken) {
       try {
-        execSync(
-          `./node_modules/.bin/wrangler pages project create "${slug}" --production-branch main`,
-          { env, stdio: 'pipe', timeout: 30_000 }
-        );
+        execFileSync('./node_modules/.bin/wrangler', ['pages', 'project', 'create', slug, '--production-branch', 'main'], { env, stdio: 'pipe', timeout: 30_000 });
       } catch {
         // project already exists — fine
       }
 
-      try {
-        execSync(
-          `./node_modules/.bin/wrangler pages deploy "${tmpDir}" --project-name "${slug}" --branch main --commit-dirty=true`,
-          { env, stdio: 'pipe', timeout: 60_000 }
-        );
-      } finally {
-        rmSync(tmpDir, { recursive: true, force: true });
-      }
+      execFileSync('./node_modules/.bin/wrangler', ['pages', 'deploy', tmpDir, '--project-name', slug, '--branch', 'main', '--commit-dirty=true'], { env, stdio: 'pipe', timeout: 60_000 });
 
       // Add custom domain + DNS record
       const subdomain = `${slug}.wao.co.il`;
@@ -280,8 +280,6 @@ export async function POST(req: Request) {
           console.warn('DNS record creation (non-fatal):', dnsData);
         }
       }
-    } else {
-      rmSync(tmpDir, { recursive: true, force: true });
     }
 
     // ── Step 4: Bridge to the client-dashboard record ──────────────────────
@@ -323,6 +321,9 @@ export async function POST(req: Request) {
     }
 
     return NextResponse.json({ success: true, url: siteUrl, projectName: slug });
+    } finally {
+      rmSync(tmpDir, { recursive: true, force: true });
+    }
 
   } catch (error: unknown) {
     console.error('Site Bot deploy error:', error);

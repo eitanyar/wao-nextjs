@@ -22,19 +22,19 @@ async function post(path: string, body: Record<string, string>): Promise<{ statu
 }
 
 export function RecoveryForm({ copy }: { copy: RecoveryCopy }) {
-  const [whatsappMobile, setWhatsappMobile] = useState('');
+  const [email, setEmail] = useState('');
   const [requested, setRequested] = useState(false);
   const [pending, setPending] = useState(false);
   const [message, setMessage] = useState('');
   async function request(event: FormEvent<HTMLFormElement>) {
     event.preventDefault(); setPending(true); setMessage('');
-    try { await post('/api/client/recover/request', { whatsappMobile }); setRequested(true); } catch { setMessage(copy.genericFailure); } finally { setPending(false); }
+    try { await post('/api/client/recover/request', { email }); setRequested(true); } catch { setMessage(copy.genericFailure); } finally { setPending(false); }
   }
   async function complete(event: FormEvent<HTMLFormElement>) {
     event.preventDefault(); setPending(true); setMessage('');
     const values = new FormData(event.currentTarget);
     try {
-      const result = await post('/api/client/recover/complete', { whatsappMobile, code: String(values.get('code') ?? ''), newPin: String(values.get('newPin') ?? ''), confirmPin: String(values.get('confirmPin') ?? '') });
+      const result = await post('/api/client/recover/complete', { email, code: String(values.get('code') ?? ''), newPin: String(values.get('newPin') ?? ''), confirmPin: String(values.get('confirmPin') ?? '') });
       if (result.status === 'complete') window.location.assign('/client/login');
       else if (result.status === 'mismatch') setMessage(copy.mismatch);
       else if (result.status === 'policy-failure') setMessage(copy.policyFailure);
@@ -49,7 +49,7 @@ export function RecoveryForm({ copy }: { copy: RecoveryCopy }) {
       <p className="text-xs text-[var(--muted)]">{copy.policyHint}</p><p aria-live="polite" className="min-h-5 text-sm text-red-300">{message}</p>
       <button type="submit" disabled={pending} className="min-h-11 w-full rounded-lg bg-[var(--accent)] px-4 py-3 text-sm font-semibold text-white disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]">{copy.submit}</button>
     </form>
-  ) : <form key="recovery-mobile-entry" onSubmit={request} className="space-y-4"><div><label htmlFor="whatsappMobile" className="block text-sm font-medium mb-1.5">WhatsApp</label><input id="whatsappMobile" value={whatsappMobile} onChange={event => setWhatsappMobile(event.target.value)} type="tel" inputMode="tel" autoComplete="tel" placeholder="050-123-4567" required className="w-full rounded-lg bg-white/8 border border-white/15 px-4 py-3 text-sm outline-none focus-visible:border-[var(--accent)] focus-visible:ring-2 focus-visible:ring-[var(--accent)]/50" /></div><p aria-live="polite" className="min-h-5 text-sm text-red-300">{message}</p><button type="submit" disabled={pending} className="min-h-11 w-full rounded-lg bg-[var(--accent)] px-4 py-3 text-sm font-semibold text-white disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]">{copy.title}</button></form>;
+  ) : <form key="recovery-email-entry" onSubmit={request} className="space-y-4"><div><label htmlFor="email" className="block text-sm font-medium mb-1.5">Email</label><input id="email" value={email} onChange={event => setEmail(event.target.value)} type="email" inputMode="email" autoComplete="email" required className="w-full rounded-lg bg-white/8 border border-white/15 px-4 py-3 text-sm outline-none focus-visible:border-[var(--accent)] focus-visible:ring-2 focus-visible:ring-[var(--accent)]/50" /></div><p aria-live="polite" className="min-h-5 text-sm text-red-300">{message}</p><button type="submit" disabled={pending} className="min-h-11 w-full rounded-lg bg-[var(--accent)] px-4 py-3 text-sm font-semibold text-white disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]">{copy.title}</button></form>;
 }
 
 export function RecoveryBackLink({ copy }: { copy: Pick<RecoveryCopy, 'backToLogin'> }) { return <Link href="/client/login" className="mt-4 flex min-h-11 items-center justify-center text-sm underline underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]">{copy.backToLogin}</Link>; }

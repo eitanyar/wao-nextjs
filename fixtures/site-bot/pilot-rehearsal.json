@@ -1,0 +1,157 @@
+{
+  "schemaVersion": 1,
+  "synthetic": true,
+  "scenarioId": "fictional-rooftop-maintenance-v1",
+  "intakeDraft": {
+    "sections": {
+      "businessFacts": {
+        "answer": "Fictional Rooftop Workshop is a synthetic local-only rehearsal identity for rooftop maintenance.",
+        "approved": false
+      },
+      "mediaRights": {
+        "answer": "Only the repository-local synthetic SVG placeholder may be used.",
+        "approved": false
+      },
+      "leadRecipient": {
+        "answer": "No lead recipient exists and every contact action must remain inert.",
+        "approved": false
+      },
+      "privacyRetention": {
+        "answer": "No personal data or submissions are collected or retained in this rehearsal.",
+        "approved": false
+      },
+      "seoDomain": {
+        "answer": "The reserved fictional-rooftop-workshop.invalid origin is local preview metadata only.",
+        "approved": false
+      },
+      "ownershipLane": {
+        "answer": "This scenario is synthetic, local-only, non-deployable, and has no real owner or approval.",
+        "approved": false
+      }
+    },
+    "finalApproval": {
+      "approved": false,
+      "note": "Synthetic local rehearsal only; completion is not real-world approval."
+    }
+  },
+  "previewInput": {
+    "synthetic": true,
+    "slug": "fictional-rooftop-workshop",
+    "canonicalOrigin": "https://fictional-rooftop-workshop.invalid",
+    "themeKey": "emergency-trades",
+    "heroAssetPath": "fixtures/site-bot/local-preview-hero.svg",
+    "showHeroAsset": true,
+    "collectedData": {
+      "businessName": "Fictional Rooftop Workshop",
+      "businessNiche": "synthetic rooftop maintenance",
+      "primaryService": "Synthetic Rooftop Maintenance",
+      "vatStatus": "between_120k_1m"
+    },
+    "pages": [
+      {
+        "opportunityId": "home",
+        "classification": "homepage",
+        "targetPath": "/",
+        "copy": {
+          "heroHeadline": "Fictional Rooftop Workshop",
+          "heroSubheadline": "Synthetic local-only rooftop maintenance rehearsal. Not approved for real-world use.",
+          "heroCta": "Disabled rehearsal action",
+          "trustBarItems": ["Synthetic scenario", "Local preview", "Non-deployable"],
+          "aboutBlurb": "A fictional workshop used only to rehearse the Site-Bot intake and preview flow.",
+          "servicesHeadline": "Synthetic rooftop services",
+          "serviceItems": ["Synthetic Rooftop Maintenance"],
+          "faqHeadline": "Rehearsal questions",
+          "faqItems": [],
+          "guaranteeBlock": "No service, certification, price, or approval is represented.",
+          "reviewFeatured": null,
+          "reviewContext": null,
+          "responseTimeBadge": null,
+          "scarcityLine": null,
+          "formHeadline": "Submissions disabled",
+          "stickyBarLine": "Synthetic local rehearsal only",
+          "aboutPageHeadline": "About this synthetic rehearsal",
+          "aboutPageBody": "This fictional identity and all site content are local-only, non-deployable rehearsal data.",
+          "serviceDetails": [
+            {
+              "name": "Synthetic Rooftop Maintenance",
+              "description": "A fictional maintenance service with no real provider, customer, price, or certification."
+            }
+          ]
+        }
+      },
+      {
+        "opportunityId": "services",
+        "classification": "service_hub",
+        "targetPath": "/services",
+        "copy": {
+          "heroHeadline": "Synthetic Rooftop Services",
+          "heroSubheadline": "A local-only service hub for the fictional rehearsal scenario.",
+          "heroCta": "Disabled rehearsal action",
+          "trustBarItems": ["Synthetic scenario", "Local preview", "Non-deployable"],
+          "aboutBlurb": "The service hub exists only to prove local navigation and safe rendering.",
+          "servicesHeadline": "Synthetic rooftop services",
+          "serviceItems": ["Synthetic Rooftop Maintenance"],
+          "faqHeadline": "Rehearsal questions",
+          "faqItems": [],
+          "guaranteeBlock": "Real-world facts, rights, recipients, privacy, content, and owner approval remain closed gates.",
+          "reviewFeatured": null,
+          "reviewContext": null,
+          "responseTimeBadge": null,
+          "scarcityLine": null,
+          "formHeadline": "Submissions disabled",
+          "stickyBarLine": "Synthetic local rehearsal only",
+          "aboutPageHeadline": "About this synthetic rehearsal",
+          "aboutPageBody": "This fictional identity and all site content are local-only, non-deployable rehearsal data.",
+          "serviceDetails": [
+            {
+              "name": "Synthetic Rooftop Maintenance",
+              "description": "A fictional maintenance service with no real provider, customer, price, or certification."
+            }
+          ]
+        }
+      },
+      {
+        "opportunityId": "rooftop-maintenance",
+        "classification": "money_service",
+        "targetPath": "/services/rooftop-maintenance",
+        "copy": {
+          "heroHeadline": "Synthetic Rooftop Maintenance",
+          "heroSubheadline": "A fictional service page for local rehearsal evidence only.",
+          "heroCta": "Disabled rehearsal action",
+          "trustBarItems": ["Synthetic scenario", "Local preview", "Non-deployable"],
+          "aboutBlurb": "No real maintenance provider, service area, offer, or customer is represented.",
+          "servicesHeadline": "Synthetic rooftop services",
+          "serviceItems": ["Synthetic Rooftop Maintenance"],
+          "faqHeadline": "Rehearsal questions",
+          "faqItems": [],
+          "guaranteeBlock": "Rehearsal completion is not real-world approval.",
+          "reviewFeatured": null,
+          "reviewContext": null,
+          "responseTimeBadge": null,
+          "scarcityLine": null,
+          "formHeadline": "Submissions disabled",
+          "stickyBarLine": "Synthetic local rehearsal only",
+          "aboutPageHeadline": "About this synthetic rehearsal",
+          "aboutPageBody": "This fictional identity and all site content are local-only, non-deployable rehearsal data.",
+          "serviceDetails": [
+            {
+              "name": "Synthetic Rooftop Maintenance",
+              "description": "A fictional maintenance service with no real provider, customer, price, or certification."
+            }
+          ]
+        }
+      }
+    ],
+    "graphEdges": [
+      {
+        "fromId": "home",
+        "toId": "services"
+      },
+      {
+        "fromId": "services",
+        "toId": "rooftop-maintenance"
+      }
+    ]
+  },
+  "stopGate": "REHEARSAL COMPLETE - NOT REAL-WORLD APPROVAL - ALL EXTERNAL AND PUBLICATION GATES REMAIN CLOSED"
+}

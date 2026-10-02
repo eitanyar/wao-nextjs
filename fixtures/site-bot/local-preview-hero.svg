@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-label="Synthetic local preview">
+  <rect width="1200" height="630" fill="#1b3a5c"/>
+  <path d="M0 500 L300 320 L540 470 L800 210 L1200 440 V630 H0 Z" fill="#ff6b35" opacity="0.7"/>
+  <text x="600" y="315" fill="#ffffff" font-family="sans-serif" font-size="46" font-weight="700" text-anchor="middle">SYNTHETIC LOCAL PREVIEW</text>
+</svg>

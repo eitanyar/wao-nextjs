@@ -67,7 +67,7 @@ export default function SessionOfDayCard({ initialSession }: Props) {
                 type="button"
                 onClick={() => setLevel(l.value)}
                 className={`rounded-md px-2 py-1 text-xs ${
-                  level === l.value ? 'bg-[var(--accent,#6ee7b7)] text-black' : 'border border-white/10 text-[var(--muted)]'
+                  level === l.value ? 'bg-[var(--accent)] text-black' : 'border border-white/10 text-[var(--muted)]'
                 }`}
               >
                 {l.labelHe}
@@ -86,7 +86,7 @@ export default function SessionOfDayCard({ initialSession }: Props) {
               }}
               disabled={busy}
               className={`rounded-md px-2 py-1 text-xs ${
-                scenario === s.key ? 'bg-[var(--accent,#6ee7b7)] text-black' : 'border border-white/10 text-[var(--muted)]'
+                scenario === s.key ? 'bg-[var(--accent)] text-black' : 'border border-white/10 text-[var(--muted)]'
               } disabled:opacity-50`}
             >
               {s.labelHe}
@@ -108,7 +108,7 @@ export default function SessionOfDayCard({ initialSession }: Props) {
           <div className="flex items-center gap-3">
             <a
               href={`/trainer/session?generatedId=${encodeURIComponent(session.generatedId)}`}
-              className="rounded-lg bg-[var(--accent,#6ee7b7)] px-4 py-2 text-sm font-medium text-black"
+              className="rounded-lg bg-[var(--accent)] px-4 py-2 text-sm font-medium text-black"
             >
               להתחיל שיחה
             </a>
@@ -128,7 +128,7 @@ export default function SessionOfDayCard({ initialSession }: Props) {
             type="button"
             onClick={() => generate(false)}
             disabled={busy}
-            className="rounded-lg bg-[var(--accent,#6ee7b7)] px-4 py-2 text-sm font-medium text-black disabled:opacity-50"
+            className="rounded-lg bg-[var(--accent)] px-4 py-2 text-sm font-medium text-black disabled:opacity-50"
           >
             {busy ? 'יוצר שיחה…' : 'צור שיחה של היום'}
           </button>

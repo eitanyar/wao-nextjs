@@ -16,6 +16,8 @@
 # next.js
 /.next/
 /out/
+/artifacts/
+/.next-podcast-fixture-*/
 
 # production
 /build
@@ -116,6 +118,7 @@ handoff/archive/*.md
 data/geo-leads/
 data/audit-logs/
 data/expired-domain-research/
+data/rank-rent/
 data/audits/*
 !data/audits/.gitkeep
 

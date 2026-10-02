@@ -74,30 +74,97 @@ test('every generic denial performs one KDF-class verification, including malfor
   assert.equal(calls, 4);
 });
 
-test('development fixture root is selected only for a safe opt-in temporary directory', (t) => {
-  const previousEnable = process.env.WAO_CLIENT_AUTH_DEV_FIXTURE_ENABLE;
-  const previousRoot = process.env.WAO_CLIENT_AUTH_DEV_FIXTURE_ROOT;
-  const previousNodeEnv = process.env.NODE_ENV;
-  const root = path.join(os.tmpdir(), 'wao-client-auth-ui-test-root');
-  t.after(() => {
-    if (previousEnable === undefined) delete process.env.WAO_CLIENT_AUTH_DEV_FIXTURE_ENABLE;
-    else process.env.WAO_CLIENT_AUTH_DEV_FIXTURE_ENABLE = previousEnable;
-    if (previousRoot === undefined) delete process.env.WAO_CLIENT_AUTH_DEV_FIXTURE_ROOT;
-    else process.env.WAO_CLIENT_AUTH_DEV_FIXTURE_ROOT = previousRoot;
-    if (previousNodeEnv === undefined) delete process.env.NODE_ENV;
-    else process.env.NODE_ENV = previousNodeEnv;
-  });
+const fixtureEnvironmentKeys = [
+  'NODE_ENV',
+  'TMPDIR',
+  'TMP',
+  'TEMP',
+  'WAO_ADMIN_AUTH_PRODUCTION_FIXTURE_ENABLE',
+  'WAO_ADMIN_AUTH_DEV_FIXTURE_ENABLE',
+  'WAO_CLIENT_AUTH_DEV_FIXTURE_ENABLE',
+  'WAO_CLIENT_AUTH_DEV_FIXTURE_ROOT',
+  'WAO_CLIENT_AUTH_DEV_FIXTURE_AUDIT_ROOT',
+  'ADMIN_SECRET',
+  'ADMIN_USERNAME',
+  'ADMIN_PASSWORD',
+] as const;
+const fixtureEnvironment = process.env as Record<string, string | undefined>;
 
-  process.env.NODE_ENV = 'development';
+function restoreFixtureEnvironment(previous: Record<string, string | undefined>): void {
+  for (const key of fixtureEnvironmentKeys) {
+    if (previous[key] === undefined) delete fixtureEnvironment[key];
+    else fixtureEnvironment[key] = previous[key];
+  }
+}
+
+function configureProductionFixture(root: string): void {
+  fixtureEnvironment.NODE_ENV = 'production';
+  process.env.WAO_ADMIN_AUTH_PRODUCTION_FIXTURE_ENABLE = '1';
+  process.env.WAO_ADMIN_AUTH_DEV_FIXTURE_ENABLE = '1';
+  process.env.WAO_CLIENT_AUTH_DEV_FIXTURE_ENABLE = '1';
+  process.env.WAO_CLIENT_AUTH_DEV_FIXTURE_ROOT = root;
+  process.env.WAO_CLIENT_AUTH_DEV_FIXTURE_AUDIT_ROOT = '/tmp/wao-client-auth-audit-test-root';
+  delete process.env.ADMIN_SECRET;
+  delete process.env.ADMIN_USERNAME;
+  delete process.env.ADMIN_PASSWORD;
+}
+
+test('development fixture root is selected only for a safe opt-in temporary directory', (t) => {
+  const previous = Object.fromEntries(fixtureEnvironmentKeys.map(key => [key, process.env[key]])) as Record<string, string | undefined>;
+  const root = '/tmp/wao-client-auth-ui-test-root';
+  t.after(() => restoreFixtureEnvironment(previous));
+
+  fixtureEnvironment.NODE_ENV = 'development';
   process.env.WAO_CLIENT_AUTH_DEV_FIXTURE_ENABLE = '1';
   process.env.WAO_CLIENT_AUTH_DEV_FIXTURE_ROOT = root;
   assert.equal(resolveConfiguredClientAuthRoot(), path.resolve(root));
 
-  process.env.NODE_ENV = 'production';
+  configureProductionFixture(root);
   assert.equal(resolveConfiguredClientAuthRoot(), null);
-  process.env.NODE_ENV = 'development';
-  process.env.WAO_CLIENT_AUTH_DEV_FIXTURE_ROOT = path.join(os.tmpdir(), 'not-an-auth-ui-fixture');
+  fixtureEnvironment.NODE_ENV = 'development';
+  process.env.WAO_CLIENT_AUTH_DEV_FIXTURE_ROOT = '/tmp/not-an-auth-ui-fixture';
   assert.equal(resolveConfiguredClientAuthRoot(), null);
-  process.env.WAO_CLIENT_AUTH_DEV_FIXTURE_ROOT = path.join(os.tmpdir(), '..', 'wao-client-auth-ui-escape');
+  process.env.WAO_CLIENT_AUTH_DEV_FIXTURE_ROOT = '/var/tmp/wao-client-auth-ui-test-root';
   assert.equal(resolveConfiguredClientAuthRoot(), null);
+  process.env.WAO_CLIENT_AUTH_DEV_FIXTURE_ROOT = '/tmp/wao-client-auth-ui-test-root/child';
+  assert.equal(resolveConfiguredClientAuthRoot(), null);
+});
+
+test('production fixture root requires explicit post-authorization selection and every safety gate', (t) => {
+  const previous = Object.fromEntries(fixtureEnvironmentKeys.map(key => [key, process.env[key]])) as Record<string, string | undefined>;
+  const privateTmp = '/tmp/wao-client-auth-private-harness';
+  const root = '/tmp/wao-client-auth-ui-production-test-root';
+  t.after(() => restoreFixtureEnvironment(previous));
+
+  configureProductionFixture(root);
+  process.env.TMPDIR = privateTmp;
+  process.env.TMP = privateTmp;
+  process.env.TEMP = privateTmp;
+  assert.equal(resolveConfiguredClientAuthRoot(), null);
+  assert.equal(resolveConfiguredClientAuthRoot({ productionSyntheticAuthorized: true }), path.resolve(root));
+
+  process.env.TMPDIR = `${privateTmp}-other`;
+  assert.equal(resolveConfiguredClientAuthRoot({ productionSyntheticAuthorized: true }), path.resolve(root));
+
+  const deniedMutations: Array<() => void> = [
+    () => { delete process.env.WAO_ADMIN_AUTH_PRODUCTION_FIXTURE_ENABLE; },
+    () => { process.env.WAO_ADMIN_AUTH_DEV_FIXTURE_ENABLE = '0'; },
+    () => { process.env.WAO_CLIENT_AUTH_DEV_FIXTURE_ENABLE = '0'; },
+    () => { process.env.WAO_CLIENT_AUTH_DEV_FIXTURE_ROOT = '/tmp/not-an-auth-ui-fixture'; },
+    () => { process.env.WAO_CLIENT_AUTH_DEV_FIXTURE_ROOT = '/tmp/wao-client-auth-ui-production-test-root/child'; },
+    () => { process.env.WAO_CLIENT_AUTH_DEV_FIXTURE_AUDIT_ROOT = '/tmp/wao-client-auth-audit-other/child'; },
+    () => { process.env.WAO_CLIENT_AUTH_DEV_FIXTURE_AUDIT_ROOT = '/var/tmp/wao-client-auth-audit-test-root'; },
+    () => { delete process.env.WAO_CLIENT_AUTH_DEV_FIXTURE_AUDIT_ROOT; },
+    () => { process.env.ADMIN_SECRET = 'non-empty'; },
+    () => { process.env.ADMIN_USERNAME = 'non-empty'; },
+    () => { process.env.ADMIN_PASSWORD = 'non-empty'; },
+  ];
+  for (const mutate of deniedMutations) {
+    configureProductionFixture(root);
+    process.env.TMPDIR = privateTmp;
+    process.env.TMP = privateTmp;
+    process.env.TEMP = privateTmp;
+    mutate();
+    assert.equal(resolveConfiguredClientAuthRoot({ productionSyntheticAuthorized: true }), null);
+  }
 });

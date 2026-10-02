@@ -697,7 +697,7 @@ p { margin: 0; }
 .onboarding-chat-card.onboarding-chat-card-reviewing { height: clamp(440px, 68dvh, 620px) !important; }
 
 @media (max-width: 640px) {
-  .onboarding-chat-card.onboarding-chat-card-reviewing { height: clamp(704px, 84dvh, 720px) !important; }
+  .onboarding-chat-card.onboarding-chat-card-reviewing { height: clamp(704px, 88dvh, 744px) !important; }
 }
 
 /* Astra homepage and shared shell */

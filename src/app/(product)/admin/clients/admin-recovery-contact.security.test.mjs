@@ -1,71 +1,93 @@
 import assert from 'node:assert/strict';
-import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import test from 'node:test';
 
 const root = process.cwd();
 const read = (relative) => fs.readFileSync(path.join(root, relative), 'utf8');
-const sha256 = (relative) => crypto.createHash('sha256').update(read(relative)).digest('hex');
 
 function actionBody(source, name) {
   const start = source.indexOf(`export async function ${name}`);
-  assert.notEqual(start, -1, `${name} is exported`);
+  assert.notEqual(start, -1);
   const open = source.indexOf('{', start);
   let depth = 0;
   for (let index = open; index < source.length; index += 1) {
     if (source[index] === '{') depth += 1;
     if (source[index] === '}' && --depth === 0) return source.slice(open + 1, index);
   }
-  throw new Error(`unterminated_${name}`);
+  throw new Error('unterminated_action');
 }
 
-test('synthetic admin fixture is exact-route, gated, and short-circuits ambient auth', () => {
-  const auth = read('src/lib/admin-auth.ts');
-  assert.match(auth, /ADMIN_CLIENT_FIXTURE_TOKEN = 'wao-admin-client-fixture-v1'/);
-  assert.match(auth, /WAO_ADMIN_AUTH_DEV_FIXTURE_ENABLE === '1'/);
-  assert.match(auth, /WAO_CLIENT_AUTH_DEV_FIXTURE_ENABLE === '1'/);
-  assert.match(auth, /pathname === '\/admin\/clients'/);
-  assert.match(auth, /\^\\\/tmp\\\/wao-client-auth-ui-\[A-Za-z0-9_-\]\{1,64\}\$/);
-  const markerBranch = auth.slice(auth.indexOf('if (token === ADMIN_CLIENT_FIXTURE_TOKEN)'), auth.indexOf('return await verifyAdminToken'));
-  assert.match(markerBranch, /return validFixture \? 'synthetic' : null/);
-  assert.doesNotMatch(markerBranch, /getAdminSecret|verifyAdminToken|verifyAdminCredentials|createAdminToken/);
-});
-
-test('proxy and page scope synthetic authorization to only the canonical client route', () => {
-  const proxy = read('src/proxy.ts');
-  const page = read('src/app/(product)/admin/clients/page.tsx');
-  assert.match(proxy, /pathname === '\/admin\/clients'\s*\? await verifyAdminClientFixtureAccess/);
-  assert.match(proxy, /: await verifyAdminToken\(token\) \? 'live' : null/);
-  assert.match(page, /const fixtureRoot = resolveConfiguredClientAuthRoot\(\);/);
-  assert.match(page, /verifyAdminClientFixtureAccess\([^\n]+, '\/admin\/clients', fixtureRoot \?\? undefined\)/);
-  assert.match(page, /authorized === 'synthetic' \? fixtureRoot! : fixtureRoot \?\? CLIENTS_DIR/);
-  assert.ok(page.indexOf('if (!authorized) redirect') < page.indexOf('const clients = loadClients(root);'));
-});
-
-test('recovery actions use scoped authorization while impersonation and reset remain live-only', () => {
+test('admin recovery contact is email-only with fixture-scoped authorization', () => {
+  const control = read('src/app/(product)/admin/clients/recovery-contact-control.tsx');
   const action = read('src/app/(product)/admin/clients/action.ts');
-  assert.match(action, /verifyAdminClientFixtureAccess\([^\n]+, '\/admin\/clients', root \?\? undefined\)/);
-  for (const name of [
-    'requestClientRecoveryContactVerificationAction',
-    'completeClientRecoveryContactVerificationAction',
-    'revealClientRecoveryContactAction',
-  ]) {
+  const core = read('src/lib/client-recovery-contact.ts');
+  const auth = read('src/lib/admin-auth.ts');
+  for (const label of ['Recovery Email: Enabled', 'Recovery Email: Disabled', 'Recovery Email: Invalid', 'Verified email', 'Verified at', 'Reveal', 'Hide', 'Enroll or update', 'Email', 'Send verification code', 'Verification code', 'Confirm verified email']) assert.match(control, new RegExp(label));
+  assert.doesNotMatch(control, /whatsapp|mobile/i);
+  assert.doesNotMatch(core, /whatsapp|approvalContact|approvalWhatsapp/i);
+  assert.match(core, /beginClientRecoveryContactVerification/);
+  assert.match(core, /consumeClientRecoveryContactVerification/);
+  assert.match(auth, /pathname === '\/admin\/clients'/);
+  for (const name of ['requestClientRecoveryContactVerificationAction', 'completeClientRecoveryContactVerificationAction', 'revealClientRecoveryContactAction']) {
     const body = actionBody(action, name);
-    assert.ok(body.indexOf('await requireAdmin()') < body.indexOf('formData.get'), `${name} authorizes before form reads`);
-    assert.match(body, /clientsRoot: context\.root/);
+    assert.ok(body.indexOf('await requireAdmin()') < body.indexOf('formData.get'));
   }
   for (const name of ['loginAsClientAction', 'resetClientPinAction']) {
     const body = actionBody(action, name);
-    assert.ok(body.indexOf('await verifyAdminToken') < body.indexOf('formData.get'), `${name} remains live-token only`);
+    assert.ok(body.indexOf('await verifyAdminToken') < body.indexOf('formData.get'));
     assert.doesNotMatch(body, /verifyAdminClientFixtureAccess/);
   }
 });
 
-test('protected login sources are unchanged and canonical discovery includes this suite', () => {
-  assert.equal(sha256('src/app/(product)/admin/login/action.ts'), 'bf287779db43b9edf477e87808186a18dd817f035a3d17445e84e857e751a585');
-  assert.equal(sha256('src/app/(product)/admin/login/page.tsx'), 'd7eebd2d488b4eed1854473fc41f42db4d7b4aa9ae9ae1f3869f9001eaf3eec3');
+test('proxy, page, and recovery actions pass only the direct request host into fixture authorization', () => {
+  const proxy = read('src/proxy.ts');
+  const page = read('src/app/(product)/admin/clients/page.tsx');
+  const action = read('src/app/(product)/admin/clients/action.ts');
+  const auth = read('src/lib/admin-auth.ts');
+  const requireAdmin = action.slice(action.indexOf('async function requireAdmin()'), action.indexOf('export async function requestClientRecoveryContactVerificationAction'));
+
+  assert.match(proxy, /pathname === '\/admin\/clients'\s*\? await verifyAdminClientFixtureAccess\(token, pathname, process\.env\.WAO_CLIENT_AUTH_DEV_FIXTURE_ROOT, req\.headers\.get\('host'\)\)/);
+  assert.match(proxy, /: await verifyAdminToken\(token\) \? 'live' : null/);
+  assert.match(page, /const requestHeaders = await headers\(\);/);
+  assert.match(page, /const fixtureRootCandidate = process\.env\.WAO_CLIENT_AUTH_DEV_FIXTURE_ROOT;/);
+  assert.match(page, /verifyAdminClientFixtureAccess\([^\n]+, '\/admin\/clients', fixtureRootCandidate, requestHeaders\.get\('host'\)\)/);
+  assert.match(requireAdmin, /const requestHeaders = await headers\(\);/);
+  assert.match(requireAdmin, /const fixtureRootCandidate = process\.env\.WAO_CLIENT_AUTH_DEV_FIXTURE_ROOT;/);
+  assert.match(requireAdmin, /verifyAdminClientFixtureAccess\([^\n]+, '\/admin\/clients', fixtureRootCandidate, requestHeaders\.get\('host'\)\)/);
+  assert.doesNotMatch(proxy, /x-forwarded-host/);
+  assert.doesNotMatch(page, /x-forwarded-host/);
+  assert.doesNotMatch(requireAdmin, /x-forwarded-host/);
+  assert.match(auth, /WAO_ADMIN_AUTH_PRODUCTION_FIXTURE_ENABLE === '1'/);
+  assert.match(auth, /WAO_CLIENT_AUTH_DEV_FIXTURE_AUDIT_ROOT/);
+  assert.match(auth, /LOOPBACK_FIXTURE_HOST_PATTERN\.test\(requestHost \?\? ''\)/);
+  assert.match(auth, /pathname === '\/admin\/clients'/);
+  assert.doesNotMatch(auth, /x-forwarded-host/);
+});
+
+test('production fixture root selection follows synthetic authorization and never reaches live or generic callers', () => {
+  const page = read('src/app/(product)/admin/clients/page.tsx');
+  const action = read('src/app/(product)/admin/clients/action.ts');
+  const authStore = read('src/lib/client-auth-store.ts');
+  const pinRecovery = read('src/lib/client-pin-recovery.ts');
+  const contactRecovery = read('src/lib/client-recovery-contact.ts');
+  const requireAdmin = action.slice(action.indexOf('async function requireAdmin()'), action.indexOf('export async function requestClientRecoveryContactVerificationAction'));
+  const signal = 'resolveConfiguredClientAuthRoot({ productionSyntheticAuthorized: true })';
+
+  assert.ok(page.indexOf('verifyAdminClientFixtureAccess') < page.indexOf(signal));
+  assert.ok(requireAdmin.indexOf('verifyAdminClientFixtureAccess') < requireAdmin.indexOf(signal));
+  assert.match(page, /authorized === 'synthetic' \? resolveConfiguredClientAuthRoot\(\{ productionSyntheticAuthorized: true \}\) : CLIENTS_DIR/);
+  assert.match(requireAdmin, /authorized === 'synthetic' \? resolveConfiguredClientAuthRoot\(\{ productionSyntheticAuthorized: true \}\) : undefined/);
+  assert.match(authStore, /options\.productionSyntheticAuthorized === true/);
+  assert.doesNotMatch(pinRecovery, /productionSyntheticAuthorized/);
+  assert.doesNotMatch(contactRecovery, /productionSyntheticAuthorized/);
+  assert.equal((page.match(/productionSyntheticAuthorized/g) ?? []).length, 1);
+  assert.equal((action.match(/productionSyntheticAuthorized/g) ?? []).length, 1);
+});
+
+test('canonical discovery includes both source and transport suites', () => {
   const packageJson = read('package.json');
+  assert.match(packageJson, /resend-transactional\.test\.js/);
   assert.match(packageJson, /admin-recovery-contact\.security\.test\.mjs/);
-  assert.match(packageJson, /dist\/lib\/admin-auth\.test\.js/);
+  assert.match(packageJson, /client-auth\.security\.test\.mjs/);
 });

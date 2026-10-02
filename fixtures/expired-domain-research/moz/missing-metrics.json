@@ -1,0 +1,1 @@
+{"jsonrpc":"2.0","id":"req-missing","result":{"site_query":{"query":"https://missing.example.test/"},"site_metrics":{"page_authority":"42","domain_authority":101,"spam_score":null,"page":"https://missing.example.test/","root_domain":"missing.example.test"}}}

@@ -1,6 +1,5 @@
 import { randomUUID } from 'node:crypto';
 import fs from 'node:fs';
-import os from 'node:os';
 import path from 'node:path';
 import { hashClientPin, verifyClientPin } from './client-pin';
 
@@ -44,6 +43,11 @@ export interface ClientRecoveryContactVerification {
   deliveredAt?: string;
 }
 
+export type ClientRecoveryContactVerificationResult =
+  | { status: 'complete' }
+  | { status: 'invalid-or-expired' }
+  | { status: 'client-record-failed' };
+
 export interface VerifyClientCredentialsResult {
   ok: boolean;
   clientId?: string;
@@ -54,7 +58,8 @@ export interface VerifyClientCredentialsResult {
 
 const DEFAULT_CLIENTS_ROOT = path.join(process.cwd(), 'data', 'clients');
 const CLIENT_ID_PATTERN = /^[a-z0-9][a-z0-9-]{0,63}$/;
-const DEV_FIXTURE_ROOT_PATTERN = /^wao-client-auth-ui-[A-Za-z0-9_-]{1,64}$/;
+const DEV_FIXTURE_ROOT_PATTERN = /^\/tmp\/wao-client-auth-ui-[A-Za-z0-9_-]{1,64}$/;
+const DEV_FIXTURE_AUDIT_ROOT_PATTERN = /^\/tmp\/wao-client-auth-audit-[A-Za-z0-9_-]{1,64}$/;
 let dummyHashPromise: Promise<string> | undefined;
 let testVerifyPin: typeof verifyClientPin | undefined;
 const recoveryLocks = new Map<string, Promise<void>>();
@@ -69,13 +74,24 @@ function isContained(candidate: string, root: string): boolean {
   return relative !== '' && !relative.startsWith(`..${path.sep}`) && relative !== '..' && !path.isAbsolute(relative);
 }
 
-export function resolveConfiguredClientAuthRoot(): string | null {
-  if (process.env.NODE_ENV === 'production' || process.env.WAO_CLIENT_AUTH_DEV_FIXTURE_ENABLE !== '1') return null;
+export function resolveConfiguredClientAuthRoot(options: { productionSyntheticAuthorized?: true } = {}): string | null {
   const configuredRoot = process.env.WAO_CLIENT_AUTH_DEV_FIXTURE_ROOT;
   if (!configuredRoot) return null;
   const resolvedRoot = path.resolve(configuredRoot);
-  const temporaryRoot = path.resolve(os.tmpdir());
-  if (!isContained(resolvedRoot, temporaryRoot) || !DEV_FIXTURE_ROOT_PATTERN.test(path.basename(resolvedRoot))) return null;
+  if (!DEV_FIXTURE_ROOT_PATTERN.test(resolvedRoot)) return null;
+  if (process.env.NODE_ENV === 'production') {
+    const auditRoot = process.env.WAO_CLIENT_AUTH_DEV_FIXTURE_AUDIT_ROOT;
+    const resolvedAuditRoot = auditRoot ? path.resolve(auditRoot) : '';
+    const noLiveCredentials = !(process.env.ADMIN_SECRET ?? '') && !(process.env.ADMIN_USERNAME ?? '') && !(process.env.ADMIN_PASSWORD ?? '');
+    const validProductionFixture = options.productionSyntheticAuthorized === true
+      && process.env.WAO_ADMIN_AUTH_PRODUCTION_FIXTURE_ENABLE === '1'
+      && process.env.WAO_ADMIN_AUTH_DEV_FIXTURE_ENABLE === '1'
+      && process.env.WAO_CLIENT_AUTH_DEV_FIXTURE_ENABLE === '1'
+      && DEV_FIXTURE_AUDIT_ROOT_PATTERN.test(resolvedAuditRoot)
+      && noLiveCredentials;
+    return validProductionFixture ? resolvedRoot : null;
+  }
+  if (process.env.WAO_CLIENT_AUTH_DEV_FIXTURE_ENABLE !== '1') return null;
   return resolvedRoot;
 }
 
@@ -260,7 +276,67 @@ export async function cancelClientRecoveryChallenge(clientId: string, challengeI
   });
 }
 
-export async function consumeClientRecoveryChallengeAndResetPin(clientId: string, options: { challengeId: string; now: string; newPin: string; validDigest: boolean; validSubject: boolean }, root?: string): Promise<{ status: 'complete' | 'invalid-or-expired'; sessionVersion?: number }> {
+function validContactVerification(value: unknown): value is ClientRecoveryContactVerification {
+  if (!value || typeof value !== 'object') return false;
+  const challenge = value as ClientRecoveryContactVerification;
+  return typeof challenge.id === 'string' && typeof challenge.nonce === 'string'
+    && typeof challenge.subjectDigest === 'string' && typeof challenge.codeDigest === 'string'
+    && typeof challenge.createdAt === 'string' && typeof challenge.expiresAt === 'string'
+    && Number.isInteger(challenge.failedAttempts) && challenge.failedAttempts >= 0
+    && (challenge.state === 'pending' || challenge.state === 'delivered')
+    && (challenge.deliveredAt === undefined || typeof challenge.deliveredAt === 'string');
+}
+
+export async function beginClientRecoveryContactVerification(clientId: string, challenge: ClientRecoveryContactVerification, root?: string): Promise<boolean> {
+  if (!validContactVerification(challenge)) return false;
+  return withRecoveryLock(clientId, root, async () => {
+    const current = readUsableRecoveryRecord(clientId, root);
+    if (!current) return false;
+    atomicWriteJson(current.path, { ...current.record, recoveryContactVerification: challenge, updatedAt: challenge.createdAt });
+    return true;
+  });
+}
+
+export async function markClientRecoveryContactVerificationDelivered(clientId: string, challengeId: string, now: string, root?: string): Promise<boolean> {
+  return withRecoveryLock(clientId, root, async () => {
+    const current = readUsableRecoveryRecord(clientId, root);
+    const challenge = current?.record.recoveryContactVerification;
+    if (!current || !challenge || !validContactVerification(challenge) || challenge.id !== challengeId || challenge.state !== 'pending') return false;
+    atomicWriteJson(current.path, { ...current.record, recoveryContactVerification: { ...challenge, state: 'delivered', deliveredAt: now }, updatedAt: now });
+    return true;
+  });
+}
+
+export async function cancelClientRecoveryContactVerification(clientId: string, challengeId: string, now: string, root?: string): Promise<boolean> {
+  return withRecoveryLock(clientId, root, async () => {
+    const current = readUsableRecoveryRecord(clientId, root);
+    if (!current || current.record.recoveryContactVerification?.id !== challengeId) return false;
+    atomicWriteJson(current.path, { ...current.record, recoveryContactVerification: undefined, updatedAt: now });
+    return true;
+  });
+}
+
+export async function consumeClientRecoveryContactVerification(
+  clientId: string,
+  options: { challengeId: string; now: string; validDigest: boolean; validSubject: boolean; replaceClientRecord: () => boolean },
+  root?: string,
+): Promise<ClientRecoveryContactVerificationResult> {
+  return withRecoveryLock(clientId, root, async () => {
+    const current = readUsableRecoveryRecord(clientId, root);
+    const challenge = current?.record.recoveryContactVerification;
+    if (!current || !challenge || !validContactVerification(challenge) || challenge.id !== options.challengeId
+      || challenge.state !== 'delivered' || new Date(challenge.expiresAt).getTime() <= new Date(options.now).getTime()) return { status: 'invalid-or-expired' };
+    if (!options.validDigest || !options.validSubject || challenge.failedAttempts >= 5) {
+      const failedAttempts = challenge.failedAttempts + 1;
+      atomicWriteJson(current.path, { ...current.record, recoveryContactVerification: failedAttempts >= 5 ? undefined : { ...challenge, failedAttempts }, updatedAt: options.now });
+      return { status: 'invalid-or-expired' };
+    }
+    atomicWriteJson(current.path, { ...current.record, recovery: { ...current.record.recovery, challenge: undefined }, recoveryContactVerification: undefined, updatedAt: options.now });
+    return options.replaceClientRecord() ? { status: 'complete' } : { status: 'client-record-failed' };
+  });
+}
+
+export async function consumeClientRecoveryChallengeAndResetPin(clientId: string, options: { challengeId: string; now: string; newPin: string; validDigest: boolean; validSubject: boolean; requiredAudit?: (sessionVersion: number) => boolean }, root?: string): Promise<{ status: 'complete' | 'invalid-or-expired'; sessionVersion?: number }> {
   return withRecoveryLock(clientId, root, async () => {
     const current = readUsableRecoveryRecord(clientId, root);
     const challenge = current?.record.recovery?.challenge;
@@ -270,7 +346,9 @@ export async function consumeClientRecoveryChallengeAndResetPin(clientId: string
       atomicWriteJson(current.path, { ...current.record, recovery: { ...current.record.recovery, challenge: failedAttempts >= 5 ? undefined : { ...challenge, failedAttempts } }, updatedAt: options.now });
       return { status: 'invalid-or-expired' };
     }
-    const next = { ...current.record, pinHash: await hashClientPin(options.newPin), sessionVersion: current.record.sessionVersion + 1, mustChangePin: false, recovery: { ...current.record.recovery, challenge: undefined }, updatedAt: options.now };
+    const sessionVersion = current.record.sessionVersion + 1;
+    if (options.requiredAudit && !options.requiredAudit(sessionVersion)) return { status: 'invalid-or-expired' };
+    const next = { ...current.record, pinHash: await hashClientPin(options.newPin), sessionVersion, mustChangePin: false, recovery: { ...current.record.recovery, challenge: undefined }, updatedAt: options.now };
     atomicWriteJson(current.path, next);
     return { status: 'complete', sessionVersion: next.sessionVersion };
   });

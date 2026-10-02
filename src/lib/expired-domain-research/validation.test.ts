@@ -37,7 +37,7 @@ function orchestratedFixture(): ResearchRun {
     orchestration: {
       stage: 'complete', approvedOpenSeoCredits: 1, approvedMozCalls: 1, estimatedOpenSeoCredits: 0, observedOpenSeoCredits: 0, observedMozCalls: 0, observedHttpAttempts: 0,
       stageHistory: (['validated', 'discovered', 'status_checked', 'niche_enriched', 'authority_enriched', 'risk_gated', 'ranked', 'complete'] as OrchestrationStage[]).map(stage => ({ stage, completedAt: stamp })),
-      truncations: [{ stage: 'discovered', originalCount: 2, retainedCount: 1, skippedHostnames: ['b.test'], reason: 'cap' }],
+      truncations: [{ stage: 'discovered', originalCount: 2, retainedCount: 1, skippedHostnames: ['c.test'], reason: 'cap' }],
       skips: [{ stage: 'discovered', hostname: 'b.test', reason: 'duplicate' }],
       providerOperations: [{ id: 'operation-one', provider: 'wayback', operation: 'history', units: 0, httpAttempts: 0, evidenceIds: [evidenceIds[0]], recordedAt: stamp }],
       candidateEvidenceOutcomes: [{ id: 'outcome-one', hostname: 'a.test', provider: 'wayback', stage: 'discovered', status: 'successful', reason: null, operationId: 'operation-one', evidenceIds: [evidenceIds[0]], recordedAt: stamp }],
@@ -140,14 +140,18 @@ rejectedRows('identity and reference integrity rejects duplicates and cross-cand
   { name: 'duplicate usage tuple', mutate: run => { run.providerUsage.push(clone(run.providerUsage[0])); } },
   { name: 'score missing candidate', mutate: run => { run.scores[0].hostname = 'missing.test'; } },
   { name: 'score foreign evidence', mutate: run => { run.scores[0].evidenceIds = ['history-two']; } },
+  { name: 'penalty foreign evidence', mutate: run => { run.scores[0].penalties[0].evidenceIds = ['history-two']; } },
+  { name: 'candidate gate foreign evidence', mutate: run => { run.candidates[0].riskGates[0].evidenceIds = ['history-two']; } },
+  { name: 'acquisition gate missing evidence', mutate: run => { run.orchestration!.acquisitionGates[0].evidenceIds = ['missing']; } },
+  { name: 'outcome missing evidence', mutate: run => { run.orchestration!.candidateEvidenceOutcomes![0].evidenceIds = ['missing']; } },
   { name: 'duplicate score reference', mutate: run => { run.scores[0].evidenceIds.push(run.scores[0].evidenceIds[0]); } },
   { name: 'outcome provider crossover', mutate: run => { run.orchestration!.candidateEvidenceOutcomes![0].provider = 'moz-data-api-v3'; } },
 ]);
 
 rejectedRows('orchestration entry and provider shapes reject malformed values', [
   { name: 'truncation count mismatch', mutate: run => { run.orchestration!.truncations[0].retainedCount = 0; } },
-  { name: 'truncation unknown hostname', mutate: run => { run.orchestration!.truncations[0].skippedHostnames = ['missing.test']; } },
-  { name: 'skip unknown hostname', mutate: run => { run.orchestration!.skips[0].hostname = 'missing.test'; } },
+  { name: 'truncation invalid hostname', mutate: run => { run.orchestration!.truncations[0].skippedHostnames = ['bad host']; } },
+  { name: 'skip empty hostname', mutate: run => { run.orchestration!.skips[0].hostname = ''; } },
   { name: 'empty hold reason', mutate: run => { run.orchestration!.holdReasons = ['']; } },
   { name: 'duplicate failure reason', mutate: run => { run.orchestration!.failureReasons = ['same', 'same']; } },
   { name: 'empty operation name', mutate: run => { run.orchestration!.providerOperations[0].operation = ''; } },

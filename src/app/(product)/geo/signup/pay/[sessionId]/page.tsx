@@ -17,7 +17,7 @@ export default function GeoSignupPayPage() {
   const [phase, setPhase] = useState<Phase>("form");
   const [error, setError] = useState<string | null>(null);
   const [clientId, setClientId] = useState<string | null>(null);
-  const [pin, setPin] = useState<string | null>(null);
+
 
   async function pay() {
     setPhase("charging");
@@ -31,10 +31,10 @@ export default function GeoSignupPayPage() {
       const json = await res.json();
       if (!res.ok || !json.clientId) throw new Error(json.error || "משהו השתבש");
       setClientId(json.clientId);
-      setPin(json.pin);
+
       setPhase("done");
-    } catch (e: any) {
-      setError(e.message || "משהו השתבש");
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : "משהו השתבש");
       setPhase("error");
     }
   }
@@ -86,10 +86,10 @@ export default function GeoSignupPayPage() {
             <div style={{ textAlign: "center" }}>
               <p style={{ marginBottom: "8px" }}>{renderMixed("החשבון שלך פעיל!")}</p>
               <p style={{ marginBottom: "16px", color: "var(--muted)", fontSize: "0.9rem" }}>
-                {renderMixed(`מזהה לקוח: ${clientId} · קוד גישה: ${pin}`)}
+                {renderMixed(`מזהה לקוח: ${clientId}`)}
               </p>
               <p style={{ marginBottom: "16px", color: "var(--muted)", fontSize: "0.85rem" }}>
-                {renderMixed("שמור את הפרטים האלה — הם ישמשו אותך לכניסה לאזור האישי בעתיד.")}
+                {renderMixed("המשך כדי להגדיר קוד גישה אישי.")}
               </p>
               <button onClick={goToGscConnect} className="btn-primary" style={{ width: "100%", padding: "14px" }}>
                 {renderMixed("המשך לחיבור Search Console")}

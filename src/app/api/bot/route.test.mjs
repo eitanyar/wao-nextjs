@@ -3,10 +3,71 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { createRequire } from 'node:module';
+
+const requireModule = createRequire(import.meta.url);
 
 const baseDir = path.dirname(fileURLToPath(import.meta.url));
 const routePath = path.join(baseDir, 'route.ts');
 const routeCode = fs.readFileSync(routePath, 'utf8');
+const promptPath = path.resolve(baseDir, '../../../lib/bot/prompts.ts');
+const promptCode = fs.readFileSync(promptPath, 'utf8');
+
+async function loadHandleSimulation() {
+  const start = routeCode.indexOf('function handleSimulation(');
+  const end = routeCode.indexOf('function generateMockCampaign', start);
+  assert.notEqual(start, -1, 'handleSimulation function not found');
+  assert.notEqual(end, -1, 'generateMockCampaign boundary not found');
+
+  const typescript = await import('typescript');
+  const source = `
+    const TURN_QUESTIONS = new Proxy({}, { get: (_, key) => \`question-\${key}\` });
+    const NextResponse = { json: (payload) => payload };
+    const generateFallbackStrategyAndCopy = () => ({ copy: { marker: 'generated-copy' } });
+    ${routeCode.slice(start, end)}
+    module.exports = { handleSimulation };
+  `;
+  const compiled = typescript.transpileModule(source, {
+    compilerOptions: {
+      module: typescript.ModuleKind.CommonJS,
+      target: typescript.ScriptTarget.ES2022,
+    },
+  }).outputText;
+  const loadedModule = { exports: {} };
+  new Function('module', 'exports', compiled)(loadedModule, loadedModule.exports);
+  return loadedModule.exports.handleSimulation;
+}
+
+test('simulation executes the turn 8 to 9 to 10 progression exactly once', async () => {
+  const handleSimulation = await loadHandleSimulation();
+  const turn8 = handleSimulation('distinctive value', 'DIAGNOSING', {
+    turnIndex: 8,
+    businessNiche: 'service',
+    specificCities: 'city',
+  });
+
+  assert.equal(turn8.currentState, 'DIAGNOSING');
+  assert.equal(turn8.collectedData.turnIndex, 9);
+  assert.equal(turn8.collectedData.usp, 'distinctive value');
+  assert.deepEqual(turn8.copy, { marker: 'generated-copy' });
+  assert.equal(turn8.response, 'question-9');
+
+  const turn9 = handleSimulation('12 years with warranty', 'DIAGNOSING', turn8.collectedData);
+  assert.equal(turn9.collectedData.turnIndex, 10);
+  assert.equal(turn9.collectedData.usp, 'distinctive value');
+  assert.equal(turn9.collectedData.yearsInField, '12 years with warranty');
+  assert.equal(turn9.collectedData.guarantee, '12 years with warranty');
+  assert.equal(turn9.response, 'question-10');
+});
+
+test('live prompt keeps turn 8 and turn 9 collection parity', () => {
+  const turn8 = promptCode.indexOf('T8:');
+  const turn9 = promptCode.indexOf('T9:', turn8);
+  const turn10 = promptCode.indexOf('T10:', turn9);
+  assert.ok(turn8 >= 0 && turn8 < turn9 && turn9 < turn10, 'T8, T9, and T10 must remain ordered');
+  assert.match(promptCode.slice(turn8, turn9), /collect:\s*usp/);
+  assert.match(promptCode.slice(turn9, turn10), /collect:\s*yearsInField,\s*guarantee/);
+});
 
 // ── Regression test for the ownerName (T2b) turn-index drift bug ───────────
 // Root cause: prompts.ts (the live/Gemini path) has always asked a T2b
@@ -22,7 +83,9 @@ test('TURN_QUESTIONS has an ownerName question at index 2, matching prompts.ts T
   const body = match[1];
   const entry2 = body.match(/\n\s*2:\s*"([^"]*)"/);
   assert.ok(entry2, 'TURN_QUESTIONS[2] entry not found');
-  assert.match(entry2[1], /שמך הפרטי/, 'TURN_QUESTIONS[2] should be the "ומה שמך הפרטי?" (T2b ownerName) question');
+  const promptT2b = promptCode.match(/T2b:\s*"([^"]*)"/);
+  assert.ok(promptT2b, 'T2b prompt question not found');
+  assert.equal(entry2[1], promptT2b[1], 'TURN_QUESTIONS[2] must match the T2b ownerName question');
 });
 
 test('handleSimulation switch has a distinct case for each turn 0-24 with no duplicates', () => {
@@ -56,8 +119,12 @@ test('case 3 stores the answer into data.secondaryServices (shifted correctly af
 });
 
 test('the inferred-service-model jump lands on turnIndex 5 (T5 cities/address), not 4', () => {
-  assert.match(routeCode, /data\.turnIndex = 5;/);
-  assert.doesNotMatch(routeCode, /data\.turnIndex = 4;/);
+  const case3 = routeCode.match(/case 3:\s*\n([\s\S]*?)\n\s*case 4:/);
+  assert.ok(case3, 'case 3 block not found');
+  const inferredBranch = case3[1].match(/if \(inferredServiceModel\) \{([\s\S]*?)\n\s*\} else \{/);
+  assert.ok(inferredBranch, 'inferred service model branch not found');
+  assert.match(inferredBranch[1], /data\.turnIndex = 5;/);
+  assert.doesNotMatch(inferredBranch[1], /data\.turnIndex = 4;/);
 });
 
 test('phone/whatsapp turn (case 24) is guarded by isPlausiblePhoneAnswer before being stored', () => {
@@ -73,7 +140,6 @@ function loadIsPlausiblePhoneAnswer() {
   );
   assert.ok(match, 'isPlausiblePhoneAnswer function not found in route.ts');
   const body = match[1];
-  // eslint-disable-next-line no-new-func
   return new Function('text', body);
 }
 
@@ -112,4 +178,67 @@ test('DIAGNOSING state short-circuits on an upload-acknowledgment message before
     'upload-acknowledgment guard regex not found before the turn-consuming switch'
   );
   assert.match(diagnosingBlock[1], /return NextResponse\.json/, 'guard must return early, not fall through to the switch');
+});
+
+// Execute the actual POST handler with isolated module dependencies and no network or disk writes.
+function loadPost(environment, qwenCalls, geminiCalls) {
+  const ts = requireModule('typescript');
+  const compiled = ts.transpileModule(routeCode, { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 } }).outputText;
+  const module = { exports: {} };
+  const fakeRequire = name => {
+    if (name === 'next/server') return { NextResponse: { json: (data, opts) => Response.json(data, opts) } };
+    if (name === '@/lib/bot/prompts') return { ADAM_SYSTEM_PROMPT: 'adam', DROR_SYSTEM_PROMPT: 'dror', TAMAR_SYSTEM_PROMPT: 'tamar', T21_PHOTO_ASK_VERSION: 'test' };
+    if (name === '@/lib/ads/keywordPlanner') return { getEstimatedCPC: async () => null };
+    if (name === '@/lib/google-ads/onboarding-response') return { resolveBoundedOnboardingResponse: async ({ live, timeoutMs }) => {
+      assert.equal(timeoutMs, 12000);
+      return live();
+    } };
+    if (name === '@/lib/ai/qwen-fast') return { callQwenChatJSON: async (...args) => {
+      qwenCalls.push(args); return JSON.stringify({ response: 'qwen', currentState: 'DIAGNOSING', collectedData: {} });
+    } };
+    if (name === 'fs/promises') return { mkdir: async () => {}, appendFile: async () => {} };
+    if (name === 'path') return path;
+    throw new Error(`Unexpected import: ${name}`);
+  };
+  const fetch = async url => {
+    geminiCalls.push(url);
+    return Response.json({ candidates: [{ content: { parts: [{ text: '{"response":"gemini","currentState":"DIAGNOSING","collectedData":{}}' }] } }] });
+  };
+  new Function('require', 'module', 'exports', 'process', 'fetch', 'console', 'Response', 'AbortSignal', compiled)(
+    fakeRequire, module, module.exports, { env: environment, cwd: () => baseDir }, fetch, { log() {}, warn() {}, error() {} }, Response, AbortSignal);
+  return module.exports.POST;
+}
+
+async function invokePost(post) {
+  const request = new Request('https://example.test/api/bot', { method: 'POST', body: JSON.stringify({
+    messages: [{ role: 'user', content: 'business' }, { role: 'assistant', content: 'question' }, { role: 'user', content: 'answer' }],
+    currentState: 'DIAGNOSING', collectedData: {},
+  }) });
+  const response = await post(request);
+  assert.equal(response.status, 200);
+  return response.json();
+}
+
+test('Qwen wins over Gemini and receives multi-turn OpenAI roles without Gemini network calls', async () => {
+  const qwen = []; const gemini = [];
+  const payload = await invokePost(loadPost({ QWEN_API_KEY: 'mock', QWEN_BASE_URL: 'https://example.test', GEMINI_API_KEY: 'mock' }, qwen, gemini));
+  assert.equal(payload.response, 'qwen'); assert.equal(payload.isSimulation, false);
+  assert.equal(qwen.length, 1); assert.equal(gemini.length, 0);
+  assert.equal(qwen[0][2].timeoutMs, 12000);
+  assert.deepEqual(qwen[0][1].map(m => m.role), ['user', 'assistant', 'user']);
+});
+
+test('Gemini remains secondary when Qwen configuration is incomplete', async () => {
+  const qwen = []; const gemini = [];
+  const payload = await invokePost(loadPost({ QWEN_API_KEY: 'mock', GEMINI_API_KEY: 'mock' }, qwen, gemini));
+  assert.equal(payload.response, 'gemini'); assert.equal(payload.isSimulation, false);
+  assert.equal(qwen.length, 0); assert.equal(gemini.length, 1);
+  assert.match(gemini[0], /^https:\/\/generativelanguage\.googleapis\.com\//);
+});
+
+test('without configured provider POST returns simulation without network calls', async () => {
+  const qwen = []; const gemini = [];
+  const payload = await invokePost(loadPost({}, qwen, gemini));
+  assert.equal(payload.isSimulation, true);
+  assert.equal(qwen.length, 0); assert.equal(gemini.length, 0);
 });

@@ -36,7 +36,7 @@ export default function AnalyzeButton({ sessionRef }: Props) {
         type="button"
         onClick={onClick}
         disabled={state === 'loading'}
-        className="rounded-lg bg-[var(--accent,#6ee7b7)] px-3 py-1.5 text-sm font-medium text-black disabled:opacity-50"
+        className="rounded-lg bg-[var(--accent)] px-3 py-1.5 text-sm font-medium text-black disabled:opacity-50"
       >
         {state === 'loading' ? 'מנתח…' : 'נתח את השיחה'}
       </button>

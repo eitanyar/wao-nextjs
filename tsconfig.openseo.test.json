@@ -1,0 +1,10 @@
+{
+  "extends": "./tsconfig.test.json",
+  "compilerOptions": {
+    "noEmitOnError": true
+  },
+  "include": [
+    "src/lib/expired-domain-research/openSeoMcp.ts",
+    "src/lib/expired-domain-research/openSeoMcp.test.ts"
+  ]
+}

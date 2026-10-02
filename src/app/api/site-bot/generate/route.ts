@@ -1,11 +1,20 @@
 import { NextResponse } from 'next/server';
-import fs from 'fs';
-import path from 'path';
+import path from 'node:path';
+import { cookies } from 'next/headers';
 import type { CollectedData } from '@/lib/bot/prompts';
 import type { PageBrief } from '@/lib/site-bot/research/pageBrief';
 import { readResearchDossier, writeResearchDossierAtomic } from '@/lib/site-bot/research/researchStore';
-import { transitionResearchStatus } from '@/lib/site-bot/research/types';
-import { buildSimulationGenerationResult, generateResearchPageCopy, isApprovedPortfolioBrief } from '@/lib/lp/researchPageCopy';
+import { buildSimulationGenerationResult, generateResearchPageCopy } from '@/lib/lp/researchPageCopy';
+import type { ResearchedSiteGraphEdge } from '@/lib/lp/researchedSite';
+import { detectVertical } from '@/lib/lp/verticalDetect';
+import { VERTICAL_THEMES } from '@/lib/lp/verticalThemes';
+import { VERTICAL_ASSETS } from '@/lib/lp/verticalAssets';
+import { ADMIN_COOKIE_NAME, verifyAdminToken } from '@/lib/admin-auth';
+import { isSafeDeploymentSlug } from '@/lib/deployment/deploy-access';
+import {
+  buildResearchedSiteGeneration,
+  persistResearchedSiteRecordAtomic,
+} from '@/lib/site-bot/researchedSiteGeneration';
 
 export const dynamic = 'force-dynamic';
 
@@ -30,7 +39,7 @@ function isPageBrief(value: unknown): value is PageBrief {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
   const brief = value as Partial<PageBrief>;
   return Boolean(
-    brief.page && typeof brief.page.id === 'string' && typeof brief.page.targetPath === 'string'
+    brief.page && typeof brief.page.id === 'string' && typeof brief.page.targetPath === 'string' && typeof brief.page.pageClass === 'string'
     && brief.persona && typeof brief.persona.value === 'string'
     && brief.waoOffer && typeof brief.waoOffer.value === 'string'
     && Array.isArray(brief.targetQueries)
@@ -47,17 +56,36 @@ function isPageBrief(value: unknown): value is PageBrief {
   );
 }
 
+function isGraphEdge(value: unknown): value is ResearchedSiteGraphEdge {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
+  const edge = value as Partial<ResearchedSiteGraphEdge>;
+  return opaqueId(edge.fromId) && opaqueId(edge.toId);
+}
+
 export async function POST(req: Request) {
-  const body = await req.json().catch(() => null);
-  const collectedData = body?.collectedData as CollectedData | undefined;
-  if (!collectedData?.businessNiche) {
-    return NextResponse.json({ error: 'collectedData.businessNiche is required' }, { status: 400 });
+  const authCookies = await cookies();
+  const adminAuthorized = await verifyAdminToken(authCookies.get(ADMIN_COOKIE_NAME)?.value ?? '');
+  if (!adminAuthorized) {
+    return NextResponse.json({ error: 'unauthorized', deployable: false }, { status: 401 });
   }
 
-  const rawSlug = body.slug || collectedData.preferredSlug;
-  const slug = rawSlug
-    ? rawSlug.toLowerCase().replace(/[^a-z0-9-]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '').slice(0, 40) || slugify(collectedData.businessName || collectedData.businessNiche, collectedData.phone)
+  const body = await req.json().catch(() => null);
+  if (!body || typeof body !== 'object' || Array.isArray(body)) {
+    return NextResponse.json({ error: 'invalid_request', deployable: false }, { status: 400 });
+  }
+
+  const collectedData = body.collectedData as CollectedData | undefined;
+  if (!collectedData?.businessNiche) {
+    return NextResponse.json({ error: 'collectedData.businessNiche is required', deployable: false }, { status: 400 });
+  }
+
+  const hasExplicitSlug = Object.prototype.hasOwnProperty.call(body, 'slug');
+  const slug = hasExplicitSlug
+    ? body.slug
     : slugify(collectedData.businessName || collectedData.businessNiche, collectedData.phone);
+  if (!isSafeDeploymentSlug(slug)) {
+    return NextResponse.json({ error: 'invalid_deployment_slug', deployable: false }, { status: 400 });
+  }
 
   if (body.simulation === true) {
     return NextResponse.json({
@@ -69,48 +97,57 @@ export async function POST(req: Request) {
     });
   }
 
-  if (!opaqueId(body.researchId) || !isPageBrief(body.pageBrief)) {
-    return NextResponse.json({ error: 'researchId and pageBrief are required for paid generation', deployable: false }, { status: 400 });
+  if (
+    !opaqueId(body.researchId)
+    || !Array.isArray(body.pageBriefs)
+    || !body.pageBriefs.every(isPageBrief)
+    || !Array.isArray(body.graphEdges)
+    || !body.graphEdges.every(isGraphEdge)
+  ) {
+    return NextResponse.json({ error: 'research_generation_input_invalid', deployable: false }, { status: 400 });
   }
 
   const dossier = await readResearchDossier(body.researchId);
-  if (!dossier || !isApprovedPortfolioBrief(dossier, body.pageBrief)) {
+  if (!dossier) {
     return NextResponse.json({ error: 'research_copy_not_ready', deployable: false }, { status: 409 });
   }
 
   try {
-    const copy = await generateResearchPageCopy(body.pageBrief, collectedData);
-    dossier.status = transitionResearchStatus(dossier.status, 'deploy_ready');
-    dossier.pipelineChecks = {
-      ...dossier.pipelineChecks,
-      copy: 'pass',
-      hebrewQa: 'pass',
-      neuronEvaluation: dossier.pipelineChecks?.neuronEvaluation ?? 'pending',
-      duplicateCannibalization: dossier.pipelineChecks?.duplicateCannibalization ?? 'pending',
-    };
-    if (!await writeResearchDossierAtomic(dossier.researchId, dossier)) {
-      throw new Error('Unable to persist deploy-ready research dossier');
-    }
-
-    const sitesDir = path.join(process.cwd(), 'data', 'sites');
-    fs.mkdirSync(sitesDir, { recursive: true });
-    fs.writeFileSync(path.join(sitesDir, `${slug}.json`), JSON.stringify({
+    const verticalKey = detectVertical(collectedData.businessNiche);
+    const theme = VERTICAL_THEMES[verticalKey];
+    const assets = VERTICAL_ASSETS[verticalKey];
+    const heroImageUrl = collectedData.trustAssetUrls?.[0] || collectedData.profilePhotoUrl || assets.heroImages[0].url;
+    const record = await buildResearchedSiteGeneration({
       slug,
-      researchId: dossier.researchId,
-      approvedPageId: body.pageBrief.page.id,
+      researchId: body.researchId,
       collectedData,
-      copy,
-      createdAt: new Date().toISOString(),
-    }, null, 2));
+      dossier,
+      pageBriefs: body.pageBriefs,
+      graphEdges: body.graphEdges,
+    }, {
+      generateCopy: generateResearchPageCopy,
+      renderInputs: {
+        theme,
+        assets,
+        heroImageUrl,
+        siteUrl: `https://${slug}.wao.co.il`,
+      },
+    });
 
-    return NextResponse.json({ success: true, slug, simulation: false, deployable: true });
-  } catch {
-    dossier.status = transitionResearchStatus(dossier.status, 'held');
-    await writeResearchDossierAtomic(dossier.researchId, dossier);
+    await persistResearchedSiteRecordAtomic(record, {
+      sitesRoot: path.join(process.cwd(), 'data', 'sites'),
+      dossier,
+      writeDossier: updated => writeResearchDossierAtomic(updated.researchId, updated),
+    });
+
     return NextResponse.json({
-      error: 'research_copy_held',
-      deployable: false,
-      held: true,
-    }, { status: 502 });
+      success: true,
+      slug,
+      simulation: false,
+      deployable: true,
+      pageCount: record.researchedPages.length,
+    });
+  } catch {
+    return NextResponse.json({ error: 'research_generation_failed', deployable: false }, { status: 502 });
   }
 }

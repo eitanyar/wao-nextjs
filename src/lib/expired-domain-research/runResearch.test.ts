@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { createResearchRun, resumeExpiredDomainResearch, runExpiredDomainResearch } from './runResearch';
 import type { CandidateEvidenceBatch, ResearchDependencies } from './runResearch';
-import type { DomainStatusEvidence, HistoricalEvidence, MozAuthorityEvidence, OpenSeoEvidence, ProviderOperation, ResearchRun } from './types';
+import type { DomainStatusEvidence, EvidenceOutcomeStatus, HistoricalEvidence, MozAuthorityEvidence, OpenSeoEvidence, ProviderOperation, ResearchRun } from './types';
 import { validateResearchRun } from './validation';
 
 const stamp = '2026-01-01T00:00:00.000Z';
@@ -13,7 +13,7 @@ const historical = (hostname: string, id = `history-${hostname}`, retrievedAt = 
 const status = (hostname: string, id = `status-${hostname}`, retrievedAt = stamp): DomainStatusEvidence => ({ ...base(id, 'domain-status', retrievedAt), availability: 'unknown', observedAt: stamp });
 const open = (hostname: string, id = `open-${hostname}`, retrievedAt = stamp): OpenSeoEvidence => ({ ...base(id, 'open-seo', retrievedAt), provider: 'open-seo', domainRank: 1, pageRank: 2, targetSpamScore: 3, backlinks: 4, referringDomains: 5, organicTraffic: 6, organicKeywords: 7 });
 const moz = (hostname: string, id = `moz-${hostname}`, retrievedAt = stamp): MozAuthorityEvidence => ({ ...base(id, 'moz-data-api-v3', retrievedAt), provider: 'moz-data-api-v3', pageAuthority: 30, domainAuthority: 40, spamScore: 2 });
-const result = <T>(hostname: string, evidence: T[], statusValue: 'successful' | 'negative' | 'partial' | 'unavailable' = 'successful', reason: string | null = null) => ({ hostname, status: statusValue, reason, evidence });
+const result = <T>(hostname: string, evidence: T[], statusValue: EvidenceOutcomeStatus = 'successful', reason: string | null = null) => ({ hostname, status: statusValue, reason, evidence });
 const batch = <T>(operation: string, results: ReturnType<typeof result<T>>[], extras: Partial<CandidateEvidenceBatch<T>> = {}): CandidateEvidenceBatch<T> => ({ operation, status: 'successful', results, skipped: [], operations: results.length, httpAttempts: results.length, ...extras });
 const clone = <T>(value: T): T => JSON.parse(JSON.stringify(value)) as T;
 
@@ -38,6 +38,9 @@ test('typed candidate-bound adapter evidence and outcomes persist per matching h
   for (const candidate of run.candidates) assert.deepEqual([candidate.historicalEvidence.length, candidate.domainStatusEvidence.length, candidate.openSeoEvidence.length, candidate.mozAuthorityEvidence.length], [1, 1, 1, 1]);
   assert.equal(run.orchestration?.candidateEvidenceOutcomes?.length, 8);
   for (const outcome of run.orchestration?.candidateEvidenceOutcomes ?? []) { const operation: ProviderOperation | undefined = run.orchestration?.providerOperations.find(entry => entry.id === outcome.operationId); const candidate = run.candidates.find(item => item.hostname === outcome.hostname)!; const evidence = outcome.provider === 'wayback' ? candidate.historicalEvidence : outcome.provider === 'domain-status' ? candidate.domainStatusEvidence : outcome.provider === 'open-seo' ? candidate.openSeoEvidence : candidate.mozAuthorityEvidence; assert.equal(operation?.provider, outcome.provider); assert.equal(outcome.evidenceIds.every(id => evidence.some(item => item.id === id) && Boolean(operation?.evidenceIds.includes(id))), true); }
+  assert.equal(run.candidates[0].openSeoEvidence[0].targetSpamScore, 3); assert.equal(run.candidates[0].mozAuthorityEvidence[0].spamScore, 2);
+  assert.equal('pageAuthority' in run.candidates[0].openSeoEvidence[0], false); assert.equal('targetSpamScore' in run.candidates[0].mozAuthorityEvidence[0], false);
+  assert.deepEqual([run.orchestration?.observedOpenSeoCredits, run.orchestration?.observedMozCalls, run.orchestration?.observedHttpAttempts], [2, 2, 7]);
 });
 
 test('negative results retain candidate-bound reasons and malformed results hold before later adapters', async () => {
@@ -106,6 +109,9 @@ test('normal-stage resume rewinds to stale earlier wayback evidence without late
   assert.equal(JSON.stringify(meta.providerOperations.slice(0, priorMeta.providerOperations.length)), JSON.stringify(priorMeta.providerOperations)); assert.equal(JSON.stringify(meta.candidateEvidenceOutcomes?.slice(0, priorMeta.candidateEvidenceOutcomes?.length)), JSON.stringify(priorMeta.candidateEvidenceOutcomes)); assert.equal(JSON.stringify(outcome.run.providerUsage), JSON.stringify(prior.providerUsage)); assert.equal(JSON.stringify(meta.skips), JSON.stringify(priorMeta.skips)); assert.equal(JSON.stringify(meta.holdReasons), JSON.stringify(priorMeta.holdReasons)); assert.equal(JSON.stringify(meta.failureReasons), JSON.stringify(priorMeta.failureReasons)); assert.equal(JSON.stringify(meta.stageHistory.slice(0, priorMeta.stageHistory.length)), JSON.stringify(priorMeta.stageHistory)); assert.equal(new Set(meta.stageHistory.map(entry => entry.stage)).size, meta.stageHistory.length);
   const operation = meta.providerOperations.at(-1)!; const evidence = candidate.historicalEvidence.at(-1)!; const candidateOutcome = (meta.candidateEvidenceOutcomes ?? []).at(-1)!;
   assert.equal(operation.provider, 'wayback'); assert.deepEqual(operation.evidenceIds, [evidence.id]); assert.equal(candidateOutcome.hostname, 'a.test'); assert.equal(candidateOutcome.operationId, operation.id); assert.deepEqual(candidateOutcome.evidenceIds, [evidence.id]);
+  const completed = JSON.stringify(outcome.run); const callCount = calls.length; const snapshotCount = snapshots.length;
+  const repeated = await resumeExpiredDomainResearch(outcome.run, { approvedOpenSeoCredits: 10, approvedMozCalls: 10 }, deps);
+  assert.equal(repeated.status, 'complete'); assert.equal(JSON.stringify(repeated.run), completed); assert.equal(calls.length, callCount); assert.equal(snapshots.length, snapshotCount);
 });
 
 test('initial execution persists immutable validated lifecycle snapshots in order', async () => {
@@ -115,12 +121,51 @@ test('initial execution persists immutable validated lifecycle snapshots in orde
   const run = createResearchRun(input, { approvedOpenSeoCredits: 3, approvedMozCalls: 10, now: () => new Date(stamp), id: () => `lifecycle-${++number}` });
   const outcome = await runExpiredDomainResearch(run, dependencies({ calls, id: () => `operation-${++number}`, persist: async saved => { snapshots.push(clone(saved)); return true; } }));
   assert.equal(outcome.status, 'complete');
-  assert.deepEqual(snapshots.map(saved => saved.orchestration?.stage), ['discovered', 'status_checked', 'niche_enriched', 'authority_enriched', 'risk_gated', 'ranked', 'complete']);
+  assert.deepEqual(snapshots.map(saved => saved.orchestration?.stage), ['validated', 'discovered', 'status_checked', 'niche_enriched', 'authority_enriched', 'risk_gated', 'ranked', 'complete']);
   assert.equal(snapshots.every(validateResearchRun), true);
   const serialized = snapshots.map(saved => JSON.stringify(saved));
   run.candidates[0].historicalEvidence[0].topicalTags.push('later');
   assert.deepEqual(snapshots.map(saved => JSON.stringify(saved)), serialized);
   assert.deepEqual(calls, ['discover', 'history:b.test', 'status:a.test,b.test', 'open:a.test,b.test', 'moz:a.test,b.test']);
+});
+
+test('validated and held persistence failures stop before unsafe continuation', async () => {
+  const initialCalls: string[] = []; let initialWrites = 0;
+  const initial = createResearchRun(input, { approvedOpenSeoCredits: 3, approvedMozCalls: 10, now: () => new Date(stamp), id: () => 'validated-failure' });
+  const failedValidated = await runExpiredDomainResearch(initial, dependencies({ calls: initialCalls, persist: async () => { initialWrites += 1; return false; } }));
+  assert.equal(failedValidated.status, 'failed'); assert.equal(failedValidated.reason, 'persistence_failed'); assert.equal(initialWrites, 1); assert.deepEqual(initialCalls, []);
+
+  const heldSnapshots: ResearchRun[] = []; const heldCalls: string[] = [];
+  const held = createResearchRun(input, { approvedOpenSeoCredits: 0, approvedMozCalls: 10, now: () => new Date(stamp), id: () => 'held-failure' });
+  const failedHeld = await runExpiredDomainResearch(held, dependencies({ calls: heldCalls, persist: async saved => { heldSnapshots.push(clone(saved)); return saved.orchestration?.stage !== 'held'; } }));
+  assert.equal(failedHeld.status, 'failed'); assert.equal(failedHeld.reason, 'persistence_failed');
+  assert.equal(heldCalls.some(call => call.startsWith('open:')), false); assert.equal(heldCalls.some(call => call.startsWith('moz:')), true);
+  assert.equal(heldSnapshots.at(-1)?.orchestration?.stage, 'held');
+});
+
+test('zero approval isolates only its provider and persists held after independent work', async () => {
+  for (const row of [
+    { openCredits: 0, mozCalls: 10, absent: 'open:', present: 'moz:', reason: 'openseo_approval_zero' },
+    { openCredits: 3, mozCalls: 0, absent: 'moz:', present: 'open:', reason: 'moz_approval_zero' },
+  ]) {
+    const calls: string[] = []; const snapshots: ResearchRun[] = []; let number = 0;
+    const run = createResearchRun({ ...input, runId: `zero-${row.reason}` }, { approvedOpenSeoCredits: row.openCredits, approvedMozCalls: row.mozCalls, now: () => new Date(stamp), id: () => `zero-${++number}` });
+    const outcome = await runExpiredDomainResearch(run, dependencies({ calls, id: () => `zero-operation-${++number}`, persist: async saved => { snapshots.push(clone(saved)); return true; } }));
+    assert.equal(outcome.status, 'held', row.reason); assert.equal(outcome.reason, row.reason); assert.equal(calls.some(call => call.startsWith(row.absent)), false); assert.equal(calls.some(call => call.startsWith(row.present)), true);
+    assert.equal(snapshots.at(-1)?.orchestration?.stage, 'held'); assert.equal(snapshots.at(-1)?.orchestration?.holdReasons.includes(row.reason), true);
+  }
+});
+
+test('replacement approval resolves provider-zero hold without duplicating completed work', async () => {
+  let number = 0; const initialCalls: string[] = [];
+  const run = createResearchRun({ ...input, runId: 'zero-resume' }, { approvedOpenSeoCredits: 0, approvedMozCalls: 10, now: () => new Date(stamp), id: () => `zero-resume-${++number}` });
+  const held = await runExpiredDomainResearch(run, dependencies({ calls: initialCalls, id: () => `zero-resume-operation-${++number}` }));
+  assert.equal(held.status, 'held'); assert.equal(held.run.orchestration?.holdReasons.includes('openseo_approval_zero'), true);
+  const beforeOperations = held.run.orchestration!.providerOperations.length; const beforeMozCalls = initialCalls.filter(call => call.startsWith('moz:')).length; const resumedCalls: string[] = [];
+  const resumed = await resumeExpiredDomainResearch(held.run, { approvedOpenSeoCredits: 3, approvedMozCalls: 10 }, dependencies({ calls: resumedCalls, id: () => `zero-resume-retry-${++number}` }));
+  assert.equal(resumed.status, 'complete'); assert.equal(resumed.run.orchestration?.holdReasons.includes('openseo_approval_zero'), false);
+  assert.equal(resumedCalls.some(call => call.startsWith('open:')), true); assert.equal(resumedCalls.some(call => call.startsWith('moz:')), false); assert.equal(beforeMozCalls, 1);
+  assert.equal(resumed.run.orchestration!.providerOperations.length > beforeOperations, true);
 });
 
 test('persistence failures stop initial execution at every durable transition', async () => {
@@ -142,13 +187,15 @@ test('persistence failures stop initial execution at every durable transition', 
 test('initial normalization records invalid duplicate and cap exclusions without mutating inputs', async () => {
   const discovered = ['A.test', 'invalid host', 'a.test', ...Array.from({ length: 52 }, (_, index) => `d${String(index).padStart(2, '0')}.test`)];
   const requested = [' request.test ', 'A.test', 'bad host']; const original = clone({ discovered, requested });
-  const run = createResearchRun({ ...input, runId: 'normalization', requestedCandidates: requested }, { approvedOpenSeoCredits: 3, approvedMozCalls: 10, now: () => new Date(stamp), id: () => 'normalization-id' });
-  const outcome = await runExpiredDomainResearch(run, dependencies({ discover: async () => ({ candidates: discovered, evidence: [] }) }));
+  let number = 0;
+  const run = createResearchRun({ ...input, runId: 'normalization', requestedCandidates: requested }, { approvedOpenSeoCredits: 3, approvedMozCalls: 10, now: () => new Date(stamp), id: () => `normalization-${++number}` });
+  const outcome = await runExpiredDomainResearch(run, dependencies({ id: () => `normalization-operation-${++number}`, discover: async () => ({ candidates: discovered, evidence: [] }) }));
   assert.equal(outcome.status, 'complete');
   assert.deepEqual(run.candidates.map(candidate => candidate.hostname), ['request.test', 'a.test', ...Array.from({ length: 48 }, (_, index) => `d${String(index).padStart(2, '0')}.test`)]);
   assert.deepEqual(run.orchestration?.truncations, [{ stage: 'discovered', originalCount: 54, retainedCount: 50, skippedHostnames: ['d48.test', 'd49.test', 'd50.test', 'd51.test'], reason: 'candidate_cap_50' }]);
   assert.deepEqual(run.orchestration?.skips, [{ stage: 'discovered', hostname: 'bad host', reason: 'invalid_hostname' }, { stage: 'discovered', hostname: 'a.test', reason: 'duplicate_hostname' }, { stage: 'discovered', hostname: 'invalid host', reason: 'invalid_hostname' }, ...['d48.test', 'd49.test', 'd50.test', 'd51.test'].map(hostname => ({ stage: 'discovered', hostname, reason: 'candidate_cap_50' }))]);
   assert.deepEqual({ discovered, requested }, original);
+  assert.equal(validateResearchRun(run), true);
 });
 
 test('invalid approvals and unpersisted metered estimates fail closed before provider calls', async () => {
@@ -175,7 +222,7 @@ test('malformed provider accounting holds before fabricated batch state or later
 });
 
 test('all provider outcome classes retain candidate operation and evidence provenance', async () => {
-  const statuses: Array<'successful' | 'negative' | 'partial' | 'unavailable'> = ['successful', 'negative', 'partial', 'unavailable'];
+  const statuses: EvidenceOutcomeStatus[] = ['successful', 'negative', 'partial', 'unavailable', 'auth-unavailable', 'quota-unavailable', 'rate-limited', 'provider-schema-changed'];
   for (const statusValue of statuses) {
     let number = 0;
     const run = createResearchRun({ ...input, runId: `outcome-${statusValue}` }, { approvedOpenSeoCredits: 3, approvedMozCalls: 10, now: () => new Date(stamp), id: () => `outcome-${++number}` });

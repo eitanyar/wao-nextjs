@@ -2,7 +2,7 @@ import { createHash } from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 
-export type ClientSecurityAuditEvent = 'login-denied' | 'login-succeeded' | 'legacy-migrated' | 'admin-reset' | 'forced-change' | 'owner-change' | 'recovery-contact-request' | 'recovery-contact-delivery' | 'recovery-contact-verified' | 'recovery-contact-denied' | 'recovery-contact-reveal';
+export type ClientSecurityAuditEvent = 'login-denied' | 'login-succeeded' | 'legacy-migrated' | 'admin-reset' | 'forced-change' | 'owner-change' | 'recovery-request' | 'recovery-delivery' | 'recovery-denied' | 'recovery-limited' | 'recovery-reset' | 'recovery-contact-request' | 'recovery-contact-delivery' | 'recovery-contact-verified' | 'recovery-contact-denied' | 'recovery-contact-reveal';
 
 function pseudonymize(value: string): string {
   return createHash('sha256').update(value).digest('hex');

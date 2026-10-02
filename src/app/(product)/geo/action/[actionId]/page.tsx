@@ -3,6 +3,7 @@ import { cookies } from 'next/headers';
 import { notFound, redirect } from 'next/navigation';
 import { ADMIN_COOKIE_NAME, verifyAdminToken } from '@/lib/admin-auth';
 import { findActionById, getClientActions } from '@/lib/geo/actions';
+import { resolveGeoActionViewAccess } from '@/lib/geo/action-access';
 import { getClientRecord } from '@/lib/geo/client';
 import { verifySessionToken, COOKIE_NAME } from '@/lib/client-auth';
 import CopyAnnouncer   from '@/components/geo/CopyAnnouncer';
@@ -33,20 +34,22 @@ export default async function GeoActionPage({
   const actionId = decodeURIComponent(rawId);
 
   const jar = await cookies();
-  const isAdmin = await verifyAdminToken(jar.get(ADMIN_COOKIE_NAME)?.value ?? '');
-  if (!isAdmin) {
-    redirect('/admin/login?next=/geo/action/' + actionId);
-  }
+  const [isAdmin, sessionClientId] = await Promise.all([
+    verifyAdminToken(jar.get(ADMIN_COOKIE_NAME)?.value ?? ''),
+    verifySessionToken(jar.get(COOKIE_NAME)?.value ?? ''),
+  ]);
 
   const action = findActionById(actionId);
+  const access = resolveGeoActionViewAccess({
+    actionExists: Boolean(action),
+    adminAuthenticated: isAdmin,
+    sessionClientId,
+    actionClientId: action?.clientId ?? null,
+    actionPath: `/geo/action/${encodeURIComponent(actionId)}`,
+  });
+  if (access.kind === 'not-found') notFound();
+  if (access.kind === 'login') redirect(`/client/login?next=${encodeURIComponent(access.nextPath)}`);
   if (!action) notFound();
-
-  // Ownership check: the session's client may only view its own actions.
-  // Middleware only confirms SOME valid session — not that it matches this actionId.
-  // Staff with a valid wao-admin cookie may view any action.
-  const token       = jar.get(COOKIE_NAME)?.value ?? '';
-  const sessionClientId = await verifySessionToken(token);
-  if (!isAdmin && (!sessionClientId || sessionClientId !== action.clientId)) notFound();
 
   const client        = getClientRecord(action.clientId);
   const wpConnected    = client?.wpConnected ?? false;

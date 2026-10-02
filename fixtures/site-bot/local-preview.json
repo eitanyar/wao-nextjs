@@ -1,0 +1,97 @@
+{
+  "synthetic": true,
+  "slug": "synthetic-preview",
+  "canonicalOrigin": "https://synthetic-preview.invalid",
+  "themeKey": "emergency-trades",
+  "heroAssetPath": "fixtures/site-bot/local-preview-hero.svg",
+  "collectedData": {
+    "businessName": "Synthetic Workshop",
+    "businessNiche": "synthetic service",
+    "primaryService": "Synthetic Service",
+    "vatStatus": "between_120k_1m"
+  },
+  "pages": [
+    {
+      "opportunityId": "home",
+      "classification": "homepage",
+      "targetPath": "/",
+      "copy": {
+        "heroHeadline": "Synthetic Home",
+        "heroSubheadline": "Offline preview fixture only.",
+        "heroCta": "Disabled",
+        "trustBarItems": ["Synthetic", "Offline"],
+        "aboutBlurb": "Synthetic fixture.",
+        "servicesHeadline": "Services",
+        "serviceItems": ["Synthetic Service"],
+        "faqHeadline": "FAQ",
+        "faqItems": [],
+        "guaranteeBlock": "Synthetic only.",
+        "reviewFeatured": null,
+        "reviewContext": null,
+        "responseTimeBadge": null,
+        "scarcityLine": null,
+        "formHeadline": "No submissions",
+        "stickyBarLine": "Offline only",
+        "aboutPageHeadline": "About synthetic",
+        "aboutPageBody": "Synthetic fixture.",
+        "serviceDetails": [{ "name": "Synthetic Service", "description": "Synthetic fixture service." }]
+      }
+    },
+    {
+      "opportunityId": "hub",
+      "classification": "service_hub",
+      "targetPath": "/services",
+      "copy": {
+        "heroHeadline": "Synthetic Services",
+        "heroSubheadline": "Offline preview fixture only.",
+        "heroCta": "Disabled",
+        "trustBarItems": ["Synthetic", "Offline"],
+        "aboutBlurb": "Synthetic fixture.",
+        "servicesHeadline": "Services",
+        "serviceItems": ["Synthetic Service"],
+        "faqHeadline": "FAQ",
+        "faqItems": [],
+        "guaranteeBlock": "Synthetic only.",
+        "reviewFeatured": null,
+        "reviewContext": null,
+        "responseTimeBadge": null,
+        "scarcityLine": null,
+        "formHeadline": "No submissions",
+        "stickyBarLine": "Offline only",
+        "aboutPageHeadline": "About synthetic",
+        "aboutPageBody": "Synthetic fixture.",
+        "serviceDetails": [{ "name": "Synthetic Service", "description": "Synthetic fixture service." }]
+      }
+    },
+    {
+      "opportunityId": "money-service",
+      "classification": "money_service",
+      "targetPath": "/services/synthetic-service",
+      "copy": {
+        "heroHeadline": "Synthetic Money Service",
+        "heroSubheadline": "Offline preview fixture only.",
+        "heroCta": "Disabled",
+        "trustBarItems": ["Synthetic", "Offline"],
+        "aboutBlurb": "Synthetic fixture.",
+        "servicesHeadline": "Services",
+        "serviceItems": ["Synthetic Service"],
+        "faqHeadline": "FAQ",
+        "faqItems": [],
+        "guaranteeBlock": "Synthetic only.",
+        "reviewFeatured": null,
+        "reviewContext": null,
+        "responseTimeBadge": null,
+        "scarcityLine": null,
+        "formHeadline": "No submissions",
+        "stickyBarLine": "Offline only",
+        "aboutPageHeadline": "About synthetic",
+        "aboutPageBody": "Synthetic fixture.",
+        "serviceDetails": [{ "name": "Synthetic Service", "description": "Synthetic fixture service." }]
+      }
+    }
+  ],
+  "graphEdges": [
+    { "fromId": "home", "toId": "hub" },
+    { "fromId": "hub", "toId": "money-service" }
+  ]
+}

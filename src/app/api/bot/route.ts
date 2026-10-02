@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { ADAM_SYSTEM_PROMPT, DROR_SYSTEM_PROMPT, TAMAR_SYSTEM_PROMPT, T21_PHOTO_ASK_VERSION, CollectedData } from "@/lib/bot/prompts";
 import { getEstimatedCPC } from "@/lib/ads/keywordPlanner";
 import { resolveBoundedOnboardingResponse } from "@/lib/google-ads/onboarding-response";
+import { callQwenChatJSON } from "@/lib/ai/qwen-fast";
 
 interface Message {
   role: "user" | "assistant" | "system";
@@ -432,6 +433,7 @@ function handleSimulation(
         break;
       case 8:
         data.usp = text;
+        data.turnIndex = 9;
         // Generate copy early — for RSA preview
         console.log('DEBUG: data =', data);
         if (data.businessNiche && data.specificCities && data.usp) {
@@ -857,6 +859,7 @@ function generateMockCampaign(data: CollectedData) {
 
 const GEMINI_MODEL_NAME = process.env.GEMINI_MODEL_NAME || "gemini-3.8-flash";
 const GEMINI_TIMEOUT_MS = 12_000;
+const QWEN_CHAT_TIMEOUT_MS = 12_000;
 
 function toGeminiRole(role: Message["role"]): "user" | "model" {
   return role === "assistant" ? "model" : "user";
@@ -926,11 +929,26 @@ async function callGemini(
   }
 }
 
-async function handleGemini(
+type LiveChat = (systemPrompt: string, messages: { role: "user" | "model"; parts: { text: string }[] }[]) => Promise<any>;
+
+async function handleGemini(messages: Message[], currentState: string, collectedData: CollectedData, apiKey: string) {
+  return handleLiveChat(messages, currentState, collectedData,
+    (systemPrompt, contents) => callGemini(apiKey, systemPrompt, contents));
+}
+
+async function handleQwen(messages: Message[], currentState: string, collectedData: CollectedData) {
+  return handleLiveChat(messages, currentState, collectedData, async (systemPrompt, contents) =>
+    JSON.parse(await callQwenChatJSON(systemPrompt, contents.map(({ role, parts }) => ({
+      role: role === "model" ? "assistant" : "user",
+      content: parts[0].text,
+    })), { timeoutMs: QWEN_CHAT_TIMEOUT_MS })));
+}
+
+async function handleLiveChat(
   messages: Message[],
   currentState: string,
   collectedData: CollectedData,
-  apiKey: string
+  liveChat: LiveChat
 ) {
   if (currentState === "STRATEGIZING") {
     const brief = `
@@ -970,8 +988,8 @@ Phone: ${collectedData.phone}
     let tamarData: Record<string, any>;
     try {
       [drorData, tamarData] = await Promise.all([
-        callGemini(apiKey, DROR_SYSTEM_PROMPT, [{ role: "user", parts: [{ text: brief }] }]),
-        callGemini(apiKey, TAMAR_SYSTEM_PROMPT, [{ role: "user", parts: [{ text: brief }] }]),
+        liveChat(DROR_SYSTEM_PROMPT, [{ role: "user", parts: [{ text: brief }] }]),
+        liveChat(TAMAR_SYSTEM_PROMPT, [{ role: "user", parts: [{ text: brief }] }]),
       ]);
     } catch {
       const fallback = generateFallbackStrategyAndCopy(collectedData);
@@ -994,7 +1012,7 @@ IMPORTANT: End your message with EXACTLY this sentence (no variation):
 "אם הכל נראה טוב — כתוב ״אישור״ ואנחנו מתניעים."
 `;
 
-    const adamData = await callGemini(apiKey, ADAM_SYSTEM_PROMPT, [
+    const adamData = await liveChat(ADAM_SYSTEM_PROMPT, [
       { role: "user", parts: [{ text: presentPrompt }] },
     ]);
 
@@ -1109,7 +1127,7 @@ Present ₪${chosenBudget} as: "עם ₪${chosenBudget} תקבל בסביבות 
     });
   }
 
-  const content = await callGemini(apiKey, systemInstruction, geminiContents);
+  const content = await liveChat(systemInstruction, geminiContents);
 
   return NextResponse.json({ ...content, isSimulation: false });
 }
@@ -1123,16 +1141,21 @@ export async function POST(req: Request) {
     const { messages, currentState, collectedData, sessionId } = body;
     const lastUserMessage = messages[messages.length - 1]?.content || "";
 
+    const qwenConfigured = Boolean(process.env.QWEN_API_KEY && process.env.QWEN_BASE_URL);
     const apiKey = process.env.GEMINI_API_KEY;
+    const live = qwenConfigured
+      ? () => handleQwen(messages, currentState, collectedData)
+      : apiKey ? () => handleGemini(messages, currentState, collectedData, apiKey) : null;
+    const timeoutMs = qwenConfigured ? QWEN_CHAT_TIMEOUT_MS : GEMINI_TIMEOUT_MS;
 
-    const result = apiKey && currentState === "DIAGNOSING"
+    const result = live && currentState === "DIAGNOSING"
       ? await resolveBoundedOnboardingResponse({
-          live: () => handleGemini(messages, currentState, collectedData, apiKey),
+          live,
           fallback: () => handleSimulation(lastUserMessage, currentState, collectedData),
-          timeoutMs: GEMINI_TIMEOUT_MS,
+          timeoutMs,
         })
-      : apiKey
-        ? await handleGemini(messages, currentState, collectedData, apiKey)
+      : live
+        ? await live()
         : handleSimulation(lastUserMessage, currentState, collectedData);
 
     // Fire-and-forget session logging — never await, never block/fail the

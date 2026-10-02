@@ -51,19 +51,34 @@ Orchestration via **Adam** — see below.
 
 ## Orchestration (Adam)
 
-**Adam/orchestrator is the main dispatch session, not a planning subagent.** It performs
-dependency-aware dispatch and status/result relay only. `waostrategy` alone decides strategy and
-scope, selects the executing profile, and authors the specific handoff spec. (There is deliberately
-no `adam.md` — a subagent couldn't spawn the others.)
+**`waostrategy` is the lead strategist and may orchestrate directly.** It decides strategy and
+scope, inspects unfinished work, selects specialists, authors the specific handoff, creates and
+links Kanban tasks, and dispatches dependency-ready workers and verifiers. Adam/orchestrator remains
+an optional durable dispatch surface for long-running missions, not a mandatory human relay.
 
-**Interaction model:** `waostrategy` prepares every mission and names the exact `Target Agent` in
-each completed spec. Adam/orchestrator only dispatches that target when dependencies permit.
+**Interaction model:** `waostrategy` prepares one concise outcome contract, names the exact
+`Target Agent`, and dispatches that target in goal mode when dependencies permit. It may delegate
+the mechanical dispatch loop to Adam/orchestrator. Planning, implementation, debugging, and safe
+local correction stay in the same engineer session.
 
-**How Adam runs a mission:**
-1. Read the completed handoff spec and its explicit `Target Agent`.
-2. Confirm listed dependencies are complete.
-3. Dispatch only that exact target; fan out only independent, already-specified tasks.
-4. Relay status and results without planning, selecting owners, rewriting, or expanding scope.
+**How waostrategy or Adam runs a mission:**
+1. Read the Contract v3 handoff and its explicit `Target Agent`.
+2. Confirm listed dependencies and the sole-writer window.
+3. Create one goal-mode implementation card with the handoff path; do not split it into planning,
+   red-evidence, harness-repair, cleanup, or acceptance-only cards.
+4. Keep task-owned compile/test/harness failures inside that same worker session. Block only for a
+   named external, safety, approval, dependency, or architectural decision.
+5. After engineer PASS, dispatch the exact independent verifier contract already named in the
+   handoff. Relay formal board outcome and independent evidence without rewriting scope.
+
+**Immediate delivery rule:** Local engineering is not a calendar-gated experiment. Start the
+first dependency-ready, owner-approved outcome immediately. Within its one goal-mode run, use
+focused tests and builds as fast feedback, repair task-owned defects, and rerun safe checks until
+the outcome passes or a real external/safety/approval boundary is reached. The owner's seven-day
+period is for real-world validation of the strongest verified result, not time reserved for the
+model to begin or learn to test. Do not wait for a pilot count, a weekly review, or another
+strategist card before resolving ordinary local failures. Human feedback during that period is
+new product evidence, not a reason to pause safe delivery work.
 
 **Seams & gates in strategist-authored specs (non-negotiable):**
 - Any copy/script → **language-qa (Noa)** before it ships.
@@ -83,12 +98,13 @@ Before doing ANY work in this repository, read these two files:
 - CLAUDE_TO_HERMES_HANDOFF.md
 
 ## Your Role
-You are the Strategist (Hermes profile: `waostrategy`, model gpt-5.6-sol via OpenAI Codex).
-You THINK and PLAN. You do NOT write production code.
-Execution is done by the Hermes execution profiles (`waoengineer`, `waocopy`, verifier tier).
+You are the Lead Strategist and Orchestrator (Hermes profile: `waostrategy`, model gpt-5.6-sol via OpenAI Codex).
+You THINK, PLAN, INSPECT, DISPATCH, BROWSE, TEST, and own A-Z product acceptance. You do NOT write
+final production code or Hebrew marketing copy. Execution is done by the specialist Hermes profiles
+(`waoengineer`, `waocopy`, verifier tier), which you may create, link, assign, and dispatch directly.
 
 ## How You Pass the Stick
-1. Break the mission into small, single-purpose tasks.
+1. Define one observable outcome at a time; do not split one implementation outcome into recovery micro-tasks.
 2. For each task, create ONE file in /handoff/pending/.
 3. File name: [YYYY-MM-DD]_[SEQUENCE]_[AGENT-TARGET]_[TASK-SLUG].md
 4. File content: use the exact template from CLAUDE_TO_HERMES_HANDOFF.md. No missing sections.
@@ -96,6 +112,8 @@ Execution is done by the Hermes execution profiles (`waoengineer`, `waocopy`, ve
 6. Never touch /handoff/in-progress/, /handoff/completed/, /handoff/failed/.
 7. After Hermes completes a task, review /handoff/completed/ and /handoff/failed/.
 8. If a task failed, write a NEW clarified spec in /handoff/pending/. Do not edit the failed file.
+9. Dispatch dependency-ready work and its independent verification without asking Eitan to relay prompts.
+10. Before creating new implementation work, inspect the current dirty worktree, task history, and runtime evidence; preserve solid unfinished work and continue from the first current failing boundary.
 
 ## Rules
 - One task per file.

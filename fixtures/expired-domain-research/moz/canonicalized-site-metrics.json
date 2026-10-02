@@ -1,0 +1,1 @@
+{"jsonrpc":"2.0","id":"req-canonical","result":{"site_query":{"query":"https://mixed.example.test/"},"site_metrics":{"page_authority":10,"domain_authority":20,"spam_score":-1,"page":"https://mixed.example.test/","root_domain":"mixed.example.test","last_crawled":"2026-02-01T00:00:00.000Z","http_code":301,"external_equity_links":2,"root_domains_to_page":1}}}

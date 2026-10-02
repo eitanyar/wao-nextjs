@@ -1,0 +1,1491 @@
+[
+  {
+    "path": ".gitignore",
+    "status": "unstaged-modified",
+    "owner": "tooling-scripts",
+    "kind": "config",
+    "risk": "low",
+    "acceptance": "n-a",
+    "outcome": "Ignore /artifacts/, podcast fixture builds, data/rank-rent/"
+  },
+  {
+    "path": "AGENTS.md",
+    "status": "unstaged-modified",
+    "owner": "docs-reports",
+    "kind": "docs",
+    "risk": "low",
+    "acceptance": "n-a",
+    "outcome": "Agent profile/workflow rules update (verifier models, cost hygiene)"
+  },
+  {
+    "path": "CLAUDE.md",
+    "status": "unstaged-modified",
+    "owner": "docs-reports",
+    "kind": "docs",
+    "risk": "low",
+    "acceptance": "n-a",
+    "outcome": "Claude-facing repo doc update"
+  },
+  {
+    "path": "CLAUDE_TO_HERMES_HANDOFF.md",
+    "status": "unstaged-modified",
+    "owner": "docs-reports",
+    "kind": "docs",
+    "risk": "low",
+    "acceptance": "n-a",
+    "outcome": "Claude->Hermes handoff doc update (158 lines)"
+  },
+  {
+    "path": "eslint.config.mjs",
+    "status": "unstaged-modified",
+    "owner": "tooling-scripts",
+    "kind": "config",
+    "risk": "low",
+    "acceptance": "n-a",
+    "outcome": "ESLint ignores dist/, artifacts/, podcast fixture dirs"
+  },
+  {
+    "path": "package-lock.json",
+    "status": "unstaged-modified",
+    "owner": "tooling-scripts",
+    "kind": "config",
+    "risk": "med",
+    "acceptance": "unverified",
+    "outcome": "Lockfile update (842 lines: @modelcontextprotocol/sdk + transitive deps); must land together with package.json"
+  },
+  {
+    "path": "package.json",
+    "status": "staged+unstaged-modified",
+    "owner": "deployment-security-staged",
+    "kind": "config",
+    "risk": "med",
+    "acceptance": "board-done",
+    "outcome": "Staged: wire deployment tests into npm test; unstaged: further test-script growth + MCP SDK dep (mixed features)",
+    "hunks": "staged(1): test script adds dist/lib/deployment/*.test.js + src/app/api/deployment-security.test.mjs; unstaged(2): test script adds rank-rent/podcast/astra-copy-review/bot/leads/onboarding-smoke/resend suites; dependency @modelcontextprotocol/sdk@1.30.0",
+    "mixed": "YES - staged hunk is deployment-security only; unstaged hunks mix rank-rent, podcast-title, homepage-astra, qwen-bot, onboarding-demo, expired-domain tooling"
+  },
+  {
+    "path": "src/app/(app)/about/page.tsx",
+    "status": "unstaged-modified",
+    "owner": "homepage-astra-v3",
+    "kind": "source",
+    "risk": "low",
+    "acceptance": "board-fail-pending-fix",
+    "outcome": "Add Google Partners directory sameAs to Organization schema (E-E-A-T proof)"
+  },
+  {
+    "path": "src/app/(app)/google-ads/onboarding/page.tsx",
+    "status": "unstaged-modified",
+    "owner": "onboarding-demo",
+    "kind": "source",
+    "risk": "med",
+    "acceptance": "unverified",
+    "outcome": "Onboarding chat demo page updates (72-line diff, reviewing-state card)"
+  },
+  {
+    "path": "src/app/(app)/layout.tsx",
+    "status": "unstaged-modified",
+    "owner": "homepage-astra-v3",
+    "kind": "source",
+    "risk": "med",
+    "acceptance": "board-fail-pending-fix",
+    "outcome": "Mount AccessibilityControl with astra proof copy labels in root (app) layout",
+    "hunks": "(1) import AccessibilityControl + astra-real-proof-eeat-copy.json; (2) render <AccessibilityControl labels={proof.accessibility.basic_toolbar}/> after CookieBanner",
+    "mixed": "YES - AccessibilityControl is rtl-a11y-fix (t_df680b95); labels source is homepage-astra; two features in one file"
+  },
+  {
+    "path": "src/app/(app)/page.tsx",
+    "status": "unstaged-modified",
+    "owner": "homepage-astra-v3",
+    "kind": "source",
+    "risk": "high",
+    "acceptance": "board-fail-pending-fix",
+    "outcome": "Replace 7 legacy homepage sections with AstraHome + SEO metadata from astra copy JSON",
+    "hunks": "(1) single hunk: removes Hero/Services/Process/WhyWao/Testimonials/BlogPreview/CtaBanner imports and JSX; renders <AstraHome/> with metadata title/description from astra-homepage-copy.json + authority-first copy; note: missing trailing newline at EOF",
+    "mixed": "NO - homepage-astra only"
+  },
+  {
+    "path": "src/app/(app)/trainer/analyze-button.tsx",
+    "status": "unstaged-modified",
+    "owner": "tooling-scripts",
+    "kind": "source",
+    "risk": "low",
+    "acceptance": "unverified",
+    "outcome": "Remove --accent fallback color (CSS var cleanup)"
+  },
+  {
+    "path": "src/app/(app)/trainer/session-of-day.tsx",
+    "status": "unstaged-modified",
+    "owner": "tooling-scripts",
+    "kind": "source",
+    "risk": "low",
+    "acceptance": "unverified",
+    "outcome": "Remove --accent fallback colors (CSS var cleanup)"
+  },
+  {
+    "path": "src/app/(product)/admin/clients/action.ts",
+    "status": "unstaged-modified",
+    "owner": "client-recovery-security",
+    "kind": "source",
+    "risk": "med",
+    "acceptance": "board-done",
+    "outcome": "Admin client recovery-contact actions updated for email recovery flow"
+  },
+  {
+    "path": "src/app/(product)/admin/clients/admin-recovery-contact.security.test.mjs",
+    "status": "unstaged-modified",
+    "owner": "client-recovery-security",
+    "kind": "test",
+    "risk": "low",
+    "acceptance": "board-done",
+    "outcome": "Security tests for admin recovery-contact endpoints"
+  },
+  {
+    "path": "src/app/(product)/admin/clients/page.tsx",
+    "status": "unstaged-modified",
+    "owner": "client-recovery-security",
+    "kind": "source",
+    "risk": "med",
+    "acceptance": "board-done",
+    "outcome": "Admin clients page surfaces recovery-contact state"
+  },
+  {
+    "path": "src/app/(product)/admin/clients/recovery-contact-control.tsx",
+    "status": "unstaged-modified",
+    "owner": "client-recovery-security",
+    "kind": "source",
+    "risk": "med",
+    "acceptance": "board-done",
+    "outcome": "Recovery-contact admin control component updates"
+  },
+  {
+    "path": "src/app/(product)/client/client-auth.security.test.mjs",
+    "status": "unstaged-modified",
+    "owner": "client-recovery-security",
+    "kind": "test",
+    "risk": "low",
+    "acceptance": "board-done",
+    "outcome": "Client auth security tests reworked for pin-recovery changes"
+  },
+  {
+    "path": "src/app/(product)/client/recover/recovery-form.tsx",
+    "status": "unstaged-modified",
+    "owner": "client-recovery-security",
+    "kind": "source",
+    "risk": "med",
+    "acceptance": "board-done",
+    "outcome": "Client recovery form updated (email recovery path)"
+  },
+  {
+    "path": "src/app/(product)/geo/action/[actionId]/page.tsx",
+    "status": "unstaged-modified",
+    "owner": "geo-access",
+    "kind": "source",
+    "risk": "low",
+    "acceptance": "board-done",
+    "outcome": "Geo action page uses resolveGeoActionViewAccess for view authorization"
+  },
+  {
+    "path": "src/app/(product)/geo/signup/pay/[sessionId]/page.tsx",
+    "status": "unstaged-modified",
+    "owner": "client-recovery-security",
+    "kind": "source",
+    "risk": "med",
+    "acceptance": "board-done",
+    "outcome": "Stop displaying generated PIN after payment; direct to personal access-code setup"
+  },
+  {
+    "path": "src/app/api/admin/podcast-titles/podcast-title-admin.security.test.mjs",
+    "status": "unstaged-modified",
+    "owner": "podcast-title",
+    "kind": "test",
+    "risk": "low",
+    "acceptance": "board-done",
+    "outcome": "Minor security-test adjustment (2-line diff) for podcast-title admin"
+  },
+  {
+    "path": "src/app/api/bot/route.test.mjs",
+    "status": "unstaged-modified",
+    "owner": "qwen-bot-integration",
+    "kind": "test",
+    "risk": "low",
+    "acceptance": "board-done",
+    "outcome": "Tests for Qwen live path + fallback behavior"
+  },
+  {
+    "path": "src/app/api/bot/route.ts",
+    "status": "unstaged-modified",
+    "owner": "qwen-bot-integration",
+    "kind": "source",
+    "risk": "med",
+    "acceptance": "board-done",
+    "outcome": "Qwen live-chat path: handleQwen via callQwenChatJSON, provider-agnostic handleLiveChat, Qwen preferred when QWEN_API_KEY+BASE_URL set, Gemini fallback; sim turnIndex fix"
+  },
+  {
+    "path": "src/app/api/client/recover/complete/route.ts",
+    "status": "unstaged-modified",
+    "owner": "client-recovery-security",
+    "kind": "source",
+    "risk": "med",
+    "acceptance": "board-done",
+    "outcome": "Recovery complete route hardened/updated"
+  },
+  {
+    "path": "src/app/api/client/recover/request/route.ts",
+    "status": "unstaged-modified",
+    "owner": "client-recovery-security",
+    "kind": "source",
+    "risk": "med",
+    "acceptance": "board-done",
+    "outcome": "Recovery request route hardened/updated"
+  },
+  {
+    "path": "src/app/api/cloudflare-pages/deploy/route.ts",
+    "status": "staged-modified",
+    "owner": "deployment-security-staged",
+    "kind": "source",
+    "risk": "low",
+    "acceptance": "board-done",
+    "outcome": "Harden LP deploy route: cookie auth (admin or owning client) before body parse, slug validation, ownership 403, execFileSync argv wrangler, mkdtemp + finally cleanup",
+    "hunks": "(1) imports execFileSync/mkdtempSync; (2) adds admin-auth/client-auth/campaign/deploy-access imports; (3) cookieValue helper; (4) 401 auth gate + isSafeDeploymentSlug + client ownership 403 before side effects; (5) mkdtempSync tmpdir with try/finally rmSync; (6) wrangler calls via argv not shell; (7) DNS error typed, catch error:unknown",
+    "mixed": "NO - deployment-security only"
+  },
+  {
+    "path": "src/app/api/deployment-security.test.mjs",
+    "status": "staged-added",
+    "owner": "deployment-security-staged",
+    "kind": "test",
+    "risk": "low",
+    "acceptance": "board-done",
+    "outcome": "New security test: both deploy routes authorize+validate slug before side effects, no shell exec, unique tmpdir with cleanup, fraud-blocker failure halts site-bot deploy",
+    "hunks": "(1) new file, 3 tests reading both route sources and asserting order/regex invariants",
+    "mixed": "NO - deployment-security only"
+  },
+  {
+    "path": "src/app/api/geo/signup/init/route.ts",
+    "status": "unstaged-modified",
+    "owner": "client-recovery-security",
+    "kind": "source",
+    "risk": "med",
+    "acceptance": "board-done",
+    "outcome": "Stop generating/storing random PIN at signup init"
+  },
+  {
+    "path": "src/app/api/google-ads/onboarding-smoke.test.mjs",
+    "status": "unstaged-modified",
+    "owner": "onboarding-demo",
+    "kind": "test",
+    "risk": "low",
+    "acceptance": "unverified",
+    "outcome": "Onboarding smoke test additions (55 lines)"
+  },
+  {
+    "path": "src/app/api/site-bot/deploy/route.ts",
+    "status": "staged+unstaged-modified",
+    "owner": "deployment-security-staged",
+    "kind": "source",
+    "risk": "med",
+    "acceptance": "board-done",
+    "outcome": "Staged: admin-cookie auth gate, slug validation, execFileSync argv wrangler, mkdtemp + finally cleanup; unstaged: drop unused fraudBlockerRequired const",
+    "hunks": "staged(6): admin-auth+deploy-access imports; 401 gate via cookies(); isSafeDeploymentSlug replaces !slug; mkdtempSync + guarded child mkdirSync; argv wrangler calls; finally rmSync replaces else-branch cleanup. unstaged(1): removes unused fraudBlockerRequired variable (site-bot cleanup)",
+    "mixed": "MINOR - staged hunks deployment-security only; single unstaged hunk is site-bot dead-code cleanup"
+  },
+  {
+    "path": "src/app/api/site-bot/generate/route.ts",
+    "status": "unstaged-modified",
+    "owner": "site-bot-pilot",
+    "kind": "source",
+    "risk": "med",
+    "acceptance": "unverified",
+    "outcome": "Generate route reworked (123-line diff) for researched site generation / local preview path"
+  },
+  {
+    "path": "src/app/globals.css",
+    "status": "unstaged-modified",
+    "owner": "homepage-astra-v3",
+    "kind": "source",
+    "risk": "med",
+    "acceptance": "board-fail-pending-fix",
+    "outcome": "~707 added lines: full Astra design system (header, hero, demo flow, owner card, video proof, buttons, responsive)",
+    "hunks": "(1) .onboarding-chat-card-reviewing height clamp (onboarding-demo, 1 line); (2) large appended block: --astra-* tokens, .astra-header/nav/menu, .astra-hero, .astra-button variants, .astra-demo ad/page mock, .astra-owner-card, .astra-video-proof/consent, RTL arrow flip (.astra-home .astra-arrow scaleX(-1)), media queries",
+    "mixed": "YES - one onboarding-demo hunk + rest homepage-astra-v3 (incl. rtl-a11y arrow flip)"
+  },
+  {
+    "path": "src/components/CookieBanner.tsx",
+    "status": "unstaged-modified",
+    "owner": "onboarding-demo",
+    "kind": "source",
+    "risk": "low",
+    "acceptance": "unverified",
+    "outcome": "Suppress cookie banner on /google-ads/onboarding; add wao-cookie-banner class",
+    "hunks": "(1) SUPPRESS_ON += /google-ads/onboarding; (2) className wao-cookie-banner added to dialog div",
+    "mixed": "MINOR - suppression is onboarding-demo; class hook supports astra/consent visual QA styling"
+  },
+  {
+    "path": "src/components/ExitSurveyPopup.tsx",
+    "status": "unstaged-modified",
+    "owner": "homepage-astra-v3",
+    "kind": "source",
+    "risk": "low",
+    "acceptance": "board-fail-pending-fix",
+    "outcome": "Suppress exit-survey popup on the new Astra homepage ('/')",
+    "hunks": "(1) getVariant bypassed when pathname === '/'; (2) render guard returns null on '/'",
+    "mixed": "NO - homepage-astra only"
+  },
+  {
+    "path": "src/components/Footer.tsx",
+    "status": "unstaged-modified",
+    "owner": "homepage-astra-v3",
+    "kind": "source",
+    "risk": "low",
+    "acceptance": "board-fail-pending-fix",
+    "outcome": "Footer restyled to astra tokens, nav/labels from astra-homepage-copy.json, adds phone icon",
+    "hunks": "(1) imports astra copy JSON + adds PhoneIcon svg; footer markup/classes updated",
+    "mixed": "NO - homepage-astra only"
+  },
+  {
+    "path": "src/components/Header.tsx",
+    "status": "unstaged-modified",
+    "owner": "homepage-astra-v3",
+    "kind": "source",
+    "risk": "med",
+    "acceptance": "board-fail-pending-fix",
+    "outcome": "Full rewrite: astra-header markup driven by astra-homepage-copy.json nav, mobile menu with Escape-to-close",
+    "hunks": "(1) single rewrite hunk: removes inline-styled scrolled/PhoneReveal header; new class-based astra header, nav from copy JSON, help link, mobile menu + keydown Escape close",
+    "mixed": "NO - homepage-astra only (a11y escape handling is part of same card family)"
+  },
+  {
+    "path": "src/lib/admin-auth.test.ts",
+    "status": "unstaged-modified",
+    "owner": "client-recovery-security",
+    "kind": "test",
+    "risk": "low",
+    "acceptance": "board-done",
+    "outcome": "Tests for admin-auth changes"
+  },
+  {
+    "path": "src/lib/admin-auth.ts",
+    "status": "unstaged-modified",
+    "owner": "client-recovery-security",
+    "kind": "source",
+    "risk": "med",
+    "acceptance": "board-done",
+    "outcome": "Admin auth: host-aware client fixture access verification"
+  },
+  {
+    "path": "src/lib/ai/qwen-fast.test.ts",
+    "status": "unstaged-modified",
+    "owner": "qwen-bot-integration",
+    "kind": "test",
+    "risk": "low",
+    "acceptance": "board-done",
+    "outcome": "Tests for qwen-fast chat JSON helper"
+  },
+  {
+    "path": "src/lib/ai/qwen-fast.ts",
+    "status": "unstaged-modified",
+    "owner": "qwen-bot-integration",
+    "kind": "source",
+    "risk": "low",
+    "acceptance": "board-done",
+    "outcome": "callQwenChatJSON helper (timeout, JSON chat completions)"
+  },
+  {
+    "path": "src/lib/client-auth-store.test.ts",
+    "status": "unstaged-modified",
+    "owner": "client-recovery-security",
+    "kind": "test",
+    "risk": "low",
+    "acceptance": "board-done",
+    "outcome": "Tests for client-auth-store changes"
+  },
+  {
+    "path": "src/lib/client-auth-store.ts",
+    "status": "unstaged-modified",
+    "owner": "client-recovery-security",
+    "kind": "source",
+    "risk": "med",
+    "acceptance": "board-done",
+    "outcome": "Client auth store: pin recovery email support"
+  },
+  {
+    "path": "src/lib/client-pin-recovery.test.ts",
+    "status": "unstaged-modified",
+    "owner": "client-recovery-security",
+    "kind": "test",
+    "risk": "low",
+    "acceptance": "board-done",
+    "outcome": "Tests for pin-recovery rework"
+  },
+  {
+    "path": "src/lib/client-pin-recovery.ts",
+    "status": "unstaged-modified",
+    "owner": "client-recovery-security",
+    "kind": "source",
+    "risk": "med",
+    "acceptance": "board-done",
+    "outcome": "PIN recovery reworked (email-based recovery, limited/reset events)"
+  },
+  {
+    "path": "src/lib/client-recovery-contact.test.ts",
+    "status": "unstaged-modified",
+    "owner": "client-recovery-security",
+    "kind": "test",
+    "risk": "low",
+    "acceptance": "board-done",
+    "outcome": "Tests for recovery-contact rework"
+  },
+  {
+    "path": "src/lib/client-recovery-contact.ts",
+    "status": "unstaged-modified",
+    "owner": "client-recovery-security",
+    "kind": "source",
+    "risk": "med",
+    "acceptance": "board-done",
+    "outcome": "Recovery-contact logic rework (293-line diff)"
+  },
+  {
+    "path": "src/lib/client-security-audit.ts",
+    "status": "unstaged-modified",
+    "owner": "client-recovery-security",
+    "kind": "source",
+    "risk": "med",
+    "acceptance": "board-done",
+    "outcome": "Audit event union extended with recovery-request/delivery/denied/limited/reset"
+  },
+  {
+    "path": "src/lib/deployment/deploy-access.test.ts",
+    "status": "staged-added",
+    "owner": "deployment-security-staged",
+    "kind": "test",
+    "risk": "low",
+    "acceptance": "board-done",
+    "outcome": "Boundary tests for isSafeDeploymentSlug (accepts DNS-safe 3-40 char slugs, rejects traversal/shell/uppercase/malformed)",
+    "hunks": "(1) new file, 2 tests: accept boundaries, reject unsafe values",
+    "mixed": "NO - deployment-security only"
+  },
+  {
+    "path": "src/lib/deployment/deploy-access.ts",
+    "status": "staged-added",
+    "owner": "deployment-security-staged",
+    "kind": "source",
+    "risk": "low",
+    "acceptance": "board-done",
+    "outcome": "Shared slug validator: regex DNS-label guard used by both deploy routes",
+    "hunks": "(1) new file: SAFE_DEPLOYMENT_SLUG regex + isSafeDeploymentSlug type guard",
+    "mixed": "NO - deployment-security only"
+  },
+  {
+    "path": "src/lib/expired-domain-research/runResearch.test.ts",
+    "status": "unstaged-modified",
+    "owner": "expired-domain-research",
+    "kind": "source",
+    "risk": "low",
+    "acceptance": "unverified",
+    "outcome": "Tests for updated research pipeline"
+  },
+  {
+    "path": "src/lib/expired-domain-research/runResearch.ts",
+    "status": "unstaged-modified",
+    "owner": "expired-domain-research",
+    "kind": "source",
+    "risk": "low",
+    "acceptance": "unverified",
+    "outcome": "Research pipeline integrates Moz metrics / OpenSEO MCP signals"
+  },
+  {
+    "path": "src/lib/expired-domain-research/validation.test.ts",
+    "status": "unstaged-modified",
+    "owner": "expired-domain-research",
+    "kind": "test",
+    "risk": "low",
+    "acceptance": "unverified",
+    "outcome": "Tests for validation updates"
+  },
+  {
+    "path": "src/lib/expired-domain-research/validation.ts",
+    "status": "unstaged-modified",
+    "owner": "expired-domain-research",
+    "kind": "source",
+    "risk": "low",
+    "acceptance": "unverified",
+    "outcome": "Validation updates for new metric sources"
+  },
+  {
+    "path": "src/lib/geo/client.test.ts",
+    "status": "unstaged-modified",
+    "owner": "geo-access",
+    "kind": "test",
+    "risk": "low",
+    "acceptance": "board-done",
+    "outcome": "Tests for geo client update"
+  },
+  {
+    "path": "src/lib/geo/client.ts",
+    "status": "unstaged-modified",
+    "owner": "geo-access",
+    "kind": "source",
+    "risk": "low",
+    "acceptance": "board-done",
+    "outcome": "Geo client record helpers updated (small)"
+  },
+  {
+    "path": "src/lib/shared/clients.ts",
+    "status": "unstaged-modified",
+    "owner": "client-recovery-security",
+    "kind": "source",
+    "risk": "med",
+    "acceptance": "board-done",
+    "outcome": "SharedClientRecord adds clientPinRecoveryEmail field"
+  },
+  {
+    "path": "src/proxy.ts",
+    "status": "unstaged-modified",
+    "owner": "client-recovery-security",
+    "kind": "source",
+    "risk": "med",
+    "acceptance": "board-done",
+    "outcome": "Middleware: host arg passed to verifyAdminClientFixtureAccess; /admin/astra-copy-review added to master-admin protection",
+    "hunks": "(1) MASTER_ADMIN_PROTECTED += /admin/astra-copy-review; (2) fixture access verify receives req host header; (3) matcher adds astra-copy-review paths",
+    "mixed": "YES - client-recovery-security (host check) + homepage-astra-v3 (astra-copy-review admin protection)"
+  },
+  {
+    "path": "tsconfig.test.json",
+    "status": "staged+unstaged-modified",
+    "owner": "deployment-security-staged",
+    "kind": "config",
+    "risk": "med",
+    "acceptance": "board-done",
+    "outcome": "Staged: add deploy-access files to test compile list; unstaged: adds many other feature test files (mixed)",
+    "hunks": "staged(1): adds src/lib/deployment/deploy-access.{ts,test.ts}; unstaged(~6): adds astra-copy-review, google-ads/onboarding-demo, site-bot researchedSiteGeneration+localPreview, geo/action-access, notifications/resend-transactional, expired-domain openSeoMcp+mozMetrics+topicalFit (with reordering), rank-rent suite (12 files)",
+    "mixed": "YES - staged hunk deployment-security only; unstaged hunks mix homepage-astra, onboarding-demo, site-bot-pilot, geo-access, client-recovery, expired-domain-research, rank-rent"
+  },
+  {
+    "path": ".hermes/audits/",
+    "status": "untracked",
+    "owner": "personal-temp",
+    "kind": "temp",
+    "risk": "low",
+    "acceptance": "n-a",
+    "outcome": "Hermes completion-watch audit notes (2026-09-11, t_efa1016c)",
+    "notes": "untracked dir: 2 md files"
+  },
+  {
+    "path": "audits/",
+    "status": "untracked",
+    "owner": "personal-temp",
+    "kind": "temp",
+    "risk": "low",
+    "acceptance": "n-a",
+    "outcome": "Local QA audit outputs (homepage-ui-qa 2026-09-12 manifest+verdict, sksu completion watch)",
+    "notes": "untracked dir: 3 files"
+  },
+  {
+    "path": "data/lps/northstar-plumbing.json",
+    "status": "untracked",
+    "owner": "data-client",
+    "kind": "data",
+    "risk": "med",
+    "acceptance": "n-a",
+    "outcome": "Client LP record (northstar-plumbing) - client data, contents not read per policy; committing exposes client record to repo history"
+  },
+  {
+    "path": "docs/copy/astra-authority-first-homepage-copy.json",
+    "status": "untracked",
+    "owner": "homepage-astra-v3",
+    "kind": "docs",
+    "risk": "low",
+    "acceptance": "n-a",
+    "outcome": "Astra homepage copy draft/QA artifact (iteration snapshots + Hebrew QA reports)"
+  },
+  {
+    "path": "docs/copy/astra-authority-first-homepage-copy.pre-sabra-2026-09-28.json",
+    "status": "untracked",
+    "owner": "homepage-astra-v3",
+    "kind": "docs",
+    "risk": "low",
+    "acceptance": "n-a",
+    "outcome": "Astra homepage copy draft/QA artifact (iteration snapshots + Hebrew QA reports)"
+  },
+  {
+    "path": "docs/copy/astra-authority-first-homepage-copy.pre-sharp-sabra-2026-09-28.json",
+    "status": "untracked",
+    "owner": "homepage-astra-v3",
+    "kind": "docs",
+    "risk": "low",
+    "acceptance": "n-a",
+    "outcome": "Astra homepage copy draft/QA artifact (iteration snapshots + Hebrew QA reports)"
+  },
+  {
+    "path": "docs/copy/astra-authority-first-homepage-copy.qwen38-2026-09-29.json",
+    "status": "untracked",
+    "owner": "homepage-astra-v3",
+    "kind": "docs",
+    "risk": "low",
+    "acceptance": "n-a",
+    "outcome": "Astra homepage copy draft/QA artifact (iteration snapshots + Hebrew QA reports)"
+  },
+  {
+    "path": "docs/copy/astra-authority-first-homepage-copy.qwen38-v3-2026-09-30.json",
+    "status": "untracked",
+    "owner": "homepage-astra-v3",
+    "kind": "docs",
+    "risk": "low",
+    "acceptance": "n-a",
+    "outcome": "Astra homepage copy draft/QA artifact (iteration snapshots + Hebrew QA reports)"
+  },
+  {
+    "path": "docs/copy/astra-homepage-copy.json",
+    "status": "untracked",
+    "owner": "homepage-astra-v3",
+    "kind": "docs",
+    "risk": "low",
+    "acceptance": "n-a",
+    "outcome": "Astra homepage copy draft/QA artifact (iteration snapshots + Hebrew QA reports)"
+  },
+  {
+    "path": "docs/copy/astra-homepage-copy.qa.md",
+    "status": "untracked",
+    "owner": "homepage-astra-v3",
+    "kind": "docs",
+    "risk": "low",
+    "acceptance": "n-a",
+    "outcome": "Astra homepage copy draft/QA artifact (iteration snapshots + Hebrew QA reports)"
+  },
+  {
+    "path": "docs/copy/astra-homepage-copy.recheck.qa.md",
+    "status": "untracked",
+    "owner": "homepage-astra-v3",
+    "kind": "docs",
+    "risk": "low",
+    "acceptance": "n-a",
+    "outcome": "Astra homepage copy draft/QA artifact (iteration snapshots + Hebrew QA reports)"
+  },
+  {
+    "path": "docs/copy/astra-homepage-recommendations.md",
+    "status": "untracked",
+    "owner": "homepage-astra-v3",
+    "kind": "docs",
+    "risk": "low",
+    "acceptance": "n-a",
+    "outcome": "Astra homepage copy draft/QA artifact (iteration snapshots + Hebrew QA reports)"
+  },
+  {
+    "path": "docs/copy/astra-real-proof-eeat-copy.json",
+    "status": "untracked",
+    "owner": "homepage-astra-v3",
+    "kind": "docs",
+    "risk": "low",
+    "acceptance": "n-a",
+    "outcome": "Astra homepage copy draft/QA artifact (iteration snapshots + Hebrew QA reports)"
+  },
+  {
+    "path": "docs/copy/astra-real-proof-eeat-copy.qa.md",
+    "status": "untracked",
+    "owner": "homepage-astra-v3",
+    "kind": "docs",
+    "risk": "low",
+    "acceptance": "n-a",
+    "outcome": "Astra homepage copy draft/QA artifact (iteration snapshots + Hebrew QA reports)"
+  },
+  {
+    "path": "docs/copy/audit-disclosure-contact-patches.json",
+    "status": "untracked",
+    "owner": "docs-reports",
+    "kind": "docs",
+    "risk": "low",
+    "acceptance": "n-a",
+    "outcome": "Copy patch notes: audit disclosure / contact wording"
+  },
+  {
+    "path": "docs/copy/site-bot-fictional-rooftop-demo-site.json",
+    "status": "untracked",
+    "owner": "site-bot-pilot",
+    "kind": "docs",
+    "risk": "low",
+    "acceptance": "unverified",
+    "outcome": "Fictional rooftop demo site copy"
+  },
+  {
+    "path": "docs/copy/site-bot-pilot-intake-notebook.json",
+    "status": "untracked",
+    "owner": "site-bot-pilot",
+    "kind": "docs",
+    "risk": "low",
+    "acceptance": "unverified",
+    "outcome": "Pilot intake notebook copy"
+  },
+  {
+    "path": "docs/copy/site-bot-pilot-intake-notebook.qa.json",
+    "status": "untracked",
+    "owner": "site-bot-pilot",
+    "kind": "docs",
+    "risk": "low",
+    "acceptance": "unverified",
+    "outcome": "Pilot intake notebook QA output"
+  },
+  {
+    "path": "docs/missions/continuous-waostrategy-planning-loop-2026-09-06.md",
+    "status": "untracked",
+    "owner": "docs-reports",
+    "kind": "docs",
+    "risk": "low",
+    "acceptance": "n-a",
+    "outcome": "Mission record: continuous strategy planning loop"
+  },
+  {
+    "path": "docs/missions/expired-domain-research-tool-2026-09-05.md",
+    "status": "untracked",
+    "owner": "expired-domain-research",
+    "kind": "docs",
+    "risk": "low",
+    "acceptance": "unverified",
+    "outcome": "Mission record for expired-domain research tool"
+  },
+  {
+    "path": "docs/missions/outcome-owned-delivery-model-2026-09-09.md",
+    "status": "untracked",
+    "owner": "docs-reports",
+    "kind": "docs",
+    "risk": "low",
+    "acceptance": "n-a",
+    "outcome": "Mission record: outcome-owned delivery model"
+  },
+  {
+    "path": "docs/missions/owner-operations-manual-section-2026-09-06.md",
+    "status": "untracked",
+    "owner": "docs-reports",
+    "kind": "docs",
+    "risk": "low",
+    "acceptance": "n-a",
+    "outcome": "Owner operations manual section"
+  },
+  {
+    "path": "docs/operations/",
+    "status": "untracked",
+    "owner": "site-bot-pilot",
+    "kind": "docs",
+    "risk": "low",
+    "acceptance": "unverified",
+    "outcome": "weekend-human-qa-guide-2026-09-19.md (site-bot weekend launch QA guide)"
+  },
+  {
+    "path": "docs/research/astra-authority-first-homepage-decision-2026-09-27.md",
+    "status": "untracked",
+    "owner": "homepage-astra-v3",
+    "kind": "docs",
+    "risk": "low",
+    "acceptance": "n-a",
+    "outcome": "Astra homepage decision/research record"
+  },
+  {
+    "path": "docs/research/astra-conversion-problem-definition-2026-09-30-addendum1.md",
+    "status": "untracked",
+    "owner": "homepage-astra-v3",
+    "kind": "docs",
+    "risk": "low",
+    "acceptance": "n-a",
+    "outcome": "Astra homepage decision/research record"
+  },
+  {
+    "path": "docs/research/astra-conversion-problem-definition-2026-09-30.md",
+    "status": "untracked",
+    "owner": "homepage-astra-v3",
+    "kind": "docs",
+    "risk": "low",
+    "acceptance": "n-a",
+    "outcome": "Astra homepage decision/research record"
+  },
+  {
+    "path": "docs/research/astra-preview-restart-policy-recovery-decision-2026-09-28.md",
+    "status": "untracked",
+    "owner": "homepage-astra-v3",
+    "kind": "docs",
+    "risk": "low",
+    "acceptance": "n-a",
+    "outcome": "Astra homepage decision/research record"
+  },
+  {
+    "path": "docs/research/astra-real-proof-eeat-decision-2026-09-24.md",
+    "status": "untracked",
+    "owner": "homepage-astra-v3",
+    "kind": "docs",
+    "risk": "low",
+    "acceptance": "n-a",
+    "outcome": "Astra homepage decision/research record"
+  },
+  {
+    "path": "docs/research/astra-real-proof-source-manifest.json",
+    "status": "untracked",
+    "owner": "homepage-astra-v3",
+    "kind": "docs",
+    "risk": "low",
+    "acceptance": "n-a",
+    "outcome": "Astra homepage decision/research record"
+  },
+  {
+    "path": "docs/research/astra-single-hebrew-qa-exception-decision-2026-09-24.md",
+    "status": "untracked",
+    "owner": "homepage-astra-v3",
+    "kind": "docs",
+    "risk": "low",
+    "acceptance": "n-a",
+    "outcome": "Astra homepage decision/research record"
+  },
+  {
+    "path": "docs/research/astra-verification-mismatch-decision-2026-09-22.md",
+    "status": "untracked",
+    "owner": "homepage-astra-v3",
+    "kind": "docs",
+    "risk": "low",
+    "acceptance": "n-a",
+    "outcome": "Astra homepage decision/research record"
+  },
+  {
+    "path": "docs/research/audit-visual-failure-classification-2026-09-18.md",
+    "status": "untracked",
+    "owner": "docs-reports",
+    "kind": "docs",
+    "risk": "low",
+    "acceptance": "n-a",
+    "outcome": "Visual failure classification audit report"
+  },
+  {
+    "path": "docs/research/authorization-spec-reliability-audit-2026-09-07.md",
+    "status": "untracked",
+    "owner": "docs-reports",
+    "kind": "docs",
+    "risk": "low",
+    "acceptance": "n-a",
+    "outcome": "Authorization spec reliability audit"
+  },
+  {
+    "path": "docs/research/email-recovery-simplification-decision-2026-09-17.md",
+    "status": "untracked",
+    "owner": "client-recovery-security",
+    "kind": "docs",
+    "risk": "low",
+    "acceptance": "board-done",
+    "outcome": "Email recovery simplification decision record"
+  },
+  {
+    "path": "docs/research/featured-services/",
+    "status": "untracked",
+    "owner": "docs-reports",
+    "kind": "docs",
+    "risk": "low",
+    "acceptance": "n-a",
+    "outcome": "Featured-services research: 001_offer-readiness.md"
+  },
+  {
+    "path": "docs/research/next-production-near-outcome-2026-09-18.md",
+    "status": "untracked",
+    "owner": "docs-reports",
+    "kind": "docs",
+    "risk": "low",
+    "acceptance": "n-a",
+    "outcome": "Production-near outcome report"
+  },
+  {
+    "path": "docs/research/next-production-near-release-outcome-2026-09-18.md",
+    "status": "untracked",
+    "owner": "docs-reports",
+    "kind": "docs",
+    "risk": "low",
+    "acceptance": "n-a",
+    "outcome": "Production-near release outcome report"
+  },
+  {
+    "path": "docs/research/next-production-near-security-outcome-2026-09-18.md",
+    "status": "untracked",
+    "owner": "deployment-security-staged",
+    "kind": "docs",
+    "risk": "low",
+    "acceptance": "n-a",
+    "outcome": "Production-near security outcome report (deploy-hardening lineage)"
+  },
+  {
+    "path": "docs/research/onboarding-model-reconciliation-2026-09-30.md",
+    "status": "untracked",
+    "owner": "onboarding-demo",
+    "kind": "docs",
+    "risk": "low",
+    "acceptance": "unverified",
+    "outcome": "Onboarding model reconciliation decision record"
+  },
+  {
+    "path": "docs/research/persona-led-website-positioning-assessment-2026-09-06.md",
+    "status": "untracked",
+    "owner": "homepage-astra-v3",
+    "kind": "docs",
+    "risk": "low",
+    "acceptance": "n-a",
+    "outcome": "Persona-led website positioning assessment (astra predecessor research)"
+  },
+  {
+    "path": "docs/research/rank-and-rent-portfolio-operating-system-2026-09-06.md",
+    "status": "untracked",
+    "owner": "rank-rent-experimental",
+    "kind": "docs",
+    "risk": "low",
+    "acceptance": "n-a",
+    "outcome": "Rank-and-rent operating-system strategy doc"
+  },
+  {
+    "path": "docs/research/rank-and-rent-portfolio-strategy-2026-09-06.md",
+    "status": "untracked",
+    "owner": "rank-rent-experimental",
+    "kind": "docs",
+    "risk": "low",
+    "acceptance": "n-a",
+    "outcome": "Rank-and-rent portfolio strategy doc"
+  },
+  {
+    "path": "docs/research/release-inventory-2026-09-30.json",
+    "status": "untracked",
+    "owner": "docs-reports",
+    "kind": "docs",
+    "risk": "low",
+    "acceptance": "n-a",
+    "outcome": "This release-candidate inventory file (output of the 2026-09-30 read-only worktree audit)"
+  },
+  {
+    "path": "docs/research/rooftop-demo-copy-qa-recovery-decision-2026-09-20.md",
+    "status": "untracked",
+    "owner": "site-bot-pilot",
+    "kind": "docs",
+    "risk": "low",
+    "acceptance": "unverified",
+    "outcome": "Rooftop demo copy QA recovery decision"
+  },
+  {
+    "path": "docs/research/rooftop-demo-simplification-decision-2026-09-20.md",
+    "status": "untracked",
+    "owner": "site-bot-pilot",
+    "kind": "docs",
+    "risk": "low",
+    "acceptance": "unverified",
+    "outcome": "Rooftop demo simplification decision"
+  },
+  {
+    "path": "docs/research/seven-day-delivery-lane-decision-2026-09-17.md",
+    "status": "untracked",
+    "owner": "docs-reports",
+    "kind": "docs",
+    "risk": "low",
+    "acceptance": "n-a",
+    "outcome": "Seven-day delivery lane decision"
+  },
+  {
+    "path": "docs/research/wao-017-019-reconciliation.md",
+    "status": "untracked",
+    "owner": "deployment-security-staged",
+    "kind": "docs",
+    "risk": "low",
+    "acceptance": "n-a",
+    "outcome": "Reconciliation of wao-017..019 deploy-hardening cards"
+  },
+  {
+    "path": "docs/research/wao-agent-workflow-qwen-chat-stabilization-2026-09-29.md",
+    "status": "untracked",
+    "owner": "qwen-bot-integration",
+    "kind": "docs",
+    "risk": "low",
+    "acceptance": "n-a",
+    "outcome": "Qwen chat stabilization decision record"
+  },
+  {
+    "path": "docs/research/wao-dispatch-readiness-2026-09-09.csv",
+    "status": "untracked",
+    "owner": "docs-reports",
+    "kind": "docs",
+    "risk": "low",
+    "acceptance": "n-a",
+    "outcome": "Dispatch readiness data snapshot"
+  },
+  {
+    "path": "docs/research/wao-execution-reliability-decision-2026-09-09.md",
+    "status": "untracked",
+    "owner": "docs-reports",
+    "kind": "docs",
+    "risk": "low",
+    "acceptance": "n-a",
+    "outcome": "Execution reliability decision"
+  },
+  {
+    "path": "docs/research/wao-homepage-recovery-qwen-copy-strategy-2026-09-29.md",
+    "status": "untracked",
+    "owner": "homepage-astra-v3",
+    "kind": "docs",
+    "risk": "low",
+    "acceptance": "n-a",
+    "outcome": "Astra homepage decision/research record"
+  },
+  {
+    "path": "docs/research/wao-macro-goal-bottleneck-scan-2026-09-29.md",
+    "status": "untracked",
+    "owner": "docs-reports",
+    "kind": "docs",
+    "risk": "low",
+    "acceptance": "n-a",
+    "outcome": "Macro-goal bottleneck scan"
+  },
+  {
+    "path": "docs/research/wao-pending-queue-triage-2026-09-09.md",
+    "status": "untracked",
+    "owner": "docs-reports",
+    "kind": "docs",
+    "risk": "low",
+    "acceptance": "n-a",
+    "outcome": "Pending queue triage report"
+  },
+  {
+    "path": "docs/research/weekend-sitebot-launch-readiness-2026-09-19.md",
+    "status": "untracked",
+    "owner": "site-bot-pilot",
+    "kind": "docs",
+    "risk": "low",
+    "acceptance": "unverified",
+    "outcome": "Weekend site-bot launch readiness assessment"
+  },
+  {
+    "path": "docs/tools/",
+    "status": "untracked",
+    "owner": "expired-domain-research",
+    "kind": "docs",
+    "risk": "low",
+    "acceptance": "unverified",
+    "outcome": "Tool docs: expired-domain-openseo-local-setup.md"
+  },
+  {
+    "path": "fixtures/expired-domain-research/moz/",
+    "status": "untracked",
+    "owner": "expired-domain-research",
+    "kind": "data",
+    "risk": "low",
+    "acceptance": "unverified",
+    "outcome": "Moz API fixtures: canonicalized/site metrics, error responses, missing metrics"
+  },
+  {
+    "path": "fixtures/expired-domain-research/openseo/",
+    "status": "untracked",
+    "owner": "expired-domain-research",
+    "kind": "data",
+    "risk": "low",
+    "acceptance": "unverified",
+    "outcome": "OpenSEO MCP fixtures: error responses, projects, research responses, tool list, whoami"
+  },
+  {
+    "path": "fixtures/site-bot/",
+    "status": "untracked",
+    "owner": "site-bot-pilot",
+    "kind": "data",
+    "risk": "low",
+    "acceptance": "unverified",
+    "outcome": "Site-bot fixtures: local-preview-hero.svg, local-preview.json, pilot-rehearsal.json"
+  },
+  {
+    "path": "home/",
+    "status": "untracked",
+    "owner": "generated-build",
+    "kind": "generated",
+    "risk": "high",
+    "acceptance": "n-a",
+    "outcome": "Stray synthetic-release build tree (home/eitanya/wao/.synthetic-release-*/release/.next/**) - generated build output accidentally created inside repo; must NOT be committed",
+    "notes": "untracked dir: full .next build output (chunks, manifests, server bundles)"
+  },
+  {
+    "path": "public/google-partner-badge.svg",
+    "status": "untracked",
+    "owner": "homepage-astra-v3",
+    "kind": "source",
+    "risk": "low",
+    "acceptance": "board-fail-pending-fix",
+    "outcome": "New Google Partner badge asset for astra E-E-A-T proof strip",
+    "hunks": "(1) new SVG asset",
+    "mixed": "NO - homepage-astra only"
+  },
+  {
+    "path": "scripts/expired-domain-openseo-preflight.mjs",
+    "status": "untracked",
+    "owner": "expired-domain-research",
+    "kind": "source",
+    "risk": "low",
+    "acceptance": "unverified",
+    "outcome": "OpenSEO local preflight check script"
+  },
+  {
+    "path": "scripts/render-consent-visual-qa.mjs",
+    "status": "untracked",
+    "owner": "rtl-a11y-fix",
+    "kind": "source",
+    "risk": "low",
+    "acceptance": "board-done",
+    "outcome": "Render consent UI screenshots for visual QA (t_df680b95 family)"
+  },
+  {
+    "path": "scripts/site-bot-local-preview.mjs",
+    "status": "untracked",
+    "owner": "site-bot-pilot",
+    "kind": "source",
+    "risk": "med",
+    "acceptance": "unverified",
+    "outcome": "CLI: render site-bot local preview"
+  },
+  {
+    "path": "scripts/site-bot-operator-preview.mjs",
+    "status": "untracked",
+    "owner": "site-bot-pilot",
+    "kind": "source",
+    "risk": "med",
+    "acceptance": "unverified",
+    "outcome": "CLI: operator preview"
+  },
+  {
+    "path": "scripts/site-bot-operator-preview.test.mjs",
+    "status": "untracked",
+    "owner": "site-bot-pilot",
+    "kind": "test",
+    "risk": "low",
+    "acceptance": "unverified",
+    "outcome": "Tests for operator preview script"
+  },
+  {
+    "path": "scripts/site-bot-pilot-intake.mjs",
+    "status": "untracked",
+    "owner": "site-bot-pilot",
+    "kind": "source",
+    "risk": "med",
+    "acceptance": "unverified",
+    "outcome": "CLI: pilot intake notebook generation"
+  },
+  {
+    "path": "scripts/site-bot-pilot-intake.test.mjs",
+    "status": "untracked",
+    "owner": "site-bot-pilot",
+    "kind": "test",
+    "risk": "low",
+    "acceptance": "unverified",
+    "outcome": "Tests for pilot intake script"
+  },
+  {
+    "path": "scripts/site-bot-pilot-rehearsal.mjs",
+    "status": "untracked",
+    "owner": "site-bot-pilot",
+    "kind": "source",
+    "risk": "med",
+    "acceptance": "unverified",
+    "outcome": "CLI: pilot rehearsal run"
+  },
+  {
+    "path": "scripts/site-bot-pilot-rehearsal.test.mjs",
+    "status": "untracked",
+    "owner": "site-bot-pilot",
+    "kind": "test",
+    "risk": "low",
+    "acceptance": "unverified",
+    "outcome": "Tests for pilot rehearsal script"
+  },
+  {
+    "path": "scripts/verify-moz-metrics-gate.mjs",
+    "status": "untracked",
+    "owner": "expired-domain-research",
+    "kind": "source",
+    "risk": "low",
+    "acceptance": "unverified",
+    "outcome": "Verify script: Moz metrics gate"
+  },
+  {
+    "path": "scripts/verify-openseo-correction.mjs",
+    "status": "untracked",
+    "owner": "expired-domain-research",
+    "kind": "source",
+    "risk": "low",
+    "acceptance": "unverified",
+    "outcome": "Verify script: OpenSEO correction"
+  },
+  {
+    "path": "scripts/verify-podcast-human-review-ui.mjs",
+    "status": "untracked",
+    "owner": "podcast-title",
+    "kind": "source",
+    "risk": "low",
+    "acceptance": "board-done",
+    "outcome": "Verify script: podcast human-review UI"
+  },
+  {
+    "path": "scripts/visual-qa-autonomy-consent.mjs",
+    "status": "untracked",
+    "owner": "rtl-a11y-fix",
+    "kind": "source",
+    "risk": "low",
+    "acceptance": "board-done",
+    "outcome": "Visual-QA driver for autonomy/consent components"
+  },
+  {
+    "path": "src/app/(product)/admin/astra-copy-review/",
+    "status": "untracked",
+    "owner": "homepage-astra-v3",
+    "kind": "source",
+    "risk": "low",
+    "acceptance": "board-fail-pending-fix",
+    "outcome": "Admin page for reviewing/iterating astra homepage copy",
+    "notes": "untracked dir: page.tsx (protected via proxy.ts MASTER_ADMIN_PROTECTED addition)"
+  },
+  {
+    "path": "src/app/api/rank-rent/",
+    "status": "untracked",
+    "owner": "rank-rent-experimental",
+    "kind": "source",
+    "risk": "med",
+    "acceptance": "unverified",
+    "outcome": "Experimental rank-rent leads API route + test",
+    "notes": "untracked dir: leads/route.ts, leads/route.test.mjs"
+  },
+  {
+    "path": "src/app/homepage-astra.contract.test.mjs",
+    "status": "untracked",
+    "owner": "homepage-astra-v3",
+    "kind": "test",
+    "risk": "med",
+    "acceptance": "board-done",
+    "outcome": "Contract-pin test: copy JSON keys must match component consumption (t_582bcd9d + C3 fixes, done, uncommitted)",
+    "hunks": "(1) new test pinning astra copy JSON schema against AstraHome/Header/Footer usage",
+    "mixed": "NO - homepage-astra only"
+  },
+  {
+    "path": "src/components/AccessibilityControl.tsx",
+    "status": "untracked",
+    "owner": "rtl-a11y-fix",
+    "kind": "source",
+    "risk": "low",
+    "acceptance": "board-done",
+    "outcome": "New accessibility toolbar launcher (t_df680b95, done, uncommitted): font-size/contrast controls with persisted labels",
+    "notes": "untracked new component mounted from (app)/layout.tsx"
+  },
+  {
+    "path": "src/components/admin/astra-copy-review/",
+    "status": "untracked",
+    "owner": "homepage-astra-v3",
+    "kind": "source",
+    "risk": "low",
+    "acceptance": "board-fail-pending-fix",
+    "outcome": "CopyFeedbackReference component for the admin copy-review page",
+    "notes": "untracked dir: CopyFeedbackReference.tsx"
+  },
+  {
+    "path": "src/components/home/",
+    "status": "untracked",
+    "owner": "homepage-astra-v3",
+    "kind": "source",
+    "risk": "high",
+    "acceptance": "board-fail-pending-fix",
+    "outcome": "AstraHome page composition + AstraProofVideo consent-gated video block",
+    "notes": "untracked dir: AstraHome.tsx, AstraProofVideo.tsx",
+    "hunks": "(1) AstraHome.tsx assembles hero/demo/owner/proof sections from copy JSON; (2) AstraProofVideo.tsx consent-gated iframe video",
+    "mixed": "NO - homepage-astra only"
+  },
+  {
+    "path": "src/content/",
+    "status": "untracked",
+    "owner": "homepage-astra-v3",
+    "kind": "data",
+    "risk": "med",
+    "acceptance": "board-fail-pending-fix",
+    "outcome": "Homepage copy JSON consumed by AstraHome/Header/Footer/layout",
+    "notes": "untracked dir: astra-homepage-copy.json, astra-authority-first-homepage-copy.json (+ .pre-qwen38-2026-09-30 and .pre-v3-2026-09-30 backups), astra-real-proof-eeat-copy.json",
+    "hunks": "(1) 5 new JSON copy files (2 dated backups are pre-iteration snapshots)",
+    "mixed": "NO - homepage-astra only; dated backup snapshots probably should not ship"
+  },
+  {
+    "path": "src/lib/astra-copy-review.test.ts",
+    "status": "untracked",
+    "owner": "homepage-astra-v3",
+    "kind": "test",
+    "risk": "low",
+    "acceptance": "board-fail-pending-fix",
+    "outcome": "Tests for astra-copy-review logic"
+  },
+  {
+    "path": "src/lib/astra-copy-review.ts",
+    "status": "untracked",
+    "owner": "homepage-astra-v3",
+    "kind": "source",
+    "risk": "low",
+    "acceptance": "board-fail-pending-fix",
+    "outcome": "Copy-review store/logic for astra homepage iterations"
+  },
+  {
+    "path": "src/lib/expired-domain-research/mozMetrics.test.ts",
+    "status": "untracked",
+    "owner": "expired-domain-research",
+    "kind": "test",
+    "risk": "low",
+    "acceptance": "unverified",
+    "outcome": "Tests for mozMetrics (fixture-driven)"
+  },
+  {
+    "path": "src/lib/expired-domain-research/mozMetrics.ts",
+    "status": "untracked",
+    "owner": "expired-domain-research",
+    "kind": "source",
+    "risk": "low",
+    "acceptance": "unverified",
+    "outcome": "New Moz site-metrics client with canonicalization + missing-metric handling"
+  },
+  {
+    "path": "src/lib/expired-domain-research/openSeoMcp.test.ts",
+    "status": "untracked",
+    "owner": "expired-domain-research",
+    "kind": "test",
+    "risk": "low",
+    "acceptance": "unverified",
+    "outcome": "Tests for openSeoMcp (fixture-driven)"
+  },
+  {
+    "path": "src/lib/expired-domain-research/openSeoMcp.ts",
+    "status": "untracked",
+    "owner": "expired-domain-research",
+    "kind": "source",
+    "risk": "low",
+    "acceptance": "unverified",
+    "outcome": "New OpenSEO MCP client (tool list, whoami, projects, research responses)"
+  },
+  {
+    "path": "src/lib/expired-domain-research/topicalFit.test.ts",
+    "status": "untracked",
+    "owner": "expired-domain-research",
+    "kind": "test",
+    "risk": "low",
+    "acceptance": "unverified",
+    "outcome": "Tests for topicalFit"
+  },
+  {
+    "path": "src/lib/expired-domain-research/topicalFit.ts",
+    "status": "untracked",
+    "owner": "expired-domain-research",
+    "kind": "source",
+    "risk": "low",
+    "acceptance": "unverified",
+    "outcome": "New topical-fit scoring module"
+  },
+  {
+    "path": "src/lib/geo/action-access.test.ts",
+    "status": "untracked",
+    "owner": "geo-access",
+    "kind": "test",
+    "risk": "low",
+    "acceptance": "board-done",
+    "outcome": "Tests for geo action-access"
+  },
+  {
+    "path": "src/lib/geo/action-access.ts",
+    "status": "untracked",
+    "owner": "geo-access",
+    "kind": "source",
+    "risk": "low",
+    "acceptance": "board-done",
+    "outcome": "New resolveGeoActionViewAccess access-control module for geo action pages"
+  },
+  {
+    "path": "src/lib/google-ads/onboarding-demo.test.ts",
+    "status": "untracked",
+    "owner": "onboarding-demo",
+    "kind": "test",
+    "risk": "low",
+    "acceptance": "unverified",
+    "outcome": "Tests for onboarding-demo"
+  },
+  {
+    "path": "src/lib/google-ads/onboarding-demo.ts",
+    "status": "untracked",
+    "owner": "onboarding-demo",
+    "kind": "source",
+    "risk": "med",
+    "acceptance": "unverified",
+    "outcome": "New onboarding demo model/logic module"
+  },
+  {
+    "path": "src/lib/notifications/resend-transactional.test.ts",
+    "status": "untracked",
+    "owner": "client-recovery-security",
+    "kind": "test",
+    "risk": "low",
+    "acceptance": "board-done",
+    "outcome": "Tests for resend-transactional"
+  },
+  {
+    "path": "src/lib/notifications/resend-transactional.ts",
+    "status": "untracked",
+    "owner": "client-recovery-security",
+    "kind": "source",
+    "risk": "med",
+    "acceptance": "board-done",
+    "outcome": "New Resend transactional email sender for recovery notifications"
+  },
+  {
+    "path": "src/lib/rank-rent/",
+    "status": "untracked",
+    "owner": "rank-rent-experimental",
+    "kind": "source",
+    "risk": "med",
+    "acceptance": "unverified",
+    "outcome": "Experimental rank-and-rent portfolio module (types/store/eligibility/authorization/proof/leads + tests)",
+    "notes": "untracked dir: 12 files (6 modules + 6 tests)"
+  },
+  {
+    "path": "src/lib/site-bot/localPreview.test.ts",
+    "status": "untracked",
+    "owner": "site-bot-pilot",
+    "kind": "test",
+    "risk": "low",
+    "acceptance": "unverified",
+    "outcome": "Tests for localPreview"
+  },
+  {
+    "path": "src/lib/site-bot/localPreview.ts",
+    "status": "untracked",
+    "owner": "site-bot-pilot",
+    "kind": "source",
+    "risk": "med",
+    "acceptance": "unverified",
+    "outcome": "New local preview renderer for site-bot pilot"
+  },
+  {
+    "path": "src/lib/site-bot/researchedSiteGeneration.test.ts",
+    "status": "untracked",
+    "owner": "site-bot-pilot",
+    "kind": "test",
+    "risk": "low",
+    "acceptance": "unverified",
+    "outcome": "Tests for researchedSiteGeneration"
+  },
+  {
+    "path": "src/lib/site-bot/researchedSiteGeneration.ts",
+    "status": "untracked",
+    "owner": "site-bot-pilot",
+    "kind": "source",
+    "risk": "med",
+    "acceptance": "unverified",
+    "outcome": "New researched-site generation module"
+  },
+  {
+    "path": "tmp/",
+    "status": "untracked",
+    "owner": "personal-temp",
+    "kind": "temp",
+    "risk": "high",
+    "acceptance": "n-a",
+    "outcome": "Temp release-a build tree (tmp/tmp.*/release-a/.next/**) - scratch build output; must NOT be committed",
+    "notes": "untracked dir: full .next build output"
+  },
+  {
+    "path": "tsconfig.openseo.test.json",
+    "status": "untracked",
+    "owner": "expired-domain-research",
+    "kind": "config",
+    "risk": "low",
+    "acceptance": "unverified",
+    "outcome": "Separate tsconfig for OpenSEO test compile"
+  }
+]

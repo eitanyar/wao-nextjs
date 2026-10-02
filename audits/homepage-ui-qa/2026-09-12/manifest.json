@@ -1,0 +1,40 @@
+{
+  "url": "http://100.102.160.114:3000/",
+  "preflight": {
+    "httpStatus": 200,
+    "homepageConfirmed": true,
+    "checkedAt": "2026-09-12T11:51:26.978Z",
+    "observedBrowserViewport": {
+      "width": 1280,
+      "height": 633
+    },
+    "observedDocumentHeight": 6913,
+    "observedDocumentWidth": 1280
+  },
+  "desktop": {
+    "viewport": {
+      "width": 1440,
+      "height": 900
+    },
+    "orderedFilenames": [],
+    "scrollPositions": [],
+    "captureTimestamp": null,
+    "documentHeight": null,
+    "screenshotCount": 0,
+    "status": "BLOCKED",
+    "reason": "The available browser capture session is fixed at 1280x633 and exposes no viewport-emulation or artifact-save control; exact 1440x900 sequential captures could not be produced without falsifying evidence."
+  },
+  "mobile": {
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "orderedFilenames": [],
+    "scrollPositions": [],
+    "captureTimestamp": null,
+    "documentHeight": null,
+    "screenshotCount": 0,
+    "status": "BLOCKED",
+    "reason": "The available browser capture session is fixed at 1280x633 and exposes no viewport-emulation or artifact-save control; exact 390x844 sequential captures could not be produced without falsifying evidence."
+  }
+}

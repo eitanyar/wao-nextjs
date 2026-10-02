@@ -52,7 +52,7 @@ test('ensureSiteBotClientRecord: idempotent — redeploy does not clobber first 
     assert.equal(first!.wpConnected, false);
     assert.equal(first!.platform, null);
     assert.equal(first!.gscConnected, false);
-    assert.ok(first!.pin && /^\d{4}$/.test(first!.pin));
+    assert.equal('pin' in first!, false);
     assert.ok(first!.siteBotLaunchedAt);
     const firstLaunchedAt = first!.siteBotLaunchedAt;
 
@@ -69,7 +69,7 @@ test('ensureSiteBotClientRecord: idempotent — redeploy does not clobber first 
     assert.equal(second!.businessNiche, 'אינסטלציה'); // unchanged
     assert.equal(second!.usp, 'שירות מהיר'); // unchanged
     assert.equal(second!.siteBotLaunchedAt, firstLaunchedAt); // clock not reset
-    assert.equal(second!.pin, first!.pin); // pin not re-issued
+    assert.equal('pin' in second!, false);
   } finally {
     cleanup();
   }

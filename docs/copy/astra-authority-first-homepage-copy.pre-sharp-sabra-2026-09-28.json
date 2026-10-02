@@ -1,0 +1,128 @@
+{
+  "metadata": {
+    "artifact": "astra-authority-first-homepage-copy",
+    "task_id": "2026-09-27_002",
+    "kanban_task": "t_84520bff",
+    "status": "draft-owner-review",
+    "authoring_model": "gpt-6-sol",
+    "language": "he-IL",
+    "scope": "Replacement top-page strings only; lower-page sections and historical copy remain untouched.",
+    "seo_anchors_preserved_by_reference": {
+      "title": "docs/copy/astra-homepage-copy.json#/metadata/seo/homepage_title_tag_current",
+      "h1_line1": "docs/copy/astra-homepage-copy.json#/hero/h1_line1",
+      "h1_line2": "docs/copy/astra-homepage-copy.json#/hero/h1_line2",
+      "hero_eyebrow": "docs/copy/astra-homepage-copy.json#/hero/eyebrow"
+    },
+    "section_roles": {
+      "hero": "Recognize the busy tradesman and make one clear primary invitation; no offer comparison or founder proof.",
+      "founder_authority": "Identify the accountable human once at #people; replace the later founder biography.",
+      "video_proof": "Customer voice only at #proof, with an immediately available non-autoplay player and direct fallback.",
+      "partner_proof": "Compact, directory-verifiable credential near the founder; no performance implication.",
+      "paths": "One decision at #paths, replacing both #choose_path and the older paths explanation.",
+      "final_cta": "Invite the next action without repeating the hero body or explaining the two paths again."
+    },
+    "no_repeat_rule": "Render each role once: no duplicate founder biography, path cards, video introduction, Partner status or hero promise. Do not render the older decision_guide, people biography, click-to-load copy, or duplicate video figcaption.",
+    "exact_destinations": {
+      "google_ads_primary": "/google-ads/onboarding",
+      "google_ads_supporting": "/google-ads",
+      "site_bot_primary": "/site-bot/start",
+      "site_bot_supporting": "/site-bot",
+      "founder_about": "/about",
+      "choosing_help_only": "/contact#contact-form",
+      "founder_photo": "/eitan-yariv.avif",
+      "video_embed": "https://www.youtube-nocookie.com/embed/zrgqx7OOtcc",
+      "video_direct": "https://www.youtube.com/watch?v=zrgqx7OOtcc",
+      "partner_directory": "https://partnersdirectory.withgoogle.com/partners/7030100386",
+      "partner_badge": "/google-partner-badge.svg"
+    },
+    "claim_boundaries": [
+      "Do not invent customer identities, quotations, video contents, results, ratings, awards, lead counts, revenue, rankings, ROI, experience totals, certifications or Google endorsement.",
+      "Video provenance is publisher-supplied; no quotation, paraphrase, thumbnail copying, still extraction or characterization of anyone in the video.",
+      "Partner status and Search/Display certification coverage are directory observations, not a recommendation or performance promise.",
+      "The Google Ads onboarding preview is a demo, not live advertising; ad spend and service terms are not invented here.",
+      "A business website/local presence does not include ongoing Google Business Profile management by default.",
+      "Do not publish or integrate before material Hebrew QA and subsequent founder/source-use approval."
+    ]
+  },
+  "hero": {
+    "body": "אתה באמצע יום עבודה, לקוח מתקשר, ובין לבין צריך גם לדאוג שימצאו אותך. ב-WAO עוזרים לך לבחור צעד אחד, במקום להמשיך לנחש מה לעשות בשיווק.",
+    "primary_cta": {
+      "label": "תראה לי כיוון לפרסום שלי",
+      "href": "/google-ads/onboarding"
+    }
+  },
+  "founder_authority": {
+    "name": "איתן יריב",
+    "role": "מייסד WAO, יועץ שיווק ופרסום בגוגל",
+    "accountability_line": "איתן יריב מוביל את הכיוון המקצועי ב-WAO, כדי שתדע מי עומד מאחורי העבודה.",
+    "photo_alt": "איתן יריב, מייסד WAO",
+    "about_link": {
+      "label": "בוא תכיר את איתן",
+      "href": "/about"
+    }
+  },
+  "video_proof": {
+    "heading": "רוצה לשמוע גם את הלקוחות?",
+    "context_line": "לא צריך לשמוע רק אותנו: כאן תוכל לצפות בסרטון המלצות ש-WAO פרסמה ביוטיוב.",
+    "iframe_title": "סרטון המלצות לקוחות WAO ביוטיוב",
+    "embed_src": "https://www.youtube-nocookie.com/embed/zrgqx7OOtcc",
+    "direct_link": {
+      "label": "לצפות בסרטון ביוטיוב",
+      "href": "https://www.youtube.com/watch?v=zrgqx7OOtcc"
+    }
+  },
+  "partner_proof": {
+    "heading": "WAO היא Google Partner",
+    "status_line": "WAO מופיעה בספריית השותפים של גוגל כ-Google Partner, עם הסמכות Search ו-Display.",
+    "badge_alt": "תג Google Partner של WAO",
+    "badge_src": "/google-partner-badge.svg",
+    "directory_link": {
+      "label": "לראות את WAO בספריית השותפים",
+      "href": "https://partnersdirectory.withgoogle.com/partners/7030100386"
+    }
+  },
+  "paths": {
+    "heading": "אז מאיפה מתחילים עם העסק שלך?",
+    "intro": "לא צריך לפתור את כל השיווק ביום אחד, במיוחד כשאתה כבר עמוס בעבודה. בוא תבחר נקודת התחלה אחת, לפי מה שהעסק שלך צריך עכשיו.",
+    "google_ads": {
+      "heading": "כשהלקוחות מחפשים בגוגל",
+      "description": "אם כבר מחפשים שירות כמו שלך בגוגל, אפשר להתחיל במודעה ודף נחיתה ממוקדים. ככה יש למי שמחפש מקום ברור להבין מה אתה מציע ואיך פונים אליך.",
+      "demo_status": "כרגע אתה רואה הדגמה לעסק שלך, לפני שמחליטים אם להתקדם לפרסום חי. המודעה לא עולה לאוויר בשלב הזה, ואין חיוב על פרסום בהדגמה.",
+      "primary_cta": {
+        "label": "תראה לי איך המודעה נראית",
+        "href": "/google-ads/onboarding"
+      },
+      "supporting_link": {
+        "label": "עוד על פרסום בגוגל",
+        "href": "/google-ads"
+      }
+    },
+    "business_website": {
+      "heading": "כשצריך בית לעסק ברשת",
+      "description": "כשלקוח שומע עליך ורוצה לבדוק מי אתה, כדאי שיהיה לעסק מקום ברור ברשת. אפשר להתחיל באתר לעסק ובנוכחות מקומית, בלי להתפזר לעוד עשרה כיוונים במקביל.",
+      "primary_cta": {
+        "label": "בוא נבנה את האתר שלי",
+        "href": "/site-bot/start"
+      },
+      "supporting_link": {
+        "label": "עוד על מסלול האתר",
+        "href": "/site-bot"
+      }
+    },
+    "choosing_help": {
+      "line": "אם אתה לא בטוח מאיפה להתחיל, ספר לנו מה הכי מעסיק אותך בעסק. נעזור לך להבין איזה צעד שווה לבדוק קודם, בלי להציף אותך בעוד אפשרויות.",
+      "link": {
+        "label": "בוא נדבר על הכיוון",
+        "href": "/contact#contact-form"
+      }
+    }
+  },
+  "final_cta": {
+    "heading": "אפשר כבר לראות איך זה מתחיל",
+    "body": "ספר לנו בקצרה מה אתה עושה, ותראה כיוון שאפשר לדבר עליו בלי סיסמאות. את ההחלטה אם ממשיכים תקבל אחרי שתבין מה עומד מולך.",
+    "primary_cta": {
+      "label": "תראה לי כיוון לפרסום שלי",
+      "href": "/google-ads/onboarding"
+    }
+  }
+}

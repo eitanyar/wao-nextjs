@@ -1,0 +1,1 @@
+{"jsonrpc":"2.0","id":"req-1","result":{"site_query":{"query":"https://example.test/"},"site_metrics":{"page_authority":42.5,"domain_authority":55,"spam_score":3,"page":"https://example.test/","root_domain":"example.test","last_crawled":"2026-01-01T00:00:00.000Z","http_code":200,"external_equity_links":9,"root_domains_to_page":4}}}

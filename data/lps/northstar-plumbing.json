@@ -1,0 +1,81 @@
+{
+  "slug": "northstar-plumbing",
+  "collectedData": {
+    "businessNiche": "אינסטלטור",
+    "businessName": "Northstar Plumbing",
+    "ownerName": "Ari",
+    "secondaryServices": "plumbing repair",
+    "serviceModel": "field",
+    "targetLocation": "Tel Aviv",
+    "specificCities": "Tel Aviv",
+    "idealClientFear": "leaking pipe",
+    "faqQuestions": "price and arrival time",
+    "usp": "fast reliable service, clean",
+    "yearsInField": "14",
+    "license": "licensed plumber",
+    "exclusions": "no excavation",
+    "urgencyLevel": "urgent",
+    "pricingNotes": "free quote",
+    "revenueModel": "one off jobs",
+    "avgJobValue": 450,
+    "closeRate": 0.7,
+    "hasRepeatClients": true,
+    "starRating": 4.8,
+    "reviewCount": 42,
+    "monthlyBudget": 2000,
+    "reviewQuote": "great service",
+    "capacityAvailable": "5",
+    "capacityUnit": "עבודות בשבוע",
+    "contactMethod": "phone whatsapp",
+    "phone": "0501234567",
+    "whatsappNumber": "0501234567",
+    "email": "qa@example.com",
+    "preferredSlug": null
+  },
+  "copy": {
+    "heroHeadline": "צינור דולף מציף את הבית? אינסטלטור בתל אביב שמגיע לתקן",
+    "heroSubheadline": "14 שנות ניסיון, איתור מדויק של הנזילה ועבודה נקייה בלי להשאיר בלגן.",
+    "heroCta": "התקשר עכשיו",
+    "trustBarItems": [
+      "14 שנות ניסיון",
+      "אינסטלטור מוסמך",
+      "הצעת מחיר ברורה מראש",
+      "משאיר בית נקי בסיום"
+    ],
+    "aboutBlurb": "שמי Ari, אינסטלטור מוסמך עם 14 שנות ניסיון בתל אביב. כשיש צינור דולף, אני מגיע בעצמי לאתר ולתקן במהירות, בעבודה נקייה ובלי להשאיר בלגן. תקבל ממני בדיקה מדויקת והצעת מחיר ברורה לפני שמתחילים.",
+    "servicesHeadline": "תיקוני אינסטלציה בתל אביב",
+    "serviceItems": [
+      "איתור ותיקון פיצוצי צנרת",
+      "תיקון ברזים וניאגרות",
+      "פתיחת סתימות וקווי מים",
+      "החלפת צנרת ותיקון נקודתי"
+    ],
+    "faqHeadline": "שאלות נפוצות",
+    "faqItems": [
+      {
+        "q": "כמה עולה הבדיקה והצעת המחיר?",
+        "a": "הצעת המחיר ניתנת בשיחה או במקום לאחר בדיקה ראשונית, ללא הפתעות במחיר."
+      },
+      {
+        "q": "תוך כמה זמן אתה מגיע לקריאה בתל אביב?",
+        "a": "אני יוצא לקריאות דחופות במהירות האפשרית בכל רחבי תל אביב כדי לעצור את הנזילה."
+      },
+      {
+        "q": "האם אתה מבצע גם עבודות חפירה בחצר?",
+        "a": "לא, אני מתמחה בתיקוני אינסטלציה וצנרת פנים ללא עבודות חפירה תשתיתיות."
+      },
+      {
+        "q": "האם העבודה משאירה לכלוך או הרס בבית?",
+        "a": "ממש לא. אני מקפיד על עבודה נקייה ומסודרת ומשאיר את השטח נקי בסיום התיקון."
+      }
+    ],
+    "guaranteeBlock": "אבחון מקצועי והצעת מחיר שקופה מראש לכל תיקון צנרת, בלי אותיות קטנות.",
+    "reviewFeatured": "great service",
+    "reviewContext": "4.8 כוכבים בגוגל",
+    "responseTimeBadge": null,
+    "scarcityLine": null,
+    "formHeadline": "צינור דולף? קבל הצעת מחיר עכשיו",
+    "stickyBarLine": "אינסטלטור מוסמך בתל אביב"
+  },
+  "createdAt": "2026-09-04T14:16:37.922Z"
+}

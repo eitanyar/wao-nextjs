@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "artifactPath": "docs/copy/site-bot-pilot-intake-notebook.json",
+  "status": "approved",
+  "reviewedBy": "waohebrewqa",
+  "reviewedAt": "2026-09-19T11:56:15+07:00",
+  "sha256": "c66da48df024da95551ce87349a9988ddb1c4da9d1f99b924b2ce52eeec3ccce",
+  "checks": {
+    "schema": true,
+    "sabraRegister": true,
+    "singularMale": true,
+    "sentenceLength": true,
+    "clarity": true,
+    "rtlBidi": true,
+    "approvalSemantics": true,
+    "noUnsupportedClaims": true
+  }
+}

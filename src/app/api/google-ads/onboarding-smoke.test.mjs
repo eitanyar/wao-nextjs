@@ -27,6 +27,9 @@ const createCampaignRoute = read('src/app/api/google-ads/create-campaign/route.t
 const checkoutRoute = read('src/app/api/checkout/route.ts');
 const cloudflarePagesDeploy = read('src/app/api/cloudflare-pages/deploy/route.ts');
 const onboardingPage = read('src/app/(app)/google-ads/onboarding/page.tsx');
+const onboardingDemo = read('src/lib/google-ads/onboarding-demo.ts');
+const cookieBanner = read('src/components/CookieBanner.tsx');
+const globalsCss = read('src/app/globals.css');
 const siteBotDeploy = read('src/app/api/site-bot/deploy/route.ts');
 const siteBotEdit = read('src/app/api/site-bot/edit/route.ts');
 const lpSlugPage = read('src/app/(standalone)/lp/[slug]/page.tsx');
@@ -93,6 +96,19 @@ test('onboarding keeps test mode visibly labeled as Sandbox simulation', () => {
   assert.match(onboardingPage, /Live \(locked\)/);
 });
 
+test('cookie banner suppresses exact onboarding route while preserving privacy disclosure', () => {
+  const suppressionAllowlist = cookieBanner.match(/const SUPPRESS_ON = \[([^\]]+)\];/);
+
+  assert.ok(suppressionAllowlist, 'cookie banner must retain the exact-path suppression allowlist');
+  assert.match(suppressionAllowlist[1], /["']\/google-ads\/onboarding["']/);
+  assert.doesNotMatch(suppressionAllowlist[1], /["']\/privacy["']/);
+});
+
+test('reviewing consent keeps desktop allocation and reserves measured mobile capacity', () => {
+  assert.match(globalsCss, /\.onboarding-chat-card\.onboarding-chat-card-reviewing \{ height: clamp\(440px, 68dvh, 620px\) !important; \}/);
+  assert.match(globalsCss, /@media \(max-width: 640px\) \{\s*\.onboarding-chat-card\.onboarding-chat-card-reviewing \{ height: clamp\(704px, 88dvh, 744px\) !important; \}\s*\}/);
+});
+
 test('LP hero image wiring is identical (real photo > stock fallback) across every render/deploy call site', () => {
   const expected = /collectedData\.trustAssetUrls\?\.\[0\]\s*\|\|\s*collectedData\.profilePhotoUrl\s*\|\|\s*assets\.heroImages\[0\]\.url/;
   for (const [name, code] of [
@@ -111,4 +127,43 @@ test('checkout is dry-run-safe by default — only goes live on an explicit non-
   assert.match(checkoutRoute, /isLive\s*=\s*Boolean\(terminalNumber\s*&&\s*terminalNumber\s*!==\s*'1234567890'\s*&&\s*process\.env\.YAAD_LIVE_MODE\s*===\s*'true'\)/);
   assert.match(checkoutRoute, /sandboxRedirectUrl/);
   assert.match(checkoutRoute, /mode:\s*'sandbox'/);
+});
+
+test('onboarding resolves only the trusted demo query before evaluating payment callbacks', () => {
+  assert.match(onboardingPage, /resolveOnboardingDemoEntry/);
+  assert.match(onboardingDemo, /getAll\("demo"\)/);
+  assert.match(onboardingDemo, /getAll\("mode"\)/);
+  assert.match(onboardingDemo, /getAll\("clientId"\)/);
+  assert.doesNotMatch(onboardingDemo, /\b(?:window|document|cookie|localStorage|sessionStorage|fetch)\b|process\.env/);
+
+  const queryInitialization = onboardingPage.indexOf('const entry = resolveOnboardingDemoEntry(window.location.search);');
+  const paymentCallback = onboardingPage.indexOf('if (!queryReady || isDemo || typeof window === "undefined") return;');
+  assert.ok(queryInitialization >= 0, 'onboarding must initialize the trusted query');
+  assert.ok(paymentCallback >= 0, 'payment callbacks must wait for query initialization and reject demos');
+  assert.ok(queryInitialization < paymentCallback, 'demo initialization must be declared before payment handling');
+});
+
+test('every onboarding request-producing handler rejects demo mode', () => {
+  for (const handler of [
+    'verifySandboxConnection',
+    'triggerCampaignLaunch',
+    'handleSendMessage',
+    'handleUpload',
+    'handleApprove',
+  ]) {
+    const declaration = onboardingPage.indexOf(`const ${handler} = async`);
+    assert.ok(declaration >= 0, `${handler} must exist`);
+    const opening = onboardingPage.slice(declaration, declaration + 240);
+    assert.match(opening, /if \(!queryReady \|\| isDemo(?: \|\| isSubmitting)?\) return;/, `${handler} must reject unresolved and demo mode before requesting`);
+  }
+});
+
+test('demo mode disables every onboarding mutation control', () => {
+  assert.match(onboardingPage, /disabled=\{!queryReady \|\| isDemo \|\| sandboxVerificationStatus === "checking"\}/);
+  assert.match(onboardingPage, /disabled=\{!queryReady \|\| isDemo\}/);
+  assert.match(onboardingPage, /disabled=\{!queryReady \|\| isDemo \|\| isSubmitting \|\| isUploading \|\| currentState === "COMPLETED"\}/);
+  assert.match(onboardingPage, /disabled=\{!queryReady \|\| isDemo \|\| isSubmitting \|\| currentState === "COMPLETED" \|\| !deliveryModelSelected\}/);
+  assert.match(onboardingPage, /disabled=\{!queryReady \|\| isDemo \|\| isSubmitting \|\| !inputValue\.trim\(\) \|\| currentState === "COMPLETED"\}/);
+  assert.equal((onboardingPage.match(/disabled=\{!queryReady \|\| isDemo \|\| isSubmitting \|\| !acceptedTerms\}/g) || []).length, 2);
+  assert.equal((onboardingPage.match(/disabled=\{!queryReady \|\| isDemo \|\| isSubmitting\}/g) || []).length, 2);
 });

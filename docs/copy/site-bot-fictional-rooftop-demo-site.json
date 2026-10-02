@@ -1,0 +1,349 @@
+{
+  "schemaVersion": 1,
+  "fictional": true,
+  "scenarioId": "fictional-rooftop-professional-v2",
+  "locale": "he-IL",
+  "dir": "rtl",
+  "source": {
+    "path": "/tmp/wao-fictional-rooftop-professional-notebook.json",
+    "sha256": "35e164c204bab8e0a34f7558f3a935e45b177e54f6ba6e9e9306df89177456ee",
+    "qaCards": [
+      "t_fa0d1ca8",
+      "t_9d0d4fdf"
+    ]
+  },
+  "intakeDraft": {
+    "sections": {
+      "businessFacts": {
+        "answer": "קוראים לי יוסי, ואני הבעלים של יוסי איטום גגות. היום שלי מתחיל ב-6:30 בבוקר. אני בודק את הציוד בטנדר: רתמות, קסדות, חומרי איטום וסולם תקין. ב-8:00 אני כבר אצל הלקוח הראשון. אתמול הייתה סופה, והבוקר חיכתה לי קריאה דחופה — גג מדליף מעל הסלון. הגעתי, הקשבתי בשקט והרגעתי את הלקוח. הסברתי בגובה העיניים מה אני בודק ומה הולך לקרות. לפני כל עלייה לגג אני בודק את תנאי השטח, מרכיב ציוד מגן ופועל עם מערכת עיגון מתאימה. בטיחות תמיד לפני הכול. על הגג בדקתי את היריעות, חיפשתי סדקים ורעפים רופפים ועברתי על המרזבים. מצאתי קרע קטן ביריעה, ממש ליד פתח המזגן. צילמתי, הראיתי ללקוח והסברתי לו בדיוק מה הבעיה ומה הפתרון. התיקון היה נקי ומסודר, וניקיתי את המרזבים לפני הגשם הבא. ב-15:00 אני חוזר לטנדר, מעדכן את הלקוח ומסכם איתו את השלב הבא. אפשר להגיע אליי בטלפון 050-0000000, ואני נותן שירות בכל הסביבה הקרובה. העבודה טובה והלקוחות מרוצים, אבל הכול מגיע רק מפה לאוזן. חסר לי אתר מסודר שיספר את הסיפור, יציג את העבודות ויקבל פניות מסביב לשעון. בדיוק בשביל זה אני כאן.",
+        "approved": false
+      },
+      "mediaRights": {
+        "answer": "להדגמה בנינו חבילת מדיה ייעודית. היא כוללת שמונה סצנות שמלוות את היום של יוסי: פריסת הציוד בבוקר, הטנדר המוכן ליציאה, העלייה לגג עם רתמה וקסדה, נקודת עיגון מתאימה, איתור הקרע ביריעה, מצב הגג לפני התיקון ואחריו, ניקוי המרזבים ולחיצת יד עם הלקוח בסיום. כל סצנה מתוארת בכתב במחברת, כדי להראות בדיוק אילו תמונות יופיעו באתר. יש גם לוגו: טיפת מים מעל קו גג, בגווני כחול. ולצידו המלצה קצרה וחמה בשם הלקוח מהסיפור, שמספרת איך הגג הפסיק להדליף לפני החורף. כשבעל עסק אמיתי יצטרף, נחליף הכול בחומרים שבעל העסק מסר ואישר במפורש לשימוש.",
+        "approved": false
+      },
+      "leadRecipient": {
+        "answer": "בהדגמה אנחנו מדמים מסירה מלאה של פנייה, מקצה לקצה. הלקוח מהסיפור רואה את האתר וממלא טופס קצר: שם, טלפון ומה הבעיה בגג. הפנייה נקלטת במחברת המקומית כדי להמחיש את הזרימה המתוכננת במוצר. יוסי מקבל התראה בבוקר, חוזר בטלפון, וביחד הם מתאמים את הביקור. הפנייה מסומנת כפנייה חדשה, מקבלת מעקב סטטוס ונסגרת כשהעבודה הושלמה. כך אפשר לראות ולהרגיש איך תיראה קבלת הפניות בעסק אמיתי: מהירה, מסודרת ואישית. כל המסלול רץ על המכשיר המקומי, וזה בדיוק המקום שבו נחבר נמען אמיתי ברגע שבעל העסק יאשר.",
+        "approved": false
+      },
+      "privacyRetention": {
+        "answer": "המחברת בנויה לצמצם חשיפה של מידע. כל הפרטים בה הם דמו בלבד — שם לדוגמה, טלפון עם ספרות 0 ואזור שירות כללי. בדמו הזה הנתונים נשמרים בקובץ מקומי ייעודי, בלי שליחה לנמען חיצוני. זו בדיוק הגישה שנרצה גם בעסק האמיתי: אוספים מינימום מידע, רק מה שצריך כדי לטפל בפנייה, ומגדירים מראש לכמה זמן שומרים אותו. כשיגיע בעל עסק אמיתי, נשב איתו ונגדיר מדיניות שמירה ומחיקה מסודרת לפני שנכניס פרט ראשון. הפרטיות של הלקוחות שלו היא חלק מהשירות, לא סעיף נסתר.",
+        "approved": false
+      },
+      "seoDomain": {
+        "answer": "יש כיוון ברור לדף. כותרת לדוגמה: איטום גגות ותחזוקת גג — יוסי איטום גגות. כותרת H1: אוטמים לכם את הגג לפני שהחורף מפתיע. כיוון לכתובת: yossi-igum-gagot.example — כתובת ההדגמה שלנו בלבד. בדף יופיעו שירותי האיטום, בדיקת הרעפים וניקוי המרזבים, עם תמונות ההדגמה וכפתור פנייה מהיר. המילים שמובילות את הסיפור: איטום גגות, תיקון רעפים, ניקוי מרזבים לפני החורף וטיפול דחוף אחרי סופה. אלו כיוונים להמחשה, כדי להראות איך הדף ייראה וידבר. את מחקר המילים ואת הדומיין הסופי נבנה ביחד עם בעל העסק, לפני כל פרסום.",
+        "approved": false
+      },
+      "ownershipLane": {
+        "answer": "זהו נכס הדגמה בדיוני של WAO, לתצוגה מקומית בלבד. הסיפור, השמות וכל הפרטים הומצאו כדי להראות איך עסק אמיתי היה ממלא את המחברת. אין כאן חיבור ללקוחות, להכנסות או למסלול מסחרי. המטרה היא אחת: תצוגה משכנעת של התהליך כולו, מקצה לקצה.",
+        "approved": false
+      }
+    },
+    "finalApproval": {
+      "approved": false,
+      "note": "אין עדיין אישור סופי — זו הדגמה בדיונית שמציגה את התהליך, וכל החלטה אמיתית תתקבל רק יחד עם בעל העסק."
+    }
+  },
+  "siteDraft": {
+    "slug": "fictional-rooftop-professional-v2",
+    "researchId": "research-fictional-rooftop-professional-v2",
+    "approvedPageId": "home",
+    "graphEdges": [
+      {
+        "from": "home",
+        "to": "services"
+      },
+      {
+        "from": "services",
+        "to": "roof-waterproofing"
+      }
+    ],
+    "fictionalLabel": "אתר הדגמה בדיוני של WAO — כל הפרטים והשמות הומצאו",
+    "businessProfile": {
+      "businessName": "יוסי איטום גגות",
+      "ownerName": "יוסי",
+      "businessNiche": "איטום גגות ותחזוקת גגות",
+      "primaryService": "איטום גגות",
+      "secondaryServices": [
+        "בדיקת רעפים",
+        "ניקוי מרזבים",
+        "טיפול דחוף אחרי סופה",
+        "תחזוקה לפני החורף"
+      ],
+      "phone": "050-0000000",
+      "serviceArea": "הסביבה הקרובה",
+      "contactMethod": "טופס פנייה",
+      "demo": true
+    },
+    "pages": [
+      {
+        "id": "home",
+        "pageClass": "homepage",
+        "path": "/",
+        "copy": {
+          "heroHeadline": "הגג מדליף אחרי הסופה? בדיקה מסודרת לפני שהחורף מפתיע",
+          "heroSubheadline": "עולים לגג, מצלמים כל קרע ביריעה, ומסבירים לך בגובה העיניים מה הבעיה ומה הפתרון",
+          "heroCta": "לפתיחת טופס ההדגמה",
+          "trustBarItems": [
+            "בטיחות לפני הכול",
+            "תיעוד לפני ואחרי",
+            "הסבר בגובה העיניים",
+            "ציוד מגן מלא"
+          ],
+          "aboutBlurb": "שמי יוסי, הבעלים של יוסי איטום גגות. כל בוקר אני בודק את הציוד בטנדר — רתמות, קסדות וחומרי איטום — ורק אז עולה לגג. אני בודק יריעות ורעפים, מצלם כל ממצא ומסביר לך בדיוק מה ראיתי. כשאתה פונה אליי, אני זה שמגיע, והעבודה נקייה ומסודרת.",
+          "servicesHeadline": "מה אני מטפל בו בגג שלך",
+          "serviceItems": [
+            "איטום גגות ויריעות",
+            "איתור קרעים ליד פתחי מזגן",
+            "בדיקת רעפים רופפים",
+            "ניקוי מרזבים לפני הגשם",
+            "טיפול דחוף אחרי סופה",
+            "תחזוקת גג לפני החורף"
+          ],
+          "faqHeadline": "שאלות לפני שמתקשרים",
+          "faqItems": [
+            {
+              "q": "איך אני יודע שהגג באמת מדליף?",
+              "a": "אני עולה לגג, בודק יריעות, רעפים ומרזבים ומצלם. אתה רואה את הקרע בעיניים ומקבל הסבר ברור לפני כל תיקון."
+            },
+            {
+              "q": "מה עושים עם דליפה אחרי סופה?",
+              "a": "קודם כל נרגעים. אני מאתר את מקור הנזילה, מתקן בצורה מסודרת ומנקה את המרזבים, כדי שהגשם הבא לא יפתיע אותך."
+            },
+            {
+              "q": "שווה לבדוק את הגג לפני החורף?",
+              "a": "בהחלט. כשהגג יבש אפשר לראות קרע קטן ביריעה או רעף רופף ולטפל בהם בזמן — לפני שהמים כבר בסלון."
+            },
+            {
+              "q": "אקבל תיעוד של העבודה?",
+              "a": "כן. אני מצלם לפני ואחרי, מראה לך מה תוקן ומסכם איתך את השלב הבא לפני שאני עוזב את הגג."
+            }
+          ],
+          "guaranteeBlock": "בלי הפתעות: אני מצלם, מסביר ונותן לך הצעה ברורה — ורק אחרי האישור שלך מתחילים לעבוד.",
+          "reviewFeatured": null,
+          "reviewContext": null,
+          "responseTimeBadge": null,
+          "scarcityLine": null,
+          "formHeadline": "זה טופס הדגמה מקומי — ממלאים ורואים איך פנייה הייתה נקלטת, בלי שליחה אמיתית",
+          "stickyBarLine": "דליפה מהגג? פתח את טופס ההדגמה — הכול מקומי, בלי שליחה",
+          "aboutPageHeadline": "ככה נראה אצלי יום עבודה על הגג",
+          "aboutPageBody": "היום שלי מתחיל ב-6:30 בבוקר עם בדיקת הציוד בטנדר: רתמות, קסדות, חומרי איטום וסולם תקין. ב-8:00 אני כבר אצל הלקוח הראשון — אתמול הייתה סופה, והבוקר חיכתה לי דליפה מעל הסלון. לפני כל עלייה לגג אני בודק את תנאי השטח, מרכיב ציוד מגן ופועל עם מערכת עיגון. על הגג אני בודק את היריעות, מחפש סדקים ורעפים רופפים ועובר על המרזבים — וב-15:00 אני כבר מסכם איתך את השלב הבא.",
+          "serviceDetails": [
+            {
+              "name": "איטום גגות ויריעות",
+              "description": "איתור קרעים ביריעות, במיוחד סביב פתחי המזגן, ותיקון נקי שסוגר את הנזילה."
+            },
+            {
+              "name": "בדיקת רעפים",
+              "description": "עובר על הרעפים אחד אחד, מאתר רופפים או סדוקים ומחזיר אותם למקום לפני הגשם."
+            },
+            {
+              "name": "ניקוי מרזבים",
+              "description": "מרזב סתום גורם למים לעלות על הגג. אני מנקה, בודק זרימה ומצלם לפני ואחרי."
+            },
+            {
+              "name": "טיפול דחוף אחרי סופה",
+              "description": "דליפה מעל הסלון? אני מגיע, מאתר את מקור הנזק ועוצר אותו לפני שייגדל."
+            },
+            {
+              "name": "תחזוקה לפני החורף",
+              "description": "בדיקה מקיפה כשהגג יבש — יריעות, רעפים ומרזבים, כדי שתעבור את החורף בשקט."
+            }
+          ]
+        }
+      },
+      {
+        "id": "services",
+        "pageClass": "service_hub",
+        "path": "/services",
+        "copy": {
+          "heroHeadline": "כל מה שהגג שלך צריך, אצל איש מקצוע אחד",
+          "heroSubheadline": "מבדיקת יריעות ורעפים ועד ניקוי מרזבים — כל שלב מתועד, מוסבר ומבוצע עם ציוד הבטיחות הנכון",
+          "heroCta": "לטופס ההדגמה",
+          "trustBarItems": [
+            "מערכת עיגון ורתמות",
+            "צילום כל ממצא",
+            "תיקון נקי ומסודר",
+            "בדיקת מרזבים"
+          ],
+          "aboutBlurb": "אני יוסי, וזה העסק שלי — יוסי איטום גגות. אני בעצמי עולה לגג שלך, עם רתמה, קסדה וציוד תקין. כל ממצא מצולם ומוסבר, וכל תיקון נסגר איתך לפני שאני יורד מהגג.",
+          "servicesHeadline": "השירותים, שלב אחרי שלב",
+          "serviceItems": [
+            "בדיקת גג מקיפה עם צילום",
+            "איטום יריעות וקרעים",
+            "תיקון רעפים",
+            "ניקוי ושטיפת מרזבים",
+            "הכנת הגג לחורף",
+            "איתור נזילות אחרי סופה"
+          ],
+          "faqHeadline": "מה שואלים אותי על השירותים",
+          "faqItems": [
+            {
+              "q": "מה כוללת בדיקת גג?",
+              "a": "מעבר על היריעות, חיפוש סדקים ורעפים רופפים, בדיקת המרזבים וצילום של כל מה שמצאתי — עם הסבר פנים אל פנים."
+            },
+            {
+              "q": "אפשר להזמין רק ניקוי מרזבים?",
+              "a": "בהחלט. מרזב סתום זה מתכון לנזילה, ואני מנקה ובודק זרימה גם בלי תיקון נוסף — עם צילום לפני ואחרי."
+            },
+            {
+              "q": "איך אני יודע מה דחוף ומה יכול לחכות?",
+              "a": "אני מסמן לך על התמונות מה מטפלים בו עכשיו ומה יכול לחכות. ההחלטה שלך, בלי לחץ ובלי הפחדות."
+            },
+            {
+              "q": "העבודה בטוחה? מדובר בגג גבוה.",
+              "a": "בטיחות לפני הכול: אני בודק את תנאי השטח ועובד עם רתמה, קסדה ומערכת עיגון מתאימה — בכל עלייה לגג."
+            }
+          ],
+          "guaranteeBlock": "אתה רואה את התמונות לפני כל החלטה. אני מסביר מה כל תיקון נותן — ומה אפשר לדחות.",
+          "reviewFeatured": null,
+          "reviewContext": null,
+          "responseTimeBadge": null,
+          "scarcityLine": null,
+          "formHeadline": "רוצה לראות איך זה עובד? זה טופס הדגמה — הפרטים נשארים מקומיים ולא נשלחים לשום מקום",
+          "stickyBarLine": "נסה את טופס ההדגמה — מקומי לחלוטין, בלי פנייה אמיתית",
+          "aboutPageHeadline": "בעל מקצוע אחד, מהבדיקה ועד התיקון",
+          "aboutPageBody": "הכול מתחיל בטנדר מסודר: כל בוקר אני פורס את הרתמות, הקסדות וחומרי האיטום ומוודא שהסולם תקין, כי על הגג אין מקום לפשרות בבטיחות. משם אני מגיע אליך, מקשיב למה שקרה, ועולה לבדוק. את הממצאים אני מצלם ומסביר בשפה פשוטה, ואת התיקון מבצע נקי ומסודר. הכלי הכי חשוב שלי הוא ההסבר הברור שאתה מקבל לפני כל עבודה.",
+          "serviceDetails": [
+            {
+              "name": "בדיקת גג מקיפה",
+              "description": "יריעות, רעפים, מרזבים ופתחי מזגן — הכול נבדק ומצולם, עם הסבר ברור בשטח."
+            },
+            {
+              "name": "איטום יריעות",
+              "description": "קרע קטן ליד פתח המזגן הופך לנזילה גדולה. אני מאתר ואוטם לפני שהחורף מגיע."
+            },
+            {
+              "name": "תיקון רעפים",
+              "description": "רעפים רופפים או סדוקים מזוהים בצילום, מוחזרים למקום או מוחלפים לפי הצורך."
+            },
+            {
+              "name": "ניקוי מרזבים",
+              "description": "הסרת עלים ופסולת, בדיקת זרימה וצילום לפני ואחרי — כדי שהמים ירדו למטה."
+            },
+            {
+              "name": "הכנת הגג לחורף",
+              "description": "סיבוב בדיקה ותחזוקה לפני הגשמים הראשונים, כדי שתעבור את העונה בשקט."
+            },
+            {
+              "name": "איתור נזילות",
+              "description": "מים על התקרה? אני עוקב אחרי מסלול הנזילה מהגג פנימה ומוצא את המקור האמיתי."
+            }
+          ]
+        }
+      },
+      {
+        "id": "roof-waterproofing",
+        "pageClass": "money_service",
+        "path": "/services/roof-waterproofing",
+        "copy": {
+          "heroHeadline": "איטום גגות לפני החורף — כדי שהטיפה תישאר בחוץ",
+          "heroSubheadline": "בדיקת יריעות מדויקת סביב פתחי המזגן, איתור הקרע, ותיקון איטום מסודר — עם צילום והסבר לפני ואחרי",
+          "heroCta": "לפתיחת טופס ההדגמה",
+          "trustBarItems": [
+            "איתור קרעים בצילום",
+            "איטום סביב פתחי מזגן",
+            "עבודה עם רתמה ועיגון",
+            "ניקיון אחרי התיקון"
+          ],
+          "aboutBlurb": "שמי יוסי, ואיטום גגות זה המקצוע שלי. אתמול הייתה סופה, והבוקר עמדתי על גג עם דליפה מעל הסלון — קרע קטן ביריעה, ממש ליד פתח המזגן. צילמתי, הסברתי ללקוח מה הבעיה ומה הפתרון, ותיקנתי נקי ומסודר. ככה אני עובד: קודם בדיקה, צילום והסבר — ורק אז עוברים לתיקון.",
+          "servicesHeadline": "מה כלול באיטום הגג",
+          "serviceItems": [
+            "בדיקת יריעות וסדקים",
+            "איטום סביב פתחי מזגן",
+            "טיפול בקרעים ביריעה",
+            "איטום לפני עונת הגשמים",
+            "בדיקה אחרי סופה",
+            "צילום ותיעוד התיקון"
+          ],
+          "faqHeadline": "שאלות על איטום גגות",
+          "faqItems": [
+            {
+              "q": "מאיפה בכלל נכנסים המים?",
+              "a": "בדרך כלל מקרע קטן ביריעה, מרעף רופף או מרזב סתום. אני עוקב אחרי מסלול המים, מצלם ומראה לך בדיוק את הנקודה."
+            },
+            {
+              "q": "מתי הכי נכון לאטום את הגג?",
+              "a": "לפני החורף, כשהגג יבש. ככה אפשר לראות קרע קטן ביריעה ולסגור אותו בזמן — לפני שהגשם כבר מגיע לסלון."
+            },
+            {
+              "q": "היריעה ליד המזגן נראית שלמה. באמת צריך לבדוק?",
+              "a": "דווקא שם. סביב פתחי המזגן יש תזוזה וחיתוכים ביריעה, לכן זו נקודה שחשוב לבדוק — קרע יכול להתחיל בדיוק שם."
+            },
+            {
+              "q": "מה קורה אם הגג כבר מדליף עכשיו?",
+              "a": "אני מגיע, מאתר את המקור ועוצר את הנזילה בצורה מסודרת, ואז מתכננים יחד את התיקון המלא — בלי לחץ."
+            },
+            {
+              "q": "איך אני יודע שהאיטום בוצע כמו שצריך?",
+              "a": "תיעוד לפני ואחרי. אתה רואה את הקרע, את התיקון ואת הגג הנקי בסיום — ואת השלב הבא אנחנו מסכמים יחד."
+            }
+          ],
+          "guaranteeBlock": "אני לא מבטיח שהגשם לא יגיע — אני מבטיח שתדע בדיוק מה מצב הגג שלך, עם תמונות.",
+          "reviewFeatured": null,
+          "reviewContext": null,
+          "responseTimeBadge": null,
+          "scarcityLine": null,
+          "formHeadline": "ככה תיראה פנייה של לקוח — טופס הדגמה מקומי, והפרטים לא עוברים לאף אחד",
+          "stickyBarLine": "רוצה לראות איך פונים? פתח את טופס ההדגמה המקומי",
+          "aboutPageHeadline": "איטום גגות שמתחיל בבדיקה, לא בהבטחות",
+          "aboutPageBody": "כל איטום מתחיל אצלי באותה נקודה: לעלות על הגג ולהסתכל. אני מחפש סדקים ביריעות, רעפים רופפים ומרזבים סתומים, ונותן דגש מיוחד לסביבת פתחי המזגן — נקודה שדורשת בדיקה דקדקנית. כל ממצא מצולם ומוסבר לך בגובה העיניים, ורק אז עוברים לתיקון. אני עובד עם רתמה, קסדה ומערכת עיגון, משאיר את הגג נקי ומנקה את המרזבים לפני הגשם הבא.",
+          "serviceDetails": [
+            {
+              "name": "איטום יריעות",
+              "description": "איתור קרעים וסדקים ביריעות הקיימות ואיטום מסודר שסוגר את כניסת המים."
+            },
+            {
+              "name": "איטום סביב פתחי מזגן",
+              "description": "נקודת בדיקה חשובה על הגג. אני בודק, מנקה ומאטם מחדש סביב כל פתח ורגל של יחידה."
+            },
+            {
+              "name": "טיפול בקרעים לפני החורף",
+              "description": "סיבוב בדיקה יזום כשהגג יבש, וסגירה של כל קרע קטן לפני שהוא הופך לנזק."
+            },
+            {
+              "name": "תיקון נזקי סופה",
+              "description": "דליפה שמתחילה בסופה מטופלת מהר: איתור המקור, תיקון מסודר וניקוי המרזבים."
+            },
+            {
+              "name": "תיעוד לפני ואחרי",
+              "description": "כל עבודה מצולמת — הגג לפני התיקון, הקרע מקרוב והגג הסגור והנקי בסיום."
+            }
+          ]
+        }
+      }
+    ]
+  },
+  "visualDirection": {
+    "language": "en",
+    "generated": false,
+    "assets": [
+      {
+        "id": "hero",
+        "role": "hero_banner",
+        "aspectRatio": "16:9",
+        "prompt": "Premium documentary-style photograph, wide establishing shot of an Israeli flat concrete rooftop in soft early-morning light under a clear pale-blue sky: low parapet walls, dark bitumen membrane sheets with visible seams, a small HVAC pipe penetration, a safety harness and white helmet resting neatly beside the roof hatch, coiled rope and sealed buckets of waterproofing material, one anonymous male worker in plain grey work clothes seen from behind at a distance, muted warm concrete-grey palette, crisp realistic textures, natural sunlight, editorial realism, dry clear weather",
+        "negativePrompt": "faces, identifiable person, recognizable celebrity, portrait, crowd, children, pets, logos, brands, trademarks, business names, text, letters, numbers, signage, license plates, documents, phones, screens, watermarks, captions, badges, testimonials, cartoon, illustration, 3d render look, oversaturated colors, night scene, rain, storm"
+      },
+      {
+        "id": "inspection",
+        "role": "inspection_process",
+        "aspectRatio": "3:2",
+        "prompt": "Premium documentary-style close-up photograph on the same Israeli flat rooftop, same soft morning light, dry weather and palette: a gloved hand in worn work gloves pointing at a small tear in a dark bitumen membrane sheet right next to an HVAC pipe penetration, a tape measure and flashlight lying on the roof surface, shallow depth of field, the anonymous worker shown only as arm and shoulder cropped at the frame edge with no visible face, muted concrete-grey and bitumen-black tones with warm morning highlights, realistic editorial texture",
+        "negativePrompt": "faces, identifiable person, recognizable celebrity, portrait, crowd, children, pets, logos, brands, trademarks, business names, text, letters, numbers, signage, license plates, documents, phones, screens, watermarks, captions, badges, testimonials, cartoon, illustration, 3d render look, oversaturated colors, night scene, rain, storm"
+      },
+      {
+        "id": "repair-detail",
+        "role": "service_detail",
+        "aspectRatio": "3:2",
+        "prompt": "Premium documentary-style detail photograph on the same Israeli flat rooftop, same morning light, weather and palette: two gloved hands pressing a fresh sealing membrane patch over a repaired tear in the bitumen sheet with a metal trowel, an open tube of sealant and clean rags nearby, crisp careful workmanship, fresh wet-seal sheen contrasting with the weathered old membrane for a subtle before-and-after feel within one frame, no visible face, anonymous worker in plain grey sleeves only",
+        "negativePrompt": "faces, identifiable person, recognizable celebrity, portrait, crowd, children, pets, logos, brands, trademarks, business names, text, letters, numbers, signage, license plates, documents, phones, screens, watermarks, captions, badges, testimonials, cartoon, illustration, 3d render look, oversaturated colors, night scene, rain, storm"
+      }
+    ]
+  },
+  "approval": {
+    "copyStatus": "pending_hebrew_qa",
+    "visualStatus": "brief_only_not_generated",
+    "engineerUse": false
+  }
+}

@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
-import { execSync } from 'child_process';
-import { mkdirSync, writeFileSync, rmSync, readFileSync } from 'fs';
+import { execFileSync } from 'child_process';
+import { mkdtempSync, writeFileSync, rmSync, readFileSync } from 'fs';
 import { tmpdir } from 'os';
 import path from 'path';
 import { renderStaticHtml } from '@/lib/lp/renderStaticHtml';
@@ -13,6 +13,10 @@ import type { LPCopy } from '@/lib/lp/lpCopyPrompt';
 import { createFraudBlockerClient } from '@/lib/fraud-blocker/client';
 import { fraudBlockerFailureState, provisionFraudBlockerDomain, recordFraudBlockerTrackerInstallation } from '@/lib/fraud-blocker/deployment';
 import { readFraudBlockerState, writeFraudBlockerState } from '@/lib/fraud-blocker/store';
+import { ADMIN_COOKIE_NAME, verifyAdminToken } from '@/lib/admin-auth';
+import { COOKIE_NAME, verifySessionToken } from '@/lib/client-auth';
+import { loadCampaignConfigBySlug } from '@/lib/crm/intelligence';
+import { isSafeDeploymentSlug } from '@/lib/deployment/deploy-access';
 
 interface DeployRequest {
   slug: string;
@@ -47,12 +51,34 @@ async function cfPost(path: string, body: unknown) {
   return { ok: res.ok, status: res.status, data: await res.json() };
 }
 
+function cookieValue(request: Request, name: string): string {
+  const prefix = `${name}=`;
+  const cookie = request.headers.get('cookie') ?? '';
+  return cookie.split(';').map(value => value.trim()).find(value => value.startsWith(prefix))?.slice(prefix.length) ?? '';
+}
+
 export async function POST(req: Request) {
   try {
+    const adminAuthorized = await verifyAdminToken(cookieValue(req, ADMIN_COOKIE_NAME));
+    const sessionClientId = adminAuthorized ? null : await verifySessionToken(cookieValue(req, COOKIE_NAME));
+    if (!adminAuthorized && !sessionClientId) {
+      return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
+    }
+
     const body: DeployRequest = await req.json();
     const { slug, googleAdsCustomerId, gtagSnippet, formConversionLabel, phoneConversionLabel, whatsappConversionLabel } = body;
 
-    if (!slug) return NextResponse.json({ error: 'slug is required' }, { status: 400 });
+    if (!isSafeDeploymentSlug(slug)) return NextResponse.json({ error: 'invalid_deployment_slug' }, { status: 400 });
+
+    if (sessionClientId) {
+      const campaign = loadCampaignConfigBySlug(slug);
+      if (
+        campaign?.clientId !== sessionClientId ||
+        (googleAdsCustomerId !== undefined && campaign.customerId !== googleAdsCustomerId)
+      ) {
+        return NextResponse.json({ error: 'forbidden' }, { status: 403 });
+      }
+    }
 
     const accountId = process.env.CLOUDFLARE_ACCOUNT_ID!;
 
@@ -101,8 +127,8 @@ export async function POST(req: Request) {
     });
 
     // ── Step 3: Ensure CF Pages project exists, then deploy ──────────────────
-    const tmpDir = path.join(tmpdir(), `wao-lp-${Date.now()}`);
-    mkdirSync(tmpDir, { recursive: true });
+    const tmpDir = mkdtempSync(path.join(tmpdir(), 'wao-lp-'));
+    try {
     writeFileSync(path.join(tmpDir, 'index.html'), htmlContent, 'utf-8');
 
     // Legal disclosure pages — same requirement as Site Bot's 5-page output.
@@ -132,22 +158,12 @@ export async function POST(req: Request) {
 
     // Create project first (idempotent — errors on duplicate are ignored)
     try {
-      execSync(
-        `./node_modules/.bin/wrangler pages project create "${slug}" --production-branch main`,
-        { env, stdio: 'pipe', timeout: 30_000 }
-      );
+      execFileSync('./node_modules/.bin/wrangler', ['pages', 'project', 'create', slug, '--production-branch', 'main'], { env, stdio: 'pipe', timeout: 30_000 });
     } catch {
       // project already exists — fine
     }
 
-    try {
-      execSync(
-        `./node_modules/.bin/wrangler pages deploy "${tmpDir}" --project-name "${slug}" --branch main --commit-dirty=true`,
-        { env, stdio: 'pipe', timeout: 60_000 }
-      );
-    } finally {
-      rmSync(tmpDir, { recursive: true, force: true });
-    }
+    execFileSync('./node_modules/.bin/wrangler', ['pages', 'deploy', tmpDir, '--project-name', slug, '--branch', 'main', '--commit-dirty=true'], { env, stdio: 'pipe', timeout: 60_000 });
 
     // ── Step 5: Add custom domain + DNS record ────────────────────────────────
     const subdomain = `${slug}.wao.co.il`;
@@ -174,19 +190,22 @@ export async function POST(req: Request) {
         ttl: 1,
       }),
     });
-    const dnsData = await dnsRes.json();
-    if (!dnsRes.ok && !dnsData?.errors?.some((e: any) => e.code === 81053)) {
+    const dnsData = await dnsRes.json() as { errors?: Array<{ code?: number }> };
+    if (!dnsRes.ok && !dnsData?.errors?.some((entry) => entry.code === 81053)) {
       // 81053 = record already exists — safe to ignore
       console.warn('DNS record creation (non-fatal):', dnsData);
     }
 
     const url = `https://${subdomain}`;
     return NextResponse.json({ success: true, url, projectName: slug });
+    } finally {
+      rmSync(tmpDir, { recursive: true, force: true });
+    }
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Cloudflare Pages deploy error:', error);
     return NextResponse.json(
-      { error: error.message || 'Deploy failed' },
+      { error: error instanceof Error ? error.message : 'Deploy failed' },
       { status: 500 }
     );
   }

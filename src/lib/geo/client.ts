@@ -20,7 +20,7 @@ export interface GeoClientRecord {
   approvalContact?: string;
   approvalWhatsapp?: string;
   tone?:            string;
-  pin?:             string;
+
   entitlements?:    string[];
   wpConnected?:     boolean;
   platform?:        string | null;
@@ -191,9 +191,6 @@ export function ensureSiteBotClientRecord(params: {
 }): void {
   if (clientRecordExists(params.clientId)) return;
 
-  // Same 4-digit PIN generation as geo/signup/init/route.ts, so a Site Bot
-  // client authenticates through the identical /client/login pin-based flow.
-  const pin = String(Math.floor(1000 + Math.random() * 9000));
 
   const record: GeoClientRecord = {
     clientId: params.clientId,
@@ -204,7 +201,7 @@ export function ensureSiteBotClientRecord(params: {
     usp: params.usp,
     approvalContact: params.approvalContact,
     approvalWhatsapp: params.approvalWhatsapp,
-    pin,
+
     entitlements: [],
     wpConnected: false,
     platform: null,

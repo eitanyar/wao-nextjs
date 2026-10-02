@@ -1,0 +1,39 @@
+{
+  "taskId": "2026-09-15_002",
+  "policy": {
+    "retentionDays": 30,
+    "automaticExpiry": true,
+    "contactDestination": "/contact#contact-form",
+    "auditPurposeOnly": true,
+    "unrelatedOutreachReuse": false
+  },
+  "patches": [
+    {
+      "id": "scorecard-bundle-disclosure-contact",
+      "path": "docs/research/site-bot/scorecard-copy-bundle.md",
+      "expectedOccurrences": 1,
+      "old": "## __CTA_TRIAL__\n```\nבא לך שנעשה את כל התיקונים בשבילך? אנחנו מטפלים בפרופיל ובאתר — בוא נסה.\n```\n",
+      "new": "## __CTA_TRIAL__\n```\nרוצה לדבר על דוח הבדיקה? אפשר לפנות לאיתן, מייסד WAO, דרך טופס יצירת הקשר.\n```\n\n## __AUDIT_DISCLOSURE__\n```\nכדי להכין את הבדיקה אנחנו קולטים רק את שם העסק ששלחת. הבדיקה מתבססת על מידע מ-Google Places. אנחנו משתמשים במידע רק כדי להכין את דוח הבדיקה שביקשת. הוא נשמר 30 ימים ונמחק אוטומטית לאחר מכן. אפשר לבקש מחיקה גם קודם, דרך טופס יצירת הקשר. אנחנו לא משתמשים במידע לשום פנייה שלא קשורה לבדיקה.\n```\n\n## __AUDIT_PRIVACY_LINK__\n```\nמדיניות הפרטיות\n```\n"
+    },
+    {
+      "id": "privacy-audit-purpose",
+      "path": "src/app/(app)/privacy/page.tsx",
+      "expectedOccurrences": 1,
+      "old": "          <ul style={{ paddingRight: \"20px\", margin: \"0 0 16px\" }}>\n            <li style={LI}>\n              <strong style={{ color: \"var(--text)\" }}>טופס יצירת קשר</strong> — שם, טלפון, אימייל (אופציונלי), תחום עניין, הודעה.\n              המידע נאסף לשם מתן מענה לפנייה ויצירת קשר עסקי בלבד.\n            </li>\n            <li style={LI}>\n              <strong style={{ color: \"var(--text)\" }}>שיחות טלפון ומיילים</strong> — תוכן שיחות ומיילים שמתנהלים ישירות עם WAO.\n            </li>\n          </ul>\n",
+      "new": "          <ul style={{ paddingRight: \"20px\", margin: \"0 0 16px\" }}>\n            <li style={LI}>\n              <strong style={{ color: \"var(--text)\" }}>טופס יצירת קשר</strong> — שם, טלפון, אימייל (אופציונלי), תחום עניין, הודעה.\n              המידע נאסף לשם מתן מענה לפנייה ויצירת קשר עסקי בלבד.\n            </li>\n            <li style={LI}>\n              <strong style={{ color: \"var(--text)\" }}>שיחות טלפון ומיילים</strong> — תוכן שיחות ומיילים שמתנהלים ישירות עם WAO.\n            </li>\n            <li style={LI}>\n              <strong style={{ color: \"var(--text)\" }}>בדיקת פרופיל עסקי בגוגל</strong> — שם העסק\n              ששלחת בטופס הבדיקה. הבדיקה מתבססת על מידע מ-Google Places. המידע משמש\n              להכנת דוח הבדיקה שביקשת בלבד. הוא לא משמש לפניות שלא קשורות לבדיקה.\n            </li>\n          </ul>\n"
+    },
+    {
+      "id": "privacy-audit-retention-deletion",
+      "path": "src/app/(app)/privacy/page.tsx",
+      "expectedOccurrences": 1,
+      "old": "        {/* 5 */}\n        <div style={SECTION}>\n          <h2 style={H2}>תקופת שמירת המידע</h2>\n          <ul style={{ paddingRight: \"20px\", margin: \"0 0 10px\" }}>\n            <li style={LI}>פניות שלא הפכו ללקוחות — נמחקות לאחר 24 חודשים.</li>\n            <li style={LI}>מידע על לקוחות פעילים — נשמר לאורך תקופת ההתקשרות ועד 7 שנים לאחריה (דרישת חוק החשבונות).</li>\n            <li style={LI}>נתוני אנליטיקה — מאוחסנים ב-Google לפי הגדרות החשבון (13 חודשים כברירת מחדל).</li>\n          </ul>\n        </div>\n",
+      "new": "        {/* 5 */}\n        <div style={SECTION}>\n          <h2 style={H2}>תקופת שמירת המידע</h2>\n          <ul style={{ paddingRight: \"20px\", margin: \"0 0 10px\" }}>\n            <li style={LI}>פניות שלא הפכו ללקוחות — נמחקות לאחר 24 חודשים.</li>\n            <li style={LI}>מידע על לקוחות פעילים — נשמר לאורך תקופת ההתקשרות ועד 7 שנים לאחריה (דרישת חוק החשבונות).</li>\n            <li style={LI}>נתוני אנליטיקה — מאוחסנים ב-Google לפי הגדרות החשבון (13 חודשים כברירת מחדל).</li>\n            <li style={LI}>\n              נתוני בדיקת הפרופיל העסקי — נשמרים 30 ימים ונמחקים אוטומטית לאחר מכן.\n              לבקשת מחיקה מוקדמת פונים דרך{\" \"}\n              <a href=\"/contact#contact-form\" style={{ color: \"var(--accent)\" }}>טופס יצירת הקשר</a>.\n            </li>\n          </ul>\n        </div>\n"
+    }
+  ],
+  "qa": {
+    "noaRequired": false,
+    "authorization": "explicit-owner-waiver-for-this-bounded-task",
+    "truthfulToDelegatedPolicy": true,
+    "compatibleImplementationHandoff": "handoff/pending/2026-09-15_001_waoengineer_prepare-audit-only-release.md"
+  }
+}

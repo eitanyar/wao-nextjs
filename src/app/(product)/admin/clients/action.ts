@@ -13,28 +13,30 @@ import { completeClientRecoveryContactVerification, requestClientRecoveryContact
 
 const hash = (value: string) => createHash('sha256').update(value).digest('hex');
 
-export type RecoveryContactActionState = { status: 'idle' | 'sent' | 'complete' | 'revealed' | 'failed' | 'limited'; mobile?: string };
+export type RecoveryContactActionState = { status: 'idle' | 'sent' | 'complete' | 'revealed' | 'failed' | 'limited'; email?: string };
 
 async function requireAdmin(): Promise<{ source: string; root?: string; auditRoot?: string } | null> {
   const jar = await cookies();
-  const root = resolveConfiguredClientAuthRoot();
-  const authorized = await verifyAdminClientFixtureAccess(jar.get(ADMIN_COOKIE_NAME)?.value ?? '', '/admin/clients', root ?? undefined);
-  if (!authorized) return null;
   const requestHeaders = await headers();
+  const fixtureRootCandidate = process.env.WAO_CLIENT_AUTH_DEV_FIXTURE_ROOT;
+  const authorized = await verifyAdminClientFixtureAccess(jar.get(ADMIN_COOKIE_NAME)?.value ?? '', '/admin/clients', fixtureRootCandidate, requestHeaders.get('host'));
+  if (!authorized) return null;
   const origin = requestHeaders.get('origin');
   const host = requestHeaders.get('host');
   if (!origin || !host || new URL(origin).host !== host) return null;
-  const auditRoot = process.env.WAO_CLIENT_AUTH_DEV_FIXTURE_AUDIT_ROOT;
-  const syntheticAuditRoot = /^\/tmp\/wao-client-auth-audit-[A-Za-z0-9_-]{1,64}$/.test(auditRoot ?? '') ? auditRoot : undefined;
-  return { source: requestHeaders.get('x-forwarded-for')?.split(',')[0]?.trim() ?? 'unknown', root: authorized === 'synthetic' ? root! : root ?? undefined, auditRoot: authorized === 'synthetic' ? syntheticAuditRoot : undefined };
+  const root = authorized === 'synthetic' ? resolveConfiguredClientAuthRoot({ productionSyntheticAuthorized: true }) : undefined;
+  if (authorized === 'synthetic' && !root) return null;
+  const auditRoot = authorized === 'synthetic' ? process.env.WAO_CLIENT_AUTH_DEV_FIXTURE_AUDIT_ROOT : undefined;
+  const syntheticAuditRoot: string | undefined = /^\/tmp\/wao-client-auth-audit-[A-Za-z0-9_-]{1,64}$/.test(auditRoot ?? '') ? auditRoot ?? undefined : undefined;
+  return { source: requestHeaders.get('x-forwarded-for')?.split(',')[0]?.trim() ?? 'unknown', root: root ?? undefined, auditRoot: syntheticAuditRoot };
 }
 
 export async function requestClientRecoveryContactVerificationAction(_previous: RecoveryContactActionState, formData: FormData): Promise<RecoveryContactActionState> {
   const context = await requireAdmin();
   if (!context) return { status: 'failed' };
   const clientId = typeof formData.get('clientId') === 'string' ? String(formData.get('clientId')).trim() : '';
-  const whatsappMobile = typeof formData.get('whatsappMobile') === 'string' ? String(formData.get('whatsappMobile')).trim() : '';
-  const result = await requestClientRecoveryContactVerification({ clientId, whatsappMobile }, { source: context.source, clientsRoot: context.root, auditRoot: context.auditRoot });
+  const email = typeof formData.get('email') === 'string' ? String(formData.get('email')).trim() : '';
+  const result = await requestClientRecoveryContactVerification({ clientId, email }, { source: context.source, clientsRoot: context.root, auditRoot: context.auditRoot });
   return { status: result.status };
 }
 
@@ -42,9 +44,9 @@ export async function completeClientRecoveryContactVerificationAction(_previous:
   const context = await requireAdmin();
   if (!context) return { status: 'failed' };
   const clientId = typeof formData.get('clientId') === 'string' ? String(formData.get('clientId')).trim() : '';
-  const whatsappMobile = typeof formData.get('whatsappMobile') === 'string' ? String(formData.get('whatsappMobile')).trim() : '';
+  const email = typeof formData.get('email') === 'string' ? String(formData.get('email')).trim() : '';
   const code = typeof formData.get('code') === 'string' ? String(formData.get('code')).trim() : '';
-  const result = await completeClientRecoveryContactVerification({ clientId, whatsappMobile, code }, { source: context.source, clientsRoot: context.root, auditRoot: context.auditRoot });
+  const result = await completeClientRecoveryContactVerification({ clientId, email, code }, { source: context.source, clientsRoot: context.root, auditRoot: context.auditRoot });
   return { status: result.status };
 }
 
@@ -52,8 +54,8 @@ export async function revealClientRecoveryContactAction(_previous: RecoveryConta
   const context = await requireAdmin();
   if (!context) return { status: 'failed' };
   const clientId = typeof formData.get('clientId') === 'string' ? String(formData.get('clientId')).trim() : '';
-  const mobile = await revealClientRecoveryContact(clientId, { source: context.source, clientsRoot: context.root, auditRoot: context.auditRoot });
-  return mobile ? { status: 'revealed', mobile } : { status: 'failed' };
+  const email = await revealClientRecoveryContact(clientId, { source: context.source, clientsRoot: context.root, auditRoot: context.auditRoot });
+  return email ? { status: 'revealed', email } : { status: 'failed' };
 }
 
 export async function loginAsClientAction(formData: FormData) {

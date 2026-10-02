@@ -80,13 +80,13 @@ export async function POST(req: Request) {
 
     const clientId = uniqueClientId(slugify(body.businessName!));
     const sessionId = crypto.randomUUID();
-    const pin = String(Math.floor(1000 + Math.random() * 9000));
+
 
     const pendingDir = path.join(process.cwd(), 'data', 'geo-signups-pending');
     fs.mkdirSync(pendingDir, { recursive: true });
     fs.writeFileSync(
       path.join(pendingDir, `${sessionId}.json`),
-      JSON.stringify({ clientId, pin, input: body, createdAt: new Date().toISOString() }, null, 2)
+      JSON.stringify({ clientId, input: body, createdAt: new Date().toISOString() }, null, 2)
     );
 
     const origin = new URL(req.url).origin;
@@ -99,8 +99,8 @@ export async function POST(req: Request) {
     });
 
     return NextResponse.json({ sessionId, clientId, amount: GEO_PRICE });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('GEO Bot signup init error:', error);
-    return NextResponse.json({ error: error.message || 'Signup init failed' }, { status: 500 });
+    return NextResponse.json({ error: error instanceof Error ? error.message : 'Signup init failed' }, { status: 500 });
   }
 }

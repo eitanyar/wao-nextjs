@@ -17,6 +17,7 @@ export interface SharedClientRecord {
   approvalContact?: string;
   approvalWhatsapp?: string;
   clientPinRecovery?: { whatsappE164: string; verifiedAt: string; enabled: true };
+  clientPinRecoveryEmail?: { emailCanonical: string; verifiedAt: string; enabled: true };
   entitlements?:    string[];
   /**
    * Display name used in owner/customer-facing copy (e.g. review-flywheel WhatsApp

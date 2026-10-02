@@ -1,6 +1,6 @@
 import fs from 'fs';
 import path from 'path';
-import { cookies } from 'next/headers';
+import { cookies, headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 import accessCopy from '@/data/client-access-copy.he.json';
 import { ADMIN_COOKIE_NAME, verifyAdminClientFixtureAccess } from '@/lib/admin-auth';
@@ -32,11 +32,13 @@ function loadClients(root: string): ClientEntry[] {
 
 export default async function AdminClientsPage({ searchParams }: { searchParams: Promise<{ error?: string; success?: string }> }) {
   const jar = await cookies();
-  const fixtureRoot = resolveConfiguredClientAuthRoot();
-  const authorized = await verifyAdminClientFixtureAccess(jar.get(ADMIN_COOKIE_NAME)?.value ?? '', '/admin/clients', fixtureRoot ?? undefined);
+  const requestHeaders = await headers();
+  const fixtureRootCandidate = process.env.WAO_CLIENT_AUTH_DEV_FIXTURE_ROOT;
+  const authorized = await verifyAdminClientFixtureAccess(jar.get(ADMIN_COOKIE_NAME)?.value ?? '', '/admin/clients', fixtureRootCandidate, requestHeaders.get('host'));
   if (!authorized) redirect('/admin/login?next=%2Fadmin%2Fclients');
   const { error, success } = await searchParams;
-  const root = authorized === 'synthetic' ? fixtureRoot! : fixtureRoot ?? CLIENTS_DIR;
+  const root = authorized === 'synthetic' ? resolveConfiguredClientAuthRoot({ productionSyntheticAuthorized: true }) : CLIENTS_DIR;
+  if (!root) redirect('/admin/login?next=%2Fadmin%2Fclients');
   const clients = loadClients(root);
   const copy = accessCopy.admin;
   const message = success === '1' ? copy.success : error === 'reset-failed' ? copy.failure : '';
@@ -48,7 +50,7 @@ export default async function AdminClientsPage({ searchParams }: { searchParams:
       const recovery = getClientRecoveryContactStatus(client.clientId, root);
       return <section key={client.clientId} className="rounded-xl border border-white/10 bg-white/5 p-4">
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3"><div className="min-w-0"><p className="truncate text-sm font-semibold" dir="ltr">{client.clientId}</p><p className="truncate text-xs text-[var(--muted)]">{client.label}</p></div><form action={loginAsClientAction}><input type="hidden" name="clientId" value={client.clientId} /><button type="submit" className="min-h-11 rounded-lg bg-[var(--accent)] px-4 py-3 text-sm font-semibold text-white hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]">WAO</button></form></div>
-        <RecoveryContactControl clientId={client.clientId} status={recovery.status} maskedMobile={recovery.status === 'verified' ? recovery.maskedMobile : undefined} verifiedAt={recovery.status === 'verified' ? recovery.verifiedAt : undefined} />
+        <RecoveryContactControl clientId={client.clientId} status={recovery.status} maskedEmail={recovery.status === 'verified' ? recovery.maskedEmail : undefined} verifiedAt={recovery.status === 'verified' ? recovery.verifiedAt : undefined} />
         <details className="border-t border-white/10 pt-4"><summary className="min-h-11 cursor-pointer py-3 text-sm font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]">{copy.resetOpen}</summary><form action={resetClientPinAction} className="mt-3 grid gap-3 sm:grid-cols-2"><input type="hidden" name="clientId" value={client.clientId} /><div><label htmlFor={`pin-${client.clientId}`} className="mb-1.5 block text-sm font-medium">{copy.pinLabel}</label><input id={`pin-${client.clientId}`} name="pin" type="password" inputMode="numeric" autoComplete="new-password" required className="w-full rounded-lg border border-white/15 bg-white/8 px-4 py-3 text-sm outline-none focus-visible:border-[var(--accent)] focus-visible:ring-2 focus-visible:ring-[var(--accent)]/50" /></div><div><label htmlFor={`confirmation-${client.clientId}`} className="mb-1.5 block text-sm font-medium">{copy.confirmPinLabel}</label><input id={`confirmation-${client.clientId}`} name="confirmation" type="password" inputMode="numeric" autoComplete="new-password" required className="w-full rounded-lg border border-white/15 bg-white/8 px-4 py-3 text-sm outline-none focus-visible:border-[var(--accent)] focus-visible:ring-2 focus-visible:ring-[var(--accent)]/50" /></div><p className="text-xs leading-5 text-[var(--muted)] sm:col-span-2">{accessCopy.change.policyHint}</p><button type="submit" className="min-h-11 rounded-lg border border-[var(--accent)] px-4 py-3 text-sm font-semibold text-[var(--accent)] hover:bg-[var(--accent)]/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] sm:col-span-2">{copy.submit}</button></form></details>
       </section>;
     })}</div>

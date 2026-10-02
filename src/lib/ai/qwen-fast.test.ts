@@ -1,6 +1,22 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { callQwenJSON } from './qwen-fast';
+import fs from 'node:fs';
+import path from 'node:path';
+import { createRequire } from 'node:module';
+
+// Run the source module under Node's direct TS test runner (which does not resolve
+// extensionless TS imports), while keeping the canonical CommonJS test build intact.
+const requireModule = createRequire(path.join(process.cwd(), 'package.json'));
+const ts = requireModule('typescript');
+function loadSource(file: string, dependency?: Record<string, unknown>): Record<string, any> {
+  const source = fs.readFileSync(path.join(process.cwd(), 'src/lib/ai', file), 'utf8');
+  const compiled = ts.transpileModule(source, { compilerOptions: { module: ts.ModuleKind.CommonJS } }).outputText;
+  const module = { exports: {} as Record<string, any> };
+  new Function('require', 'module', 'exports', 'process', 'AbortSignal', 'fetch', compiled)(
+    () => dependency, module, module.exports, process, AbortSignal, globalThis.fetch);
+  return module.exports;
+}
+const { callQwenJSON, callQwenChatJSON } = loadSource('qwen-fast.ts', loadSource('gemini-fast.ts')) as typeof import('./qwen-fast');
 
 function response() { return new Response(JSON.stringify({ choices: [{ message: { content: '{"ok":true}' } }] }), { status: 200 }); }
 function fakeEnvironment() { process.env.QWEN_API_KEY = 'test-key'; process.env.QWEN_BASE_URL = 'https://example.test'; }
@@ -75,4 +91,48 @@ test('invalid options do not call fetch', async () => {
   await assert.rejects(() => callQwenJSON('system', 'user', { timeoutMs: 0, fetch }));
   await assert.rejects(() => callQwenJSON('system', 'user', { maxAttempts: 4, fetch }));
   assert.equal(calls, 0);
+});
+
+test('chat posts verbatim history, system first, JSON mode and flash without thinking', async () => {
+  fakeEnvironment(); delete process.env.QWEN_CHAT_MODEL;
+  const history = [{ role: 'user' as const, content: 'first' }, { role: 'assistant' as const, content: 'reply' }, { role: 'user' as const, content: 'second' }];
+  let payload: any; let url: unknown;
+  const result = await callQwenChatJSON('system', history, { fetch: async (target, init) => {
+    url = target; payload = JSON.parse(String(init?.body)); return response();
+  } });
+  assert.equal(result, '{"ok":true}');
+  assert.equal(url, 'https://example.test/chat/completions');
+  assert.equal(payload.model, 'qwen3.8-flash');
+  assert.deepEqual(payload.messages, [{ role: 'system', content: 'system' }, ...history]);
+  assert.deepEqual(payload.response_format, { type: 'json_object' });
+  assert.equal(payload.enable_thinking, false);
+});
+
+test('chat model env override and explicit options', async () => {
+  fakeEnvironment(); process.env.QWEN_CHAT_MODEL = 'test-chat-model';
+  const models: unknown[] = []; const flags: unknown[] = [];
+  const fetch = async (_url: string | URL | Request, init?: RequestInit) => {
+    const body = JSON.parse(String(init?.body)); models.push(body.model); flags.push(body.enable_thinking); return response();
+  };
+  try {
+    await callQwenChatJSON('system', [], { fetch });
+    await callQwenChatJSON('system', [], { fetch, model: 'explicit-model', think: true });
+    assert.deepEqual(models, ['test-chat-model', 'explicit-model']);
+    assert.deepEqual(flags, [false, undefined]);
+  } finally { delete process.env.QWEN_CHAT_MODEL; }
+});
+
+test('chat timeout aborts the request', async () => {
+  fakeEnvironment(); const state = pendingState();
+  await assertTimeout(() => callQwenChatJSON('system', [], { timeoutMs: 5, maxAttempts: 1, fetch: pendingFetch(state) }));
+  assert.equal(state.started, 1); assert.equal(state.settled, 1); assert.equal(state.active, 0);
+  assert.equal(state.signals[0].reason?.name, 'TimeoutError');
+});
+
+test('chat retries malformed responses then throws on exhausted attempts', async () => {
+  fakeEnvironment(); let calls = 0;
+  await assert.rejects(() => callQwenChatJSON('system', [], { maxAttempts: 2, fetch: async () => {
+    calls++; return new Response(JSON.stringify({ choices: [{ message: { content: 'not json' } }] }), { status: 200 });
+  } }), /No JSON|JSON|balanced/i);
+  assert.equal(calls, 2);
 });

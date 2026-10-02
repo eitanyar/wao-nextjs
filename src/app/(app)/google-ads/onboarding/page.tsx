@@ -6,6 +6,7 @@ import type { CollectedData } from "@/lib/bot/prompts";
 import { deliveryModelFollowUp, deliveryModelOptions } from "@/lib/bot/delivery-model";
 import { AutonomyConsent } from "@/components/google-ads/AutonomyConsent";
 import { AUTONOMY_TERMS_VERSION } from "@/lib/google-ads/autonomyCopy";
+import { resolveOnboardingDemoEntry } from "@/lib/google-ads/onboarding-demo";
 
 interface Message {
   role: "user" | "assistant" | "system";
@@ -45,6 +46,16 @@ interface SandboxVerificationResponse {
   error?: string;
 }
 
+interface CampaignCreationResponse {
+  success?: boolean;
+  customerId?: string;
+  slug?: string;
+  gtagSnippet?: string;
+  formConversionLabel?: string;
+  phoneConversionLabel?: string;
+  whatsappConversionLabel?: string;
+}
+
 const DEMO_PROFILE: CollectedData = {
   businessNiche: "אינסטלטור בתל אביב",
   businessName: "אינסטלטור תל אביב מהיר",
@@ -81,6 +92,7 @@ export default function OnboardingPage() {
   const [clientId, setClientId] = useState<string | undefined>(undefined);
   const [mode, setMode] = useState<"test" | "live">("test");
   const [isDemo, setIsDemo] = useState(false);
+  const [queryReady, setQueryReady] = useState(false);
   const [deliveryModelSelected, setDeliveryModelSelected] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
     {
@@ -105,7 +117,7 @@ export default function OnboardingPage() {
   const [awaitingProfilePhoto, setAwaitingProfilePhoto] = useState(false);
   const [sandboxVerificationStatus, setSandboxVerificationStatus] = useState<"idle" | "checking" | "ready" | "error">("idle");
   const [sandboxVerificationMessage, setSandboxVerificationMessage] = useState<string | null>(null);
-  const sessionIdRef = useRef(`s-${Date.now()}-${Math.random().toString(36).slice(2)}`);
+  const sessionIdRef = useRef("");
   const inputPlaceholder =
     currentState === "COMPLETED"
       ? ""
@@ -155,8 +167,25 @@ export default function OnboardingPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const messagesContainerRef = useRef<HTMLDivElement>(null);
+  const compactConsentRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const entry = resolveOnboardingDemoEntry(window.location.search);
+    sessionIdRef.current = `s-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    // Query state must settle before any request-producing control becomes active.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setMode(entry.mode);
+    setClientId(entry.clientId);
+    setIsDemo(entry.isDemo);
+    if (entry.isDemo) {
+      setCollectedData({ ...DEMO_PROFILE });
+      setDeliveryModelSelected(true);
+    }
+    setQueryReady(true);
+  }, []);
 
   const verifySandboxConnection = async () => {
+    if (!queryReady || isDemo) return;
     setSandboxVerificationStatus("checking");
     setSandboxVerificationMessage(null);
 
@@ -197,7 +226,10 @@ export default function OnboardingPage() {
 
     if (currentState === "REVIEWING") {
       const scrollToCompactConsent = () => {
-        el.scrollTop = el.scrollHeight;
+        const compactConsent = compactConsentRef.current;
+        if (compactConsent) {
+          el.scrollTop = Math.max(0, compactConsent.offsetTop - 16);
+        }
       };
       scrollToCompactConsent();
       const frame = requestAnimationFrame(scrollToCompactConsent);
@@ -217,7 +249,7 @@ export default function OnboardingPage() {
 
   // Post-payment flow — shared by Yaad Sarig redirect and bypass button
   const triggerCampaignLaunch = async () => {
-    if (isSubmitting) return;
+    if (!queryReady || isDemo || isSubmitting) return;
     setIsSubmitting(true);
     try {
       // Step 1: Close the bot conversation
@@ -234,7 +266,7 @@ export default function OnboardingPage() {
       setCurrentState(botData.currentState);
 
       // Step 2: Create Google Ads sub-account + conversion actions
-      let adsData: any = null;
+      let adsData: CampaignCreationResponse | null = null;
       const resolvedClientId = clientId || (mode === "test" ? "google-ads-sandbox" : undefined);
       if (strategy && copy) {
         const adsRes = await fetch("/api/google-ads/create-campaign", {
@@ -254,7 +286,7 @@ export default function OnboardingPage() {
             mode,
           }),
         });
-        adsData = await adsRes.json();
+        adsData = await adsRes.json() as CampaignCreationResponse;
         if (adsData.success) {
           const adsMsg = `יצרתי לך חשבון Google Ads חדש תחת WAO 🚀\n\nמספר חשבון: ${adsData.customerId}\nהקמפיין ממתין לקישור אמצעי תשלום.`;
           setMessages((prev) => [...prev, { role: "assistant", content: adsMsg }]);
@@ -322,15 +354,17 @@ export default function OnboardingPage() {
 
   // Listen for the callback redirect from Yaad Sarig
   useEffect(() => {
-    if (typeof window === "undefined") return;
+    if (!queryReady || isDemo || typeof window === "undefined") return;
     const params = new URLSearchParams(window.location.search);
     if (params.get("payment") === "success" && currentState !== "COMPLETED") {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       triggerCampaignLaunch();
     }
-  }, [currentState, triggerCampaignLaunch]);
+  }, [currentState, isDemo, queryReady, triggerCampaignLaunch]);
 
   const handleSendMessage = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
+    if (!queryReady || isDemo) return;
     const trimmedInput = inputValue.trim();
     if (!trimmedInput || isSubmitting) return;
 
@@ -415,7 +449,7 @@ export default function OnboardingPage() {
           // non-fatal — user can still proceed to payment
         }
       }
-    } catch (err: any) {
+    } catch {
       setMessages((prev) => [
         ...prev,
         { role: "assistant", content: "אוי, נראה שיש לנו תקלת תקשורת קלה. בוא ננסה שוב!" },
@@ -426,6 +460,7 @@ export default function OnboardingPage() {
   };
 
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!queryReady || isDemo) return;
     const files = Array.from(e.target.files || []);
     if (!files.length) return;
     setIsUploading(true);
@@ -480,6 +515,7 @@ export default function OnboardingPage() {
   };
 
   const handleApprove = async () => {
+    if (!queryReady || isDemo) return;
     setIsSubmitting(true);
     try {
       const response = await fetch("/api/checkout", {
@@ -622,7 +658,7 @@ export default function OnboardingPage() {
               type="button"
               onClick={verifySandboxConnection}
               className="btn-outline"
-              disabled={sandboxVerificationStatus === "checking"}
+              disabled={!queryReady || isDemo || sandboxVerificationStatus === "checking"}
               style={{
                 padding: "8px 14px",
                 fontSize: "0.9rem",
@@ -769,6 +805,7 @@ export default function OnboardingPage() {
                       key={option.value}
                       type="button"
                       onClick={() => selectDeliveryModel(option.value as CollectedData["serviceModel"])}
+                      disabled={!queryReady || isDemo}
                       style={{ padding: "14px", textAlign: "right", borderRadius: "10px", border: "1px solid var(--accent-border)", background: "rgba(74,227,181,0.06)", color: "var(--text)", cursor: "pointer" }}
                     >
                       <strong style={{ display: "block" }}>{option.label}</strong>
@@ -832,7 +869,7 @@ export default function OnboardingPage() {
 
               {/* Inline payment CTA — appears in chat so user never needs to scroll */}
               {currentState === "REVIEWING" && (
-                <div style={{
+                <div ref={compactConsentRef} style={{
                   margin: "8px 0",
                   padding: "16px 20px",
                   borderRadius: "14px",
@@ -848,7 +885,7 @@ export default function OnboardingPage() {
                   <AutonomyConsent checked={acceptedTerms} onChange={setAcceptedTerms} compact />
                   <button
                     onClick={handleApprove}
-                    disabled={isSubmitting || !acceptedTerms}
+                    disabled={!queryReady || isDemo || isSubmitting || !acceptedTerms}
                     className="btn-primary"
                     style={{
                       width: "100%",
@@ -869,7 +906,7 @@ export default function OnboardingPage() {
                   {process.env.NEXT_PUBLIC_PAYMENT_BYPASS === "true" && (
                     <button
                       onClick={triggerCampaignLaunch}
-                      disabled={isSubmitting}
+                      disabled={!queryReady || isDemo || isSubmitting}
                       style={{
                         width: "100%",
                         padding: "10px",
@@ -924,6 +961,7 @@ export default function OnboardingPage() {
                 <input
                   ref={fileInputRef}
                   type="file"
+                  disabled={!queryReady || isDemo}
                   accept="image/jpeg,image/png,image/webp,image/gif"
                   multiple={!awaitingProfilePhoto}
                   style={{ display: "none" }}
@@ -933,7 +971,7 @@ export default function OnboardingPage() {
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
-                  disabled={isSubmitting || isUploading || currentState === "COMPLETED"}
+                  disabled={!queryReady || isDemo || isSubmitting || isUploading || currentState === "COMPLETED"}
                   title={awaitingProfilePhoto ? "העלה תמונה מקצועית אחת שלך" : "העלה תמונות וצילומי מסך"}
                   style={{
                     background: "var(--subtle)",
@@ -958,7 +996,7 @@ export default function OnboardingPage() {
                     placeholder={inputPlaceholder}
                     value={inputValue}
                     onChange={(e) => setInputValue(e.target.value)}
-                    disabled={isSubmitting || currentState === "COMPLETED" || !deliveryModelSelected}
+                    disabled={!queryReady || isDemo || isSubmitting || currentState === "COMPLETED" || !deliveryModelSelected}
                     aria-describedby="onboarding-input-helper"
                     style={{
                       width: "100%",
@@ -984,7 +1022,7 @@ export default function OnboardingPage() {
                 </div>
                 <button
                   type="submit"
-                  disabled={isSubmitting || !inputValue.trim() || currentState === "COMPLETED"}
+                  disabled={!queryReady || isDemo || isSubmitting || !inputValue.trim() || currentState === "COMPLETED"}
                   className="btn-primary"
                   style={{
                     padding: "12px 24px",
@@ -1289,7 +1327,7 @@ export default function OnboardingPage() {
 
                       <button
                         onClick={handleApprove}
-                        disabled={isSubmitting || !acceptedTerms}
+                        disabled={!queryReady || isDemo || isSubmitting || !acceptedTerms}
                         className="btn-primary"
                         style={{
                           width: "100%",
@@ -1310,7 +1348,7 @@ export default function OnboardingPage() {
                       {process.env.NEXT_PUBLIC_PAYMENT_BYPASS === "true" && (
                         <button
                           onClick={triggerCampaignLaunch}
-                          disabled={isSubmitting}
+                          disabled={!queryReady || isDemo || isSubmitting}
                           style={{
                             width: "100%",
                             padding: "10px",

@@ -1,6 +1,4 @@
-// Shared single-turn JSON-mode Qwen caller — used by content-generation
-// routes that need one system+user prompt in, one JSON string out.
-// Conversational bots stay on Gemini (see gemini-fast.ts / /api/bot).
+// Shared JSON-mode Qwen caller for single-turn content and multi-turn chat.
 //
 // DashScope qwen3.8-max reasons by default; pair enable_thinking:false or a
 // thinking_budget with AbortSignal.timeout so a hung non-streaming JSON call
@@ -25,6 +23,7 @@ export type CallQwenJSONOptions = {
 
 const DEFAULT_TIMEOUT_MS = 180_000;
 const DEFAULT_MAX_ATTEMPTS = 3;
+const DEFAULT_QWEN_CHAT_MODEL = process.env.QWEN_CHAT_MODEL || 'qwen3.8-flash';
 
 function validateOptions(opts: CallQwenJSONOptions) {
   if (opts.timeoutMs !== undefined && (!Number.isFinite(opts.timeoutMs) || opts.timeoutMs <= 0)) throw new Error('Invalid Qwen timeout');
@@ -36,19 +35,33 @@ export async function callQwenJSON(
   userMessage: string,
   opts: CallQwenJSONOptions = {},
 ): Promise<string> {
+  return requestQwenJSON(systemPrompt, [{ role: 'user', content: userMessage }], opts, opts.model || 'qwen3.8-max');
+}
+
+export async function callQwenChatJSON(
+  systemPrompt: string,
+  messages: { role: 'user' | 'assistant'; content: string }[],
+  opts: CallQwenJSONOptions = {},
+): Promise<string> {
+  return requestQwenJSON(systemPrompt, messages, { ...opts, think: opts.think ?? false }, opts.model || process.env.QWEN_CHAT_MODEL || DEFAULT_QWEN_CHAT_MODEL);
+}
+
+async function requestQwenJSON(
+  systemPrompt: string,
+  messages: { role: 'user' | 'assistant'; content: string }[],
+  opts: CallQwenJSONOptions,
+  model: string,
+): Promise<string> {
   validateOptions(opts);
   const apiKey = process.env.QWEN_API_KEY;
   const baseUrl = process.env.QWEN_BASE_URL;
   if (!apiKey || !baseUrl) throw new Error('Qwen not configured');
 
   const payload: Record<string, unknown> = {
-    model: opts.model || 'qwen3.8-max',
+    model,
     temperature: 0.7,
     response_format: { type: 'json_object' },
-    messages: [
-      { role: 'system', content: systemPrompt },
-      { role: 'user', content: userMessage },
-    ],
+    messages: [{ role: 'system', content: systemPrompt }, ...messages],
   };
   if (opts.think === false) payload.enable_thinking = false;
   if (typeof opts.thinkingBudget === 'number') payload.thinking_budget = opts.thinkingBudget;
