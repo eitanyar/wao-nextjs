@@ -87,9 +87,9 @@ export default function AccessibilityControl({ labels }: { labels: Labels }) {
   };
 
   return (
-    <div className="wao-a11y-control" style={{ bottom: `calc(${bannerHeight}px + ${bannerHeight ? 80 : 16}px)` }} onKeyDown={(event) => { if (event.key === "Escape" && open) { event.stopPropagation(); close(); } }}>
+    <div className="wao-a11y-control" style={{ bottom: `calc(${bannerHeight}px + ${bannerHeight ? "var(--wao-a11y-banner-gap, 80px)" : "16px"})` }} onKeyDown={(event) => { if (event.key === "Escape" && open) { event.stopPropagation(); close(); } }}>
       {open && (
-        <div id="wao-a11y-panel" className="wao-a11y-panel" dir="rtl" ref={panel}>
+        <div id="wao-a11y-panel" className="wao-a11y-panel" dir="rtl" ref={panel} style={bannerHeight ? { maxHeight: `min(200px, calc(100dvh - ${bannerHeight}px - 32px))` } : undefined}>
           <button type="button" className="wao-a11y-close" onClick={close} aria-label={labels.close_panel_label}>{labels.close_panel_label}</button>
           {([
             ["textLarge", labels.increase_text_label],
