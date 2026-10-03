@@ -24,13 +24,16 @@ test('parseConversionActionId returns null (not a throw) on a malformed resource
 });
 
 // Priority 4 spec §6.1 item 10.
-test('resolveDataManagerRefreshToken falls back from the test-mode var to the general var', () => {
+test('resolveDataManagerRefreshToken isolates test and live tokens', () => {
   const prevTest = process.env.GOOGLE_DATAMANAGER_TEST_REFRESH_TOKEN;
   const prevGeneral = process.env.GOOGLE_DATAMANAGER_REFRESH_TOKEN;
   try {
     delete process.env.GOOGLE_DATAMANAGER_TEST_REFRESH_TOKEN;
     process.env.GOOGLE_DATAMANAGER_REFRESH_TOKEN = 'general-token';
-    assert.equal(resolveDataManagerRefreshToken('test'), 'general-token');
+    assert.equal(resolveDataManagerRefreshToken('test'), undefined);
+
+    process.env.GOOGLE_DATAMANAGER_TEST_REFRESH_TOKEN = '';
+    assert.equal(resolveDataManagerRefreshToken('test'), '');
 
     process.env.GOOGLE_DATAMANAGER_TEST_REFRESH_TOKEN = 'test-specific-token';
     assert.equal(resolveDataManagerRefreshToken('test'), 'test-specific-token');

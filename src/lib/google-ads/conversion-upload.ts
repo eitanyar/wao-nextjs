@@ -71,9 +71,9 @@ type AdsMode = 'test' | 'live';
  */
 function resolveAdsAccount(mode: AdsMode) {
   if (mode === 'test') {
-    const refreshToken = process.env.GOOGLE_ADS_TEST_REFRESH_TOKEN || process.env.GOOGLE_ADS_REFRESH_TOKEN;
-    const mccId = (process.env.GOOGLE_ADS_TEST_MCC_CUSTOMER_ID || process.env.GOOGLE_ADS_MCC_CUSTOMER_ID)?.replace(/-/g, '');
-    if (!refreshToken || !mccId) throw new Error('Test mode requires Google Ads test-MCC credentials');
+    const refreshToken = process.env.GOOGLE_ADS_TEST_REFRESH_TOKEN;
+    const mccId = process.env.GOOGLE_ADS_TEST_MCC_CUSTOMER_ID?.replace(/-/g, '');
+    if (!refreshToken?.trim() || !mccId?.trim()) throw new Error('Test mode requires Google Ads test-MCC credentials');
     return { refreshToken, mccId };
   }
 
@@ -205,7 +205,7 @@ export async function uploadLeadConversion(
     const { mccId } = resolveAdsAccount(mode);
 
     const refreshToken = resolveDataManagerRefreshToken(mode);
-    if (!refreshToken) {
+    if (!refreshToken?.trim()) {
       return { success: false, error: 'Data Manager refresh token not configured for this mode', status: 500 };
     }
 

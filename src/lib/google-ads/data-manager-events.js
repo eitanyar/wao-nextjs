@@ -29,13 +29,13 @@ export function parseConversionActionId(resourceName) {
 
 /**
  * `datamanager`-scoped refresh token lookup, mirroring `resolveAdsAccount`'s
- * mode-gated fallback pattern (spec §4). Env var names are `GOOGLE_DATAMANAGER_*`
+ * mode-gated account lookup. Env var names are `GOOGLE_DATAMANAGER_*`
  * (no `_ADS_` infix) — what was actually minted for the new, deliberately
  * separate Testing-status OAuth client (spec §2 step 4).
  */
 export function resolveDataManagerRefreshToken(mode) {
   if (mode === 'test') {
-    return process.env.GOOGLE_DATAMANAGER_TEST_REFRESH_TOKEN || process.env.GOOGLE_DATAMANAGER_REFRESH_TOKEN;
+    return process.env.GOOGLE_DATAMANAGER_TEST_REFRESH_TOKEN;
   }
   return process.env.GOOGLE_DATAMANAGER_REFRESH_TOKEN;
 }

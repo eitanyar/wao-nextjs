@@ -21,9 +21,9 @@ export function buildClient() {
 
 export function resolveAdsAccount(mode: 'test' | 'live') {
   if (mode === 'test') {
-    const refreshToken = process.env.GOOGLE_ADS_TEST_REFRESH_TOKEN || process.env.GOOGLE_ADS_REFRESH_TOKEN;
-    const mccId = (process.env.GOOGLE_ADS_TEST_MCC_CUSTOMER_ID || process.env.GOOGLE_ADS_MCC_CUSTOMER_ID)?.replace(/-/g, '');
-    if (!refreshToken || !mccId) {
+    const refreshToken = process.env.GOOGLE_ADS_TEST_REFRESH_TOKEN;
+    const mccId = process.env.GOOGLE_ADS_TEST_MCC_CUSTOMER_ID?.replace(/-/g, '');
+    if (!refreshToken?.trim() || !mccId?.trim()) {
       throw new Error('Test mode requires GOOGLE_ADS_TEST_REFRESH_TOKEN and GOOGLE_ADS_TEST_MCC_CUSTOMER_ID');
     }
     return { refreshToken, mccId, clientId: process.env.GOOGLE_ADS_SANDBOX_CLIENT_ID || 'google-ads-sandbox' };

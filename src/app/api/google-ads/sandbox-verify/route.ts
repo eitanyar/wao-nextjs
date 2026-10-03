@@ -35,10 +35,10 @@ function buildGoogleAdsClient(): GoogleAdsApi {
 }
 
 function getTestAccountCredentials(): { refreshToken: string; mccCustomerId: string } {
-  const refreshToken = process.env.GOOGLE_ADS_TEST_REFRESH_TOKEN || process.env.GOOGLE_ADS_REFRESH_TOKEN;
-  const mccCustomerId = (process.env.GOOGLE_ADS_TEST_MCC_CUSTOMER_ID || process.env.GOOGLE_ADS_MCC_CUSTOMER_ID)?.replace(/-/g, '');
+  const refreshToken = process.env.GOOGLE_ADS_TEST_REFRESH_TOKEN;
+  const mccCustomerId = process.env.GOOGLE_ADS_TEST_MCC_CUSTOMER_ID?.replace(/-/g, '');
 
-  if (!refreshToken || !mccCustomerId) {
+  if (!refreshToken?.trim() || !mccCustomerId?.trim()) {
     throw new Error('Test mode requires Google Ads test-MCC credentials');
   }
 
