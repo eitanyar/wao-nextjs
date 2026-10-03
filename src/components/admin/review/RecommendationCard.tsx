@@ -7,6 +7,7 @@ import { STATUS_CONFIG } from '@/components/geo/StatusBar';
 import QueueDepthNote from './QueueDepthNote';
 import WhyDisclosure, { type InquiryTurn } from './WhyDisclosure';
 import DecisionRow, { type DecisionResult } from './DecisionRow';
+import type { GoogleAdsOperatorTask } from '@/lib/google-ads/operator';
 
 const RISK_LABEL: Record<'low' | 'medium' | 'high', string> = {
   low: 'נמוך',
@@ -16,6 +17,7 @@ const RISK_LABEL: Record<'low' | 'medium' | 'high', string> = {
 
 export interface ReviewTask {
   taskId: string;
+  kind: GoogleAdsOperatorTask['kind'];
   title: string;
   whyNeeded: string;
   recommendedAction: string;
@@ -43,8 +45,9 @@ export default function RecommendationCard({ task, queueDepth, initialInquiries 
   }, [task.taskId]);
 
   const pill = STATUS_CONFIG['pending-review'];
+  const isAudit = task.kind === 'tracking_audit';
 
-  if (resolved) {
+  if (resolved && !isAudit) {
     return (
       <div
         role="status"
@@ -69,8 +72,10 @@ export default function RecommendationCard({ task, queueDepth, initialInquiries 
   return (
     <div className="rounded-[var(--radius-md)] border border-[var(--border)] bg-[var(--surface)] p-6 shadow-[var(--shadow-card)]">
       <div className="mb-4 flex items-center justify-between gap-3">
-        <span className={`rounded-full px-3 py-1 text-sm font-medium ${pill.color}`}>{pill.label}</span>
-        <QueueDepthNote count={queueDepth} />
+        <span className={`rounded-full px-3 py-1 text-sm font-medium ${pill.color}`}>
+          {isAudit ? 'בבדיקה ידנית' : pill.label}
+        </span>
+        {!isAudit && <QueueDepthNote count={queueDepth} />}
       </div>
 
       <div className="mb-3 flex flex-wrap items-center gap-2">
@@ -84,14 +89,20 @@ export default function RecommendationCard({ task, queueDepth, initialInquiries 
 
       <p className="text-sm leading-relaxed text-[var(--text)]">{renderMixed(task.whyNeeded)}</p>
 
-      <WhyDisclosure taskId={task.taskId} initialInquiries={initialInquiries} />
-
-      <p className="mt-4 rounded-lg bg-[var(--bg)] p-3 text-xs leading-relaxed text-[var(--muted)]">
-        באישור: השינוי יבוצע מיד בחשבון Google Ads החי שלך — זו לא סימולציה.
-        {task.risk === 'low' && ' אם לא תגיב תוך 72 שעות, ההמלצה הזו תאושר ותבוצע אוטומטית.'}
-      </p>
-
-      <DecisionRow taskId={task.taskId} onResolved={setResolved} />
+      {isAudit ? (
+        <p className="mt-4 rounded-lg bg-[var(--bg)] p-3 text-xs leading-relaxed text-[var(--muted)]">
+          משימת בדיקה היא עבודת אדם, לא שינוי חי בחשבון Google Ads. מהנדס של WAO בודק את המדידה ומדווח לך על הממצאים. רק אחר כך, אם יידרש, הוא יציע שינוי.
+        </p>
+      ) : (
+        <>
+          <WhyDisclosure taskId={task.taskId} initialInquiries={initialInquiries} />
+          <p className="mt-4 rounded-lg bg-[var(--bg)] p-3 text-xs leading-relaxed text-[var(--muted)]">
+            באישור: השינוי יבוצע מיד בחשבון Google Ads החי שלך — זו לא סימולציה.
+            {task.risk === 'low' && ' אם לא תגיב תוך 72 שעות, ההמלצה הזו תאושר ותבוצע אוטומטית.'}
+          </p>
+          <DecisionRow taskId={task.taskId} onResolved={setResolved} />
+        </>
+      )}
     </div>
   );
 }

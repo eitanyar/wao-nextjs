@@ -17,6 +17,7 @@ export default function GoogleAdsOperatorPanel({ clientId, tasks, approvals }: G
   const approvedTaskIds = useMemo(() => new Set(localApprovals.map((approval) => approval.taskId)), [localApprovals]);
 
   async function approveTask(task: GoogleAdsOperatorTask) {
+    if (task.kind === 'tracking_audit') return;
     const ok = window.confirm(
       [
         'Approve this Google Ads task?',
@@ -72,36 +73,44 @@ export default function GoogleAdsOperatorPanel({ clientId, tasks, approvals }: G
 
       <div className="grid gap-3 sm:grid-cols-2 max-w-4xl">
         {tasks.map((task) => {
+          const isAudit = task.kind === 'tracking_audit';
           const approved = approvedTaskIds.has(task.taskId);
           const busy = busyTaskId === task.taskId;
 
           return (
-            <div key={task.taskId} className="rounded-xl border border-white/10 bg-white/5 p-4">
+            <div key={task.taskId} dir={isAudit ? 'rtl' : undefined} lang={isAudit ? 'he' : undefined} className={`rounded-xl border border-white/10 bg-white/5 p-4${isAudit ? ' text-right' : ''}`}>
               <div className="flex items-center justify-between gap-3 mb-2">
                 <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full border border-white/10 bg-white/5 text-[var(--muted)] uppercase tracking-wide">
-                  {task.source === 'alert' ? 'Needs review' : 'Proposed task'}
+                  {isAudit ? 'לקריאה בלבד' : task.source === 'alert' ? 'Needs review' : 'Proposed task'}
                 </span>
-                <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${approved ? 'text-green-400 bg-green-500/15' : 'text-[var(--muted)] bg-white/5'}`}>
-                  {approved ? 'Approved' : 'Approval gated'}
-                </span>
+                {!isAudit && (
+                  <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${approved ? 'text-green-400 bg-green-500/15' : 'text-[var(--muted)] bg-white/5'}`}>
+                    {approved ? 'Approved' : 'Approval gated'}
+                  </span>
+                )}
               </div>
 
-              <p className="text-sm font-semibold mb-1">{task.title}</p>
-              <p className="text-xs text-[var(--muted)] leading-relaxed mb-2">{task.whyNeeded}</p>
-              <p className="text-xs text-[var(--foreground)]/80 leading-relaxed mb-4">{task.recommendedAction}</p>
+              <p className="text-sm font-semibold mb-1">{isAudit ? <bdi dir="auto">{task.title}</bdi> : task.title}</p>
+              <p className="text-xs text-[var(--muted)] leading-relaxed mb-2">{isAudit ? <bdi dir="auto">{task.whyNeeded}</bdi> : task.whyNeeded}</p>
+              <p className="text-xs text-[var(--foreground)]/80 leading-relaxed mb-4">{isAudit ? <bdi dir="auto">{task.recommendedAction}</bdi> : task.recommendedAction}</p>
+              {isAudit && (
+                <p dir="rtl" lang="he" className="text-xs text-[var(--muted)] leading-relaxed mb-4">
+                  משימת הבדיקה לא מחכה לאישור שלך, והיא לא מבוצעת אוטומטית בחשבון. מהנדס של WAO בודק את המדידה ומעדכן בממצאים. שינוי יוצע רק אם יידרש — בנפרד.
+                </p>
+              )}
 
               <div className="flex items-center justify-between gap-3 flex-wrap">
                 <span className="text-[10px] text-[var(--muted)]">
-                  Risk: {task.risk}
+                  {isAudit ? <bdi dir="ltr">Risk: {task.risk}</bdi> : <>Risk: {task.risk}</>}
                 </span>
-                <button
+                {!isAudit && <button
                   type="button"
                   className="rounded-full bg-[var(--accent)] px-4 py-2 text-xs font-semibold text-black disabled:opacity-60"
                   onClick={() => approveTask(task)}
                   disabled={busy || approved}
                 >
                   {busy ? 'Approving…' : approved ? 'Approved' : 'Approve task'}
-                </button>
+                </button>}
               </div>
             </div>
           );

@@ -106,6 +106,7 @@
     "src/lib/google-ads/recommendation-feed.ts",
     "src/lib/google-ads/recommendation-feed.test.ts",
     "src/lib/google-ads/recommendation-feed-operator.test.ts",
+    "src/lib/google-ads/tracking-audit-guard.test.ts",
     "src/lib/google-ads/campaign-enumeration.ts",
     "src/lib/google-ads/campaign-enumeration.test.ts",
     "src/lib/google-ads/operator.ts",

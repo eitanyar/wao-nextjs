@@ -624,13 +624,17 @@ export default async function DashboardPage() {
               </span>
             )}
           </div>
-          <p dir="rtl" lang="he" className="text-sm text-[var(--foreground)]/90 leading-relaxed mb-2 max-w-xl">
-            זה תור הפעולות שהבוט מציע לשנות בחשבון. הוא מסביר למה זה נחוץ, מחכה לאישור מפורש, ואז יבצע רק את המשימה שאישרת.
-          </p>
-          <p className="text-[10px] text-[var(--muted)] mb-4 max-w-xl">
-            Internal preview — approval-gated operator queue. Read-only in this phase.
-            Low-risk tasks such as copy refresh, negative keywords, pacing, and search-term cleanup will land here first.
-          </p>
+          {!googleAdsOperatorTasks.some((task) => task.kind === 'tracking_audit') && (
+            <>
+              <p dir="rtl" lang="he" className="text-sm text-[var(--foreground)]/90 leading-relaxed mb-2 max-w-xl">
+                זה תור הפעולות שהבוט מציע לשנות בחשבון. הוא מסביר למה זה נחוץ, מחכה לאישור מפורש, ואז יבצע רק את המשימה שאישרת.
+              </p>
+              <p className="text-[10px] text-[var(--muted)] mb-4 max-w-xl">
+                Internal preview — approval-gated operator queue. Read-only in this phase.
+                Low-risk tasks such as copy refresh, negative keywords, pacing, and search-term cleanup will land here first.
+              </p>
+            </>
+          )}
 
           <GoogleAdsOperatorPanel
             clientId={clientId}

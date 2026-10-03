@@ -163,6 +163,13 @@ export async function POST(req: Request) {
       );
     }
 
+    if (task.kind === 'tracking_audit') {
+      return NextResponse.json(
+        { error: 'Manual investigation required for tracking audits; approval and rejection are unavailable.' },
+        { status: 409 }
+      );
+    }
+
     // windowEnd for the approval record — from this task's own campaign digest when known,
     // falling back to any digest built this cycle (they share the same 7-day window/`now`).
     const digestWindowEnd =

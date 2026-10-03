@@ -435,6 +435,7 @@ export async function executeGoogleAdsOperatorTask(params: {
       return { success: true };
     }
     case 'tracking_audit':
+      return { success: false, error: 'Manual investigation required for tracking audits; no task was executed.' };
     case 'conversion_review':
     case 'lead_followup':
     case 'general_review':

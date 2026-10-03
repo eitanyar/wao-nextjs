@@ -199,6 +199,7 @@ export default async function GoogleAdsReviewPage({
       <RecommendationCard
         task={{
           taskId: current.taskId,
+          kind: current.kind,
           title: translatedCurrent.title,
           whyNeeded: translatedCurrent.whyNeeded,
           recommendedAction: translatedCurrent.recommendedAction,
