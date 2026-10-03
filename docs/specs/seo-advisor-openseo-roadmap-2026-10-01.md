@@ -47,6 +47,7 @@ Phase 1 local implementation executed 2026-10-01 under Kanban card t_1deb1703; i
 - New operator-only route (no public exposure): input = client domain from Eitan's retainer roster; output = ranked "next best action" list with evidence (domain overview, ranked-keyword gaps, keyword suggestions, backlink profile) and an explicit 20/80 framing: the one or two moves with the largest expected organic impact per effort.
 - Per-run credit ceiling approved in advance by the budget planner; every skipped planned call persisted (spec 034 §5-6 already defines this).
 - Advisory only. No mutation of client properties. Fits the existing "audit-only" posture proven by the Site-Bot scorecard (c78c9ce).
+- 2026-10-03 Contract 033: live schema diagnosis corrected the ranked target (bare domain), bounded provider-error detail, and nested keyword-row normalization; two cap-700 confirmation sequences returned 18 ranked rows and five position-4-to-20 actions on the final run; adapter-accounted observedCredits 600 + 600 = 1200 total (not verified provider billing).
 
 ## Phase 1b — location/language market filter (2026-10-02)
 - Task t_e05b25b8 threads per-call market overrides through the operator advisor without creating another OpenSEO project.

@@ -139,6 +139,22 @@ test('research reports provider failures and closes resources', async () => {
   assert.equal(result.status, 'partial'); assert.equal(result.skipped.some(item => item.reason === 'provider_failure'), true); assert.equal(client.closed, 1);
 });
 
+test('ranked isError reproduces recorded overview-first failure and sanitizes provider detail', async () => {
+  const unsafe = `Market unavailable at https://private.example.test/path Authorization:Bearer-secret ${'z'.repeat(250)}`;
+  const client = new FakeClient(undefined, '', input => input.name === 'get_ranked_keywords'
+    ? { content: [{ type: 'text', text: unsafe }], isError: true }
+    : ordinary((responses[input.name] ?? {}) as Record<string, unknown>));
+  const result = await runOpenSeoResearch({ client, projectId: 'project-1', candidates: ['www.one.test'], approvedCap: 700, now: day });
+  assert.deepEqual(client.calls, ['get_domain_overview', 'get_ranked_keywords']);
+  assert.equal(client.inputs[1].arguments.target, 'one.test');
+  assert.equal(result.status, 'partial'); assert.equal(result.observedCredits, 300); assert.equal(result.evidence[0].tool, 'get_domain_overview');
+  const failure = result.skipped.find(item => item.tool === 'get_ranked_keywords');
+  assert.equal(failure?.reason, 'provider_failure'); assert.match(failure?.detail ?? '', /Market unavailable at \[endpoint\]/u);
+  assert.ok((failure?.detail?.length ?? 0) <= 200);
+  assert.doesNotMatch(failure?.detail ?? '', /private\.example|Bearer-secret|zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz/iu);
+  assert.equal(client.closed, 1);
+});
+
 test('close helper closes both injected resources', async () => {
   const client = new FakeClient(); const transport = new InMemoryTransport(); await closeOpenSeoMcpClient({ client, transport, mode: 'local', origin: 'http://127.0.0.1:3001' }); assert.equal(client.closed, 1); assert.equal(transport.closed, 1);
 });
@@ -179,10 +195,19 @@ test('all metered tools require projectId and ranked input rejects malformed fie
     await callAllowedOpenSeoTool(client, tool, { projectId: 'project-1', ...input });
   }
   assert.equal(client.calls.length, 6);
-  for (const input of [{ target: '127.0.0.1' }, { target: 'one.test', limit: 201 }, { target: 'one.test', maxRank: 101 }, { target: 'one.test', locationCode: 0 }, { target: 'one.test', languageCode: 'eng' }, { target: 'one.test', unexpected: true }]) {
+  for (const input of [{ target: '127.0.0.1' }, { target: 'www.one.test', limit: 50, maxRank: 20 }, { target: 'one.test', limit: 101 }, { target: 'one.test', limit: 201 }, { target: 'one.test', maxRank: 101 }, { target: 'one.test', locationCode: 0 }, { target: 'one.test', languageCode: 'eng' }, { target: 'one.test', unexpected: true }]) {
     await assert.rejects(() => callAllowedOpenSeoTool(client, 'get_ranked_keywords', { projectId: 'project-1', ...input }));
   }
   assert.equal(client.calls.length, 6);
+});
+
+test('ranked plan arguments satisfy live required schema and preserve 50-row cap', async () => {
+  const plan = estimateOpenSeoPlan({ projectId: 'project-1', candidates: ['www.one.test'], approvedCap: 700, locationCode: 2376, languageCode: 'he' });
+  const ranked = plan.calls.find(call => call.tool === 'get_ranked_keywords');
+  assert.deepEqual(ranked?.arguments, { projectId: 'project-1', target: 'one.test', locationCode: 2376, languageCode: 'he', limit: 50, maxRank: 20 });
+  const client = new FakeClient();
+  await callAllowedOpenSeoTool(client, 'get_ranked_keywords', ranked?.arguments ?? {});
+  assert.deepEqual(client.inputs[0].arguments, ranked?.arguments);
 });
 
 test('ranked normalization retains only six fields per row and caps at 50', async () => {
@@ -192,4 +217,14 @@ test('ranked normalization retains only six fields per row and caps at 50', asyn
   const ranked = result.evidence.find(item => item.tool === 'get_ranked_keywords');
   assert.equal(ranked?.rowCount, 50); assert.equal((ranked?.rankedKeywordRows as unknown[]).length, 50); assert.equal(ranked?.topKeyword, 'term-0'); assert.equal(ranked?.bestPosition, 1);
   assert.equal(JSON.stringify(result.evidence).includes('account@example.test'), false); assert.equal(JSON.stringify(result.evidence).includes('hidden'), false);
+});
+
+test('live OpenSEO nested keyword rows become actionable ranked evidence', async () => {
+  const row = { keyword_data: { keyword: 'seo tools', keyword_info: { search_volume: 1000, cpc: 3.2 }, search_intent_info: { main_intent: 'commercial' } }, ranked_serp_element: { serp_item: { rank_absolute: 4, url: 'https://one.test/tools' } }, secret: 'hidden' };
+  const client = new FakeClient(undefined, '', input => input.name === 'get_ranked_keywords' ? ordinary({ keywords: [row] }) : ordinary());
+  const result = await runOpenSeoResearch({ client, projectId: 'project-1', candidates: ['one.test'], approvedCap: 600, now: day });
+  const ranked = result.evidence.find(item => item.tool === 'get_ranked_keywords');
+  assert.equal(ranked?.rowCount, 1); assert.equal(ranked?.bestPosition, 4); assert.equal(ranked?.topKeyword, 'seo tools');
+  assert.deepEqual(ranked?.rankedKeywordRows, [{ keyword: 'seo tools', url: 'https://one.test/tools', position: 4, searchVolume: 1000, cpc: 3.2, intent: 'commercial' }]);
+  assert.equal(JSON.stringify(result.evidence).includes('hidden'), false);
 });

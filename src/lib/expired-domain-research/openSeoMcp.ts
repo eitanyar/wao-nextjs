@@ -26,13 +26,24 @@ export interface OpenSeoPlanCall { tool: MeteredTool; arguments: Record<string, 
 export interface OpenSeoPlan { status: 'ready' | 'budget_confirmation_required' | 'insufficient_budget'; totalCredits: number; approvedCap: number; calls: OpenSeoPlanCall[]; omitted: Array<{ tool: MeteredTool; reason: string }>; }
 export interface OpenSeoPlanOptions { projectId: string; seed?: string; candidates?: string[]; approvedCap?: number; explicitPlanCredits?: number; locationCode?: number; languageCode?: string; }
 export interface OpenSeoResearchOptions { client: OpenSeoClient; projectId: string; seed?: string; candidates?: string[]; approvedCap: number; remainingCredits?: number; now?: () => Date; locationCode?: number; languageCode?: string; }
-export interface OpenSeoResearchResult { status: 'complete' | 'partial' | 'budget_confirmation_required' | 'insufficient_budget'; plan: OpenSeoPlan; observedCredits: number; evidence: Array<Record<string, unknown>>; skipped: Array<{ tool: MeteredTool; reason: string }>; }
+export interface OpenSeoResearchResult { status: 'complete' | 'partial' | 'budget_confirmation_required' | 'insufficient_budget'; plan: OpenSeoPlan; observedCredits: number; evidence: Array<Record<string, unknown>>; skipped: Array<{ tool: MeteredTool; reason: string; detail?: string }>; }
 
 function record(value: unknown): value is Record<string, unknown> { return Boolean(value) && typeof value === 'object' && !Array.isArray(value); }
 function digest(value: unknown): string { return crypto.createHash('sha256').update(JSON.stringify(value)).digest('hex'); }
 function hostname(value: unknown): value is string { return typeof value === 'string' && isIP(value) === 0 && /^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?)+$/iu.test(value) && value.length <= 253; }
 function isOrdinaryToolResult(result: OpenSeoToolResult): result is OpenSeoOrdinaryToolResult { return 'content' in result; }
 function readStructured(result: OpenSeoOrdinaryToolResult): Record<string, unknown> { if (record(result.structuredContent)) return result.structuredContent; const text = result.content.find(item => item.type === 'text')?.text; if (!text) return {}; try { const parsed: unknown = JSON.parse(text); return record(parsed) ? parsed : {}; } catch { return {}; } }
+class OpenSeoProviderError extends Error {}
+function sanitizedProviderDetail(result: OpenSeoOrdinaryToolResult): string {
+  const text = result.content.filter(item => item.type === 'text' && typeof item.text === 'string').map(item => item.text).join(' ');
+  return (text || 'OpenSEO tool failed')
+    .replace(/https?:\/\/\S+/giu, '[endpoint]')
+    .replace(/(?:"|')?(?:Authorization|Cookie|Set-Cookie|api[_-]?key|token|password|secret)(?:"|')?\s*[:=]\s*(?:"[^"]*"|'[^']*'|\S+)/giu, '[credential]')
+    .replace(/\b(?:Authorization|Cookie|Set-Cookie|api[_-]?key|token|password|secret)\s*[:=]\s*\S+/giu, '[credential]')
+    .replace(/\b(?:Bearer|Basic)\s+\S+/giu, '[credential]')
+    .replace(/\b[A-Za-z0-9_+/=-]{32,}/gu, '[redacted]')
+    .slice(0, 200);
+}
 function configuredUrl(options: OpenSeoClientOptions): { mode: OpenSeoMode; url: URL } {
   const mode = options.mode ?? (options.url ? 'hosted' : 'local');
   const value = options.url ?? (mode === 'local' ? LOCAL_URL : HOSTED_URL);
@@ -49,8 +60,8 @@ function validateInput(tool: OpenSeoTool, input: Record<string, unknown>): void 
   if ((tool === 'get_domain_overview' || tool === 'get_domain_keyword_suggestions') && hostname(input.domain)) return;
   if (tool === 'get_backlinks_overview' && hostname(input.target)) return;
   if (tool === 'get_backlinks_profile' && hostname(input.target) && input.page === 1) return;
-  if (tool === 'get_ranked_keywords' && hostname(input.target) && Object.keys(input).every(key => ['projectId', 'target', 'scope', 'market', 'locationCode', 'languageCode', 'resultTypes', 'includeSubdomains', 'minSearchVolume', 'maxRank', 'excludeBrandTerms', 'sortBy', 'limit', 'offset'].includes(key)) &&
-    (input.limit === undefined || (Number.isInteger(input.limit) && (input.limit as number) >= 1 && (input.limit as number) <= 200)) &&
+  if (tool === 'get_ranked_keywords' && hostname(input.target) && !(input.target as string).startsWith('www.') && Object.keys(input).every(key => ['projectId', 'target', 'scope', 'market', 'locationCode', 'languageCode', 'resultTypes', 'includeSubdomains', 'minSearchVolume', 'maxRank', 'excludeBrandTerms', 'sortBy', 'limit', 'offset'].includes(key)) &&
+    (input.limit === undefined || (Number.isInteger(input.limit) && (input.limit as number) >= 1 && (input.limit as number) <= 100)) &&
     (input.maxRank === undefined || (Number.isInteger(input.maxRank) && (input.maxRank as number) >= 1 && (input.maxRank as number) <= 100)) &&
     (input.locationCode === undefined || (Number.isInteger(input.locationCode) && (input.locationCode as number) > 0)) &&
     (input.languageCode === undefined || (typeof input.languageCode === 'string' && /^[a-z]{2}$/iu.test(input.languageCode)))) return;
@@ -71,7 +82,7 @@ export async function callAllowedOpenSeoTool(client: OpenSeoClient, tool: OpenSe
   validateInput(tool, input);
   const result = await client.callTool({ name: tool, arguments: input });
   if (!isOrdinaryToolResult(result)) throw new Error('OpenSEO tool result is unsupported');
-  if (result.isError) throw new Error('OpenSEO tool failed');
+  if (result.isError) throw new OpenSeoProviderError(sanitizedProviderDetail(result));
   return result;
 }
 
@@ -117,7 +128,7 @@ export function estimateOpenSeoPlan(options: OpenSeoPlanOptions): OpenSeoPlan {
   const all: OpenSeoPlanCall[] = [
     ...(options.candidates && !options.seed ? [] : [{ tool: 'research_keywords' as const, arguments: { projectId, seed, clickstream: false }, cost: COSTS.research_keywords }]),
     ...candidates.map(domain => ({ tool: 'get_domain_overview' as const, arguments: { projectId, domain, ...marketArgs }, cost: COSTS.get_domain_overview })),
-    ...candidates.map(target => ({ tool: 'get_ranked_keywords' as const, arguments: { projectId, target, ...marketArgs, limit: 50, maxRank: 20 }, cost: COSTS.get_ranked_keywords })),
+    ...candidates.map(target => ({ tool: 'get_ranked_keywords' as const, arguments: { projectId, target: target.replace(/^www\./iu, ''), ...marketArgs, limit: 50, maxRank: 20 }, cost: COSTS.get_ranked_keywords })),
     ...candidates.slice(0, 2).map(domain => ({ tool: 'get_domain_keyword_suggestions' as const, arguments: { projectId, domain, ...marketArgs }, cost: COSTS.get_domain_keyword_suggestions })),
     ...candidates.map(target => ({ tool: 'get_backlinks_overview' as const, arguments: { projectId, target }, cost: COSTS.get_backlinks_overview })),
     ...candidates.map(target => ({ tool: 'get_backlinks_profile' as const, arguments: { projectId, target, page: 1 }, cost: COSTS.get_backlinks_profile })),
@@ -139,14 +150,26 @@ function normalize(tool: MeteredTool, result: OpenSeoOrdinaryToolResult, retriev
   if (tool === 'get_domain_keyword_suggestions') return { ...evidence, rankedKeywords: numeric('rankedKeywords'), rankedUrls: numeric('rankedUrls'), dataForSeoRank: numeric('rank') };
   if (tool === 'get_ranked_keywords') {
     const rawRows = Array.isArray(source.keywords) ? source.keywords : Array.isArray(source.items) ? source.items : Array.isArray(source.rows) ? source.rows : [];
-    const rankedKeywordRows = rawRows.filter(record).slice(0, 50).map(row => ({
-      keyword: typeof row.keyword === 'string' ? row.keyword : null,
-      url: typeof row.url === 'string' ? row.url : null,
-      position: typeof row.position === 'number' && Number.isFinite(row.position) ? row.position : null,
-      searchVolume: typeof row.searchVolume === 'number' && Number.isFinite(row.searchVolume) ? row.searchVolume : null,
-      cpc: typeof row.cpc === 'number' && Number.isFinite(row.cpc) ? row.cpc : null,
-      intent: typeof row.intent === 'string' ? row.intent : null,
-    }));
+    const rankedKeywordRows = rawRows.filter(record).slice(0, 50).map(row => {
+      const keywordData = record(row.keyword_data) ? row.keyword_data : {};
+      const keywordInfo = record(keywordData.keyword_info) ? keywordData.keyword_info : {};
+      const serp = record(row.ranked_serp_element) ? row.ranked_serp_element : {};
+      const serpItem = record(serp.serp_item) ? serp.serp_item : {};
+      const keyword = keywordData.keyword ?? row.keyword;
+      const url = serpItem.url ?? serp.url ?? row.url;
+      const position = serpItem.rank_absolute ?? serp.rank_absolute ?? row.position;
+      const searchVolume = keywordInfo.search_volume ?? row.searchVolume;
+      const cpc = keywordInfo.cpc ?? row.cpc;
+      const intent = record(keywordData.search_intent_info) ? keywordData.search_intent_info.main_intent : row.intent;
+      return {
+        keyword: typeof keyword === 'string' ? keyword : null,
+        url: typeof url === 'string' ? url : null,
+        position: typeof position === 'number' && Number.isFinite(position) ? position : null,
+        searchVolume: typeof searchVolume === 'number' && Number.isFinite(searchVolume) ? searchVolume : null,
+        cpc: typeof cpc === 'number' && Number.isFinite(cpc) ? cpc : null,
+        intent: typeof intent === 'string' ? intent : null,
+      };
+    });
     const positioned = rankedKeywordRows.filter(row => row.position !== null).sort((a, b) => (a.position ?? Infinity) - (b.position ?? Infinity));
     return { ...evidence, rankedKeywordRows, topKeyword: positioned[0]?.keyword ?? null, bestPosition: positioned[0]?.position ?? null, rowCount: rankedKeywordRows.length };
   }
@@ -156,11 +179,11 @@ function normalize(tool: MeteredTool, result: OpenSeoOrdinaryToolResult, retriev
 export async function runOpenSeoResearch(options: OpenSeoResearchOptions): Promise<OpenSeoResearchResult> {
   const plan = estimateOpenSeoPlan({ projectId: options.projectId, seed: options.seed, candidates: options.candidates, approvedCap: options.approvedCap, locationCode: options.locationCode, languageCode: options.languageCode });
   if (plan.status !== 'ready') return { status: plan.status, plan, observedCredits: 0, evidence: [], skipped: plan.omitted };
-  let remaining = options.remainingCredits ?? options.approvedCap; let observedCredits = 0; const evidence: Array<Record<string, unknown>> = []; const skipped = [...plan.omitted]; const now = options.now ?? (() => new Date());
+  let remaining = options.remainingCredits ?? options.approvedCap; let observedCredits = 0; const evidence: Array<Record<string, unknown>> = []; const skipped: OpenSeoResearchResult['skipped'] = [...plan.omitted]; const now = options.now ?? (() => new Date());
   try {
     for (const call of plan.calls) {
       if (remaining < call.cost) { skipped.push({ tool: call.tool, reason: 'remaining_credits' }); continue; }
-      try { const result = await callAllowedOpenSeoTool(options.client, call.tool, call.arguments); evidence.push(normalize(call.tool, result, now().toISOString())); observedCredits += call.cost; remaining -= call.cost; } catch { skipped.push({ tool: call.tool, reason: 'provider_failure' }); break; }
+      try { const result = await callAllowedOpenSeoTool(options.client, call.tool, call.arguments); evidence.push(normalize(call.tool, result, now().toISOString())); observedCredits += call.cost; remaining -= call.cost; } catch (error) { skipped.push({ tool: call.tool, reason: 'provider_failure', detail: error instanceof OpenSeoProviderError ? error.message : 'OpenSEO tool failed' }); break; }
     }
     return { status: skipped.length ? 'partial' : 'complete', plan, observedCredits, evidence, skipped };
   } finally { await options.client.close?.(); }
