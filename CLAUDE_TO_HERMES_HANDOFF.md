@@ -325,6 +325,38 @@ Rule for every spec:
 
 ---
 
+## Memory & Procedure Placement (added 2026-10-03)
+
+This section is the project-local shared procedure surface for all WAO profiles (the
+`multi-profile-agent-orchestration` skill mirrors it, but WAO profile skill dirs shadow the
+default skills tree, so this file is the loadable surface). Specs carry task-specific detail
+only — never restate these procedures in spec bodies or dispatch prompts.
+
+- **Batch-first:** collect independent read-only discovery/evidence calls (file reads, git
+  status, hashes, forbidden-symbol scans, port/process checks) in one parallel tool round;
+  finish with one parallel evidence batch (final status, diffs, hashes, artifact inventory).
+- **Serialize side effects:** edits, tests/builds sharing outputs (`dist`, `.next`),
+  browser-server lifecycle, and every external/state-changing action run one at a time.
+- **One writer:** at most one shared-repository writer (`/home/eitanya/wao`) at a time;
+  batching never creates a second writer or weakens/skips/reorders acceptance gates.
+- **Hard gates before soft scores:** focused tests, canonical `npm run test` + `npm run build`,
+  scope checks, and runtime evidence pass before any soft score or quality judgment is reported.
+- **Delegation limits:** no delegation for ordinary local corrections (the outcome-owning worker
+  fixes task-owned test/harness failures in-session); one-hop delegation maximum unless a real
+  capability boundary exists (name it).
+- **Timing line** in every goal-mode completion: elapsed, model/API calls, tool calls, slowest
+  model call, batched independent checks yes/no. The first post-change run is a measurement
+  sample, not proof of a guaranteed speedup.
+- **Memory hygiene:** task-specific progress belongs in Kanban/handoff/session history; reusable
+  procedures belong in this file or a loadable skill; only cross-session stable facts (identity,
+  role constraints, safety boundaries, standing user preferences, environment facts) belong in
+  profile memory. Targets: <= 1,000 bytes (verifier/copy/QA profiles), <= 1,500 bytes
+  (engineer/strategist/orchestrator), unless unique role constraints justify more (record the
+  justification). Reversible backups before any memory edit; report before/after byte size and
+  line count.
+
+---
+
 ## Quick Reference
 
 | Action | Directory | Who Does It |
