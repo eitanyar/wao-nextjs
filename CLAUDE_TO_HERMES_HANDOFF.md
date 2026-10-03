@@ -333,12 +333,16 @@ default skills tree, so this file is the loadable surface). Specs carry task-spe
 only — never restate these procedures in spec bodies or dispatch prompts.
 
 - **Batch-first:** collect independent read-only discovery/evidence calls (file reads, git
-  status, hashes, forbidden-symbol scans, port/process checks) in one parallel tool round;
+  status, hashes, forbidden-symbol scans, dependency checks, port/process checks) in one parallel tool round;
   finish with one parallel evidence batch (final status, diffs, hashes, artifact inventory).
-- **Serialize side effects:** edits, tests/builds sharing outputs (`dist`, `.next`),
+- **Serialize side effects:** edits, generated files, TypeScript compilation, tests/builds sharing outputs (`dist`, `.next`),
   browser-server lifecycle, and every external/state-changing action run one at a time.
 - **One writer:** at most one shared-repository writer (`/home/eitanya/wao`) at a time;
-  batching never creates a second writer or weakens/skips/reorders acceptance gates.
+  batching never creates a second writer or weakens/skips/reorders acceptance or independent-verification gates.
+- **Example:** anti-pattern: read file A, then in separate turns read file B, check git status,
+  and scan forbidden symbols, reasoning after each independent check. Correct: batch those
+  read-only checks in parallel, reason once, then edit and run required gates in order;
+  `npm run test` and `npm run build` stay serial because they share `dist`/`.next` output.
 - **Hard gates before soft scores:** focused tests, canonical `npm run test` + `npm run build`,
   scope checks, and runtime evidence pass before any soft score or quality judgment is reported.
 - **Delegation limits:** no delegation for ordinary local corrections (the outcome-owning worker
