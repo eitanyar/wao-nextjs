@@ -3,12 +3,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import ExitOptinPopup from './ExitOptinPopup';
 
 type NicheBucket = 'clinic' | 'lawyer' | 'ecommerce' | 'other';
-type PopupVariant = 'course' | 'commercial';
+type PopupVariant = 'course' | 'optin';
 
-// Reuses the same WhatsApp deep link used across the site (see Header.tsx, CtaBanner.tsx).
-const WHATSAPP_URL = 'https://wa.me/972526148860';
 
 // ── Persistent suppression gate (localStorage — survives reloads/new tabs/new sessions) ──
 const GATE_KEY = 'wao_exit_survey_state';
@@ -64,9 +63,8 @@ const NO_POPUP_PATHS = [
   '/privacy',
   '/accessibility',
   '/preview-lp',
-  // GEO Bot task/tool surfaces — signup flow, auth, scan/audit tools, dashboard, and
-  // per-action pages. NOT '/geo' itself, which is the marketing landing page and should
-  // keep the commercial exit-intent popup. See mobile-audit fix #1 (Maya, approved by Eitan).
+  // GEO Bot task/tool surfaces — signup flow, auth, scan/audit tools, dashboard,
+  // and per-action pages remain excluded.
   '/geo/signup',
   '/geo/login',
   '/geo/scan',
@@ -76,6 +74,7 @@ const NO_POPUP_PATHS = [
 
 // Content/learning pages keep the existing 4-step course-lead survey.
 const COURSE_VARIANT_PATHS = ['/training', '/blog', '/knowledge', '/glossary', '/about'];
+const OPTIN_PATHS = ['/seo', '/google-ads', '/site-bot', '/consulting', '/google-business'];
 
 function getVariant(pathname: string | null): PopupVariant | null {
   if (!pathname) return null;
@@ -85,8 +84,7 @@ function getVariant(pathname: string | null): PopupVariant | null {
   if (COURSE_VARIANT_PATHS.some((p) => pathname === p || pathname.startsWith(p + '/'))) {
     return 'course';
   }
-  // Default: home, /seo, /consulting, and every other commercial/service page.
-  return 'commercial';
+  return OPTIN_PATHS.some((p) => pathname === p || pathname.startsWith(p + '/')) ? 'optin' : null;
 }
 
 export default function ExitSurveyPopup() {
@@ -136,7 +134,7 @@ export default function ExitSurveyPopup() {
   };
 
   useEffect(() => {
-    if (!variant) return; // page excluded from all exit popups
+    if (variant !== 'course') return; // opt-in has independent gates and intent handling
 
     // Dev/QA bypass: append ?no_exit_popup=1 to any URL to fully disable the popup for
     // that page load. Deliberately query-param based (not an automatic NODE_ENV skip) so
@@ -230,7 +228,6 @@ export default function ExitSurveyPopup() {
 
       return () => clearTimeout(mobileTimeout);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [variant]);
 
 
@@ -341,75 +338,8 @@ export default function ExitSurveyPopup() {
     }
   };
 
-  const handleCommercialCtaClick = () => {
-    markSubmitted(); // primary CTA click counts as a conversion, not a dismissal
-    closePopup();
-  };
-
+  if (variant === 'optin') return <ExitOptinPopup key={pathname} pathname={pathname!} />;
   if (pathname === '/' || !isOpen || !variant) return null;
-
-  // ── Commercial variant: single-step, no survey, no form POST ──────────────
-  if (variant === 'commercial') {
-    return (
-      <div
-        className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="exit-commercial-title"
-        onClick={(e) => {
-          if (e.target === e.currentTarget) dismissPopup();
-        }}
-      >
-        <div
-          ref={modalRef}
-          dir="rtl"
-          className="relative w-full max-w-[520px] bg-[var(--surface)] border border-[var(--border)] rounded-[var(--radius-lg)] p-6 md:p-8 shadow-[var(--shadow-card)] text-[var(--text)] transition-all overflow-hidden text-center"
-        >
-          {/* Glow decoration */}
-          <div className="absolute top-0 right-1/4 w-96 h-96 bg-[var(--accent)]/10 rounded-full blur-[80px] pointer-events-none" />
-
-          {/* Close Button */}
-          <button
-            ref={closeButtonRef}
-            onClick={dismissPopup}
-            className="absolute top-4 left-4 w-8 h-8 flex items-center justify-center rounded-full border border-[var(--border)] hover:border-[var(--accent)] text-[var(--muted)] hover:text-[var(--text)] transition-colors cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--accent)]"
-            aria-label="סגור חלון"
-          >
-            ✕
-          </button>
-
-          <div className="space-y-4 pt-2">
-            <h2 id="exit-commercial-title" className="text-xl md:text-2xl font-bold font-rubik">
-              רגע לפני שאתה סוגר — ב-₪9.90 הבוט כבר מתחיל לבנות לך אתר
-            </h2>
-            <p className="text-sm md:text-base text-[var(--muted)] max-w-md mx-auto">
-              את כל מה שקראת כאן, הבוט של WAO עושה בשבילך — ואתה רק מאשר.
-              משלם ₪9.90, מקבל אתר חי תוך 24 שעות, וממשיך רק אם אהבת.
-            </p>
-
-            <div className="pt-4 space-y-3">
-              <Link
-                href="/site-bot"
-                onClick={handleCommercialCtaClick}
-                className="btn-primary block w-full px-8 py-3.5 text-sm md:text-base font-semibold text-center rounded-[var(--radius-pill)] cursor-pointer"
-              >
-                שהבוט יבנה לי ב-₪9.90
-              </Link>
-              <a
-                href={WHATSAPP_URL}
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={dismissPopup}
-                className="block text-xs md:text-sm text-[var(--muted)] hover:text-[var(--text)] underline underline-offset-2 transition-colors cursor-pointer"
-              >
-                מעדיף לדבר עם בן אדם קודם? דבר איתנו בוואטסאפ
-              </a>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   // ── Course variant: existing 4-step survey ────────────────────────────────
   return (

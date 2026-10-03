@@ -175,6 +175,7 @@
     "src/lib/notifications/whatsapp-cloud.test.ts",
     "src/lib/notifications/resend-transactional.ts",
     "src/lib/notifications/resend-transactional.test.ts",
+    "src/lib/exit-optin.test.ts",
     "src/lib/site-bot/seedPrefill.ts",
     "src/lib/site-bot/seedPrefill.test.ts",
     "src/lib/places/client.ts",
