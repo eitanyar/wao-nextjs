@@ -212,4 +212,5 @@ const inputStyle: React.CSSProperties = {
   background: "transparent",
   color: "inherit",
   flex: 1,
+  minWidth: 0,
 };
