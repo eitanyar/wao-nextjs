@@ -9,6 +9,7 @@ import {
   evaluateBrandCplBaselineWatch,
   BRAND_BASELINE_DEGRADATION_MULTIPLIER,
 } from './cpl-ceiling';
+import { evaluateRecommendation, type RecommendationCeilingInput } from './recommendation-feed';
 
 export type GoogleAdsOperatorRisk = 'low' | 'medium' | 'high';
 /**
@@ -246,6 +247,11 @@ export function buildGoogleAdsOperatorTasks(params: {
    */
   campaignId?: string;
   campaignName?: string;
+  /** Pre-fetched, offline candidates only; this builder never fetches recommendations. */
+  recommendations?: Array<Pick<RecommendationCeilingInput, 'projectedCostIls' | 'projectedConversions' | 'brandBaselineCplIls'> & {
+    type: string;
+    resourceName: string;
+  }>;
   /**
    * Optional pre-computed search-term scoring summary, per
    * docs/specs/priority-3-search-term-cleanup-scoring.md §5's "whyNeeded ... should state
@@ -262,7 +268,7 @@ export function buildGoogleAdsOperatorTasks(params: {
     wastedSpendIls: number;
   };
 }): GoogleAdsOperatorTask[] {
-  const { clientId, digest, campaignConfig, campaignId, campaignName, campaignAge, searchTermCleanupPreview } = params;
+  const { clientId, digest, campaignConfig, campaignId, campaignName, campaignAge, searchTermCleanupPreview, recommendations } = params;
   const lifecycle = campaignAge ?? { ageDays: null, phase: 'unknown' as const };
   const tasks: Array<Omit<GoogleAdsOperatorTask, 'campaignPhase' | 'campaignAgeDays'>> = [];
 
@@ -556,6 +562,38 @@ export function buildGoogleAdsOperatorTasks(params: {
       order: 40,
     });
   }
+
+  // Offline bridge: classify every supplied candidate before considering any operator task.
+  // The only surfaced path in this contract is an inert engineering audit, never an Ads mutation.
+  const seenRecommendationResources = new Set<string>();
+  recommendations?.forEach((candidate, index) => {
+    const resourceName = candidate.resourceName?.trim();
+    if (!resourceName || seenRecommendationResources.has(resourceName)) return;
+    const evaluated = evaluateRecommendation({
+      clientId,
+      campaignName: campaignName ?? '',
+      type: candidate.type,
+      projectedCostIls: candidate.projectedCostIls,
+      projectedConversions: candidate.projectedConversions,
+      brandBaselineCplIls: candidate.brandBaselineCplIls,
+    });
+    if (candidate.type !== 'IMPROVE_GOOGLE_TAG_COVERAGE'
+      || evaluated.decision !== 'allow'
+      || evaluated.executionPath !== 'tracking_audit') return;
+    seenRecommendationResources.add(resourceName);
+    tasks.push({
+      taskId: `recommendation-${encodeURIComponent(JSON.stringify([clientId, campaignId ?? null, campaignName ?? null, resourceName]))}`,
+      clientId,
+      campaignId,
+      kind: 'tracking_audit',
+      title: `Inspect Google tag coverage for ${resourceName}`,
+      whyNeeded: `A Google tag coverage recommendation was supplied for ${campaignName ?? 'this campaign'} (${resourceName}). Coverage has not been verified.`,
+      recommendedAction: 'Have an engineer inspect Google tag and conversion coverage; confirm the findings before proposing any change.',
+      risk: 'medium',
+      source: 'alert',
+      order: 10 + index,
+    });
+  });
 
   if (!tasks.length) {
     tasks.push({
