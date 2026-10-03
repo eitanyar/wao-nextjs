@@ -272,6 +272,8 @@
     "src/lib/expired-domain-research/openSeoMcp.ts",
     "src/lib/expired-domain-research/openSeoMcp.test.ts",
     "src/lib/seo-advisor-panel.test.ts",
+    "src/lib/seo-advisor-fraud-gate.ts",
+    "src/lib/seo-advisor-fraud-gate.test.ts",
     "src/lib/seo-advisor-public-budget.ts",
     "src/lib/seo-advisor-public-budget.test.ts",
     "src/lib/seo-advisor-public-session.ts",

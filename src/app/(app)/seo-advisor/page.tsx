@@ -1,5 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { connection } from 'next/server';
+import { publicSeoFraudTrackerHtml } from '@/lib/seo-advisor-fraud-gate';
 import { PAGE_COPY } from '@/lib/seo-advisor-page-copy';
 import AdvisorChat from './advisor-chat';
 
@@ -18,9 +20,12 @@ export const metadata: Metadata = {
   },
 };
 
-export default function SeoAdvisorPage() {
+export default async function SeoAdvisorPage() {
+  await connection();
+  const trackerHtml = publicSeoFraudTrackerHtml(process.env.WAO_PUBLIC_SEO_FRAUD_SID);
   return (
     <section className="wao-section" style={{ paddingTop: 'clamp(110px,14vw,160px)' }}>
+      {trackerHtml && <div dangerouslySetInnerHTML={{ __html: trackerHtml }} />}
       <div className="wao-container" style={{ maxWidth: '860px' }}>
         <h1 style={{ fontFamily: 'var(--font-rubik), sans-serif', fontWeight: 900,
           fontSize: 'clamp(1.7rem,4vw,2.8rem)', lineHeight: 1.2, marginBottom: '20px' }}>
