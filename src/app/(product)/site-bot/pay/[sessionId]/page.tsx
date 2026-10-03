@@ -20,18 +20,21 @@ type Phase = "form" | "charging" | "gates" | "submitting_gate" | "done" | "error
 
 interface CheckoutCallbackResponse {
   success: boolean;
-  url: string;
-  slug: string;
+  charged?: boolean;
   researchId: string;
-  collectedData: CollectedData;
-  openResearchGates: ResearchGate[];
+  status?: string;
+  statusUrl?: string;
+  openGateCount?: number;
+  collectedData?: CollectedData;
+  openResearchGates?: ResearchGate[];
 }
 
 export default function SiteBotPayPage() {
   const { sessionId } = useParams<{ sessionId: string }>();
   const [phase, setPhase] = useState<Phase>("form");
   const [error, setError] = useState<string | null>(null);
-  const [liveUrl, setLiveUrl] = useState<string | null>(null);
+  const [researchStatus, setResearchStatus] = useState<string | null>(null);
+  const [gatesFinished, setGatesFinished] = useState(false);
   const [researchId, setResearchId] = useState<string | null>(null);
   const [collectedData, setCollectedData] = useState<CollectedData | null>(null);
   const [openResearchGates, setOpenResearchGates] = useState<ResearchGate[]>([]);
@@ -49,8 +52,9 @@ export default function SiteBotPayPage() {
         body: JSON.stringify({ sessionId }),
       });
       const json = await res.json() as CheckoutCallbackResponse & { error?: string };
-      if (!res.ok || !json.url) throw new Error(json.error || "משהו השתבש");
-      setLiveUrl(json.url);
+      if (!res.ok || !json.success) throw new Error(json.error || "משהו השתבש");
+      setResearchStatus(json.status ?? null);
+      setGatesFinished(false);
       if (json.openResearchGates?.length && json.researchId && json.collectedData) {
         setResearchId(json.researchId);
         setCollectedData(json.collectedData);
@@ -95,6 +99,7 @@ export default function SiteBotPayPage() {
       setCollectedData(json.collectedData);
       setAnswer("");
       if (gateIndex + 1 === openResearchGates.length) {
+        setGatesFinished(true);
         setPhase("done");
       } else {
         setGateIndex((current) => current + 1);
@@ -133,7 +138,7 @@ export default function SiteBotPayPage() {
           )}
 
           {phase === "charging" && (
-            <p style={{ color: "var(--muted)", textAlign: "center" }}>{renderMixed("מחייב ובונה את האתר...")}</p>
+            <p style={{ color: "var(--muted)", textAlign: "center" }}>{renderMixed("התשלום מתקבל עכשיו — ובאותו רגע אנחנו מתחילים לחקור את העסק שלך לעומק.")}</p>
           )}
 
           {(phase === "gates" || phase === "submitting_gate") && openResearchGates[gateIndex] && (
@@ -187,12 +192,11 @@ export default function SiteBotPayPage() {
             </>
           )}
 
-          {phase === "done" && liveUrl && (
+          {phase === "done" && (
             <div style={{ textAlign: "center" }}>
-              <p style={{ marginBottom: "16px" }}>{renderMixed("האתר שלך באוויר!")}</p>
-              <a href={liveUrl} target="_blank" rel="noreferrer" className="btn-primary" style={{ display: "inline-block" }}>
-                {liveUrl}
-              </a>
+              <p style={{ marginBottom: "16px" }}>{renderMixed("קיבלנו את התשלום שלך — הכל עבר חלק.")}</p>
+              <p>{renderMixed((researchStatus === "architecture_ready" || researchStatus === "copy_ready" || researchStatus === "deploy_ready") ? "המחקר הושלם. הצוות של WAO בונה את האתר מהתשובות שלך — ונחזור אליך לפרטים שמסרת." : "המחקר עדיין רץ ברקע. הצוות של WAO משלים אותו, בונה את האתר — ונחזור אליך.")}</p>
+              {gatesFinished && <p>{renderMixed("התשובות שלך נשמרו — הן הבסיס שהצוות בונה ממנו את האתר.")}</p>}
             </div>
           )}
         </div>

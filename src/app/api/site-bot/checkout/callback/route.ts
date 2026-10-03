@@ -105,10 +105,13 @@ export async function POST(req: Request) {
       console.error(`[site-bot checkout] Failed to issue invoice for session=${sessionId}:`, err);
     }
 
+    const openResearchGates = deriveOpenResearchGates(sessionId, pending.collectedData);
     const response = await completePaidCheckoutResearch({
       sessionId,
       runResearch: () => runSiteResearch(sessionId, researchInput(sessionId, pending.collectedData)),
-      openResearchGateCount: deriveOpenResearchGates(sessionId, pending.collectedData).length,
+      openResearchGateCount: openResearchGates.length,
+      collectedData: pending.collectedData,
+      openResearchGates,
       removePending: () => fs.rmSync(pendingPath, { force: true }),
     });
     return NextResponse.json(response);
