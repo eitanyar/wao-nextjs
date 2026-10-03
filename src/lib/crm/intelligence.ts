@@ -9,6 +9,7 @@ export interface LeadRecord {
   orderId?: string;
   name?: string | null;
   phone?: string | null;
+  email?: string | null;
   date?: string;
   status?: string;
   quality?: string;

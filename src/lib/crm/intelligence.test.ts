@@ -1,6 +1,10 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import fs from 'node:fs/promises';
+import os from 'node:os';
+import path from 'node:path';
 import { buildWeeklyDigest, type CampaignConfig, type LeadRecord } from './intelligence';
+import { createLeadsStore } from './leadsStore';
 
 /**
  * Real-behavior tests for `buildWeeklyDigest`'s live-conversion accuracy fix (Aug 2026):
@@ -89,4 +93,16 @@ test('performance.conversions === 0 (live pull confirms zero conversions) is sti
   assert.equal(digest.totals.verifiedLeads, 0);
   // cpl stays undefined when verifiedLeads === 0, same rule as the CRM path (§4A.4 scope note).
   assert.equal(digest.totals.cpl, undefined);
+});
+
+test('optional lead email round-trips through the existing leads store', async () => {
+  const directory = await fs.mkdtemp(path.join(os.tmpdir(), 'wao-email-roundtrip-'));
+  try {
+    const store = createLeadsStore({ filePath: path.join(directory, 'leads.json') });
+    const leads: LeadRecord[] = [{ id: 1, email: 'buyer@example.com' }, { id: 2 }];
+    await store.writeLeads(leads);
+    assert.deepEqual(await store.readLeads(), leads);
+  } finally {
+    await fs.rm(directory, { recursive: true, force: true });
+  }
 });

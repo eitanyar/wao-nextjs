@@ -5,6 +5,7 @@ export interface LeadCapturePayload {
   orderId?: string;
   name?: string;
   phone?: string;
+  email?: string;
   type?: string;
   source?: string;
   slug?: string;
@@ -48,12 +49,14 @@ export function captureLead(input: {
   const now = input.now ?? new Date();
   const isClickStub = body.type === 'phone-click' || body.type === 'whatsapp-click';
   const isEligibleForm = body.type === 'form' && Boolean(body.phone) && hasRecordedConsent(body.contactConsentAt);
+  const isConsentedMagnet = body.type === 'gbp-magnet-unlock' && Boolean(body.phone) && hasRecordedConsent(body.contactConsentAt);
   const attribution = deriveLeadAttribution(body);
   const lead: LeadRecord = {
     id: input.id ?? now.getTime(),
     orderId: body.orderId || `wao-${now.getTime()}`,
     name: body.name || null,
     phone: body.phone || null,
+    email: body.email || null,
     date: formatDate(now),
     status: isClickStub ? 'click' : 'new',
     quality: 'PENDING',
@@ -68,7 +71,7 @@ export function captureLead(input: {
     wbraid: body.wbraid || null,
     gbraid: body.gbraid || null,
     businessNiche: body.businessNiche || '',
-    contactConsentAt: isEligibleForm ? body.contactConsentAt : undefined,
+    contactConsentAt: isEligibleForm || isConsentedMagnet ? body.contactConsentAt : undefined,
     landingReferrer: body.landingReferrer || undefined,
     utmSource: body.utmSource || undefined,
     utmMedium: body.utmMedium || undefined,
