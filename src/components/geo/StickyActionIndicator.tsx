@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { renderMixed } from '@/lib/bidi';
 
 interface Props {
@@ -23,13 +23,42 @@ interface Props {
  */
 export default function StickyActionIndicator({ title, current, total, done }: Props) {
   const [visible, setVisible] = useState(false);
+  const stripRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const onScroll = () => setVisible(window.scrollY > 180);
+    const strip = stripRef.current;
+    if (!strip) return;
+    const select = document.getElementById('geo-platform-select');
+    const label = document.querySelector('label[for="geo-platform-select"]');
+    const onScroll = () => {
+      const height = strip.getBoundingClientRect().height;
+      const collides = [select, label].some(element => {
+        if (!element) return false;
+        const rect = element.getBoundingClientRect();
+        const style = getComputedStyle(element);
+        return rect.width > 0 && rect.height > 0 && style.visibility !== 'hidden' &&
+          rect.bottom > 0 && rect.top < height;
+      });
+      const next = window.scrollY > 180 && !collides;
+      // Remove painting and interaction immediately, including during slide-out.
+      strip.style.visibility = next ? 'visible' : 'hidden';
+      strip.style.pointerEvents = next ? 'auto' : 'none';
+      strip.inert = !next;
+      setVisible(next);
+    };
+    const observer = new ResizeObserver(onScroll);
+    observer.observe(strip, { box: 'border-box' });
+    if (select) observer.observe(select, { box: 'border-box' });
+    if (label) observer.observe(label, { box: 'border-box' });
     onScroll();
     window.addEventListener('scroll', onScroll, { passive: true });
-    return () => window.removeEventListener('scroll', onScroll);
-  }, []);
+    window.addEventListener('resize', onScroll);
+    return () => {
+      window.removeEventListener('scroll', onScroll);
+      window.removeEventListener('resize', onScroll);
+      observer.disconnect();
+    };
+  }, [title, current, total, done]);
 
   function jumpToCta() {
     document.getElementById('action-cta')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -37,6 +66,8 @@ export default function StickyActionIndicator({ title, current, total, done }: P
 
   return (
     <div
+      ref={stripRef}
+      inert={!visible}
       className="md:hidden"
       style={{
         position: 'fixed',
@@ -47,6 +78,8 @@ export default function StickyActionIndicator({ title, current, total, done }: P
         borderBottom: '1px solid var(--border)',
         boxShadow: '0 2px 10px rgba(0,0,0,0.25)',
         transform: visible ? 'translateY(0)' : 'translateY(-100%)',
+        visibility: visible ? 'visible' : 'hidden',
+        pointerEvents: visible ? 'auto' : 'none',
         transition: 'transform 0.25s ease',
       }}
     >
