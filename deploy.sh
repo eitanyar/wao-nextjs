@@ -43,10 +43,21 @@ validate_candidate() {
   [[ -s "$standalone/public/eitan-yariv.avif" ]] || fail 'candidate standalone public assets are missing or nested.'
   [[ -L "$standalone/data" && "$(readlink "$standalone/data")" == "$RUNTIME_DATA_DIR" ]] || fail 'candidate runtime-data link is invalid.'
 
-  node - "$dist" <<'NODE' || fail 'candidate manifest references a missing or invalid chunk.'
+  node - "$dist" "$standalone" "$DEPLOY_DIST_DIR" <<'NODE' || fail 'candidate standalone runtime or manifest references missing or invalid build files.'
 const fs = require('node:fs');
 const path = require('node:path');
-const dist = process.argv[2];
+const [buildDist, standalone, deployDistDir] = process.argv.slice(2);
+// Next 16.2.6 serializes this JSON on one line; never execute the entrypoint
+// during packaging. Fail closed if its generated config/layout changes.
+const source = fs.readFileSync(path.join(standalone, 'server.js'), 'utf8');
+const configs = [...source.matchAll(/^const nextConfig = (.+)$/gm)];
+if (configs.length !== 1) process.exit(1);
+const config = JSON.parse(configs[0][1]);
+if (config.distDir !== `./${deployDistDir}`) process.exit(1);
+const runtimeDist = path.join(standalone, config.distDir);
+if (!fs.statSync(path.join(runtimeDist, 'static')).isDirectory()
+  || !fs.readFileSync(path.join(runtimeDist, 'BUILD_ID')).equals(fs.readFileSync(path.join(buildDist, 'BUILD_ID')))) process.exit(1);
+for (const dist of [buildDist, runtimeDist]) {
 const manifests = ['build-manifest.json', 'app-build-manifest.json', 'server/app-paths-manifest.json', 'server/server-reference-manifest.json'];
 const files = new Set();
 function collect(value) {
@@ -67,6 +78,7 @@ for (const reference of files) {
   const candidates = [path.join(dist, relative), path.join(dist, 'server', relative)];
   const chunk = candidates.find((candidate) => fs.existsSync(candidate));
   if (!chunk || fs.statSync(chunk).size === 0 || /^\s*</.test(fs.readFileSync(chunk, 'utf8'))) process.exit(1);
+}
 }
 NODE
 }
@@ -208,10 +220,13 @@ trap cleanup_candidate EXIT
 npm ci
 printf 'Building with Webpack and Node old-space limit %s MiB\n' "$BUILD_MAX_OLD_SPACE_MB"
 WAO_DEPLOY_DIST_DIR="$DEPLOY_DIST_DIR" NODE_OPTIONS="$BUILD_NODE_OPTIONS" npm run build -- --webpack
-mkdir -p "$CANDIDATE/.next/standalone/.next"
+# Traced build/server files live under the generated distDir relative to
+# standalone, not necessarily standalone/.next. Keep static beside them;
+# this internal relative layout survives the outer candidate rename.
+mkdir -p "$CANDIDATE/.next/standalone/$DEPLOY_DIST_DIR"
 mkdir -p "$CANDIDATE/.next/standalone/public"
 cp -a public/. "$CANDIDATE/.next/standalone/public/"
-cp -a "$CANDIDATE/.next/static" "$CANDIDATE/.next/standalone/.next/static"
+cp -a "$CANDIDATE/.next/static" "$CANDIDATE/.next/standalone/$DEPLOY_DIST_DIR/static"
 # The application package is ESM, while Next's generated standalone server is
 # CommonJS. Keep the release-local runtime boundary explicit.
 printf '{"type":"commonjs"}\n' > "$CANDIDATE/.next/standalone/package.json"
@@ -222,6 +237,7 @@ validate_candidate "$CANDIDATE"
 RELEASE="$RELEASES_DIR/release-${COMMIT:0:12}-$(date +%s)"
 mv "$CANDIDATE" "$RELEASE"
 CANDIDATE=""
+validate_candidate "$RELEASE"
 
 ln -sfn "$RELEASE" "$CURRENT_RELEASE"
 if ! replace_wao_process "$RELEASE" \
