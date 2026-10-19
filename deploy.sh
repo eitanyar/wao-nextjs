@@ -97,6 +97,22 @@ if (fs.realpathSync(processInfo.pm_exec_path) !== expectedEntry || fs.realpathSy
 ' "$release"
 }
 
+wait_for_local_readiness() {
+  local attempt
+  # PM2 online does not mean the HTTP listener has bound yet. Bound each probe
+  # and the retry count; keep expected startup connection refusals quiet.
+  for ((attempt = 1; attempt <= 30; attempt++)); do
+    if curl --fail --silent --connect-timeout 1 --max-time 2 --output /dev/null http://127.0.0.1:3000/client/login 2>/dev/null; then
+      return 0
+    fi
+    if (( attempt < 30 )); then
+      sleep 1 || return 1
+    fi
+  done
+  printf 'Local HTTP readiness timed out after 30 probes.\n' >&2
+  return 1
+}
+
 verify_homepage_assets() {
   local homepage asset expected
   homepage="$(curl --fail --silent --show-error --max-time 15 http://127.0.0.1:3000/)" || return 1
@@ -134,7 +150,7 @@ restore_previous_release() {
   ln -sfn "$previous" "$CURRENT_RELEASE"
   replace_wao_process "$previous" \
     && verify_active_release "$previous" \
-    && curl --fail --silent --show-error --max-time 15 --output /dev/null http://127.0.0.1:3000/client/login \
+    && wait_for_local_readiness \
     && verify_homepage_assets
 }
 
@@ -210,7 +226,7 @@ CANDIDATE=""
 ln -sfn "$RELEASE" "$CURRENT_RELEASE"
 if ! replace_wao_process "$RELEASE" \
   || ! verify_active_release "$RELEASE" \
-  || ! curl --fail --silent --show-error --max-time 15 --output /dev/null http://127.0.0.1:3000/client/login \
+  || ! wait_for_local_readiness \
   || ! verify_homepage_assets \
   || ! node scripts/verify-google-ads-sandbox.mjs; then
   printf 'Activation failed; restoring the previous release.\n' >&2

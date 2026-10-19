@@ -88,7 +88,21 @@ exit 90
 printf 'curl %s\\n' "$*" >> "$WAO_TEST_LOG"
 for last; do :; done
 case "$last" in
-  */client/login) [ "$WAO_TEST_FAILURE" = health ] && exit 7; printf 'ok'; exit 0 ;;
+  */client/login)
+    case "$(cat "$WAO_PM2_STATE")" in
+      *release-previous*) phase=previous; refusals="$WAO_TEST_PREVIOUS_REFUSALS" ;;
+      *) phase=candidate; refusals="$WAO_TEST_CANDIDATE_REFUSALS" ;;
+    esac
+    counter="$WAO_PM2_STATE.$phase-probes"
+    count=0
+    [ ! -f "$counter" ] || read -r count < "$counter"
+    count=$((count + 1))
+    printf '%s\\n' "$count" > "$counter"
+    printf 'probe %s %s\\n' "$phase" "$count" >> "$WAO_TEST_LOG"
+    [ "$phase" = candidate ] && [ "$WAO_TEST_FAILURE" = health ] && exit 7
+    [ "$count" -le "$refusals" ] && exit 7
+    printf 'ready %s\\n' "$phase" >> "$WAO_TEST_LOG"
+    exit 0 ;;
   */) [ "$WAO_TEST_FAILURE" = homepage ] && exit 7; printf '%s' '<link rel="stylesheet" href="/_next/static/app.css?v=1"><script src="/_next/static/app.js?v=2"></script>'; exit 0 ;;
   */_next/static/app.css?v=1)
     [ "$WAO_TEST_FAILURE" = asset-empty ] && { printf 'HTTP/1.1 200 OK\\r\\nContent-Type: text/css\\r\\n\\r\\n'; exit 0; }
@@ -97,6 +111,9 @@ case "$last" in
   */_next/static/app.js?v=2) printf 'HTTP/1.1 200 OK\\r\\nContent-Type: application/javascript\\r\\n\\r\\nconsole.log(1)'; exit 0 ;;
 esac
 exit 7
+`);
+  writeExecutable(path.join(bin, 'sleep'), `#!/bin/sh
+printf 'sleep %s\\n' "$*" >> "$WAO_TEST_LOG"
 `);
   writeExecutable(path.join(bin, 'node'), `#!/bin/sh
 if [ "$1" = -e ] || [ "$1" = - ]; then exec "$WAO_REAL_NODE" "$@"; fi
@@ -112,6 +129,7 @@ function runFixture(options = {}, envExtra = {}) {
   const result = spawnSync('bash', [deployScript, 'synthetic-target'], {
     cwd: f.repo,
     encoding: 'utf8',
+    timeout: 15000,
     env: {
       ...process.env,
       PATH: `${f.bin}:${process.env.PATH}`,
@@ -125,6 +143,8 @@ function runFixture(options = {}, envExtra = {}) {
       NEXT_SERVER_ACTIONS_ENCRYPTION_KEY: Buffer.alloc(32, 7).toString('base64'),
       NODE_OPTIONS: '',
       WAO_TEST_FAILURE: options.failure ?? '',
+      WAO_TEST_CANDIDATE_REFUSALS: String(options.candidateRefusals ?? 0),
+      WAO_TEST_PREVIOUS_REFUSALS: String(options.previousRefusals ?? 0),
       ...envExtra,
     },
   });
@@ -162,6 +182,62 @@ test('activates exactly one process with release-local entrypoint and cwd after 
     assert.match(f.log, /pm2 delete wao[\s\S]*pm2 start .*server\.js --name wao --update-env --cwd .*standalone/);
     assert.match(f.log, /app\.css\?v=1[\s\S]*app\.js\?v=2[\s\S]*node scripts\/verify-google-ads-sandbox\.mjs/);
     assert.deepEqual(fs.readFileSync(path.join(f.repo, 'tsconfig.json')), Buffer.from('{"fixture":"original"}\n'));
+  } finally { cleanup(f.root); }
+});
+
+test('startup readiness retries refused candidate probes before remaining activation gates', () => {
+  const f = runFixture({ candidateRefusals: 2 });
+  try {
+    assert.equal(f.result.status, 0, f.result.stderr);
+    assert.equal((f.log.match(/^probe candidate /gm) ?? []).length, 3);
+    assert.equal((f.log.match(/^sleep 1$/gm) ?? []).length, 2);
+    assert.match(f.log, /probe candidate 3\nready candidate\ncurl .*http:\/\/127\.0\.0\.1:3000\/\n[\s\S]*node scripts\/verify-google-ads-sandbox\.mjs/);
+    assert.doesNotMatch(f.log, /probe previous /);
+    assert.match(f.log, /curl --fail --silent --connect-timeout 1 --max-time 2 --output \/dev\/null http:\/\/127\.0\.0\.1:3000\/client\/login/);
+    assert.equal(f.result.stderr, '');
+    assert.match(f.result.stdout, /Activated deployment/);
+  } finally { cleanup(f.root); }
+});
+
+test('startup readiness accepts success on the final bounded probe', () => {
+  const f = runFixture({ candidateRefusals: 29 });
+  try {
+    assert.equal(f.result.status, 0, f.result.stderr);
+    assert.equal((f.log.match(/^probe candidate /gm) ?? []).length, 30);
+    assert.equal((f.log.match(/^sleep 1$/gm) ?? []).length, 29);
+    assert.match(f.log, /probe candidate 30\nready candidate/);
+  } finally { cleanup(f.root); }
+});
+
+test('startup readiness timeout rolls back and awaits delayed previous release before its asset gates', () => {
+  const f = runFixture({ failure: 'health', previousRefusals: 2 });
+  try {
+    assert.equal(f.result.status, 1, f.result.stderr);
+    assert.equal((f.log.match(/^probe candidate /gm) ?? []).length, 30);
+    assert.equal((f.log.match(/^probe previous /gm) ?? []).length, 3);
+    assert.equal((f.log.match(/^sleep 1$/gm) ?? []).length, 31);
+    assert.match(f.log, /probe candidate 30\npm2 delete wao[\s\S]*pm2 start .*release-previous[\s\S]*probe previous 3\nready previous\ncurl .*http:\/\/127\.0\.0\.1:3000\/\n[\s\S]*app\.js\?v=2/);
+    assert.match(f.result.stderr, /Local HTTP readiness timed out after 30 probes/);
+    assert.doesNotMatch(f.result.stderr, /rollback verification failed/);
+    assert.doesNotMatch(f.result.stdout, /Activated deployment/);
+    assert.doesNotMatch(f.log, /node scripts\/verify-google-ads-sandbox\.mjs/);
+    assert.equal(fs.realpathSync(path.join(f.releases, 'current')), path.join(f.releases, 'release-previous'));
+    assert.equal(currentProcess(f).length, 1);
+    assert.match(currentProcess(f)[0], /release-previous/);
+  } finally { cleanup(f.root); }
+});
+
+test('startup readiness fails closed when rollback also exhausts its bounded probes', () => {
+  const f = runFixture({ failure: 'health', previousRefusals: 30 });
+  try {
+    assert.equal(f.result.status, 1, f.result.stderr);
+    assert.equal((f.log.match(/^probe candidate /gm) ?? []).length, 30);
+    assert.equal((f.log.match(/^probe previous /gm) ?? []).length, 30);
+    assert.equal((f.log.match(/^sleep 1$/gm) ?? []).length, 58);
+    assert.equal((f.result.stderr.match(/Local HTTP readiness timed out after 30 probes/g) ?? []).length, 2);
+    assert.match(f.result.stderr, /activation failed and rollback verification failed/);
+    assert.doesNotMatch(f.log, /ready |app\.css|node scripts\/verify-google-ads-sandbox\.mjs/);
+    assert.doesNotMatch(f.result.stdout, /Activated deployment/);
   } finally { cleanup(f.root); }
 });
 
