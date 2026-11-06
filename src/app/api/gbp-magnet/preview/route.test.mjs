@@ -9,8 +9,9 @@ import ts from 'typescript';
 import * as places from '../../../../../scripts/lib/places-client.mjs';
 
 const root = process.cwd();
-function load(relative, dependencies = {}) {
-  const source = fs.readFileSync(path.join(root, relative), 'utf8');
+function load(relative, dependencies = {}, exposePreview = false) {
+  let source = fs.readFileSync(path.join(root, relative), 'utf8');
+  if (exposePreview) source = source.replace('async function handlePreview(', 'export async function handlePreview(');
   const output = ts.transpileModule(source, { compilerOptions: {
     module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022, esModuleInterop: true,
   } }).outputText;
@@ -34,7 +35,7 @@ const route = load('src/app/api/gbp-magnet/preview/route.ts', {
   '@/lib/payments/rate-limit': rate,
   '@/lib/gbp-magnet/daily-ceiling': ceiling,
   '@/lib/gbp-magnet/preview-token': token,
-});
+}, true);
 const original = { key: process.env.GOOGLE_MAPS_API_KEY, secret: process.env.GBP_MAGNET_TOKEN_SECRET,
   ceiling: process.env.GBP_MAGNET_DAILY_PLACES_CEILING };
 const originalConnect = net.Socket.prototype.connect;
@@ -79,6 +80,11 @@ test.after(() => {
     ['GOOGLE_MAPS_API_KEY', original.key], ['GBP_MAGNET_TOKEN_SECRET', original.secret],
     ['GBP_MAGNET_DAILY_PLACES_CEILING', original.ceiling],
   ]) { if (value === undefined) delete process.env[name]; else process.env[name] = value; }
+});
+
+test('Next route exports only supported route fields', () => {
+  const source = fs.readFileSync(path.join(root, 'src/app/api/gbp-magnet/preview/route.ts'), 'utf8');
+  assert.doesNotMatch(source, /export\s+async\s+function\s+handlePreview\b/);
 });
 
 test('exact successful preview fields, real shared client, and token binding', async () => {
