@@ -48,7 +48,12 @@ function systemPrompt(patches) {
 
 async function main() {
   const args = parseArgs(process.argv.slice(2));
-  const { QWEN_API_KEY, QWEN_BASE_URL } = process.env;
+  // .env.local is the source of truth: Node's --env-file never overrides variables already in
+  // the shell, and stale QWEN_* exports there once pointed waocopy at a dead key / wrong host.
+  const envFile = path.resolve(import.meta.dirname, '../.env.local');
+  const fileEnv = fs.existsSync(envFile) ? (await import('node:util')).parseEnv(fs.readFileSync(envFile, 'utf8')) : {};
+  const QWEN_API_KEY = fileEnv.QWEN_API_KEY || process.env.QWEN_API_KEY;
+  const QWEN_BASE_URL = fileEnv.QWEN_BASE_URL || process.env.QWEN_BASE_URL;
   if (!QWEN_API_KEY || !QWEN_BASE_URL) {
     throw new Error('QWEN_API_KEY and QWEN_BASE_URL must be set (run with --env-file=.env.local)');
   }

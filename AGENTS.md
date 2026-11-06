@@ -117,6 +117,10 @@ working branch (currently `hermes-migration`), and runs the deploy command in `C
 ## Environment variables
 Required in `.env.local` (local dev) and `.env.production` (servers):
 
-    QWEN_API_KEY=<your-dashscope-singapore-api-key>
-    QWEN_BASE_URL=https://dashscope-intl.aliyuncs.com/compatible-mode/v1
+    QWEN_API_KEY=<Qwen subscription (token plan) key>
+    QWEN_BASE_URL=https://token-plan.ap-southeast-1.maas.aliyuncs.com/compatible-mode/v1
     GEMINI_API_KEY=<your-google-ai-studio-key>
+
+Qwen is a monthly subscription (token plan), not pay-as-you-go: its key works only with the
+`token-plan` base URL and returns 401 on `dashscope-intl`. `scripts/waocopy.mjs` reads
+`.env.local` in preference to shell variables, because stale `QWEN_*` shell exports exist.
