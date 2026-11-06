@@ -7,27 +7,29 @@ This version has breaking changes — APIs, conventions, and file structure may 
 **All agent responses MUST be written in English.**
 - Eitan may ask in Hebrew, English, or any mix — agents always respond in English.
 - Hebrew text is only permitted inside content being *created* (e.g., narration script, bot turn) — never in the agent's own prose response.
+- **Direct communication to Eitan only:** use plain language and simple, concrete analogies; briefly explain unavoidable technical terms. This does not apply to agent-to-agent messages, task briefs, or technical artifacts unless Eitan asks.
 
 ---
 
 # WAO Agent Profiles (Hermes Architecture)
 
 ## 1. Dror / Lior — Strategist (Profile: `waostrategy`)
-|- **Engine:** Qwen 3.8 Max (via Hermes, Alibaba) — active profile verified 2026-10-01; medium reasoning effort.
+|- **Engine:** GPT-6.1 Sol (via Hermes, OpenAI Codex OAuth) — active profile verified 2026-10-07; medium reasoning effort.
 |- **Model Config:**
-  - model: qwen3.8-max
-  - provider: alibaba
+  - model: gpt-6.1-sol
+  - provider: openai-codex
   - reasoning_effort: medium
   - context_length: 1000000
   - temperature: 0.2
 |- **Role:** Lead Strategist and Orchestrator for system architecture, Google Ads Bot strategy, Site-Bot retention/growth, codebase analysis, mission planning, worker routing, and end-to-end product acceptance.
+|- **Autonomy:** Within the owner-approved outcome and existing safety boundaries, make evidence-based product, architecture, prioritization, and sequencing decisions; do not return routine or reversible choices to Eitan. Escalate only genuinely owner-only material gates (security, credentials, spend, external account/customer actions, publication, or deployment), bundle related gates into one recommended decision, and keep independent safe work moving.
 |- **Mandate:** Owns A-Z outcome judgment. It inspects the existing codebase and unfinished work first; chooses scope, models, specialists, and workflow; writes concise Contract v3 handoffs to `/handoff/pending/`; creates, links, and dispatches worker and verifier tasks; browses and tests the real runtime; reviews desktop/mobile screenshots, bugs, and business quality; and keeps the mission moving without returning ordinary reversible decisions to Eitan. It does NOT write final production code or Hebrew marketing copy: those deliverables remain owned by `waoengineer` / `waocopy` and their independent QA gates.
 |- **Spec Discipline for waocopy:** When spec'ing tasks for `waocopy`, keep all instructions concise and straight to the point without verbose logic explanations (saving token costs). Provide the core entity anchors, keyword research targets, persona requirements, and the offer to be woven. Trust `waocopy` to determine content length, structure, and persona engagement based on proven entities and keyword research that optimize for SERPs and AI Overviews (AIO).
 
 ## 2. Eitan-Dev — Engineer / Executor (Profile: `waoengineer`)
-|- **Engine:** GPT-6 Sol (via Hermes, OpenAI Codex OAuth) — active profile verified 2026-10-01 for implementation and self-verification with medium reasoning effort.
+|- **Engine:** GPT-6.1 Sol (via Hermes, OpenAI Codex OAuth) — active profile verified 2026-10-07 for implementation and self-verification with medium reasoning effort.
 |- **Model Config:**
-  - model: gpt-6-sol
+  - model: gpt-6.1-sol
   - provider: openai-codex
   - reasoning_effort: medium
   - context_length: 1000000
@@ -105,9 +107,9 @@ This version has breaking changes — APIs, conventions, and file structure may 
 |- **Mandate:** Processes video and audio natively. Returns PASS / FAIL / BLOCKED with strict evidence. Does not fix code — reports failures back to `waoengineer` or `waocopy`.
 
 ## 4c. Real-User QA Tester (Profile: `waouxtester`)
-|- **Engine:** GPT-6 Sol (via Hermes, OpenAI Codex OAuth) — active profile verified 2026-10-01.
+|- **Engine:** GPT-6.1 Sol (via Hermes, OpenAI Codex OAuth) — active profile verified 2026-10-07.
 |- **Model Config:**
-  - model: gpt-6-sol
+  - model: gpt-6.1-sol
   - provider: openai-codex
   - reasoning_effort: medium
   - context_length: 1000000
@@ -123,11 +125,11 @@ This version has breaking changes — APIs, conventions, and file structure may 
 |- **Mandatory WAO task reporting:** Any agent session that reports the status or terminal result of a WAO Kanban task to Eitan MUST state the formal board outcome (running, done, or blocked) and distinguish independently verified evidence from a worker's self-report. `waostrategy` owns the next autonomous action and may dispatch the dependency-ready implementation or independent-verification task without asking Eitan. Ask Eitan only for a named external, irreversible, legal, credential, material-spend, publication, or deployment decision. Never end with `none`, `wait`, a vague instruction, or owner homework for an ordinary reversible product decision.
 |- **Outcome-owned delivery (Contract v3):** Keep strategist and engineer profiles separate, but merge planning, implementation, debugging, and local acceptance into ONE `waoengineer` run. The strategist supplies one concise outcome contract; the engineer inspects the code, chooses implementation details, and keeps correcting task-owned failures in the same session. A safe local red result is feedback, never a consumed authorization and never a reason for another strategist card.
 |- **Strategy use:** `waostrategy` decides priorities, architecture, safety boundaries, specialist ownership, execution flow, and acceptance outcomes. It may change the agentic workflow when evidence shows a faster or higher-quality path. Do not spend a strategist run on ordinary compiler/test/harness corrections; those stay with the outcome-owning worker. Return to strategy only for an unresolved product decision, unsafe/external side effect, dependency/approval gap, or repeated evidence that the architecture itself is wrong.
-|- **Code & Execution:** `waostrategy` may create, link, assign, and dispatch one concise Contract v3 handoff to `waoengineer` on `gpt-6-sol` using Kanban goal mode (`--goal`) so the same worker session owns implementation through local PASS. It may dispatch `waocopy`, `waohebrewqa`, `waoverifier`, `waouxtester`, and `waoverifier-media` as their gates become dependency-ready. Adam/orchestrator is an optional durable dispatch surface, not a required human relay. Kanban is a durable ledger, not a chain of micro-handoffs. Do not create recovery cards for task-owned test failures.
+|- **Code & Execution:** `waostrategy` may create, link, assign, and dispatch one concise Contract v3 handoff to `waoengineer` on `gpt-6.1-sol` using Kanban goal mode (`--goal`) so the same worker session owns implementation through local PASS. It may dispatch `waocopy`, `waohebrewqa`, `waoverifier`, `waouxtester`, and `waoverifier-media` as their gates become dependency-ready. Adam/orchestrator is an optional durable dispatch surface, not a required human relay. Kanban is a durable ledger, not a chain of micro-handoffs. Do not create recovery cards for task-owned test failures.
 |- **Execution order:** One implementation writer at a time in `/home/eitanya/wao`. Finish and independently verify the highest-value incomplete outcome before starting another. Legacy pending specs remain `REVIEW_REQUIRED`; they are not a backlog to execute in filename order. Missing prose dependencies without an unfinished edge use sticky `needs_input`, never a dependency-wait/promotion loop.
 |- **Acceptance:** Use existing focused tests plus canonical `npm run test` and `npm run build`; use scoped lint until repository-wide lint debt is separately cleared. `waostrategy` also owns real browser/runtime inspection, desktop/mobile snapshots, bug triage, and sellability review, using premium models where they materially improve quality. Do not create bespoke evidence harnesses, red-evidence ceremonies, immutable worktree snapshots, or exact-once local commands unless the task itself is a production-sensitive one-shot operation. After engineer PASS, `waostrategy` dispatches one independent verifier card from the verification contract already embedded in the handoff; do not require another strategist card merely to restate it.
 |- **Content Generation:** Hermes uses `qwen3.8-max` for all Hebrew content (subject to the human gate above) — **except GEO opportunity generation** (`scripts/geo-generate-content.mjs`), where `gemini-3.8-flash` is PRIMARY and `qwen3.8-max` is the fallback. Every saved GEO action is stamped `generatedVia: "primary:gemini-3.8-flash"` or `"fallback:qwen3.8-max"`. Applies to every GEO-entitled client (`retter`, `ajudaica`, `wao`).
-|- **App Verification:** structural checks → Claude `verifier` (Haiku 4.5, direct subagent, not Hermes; escalate to Sonnet 5 only if Haiku misses a hard drive). Visual/RTL checks → two-tier: `qwen3.5-omni-plus` (quick/iterative) or `qwen3.8-max` (serious/from-scratch, pre-deploy gate) via direct DashScope API call (see §4a); for real-user flow QA via screenshot inspection, `waouxtester` (GPT-6 Sol, §4c). **Media Verification:** `waoverifier-media` (GPT-6 Luna, §4b) for video/audio QA. **Hermes-orchestrated flows** use the `waoverifier` profile (GPT-6 Luna, §4a) as their in-Hermes verifier.
+|- **App Verification:** structural checks → Claude `verifier` (Haiku 4.5, direct subagent, not Hermes; escalate to Sonnet 5 only if Haiku misses a hard drive). Visual/RTL checks → two-tier: `qwen3.5-omni-plus` (quick/iterative) or `qwen3.8-max` (serious/from-scratch, pre-deploy gate) via direct DashScope API call (see §4a); for real-user flow QA via screenshot inspection, `waouxtester` (GPT-6.1 Sol, §4c). **Media Verification:** `waoverifier-media` (GPT-6 Luna, §4b) for video/audio QA. **Hermes-orchestrated flows** use the `waoverifier` profile (GPT-6 Luna, §4a) as their in-Hermes verifier.
 |- **Autonomous milestone push & deploy:** Post-milestone completion, the Lead Architect auto-commits, pushes to `hermes-migration`, and triggers `./deploy.sh` via SSH key once independent verification (tests, build, scope checks) passes.
 |- **Context-budget check:** before writing a spec that routes through a Hermes/Qwen profile, the strategist checks that profile's real context_length above (not an aspirational number) against the spec's expected payload (repo context + tool outputs + screenshots/JSON dumps it will produce). If a spec is likely to exceed it, split it into narrower tasks rather than write one large one and hope. New profiles must have a working `.env` (verify with `hermes profile show <name>` before dispatching to it) — a profile scaffolded via `hermes profile create` has no credentials until one is added.
 
@@ -137,7 +139,7 @@ Default WAO implementation work uses one goal-mode engineer session plus one ind
 session. Avoid chains of stateless strategist/executor/recovery cards. Rationale + verified pricing:
 [[project_model_cost_geometry]].
 
-**OpenAI Codex** (active configs verified 2026-10-01: `waoengineer` and `waouxtester` on `gpt-6-sol`, `orchestrator`, `waoverifier`, and `waoverifier-media` on `gpt-6-luna`): profile roles remain separate; the engineer run owns implementation planning and local convergence. `waostrategy`, `waocopy`, and `waohebrewqa` use `qwen3.8-max` via Alibaba.
+**OpenAI Codex** (active configs verified 2026-10-07: `waostrategy`, `waoengineer`, and `waouxtester` on `gpt-6.1-sol`; `orchestrator`, `waohebrewqa`, `waoverifier`, and `waoverifier-media` on `gpt-6-luna`): profile roles remain separate; the engineer run owns implementation planning and local convergence. `waocopy` uses `qwen3.8-max` via Alibaba.
 
 **Qwen 3.8 Max** (`waocopy`): flat rate to 1M — deep reasoning and nuanced generation for Hebrew copy. Still enforce:
 - One scoped task per `/handoff/pending/` MD; name exact paths/functions; never dump whole files or the repo.

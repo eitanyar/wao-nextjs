@@ -117,6 +117,27 @@ Before approval, the strategist verifies only what the engineer cannot decide lo
    build, and runtime/visual evidence only when applicable.
 4. Live/client/provider/deploy side effects are separately explicit and fail closed.
 
+### Unattended development compatibility
+
+- Read the complete named handoff and current owner amendments BEFORE issuing dependent
+  commands or helper scripts; never batch the first contract read with execution decisions.
+- Strategist preflight checks the target profile's effective approvals AND actual launch mode.
+  Kanban goal workers use `chat -q`; interactive approvals do not transfer to those workers.
+  Do not dispatch required approval-dependent work without a demonstrated supported approval path.
+- Use native file/search tools for inspection. Do not use `execute_code` for routine task-history
+  parsing in deny-mode unattended runs. Oversized output does not authorize a prohibited parser.
+  Prepare a concise resume brief before dispatch; retain full history as evidence, not repeated context.
+- For NEW authorized commands, keep required checks separate from optional telemetry; prefer
+  simple explicit commands without nested shell calculations. This is not permission to rewrite,
+  split, wrap, or move a previously denied operation to another tool or session.
+- A denial stops the denied operation. Record the exact tool/payload, reason, and affected criterion.
+  Continue only unrelated, already-permitted work when the task contract allows it; block when a
+  required gate cannot proceed. Never waive a required check or claim PASS from partial evidence.
+  Do not add blanket whole-task-stop rules to new local-only specs without a named safety reason.
+- Existing task-specific stops and denials remain binding until explicitly amended; no automatic
+  redispatch, replacement chain, direct database status edits, or security-policy relaxation.
+  New rules do not retroactively authorize held commands, existing cards, or deployment.
+
 Default execution:
 - `waoengineer`, `--goal`, one shared-directory writer, 45-minute runtime, 12 goal turns.
 - Safe local commands are rerunnable. Red compiler/test/harness output remains `running` feedback.
@@ -129,6 +150,16 @@ Default execution:
   immutable dirty-worktree snapshots, or bespoke meta-harnesses by default.
 - After local PASS, one independent verifier checks the changed diff and acceptance. The verifier
   contract is named in the implementation handoff, so no strategist restatement card is needed.
+
+Build-infrastructure escalation clarification (2026-10-20; independently reviewed local feasibility
+task `t_9cd0f898`): repeated same-class build failures, including recurring OOM or infrastructure
+failures, require waostrategy's narrow root-cause/architecture review before any further retry.
+Record the failing class, evidence, changed prerequisite or bounded next experiment, and existing
+approval boundaries; do not respond with another blind heap increase or automatic redispatch.
+Ordinary task-owned compiler/test corrections remain with the outcome-owning engineer in the same
+run. This clarification does not authorize a production retry, deployment, or changed safety scope;
+explicit one-build contracts retain their stop rule. Existing policy and historical evidence remain
+in force.
 
 ### Immediate execution and owner-validation window
 
@@ -332,9 +363,9 @@ This section is the project-local shared procedure surface for all WAO profiles 
 default skills tree, so this file is the loadable surface). Specs carry task-specific detail
 only — never restate these procedures in spec bodies or dispatch prompts.
 
-- **Batch-first:** collect independent read-only discovery/evidence calls (file reads, git
-  status, hashes, forbidden-symbol scans, dependency checks, port/process checks) in one parallel tool round;
-  finish with one parallel evidence batch (final status, diffs, hashes, artifact inventory).
+- **Batch-first:** after prerequisite instructions are read, collect independent read-only
+  discovery/evidence calls in one parallel tool round. Batch tool calls, not nested shell programs;
+  keep required status/diff/hash checks independent of optional timing/reporting.
 - **Serialize side effects:** edits, generated files, TypeScript compilation, tests/builds sharing outputs (`dist`, `.next`),
   browser-server lifecycle, and every external/state-changing action run one at a time.
 - **One writer:** at most one shared-repository writer (`/home/eitanya/wao`) at a time;
@@ -348,9 +379,9 @@ only — never restate these procedures in spec bodies or dispatch prompts.
 - **Delegation limits:** no delegation for ordinary local corrections (the outcome-owning worker
   fixes task-owned test/harness failures in-session); one-hop delegation maximum unless a real
   capability boundary exists (name it).
-- **Timing line** in every goal-mode completion: elapsed, model/API calls, tool calls, slowest
-  model call, batched independent checks yes/no. The first post-change run is a measurement
-  sample, not proof of a guaranteed speedup.
+- **Timing is optional telemetry, not acceptance:** use existing run metadata when available;
+  otherwise report unavailable. Never add a helper script or nested command solely to recover
+  elapsed/API/tool-call metrics, and never block product acceptance on missing timing.
 - **Memory hygiene:** task-specific progress belongs in Kanban/handoff/session history; reusable
   procedures belong in this file or a loadable skill; only cross-session stable facts (identity,
   role constraints, safety boundaries, standing user preferences, environment facts) belong in
