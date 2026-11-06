@@ -6,7 +6,8 @@ import fs from 'fs';
 import path from 'path';
 
 const MODEL = 'qwen3.8-max';
-const TIMEOUT_MS = 300_000;
+// Non-streaming call: Qwen 3.8 Max reasons before answering, so multi-patch briefs can exceed 5 min.
+const TIMEOUT_MS = Number(process.env.WAOCOPY_TIMEOUT_MS) || 900_000;
 const CHARTER = path.resolve(import.meta.dirname, '../.claude/agents/copywriter.md');
 
 function parseArgs(argv) {
@@ -67,6 +68,10 @@ async function main() {
     ],
   };
   if (args.patches) body.response_format = { type: 'json_object' };
+  // Stream: Node's fetch (undici) aborts after 300s without response headers, and a
+  // non-streamed reply sends nothing until Qwen finishes reasoning.
+  body.stream = true;
+  body.stream_options = { include_usage: true };
 
   const started = Date.now();
   const res = await fetch(`${QWEN_BASE_URL}/chat/completions`, {
@@ -75,13 +80,31 @@ async function main() {
     body: JSON.stringify(body),
     signal: AbortSignal.timeout(TIMEOUT_MS),
   });
-  const data = await res.json().catch(() => ({}));
-  const requestId = res.headers.get('x-request-id') || data.request_id || data.id || 'none';
+  let requestId = res.headers.get('x-request-id') || 'none';
   if (!res.ok) {
-    throw new Error(`DashScope HTTP ${res.status} (request_id ${requestId}): ${JSON.stringify(data).slice(0, 500)}`);
+    const errText = await res.text().catch(() => '');
+    throw new Error(`DashScope HTTP ${res.status} (request_id ${requestId}): ${errText.slice(0, 500)}`);
   }
 
-  const text = data.choices?.[0]?.message?.content ?? '';
+  const data = { usage: null };
+  let text = '';
+  let buf = '';
+  const decoder = new TextDecoder();
+  for await (const chunk of res.body) {
+    buf += decoder.decode(chunk, { stream: true });
+    let nl;
+    while ((nl = buf.indexOf('\n')) !== -1) {
+      const line = buf.slice(0, nl).trim();
+      buf = buf.slice(nl + 1);
+      if (!line.startsWith('data:')) continue;
+      const payload = line.slice(5).trim();
+      if (payload === '[DONE]') continue;
+      const evt = JSON.parse(payload);
+      if (requestId === 'none' && (evt.request_id || evt.id)) requestId = evt.request_id || evt.id;
+      if (evt.usage) data.usage = evt.usage;
+      text += evt.choices?.[0]?.delta?.content ?? '';
+    }
+  }
   if (args.patches) {
     const parsed = JSON.parse(text);
     if (!Array.isArray(parsed.patches)) throw new Error('Response JSON has no "patches" array');
