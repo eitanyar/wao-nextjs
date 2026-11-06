@@ -84,8 +84,10 @@ they always resolve to the current generation.
    several sessions, using the five headings: Outcome, Files, Constraints, Acceptance, Verifier.
 
 ## Acceptance
-- Focused tests for the change, then `npm run test` and `npm run build` (serially — they share
-  `.next` output). Scoped lint on changed files.
+- Focused tests for the change, then `npm run test` and `npm run build -- --webpack` (serially —
+  they share `.next` output). The build must use `--webpack`: it is what `deploy.sh` runs, and the
+  default Turbopack build skips checks that fail the deploy. Use `WAO_DEPLOY_DIST_DIR=.next-<name>`
+  when another server is using `.next`. Scoped lint on changed files.
 - UI changes: `npm run dev`, curl the changed routes, and screenshot desktop + mobile.
 - `data/clients/` is live production data. No command may write to it unless the brief names the
   exact client and command. After any run that could touch it, check `git diff data/clients/`.
