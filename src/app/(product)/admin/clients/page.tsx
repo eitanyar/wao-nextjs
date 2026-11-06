@@ -45,6 +45,7 @@ export default async function AdminClientsPage({ searchParams }: { searchParams:
 
   return <main className="min-h-screen px-4 py-12" dir="rtl" lang="he"><div className="mx-auto w-full max-w-2xl">
     <div className="mb-8 text-center"><span className="text-3xl font-black" dir="ltr">WAO</span></div>
+    {authorized === 'live' && <nav aria-label="Admin"><a href="/admin/site-bot-help" className="mb-4 inline-block min-h-11 rounded-lg border border-[var(--accent)] px-4 py-3 text-sm font-semibold text-[var(--accent)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]" dir="ltr">Site-Bot help requests</a></nav>}
     <p aria-live="polite" className={`mb-4 min-h-5 text-center text-sm ${success === '1' ? 'text-green-300' : 'text-red-300'}`}>{message}</p>
     <div className="space-y-4 rounded-2xl border border-white/10 bg-white/5 p-4 sm:p-6">{clients.map(client => {
       const recovery = getClientRecoveryContactStatus(client.clientId, root);
