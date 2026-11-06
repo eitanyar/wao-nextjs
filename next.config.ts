@@ -364,11 +364,20 @@ const nextConfig: NextConfig = {
     // venv/bin/python3 is an absolute symlink to /usr/bin/python3, outside the project
     // root — Turbopack's file-tracing panics trying to resolve it. Python here is only
     // ever invoked as a subprocess (never bundled), so it's safe to exclude entirely.
-    "/*": ["venv/**/*", "data/**/*"],
+    "/*": [
+      "venv/**/*",
+      "data/**/*",
+      // deploy.sh keeps releases/ inside the project root. Never trace previous
+      // releases (or the `current` symlink) into a new standalone, or each release
+      // nests all earlier ones. The active build is releases/.candidate-*/.next
+      // (the distDir) and must stay traced, so only these two shapes are excluded.
+      "releases/release-*/**",
+      "releases/current/**",
+    ],
     // The root route does not match /* in Next's picomatch call. The shared
     // next-server trace has its own key and can also contribute standalone files.
-    "/": ["data/**/*"],
-    "next-server": ["data/**/*"],
+    "/": ["data/**/*", "releases/release-*/**", "releases/current/**"],
+    "next-server": ["data/**/*", "releases/release-*/**", "releases/current/**"],
   },
   // Tailscale IPs/hostname used to reach the dev server remotely (not localhost) —
   // without this, Next 16 dev mode silently blocks HMR/RSC dev-asset requests from
