@@ -36,12 +36,12 @@ function excluded(route, file) {
 
 test('standalone route and shared-server traces exclude repo-root runtime data', () => {
   assert.equal(config.output, 'standalone');
-  assert.deepEqual(Object.keys(config.outputFileTracingExcludes), ['/*', '/', 'next-server']);
+  assert.deepEqual(Object.keys(config.outputFileTracingExcludes), ['/*', '/']);
   const excludes = Array.from(config.outputFileTracingExcludes['/*']);
   assert.ok(excludes.includes('venv/**/*'));
   assert.ok(excludes.includes('data/**/*'));
 
-  for (const route of ['/', '/api/site-bot/research/gates', '/client/login', 'next-server']) {
+  for (const route of ['/', '/api/site-bot/research/gates', '/client/login']) {
     for (const file of ['data/clients/sentinel.json', 'data/sites/nested/sentinel.json', 'data/site-research/sentinel.json']) {
       assert.equal(excluded(route, file), true, `${route}: ${file} must be excluded`);
     }
@@ -50,4 +50,17 @@ test('standalone route and shared-server traces exclude repo-root runtime data',
     }
   }
   assert.equal(excluded('/api/site-bot/research/gates', 'venv/bin/python3'), true);
+});
+
+// Mirrors collect-build-traces.js makeIgnoreFn: next-server excludes are matched
+// against root-RELATIVE paths with contains:true (not root-joined like routes).
+test('shared next-server trace keeps Next runtime internals (e.g. lib/metadata)', () => {
+  const globs = Object.keys(config.outputFileTracingExcludes)
+    .filter((key) => picomatch(key)('next-server'))
+    .flatMap((key) => config.outputFileTracingExcludes[key]);
+  const isMatch = globs.length ? picomatch(globs, { contains: true, dot: true }) : () => false;
+  for (const file of [
+    'node_modules/next/dist/lib/metadata/get-metadata-route.js',
+    'node_modules/next/dist/server/lib/router-utils/filesystem.js',
+  ]) assert.equal(isMatch(file), false, `next-server trace must keep ${file}`);
 });

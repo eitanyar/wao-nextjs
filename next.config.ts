@@ -374,10 +374,11 @@ const nextConfig: NextConfig = {
       "releases/release-*/**",
       "releases/current/**",
     ],
-    // The root route does not match /* in Next's picomatch call. The shared
-    // next-server trace has its own key and can also contribute standalone files.
+    // The root route does not match /* in Next's picomatch call.
     "/": ["data/**/*", "releases/release-*/**", "releases/current/**"],
-    "next-server": ["data/**/*", "releases/release-*/**", "releases/current/**"],
+    // NO "next-server" key: Next matches those globs against root-RELATIVE paths with
+    // `contains: true`, so "data/**/*" also matches node_modules/next/dist/lib/metadata/
+    // and strips Next's own runtime from the standalone (MODULE_NOT_FOUND on boot).
   },
   // Tailscale IPs/hostname used to reach the dev server remotely (not localhost) —
   // without this, Next 16 dev mode silently blocks HMR/RSC dev-asset requests from
