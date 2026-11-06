@@ -1,28 +1,35 @@
 'use client';
 
-import React, { Suspense, useState, useEffect, useCallback } from 'react';
+import React, { Suspense, useState, useEffect, useCallback, useRef } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { ACQUISITION_COPY } from '@/lib/site-bot/acquisitionCopy';
 import { SCORECARD_COPY } from '@/lib/site-bot/scorecardCopy';
-import type { AuditResult, AuditDimension } from '@/lib/gbp/auditScore';
+import type { AuditDimension } from '@/lib/gbp/auditScore';
+import { AUDIT_JOURNEY_COPY as COPY } from '@/lib/site-bot/auditJourneyCopy';
+import { AUDIT_ID, nonempty, validCandidates, readyIdentity, identityQuery, identityCopy } from '@/lib/site-bot/auditJourneyState';
+import type { ReadyIdentity, Candidate } from '@/lib/site-bot/auditJourneyState';
+import { createHelpSubmission, helpAttemptKey } from '@/lib/site-bot/helpSubmission.mjs';
+import PrivacyConsent from '@/components/PrivacyConsent';
+import HELP_COPY from '@/content/site-bot-help-form-copy.json';
 
-interface Candidate {
-  placeId: string;
-  displayName: string;
-  formattedAddress: string;
-}
-
-type PageState = 'form' | 'loading' | 'pick' | 'ready' | 'not_found';
+type PageState = 'form' | 'loading' | 'pick' | 'confirm' | 'ready' | 'not_found' | 'recovery';
+interface Operation { generation: number; controller: AbortController; urlKey: string }
 
 const DIY_KEYS = ['categories', 'hours', 'photos'] as const;
+const helpInputStyle: React.CSSProperties = {
+  width: '100%', boxSizing: 'border-box', minWidth: 0, padding: '12px 16px',
+  borderRadius: 'var(--radius-md)', border: '1px solid var(--border)',
+  background: 'var(--bg)', color: 'var(--text)', fontSize: '1rem',
+};
 
-async function fetchWithTimeout(url: string, options: RequestInit = {}, timeoutMs = 15000): Promise<Response> {
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), timeoutMs);
+async function request(url: string, operation: Operation, options: RequestInit = {}) {
+  const timer = setTimeout(() => operation.controller.abort(), 15000);
   try {
-    const response = await fetch(url, { ...options, signal: controller.signal });
-    return response;
+    const response = await fetch(url, { ...options, signal: operation.controller.signal });
+    const data: unknown = response.ok ? await response.json() : null;
+    if (operation.controller.signal.aborted) throw new Error('Request expired');
+    return { status: response.status, ok: response.ok, data };
   } finally {
     clearTimeout(timer);
   }
@@ -30,137 +37,278 @@ async function fetchWithTimeout(url: string, options: RequestInit = {}, timeoutM
 
 function AuditContent() {
   const searchParams = useSearchParams();
-  const [state, setState] = useState<PageState>('form');
+  const urlKey = JSON.stringify([searchParams.get('auditId'), searchParams.get('placeId')]);
+  const [phase, setState] = useState<PageState>('form');
+  const [viewKey, setViewKey] = useState(urlKey);
   const [businessNameInput, setBusinessNameInput] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorKey, setErrorKey] = useState<string | null>(null);
   const [currentAuditId, setCurrentAuditId] = useState<string | null>(null);
   const [candidates, setCandidates] = useState<Candidate[]>([]);
-  const [auditResult, setAuditResult] = useState<AuditResult | null>(null);
-  const [businessName, setBusinessName] = useState<string>('');
-
-
-  const fetchResult = useCallback(async (auditId: string, placeId?: string | null) => {
-    setState('loading');
+  const [identity, setIdentity] = useState<ReadyIdentity | null>(null);
+  const [recoveryIdentity, setRecoveryIdentity] = useState<{auditId: string; placeId: string} | null>(null);
+  const [helpContact, setHelpContact] = useState({ name: '', phone: '', email: '' });
+  const [helpConsent, setHelpConsent] = useState(false);
+  const [helpStatus, setHelpStatus] = useState<'idle' | 'loading' | 'received' | 'unconfirmed' | 'blocked' | 'retry'>('idle');
+  const helpTransport = useRef<ReturnType<typeof createHelpSubmission> | null>(null);
+  const generation = useRef(0);
+  const active = useRef<Operation | null>(null);
+  const pending = useRef<ReadyIdentity | null>(null);
+  const internalNavigation = useRef<string | null>(null);
+  const state = viewKey === urlKey ? phase : 'loading';
+  const auditResult = identity?.score;
+  const businessName = identity?.businessName;
+  const invalidate = useCallback(() => {
+    generation.current++;
+    active.current?.controller.abort();
+    active.current = null;
+    pending.current = null;
+    helpTransport.current?.dispose();
+    helpTransport.current = null;
+  }, []);
+  const clear = useCallback(() => {
+    setIdentity(null);
+    setRecoveryIdentity(null);
+    setCurrentAuditId(null);
+    setCandidates([]);
+    setIsSubmitting(false);
     setErrorKey(null);
+    setHelpContact({ name: '', phone: '', email: '' });
+    setHelpConsent(false);
+    setHelpStatus('idle');
+  }, []);
+  const begin = useCallback(() => {
+    invalidate();
+    clear();
+    const operation = { generation: generation.current, controller: new AbortController(), urlKey: identityQuery(window.location.href) };
+    active.current = operation;
+    setViewKey(operation.urlKey);
+    setState('loading');
+    return operation;
+  }, [clear, invalidate]);
+  const live = useCallback((operation: Operation) => generation.current === operation.generation &&
+    identityQuery(window.location.href) === operation.urlKey, []);
+  const fail = useCallback((key = 'FORM_ERROR_GENERIC') => {
+    clear();
+    pending.current = null;
+    setErrorKey(key);
+    setState('form');
+  }, [clear]);
+  const updateUrl = useCallback((result: ReadyIdentity | null) => {
+    const url = new URL(window.location.href);
+    url.searchParams.delete('auditId');
+    url.searchParams.delete('placeId');
+    if (result) {
+      url.searchParams.set('auditId', result.auditId);
+      url.searchParams.set('placeId', result.placeId);
+    }
+    const next = identityQuery(url.toString());
+    if (next !== identityQuery(window.location.href)) {
+      internalNavigation.current = next;
+      window.history.replaceState(null, '', url.toString());
+    }
+    setViewKey(next);
+  }, []);
+  const fetchResult = useCallback(async (auditId: string, placeId?: string | null, selected?: Candidate, existing?: Operation) => {
+    const operation = existing ?? begin();
     try {
+      if (!AUDIT_ID.test(auditId)) throw new Error('Invalid audit');
       const query = new URLSearchParams({ auditId });
       if (placeId) query.set('placeId', placeId);
-      const res = await fetchWithTimeout(`/api/site-bot/audit-result?${query.toString()}`);
+      const res = await request(`/api/site-bot/audit-result?${query.toString()}`, operation);
+      if (!live(operation)) return;
       if (res.status === 429) {
-        setErrorKey('FORM_ERROR_RATE');
-        setState('form');
+        fail('FORM_ERROR_RATE');
         return;
       }
       if (res.status === 404) {
-        setState('not_found');
+        let recovery = false;
+        if (placeId) {
+          try { recovery = /^pending:[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(window.sessionStorage.getItem(helpAttemptKey({auditId, placeId})) ?? ''); } catch { /* fail closed */ }
+        }
+        if (recovery && placeId) { setRecoveryIdentity({auditId, placeId}); setHelpStatus('retry'); setState('recovery'); }
+        else setState('not_found');
         return;
       }
       if (!res.ok) {
-        setErrorKey('FORM_ERROR_GENERIC');
-        setState('form');
+        fail();
         return;
       }
-      const data = await res.json();
-      if (data.status === 'ready' && data.score) {
-        setAuditResult(data.score);
-        setBusinessName(data.businessName || '');
+      const data = res.data as Record<string, unknown> | null;
+      if (data?.status === 'ready') {
+        const result = readyIdentity(data, auditId, placeId, selected);
+        pending.current = result;
+        setIdentity(result);
         setCurrentAuditId(auditId);
-        setState('ready');
-      } else if (data.status === 'pick' && Array.isArray(data.candidates)) {
+        if (selected) updateUrl(result);
+        setState(selected ? 'ready' : 'confirm');
+      } else if (!placeId && data?.status === 'pick' && validCandidates(data.candidates)) {
         setCandidates(data.candidates);
         setCurrentAuditId(auditId);
         setState('pick');
-      } else if (data.status === 'not_found') {
+      } else if (data?.status === 'not_found') {
         setState('not_found');
       } else {
-        setErrorKey('FORM_ERROR_GENERIC');
-        setState('form');
+        fail();
       }
     } catch {
-      setErrorKey('FORM_ERROR_GENERIC');
-      setState('form');
+      if (live(operation)) fail();
+    } finally {
+      if (live(operation)) setIsSubmitting(false);
     }
-  }, []);
+  }, [begin, fail, live, updateUrl]);
 
   useEffect(() => {
-    const auditIdParam = searchParams.get('auditId');
-    const placeIdParam = searchParams.get('placeId');
-    if (auditIdParam) {
-      queueMicrotask(() => {
-        void fetchResult(auditIdParam, placeIdParam);
-      });
+    if (internalNavigation.current === urlKey) {
+      internalNavigation.current = null;
+      return;
     }
-  }, [searchParams, fetchResult]);
+    internalNavigation.current = null;
+    invalidate();
+    let disposed = false;
+    queueMicrotask(() => {
+      if (disposed) return;
+      const [auditIdParam, placeIdParam] = JSON.parse(urlKey) as [string | null, string | null];
+      if (auditIdParam) void fetchResult(auditIdParam, placeIdParam);
+      else { clear(); setViewKey(urlKey); setState('form'); }
+    });
+    return () => { disposed = true; };
+  }, [urlKey, clear, fetchResult, invalidate]);
+
+  useEffect(() => () => { invalidate(); }, [invalidate]);
+
+  useEffect(() => {
+    if (!identity) return;
+    let disposed = false;
+    let status: 'received' | 'blocked' | 'retry' | null = null;
+    try {
+      const stored = window.sessionStorage.getItem(helpAttemptKey(identity));
+      if (stored) status = stored === 'received' ? 'received' : /^pending:[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(stored) ? 'retry' : 'blocked';
+    } catch { status = 'blocked'; }
+    if (status) queueMicrotask(() => { if (!disposed) setHelpStatus(status); });
+    return () => { disposed = true; };
+  }, [identity]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     const trimmedName = businessNameInput.trim();
     if (!trimmedName) return;
 
+    updateUrl(null);
+    const operation = begin();
     setIsSubmitting(true);
-    setErrorKey(null);
     try {
       const body = { businessName: trimmedName };
-      const res = await fetchWithTimeout('/api/site-bot/audit-lookup', {
+      const res = await request('/api/site-bot/audit-lookup', operation, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
       });
 
+      if (!live(operation)) return;
       if (res.status === 429) {
-        setErrorKey('FORM_ERROR_RATE');
-        setIsSubmitting(false);
+        fail('FORM_ERROR_RATE');
         return;
       }
       if (!res.ok) {
-        setErrorKey('FORM_ERROR_GENERIC');
-        setIsSubmitting(false);
+        fail();
         return;
       }
-      const data = await res.json();
-      if (data.auditId) {
-        setCurrentAuditId(data.auditId);
-        if (typeof window !== 'undefined') {
-          const url = new URL(window.location.href);
-          url.searchParams.set('auditId', data.auditId);
-          url.searchParams.delete('placeId');
-          window.history.pushState({}, '', url.toString());
-        }
-        await fetchResult(data.auditId);
+      const data = res.data as Record<string, unknown> | null;
+      if (nonempty(data?.auditId) && AUDIT_ID.test(data.auditId)) {
+        await fetchResult(data.auditId, null, undefined, operation);
       } else {
-        setErrorKey('FORM_ERROR_GENERIC');
+        fail();
       }
     } catch {
-      setErrorKey('FORM_ERROR_GENERIC');
+      if (live(operation)) fail();
     } finally {
-      setIsSubmitting(false);
+      if (live(operation)) setIsSubmitting(false);
     }
   }
 
   async function handlePickCandidate(candidate: Candidate) {
-    if (!currentAuditId) return;
-    if (typeof window !== 'undefined') {
-      const url = new URL(window.location.href);
-      url.searchParams.set('auditId', currentAuditId);
-      url.searchParams.set('placeId', candidate.placeId);
-      window.history.pushState({}, '', url.toString());
-    }
-    await fetchResult(currentAuditId, candidate.placeId);
+    if (!currentAuditId || state !== 'pick' || !candidates.includes(candidate) || identityQuery(window.location.href) !== viewKey) return;
+    await fetchResult(currentAuditId, candidate.placeId, candidate);
+  }
+  function confirmBusiness(accepted: boolean) {
+    if (state !== 'confirm' || !identity || pending.current !== identity || identityQuery(window.location.href) !== viewKey) return;
+    if (accepted) { updateUrl(identity); setState('ready'); }
+    else { invalidate(); clear(); updateUrl(null); setState('form'); }
   }
 
+  async function handleHelpSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    const target = state === 'recovery' ? recoveryIdentity : state === 'ready' ? identity : null;
+    if (!target || helpStatus === 'received' || helpStatus === 'loading' || helpStatus === 'blocked') return;
+    const confirmed = target;
+    let storage: Storage;
+    try { storage = window.sessionStorage; }
+    catch { setHelpStatus('blocked'); return; }
+    if (!helpTransport.current) helpTransport.current = createHelpSubmission({
+      fetchFn: fetch, makeId: () => crypto.randomUUID(), onState: setHelpStatus,
+      isCurrent: () => identityQuery(window.location.href) === JSON.stringify([confirmed.auditId, confirmed.placeId]),
+      storage, recoveryOnly: state === 'recovery',
+    });
+    await helpTransport.current.submit(confirmed, { ...helpContact, privacyAccepted: helpConsent });
+  }
+
+  function renderHelpForm() {
+    const locked = helpStatus !== 'idle' && helpStatus !== 'retry';
+    return (
+      <section id="help-form" data-help-section="true" style={{ scrollMarginTop: '96px' }}>
+        {helpStatus !== 'received' && (
+          <form data-help-form="true" onSubmit={handleHelpSubmit} aria-busy={helpStatus === 'loading'}
+            style={{ display: 'flex', flexDirection: 'column', gap: '12px', padding: '20px', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', background: 'var(--surface)' }}>
+            <h2 id="help-form-heading" tabIndex={-1} style={{ fontSize: '1.1rem', margin: 0 }}>{HELP_COPY.HELP_FORM_HEADING}</h2>
+            <label htmlFor="help-name">שם מלא</label>
+            <input id="help-name" name="name" required maxLength={120} autoComplete="name" style={helpInputStyle} value={helpContact.name}
+              disabled={locked}
+              onChange={e => setHelpContact(previous => ({ ...previous, name: e.target.value }))} />
+            <label htmlFor="help-phone">טלפון</label>
+            <input id="help-phone" name="phone" type="tel" maxLength={40} autoComplete="tel" dir="ltr" style={helpInputStyle} value={helpContact.phone}
+              disabled={locked}
+              onChange={e => setHelpContact(previous => ({ ...previous, phone: e.target.value }))} />
+            <label htmlFor="help-email">{HELP_COPY.HELP_EMAIL_LABEL}</label>
+            <input id="help-email" name="email" type="email" maxLength={254} autoComplete="email" dir="ltr" style={helpInputStyle} value={helpContact.email}
+              disabled={locked}
+              onChange={e => setHelpContact(previous => ({ ...previous, email: e.target.value }))} />
+            <p id="help-contact-hint" style={{ margin: 0, fontSize: '0.88rem', color: 'var(--muted)' }}>{HELP_COPY.HELP_CONTACT_HINT}</p>
+            <fieldset disabled={locked} style={{ border: 0, padding: 0, margin: 0 }}>
+              <PrivacyConsent id="help-privacy" checked={helpConsent} onChange={setHelpConsent} />
+            </fieldset>
+            <button type="submit" className="btn-primary" aria-describedby="help-contact-hint"
+              disabled={helpStatus === 'loading' || helpStatus === 'blocked' || !helpConsent || !helpContact.name.trim() || (!helpContact.phone.trim() && !helpContact.email.trim())}>
+              {helpStatus === 'loading' ? 'שולח...' : 'שלח פנייה'}
+            </button>
+          </form>
+        )}
+        {/* Always mounted so late success/error messages are announced. */}
+        <div aria-live="polite" data-help-live="true">
+          {helpStatus === 'received' && <p data-help-received="true">הפנייה התקבלה — תודה!</p>}
+          {(helpStatus === 'unconfirmed' || helpStatus === 'retry') && <p role="alert" data-help-error="retry">{HELP_COPY.HELP_ERROR_RETRY}</p>}
+          {helpStatus === 'blocked' && <p role="alert" data-help-error="blocked">{HELP_COPY.HELP_ERROR_BLOCKED}</p>}
+        </div>
+      </section>
+    );
+  }
+
+  function jumpToHelpForm(e: React.MouseEvent<HTMLAnchorElement>) {
+    const heading = document.getElementById('help-form-heading');
+    if (!heading) return;
+    // Keep the URL (and its hash) untouched; the confirmed identity lives in the query string.
+    e.preventDefault();
+    document.getElementById('help-form')?.scrollIntoView({ block: 'start' });
+    heading.focus({ preventScroll: true });
+  }
 
   function renderDimensionCard(dim: AuditDimension) {
     const titleToken = dim.copyToken;
-    const statusToken = 'DIM_' + dim.key.toUpperCase() + '_' + dim.status.toUpperCase();
-    const badgeToken = 'STATUS_' + dim.status.toUpperCase();
     const title = SCORECARD_COPY[titleToken] || '';
-    const statusLine = SCORECARD_COPY[statusToken] || '';
-    const badge = SCORECARD_COPY[badgeToken] || '';
+    const statusLine = dim.status === 'pass' ? COPY.SB_STATUS_CONFIRMED : dim.status === 'fail' ? COPY.SB_STATUS_MISSING : COPY.SB_STATUS_UNKNOWN;
 
     const isDiyFail = dim.status === 'fail' && (DIY_KEYS as readonly string[]).includes(dim.key);
-    const diyStepsToken = 'DIY_' + dim.key.toUpperCase() + '_STEPS';
-    const diyStepsText = isDiyFail ? SCORECARD_COPY[diyStepsToken] : null;
+    const diyStepsText = dim.key === 'categories' ? COPY.SB_FIX_CATEGORIES : dim.key === 'hours' ? COPY.SB_FIX_HOURS : COPY.SB_FIX_PHOTOS;
 
     let badgeStyle: React.CSSProperties = {
       display: 'inline-flex',
@@ -197,6 +345,8 @@ function AuditContent() {
     return (
       <div
         key={dim.key}
+        data-dimension={dim.key}
+        data-status={dim.status}
         style={{
           border: '1px solid var(--border)',
           borderRadius: 'var(--radius-md)',
@@ -211,12 +361,12 @@ function AuditContent() {
           <span style={{ fontWeight: 700, fontSize: '1.05rem', color: 'var(--text)' }}>
             {title}
           </span>
-          <span style={badgeStyle}>{badge}</span>
         </div>
-        <div style={{ fontSize: '0.92rem', lineHeight: 1.6, color: 'var(--muted)' }}>
+        <div style={{ ...badgeStyle, whiteSpace: 'pre-line', overflowWrap: 'anywhere', fontSize: '0.92rem', lineHeight: 1.6 }}>
           {statusLine}
         </div>
-        {isDiyFail && diyStepsText && (
+        {dim.status === 'unknown' && <p style={{ whiteSpace: 'pre-line', overflowWrap: 'anywhere' }}>{COPY.SB_UNKNOWN_VERIFY}</p>}
+        {isDiyFail && (
           <div
             style={{
               marginTop: '8px',
@@ -234,7 +384,8 @@ function AuditContent() {
                 color: 'var(--accent)',
               }}
             >
-              {SCORECARD_COPY.DIY_HOWTO_LABEL}
+              <p style={{ whiteSpace: 'pre-line' }}>{COPY.SB_MISSING_ACTION}</p>
+              <p style={{ whiteSpace: 'pre-line' }}>{COPY.SB_SELFFIX_ACCESS_NOTE}</p>
             </div>
             <div
               style={{
@@ -369,10 +520,11 @@ function AuditContent() {
             >
               <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                  <label style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--text)' }}>
+                  <label htmlFor="audit-business-name" style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--text)' }}>
                     {SCORECARD_COPY.FORM_NAME_LABEL}
                   </label>
                   <input
+                    id="audit-business-name"
                     type="text"
                     required
                     value={businessNameInput}
@@ -455,9 +607,18 @@ function AuditContent() {
           </div>
         )}
 
+        {state === 'confirm' && identity && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', overflowWrap: 'anywhere' }}>
+            <p style={{ whiteSpace: 'pre-line' }}>{identityCopy(COPY.SB_CONFIRM_SOLEMATCH, identity.businessName, identity.formattedAddress)}</p>
+            <button type="button" className="btn-primary" onClick={() => confirmBusiness(true)}>{COPY.SB_CONFIRM_YES}</button>
+            <button type="button" className="btn-secondary" onClick={() => confirmBusiness(false)}>{COPY.SB_CONFIRM_NO}</button>
+          </div>
+        )}
+
         {state === 'pick' && (
           <div
             style={{
+              overflowWrap: 'anywhere',
               border: '1px solid var(--border)',
               borderRadius: 'var(--radius-md)',
               background: 'var(--surface)',
@@ -476,7 +637,7 @@ function AuditContent() {
                 margin: 0,
               }}
             >
-              {SCORECARD_COPY.FORM_TITLE}
+              {COPY.SB_PICK_PROMPT}
             </h1>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
               {candidates.map((cand) => (
@@ -500,7 +661,7 @@ function AuditContent() {
                   }}
                 >
                   <span style={{ fontWeight: 700, fontSize: '1rem', color: 'var(--text)' }}>
-                    {cand.displayName}
+                    {identityCopy(COPY.SB_PICK_OPTION_BUTTON, cand.displayName, cand.formattedAddress)}
                   </span>
                   <span style={{ fontSize: '0.85rem', color: 'var(--muted)' }}>
                     {cand.formattedAddress}
@@ -512,11 +673,12 @@ function AuditContent() {
         )}
 
         {state === 'ready' && auditResult && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', overflowWrap: 'anywhere' }} data-audit-id={identity?.auditId} data-place-id={identity?.placeId}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
               {businessName && (
                 <div style={{ fontSize: '1rem', fontWeight: 600, color: 'var(--accent)' }}>
-                  {businessName}
+                  {identityCopy(COPY.SB_SELECTED_ACK, businessName, identity?.formattedAddress || '')}
+                  <div>{identity?.formattedAddress}</div>
                 </div>
               )}
               <h1
@@ -531,105 +693,25 @@ function AuditContent() {
                 {SCORECARD_COPY.PAGE_TITLE}
               </h1>
               <p style={{ fontSize: '1rem', color: 'var(--muted)', margin: 0, lineHeight: 1.5 }}>
-                {SCORECARD_COPY.PAGE_SUBTITLE}
+                {COPY.SB_CHECKLIST_INTRO}
               </p>
+              {helpStatus !== 'received' && (
+                <a href="#help-form" data-help-jump="true" onClick={jumpToHelpForm} style={{ color: 'var(--accent)', fontWeight: 600, alignSelf: 'flex-start' }}>
+                  {HELP_COPY.HELP_JUMP_LINK}
+                </a>
+              )}
             </div>
 
-            <div
-              style={{
-                border: '1px solid var(--border)',
-                borderRadius: 'var(--radius-md)',
-                background: 'var(--surface)',
-                padding: '18px 20px',
-                fontSize: '1.05rem',
-                fontWeight: 600,
-                lineHeight: 1.6,
-                color: 'var(--text)',
-              }}
-            >
-              {(SCORECARD_COPY.SCORELINE || '')
-                .replace('__PASSED__', String(auditResult.passed))
-                .replace('__TOTAL__', String(auditResult.total))}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              {auditResult.dimensions.map(renderDimensionCard)}
             </div>
+            <p style={{ whiteSpace: 'pre-line' }}>{COPY.SB_CHECKLIST_CANDOR}</p>
 
-            {auditResult.dimensions.some((d) => d.status === 'pass') && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                <h2
-                  style={{
-                    fontFamily: 'var(--font-rubik), sans-serif',
-                    fontSize: '1.15rem',
-                    fontWeight: 700,
-                    color: 'var(--text)',
-                    margin: 0,
-                  }}
-                >
-                  {SCORECARD_COPY.SEC_FOUND}
-                </h2>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                  {auditResult.dimensions
-                    .filter((d) => d.status === 'pass')
-                    .map(renderDimensionCard)}
-                </div>
-              </div>
-            )}
-
-            {auditResult.dimensions.some((d) => d.status === 'fail') && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                <h2
-                  style={{
-                    fontFamily: 'var(--font-rubik), sans-serif',
-                    fontSize: '1.15rem',
-                    fontWeight: 700,
-                    color: 'var(--text)',
-                    margin: 0,
-                  }}
-                >
-                  {SCORECARD_COPY.SEC_MISSING}
-                </h2>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                  {auditResult.dimensions
-                    .filter((d) => d.status === 'fail')
-                    .map(renderDimensionCard)}
-                </div>
-              </div>
-            )}
-
-            {auditResult.dimensions.some((d) => d.status === 'unknown') && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                <h2
-                  style={{
-                    fontFamily: 'var(--font-rubik), sans-serif',
-                    fontSize: '1.15rem',
-                    fontWeight: 700,
-                    color: 'var(--text)',
-                    margin: 0,
-                  }}
-                >
-                  {SCORECARD_COPY.SEC_UNKNOWN}
-                </h2>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                  {auditResult.dimensions
-                    .filter((d) => d.status === 'unknown')
-                    .map(renderDimensionCard)}
-                </div>
-              </div>
-            )}
-
-            <Link
-              href="/contact#contact-form"
-              className="btn-primary"
-              style={{
-                justifyContent: 'center',
-                marginTop: '12px',
-                padding: '16px 28px',
-                fontSize: '1.05rem',
-                textAlign: 'center',
-              }}
-            >
-              {SCORECARD_COPY.CTA_TRIAL}
-            </Link>
+            {renderHelpForm()}
           </div>
         )}
+
+        {state === 'recovery' && recoveryIdentity && renderHelpForm()}
 
         {state === 'not_found' && (
           <div
@@ -652,14 +734,17 @@ function AuditContent() {
                 margin: 0,
               }}
             >
-              {SCORECARD_COPY.NOTFOUND_TITLE}
+              {COPY.SB_NOMATCH_TITLE}
             </h1>
             <p style={{ fontSize: '0.98rem', lineHeight: 1.6, color: 'var(--muted)', margin: 0 }}>
-              {SCORECARD_COPY.NOTFOUND_BODY}
+              {COPY.SB_NOMATCH_BODY}
             </p>
+            <Link href="/site-bot/audit" className="btn-secondary" style={{ justifyContent: 'center' }}>
+              {ACQUISITION_COPY.ENTRY_CTA_BUTTON}
+            </Link>
             <div style={{ marginTop: '12px' }}>
               <Link
-                href="/contact#contact-form"
+                href="/contact?ref=site-bot-audit#contact-form"
                 className="btn-primary"
                 style={{
                   justifyContent: 'center',

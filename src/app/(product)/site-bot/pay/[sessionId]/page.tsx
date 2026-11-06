@@ -23,7 +23,6 @@ interface CheckoutCallbackResponse {
   charged?: boolean;
   researchId: string;
   status?: string;
-  statusUrl?: string;
   openGateCount?: number;
   collectedData?: CollectedData;
   openResearchGates?: ResearchGate[];

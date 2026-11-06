@@ -1,0 +1,182 @@
+{
+  "artifact": "homepage-benefit-first-draft-2026-10-12-v2",
+  "status": "DRAFT_ONLY_NOT_APPLIED",
+  "task": "t_1b1184ab",
+  "contract": "handoff/pending/2026-10-12_011_waocopy_homepage-benefit-first-completeness-correction.md",
+  "parent_task": "t_803fa27a",
+  "author": { "profile": "waocopy", "actual_model": "qwen3.8-max", "provider": "alibaba", "note": "Authenticated waocopy profile route only; no fallback and no provider switch. Narrow v2 correction of the three Contract011 completeness gaps; every other customer-visible string is a byte-identical v1 carry-forward. No independent QA, founder approval or publication implied." },
+  "page": "docs/copy/homepage-benefit-first-draft-2026-10-12-v2.md",
+  "v1_preserved_byte_identical": {
+    "v1_markdown": { "path": "docs/copy/homepage-benefit-first-draft-2026-10-12.md", "sha256_contract_pinned": "189b0a440da65c0aaa2ecb652ae27cdbe3a71e873c3761a0b5e131a5e0cd6d13", "action": "not read-modified, not overwritten; hash as pinned by Contract011" },
+    "v1_json": { "path": "docs/copy/homepage-benefit-first-draft-2026-10-12.json", "sha256_contract_pinned": "813dd1d278ed0fef8e32c2ae6d24f23bec533558f2d0bd9ee30c3f3665542f9f", "action": "not overwritten; hash as pinned by Contract011" },
+    "v1_qa_report": { "path": "docs/research/homepage-benefit-first-language-review-2026-10-12.md", "sha256_contract_pinned": "39fe8c1b0ef13e8a979dc89fe436bcf2205e0e0119ef2981ad59677d759a247b", "action": "not overwritten; remains historical PASS for v1 only and does not count as v2 acceptance" },
+    "current_source": { "path": "src/content/astra-homepage-copy.json", "sha256_contract_pinned": "5f5ff90bf818c36b84f1d0dfe18698ce14ae993b5da42330fa7abe9414964278", "action": "read-only observation via native tools; not modified" },
+    "note": "Contract011 forbids shell commands in this draft-only scope, so hashes are the contract-pinned values rather than freshly recomputed ones; no source, draft or report file was written by this task other than the two new v2 files."
+  },
+  "source_selection": {
+    "renderer": "src/components/home/AstraHome.tsx:46-173",
+    "page_metadata": "src/app/(app)/page.tsx:6-9",
+    "header": "src/components/Header.tsx:5,26-79",
+    "footer": "src/components/Footer.tsx:23-62,98-109",
+    "base_copy": "src/content/astra-homepage-copy.json",
+    "selected_top_copy": "src/content/astra-authority-first-homepage-copy.json",
+    "video_renderer": "src/components/home/AstraProofVideo.tsx:7-22"
+  },
+  "v2_corrections": {
+    "gap1_google_ads_parity": {
+      "problem": "v1 Markdown fused paths.google_ads.description with the first sentence of paths.google_ads.demo_status and omitted demo_status's second sentence, breaking visible Markdown/JSON parity at the status/activation boundary.",
+      "fix": "v2 Markdown renders description and demo_status as two separate visible blocks, each complete and exactly once in reading order, byte-identical to the keys below. No mapped Hebrew value changed from v1.",
+      "render_seams": { "description": "src/components/home/AstraHome.tsx:88 (body <p>)", "demo_status": "src/components/home/AstraHome.tsx:89 (<p className=\"astra-card-note\">)" }
+    },
+    "gap2_founder_experience_proof": {
+      "problem": "Source renders astra-homepage-copy.json#/people/intro experience statement in the footer seam src/components/Footer.tsx:108 (concatenated with low_price.lines[0] and low_price.lines[1]). v1's footer blurb replacement dropped that proof while the v1 inventory claimed no trust element was removed.",
+      "fix": "v2 preserves the statement byte-exact as a visible founder-block line, mapped under proposed_additions['founder_authority.experience_line'] with both current and proposed render locations. Footer blurb replacement text stays byte-identical to v1, so the experience point renders exactly once page-wide.",
+      "verification_flag": "Source-observed only; fresh founder confirmation of the since-2006 experience claim required before publication. No years, credentials, outcomes, customers or metrics invented or amplified."
+    },
+    "gap3_faq_topic_preservation": {
+      "problem": "Original FAQ includes the no-marketing-experience concern (astra-homepage-copy.json#/faq/items[2]); v1 replaced the set and omitted that topic.",
+      "fix": "v2 adds one proposed FAQ entry (items[6]) restoring the topic: question byte-identical to source, answer keeps the source answer's core byte-exact plus the draft's existing agreement/activation-gate boundary sentence. All six v1 items preserved byte-identical (existing-site, service-area, preparation, payment-separation, timing, terms).",
+      "boundary": "No implication that a contact request guarantees service, immediate human follow-up or any result. Implementation is an explicit array addition; AstraHome.tsx:149-154 maps over faq.items, so the entry renders without a renderer change."
+    }
+  },
+  "unchanged_protected": {
+    "src/content/astra-homepage-copy.json#/hero/eyebrow": "שיווק בגוגל לבעלי מקצוע ונותני שירות",
+    "src/content/astra-homepage-copy.json#/hero/h1_line1": "יותר לקוחות מגוגל.",
+    "src/content/astra-homepage-copy.json#/hero/h1_line2": "פחות שיווק על הראש.",
+    "src/content/astra-homepage-copy.json#/metadata/seo/homepage_title_tag_current": "שיווק דיגיטלי ש-AI מריץ — טוב יותר מסוכנות פרסום | WAO"
+  },
+  "replacement_map": {
+    "src/app/(app)/page.tsx#metadata.description": "פרסום בגוגל ואתר לעסק של בעל מקצוע שנותן שירות בבית הלקוח. WAO עוזרת לך לפנות יותר מקום לעבודה ולהוריד שיווק מהראש — עם דרך ברורה להתחיל.",
+    "src/content/astra-homepage-copy.json#/navigation/primary_cta/label": "בוא נדבר על עוד עבודה",
+    "src/content/astra-homepage-copy.json#/navigation/primary_cta/href": "/contact#contact-form",
+    "src/content/astra-authority-first-homepage-copy.json#/hero/body": "אתה עובד אצל לקוחות, סוגר קריאות, ובין לבין צריך לדאוג גם לעבודה הבאה. כשמישהו באזור שלך מחפש איש מקצוע, העסק שלך צריך לתת לו סיבה לפנות. ב-WAO עוזרים לך לבנות דרך ברורה לפניות: פרסום בגוגל ואתר שמציג אותך כמו שצריך. אתה מתרכז בעבודה שלך, ואנחנו עוזרים לעשות סדר במה שקורה מסביבה.",
+    "src/content/astra-authority-first-homepage-copy.json#/hero/primary_cta/label": "בוא נדבר על עוד עבודה",
+    "src/content/astra-authority-first-homepage-copy.json#/hero/primary_cta/href": "/contact#contact-form",
+    "src/content/astra-authority-first-homepage-copy.json#/video_proof/heading": "רוצה לשמוע ממי שכבר עבד איתנו?",
+    "src/content/astra-authority-first-homepage-copy.json#/video_proof/context_line": "לפני שאתה מחליט עם מי לדבר, אפשר לשמוע לקוחות של WAO בקולם. הסרטון כאן כדי שתוכל להתרשם בעצמך, בלי סיפור הצלחה שהמצאנו בשבילך.",
+    "src/content/astra-authority-first-homepage-copy.json#/paths/heading": "מאיפה תגיע העבודה הבאה?",
+    "src/content/astra-authority-first-homepage-copy.json#/paths/intro": "אם המלצות מביאות חלק מהעבודה, מצוין — בוא נבנה להן עוד דרך להכיר אותך. אפשר להתחיל מפרסום למי שכבר מחפש שירות, או מאתר שמסביר למה לפנות אליך. לא צריך לבחור הכול בבת אחת; מתחילים במה שמתאים לעסק שלך עכשיו.",
+    "src/content/astra-authority-first-homepage-copy.json#/paths/google_ads/heading": "פרסום בגוגל — לפגוש לקוח כשהוא מחפש בעל מקצוע",
+    "src/content/astra-authority-first-homepage-copy.json#/paths/google_ads/description": "נניח שמישהו מחפש חשמלאי באזור שלך, והטלפון שלך פנוי לעבודה הבאה. מודעת חיפוש יכולה להציג את השירות שלך מול חיפוש רלוונטי, באזור שבחרת. דף נחיתה מסביר מה אתה עושה ומקל על מי שמתאים לו ליצור קשר. WAO מטפלת בתכנון ובהקמה לפי מה שתסכמו, ואתה נשאר בעניינים לפני כל הפעלה.",
+    "src/content/astra-authority-first-homepage-copy.json#/paths/google_ads/demo_status": "המטרה היא פניות שמתאימות לעבודה שלך, בלי שתצטרך ללמוד לנהל קמפיין בערב. פנייה מהעמוד הזה היא בקשה לשיחה; היא לא מפעילה פרסום בגוגל.",
+    "src/content/astra-authority-first-homepage-copy.json#/paths/google_ads/primary_cta/label": "בוא נדבר על פניות מגוגל",
+    "src/content/astra-authority-first-homepage-copy.json#/paths/google_ads/primary_cta/href": "/contact#contact-form",
+    "src/content/astra-authority-first-homepage-copy.json#/paths/google_ads/supporting_link/label": "איך עובד פרסום בגוגל?",
+    "src/content/astra-authority-first-homepage-copy.json#/paths/business_website/heading": "אתר לעסק — לתת להמלצה מקום שאפשר לשלוח אליו",
+    "src/content/astra-authority-first-homepage-copy.json#/paths/business_website/description": "גם מי שקיבל את המספר שלך מחבר רוצה לבדוק מי מגיע אליו הביתה. אתר ברור מציג את השירותים, אזור העבודה והדרך ליצור איתך קשר. כך מי ששמע עליך יכול להבין אם אתה מתאים לו, גם כשאתה באמצע קריאה. אפשר לחשוב יחד גם על הפרטים המקומיים שכדאי להציג ליד העסק בגוגל. ניהול שוטף של הפרופיל העסקי בגוגל הוא שירות נפרד, ולא חלק אוטומטי מהאתר.",
+    "src/content/astra-authority-first-homepage-copy.json#/paths/business_website/primary_cta/label": "בוא נדבר על האתר שלי",
+    "src/content/astra-authority-first-homepage-copy.json#/paths/business_website/primary_cta/href": "/contact#contact-form",
+    "src/content/astra-authority-first-homepage-copy.json#/paths/business_website/supporting_link/label": "איך מתחילים עם האתר?",
+    "src/content/astra-authority-first-homepage-copy.json#/paths/choosing_help/line": "ספר לנו איזה שירות אתה נותן, איפה אתה עובד ואיפה חסרות לך פניות. נוכל לבחון איתך מה כדאי לסדר קודם, בלי להעמיס עליך עוד משימות.",
+    "src/content/astra-authority-first-homepage-copy.json#/paths/choosing_help/link/label": "בוא נדבר על העסק שלי",
+    "src/content/astra-authority-first-homepage-copy.json#/founder_authority/accountability_line": "איתן יריב, מייסד WAO, עומד מאחורי הכיוון המקצועי של העבודה כאן. זה לא מצריך ממך להפוך לאיש שיווק אחרי יום עבודה ארוך. כדאי שנכיר את השירות, האזור והלקוחות שאתה רוצה לקבל מהם פניות. משם אפשר לדבר על דרך פעולה שמתאימה לעסק שלך, ולא על חבילה גנרית.",
+    "src/content/astra-authority-first-homepage-copy.json#/partner_proof/status_line": "WAO רשומה בספריית השותפים של גוגל כ-Google Partner, עם הסמכות Search ו-Display.",
+    "src/content/astra-homepage-copy.json#/faq/heading": "שאלות שכדאי לסגור לפני שמתחילים",
+    "src/content/astra-homepage-copy.json#/faq/items/0/q": "כבר יש לי אתר. מה עוד צריך?",
+    "src/content/astra-homepage-copy.json#/faq/items/0/a": "אם האתר שלך מציג נכון את השירות ומאפשר פנייה נוחה, אפשר לבחון פרסום אליו. אם יש פער בין החיפוש של הלקוח למה שהוא רואה באתר, נשקול דף ממוקד. ההחלטה תלויה בעסק שלך ובמה שכבר עובד, לא בחובה לבנות הכול מחדש.",
+    "src/content/astra-homepage-copy.json#/faq/items/1/q": "אני עובד רק באזור מסוים. זה מתאים לי?",
+    "src/content/astra-homepage-copy.json#/faq/items/1/a": "כן, חשוב להתחיל מהיישובים שבהם באמת נוח לך לקחת עבודה ולתת שירות. בפרסום בגוגל מתכננים את אזור הפעילות והמסר סביב השירותים שאתה רוצה לקבל. באתר מציגים את אזור השירות, כדי שלקוח יבין אם אתה מגיע אליו.",
+    "src/content/astra-homepage-copy.json#/faq/items/2/q": "מה אתה צריך ממני כדי להתחיל לדבר?",
+    "src/content/astra-homepage-copy.json#/faq/items/2/a": "ספר לנו מה אתה עושה, איפה אתה עובד ואילו עבודות היית רוצה לקבל. כדאי לספר גם מה מגיע מהמלצות ומה ניסית עד היום בגוגל. זו נקודת פתיחה לשיחה, לא התחייבות להשקיע בתקציב או להתחיל קמפיין.",
+    "src/content/astra-homepage-copy.json#/faq/items/3/q": "הכסף של הפרסום עובר דרך WAO?",
+    "src/content/astra-homepage-copy.json#/faq/items/3/a": "אם תבחר לפרסם, התקציב למדיה בגוגל נפרד מהתשלום על העבודה של WAO. פרטי החשבון, ההרשאות והתנאים צריכים להיות ברורים ומוסכמים לפני פעילות חיה. שיחה או פנייה מהעמוד הזה לא מפעילות פרסום ולא מאשרות חיוב.",
+    "src/content/astra-homepage-copy.json#/faq/items/4/q": "מתי יגיעו פניות?",
+    "src/content/astra-homepage-copy.json#/faq/items/4/a": "זה משתנה לפי השירות, אזור העבודה, התחרות, התקציב ומה שהלקוח רואה בדרך. פרסום יכול להביא תנועה רק אחרי שמחליטים יחד על התנאים ומפעילים אותו. אתר מסודר עוזר ללקוח להבין אותך, אבל לא מבטיח מספר פניות או מועד.",
+    "src/content/astra-authority-first-homepage-copy.json#/final_cta/heading": "בוא נדאג שלעבודה הבאה יהיה איך להגיע אליך",
+    "src/content/astra-authority-first-homepage-copy.json#/final_cta/body": "ספר לנו איזה בעל מקצוע אתה, איפה אתה עובד ואיזו עבודה תרצה לקבל יותר. נתחיל משיחה על העסק ועל הדרך המתאימה לו, בלי למכור לך עוד משימה.",
+    "src/content/astra-authority-first-homepage-copy.json#/final_cta/primary_cta/label": "בוא נדבר על עוד עבודה",
+    "src/content/astra-authority-first-homepage-copy.json#/final_cta/primary_cta/href": "/contact#contact-form",
+    "src/components/Footer.tsx#brand_blurb_expr:108": "בעל מקצוע טוב צריך מקום ברור ברשת, לא עוד עבודה אחרי שעות העבודה. WAO עוזרת לך לחשוב על פרסום בגוגל, אתר לעסק והדרך לפניות שמתאימות לך."
+  },
+  "v1_carry_forward_note_en": "All customer-visible Hebrew in the v2 files is a byte-identical carry-forward from the v1 draft except the three Contract011 gap repairs (demo_status parity rendering, people.intro experience line placement, restored FAQ items[6]). The v1 draft and v1 JSON were not modified; they remain contract-protected at their pinned SHA-256 values.",
+  "proposed_additions": {
+    "people.section_heading": {
+      "value": "יש עם מי לדבר על השיווק שלך",
+      "note_en": "Proposed #people section heading carried byte-identical from the v1 Markdown; mapped here so the v2 Markdown's every customer-visible sentence has a keyed JSON value (Gap 1 parity rule). The current renderer draws founder_authority.name as the h2 (AstraHome.tsx:126); adopting this heading is an implementation decision for a later authorized application, not part of this draft-only correction.",
+      "current_render_location": "src/components/home/AstraHome.tsx:126 renders founder_authority.name as the #people h2",
+      "proposed_render_location": "#people section heading, above founder name/role/accountability block"
+    },
+    "paths.choosing_help.heading": "לא בטוח מה קודם?",
+    "faq.items[5]": { "q": "יש התחייבות או מחיר קבוע?", "a": "כדאי לעבור על היקף העבודה, מחיר השירות ותקציב הפרסום בנפרד לפני החלטה. התנאים תלויים במסלול שתבחר ובהסכמה מפורשת על מה שעושים בפועל. אפשר להתחיל מפנייה על העסק, בלי לייחס לטופס עסקה או תוצאה מובטחת." },
+    "faq.items[6]": {
+      "q": "אין לי רקע בשיווק. זה בעיה?",
+      "a": "להפך — בשביל זה אנחנו כאן. אתה איש המקצוע, ואנחנו מטפלים בצד השיווקי. אתה לא צריך ללמוד מקצוע נוסף. בכל מסלול, מה שעושים מסכמים יחד, ואתה נשאר בעניינים לפני כל הפעלה.",
+      "restores_source_topic": "src/content/astra-homepage-copy.json#/faq/items[2]",
+      "question_byte_identical_to_source": true,
+      "answer_core_byte_identical_to_source": "להפך — בשביל זה אנחנו כאן. אתה איש המקצוע, ואנחנו מטפלים בצד השיווקי. אתה לא צריך ללמוד מקצוע נוסף.",
+      "added_boundary_sentence_only": "בכל מסלול, מה שעושים מסכמים יחד, ואתה נשאר בעניינים לפני כל הפעלה.",
+      "no_guarantee_implied": "A contact request does not guarantee service, immediate human follow-up or any result."
+    },
+    "founder_authority.experience_line": {
+      "value": "מאחורי המערכת יש אנשים אמיתיים, עם ניסיון בשיווק דיגיטלי מאז 2006.",
+      "byte_identical_to_source": "src/content/astra-homepage-copy.json#/people/intro",
+      "current_render_location": "src/components/Footer.tsx:108 — footer brand <p>, concatenated as {copy.low_price.lines[0]} {copy.low_price.lines[1]} {copy.people.intro}",
+      "proposed_render_location": "Founder block (#people): a new <p> after founder_authority.accountability_line, near src/components/home/AstraHome.tsx:128; renders exactly once page-wide because the Footer.tsx:108 concatenation is replaced by the standalone brand blurb",
+      "verification_flag": "source-observed; fresh founder confirmation of the since-2006 experience claim required before publication; no years, credentials, outcomes, customers or metrics invented or amplified"
+    },
+    "footer.local_details_label": "איך מתחילים עם האתר?",
+    "footer.conversion_label": "בוא נדבר על עוד עבודה"
+  },
+  "v2_markdown_json_parity_check_en": {
+    "method": "Independent same-run comparison of the v2 Markdown's customer-visible Hebrew lines against this keyed JSON, section by section in reading order, excluding lines tagged [EN|NOT RENDERED] and English apparatus.",
+    "result": "Every customer-visible sentence in the v2 Markdown matches its keyed JSON value byte-for-byte, including the complete paths.google_ads.description (body paragraph) and the complete paths.google_ads.demo_status (card note with the activation-boundary sentence), each rendered exactly once; the people.section_heading and people.intro experience line; all seven FAQ items; and the footer brand blurb. No visible sentence exists in the Markdown without a JSON key, and no rendered key is missing from the Markdown. Two retype typos introduced during this run's authoring (paths/intro and faq items/3/a) and one unmapped carried heading (people.section_heading) were caught by this comparison and corrected in the v2 JSON before completion."
+  },
+  "proposed_removals": ["No rendered trust, helpful or proof element is proposed for removal in v2. The source-backed people.intro experience statement — dropped from the footer seam by v1's blurb replacement — is now preserved byte-exact at the proposed founder-block location and mapped above. The seven-item FAQ set covers every material v1 topic plus the restored no-marketing-experience topic. The footer brand concatenation would be replaced by a standalone blurb, retaining its human/accountability concept in the people section."],
+  "retained_unchanged": {
+    "navigation.links": ["/google-ads", "/site-bot", "/about"],
+    "navigation.help_link": "/contact#contact-form",
+    "video_proof.iframe_title": "סרטון המלצות לקוחות WAO ביוטיוב",
+    "video_proof.embed_src": "https://www.youtube-nocookie.com/embed/zrgqx7OOtcc",
+    "video_proof.direct_link": { "label": "לצפות בסרטון ביוטיוב", "href": "https://www.youtube.com/watch?v=zrgqx7OOtcc" },
+    "paths.google_ads.supporting_link.href": "/google-ads",
+    "paths.business_website.supporting_link.href": "/site-bot",
+    "paths.choosing_help.link.href": "/contact#contact-form",
+    "founder_authority": { "name": "איתן יריב", "role": "מייסד WAO, יועץ שיווק ופרסום בגוגל", "photo": "/eitan-yariv.avif", "photo_alt": "איתן יריב, מייסד WAO", "about_link": { "label": "להכיר את איתן", "href": "/about" } },
+    "partner_proof": { "heading": "WAO היא Google Partner", "badge_src": "/google-partner-badge.svg", "badge_alt": "תג Google Partner של WAO", "directory_link": { "label": "לבדוק בספריית השותפים", "href": "https://partnersdirectory.withgoogle.com/partners/7030100386" } },
+    "footer": { "phone_reveal": "src/components/Footer.tsx:113-118", "location": "ראשון לציון, ישראל", "company_links": ["/about", "/blog", "/contact"], "service_links": ["/seo", "/google-ads", "/content", "/consulting", "/google-business"], "other_links": ["/maoved", "/build", "/social", "/training"], "guide_links": ["/seo/guide", "/training/affiliate-marketing", "/glossary", "/training"], "legal_links": ["/privacy", "/accessibility"] }
+  },
+  "trust_helpfulness_inventory": [
+    { "current_rendered": "Approved eyebrow/H1", "source": "AstraHome.tsx:52-56", "action": "byte-exact retained" },
+    { "current_rendered": "Customer video, iframe and direct fallback", "source": "AstraHome.tsx:68-75; AstraProofVideo.tsx:9-22", "action": "asset/title/fallback retained; heading and context rephrased; no invented testimonial" },
+    { "current_rendered": "Google Ads service mechanism and details", "source": "AstraHome.tsx:85-95", "action": "benefit-first rewrite; search ad, landing page, service area and explanatory link retained; obsolete every-inquiry attribution promise removed; v2 renders full description AND full demo_status (status/activation boundary) exactly once, matching this JSON" },
+    { "current_rendered": "Website/local service mechanism and details", "source": "AstraHome.tsx:97-105", "action": "benefit-first rewrite; website, local details and explanatory link retained; ongoing GBP management excluded" },
+    { "current_rendered": "Choosing help", "source": "AstraHome.tsx:107-110", "action": "rephrased with same contact destination" },
+    { "current_rendered": "Founder identity, role, image, accountability and about link", "source": "AstraHome.tsx:114-132", "action": "retained identity/role/photo/link; accountability rephrased" },
+    { "current_rendered": "People/experience statement (since 2006)", "source": "astra-homepage-copy.json#/people/intro, rendered at Footer.tsx:108", "action": "v2 preserves byte-exact at proposed founder-block seam; source-observed, founder confirmation flagged before publication; renders once page-wide" },
+    { "current_rendered": "Partner heading, badge, status sentence and directory", "source": "AstraHome.tsx:133-140", "action": "all proof roles retained in draft; current status/certifications and badge use require fresh external verification before publication" },
+    { "current_rendered": "Five explanatory FAQs incl. no-marketing-experience topic", "source": "AstraHome.tsx:145-156; base_copy#/faq/items", "action": "six v1 items byte-identical (existing-site, service-area, preparation, payment, timing, terms); v2 restores the no-marketing-experience topic as proposed items[6]; no material topic dropped" },
+    { "current_rendered": "Closing CTA", "source": "AstraHome.tsx:159-169", "action": "rephrased as contact/inquiry outcome; destination proposed, not verified" },
+    { "current_rendered": "Header desktop/mobile, help and service navigation", "source": "Header.tsx:26-79", "action": "all navigation/help retained; CTA label/destination changed consistently in both render paths" },
+    { "current_rendered": "Footer company, service, guide, phone, location, privacy/accessibility", "source": "Footer.tsx:23-62,98-190", "action": "all categories/links/contact controls retained; only brand blurb and dynamic conversion labels proposed for rewording" }
+  ],
+  "source_claim_ledger_en": {
+    "note": "Distinguishes source observation (what the current selected source files render, observed read-only this run or pinned by contract) from current verification (what has NOT been independently confirmed and is publication-gated).",
+    "source_observed": [
+      "Eyebrow, both H1 lines and the SEO title are the pinned current-source values, retained byte-exact.",
+      "people.intro since-2006 experience statement is rendered today at Footer.tsx:108 in the footer brand concatenation; v2 preserves it byte-exact at a proposed founder-block seam.",
+      "Video embed URL, iframe title and direct YouTube fallback are existing source assets, carried unchanged; video content was not viewed or paraphrased.",
+      "Founder name, role, photo path and about link are existing source values.",
+      "Partner heading, badge path, status sentence and directory URL are existing source references.",
+      "The original FAQ's no-marketing-experience item (items[2]) exists in the source array; v2 restores the topic.",
+      "Contact-form destination /contact#contact-form is the existing source target for help/CTA links.",
+      "AstraHome.tsx:88-89 renders google_ads description and demo_status as two separate visible elements; the v2 Markdown mirrors that seam structure exactly once each."
+    ],
+    "current_verification_pending": [
+      "Fresh founder confirmation of the since-2006 experience claim before publication.",
+      "Current Google Partner directory status, certifications and badge-use rights (external directory check).",
+      "/google-ads destination terms alignment (legacy pricing conflict) and /site-bot destination alignment (superseded payment/time claims; broken static assets and absent audit entry per the Site-Bot runtime report — not represented as functioning anywhere in this draft).",
+      "Contact form submission delivery, inbox receipt and human follow-up (October 12 runtime report observed a form with broken CSS/JS and no verified successful submit).",
+      "Footer location, phone-reveal accuracy and link destinations as ordinary publication checks.",
+      "No pricing, response-time, ranking, lead-volume, attribution, live-service, current Partner-status or performance claim is asserted anywhere in v2."
+    ]
+  },
+  "review_gates": {
+    "independent_hebrew_claim_qa_v2": "pending — waostrategy routes exactly one fresh waohebrewqa review of the exact v2 bytes with t_1b1184ab as sole parent; English report at docs/research/homepage-benefit-first-language-review-2026-10-12-v2.md; the v1 PASS (t_b11c2593) is historical for v1 only and does not count as v2 acceptance; this task creates no QA successor card",
+    "strategist_whole_page_marketing_judgment": "pending",
+    "founder_full_page_voice_review": "pending (includes confirmation of the source-observed since-2006 experience line)",
+    "partner_and_destinations_verification": "pending",
+    "rendered_preview_and_runtime": "pending",
+    "release_health": false
+  },
+  "implementation_note": "This is not an application patch. JSON paths identify existing current-source seams; keys under proposed_additions require explicit structure changes (faq items[6] array addition; founder experience line as a new <p> in the #people block). Preserve video and Partner references by exact source asset/link. Only the two new v2 files were written by this task; no source, renderer, SEO guide, v1 draft or v1 QA report was modified; no runtime, shell, provider, publication, commit, push, deploy or notification/subscription action occurred. Any bot-turn change in a future separate scope must cover both simulation (src/app/api/bot/route.ts) and live prompt (src/lib/bot/prompts.ts) paths; no bot turn is changed here."
+}

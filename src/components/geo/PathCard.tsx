@@ -7,6 +7,8 @@ type PublishMode = 'auto' | 'manual';
 interface Props {
   actionId:    string;
   wpConnected: boolean;
+  /** Server-verified admin view; staff connection routes are never client destinations. */
+  adminView:   boolean;
   mode:        PublishMode;
   /** True once auto-publish has actually executed — both radios lock. */
   locked:      boolean;
@@ -14,7 +16,7 @@ interface Props {
   autoDisabled?: boolean;
 }
 
-export default function PathCard({ actionId, wpConnected, mode, locked, autoDisabled }: Props) {
+export default function PathCard({ actionId, wpConnected, adminView, mode, locked, autoDisabled }: Props) {
   const [current, setCurrent] = useState<PublishMode>(mode);
   const [switchedFromAuto, setSwitchedFromAuto] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -104,7 +106,7 @@ export default function PathCard({ actionId, wpConnected, mode, locked, autoDisa
 
       {error && <p className="mt-3 text-xs text-red-400">{error}</p>}
 
-      {!wpConnected && (
+      {adminView && !wpConnected && (
         <a
           href="/geo/dashboard"
           className="mt-3 inline-block text-xs text-[var(--accent)] underline underline-offset-2"

@@ -16,6 +16,8 @@ test('resolveGeoActionViewAccess applies the closed authorization matrix', () =>
     { name: 'matching owner client', input: { actionExists: true, adminAuthenticated: false, sessionClientId: ownerId, actionClientId: ownerId, actionPath }, expected: { kind: 'render' } },
     { name: 'cross-client client', input: { actionExists: true, adminAuthenticated: false, sessionClientId: otherId, actionClientId: ownerId, actionPath }, expected: { kind: 'not-found' } },
     { name: 'missing client session', input: { actionExists: true, adminAuthenticated: false, sessionClientId: null, actionClientId: ownerId, actionPath }, expected: { kind: 'login', nextPath: actionPath } },
+    { name: 'unknown action for admin', input: { actionExists: false, adminAuthenticated: true, sessionClientId: null, actionClientId: null, actionPath }, expected: { kind: 'not-found' } },
+    { name: 'unknown action for anonymous', input: { actionExists: false, adminAuthenticated: false, sessionClientId: null, actionClientId: null, actionPath }, expected: { kind: 'not-found' } },
     { name: 'missing action', input: { actionExists: false, adminAuthenticated: false, sessionClientId: ownerId, actionClientId: null, actionPath }, expected: { kind: 'not-found' } },
   ] as const;
 

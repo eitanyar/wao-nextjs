@@ -10,8 +10,12 @@ import ts from 'typescript';
 import * as places from '../../../../../scripts/lib/places-client.mjs';
 
 const root = process.cwd();
-function load(relative, dependencies = {}) {
-  const source = fs.readFileSync(path.join(root, relative), 'utf8');
+test('Next route does not export its internal test seam', () => {
+  assert.doesNotMatch(fs.readFileSync(path.join(root, 'src/app/api/gbp-magnet/unlock/route.ts'), 'utf8'), /export\s+async\s+function\s+handleUnlock\b/);
+});
+function load(relative, dependencies = {}, exposeUnlock = false) {
+  let source = fs.readFileSync(path.join(root, relative), 'utf8');
+  if (exposeUnlock) source = source.replace('async function handleUnlock(', 'export async function handleUnlock(');
   const output = ts.transpileModule(source, { compilerOptions: {
     module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022, esModuleInterop: true,
   } }).outputText;
@@ -46,7 +50,7 @@ const route = load('src/app/api/gbp-magnet/unlock/route.ts', {
   '@/lib/crm/lead-capture': capture,
   '@/lib/crm/leadsStore': store,
   '@/lib/mail': { sendLeadNotificationEmail: async lead => { sent.push(lead); } },
-});
+}, true);
 const original = Object.fromEntries(['GOOGLE_MAPS_API_KEY', 'GBP_MAGNET_TOKEN_SECRET',
   'GBP_MAGNET_DAILY_PLACES_CEILING', 'WAO_LEADS_FILE_PATH'].map(key => [key, process.env[key]]));
 const originalConnect = net.Socket.prototype.connect;

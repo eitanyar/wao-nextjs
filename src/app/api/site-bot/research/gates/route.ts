@@ -1,11 +1,15 @@
+import fs from 'fs';
+import path from 'path';
 import { NextResponse } from 'next/server';
+import { cookies } from 'next/headers';
+import { ADMIN_COOKIE_NAME, verifyAdminToken } from '@/lib/admin-auth';
 import type { CollectedData } from '@/lib/bot/prompts';
 import {
   applyResearchGateAnswer,
   deriveOpenResearchGates,
   persistResearchGateApproval,
 } from '@/lib/site-bot/research/gates';
-import { readResearchDossier } from '@/lib/site-bot/research/researchStore';
+import { getResearchPath, readResearchDossier } from '@/lib/site-bot/research/researchStore';
 
 export const dynamic = 'force-dynamic';
 
@@ -17,24 +21,57 @@ function isCollectedData(value: unknown): value is CollectedData {
   return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
 }
 
+function getReply(body: object, status: number) {
+  return NextResponse.json(body, { status, headers: { 'Cache-Control': 'private, no-store' } });
+}
+
+function fileState(file: string): 'ready' | 'missing' | 'invalid' {
+  const relative = path.relative(process.cwd(), file);
+  if (!relative || relative.startsWith('..') || path.isAbsolute(relative)) return 'invalid';
+  let current = process.cwd();
+  const parts = relative.split(path.sep);
+  for (const [index, part] of parts.entries()) {
+    current = path.join(/* turbopackIgnore: true */ current, part);
+    try {
+      const stat = fs.lstatSync(current);
+      if (stat.isSymbolicLink() || !(index === parts.length - 1 ? stat.isFile() : stat.isDirectory())) return 'invalid';
+    } catch (error) {
+      return (error as NodeJS.ErrnoException).code === 'ENOENT' ? 'missing' : 'invalid';
+    }
+  }
+  return 'ready';
+}
+
 export async function GET(req: Request) {
+  const authCookies = await cookies();
+  const adminAuthorized = await verifyAdminToken(authCookies.get(ADMIN_COOKIE_NAME)?.value ?? '');
+  if (!adminAuthorized) return getReply({ error: 'unauthorized' }, 401);
+
   const researchId = new URL(req.url).searchParams.get('researchId');
-  if (!opaqueId(researchId)) return NextResponse.json({ error: 'invalid_input' }, { status: 400 });
-  const dossier = await readResearchDossier(researchId);
-  if (!dossier) return NextResponse.json({ error: 'not_found' }, { status: 404 });
-  return NextResponse.json({ researchId, approvals: dossier.researchGateApprovals ?? {} });
+  if (!opaqueId(researchId)) return getReply({ error: 'invalid_input' }, 400);
+  const dossierPath = getResearchPath(researchId);
+  const dossierState = dossierPath ? fileState(dossierPath) : 'invalid';
+  if (dossierState !== 'ready') return getReply({ error: 'not_found' }, 404);
+  const dossier = await readResearchDossier(researchId, undefined, { bounded: true });
+  if (!dossier) return getReply({ error: 'not_found' }, 404);
+  return getReply({ researchId, approvals: dossier.researchGateApprovals ?? {} }, 200);
 }
 
 export async function POST(req: Request) {
+  const authCookies = await cookies();
+  const adminAuthorized = await verifyAdminToken(authCookies.get(ADMIN_COOKIE_NAME)?.value ?? '');
+  if (!adminAuthorized) return getReply({ error: 'unauthorized' }, 401);
+
   const body = await req.json().catch(() => null);
   if (!body || !opaqueId(body.researchId) || !isCollectedData(body.collectedData) || typeof body.gateId !== 'string' || typeof body.evidenceDigest !== 'string') {
-    return NextResponse.json({ error: 'invalid_input' }, { status: 400 });
+    return getReply({ error: 'invalid_input' }, 400);
   }
   const gates = deriveOpenResearchGates(body.researchId, body.collectedData, true);
   const gate = gates.find(item => item.id === body.gateId);
-  if (!gate) return NextResponse.json({ error: 'not_found' }, { status: 404 });
+  if (!gate) return getReply({ error: 'not_found' }, 404);
   const answered = applyResearchGateAnswer(body.collectedData, gate, body.answer);
   const result = await persistResearchGateApproval(body.researchId, gate, answered, body.evidenceDigest);
-  if (result.status === 'stale') return NextResponse.json({ error: 'stale_evidence' }, { status: 409 });
-  return NextResponse.json({ status: result.status, collectedData: result.collectedData, approvals: result.dossier.researchGateApprovals ?? {} });
+  if (result.status === 'not_found') return getReply({ error: 'not_found' }, 404);
+  if (result.status === 'stale') return getReply({ error: 'stale_evidence' }, 409);
+  return getReply({ status: result.status, collectedData: result.collectedData, approvals: result.dossier.researchGateApprovals ?? {} }, 200);
 }

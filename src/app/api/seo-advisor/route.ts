@@ -13,7 +13,7 @@ const disabledExecutor: PublicSeoExecutor = async () => {
   throw new Error('public_seo_executor_not_wired');
 };
 
-export function readConfig() {
+function readConfig() {
   if (process.env.WAO_PUBLIC_SEO_ARMED !== '1') return null;
   const secret = process.env.WAO_PUBLIC_SEO_SECRET;
   const ceiling = process.env.WAO_PUBLIC_SEO_DAILY_CEILING;

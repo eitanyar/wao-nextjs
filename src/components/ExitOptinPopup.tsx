@@ -79,7 +79,7 @@ export default function ExitOptinPopup({ pathname }: { pathname: string }) {
   useEffect(() => {
     const click = (event: MouseEvent) => {
       const anchor = (event.target as Element).closest?.('a[href]') as HTMLAnchorElement | null;
-      if (!anchor || anchor.origin !== location.origin || !['/google-ads/onboarding', '/site-bot/start'].includes(anchor.pathname)) return;
+      if (!anchor || anchor.origin !== location.origin || !['/google-ads/onboarding', '/site-bot'].includes(anchor.pathname)) return;
       sessionStorage.setItem(CTA_KEY, 'true');
       setOpen(false);
     };
@@ -175,12 +175,14 @@ export default function ExitOptinPopup({ pathname }: { pathname: string }) {
       <div className="absolute top-0 bg-black/80" style={{ left: narrow ? 104 : 0, right: 0, bottom: narrow ? 0 : 104, pointerEvents: 'auto' }} onClick={() => close()} />
       <div className="absolute bottom-0 bg-black/80" style={{ left: narrow ? 0 : 104, right: narrow ? 'auto' : 0, top: narrow ? 160 : 'auto', width: narrow ? 104 : 'auto', height: narrow ? 'auto' : 104, pointerEvents: 'auto' }} onClick={() => close()} />
       <div ref={dialog} dir="rtl" className="relative w-full max-w-[520px] overflow-y-auto rounded-[var(--radius-lg)] border border-[var(--border)] bg-[var(--surface)] p-5 text-[var(--text)] shadow-[var(--shadow-card)] sm:p-7" style={{ maxHeight: narrow ? 'calc(100dvh - 184px)' : 'calc(100dvh - 144px)', pointerEvents: 'auto', marginBottom: narrow ? 16 : 128 }}>
-        <button ref={closeButton} type="button" onClick={() => close()} className="absolute left-4 top-4 rounded-full border border-[var(--border)] px-2" aria-label="Close">×</button>
-        {preview && <p dir="ltr" className="text-xs">Local mock preview — sending disabled</p>}
+        <div className="flex items-start justify-between gap-3">
+          {preview ? <p dir="ltr" className="min-w-0 flex-1 text-xs">Local mock preview — sending disabled</p> : <span className="flex-1" aria-hidden="true" />}
+          <button ref={closeButton} type="button" onClick={() => close()} className="rounded-full border border-[var(--border)] px-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)]" aria-label="Close">×</button>
+        </div>
         {success ? <><h2 id="exit-optin-title" className="text-xl font-bold">{copy['optin.popup.successTitle']}</h2><p>{copy['optin.popup.successBody']}</p></> : <>
-          <h2 id="exit-optin-title" className="mt-7 text-xl font-bold">{copy['optin.popup.title']}</h2>
-          <p className="my-3 text-sm text-[var(--muted)]">{copy['optin.popup.body']}</p>
-          <form onSubmit={submit} className="space-y-3">
+          <h2 id="exit-optin-title" className="mt-2 text-xl font-bold">{copy['optin.popup.title']}</h2>
+          <p className="my-2 text-sm text-[var(--muted)]">{copy['optin.popup.body']}</p>
+          <form onSubmit={submit} className="space-y-2">
             <label className="block text-sm" htmlFor="exit-optin-email">{copy['optin.popup.emailLabel']}</label>
             <input id="exit-optin-email" type="email" required maxLength={254} value={email} onChange={e => setEmail(e.target.value)} className="w-full min-w-0 rounded border border-[var(--border)] bg-[var(--elevated)] p-2" dir="ltr" />
             <div className="grid grid-cols-2 gap-2">{(Object.keys(niches) as Niche[]).map(item => <button key={item} type="button" aria-pressed={niche === item} onClick={() => setNiche(item)} className={`rounded border p-2 text-right text-xs ${niche === item ? 'border-[var(--accent)]' : 'border-[var(--border)]'}`}>{niches[item]}</button>)}</div>
@@ -189,7 +191,7 @@ export default function ExitOptinPopup({ pathname }: { pathname: string }) {
             <button className="btn-primary w-full rounded p-2 disabled:opacity-50" type="submit" disabled={!consent || !niche || !email || preview || sending}>{copy['optin.popup.submit']}</button>
             {error && <p role="alert" className="text-red-300">{error}</p>}
           </form>
-          <p className="mt-4 text-xs">{secondary.slice(0, 5).join(' ')} <Link href="/google-ads/onboarding" className="underline">{secondary.slice(5, 8).join(' ')}</Link> {secondary[8]} <Link href="/site-bot/start" className="underline">{secondary.slice(9).join(' ').replace(/\.$/, '')}</Link>.</p>
+          <p className="mt-4 text-xs">{secondary.slice(0, 5).join(' ')} <Link href="/google-ads/onboarding" className="underline">{secondary.slice(5, 8).join(' ')}</Link> {secondary[8]} <Link href="/site-bot" className="underline">{secondary.slice(9).join(' ').replace(/\.$/, '')}</Link>.</p>
         </>}
       </div>
     </div>

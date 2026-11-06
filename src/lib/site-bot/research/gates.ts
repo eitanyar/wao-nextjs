@@ -1,5 +1,7 @@
 import { createHash } from 'crypto';
-import { readResearchDossier, writeResearchDossierAtomic } from './researchStore';
+import fs from 'fs';
+import path from 'path';
+import { getResearchPath, readResearchDossier, writeResearchDossierAtomic } from './researchStore';
 import type { CollectedData } from '../../bot/prompts';
 import type { SiteResearchDossier } from './types';
 
@@ -20,6 +22,8 @@ export interface ResearchGatePersistenceOptions {
   baseDir?: string;
   now?: () => Date;
 }
+
+type ResearchGatePersistenceResult = (ResearchGateApprovalResult & { dossier: SiteResearchDossier }) | { status: 'not_found' };
 
 function digest(value: unknown): string {
   return createHash('sha256').update(JSON.stringify(value)).digest('hex').slice(0, 24);
@@ -90,20 +94,31 @@ export function approveResearchGate(collectedData: CollectedData, gateItem: Rese
   };
 }
 
-function initialDossier(researchId: string, now: string): SiteResearchDossier {
-  return {
-    researchId, status: 'needs_input', createdAt: now, updatedAt: now,
-    businessTruth: { businessName: '', assertions: [], status: 'unknown' },
-    evidence: [], evidenceEdges: [], keywordEvidence: [], serpObservations: [], pageOpportunities: [], internalLinkEdges: [], providerUsage: [], humanGates: [], researchGateApprovals: {},
-  };
+function regularDossierPath(file: string): boolean {
+  const root = path.parse(file).root;
+  const parts = path.relative(root, file).split(path.sep);
+  let current = root;
+  for (const [index, part] of parts.entries()) {
+    current = path.join(current, part);
+    try {
+      const stat = fs.lstatSync(current);
+      if (stat.isSymbolicLink() || !(index === parts.length - 1 ? stat.isFile() : stat.isDirectory())) return false;
+    } catch {
+      return false;
+    }
+  }
+  return true;
 }
 
-export async function persistResearchGateApproval(researchId: string, gateItem: ResearchGate, collectedData: CollectedData, evidenceDigest: string, options: ResearchGatePersistenceOptions = {}): Promise<ResearchGateApprovalResult & { dossier: SiteResearchDossier }> {
+export async function persistResearchGateApproval(researchId: string, gateItem: ResearchGate, collectedData: CollectedData, evidenceDigest: string, options: ResearchGatePersistenceOptions = {}): Promise<ResearchGatePersistenceResult> {
+  const file = getResearchPath(researchId, options.baseDir);
+  if (!file || !regularDossierPath(file)) return { status: 'not_found' };
+  const dossier = await readResearchDossier(researchId, options.baseDir, { bounded: true });
+  if (!dossier) return { status: 'not_found' };
   const now = options.now ?? (() => new Date());
-  const dossier = await readResearchDossier(researchId, options.baseDir) ?? initialDossier(researchId, now().toISOString());
-  const approval = approveResearchGate({ ...collectedData, researchGateApprovals: { ...dossier.researchGateApprovals, ...collectedData.researchGateApprovals } }, gateItem, evidenceDigest, now().toISOString());
+  const approval = approveResearchGate({ ...collectedData, researchGateApprovals: dossier.researchGateApprovals }, gateItem, evidenceDigest, now().toISOString());
   if (approval.status === 'stale') return { ...approval, dossier };
-  dossier.researchGateApprovals = { ...dossier.researchGateApprovals, ...approval.collectedData.researchGateApprovals };
+  dossier.researchGateApprovals = approval.collectedData.researchGateApprovals;
   dossier.updatedAt = now().toISOString();
   if (!await writeResearchDossierAtomic(researchId, dossier, options.baseDir)) throw new Error('Unable to persist research gate approval');
   return { ...approval, dossier };

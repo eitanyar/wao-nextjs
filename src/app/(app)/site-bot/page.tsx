@@ -8,16 +8,16 @@ export const metadata: Metadata = {
   // title.absolute bypasses the root "%s‏ | WAO" template — this string already
   // ends in the RLM-anchored "‏ | WAO" suffix, so the template must not append a second one.
   title: {
-    absolute: "בניית אתר לעסק קטן — אתר חי תוך 24 שעות, עדכון בהודעה‏ | WAO",
+    absolute: "בניית אתר לעסק קטן — בלי עורך, עדכונים בהודעה‏ | WAO",
   },
   description:
-    "בניית אתר לעסק קטן: ניסיון ב-₪9.90 לעמוד בית חי. בחבילה המלאה ב-₪1,490 חד-פעמי, האתר שלך עולה לאוויר תוך 24 שעות ומתעדכן בהודעה.",
+    "בניית אתר לעסק קטן מתחילה בשיחה עם איתן על האתר שמתאים לעסק שלך. רוצה לראות קודם איך העסק שלך נראה בגוגל? הבדיקה חינמית.",
   alternates: { canonical: CANONICAL },
   robots: { index: true, follow: true },
   openGraph: {
-    title: "בניית אתר לעסק קטן — אתר חי תוך 24 שעות, עדכון בהודעה",
+    title: "בניית אתר לעסק קטן — בלי עורך, עדכונים בהודעה",
     description:
-      "בניית אתר לעסק קטן: ניסיון ב-₪9.90 לעמוד בית חי. בחבילה המלאה ב-₪1,490 חד-פעמי, האתר שלך עולה לאוויר תוך 24 שעות ומתעדכן בהודעה.",
+      "בניית אתר לעסק קטן מתחילה בשיחה עם איתן על האתר שמתאים לעסק שלך. רוצה לראות קודם איך העסק שלך נראה בגוגל? הבדיקה חינמית.",
     url: CANONICAL,
     type: "website",
   },
@@ -26,15 +26,15 @@ export const metadata: Metadata = {
 const FAQS = [
   {
     q: "כמה עולה בניית אתר לעסק קטן ב-Site Bot?",
-    a: "ניסיון עם עמוד בית חי בכתובת WAO עולה ₪9.90. החבילה המלאה עולה ₪1,490 חד-פעמי, בלי מנוי או חוזה.",
+    a: "המחיר נקבע בשיחה אישית עם איתן, לפי מה שהעסק שלך צריך. אפשר להתחיל קודם בבדיקה חינמית של העסק שלך בגוגל.",
   },
   {
     q: "מתי האתר לעסק שלך עולה לאוויר?",
-    a: "החבילה המלאה עולה לאוויר תוך 24 שעות. אתה מתחיל בשיחה, בלי להקים אתר בעצמך.",
+    a: "המועד נקבע בשיחה עם איתן, לפי היקף האתר. אתה לא צריך להקים כלום בעצמך.",
   },
   {
     q: "צריך לדעת לבנות אתר או לעבוד עם קוד?",
-    a: "לא. אתה מספר על העסק בצ׳אט; החבילה המלאה כוללת אתר בדומיין פרטי תוך 24 שעות.",
+    a: "לא. אתה מספר על העסק בצ׳אט; החבילה המלאה כוללת אתר בדומיין פרטי, בלי להקים אותו בעצמך.",
   },
   {
     q: "איך משנים מחיר או שירות אחרי שהאתר עלה?",
@@ -46,7 +46,7 @@ const FAQS = [
   },
   {
     q: "כבר למדת לבנות אתר בקורס של WAO. למה לשלם?",
-    a: "אתה יכול לבנות לבד, אבל הזמן שלך לא בחינם. ב-₪1,490 חד-פעמי אתה מקבל חמישה עמודים, דומיין פרטי ועריכה בצ׳אט לתמיד. החבילה כוללת גם חיבור GSC, פרופיל עסקי בגוגל וטופס לידים.",
+    a: "אתה יכול לבנות לבד, אבל הזמן שלך לא בחינם. החבילה כוללת חמישה עמודים, דומיין פרטי ועריכה בצ׳אט לתמיד, וגם חיבור GSC, פרופיל עסקי בגוגל וטופס לידים.",
   },
 ];
 
@@ -55,7 +55,7 @@ const schemas = [
     "@context": "https://schema.org",
     "@type": "Service",
     "@id": `${CANONICAL}#service`,
-    name: "Site Bot — בניית אתר לעסק קטן במחיר קבוע",
+    name: "Site Bot — בניית אתר לעסק קטן",
     serviceType: "בניית אתר לעסק קטן",
     provider: {
       "@type": "Organization",
@@ -63,20 +63,6 @@ const schemas = [
       url: "https://www.wao.co.il",
     },
     areaServed: "IL",
-    offers: [
-      {
-        "@type": "Offer",
-        name: "Site Bot — ניסיון לעמוד בית חי בכתובת WAO",
-        price: "9.90",
-        priceCurrency: "ILS",
-      },
-      {
-        "@type": "Offer",
-        name: "Site Bot — חבילה מלאה במחיר קבוע",
-        price: "1490",
-        priceCurrency: "ILS",
-      },
-    ],
   },
   {
     "@context": "https://schema.org",
@@ -96,7 +82,7 @@ const schemas = [
 const STEPS = [
   "מתחיל בשיחה על העסק שלך, בלי לפתוח עורך אתרים.",
   "מספר מה אתה עושה ולמי אתה רוצה שהאתר יפנה.",
-  "החבילה המלאה עולה לאוויר תוך 24 שעות, בדומיין שרשום על שמך.",
+  "החבילה המלאה כוללת אתר בדומיין שרשום על שמך.",
 ];
 
 const COMPARE = [
@@ -149,25 +135,30 @@ export default function SiteBotPage() {
               marginBottom: "24px",
             }}
           >
-            בחבילה המלאה ב-₪1,490, האתר שלך עולה לאוויר תוך 24 שעות. אחר כך תעדכן אותו בהודעה.
+            בניית אתר לעסק קטן מתחילה בשיחה עם איתן, ואחר כך אתה מעדכן את האתר בהודעה.
           </h1>
 
           <p style={{ ...bodyStyle, fontSize: "clamp(1rem,1.8vw,1.2rem)", marginBottom: "24px", maxWidth: "640px" }}>
             {renderMixed(
-              "אתה באמצע יום עבודה וצריך לעדכן מחיר באתר? שלח הודעת WhatsApp והאתר מתעדכן. מתחיל בניסיון של עמוד בית חי ב-₪9.90; החבילה המלאה כוללת חמישה עמודים בדומיין שלך."
+              "אתה באמצע יום עבודה וצריך לעדכן מחיר באתר? שלח הודעת WhatsApp והאתר מתעדכן. החבילה המלאה כוללת חמישה עמודים בדומיין שלך."
             )}
           </p>
 
-          <Link
-            href="/site-bot/start"
-            className="btn-primary w-full sm:w-auto justify-center"
-            style={{ fontSize: "1.05rem", padding: "16px 40px" }}
-          >
-            {renderMixed("תן לי לראות עמוד בית חי ב-₪9.90")}
-          </Link>
+          <div style={{ display: "flex", gap: "16px", flexWrap: "wrap" }}>
+            <Link
+              href="/contact?ref=site-bot-build#contact-form"
+              className="btn-primary w-full sm:w-auto justify-center"
+              style={{ fontSize: "1.05rem", padding: "16px 40px" }}
+            >
+              {renderMixed("דבר עם איתן על האתר שלך")}
+            </Link>
+            <Link href="/site-bot/audit" className="btn-outline w-full sm:w-auto justify-center" style={{ fontSize: "1rem" }}>
+              {renderMixed("בדוק איך העסק שלך נראה בגוגל — חינם")}
+            </Link>
+          </div>
 
           <p style={{ marginTop: "18px", fontSize: "0.85rem", color: "var(--muted)", fontFamily: "var(--font-body), sans-serif" }}>
-            {renderMixed("ניסיון ב-₪9.90 לעמוד בית חי בכתובת WAO; חבילה מלאה ב-₪1,490 חד-פעמי.")}
+            {renderMixed("משאירים פרטים, ואיתן חוזר אליך לשיחה על האתר. אפשר גם להתחיל בבדיקה חינמית של העסק שלך בגוגל.")}
           </p>
         </div>
       </section>
@@ -254,21 +245,21 @@ export default function SiteBotPage() {
         <div className="wao-container" style={{ maxWidth: "860px" }}>
           <p style={{ ...bodyStyle, fontSize: "clamp(1rem,1.8vw,1.15rem)", marginBottom: "24px", color: "var(--text)" }}>
             {renderMixed(
-              "בניית אתר במחיר קבוע: ₪1,490 חד-פעמי לחבילה המלאה. רוצה לראות קודם עמוד בית חי? הניסיון עולה ₪9.90 בכתובת WAO. אין מנוי ואין חוזה ארוך שתצטרך לסיים אחר כך."
+              "כל אתר נבנה אחרי שיחה עם איתן על העסק שלך. רוצה לבדוק קודם איך העסק שלך נראה בגוגל? הבדיקה חינמית, וצריך רק את שם העסק."
             )}
           </p>
 
           <Link
-            href="/site-bot/start"
+            href="/contact?ref=site-bot-build#contact-form"
             className="btn-primary w-full sm:w-auto justify-center"
             style={{ fontSize: "1.05rem", padding: "16px 40px", marginBottom: "18px" }}
           >
-            {renderMixed("תן לי לראות עמוד בית חי ב-₪9.90")}
+            {renderMixed("דבר עם איתן על האתר שלך")}
           </Link>
 
           <p style={{ ...bodyStyle, fontSize: "0.95rem", color: "var(--text)", marginTop: "18px" }}>
             {renderMixed(
-              "ב-₪9.90 אתה רואה עמוד בית חי, בכתובת WAO. רק אחר כך תחליט אם לעבור לחבילה המלאה; אין מנוי או חוזה."
+              "הבדיקה לא מחייבת אותך לכלום. רק אחריה תחליט אם לדבר עם איתן על האתר."
             )}
           </p>
 
@@ -284,7 +275,7 @@ export default function SiteBotPage() {
           >
             <p style={{ ...bodyStyle, color: "var(--text)", margin: 0 }}>
               {renderMixed(
-                "מה כלול בניסיון? עמוד בית חי אחד, בכתובת של WAO, ב-₪9.90. בחבילה המלאה תקבל חמישה עמודים, דומיין פרטי ועריכה בצ׳אט לתמיד. גם GSC, הפרופיל העסקי בגוגל וטופס הלידים מחוברים במסגרת החבילה."
+                "מה כוללת החבילה המלאה? חמישה עמודים, דומיין פרטי ועריכה בצ׳אט. גם GSC, הפרופיל העסקי בגוגל וטופס הלידים מחוברים לאתר."
               )}
             </p>
           </div>
@@ -348,7 +339,7 @@ export default function SiteBotPage() {
                 color: "var(--text)",
               }}
             >
-              {renderMixed("Site Bot: ₪1,490 חד-פעמי לחבילה המלאה, אתר תוך 24 שעות ועריכה בצ׳אט לתמיד.")}
+              {renderMixed("Site Bot: אתר לעסק קטן, בדומיין שלך ועם עריכה בצ׳אט.")}
             </p>
           </div>
         </div>
@@ -443,21 +434,21 @@ export default function SiteBotPage() {
             <div aria-hidden style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%,-50%)", width: "60%", height: "100%", background: "radial-gradient(ellipse at center, rgba(74,227,181,0.06) 0%, transparent 70%)", pointerEvents: "none" }} />
             <div style={{ position: "relative", zIndex: 1 }}>
               <p style={{ fontFamily: "var(--font-rubik), sans-serif", fontWeight: 900, fontSize: "clamp(1.6rem,3.5vw,2.6rem)", lineHeight: 1.15, marginBottom: "16px", color: "var(--text)" }}>
-                {renderMixed("Site Bot")} — <span className="text-gradient">₪1,490</span>
+                {renderMixed("Site Bot")} — <span className="text-gradient">אתר לעסק</span>
               </p>
               <p style={{ color: "var(--muted)", fontFamily: "var(--font-body), sans-serif", marginBottom: "32px", maxWidth: "480px", margin: "0 auto 32px", lineHeight: 1.75 }}>
-                {renderMixed("ניסיון ב-₪9.90 לעמוד בית חי בכתובת WAO; חבילה מלאה ב-₪1,490 חד-פעמי.")}
+                {renderMixed("משאירים פרטים, ואיתן חוזר אליך לשיחה על האתר. אפשר גם להתחיל בבדיקה חינמית של העסק שלך בגוגל.")}
               </p>
               <div style={{ display: "flex", gap: "16px", justifyContent: "center", flexWrap: "wrap" }}>
                 <Link
-                  href="/site-bot/start"
+                  href="/contact?ref=site-bot-build#contact-form"
                   className="btn-primary w-full sm:w-auto justify-center"
                   style={{ fontSize: "1.05rem", padding: "16px 40px" }}
                 >
-                  {renderMixed("תן לי לראות עמוד בית חי ב-₪9.90")}
+                  {renderMixed("דבר עם איתן על האתר שלך")}
                 </Link>
-                <Link href="/contact" className="btn-outline w-full sm:w-auto justify-center" style={{ fontSize: "1rem" }}>
-                  יש לך שאלה? פנה אלינו
+                <Link href="/site-bot/audit" className="btn-outline w-full sm:w-auto justify-center" style={{ fontSize: "1rem" }}>
+                  {renderMixed("בדוק איך העסק שלך נראה בגוגל — חינם")}
                 </Link>
               </div>
             </div>

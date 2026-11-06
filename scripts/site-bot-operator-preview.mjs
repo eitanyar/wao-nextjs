@@ -1,4 +1,5 @@
-import { lstat, readFile } from 'node:fs/promises';
+import { constants } from 'node:fs';
+import { open } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -8,40 +9,47 @@ const MAX_RECORD_BYTES = 2 * 1024 * 1024;
 const MAX_HERO_BYTES = 5 * 1024 * 1024;
 
 function usage() {
-  throw new Error('Usage: node scripts/site-bot-operator-preview.mjs --record <path> --hero <path> [--port 1024-65535]');
+  throw new Error('Usage: node scripts/site-bot-operator-preview.mjs --record <path> --hero <path> --dossier <path> --sha256 <64 lowercase hex> [--port 1024-65535]');
 }
 
 function parseArgs(args) {
-  const options = { recordPath: '', heroPath: '', port: 3198 };
+  const options = { recordPath: '', heroPath: '', dossierPath: '', sha256: '', port: 3198 };
   const seen = new Set();
   for (let index = 0; index < args.length; index += 1) {
     const option = args[index];
-    if (!['--record', '--hero', '--port'].includes(option) || seen.has(option) || index + 1 >= args.length) usage();
+    if (!['--record', '--hero', '--dossier', '--sha256', '--port'].includes(option) || seen.has(option) || index + 1 >= args.length) usage();
     seen.add(option);
     const value = args[++index];
     if (!value || value.startsWith('--')) usage();
     if (option === '--record') options.recordPath = resolve(value);
     else if (option === '--hero') options.heroPath = resolve(value);
+    else if (option === '--dossier') options.dossierPath = resolve(value);
+    else if (option === '--sha256') options.sha256 = value;
     else if (!/^\d+$/.test(value)) usage();
     else options.port = Number(value);
   }
-  if (!options.recordPath || !options.heroPath || !Number.isInteger(options.port) || options.port < 1024 || options.port > 65535) usage();
+  if (!options.recordPath || !options.heroPath || !options.dossierPath || !/^[0-9a-f]{64}$/.test(options.sha256) ||
+    !Number.isInteger(options.port) || options.port < 1024 || options.port > 65535) usage();
   return options;
 }
 
 async function readRegularFile(filePath, maximumBytes, label) {
   const absolutePath = resolve(filePath);
-  let details;
+  let file;
   try {
-    details = await lstat(absolutePath);
-  } catch {
+    file = await open(absolutePath, constants.O_RDONLY | constants.O_NOFOLLOW | constants.O_NONBLOCK);
+    const details = await file.stat();
+    if (!details.isFile()) throw new Error('Not regular');
+    if (details.size > maximumBytes) throw new Error('Too large');
+    const bytes = await file.readFile();
+    if (bytes.length > maximumBytes) throw new Error('Too large');
+    return bytes;
+  } catch (error) {
+    if (error instanceof Error && error.message === 'Too large') throw new Error(`${label} is too large.`);
     throw new Error(`${label} must be an existing non-symlink regular file.`);
+  } finally {
+    await file?.close();
   }
-  if (details.isSymbolicLink() || !details.isFile()) throw new Error(`${label} must be an existing non-symlink regular file.`);
-  if (details.size > maximumBytes) throw new Error(`${label} is too large.`);
-  const bytes = await readFile(absolutePath);
-  if (bytes.length > maximumBytes) throw new Error(`${label} is too large.`);
-  return bytes;
 }
 
 function imageMime(bytes) {
@@ -51,18 +59,34 @@ function imageMime(bytes) {
   throw new Error('Hero must contain PNG, JPEG, or WebP image bytes.');
 }
 
-export async function loadOperatorPreviewInput({ recordPath, heroPath } = {}) {
-  if (typeof recordPath !== 'string' || typeof heroPath !== 'string') throw new Error('Explicit record and hero paths are required.');
-  const [recordBytes, heroBytes] = await Promise.all([
-    readRegularFile(recordPath, MAX_RECORD_BYTES, 'Record'),
-    readRegularFile(heroPath, MAX_HERO_BYTES, 'Hero'),
-  ]);
+export async function loadOperatorPreviewInput({ recordPath, heroPath, dossierPath, sha256 } = {}) {
+  if ([recordPath, heroPath, dossierPath].some(path => typeof path !== 'string' || !path) ||
+    typeof sha256 !== 'string' || !/^[0-9a-f]{64}$/.test(sha256)) {
+    throw new Error('Explicit record, hero, dossier and lowercase SHA-256 are required.');
+  }
+  const dossierBytes = await readRegularFile(dossierPath, MAX_RECORD_BYTES, 'Dossier');
+  let dossier;
+  try {
+    dossier = JSON.parse(dossierBytes.toString('utf8'));
+  } catch {
+    throw new Error('Dossier must contain valid JSON.');
+  }
+  const recordBytes = await readRegularFile(recordPath, MAX_RECORD_BYTES, 'Record');
+  const { buildResearchedCopyReviewPacket } = await import('../dist/lib/site-bot/research/copyReviewPacket.js');
+  try {
+    if (buildResearchedCopyReviewPacket(recordBytes, dossier).sha256 !== sha256) {
+      throw new Error('Digest mismatch.');
+    }
+  } catch {
+    throw new Error('Record does not match the pending review dossier and SHA-256.');
+  }
   let record;
   try {
     record = JSON.parse(recordBytes.toString('utf8'));
   } catch {
     throw new Error('Record must contain valid JSON.');
   }
+  const heroBytes = await readRegularFile(heroPath, MAX_HERO_BYTES, 'Hero');
   const mime = imageMime(heroBytes);
   return { record, heroDataUrl: `data:${mime};base64,${heroBytes.toString('base64')}` };
 }
@@ -70,13 +94,15 @@ export async function loadOperatorPreviewInput({ recordPath, heroPath } = {}) {
 export async function createOperatorPreviewRuntime({
   recordPath,
   heroPath,
+  dossierPath,
+  sha256,
   port = 3198,
   buildOnly = false,
   tempParent = tmpdir(),
   log = console.log,
 } = {}) {
   if (!Number.isInteger(port) || port < 1024 || port > 65535) throw new Error('Operator preview port is invalid.');
-  const input = await loadOperatorPreviewInput({ recordPath, heroPath });
+  const input = await loadOperatorPreviewInput({ recordPath, heroPath, dossierPath, sha256 });
   const { buildOperatorLocalPreview } = await import('../dist/lib/site-bot/localPreview.js');
   const bundle = buildOperatorLocalPreview(input);
   return createLocalPreviewRuntime({ bundle, port, buildOnly, tempParent, log });

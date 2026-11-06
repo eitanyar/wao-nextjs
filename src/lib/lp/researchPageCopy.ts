@@ -26,6 +26,95 @@ const COPY_SYSTEM_PROMPT =
 const QA_SYSTEM_PROMPT =
   'You are Noa, a Hebrew language QA editor. Correct only language and typography in the supplied JSON, preserve all factual claims and structure, and return only valid JSON.';
 
+const COPY_FIELDS = {
+  heroHeadline: 68, heroSubheadline: 90, heroCta: 15, aboutBlurb: 320,
+  servicesHeadline: 35, faqHeadline: 30, guaranteeBlock: 100,
+  formHeadline: 35, stickyBarLine: 25, aboutPageHeadline: 50, aboutPageBody: 400,
+} as const;
+const OPTIONAL_FIELDS = {
+  reviewFeatured: 400, reviewContext: 160, responseTimeBadge: 100,
+} as const;
+const SITE_COPY_KEYS = [
+  ...Object.keys(COPY_FIELDS), ...Object.keys(OPTIONAL_FIELDS),
+  'trustBarItems', 'serviceItems', 'faqItems', 'scarcityLine', 'serviceDetails',
+];
+
+function invalidCopy(): never {
+  throw new Error('Invalid bounded generated site copy.');
+}
+
+function plainObject(value: unknown): value is Record<string, unknown> {
+  return value !== null && typeof value === 'object' && !Array.isArray(value) &&
+    (Object.getPrototypeOf(value) === Object.prototype || Object.getPrototypeOf(value) === null);
+}
+
+function exactFields(value: Record<string, unknown>, keys: readonly string[]): void {
+  const own = Reflect.ownKeys(value);
+  if (own.length !== keys.length || own.some(key => typeof key !== 'string' || !keys.includes(key))) invalidCopy();
+  if (keys.some(key => {
+    const descriptor = Object.getOwnPropertyDescriptor(value, key);
+    return !descriptor || !descriptor.enumerable || !('value' in descriptor);
+  })) invalidCopy();
+}
+
+function boundedString(value: unknown, max: number): boolean {
+  return typeof value === 'string' && value.trim().length > 0 && value.length <= max;
+}
+
+function boundedArray(value: unknown, max: number, check: (item: unknown) => boolean): boolean {
+  if (!Array.isArray(value) || Object.getPrototypeOf(value) !== Array.prototype || value.length > max ||
+    Reflect.ownKeys(value).length !== value.length + 1) return false;
+  for (let index = 0; index < value.length; index++) {
+    const descriptor = Object.getOwnPropertyDescriptor(value, String(index));
+    if (!descriptor || !descriptor.enumerable || !('value' in descriptor) || !check(descriptor.value)) return false;
+  }
+  return true;
+}
+
+function stringPair(value: unknown, keys: readonly string[], limits: readonly number[]): boolean {
+  if (!plainObject(value)) return false;
+  if (Reflect.ownKeys(value).length !== keys.length) return false;
+  for (let index = 0; index < keys.length; index++) {
+    const descriptor = Object.getOwnPropertyDescriptor(value, keys[index]);
+    if (!descriptor || !descriptor.enumerable || !('value' in descriptor) || !boundedString(descriptor.value, limits[index])) return false;
+  }
+  return Reflect.ownKeys(value).every(key => typeof key === 'string' && keys.includes(key));
+}
+
+export function assertBoundedGeneratedSiteCopy(value: unknown): asserts value is SiteCopy {
+  if (!plainObject(value)) invalidCopy();
+  exactFields(value, SITE_COPY_KEYS);
+  for (const [key, max] of Object.entries(COPY_FIELDS)) {
+    if (!boundedString(value[key], max)) invalidCopy();
+  }
+  for (const [key, max] of Object.entries(OPTIONAL_FIELDS)) {
+    if (value[key] !== null && !boundedString(value[key], max)) invalidCopy();
+  }
+  if (value.scarcityLine !== null ||
+    (value.reviewFeatured === null) !== (value.reviewContext === null) ||
+    !boundedArray(value.trustBarItems, 4, item => boundedString(item, 20)) ||
+    !boundedArray(value.serviceItems, 6, item => boundedString(item, 25)) ||
+    !boundedArray(value.faqItems, 20, item => stringPair(item, ['q', 'a'], [120, 120])) ||
+    !boundedArray(value.serviceDetails, 6, item => stringPair(item, ['name', 'description'], [25, 80]))) invalidCopy();
+  try {
+    if (Buffer.byteLength(JSON.stringify(value), 'utf8') > 16 * 1024) invalidCopy();
+  } catch {
+    invalidCopy();
+  }
+}
+
+function parseGeneratedCopy(raw: string): SiteCopy {
+  if (typeof raw !== 'string' || Buffer.byteLength(raw, 'utf8') > 16 * 1024) invalidCopy();
+  let value: unknown;
+  try {
+    value = JSON.parse(raw);
+  } catch {
+    invalidCopy();
+  }
+  assertBoundedGeneratedSiteCopy(value);
+  return value;
+}
+
 function supportedFaqItems(brief: PageBrief): SiteCopy['faqItems'] {
   if (brief.faqPolicy === 'none') return [];
   return brief.faqCandidates.map(candidate => ({ q: candidate.question, a: candidate.answer }));
@@ -85,9 +174,12 @@ export async function generateResearchPageCopy(
   const callJson = dependencies.callJson ?? callQwenJSON;
   const prompt = `${buildResearchPageCopyPrompt(brief)}\n\nOWNER FACTS AND SITE COPY SCHEMA:\n${buildSiteCopyPrompt(data)}`;
   const tamarRaw = await callJson(COPY_SYSTEM_PROMPT, prompt, { thinkingBudget: 1500 });
-  const tamarCopy = JSON.parse(tamarRaw) as SiteCopy;
+  const tamarCopy = parseGeneratedCopy(tamarRaw);
   const noaRaw = await callJson(QA_SYSTEM_PROMPT, JSON.stringify(tamarCopy), { think: false });
-  return applyFaqPolicy(JSON.parse(noaRaw) as SiteCopy, brief);
+  const noaCopy = parseGeneratedCopy(noaRaw);
+  const finalCopy = applyFaqPolicy(noaCopy, brief);
+  assertBoundedGeneratedSiteCopy(finalCopy);
+  return finalCopy;
 }
 
 export function isApprovedPortfolioBrief(dossier: SiteResearchDossier, brief: PageBrief): boolean {

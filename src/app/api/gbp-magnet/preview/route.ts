@@ -40,7 +40,7 @@ function unavailable() {
 }
 
 // The sole network seam is injected by offline tests; production uses global fetch.
-export async function handlePreview(request: Request, fetchImpl: typeof fetch = fetch) {
+async function handlePreview(request: Request, fetchImpl: typeof fetch = fetch) {
   let body: unknown;
   try { body = await request.json(); } catch {
     return NextResponse.json({ error: 'invalid_input' }, { status: 400 });

@@ -364,14 +364,24 @@ const nextConfig: NextConfig = {
     // venv/bin/python3 is an absolute symlink to /usr/bin/python3, outside the project
     // root — Turbopack's file-tracing panics trying to resolve it. Python here is only
     // ever invoked as a subprocess (never bundled), so it's safe to exclude entirely.
-    "/*": ["venv/**/*"],
+    "/*": ["venv/**/*", "data/**/*"],
+    // The root route does not match /* in Next's picomatch call. The shared
+    // next-server trace has its own key and can also contribute standalone files.
+    "/": ["data/**/*"],
+    "next-server": ["data/**/*"],
   },
   // Tailscale IPs/hostname used to reach the dev server remotely (not localhost) —
   // without this, Next 16 dev mode silently blocks HMR/RSC dev-asset requests from
   // that origin, which breaks client hydration (buttons render but onClick never wires up).
   allowedDevOrigins: ["100.102.160.114", "100.83.177.51", "msi-1.tailc496b2.ts.net"],
   async redirects() {
-    return [...legacyRedirects];
+    return [
+      ...legacyRedirects,
+      // TEMPORARY (307): Site Bot checkout is offline (payment gateway not connected,
+      // checkout APIs return 503). Restore /site-bot/start by removing this entry once
+      // charging is live.
+      { source: "/site-bot/start", destination: "/site-bot", permanent: false },
+    ];
   },
   async headers() {
     return [

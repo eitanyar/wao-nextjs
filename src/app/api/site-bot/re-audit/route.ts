@@ -16,9 +16,13 @@ function isAuthorized(req: Request): boolean {
   return scheme === 'Bearer' && token === expected;
 }
 
+function reAuditReply(body: object, status: number = 200) {
+  return NextResponse.json(body, { status, headers: { 'Cache-Control': 'private, no-store' } });
+}
+
 export async function POST(req: Request) {
   if (!isAuthorized(req)) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    return reAuditReply({ error: 'Unauthorized' }, 401);
   }
 
   try {
@@ -27,22 +31,25 @@ export async function POST(req: Request) {
     const isMock = process.env.NODE_ENV === 'test' || body?.mock === true;
 
     if (!auditId || !UUID_REGEX.test(auditId)) {
-      return NextResponse.json({ error: 'invalid_input' }, { status: 400 });
+      return reAuditReply({ error: 'invalid_input' }, 400);
     }
 
     const filePath = path.join(AUDITS_DIR, `${auditId}.json`);
     if (!fs.existsSync(filePath)) {
-      return NextResponse.json({ error: 'not_found' }, { status: 404 });
+      return reAuditReply({ error: 'not_found' }, 404);
     }
 
+    // Existing audit payload shape is intentionally dynamic in this route.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let baselineAudit: Record<string, any>;
     try {
       const raw = fs.readFileSync(filePath, 'utf8');
       baselineAudit = JSON.parse(raw);
     } catch {
-      return NextResponse.json({ error: 'not_found' }, { status: 404 });
+      return reAuditReply({ error: 'not_found' }, 404);
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let currentAudit: Record<string, any>;
 
     if (body?.currentAudit && typeof body.currentAudit === 'object') {
@@ -69,12 +76,12 @@ export async function POST(req: Request) {
         undefined;
 
       if (!businessName) {
-        return NextResponse.json({ error: 'cannot_determine_business_name' }, { status: 400 });
+        return reAuditReply({ error: 'cannot_determine_business_name' }, 400);
       }
 
       const candidates = await searchPlacesByName({ name: businessName, phone });
       if (!candidates || candidates.length === 0) {
-        return NextResponse.json({ error: 'place_not_found' }, { status: 404 });
+        return reAuditReply({ error: 'place_not_found' }, 404);
       }
 
       const currentPlace = candidates[0];
@@ -108,18 +115,18 @@ export async function POST(req: Request) {
         fetchedAt: new Date().toISOString(),
       };
     } else {
-      return NextResponse.json({ error: 'places_not_configured' }, { status: 503 });
+      return reAuditReply({ error: 'places_not_configured' }, 503);
     }
 
     const driftReport = calculateAuditDrift(baselineAudit, currentAudit);
     saveDriftReport(auditId, driftReport);
 
-    return NextResponse.json({
+    return reAuditReply({
       success: true,
       driftReport,
     });
   } catch (error) {
     console.error('re-audit error:', error);
-    return NextResponse.json({ error: 'server_error' }, { status: 500 });
+    return reAuditReply({ error: 'server_error' }, 500);
   }
 }

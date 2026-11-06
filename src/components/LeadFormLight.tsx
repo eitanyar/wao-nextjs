@@ -57,6 +57,7 @@ export default function LeadFormLight({ source = "geo-audit-light" }: { source?:
           name: form.name,
           phone: isEmail ? undefined : form.contact,
           email: isEmail ? form.contact : undefined,
+          privacyAccepted: true,
           message: `יש אתר עם 30+ עמודים ו-Google Search Console: ${qualified ? "כן" : "לא / לא בטוח"}`,
           source,
           ref: tracking.ref ?? undefined,
@@ -65,11 +66,14 @@ export default function LeadFormLight({ source = "geo-audit-light" }: { source?:
           utm_campaign: tracking.utm_campaign ?? undefined,
         }),
       });
-      if (res.ok) {
+      const acknowledgement: unknown = res.ok ? await res.json() : null;
+      const accepted = res.ok && acknowledgement !== null && typeof acknowledgement === "object"
+        && !Array.isArray(acknowledgement) && "ok" in acknowledgement && acknowledgement.ok === true;
+      if (accepted) {
         window.dataLayer = window.dataLayer || [];
         window.dataLayer.push({ event: "lead_submit", source, ref: tracking.ref ?? undefined });
       }
-      setStatus(res.ok ? "success" : "error");
+      setStatus(accepted ? "success" : "error");
     } catch {
       setStatus("error");
     }

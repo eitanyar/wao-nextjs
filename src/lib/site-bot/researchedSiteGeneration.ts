@@ -13,13 +13,14 @@ import {
   type ResearchedSiteGraphEdge,
   type ResearchedSitePage,
 } from '../lp/researchedSite';
-import { isApprovedPortfolioBrief } from '../lp/researchPageCopy';
+import { assertBoundedGeneratedSiteCopy, isApprovedPortfolioBrief } from '../lp/researchPageCopy';
 import { isSafeDeploymentSlug } from '../deployment/deploy-access';
-import type { PageBrief } from './research/pageBrief';
+import { assertBoundedPageBrief, type PageBrief } from './research/pageBrief';
 import type { PageClassification } from './research/pagePortfolio';
-import { transitionResearchStatus, type SiteResearchDossier } from './research/types';
+import type { SiteResearchDossier } from './research/types';
 
 const OPAQUE_ID = /^[A-Za-z0-9][A-Za-z0-9_-]*$/;
+const MAX_SITE_RECORD_BYTES = 16 * 1024 * 1024;
 const SAFE_PATH_SEGMENT = /^[A-Za-z0-9_-]+$/;
 const RESERVED_PATH_SEGMENTS = new Set(['api', 'assets', 'static', 'index', 'privacy', 'accessibility', 'contact', 'sitemap']);
 const RENDERABLE_CLASSES = new Set<PageClassification>([
@@ -68,7 +69,8 @@ export interface ResearchedSiteGenerationDependencies {
 
 type AtomicFileSystem = Pick<
   typeof fs,
-  'existsSync' | 'lstatSync' | 'mkdirSync' | 'readFileSync' | 'writeFileSync' | 'renameSync' | 'rmSync' | 'realpathSync'
+  'existsSync' | 'lstatSync' | 'mkdirSync' | 'writeFileSync' | 'renameSync' | 'rmSync' | 'realpathSync'
+  | 'openSync' | 'fstatSync' | 'readSync' | 'closeSync'
 >;
 
 export interface PersistResearchedSiteRecordOptions {
@@ -78,8 +80,25 @@ export interface PersistResearchedSiteRecordOptions {
   fileSystem?: AtomicFileSystem;
 }
 
+export interface PreflightResearchedSiteTargetOptions {
+  sitesRoot: string;
+  fileSystem?: AtomicFileSystem;
+}
+
 function fail(message: string): never {
   throw new Error(message);
+}
+
+export function assertResearchedGenerationReady(dossier: unknown, researchId: string): void {
+  if (!dossier || typeof dossier !== 'object' || Array.isArray(dossier)) fail('Research dossier is not copy ready.');
+  const candidate = dossier as Record<string, unknown>;
+  if (candidate.status !== 'copy_ready' || typeof candidate.researchId !== 'string' ||
+    !OPAQUE_ID.test(candidate.researchId) || candidate.researchId !== researchId ||
+    !Array.isArray(candidate.humanGates) || candidate.humanGates.some(gate => (
+      !gate || typeof gate !== 'object' || Array.isArray(gate) || gate.status !== 'approved'
+    ))) {
+    fail('Research dossier is not copy ready.');
+  }
 }
 
 function safeTargetPath(targetPath: string, classification: PageClassification): boolean {
@@ -93,8 +112,7 @@ function safeTargetPath(targetPath: string, classification: PageClassification):
 
 function validatePortfolio(input: ResearchedSiteGenerationInput): PageBrief {
   if (!isSafeDeploymentSlug(input.slug)) fail('Invalid deployment slug.');
-  if (!OPAQUE_ID.test(input.researchId) || input.dossier.researchId !== input.researchId) fail('Invalid research dossier identity.');
-  if (input.dossier.status !== 'copy_ready') fail('Research dossier is not copy ready.');
+  assertResearchedGenerationReady(input.dossier, input.researchId);
   if (!Array.isArray(input.pageBriefs) || input.pageBriefs.length === 0) fail('Approved page briefs are required.');
   if (!Array.isArray(input.graphEdges)) fail('Research graph edges are required.');
 
@@ -102,6 +120,7 @@ function validatePortfolio(input: ResearchedSiteGenerationInput): PageBrief {
   const targetPaths = new Set<string>();
   let homepage: PageBrief | undefined;
   for (const brief of input.pageBriefs) {
+    assertBoundedPageBrief(brief);
     if (!brief?.page || !OPAQUE_ID.test(brief.page.id)) fail('Page brief has an invalid ID.');
     if (briefIds.has(brief.page.id)) fail('Page brief IDs must be unique.');
     if (targetPaths.has(brief.page.targetPath)) fail('Page brief target paths must be unique.');
@@ -155,6 +174,7 @@ export async function buildResearchedSiteGeneration(
   for (const sourceBrief of input.pageBriefs) {
     const brief = structuredClone(sourceBrief);
     const generatedCopy = await dependencies.generateCopy(brief, structuredClone(input.collectedData));
+    assertBoundedGeneratedSiteCopy(generatedCopy);
     pages.push({
       opportunityId: brief.page.id,
       classification: brief.page.pageClass as PageClassification,
@@ -204,6 +224,30 @@ function assertSafeSitesRoot(fileSystem: AtomicFileSystem, sitesRoot: string): s
   return resolvedRoot;
 }
 
+function existingSafeSitesRoot(fileSystem: AtomicFileSystem, sitesRoot: string): string | null {
+  const resolvedRoot = path.resolve(sitesRoot);
+  let current = path.parse(resolvedRoot).root;
+  for (const segment of resolvedRoot.slice(current.length).split(path.sep).filter(Boolean)) {
+    current = path.join(current, segment);
+    let stat: fs.Stats;
+    try {
+      stat = fileSystem.lstatSync(current);
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code === 'ENOENT') return null;
+      throw error;
+    }
+    if (stat.isSymbolicLink() || !stat.isDirectory()) fail('Sites root is not a regular directory.');
+  }
+  if (fileSystem.realpathSync(resolvedRoot) !== resolvedRoot) fail('Sites root contains a symlink.');
+  return resolvedRoot;
+}
+
+function siteRecordTarget(sitesRoot: string, slug: string): string {
+  const targetPath = path.resolve(sitesRoot, `${slug}.json`);
+  if (!targetPath.startsWith(`${sitesRoot}${path.sep}`)) fail('Site record path escapes the sites root.');
+  return targetPath;
+}
+
 function rollbackSiteRecord(
   fileSystem: AtomicFileSystem,
   targetPath: string,
@@ -218,34 +262,100 @@ function rollbackSiteRecord(
   fileSystem.renameSync(rollbackPath, targetPath);
 }
 
+function readPriorSiteRecord(fileSystem: AtomicFileSystem, targetPath: string): Buffer | null {
+  try {
+    const stat = fileSystem.lstatSync(targetPath);
+    if (stat.isSymbolicLink()) fail('Site record target cannot be a symlink.');
+    if (!stat.isFile()) fail('Site record target must be a regular file.');
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === 'ENOENT') return null;
+    throw error;
+  }
+
+  let descriptor: number | undefined;
+  try {
+    descriptor = fileSystem.openSync(targetPath, fs.constants.O_RDONLY | fs.constants.O_NOFOLLOW | fs.constants.O_NONBLOCK);
+    const stat = fileSystem.fstatSync(descriptor);
+    if (!stat.isFile() || stat.size > MAX_SITE_RECORD_BYTES) fail('Invalid existing site record.');
+    const chunks: Buffer[] = [];
+    let total = 0;
+    while (total <= MAX_SITE_RECORD_BYTES) {
+      const chunk = Buffer.allocUnsafe(Math.min(64 * 1024, MAX_SITE_RECORD_BYTES + 1 - total));
+      const count = fileSystem.readSync(descriptor, chunk, 0, chunk.length, null);
+      if (count === 0) break;
+      total += count;
+      if (total > MAX_SITE_RECORD_BYTES) fail('Invalid existing site record.');
+      chunks.push(chunk.subarray(0, count));
+    }
+    return Buffer.concat(chunks, total);
+  } finally {
+    if (descriptor !== undefined) fileSystem.closeSync(descriptor);
+  }
+}
+
+function assertPriorSiteIdentity(priorBytes: Buffer | null, record: Pick<ResearchedSiteGenerationRecord, 'slug' | 'researchId'>): void {
+  if (priorBytes === null) return;
+  let prior: unknown;
+  try {
+    prior = JSON.parse(new TextDecoder('utf-8', { fatal: true }).decode(priorBytes));
+  } catch {
+    fail('Invalid existing site record.');
+  }
+  if (!prior || typeof prior !== 'object' || Array.isArray(prior)) fail('Invalid existing site record.');
+  const existing = prior as Record<string, unknown>;
+  if (!isSafeDeploymentSlug(existing.slug) || existing.slug !== record.slug ||
+    typeof existing.researchId !== 'string' || !OPAQUE_ID.test(existing.researchId) ||
+    existing.researchId !== record.researchId || existing.simulation !== undefined ||
+    existing.legacyCoreThirty === true || !Array.isArray(existing.researchedPages) ||
+    existing.researchedPages.length === 0 ||
+    !Array.isArray(existing.researchedGraphEdges) ||
+    typeof existing.approvedPageId !== 'string' || !OPAQUE_ID.test(existing.approvedPageId) ||
+    !existing.collectedData || typeof existing.collectedData !== 'object' ||
+    !existing.copy || typeof existing.copy !== 'object' ||
+    typeof existing.createdAt !== 'string') {
+    fail('Existing site record belongs to another or unknown research identity.');
+  }
+}
+
+export function preflightResearchedSiteTarget(
+  slug: string,
+  researchId: string,
+  options: PreflightResearchedSiteTargetOptions,
+): void {
+  if (!isSafeDeploymentSlug(slug)) fail('Invalid deployment slug.');
+  if (typeof researchId !== 'string' || !OPAQUE_ID.test(researchId)) fail('Invalid research identity.');
+  const fileSystem = options.fileSystem ?? fs;
+  const sitesRoot = existingSafeSitesRoot(fileSystem, options.sitesRoot);
+  if (sitesRoot === null) return;
+  const priorBytes = readPriorSiteRecord(fileSystem, siteRecordTarget(sitesRoot, slug));
+  assertPriorSiteIdentity(priorBytes, { slug, researchId });
+}
+
 export async function persistResearchedSiteRecordAtomic(
   record: ResearchedSiteGenerationRecord,
   options: PersistResearchedSiteRecordOptions,
 ): Promise<void> {
   const fileSystem = options.fileSystem ?? fs;
   if (!isSafeDeploymentSlug(record.slug)) fail('Invalid deployment slug.');
-  if (options.dossier.researchId !== record.researchId || options.dossier.status !== 'copy_ready') {
-    fail('Research dossier is not eligible for persistence.');
-  }
+  assertResearchedGenerationReady(options.dossier, record.researchId);
 
   const sitesRoot = assertSafeSitesRoot(fileSystem, options.sitesRoot);
-  const targetPath = path.resolve(sitesRoot, `${record.slug}.json`);
-  if (!targetPath.startsWith(`${sitesRoot}${path.sep}`)) fail('Site record path escapes the sites root.');
-  if (fileSystem.existsSync(targetPath) && fileSystem.lstatSync(targetPath).isSymbolicLink()) {
-    fail('Site record target cannot be a symlink.');
-  }
+  const targetPath = siteRecordTarget(sitesRoot, record.slug);
+
+  const priorBytes = readPriorSiteRecord(fileSystem, targetPath);
+  assertPriorSiteIdentity(priorBytes, record);
 
   const nonce = `${process.pid}.${Date.now()}.${Math.random().toString(36).slice(2)}`;
   const temporaryPath = path.join(sitesRoot, `.${record.slug}.${nonce}.tmp`);
   const rollbackPath = path.join(sitesRoot, `.${record.slug}.${nonce}.rollback`);
-  const priorBytes = fileSystem.existsSync(targetPath) ? fileSystem.readFileSync(targetPath) : null;
+
   const updatedDossier = structuredClone(options.dossier);
-  updatedDossier.status = transitionResearchStatus(updatedDossier.status, 'deploy_ready');
+  delete updatedDossier.approvedCopyReviewPacket;
   updatedDossier.updatedAt = record.createdAt;
   updatedDossier.pipelineChecks = {
     ...updatedDossier.pipelineChecks,
     copy: 'pass',
-    hebrewQa: 'pass',
+    hebrewQa: 'pending',
   };
 
   try {
@@ -264,6 +374,6 @@ export async function persistResearchedSiteRecordAtomic(
     } finally {
       fileSystem.rmSync(rollbackPath, { force: true });
     }
-    fail('Unable to persist deploy-ready research dossier.');
+    fail('Unable to persist research dossier.');
   }
 }

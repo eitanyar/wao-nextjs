@@ -9,6 +9,7 @@ import type { SiteResearchDossier } from './types';
 
 export const SITE_RESEARCH_BASE_DIR = path.join('data', 'site-research');
 const RESEARCH_ID_REGEX = /^[A-Za-z0-9][A-Za-z0-9_-]*$/;
+const MAX_REVIEW_DOSSIER_BYTES = 16 * 1024 * 1024;
 
 function getBaseDir(customBaseDir?: string): string {
   return customBaseDir ? path.resolve(customBaseDir) : path.resolve(process.cwd(), SITE_RESEARCH_BASE_DIR);
@@ -80,15 +81,40 @@ function isResearchDossier(value: unknown, researchId: string): value is SiteRes
 
 export async function readResearchDossier(
   researchId: string,
-  customBaseDir?: string
+  customBaseDir?: string,
+  options?: { bounded?: boolean }
 ): Promise<SiteResearchDossier | null> {
   const filePath = getResearchPath(researchId, customBaseDir);
-  if (!filePath || !fs.existsSync(filePath)) {
+  if (!filePath || (!options?.bounded && !fs.existsSync(filePath))) {
     return null;
   }
 
   try {
-    const dossier: unknown = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+    let raw: string;
+    if (options?.bounded) {
+      let descriptor: number | undefined;
+      try {
+        descriptor = fs.openSync(filePath, fs.constants.O_RDONLY | fs.constants.O_NOFOLLOW);
+        const stat = fs.fstatSync(descriptor);
+        if (!stat.isFile() || stat.size > MAX_REVIEW_DOSSIER_BYTES) return null;
+        const chunks: Buffer[] = [];
+        let total = 0;
+        while (total <= MAX_REVIEW_DOSSIER_BYTES) {
+          const chunk = Buffer.allocUnsafe(Math.min(64 * 1024, MAX_REVIEW_DOSSIER_BYTES + 1 - total));
+          const count = fs.readSync(descriptor, chunk, 0, chunk.length, null);
+          if (count === 0) break;
+          total += count;
+          if (total > MAX_REVIEW_DOSSIER_BYTES) return null;
+          chunks.push(chunk.subarray(0, count));
+        }
+        raw = new TextDecoder('utf-8', { fatal: true }).decode(Buffer.concat(chunks, total));
+      } finally {
+        if (descriptor !== undefined) fs.closeSync(descriptor);
+      }
+    } else {
+      raw = fs.readFileSync(filePath, 'utf8');
+    }
+    const dossier: unknown = JSON.parse(raw);
     return isResearchDossier(dossier, researchId) ? dossier : null;
   } catch {
     return null;

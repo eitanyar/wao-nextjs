@@ -18,6 +18,8 @@
 /out/
 /artifacts/
 /.next-podcast-fixture-*/
+# isolated QA/build dist dirs (WAO_DEPLOY_DIST_DIR); also keeps Tailwind from scanning binary caches
+/.next-sitebot-*/
 
 # production
 /build
@@ -115,6 +117,7 @@ handoff/in-progress/*.md
 handoff/completed/*.md
 handoff/failed/*.md
 handoff/archive/*.md
+handoff/archive/legacy-hermes/
 data/geo-leads/
 data/audit-logs/
 data/expired-domain-research/

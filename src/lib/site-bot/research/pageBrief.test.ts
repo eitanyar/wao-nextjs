@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
   MAX_PAGE_BRIEF_PAYLOAD_CHARS,
+  assertBoundedPageBrief,
   compilePageBrief,
   selectFaqCandidates,
   type PageBriefInput,
@@ -99,4 +100,53 @@ test('compilePageBrief keeps a large evidence set below the profile-safe payload
 
   assert.ok(JSON.stringify(brief).length <= MAX_PAGE_BRIEF_PAYLOAD_CHARS);
   assert.ok(brief.firstPartyProof.length < 2000);
+});
+
+test('compiler output with a supported FAQ and link passes without mutation', () => {
+  const brief = compilePageBrief(input({ faqCandidates: [{
+    id: 'faq-one', question: 'What is included?', answer: 'The verified service.',
+    source: 'owner_faq', relevance: 0.8, answerEvidenceIds: ['proof-license'], requiredForUserClarity: true,
+  }] }));
+  const before = structuredClone(brief);
+  assertBoundedPageBrief(brief);
+  assert.deepEqual(brief, before);
+  assert.equal(brief.faqPolicy, 'required_for_user_clarity');
+});
+
+test('bounded assertion rejects malformed nested values, ceilings and unsupported references', () => {
+  const valid = compilePageBrief(input({ faqCandidates: [{
+    id: 'faq-one', question: 'What is included?', answer: 'The verified service.',
+    source: 'owner_faq', relevance: 0.8, answerEvidenceIds: ['proof-license'],
+  }] }));
+  const invalid: Array<[string, (brief: typeof valid) => void]> = [
+    ['null page', brief => { brief.page = null as unknown as typeof brief.page; }],
+    ['array persona', brief => { brief.persona = [] as unknown as typeof brief.persona; }],
+    ['empty offer', brief => { brief.waoOffer.value = ' '; }],
+    ['oversized ID', brief => { brief.page.id = 'x'.repeat(241); }],
+    ['oversized evidence', brief => { brief.firstPartyProof[0].value = 'x'.repeat(241); }],
+    ['duplicate section ID', brief => { brief.firstPartyProof.push({ ...brief.firstPartyProof[0] }); }],
+    ['too many items', brief => { brief.targetQueries = Array.from({ length: 25 }, (_, i) => ({ id: `q-${i}`, value: 'query' })); }],
+    ['sparse items', brief => { brief.targetQueries = Array(1) as typeof brief.targetQueries; }],
+    ['null item', brief => { brief.targetQueries = [null] as unknown as typeof brief.targetQueries; }],
+    ['bad strings', brief => { brief.prohibitedClaims = [7] as unknown as string[]; }],
+    ['too many strings', brief => { brief.informationGainGaps = Array(25).fill('gap'); }],
+    ['bad policy', brief => { brief.faqPolicy = 'forced' as typeof brief.faqPolicy; }],
+    ['too many FAQs', brief => { brief.faqCandidates = Array(9).fill(brief.faqCandidates[0]); }],
+    ['bad source', brief => { brief.faqCandidates[0].source = 'web' as typeof brief.faqCandidates[0]['source']; }],
+    ['infinite relevance', brief => { brief.faqCandidates[0].relevance = Infinity; }],
+    ['negative relevance', brief => { brief.faqCandidates[0].relevance = -0.1; }],
+    ['relevance above one', brief => { brief.faqCandidates[0].relevance = 1.1; }],
+    ['unsupported FAQ evidence', brief => { brief.faqCandidates[0].answerEvidenceIds = ['unknown']; }],
+    ['empty FAQ evidence', brief => { brief.faqCandidates[0].answerEvidenceIds = []; }],
+    ['invalid optional flag', brief => { brief.faqCandidates[0].requiredForUserClarity = 'yes' as unknown as boolean; }],
+    ['unsupported link evidence', brief => { brief.links[0].evidenceIds = ['unknown']; }],
+    ['oversized link', brief => { brief.links[0].relationship = 'x'.repeat(241); }],
+    ['too many links', brief => { brief.links = Array(25).fill(brief.links[0]); }],
+    ['oversized payload', brief => { (brief as typeof brief & { ignored: string }).ignored = 'x'.repeat(MAX_PAGE_BRIEF_PAYLOAD_CHARS); }],
+  ];
+  for (const [name, mutate] of invalid) {
+    const candidate = structuredClone(valid);
+    mutate(candidate);
+    assert.throws(() => assertBoundedPageBrief(candidate), /Invalid bounded page brief/, name);
+  }
 });

@@ -111,7 +111,8 @@ test('route imports exactly the sanctioned modules', () => {
 function loadedRoute(env) {
   const calls = { factory: 0, handled: 0 };
   const exports = {};
-  const output = ts.transpileModule(route, { compilerOptions: { module: ts.ModuleKind.CommonJS,
+  const testSource = route.replace('function readConfig()', 'export function readConfig()');
+  const output = ts.transpileModule(testSource, { compilerOptions: { module: ts.ModuleKind.CommonJS,
     target: ts.ScriptTarget.ES2022 } }).outputText;
   const dependencies = {
     'next/server': { NextResponse: { json: (body, options) => ({ body, status: options.status }) } },
@@ -136,6 +137,10 @@ function loadedRoute(env) {
   } });
   return { route: exports, calls };
 }
+
+test('Next route does not export its internal configuration helper', () => {
+  assert.doesNotMatch(route, /export\s+function\s+readConfig\b/);
+});
 
 const configured = { WAO_PUBLIC_SEO_ARMED: '1', WAO_PUBLIC_SEO_SECRET: 'test-secret',
   WAO_PUBLIC_SEO_DAILY_CEILING: '300', WAO_PUBLIC_SEO_PROJECT_ID: 'project-test',

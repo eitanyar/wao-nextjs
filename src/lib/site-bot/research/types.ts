@@ -2,6 +2,7 @@
  * Canonical, provider-agnostic research dossier contracts.
  * HEBREW-SAFETY: this module contains ZERO Hebrew bytes.
  */
+import type { ResearchedCopyReviewPacket } from './copyReviewPacket';
 
 export const RESEARCH_STATUSES = [
   'pending',
@@ -123,6 +124,7 @@ export interface SiteResearchDossier {
   providerUsage: ProviderUsage[];
   humanGates: HumanGate[];
   researchGateApprovals?: Record<string, ResearchGateApproval>;
+  approvedCopyReviewPacket?: ResearchedCopyReviewPacket;
   pipelineChecks?: ResearchPipelineChecks;
 }
 

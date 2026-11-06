@@ -23,12 +23,12 @@ test('paid checkout completes the reachable research contract without attempting
     charged: true,
     researchId: 'checkout-123',
     status: 'needs_input',
-    statusUrl: '/api/site-bot/research/status?researchId=checkout-123',
     openGateCount: 3,
   });
   assert.equal('url' in response, false);
   assert.equal('slug' in response, false);
   assert.equal('collectedData' in response, false);
+  assert.equal('statusUrl' in response, false);
   assert.equal('openResearchGates' in response, false);
 });
 
@@ -52,6 +52,7 @@ test('paid checkout carries supplied collected data and open gates without chang
   assert.deepEqual(openResearchGates, originalGates);
   assert.equal('url' in response, false);
   assert.equal('slug' in response, false);
+  assert.equal('statusUrl' in response, false);
 });
 
 test('paid checkout retains its pending record when research cannot complete', async () => {

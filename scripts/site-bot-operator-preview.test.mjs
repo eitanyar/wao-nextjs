@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
+import { createHash } from 'node:crypto';
 import { createServer } from 'node:http';
 import { access, mkdtemp, readFile, readdir, rm, symlink, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
@@ -60,18 +61,35 @@ function record(overrides = {}) {
   };
 }
 
+function dossier(overrides = {}) {
+  return {
+    researchId: 'research-alpha', status: 'copy_ready',
+    pageOpportunities: [
+      { id: 'home', targetPath: '/', status: 'ready' },
+      { id: 'hub', targetPath: '/services', status: 'ready' },
+      { id: 'money', targetPath: '/services/synthetic-service', status: 'ready' },
+    ],
+    pipelineChecks: { copy: 'pass', hebrewQa: 'pending' },
+    ...overrides,
+  };
+}
+
 async function ownedRoot(prefix = 'wao-sitebot-operator-test-') {
   const value = await mkdtemp(join(tmpdir(), prefix));
   roots.push(value);
   return value;
 }
 
-async function fixtureFiles(root, value = record(), hero = pngBytes) {
+async function fixtureFiles(root, value = record(), hero = pngBytes, research = dossier()) {
   const recordPath = join(root, 'record.json');
   const heroPath = join(root, 'hero.bin');
-  await writeFile(recordPath, JSON.stringify(value), 'utf8');
+  const dossierPath = join(root, 'dossier.json');
+  const recordBytes = Buffer.from(JSON.stringify(value), 'utf8');
+  const sha256 = createHash('sha256').update(recordBytes).digest('hex');
+  await writeFile(recordPath, recordBytes);
   await writeFile(heroPath, hero);
-  return { recordPath, heroPath };
+  await writeFile(dossierPath, JSON.stringify(research), 'utf8');
+  return { recordPath, heroPath, dossierPath, sha256 };
 }
 
 async function unusedPort() {
@@ -100,16 +118,19 @@ afterEach(async () => {
   await Promise.all(roots.splice(0).map(value => rm(value, { recursive: true, force: true })));
 });
 
-test('loads only explicit bounded regular record and magic-validated image files', async () => {
+test('loads only explicit bounded regular record, pending dossier and magic-validated image files', async () => {
   const root = await ownedRoot();
-  const { recordPath, heroPath } = await fixtureFiles(root);
+  const input = await fixtureFiles(root);
+  const { recordPath, heroPath, dossierPath } = input;
   const beforeRecord = await readFile(recordPath);
   const beforeHero = await readFile(heroPath);
-  const loaded = await loadOperatorPreviewInput({ recordPath, heroPath });
+  const beforeDossier = await readFile(dossierPath);
+  const loaded = await loadOperatorPreviewInput(input);
   assert.deepEqual(loaded.record, record());
   assert.match(loaded.heroDataUrl, /^data:image\/png;base64,/);
   assert.deepEqual(await readFile(recordPath), beforeRecord);
   assert.deepEqual(await readFile(heroPath), beforeHero);
+  assert.deepEqual(await readFile(dossierPath), beforeDossier);
 
   for (const [name, bytes, mime] of [
     ['jpeg', Buffer.from([0xff, 0xd8, 0xff, 0xe0]), 'image/jpeg'],
@@ -117,31 +138,42 @@ test('loads only explicit bounded regular record and magic-validated image files
   ]) {
     const imagePath = join(root, `${name}.bin`);
     await writeFile(imagePath, bytes);
-    assert.match((await loadOperatorPreviewInput({ recordPath, heroPath: imagePath })).heroDataUrl, new RegExp(`^data:${mime};base64,`));
+    assert.match((await loadOperatorPreviewInput({ ...input, heroPath: imagePath })).heroDataUrl, new RegExp(`^data:${mime};base64,`));
   }
 
   const directory = await ownedRoot();
   const symlinkPath = join(root, 'record-link.json');
   await symlink(recordPath, symlinkPath);
-  await assert.rejects(loadOperatorPreviewInput({ recordPath: symlinkPath, heroPath }), /regular file/i);
-  await assert.rejects(loadOperatorPreviewInput({ recordPath: directory, heroPath }), /regular file/i);
+  await assert.rejects(loadOperatorPreviewInput({ ...input, recordPath: symlinkPath }), /regular file/i);
+  await assert.rejects(loadOperatorPreviewInput({ ...input, recordPath: directory }), /regular file/i);
 
   const unsupported = join(root, 'unsupported.bin');
   await writeFile(unsupported, Buffer.from('GIF89a', 'ascii'));
-  await assert.rejects(loadOperatorPreviewInput({ recordPath, heroPath: unsupported }), /PNG, JPEG, or WebP/i);
+  await assert.rejects(loadOperatorPreviewInput({ ...input, heroPath: unsupported }), /PNG, JPEG, or WebP/i);
 
   const oversizedHero = join(root, 'oversized-hero.bin');
   await writeFile(oversizedHero, Buffer.alloc(5 * 1024 * 1024 + 1));
-  await assert.rejects(loadOperatorPreviewInput({ recordPath, heroPath: oversizedHero }), /too large/i);
+  await assert.rejects(loadOperatorPreviewInput({ ...input, heroPath: oversizedHero }), /too large/i);
 
   const oversizedRecord = join(root, 'oversized-record.json');
   await writeFile(oversizedRecord, Buffer.alloc(2 * 1024 * 1024 + 1, 0x20));
-  await assert.rejects(loadOperatorPreviewInput({ recordPath: oversizedRecord, heroPath }), /too large/i);
+  await assert.rejects(loadOperatorPreviewInput({ ...input, recordPath: oversizedRecord }), /too large/i);
+
+  const dossierLink = join(root, 'dossier-link.json');
+  await symlink(dossierPath, dossierLink);
+  await assert.rejects(loadOperatorPreviewInput({ ...input, dossierPath: dossierLink }), /regular file/i);
+  await assert.rejects(loadOperatorPreviewInput({ ...input, dossierPath: directory }), /regular file/i);
+  await assert.rejects(loadOperatorPreviewInput({ ...input, dossierPath: join(root, 'absent.json') }), /regular file/i);
+  const oversizedDossier = join(root, 'oversized-dossier.json');
+  await writeFile(oversizedDossier, Buffer.alloc(2 * 1024 * 1024 + 1, 0x20));
+  await assert.rejects(loadOperatorPreviewInput({ ...input, dossierPath: oversizedDossier }), /too large/i);
+  await assert.rejects(loadOperatorPreviewInput({ ...input, dossierPath: undefined }));
 });
 
 test('rejects malformed and incomplete records before creating preview output', async () => {
   const root = await ownedRoot();
   const tempParent = await ownedRoot();
+  const input = await fixtureFiles(root);
   const cases = [
     '{',
     JSON.stringify({ ...record(), researchId: '' }),
@@ -151,22 +183,69 @@ test('rejects malformed and incomplete records before creating preview output', 
   ];
   for (const [index, body] of cases.entries()) {
     const recordPath = join(root, `invalid-${index}.json`);
-    const heroPath = join(root, `hero-${index}.bin`);
     await writeFile(recordPath, body, 'utf8');
-    await writeFile(heroPath, pngBytes);
     const before = await readdir(tempParent);
-    await assert.rejects(createOperatorPreviewRuntime({ recordPath, heroPath, tempParent, buildOnly: true, log: () => {} }));
+    await assert.rejects(createOperatorPreviewRuntime({ ...input, recordPath, sha256: createHash('sha256').update(body).digest('hex'), tempParent, buildOnly: true, log: () => {} }));
     assert.deepEqual(await readdir(tempParent), before);
   }
+});
+
+test('rejects changed bytes, wrong digest and ineligible or stale dossiers before output or listener', async () => {
+  const root = await ownedRoot();
+  const tempParent = await ownedRoot();
+  const input = await fixtureFiles(root);
+  const port = await unusedPort();
+  const fail = async options => {
+    await assert.rejects(createOperatorPreviewRuntime({ ...input, ...options, port, tempParent, log: () => {} }));
+    assert.deepEqual(await readdir(tempParent), []);
+    await assertPortClosed(port);
+  };
+  await fail({ sha256: '0'.repeat(64) });
+  await fail({ sha256: input.sha256.toUpperCase() });
+  await fail({ dossierPath: undefined });
+  await writeFile(input.recordPath, `${JSON.stringify(record())} `);
+  await fail({});
+  await writeFile(input.recordPath, JSON.stringify(record()));
+  for (const changed of [
+    { researchId: 'research-other' },
+    { status: 'held' },
+    { status: 'deploy_ready' },
+    { pipelineChecks: { copy: 'pass', hebrewQa: 'pass' } },
+    { pipelineChecks: { copy: 'pending', hebrewQa: 'pending' } },
+    { pageOpportunities: dossier().pageOpportunities.slice(0, 2) },
+    { pageOpportunities: dossier().pageOpportunities.map(item => item.id === 'money' ? { ...item, status: 'held' } : item) },
+    { pageOpportunities: dossier().pageOpportunities.map(item => item.id === 'money' ? { ...item, targetPath: '/stale' } : item) },
+  ]) {
+    await writeFile(input.dossierPath, JSON.stringify(dossier(changed)));
+    await fail({});
+  }
+  await writeFile(input.dossierPath, '{');
+  await fail({});
+});
+
+test('matching review digest retains buildOnly output and explicit cleanup', async () => {
+  const root = await ownedRoot();
+  const tempParent = await ownedRoot();
+  const input = await fixtureFiles(root);
+  const runtime = await createOperatorPreviewRuntime({ ...input, tempParent, buildOnly: true, log: () => {} });
+  try {
+    assert.equal(runtime.url, null);
+    assert.equal(runtime.bundle.manifest.deployable, false);
+    assert.equal(runtime.bundle.manifest.kind, 'operator-researched');
+    assert.equal((await readdir(tempParent)).length, 1);
+  } finally {
+    await runtime.close();
+  }
+  assert.deepEqual(await readdir(tempParent), []);
 });
 
 test('serves the exact inert graph with a visible embedded hero at desktop and mobile sizes', async () => {
   const root = await ownedRoot();
   const tempParent = await ownedRoot();
-  const { recordPath, heroPath } = await fixtureFiles(root);
+  const input = await fixtureFiles(root);
   const port = await unusedPort();
   const lines = [];
-  const runtime = await createOperatorPreviewRuntime({ recordPath, heroPath, port, tempParent, log: line => lines.push(line) });
+  const runtime = await createOperatorPreviewRuntime({ ...input, port, tempParent, log: line => lines.push(line) });
   let browser;
   try {
     assert.deepEqual(lines.map(line => line.split('=')[0]), ['PREVIEW_DIR', 'PREVIEW_URL']);
@@ -239,14 +318,31 @@ test('generic runtime rejects malformed bundles and cleans owned roots after pro
 test('CLI rejects unknown, duplicate, missing, and invalid port arguments before writes', async () => {
   const tempParent = await ownedRoot();
   const root = await ownedRoot();
-  const { recordPath, heroPath } = await fixtureFiles(root);
+  const { recordPath, heroPath, dossierPath, sha256 } = await fixtureFiles(root);
+  const dossierLink = join(root, 'dossier-link.json');
+  await symlink(dossierPath, dossierLink);
+  const oversizedDossier = join(root, 'oversized-dossier.json');
+  await writeFile(oversizedDossier, Buffer.alloc(2 * 1024 * 1024 + 1));
+  const valid = ['--record', recordPath, '--hero', heroPath, '--dossier', dossierPath, '--sha256', sha256];
   const cases = [
     [],
     ['--record', recordPath],
     ['--hero', heroPath],
+    ['--record', recordPath, '--hero', heroPath, '--sha256', sha256],
+    ['--record', recordPath, '--hero', heroPath, '--dossier', dossierPath],
     ['--unknown'],
     ['--record', recordPath, '--record', recordPath, '--hero', heroPath],
     ['--record', recordPath, '--hero', heroPath, '--port', '80'],
+    [...valid, '--unknown', 'x'],
+    [...valid, '--dossier', dossierPath],
+    [...valid, '--sha256', sha256],
+    [...valid.slice(0, -1), 'a'.repeat(63)],
+    [...valid.slice(0, -1), sha256.toUpperCase()],
+    [...valid.slice(0, -1), ` ${sha256}`],
+    [...valid.slice(0, -1), '0'.repeat(64)],
+    ['--record', recordPath, '--hero', heroPath, '--dossier', dossierLink, '--sha256', sha256],
+    ['--record', recordPath, '--hero', heroPath, '--dossier', oversizedDossier, '--sha256', sha256],
+    ['--record', recordPath, '--hero', heroPath, '--dossier', join(root, 'missing.json'), '--sha256', sha256],
   ];
   for (const args of cases) {
     const child = spawn(process.execPath, ['scripts/site-bot-operator-preview.mjs', ...args], {
@@ -256,15 +352,22 @@ test('CLI rejects unknown, duplicate, missing, and invalid port arguments before
     assert.notEqual(code, 0);
     assert.deepEqual(await readdir(tempParent), []);
   }
+  await writeFile(dossierPath, JSON.stringify(dossier({ status: 'held' })));
+  const child = spawn(process.execPath, ['scripts/site-bot-operator-preview.mjs', ...valid], {
+    cwd: process.cwd(), env: { ...process.env, TMPDIR: tempParent }, stdio: ['ignore', 'pipe', 'pipe'],
+  });
+  assert.notEqual(await new Promise(resolve => child.once('exit', resolve)), 0);
+  assert.deepEqual(await readdir(tempParent), []);
 });
 
 test('real CLI logs no source path, closes its port, and removes owned output on SIGTERM', async () => {
   const root = await ownedRoot();
   const tempParent = await ownedRoot();
-  const { recordPath, heroPath } = await fixtureFiles(root);
+  const { recordPath, heroPath, dossierPath, sha256 } = await fixtureFiles(root);
   const port = await unusedPort();
   const child = spawn(process.execPath, [
-    'scripts/site-bot-operator-preview.mjs', '--record', recordPath, '--hero', heroPath, '--port', String(port),
+    'scripts/site-bot-operator-preview.mjs', '--record', recordPath, '--hero', heroPath,
+    '--dossier', dossierPath, '--sha256', sha256, '--port', String(port),
   ], {
     cwd: process.cwd(), env: { ...process.env, TMPDIR: tempParent }, stdio: ['ignore', 'pipe', 'pipe'],
   });
@@ -280,6 +383,8 @@ test('real CLI logs no source path, closes its port, and removes owned output on
     assert.equal(stderr, '');
     assert.equal(stdout.includes(recordPath), false);
     assert.equal(stdout.includes(heroPath), false);
+    assert.equal(stdout.includes(dossierPath), false);
+    assert.equal(stdout.includes(sha256), false);
   } finally {
     child.kill('SIGTERM');
     assert.equal(await new Promise(resolve => child.once('exit', resolve)), 0);
@@ -288,4 +393,5 @@ test('real CLI logs no source path, closes its port, and removes owned output on
   await assert.rejects(access(previewDir));
   assert.deepEqual(await readFile(recordPath), Buffer.from(JSON.stringify(record()), 'utf8'));
   assert.deepEqual(await readFile(heroPath), pngBytes);
+  assert.deepEqual(await readFile(dossierPath), Buffer.from(JSON.stringify(dossier()), 'utf8'));
 });

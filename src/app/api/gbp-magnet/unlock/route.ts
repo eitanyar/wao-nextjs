@@ -63,7 +63,7 @@ function unavailable() {
   return NextResponse.json({ error: 'unavailable' }, { status: 503 });
 }
 
-export async function handleUnlock(request: Request, fetchImpl: typeof fetch = fetch, deps: Dependencies = {}) {
+async function handleUnlock(request: Request, fetchImpl: typeof fetch = fetch, deps: Dependencies = {}) {
   let body: unknown;
   try { body = await request.json(); } catch {
     return NextResponse.json({ error: 'invalid_input' }, { status: 400 });

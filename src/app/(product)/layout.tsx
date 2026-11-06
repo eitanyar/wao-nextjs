@@ -1,5 +1,6 @@
 import type { Viewport } from "next";
-import { Rubik, Assistant } from "next/font/google";
+import "../offline-fonts.css";
+import { preload } from "react-dom";
 import Script from "next/script";
 import "../globals.css";
 
@@ -13,20 +14,6 @@ import "../globals.css";
 // Mirrors the existing (standalone)/layout.tsx pattern — a second root
 // layout via route groups; see node_modules/next/dist/docs/01-app/03-api-reference/03-file-conventions/route-groups.md.
 
-const rubik = Rubik({
-  subsets: ["hebrew", "latin"],
-  variable: "--font-rubik",
-  weight: ["400", "500", "700", "800", "900"],
-  display: "swap",
-});
-
-const assistant = Assistant({
-  subsets: ["hebrew", "latin"],
-  variable: "--font-assistant",
-  weight: ["400", "500", "600", "700"],
-  display: "swap",
-});
-
 export const viewport: Viewport = {
   viewportFit: "cover",
   width: "device-width",
@@ -38,8 +25,12 @@ export default function ProductLayout({
 }: {
   children: React.ReactNode;
 }) {
+  preload("/offline-fonts/1a072933b891bea6-s.p.0ag2x0_84lov2.woff2", { as: "font", type: "font/woff2", crossOrigin: "anonymous" });
+  preload("/offline-fonts/4c42083b9bffcb01-s.p.01zus3.tz2k99.woff2", { as: "font", type: "font/woff2", crossOrigin: "anonymous" });
+  preload("/offline-fonts/87c7f5b5afcd23bd-s.p.06avho5za9mi..woff2", { as: "font", type: "font/woff2", crossOrigin: "anonymous" });
+  preload("/offline-fonts/c9f6ebf08ddd616b-s.p.08ydm43xlmlw2.woff2", { as: "font", type: "font/woff2", crossOrigin: "anonymous" });
   return (
-    <html lang="he" dir="rtl" className={`${rubik.variable} ${assistant.variable}`}>
+    <html lang="he" dir="rtl">
       <body>
         {/* Google Tag Manager (noscript) — tracking still applies in-product per Dror's direction */}
         <noscript>

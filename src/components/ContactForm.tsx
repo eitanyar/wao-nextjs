@@ -60,6 +60,7 @@ export default function ContactForm({ source = "contact-page" }: { source?: stri
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...form,
+          privacyAccepted: true,
           source,
           ref: tracking.ref ?? undefined,
           utm_source: tracking.utm_source ?? undefined,
@@ -67,11 +68,14 @@ export default function ContactForm({ source = "contact-page" }: { source?: stri
           utm_campaign: tracking.utm_campaign ?? undefined,
         }),
       });
-      if (res.ok) {
+      const acknowledgement: unknown = res.ok ? await res.json() : null;
+      const accepted = res.ok && acknowledgement !== null && typeof acknowledgement === "object"
+        && !Array.isArray(acknowledgement) && "ok" in acknowledgement && acknowledgement.ok === true;
+      if (accepted) {
         window.dataLayer = window.dataLayer || [];
         window.dataLayer.push({ event: "lead_submit", source, ref: tracking.ref ?? undefined });
       }
-      setStatus(res.ok ? "success" : "error");
+      setStatus(accepted ? "success" : "error");
     } catch {
       setStatus("error");
     }

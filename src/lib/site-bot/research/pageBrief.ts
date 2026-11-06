@@ -73,6 +73,73 @@ export interface PageBrief {
   faqCandidates: PageBriefFaqCandidate[];
 }
 
+function plainObject(value: unknown): value is Record<string, unknown> {
+  if (value === null || typeof value !== 'object' || Array.isArray(value)) return false;
+  const prototype = Object.getPrototypeOf(value);
+  return prototype === Object.prototype || prototype === null;
+}
+
+function boundedText(value: unknown): value is string {
+  return typeof value === 'string' && value.length <= MAX_EVIDENCE_VALUE_CHARS && value.trim().length > 0;
+}
+
+function denseArray(value: unknown, limit: number): value is unknown[] {
+  return Array.isArray(value) && value.length <= limit &&
+    Array.from({ length: value.length }, (_, index) => Object.hasOwn(value, index)).every(Boolean);
+}
+
+function invalidBrief(): never {
+  throw new Error('Invalid bounded page brief.');
+}
+
+/** Validate request data without normalizing it or conferring factual approval. */
+export function assertBoundedPageBrief(value: unknown): asserts value is PageBrief {
+  if (!plainObject(value) || !plainObject(value.page) ||
+    !boundedText(value.page.id) || !boundedText(value.page.targetPath) || !boundedText(value.page.pageClass)) invalidBrief();
+
+  const evidenceIds = new Set<string>();
+  const evidence = (item: unknown, sectionIds: Set<string>): void => {
+    if (!plainObject(item) || !boundedText(item.id) || !boundedText(item.value) || sectionIds.has(item.id)) invalidBrief();
+    sectionIds.add(item.id);
+    evidenceIds.add(item.id);
+  };
+  evidence(value.persona, new Set());
+  evidence(value.waoOffer, new Set());
+  for (const key of ['targetQueries', 'approvedEntityAnchors', 'firstPartyProof', 'assertableLocalFacts',
+    'customerDecisions', 'constraints'] as const) {
+    const items = value[key];
+    if (!denseArray(items, MAX_ITEMS_PER_SECTION)) invalidBrief();
+    const sectionIds = new Set<string>();
+    for (const item of items) evidence(item, sectionIds);
+  }
+  for (const key of ['informationGainGaps', 'prohibitedClaims'] as const) {
+    const items = value[key];
+    if (!denseArray(items, MAX_ITEMS_PER_SECTION) || !items.every(boundedText)) invalidBrief();
+  }
+  if (value.faqPolicy !== 'none' && value.faqPolicy !== 'optional' &&
+    value.faqPolicy !== 'required_for_user_clarity') invalidBrief();
+  if (!denseArray(value.faqCandidates, MAX_FAQ_ITEMS) || !denseArray(value.links, MAX_ITEMS_PER_SECTION)) invalidBrief();
+
+  const referencedIds = (ids: unknown): boolean => denseArray(ids, MAX_ITEMS_PER_SECTION) && ids.length > 0 &&
+    ids.every(id => boundedText(id) && evidenceIds.has(id));
+  for (const item of value.faqCandidates) {
+    if (!plainObject(item) || !boundedText(item.id) || !boundedText(item.question) ||
+      !boundedText(item.answer) || !['paa', 'neuronwriter', 'owner_faq', 'review', 'sales_objection'].includes(item.source as string) ||
+      typeof item.relevance !== 'number' || !Number.isFinite(item.relevance) ||
+      item.relevance < 0 || item.relevance > 1 || !referencedIds(item.answerEvidenceIds) ||
+      (item.requiredForUserClarity !== undefined && typeof item.requiredForUserClarity !== 'boolean')) invalidBrief();
+  }
+  for (const item of value.links) {
+    if (!plainObject(item) || !boundedText(item.targetPath) || !boundedText(item.relationship) ||
+      !referencedIds(item.evidenceIds)) invalidBrief();
+  }
+  try {
+    if (JSON.stringify(value).length > MAX_PAGE_BRIEF_PAYLOAD_CHARS) invalidBrief();
+  } catch {
+    invalidBrief();
+  }
+}
+
 function normalizeText(value: string, maxLength = MAX_EVIDENCE_VALUE_CHARS): string {
   return value.trim().replace(/\s+/g, ' ').slice(0, maxLength);
 }

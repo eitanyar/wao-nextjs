@@ -1,6 +1,8 @@
+import fs from 'fs';
+import path from 'path';
 import { randomUUID } from 'crypto';
 import { NextResponse } from 'next/server';
-import { readResearchDossier } from '@/lib/site-bot/research/researchStore';
+import { getResearchPath, readResearchDossier } from '@/lib/site-bot/research/researchStore';
 import { resumeSiteResearch, runSiteResearch, type SiteResearchInput } from '@/lib/site-bot/research/runResearch';
 
 export const dynamic = 'force-dynamic';
@@ -33,27 +35,57 @@ function summary(dossier: Awaited<ReturnType<typeof readResearchDossier>>) {
   };
 }
 
+function postReply(body: object | null, status: number) {
+  return NextResponse.json(body, { status, headers: { 'Cache-Control': 'private, no-store' } });
+}
+
 export async function POST(req: Request) {
-  if (!isAuthorized(req)) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  if (!isAuthorized(req)) return postReply({ error: 'Unauthorized' }, 401);
   const body = await req.json().catch(() => null);
-  if (!body || (body.action !== 'start' && body.action !== 'resume')) return NextResponse.json({ error: 'invalid_input' }, { status: 400 });
+  if (!body || (body.action !== 'start' && body.action !== 'resume')) return postReply({ error: 'invalid_input' }, 400);
   const researchId = body.action === 'start' ? (opaqueId(body.researchId) ? body.researchId : randomUUID()) : body.researchId;
-  if (!opaqueId(researchId) || !body.input || typeof body.input !== 'object') return NextResponse.json({ error: 'invalid_input' }, { status: 400 });
+  if (!opaqueId(researchId) || !body.input || typeof body.input !== 'object') return postReply({ error: 'invalid_input' }, 400);
   try {
     const result = body.action === 'resume'
       ? await resumeSiteResearch(researchId, body.input as SiteResearchInput)
       : await runSiteResearch(researchId, body.input as SiteResearchInput);
-    return NextResponse.json(summary(result.dossier));
+    return postReply(summary(result.dossier), 200);
   } catch {
-    return NextResponse.json({ error: 'research_failed' }, { status: 500 });
+    return postReply({ error: 'research_failed' }, 500);
   }
 }
 
+function getReply(body: object | null, status: number) {
+  return NextResponse.json(body, { status, headers: { 'Cache-Control': 'private, no-store' } });
+}
+
+function getFileState(file: string, researchId: string): 'ready' | 'missing' | 'invalid' {
+  const root = process.cwd();
+  if (file !== path.resolve(root, 'data', 'site-research', researchId, 'dossier.json')) return 'invalid';
+  const relative = path.relative(root, file);
+  if (!relative || relative.startsWith('..') || path.isAbsolute(relative)) return 'invalid';
+  let current = root;
+  const parts = relative.split(path.sep);
+  for (const [index, part] of parts.entries()) {
+    current = path.join(/* turbopackIgnore: true */ current, part);
+    try {
+      const stat = fs.lstatSync(current);
+      if (stat.isSymbolicLink() || !(index === parts.length - 1 ? stat.isFile() : stat.isDirectory())) return 'invalid';
+    } catch (error) {
+      return (error as NodeJS.ErrnoException).code === 'ENOENT' ? 'missing' : 'invalid';
+    }
+  }
+  return 'ready';
+}
+
 export async function GET(req: Request) {
-  if (!isAuthorized(req)) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  if (!isAuthorized(req)) return getReply({ error: 'Unauthorized' }, 401);
   const researchId = new URL(req.url).searchParams.get('researchId');
-  if (!opaqueId(researchId)) return NextResponse.json({ error: 'invalid_input' }, { status: 400 });
-  const dossier = await readResearchDossier(researchId);
-  if (!dossier) return NextResponse.json({ error: 'not_found' }, { status: 404 });
-  return NextResponse.json(summary(dossier));
+  if (!opaqueId(researchId)) return getReply({ error: 'invalid_input' }, 400);
+  const dossierPath = getResearchPath(researchId);
+  const state = dossierPath ? getFileState(dossierPath, researchId) : 'invalid';
+  if (state !== 'ready') return getReply({ error: state === 'missing' ? 'not_found' : 'invalid_record' }, state === 'missing' ? 404 : 409);
+  const dossier = await readResearchDossier(researchId, undefined, { bounded: true });
+  if (!dossier) return getReply({ error: 'invalid_record' }, 409);
+  return getReply(summary(dossier), 200);
 }

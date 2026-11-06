@@ -1,0 +1,138 @@
+{
+  "source": "waocopy qwen3.8-max request_ids 6f150d5b-bf2a-4857-b95d-3fb30280c293, e541cc8a-1a8f-4b8b-80f9-fc0d9e0b1859",
+  "patches": [
+    {
+      "file": "src/app/(app)/site-bot/page.tsx",
+      "old": "בניית אתר לעסק קטן — אתר חי תוך 24 שעות, עדכון בהודעה‏ | WAO",
+      "new": "בניית אתר לעסק קטן — בלי עורך, עדכונים בהודעה‏ | WAO",
+      "why": "Replace timed title with the approved price-free title.",
+      "expected_count": 1
+    },
+    {
+      "file": "src/app/(app)/site-bot/page.tsx",
+      "old": "בניית אתר לעסק קטן: ניסיון ב-₪9.90 לעמוד בית חי. בחבילה המלאה ב-₪1,490 חד-פעמי, האתר שלך עולה לאוויר תוך 24 שעות ומתעדכן בהודעה.",
+      "new": "בניית אתר לעסק קטן מתחילה בשיחה עם איתן על האתר שמתאים לעסק שלך. רוצה לראות קודם איך העסק שלך נראה בגוגל? הבדיקה חינמית.",
+      "why": "Make the description honest, price-free, and aligned with the available actions. [language-qa correction]",
+      "expected_count": 2
+    },
+    {
+      "file": "src/app/(app)/site-bot/page.tsx",
+      "old": "בניית אתר לעסק קטן — אתר חי תוך 24 שעות, עדכון בהודעה",
+      "new": "בניית אתר לעסק קטן — בלי עורך, עדכונים בהודעה",
+      "why": "Set the OG title to the approved price-free version without the suffix.",
+      "expected_count": 2
+    },
+    {
+      "file": "src/app/(app)/site-bot/page.tsx",
+      "old": "ניסיון עם עמוד בית חי בכתובת WAO עולה ₪9.90. החבילה המלאה עולה ₪1,490 חד-פעמי, בלי מנוי או חוזה.",
+      "new": "המחיר נקבע בשיחה אישית עם איתן, לפי מה שהעסק שלך צריך. אפשר להתחיל קודם בבדיקה חינמית של העסק שלך בגוגל.",
+      "why": "Answer the pricing FAQ honestly without price, trial, or timeline. [language-qa correction]",
+      "expected_count": 1
+    },
+    {
+      "file": "src/app/(app)/site-bot/page.tsx",
+      "old": "החבילה המלאה עולה לאוויר תוך 24 שעות. אתה מתחיל בשיחה, בלי להקים אתר בעצמך.",
+      "new": "המועד נקבע בשיחה עם איתן, לפי היקף האתר. אתה לא צריך להקים כלום בעצמך.",
+      "why": "Remove the delivery-speed promise and keep the available next step. [language-qa correction]",
+      "expected_count": 1
+    },
+    {
+      "file": "src/app/(app)/site-bot/page.tsx",
+      "old": "לא. אתה מספר על העסק בצ׳אט; החבילה המלאה כוללת אתר בדומיין פרטי תוך 24 שעות.",
+      "new": "לא. אתה מספר על העסק בצ׳אט; החבילה המלאה כוללת אתר בדומיין פרטי, בלי להקים אותו בעצמך.",
+      "why": "Keep the description but remove the 24-hour claim.",
+      "expected_count": 1
+    },
+    {
+      "file": "src/app/(app)/site-bot/page.tsx",
+      "old": "אתה יכול לבנות לבד, אבל הזמן שלך לא בחינם. ב-₪1,490 חד-פעמי אתה מקבל חמישה עמודים, דומיין פרטי ועריכה בצ׳אט לתמיד. החבילה כוללת גם חיבור GSC, פרופיל עסקי בגוגל וטופס לידים.",
+      "new": "אתה יכול לבנות לבד, אבל הזמן שלך לא בחינם. החבילה כוללת חמישה עמודים, דומיין פרטי ועריכה בצ׳אט לתמיד, וגם חיבור GSC, פרופיל עסקי בגוגל וטופס לידים.",
+      "why": "Preserve the included-features description while removing the price.",
+      "expected_count": 1
+    },
+    {
+      "file": "src/app/(app)/site-bot/page.tsx",
+      "old": "החבילה המלאה עולה לאוויר תוך 24 שעות, בדומיין שרשום על שמך.",
+      "new": "החבילה המלאה כוללת אתר בדומיין שרשום על שמך.",
+      "why": "Remove the timing claim and keep the domain ownership description.",
+      "expected_count": 1
+    },
+    {
+      "file": "src/app/(app)/site-bot/page.tsx",
+      "old": "בחבילה המלאה ב-₪1,490, האתר שלך עולה לאוויר תוך 24 שעות. אחר כך תעדכן אותו בהודעה.",
+      "new": "בניית אתר לעסק קטן מתחילה בשיחה עם איתן, ואחר כך אתה מעדכן את האתר בהודעה.",
+      "why": "Hero/H1 becomes price-free and keeps the required head term.",
+      "expected_count": 1
+    },
+    {
+      "file": "src/app/(app)/site-bot/page.tsx",
+      "old": "אתה באמצע יום עבודה וצריך לעדכן מחיר באתר? שלח הודעת WhatsApp והאתר מתעדכן. מתחיל בניסיון של עמוד בית חי ב-₪9.90; החבילה המלאה כוללת חמישה עמודים בדומיין שלך.",
+      "new": "אתה באמצע יום עבודה וצריך לעדכן מחיר באתר? שלח הודעת WhatsApp והאתר מתעדכן. החבילה המלאה כוללת חמישה עמודים בדומיין שלך.",
+      "why": "Drop trial+price clause only; original wording kept [language-qa]",
+      "expected_count": 1
+    },
+    {
+      "file": "src/app/(app)/site-bot/page.tsx",
+      "old": "תן לי לראות עמוד בית חי ב-₪9.90",
+      "new": "דבר עם איתן על האתר שלך",
+      "why": "Primary CTA becomes the conversation with Eitan, replacing the paid trial.",
+      "expected_count": 3
+    },
+    {
+      "file": "src/app/(app)/site-bot/page.tsx",
+      "old": "ניסיון ב-₪9.90 לעמוד בית חי בכתובת WAO; חבילה מלאה ב-₪1,490 חד-פעמי.",
+      "new": "משאירים פרטים, ואיתן חוזר אליך לשיחה על האתר. אפשר גם להתחיל בבדיקה חינמית של העסק שלך בגוגל.",
+      "why": "Replaces pricing subtext with the primary and secondary next steps. [language-qa correction]",
+      "expected_count": 2
+    },
+    {
+      "file": "src/app/(app)/site-bot/page.tsx",
+      "old": "בניית אתר במחיר קבוע: ₪1,490 חד-פעמי לחבילה המלאה. רוצה לראות קודם עמוד בית חי? הניסיון עולה ₪9.90 בכתובת WAO. אין מנוי ואין חוזה ארוך שתצטרך לסיים אחר כך.",
+      "new": "כל אתר נבנה אחרי שיחה עם איתן על העסק שלך. רוצה לבדוק קודם איך העסק שלך נראה בגוגל? הבדיקה חינמית, וצריך רק את שם העסק.",
+      "why": "Price-free honest offer: conversation with Eitan plus the free Google check. [language-qa correction]",
+      "expected_count": 1
+    },
+    {
+      "file": "src/app/(app)/site-bot/page.tsx",
+      "old": "ב-₪9.90 אתה רואה עמוד בית חי, בכתובת WAO. רק אחר כך תחליט אם לעבור לחבילה המלאה; אין מנוי או חוזה.",
+      "new": "הבדיקה לא מחייבת אותך לכלום. רק אחריה תחליט אם לדבר עם איתן על האתר.",
+      "why": "Replaces paid-trial explanation with the free audit before conversation. [language-qa correction]",
+      "expected_count": 1
+    },
+    {
+      "file": "src/app/(app)/site-bot/page.tsx",
+      "old": "מה כלול בניסיון? עמוד בית חי אחד, בכתובת של WAO, ב-₪9.90. בחבילה המלאה תקבל חמישה עמודים, דומיין פרטי ועריכה בצ׳אט לתמיד. גם GSC, הפרופיל העסקי בגוגל וטופס הלידים מחוברים במסגרת החבילה.",
+      "new": "מה כוללת החבילה המלאה? חמישה עמודים, דומיין פרטי ועריכה בצ׳אט. גם GSC, הפרופיל העסקי בגוגל וטופס הלידים מחוברים לאתר.",
+      "why": "Keeps the included-site description without trial, price, or speed. [language-qa correction]",
+      "expected_count": 1
+    },
+    {
+      "file": "src/app/(app)/site-bot/page.tsx",
+      "old": "Site Bot: ₪1,490 חד-פעמי לחבילה המלאה, אתר תוך 24 שעות ועריכה בצ׳אט לתמיד.",
+      "new": "Site Bot: אתר לעסק קטן, בדומיין שלך ועם עריכה בצ׳אט.",
+      "why": "Removes price and 24-hour promise from the mixed line. [language-qa correction]",
+      "expected_count": 1
+    },
+    {
+      "file": "src/app/(app)/site-bot/page.tsx",
+      "old": "<span className=\"text-gradient\">₪1,490</span>",
+      "new": "<span className=\"text-gradient\">אתר לעסק</span>",
+      "why": "Scoped pricing-card heading replacement avoids touching other price strings.",
+      "expected_count": 1
+    },
+    {
+      "file": "src/app/(app)/site-bot/page.tsx",
+      "old": "NEW_SECONDARY_CTA",
+      "new": "בדוק איך העסק שלך נראה בגוגל — חינם",
+      "why": "Adds the free-audit secondary CTA label."
+    },
+    {
+      "file": "src/app/(app)/site-bot/page.tsx",
+      "old": "Site Bot — בניית אתר לעסק קטן במחיר קבוע",
+      "new": "Site Bot — בניית אתר לעסק קטן",
+      "why": "Schema Service name: drop fixed-price claim (deletion only)",
+      "expected_count": 1
+    }
+  ],
+  "qa": "language-qa PASS after corrections 2026-11-06; Hero.tsx/Services.tsx patches dropped (components unused)"
+}

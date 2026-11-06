@@ -4,7 +4,7 @@ import { ADMIN_COOKIE_NAME, verifyAdminClientFixtureAccess, verifyAdminToken } f
 
 const CLIENT_PROTECTED = ['/client', '/api/geo/action', '/gmb/action', '/api/gmb/action'];
 const ADMIN_PROTECTED = ['/geo/dashboard', '/gmb/dashboard', '/leads'];
-const MASTER_ADMIN_PROTECTED = ['/admin/clients', '/admin/podcast-titles', '/admin/astra-copy-review'];
+const MASTER_ADMIN_PROTECTED = ['/admin/clients', '/admin/podcast-titles', '/admin/astra-copy-review', '/admin/site-bot-copy-review'];
 const LOGIN_PATH = '/client/login';
 const ADMIN_LOGIN_PATH = '/geo/login';
 const MASTER_ADMIN_LOGIN_PATH = '/admin/login';
@@ -47,4 +47,4 @@ export async function proxy(req: NextRequest) {
   return NextResponse.next();
 }
 
-export const config = { matcher: ['/client/:path*', '/geo/action/:path*', '/api/geo/action/:path*', '/geo/dashboard/:path*', '/gmb/action/:path*', '/api/gmb/action/:path*', '/gmb/dashboard/:path*', '/admin/clients/:path*', '/admin/podcast-titles/:path*', '/admin/astra-copy-review/:path*', '/leads/:path*'] };
+export const config = { matcher: ['/client/:path*', '/geo/action/:path*', '/api/geo/action/:path*', '/geo/dashboard/:path*', '/gmb/action/:path*', '/api/gmb/action/:path*', '/gmb/dashboard/:path*', '/admin/clients/:path*', '/admin/podcast-titles/:path*', '/admin/astra-copy-review/:path*', '/admin/site-bot-copy-review/:path*', '/leads/:path*'] };

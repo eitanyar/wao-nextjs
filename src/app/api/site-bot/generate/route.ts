@@ -1,9 +1,10 @@
 import { NextResponse } from 'next/server';
+import fs from 'node:fs';
 import path from 'node:path';
 import { cookies } from 'next/headers';
 import type { CollectedData } from '@/lib/bot/prompts';
-import type { PageBrief } from '@/lib/site-bot/research/pageBrief';
-import { readResearchDossier, writeResearchDossierAtomic } from '@/lib/site-bot/research/researchStore';
+import { assertBoundedPageBrief, type PageBrief } from '@/lib/site-bot/research/pageBrief';
+import { getResearchPath, readResearchDossier, writeResearchDossierAtomic } from '@/lib/site-bot/research/researchStore';
 import { buildSimulationGenerationResult, generateResearchPageCopy } from '@/lib/lp/researchPageCopy';
 import type { ResearchedSiteGraphEdge } from '@/lib/lp/researchedSite';
 import { detectVertical } from '@/lib/lp/verticalDetect';
@@ -12,7 +13,9 @@ import { VERTICAL_ASSETS } from '@/lib/lp/verticalAssets';
 import { ADMIN_COOKIE_NAME, verifyAdminToken } from '@/lib/admin-auth';
 import { isSafeDeploymentSlug } from '@/lib/deployment/deploy-access';
 import {
+  assertResearchedGenerationReady,
   buildResearchedSiteGeneration,
+  preflightResearchedSiteTarget,
   persistResearchedSiteRecordAtomic,
 } from '@/lib/site-bot/researchedSiteGeneration';
 
@@ -62,21 +65,42 @@ function isGraphEdge(value: unknown): value is ResearchedSiteGraphEdge {
   return opaqueId(edge.fromId) && opaqueId(edge.toId);
 }
 
+function dossierFileReady(file: string): boolean {
+  const relative = path.relative(process.cwd(), file);
+  if (!relative || relative.startsWith('..') || path.isAbsolute(relative)) return false;
+  let current = process.cwd();
+  const parts = relative.split(path.sep);
+  for (const [index, part] of parts.entries()) {
+    current = path.join(/* turbopackIgnore: true */ current, part);
+    try {
+      const stat = fs.lstatSync(current);
+      if (stat.isSymbolicLink() || !(index === parts.length - 1 ? stat.isFile() : stat.isDirectory())) return false;
+    } catch {
+      return false;
+    }
+  }
+  return true;
+}
+
+function postReply(body: object, status = 200) {
+  return NextResponse.json(body, { status, headers: { 'Cache-Control': 'private, no-store' } });
+}
+
 export async function POST(req: Request) {
   const authCookies = await cookies();
   const adminAuthorized = await verifyAdminToken(authCookies.get(ADMIN_COOKIE_NAME)?.value ?? '');
   if (!adminAuthorized) {
-    return NextResponse.json({ error: 'unauthorized', deployable: false }, { status: 401 });
+    return postReply({ error: 'unauthorized', deployable: false }, 401);
   }
 
   const body = await req.json().catch(() => null);
   if (!body || typeof body !== 'object' || Array.isArray(body)) {
-    return NextResponse.json({ error: 'invalid_request', deployable: false }, { status: 400 });
+    return postReply({ error: 'invalid_request', deployable: false }, 400);
   }
 
   const collectedData = body.collectedData as CollectedData | undefined;
   if (!collectedData?.businessNiche) {
-    return NextResponse.json({ error: 'collectedData.businessNiche is required', deployable: false }, { status: 400 });
+    return postReply({ error: 'collectedData.businessNiche is required', deployable: false }, 400);
   }
 
   const hasExplicitSlug = Object.prototype.hasOwnProperty.call(body, 'slug');
@@ -84,11 +108,11 @@ export async function POST(req: Request) {
     ? body.slug
     : slugify(collectedData.businessName || collectedData.businessNiche, collectedData.phone);
   if (!isSafeDeploymentSlug(slug)) {
-    return NextResponse.json({ error: 'invalid_deployment_slug', deployable: false }, { status: 400 });
+    return postReply({ error: 'invalid_deployment_slug', deployable: false }, 400);
   }
 
   if (body.simulation === true) {
-    return NextResponse.json({
+    return postReply({
       success: true,
       slug,
       simulation: true,
@@ -104,15 +128,32 @@ export async function POST(req: Request) {
     || !Array.isArray(body.graphEdges)
     || !body.graphEdges.every(isGraphEdge)
   ) {
-    return NextResponse.json({ error: 'research_generation_input_invalid', deployable: false }, { status: 400 });
+    return postReply({ error: 'research_generation_input_invalid', deployable: false }, 400);
   }
 
-  const dossier = await readResearchDossier(body.researchId);
+  const dossierPath = getResearchPath(body.researchId);
+  if (!dossierPath || !dossierFileReady(dossierPath)) {
+    return postReply({ error: 'research_copy_not_ready', deployable: false }, 409);
+  }
+  const dossier = await readResearchDossier(body.researchId, undefined, { bounded: true });
   if (!dossier) {
-    return NextResponse.json({ error: 'research_copy_not_ready', deployable: false }, { status: 409 });
+    return postReply({ error: 'research_copy_not_ready', deployable: false }, 409);
+  }
+  try {
+    assertResearchedGenerationReady(dossier, body.researchId);
+  } catch {
+    return postReply({ error: 'research_copy_not_ready', deployable: false }, 409);
   }
 
   try {
+    for (const brief of body.pageBriefs) assertBoundedPageBrief(brief);
+  } catch {
+    return postReply({ error: 'research_generation_input_invalid', deployable: false }, 400);
+  }
+
+  try {
+    const sitesRoot = path.join(process.cwd(), 'data', 'sites');
+    preflightResearchedSiteTarget(slug, body.researchId, { sitesRoot });
     const verticalKey = detectVertical(collectedData.businessNiche);
     const theme = VERTICAL_THEMES[verticalKey];
     const assets = VERTICAL_ASSETS[verticalKey];
@@ -135,19 +176,19 @@ export async function POST(req: Request) {
     });
 
     await persistResearchedSiteRecordAtomic(record, {
-      sitesRoot: path.join(process.cwd(), 'data', 'sites'),
+      sitesRoot,
       dossier,
       writeDossier: updated => writeResearchDossierAtomic(updated.researchId, updated),
     });
 
-    return NextResponse.json({
+    return postReply({
       success: true,
       slug,
       simulation: false,
-      deployable: true,
+      deployable: false,
       pageCount: record.researchedPages.length,
     });
   } catch {
-    return NextResponse.json({ error: 'research_generation_failed', deployable: false }, { status: 502 });
+    return postReply({ error: 'research_generation_failed', deployable: false }, 502);
   }
 }

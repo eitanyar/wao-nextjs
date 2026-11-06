@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
+  assertBoundedGeneratedSiteCopy,
   buildResearchPageCopyPrompt,
   buildSimulationGenerationResult,
   generateResearchPageCopy,
@@ -101,4 +102,75 @@ test('Noa failure rejects rather than returning unreviewed Tamar copy', async ()
     },
   }), /noa failure/);
   assert.equal(calls, 2);
+});
+
+test('bounded copy rejects malformed shapes, excess fields and sparse arrays generically', () => {
+  const sparse = [copy.trustBarItems[0], 'second'];
+  delete sparse[1];
+  const cases: unknown[] = [
+    null, [], { ...copy, heroHeadline: undefined }, { ...copy, heroHeadline: '   ' },
+    { ...copy, heroHeadline: 'x'.repeat(69) }, { ...copy, extra: 'private model content' },
+    { ...copy, reviewFeatured: 'Quote' }, { ...copy, reviewContext: 'Context' },
+    { ...copy, scarcityLine: 'Limited' }, { ...copy, responseTimeBadge: 12 },
+    { ...copy, trustBarItems: sparse }, { ...copy, trustBarItems: ['x'.repeat(21)] },
+    { ...copy, serviceItems: Array(7).fill('Item') },
+    { ...copy, faqItems: [{ q: 'Q', a: '' }] },
+    { ...copy, faqItems: [{ q: 'Q', a: 'A', extra: 'no' }] },
+    { ...copy, faqItems: [null] },
+    { ...copy, serviceDetails: [{ name: 'Name', description: { nested: 'no' } }] },
+    { ...copy, serviceDetails: [{ name: 'x'.repeat(26), description: 'Detail' }] },
+  ];
+  for (const [index, candidate] of cases.entries()) {
+    assert.throws(() => assertBoundedGeneratedSiteCopy(candidate), /^Error: Invalid bounded generated site copy\.$/, `case ${index}`);
+  }
+  assert.doesNotThrow(() => assertBoundedGeneratedSiteCopy(copy));
+  assert.doesNotThrow(() => assertBoundedGeneratedSiteCopy({
+    ...copy, faqItems: [], reviewFeatured: 'Quote', reviewContext: 'Context', responseTimeBadge: 'Soon',
+  }));
+});
+
+test('malformed Tamar output never calls Noa and malformed Noa output is never returned', async () => {
+  for (const tamar of ['{private model text', JSON.stringify({ ...copy, heroHeadline: 'x'.repeat(69) }),
+    `${JSON.stringify(copy)}${' '.repeat(16 * 1024)}`]) {
+    let calls = 0;
+    await assert.rejects(() => generateResearchPageCopy(brief(), {}, {
+      callJson: async () => {
+        calls++;
+        if (calls !== 1) throw new Error('unexpected Noa call');
+        return tamar;
+      },
+    }), /^Error: Invalid bounded generated site copy\.$/);
+    assert.equal(calls, 1);
+  }
+  for (const noa of ['{private model text', JSON.stringify({ ...copy, serviceDetails: [{ name: 'Name', description: '' }] })]) {
+    let calls = 0;
+    await assert.rejects(() => generateResearchPageCopy(brief(), {}, {
+      callJson: async () => {
+        calls++;
+        if (calls === 1) return JSON.stringify(copy);
+        if (calls === 2) return noa;
+        throw new Error('unexpected provider call');
+      },
+    }), /^Error: Invalid bounded generated site copy\.$/);
+    assert.equal(calls, 2);
+  }
+});
+
+test('FAQ policy result is bounded after Noa and retains valid supported candidates', async () => {
+  const candidate = brief();
+  candidate.faqCandidates[0].answer = 'x'.repeat(121);
+  let calls = 0;
+  await assert.rejects(() => generateResearchPageCopy(candidate, {}, {
+    callJson: async () => { calls++; return JSON.stringify(copy); },
+  }), /^Error: Invalid bounded generated site copy\.$/);
+  assert.equal(calls, 2);
+
+  const seen: string[] = [];
+  const generated = await generateResearchPageCopy(brief(), {}, {
+    callJson: async (system) => { seen.push(system); return JSON.stringify(copy); },
+  });
+  assert.equal(seen.length, 2);
+  assert.match(seen[0], /Tamar/);
+  assert.match(seen[1], /Noa/);
+  assert.deepEqual(generated.faqItems, [{ q: 'What does alpha service include?', a: 'Scope is confirmed before booking.' }]);
 });

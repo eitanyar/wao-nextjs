@@ -1,0 +1,29 @@
+# Independent Hebrew and claim review — homepage benefit-first draft v2
+
+Date: October 12, 2026  
+Exact artifacts reviewed: `docs/copy/homepage-benefit-first-draft-2026-10-12-v2.md` and `docs/copy/homepage-benefit-first-draft-2026-10-12-v2.json`  
+Identity: the exact v2 paths named above; SHA-256 values are the strategist's freshly verified pins recorded in task `t_b5608e7b` (Markdown `53acb0da3cf893a79a671ae444d6e232d24553f13c91f4c07a37c9068934e2f6`; JSON `47e66dadb1e3722ef6e2658bc5a334046f2f62f8f85169ffa0737e6bcbdabe81`). I used the required native file reads and did not recompute hashes because commands were out of scope.
+
+## Formal and substantive outcome
+
+Formal review outcome: complete; the assigned Kanban review task should be marked DONE.
+
+Independent language/claim verdict: PASS for this internal, unapplied draft. The exact v2 text is materially understandable, natural Israeli Hebrew for its target, consistently addresses the reader in singular masculine, and keeps contact invitations distinct from confirmed service, follow-up, or live activation. I found no material language, persona, claim, trust, or topic-preservation defect requiring a copy change.
+
+This is not founder approval, whole-page commercial judgment, rendered-preview acceptance, or release/publication authorization. Founder voice and confirmation of the since-2006 experience statement, current Partner/badge status, destination/terms alignment, contact delivery, and runtime/rendered acceptance remain pending.
+
+## Independent checks
+
+- Protected anchors: the eyebrow, both H1 lines, and current SEO title in v2 JSON `unchanged_protected` match the source values at `src/content/astra-homepage-copy.json` lines 24 and 49–52. The title is explicitly retained, not proposed for implementation change.
+- Google Ads correction and parity: v2 Markdown lines 53–55 contain the full `replacement_map` values `paths.google_ads.description` and `paths.google_ads.demo_status` (JSON lines 60–61) as separate visible blocks, each once. The status block includes the contact-request/activation boundary. This matches the separate body and card-note seams in `src/components/home/AstraHome.tsx:88-89`. The core copy keys were also checked against the selected-source JSON; Markdown reproduces the visible values, while its English explanations are marked non-rendered.
+- Founder experience correction: Markdown line 79 preserves the `src/content/astra-homepage-copy.json#/people/intro` statement byte-for-byte. JSON `proposed_additions.founder_authority.experience_line` maps the current `Footer.tsx:108` seam and proposed founder-block placement. The new placement is a proposal, not a current render. The author correctly flags fresh founder confirmation before publication; this review does not verify the underlying claim.
+- FAQ correction and preservation: Markdown lines 91–119 retain the six v1 topics and restore the no-marketing-experience concern at lines 115–117. JSON additions `faq.items[5]` and `[6]` map the terms and restored entries; `[6]` preserves the source question and answer core, then adds the agreement/activation boundary. `AstraHome.tsx:149-154` maps the FAQ array, consistent with the proposed addition. No material FAQ topic is lost, and the contact request is not described as guaranteeing service, immediate follow-up, or results.
+- Whole-page language and CTA expectations: the hero, service paths, founder section, FAQs, closing CTA, navigation, and footer were reviewed in both artifacts against the selected renderer seams. Register remains singular masculine. CTA destinations are presented as proposed contact invitations, not completed bookings or operational guarantees. No materially confusing or TTS-breaking wording was found; the prose is generally broken into short, speakable sentences.
+- Trust and claim boundaries: the draft retains the existing video asset and direct fallback without inventing a quotation or video-content claim; founder identity/photo/about link; Partner proof references; service explanations; and useful navigation. The source’s since-2006 statement is preserved but not independently substantiated. Partner status, badge use, destination terms, contact-form delivery and human receipt remain explicitly unverified. The draft adds no unsupported price, SLA, result, ranking, lead-volume, attribution, live-service, or current-credential claim. It does not describe the broken Site-Bot journey as functioning.
+- v1 comparison: the v1 and v2 reading-order copy was compared for preservation beyond the three declared corrections. The six v1 FAQ entries remain represented, and the v2 JSON records the three intended completeness repairs. This is a native read-based comparison, not a fresh hash calculation or runtime test.
+
+## Evidence limits and remaining gates
+
+Source/render behavior was checked by reading `src/app/(app)/page.tsx`, `AstraHome.tsx`, `AstraProofVideo.tsx`, `Header.tsx`, `Footer.tsx`, and both named source-copy JSON files. The draft’s proposed seams, parity history, and authoring-model provenance are documented claims; this review independently checked the visible wording and relevant source mappings but did not execute code, visit destinations, view the video, verify the Partner directory, submit the form, confirm the experience claim with the founder, or render a preview. The runtime review remains the cited source evidence for known Site-Bot/contact limitations, not proof of current recovery.
+
+Read-only language and claim review only. No draft, source, historical report, runtime, or customer data was changed or accessed; no publication, application, provider action, command, or successor task was performed.

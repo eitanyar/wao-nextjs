@@ -32,7 +32,6 @@ export async function completePaidCheckoutResearch({
     charged: true,
     researchId: sessionId,
     status: result.dossier.status,
-    statusUrl: `/api/site-bot/research/status?researchId=${encodeURIComponent(sessionId)}`,
     openGateCount: openResearchGateCount + result.dossier.humanGates.filter(gate => gate.status !== 'approved').length,
     ...(collectedData !== undefined ? { collectedData } : {}),
     ...(openResearchGates !== undefined ? { openResearchGates } : {}),

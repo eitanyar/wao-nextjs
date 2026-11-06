@@ -141,6 +141,7 @@ export default async function GeoActionPage({
           <PathCard
             actionId={actionId}
             wpConnected={wpConnected}
+            adminView={isAdmin}
             mode={publishMode}
             locked={locked}
             autoDisabled={hasCannibalRisk}

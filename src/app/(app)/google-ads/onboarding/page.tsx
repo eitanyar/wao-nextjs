@@ -4,8 +4,6 @@ import React, { useState, useEffect, useLayoutEffect, useRef } from "react";
 import Link from "next/link";
 import type { CollectedData } from "@/lib/bot/prompts";
 import { deliveryModelFollowUp, deliveryModelOptions } from "@/lib/bot/delivery-model";
-import { AutonomyConsent } from "@/components/google-ads/AutonomyConsent";
-import { AUTONOMY_TERMS_VERSION } from "@/lib/google-ads/autonomyCopy";
 import { resolveOnboardingDemoEntry } from "@/lib/google-ads/onboarding-demo";
 
 interface Message {
@@ -46,15 +44,6 @@ interface SandboxVerificationResponse {
   error?: string;
 }
 
-interface CampaignCreationResponse {
-  success?: boolean;
-  customerId?: string;
-  slug?: string;
-  gtagSnippet?: string;
-  formConversionLabel?: string;
-  phoneConversionLabel?: string;
-  whatsappConversionLabel?: string;
-}
 
 const DEMO_PROFILE: CollectedData = {
   businessNiche: "אינסטלטור בתל אביב",
@@ -89,7 +78,6 @@ const DEMO_PROFILE: CollectedData = {
 };
 
 export default function OnboardingPage() {
-  const [clientId, setClientId] = useState<string | undefined>(undefined);
   const [mode, setMode] = useState<"test" | "live">("test");
   const [isDemo, setIsDemo] = useState(false);
   const [queryReady, setQueryReady] = useState(false);
@@ -110,7 +98,7 @@ export default function OnboardingPage() {
   const [showBudgetCalculation, setShowBudgetCalculation] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSimulation, setIsSimulation] = useState(true);
-  const [acceptedTerms, setAcceptedTerms] = useState(false);
+
   const [lpUrl, setLpUrl] = useState<string | null>(null);
   const [lpGenerating, setLpGenerating] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
@@ -167,7 +155,7 @@ export default function OnboardingPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const messagesContainerRef = useRef<HTMLDivElement>(null);
-  const compactConsentRef = useRef<HTMLDivElement>(null);
+
 
   useEffect(() => {
     const entry = resolveOnboardingDemoEntry(window.location.search);
@@ -175,7 +163,6 @@ export default function OnboardingPage() {
     // Query state must settle before any request-producing control becomes active.
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setMode(entry.mode);
-    setClientId(entry.clientId);
     setIsDemo(entry.isDemo);
     if (entry.isDemo) {
       setCollectedData({ ...DEMO_PROFILE });
@@ -224,143 +211,19 @@ export default function OnboardingPage() {
     const el = messagesContainerRef.current;
     if (!el) return;
 
-    if (currentState === "REVIEWING") {
-      const scrollToCompactConsent = () => {
-        const compactConsent = compactConsentRef.current;
-        if (compactConsent) {
-          el.scrollTop = Math.max(0, compactConsent.offsetTop - 16);
-        }
-      };
-      scrollToCompactConsent();
-      const frame = requestAnimationFrame(scrollToCompactConsent);
-      return () => cancelAnimationFrame(frame);
-    }
 
     const latestMessage = messages[messages.length - 1];
     if (latestMessage?.role === "assistant") {
       const assistantMessages = el.querySelectorAll<HTMLElement>("[data-chat-role='assistant']");
       const latestAssistant = assistantMessages[assistantMessages.length - 1];
-      if (latestAssistant) el.scrollTop = Math.max(0, latestAssistant.offsetTop - 16);
+      if (latestAssistant) {
+        el.scrollTop = Math.max(0, el.scrollTop + latestAssistant.getBoundingClientRect().top - el.getBoundingClientRect().top - el.clientTop - 16);
+      }
       return;
     }
 
     el.scrollTop = el.scrollHeight;
   }, [messages, currentState]);
-
-  // Post-payment flow — shared by Yaad Sarig redirect and bypass button
-  const triggerCampaignLaunch = async () => {
-    if (!queryReady || isDemo || isSubmitting) return;
-    setIsSubmitting(true);
-    try {
-      // Step 1: Close the bot conversation
-      const updatedMessages = [...messages, { role: "user" as const, content: "אשר והפעל קמפיין" }];
-      setMessages(updatedMessages);
-
-      const botRes = await fetch("/api/bot", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ messages: updatedMessages, currentState: "REVIEWING", collectedData, sessionId: sessionIdRef.current }),
-      });
-      const botData = await botRes.json();
-      setMessages((prev) => [...prev, { role: "assistant", content: botData.response }]);
-      setCurrentState(botData.currentState);
-
-      // Step 2: Create Google Ads sub-account + conversion actions
-      let adsData: CampaignCreationResponse | null = null;
-      const resolvedClientId = clientId || (mode === "test" ? "google-ads-sandbox" : undefined);
-      if (strategy && copy) {
-        const adsRes = await fetch("/api/google-ads/create-campaign", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            collectedData,
-            strategy,
-            copy,
-            consentTimestamp: new Date().toISOString(),
-            ...(acceptedTerms ? {
-              autonomyConsent: true,
-              autonomyConsentTimestamp: new Date().toISOString(),
-              autonomyTermsVersion: AUTONOMY_TERMS_VERSION,
-            } : {}),
-            clientId: resolvedClientId,
-            mode,
-          }),
-        });
-        adsData = await adsRes.json() as CampaignCreationResponse;
-        if (adsData.success) {
-          const adsMsg = `יצרתי לך חשבון Google Ads חדש תחת WAO 🚀\n\nמספר חשבון: ${adsData.customerId}\nהקמפיין ממתין לקישור אמצעי תשלום.`;
-          setMessages((prev) => [...prev, { role: "assistant", content: adsMsg }]);
-        }
-      }
-
-      // Step 3: Generate LP copy and save to server
-      setLpGenerating(true);
-      const lpRes = await fetch("/api/lp-generate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ collectedData, slug: adsData?.slug || collectedData.preferredSlug || undefined }),
-      });
-      const lpData = await lpRes.json();
-
-      // Step 4: Deploy static LP to Cloudflare Pages
-      let deployedUrl: string | null = null;
-      if (lpData.success && lpData.slug) {
-        const deployRes = await fetch("/api/cloudflare-pages/deploy", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            slug: lpData.slug,
-            googleAdsCustomerId: adsData?.customerId,
-            gtagSnippet: adsData?.gtagSnippet,
-            formConversionLabel: adsData?.formConversionLabel,
-            phoneConversionLabel: adsData?.phoneConversionLabel,
-            whatsappConversionLabel: adsData?.whatsappConversionLabel,
-          }),
-        });
-        const deployData = await deployRes.json();
-        if (deployData.success) {
-          deployedUrl = deployData.url;
-        }
-      }
-      setLpGenerating(false);
-
-      if (deployedUrl) {
-        setLpUrl(deployedUrl);
-        const lpMsg = `הדף שלך באוויר! 🎉\n\n${deployedUrl}\n\nכל מי שילחץ על המודעה בגוגל יגיע לדף הזה. שמור את הקישור — אפשר לשתף אותו גם ישירות בוואטסאפ.`;
-        setMessages((prev) => [...prev, { role: "assistant", content: lpMsg }]);
-      }
-
-      // Step 5: Store the lead for CRM
-      await fetch("/api/lead", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: collectedData.ownerName || collectedData.businessName || "לקוח חדש",
-          phone: collectedData.phone,
-          service: "google-ads",
-          message: `עסק: ${collectedData.businessName || collectedData.businessNiche} | תקציב: ₪${collectedData.monthlyBudget} | LP: ${deployedUrl || lpData.url || "N/A"} | ענף: ${collectedData.feasibilityBranch || "—"} | חשבון גוגל: ${adsData?.customerId || "—"}`,
-          source: "bot-onboarding-v6",
-        }),
-      }).catch(() => {});
-
-      window.history.replaceState({}, document.title, window.location.pathname);
-    } catch (err) {
-      console.error(err);
-      setLpGenerating(false);
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  // Listen for the callback redirect from Yaad Sarig
-  useEffect(() => {
-    if (!queryReady || isDemo || typeof window === "undefined") return;
-    const params = new URLSearchParams(window.location.search);
-    if (params.get("payment") === "success" && currentState !== "COMPLETED") {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      triggerCampaignLaunch();
-    }
-  }, [currentState, isDemo, queryReady, triggerCampaignLaunch]);
 
   const handleSendMessage = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
@@ -511,31 +374,6 @@ export default function OnboardingPage() {
       setIsUploading(false);
       setIsSubmitting(false);
       if (fileInputRef.current) fileInputRef.current.value = "";
-    }
-  };
-
-  const handleApprove = async () => {
-    if (!queryReady || isDemo) return;
-    setIsSubmitting(true);
-    try {
-      const response = await fetch("/api/checkout", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          amount: 9.9,
-          businessName: collectedData.businessName || collectedData.businessNiche || "קמפיין Google Ads"
-        }),
-      });
-
-      const data = await response.json();
-      if (data.success && data.redirectUrl) {
-        // Redirect the user to the Ya'ad sandbox checkout page
-        window.location.href = data.redirectUrl;
-      }
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setIsSubmitting(false);
     }
   };
 
@@ -718,8 +556,7 @@ export default function OnboardingPage() {
               color: "var(--muted)",
               lineHeight: 1.6,
             }}>
-              הקמה אצל פרילנסר עולה אלפי שקלים, וניהול חודשי עולה בקלות 1,500 ₪.{" "}
-              <strong style={{ color: "var(--text)" }}>אצלך ההקמה ב-9.90 ₪, חודש הניהול הראשון חינם, ומשם 249 ₪ בחודש. כן, קראת נכון.</strong>
+              נכון לעכשיו, ההרשמה והתשלום המקוונים אינם זמינים. שום חיוב לא מתבצע. תוכל להמשיך לצפות בהדגמה.
             </div>
           </div>
         </div>
@@ -728,7 +565,7 @@ export default function OnboardingPage() {
         <div
           style={{
             display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))",
+            gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 320px), 1fr))",
             gap: "24px",
             alignItems: "stretch",
           }}
@@ -740,13 +577,15 @@ export default function OnboardingPage() {
               ...glass,
               display: "flex",
               flexDirection: "column",
-              height: "clamp(380px, 55dvh, 600px)",
+              height: currentState === "DIAGNOSING" ? "clamp(560px, 70dvh, 640px)" : "clamp(380px, 55dvh, 600px)",
+              minWidth: 0,
               overflow: "hidden",
             }}
           >
             {/* Assistant Header */}
             <div
               style={{
+                flexShrink: 0,
                 padding: "20px 24px",
                 borderBottom: "1px solid var(--border)",
                 display: "flex",
@@ -785,6 +624,8 @@ export default function OnboardingPage() {
               ref={messagesContainerRef}
               style={{
                 flex: 1,
+                minHeight: 0,
+                minWidth: 0,
                 overflowY: "auto",
                 padding: "24px",
               }}
@@ -794,26 +635,10 @@ export default function OnboardingPage() {
                   display: "flex",
                   flexDirection: "column",
                   gap: "16px",
-                  justifyContent: "flex-end",
+                  justifyContent: "flex-start",
                   minHeight: "100%",
                 }}
               >
-              {!deliveryModelSelected && (
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px", direction: "rtl" }}>
-                  {deliveryModelOptions.map(option => (
-                    <button
-                      key={option.value}
-                      type="button"
-                      onClick={() => selectDeliveryModel(option.value as CollectedData["serviceModel"])}
-                      disabled={!queryReady || isDemo}
-                      style={{ padding: "14px", textAlign: "right", borderRadius: "10px", border: "1px solid var(--accent-border)", background: "rgba(74,227,181,0.06)", color: "var(--text)", cursor: "pointer" }}
-                    >
-                      <strong style={{ display: "block" }}>{option.label}</strong>
-                      <span style={{ fontSize: "0.75rem", color: "var(--muted)" }}>{option.description}</span>
-                    </button>
-                  ))}
-                </div>
-              )}
               {messages.map((msg, i) => (
                 <div
                   data-chat-role={msg.role}
@@ -859,68 +684,27 @@ export default function OnboardingPage() {
                   </div>
                 </div>
               ))}
+              {!deliveryModelSelected && (
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 180px), 1fr))", gap: "10px", direction: "rtl" }}>
+                  {deliveryModelOptions.map(option => (
+                    <button
+                      key={option.value}
+                      type="button"
+                      onClick={() => selectDeliveryModel(option.value as CollectedData["serviceModel"])}
+                      disabled={!queryReady || isDemo}
+                      style={{ minWidth: 0, whiteSpace: "normal", overflowWrap: "anywhere", padding: "14px", textAlign: "right", borderRadius: "10px", border: "1px solid var(--accent-border)", background: "rgba(74,227,181,0.06)", color: "var(--text)", cursor: "pointer" }}
+                    >
+                      <strong style={{ display: "block" }}>{option.label}</strong>
+                      <span style={{ fontSize: "0.75rem", color: "var(--muted)" }}>{option.description}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
               {isSubmitting && (
                 <div style={{ display: "flex", justifyContent: "flex-end" }}>
                   <div style={{ color: "var(--muted)", fontSize: "0.85rem", padding: "8px" }}>
                     אדם חושב...
                   </div>
-                </div>
-              )}
-
-              {/* Inline payment CTA — appears in chat so user never needs to scroll */}
-              {currentState === "REVIEWING" && (
-                <div ref={compactConsentRef} style={{
-                  margin: "8px 0",
-                  padding: "16px 20px",
-                  borderRadius: "14px",
-                  border: "1px solid var(--accent-border)",
-                  background: "linear-gradient(135deg, rgba(74,227,181,0.10) 0%, rgba(0,195,255,0.10) 100%)",
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: "12px",
-                }}>
-                  <div style={{ fontSize: "0.9rem", color: "var(--muted)", textAlign: "center" }}>
-                    דמי הקמה חד-פעמיים — <strong style={{ color: "var(--text)" }}>9.90 ₪</strong>
-                  </div>
-                  <AutonomyConsent checked={acceptedTerms} onChange={setAcceptedTerms} compact />
-                  <button
-                    onClick={handleApprove}
-                    disabled={!queryReady || isDemo || isSubmitting || !acceptedTerms}
-                    className="btn-primary"
-                    style={{
-                      width: "100%",
-                      padding: "14px",
-                      justifyContent: "center",
-                      fontSize: "1rem",
-                      background: acceptedTerms ? "linear-gradient(135deg, #4AE3B5, #00C3FF)" : "var(--border)",
-                      color: acceptedTerms ? "var(--bg)" : "var(--muted)",
-                      cursor: acceptedTerms ? "pointer" : "not-allowed",
-                      border: "none",
-                      borderRadius: "8px",
-                      fontWeight: "bold",
-                      transition: "all 0.3s ease",
-                    }}
-                  >
-                    🚀 לתשלום (9.9 ₪) והפעלת קמפיין
-                  </button>
-                  {process.env.NEXT_PUBLIC_PAYMENT_BYPASS === "true" && (
-                    <button
-                      onClick={triggerCampaignLaunch}
-                      disabled={!queryReady || isDemo || isSubmitting}
-                      style={{
-                        width: "100%",
-                        padding: "10px",
-                        border: "1px dashed #f59e0b",
-                        borderRadius: "8px",
-                        background: "rgba(245,158,11,0.08)",
-                        color: "#f59e0b",
-                        fontSize: "0.8rem",
-                        cursor: isSubmitting ? "not-allowed" : "pointer",
-                      }}
-                    >
-                      🧪 דלג על תשלום (בדיקה בלבד)
-                    </button>
-                  )}
                 </div>
               )}
               </div>
@@ -930,6 +714,8 @@ export default function OnboardingPage() {
             <form
               onSubmit={handleSendMessage}
               style={{
+                flexShrink: 0,
+                minWidth: 0,
                 padding: "16px",
                 borderTop: "1px solid var(--border)",
                 display: "flex",
@@ -990,7 +776,7 @@ export default function OnboardingPage() {
                 >
                   {isUploading ? "⏳" : "📎"}
                 </button>
-                <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "6px" }}>
+                <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: "6px" }}>
                   <input
                     type="text"
                     placeholder={inputPlaceholder}
@@ -1305,66 +1091,6 @@ export default function OnboardingPage() {
                       </div>
                     </div>
                   </div>
-
-                  {/* Checkout & Action CTA — above LP placeholder so it is visible without scrolling */}
-                  {currentState === "REVIEWING" && (
-                    <div style={{
-                      background: "rgba(13, 15, 21, 0.4)",
-                      border: "1px solid var(--accent-border)",
-                      padding: "20px",
-                      borderRadius: "12px",
-                      display: "flex",
-                      flexDirection: "column",
-                      gap: "16px"
-                    }}>
-                      <div style={{ textAlign: "center" }}>
-                        <div style={{ fontSize: "0.9rem", color: "var(--muted)" }}>דמי הקמה חד-פעמיים</div>
-                        <div style={{ fontSize: "2rem", fontWeight: 800, color: "var(--text)", margin: "4px 0" }}>9.90 ₪</div>
-                        <div style={{ fontSize: "0.8rem", color: "var(--muted)" }}>תשלום אחד שמקים לך את הקמפיין ודף הנחיתה. חודש הניהול הראשון חינם, ומהחודש השני 249 ₪ בחודש.</div>
-                      </div>
-
-                      <AutonomyConsent checked={acceptedTerms} onChange={setAcceptedTerms} />
-
-                      <button
-                        onClick={handleApprove}
-                        disabled={!queryReady || isDemo || isSubmitting || !acceptedTerms}
-                        className="btn-primary"
-                        style={{
-                          width: "100%",
-                          padding: "16px",
-                          justifyContent: "center",
-                          fontSize: "1.1rem",
-                          background: acceptedTerms ? "linear-gradient(135deg, #4AE3B5, #00C3FF)" : "var(--border)",
-                          color: acceptedTerms ? "var(--bg)" : "var(--muted)",
-                          cursor: acceptedTerms ? "pointer" : "not-allowed",
-                          transition: "all 0.3s ease",
-                          border: "none",
-                          borderRadius: "8px",
-                          fontWeight: "bold"
-                        }}
-                      >
-                        🚀 לתשלום (9.9 ₪) והפעלת קמפיין
-                      </button>
-                      {process.env.NEXT_PUBLIC_PAYMENT_BYPASS === "true" && (
-                        <button
-                          onClick={triggerCampaignLaunch}
-                          disabled={!queryReady || isDemo || isSubmitting}
-                          style={{
-                            width: "100%",
-                            padding: "10px",
-                            border: "1px dashed #f59e0b",
-                            borderRadius: "8px",
-                            background: "rgba(245,158,11,0.08)",
-                            color: "#f59e0b",
-                            fontSize: "0.8rem",
-                            cursor: isSubmitting ? "not-allowed" : "pointer",
-                          }}
-                        >
-                          🧪 דלג על תשלום (בדיקה בלבד)
-                        </button>
-                      )}
-                    </div>
-                  )}
 
                   {/* Landing Page Preview — 340px iframe/spinner only when there is content; compact note otherwise */}
                   {(lpUrl || lpGenerating) ? (
