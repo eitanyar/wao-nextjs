@@ -26,7 +26,8 @@ Reject a token unless the owner stated the claim. Matching is plain substring ma
     "no_extra_charge": ["בלי חיוב נוסף", "ללא חיוב נוסף", "על חשבוני", "בלי עלות נוספת", "ללא עלות נוספת"],
     "report_included": ["דוח ממצאים", "דוח מסודר", "דוח מפורט", "כולל דוח", "דו״ח"],
     "sealing_test": ["בדיקת איטום", "איטום הגג", "בדיקת לחץ"],
-    "apprenticeship_bio": ["כשוליה", "התחלתי כ", "התחלתי לעבוד", "בגיל", "למדתי את המקצוע", "עבדתי אצל"],
+    "apprenticeship_bio": ["כשוליה", "כעוזר", "התחלתי לעבוד", "בגיל", "מגיל", "למדתי את המקצוע", "עבדתי אצל"],
+    "solo_operator": ["עונה בעצמי", "עובד לבד", "מגיע לבד", "אני זה שעונה", "בלי קבלני משנה", "בלי מתווכים", "אין מתווכים", "בלי מוקד", "אין מוקד", "ישירות איתי", "מענה אישי"],
     "fix_time": ["מתקן תוך", "מתקין תוך", "תיקון תוך", "התקנה תוך", "פותח תוך", "מסיים תוך", "פותר תוך"],
     "license_grade": ["מאסטר", "חשמלאי ראשי", "חשמלאי מוסמך", "חשמלאי מעשי", "הנדסאי", "מהנדס חשמל"]
   }
@@ -62,4 +63,91 @@ Formula: `<prefix> <trade> ב<city> | <brand>`, ≤ ~60 chars, RLM before " | " 
 
 ~~~json
 {"contactTitlePrefix": "יצירת קשר:"}
+~~~
+
+## 6. claimTokenWordEnd (Noa 2026-11-08)
+
+Claim tokens in this list match only when no Hebrew letter follows them (right word boundary), so "ברחוב" does not match "ברחובות" (Rehovot), "בגיל" does not match "בגילוי" and "מגיל" does not match "מגילה". All other claim tokens stay plain substring matches. `solo_operator` is authorised only by an owner fact (e.g. answer myself, personally, work alone, solo, no subcontractors).
+
+~~~json
+{
+  "claimTokenWordEnd": ["ברחוב", "בגיל", "מגיל"]
+}
+~~~
+
+## 7. fixTimeWithinWords and fixTimeLeadTokens (Noa 2026-11-08)
+
+A lead token followed by optional spaces and then a digit, or a word that starts with one of the within-words, is a time promise for the `fix_time` sentence check. "כדי", "שמירה" and "שימוש" are deliberately absent ("תוך כדי", "תוך שמירה" mean "while").
+
+~~~json
+{
+  "fixTimeLeadTokens": ["תוך", "בתוך"],
+  "fixTimeWithinWords": ["שעה", "שעתיים", "שעות", "דקה", "דקות", "יום", "יומיים", "ימים", "שבוע", "חצי", "רבע", "כמה", "פחות מ", "שתי", "שני", "שלוש", "ארבע", "חמש", "שש", "שבע", "שמונה", "תשע", "עשר", "עשרים", "שלושים", "ארבעים", "חמישים", "שישים"]
+}
+~~~
+
+## 8. arrivalTokens (Noa 2026-11-08, replaces the arrival list in section 2's note)
+
+~~~json
+{
+  "arrivalTokens": ["מגיע", "אני שם", "אני בדרך", "הגעה", "אגיע", "אצלך"]
+}
+~~~
+
+## 9. paraphraseGuard (Noa 2026-11-08)
+
+A sentence that contains a customer stem and a speech verb is a customer-attribution hit. Speech verbs are third-person or plural only, so the owner's own "אמרתי ללקוח" or "אני ממליץ ללקוח" never hits.
+
+~~~json
+{
+  "paraphraseGuard": {
+    "customerStems": ["לקוח", "דייר", "בעל הבית", "בעלת הבית"],
+    "speechVerbs": ["סיפר", "אומרים", "אומרת", "אמרו", "אמרה", "אמר לי", "ממליצים", "ממליצה", "המליץ", "כותבים", "כתבו", "כתבה", "מעידים", "משבחים"]
+  }
+}
+~~~
+
+## 10. pluralAddressTokens and weTokens (Noa 2026-11-08, additions only)
+
+Add these to the existing lists in copyGates.config.ts. The `-י` forms are feminine singular, which is also off-rule. "פנו" and "צוות" are deliberately left out ("הלקוחות פנו אליי", "בלי צוות").
+Note: every weTokens entry is `allowPrefix: true`.
+
+~~~json
+{
+  "pluralAddressTokens": ["אתכם", "בשבילכם", "עבורכם", "אצלכם", "מכם", "תתקשרו", "השאירו", "תשאירו", "צרו", "שלחו", "קבלו", "תגידו", "תספרו", "תדעו", "תראו", "הזמינו", "תזמינו", "חייגו", "התקשרי", "השאירי", "שלחי", "תשאירי"],
+  "weTokens": ["אנו", "לנו", "אצלנו", "איתנו", "אלינו", "אותנו", "בשבילנו", "נחזור", "נשמח", "נגיע"]
+}
+~~~
+
+## 11. waoServiceTerms (Noa 2026-11-08, additions only; substring match)
+
+~~~json
+{
+  "waoServiceTerms": ["דפי נחיתה", "דף נחיתה", "קידום אתרים", "בניית אתרים", "ניהול קמפיינים", "שיווק דיגיטלי", "קופירייטינג", "קידום בגוגל", "ניהול רשתות חברתיות"]
+}
+~~~
+
+## 12. thermalTokens (Noa 2026-11-08, replaces the single token "תרמית")
+
+"תרמי" also matches "תרמית" and "תרמיים" as a substring.
+
+~~~json
+{
+  "thermalTokens": ["תרמי", "תרמוגרפ"]
+}
+~~~
+
+## 13. templateStrings (Noa 2026-11-08, system HTML on client sites)
+
+`formSubmitLabel` replaces the heroCta text on the lead-form submit button (the button sends the form, it does not place a call). `formThanks` replaces the form-success message (solo operator, first-person singular).
+
+Prefix rule for template text (privacy and accessibility pages): a Hebrew prefix letter before a name or term that starts with a Latin letter or a digit takes a plain hyphen (ל-WCAG 2.0, ל-Test Owner A). Before a name that starts with a Hebrew letter, the prefix attaches directly with no hyphen (ליוסי כהן, never ל-יוסי כהן).
+
+~~~json
+{
+  "templateStrings": {
+    "formSubmitLabel": "שלח",
+    "formThanks": "✅ תודה! אחזור אליך בהקדם."
+  }
+}
 ~~~
