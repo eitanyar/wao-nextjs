@@ -1,13 +1,14 @@
 # Market scan — stop-and-see check (one page)
 
-Yonatan · 2026-11-07 · final version · runs 73ecfd6063af (first check) and 7f91346fefc5 (free re-score with the
-fixes) · anonymized (no business names, phones or websites)
+Yonatan · 2026-11-07 · final version · runs 73ecfd6063af (first check), 7f91346fefc5 and 8684c8405951 (free
+re-scores), final state **f354d8b0c7e7** · anonymized (no business names, phones or websites)
 
 ## What we checked
-The scanner ranked 410 profession-by-city "cells". Before any outreach I hand-checked them in two rounds. Round 1:
+The scanner ranked 410 profession-by-city "cells". Before any outreach I hand-checked them in three rounds. Round 1:
 the engineer's top 5, movers in Ashdod, and pilot cells A (roofing, Petah Tikva), C (pergolas, Karmiel) and
 D (roofing, Rehovot). Round 2, after the free re-score: every new entrant near the top: the two small-town locksmith
-clusters, electricians in Holon, aluminum in Tel Aviv and AC repair in Rishon LeZion. For each one I looked at the
+clusters, electricians in Holon, aluminum in Tel Aviv and AC repair in Rishon LeZion. Round 3: renovation in Tel
+Aviv, which jumped to #1 after a re-score. For each one I looked at the
 businesses Google actually shows in the top 3 (from the saved Google responses of 2026-11-07). For the 5 final cells
 I read the whole list of businesses we counted as "weak and reachable". I asked two questions: is the top 3 really
 as strong as the score says, and are the weak ones real owner-run businesses we could talk to? No business was
@@ -53,30 +54,42 @@ network), and the network-held locksmith towns are now visible as such.
   and a builder. That leaves about 6 real prospects.
 - **Roofing, Rehovot: dropped out on its own.** Once network listings are removed, only 6 names are left, and
   2 of them are larger firms. That's below our minimum of 8.
-- **Three small counting errors still to fix** (free, no new data): (1) Two of Rehovot's own top-3 electricians
-  were also counted as its weak prospects. They had been moved in from the town next door. (2) The "this business
-  belongs to another city" check only knows each city's official name ("Tel Aviv-Yafo", "Modiin-Maccabim-Re'ut"),
-  so it misses titles that use the everyday name. (3) A dead website on a top-3 listing still counts as a real site.
-  None of these changes the list below. Rehovot drops by about 2 names.
+## What changed since the provisional list
+- **Three small counting errors, fixed.** A town's own top-3 businesses had been counted as its weak prospects. The
+  city check missed everyday city names like "Tel Aviv". And a dead website on a top-3 listing still counted as a
+  real site.
+- **The dead-website fix had a side effect of its own, also fixed.** Free Wix sites live on a page *under* the
+  address. The checker opened only the bare address, which always shows "not found", so live sites were scored as
+  dead. That briefly put renovation in Tel Aviv at #1. The scanner now judges the exact page the Google listing
+  links to. With that fixed, Tel Aviv renovation, Hod HaSharon electricians, Petah Tikva aluminum and the small-town
+  aluminum cluster are all locked up again.
+- **Close calls are now flagged.** If changing one website result would flip a cell, it's flagged for a hand check
+  before it can enter the top 10. 12 cells are flagged. All of them are already ruled out, and none is near the top.
+- The final five didn't change. Each moved up one place.
 
-## Final top 5
-| # | Cell | Real weak prospects | Why it's winnable |
-|---|---|---|---|
-| 1 | Locksmith, Jerusalem | ≈ 32 | Network listings hold the whole top 3. Below them are dozens of real local locksmiths with 10–75 reviews and no website. |
-| 2 | Electrician, Rehovot | ≈ 18 | The top 3 are real one-person businesses (28–74 reviews), beatable with a better profile, more reviews and a site. |
-| 3 | Electrician, Ramla | ≈ 12 | The weakest top 3 of the five (11 reviews, 1 review, and one out-of-town electrician). It sits next to #2, so one case study serves both. |
-| 4 | Electrician, Holon | ≈ 15 | Same picture as Rehovot. Same kit as #2 and #3. |
-| 5 | AC repair, Rishon LeZion | ≈ 17 | A second trade. It's off-season now, so technicians have time to talk and a site ready before summer. |
+## Final top 5 (run f354d8b0c7e7)
+| # | Rank | Cell | Real weak prospects | Why it's winnable |
+|---|---|---|---|---|
+| 1 | #1 | Locksmith, Jerusalem | ≈ 32 | Network listings hold the whole top 3. Below them are dozens of real local locksmiths with 10–75 reviews and no website. |
+| 2 | #2 | Electrician, Rehovot | ≈ 18 | The top 3 are real one-person businesses (28–74 reviews), beatable with a better profile, more reviews and a site. |
+| 3 | #3 | Electrician, Ramla | ≈ 12 | The weakest top 3 of the five. It sits next to Rehovot, so one case study serves both. |
+| 4 | #7 | Electrician, Holon | ≈ 15 | Same picture as Rehovot, and the same kit. |
+| 5 | #11 | AC repair, Rishon LeZion | ≈ 17 | A second trade. It's off-season, so technicians have time to talk and can have a site ready before summer. |
 
-Held back: all movers cells, both small-town locksmith clusters, aluminum in Tel Aviv, and roofing in Rehovot.
-Reserves if a top-5 cell fails at outreach: electricians in Kfar Saba (#8) and Modiin (#9). I haven't hand-checked
-either one yet.
+## Held back, and why
+- **Movers:** a data error had made strong movers look brand new, and a national lead broker sits in the top 3
+  almost everywhere.
+- **Small-town locksmith clusters:** fake network listings hold the top 3, and the weak lists are thin.
+- **Renovation, Tel Aviv:** truly locked up (one contractor with 300+ reviews tops every part of the city). We also
+  have no renovation demo kit.
+- **Aluminum (Tel Aviv, Petah Tikva, small-town cluster):** no demo kit and mixed lists. Petah Tikva and the
+  cluster are locked up.
+- **Roofing, Rehovot:** only about 4 real names once network listings are removed.
+- **Reserves** if a top-5 cell fails at outreach: electricians in Kfar Saba and Modiin. Neither is hand-checked yet.
 
-## The slot-5 decision, closed
-Your open choice was roofing in Rehovot or electricians in Holon. Holon is now in at #4 on its own merits. For slot 5
-I am **not** forcing roofing back in: 6 names (about 4 real) is too few for even one proof case. Instead I pick
-**AC repair in Rishon LeZion**. The trade-off: we get a second trade and an off-season pitch, but its top 3 is tougher
-(two real firms with websites) and we can't reuse the electrician kit. The roofing demo stays ready for a roofing
-cell with enough names.
+## Slot 5 — your decision
+I recommend **AC repair in Rishon LeZion**. The trade-off: we get a second trade and an off-season pitch, but its top 3
+is tougher (two real firms with websites) and we can't reuse the electrician kit. Roofing stays parked until a
+roofing cell has enough names.
 
 Pilot check 6 (your look at pilots A, C and D) is closed: all three match.
