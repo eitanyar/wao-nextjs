@@ -1,0 +1,233 @@
+{
+  "spec": "docs/research/site-bot/market-scanner-scoring-spec.md",
+  "spec_sha256": "26e29a2b471ccf0cfc7b60033049eea1e292cb5bb0360cafcc4974b9c16358ee",
+  "generated_by": "scripts/market-scan/build-config.mjs",
+  "professions": [
+    {
+      "slug": "plumber",
+      "trade_he": "אינסטלטור",
+      "kit_level": 1,
+      "source": "pack",
+      "pack_slug": "plumber",
+      "terms": [
+        "אינסטלטור",
+        "פתיחת סתימה",
+        "איתור נזילה"
+      ],
+      "proposed_terms": []
+    },
+    {
+      "slug": "electrician",
+      "trade_he": "חשמלאי",
+      "kit_level": 1,
+      "source": "pack",
+      "pack_slug": "electrician",
+      "terms": [
+        "חשמלאי",
+        "חשמלאי מוסמך"
+      ],
+      "proposed_terms": []
+    },
+    {
+      "slug": "ac-repair",
+      "trade_he": "מזגנים",
+      "kit_level": 1,
+      "source": "pack",
+      "pack_slug": "ac-repair",
+      "terms": [
+        "טכנאי מזגנים",
+        "תיקון מזגנים",
+        "תיקון מזגן"
+      ],
+      "proposed_terms": []
+    },
+    {
+      "slug": "locksmith",
+      "trade_he": "מנעולן",
+      "kit_level": 1,
+      "source": "pack",
+      "pack_slug": "locksmith",
+      "terms": [
+        "מנעולן",
+        "פריצת דלת"
+      ],
+      "proposed_terms": []
+    },
+    {
+      "slug": "pest-control",
+      "trade_he": "הדברה",
+      "kit_level": 1,
+      "source": "pack",
+      "pack_slug": "pest-control",
+      "terms": [
+        "הדברה",
+        "מדביר",
+        "חברת הדברה"
+      ],
+      "proposed_terms": []
+    },
+    {
+      "slug": "movers",
+      "trade_he": "הובלות",
+      "kit_level": 1,
+      "source": "pack+P",
+      "pack_slug": "movers",
+      "terms": [
+        "הובלות",
+        "הובלות דירה",
+        "חברת הובלות"
+      ],
+      "proposed_terms": [
+        "הובלות"
+      ]
+    },
+    {
+      "slug": "roofing",
+      "trade_he": "איטום גגות",
+      "kit_level": 2,
+      "source": "pack",
+      "pack_slug": "roofing",
+      "terms": [
+        "איטום גגות",
+        "קבלן איטום גגות",
+        "גגן"
+      ],
+      "proposed_terms": []
+    },
+    {
+      "slug": "carpenter",
+      "trade_he": "נגר",
+      "kit_level": 1,
+      "source": "pack",
+      "pack_slug": "carpenter",
+      "terms": [
+        "נגר",
+        "נגר בהתאמה אישית",
+        "נגר לארונות"
+      ],
+      "proposed_terms": []
+    },
+    {
+      "slug": "painter",
+      "trade_he": "צבעי",
+      "kit_level": 1,
+      "source": "pack+P",
+      "pack_slug": "painter",
+      "terms": [
+        "צבעי",
+        "צבעי בניין",
+        "צביעת דירה"
+      ],
+      "proposed_terms": [
+        "צבעי"
+      ]
+    },
+    {
+      "slug": "tiling",
+      "trade_he": "ריצוף",
+      "kit_level": 1,
+      "source": "pack (partial)+P",
+      "pack_slug": "tiler",
+      "terms": [
+        "רצף",
+        "קבלן ריצוף",
+        "ריצוף"
+      ],
+      "proposed_terms": [
+        "רצף",
+        "ריצוף"
+      ]
+    },
+    {
+      "slug": "car-body-repair",
+      "trade_he": "פחחות",
+      "kit_level": 1,
+      "source": "pack",
+      "pack_slug": "car-body-repair",
+      "terms": [
+        "פחחות רכב",
+        "פחח רכב",
+        "מוסך פחחות וצבע"
+      ],
+      "proposed_terms": []
+    },
+    {
+      "slug": "solar",
+      "trade_he": "סולארי",
+      "kit_level": 0,
+      "source": "P",
+      "pack_slug": null,
+      "terms": [
+        "מערכת סולארית",
+        "התקנת מערכת סולארית",
+        "פאנלים סולאריים"
+      ],
+      "proposed_terms": []
+    },
+    {
+      "slug": "pergolas",
+      "trade_he": "פרגולות",
+      "kit_level": 0,
+      "source": "P",
+      "pack_slug": null,
+      "terms": [
+        "פרגולות",
+        "פרגולה מאלומיניום",
+        "פרגולה מעץ"
+      ],
+      "proposed_terms": []
+    },
+    {
+      "slug": "aluminum",
+      "trade_he": "אלומיניום",
+      "kit_level": 0,
+      "source": "P",
+      "pack_slug": null,
+      "terms": [
+        "חלונות אלומיניום",
+        "עבודות אלומיניום",
+        "תריס חשמלי"
+      ],
+      "proposed_terms": []
+    },
+    {
+      "slug": "kitchens",
+      "trade_he": "מטבחים",
+      "kit_level": 0,
+      "source": "P",
+      "pack_slug": null,
+      "terms": [
+        "מטבחים",
+        "מטבחים בהתאמה אישית"
+      ],
+      "proposed_terms": []
+    },
+    {
+      "slug": "renovation",
+      "trade_he": "שיפוצים",
+      "kit_level": 0,
+      "source": "P",
+      "pack_slug": null,
+      "terms": [
+        "קבלן שיפוצים",
+        "שיפוצים",
+        "שיפוץ דירה",
+        "שיפוץ אמבטיה"
+      ],
+      "proposed_terms": []
+    },
+    {
+      "slug": "gates-fencing",
+      "trade_he": "מסגרות/שערים",
+      "kit_level": 0,
+      "source": "P",
+      "pack_slug": null,
+      "terms": [
+        "מסגר",
+        "שער חשמלי",
+        "גדרות"
+      ],
+      "proposed_terms": []
+    }
+  ]
+}

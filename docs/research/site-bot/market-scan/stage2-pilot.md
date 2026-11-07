@@ -1,0 +1,10 @@
+## Stage 2 pilot (run 745416b2b68f)
+
+| rank | zoom | cell_id | expect | slug | trade_he | region | city | city_he | ring | V_region | V_cell | V_source | T_p_usd | M | value_usd | S3 | S3_band | top3_s | W | P | pooled | kit_level | score | score_unkilled | kill_reason | flags | maps_items_t1 | maps_items_t2 | relevant_ranked | lf_overlap_top3 | organic_local_pack | search_places_false_top20_overlap | run_id |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| 1 | 13z | A | saturated | roofing | איטום גגות | R1 | petah-tikva | פתח תקווה | core | 930 | 90 | measured | 8.512 | 1 | 766.0822 | 0.3763 | open | 0.152/0.8712/0.1056 | 0.5125 | 13 | false | 2 | 258.2997 | 258.2997 |  |  | 63 | 83 | 44 | 1 | true | 20 | 745416b2b68f |
+| 2 | 13z | B | middle | roofing | איטום גגות | R1 | rosh-haayin | ראש העין | ring2 | 930 | 38.0977 | imputed | 8.512 | 1 | 324.2888 | 0.705 | saturated | 0.4645/0.8712/0.7793 | 0.4605 | 1 | false | 2 | 0 | 1.8814 | saturated;P<8 |  | 24 | 35 | 19 | 2 | true |  | 745416b2b68f |
+| 3 | 13z | C | open | pergolas | פרגולות | R8 | karmiel | כרמיאל | core | 530 | 60 | measured | 2.5693 | 1 | 154.1552 | 0.6085 | middle | 0.7435/0.152/0.93 | 0.25 | 1 | false | 0 | 0 | 1.5752 | P<8 |  | 19 | 4 | 6 | 1 | true |  | 745416b2b68f |
+| 1 | 15z | A | saturated | roofing | איטום גגות | R1 | petah-tikva | פתח תקווה | core | 930 | 90 | measured | 8.512 | 1 | 766.0822 | 0.3763 | open | 0.152/0.8712/0.1056 | 0.5 | 3 | false | 2 | 0 | 59.6076 | P<8 |  | 14 | 14 | 10 | 1 | true |  | 745416b2b68f |
+| 2 | 15z | B | middle | roofing | איטום גגות | R1 | rosh-haayin | ראש העין | ring2 | 930 | 38.0977 | imputed | 8.512 | 1 | 324.2888 | 0.2882 | open | 0.4645/0.2/0.2 | 0.5 | 0 | false | 2 | 0 | 0 | P<8 |  | 3 | 3 | 3 | 1 | true |  | 745416b2b68f |
+| 3 | 15z | C | open | pergolas | פרגולות | R8 | karmiel | כרמיאל | core | 530 | 60 | measured | 2.5693 | 1 | 154.1552 | 0.2887 | open | 0.152/0.714/0 | 0.625 | 1 | false | 0 | 0 | 5.2001 | P<8 |  | 8 | 0 | 2 | 0 | true |  | 745416b2b68f |

@@ -128,3 +128,6 @@ data/rank-rent/
 data/audits/*
 !data/audits/.gitkeep
 
+# Site-bot market scanner — raw DataForSEO cache, scraped business rows, run ledgers.
+# Private, minimal fields; never committed (mission: docs/missions/site-bot-market-scanner-2026-11-07.md)
+data/market-scan/

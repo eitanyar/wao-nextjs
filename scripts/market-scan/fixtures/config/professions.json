@@ -1,0 +1,29 @@
+{
+  "spec": "fixture",
+  "professions": [
+    {
+      "slug": "alpha",
+      "trade_he": "Alpha Trade",
+      "kit_level": 2,
+      "source": "fixture",
+      "pack_slug": null,
+      "terms": [
+        "alpha one",
+        "alpha two"
+      ],
+      "proposed_terms": []
+    },
+    {
+      "slug": "beta",
+      "trade_he": "Beta Trade",
+      "kit_level": 0,
+      "source": "fixture",
+      "pack_slug": null,
+      "terms": [
+        "beta one",
+        "beta two"
+      ],
+      "proposed_terms": []
+    }
+  ]
+}

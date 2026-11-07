@@ -1,0 +1,570 @@
+{
+ "generated_by": "scripts/market-scan/category-catalog.mjs",
+ "note": "counts are occurrences across cached Maps/Local Finder items (all ranks, all pilot queries)",
+ "categories": [
+  {
+   "id": "cat-a58e4968",
+   "category": "שירות איטום מפני חדירת מים",
+   "primary": 108,
+   "additional": 24
+  },
+  {
+   "id": "cat-429e3240",
+   "category": "Service establishment",
+   "primary": 0,
+   "additional": 101
+  },
+  {
+   "id": "cat-b3b8662b",
+   "category": "חברת איטום",
+   "primary": 30,
+   "additional": 27
+  },
+  {
+   "id": "cat-f8ce5a88",
+   "category": "קבלן",
+   "primary": 27,
+   "additional": 13
+  },
+  {
+   "id": "cat-3ae38c36",
+   "category": "גגן",
+   "primary": 21,
+   "additional": 12
+  },
+  {
+   "id": "cat-7a213e9e",
+   "category": "שיפוצניק",
+   "primary": 12,
+   "additional": 15
+  },
+  {
+   "id": "cat-154601b2",
+   "category": "שרברב",
+   "primary": 15,
+   "additional": 5
+  },
+  {
+   "id": "cat-25ef429a",
+   "category": "קבלן בידוד",
+   "primary": 9,
+   "additional": 11
+  },
+  {
+   "id": "cat-3eeb2738",
+   "category": "חברת בנייה",
+   "primary": 17,
+   "additional": 0
+  },
+  {
+   "id": "cat-a68fb611",
+   "category": "קבלן כללי",
+   "primary": 9,
+   "additional": 5
+  },
+  {
+   "id": "cat-1e47f7f9",
+   "category": "עבודות בגובה רב",
+   "primary": 2,
+   "additional": 11
+  },
+  {
+   "id": "cat-75669814",
+   "category": "שירות שיקום בניינים",
+   "primary": 0,
+   "additional": 13
+  },
+  {
+   "id": "cat-a6c11114",
+   "category": "שירות תיקונים לאחר נזקי מים",
+   "primary": 0,
+   "additional": 13
+  },
+  {
+   "id": "cat-a9fdc056",
+   "category": "חנות חומרי בניין",
+   "primary": 11,
+   "additional": 0
+  },
+  {
+   "id": "cat-d4945e30",
+   "category": "קבלן ריצוף",
+   "primary": 0,
+   "additional": 11
+  },
+  {
+   "id": "cat-86b6d8e7",
+   "category": "קבלן טיח",
+   "primary": 0,
+   "additional": 10
+  },
+  {
+   "id": "cat-08e76de4",
+   "category": "חשמלאי",
+   "primary": 0,
+   "additional": 9
+  },
+  {
+   "id": "cat-a4707518",
+   "category": "צבע",
+   "primary": 0,
+   "additional": 9
+  },
+  {
+   "id": "cat-aec7cb01",
+   "category": "משרדי החברה",
+   "primary": 7,
+   "additional": 2
+  },
+  {
+   "id": "cat-2051e498",
+   "category": "קבלן קירות גבס",
+   "primary": 0,
+   "additional": 8
+  },
+  {
+   "id": "cat-47b80b4b",
+   "category": "חנות לחומרי איטום",
+   "primary": 5,
+   "additional": 3
+  },
+  {
+   "id": "cat-7e0ac5b4",
+   "category": "מהנדס מבנים",
+   "primary": 1,
+   "additional": 7
+  },
+  {
+   "id": "cat-e01eb780",
+   "category": "קבלן בנייה",
+   "primary": 0,
+   "additional": 8
+  },
+  {
+   "id": "cat-152a61e0",
+   "category": "קבלן בטון",
+   "primary": 0,
+   "additional": 6
+  },
+  {
+   "id": "cat-699912c7",
+   "category": "שירות תחזוקה",
+   "primary": 6,
+   "additional": 0
+  },
+  {
+   "id": "cat-74d33b57",
+   "category": "יצרן פרגולות וגגונים לרכב",
+   "primary": 0,
+   "additional": 6
+  },
+  {
+   "id": "cat-9babdd8e",
+   "category": "בונה דקים",
+   "primary": 0,
+   "additional": 6
+  },
+  {
+   "id": "cat-9e0ff053",
+   "category": "חנות למוצרי בניין",
+   "primary": 6,
+   "additional": 0
+  },
+  {
+   "id": "cat-1fe19ec7",
+   "category": "מנעולן",
+   "primary": 0,
+   "additional": 5
+  },
+  {
+   "id": "cat-2a817e99",
+   "category": "שירות שיפוץ משרדים",
+   "primary": 0,
+   "additional": 5
+  },
+  {
+   "id": "cat-3a6ec85f",
+   "category": "קבלן מיזוג אוויר",
+   "primary": 0,
+   "additional": 5
+  },
+  {
+   "id": "cat-5e3efad6",
+   "category": "קבלן למעצבי פנים",
+   "primary": 0,
+   "additional": 5
+  },
+  {
+   "id": "cat-93cb13c1",
+   "category": "שירותים ציבוריים",
+   "primary": 5,
+   "additional": 0
+  },
+  {
+   "id": "cat-c98604fa",
+   "category": "מפקח בנייה",
+   "primary": 0,
+   "additional": 5
+  },
+  {
+   "id": "cat-f03263f6",
+   "category": "טייחות",
+   "primary": 0,
+   "additional": 5
+  },
+  {
+   "id": "cat-f014aa03",
+   "category": "יועץ בנייה",
+   "primary": 1,
+   "additional": 3
+  },
+  {
+   "id": "cat-527bbda7",
+   "category": "עיצוב פנים",
+   "primary": 0,
+   "additional": 3
+  },
+  {
+   "id": "cat-6f7cb50a",
+   "category": "שירות בדיקת אסבסט",
+   "primary": 1,
+   "additional": 2
+  },
+  {
+   "id": "cat-76e7e699",
+   "category": "ספק אלומיניום",
+   "primary": 2,
+   "additional": 1
+  },
+  {
+   "id": "cat-851f47c3",
+   "category": "שירות תיקונים למזגנים",
+   "primary": 0,
+   "additional": 3
+  },
+  {
+   "id": "cat-cd248a24",
+   "category": "נגר",
+   "primary": 0,
+   "additional": 3
+  },
+  {
+   "id": "cat-e1cf1787",
+   "category": "קבלן בריכות שחייה",
+   "primary": 0,
+   "additional": 3
+  },
+  {
+   "id": "cat-e2a25629",
+   "category": "שירות לשיווק באינטרנט",
+   "primary": 3,
+   "additional": 0
+  },
+  {
+   "id": "cat-f12924da",
+   "category": "אדריכל",
+   "primary": 0,
+   "additional": 3
+  },
+  {
+   "id": "cat-f581e5b7",
+   "category": "חלון אלומיניום",
+   "primary": 2,
+   "additional": 1
+  },
+  {
+   "id": "cat-fda53b2a",
+   "category": "קבלן גדרות",
+   "primary": 3,
+   "additional": 0
+  },
+  {
+   "id": "cat-0009b6d3",
+   "category": "חנות לציוד סטריאו לרכב",
+   "primary": 0,
+   "additional": 2
+  },
+  {
+   "id": "cat-0c20b4cf",
+   "category": "מעצב גינות",
+   "primary": 2,
+   "additional": 0
+  },
+  {
+   "id": "cat-115d798c",
+   "category": "סוחר נגררים",
+   "primary": 0,
+   "additional": 2
+  },
+  {
+   "id": "cat-1317f7e1",
+   "category": "קבלן בתים",
+   "primary": 0,
+   "additional": 2
+  },
+  {
+   "id": "cat-1da3c04b",
+   "category": "חנות כלי עבודה",
+   "primary": 0,
+   "additional": 2
+  },
+  {
+   "id": "cat-2608df5a",
+   "category": "יצרן",
+   "primary": 2,
+   "additional": 0
+  },
+  {
+   "id": "cat-31e02175",
+   "category": "חנות לציוד \"עשה זאת בעצמך\"",
+   "primary": 2,
+   "additional": 0
+  },
+  {
+   "id": "cat-4120638d",
+   "category": "מוסך",
+   "primary": 0,
+   "additional": 2
+  },
+  {
+   "id": "cat-5becaf69",
+   "category": "גן",
+   "primary": 0,
+   "additional": 2
+  },
+  {
+   "id": "cat-6b2e0b0d",
+   "category": "שירות עסק-לעסק",
+   "primary": 2,
+   "additional": 0
+  },
+  {
+   "id": "cat-6b4a6330",
+   "category": "חנות למוצרי צביעה",
+   "primary": 0,
+   "additional": 2
+  },
+  {
+   "id": "cat-7853837e",
+   "category": "ספק סוככים",
+   "primary": 2,
+   "additional": 0
+  },
+  {
+   "id": "cat-7a204f34",
+   "category": "ספק סגירת פטיו",
+   "primary": 0,
+   "additional": 2
+  },
+  {
+   "id": "cat-7f9bf1cd",
+   "category": "ספק אזעקות לרכב",
+   "primary": 0,
+   "additional": 2
+  },
+  {
+   "id": "cat-8500380d",
+   "category": "חנות למקלחונים",
+   "primary": 2,
+   "additional": 0
+  },
+  {
+   "id": "cat-a0d60b73",
+   "category": "שירות חשמל לרכב",
+   "primary": 0,
+   "additional": 2
+  },
+  {
+   "id": "cat-b56dfea2",
+   "category": "חנות ציוד לגדרות",
+   "primary": 0,
+   "additional": 2
+  },
+  {
+   "id": "cat-b6324351",
+   "category": "חנות למוצרי אטימה",
+   "primary": 0,
+   "additional": 2
+  },
+  {
+   "id": "cat-ba42cab4",
+   "category": "תיקון ותחזוקה של כלי רכב",
+   "primary": 2,
+   "additional": 0
+  },
+  {
+   "id": "cat-bab1d99d",
+   "category": "חנות הכל לבית",
+   "primary": 0,
+   "additional": 2
+  },
+  {
+   "id": "cat-ce23c577",
+   "category": "זגגות לרכב",
+   "primary": 2,
+   "additional": 0
+  },
+  {
+   "id": "cat-e3108a75",
+   "category": "מפעל ברזל",
+   "primary": 0,
+   "additional": 2
+  },
+  {
+   "id": "cat-e4cce17b",
+   "category": "חנות טפטים",
+   "primary": 0,
+   "additional": 2
+  },
+  {
+   "id": "cat-e9eec11b",
+   "category": "חנות לאביזרי תאורה",
+   "primary": 0,
+   "additional": 2
+  },
+  {
+   "id": "cat-ec866a71",
+   "category": "נגרות",
+   "primary": 2,
+   "additional": 0
+  },
+  {
+   "id": "cat-fc3f70f2",
+   "category": "שירות השכרת נגררים",
+   "primary": 0,
+   "additional": 2
+  },
+  {
+   "id": "cat-fd005971",
+   "category": "ספק חומרי בניין",
+   "primary": 2,
+   "additional": 0
+  },
+  {
+   "id": "cat-2624be9e",
+   "category": "שירות התקנת רצפות עץ",
+   "primary": 1,
+   "additional": 0
+  },
+  {
+   "id": "cat-285a811e",
+   "category": "סוכנות לביטוח בתים",
+   "primary": 0,
+   "additional": 1
+  },
+  {
+   "id": "cat-313ccf51",
+   "category": "בית מלאכה למתכות",
+   "primary": 0,
+   "additional": 1
+  },
+  {
+   "id": "cat-38fdb178",
+   "category": "קבלן מעקות",
+   "primary": 0,
+   "additional": 1
+  },
+  {
+   "id": "cat-3baf3afe",
+   "category": "סוכנות ביטוח",
+   "primary": 0,
+   "additional": 1
+  },
+  {
+   "id": "cat-4a209116",
+   "category": "סוכנות לביטוח חיים",
+   "primary": 0,
+   "additional": 1
+  },
+  {
+   "id": "cat-4b734cc9",
+   "category": "שירות התקנת חלונות",
+   "primary": 0,
+   "additional": 1
+  },
+  {
+   "id": "cat-53a919b1",
+   "category": "סוכנות ביטוח לשוכרים",
+   "primary": 0,
+   "additional": 1
+  },
+  {
+   "id": "cat-53b7a37a",
+   "category": "ספק מסגרות אלומיניום",
+   "primary": 0,
+   "additional": 1
+  },
+  {
+   "id": "cat-55cb538e",
+   "category": "בית מלון",
+   "primary": 1,
+   "additional": 0
+  },
+  {
+   "id": "cat-5b8b1209",
+   "category": "סוכנות לביטוח רכב",
+   "primary": 0,
+   "additional": 1
+  },
+  {
+   "id": "cat-6a1ddbf1",
+   "category": "מכללה",
+   "primary": 0,
+   "additional": 1
+  },
+  {
+   "id": "cat-8d96a783",
+   "category": "יועץ אקוסטיקה",
+   "primary": 1,
+   "additional": 0
+  },
+  {
+   "id": "cat-9e200570",
+   "category": "חברת ביטוח",
+   "primary": 1,
+   "additional": 0
+  },
+  {
+   "id": "cat-b8b79b86",
+   "category": "יועץ סביבתי",
+   "primary": 0,
+   "additional": 1
+  },
+  {
+   "id": "cat-bec71a3f",
+   "category": "ספק חלונות PVC",
+   "primary": 0,
+   "additional": 1
+  },
+  {
+   "id": "cat-ca470855",
+   "category": "מרכז למידה",
+   "primary": 1,
+   "additional": 0
+  },
+  {
+   "id": "cat-e0fcc873",
+   "category": "סוכן לביטוח בריאות",
+   "primary": 0,
+   "additional": 1
+  },
+  {
+   "id": "cat-e3aceaad",
+   "category": "ספקים לתעשיית המתכת",
+   "primary": 1,
+   "additional": 0
+  },
+  {
+   "id": "cat-f2e6e4ff",
+   "category": "ספק חלונות",
+   "primary": 1,
+   "additional": 0
+  },
+  {
+   "id": "cat-fba306f9",
+   "category": "שירות הדברה",
+   "primary": 1,
+   "additional": 0
+  }
+ ]
+}

@@ -1,0 +1,61 @@
+{
+ "run_id": "81896355e420",
+ "null_cities": [
+  "c2"
+ ],
+ "null_city_fraction": 0.3333,
+ "grouped_terms": [
+  {
+   "profession": "alpha",
+   "city": "c3",
+   "term": "alpha two",
+   "search_volume": 50
+  }
+ ],
+ "profession_null_fraction": {
+  "alpha": 0.3333,
+  "beta": 0.6667
+ },
+ "ticket": {
+  "alpha": {
+   "T_p_usd": 3,
+   "country_volume": 2000,
+   "terms": [
+    {
+     "term": "alpha one",
+     "sv": 1000,
+     "cpc": 2,
+     "high_bid": null,
+     "grouped": false
+    },
+    {
+     "term": "alpha two",
+     "sv": 1000,
+     "cpc": 4,
+     "high_bid": null,
+     "grouped": false
+    }
+   ]
+  },
+  "beta": {
+   "T_p_usd": 1,
+   "country_volume": 500,
+   "terms": [
+    {
+     "term": "beta one",
+     "sv": 500,
+     "cpc": null,
+     "high_bid": 1,
+     "grouped": false
+    },
+    {
+     "term": "beta two",
+     "sv": 500,
+     "cpc": 9,
+     "high_bid": null,
+     "grouped": true
+    }
+   ]
+  }
+ }
+}

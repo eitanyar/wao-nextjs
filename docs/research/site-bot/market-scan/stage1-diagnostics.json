@@ -1,0 +1,1557 @@
+{
+ "run_id": "745416b2b68f",
+ "null_cities": [
+  "givat-shmuel",
+  "maale-adumim",
+  "lehavim"
+ ],
+ "null_city_fraction": 0.0423,
+ "grouped_terms": [
+  {
+   "profession": "ac-repair",
+   "city": "afula",
+   "term": "תיקון מזגן",
+   "search_volume": 10
+  },
+  {
+   "profession": "ac-repair",
+   "city": "akko",
+   "term": "תיקון מזגן",
+   "search_volume": 10
+  },
+  {
+   "profession": "ac-repair",
+   "city": "ashdod",
+   "term": "תיקון מזגן",
+   "search_volume": 10
+  },
+  {
+   "profession": "ac-repair",
+   "city": "ashkelon",
+   "term": "תיקון מזגן",
+   "search_volume": 10
+  },
+  {
+   "profession": "ac-repair",
+   "city": "bat-yam",
+   "term": "תיקון מזגן",
+   "search_volume": 10
+  },
+  {
+   "profession": "ac-repair",
+   "city": "beer-sheva",
+   "term": "תיקון מזגן",
+   "search_volume": 10
+  },
+  {
+   "profession": "ac-repair",
+   "city": "beer-yaakov",
+   "term": "תיקון מזגן",
+   "search_volume": 10
+  },
+  {
+   "profession": "ac-repair",
+   "city": "beit-shemesh",
+   "term": "תיקון מזגן",
+   "search_volume": 10
+  },
+  {
+   "profession": "ac-repair",
+   "city": "binyamina",
+   "term": "תיקון מזגן",
+   "search_volume": 10
+  },
+  {
+   "profession": "ac-repair",
+   "city": "bnei-brak",
+   "term": "תיקון מזגן",
+   "search_volume": 10
+  },
+  {
+   "profession": "ac-repair",
+   "city": "dimona",
+   "term": "תיקון מזגן",
+   "search_volume": 10
+  },
+  {
+   "profession": "ac-repair",
+   "city": "even-yehuda",
+   "term": "תיקון מזגן",
+   "search_volume": 10
+  },
+  {
+   "profession": "ac-repair",
+   "city": "gan-yavne",
+   "term": "תיקון מזגן",
+   "search_volume": 10
+  },
+  {
+   "profession": "ac-repair",
+   "city": "gedera",
+   "term": "תיקון מזגן",
+   "search_volume": 10
+  },
+  {
+   "profession": "ac-repair",
+   "city": "givatayim",
+   "term": "תיקון מזגן",
+   "search_volume": 10
+  },
+  {
+   "profession": "ac-repair",
+   "city": "hadera",
+   "term": "תיקון מזגן",
+   "search_volume": 10
+  },
+  {
+   "profession": "ac-repair",
+   "city": "haifa",
+   "term": "תיקון מזגן",
+   "search_volume": 20
+  },
+  {
+   "profession": "ac-repair",
+   "city": "herzliya",
+   "term": "תיקון מזגן",
+   "search_volume": 10
+  },
+  {
+   "profession": "ac-repair",
+   "city": "hod-hasharon",
+   "term": "תיקון מזגן",
+   "search_volume": 10
+  },
+  {
+   "profession": "ac-repair",
+   "city": "holon",
+   "term": "תיקון מזגן",
+   "search_volume": 10
+  },
+  {
+   "profession": "ac-repair",
+   "city": "jerusalem",
+   "term": "תיקון מזגן",
+   "search_volume": 30
+  },
+  {
+   "profession": "ac-repair",
+   "city": "kadima-zoran",
+   "term": "תיקון מזגן",
+   "search_volume": 10
+  },
+  {
+   "profession": "ac-repair",
+   "city": "karmiel",
+   "term": "תיקון מזגן",
+   "search_volume": 10
+  },
+  {
+   "profession": "ac-repair",
+   "city": "kfar-saba",
+   "term": "תיקון מזגן",
+   "search_volume": 10
+  },
+  {
+   "profession": "ac-repair",
+   "city": "kfar-yona",
+   "term": "תיקון מזגן",
+   "search_volume": 10
+  },
+  {
+   "profession": "ac-repair",
+   "city": "kiryat-ata",
+   "term": "תיקון מזגן",
+   "search_volume": 10
+  },
+  {
+   "profession": "ac-repair",
+   "city": "kiryat-bialik",
+   "term": "תיקון מזגן",
+   "search_volume": 10
+  },
+  {
+   "profession": "ac-repair",
+   "city": "kiryat-gat",
+   "term": "תיקון מזגן",
+   "search_volume": 10
+  },
+  {
+   "profession": "ac-repair",
+   "city": "kiryat-malakhi",
+   "term": "תיקון מזגן",
+   "search_volume": 10
+  },
+  {
+   "profession": "ac-repair",
+   "city": "kiryat-motzkin",
+   "term": "תיקון מזגן",
+   "search_volume": 10
+  },
+  {
+   "profession": "ac-repair",
+   "city": "kiryat-ono",
+   "term": "תיקון מזגן",
+   "search_volume": 10
+  },
+  {
+   "profession": "ac-repair",
+   "city": "kiryat-shmona",
+   "term": "תיקון מזגן",
+   "search_volume": 10
+  },
+  {
+   "profession": "ac-repair",
+   "city": "kiryat-yam",
+   "term": "תיקון מזגן",
+   "search_volume": 10
+  },
+  {
+   "profession": "ac-repair",
+   "city": "lod",
+   "term": "תיקון מזגן",
+   "search_volume": 10
+  },
+  {
+   "profession": "ac-repair",
+   "city": "maalot-tarshiha",
+   "term": "תיקון מזגן",
+   "search_volume": 10
+  },
+  {
+   "profession": "ac-repair",
+   "city": "mazkeret-batya",
+   "term": "תיקון מזגן",
+   "search_volume": 10
+  },
+  {
+   "profession": "ac-repair",
+   "city": "mevaseret-zion",
+   "term": "תיקון מזגן",
+   "search_volume": 10
+  },
+  {
+   "profession": "ac-repair",
+   "city": "migdal-haemek",
+   "term": "תיקון מזגן",
+   "search_volume": 10
+  },
+  {
+   "profession": "ac-repair",
+   "city": "modiin",
+   "term": "תיקון מזגן",
+   "search_volume": 10
+  },
+  {
+   "profession": "ac-repair",
+   "city": "nahariya",
+   "term": "תיקון מזגן",
+   "search_volume": 10
+  },
+  {
+   "profession": "ac-repair",
+   "city": "nesher",
+   "term": "תיקון מזגן",
+   "search_volume": 10
+  },
+  {
+   "profession": "ac-repair",
+   "city": "ness-ziona",
+   "term": "תיקון מזגן",
+   "search_volume": 10
+  },
+  {
+   "profession": "ac-repair",
+   "city": "netanya",
+   "term": "תיקון מזגן",
+   "search_volume": 10
+  },
+  {
+   "profession": "ac-repair",
+   "city": "netivot",
+   "term": "תיקון מזגן",
+   "search_volume": 10
+  },
+  {
+   "profession": "ac-repair",
+   "city": "nof-hagalil",
+   "term": "תיקון מזגן",
+   "search_volume": 10
+  },
+  {
+   "profession": "ac-repair",
+   "city": "ofakim",
+   "term": "תיקון מזגן",
+   "search_volume": 10
+  },
+  {
+   "profession": "ac-repair",
+   "city": "omer",
+   "term": "תיקון מזגן",
+   "search_volume": 10
+  },
+  {
+   "profession": "ac-repair",
+   "city": "or-akiva",
+   "term": "תיקון מזגן",
+   "search_volume": 10
+  },
+  {
+   "profession": "ac-repair",
+   "city": "or-yehuda",
+   "term": "תיקון מזגן",
+   "search_volume": 10
+  },
+  {
+   "profession": "ac-repair",
+   "city": "pardes-hanna-karkur",
+   "term": "תיקון מזגן",
+   "search_volume": 10
+  },
+  {
+   "profession": "ac-repair",
+   "city": "petah-tikva",
+   "term": "תיקון מזגן",
+   "search_volume": 20
+  },
+  {
+   "profession": "ac-repair",
+   "city": "raanana",
+   "term": "תיקון מזגן",
+   "search_volume": 10
+  },
+  {
+   "profession": "ac-repair",
+   "city": "ramat-gan",
+   "term": "תיקון מזגן",
+   "search_volume": 40
+  },
+  {
+   "profession": "ac-repair",
+   "city": "ramat-hasharon",
+   "term": "תיקון מזגן",
+   "search_volume": 10
+  },
+  {
+   "profession": "ac-repair",
+   "city": "ramla",
+   "term": "תיקון מזגן",
+   "search_volume": 10
+  },
+  {
+   "profession": "ac-repair",
+   "city": "rehovot",
+   "term": "תיקון מזגן",
+   "search_volume": 10
+  },
+  {
+   "profession": "ac-repair",
+   "city": "rishon-lezion",
+   "term": "תיקון מזגן",
+   "search_volume": 30
+  },
+  {
+   "profession": "ac-repair",
+   "city": "rosh-haayin",
+   "term": "תיקון מזגן",
+   "search_volume": 10
+  },
+  {
+   "profession": "ac-repair",
+   "city": "sderot",
+   "term": "תיקון מזגן",
+   "search_volume": 10
+  },
+  {
+   "profession": "ac-repair",
+   "city": "shoham",
+   "term": "תיקון מזגן",
+   "search_volume": 10
+  },
+  {
+   "profession": "ac-repair",
+   "city": "tel-aviv",
+   "term": "תיקון מזגן",
+   "search_volume": 70
+  },
+  {
+   "profession": "ac-repair",
+   "city": "tel-mond",
+   "term": "תיקון מזגן",
+   "search_volume": 10
+  },
+  {
+   "profession": "ac-repair",
+   "city": "tiberias",
+   "term": "תיקון מזגן",
+   "search_volume": 10
+  },
+  {
+   "profession": "ac-repair",
+   "city": "tirat-carmel",
+   "term": "תיקון מזגן",
+   "search_volume": 10
+  },
+  {
+   "profession": "ac-repair",
+   "city": "yavne",
+   "term": "תיקון מזגן",
+   "search_volume": 10
+  },
+  {
+   "profession": "ac-repair",
+   "city": "yehud-monosson",
+   "term": "תיקון מזגן",
+   "search_volume": 10
+  },
+  {
+   "profession": "ac-repair",
+   "city": "yokneam-illit",
+   "term": "תיקון מזגן",
+   "search_volume": 10
+  },
+  {
+   "profession": "ac-repair",
+   "city": "zikhron-yaakov",
+   "term": "תיקון מזגן",
+   "search_volume": 10
+  },
+  {
+   "profession": "aluminum",
+   "city": "ashdod",
+   "term": "תריס חשמלי",
+   "search_volume": 10
+  },
+  {
+   "profession": "aluminum",
+   "city": "gan-yavne",
+   "term": "תריס חשמלי",
+   "search_volume": 10
+  },
+  {
+   "profession": "aluminum",
+   "city": "kfar-yona",
+   "term": "תריס חשמלי",
+   "search_volume": 10
+  },
+  {
+   "profession": "aluminum",
+   "city": "kiryat-bialik",
+   "term": "תריס חשמלי",
+   "search_volume": 10
+  },
+  {
+   "profession": "aluminum",
+   "city": "kiryat-motzkin",
+   "term": "תריס חשמלי",
+   "search_volume": 10
+  },
+  {
+   "profession": "aluminum",
+   "city": "kiryat-ono",
+   "term": "תריס חשמלי",
+   "search_volume": 10
+  },
+  {
+   "profession": "aluminum",
+   "city": "yehud-monosson",
+   "term": "תריס חשמלי",
+   "search_volume": 10
+  },
+  {
+   "profession": "aluminum",
+   "city": "zikhron-yaakov",
+   "term": "תריס חשמלי",
+   "search_volume": 10
+  },
+  {
+   "profession": "car-body-repair",
+   "city": "afula",
+   "term": "פחח רכב",
+   "search_volume": 10
+  },
+  {
+   "profession": "car-body-repair",
+   "city": "akko",
+   "term": "פחח רכב",
+   "search_volume": 10
+  },
+  {
+   "profession": "car-body-repair",
+   "city": "ashdod",
+   "term": "פחח רכב",
+   "search_volume": 10
+  },
+  {
+   "profession": "car-body-repair",
+   "city": "ashkelon",
+   "term": "פחח רכב",
+   "search_volume": 10
+  },
+  {
+   "profession": "car-body-repair",
+   "city": "bat-yam",
+   "term": "פחח רכב",
+   "search_volume": 10
+  },
+  {
+   "profession": "car-body-repair",
+   "city": "beer-sheva",
+   "term": "פחח רכב",
+   "search_volume": 20
+  },
+  {
+   "profession": "car-body-repair",
+   "city": "beer-yaakov",
+   "term": "פחח רכב",
+   "search_volume": 10
+  },
+  {
+   "profession": "car-body-repair",
+   "city": "beit-shemesh",
+   "term": "פחח רכב",
+   "search_volume": 10
+  },
+  {
+   "profession": "car-body-repair",
+   "city": "binyamina",
+   "term": "פחח רכב",
+   "search_volume": 10
+  },
+  {
+   "profession": "car-body-repair",
+   "city": "bnei-brak",
+   "term": "פחח רכב",
+   "search_volume": 20
+  },
+  {
+   "profession": "car-body-repair",
+   "city": "dimona",
+   "term": "פחח רכב",
+   "search_volume": 10
+  },
+  {
+   "profession": "car-body-repair",
+   "city": "even-yehuda",
+   "term": "פחח רכב",
+   "search_volume": 10
+  },
+  {
+   "profession": "car-body-repair",
+   "city": "gan-yavne",
+   "term": "פחח רכב",
+   "search_volume": 10
+  },
+  {
+   "profession": "car-body-repair",
+   "city": "gedera",
+   "term": "פחח רכב",
+   "search_volume": 10
+  },
+  {
+   "profession": "car-body-repair",
+   "city": "givatayim",
+   "term": "פחח רכב",
+   "search_volume": 10
+  },
+  {
+   "profession": "car-body-repair",
+   "city": "hadera",
+   "term": "פחח רכב",
+   "search_volume": 30
+  },
+  {
+   "profession": "car-body-repair",
+   "city": "haifa",
+   "term": "פחח רכב",
+   "search_volume": 20
+  },
+  {
+   "profession": "car-body-repair",
+   "city": "herzliya",
+   "term": "פחח רכב",
+   "search_volume": 20
+  },
+  {
+   "profession": "car-body-repair",
+   "city": "hod-hasharon",
+   "term": "פחח רכב",
+   "search_volume": 10
+  },
+  {
+   "profession": "car-body-repair",
+   "city": "holon",
+   "term": "פחח רכב",
+   "search_volume": 30
+  },
+  {
+   "profession": "car-body-repair",
+   "city": "jerusalem",
+   "term": "פחח רכב",
+   "search_volume": 30
+  },
+  {
+   "profession": "car-body-repair",
+   "city": "kadima-zoran",
+   "term": "פחח רכב",
+   "search_volume": 10
+  },
+  {
+   "profession": "car-body-repair",
+   "city": "karmiel",
+   "term": "פחח רכב",
+   "search_volume": 10
+  },
+  {
+   "profession": "car-body-repair",
+   "city": "kfar-saba",
+   "term": "פחח רכב",
+   "search_volume": 20
+  },
+  {
+   "profession": "car-body-repair",
+   "city": "kfar-yona",
+   "term": "פחח רכב",
+   "search_volume": 10
+  },
+  {
+   "profession": "car-body-repair",
+   "city": "kiryat-ata",
+   "term": "פחח רכב",
+   "search_volume": 10
+  },
+  {
+   "profession": "car-body-repair",
+   "city": "kiryat-bialik",
+   "term": "פחח רכב",
+   "search_volume": 10
+  },
+  {
+   "profession": "car-body-repair",
+   "city": "kiryat-gat",
+   "term": "פחח רכב",
+   "search_volume": 10
+  },
+  {
+   "profession": "car-body-repair",
+   "city": "kiryat-malakhi",
+   "term": "פחח רכב",
+   "search_volume": 10
+  },
+  {
+   "profession": "car-body-repair",
+   "city": "kiryat-motzkin",
+   "term": "פחח רכב",
+   "search_volume": 10
+  },
+  {
+   "profession": "car-body-repair",
+   "city": "kiryat-ono",
+   "term": "פחח רכב",
+   "search_volume": 10
+  },
+  {
+   "profession": "car-body-repair",
+   "city": "kiryat-shmona",
+   "term": "פחח רכב",
+   "search_volume": 10
+  },
+  {
+   "profession": "car-body-repair",
+   "city": "kiryat-yam",
+   "term": "פחח רכב",
+   "search_volume": 10
+  },
+  {
+   "profession": "car-body-repair",
+   "city": "lod",
+   "term": "פחח רכב",
+   "search_volume": 10
+  },
+  {
+   "profession": "car-body-repair",
+   "city": "maalot-tarshiha",
+   "term": "פחח רכב",
+   "search_volume": 10
+  },
+  {
+   "profession": "car-body-repair",
+   "city": "mazkeret-batya",
+   "term": "פחח רכב",
+   "search_volume": 10
+  },
+  {
+   "profession": "car-body-repair",
+   "city": "mevaseret-zion",
+   "term": "פחח רכב",
+   "search_volume": 10
+  },
+  {
+   "profession": "car-body-repair",
+   "city": "migdal-haemek",
+   "term": "פחח רכב",
+   "search_volume": 10
+  },
+  {
+   "profession": "car-body-repair",
+   "city": "modiin",
+   "term": "פחח רכב",
+   "search_volume": 10
+  },
+  {
+   "profession": "car-body-repair",
+   "city": "nahariya",
+   "term": "מוסך פחחות וצבע",
+   "search_volume": 10
+  },
+  {
+   "profession": "car-body-repair",
+   "city": "nahariya",
+   "term": "פחח רכב",
+   "search_volume": 10
+  },
+  {
+   "profession": "car-body-repair",
+   "city": "nesher",
+   "term": "פחח רכב",
+   "search_volume": 10
+  },
+  {
+   "profession": "car-body-repair",
+   "city": "ness-ziona",
+   "term": "פחח רכב",
+   "search_volume": 10
+  },
+  {
+   "profession": "car-body-repair",
+   "city": "netanya",
+   "term": "פחח רכב",
+   "search_volume": 40
+  },
+  {
+   "profession": "car-body-repair",
+   "city": "netivot",
+   "term": "פחח רכב",
+   "search_volume": 10
+  },
+  {
+   "profession": "car-body-repair",
+   "city": "nof-hagalil",
+   "term": "פחח רכב",
+   "search_volume": 10
+  },
+  {
+   "profession": "car-body-repair",
+   "city": "ofakim",
+   "term": "פחח רכב",
+   "search_volume": 10
+  },
+  {
+   "profession": "car-body-repair",
+   "city": "omer",
+   "term": "פחח רכב",
+   "search_volume": 10
+  },
+  {
+   "profession": "car-body-repair",
+   "city": "or-akiva",
+   "term": "פחח רכב",
+   "search_volume": 10
+  },
+  {
+   "profession": "car-body-repair",
+   "city": "or-yehuda",
+   "term": "פחח רכב",
+   "search_volume": 10
+  },
+  {
+   "profession": "car-body-repair",
+   "city": "pardes-hanna-karkur",
+   "term": "פחח רכב",
+   "search_volume": 10
+  },
+  {
+   "profession": "car-body-repair",
+   "city": "petah-tikva",
+   "term": "פחח רכב",
+   "search_volume": 50
+  },
+  {
+   "profession": "car-body-repair",
+   "city": "raanana",
+   "term": "פחח רכב",
+   "search_volume": 20
+  },
+  {
+   "profession": "car-body-repair",
+   "city": "ramat-gan",
+   "term": "פחח רכב",
+   "search_volume": 50
+  },
+  {
+   "profession": "car-body-repair",
+   "city": "ramat-hasharon",
+   "term": "פחח רכב",
+   "search_volume": 10
+  },
+  {
+   "profession": "car-body-repair",
+   "city": "ramla",
+   "term": "פחח רכב",
+   "search_volume": 40
+  },
+  {
+   "profession": "car-body-repair",
+   "city": "rehovot",
+   "term": "פחח רכב",
+   "search_volume": 50
+  },
+  {
+   "profession": "car-body-repair",
+   "city": "rishon-lezion",
+   "term": "פחח רכב",
+   "search_volume": 50
+  },
+  {
+   "profession": "car-body-repair",
+   "city": "rosh-haayin",
+   "term": "פחח רכב",
+   "search_volume": 10
+  },
+  {
+   "profession": "car-body-repair",
+   "city": "sderot",
+   "term": "פחח רכב",
+   "search_volume": 10
+  },
+  {
+   "profession": "car-body-repair",
+   "city": "shoham",
+   "term": "פחח רכב",
+   "search_volume": 10
+  },
+  {
+   "profession": "car-body-repair",
+   "city": "tel-aviv",
+   "term": "פחח רכב",
+   "search_volume": 210
+  },
+  {
+   "profession": "car-body-repair",
+   "city": "tel-mond",
+   "term": "פחח רכב",
+   "search_volume": 10
+  },
+  {
+   "profession": "car-body-repair",
+   "city": "tiberias",
+   "term": "פחח רכב",
+   "search_volume": 10
+  },
+  {
+   "profession": "car-body-repair",
+   "city": "tirat-carmel",
+   "term": "פחח רכב",
+   "search_volume": 10
+  },
+  {
+   "profession": "car-body-repair",
+   "city": "yavne",
+   "term": "פחח רכב",
+   "search_volume": 10
+  },
+  {
+   "profession": "car-body-repair",
+   "city": "yehud-monosson",
+   "term": "פחח רכב",
+   "search_volume": 10
+  },
+  {
+   "profession": "car-body-repair",
+   "city": "yokneam-illit",
+   "term": "פחח רכב",
+   "search_volume": 10
+  },
+  {
+   "profession": "car-body-repair",
+   "city": "zikhron-yaakov",
+   "term": "פחח רכב",
+   "search_volume": 10
+  },
+  {
+   "profession": "electrician",
+   "city": "even-yehuda",
+   "term": "חשמלאי מוסמך",
+   "search_volume": 10
+  },
+  {
+   "profession": "gates-fencing",
+   "city": "afula",
+   "term": "גדרות",
+   "search_volume": 10
+  },
+  {
+   "profession": "gates-fencing",
+   "city": "afula",
+   "term": "שער חשמלי",
+   "search_volume": 10
+  },
+  {
+   "profession": "gates-fencing",
+   "city": "beit-shemesh",
+   "term": "שער חשמלי",
+   "search_volume": 10
+  },
+  {
+   "profession": "gates-fencing",
+   "city": "even-yehuda",
+   "term": "גדרות",
+   "search_volume": 10
+  },
+  {
+   "profession": "gates-fencing",
+   "city": "even-yehuda",
+   "term": "שער חשמלי",
+   "search_volume": 10
+  },
+  {
+   "profession": "gates-fencing",
+   "city": "kadima-zoran",
+   "term": "גדרות",
+   "search_volume": 10
+  },
+  {
+   "profession": "gates-fencing",
+   "city": "kfar-yona",
+   "term": "גדרות",
+   "search_volume": 10
+  },
+  {
+   "profession": "gates-fencing",
+   "city": "kfar-yona",
+   "term": "שער חשמלי",
+   "search_volume": 10
+  },
+  {
+   "profession": "gates-fencing",
+   "city": "kiryat-ata",
+   "term": "גדרות",
+   "search_volume": 10
+  },
+  {
+   "profession": "gates-fencing",
+   "city": "kiryat-bialik",
+   "term": "גדרות",
+   "search_volume": 10
+  },
+  {
+   "profession": "gates-fencing",
+   "city": "kiryat-gat",
+   "term": "שער חשמלי",
+   "search_volume": 10
+  },
+  {
+   "profession": "gates-fencing",
+   "city": "kiryat-motzkin",
+   "term": "שער חשמלי",
+   "search_volume": 10
+  },
+  {
+   "profession": "gates-fencing",
+   "city": "kiryat-shmona",
+   "term": "שער חשמלי",
+   "search_volume": 10
+  },
+  {
+   "profession": "gates-fencing",
+   "city": "nahariya",
+   "term": "גדרות",
+   "search_volume": 10
+  },
+  {
+   "profession": "gates-fencing",
+   "city": "netivot",
+   "term": "גדרות",
+   "search_volume": 10
+  },
+  {
+   "profession": "gates-fencing",
+   "city": "pardes-hanna-karkur",
+   "term": "גדרות",
+   "search_volume": 10
+  },
+  {
+   "profession": "gates-fencing",
+   "city": "sderot",
+   "term": "גדרות",
+   "search_volume": 10
+  },
+  {
+   "profession": "gates-fencing",
+   "city": "tirat-carmel",
+   "term": "שער חשמלי",
+   "search_volume": 10
+  },
+  {
+   "profession": "gates-fencing",
+   "city": "yehud-monosson",
+   "term": "גדרות",
+   "search_volume": 10
+  },
+  {
+   "profession": "movers",
+   "city": "gedera",
+   "term": "הובלות דירה",
+   "search_volume": 10
+  },
+  {
+   "profession": "movers",
+   "city": "givatayim",
+   "term": "חברת הובלות",
+   "search_volume": 10
+  },
+  {
+   "profession": "pest-control",
+   "city": "pardes-hanna-karkur",
+   "term": "מדביר",
+   "search_volume": 10
+  },
+  {
+   "profession": "pest-control",
+   "city": "sderot",
+   "term": "מדביר",
+   "search_volume": 10
+  },
+  {
+   "profession": "renovation",
+   "city": "beer-sheva",
+   "term": "שיפוץ אמבטיה",
+   "search_volume": 10
+  },
+  {
+   "profession": "renovation",
+   "city": "beer-yaakov",
+   "term": "שיפוץ אמבטיה",
+   "search_volume": 10
+  },
+  {
+   "profession": "renovation",
+   "city": "gedera",
+   "term": "שיפוצים",
+   "search_volume": 10
+  },
+  {
+   "profession": "renovation",
+   "city": "hod-hasharon",
+   "term": "שיפוץ אמבטיה",
+   "search_volume": 10
+  },
+  {
+   "profession": "renovation",
+   "city": "kiryat-ata",
+   "term": "שיפוץ אמבטיה",
+   "search_volume": 10
+  },
+  {
+   "profession": "renovation",
+   "city": "raanana",
+   "term": "שיפוץ אמבטיה",
+   "search_volume": 10
+  },
+  {
+   "profession": "renovation",
+   "city": "ramat-hasharon",
+   "term": "שיפוץ אמבטיה",
+   "search_volume": 10
+  },
+  {
+   "profession": "solar",
+   "city": "gan-yavne",
+   "term": "פאנלים סולאריים",
+   "search_volume": 10
+  },
+  {
+   "profession": "solar",
+   "city": "kiryat-ono",
+   "term": "פאנלים סולאריים",
+   "search_volume": 10
+  },
+  {
+   "profession": "tiling",
+   "city": "kiryat-ata",
+   "term": "ריצוף",
+   "search_volume": 10
+  },
+  {
+   "profession": "tiling",
+   "city": "or-yehuda",
+   "term": "ריצוף",
+   "search_volume": 10
+  }
+ ],
+ "profession_null_fraction": {
+  "plumber": 0.0423,
+  "electrician": 0.0423,
+  "ac-repair": 0.0423,
+  "locksmith": 0.0423,
+  "pest-control": 0.0423,
+  "movers": 0.0423,
+  "roofing": 0.0423,
+  "carpenter": 0.0423,
+  "painter": 0.0423,
+  "tiling": 0.0423,
+  "car-body-repair": 0.0423,
+  "solar": 0.0423,
+  "pergolas": 0.0423,
+  "aluminum": 0.0423,
+  "kitchens": 0.0423,
+  "renovation": 0.0423,
+  "gates-fencing": 0.0423
+ },
+ "ticket": {
+  "plumber": {
+   "T_p_usd": 8.5036,
+   "country_volume": 11590,
+   "terms": [
+    {
+     "term": "אינסטלטור",
+     "sv": 9900,
+     "cpc": 8.03,
+     "high_bid": 9.03,
+     "grouped": false
+    },
+    {
+     "term": "פתיחת סתימה",
+     "sv": 390,
+     "cpc": 5.77,
+     "high_bid": 7.21,
+     "grouped": false
+    },
+    {
+     "term": "איתור נזילה",
+     "sv": 1300,
+     "cpc": 12.93,
+     "high_bid": 13.26,
+     "grouped": false
+    }
+   ]
+  },
+  "electrician": {
+   "T_p_usd": 6.63,
+   "country_volume": 6000,
+   "terms": [
+    {
+     "term": "חשמלאי",
+     "sv": 3600,
+     "cpc": 6.25,
+     "high_bid": 7.59,
+     "grouped": false
+    },
+    {
+     "term": "חשמלאי מוסמך",
+     "sv": 2400,
+     "cpc": 7.2,
+     "high_bid": 6.17,
+     "grouped": false
+    }
+   ]
+  },
+  "ac-repair": {
+   "T_p_usd": 4.075,
+   "country_volume": 2880,
+   "terms": [
+    {
+     "term": "טכנאי מזגנים",
+     "sv": 2400,
+     "cpc": 4.09,
+     "high_bid": 4.35,
+     "grouped": false
+    },
+    {
+     "term": "תיקון מזגנים",
+     "sv": 480,
+     "cpc": 4,
+     "high_bid": 4.31,
+     "grouped": false
+    },
+    {
+     "term": "תיקון מזגן",
+     "sv": 480,
+     "cpc": 4,
+     "high_bid": 4.31,
+     "grouped": true
+    }
+   ]
+  },
+  "locksmith": {
+   "T_p_usd": 12.1746,
+   "country_volume": 4490,
+   "terms": [
+    {
+     "term": "מנעולן",
+     "sv": 4400,
+     "cpc": 12.16,
+     "high_bid": 11.96,
+     "grouped": false
+    },
+    {
+     "term": "פריצת דלת",
+     "sv": 90,
+     "cpc": 12.89,
+     "high_bid": 11.29,
+     "grouped": false
+    }
+   ]
+  },
+  "pest-control": {
+   "T_p_usd": 4.8177,
+   "country_volume": 2410,
+   "terms": [
+    {
+     "term": "הדברה",
+     "sv": 1300,
+     "cpc": 4.67,
+     "high_bid": 4.99,
+     "grouped": false
+    },
+    {
+     "term": "מדביר",
+     "sv": 1000,
+     "cpc": 4.63,
+     "high_bid": 5.08,
+     "grouped": false
+    },
+    {
+     "term": "חברת הדברה",
+     "sv": 110,
+     "cpc": 8.27,
+     "high_bid": 5.12,
+     "grouped": false
+    }
+   ]
+  },
+  "movers": {
+   "T_p_usd": 9.1819,
+   "country_volume": 4790,
+   "terms": [
+    {
+     "term": "הובלות",
+     "sv": 2900,
+     "cpc": 7.08,
+     "high_bid": 7.45,
+     "grouped": false
+    },
+    {
+     "term": "הובלות דירה",
+     "sv": 1300,
+     "cpc": 14.28,
+     "high_bid": 16.18,
+     "grouped": false
+    },
+    {
+     "term": "חברת הובלות",
+     "sv": 590,
+     "cpc": 8.28,
+     "high_bid": 7.86,
+     "grouped": false
+    }
+   ]
+  },
+  "roofing": {
+   "T_p_usd": 8.512,
+   "country_volume": 3210,
+   "terms": [
+    {
+     "term": "איטום גגות",
+     "sv": 2900,
+     "cpc": 8.78,
+     "high_bid": 11.49,
+     "grouped": false
+    },
+    {
+     "term": "קבלן איטום גגות",
+     "sv": 50,
+     "cpc": 9.88,
+     "high_bid": 8.84,
+     "grouped": false
+    },
+    {
+     "term": "גגן",
+     "sv": 260,
+     "cpc": 5.26,
+     "high_bid": 6.48,
+     "grouped": false
+    }
+   ]
+  },
+  "carpenter": {
+   "T_p_usd": 1.9199,
+   "country_volume": 1940,
+   "terms": [
+    {
+     "term": "נגר",
+     "sv": 1900,
+     "cpc": 1.93,
+     "high_bid": 2.49,
+     "grouped": false
+    },
+    {
+     "term": "נגר בהתאמה אישית",
+     "sv": 40,
+     "cpc": 1.44,
+     "high_bid": 1.93,
+     "grouped": false
+    },
+    {
+     "term": "נגר לארונות",
+     "sv": null,
+     "cpc": null,
+     "high_bid": null,
+     "grouped": false
+    }
+   ]
+  },
+  "painter": {
+   "T_p_usd": 5.5032,
+   "country_volume": 1600,
+   "terms": [
+    {
+     "term": "צבעי",
+     "sv": 1000,
+     "cpc": 5.57,
+     "high_bid": 5.95,
+     "grouped": false
+    },
+    {
+     "term": "צבעי בניין",
+     "sv": 10,
+     "cpc": null,
+     "high_bid": null,
+     "grouped": false
+    },
+    {
+     "term": "צביעת דירה",
+     "sv": 590,
+     "cpc": 5.39,
+     "high_bid": 4.41,
+     "grouped": false
+    }
+   ]
+  },
+  "tiling": {
+   "T_p_usd": 1.3817,
+   "country_volume": 2260,
+   "terms": [
+    {
+     "term": "רצף",
+     "sv": 590,
+     "cpc": 3.56,
+     "high_bid": 3.91,
+     "grouped": false
+    },
+    {
+     "term": "קבלן ריצוף",
+     "sv": 70,
+     "cpc": 2.49,
+     "high_bid": 3.98,
+     "grouped": false
+    },
+    {
+     "term": "ריצוף",
+     "sv": 1600,
+     "cpc": 0.53,
+     "high_bid": 1.37,
+     "grouped": false
+    }
+   ]
+  },
+  "car-body-repair": {
+   "T_p_usd": 3.3217,
+   "country_volume": 1560,
+   "terms": [
+    {
+     "term": "פחחות רכב",
+     "sv": 1300,
+     "cpc": 2.82,
+     "high_bid": 3.41,
+     "grouped": false
+    },
+    {
+     "term": "פחח רכב",
+     "sv": 1300,
+     "cpc": 2.82,
+     "high_bid": 3.41,
+     "grouped": true
+    },
+    {
+     "term": "מוסך פחחות וצבע",
+     "sv": 260,
+     "cpc": 5.83,
+     "high_bid": 16.28,
+     "grouped": false
+    }
+   ]
+  },
+  "solar": {
+   "T_p_usd": 4.7644,
+   "country_volume": 3110,
+   "terms": [
+    {
+     "term": "מערכת סולארית",
+     "sv": 1000,
+     "cpc": 6.44,
+     "high_bid": 6.43,
+     "grouped": false
+    },
+    {
+     "term": "התקנת מערכת סולארית",
+     "sv": 210,
+     "cpc": 9.13,
+     "high_bid": 9.5,
+     "grouped": false
+    },
+    {
+     "term": "פאנלים סולאריים",
+     "sv": 1900,
+     "cpc": 3.4,
+     "high_bid": 4.78,
+     "grouped": false
+    }
+   ]
+  },
+  "pergolas": {
+   "T_p_usd": 2.5693,
+   "country_volume": 12590,
+   "terms": [
+    {
+     "term": "פרגולות",
+     "sv": 5400,
+     "cpc": 1.81,
+     "high_bid": 3.39,
+     "grouped": false
+    },
+    {
+     "term": "פרגולה מאלומיניום",
+     "sv": 6600,
+     "cpc": 3.16,
+     "high_bid": 3.65,
+     "grouped": false
+    },
+    {
+     "term": "פרגולה מעץ",
+     "sv": 590,
+     "cpc": 2.91,
+     "high_bid": 4.22,
+     "grouped": false
+    }
+   ]
+  },
+  "aluminum": {
+   "T_p_usd": 3.1978,
+   "country_volume": 2920,
+   "terms": [
+    {
+     "term": "חלונות אלומיניום",
+     "sv": 1000,
+     "cpc": 3.04,
+     "high_bid": 3.08,
+     "grouped": false
+    },
+    {
+     "term": "עבודות אלומיניום",
+     "sv": 320,
+     "cpc": 2.98,
+     "high_bid": 3.29,
+     "grouped": false
+    },
+    {
+     "term": "תריס חשמלי",
+     "sv": 1600,
+     "cpc": 3.34,
+     "high_bid": 2.99,
+     "grouped": false
+    }
+   ]
+  },
+  "kitchens": {
+   "T_p_usd": 1.3915,
+   "country_volume": 8310,
+   "terms": [
+    {
+     "term": "מטבחים",
+     "sv": 8100,
+     "cpc": 1.37,
+     "high_bid": 1.94,
+     "grouped": false
+    },
+    {
+     "term": "מטבחים בהתאמה אישית",
+     "sv": 210,
+     "cpc": 2.22,
+     "high_bid": 3.29,
+     "grouped": false
+    }
+   ]
+  },
+  "renovation": {
+   "T_p_usd": 5.1954,
+   "country_volume": 4110,
+   "terms": [
+    {
+     "term": "קבלן שיפוצים",
+     "sv": 1000,
+     "cpc": 5.9,
+     "high_bid": 6.21,
+     "grouped": false
+    },
+    {
+     "term": "שיפוצים",
+     "sv": 2400,
+     "cpc": 5.49,
+     "high_bid": 6.44,
+     "grouped": false
+    },
+    {
+     "term": "שיפוץ דירה",
+     "sv": 390,
+     "cpc": 3.41,
+     "high_bid": 4.19,
+     "grouped": false
+    },
+    {
+     "term": "שיפוץ אמבטיה",
+     "sv": 320,
+     "cpc": 2.96,
+     "high_bid": 4.03,
+     "grouped": false
+    }
+   ]
+  },
+  "gates-fencing": {
+   "T_p_usd": 2.4067,
+   "country_volume": 3900,
+   "terms": [
+    {
+     "term": "מסגר",
+     "sv": 1300,
+     "cpc": 2.98,
+     "high_bid": 3.67,
+     "grouped": false
+    },
+    {
+     "term": "שער חשמלי",
+     "sv": 1000,
+     "cpc": 3.64,
+     "high_bid": 3.62,
+     "grouped": false
+    },
+    {
+     "term": "גדרות",
+     "sv": 1600,
+     "cpc": 1.17,
+     "high_bid": 1.63,
+     "grouped": false
+    }
+   ]
+  }
+ }
+}

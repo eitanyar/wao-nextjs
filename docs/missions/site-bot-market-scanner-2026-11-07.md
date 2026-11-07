@@ -30,6 +30,29 @@ Pilot validates the *method*: Stage 1 on the full matrix; Stage 2 on 3 deliberat
 cells (expected-saturated big-city crowded service / expected-weak / middle). Scoring must
 separate them the way common sense does before running Stage 2 broadly.
 
+### Reach plan (approved 2026-11-07)
+The scan yields a **named list** (20–40 businesses per winning cell), so reach is 1:1, not ad targeting.
+- **Near-free lead magnet:** pre-build each prospect's audit report from Stage-2 data (same fields the
+  live audit buys from Places) and send a **personal report link** — no Places call on open. Public
+  audit form stays for inbound behind the existing daily ceiling. Reports respect the 30-day retention.
+- **Channels, best value first:**
+  1. Personal call / WhatsApp from Eitan with the report link, ~10/day (Amit gate: §30A, WhatsApp ToS).
+  2. Printed one-page "Google profile report card" letter with QR to the personal report (paper is
+     outside the electronic-spam law — Amit confirms; few ₪ each, high-ticket cells first).
+  3. Scan-as-content: anonymized cell mini-report for the profession's FB groups; later a wao.co.il
+     article (Yonatan) — original data, GEO-citable.
+  4. Paid = retargeting only (people who opened their link / visited the audit). Never upload scraped
+     lists as Meta custom audiences. Dror once warm traffic exists.
+  5. Partners: suppliers serving many contractors (solar distributors, aluminum, building materials);
+     peer referrals via the existing share prompt.
+- **Per-cell rhythm:** scan → 1–2 warm case studies in that profession → wave (letter + call/WhatsApp
+  + group post) → retarget openers → measure replies/conversations per channel → keep what works.
+- **Added work:** personal-report-link build (engineer, after M4); Amit compliance + letter format;
+  Tamar: call script, letter, WhatsApp opener, group-post template (Noa gate).
+
+**Approved spend (Eitan, 2026-11-07):** Stage 1 cap $10, Stage-2 pilot cap $1. DataForSEO balance
+$40.61 on 2026-11-07. Re-check prices on the day of the run.
+
 ## Files
 - Profession seeds: `data/batch/<slug>/keywords.json` (44 packs, July 2026, GPT-generated — keywords
   reusable, copy is draft only); `docs/batch-verticals.md`.

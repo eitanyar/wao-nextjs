@@ -1,0 +1,84 @@
+{
+  "spec": "docs/research/site-bot/market-scanner-scoring-spec.md",
+  "free_checks_2026_11_07": {
+    "balance_usd": 40.612988,
+    "ads_language_code": "iw",
+    "ads_language_note": "GET /v3/keywords_data/google_ads/languages lists Hebrew only as code 'iw' ('Hebrew (old)'); 'he' is not in the Google Ads list. Spec 3.1 said 'he' for search_volume - contradicted.",
+    "serp_language_code": "he",
+    "serp_language_note": "GET /v3/serp/google/languages lists 'he' (Hebrew) and 'iw' (Hebrew (old)). 'he' used, as spec 3.1 assumed.",
+    "missing_ads_location_codes": ["givat-shmuel", "maale-adumim", "lehavim"],
+    "missing_ads_location_fallback": "spec 2 / 3.4: stays in the matrix with V_source = imputed (3 of 71 cities = 4%, far below the 50% district fallback trigger)",
+    "local_finder_price": "confirmed 2026-11-07 on https://dataforseo.com/pricing/serp/google-local-finder-serp-api: live $0.002 per SERP of 10 results (standard $0.0006, priority $0.0012)",
+    "price_source": "account price table from GET /v3/appendix/user_data (free) 2026-11-07, cross-checked against the public pricing pages the same day: unchanged from spec 7"
+  },
+  "api": {
+    "base_url": "https://api.dataforseo.com/v3",
+    "country_location_code": 2376
+  },
+  "prices_usd": {
+    "/keywords_data/google_ads/search_volume/live": { "per_unit": 0.09, "unit": "task" },
+    "/serp/google/organic/live/advanced": { "per_unit": 0.002, "unit": "serp", "results_per_unit": 10 },
+    "/serp/google/maps/live/advanced": { "per_unit": 0.002, "unit": "serp", "results_per_unit": 100 },
+    "/serp/google/local_finder/live/advanced": { "per_unit": 0.002, "unit": "serp", "results_per_unit": 10 }
+  },
+  "caps_usd": {
+    "stage1": 10,
+    "stage2-pilot": 1
+  },
+  "approved_caps_note": "Caps approved by Eitan 2026-11-07. The CLI may lower a cap with --cap but never raise it.",
+  "rate_limits": {
+    "/keywords_data/google_ads/search_volume/live": { "min_interval_ms": 5500, "concurrency": 1 },
+    "/serp/google/organic/live/advanced": { "min_interval_ms": 0, "concurrency": 4 },
+    "/serp/google/maps/live/advanced": { "min_interval_ms": 0, "concurrency": 4 },
+    "/serp/google/local_finder/live/advanced": { "min_interval_ms": 0, "concurrency": 4 }
+  },
+  "stage1": {
+    "min_city_volume_measured": 50,
+    "min_region_volume": 150,
+    "value_top_fraction": 0.5,
+    "max_pairs_advancing": 40,
+    "map_intent_pack": 1.0,
+    "map_intent_no_pack": 0.4,
+    "null_city_fail_fraction": 0.5,
+    "organic_depth": 10
+  },
+  "stage2": {
+    "terms_per_profession": 2,
+    "zooms": ["13z", "15z"],
+    "primary_zoom": "13z",
+    "maps_depth": 100,
+    "score_ranks": 20,
+    "review_saturation_votes": 150,
+    "photo_saturation": 50,
+    "rating_min_votes": 5,
+    "weights": { "reviews": 0.40, "rating": 0.15, "real_site": 0.20, "photos": 0.10, "stuffed": 0.15 },
+    "saturated_s3": 0.70,
+    "open_s3": 0.40,
+    "gap_cap": 4,
+    "prospect_min_gaps": 2,
+    "prospect_radius_km": 6,
+    "prospect_pass": 15,
+    "prospect_kill_below": 8,
+    "chain_min_cells": 3,
+    "chain_min_regions": 2,
+    "tie_within_fraction": 0.05,
+    "local_finder_depth": 10,
+    "not_a_site": [
+      "facebook.com", "instagram.com", "wa.me", "api.whatsapp.com", "linktr.ee", "tiktok.com",
+      "easy.co.il", "b144.co.il", "d.co.il", "midrag.co.il", "zap.co.il", "yad2.co.il", "google.com", "sites.google.com"
+    ],
+    "category_allowlist": {
+      "roofing": ["cat-a58e4968", "cat-b3b8662b", "cat-3ae38c36"],
+      "pergolas": ["cat-74d33b57", "cat-7853837e", "cat-7a204f34", "cat-76e7e699", "cat-fda53b2a"]
+    },
+    "category_allowlist_note": "PROVISIONAL (engineer, 2026-11-07, for Yonatan's review). Hebrew Maps items return no category_ids, only localized category text, so spec 8's text fallback is used: ids are categoryId(text) from config/market-scanner/category-catalog.json, matched against category + additional_categories. roofing = waterproofing service, waterproofing company, roofer (excluded: general contractor, plumber, renovator, insulation contractor, building-materials stores). pergolas = pergola/carport manufacturer, awning supplier, patio-enclosure supplier, aluminum supplier, fence contractor (the last two kept because most Karmiel listings in them carry a pergola term in the name; excluded: carpentry, aluminum windows, garden designer, construction company)."
+  },
+  "pilot": {
+    "cells": [
+      { "id": "A", "profession": "roofing", "city": "petah-tikva", "expect": "saturated" },
+      { "id": "B", "profession": "roofing", "city": "rosh-haayin", "expect": "middle" },
+      { "id": "C", "profession": "pergolas", "city": "karmiel", "expect": "open" }
+    ],
+    "search_places_check_cell": "A"
+  }
+}

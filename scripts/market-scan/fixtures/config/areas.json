@@ -1,0 +1,55 @@
+{
+  "spec": "fixture",
+  "regions": [
+    {
+      "id": "R1",
+      "name": "Region One",
+      "cities": [
+        {
+          "slug": "c1",
+          "region": "R1",
+          "ring": "core",
+          "he_name": "City One",
+          "en_name": "City One",
+          "ads_location_code": 101,
+          "lat": 32.0,
+          "lng": 34.8,
+          "population": 1000,
+          "flags": []
+        },
+        {
+          "slug": "c2",
+          "region": "R1",
+          "ring": "ring2",
+          "he_name": "City Two",
+          "en_name": "City Two",
+          "ads_location_code": null,
+          "lat": 32.05,
+          "lng": 34.85,
+          "population": 500,
+          "flags": [
+            "haredi_majority"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "R2",
+      "name": "Region Two",
+      "cities": [
+        {
+          "slug": "c3",
+          "region": "R2",
+          "ring": "core",
+          "he_name": "City Three",
+          "en_name": "City Three",
+          "ads_location_code": 103,
+          "lat": 31.0,
+          "lng": 34.9,
+          "population": 2000,
+          "flags": []
+        }
+      ]
+    }
+  ]
+}

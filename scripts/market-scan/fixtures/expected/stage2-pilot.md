@@ -1,0 +1,8 @@
+## Stage 2 pilot (run 81896355e420)
+
+| rank | zoom | cell_id | expect | slug | trade_he | region | city | city_he | ring | V_region | V_cell | V_source | T_p_usd | M | value_usd | S3 | S3_band | top3_s | W | P | pooled | kit_level | score | score_unkilled | kill_reason | flags | maps_items_t1 | maps_items_t2 | relevant_ranked | lf_overlap_top3 | organic_local_pack | search_places_false_top20_overlap | run_id |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| 1 | 13z | B | open | alpha | Alpha Trade | R2 | c3 | City Three | core | 50 | 50 | measured | 3 | 0.4 | 60 | 0.1443 | open | 0.1165/0.3165/0 | 1 | 2 | false | 2 | 0 | 5.8571 | P<8;stage1_fail |  | 2 | 2 | 2 | 1 | false |  | 81896355e420 |
+| 2 | 13z | A | saturated | alpha | Alpha Trade | R1 | c1 | City One | core | 400 | 400 | measured | 3 | 1 | 1200 | 0.475 | middle | 1/0.3086/0.1165 | 0.6667 | 1 | false | 2 | 0 | 22.0474 | P<8 |  | 5 | 5 | 3 | 2 | true | 5 | 81896355e420 |
+| 1 | 15z | B | open | alpha | Alpha Trade | R2 | c3 | City Three | core | 50 | 50 | measured | 3 | 0.4 | 60 | 0.1443 | open | 0.1165/0.3165/0 | 1 | 2 | false | 2 | 0 | 5.8571 | P<8;stage1_fail |  | 2 | 2 | 2 | 1 | false |  | 81896355e420 |
+| 2 | 15z | A | saturated | alpha | Alpha Trade | R1 | c1 | City One | core | 400 | 400 | measured | 3 | 1 | 1200 | 0.475 | middle | 1/0.3086/0.1165 | 0.6667 | 1 | false | 2 | 0 | 22.0474 | P<8 |  | 5 | 5 | 3 | 2 | true |  | 81896355e420 |
