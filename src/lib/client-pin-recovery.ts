@@ -47,7 +47,7 @@ export function resolveUniqueRecoveryEnrollmentByEmail(email: string, root: stri
     const matches: Array<{ clientId: string; emailCanonical: string }> = [];
     for (const clientId of fs.readdirSync(root).sort()) {
       if (!CLIENT_ID_PATTERN.test(clientId)) continue;
-      const recordPath = path.resolve(root, clientId, 'client.json');
+      const recordPath = path.join(path.resolve(root), clientId, 'client.json');
       if (!contained(recordPath, root)) return null;
       const record: unknown = JSON.parse(fs.readFileSync(recordPath, 'utf8'));
       if (!record || typeof record !== 'object' || (record as { clientId?: unknown }).clientId !== clientId) return null;

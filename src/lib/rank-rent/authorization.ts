@@ -133,7 +133,7 @@ function validLedger(value: unknown, grantId: string): value is AuthorizationLed
 
 export function recordAuthorizationEvent(grantId: string, input: unknown, customRoot: string): LedgerResult {
   if (!safeId(grantId) || !nonblankText(customRoot, 4096) || !validEvent(input, grantId)) return { ok: false, reason: 'invalid_input' };
-  const root = path.resolve(customRoot); const target = path.resolve(root, `${grantId}.json`); const temporary = path.join(root, `.${grantId}.${crypto.randomUUID()}.tmp`);
+  const root = path.resolve(customRoot); const target = path.join(path.resolve(root), `${grantId}.json`); const temporary = path.join(root, `.${grantId}.${crypto.randomUUID()}.tmp`);
   if (target !== path.join(root, `${grantId}.json`)) return { ok: false, reason: 'unsafe_path' };
   try {
     fs.mkdirSync(root, { recursive: true, mode: 0o700 });

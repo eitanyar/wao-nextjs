@@ -22,7 +22,7 @@ export function getResearchPath(researchId: string, customBaseDir?: string): str
   }
 
   const baseDir = getBaseDir(customBaseDir);
-  const resolved = path.resolve(baseDir, researchId, 'dossier.json');
+  const resolved = path.join(path.resolve(baseDir), researchId, 'dossier.json');
   const expectedPrefix = `${baseDir}${path.sep}`;
   return resolved.startsWith(expectedPrefix) ? resolved : null;
 }

@@ -62,7 +62,7 @@ function getReply(body: object | null, status: number) {
 
 function getFileState(file: string, researchId: string): 'ready' | 'missing' | 'invalid' {
   const { dir, walkBase: root } = dataRoot('siteResearch');
-  if (file !== path.resolve(dir, researchId, 'dossier.json')) return 'invalid';
+  if (file !== path.join(path.resolve(dir), researchId, 'dossier.json')) return 'invalid';
   const relative = path.relative(root, file);
   if (!relative || relative.startsWith('..') || path.isAbsolute(relative)) return 'invalid';
   let current = root;

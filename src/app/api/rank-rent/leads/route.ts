@@ -23,7 +23,7 @@ function resolveSite(origin: string, dataRoot: string): PortfolioSite | null {
 }
 function readGrant(siteId: string, authorizationRoot: string): unknown | null {
   if (!/^[A-Za-z0-9][A-Za-z0-9_-]{0,79}$/.test(siteId)) return null;
-  const target = path.resolve(authorizationRoot, `${siteId}.json`);
+  const target = path.join(path.resolve(authorizationRoot), `${siteId}.json`);
   if (target !== path.join(authorizationRoot, `${siteId}.json`)) return null;
   try { const stat = fs.lstatSync(target); if (!stat.isFile() || stat.isSymbolicLink() || stat.nlink !== 1 || stat.size > MAX_AUTHORIZATION_BYTES) return null; return JSON.parse(fs.readFileSync(target, 'utf8')); } catch { return null; }
 }

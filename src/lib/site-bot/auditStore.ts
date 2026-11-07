@@ -54,7 +54,7 @@ function getBaseDir(customBaseDir?: string): string {
 export function resolveAuditPath(auditId: string, customBaseDir?: string): string | null {
   if (!auditId || typeof auditId !== 'string' || !UUID_REGEX.test(auditId)) return null;
   const baseDir = getBaseDir(customBaseDir);
-  const resolved = path.resolve(baseDir, `${auditId}.json`);
+  const resolved = path.join(path.resolve(baseDir), `${auditId}.json`);
   return path.dirname(resolved) === baseDir ? resolved : null;
 }
 

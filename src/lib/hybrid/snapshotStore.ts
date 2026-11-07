@@ -12,7 +12,7 @@ function clientsDir(baseDir?: string): string {
 function clientHybridDir(clientId: string, baseDir?: string): string | null {
   if (!CLIENT_ID_PATTERN.test(clientId)) return null;
   const root = clientsDir(baseDir);
-  const resolved = path.resolve(root, clientId, 'hybrid');
+  const resolved = path.join(path.resolve(root), clientId, 'hybrid');
   return resolved.startsWith(`${root}${path.sep}`) ? resolved : null;
 }
 

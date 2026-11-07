@@ -42,11 +42,17 @@ function overrideFor(kind: DataRootKind): string | undefined {
   return typeof raw === 'string' && raw.trim() !== '' ? raw.trim() : undefined;
 }
 
-const DEFAULT_SEGMENTS: Record<DataRootKind, readonly [string, string]> = {
-  clients: ['data', 'clients'],
-  sites: ['data', 'sites'],
-  siteResearch: ['data', 'site-research'],
-};
+/**
+ * Default roots as literal `path.join(process.cwd(), 'data', '<name>')` calls, one per kind,
+ * so build-time file tracing (nft) resolves each to a fixed data/<name> directory (excluded in
+ * next.config.ts) instead of an unresolvable expression. Keep these literal: no spreads,
+ * lookups or variables in the join.
+ */
+function defaultDir(kind: DataRootKind): string {
+  if (kind === 'clients') return path.join(process.cwd(), 'data', 'clients');
+  if (kind === 'sites') return path.join(process.cwd(), 'data', 'sites');
+  return path.join(process.cwd(), 'data', 'site-research');
+}
 
 export function dataRoot(kind: DataRootKind): DataRoot {
   const override = overrideFor(kind);
@@ -54,8 +60,9 @@ export function dataRoot(kind: DataRootKind): DataRoot {
     const dir = path.resolve(override);
     return { dir, walkBase: dir, overridden: true };
   }
-  const cwd = process.cwd();
-  return { dir: path.join(cwd, ...DEFAULT_SEGMENTS[kind]), walkBase: cwd, overridden: false };
+  // One process.cwd() call (inside the literal join); walkBase is that cwd (data/<name> is two levels down).
+  const dir = defaultDir(kind);
+  return { dir, walkBase: path.dirname(path.dirname(dir)), overridden: false };
 }
 
 export function clientsDir(): string {

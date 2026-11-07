@@ -65,7 +65,7 @@ function scanClients(root: string): Map<string, Record<string, unknown>> | null 
     const result = new Map<string, Record<string, unknown>>();
     for (const clientId of fs.readdirSync(root).sort()) {
       if (!CLIENT_ID_PATTERN.test(clientId)) return null;
-      const file = path.resolve(root, clientId, 'client.json');
+      const file = path.join(path.resolve(root), clientId, 'client.json');
       if (!isContained(file, root)) return null;
       const record: unknown = JSON.parse(fs.readFileSync(file, 'utf8'));
       if (!record || typeof record !== 'object' || (record as { clientId?: unknown }).clientId !== clientId) return null;
@@ -78,7 +78,7 @@ function hasCollision(records: Map<string, Record<string, unknown>>, clientId: s
   return [...records.entries()].some(([id, record]) => id !== clientId && validEnrollment(record.clientPinRecoveryEmail) && record.clientPinRecoveryEmail.emailCanonical === email);
 }
 function writeClientRecord(root: string, clientId: string, record: Record<string, unknown>): boolean {
-  const target = path.resolve(root, clientId, 'client.json');
+  const target = path.join(path.resolve(root), clientId, 'client.json');
   if (!isContained(target, root)) return false;
   const temporary = path.join(path.dirname(target), `.${path.basename(target)}.${process.pid}.${randomUUID()}.tmp`);
   try {

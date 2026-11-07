@@ -27,7 +27,7 @@ function clientsBaseDir(baseDir?: string): string {
 function statePath(clientId: string, baseDir?: string): string | null {
   if (!CLIENT_ID_PATTERN.test(clientId)) return null;
   const root = clientsBaseDir(baseDir);
-  const directory = path.resolve(root, clientId);
+  const directory = path.join(path.resolve(root), clientId);
   if (!directory.startsWith(`${root}${path.sep}`)) return null;
   return path.join(directory, 'fraud-blocker.json');
 }

@@ -27,6 +27,8 @@
 /.next-m05-dev/
 /.next-rehearsal/
 /.next-m2a/
+# Any other local build dir (WAO_DEPLOY_DIST_DIR=.next-<name>).
+/.next-*/
 # deploy.sh release candidates and releases (built inside the project root); also keeps
 # Tailwind's source scan out of old builds
 /releases/

@@ -147,7 +147,7 @@ export function resolvePortfolioLeadPath(siteId: string, eventId: string, leadRo
   if (!safeId(siteId) || !safeId(eventId) || typeof leadRoot !== 'string' || !path.isAbsolute(leadRoot) || /[%\x00-\x1F]|[\\]|^[A-Za-z]:/.test(leadRoot)) return null;
   const root = path.resolve(leadRoot); const repository = path.resolve(process.cwd());
   if (root === repository || root.startsWith(`${repository}${path.sep}`)) return null;
-  const target = path.resolve(root, siteId, `${eventId}.json`);
+  const target = path.join(path.resolve(root), siteId, `${eventId}.json`);
   return path.dirname(path.dirname(target)) === root && target === path.join(root, siteId, `${eventId}.json`) ? target : null;
 }
 

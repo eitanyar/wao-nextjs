@@ -243,7 +243,7 @@ function existingSafeSitesRoot(fileSystem: AtomicFileSystem, sitesRoot: string):
 }
 
 function siteRecordTarget(sitesRoot: string, slug: string): string {
-  const targetPath = path.resolve(sitesRoot, `${slug}.json`);
+  const targetPath = path.join(path.resolve(sitesRoot), `${slug}.json`);
   if (!targetPath.startsWith(`${sitesRoot}${path.sep}`)) fail('Site record path escapes the sites root.');
   return targetPath;
 }

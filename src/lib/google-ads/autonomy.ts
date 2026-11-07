@@ -93,7 +93,7 @@ function clientsBaseDir(baseDir?: string): string {
 function clientDir(clientId: string, baseDir?: string): string | null {
   if (!CLIENT_ID_PATTERN.test(clientId)) return null;
   const root = clientsBaseDir(baseDir);
-  const resolved = path.resolve(root, clientId);
+  const resolved = path.join(path.resolve(root), clientId);
   return resolved.startsWith(`${root}${path.sep}`) ? resolved : null;
 }
 

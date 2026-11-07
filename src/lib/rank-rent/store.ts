@@ -132,7 +132,7 @@ function rootDirectory(customRoot?: string): string | null {
 export function resolvePortfolioSitePath(siteId: string, customRoot?: string): string | null {
   const base = rootDirectory(customRoot);
   if (!base || typeof siteId !== 'string' || !SAFE_ID.test(siteId)) return null;
-  const target = path.resolve(base, `${siteId}.json`);
+  const target = path.join(path.resolve(base), `${siteId}.json`);
   return target.startsWith(`${base}${path.sep}`) ? target : null;
 }
 

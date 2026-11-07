@@ -22,7 +22,7 @@ function rootDirectory(root?: string): string | null {
 export function getResearchRunPath(runId: string, root?: string): string | null {
   const base = rootDirectory(root);
   if (!base || !SAFE_ID.test(runId)) return null;
-  const target = path.resolve(base, `${runId}.json`);
+  const target = path.join(path.resolve(base), `${runId}.json`);
   return target.startsWith(`${base}${path.sep}`) ? target : null;
 }
 

@@ -104,7 +104,7 @@ function validClientId(clientId: string): boolean { return CLIENT_ID_PATTERN.tes
 export function resolveClientAuthPath(clientId: string, root?: string): string | null {
   if (!validClientId(clientId)) return null;
   const base = clientsRoot(root);
-  const candidate = path.resolve(base, clientId, 'client-auth.json');
+  const candidate = path.join(path.resolve(base), clientId, 'client-auth.json');
   return isContained(candidate, base) ? candidate : null;
 }
 function resolveClientRecordPath(clientId: string, root?: string): string | null {
