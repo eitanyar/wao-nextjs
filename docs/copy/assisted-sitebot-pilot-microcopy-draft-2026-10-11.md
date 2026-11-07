@@ -242,7 +242,7 @@ count threshold fail; hours fail on absent special hours; description on absent 
 — playbook §Evidence vocabulary). Owner verification remains the prerequisite for any asserted
 gap or fix (`SB_MISSING_ACTION`).
 
-> לא עבר — הסעיף לא עמד בקריטריון הבדיקה; המידע עדיין יכול להיות קיים
+> לא עבר — הסעיף לא עמד בבדיקה, אבל המידע עדיין יכול להיות קיים
 
 ### SB_STATUS_UNKNOWN (compact label)
 Trigger/evidence: unknown means this check lacked sufficient evidence (`auditScore.ts:84` photos
@@ -258,8 +258,8 @@ categories/hours/photos only. Owner-correction intake/recording is proposed/manu
 implemented record-saving feature is shown; the correction route offered here is the
 source-evidenced contact seam.
 
-> סעיף סומן כ"לא עבר"? קודם בודקים מה באמת רשום אצלך בפרופיל.
-> אם הוא באמת חסר בקטגוריות, בשעות או בתמונות — מחכות לך הוראות לתיקון עצמי.
+> סעיף סומן כ״לא עבר״? קודם בודקים מה באמת רשום אצלך בפרופיל.
+> אם משהו באמת חסר בקטגוריות, בשעות או בתמונות — מחכות לך הוראות לתיקון עצמי.
 > אם המידע דווקא קיים — אפשר לספר לנו דרך טופס יצירת הקשר.
 
 ### SB_UNKNOWN_VERIFY
@@ -272,9 +272,9 @@ and presence alone proves neither accuracy nor suitability (playbook :36). Raw h
 stays separate from this reviewed interpretation (playbook :40). This draft gathers no real
 evidence and creates no implemented verification control (playbook :56).
 
-> "לא ידוע" לא אומר שמשהו מקולקל — לבדיקה פשוט אין מספיק מידע.
+> ״לא ידוע״ לא אומר שמשהו מקולקל — לבדיקה פשוט אין מספיק מידע.
 > רוצה לוודא? היכנס לפרופיל העסקי שלך בגוגל ובדוק בעצמך.
-> כדי לסגור "לא ידוע" צריך ביסוס מתאים: האישור שלך, מקור שתספק, או בדיקה שאושרה בנפרד.
+> כדי לסגור ״לא ידוע״ צריך ביסוס מתאים: האישור שלך, מקור שתספק או בדיקה שאושרה בנפרד.
 
 ### SB_CHECKLIST_CANDOR (single quiet accuracy line)
 Trigger/evidence: one candor touch, never a lead (accepted voice direction; V2 claim-check #5–#7):
@@ -310,9 +310,9 @@ No minutes-based or any other update-timing expectation — existing evidence do
 Google update timing; the last step asks the owner to observe the change, not presume success.
 
 > 1. נכנסים לפרופיל העסקי בגוגל — דרך החיפוש או המפות.
-> 2. בוחרים עריכת הפרופיל, ואז את הקטגוריה.
+> 2. בוחרים ״עריכת פרופיל״ ואז ״קטגוריות עסקיות״.
 > 3. מגדירים קטגוריה ראשית שמדויקת לעסק שלך.
-> 4. מוסיפים קטגוריות משניות רק אם באמת צריך.
+> 4. מוסיפים קטגוריות משנה רק אם באמת צריך.
 > 5. שומרים את השינוי, וחוזרים לפרופיל כדי לראות שהוא מופיע.
 
 ### SB_FIX_HOURS (steps)
@@ -320,7 +320,7 @@ Trigger/evidence: fail-gated hours DIY instruction (same seam). No presumed save
 final step is the owner's observed confirmation.
 
 > 1. נכנסים לפרופיל העסקי בגוגל.
-> 2. בוחרים עריכת הפרופיל, ואז שעות.
+> 2. בוחרים ״עריכת פרופיל״ ואז ״שעות פתיחה״.
 > 3. מסמנים את ימי הפעילות ואת שעות הפתיחה המדויקות.
 > 4. יש חגים או שעות מיוחדות? כדאי לעדכן גם אותן.
 > 5. שומרים — וחוזרים לבדוק שהשינוי מופיע בפרופיל.
@@ -332,7 +332,7 @@ vocabulary; V2 claim-check #4). Completion is the owner's observed check, not a 
 success.
 
 > 1. נכנסים לפרופיל העסקי בגוגל.
-> 2. בוחרים תמונות, ואז העלאה.
+> 2. בוחרים ״תמונות״ ואז ״העלאה״.
 > 3. מעלים תמונות אמיתיות ועדכניות — חזית העסק, פנים, מוצרים או צוות.
 > 4. עדיפה תמונה ברורה עם תאורה טובה, בלי עריכה כבדה.
 > 5. שומרים ובודקים שהכול הועלה.

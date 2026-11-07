@@ -11,6 +11,13 @@ there" scenes that make a loss felt, not told) and native Sabra register.
 ("that's what we're here for"); stock SaaS openers with no observed fact; internal-process
 jargon; praise for a score that doesn't deserve it.
 
+**Removed after review (2026-11-07):** (1) a step list telling owners to add a category for every
+service and calling dilution "a myth" — Google's own guidance says the opposite ("Do not select a
+category for every product or service… use a few categories", support.google.com/business/answer/7249669,
+checked 2026-11-07); the live page's step list ("only if really needed") is the correct one.
+(2) a score line that called any result "a good starting point", even 0/6. Both were dead copy,
+not rendered on the page. Never claim a myth without a dated source; never praise a score blindly.
+
 ### 2. VOICE TRAITS
 - **Short declarative bad news, then the consequence, then the next step, all in three short sentences.** "יש לך רק קטגוריה אחת בפרופיל. זה מצמצם את מי שמוצא אותך. השלבים לתיקון מחכים לך למטה."
 - **The tool states its own limits plainly.** "הבדיקה לא כותבת כלום בפרופיל שלך, וגם לא מבטיחה דירוג או חשיפה."
@@ -19,7 +26,6 @@ jargon; praise for a score that doesn't deserve it.
 - **It turns a "no" into a fork with no shame attached.** "אין לך גישה לניהול הפרופיל? התיקון פשוט ימתין — וזה בסדר."
 - **Praise is concrete and tied to a customer benefit, never a compliment.** "טלפון ואתר מופיעים בפרופיל. לקוחות מגיעים אליך בלחיצה אחת."
 - **CTAs are first-person, low-friction and specific about time and effort.** "תסדר את זה בדקה — השלבים למטה." Also: "בדוק את העסק שלי בחינם".
-- **It debunks a myth like a peer would.** "כמה קטגוריות לא מדללות אותך, זו אגדה."
 
 ### 3. BELOW-THE-BAR (exclude or flag in the exemplar)
 1. "אנחנו נכתוב את זה כמו שצריך — בדיוק בשביל זה אנחנו כאן." This is a generic agency boast, and it contradicts the sentence before it.
@@ -86,7 +92,6 @@ Also overused: בדיוק appears about eight times across the scorecard. It sho
 - `—`: יש לך כמות יפה של ביקורות בגוגל. זה בונה אמון אצל לקוחות חדשים. תמשיך לאסוף.
 - `—`: ביקורות בגוגל
 - `—`: לא הצלחנו לראות את הביקורות מבחוץ. זו לא תקלה — זה פשוט לא גלוי מכאן.
-- `—`: 1. היכנס לפרופיל העסקי שלך בגוגל.\n2. לחץ על ״עריכת פרופיל״ ואז על ״קטגוריות עסקיות״.\n3. בחר קטגוריה ראשית — זו שמתארת אותך הכי טוב.\n4. הוסף קטגוריות משנה לכל שירות נוסף שאתה נותן.\n5. אפשר עד עשר קטגוריות. כמה קטגוריות לא ״מדללות״ אותך — זו אגדה.
 - `—`: 1. היכנס לפרופיל העסקי שלך בגוגל.\n2. לחץ על ״עריכת פרופיל״ ואז על ״שעות פתיחה״.\n3. קבע את השעות הרגילות שלך לשבוע ושמור.\n4. הוסף את החגים הקרובים — גוגל נותן להגדיר רק את הקרובים ביותר.\n5. חזור ועדכן לפני כל חג. זה לוקח דקה.
 - `—`: איך לתקן את זה בעצמך, חינם
 - `—`: 1. צלם כמה תמונות של העבודה שלך עם הטלפון.\n2. תמונות אמיתיות עובדות טוב יותר מתמונות מאגר — לקוחות רוצים לראות את הדבר האמיתי.\n3. היכנס לפרופיל העסקי שלך בגוגל.\n4. לחץ על ״הוספת תמונות״ והעלה מהטלפון.\n5. כמה תמונות מספיקות להתחלה. הוסף עוד עם הזמן.
@@ -117,7 +122,6 @@ Also overused: בדיוק appears about eight times across the scorecard. It sho
 - `—`: בדיקת הפרופיל העסקי שלך בגוגל
 - `—`: מצאנו בבדיקה: __VALUE__ — ענה ״כן״ כדי להשאיר את זה, או כתוב את התיקון שלך.
 - `—`: כן
-- `—`: הפרופיל שלך עבר __PASSED__ מתוך __TOTAL__ בדיקות — נקודת פתיחה טובה, וכל השאר אפשר לתקן.
 - `—`: מה עובד לך
 - `—`: מה חסר לך
 - `—`: מה לא הצלחנו לראות

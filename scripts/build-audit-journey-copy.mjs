@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import { createHash } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 
-export const SOURCE_SHA256 = '09dc8b0c100c2459658ad0bfbb595c5bcc4e7efbe22bd31d266a887650b5a3b6';
+export const SOURCE_SHA256 = '9912d5ca861767782a8a7998e6c56adffa53a81bc578408d31124557bb2d76cd';
 export const SOURCE_URL = new URL('../docs/copy/assisted-sitebot-pilot-microcopy-draft-2026-10-11.md', import.meta.url);
 export const OUTPUT_URL = new URL('../src/lib/site-bot/auditJourneyCopy.ts', import.meta.url);
 export const IDS = Object.freeze([
