@@ -735,3 +735,296 @@ change.
 - **Eitan** — glance at LF top 3 for A, C and the top cell; M4 cap decision only if step-1 kill rate < ~40 %.
 - **Tamar → Noa** (later, after M4) — "hosting + domain included" framing using R9 and the per-prospect `platform`.
 - No keyword anchor / title formula is touched.
+
+---
+---
+
+# Revision 2 — 2026-11-07 (post-M3)
+
+Owner: Yonatan · Inputs: run `df19e422e595` (M3 pilot, spend $0.034), `stage2-pilot.*`,
+`stage2-category-diagnostics.json`, `stage2-proximity.json`, private rows in `data/market-scan/private/` (read, nothing
+business-level copied here). **Where Revision 2 disagrees with §1–§10 or R0–R13, Revision 2 wins.**
+
+## 2.0 What M3 taught us
+
+| Criterion (R11) | Result | Verdict |
+|---|---|---|
+| 1. A killed at step 1, no Maps bought | S3 0.919, 0 Maps calls | pass |
+| 2. Ring2: A > B and D > E | A > B holds, D > E fails | inconclusive → ring2 measured as normal, pooling unchanged |
+| 3. LF vs organic `local_pack` overlap ≥ 2/3 in ≥ 5/6 | 3/3 in 6/6 | pass — LF is the pack |
+| 4. F `D_share` > `L_share`; a roofing cell `L_share` ≥ 0.3 | F 0.625 > 0.375; roofing 0.71–1.0 | pass, but `L_share` inflated (2.2) |
+| 5. Homepage errors < 5 % not explained by the site | D 0/5, F 4/18 | re-judge after 2.5 (anti-bot ≠ site failure) |
+| 6. Eitan glances at LF top 3 of A, C, best cell | not done yet | **open** |
+
+Two structural findings drive most decisions below:
+- **Service-area spillover.** Roofing is a service-area trade: the same strong roofers fill the LF top 3 of several
+  nearby cities (one business sits in the top 3 of A, B and E; another in A and B; D's #1 is E's #1). A ring2 town next
+  to a strong core inherits the core's incumbents. That is real competition, not a scoring bug. It's why B looks
+  like A and why D > E failed.
+- **Organic results barely change by city for roofing.** B, D, E share nearly the same organic top 7. So whether a
+  host is "local" has to be proven (Maps-pool match, or not national), not assumed.
+
+Stage-1 note: the engineer's real cut-off ($1,906) replaces my hand-walked ≈ $1,827. Same 15/17 professions advance
+(tiling and carpenter are out). Accepted.
+
+## 2.1 Step-1 S3 inflation — decision
+
+**Diagnosis.** The inflation comes from renormalisation, not from the keyword-in-name weight. LF items never carry a
+website or photo count, so dropping those fields and renormalising (÷ 0.70) treats unknown as "as strong as the
+reviews". A 3-review keyword-named listing reaches 0.37 that way. A 66-review roofer with no known site reaches 0.91.
+With full data the same roofer could score anywhere from 0.64 to 0.94.
+
+**Keep keyword-in-name at 0.15.** It's a real strength signal right now: Whitespark's study (published 2026-09-08,
+1.4M+ listings, 17 industries) shows exact-match names have top-3 rates several times higher than names with no
+keyword in most industries (e.g. retail 15.1 % vs 3.1 %). Confidence: high on direction, medium on size for Israel.
+
+**Rule (replaces R1.2's "renormalise" and the step-1 use of the 0.70 gate):**
+```
+missing component (site, photos, or any field absent after the join) → credit = 0.5 × its weight   // "neutral"
+S3_step1  = S3 from LF top 3 with neutral fill                // at step 1 = 0.70 × S3_renorm + 0.15
+step-1 kill   iff S3_step1 ≥ 0.75                            // ≈ renormalised 0.857 — clear saturation only
+otherwise     → buy step 2 (Maps × 2 + organic), join by cid, recompute S3 (neutral fill only for unjoined items)
+final kill    iff S3_joined ≥ 0.70   (bands 0.70 / 0.40 unchanged — they were calibrated on full data)
+log per cell: S3_step1, S3_low (missing = 0), S3_high (missing = 1)
+```
+Why the 0.75 gate is safe: a wrong survival costs $0.006 (step 2), while a wrong kill throws away a cell for good.
+So step 1 kills only what can't plausibly come back under 0.70.
+
+**Pilot re-scored** (step-1 from the engineer's numbers; joined S3 for D and F is unchanged because all three LF
+items joined, so neutral fill never applies):
+
+| Cell | S3 old (renorm) | S3_step1 new | [low – high] | Step-1 outcome | Final S3 / band |
+|---|---|---|---|---|---|
+| A roofing × Petah Tikva | 0.919 | **0.793** | 0.64 – 0.94 | killed | saturated |
+| B roofing × Rosh HaAyin | 0.734 | 0.664 | 0.51 – 0.81 | buy step 2 | pending Maps (M4 buys it) |
+| C pergolas × Karmiel | 0.764 | 0.685 | 0.53 – 0.83 | buy step 2 | pending Maps (calibration buy, 2.11) |
+| D roofing × Rehovot | 0.541 | 0.529 | 0.38 – 0.68 | step 2 | 0.528 middle |
+| E roofing × Gedera | 0.724 | 0.657 | 0.51 – 0.81 | buy step 2 | pending Maps (M4 buys it) |
+| F renovation × Rishon | 0.582 | 0.558 | 0.41 – 0.71 | step 2 | 0.613 middle |
+
+Step-1 kill rate drops from 4/6 to 1/6. That is intended: B, C and E straddle the line, so they need data, not a verdict.
+
+## 2.2 Organic lists and the "local by default" problem
+
+Pilot hosts reviewed (web-checked 2026-11-07): one content site of a construction-inspection software vendor (ranks
+for roofing in 4 cells across 2 regions) → media. One quote-request portal for renovation contractors → lead-gen
+directory. One national DIY retail chain in the pergola SERP → chain. Two default hosts checked were single
+businesses and stay local. One host returned 403 to our check and stays default (the national rule below will catch
+it if it's national).
+
+Rules:
+1. **List matching is by host suffix**: host `== d` or ends with `"." + d` (so `he-il.facebook.com` → social,
+   `he.wikipedia.org` → media). Applies to `not_a_site`, directories, social, media, chains.
+2. **New class `chain_retail`**, checked after `media_info` and before the `local_site` rules. It counts as non-local.
+3. **Unproven hosts count half.** `L_share = (local_pool + 0.5 × local_default) / counted`, where `local_pool` = host
+   matched a business in this cell's Maps pool (R7 rule 4) and `local_default` = R7 rule 6. A default host is probably
+   a business, but not proven local. This bounds the error inside O's ±0.20 range.
+4. The engine writes every `local_default` host with its cell/region count to diagnostics, so I can extend the lists
+   (append-only, dated).
+
+Pilot effect: D `L_share` 0.714 → 0.357, O 1.086 → 0.943, **score 359 → ≈ 312**. F `L_share` 0.375 → 0.125,
+`D_share` 0.75, O 0.95 → 0.85, **score 118 → ≈ 106**. Order unchanged.
+
+## 2.3 National-brand detection — re-buy the Stage-1 organic SERPs
+
+**Decision: re-buy the 170 Stage-1 organic SERPs in M4 ($0.34), storing real `domain` / `url` / `title`.**
+They're the only uniform 17 × 10-region sample. Cell SERPs exist only for advancing pairs, and the per-profession cap
+of 4 regions would leave most trades unable to reach "≥ 3 regions". The pilot shows why it matters: roofing organic
+results are near-identical across regions, so without this rule regional and national sites would pass as local.
+```
+national_brand(host, p) = host ∉ this cell's Maps pool AND host appears in organic top 10 for profession p in ≥ 3
+                          distinct regions, counting the Stage-1 re-buy ∪ all M4 cell SERPs of p
+```
+R7 order is unchanged: a Maps-pool match (rule 4) still wins over national_brand (rule 5).
+
+## 2.4 "Article on publisher" path rule — dropped
+
+Path patterns (`/blog/`, `/article`, dated URLs) can't tell a publisher's article from a local roofer's own blog
+post, and the second case is exactly the local-site evidence we want. Publishers are caught by the media list plus
+the national-brand rule (2.3), which is the deterministic version of the same idea.
+
+## 2.5 Anti-bot and fetch failures
+
+A bot wall says nothing about what a customer's phone sees. As of 2026-07/2026-09 reports, SiteGround (common in
+Israeli WordPress hosting) answers suspected bots with **HTTP 202 + `sg-captcha: challenge`** and a tiny meta-refresh
+body to `/.well-known/sgcaptcha/`. That matches the ≈ 169-byte 202s we saw. Sources: Sprocket Security write-up;
+mySites.guru, 2026-07-14.
+
+| Outcome | Condition | `site_check` | w_b |
+|---|---|---|---|
+| **not checked** | status 202, 401, 403, 429 · any status with header `sg-captcha`, `cf-mitigated`, or body ≤ 4 KB containing a challenge marker · 503 with such a header/marker · timeout twice (one retry) · robots disallow · robots 5xx/unreachable | `blocked` / `timeout` / `skipped_robots` | 1.00 |
+| **weak (hard)** | DNS NXDOMAIN · connection/TLS failure on both schemes · `/` returns 404/410 · other 5xx after one retry · parked page (R8) | `failed` | 1.10 (has a domain) |
+| normal | everything else → R8 rules | `ok` | per R8 |
+
+Challenge markers (case-insensitive): `sgcaptcha`, `cf-chl`, `challenge-platform`, `just a moment`, `captcha`,
+`imunify`. The parked-page rule runs only after the challenge check, so a challenge page is never "parked".
+M3 criterion 5 is re-judged on `failed` only.
+
+## 2.6 robots.txt vs "one GET" — two requests per host, approved
+
+Order: `GET /robots.txt`, then `GET /`. HTTP fallback (R8) applies to both, so worst case is 4 requests on a host
+whose HTTPS is broken. Per RFC 9309: robots 4xx → allowed; 5xx/unreachable → treat as disallow (`skipped_robots`).
+Match group `WAO-MarketScan` first, else `*`. Cache the robots result for 30 days with the same key rule.
+Concurrency stays at 2.
+
+## 2.7 Storing title + first H1 text privately — approved
+
+Tag-stripped `<title>` and first `<h1>` text, each ≤ 200 chars, stored in `data/market-scan/private/` only, 30-day
+retention, used only to recompute `city_hit` / `service_hit` when term lists change. Never in committed outputs, never
+raw HTML. It's public text, kept minimal, and it saves re-fetching.
+
+## 2.8 Readings confirmed
+
+- **Weak ranking** uses the **raw** Maps `rank_group` as returned (what the searcher sees), not re-numbered after
+  the relevance filter. Best of terms 1–2.
+- **One business → one cell per profession.** If a `cid` qualifies in several cells of the same profession, assign
+  it to the cell whose centroid is nearest the business lat/lng (tie → city slug asc). The same `cid` may be a prospect
+  in a different profession. The final outreach list dedupes by `cid`/phone across professions. LF top-3 membership
+  is never "assigned": one business can count toward S3 in many cells (that's the spillover in 2.0).
+- **Ring2 pooling** as in §5.1 / R6: ring2 towns with `P_w < 15` pool per region × profession; P_w summed after
+  one-cell assignment, population-weighted S3, summed Value. Core cities never pool.
+- **C is the control** (pergolas R8 didn't advance). It's not ranked in the M4 top 5. It gets one calibration
+  step-2 buy (2.11) so the joined S3 can be compared with Eitan's glance.
+
+## 2.9 Proximity — big-city rule for M4
+
+Averaging across cities was the wrong test. Proximity sensitivity is a property of the cell: a service-area trade
+(roofing, A 3/3) barely moves, while dense renovation (F 1/3) reshuffles within 3 km. So the rule is per cell, always on:
+```
+pop > 150,000 and not haredi-flagged → S3 = mean of 3 points: centroid, 3 km N, 3 km S   (step 1 and joined)
+jerusalem (≈ 1.1M, large area)        → 5 points: + 3 km E, 3 km W
+probe LF items join by cid to the centroid Maps pool; unjoined → neutral fill (2.1)
+```
+M4 big-city cells (non-flagged): Tel Aviv, Ramat Gan, Holon, Bat Yam, Petah Tikva (R1), Netanya, Rishon LeZion,
+Rehovot, Jerusalem, Haifa, Ashdod, Ashkelon → 107 cells.
+
+## 2.10 Category rules (R4 extensions, append-only)
+
+| Profession | Category seen | Decision |
+|---|---|---|
+| roofing | ספק חומרי בידוד (insulation supplier) | add **conditional** (needs a roofing title term) |
+| roofing | עבודות בגובה רב (high-altitude work) | add **conditional** — rope-access roofers use it |
+| roofing | קבלן בנייה (construction contractor) | add **conditional** |
+| roofing | תחזוקת נכסים (property maintenance) | add **conditional** |
+| roofing | חנות חומרי בניין · קבלן בריכות שחייה · קבלן ריצוף · שירות גימור לריצוף | not relevant — leave unmatched |
+| renovation | צבע (painter) · מעצב מטבחים מחדש (kitchen remodeler) · קבלן קירות גבס (drywall) · קבלן ריצוף (tiling) | add **conditional** (needs a renovation title term). Single trades take renovation jobs only when they say so |
+| renovation | וילה | no rule — a mis-categorised listing; the title rule already caught it |
+
+## 2.11 M4 plan and cost
+
+**Scope:** the 40 advancing pairs (14 R1 · 10 R3 · 9 R2 · 5 R4 · 1 R5 · 1 R9) → **410 cells**. Haredi-flagged cells
+(Bnei Brak × 14, Beit Shemesh × 5 = 19) run step 1 only, with no probes and no step 2, because they're killed by flag
+anyway. Plus C as a calibration step-2 buy.
+
+**Order per cell (organic moves to step 2):** step 1 = LF (+ probes if big city) → step-1 gate → step 2 = Maps × 2 +
+organic → joined S3 → P_w, O → score. The LF↔pack cross-check passed 6/6, so organic for killed cells adds nothing.
+
+| Item | Calls | Live USD |
+|---|---|---|
+| Stage-1 organic re-buy (2.3) | 170 | 0.34 |
+| Step 1 — LF, all cells | 410 | 0.82 |
+| Proximity probes (107 cells × 2, + Jerusalem 5 × 2) | 224 | 0.45 |
+| Step 2 — Maps × 2 + organic, survivors (worst case: all 391 non-flagged survive) | 1,173 | 2.35 |
+| C calibration step 2 | 3 | 0.01 |
+| Homepage checks | own HTTP | 0 |
+| **Total — worst case** | | **≈ $3.97** |
+| Expected (≈ 20 % step-1 kill) | | ≈ $3.50 |
+
+Pilot cells already cached (A, B, D, E, F step 1; D, F step 2; A, F probes) save a few cents. Not counted.
+The total is **up from the ≈ $3 projection** for three reasons: step 1 now kills far fewer cells by design, there are
+new proximity probes, and there's the national-brand re-buy. **Requested hard cap: $6** (≈ 50 % headroom). The balance
+was $40.61 on 2026-11-07, so no top-up is needed. Prices are the 2026-11-07 account table. The engineer re-checks them
+on run day (free `user_data`). The standard queue would cut this to ≈ $1.2 but takes hours. Not needed at this size.
+
+**M4 acceptance (for Roni):** determinism on cache; cap halt before the first over-cap call; no step 2 for any cell
+with `S3_step1 ≥ 0.75` or a haredi flag; 3-/5-point S3 on every big-city cell; anti-bot outcomes never `failed`;
+`git diff data/clients/` empty; no names/phones/domains in committed outputs.
+
+## 2.12 Config for the engineer (merge into `config/market-scanner/run-config.json`; Yonatan does not edit `config/`)
+
+Replace keys that already exist (`s3_missing_field_policy`, `category_rules.roofing.conditional`,
+`category_rules.renovation.conditional`). Append the `*_append` arrays to their base lists. Add everything else.
+`caps_usd.stage2-full` goes in **only after Eitan approves**.
+
+```json
+{
+  "caps_usd": { "stage2-full": 6 },
+  "stage2": {
+    "s3_missing_field_policy": "neutral",
+    "s3_neutral_fill": 0.5,
+    "step1_kill_s3": 0.75,
+    "saturated_s3": 0.7,
+    "s3_log_bounds": true,
+    "organic_step": 2,
+    "flagged_cells_step1_only": true,
+    "proximity": {
+      "enabled": true,
+      "min_population": 150000,
+      "offset_km": 3,
+      "points": ["N", "S"],
+      "extra_points_by_city": { "jerusalem": ["E", "W"] },
+      "aggregate": "mean",
+      "skip_flagged": true,
+      "unjoined_policy": "neutral"
+    },
+    "list_match": "host_suffix",
+    "organic_local_default_weight": 0.5,
+    "organic_log_default_hosts": true,
+    "organic_directories_append": ["renovations-israel.co.il"],
+    "organic_media_append": ["reporto.co.il"],
+    "organic_chain_retail": ["homecenter.co.il", "ace.co.il", "ikea.com", "ikea.co.il"],
+    "not_a_site_append": ["renovations-israel.co.il"],
+    "national_brand_min_regions": 3,
+    "national_brand_sources": ["stage1_organic_rebuy", "stage2_cell_organic"],
+    "media_article_path_rule": false,
+    "weak_rank_source": "raw_rank_group",
+    "cid_assignment": "nearest_centroid_per_profession",
+    "category_rules": {
+      "roofing":    { "conditional": ["שיפוצניק", "קבלן בידוד", "ספק חומרי בידוד", "עבודות בגובה רב", "קבלן בנייה", "תחזוקת נכסים"] },
+      "renovation": { "conditional": ["קבלן", "קבלן בנייה", "חברת בנייה", "צבע", "מעצב מטבחים מחדש", "קבלן קירות גבס", "קבלן ריצוף"] }
+    }
+  },
+  "stage1": {
+    "organic_rebuy_m4": true,
+    "organic_store_fields": ["type", "rank_group", "rank_absolute", "domain", "url", "title"]
+  },
+  "homepage_check": {
+    "requests_per_host": 2,
+    "http_fallback": true,
+    "robots": { "path": "/robots.txt", "ua_token": "WAO-MarketScan", "on_4xx": "allow", "on_5xx_or_unreachable": "skip", "cache_days": 30 },
+    "not_checked_statuses": [202, 401, 403, 429],
+    "challenge_headers": ["sg-captcha", "cf-mitigated"],
+    "challenge_markers": ["sgcaptcha", "cf-chl", "challenge-platform", "just a moment", "captcha", "imunify"],
+    "challenge_max_bytes": 4096,
+    "status_503_rule": "not_checked_if_challenge_else_retry_then_failed",
+    "timeout_retries": 1,
+    "timeout_outcome": "not_checked",
+    "hard_fail": ["dns_nxdomain", "connect_or_tls_both_schemes", "status_404_410", "status_5xx_after_retry", "parked"],
+    "store_text_private": { "title": true, "first_h1": true, "max_chars": 200, "dir": "data/market-scan/private/", "retention_days": 30 }
+  },
+  "m4": {
+    "pairs": "stage1_advancing",
+    "calibration_cells": [{ "id": "C", "profession": "pergolas", "city": "karmiel", "force_step2": true, "ranked": false }]
+  }
+}
+```
+ACE and IKEA in `organic_chain_retail` are household chains listed from knowledge, not seen in the pilot. They're
+harmless if they never appear.
+
+## 2.13 Handoffs (post-M3)
+
+- **Eitan** — (1) approve the **M4 hard cap of $6** (was projected ≈ $3). (2) Glance at the LF top 3 of A, C and D
+  (open M3 criterion 6). Can run in parallel with M4, since C's calibration buy lands in M4.
+- **nextjs-engineer** — apply 2.12; implement neutral fill + step-1 gate (2.1), host-suffix matching + half-weight
+  default + chain class (2.2), Stage-1 organic re-buy + national rule (2.3), anti-bot/robots rules (2.5–2.6), private
+  text store (2.7), per-profession cid assignment (2.8), proximity points (2.9); fixtures for each; re-score the pilot
+  from cache and confirm D ≈ 312, F ≈ 106 and the 2.1 step-1 table. Then run M4 within the approved cap.
+- **verifier (Roni)** — the M4 acceptance list in 2.11.
+- **Yonatan** — review M4 default-host and unmatched-category diagnostics; extend lists (append-only, dated); pick top 5.
+- No keyword anchor / title formula is touched.
+
+Sources (accessed 2026-11-07): Whitespark keyword-in-name study, 2026-09-08 —
+https://whitespark.ca/research/how-keywords-in-business-names-currently-impact-google-local-pack-rank-and-ai-search/ ·
+SiteGround 202 challenge — https://www.sprocketsecurity.com/blog/please-show-your-work-bypassing-javascript-proof-of-work-captchas
+and https://mysites.guru/blog/siteground-captcha-blocking-mysites-guru/ · RFC 9309 (robots.txt) — https://www.rfc-editor.org/rfc/rfc9309 ·
+pilot host checks by direct fetch of the hosts' home pages.
