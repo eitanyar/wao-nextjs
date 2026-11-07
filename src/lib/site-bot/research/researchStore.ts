@@ -5,6 +5,7 @@
 
 import fs from 'fs';
 import path from 'path';
+import { siteResearchDir } from '../../dataRoots';
 import type { SiteResearchDossier } from './types';
 
 export const SITE_RESEARCH_BASE_DIR = path.join('data', 'site-research');
@@ -12,7 +13,7 @@ const RESEARCH_ID_REGEX = /^[A-Za-z0-9][A-Za-z0-9_-]*$/;
 const MAX_REVIEW_DOSSIER_BYTES = 16 * 1024 * 1024;
 
 function getBaseDir(customBaseDir?: string): string {
-  return customBaseDir ? path.resolve(customBaseDir) : path.resolve(process.cwd(), SITE_RESEARCH_BASE_DIR);
+  return customBaseDir ? path.resolve(customBaseDir) : siteResearchDir();
 }
 
 export function getResearchPath(researchId: string, customBaseDir?: string): string | null {

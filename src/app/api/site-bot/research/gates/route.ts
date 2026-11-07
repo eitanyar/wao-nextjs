@@ -1,5 +1,6 @@
 import fs from 'fs';
 import path from 'path';
+import { dataRoot } from '@/lib/dataRoots';
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { ADMIN_COOKIE_NAME, verifyAdminToken } from '@/lib/admin-auth';
@@ -25,10 +26,10 @@ function getReply(body: object, status: number) {
   return NextResponse.json(body, { status, headers: { 'Cache-Control': 'private, no-store' } });
 }
 
-function fileState(file: string): 'ready' | 'missing' | 'invalid' {
-  const relative = path.relative(process.cwd(), file);
+function fileState(file: string, base: string = dataRoot('siteResearch').walkBase): 'ready' | 'missing' | 'invalid' {
+  const relative = path.relative(base, file);
   if (!relative || relative.startsWith('..') || path.isAbsolute(relative)) return 'invalid';
-  let current = process.cwd();
+  let current = base;
   const parts = relative.split(path.sep);
   for (const [index, part] of parts.entries()) {
     current = path.join(/* turbopackIgnore: true */ current, part);

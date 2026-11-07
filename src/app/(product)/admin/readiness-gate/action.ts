@@ -2,12 +2,13 @@
 
 import fs   from 'fs';
 import path from 'path';
+import { clientsDir } from '@/lib/dataRoots';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { ADMIN_COOKIE_NAME, verifyAdminToken } from '@/lib/admin-auth';
 import { applyLtpcSubmission } from './ltpc-store.js';
 
-const CLIENTS_DIR = path.join(process.cwd(), 'data', 'clients');
+const CLIENTS_DIR = clientsDir();
 
 function clientExists(clientId: string): boolean {
   const dir = path.join(CLIENTS_DIR, clientId);

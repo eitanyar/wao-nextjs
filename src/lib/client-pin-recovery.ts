@@ -1,6 +1,7 @@
 import { createHmac, randomInt, randomUUID, timingSafeEqual } from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
+import { clientsDir } from './dataRoots';
 import { appendClientSecurityAudit } from './client-security-audit';
 import { beginClientRecoveryChallenge, cancelClientRecoveryChallenge, consumeClientRecoveryChallengeAndResetPin, markClientRecoveryChallengeDelivered, readClientAuthRecord, resolveConfiguredClientAuthRoot, type ClientRecoveryChallenge } from './client-auth-store';
 import { validateClientPinPolicy } from './client-pin';
@@ -64,7 +65,7 @@ function audit(event: 'recovery-request' | 'recovery-delivery' | 'recovery-denie
 }
 function defaults(dependencies: ClientPinRecoveryDependencies) {
   return {
-    clientsRoot: path.resolve(dependencies.clientsRoot ?? resolveConfiguredClientAuthRoot() ?? path.join(process.cwd(), 'data', 'clients')),
+    clientsRoot: path.resolve(dependencies.clientsRoot ?? resolveConfiguredClientAuthRoot() ?? clientsDir()),
     now: dependencies.now ?? (() => new Date()), randomCode: dependencies.randomCode ?? (() => String(randomInt(0, 100_000_000)).padStart(8, '0')),
     recoverySecret: dependencies.recoverySecret ?? process.env.CLIENT_PORTAL_SECRET ?? '', enabled: dependencies.enabled ?? process.env.CLIENT_PIN_RECOVERY_EMAIL_ENABLE === '1',
     sender: dependencies.sender ?? process.env.CLIENT_PIN_RECOVERY_EMAIL_FROM ?? '', auditRoot: dependencies.auditRoot, rateLimit: dependencies.rateLimit ?? (() => true), sendEmail: dependencies.sendEmail ?? sendResendTransactionalEmail,

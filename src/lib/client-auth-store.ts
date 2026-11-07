@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
+import { clientsDir } from './dataRoots';
 import { hashClientPin, verifyClientPin } from './client-pin';
 
 export interface ClientAuthRecord {
@@ -56,7 +57,7 @@ export interface VerifyClientCredentialsResult {
   legacyMigrated?: boolean;
 }
 
-const DEFAULT_CLIENTS_ROOT = path.join(process.cwd(), 'data', 'clients');
+const DEFAULT_CLIENTS_ROOT = clientsDir();
 const CLIENT_ID_PATTERN = /^[a-z0-9][a-z0-9-]{0,63}$/;
 const DEV_FIXTURE_ROOT_PATTERN = /^\/tmp\/wao-client-auth-ui-[A-Za-z0-9_-]{1,64}$/;
 const DEV_FIXTURE_AUDIT_ROOT_PATTERN = /^\/tmp\/wao-client-auth-audit-[A-Za-z0-9_-]{1,64}$/;

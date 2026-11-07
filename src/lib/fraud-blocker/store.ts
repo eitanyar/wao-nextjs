@@ -1,5 +1,6 @@
 import fs from 'fs';
 import path from 'path';
+import { clientsDir } from '../dataRoots';
 
 const CLIENT_ID_PATTERN = /^[A-Za-z0-9][A-Za-z0-9_-]{0,127}$/;
 const STATUS_VALUES = new Set(['provisioned', 'tracker_installed', 'healthy', 'error', 'archived', 'provisioning_failed', 'external_install_required']);
@@ -20,7 +21,7 @@ export interface FraudBlockerState {
 }
 
 function clientsBaseDir(baseDir?: string): string {
-  return path.resolve(baseDir ?? path.join(process.cwd(), 'data', 'clients'));
+  return path.resolve(baseDir ?? clientsDir());
 }
 
 function statePath(clientId: string, baseDir?: string): string | null {

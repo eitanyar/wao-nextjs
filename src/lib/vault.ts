@@ -13,11 +13,12 @@
 
 import fs      from 'fs';
 import path    from 'path';
+import { clientsDir } from './dataRoots';
 import crypto  from 'crypto';
 
 export type VaultService = 'gsc' | 'googleAds' | 'cloudflare' | 'github' | 'resend';
 
-const CLIENTS_DIR = path.join(process.cwd(), 'data', 'clients');
+const CLIENTS_DIR = clientsDir();
 const ALGORITHM   = 'aes-256-gcm';
 const KEY_LENGTH  = 32; // bytes
 

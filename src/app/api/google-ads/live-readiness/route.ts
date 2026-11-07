@@ -1,5 +1,6 @@
 import fs from 'fs';
 import path from 'path';
+import { clientsDir } from '@/lib/dataRoots';
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { COOKIE_NAME, verifySessionToken } from '@/lib/client-auth';
@@ -15,7 +16,7 @@ interface LiveReadinessRecord {
 }
 
 function loadReadinessRecord(clientId: string): LiveReadinessRecord {
-  const recordPath = path.join(process.cwd(), 'data', 'clients', clientId, 'live-readiness.json');
+  const recordPath = path.join(clientsDir(), clientId, 'live-readiness.json');
   try {
     return JSON.parse(fs.readFileSync(recordPath, 'utf8')) as LiveReadinessRecord;
   } catch {

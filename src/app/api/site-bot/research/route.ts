@@ -1,5 +1,6 @@
 import fs from 'fs';
 import path from 'path';
+import { dataRoot } from '@/lib/dataRoots';
 import { randomUUID } from 'crypto';
 import { NextResponse } from 'next/server';
 import { getResearchPath, readResearchDossier } from '@/lib/site-bot/research/researchStore';
@@ -60,8 +61,8 @@ function getReply(body: object | null, status: number) {
 }
 
 function getFileState(file: string, researchId: string): 'ready' | 'missing' | 'invalid' {
-  const root = process.cwd();
-  if (file !== path.resolve(root, 'data', 'site-research', researchId, 'dossier.json')) return 'invalid';
+  const { dir, walkBase: root } = dataRoot('siteResearch');
+  if (file !== path.resolve(dir, researchId, 'dossier.json')) return 'invalid';
   const relative = path.relative(root, file);
   if (!relative || relative.startsWith('..') || path.isAbsolute(relative)) return 'invalid';
   let current = root;

@@ -1,5 +1,6 @@
 import fs   from 'fs';
 import path from 'path';
+import { clientsDir } from '@/lib/dataRoots';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { ADMIN_COOKIE_NAME, verifyAdminToken } from '@/lib/admin-auth';
@@ -64,13 +65,13 @@ function isClean(action: ActionFile): boolean {
 
 // ── Data loading ──────────────────────────────────────────────────────────────
 function loadClient(clientId: string): ClientData | null {
-  const file = path.join(process.cwd(), 'data', 'clients', clientId, 'client.json');
+  const file = path.join(clientsDir(), clientId, 'client.json');
   if (!fs.existsSync(file)) return null;
   return JSON.parse(fs.readFileSync(file, 'utf8'));
 }
 
 function loadActions(clientId: string): ActionFile[] {
-  const dir = path.join(process.cwd(), 'data', 'clients', clientId, 'tasks', 'geo');
+  const dir = path.join(clientsDir(), clientId, 'tasks', 'geo');
   if (!fs.existsSync(dir)) return [];
   return fs.readdirSync(dir)
     .filter(f => f.endsWith('.json'))
@@ -79,7 +80,7 @@ function loadActions(clientId: string): ActionFile[] {
 }
 
 function listClients(): string[] {
-  const dir = path.join(process.cwd(), 'data', 'clients');
+  const dir = clientsDir();
   if (!fs.existsSync(dir)) return [];
   return fs.readdirSync(dir).filter(d =>
     fs.statSync(path.join(dir, d)).isDirectory()

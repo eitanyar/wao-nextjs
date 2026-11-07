@@ -103,15 +103,128 @@ export function assertBoundedGeneratedSiteCopy(value: unknown): asserts value is
   }
 }
 
-function parseGeneratedCopy(raw: string): SiteCopy {
-  if (typeof raw !== 'string' || Buffer.byteLength(raw, 'utf8') > 16 * 1024) invalidCopy();
+export type CopyValidationStage = 'tamar' | 'noa' | 'final';
+
+/** One reason a generated SiteCopy failed the bounded validator. Lengths only, never copy text. */
+export interface CopyViolation {
+  field: string;
+  rule: string;
+  limit?: number;
+  actual?: number | string;
+}
+
+/**
+ * Thrown where the bounded validator rejects generated copy. Same message as the
+ * plain validator error; additionally carries every violation found so the caller
+ * can log field + limit + actual (paid-journey v2 M0.5, B4 part).
+ */
+export class GeneratedCopyValidationError extends Error {
+  readonly stage: CopyValidationStage;
+  readonly violations: CopyViolation[];
+
+  constructor(stage: CopyValidationStage, violations: CopyViolation[]) {
+    // name stays 'Error' so String(error) is unchanged for existing callers/tests.
+    super('Invalid bounded generated site copy.');
+    this.stage = stage;
+    this.violations = violations;
+  }
+}
+
+function stringViolation(field: string, value: unknown, max: number): CopyViolation | null {
+  if (typeof value !== 'string') return { field, rule: 'type', actual: value === null ? 'null' : Array.isArray(value) ? 'array' : typeof value };
+  if (value.trim().length === 0) return { field, rule: 'empty' };
+  if (value.length > max) return { field, rule: 'max_length', limit: max, actual: value.length };
+  return null;
+}
+
+function arrayViolations(
+  field: string,
+  value: unknown,
+  max: number,
+  item: (entry: unknown, index: number) => CopyViolation[],
+): CopyViolation[] {
+  if (!Array.isArray(value)) return [{ field, rule: 'type', actual: value === null ? 'null' : typeof value }];
+  const out: CopyViolation[] = [];
+  if (value.length > max) out.push({ field, rule: 'max_items', limit: max, actual: value.length });
+  value.forEach((entry, index) => out.push(...item(entry, index)));
+  return out;
+}
+
+function pairViolations(field: string, entry: unknown, keys: readonly string[], limits: readonly number[]): CopyViolation[] {
+  if (!plainObject(entry)) return [{ field, rule: 'type', actual: entry === null ? 'null' : Array.isArray(entry) ? 'array' : typeof entry }];
+  const out: CopyViolation[] = [];
+  for (const key of Object.keys(entry)) if (!keys.includes(key)) out.push({ field: `${field}.${key}`, rule: 'unexpected' });
+  keys.forEach((key, index) => {
+    const violation = stringViolation(`${field}.${key}`, entry[key], limits[index]);
+    if (violation) out.push(violation);
+  });
+  return out;
+}
+
+/**
+ * Explains why assertBoundedGeneratedSiteCopy rejects a value: every violation, not
+ * just the first. Diagnostic only; the assert stays the single source of truth.
+ */
+export function explainGeneratedSiteCopyViolations(value: unknown): CopyViolation[] {
+  if (!plainObject(value)) return [{ field: '$', rule: 'not_object' }];
+  const out: CopyViolation[] = [];
+  const own = Object.keys(value);
+  for (const key of SITE_COPY_KEYS) if (!own.includes(key)) out.push({ field: key, rule: 'missing' });
+  for (const key of own) if (!SITE_COPY_KEYS.includes(key)) out.push({ field: key, rule: 'unexpected' });
+  for (const [key, max] of Object.entries(COPY_FIELDS)) {
+    if (!own.includes(key)) continue;
+    const violation = stringViolation(key, value[key], max);
+    if (violation) out.push(violation);
+  }
+  for (const [key, max] of Object.entries(OPTIONAL_FIELDS)) {
+    if (!own.includes(key) || value[key] === null) continue;
+    const violation = stringViolation(key, value[key], max);
+    if (violation) out.push(violation);
+  }
+  if (own.includes('scarcityLine') && value.scarcityLine !== null) out.push({ field: 'scarcityLine', rule: 'must_be_null' });
+  if ((value.reviewFeatured === null) !== (value.reviewContext === null)) {
+    out.push({ field: 'reviewFeatured+reviewContext', rule: 'both_or_neither', actual: value.reviewFeatured === null ? 'reviewContext_only' : 'reviewFeatured_only' });
+  }
+  out.push(...arrayViolations('trustBarItems', value.trustBarItems, 4, (entry, index) => {
+    const violation = stringViolation(`trustBarItems[${index}]`, entry, 20);
+    return violation ? [violation] : [];
+  }));
+  out.push(...arrayViolations('serviceItems', value.serviceItems, 6, (entry, index) => {
+    const violation = stringViolation(`serviceItems[${index}]`, entry, 25);
+    return violation ? [violation] : [];
+  }));
+  out.push(...arrayViolations('faqItems', value.faqItems, 20, (entry, index) => pairViolations(`faqItems[${index}]`, entry, ['q', 'a'], [120, 120])));
+  out.push(...arrayViolations('serviceDetails', value.serviceDetails, 6, (entry, index) => pairViolations(`serviceDetails[${index}]`, entry, ['name', 'description'], [25, 80])));
+  try {
+    const bytes = Buffer.byteLength(JSON.stringify(value), 'utf8');
+    if (bytes > 16 * 1024) out.push({ field: '$', rule: 'max_bytes', limit: 16 * 1024, actual: bytes });
+  } catch {
+    out.push({ field: '$', rule: 'not_serializable' });
+  }
+  return out;
+}
+
+function assertCopyAt(stage: CopyValidationStage, value: unknown): asserts value is SiteCopy {
+  try {
+    assertBoundedGeneratedSiteCopy(value);
+  } catch {
+    const violations = explainGeneratedSiteCopyViolations(value);
+    // The assert also rejects shapes the explainer does not itemise (e.g. accessor properties).
+    throw new GeneratedCopyValidationError(stage, violations.length ? violations : [{ field: '$', rule: 'structure' }]);
+  }
+}
+
+function parseGeneratedCopy(raw: string, stage: CopyValidationStage): SiteCopy {
+  if (typeof raw !== 'string') throw new GeneratedCopyValidationError(stage, [{ field: '$', rule: 'type', actual: typeof raw }]);
+  const bytes = Buffer.byteLength(raw, 'utf8');
+  if (bytes > 16 * 1024) throw new GeneratedCopyValidationError(stage, [{ field: '$', rule: 'max_bytes', limit: 16 * 1024, actual: bytes }]);
   let value: unknown;
   try {
     value = JSON.parse(raw);
   } catch {
-    invalidCopy();
+    throw new GeneratedCopyValidationError(stage, [{ field: '$', rule: 'invalid_json' }]);
   }
-  assertBoundedGeneratedSiteCopy(value);
+  assertCopyAt(stage, value);
   return value;
 }
 
@@ -174,11 +287,11 @@ export async function generateResearchPageCopy(
   const callJson = dependencies.callJson ?? callQwenJSON;
   const prompt = `${buildResearchPageCopyPrompt(brief)}\n\nOWNER FACTS AND SITE COPY SCHEMA:\n${buildSiteCopyPrompt(data)}`;
   const tamarRaw = await callJson(COPY_SYSTEM_PROMPT, prompt, { thinkingBudget: 1500 });
-  const tamarCopy = parseGeneratedCopy(tamarRaw);
+  const tamarCopy = parseGeneratedCopy(tamarRaw, 'tamar');
   const noaRaw = await callJson(QA_SYSTEM_PROMPT, JSON.stringify(tamarCopy), { think: false });
-  const noaCopy = parseGeneratedCopy(noaRaw);
+  const noaCopy = parseGeneratedCopy(noaRaw, 'noa');
   const finalCopy = applyFaqPolicy(noaCopy, brief);
-  assertBoundedGeneratedSiteCopy(finalCopy);
+  assertCopyAt('final', finalCopy);
   return finalCopy;
 }
 

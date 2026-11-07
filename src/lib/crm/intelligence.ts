@@ -1,5 +1,6 @@
 import fs from 'fs';
 import path from 'path';
+import { clientsDir } from '../dataRoots';
 import { leadMatchesClientIndex } from './ownership';
 import type { PaidSearchDemandEvidenceSummary } from '../google-ads/demand-readiness';
 import type { AcquisitionChannel, AttributionConfidence } from './lead-attribution';
@@ -162,7 +163,7 @@ export interface WeeklyDigest {
 const LEADS_PATH = path.join(process.cwd(), 'src', 'data', 'leads.json');
 const DEFAULT_WINDOW_DAYS = 7;
 const CAMPAIGNS_DIR = path.join(process.cwd(), 'data', 'campaigns');
-const CLIENTS_DIR = path.join(process.cwd(), 'data', 'clients');
+const CLIENTS_DIR = clientsDir();
 
 function parseDate(value: string | undefined | null): Date | null {
   if (!value) return null;

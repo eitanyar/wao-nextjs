@@ -1,5 +1,6 @@
 import fs from 'fs';
 import path from 'path';
+import { clientsDir } from '../dataRoots';
 import type { CampaignConfig } from '../crm/intelligence';
 import { deriveCplCeilingIls } from '../crm/intelligence';
 
@@ -254,7 +255,7 @@ interface BrandCplBaselineRecord {
  * refresh/reset if that turns out to be too noisy in practice.
  */
 function brandBaselineStorePath(clientId: string): string {
-  return path.join(process.cwd(), 'data', 'clients', clientId, 'google-ads', 'brand-cpl-baselines.json');
+  return path.join(clientsDir(), clientId, 'google-ads', 'brand-cpl-baselines.json');
 }
 
 function loadBrandCplBaselines(clientId: string): Record<string, BrandCplBaselineRecord> {

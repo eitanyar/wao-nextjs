@@ -174,3 +174,43 @@ test('FAQ policy result is bounded after Noa and retains valid supported candida
   assert.match(seen[1], /Noa/);
   assert.deepEqual(generated.faqItems, [{ q: 'What does alpha service include?', a: 'Scope is confirmed before booking.' }]);
 });
+
+test('validator failures carry stage + every field/limit/actual, never the copy text (M0.5 B4)', async () => {
+  const { GeneratedCopyValidationError, explainGeneratedSiteCopyViolations } = await import('./researchPageCopy');
+  // The four-way M0 failure shape: every hard limit broken at once.
+  const broken = {
+    ...copy,
+    stickyBarLine: 's'.repeat(33),
+    servicesHeadline: 'h'.repeat(54),
+    trustBarItems: ['t'.repeat(21)],
+    serviceItems: ['ok', 'v'.repeat(26)],
+    reviewFeatured: 'secret quote text',
+    reviewContext: null,
+  };
+  let caught: unknown;
+  await generateResearchPageCopy(brief(), {}, { callJson: async () => JSON.stringify(broken) }).catch(error => { caught = error; });
+  assert.ok(caught instanceof GeneratedCopyValidationError);
+  assert.match(String(caught), /^Error: Invalid bounded generated site copy\.$/);
+  assert.equal(caught.stage, 'tamar');
+  assert.deepEqual(caught.violations, [
+    { field: 'servicesHeadline', rule: 'max_length', limit: 35, actual: 54 },
+    { field: 'stickyBarLine', rule: 'max_length', limit: 25, actual: 33 },
+    { field: 'reviewFeatured+reviewContext', rule: 'both_or_neither', actual: 'reviewFeatured_only' },
+    { field: 'trustBarItems[0]', rule: 'max_length', limit: 20, actual: 21 },
+    { field: 'serviceItems[1]', rule: 'max_length', limit: 25, actual: 26 },
+  ]);
+  assert.doesNotMatch(JSON.stringify(caught.violations), /secret quote|sss|hhh/);
+
+  let calls = 0;
+  caught = undefined;
+  await generateResearchPageCopy(brief(), {}, { callJson: async () => (++calls === 1 ? JSON.stringify(copy) : '{not json') })
+    .catch(error => { caught = error; });
+  assert.ok(caught instanceof GeneratedCopyValidationError);
+  assert.equal(caught.stage, 'noa');
+  assert.deepEqual(caught.violations, [{ field: '$', rule: 'invalid_json' }]);
+
+  assert.deepEqual(explainGeneratedSiteCopyViolations(copy), []);
+  assert.deepEqual(explainGeneratedSiteCopyViolations({ ...copy, extra: 1, heroCta: undefined }).map(v => `${v.field}:${v.rule}`), [
+    'extra:unexpected', 'heroCta:type',
+  ]);
+});

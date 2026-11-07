@@ -1,6 +1,7 @@
 import { createHmac, randomInt, randomUUID, timingSafeEqual } from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
+import { clientsDir } from './dataRoots';
 import { appendClientSecurityAudit } from './client-security-audit';
 import { checkRateLimit } from './payments/rate-limit';
 import { canonicalizeRecoveryEmail } from './client-pin-recovery';
@@ -35,7 +36,7 @@ export interface ClientRecoveryContactDependencies {
 }
 
 function rootFor(dependencies: ClientRecoveryContactDependencies): string {
-  return path.resolve(dependencies.clientsRoot ?? resolveConfiguredClientAuthRoot() ?? path.join(process.cwd(), 'data', 'clients'));
+  return path.resolve(dependencies.clientsRoot ?? resolveConfiguredClientAuthRoot() ?? clientsDir());
 }
 function isContained(candidate: string, root: string): boolean {
   const relative = path.relative(root, candidate);
@@ -105,7 +106,7 @@ function status(record: Record<string, unknown> | undefined): ContactStatus {
   return validEnrollment(entry) ? { status: 'verified', maskedEmail: maskEmail(entry.emailCanonical), verifiedAt: entry.verifiedAt } : { status: 'invalid' };
 }
 export function getClientRecoveryContactStatus(clientId: string, root?: string): ContactStatus {
-  return status(scanClients(path.resolve(root ?? resolveConfiguredClientAuthRoot() ?? path.join(process.cwd(), 'data', 'clients')))?.get(clientId));
+  return status(scanClients(path.resolve(root ?? resolveConfiguredClientAuthRoot() ?? clientsDir()))?.get(clientId));
 }
 
 export async function requestClientRecoveryContactVerification(input: RequestInput, dependencies: ClientRecoveryContactDependencies = {}): Promise<{ status: 'sent' | 'failed' | 'limited' }> {

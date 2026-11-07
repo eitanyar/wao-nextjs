@@ -5,6 +5,7 @@ import test from 'node:test';
 import vm from 'node:vm';
 import { webcrypto } from 'node:crypto';
 import ts from 'typescript';
+import { loadDataRoots } from '../../../../../lib/dataRoots.testkit.mjs';
 
 const root = process.cwd();
 const routePath = path.join(root, 'src/app/api/site-bot/research/status/route.ts');
@@ -54,6 +55,7 @@ function routeHarness({ token, dossier = null, authModule = auth, unpublishedSit
       return { isFile: () => state === 'file', isDirectory: () => state === 'directory', isSymbolicLink: () => state === 'symlink' };
     }, readdirSync: unexpectedSiteAccess, readFileSync: unexpectedSiteAccess },
     path,
+    '@/lib/dataRoots': loadDataRoots({ cwd: () => rootPath }),
     'next/server': { NextResponse: { json: (body, options) => Response.json(body, options) } },
     'next/headers': { cookies: async () => ({ get: () => token === undefined ? undefined : { value: token } }) },
     '@/lib/admin-auth': authModule,

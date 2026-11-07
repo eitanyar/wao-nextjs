@@ -1,5 +1,6 @@
 import fs                  from 'fs';
 import path                from 'path';
+import { clientsDir } from '@/lib/dataRoots';
 import { cookies }         from 'next/headers';
 import { redirect }        from 'next/navigation';
 import Link                from 'next/link';
@@ -69,7 +70,7 @@ interface TitleBotSuggestions {
 }
 
 function loadTitleSuggestions(clientId: string): TitleBotSuggestions | null {
-  const file = path.join(process.cwd(), 'data', 'clients', clientId, 'title-suggestions.json');
+  const file = path.join(clientsDir(), clientId, 'title-suggestions.json');
   if (!fs.existsSync(file)) return null;
   try {
     return JSON.parse(fs.readFileSync(file, 'utf8'));
@@ -119,7 +120,7 @@ interface ParetoData {
 }
 
 function loadParetoData(clientId: string): ParetoData | null {
-  const file = path.join(process.cwd(), 'data', 'clients', clientId, 'pareto.json');
+  const file = path.join(clientsDir(), clientId, 'pareto.json');
   if (!fs.existsSync(file)) return null;
   try {
     return JSON.parse(fs.readFileSync(file, 'utf8'));
@@ -160,7 +161,7 @@ interface AnomalyData {
 }
 
 function loadAnomalyData(clientId: string): AnomalyData | null {
-  const file = path.join(process.cwd(), 'data', 'clients', clientId, 'anomalies.json');
+  const file = path.join(clientsDir(), clientId, 'anomalies.json');
   if (!fs.existsSync(file)) return null;
   try {
     return JSON.parse(fs.readFileSync(file, 'utf8'));
@@ -209,7 +210,7 @@ interface AdsOverlapData {
 }
 
 function loadAdsOverlapData(clientId: string): AdsOverlapData | null {
-  const file = path.join(process.cwd(), 'data', 'clients', clientId, 'ads-overlap.json');
+  const file = path.join(clientsDir(), clientId, 'ads-overlap.json');
   if (!fs.existsSync(file)) return null;
   try {
     return JSON.parse(fs.readFileSync(file, 'utf8'));

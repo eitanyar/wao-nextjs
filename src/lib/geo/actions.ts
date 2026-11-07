@@ -1,5 +1,6 @@
 import fs   from 'fs';
 import path from 'path';
+import { clientsDir } from '../dataRoots';
 
 export interface GeoAction {
   actionId:           string;
@@ -86,7 +87,7 @@ export interface GeoAction {
   };
 }
 
-const CLIENTS_DIR = path.join(process.cwd(), 'data', 'clients');
+const CLIENTS_DIR = clientsDir();
 
 // A client's live actions live in tasks/geo/; superseded ones are moved to
 // tasks/geo/_archive/ by scripts/geo-generate-content.mjs rather than

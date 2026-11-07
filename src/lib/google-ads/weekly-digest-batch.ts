@@ -1,5 +1,6 @@
 import * as fs from 'fs';
 import * as path from 'path';
+import { clientsDir } from '../dataRoots';
 import {
   buildWeeklyDigest,
   loadClientGoogleAdsIndex,
@@ -13,7 +14,7 @@ import {
   type EnumeratedCampaign,
 } from '@/lib/google-ads/campaign-enumeration';
 
-const CLIENTS_DIR = path.join(process.cwd(), 'data', 'clients');
+const CLIENTS_DIR = clientsDir();
 
 /**
  * §8.3's enumeration query is a 30-day window (`segments.date DURING LAST_30_DAYS`) — the

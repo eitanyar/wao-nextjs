@@ -4,6 +4,7 @@ import path from 'node:path';
 import test from 'node:test';
 import vm from 'node:vm';
 import ts from 'typescript';
+import { loadDataRoots } from '../../../../lib/dataRoots.testkit.mjs';
 
 const routePath = path.join(process.cwd(), 'src/app/api/site-bot/research/route.ts');
 const root = '/synthetic-research-root';
@@ -36,6 +37,7 @@ function routeHarness({ authorized = true, secretConfigured = true, dossier = fi
       return { isFile: () => state === 'file', isDirectory: () => state === 'directory', isSymbolicLink: () => state === 'symlink' };
     }, readFileSync: unexpected, readdirSync: unexpected },
     path,
+    '@/lib/dataRoots': loadDataRoots({ cwd: () => root }),
     crypto: { randomUUID: () => { runnerCalls.generated++; return id; } },
     'next/server': { NextResponse: { json: (body, options) => Response.json(body, options) } },
     '@/lib/site-bot/research/researchStore': {

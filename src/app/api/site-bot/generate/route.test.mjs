@@ -17,6 +17,14 @@ const code = ts.transpileModule(source, {
 }).outputText;
 
 const dossierPath = '/synthetic-root/data/site-research/synthetic-research.json';
+
+class SyntheticCopyValidationError extends Error {
+  constructor() {
+    super('Invalid bounded generated site copy.');
+    this.stage = 'tamar';
+    this.violations = [{ field: 'stickyBarLine', rule: 'max_length', limit: 25, actual: 33 }];
+  }
+}
 const components = ['/synthetic-root/data', '/synthetic-root/data/site-research', dossierPath];
 
 function harness({ authorized = true, simulation = false, target = 'absent', dossierOverride, pathFailure, researchPath = dossierPath, readerFailure, failure } = {}) {
@@ -33,6 +41,14 @@ function harness({ authorized = true, simulation = false, target = 'absent', dos
   const imports = {
     'next/server': { NextResponse: { json: (body, options) => Response.json(body, options) } },
     'node:path': path,
+    '@/lib/dataRoots': {
+      dataRoot: kind => {
+        expectResearch('cwd');
+        assert.equal(kind, 'siteResearch');
+        return { dir: '/synthetic-root/data/site-research', walkBase: '/synthetic-root', overridden: false };
+      },
+      sitesDir: () => { expectResearch('cwd'); return '/synthetic-root/data/sites'; },
+    },
     'node:fs': { lstatSync: file => {
       expectResearch('stat');
       const index = calls.stat - 1;
@@ -75,6 +91,7 @@ function harness({ authorized = true, simulation = false, target = 'absent', dos
         return { heroHeadline: 'synthetic simulation' };
       },
       generateResearchPageCopy: async () => { step('provider'); throw new Error('unexpected copy provider call'); },
+      GeneratedCopyValidationError: SyntheticCopyValidationError,
     },
     '@/lib/lp/verticalDetect': { detectVertical: niche => {
       expectResearch('vertical');
@@ -121,6 +138,7 @@ function harness({ authorized = true, simulation = false, target = 'absent', dos
         assert.equal(typeof dependencies.generateCopy, 'function');
         assert.equal(dependencies.renderInputs.siteUrl, 'https://synthetic-site.wao.co.il');
         if (failure === 'copy') throw new Error('synthetic copy failure: private detail');
+        if (failure === 'validation') throw new SyntheticCopyValidationError();
         return record;
       },
       persistResearchedSiteRecordAtomic: async (actual, options) => {
@@ -134,13 +152,15 @@ function harness({ authorized = true, simulation = false, target = 'absent', dos
     },
   };
   const exports = {};
+  const logs = [];
   vm.runInNewContext(code, {
     exports,
+    console: { error: (...args) => logs.push(args.join(' ')) },
     require: name => {
       assert.ok(Object.hasOwn(imports, name), `unexpected import: ${name}`);
       return imports[name];
     },
-    process: { cwd: () => { step('cwd'); return '/synthetic-root'; } },
+    process: new Proxy({}, { get: (_, key) => { throw new Error(`unexpected process.${String(key)}`); } }),
   }, { filename: routePath });
   async function post(body) {
     const response = await exports.POST({ json: async () => {
@@ -151,14 +171,14 @@ function harness({ authorized = true, simulation = false, target = 'absent', dos
     assert.equal(response.headers.get('Cache-Control'), 'private, no-store');
     return { status: response.status, body: await response.json() };
   }
-  return { post, calls, order };
+  return { post, calls, order, logs };
 }
 
-const checkedPath = ['path', 'cwd', 'cwd', 'stat', 'stat', 'stat'];
+const checkedPath = ['path', 'cwd', 'stat', 'stat', 'stat'];
 const checkedDossier = [...checkedPath, 'dossier'];
 const counts = (overrides = {}) => ({
   auth: 1, json: 1, path: 1, stat: 3, dossier: 1, gate: 0, brief: 0, preflight: 0,
-  copy: 0, persist: 0, provider: 0, write: 0, simulated: 0, vertical: 0, cwd: 2,
+  copy: 0, persist: 0, provider: 0, write: 0, simulated: 0, vertical: 0, cwd: 1,
   ...overrides,
 });
 
@@ -183,7 +203,7 @@ test('approved and empty-gate dossiers with absent and same-identity targets gen
       status: 200, body: { success: true, slug: 'synthetic-site', simulation: false, deployable: false, pageCount: 2 },
     });
     assert.deepEqual(route.order, ['auth', 'json', ...checkedDossier, 'gate', 'brief', 'cwd', 'preflight', 'vertical', 'copy', 'persist'], target);
-    assert.deepEqual(route.calls, counts({ gate: 1, brief: 1, preflight: 1, copy: 1, persist: 1, vertical: 1, cwd: 3 }));
+    assert.deepEqual(route.calls, counts({ gate: 1, brief: 1, preflight: 1, copy: 1, persist: 1, vertical: 1, cwd: 2 }));
   }
 });
 
@@ -191,22 +211,30 @@ test('foreign and invalid targets fail before vertical, copy, provider or persis
   for (const target of ['foreign', 'invalid']) {
     const route = harness({ target });
     assert.deepEqual(await route.post(input), {
-      status: 502, body: { error: 'research_generation_failed', deployable: false },
+      status: 502, body: { error: 'research_generation_failed', reason: 'site_target_conflict', deployable: false },
     });
+    assert.equal(route.logs.length, 1);
+    assert.match(route.logs[0], /^\[site-bot generate\] research_generation_failed \{"reason":"site_target_conflict","slug":"synthetic-site","researchId":"synthetic-research","message":"synthetic occupied target"\}$/);
     assert.deepEqual(route.order, ['auth', 'json', ...checkedDossier, 'gate', 'brief', 'cwd', 'preflight'], target);
-    assert.deepEqual(route.calls, counts({ gate: 1, brief: 1, preflight: 1, cwd: 3 }));
+    assert.deepEqual(route.calls, counts({ gate: 1, brief: 1, preflight: 1, cwd: 2 }));
   }
-  for (const failure of ['copy', 'persist']) {
+  const reasons = { copy: 'copy_generation_failed', validation: 'copy_validation_failed', persist: 'persist_failed' };
+  for (const failure of ['copy', 'validation', 'persist']) {
     const route = harness({ failure });
     assert.deepEqual(await route.post(input), {
-      status: 502, body: { error: 'research_generation_failed', deployable: false },
+      status: 502, body: { error: 'research_generation_failed', reason: reasons[failure], deployable: false },
     }, failure);
+    assert.equal(route.logs.length, 1, failure);
+    assert.match(route.logs[0], new RegExp(`"reason":"${reasons[failure]}"`), failure);
+    if (failure === 'validation') {
+      assert.match(route.logs[0], /"stage":"tamar","violations":\[\{"field":"stickyBarLine","rule":"max_length","limit":25,"actual":33\}\]/);
+    }
     assert.deepEqual(route.order, [
       'auth', 'json', ...checkedDossier, 'gate', 'brief', 'cwd', 'preflight', 'vertical', 'copy',
       ...(failure === 'persist' ? ['persist'] : []),
     ], failure);
     assert.deepEqual(route.calls, counts({
-      gate: 1, brief: 1, preflight: 1, copy: 1, persist: failure === 'persist' ? 1 : 0, vertical: 1, cwd: 3,
+      gate: 1, brief: 1, preflight: 1, copy: 1, persist: failure === 'persist' ? 1 : 0, vertical: 1, cwd: 2,
     }), failure);
   }
 });
@@ -247,7 +275,7 @@ test('missing and unsafe dossier paths or bounded reader failures reject before 
   for (const index of [0, 1, 2]) for (const type of ['symlink', 'missing', 'denied', index === 2 ? 'directory' : 'file']) {
     const route = harness({ pathFailure: { index, type } });
     assert.deepEqual(await route.post(input), { status: 409, body: { error: 'research_copy_not_ready', deployable: false } }, `${index}: ${type}`);
-    assert.deepEqual(route.order, ['auth', 'json', 'path', 'cwd', 'cwd', ...Array(index + 1).fill('stat')], `${index}: ${type}`);
+    assert.deepEqual(route.order, ['auth', 'json', 'path', 'cwd', ...Array(index + 1).fill('stat')], `${index}: ${type}`);
     assert.deepEqual(route.calls, counts({ stat: index + 1, dossier: 0 }), `${index}: ${type}`);
   }
   for (const researchPath of [null, '/outside/synthetic-research.json', '/synthetic-root', '/synthetic-root/../outside/record.json']) {

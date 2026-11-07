@@ -391,9 +391,14 @@ const nextConfig: NextConfig = {
       // checkout APIs return 503). Restore /site-bot/start by removing this entry once
       // charging is live. Paid-journey v2 M0 rehearsal: skipped ONLY when
       // SITE_BOT_PAID_FLOW=1 on a non-production server (prod always keeps it).
+      // M0.5 (B16): the mock pay page /site-bot/pay/<anything> is closed by the same
+      // gate, so prod never renders the pre-filled mock card form.
       ...(process.env.SITE_BOT_PAID_FLOW === "1" && process.env.NODE_ENV !== "production"
         ? []
-        : [{ source: "/site-bot/start", destination: "/site-bot", permanent: false }]),
+        : [
+          { source: "/site-bot/start", destination: "/site-bot", permanent: false },
+          { source: "/site-bot/pay/:path*", destination: "/site-bot", permanent: false },
+        ]),
     ];
   },
   async headers() {

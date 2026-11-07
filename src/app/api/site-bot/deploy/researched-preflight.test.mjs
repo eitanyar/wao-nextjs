@@ -6,6 +6,7 @@ import test from 'node:test';
 import util from 'node:util';
 import vm from 'node:vm';
 import ts from 'typescript';
+import { loadDataRoots } from '../../../../lib/dataRoots.testkit.mjs';
 
 const routePath = path.resolve('src/app/api/site-bot/deploy/route.ts');
 const source = fs.readFileSync(routePath, 'utf8');
@@ -224,6 +225,7 @@ function harness({ authorized = true, record, dossier = syntheticDossier(), read
     },
     os: { tmpdir: activeDeploy ? () => '/synthetic-tmp' : forbidden('tmpdir') },
     path,
+    '@/lib/dataRoots': loadDataRoots({ cwd: () => { calls.cwd++; return '/synthetic-root'; } }),
     'next/headers': { cookies: async () => ({
       get: name => {
         assert.equal(name, 'synthetic-admin-cookie');
@@ -384,7 +386,7 @@ function assertPreflightOnly(setup, response) {
 function assertOrphanRejected(setup, response) {
   assert.deepEqual(response, { status: 409, body: { error: 'invalid_site_record' } });
   assertPreflightOnly(setup, response);
-  assert.deepEqual(setup.calls, { body: 1, cwd: 1, site: 1, dossier: 0, readiness: 0, validation: 0,
+  assert.deepEqual(setup.calls, { body: 1, cwd: 2, site: 1, dossier: 0, readiness: 0, validation: 0,
     vertical: 0, client: 0, provision: 0, state: 0, forbidden: 0 });
   assert.equal(setup.dossierLookups, 0);
   assert.equal(setup.receiptChecks, 0);
@@ -575,7 +577,7 @@ test('absent receipt rejects before credential access, provisioning, rendering, 
   });
   const setup = harness({ record, bodyApproval: { approvedCopyReviewPacket: bodyPacket }, cloudflare: {} });
   assert.deepEqual(await setup.post(), { status: 409, body: { error: 'copy_review_approval_required' } });
-  assert.deepEqual(setup.calls, { body: 1, cwd: 1, site: 1, dossier: 1, readiness: 1, validation: 1,
+  assert.deepEqual(setup.calls, { body: 1, cwd: 2, site: 1, dossier: 1, readiness: 1, validation: 1,
     vertical: 0, client: 0, provision: 0, state: 0, forbidden: 0 });
   assert.equal(setup.credentialReads, 0);
   assert.deepEqual(setup.deployEvents, []);
@@ -600,7 +602,7 @@ for (const [label, mutate] of [
     const rawBytes = label === 'one-byte stale copy' ? Buffer.from(JSON.stringify(record)) : originalBytes;
     const setup = harness({ record, dossier, rawBytes, cloudflare: {}, bodyApproval: { approvedCopyReviewPacket: dossier.approvedCopyReviewPacket } });
     assert.deepEqual(await setup.post(), { status: 409, body: { error: 'copy_review_approval_required' } });
-    assert.deepEqual(setup.calls, { body: 1, cwd: 1, site: 1, dossier: 1, readiness: 1, validation: 1,
+    assert.deepEqual(setup.calls, { body: 1, cwd: 2, site: 1, dossier: 1, readiness: 1, validation: 1,
       vertical: 0, client: 0, provision: 0, state: 0, forbidden: 0 });
     assert.equal(setup.credentialReads, 0);
     assert.deepEqual(setup.deployEvents, []);
@@ -638,7 +640,7 @@ for (const pages of [undefined, []]) {
     const record = { slug, researchId: 'synthetic-research', collectedData: {}, copy: {}, ...(pages === undefined ? {} : { researchedPages: pages }) };
     const { post, calls } = harness({ record });
     assert.deepEqual(await post(), { status: 409, body: { error: 'researched_site_pages_required' } });
-    assert.deepEqual(calls, { body: 1, cwd: 1, site: 1, dossier: 1, readiness: 1, validation: 0, vertical: 0, client: 0, provision: 0, state: 0, forbidden: 0 });
+    assert.deepEqual(calls, { body: 1, cwd: 2, site: 1, dossier: 1, readiness: 1, validation: 0, vertical: 0, client: 0, provision: 0, state: 0, forbidden: 0 });
   });
 }
 
@@ -662,14 +664,14 @@ for (const [name, corrupt] of invalidGraphs) {
     corrupt(record);
     const { post, calls } = harness({ record });
     assert.deepEqual(await post(), { status: 409, body: { error: 'researched_site_graph_invalid' } });
-    assert.deepEqual(calls, { body: 1, cwd: 1, site: 1, dossier: 1, readiness: 1, validation: 1, vertical: 0, client: 0, provision: 0, state: 0, forbidden: 0 });
+    assert.deepEqual(calls, { body: 1, cwd: 2, site: 1, dossier: 1, readiness: 1, validation: 1, vertical: 0, client: 0, provision: 0, state: 0, forbidden: 0 });
   });
 }
 
 test('valid researched graph invokes the real validator and reaches synthetic provision failure', async () => {
   const { post, calls } = approvedHarness({ record: researchedRecord() });
   assert.deepEqual(await post(), { status: 424, body: { error: 'fraud_blocker_provisioning_required' } });
-  assert.deepEqual(calls, { body: 1, cwd: 1, site: 1, dossier: 1, readiness: 1, validation: 1, vertical: 1, client: 1, provision: 1, state: 1, forbidden: 0 });
+  assert.deepEqual(calls, { body: 1, cwd: 2, site: 1, dossier: 1, readiness: 1, validation: 1, vertical: 1, client: 1, provision: 1, state: 1, forbidden: 0 });
 });
 
 const unbound = [
@@ -707,7 +709,7 @@ for (const [name, mutate] of unbound) {
     mutate(record, dossier);
     const { post, calls } = harness({ record, dossier });
     assert.deepEqual(await post(), { status: 409, body: { error: 'researched_site_dossier_mismatch' } });
-    assert.deepEqual(calls, { body: 1, cwd: 1, site: 1, dossier: 1, readiness: 1, validation: 1, vertical: 0, client: 0, provision: 0, state: 0, forbidden: 0 });
+    assert.deepEqual(calls, { body: 1, cwd: 2, site: 1, dossier: 1, readiness: 1, validation: 1, vertical: 0, client: 0, provision: 0, state: 0, forbidden: 0 });
   });
 }
 
@@ -718,7 +720,7 @@ test('reordered equivalent pages and opportunities bind and reach synthetic prov
   dossier.pageOpportunities.reverse();
   const { post, calls } = approvedHarness({ record, dossier });
   assert.deepEqual(await post(), { status: 424, body: { error: 'fraud_blocker_provisioning_required' } });
-  assert.deepEqual(calls, { body: 1, cwd: 1, site: 1, dossier: 1, readiness: 1, validation: 1, vertical: 1, client: 1, provision: 1, state: 1, forbidden: 0 });
+  assert.deepEqual(calls, { body: 1, cwd: 2, site: 1, dossier: 1, readiness: 1, validation: 1, vertical: 1, client: 1, provision: 1, state: 1, forbidden: 0 });
 });
 
 test('homepage copy with different object key insertion order binds', async () => {
@@ -726,16 +728,16 @@ test('homepage copy with different object key insertion order binds', async () =
   record.copy = Object.fromEntries(Object.entries(record.copy).reverse());
   const { post, calls } = approvedHarness({ record });
   assert.deepEqual(await post(), { status: 424, body: { error: 'fraud_blocker_provisioning_required' } });
-  assert.deepEqual(calls, { body: 1, cwd: 1, site: 1, dossier: 1, readiness: 1, validation: 1, vertical: 1, client: 1, provision: 1, state: 1, forbidden: 0 });
+  assert.deepEqual(calls, { body: 1, cwd: 2, site: 1, dossier: 1, readiness: 1, validation: 1, vertical: 1, client: 1, provision: 1, state: 1, forbidden: 0 });
 });
 
 test('missing dossier and not-ready dossier preserve their existing responses and ordering', async () => {
   const missing = harness({ record: researchedRecord(), dossier: null });
   assert.deepEqual(await missing.post(), { status: 409, body: { error: 'research_dossier_required' } });
-  assert.deepEqual(missing.calls, { body: 1, cwd: 1, site: 1, dossier: 1, readiness: 0, validation: 0, vertical: 0, client: 0, provision: 0, state: 0, forbidden: 0 });
+  assert.deepEqual(missing.calls, { body: 1, cwd: 2, site: 1, dossier: 1, readiness: 0, validation: 0, vertical: 0, client: 0, provision: 0, state: 0, forbidden: 0 });
   const held = harness({ record: researchedRecord(), ready: false });
   assert.deepEqual(await held.post(), { status: 409, body: { error: 'deploy_not_ready', reasons: ['deploy_not_ready'] } });
-  assert.deepEqual(held.calls, { body: 1, cwd: 1, site: 1, dossier: 1, readiness: 1, validation: 0, vertical: 0, client: 0, provision: 0, state: 0, forbidden: 0 });
+  assert.deepEqual(held.calls, { body: 1, cwd: 2, site: 1, dossier: 1, readiness: 1, validation: 0, vertical: 0, client: 0, provision: 0, state: 0, forbidden: 0 });
 });
 
 test('legacy flag added to approved researched bytes rejects before dossier or credentials', async () => {
@@ -783,7 +785,7 @@ test('researchId-absent explicit legacy record retains its Core-30 provisioning 
     collectedData: { businessNiche: 'synthetic' }, copy: {} };
   const setup = harness({ record });
   assert.deepEqual(await setup.post(), { status: 424, body: { error: 'fraud_blocker_provisioning_required' } });
-  assert.deepEqual(setup.calls, { body: 1, cwd: 1, site: 1, dossier: 0, readiness: 0, validation: 0,
+  assert.deepEqual(setup.calls, { body: 1, cwd: 2, site: 1, dossier: 0, readiness: 0, validation: 0,
     vertical: 1, client: 1, provision: 1, state: 1, forbidden: 0 });
   assert.equal(setup.io.close, 1);
   assert.equal(setup.credentialReads, 3);
@@ -829,7 +831,7 @@ test('non-researched record reaches Fraud Blocker and retains its 424 failure re
   // Allow only the pure pre-provision theme calculation for this control.
   // A provisioning failure must terminate before rendering or deployment.
   assert.deepEqual(await post(), { status: 424, body: { error: 'fraud_blocker_provisioning_required' } });
-  assert.deepEqual(calls, { body: 1, cwd: 1, site: 1, dossier: 0, readiness: 0, validation: 0, vertical: 1, client: 1, provision: 1, state: 1, forbidden: 0 });
+  assert.deepEqual(calls, { body: 1, cwd: 2, site: 1, dossier: 0, readiness: 0, validation: 0, vertical: 1, client: 1, provision: 1, state: 1, forbidden: 0 });
 });
 
 for (const [field, value, label] of [
@@ -854,7 +856,7 @@ for (const [field, value, label] of [
       const options = { record: createRecord(), cloudflare };
       const { post, calls } = kind === 'researched' ? approvedHarness(options) : harness(options);
       assert.deepEqual(await post(), { status: 503, body: { error: 'deployment_provider_unavailable' } });
-      assert.deepEqual(calls, { body: 1, cwd: 1, site: 1, dossier: dossierCalls, readiness: dossierCalls,
+      assert.deepEqual(calls, { body: 1, cwd: 2, site: 1, dossier: dossierCalls, readiness: dossierCalls,
         validation: dossierCalls, vertical: 0, client: 0, provision: 0, state: 0, forbidden: 0 });
     });
   }
@@ -865,14 +867,14 @@ test('graph and dossier mismatch 409 take precedence over missing provider crede
   graph.researchedGraphEdges = [];
   const invalid = harness({ record: graph, cloudflare: {} });
   assert.deepEqual(await invalid.post(), { status: 409, body: { error: 'researched_site_graph_invalid' } });
-  assert.deepEqual(invalid.calls, { body: 1, cwd: 1, site: 1, dossier: 1, readiness: 1, validation: 1,
+  assert.deepEqual(invalid.calls, { body: 1, cwd: 2, site: 1, dossier: 1, readiness: 1, validation: 1,
     vertical: 0, client: 0, provision: 0, state: 0, forbidden: 0 });
 
   const unbound = researchedRecord();
   unbound.approvedPageId = 'hub';
   const mismatch = harness({ record: unbound, cloudflare: {} });
   assert.deepEqual(await mismatch.post(), { status: 409, body: { error: 'researched_site_dossier_mismatch' } });
-  assert.deepEqual(mismatch.calls, { body: 1, cwd: 1, site: 1, dossier: 1, readiness: 1, validation: 1,
+  assert.deepEqual(mismatch.calls, { body: 1, cwd: 2, site: 1, dossier: 1, readiness: 1, validation: 1,
     vertical: 0, client: 0, provision: 0, state: 0, forbidden: 0 });
 });
 
@@ -880,14 +882,14 @@ test('explicit simulation is rejected in production before provider access and d
   const simulation = harness({ record: { slug, simulation: true }, offlineSimulation: true,
     nodeEnv: 'production', cloudflare: {} });
   assert.deepEqual(await simulation.post(), { status: 409, body: { error: 'simulation_deploy_rejected' } });
-  assert.deepEqual(simulation.calls, { body: 1, cwd: 1, site: 1, dossier: 0, readiness: 0, validation: 0,
+  assert.deepEqual(simulation.calls, { body: 1, cwd: 2, site: 1, dossier: 0, readiness: 0, validation: 0,
     vertical: 0, client: 0, provision: 0, state: 0, forbidden: 0 });
 });
 
 test('test-only simulation cannot bypass missing provider credentials', async () => {
   const simulation = harness({ record: { slug, simulation: true }, offlineSimulation: true, cloudflare: {} });
   assert.deepEqual(await simulation.post(), { status: 503, body: { error: 'deployment_provider_unavailable' } });
-  assert.deepEqual(simulation.calls, { body: 1, cwd: 1, site: 1, dossier: 0, readiness: 0, validation: 0,
+  assert.deepEqual(simulation.calls, { body: 1, cwd: 2, site: 1, dossier: 0, readiness: 0, validation: 0,
     vertical: 0, client: 0, provision: 0, state: 0, forbidden: 0 });
 });
 
@@ -921,7 +923,7 @@ test('synthetic Wrangler deploy failure cannot create client account or return s
   const { post, calls, deployEvents } = approvedHarness({ record: researchedRecord(), failWranglerDeploy: true });
   assert.deepEqual(await post(), { status: 500, body: { error: 'Deploy failed' } });
   assert.deepEqual(deployEvents, ['render', 'tmpdir', 'write', 'project', 'deploy', 'cleanup', 'error']);
-  assert.deepEqual(calls, { body: 1, cwd: 1, site: 1, dossier: 1, readiness: 1, validation: 1,
+  assert.deepEqual(calls, { body: 1, cwd: 2, site: 1, dossier: 1, readiness: 1, validation: 1,
     vertical: 1, client: 1, provision: 1, state: 0, forbidden: 0 });
 });
 

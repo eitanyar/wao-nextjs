@@ -1,6 +1,7 @@
 import { createHash } from 'crypto';
 import fs from 'fs';
 import path from 'path';
+import { clientsDir } from '../dataRoots';
 import type { CampaignConfig, WeeklyDigest } from '../crm/intelligence';
 import { evaluateCampaignAge } from '../google-ads/campaignAge';
 import { appendHybridDecision, appendHybridSnapshot, readHybridSnapshots } from './snapshotStore';
@@ -71,7 +72,7 @@ export function collectHybridSnapshot(params: {
   baseDir?: string;
   fraudBlocker?: FraudBlockerSummary;
 }): HybridSnapshot {
-  const clientsRoot = path.resolve(params.baseDir ?? path.join(process.cwd(), 'data', 'clients'));
+  const clientsRoot = path.resolve(params.baseDir ?? clientsDir());
   const overlapPath = path.join(clientsRoot, params.clientId, 'ads-overlap.json');
   let overlap: StoredOverlapData | undefined;
   try {

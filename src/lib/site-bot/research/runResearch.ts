@@ -11,6 +11,7 @@ import {
 import { compileBusinessTruthModel, findBusinessTruthGaps, type BusinessTruthInput } from './businessTruth';
 import { compileCityEvidence, compileSemanticEvidenceGraph } from './evidenceGraph';
 import { createServiceQuery, getServiceQuery, type NeuronServiceQuery, type ServiceQueryInput } from './neuronWriter';
+import { fixtureResearchProviders } from './fixtureProviders';
 import { readResearchDossier, writeResearchDossierAtomic } from './researchStore';
 import type { EvidenceNode, HumanGate, SiteResearchDossier } from './types';
 
@@ -50,7 +51,38 @@ export interface SiteResearchResult {
 const DEMAND_TTL_MS = 90 * 24 * 60 * 60 * 1000;
 const SERP_TTL_MS = 30 * 24 * 60 * 60 * 1000;
 
+export type ResearchProviderMode = 'live' | 'fixture';
+
+/**
+ * SITE_BOT_RESEARCH_PROVIDERS selects the research transport (paid-journey v2 M0.5, B5).
+ * - unset, '' or 'live': live DataForSEO + NeuronWriter (the default, unchanged).
+ * - 'fixture': zero-network synthetic fixtures (./fixtureProviders), NON-PRODUCTION ONLY.
+ * In production every value resolves to live, and a set value is logged as an error:
+ * a fixture dossier would mark a paying customer's research architecture_ready on
+ * fake keyword/SERP evidence, which is worse than an outage. Off production, an
+ * unknown value throws instead of silently falling back to paid live calls.
+ */
+export function resolveResearchProviderMode(
+  env: { SITE_BOT_RESEARCH_PROVIDERS?: string; NODE_ENV?: string } = process.env,
+): ResearchProviderMode {
+  const requested = env.SITE_BOT_RESEARCH_PROVIDERS;
+  const unset = requested === undefined || requested === '' || requested === 'live';
+  if (env.NODE_ENV === 'production') {
+    if (!unset) {
+      console.error(`[site-bot research] SITE_BOT_RESEARCH_PROVIDERS=${JSON.stringify(requested)} IGNORED in production; using live providers`);
+    }
+    return 'live';
+  }
+  if (unset) return 'live';
+  if (requested === 'fixture') return 'fixture';
+  throw new Error(`SITE_BOT_RESEARCH_PROVIDERS must be unset, 'live' or 'fixture' (got ${JSON.stringify(requested)})`);
+}
+
 function defaultProviders(): ResearchProviders {
+  if (resolveResearchProviderMode() === 'fixture') {
+    console.warn('[site-bot research] FIXTURE providers active (SITE_BOT_RESEARCH_PROVIDERS=fixture): zero network, synthetic evidence, task IDs prefixed fixture-');
+    return fixtureResearchProviders();
+  }
   return {
     dataForSeo: { expand: expandServiceSeeds, metrics: fetchKeywordMetrics, intent: classifySearchIntent, serps: fetchLocalSerpEvidence },
     neuron: { create: createServiceQuery, get: getServiceQuery },

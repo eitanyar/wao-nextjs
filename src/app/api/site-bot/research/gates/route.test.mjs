@@ -5,6 +5,7 @@ import path from 'node:path';
 import test from 'node:test';
 import vm from 'node:vm';
 import ts from 'typescript';
+import { loadDataRoots } from '../../../../../lib/dataRoots.testkit.mjs';
 
 const root = process.cwd();
 const routePath = path.join(root, 'src/app/api/site-bot/research/gates/route.ts');
@@ -56,6 +57,7 @@ function routeHarness({ token, authorization = auth, dossier = null, denyReads =
       };
     } },
     path,
+    '@/lib/dataRoots': loadDataRoots({ cwd: () => syntheticRoot }),
     'next/server': { NextResponse: { json: (body, options) => Response.json(body, options) } },
     'next/headers': { cookies: async () => ({ get: name => {
       assert.equal(name, auth.ADMIN_COOKIE_NAME);

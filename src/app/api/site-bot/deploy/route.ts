@@ -4,6 +4,7 @@ import { execFileSync } from 'child_process';
 import { mkdirSync, mkdtempSync, writeFileSync, rmSync, lstatSync, openSync, fstatSync, readSync, closeSync, constants } from 'fs';
 import { tmpdir } from 'os';
 import path from 'path';
+import { dataRoot } from '@/lib/dataRoots';
 import { cookies } from 'next/headers';
 import { renderSitePages, buildSitemap } from '@/lib/lp/renderSitePages';
 import { renderResearchedSitePages, type ResearchedSitePage, type ResearchedSiteGraphEdge } from '@/lib/lp/researchedSite';
@@ -207,9 +208,10 @@ export async function POST(req: Request) {
     if (!isSafeDeploymentSlug(slug)) return privateJson({ error: 'invalid_deployment_slug' }, 400);
 
     // ── Step 1: Load site data from filesystem ────────────────────────────
-    const root = process.cwd();
-    const sitePath = path.join(root, 'data', 'sites', `${slug}.json`);
-    const siteState = fileState(root, sitePath);
+    const sitesRoot = dataRoot('sites');
+    const researchRoot = dataRoot('siteResearch');
+    const sitePath = path.join(sitesRoot.dir, `${slug}.json`);
+    const siteState = fileState(sitesRoot.walkBase, sitePath);
     if (siteState !== 'ready') return privateJson({ error: siteState === 'missing' ? 'site_not_found' : 'invalid_site_record' }, siteState === 'missing' ? 404 : 409);
     let record: SiteRecord;
     let recordBytes: Buffer;
@@ -250,7 +252,7 @@ export async function POST(req: Request) {
       } catch {
         dossierPath = null;
       }
-      if (!dossierPath || fileState(root, dossierPath) !== 'ready') {
+      if (!dossierPath || fileState(researchRoot.walkBase, dossierPath) !== 'ready') {
         return privateJson({ error: 'research_dossier_required' }, 409);
       }
       try {

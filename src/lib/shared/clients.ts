@@ -9,6 +9,7 @@
 
 import fs   from 'fs';
 import path from 'path';
+import { clientsDir } from '../dataRoots';
 
 export interface SharedClientRecord {
   clientId:         string;
@@ -48,7 +49,7 @@ export interface SharedClientRecord {
   leadResponseBusinessDisplayName?: string;
 }
 
-const CLIENTS_DIR = path.join(process.cwd(), 'data', 'clients');
+const CLIENTS_DIR = clientsDir();
 
 export function listClients(): string[] {
   if (!fs.existsSync(CLIENTS_DIR)) return [];

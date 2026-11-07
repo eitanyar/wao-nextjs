@@ -1,11 +1,12 @@
 import { NextResponse } from 'next/server';
 import fs from 'node:fs';
 import path from 'node:path';
+import { dataRoot, sitesDir } from '@/lib/dataRoots';
 import { cookies } from 'next/headers';
 import type { CollectedData } from '@/lib/bot/prompts';
 import { assertBoundedPageBrief, type PageBrief } from '@/lib/site-bot/research/pageBrief';
 import { getResearchPath, readResearchDossier, writeResearchDossierAtomic } from '@/lib/site-bot/research/researchStore';
-import { buildSimulationGenerationResult, generateResearchPageCopy } from '@/lib/lp/researchPageCopy';
+import { buildSimulationGenerationResult, generateResearchPageCopy, GeneratedCopyValidationError } from '@/lib/lp/researchPageCopy';
 import type { ResearchedSiteGraphEdge } from '@/lib/lp/researchedSite';
 import { detectVertical } from '@/lib/lp/verticalDetect';
 import { VERTICAL_THEMES } from '@/lib/lp/verticalThemes';
@@ -66,9 +67,10 @@ function isGraphEdge(value: unknown): value is ResearchedSiteGraphEdge {
 }
 
 function dossierFileReady(file: string): boolean {
-  const relative = path.relative(process.cwd(), file);
+  const base = dataRoot('siteResearch').walkBase;
+  const relative = path.relative(base, file);
   if (!relative || relative.startsWith('..') || path.isAbsolute(relative)) return false;
-  let current = process.cwd();
+  let current = base;
   const parts = relative.split(path.sep);
   for (const [index, part] of parts.entries()) {
     current = path.join(/* turbopackIgnore: true */ current, part);
@@ -80,6 +82,25 @@ function dossierFileReady(file: string): boolean {
     }
   }
   return true;
+}
+
+// Machine-readable reason for a 502 research_generation_failed (admin-only route).
+// The client-facing error code stays generic; details go to the server log only.
+type GenerationFailureReason = 'site_target_conflict' | 'copy_validation_failed' | 'copy_generation_failed' | 'persist_failed';
+type GenerationStep = 'preflight' | 'generate' | 'persist';
+
+function failureReason(step: GenerationStep, error: unknown): GenerationFailureReason {
+  if (step === 'preflight') return 'site_target_conflict';
+  if (step === 'persist') return 'persist_failed';
+  return error instanceof GeneratedCopyValidationError ? 'copy_validation_failed' : 'copy_generation_failed';
+}
+
+function logGenerationFailure(reason: GenerationFailureReason, slug: string, researchId: string, error: unknown): void {
+  // Field names, limits and lengths only: never generated copy text or owner data.
+  const detail = error instanceof GeneratedCopyValidationError
+    ? { stage: error.stage, violations: error.violations }
+    : { message: error && typeof (error as Error).message === 'string' ? (error as Error).message.slice(0, 200) : 'non-error thrown' };
+  console.error(`[site-bot generate] research_generation_failed ${JSON.stringify({ reason, slug, researchId, ...detail })}`);
 }
 
 function postReply(body: object, status = 200) {
@@ -151,9 +172,11 @@ export async function POST(req: Request) {
     return postReply({ error: 'research_generation_input_invalid', deployable: false }, 400);
   }
 
+  let step: GenerationStep = 'preflight';
   try {
-    const sitesRoot = path.join(process.cwd(), 'data', 'sites');
+    const sitesRoot = sitesDir();
     preflightResearchedSiteTarget(slug, body.researchId, { sitesRoot });
+    step = 'generate';
     const verticalKey = detectVertical(collectedData.businessNiche);
     const theme = VERTICAL_THEMES[verticalKey];
     const assets = VERTICAL_ASSETS[verticalKey];
@@ -175,6 +198,7 @@ export async function POST(req: Request) {
       },
     });
 
+    step = 'persist';
     await persistResearchedSiteRecordAtomic(record, {
       sitesRoot,
       dossier,
@@ -188,7 +212,9 @@ export async function POST(req: Request) {
       deployable: false,
       pageCount: record.researchedPages.length,
     });
-  } catch {
-    return postReply({ error: 'research_generation_failed', deployable: false }, 502);
+  } catch (error) {
+    const reason = failureReason(step, error);
+    logGenerationFailure(reason, slug, body.researchId, error);
+    return postReply({ error: 'research_generation_failed', reason, deployable: false }, 502);
   }
 }

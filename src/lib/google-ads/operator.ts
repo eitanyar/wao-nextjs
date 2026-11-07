@@ -1,5 +1,6 @@
 import fs from 'fs';
 import path from 'path';
+import { clientsDir } from '../dataRoots';
 import type { WeeklyDigest, CampaignConfig } from '../crm/intelligence';
 import type { CampaignAgeEvaluation, CampaignLifecyclePhase } from './campaignAge';
 import {
@@ -160,7 +161,7 @@ export interface GoogleAdsOperatorInquiry {
 }
 
 function taskDir(clientId: string): string {
-  return path.join(process.cwd(), 'data', 'clients', clientId, 'tasks', 'google-ads');
+  return path.join(clientsDir(), clientId, 'tasks', 'google-ads');
 }
 
 function approvalsPath(clientId: string): string {
@@ -629,7 +630,7 @@ export function buildGoogleAdsOperatorTasks(params: {
     .sort((a, b) => a.order - b.order || a.title.localeCompare(b.title));
 }
 
-const CLIENTS_ROOT = path.join(process.cwd(), 'data', 'clients');
+const CLIENTS_ROOT = clientsDir();
 
 /**
  * Scans every client's approval log for one taskId — backs the audit-trail deep link from

@@ -464,3 +464,116 @@ test('audit lookup bounds streamed bytes before rate, key, reservation and store
   assert.equal(cancelled, true);
   assert.deepEqual(accessed, []);
 });
+
+test('next.config 307s every /site-bot/pay/* path unless the rehearsal flag opens it off-production (M0.5 B16)', async () => {
+  const { default: ts } = await import('typescript');
+  const { default: vm } = await import('node:vm');
+  const { createRequire } = await import('node:module');
+  const req = createRequire(path.join(root, 'package.json'));
+  const { getPathMatch } = req('next/dist/shared/lib/router/utils/path-match');
+  const compiled = ts.transpileModule(read('next.config.ts'), {
+    compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022, esModuleInterop: true },
+  }).outputText;
+  const redirectsFor = async env => {
+    const exports = {};
+    vm.runInNewContext(compiled, { exports, require: id => req(id), __dirname: root, process: { env } }, { filename: 'next.config.ts' });
+    return JSON.parse(JSON.stringify(await exports.default.redirects()));
+  };
+  const payPaths = ['/site-bot/pay', '/site-bot/pay/x', '/site-bot/pay/undefined',
+    '/site-bot/pay/123e4567-e89b-42d3-a456-426614174000', '/site-bot/pay/a/b'];
+  const matching = (redirects, pathname) => redirects.filter(entry => getPathMatch(entry.source, { strict: true, removeUnnamedParams: true })(pathname));
+  for (const env of CLOSED_GATE_ENVS) {
+    const redirects = await redirectsFor({ ...env });
+    assert.deepEqual(redirects.filter(entry => entry.source.startsWith('/site-bot/pay')),
+      [{ source: '/site-bot/pay/:path*', destination: '/site-bot', permanent: false }], JSON.stringify(env));
+    for (const pathname of payPaths) {
+      // Exactly one redirect claims it, and it is the temporary one to the offer page.
+      assert.deepEqual(matching(redirects, pathname).map(entry => [entry.destination, entry.permanent]), [['/site-bot', false]], `${pathname} ${JSON.stringify(env)}`);
+    }
+    for (const pathname of ['/site-bot', '/site-bot/payment', '/site-bot/audit']) {
+      assert.equal(matching(redirects, pathname).some(entry => entry.source.startsWith('/site-bot/pay')), false, pathname);
+    }
+  }
+  for (const env of OPEN_GATE_ENVS) {
+    const redirects = await redirectsFor({ ...env });
+    assert.deepEqual(redirects.filter(entry => entry.source.startsWith('/site-bot/pay')), []);
+    for (const pathname of payPaths) assert.deepEqual(matching(redirects, pathname), [], pathname);
+  }
+});
+
+test('pay layout 404s the mock card form before rendering children unless the off-production rehearsal flag is set (M0.5 B16)', async () => {
+  const { default: ts } = await import('typescript');
+  const { default: vm } = await import('node:vm');
+  const layoutPath = path.join(root, 'src/app/(product)/site-bot/pay/layout.tsx');
+  const source = read('src/app/(product)/site-bot/pay/layout.tsx');
+  assert.equal(source.trim(), `import type { Metadata } from 'next';
+import type { ReactNode } from 'react';
+import { notFound } from 'next/navigation';
+
+export const metadata: Metadata = {
+  robots: { index: false },
+};
+
+// Paid-journey v2 M0.5 (B16): the mock checkout page under /site-bot/pay renders
+// ONLY when SITE_BOT_PAID_FLOW=1 on a non-production server. next.config.ts 307s
+// /site-bot/pay/:path* -> /site-bot first; this layout is the second lock, so the
+// pre-filled mock card form 404s even if that redirect is ever bypassed.
+export default function SiteBotPayLayout({ children }: { children: ReactNode }) {
+  if (process.env.SITE_BOT_PAID_FLOW === '1' && process.env.NODE_ENV !== 'production') {
+    return children;
+  }
+  notFound();
+}`);
+  // The page itself is the only child segment; no sibling route can bypass the layout.
+  assert.deepEqual(fs.readdirSync(path.join(root, 'src/app/(product)/site-bot/pay')).sort(), ['[sessionId]', 'layout.tsx']);
+  assert.deepEqual(fs.readdirSync(path.join(root, 'src/app/(product)/site-bot/pay/[sessionId]')), ['page.tsx']);
+  const code = ts.transpileModule(source, {
+    fileName: layoutPath,
+    compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022, esModuleInterop: true, jsx: ts.JsxEmit.ReactJSX },
+  }).outputText;
+  const load = env => {
+    const unexpected = [];
+    const deny = name => { unexpected.push(name); throw new Error(`unexpected ${name}`); };
+    const exports = {};
+    vm.runInNewContext(code, {
+      exports,
+      require: name => name === 'next/navigation'
+        ? { notFound: () => { throw new Error('NEXT_HTTP_ERROR_FALLBACK;404'); } }
+        : deny(`import: ${name}`),
+      process: gatedProcess(env, deny),
+      fetch: () => deny('fetch'),
+      console: new Proxy({}, { get: (_, name) => deny(`console.${String(name)}`) }),
+      Date: class { constructor() { deny('clock'); } static now() { deny('clock'); } },
+      setTimeout: () => deny('setTimeout'),
+      setInterval: () => deny('setInterval'),
+    }, { filename: layoutPath });
+    return { exports, unexpected };
+  };
+  const children = new Proxy({}, { get: (_, key) => { throw new Error(`children rendered: ${String(key)}`); } });
+  for (const env of CLOSED_GATE_ENVS) {
+    const { exports, unexpected } = load(env);
+    assert.deepEqual(Object.keys(exports).sort(), ['default', 'metadata']);
+    assert.equal(exports.metadata.robots.index, false);
+    assert.throws(() => exports.default({ children }), { message: 'NEXT_HTTP_ERROR_FALLBACK;404' }, JSON.stringify(env));
+    assert.deepEqual(unexpected, [], JSON.stringify(env));
+  }
+  for (const env of OPEN_GATE_ENVS) {
+    const { exports, unexpected } = load(env);
+    assert.equal(exports.default({ children }), children);
+    assert.deepEqual(unexpected, []);
+  }
+});
+
+test('pay page and start flow gate navigation and "done" on the checked response helpers (M0.5 B9/B10)', () => {
+  const pay = read('src/app/(product)/site-bot/pay/[sessionId]/page.tsx');
+  const pay_ = pay.slice(pay.indexOf('async function pay()'), pay.indexOf('async function submitGate()'));
+  assert.match(pay_, /const outcome = checkoutCallbackOutcome\(res\.ok, json\);\s*if \(outcome\.kind === "error"\) throw/);
+  assert.match(pay_, /await readJsonBody\(res\)/);
+  assert.doesNotMatch(pay_, /res\.json\(\)/);
+  assert.ok(pay_.indexOf('outcome.kind === "error"') < pay_.indexOf('setPhase("done")'));
+  const start = read('src/app/(app)/site-bot/start/StartPaidFlow.tsx');
+  const finish = start.slice(start.indexOf('async function finish('), start.indexOf('function handleSend('));
+  assert.match(finish, /const sessionId = checkoutInitSessionId\(res\.ok, json\);\s*if \(!sessionId\) throw/);
+  assert.match(finish, /router\.push\(`\/site-bot\/pay\/\$\{sessionId\}`\)/);
+  assert.doesNotMatch(finish, /json\.sessionId|res\.json\(\)/);
+});

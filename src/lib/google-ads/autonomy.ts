@@ -1,6 +1,7 @@
 import { createHash } from 'crypto';
 import fs from 'fs';
 import path from 'path';
+import { clientsDir } from '../dataRoots';
 
 export type AutonomousActionKind = 'budget_tune' | 'search_term_cleanup' | 'search_term_harvest';
 export type ClickProtectionStatus = 'protected' | 'unprotected' | 'unknown' | 'awaiting_ads_connection' | 'monitoring_only' | 'stale' | 'unauthorized' | 'not_found' | 'rate_limited' | 'domain_or_sid_mismatch' | 'tracker_not_installed' | 'provider_error' | 'invalid_response';
@@ -86,7 +87,7 @@ const CLIENT_ID_PATTERN = /^[a-zA-Z0-9][a-zA-Z0-9_-]{0,127}$/;
 const ACTION_KINDS: ReadonlySet<string> = new Set(['budget_tune', 'search_term_cleanup', 'search_term_harvest']);
 
 function clientsBaseDir(baseDir?: string): string {
-  return path.resolve(baseDir ?? path.join(process.cwd(), 'data', 'clients'));
+  return path.resolve(baseDir ?? clientsDir());
 }
 
 function clientDir(clientId: string, baseDir?: string): string | null {

@@ -6,6 +6,7 @@ import { renderMixed } from "@/lib/bidi";
 import type { CollectedData } from "@/lib/bot/prompts";
 import type { ResearchGate } from "@/lib/site-bot/research/gates";
 import { RESEARCH_COPY } from "@/lib/site-bot/researchCopy";
+import { checkoutCallbackOutcome, customerErrorText, readJsonBody } from "@/lib/site-bot/checkout/customerError";
 import {
   buildResearchGateAnswer,
   RESEARCH_PROGRESS_KEYS,
@@ -50,22 +51,24 @@ export default function SiteBotPayPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ sessionId }),
       });
-      const json = await res.json() as CheckoutCallbackResponse & { error?: string };
-      if (!res.ok || !json.success) throw new Error(json.error || "משהו השתבש");
+      // M0.5 (B9): a non-2xx or non-JSON callback is an error state, never "done".
+      const json = await readJsonBody(res) as Partial<CheckoutCallbackResponse> & { error?: string };
+      const outcome = checkoutCallbackOutcome(res.ok, json);
+      if (outcome.kind === "error") throw new Error(customerErrorText(json.error, "משהו השתבש"));
       setResearchStatus(json.status ?? null);
       setGatesFinished(false);
-      if (json.openResearchGates?.length && json.researchId && json.collectedData) {
-        setResearchId(json.researchId);
-        setCollectedData(json.collectedData);
-        setOpenResearchGates(json.openResearchGates);
+      if (outcome.kind === "gates") {
+        setResearchId(outcome.researchId);
+        setCollectedData(outcome.collectedData);
+        setOpenResearchGates(outcome.openResearchGates);
         setGateIndex(0);
         setAnswer("");
         setPhase("gates");
       } else {
         setPhase("done");
       }
-    } catch (e: any) {
-      setError(e.message || "משהו השתבש");
+    } catch (e: unknown) {
+      setError(customerErrorText(e instanceof Error ? e.message : undefined, "משהו השתבש"));
       setPhase("error");
     }
   }

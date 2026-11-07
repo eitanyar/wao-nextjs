@@ -2,12 +2,13 @@
 
 import fs   from 'fs';
 import path from 'path';
+import { clientsDir } from '@/lib/dataRoots';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { ADMIN_COOKIE_NAME, verifyAdminToken } from '@/lib/admin-auth';
 import { READINESS_KEYS, parseLiveReadinessSubmission, type ReadinessKey, type LiveReadinessRecord } from './shared';
 
-const CLIENTS_DIR = path.join(process.cwd(), 'data', 'clients');
+const CLIENTS_DIR = clientsDir();
 
 function loadRecord(recordPath: string): LiveReadinessRecord {
   try {

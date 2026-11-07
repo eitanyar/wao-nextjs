@@ -1,11 +1,12 @@
 import fs from 'fs';
 import path from 'path';
+import { clientsDir as defaultClientsDir } from '../dataRoots';
 import type { HybridDecision, HybridSnapshot } from './types';
 
 const CLIENT_ID_PATTERN = /^[A-Za-z0-9][A-Za-z0-9_-]*$/;
 
 function clientsDir(baseDir?: string): string {
-  return path.resolve(baseDir ?? path.join(process.cwd(), 'data', 'clients'));
+  return path.resolve(baseDir ?? defaultClientsDir());
 }
 
 function clientHybridDir(clientId: string, baseDir?: string): string | null {

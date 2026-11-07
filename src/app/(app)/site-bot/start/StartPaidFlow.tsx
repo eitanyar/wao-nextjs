@@ -3,6 +3,7 @@
 import { Suspense, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
+import { checkoutInitSessionId, customerErrorText, readJsonBody } from "@/lib/site-bot/checkout/customerError";
 import type { CollectedData } from "@/lib/bot/prompts";
 import { renderMixed } from "@/lib/bidi";
 import { SCORECARD_COPY } from "@/lib/site-bot/scorecardCopy";
@@ -249,11 +250,13 @@ function SiteBotStartContent() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ collectedData: data }),
       });
-      const json = await res.json();
-      if (!res.ok || !json.sessionId) throw new Error(json.error || "יצירת התשלום נכשלה");
-      router.push(`/site-bot/pay/${json.sessionId}`);
-    } catch (err: any) {
-      setErrorMessage(err.message || "משהו השתבש");
+      // M0.5 (B10): a non-2xx, non-JSON or malformed init never navigates to /site-bot/pay/undefined.
+      const json = await readJsonBody(res);
+      const sessionId = checkoutInitSessionId(res.ok, json);
+      if (!sessionId) throw new Error(customerErrorText(json.error, "יצירת התשלום נכשלה"));
+      router.push(`/site-bot/pay/${sessionId}`);
+    } catch (err: unknown) {
+      setErrorMessage(customerErrorText(err instanceof Error ? err.message : undefined, "משהו השתבש"));
       setPhase("error");
     }
   }

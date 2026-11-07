@@ -7,8 +7,9 @@
 
 import fs   from 'fs';
 import path from 'path';
+import { clientsDir } from '../dataRoots';
 
-const CLIENTS_DIR = path.join(process.cwd(), 'data', 'clients');
+const CLIENTS_DIR = clientsDir();
 
 export interface ReviewResponderQueueItem {
   reviewId:         string;

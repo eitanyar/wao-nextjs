@@ -16,6 +16,7 @@
 
 import fs from 'fs';
 import path from 'path';
+import { clientsDir } from '../dataRoots';
 import { encryptToken, decryptToken } from '@/lib/payments/crypto';
 
 export interface GscTokenRecord {
@@ -28,7 +29,7 @@ export interface GscTokenRecord {
 }
 
 function tokenFile(clientId: string): string {
-  return path.join(process.cwd(), 'data', 'clients', clientId, 'gsc-token.json');
+  return path.join(clientsDir(), clientId, 'gsc-token.json');
 }
 
 export function saveGscToken(params: {
@@ -38,7 +39,7 @@ export function saveGscToken(params: {
   sites: string[];
 }): void {
   const { clientId, refreshTokenPlain, scope, sites } = params;
-  const dir = path.join(process.cwd(), 'data', 'clients', clientId);
+  const dir = path.join(clientsDir(), clientId);
   fs.mkdirSync(dir, { recursive: true });
   const record: GscTokenRecord = {
     clientId,

@@ -6,6 +6,7 @@ import test from 'node:test';
 import { isDeepStrictEqual } from 'node:util';
 import vm from 'node:vm';
 import ts from 'typescript';
+import { loadDataRoots } from '../../../../../lib/dataRoots.testkit.mjs';
 
 const root = process.cwd();
 const source = name => path.join(root, name);
@@ -119,6 +120,7 @@ function harness({ token, data = dossier(), boundedRejected = false, raw = bytes
   } });
   const route = load('src/app/api/site-bot/research/copy-review/route.ts', {
     fs: fsAdapter, path,
+    '@/lib/dataRoots': loadDataRoots({ cwd: () => cwd }),
     'next/server': { NextResponse: { json: (body, options) => Response.json(body, options) } },
     'next/headers': { cookies: async () => ({ get: name => {
       assert.equal(name, auth.ADMIN_COOKIE_NAME);

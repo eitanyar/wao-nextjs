@@ -2,6 +2,7 @@ import { createHash } from 'crypto';
 import fs from 'fs';
 import os from 'os';
 import path from 'path';
+import { clientsDir } from '../dataRoots';
 import { buildWeeklyDigest, deriveCplCeilingIls, loadCampaignConfigBySlug, loadClientGoogleAdsIndex, type CampaignConfig, type WeeklyDigest } from '../crm/intelligence';
 import { collectHybridSnapshot, runHybridShadowPlan as runHybridShadowPlanInternal } from '../hybrid/planner';
 import type { HybridPlanResult } from '../hybrid/types';
@@ -99,7 +100,7 @@ function defaultDependencies(): Required<AutonomousCycleDependencies> {
   return {
     now: () => new Date(),
     listClientIds: () => {
-      const base = path.join(process.cwd(), 'data', 'clients');
+      const base = clientsDir();
       try {
         return fs.readdirSync(base).filter(clientId => fs.existsSync(path.join(base, clientId, 'google-ads.json')));
       } catch {

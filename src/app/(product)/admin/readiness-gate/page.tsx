@@ -1,5 +1,6 @@
 import fs   from 'fs';
 import path from 'path';
+import { clientsDir } from '@/lib/dataRoots';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { ADMIN_COOKIE_NAME, verifyAdminToken } from '@/lib/admin-auth';
@@ -15,7 +16,7 @@ import {
 
 export const metadata = { robots: { index: false }, title: 'שער מוכנות (Readiness Gate) | WAO' };
 
-const CLIENTS_DIR   = path.join(process.cwd(), 'data', 'clients');
+const CLIENTS_DIR   = clientsDir();
 const PROSPECTS_DIR = path.join(process.cwd(), 'data', 'prospects');
 
 // Hebrew labels — universal items (docs/specs/readiness-gate.md §5.2) and

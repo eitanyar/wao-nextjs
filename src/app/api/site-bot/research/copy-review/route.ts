@@ -1,5 +1,6 @@
 import fs from 'fs';
 import path from 'path';
+import { dataRoot } from '@/lib/dataRoots';
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { ADMIN_COOKIE_NAME, verifyAdminToken } from '@/lib/admin-auth';
@@ -19,10 +20,10 @@ function reply(body: object, status: number) {
 
 // Check every directory component, not just the final file: a symlinked parent
 // must never redirect this review endpoint outside its intended data tree.
-function fileState(file: string): 'ready' | 'missing' | 'invalid' {
-  const relative = path.relative(process.cwd(), file);
+function fileState(file: string, base: string = dataRoot('siteResearch').walkBase): 'ready' | 'missing' | 'invalid' {
+  const relative = path.relative(base, file);
   if (!relative || relative.startsWith('..') || path.isAbsolute(relative)) return 'invalid';
-  let current = process.cwd();
+  let current = base;
   const parts = relative.split(path.sep);
   for (const [index, part] of parts.entries()) {
     current = path.join(/* turbopackIgnore: true */ current, part);
@@ -63,8 +64,9 @@ export async function GET(req: Request) {
   const dossier = await readResearchDossier(researchId, undefined, { bounded: true });
   if (!dossier) return reply({ error: 'invalid_record' }, 409);
 
-  const sitePath = path.join(process.cwd(), 'data', 'sites', `${slug}.json`);
-  const siteState = fileState(sitePath);
+  const sitesRoot = dataRoot('sites');
+  const sitePath = path.join(sitesRoot.dir, `${slug}.json`);
+  const siteState = fileState(sitePath, sitesRoot.walkBase);
   if (siteState !== 'ready') return reply({ error: siteState === 'missing' ? 'not_found' : 'invalid_record' }, siteState === 'missing' ? 404 : 409);
 
   let descriptor: number | undefined;

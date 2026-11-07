@@ -1,5 +1,6 @@
 import fs from 'fs';
 import path from 'path';
+import { clientsDir } from '@/lib/dataRoots';
 import { cookies, headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 import accessCopy from '@/data/client-access-copy.he.json';
@@ -11,7 +12,7 @@ import { RecoveryContactControl } from './recovery-contact-control';
 
 export const metadata = { robots: { index: false }, title: 'WAO Client Administration' };
 
-const CLIENTS_DIR = path.join(process.cwd(), 'data', 'clients');
+const CLIENTS_DIR = clientsDir();
 type ClientEntry = { clientId: string; label: string; siteUrl?: string };
 
 function loadClients(root: string): ClientEntry[] {

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import fs from "fs";
 import path from "path";
+import { clientsDir } from "@/lib/dataRoots";
 import { ADMIN_COOKIE_NAME, verifyAdminToken } from "@/lib/admin-auth";
 import { loadClient } from "@/lib/shared/clients";
 import {
@@ -24,7 +25,7 @@ async function isAdminAuthorized(): Promise<boolean> {
 }
 
 function ledgerPath(clientId: string): string {
-  return path.join(process.cwd(), "data", "clients", clientId, "review-responder-log.jsonl");
+  return path.join(clientsDir(), clientId, "review-responder-log.jsonl");
 }
 
 function appendLedgerLine(clientId: string, entry: Record<string, unknown>): void {

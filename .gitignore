@@ -22,6 +22,10 @@
 /.next-sitebot-*/
 # paid-journey v2 M0 dress-rehearsal dev server dist dir
 /.next-m0/
+# paid-journey v2 M0.5 build + rehearsal dist dirs, and the default of scripts/site-bot-rehearsal-dev.sh
+/.next-m05/
+/.next-m05-dev/
+/.next-rehearsal/
 # deploy.sh release candidates and releases (built inside the project root); also keeps
 # Tailwind's source scan out of old builds
 /releases/
@@ -112,6 +116,9 @@ data/inner-coach/
 data/bot-sessions/
 data/payments/
 data/sites-pending/
+# Site-bot research dossiers (runtime, per-customer; nothing tracked here as of 2026-11-07).
+# Rehearsals should still point WAO_SITE_RESEARCH_DIR outside the repo.
+data/site-research/
 
 # Site-bot chat image uploads — session-scoped runtime user data, never source
 /public/uploads/

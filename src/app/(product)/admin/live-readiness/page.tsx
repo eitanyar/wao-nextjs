@@ -1,5 +1,6 @@
 import fs   from 'fs';
 import path from 'path';
+import { clientsDir } from '@/lib/dataRoots';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { ADMIN_COOKIE_NAME, verifyAdminToken } from '@/lib/admin-auth';
@@ -9,7 +10,7 @@ import { READINESS_KEYS, type ReadinessKey, type LiveReadinessRecord } from './s
 
 export const metadata = { robots: { index: false }, title: 'מוכנות להפעלה חיה | WAO' };
 
-const CLIENTS_DIR = path.join(process.cwd(), 'data', 'clients');
+const CLIENTS_DIR = clientsDir();
 
 // Hebrew labels for every requirement `assessLiveReadiness()` can report,
 // including the read-only `managerCredentialsConfigured` one (env-driven,

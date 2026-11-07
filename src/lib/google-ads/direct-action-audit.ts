@@ -12,6 +12,7 @@
  */
 import fs from 'fs';
 import path from 'path';
+import { clientsDir } from '../dataRoots';
 
 export type GoogleAdsDirectActionType =
   | 'pause_resume'
@@ -31,7 +32,7 @@ export interface GoogleAdsDirectActionAudit {
 }
 
 function taskDir(clientId: string): string {
-  return path.join(process.cwd(), 'data', 'clients', clientId, 'tasks', 'google-ads');
+  return path.join(clientsDir(), clientId, 'tasks', 'google-ads');
 }
 
 function directActionsPath(clientId: string): string {

@@ -6,11 +6,12 @@
 
 import fs   from 'fs';
 import path from 'path';
+import { clientsDir } from '../dataRoots';
 import type {
   GmbConnection, GmbQueueItem, NapScanResult, CompletenessScore,
 } from './types';
 
-const CLIENTS_DIR = path.join(process.cwd(), 'data', 'clients');
+const CLIENTS_DIR = clientsDir();
 
 function gmbDir(clientId: string): string {
   return path.join(CLIENTS_DIR, clientId, 'gmb');

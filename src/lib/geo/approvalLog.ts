@@ -6,6 +6,7 @@
 
 import fs   from 'fs';
 import path from 'path';
+import { clientsDir } from '../dataRoots';
 
 export type ActionType = 'faq_block' | 'definition_box' | 'table' | 'schema' | 'mixed';
 export type VerificationResult = 'pass' | 'fail' | 'pending' | 'skipped';
@@ -40,7 +41,7 @@ export interface ApprovalEntry {
 }
 
 function logPath(clientId: string): string {
-  const dir = path.join(process.cwd(), 'data', 'clients', clientId);
+  const dir = path.join(clientsDir(), clientId);
   fs.mkdirSync(dir, { recursive: true });
   return path.join(dir, 'log.jsonl');
 }
