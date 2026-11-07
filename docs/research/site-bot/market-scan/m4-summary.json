@@ -1,5 +1,5 @@
 {
- "run_id": "73ecfd6063af",
+ "run_id": "7f91346fefc5",
  "cells": 411,
  "ranked_cells": 410,
  "calibration_cells": [
@@ -11,126 +11,102 @@
    "S3": 0.7845,
    "S3_band": "saturated",
    "P_w": 1.25,
-   "score_unkilled": 0.4773
+   "score_unkilled": 0.5966
   }
  ],
  "step1": {
-  "killed_saturated": 65,
+  "killed_saturated": 112,
   "flagged_step1_only": 19,
-  "passed": 326,
+  "passed": 279,
   "forced": 1,
   "multi_point_cells": 107
  },
  "step2": {
-  "bought": 327,
+  "bought": 280,
   "pending": 0,
-  "killed_saturated_joined": 156,
-  "killed_pw_below": 151,
-  "pooled_members": 62,
-  "survived_scored": 54
+  "killed_saturated_joined": 166,
+  "killed_pw_below": 148,
+  "pooled_members": 42,
+  "survived_scored": 33
  },
  "ring2_pools": [
   {
    "cell_id": "locksmith@R1-ring2",
-   "members": "givat-shmuel;or-yehuda;rosh-haayin;yehud-monosson",
-   "P_w": 19.1,
-   "S3": 0.5077,
-   "score": 598.1178,
+   "members": "rosh-haayin;yehud-monosson",
+   "P_w": 9.75,
+   "S3": 0.5642,
+   "score": 214.4911,
    "kill_reason": ""
   },
   {
    "cell_id": "locksmith@R3-ring2",
-   "members": "beer-yaakov;gan-yavne;gedera;shoham",
-   "P_w": 15.3,
-   "S3": 0.3098,
-   "score": 450.4482,
-   "kill_reason": ""
-  },
-  {
-   "cell_id": "movers@R9-ring2",
-   "members": "kiryat-gat;kiryat-malakhi;sderot",
-   "P_w": 8.5,
-   "S3": 0.3079,
-   "score": 312.3888,
-   "kill_reason": ""
-  },
-  {
-   "cell_id": "roofing@R3-ring2",
-   "members": "beer-yaakov;gan-yavne;gedera;mazkeret-batya",
-   "P_w": 8.6,
-   "S3": 0.619,
-   "score": 96.069,
+   "members": "beer-yaakov;gan-yavne;gedera",
+   "P_w": 11,
+   "S3": 0.4518,
+   "score": 198.2368,
    "kill_reason": ""
   },
   {
    "cell_id": "renovation@R5-ring2",
    "members": "kiryat-ata;kiryat-motzkin;kiryat-yam;nesher;tirat-carmel",
-   "P_w": 31,
+   "P_w": 31.15,
    "S3": 0.6109,
-   "score": 87.2815,
+   "score": 108.0153,
    "kill_reason": ""
   },
   {
-   "cell_id": "ac-repair@R1-ring2",
-   "members": "givat-shmuel;kiryat-ono;yehud-monosson",
-   "P_w": 19.55,
-   "S3": 0.4811,
-   "score": 71.6698,
+   "cell_id": "electrician@R3-ring2",
+   "members": "gan-yavne;gedera;shoham",
+   "P_w": 19.05,
+   "S3": 0.5688,
+   "score": 91.9342,
    "kill_reason": ""
   },
   {
    "cell_id": "electrician@R1-ring2",
    "members": "or-yehuda;rosh-haayin",
-   "P_w": 18.65,
+   "P_w": 17.7,
    "S3": 0.6391,
-   "score": 71.4843,
+   "score": 87.4663,
    "kill_reason": ""
   },
   {
    "cell_id": "electrician@R2-ring2",
-   "members": "kadima-zoran;kfar-yona;tel-mond",
-   "P_w": 33,
-   "S3": 0.6011,
-   "score": 36.7564,
+   "members": "even-yehuda;kadima-zoran;kfar-yona;tel-mond",
+   "P_w": 39.05,
+   "S3": 0.5819,
+   "score": 61.3284,
    "kill_reason": ""
   },
   {
-   "cell_id": "electrician@R3-ring2",
-   "members": "gedera;shoham",
-   "P_w": 8.2,
-   "S3": 0.5454,
-   "score": 30.0519,
-   "kill_reason": ""
-  },
-  {
-   "cell_id": "ac-repair@R3-ring2",
-   "members": "gan-yavne;shoham",
-   "P_w": 9.45,
-   "S3": 0.5647,
-   "score": 15.1842,
+   "cell_id": "ac-repair@R1-ring2",
+   "members": "givat-shmuel;kiryat-ono;yehud-monosson",
+   "P_w": 14.7,
+   "S3": 0.6512,
+   "score": 37.6392,
    "kill_reason": ""
   },
   {
    "cell_id": "ac-repair@R2-ring2",
    "members": "even-yehuda;kadima-zoran;kfar-yona",
    "P_w": 10.85,
-   "S3": 0.6177,
-   "score": 14.1524,
+   "S3": 0.6408,
+   "score": 15.6182,
    "kill_reason": ""
+  },
+  {
+   "cell_id": "roofing@R3-ring2",
+   "members": "beer-yaakov;gan-yavne;gedera;mazkeret-batya",
+   "P_w": 3,
+   "S3": 0.6786,
+   "score": 0,
+   "kill_reason": "P_w<8"
   },
   {
    "cell_id": "roofing@R2-ring2",
    "members": "even-yehuda;kadima-zoran;kfar-yona;tel-mond",
    "P_w": 2.35,
-   "S3": 0.5478,
-   "score": 0,
-   "kill_reason": "P_w<8"
-  },
-  {
-   "cell_id": "movers@R1-ring2",
-   "members": "givat-shmuel;kiryat-ono;or-yehuda;rosh-haayin;yehud-monosson",
-   "P_w": 5.95,
-   "S3": 0.3218,
+   "S3": 0.6297,
    "score": 0,
    "kill_reason": "P_w<8"
   },
@@ -138,30 +114,14 @@
    "cell_id": "locksmith@R2-ring2",
    "members": "even-yehuda;kadima-zoran;kfar-yona;tel-mond",
    "P_w": 5,
-   "S3": 0.4786,
-   "score": 0,
-   "kill_reason": "P_w<8"
-  },
-  {
-   "cell_id": "movers@R3-ring2",
-   "members": "beer-yaakov;gan-yavne;gedera;mazkeret-batya;shoham",
-   "P_w": 4.85,
-   "S3": 0.3638,
-   "score": 0,
-   "kill_reason": "P_w<8"
-  },
-  {
-   "cell_id": "movers@R2-ring2",
-   "members": "even-yehuda;kadima-zoran;kfar-yona;tel-mond",
-   "P_w": 0,
-   "S3": 0.3242,
+   "S3": 0.6496,
    "score": 0,
    "kill_reason": "P_w<8"
   },
   {
    "cell_id": "aluminum@R1-ring2",
    "members": "rosh-haayin;yehud-monosson",
-   "P_w": 6.9,
+   "P_w": 5.8,
    "S3": 0.6324,
    "score": 0,
    "kill_reason": "P_w<8"
@@ -169,45 +129,69 @@
   {
    "cell_id": "solar@R2-ring2",
    "members": "even-yehuda;kadima-zoran;tel-mond",
-   "P_w": 1.1,
-   "S3": 0.6335,
+   "P_w": 1.25,
+   "S3": 0.6531,
    "score": 0,
    "kill_reason": "P_w<8"
   }
  ],
  "bands_final": {
-  "open": 44,
-  "middle": 139,
-  "saturated": 228
+  "open": 2,
+  "middle": 122,
+  "saturated": 287
  },
  "homepage": {
-  "hosts": 1130,
-  "cached": 1130,
+  "hosts": 958,
+  "cached": 926,
   "by_outcome": {
-   "blocked": 69,
-   "failed": 169,
-   "ok": 839,
-   "skipped_robots": 9,
-   "timeout": 44
+   "blocked": 53,
+   "failed": 22,
+   "ok": 691,
+   "site_dead": 118,
+   "skipped_robots": 6,
+   "timeout": 36
   },
   "by_reason": {
    "challenge_200": 1,
-   "challenge_403": 4,
-   "connect_or_tls_both_schemes": 16,
-   "dns_nxdomain": 101,
-   "parked": 14,
-   "robots_500": 2,
-   "robots_503": 2,
-   "robots_challenge_202": 24,
-   "robots_challenge_403": 17,
-   "robots_disallow": 4,
-   "robots_timeout": 44,
+   "challenge_403": 3,
+   "connect_or_tls_both_schemes": 14,
+   "dns_nxdomain": 86,
+   "parked": 10,
+   "robots_500": 1,
+   "robots_503": 1,
+   "robots_challenge_202": 19,
+   "robots_challenge_403": 15,
+   "robots_disallow": 3,
+   "robots_timeout": 36,
    "robots_unreachable": 1,
-   "status_403": 22,
-   "status_404_410": 37,
-   "status_456": 1,
-   "status_5xx_after_retry": 1
+   "status_403": 14,
+   "status_404_410": 30,
+   "status_456": 1
   },
-  "failed_fraction": 0.1496
+  "nxdomain": {
+   "confirmed": 78,
+   "unconfirmed": 8
+  },
+  "failed_fraction": 0.0238
+ },
+ "revision3": {
+  "lf_slots_step2": {
+   "maps": 1070,
+   "best_known": 230,
+   "neutral": 8,
+   "network": 429
+  },
+  "lf_slots_step1_only": {
+   "best_known": 588,
+   "neutral": 9,
+   "network": 49
+  },
+  "prospects_excluded": {
+   "title": 45,
+   "network": 632,
+   "out_of_cell": 274,
+   "moved_in": 59
+  },
+  "homepage_site_dead_prospects": 106
  }
 }

@@ -6,13 +6,15 @@ import test from 'node:test';
 import { runEngine, loadConfig } from './lib/engine.mjs';
 import { createDfsClient, cacheKey, cachePath, originalPath, BudgetExceededError, projectResult, breadcrumbHost, ORGANIC_SCHEMA } from './lib/dfs.mjs';
 import { professionVolume, ticketProxy, scoreStage1, organicParams } from './lib/stage1.mjs';
-import { businessStrength, strengthComponents, topStrength, compositeScore, gaps, orderRows, s3Band, categoryId, joinLf, planStep1, planStep2, step1Gate, proximityPoints, cellPoints, assignProspects, poolRing2, ORGANIC_ENDPOINT, LOCAL_FINDER_ENDPOINT, MAPS_ENDPOINT } from './lib/stage2.mjs';
+import { businessStrength, strengthComponents, topStrength, compositeScore, gaps, orderRows, s3Band, categoryId, joinLf, planStep1, planStep2, step1Gate, proximityPoints, cellPoints, assignProspects, poolRing2, ORGANIC_ENDPOINT, LOCAL_FINDER_ENDPOINT, MAPS_ENDPOINT, e164Il, phoneBlock, bestKnownIndex, lfView, lfSiteHost, leadGenNetworks, leadGenPhones, isLeadGen, titleRule, citiesNamedIn, outOfCellTarget, prospectWeight } from './lib/stage2.mjs';
+import { mergeInto } from './apply-r2-12.mjs';
 import { classifyRelevance, titleTerms } from './lib/relevance.mjs';
 import { classifyOrganic, nationalBrandDomains } from './lib/organic.mjs';
-import { checkHomepage, checkHomepageFull, homepageCache, homepageTextStore, robotsAllows, siteVerdict, HOMEPAGE_CACHE_SUBDIR, HOMEPAGE_TEXT_SUBDIR } from './lib/homepage.mjs';
+import { checkHomepage, checkHomepageFull, homepageCache, homepageTextStore, robotsAllows, siteVerdict, siteOutcome, confirmNxdomains, HOMEPAGE_CACHE_SUBDIR, HOMEPAGE_TEXT_SUBDIR } from './lib/homepage.mjs';
 import { parseProfessions, parseRegions, SPEC_PATH } from './lib/spec.mjs';
 import { extractR12, mergeR12 } from './apply-r12.mjs';
 import { extractR2_12, mergeR2_12 } from './apply-r2-12.mjs';
+import { extractR3_8, mergeR3_8 } from './apply-r3-8.mjs';
 import { createFakeFetch, networkForbidden, createFakeWeb } from './fixtures/fake-dataforseo.mjs';
 
 const HERE = path.dirname(new URL(import.meta.url).pathname);
@@ -287,6 +289,9 @@ test('R12 config: all 17 professions have category rules copied byte-exact from 
   const r2 = extractR2_12(spec);
   const expectedRules = structuredClone(r12.stage2.category_rules);
   for (const [slug, rule] of Object.entries(r2.stage2.category_rules)) Object.assign(expectedRules[slug], rule);
+  // + Revision 3 (3.8): movers category exclude_append
+  const r3 = extractR3_8(spec);
+  for (const [slug, rule] of Object.entries(r3.stage2.category_rules)) expectedRules[slug].exclude = [...new Set([...expectedRules[slug].exclude, ...rule.exclude_append])];
   assert.deepEqual(runConfig.stage2.category_rules, expectedRules);
   assert.deepEqual(runConfig.stage2.generic_categories, r12.stage2.generic_categories);
   assert.deepEqual(runConfig.languages, { ads_language_code: 'iw', serp_language_code: 'he' });
@@ -294,7 +299,7 @@ test('R12 config: all 17 professions have category rules copied byte-exact from 
   for (const k of ['category_allowlist', 'prospect_min_gaps', 'prospect_pass', 'prospect_kill_below']) assert.equal(runConfig.stage2[k], undefined, k);
   assert.equal(runConfig.pilot.cells.length, 6);
   // idempotent: R12 then 2.12 again changes nothing
-  const again = mergeR2_12(mergeR12(runConfig, r12, runConfig.r12_applied.spec_sha256), r2, runConfig.r2_12_applied.spec_sha256);
+  const again = mergeR3_8(mergeR2_12(mergeR12(runConfig, r12, runConfig.r12_applied.spec_sha256), r2, runConfig.r2_12_applied.spec_sha256), r3, runConfig.r3_8_applied.spec_sha256);
   assert.deepEqual(again, runConfig);
 });
 
@@ -424,7 +429,7 @@ test('config Hebrew is sliced byte-exact from the spec and engine sources carry 
   const specCities = parseRegions(spec).flatMap(r => [...r.core, ...r.ring2].map(c => c.he_name));
   assert.deepEqual(areas.regions.flatMap(r => r.cities.map(c => c.he_name)), specCities);
   assert.equal(specCities.length, 71);
-  const sources = ['run.mjs', 'build-config.mjs', 'free-checks.mjs', 'category-catalog.mjs', 'apply-r12.mjs', 'apply-r2-12.mjs', 'price-check.mjs', 'lib/spec.mjs', 'lib/cities.mjs', 'lib/dfs.mjs', 'lib/stage1.mjs', 'lib/stage2.mjs', 'lib/engine.mjs', 'lib/output.mjs', 'lib/relevance.mjs', 'lib/organic.mjs', 'lib/homepage.mjs'];
+  const sources = ['run.mjs', 'build-config.mjs', 'free-checks.mjs', 'category-catalog.mjs', 'apply-r12.mjs', 'apply-r2-12.mjs', 'apply-r3-8.mjs', 'confirm-nxdomain.mjs', 'price-check.mjs', 'lib/spec.mjs', 'lib/cities.mjs', 'lib/dfs.mjs', 'lib/stage1.mjs', 'lib/stage2.mjs', 'lib/engine.mjs', 'lib/output.mjs', 'lib/relevance.mjs', 'lib/organic.mjs', 'lib/homepage.mjs'];
   for (const f of sources) assert.ok(!/[\u0590-\u05ff]/.test(fs.readFileSync(path.join(HERE, f), 'utf8')), `${f} contains Hebrew`);
 });
 
@@ -700,4 +705,277 @@ test('2.12 config: merged byte-exact from the spec; cap 6 approved; *_append arr
   assert.deepEqual(runConfig.homepage_check.challenge_markers, patch.homepage_check.challenge_markers);
   assert.deepEqual(runConfig.m4, patch.m4);
   assert.deepEqual(mergeR2_12(runConfig, patch, runConfig.r2_12_applied.spec_sha256), runConfig); // idempotent
+});
+
+// ---- Revision 3 (spec 3.1-3.8) ------------------------------------------------------------------
+// All fixtures below are synthetic: invented cids, 555-range phone numbers, .example domains.
+const SPEC_TEXT = () => fs.readFileSync(path.join(ROOT, SPEC_PATH), 'utf8');
+// The fixture run-config with the spec's 3.8 block merged in (exactly what apply-r3-8.mjs merges).
+function rev3Run(overrides = {}) {
+  return mergeInto(mergeInto(fixtureConfig().run, extractR3_8(SPEC_TEXT())), overrides);
+}
+const ctxFor = run => ({ run, profession: { slug: 'movers-x', terms: ['alpha one'] }, city: { he_name: 'City One' } });
+const near = (a, b) => Math.abs(a - b) < 1e-9;
+
+test('3.1 field precedence: Ashkelon-mover + broker case - Maps if joined, else best known, else neutral', () => {
+  const run = rev3Run();
+  const ctx = ctxFor(run);
+  // The cached pattern, synthetic ids: the mover has rating null in 6 of 7 LF responses and 21
+  // reviews at 5.0 in one LF response and in Maps; the broker shows 1,100 in 2 of 5 responses.
+  const lfNull = (cid, title) => ({ type: 'local_pack', rank_group: 1, cid, title, domain: null, url: null, rating: null, phone: '052-555-0100' });
+  const mover = cid => lfNull(cid, 'Mover Co');
+  const lfResponses = [
+    ...Array.from({ length: 6 }, () => [mover('900001'), lfNull('900002', 'Broker')]),
+    [{ ...mover('900001'), rating: { value: 5, votes_count: 21 } }, { ...lfNull('900002', 'Broker'), rating: { value: 4.6, votes_count: 1100 } }],
+    [{ ...lfNull('900002', 'Broker'), rating: { value: 4.6, votes_count: 1100 } }],
+  ];
+  const mapsItem = { cid: '900001', title: 'Mover Co', domain: null, total_photos: 12, rating: { value: 5, votes_count: 21 } };
+  const known = bestKnownIndex([...lfResponses, [mapsItem]]);
+  assert.deepEqual(known.get('900001'), { votes_count: 21, value: 5 });
+  assert.deepEqual(known.get('900002'), { votes_count: 1100, value: 4.6 });
+  // joined: every field from Maps, votes included (the old engine scored this slot as 0 reviews)
+  const joined = lfView(mover('900001'), { poolByCid: new Map([['900001', mapsItem]]), known, run });
+  assert.deepEqual([joined._joined, joined._votes_source, joined.rating.votes_count, joined.total_photos], [true, 'maps', 21, 12]);
+  // Maps item without a website is a known "no site" (0); LF never is
+  assert.equal(strengthComponents(joined, ctx).real_site, 0);
+  // unjoined broker: best known 1,100 -> reviews saturate; site unknown -> neutral, not 0
+  const broker = lfView(lfNull('900002', 'Broker'), { known, run });
+  assert.deepEqual([broker._joined, broker._votes_source, broker.rating.votes_count, broker._site_known], [false, 'best_known', 1100, false]);
+  assert.deepEqual(strengthComponents(broker, ctx), { reviews: 1, rating: Math.min(1, (4.6 - 3.5) / 1.5), real_site: null, photos: null, stuffed: 0 });
+  // 0.40 + 0.15 x 0.7333 + 0.5 x (0.20 + 0.10) + 0 = 0.66
+  assert.ok(near(businessStrength(broker, ctx), 0.4 + 0.15 * (1.1 / 1.5) + 0.15));
+  // a cid never rated anywhere -> neutral votes and rating (0.5 x their weights), not 0 reviews
+  const unknown = lfView(lfNull('900003', 'Nobody'), { known, run });
+  assert.equal(unknown._votes_source, 'neutral');
+  assert.deepEqual(strengthComponents(unknown, ctx), { reviews: null, rating: null, real_site: null, photos: null, stuffed: 0 });
+  assert.ok(near(businessStrength(unknown, ctx), 0.5 * 0.85));
+  // the legacy engine scored the same null-rating item as a 0-review listing with no site
+  const legacy = fixtureConfig().run;
+  assert.ok(near(businessStrength(lfNull('900002', 'Broker'), ctxFor(legacy)), 0.5 * 0.10));
+  // LF `domain` "google.com" or null is NEVER "known no site"; a direct url or a url= redirect
+  // parameter that is itself a URL gives the real host; the provider's opaque goto token gives none.
+  for (const item of [{ domain: 'google.com', url: 'https://google.com/goto?url=CAESopaque' }, { domain: null, url: null }, { domain: 'google.com' }]) {
+    assert.equal(strengthComponents(lfView({ cid: '7', title: 'x', ...item }, { run }), ctx).real_site, null);
+  }
+  assert.equal(lfSiteHost({ url: 'https://google.com/url?q=https://www.mover.example/he' }), 'mover.example');
+  assert.equal(lfSiteHost({ url: 'https://www.mover.example/' }), 'mover.example');
+  assert.equal(lfSiteHost({ url: 'https://google.com/goto?url=CAESopaque' }), null);
+  assert.equal(strengthComponents(lfView({ cid: '7', title: 'x', url: 'https://google.com/url?q=https://www.mover.example/' }, { run }), ctx).real_site, 1);
+  // a joined item whose Maps listing has no rating is 0 reviews (Maps is the truth), not neutral
+  const noRating = lfView({ ...mover('900001'), rating: { value: 5, votes_count: 99 } }, { poolByCid: new Map([['900001', { cid: '900001' }]]), known, run });
+  assert.deepEqual([noRating._votes_source, noRating.rating], ['maps', null]);
+  assert.equal(strengthComponents(noRating, ctx).reviews, 0);
+  // best known: items without a cid carry no evidence; equal votes -> the higher rating
+  const idx = bestKnownIndex([[{ title: 'no cid', rating: { votes_count: 500, value: 5 } }, { cid: 'a', rating: { votes_count: 9, value: 4 } }, { cid: 'a', rating: { votes_count: 9, value: 4.5 } }]]);
+  assert.deepEqual([...idx.keys()], ['a']);
+  assert.deepEqual(idx.get('a'), { votes_count: 9, value: 4.5 });
+});
+
+test('3.1 at step 1: best known over every LF response; every change raises or holds S3_step1', () => {
+  const legacyCfg = fixtureConfig();
+  const cfg = { ...legacyCfg, run: rev3Run() };
+  // cell X (c3) LF: null ratings and no domain; cell Y (c1) LF carries the same cids with votes.
+  const item = (cid, rank, rating) => ({ type: 'local_pack', rank_group: rank, cid, title: `Biz ${cid}`, domain: null, url: null, rating, phone: null });
+  const get = (endpoint, params) => {
+    if (endpoint !== LOCAL_FINDER_ENDPOINT) return undefined;
+    if (params.location_coordinate.startsWith('31,')) return { items: [item('k1', 1, null), item('k2', 2, null), item('k3', 3, null)] };
+    return { items: [item('k1', 1, { value: 5, votes_count: 150 }), item('k2', 2, { value: 5, votes_count: 150 }), item('k9', 3, null)] };
+  };
+  const specs = [{ id: 'X', profession: 'alpha', city: 'c3' }, { id: 'Y', profession: 'alpha', city: 'c1' }];
+  const s3 = c => Object.fromEntries(step1Gate(c, get, { specs, mode: 'pilot' }).cells.map(x => [x.cell.id, Math.round(x.S3_step1 * 1e4) / 1e4]));
+  const before = s3(legacyCfg);
+  const after = s3(cfg);
+  // legacy: 0 reviews and "no site" everywhere in X -> 0; Rev 3: k1/k2 take 150 votes from Y's
+  // response (0.40 + 0.15 + 0.15 neutral site/photos = 0.70), k3 is fully neutral (0.425).
+  assert.equal(before.X, 0.05); // only photos counted as missing
+  assert.equal(after.X, Math.round(((0.7 + 0.7 + 0.425) / 3) * 1e4) / 1e4);
+  for (const id of Object.keys(before)) assert.ok(after[id] >= before[id], `${id} dropped`);
+});
+
+test('3.2 E.164 on both sources: LF "05X-" and Maps "+9725X-" are one number; 1-700 too', () => {
+  assert.equal(e164Il('052-555-0101'), '+972525550101');
+  assert.equal(e164Il('+97252-555-0101'), '+972525550101');
+  assert.equal(e164Il('08-955-5010'), '+97289555010');
+  assert.equal(e164Il('+9728-955-5010'), '+97289555010');
+  assert.equal(e164Il('1-700-555-010'), '+9721700555010'); // LF
+  assert.equal(e164Il('+972-1-700-555-010'), '+9721700555010'); // Maps
+  assert.equal(e164Il(null), null);
+  assert.equal(phoneBlock('052-555-0101'), '0525550');
+  assert.equal(phoneBlock('+97252-555-0199'), '0525550');
+  assert.equal(phoneBlock('+972123'), null); // too short to have a block
+  // R5.3 (iii) with E.164: a Maps-flagged phone matches the same number printed LF-style
+  const run = rev3Run();
+  const pool = ['a', 'b'].map(id => ({ _id: id, cid: id, phone: '+97252-555-0111' }));
+  const flagged = leadGenPhones([{ cellKey: 'beta|c1', urgency: true, pool }], run).get('beta|c1');
+  assert.equal(isLeadGen({ phone: '052-555-0111' }, flagged, run), true);
+  // the legacy key could not match the 1-700 forms across sources
+  const legacyRun = fixtureConfig().run;
+  const legacyFlag = leadGenPhones([{ cellKey: 'beta|c1', urgency: true, pool: ['a', 'b'].map(id => ({ _id: id, cid: id, phone: '+972-1-700-555-010' })) }], legacyRun).get('beta|c1');
+  assert.equal(isLeadGen({ phone: '1-700-555-010' }, legacyFlag, legacyRun), false);
+  assert.equal(isLeadGen({ phone: '1-700-555-010' }, leadGenPhones([{ cellKey: 'beta|c1', urgency: true, pool: ['a', 'b'].map(id => ({ _id: id, cid: id, phone: '+972-1-700-555-010' })) }], run).get('beta|c1'), run), true);
+});
+
+test('3.2 lead-gen networks: shared 7-digit phone block, shared domain, 0.60 floor in the LF top 3', () => {
+  const run = rev3Run();
+  const prof = slug => ({ slug, terms: [`${slug} one`] });
+  const city = n => ({ slug: `c${n}`, he_name: `Town${n}` });
+  const e = (p, c, items) => ({ cellKey: `${p}|c${c}`, profession: prof(p), city: city(c), items });
+  // block 054-555-1: three cids across two cells (two professions), two stuffed -> network
+  const net = [
+    e('lock', 1, [{ cid: 'n1', phone: '054-555-1001', title: 'lock one in Town1 Avi' }, { cid: 'n2', phone: '+97254-555-1002', title: 'lock one Town1 Beni' }]),
+    e('acr', 2, [{ cid: 'n3', phone: '054-555-1093', title: 'Gadi services' }]),
+  ];
+  // block 050-555-2: three cids, two cells, only one stuffed -> innocent; block 050-555-3: 3 cids, 1 cell -> innocent
+  const innocent = [
+    e('lock', 1, [{ cid: 'i1', phone: '050-555-2001', title: 'lock one Dan' }, { cid: 'i2', phone: '050-555-2002', title: 'Eli' }]),
+    e('lock', 3, [{ cid: 'i3', phone: '050-555-2003', title: 'Fadi' }, ...[1, 2, 3].map(i => ({ cid: `j${i}`, phone: `050-555-300${i}`, title: 'lock one Town3' }))]),
+  ];
+  // shared real domain: two cids in one profession -> network; across professions or a
+  // NOT_A_SITE host -> not
+  const domains = [
+    e('keys', 1, [{ cid: 'd1', domain: 'www.keys.example' }, { cid: 'd2', domain: 'keys.example' }, { cid: 'f1', domain: 'facebook.com' }, { cid: 'f2', domain: 'he-il.facebook.com' }]),
+    e('keys', 2, [{ cid: 'x1', domain: 'solo.example' }]),
+    e('other', 2, [{ cid: 'x2', domain: 'solo.example' }]),
+  ];
+  const flags = leadGenNetworks([...net, ...innocent, ...domains], run);
+  assert.deepEqual([...flags.keys()].sort(), ['d1', 'd2', 'n1', 'n2', 'n3']);
+  assert.deepEqual([...flags.get('n3')], ['phone_block']);
+  assert.deepEqual([...flags.get('d1')], ['shared_domain']);
+  // without the Revision 3 config: no network rules at all
+  assert.equal(leadGenNetworks([...net, ...domains], fixtureConfig().run).size, 0);
+  // floor: a 1-review network listing in the LF top 3 scores 0.60; a strong one keeps its score
+  const ctx = ctxFor(run);
+  const weak = { cid: 'n1', title: 'x', domain: null, url: null, rating: { value: 5, votes_count: 1 }, phone: '054-555-1001' };
+  const strong = { cid: 'n2', title: 'x', domain: null, url: null, rating: { value: 5, votes_count: 150 }, phone: '054-555-1002' };
+  const networks = flags;
+  const [w, st, plain] = [weak, strong, { ...weak, cid: 'p1' }].map(b => lfView(b, { known: bestKnownIndex([[weak, strong]]), networks, run }));
+  const top = topStrength([w, st, plain], ctx);
+  assert.equal(top.top3[0], 0.6);
+  assert.ok(near(top.top3[1], 0.4 + 0.15 + 0.15));
+  assert.ok(top.top3[2] < 0.6);
+  // network listings are never prospects
+  const b = { _id: 'n1', cid: 'n1', phone: '054-555-1001', title: 'Avi', rating: { votes_count: 3 }, latitude: 31, longitude: 34.9, address_info: { city: 'x' } };
+  const cell = { cellKey: 'lock|cz', cell: { profession: { slug: 'lock' } }, city: { slug: 'cz', lat: 31, lng: 34.9, he_name: 'cz' }, lfTop3: [], lfTop3Ids: new Set(), ranked: [b], rawRank: new Map([['n1', 5]]) };
+  const out = assignProspects([cell], new Set(), new Map(), run, { networks });
+  assert.deepEqual(out.get('lock|cz'), []);
+  assert.equal(out.diag.get('lock|cz').network, 1);
+});
+
+test('3.3 title excludes, nationwide stem, out-of-cell titles (prospect pool only)', () => {
+  // Rules with synthetic English stems; the real Hebrew stems are checked byte-exact in the 3.8 test.
+  const run = rev3Run({ stage2: { title_exclude: { alpha: ['Garage'] }, title_chain_stems: ['Nationwide'], category_rules: { alpha: { exclude: ['store'] } } } });
+  const alpha = { slug: 'alpha', terms: ['alpha one'] };
+  assert.equal(titleRule({ title: 'Car Garage alpha one' }, alpha, run), 'title_exclude');
+  assert.equal(titleRule({ title: 'alpha one store' }, alpha, run), 'title_exclude'); // category exclude stems match titles too
+  assert.equal(titleRule({ title: 'Movers Nationwide' }, alpha, run), 'title_chain');
+  assert.equal(titleRule({ title: 'alpha one Dan' }, alpha, run), null);
+  assert.equal(titleRule({ title: 'Car Garage' }, alpha, fixtureConfig().run), null); // legacy: off
+  // city names: a town whose name contains another town's name matches only as itself; a hit
+  // glued to a following letter is part of a longer word
+  const cities = [
+    { slug: 'big', he_name: 'Bigtown', region: 'R9', ring: 'core', lat: 31.8, lng: 34.65 },
+    { slug: 'yav', he_name: 'Yav', region: 'R9', ring: 'ring2', lat: 31.88, lng: 34.74 },
+    { slug: 'gan-yav', he_name: 'Gan Yav', region: 'R9', ring: 'ring2', lat: 31.79, lng: 34.7 },
+    { slug: 'ged', he_name: 'Ged', region: 'R9', ring: 'ring2', lat: 31.81, lng: 34.78 },
+  ];
+  assert.deepEqual(citiesNamedIn('Locks in Gan Yav', cities).map(c => c.slug), ['gan-yav']);
+  assert.deepEqual(citiesNamedIn('Locks in Yav and Bigtown', cities).map(c => c.slug), ['big', 'yav']);
+  assert.deepEqual(citiesNamedIn('Yavor locks', cities), []);
+  const ganYav = { city: cities[2] };
+  assert.equal(outOfCellTarget({ title: 'Locks Bigtown' }, ganYav, cities).slug, 'big'); // the spill
+  assert.equal(outOfCellTarget({ title: 'Locks Ged' }, ganYav, cities), null); // a ring2 pool member stays
+  assert.equal(outOfCellTarget({ title: 'Locks Gan Yav Bigtown' }, ganYav, cities), null); // names its own town
+  assert.equal(outOfCellTarget({ title: 'Locks Dan' }, ganYav, cities), null);
+  assert.equal(outOfCellTarget({ title: 'Locks Yav' }, { city: cities[0] }, cities).slug, 'yav'); // core: no pool members
+  // engine: the Bigtown-titled listing leaves the Gan Yav pool and counts in Bigtown; a listing
+  // naming a town with no cell is dropped; off-trade titles never count
+  const biz = (id, title) => ({ _id: id, cid: id, phone: `050-555-40${id}`, title, rating: { votes_count: 3 }, latitude: 31.79, longitude: 34.7, address_info: { city: 'x' } });
+  const mk = (c, items) => ({ cellKey: `alpha|${c.slug}`, cell: { profession: alpha, city: c }, city: c, lfTop3: [], lfTop3Ids: new Set(), ranked: items, rawRank: new Map(items.map(x => [x._id, 5])) });
+  const spill = biz('11', 'Locks Bigtown');
+  const cells = [mk(cities[2], [spill, biz('12', 'Locks Fartown'), biz('15', 'Locks Yav'), biz('13', 'Car Garage'), biz('14', 'Locks Dan')]), mk(cities[0], [])];
+  const out = assignProspects(cells, new Set(), new Map(), run, { cities: [...cities, { slug: 'far', he_name: 'Fartown', region: 'R8', ring: 'core', lat: 32.8, lng: 35.0 }] });
+  assert.deepEqual(out.get('alpha|gan-yav').map(p => p.id), ['14', '15']); // 15 names a ring2 pool member: stays
+  assert.deepEqual(out.get('alpha|big').map(p => [p.id, p.from]), [['11', 'alpha|gan-yav']]);
+  assert.deepEqual(out.diag.get('alpha|gan-yav'), { title_exclude: 1, title_chain: 0, network: 0, out_of_cell_moved: 1, out_of_cell_dropped: 1, moved_in: 0 });
+  assert.equal(out.diag.get('alpha|big').moved_in, 1);
+});
+
+test('3.4 O = 1.0 for every cell; L_share / D_share stay as output', () => {
+  const run = rev3Run();
+  const o = (rank, domain) => ({ type: 'organic', rank_group: rank, domain });
+  const res = classifyOrganic({ items: [o(1, 'www.dir.example'), o(2, 'pool.example'), o(3, 'other.example')] }, { run, poolDomains: new Set(['pool.example']) });
+  assert.equal(res.O, 1);
+  assert.ok(near(res.L_share, 1.5 / 3));
+  assert.ok(near(res.D_share, 1 / 3));
+  assert.equal(compositeScore({ value: 1200, S3: 0.5, P_w: 15, O: res.O, flags: [], stage1Pass: true }, run).score, 300);
+});
+
+test('3.5 site_dead: confirmed NXDOMAIN / parked / 404-410 weigh 1.25; failed 1.10; DoH confirmation', async () => {
+  const run = rev3Run();
+  const hc = run.homepage_check;
+  const rec = (reason, extra = {}) => ({ schema: 2, host: 'h.example', checked_at: '2026-11-07T12:00:00.000Z', site_check: 'failed', reason, fetch_ok: false, https: false, viewport: false, ...extra });
+  assert.equal(siteOutcome(rec('dns_nxdomain', { nxdomain_confirmed: true }), hc), 'site_dead');
+  assert.equal(siteOutcome(rec('dns_nxdomain'), hc), 'failed'); // local resolver only: not confirmed
+  assert.equal(siteOutcome(rec('parked'), hc), 'site_dead');
+  assert.equal(siteOutcome(rec('status_404_410'), hc), 'site_dead');
+  assert.equal(siteOutcome(rec('connect_or_tls_both_schemes'), hc), 'failed');
+  assert.equal(siteOutcome(rec('status_5xx_after_retry'), hc), 'failed');
+  assert.equal(siteOutcome({ site_check: 'blocked' }, hc), 'blocked');
+  assert.equal(siteOutcome(rec('parked'), fixtureConfig().run.homepage_check), 'failed'); // legacy
+  const ctx = { run, siteCtx: { cityNames: ['City'], titleTerms: ['alpha'] } };
+  const b = { domain: 'h.example' };
+  assert.deepEqual(prospectWeight(b, rec('parked'), ctx), { w_b: 1.25, site: 'dead', verdict: null });
+  assert.equal(prospectWeight(b, rec('connect_or_tls_both_schemes'), ctx).w_b, 1.1);
+  assert.equal(prospectWeight(b, rec('dns_nxdomain'), ctx).site, 'failed');
+  // DoH: Status 3 -> confirmed; Status 0 -> re-fetched once; anything else -> unconfirmed. Idempotent.
+  const base = tmp();
+  const cache = homepageCache(base, hc, FIXED_NOW);
+  for (const host of ['gone.example', 'flaky.example', 'servfail.example']) cache.set(host, { ...rec('dns_nxdomain'), host });
+  cache.set('ok.example', { schema: 2, host: 'ok.example', checked_at: '2026-11-07T12:00:00.000Z', site_check: 'ok' });
+  const doh = [];
+  const status = { 'gone.example': 3, 'flaky.example': 0, 'servfail.example': 2 };
+  const dohFetch = async url => { doh.push(url); const host = new URL(url).searchParams.get('name'); return { ok: true, json: async () => ({ Status: status[host] }) }; };
+  const web = createFakeWeb({ sites: { 'https://flaky.example/robots.txt': { status: 404, type: 'text/plain', body: '' }, 'https://flaky.example/': { status: 200, body: `<html><head><title>t</title><meta name="viewport" content="width=device-width"></head><body><h1>h</h1>${'x'.repeat(5000)}</body></html>` } } });
+  const res = await confirmNxdomains({ cache, fetchImpl: dohFetch, siteFetchImpl: web, cfg: hc, now: FIXED_NOW });
+  assert.deepEqual(res, { candidates: 3, confirmed: 1, resolves_refetched: 1, refetch_outcomes: { 'ok:': 1 }, unconfirmed: 1 });
+  assert.equal(siteOutcome(cache.get('gone.example'), hc), 'site_dead');
+  assert.equal(cache.get('flaky.example').site_check, 'ok');
+  assert.equal(siteOutcome(cache.get('servfail.example'), hc), 'failed');
+  assert.ok(doh.every(u => /^https:\/\/(dns\.google|cloudflare-dns\.com)\//.test(u)));
+  assert.equal(doh.filter(u => u.includes('servfail')).length, 2); // second resolver tried
+  const again = await confirmNxdomains({ cache, fetchImpl: async () => { throw new Error('re-checked a confirmed record'); }, cfg: hc, now: FIXED_NOW });
+  assert.equal(again.candidates, 0);
+});
+
+test('3.8 config: merged byte-exact from the spec (Hebrew stems included); idempotent', () => {
+  const spec = SPEC_TEXT();
+  const patch = extractR3_8(spec);
+  const runConfig = JSON.parse(fs.readFileSync(path.join(ROOT, 'config/market-scanner/run-config.json'), 'utf8'));
+  for (const k of ['lf_field_precedence', 'lf_domain_trust', 'lf_url_redirect_parse', 'phone_normalize', 'lead_gen_network', 'title_exclude', 'title_chain_stems', 'out_of_cell_title_rule', 'organic_factor']) assert.deepEqual(runConfig.stage2[k], patch.stage2[k], k);
+  assert.deepEqual(runConfig.stage2.organic_factor, { base: 1, slope: 0 });
+  assert.deepEqual(runConfig.homepage_check.weights, { site_dead: 1.25, failed: 1.1 });
+  for (const x of patch.stage2.category_rules.movers.exclude_append) assert.ok(runConfig.stage2.category_rules.movers.exclude.includes(x));
+  // every Hebrew stem in the config also appears verbatim in the 3.3 prose
+  const s33 = spec.slice(spec.indexOf('\n## 3.3 '), spec.indexOf('\n## 3.4 '));
+  for (const stem of [...Object.values(runConfig.stage2.title_exclude).flat(), ...runConfig.stage2.title_chain_stems, ...patch.stage2.category_rules.movers.exclude_append]) assert.ok(s33.includes(`\`${stem}`) || s33.includes(` ${stem}`), stem);
+  assert.deepEqual(mergeR3_8(runConfig, patch, runConfig.r3_8_applied.spec_sha256), runConfig);
+});
+
+test('M4 with Revision 3 on fixtures: zero network, determinism, no PII, slot-source counts', async () => {
+  const { base, d } = await m4Fixture();
+  // the fixture M4 cache is bought once with the legacy config, then re-scored offline with Rev 3
+  await runEngine({ stage: 'm4', ...d, token: 'fake', fetchImpl: createFakeFetch(), siteFetchImpl: createFakeWeb(), now: FIXED_NOW });
+  const runCfg = JSON.parse(fs.readFileSync(path.join(d.configDir, 'run-config.json'), 'utf8'));
+  fs.writeFileSync(path.join(d.configDir, 'run-config.json'), JSON.stringify(mergeInto(runCfg, extractR3_8(SPEC_TEXT()))));
+  const a = await runEngine({ stage: 'm4', ...d, outDir: path.join(base, 'r3a'), offline: true, fetchImpl: networkForbidden(), siteFetchImpl: webForbidden(), now: FIXED_NOW });
+  const b = await runEngine({ stage: 'm4', ...d, outDir: path.join(base, 'r3b'), offline: true, fetchImpl: networkForbidden(), siteFetchImpl: webForbidden(), now: FIXED_NOW });
+  assert.deepEqual([a.network_calls, a.spent_usd, b.network_calls], [0, 0, 0]);
+  for (const f of M4_FILES) assert.ok(read(path.join(base, 'r3a'), f).equals(read(path.join(base, 'r3b'), f)), `${f} not deterministic`);
+  for (const f of M4_FILES) assert.ok(!/Biz \d|Seven Co|\+972|05\d-|\.example/.test(fs.readFileSync(path.join(base, 'r3a', f), 'utf8')), `${f} leaks business data`);
+  const rows = JSON.parse(fs.readFileSync(path.join(base, 'r3a', 'm4-cells.json'), 'utf8'));
+  for (const r of rows.filter(x => x.ring !== 'ring2_pool')) assert.ok(r.lf_slots_maps + r.lf_slots_best_known + r.lf_slots_neutral <= 3 * r.points, r.cell_id);
+  assert.ok(rows.some(r => r.lf_slots_maps > 0) && rows.some(r => r.lf_slots_best_known + r.lf_slots_neutral > 0));
+  assert.ok(rows.every(r => r.O === 1 || r.O === null));
+  const summary = JSON.parse(fs.readFileSync(path.join(base, 'r3a', 'm4-summary.json'), 'utf8'));
+  assert.ok(summary.revision3 && summary.revision3.lf_slots_step2);
 });

@@ -5,7 +5,7 @@ import { createDfsClient, estimateCost, canonicalJson, BudgetExceededError } fro
 import { planStage1, scoreStage1, organicParams, hasLocalPack } from './stage1.mjs';
 import { planStep1, planStep2, planStage1Rebuy, stage1RebuySerps, step1Gate, scoreCells, m4CellSpecs, resolveCells, isHarediFlagged, ORGANIC_ENDPOINT } from './stage2.mjs';
 import { ORGANIC_SCHEMA } from './dfs.mjs';
-import { homepageCache, homepageTextStore, runHomepageChecks } from './homepage.mjs';
+import { homepageCache, homepageTextStore, runHomepageChecks, siteOutcome } from './homepage.mjs';
 import { writeTable, writeJson, toMarkdown } from './output.mjs';
 
 const readJson = file => JSON.parse(fs.readFileSync(file, 'utf8'));
@@ -23,7 +23,7 @@ export const STAGE1_CELL_COLUMNS = ['value_rank', 'slug', 'trade_he', 'region', 
 export const STAGE2_COLUMNS = ['rank', 'cell_id', 'expect', 'calibration', 'ranked', 'slug', 'trade_he', 'region', 'city', 'city_he', 'ring', 'population', 'urgency_lead_gen', 'V_region', 'V_cell', 'V_source', 'T_p_usd', 'M', 'value_usd', 'region_pass', 'region_advance',
   'stopped_at', 'gate_reason', 'maps_bought', 'points', 'S3_step1', 'S3_step1_low', 'S3_step1_high', 'S3', 'S3_band', 'S3_points', 'top3_s', 'lf_top3_joined', 'lf_top3_paid', 'W', 'P', 'P_w', 'pooled', 'pooled_into', 'pool_members',
   'L_share', 'D_share', 'O', 'organic_counted', 'organic_unresolved', 'local_pool', 'local_default', 'has_ai_overview',
-  'kit_level', 'score', 'score_unkilled', 'kill_reason', 'flags', 'lf_pack_overlap', 'lead_gen_listings', 'homepage_checked', 'homepage_failed', 'homepage_not_checked', 'maps_items_t1', 'maps_items_t2', 'relevant_ranked', 'run_id'];
+  'kit_level', 'score', 'score_unkilled', 'kill_reason', 'flags', 'lf_pack_overlap', 'lead_gen_listings', 'lf_slots_maps', 'lf_slots_best_known', 'lf_slots_neutral', 'lf_top3_network', 'p_excluded_title', 'p_excluded_network', 'p_out_of_cell', 'p_moved_in', 'homepage_checked', 'homepage_failed', 'homepage_site_dead', 'homepage_not_checked', 'maps_items_t1', 'maps_items_t2', 'relevant_ranked', 'run_id'];
 // Compact view for the ranked M4 markdown table.
 export const M4_MD_COLUMNS = ['rank', 'slug', 'trade_he', 'region', 'city', 'city_he', 'ring', 'pool_members', 'urgency_lead_gen', 'value_usd', 'points', 'S3_step1', 'S3', 'S3_band', 'P', 'P_w', 'L_share', 'D_share', 'O', 'score', 'kill_reason', 'kit_level'];
 
@@ -164,7 +164,7 @@ export async function runEngine({ stage, configDir, cacheDir, outDir, privateDir
       const texts = new Map(scored.hostsNeeded.map(h => [h, textStore.get(h)]).filter(([, v]) => v).map(([h, v]) => [h, { title: v.title, h1: v.first_h1 }]));
       scored = scoreCells(config, get, stage1.cells, { ...scoreOpts, siteChecks: checks, siteTexts: texts });
     }
-    const homepage = homepageSummary(scored, siteCache);
+    const homepage = homepageSummary(scored, siteCache, hc);
     if (stage === 'pilot') {
       const pilot = { ...scored, proximity: pilotProximity(scored.proximity, run) };
       writeTable(outDir, 'stage2-pilot', tag(pilot.rows), STAGE2_COLUMNS, `Stage 2 pilot (run ${runId})`);
@@ -181,15 +181,23 @@ export async function runEngine({ stage, configDir, cacheDir, outDir, privateDir
   return { ...plan, ...outputs, spent_usd: Math.round(client.ledger.spentUsd * 1e6) / 1e6, network_calls: client.ledger.networkCalls, cache_hits: requests.length - uncached.length };
 }
 
-function homepageSummary(scored, siteCache) {
+// 3.5: with homepage_check.site_dead configured, outcomes are counted after the site_dead split
+// and the fetch-error rate (failed_fraction) is judged on `failed` only.
+function homepageSummary(scored, siteCache, hc) {
   const out = { hosts: scored.hostsNeeded.length, cached: 0, by_outcome: {}, by_reason: {} };
   if (!siteCache) return out;
+  const rev3 = Array.isArray(hc?.site_dead);
   for (const h of scored.hostsNeeded) {
     const rec = siteCache.get(h);
     if (!rec) continue;
     out.cached += 1;
-    out.by_outcome[rec.site_check] = (out.by_outcome[rec.site_check] ?? 0) + 1;
+    const outcome = rev3 ? siteOutcome(rec, hc) : rec.site_check;
+    out.by_outcome[outcome] = (out.by_outcome[outcome] ?? 0) + 1;
     if (rec.reason) out.by_reason[rec.reason] = (out.by_reason[rec.reason] ?? 0) + 1;
+    if (rev3 && rec.reason === 'dns_nxdomain') {
+      const k = rec.nxdomain_confirmed === true ? 'confirmed' : (rec.doh_status === undefined ? 'not_rechecked' : 'unconfirmed');
+      out.nxdomain = { ...(out.nxdomain ?? {}), [k]: (out.nxdomain?.[k] ?? 0) + 1 };
+    }
   }
   out.by_outcome = Object.fromEntries(Object.entries(out.by_outcome).sort());
   out.by_reason = Object.fromEntries(Object.entries(out.by_reason).sort());
@@ -241,6 +249,17 @@ function writeM4(outDir, privateDir, scored, { runId, run, stage1, config, get, 
     bands_final: Object.fromEntries(['open', 'middle', 'saturated'].map(b => [b, count(r => r.S3_band === b)])),
     homepage,
   };
+  // 3.1 / 3.2 / 3.3 diagnostics (counts only), over cells that reached step 2
+  if (run.stage2.lf_field_precedence) {
+    const s2 = cellRows.filter(r => r.maps_bought);
+    const sum = f => s2.reduce((n, r) => n + (r[f] ?? 0), 0);
+    summary.revision3 = {
+      lf_slots_step2: { maps: sum('lf_slots_maps'), best_known: sum('lf_slots_best_known'), neutral: sum('lf_slots_neutral'), network: sum('lf_top3_network') },
+      lf_slots_step1_only: { best_known: cellRows.filter(r => !r.maps_bought).reduce((n, r) => n + r.lf_slots_best_known, 0), neutral: cellRows.filter(r => !r.maps_bought).reduce((n, r) => n + r.lf_slots_neutral, 0), network: cellRows.filter(r => !r.maps_bought).reduce((n, r) => n + r.lf_top3_network, 0) },
+      prospects_excluded: { title: sum('p_excluded_title'), network: sum('p_excluded_network'), out_of_cell: sum('p_out_of_cell'), moved_in: sum('p_moved_in') },
+      homepage_site_dead_prospects: sum('homepage_site_dead'),
+    };
+  }
   writeJson(path.join(outDir, 'm4-summary.json'), summary);
 
   // R4 diagnostics: per cell + aggregated per profession (category texts only - no business data).

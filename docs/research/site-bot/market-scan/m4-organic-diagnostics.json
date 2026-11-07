@@ -1,7 +1,7 @@
 {
- "run_id": "73ecfd6063af",
+ "run_id": "7f91346fefc5",
  "note": "2.2-2.3: organic classes across M4 step-2 cells. Host names are private (data/market-scan/private/m4-default-hosts.json).",
- "serps_for_national_rule": 497,
+ "serps_for_national_rule": 450,
  "stage1_rebuy_serps": 170,
  "stage1_rebuy_local_pack_flips": [
   {
@@ -54,18 +54,18 @@
   }
  ],
  "class_totals": {
-  "chain_retail": 13,
-  "directory": 1018,
-  "local_default": 134,
-  "local_site_pool": 180,
-  "media_info": 93,
-  "national_brand": 1228,
-  "unresolved": 170
+  "chain_retail": 7,
+  "directory": 883,
+  "local_default": 126,
+  "local_site_pool": 148,
+  "media_info": 80,
+  "national_brand": 1025,
+  "unresolved": 147
  },
  "default_hosts": {
-  "distinct": 73,
-  "in_2plus_cells": 33,
+  "distinct": 71,
+  "in_2plus_cells": 35,
   "in_2plus_regions": 15,
-  "in_1_cell": 40
+  "in_1_cell": 36
  }
 }

@@ -281,6 +281,70 @@ export async function checkHomepage(host, opts) {
   return (await checkHomepageFull(host, opts)).record;
 }
 
+// 3.5 outcome of a cached record: `site_dead` = NXDOMAIN confirmed by a second resolver (DoH),
+// parked, or 404/410 (configured in homepage_check.site_dead); every other `failed` stays `failed`.
+// An unconfirmed NXDOMAIN (local resolver only) is `failed`. Without the config: legacy outcomes.
+export function siteOutcome(check, cfg) {
+  if (!check) return null;
+  if (check.site_check !== 'failed') return check.site_check;
+  const dead = cfg?.site_dead;
+  if (!Array.isArray(dead)) return 'failed';
+  if (check.reason === 'dns_nxdomain') return dead.includes('dns_nxdomain_confirmed') && check.nxdomain_confirmed === true ? 'site_dead' : 'failed';
+  return dead.includes(check.reason) ? 'site_dead' : 'failed';
+}
+
+// 3.5 second-resolver confirmation of a cached `dns_nxdomain` record over DNS-over-HTTPS (free).
+// Status 3 = NXDOMAIN (confirmed); Status 0 = the name resolves elsewhere (the caller re-fetches
+// the homepage once); anything else = unconfirmed. Never throws.
+export const DOH_RESOLVERS = {
+  google: host => `https://dns.google/resolve?name=${encodeURIComponent(host)}&type=A`,
+  cloudflare: host => `https://cloudflare-dns.com/dns-query?name=${encodeURIComponent(host)}&type=A`,
+};
+export async function dohStatus(host, { fetchImpl, resolver = 'google', timeoutMs = 10000 }) {
+  try {
+    const res = await fetchImpl(DOH_RESOLVERS[resolver](host), { headers: { Accept: 'application/dns-json' }, signal: AbortSignal.timeout(timeoutMs) });
+    if (!res.ok) return { status: null, error: `http_${res.status}` };
+    const body = await res.json();
+    return { status: typeof body.Status === 'number' ? body.Status : null, answers: (body.Answer ?? []).length };
+  } catch (err) {
+    return { status: null, error: err?.name ?? 'fetch_failed' };
+  }
+}
+
+// Confirms every cached dns_nxdomain record once (idempotent: records with doh_status are skipped).
+// Resolves elsewhere -> one re-fetch (checkHomepageFull) replaces the record.
+export async function confirmNxdomains({ cache, textStore = null, fetchImpl, siteFetchImpl = fetchImpl, cfg, now = () => new Date(), resolvers = ['google', 'cloudflare'], log = () => {} }) {
+  const out = { candidates: 0, confirmed: 0, resolves_refetched: 0, refetch_outcomes: {}, unconfirmed: 0 };
+  for (const host of cache.hosts().sort()) {
+    const rec = cache.get(host);
+    if (!rec || rec.reason !== 'dns_nxdomain' || rec.doh_status !== undefined) continue;
+    out.candidates += 1;
+    let r = null;
+    let used = null;
+    for (const name of resolvers) {
+      r = await dohStatus(host, { fetchImpl, resolver: name });
+      used = name;
+      if (r.status === 0 || r.status === 3) break;
+    }
+    const stamp = { doh_status: r.status, doh_resolver: used, doh_checked_at: now().toISOString() };
+    if (r.status === 3) { cache.set(host, { ...rec, ...stamp, nxdomain_confirmed: true }); out.confirmed += 1; continue; }
+    if (r.status === 0) {
+      const { record, text } = await checkHomepageFull(host, { fetchImpl: siteFetchImpl, cfg, now });
+      const next = { ...record, ...stamp, nxdomain_confirmed: false, nxdomain_refetched: true };
+      cache.set(host, next);
+      if (textStore && text) textStore.set(host, { host, checked_at: record.checked_at, title: text.title.slice(0, 200), first_h1: text.h1.slice(0, 200) });
+      out.resolves_refetched += 1;
+      const k = `${record.site_check}:${record.reason ?? ''}`;
+      out.refetch_outcomes[k] = (out.refetch_outcomes[k] ?? 0) + 1;
+      continue;
+    }
+    cache.set(host, { ...rec, ...stamp, nxdomain_confirmed: false });
+    out.unconfirmed += 1;
+  }
+  log(`nxdomain confirmation: ${JSON.stringify(out)}`);
+  return out;
+}
+
 // R8 weak-site rule for one cell context (2.5 outcomes): not checked -> null (w_b 1.00);
 // failed -> weak (hard); ok -> R8 hard / soft rule on the private title + first h1 text.
 export function siteVerdict(check, ctxOrText, cfgOrCtx, maybeCfg) {
@@ -312,6 +376,11 @@ function retentionStore(dir, maxAgeMs, now, valid = () => true) {
     set(host, rec) {
       fs.mkdirSync(dir, { recursive: true });
       fs.writeFileSync(hostFile(dir, host), JSON.stringify(rec));
+    },
+    // Hosts of every fresh record (from the records themselves; file names are hashes).
+    hosts() {
+      if (!fs.existsSync(dir)) return [];
+      return fs.readdirSync(dir).map(f => JSON.parse(fs.readFileSync(path.join(dir, f), 'utf8'))).filter(fresh).map(r => r.host).filter(Boolean);
     },
     // 30-day retention, like the audit reports. Stale-schema records are dropped too.
     purge() {

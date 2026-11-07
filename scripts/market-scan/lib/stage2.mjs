@@ -11,7 +11,7 @@ import { round4, serpLanguage, organicParams } from './stage1.mjs';
 import { ORGANIC_SCHEMA, isGoogleRedirect } from './dfs.mjs';
 import { classifyRelevance, titleTerms } from './relevance.mjs';
 import { classifyOrganic, nationalBrandDomains, hasAiOverview, normalizeDomain, domainIn } from './organic.mjs';
-import { siteVerdict } from './homepage.mjs';
+import { siteVerdict, siteOutcome } from './homepage.mjs';
 
 export { normalizeDomain };
 export const MAPS_ENDPOINT = '/serp/google/maps/live/advanced';
@@ -154,7 +154,26 @@ export function categoryId(text) {
 }
 const idOf = b => String(b.cid ?? b.place_id ?? b.title);
 const byRank = (a, b) => (a.rank_group ?? 0) - (b.rank_group ?? 0);
-const phoneKey = p => String(p ?? '').replace(/\D/g, '').replace(/^972/, '0');
+
+// ---- 3.2 phones: E.164 on both sources ---------------------------------------------------------
+// Local Finder prints "05X-XXX-XXXX" / "1-700-XXX-XXX"; Maps prints "+9725X-XXX-XXXX" /
+// "+972-1-700-...". Both normalise to "+972" + the national number without its trunk 0.
+export function e164Il(p) {
+  let d = String(p ?? '').replace(/\D/g, '');
+  if (!d) return null;
+  if (d.startsWith('972')) d = d.slice(3);
+  d = d.replace(/^0+/, '');
+  return d ? `+972${d}` : null;
+}
+// National number as dialled in Israel: trunk 0 restored, except for 1-700 / 1-800 style numbers.
+export const nationalNumber = e164 => (e164 ? (e164.slice(4).startsWith('1') ? e164.slice(4) : `0${e164.slice(4)}`) : null);
+// 3.2: first `digits` digits of the national number (05X-XXX-X for a mobile).
+export function phoneBlock(p, digits = 7) {
+  const n = nationalNumber(e164Il(p));
+  return n && n.length >= digits + 2 ? n.slice(0, digits) : null;
+}
+// Legacy R5.3 key (national digits, "972" -> "0") unless 3.2 E.164 normalisation is configured.
+export const phoneKeyFor = run => (run?.stage2?.phone_normalize === 'e164_il' ? e164Il : p => String(p ?? '').replace(/\D/g, '').replace(/^972/, '0'));
 
 // ---- S3 (spec 4.4 weights, R1 source, 2.1 missing-field policy) --------------------------------
 // Each component is a number in [0,1] or null when the field is missing. Missing != weak.
@@ -162,14 +181,17 @@ const phoneKey = p => String(p ?? '').replace(/\D/g, '').replace(/^972/, '0');
 // S3_high uses 1). Legacy R1.2 (policy "renormalize"): dropped and the other weights renormalised.
 //   real_site is missing only when the listing's website is hidden behind a Google redirect
 //   (Local Finder items); no website at all is a real 0. photos is missing when total_photos is.
+//   Revision 3 (3.1): an item prepared by lfView() carries `_votes_source` (maps / best_known /
+//   neutral) and `_site_known`; neutral votes -> reviews and rating missing, unknown site -> missing.
 export function strengthComponents(b, ctx) {
   const s = ctx.run.stage2;
   const votes = b.rating?.votes_count ?? 0;
   const rating = b.rating?.value ?? null;
-  const siteUnknown = isGoogleRedirect(b) && !b._joined;
+  const siteUnknown = b._site_known === undefined ? isGoogleRedirect(b) && !b._joined : !b._site_known;
+  const votesUnknown = b._votes_source === 'neutral';
   return {
-    reviews: Math.min(1, Math.log10(1 + votes) / Math.log10(1 + s.review_saturation_votes)),
-    rating: votes < s.rating_min_votes || rating === null ? 0 : Math.min(1, Math.max(0, (rating - 3.5) / 1.5)),
+    reviews: votesUnknown ? null : Math.min(1, Math.log10(1 + votes) / Math.log10(1 + s.review_saturation_votes)),
+    rating: votesUnknown ? null : (votes < s.rating_min_votes || rating === null ? 0 : Math.min(1, Math.max(0, (rating - 3.5) / 1.5))),
     real_site: siteUnknown ? null : (realSite(b, notASite(ctx.run)) ? 1 : 0),
     photos: typeof b.total_photos === 'number' ? Math.min(1, b.total_photos / s.photo_saturation) : null,
     stuffed: stuffed(b, ctx.profession, ctx.city) ? 1 : 0,
@@ -200,9 +222,14 @@ export function businessStrength(b, ctx, fill = missingFill(ctx.run)) {
   return den > 0 ? num / den : 0;
 }
 
-// LF top 3 as-is (R1.1); an empty slot counts 0.
+// LF top 3 as-is (R1.1); an empty slot counts 0. 3.2: a lead-gen network listing in the LF top 3
+// scores at least lead_gen_network.lf_s_b_floor.
 export function topStrength(top3, ctx, fill = missingFill(ctx.run)) {
-  const scores = top3.slice(0, 3).map(b => businessStrength(b, ctx, fill));
+  const floor = ctx.run.stage2.lead_gen_network?.lf_s_b_floor;
+  const scores = top3.slice(0, 3).map(b => {
+    const v = businessStrength(b, ctx, fill);
+    return b._network && typeof floor === 'number' ? Math.max(v, floor) : v;
+  });
   while (scores.length < 3) scores.push(0);
   return { S3: (scores[0] + scores[1] + scores[2]) / 3, top3: scores };
 }
@@ -229,6 +256,75 @@ export function joinLf(lfItem, poolByCid) {
 }
 
 export const lfTop3 = items => [...(items ?? [])].sort(byRank).slice(0, 3);
+
+// ---- 3.1 field precedence for LF top-3 items --------------------------------------------------
+export const rev3Precedence = run => run.stage2.lf_field_precedence === 'maps_if_joined_else_best_known_else_neutral';
+
+// Best known votes/rating per cid across a set of responses: max votes_count, rating from that
+// same item (tie on votes -> the higher rating, so the result never depends on response order).
+// Items without a cid, or without a rating, carry no evidence.
+export function bestKnownIndex(itemLists) {
+  const out = new Map();
+  for (const items of itemLists) {
+    for (const it of items ?? []) {
+      if (it?.cid === undefined || it?.cid === null) continue;
+      const v = it.rating?.votes_count;
+      if (typeof v !== 'number') continue;
+      const key = String(it.cid);
+      const prev = out.get(key);
+      const r = it.rating?.value ?? null;
+      if (!prev || v > prev.votes_count || (v === prev.votes_count && (r ?? -1) > (prev.value ?? -1))) out.set(key, { votes_count: v, value: r });
+    }
+  }
+  return out;
+}
+
+// 3.1: the real website host of an unjoined LF item, from its `url` only (LF `domain` is a Google
+// redirect host or null and is never trusted). A Google redirect yields a host only when its
+// url/q parameter is itself an http(s) URL; the provider's opaque `goto?url=CAES...` yields none.
+export function lfSiteHost(b) {
+  let u;
+  try { u = new URL(b?.url ?? ''); } catch { return null; }
+  if (!/^https?:$/.test(u.protocol)) return null;
+  if (isGoogleRedirect(b)) {
+    const inner = u.searchParams.get('url') ?? u.searchParams.get('q');
+    if (!inner || !/^https?:\/\//i.test(inner)) return null;
+    try { return normalizeDomain(new URL(inner).hostname); } catch { return null; }
+  }
+  return normalizeDomain(u.hostname);
+}
+
+// One LF top-3 item, resolved per 3.1 (or legacy R1.2 joinLf when Revision 3 is not configured):
+//   joined   -> every field from Maps (votes, rating, domain, photos, categories, claimed)
+//   unjoined -> votes/rating best known for the cid in `known`, else neutral; site from the url
+//               redirect param, else neutral (never "known no site" from LF `domain`)
+// `networks` (Set of cids) marks 3.2 lead-gen network listings (`_network`).
+export function lfView(lfItem, { poolByCid = null, known = new Map(), networks = null, flaggedPhones = null, run }) {
+  const network = Boolean(networks?.has(String(lfItem.cid)) || flaggedPhones?.has(phoneKeyFor(run)(lfItem.phone)));
+  if (!rev3Precedence(run)) {
+    const j = poolByCid ? joinLf(lfItem, poolByCid) : { ...lfItem, _joined: false };
+    return network ? { ...j, _network: true } : j;
+  }
+  const s = run.stage2;
+  const m = poolByCid?.get(String(lfItem.cid));
+  if (m) {
+    const out = joinLf(lfItem, poolByCid);
+    out.rating = m.rating ?? null; // Maps is the truth about reviews: no rating there = 0 reviews
+    if (m.rating_distribution !== undefined) out.rating_distribution = m.rating_distribution;
+    return { ...out, _votes_source: 'maps', _site_known: true, _network: network };
+  }
+  const out = { ...lfItem, _joined: false, _network: network };
+  const k = known.get(String(lfItem.cid));
+  if (k) { out.rating = { ...(lfItem.rating ?? {}), votes_count: k.votes_count, value: k.value }; out._votes_source = 'best_known'; }
+  else { out.rating = null; out._votes_source = 'neutral'; }
+  const host = s.lf_url_redirect_parse ? lfSiteHost(lfItem) : null;
+  const trusted = s.lf_domain_trust === true && lfItem.domain && !isGoogleRedirect(lfItem) ? normalizeDomain(lfItem.domain) : null;
+  out.domain = host ?? trusted ?? null;
+  out._site_known = Boolean(out.domain);
+  return out;
+}
+
+export const slotSource = b => b._votes_source ?? (b._joined ? 'maps' : 'lf_own');
 
 // ---- spec 4.5 gaps / weakness (pitch material; no longer a prospect gate) -----------------------
 export function gaps(b, run) {
@@ -309,12 +405,13 @@ export function chainDomains(cellResults, run) {
 // in >= 3 cells -> lead_gen (never a prospect; still counts fully toward S3).
 export function leadGenPhones(cellResults, run) {
   const s = run.stage2;
+  const key = phoneKeyFor(run);
   const cellsByPhone = new Map();
   const perCell = new Map();
   for (const cr of cellResults) {
     const listings = new Map();
     for (const b of cr.pool) {
-      const p = phoneKey(b.phone);
+      const p = key(b.phone);
       if (!p) continue;
       listings.set(p, (listings.get(p) ?? new Set()).add(b._id));
       cellsByPhone.set(p, (cellsByPhone.get(p) ?? new Set()).add(cr.cellKey));
@@ -333,17 +430,109 @@ export function leadGenPhones(cellResults, run) {
   }
   return out;
 }
-export const isLeadGen = (b, flagged) => flagged.has(phoneKey(b.phone));
+export const isLeadGen = (b, flagged, run = null) => flagged.has(phoneKeyFor(run)(b.phone));
+
+// 3.2 lead-gen networks, rules (i) and (ii). `entries` = [{ cellKey, profession, city, items }]:
+// every listing the run has seen for a cell (LF items at its scored points, + its Maps pool once
+// bought). Returns Map cid -> Set(rule) for every network listing.
+//   (i)  >= block_min_cids distinct cids share a phone block, across >= block_min_cells cells (any
+//        profession), and >= block_min_stuffed of those cids are stuffed (head term / city name in
+//        the title, in a cell they appear in)
+//   (ii) a real domain (not NOT_A_SITE, host-suffix match) shared by >= shared_domain_min_cids
+//        distinct cids in the same profession
+export function leadGenNetworks(entries, run) {
+  const cfg = run.stage2.lead_gen_network;
+  const out = new Map();
+  if (!cfg) return out;
+  const flag = (cid, rule) => out.set(cid, (out.get(cid) ?? new Set()).add(rule));
+  const blocks = new Map();
+  const domains = new Map();
+  const nas = notASite(run);
+  for (const e of entries) {
+    for (const b of e.items ?? []) {
+      if (b?.cid === undefined || b?.cid === null) continue;
+      const cid = String(b.cid);
+      const block = phoneBlock(b.phone, cfg.phone_block_digits ?? 7);
+      if (block) {
+        const g = blocks.get(block) ?? { cids: new Set(), cells: new Set(), stuffed: new Set() };
+        g.cids.add(cid);
+        g.cells.add(e.cellKey);
+        if (stuffed(b, e.profession, e.city)) g.stuffed.add(cid);
+        blocks.set(block, g);
+      }
+      if (b.domain && realSite(b, nas)) {
+        const scope = (cfg.shared_domain_scope ?? 'profession') === 'profession' ? e.profession.slug : '*';
+        const k = `${scope}|${normalizeDomain(b.domain)}`;
+        domains.set(k, (domains.get(k) ?? new Set()).add(cid));
+      }
+    }
+  }
+  for (const g of blocks.values()) {
+    if (g.cids.size >= cfg.block_min_cids && g.cells.size >= cfg.block_min_cells && g.stuffed.size >= cfg.block_min_stuffed) for (const cid of g.cids) flag(cid, 'phone_block');
+  }
+  for (const cids of domains.values()) if (cids.size >= (cfg.shared_domain_min_cids ?? Infinity)) for (const cid of cids) flag(cid, 'shared_domain');
+  return out;
+}
 
 // R6 prospects + 2.8 assignment: a cid that qualifies in several cells of the same profession goes
 // to the cell whose centroid is nearest the business (tie -> city slug asc, via the cellKey
 // "profession|city"). The same cid may be a prospect in another profession (R4).
-export function assignProspects(cellResults, chains, leadGen, run) {
+const normText = s => String(s ?? '').normalize('NFC');
+// 3.3.3: areas.json cities whose he_name occurs in a title. A hit inside a longer hit is dropped,
+// so a town whose name contains another town's name is matched only as itself.
+export function citiesNamedIn(title, cities) {
+  const t = normText(title);
+  const hits = [];
+  for (const c of cities) {
+    const n = normText(c.he_name).trim();
+    if (!n) continue;
+    // Engineer reading: a hit glued to a following letter is part of a longer word, not the name
+    // (leading letters are allowed: Hebrew prefixes such as "in" / "to" attach to the name).
+    for (let i = t.indexOf(n); i >= 0; i = t.indexOf(n, i + 1)) if (!/\p{L}/u.test(t[i + n.length] ?? '')) hits.push({ c, start: i, end: i + n.length });
+  }
+  const kept = hits.filter(h => !hits.some(o => o !== h && o.end - o.start > h.end - h.start && o.start <= h.start && o.end >= h.end));
+  return [...new Map(kept.map(h => [h.c.slug, h.c])).values()].sort((a, b) => a.slug.localeCompare(b.slug, 'en'));
+}
+
+// 3.3.1-2 title rules for the Maps prospect pool (never the LF top 3): the profession's category
+// `exclude` stems + its title-only stems -> not this trade; a global chain stem -> chain.
+export function titleRule(b, profession, run) {
+  const s = run.stage2;
+  const title = normText(b.title);
+  if (s.title_exclude) {
+    const stems = [...(s.category_rules?.[profession.slug]?.exclude ?? []), ...(s.title_exclude[profession.slug] ?? [])].map(normText).filter(Boolean);
+    if (stems.some(x => title.includes(x))) return 'title_exclude';
+  }
+  if ((s.title_chain_stems ?? []).map(normText).some(x => x && title.includes(x))) return 'title_chain';
+  return null;
+}
+
+// 3.3.3 out-of-cell title: the title names an areas.json city that is neither the cell's city nor
+// a pool member (ring2 cell: the other ring2 towns of its region) -> the business belongs to that
+// city. Engineer reading: a title that also names the cell's own city (or a pool member) stays.
+// Returns null (stays) or the target city (nearest named city to the business, tie slug asc).
+export function outOfCellTarget(b, cell, cities) {
+  const named = citiesNamedIn(b.title, cities);
+  if (!named.length) return null;
+  const allowed = c => c.slug === cell.city.slug || (cell.city.ring === 'ring2' && c.ring === 'ring2' && c.region === cell.city.region);
+  if (named.some(allowed)) return null;
+  const hasCoords = typeof b.latitude === 'number' && typeof b.longitude === 'number';
+  const d = c => (hasCoords ? haversineKm(b.latitude, b.longitude, c.lat, c.lng) : 0);
+  return [...named].sort((x, y) => (d(x) - d(y)) || x.slug.localeCompare(y.slug, 'en'))[0];
+}
+
+// opts (Revision 3): networks = Map cid -> rules (3.2 i/ii), cities = areas cities (3.3.3).
+// The returned Map carries `.diag`: per cell counts of the Revision 3 exclusions.
+export function assignProspects(cellResults, chains, leadGen, run, { networks = new Map(), cities = null } = {}) {
   const s = run.stage2;
   const candidates = new Map(); // profession|id -> [{cellKey, dist, b}]
+  const diag = new Map(cellResults.map(cr => [cr.cellKey, { title_exclude: 0, title_chain: 0, network: 0, out_of_cell_moved: 0, out_of_cell_dropped: 0, moved_in: 0 }]));
+  const byKey = new Map(cellResults.map(cr => [cr.cellKey, cr]));
+  const outOfCell = Boolean(s.out_of_cell_title_rule && cities);
   for (const cr of cellResults) {
     const lfIds = cr.lfTop3Ids ?? new Set(cr.lfTop3.map(b => String(b.cid)));
     const flagged = leadGen.get(cr.cellKey) ?? new Set();
+    const dg = diag.get(cr.cellKey);
     for (const b of cr.ranked) {
       const votes = b.rating?.votes_count ?? 0;
       const alive = votes >= 1 || b.is_claimed === true;
@@ -352,27 +541,51 @@ export function assignProspects(cellResults, chains, leadGen, run) {
       const dist = hasCoords ? haversineKm(b.latitude, b.longitude, cr.city.lat, cr.city.lng) : Infinity;
       const inCell = b.address_info?.city === cr.city.he_name || dist <= s.prospect_radius_km;
       const weakRanking = !lfIds.has(String(b.cid)) && (cr.rawRank.get(b._id) ?? Infinity) >= s.weak_rank_min;
-      if (!b.phone || isChain || isLeadGen(b, flagged) || b.is_directory_item === true || !alive || !inCell || !weakRanking) continue;
+      if (!b.phone || isChain || isLeadGen(b, flagged, run) || b.is_directory_item === true || !alive || !inCell || !weakRanking) continue;
+      if (networks.has(String(b.cid))) { dg.network += 1; continue; }
+      const tr = titleRule(b, cr.cell.profession, run);
+      if (tr) { dg[tr] += 1; continue; }
+      let cellKey = cr.cellKey;
+      let d = dist;
+      if (outOfCell) {
+        const target = outOfCellTarget(b, cr.cell, cities);
+        if (target) {
+          const tk = `${cr.cell.profession.slug}|${target.slug}`;
+          const tcr = byKey.get(tk);
+          if (!tcr) { dg.out_of_cell_dropped += 1; continue; }
+          dg.out_of_cell_moved += 1;
+          cellKey = tk;
+          d = hasCoords ? haversineKm(b.latitude, b.longitude, tcr.city.lat, tcr.city.lng) : Infinity;
+        }
+      }
       const key = `${cr.cell.profession.slug}|${b._id}`;
-      candidates.set(key, [...(candidates.get(key) ?? []), { cellKey: cr.cellKey, dist, b }]);
+      candidates.set(key, [...(candidates.get(key) ?? []), { cellKey, dist: d, b, from: cr.cellKey }]);
     }
   }
   const byCell = new Map(cellResults.map(cr => [cr.cellKey, []]));
   for (const [key, list] of [...candidates.entries()].sort(([a], [b]) => a.localeCompare(b, 'en'))) {
     const best = [...list].sort((a, b) => (a.dist - b.dist) || a.cellKey.localeCompare(b.cellKey, 'en'))[0];
+    if (best.from !== best.cellKey) diag.get(best.cellKey).moved_in += 1;
     byCell.get(best.cellKey).push({ id: key.split('|')[1], ...best });
   }
+  byCell.diag = diag;
   return byCell;
 }
 
 // R6 weight of one prospect: 1.25 no real site, 1.10 weak site (incl. 2.5 `failed`), 1.00 site OK
 // or not checked (blocked / timeout / skipped_robots / never fetched).
+// 3.5: `site_dead` (confirmed NXDOMAIN / parked / 404-410) weighs like no site (homepage_check.
+// weights.site_dead, 1.25); `failed` weighs homepage_check.weights.failed (1.10) when configured.
 export function prospectWeight(b, check, ctx, text) {
   const w = ctx.run.stage2.prospect_weights;
+  const hw = ctx.run.homepage_check?.weights ?? {};
   if (!realSite(b, notASite(ctx.run))) return { w_b: w.no_site, site: 'none', verdict: null };
+  const outcome = siteOutcome(check, ctx.run.homepage_check);
+  if (outcome === 'site_dead') return { w_b: hw.site_dead ?? w.no_site, site: 'dead', verdict: null };
   const verdict = siteVerdict(check, text, ctx.siteCtx, ctx.run.homepage_check);
   if (!verdict) return { w_b: w.unchecked, site: check ? check.site_check : 'unchecked', verdict: null };
-  return { w_b: verdict.weak_site ? w.weak_site : w.ok_site, site: verdict.weak_site ? (check.site_check === 'failed' ? 'failed' : 'weak') : 'ok', verdict };
+  if (outcome === 'failed') return { w_b: hw.failed ?? w.weak_site, site: 'failed', verdict };
+  return { w_b: verdict.weak_site ? w.weak_site : w.ok_site, site: verdict.weak_site ? 'weak' : 'ok', verdict };
 }
 
 // R10: Score = Value * (1 - S3)^2 * min(1, P_w / 15) * O. P_w null (step-1 kill) -> unscored.
@@ -421,6 +634,7 @@ export function step1Gate(config, get, { specs = config.run.pilot.cells, mode = 
   const killAt = s.step1_kill_s3 ?? s.saturated_s3;
   const missing = [];
   const out = [];
+  const fetched = [];
   for (const cell of resolveCells(specs, config)) {
     const { scored, logged } = cellPoints(cell, run, mode);
     const term = cell.profession.terms[0];
@@ -428,10 +642,19 @@ export function step1Gate(config, get, { specs = config.run.pilot.cells, mode = 
     const pts = scored.map(fetchPoint);
     const miss = pts.filter(p => p.data === undefined);
     if (miss.length) { for (const p of miss) missing.push(`local_finder:${cell.id}:${p.dir}`); continue; }
+    fetched.push({ cell, logged, fetchPoint, pts });
+  }
+  // Revision 3 at step 1 uses the Local Finder responses only (all of them are present before the
+  // gate, so the gate never depends on which Maps pools happen to be cached): 3.1 best-known votes
+  // over every LF response of the run, 3.2 rule (i) phone-block networks over every LF listing.
+  const lfEntries = fetched.map(f => ({ cellKey: `${f.cell.profession.slug}|${f.cell.city.slug}`, profession: f.cell.profession, city: f.cell.city, items: f.pts.flatMap(p => p.data.items ?? []) }));
+  const known = rev3Precedence(run) ? bestKnownIndex(lfEntries.map(e => e.items)) : new Map();
+  const networks = leadGenNetworks(lfEntries, run);
+  for (const { cell, logged, fetchPoint, pts } of fetched) {
     const ctx = { run, profession: cell.profession, city: cell.city };
     const points = pts.map(p => {
-      const top = lfTop3(p.data.items);
-      return { dir: p.dir, lat: p.lat, lng: p.lng, items: p.data.items ?? [], top, step1: topStrength(top, ctx), low: topStrength(top, ctx, 0).S3, high: topStrength(top, ctx, 1).S3 };
+      const top = lfTop3(p.data.items).map(b => lfView(b, { known, networks, run }));
+      return { dir: p.dir, lat: p.lat, lng: p.lng, items: p.data.items ?? [], rawTop: lfTop3(p.data.items), top, step1: topStrength(top, ctx), low: topStrength(top, ctx, 0).S3, high: topStrength(top, ctx, 1).S3 };
     });
     const S3_step1 = mean(points.map(p => p.step1.S3));
     let survives;
@@ -446,7 +669,7 @@ export function step1Gate(config, get, { specs = config.run.pilot.cells, mode = 
       survives, gate_reason,
     });
   }
-  return { cells: out, missing, survivors: out.filter(c => c.survives).map(c => c.cell.id) };
+  return { cells: out, missing, survivors: out.filter(c => c.survives).map(c => c.cell.id), lfEntries, networks };
 }
 
 function overlapCount(aIds, bIds) {
@@ -527,17 +750,27 @@ export function scoreCells(config, get, stage1Cells, { specs = config.run.pilot.
     throw err;
   }
 
-  // 2.9: every scored point's LF top 3 joins by cid to the centroid Maps pool; unjoined -> neutral.
+  const survivors = results.filter(r => r.maps);
+  const leadGen = leadGenPhones(survivors, run);
+  // Revision 3 (3.1 / 3.2) on the final pass: best-known votes and networks over every LF response
+  // plus every Maps pool the run has.
+  const poolOf = new Map(survivors.map(r => [r.cellKey, r.pool]));
+  const allEntries = gate.lfEntries.map(e => ({ ...e, items: [...e.items, ...(poolOf.get(e.cellKey) ?? [])] }));
+  const known = rev3Precedence(run) ? bestKnownIndex(allEntries.map(e => e.items)) : new Map();
+  const networks = leadGenNetworks(allEntries, run);
+  // 2.9: every scored point's LF top 3 joins by cid to the centroid Maps pool; unjoined -> neutral
+  // (Revision 3: best known, then neutral). Step-1 kills keep their step-1 view.
   for (const r of results) {
-    r.joinedPoints = r.points.map(p => p.top.map(b => joinLf(b, r.poolByCid)));
+    r.joinedPoints = r.maps
+      ? r.points.map(p => p.rawTop.map(b => lfView(b, { poolByCid: r.poolByCid, known, networks, flaggedPhones: leadGen.get(r.cellKey), run })))
+      : r.points.map(p => p.top);
     r.lfTop3 = r.joinedPoints[0];
     // weak_ranking (R6): not in the LF top 3 at any scored point (engineer reading for 3-/5-point cells)
     r.lfTop3Ids = new Set(r.joinedPoints.flat().map(b => String(b.cid)));
   }
-  const survivors = results.filter(r => r.maps);
   const chains = chainDomains(survivors, run);
-  const leadGen = leadGenPhones(survivors, run);
-  const prospects = assignProspects(survivors, chains, leadGen, run);
+  const cities = config.areas.regions.flatMap(rg => rg.cities.map(c => ({ ...c, region: c.region ?? rg.id })));
+  const prospects = assignProspects(survivors, chains, leadGen, run, { networks, cities });
   const nationalSerps = [...rebuySerps.filter(x => x.data), ...survivors.map(r => ({ profession: r.cell.profession.slug, region: r.city.region, source: 'stage2_cell_organic', data: r.organic }))];
   const national = nationalBrandDomains(nationalSerps, run.stage2.national_brand_min_regions, run.stage2.organic_depth_cell);
 
@@ -560,6 +793,7 @@ export function scoreCells(config, get, stage1Cells, { specs = config.run.pilot.
     let P_w = r.maps ? 0 : null;
     let checked = 0;
     let failedChecks = 0;
+    let deadSites = 0;
     let blocked = 0;
     const prospectRows = list.map(p => {
       const host = realSite(p.b, notASite(run)) ? normalizeDomain(p.b.domain) : null;
@@ -567,7 +801,9 @@ export function scoreCells(config, get, stage1Cells, { specs = config.run.pilot.
       const check = host ? siteChecks.get(host) : undefined;
       if (check) {
         checked += 1;
-        if (check.site_check === 'failed') failedChecks += 1;
+        const outcome = siteOutcome(check, run.homepage_check);
+        if (outcome === 'failed') failedChecks += 1;
+        if (outcome === 'site_dead') deadSites += 1;
         if (['blocked', 'timeout', 'skipped_robots'].includes(check.site_check)) blocked += 1;
       }
       const wt = prospectWeight(p.b, check, ctx, host ? siteTexts.get(host) : undefined);
@@ -584,6 +820,9 @@ export function scoreCells(config, get, stage1Cells, { specs = config.run.pilot.
     const pending = Boolean(r.pending);
     const packCids = (r.organic?.items ?? []).filter(i => i.type === 'local_pack' && i.cid).map(i => i.cid);
     const flaggedPhones = leadGen.get(r.cellKey) ?? new Set();
+    const slots = r.joinedPoints.flat();
+    const slotCount = src => slots.filter(b => slotSource(b) === src).length;
+    const pd = prospects.diag?.get(r.cellKey);
     rows.push({
       cell_id: cell.id, expect: cell.expect ?? null, slug: cell.profession.slug, trade_he: cell.profession.trade_he,
       region: cell.city.region, city: cell.city.slug, city_he: cell.city.he_name, ring: cell.city.ring, population: cell.city.population, urgency_lead_gen: r.urgency,
@@ -600,8 +839,10 @@ export function scoreCells(config, get, stage1Cells, { specs = config.run.pilot.
       kit_level: cell.profession.kit_level, score: pending ? null : round4(comp.score), score_unkilled: pending ? null : round4(comp.score_unkilled), kill_reason: pending ? '' : comp.kill_reason,
       flags: cell.city.flags.join(';'), ranked: cell.ranked !== false, calibration: cell.calibration_id ?? null,
       lf_pack_overlap: r.maps ? overlapCount(packCids, r.lfTop3.map(b => b.cid)) : null,
-      lead_gen_listings: r.maps ? r.pool.filter(b => isLeadGen(b, flaggedPhones)).length : null,
-      homepage_checked: r.maps ? checked : null, homepage_failed: r.maps ? failedChecks : null, homepage_not_checked: r.maps ? blocked : null,
+      lead_gen_listings: r.maps ? r.pool.filter(b => isLeadGen(b, flaggedPhones, run) || networks.has(String(b.cid))).length : null,
+      lf_slots_maps: slotCount('maps'), lf_slots_best_known: slotCount('best_known'), lf_slots_neutral: slotCount('neutral'), lf_top3_network: slots.filter(b => b._network).length,
+      p_excluded_title: pd ? pd.title_exclude + pd.title_chain : null, p_excluded_network: pd ? pd.network : null, p_out_of_cell: pd ? pd.out_of_cell_moved + pd.out_of_cell_dropped : null, p_moved_in: pd ? pd.moved_in : null,
+      homepage_checked: r.maps ? checked : null, homepage_failed: r.maps ? failedChecks : null, homepage_site_dead: r.maps ? deadSites : null, homepage_not_checked: r.maps ? blocked : null,
       maps_items_t1: r.maps ? r.lists[0].length : null, maps_items_t2: r.maps ? (r.lists[1]?.length ?? 0) : null, relevant_ranked: r.maps ? r.ranked.length : null,
     });
 
@@ -610,11 +851,13 @@ export function scoreCells(config, get, stage1Cells, { specs = config.run.pilot.
       const host = b._joined && realSite(b, notASite(run)) ? normalizeDomain(b.domain) : null;
       const check = host ? siteChecks.get(host) : undefined;
       const verdict = check ? siteVerdict(check, siteTexts.get(host), ctx.siteCtx, run.homepage_check) : null;
-      privateRows.push({ cell_id: cell.id, role: pi === 0 ? 'lf_top3' : 'lf_top3_point', point: r.points[pi].dir, rank: i + 1, cid: b.cid ?? null, title: b.title ?? null, phone: b.phone ?? null, domain: b._joined ? (b.domain ?? null) : null, joined: b._joined, votes: b.rating?.votes_count ?? 0, rating: b.rating?.value ?? null, category: b.category ?? null, s_b: round4(pointS3[pi].top3[i]), site_check: check?.site_check ?? null, platform: check?.platform ?? null, weak_site: verdict?.weak_site ?? null });
+      const netRules = [...(networks.get(String(b.cid)) ?? [])];
+      if (flaggedPhones.has(phoneKeyFor(run)(b.phone))) netRules.push('exact_phone');
+      privateRows.push({ cell_id: cell.id, role: pi === 0 ? 'lf_top3' : 'lf_top3_point', point: r.points[pi].dir, rank: i + 1, cid: b.cid ?? null, title: b.title ?? null, phone: b.phone ?? null, phone_e164: e164Il(b.phone), domain: b._joined || b._site_known ? (b.domain ?? null) : null, joined: b._joined, votes_source: slotSource(b), network: netRules.join('|') || null, votes: b.rating?.votes_count ?? (b._votes_source === 'neutral' ? null : 0), rating: b.rating?.value ?? null, category: b.category ?? null, s_b: round4(pointS3[pi].top3[i]), site_check: check?.site_check ?? null, platform: check?.platform ?? null, weak_site: verdict?.weak_site ?? null });
     }));
     for (const { p, host, check, wt } of prospectRows) {
       const b = p.b;
-      privateRows.push({ cell_id: cell.id, role: 'prospect', rank: r.rawRank.get(b._id), cid: b.cid ?? null, title: b.title ?? null, phone: b.phone ?? null, domain: b.domain ?? null, votes: b.rating?.votes_count ?? 0, rating: b.rating?.value ?? null, category: b.category ?? null, relevant_via: r.rel.get(b._id)?.via ?? null, gaps: gaps(b, run).join('|'), dist_km: round4(p.dist), w_b: wt.w_b, site: wt.site, site_check: check?.site_check ?? (host ? 'unchecked' : null), site_reason: check?.reason ?? null, platform: check?.platform ?? null, city_hit: wt.verdict?.city_hit ?? null, service_hit: wt.verdict?.service_hit ?? null, multi_page: check?.multi_page ?? null, fetch_ms: check?.fetch_ms ?? null });
+      privateRows.push({ cell_id: cell.id, role: 'prospect', rank: r.rawRank.get(b._id) ?? null, moved_from: p.from && p.from !== r.cellKey ? p.from : null, cid: b.cid ?? null, title: b.title ?? null, phone: b.phone ?? null, phone_e164: e164Il(b.phone), domain: b.domain ?? null, votes: b.rating?.votes_count ?? 0, rating: b.rating?.value ?? null, category: b.category ?? null, relevant_via: r.rel.get(b._id)?.via ?? null, gaps: gaps(b, run).join('|'), dist_km: round4(p.dist), w_b: wt.w_b, site: wt.site, site_check: check?.site_check ?? (host ? 'unchecked' : null), site_reason: check?.reason ?? null, platform: check?.platform ?? null, city_hit: wt.verdict?.city_hit ?? null, service_hit: wt.verdict?.service_hit ?? null, multi_page: check?.multi_page ?? null, fetch_ms: check?.fetch_ms ?? null });
     }
     if (org) {
       organicRows.push({ cell_id: cell.id, rows: org.rows });

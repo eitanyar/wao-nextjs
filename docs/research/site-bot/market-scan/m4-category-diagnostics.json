@@ -1,34 +1,27 @@
 {
- "run_id": "73ecfd6063af",
+ "run_id": "7f91346fefc5",
  "note": "R4/2.10: every top-20 Maps category text that matched no rule. by_profession = aggregate across M4 cells (append-only rule extensions: Yonatan)",
  "by_profession": [
   {
    "profession": "ac-repair",
    "category": "קבלן חימום, אוורור ומזוג אוויר",
-   "items": 49,
-   "items_relevant_anyway": 37,
-   "cells": 23
+   "items": 46,
+   "items_relevant_anyway": 35,
+   "cells": 22
   },
   {
    "profession": "ac-repair",
    "category": "שירות תיקון מקררים",
-   "items": 31,
-   "items_relevant_anyway": 18,
-   "cells": 23
+   "items": 29,
+   "items_relevant_anyway": 17,
+   "cells": 22
   },
   {
    "profession": "ac-repair",
    "category": "חשמלאי",
-   "items": 26,
-   "items_relevant_anyway": 21,
-   "cells": 20
-  },
-  {
-   "profession": "ac-repair",
-   "category": "שירות תיקונים למכשירי חשמל",
-   "items": 19,
-   "items_relevant_anyway": 3,
-   "cells": 13
+   "items": 24,
+   "items_relevant_anyway": 19,
+   "cells": 19
   },
   {
    "profession": "ac-repair",
@@ -39,10 +32,10 @@
   },
   {
    "profession": "ac-repair",
-   "category": "שירות תיקונים לתנורים",
-   "items": 6,
-   "items_relevant_anyway": 5,
-   "cells": 6
+   "category": "שירות תיקונים למכשירי חשמל",
+   "items": 17,
+   "items_relevant_anyway": 2,
+   "cells": 12
   },
   {
    "profession": "ac-repair",
@@ -60,6 +53,13 @@
   },
   {
    "profession": "ac-repair",
+   "category": "שירות תיקונים לתנורים",
+   "items": 5,
+   "items_relevant_anyway": 4,
+   "cells": 5
+  },
+  {
+   "profession": "ac-repair",
    "category": "שירותי תיקון מכונות",
    "items": 5,
    "items_relevant_anyway": 4,
@@ -71,13 +71,6 @@
    "items": 4,
    "items_relevant_anyway": 0,
    "cells": 4
-  },
-  {
-   "profession": "ac-repair",
-   "category": "שיפוצניק",
-   "items": 4,
-   "items_relevant_anyway": 2,
-   "cells": 3
   },
   {
    "profession": "ac-repair",
@@ -137,13 +130,6 @@
   },
   {
    "profession": "ac-repair",
-   "category": "שירות תיקונים למכונות ומייבשי כביסה",
-   "items": 3,
-   "items_relevant_anyway": 1,
-   "cells": 2
-  },
-  {
-   "profession": "ac-repair",
    "category": "חנות",
    "items": 2,
    "items_relevant_anyway": 0,
@@ -172,16 +158,16 @@
   },
   {
    "profession": "ac-repair",
-   "category": "ספק דודי חימום",
+   "category": "קבלן חימום",
    "items": 2,
-   "items_relevant_anyway": 1,
+   "items_relevant_anyway": 2,
    "cells": 2
   },
   {
    "profession": "ac-repair",
-   "category": "קבלן חימום",
+   "category": "שיפוצניק",
    "items": 2,
-   "items_relevant_anyway": 2,
+   "items_relevant_anyway": 1,
    "cells": 2
   },
   {
@@ -190,13 +176,6 @@
    "items": 2,
    "items_relevant_anyway": 2,
    "cells": 2
-  },
-  {
-   "profession": "ac-repair",
-   "category": "חברת בנייה",
-   "items": 1,
-   "items_relevant_anyway": 1,
-   "cells": 1
   },
   {
    "profession": "ac-repair",
@@ -291,14 +270,14 @@
   },
   {
    "profession": "ac-repair",
-   "category": "נגר",
+   "category": "סיטונאי",
    "items": 1,
    "items_relevant_anyway": 1,
    "cells": 1
   },
   {
    "profession": "ac-repair",
-   "category": "סיטונאי",
+   "category": "ספק דודי חימום",
    "items": 1,
    "items_relevant_anyway": 1,
    "cells": 1
@@ -368,21 +347,7 @@
   },
   {
    "profession": "ac-repair",
-   "category": "צבע",
-   "items": 1,
-   "items_relevant_anyway": 1,
-   "cells": 1
-  },
-  {
-   "profession": "ac-repair",
    "category": "ציוד ופתרונות אנרגיה",
-   "items": 1,
-   "items_relevant_anyway": 1,
-   "cells": 1
-  },
-  {
-   "profession": "ac-repair",
-   "category": "קבלן בתים",
    "items": 1,
    "items_relevant_anyway": 1,
    "cells": 1
@@ -397,13 +362,6 @@
   {
    "profession": "ac-repair",
    "category": "קבלן מכונות",
-   "items": 1,
-   "items_relevant_anyway": 1,
-   "cells": 1
-  },
-  {
-   "profession": "ac-repair",
-   "category": "קבלן ריצוף",
    "items": 1,
    "items_relevant_anyway": 1,
    "cells": 1
@@ -431,9 +389,9 @@
   },
   {
    "profession": "ac-repair",
-   "category": "שירותי בריאות עד הבית",
+   "category": "שירות תיקונים למכונות ומייבשי כביסה",
    "items": 1,
-   "items_relevant_anyway": 1,
+   "items_relevant_anyway": 0,
    "cells": 1
   },
   {
@@ -441,13 +399,6 @@
    "category": "שירותי ניקיון",
    "items": 1,
    "items_relevant_anyway": 0,
-   "cells": 1
-  },
-  {
-   "profession": "ac-repair",
-   "category": "שרברב",
-   "items": 1,
-   "items_relevant_anyway": 1,
    "cells": 1
   },
   {
@@ -929,50 +880,36 @@
   {
    "profession": "electrician",
    "category": "מהנדס חשמל",
-   "items": 30,
-   "items_relevant_anyway": 17,
-   "cells": 22
-  },
-  {
-   "profession": "electrician",
-   "category": "שירות להתקנת מוצרי חשמל",
-   "items": 25,
-   "items_relevant_anyway": 12,
+   "items": 28,
+   "items_relevant_anyway": 16,
    "cells": 21
   },
   {
    "profession": "electrician",
+   "category": "שירות להתקנת מוצרי חשמל",
+   "items": 22,
+   "items_relevant_anyway": 10,
+   "cells": 19
+  },
+  {
+   "profession": "electrician",
    "category": "שיפוצניק",
-   "items": 19,
-   "items_relevant_anyway": 19,
-   "cells": 16
+   "items": 17,
+   "items_relevant_anyway": 17,
+   "cells": 15
   },
   {
    "profession": "electrician",
    "category": "חנות חשמל ואלקטרוניקה",
-   "items": 12,
-   "items_relevant_anyway": 5,
-   "cells": 10
+   "items": 11,
+   "items_relevant_anyway": 4,
+   "cells": 9
   },
   {
    "profession": "electrician",
    "category": "שירות חשמל לרכב",
    "items": 8,
    "items_relevant_anyway": 1,
-   "cells": 7
-  },
-  {
-   "profession": "electrician",
-   "category": "מוסך",
-   "items": 7,
-   "items_relevant_anyway": 1,
-   "cells": 7
-  },
-  {
-   "profession": "electrician",
-   "category": "צבע",
-   "items": 7,
-   "items_relevant_anyway": 6,
    "cells": 7
   },
   {
@@ -991,21 +928,14 @@
   },
   {
    "profession": "electrician",
-   "category": "חנות לציוד חשמלי",
+   "category": "מוסך",
    "items": 6,
-   "items_relevant_anyway": 0,
+   "items_relevant_anyway": 1,
    "cells": 6
   },
   {
    "profession": "electrician",
-   "category": "מנעולן",
-   "items": 6,
-   "items_relevant_anyway": 5,
-   "cells": 5
-  },
-  {
-   "profession": "electrician",
-   "category": "ספק דודי חימום",
+   "category": "צבע",
    "items": 6,
    "items_relevant_anyway": 6,
    "cells": 6
@@ -1026,10 +956,17 @@
   },
   {
    "profession": "electrician",
-   "category": "תחזוקת נכסים",
-   "items": 6,
+   "category": "מנעולן",
+   "items": 5,
+   "items_relevant_anyway": 4,
+   "cells": 4
+  },
+  {
+   "profession": "electrician",
+   "category": "ספק דודי חימום",
+   "items": 5,
    "items_relevant_anyway": 5,
-   "cells": 6
+   "cells": 5
   },
   {
    "profession": "electrician",
@@ -1054,9 +991,23 @@
   },
   {
    "profession": "electrician",
+   "category": "תחזוקת נכסים",
+   "items": 5,
+   "items_relevant_anyway": 5,
+   "cells": 5
+  },
+  {
+   "profession": "electrician",
    "category": "בריכת שחייה",
    "items": 4,
    "items_relevant_anyway": 4,
+   "cells": 4
+  },
+  {
+   "profession": "electrician",
+   "category": "חנות לציוד חשמלי",
+   "items": 4,
+   "items_relevant_anyway": 0,
    "cells": 4
   },
   {
@@ -1099,13 +1050,6 @@
    "category": "חנות למכשירי חשמל",
    "items": 3,
    "items_relevant_anyway": 0,
-   "cells": 3
-  },
-  {
-   "profession": "electrician",
-   "category": "חנות לתיקון מוצרים אלקטרוניים",
-   "items": 3,
-   "items_relevant_anyway": 2,
    "cells": 3
   },
   {
@@ -1159,13 +1103,6 @@
   },
   {
    "profession": "electrician",
-   "category": "חברת חשמל",
-   "items": 2,
-   "items_relevant_anyway": 2,
-   "cells": 2
-  },
-  {
-   "profession": "electrician",
    "category": "חנות לחלקי חילוף לרכב",
    "items": 2,
    "items_relevant_anyway": 1,
@@ -1180,9 +1117,9 @@
   },
   {
    "profession": "electrician",
-   "category": "חנות תריסים ווילונות",
+   "category": "חנות לתיקון מוצרים אלקטרוניים",
    "items": 2,
-   "items_relevant_anyway": 2,
+   "items_relevant_anyway": 1,
    "cells": 2
   },
   {
@@ -1197,13 +1134,6 @@
    "category": "מוסך למכונאות רכב",
    "items": 2,
    "items_relevant_anyway": 1,
-   "cells": 2
-  },
-  {
-   "profession": "electrician",
-   "category": "ספק מערכת סולרית למים חמים",
-   "items": 2,
-   "items_relevant_anyway": 2,
    "cells": 2
   },
   {
@@ -1257,21 +1187,14 @@
   },
   {
    "profession": "electrician",
-   "category": "גנן נוף",
-   "items": 1,
-   "items_relevant_anyway": 0,
-   "cells": 1
-  },
-  {
-   "profession": "electrician",
-   "category": "חברת תוכנה",
+   "category": "חברת חשמל",
    "items": 1,
    "items_relevant_anyway": 1,
    "cells": 1
   },
   {
    "profession": "electrician",
-   "category": "חלון אלומיניום",
+   "category": "חברת תוכנה",
    "items": 1,
    "items_relevant_anyway": 1,
    "cells": 1
@@ -1320,13 +1243,6 @@
   },
   {
    "profession": "electrician",
-   "category": "חנות למנועים חשמליים",
-   "items": 1,
-   "items_relevant_anyway": 1,
-   "cells": 1
-  },
-  {
-   "profession": "electrician",
    "category": "חנות למערכות מיזוג אוויר",
    "items": 1,
    "items_relevant_anyway": 1,
@@ -1351,13 +1267,6 @@
    "category": "חנות לקולנוע ביתי",
    "items": 1,
    "items_relevant_anyway": 0,
-   "cells": 1
-  },
-  {
-   "profession": "electrician",
-   "category": "חנות לתיקון מנועים חשמליים",
-   "items": 1,
-   "items_relevant_anyway": 1,
    "cells": 1
   },
   {
@@ -1393,6 +1302,13 @@
    "category": "חנות שואבי אבק",
    "items": 1,
    "items_relevant_anyway": 0,
+   "cells": 1
+  },
+  {
+   "profession": "electrician",
+   "category": "חנות תריסים ווילונות",
+   "items": 1,
+   "items_relevant_anyway": 1,
    "cells": 1
   },
   {
@@ -1509,14 +1425,14 @@
   },
   {
    "profession": "electrician",
-   "category": "ספק אזעקות לרכב",
+   "category": "ספק דלתות",
    "items": 1,
-   "items_relevant_anyway": 0,
+   "items_relevant_anyway": 1,
    "cells": 1
   },
   {
    "profession": "electrician",
-   "category": "ספק דלתות",
+   "category": "ספק מערכת סולרית למים חמים",
    "items": 1,
    "items_relevant_anyway": 1,
    "cells": 1
@@ -1558,13 +1474,6 @@
   },
   {
    "profession": "electrician",
-   "category": "קבלן תאורה",
-   "items": 1,
-   "items_relevant_anyway": 1,
-   "cells": 1
-  },
-  {
-   "profession": "electrician",
    "category": "קבלנות אנרגיה סולארית",
    "items": 1,
    "items_relevant_anyway": 1,
@@ -1579,13 +1488,6 @@
   },
   {
    "profession": "electrician",
-   "category": "רתך",
-   "items": 1,
-   "items_relevant_anyway": 0,
-   "cells": 1
-  },
-  {
-   "profession": "electrician",
    "category": "שירות אבטחה",
    "items": 1,
    "items_relevant_anyway": 1,
@@ -1593,28 +1495,7 @@
   },
   {
    "profession": "electrician",
-   "category": "שירות איטום מפני חדירת מים",
-   "items": 1,
-   "items_relevant_anyway": 0,
-   "cells": 1
-  },
-  {
-   "profession": "electrician",
-   "category": "שירות התקנת חלונות",
-   "items": 1,
-   "items_relevant_anyway": 1,
-   "cells": 1
-  },
-  {
-   "profession": "electrician",
    "category": "שירות התקנת מערכות אבטחה",
-   "items": 1,
-   "items_relevant_anyway": 0,
-   "cells": 1
-  },
-  {
-   "profession": "electrician",
-   "category": "שירות טיפוח מדשאות",
    "items": 1,
    "items_relevant_anyway": 0,
    "cells": 1
@@ -1645,13 +1526,6 @@
    "category": "שירות ניקיון",
    "items": 1,
    "items_relevant_anyway": 1,
-   "cells": 1
-  },
-  {
-   "profession": "electrician",
-   "category": "שירות שיפוץ משרדים",
-   "items": 1,
-   "items_relevant_anyway": 0,
    "cells": 1
   },
   {
@@ -1698,13 +1572,6 @@
   },
   {
    "profession": "electrician",
-   "category": "שירות תיקונים למחשב",
-   "items": 1,
-   "items_relevant_anyway": 0,
-   "cells": 1
-  },
-  {
-   "profession": "electrician",
    "category": "שירות תיקונים למנורות",
    "items": 1,
    "items_relevant_anyway": 0,
@@ -1713,13 +1580,6 @@
   {
    "profession": "electrician",
    "category": "שירות תיקונים לתנורי מיקרוגל",
-   "items": 1,
-   "items_relevant_anyway": 0,
-   "cells": 1
-  },
-  {
-   "profession": "electrician",
-   "category": "שירותי מרזבים",
    "items": 1,
    "items_relevant_anyway": 0,
    "cells": 1
@@ -1979,23 +1839,23 @@
   {
    "profession": "kitchens",
    "category": "יצרן ארונות",
-   "items": 31,
-   "items_relevant_anyway": 28,
-   "cells": 10
+   "items": 30,
+   "items_relevant_anyway": 27,
+   "cells": 9
   },
   {
    "profession": "kitchens",
    "category": "עיצוב פנים",
-   "items": 23,
-   "items_relevant_anyway": 15,
-   "cells": 10
+   "items": 21,
+   "items_relevant_anyway": 13,
+   "cells": 9
   },
   {
    "profession": "kitchens",
    "category": "ייצור רהיטים",
-   "items": 16,
-   "items_relevant_anyway": 16,
-   "cells": 10
+   "items": 14,
+   "items_relevant_anyway": 14,
+   "cells": 9
   },
   {
    "profession": "kitchens",
@@ -2009,13 +1869,6 @@
    "category": "מעצב חדרי אמבטיה",
    "items": 9,
    "items_relevant_anyway": 9,
-   "cells": 5
-  },
-  {
-   "profession": "kitchens",
-   "category": "עיצוב אדריכלי",
-   "items": 8,
-   "items_relevant_anyway": 8,
    "cells": 5
   },
   {
@@ -2055,17 +1908,10 @@
   },
   {
    "profession": "kitchens",
-   "category": "בונה בתים בהתאמה אישית",
-   "items": 5,
-   "items_relevant_anyway": 5,
-   "cells": 5
-  },
-  {
-   "profession": "kitchens",
-   "category": "מלאכת יד",
-   "items": 5,
-   "items_relevant_anyway": 5,
-   "cells": 5
+   "category": "עיצוב אדריכלי",
+   "items": 6,
+   "items_relevant_anyway": 6,
+   "cells": 4
   },
   {
    "profession": "kitchens",
@@ -2076,10 +1922,24 @@
   },
   {
    "profession": "kitchens",
-   "category": "חנות רהיטים",
+   "category": "בונה בתים בהתאמה אישית",
    "items": 4,
    "items_relevant_anyway": 4,
-   "cells": 3
+   "cells": 4
+  },
+  {
+   "profession": "kitchens",
+   "category": "מלאכת יד",
+   "items": 4,
+   "items_relevant_anyway": 4,
+   "cells": 4
+  },
+  {
+   "profession": "kitchens",
+   "category": "חנות רהיטים",
+   "items": 3,
+   "items_relevant_anyway": 3,
+   "cells": 2
   },
   {
    "profession": "kitchens",
@@ -2181,13 +2041,6 @@
   },
   {
    "profession": "kitchens",
-   "category": "סוכנות עיצוב",
-   "items": 1,
-   "items_relevant_anyway": 0,
-   "cells": 1
-  },
-  {
-   "profession": "kitchens",
    "category": "ספק גרניט",
    "items": 1,
    "items_relevant_anyway": 0,
@@ -2231,44 +2084,44 @@
   {
    "profession": "locksmith",
    "category": "שירות שכפול מפתחות",
-   "items": 91,
-   "items_relevant_anyway": 60,
-   "cells": 28
+   "items": 79,
+   "items_relevant_anyway": 50,
+   "cells": 26
   },
   {
    "profession": "locksmith",
    "category": "שירותי מנעולנות חירום",
-   "items": 74,
-   "items_relevant_anyway": 50,
-   "cells": 25
+   "items": 68,
+   "items_relevant_anyway": 46,
+   "cells": 23
   },
   {
    "profession": "locksmith",
    "category": "חנות כספות",
-   "items": 16,
-   "items_relevant_anyway": 16,
-   "cells": 9
+   "items": 13,
+   "items_relevant_anyway": 13,
+   "cells": 7
   },
   {
    "profession": "locksmith",
    "category": "ספק דלתות",
-   "items": 15,
-   "items_relevant_anyway": 15,
-   "cells": 13
+   "items": 12,
+   "items_relevant_anyway": 12,
+   "cells": 11
   },
   {
    "profession": "locksmith",
    "category": "סיטונאי",
-   "items": 12,
+   "items": 11,
    "items_relevant_anyway": 1,
-   "cells": 11
+   "cells": 10
   },
   {
    "profession": "locksmith",
    "category": "ספק מערכות אבטחה",
-   "items": 12,
-   "items_relevant_anyway": 11,
-   "cells": 11
+   "items": 11,
+   "items_relevant_anyway": 10,
+   "cells": 10
   },
   {
    "profession": "locksmith",
@@ -2286,17 +2139,17 @@
   },
   {
    "profession": "locksmith",
-   "category": "שירות אבטחה",
-   "items": 9,
-   "items_relevant_anyway": 7,
-   "cells": 7
-  },
-  {
-   "profession": "locksmith",
    "category": "חנות לציוד אינסטלציה",
    "items": 8,
    "items_relevant_anyway": 0,
    "cells": 7
+  },
+  {
+   "profession": "locksmith",
+   "category": "שירות אבטחה",
+   "items": 8,
+   "items_relevant_anyway": 7,
+   "cells": 6
   },
   {
    "profession": "locksmith",
@@ -2332,13 +2185,6 @@
    "items": 6,
    "items_relevant_anyway": 1,
    "cells": 6
-  },
-  {
-   "profession": "locksmith",
-   "category": "חנות למוצרי אבטחה",
-   "items": 6,
-   "items_relevant_anyway": 5,
-   "cells": 5
   },
   {
    "profession": "locksmith",
@@ -2384,13 +2230,6 @@
   },
   {
    "profession": "locksmith",
-   "category": "שירות התקנת מערכות אבטחה",
-   "items": 4,
-   "items_relevant_anyway": 4,
-   "cells": 4
-  },
-  {
-   "profession": "locksmith",
    "category": "שירות תיקונים",
    "items": 4,
    "items_relevant_anyway": 4,
@@ -2405,17 +2244,17 @@
   },
   {
    "profession": "locksmith",
-   "category": "חנות בולים",
-   "items": 3,
-   "items_relevant_anyway": 3,
-   "cells": 3
-  },
-  {
-   "profession": "locksmith",
    "category": "חנות חותמות גומי",
    "items": 3,
    "items_relevant_anyway": 3,
    "cells": 2
+  },
+  {
+   "profession": "locksmith",
+   "category": "חנות למוצרי אבטחה",
+   "items": 3,
+   "items_relevant_anyway": 2,
+   "cells": 3
   },
   {
    "profession": "locksmith",
@@ -2454,6 +2293,13 @@
   },
   {
    "profession": "locksmith",
+   "category": "שירות התקנת מערכות אבטחה",
+   "items": 3,
+   "items_relevant_anyway": 3,
+   "cells": 3
+  },
+  {
+   "profession": "locksmith",
    "category": "שירות שחזור נתונים",
    "items": 3,
    "items_relevant_anyway": 3,
@@ -2465,6 +2311,13 @@
    "items": 3,
    "items_relevant_anyway": 3,
    "cells": 3
+  },
+  {
+   "profession": "locksmith",
+   "category": "חנות בולים",
+   "items": 2,
+   "items_relevant_anyway": 2,
+   "cells": 2
   },
   {
    "profession": "locksmith",
@@ -2548,13 +2401,6 @@
    "category": "ארגון שירות ותמיכה לאנשים עם מוגבלויות",
    "items": 1,
    "items_relevant_anyway": 0,
-   "cells": 1
-  },
-  {
-   "profession": "locksmith",
-   "category": "בית ספר",
-   "items": 1,
-   "items_relevant_anyway": 1,
    "cells": 1
   },
   {
@@ -2737,13 +2583,6 @@
    "category": "מחסן",
    "items": 1,
    "items_relevant_anyway": 0,
-   "cells": 1
-  },
-  {
-   "profession": "locksmith",
-   "category": "מרכז לימודים",
-   "items": 1,
-   "items_relevant_anyway": 1,
    "cells": 1
   },
   {
@@ -2937,59 +2776,45 @@
   },
   {
    "profession": "movers",
-   "category": "שירות משלוחים",
-   "items": 47,
-   "items_relevant_anyway": 16,
-   "cells": 26
-  },
-  {
-   "profession": "movers",
    "category": "חברת אריזה",
-   "items": 40,
-   "items_relevant_anyway": 38,
-   "cells": 26
-  },
-  {
-   "profession": "movers",
-   "category": "שירותי מנוף",
-   "items": 29,
-   "items_relevant_anyway": 22,
+   "items": 35,
+   "items_relevant_anyway": 33,
    "cells": 21
   },
   {
    "profession": "movers",
-   "category": "שירות לוגיסטיקה",
-   "items": 21,
-   "items_relevant_anyway": 11,
-   "cells": 19
+   "category": "שירות משלוחים",
+   "items": 35,
+   "items_relevant_anyway": 10,
+   "cells": 20
+  },
+  {
+   "profession": "movers",
+   "category": "שירותי מנוף",
+   "items": 19,
+   "items_relevant_anyway": 14,
+   "cells": 16
   },
   {
    "profession": "movers",
    "category": "שירות הסעות",
-   "items": 18,
-   "items_relevant_anyway": 10,
-   "cells": 12
+   "items": 14,
+   "items_relevant_anyway": 9,
+   "cells": 9
+  },
+  {
+   "profession": "movers",
+   "category": "שירות לוגיסטיקה",
+   "items": 14,
+   "items_relevant_anyway": 4,
+   "cells": 14
   },
   {
    "profession": "movers",
    "category": "שירות העברת פסנתרים",
-   "items": 17,
-   "items_relevant_anyway": 13,
-   "cells": 15
-  },
-  {
-   "profession": "movers",
-   "category": "שירות הפצה",
-   "items": 13,
-   "items_relevant_anyway": 13,
+   "items": 9,
+   "items_relevant_anyway": 8,
    "cells": 8
-  },
-  {
-   "profession": "movers",
-   "category": "חנות לציוד אריזה",
-   "items": 7,
-   "items_relevant_anyway": 7,
-   "cells": 7
   },
   {
    "profession": "movers",
@@ -3000,7 +2825,7 @@
   },
   {
    "profession": "movers",
-   "category": "קבלנות משטחים",
+   "category": "חנות לציוד אריזה",
    "items": 6,
    "items_relevant_anyway": 6,
    "cells": 6
@@ -3011,6 +2836,13 @@
    "items": 5,
    "items_relevant_anyway": 4,
    "cells": 5
+  },
+  {
+   "profession": "movers",
+   "category": "שירות הפצה",
+   "items": 5,
+   "items_relevant_anyway": 5,
+   "cells": 3
   },
   {
    "profession": "movers",
@@ -3056,6 +2888,13 @@
   },
   {
    "profession": "movers",
+   "category": "קבלנות משטחים",
+   "items": 3,
+   "items_relevant_anyway": 3,
+   "cells": 3
+  },
+  {
+   "profession": "movers",
    "category": "שירותי נהג",
    "items": 3,
    "items_relevant_anyway": 3,
@@ -3070,13 +2909,6 @@
   },
   {
    "profession": "movers",
-   "category": "אימון אישי לחיים",
-   "items": 2,
-   "items_relevant_anyway": 0,
-   "cells": 2
-  },
-  {
-   "profession": "movers",
    "category": "סוכנות השכרת רכב",
    "items": 2,
    "items_relevant_anyway": 2,
@@ -3084,35 +2916,7 @@
   },
   {
    "profession": "movers",
-   "category": "שיפוצניק",
-   "items": 2,
-   "items_relevant_anyway": 2,
-   "cells": 2
-  },
-  {
-   "profession": "movers",
-   "category": "שירות מוניות",
-   "items": 2,
-   "items_relevant_anyway": 2,
-   "cells": 2
-  },
-  {
-   "profession": "movers",
-   "category": "שירות שליחים",
-   "items": 2,
-   "items_relevant_anyway": 1,
-   "cells": 2
-  },
-  {
-   "profession": "movers",
-   "category": "תיווך נדל\"ן",
-   "items": 2,
-   "items_relevant_anyway": 0,
-   "cells": 1
-  },
-  {
-   "profession": "movers",
-   "category": "גנן נוף",
+   "category": "אימון אישי לחיים",
    "items": 1,
    "items_relevant_anyway": 0,
    "cells": 1
@@ -3196,13 +3000,6 @@
   },
   {
    "profession": "movers",
-   "category": "ספק חומרי בניין",
-   "items": 1,
-   "items_relevant_anyway": 0,
-   "cells": 1
-  },
-  {
-   "profession": "movers",
    "category": "עבודות בגובה רב",
    "items": 1,
    "items_relevant_anyway": 0,
@@ -3224,6 +3021,13 @@
   },
   {
    "profession": "movers",
+   "category": "שיפוצניק",
+   "items": 1,
+   "items_relevant_anyway": 1,
+   "cells": 1
+  },
+  {
+   "profession": "movers",
    "category": "שירות איסוף אשפה",
    "items": 1,
    "items_relevant_anyway": 1,
@@ -3231,7 +3035,7 @@
   },
   {
    "profession": "movers",
-   "category": "שירותי השכרת כלי גינון",
+   "category": "שירות שליחים",
    "items": 1,
    "items_relevant_anyway": 0,
    "cells": 1
@@ -3246,30 +3050,30 @@
   {
    "profession": "painter",
    "category": "חנות חומרי בניין",
-   "items": 56,
+   "items": 51,
    "items_relevant_anyway": 0,
-   "cells": 13
+   "cells": 12
   },
   {
    "profession": "painter",
    "category": "שיפוצניק",
-   "items": 31,
-   "items_relevant_anyway": 22,
-   "cells": 11
+   "items": 29,
+   "items_relevant_anyway": 21,
+   "cells": 10
   },
   {
    "profession": "painter",
    "category": "חנות למוצרי בניין",
-   "items": 24,
+   "items": 23,
    "items_relevant_anyway": 0,
-   "cells": 11
+   "cells": 10
   },
   {
    "profession": "painter",
    "category": "חנות כלי עבודה",
-   "items": 23,
+   "items": 22,
    "items_relevant_anyway": 2,
-   "cells": 12
+   "cells": 11
   },
   {
    "profession": "painter",
@@ -3309,9 +3113,9 @@
   {
    "profession": "painter",
    "category": "ספק חומרי בניין",
-   "items": 10,
+   "items": 9,
    "items_relevant_anyway": 0,
-   "cells": 7
+   "cells": 6
   },
   {
    "profession": "painter",
@@ -3329,20 +3133,6 @@
   },
   {
    "profession": "painter",
-   "category": "מנעולן",
-   "items": 5,
-   "items_relevant_anyway": 0,
-   "cells": 4
-  },
-  {
-   "profession": "painter",
-   "category": "חנות",
-   "items": 4,
-   "items_relevant_anyway": 0,
-   "cells": 4
-  },
-  {
-   "profession": "painter",
    "category": "חנות לציוד אמנות",
    "items": 4,
    "items_relevant_anyway": 1,
@@ -3350,10 +3140,10 @@
   },
   {
    "profession": "painter",
-   "category": "מוסך פחחות וצבע",
+   "category": "מנעולן",
    "items": 4,
    "items_relevant_anyway": 0,
-   "cells": 4
+   "cells": 3
   },
   {
    "profession": "painter",
@@ -3361,6 +3151,13 @@
    "items": 4,
    "items_relevant_anyway": 4,
    "cells": 4
+  },
+  {
+   "profession": "painter",
+   "category": "חנות",
+   "items": 3,
+   "items_relevant_anyway": 0,
+   "cells": 3
   },
   {
    "profession": "painter",
@@ -3378,14 +3175,7 @@
   },
   {
    "profession": "painter",
-   "category": "חנות לציוד משרדי",
-   "items": 3,
-   "items_relevant_anyway": 0,
-   "cells": 3
-  },
-  {
-   "profession": "painter",
-   "category": "צביעת רכב",
+   "category": "מוסך פחחות וצבע",
    "items": 3,
    "items_relevant_anyway": 0,
    "cells": 3
@@ -3434,13 +3224,6 @@
   },
   {
    "profession": "painter",
-   "category": "חנות למוצרי קוסמטיקה",
-   "items": 2,
-   "items_relevant_anyway": 0,
-   "cells": 2
-  },
-  {
-   "profession": "painter",
    "category": "חנות לציוד \"עשה זאת בעצמך\"",
    "items": 2,
    "items_relevant_anyway": 0,
@@ -3451,6 +3234,13 @@
    "category": "חנות לציוד חשמלי",
    "items": 2,
    "items_relevant_anyway": 1,
+   "cells": 2
+  },
+  {
+   "profession": "painter",
+   "category": "חנות לציוד משרדי",
+   "items": 2,
+   "items_relevant_anyway": 0,
    "cells": 2
   },
   {
@@ -3469,21 +3259,7 @@
   },
   {
    "profession": "painter",
-   "category": "חנות תחביבים",
-   "items": 2,
-   "items_relevant_anyway": 1,
-   "cells": 2
-  },
-  {
-   "profession": "painter",
    "category": "יבואן",
-   "items": 2,
-   "items_relevant_anyway": 0,
-   "cells": 2
-  },
-  {
-   "profession": "painter",
-   "category": "מוסך רכב",
    "items": 2,
    "items_relevant_anyway": 0,
    "cells": 2
@@ -3511,21 +3287,14 @@
   },
   {
    "profession": "painter",
+   "category": "צביעת רכב",
+   "items": 2,
+   "items_relevant_anyway": 0,
+   "cells": 2
+  },
+  {
+   "profession": "painter",
    "category": "ציור",
-   "items": 2,
-   "items_relevant_anyway": 0,
-   "cells": 2
-  },
-  {
-   "profession": "painter",
-   "category": "שירות תיקונים ושחזור לרכב",
-   "items": 2,
-   "items_relevant_anyway": 0,
-   "cells": 2
-  },
-  {
-   "profession": "painter",
-   "category": "שירותי ליטוש מתכת",
    "items": 2,
    "items_relevant_anyway": 0,
    "cells": 2
@@ -3595,6 +3364,13 @@
   },
   {
    "profession": "painter",
+   "category": "חנות למוצרי קוסמטיקה",
+   "items": 1,
+   "items_relevant_anyway": 0,
+   "cells": 1
+  },
+  {
+   "profession": "painter",
    "category": "חנות למפות",
    "items": 1,
    "items_relevant_anyway": 0,
@@ -3610,13 +3386,6 @@
   {
    "profession": "painter",
    "category": "חנות לריהוט גן",
-   "items": 1,
-   "items_relevant_anyway": 0,
-   "cells": 1
-  },
-  {
-   "profession": "painter",
-   "category": "חנות לתיקון רהיטים",
    "items": 1,
    "items_relevant_anyway": 0,
    "cells": 1
@@ -3679,7 +3448,21 @@
   },
   {
    "profession": "painter",
+   "category": "חנות תחביבים",
+   "items": 1,
+   "items_relevant_anyway": 1,
+   "cells": 1
+  },
+  {
+   "profession": "painter",
    "category": "ייצור דלתות",
+   "items": 1,
+   "items_relevant_anyway": 0,
+   "cells": 1
+  },
+  {
+   "profession": "painter",
+   "category": "מוסך רכב",
    "items": 1,
    "items_relevant_anyway": 0,
    "cells": 1
@@ -3805,6 +3588,20 @@
   },
   {
    "profession": "painter",
+   "category": "שירות תיקונים ושחזור לרכב",
+   "items": 1,
+   "items_relevant_anyway": 0,
+   "cells": 1
+  },
+  {
+   "profession": "painter",
+   "category": "שירותי ליטוש מתכת",
+   "items": 1,
+   "items_relevant_anyway": 0,
+   "cells": 1
+  },
+  {
+   "profession": "painter",
    "category": "שירותי מנעולנות חירום",
    "items": 1,
    "items_relevant_anyway": 0,
@@ -3826,129 +3623,52 @@
   },
   {
    "profession": "pergolas",
-   "category": "חברת בנייה",
-   "items": 16,
-   "items_relevant_anyway": 1,
-   "cells": 12
-  },
-  {
-   "profession": "pergolas",
    "category": "חלון אלומיניום",
-   "items": 16,
-   "items_relevant_anyway": 9,
-   "cells": 13
+   "items": 11,
+   "items_relevant_anyway": 7,
+   "cells": 8
   },
   {
    "profession": "pergolas",
-   "category": "חנות לחומרי עץ",
-   "items": 13,
-   "items_relevant_anyway": 2,
-   "cells": 8
+   "category": "חברת בנייה",
+   "items": 10,
+   "items_relevant_anyway": 0,
+   "cells": 7
   },
   {
    "profession": "pergolas",
    "category": "גגן",
-   "items": 11,
-   "items_relevant_anyway": 6,
-   "cells": 8
+   "items": 8,
+   "items_relevant_anyway": 5,
+   "cells": 5
   },
   {
    "profession": "pergolas",
    "category": "ספק חלונות",
-   "items": 11,
-   "items_relevant_anyway": 8,
-   "cells": 10
+   "items": 8,
+   "items_relevant_anyway": 7,
+   "cells": 7
   },
   {
    "profession": "pergolas",
    "category": "ספק מסגרות אלומיניום",
-   "items": 11,
-   "items_relevant_anyway": 3,
-   "cells": 10
-  },
-  {
-   "profession": "pergolas",
-   "category": "בונה מחסנים",
-   "items": 10,
-   "items_relevant_anyway": 4,
-   "cells": 9
-  },
-  {
-   "profession": "pergolas",
-   "category": "חנות לעבודות עץ",
-   "items": 8,
-   "items_relevant_anyway": 4,
-   "cells": 6
-  },
-  {
-   "profession": "pergolas",
-   "category": "שירות הצללת חלונות",
-   "items": 7,
-   "items_relevant_anyway": 4,
-   "cells": 7
+   "items": 6,
+   "items_relevant_anyway": 2,
+   "cells": 5
   },
   {
    "profession": "pergolas",
    "category": "שירות התקנת חלונות",
-   "items": 7,
-   "items_relevant_anyway": 6,
-   "cells": 7
+   "items": 6,
+   "items_relevant_anyway": 5,
+   "cells": 6
   },
   {
    "profession": "pergolas",
-   "category": "בונה בתים מבולי עץ",
+   "category": "חנות לעבודות עץ",
    "items": 5,
    "items_relevant_anyway": 4,
-   "cells": 4
-  },
-  {
-   "profession": "pergolas",
-   "category": "חנות בדים",
-   "items": 5,
-   "items_relevant_anyway": 5,
-   "cells": 5
-  },
-  {
-   "profession": "pergolas",
-   "category": "חנות למוצרי זכוכית",
-   "items": 5,
-   "items_relevant_anyway": 0,
-   "cells": 5
-  },
-  {
-   "profession": "pergolas",
-   "category": "חנות לציוד מחנאות",
-   "items": 5,
-   "items_relevant_anyway": 5,
-   "cells": 5
-  },
-  {
-   "profession": "pergolas",
-   "category": "חנות לציוד נגרות",
-   "items": 5,
-   "items_relevant_anyway": 0,
-   "cells": 5
-  },
-  {
-   "profession": "pergolas",
-   "category": "חנות תפירה",
-   "items": 5,
-   "items_relevant_anyway": 5,
-   "cells": 5
-  },
-  {
-   "profession": "pergolas",
-   "category": "חנות תריסים ווילונות",
-   "items": 5,
-   "items_relevant_anyway": 5,
-   "cells": 5
-  },
-  {
-   "profession": "pergolas",
-   "category": "נגר",
-   "items": 5,
-   "items_relevant_anyway": 2,
-   "cells": 4
+   "cells": 3
   },
   {
    "profession": "pergolas",
@@ -3959,52 +3679,31 @@
   },
   {
    "profession": "pergolas",
-   "category": "בונה חניות מקורות",
+   "category": "בונה בתים מבולי עץ",
    "items": 4,
    "items_relevant_anyway": 4,
    "cells": 3
   },
   {
    "profession": "pergolas",
-   "category": "לינה",
+   "category": "חנות לחומרי עץ",
    "items": 4,
    "items_relevant_anyway": 0,
-   "cells": 4
-  },
-  {
-   "profession": "pergolas",
-   "category": "מעצב גינות",
-   "items": 4,
-   "items_relevant_anyway": 1,
-   "cells": 4
-  },
-  {
-   "profession": "pergolas",
-   "category": "עבודות בגובה רב",
-   "items": 4,
-   "items_relevant_anyway": 0,
-   "cells": 4
-  },
-  {
-   "profession": "pergolas",
-   "category": "רתך",
-   "items": 4,
-   "items_relevant_anyway": 4,
-   "cells": 4
-  },
-  {
-   "profession": "pergolas",
-   "category": "שיפוצניק",
-   "items": 4,
-   "items_relevant_anyway": 1,
-   "cells": 4
-  },
-  {
-   "profession": "pergolas",
-   "category": "אדריכל נוף",
-   "items": 3,
-   "items_relevant_anyway": 3,
    "cells": 3
+  },
+  {
+   "profession": "pergolas",
+   "category": "חנות למוצרי זכוכית",
+   "items": 4,
+   "items_relevant_anyway": 0,
+   "cells": 4
+  },
+  {
+   "profession": "pergolas",
+   "category": "חנות לציוד נגרות",
+   "items": 4,
+   "items_relevant_anyway": 0,
+   "cells": 4
   },
   {
    "profession": "pergolas",
@@ -4015,23 +3714,23 @@
   },
   {
    "profession": "pergolas",
-   "category": "חברת תפירה",
+   "category": "בונה חניות מקורות",
    "items": 3,
    "items_relevant_anyway": 3,
+   "cells": 2
+  },
+  {
+   "profession": "pergolas",
+   "category": "בונה מחסנים",
+   "items": 3,
+   "items_relevant_anyway": 2,
    "cells": 3
   },
   {
    "profession": "pergolas",
-   "category": "חנות",
+   "category": "חנות תריסים ווילונות",
    "items": 3,
-   "items_relevant_anyway": 0,
-   "cells": 3
-  },
-  {
-   "profession": "pergolas",
-   "category": "חנות ציוד לגגות",
-   "items": 3,
-   "items_relevant_anyway": 0,
+   "items_relevant_anyway": 3,
    "cells": 3
   },
   {
@@ -4043,10 +3742,10 @@
   },
   {
    "profession": "pergolas",
-   "category": "מנסרת עצים",
+   "category": "מעצב גינות",
    "items": 3,
-   "items_relevant_anyway": 0,
-   "cells": 2
+   "items_relevant_anyway": 1,
+   "cells": 3
   },
   {
    "profession": "pergolas",
@@ -4057,14 +3756,7 @@
   },
   {
    "profession": "pergolas",
-   "category": "ספק כיסויים לסירות",
-   "items": 3,
-   "items_relevant_anyway": 3,
-   "cells": 3
-  },
-  {
-   "profession": "pergolas",
-   "category": "ספק עץ",
+   "category": "עבודות בגובה רב",
    "items": 3,
    "items_relevant_anyway": 0,
    "cells": 3
@@ -4078,6 +3770,20 @@
   },
   {
    "profession": "pergolas",
+   "category": "רתך",
+   "items": 3,
+   "items_relevant_anyway": 3,
+   "cells": 3
+  },
+  {
+   "profession": "pergolas",
+   "category": "שירות הצללת חלונות",
+   "items": 3,
+   "items_relevant_anyway": 2,
+   "cells": 3
+  },
+  {
+   "profession": "pergolas",
    "category": "שירות התקנת רצפות עץ",
    "items": 3,
    "items_relevant_anyway": 2,
@@ -4085,23 +3791,9 @@
   },
   {
    "profession": "pergolas",
-   "category": "שירות טיפול בעצים",
-   "items": 3,
-   "items_relevant_anyway": 0,
-   "cells": 3
-  },
-  {
-   "profession": "pergolas",
-   "category": "בונה בתים בהתאמה אישית",
+   "category": "אדריכל נוף",
    "items": 2,
-   "items_relevant_anyway": 0,
-   "cells": 2
-  },
-  {
-   "profession": "pergolas",
-   "category": "בונה בתים מודולריים",
-   "items": 2,
-   "items_relevant_anyway": 1,
+   "items_relevant_anyway": 2,
    "cells": 2
   },
   {
@@ -4109,13 +3801,6 @@
    "category": "בית מלאכה למתכות",
    "items": 2,
    "items_relevant_anyway": 1,
-   "cells": 2
-  },
-  {
-   "profession": "pergolas",
-   "category": "בריכת שחייה",
-   "items": 2,
-   "items_relevant_anyway": 0,
    "cells": 2
   },
   {
@@ -4134,87 +3819,24 @@
   },
   {
    "profession": "pergolas",
-   "category": "חנות הכל לבית",
+   "category": "חברת תפירה",
+   "items": 2,
+   "items_relevant_anyway": 2,
+   "cells": 2
+  },
+  {
+   "profession": "pergolas",
+   "category": "חנות",
    "items": 2,
    "items_relevant_anyway": 0,
    "cells": 2
   },
   {
    "profession": "pergolas",
-   "category": "חנות לריהוט גינה",
-   "items": 2,
-   "items_relevant_anyway": 0,
-   "cells": 2
-  },
-  {
-   "profession": "pergolas",
-   "category": "חנות ציוד לגדרות",
-   "items": 2,
-   "items_relevant_anyway": 0,
-   "cells": 2
-  },
-  {
-   "profession": "pergolas",
-   "category": "יבואן",
-   "items": 2,
-   "items_relevant_anyway": 0,
-   "cells": 2
-  },
-  {
-   "profession": "pergolas",
-   "category": "יצרן זכוכיות",
+   "category": "נגר",
    "items": 2,
    "items_relevant_anyway": 1,
-   "cells": 2
-  },
-  {
-   "profession": "pergolas",
-   "category": "יצרן מתכת",
-   "items": 2,
-   "items_relevant_anyway": 2,
-   "cells": 2
-  },
-  {
-   "profession": "pergolas",
-   "category": "יצרן פלדה",
-   "items": 2,
-   "items_relevant_anyway": 2,
-   "cells": 2
-  },
-  {
-   "profession": "pergolas",
-   "category": "יצרן פריטי מתכת",
-   "items": 2,
-   "items_relevant_anyway": 2,
-   "cells": 2
-  },
-  {
-   "profession": "pergolas",
-   "category": "יצרן רהיטים",
-   "items": 2,
-   "items_relevant_anyway": 2,
-   "cells": 2
-  },
-  {
-   "profession": "pergolas",
-   "category": "מפיץ פלדה",
-   "items": 2,
-   "items_relevant_anyway": 2,
-   "cells": 2
-  },
-  {
-   "profession": "pergolas",
-   "category": "מפקח בנייה",
-   "items": 2,
-   "items_relevant_anyway": 0,
-   "cells": 2
-  },
-  {
-   "profession": "pergolas",
-   "category": "מרכז עסקים",
-   "items": 2,
-   "items_relevant_anyway": 0,
-   "cells": 2
+   "cells": 1
   },
   {
    "profession": "pergolas",
@@ -4225,16 +3847,16 @@
   },
   {
    "profession": "pergolas",
-   "category": "ספק מבני גינה",
+   "category": "ספק כיסויים לסירות",
    "items": 2,
-   "items_relevant_anyway": 0,
+   "items_relevant_anyway": 2,
    "cells": 2
   },
   {
    "profession": "pergolas",
-   "category": "ספק מסגרות מתכת ליציקת בטון",
+   "category": "ספק עץ",
    "items": 2,
-   "items_relevant_anyway": 2,
+   "items_relevant_anyway": 0,
    "cells": 2
   },
   {
@@ -4246,35 +3868,21 @@
   },
   {
    "profession": "pergolas",
-   "category": "קבלן מסגרות פלדה",
-   "items": 2,
-   "items_relevant_anyway": 2,
-   "cells": 2
-  },
-  {
-   "profession": "pergolas",
-   "category": "קבלנות בניית פנים",
+   "category": "שיפוצניק",
    "items": 2,
    "items_relevant_anyway": 0,
    "cells": 2
-  },
-  {
-   "profession": "pergolas",
-   "category": "ריתוך אלומיניום",
-   "items": 2,
-   "items_relevant_anyway": 0,
-   "cells": 2
-  },
-  {
-   "profession": "pergolas",
-   "category": "בונה רציפים",
-   "items": 1,
-   "items_relevant_anyway": 1,
-   "cells": 1
   },
   {
    "profession": "pergolas",
    "category": "בית מלון",
+   "items": 1,
+   "items_relevant_anyway": 0,
+   "cells": 1
+  },
+  {
+   "profession": "pergolas",
+   "category": "בריכת שחייה",
    "items": 1,
    "items_relevant_anyway": 0,
    "cells": 1
@@ -4295,6 +3903,13 @@
   },
   {
    "profession": "pergolas",
+   "category": "חנות הכל לבית",
+   "items": 1,
+   "items_relevant_anyway": 0,
+   "cells": 1
+  },
+  {
+   "profession": "pergolas",
    "category": "חנות טפטים",
    "items": 1,
    "items_relevant_anyway": 0,
@@ -4310,13 +3925,6 @@
   {
    "profession": "pergolas",
    "category": "חנות לאביזרי תאורה",
-   "items": 1,
-   "items_relevant_anyway": 0,
-   "cells": 1
-  },
-  {
-   "profession": "pergolas",
-   "category": "חנות למוצרי בניין",
    "items": 1,
    "items_relevant_anyway": 0,
    "cells": 1
@@ -4351,6 +3959,13 @@
   },
   {
    "profession": "pergolas",
+   "category": "חנות לריהוט גינה",
+   "items": 1,
+   "items_relevant_anyway": 0,
+   "cells": 1
+  },
+  {
+   "profession": "pergolas",
    "category": "חנות לריהוט גן",
    "items": 1,
    "items_relevant_anyway": 0,
@@ -4358,16 +3973,23 @@
   },
   {
    "profession": "pergolas",
-   "category": "חנות רשתות נגד חרקים",
+   "category": "חנות ציוד לגגות",
    "items": 1,
-   "items_relevant_anyway": 1,
+   "items_relevant_anyway": 0,
    "cells": 1
   },
   {
    "profession": "pergolas",
-   "category": "יועץ בנייה",
+   "category": "חנות ציוד לגדרות",
    "items": 1,
-   "items_relevant_anyway": 1,
+   "items_relevant_anyway": 0,
+   "cells": 1
+  },
+  {
+   "profession": "pergolas",
+   "category": "יבואן",
+   "items": 1,
+   "items_relevant_anyway": 0,
    "cells": 1
   },
   {
@@ -4386,9 +4008,51 @@
   },
   {
    "profession": "pergolas",
+   "category": "יצרן זכוכיות",
+   "items": 1,
+   "items_relevant_anyway": 0,
+   "cells": 1
+  },
+  {
+   "profession": "pergolas",
+   "category": "יצרן מתכת",
+   "items": 1,
+   "items_relevant_anyway": 1,
+   "cells": 1
+  },
+  {
+   "profession": "pergolas",
+   "category": "יצרן פלדה",
+   "items": 1,
+   "items_relevant_anyway": 1,
+   "cells": 1
+  },
+  {
+   "profession": "pergolas",
+   "category": "יצרן פריטי מתכת",
+   "items": 1,
+   "items_relevant_anyway": 1,
+   "cells": 1
+  },
+  {
+   "profession": "pergolas",
+   "category": "יצרן רהיטים",
+   "items": 1,
+   "items_relevant_anyway": 1,
+   "cells": 1
+  },
+  {
+   "profession": "pergolas",
    "category": "מוסך",
    "items": 1,
    "items_relevant_anyway": 1,
+   "cells": 1
+  },
+  {
+   "profession": "pergolas",
+   "category": "מנסרת עצים",
+   "items": 1,
+   "items_relevant_anyway": 0,
    "cells": 1
   },
   {
@@ -4400,14 +4064,7 @@
   },
   {
    "profession": "pergolas",
-   "category": "מתכנן אירועים",
-   "items": 1,
-   "items_relevant_anyway": 1,
-   "cells": 1
-  },
-  {
-   "profession": "pergolas",
-   "category": "מתכנן חתונות",
+   "category": "מפיץ פלדה",
    "items": 1,
    "items_relevant_anyway": 1,
    "cells": 1
@@ -4442,6 +4099,13 @@
   },
   {
    "profession": "pergolas",
+   "category": "ספק מסגרות מתכת ליציקת בטון",
+   "items": 1,
+   "items_relevant_anyway": 1,
+   "cells": 1
+  },
+  {
+   "profession": "pergolas",
    "category": "ספק מסגרות עץ",
    "items": 1,
    "items_relevant_anyway": 0,
@@ -4456,34 +4120,6 @@
   },
   {
    "profession": "pergolas",
-   "category": "ספק ריצוף עץ ולמינציה",
-   "items": 1,
-   "items_relevant_anyway": 0,
-   "cells": 1
-  },
-  {
-   "profession": "pergolas",
-   "category": "עיצוב אדריכלי",
-   "items": 1,
-   "items_relevant_anyway": 0,
-   "cells": 1
-  },
-  {
-   "profession": "pergolas",
-   "category": "צבע",
-   "items": 1,
-   "items_relevant_anyway": 1,
-   "cells": 1
-  },
-  {
-   "profession": "pergolas",
-   "category": "קבלן בנייה",
-   "items": 1,
-   "items_relevant_anyway": 0,
-   "cells": 1
-  },
-  {
-   "profession": "pergolas",
    "category": "קבלן למערכות ממטרות למדשאות",
    "items": 1,
    "items_relevant_anyway": 0,
@@ -4491,21 +4127,21 @@
   },
   {
    "profession": "pergolas",
-   "category": "קמפוס תאגידים",
+   "category": "קבלן מסגרות פלדה",
    "items": 1,
    "items_relevant_anyway": 1,
+   "cells": 1
+  },
+  {
+   "profession": "pergolas",
+   "category": "ריתוך אלומיניום",
+   "items": 1,
+   "items_relevant_anyway": 0,
    "cells": 1
   },
   {
    "profession": "pergolas",
    "category": "שירות בדיקת אסבסט",
-   "items": 1,
-   "items_relevant_anyway": 1,
-   "cells": 1
-  },
-  {
-   "profession": "pergolas",
-   "category": "שירות הפצה",
    "items": 1,
    "items_relevant_anyway": 1,
    "cells": 1
@@ -4519,13 +4155,6 @@
   },
   {
    "profession": "pergolas",
-   "category": "שירות השכרת ציוד למסיבות",
-   "items": 1,
-   "items_relevant_anyway": 1,
-   "cells": 1
-  },
-  {
-   "profession": "pergolas",
    "category": "שירות חשמל לרכב",
    "items": 1,
    "items_relevant_anyway": 1,
@@ -4533,7 +4162,7 @@
   },
   {
    "profession": "pergolas",
-   "category": "שירות ניקוי מרזבים",
+   "category": "שירות טיפול בעצים",
    "items": 1,
    "items_relevant_anyway": 0,
    "cells": 1
@@ -4561,20 +4190,6 @@
   },
   {
    "profession": "pest-control",
-   "category": "ארגון להגנת בעלי חיים",
-   "items": 2,
-   "items_relevant_anyway": 2,
-   "cells": 2
-  },
-  {
-   "profession": "pest-control",
-   "category": "ארגון להגנת הסביבה",
-   "items": 2,
-   "items_relevant_anyway": 2,
-   "cells": 2
-  },
-  {
-   "profession": "pest-control",
    "category": "מוקד שירות",
    "items": 2,
    "items_relevant_anyway": 2,
@@ -4591,6 +4206,20 @@
    "profession": "pest-control",
    "category": "שירות פיקוח על ציפורים",
    "items": 2,
+   "items_relevant_anyway": 1,
+   "cells": 1
+  },
+  {
+   "profession": "pest-control",
+   "category": "ארגון להגנת בעלי חיים",
+   "items": 1,
+   "items_relevant_anyway": 1,
+   "cells": 1
+  },
+  {
+   "profession": "pest-control",
+   "category": "ארגון להגנת הסביבה",
+   "items": 1,
    "items_relevant_anyway": 1,
    "cells": 1
   },
@@ -4645,21 +4274,7 @@
   },
   {
    "profession": "pest-control",
-   "category": "שירות חילוץ בעלי חיים",
-   "items": 1,
-   "items_relevant_anyway": 0,
-   "cells": 1
-  },
-  {
-   "profession": "pest-control",
    "category": "שירות חקלאי",
-   "items": 1,
-   "items_relevant_anyway": 1,
-   "cells": 1
-  },
-  {
-   "profession": "pest-control",
-   "category": "שירות תברואה",
    "items": 1,
    "items_relevant_anyway": 1,
    "cells": 1
@@ -4674,223 +4289,195 @@
   {
    "profession": "plumber",
    "category": "שירות לסילוק שפכים",
-   "items": 93,
-   "items_relevant_anyway": 74,
-   "cells": 28
+   "items": 46,
+   "items_relevant_anyway": 33,
+   "cells": 14
   },
   {
    "profession": "plumber",
    "category": "שירות לבורות ספיגה",
-   "items": 52,
-   "items_relevant_anyway": 47,
-   "cells": 25
+   "items": 25,
+   "items_relevant_anyway": 21,
+   "cells": 12
   },
   {
    "profession": "plumber",
    "category": "שיפוצניק",
-   "items": 32,
-   "items_relevant_anyway": 14,
-   "cells": 20
-  },
-  {
-   "profession": "plumber",
-   "category": "שירותי ניקוז",
-   "items": 21,
-   "items_relevant_anyway": 20,
-   "cells": 19
+   "items": 16,
+   "items_relevant_anyway": 8,
+   "cells": 10
   },
   {
    "profession": "plumber",
    "category": "שירות תיקונים לאחר נזקי מים",
-   "items": 19,
-   "items_relevant_anyway": 18,
-   "cells": 15
+   "items": 13,
+   "items_relevant_anyway": 12,
+   "cells": 10
+  },
+  {
+   "profession": "plumber",
+   "category": "שירותי ניקוז",
+   "items": 11,
+   "items_relevant_anyway": 10,
+   "cells": 10
   },
   {
    "profession": "plumber",
    "category": "ספק דודי חימום",
-   "items": 13,
-   "items_relevant_anyway": 13,
-   "cells": 13
-  },
-  {
-   "profession": "plumber",
-   "category": "ספק צינורות",
-   "items": 10,
-   "items_relevant_anyway": 10,
-   "cells": 10
-  },
-  {
-   "profession": "plumber",
-   "category": "ספק צנרת",
-   "items": 10,
-   "items_relevant_anyway": 10,
-   "cells": 10
+   "items": 8,
+   "items_relevant_anyway": 8,
+   "cells": 8
   },
   {
    "profession": "plumber",
    "category": "שירות תברואה",
-   "items": 10,
+   "items": 7,
    "items_relevant_anyway": 0,
-   "cells": 10
-  },
-  {
-   "profession": "plumber",
-   "category": "מרפאת שיניים",
-   "items": 9,
-   "items_relevant_anyway": 0,
-   "cells": 9
+   "cells": 7
   },
   {
    "profession": "plumber",
    "category": "יצרן דודים",
-   "items": 7,
-   "items_relevant_anyway": 7,
-   "cells": 7
+   "items": 4,
+   "items_relevant_anyway": 4,
+   "cells": 4
   },
   {
    "profession": "plumber",
    "category": "מוקד שירות",
-   "items": 7,
+   "items": 4,
    "items_relevant_anyway": 0,
-   "cells": 7
+   "cells": 4
   },
   {
    "profession": "plumber",
-   "category": "חברת איטום",
-   "items": 6,
-   "items_relevant_anyway": 6,
-   "cells": 6
-  },
-  {
-   "profession": "plumber",
-   "category": "עבודות לאספקת מים",
-   "items": 6,
+   "category": "ספק צינורות",
+   "items": 4,
    "items_relevant_anyway": 4,
-   "cells": 6
+   "cells": 4
   },
   {
    "profession": "plumber",
-   "category": "קבלן קירות גבס",
-   "items": 6,
-   "items_relevant_anyway": 6,
-   "cells": 6
-  },
-  {
-   "profession": "plumber",
-   "category": "קבלן ריצוף",
-   "items": 6,
-   "items_relevant_anyway": 6,
-   "cells": 5
+   "category": "ספק צנרת",
+   "items": 4,
+   "items_relevant_anyway": 4,
+   "cells": 4
   },
   {
    "profession": "plumber",
    "category": "שירות תיקונים",
-   "items": 6,
-   "items_relevant_anyway": 6,
-   "cells": 6
+   "items": 4,
+   "items_relevant_anyway": 4,
+   "cells": 4
   },
   {
    "profession": "plumber",
    "category": "שירותי ניקוי מיכלי מים",
-   "items": 6,
-   "items_relevant_anyway": 6,
-   "cells": 6
-  },
-  {
-   "profession": "plumber",
-   "category": "ספק מסנני מים",
-   "items": 5,
-   "items_relevant_anyway": 5,
-   "cells": 5
-  },
-  {
-   "profession": "plumber",
-   "category": "ספק משאבות מים",
-   "items": 5,
-   "items_relevant_anyway": 5,
-   "cells": 5
-  },
-  {
-   "profession": "plumber",
-   "category": "מעצב גינות",
    "items": 4,
    "items_relevant_anyway": 4,
    "cells": 4
   },
   {
    "profession": "plumber",
-   "category": "ספק משאבות לתעשייה",
-   "items": 4,
-   "items_relevant_anyway": 4,
-   "cells": 4
+   "category": "חברת איטום",
+   "items": 3,
+   "items_relevant_anyway": 3,
+   "cells": 3
   },
   {
    "profession": "plumber",
-   "category": "ספק של ציוד חימום",
-   "items": 4,
-   "items_relevant_anyway": 4,
-   "cells": 4
-  },
-  {
-   "profession": "plumber",
-   "category": "קבלן בריכות שחייה",
-   "items": 4,
-   "items_relevant_anyway": 4,
-   "cells": 4
-  },
-  {
-   "profession": "plumber",
-   "category": "שירות ניקוי מרזבים",
-   "items": 4,
-   "items_relevant_anyway": 4,
-   "cells": 4
-  },
-  {
-   "profession": "plumber",
-   "category": "שירותי מרזבים",
-   "items": 4,
-   "items_relevant_anyway": 0,
-   "cells": 4
-  },
-  {
-   "profession": "plumber",
-   "category": "חברת ביוטכנולוגיה",
+   "category": "מרפאת שיניים",
    "items": 3,
    "items_relevant_anyway": 0,
    "cells": 3
   },
   {
    "profession": "plumber",
-   "category": "חשמלאי",
+   "category": "ספק משאבות מים",
+   "items": 3,
+   "items_relevant_anyway": 3,
+   "cells": 3
+  },
+  {
+   "profession": "plumber",
+   "category": "עבודות לאספקת מים",
    "items": 3,
    "items_relevant_anyway": 2,
    "cells": 3
   },
   {
    "profession": "plumber",
-   "category": "מנעולן",
+   "category": "קבלן קירות גבס",
+   "items": 3,
+   "items_relevant_anyway": 3,
+   "cells": 3
+  },
+  {
+   "profession": "plumber",
+   "category": "שירותי מרזבים",
    "items": 3,
    "items_relevant_anyway": 0,
    "cells": 3
   },
   {
    "profession": "plumber",
-   "category": "שירות איטום מפני חדירת מים",
-   "items": 3,
-   "items_relevant_anyway": 1,
-   "cells": 3
+   "category": "חברת ביוטכנולוגיה",
+   "items": 2,
+   "items_relevant_anyway": 0,
+   "cells": 2
   },
   {
    "profession": "plumber",
-   "category": "חברת בנייה",
+   "category": "מעצב גינות",
+   "items": 2,
+   "items_relevant_anyway": 2,
+   "cells": 2
+  },
+  {
+   "profession": "plumber",
+   "category": "ספק מסנני מים",
+   "items": 2,
+   "items_relevant_anyway": 2,
+   "cells": 2
+  },
+  {
+   "profession": "plumber",
+   "category": "ספק משאבות לתעשייה",
+   "items": 2,
+   "items_relevant_anyway": 2,
+   "cells": 2
+  },
+  {
+   "profession": "plumber",
+   "category": "ספק של ציוד חימום",
+   "items": 2,
+   "items_relevant_anyway": 2,
+   "cells": 2
+  },
+  {
+   "profession": "plumber",
+   "category": "קבלן בריכות שחייה",
+   "items": 2,
+   "items_relevant_anyway": 2,
+   "cells": 2
+  },
+  {
+   "profession": "plumber",
+   "category": "קבלן ריצוף",
+   "items": 2,
+   "items_relevant_anyway": 2,
+   "cells": 2
+  },
+  {
+   "profession": "plumber",
+   "category": "שירות איטום מפני חדירת מים",
    "items": 2,
    "items_relevant_anyway": 1,
    "cells": 2
   },
   {
    "profession": "plumber",
-   "category": "ספק מערכת מים חמים",
+   "category": "שירות ניקוי מרזבים",
    "items": 2,
    "items_relevant_anyway": 2,
    "cells": 2
@@ -4900,6 +4487,13 @@
    "category": "ביקורת תברואה",
    "items": 1,
    "items_relevant_anyway": 1,
+   "cells": 1
+  },
+  {
+   "profession": "plumber",
+   "category": "חברת בנייה",
+   "items": 1,
+   "items_relevant_anyway": 0,
    "cells": 1
   },
   {
@@ -4925,6 +4519,13 @@
   },
   {
    "profession": "plumber",
+   "category": "חשמלאי",
+   "items": 1,
+   "items_relevant_anyway": 1,
+   "cells": 1
+  },
+  {
+   "profession": "plumber",
    "category": "יועץ הנדסי",
    "items": 1,
    "items_relevant_anyway": 0,
@@ -4932,14 +4533,14 @@
   },
   {
    "profession": "plumber",
-   "category": "מחלקת בריאות הציבור",
+   "category": "מחסן",
    "items": 1,
    "items_relevant_anyway": 0,
    "cells": 1
   },
   {
    "profession": "plumber",
-   "category": "מחסן",
+   "category": "מנעולן",
    "items": 1,
    "items_relevant_anyway": 0,
    "cells": 1
@@ -4960,16 +4561,9 @@
   },
   {
    "profession": "plumber",
-   "category": "סוכנות ביטוח",
+   "category": "ספק מערכת מים חמים",
    "items": 1,
-   "items_relevant_anyway": 0,
-   "cells": 1
-  },
-  {
-   "profession": "plumber",
-   "category": "ספק דלתות",
-   "items": 1,
-   "items_relevant_anyway": 0,
+   "items_relevant_anyway": 1,
    "cells": 1
   },
   {
@@ -4988,27 +4582,6 @@
   },
   {
    "profession": "plumber",
-   "category": "צבע",
-   "items": 1,
-   "items_relevant_anyway": 1,
-   "cells": 1
-  },
-  {
-   "profession": "plumber",
-   "category": "קבלן בטון",
-   "items": 1,
-   "items_relevant_anyway": 1,
-   "cells": 1
-  },
-  {
-   "profession": "plumber",
-   "category": "קבלן בידוד",
-   "items": 1,
-   "items_relevant_anyway": 1,
-   "cells": 1
-  },
-  {
-   "profession": "plumber",
    "category": "קבלן בנייה",
    "items": 1,
    "items_relevant_anyway": 1,
@@ -5016,21 +4589,7 @@
   },
   {
    "profession": "plumber",
-   "category": "קבלן חדרי שמש",
-   "items": 1,
-   "items_relevant_anyway": 1,
-   "cells": 1
-  },
-  {
-   "profession": "plumber",
    "category": "קבלן חימום",
-   "items": 1,
-   "items_relevant_anyway": 1,
-   "cells": 1
-  },
-  {
-   "profession": "plumber",
-   "category": "קבלן מיזוג אוויר",
    "items": 1,
    "items_relevant_anyway": 1,
    "cells": 1
@@ -5045,13 +4604,6 @@
   {
    "profession": "plumber",
    "category": "שירות להחלפת שיער",
-   "items": 1,
-   "items_relevant_anyway": 1,
-   "cells": 1
-  },
-  {
-   "profession": "plumber",
-   "category": "שירות ניהול פסולת",
    "items": 1,
    "items_relevant_anyway": 1,
    "cells": 1
@@ -5087,44 +4639,37 @@
   {
    "profession": "renovation",
    "category": "שרברב",
-   "items": 55,
-   "items_relevant_anyway": 43,
-   "cells": 21
+   "items": 51,
+   "items_relevant_anyway": 42,
+   "cells": 18
   },
   {
    "profession": "renovation",
    "category": "קבלן בתים",
-   "items": 29,
-   "items_relevant_anyway": 25,
-   "cells": 20
+   "items": 27,
+   "items_relevant_anyway": 23,
+   "cells": 18
   },
   {
    "profession": "renovation",
    "category": "חשמלאי",
-   "items": 28,
-   "items_relevant_anyway": 25,
-   "cells": 22
+   "items": 23,
+   "items_relevant_anyway": 20,
+   "cells": 18
   },
   {
    "profession": "renovation",
    "category": "קבלן טיח",
-   "items": 22,
-   "items_relevant_anyway": 22,
-   "cells": 15
+   "items": 20,
+   "items_relevant_anyway": 20,
+   "cells": 13
   },
   {
    "profession": "renovation",
    "category": "קבלן בטון",
-   "items": 14,
-   "items_relevant_anyway": 14,
-   "cells": 12
-  },
-  {
-   "profession": "renovation",
-   "category": "עיצוב פנים",
-   "items": 13,
-   "items_relevant_anyway": 10,
-   "cells": 10
+   "items": 11,
+   "items_relevant_anyway": 11,
+   "cells": 9
   },
   {
    "profession": "renovation",
@@ -5132,13 +4677,6 @@
    "items": 11,
    "items_relevant_anyway": 6,
    "cells": 11
-  },
-  {
-   "profession": "renovation",
-   "category": "בונה דקים",
-   "items": 9,
-   "items_relevant_anyway": 9,
-   "cells": 6
   },
   {
    "profession": "renovation",
@@ -5163,17 +4701,17 @@
   },
   {
    "profession": "renovation",
-   "category": "מעצב חדרי אמבטיה",
-   "items": 8,
-   "items_relevant_anyway": 6,
-   "cells": 8
-  },
-  {
-   "profession": "renovation",
    "category": "עבודות בגובה רב",
    "items": 8,
    "items_relevant_anyway": 0,
    "cells": 6
+  },
+  {
+   "profession": "renovation",
+   "category": "עיצוב פנים",
+   "items": 8,
+   "items_relevant_anyway": 5,
+   "cells": 7
   },
   {
    "profession": "renovation",
@@ -5198,24 +4736,10 @@
   },
   {
    "profession": "renovation",
-   "category": "שירות תיקונים למזגנים",
+   "category": "מעצב חדרי אמבטיה",
    "items": 7,
-   "items_relevant_anyway": 7,
-   "cells": 5
-  },
-  {
-   "profession": "renovation",
-   "category": "אדריכל",
-   "items": 6,
    "items_relevant_anyway": 5,
-   "cells": 6
-  },
-  {
-   "profession": "renovation",
-   "category": "נגר",
-   "items": 6,
-   "items_relevant_anyway": 5,
-   "cells": 6
+   "cells": 7
   },
   {
    "profession": "renovation",
@@ -5226,13 +4750,6 @@
   },
   {
    "profession": "renovation",
-   "category": "חנות חומרי בניין",
-   "items": 5,
-   "items_relevant_anyway": 1,
-   "cells": 4
-  },
-  {
-   "profession": "renovation",
    "category": "מעצב מחדש",
    "items": 5,
    "items_relevant_anyway": 3,
@@ -5240,35 +4757,21 @@
   },
   {
    "profession": "renovation",
+   "category": "טייחות",
+   "items": 4,
+   "items_relevant_anyway": 4,
+   "cells": 4
+  },
+  {
+   "profession": "renovation",
    "category": "נגרות",
-   "items": 5,
-   "items_relevant_anyway": 5,
-   "cells": 5
+   "items": 4,
+   "items_relevant_anyway": 4,
+   "cells": 4
   },
   {
    "profession": "renovation",
    "category": "ציור",
-   "items": 5,
-   "items_relevant_anyway": 5,
-   "cells": 5
-  },
-  {
-   "profession": "renovation",
-   "category": "שירות לשיווק באינטרנט",
-   "items": 5,
-   "items_relevant_anyway": 5,
-   "cells": 5
-  },
-  {
-   "profession": "renovation",
-   "category": "חנות למוצרי בניין",
-   "items": 4,
-   "items_relevant_anyway": 0,
-   "cells": 3
-  },
-  {
-   "profession": "renovation",
-   "category": "טייחות",
    "items": 4,
    "items_relevant_anyway": 4,
    "cells": 4
@@ -5282,6 +4785,20 @@
   },
   {
    "profession": "renovation",
+   "category": "אדריכל",
+   "items": 3,
+   "items_relevant_anyway": 2,
+   "cells": 3
+  },
+  {
+   "profession": "renovation",
+   "category": "בונה דקים",
+   "items": 3,
+   "items_relevant_anyway": 3,
+   "cells": 3
+  },
+  {
+   "profession": "renovation",
    "category": "חנות הכל לבית",
    "items": 3,
    "items_relevant_anyway": 2,
@@ -5289,10 +4806,17 @@
   },
   {
    "profession": "renovation",
-   "category": "חנות לציוד אינסטלציה",
+   "category": "חנות חומרי בניין",
+   "items": 3,
+   "items_relevant_anyway": 0,
+   "cells": 3
+  },
+  {
+   "profession": "renovation",
+   "category": "נגר",
    "items": 3,
    "items_relevant_anyway": 2,
-   "cells": 2
+   "cells": 3
   },
   {
    "profession": "renovation",
@@ -5310,17 +4834,17 @@
   },
   {
    "profession": "renovation",
-   "category": "שירות שכפול מפתחות",
-   "items": 3,
-   "items_relevant_anyway": 1,
-   "cells": 3
-  },
-  {
-   "profession": "renovation",
    "category": "שירות תיקונים לאחר נזקי מים",
    "items": 3,
    "items_relevant_anyway": 0,
    "cells": 3
+  },
+  {
+   "profession": "renovation",
+   "category": "חנות למוצרי בניין",
+   "items": 2,
+   "items_relevant_anyway": 0,
+   "cells": 1
   },
   {
    "profession": "renovation",
@@ -5374,6 +4898,27 @@
   {
    "profession": "renovation",
    "category": "קבלן תשתיות",
+   "items": 2,
+   "items_relevant_anyway": 2,
+   "cells": 2
+  },
+  {
+   "profession": "renovation",
+   "category": "שירות לשיווק באינטרנט",
+   "items": 2,
+   "items_relevant_anyway": 2,
+   "cells": 2
+  },
+  {
+   "profession": "renovation",
+   "category": "שירות שכפול מפתחות",
+   "items": 2,
+   "items_relevant_anyway": 0,
+   "cells": 2
+  },
+  {
+   "profession": "renovation",
+   "category": "שירות תיקונים למזגנים",
    "items": 2,
    "items_relevant_anyway": 2,
    "cells": 2
@@ -5436,37 +4981,9 @@
   },
   {
    "profession": "renovation",
-   "category": "חלל עבודה משותף",
-   "items": 1,
-   "items_relevant_anyway": 1,
-   "cells": 1
-  },
-  {
-   "profession": "renovation",
    "category": "חנות ארונות",
    "items": 1,
    "items_relevant_anyway": 1,
-   "cells": 1
-  },
-  {
-   "profession": "renovation",
-   "category": "חנות חשמל ואלקטרוניקה",
-   "items": 1,
-   "items_relevant_anyway": 1,
-   "cells": 1
-  },
-  {
-   "profession": "renovation",
-   "category": "חנות כלי עבודה",
-   "items": 1,
-   "items_relevant_anyway": 0,
-   "cells": 1
-  },
-  {
-   "profession": "renovation",
-   "category": "חנות למוצרי צביעה",
-   "items": 1,
-   "items_relevant_anyway": 0,
    "cells": 1
   },
   {
@@ -5478,9 +4995,9 @@
   },
   {
    "profession": "renovation",
-   "category": "חנות לציוד חשמלי",
+   "category": "חנות לציוד אינסטלציה",
    "items": 1,
-   "items_relevant_anyway": 0,
+   "items_relevant_anyway": 1,
    "cells": 1
   },
   {
@@ -5548,13 +5065,6 @@
   },
   {
    "profession": "renovation",
-   "category": "מוצרי חשמל",
-   "items": 1,
-   "items_relevant_anyway": 1,
-   "cells": 1
-  },
-  {
-   "profession": "renovation",
    "category": "ספק דודי חימום",
    "items": 1,
    "items_relevant_anyway": 0,
@@ -5591,13 +5101,6 @@
   {
    "profession": "renovation",
    "category": "ספק מערכת סולרית למים חמים",
-   "items": 1,
-   "items_relevant_anyway": 0,
-   "cells": 1
-  },
-  {
-   "profession": "renovation",
-   "category": "עורך דין",
    "items": 1,
    "items_relevant_anyway": 0,
    "cells": 1
@@ -5682,29 +5185,22 @@
   {
    "profession": "roofing",
    "category": "שירות שיקום בניינים",
-   "items": 23,
-   "items_relevant_anyway": 21,
-   "cells": 13
-  },
-  {
-   "profession": "roofing",
-   "category": "קבלן טיח",
-   "items": 16,
-   "items_relevant_anyway": 7,
+   "items": 19,
+   "items_relevant_anyway": 17,
    "cells": 12
-  },
-  {
-   "profession": "roofing",
-   "category": "קבלן בטון",
-   "items": 15,
-   "items_relevant_anyway": 6,
-   "cells": 11
   },
   {
    "profession": "roofing",
    "category": "קבלן בתים",
    "items": 15,
    "items_relevant_anyway": 1,
+   "cells": 11
+  },
+  {
+   "profession": "roofing",
+   "category": "קבלן טיח",
+   "items": 15,
+   "items_relevant_anyway": 6,
    "cells": 11
   },
   {
@@ -5723,17 +5219,17 @@
   },
   {
    "profession": "roofing",
-   "category": "חנות למוצרי בניין",
-   "items": 13,
-   "items_relevant_anyway": 5,
-   "cells": 13
-  },
-  {
-   "profession": "roofing",
    "category": "צבע",
    "items": 13,
    "items_relevant_anyway": 9,
    "cells": 10
+  },
+  {
+   "profession": "roofing",
+   "category": "קבלן בטון",
+   "items": 13,
+   "items_relevant_anyway": 5,
+   "cells": 9
   },
   {
    "profession": "roofing",
@@ -5744,24 +5240,10 @@
   },
   {
    "profession": "roofing",
-   "category": "מפקח בנייה",
+   "category": "חנות למוצרי בניין",
    "items": 11,
-   "items_relevant_anyway": 11,
-   "cells": 10
-  },
-  {
-   "profession": "roofing",
-   "category": "קבלן בריכות שחייה",
-   "items": 10,
-   "items_relevant_anyway": 7,
-   "cells": 10
-  },
-  {
-   "profession": "roofing",
-   "category": "שירות תיקונים לאחר נזקי מים",
-   "items": 10,
-   "items_relevant_anyway": 9,
-   "cells": 9
+   "items_relevant_anyway": 4,
+   "cells": 11
   },
   {
    "profession": "roofing",
@@ -5772,9 +5254,23 @@
   },
   {
    "profession": "roofing",
-   "category": "מהנדס מבנים",
-   "items": 8,
-   "items_relevant_anyway": 3,
+   "category": "מפקח בנייה",
+   "items": 9,
+   "items_relevant_anyway": 9,
+   "cells": 8
+  },
+  {
+   "profession": "roofing",
+   "category": "קבלן בריכות שחייה",
+   "items": 9,
+   "items_relevant_anyway": 6,
+   "cells": 9
+  },
+  {
+   "profession": "roofing",
+   "category": "שירות תיקונים לאחר נזקי מים",
+   "items": 9,
+   "items_relevant_anyway": 8,
    "cells": 8
   },
   {
@@ -5783,6 +5279,13 @@
    "items": 7,
    "items_relevant_anyway": 0,
    "cells": 6
+  },
+  {
+   "profession": "roofing",
+   "category": "מהנדס מבנים",
+   "items": 7,
+   "items_relevant_anyway": 2,
+   "cells": 7
   },
   {
    "profession": "roofing",
@@ -5821,20 +5324,6 @@
   },
   {
    "profession": "roofing",
-   "category": "שירותי מרזבים",
-   "items": 6,
-   "items_relevant_anyway": 6,
-   "cells": 6
-  },
-  {
-   "profession": "roofing",
-   "category": "איגוד או ארגון",
-   "items": 5,
-   "items_relevant_anyway": 5,
-   "cells": 5
-  },
-  {
-   "profession": "roofing",
    "category": "מעצב נוף",
    "items": 5,
    "items_relevant_anyway": 0,
@@ -5846,13 +5335,6 @@
    "items": 5,
    "items_relevant_anyway": 1,
    "cells": 3
-  },
-  {
-   "profession": "roofing",
-   "category": "שירות בדיקת אסבסט",
-   "items": 5,
-   "items_relevant_anyway": 5,
-   "cells": 5
   },
   {
    "profession": "roofing",
@@ -5870,7 +5352,14 @@
   },
   {
    "profession": "roofing",
-   "category": "חנות למוצרי אטימה",
+   "category": "שירותי מרזבים",
+   "items": 5,
+   "items_relevant_anyway": 5,
+   "cells": 5
+  },
+  {
+   "profession": "roofing",
+   "category": "איגוד או ארגון",
    "items": 4,
    "items_relevant_anyway": 4,
    "cells": 4
@@ -5919,7 +5408,7 @@
   },
   {
    "profession": "roofing",
-   "category": "שירותי ניקוז",
+   "category": "שירות בדיקת אסבסט",
    "items": 4,
    "items_relevant_anyway": 4,
    "cells": 4
@@ -5940,6 +5429,13 @@
   },
   {
    "profession": "roofing",
+   "category": "חנות למוצרי אטימה",
+   "items": 3,
+   "items_relevant_anyway": 3,
+   "cells": 3
+  },
+  {
+   "profession": "roofing",
    "category": "עיצוב פנים",
    "items": 3,
    "items_relevant_anyway": 0,
@@ -5950,6 +5446,13 @@
    "category": "שירות להתקנת מוצרי חשמל",
    "items": 3,
    "items_relevant_anyway": 2,
+   "cells": 3
+  },
+  {
+   "profession": "roofing",
+   "category": "שירותי ניקוז",
+   "items": 3,
+   "items_relevant_anyway": 3,
    "cells": 3
   },
   {
@@ -7554,87 +7057,7 @@
    "cell_id": "ac-repair@modiin",
    "profession": "ac-repair",
    "city": "modiin",
-   "top20_relevance": {
-    "exact": 11,
-    "not_relevant": 9
-   },
-   "unmatched": [
-    {
-     "category": "קבלן חימום, אוורור ומזוג אוויר",
-     "items": 3,
-     "items_relevant_anyway": 2
-    },
-    {
-     "category": "חשמלאי",
-     "items": 2,
-     "items_relevant_anyway": 2
-    },
-    {
-     "category": "שיפוצניק",
-     "items": 2,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "שירות תיקון מקררים",
-     "items": 2,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "שירות תיקונים למכונות ומייבשי כביסה",
-     "items": 2,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "שירות תיקונים למכשירי חשמל",
-     "items": 2,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "חברת בנייה",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "נגר",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "ספק דודי חימום",
-     "items": 1,
-     "items_relevant_anyway": 0
-    },
-    {
-     "category": "צבע",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "קבלן בתים",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "קבלן ריצוף",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "שירות תיקונים לתנורים",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "שירותי בריאות עד הבית",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "שרברב",
-     "items": 1,
-     "items_relevant_anyway": 1
-    }
-   ]
+   "skipped": "stopped at step 1 (step1_saturated; no Maps call; Local Finder items carry no category)"
   },
   {
    "cell_id": "ac-repair@gedera",
@@ -9019,62 +8442,7 @@
    "cell_id": "electrician@ramat-gan",
    "profession": "electrician",
    "city": "ramat-gan",
-   "top20_relevance": {
-    "exact": 18,
-    "not_relevant": 2
-   },
-   "unmatched": [
-    {
-     "category": "שירות להתקנת מוצרי חשמל",
-     "items": 2,
-     "items_relevant_anyway": 2
-    },
-    {
-     "category": "חברת חשמל",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "חנות חשמל ואלקטרוניקה",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "חנות לציוד חשמלי",
-     "items": 1,
-     "items_relevant_anyway": 0
-    },
-    {
-     "category": "חנות לתיקון מוצרים אלקטרוניים",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "מנעולן",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "ספק אזעקות לרכב",
-     "items": 1,
-     "items_relevant_anyway": 0
-    },
-    {
-     "category": "ספק דודי חימום",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "ספק מערכת סולרית למים חמים",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "קבלן תאורה",
-     "items": 1,
-     "items_relevant_anyway": 1
-    }
-   ]
+   "skipped": "stopped at step 1 (step1_saturated; no Maps call; Local Finder items carry no category)"
   },
   {
    "cell_id": "electrician@givatayim",
@@ -9491,107 +8859,7 @@
    "cell_id": "electrician@raanana",
    "profession": "electrician",
    "city": "raanana",
-   "top20_relevance": {
-    "exact": 15,
-    "not_relevant": 5
-   },
-   "unmatched": [
-    {
-     "category": "מהנדס חשמל",
-     "items": 2,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "שיפוצניק",
-     "items": 2,
-     "items_relevant_anyway": 2
-    },
-    {
-     "category": "גנן נוף",
-     "items": 1,
-     "items_relevant_anyway": 0
-    },
-    {
-     "category": "חלון אלומיניום",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "חנות למנועים חשמליים",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "חנות לציוד חשמלי",
-     "items": 1,
-     "items_relevant_anyway": 0
-    },
-    {
-     "category": "חנות לתיקון מנועים חשמליים",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "חנות תריסים ווילונות",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "מוסך",
-     "items": 1,
-     "items_relevant_anyway": 0
-    },
-    {
-     "category": "צבע",
-     "items": 1,
-     "items_relevant_anyway": 0
-    },
-    {
-     "category": "רתך",
-     "items": 1,
-     "items_relevant_anyway": 0
-    },
-    {
-     "category": "שירות איטום מפני חדירת מים",
-     "items": 1,
-     "items_relevant_anyway": 0
-    },
-    {
-     "category": "שירות התקנת חלונות",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "שירות טיפוח מדשאות",
-     "items": 1,
-     "items_relevant_anyway": 0
-    },
-    {
-     "category": "שירות להתקנת מוצרי חשמל",
-     "items": 1,
-     "items_relevant_anyway": 0
-    },
-    {
-     "category": "שירות שיפוץ משרדים",
-     "items": 1,
-     "items_relevant_anyway": 0
-    },
-    {
-     "category": "שירות תיקונים למחשב",
-     "items": 1,
-     "items_relevant_anyway": 0
-    },
-    {
-     "category": "שירותי מרזבים",
-     "items": 1,
-     "items_relevant_anyway": 0
-    },
-    {
-     "category": "תחזוקת נכסים",
-     "items": 1,
-     "items_relevant_anyway": 0
-    }
-   ]
+   "skipped": "stopped at step 1 (step1_saturated; no Maps call; Local Finder items carry no category)"
   },
   {
    "cell_id": "electrician@kfar-saba",
@@ -11826,53 +11094,7 @@
    "cell_id": "kitchens@holon",
    "profession": "kitchens",
    "city": "holon",
-   "top20_relevance": {
-    "contains": 15,
-    "not_relevant": 3,
-    "conditional_title": 2
-   },
-   "unmatched": [
-    {
-     "category": "ייצור רהיטים",
-     "items": 2,
-     "items_relevant_anyway": 2
-    },
-    {
-     "category": "עיצוב אדריכלי",
-     "items": 2,
-     "items_relevant_anyway": 2
-    },
-    {
-     "category": "עיצוב פנים",
-     "items": 2,
-     "items_relevant_anyway": 2
-    },
-    {
-     "category": "בונה בתים בהתאמה אישית",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "חנות רהיטים",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "יצרן ארונות",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "מלאכת יד",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "סוכנות עיצוב",
-     "items": 1,
-     "items_relevant_anyway": 0
-    }
-   ]
+   "skipped": "stopped at step 1 (step1_saturated; no Maps call; Local Finder items carry no category)"
   },
   {
    "cell_id": "kitchens@bat-yam",
@@ -13483,53 +12705,7 @@
    "cell_id": "locksmith@rehovot",
    "profession": "locksmith",
    "city": "rehovot",
-   "top20_relevance": {
-    "exact": 16,
-    "generic_title": 1,
-    "not_relevant": 3
-   },
-   "unmatched": [
-    {
-     "category": "שירות שכפול מפתחות",
-     "items": 7,
-     "items_relevant_anyway": 6
-    },
-    {
-     "category": "שירותי מנעולנות חירום",
-     "items": 4,
-     "items_relevant_anyway": 3
-    },
-    {
-     "category": "חנות כספות",
-     "items": 2,
-     "items_relevant_anyway": 2
-    },
-    {
-     "category": "חנות למוצרי אבטחה",
-     "items": 2,
-     "items_relevant_anyway": 2
-    },
-    {
-     "category": "ספק דלתות",
-     "items": 2,
-     "items_relevant_anyway": 2
-    },
-    {
-     "category": "ספק מערכות אבטחה",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "שירות אבטחה",
-     "items": 1,
-     "items_relevant_anyway": 0
-    },
-    {
-     "category": "שירות התקנת מערכות אבטחה",
-     "items": 1,
-     "items_relevant_anyway": 1
-    }
-   ]
+   "skipped": "stopped at step 1 (step1_saturated; no Maps call; Local Finder items carry no category)"
   },
   {
    "cell_id": "locksmith@ness-ziona",
@@ -13815,57 +12991,7 @@
    "cell_id": "locksmith@mazkeret-batya",
    "profession": "locksmith",
    "city": "mazkeret-batya",
-   "top20_relevance": {
-    "not_relevant": 3,
-    "exact": 17
-   },
-   "unmatched": [
-    {
-     "category": "שירות שכפול מפתחות",
-     "items": 5,
-     "items_relevant_anyway": 4
-    },
-    {
-     "category": "שירותי מנעולנות חירום",
-     "items": 2,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "בית ספר",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "חנות בולים",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "חנות כספות",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "חנות למוצרי אבטחה",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "מרכז לימודים",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "סיטונאי",
-     "items": 1,
-     "items_relevant_anyway": 0
-    },
-    {
-     "category": "ספק דלתות",
-     "items": 1,
-     "items_relevant_anyway": 1
-    }
-   ]
+   "skipped": "stopped at step 1 (step1_saturated; no Maps call; Local Finder items carry no category)"
   },
   {
    "cell_id": "locksmith@beer-yaakov",
@@ -15061,183 +14187,25 @@
    "cell_id": "movers@rishon-lezion",
    "profession": "movers",
    "city": "rishon-lezion",
-   "top20_relevance": {
-    "contains": 18,
-    "not_relevant": 2
-   },
-   "unmatched": [
-    {
-     "category": "שירות הסעות",
-     "items": 2,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "שירות העברת פסנתרים",
-     "items": 2,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "שירות הפצה",
-     "items": 2,
-     "items_relevant_anyway": 2
-    },
-    {
-     "category": "חברת אריזה",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "שירות מוניות",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "שירות משלוחים",
-     "items": 1,
-     "items_relevant_anyway": 1
-    }
-   ]
+   "skipped": "stopped at step 1 (step1_saturated; no Maps call; Local Finder items carry no category)"
   },
   {
    "cell_id": "movers@rehovot",
    "profession": "movers",
    "city": "rehovot",
-   "top20_relevance": {
-    "contains": 16,
-    "generic_title": 1,
-    "not_relevant": 3
-   },
-   "unmatched": [
-    {
-     "category": "שירות משלוחים",
-     "items": 2,
-     "items_relevant_anyway": 0
-    },
-    {
-     "category": "אימון אישי לחיים",
-     "items": 1,
-     "items_relevant_anyway": 0
-    },
-    {
-     "category": "קבלנות משטחים",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "שירות העברת פסנתרים",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "שירות הפצה",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "שירות לוגיסטיקה",
-     "items": 1,
-     "items_relevant_anyway": 1
-    }
-   ]
+   "skipped": "stopped at step 1 (step1_saturated; no Maps call; Local Finder items carry no category)"
   },
   {
    "cell_id": "movers@ness-ziona",
    "profession": "movers",
    "city": "ness-ziona",
-   "top20_relevance": {
-    "contains": 18,
-    "generic_title": 1,
-    "not_relevant": 1
-   },
-   "unmatched": [
-    {
-     "category": "שירות הפצה",
-     "items": 2,
-     "items_relevant_anyway": 2
-    },
-    {
-     "category": "חברת אריזה",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "קבלנות משטחים",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "שירות הסעות",
-     "items": 1,
-     "items_relevant_anyway": 0
-    },
-    {
-     "category": "שירות העברת פסנתרים",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "שירות לוגיסטיקה",
-     "items": 1,
-     "items_relevant_anyway": 1
-    }
-   ]
+   "skipped": "stopped at step 1 (step1_saturated; no Maps call; Local Finder items carry no category)"
   },
   {
    "cell_id": "movers@yavne",
    "profession": "movers",
    "city": "yavne",
-   "top20_relevance": {
-    "contains": 14,
-    "generic_title": 3,
-    "not_relevant": 3
-   },
-   "unmatched": [
-    {
-     "category": "שירות משלוחים",
-     "items": 3,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "שירות לוגיסטיקה",
-     "items": 2,
-     "items_relevant_anyway": 2
-    },
-    {
-     "category": "חנות לציוד אריזה",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "קבלנות משטחים",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "שירות העברת פסנתרים",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "שירות הפצה",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "שירות מוניות",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "שירות שליחים",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "שירותי מנוף",
-     "items": 1,
-     "items_relevant_anyway": 0
-    }
-   ]
+   "skipped": "stopped at step 1 (step1_saturated; no Maps call; Local Finder items carry no category)"
   },
   {
    "cell_id": "movers@lod",
@@ -15275,48 +14243,7 @@
    "cell_id": "movers@ramla",
    "profession": "movers",
    "city": "ramla",
-   "top20_relevance": {
-    "generic_title": 5,
-    "contains": 13,
-    "not_relevant": 2
-   },
-   "unmatched": [
-    {
-     "category": "שירות משלוחים",
-     "items": 3,
-     "items_relevant_anyway": 2
-    },
-    {
-     "category": "שירות הפצה",
-     "items": 2,
-     "items_relevant_anyway": 2
-    },
-    {
-     "category": "שירות לוגיסטיקה",
-     "items": 2,
-     "items_relevant_anyway": 2
-    },
-    {
-     "category": "חברת אריזה",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "שיפוצניק",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "שירות הסעות",
-     "items": 1,
-     "items_relevant_anyway": 0
-    },
-    {
-     "category": "שירות העברת פסנתרים",
-     "items": 1,
-     "items_relevant_anyway": 1
-    }
-   ]
+   "skipped": "stopped at step 1 (step1_saturated; no Maps call; Local Finder items carry no category)"
   },
   {
    "cell_id": "movers@modiin",
@@ -15354,22 +14281,7 @@
    "cell_id": "movers@gedera",
    "profession": "movers",
    "city": "gedera",
-   "top20_relevance": {
-    "contains": 19,
-    "generic_title": 1
-   },
-   "unmatched": [
-    {
-     "category": "שירותי מנוף",
-     "items": 2,
-     "items_relevant_anyway": 2
-    },
-    {
-     "category": "שירות לוגיסטיקה",
-     "items": 1,
-     "items_relevant_anyway": 1
-    }
-   ]
+   "skipped": "stopped at step 1 (step1_saturated; no Maps call; Local Finder items carry no category)"
   },
   {
    "cell_id": "movers@mazkeret-batya",
@@ -15469,33 +14381,7 @@
    "cell_id": "movers@gan-yavne",
    "profession": "movers",
    "city": "gan-yavne",
-   "top20_relevance": {
-    "contains": 17,
-    "not_relevant": 1,
-    "generic_title": 2
-   },
-   "unmatched": [
-    {
-     "category": "שירותי מנוף",
-     "items": 3,
-     "items_relevant_anyway": 3
-    },
-    {
-     "category": "חברת אריזה",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "שירות העברת פסנתרים",
-     "items": 1,
-     "items_relevant_anyway": 0
-    },
-    {
-     "category": "שירות משלוחים",
-     "items": 1,
-     "items_relevant_anyway": 1
-    }
-   ]
+   "skipped": "stopped at step 1 (step1_saturated; no Maps call; Local Finder items carry no category)"
   },
   {
    "cell_id": "movers@shoham",
@@ -15528,27 +14414,7 @@
    "cell_id": "movers@ashdod",
    "profession": "movers",
    "city": "ashdod",
-   "top20_relevance": {
-    "contains": 19,
-    "not_relevant": 1
-   },
-   "unmatched": [
-    {
-     "category": "שירות משלוחים",
-     "items": 2,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "שירותי מנוף",
-     "items": 2,
-     "items_relevant_anyway": 2
-    },
-    {
-     "category": "חברת אריזה",
-     "items": 1,
-     "items_relevant_anyway": 1
-    }
-   ]
+   "skipped": "stopped at step 1 (step1_saturated; no Maps call; Local Finder items carry no category)"
   },
   {
    "cell_id": "movers@ashkelon",
@@ -15575,43 +14441,7 @@
    "cell_id": "movers@kiryat-malakhi",
    "profession": "movers",
    "city": "kiryat-malakhi",
-   "top20_relevance": {
-    "contains": 14,
-    "not_relevant": 5,
-    "generic_title": 1
-   },
-   "unmatched": [
-    {
-     "category": "שירותי מנוף",
-     "items": 2,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "תיווך נדל\"ן",
-     "items": 2,
-     "items_relevant_anyway": 0
-    },
-    {
-     "category": "גנן נוף",
-     "items": 1,
-     "items_relevant_anyway": 0
-    },
-    {
-     "category": "ספק חומרי בניין",
-     "items": 1,
-     "items_relevant_anyway": 0
-    },
-    {
-     "category": "שירות העברת פסנתרים",
-     "items": 1,
-     "items_relevant_anyway": 0
-    },
-    {
-     "category": "שירותי השכרת כלי גינון",
-     "items": 1,
-     "items_relevant_anyway": 0
-    }
-   ]
+   "skipped": "stopped at step 1 (step1_saturated; no Maps call; Local Finder items carry no category)"
   },
   {
    "cell_id": "movers@kiryat-gat",
@@ -16625,92 +15455,7 @@
    "cell_id": "painter@rehovot",
    "profession": "painter",
    "city": "rehovot",
-   "top20_relevance": {
-    "exact": 2,
-    "not_relevant": 18
-   },
-   "unmatched": [
-    {
-     "category": "חנות חומרי בניין",
-     "items": 5,
-     "items_relevant_anyway": 0
-    },
-    {
-     "category": "שיפוצניק",
-     "items": 2,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "חנות",
-     "items": 1,
-     "items_relevant_anyway": 0
-    },
-    {
-     "category": "חנות כלי עבודה",
-     "items": 1,
-     "items_relevant_anyway": 0
-    },
-    {
-     "category": "חנות למוצרי בניין",
-     "items": 1,
-     "items_relevant_anyway": 0
-    },
-    {
-     "category": "חנות למוצרי קוסמטיקה",
-     "items": 1,
-     "items_relevant_anyway": 0
-    },
-    {
-     "category": "חנות לציוד משרדי",
-     "items": 1,
-     "items_relevant_anyway": 0
-    },
-    {
-     "category": "חנות לתיקון רהיטים",
-     "items": 1,
-     "items_relevant_anyway": 0
-    },
-    {
-     "category": "חנות תחביבים",
-     "items": 1,
-     "items_relevant_anyway": 0
-    },
-    {
-     "category": "מוסך פחחות וצבע",
-     "items": 1,
-     "items_relevant_anyway": 0
-    },
-    {
-     "category": "מוסך רכב",
-     "items": 1,
-     "items_relevant_anyway": 0
-    },
-    {
-     "category": "מנעולן",
-     "items": 1,
-     "items_relevant_anyway": 0
-    },
-    {
-     "category": "ספק חומרי בניין",
-     "items": 1,
-     "items_relevant_anyway": 0
-    },
-    {
-     "category": "צביעת רכב",
-     "items": 1,
-     "items_relevant_anyway": 0
-    },
-    {
-     "category": "שירות תיקונים ושחזור לרכב",
-     "items": 1,
-     "items_relevant_anyway": 0
-    },
-    {
-     "category": "שירותי ליטוש מתכת",
-     "items": 1,
-     "items_relevant_anyway": 0
-    }
-   ]
+   "skipped": "stopped at step 1 (step1_saturated; no Maps call; Local Finder items carry no category)"
   },
   {
    "cell_id": "painter@ness-ziona",
@@ -17159,59 +15904,7 @@
    "cell_id": "pergolas@or-yehuda",
    "profession": "pergolas",
    "city": "or-yehuda",
-   "top20_relevance": {
-    "not_relevant": 5,
-    "exact": 13,
-    "conditional_title": 1,
-    "generic_title": 1
-   },
-   "unmatched": [
-    {
-     "category": "אדריכל נוף",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "חברת בנייה",
-     "items": 1,
-     "items_relevant_anyway": 0
-    },
-    {
-     "category": "חברת תפירה",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "חלון אלומיניום",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "ספק כיסויים לסירות",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "ספק מסגרות אלומיניום",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "עבודות בגובה רב",
-     "items": 1,
-     "items_relevant_anyway": 0
-    },
-    {
-     "category": "עיצוב אדריכלי",
-     "items": 1,
-     "items_relevant_anyway": 0
-    },
-    {
-     "category": "שירות הצללת חלונות",
-     "items": 1,
-     "items_relevant_anyway": 1
-    }
-   ]
+   "skipped": "stopped at step 1 (step1_saturated; no Maps call; Local Finder items carry no category)"
   },
   {
    "cell_id": "pergolas@yehud-monosson",
@@ -17424,323 +16117,25 @@
    "cell_id": "pergolas@herzliya",
    "profession": "pergolas",
    "city": "herzliya",
-   "top20_relevance": {
-    "exact": 7,
-    "conditional_title": 3,
-    "generic_title": 3,
-    "not_relevant": 7
-   },
-   "unmatched": [
-    {
-     "category": "חלון אלומיניום",
-     "items": 1,
-     "items_relevant_anyway": 0
-    },
-    {
-     "category": "חנות בדים",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "חנות לציוד מחנאות",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "חנות ציוד לגגות",
-     "items": 1,
-     "items_relevant_anyway": 0
-    },
-    {
-     "category": "חנות תפירה",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "יבואן",
-     "items": 1,
-     "items_relevant_anyway": 0
-    },
-    {
-     "category": "יצרן זכוכיות",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "לינה",
-     "items": 1,
-     "items_relevant_anyway": 0
-    },
-    {
-     "category": "ספק חלונות",
-     "items": 1,
-     "items_relevant_anyway": 0
-    },
-    {
-     "category": "ספק מסגרות אלומיניום",
-     "items": 1,
-     "items_relevant_anyway": 0
-    },
-    {
-     "category": "שירות הצללת חלונות",
-     "items": 1,
-     "items_relevant_anyway": 0
-    }
-   ]
+   "skipped": "stopped at step 1 (step1_saturated; no Maps call; Local Finder items carry no category)"
   },
   {
    "cell_id": "pergolas@raanana",
    "profession": "pergolas",
    "city": "raanana",
-   "top20_relevance": {
-    "exact": 6,
-    "conditional_title": 4,
-    "not_relevant": 8,
-    "generic_title": 2
-   },
-   "unmatched": [
-    {
-     "category": "חברת בנייה",
-     "items": 1,
-     "items_relevant_anyway": 0
-    },
-    {
-     "category": "חלון אלומיניום",
-     "items": 1,
-     "items_relevant_anyway": 0
-    },
-    {
-     "category": "חנות",
-     "items": 1,
-     "items_relevant_anyway": 0
-    },
-    {
-     "category": "חנות בדים",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "חנות לחומרי עץ",
-     "items": 1,
-     "items_relevant_anyway": 0
-    },
-    {
-     "category": "חנות לציוד מחנאות",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "חנות ציוד לגגות",
-     "items": 1,
-     "items_relevant_anyway": 0
-    },
-    {
-     "category": "חנות תפירה",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "לינה",
-     "items": 1,
-     "items_relevant_anyway": 0
-    },
-    {
-     "category": "מעצב גינות",
-     "items": 1,
-     "items_relevant_anyway": 0
-    },
-    {
-     "category": "נגר",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "ספק חלונות",
-     "items": 1,
-     "items_relevant_anyway": 0
-    },
-    {
-     "category": "ספק מסגרות אלומיניום",
-     "items": 1,
-     "items_relevant_anyway": 0
-    },
-    {
-     "category": "שירות הצללת חלונות",
-     "items": 1,
-     "items_relevant_anyway": 0
-    }
-   ]
+   "skipped": "stopped at step 1 (step1_saturated; no Maps call; Local Finder items carry no category)"
   },
   {
    "cell_id": "pergolas@kfar-saba",
    "profession": "pergolas",
    "city": "kfar-saba",
-   "top20_relevance": {
-    "conditional_title": 4,
-    "exact": 8,
-    "not_relevant": 6,
-    "generic_title": 2
-   },
-   "unmatched": [
-    {
-     "category": "בונה בתים בהתאמה אישית",
-     "items": 1,
-     "items_relevant_anyway": 0
-    },
-    {
-     "category": "בונה מחסנים",
-     "items": 1,
-     "items_relevant_anyway": 0
-    },
-    {
-     "category": "גגן",
-     "items": 1,
-     "items_relevant_anyway": 0
-    },
-    {
-     "category": "חברת בנייה",
-     "items": 1,
-     "items_relevant_anyway": 0
-    },
-    {
-     "category": "חנות בדים",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "חנות לעבודות עץ",
-     "items": 1,
-     "items_relevant_anyway": 0
-    },
-    {
-     "category": "חנות לציוד מחנאות",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "חנות רשתות נגד חרקים",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "חנות תפירה",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "חנות תריסים ווילונות",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "מפקח בנייה",
-     "items": 1,
-     "items_relevant_anyway": 0
-    },
-    {
-     "category": "נגר",
-     "items": 1,
-     "items_relevant_anyway": 0
-    },
-    {
-     "category": "ספק מבני גינה",
-     "items": 1,
-     "items_relevant_anyway": 0
-    },
-    {
-     "category": "קמפוס תאגידים",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "שירות הפצה",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "שירות ניקוי מרזבים",
-     "items": 1,
-     "items_relevant_anyway": 0
-    }
-   ]
+   "skipped": "stopped at step 1 (step1_saturated; no Maps call; Local Finder items carry no category)"
   },
   {
    "cell_id": "pergolas@hod-hasharon",
    "profession": "pergolas",
    "city": "hod-hasharon",
-   "top20_relevance": {
-    "not_relevant": 6,
-    "conditional_title": 4,
-    "generic_title": 3,
-    "exact": 7
-   },
-   "unmatched": [
-    {
-     "category": "בונה בתים בהתאמה אישית",
-     "items": 1,
-     "items_relevant_anyway": 0
-    },
-    {
-     "category": "בונה מחסנים",
-     "items": 1,
-     "items_relevant_anyway": 0
-    },
-    {
-     "category": "גגן",
-     "items": 1,
-     "items_relevant_anyway": 0
-    },
-    {
-     "category": "חברת בנייה",
-     "items": 1,
-     "items_relevant_anyway": 0
-    },
-    {
-     "category": "חלון אלומיניום",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "חנות למוצרי זכוכית",
-     "items": 1,
-     "items_relevant_anyway": 0
-    },
-    {
-     "category": "חנות לעבודות עץ",
-     "items": 1,
-     "items_relevant_anyway": 0
-    },
-    {
-     "category": "חנות תריסים ווילונות",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "מפקח בנייה",
-     "items": 1,
-     "items_relevant_anyway": 0
-    },
-    {
-     "category": "נגר",
-     "items": 1,
-     "items_relevant_anyway": 0
-    },
-    {
-     "category": "ספק חלונות",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "ספק מבני גינה",
-     "items": 1,
-     "items_relevant_anyway": 0
-    },
-    {
-     "category": "שירות התקנת חלונות",
-     "items": 1,
-     "items_relevant_anyway": 1
-    }
-   ]
+   "skipped": "stopped at step 1 (step1_saturated; no Maps call; Local Finder items carry no category)"
   },
   {
    "cell_id": "pergolas@ramat-hasharon",
@@ -17814,133 +16209,13 @@
    "cell_id": "pergolas@even-yehuda",
    "profession": "pergolas",
    "city": "even-yehuda",
-   "top20_relevance": {
-    "exact": 7,
-    "not_relevant": 13
-   },
-   "unmatched": [
-    {
-     "category": "חנות לחומרי עץ",
-     "items": 2,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "בונה מחסנים",
-     "items": 1,
-     "items_relevant_anyway": 0
-    },
-    {
-     "category": "חלון אלומיניום",
-     "items": 1,
-     "items_relevant_anyway": 0
-    },
-    {
-     "category": "חנות בדים",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "חנות לציוד מחנאות",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "חנות ציוד לגדרות",
-     "items": 1,
-     "items_relevant_anyway": 0
-    },
-    {
-     "category": "חנות תפירה",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "לינה",
-     "items": 1,
-     "items_relevant_anyway": 0
-    },
-    {
-     "category": "מרכז עסקים",
-     "items": 1,
-     "items_relevant_anyway": 0
-    },
-    {
-     "category": "ספק ריצוף עץ ולמינציה",
-     "items": 1,
-     "items_relevant_anyway": 0
-    },
-    {
-     "category": "קבלנות בניית פנים",
-     "items": 1,
-     "items_relevant_anyway": 0
-    }
-   ]
+   "skipped": "stopped at step 1 (step1_saturated; no Maps call; Local Finder items carry no category)"
   },
   {
    "cell_id": "pergolas@kadima-zoran",
    "profession": "pergolas",
    "city": "kadima-zoran",
-   "top20_relevance": {
-    "not_relevant": 12,
-    "exact": 8
-   },
-   "unmatched": [
-    {
-     "category": "חנות לחומרי עץ",
-     "items": 2,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "בונה מחסנים",
-     "items": 1,
-     "items_relevant_anyway": 0
-    },
-    {
-     "category": "חנות בדים",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "חנות למוצרי בניין",
-     "items": 1,
-     "items_relevant_anyway": 0
-    },
-    {
-     "category": "חנות לעבודות עץ",
-     "items": 1,
-     "items_relevant_anyway": 0
-    },
-    {
-     "category": "חנות לציוד מחנאות",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "חנות תפירה",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "לינה",
-     "items": 1,
-     "items_relevant_anyway": 0
-    },
-    {
-     "category": "מרכז עסקים",
-     "items": 1,
-     "items_relevant_anyway": 0
-    },
-    {
-     "category": "קבלנות בניית פנים",
-     "items": 1,
-     "items_relevant_anyway": 0
-    },
-    {
-     "category": "שירות טיפול בעצים",
-     "items": 1,
-     "items_relevant_anyway": 0
-    }
-   ]
+   "skipped": "stopped at step 1 (step1_saturated; no Maps call; Local Finder items carry no category)"
   },
   {
    "cell_id": "pergolas@kfar-yona",
@@ -18128,124 +16403,7 @@
    "cell_id": "pergolas@mazkeret-batya",
    "profession": "pergolas",
    "city": "mazkeret-batya",
-   "top20_relevance": {
-    "exact": 7,
-    "not_relevant": 10,
-    "conditional_title": 2,
-    "generic_title": 1
-   },
-   "unmatched": [
-    {
-     "category": "בונה מחסנים",
-     "items": 2,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "חברת בנייה",
-     "items": 2,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "חנות לחומרי עץ",
-     "items": 2,
-     "items_relevant_anyway": 0
-    },
-    {
-     "category": "בונה בתים מבולי עץ",
-     "items": 1,
-     "items_relevant_anyway": 0
-    },
-    {
-     "category": "בונה בתים מודולריים",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "בונה חניות מקורות",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "בונה רציפים",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "בריכת שחייה",
-     "items": 1,
-     "items_relevant_anyway": 0
-    },
-    {
-     "category": "גגן",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "חנות לריהוט גינה",
-     "items": 1,
-     "items_relevant_anyway": 0
-    },
-    {
-     "category": "יועץ בנייה",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "יצרן מתכת",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "יצרן פלדה",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "יצרן פריטי מתכת",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "יצרן רהיטים",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "מפיץ פלדה",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "ספק מסגרות אלומיניום",
-     "items": 1,
-     "items_relevant_anyway": 0
-    },
-    {
-     "category": "ספק מסגרות מתכת ליציקת בטון",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "קבלן בנייה",
-     "items": 1,
-     "items_relevant_anyway": 0
-    },
-    {
-     "category": "קבלן מסגרות פלדה",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "רתך",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "שיפוצניק",
-     "items": 1,
-     "items_relevant_anyway": 0
-    }
-   ]
+   "skipped": "stopped at step 1 (step1_saturated; no Maps call; Local Finder items carry no category)"
   },
   {
    "cell_id": "pergolas@beer-yaakov",
@@ -18257,94 +16415,7 @@
    "cell_id": "pergolas@gan-yavne",
    "profession": "pergolas",
    "city": "gan-yavne",
-   "top20_relevance": {
-    "generic_title": 1,
-    "not_relevant": 10,
-    "exact": 6,
-    "conditional_title": 3
-   },
-   "unmatched": [
-    {
-     "category": "חנות לחומרי עץ",
-     "items": 2,
-     "items_relevant_anyway": 0
-    },
-    {
-     "category": "מנסרת עצים",
-     "items": 2,
-     "items_relevant_anyway": 0
-    },
-    {
-     "category": "בונה בתים מודולריים",
-     "items": 1,
-     "items_relevant_anyway": 0
-    },
-    {
-     "category": "בונה מחסנים",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "חנות הכל לבית",
-     "items": 1,
-     "items_relevant_anyway": 0
-    },
-    {
-     "category": "חנות לציוד נגרות",
-     "items": 1,
-     "items_relevant_anyway": 0
-    },
-    {
-     "category": "מתכנן אירועים",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "מתכנן חתונות",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "ספק מסגרות אלומיניום",
-     "items": 1,
-     "items_relevant_anyway": 0
-    },
-    {
-     "category": "ספק עץ",
-     "items": 1,
-     "items_relevant_anyway": 0
-    },
-    {
-     "category": "צבע",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "ריתוך אלומיניום",
-     "items": 1,
-     "items_relevant_anyway": 0
-    },
-    {
-     "category": "שיפוצניק",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "שירות הצללת חלונות",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "שירות השכרת ציוד למסיבות",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "שירות טיפול בעצים",
-     "items": 1,
-     "items_relevant_anyway": 0
-    }
-   ]
+   "skipped": "stopped at step 1 (step1_saturated; no Maps call; Local Finder items carry no category)"
   },
   {
    "cell_id": "pergolas@shoham",
@@ -18721,42 +16792,13 @@
    "cell_id": "pest-control@givat-shmuel",
    "profession": "pest-control",
    "city": "givat-shmuel",
-   "top20_relevance": {
-    "exact": 19,
-    "not_relevant": 1
-   },
-   "unmatched": [
-    {
-     "category": "ארגון להגנת בעלי חיים",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "ארגון להגנת הסביבה",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "שירות חילוץ בעלי חיים",
-     "items": 1,
-     "items_relevant_anyway": 0
-    }
-   ]
+   "skipped": "stopped at step 1 (step1_saturated; no Maps call; Local Finder items carry no category)"
   },
   {
    "cell_id": "pest-control@rishon-lezion",
    "profession": "pest-control",
    "city": "rishon-lezion",
-   "top20_relevance": {
-    "exact": 20
-   },
-   "unmatched": [
-    {
-     "category": "שירות תברואה",
-     "items": 1,
-     "items_relevant_anyway": 1
-    }
-   ]
+   "skipped": "stopped at step 1 (step1_saturated; no Maps call; Local Finder items carry no category)"
   },
   {
    "cell_id": "pest-control@rehovot",
@@ -18961,79 +17003,13 @@
    "cell_id": "plumber@tel-aviv",
    "profession": "plumber",
    "city": "tel-aviv",
-   "top20_relevance": {
-    "exact": 18,
-    "not_relevant": 2
-   },
-   "unmatched": [
-    {
-     "category": "שירות לסילוק שפכים",
-     "items": 3,
-     "items_relevant_anyway": 2
-    },
-    {
-     "category": "חשמלאי",
-     "items": 1,
-     "items_relevant_anyway": 0
-    },
-    {
-     "category": "ספק דודי חימום",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "צבע",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "שירות לבורות ספיגה",
-     "items": 1,
-     "items_relevant_anyway": 1
-    }
-   ]
+   "skipped": "stopped at step 1 (step1_saturated; no Maps call; Local Finder items carry no category)"
   },
   {
    "cell_id": "plumber@ramat-gan",
    "profession": "plumber",
    "city": "ramat-gan",
-   "top20_relevance": {
-    "exact": 16,
-    "not_relevant": 2,
-    "generic_title": 2
-   },
-   "unmatched": [
-    {
-     "category": "שירות לסילוק שפכים",
-     "items": 4,
-     "items_relevant_anyway": 2
-    },
-    {
-     "category": "שירות לבורות ספיגה",
-     "items": 3,
-     "items_relevant_anyway": 2
-    },
-    {
-     "category": "ספק דודי חימום",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "שירות תברואה",
-     "items": 1,
-     "items_relevant_anyway": 0
-    },
-    {
-     "category": "שירותי מרזבים",
-     "items": 1,
-     "items_relevant_anyway": 0
-    },
-    {
-     "category": "שירותי ניקוז",
-     "items": 1,
-     "items_relevant_anyway": 1
-    }
-   ]
+   "skipped": "stopped at step 1 (step1_saturated; no Maps call; Local Finder items carry no category)"
   },
   {
    "cell_id": "plumber@givatayim",
@@ -19199,47 +17175,7 @@
    "cell_id": "plumber@petah-tikva",
    "profession": "plumber",
    "city": "petah-tikva",
-   "top20_relevance": {
-    "exact": 17,
-    "not_relevant": 3
-   },
-   "unmatched": [
-    {
-     "category": "שיפוצניק",
-     "items": 2,
-     "items_relevant_anyway": 2
-    },
-    {
-     "category": "שירות לסילוק שפכים",
-     "items": 2,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "שירות תיקונים לאחר נזקי מים",
-     "items": 2,
-     "items_relevant_anyway": 2
-    },
-    {
-     "category": "חשמלאי",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "מוקד שירות",
-     "items": 1,
-     "items_relevant_anyway": 0
-    },
-    {
-     "category": "מרפאת שיניים",
-     "items": 1,
-     "items_relevant_anyway": 0
-    },
-    {
-     "category": "קבלן מיזוג אוויר",
-     "items": 1,
-     "items_relevant_anyway": 1
-    }
-   ]
+   "skipped": "stopped at step 1 (step1_saturated; no Maps call; Local Finder items carry no category)"
   },
   {
    "cell_id": "plumber@kiryat-ono",
@@ -19427,213 +17363,13 @@
    "cell_id": "plumber@herzliya",
    "profession": "plumber",
    "city": "herzliya",
-   "top20_relevance": {
-    "exact": 18,
-    "not_relevant": 2
-   },
-   "unmatched": [
-    {
-     "category": "שירות לסילוק שפכים",
-     "items": 6,
-     "items_relevant_anyway": 5
-    },
-    {
-     "category": "שירות לבורות ספיגה",
-     "items": 2,
-     "items_relevant_anyway": 2
-    },
-    {
-     "category": "חברת איטום",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "חברת בנייה",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "יצרן דודים",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "מוקד שירות",
-     "items": 1,
-     "items_relevant_anyway": 0
-    },
-    {
-     "category": "ספק דודי חימום",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "ספק מסנני מים",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "ספק משאבות מים",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "ספק צינורות",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "ספק צנרת",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "ספק של ציוד חימום",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "קבלן בטון",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "קבלן בידוד",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "קבלן קירות גבס",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "קבלן ריצוף",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "שירות ניקוי מרזבים",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "שירות תיקונים",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "שירותי ניקוז",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "שירותי ניקוי מיכלי מים",
-     "items": 1,
-     "items_relevant_anyway": 1
-    }
-   ]
+   "skipped": "stopped at step 1 (step1_saturated; no Maps call; Local Finder items carry no category)"
   },
   {
    "cell_id": "plumber@raanana",
    "profession": "plumber",
    "city": "raanana",
-   "top20_relevance": {
-    "exact": 17,
-    "not_relevant": 3
-   },
-   "unmatched": [
-    {
-     "category": "שירות לסילוק שפכים",
-     "items": 5,
-     "items_relevant_anyway": 5
-    },
-    {
-     "category": "שירות לבורות ספיגה",
-     "items": 2,
-     "items_relevant_anyway": 2
-    },
-    {
-     "category": "שירותי ניקוז",
-     "items": 2,
-     "items_relevant_anyway": 2
-    },
-    {
-     "category": "חברת איטום",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "יצרן דודים",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "מוקד שירות",
-     "items": 1,
-     "items_relevant_anyway": 0
-    },
-    {
-     "category": "מרפאת שיניים",
-     "items": 1,
-     "items_relevant_anyway": 0
-    },
-    {
-     "category": "ספק דודי חימום",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "ספק מסנני מים",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "ספק משאבות מים",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "ספק צינורות",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "ספק צנרת",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "ספק של ציוד חימום",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "קבלן קירות גבס",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "שיפוצניק",
-     "items": 1,
-     "items_relevant_anyway": 0
-    },
-    {
-     "category": "שירות ניקוי מרזבים",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "שירות תיקונים",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "שירותי ניקוי מיכלי מים",
-     "items": 1,
-     "items_relevant_anyway": 1
-    }
-   ]
+   "skipped": "stopped at step 1 (step1_saturated; no Maps call; Local Finder items carry no category)"
   },
   {
    "cell_id": "plumber@kfar-saba",
@@ -20020,274 +17756,31 @@
    "cell_id": "plumber@kfar-yona",
    "profession": "plumber",
    "city": "kfar-yona",
-   "top20_relevance": {
-    "exact": 17,
-    "not_relevant": 2,
-    "generic_title": 1
-   },
-   "unmatched": [
-    {
-     "category": "שירות לסילוק שפכים",
-     "items": 3,
-     "items_relevant_anyway": 3
-    },
-    {
-     "category": "קבלן ריצוף",
-     "items": 2,
-     "items_relevant_anyway": 2
-    },
-    {
-     "category": "שיפוצניק",
-     "items": 2,
-     "items_relevant_anyway": 2
-    },
-    {
-     "category": "שירות לבורות ספיגה",
-     "items": 2,
-     "items_relevant_anyway": 2
-    },
-    {
-     "category": "מעצב גינות",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "עבודות לאספקת מים",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "קבלן בריכות שחייה",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "שירותי ניקוז",
-     "items": 1,
-     "items_relevant_anyway": 1
-    }
-   ]
+   "skipped": "stopped at step 1 (step1_saturated; no Maps call; Local Finder items carry no category)"
   },
   {
    "cell_id": "plumber@tel-mond",
    "profession": "plumber",
    "city": "tel-mond",
-   "top20_relevance": {
-    "not_relevant": 6,
-    "exact": 14
-   },
-   "unmatched": [
-    {
-     "category": "שירות לסילוק שפכים",
-     "items": 4,
-     "items_relevant_anyway": 3
-    },
-    {
-     "category": "שירות לבורות ספיגה",
-     "items": 2,
-     "items_relevant_anyway": 2
-    },
-    {
-     "category": "חברת איטום",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "יצרן דודים",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "מעצב גינות",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "סוכנות ביטוח",
-     "items": 1,
-     "items_relevant_anyway": 0
-    },
-    {
-     "category": "ספק דודי חימום",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "עבודות לאספקת מים",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "קבלן בריכות שחייה",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "קבלן קירות גבס",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "קבלן ריצוף",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "שיפוצניק",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "שירותי ניקוז",
-     "items": 1,
-     "items_relevant_anyway": 1
-    }
-   ]
+   "skipped": "stopped at step 1 (step1_saturated; no Maps call; Local Finder items carry no category)"
   },
   {
    "cell_id": "plumber@rishon-lezion",
    "profession": "plumber",
    "city": "rishon-lezion",
-   "top20_relevance": {
-    "exact": 18,
-    "not_relevant": 2
-   },
-   "unmatched": [
-    {
-     "category": "שירות לסילוק שפכים",
-     "items": 4,
-     "items_relevant_anyway": 4
-    },
-    {
-     "category": "חברת ביוטכנולוגיה",
-     "items": 1,
-     "items_relevant_anyway": 0
-    },
-    {
-     "category": "ספק מסנני מים",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "שירות לבורות ספיגה",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "שירות תברואה",
-     "items": 1,
-     "items_relevant_anyway": 0
-    }
-   ]
+   "skipped": "stopped at step 1 (step1_saturated; no Maps call; Local Finder items carry no category)"
   },
   {
    "cell_id": "plumber@rehovot",
    "profession": "plumber",
    "city": "rehovot",
-   "top20_relevance": {
-    "exact": 14,
-    "generic_title": 1,
-    "not_relevant": 5
-   },
-   "unmatched": [
-    {
-     "category": "שירות לבורות ספיגה",
-     "items": 3,
-     "items_relevant_anyway": 3
-    },
-    {
-     "category": "שירות לסילוק שפכים",
-     "items": 3,
-     "items_relevant_anyway": 3
-    },
-    {
-     "category": "שיפוצניק",
-     "items": 2,
-     "items_relevant_anyway": 0
-    },
-    {
-     "category": "מנעולן",
-     "items": 1,
-     "items_relevant_anyway": 0
-    },
-    {
-     "category": "מרפאת שיניים",
-     "items": 1,
-     "items_relevant_anyway": 0
-    },
-    {
-     "category": "ספק דלתות",
-     "items": 1,
-     "items_relevant_anyway": 0
-    },
-    {
-     "category": "ספק צינורות",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "ספק צנרת",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "שירות תיקונים לאחר נזקי מים",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "שירותי ניקוז",
-     "items": 1,
-     "items_relevant_anyway": 1
-    }
-   ]
+   "skipped": "stopped at step 1 (step1_saturated; no Maps call; Local Finder items carry no category)"
   },
   {
    "cell_id": "plumber@ness-ziona",
    "profession": "plumber",
    "city": "ness-ziona",
-   "top20_relevance": {
-    "exact": 16,
-    "generic_title": 1,
-    "not_relevant": 3
-   },
-   "unmatched": [
-    {
-     "category": "שירות לסילוק שפכים",
-     "items": 6,
-     "items_relevant_anyway": 6
-    },
-    {
-     "category": "שירות לבורות ספיגה",
-     "items": 4,
-     "items_relevant_anyway": 4
-    },
-    {
-     "category": "שיפוצניק",
-     "items": 2,
-     "items_relevant_anyway": 0
-    },
-    {
-     "category": "ספק צינורות",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "ספק צנרת",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "שירות תיקונים לאחר נזקי מים",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "שירותי ניקוז",
-     "items": 1,
-     "items_relevant_anyway": 1
-    }
-   ]
+   "skipped": "stopped at step 1 (step1_saturated; no Maps call; Local Finder items carry no category)"
   },
   {
    "cell_id": "plumber@yavne",
@@ -20344,57 +17837,7 @@
    "cell_id": "plumber@lod",
    "profession": "plumber",
    "city": "lod",
-   "top20_relevance": {
-    "exact": 16,
-    "not_relevant": 4
-   },
-   "unmatched": [
-    {
-     "category": "ספק משאבות לתעשייה",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "ספק צינורות",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "ספק צנרת",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "שיפוצניק",
-     "items": 1,
-     "items_relevant_anyway": 0
-    },
-    {
-     "category": "שירות איטום מפני חדירת מים",
-     "items": 1,
-     "items_relevant_anyway": 0
-    },
-    {
-     "category": "שירות לבורות ספיגה",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "שירות לסילוק שפכים",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "שירות תיקונים לאחר נזקי מים",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "שירותי ניקוז",
-     "items": 1,
-     "items_relevant_anyway": 1
-    }
-   ]
+   "skipped": "stopped at step 1 (step1_saturated; no Maps call; Local Finder items carry no category)"
   },
   {
    "cell_id": "plumber@ramla",
@@ -20524,155 +17967,19 @@
    "cell_id": "plumber@mazkeret-batya",
    "profession": "plumber",
    "city": "mazkeret-batya",
-   "top20_relevance": {
-    "exact": 16,
-    "not_relevant": 3,
-    "generic_title": 1
-   },
-   "unmatched": [
-    {
-     "category": "שיפוצניק",
-     "items": 2,
-     "items_relevant_anyway": 0
-    },
-    {
-     "category": "שירות לבורות ספיגה",
-     "items": 2,
-     "items_relevant_anyway": 2
-    },
-    {
-     "category": "מרפאת שיניים",
-     "items": 1,
-     "items_relevant_anyway": 0
-    },
-    {
-     "category": "ספק מערכת מים חמים",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "ספק משאבות לתעשייה",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "קבלן חדרי שמש",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "שירות לסילוק שפכים",
-     "items": 1,
-     "items_relevant_anyway": 1
-    }
-   ]
+   "skipped": "stopped at step 1 (step1_saturated; no Maps call; Local Finder items carry no category)"
   },
   {
    "cell_id": "plumber@beer-yaakov",
    "profession": "plumber",
    "city": "beer-yaakov",
-   "top20_relevance": {
-    "exact": 17,
-    "not_relevant": 3
-   },
-   "unmatched": [
-    {
-     "category": "שירות לסילוק שפכים",
-     "items": 4,
-     "items_relevant_anyway": 4
-    },
-    {
-     "category": "שירות לבורות ספיגה",
-     "items": 3,
-     "items_relevant_anyway": 3
-    },
-    {
-     "category": "מרפאת שיניים",
-     "items": 1,
-     "items_relevant_anyway": 0
-    },
-    {
-     "category": "ספק צינורות",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "ספק צנרת",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "שיפוצניק",
-     "items": 1,
-     "items_relevant_anyway": 0
-    },
-    {
-     "category": "שירות תברואה",
-     "items": 1,
-     "items_relevant_anyway": 0
-    },
-    {
-     "category": "שירות תיקונים לאחר נזקי מים",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "שירותי ניקוז",
-     "items": 1,
-     "items_relevant_anyway": 1
-    }
-   ]
+   "skipped": "stopped at step 1 (step1_saturated; no Maps call; Local Finder items carry no category)"
   },
   {
    "cell_id": "plumber@gan-yavne",
    "profession": "plumber",
    "city": "gan-yavne",
-   "top20_relevance": {
-    "exact": 14,
-    "not_relevant": 6
-   },
-   "unmatched": [
-    {
-     "category": "שיפוצניק",
-     "items": 2,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "מחלקת בריאות הציבור",
-     "items": 1,
-     "items_relevant_anyway": 0
-    },
-    {
-     "category": "מנעולן",
-     "items": 1,
-     "items_relevant_anyway": 0
-    },
-    {
-     "category": "מרפאת שיניים",
-     "items": 1,
-     "items_relevant_anyway": 0
-    },
-    {
-     "category": "עבודות לאספקת מים",
-     "items": 1,
-     "items_relevant_anyway": 0
-    },
-    {
-     "category": "שירות לבורות ספיגה",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "שירות לסילוק שפכים",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "שירות ניהול פסולת",
-     "items": 1,
-     "items_relevant_anyway": 1
-    }
-   ]
+   "skipped": "stopped at step 1 (step1_saturated; no Maps call; Local Finder items carry no category)"
   },
   {
    "cell_id": "plumber@shoham",
@@ -20811,149 +18118,13 @@
    "cell_id": "renovation@ramat-gan",
    "profession": "renovation",
    "city": "ramat-gan",
-   "top20_relevance": {
-    "conditional_title": 4,
-    "exact": 11,
-    "contains": 1,
-    "generic_title": 2,
-    "not_relevant": 2
-   },
-   "unmatched": [
-    {
-     "category": "בונה דקים",
-     "items": 3,
-     "items_relevant_anyway": 3
-    },
-    {
-     "category": "חשמלאי",
-     "items": 2,
-     "items_relevant_anyway": 2
-    },
-    {
-     "category": "עיצוב פנים",
-     "items": 2,
-     "items_relevant_anyway": 2
-    },
-    {
-     "category": "שירות תיקונים למזגנים",
-     "items": 2,
-     "items_relevant_anyway": 2
-    },
-    {
-     "category": "אדריכל",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "חנות למוצרי בניין",
-     "items": 1,
-     "items_relevant_anyway": 0
-    },
-    {
-     "category": "נגר",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "נגרות",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "קבלן בטון",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "שירות לשיווק באינטרנט",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "שרברב",
-     "items": 1,
-     "items_relevant_anyway": 0
-    }
-   ]
+   "skipped": "stopped at step 1 (step1_saturated; no Maps call; Local Finder items carry no category)"
   },
   {
    "cell_id": "renovation@givatayim",
    "profession": "renovation",
    "city": "givatayim",
-   "top20_relevance": {
-    "exact": 13,
-    "not_relevant": 3,
-    "generic_title": 1,
-    "conditional_title": 2,
-    "contains": 1
-   },
-   "unmatched": [
-    {
-     "category": "בונה דקים",
-     "items": 2,
-     "items_relevant_anyway": 2
-    },
-    {
-     "category": "עיצוב פנים",
-     "items": 2,
-     "items_relevant_anyway": 2
-    },
-    {
-     "category": "שירות תיקונים למזגנים",
-     "items": 2,
-     "items_relevant_anyway": 2
-    },
-    {
-     "category": "אדריכל",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "חלל עבודה משותף",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "חנות למוצרי בניין",
-     "items": 1,
-     "items_relevant_anyway": 0
-    },
-    {
-     "category": "חשמלאי",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "נגר",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "עורך דין",
-     "items": 1,
-     "items_relevant_anyway": 0
-    },
-    {
-     "category": "קבלן בטון",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "קבלן בתים",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "שירות לשיווק באינטרנט",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "שרברב",
-     "items": 1,
-     "items_relevant_anyway": 0
-    }
-   ]
+   "skipped": "stopped at step 1 (step1_saturated; no Maps call; Local Finder items carry no category)"
   },
   {
    "cell_id": "renovation@bnei-brak",
@@ -21477,72 +18648,7 @@
    "cell_id": "renovation@hod-hasharon",
    "profession": "renovation",
    "city": "hod-hasharon",
-   "top20_relevance": {
-    "generic_title": 4,
-    "exact": 16
-   },
-   "unmatched": [
-    {
-     "category": "אדריכל",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "בונה דקים",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "חשמלאי",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "מעצב חדרי אמבטיה",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "נגר",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "עיצוב פנים",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "ציור",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "קבלן בטון",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "קבלן בתים",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "קבלן טיח",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "שירות לשיווק באינטרנט",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "שירות תיקונים למזגנים",
-     "items": 1,
-     "items_relevant_anyway": 1
-    }
-   ]
+   "skipped": "stopped at step 1 (step1_saturated; no Maps call; Local Finder items carry no category)"
   },
   {
    "cell_id": "renovation@ramat-hasharon",
@@ -22384,70 +19490,7 @@
    "cell_id": "renovation@haifa",
    "profession": "renovation",
    "city": "haifa",
-   "top20_relevance": {
-    "contains": 1,
-    "not_relevant": 5,
-    "exact": 9,
-    "generic_title": 4,
-    "conditional_title": 1
-   },
-   "unmatched": [
-    {
-     "category": "חנות חומרי בניין",
-     "items": 2,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "חנות לציוד אינסטלציה",
-     "items": 2,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "שרברב",
-     "items": 2,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "חנות חשמל ואלקטרוניקה",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "חנות כלי עבודה",
-     "items": 1,
-     "items_relevant_anyway": 0
-    },
-    {
-     "category": "חנות למוצרי צביעה",
-     "items": 1,
-     "items_relevant_anyway": 0
-    },
-    {
-     "category": "חנות לציוד חשמלי",
-     "items": 1,
-     "items_relevant_anyway": 0
-    },
-    {
-     "category": "חשמלאי",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "מוצרי חשמל",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "קבלן טיח",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "שירות שכפול מפתחות",
-     "items": 1,
-     "items_relevant_anyway": 1
-    }
-   ]
+   "skipped": "stopped at step 1 (step1_saturated; no Maps call; Local Finder items carry no category)"
   },
   {
    "cell_id": "renovation@kiryat-ata",
@@ -23091,63 +20134,7 @@
    "cell_id": "roofing@or-yehuda",
    "profession": "roofing",
    "city": "or-yehuda",
-   "top20_relevance": {
-    "exact": 18,
-    "not_relevant": 1,
-    "generic_title": 1
-   },
-   "unmatched": [
-    {
-     "category": "שירות שיקום בניינים",
-     "items": 4,
-     "items_relevant_anyway": 4
-    },
-    {
-     "category": "חנות למוצרי בניין",
-     "items": 1,
-     "items_relevant_anyway": 0
-    },
-    {
-     "category": "מהנדס מבנים",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "מפקח בנייה",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "קבלן בטון",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "קבלן בריכות שחייה",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "קבלן טיח",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "שירות תיקונים לאחר נזקי מים",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "שירותי מרזבים",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "שירותי ניקוז",
-     "items": 1,
-     "items_relevant_anyway": 1
-    }
-   ]
+   "skipped": "stopped at step 1 (step1_saturated; no Maps call; Local Finder items carry no category)"
   },
   {
    "cell_id": "roofing@yehud-monosson",
@@ -23412,44 +20399,7 @@
    "cell_id": "roofing@herzliya",
    "profession": "roofing",
    "city": "herzliya",
-   "top20_relevance": {
-    "exact": 12,
-    "conditional_title": 2,
-    "generic_title": 3,
-    "not_relevant": 3
-   },
-   "unmatched": [
-    {
-     "category": "איגוד או ארגון",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "חנות למוצרי אטימה",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "חנות למוצרי בניין",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "מפקח בנייה",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "קבלן בטון",
-     "items": 1,
-     "items_relevant_anyway": 0
-    },
-    {
-     "category": "שירות בדיקת אסבסט",
-     "items": 1,
-     "items_relevant_anyway": 1
-    }
-   ]
+   "skipped": "stopped at step 1 (step1_saturated; no Maps call; Local Finder items carry no category)"
   },
   {
    "cell_id": "roofing@raanana",

@@ -26,7 +26,7 @@ export function extractR2_12(specText) {
 
 const isObj = v => v && typeof v === 'object' && !Array.isArray(v);
 
-function mergeInto(base, patch) {
+export function mergeInto(base, patch) {
   const out = structuredClone(base ?? {});
   for (const [k, v] of Object.entries(patch)) {
     if (k.endsWith('_append') && Array.isArray(v)) {

@@ -161,8 +161,8 @@
     "lead_gen_phone_min_listings_in_cell": 2,
     "lead_gen_phone_min_cells": 3,
     "organic_factor": {
-      "base": 0.8,
-      "slope": 0.4
+      "base": 1,
+      "slope": 0
     },
     "national_brand_min_regions": 3,
     "not_a_site_append": [
@@ -315,7 +315,8 @@
         ],
         "exclude": [
           "השכרת רכב",
-          "שליחויות"
+          "שליחויות",
+          "חנות ציוד"
         ]
       },
       "roofing": {
@@ -559,7 +560,42 @@
     ],
     "media_article_path_rule": false,
     "weak_rank_source": "raw_rank_group",
-    "cid_assignment": "nearest_centroid_per_profession"
+    "cid_assignment": "nearest_centroid_per_profession",
+    "lf_field_precedence": "maps_if_joined_else_best_known_else_neutral",
+    "lf_domain_trust": false,
+    "lf_url_redirect_parse": true,
+    "phone_normalize": "e164_il",
+    "lead_gen_network": {
+      "phone_block_digits": 7,
+      "block_min_cids": 3,
+      "block_min_cells": 2,
+      "block_min_stuffed": 2,
+      "shared_domain_min_cids": 2,
+      "shared_domain_scope": "profession",
+      "lf_s_b_floor": 0.6
+    },
+    "title_exclude": {
+      "electrician": [
+        "רכב",
+        "מוסך"
+      ],
+      "ac-repair": [
+        "אביזרי"
+      ],
+      "locksmith": [
+        "פרזול",
+        "פירוק",
+        "מכונות"
+      ],
+      "movers": [
+        "השוואת מחירי"
+      ]
+    },
+    "title_chain_stems": [
+      "פריסה ארצית"
+    ],
+    "out_of_cell_title_rule": true,
+    "organic_factor_note": "O disabled 2026-11-07 (Rev 3, 3.4); L_share/D_share display only"
   },
   "pilot": {
     "cells": [
@@ -670,6 +706,16 @@
       "max_chars": 200,
       "dir": "data/market-scan/private/",
       "retention_days": 30
+    },
+    "site_dead": [
+      "dns_nxdomain_confirmed",
+      "parked",
+      "status_404_410"
+    ],
+    "nxdomain_second_resolver": "doh",
+    "weights": {
+      "site_dead": 1.25,
+      "failed": 1.1
     }
   },
   "r12_applied": {
@@ -696,5 +742,11 @@
     "date": "2026-11-07",
     "by": "scripts/market-scan/apply-r2-12.mjs",
     "cap_note": "caps_usd.stage2-full = 6 approved by Eitan 2026-11-07"
+  },
+  "r3_8_applied": {
+    "spec": "docs/research/site-bot/market-scanner-scoring-spec.md",
+    "spec_sha256": "b4f300aed31beaddd3c056e18542d4f33eaf85f4b36f9c5e8e7854ad422758db",
+    "date": "2026-11-07",
+    "by": "scripts/market-scan/apply-r3-8.mjs"
   }
 }
