@@ -389,8 +389,11 @@ const nextConfig: NextConfig = {
       ...legacyRedirects,
       // TEMPORARY (307): Site Bot checkout is offline (payment gateway not connected,
       // checkout APIs return 503). Restore /site-bot/start by removing this entry once
-      // charging is live.
-      { source: "/site-bot/start", destination: "/site-bot", permanent: false },
+      // charging is live. Paid-journey v2 M0 rehearsal: skipped ONLY when
+      // SITE_BOT_PAID_FLOW=1 on a non-production server (prod always keeps it).
+      ...(process.env.SITE_BOT_PAID_FLOW === "1" && process.env.NODE_ENV !== "production"
+        ? []
+        : [{ source: "/site-bot/start", destination: "/site-bot", permanent: false }]),
     ];
   },
   async headers() {

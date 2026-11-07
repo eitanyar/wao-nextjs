@@ -4,11 +4,12 @@ import path from 'node:path';
 import test from 'node:test';
 import vm from 'node:vm';
 import ts from 'typescript';
+import { CLOSED_GATE_ENVS, gatedProcess } from '../paidFlowGate.testkit.mjs';
 
 const routePath = path.join(process.cwd(), 'src/app/api/site-bot/connect-status/route.ts');
 const auditId = '00000000-0000-4000-8000-000000000000';
 
-function routeHarness() {
+function routeHarness(processEnv = {}) {
   const code = ts.transpileModule(fs.readFileSync(routePath, 'utf8'), {
     fileName: routePath,
     compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022, esModuleInterop: true },
@@ -21,7 +22,8 @@ function routeHarness() {
     require: name => name === 'next/server'
       ? { NextResponse: { json: (body, options) => Response.json(body, options) } }
       : deny(`import: ${name}`),
-    process: new Proxy({}, { get: (_, name) => deny(`process.${String(name)}`) }),
+    // Only the SITE_BOT_PAID_FLOW gate keys are readable; every closed-gate env must keep the stub.
+    process: gatedProcess(processEnv, deny),
     fetch: () => deny('fetch'),
     WebSocket: function () { deny('WebSocket'); },
     XMLHttpRequest: function () { deny('XMLHttpRequest'); },
@@ -68,5 +70,12 @@ test('GBP status GET ignores valid-looking and apparently authorized inputs repe
         headers: { authorization: 'Bearer admin', cookie: 'admin=true', 'x-forwarded-for': '127.0.0.1' },
         env: { ENABLE_GBP_STATUS: 'true', NODE_ENV: 'production' } },
     ]) await harness.get(fixture);
+  }
+});
+
+test('GBP status GET stays the audit-only stub for every closed rehearsal-flag env', async () => {
+  for (const env of CLOSED_GATE_ENVS) {
+    const harness = routeHarness(env);
+    await harness.get({ url: 'https://example.invalid/api/site-bot/connect-status?auditId=00000000-0000-4000-8000-000000000000' });
   }
 });

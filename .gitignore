@@ -20,6 +20,8 @@
 /.next-podcast-fixture-*/
 # isolated QA/build dist dirs (WAO_DEPLOY_DIST_DIR); also keeps Tailwind from scanning binary caches
 /.next-sitebot-*/
+# paid-journey v2 M0 dress-rehearsal dev server dist dir
+/.next-m0/
 # deploy.sh release candidates and releases (built inside the project root); also keeps
 # Tailwind's source scan out of old builds
 /releases/

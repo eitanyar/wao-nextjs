@@ -2,9 +2,112 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
+import { CLOSED_GATE_ENVS, OPEN_GATE_ENVS, gatedProcess, gatedRouteSource } from './paidFlowGate.testkit.mjs';
 
 const root = path.resolve(import.meta.dirname, '../../../..');
 const read = (relativePath) => fs.readFileSync(path.join(root, relativePath), 'utf8');
+
+// Paid-journey v2 M0: the paid routes below are re-enabled for local rehearsal ONLY behind
+// SITE_BOT_PAID_FLOW=1 on a non-production server. These checks keep the default-off state
+// identical to the audit-only release: same 503 body and headers, no request, import,
+// network, clock, console or env access beyond the two gate keys.
+async function assertGatedStub(relativePath, method, error) {
+  const { default: ts } = await import('typescript');
+  const { default: vm } = await import('node:vm');
+  const source = read(relativePath);
+  assert.equal(source.trim(), gatedRouteSource(method, error));
+  const code = ts.transpileModule(source, {
+    fileName: path.join(root, relativePath),
+    compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022, esModuleInterop: true },
+  }).outputText;
+  const run = async env => {
+    const unexpected = [];
+    const deny = name => { unexpected.push(name); throw new Error(`unexpected ${name}`); };
+    const exports = {};
+    vm.runInNewContext(code, {
+      exports,
+      require: name => name === 'next/server'
+        ? { NextResponse: { json: (body, options) => Response.json(body, options) } }
+        : deny(`import: ${name}`),
+      process: gatedProcess(env, deny),
+      fetch: () => deny('fetch'),
+      console: new Proxy({}, { get: (_, name) => deny(`console.${String(name)}`) }),
+      Date: class { constructor() { deny('clock'); } static now() { deny('clock'); } },
+      setTimeout: () => deny('setTimeout'),
+      setInterval: () => deny('setInterval'),
+    }, { filename: path.join(root, relativePath) });
+    assert.deepEqual(Object.keys(exports), [method]);
+    const request = new Proxy({}, {
+      get: (_, key) => deny(`request.${String(key)}`),
+      ownKeys: () => deny('request keys'),
+      getOwnPropertyDescriptor: () => deny('request descriptor'),
+    });
+    let response = null;
+    let thrown = null;
+    try { response = await exports[method](request); } catch (error) { thrown = error; }
+    return { response, thrown, unexpected };
+  };
+  for (const env of CLOSED_GATE_ENVS) {
+    const { response, thrown, unexpected } = await run(env);
+    assert.equal(thrown, null, `${relativePath} threw with ${JSON.stringify(env)}`);
+    assert.equal(response.status, 503);
+    assert.equal(response.headers.get('Cache-Control'), 'private, no-store');
+    assert.deepEqual(await response.json(), { error });
+    assert.deepEqual(unexpected, [], `${relativePath} touched ${unexpected} with ${JSON.stringify(env)}`);
+  }
+  for (const env of OPEN_GATE_ENVS) {
+    // With the gate open the stub's first and only effect is loading ./paid; it still
+    // must not read the request before handing it over.
+    const { thrown, unexpected } = await run(env);
+    assert.match(String(thrown?.message), /unexpected import: \.\/paid/);
+    assert.deepEqual(unexpected, ['import: ./paid']);
+  }
+  const paidSibling = path.join(path.dirname(relativePath), 'paid.ts');
+  assert.ok(fs.existsSync(path.join(root, paidSibling)), `${paidSibling} must exist`);
+}
+
+test('paid handlers are imported only by their own gated stub', () => {
+  const offenders = [];
+  const walk = dir => {
+    for (const entry of fs.readdirSync(path.join(root, dir), { withFileTypes: true })) {
+      const rel = path.join(dir, entry.name);
+      if (entry.isDirectory()) { walk(rel); continue; }
+      if (!/\.(ts|tsx|mjs|js)$/.test(entry.name) || /\.test\.|testkit/.test(entry.name)) continue;
+      const text = read(rel);
+      if (/site-bot\/(checkout\/(init|callback)|connect-gbp|connect-status)\/paid/.test(text) || /StartPaidFlow/.test(text)) {
+        offenders.push(rel);
+      }
+      if (/['"]\.\/paid['"]/.test(text)) offenders.push(rel);
+    }
+  };
+  walk('src');
+  assert.deepEqual(offenders.sort(), [
+    'src/app/(app)/site-bot/start/page.tsx',
+    'src/app/api/site-bot/checkout/callback/route.ts',
+    'src/app/api/site-bot/checkout/init/route.ts',
+    'src/app/api/site-bot/connect-gbp/route.ts',
+    'src/app/api/site-bot/connect-status/route.ts',
+  ]);
+});
+
+test('next.config keeps the /site-bot/start 307 unless the rehearsal flag opens it off-production', async () => {
+  const { default: ts } = await import('typescript');
+  const { default: vm } = await import('node:vm');
+  const { createRequire } = await import('node:module');
+  const req = createRequire(path.join(root, 'package.json'));
+  const compiled = ts.transpileModule(read('next.config.ts'), {
+    compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022, esModuleInterop: true },
+  }).outputText;
+  const redirectsFor = async env => {
+    const exports = {};
+    vm.runInNewContext(compiled, { exports, require: id => req(id), __dirname: root, process: { env } }, { filename: 'next.config.ts' });
+    // JSON round-trip: the vm realm's arrays/objects have foreign prototypes.
+    return JSON.parse(JSON.stringify((await exports.default.redirects()).filter(entry => entry.source === '/site-bot/start')));
+  };
+  const expected = [{ source: '/site-bot/start', destination: '/site-bot', permanent: false }];
+  for (const env of CLOSED_GATE_ENVS) assert.deepEqual(await redirectsFor({ ...env }), expected, JSON.stringify(env));
+  for (const env of OPEN_GATE_ENVS) assert.deepEqual(await redirectsFor({ ...env }), []);
+});
 
 test('audit page excludes grid, paid, outbound, and mutation reachability', () => {
   const source = read('src/app/(app)/site-bot/audit/page.tsx');
@@ -117,15 +220,8 @@ export async function POST() {
 }`);
 });
 
-test('direct GBP connection POST stays disabled before any binding or request access', () => {
-  const source = read('src/app/api/site-bot/connect-gbp/route.ts');
-  assert.equal(source.trim(), `import { NextResponse } from 'next/server';
-export async function POST() {
-  return NextResponse.json(
-    { error: 'gbp_connect_disabled' },
-    { status: 503, headers: { 'Cache-Control': 'private, no-store' } }
-  );
-}`);
+test('direct GBP connection POST stays disabled unless the off-production rehearsal flag is set', async () => {
+  await assertGatedStub('src/app/api/site-bot/connect-gbp/route.ts', 'POST', 'gbp_connect_disabled');
 });
 
 test('both public GBP OAuth GETs stay disabled before state, token or binding access', () => {
@@ -142,16 +238,8 @@ export async function GET() {
   }
 });
 
-test('public GBP connection status GET stays disabled before audit or request access', () => {
-  const source = read('src/app/api/site-bot/connect-status/route.ts');
-  assert.equal(source.trim(), `import { NextResponse } from 'next/server';
-
-export async function GET() {
-  return NextResponse.json(
-    { error: 'gbp_status_disabled' },
-    { status: 503, headers: { 'Cache-Control': 'private, no-store' } }
-  );
-}`);
+test('public GBP connection status GET stays disabled unless the off-production rehearsal flag is set', async () => {
+  await assertGatedStub('src/app/api/site-bot/connect-status/route.ts', 'GET', 'gbp_status_disabled');
 });
 
 test('direct fix-approval POST stays disabled before audit, log or request access', () => {
@@ -243,62 +331,85 @@ export default function SiteBotFixPage() {
   }
 });
 
-test('direct Site-Bot start page is server-only and throws 404 before intake or checkout access', async () => {
+test('direct Site-Bot start page throws 404 before intake or checkout access unless the off-production rehearsal flag is set', async () => {
   const { default: ts } = await import('typescript');
   const { default: vm } = await import('node:vm');
   const pagePath = path.join(root, 'src/app/(app)/site-bot/start/page.tsx');
   const source = read('src/app/(app)/site-bot/start/page.tsx');
   assert.equal(source.trim(), `import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
+import StartPaidFlow from './StartPaidFlow';
 
 export const metadata: Metadata = {
   robots: { index: false },
 };
 
+// Paid-journey v2 M0 dress rehearsal: the intake chat (./StartPaidFlow) renders
+// ONLY when SITE_BOT_PAID_FLOW=1 on a non-production server. With the flag unset
+// (prod default) this page 404s exactly as the audit-only release does, and
+// next.config.ts still 307s /site-bot/start -> /site-bot before it is reached.
 export default function SiteBotStartPage() {
+  if (process.env.SITE_BOT_PAID_FLOW === '1' && process.env.NODE_ENV !== 'production') {
+    return <StartPaidFlow />;
+  }
   notFound();
 }`);
+  assert.match(read('src/app/(app)/site-bot/start/StartPaidFlow.tsx'), /^"use client";/);
   const code = ts.transpileModule(source, {
     fileName: pagePath,
-    compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022, esModuleInterop: true },
+    compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022, esModuleInterop: true, jsx: ts.JsxEmit.ReactJSX },
   }).outputText;
-  const unexpected = [];
-  const deny = name => { unexpected.push(name); throw new Error(`unexpected ${name}`); };
-  const exports = {};
-  vm.runInNewContext(code, {
-    exports,
-    require: name => name === 'next/navigation' ? { notFound: () => { throw new Error('NEXT_HTTP_ERROR_FALLBACK;404'); } } : deny(`import: ${name}`),
-    process: new Proxy({}, { get: (_, name) => deny(`process.${String(name)}`) }),
-    fetch: () => deny('fetch'),
-    console: new Proxy({}, { get: (_, name) => deny(`console.${String(name)}`) }),
-    Date: class { constructor() { deny('clock'); } static now() { deny('clock'); } },
-    setTimeout: () => deny('setTimeout'),
-    setInterval: () => deny('setInterval'),
-  }, { filename: pagePath });
-  assert.deepEqual(Object.keys(exports).sort(), ['default', 'metadata']);
-  assert.equal(exports.metadata.robots.index, false);
+  const load = env => {
+    const unexpected = [];
+    const deny = name => { unexpected.push(name); throw new Error(`unexpected ${name}`); };
+    const rendered = [];
+    // The client component is a reference only: any property access means it ran on the server.
+    const StartPaidFlow = new Proxy(function StartPaidFlow() {}, { get: (_, key) => key === '__esModule' ? false : deny(`StartPaidFlow.${String(key)}`) });
+    const exports = {};
+    vm.runInNewContext(code, {
+      exports,
+      require: name => {
+        if (name === 'next/navigation') return { notFound: () => { throw new Error('NEXT_HTTP_ERROR_FALLBACK;404'); } };
+        if (name === 'react/jsx-runtime') return { jsx: (type, props) => { rendered.push(type); return { type, props }; } };
+        if (name === './StartPaidFlow') return StartPaidFlow;
+        return deny(`import: ${name}`);
+      },
+      process: gatedProcess(env, deny),
+      fetch: () => deny('fetch'),
+      console: new Proxy({}, { get: (_, name) => deny(`console.${String(name)}`) }),
+      Date: class { constructor() { deny('clock'); } static now() { deny('clock'); } },
+      setTimeout: () => deny('setTimeout'),
+      setInterval: () => deny('setInterval'),
+    }, { filename: pagePath });
+    return { exports, unexpected, rendered, StartPaidFlow };
+  };
   const trapped = new Proxy({}, {
-    get: (_, key) => deny(`props.${String(key)}`),
-    ownKeys: () => deny('props keys'),
-    getOwnPropertyDescriptor: () => deny('props descriptor'),
+    get: (_, key) => { throw new Error(`unexpected props.${String(key)}`); },
+    ownKeys: () => { throw new Error('unexpected props keys'); },
+    getOwnPropertyDescriptor: () => { throw new Error('unexpected props descriptor'); },
   });
-  for (const props of [undefined, null, trapped]) {
-    assert.throws(() => exports.default(props), { message: 'NEXT_HTTP_ERROR_FALLBACK;404' });
+  for (const env of CLOSED_GATE_ENVS) {
+    const { exports, unexpected, rendered } = load(env);
+    assert.deepEqual(Object.keys(exports).sort(), ['default', 'metadata']);
+    assert.equal(exports.metadata.robots.index, false);
+    for (const props of [undefined, null, trapped]) {
+      assert.throws(() => exports.default(props), { message: 'NEXT_HTTP_ERROR_FALLBACK;404' });
+    }
+    assert.deepEqual(unexpected, [], JSON.stringify(env));
+    assert.deepEqual(rendered, []);
+  }
+  for (const env of OPEN_GATE_ENVS) {
+    const { exports, unexpected, rendered, StartPaidFlow } = load(env);
+    const element = exports.default(trapped);
+    assert.equal(element.type, StartPaidFlow);
+    assert.deepEqual(rendered, [StartPaidFlow]);
     assert.deepEqual(unexpected, []);
   }
 });
 
-test('both public checkout POSTs stay disabled before request, pending record, provider or research access', () => {
-  const disabled = `import { NextResponse } from 'next/server';
-
-export async function POST() {
-  return NextResponse.json(
-    { error: 'checkout_unavailable' },
-    { status: 503, headers: { 'Cache-Control': 'private, no-store' } }
-  );
-}`;
+test('both public checkout POSTs stay disabled unless the off-production rehearsal flag is set', async () => {
   for (const route of ['init', 'callback']) {
-    assert.equal(read(`src/app/api/site-bot/checkout/${route}/route.ts`).trim(), disabled);
+    await assertGatedStub(`src/app/api/site-bot/checkout/${route}/route.ts`, 'POST', 'checkout_unavailable');
   }
 });
 

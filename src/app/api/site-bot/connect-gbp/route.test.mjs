@@ -4,6 +4,7 @@ import path from 'node:path';
 import test from 'node:test';
 import vm from 'node:vm';
 import ts from 'typescript';
+import { CLOSED_GATE_ENVS, gatedProcess } from '../paidFlowGate.testkit.mjs';
 
 const routePath = path.join(process.cwd(), 'src/app/api/site-bot/connect-gbp/route.ts');
 const source = fs.readFileSync(routePath, 'utf8');
@@ -12,7 +13,7 @@ const code = ts.transpileModule(source, {
   compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022, esModuleInterop: true },
 }).outputText;
 
-function routeHarness() {
+function routeHarness(processEnv = {}) {
   const unexpected = [];
   const deny = name => { unexpected.push(name); throw new Error(`unexpected ${name}`); };
   const exports = {};
@@ -21,7 +22,8 @@ function routeHarness() {
     require: name => name === 'next/server'
       ? { NextResponse: { json: (body, options) => Response.json(body, options) } }
       : deny(`import: ${name}`),
-    process: new Proxy({}, { get: (_, name) => deny(`process.${String(name)}`) }),
+    // Only the SITE_BOT_PAID_FLOW gate keys are readable; every closed-gate env must keep the stub.
+    process: gatedProcess(processEnv, deny),
     fetch: () => deny('network access'),
     WebSocket: function () { deny('WebSocket access'); },
     XMLHttpRequest: function () { deny('XMLHttpRequest access'); },
@@ -67,4 +69,11 @@ test('GBP connection POST ignores apparent authorization and enabling flags acro
       env: { ENABLE_GBP_CONNECTION: 'true', NODE_ENV: 'development' } });
   }
   assert.deepEqual(h.unexpected, []);
+});
+
+test('GBP connection POST stays the audit-only stub for every closed rehearsal-flag env', async () => {
+  for (const env of CLOSED_GATE_ENVS) {
+    const harness = routeHarness(env);
+    await harness.post({ auditId: '00000000-0000-4000-8000-000000000000', gbpLocationId: 'locations/456', connectionMethod: 'manager_invite' });
+  }
 });

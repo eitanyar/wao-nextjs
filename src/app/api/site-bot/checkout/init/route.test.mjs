@@ -4,10 +4,11 @@ import path from 'node:path';
 import test from 'node:test';
 import vm from 'node:vm';
 import ts from 'typescript';
+import { CLOSED_GATE_ENVS, gatedProcess } from '../../paidFlowGate.testkit.mjs';
 
 const routePath = path.join(process.cwd(), 'src/app/api/site-bot/checkout/init/route.ts');
 
-function routeHarness(nodeEnv) {
+function routeHarness(processEnv) {
   const code = ts.transpileModule(fs.readFileSync(routePath, 'utf8'), {
     fileName: routePath,
     compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022, esModuleInterop: true },
@@ -20,7 +21,8 @@ function routeHarness(nodeEnv) {
     require: name => name === 'next/server'
       ? { NextResponse: { json: (body, options) => Response.json(body, options) } }
       : deny(`import: ${name}`),
-    process: new Proxy({ env: { NODE_ENV: nodeEnv } }, { get: (_, name) => deny(`process.${String(name)}`) }),
+    // Only the SITE_BOT_PAID_FLOW gate keys are readable; every closed-gate env must keep the stub.
+    process: gatedProcess(processEnv, deny),
     fetch: () => deny('fetch'),
     WebSocket: function () { deny('WebSocket'); },
     XMLHttpRequest: function () { deny('XMLHttpRequest'); },
@@ -50,7 +52,7 @@ function routeHarness(nodeEnv) {
 }
 
 test('checkout init actual POST rejects valid and malformed inputs in every environment without effects', async () => {
-  for (const env of ['development', 'production', 'test']) {
+  for (const env of CLOSED_GATE_ENVS) {
     const harness = routeHarness(env);
     for (const request of [
       undefined,
@@ -66,7 +68,7 @@ test('checkout init actual POST rejects valid and malformed inputs in every envi
 });
 
 test('checkout init actual POST never reads getter or thenable traps', async () => {
-  for (const env of ['development', 'production', 'test']) {
+  for (const env of CLOSED_GATE_ENVS) {
     const harness = routeHarness(env);
     await harness.post(harness.trapped({
       get json() { throw new Error('request JSON getter'); },

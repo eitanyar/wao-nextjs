@@ -11,6 +11,7 @@ const routePath = path.join(root, 'src/app/api/site-bot/research/status/route.ts
 const authPath = path.join(root, 'src/lib/admin-auth.ts');
 const pipelinePath = path.join(root, 'src/lib/site-bot/research/pipelineState.ts');
 const callbackPath = path.join(root, 'src/app/api/site-bot/checkout/callback/route.ts');
+const callbackPaidPath = path.join(root, 'src/app/api/site-bot/checkout/callback/paid.ts');
 const completionPath = path.join(root, 'src/lib/site-bot/checkout/researchCompletion.ts');
 const payPath = path.join(root, 'src/app/(product)/site-bot/pay/[sessionId]/page.tsx');
 const secret = 'synthetic-status-guard-secret';
@@ -181,7 +182,7 @@ test('regular file with oversized or malformed bounded-read result is invalid, n
 });
 
 test('checkout branches and pay page no longer advertise or consume a status URL', () => {
-  for (const fileName of [callbackPath, completionPath, payPath]) {
+  for (const fileName of [callbackPath, callbackPaidPath, completionPath, payPath]) {
     assert.equal(fs.readFileSync(fileName, 'utf8').includes('statusUrl'), false, fileName);
   }
 });
