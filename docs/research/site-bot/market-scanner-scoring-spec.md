@@ -1028,3 +1028,182 @@ https://whitespark.ca/research/how-keywords-in-business-names-currently-impact-g
 SiteGround 202 challenge — https://www.sprocketsecurity.com/blog/please-show-your-work-bypassing-javascript-proof-of-work-captchas
 and https://mysites.guru/blog/siteground-captcha-blocking-mysites-guru/ · RFC 9309 (robots.txt) — https://www.rfc-editor.org/rfc/rfc9309 ·
 pilot host checks by direct fetch of the hosts' home pages.
+
+---
+---
+
+# Revision 3 — 2026-11-07 (post-M4 stop-and-see gate)
+
+Owner: Yonatan · Inputs: run `73ecfd6063af` (M4, 411 cells), `m4-*.json/csv`, private rows
+`data/market-scan/private/m4-businesses.json`, and the cached raw Local Finder / Maps responses in
+`data/market-scan/cache/`. Nothing business-level is copied here. **Where Revision 3 disagrees with anything above,
+Revision 3 wins.** (Numbered §3.x because §2.13 is already the post-M3 handoff list.)
+
+## 3.0 What the gate found
+
+The gate compared the score with what Google actually returned for 9 cells: the engineer's top 5, plus movers ×
+Ashdod and pilots A, C and D. It also read the full counted-prospect list for each of the 5 cells that became the
+final top 5. Two of the gate's findings are data bugs and two are rule gaps:
+
+1. **LF ratings are missing, and missing was scored as zero (bug).** Google's Local Finder response carries
+   `rating: null` for **171 of 177 movers top-3 slots** (and 27 more slots in other trades, 198 of 1,905 overall).
+   The engine scored those businesses as 0-review listings, **even when the cid was joined to a Maps item that has
+   the reviews**. Example from the cache: one Ashkelon mover has `rating: null` in 6 of 7 LF responses and 21 reviews
+   at 5.0 in the Maps response. A moving-auction marketplace that sits in the LF top 3 of ~40 movers cells shows
+   1,100 reviews in 2 responses and 0 in every other one. **Every movers score is inflated by this bug.** It is my
+   spec's fault in part: R1.2 listed the detail fields to join, but it didn't say Maps wins for votes/rating.
+2. **LF `domain` is unusable (bug).** LF items carry `domain: "google.com"` (a Google redirect) or `null`. So for an
+   unjoined LF item, "no website" is *unknown*, not *known false*. This is the root of question (a).
+3. **Phone-block lead-gen networks (rule gap).** Three mobile number blocks (the same first 7 digits) appear
+   across many cells and trades. Their listings all follow the pattern "<trade> in <city> <first name> <trade>" and
+   have 0–4 reviews. One locksmith block holds the #1 LF slot in 5 cells. Separately, two or more listings
+   in one cell share one real domain (a 4-listing car-key operator; a 2-listing locksmith operator). R5.3's rule
+   (exact phone on ≥ 2 listings in a cell or ≥ 3 cells) catches none of these. LF prints phones as `05X-…` and Maps
+   prints them as `+9725X-…`, so exact matching may also be failing across the two sources.
+4. **Off-trade and out-of-cell prospects (rule gap).** Category text passed items whose *title* says otherwise:
+   car-electric garages counted as electricians, AC-accessory shops counted as AC repair, a hardware retailer and
+   a car-scrap buyer counted as locksmiths, and a "nationwide" operator. A ring2 pool beside a big city also took in
+   the city's own businesses: Ashdod-titled locksmiths were counted in the Gan Yavne pool.
+
+The pilots match. In A, the three real contractors (66–88 reviews) are truly saturated. In C, there are 488, 44 and
+1,000 reviews (one a national chain), and zero prospects. D has two real strong roofers plus one network listing,
+and 8 real small contractors as prospects.
+
+## 3.1 Field precedence for LF top-3 items (fixes 3.0.1, 3.0.2, question a)
+
+```
+joined (cid in this cell's Maps pool)  → every field from Maps (votes, rating, domain, photos, categories, claimed)
+unjoined                               → votes/rating = best known value for this cid anywhere in the run's cache
+                                          (max votes_count across all LF + Maps responses; rating from that same item)
+                                          else neutral fill (2.1)
+                                        → site: real domain parsed from the LF `url` redirect param if present,
+                                          else neutral fill — LF `domain` null/"google.com" is NEVER "known no site"
+photos / categories / claimed, unjoined → neutral fill (2.1)
+```
+Votes are a property of the business, not the query. So the best-known value is deterministic and honest. The engine
+logs per cell how many slots used `maps`, `best_known` and `neutral`.
+
+**Question (a):** the implemented rule gave an unjoined LF item with `domain: null` a site score of 0. That is
+**not** what 2.1 meant, because LF can't tell us a business has no site. Joined items keep the Maps value (known
+true/false). The D/E/F differences are small and in the safe direction (lower → fewer step-1 kills), but final S3
+uses the same code on unjoined proximity-point items, so it gets fixed.
+
+## 3.2 Lead-gen networks (fixes 3.0.3)
+
+All phone logic runs on **E.164-normalised** numbers (`+9725XXXXXXXX`).
+```
+phone_block(b) = first 7 digits of the national number (e.g. 05X-XXX-X)
+lead_gen_network(b) iff any of:
+  (i)  ≥ 3 distinct cids share b's phone_block, across ≥ 2 cells (any profession),
+       AND ≥ 2 of them are stuffed(title)            // §4.3 stuffed = head term or a city name in the title
+  (ii) b's real domain (not NOT_A_SITE, after host-suffix match) is shared by ≥ 2 distinct cids in the same profession
+  (iii) the existing R5.3 exact-phone rule
+lead_gen_network → never a prospect; in LF top 3:  s_b = max(s_b, 0.60)  [CALIBRATE]
+```
+Why a 0.60 floor: a network listing ranks on its keyword name and pin location, not on profile quality. When one
+is suspended, another replaces it. Our client won't keyword-stuff, so the slot is harder to win than the listing's
+1–4 reviews suggest, but it's still softer than a real incumbent with 90 reviews. The 3-cid + stuffed-title
+condition keeps an innocent shared block (a 1-in-1,000 coincidence) from tripping it.
+`urgency_lead_gen` stays a display flag. Rule (i) applies to every profession: the AC-repair and roofing networks
+prove that it isn't only an urgency-trade problem.
+
+## 3.3 Title excludes, nationwide operators, out-of-cell titles (fixes 3.0.4)
+
+Applies to the Maps prospect pool only (never to LF top 3, R1.1):
+1. A profession's `exclude` stems are also matched against the **title**, plus these title-only stems (append-only):
+   electrician `רכב · מוסך` · ac-repair `אביזרי` · locksmith `פרזול · פירוק · מכונות` · movers `השוואת מחירי`.
+   Category exclude for movers adds `חנות ציוד`.
+2. Global title stem `פריסה ארצית` (nationwide) → `chain`, never a prospect.
+3. **Out-of-cell title:** if the title contains the `he_name` of an areas.json city that is neither the cell's city nor a
+   pool member, the business is not in this cell. Assign it to that city's cell for the profession if it exists,
+   else drop it. This fixes the ring2-next-to-big-city spill. The 6 km radius is otherwise unchanged.
+
+## 3.4 Organic multiplier O — dropped from the score (question b)
+
+1,228 organic results were classed `national_brand` and 314 local. The input barely varies: for a bare head term,
+Google's organic top 10 is close to identical in every city (first seen in M3, 2.0). A higher region threshold wouldn't
+help, because the same results would still repeat everywhere. **Decision: `O = 1.0` in R10 for now.** `L_share` /
+`D_share` stay in the output as pitch material. If a future run wants a real local-organic signal, it should buy
+one organic SERP for the *city-modified* query ("<term> ב<city>") on the final top 5 only (≈ $0.01). That's where a
+local site actually ranks. Informational only, never scored.
+
+## 3.5 Homepage outcomes — dead domains (question d)
+
+```
+site_dead  = dns_nxdomain (confirmed by a second resolver, e.g. DNS-over-HTTPS) · parked · 404/410   → w_b 1.25
+failed     = connect/TLS failure on both schemes · 5xx after retry                                  → w_b 1.10
+```
+A dead domain on a Google listing is effectively no site, and it's worse than none because the profile's
+"Website" button is broken. That makes it the strongest single pitch line, so it gets the no-site weight.
+`site_dead` is a site-caused outcome. It's excluded from the fetch-error rate (M3 criterion 5 is re-judged on
+`failed` only). The second-resolver confirmation exists because local WSL DNS is a known flaky resolver. An
+NXDOMAIN that resolves elsewhere is re-fetched once.
+
+## 3.6 Urgency trades (question c, R5.3 revisit)
+
+The R5.3 revisit trigger fired: urgency trades won on score and lost on the glance. The causes are 3.0.1 (movers)
+and 3.0.3 (locksmith). That's a data/rule failure, not a CPC-weighting failure, so **no damping constant is added**.
+After the 3.1–3.3 re-score, any urgency cell that re-enters the top 5 is re-gated by hand before it's final.
+
+## 3.7 Re-score (no paid calls)
+
+Re-score M4 from cache with 3.1–3.5. Expected: every change raises or holds S3 (known votes, neutral site, network
+floor), so no cell newly drops below the 0.75 step-1 gate. **No new Maps buys and $0 spend.** If any cell does
+cross back under 0.75, list it and stop. Don't buy it without Adam.
+
+## 3.8 Config for the engineer (merge; Yonatan does not edit `config/`)
+
+```json
+{
+  "stage2": {
+    "lf_field_precedence": "maps_if_joined_else_best_known_else_neutral",
+    "lf_domain_trust": false,
+    "lf_url_redirect_parse": true,
+    "phone_normalize": "e164_il",
+    "lead_gen_network": {
+      "phone_block_digits": 7, "block_min_cids": 3, "block_min_cells": 2, "block_min_stuffed": 2,
+      "shared_domain_min_cids": 2, "shared_domain_scope": "profession",
+      "lf_s_b_floor": 0.60
+    },
+    "title_exclude": {
+      "electrician": ["רכב", "מוסך"], "ac-repair": ["אביזרי"],
+      "locksmith": ["פרזול", "פירוק", "מכונות"], "movers": ["השוואת מחירי"]
+    },
+    "category_rules": { "movers": { "exclude_append": ["חנות ציוד"] } },
+    "title_chain_stems": ["פריסה ארצית"],
+    "out_of_cell_title_rule": true,
+    "organic_factor": { "base": 1.0, "slope": 0.0 },
+    "organic_factor_note": "O disabled 2026-11-07 (Rev 3, 3.4); L_share/D_share display only"
+  },
+  "homepage_check": {
+    "site_dead": ["dns_nxdomain_confirmed", "parked", "status_404_410"],
+    "nxdomain_second_resolver": "doh",
+    "weights": { "site_dead": 1.25, "failed": 1.10 }
+  }
+}
+```
+
+## 3.9 Final top 5 (provisional until the 3.7 re-score; then Yonatan re-gates any new entrant)
+
+| # | Cell | M4 score | S3 | P counted → real after gate | Why winnable |
+|---|---|---|---|---|---|
+| 1 | locksmith × Jerusalem | 391.8 | 0.57 | 42 → ≈ 35 | top 3 = a 2-listing network + a 0-review stuffed listing; dozens of real one-man locksmiths with 10–75 reviews and no site |
+| 2 | ac-repair × Petah Tikva | 230.9 | 0.37 | 38 → ≈ 31 | top 3 = three 1–2-review keyword listings (lead-gen style); real technicians below them |
+| 3 | electrician × Rehovot | 234.5 | 0.62 | 27 → ≈ 21 | real owner-run top 3 (28–74 reviews), beatable with a review push + site |
+| 4 | electrician × Ramla | 215.9 | 0.50 | 16 → ≈ 15 | clean owner-run pack; same kit and case study as #3 (adjacent, same region) |
+| 5 | roofing × Rehovot (pilot D) | 205.3 | 0.55 | 8 → 8 | highest ticket, demo kit ready (kit 2); small list. Alternate: electrician × Holon (P 29, not yet gated) |
+
+Held out pending re-score: all movers cells (3.0.1), locksmith × R1-ring2 (partial match: real incumbents mixed with
+stuffed listings, some off-trade prospects), locksmith × R3-ring2 (mismatch: network-held top 3, prospects
+spilled in from Ashdod; ≈ 9 real → likely below P_w 8–15 after 3.3).
+
+## 3.10 Handoffs (post-M4)
+
+- **nextjs-engineer** — implement 3.1–3.5 + 3.8, fixtures for each (include the cached Ashkelon-mover and
+  marketplace cids as fixtures for 3.1, and the three phone blocks for 3.2), re-score M4 from cache at $0, and
+  report the new top 15 with slot-source counts.
+- **verifier (Roni)** — determinism; zero network calls during re-score; no LF item scored "known no site" from LF
+  `domain`; E.164 normalisation on both sources; `git diff data/clients/` empty; no names/phones/domains committed.
+- **Yonatan** — re-gate any new top-5 entrant from the private file; then the top 5 is final.
+- **Eitan** — the 5th slot (roofing × Rehovot vs electrician × Holon), see the stop-and-see summary.
+- No keyword anchor / title formula is touched.
