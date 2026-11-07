@@ -33,6 +33,17 @@ export interface ResearchedSitePage {
   brief?: Pick<PageBrief, 'faqPolicy' | 'faqCandidates'>;
   areaServed?: { name: string; type?: 'City' | 'AdministrativeArea' | 'Place' };
   persistedSlug?: string;
+  /** M2a.1 (C1): plain page name + city for the title formula, H1 rule, schema and link anchors. */
+  seo?: ResearchedPageSeo;
+}
+
+export interface ResearchedPageSeo {
+  /** Plain service name (money page) or trade (homepage). Never the hero hook. */
+  name: string;
+  /** Base city display name, or null. */
+  city: string | null;
+  /** Owner-stated places (schema areaServed), never widened. */
+  serviceArea: string[];
 }
 
 export interface ResearchedSiteGraphEdge {
@@ -54,7 +65,7 @@ function normalizePath(value: string): string | null {
 }
 
 function validSlug(value: string | undefined): value is string {
-  return Boolean(value && /^[a-z0-9]+(?:-[a-z0-9]+)*--[a-z0-9][a-z0-9-]*$/.test(value) && !RESERVED_SEGMENTS.has(value));
+  return Boolean(value && /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(value) && value.length <= 64 && !RESERVED_SEGMENTS.has(value));
 }
 
 function asciiToken(value: string): string {
@@ -67,12 +78,49 @@ function asciiToken(value: string): string {
   return tokens.join('').replace(/-+/g, '-').replace(/^-|-$/g, '');
 }
 
+/**
+ * Clean page slug (M2a.1, C3): the planned path segment itself (already a short, persisted,
+ * unique English keyword slug, `-2` suffixed on collision), with no opportunity-ID suffix.
+ * A valid persisted slug wins; a segment that is not a clean slug falls back to `svc-<hex>`.
+ */
 export function buildStablePageSlug(opportunityId: string, label: string, persistedSlug?: string): string {
   if (!/^[A-Za-z0-9][A-Za-z0-9_-]*$/.test(opportunityId)) throw new Error('Opportunity ID must be opaque.');
   if (validSlug(persistedSlug)) return persistedSlug;
-  const base = asciiToken(label) || 'page';
-  const suffix = asciiToken(opportunityId) || `id-${Buffer.from(opportunityId).toString('hex').slice(0, 12)}`;
-  return `${base.slice(0, 56).replace(/-$/g, '') || 'page'}--${suffix.slice(0, 32)}`;
+  const base = asciiToken(label).slice(0, 64).replace(/-$/g, '');
+  return validSlug(base) ? base : `svc-${Buffer.from(opportunityId).toString('hex').slice(0, 10)}`;
+}
+
+const RLM = '\u200F';
+const HEBREW_BET = '\u05D1';
+const HEBREW_LETTER = /[\u05D0-\u05EA]/;
+
+/** "<name> b<city>" (Yonatan's formula). A city that does not start with a Hebrew letter takes a hyphen after the prefix. */
+export function pageNameWithCity(name: string, city: string | null): string {
+  const place = (city ?? '').trim();
+  if (!place) return name.trim();
+  return `${name.trim()} ${HEBREW_BET}${HEBREW_LETTER.test(place[0]) ? '' : '-'}${place}`;
+}
+
+/**
+ * Title formula (C1, signed off by Yonatan): money page `<service> b<city> | <business>`,
+ * homepage `<trade> b<city> | <business>`. Brand last, `|` separator. A Latin business
+ * name is anchored with an RLM before ` | ` (CLAUDE.md `%s\u200F | WAO` technique).
+ * Target <= RESEARCHED_TITLE_TARGET_CHARS; longer titles are returned unchanged (flagged by tests/eval).
+ */
+export const RESEARCHED_TITLE_TARGET_CHARS = 60;
+export function buildResearchedPageTitle(name: string, city: string | null, businessName: string): string {
+  const brand = businessName.trim();
+  const head = pageNameWithCity(name, city);
+  if (!brand) return head;
+  return `${head}${HEBREW_LETTER.test(brand) ? '' : RLM} | ${brand}`;
+}
+
+/** H1 (C1): the hero hook only if it contains the page name and the city; otherwise name + city. */
+export function researchedPageH1(hook: string, seo: ResearchedPageSeo | undefined): string {
+  if (!seo) return hook;
+  const hasName = hook.includes(seo.name.trim());
+  const hasCity = !seo.city || hook.includes(seo.city.trim());
+  return hasName && hasCity ? hook : pageNameWithCity(seo.name, seo.city);
 }
 
 function outputPath(page: ResearchedSitePage): string | null {
@@ -132,7 +180,18 @@ function pageUrl(siteUrl: string, output: string): string {
   return output === 'index.html' ? `${siteUrl}/` : `${siteUrl}/${output}`;
 }
 
-function navigationLinks(page: ResearchedSitePage, pages: ResearchedSitePage[], outputs: Map<string, string>): ResearchedSitePage[] {
+/**
+ * Links drawn on a page. With graph edges (research sites, C4) exactly the page's outgoing
+ * edges, in edge order; the edges are built from the brief links, so brief links, graph
+ * and navigation are one list. Without edges: the legacy hub/sibling behaviour.
+ */
+function navigationLinks(page: ResearchedSitePage, pages: ResearchedSitePage[], outputs: Map<string, string>, edges: ResearchedSiteGraphEdge[] = []): ResearchedSitePage[] {
+  if (edges.length) {
+    return edges.filter(edge => edge.fromId === page.opportunityId).flatMap(edge => {
+      const target = pages.find(item => item.opportunityId === edge.toId);
+      return target && outputs.has(target.opportunityId) ? [target] : [];
+    });
+  }
   if (page.classification === 'homepage') {
     const hub = pages.filter(item => item.classification === 'service_hub');
     return hub.length ? hub : pages.filter(item => item.classification !== 'homepage');
@@ -148,12 +207,17 @@ function schemaGraph(page: ResearchedSitePage, data: CollectedData, siteUrl: str
   const service: Record<string, unknown> = {
     '@type': 'Service',
     '@id': `${pageUrl(cleanUrl, output)}#service`,
-    name: page.copy.heroHeadline,
+    name: page.seo?.name ?? page.copy.heroHeadline,
     provider: { '@id': `${cleanUrl}/#business` },
     description: page.copy.heroSubheadline,
-    ...(page.areaServed ? { areaServed: { '@type': page.areaServed.type ?? 'Place', name: page.areaServed.name } } : {}),
+    ...(page.seo?.serviceArea.length
+      ? { areaServed: page.seo.serviceArea.map(name => ({ '@type': 'City', name })) }
+      : page.areaServed ? { areaServed: { '@type': page.areaServed.type ?? 'Place', name: page.areaServed.name } } : {}),
   };
-  const graph: Record<string, unknown>[] = [localBusinessObject(data, businessName, cleanUrl, heroImageUrl), service];
+  const business = page.seo
+    ? localBusinessObject(data, businessName, cleanUrl, heroImageUrl, { ownerFactsOnly: true, areaServed: page.seo.serviceArea })
+    : localBusinessObject(data, businessName, cleanUrl, heroImageUrl);
+  const graph: Record<string, unknown>[] = [business, service];
   if (faq.length) graph.push({
     '@type': 'FAQPage',
     '@id': `${pageUrl(cleanUrl, output)}#faq`,
@@ -162,17 +226,36 @@ function schemaGraph(page: ResearchedSitePage, data: CollectedData, siteUrl: str
   return `<script type="application/ld+json">${JSON.stringify({ '@context': 'https://schema.org', '@graph': graph })}</script>`;
 }
 
+/** Link anchor text (C1): the plain service name; the business name for the homepage. */
+function anchorText(target: ResearchedSitePage, businessName: string): string {
+  if (target.classification === 'homepage' && target.seo) return businessName || target.seo.name;
+  return target.seo?.name ?? target.copy.heroHeadline;
+}
+
+/** Customer quote; renders with or without a context line (M2a.1 review pair). */
+function reviewSection(page: ResearchedSitePage, theme: RenderResearchedSitePagesParams['theme']): string {
+  const quote = page.copy.reviewFeatured;
+  if (!quote) return '';
+  const context = page.copy.reviewContext ? `<div style="font-size:0.85rem;color:${theme.textMuted};margin-top:10px;">${esc(page.copy.reviewContext)}</div>` : '';
+  return `<section style="padding:28px 20px;background:${theme.surface};"><blockquote style="max-width:640px;margin:0 auto;text-align:center;"><p style="font-style:italic;font-size:1.05rem;color:${theme.textPrimary};line-height:1.6;">\u05F4${esc(quote)}\u05F4</p>${context}</blockquote></section>`;
+}
+
+/** The <title> of one researched page: the C1 formula when the page has SEO facts, else the legacy hook title. */
+export function researchedPageTitle(page: ResearchedSitePage, businessName: string): string {
+  return page.seo ? buildResearchedPageTitle(page.seo.name, page.seo.city, businessName) : `${page.copy.heroHeadline} \u2014 ${businessName}`;
+}
+
 function buildPageHtml(page: ResearchedSitePage, params: RenderResearchedSitePagesParams, siteUrl: string, output: string, allPages: ResearchedSitePage[], outputs: Map<string, string>): string {
   const { theme, data, heroImageUrl, slug } = params;
   const { phone, phoneHref, businessName } = contacts(data);
-  const links = navigationLinks(page, allPages, outputs).flatMap(item => {
+  const links = navigationLinks(page, allPages, outputs, params.graphEdges ?? []).flatMap(item => {
     const target = outputs.get(item.opportunityId);
-    return target ? [`<a href="/${target === 'index.html' ? '' : target}" style="color:${theme.accent};font-weight:700;">${esc(item.copy.heroHeadline)}</a>`] : [];
+    return target ? [`<a href="/${target === 'index.html' ? '' : target}" style="color:${theme.accent};font-weight:700;">${esc(anchorText(item, businessName))}</a>`] : [];
   }).join('');
   const faq = approvedFaqs(page).map(item => `<details style="background:${theme.surface};border:1px solid ${theme.border};border-radius:${theme.radiusMd};padding:14px;"><summary style="font-weight:700;color:${theme.primary};">${esc(item.q)}</summary><p style="color:${theme.textMuted};margin-top:8px;">${esc(item.a)}</p></details>`).join('');
   const head = pageHead({
     t: theme,
-    title: `${page.copy.heroHeadline} — ${businessName}`,
+    title: researchedPageTitle(page, businessName),
     description: page.copy.heroSubheadline,
     canonicalUrl: pageUrl(siteUrl, output),
     ogImage: heroImageUrl,
@@ -181,8 +264,9 @@ function buildPageHtml(page: ResearchedSitePage, params: RenderResearchedSitePag
   });
   const body = `${stickyHeader(theme, businessName, phone, phoneHref)}
   <main>
-    <section style="padding:44px 20px;background:${theme.surface};text-align:center;"><div style="max-width:700px;margin:0 auto;"><h1 style="color:${theme.primary};font-size:clamp(1.6rem,4vw,2.3rem);margin-bottom:16px;">${esc(page.copy.heroHeadline)}</h1><p style="color:${theme.textMuted};line-height:1.7;">${esc(page.copy.heroSubheadline)}</p></div></section>
+    <section style="padding:44px 20px;background:${theme.surface};text-align:center;"><div style="max-width:700px;margin:0 auto;"><h1 style="color:${theme.primary};font-size:clamp(1.6rem,4vw,2.3rem);margin-bottom:16px;">${esc(researchedPageH1(page.copy.heroHeadline, page.seo))}</h1><p style="color:${theme.textMuted};line-height:1.7;">${esc(page.copy.heroSubheadline)}</p></div></section>
     ${links ? `<nav aria-label="Related pages" style="padding:20px;display:flex;flex-wrap:wrap;gap:14px;justify-content:center;background:${theme.surfaceAlt};">${links}</nav>` : ''}
+    ${reviewSection(page, theme)}
     ${faq ? `<section style="padding:32px 20px;background:${theme.surfaceAlt};"><div style="max-width:700px;margin:0 auto;display:flex;flex-direction:column;gap:12px;">${faq}</div></section>` : ''}
     ${leadFormSection(theme, page.copy.formHeadline, page.copy.heroCta)}
   </main>
@@ -221,7 +305,11 @@ export function renderResearchedSitePages(params: RenderResearchedSitePagesParam
   if ((params.graphEdges?.length ?? 0) > 0 && pages.some(page => !reachable.has(page.opportunityId))) throw new Error('Research graph contains an orphan selected page.');
   const siteUrl = params.siteUrl.replace(/\/$/, '');
   const outputs = new Map(pages.map(page => [page.opportunityId, outputPath(page)!]));
-  const legacy = renderSitePages({ ...params, copy: home[0].copy });
+  const legacy = renderSitePages({
+    ...params,
+    copy: home[0].copy,
+    ...(home[0].seo ? { schemaOptions: { ownerFactsOnly: true, areaServed: home[0].seo.serviceArea } } : {}),
+  });
   delete legacy['index.html'];
   delete legacy['about.html'];
   delete legacy['services.html'];

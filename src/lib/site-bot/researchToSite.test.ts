@@ -83,7 +83,17 @@ test('fixture business: no dossier -> research -> architecture_ready -> copy_rea
   const record = JSON.parse(fs.readFileSync(path.join(roots.sitesRoot, 'm2a-unit-plumbing.json'), 'utf8'));
   assert.equal(record.researchId, 'm2a-unit-a');
   assert.equal(record.researchedPages.length, 3);
-  assert.deepEqual(record.researchedGraphEdges, [{ fromId: 'home', toId: 'svc-leak-detection' }, { fromId: 'home', toId: 'svc-drain-unblocking' }]);
+  // C4: graph edges are exactly the brief links: home -> every service; service -> home + siblings.
+  assert.deepEqual(record.researchedGraphEdges, [
+    { fromId: 'home', toId: 'svc-leak-detection' }, { fromId: 'home', toId: 'svc-drain-unblocking' },
+    { fromId: 'svc-leak-detection', toId: 'home' }, { fromId: 'svc-leak-detection', toId: 'svc-drain-unblocking' },
+    { fromId: 'svc-drain-unblocking', toId: 'home' }, { fromId: 'svc-drain-unblocking', toId: 'svc-leak-detection' },
+  ]);
+  // Site identity was resolved once (deterministic here: no model) and persisted on the plan.
+  assert.deepEqual(dossier?.siteIdentity?.services.map(item => [item.source, item.label, item.slug]), [
+    ['leak detection', 'leak detection', 'leak-detection'], ['drain unblocking', 'drain unblocking', 'drain-unblocking'],
+  ]);
+  assert.deepEqual(record.researchedPages.map((item: { seo?: { name: string } }) => item.seo?.name), ['plumber', 'leak detection', 'drain unblocking']);
 
   // Re-runnable: a copy_ready dossier regenerates from its persisted plan without re-running research.
   const calls: string[] = [];
@@ -161,7 +171,7 @@ test('state transitions: only architecture_ready moves to copy_ready; every othe
   assert.deepEqual(planned.pageOpportunities.map(item => [item.id, item.targetPath, item.pageClass, item.status]), [
     ['home', '/', 'homepage', 'ready'], ['svc-alpha', '/services/alpha', 'money_service', 'ready'],
   ]);
-  assert.deepEqual(planned.internalLinkEdges.map(edge => [edge.fromPath, edge.toPath]), [['/', '/services/alpha']]);
+  assert.deepEqual(planned.internalLinkEdges.map(edge => [edge.fromPath, edge.toPath]), [['/', '/services/alpha'], ['/services/alpha', '/']]);
   // Idempotent once planned.
   assert.deepEqual(planCopyReadyDossier(planned, now), planned);
 });
@@ -188,7 +198,14 @@ test('briefs carry owner facts verbatim, English scaffolding, no FAQ, and pass t
   assert.equal(home.faqPolicy, 'none');
   assert.ok(home.firstPartyProof.some(item => item.value === 'Years in the field (owner-stated): 12'));
   assert.ok(home.firstPartyProof.some(item => item.value.includes('Came in an hour | star rating: 5')));
-  assert.ok(home.assertableLocalFacts.some(item => item.value === 'Service area (owner-stated): Holon'));
+  assert.ok(home.assertableLocalFacts.some(item => item.value === 'Service area (owner-stated; name only these places, never a wider area): Holon, Bat Yam'));
+  assert.deepEqual(home.site, {
+    pageName: 'plumber', relevanceTerm: 'leak detection', city: 'Holon', serviceArea: ['Holon', 'Bat Yam'],
+    serviceLabels: ['alpha'], businessName: 'TEST Biz', soloOperator: true, ownerIntroPage: true,
+  });
+  assert.equal(service.site?.pageName, 'alpha');
+  assert.equal(service.site?.relevanceTerm, 'alpha');
+  assert.equal(service.site?.ownerIntroPage, false);
   assert.deepEqual(home.links, [{ targetPath: '/services/alpha', relationship: 'service_child', evidenceIds: ['entity-1'] }]);
   assert.deepEqual(service.links, [{ targetPath: '/', relationship: 'site_hierarchy', evidenceIds: ['entity-1'] }]);
   assert.ok(service.informationGainGaps.includes('No license number was supplied; do not state one.'));

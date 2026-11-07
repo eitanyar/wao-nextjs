@@ -35,7 +35,8 @@ export interface SiteCopy extends LPCopy {
   serviceDetails: { name: string; description: string }[]; // 4-6 services with descriptions. Each description max 80 chars.
 }
 
-export function buildLpCopyPrompt(data: CollectedData): string {
+/** Fixed singular primary CTA label (the copy step injects it; the model never writes heroCta). */
+export function primaryCtaLabel(data: CollectedData): string {
   const hasPhone = data.contactMethod?.includes('טלפון') || data.contactMethod?.includes('להתקשר');
   const hasWhatsapp = data.contactMethod?.includes('וואטסאפ');
   const hasForm = data.contactMethod?.includes('טופס');
@@ -48,8 +49,27 @@ export function buildLpCopyPrompt(data: CollectedData): string {
     ? 'השאר פרטים'
     : 'התקשר עכשיו';
 
+  return contactLabel;
+}
+
+/** True when the owner supplied a real customer quote. */
+export function hasRealReviewQuote(data: CollectedData): boolean {
+  return !!data.reviewQuote && !data.reviewQuote.includes('אין');
+}
+
+/** Research-path prompt options (M2a.1). Unset = the legacy prompt, byte-identical. */
+export interface LpCopyPromptOptions {
+  /** Hero relevance term; default primaryService || businessNiche. Service pages pass their own service. */
+  relevanceTerm?: string;
+  /** Leave responseTimeBadge blank in the template so the model writes it (instead of the raw owner answer). */
+  blankResponseTimeBadge?: boolean;
+}
+
+export function buildLpCopyPrompt(data: CollectedData, options: LpCopyPromptOptions = {}): string {
+  const contactLabel = primaryCtaLabel(data);
+
   const ownerFirstName = (data.ownerName || data.businessName || '').split(/[\s,]/)[0];
-  const hasRealReview = !!data.reviewQuote && !data.reviewQuote.includes('אין');
+  const hasRealReview = hasRealReviewQuote(data);
 
   return `You are Tamar, WAO's Sabra conversion copywriter.
 Write LP copy for a Hebrew RTL landing page. Output ONLY valid JSON. No prose, no explanation.
@@ -151,7 +171,7 @@ ABOUT SECTION (aboutBlurb) — most important field:
 - Max 320 chars. Zero generic filler phrases like "אנו מחויבים ללקוח" or "שירות מקצועי ואיכותי".
 
 HERO:
-- primaryService: explicit required term: "${data.primaryService || data.businessNiche || ''}"
+- primaryService: explicit required term: "${options.relevanceTerm ?? (data.primaryService || data.businessNiche || '')}"
 - QUALITY SCORE RELEVANCE RULE: heroHeadline or heroSubheadline MUST contain the exact literal primaryService term (or a natural Hebrew inflection of it). This is a strict Google Ads Quality Score relevance requirement, not a style preference.
 - heroHeadline: open with the client's fear/problem, close with the relief. Max 68 chars.
 - heroSubheadline: one specific, credible USP. Not a list — one sharp promise. Max 90 chars.
@@ -200,7 +220,7 @@ OUTPUT (JSON only, no markdown):
   "guaranteeBlock": "",
   "reviewFeatured": ${hasRealReview ? `"${data.reviewQuote}"` : 'null'},
   "reviewContext": ${hasRealReview && data.starRating ? `"${data.starRating} כוכבים בגוגל"` : 'null'},
-  "responseTimeBadge": ${data.responseTime ? `"${data.responseTime}"` : 'null'},
+  "responseTimeBadge": ${data.responseTime ? (options.blankResponseTimeBadge ? '""' : `"${data.responseTime}"`) : 'null'},
   "scarcityLine": null,
   "formHeadline": "",
   "stickyBarLine": ""
@@ -209,8 +229,8 @@ OUTPUT (JSON only, no markdown):
 
 // Site Bot — same rules/hard-constraints as buildLpCopyPrompt, plus the 3 extra
 // fields needed for standalone about.html / services.html pages.
-export function buildSiteCopyPrompt(data: CollectedData): string {
-  const basePrompt = buildLpCopyPrompt(data);
+export function buildSiteCopyPrompt(data: CollectedData, options: LpCopyPromptOptions = {}): string {
+  const basePrompt = buildLpCopyPrompt(data, options);
 
   const extraRules = `
 ADDITIONAL SITE PAGES (about.html / services.html deep-dive content):

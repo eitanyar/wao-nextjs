@@ -9,12 +9,15 @@ import type { CollectedData } from '@/lib/bot/prompts';
 import { renderStaticHtml, type RenderStaticHtmlParams } from './renderStaticHtml';
 import { buildPrivacyHtml, buildAccessibilityHtml, isAccessibilityExempt } from './legalPages';
 import { buildFraudBlockerTrackerHtml } from '../fraud-blocker/tracker';
+import { parseBusinessHours } from './businessHours';
 
 export interface RenderSitePagesParams extends Omit<RenderStaticHtmlParams, 'copy' | 'mode' | 'siteUrl'> {
   copy: SiteCopy;
   mode?: 'site';
   /** Required — the live domain root, e.g. 'https://daniel-locksmith.wao.co.il' */
   siteUrl: string;
+  /** Researched sites (M2a.1) pass ownerFactsOnly schema options; unset = legacy schema, unchanged. */
+  schemaOptions?: LocalBusinessSchemaOptions;
 }
 
 export function renderSitePages(p: RenderSitePagesParams): Record<string, string> {
@@ -51,7 +54,7 @@ function buildIndexHtml(p: RenderSitePagesParams, siteUrl: string): string {
 
   const withSchema = html.replace(
     '</head>',
-    () => `  ${localBusinessSchema(p.data, businessName, siteUrl, p.heroImageUrl)}\n</head>`
+    () => `  ${localBusinessSchema(p.data, businessName, siteUrl, p.heroImageUrl, p.schemaOptions)}\n</head>`
   );
 
   const withNav = withSchema.replace(
@@ -185,8 +188,48 @@ export function getSchemaOrgType(businessNiche?: string): string {
 // policy disqualifies (and risks a manual action on) self-hosted review schema
 // where the business controls the reviews about itself, which is exactly this
 // case. starRating/reviewCount stay visible page copy only, never schema.
-export function localBusinessObject(data: CollectedData, businessName: string, siteUrl: string, ogImage: string): Record<string, unknown> {
+export interface LocalBusinessSchemaOptions {
+  /**
+   * M2a.1 (Yonatan's schema must-fixes): emit only what the owner stated. No hard-coded
+   * priceRange / paymentAccepted, openingHoursSpecification only when the hours parse,
+   * areaServed as one City per owner-stated place, sameAs only from a GBP/Maps URL in the
+   * data, address only from the owner's streetAddress (never invented).
+   */
+  ownerFactsOnly?: boolean;
+  /** Owner-stated places for areaServed (display names); default: targetLocation + specificCities. */
+  areaServed?: string[];
+}
+
+const MAPS_URL = /^https:\/\/(?:(?:www\.)?google\.[a-z.]+\/maps|maps\.google\.[a-z.]+|maps\.app\.goo\.gl|g\.page|share\.google)\//i;
+
+function ownerStatedPlaces(data: CollectedData): string[] {
+  const seen = new Set<string>();
+  return [data.targetLocation, ...(data.specificCities ?? '').split(',')]
+    .map(value => (value ?? '').trim())
+    .filter(value => value && !seen.has(value.toLowerCase()) && Boolean(seen.add(value.toLowerCase())));
+}
+
+function ownerFactsLocalBusiness(data: CollectedData, businessName: string, cleanSiteUrl: string, ogImage: string, options: LocalBusinessSchemaOptions): Record<string, unknown> {
+  const hours = parseBusinessHours(data.businessHours);
+  const places = (options.areaServed ?? ownerStatedPlaces(data)).map(name => name.trim()).filter(Boolean);
+  const mapsUrl = typeof data.googleMapsUrl === 'string' && MAPS_URL.test(data.googleMapsUrl.trim()) ? data.googleMapsUrl.trim() : '';
+  return {
+    '@type': getSchemaOrgType(data.businessNiche),
+    '@id': `${cleanSiteUrl}/#business`,
+    name: businessName,
+    url: cleanSiteUrl,
+    image: ogImage,
+    ...(data.phone ? { telephone: data.phone } : {}),
+    ...(data.streetAddress ? { address: { '@type': 'PostalAddress', streetAddress: data.streetAddress, ...(data.targetLocation ? { addressLocality: data.targetLocation } : {}), addressCountry: 'IL' } } : {}),
+    ...(places.length ? { areaServed: places.map(name => ({ '@type': 'City', name })) } : {}),
+    ...(hours ? { openingHoursSpecification: hours } : {}),
+    ...(mapsUrl ? { sameAs: [mapsUrl] } : {}),
+  };
+}
+
+export function localBusinessObject(data: CollectedData, businessName: string, siteUrl: string, ogImage: string, options: LocalBusinessSchemaOptions = {}): Record<string, unknown> {
   const cleanSiteUrl = siteUrl.replace(/\/$/, '');
+  if (options.ownerFactsOnly) return ownerFactsLocalBusiness(data, businessName, cleanSiteUrl, ogImage, options);
   const address = data.streetAddress
     ? {
         '@type': 'PostalAddress',
@@ -214,10 +257,10 @@ export function localBusinessObject(data: CollectedData, businessName: string, s
   };
 }
 
-export function localBusinessSchema(data: CollectedData, businessName: string, siteUrl: string, ogImage: string): string {
+export function localBusinessSchema(data: CollectedData, businessName: string, siteUrl: string, ogImage: string, options: LocalBusinessSchemaOptions = {}): string {
   const schema: Record<string, unknown> = {
     '@context': 'https://schema.org',
-    ...localBusinessObject(data, businessName, siteUrl, ogImage),
+    ...localBusinessObject(data, businessName, siteUrl, ogImage, options),
   };
 
   return `<script type="application/ld+json">${JSON.stringify(schema)}</script>`;
@@ -397,7 +440,7 @@ function buildAboutHtml(p: RenderSitePagesParams, siteUrl: string): string {
     description: copy.aboutPageBody,
     canonicalUrl,
     ogImage: heroImageUrl,
-    schema: localBusinessSchema(data, businessName, siteUrl, heroImageUrl),
+    schema: localBusinessSchema(data, businessName, siteUrl, heroImageUrl, p.schemaOptions),
     fraudBlockerSid: p.fraudBlockerSid,
   });
 
@@ -452,7 +495,7 @@ function buildServicesHtml(p: RenderSitePagesParams, siteUrl: string): string {
     description: copy.heroSubheadline,
     canonicalUrl,
     ogImage: heroImageUrl,
-    schema: localBusinessSchema(data, businessName, siteUrl, heroImageUrl),
+    schema: localBusinessSchema(data, businessName, siteUrl, heroImageUrl, p.schemaOptions),
     fraudBlockerSid: p.fraudBlockerSid,
   });
 
@@ -505,7 +548,7 @@ function buildContactHtml(p: RenderSitePagesParams, siteUrl: string): string {
     description: copy.heroSubheadline,
     canonicalUrl,
     ogImage: heroImageUrl,
-    schema: localBusinessSchema(data, businessName, siteUrl, heroImageUrl),
+    schema: localBusinessSchema(data, businessName, siteUrl, heroImageUrl, p.schemaOptions),
     fraudBlockerSid: p.fraudBlockerSid,
   });
 

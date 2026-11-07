@@ -18,7 +18,9 @@
 // - cumulative LLM spend across the ledger is capped (default US$3); a call that would
 //   start past the cap is refused before it is sent.
 // Writes: <out>/outcome.json, usage.json, events.json, and when generated site-record.json
-// (verbatim generated copy) plus copy.txt (the same strings, one field per line, unedited).
+// (verbatim generated copy) plus copy.txt (the same strings, one field per line, unedited),
+// html/<page>.html (the rendered researched site) and pages.json (title, canonical URL, H1,
+// final gate hits per page; M2a.1).
 import fs from 'node:fs';
 import path from 'node:path';
 import { createRequire } from 'node:module';
@@ -75,7 +77,10 @@ if (!fs.existsSync(entry)) die('dist/ build missing: run `npx tsc -p tsconfig.te
 fs.writeFileSync(path.join(root, 'dist/package.json'), JSON.stringify({ type: 'commonjs' }));
 const { runResearchToSite } = require(entry);
 const { callQwenJSON } = require(path.join(root, 'dist/lib/ai/qwen-fast.js'));
-const { assertBoundedGeneratedSiteCopy, generateResearchPageCopy } = require(path.join(root, 'dist/lib/lp/researchPageCopy.js'));
+const { assertBoundedGeneratedSiteCopy, generateResearchPageCopy, gateViolations } = require(path.join(root, 'dist/lib/lp/researchPageCopy.js'));
+const { copyGateContext } = require(path.join(root, 'dist/lib/lp/copyGates.js'));
+const { renderResearchedSitePages, researchedPageTitle, researchedPageH1 } = require(path.join(root, 'dist/lib/lp/researchedSite.js'));
+const { researchedRenderInputs, buildPageBriefs } = require(entry);
 
 function priorSpend() {
   if (!ledger || !fs.existsSync(ledger)) return 0;
@@ -94,6 +99,7 @@ function roleOf(system) {
   if (/repairing specific fields/.test(system)) return 'repair';
   if (/^You are Noa/.test(system)) return 'noa';
   if (/^You are Tamar/.test(system)) return 'tamar';
+  if (/^You name pages/.test(system)) return 'identity';
   return 'other';
 }
 async function callJson(system, user, options = {}) {
@@ -116,6 +122,8 @@ async function callJson(system, user, options = {}) {
 fs.mkdirSync(outDir, { recursive: true });
 const startedAt = Date.now();
 const outcome = await runResearchToSite({ slug, researchId, collectedData }, {
+  // Site identity (labels + slugs) is one metered model call before the plan (M2a.1).
+  callJson: (system, user, options) => { currentPage = 'identity'; return callJson(system, user, options); },
   // Same generator the orchestration uses by default, wrapped to tag usage rows with the page.
   generateCopy: (brief, data) => {
     currentPage = brief.page.id;
@@ -155,7 +163,36 @@ if (outcome.status === 'generated') {
     lines.push('');
   }
   fs.writeFileSync(path.join(outDir, 'copy.txt'), lines.join('\n'));
+  // Render the site exactly as deploy would (same renderer + inputs), and record title/URL/H1 + final gate hits.
+  const html = renderResearchedSitePages({ ...researchedRenderInputs(record.collectedData, slug), data: record.collectedData, slug, pages: record.researchedPages, graphEdges: record.researchedGraphEdges });
+  for (const [file, body] of Object.entries(html)) {
+    const target = path.join(outDir, 'html', file);
+    fs.mkdirSync(path.dirname(target), { recursive: true });
+    fs.writeFileSync(target, body);
+  }
+  const dossierPath = path.join(path.resolve(process.env.WAO_SITE_RESEARCH_DIR), researchId, 'dossier.json');
+  const dossier = JSON.parse(fs.readFileSync(dossierPath, 'utf8'));
+  const briefs = new Map(buildPageBriefs(dossier, record.collectedData).map(brief => [brief.page.id, brief]));
+  const businessName = record.collectedData.businessName || record.collectedData.businessNiche || '';
+  const pageFacts = record.researchedPages.map(page => {
+    const brief = briefs.get(page.opportunityId);
+    const gates = copyGateContext(record.collectedData, brief?.site?.serviceLabels ?? [], brief?.site?.soloOperator ?? true);
+    const file = page.classification === 'homepage' ? 'index.html' : Object.keys(html).find(name => name === `${page.targetPath.slice(1)}.html`);
+    const body = file ? html[file] : '';
+    return {
+      page: page.opportunityId,
+      file: file ?? null,
+      canonical: /<link rel="canonical" href="([^"]+)"/.exec(body)?.[1] ?? null,
+      title: researchedPageTitle(page, businessName),
+      titleChars: researchedPageTitle(page, businessName).length,
+      h1: researchedPageH1(page.copy.heroHeadline, page.seo),
+      inSitemap: Boolean(html['sitemap.xml']?.includes(`<loc>${/<link rel="canonical" href="([^"]+)"/.exec(body)?.[1]}</loc>`)),
+      finalGateHits: gateViolations(page.copy, gates),
+    };
+  });
+  fs.writeFileSync(path.join(outDir, 'pages.json'), JSON.stringify({ siteIdentity: dossier.siteIdentity ?? null, pages: pageFacts }, null, 2));
   summary.validatorPass = pageResults.every(item => item.valid);
+  summary.gatesPass = pageFacts.every(item => item.finalGateHits.length === 0);
   summary.pages = pageResults;
 } else {
   summary.validatorPass = false;
@@ -164,7 +201,7 @@ if (outcome.status === 'generated') {
 fs.writeFileSync(path.join(outDir, 'outcome.json'), JSON.stringify(summary, null, 2));
 fs.writeFileSync(path.join(outDir, 'usage.json'), JSON.stringify(usage, null, 2));
 fs.writeFileSync(path.join(outDir, 'events.json'), JSON.stringify(events, null, 2));
-console.log(JSON.stringify({ slug, status: outcome.status, validatorPass: summary.validatorPass, calls: summary.calls, repairs: summary.repairs,
+console.log(JSON.stringify({ slug, status: outcome.status, validatorPass: summary.validatorPass, gatesPass: summary.gatesPass ?? false, calls: summary.calls, repairs: summary.repairs,
   fixes: summary.deterministicFixes, costUsd: Number(summary.costUsd.toFixed(4)), totalSpentUsd: Number(spent.toFixed(4)),
   ...(outcome.status !== 'generated' ? { outcome } : {}) }));
-process.exit(outcome.status === 'generated' && summary.validatorPass ? 0 : 1);
+process.exit(outcome.status === 'generated' && summary.validatorPass && summary.gatesPass ? 0 : 1);

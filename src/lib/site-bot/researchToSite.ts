@@ -40,6 +40,14 @@ import { readResearchDossier, writeResearchDossierAtomic } from './research/rese
 import { runSiteResearch } from './research/runResearch';
 import { transitionResearchStatus, type HumanGate, type PageOpportunity, type ResearchStatus, type SiteResearchDossier } from './research/types';
 import {
+  assembleSiteIdentity,
+  isSiteIdentity,
+  resolveSiteIdentity,
+  siteIdentityInput,
+  type SiteIdentity,
+  type SiteIdentityModelCall,
+} from './siteIdentity';
+import {
   buildResearchedSiteGeneration,
   persistResearchedSiteRecordAtomic,
   preflightResearchedSiteTarget,
@@ -51,6 +59,8 @@ const LATIN_NAME = /^[A-Za-z0-9 _-]+$/;
 const RESERVED_SEGMENTS = new Set(['api', 'assets', 'static', 'index', 'privacy', 'accessibility', 'contact', 'sitemap', 'services']);
 const HOME_ID = 'home';
 const MAX_QUERIES_PER_PAGE = 6;
+/** Brief links (C4): a service page links home plus up to this many sibling services. */
+export const MAX_SIBLING_LINKS = 5;
 
 // ---------------------------------------------------------------------------
 // Gate check
@@ -130,7 +140,7 @@ function planned(dossier: SiteResearchDossier): boolean {
  * one homepage plus one money-service page per research service opportunity, all with
  * opaque IDs and safe paths. Held/unknown opportunities keep their status.
  */
-export function planCopyReadyDossier(dossier: SiteResearchDossier, now: () => Date = () => new Date()): SiteResearchDossier {
+export function planCopyReadyDossier(dossier: SiteResearchDossier, now: () => Date = () => new Date(), identity?: SiteIdentity): SiteResearchDossier {
   if (dossier.status === 'copy_ready' && planned(dossier)) return structuredClone(dossier);
   const status = transitionResearchStatus(dossier.status, 'copy_ready');
   const next = structuredClone(dossier);
@@ -140,7 +150,10 @@ export function planCopyReadyDossier(dossier: SiteResearchDossier, now: () => Da
   for (const item of dossier.pageOpportunities) {
     if (item.id === HOME_ID || item.targetPath === '/') continue;
     const isService = item.id.startsWith('service:') || item.pageClass === 'money_service';
-    const base = safeOpportunityIdentity(item);
+    const named = identity?.services.find(service => norm(service.source) === norm(item.opportunity));
+    const base = named && !RESERVED_SEGMENTS.has(named.slug)
+      ? { id: named.slug.startsWith('svc-') ? named.slug : `svc-${named.slug}`, targetPath: `/services/${named.slug}` }
+      : safeOpportunityIdentity(item);
     let { id, targetPath } = base;
     for (let n = 2; ids.has(id) || paths.has(targetPath); n++) {
       id = `${base.id}-${n}`;
@@ -154,6 +167,7 @@ export function planCopyReadyDossier(dossier: SiteResearchDossier, now: () => Da
       targetPath,
       pageClass: 'money_service',
       sourceOpportunityId: item.sourceOpportunityId ?? item.id,
+      ...(named ? { displayName: named.label } : {}),
       // Only service opportunities have a renderer page class today; anything else is held.
       status: isService ? item.status : 'held',
     });
@@ -168,9 +182,17 @@ export function planCopyReadyDossier(dossier: SiteResearchDossier, now: () => Da
     pageClass: 'homepage',
     sourceOpportunityId: HOME_ID,
   }, ...opportunities];
-  next.internalLinkEdges = opportunities
-    .filter(item => item.status === 'ready')
-    .map(item => ({ fromPath: '/', toPath: item.targetPath, rationale: 'research evidence', evidenceIds: item.evidenceIds }));
+  // C4: homepage -> every service; every service -> home + up to MAX_SIBLING_LINKS siblings.
+  const readyServices = opportunities.filter(item => item.status === 'ready');
+  next.internalLinkEdges = [
+    ...readyServices.map(item => ({ fromPath: '/', toPath: item.targetPath, rationale: 'service_child', evidenceIds: item.evidenceIds })),
+    ...readyServices.flatMap(item => [
+      { fromPath: item.targetPath, toPath: '/', rationale: 'site_hierarchy', evidenceIds: item.evidenceIds },
+      ...readyServices.filter(other => other !== item).slice(0, MAX_SIBLING_LINKS)
+        .map(other => ({ fromPath: item.targetPath, toPath: other.targetPath, rationale: 'sibling_service', evidenceIds: other.evidenceIds })),
+    ]),
+  ];
+  if (identity) next.siteIdentity = structuredClone(identity);
   next.status = status;
   next.updatedAt = now().toISOString();
   return next;
@@ -213,6 +235,12 @@ const PROHIBITED_CLAIMS = [
   'Do not invent reviews, ratings, customer counts or testimonials.',
   'Do not claim service areas beyond the supplied local facts.',
   'Do not promise response or arrival times that are not in the allowed facts.',
+  'Do not mention any warranty or guarantee unless one appears in the allowed facts; never widen a stated warranty (for example to "full").',
+  'Do not mention thermal imaging or any equipment that is not in the allowed facts.',
+  'Do not state a street address or invite walk-in visits unless an address is in the allowed facts.',
+  'Do not mention WAO, marketing, copywriting, advertising or website services: this site is only about the business and its own services.',
+  'Do not offer or name any service that is not in the entities list.',
+  'Do not coin license grades or titles: name the license exactly as the owner stated it, with one consistent term on every page.',
 ];
 
 function commercialQueries(dossier: SiteResearchDossier): string[] {
@@ -227,6 +255,7 @@ export function buildPageBriefs(dossier: SiteResearchDossier, data: CollectedDat
   if (dossier.status !== 'copy_ready' || !planned(dossier)) throw new Error('Dossier has no copy_ready plan.');
   const ready = dossier.pageOpportunities.filter(item => item.status === 'ready');
   const services = dossier.businessTruth.assertions.filter(item => item.assertionStatus === 'verified');
+  const identity = briefIdentity(dossier, data);
   const entities = services.map((assertion, index) => approved(`entity-${index + 1}`, assertion.claim));
   const queries = commercialQueries(dossier);
   const cities = dossier.evidence.filter(item => item.id.startsWith('city:'));
@@ -238,8 +267,11 @@ export function buildPageBriefs(dossier: SiteResearchDossier, data: CollectedDat
   ], 'proof');
   const review = clean(data.reviewQuote);
   if (review) proof.push(approved('proof-review', `Customer review quote (owner-supplied; quote verbatim or not at all): ${review}${clean(data.starRating) ? ` | star rating: ${clean(data.starRating)}` : ''}`));
+  // C5: the owner's own wording, never widened. Held city evidence never reaches the brief (compactEvidence drops it).
+  const ownerArea = clean(data.specificCities) || location;
+  const areaLabels = identity.serviceArea.join(', ');
   const localFacts = [
-    ...(location ? [approved('local-area', `Service area (owner-stated): ${location}`)] : []),
+    ...(ownerArea ? [approved('local-area', `Service area (owner-stated; name only these places, never a wider area): ${ownerArea}${areaLabels && areaLabels !== ownerArea ? ` | display names: ${areaLabels}` : ''}`)] : []),
     ...cities.map((item, index): BriefEvidence => ({
       id: `local-city-${index + 1}`, value: `City evidence: ${item.claim}`, status: item.assertionStatus === 'verified' ? 'approved' : 'held',
     })),
@@ -249,6 +281,9 @@ export function buildPageBriefs(dossier: SiteResearchDossier, data: CollectedDat
   const offerValue = clean(data.usp) || niche || dossier.businessTruth.businessName;
   // Research opportunities are named after the owner-confirmed service they came from.
   const serviceIndexFor = (page: PageOpportunity) => services.findIndex(assertion => norm(assertion.claim) === norm(page.opportunity));
+  const labelFor = (name: string) => identity.services.find(service => norm(service.source) === norm(name))?.label ?? name;
+  const readyServices = ready.filter(item => item.pageClass !== 'homepage');
+  const primaryLabel = labelFor(clean(data.primaryService) || readyServices[0]?.opportunity || niche);
 
   return ready.map(page => {
     const isHome = page.pageClass === 'homepage';
@@ -260,12 +295,20 @@ export function buildPageBriefs(dossier: SiteResearchDossier, data: CollectedDat
       : [...queries.filter(query => query.toLowerCase().includes(subject.toLowerCase())), subject].slice(0, MAX_QUERIES_PER_PAGE);
     const orderedEntities = serviceIndex >= 0 ? [entities[serviceIndex], ...entities.filter((_, index) => index !== serviceIndex)] : entities;
     const anchorId = (serviceIndex >= 0 ? entities[serviceIndex] : entities[0])?.id ?? 'offer';
+    const serviceLink = (item: PageOpportunity, relationship: string): PageBriefLink => {
+      const index = serviceIndexFor(item);
+      return { targetPath: item.targetPath, relationship, evidenceIds: [index >= 0 ? entities[index].id : anchorId] };
+    };
+    // C4: brief links are the single source of truth for graph edges and rendered navigation.
     const links: PageBriefLink[] = isHome
-      ? ready.filter(item => item.pageClass !== 'homepage').map(item => {
-        const index = serviceIndexFor(item);
-        return { targetPath: item.targetPath, relationship: 'service_child', evidenceIds: [index >= 0 ? entities[index].id : anchorId] };
-      })
-      : [{ targetPath: '/', relationship: 'site_hierarchy', evidenceIds: [anchorId] }];
+      ? readyServices.map(item => serviceLink(item, 'service_child'))
+      : [
+        { targetPath: '/', relationship: 'site_hierarchy', evidenceIds: [anchorId] },
+        ...readyServices.filter(item => item.id !== page.id).slice(0, MAX_SIBLING_LINKS).map(item => serviceLink(item, 'sibling_service')),
+      ];
+    const pageLabel = isHome ? (identity.trade || niche || dossier.businessTruth.businessName) : labelFor(subject);
+    const ownLabels = readyServices.map(item => labelFor(item.opportunity));
+    const serviceLabels = isHome ? ownLabels : [pageLabel, ...ownLabels.filter(label => label !== pageLabel)];
     return compilePageBrief({
       page: { id: page.id, targetPath: page.targetPath, pageClass: page.pageClass ?? 'money_service' },
       persona: approved('persona', isHome
@@ -285,15 +328,38 @@ export function buildPageBriefs(dossier: SiteResearchDossier, data: CollectedDat
       informationGainGaps: gaps(data),
       prohibitedClaims: PROHIBITED_CLAIMS,
       faqCandidates: [],
+      site: {
+        pageName: pageLabel,
+        relevanceTerm: isHome ? primaryLabel : pageLabel,
+        city: identity.baseCity,
+        serviceArea: identity.serviceArea,
+        serviceLabels,
+        businessName: dossier.businessTruth.businessName,
+        // Site Bot serves solo operators; CollectedData has no team-size answer yet.
+        soloOperator: true,
+        ownerIntroPage: isHome,
+      },
     });
   });
 }
 
-/** Homepage reaches every other page directly. */
+/** The persisted identity, or (pre-M2a.1 plans) a deterministic one with owner wording as labels. */
+function briefIdentity(dossier: SiteResearchDossier, data: CollectedData): SiteIdentity {
+  if (isSiteIdentity(dossier.siteIdentity)) return dossier.siteIdentity;
+  return assembleSiteIdentity(siteIdentityInput(serviceNamesFor(dossier), data), null, () => new Date(dossier.updatedAt));
+}
+
+function serviceNamesFor(dossier: SiteResearchDossier): string[] {
+  return dossier.businessTruth.assertions.filter(item => item.assertionStatus === 'verified').map(item => item.claim);
+}
+
+/** Graph edges are exactly the brief links (C4): one edge per brief link whose target is a planned page. */
 export function buildGraphEdges(briefs: PageBrief[]): ResearchedSiteGraphEdge[] {
-  const home = briefs.find(brief => brief.page.pageClass === 'homepage');
-  if (!home) return [];
-  return briefs.filter(brief => brief !== home).map(brief => ({ fromId: home.page.id, toId: brief.page.id }));
+  const idByPath = new Map(briefs.map(brief => [brief.page.targetPath, brief.page.id]));
+  return briefs.flatMap(brief => brief.links.flatMap(link => {
+    const toId = idByPath.get(link.targetPath);
+    return toId && toId !== brief.page.id ? [{ fromId: brief.page.id, toId }] : [];
+  }));
 }
 
 export function researchedRenderInputs(data: CollectedData, slug: string): ResearchedSiteGenerationDependencies['renderInputs'] {
@@ -325,6 +391,11 @@ export interface ResearchToSiteDependencies {
   researchBaseDir?: string;
   sitesRoot?: string;
   callJson?: QwenJsonCaller;
+  /**
+   * Site identity (labels + slugs), resolved once before the copy_ready plan. Default: one
+   * model call via callJson when given, else deterministic (owner wording, Latin/hash slugs).
+   */
+  resolveIdentity?: (dossier: SiteResearchDossier, data: CollectedData) => Promise<SiteIdentity>;
   generateCopy?: (brief: PageBrief, data: CollectedData) => Promise<SiteCopy>;
   onCopyEvent?: (pageId: string, event: CopyRepairEvent) => void;
   now?: () => Date;
@@ -364,7 +435,14 @@ export async function runResearchToSite(input: ResearchToSiteInput, deps: Resear
   const transitioned = dossier.status === 'architecture_ready';
   let plannedDossier: SiteResearchDossier;
   try {
-    plannedDossier = planCopyReadyDossier(dossier, now);
+    let identity: SiteIdentity | undefined;
+    if (!(dossier.status === 'copy_ready' && planned(dossier))) {
+      const call: SiteIdentityModelCall | null = deps.callJson ? (system, user) => deps.callJson!(system, user, { think: false }) : null;
+      identity = deps.resolveIdentity
+        ? await deps.resolveIdentity(dossier, collectedData)
+        : await resolveSiteIdentity(siteIdentityInput(serviceNamesFor(dossier), collectedData), call, now);
+    }
+    plannedDossier = planCopyReadyDossier(dossier, now, identity);
     if (transitioned || JSON.stringify(plannedDossier) !== JSON.stringify(dossier)) {
       if (!await writeResearchDossierAtomic(researchId, plannedDossier, baseDir)) throw new Error('Unable to persist copy_ready plan.');
     }

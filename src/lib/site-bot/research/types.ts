@@ -3,6 +3,7 @@
  * HEBREW-SAFETY: this module contains ZERO Hebrew bytes.
  */
 import type { ResearchedCopyReviewPacket } from './copyReviewPacket';
+import type { SiteIdentity } from '../siteIdentity';
 
 export const RESEARCH_STATUSES = [
   'pending',
@@ -70,6 +71,8 @@ export interface PageOpportunity {
   pageClass?: string;
   /** Set by the copy_ready plan (M2a): the research-time ID this generator-safe ID replaced. */
   sourceOpportunityId?: string;
+  /** Set by the copy_ready plan (M2a.1): plain display name of the owner-confirmed service. */
+  displayName?: string;
 }
 
 export interface InternalLinkEdge {
@@ -130,6 +133,8 @@ export interface SiteResearchDossier {
   researchGateApprovals?: Record<string, ResearchGateApproval>;
   approvedCopyReviewPacket?: ResearchedCopyReviewPacket;
   pipelineChecks?: ResearchPipelineChecks;
+  /** Set once by the copy_ready plan (M2a.1): service labels/slugs, trade and service-area labels. Never regenerated. */
+  siteIdentity?: SiteIdentity;
 }
 
 const RESEARCH_STATUS_TRANSITIONS: Readonly<Record<ResearchStatus, readonly ResearchStatus[]>> = {

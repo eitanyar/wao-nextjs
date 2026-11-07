@@ -5,10 +5,18 @@
 
 import type { CollectedData } from '../bot/prompts';
 import type { SiteCopy } from './lpCopyPrompt';
-import { buildSiteCopyPrompt } from './lpCopyPrompt';
+import { buildSiteCopyPrompt, hasRealReviewQuote, primaryCtaLabel } from './lpCopyPrompt';
 import { callQwenJSON, type CallQwenJSONOptions } from '../ai/qwen-fast';
 import type { PageBrief } from '../site-bot/research/pageBrief';
 import type { SiteResearchDossier } from '../site-bot/research/types';
+import { PLURAL_ADDRESS_TOKENS, WE_FORM_TOKENS } from './copyGates.config';
+import {
+  copyGateContext,
+  describeGateViolation,
+  GATE_RULES,
+  runCopyGates,
+  type CopyGateContext,
+} from './copyGates';
 
 export type QwenJsonCaller = (
   systemPrompt: string,
@@ -24,16 +32,29 @@ export interface ResearchPageCopyDependencies {
   deterministicFixes?: boolean;
   /** Diagnostics: field names, limits, lengths and fix kinds only, never copy text. */
   onEvent?: (event: CopyRepairEvent) => void;
+  /** Deterministic copy gates (M2a.1). Default true. */
+  gates?: boolean;
 }
 
+/**
+ * Singular-male address rule (M2a.1, B). The forbidden forms are the gate's token data
+ * (copyGates.config.ts), so the prompt and the gate can never drift apart.
+ */
+export const SINGULAR_ADDRESS_RULE =
+  `ADDRESS (hard rule, binding): address the reader in the singular masculine second person only, as one man. Never use plural or second-person-plural forms. Forbidden forms, including with attached prefix letters: ${PLURAL_ADDRESS_TOKENS.map(entry => entry.token).join(', ')}. The business is a solo operator: the owner speaks in the first-person singular, never in the first-person plural. Forbidden: ${WE_FORM_TOKENS.map(entry => entry.token).join(', ')}.`;
+
+/** Hebrew typography spec for the Noa stage (M2a.1, B). Characters are written as escapes. */
+export const TYPOGRAPHY_RULE =
+  'TYPOGRAPHY (binding): use gershayim (\u05F4) in Hebrew acronyms and geresh (\u05F3) in abbreviations and borrowed sounds; never an ASCII double quote (") or apostrophe (\') inside Hebrew text. An em-dash (—) has exactly one space on each side. Ranges of numbers, times or days use an en-dash (–) with no spaces (08:00–18:00). A Hebrew prefix letter joins a following number or Latin word with a maqaf (\u05BE) or plain hyphen and no spaces. Never use double spaces.';
+
 const COPY_SYSTEM_PROMPT =
-  'You are Tamar, a Hebrew conversion copywriter. Follow the supplied research brief and JSON schema exactly. Return only the requested JSON object, with no prose or markdown.';
+  `You are Tamar, a Hebrew conversion copywriter. Follow the supplied research brief and JSON schema exactly. Return only the requested JSON object, with no prose or markdown.\n\n${SINGULAR_ADDRESS_RULE}`;
 
 const QA_SYSTEM_PROMPT =
-  'You are Noa, a Hebrew language QA editor. Correct only language and typography in the supplied JSON, preserve all factual claims and structure, and return only valid JSON.';
+  `You are Noa, a Hebrew language QA editor. Correct only language and typography in the supplied JSON, preserve all factual claims and structure, and return only valid JSON.\n\n${SINGULAR_ADDRESS_RULE} If any field breaks this rule, rewrite that sentence in singular masculine address.\n\n${TYPOGRAPHY_RULE}`;
 
 const REPAIR_SYSTEM_PROMPT =
-  'You are Tamar, a Hebrew conversion copywriter. You are repairing specific fields of a site-copy JSON object that broke hard validator limits. Return only a JSON object containing exactly the requested keys, with no prose or markdown.';
+  `You are Tamar, a Hebrew conversion copywriter. You are repairing specific fields of a site-copy JSON object that broke hard validator limits or copy rules. Return only a JSON object containing exactly the requested keys, with no prose or markdown.\n\n${SINGULAR_ADDRESS_RULE}\n\n${TYPOGRAPHY_RULE}`;
 
 // ---------------------------------------------------------------------------
 // Hard limits: the single source of truth for the validator, the violation
@@ -63,8 +84,12 @@ export const SITE_COPY_PAIR_LIST_LIMITS = {
 export const SITE_COPY_MAX_BYTES = 16 * 1024;
 /** Fields that must always be null. */
 export const SITE_COPY_ALWAYS_NULL = ['scarcityLine'] as const;
-/** Fields that must be both set or both null. */
+/**
+ * Review pair (M2a.1, Adam's decision): [quote, context]. The quote may stand alone
+ * (no star rating); a context without a quote is invalid.
+ */
 export const SITE_COPY_BOTH_OR_NEITHER = ['reviewFeatured', 'reviewContext'] as const;
+export const SITE_COPY_REVIEW_PAIR = SITE_COPY_BOTH_OR_NEITHER;
 /** Upper bound on LLM repair calls per generated page. */
 export const MAX_COPY_REPAIRS = 2;
 
@@ -133,7 +158,7 @@ export function assertBoundedGeneratedSiteCopy(value: unknown): asserts value is
     if (value[key] !== null && !boundedString(value[key], max)) invalidCopy();
   }
   if (SITE_COPY_ALWAYS_NULL.some(key => value[key] !== null) ||
-    (value[SITE_COPY_BOTH_OR_NEITHER[0]] === null) !== (value[SITE_COPY_BOTH_OR_NEITHER[1]] === null) ||
+    (value[SITE_COPY_REVIEW_PAIR[0]] === null && value[SITE_COPY_REVIEW_PAIR[1]] !== null) ||
     STRING_LIST_KEYS.some(key => {
       const limit = SITE_COPY_STRING_LIST_LIMITS[key];
       return !boundedArray(value[key], limit.maxItems, item => boundedString(item, limit.itemMaxChars));
@@ -230,9 +255,9 @@ export function explainGeneratedSiteCopyViolations(value: unknown): CopyViolatio
   for (const key of SITE_COPY_ALWAYS_NULL) {
     if (own.includes(key) && value[key] !== null) out.push({ field: key, rule: 'must_be_null' });
   }
-  const [pairA, pairB] = SITE_COPY_BOTH_OR_NEITHER;
-  if ((value[pairA] === null) !== (value[pairB] === null)) {
-    out.push({ field: `${pairA}+${pairB}`, rule: 'both_or_neither', actual: value[pairA] === null ? `${pairB}_only` : `${pairA}_only` });
+  const [pairA, pairB] = SITE_COPY_REVIEW_PAIR;
+  if (value[pairA] === null && value[pairB] !== null) {
+    out.push({ field: `${pairA}+${pairB}`, rule: 'context_requires_quote', actual: `${pairB}_only` });
   }
   for (const key of STRING_LIST_KEYS) {
     const limit = SITE_COPY_STRING_LIST_LIMITS[key];
@@ -274,12 +299,38 @@ function applyFaqPolicy(copy: SiteCopy, brief: PageBrief): SiteCopy {
   return { ...copy, faqItems: supportedFaqItems(brief) };
 }
 
+/** M2a.1 copy rules (English). Site-specific lines only when the brief carries site facts. */
+export function buildResearchCopyRules(brief: PageBrief): string[] {
+  const site = brief.site;
+  const rules = [
+    SINGULAR_ADDRESS_RULE,
+    '- Use each owner fact at most twice per page; rotate proof points across fields instead of repeating the same fact.',
+    '- When a field must be shorter, cut a whole idea. Never shorten by dropping a verb\'s object or leaving a sentence grammatically incomplete.',
+    '- Owner facts may arrive translated or in English. Render their meaning in native, idiomatic Hebrew; never mirror an English idiom or English word order, and never copy English wording into the copy (proper names excepted).',
+    '- The customer quote may appear only in reviewFeatured, which the system fills in verbatim. Never quote, paraphrase or echo it in any other field.',
+    '- heroCta is fixed by the system: output it exactly as given in the schema.',
+    '- reviewFeatured is filled in by the system: output it exactly as given in the schema. reviewContext: only when the data supplies a star rating, otherwise null.',
+    '- responseTimeBadge: when the owner gave a response time, write a short native Hebrew badge from it; otherwise null.',
+    '- If a license is in the allowed facts, name it with one consistent term exactly as the owner stated it, on every page; never coin license grades or titles.',
+    '- Name only the places in the service-area local fact (use their display names); never a wider region and never "and surroundings".',
+  ];
+  if (site) {
+    rules.push(
+      `- serviceItems is filled in by the system. serviceDetails: at most one entry per service; every name must be exactly one of these owner-confirmed service names, character for character: ${JSON.stringify(site.serviceLabels)}. Never add any other service.`,
+      `- This page is about: ${JSON.stringify(site.pageName)}${site.city ? ` in ${JSON.stringify(site.city)}` : ''}. Where it reads naturally, heroHeadline contains that name${site.city ? ' and that city' : ''}.`,
+      site.ownerIntroPage
+        ? '- The "my name is <first name>" opener appears once per site: this is that page. Use it at most once here (aboutBlurb); aboutPageBody must not repeat it.'
+        : '- The "my name is <first name>" opener appears once per site and the homepage already has it. Do not open aboutBlurb or aboutPageBody with it or any other self-introduction by name; this overrides the ABOUT SECTION opener instruction below.',
+    );
+  }
+  return rules;
+}
+
 export function buildResearchPageCopyPrompt(brief: PageBrief): string {
   return `RESEARCH BRIEF (authoritative; use no claim not supported here):
 ${JSON.stringify({
   page: brief.page,
   persona: brief.persona,
-  offer: brief.waoOffer,
   entities: brief.approvedEntityAnchors,
   queries: brief.targetQueries,
   allowedFacts: {
@@ -297,13 +348,16 @@ ${JSON.stringify({
 
 RESEARCH RULES:
 - Generate only the approved page identified by page.id and page.targetPath.
-- Use only facts included in allowedFacts, entities, queries, persona, offer, or FAQ candidates.
+- Use only facts included in allowedFacts, entities, queries, persona, or FAQ candidates.
 - Do not make any claim prohibited by prohibitedClaims or fill an information gap with an inference.
 - If faqPolicy is none, output an empty faqItems array.
 - Otherwise faqItems may contain only the supplied FAQ candidates, retaining their supplied question and answer.
 - Keep required internal-link targets limited to links.
 
-The following owner-fact prompt provides the required SiteCopy JSON schema. Treat owner facts as context only; use a fact in output only when the research brief authorizes it.`;
+COPY RULES (binding):
+${buildResearchCopyRules(brief).join('\n')}
+
+The following owner-fact prompt provides the required SiteCopy JSON schema. Treat its owner facts as context only; use a fact in output only when the research brief authorizes it. Its HARD RULES, BANNED PHRASES, address and voice rules are NOT context: they are binding, together with the COPY RULES above.`;
 }
 
 export function buildSimulationGenerationResult(data: CollectedData) {
@@ -343,7 +397,7 @@ export function buildSiteCopyHardLimitsBlock(heading = 'HARD LIMITS'): string {
       const parts = limit.keys.map((name, index) => `"${name}" max ${limit.maxChars[index]} characters`).join(', ');
       return `  - ${key}: at most ${limit.maxItems} objects with exactly the keys ${limit.keys.map(name => `"${name}"`).join(' and ')}; ${parts}`;
     }),
-    `- ${SITE_COPY_BOTH_OR_NEITHER.join(' and ')}: both strings or both null, never one without the other. Never invent a ${SITE_COPY_BOTH_OR_NEITHER[1]}; if the data supplies no star rating or other context for the quote, or the quote is longer than ${SITE_COPY_OPTIONAL_STRING_LIMITS.reviewFeatured} characters, set BOTH to null. Never shorten or rephrase a quote.`,
+    `- ${SITE_COPY_REVIEW_PAIR[0]} is the owner's quote, verbatim, and may stand alone. ${SITE_COPY_REVIEW_PAIR[1]} may be set only when ${SITE_COPY_REVIEW_PAIR[0]} is set and the data supplies a star rating; otherwise ${SITE_COPY_REVIEW_PAIR[1]} is null. Never invent a ${SITE_COPY_REVIEW_PAIR[1]}. Never shorten or rephrase a quote.`,
     `- ${SITE_COPY_ALWAYS_NULL.join(', ')}: always null.`,
     '- faqItems: follow the faqPolicy rule in the research rules above.',
     `- Output exactly these keys and no others: ${SITE_COPY_KEYS.join(', ')}.`,
@@ -368,9 +422,12 @@ export interface CopyRepairEvent {
 interface RepairContext {
   callJson: QwenJsonCaller;
   brief: PageBrief;
+  data: CollectedData;
   remaining: number;
   used: number;
   deterministicFixes: boolean;
+  /** Copy gates (M2a.1); null = gates off. */
+  gates: CopyGateContext | null;
   emit: (event: CopyRepairEvent) => void;
 }
 
@@ -380,13 +437,23 @@ function topField(field: string): string {
   return field.split(/[.[+]/)[0];
 }
 
-/** Violations a model can reasonably repair. Pair rule, always-null, extras and FAQs are not sent to the model. */
-function repairableFields(violations: CopyViolation[]): string[] {
+/** Fields the system fills in; never sent to the model for repair. */
+const SYSTEM_FIELDS = ['heroCta', 'serviceItems', 'reviewFeatured', 'faqItems'];
+/** Gate rules settled by a safe fix, not by the model. */
+const SAFE_FIX_GATE_RULES: readonly string[] = [GATE_RULES.reviewContext];
+
+export function isGateRule(rule: string): boolean {
+  return rule.startsWith('gate_');
+}
+
+/** Violations a model can reasonably repair. Pair rule, always-null, extras, FAQs and system fields are not sent to the model. */
+function repairableFields(violations: CopyViolation[], systemFields: readonly string[] = ['faqItems']): string[] {
   const fields = new Set<string>();
   for (const violation of violations) {
-    if (violation.field === '$' || violation.rule === 'both_or_neither' || violation.rule === 'must_be_null') continue;
+    if (violation.field === '$' || violation.rule === 'context_requires_quote' || violation.rule === 'must_be_null' ||
+      SAFE_FIX_GATE_RULES.includes(violation.rule)) continue;
     const field = topField(violation.field);
-    if (field === 'faqItems' || !SITE_COPY_KEYS.includes(field) || (SITE_COPY_ALWAYS_NULL as readonly string[]).includes(field)) continue;
+    if (systemFields.includes(field) || !SITE_COPY_KEYS.includes(field) || (SITE_COPY_ALWAYS_NULL as readonly string[]).includes(field)) continue;
     if (violation.rule === 'unexpected' && !violation.field.includes('.')) continue;
     fields.add(field);
   }
@@ -411,8 +478,11 @@ function describeLimit(field: string): string {
   return 'see hard limits';
 }
 
-function describeProblem(violation: CopyViolation): string {
+function describeProblem(violation: CopyViolation, gates?: CopyGateContext | null): string {
   const where = violation.field;
+  if (isGateRule(violation.rule) && gates) {
+    return describeGateViolation({ field: where, rule: violation.rule as never, ...(typeof violation.actual === 'string' ? { actual: violation.actual } : {}) }, gates);
+  }
   if (violation.rule === 'max_length') return `${where} is ${violation.actual} characters (max ${violation.limit})`;
   if (violation.rule === 'max_items') return `${where} has ${violation.actual} items (max ${violation.limit})`;
   if (violation.rule === 'missing') return `${where} is missing`;
@@ -422,17 +492,17 @@ function describeProblem(violation: CopyViolation): string {
   return `${where}: ${violation.rule}`;
 }
 
-/** English repair request: only the violating fields, each with its limit, its actual length and current value. */
-export function buildCopyRepairPrompt(copy: Loose, violations: CopyViolation[], fields: string[]): string {
+/** English repair request: only the violating fields, each with its limit, its problems and current value. */
+export function buildCopyRepairPrompt(copy: Loose, violations: CopyViolation[], fields: string[], gates?: CopyGateContext | null): string {
   const blocks = fields.map(field => {
-    const problems = violations.filter(violation => topField(violation.field) === field).map(describeProblem);
+    const problems = violations.filter(violation => topField(violation.field) === field).map(violation => describeProblem(violation, gates));
     return `- ${field}: ${describeLimit(field)}.\n  Problems: ${problems.join('; ')}.\n  Current value: ${JSON.stringify(copy[field] ?? null)}`;
   });
-  return `These fields of a site-copy JSON object broke hard validator limits. Rewrite ONLY these fields so that each one is within its limit.
+  return `These fields of a site-copy JSON object broke hard validator limits or copy rules. Rewrite ONLY these fields so that each one is within its limit and fixes every listed problem.
 
 RULES:
 - Keep the same language, meaning, facts and voice as the current value. Do not add any claim, number, name or promise that is not already in the current value.
-- Shorten by rephrasing into complete, natural wording. Never cut text mid-word or mid-sentence and never use an ellipsis.
+- Shorten by cutting a whole idea and rephrasing into complete, natural wording. Never drop a verb's object, never cut text mid-word or mid-sentence and never use an ellipsis.
 - Length means the number of characters in the string, counting every letter, space, digit and punctuation mark. Aim for at most 85% of each limit.
 - For a list with too many items, keep the most specific items and drop the rest; do not merge items.
 - Return a JSON object with exactly these keys: ${fields.join(', ')}.
@@ -455,7 +525,7 @@ function parseLoose(raw: unknown): { value?: Loose; violations: CopyViolation[] 
   return { value, violations: [] };
 }
 
-function currentViolations(value: Loose): CopyViolation[] {
+function validatorViolations(value: Loose): CopyViolation[] {
   try {
     assertBoundedGeneratedSiteCopy(value);
     return [];
@@ -465,13 +535,24 @@ function currentViolations(value: Loose): CopyViolation[] {
   }
 }
 
+/** Copy-gate hits as CopyViolations (field + rule + config id; never copy text). */
+export function gateViolations(value: Loose, gates: CopyGateContext | null): CopyViolation[] {
+  if (!gates) return [];
+  return runCopyGates(value, gates).map(hit => ({ field: hit.field, rule: hit.rule, ...(hit.actual ? { actual: hit.actual } : {}) }));
+}
+
+function currentViolations(value: Loose, gates: CopyGateContext | null = null): CopyViolation[] {
+  return [...validatorViolations(value), ...gateViolations(value, gates)];
+}
+
 /**
  * Last-resort fixes that cannot damage copy: drop whole list items past the item
- * limit, null a half-set review pair, set always-null fields (missing or not) to null,
- * drop unknown keys.
- * Never shortens or edits any string.
+ * limit, null a review context that has no quote, set always-null fields (missing or
+ * not) to null, drop unknown keys. With gates: drop whole serviceDetails entries naming
+ * a service the owner did not confirm, and null a reviewContext with no star rating.
+ * Never shortens or edits any string, and never nulls the owner's quote.
  */
-export function applySafeDeterministicFixes(value: Loose): { value: Loose; fixes: string[] } {
+export function applySafeDeterministicFixes(value: Loose, gates: CopyGateContext | null = null): { value: Loose; fixes: string[] } {
   const next: Loose = { ...value };
   const fixes: string[] = [];
   for (const key of Object.keys(next)) {
@@ -488,6 +569,17 @@ export function applySafeDeterministicFixes(value: Loose): { value: Loose; fixes
       fixes.push(`trim_items:${key}:${list.length}->${max}`);
     }
   }
+  if (gates?.serviceLabels.length && Array.isArray(next.serviceDetails)) {
+    const allowed = new Set(gates.serviceLabels.map(label => label.replace(/\s+/g, ' ').trim()));
+    const kept = next.serviceDetails.filter(item => {
+      const name = plainObject(item) ? item.name : undefined;
+      return typeof name === 'string' && allowed.has(name.replace(/\s+/g, ' ').trim());
+    });
+    if (kept.length !== next.serviceDetails.length) {
+      fixes.push(`drop_unconfirmed:serviceDetails:${next.serviceDetails.length}->${kept.length}`);
+      next.serviceDetails = kept;
+    }
+  }
   for (const key of PAIR_LIST_KEYS) {
     const list = next[key];
     const max = SITE_COPY_PAIR_LIST_LIMITS[key].maxItems;
@@ -496,11 +588,10 @@ export function applySafeDeterministicFixes(value: Loose): { value: Loose; fixes
       fixes.push(`trim_items:${key}:${list.length}->${max}`);
     }
   }
-  const [pairA, pairB] = SITE_COPY_BOTH_OR_NEITHER;
-  if (pairA in next && pairB in next && (next[pairA] === null) !== (next[pairB] === null)) {
-    next[pairA] = null;
-    next[pairB] = null;
-    fixes.push(`null_pair:${pairA}+${pairB}`);
+  const [quoteKey, contextKey] = SITE_COPY_REVIEW_PAIR;
+  if (contextKey in next && next[contextKey] !== null && (next[quoteKey] === null || (gates && !gates.starRating))) {
+    next[contextKey] = null;
+    fixes.push(`null_field:${contextKey}`);
   }
   for (const key of SITE_COPY_ALWAYS_NULL) {
     if (next[key] !== null) {
@@ -512,17 +603,28 @@ export function applySafeDeterministicFixes(value: Loose): { value: Loose; fixes
   return { value: next, fixes };
 }
 
-function withFaqPolicy(value: Loose, brief: PageBrief): Loose {
-  // FAQs are never model-authored on research pages: the brief's supported candidates
-  // replace them before validation, so a discarded model FAQ can never fail a page.
-  return { ...value, faqItems: supportedFaqItems(brief) };
+/**
+ * System-filled fields, re-applied after every model response:
+ * - faqItems: the brief's supported candidates (a discarded model FAQ can never fail a page);
+ * - with site facts (M2a.1): heroCta = the fixed singular label, serviceItems = the
+ *   owner-confirmed service names, reviewFeatured = the owner's quote verbatim (or null).
+ */
+export function withSystemFields(value: Loose, brief: PageBrief, data: CollectedData): Loose {
+  const next: Loose = { ...value, faqItems: supportedFaqItems(brief) };
+  if (!brief.site) return next;
+  next.heroCta = primaryCtaLabel(data);
+  const itemLimit = SITE_COPY_STRING_LIST_LIMITS.serviceItems;
+  next.serviceItems = brief.site.serviceLabels.filter(label => label.length <= itemLimit.itemMaxChars).slice(0, itemLimit.maxItems);
+  const quote = typeof data.reviewQuote === 'string' ? data.reviewQuote.trim() : '';
+  next.reviewFeatured = hasRealReviewQuote(data) && quote && quote.length <= SITE_COPY_OPTIONAL_STRING_LIMITS.reviewFeatured ? quote : null;
+  return next;
 }
 
 async function repairFields(ctx: RepairContext, stage: CopyValidationStage, value: Loose, violations: CopyViolation[], fields: string[]): Promise<Loose> {
   ctx.remaining--;
   ctx.used++;
   ctx.emit({ stage, kind: 'repair', attempt: ctx.used, fields, violations });
-  const raw = await ctx.callJson(REPAIR_SYSTEM_PROMPT, buildCopyRepairPrompt(value, violations, fields), { thinkingBudget: 1000 });
+  const raw = await ctx.callJson(REPAIR_SYSTEM_PROMPT, buildCopyRepairPrompt(value, violations, fields, ctx.gates), { thinkingBudget: 1000 });
   const parsed = parseLoose(raw);
   if (!parsed.value) return value;
   const merged: Loose = { ...value };
@@ -532,12 +634,17 @@ async function repairFields(ctx: RepairContext, stage: CopyValidationStage, valu
   return merged;
 }
 
-/** Validate one stage's output, spending repair budget, then safe fixes; throws with what remains. */
+function systemFieldsFor(ctx: RepairContext): readonly string[] {
+  return ctx.brief.site ? SYSTEM_FIELDS : ['faqItems'];
+}
+
+/** Validate one stage's output against the validator and the gates, spending repair budget, then safe fixes; throws with what remains. */
 async function settleStage(ctx: RepairContext, stage: CopyValidationStage, call: () => Promise<string>): Promise<SiteCopy> {
+  const settle = (raw: Loose) => withSystemFields(raw, ctx.brief, ctx.data);
   let parsed = parseLoose(await call());
-  let value = parsed.value ? withFaqPolicy(parsed.value, ctx.brief) : undefined;
+  let value = parsed.value ? settle(parsed.value) : undefined;
   for (;;) {
-    const violations = value ? currentViolations(value) : parsed.violations;
+    const violations = value ? currentViolations(value, ctx.gates) : parsed.violations;
     if (value && violations.length === 0) return value as unknown as SiteCopy;
     ctx.emit({ stage, kind: 'violations', violations });
     if (ctx.remaining <= 0) break;
@@ -546,31 +653,50 @@ async function settleStage(ctx: RepairContext, stage: CopyValidationStage, call:
       ctx.used++;
       ctx.emit({ stage, kind: 'stage_retry', attempt: ctx.used, violations });
       parsed = parseLoose(await call());
-      value = parsed.value ? withFaqPolicy(parsed.value, ctx.brief) : undefined;
+      value = parsed.value ? settle(parsed.value) : undefined;
       continue;
     }
-    const fields = repairableFields(violations);
+    const fields = repairableFields(violations, systemFieldsFor(ctx));
     if (!fields.length) break;
-    value = withFaqPolicy(await repairFields(ctx, stage, value, violations, fields), ctx.brief);
+    value = settle(await repairFields(ctx, stage, value, violations, fields));
   }
   if (!value) throw new GeneratedCopyValidationError(stage, parsed.violations);
   if (ctx.deterministicFixes) {
-    const fixed = applySafeDeterministicFixes(value);
+    const fixed = applySafeDeterministicFixes(value, ctx.gates);
     if (fixed.fixes.length) {
       ctx.emit({ stage, kind: 'deterministic_fix', fixes: fixed.fixes });
       value = fixed.value;
     }
   }
   assertCopyAt(stage, value);
+  assertGatesAt(stage, value, ctx.gates);
   return value as unknown as SiteCopy;
 }
 
-export function buildResearchPageGenerationPrompt(brief: PageBrief, data: CollectedData): string {
-  return `${buildResearchPageCopyPrompt(brief)}\n\nOWNER FACTS AND SITE COPY SCHEMA:\n${buildSiteCopyPrompt(data)}\n\n${buildSiteCopyHardLimitsBlock()}`;
+function assertGatesAt(stage: CopyValidationStage, value: Loose, gates: CopyGateContext | null): void {
+  const hits = gateViolations(value, gates);
+  if (hits.length) throw new GeneratedCopyValidationError(stage, hits);
 }
 
-export function buildNoaQaMessage(copy: SiteCopy): string {
-  return `${JSON.stringify(copy)}\n\n${buildSiteCopyHardLimitsBlock('HARD LIMITS FOR YOUR CORRECTIONS (never lengthen a field past its limit)')}`;
+const LEGACY_PERSONA_LINE = "You are Tamar, WAO's Sabra conversion copywriter.";
+const RESEARCH_PERSONA_LINE = 'You are Tamar, a Sabra conversion copywriter writing for one local business.';
+
+export function buildResearchPageGenerationPrompt(brief: PageBrief, data: CollectedData): string {
+  const schema = buildSiteCopyPrompt(data, {
+    blankResponseTimeBadge: true,
+    ...(brief.site ? { relevanceTerm: brief.site.relevanceTerm } : {}),
+  });
+  // A4: the client copy prompt never names WAO (a WAO-offer leak put a copywriting agency's services on a plumber page).
+  if (!schema.includes(LEGACY_PERSONA_LINE)) throw new Error('Site copy schema prompt persona line changed; update the research persona swap.');
+  const clientSchema = schema.replace(LEGACY_PERSONA_LINE, RESEARCH_PERSONA_LINE);
+  return `${buildResearchPageCopyPrompt(brief)}\n\nOWNER FACTS AND SITE COPY SCHEMA:\n${clientSchema}\n\n${buildSiteCopyHardLimitsBlock()}`;
+}
+
+export function buildNoaQaMessage(copy: SiteCopy, brief?: PageBrief): string {
+  const fixed = brief?.site
+    ? '\n\nSYSTEM FIELDS (never change them): heroCta, serviceItems, reviewFeatured, faqItems, and every serviceDetails[].name.'
+    : '';
+  return `${JSON.stringify(copy)}\n\n${buildSiteCopyHardLimitsBlock('HARD LIMITS FOR YOUR CORRECTIONS (never lengthen a field past its limit)')}${fixed}`;
 }
 
 export async function generateResearchPageCopy(
@@ -583,18 +709,21 @@ export async function generateResearchPageCopy(
   const ctx: RepairContext = {
     callJson,
     brief,
+    data,
     remaining: Number.isInteger(requested) ? Math.max(0, Math.min(MAX_COPY_REPAIRS, requested)) : MAX_COPY_REPAIRS,
     used: 0,
     deterministicFixes: dependencies.deterministicFixes ?? true,
+    gates: dependencies.gates === false ? null : copyGateContext(data, brief.site?.serviceLabels ?? [], brief.site?.soloOperator ?? true),
     emit: event => {
       try { dependencies.onEvent?.(event); } catch { /* diagnostics never break generation */ }
     },
   };
   const prompt = buildResearchPageGenerationPrompt(brief, data);
   const tamarCopy = await settleStage(ctx, 'tamar', () => callJson(COPY_SYSTEM_PROMPT, prompt, { thinkingBudget: 1500 }));
-  const noaCopy = await settleStage(ctx, 'noa', () => callJson(QA_SYSTEM_PROMPT, buildNoaQaMessage(tamarCopy), { think: false }));
-  const finalCopy = applyFaqPolicy(noaCopy, brief);
+  const noaCopy = await settleStage(ctx, 'noa', () => callJson(QA_SYSTEM_PROMPT, buildNoaQaMessage(tamarCopy, brief), { think: false }));
+  const finalCopy = withSystemFields(applyFaqPolicy(noaCopy, brief) as unknown as Loose, brief, data) as unknown as SiteCopy;
   assertCopyAt('final', finalCopy);
+  assertGatesAt('final', finalCopy as unknown as Loose, ctx.gates);
   return finalCopy;
 }
 

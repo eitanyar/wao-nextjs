@@ -184,6 +184,7 @@ export async function buildResearchedSiteGeneration(
         faqCandidates: structuredClone(brief.faqCandidates),
       },
       copy: structuredClone(generatedCopy),
+      ...(brief.site ? { seo: { name: brief.site.pageName, city: brief.site.city, serviceArea: [...brief.site.serviceArea] } } : {}),
     });
   }
 

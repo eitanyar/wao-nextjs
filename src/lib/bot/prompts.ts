@@ -58,6 +58,7 @@ export interface CollectedData {
 
   // Digital presence
   hasGoogleBusiness?: boolean;
+  googleMapsUrl?: string; // GBP / Google Maps listing URL; feeds researched-site schema sameAs only when present (not collected yet)
   gbpVerified?: boolean; // true = client's GBP listing already shows on Maps/Search (fast-track
     // Manager-access onboarding); false = not yet claimed/verified (needs owner-driven Google
     // verification before WAO's GBP tooling can connect). Only meaningful when hasGoogleBusiness

@@ -171,8 +171,8 @@ test('builds the exact complete deployment record in deterministic brief order',
     graphEdges: record.researchedGraphEdges,
   });
   assert.ok(rendered['index.html']);
-  assert.ok(rendered['services--services.html']);
-  assert.ok(rendered['services/alpha--alpha.html']);
+  assert.ok(rendered['services.html']);
+  assert.ok(rendered['services/alpha.html']);
 });
 
 test('direct builder rejects malformed first and middle copy before later calls or rendering', async () => {

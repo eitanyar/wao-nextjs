@@ -110,7 +110,7 @@ test('bounded copy rejects malformed shapes, excess fields and sparse arrays gen
   const cases: unknown[] = [
     null, [], { ...copy, heroHeadline: undefined }, { ...copy, heroHeadline: '   ' },
     { ...copy, heroHeadline: 'x'.repeat(69) }, { ...copy, extra: 'private model content' },
-    { ...copy, reviewFeatured: 'Quote' }, { ...copy, reviewContext: 'Context' },
+    { ...copy, reviewContext: 'Context' },
     { ...copy, scarcityLine: 'Limited' }, { ...copy, responseTimeBadge: 12 },
     { ...copy, trustBarItems: sparse }, { ...copy, trustBarItems: ['x'.repeat(21)] },
     { ...copy, serviceItems: Array(7).fill('Item') },
@@ -124,6 +124,8 @@ test('bounded copy rejects malformed shapes, excess fields and sparse arrays gen
     assert.throws(() => assertBoundedGeneratedSiteCopy(candidate), /^Error: Invalid bounded generated site copy\.$/, `case ${index}`);
   }
   assert.doesNotThrow(() => assertBoundedGeneratedSiteCopy(copy));
+  // M2a.1: a quote may stand alone (no star rating); only a context without a quote is invalid.
+  assert.doesNotThrow(() => assertBoundedGeneratedSiteCopy({ ...copy, reviewFeatured: 'Quote' }));
   assert.doesNotThrow(() => assertBoundedGeneratedSiteCopy({
     ...copy, faqItems: [], reviewFeatured: 'Quote', reviewContext: 'Context', responseTimeBadge: 'Soon',
   }));
@@ -189,8 +191,8 @@ test('validator failures carry stage + every field/limit/actual, never the copy 
     servicesHeadline: 'h'.repeat(54),
     trustBarItems: ['t'.repeat(21)],
     serviceItems: ['ok', 'v'.repeat(26)],
-    reviewFeatured: 'secret quote text',
-    reviewContext: null,
+    reviewFeatured: null,
+    reviewContext: 'secret context text',
   };
   let caught: unknown;
   await generateResearchPageCopy(brief(), {}, { maxRepairs: 0, deterministicFixes: false, callJson: async () => JSON.stringify(broken) }).catch(error => { caught = error; });
@@ -200,11 +202,11 @@ test('validator failures carry stage + every field/limit/actual, never the copy 
   assert.deepEqual(caught.violations, [
     { field: 'servicesHeadline', rule: 'max_length', limit: 35, actual: 54 },
     { field: 'stickyBarLine', rule: 'max_length', limit: 25, actual: 33 },
-    { field: 'reviewFeatured+reviewContext', rule: 'both_or_neither', actual: 'reviewFeatured_only' },
+    { field: 'reviewFeatured+reviewContext', rule: 'context_requires_quote', actual: 'reviewContext_only' },
     { field: 'trustBarItems[0]', rule: 'max_length', limit: 20, actual: 21 },
     { field: 'serviceItems[1]', rule: 'max_length', limit: 25, actual: 26 },
   ]);
-  assert.doesNotMatch(JSON.stringify(caught.violations), /secret quote|sss|hhh/);
+  assert.doesNotMatch(JSON.stringify(caught.violations), /secret context|sss|hhh/);
 
   let calls = 0;
   caught = undefined;

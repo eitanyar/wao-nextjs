@@ -80,15 +80,15 @@ test('builds a complete local bundle with a visible marker and local navigation'
   assertLocalPreviewBundleSafe(bundle);
   assert.deepEqual(bundle.manifest.assets, ['assets/hero.svg']);
   assert.ok(bundle.files['index.html']);
-  assert.ok(bundle.files['services--hub.html']);
-  assert.ok(bundle.files['services/synthetic-service--money.html']);
+  assert.ok(bundle.files['services.html']);
+  assert.ok(bundle.files['services/synthetic-service.html']);
   assert.ok(bundle.files['contact.html']);
   assert.ok(bundle.files['privacy.html']);
   assert.ok(bundle.files['accessibility.html']);
   assert.ok(bundle.files['sitemap.xml']);
   assert.ok(bundle.files['preview-manifest.json']);
   assert.match(bundle.files['index.html'], /LOCAL PREVIEW - SYNTHETIC DATA - NO SUBMISSION/);
-  assert.match(bundle.files['index.html'], /href="\/services--hub.html"/);
+  assert.match(bundle.files['index.html'], /href="\/services.html"/);
   assert.match(bundle.files['index.html'], /\/assets\/hero\.svg/);
   assert.match(bundle.files['sitemap.xml'], /https:\/\/synthetic-preview\.invalid/);
 });
@@ -150,13 +150,13 @@ test('builds a complete inert operator bundle without mutating the generated rec
     'contact.html',
     'index.html',
     'privacy.html',
-    'services--hub.html',
-    'services/synthetic-service--money.html',
+    'services.html',
+    'services/synthetic-service.html',
   ]);
   assert.match(bundle.files['index.html'], /LOCAL OPERATOR PREVIEW - NOT PRODUCTION - NO SUBMISSION/);
   assert.match(bundle.files['index.html'], /data-local-preview-hero="true"/);
   assert.match(bundle.files['index.html'], new RegExp(pngDataUrl.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
-  assert.match(bundle.files['services--hub.html'], /href="\/services\/synthetic-service--money\.html"/);
+  assert.match(bundle.files['services.html'], /href="\/services\/synthetic-service\.html"/);
   assert.match(bundle.files['sitemap.xml'], /https:\/\/operator-preview\.invalid/);
   assert.doesNotMatch(bundle.files['index.html'].replaceAll('https://operator-preview.invalid', ''), /https?:\/\//i);
 });

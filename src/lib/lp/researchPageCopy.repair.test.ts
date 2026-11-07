@@ -81,7 +81,8 @@ test('limit derivation: the prompt block states every validator limit, and the v
       assert.throws(() => assertBoundedGeneratedSiteCopy({ ...valid, [key]: [{ ...atLimit, [name]: x(limit.maxChars[index] + 1) }] }), `${key}.${name}`);
     });
   }
-  assert.ok(block.includes('reviewFeatured and reviewContext: both strings or both null'));
+  assert.ok(block.includes("reviewFeatured is the owner's quote, verbatim, and may stand alone"));
+  assert.ok(block.includes('reviewContext may be set only when reviewFeatured is set'));
   assert.ok(block.includes('scarcityLine: always null'));
   assert.ok(block.includes(`at most ${SITE_COPY_MAX_BYTES} bytes`));
   assert.ok(block.includes(`Output exactly these keys and no others: ${SITE_COPY_KEY_LIST.join(', ')}.`));
@@ -195,7 +196,7 @@ test('invalid JSON from a stage is retried once per budget unit, with the same p
   assert.deepEqual(copy, valid);
 });
 
-test('deterministic fixes: trim list counts, null a half-set review pair, never touch a string', () => {
+test('deterministic fixes: trim list counts, null a context without a quote, never touch a string or the quote', () => {
   const long = x(500);
   const input = {
     ...valid,
@@ -213,18 +214,24 @@ test('deterministic fixes: trim list counts, null a half-set review pair, never 
   assert.deepEqual(value.trustBarItems, ['a', 'b', 'c', 'd']);
   assert.equal((value.serviceItems as string[]).length, 6);
   assert.equal((value.serviceDetails as unknown[]).length, 6);
-  assert.equal(value.reviewFeatured, null);
+  // The owner's quote is never nulled by a safe fix (M2a.1), even with no context.
+  assert.equal(value.reviewFeatured, long);
   assert.equal(value.reviewContext, null);
   assert.equal(value.scarcityLine, null);
   assert.equal('extra' in value, false);
   assert.deepEqual(fixes, [
     'drop_unexpected:extra', 'trim_items:trustBarItems:6->4', 'trim_items:serviceItems:9->6',
-    'trim_items:serviceDetails:8->6', 'null_pair:reviewFeatured+reviewContext', 'null_field:scarcityLine',
+    'trim_items:serviceDetails:8->6', 'null_field:scarcityLine',
   ]);
   // Every string that survives is byte-identical to an input string.
   const inputStrings = new Set(JSON.stringify(input).match(/"(?:[^"\\]|\\.)*"/g));
   for (const token of JSON.stringify(value).match(/"(?:[^"\\]|\\.)*"/g) ?? []) assert.ok(inputStrings.has(token), token);
-  assert.deepEqual(explainGeneratedSiteCopyViolations(value), [{ field: 'heroHeadline', rule: 'max_length', limit: 68, actual: 90 }]);
+  assert.deepEqual(explainGeneratedSiteCopyViolations(value), [
+    { field: 'heroHeadline', rule: 'max_length', limit: 68, actual: 90 },
+    { field: 'reviewFeatured', rule: 'max_length', limit: 400, actual: 500 },
+  ]);
+  // A context without a quote is the one half-set pair, and only the context is nulled.
+  assert.deepEqual(applySafeDeterministicFixes({ ...valid, reviewFeatured: null, reviewContext: 'c' }).fixes, ['null_field:reviewContext']);
   // A missing always-null field is added as null (never sent to the model).
   const { scarcityLine: _omit, ...withoutScarcity } = valid;
   void _omit;
@@ -234,7 +241,7 @@ test('deterministic fixes: trim list counts, null a half-set review pair, never 
   assert.deepEqual(applySafeDeterministicFixes({ ...valid, reviewFeatured: 'q', reviewContext: 'c' }).fixes, []);
 });
 
-test('the review pair is never sent to the model; with no budget the safe fixes alone settle it', async () => {
+test('the review pair is never sent to the model; a quote alone is kept, a context alone is nulled by the safe fix', async () => {
   let calls = 0;
   const events: CopyRepairEvent[] = [];
   const copy = await generateResearchPageCopy(brief, {}, {
@@ -246,16 +253,18 @@ test('the review pair is never sent to the model; with no budget the safe fixes 
     },
   });
   assert.equal(calls, 2);
-  assert.equal(copy.reviewFeatured, null);
+  assert.equal(copy.reviewFeatured, 'quote');
+  assert.equal(copy.reviewContext, null);
   assert.equal(copy.serviceItems.length, 6);
-  assert.ok(events.some(event => event.kind === 'deterministic_fix' && event.fixes?.includes('null_pair:reviewFeatured+reviewContext')));
+  assert.ok(!events.some(event => event.fixes?.some(fix => fix.startsWith('null_pair'))));
 
-  // With budget, a pair-only violation spends no repair call either.
+  // With budget, a context-only violation spends no repair call; the safe fix nulls the context only.
   calls = 0;
-  await generateResearchPageCopy(brief, {}, {
-    callJson: async () => { calls++; return JSON.stringify({ ...valid, reviewFeatured: 'quote', reviewContext: null }); },
+  const contextOnly = await generateResearchPageCopy(brief, {}, {
+    callJson: async () => { calls++; return JSON.stringify({ ...valid, reviewFeatured: null, reviewContext: 'ctx' }); },
   });
   assert.equal(calls, 2);
+  assert.equal(contextOnly.reviewContext, null);
 
   // Nor does a missing always-null field (eval run electrician-4 spent a repair on it before this rule).
   calls = 0;

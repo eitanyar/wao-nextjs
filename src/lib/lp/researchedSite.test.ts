@@ -47,24 +47,28 @@ function params(overrides: Partial<RenderResearchedSitePagesParams> = {}): Rende
   };
 }
 
-test('stable slugs are ASCII, opaque-ID collision safe, and preserve a persisted value', () => {
-  assert.equal(buildStablePageSlug('money-alpha', 'Alpha Service'), 'alpha-service--money-alpha');
-  assert.equal(buildStablePageSlug('money-alpha', 'Alpha Service', 'saved--money-alpha'), 'saved--money-alpha');
-  assert.match(buildStablePageSlug('money-alpha', 'Delta'), /^[a-z0-9-]+--money-alpha$/);
+test('clean slugs (M2a.1 C3): the planned segment with no opportunity-ID suffix; a persisted slug wins; svc fallback', () => {
+  assert.equal(buildStablePageSlug('money-alpha', 'alpha-service'), 'alpha-service');
+  assert.equal(buildStablePageSlug('money-alpha', 'Alpha Service'), 'alpha-service');
+  assert.equal(buildStablePageSlug('money-alpha', 'alpha-service', 'saved-slug'), 'saved-slug');
+  assert.equal(buildStablePageSlug('money-alpha', 'alpha-service-2'), 'alpha-service-2');
+  assert.doesNotMatch(buildStablePageSlug('money-alpha', 'Delta'), /--/);
+  assert.match(buildStablePageSlug('money-alpha', 'contact'), /^svc-[0-9a-f]{10}$/);
   assert.throws(() => buildStablePageSlug('../bad', 'Alpha'), /opaque/);
 });
 
 test('researched rendering selects only approved hierarchy pages and makes money pages browseable', () => {
   const pages = renderResearchedSitePages(params());
   assert.ok(pages['index.html']);
-  assert.ok(pages['services--hub.html']);
-  assert.ok(pages['services/alpha-service--money-alpha.html']);
+  // The hub (/services) now owns services.html; the legacy services.html is not emitted.
+  assert.ok(pages['services.html']);
+  assert.ok(pages['services/alpha-service.html']);
   assert.ok(pages['contact.html']);
   assert.ok(pages['privacy.html']);
   assert.equal(pages['about.html'], undefined);
-  assert.equal(pages['services.html'], undefined);
-  assert.match(pages['index.html'], /href="\/services--hub.html"/);
-  assert.match(pages['services--hub.html'], /href="\/services\/alpha-service--money-alpha.html"/);
+  assert.doesNotMatch(pages['services.html'], /<h3/);
+  assert.match(pages['index.html'], /href="\/services.html"/);
+  assert.match(pages['services.html'], /href="\/services\/alpha-service.html"/);
 });
 
 test('unsafe paths are omitted and explicit graph orphans reject rendering', () => {
@@ -75,7 +79,7 @@ test('unsafe paths are omitted and explicit graph orphans reject rendering', () 
 
 test('FAQ markup and FAQPage schema use only approved distinct FAQ items', () => {
   const pages = renderResearchedSitePages(params());
-  const html = pages['services/alpha-service--money-alpha.html'];
+  const html = pages['services/alpha-service.html'];
   assert.match(html, /Supported question\?/);
   assert.doesNotMatch(html, /Duplicate question\?/);
   const schema = buildResearchedSchemaGraph(page(), params().data, 'https://test.wao.co.il', 'https://example.test/hero.jpg');
@@ -98,11 +102,11 @@ test('schema links LocalBusiness and Service without inferring a storefront or a
 test('sitemap uses stable readable output paths and legacy output remains separate', () => {
   assert.deepEqual(buildResearchedSitemapUrls(params().pages), [
     'index.html',
-    'services--hub.html',
-    'services/alpha-service--money-alpha.html',
+    'services.html',
+    'services/alpha-service.html',
   ]);
   const sitemap = renderResearchedSitePages(params())['sitemap.xml'];
-  assert.match(sitemap, /https:\/\/test.wao.co.il\/services\/alpha-service--money-alpha.html/);
+  assert.match(sitemap, /https:\/\/test.wao.co.il\/services\/alpha-service.html/);
+  assert.doesNotMatch(sitemap, /--/);
   assert.doesNotMatch(sitemap, /about.html/);
-  assert.doesNotMatch(sitemap, /services.html/);
 });

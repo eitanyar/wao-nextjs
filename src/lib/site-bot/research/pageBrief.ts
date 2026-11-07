@@ -35,6 +35,27 @@ export interface PageBriefLink {
   evidenceIds: string[];
 }
 
+/**
+ * Site-level facts the copy step needs (M2a.1). All values are owner wording or the
+ * persisted site identity; nothing here is model copy.
+ */
+export interface PageBriefSite {
+  /** Plain name of this page's subject: the service name (money page) or trade (homepage). */
+  pageName: string;
+  /** Hero relevance term: this page's own service; the primary service on the homepage. */
+  relevanceTerm: string;
+  /** Base city display name, or null. */
+  city: string | null;
+  /** Owner-stated places, never widened. */
+  serviceArea: string[];
+  /** Every owner-confirmed service name, this page's own first. */
+  serviceLabels: string[];
+  businessName: string;
+  soloOperator: boolean;
+  /** True on the one page per site that may use the "my name is <owner>" opener. */
+  ownerIntroPage: boolean;
+}
+
 export interface PageBriefInput {
   page: {
     id: string;
@@ -54,6 +75,7 @@ export interface PageBriefInput {
   prohibitedClaims: string[];
   faqCandidates: PageBriefFaqCandidate[];
   siblingFaqQuestions?: string[];
+  site?: PageBriefSite;
 }
 
 export interface PageBrief {
@@ -71,6 +93,7 @@ export interface PageBrief {
   prohibitedClaims: string[];
   faqPolicy: FaqPolicy;
   faqCandidates: PageBriefFaqCandidate[];
+  site?: PageBriefSite;
 }
 
 function plainObject(value: unknown): value is Record<string, unknown> {
@@ -132,6 +155,13 @@ export function assertBoundedPageBrief(value: unknown): asserts value is PageBri
   for (const item of value.links) {
     if (!plainObject(item) || !boundedText(item.targetPath) || !boundedText(item.relationship) ||
       !referencedIds(item.evidenceIds)) invalidBrief();
+  }
+  if (value.site !== undefined) {
+    const site = value.site;
+    const list = (items: unknown) => denseArray(items, MAX_ITEMS_PER_SECTION) && items.every(boundedText);
+    if (!plainObject(site) || !boundedText(site.pageName) || !boundedText(site.relevanceTerm) ||
+      (site.city !== null && !boundedText(site.city)) || !list(site.serviceArea) || !list(site.serviceLabels) ||
+      !boundedText(site.businessName) || typeof site.soloOperator !== 'boolean' || typeof site.ownerIntroPage !== 'boolean') invalidBrief();
   }
   try {
     if (JSON.stringify(value).length > MAX_PAGE_BRIEF_PAYLOAD_CHARS) invalidBrief();
@@ -259,5 +289,6 @@ export function compilePageBrief(input: PageBriefInput): PageBrief {
     prohibitedClaims: compactStrings(input.prohibitedClaims),
     faqPolicy,
     faqCandidates,
+    ...(input.site ? { site: structuredClone(input.site) } : {}),
   });
 }
