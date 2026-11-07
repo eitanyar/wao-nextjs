@@ -1,5 +1,5 @@
 {
- "run_id": "81896355e420",
+ "run_id": "f89933e854d2",
  "null_cities": [
   "c2"
  ],
@@ -56,6 +56,19 @@
      "grouped": true
     }
    ]
+  }
+ },
+ "advancing": {
+  "pairs": 1,
+  "passing": 1,
+  "professions": [
+   "alpha"
+  ],
+  "professions_count": 1,
+  "cutoff_value_usd": 1200,
+  "per_profession": {
+   "alpha": 1,
+   "beta": 0
   }
  }
 }

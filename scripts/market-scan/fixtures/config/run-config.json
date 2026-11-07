@@ -71,13 +71,17 @@
     "map_intent_pack": 1.0,
     "map_intent_no_pack": 0.4,
     "null_city_fail_fraction": 0.5,
-    "organic_depth": 10
+    "organic_depth": 10,
+    "max_pairs_per_profession": 4,
+    "grouped_dedupe_min_volume": 50,
+    "urgency_lead_gen_professions": [
+      "beta"
+    ]
   },
   "stage2": {
     "terms_per_profession": 2,
     "zooms": [
-      "13z",
-      "15z"
+      "13z"
     ],
     "primary_zoom": "13z",
     "maps_depth": 100,
@@ -95,10 +99,7 @@
     "saturated_s3": 0.7,
     "open_s3": 0.4,
     "gap_cap": 4,
-    "prospect_min_gaps": 2,
     "prospect_radius_km": 6,
-    "prospect_pass": 15,
-    "prospect_kill_below": 8,
     "chain_min_cells": 3,
     "chain_min_regions": 2,
     "tie_within_fraction": 0.05,
@@ -119,9 +120,83 @@
       "google.com",
       "sites.google.com"
     ],
-    "category_allowlist": {
+    "s3_source": "local_finder",
+    "s3_terms": 1,
+    "s3_relevance_filter": false,
+    "s3_missing_field_policy": "renormalize",
+    "maps_terms": 2,
+    "two_step": true,
+    "organic_depth_cell": 10,
+    "organic_store_fields": [
+      "type",
+      "rank_group",
+      "rank_absolute",
+      "domain",
+      "url",
+      "title"
+    ],
+    "pack_crosscheck_min_overlap": 2,
+    "weak_rank_min": 4,
+    "prospect_weights": {
+      "no_site": 1.25,
+      "weak_site": 1.1,
+      "ok_site": 1.0,
+      "unchecked": 1.0
+    },
+    "prospect_pass_weighted": 15,
+    "prospect_kill_below_weighted": 8,
+    "lead_gen_phone_min_listings_in_cell": 2,
+    "lead_gen_phone_min_cells": 3,
+    "organic_factor": {
+      "base": 0.8,
+      "slope": 0.4
+    },
+    "national_brand_min_regions": 3,
+    "not_a_site_append": [
+      "portal.example"
+    ],
+    "organic_directories": [
+      "dir.example",
+      "portal.example"
+    ],
+    "organic_social": [
+      "facebook.com"
+    ],
+    "organic_media": [
+      "news.example"
+    ],
+    "generic_categories": [
+      "Contractor"
+    ],
+    "category_rules": {
+      "alpha": {
+        "exact": [
+          "Alpha Contractor"
+        ],
+        "contains": [
+          "alpha"
+        ],
+        "conditional": [
+          "General Builder"
+        ],
+        "exclude": [
+          "store"
+        ]
+      },
+      "beta": {
+        "exact": [
+          "Beta Service"
+        ],
+        "contains": [
+          "beta"
+        ],
+        "conditional": [],
+        "exclude": []
+      }
+    },
+    "title_terms_extra": {
       "alpha": [
-        "alpha_contractor"
+        "alf"
       ]
     }
   },
@@ -131,15 +206,45 @@
         "id": "A",
         "profession": "alpha",
         "city": "c1",
-        "expect": "saturated"
+        "expect": "saturated",
+        "proximity_probe": true
       },
       {
         "id": "B",
         "profession": "alpha",
         "city": "c3",
         "expect": "open"
+      },
+      {
+        "id": "C",
+        "profession": "beta",
+        "city": "c3",
+        "expect": "open"
       }
     ],
-    "search_places_check_cell": "A"
+    "proximity_probe_offset_km": 3,
+    "search_places_check_cell": null
+  },
+  "languages": {
+    "ads_language_code": "iw",
+    "serp_language_code": "he"
+  },
+  "homepage_check": {
+    "enabled": true,
+    "scope": [
+      "prospects_with_site",
+      "lf_top3"
+    ],
+    "user_agent": "WAO-MarketScan/1.0 (+https://www.wao.co.il)",
+    "timeout_ms": 10000,
+    "max_redirects": 5,
+    "max_bytes": 1500000,
+    "concurrency": 2,
+    "respect_robots": true,
+    "multi_page_min_internal_paths": 3,
+    "slow_fetch_ms": 3000,
+    "parked_max_bytes": 2048,
+    "weak_soft_min": 2,
+    "cache_retention_days": 30
   }
 }

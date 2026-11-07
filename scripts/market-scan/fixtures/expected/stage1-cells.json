@@ -18,8 +18,9 @@
   "region_pass": true,
   "region_advance": true,
   "kit_level": 2,
+  "urgency_lead_gen": false,
   "flags": "",
-  "run_id": "81896355e420"
+  "run_id": "f89933e854d2"
  },
  {
   "value_rank": 2,
@@ -40,8 +41,9 @@
   "region_pass": true,
   "region_advance": true,
   "kit_level": 2,
+  "urgency_lead_gen": false,
   "flags": "haredi_majority",
-  "run_id": "81896355e420"
+  "run_id": "f89933e854d2"
  },
  {
   "value_rank": 3,
@@ -62,8 +64,9 @@
   "region_pass": false,
   "region_advance": false,
   "kit_level": 2,
+  "urgency_lead_gen": false,
   "flags": "",
-  "run_id": "81896355e420"
+  "run_id": "f89933e854d2"
  },
  {
   "value_rank": 4,
@@ -84,8 +87,9 @@
   "region_pass": false,
   "region_advance": false,
   "kit_level": 0,
+  "urgency_lead_gen": true,
   "flags": "",
-  "run_id": "81896355e420"
+  "run_id": "f89933e854d2"
  },
  {
   "value_rank": 5,
@@ -106,8 +110,9 @@
   "region_pass": false,
   "region_advance": false,
   "kit_level": 0,
+  "urgency_lead_gen": true,
   "flags": "haredi_majority",
-  "run_id": "81896355e420"
+  "run_id": "f89933e854d2"
  },
  {
   "value_rank": 6,
@@ -128,7 +133,8 @@
   "region_pass": false,
   "region_advance": false,
   "kit_level": 0,
+  "urgency_lead_gen": true,
   "flags": "",
-  "run_id": "81896355e420"
+  "run_id": "f89933e854d2"
  }
 ]

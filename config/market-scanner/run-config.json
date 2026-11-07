@@ -6,7 +6,11 @@
     "ads_language_note": "GET /v3/keywords_data/google_ads/languages lists Hebrew only as code 'iw' ('Hebrew (old)'); 'he' is not in the Google Ads list. Spec 3.1 said 'he' for search_volume - contradicted.",
     "serp_language_code": "he",
     "serp_language_note": "GET /v3/serp/google/languages lists 'he' (Hebrew) and 'iw' (Hebrew (old)). 'he' used, as spec 3.1 assumed.",
-    "missing_ads_location_codes": ["givat-shmuel", "maale-adumim", "lehavim"],
+    "missing_ads_location_codes": [
+      "givat-shmuel",
+      "maale-adumim",
+      "lehavim"
+    ],
     "missing_ads_location_fallback": "spec 2 / 3.4: stays in the matrix with V_source = imputed (3 of 71 cities = 4%, far below the 50% district fallback trigger)",
     "local_finder_price": "confirmed 2026-11-07 on https://dataforseo.com/pricing/serp/google-local-finder-serp-api: live $0.002 per SERP of 10 results (standard $0.0006, priority $0.0012)",
     "price_source": "account price table from GET /v3/appendix/user_data (free) 2026-11-07, cross-checked against the public pricing pages the same day: unchanged from spec 7"
@@ -16,10 +20,25 @@
     "country_location_code": 2376
   },
   "prices_usd": {
-    "/keywords_data/google_ads/search_volume/live": { "per_unit": 0.09, "unit": "task" },
-    "/serp/google/organic/live/advanced": { "per_unit": 0.002, "unit": "serp", "results_per_unit": 10 },
-    "/serp/google/maps/live/advanced": { "per_unit": 0.002, "unit": "serp", "results_per_unit": 100 },
-    "/serp/google/local_finder/live/advanced": { "per_unit": 0.002, "unit": "serp", "results_per_unit": 10 }
+    "/keywords_data/google_ads/search_volume/live": {
+      "per_unit": 0.09,
+      "unit": "task"
+    },
+    "/serp/google/organic/live/advanced": {
+      "per_unit": 0.002,
+      "unit": "serp",
+      "results_per_unit": 10
+    },
+    "/serp/google/maps/live/advanced": {
+      "per_unit": 0.002,
+      "unit": "serp",
+      "results_per_unit": 100
+    },
+    "/serp/google/local_finder/live/advanced": {
+      "per_unit": 0.002,
+      "unit": "serp",
+      "results_per_unit": 10
+    }
   },
   "caps_usd": {
     "stage1": 10,
@@ -27,58 +46,531 @@
   },
   "approved_caps_note": "Caps approved by Eitan 2026-11-07. The CLI may lower a cap with --cap but never raise it.",
   "rate_limits": {
-    "/keywords_data/google_ads/search_volume/live": { "min_interval_ms": 5500, "concurrency": 1 },
-    "/serp/google/organic/live/advanced": { "min_interval_ms": 0, "concurrency": 4 },
-    "/serp/google/maps/live/advanced": { "min_interval_ms": 0, "concurrency": 4 },
-    "/serp/google/local_finder/live/advanced": { "min_interval_ms": 0, "concurrency": 4 }
+    "/keywords_data/google_ads/search_volume/live": {
+      "min_interval_ms": 5500,
+      "concurrency": 1
+    },
+    "/serp/google/organic/live/advanced": {
+      "min_interval_ms": 0,
+      "concurrency": 4
+    },
+    "/serp/google/maps/live/advanced": {
+      "min_interval_ms": 0,
+      "concurrency": 4
+    },
+    "/serp/google/local_finder/live/advanced": {
+      "min_interval_ms": 0,
+      "concurrency": 4
+    }
   },
   "stage1": {
     "min_city_volume_measured": 50,
     "min_region_volume": 150,
     "value_top_fraction": 0.5,
     "max_pairs_advancing": 40,
-    "map_intent_pack": 1.0,
+    "map_intent_pack": 1,
     "map_intent_no_pack": 0.4,
     "null_city_fail_fraction": 0.5,
-    "organic_depth": 10
+    "organic_depth": 10,
+    "max_pairs_per_profession": 4,
+    "grouped_dedupe_min_volume": 50,
+    "urgency_lead_gen_professions": [
+      "plumber",
+      "locksmith",
+      "movers"
+    ]
   },
   "stage2": {
     "terms_per_profession": 2,
-    "zooms": ["13z", "15z"],
+    "zooms": [
+      "13z"
+    ],
     "primary_zoom": "13z",
     "maps_depth": 100,
     "score_ranks": 20,
     "review_saturation_votes": 150,
     "photo_saturation": 50,
     "rating_min_votes": 5,
-    "weights": { "reviews": 0.40, "rating": 0.15, "real_site": 0.20, "photos": 0.10, "stuffed": 0.15 },
-    "saturated_s3": 0.70,
-    "open_s3": 0.40,
+    "weights": {
+      "reviews": 0.4,
+      "rating": 0.15,
+      "real_site": 0.2,
+      "photos": 0.1,
+      "stuffed": 0.15
+    },
+    "saturated_s3": 0.7,
+    "open_s3": 0.4,
     "gap_cap": 4,
-    "prospect_min_gaps": 2,
     "prospect_radius_km": 6,
-    "prospect_pass": 15,
-    "prospect_kill_below": 8,
     "chain_min_cells": 3,
     "chain_min_regions": 2,
     "tie_within_fraction": 0.05,
     "local_finder_depth": 10,
     "not_a_site": [
-      "facebook.com", "instagram.com", "wa.me", "api.whatsapp.com", "linktr.ee", "tiktok.com",
-      "easy.co.il", "b144.co.il", "d.co.il", "midrag.co.il", "zap.co.il", "yad2.co.il", "google.com", "sites.google.com"
+      "facebook.com",
+      "instagram.com",
+      "wa.me",
+      "api.whatsapp.com",
+      "linktr.ee",
+      "tiktok.com",
+      "easy.co.il",
+      "b144.co.il",
+      "d.co.il",
+      "midrag.co.il",
+      "zap.co.il",
+      "yad2.co.il",
+      "google.com",
+      "sites.google.com"
     ],
-    "category_allowlist": {
-      "roofing": ["cat-a58e4968", "cat-b3b8662b", "cat-3ae38c36"],
-      "pergolas": ["cat-74d33b57", "cat-7853837e", "cat-7a204f34", "cat-76e7e699", "cat-fda53b2a"]
+    "s3_source": "local_finder",
+    "s3_terms": 1,
+    "s3_relevance_filter": false,
+    "s3_missing_field_policy": "renormalize",
+    "maps_terms": 2,
+    "two_step": true,
+    "organic_depth_cell": 10,
+    "organic_store_fields": [
+      "type",
+      "rank_group",
+      "rank_absolute",
+      "domain",
+      "url",
+      "title"
+    ],
+    "pack_crosscheck_min_overlap": 2,
+    "weak_rank_min": 4,
+    "prospect_weights": {
+      "no_site": 1.25,
+      "weak_site": 1.1,
+      "ok_site": 1,
+      "unchecked": 1
     },
-    "category_allowlist_note": "PROVISIONAL (engineer, 2026-11-07, for Yonatan's review). Hebrew Maps items return no category_ids, only localized category text, so spec 8's text fallback is used: ids are categoryId(text) from config/market-scanner/category-catalog.json, matched against category + additional_categories. roofing = waterproofing service, waterproofing company, roofer (excluded: general contractor, plumber, renovator, insulation contractor, building-materials stores). pergolas = pergola/carport manufacturer, awning supplier, patio-enclosure supplier, aluminum supplier, fence contractor (the last two kept because most Karmiel listings in them carry a pergola term in the name; excluded: carpentry, aluminum windows, garden designer, construction company)."
+    "prospect_pass_weighted": 15,
+    "prospect_kill_below_weighted": 8,
+    "lead_gen_phone_min_listings_in_cell": 2,
+    "lead_gen_phone_min_cells": 3,
+    "organic_factor": {
+      "base": 0.8,
+      "slope": 0.4
+    },
+    "national_brand_min_regions": 3,
+    "not_a_site_append": [
+      "pro.co.il",
+      "top-renovations.co.il",
+      "shiplus.co.il",
+      "adbarabetuha.co.il",
+      "moving-israel.co.il",
+      "piper.co.il",
+      "youtube.com",
+      "linkedin.com",
+      "waze.com",
+      "business.site",
+      "g.page"
+    ],
+    "organic_directories": [
+      "easy.co.il",
+      "d.co.il",
+      "midrag.co.il",
+      "b144.co.il",
+      "pro.co.il",
+      "zap.co.il",
+      "yad2.co.il",
+      "top-renovations.co.il",
+      "shiplus.co.il",
+      "adbarabetuha.co.il",
+      "moving-israel.co.il",
+      "piper.co.il"
+    ],
+    "organic_social": [
+      "facebook.com",
+      "instagram.com",
+      "youtube.com",
+      "tiktok.com",
+      "linkedin.com"
+    ],
+    "organic_media": [
+      "ynet.co.il",
+      "walla.co.il",
+      "mako.co.il",
+      "kikar.co.il",
+      "bhol.co.il",
+      "calcalist.co.il",
+      "themarker.com",
+      "globes.co.il",
+      "hon.co.il",
+      "financa.co.il",
+      "wikipedia.org",
+      "gov.il"
+    ],
+    "generic_categories": [
+      "קבלן",
+      "קבלן כללי",
+      "Service establishment",
+      "שירות תחזוקה",
+      "משרדי החברה",
+      "יצרן",
+      "שירות עסק-לעסק"
+    ],
+    "category_rules": {
+      "plumber": {
+        "exact": [
+          "שרברב",
+          "אינסטלטור"
+        ],
+        "contains": [
+          "שרברב",
+          "אינסטלצ",
+          "אינסטלטור",
+          "נזילות",
+          "סתימות",
+          "ביוב"
+        ],
+        "conditional": [],
+        "exclude": [
+          "חנות"
+        ]
+      },
+      "electrician": {
+        "exact": [
+          "חשמלאי",
+          "קבלן חשמל"
+        ],
+        "contains": [
+          "חשמלאי",
+          "קבלן חשמל"
+        ],
+        "conditional": [],
+        "exclude": [
+          "חנות",
+          "רכב",
+          "מכשירי"
+        ]
+      },
+      "ac-repair": {
+        "exact": [
+          "שירות תיקונים למזגנים",
+          "קבלן מיזוג אוויר"
+        ],
+        "contains": [
+          "מזגנ",
+          "מיזוג אוויר"
+        ],
+        "conditional": [],
+        "exclude": [
+          "חנות",
+          "רכב"
+        ]
+      },
+      "locksmith": {
+        "exact": [
+          "מנעולן"
+        ],
+        "contains": [
+          "מנעולן",
+          "מנעולים"
+        ],
+        "conditional": [],
+        "exclude": [
+          "חנות"
+        ]
+      },
+      "pest-control": {
+        "exact": [
+          "שירות הדברה"
+        ],
+        "contains": [
+          "הדברה",
+          "מדביר"
+        ],
+        "conditional": [],
+        "exclude": [
+          "חנות"
+        ]
+      },
+      "movers": {
+        "exact": [
+          "חברת הובלות",
+          "מוביל"
+        ],
+        "contains": [
+          "הובלות",
+          "הובלה",
+          "מובילים"
+        ],
+        "conditional": [
+          "שירות השכרת נגררים"
+        ],
+        "exclude": [
+          "השכרת רכב",
+          "שליחויות"
+        ]
+      },
+      "roofing": {
+        "exact": [
+          "שירות איטום מפני חדירת מים",
+          "חברת איטום",
+          "גגן"
+        ],
+        "contains": [
+          "איטום",
+          "גגן",
+          "גגות"
+        ],
+        "conditional": [
+          "שיפוצניק",
+          "קבלן בידוד"
+        ],
+        "exclude": [
+          "חנות"
+        ]
+      },
+      "carpenter": {
+        "exact": [
+          "נגר",
+          "נגרות"
+        ],
+        "contains": [
+          "נגר"
+        ],
+        "conditional": [
+          "בונה דקים"
+        ],
+        "exclude": [
+          "חנות",
+          "רצפות"
+        ]
+      },
+      "painter": {
+        "exact": [
+          "צבע",
+          "קבלן צבע"
+        ],
+        "contains": [
+          "צביעה",
+          "צבעי"
+        ],
+        "conditional": [],
+        "exclude": [
+          "חנות",
+          "מוצרי",
+          "רכב",
+          "מוסך"
+        ]
+      },
+      "tiling": {
+        "exact": [
+          "קבלן ריצוף"
+        ],
+        "contains": [
+          "ריצוף",
+          "רצף"
+        ],
+        "conditional": [],
+        "exclude": [
+          "חנות",
+          "שיש"
+        ]
+      },
+      "car-body-repair": {
+        "exact": [
+          "מוסך פחחות"
+        ],
+        "contains": [
+          "פחחות",
+          "פחח"
+        ],
+        "conditional": [
+          "מוסך",
+          "תיקון ותחזוקה של כלי רכב"
+        ],
+        "exclude": [
+          "זגגות",
+          "אזעקות",
+          "סטריאו",
+          "חנות"
+        ]
+      },
+      "solar": {
+        "exact": [],
+        "contains": [
+          "סולאר",
+          "פאנלים"
+        ],
+        "conditional": [
+          "ספק חומרי בניין"
+        ],
+        "exclude": [
+          "דוד"
+        ]
+      },
+      "pergolas": {
+        "exact": [
+          "יצרן פרגולות וגגונים לרכב",
+          "ספק סוככים",
+          "ספק סגירת פטיו"
+        ],
+        "contains": [
+          "פרגול"
+        ],
+        "conditional": [
+          "ספק אלומיניום",
+          "קבלן גדרות",
+          "בונה דקים",
+          "נגרות"
+        ],
+        "exclude": []
+      },
+      "aluminum": {
+        "exact": [
+          "חלון אלומיניום",
+          "ספק אלומיניום",
+          "ספק מסגרות אלומיניום",
+          "שירות התקנת חלונות",
+          "ספק חלונות"
+        ],
+        "contains": [
+          "אלומיניום",
+          "חלונות",
+          "תריס"
+        ],
+        "conditional": [],
+        "exclude": [
+          "חנות",
+          "רכב"
+        ]
+      },
+      "kitchens": {
+        "exact": [],
+        "contains": [
+          "מטבח"
+        ],
+        "conditional": [
+          "נגר",
+          "נגרות"
+        ],
+        "exclude": [
+          "כלי",
+          "ציוד",
+          "מסעד"
+        ]
+      },
+      "renovation": {
+        "exact": [
+          "שיפוצניק",
+          "קבלן כללי",
+          "שירות שיפוץ משרדים"
+        ],
+        "contains": [
+          "שיפוץ",
+          "שיפוצ"
+        ],
+        "conditional": [
+          "קבלן",
+          "קבלן בנייה",
+          "חברת בנייה"
+        ],
+        "exclude": [
+          "חנות"
+        ]
+      },
+      "gates-fencing": {
+        "exact": [
+          "קבלן גדרות",
+          "מפעל ברזל",
+          "בית מלאכה למתכות",
+          "קבלן מעקות"
+        ],
+        "contains": [
+          "מסגר",
+          "גדר",
+          "שער"
+        ],
+        "conditional": [],
+        "exclude": [
+          "חנות"
+        ]
+      }
+    },
+    "title_terms_extra": {
+      "pergolas": [
+        "פרגול"
+      ],
+      "roofing": [
+        "איטום",
+        "גג"
+      ]
+    }
   },
   "pilot": {
     "cells": [
-      { "id": "A", "profession": "roofing", "city": "petah-tikva", "expect": "saturated" },
-      { "id": "B", "profession": "roofing", "city": "rosh-haayin", "expect": "middle" },
-      { "id": "C", "profession": "pergolas", "city": "karmiel", "expect": "open" }
+      {
+        "id": "A",
+        "profession": "roofing",
+        "city": "petah-tikva",
+        "expect": "saturated",
+        "proximity_probe": true
+      },
+      {
+        "id": "B",
+        "profession": "roofing",
+        "city": "rosh-haayin",
+        "expect": "middle"
+      },
+      {
+        "id": "C",
+        "profession": "pergolas",
+        "city": "karmiel",
+        "expect": "saturated"
+      },
+      {
+        "id": "D",
+        "profession": "roofing",
+        "city": "rehovot",
+        "expect": "middle"
+      },
+      {
+        "id": "E",
+        "profession": "roofing",
+        "city": "gedera",
+        "expect": "open"
+      },
+      {
+        "id": "F",
+        "profession": "renovation",
+        "city": "rishon-lezion",
+        "expect": "saturated",
+        "proximity_probe": true
+      }
     ],
-    "search_places_check_cell": "A"
+    "proximity_probe_offset_km": 3,
+    "search_places_check_cell": null
+  },
+  "languages": {
+    "ads_language_code": "iw",
+    "serp_language_code": "he"
+  },
+  "homepage_check": {
+    "enabled": true,
+    "scope": [
+      "prospects_with_site",
+      "lf_top3"
+    ],
+    "user_agent": "WAO-MarketScan/1.0 (+https://www.wao.co.il)",
+    "timeout_ms": 10000,
+    "max_redirects": 5,
+    "max_bytes": 1500000,
+    "concurrency": 2,
+    "respect_robots": true,
+    "multi_page_min_internal_paths": 3,
+    "slow_fetch_ms": 3000,
+    "parked_max_bytes": 2048,
+    "weak_soft_min": 2,
+    "cache_retention_days": 30
+  },
+  "r12_applied": {
+    "spec": "docs/research/site-bot/market-scanner-scoring-spec.md",
+    "spec_sha256": "64e90e73457f35c27686152f514687abf9bd78faf6f99885f11e2e41ffb6843e",
+    "date": "2026-11-07",
+    "by": "scripts/market-scan/apply-r12.mjs"
   }
 }

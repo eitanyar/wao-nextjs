@@ -1,0 +1,28 @@
+{
+ "run_id": "f89933e854d2",
+ "cells": [
+  {
+   "cell_id": "A",
+   "profession": "alpha",
+   "city": "c1",
+   "offset_km": 3,
+   "probes": [
+    {
+     "dir": "north",
+     "lat": 32.02695,
+     "lng": 34.8,
+     "survivors": 3
+    },
+    {
+     "dir": "south",
+     "lat": 31.97305,
+     "lng": 34.8,
+     "survivors": 1
+    }
+   ],
+   "mean_survivors_of_3": 2
+  }
+ ],
+ "mean_survivors_of_3": 2,
+ "rule": "if < 2 of 3 on average, M4 big cities use a 3-point mean S3"
+}

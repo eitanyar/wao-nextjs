@@ -1,0 +1,120 @@
+{
+ "run_id": "df19e422e595",
+ "note": "R4: per cell, every top-20 Maps category text that matched no rule (append-only rule extensions: Yonatan)",
+ "cells": [
+  {
+   "cell_id": "A",
+   "profession": "roofing",
+   "city": "petah-tikva",
+   "skipped": "killed at step 1 (no Maps call; Local Finder items carry no category)"
+  },
+  {
+   "cell_id": "B",
+   "profession": "roofing",
+   "city": "rosh-haayin",
+   "skipped": "killed at step 1 (no Maps call; Local Finder items carry no category)"
+  },
+  {
+   "cell_id": "C",
+   "profession": "pergolas",
+   "city": "karmiel",
+   "skipped": "killed at step 1 (no Maps call; Local Finder items carry no category)"
+  },
+  {
+   "cell_id": "D",
+   "profession": "roofing",
+   "city": "rehovot",
+   "top20_relevance": {
+    "exact": 18,
+    "not_relevant": 2
+   },
+   "unmatched": [
+    {
+     "category": "חנות חומרי בניין",
+     "items": 1,
+     "items_relevant_anyway": 0
+    },
+    {
+     "category": "ספק חומרי בידוד",
+     "items": 1,
+     "items_relevant_anyway": 1
+    },
+    {
+     "category": "עבודות בגובה רב",
+     "items": 1,
+     "items_relevant_anyway": 1
+    },
+    {
+     "category": "קבלן בנייה",
+     "items": 1,
+     "items_relevant_anyway": 1
+    },
+    {
+     "category": "קבלן בריכות שחייה",
+     "items": 1,
+     "items_relevant_anyway": 0
+    },
+    {
+     "category": "קבלן ריצוף",
+     "items": 1,
+     "items_relevant_anyway": 0
+    },
+    {
+     "category": "שירות גימור לריצוף",
+     "items": 1,
+     "items_relevant_anyway": 0
+    },
+    {
+     "category": "תחזוקת נכסים",
+     "items": 1,
+     "items_relevant_anyway": 1
+    }
+   ]
+  },
+  {
+   "cell_id": "E",
+   "profession": "roofing",
+   "city": "gedera",
+   "skipped": "killed at step 1 (no Maps call; Local Finder items carry no category)"
+  },
+  {
+   "cell_id": "F",
+   "profession": "renovation",
+   "city": "rishon-lezion",
+   "top20_relevance": {
+    "generic_title": 6,
+    "exact": 9,
+    "conditional_title": 3,
+    "not_relevant": 1,
+    "contains": 1
+   },
+   "unmatched": [
+    {
+     "category": "צבע",
+     "items": 2,
+     "items_relevant_anyway": 1
+    },
+    {
+     "category": "וילה",
+     "items": 1,
+     "items_relevant_anyway": 1
+    },
+    {
+     "category": "מעצב מטבחים מחדש",
+     "items": 1,
+     "items_relevant_anyway": 1
+    },
+    {
+     "category": "קבלן קירות גבס",
+     "items": 1,
+     "items_relevant_anyway": 1
+    },
+    {
+     "category": "קבלן ריצוף",
+     "items": 1,
+     "items_relevant_anyway": 1
+    }
+   ]
+  }
+ ]
+}

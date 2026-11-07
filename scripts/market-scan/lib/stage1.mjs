@@ -13,8 +13,12 @@ export function allCities(areas) {
   return areas.regions.flatMap(r => r.cities);
 }
 
+// R3: language codes are config values - `iw` for Google Ads endpoints, `he` for SERP endpoints.
+export const adsLanguage = run => run.languages?.ads_language_code ?? run.free_checks_2026_11_07.ads_language_code;
+export const serpLanguage = run => run.languages?.serp_language_code ?? run.free_checks_2026_11_07.serp_language_code;
+
 export function volumeParams(locationCode, professions, run) {
-  return { keywords: allTerms(professions), location_code: locationCode, language_code: run.free_checks_2026_11_07.ads_language_code };
+  return { keywords: allTerms(professions), location_code: locationCode, language_code: adsLanguage(run) };
 }
 
 export function organicParams(profession, region, run) {
@@ -22,7 +26,7 @@ export function organicParams(profession, region, run) {
   return {
     keyword: profession.terms[0],
     location_coordinate: `${anchor.lat},${anchor.lng}`,
-    language_code: run.free_checks_2026_11_07.serp_language_code,
+    language_code: serpLanguage(run),
     depth: run.stage1.organic_depth,
   };
 }
@@ -49,9 +53,10 @@ function monthlySignature(item) {
   return JSON.stringify((item.monthly_searches ?? []).map(m => [m.year, m.month, m.search_volume]));
 }
 
-// Spec 3.2 + 3.3: sum of term volumes, counting a grouped (identical volume + identical monthly
-// series) term only once - the first in config order wins. null -> 0.
-export function professionVolume(terms, byKeyword) {
+// Spec 3.2 + 3.3 (+ R5.4): sum of term volumes, counting a grouped (identical volume + identical
+// monthly series) term only once - the first in config order wins - but only when the volume is
+// >= dedupeMinVolume; below that two terms sharing Google's floor bucket are simply summed. null -> 0.
+export function professionVolume(terms, byKeyword, dedupeMinVolume = 1) {
   const seen = new Set();
   const perTerm = [];
   let total = 0;
@@ -62,7 +67,7 @@ export function professionVolume(terms, byKeyword) {
     if (sv !== null) allNull = false;
     let counted = sv ?? 0;
     let grouped = false;
-    if (sv !== null && sv > 0) {
+    if (sv !== null && sv > 0 && sv >= dedupeMinVolume) {
       const sig = `${sv}|${monthlySignature(item)}`;
       if (seen.has(sig)) { counted = 0; grouped = true; } else seen.add(sig);
     }
@@ -137,7 +142,9 @@ export function scoreStage1({ professions, areas, run }, get) {
   const pairs = [];
   const cells = [];
   for (const p of professions) {
-    const countryVol = professionVolume(p.terms, country);
+    const dedupeMin = cfg.grouped_dedupe_min_volume ?? 1;
+    const urgency = (cfg.urgency_lead_gen_professions ?? []).includes(p.slug);
+    const countryVol = professionVolume(p.terms, country, dedupeMin);
     const T = ticketProxy(countryVol.perTerm);
     diagnostics.ticket[p.slug] = { T_p_usd: round4(T), country_volume: countryVol.total, terms: countryVol.perTerm.map(t => ({ term: t.term, sv: t.search_volume, cpc: t.cpc, high_bid: t.high_top_of_page_bid, grouped: t.grouped })) };
     let nullCount = 0;
@@ -146,7 +153,7 @@ export function scoreStage1({ professions, areas, run }, get) {
       const measured = r.cities.map(c => {
         const data = cityData.get(c.slug);
         if (!data) return { city: c, v: null };
-        const vol = professionVolume(p.terms, data);
+        const vol = professionVolume(p.terms, data, dedupeMin);
         for (const t of vol.perTerm) if (t.grouped) diagnostics.grouped_terms.push({ profession: p.slug, city: c.slug, term: t.term, search_volume: t.search_volume });
         if (vol.allNull) nullCount += 1;
         return { city: c, v: vol.total };
@@ -155,12 +162,12 @@ export function scoreStage1({ professions, areas, run }, get) {
       const V_region = measured.reduce((n, m) => n + (m.v ?? 0), 0);
       const popRegion = r.cities.reduce((n, c) => n + c.population, 0);
       const valueRegion = V_region * T * M;
-      pairs.push({ slug: p.slug, trade_he: p.trade_he, kit_level: p.kit_level, region: r.id, region_name: r.name, V_region, T_p_usd: round4(T), M, value_usd: round4(valueRegion), local_pack: M === cfg.map_intent_pack });
+      pairs.push({ slug: p.slug, trade_he: p.trade_he, kit_level: p.kit_level, urgency_lead_gen: urgency, region: r.id, region_name: r.name, V_region, T_p_usd: round4(T), M, value_usd: round4(valueRegion), local_pack: M === cfg.map_intent_pack });
       for (const m of measured) {
         const isMeasured = m.v !== null && m.v >= cfg.min_city_volume_measured;
         const V_cell = isMeasured ? m.v : V_region * m.city.population / popRegion;
         cells.push({
-          slug: p.slug, trade_he: p.trade_he, kit_level: p.kit_level, region: r.id, city: m.city.slug, city_he: m.city.he_name, ring: m.city.ring,
+          slug: p.slug, trade_he: p.trade_he, kit_level: p.kit_level, urgency_lead_gen: urgency, region: r.id, city: m.city.slug, city_he: m.city.he_name, ring: m.city.ring,
           population: m.city.population, V_region, V_city_measured: m.v, V_cell: round4(V_cell), V_source: isMeasured ? 'measured' : 'imputed',
           T_p_usd: round4(T), M, value_usd: round4(V_cell * T * M), flags: m.city.flags.join(';'),
         });
@@ -169,9 +176,12 @@ export function scoreStage1({ professions, areas, run }, get) {
     diagnostics.profession_null_fraction[p.slug] = round4(nullCount / cities.length);
   }
 
-  // Spec 3.7 pass rule: V_region >= 150 AND value in the top 50% of all pairs; at most 40 advance.
+  // Spec 3.7 pass rule: V_region >= 150 AND value in the top 50% of all pairs; at most 40 advance,
+  // and (R5.2) at most max_pairs_per_profession regions per profession, highest value first.
   pairs.sort(byValue('value_usd', 'region'));
   const topN = Math.floor(pairs.length * cfg.value_top_fraction);
+  const perProfessionCap = cfg.max_pairs_per_profession ?? Infinity;
+  const perProfession = new Map();
   let advancing = 0;
   pairs.forEach((pair, i) => {
     pair.value_rank = i + 1;
@@ -179,11 +189,26 @@ export function scoreStage1({ professions, areas, run }, get) {
     if (pair.V_region < cfg.min_region_volume) reasons.push(`V_region<${cfg.min_region_volume}`);
     if (i >= topN) reasons.push('value_below_top_50pct');
     pair.stage1_pass = reasons.length === 0;
-    pair.advance = pair.stage1_pass && advancing < cfg.max_pairs_advancing;
-    if (pair.stage1_pass && !pair.advance) reasons.push(`over_cap_${cfg.max_pairs_advancing}`);
-    if (pair.advance) advancing += 1;
+    const taken = perProfession.get(pair.slug) ?? 0;
+    const underProfessionCap = taken < perProfessionCap;
+    pair.advance = pair.stage1_pass && underProfessionCap && advancing < cfg.max_pairs_advancing;
+    if (pair.stage1_pass && !underProfessionCap) reasons.push(`over_profession_cap_${perProfessionCap}`);
+    else if (pair.stage1_pass && !pair.advance) reasons.push(`over_cap_${cfg.max_pairs_advancing}`);
+    if (pair.advance) {
+      advancing += 1;
+      perProfession.set(pair.slug, taken + 1);
+    }
     pair.fail_reason = reasons.join(';');
   });
+  const adv = pairs.filter(p => p.advance);
+  diagnostics.advancing = {
+    pairs: adv.length,
+    passing: pairs.filter(p => p.stage1_pass).length,
+    professions: [...new Set(adv.map(p => p.slug))].sort(),
+    professions_count: new Set(adv.map(p => p.slug)).size,
+    cutoff_value_usd: adv.length ? adv[adv.length - 1].value_usd : null,
+    per_profession: Object.fromEntries([...new Set(pairs.map(p => p.slug))].sort().map(slug => [slug, adv.filter(p => p.slug === slug).length])),
+  };
   const pairIndex = new Map(pairs.map(p => [`${p.slug}|${p.region}`, p]));
   for (const c of cells) {
     const pair = pairIndex.get(`${c.slug}|${c.region}`);

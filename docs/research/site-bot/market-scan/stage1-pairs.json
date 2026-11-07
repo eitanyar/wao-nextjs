@@ -13,7 +13,8 @@
   "advance": true,
   "fail_reason": "",
   "kit_level": 1,
-  "run_id": "745416b2b68f"
+  "urgency_lead_gen": true,
+  "run_id": "df19e422e595"
  },
  {
   "value_rank": 2,
@@ -29,7 +30,8 @@
   "advance": true,
   "fail_reason": "",
   "kit_level": 1,
-  "run_id": "745416b2b68f"
+  "urgency_lead_gen": true,
+  "run_id": "df19e422e595"
  },
  {
   "value_rank": 3,
@@ -45,7 +47,8 @@
   "advance": true,
   "fail_reason": "",
   "kit_level": 1,
-  "run_id": "745416b2b68f"
+  "urgency_lead_gen": true,
+  "run_id": "df19e422e595"
  },
  {
   "value_rank": 4,
@@ -53,15 +56,16 @@
   "trade_he": "הובלות",
   "region": "R1",
   "region_name": "Gush Dan",
-  "V_region": 1570,
+  "V_region": 1580,
   "T_p_usd": 9.1819,
   "M": 1,
-  "value_usd": 14415.5499,
+  "value_usd": 14507.3687,
   "stage1_pass": true,
   "advance": true,
   "fail_reason": "",
   "kit_level": 1,
-  "run_id": "745416b2b68f"
+  "urgency_lead_gen": true,
+  "run_id": "df19e422e595"
  },
  {
   "value_rank": 5,
@@ -77,7 +81,8 @@
   "advance": true,
   "fail_reason": "",
   "kit_level": 1,
-  "run_id": "745416b2b68f"
+  "urgency_lead_gen": false,
+  "run_id": "df19e422e595"
  },
  {
   "value_rank": 6,
@@ -93,7 +98,8 @@
   "advance": true,
   "fail_reason": "",
   "kit_level": 1,
-  "run_id": "745416b2b68f"
+  "urgency_lead_gen": true,
+  "run_id": "df19e422e595"
  },
  {
   "value_rank": 7,
@@ -109,7 +115,8 @@
   "advance": true,
   "fail_reason": "",
   "kit_level": 1,
-  "run_id": "745416b2b68f"
+  "urgency_lead_gen": true,
+  "run_id": "df19e422e595"
  },
  {
   "value_rank": 8,
@@ -125,10 +132,28 @@
   "advance": true,
   "fail_reason": "",
   "kit_level": 2,
-  "run_id": "745416b2b68f"
+  "urgency_lead_gen": false,
+  "run_id": "df19e422e595"
  },
  {
   "value_rank": 9,
+  "slug": "movers",
+  "trade_he": "הובלות",
+  "region": "R3",
+  "region_name": "Shfela & Modiin",
+  "V_region": 870,
+  "T_p_usd": 9.1819,
+  "M": 1,
+  "value_usd": 7988.2347,
+  "stage1_pass": true,
+  "advance": true,
+  "fail_reason": "",
+  "kit_level": 1,
+  "urgency_lead_gen": true,
+  "run_id": "df19e422e595"
+ },
+ {
+  "value_rank": 10,
   "slug": "roofing",
   "trade_he": "איטום גגות",
   "region": "R1",
@@ -141,23 +166,8 @@
   "advance": true,
   "fail_reason": "",
   "kit_level": 2,
-  "run_id": "745416b2b68f"
- },
- {
-  "value_rank": 10,
-  "slug": "movers",
-  "trade_he": "הובלות",
-  "region": "R3",
-  "region_name": "Shfela & Modiin",
-  "V_region": 860,
-  "T_p_usd": 9.1819,
-  "M": 1,
-  "value_usd": 7896.4159,
-  "stage1_pass": true,
-  "advance": true,
-  "fail_reason": "",
-  "kit_level": 1,
-  "run_id": "745416b2b68f"
+  "urgency_lead_gen": false,
+  "run_id": "df19e422e595"
  },
  {
   "value_rank": 11,
@@ -173,7 +183,8 @@
   "advance": true,
   "fail_reason": "",
   "kit_level": 0,
-  "run_id": "745416b2b68f"
+  "urgency_lead_gen": false,
+  "run_id": "df19e422e595"
  },
  {
   "value_rank": 12,
@@ -189,7 +200,8 @@
   "advance": true,
   "fail_reason": "",
   "kit_level": 0,
-  "run_id": "745416b2b68f"
+  "urgency_lead_gen": false,
+  "run_id": "df19e422e595"
  },
  {
   "value_rank": 13,
@@ -205,7 +217,8 @@
   "advance": true,
   "fail_reason": "",
   "kit_level": 1,
-  "run_id": "745416b2b68f"
+  "urgency_lead_gen": false,
+  "run_id": "df19e422e595"
  },
  {
   "value_rank": 14,
@@ -221,10 +234,28 @@
   "advance": true,
   "fail_reason": "",
   "kit_level": 1,
-  "run_id": "745416b2b68f"
+  "urgency_lead_gen": true,
+  "run_id": "df19e422e595"
  },
  {
   "value_rank": 15,
+  "slug": "ac-repair",
+  "trade_he": "מזגנים",
+  "region": "R1",
+  "region_name": "Gush Dan",
+  "V_region": 1330,
+  "T_p_usd": 4.075,
+  "M": 1,
+  "value_usd": 5419.75,
+  "stage1_pass": true,
+  "advance": true,
+  "fail_reason": "",
+  "kit_level": 1,
+  "urgency_lead_gen": false,
+  "run_id": "df19e422e595"
+ },
+ {
+  "value_rank": 16,
   "slug": "locksmith",
   "trade_he": "מנעולן",
   "region": "R2",
@@ -237,10 +268,11 @@
   "advance": true,
   "fail_reason": "",
   "kit_level": 1,
-  "run_id": "745416b2b68f"
+  "urgency_lead_gen": true,
+  "run_id": "df19e422e595"
  },
  {
-  "value_rank": 16,
+  "value_rank": 17,
   "slug": "pest-control",
   "trade_he": "הדברה",
   "region": "R1",
@@ -253,23 +285,8 @@
   "advance": true,
   "fail_reason": "",
   "kit_level": 1,
-  "run_id": "745416b2b68f"
- },
- {
-  "value_rank": 17,
-  "slug": "ac-repair",
-  "trade_he": "מזגנים",
-  "region": "R1",
-  "region_name": "Gush Dan",
-  "V_region": 1190,
-  "T_p_usd": 4.075,
-  "M": 1,
-  "value_usd": 4849.25,
-  "stage1_pass": true,
-  "advance": true,
-  "fail_reason": "",
-  "kit_level": 1,
-  "run_id": "745416b2b68f"
+  "urgency_lead_gen": false,
+  "run_id": "df19e422e595"
  },
  {
   "value_rank": 18,
@@ -285,7 +302,8 @@
   "advance": true,
   "fail_reason": "",
   "kit_level": 1,
-  "run_id": "745416b2b68f"
+  "urgency_lead_gen": true,
+  "run_id": "df19e422e595"
  },
  {
   "value_rank": 19,
@@ -298,10 +316,11 @@
   "M": 1,
   "value_usd": 4676.9599,
   "stage1_pass": true,
-  "advance": true,
-  "fail_reason": "",
+  "advance": false,
+  "fail_reason": "over_profession_cap_4",
   "kit_level": 1,
-  "run_id": "745416b2b68f"
+  "urgency_lead_gen": true,
+  "run_id": "df19e422e595"
  },
  {
   "value_rank": 20,
@@ -317,7 +336,8 @@
   "advance": true,
   "fail_reason": "",
   "kit_level": 0,
-  "run_id": "745416b2b68f"
+  "urgency_lead_gen": false,
+  "run_id": "df19e422e595"
  },
  {
   "value_rank": 21,
@@ -333,10 +353,28 @@
   "advance": true,
   "fail_reason": "",
   "kit_level": 1,
-  "run_id": "745416b2b68f"
+  "urgency_lead_gen": true,
+  "run_id": "df19e422e595"
  },
  {
   "value_rank": 22,
+  "slug": "renovation",
+  "trade_he": "שיפוצים",
+  "region": "R3",
+  "region_name": "Shfela & Modiin",
+  "V_region": 790,
+  "T_p_usd": 5.1954,
+  "M": 1,
+  "value_usd": 4104.3672,
+  "stage1_pass": true,
+  "advance": true,
+  "fail_reason": "",
+  "kit_level": 0,
+  "urgency_lead_gen": false,
+  "run_id": "df19e422e595"
+ },
+ {
+  "value_rank": 23,
   "slug": "painter",
   "trade_he": "צבעי",
   "region": "R1",
@@ -349,10 +387,11 @@
   "advance": true,
   "fail_reason": "",
   "kit_level": 1,
-  "run_id": "745416b2b68f"
+  "urgency_lead_gen": false,
+  "run_id": "df19e422e595"
  },
  {
-  "value_rank": 23,
+  "value_rank": 24,
   "slug": "roofing",
   "trade_he": "איטום גגות",
   "region": "R4",
@@ -365,23 +404,8 @@
   "advance": true,
   "fail_reason": "",
   "kit_level": 2,
-  "run_id": "745416b2b68f"
- },
- {
-  "value_rank": 24,
-  "slug": "renovation",
-  "trade_he": "שיפוצים",
-  "region": "R3",
-  "region_name": "Shfela & Modiin",
-  "V_region": 770,
-  "T_p_usd": 5.1954,
-  "M": 1,
-  "value_usd": 4000.4591,
-  "stage1_pass": true,
-  "advance": true,
-  "fail_reason": "",
-  "kit_level": 0,
-  "run_id": "745416b2b68f"
+  "urgency_lead_gen": false,
+  "run_id": "df19e422e595"
  },
  {
   "value_rank": 25,
@@ -394,10 +418,11 @@
   "M": 1,
   "value_usd": 3580.9328,
   "stage1_pass": true,
-  "advance": true,
-  "fail_reason": "",
+  "advance": false,
+  "fail_reason": "over_profession_cap_4",
   "kit_level": 1,
-  "run_id": "745416b2b68f"
+  "urgency_lead_gen": true,
+  "run_id": "df19e422e595"
  },
  {
   "value_rank": 26,
@@ -410,10 +435,11 @@
   "M": 1,
   "value_usd": 3401.4254,
   "stage1_pass": true,
-  "advance": true,
-  "fail_reason": "",
+  "advance": false,
+  "fail_reason": "over_profession_cap_4",
   "kit_level": 1,
-  "run_id": "745416b2b68f"
+  "urgency_lead_gen": true,
+  "run_id": "df19e422e595"
  },
  {
   "value_rank": 27,
@@ -426,13 +452,31 @@
   "M": 1,
   "value_usd": 3397.2952,
   "stage1_pass": true,
-  "advance": true,
-  "fail_reason": "",
+  "advance": false,
+  "fail_reason": "over_profession_cap_4",
   "kit_level": 1,
-  "run_id": "745416b2b68f"
+  "urgency_lead_gen": true,
+  "run_id": "df19e422e595"
  },
  {
   "value_rank": 28,
+  "slug": "electrician",
+  "trade_he": "חשמלאי",
+  "region": "R2",
+  "region_name": "Sharon",
+  "V_region": 510,
+  "T_p_usd": 6.63,
+  "M": 1,
+  "value_usd": 3381.3,
+  "stage1_pass": true,
+  "advance": true,
+  "fail_reason": "",
+  "kit_level": 1,
+  "urgency_lead_gen": false,
+  "run_id": "df19e422e595"
+ },
+ {
+  "value_rank": 29,
   "slug": "plumber",
   "trade_he": "אינסטלטור",
   "region": "R9",
@@ -442,13 +486,14 @@
   "M": 1,
   "value_usd": 3316.3897,
   "stage1_pass": true,
-  "advance": true,
-  "fail_reason": "",
+  "advance": false,
+  "fail_reason": "over_profession_cap_4",
   "kit_level": 1,
-  "run_id": "745416b2b68f"
+  "urgency_lead_gen": true,
+  "run_id": "df19e422e595"
  },
  {
-  "value_rank": 29,
+  "value_rank": 30,
   "slug": "plumber",
   "trade_he": "אינסטלטור",
   "region": "R10",
@@ -458,26 +503,11 @@
   "M": 1,
   "value_usd": 3316.3897,
   "stage1_pass": true,
-  "advance": true,
-  "fail_reason": "",
+  "advance": false,
+  "fail_reason": "over_profession_cap_4",
   "kit_level": 1,
-  "run_id": "745416b2b68f"
- },
- {
-  "value_rank": 30,
-  "slug": "electrician",
-  "trade_he": "חשמלאי",
-  "region": "R2",
-  "region_name": "Sharon",
-  "V_region": 500,
-  "T_p_usd": 6.63,
-  "M": 1,
-  "value_usd": 3315,
-  "stage1_pass": true,
-  "advance": true,
-  "fail_reason": "",
-  "kit_level": 1,
-  "run_id": "745416b2b68f"
+  "urgency_lead_gen": true,
+  "run_id": "df19e422e595"
  },
  {
   "value_rank": 31,
@@ -493,10 +523,28 @@
   "advance": true,
   "fail_reason": "",
   "kit_level": 1,
-  "run_id": "745416b2b68f"
+  "urgency_lead_gen": true,
+  "run_id": "df19e422e595"
  },
  {
   "value_rank": 32,
+  "slug": "renovation",
+  "trade_he": "שיפוצים",
+  "region": "R2",
+  "region_name": "Sharon",
+  "V_region": 620,
+  "T_p_usd": 5.1954,
+  "M": 1,
+  "value_usd": 3221.1489,
+  "stage1_pass": true,
+  "advance": true,
+  "fail_reason": "",
+  "kit_level": 0,
+  "urgency_lead_gen": false,
+  "run_id": "df19e422e595"
+ },
+ {
+  "value_rank": 33,
   "slug": "locksmith",
   "trade_he": "מנעולן",
   "region": "R5",
@@ -506,13 +554,14 @@
   "M": 1,
   "value_usd": 3165.4045,
   "stage1_pass": true,
-  "advance": true,
-  "fail_reason": "",
+  "advance": false,
+  "fail_reason": "over_profession_cap_4",
   "kit_level": 1,
-  "run_id": "745416b2b68f"
+  "urgency_lead_gen": true,
+  "run_id": "df19e422e595"
  },
  {
-  "value_rank": 33,
+  "value_rank": 34,
   "slug": "kitchens",
   "trade_he": "מטבחים",
   "region": "R1",
@@ -525,23 +574,8 @@
   "advance": true,
   "fail_reason": "",
   "kit_level": 0,
-  "run_id": "745416b2b68f"
- },
- {
-  "value_rank": 34,
-  "slug": "renovation",
-  "trade_he": "שיפוצים",
-  "region": "R2",
-  "region_name": "Sharon",
-  "V_region": 590,
-  "T_p_usd": 5.1954,
-  "M": 1,
-  "value_usd": 3065.2869,
-  "stage1_pass": true,
-  "advance": true,
-  "fail_reason": "",
-  "kit_level": 0,
-  "run_id": "745416b2b68f"
+  "urgency_lead_gen": false,
+  "run_id": "df19e422e595"
  },
  {
   "value_rank": 35,
@@ -557,26 +591,45 @@
   "advance": true,
   "fail_reason": "",
   "kit_level": 2,
-  "run_id": "745416b2b68f"
+  "urgency_lead_gen": false,
+  "run_id": "df19e422e595"
  },
  {
   "value_rank": 36,
+  "slug": "ac-repair",
+  "trade_he": "מזגנים",
+  "region": "R3",
+  "region_name": "Shfela & Modiin",
+  "V_region": 750,
+  "T_p_usd": 4.075,
+  "M": 1,
+  "value_usd": 3056.25,
+  "stage1_pass": true,
+  "advance": true,
+  "fail_reason": "",
+  "kit_level": 1,
+  "urgency_lead_gen": false,
+  "run_id": "df19e422e595"
+ },
+ {
+  "value_rank": 37,
   "slug": "aluminum",
   "trade_he": "אלומיניום",
   "region": "R1",
   "region_name": "Gush Dan",
-  "V_region": 920,
+  "V_region": 940,
   "T_p_usd": 3.1978,
   "M": 1,
-  "value_usd": 2941.9836,
+  "value_usd": 3005.9397,
   "stage1_pass": true,
   "advance": true,
   "fail_reason": "",
   "kit_level": 0,
-  "run_id": "745416b2b68f"
+  "urgency_lead_gen": false,
+  "run_id": "df19e422e595"
  },
  {
-  "value_rank": 37,
+  "value_rank": 38,
   "slug": "locksmith",
   "trade_he": "מנעולן",
   "region": "R6",
@@ -586,13 +639,14 @@
   "M": 1,
   "value_usd": 2921.9118,
   "stage1_pass": true,
-  "advance": true,
-  "fail_reason": "",
+  "advance": false,
+  "fail_reason": "over_profession_cap_4",
   "kit_level": 1,
-  "run_id": "745416b2b68f"
+  "urgency_lead_gen": true,
+  "run_id": "df19e422e595"
  },
  {
-  "value_rank": 38,
+  "value_rank": 39,
   "slug": "plumber",
   "trade_he": "אינסטלטור",
   "region": "R8",
@@ -602,29 +656,31 @@
   "M": 1,
   "value_usd": 2891.2116,
   "stage1_pass": true,
-  "advance": true,
-  "fail_reason": "",
+  "advance": false,
+  "fail_reason": "over_profession_cap_4",
   "kit_level": 1,
-  "run_id": "745416b2b68f"
+  "urgency_lead_gen": true,
+  "run_id": "df19e422e595"
  },
  {
-  "value_rank": 39,
+  "value_rank": 40,
   "slug": "gates-fencing",
   "trade_he": "מסגרות/שערים",
   "region": "R1",
   "region_name": "Gush Dan",
-  "V_region": 1180,
+  "V_region": 1190,
   "T_p_usd": 2.4067,
   "M": 1,
-  "value_usd": 2839.8667,
+  "value_usd": 2863.9333,
   "stage1_pass": true,
   "advance": true,
   "fail_reason": "",
   "kit_level": 0,
-  "run_id": "745416b2b68f"
+  "urgency_lead_gen": false,
+  "run_id": "df19e422e595"
  },
  {
-  "value_rank": 40,
+  "value_rank": 41,
   "slug": "pergolas",
   "trade_he": "פרגולות",
   "region": "R2",
@@ -637,23 +693,8 @@
   "advance": true,
   "fail_reason": "",
   "kit_level": 0,
-  "run_id": "745416b2b68f"
- },
- {
-  "value_rank": 41,
-  "slug": "ac-repair",
-  "trade_he": "מזגנים",
-  "region": "R3",
-  "region_name": "Shfela & Modiin",
-  "V_region": 610,
-  "T_p_usd": 4.075,
-  "M": 1,
-  "value_usd": 2485.75,
-  "stage1_pass": true,
-  "advance": false,
-  "fail_reason": "over_cap_40",
-  "kit_level": 1,
-  "run_id": "745416b2b68f"
+  "urgency_lead_gen": false,
+  "run_id": "df19e422e595"
  },
  {
   "value_rank": 42,
@@ -666,10 +707,11 @@
   "M": 1,
   "value_usd": 2453.1,
   "stage1_pass": true,
-  "advance": false,
-  "fail_reason": "over_cap_40",
+  "advance": true,
+  "fail_reason": "",
   "kit_level": 1,
-  "run_id": "745416b2b68f"
+  "urgency_lead_gen": false,
+  "run_id": "df19e422e595"
  },
  {
   "value_rank": 43,
@@ -682,10 +724,11 @@
   "M": 1,
   "value_usd": 2421.4113,
   "stage1_pass": true,
-  "advance": false,
-  "fail_reason": "over_cap_40",
+  "advance": true,
+  "fail_reason": "",
   "kit_level": 1,
-  "run_id": "745416b2b68f"
+  "urgency_lead_gen": false,
+  "run_id": "df19e422e595"
  },
  {
   "value_rank": 44,
@@ -699,9 +742,10 @@
   "value_usd": 2380.9978,
   "stage1_pass": true,
   "advance": false,
-  "fail_reason": "over_cap_40",
+  "fail_reason": "over_profession_cap_4",
   "kit_level": 1,
-  "run_id": "745416b2b68f"
+  "urgency_lead_gen": true,
+  "run_id": "df19e422e595"
  },
  {
   "value_rank": 45,
@@ -714,10 +758,11 @@
   "M": 1,
   "value_usd": 2360.6817,
   "stage1_pass": true,
-  "advance": false,
-  "fail_reason": "over_cap_40",
+  "advance": true,
+  "fail_reason": "",
   "kit_level": 1,
-  "run_id": "745416b2b68f"
+  "urgency_lead_gen": false,
+  "run_id": "df19e422e595"
  },
  {
   "value_rank": 46,
@@ -731,12 +776,30 @@
   "value_usd": 2295.4697,
   "stage1_pass": true,
   "advance": false,
-  "fail_reason": "over_cap_40",
+  "fail_reason": "over_profession_cap_4",
   "kit_level": 1,
-  "run_id": "745416b2b68f"
+  "urgency_lead_gen": true,
+  "run_id": "df19e422e595"
  },
  {
   "value_rank": 47,
+  "slug": "car-body-repair",
+  "trade_he": "פחחות",
+  "region": "R1",
+  "region_name": "Gush Dan",
+  "V_region": 660,
+  "T_p_usd": 3.3217,
+  "M": 1,
+  "value_usd": 2192.3,
+  "stage1_pass": true,
+  "advance": true,
+  "fail_reason": "",
+  "kit_level": 1,
+  "urgency_lead_gen": false,
+  "run_id": "df19e422e595"
+ },
+ {
+  "value_rank": 48,
   "slug": "pergolas",
   "trade_he": "פרגולות",
   "region": "R4",
@@ -746,13 +809,48 @@
   "M": 1,
   "value_usd": 2158.1728,
   "stage1_pass": true,
-  "advance": false,
-  "fail_reason": "over_cap_40",
+  "advance": true,
+  "fail_reason": "",
   "kit_level": 0,
-  "run_id": "745416b2b68f"
+  "urgency_lead_gen": false,
+  "run_id": "df19e422e595"
  },
  {
-  "value_rank": 48,
+  "value_rank": 49,
+  "slug": "ac-repair",
+  "trade_he": "מזגנים",
+  "region": "R2",
+  "region_name": "Sharon",
+  "V_region": 490,
+  "T_p_usd": 4.075,
+  "M": 1,
+  "value_usd": 1996.75,
+  "stage1_pass": true,
+  "advance": true,
+  "fail_reason": "",
+  "kit_level": 1,
+  "urgency_lead_gen": false,
+  "run_id": "df19e422e595"
+ },
+ {
+  "value_rank": 50,
+  "slug": "renovation",
+  "trade_he": "שיפוצים",
+  "region": "R5",
+  "region_name": "Haifa & Krayot",
+  "V_region": 370,
+  "T_p_usd": 5.1954,
+  "M": 1,
+  "value_usd": 1922.2985,
+  "stage1_pass": true,
+  "advance": true,
+  "fail_reason": "",
+  "kit_level": 0,
+  "urgency_lead_gen": false,
+  "run_id": "df19e422e595"
+ },
+ {
+  "value_rank": 51,
   "slug": "solar",
   "trade_he": "סולארי",
   "region": "R2",
@@ -762,13 +860,14 @@
   "M": 1,
   "value_usd": 1905.7621,
   "stage1_pass": true,
-  "advance": false,
-  "fail_reason": "over_cap_40",
+  "advance": true,
+  "fail_reason": "",
   "kit_level": 0,
-  "run_id": "745416b2b68f"
+  "urgency_lead_gen": false,
+  "run_id": "df19e422e595"
  },
  {
-  "value_rank": 49,
+  "value_rank": 52,
   "slug": "gates-fencing",
   "trade_he": "מסגרות/שערים",
   "region": "R3",
@@ -781,10 +880,11 @@
   "advance": false,
   "fail_reason": "over_cap_40",
   "kit_level": 0,
-  "run_id": "745416b2b68f"
+  "urgency_lead_gen": false,
+  "run_id": "df19e422e595"
  },
  {
-  "value_rank": 50,
+  "value_rank": 53,
   "slug": "roofing",
   "trade_he": "איטום גגות",
   "region": "R5",
@@ -795,60 +895,30 @@
   "value_usd": 1872.6455,
   "stage1_pass": true,
   "advance": false,
-  "fail_reason": "over_cap_40",
+  "fail_reason": "over_profession_cap_4",
   "kit_level": 2,
-  "run_id": "745416b2b68f"
+  "urgency_lead_gen": false,
+  "run_id": "df19e422e595"
  },
  {
-  "value_rank": 51,
-  "slug": "renovation",
-  "trade_he": "שיפוצים",
-  "region": "R5",
-  "region_name": "Haifa & Krayot",
-  "V_region": 360,
-  "T_p_usd": 5.1954,
-  "M": 1,
-  "value_usd": 1870.3445,
-  "stage1_pass": true,
-  "advance": false,
-  "fail_reason": "over_cap_40",
-  "kit_level": 0,
-  "run_id": "745416b2b68f"
- },
- {
-  "value_rank": 52,
-  "slug": "car-body-repair",
-  "trade_he": "פחחות",
-  "region": "R1",
-  "region_name": "Gush Dan",
-  "V_region": 550,
-  "T_p_usd": 3.3217,
-  "M": 1,
-  "value_usd": 1826.9167,
-  "stage1_pass": true,
-  "advance": false,
-  "fail_reason": "over_cap_40",
-  "kit_level": 1,
-  "run_id": "745416b2b68f"
- },
- {
-  "value_rank": 53,
+  "value_rank": 54,
   "slug": "solar",
   "trade_he": "סולארי",
   "region": "R1",
   "region_name": "Gush Dan",
-  "V_region": 940,
+  "V_region": 950,
   "T_p_usd": 4.7644,
   "M": 0.4,
-  "value_usd": 1791.4163,
+  "value_usd": 1810.474,
   "stage1_pass": true,
   "advance": false,
   "fail_reason": "over_cap_40",
   "kit_level": 0,
-  "run_id": "745416b2b68f"
+  "urgency_lead_gen": false,
+  "run_id": "df19e422e595"
  },
  {
-  "value_rank": 54,
+  "value_rank": 55,
   "slug": "locksmith",
   "trade_he": "מנעולן",
   "region": "R8",
@@ -861,10 +931,28 @@
   "advance": false,
   "fail_reason": "V_region<150",
   "kit_level": 1,
-  "run_id": "745416b2b68f"
+  "urgency_lead_gen": true,
+  "run_id": "df19e422e595"
  },
  {
-  "value_rank": 55,
+  "value_rank": 56,
+  "slug": "aluminum",
+  "trade_he": "אלומיניום",
+  "region": "R3",
+  "region_name": "Shfela & Modiin",
+  "V_region": 520,
+  "T_p_usd": 3.1978,
+  "M": 1,
+  "value_usd": 1662.8603,
+  "stage1_pass": true,
+  "advance": false,
+  "fail_reason": "over_cap_40",
+  "kit_level": 0,
+  "urgency_lead_gen": false,
+  "run_id": "df19e422e595"
+ },
+ {
+  "value_rank": 57,
   "slug": "renovation",
   "trade_he": "שיפוצים",
   "region": "R4",
@@ -875,12 +963,13 @@
   "value_usd": 1662.5285,
   "stage1_pass": true,
   "advance": false,
-  "fail_reason": "over_cap_40",
+  "fail_reason": "over_profession_cap_4",
   "kit_level": 0,
-  "run_id": "745416b2b68f"
+  "urgency_lead_gen": false,
+  "run_id": "df19e422e595"
  },
  {
-  "value_rank": 56,
+  "value_rank": 58,
   "slug": "carpenter",
   "trade_he": "נגר",
   "region": "R1",
@@ -893,10 +982,11 @@
   "advance": false,
   "fail_reason": "over_cap_40",
   "kit_level": 1,
-  "run_id": "745416b2b68f"
+  "urgency_lead_gen": false,
+  "run_id": "df19e422e595"
  },
  {
-  "value_rank": 57,
+  "value_rank": 59,
   "slug": "kitchens",
   "trade_he": "מטבחים",
   "region": "R3",
@@ -909,10 +999,11 @@
   "advance": false,
   "fail_reason": "over_cap_40",
   "kit_level": 0,
-  "run_id": "745416b2b68f"
+  "urgency_lead_gen": false,
+  "run_id": "df19e422e595"
  },
  {
-  "value_rank": 58,
+  "value_rank": 60,
   "slug": "pest-control",
   "trade_he": "הדברה",
   "region": "R2",
@@ -925,26 +1016,28 @@
   "advance": false,
   "fail_reason": "over_cap_40",
   "kit_level": 1,
-  "run_id": "745416b2b68f"
+  "urgency_lead_gen": false,
+  "run_id": "df19e422e595"
  },
  {
-  "value_rank": 59,
-  "slug": "aluminum",
-  "trade_he": "אלומיניום",
+  "value_rank": 61,
+  "slug": "car-body-repair",
+  "trade_he": "פחחות",
   "region": "R3",
   "region_name": "Shfela & Modiin",
-  "V_region": 510,
-  "T_p_usd": 3.1978,
+  "V_region": 480,
+  "T_p_usd": 3.3217,
   "M": 1,
-  "value_usd": 1630.8822,
+  "value_usd": 1594.4,
   "stage1_pass": true,
   "advance": false,
   "fail_reason": "over_cap_40",
-  "kit_level": 0,
-  "run_id": "745416b2b68f"
+  "kit_level": 1,
+  "urgency_lead_gen": false,
+  "run_id": "df19e422e595"
  },
  {
-  "value_rank": 60,
+  "value_rank": 62,
   "slug": "electrician",
   "trade_he": "חשמלאי",
   "region": "R5",
@@ -955,28 +1048,13 @@
   "value_usd": 1591.2,
   "stage1_pass": true,
   "advance": false,
-  "fail_reason": "over_cap_40",
+  "fail_reason": "over_profession_cap_4",
   "kit_level": 1,
-  "run_id": "745416b2b68f"
+  "urgency_lead_gen": false,
+  "run_id": "df19e422e595"
  },
  {
-  "value_rank": 61,
-  "slug": "ac-repair",
-  "trade_he": "מזגנים",
-  "region": "R2",
-  "region_name": "Sharon",
-  "V_region": 390,
-  "T_p_usd": 4.075,
-  "M": 1,
-  "value_usd": 1589.25,
-  "stage1_pass": true,
-  "advance": false,
-  "fail_reason": "over_cap_40",
-  "kit_level": 1,
-  "run_id": "745416b2b68f"
- },
- {
-  "value_rank": 62,
+  "value_rank": 63,
   "slug": "locksmith",
   "trade_he": "מנעולן",
   "region": "R9",
@@ -989,10 +1067,11 @@
   "advance": false,
   "fail_reason": "V_region<150",
   "kit_level": 1,
-  "run_id": "745416b2b68f"
+  "urgency_lead_gen": true,
+  "run_id": "df19e422e595"
  },
  {
-  "value_rank": 63,
+  "value_rank": 64,
   "slug": "movers",
   "trade_he": "הובלות",
   "region": "R6",
@@ -1003,12 +1082,13 @@
   "value_usd": 1560.9194,
   "stage1_pass": true,
   "advance": false,
-  "fail_reason": "over_cap_40",
+  "fail_reason": "over_profession_cap_4",
   "kit_level": 1,
-  "run_id": "745416b2b68f"
+  "urgency_lead_gen": true,
+  "run_id": "df19e422e595"
  },
  {
-  "value_rank": 64,
+  "value_rank": 65,
   "slug": "movers",
   "trade_he": "הובלות",
   "region": "R8",
@@ -1019,12 +1099,13 @@
   "value_usd": 1560.9194,
   "stage1_pass": true,
   "advance": false,
-  "fail_reason": "over_cap_40",
+  "fail_reason": "over_profession_cap_4",
   "kit_level": 1,
-  "run_id": "745416b2b68f"
+  "urgency_lead_gen": true,
+  "run_id": "df19e422e595"
  },
  {
-  "value_rank": 65,
+  "value_rank": 66,
   "slug": "painter",
   "trade_he": "צבעי",
   "region": "R2",
@@ -1037,10 +1118,11 @@
   "advance": false,
   "fail_reason": "over_cap_40",
   "kit_level": 1,
-  "run_id": "745416b2b68f"
+  "urgency_lead_gen": false,
+  "run_id": "df19e422e595"
  },
  {
-  "value_rank": 66,
+  "value_rank": 67,
   "slug": "roofing",
   "trade_he": "איטום גגות",
   "region": "R9",
@@ -1051,12 +1133,13 @@
   "value_usd": 1532.1645,
   "stage1_pass": true,
   "advance": false,
-  "fail_reason": "over_cap_40",
+  "fail_reason": "over_profession_cap_4",
   "kit_level": 2,
-  "run_id": "745416b2b68f"
+  "urgency_lead_gen": false,
+  "run_id": "df19e422e595"
  },
  {
-  "value_rank": 67,
+  "value_rank": 68,
   "slug": "roofing",
   "trade_he": "איטום גגות",
   "region": "R10",
@@ -1067,12 +1150,13 @@
   "value_usd": 1532.1645,
   "stage1_pass": true,
   "advance": false,
-  "fail_reason": "over_cap_40",
+  "fail_reason": "over_profession_cap_4",
   "kit_level": 2,
-  "run_id": "745416b2b68f"
+  "urgency_lead_gen": false,
+  "run_id": "df19e422e595"
  },
  {
-  "value_rank": 68,
+  "value_rank": 69,
   "slug": "electrician",
   "trade_he": "חשמלאי",
   "region": "R8",
@@ -1083,12 +1167,13 @@
   "value_usd": 1524.9,
   "stage1_pass": true,
   "advance": false,
-  "fail_reason": "over_cap_40",
+  "fail_reason": "over_profession_cap_4",
   "kit_level": 1,
-  "run_id": "745416b2b68f"
+  "urgency_lead_gen": false,
+  "run_id": "df19e422e595"
  },
  {
-  "value_rank": 69,
+  "value_rank": 70,
   "slug": "pergolas",
   "trade_he": "פרגולות",
   "region": "R5",
@@ -1099,12 +1184,13 @@
   "value_usd": 1515.8595,
   "stage1_pass": true,
   "advance": false,
-  "fail_reason": "over_cap_40",
+  "fail_reason": "over_profession_cap_4",
   "kit_level": 0,
-  "run_id": "745416b2b68f"
+  "urgency_lead_gen": false,
+  "run_id": "df19e422e595"
  },
  {
-  "value_rank": 70,
+  "value_rank": 71,
   "slug": "movers",
   "trade_he": "הובלות",
   "region": "R7",
@@ -1115,12 +1201,13 @@
   "value_usd": 1469.1006,
   "stage1_pass": true,
   "advance": false,
-  "fail_reason": "over_cap_40",
+  "fail_reason": "over_profession_cap_4",
   "kit_level": 1,
-  "run_id": "745416b2b68f"
+  "urgency_lead_gen": true,
+  "run_id": "df19e422e595"
  },
  {
-  "value_rank": 71,
+  "value_rank": 72,
   "slug": "locksmith",
   "trade_he": "מנעולן",
   "region": "R10",
@@ -1133,10 +1220,11 @@
   "advance": false,
   "fail_reason": "V_region<150",
   "kit_level": 1,
-  "run_id": "745416b2b68f"
+  "urgency_lead_gen": true,
+  "run_id": "df19e422e595"
  },
  {
-  "value_rank": 72,
+  "value_rank": 73,
   "slug": "renovation",
   "trade_he": "שיפוצים",
   "region": "R6",
@@ -1147,12 +1235,13 @@
   "value_usd": 1454.7124,
   "stage1_pass": true,
   "advance": false,
-  "fail_reason": "over_cap_40",
+  "fail_reason": "over_profession_cap_4",
   "kit_level": 0,
-  "run_id": "745416b2b68f"
+  "urgency_lead_gen": false,
+  "run_id": "df19e422e595"
  },
  {
-  "value_rank": 73,
+  "value_rank": 74,
   "slug": "roofing",
   "trade_he": "איטום גגות",
   "region": "R8",
@@ -1163,12 +1252,30 @@
   "value_usd": 1447.0442,
   "stage1_pass": true,
   "advance": false,
-  "fail_reason": "over_cap_40",
+  "fail_reason": "over_profession_cap_4",
   "kit_level": 2,
-  "run_id": "745416b2b68f"
+  "urgency_lead_gen": false,
+  "run_id": "df19e422e595"
  },
  {
-  "value_rank": 74,
+  "value_rank": 75,
+  "slug": "car-body-repair",
+  "trade_he": "פחחות",
+  "region": "R2",
+  "region_name": "Sharon",
+  "V_region": 420,
+  "T_p_usd": 3.3217,
+  "M": 1,
+  "value_usd": 1395.1,
+  "stage1_pass": true,
+  "advance": false,
+  "fail_reason": "over_cap_40",
+  "kit_level": 1,
+  "urgency_lead_gen": false,
+  "run_id": "df19e422e595"
+ },
+ {
+  "value_rank": 76,
   "slug": "pergolas",
   "trade_he": "פרגולות",
   "region": "R8",
@@ -1179,12 +1286,13 @@
   "value_usd": 1361.7043,
   "stage1_pass": true,
   "advance": false,
-  "fail_reason": "over_cap_40",
+  "fail_reason": "over_profession_cap_4",
   "kit_level": 0,
-  "run_id": "745416b2b68f"
+  "urgency_lead_gen": false,
+  "run_id": "df19e422e595"
  },
  {
-  "value_rank": 75,
+  "value_rank": 77,
   "slug": "locksmith",
   "trade_he": "מנעולן",
   "region": "R7",
@@ -1197,10 +1305,11 @@
   "advance": false,
   "fail_reason": "V_region<150",
   "kit_level": 1,
-  "run_id": "745416b2b68f"
+  "urgency_lead_gen": true,
+  "run_id": "df19e422e595"
  },
  {
-  "value_rank": 76,
+  "value_rank": 78,
   "slug": "electrician",
   "trade_he": "חשמלאי",
   "region": "R9",
@@ -1211,12 +1320,13 @@
   "value_usd": 1326,
   "stage1_pass": true,
   "advance": false,
-  "fail_reason": "over_cap_40",
+  "fail_reason": "over_profession_cap_4",
   "kit_level": 1,
-  "run_id": "745416b2b68f"
+  "urgency_lead_gen": false,
+  "run_id": "df19e422e595"
  },
  {
-  "value_rank": 77,
+  "value_rank": 79,
   "slug": "electrician",
   "trade_he": "חשמלאי",
   "region": "R10",
@@ -1227,12 +1337,13 @@
   "value_usd": 1326,
   "stage1_pass": true,
   "advance": false,
-  "fail_reason": "over_cap_40",
+  "fail_reason": "over_profession_cap_4",
   "kit_level": 1,
-  "run_id": "745416b2b68f"
+  "urgency_lead_gen": false,
+  "run_id": "df19e422e595"
  },
  {
-  "value_rank": 78,
+  "value_rank": 80,
   "slug": "pergolas",
   "trade_he": "פרגולות",
   "region": "R6",
@@ -1243,12 +1354,30 @@
   "value_usd": 1310.3192,
   "stage1_pass": true,
   "advance": false,
-  "fail_reason": "over_cap_40",
+  "fail_reason": "over_profession_cap_4",
   "kit_level": 0,
-  "run_id": "745416b2b68f"
+  "urgency_lead_gen": false,
+  "run_id": "df19e422e595"
  },
  {
-  "value_rank": 79,
+  "value_rank": 81,
+  "slug": "renovation",
+  "trade_he": "שיפוצים",
+  "region": "R10",
+  "region_name": "Negev",
+  "V_region": 250,
+  "T_p_usd": 5.1954,
+  "M": 1,
+  "value_usd": 1298.8504,
+  "stage1_pass": true,
+  "advance": false,
+  "fail_reason": "over_profession_cap_4",
+  "kit_level": 0,
+  "urgency_lead_gen": false,
+  "run_id": "df19e422e595"
+ },
+ {
+  "value_rank": 82,
   "slug": "roofing",
   "trade_he": "איטום גגות",
   "region": "R6",
@@ -1259,28 +1388,30 @@
   "value_usd": 1276.8037,
   "stage1_pass": true,
   "advance": false,
-  "fail_reason": "over_cap_40",
+  "fail_reason": "over_profession_cap_4",
   "kit_level": 2,
-  "run_id": "745416b2b68f"
+  "urgency_lead_gen": false,
+  "run_id": "df19e422e595"
  },
  {
-  "value_rank": 80,
-  "slug": "renovation",
-  "trade_he": "שיפוצים",
-  "region": "R10",
-  "region_name": "Negev",
-  "V_region": 240,
-  "T_p_usd": 5.1954,
+  "value_rank": 83,
+  "slug": "aluminum",
+  "trade_he": "אלומיניום",
+  "region": "R2",
+  "region_name": "Sharon",
+  "V_region": 380,
+  "T_p_usd": 3.1978,
   "M": 1,
-  "value_usd": 1246.8964,
+  "value_usd": 1215.1671,
   "stage1_pass": true,
   "advance": false,
   "fail_reason": "over_cap_40",
   "kit_level": 0,
-  "run_id": "745416b2b68f"
+  "urgency_lead_gen": false,
+  "run_id": "df19e422e595"
  },
  {
-  "value_rank": 81,
+  "value_rank": 84,
   "slug": "pest-control",
   "trade_he": "הדברה",
   "region": "R5",
@@ -1293,10 +1424,11 @@
   "advance": false,
   "fail_reason": "over_cap_40",
   "kit_level": 1,
-  "run_id": "745416b2b68f"
+  "urgency_lead_gen": false,
+  "run_id": "df19e422e595"
  },
  {
-  "value_rank": 82,
+  "value_rank": 85,
   "slug": "renovation",
   "trade_he": "שיפוצים",
   "region": "R9",
@@ -1307,44 +1439,30 @@
   "value_usd": 1194.9423,
   "stage1_pass": true,
   "advance": false,
-  "fail_reason": "over_cap_40",
+  "fail_reason": "over_profession_cap_4",
   "kit_level": 0,
-  "run_id": "745416b2b68f"
+  "urgency_lead_gen": false,
+  "run_id": "df19e422e595"
  },
  {
-  "value_rank": 83,
-  "slug": "aluminum",
-  "trade_he": "אלומיניום",
-  "region": "R2",
-  "region_name": "Sharon",
-  "V_region": 370,
-  "T_p_usd": 3.1978,
+  "value_rank": 86,
+  "slug": "ac-repair",
+  "trade_he": "מזגנים",
+  "region": "R5",
+  "region_name": "Haifa & Krayot",
+  "V_region": 290,
+  "T_p_usd": 4.075,
   "M": 1,
-  "value_usd": 1183.189,
-  "stage1_pass": true,
+  "value_usd": 1181.75,
+  "stage1_pass": false,
   "advance": false,
-  "fail_reason": "over_cap_40",
-  "kit_level": 0,
-  "run_id": "745416b2b68f"
- },
- {
-  "value_rank": 84,
-  "slug": "car-body-repair",
-  "trade_he": "פחחות",
-  "region": "R3",
-  "region_name": "Shfela & Modiin",
-  "V_region": 350,
-  "T_p_usd": 3.3217,
-  "M": 1,
-  "value_usd": 1162.5833,
-  "stage1_pass": true,
-  "advance": false,
-  "fail_reason": "over_cap_40",
+  "fail_reason": "value_below_top_50pct",
   "kit_level": 1,
-  "run_id": "745416b2b68f"
+  "urgency_lead_gen": false,
+  "run_id": "df19e422e595"
  },
  {
-  "value_rank": 85,
+  "value_rank": 87,
   "slug": "pergolas",
   "trade_he": "פרגולות",
   "region": "R9",
@@ -1353,14 +1471,15 @@
   "T_p_usd": 2.5693,
   "M": 1,
   "value_usd": 1130.4715,
-  "stage1_pass": true,
+  "stage1_pass": false,
   "advance": false,
-  "fail_reason": "over_cap_40",
+  "fail_reason": "value_below_top_50pct",
   "kit_level": 0,
-  "run_id": "745416b2b68f"
+  "urgency_lead_gen": false,
+  "run_id": "df19e422e595"
  },
  {
-  "value_rank": 86,
+  "value_rank": 88,
   "slug": "electrician",
   "trade_he": "חשמלאי",
   "region": "R6",
@@ -1373,10 +1492,11 @@
   "advance": false,
   "fail_reason": "value_below_top_50pct",
   "kit_level": 1,
-  "run_id": "745416b2b68f"
+  "urgency_lead_gen": false,
+  "run_id": "df19e422e595"
  },
  {
-  "value_rank": 87,
+  "value_rank": 89,
   "slug": "roofing",
   "trade_he": "איטום גגות",
   "region": "R7",
@@ -1389,10 +1509,11 @@
   "advance": false,
   "fail_reason": "V_region<150;value_below_top_50pct",
   "kit_level": 2,
-  "run_id": "745416b2b68f"
+  "urgency_lead_gen": false,
+  "run_id": "df19e422e595"
  },
  {
-  "value_rank": 88,
+  "value_rank": 90,
   "slug": "renovation",
   "trade_he": "שיפוצים",
   "region": "R7",
@@ -1405,10 +1526,11 @@
   "advance": false,
   "fail_reason": "value_below_top_50pct",
   "kit_level": 0,
-  "run_id": "745416b2b68f"
+  "urgency_lead_gen": false,
+  "run_id": "df19e422e595"
  },
  {
-  "value_rank": 89,
+  "value_rank": 91,
   "slug": "renovation",
   "trade_he": "שיפוצים",
   "region": "R8",
@@ -1421,42 +1543,62 @@
   "advance": false,
   "fail_reason": "value_below_top_50pct",
   "kit_level": 0,
-  "run_id": "745416b2b68f"
+  "urgency_lead_gen": false,
+  "run_id": "df19e422e595"
  },
  {
-  "value_rank": 90,
+  "value_rank": 92,
   "slug": "tiling",
   "trade_he": "ריצוף",
   "region": "R1",
   "region_name": "Gush Dan",
-  "V_region": 750,
+  "V_region": 760,
   "T_p_usd": 1.3817,
   "M": 1,
-  "value_usd": 1036.2942,
+  "value_usd": 1050.1115,
   "stage1_pass": false,
   "advance": false,
   "fail_reason": "value_below_top_50pct",
   "kit_level": 1,
-  "run_id": "745416b2b68f"
+  "urgency_lead_gen": false,
+  "run_id": "df19e422e595"
  },
  {
-  "value_rank": 91,
+  "value_rank": 93,
   "slug": "solar",
   "trade_he": "סולארי",
   "region": "R3",
   "region_name": "Shfela & Modiin",
-  "V_region": 540,
+  "V_region": 550,
   "T_p_usd": 4.7644,
   "M": 0.4,
-  "value_usd": 1029.1115,
+  "value_usd": 1048.1691,
   "stage1_pass": false,
   "advance": false,
   "fail_reason": "value_below_top_50pct",
   "kit_level": 0,
-  "run_id": "745416b2b68f"
+  "urgency_lead_gen": false,
+  "run_id": "df19e422e595"
  },
  {
-  "value_rank": 92,
+  "value_rank": 94,
+  "slug": "gates-fencing",
+  "trade_he": "מסגרות/שערים",
+  "region": "R2",
+  "region_name": "Sharon",
+  "V_region": 430,
+  "T_p_usd": 2.4067,
+  "M": 1,
+  "value_usd": 1034.8667,
+  "stage1_pass": false,
+  "advance": false,
+  "fail_reason": "value_below_top_50pct",
+  "kit_level": 0,
+  "urgency_lead_gen": false,
+  "run_id": "df19e422e595"
+ },
+ {
+  "value_rank": 95,
   "slug": "painter",
   "trade_he": "צבעי",
   "region": "R5",
@@ -1469,42 +1611,28 @@
   "advance": false,
   "fail_reason": "value_below_top_50pct",
   "kit_level": 1,
-  "run_id": "745416b2b68f"
+  "urgency_lead_gen": false,
+  "run_id": "df19e422e595"
  },
  {
-  "value_rank": 93,
-  "slug": "gates-fencing",
-  "trade_he": "מסגרות/שערים",
-  "region": "R2",
-  "region_name": "Sharon",
-  "V_region": 380,
-  "T_p_usd": 2.4067,
+  "value_rank": 96,
+  "slug": "pest-control",
+  "trade_he": "הדברה",
+  "region": "R9",
+  "region_name": "South coast",
+  "V_region": 180,
+  "T_p_usd": 4.8177,
   "M": 1,
-  "value_usd": 914.5333,
-  "stage1_pass": false,
-  "advance": false,
-  "fail_reason": "value_below_top_50pct",
-  "kit_level": 0,
-  "run_id": "745416b2b68f"
- },
- {
-  "value_rank": 94,
-  "slug": "car-body-repair",
-  "trade_he": "פחחות",
-  "region": "R2",
-  "region_name": "Sharon",
-  "V_region": 260,
-  "T_p_usd": 3.3217,
-  "M": 1,
-  "value_usd": 863.6333,
+  "value_usd": 867.1892,
   "stage1_pass": false,
   "advance": false,
   "fail_reason": "value_below_top_50pct",
   "kit_level": 1,
-  "run_id": "745416b2b68f"
+  "urgency_lead_gen": false,
+  "run_id": "df19e422e595"
  },
  {
-  "value_rank": 95,
+  "value_rank": 97,
   "slug": "electrician",
   "trade_he": "חשמלאי",
   "region": "R7",
@@ -1517,14 +1645,15 @@
   "advance": false,
   "fail_reason": "V_region<150;value_below_top_50pct",
   "kit_level": 1,
-  "run_id": "745416b2b68f"
+  "urgency_lead_gen": false,
+  "run_id": "df19e422e595"
  },
  {
-  "value_rank": 96,
+  "value_rank": 98,
   "slug": "ac-repair",
   "trade_he": "מזגנים",
-  "region": "R5",
-  "region_name": "Haifa & Krayot",
+  "region": "R4",
+  "region_name": "Jerusalem",
   "V_region": 210,
   "T_p_usd": 4.075,
   "M": 1,
@@ -1533,10 +1662,11 @@
   "advance": false,
   "fail_reason": "value_below_top_50pct",
   "kit_level": 1,
-  "run_id": "745416b2b68f"
+  "urgency_lead_gen": false,
+  "run_id": "df19e422e595"
  },
  {
-  "value_rank": 97,
+  "value_rank": 99,
   "slug": "pergolas",
   "trade_he": "פרגולות",
   "region": "R7",
@@ -1549,26 +1679,11 @@
   "advance": false,
   "fail_reason": "value_below_top_50pct",
   "kit_level": 0,
-  "run_id": "745416b2b68f"
+  "urgency_lead_gen": false,
+  "run_id": "df19e422e595"
  },
  {
-  "value_rank": 98,
-  "slug": "pest-control",
-  "trade_he": "הדברה",
-  "region": "R9",
-  "region_name": "South coast",
-  "V_region": 170,
-  "T_p_usd": 4.8177,
-  "M": 1,
-  "value_usd": 819.012,
-  "stage1_pass": false,
-  "advance": false,
-  "fail_reason": "value_below_top_50pct",
-  "kit_level": 1,
-  "run_id": "745416b2b68f"
- },
- {
-  "value_rank": 99,
+  "value_rank": 100,
   "slug": "pest-control",
   "trade_he": "הדברה",
   "region": "R10",
@@ -1581,10 +1696,62 @@
   "advance": false,
   "fail_reason": "value_below_top_50pct",
   "kit_level": 1,
-  "run_id": "745416b2b68f"
+  "urgency_lead_gen": false,
+  "run_id": "df19e422e595"
  },
  {
-  "value_rank": 100,
+  "value_rank": 101,
+  "slug": "ac-repair",
+  "trade_he": "מזגנים",
+  "region": "R10",
+  "region_name": "Negev",
+  "V_region": 190,
+  "T_p_usd": 4.075,
+  "M": 1,
+  "value_usd": 774.25,
+  "stage1_pass": false,
+  "advance": false,
+  "fail_reason": "value_below_top_50pct",
+  "kit_level": 1,
+  "urgency_lead_gen": false,
+  "run_id": "df19e422e595"
+ },
+ {
+  "value_rank": 102,
+  "slug": "aluminum",
+  "trade_he": "אלומיניום",
+  "region": "R5",
+  "region_name": "Haifa & Krayot",
+  "V_region": 240,
+  "T_p_usd": 3.1978,
+  "M": 1,
+  "value_usd": 767.474,
+  "stage1_pass": false,
+  "advance": false,
+  "fail_reason": "value_below_top_50pct",
+  "kit_level": 0,
+  "urgency_lead_gen": false,
+  "run_id": "df19e422e595"
+ },
+ {
+  "value_rank": 103,
+  "slug": "car-body-repair",
+  "trade_he": "פחחות",
+  "region": "R5",
+  "region_name": "Haifa & Krayot",
+  "V_region": 230,
+  "T_p_usd": 3.3217,
+  "M": 1,
+  "value_usd": 763.9833,
+  "stage1_pass": false,
+  "advance": false,
+  "fail_reason": "value_below_top_50pct",
+  "kit_level": 1,
+  "urgency_lead_gen": false,
+  "run_id": "df19e422e595"
+ },
+ {
+  "value_rank": 104,
   "slug": "kitchens",
   "trade_he": "מטבחים",
   "region": "R4",
@@ -1597,26 +1764,45 @@
   "advance": false,
   "fail_reason": "value_below_top_50pct",
   "kit_level": 0,
-  "run_id": "745416b2b68f"
+  "urgency_lead_gen": false,
+  "run_id": "df19e422e595"
  },
  {
-  "value_rank": 101,
-  "slug": "aluminum",
-  "trade_he": "אלומיניום",
-  "region": "R5",
-  "region_name": "Haifa & Krayot",
-  "V_region": 220,
-  "T_p_usd": 3.1978,
+  "value_rank": 105,
+  "slug": "ac-repair",
+  "trade_he": "מזגנים",
+  "region": "R6",
+  "region_name": "Hadera–Zichron",
+  "V_region": 180,
+  "T_p_usd": 4.075,
   "M": 1,
-  "value_usd": 703.5178,
+  "value_usd": 733.5,
   "stage1_pass": false,
   "advance": false,
   "fail_reason": "value_below_top_50pct",
-  "kit_level": 0,
-  "run_id": "745416b2b68f"
+  "kit_level": 1,
+  "urgency_lead_gen": false,
+  "run_id": "df19e422e595"
  },
  {
-  "value_rank": 102,
+  "value_rank": 106,
+  "slug": "ac-repair",
+  "trade_he": "מזגנים",
+  "region": "R9",
+  "region_name": "South coast",
+  "V_region": 180,
+  "T_p_usd": 4.075,
+  "M": 1,
+  "value_usd": 733.5,
+  "stage1_pass": false,
+  "advance": false,
+  "fail_reason": "value_below_top_50pct",
+  "kit_level": 1,
+  "urgency_lead_gen": false,
+  "run_id": "df19e422e595"
+ },
+ {
+  "value_rank": 107,
   "slug": "carpenter",
   "trade_he": "נגר",
   "region": "R3",
@@ -1629,10 +1815,11 @@
   "advance": false,
   "fail_reason": "value_below_top_50pct",
   "kit_level": 1,
-  "run_id": "745416b2b68f"
+  "urgency_lead_gen": false,
+  "run_id": "df19e422e595"
  },
  {
-  "value_rank": 103,
+  "value_rank": 108,
   "slug": "painter",
   "trade_he": "צבעי",
   "region": "R6",
@@ -1645,10 +1832,11 @@
   "advance": false,
   "fail_reason": "V_region<150;value_below_top_50pct",
   "kit_level": 1,
-  "run_id": "745416b2b68f"
+  "urgency_lead_gen": false,
+  "run_id": "df19e422e595"
  },
  {
-  "value_rank": 104,
+  "value_rank": 109,
   "slug": "painter",
   "trade_he": "צבעי",
   "region": "R9",
@@ -1661,26 +1849,11 @@
   "advance": false,
   "fail_reason": "V_region<150;value_below_top_50pct",
   "kit_level": 1,
-  "run_id": "745416b2b68f"
+  "urgency_lead_gen": false,
+  "run_id": "df19e422e595"
  },
  {
-  "value_rank": 105,
-  "slug": "ac-repair",
-  "trade_he": "מזגנים",
-  "region": "R4",
-  "region_name": "Jerusalem",
-  "V_region": 160,
-  "T_p_usd": 4.075,
-  "M": 1,
-  "value_usd": 652,
-  "stage1_pass": false,
-  "advance": false,
-  "fail_reason": "value_below_top_50pct",
-  "kit_level": 1,
-  "run_id": "745416b2b68f"
- },
- {
-  "value_rank": 106,
+  "value_rank": 110,
   "slug": "aluminum",
   "trade_he": "אלומיניום",
   "region": "R4",
@@ -1693,10 +1866,11 @@
   "advance": false,
   "fail_reason": "value_below_top_50pct",
   "kit_level": 0,
-  "run_id": "745416b2b68f"
+  "urgency_lead_gen": false,
+  "run_id": "df19e422e595"
  },
  {
-  "value_rank": 107,
+  "value_rank": 111,
   "slug": "tiling",
   "trade_he": "ריצוף",
   "region": "R3",
@@ -1709,10 +1883,11 @@
   "advance": false,
   "fail_reason": "value_below_top_50pct",
   "kit_level": 1,
-  "run_id": "745416b2b68f"
+  "urgency_lead_gen": false,
+  "run_id": "df19e422e595"
  },
  {
-  "value_rank": 108,
+  "value_rank": 112,
   "slug": "carpenter",
   "trade_he": "נגר",
   "region": "R2",
@@ -1725,10 +1900,28 @@
   "advance": false,
   "fail_reason": "value_below_top_50pct",
   "kit_level": 1,
-  "run_id": "745416b2b68f"
+  "urgency_lead_gen": false,
+  "run_id": "df19e422e595"
  },
  {
-  "value_rank": 109,
+  "value_rank": 113,
+  "slug": "car-body-repair",
+  "trade_he": "פחחות",
+  "region": "R6",
+  "region_name": "Hadera–Zichron",
+  "V_region": 190,
+  "T_p_usd": 3.3217,
+  "M": 1,
+  "value_usd": 631.1167,
+  "stage1_pass": false,
+  "advance": false,
+  "fail_reason": "value_below_top_50pct",
+  "kit_level": 1,
+  "urgency_lead_gen": false,
+  "run_id": "df19e422e595"
+ },
+ {
+  "value_rank": 114,
   "slug": "pest-control",
   "trade_he": "הדברה",
   "region": "R7",
@@ -1741,10 +1934,11 @@
   "advance": false,
   "fail_reason": "V_region<150;value_below_top_50pct",
   "kit_level": 1,
-  "run_id": "745416b2b68f"
+  "urgency_lead_gen": false,
+  "run_id": "df19e422e595"
  },
  {
-  "value_rank": 110,
+  "value_rank": 115,
   "slug": "pest-control",
   "trade_he": "הדברה",
   "region": "R8",
@@ -1757,10 +1951,45 @@
   "advance": false,
   "fail_reason": "V_region<150;value_below_top_50pct",
   "kit_level": 1,
-  "run_id": "745416b2b68f"
+  "urgency_lead_gen": false,
+  "run_id": "df19e422e595"
  },
  {
-  "value_rank": 111,
+  "value_rank": 116,
+  "slug": "ac-repair",
+  "trade_he": "מזגנים",
+  "region": "R7",
+  "region_name": "Jezreel & Lower Galilee",
+  "V_region": 150,
+  "T_p_usd": 4.075,
+  "M": 1,
+  "value_usd": 611.25,
+  "stage1_pass": false,
+  "advance": false,
+  "fail_reason": "value_below_top_50pct",
+  "kit_level": 1,
+  "urgency_lead_gen": false,
+  "run_id": "df19e422e595"
+ },
+ {
+  "value_rank": 117,
+  "slug": "ac-repair",
+  "trade_he": "מזגנים",
+  "region": "R8",
+  "region_name": "Western Galilee",
+  "V_region": 150,
+  "T_p_usd": 4.075,
+  "M": 1,
+  "value_usd": 611.25,
+  "stage1_pass": false,
+  "advance": false,
+  "fail_reason": "value_below_top_50pct",
+  "kit_level": 1,
+  "urgency_lead_gen": false,
+  "run_id": "df19e422e595"
+ },
+ {
+  "value_rank": 118,
   "slug": "aluminum",
   "trade_he": "אלומיניום",
   "region": "R10",
@@ -1773,10 +2002,11 @@
   "advance": false,
   "fail_reason": "value_below_top_50pct",
   "kit_level": 0,
-  "run_id": "745416b2b68f"
+  "urgency_lead_gen": false,
+  "run_id": "df19e422e595"
  },
  {
-  "value_rank": 112,
+  "value_rank": 119,
   "slug": "painter",
   "trade_he": "צבעי",
   "region": "R4",
@@ -1789,10 +2019,11 @@
   "advance": false,
   "fail_reason": "V_region<150;value_below_top_50pct",
   "kit_level": 1,
-  "run_id": "745416b2b68f"
+  "urgency_lead_gen": false,
+  "run_id": "df19e422e595"
  },
  {
-  "value_rank": 113,
+  "value_rank": 120,
   "slug": "painter",
   "trade_he": "צבעי",
   "region": "R8",
@@ -1805,10 +2036,11 @@
   "advance": false,
   "fail_reason": "V_region<150;value_below_top_50pct",
   "kit_level": 1,
-  "run_id": "745416b2b68f"
+  "urgency_lead_gen": false,
+  "run_id": "df19e422e595"
  },
  {
-  "value_rank": 114,
+  "value_rank": 121,
   "slug": "painter",
   "trade_he": "צבעי",
   "region": "R10",
@@ -1821,10 +2053,62 @@
   "advance": false,
   "fail_reason": "V_region<150;value_below_top_50pct",
   "kit_level": 1,
-  "run_id": "745416b2b68f"
+  "urgency_lead_gen": false,
+  "run_id": "df19e422e595"
  },
  {
-  "value_rank": 115,
+  "value_rank": 122,
+  "slug": "gates-fencing",
+  "trade_he": "מסגרות/שערים",
+  "region": "R5",
+  "region_name": "Haifa & Krayot",
+  "V_region": 250,
+  "T_p_usd": 2.4067,
+  "M": 1,
+  "value_usd": 601.6667,
+  "stage1_pass": false,
+  "advance": false,
+  "fail_reason": "value_below_top_50pct",
+  "kit_level": 0,
+  "urgency_lead_gen": false,
+  "run_id": "df19e422e595"
+ },
+ {
+  "value_rank": 123,
+  "slug": "pest-control",
+  "trade_he": "הדברה",
+  "region": "R6",
+  "region_name": "Hadera–Zichron",
+  "V_region": 120,
+  "T_p_usd": 4.8177,
+  "M": 1,
+  "value_usd": 578.1261,
+  "stage1_pass": false,
+  "advance": false,
+  "fail_reason": "V_region<150;value_below_top_50pct",
+  "kit_level": 1,
+  "urgency_lead_gen": false,
+  "run_id": "df19e422e595"
+ },
+ {
+  "value_rank": 124,
+  "slug": "aluminum",
+  "trade_he": "אלומיניום",
+  "region": "R6",
+  "region_name": "Hadera–Zichron",
+  "V_region": 180,
+  "T_p_usd": 3.1978,
+  "M": 1,
+  "value_usd": 575.6055,
+  "stage1_pass": false,
+  "advance": false,
+  "fail_reason": "value_below_top_50pct",
+  "kit_level": 0,
+  "urgency_lead_gen": false,
+  "run_id": "df19e422e595"
+ },
+ {
+  "value_rank": 125,
   "slug": "aluminum",
   "trade_he": "אלומיניום",
   "region": "R8",
@@ -1837,26 +2121,11 @@
   "advance": false,
   "fail_reason": "value_below_top_50pct",
   "kit_level": 0,
-  "run_id": "745416b2b68f"
+  "urgency_lead_gen": false,
+  "run_id": "df19e422e595"
  },
  {
-  "value_rank": 116,
-  "slug": "ac-repair",
-  "trade_he": "מזגנים",
-  "region": "R10",
-  "region_name": "Negev",
-  "V_region": 140,
-  "T_p_usd": 4.075,
-  "M": 1,
-  "value_usd": 570.5,
-  "stage1_pass": false,
-  "advance": false,
-  "fail_reason": "V_region<150;value_below_top_50pct",
-  "kit_level": 1,
-  "run_id": "745416b2b68f"
- },
- {
-  "value_rank": 117,
+  "value_rank": 126,
   "slug": "painter",
   "trade_he": "צבעי",
   "region": "R7",
@@ -1869,74 +2138,11 @@
   "advance": false,
   "fail_reason": "V_region<150;value_below_top_50pct",
   "kit_level": 1,
-  "run_id": "745416b2b68f"
+  "urgency_lead_gen": false,
+  "run_id": "df19e422e595"
  },
  {
-  "value_rank": 118,
-  "slug": "aluminum",
-  "trade_he": "אלומיניום",
-  "region": "R6",
-  "region_name": "Hadera–Zichron",
-  "V_region": 170,
-  "T_p_usd": 3.1978,
-  "M": 1,
-  "value_usd": 543.6274,
-  "stage1_pass": false,
-  "advance": false,
-  "fail_reason": "value_below_top_50pct",
-  "kit_level": 0,
-  "run_id": "745416b2b68f"
- },
- {
-  "value_rank": 119,
-  "slug": "pest-control",
-  "trade_he": "הדברה",
-  "region": "R6",
-  "region_name": "Hadera–Zichron",
-  "V_region": 110,
-  "T_p_usd": 4.8177,
-  "M": 1,
-  "value_usd": 529.949,
-  "stage1_pass": false,
-  "advance": false,
-  "fail_reason": "V_region<150;value_below_top_50pct",
-  "kit_level": 1,
-  "run_id": "745416b2b68f"
- },
- {
-  "value_rank": 120,
-  "slug": "ac-repair",
-  "trade_he": "מזגנים",
-  "region": "R6",
-  "region_name": "Hadera–Zichron",
-  "V_region": 130,
-  "T_p_usd": 4.075,
-  "M": 1,
-  "value_usd": 529.75,
-  "stage1_pass": false,
-  "advance": false,
-  "fail_reason": "V_region<150;value_below_top_50pct",
-  "kit_level": 1,
-  "run_id": "745416b2b68f"
- },
- {
-  "value_rank": 121,
-  "slug": "ac-repair",
-  "trade_he": "מזגנים",
-  "region": "R9",
-  "region_name": "South coast",
-  "V_region": 130,
-  "T_p_usd": 4.075,
-  "M": 1,
-  "value_usd": 529.75,
-  "stage1_pass": false,
-  "advance": false,
-  "fail_reason": "V_region<150;value_below_top_50pct",
-  "kit_level": 1,
-  "run_id": "745416b2b68f"
- },
- {
-  "value_rank": 122,
+  "value_rank": 127,
   "slug": "kitchens",
   "trade_he": "מטבחים",
   "region": "R5",
@@ -1949,14 +2155,32 @@
   "advance": false,
   "fail_reason": "value_below_top_50pct",
   "kit_level": 0,
-  "run_id": "745416b2b68f"
+  "urgency_lead_gen": false,
+  "run_id": "df19e422e595"
  },
  {
-  "value_rank": 123,
+  "value_rank": 128,
+  "slug": "aluminum",
+  "trade_he": "אלומיניום",
+  "region": "R9",
+  "region_name": "South coast",
+  "V_region": 160,
+  "T_p_usd": 3.1978,
+  "M": 1,
+  "value_usd": 511.6493,
+  "stage1_pass": false,
+  "advance": false,
+  "fail_reason": "value_below_top_50pct",
+  "kit_level": 0,
+  "urgency_lead_gen": false,
+  "run_id": "df19e422e595"
+ },
+ {
+  "value_rank": 129,
   "slug": "gates-fencing",
   "trade_he": "מסגרות/שערים",
-  "region": "R5",
-  "region_name": "Haifa & Krayot",
+  "region": "R4",
+  "region_name": "Jerusalem",
   "V_region": 210,
   "T_p_usd": 2.4067,
   "M": 1,
@@ -1965,14 +2189,15 @@
   "advance": false,
   "fail_reason": "value_below_top_50pct",
   "kit_level": 0,
-  "run_id": "745416b2b68f"
+  "urgency_lead_gen": false,
+  "run_id": "df19e422e595"
  },
  {
-  "value_rank": 124,
+  "value_rank": 130,
   "slug": "car-body-repair",
   "trade_he": "פחחות",
-  "region": "R5",
-  "region_name": "Haifa & Krayot",
+  "region": "R7",
+  "region_name": "Jezreel & Lower Galilee",
   "V_region": 150,
   "T_p_usd": 3.3217,
   "M": 1,
@@ -1981,14 +2206,49 @@
   "advance": false,
   "fail_reason": "value_below_top_50pct",
   "kit_level": 1,
-  "run_id": "745416b2b68f"
+  "urgency_lead_gen": false,
+  "run_id": "df19e422e595"
  },
  {
-  "value_rank": 125,
+  "value_rank": 131,
+  "slug": "car-body-repair",
+  "trade_he": "פחחות",
+  "region": "R8",
+  "region_name": "Western Galilee",
+  "V_region": 150,
+  "T_p_usd": 3.3217,
+  "M": 1,
+  "value_usd": 498.25,
+  "stage1_pass": false,
+  "advance": false,
+  "fail_reason": "value_below_top_50pct",
+  "kit_level": 1,
+  "urgency_lead_gen": false,
+  "run_id": "df19e422e595"
+ },
+ {
+  "value_rank": 132,
+  "slug": "car-body-repair",
+  "trade_he": "פחחות",
+  "region": "R9",
+  "region_name": "South coast",
+  "V_region": 150,
+  "T_p_usd": 3.3217,
+  "M": 1,
+  "value_usd": 498.25,
+  "stage1_pass": false,
+  "advance": false,
+  "fail_reason": "value_below_top_50pct",
+  "kit_level": 1,
+  "urgency_lead_gen": false,
+  "run_id": "df19e422e595"
+ },
+ {
+  "value_rank": 133,
   "slug": "gates-fencing",
   "trade_he": "מסגרות/שערים",
-  "region": "R4",
-  "region_name": "Jerusalem",
+  "region": "R10",
+  "region_name": "Negev",
   "V_region": 200,
   "T_p_usd": 2.4067,
   "M": 1,
@@ -1997,10 +2257,11 @@
   "advance": false,
   "fail_reason": "value_below_top_50pct",
   "kit_level": 0,
-  "run_id": "745416b2b68f"
+  "urgency_lead_gen": false,
+  "run_id": "df19e422e595"
  },
  {
-  "value_rank": 126,
+  "value_rank": 134,
   "slug": "aluminum",
   "trade_he": "אלומיניום",
   "region": "R7",
@@ -2013,26 +2274,11 @@
   "advance": false,
   "fail_reason": "value_below_top_50pct",
   "kit_level": 0,
-  "run_id": "745416b2b68f"
+  "urgency_lead_gen": false,
+  "run_id": "df19e422e595"
  },
  {
-  "value_rank": 127,
-  "slug": "aluminum",
-  "trade_he": "אלומיניום",
-  "region": "R9",
-  "region_name": "South coast",
-  "V_region": 150,
-  "T_p_usd": 3.1978,
-  "M": 1,
-  "value_usd": 479.6712,
-  "stage1_pass": false,
-  "advance": false,
-  "fail_reason": "value_below_top_50pct",
-  "kit_level": 0,
-  "run_id": "745416b2b68f"
- },
- {
-  "value_rank": 128,
+  "value_rank": 135,
   "slug": "solar",
   "trade_he": "סולארי",
   "region": "R4",
@@ -2045,10 +2291,11 @@
   "advance": false,
   "fail_reason": "value_below_top_50pct",
   "kit_level": 0,
-  "run_id": "745416b2b68f"
+  "urgency_lead_gen": false,
+  "run_id": "df19e422e595"
  },
  {
-  "value_rank": 129,
+  "value_rank": 136,
   "slug": "solar",
   "trade_he": "סולארי",
   "region": "R5",
@@ -2061,14 +2308,15 @@
   "advance": false,
   "fail_reason": "value_below_top_50pct",
   "kit_level": 0,
-  "run_id": "745416b2b68f"
+  "urgency_lead_gen": false,
+  "run_id": "df19e422e595"
  },
  {
-  "value_rank": 130,
+  "value_rank": 137,
   "slug": "gates-fencing",
   "trade_he": "מסגרות/שערים",
-  "region": "R10",
-  "region_name": "Negev",
+  "region": "R6",
+  "region_name": "Hadera–Zichron",
   "V_region": 190,
   "T_p_usd": 2.4067,
   "M": 1,
@@ -2077,10 +2325,11 @@
   "advance": false,
   "fail_reason": "value_below_top_50pct",
   "kit_level": 0,
-  "run_id": "745416b2b68f"
+  "urgency_lead_gen": false,
+  "run_id": "df19e422e595"
  },
  {
-  "value_rank": 131,
+  "value_rank": 138,
   "slug": "pergolas",
   "trade_he": "פרגולות",
   "region": "R10",
@@ -2093,10 +2342,11 @@
   "advance": false,
   "fail_reason": "value_below_top_50pct",
   "kit_level": 0,
-  "run_id": "745416b2b68f"
+  "urgency_lead_gen": false,
+  "run_id": "df19e422e595"
  },
  {
-  "value_rank": 132,
+  "value_rank": 139,
   "slug": "pest-control",
   "trade_he": "הדברה",
   "region": "R4",
@@ -2109,10 +2359,11 @@
   "advance": false,
   "fail_reason": "value_below_top_50pct",
   "kit_level": 1,
-  "run_id": "745416b2b68f"
+  "urgency_lead_gen": false,
+  "run_id": "df19e422e595"
  },
  {
-  "value_rank": 133,
+  "value_rank": 140,
   "slug": "tiling",
   "trade_he": "ריצוף",
   "region": "R2",
@@ -2125,58 +2376,45 @@
   "advance": false,
   "fail_reason": "value_below_top_50pct",
   "kit_level": 1,
-  "run_id": "745416b2b68f"
+  "urgency_lead_gen": false,
+  "run_id": "df19e422e595"
  },
  {
-  "value_rank": 134,
+  "value_rank": 141,
+  "slug": "car-body-repair",
+  "trade_he": "פחחות",
+  "region": "R4",
+  "region_name": "Jerusalem",
+  "V_region": 130,
+  "T_p_usd": 3.3217,
+  "M": 1,
+  "value_usd": 431.8167,
+  "stage1_pass": false,
+  "advance": false,
+  "fail_reason": "V_region<150;value_below_top_50pct",
+  "kit_level": 1,
+  "urgency_lead_gen": false,
+  "run_id": "df19e422e595"
+ },
+ {
+  "value_rank": 142,
   "slug": "gates-fencing",
   "trade_he": "מסגרות/שערים",
-  "region": "R6",
-  "region_name": "Hadera–Zichron",
-  "V_region": 180,
+  "region": "R9",
+  "region_name": "South coast",
+  "V_region": 170,
   "T_p_usd": 2.4067,
   "M": 1,
-  "value_usd": 433.2,
+  "value_usd": 409.1333,
   "stage1_pass": false,
   "advance": false,
   "fail_reason": "value_below_top_50pct",
   "kit_level": 0,
-  "run_id": "745416b2b68f"
+  "urgency_lead_gen": false,
+  "run_id": "df19e422e595"
  },
  {
-  "value_rank": 135,
-  "slug": "ac-repair",
-  "trade_he": "מזגנים",
-  "region": "R7",
-  "region_name": "Jezreel & Lower Galilee",
-  "V_region": 100,
-  "T_p_usd": 4.075,
-  "M": 1,
-  "value_usd": 407.5,
-  "stage1_pass": false,
-  "advance": false,
-  "fail_reason": "V_region<150;value_below_top_50pct",
-  "kit_level": 1,
-  "run_id": "745416b2b68f"
- },
- {
-  "value_rank": 136,
-  "slug": "ac-repair",
-  "trade_he": "מזגנים",
-  "region": "R8",
-  "region_name": "Western Galilee",
-  "V_region": 100,
-  "T_p_usd": 4.075,
-  "M": 1,
-  "value_usd": 407.5,
-  "stage1_pass": false,
-  "advance": false,
-  "fail_reason": "V_region<150;value_below_top_50pct",
-  "kit_level": 1,
-  "run_id": "745416b2b68f"
- },
- {
-  "value_rank": 137,
+  "value_rank": 143,
   "slug": "kitchens",
   "trade_he": "מטבחים",
   "region": "R9",
@@ -2189,10 +2427,11 @@
   "advance": false,
   "fail_reason": "value_below_top_50pct",
   "kit_level": 0,
-  "run_id": "745416b2b68f"
+  "urgency_lead_gen": false,
+  "run_id": "df19e422e595"
  },
  {
-  "value_rank": 138,
+  "value_rank": 144,
   "slug": "solar",
   "trade_he": "סולארי",
   "region": "R8",
@@ -2205,10 +2444,11 @@
   "advance": false,
   "fail_reason": "value_below_top_50pct",
   "kit_level": 0,
-  "run_id": "745416b2b68f"
+  "urgency_lead_gen": false,
+  "run_id": "df19e422e595"
  },
  {
-  "value_rank": 139,
+  "value_rank": 145,
   "slug": "solar",
   "trade_he": "סולארי",
   "region": "R10",
@@ -2221,26 +2461,11 @@
   "advance": false,
   "fail_reason": "value_below_top_50pct",
   "kit_level": 0,
-  "run_id": "745416b2b68f"
+  "urgency_lead_gen": false,
+  "run_id": "df19e422e595"
  },
  {
-  "value_rank": 140,
-  "slug": "car-body-repair",
-  "trade_he": "פחחות",
-  "region": "R6",
-  "region_name": "Hadera–Zichron",
-  "V_region": 120,
-  "T_p_usd": 3.3217,
-  "M": 1,
-  "value_usd": 398.6,
-  "stage1_pass": false,
-  "advance": false,
-  "fail_reason": "V_region<150;value_below_top_50pct",
-  "kit_level": 1,
-  "run_id": "745416b2b68f"
- },
- {
-  "value_rank": 141,
+  "value_rank": 146,
   "slug": "kitchens",
   "trade_he": "מטבחים",
   "region": "R2",
@@ -2253,10 +2478,11 @@
   "advance": false,
   "fail_reason": "value_below_top_50pct",
   "kit_level": 0,
-  "run_id": "745416b2b68f"
+  "urgency_lead_gen": false,
+  "run_id": "df19e422e595"
  },
  {
-  "value_rank": 142,
+  "value_rank": 147,
   "slug": "kitchens",
   "trade_he": "מטבחים",
   "region": "R6",
@@ -2269,10 +2495,11 @@
   "advance": false,
   "fail_reason": "value_below_top_50pct",
   "kit_level": 0,
-  "run_id": "745416b2b68f"
+  "urgency_lead_gen": false,
+  "run_id": "df19e422e595"
  },
  {
-  "value_rank": 143,
+  "value_rank": 148,
   "slug": "solar",
   "trade_he": "סולארי",
   "region": "R6",
@@ -2285,14 +2512,15 @@
   "advance": false,
   "fail_reason": "value_below_top_50pct",
   "kit_level": 0,
-  "run_id": "745416b2b68f"
+  "urgency_lead_gen": false,
+  "run_id": "df19e422e595"
  },
  {
-  "value_rank": 144,
+  "value_rank": 149,
   "slug": "gates-fencing",
   "trade_he": "מסגרות/שערים",
-  "region": "R9",
-  "region_name": "South coast",
+  "region": "R7",
+  "region_name": "Jezreel & Lower Galilee",
   "V_region": 150,
   "T_p_usd": 2.4067,
   "M": 1,
@@ -2301,10 +2529,11 @@
   "advance": false,
   "fail_reason": "value_below_top_50pct",
   "kit_level": 0,
-  "run_id": "745416b2b68f"
+  "urgency_lead_gen": false,
+  "run_id": "df19e422e595"
  },
  {
-  "value_rank": 145,
+  "value_rank": 150,
   "slug": "solar",
   "trade_he": "סולארי",
   "region": "R9",
@@ -2317,74 +2546,28 @@
   "advance": false,
   "fail_reason": "value_below_top_50pct",
   "kit_level": 0,
-  "run_id": "745416b2b68f"
+  "urgency_lead_gen": false,
+  "run_id": "df19e422e595"
  },
  {
-  "value_rank": 146,
-  "slug": "car-body-repair",
-  "trade_he": "פחחות",
-  "region": "R7",
-  "region_name": "Jezreel & Lower Galilee",
-  "V_region": 100,
-  "T_p_usd": 3.3217,
-  "M": 1,
-  "value_usd": 332.1667,
-  "stage1_pass": false,
-  "advance": false,
-  "fail_reason": "V_region<150;value_below_top_50pct",
-  "kit_level": 1,
-  "run_id": "745416b2b68f"
- },
- {
-  "value_rank": 147,
-  "slug": "car-body-repair",
-  "trade_he": "פחחות",
-  "region": "R9",
-  "region_name": "South coast",
-  "V_region": 100,
-  "T_p_usd": 3.3217,
-  "M": 1,
-  "value_usd": 332.1667,
-  "stage1_pass": false,
-  "advance": false,
-  "fail_reason": "V_region<150;value_below_top_50pct",
-  "kit_level": 1,
-  "run_id": "745416b2b68f"
- },
- {
-  "value_rank": 148,
+  "value_rank": 151,
   "slug": "tiling",
   "trade_he": "ריצוף",
   "region": "R5",
   "region_name": "Haifa & Krayot",
-  "V_region": 230,
+  "V_region": 240,
   "T_p_usd": 1.3817,
   "M": 1,
-  "value_usd": 317.7969,
+  "value_usd": 331.6142,
   "stage1_pass": false,
   "advance": false,
   "fail_reason": "value_below_top_50pct",
   "kit_level": 1,
-  "run_id": "745416b2b68f"
+  "urgency_lead_gen": false,
+  "run_id": "df19e422e595"
  },
  {
-  "value_rank": 149,
-  "slug": "gates-fencing",
-  "trade_he": "מסגרות/שערים",
-  "region": "R7",
-  "region_name": "Jezreel & Lower Galilee",
-  "V_region": 130,
-  "T_p_usd": 2.4067,
-  "M": 1,
-  "value_usd": 312.8667,
-  "stage1_pass": false,
-  "advance": false,
-  "fail_reason": "V_region<150;value_below_top_50pct",
-  "kit_level": 0,
-  "run_id": "745416b2b68f"
- },
- {
-  "value_rank": 150,
+  "value_rank": 152,
   "slug": "carpenter",
   "trade_he": "נגר",
   "region": "R4",
@@ -2397,10 +2580,11 @@
   "advance": false,
   "fail_reason": "value_below_top_50pct",
   "kit_level": 1,
-  "run_id": "745416b2b68f"
+  "urgency_lead_gen": false,
+  "run_id": "df19e422e595"
  },
  {
-  "value_rank": 151,
+  "value_rank": 153,
   "slug": "carpenter",
   "trade_he": "נגר",
   "region": "R5",
@@ -2413,10 +2597,11 @@
   "advance": false,
   "fail_reason": "value_below_top_50pct",
   "kit_level": 1,
-  "run_id": "745416b2b68f"
+  "urgency_lead_gen": false,
+  "run_id": "df19e422e595"
  },
  {
-  "value_rank": 152,
+  "value_rank": 154,
   "slug": "solar",
   "trade_he": "סולארי",
   "region": "R7",
@@ -2429,10 +2614,11 @@
   "advance": false,
   "fail_reason": "value_below_top_50pct",
   "kit_level": 0,
-  "run_id": "745416b2b68f"
+  "urgency_lead_gen": false,
+  "run_id": "df19e422e595"
  },
  {
-  "value_rank": 153,
+  "value_rank": 155,
   "slug": "tiling",
   "trade_he": "ריצוף",
   "region": "R4",
@@ -2445,39 +2631,8 @@
   "advance": false,
   "fail_reason": "value_below_top_50pct",
   "kit_level": 1,
-  "run_id": "745416b2b68f"
- },
- {
-  "value_rank": 154,
-  "slug": "car-body-repair",
-  "trade_he": "פחחות",
-  "region": "R8",
-  "region_name": "Western Galilee",
-  "V_region": 90,
-  "T_p_usd": 3.3217,
-  "M": 1,
-  "value_usd": 298.95,
-  "stage1_pass": false,
-  "advance": false,
-  "fail_reason": "V_region<150;value_below_top_50pct",
-  "kit_level": 1,
-  "run_id": "745416b2b68f"
- },
- {
-  "value_rank": 155,
-  "slug": "car-body-repair",
-  "trade_he": "פחחות",
-  "region": "R4",
-  "region_name": "Jerusalem",
-  "V_region": 80,
-  "T_p_usd": 3.3217,
-  "M": 1,
-  "value_usd": 265.7333,
-  "stage1_pass": false,
-  "advance": false,
-  "fail_reason": "V_region<150;value_below_top_50pct",
-  "kit_level": 1,
-  "run_id": "745416b2b68f"
+  "urgency_lead_gen": false,
+  "run_id": "df19e422e595"
  },
  {
   "value_rank": 156,
@@ -2493,10 +2648,28 @@
   "advance": false,
   "fail_reason": "value_below_top_50pct",
   "kit_level": 0,
-  "run_id": "745416b2b68f"
+  "urgency_lead_gen": false,
+  "run_id": "df19e422e595"
  },
  {
   "value_rank": 157,
+  "slug": "car-body-repair",
+  "trade_he": "פחחות",
+  "region": "R10",
+  "region_name": "Negev",
+  "V_region": 160,
+  "T_p_usd": 3.3217,
+  "M": 0.4,
+  "value_usd": 212.5867,
+  "stage1_pass": false,
+  "advance": false,
+  "fail_reason": "value_below_top_50pct",
+  "kit_level": 1,
+  "urgency_lead_gen": false,
+  "run_id": "df19e422e595"
+ },
+ {
+  "value_rank": 158,
   "slug": "carpenter",
   "trade_he": "נגר",
   "region": "R9",
@@ -2509,10 +2682,11 @@
   "advance": false,
   "fail_reason": "V_region<150;value_below_top_50pct",
   "kit_level": 1,
-  "run_id": "745416b2b68f"
+  "urgency_lead_gen": false,
+  "run_id": "df19e422e595"
  },
  {
-  "value_rank": 158,
+  "value_rank": 159,
   "slug": "tiling",
   "trade_he": "ריצוף",
   "region": "R6",
@@ -2525,10 +2699,11 @@
   "advance": false,
   "fail_reason": "value_below_top_50pct",
   "kit_level": 1,
-  "run_id": "745416b2b68f"
+  "urgency_lead_gen": false,
+  "run_id": "df19e422e595"
  },
  {
-  "value_rank": 159,
+  "value_rank": 160,
   "slug": "tiling",
   "trade_he": "ריצוף",
   "region": "R7",
@@ -2541,10 +2716,11 @@
   "advance": false,
   "fail_reason": "value_below_top_50pct",
   "kit_level": 1,
-  "run_id": "745416b2b68f"
+  "urgency_lead_gen": false,
+  "run_id": "df19e422e595"
  },
  {
-  "value_rank": 160,
+  "value_rank": 161,
   "slug": "tiling",
   "trade_he": "ריצוף",
   "region": "R8",
@@ -2557,10 +2733,11 @@
   "advance": false,
   "fail_reason": "value_below_top_50pct",
   "kit_level": 1,
-  "run_id": "745416b2b68f"
+  "urgency_lead_gen": false,
+  "run_id": "df19e422e595"
  },
  {
-  "value_rank": 161,
+  "value_rank": 162,
   "slug": "tiling",
   "trade_he": "ריצוף",
   "region": "R9",
@@ -2573,10 +2750,11 @@
   "advance": false,
   "fail_reason": "value_below_top_50pct",
   "kit_level": 1,
-  "run_id": "745416b2b68f"
+  "urgency_lead_gen": false,
+  "run_id": "df19e422e595"
  },
  {
-  "value_rank": 162,
+  "value_rank": 163,
   "slug": "tiling",
   "trade_he": "ריצוף",
   "region": "R10",
@@ -2589,10 +2767,11 @@
   "advance": false,
   "fail_reason": "value_below_top_50pct",
   "kit_level": 1,
-  "run_id": "745416b2b68f"
+  "urgency_lead_gen": false,
+  "run_id": "df19e422e595"
  },
  {
-  "value_rank": 163,
+  "value_rank": 164,
   "slug": "kitchens",
   "trade_he": "מטבחים",
   "region": "R10",
@@ -2605,10 +2784,28 @@
   "advance": false,
   "fail_reason": "value_below_top_50pct",
   "kit_level": 0,
-  "run_id": "745416b2b68f"
+  "urgency_lead_gen": false,
+  "run_id": "df19e422e595"
  },
  {
-  "value_rank": 164,
+  "value_rank": 165,
+  "slug": "gates-fencing",
+  "trade_he": "מסגרות/שערים",
+  "region": "R8",
+  "region_name": "Western Galilee",
+  "V_region": 200,
+  "T_p_usd": 2.4067,
+  "M": 0.4,
+  "value_usd": 192.5333,
+  "stage1_pass": false,
+  "advance": false,
+  "fail_reason": "value_below_top_50pct",
+  "kit_level": 0,
+  "urgency_lead_gen": false,
+  "run_id": "df19e422e595"
+ },
+ {
+  "value_rank": 166,
   "slug": "carpenter",
   "trade_he": "נגר",
   "region": "R6",
@@ -2621,10 +2818,11 @@
   "advance": false,
   "fail_reason": "V_region<150;value_below_top_50pct",
   "kit_level": 1,
-  "run_id": "745416b2b68f"
+  "urgency_lead_gen": false,
+  "run_id": "df19e422e595"
  },
  {
-  "value_rank": 165,
+  "value_rank": 167,
   "slug": "carpenter",
   "trade_he": "נגר",
   "region": "R10",
@@ -2637,26 +2835,11 @@
   "advance": false,
   "fail_reason": "V_region<150;value_below_top_50pct",
   "kit_level": 1,
-  "run_id": "745416b2b68f"
+  "urgency_lead_gen": false,
+  "run_id": "df19e422e595"
  },
  {
-  "value_rank": 166,
-  "slug": "gates-fencing",
-  "trade_he": "מסגרות/שערים",
-  "region": "R8",
-  "region_name": "Western Galilee",
-  "V_region": 180,
-  "T_p_usd": 2.4067,
-  "M": 0.4,
-  "value_usd": 173.28,
-  "stage1_pass": false,
-  "advance": false,
-  "fail_reason": "value_below_top_50pct",
-  "kit_level": 0,
-  "run_id": "745416b2b68f"
- },
- {
-  "value_rank": 167,
+  "value_rank": 168,
   "slug": "carpenter",
   "trade_he": "נגר",
   "region": "R8",
@@ -2669,10 +2852,11 @@
   "advance": false,
   "fail_reason": "V_region<150;value_below_top_50pct",
   "kit_level": 1,
-  "run_id": "745416b2b68f"
+  "urgency_lead_gen": false,
+  "run_id": "df19e422e595"
  },
  {
-  "value_rank": 168,
+  "value_rank": 169,
   "slug": "carpenter",
   "trade_he": "נגר",
   "region": "R7",
@@ -2685,10 +2869,11 @@
   "advance": false,
   "fail_reason": "V_region<150;value_below_top_50pct",
   "kit_level": 1,
-  "run_id": "745416b2b68f"
+  "urgency_lead_gen": false,
+  "run_id": "df19e422e595"
  },
  {
-  "value_rank": 169,
+  "value_rank": 170,
   "slug": "kitchens",
   "trade_he": "מטבחים",
   "region": "R8",
@@ -2701,22 +2886,7 @@
   "advance": false,
   "fail_reason": "value_below_top_50pct",
   "kit_level": 0,
-  "run_id": "745416b2b68f"
- },
- {
-  "value_rank": 170,
-  "slug": "car-body-repair",
-  "trade_he": "פחחות",
-  "region": "R10",
-  "region_name": "Negev",
-  "V_region": 100,
-  "T_p_usd": 3.3217,
-  "M": 0.4,
-  "value_usd": 132.8667,
-  "stage1_pass": false,
-  "advance": false,
-  "fail_reason": "V_region<150;value_below_top_50pct",
-  "kit_level": 1,
-  "run_id": "745416b2b68f"
+  "urgency_lead_gen": false,
+  "run_id": "df19e422e595"
  }
 ]

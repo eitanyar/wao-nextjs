@@ -13,7 +13,8 @@
   "advance": true,
   "fail_reason": "",
   "kit_level": 2,
-  "run_id": "81896355e420"
+  "urgency_lead_gen": false,
+  "run_id": "f89933e854d2"
  },
  {
   "value_rank": 2,
@@ -29,7 +30,8 @@
   "advance": false,
   "fail_reason": "V_region<150",
   "kit_level": 2,
-  "run_id": "81896355e420"
+  "urgency_lead_gen": false,
+  "run_id": "f89933e854d2"
  },
  {
   "value_rank": 3,
@@ -45,7 +47,8 @@
   "advance": false,
   "fail_reason": "V_region<150;value_below_top_50pct",
   "kit_level": 0,
-  "run_id": "81896355e420"
+  "urgency_lead_gen": true,
+  "run_id": "f89933e854d2"
  },
  {
   "value_rank": 4,
@@ -61,6 +64,7 @@
   "advance": false,
   "fail_reason": "V_region<150;value_below_top_50pct",
   "kit_level": 0,
-  "run_id": "81896355e420"
+  "urgency_lead_gen": true,
+  "run_id": "f89933e854d2"
  }
 ]

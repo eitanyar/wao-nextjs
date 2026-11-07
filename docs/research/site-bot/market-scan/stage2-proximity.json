@@ -1,0 +1,49 @@
+{
+ "run_id": "df19e422e595",
+ "cells": [
+  {
+   "cell_id": "A",
+   "profession": "roofing",
+   "city": "petah-tikva",
+   "offset_km": 3,
+   "probes": [
+    {
+     "dir": "north",
+     "lat": 32.11759,
+     "lng": 34.87653,
+     "survivors": 3
+    },
+    {
+     "dir": "south",
+     "lat": 32.06369,
+     "lng": 34.87653,
+     "survivors": 3
+    }
+   ],
+   "mean_survivors_of_3": 3
+  },
+  {
+   "cell_id": "F",
+   "profession": "renovation",
+   "city": "rishon-lezion",
+   "offset_km": 3,
+   "probes": [
+    {
+     "dir": "north",
+     "lat": 31.99822,
+     "lng": 34.79153,
+     "survivors": 1
+    },
+    {
+     "dir": "south",
+     "lat": 31.94432,
+     "lng": 34.79153,
+     "survivors": 1
+    }
+   ],
+   "mean_survivors_of_3": 1
+  }
+ ],
+ "mean_survivors_of_3": 2,
+ "rule": "if < 2 of 3 on average, M4 big cities use a 3-point mean S3"
+}
