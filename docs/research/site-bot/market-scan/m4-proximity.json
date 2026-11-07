@@ -1,5 +1,5 @@
 {
- "run_id": "8684c8405951",
+ "run_id": "f354d8b0c7e7",
  "rule": "2.9: pop > 150k and not haredi-flagged -> mean S3 of centroid + 3 km N/S (Jerusalem + E/W)",
  "cells": [
   {
@@ -412,7 +412,7 @@
      "lat": 32.06369,
      "lng": 34.87653,
      "S3_step1": 0.7118,
-     "S3": 0.6811,
+     "S3": 0.7478,
      "centroid_top3_survivors": 0
     }
    ],
@@ -1340,7 +1340,7 @@
      "lat": 32.09064,
      "lng": 34.87653,
      "S3_step1": 0.7967,
-     "S3": 0.7774,
+     "S3": 0.844,
      "centroid_top3_survivors": 3
     },
     {
@@ -2892,7 +2892,7 @@
      "lat": 32.0853,
      "lng": 34.78181,
      "S3_step1": 0.7235,
-     "S3": 0.6195,
+     "S3": 0.6861,
      "centroid_top3_survivors": 3
     },
     {

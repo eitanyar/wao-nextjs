@@ -205,8 +205,11 @@ const failed = (base, reason, extra = {}) => ({ ...base, site_check: 'failed', r
 // One host -> one derived record + its private text ({ title, h1 } or null). Never throws.
 // Order per scheme (2.6): GET /robots.txt, then GET /. HTTPS first; HTTP only when HTTPS cannot
 // connect (connection / TLS failure), worst case 4 requests on a host with broken HTTPS.
-export async function checkHomepageFull(host, { fetchImpl, cfg, now = () => new Date(), clock = () => performance.now() }) {
-  const base = { schema: HOMEPAGE_SCHEMA, host, checked_at: now().toISOString() };
+// 3.1.6: `path` (default "/") = the listed URL's path + query; a non-root fetch stamps the record
+// with `key` (host + path, its cache key) and `fetched_path`, and robots.txt is judged for it.
+export async function checkHomepageFull(host, { fetchImpl, cfg, now = () => new Date(), clock = () => performance.now(), path: pagePath = '/' }) {
+  const deep = pagePath !== '/';
+  const base = { schema: HOMEPAGE_SCHEMA, host, ...(deep ? { key: `${host}${pagePath}`, fetched_path: pagePath } : {}), checked_at: now().toISOString() };
   const schemes = cfg.http_fallback === false ? ['https'] : ['https', 'http'];
   const notCheckedStatuses = new Set(cfg.not_checked_statuses ?? [202, 401, 403, 429]);
   const robotsCfg = cfg.robots ?? {};
@@ -224,12 +227,12 @@ export async function checkHomepageFull(host, { fetchImpl, cfg, now = () => new 
       if (isChallenge(res, cfg) || res.status === 202) return { record: notChecked(base, 'blocked', `robots_challenge_${res.status}`, { requests, status: res.status }), text: null };
       // RFC 9309: 4xx -> no restriction; 5xx / unreachable -> treat as disallowed.
       if (res.status >= 500) return { record: notChecked(base, 'skipped_robots', `robots_${res.status}`, { requests, status: res.status }), text: null };
-      if (res.status >= 200 && res.status < 300 && !/html/i.test(res.contentType) && !robotsAllows(res.text, robotsCfg.ua_token ?? cfg.user_agent, '/')) {
+      if (res.status >= 200 && res.status < 300 && !/html/i.test(res.contentType) && !robotsAllows(res.text, robotsCfg.ua_token ?? cfg.user_agent, pagePath.split('?')[0])) {
         return { record: notChecked(base, 'skipped_robots', 'robots_disallow', { requests }), text: null };
       }
     }
     const t0 = clock();
-    const p = await attemptWithRetry(`${scheme}://${host}/`, { fetchImpl, cfg });
+    const p = await attemptWithRetry(`${scheme}://${host}${pagePath}`, { fetchImpl, cfg });
     requests += p.requests;
     const fetchMs = Math.round(clock() - t0);
     if (p.error === 'dns') return { record: failed(base, 'dns_nxdomain', { requests }), text: null };
@@ -276,6 +279,51 @@ export async function checkHomepageFull(host, { fetchImpl, cfg, now = () => new 
   return { record: failed(base, 'connect_or_tls_both_schemes', { error: lastConnect, requests }), text: null };
 }
 
+// ---- 3.1.6 listed URL ---------------------------------------------------------------------------
+// The URL a listing points at: its `url` as-is, or (unjoined Local Finder item) the real URL inside
+// a Google redirect's url/q parameter (the opaque goto?url=CAES... form yields none). null = none.
+export function listedUrlOf(url, redirect) {
+  let u;
+  try { u = new URL(url ?? ''); } catch { return null; }
+  if (!/^https?:$/.test(u.protocol)) return null;
+  if (!redirect) return u.href;
+  const inner = u.searchParams.get('url') ?? u.searchParams.get('q');
+  if (!inner || !/^https?:\/\//i.test(inner)) return null;
+  try { return new URL(inner).href; } catch { return null; }
+}
+// root_listed: the listed URL's path is "" or "/" (query and fragment ignored). No listed URL = the
+// listing names the host only = root.
+export function rootListed(listedUrl) {
+  if (!listedUrl) return true;
+  try { const p = new URL(listedUrl).pathname; return p === '' || p === '/'; } catch { return true; }
+}
+// The homepage-check target of a listing: root-listed -> the host (the legacy cache key); otherwise
+// key = host + the listed path + query, fetched by future online runs (homepage_check.fetch:
+// "listed_url").
+export function checkTarget(host, listedUrl) {
+  if (rootListed(listedUrl)) return { key: host, host, path: '/' };
+  const u = new URL(listedUrl);
+  const p = `${u.pathname}${u.search}`;
+  return { key: `${host}${p}`, host, path: p };
+}
+// Record for a target: the listed-URL record when cached (`listed: true`), else the host-root record
+// (`listed` = whether the root IS the listed URL). checks: Map key -> record.
+export function resolveCheck(checks, target) {
+  if (target.key !== target.host && checks.has(target.key)) return { check: checks.get(target.key), key: target.key, listed: true, deep: true };
+  return { check: checks.get(target.host), key: target.host, listed: target.key === target.host, deep: false };
+}
+// 3.1.6 outcome of a listing (homepage_check.site_dead_rule "listed_url"): confirmed NXDOMAIN stays
+// site_dead (the whole host is gone); parked / 404-410 are site_dead only when the record judged
+// the listed URL - root-listed, or (future online runs) a 404/410 on the fetched deep listed URL.
+// Otherwise `root_only_inconclusive`. Without the rule: siteOutcome() unchanged.
+export function listingOutcome(check, cfg, res) {
+  const o = siteOutcome(check, cfg);
+  if (o !== 'site_dead' || cfg?.site_dead_rule !== 'listed_url' || check.reason === 'dns_nxdomain') return o;
+  if (res?.listed && !res.deep) return o;
+  if (res?.listed && res.deep && check.reason === 'status_404_410') return o;
+  return 'root_only_inconclusive';
+}
+
 // Back-compat wrapper: the derived record only.
 export async function checkHomepage(host, opts) {
   return (await checkHomepageFull(host, opts)).record;
@@ -315,9 +363,10 @@ export async function dohStatus(host, { fetchImpl, resolver = 'google', timeoutM
 // Resolves elsewhere -> one re-fetch (checkHomepageFull) replaces the record.
 export async function confirmNxdomains({ cache, textStore = null, fetchImpl, siteFetchImpl = fetchImpl, cfg, now = () => new Date(), resolvers = ['google', 'cloudflare'], log = () => {} }) {
   const out = { candidates: 0, confirmed: 0, resolves_refetched: 0, refetch_outcomes: {}, unconfirmed: 0 };
-  for (const host of cache.hosts().sort()) {
-    const rec = cache.get(host);
+  for (const key of cache.hosts().sort()) {
+    const rec = cache.get(key);
     if (!rec || rec.reason !== 'dns_nxdomain' || rec.doh_status !== undefined) continue;
+    const host = rec.host ?? key;
     out.candidates += 1;
     let r = null;
     let used = null;
@@ -327,18 +376,18 @@ export async function confirmNxdomains({ cache, textStore = null, fetchImpl, sit
       if (r.status === 0 || r.status === 3) break;
     }
     const stamp = { doh_status: r.status, doh_resolver: used, doh_checked_at: now().toISOString() };
-    if (r.status === 3) { cache.set(host, { ...rec, ...stamp, nxdomain_confirmed: true }); out.confirmed += 1; continue; }
+    if (r.status === 3) { cache.set(key, { ...rec, ...stamp, nxdomain_confirmed: true }); out.confirmed += 1; continue; }
     if (r.status === 0) {
-      const { record, text } = await checkHomepageFull(host, { fetchImpl: siteFetchImpl, cfg, now });
+      const { record, text } = await checkHomepageFull(host, { fetchImpl: siteFetchImpl, cfg, now, path: rec.fetched_path ?? '/' });
       const next = { ...record, ...stamp, nxdomain_confirmed: false, nxdomain_refetched: true };
-      cache.set(host, next);
-      if (textStore && text) textStore.set(host, { host, checked_at: record.checked_at, title: text.title.slice(0, 200), first_h1: text.h1.slice(0, 200) });
+      cache.set(key, next);
+      if (textStore && text) textStore.set(key, { host, checked_at: record.checked_at, title: text.title.slice(0, 200), first_h1: text.h1.slice(0, 200) });
       out.resolves_refetched += 1;
       const k = `${record.site_check}:${record.reason ?? ''}`;
       out.refetch_outcomes[k] = (out.refetch_outcomes[k] ?? 0) + 1;
       continue;
     }
-    cache.set(host, { ...rec, ...stamp, nxdomain_confirmed: false });
+    cache.set(key, { ...rec, ...stamp, nxdomain_confirmed: false });
     out.unconfirmed += 1;
   }
   log(`nxdomain confirmation: ${JSON.stringify(out)}`);
@@ -352,9 +401,10 @@ export function siteVerdict(check, ctxOrText, cfgOrCtx, maybeCfg) {
   const [text, ctx, cfg] = maybeCfg === undefined ? [check, ctxOrText, cfgOrCtx] : [ctxOrText, cfgOrCtx, maybeCfg];
   if (!check || ['skipped_robots', 'blocked', 'timeout'].includes(check.site_check)) return null;
   if (check.site_check === 'failed') return { city_hit: false, service_hit: false, hard: true, soft: null, weak_site: true };
-  const { cityNames, titleTerms } = ctx;
+  const { cityNames, titleTerms, cityHit } = ctx;
   const t = `${text?.title ?? ''} ${text?.h1 ?? ''}`;
-  const city_hit = cityNames.some(n => n && t.includes(n));
+  // 3.1.6: cityHit (title and h1 judged apart) = the 3.1.1 / 3.1.4 matcher; legacy = substring.
+  const city_hit = cityHit ? Boolean(cityHit(text?.title ?? '') || cityHit(text?.h1 ?? '')) : cityNames.some(n => n && t.includes(n));
   const service_hit = titleTerms.some(x => x && t.includes(x));
   const hard = !check.fetch_ok || !check.https || !check.viewport;
   const soft = Number(!service_hit) + Number(!city_hit) + Number(!check.multi_page) + Number((check.fetch_ms ?? 0) > cfg.slow_fetch_ms);
@@ -377,10 +427,10 @@ function retentionStore(dir, maxAgeMs, now, valid = () => true) {
       fs.mkdirSync(dir, { recursive: true });
       fs.writeFileSync(hostFile(dir, host), JSON.stringify(rec));
     },
-    // Hosts of every fresh record (from the records themselves; file names are hashes).
+    // Keys of every fresh record (host, or 3.1.6 host + listed path; file names are hashes).
     hosts() {
       if (!fs.existsSync(dir)) return [];
-      return fs.readdirSync(dir).map(f => JSON.parse(fs.readFileSync(path.join(dir, f), 'utf8'))).filter(fresh).map(r => r.host).filter(Boolean);
+      return fs.readdirSync(dir).map(f => JSON.parse(fs.readFileSync(path.join(dir, f), 'utf8'))).filter(fresh).map(r => r.key ?? r.host).filter(Boolean);
     },
     // 30-day retention, like the audit reports. Stale-schema records are dropped too.
     purge() {
@@ -406,16 +456,18 @@ export function homepageTextStore(privateDir, cfg, now = () => new Date()) {
   return retentionStore(path.join(privateDir, HOMEPAGE_TEXT_SUBDIR), (st.retention_days ?? cfg.cache_retention_days) * 864e5, now);
 }
 
+// targets: host strings (GET /) or 3.1.6 { key, host, path } (GET the listed URL), cached by key.
 export async function runHomepageChecks(hosts, { cache, textStore = null, fetchImpl, cfg, now, log = () => {} }) {
-  const queue = [...new Set(hosts)].filter(h => cache.get(h) === undefined).sort();
+  const byKey = new Map(hosts.map(t => (typeof t === 'string' ? { key: t, host: t, path: '/' } : t)).map(t => [t.key, t]));
+  const queue = [...byKey.values()].filter(t => cache.get(t.key) === undefined).sort((a, b) => (a.key < b.key ? -1 : a.key > b.key ? 1 : 0));
   const max = cfg.store_text_private?.max_chars ?? TEXT_MAX;
   let done = 0;
   async function worker() {
     while (queue.length) {
-      const host = queue.shift();
-      const { record, text } = await checkHomepageFull(host, { fetchImpl, cfg, now });
-      cache.set(host, record);
-      if (textStore && text) textStore.set(host, { host, checked_at: record.checked_at, title: text.title.slice(0, max), first_h1: text.h1.slice(0, max) });
+      const { key, host, path: pagePath } = queue.shift();
+      const { record, text } = await checkHomepageFull(host, { fetchImpl, cfg, now, path: pagePath });
+      cache.set(key, record);
+      if (textStore && text) textStore.set(key, { host, checked_at: record.checked_at, title: text.title.slice(0, max), first_h1: text.h1.slice(0, max) });
       done += 1;
       if (done % 100 === 0) log(`homepage checks: ${done} fetched, ${queue.length} queued`);
     }

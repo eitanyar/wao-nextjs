@@ -6,16 +6,17 @@ import test from 'node:test';
 import { runEngine, loadConfig } from './lib/engine.mjs';
 import { createDfsClient, cacheKey, cachePath, originalPath, BudgetExceededError, projectResult, breadcrumbHost, ORGANIC_SCHEMA } from './lib/dfs.mjs';
 import { professionVolume, ticketProxy, scoreStage1, organicParams } from './lib/stage1.mjs';
-import { businessStrength, strengthComponents, topStrength, compositeScore, gaps, orderRows, s3Band, categoryId, joinLf, planStep1, planStep2, step1Gate, proximityPoints, cellPoints, assignProspects, poolRing2, ORGANIC_ENDPOINT, LOCAL_FINDER_ENDPOINT, MAPS_ENDPOINT, e164Il, phoneBlock, bestKnownIndex, lfView, lfSiteHost, leadGenNetworks, leadGenPhones, isLeadGen, titleRule, citiesNamedIn, outOfCellTarget, prospectWeight, markLfSiteDead, multiBranchCids } from './lib/stage2.mjs';
+import { businessStrength, strengthComponents, topStrength, compositeScore, gaps, orderRows, s3Band, categoryId, joinLf, planStep1, planStep2, step1Gate, proximityPoints, cellPoints, assignProspects, poolRing2, ORGANIC_ENDPOINT, LOCAL_FINDER_ENDPOINT, MAPS_ENDPOINT, e164Il, phoneBlock, bestKnownIndex, lfView, lfSiteHost, leadGenNetworks, leadGenPhones, isLeadGen, titleRule, citiesNamedIn, outOfCellTarget, prospectWeight, markLfSiteDead, multiBranchCids, dedupeSamePhone, s3Borderline, listingUrl } from './lib/stage2.mjs';
 import { mergeInto } from './apply-r2-12.mjs';
 import { classifyRelevance, titleTerms } from './lib/relevance.mjs';
 import { classifyOrganic, nationalBrandDomains } from './lib/organic.mjs';
-import { checkHomepage, checkHomepageFull, homepageCache, homepageTextStore, robotsAllows, siteVerdict, siteOutcome, confirmNxdomains, HOMEPAGE_CACHE_SUBDIR, HOMEPAGE_TEXT_SUBDIR } from './lib/homepage.mjs';
+import { checkHomepage, checkHomepageFull, homepageCache, homepageTextStore, robotsAllows, siteVerdict, siteOutcome, confirmNxdomains, HOMEPAGE_CACHE_SUBDIR, HOMEPAGE_TEXT_SUBDIR, listedUrlOf, rootListed, checkTarget, resolveCheck, listingOutcome, runHomepageChecks } from './lib/homepage.mjs';
 import { parseProfessions, parseRegions, SPEC_PATH } from './lib/spec.mjs';
 import { extractR12, mergeR12 } from './apply-r12.mjs';
 import { extractR2_12, mergeR2_12 } from './apply-r2-12.mjs';
 import { extractR3_8, mergeR3_8 } from './apply-r3-8.mjs';
 import { extractR3_1_1, extractR3_1_4, aliasCount, applyAreas, R3_1_RUN_PATCH } from './apply-r3-1.mjs';
+import { extractR3_1_6, mergeR3_1_6 } from './apply-r3-1-6.mjs';
 import { createFakeFetch, networkForbidden, createFakeWeb } from './fixtures/fake-dataforseo.mjs';
 
 const HERE = path.dirname(new URL(import.meta.url).pathname);
@@ -300,7 +301,7 @@ test('R12 config: all 17 professions have category rules copied byte-exact from 
   for (const k of ['category_allowlist', 'prospect_min_gaps', 'prospect_pass', 'prospect_kill_below']) assert.equal(runConfig.stage2[k], undefined, k);
   assert.equal(runConfig.pilot.cells.length, 6);
   // idempotent: R12 then 2.12 again changes nothing
-  const again = mergeR3_8(mergeR2_12(mergeR12(runConfig, r12, runConfig.r12_applied.spec_sha256), r2, runConfig.r2_12_applied.spec_sha256), r3, runConfig.r3_8_applied.spec_sha256);
+  const again = mergeR3_1_6(mergeR3_8(mergeR2_12(mergeR12(runConfig, r12, runConfig.r12_applied.spec_sha256), r2, runConfig.r2_12_applied.spec_sha256), r3, runConfig.r3_8_applied.spec_sha256), extractR3_1_6(spec), runConfig.r3_1_6_applied.spec_sha256);
   assert.deepEqual(again, runConfig);
 });
 
@@ -1159,4 +1160,183 @@ test('3.1.4 multi_branch: shared-domain + votes >= 150 + no phone block -> label
   const ctx = ctxFor(run);
   const top = topStrength([{ cid: 'm1', title: 'x', domain: null, url: null, rating: { value: 3, votes_count: 0 }, _network: true }], ctx);
   assert.equal(top.top3[0], 0.6);
+});
+
+// ---- 3.1.6 dead-site guard on the listed URL (synthetic fixtures, no Hebrew literals) ------------
+const r316Run = (overrides = {}) => mergeInto(mergeInto(r31Run(), extractR3_1_6(SPEC_TEXT())), overrides);
+const hcRec = (reason, extra = {}) => ({ schema: 2, host: 'x', checked_at: '2026-11-07T12:00:00.000Z', site_check: 'failed', reason, fetch_ok: false, https: false, viewport: false, ...extra });
+const joinedSlot = (domain, url) => ({ cid: `${domain}${url ?? ''}`, title: 'Dan', _joined: true, _votes_source: 'maps', _site_known: true, domain, url, rating: { value: 4.8, votes_count: 40 }, total_photos: 20 });
+
+test('3.1.6 config: band parsed from the spec prose; switches merged; idempotent', () => {
+  const patch = extractR3_1_6(SPEC_TEXT());
+  assert.deepEqual(patch.stage2.s3_borderline_band, [0.67, 0.73]);
+  const runConfig = JSON.parse(fs.readFileSync(path.join(ROOT, 'config/market-scanner/run-config.json'), 'utf8'));
+  assert.equal(runConfig.homepage_check.site_dead_rule, 'listed_url');
+  assert.equal(runConfig.homepage_check.fetch, 'listed_url');
+  assert.deepEqual(runConfig.homepage_check.site_dead, ['dns_nxdomain_confirmed', 'parked', 'status_404_410']);
+  assert.equal(runConfig.stage2.prospect_same_phone_dedupe, 'non_urgency');
+  assert.equal(runConfig.stage2.city_hit_matcher, 'he_name_and_aliases');
+  assert.deepEqual(mergeR3_1_6(runConfig, patch, runConfig.r3_1_6_applied.spec_sha256), runConfig);
+});
+
+test('3.1.6 listed URL: root_listed ignores query / fragment; LF redirect param; check targets', () => {
+  assert.equal(rootListed('https://gone.example'), true);
+  assert.equal(rootListed('https://gone.example/'), true);
+  assert.equal(rootListed('https://gone.example/?utm_source=gbp#top'), true);
+  assert.equal(rootListed('https://synthuser.wixsite.com/my-site'), false);
+  assert.equal(rootListed(null), true); // host-only listing
+  assert.equal(listedUrlOf('https://www.google.com/url?q=https://synthuser.wixsite.com/my-site', true), 'https://synthuser.wixsite.com/my-site');
+  assert.equal(listedUrlOf('https://google.com/goto?url=CAESopaque', true), null);
+  assert.deepEqual(checkTarget('synthuser.wixsite.com', 'https://synthuser.wixsite.com/my-site?x=1'), { key: 'synthuser.wixsite.com/my-site?x=1', host: 'synthuser.wixsite.com', path: '/my-site?x=1' });
+  assert.deepEqual(checkTarget('gone.example', 'https://gone.example/#x'), { key: 'gone.example', host: 'gone.example', path: '/' });
+  // joined -> the Maps url; unjoined LF -> the url parsed out of the redirect by lfView
+  assert.equal(listingUrl(joinedSlot('a.example', 'https://a.example/he/services')), 'https://a.example/he/services');
+  const run = r316Run();
+  const lf = lfView({ cid: 'u1', title: 'Dan', url: 'https://www.google.com/url?q=https://synthuser.wixsite.com/my-site', domain: 'www.google.com' }, { run });
+  assert.equal(lf.domain, 'synthuser.wixsite.com');
+  assert.equal(listingUrl(lf), 'https://synthuser.wixsite.com/my-site');
+});
+
+test('3.1.6 dead-site guard: Wix path / custom deep path -> inconclusive (a site, w_b 1.10); root 404 and confirmed NXDOMAIN -> dead', () => {
+  const run = r316Run();
+  const hc = run.homepage_check;
+  const ctx = { ...ctxFor(run), siteCtx: { cityNames: ['City One'], titleTerms: ['alpha one'] } };
+  const checks = new Map([
+    ['synthuser.wixsite.com', hcRec('status_404_410', { status: 404 })], // Wix free site: the bare root always 404s
+    ['custom.example', hcRec('status_404_410', { status: 404 })],
+    ['gone.example', hcRec('status_404_410', { status: 404 })],
+    ['nx.example', hcRec('dns_nxdomain', { nxdomain_confirmed: true })],
+    ['nx-unconfirmed.example', hcRec('dns_nxdomain')],
+    ['parked-root.example', hcRec('parked')],
+    ['parked-deep.example', hcRec('parked')],
+  ]);
+  const slots = {
+    wix: joinedSlot('synthuser.wixsite.com', 'https://synthuser.wixsite.com/my-site'),
+    custom: joinedSlot('custom.example', 'https://custom.example/he/services/plumbing'),
+    root404: joinedSlot('gone.example', 'https://gone.example/?utm_source=gbp'),
+    nx: joinedSlot('nx.example', 'https://nx.example/deep/page'),
+    nxUnconfirmed: joinedSlot('nx-unconfirmed.example', 'https://nx-unconfirmed.example/'),
+    parkedRoot: joinedSlot('parked-root.example', 'https://parked-root.example/'),
+    parkedDeep: joinedSlot('parked-deep.example', 'https://parked-deep.example/page'),
+  };
+  markLfSiteDead(Object.values(slots), checks, run);
+  const state = b => (b._site_dead ? 'dead' : b._site_inconclusive ? 'inconclusive' : 'site');
+  assert.deepEqual(Object.fromEntries(Object.entries(slots).map(([k, b]) => [k, state(b)])), { wix: 'inconclusive', custom: 'inconclusive', root404: 'dead', nx: 'dead', nxUnconfirmed: 'site', parkedRoot: 'dead', parkedDeep: 'inconclusive' });
+  // S3: inconclusive is still a site (as 3.1.2 "failed"); dead is no site
+  assert.equal(strengthComponents(slots.wix, ctx).real_site, 1);
+  assert.equal(strengthComponents(slots.custom, ctx).real_site, 1);
+  assert.equal(strengthComponents(slots.root404, ctx).real_site, 0);
+  assert.equal(strengthComponents(slots.nx, ctx).real_site, 0);
+  // prospect w_b: inconclusive = weak site 1.10 (hard fail), dead = 1.25
+  const pw = b => { const t = checkTarget(b.domain, listingUrl(b)); const res = resolveCheck(checks, t); return prospectWeight(b, res.check, ctx, undefined, res); };
+  assert.deepEqual(pw(slots.wix), { w_b: 1.1, site: 'root_only_inconclusive', verdict: { city_hit: false, service_hit: false, hard: true, soft: null, weak_site: true } });
+  assert.equal(pw(slots.custom).w_b, 1.1);
+  assert.deepEqual(pw(slots.root404), { w_b: 1.25, site: 'dead', verdict: null });
+  assert.deepEqual(pw(slots.nx), { w_b: 1.25, site: 'dead', verdict: null });
+  assert.equal(pw(slots.nxUnconfirmed).site, 'failed');
+  // without the 3.1.6 rule (Revision 3.1) the Wix slot was dead
+  const legacy = joinedSlot('synthuser.wixsite.com', 'https://synthuser.wixsite.com/my-site');
+  markLfSiteDead([legacy], checks, r31Run());
+  assert.equal(legacy._site_dead, true);
+  // listingOutcome: a record of the fetched deep listed URL (future online runs) - 404 qualifies whatever the path
+  assert.equal(listingOutcome(hcRec('status_404_410'), hc, { listed: true, deep: true }), 'site_dead');
+  assert.equal(listingOutcome(hcRec('status_404_410'), hc, { listed: false, deep: false }), 'root_only_inconclusive');
+  assert.equal(listingOutcome({ site_check: 'ok' }, hc, { listed: false, deep: false }), 'ok');
+});
+
+test('3.1.6 future online runs fetch the listed URL (cache key host + path); replay prefers that record', async () => {
+  const run = r316Run();
+  const hc = run.homepage_check;
+  const page = `<html><head><title>t</title><meta name="viewport" content="width=device-width"></head><body><h1>h</h1>${'x'.repeat(5000)}</body></html>`;
+  const calls = [];
+  const web = createFakeWeb({ onCall: u => calls.push(u), sites: {
+    'https://synthuser.wixsite.com/robots.txt': { status: 404, type: 'text/plain', body: '' },
+    'https://synthuser.wixsite.com/': { status: 404, body: 'nope' },
+    'https://synthuser.wixsite.com/my-site': { status: 200, body: page },
+    'https://deep404.example/robots.txt': { status: 404, type: 'text/plain', body: '' },
+    'https://deep404.example/old-page': { status: 404, body: 'nope' },
+  } });
+  const cache = homepageCache(tmp(), hc, FIXED_NOW);
+  const wix = checkTarget('synthuser.wixsite.com', 'https://synthuser.wixsite.com/my-site');
+  const deep = checkTarget('deep404.example', 'https://deep404.example/old-page');
+  assert.equal(await runHomepageChecks([wix, deep], { cache, fetchImpl: web, cfg: hc, now: FIXED_NOW }), 2);
+  assert.ok(!calls.includes('https://synthuser.wixsite.com/')); // the bare root is never fetched
+  assert.equal(cache.get('synthuser.wixsite.com'), undefined);
+  assert.equal(cache.get(wix.key).site_check, 'ok');
+  assert.equal(cache.get(wix.key).fetched_path, '/my-site');
+  assert.deepEqual(cache.hosts().sort(), [deep.key, wix.key].sort());
+  const checks = new Map([[wix.key, cache.get(wix.key)], [deep.key, cache.get(deep.key)], ['synthuser.wixsite.com', hcRec('status_404_410')]]);
+  const r1 = resolveCheck(checks, wix);
+  assert.deepEqual([r1.key, r1.check.site_check, listingOutcome(r1.check, hc, r1)], [wix.key, 'ok', 'ok']);
+  const r2 = resolveCheck(checks, deep);
+  assert.equal(listingOutcome(r2.check, hc, r2), 'site_dead'); // 404 on the listed URL itself
+  assert.equal(await runHomepageChecks([wix, deep], { cache, fetchImpl: webForbidden(), cfg: hc, now: FIXED_NOW }), 0); // cached by key
+});
+
+test('3.1.6 same-phone duplicates count once in non-urgency trades (higher votes kept); urgency keeps R5.3', () => {
+  const run = r316Run();
+  const p = (id, phone, votes) => ({ id, b: { _id: id, phone, rating: { votes_count: votes } } });
+  const list = [p('a', '050-555-0101', 3), p('b', '052-555-0202', 9), p('c', '+972-50-555-0101', 12), p('d', '+972505550101', 12)];
+  const out = dedupeSamePhone(list, { urgency: false, run });
+  assert.deepEqual(out.kept.map(x => x.id), ['b', 'c']); // a/c/d share one E.164 phone; c has the most votes (first of the tie)
+  assert.equal(out.dropped, 2);
+  assert.deepEqual(dedupeSamePhone(list, { urgency: true, run }).kept.map(x => x.id), ['a', 'b', 'c', 'd']);
+  assert.equal(dedupeSamePhone(list, { urgency: false, run: r31Run() }).dropped, 0); // not configured
+});
+
+test('3.1.6 s3_borderline: in-band cell whose kill state flips with one listed URL; out of band never', () => {
+  const ctx = ctxFor(r316Run({ stage2: { s3_borderline_band: [0, 1] } }));
+  const A = { ...joinedSlot('a.example', 'https://a.example/'), _site_target: checkTarget('a.example', 'https://a.example/') };
+  const B = { ...joinedSlot('b.example', 'https://b.example/x'), _site_target: checkTarget('b.example', 'https://b.example/x') };
+  const C = joinedSlot('c.example', 'https://c.example/'); // no target (not a known host) -> never flipped
+  const points = [[A, C, C], [A, B, C]];
+  const S3 = points.map(t => topStrength(t, ctx).S3).reduce((x, y) => x + y, 0) / 2;
+  const deadA = points.map(t => t.map(b => (b === A ? { ...b, _site_dead: true } : b)));
+  const sA = deadA.map(t => topStrength(t, ctx).S3).reduce((x, y) => x + y, 0) / 2;
+  const deadB = points.map(t => t.map(b => (b === B ? { ...b, _site_dead: true } : b)));
+  const sB = deadB.map(t => topStrength(t, ctx).S3).reduce((x, y) => x + y, 0) / 2;
+  assert.ok(sA < sB && sB < S3); // A sits at both points, so flipping it moves S3 twice as far
+  const line = (sA + sB) / 2;
+  assert.deepEqual(s3Borderline(points, S3, ctx, x => x >= line), { borderline: true, flips: 1 });
+  assert.deepEqual(s3Borderline(points, S3, ctx, x => x >= sA / 2), { borderline: false, flips: 0 });
+  // the configured band [0.67, 0.73], edges inclusive
+  const real = ctxFor(r316Run());
+  assert.equal(s3Borderline(points, 0.66999, real, () => true).borderline, false);
+  assert.equal(s3Borderline(points, 0.7301, real, () => true).borderline, false);
+  assert.equal(s3Borderline(points, 0.67, real, x => x >= 0.67).borderline, true); // flipping A to dead drops it under
+  assert.equal(s3Borderline(points, 0.7, ctxFor(r31Run()), () => true), null); // not configured
+});
+
+test('3.1.6 city_hit: he_name + he_aliases with the 3.1.1 matcher and 3.1.4 guards (title / h1 apart)', () => {
+  const real = realCities();
+  const tlv = real.find(c => c.slug === 'tel-aviv');
+  const omer = real.find(c => c.slug === 'omer');
+  const hitFor = city => t => citiesNamedIn(t, real).some(c => c.slug === city.slug);
+  const ok = { site_check: 'ok', fetch_ok: true, https: true, viewport: true, multi_page: true, fetch_ms: 100 };
+  const cfg = r316Run().homepage_check;
+  const title = `Electric ${tlv.he_aliases[0]}`;
+  assert.equal(siteVerdict(ok, { title, h1: '' }, { cityNames: [tlv.he_name], titleTerms: ['x'], cityHit: hitFor(tlv) }, cfg).city_hit, true);
+  assert.equal(siteVerdict(ok, { title, h1: '' }, { cityNames: [tlv.he_name], titleTerms: ['x'] }, cfg).city_hit, false); // legacy: he_name substring only
+  assert.equal(siteVerdict(ok, { title: 'Home', h1: `${tlv.he_aliases[0]} 24/7` }, { cityNames: [], titleTerms: ['x'], cityHit: hitFor(tlv) }, cfg).city_hit, true); // h1 counts
+  assert.equal(siteVerdict(ok, { title: `Locks ${omer.he_name}`, h1: '' }, { cityNames: [omer.he_name], titleTerms: ['x'], cityHit: hitFor(omer) }, cfg).city_hit, false); // prefix guard
+  const [pre] = omer.he_match_guard.prefix_letters;
+  assert.equal(siteVerdict(ok, { title: `Locks ${pre}${omer.he_name}`, h1: '' }, { cityNames: [omer.he_name], titleTerms: ['x'], cityHit: hitFor(omer) }, cfg).city_hit, true);
+});
+
+test('M4 with 3.1.6 on fixtures: zero network, determinism, no PII, 3.1.6 summary block', async () => {
+  const { base, d } = await m4Fixture();
+  await runEngine({ stage: 'm4', ...d, token: 'fake', fetchImpl: createFakeFetch(), siteFetchImpl: createFakeWeb(), now: FIXED_NOW });
+  const runCfg = JSON.parse(fs.readFileSync(path.join(d.configDir, 'run-config.json'), 'utf8'));
+  fs.writeFileSync(path.join(d.configDir, 'run-config.json'), JSON.stringify(mergeInto(mergeInto(mergeInto(runCfg, extractR3_8(SPEC_TEXT())), R3_1_RUN_PATCH), extractR3_1_6(SPEC_TEXT()))));
+  const a = await runEngine({ stage: 'm4', ...d, outDir: path.join(base, 'r316a'), offline: true, fetchImpl: networkForbidden(), siteFetchImpl: webForbidden(), now: FIXED_NOW });
+  const b = await runEngine({ stage: 'm4', ...d, outDir: path.join(base, 'r316b'), offline: true, fetchImpl: networkForbidden(), siteFetchImpl: webForbidden(), now: FIXED_NOW });
+  assert.deepEqual([a.network_calls, a.spent_usd, b.network_calls], [0, 0, 0]);
+  for (const f of M4_FILES) assert.ok(read(path.join(base, 'r316a'), f).equals(read(path.join(base, 'r316b'), f)), `${f} not deterministic`);
+  for (const f of M4_FILES) assert.ok(!/Biz \d|Seven Co|\+972|05\d-|\.example/.test(fs.readFileSync(path.join(base, 'r316a', f), 'utf8')), `${f} leaks business data`);
+  const summary = JSON.parse(fs.readFileSync(path.join(base, 'r316a', 'm4-summary.json'), 'utf8'));
+  assert.equal(summary.revision3_1_6.site_dead_rule, 'listed_url');
+  assert.deepEqual(summary.revision3_1_6.s3_borderline_band, [0.67, 0.73]);
+  assert.ok(Array.isArray(summary.revision3_1_6.top10_hand_gate_required));
+  const rows = JSON.parse(fs.readFileSync(path.join(base, 'r316a', 'm4-cells.json'), 'utf8'));
+  for (const r of rows.filter(x => x.maps_bought)) assert.equal(typeof r.s3_borderline, 'boolean', r.cell_id);
 });

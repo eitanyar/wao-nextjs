@@ -23,9 +23,9 @@ export const STAGE1_CELL_COLUMNS = ['value_rank', 'slug', 'trade_he', 'region', 
 export const STAGE2_COLUMNS = ['rank', 'cell_id', 'expect', 'calibration', 'ranked', 'slug', 'trade_he', 'region', 'city', 'city_he', 'ring', 'population', 'urgency_lead_gen', 'V_region', 'V_cell', 'V_source', 'T_p_usd', 'M', 'value_usd', 'region_pass', 'region_advance',
   'stopped_at', 'gate_reason', 'maps_bought', 'points', 'S3_step1', 'S3_step1_low', 'S3_step1_high', 'S3', 'S3_band', 'S3_points', 'top3_s', 'lf_top3_joined', 'lf_top3_paid', 'W', 'P', 'P_w', 'pooled', 'pooled_into', 'pool_members',
   'L_share', 'D_share', 'O', 'organic_counted', 'organic_unresolved', 'local_pool', 'local_default', 'has_ai_overview',
-  'kit_level', 'score', 'score_unkilled', 'kill_reason', 'flags', 'lf_pack_overlap', 'lead_gen_listings', 'lf_slots_maps', 'lf_slots_best_known', 'lf_slots_neutral', 'lf_top3_network', 'lf_top3_multi_branch', 'lf_top3_site_dead', 'p_excluded_title', 'p_excluded_network', 'p_excluded_multi_branch', 'p_out_of_cell', 'p_moved_in', 'p_excluded_incumbent', 'p_excluded_incumbent_moved_in', 'homepage_checked', 'homepage_failed', 'homepage_site_dead', 'homepage_not_checked', 'maps_items_t1', 'maps_items_t2', 'relevant_ranked', 'run_id'];
+  'kit_level', 'score', 'score_unkilled', 'kill_reason', 'flags', 'lf_pack_overlap', 'lead_gen_listings', 'lf_slots_maps', 'lf_slots_best_known', 'lf_slots_neutral', 'lf_top3_network', 'lf_top3_multi_branch', 'lf_top3_site_dead', 'lf_top3_root_only_inconclusive', 's3_borderline', 's3_borderline_flips', 'p_same_phone_dup', 'p_excluded_title', 'p_excluded_network', 'p_excluded_multi_branch', 'p_out_of_cell', 'p_moved_in', 'p_excluded_incumbent', 'p_excluded_incumbent_moved_in', 'homepage_checked', 'homepage_failed', 'homepage_site_dead', 'homepage_root_only_inconclusive', 'homepage_not_checked', 'maps_items_t1', 'maps_items_t2', 'relevant_ranked', 'run_id'];
 // Compact view for the ranked M4 markdown table.
-export const M4_MD_COLUMNS = ['rank', 'slug', 'trade_he', 'region', 'city', 'city_he', 'ring', 'pool_members', 'urgency_lead_gen', 'value_usd', 'points', 'S3_step1', 'S3', 'S3_band', 'P', 'P_w', 'L_share', 'D_share', 'O', 'score', 'kill_reason', 'kit_level'];
+export const M4_MD_COLUMNS = ['rank', 'slug', 'trade_he', 'region', 'city', 'city_he', 'ring', 'pool_members', 'urgency_lead_gen', 'value_usd', 'points', 'S3_step1', 'S3', 'S3_band', 'P', 'P_w', 'L_share', 'D_share', 'O', 'score', 'kill_reason', 'kit_level', 's3_borderline'];
 
 const STAGE_KEYS = { 1: 'stage1', pilot: 'stage2-pilot', m4: 'stage2-full' };
 const reqKey = r => `${r.endpoint}|${canonicalJson(r.params)}|${r.minSchema ?? 1}`;
@@ -159,9 +159,14 @@ export async function runEngine({ stage, configDir, cacheDir, outDir, privateDir
     if (siteCache) {
       siteCache.purge();
       textStore.purge();
-      if (siteFetchImpl && !offline) homepageFetched = await runHomepageChecks(scored.hostsNeeded, { cache: siteCache, textStore, fetchImpl: siteFetchImpl, cfg: hc, now, log });
-      const checks = new Map(scored.hostsNeeded.map(h => [h, siteCache.get(h)]).filter(([, v]) => v));
-      const texts = new Map(scored.hostsNeeded.map(h => [h, textStore.get(h)]).filter(([, v]) => v).map(([h, v]) => [h, { title: v.title, h1: v.first_h1 }]));
+      // 3.1.6: online runs with homepage_check.fetch "listed_url" GET the listed URL (cache key =
+      // host + listed path for a deep listing), not the host root. Replays read both keys: the
+      // listed-URL record when cached, else the host-root record (judged by listingOutcome).
+      const targets = hc.fetch === 'listed_url' ? scored.siteTargets : scored.hostsNeeded;
+      if (siteFetchImpl && !offline) homepageFetched = await runHomepageChecks(targets, { cache: siteCache, textStore, fetchImpl: siteFetchImpl, cfg: hc, now, log });
+      const keys = [...new Set([...scored.hostsNeeded, ...scored.siteTargets.flatMap(t => [t.key, t.host])])].sort();
+      const checks = new Map(keys.map(h => [h, siteCache.get(h)]).filter(([, v]) => v));
+      const texts = new Map(keys.map(h => [h, textStore.get(h)]).filter(([, v]) => v).map(([h, v]) => [h, { title: v.title, h1: v.first_h1 }]));
       scored = scoreCells(config, get, stage1.cells, { ...scoreOpts, siteChecks: checks, siteTexts: texts });
     }
     const homepage = homepageSummary(scored, siteCache, hc);
@@ -266,6 +271,24 @@ function writeM4(outDir, privateDir, scored, { runId, run, stage1, config, get, 
         lf_slots_multi_branch: { step2: sum('lf_top3_multi_branch'), step1_only: cellRows.filter(r => !r.maps_bought).reduce((n, r) => n + r.lf_top3_multi_branch, 0) },
         prospects_excluded: { multi_branch: sum('p_excluded_multi_branch'), incumbent: sum('p_excluded_incumbent'), incumbent_would_be_moved_in: sum('p_excluded_incumbent_moved_in') },
         note: 'p_excluded_network excludes multi_branch (3.1.4, display only - still never a prospect); incumbent counts are per business on the cell it would have been assigned to',
+      };
+    }
+    // 3.1.6 diagnostics: listed-URL dead-site guard, borderline band, same-phone duplicates
+    if (run.homepage_check?.site_dead_rule === 'listed_url' || run.stage2.s3_borderline_band) {
+      const top10 = r => r.rank !== null && r.rank <= 10 && r.score > 0;
+      const bl = rows.filter(r => r.s3_borderline === true).sort((a, b) => ((a.rank ?? 1e9) - (b.rank ?? 1e9)) || a.cell_id.localeCompare(b.cell_id, 'en'));
+      summary.revision3_1_6 = {
+        site_dead_rule: run.homepage_check?.site_dead_rule ?? null,
+        homepage_fetch: run.homepage_check?.fetch ?? 'root',
+        lf_top3_site_dead_slots: sum('lf_top3_site_dead'),
+        lf_top3_root_only_inconclusive_slots: sum('lf_top3_root_only_inconclusive'),
+        prospects_site_dead: sum('homepage_site_dead'),
+        prospects_root_only_inconclusive: sum('homepage_root_only_inconclusive'),
+        prospects_same_phone_duplicates_dropped: sum('p_same_phone_dup'),
+        s3_borderline_band: run.stage2.s3_borderline_band ?? null,
+        s3_borderline: bl.map(r => ({ cell_id: r.cell_id, rank: r.rank, S3: r.S3, P_w: r.P_w, score: r.score, score_unkilled: r.score_unkilled, kill_reason: r.kill_reason, flips: r.s3_borderline_flips, in_top10: top10(r) })),
+        top10_hand_gate_required: bl.filter(top10).map(r => r.cell_id),
+        note: '3.1.6: an s3_borderline cell cannot enter the top 10 without a hand gate; slot counts are per scored point',
       };
     }
   }

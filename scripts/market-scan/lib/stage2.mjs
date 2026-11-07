@@ -11,7 +11,7 @@ import { round4, serpLanguage, organicParams } from './stage1.mjs';
 import { ORGANIC_SCHEMA, isGoogleRedirect } from './dfs.mjs';
 import { classifyRelevance, titleTerms } from './relevance.mjs';
 import { classifyOrganic, nationalBrandDomains, hasAiOverview, normalizeDomain, domainIn } from './organic.mjs';
-import { siteVerdict, siteOutcome } from './homepage.mjs';
+import { siteVerdict, listedUrlOf, checkTarget, resolveCheck, listingOutcome } from './homepage.mjs';
 
 export { normalizeDomain };
 export const MAPS_ENDPOINT = '/serp/google/maps/live/advanced';
@@ -322,7 +322,31 @@ export function lfView(lfItem, { poolByCid = null, known = new Map(), networks =
   const trusted = s.lf_domain_trust === true && lfItem.domain && !isGoogleRedirect(lfItem) ? normalizeDomain(lfItem.domain) : null;
   out.domain = host ?? trusted ?? null;
   out._site_known = Boolean(out.domain);
+  // 3.1.6 listed_url of an unjoined item: the real URL parsed from the LF redirect param (or the
+  // trusted direct url); none -> host-only listing (root).
+  out._listed_url = host ? listedUrlOf(lfItem.url, isGoogleRedirect(lfItem)) : (trusted ? listedUrlOf(lfItem.url, false) : null);
   return out;
+}
+
+// 3.1.6 listed_url(b): Maps `url` if joined (and for Maps prospects), else the url parsed by lfView.
+export const listingUrl = b => (b._listed_url !== undefined ? b._listed_url : listedUrlOf(b.url, !b._joined && isGoogleRedirect(b)));
+
+// 3.1.6 same-phone duplicates (non-urgency trades): prospect listings of one cell sharing an E.164
+// phone count once - the one with the most votes (tie: the first in assignment order) is kept.
+// Urgency trades keep the R5.3 rule (such a phone is lead_gen there and never reaches this list).
+export function dedupeSamePhone(list, { urgency, run }) {
+  if (run.stage2.prospect_same_phone_dedupe !== 'non_urgency' || urgency) return { kept: list, dropped: 0 };
+  const best = new Map();
+  list.forEach((p, i) => {
+    const k = e164Il(p.b.phone);
+    if (!k) return;
+    const v = p.b.rating?.votes_count ?? 0;
+    const prev = best.get(k);
+    if (!prev || v > prev.v) best.set(k, { i, v });
+  });
+  const keep = new Set([...best.values()].map(x => x.i));
+  const kept = list.filter((p, i) => !e164Il(p.b.phone) || keep.has(i));
+  return { kept, dropped: list.length - kept.length };
 }
 
 export const slotSource = b => b._votes_source ?? (b._joined ? 'maps' : 'lf_own');
@@ -617,14 +641,17 @@ export function assignProspects(cellResults, chains, leadGen, run, { networks = 
 // or not checked (blocked / timeout / skipped_robots / never fetched).
 // 3.5: `site_dead` (confirmed NXDOMAIN / parked / 404-410) weighs like no site (homepage_check.
 // weights.site_dead, 1.25); `failed` weighs homepage_check.weights.failed (1.10) when configured.
-export function prospectWeight(b, check, ctx, text) {
+// 3.1.6: `res` = resolveCheck() of the listing (default: the record judged a root-listed URL);
+// `root_only_inconclusive` weighs like `failed` (weak site, hard fail on the check).
+export function prospectWeight(b, check, ctx, text, res = { listed: true, deep: false }) {
   const w = ctx.run.stage2.prospect_weights;
   const hw = ctx.run.homepage_check?.weights ?? {};
   if (!realSite(b, notASite(ctx.run))) return { w_b: w.no_site, site: 'none', verdict: null };
-  const outcome = siteOutcome(check, ctx.run.homepage_check);
+  const outcome = check ? listingOutcome(check, ctx.run.homepage_check, res) : null;
   if (outcome === 'site_dead') return { w_b: hw.site_dead ?? w.no_site, site: 'dead', verdict: null };
   const verdict = siteVerdict(check, text, ctx.siteCtx, ctx.run.homepage_check);
   if (!verdict) return { w_b: w.unchecked, site: check ? check.site_check : 'unchecked', verdict: null };
+  if (outcome === 'root_only_inconclusive') return { w_b: hw.failed ?? w.weak_site, site: 'root_only_inconclusive', verdict };
   if (outcome === 'failed') return { w_b: hw.failed ?? w.weak_site, site: 'failed', verdict };
   return { w_b: verdict.weak_site ? w.weak_site : w.ok_site, site: verdict.weak_site ? 'weak' : 'ok', verdict };
 }
@@ -635,15 +662,40 @@ export const lfKnownHost = (b, run) => ((b._joined || b._site_known) && realSite
 // 3.1.2: marks `_site_dead` on every item whose host outcome is site_dead (homepage_check.site_dead
 // reasons only: confirmed NXDOMAIN / parked / 404-410; `failed`, blocked, timeout, challenges,
 // robots, 403 and unconfirmed NXDOMAIN stay a site). Returns the hosts seen (to be checked).
+// 3.1.6: judged on the listed URL (listingOutcome); every known item gets `_site_target` (its
+// check target) and a root-only parked / 404-410 gets `_site_inconclusive` (still a site).
 export function markLfSiteDead(items, siteChecks, run) {
   const hosts = [];
   for (const b of items) {
     const h = lfKnownHost(b, run);
     if (!h) continue;
     hosts.push(h);
-    if (siteOutcome(siteChecks.get(h), run.homepage_check) === 'site_dead') b._site_dead = true;
+    b._site_target = checkTarget(h, listingUrl(b));
+    const res = resolveCheck(siteChecks, b._site_target);
+    const outcome = res.check ? listingOutcome(res.check, run.homepage_check, res) : null;
+    if (outcome === 'site_dead') b._site_dead = true;
+    if (outcome === 'root_only_inconclusive') b._site_inconclusive = true;
   }
   return hosts;
+}
+
+// 3.1.6 s3_borderline: joined S3 inside stage2.s3_borderline_band whose kill / pass outcome flips
+// when one check target's homepage outcome flips (site_dead <-> a site) on every slot carrying it.
+// Engineer reading: "one slot" = one listed URL (a business at several scored points flips at all
+// of them); `killed(S3)` is the full composite kill state, so a cell killed anyway by P_w is not
+// borderline. Returns null (not judged), or { borderline, flips }.
+export function s3Borderline(points, S3, ctx, killed) {
+  const band = ctx.run.stage2.s3_borderline_band;
+  if (!Array.isArray(band)) return null;
+  if (S3 < band[0] || S3 > band[1]) return { borderline: false, flips: 0 };
+  const keys = [...new Set(points.flat().filter(b => b._site_target).map(b => b._site_target.key))].sort();
+  const base = killed(S3);
+  let flips = 0;
+  for (const k of keys) {
+    const alt = points.map(top => top.map(b => (b._site_target?.key === k ? { ...b, _site_dead: !b._site_dead } : b)));
+    if (killed(mean(alt.map(top => topStrength(top, ctx).S3))) !== base) flips += 1;
+  }
+  return { borderline: flips > 0, flips };
 }
 
 // 3.1.4 multi_branch (display only): a shared-domain (3.2 ii) network cid with no phone-block
@@ -857,6 +909,10 @@ export function scoreCells(config, get, stage1Cells, { specs = config.run.pilot.
   const national = nationalBrandDomains(nationalSerps, run.stage2.national_brand_min_regions, run.stage2.organic_depth_cell);
 
   const hostsNeeded = new Set();
+  // 3.1.6 check targets (host, or host + listed path): fetched by online runs with
+  // homepage_check.fetch "listed_url"; replays fall back to the host-root record.
+  const siteTargets = new Map();
+  const addTarget = t => { if (!siteTargets.has(t.key)) siteTargets.set(t.key, t); };
   const rows = [];
   const privateRows = [];
   const organicRows = [];
@@ -865,43 +921,56 @@ export function scoreCells(config, get, stage1Cells, { specs = config.run.pilot.
   const defaultHosts = new Map();
   for (const r of results) {
     const { cell } = r;
-    const ctx = { run, profession: cell.profession, city: cell.city, siteCtx: { cityNames: [cell.city.he_name, ...(cell.city.aliases ?? [])], titleTerms: titleTerms(cell.profession, run) } };
+    // 3.1.6: city_hit = the 3.1.1 / 3.1.4 matcher (he_name + he_aliases, prefix guards); legacy = he_name substring.
+    const cityHit = run.stage2.city_hit_matcher === 'he_name_and_aliases' ? t => citiesNamedIn(t, cities).some(c => c.slug === cell.city.slug) : null;
+    const ctx = { run, profession: cell.profession, city: cell.city, siteCtx: { cityNames: [cell.city.he_name], titleTerms: titleTerms(cell.profession, run), ...(cityHit ? { cityHit } : {}) } };
     // 3.1.2: every scored point's LF top-3 host is checked; a site_dead outcome (homepage_check.
     // site_dead reasons only) -> has_site = false in s_b. Step-1 kills keep their step-1 S3.
-    if (r.maps && siteDeadOn) for (const h of markLfSiteDead(r.joinedPoints.flat(), siteChecks, run)) hostsNeeded.add(h);
+    if (r.maps && siteDeadOn) {
+      for (const h of markLfSiteDead(r.joinedPoints.flat(), siteChecks, run)) hostsNeeded.add(h);
+      for (const b of r.joinedPoints.flat()) if (b._site_target) addTarget(b._site_target);
+    }
     // S3: survivors use the cid-joined LF top 3 (mean over scored points); others keep S3_step1.
     const pointS3 = r.maps ? r.joinedPoints.map(top => topStrength(top, ctx)) : r.points.map(p => p.step1);
     const S3 = r.maps ? mean(pointS3.map(x => x.S3)) : r.S3_step1;
     const top3 = pointS3[0].top3;
     const W = r.maps ? weakness(r.ranked, run) : null;
-    const list = r.maps ? prospects.get(r.cellKey) : [];
+    const dedup = r.maps ? dedupeSamePhone(prospects.get(r.cellKey), { urgency: r.urgency, run }) : { kept: [], dropped: 0 };
+    const list = dedup.kept;
     let P_w = r.maps ? 0 : null;
     let checked = 0;
     let failedChecks = 0;
     let deadSites = 0;
+    let inconclusive = 0;
     let blocked = 0;
     const prospectRows = list.map(p => {
       const host = realSite(p.b, notASite(run)) ? normalizeDomain(p.b.domain) : null;
       if (host) hostsNeeded.add(host);
-      const check = host ? siteChecks.get(host) : undefined;
+      const target = host ? checkTarget(host, listingUrl(p.b)) : null;
+      if (target) addTarget(target);
+      const res = target ? resolveCheck(siteChecks, target) : null;
+      const check = res?.check;
+      let outcome = null;
       if (check) {
         checked += 1;
-        const outcome = siteOutcome(check, run.homepage_check);
+        outcome = listingOutcome(check, run.homepage_check, res);
         if (outcome === 'failed') failedChecks += 1;
         if (outcome === 'site_dead') deadSites += 1;
+        if (outcome === 'root_only_inconclusive') inconclusive += 1;
         if (['blocked', 'timeout', 'skipped_robots'].includes(check.site_check)) blocked += 1;
       }
-      const wt = prospectWeight(p.b, check, ctx, host ? siteTexts.get(host) : undefined);
+      const wt = prospectWeight(p.b, check, ctx, res ? siteTexts.get(res.key) : undefined, res ?? undefined);
       P_w += wt.w_b;
-      return { p, host, check, wt };
+      return { p, host, check, wt, outcome };
     });
-    if (r.maps) for (const b of r.lfTop3) if (b._joined && realSite(b, notASite(run))) hostsNeeded.add(normalizeDomain(b.domain));
+    if (r.maps) for (const b of r.lfTop3) if (b._joined && realSite(b, notASite(run))) { const h = normalizeDomain(b.domain); hostsNeeded.add(h); addTarget(b._site_target ?? checkTarget(h, listingUrl(b))); }
     const poolDomains = new Set(r.maps ? r.pool.filter(b => realSite(b, notASite(run))).map(b => normalizeDomain(b.domain)) : []);
     const org = r.maps ? classifyOrganic(r.organic, { poolDomains, chainDomains: chains, nationalDomains: national.get(cell.profession.slug) ?? new Set(), run }) : null;
     const O = org ? org.O : 1;
     const s1 = stage1Cells?.find(c => c.slug === cell.profession.slug && c.city === cell.city.slug);
     const value = s1?.value_usd ?? 0;
     const comp = compositeScore({ value, S3, P_w, O, flags: cell.city.flags, stage1Pass: s1 ? s1.region_pass : undefined }, run);
+    const bl = r.maps && siteDeadOn ? s3Borderline(r.joinedPoints, S3, ctx, x => Boolean(compositeScore({ value, S3: x, P_w, O, flags: cell.city.flags, stage1Pass: s1 ? s1.region_pass : undefined }, run).kill_reason)) : null;
     const pending = Boolean(r.pending);
     const packCids = (r.organic?.items ?? []).filter(i => i.type === 'local_pack' && i.cid).map(i => i.cid);
     const flaggedPhones = leadGen.get(r.cellKey) ?? new Set();
@@ -928,24 +997,28 @@ export function scoreCells(config, get, stage1Cells, { specs = config.run.pilot.
       lf_slots_maps: slotCount('maps'), lf_slots_best_known: slotCount('best_known'), lf_slots_neutral: slotCount('neutral'),
       lf_top3_network: slots.filter(b => slotLabel(b, flaggedPhones) === 'network').length, lf_top3_multi_branch: slots.filter(b => slotLabel(b, flaggedPhones) === 'multi_branch').length,
       lf_top3_site_dead: r.maps ? slots.filter(b => b._site_dead).length : null,
+      lf_top3_root_only_inconclusive: r.maps ? slots.filter(b => b._site_inconclusive).length : null,
+      s3_borderline: bl ? bl.borderline : null, s3_borderline_flips: bl ? bl.flips : null,
+      p_same_phone_dup: r.maps ? dedup.dropped : null,
       p_excluded_title: pd ? pd.title_exclude + pd.title_chain : null, p_excluded_network: pd ? pd.network : null, p_excluded_multi_branch: pd ? pd.multi_branch : null, p_out_of_cell: pd ? pd.out_of_cell_moved + pd.out_of_cell_dropped : null, p_moved_in: pd ? pd.moved_in : null,
       p_excluded_incumbent: pd ? pd.incumbent : null, p_excluded_incumbent_moved_in: pd ? pd.incumbent_moved_in : null,
-      homepage_checked: r.maps ? checked : null, homepage_failed: r.maps ? failedChecks : null, homepage_site_dead: r.maps ? deadSites : null, homepage_not_checked: r.maps ? blocked : null,
+      homepage_checked: r.maps ? checked : null, homepage_failed: r.maps ? failedChecks : null, homepage_site_dead: r.maps ? deadSites : null, homepage_root_only_inconclusive: r.maps ? inconclusive : null, homepage_not_checked: r.maps ? blocked : null,
       maps_items_t1: r.maps ? r.lists[0].length : null, maps_items_t2: r.maps ? (r.lists[1]?.length ?? 0) : null, relevant_ranked: r.maps ? r.ranked.length : null,
     });
 
     // private, business-level rows (gitignored dir only)
     r.joinedPoints.forEach((top, pi) => top.forEach((b, i) => {
       const host = siteDeadOn ? lfHost(b) : (b._joined && realSite(b, notASite(run)) ? normalizeDomain(b.domain) : null);
-      const check = host ? siteChecks.get(host) : undefined;
-      const verdict = check ? siteVerdict(check, siteTexts.get(host), ctx.siteCtx, run.homepage_check) : null;
+      const res = host ? resolveCheck(siteChecks, b._site_target ?? checkTarget(host, listingUrl(b))) : null;
+      const check = res?.check;
+      const verdict = check ? siteVerdict(check, siteTexts.get(res.key), ctx.siteCtx, run.homepage_check) : null;
       const netRules = [...(networks.get(String(b.cid)) ?? [])];
       if (flaggedPhones.has(phoneKeyFor(run)(b.phone))) netRules.push('exact_phone');
-      privateRows.push({ cell_id: cell.id, role: pi === 0 ? 'lf_top3' : 'lf_top3_point', point: r.points[pi].dir, rank: i + 1, cid: b.cid ?? null, title: b.title ?? null, phone: b.phone ?? null, phone_e164: e164Il(b.phone), domain: b._joined || b._site_known ? (b.domain ?? null) : null, joined: b._joined, votes_source: slotSource(b), network: netRules.join('|') || null, network_label: slotLabel(b, flaggedPhones), site_dead: b._site_dead === true, votes: b.rating?.votes_count ?? (b._votes_source === 'neutral' ? null : 0), rating: b.rating?.value ?? null, category: b.category ?? null, s_b: round4(pointS3[pi].top3[i]), site_check: check?.site_check ?? null, platform: check?.platform ?? null, weak_site: verdict?.weak_site ?? null });
+      privateRows.push({ cell_id: cell.id, role: pi === 0 ? 'lf_top3' : 'lf_top3_point', point: r.points[pi].dir, rank: i + 1, cid: b.cid ?? null, title: b.title ?? null, phone: b.phone ?? null, phone_e164: e164Il(b.phone), domain: b._joined || b._site_known ? (b.domain ?? null) : null, joined: b._joined, votes_source: slotSource(b), network: netRules.join('|') || null, network_label: slotLabel(b, flaggedPhones), site_dead: b._site_dead === true, site_outcome: check ? listingOutcome(check, run.homepage_check, res) : null, listed_root: host ? (b._site_target ?? checkTarget(host, listingUrl(b))).key === host : null, votes: b.rating?.votes_count ?? (b._votes_source === 'neutral' ? null : 0), rating: b.rating?.value ?? null, category: b.category ?? null, s_b: round4(pointS3[pi].top3[i]), site_check: check?.site_check ?? null, platform: check?.platform ?? null, weak_site: verdict?.weak_site ?? null });
     }));
-    for (const { p, host, check, wt } of prospectRows) {
+    for (const { p, host, check, wt, outcome } of prospectRows) {
       const b = p.b;
-      privateRows.push({ cell_id: cell.id, role: 'prospect', rank: r.rawRank.get(b._id) ?? null, moved_from: p.from && p.from !== r.cellKey ? p.from : null, cid: b.cid ?? null, title: b.title ?? null, phone: b.phone ?? null, phone_e164: e164Il(b.phone), domain: b.domain ?? null, votes: b.rating?.votes_count ?? 0, rating: b.rating?.value ?? null, category: b.category ?? null, relevant_via: r.rel.get(b._id)?.via ?? null, gaps: gaps(b, run).join('|'), dist_km: round4(p.dist), w_b: wt.w_b, site: wt.site, site_check: check?.site_check ?? (host ? 'unchecked' : null), site_reason: check?.reason ?? null, platform: check?.platform ?? null, city_hit: wt.verdict?.city_hit ?? null, service_hit: wt.verdict?.service_hit ?? null, multi_page: check?.multi_page ?? null, fetch_ms: check?.fetch_ms ?? null });
+      privateRows.push({ cell_id: cell.id, role: 'prospect', rank: r.rawRank.get(b._id) ?? null, moved_from: p.from && p.from !== r.cellKey ? p.from : null, cid: b.cid ?? null, title: b.title ?? null, phone: b.phone ?? null, phone_e164: e164Il(b.phone), domain: b.domain ?? null, votes: b.rating?.votes_count ?? 0, rating: b.rating?.value ?? null, category: b.category ?? null, relevant_via: r.rel.get(b._id)?.via ?? null, gaps: gaps(b, run).join('|'), dist_km: round4(p.dist), w_b: wt.w_b, site: wt.site, site_check: check?.site_check ?? (host ? 'unchecked' : null), site_reason: check?.reason ?? null, site_outcome: outcome, platform: check?.platform ?? null, city_hit: wt.verdict?.city_hit ?? null, service_hit: wt.verdict?.service_hit ?? null, multi_page: check?.multi_page ?? null, fetch_ms: check?.fetch_ms ?? null });
     }
     if (org) {
       organicRows.push({ cell_id: cell.id, rows: org.rows });
@@ -1002,6 +1075,7 @@ export function scoreCells(config, get, stage1Cells, { specs = config.run.pilot.
     defaultHosts: [...defaultHosts.values()].map(e => ({ host: e.host, cells: e.cells.size, regions: e.regions.size, professions: [...e.professions].sort() })).sort((a, b) => (b.cells - a.cells) || a.host.localeCompare(b.host, 'en')),
     nationalSerpsCounted: nationalSerps.length,
     hostsNeeded: [...hostsNeeded].sort(),
+    siteTargets: [...siteTargets.values()].sort((a, b) => (a.key < b.key ? -1 : a.key > b.key ? 1 : 0)),
     gate: gate.cells.map(c => ({ cell_id: c.cell.id, S3_step1: round4(c.S3_step1), survives: c.survives, gate_reason: c.gate_reason })),
   };
 }

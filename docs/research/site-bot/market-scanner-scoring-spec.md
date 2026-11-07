@@ -1310,3 +1310,36 @@ After the 3.1 re-score, re-gate if any of these happens:
 - any cell not already hand-checked enters the top 10.
 
 If none fires, the top 5 is final with no further review.
+
+## 3.1.6 Dead-site guard: judge the listed URL, not the bare host (amends 3.1.2, 3.5, R8)
+
+What fired it (run 8684c8405951): the one `status_404_410` slot that flipped renovation × Tel Aviv is a
+free-builder site whose GBP URL has a path (`<user>.wixsite.com/<site>`). R8 fetched the host root, which returns 404
+for every such site (all 26 cached `*.wixsite.com` hosts are 404), while the listed page is live (hand-checked
+2026-11-07). The same artefact is behind electrician × Hod HaSharon and aluminum × Petah Tikva crossing under 0.70.
+My §3.7 line "every change raises or holds S3" was wrong once 3.1.2 existed. 3.1.2 can only lower S3.
+
+```
+listed_url(b)   = Maps `url` if joined, else the real URL parsed from the LF redirect param (3.1)
+root_listed(b)  = listed_url path is "" or "/" (query string and #fragment ignored)
+
+site_dead for S3 (3.1.2) and for prospect w_b (3.5), offline from cache:
+  dns_nxdomain_confirmed  → qualifies (the whole host is gone)
+  parked                  → qualifies only if root_listed(b)
+  status_404_410          → qualifies only if root_listed(b)
+  otherwise               → outcome `root_only_inconclusive`: still a site in S3 (as 3.1.2 "failed");
+                            prospect w_b 1.10 (weak site, hard fail on the check)
+```
+
+- Future online runs (not now): R8 fetches `listed_url`, not `https://<domain>/`. A 404/410 on the listed URL
+  then qualifies whatever the path.
+- **Borderline band, display + re-gate trigger:** a cell with joined S3 in [0.67, 0.73] whose kill/pass
+  outcome flips by changing one slot's homepage outcome gets flag `s3_borderline`. A `s3_borderline` cell
+  can't enter the top 10 without a hand gate. Reason: Score jumps from 0 to ≈ 0.09 × Value at the kill line, so a
+  high-value cell 0.005 under the line can jump straight to #1.
+- **Same-phone duplicates (non-urgency trades):** two prospect listings in one cell with the same E.164 phone
+  count once (keep the higher `votes`). Urgency trades keep the R5.3 network rule.
+- `city_hit` (R8) matches `he_name` plus `he_aliases` (3.1.1), using the same matcher and prefix guards.
+  This recomputes from the stored title/H1 (2.7). No refetch.
+- **Re-score:** offline from cache, $0, no network. Report: cells whose kill state changed, the count of
+  `root_only_inconclusive` slots, and the `s3_borderline` list.

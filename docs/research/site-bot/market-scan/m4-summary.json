@@ -1,5 +1,5 @@
 {
- "run_id": "8684c8405951",
+ "run_id": "f354d8b0c7e7",
  "cells": 411,
  "ranked_cells": 410,
  "calibration_cells": [
@@ -24,10 +24,10 @@
  "step2": {
   "bought": 280,
   "pending": 0,
-  "killed_saturated_joined": 157,
-  "killed_pw_below": 151,
-  "pooled_members": 47,
-  "survived_scored": 32
+  "killed_saturated_joined": 161,
+  "killed_pw_below": 152,
+  "pooled_members": 46,
+  "survived_scored": 29
  },
  "ring2_pools": [
   {
@@ -49,7 +49,7 @@
   {
    "cell_id": "electrician@R3-ring2",
    "members": "beer-yaakov;gan-yavne;gedera;shoham",
-   "P_w": 27.65,
+   "P_w": 27.5,
    "S3": 0.5788,
    "score": 128.8807,
    "kill_reason": ""
@@ -65,7 +65,7 @@
   {
    "cell_id": "electrician@R1-ring2",
    "members": "or-yehuda;rosh-haayin",
-   "P_w": 16.7,
+   "P_w": 16.4,
    "S3": 0.6391,
    "score": 87.4663,
    "kill_reason": ""
@@ -89,17 +89,9 @@
   {
    "cell_id": "car-body-repair@R1-ring2",
    "members": "or-yehuda;rosh-haayin",
-   "P_w": 15.85,
+   "P_w": 14.6,
    "S3": 0.5089,
-   "score": 33.0966,
-   "kill_reason": ""
-  },
-  {
-   "cell_id": "aluminum@R1-ring2",
-   "members": "kiryat-ono;rosh-haayin;yehud-monosson",
-   "P_w": 9.7,
-   "S3": 0.6472,
-   "score": 19.9875,
+   "score": 32.214,
    "kill_reason": ""
   },
   {
@@ -135,6 +127,14 @@
    "kill_reason": "P_w<8"
   },
   {
+   "cell_id": "aluminum@R1-ring2",
+   "members": "rosh-haayin;yehud-monosson",
+   "P_w": 4.7,
+   "S3": 0.6324,
+   "score": 0,
+   "kill_reason": "P_w<8"
+  },
+  {
    "cell_id": "solar@R2-ring2",
    "members": "even-yehuda;kadima-zoran;kfar-yona;tel-mond",
    "P_w": 1.25,
@@ -145,8 +145,8 @@
  ],
  "bands_final": {
   "open": 2,
-  "middle": 131,
-  "saturated": 278
+  "middle": 127,
+  "saturated": 282
  },
  "homepage": {
   "hosts": 991,
@@ -200,10 +200,10 @@
    "out_of_cell": 340,
    "moved_in": 44
   },
-  "homepage_site_dead_prospects": 100
+  "homepage_site_dead_prospects": 84
  },
  "revision3_1": {
-  "lf_top3_site_dead_slots": 32,
+  "lf_top3_site_dead_slots": 25,
   "lf_slots_multi_branch": {
    "step2": 29,
    "step1_only": 0
@@ -214,5 +214,154 @@
    "incumbent_would_be_moved_in": 21
   },
   "note": "p_excluded_network excludes multi_branch (3.1.4, display only - still never a prospect); incumbent counts are per business on the cell it would have been assigned to"
+ },
+ "revision3_1_6": {
+  "site_dead_rule": "listed_url",
+  "homepage_fetch": "listed_url",
+  "lf_top3_site_dead_slots": 25,
+  "lf_top3_root_only_inconclusive_slots": 7,
+  "prospects_site_dead": 84,
+  "prospects_root_only_inconclusive": 16,
+  "prospects_same_phone_duplicates_dropped": 8,
+  "s3_borderline_band": [
+   0.67,
+   0.73
+  ],
+  "s3_borderline": [
+   {
+    "cell_id": "electrician@rishon-lezion",
+    "rank": 82,
+    "S3": 0.7038,
+    "P_w": 30.45,
+    "score": 0,
+    "score_unkilled": 116.3127,
+    "kill_reason": "saturated",
+    "flips": 2,
+    "in_top10": false
+   },
+   {
+    "cell_id": "movers@ashkelon",
+    "rank": 89,
+    "S3": 0.7028,
+    "P_w": 18.25,
+    "score": 0,
+    "score_unkilled": 275.7479,
+    "kill_reason": "saturated",
+    "flips": 1,
+    "in_top10": false
+   },
+   {
+    "cell_id": "car-body-repair@givatayim",
+    "rank": 91,
+    "S3": 0.7252,
+    "P_w": 15.4,
+    "score": 0,
+    "score_unkilled": 5.4421,
+    "kill_reason": "saturated",
+    "flips": 3,
+    "in_top10": false
+   },
+   {
+    "cell_id": "ac-repair@tel-aviv",
+    "rank": 103,
+    "S3": 0.7132,
+    "P_w": 9.3,
+    "score": 0,
+    "score_unkilled": 114.2737,
+    "kill_reason": "saturated",
+    "flips": 6,
+    "in_top10": false
+   },
+   {
+    "cell_id": "electrician@beer-yaakov",
+    "rank": 106,
+    "S3": 0.6884,
+    "P_w": 8.6,
+    "score": 0,
+    "score_unkilled": 12.9178,
+    "kill_reason": "pooled",
+    "flips": 1,
+    "in_top10": false
+   },
+   {
+    "cell_id": "electrician@hod-hasharon",
+    "rank": 107,
+    "S3": 0.7131,
+    "P_w": 8.6,
+    "score": 0,
+    "score_unkilled": 15.6496,
+    "kill_reason": "saturated",
+    "flips": 2,
+    "in_top10": false
+   },
+   {
+    "cell_id": "plumber@ramla",
+    "rank": 110,
+    "S3": 0.7247,
+    "P_w": 8,
+    "score": 0,
+    "score_unkilled": 161.5902,
+    "kill_reason": "saturated",
+    "flips": 1,
+    "in_top10": false
+   },
+   {
+    "cell_id": "renovation@tel-aviv",
+    "rank": 305,
+    "S3": 0.7168,
+    "P_w": 49.25,
+    "score": 0,
+    "score_unkilled": 254.1028,
+    "kill_reason": "saturated",
+    "flips": 3,
+    "in_top10": false
+   },
+   {
+    "cell_id": "aluminum@holon",
+    "rank": 306,
+    "S3": 0.707,
+    "P_w": 48,
+    "score": 0,
+    "score_unkilled": 16.4704,
+    "kill_reason": "saturated",
+    "flips": 7,
+    "in_top10": false
+   },
+   {
+    "cell_id": "aluminum@petah-tikva",
+    "rank": 318,
+    "S3": 0.7126,
+    "P_w": 12.6,
+    "score": 0,
+    "score_unkilled": 19.971,
+    "kill_reason": "saturated",
+    "flips": 4,
+    "in_top10": false
+   },
+   {
+    "cell_id": "renovation@beer-yaakov",
+    "rank": 321,
+    "S3": 0.7226,
+    "P_w": 11,
+    "score": 0,
+    "score_unkilled": 9.1094,
+    "kill_reason": "saturated",
+    "flips": 1,
+    "in_top10": false
+   },
+   {
+    "cell_id": "gates-fencing@tel-aviv",
+    "rank": 325,
+    "S3": 0.7286,
+    "P_w": 9.45,
+    "score": 0,
+    "score_unkilled": 70.3691,
+    "kill_reason": "saturated",
+    "flips": 1,
+    "in_top10": false
+   }
+  ],
+  "top10_hand_gate_required": [],
+  "note": "3.1.6: an s3_borderline cell cannot enter the top 10 without a hand gate; slot counts are per scored point"
  }
 }

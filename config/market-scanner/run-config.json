@@ -598,7 +598,13 @@
     "out_of_cell_title_rule": true,
     "organic_factor_note": "O disabled 2026-11-07 (Rev 3, 3.4); L_share/D_share display only",
     "lf_site_dead_no_site": true,
-    "incumbent_never_prospect": "destination_and_same_trade"
+    "incumbent_never_prospect": "destination_and_same_trade",
+    "s3_borderline_band": [
+      0.67,
+      0.73
+    ],
+    "prospect_same_phone_dedupe": "non_urgency",
+    "city_hit_matcher": "he_name_and_aliases"
   },
   "pilot": {
     "cells": [
@@ -719,7 +725,9 @@
     "weights": {
       "site_dead": 1.25,
       "failed": 1.1
-    }
+    },
+    "site_dead_rule": "listed_url",
+    "fetch": "listed_url"
   },
   "r12_applied": {
     "spec": "docs/research/site-bot/market-scanner-scoring-spec.md",
@@ -757,5 +765,11 @@
     "spec_sha256": "430bc93938965f12c23e32d27c68e82e64a3e9c674e167fa7128f9c8c432d188",
     "date": "2026-11-07",
     "by": "scripts/market-scan/apply-r3-1.mjs"
+  },
+  "r3_1_6_applied": {
+    "spec": "docs/research/site-bot/market-scanner-scoring-spec.md",
+    "spec_sha256": "42c4677a7ec6dfa80422fa29c0b4a8a6825486cb9e86b6c8d094b262d795d783",
+    "date": "2026-11-07",
+    "by": "scripts/market-scan/apply-r3-1-6.mjs"
   }
 }
