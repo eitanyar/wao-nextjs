@@ -55,6 +55,22 @@ domain (301s from old URLs, MX/email untouched), not only no-website businesses.
 - M5: owner voice notes as an input option.
 - M6: walkthrough video recorded from the real flow (pipeline + narration), placed on /site-bot after Noa + Eitan.
 
+### Re-plan after M0 (2026-11-07, Adam; source `docs/research/site-bot/paid-journey-m0-report.md`, commit `aaf7a80`)
+M0 finding: the pipeline runs pay → research → operator → generate → review → deploy (reverse of the approved
+flow), the generator fails its own copy validator 4/4, and the existing-domain path does not exist. M1–M4 are new
+orchestration, not re-enabling. New order (critical path = a site that generates at all):
+- **M0.5 plumbing (S/M):** prod guard on `/site-bot/pay/*` (B16) + guard test; `res.ok` checks (B9, B10);
+  `WAO_CLIENTS_DIR` (B13); test data out of tracked dirs (B14); research fixture/cache mode (B5); generate logs
+  its real error (B4 part); stale-Qwen-env note (B17).
+- **M2a generation engine (M/L):** copy limits in the prompt + bounded repair pass (B4); research → `copy_ready`
+  → `compilePageBrief` orchestration (B3). Acceptance: fixture business generates a valid site record ≥ 9/10 runs.
+- **M1** pre-fill + ≤ 3 questions + buy CTA on the result (B11, B15, F1–F4; truth-gap fields asked up front).
+- **M2b** preview before pay on noindex staging host (B2, B12, F6); customer-scoped session replaces the admin gate (B1).
+- **M3** ₪199/mo on the existing subscriptions engine + cancel + status page + login (B6, F5, F7, F12).
+- **M4** GBP add-manager with real verification + UI (B8, F11); existing-domain path: domain capture, DNS/MX read
+  and preserve, 301 map, custom-domain bind (B7, F10).
+- **M5, M6** unchanged. Copy items F8, F10, F11 → waocopy → Noa, landing with M2b / M4.
+
 ## Verifier
 Roni walks the flow at runtime as the persona (desktop + mobile, RTL), confirms the mock charge, cancel and
 status page work, that no real GBP/DNS/publish call fires in test, that the audit-only guard still holds for
