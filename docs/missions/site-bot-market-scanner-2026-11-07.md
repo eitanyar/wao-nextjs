@@ -52,6 +52,13 @@ The scan yields a **named list** (20–40 businesses per winning cell), so reach
 
 **Approved spend (Eitan, 2026-11-07):** Stage 1 cap $10, Stage-2 pilot cap $1. DataForSEO balance
 $40.61 on 2026-11-07. Re-check prices on the day of the run.
+**M4 hard cap $6 approved by Eitan 2026-11-07** (spec §2.11; balance $33.99, expected ≈ $3.50).
+
+**Stop-and-see gate (Eitan, 2026-11-07):** after M4 and before any outreach, Yonatan opens the real Local
+Finder top 3 + a sample of counted weak prospects for each of the top 5 cells (plus pilot cells A, C, D) from
+the private file and confirms the score matches what a human sees (are the "strong" ones really strong, are the
+"weak" ones really reachable owner-run businesses). Mismatches revise the spec before the top 5 is final.
+Eitan gets a one-page anonymized summary, not raw data.
 
 ## Files
 - Profession seeds: `data/batch/<slug>/keywords.json` (44 packs, July 2026, GPT-generated — keywords
