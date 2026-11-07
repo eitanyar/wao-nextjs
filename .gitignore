@@ -26,6 +26,7 @@
 /.next-m05/
 /.next-m05-dev/
 /.next-rehearsal/
+/.next-m2a/
 # deploy.sh release candidates and releases (built inside the project root); also keeps
 # Tailwind's source scan out of old builds
 /releases/

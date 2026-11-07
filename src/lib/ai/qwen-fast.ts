@@ -19,7 +19,38 @@ export type CallQwenJSONOptions = {
   timeoutMs?: number;
   maxAttempts?: number;
   fetch?: typeof globalThis.fetch;
+  /** Called once per HTTP attempt that returned a body, with the provider's token usage
+   * (OpenAI-compatible `usage`), so callers can log tokens/cost. Never receives content. */
+  onUsage?: (usage: QwenUsage) => void;
 };
+
+export type QwenUsage = {
+  model: string;
+  promptTokens: number;
+  completionTokens: number;
+  reasoningTokens: number;
+  totalTokens: number;
+  ok: boolean;
+};
+
+function reportUsage(opts: CallQwenJSONOptions, model: string, data: unknown, ok: boolean): void {
+  if (!opts.onUsage) return;
+  const usage = (data as { usage?: Record<string, unknown> } | null)?.usage;
+  const num = (value: unknown) => (typeof value === 'number' && Number.isFinite(value) ? value : 0);
+  const details = usage?.completion_tokens_details as Record<string, unknown> | undefined;
+  try {
+    opts.onUsage({
+      model,
+      promptTokens: num(usage?.prompt_tokens),
+      completionTokens: num(usage?.completion_tokens),
+      reasoningTokens: num(details?.reasoning_tokens),
+      totalTokens: num(usage?.total_tokens),
+      ok,
+    });
+  } catch {
+    // Telemetry must never break a generation call.
+  }
+}
 
 const DEFAULT_TIMEOUT_MS = 180_000;
 const DEFAULT_MAX_ATTEMPTS = 3;
@@ -85,6 +116,7 @@ async function requestQwenJSON(
         signal,
       });
       const data = await res.json();
+      reportUsage(opts, model, data, res.ok);
       if (!res.ok) throw new Error(`Qwen API error (${res.status})`);
       const text = data?.choices?.[0]?.message?.content;
       if (typeof text !== 'string') {

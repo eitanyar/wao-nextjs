@@ -61,6 +61,7 @@ const CALL_SITES = {
   'src/lib/hybrid/snapshotStore.ts': ['defaultClientsDir()'],
   'src/lib/shared/clients.ts': ['clientsDir()'],
   'src/lib/site-bot/research/researchStore.ts': ['siteResearchDir()'],
+  'src/lib/site-bot/researchToSite.ts': ['sitesDir()'],
   'src/lib/vault.ts': ['clientsDir()'],
 };
 

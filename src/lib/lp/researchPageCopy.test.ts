@@ -130,10 +130,12 @@ test('bounded copy rejects malformed shapes, excess fields and sparse arrays gen
 });
 
 test('malformed Tamar output never calls Noa and malformed Noa output is never returned', async () => {
+  // Repairs off: this pins the single-pass contract; the repair loop has its own tests.
   for (const tamar of ['{private model text', JSON.stringify({ ...copy, heroHeadline: 'x'.repeat(69) }),
     `${JSON.stringify(copy)}${' '.repeat(16 * 1024)}`]) {
     let calls = 0;
     await assert.rejects(() => generateResearchPageCopy(brief(), {}, {
+      maxRepairs: 0,
       callJson: async () => {
         calls++;
         if (calls !== 1) throw new Error('unexpected Noa call');
@@ -145,6 +147,7 @@ test('malformed Tamar output never calls Noa and malformed Noa output is never r
   for (const noa of ['{private model text', JSON.stringify({ ...copy, serviceDetails: [{ name: 'Name', description: '' }] })]) {
     let calls = 0;
     await assert.rejects(() => generateResearchPageCopy(brief(), {}, {
+      maxRepairs: 0,
       callJson: async () => {
         calls++;
         if (calls === 1) return JSON.stringify(copy);
@@ -163,7 +166,9 @@ test('FAQ policy result is bounded after Noa and retains valid supported candida
   await assert.rejects(() => generateResearchPageCopy(candidate, {}, {
     callJson: async () => { calls++; return JSON.stringify(copy); },
   }), /^Error: Invalid bounded generated site copy\.$/);
-  assert.equal(calls, 2);
+  // M2a: the brief's FAQs replace model FAQs before validation, so an over-limit brief
+  // FAQ fails at the Tamar stage; FAQs are never sent to the model for repair.
+  assert.equal(calls, 1);
 
   const seen: string[] = [];
   const generated = await generateResearchPageCopy(brief(), {}, {
@@ -188,7 +193,7 @@ test('validator failures carry stage + every field/limit/actual, never the copy 
     reviewContext: null,
   };
   let caught: unknown;
-  await generateResearchPageCopy(brief(), {}, { callJson: async () => JSON.stringify(broken) }).catch(error => { caught = error; });
+  await generateResearchPageCopy(brief(), {}, { maxRepairs: 0, deterministicFixes: false, callJson: async () => JSON.stringify(broken) }).catch(error => { caught = error; });
   assert.ok(caught instanceof GeneratedCopyValidationError);
   assert.match(String(caught), /^Error: Invalid bounded generated site copy\.$/);
   assert.equal(caught.stage, 'tamar');
@@ -203,7 +208,7 @@ test('validator failures carry stage + every field/limit/actual, never the copy 
 
   let calls = 0;
   caught = undefined;
-  await generateResearchPageCopy(brief(), {}, { callJson: async () => (++calls === 1 ? JSON.stringify(copy) : '{not json') })
+  await generateResearchPageCopy(brief(), {}, { maxRepairs: 0, callJson: async () => (++calls === 1 ? JSON.stringify(copy) : '{not json') })
     .catch(error => { caught = error; });
   assert.ok(caught instanceof GeneratedCopyValidationError);
   assert.equal(caught.stage, 'noa');

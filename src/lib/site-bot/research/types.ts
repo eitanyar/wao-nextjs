@@ -66,6 +66,10 @@ export interface PageOpportunity {
   opportunity: string;
   evidenceIds: string[];
   status: 'unknown' | 'held' | 'ready';
+  /** Set by the copy_ready plan (M2a): renderer page class for this opportunity. */
+  pageClass?: string;
+  /** Set by the copy_ready plan (M2a): the research-time ID this generator-safe ID replaced. */
+  sourceOpportunityId?: string;
 }
 
 export interface InternalLinkEdge {

@@ -189,7 +189,14 @@ export async function POST(req: Request) {
       pageBriefs: body.pageBriefs,
       graphEdges: body.graphEdges,
     }, {
-      generateCopy: generateResearchPageCopy,
+      // M2a: bounded repair pass + safe fixes run inside generateResearchPageCopy;
+      // log what they did (field names, limits, lengths and fix kinds only, never copy text).
+      generateCopy: (brief, data) => generateResearchPageCopy(brief, data, {
+        onEvent: event => {
+          if (event.kind === 'violations') return;
+          console.info(`[site-bot generate] copy_${event.kind} ${JSON.stringify({ slug, page: brief.page.id, stage: event.stage, attempt: event.attempt, fields: event.fields, fixes: event.fixes })}`);
+        },
+      }),
       renderInputs: {
         theme,
         assets,

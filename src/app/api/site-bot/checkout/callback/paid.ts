@@ -8,6 +8,7 @@ import { deriveOpenResearchGates } from '@/lib/site-bot/research/gates';
 import { readResearchDossier } from '@/lib/site-bot/research/researchStore';
 import { runSiteResearch, type SiteResearchInput } from '@/lib/site-bot/research/runResearch';
 import { completePaidCheckoutResearch } from '@/lib/site-bot/checkout/researchCompletion';
+import { buildSiteResearchInput } from '@/lib/site-bot/research/researchInput';
 
 const SITE_BOT_PRICE = 9.9;
 
@@ -17,32 +18,7 @@ interface PendingRecord {
 }
 
 function researchInput(sessionId: string, collectedData: CollectedData): SiteResearchInput {
-  const capturedAt = new Date().toISOString();
-  const owner = { sourceId: `checkout:${sessionId}`, capturedAt };
-  const serviceModel = collectedData.serviceModel === 'location'
-    ? 'fixed'
-    : collectedData.serviceModel === 'mixed'
-      ? 'hybrid'
-      : collectedData.serviceModel === 'event'
-        ? 'field'
-        : collectedData.serviceModel ?? 'remote';
-  const services = [collectedData.primaryService, ...(collectedData.secondaryServices ?? '').split(',')]
-    .map(value => value?.trim())
-    .filter((value): value is string => Boolean(value));
-  return {
-    businessTruth: {
-      businessName: collectedData.businessName ?? collectedData.ownerName ?? sessionId,
-      serviceModel,
-      confirmedServices: services.map(value => ({ value, owner })),
-      moneyPriorities: (collectedData.priorityServices ?? []).map(value => ({ value, owner })),
-      ...(collectedData.targetLocation ? { base: { value: collectedData.targetLocation, owner } } : {}),
-      ...(collectedData.travelBoundary ? { travelBoundary: { value: collectedData.travelBoundary, owner } } : {}),
-      servedAreas: (collectedData.specificCities ?? '').split(',').map(value => value.trim()).filter(Boolean).map(value => ({ value, owner })),
-      excludedAreas: (collectedData.geographicExclusions ?? []).map(value => ({ value, owner })),
-      ...(serviceModel === 'fixed' ? { customerTravel: { value: true, owner } } : {}),
-    },
-    seeds: services,
-  };
+  return buildSiteResearchInput(`checkout:${sessionId}`, collectedData, () => new Date(), sessionId);
 }
 
 export async function POST(req: Request) {
