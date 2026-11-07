@@ -22,6 +22,16 @@
           "region": "R1",
           "ring": "core",
           "he_name": "תל אביב-יפו",
+          "he_aliases": [
+            "תל אביב",
+            "תל-אביב",
+            "תל אביב יפו",
+            "תל-אביב-יפו",
+            "תל אביב-יפו",
+            "יפו",
+            "ת\"א",
+            "ת״א"
+          ],
           "en_name": "Tel Aviv-Yafo",
           "ads_location_code": 1008006,
           "ads_location_name": "Tel Aviv-Yafo,Tel Aviv District,Israel",
@@ -37,6 +47,9 @@
           "region": "R1",
           "ring": "core",
           "he_name": "רמת גן",
+          "he_aliases": [
+            "רמת-גן"
+          ],
           "en_name": "Ramat Gan",
           "ads_location_code": 1008004,
           "ads_location_name": "Ramat Gan,Tel Aviv District,Israel",
@@ -52,6 +65,9 @@
           "region": "R1",
           "ring": "core",
           "he_name": "גבעתיים",
+          "he_aliases": [
+            "גבעתים"
+          ],
           "en_name": "Giv'atayim",
           "ads_location_code": 1008000,
           "ads_location_name": "Giv'atayim,Tel Aviv District,Israel",
@@ -67,6 +83,9 @@
           "region": "R1",
           "ring": "core",
           "he_name": "בני ברק",
+          "he_aliases": [
+            "בני-ברק"
+          ],
           "en_name": "Bnei Brak",
           "ads_location_code": 1007999,
           "ads_location_name": "Bnei Brak,Tel Aviv District,Israel",
@@ -99,6 +118,9 @@
           "region": "R1",
           "ring": "core",
           "he_name": "בת ים",
+          "he_aliases": [
+            "בת-ים"
+          ],
           "en_name": "Bat Yam",
           "ads_location_code": 1007998,
           "ads_location_name": "Bat Yam,Center District,Israel",
@@ -114,6 +136,14 @@
           "region": "R1",
           "ring": "core",
           "he_name": "פתח תקווה",
+          "he_aliases": [
+            "פתח תקוה",
+            "פתח-תקווה",
+            "פתח-תקוה",
+            "פתח תיקווה",
+            "פ\"ת",
+            "פ״ת"
+          ],
           "en_name": "Petah Tikva",
           "ads_location_code": 1007988,
           "ads_location_name": "Petah Tikva,Center District,Israel",
@@ -129,6 +159,11 @@
           "region": "R1",
           "ring": "ring2",
           "he_name": "קריית אונו",
+          "he_aliases": [
+            "קרית אונו",
+            "קריית-אונו",
+            "קרית-אונו"
+          ],
           "en_name": "Kiryat Ono",
           "ads_location_code": 1007989,
           "ads_location_name": "Kiryat Ono,Tel Aviv District,Israel",
@@ -144,6 +179,9 @@
           "region": "R1",
           "ring": "ring2",
           "he_name": "אור יהודה",
+          "he_aliases": [
+            "אור-יהודה"
+          ],
           "en_name": "Or Yehuda",
           "ads_location_code": 1008003,
           "ads_location_name": "Or Yehuda,Tel Aviv District,Israel",
@@ -159,6 +197,11 @@
           "region": "R1",
           "ring": "ring2",
           "he_name": "יהוד-מונוסון",
+          "he_aliases": [
+            "יהוד",
+            "יהוד מונוסון",
+            "יהוד מונסון"
+          ],
           "en_name": "Yehud-Monosson",
           "ads_location_code": 1007996,
           "ads_location_name": "Yehud-Monosson,Center District,Israel",
@@ -174,6 +217,9 @@
           "region": "R1",
           "ring": "ring2",
           "he_name": "ראש העין",
+          "he_aliases": [
+            "ראש-העין"
+          ],
           "en_name": "Rosh Haayin",
           "ads_location_code": 1007994,
           "ads_location_name": "Rosh Haayin,Center District,Israel",
@@ -189,6 +235,9 @@
           "region": "R1",
           "ring": "ring2",
           "he_name": "גבעת שמואל",
+          "he_aliases": [
+            "גבעת-שמואל"
+          ],
           "en_name": "Giv'at Shmuel",
           "ads_location_code": null,
           "ads_location_name": null,
@@ -225,6 +274,9 @@
           "region": "R2",
           "ring": "core",
           "he_name": "הרצליה",
+          "he_aliases": [
+            "הרצלייה"
+          ],
           "en_name": "Herzliya",
           "ads_location_code": 1008001,
           "ads_location_name": "Herzliya,Tel Aviv District,Israel",
@@ -255,6 +307,9 @@
           "region": "R2",
           "ring": "core",
           "he_name": "כפר סבא",
+          "he_aliases": [
+            "כפר-סבא"
+          ],
           "en_name": "Kefar Sava",
           "ads_location_code": 1007982,
           "ads_location_name": "Kefar Sava,Center District,Israel",
@@ -270,6 +325,9 @@
           "region": "R2",
           "ring": "core",
           "he_name": "הוד השרון",
+          "he_aliases": [
+            "הוד-השרון"
+          ],
           "en_name": "Hod Hasharon",
           "ads_location_code": 1007981,
           "ads_location_name": "Hod Hasharon,Center District,Israel",
@@ -285,6 +343,9 @@
           "region": "R2",
           "ring": "core",
           "he_name": "רמת השרון",
+          "he_aliases": [
+            "רמת-השרון"
+          ],
           "en_name": "Ramat Hasharon",
           "ads_location_code": 1008005,
           "ads_location_name": "Ramat Hasharon,Tel Aviv District,Israel",
@@ -300,6 +361,9 @@
           "region": "R2",
           "ring": "ring2",
           "he_name": "אבן יהודה",
+          "he_aliases": [
+            "אבן-יהודה"
+          ],
           "en_name": "Even Yehuda",
           "ads_location_code": 9190173,
           "ads_location_name": "Even Yehuda,Center District,Israel",
@@ -315,6 +379,10 @@
           "region": "R2",
           "ring": "ring2",
           "he_name": "קדימה-צורן",
+          "he_aliases": [
+            "קדימה צורן",
+            "צורן"
+          ],
           "en_name": "Kadima Zoran",
           "ads_location_code": 9196550,
           "ads_location_name": "Kadima Zoran,Center District,Israel",
@@ -330,6 +398,9 @@
           "region": "R2",
           "ring": "ring2",
           "he_name": "כפר יונה",
+          "he_aliases": [
+            "כפר-יונה"
+          ],
           "en_name": "Kfar Yona",
           "ads_location_code": 9195774,
           "ads_location_name": "Kfar Yona,Center District,Israel",
@@ -345,6 +416,9 @@
           "region": "R2",
           "ring": "ring2",
           "he_name": "תל מונד",
+          "he_aliases": [
+            "תל-מונד"
+          ],
           "en_name": "Tel Mond",
           "ads_location_code": 9195754,
           "ads_location_name": "Tel Mond,Center District,Israel",
@@ -366,6 +440,12 @@
           "region": "R3",
           "ring": "core",
           "he_name": "ראשון לציון",
+          "he_aliases": [
+            "ראשון-לציון",
+            "ראשל\"צ",
+            "ראשל״צ",
+            "ראשלצ"
+          ],
           "en_name": "Rishon LeZion",
           "ads_location_code": 1007993,
           "ads_location_name": "Rishon LeZion,Center District,Israel",
@@ -396,6 +476,9 @@
           "region": "R3",
           "ring": "core",
           "he_name": "נס ציונה",
+          "he_aliases": [
+            "נס-ציונה"
+          ],
           "en_name": "Ness Ziona",
           "ads_location_code": 1007985,
           "ads_location_name": "Ness Ziona,Center District,Israel",
@@ -456,6 +539,11 @@
           "region": "R3",
           "ring": "core",
           "he_name": "מודיעין-מכבים-רעות",
+          "he_aliases": [
+            "מודיעין",
+            "מודיעין מכבים רעות",
+            "מודיעין-מכבים רעות"
+          ],
           "en_name": "Modi'in-Maccabim-Re'ut",
           "ads_location_code": 9050473,
           "ads_location_name": "Modi'in-Maccabim-Re'ut,Center District,Israel",
@@ -486,6 +574,9 @@
           "region": "R3",
           "ring": "ring2",
           "he_name": "מזכרת בתיה",
+          "he_aliases": [
+            "מזכרת-בתיה"
+          ],
           "en_name": "Mazkeret Batya",
           "ads_location_code": 9197280,
           "ads_location_name": "Mazkeret Batya,Center District,Israel",
@@ -501,6 +592,9 @@
           "region": "R3",
           "ring": "ring2",
           "he_name": "באר יעקב",
+          "he_aliases": [
+            "באר-יעקב"
+          ],
           "en_name": "Be'er Ya'akov",
           "ads_location_code": 9050469,
           "ads_location_name": "Be'er Ya'akov,Center District,Israel",
@@ -516,6 +610,9 @@
           "region": "R3",
           "ring": "ring2",
           "he_name": "גן יבנה",
+          "he_aliases": [
+            "גן-יבנה"
+          ],
           "en_name": "Gan Yavne",
           "ads_location_code": 9195939,
           "ads_location_name": "Gan Yavne,Center District,Israel",
@@ -552,6 +649,9 @@
           "region": "R4",
           "ring": "core",
           "he_name": "ירושלים",
+          "he_aliases": [
+            "ירושליים"
+          ],
           "en_name": "Jerusalem",
           "ads_location_code": 1007978,
           "ads_location_name": "Jerusalem,Jerusalem District,Israel",
@@ -567,6 +667,10 @@
           "region": "R4",
           "ring": "ring2",
           "he_name": "מבשרת ציון",
+          "he_aliases": [
+            "מבשרת",
+            "מבשרת-ציון"
+          ],
           "en_name": "Mevaseret Zion",
           "ads_location_code": 9196007,
           "ads_location_name": "Mevaseret Zion,Jerusalem District,Israel",
@@ -582,6 +686,9 @@
           "region": "R4",
           "ring": "ring2",
           "he_name": "בית שמש",
+          "he_aliases": [
+            "בית-שמש"
+          ],
           "en_name": "Bet Shemesh",
           "ads_location_code": 1007977,
           "ads_location_name": "Bet Shemesh,Jerusalem District,Israel",
@@ -599,6 +706,9 @@
           "region": "R4",
           "ring": "ring2",
           "he_name": "מעלה אדומים",
+          "he_aliases": [
+            "מעלה-אדומים"
+          ],
           "en_name": "Ma'ale Adumim",
           "ads_location_code": null,
           "ads_location_name": null,
@@ -635,6 +745,11 @@
           "region": "R5",
           "ring": "ring2",
           "he_name": "קריית אתא",
+          "he_aliases": [
+            "קרית אתא",
+            "קריית-אתא",
+            "קרית-אתא"
+          ],
           "en_name": "Kiryat Ata",
           "ads_location_code": 9050472,
           "ads_location_name": "Kiryat Ata,Haifa District,Israel",
@@ -650,6 +765,11 @@
           "region": "R5",
           "ring": "ring2",
           "he_name": "קריית ביאליק",
+          "he_aliases": [
+            "קרית ביאליק",
+            "קריית-ביאליק",
+            "קרית-ביאליק"
+          ],
           "en_name": "Kiryat Bialik",
           "ads_location_code": 9196942,
           "ads_location_name": "Kiryat Bialik,Haifa District,Israel",
@@ -665,6 +785,11 @@
           "region": "R5",
           "ring": "ring2",
           "he_name": "קריית מוצקין",
+          "he_aliases": [
+            "קרית מוצקין",
+            "קריית-מוצקין",
+            "קרית-מוצקין"
+          ],
           "en_name": "Kiryat Motzkin",
           "ads_location_code": 9197006,
           "ads_location_name": "Kiryat Motzkin,Haifa District,Israel",
@@ -680,6 +805,11 @@
           "region": "R5",
           "ring": "ring2",
           "he_name": "קריית ים",
+          "he_aliases": [
+            "קרית ים",
+            "קריית-ים",
+            "קרית-ים"
+          ],
           "en_name": "Kiryat Yam",
           "ads_location_code": 9197294,
           "ads_location_name": "Kiryat Yam,Haifa District,Israel",
@@ -710,6 +840,10 @@
           "region": "R5",
           "ring": "ring2",
           "he_name": "טירת כרמל",
+          "he_aliases": [
+            "טירת-כרמל",
+            "טירת הכרמל"
+          ],
           "en_name": "Tirat Carmel",
           "ads_location_code": 1007975,
           "ads_location_name": "Tirat Carmel,Haifa District,Israel",
@@ -746,6 +880,12 @@
           "region": "R6",
           "ring": "ring2",
           "he_name": "פרדס חנה-כרכור",
+          "he_aliases": [
+            "פרדס חנה",
+            "פרדס-חנה",
+            "פרדס חנה כרכור",
+            "כרכור"
+          ],
           "en_name": "Pardes Hanna-Karkur",
           "ads_location_code": 9050474,
           "ads_location_name": "Pardes Hanna-Karkur,Haifa District,Israel",
@@ -761,6 +901,11 @@
           "region": "R6",
           "ring": "ring2",
           "he_name": "זכרון יעקב",
+          "he_aliases": [
+            "זיכרון יעקב",
+            "זכרון-יעקב",
+            "זיכרון-יעקב"
+          ],
           "en_name": "Zikhron Ya'akov",
           "ads_location_code": 9197436,
           "ads_location_name": "Zikhron Ya'akov,Haifa District,Israel",
@@ -776,6 +921,11 @@
           "region": "R6",
           "ring": "ring2",
           "he_name": "בנימינה-גבעת עדה",
+          "he_aliases": [
+            "בנימינה",
+            "בנימינה גבעת עדה",
+            "גבעת עדה"
+          ],
           "en_name": "Binyamina-Giv'at Ada",
           "ads_location_code": 9050471,
           "ads_location_name": "Binyamina-Giv'at Ada,Haifa District,Israel",
@@ -791,6 +941,9 @@
           "region": "R6",
           "ring": "ring2",
           "he_name": "אור עקיבא",
+          "he_aliases": [
+            "אור-עקיבא"
+          ],
           "en_name": "Or Akiva",
           "ads_location_code": 9197414,
           "ads_location_name": "Or Akiva,Haifa District,Israel",
@@ -827,6 +980,10 @@
           "region": "R7",
           "ring": "core",
           "he_name": "נוף הגליל",
+          "he_aliases": [
+            "נוף-הגליל",
+            "נצרת עילית"
+          ],
           "en_name": "Nof HaGalil",
           "ads_location_code": 1008017,
           "ads_location_name": "Nof HaGalil,North District,Israel",
@@ -842,6 +999,12 @@
           "region": "R7",
           "ring": "ring2",
           "he_name": "יקנעם עילית",
+          "he_aliases": [
+            "יקנעם",
+            "יוקנעם",
+            "יקנעם-עילית",
+            "יוקנעם עילית"
+          ],
           "en_name": "Yokne'am Illit",
           "ads_location_code": 1008020,
           "ads_location_name": "Yokne'am Illit,North District,Israel",
@@ -857,6 +1020,9 @@
           "region": "R7",
           "ring": "ring2",
           "he_name": "מגדל העמק",
+          "he_aliases": [
+            "מגדל-העמק"
+          ],
           "en_name": "Migdal HaEmek",
           "ads_location_code": 1008014,
           "ads_location_name": "Migdal HaEmek,North District,Israel",
@@ -908,6 +1074,9 @@
           "region": "R8",
           "ring": "core",
           "he_name": "נהריה",
+          "he_aliases": [
+            "נהרייה"
+          ],
           "en_name": "Nahariyya",
           "ads_location_code": 1008015,
           "ads_location_name": "Nahariyya,North District,Israel",
@@ -938,6 +1107,9 @@
           "region": "R8",
           "ring": "ring2",
           "he_name": "מעלות-תרשיחא",
+          "he_aliases": [
+            "מעלות תרשיחא"
+          ],
           "en_name": "Ma'alot-Tarshiha",
           "ads_location_code": 9196052,
           "ads_location_name": "Ma'alot-Tarshiha,North District,Israel",
@@ -953,6 +1125,11 @@
           "region": "R8",
           "ring": "ring2",
           "he_name": "קריית שמונה",
+          "he_aliases": [
+            "קרית שמונה",
+            "קריית-שמונה",
+            "קרית-שמונה"
+          ],
           "en_name": "Qiryat Shemona",
           "ads_location_code": 1008018,
           "ads_location_name": "Qiryat Shemona,North District,Israel",
@@ -1004,6 +1181,11 @@
           "region": "R9",
           "ring": "ring2",
           "he_name": "קריית מלאכי",
+          "he_aliases": [
+            "קרית מלאכי",
+            "קריית-מלאכי",
+            "קרית-מלאכי"
+          ],
           "en_name": "Kiryat Malakhi",
           "ads_location_code": 9197549,
           "ads_location_name": "Kiryat Malakhi,South District,Israel",
@@ -1019,6 +1201,11 @@
           "region": "R9",
           "ring": "ring2",
           "he_name": "קריית גת",
+          "he_aliases": [
+            "קרית גת",
+            "קריית-גת",
+            "קרית-גת"
+          ],
           "en_name": "Kiryat Gat",
           "ads_location_code": 9197095,
           "ads_location_name": "Kiryat Gat,South District,Israel",
@@ -1034,6 +1221,17 @@
           "region": "R9",
           "ring": "ring2",
           "he_name": "שדרות",
+          "he_match_guard": {
+            "prefix_letters": [
+              "ב",
+              "מ",
+              "ל"
+            ],
+            "end": "title_end_punct_or_word",
+            "end_words": [
+              "והסביבה"
+            ]
+          },
           "en_name": "Sderot",
           "ads_location_code": 9050476,
           "ads_location_name": "Sderot,South District,Israel",
@@ -1070,6 +1268,13 @@
           "region": "R10",
           "ring": "ring2",
           "he_name": "עומר",
+          "he_match_guard": {
+            "prefix_letters": [
+              "ב",
+              "מ",
+              "ל"
+            ]
+          },
           "en_name": "Omer",
           "ads_location_code": 9196057,
           "ads_location_name": "Omer,South District,Israel",

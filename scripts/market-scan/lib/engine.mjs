@@ -23,7 +23,7 @@ export const STAGE1_CELL_COLUMNS = ['value_rank', 'slug', 'trade_he', 'region', 
 export const STAGE2_COLUMNS = ['rank', 'cell_id', 'expect', 'calibration', 'ranked', 'slug', 'trade_he', 'region', 'city', 'city_he', 'ring', 'population', 'urgency_lead_gen', 'V_region', 'V_cell', 'V_source', 'T_p_usd', 'M', 'value_usd', 'region_pass', 'region_advance',
   'stopped_at', 'gate_reason', 'maps_bought', 'points', 'S3_step1', 'S3_step1_low', 'S3_step1_high', 'S3', 'S3_band', 'S3_points', 'top3_s', 'lf_top3_joined', 'lf_top3_paid', 'W', 'P', 'P_w', 'pooled', 'pooled_into', 'pool_members',
   'L_share', 'D_share', 'O', 'organic_counted', 'organic_unresolved', 'local_pool', 'local_default', 'has_ai_overview',
-  'kit_level', 'score', 'score_unkilled', 'kill_reason', 'flags', 'lf_pack_overlap', 'lead_gen_listings', 'lf_slots_maps', 'lf_slots_best_known', 'lf_slots_neutral', 'lf_top3_network', 'p_excluded_title', 'p_excluded_network', 'p_out_of_cell', 'p_moved_in', 'homepage_checked', 'homepage_failed', 'homepage_site_dead', 'homepage_not_checked', 'maps_items_t1', 'maps_items_t2', 'relevant_ranked', 'run_id'];
+  'kit_level', 'score', 'score_unkilled', 'kill_reason', 'flags', 'lf_pack_overlap', 'lead_gen_listings', 'lf_slots_maps', 'lf_slots_best_known', 'lf_slots_neutral', 'lf_top3_network', 'lf_top3_multi_branch', 'lf_top3_site_dead', 'p_excluded_title', 'p_excluded_network', 'p_excluded_multi_branch', 'p_out_of_cell', 'p_moved_in', 'p_excluded_incumbent', 'p_excluded_incumbent_moved_in', 'homepage_checked', 'homepage_failed', 'homepage_site_dead', 'homepage_not_checked', 'maps_items_t1', 'maps_items_t2', 'relevant_ranked', 'run_id'];
 // Compact view for the ranked M4 markdown table.
 export const M4_MD_COLUMNS = ['rank', 'slug', 'trade_he', 'region', 'city', 'city_he', 'ring', 'pool_members', 'urgency_lead_gen', 'value_usd', 'points', 'S3_step1', 'S3', 'S3_band', 'P', 'P_w', 'L_share', 'D_share', 'O', 'score', 'kill_reason', 'kit_level'];
 
@@ -259,6 +259,15 @@ function writeM4(outDir, privateDir, scored, { runId, run, stage1, config, get, 
       prospects_excluded: { title: sum('p_excluded_title'), network: sum('p_excluded_network'), out_of_cell: sum('p_out_of_cell'), moved_in: sum('p_moved_in') },
       homepage_site_dead_prospects: sum('homepage_site_dead'),
     };
+    // Revision 3.1 (3.1.2-3.1.4) diagnostics, counts only
+    if (run.stage2.incumbent_never_prospect || run.stage2.lf_site_dead_no_site) {
+      summary.revision3_1 = {
+        lf_top3_site_dead_slots: sum('lf_top3_site_dead'),
+        lf_slots_multi_branch: { step2: sum('lf_top3_multi_branch'), step1_only: cellRows.filter(r => !r.maps_bought).reduce((n, r) => n + r.lf_top3_multi_branch, 0) },
+        prospects_excluded: { multi_branch: sum('p_excluded_multi_branch'), incumbent: sum('p_excluded_incumbent'), incumbent_would_be_moved_in: sum('p_excluded_incumbent_moved_in') },
+        note: 'p_excluded_network excludes multi_branch (3.1.4, display only - still never a prospect); incumbent counts are per business on the cell it would have been assigned to',
+      };
+    }
   }
   writeJson(path.join(outDir, 'm4-summary.json'), summary);
 

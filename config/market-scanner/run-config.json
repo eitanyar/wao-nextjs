@@ -572,7 +572,8 @@
       "block_min_stuffed": 2,
       "shared_domain_min_cids": 2,
       "shared_domain_scope": "profession",
-      "lf_s_b_floor": 0.6
+      "lf_s_b_floor": 0.6,
+      "multi_branch_min_votes": 150
     },
     "title_exclude": {
       "electrician": [
@@ -595,7 +596,9 @@
       "פריסה ארצית"
     ],
     "out_of_cell_title_rule": true,
-    "organic_factor_note": "O disabled 2026-11-07 (Rev 3, 3.4); L_share/D_share display only"
+    "organic_factor_note": "O disabled 2026-11-07 (Rev 3, 3.4); L_share/D_share display only",
+    "lf_site_dead_no_site": true,
+    "incumbent_never_prospect": "destination_and_same_trade"
   },
   "pilot": {
     "cells": [
@@ -748,5 +751,11 @@
     "spec_sha256": "b4f300aed31beaddd3c056e18542d4f33eaf85f4b36f9c5e8e7854ad422758db",
     "date": "2026-11-07",
     "by": "scripts/market-scan/apply-r3-8.mjs"
+  },
+  "r3_1_applied": {
+    "spec": "docs/research/site-bot/market-scanner-scoring-spec.md",
+    "spec_sha256": "430bc93938965f12c23e32d27c68e82e64a3e9c674e167fa7128f9c8c432d188",
+    "date": "2026-11-07",
+    "by": "scripts/market-scan/apply-r3-1.mjs"
   }
 }

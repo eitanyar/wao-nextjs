@@ -192,7 +192,8 @@ export function strengthComponents(b, ctx) {
   return {
     reviews: votesUnknown ? null : Math.min(1, Math.log10(1 + votes) / Math.log10(1 + s.review_saturation_votes)),
     rating: votesUnknown ? null : (votes < s.rating_min_votes || rating === null ? 0 : Math.min(1, Math.max(0, (rating - 3.5) / 1.5))),
-    real_site: siteUnknown ? null : (realSite(b, notASite(ctx.run)) ? 1 : 0),
+    // 3.1.2: an LF top-3 item whose host is `site_dead` (marked by scoreCells) has no site.
+    real_site: siteUnknown ? null : (!b._site_dead && realSite(b, notASite(ctx.run)) ? 1 : 0),
     photos: typeof b.total_photos === 'number' ? Math.min(1, b.total_photos / s.photo_saturation) : null,
     stuffed: stuffed(b, ctx.profession, ctx.city) ? 1 : 0,
   };
@@ -478,17 +479,37 @@ export function leadGenNetworks(entries, run) {
 // to the cell whose centroid is nearest the business (tie -> city slug asc, via the cellKey
 // "profession|city"). The same cid may be a prospect in another profession (R4).
 const normText = s => String(s ?? '').normalize('NFC');
-// 3.3.3: areas.json cities whose he_name occurs in a title. A hit inside a longer hit is dropped,
-// so a town whose name contains another town's name is matched only as itself.
+// 3.1.4 prefix guard (areas.json `he_match_guard`, ambiguous names such as omer / sderot): the
+// letter right before the hit must be one of `prefix_letters`; with end "title_end_punct_or_word"
+// the hit must also end the title or be followed (after optional spaces) by punctuation / a
+// symbol (hyphen, pipe, ...) or one of `end_words` as a whole word.
+function guardAllows(t, start, end, g) {
+  if (!g) return true;
+  if (g.prefix_letters && !g.prefix_letters.map(normText).includes(t[start - 1])) return false;
+  if (g.end === 'title_end_punct_or_word') {
+    let j = end;
+    while (j < t.length && /\s/u.test(t[j])) j += 1;
+    if (j >= t.length || /[\p{P}\p{S}]/u.test(t[j])) return true;
+    return (g.end_words ?? []).map(normText).some(w => w && t.startsWith(w, j) && !/\p{L}/u.test(t[j + w.length] ?? ''));
+  }
+  return true;
+}
+// 3.3.3 + 3.1.1: areas.json cities whose he_name or any `he_aliases` entry occurs in a title (an
+// alias hit is a hit on its city). A hit inside a longer hit is dropped, so a town whose name
+// contains another town's name is matched only as itself.
 export function citiesNamedIn(title, cities) {
   const t = normText(title);
   const hits = [];
   for (const c of cities) {
-    const n = normText(c.he_name).trim();
-    if (!n) continue;
-    // Engineer reading: a hit glued to a following letter is part of a longer word, not the name
-    // (leading letters are allowed: Hebrew prefixes such as "in" / "to" attach to the name).
-    for (let i = t.indexOf(n); i >= 0; i = t.indexOf(n, i + 1)) if (!/\p{L}/u.test(t[i + n.length] ?? '')) hits.push({ c, start: i, end: i + n.length });
+    for (const name of [c.he_name, ...(c.he_aliases ?? [])]) {
+      const n = normText(name).trim();
+      if (!n) continue;
+      // Engineer reading: a hit glued to a following letter is part of a longer word, not the name
+      // (leading letters are allowed: Hebrew prefixes such as "in" / "to" attach to the name).
+      for (let i = t.indexOf(n); i >= 0; i = t.indexOf(n, i + 1)) {
+        if (!/\p{L}/u.test(t[i + n.length] ?? '') && guardAllows(t, i, i + n.length, c.he_match_guard)) hits.push({ c, start: i, end: i + n.length });
+      }
+    }
   }
   const kept = hits.filter(h => !hits.some(o => o !== h && o.end - o.start > h.end - h.start && o.start <= h.start && o.end >= h.end));
   return [...new Map(kept.map(h => [h.c.slug, h.c])).values()].sort((a, b) => a.slug.localeCompare(b.slug, 'en'));
@@ -522,11 +543,17 @@ export function outOfCellTarget(b, cell, cities) {
 }
 
 // opts (Revision 3): networks = Map cid -> rules (3.2 i/ii), cities = areas cities (3.3.3).
-// The returned Map carries `.diag`: per cell counts of the Revision 3 exclusions.
-export function assignProspects(cellResults, chains, leadGen, run, { networks = new Map(), cities = null } = {}) {
+// Revision 3.1: multiBranch = Set of network cids labelled `multi_branch` (3.1.4, display only:
+// still excluded, counted apart); incumbents = Map profession slug -> Set of cids in the LF top 3
+// (any scored point) of any cell of that profession (3.1.3 same-trade variant).
+// The returned Map carries `.diag`: per cell counts of the Revision 3 / 3.1 exclusions.
+// 3.1.3 counts (incumbent, incumbent_moved_in) are per business, on the cell it would have been
+// assigned to; incumbent_moved_in = those that would have counted as moved_in.
+export function assignProspects(cellResults, chains, leadGen, run, { networks = new Map(), cities = null, multiBranch = new Set(), incumbents = null } = {}) {
   const s = run.stage2;
   const candidates = new Map(); // profession|id -> [{cellKey, dist, b}]
-  const diag = new Map(cellResults.map(cr => [cr.cellKey, { title_exclude: 0, title_chain: 0, network: 0, out_of_cell_moved: 0, out_of_cell_dropped: 0, moved_in: 0 }]));
+  const diag = new Map(cellResults.map(cr => [cr.cellKey, { title_exclude: 0, title_chain: 0, network: 0, multi_branch: 0, out_of_cell_moved: 0, out_of_cell_dropped: 0, moved_in: 0, incumbent: 0, incumbent_moved_in: 0 }]));
+  const incumbentMode = s.incumbent_never_prospect ?? null;
   const byKey = new Map(cellResults.map(cr => [cr.cellKey, cr]));
   const outOfCell = Boolean(s.out_of_cell_title_rule && cities);
   for (const cr of cellResults) {
@@ -542,7 +569,7 @@ export function assignProspects(cellResults, chains, leadGen, run, { networks = 
       const inCell = b.address_info?.city === cr.city.he_name || dist <= s.prospect_radius_km;
       const weakRanking = !lfIds.has(String(b.cid)) && (cr.rawRank.get(b._id) ?? Infinity) >= s.weak_rank_min;
       if (!b.phone || isChain || isLeadGen(b, flagged, run) || b.is_directory_item === true || !alive || !inCell || !weakRanking) continue;
-      if (networks.has(String(b.cid))) { dg.network += 1; continue; }
+      if (networks.has(String(b.cid))) { dg[multiBranch.has(String(b.cid)) ? 'multi_branch' : 'network'] += 1; continue; }
       const tr = titleRule(b, cr.cell.profession, run);
       if (tr) { dg[tr] += 1; continue; }
       let cellKey = cr.cellKey;
@@ -558,15 +585,29 @@ export function assignProspects(cellResults, chains, leadGen, run, { networks = 
           d = hasCoords ? haversineKm(b.latitude, b.longitude, tcr.city.lat, tcr.city.lng) : Infinity;
         }
       }
+      // 3.1.3: after the move, a cid in the destination cell's LF top 3 (any point) - or, with the
+      // same-trade variant, in any same-profession cell's LF top 3 - is an incumbent, never a prospect.
+      const cid = String(b.cid);
+      const incumbent = Boolean(incumbentMode) && (byKey.get(cellKey).lfTop3Ids?.has(cid) || (incumbentMode === 'destination_and_same_trade' && Boolean(incumbents?.get(cr.cell.profession.slug)?.has(cid))));
       const key = `${cr.cell.profession.slug}|${b._id}`;
-      candidates.set(key, [...(candidates.get(key) ?? []), { cellKey, dist: d, b, from: cr.cellKey }]);
+      candidates.set(key, [...(candidates.get(key) ?? []), { cellKey, dist: d, b, from: cr.cellKey, incumbent }]);
     }
   }
   const byCell = new Map(cellResults.map(cr => [cr.cellKey, []]));
-  for (const [key, list] of [...candidates.entries()].sort(([a], [b]) => a.localeCompare(b, 'en'))) {
-    const best = [...list].sort((a, b) => (a.dist - b.dist) || a.cellKey.localeCompare(b.cellKey, 'en'))[0];
+  const nearest = list => [...list].sort((a, b) => (a.dist - b.dist) || a.cellKey.localeCompare(b.cellKey, 'en'))[0];
+  for (const [key, all] of [...candidates.entries()].sort(([a], [b]) => a.localeCompare(b, 'en'))) {
+    const list = all.filter(x => !x.incumbent);
+    if (!list.length) {
+      const would = nearest(all);
+      const dg = diag.get(would.cellKey);
+      dg.incumbent += 1;
+      if (would.from !== would.cellKey) dg.incumbent_moved_in += 1;
+      continue;
+    }
+    const best = nearest(list);
     if (best.from !== best.cellKey) diag.get(best.cellKey).moved_in += 1;
-    byCell.get(best.cellKey).push({ id: key.split('|')[1], ...best });
+    const { incumbent: _inc, ...entry } = best;
+    byCell.get(best.cellKey).push({ id: key.split('|')[1], ...entry });
   }
   byCell.diag = diag;
   return byCell;
@@ -586,6 +627,33 @@ export function prospectWeight(b, check, ctx, text) {
   if (!verdict) return { w_b: w.unchecked, site: check ? check.site_check : 'unchecked', verdict: null };
   if (outcome === 'failed') return { w_b: hw.failed ?? w.weak_site, site: 'failed', verdict };
   return { w_b: verdict.weak_site ? w.weak_site : w.ok_site, site: verdict.weak_site ? 'weak' : 'ok', verdict };
+}
+
+// 3.1.2: the host an LF top-3 item is known to have (joined Maps domain, or the 3.1 url host of an
+// unjoined item); null = no site or unknown.
+export const lfKnownHost = (b, run) => ((b._joined || b._site_known) && realSite(b, notASite(run)) ? normalizeDomain(b.domain) : null);
+// 3.1.2: marks `_site_dead` on every item whose host outcome is site_dead (homepage_check.site_dead
+// reasons only: confirmed NXDOMAIN / parked / 404-410; `failed`, blocked, timeout, challenges,
+// robots, 403 and unconfirmed NXDOMAIN stay a site). Returns the hosts seen (to be checked).
+export function markLfSiteDead(items, siteChecks, run) {
+  const hosts = [];
+  for (const b of items) {
+    const h = lfKnownHost(b, run);
+    if (!h) continue;
+    hosts.push(h);
+    if (siteOutcome(siteChecks.get(h), run.homepage_check) === 'site_dead') b._site_dead = true;
+  }
+  return hosts;
+}
+
+// 3.1.4 multi_branch (display only): a shared-domain (3.2 ii) network cid with no phone-block
+// (3.2 i) flag and best-known votes >= lead_gen_network.multi_branch_min_votes.
+export function multiBranchCids(networks, votesIdx, run) {
+  const min = run.stage2.lead_gen_network?.multi_branch_min_votes;
+  const out = new Set();
+  if (typeof min !== 'number') return out;
+  for (const [cid, rules] of networks) if (rules.has('shared_domain') && !rules.has('phone_block') && (votesIdx.get(cid)?.votes_count ?? 0) >= min) out.add(cid);
+  return out;
 }
 
 // R10: Score = Value * (1 - S3)^2 * min(1, P_w / 15) * O. P_w null (step-1 kill) -> unscored.
@@ -770,7 +838,21 @@ export function scoreCells(config, get, stage1Cells, { specs = config.run.pilot.
   }
   const chains = chainDomains(survivors, run);
   const cities = config.areas.regions.flatMap(rg => rg.cities.map(c => ({ ...c, region: c.region ?? rg.id })));
-  const prospects = assignProspects(survivors, chains, leadGen, run, { networks, cities });
+  // 3.1.3 same-trade incumbents: every cid in the LF top 3 (any scored point) of any cell of the
+  // profession, step-1 kills included.
+  const incumbents = new Map();
+  for (const r of results) {
+    const set = incumbents.get(r.cell.profession.slug) ?? new Set();
+    for (const b of r.joinedPoints.flat()) if (b?.cid !== undefined && b?.cid !== null) set.add(String(b.cid));
+    incumbents.set(r.cell.profession.slug, set);
+  }
+  // 3.1.4 multi_branch (display only): a shared-domain network cid with no phone-block flag and
+  // best-known votes >= multi_branch_min_votes.
+  const multiBranch = multiBranchCids(networks, bestKnownIndex(allEntries.map(e => e.items)), run);
+  const slotLabel = (b, flagged) => (!b._network ? null : (multiBranch.has(String(b.cid)) && !flagged.has(phoneKeyFor(run)(b.phone)) ? 'multi_branch' : 'network'));
+  const prospects = assignProspects(survivors, chains, leadGen, run, { networks, cities, multiBranch, incumbents });
+  const siteDeadOn = run.stage2.lf_site_dead_no_site === true;
+  const lfHost = b => lfKnownHost(b, run);
   const nationalSerps = [...rebuySerps.filter(x => x.data), ...survivors.map(r => ({ profession: r.cell.profession.slug, region: r.city.region, source: 'stage2_cell_organic', data: r.organic }))];
   const national = nationalBrandDomains(nationalSerps, run.stage2.national_brand_min_regions, run.stage2.organic_depth_cell);
 
@@ -784,6 +866,9 @@ export function scoreCells(config, get, stage1Cells, { specs = config.run.pilot.
   for (const r of results) {
     const { cell } = r;
     const ctx = { run, profession: cell.profession, city: cell.city, siteCtx: { cityNames: [cell.city.he_name, ...(cell.city.aliases ?? [])], titleTerms: titleTerms(cell.profession, run) } };
+    // 3.1.2: every scored point's LF top-3 host is checked; a site_dead outcome (homepage_check.
+    // site_dead reasons only) -> has_site = false in s_b. Step-1 kills keep their step-1 S3.
+    if (r.maps && siteDeadOn) for (const h of markLfSiteDead(r.joinedPoints.flat(), siteChecks, run)) hostsNeeded.add(h);
     // S3: survivors use the cid-joined LF top 3 (mean over scored points); others keep S3_step1.
     const pointS3 = r.maps ? r.joinedPoints.map(top => topStrength(top, ctx)) : r.points.map(p => p.step1);
     const S3 = r.maps ? mean(pointS3.map(x => x.S3)) : r.S3_step1;
@@ -840,20 +925,23 @@ export function scoreCells(config, get, stage1Cells, { specs = config.run.pilot.
       flags: cell.city.flags.join(';'), ranked: cell.ranked !== false, calibration: cell.calibration_id ?? null,
       lf_pack_overlap: r.maps ? overlapCount(packCids, r.lfTop3.map(b => b.cid)) : null,
       lead_gen_listings: r.maps ? r.pool.filter(b => isLeadGen(b, flaggedPhones, run) || networks.has(String(b.cid))).length : null,
-      lf_slots_maps: slotCount('maps'), lf_slots_best_known: slotCount('best_known'), lf_slots_neutral: slotCount('neutral'), lf_top3_network: slots.filter(b => b._network).length,
-      p_excluded_title: pd ? pd.title_exclude + pd.title_chain : null, p_excluded_network: pd ? pd.network : null, p_out_of_cell: pd ? pd.out_of_cell_moved + pd.out_of_cell_dropped : null, p_moved_in: pd ? pd.moved_in : null,
+      lf_slots_maps: slotCount('maps'), lf_slots_best_known: slotCount('best_known'), lf_slots_neutral: slotCount('neutral'),
+      lf_top3_network: slots.filter(b => slotLabel(b, flaggedPhones) === 'network').length, lf_top3_multi_branch: slots.filter(b => slotLabel(b, flaggedPhones) === 'multi_branch').length,
+      lf_top3_site_dead: r.maps ? slots.filter(b => b._site_dead).length : null,
+      p_excluded_title: pd ? pd.title_exclude + pd.title_chain : null, p_excluded_network: pd ? pd.network : null, p_excluded_multi_branch: pd ? pd.multi_branch : null, p_out_of_cell: pd ? pd.out_of_cell_moved + pd.out_of_cell_dropped : null, p_moved_in: pd ? pd.moved_in : null,
+      p_excluded_incumbent: pd ? pd.incumbent : null, p_excluded_incumbent_moved_in: pd ? pd.incumbent_moved_in : null,
       homepage_checked: r.maps ? checked : null, homepage_failed: r.maps ? failedChecks : null, homepage_site_dead: r.maps ? deadSites : null, homepage_not_checked: r.maps ? blocked : null,
       maps_items_t1: r.maps ? r.lists[0].length : null, maps_items_t2: r.maps ? (r.lists[1]?.length ?? 0) : null, relevant_ranked: r.maps ? r.ranked.length : null,
     });
 
     // private, business-level rows (gitignored dir only)
     r.joinedPoints.forEach((top, pi) => top.forEach((b, i) => {
-      const host = b._joined && realSite(b, notASite(run)) ? normalizeDomain(b.domain) : null;
+      const host = siteDeadOn ? lfHost(b) : (b._joined && realSite(b, notASite(run)) ? normalizeDomain(b.domain) : null);
       const check = host ? siteChecks.get(host) : undefined;
       const verdict = check ? siteVerdict(check, siteTexts.get(host), ctx.siteCtx, run.homepage_check) : null;
       const netRules = [...(networks.get(String(b.cid)) ?? [])];
       if (flaggedPhones.has(phoneKeyFor(run)(b.phone))) netRules.push('exact_phone');
-      privateRows.push({ cell_id: cell.id, role: pi === 0 ? 'lf_top3' : 'lf_top3_point', point: r.points[pi].dir, rank: i + 1, cid: b.cid ?? null, title: b.title ?? null, phone: b.phone ?? null, phone_e164: e164Il(b.phone), domain: b._joined || b._site_known ? (b.domain ?? null) : null, joined: b._joined, votes_source: slotSource(b), network: netRules.join('|') || null, votes: b.rating?.votes_count ?? (b._votes_source === 'neutral' ? null : 0), rating: b.rating?.value ?? null, category: b.category ?? null, s_b: round4(pointS3[pi].top3[i]), site_check: check?.site_check ?? null, platform: check?.platform ?? null, weak_site: verdict?.weak_site ?? null });
+      privateRows.push({ cell_id: cell.id, role: pi === 0 ? 'lf_top3' : 'lf_top3_point', point: r.points[pi].dir, rank: i + 1, cid: b.cid ?? null, title: b.title ?? null, phone: b.phone ?? null, phone_e164: e164Il(b.phone), domain: b._joined || b._site_known ? (b.domain ?? null) : null, joined: b._joined, votes_source: slotSource(b), network: netRules.join('|') || null, network_label: slotLabel(b, flaggedPhones), site_dead: b._site_dead === true, votes: b.rating?.votes_count ?? (b._votes_source === 'neutral' ? null : 0), rating: b.rating?.value ?? null, category: b.category ?? null, s_b: round4(pointS3[pi].top3[i]), site_check: check?.site_check ?? null, platform: check?.platform ?? null, weak_site: verdict?.weak_site ?? null });
     }));
     for (const { p, host, check, wt } of prospectRows) {
       const b = p.b;

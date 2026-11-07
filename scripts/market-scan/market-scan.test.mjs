@@ -6,7 +6,7 @@ import test from 'node:test';
 import { runEngine, loadConfig } from './lib/engine.mjs';
 import { createDfsClient, cacheKey, cachePath, originalPath, BudgetExceededError, projectResult, breadcrumbHost, ORGANIC_SCHEMA } from './lib/dfs.mjs';
 import { professionVolume, ticketProxy, scoreStage1, organicParams } from './lib/stage1.mjs';
-import { businessStrength, strengthComponents, topStrength, compositeScore, gaps, orderRows, s3Band, categoryId, joinLf, planStep1, planStep2, step1Gate, proximityPoints, cellPoints, assignProspects, poolRing2, ORGANIC_ENDPOINT, LOCAL_FINDER_ENDPOINT, MAPS_ENDPOINT, e164Il, phoneBlock, bestKnownIndex, lfView, lfSiteHost, leadGenNetworks, leadGenPhones, isLeadGen, titleRule, citiesNamedIn, outOfCellTarget, prospectWeight } from './lib/stage2.mjs';
+import { businessStrength, strengthComponents, topStrength, compositeScore, gaps, orderRows, s3Band, categoryId, joinLf, planStep1, planStep2, step1Gate, proximityPoints, cellPoints, assignProspects, poolRing2, ORGANIC_ENDPOINT, LOCAL_FINDER_ENDPOINT, MAPS_ENDPOINT, e164Il, phoneBlock, bestKnownIndex, lfView, lfSiteHost, leadGenNetworks, leadGenPhones, isLeadGen, titleRule, citiesNamedIn, outOfCellTarget, prospectWeight, markLfSiteDead, multiBranchCids } from './lib/stage2.mjs';
 import { mergeInto } from './apply-r2-12.mjs';
 import { classifyRelevance, titleTerms } from './lib/relevance.mjs';
 import { classifyOrganic, nationalBrandDomains } from './lib/organic.mjs';
@@ -15,6 +15,7 @@ import { parseProfessions, parseRegions, SPEC_PATH } from './lib/spec.mjs';
 import { extractR12, mergeR12 } from './apply-r12.mjs';
 import { extractR2_12, mergeR2_12 } from './apply-r2-12.mjs';
 import { extractR3_8, mergeR3_8 } from './apply-r3-8.mjs';
+import { extractR3_1_1, extractR3_1_4, aliasCount, applyAreas, R3_1_RUN_PATCH } from './apply-r3-1.mjs';
 import { createFakeFetch, networkForbidden, createFakeWeb } from './fixtures/fake-dataforseo.mjs';
 
 const HERE = path.dirname(new URL(import.meta.url).pathname);
@@ -429,7 +430,7 @@ test('config Hebrew is sliced byte-exact from the spec and engine sources carry 
   const specCities = parseRegions(spec).flatMap(r => [...r.core, ...r.ring2].map(c => c.he_name));
   assert.deepEqual(areas.regions.flatMap(r => r.cities.map(c => c.he_name)), specCities);
   assert.equal(specCities.length, 71);
-  const sources = ['run.mjs', 'build-config.mjs', 'free-checks.mjs', 'category-catalog.mjs', 'apply-r12.mjs', 'apply-r2-12.mjs', 'apply-r3-8.mjs', 'confirm-nxdomain.mjs', 'price-check.mjs', 'lib/spec.mjs', 'lib/cities.mjs', 'lib/dfs.mjs', 'lib/stage1.mjs', 'lib/stage2.mjs', 'lib/engine.mjs', 'lib/output.mjs', 'lib/relevance.mjs', 'lib/organic.mjs', 'lib/homepage.mjs'];
+  const sources = ['run.mjs', 'build-config.mjs', 'free-checks.mjs', 'category-catalog.mjs', 'apply-r12.mjs', 'apply-r2-12.mjs', 'apply-r3-8.mjs', 'apply-r3-1.mjs', 'confirm-nxdomain.mjs', 'price-check.mjs', 'lib/spec.mjs', 'lib/cities.mjs', 'lib/dfs.mjs', 'lib/stage1.mjs', 'lib/stage2.mjs', 'lib/engine.mjs', 'lib/output.mjs', 'lib/relevance.mjs', 'lib/organic.mjs', 'lib/homepage.mjs'];
   for (const f of sources) assert.ok(!/[\u0590-\u05ff]/.test(fs.readFileSync(path.join(HERE, f), 'utf8')), `${f} contains Hebrew`);
 });
 
@@ -896,7 +897,7 @@ test('3.3 title excludes, nationwide stem, out-of-cell titles (prospect pool onl
   const out = assignProspects(cells, new Set(), new Map(), run, { cities: [...cities, { slug: 'far', he_name: 'Fartown', region: 'R8', ring: 'core', lat: 32.8, lng: 35.0 }] });
   assert.deepEqual(out.get('alpha|gan-yav').map(p => p.id), ['14', '15']); // 15 names a ring2 pool member: stays
   assert.deepEqual(out.get('alpha|big').map(p => [p.id, p.from]), [['11', 'alpha|gan-yav']]);
-  assert.deepEqual(out.diag.get('alpha|gan-yav'), { title_exclude: 1, title_chain: 0, network: 0, out_of_cell_moved: 1, out_of_cell_dropped: 1, moved_in: 0 });
+  assert.deepEqual(out.diag.get('alpha|gan-yav'), { title_exclude: 1, title_chain: 0, network: 0, multi_branch: 0, out_of_cell_moved: 1, out_of_cell_dropped: 1, moved_in: 0, incumbent: 0, incumbent_moved_in: 0 });
   assert.equal(out.diag.get('alpha|big').moved_in, 1);
 });
 
@@ -951,7 +952,8 @@ test('3.8 config: merged byte-exact from the spec (Hebrew stems included); idemp
   const spec = SPEC_TEXT();
   const patch = extractR3_8(spec);
   const runConfig = JSON.parse(fs.readFileSync(path.join(ROOT, 'config/market-scanner/run-config.json'), 'utf8'));
-  for (const k of ['lf_field_precedence', 'lf_domain_trust', 'lf_url_redirect_parse', 'phone_normalize', 'lead_gen_network', 'title_exclude', 'title_chain_stems', 'out_of_cell_title_rule', 'organic_factor']) assert.deepEqual(runConfig.stage2[k], patch.stage2[k], k);
+  const withR3_1 = mergeInto(patch, R3_1_RUN_PATCH); // Revision 3.1 adds lead_gen_network.multi_branch_min_votes
+  for (const k of ['lf_field_precedence', 'lf_domain_trust', 'lf_url_redirect_parse', 'phone_normalize', 'lead_gen_network', 'title_exclude', 'title_chain_stems', 'out_of_cell_title_rule', 'organic_factor']) assert.deepEqual(runConfig.stage2[k], withR3_1.stage2[k], k);
   assert.deepEqual(runConfig.stage2.organic_factor, { base: 1, slope: 0 });
   assert.deepEqual(runConfig.homepage_check.weights, { site_dead: 1.25, failed: 1.1 });
   for (const x of patch.stage2.category_rules.movers.exclude_append) assert.ok(runConfig.stage2.category_rules.movers.exclude.includes(x));
@@ -978,4 +980,183 @@ test('M4 with Revision 3 on fixtures: zero network, determinism, no PII, slot-so
   assert.ok(rows.every(r => r.O === 1 || r.O === null));
   const summary = JSON.parse(fs.readFileSync(path.join(base, 'r3a', 'm4-summary.json'), 'utf8'));
   assert.ok(summary.revision3 && summary.revision3.lf_slots_step2);
+});
+
+// ---- Revision 3.1 (spec 3.1.1-3.1.4) -------------------------------------------------------------
+// Synthetic fixtures (invented cids, 555-range phones, .example domains). Hebrew city names and
+// aliases are read from config/market-scanner/areas.json (itself copied from the spec by
+// apply-r3-1.mjs); this test file carries no Hebrew literals.
+const REAL_AREAS = () => JSON.parse(fs.readFileSync(path.join(ROOT, 'config/market-scanner/areas.json'), 'utf8'));
+const realCities = () => REAL_AREAS().regions.flatMap(r => r.cities.map(c => ({ ...c, region: c.region ?? r.id })));
+const r31Run = (overrides = {}) => mergeInto(mergeInto(rev3Run(), R3_1_RUN_PATCH), overrides);
+
+test('3.1.1 aliases: copied byte-exact from the spec block (count asserted); common words are not aliases', () => {
+  const spec = SPEC_TEXT();
+  const aliases = extractR3_1_1(spec);
+  const cities = realCities();
+  const written = Object.fromEntries(cities.filter(c => c.he_aliases).map(c => [c.slug, c.he_aliases]));
+  assert.deepEqual(written, aliases);
+  assert.equal(aliasCount(written), aliasCount(aliases));
+  assert.equal(Object.keys(aliases).length, 46);
+  assert.equal(aliasCount(aliases), 95);
+  const s311 = spec.slice(spec.indexOf('\n## 3.1.1 '), spec.indexOf('\n## 3.1.2 '));
+  for (const a of Object.values(aliases).flat()) assert.ok(s311.includes(JSON.stringify(a)), a);
+  // the "deliberately not aliases" bullet: none of those bare words is an alias
+  const bare = /deliberately \*\*not\*\* aliases: ([^\n]+)\n\s+([^\n.]+)\./.exec(s311);
+  const words = `${bare[1]} ${bare[2]}`.split(',').map(w => w.trim()).filter(Boolean);
+  assert.equal(words.length, 9);
+  for (const w of words) assert.ok(!Object.values(aliases).flat().includes(w), w);
+  // applying twice is idempotent and every alias lands on its own city
+  const { areas: again, written: n } = applyAreas(REAL_AREAS(), aliases, extractR3_1_4(spec));
+  assert.equal(n, 95);
+  assert.deepEqual(again, REAL_AREAS());
+  assert.throws(() => applyAreas(REAL_AREAS(), { 'no-such-town': ['x'] }, {}), /unknown city slug/);
+});
+
+test('3.1.1 citiesNamedIn: an alias hit is a hit on its city, same boundary rules', () => {
+  const cities = [
+    { slug: 'tlv', he_name: 'Tel Aviv-Yafo', he_aliases: ['Tel Aviv', 'Yafo', 'TA'], ring: 'core', region: 'R1', lat: 32.08, lng: 34.78 },
+    { slug: 'hol', he_name: 'Holon', ring: 'core', region: 'R1', lat: 32.01, lng: 34.78 },
+  ];
+  assert.deepEqual(citiesNamedIn('Electric Tel Aviv', cities).map(c => c.slug), ['tlv']);
+  assert.deepEqual(citiesNamedIn('Electric bTel Aviv', cities).map(c => c.slug), ['tlv']); // leading prefix letters allowed
+  assert.deepEqual(citiesNamedIn('Electric Yafor', cities), []); // glued to a following letter
+  assert.deepEqual(citiesNamedIn('Electric Tel Aviv-Yafo', cities).map(c => c.slug), ['tlv']); // longest hit, one city
+  assert.deepEqual(citiesNamedIn('Electric Holon Tel Aviv', cities).map(c => c.slug), ['hol', 'tlv']);
+  assert.equal(outOfCellTarget({ title: 'Electric Tel Aviv' }, { city: cities[1] }, cities).slug, 'tlv');
+  assert.equal(outOfCellTarget({ title: 'Electric Holon Tel Aviv' }, { city: cities[1] }, cities), null); // names its own city
+  assert.equal(outOfCellTarget({ title: 'Electric Yafo Ben' }, { city: cities[0] }, cities), null); // own-city alias stays
+  // real config: a title naming Tel Aviv by its short alias was invisible before 3.1.1
+  const real = realCities();
+  const tlv = real.find(c => c.slug === 'tel-aviv');
+  const holon = real.find(c => c.slug === 'holon');
+  const title = `Electric ${tlv.he_aliases[0]}`;
+  assert.ok(!title.includes(tlv.he_name));
+  assert.equal(outOfCellTarget({ title }, { city: holon }, real.map(({ he_aliases: _a, ...c }) => c)), null); // pre-3.1.1
+  assert.equal(outOfCellTarget({ title }, { city: holon }, real).slug, 'tel-aviv');
+  for (const a of tlv.he_aliases) assert.equal(outOfCellTarget({ title: `Electric ${a} 24/7` }, { city: holon }, real)?.slug, 'tel-aviv', a);
+});
+
+test('3.1.4 prefix guard: omer needs a prefix letter; sderot also needs a title end / punctuation / end word', () => {
+  // synthetic Latin twins of the rule
+  const cities = [
+    { slug: 'om', he_name: 'Omer', he_match_guard: { prefix_letters: ['b', 'm', 'l'] }, ring: 'ring2', region: 'R10', lat: 31.26, lng: 34.85 },
+    { slug: 'sd', he_name: 'Sderot', he_match_guard: { prefix_letters: ['b', 'm', 'l'], end: 'title_end_punct_or_word', end_words: ['around'] }, ring: 'ring2', region: 'R9', lat: 31.52, lng: 34.6 },
+  ];
+  const named = t => citiesNamedIn(t, cities).map(c => c.slug);
+  assert.deepEqual(named('Locks bOmer'), ['om']);
+  assert.deepEqual(named('Locks lOmer 24'), ['om']);
+  assert.deepEqual(named('Omer Locks'), []); // title start: no letter before
+  assert.deepEqual(named('Locks Omer'), []); // a space is not a prefix letter
+  assert.deepEqual(named('Locks xOmer'), []);
+  assert.deepEqual(named('Locks bSderot'), ['sd']);
+  assert.deepEqual(named('Locks bSderot  '), ['sd']);
+  assert.deepEqual(named('Locks bSderot - Ben'), ['sd']);
+  assert.deepEqual(named('Locks bSderot | Ben'), ['sd']);
+  assert.deepEqual(named('Locks bSderot, Ben'), ['sd']);
+  assert.deepEqual(named('Locks bSderot around'), ['sd']);
+  assert.deepEqual(named('Locks bSderot Ben'), []); // "boulevard" + street name
+  assert.deepEqual(named('Locks bSderot 5'), []);
+  assert.deepEqual(named('Locks Sderot'), []); // no prefix
+  assert.deepEqual(named('Locks bSderot aroundx'), []);
+  // real config: guard strings come from the spec prose, names match areas.json
+  const spec = SPEC_TEXT();
+  const g = extractR3_1_4(spec);
+  const real = realCities();
+  const omer = real.find(c => c.slug === 'omer');
+  const sderot = real.find(c => c.slug === 'sderot');
+  assert.equal(g.omer.he_name, omer.he_name);
+  assert.equal(g.sderot.he_name, sderot.he_name);
+  assert.deepEqual(omer.he_match_guard, { prefix_letters: g.omer.prefix_letters });
+  assert.deepEqual(sderot.he_match_guard, { prefix_letters: g.sderot.prefix_letters, end: 'title_end_punct_or_word', end_words: g.sderot.end_words });
+  const [p] = omer.he_match_guard.prefix_letters;
+  const realNamed = t => citiesNamedIn(t, real).map(c => c.slug);
+  assert.deepEqual(realNamed(`Locks ${p}${omer.he_name}`), ['omer']);
+  assert.deepEqual(realNamed(`Locks ${omer.he_name}`), []);
+  assert.deepEqual(realNamed(`Locks ${p}${sderot.he_name}`), ['sderot']);
+  assert.deepEqual(realNamed(`Locks ${p}${sderot.he_name} ${sderot.he_match_guard.end_words[0]}`), ['sderot']);
+  assert.deepEqual(realNamed(`Locks ${p}${sderot.he_name} Ben`), []);
+  // cities without a guard are unaffected (no prefix needed)
+  const holon = real.find(c => c.slug === 'holon');
+  assert.deepEqual(realNamed(`Locks ${holon.he_name}`), ['holon']);
+});
+
+test('3.1.2 site_dead LF top-3 host counts as no site in s_b; failed / blocked / unconfirmed stay a site', () => {
+  const run = r31Run();
+  const ctx = ctxFor(run);
+  const rec = (reason, extra = {}) => ({ schema: 2, host: 'x', site_check: 'failed', reason, fetch_ok: false, ...extra });
+  const checks = new Map([
+    ['dead-nx.example', rec('dns_nxdomain', { nxdomain_confirmed: true })],
+    ['parked.example', rec('parked')],
+    ['gone.example', rec('status_404_410')],
+    ['nx-unconfirmed.example', rec('dns_nxdomain')],
+    ['tls.example', rec('connect_or_tls_both_schemes')],
+    ['blocked.example', { site_check: 'blocked', reason: 'challenge' }],
+    ['ok.example', { site_check: 'ok' }],
+  ]);
+  const item = domain => ({ cid: domain, title: 'Dan', _joined: true, _votes_source: 'maps', _site_known: true, domain, rating: { value: 4.8, votes_count: 40 }, total_photos: 20 });
+  const items = [...checks.keys()].map(item);
+  const unknownSite = { ...item('later.example'), _joined: false, _site_known: false, domain: null };
+  const hosts = markLfSiteDead([...items, unknownSite], checks, run);
+  assert.deepEqual(hosts, [...checks.keys()]); // every known LF host is sent to the homepage check
+  assert.deepEqual(items.filter(b => b._site_dead).map(b => b.domain), ['dead-nx.example', 'parked.example', 'gone.example']);
+  for (const b of items) assert.equal(strengthComponents(b, ctx).real_site, b._site_dead ? 0 : 1, b.domain);
+  const dead = businessStrength(items[1], ctx);
+  const noSite = businessStrength({ ...items[1], domain: null }, ctx);
+  assert.ok(near(dead, noSite)); // same s_b as a listing with no website
+  assert.ok(dead < businessStrength(items[6], ctx));
+  // without site_dead configured nothing is marked
+  const legacy = items.map(b => ({ ...b, _site_dead: undefined }));
+  markLfSiteDead(legacy, checks, fixtureConfig().run);
+  assert.ok(legacy.every(b => !b._site_dead));
+});
+
+test('3.1.3 incumbents: a destination-top-3 or same-trade-top-3 cid is never a prospect; Holon Tel-Aviv-titled listing moves out', () => {
+  const run = r31Run();
+  const prof = { slug: 'elec', terms: ['elec one'] };
+  const cities = [
+    { slug: 'tlv', he_name: 'Tel Aviv-Yafo', he_aliases: ['Tel Aviv'], ring: 'core', region: 'R1', lat: 32.08, lng: 34.78 },
+    { slug: 'hol', he_name: 'Holon', ring: 'core', region: 'R1', lat: 32.01, lng: 34.78 },
+    { slug: 'rg', he_name: 'Ramat Gan', ring: 'core', region: 'R1', lat: 32.07, lng: 34.82 },
+  ];
+  const biz = (id, title) => ({ _id: id, cid: id, phone: `050-555-50${id}`, title, rating: { votes_count: 4 }, latitude: 32.01, longitude: 34.78, address_info: { city: 'x' } });
+  const mk = (c, items, lfIds) => ({ cellKey: `elec|${c.slug}`, cell: { profession: prof, city: c }, city: c, lfTop3: [], lfTop3Ids: new Set(lfIds), ranked: items, rawRank: new Map(items.map(x => [x._id, 6])) });
+  const mover = biz('21', 'Elec Tel Aviv'); // Tel Aviv-titled, sits in Holon -> moves to Tel Aviv
+  const destIncumbent = biz('22', 'Elec Tel Aviv Pro'); // moves to Tel Aviv but is in Tel Aviv's LF top 3
+  const nextDoor = biz('23', 'Elec Avi'); // stays in Holon, but is top 3 in Ramat Gan
+  const plain = biz('24', 'Elec Beni');
+  const cells = [mk(cities[1], [mover, destIncumbent, nextDoor, plain], []), mk(cities[0], [], ['22', 'tlv-top']), mk(cities[2], [], ['rg-top'])];
+  const incumbents = new Map([['elec', new Set(['22', 'tlv-top', '23', 'rg-top'])], ['other', new Set(['24'])]]);
+  const out = assignProspects(cells, new Set(), new Map(), run, { cities, incumbents });
+  assert.deepEqual(out.get('elec|hol').map(p => p.id), ['24']);
+  assert.deepEqual(out.get('elec|tlv').map(p => [p.id, p.from]), [['21', 'elec|hol']]);
+  assert.ok(out.get('elec|tlv').every(p => !('incumbent' in p)));
+  assert.equal(out.diag.get('elec|hol').out_of_cell_moved, 2);
+  assert.deepEqual([out.diag.get('elec|tlv').moved_in, out.diag.get('elec|tlv').incumbent, out.diag.get('elec|tlv').incumbent_moved_in], [1, 1, 1]);
+  assert.deepEqual([out.diag.get('elec|hol').incumbent, out.diag.get('elec|hol').incumbent_moved_in], [1, 0]);
+  // destination-only variant: the next-door incumbent counts again; the destination one still never does
+  const destOnly = assignProspects(cells, new Set(), new Map(), r31Run({ stage2: { incumbent_never_prospect: 'destination' } }), { cities, incumbents });
+  assert.deepEqual(destOnly.get('elec|hol').map(p => p.id), ['23', '24']);
+  assert.deepEqual(destOnly.get('elec|tlv').map(p => p.id), ['21']);
+  // switched off (Revision 3): both incumbents are prospects again
+  const off = assignProspects(cells, new Set(), new Map(), rev3Run(), { cities, incumbents });
+  assert.deepEqual(off.get('elec|tlv').map(p => p.id), ['21', '22']);
+  assert.deepEqual(off.get('elec|hol').map(p => p.id), ['23', '24']);
+});
+
+test('3.1.4 multi_branch: shared-domain + votes >= 150 + no phone block -> label only, still excluded', () => {
+  const run = r31Run();
+  const networks = new Map([['m1', new Set(['shared_domain'])], ['m2', new Set(['shared_domain'])], ['m3', new Set(['shared_domain', 'phone_block'])], ['m4', new Set(['phone_block'])]]);
+  const votes = new Map([['m1', { votes_count: 150 }], ['m2', { votes_count: 149 }], ['m3', { votes_count: 900 }], ['m4', { votes_count: 900 }]]);
+  assert.deepEqual([...multiBranchCids(networks, votes, run)], ['m1']);
+  assert.equal(multiBranchCids(networks, votes, rev3Run()).size, 0); // not configured -> no label
+  const b = id => ({ _id: id, cid: id, phone: `050-555-60${id.slice(1)}`, title: 'Dan', rating: { votes_count: 200 }, latitude: 31, longitude: 34.9, address_info: { city: 'x' } });
+  const cell = { cellKey: 'lock|cz', cell: { profession: { slug: 'lock' } }, city: { slug: 'cz', lat: 31, lng: 34.9, he_name: 'cz' }, lfTop3: [], lfTop3Ids: new Set(), ranked: [b('m1'), b('m2')], rawRank: new Map([['m1', 5], ['m2', 5]]) };
+  const out = assignProspects([cell], new Set(), new Map(), run, { networks, multiBranch: multiBranchCids(networks, votes, run) });
+  assert.deepEqual(out.get('lock|cz'), []); // the prospect exclusion is unchanged
+  assert.deepEqual([out.diag.get('lock|cz').network, out.diag.get('lock|cz').multi_branch], [1, 1]);
+  // the S3 floor is unchanged: a multi_branch listing in the LF top 3 still floors at 0.60
+  const ctx = ctxFor(run);
+  const top = topStrength([{ cid: 'm1', title: 'x', domain: null, url: null, rating: { value: 3, votes_count: 0 }, _network: true }], ctx);
+  assert.equal(top.top3[0], 0.6);
 });

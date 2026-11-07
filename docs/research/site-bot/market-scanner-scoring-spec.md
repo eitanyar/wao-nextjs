@@ -1207,3 +1207,106 @@ spilled in from Ashdod; ≈ 9 real → likely below P_w 8–15 after 3.3).
 - **Yonatan** — re-gate any new top-5 entrant from the private file; then the top 5 is final.
 - **Eitan** — the 5th slot (roofing × Rehovot vs electrician × Holon), see the stop-and-see summary.
 - No keyword anchor / title formula is touched.
+
+---
+
+# Revision 3.1 — 2026-11-07 (post re-score 7f91346fefc5)
+
+Rules only. Final top 5 and the reasoning live in `m4-stop-and-see-summary.md`. Re-score from cache at $0. No paid
+calls.
+
+## 3.1.1 City aliases for the out-of-cell rule (amends 3.3.3)
+
+- Each city gets an optional `he_aliases` (string array) in `config/market-scanner/areas.json`. Keys below are the
+  city `slug` (cities have no other id). Strings are byte-exact. Copy them by script and don't retype them.
+- `citiesNamedIn()` tests `he_name` **and** every alias with the existing match: substring, no letter directly after
+  the hit, leading prefix letters allowed, and the longest overlapping hit wins. An alias hit counts as a hit on its
+  city, both for "names the cell's own city / pool member → stays" and for "names another city → move/drop".
+- Bare words that are also common Hebrew words are deliberately **not** aliases: ראשון, קדימה, זכרון, מעלות, שהם,
+  בתים, רעות, מכבים, נצרת.
+
+```json
+{
+  "tel-aviv": ["תל אביב", "תל-אביב", "תל אביב יפו", "תל-אביב-יפו", "תל אביב-יפו", "יפו", "ת\"א", "ת״א"],
+  "ramat-gan": ["רמת-גן"],
+  "givatayim": ["גבעתים"],
+  "bnei-brak": ["בני-ברק"],
+  "bat-yam": ["בת-ים"],
+  "petah-tikva": ["פתח תקוה", "פתח-תקווה", "פתח-תקוה", "פתח תיקווה", "פ\"ת", "פ״ת"],
+  "kiryat-ono": ["קרית אונו", "קריית-אונו", "קרית-אונו"],
+  "or-yehuda": ["אור-יהודה"],
+  "yehud-monosson": ["יהוד", "יהוד מונוסון", "יהוד מונסון"],
+  "rosh-haayin": ["ראש-העין"],
+  "givat-shmuel": ["גבעת-שמואל"],
+  "herzliya": ["הרצלייה"],
+  "kfar-saba": ["כפר-סבא"],
+  "hod-hasharon": ["הוד-השרון"],
+  "ramat-hasharon": ["רמת-השרון"],
+  "even-yehuda": ["אבן-יהודה"],
+  "kadima-zoran": ["קדימה צורן", "צורן"],
+  "kfar-yona": ["כפר-יונה"],
+  "tel-mond": ["תל-מונד"],
+  "rishon-lezion": ["ראשון-לציון", "ראשל\"צ", "ראשל״צ", "ראשלצ"],
+  "ness-ziona": ["נס-ציונה"],
+  "modiin": ["מודיעין", "מודיעין מכבים רעות", "מודיעין-מכבים רעות"],
+  "mazkeret-batya": ["מזכרת-בתיה"],
+  "beer-yaakov": ["באר-יעקב"],
+  "gan-yavne": ["גן-יבנה"],
+  "jerusalem": ["ירושליים"],
+  "mevaseret-zion": ["מבשרת", "מבשרת-ציון"],
+  "beit-shemesh": ["בית-שמש"],
+  "maale-adumim": ["מעלה-אדומים"],
+  "kiryat-ata": ["קרית אתא", "קריית-אתא", "קרית-אתא"],
+  "kiryat-bialik": ["קרית ביאליק", "קריית-ביאליק", "קרית-ביאליק"],
+  "kiryat-motzkin": ["קרית מוצקין", "קריית-מוצקין", "קרית-מוצקין"],
+  "kiryat-yam": ["קרית ים", "קריית-ים", "קרית-ים"],
+  "tirat-carmel": ["טירת-כרמל", "טירת הכרמל"],
+  "pardes-hanna-karkur": ["פרדס חנה", "פרדס-חנה", "פרדס חנה כרכור", "כרכור"],
+  "zikhron-yaakov": ["זיכרון יעקב", "זכרון-יעקב", "זיכרון-יעקב"],
+  "binyamina": ["בנימינה", "בנימינה גבעת עדה", "גבעת עדה"],
+  "or-akiva": ["אור-עקיבא"],
+  "nof-hagalil": ["נוף-הגליל", "נצרת עילית"],
+  "yokneam-illit": ["יקנעם", "יוקנעם", "יקנעם-עילית", "יוקנעם עילית"],
+  "migdal-haemek": ["מגדל-העמק"],
+  "nahariya": ["נהרייה"],
+  "maalot-tarshiha": ["מעלות תרשיחא"],
+  "kiryat-shmona": ["קרית שמונה", "קריית-שמונה", "קרית-שמונה"],
+  "kiryat-malakhi": ["קרית מלאכי", "קריית-מלאכי", "קרית-מלאכי"],
+  "kiryat-gat": ["קרית גת", "קריית-גת", "קרית-גת"]
+}
+```
+
+## 3.1.2 Dead site counts as "no site" in S3 (amends 3.5 and 4.4)
+
+- For any LF top-3 item, at the centroid or a proximity point, whose host outcome is `site_dead`, use `has_site = false` in
+  `s_b`. Only `homepage_check.site_dead` reasons qualify, i.e. `dns_nxdomain_confirmed` · `parked` ·
+  `status_404_410`.
+- Unchanged (still a site): `failed`, including connect/TLS failure on both schemes; also `blocked`, `timeout`,
+  any challenge, `robots_*`, `status_403`, and an unconfirmed NXDOMAIN.
+
+## 3.1.3 Top-3 incumbents are never prospects (amends 3.3.3 and 5.1)
+
+- **Required:** after the out-of-cell move, drop a prospect if its cid is in the **destination** cell's LF top 3 at any
+  point.
+- **Same-trade variant: IN.** Also drop it if its cid is in the LF top 3 (any point) of **any** cell of the same
+  profession. A business that ranks top 3 next door is not weakly ranked.
+- Diagnostics: a new per-cell count `p_excluded_incumbent`. Report how many of the 59 `moved_in` it hits.
+
+## 3.1.4 Ambiguous city names and the multi_branch label
+
+- **Prefix guard: IN.** For `omer` (עומר), a hit counts only when the letter right before it is ב, מ or ל. For
+  `sderot` (שדרות, also "boulevard"), the same prefix is required **and** the hit must end the title or be followed
+  by punctuation, a hyphen, a pipe, or the word "והסביבה".
+- **multi_branch label: IN, display only.** A shared-domain (3.2 ii) hit with votes ≥ 150 and no phone-block (3.2 i)
+  flag is tagged `multi_branch` instead of `network` in the outputs. The prospect exclusion and the S3 floor stay
+  exactly as in 3.2.
+
+## 3.1.5 Re-gate triggers (Yonatan hand-checks before the top 5 is final again)
+
+After the 3.1 re-score, re-gate if any of these happens:
+- a final-five cell (locksmith × Jerusalem, electrician × Rehovot, electrician × Ramla, electrician × Holon,
+  ac-repair × Rishon LeZion) drops below P_w 8;
+- one of those five moves more than 5 ranks;
+- any cell not already hand-checked enters the top 10.
+
+If none fires, the top 5 is final with no further review.

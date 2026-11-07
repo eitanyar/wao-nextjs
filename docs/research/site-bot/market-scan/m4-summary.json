@@ -1,5 +1,5 @@
 {
- "run_id": "7f91346fefc5",
+ "run_id": "8684c8405951",
  "cells": 411,
  "ranked_cells": 410,
  "calibration_cells": [
@@ -24,10 +24,10 @@
  "step2": {
   "bought": 280,
   "pending": 0,
-  "killed_saturated_joined": 166,
-  "killed_pw_below": 148,
-  "pooled_members": 42,
-  "survived_scored": 33
+  "killed_saturated_joined": 157,
+  "killed_pw_below": 151,
+  "pooled_members": 47,
+  "survived_scored": 32
  },
  "ring2_pools": [
   {
@@ -47,25 +47,25 @@
    "kill_reason": ""
   },
   {
+   "cell_id": "electrician@R3-ring2",
+   "members": "beer-yaakov;gan-yavne;gedera;shoham",
+   "P_w": 27.65,
+   "S3": 0.5788,
+   "score": 128.8807,
+   "kill_reason": ""
+  },
+  {
    "cell_id": "renovation@R5-ring2",
    "members": "kiryat-ata;kiryat-motzkin;kiryat-yam;nesher;tirat-carmel",
-   "P_w": 31.15,
+   "P_w": 27.65,
    "S3": 0.6109,
    "score": 108.0153,
    "kill_reason": ""
   },
   {
-   "cell_id": "electrician@R3-ring2",
-   "members": "gan-yavne;gedera;shoham",
-   "P_w": 19.05,
-   "S3": 0.5688,
-   "score": 91.9342,
-   "kill_reason": ""
-  },
-  {
    "cell_id": "electrician@R1-ring2",
    "members": "or-yehuda;rosh-haayin",
-   "P_w": 17.7,
+   "P_w": 16.7,
    "S3": 0.6391,
    "score": 87.4663,
    "kill_reason": ""
@@ -73,7 +73,7 @@
   {
    "cell_id": "electrician@R2-ring2",
    "members": "even-yehuda;kadima-zoran;kfar-yona;tel-mond",
-   "P_w": 39.05,
+   "P_w": 35.3,
    "S3": 0.5819,
    "score": 61.3284,
    "kill_reason": ""
@@ -81,24 +81,40 @@
   {
    "cell_id": "ac-repair@R1-ring2",
    "members": "givat-shmuel;kiryat-ono;yehud-monosson",
-   "P_w": 14.7,
+   "P_w": 13.45,
    "S3": 0.6512,
-   "score": 37.6392,
+   "score": 34.4386,
+   "kill_reason": ""
+  },
+  {
+   "cell_id": "car-body-repair@R1-ring2",
+   "members": "or-yehuda;rosh-haayin",
+   "P_w": 15.85,
+   "S3": 0.5089,
+   "score": 33.0966,
+   "kill_reason": ""
+  },
+  {
+   "cell_id": "aluminum@R1-ring2",
+   "members": "kiryat-ono;rosh-haayin;yehud-monosson",
+   "P_w": 9.7,
+   "S3": 0.6472,
+   "score": 19.9875,
    "kill_reason": ""
   },
   {
    "cell_id": "ac-repair@R2-ring2",
    "members": "even-yehuda;kadima-zoran;kfar-yona",
-   "P_w": 10.85,
+   "P_w": 9.6,
    "S3": 0.6408,
-   "score": 15.6182,
+   "score": 13.8189,
    "kill_reason": ""
   },
   {
    "cell_id": "roofing@R3-ring2",
    "members": "beer-yaakov;gan-yavne;gedera;mazkeret-batya",
    "P_w": 3,
-   "S3": 0.6786,
+   "S3": 0.656,
    "score": 0,
    "kill_reason": "P_w<8"
   },
@@ -113,43 +129,35 @@
   {
    "cell_id": "locksmith@R2-ring2",
    "members": "even-yehuda;kadima-zoran;kfar-yona;tel-mond",
-   "P_w": 5,
+   "P_w": 3.75,
    "S3": 0.6496,
    "score": 0,
    "kill_reason": "P_w<8"
   },
   {
-   "cell_id": "aluminum@R1-ring2",
-   "members": "rosh-haayin;yehud-monosson",
-   "P_w": 5.8,
-   "S3": 0.6324,
-   "score": 0,
-   "kill_reason": "P_w<8"
-  },
-  {
    "cell_id": "solar@R2-ring2",
-   "members": "even-yehuda;kadima-zoran;tel-mond",
+   "members": "even-yehuda;kadima-zoran;kfar-yona;tel-mond",
    "P_w": 1.25,
-   "S3": 0.6531,
+   "S3": 0.6527,
    "score": 0,
    "kill_reason": "P_w<8"
   }
  ],
  "bands_final": {
   "open": 2,
-  "middle": 122,
-  "saturated": 287
+  "middle": 131,
+  "saturated": 278
  },
  "homepage": {
-  "hosts": 958,
-  "cached": 926,
+  "hosts": 991,
+  "cached": 923,
   "by_outcome": {
    "blocked": 53,
-   "failed": 22,
-   "ok": 691,
-   "site_dead": 118,
+   "failed": 21,
+   "ok": 690,
+   "site_dead": 119,
    "skipped_robots": 6,
-   "timeout": 36
+   "timeout": 34
   },
   "by_reason": {
    "challenge_200": 1,
@@ -162,24 +170,24 @@
    "robots_challenge_202": 19,
    "robots_challenge_403": 15,
    "robots_disallow": 3,
-   "robots_timeout": 36,
+   "robots_timeout": 34,
    "robots_unreachable": 1,
    "status_403": 14,
    "status_404_410": 30,
    "status_456": 1
   },
   "nxdomain": {
-   "confirmed": 78,
-   "unconfirmed": 8
+   "confirmed": 79,
+   "unconfirmed": 7
   },
-  "failed_fraction": 0.0238
+  "failed_fraction": 0.0228
  },
  "revision3": {
   "lf_slots_step2": {
    "maps": 1070,
    "best_known": 230,
    "neutral": 8,
-   "network": 429
+   "network": 400
   },
   "lf_slots_step1_only": {
    "best_known": 588,
@@ -188,10 +196,23 @@
   },
   "prospects_excluded": {
    "title": 45,
-   "network": 632,
-   "out_of_cell": 274,
-   "moved_in": 59
+   "network": 599,
+   "out_of_cell": 340,
+   "moved_in": 44
   },
-  "homepage_site_dead_prospects": 106
+  "homepage_site_dead_prospects": 100
+ },
+ "revision3_1": {
+  "lf_top3_site_dead_slots": 32,
+  "lf_slots_multi_branch": {
+   "step2": 29,
+   "step1_only": 0
+  },
+  "prospects_excluded": {
+   "multi_branch": 33,
+   "incumbent": 160,
+   "incumbent_would_be_moved_in": 21
+  },
+  "note": "p_excluded_network excludes multi_branch (3.1.4, display only - still never a prospect); incumbent counts are per business on the cell it would have been assigned to"
  }
 }
