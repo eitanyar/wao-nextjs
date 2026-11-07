@@ -384,6 +384,8 @@ export default function LandingPage({ theme, assets, copy, data, heroImageUrl, s
       {/* ── Why Us / Guarantee ──────────────────────────────────── */}
       <section id="reviews" style={{ padding: '40px 20px', backgroundColor: t.surface }}>
         <div style={{ maxWidth: '700px', margin: '0 auto' }}>
+          {/* M2a.2: guaranteeBlock is null when the owner has no guarantee; the block is omitted. */}
+          {copy.guaranteeBlock ? (
           <div style={{ background: t.trustBadgeBg, border: `1px solid ${t.border}`, borderRadius: t.radiusMd, padding: '24px 20px', marginBottom: '24px', borderInlineStart: `4px solid ${t.accent}` }}>
             <h3 style={{ fontWeight: 700, fontSize: '1rem', color: t.primary, marginBottom: '8px', margin: '0 0 8px' }}>
               {assets.badgeEmoji} {copy.guaranteeBlock.split('.')[0]}
@@ -392,6 +394,7 @@ export default function LandingPage({ theme, assets, copy, data, heroImageUrl, s
               {copy.guaranteeBlock}
             </p>
           </div>
+          ) : null}
 
           <div style={{ background: t.trustBadgeBg, border: `1px solid ${t.border}`, borderRadius: t.radiusMd, padding: '24px 20px', borderInlineStart: `4px solid ${t.accent}` }}>
             <p style={{ fontStyle: 'italic', fontSize: '1.05rem', color: t.textPrimary, lineHeight: 1.6, marginBottom: '12px' }}>

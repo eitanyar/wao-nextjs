@@ -7,6 +7,7 @@ import type { CollectedData } from '../bot/prompts';
 import type { PageBrief } from '../site-bot/research/pageBrief';
 import type { PageClassification } from '../site-bot/research/pagePortfolio';
 import type { SiteCopy } from './lpCopyPrompt';
+import { CONTACT_TITLE_PREFIX } from './generationData';
 import type { RenderSitePagesParams } from './renderSitePages';
 import {
   assembleDocument,
@@ -113,6 +114,16 @@ export function buildResearchedPageTitle(name: string, city: string | null, busi
   const head = pageNameWithCity(name, city);
   if (!brand) return head;
   return `${head}${HEBREW_LETTER.test(brand) ? '' : RLM} | ${brand}`;
+}
+
+/**
+ * Contact page title (M2a.2, Yonatan, signed off): `<prefix> <trade> b<city> | <brand>`, RLM before
+ * " | " only for a Latin brand; never the form headline, no em-dash. The prefix is Yonatan's
+ * contactTitlePrefix (generationData.ts, scripted copy). Null without a trade.
+ */
+export function researchedContactTitle(trade: string, city: string | null, businessName: string): string | null {
+  const name = trade.trim();
+  return name ? buildResearchedPageTitle(`${CONTACT_TITLE_PREFIX} ${name}`, city, businessName) : null;
 }
 
 /** H1 (C1): the hero hook only if it contains the page name and the city; otherwise name + city. */
@@ -305,10 +316,14 @@ export function renderResearchedSitePages(params: RenderResearchedSitePagesParam
   if ((params.graphEdges?.length ?? 0) > 0 && pages.some(page => !reachable.has(page.opportunityId))) throw new Error('Research graph contains an orphan selected page.');
   const siteUrl = params.siteUrl.replace(/\/$/, '');
   const outputs = new Map(pages.map(page => [page.opportunityId, outputPath(page)!]));
+  const homeSeo = home[0].seo;
   const legacy = renderSitePages({
     ...params,
     copy: home[0].copy,
-    ...(home[0].seo ? { schemaOptions: { ownerFactsOnly: true, areaServed: home[0].seo.serviceArea } } : {}),
+    ...(homeSeo ? {
+      schemaOptions: { ownerFactsOnly: true, areaServed: homeSeo.serviceArea },
+      researched: { contactTitle: researchedContactTitle(homeSeo.name, homeSeo.city, contacts(params.data).businessName) },
+    } : {}),
   });
   delete legacy['index.html'];
   delete legacy['about.html'];

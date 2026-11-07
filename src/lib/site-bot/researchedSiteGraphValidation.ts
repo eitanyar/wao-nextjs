@@ -10,9 +10,13 @@ function requireSiteCopy(value: SiteCopy): void {
   if (!value || typeof value !== 'object') throw new Error('Research page copy is malformed.');
   const requiredStrings: Array<keyof SiteCopy> = [
     'heroHeadline', 'heroSubheadline', 'heroCta', 'aboutBlurb', 'servicesHeadline', 'faqHeadline',
-    'guaranteeBlock', 'formHeadline', 'stickyBarLine', 'aboutPageHeadline', 'aboutPageBody',
+    'formHeadline', 'stickyBarLine', 'aboutPageHeadline', 'aboutPageBody',
   ];
   if (requiredStrings.some(key => typeof value[key] !== 'string' || !(value[key] as string).trim())) {
+    throw new Error('Research page copy is malformed.');
+  }
+  // M2a.2: guaranteeBlock is null when the owner has no guarantee; when set it must be non-empty.
+  if (value.guaranteeBlock !== null && (typeof value.guaranteeBlock !== 'string' || !value.guaranteeBlock.trim())) {
     throw new Error('Research page copy is malformed.');
   }
   if (!Array.isArray(value.trustBarItems) || !value.trustBarItems.every(item => typeof item === 'string') ||

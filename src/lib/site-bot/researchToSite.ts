@@ -21,6 +21,7 @@ import { createHash } from 'node:crypto';
 import type { CollectedData } from '../bot/prompts';
 import { sitesDir } from '../dataRoots';
 import { isSafeDeploymentSlug } from '../deployment/deploy-access';
+import { effectiveReviewQuote } from '../lp/copyGates';
 import {
   generateResearchPageCopy,
   GeneratedCopyValidationError,
@@ -43,6 +44,7 @@ import {
   assembleSiteIdentity,
   isSiteIdentity,
   resolveSiteIdentity,
+  withPinnedLabels,
   siteIdentityInput,
   type SiteIdentity,
   type SiteIdentityModelCall,
@@ -261,11 +263,13 @@ export function buildPageBriefs(dossier: SiteResearchDossier, data: CollectedDat
   const cities = dossier.evidence.filter(item => item.id.startsWith('city:'));
   const location = clean(data.targetLocation) || clean(data.specificCities);
   const niche = clean(data.primaryService) || clean(data.businessNiche);
+  // M2a.2 (item 1): business hours are formatted and shown by the system; they never reach the model.
   const proof = ownerFacts(data, [
     ['yearsInField', 'Years in the field'], ['guarantee', 'Guarantee'], ['license', 'License'],
-    ['responseTime', 'Response time'], ['businessHours', 'Business hours'],
+    ['responseTime', 'Response time'],
   ], 'proof');
-  const review = clean(data.reviewQuote);
+  // M2a.2 (item 8): a quote that is not mostly Hebrew is never shown and never reaches the model (no translation).
+  const review = effectiveReviewQuote(data) ?? '';
   if (review) proof.push(approved('proof-review', `Customer review quote (owner-supplied; quote verbatim or not at all): ${review}${clean(data.starRating) ? ` | star rating: ${clean(data.starRating)}` : ''}`));
   // C5: the owner's own wording, never widened. Held city evidence never reaches the brief (compactEvidence drops it).
   const ownerArea = clean(data.specificCities) || location;
@@ -345,7 +349,8 @@ export function buildPageBriefs(dossier: SiteResearchDossier, data: CollectedDat
 
 /** The persisted identity, or (pre-M2a.1 plans) a deterministic one with owner wording as labels. */
 function briefIdentity(dossier: SiteResearchDossier, data: CollectedData): SiteIdentity {
-  if (isSiteIdentity(dossier.siteIdentity)) return dossier.siteIdentity;
+  // M2a.2: label pins apply to persisted identities too (labels only; slugs are stable).
+  if (isSiteIdentity(dossier.siteIdentity)) return withPinnedLabels(dossier.siteIdentity);
   return assembleSiteIdentity(siteIdentityInput(serviceNamesFor(dossier), data), null, () => new Date(dossier.updatedAt));
 }
 

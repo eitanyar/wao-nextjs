@@ -6,7 +6,13 @@
  * script that asserts each token against its source file:line. Add tokens only as
  * byte-exact patches from language-qa (Noa) / waocopy, never typed from memory.
  * Logic lives in copyGates.ts (zero Hebrew bytes).
+ *
+ * M2a.2: the claim tokens for the ten Noa claim kinds come from generationData.ts (scripted
+ * copy of docs/copy/site-bot-generation-data.md). Tokens below that are NOT from that file
+ * (plural / we forms, WAO-service terms, warranty, thermal) are logged for Noa to confirm.
  */
+
+import { CLAIM_TOKENS } from './generationData';
 
 export interface GateToken {
   token: string;
@@ -50,6 +56,11 @@ export interface ClaimRule {
   id: string;
   /** Hebrew tokens (substring match) that make the claim in copy. Empty = Hebrew patch pending. */
   tokens: readonly string[];
+  /**
+   * Authorise token by token (license_grade): a token is allowed only when that exact token is in
+   * the owner's facts. English keywords never authorise such a rule (never map a grade).
+   */
+  perToken?: boolean;
   /** Owner-data fields whose non-empty value authorises the claim. */
   ownerFields: readonly string[];
   /** English keywords in any owner fact that authorise the claim (case-insensitive). */
@@ -61,10 +72,35 @@ export interface ClaimRule {
 export const CLAIM_RULES: readonly ClaimRule[] = [
   { id: 'warranty', tokens: ["אחריות"], ownerFields: ['guarantee'], ownerKeywords: ['warranty', 'guarantee'], source: "noa: אחריות מלאה (e5:66)" },
   { id: 'thermal', tokens: ["תרמית"], ownerFields: [], ownerKeywords: ['thermal'], source: "noa: מצלמה תרמית (p3:108, p4:47, p5:24)" },
-  // waocopy patch needed: Hebrew tokens for street-address and walk-in claims (no reviewer example yet).
-  { id: 'street_address', tokens: [], ownerFields: ['streetAddress'], ownerKeywords: [], source: 'pending waocopy patch' },
-  { id: 'walk_in', tokens: [], ownerFields: ['streetAddress'], ownerKeywords: ['walk-in', 'walk in'], source: 'pending waocopy patch' },
+  // M2a.2: Noa's claimTokens (docs/copy/site-bot-generation-data.md section 2), loaded by script.
+  { id: 'street_address', tokens: claimTokens('street_address'), ownerFields: ['streetAddress'], ownerKeywords: [], source: 'noa data §2' },
+  { id: 'walk_in', tokens: claimTokens('walk_in'), ownerFields: [], ownerKeywords: ['walk-in', 'walk in', 'no appointment', 'without an appointment'], source: 'noa data §2' },
+  { id: 'written_guarantee', tokens: claimTokens('written_guarantee'), ownerFields: [], ownerKeywords: ['in writing', 'written', 'certificate'], source: 'noa data §2' },
+  { id: 'parts_included', tokens: claimTokens('parts_included'), ownerFields: [], ownerKeywords: ['parts included', 'including parts', 'parts and labor', 'parts and labour', 'materials included', 'including materials'], source: 'noa data §2' },
+  { id: 'no_extra_charge', tokens: claimTokens('no_extra_charge'), ownerFields: [], ownerKeywords: ['no extra charge', 'no additional charge', 'no extra cost', 'no additional cost', 'at no extra', 'free of charge'], source: 'noa data §2' },
+  { id: 'report_included', tokens: claimTokens('report_included'), ownerFields: [], ownerKeywords: ['report'], source: 'noa data §2' },
+  { id: 'sealing_test', tokens: claimTokens('sealing_test'), ownerFields: [], ownerKeywords: ['sealing', 'waterproofing', 'pressure test'], source: 'noa data §2' },
+  { id: 'apprenticeship_bio', tokens: claimTokens('apprenticeship_bio'), ownerFields: [], ownerKeywords: ['apprentice', 'started as', 'started working', 'learned the trade', 'worked for', 'at age'], source: 'noa data §2' },
+  { id: 'fix_time', tokens: claimTokens('fix_time'), ownerFields: [], ownerKeywords: ['fix within', 'fixed within', 'repair within', 'install within', 'installed within', 'finish within', 'same-day', 'same day'], source: 'noa data §2 (+ sentence check, copyGates.ts)' },
+  { id: 'license_grade', tokens: claimTokens('license_grade'), perToken: true, ownerFields: [], ownerKeywords: [], source: 'noa data §2' },
 ];
+
+function claimTokens(kind: string): readonly string[] {
+  const tokens = CLAIM_TOKENS[kind];
+  if (!tokens || !tokens.length) throw new Error(`generationData has no claim tokens for ${kind}`);
+  return tokens;
+}
+
+/** Owner-data fields that never authorise a claim (a customer's words are not the owner's claim). */
+export const CLAIM_EXCLUDED_FACT_FIELDS: readonly string[] = ['reviewQuote', 'starRating', 'reviewCount'];
+
+/**
+ * Owner-fact repetition cap (M2a.2, item 9): owner text fields whose digit runs are the fact
+ * phrases counted per page. Contact, internal and customer fields are excluded.
+ */
+export const FACT_PHRASE_FIELDS: readonly string[] = ['yearsInField', 'guarantee', 'license', 'usp', 'responseTime', 'pricingNotes'];
+/** A fact phrase may appear at most this many times per page. */
+export const FACT_REPEAT_MAX = 2;
 
 /** A quote overlap of at least this many characters outside reviewFeatured is a violation. */
 export const QUOTE_OVERLAP_MIN_CHARS = 24;

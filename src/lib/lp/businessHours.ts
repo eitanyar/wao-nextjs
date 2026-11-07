@@ -5,13 +5,14 @@
  * ("Sun-Thu 08:00-18:00, Fri 08:00-13:00") -> schema.org OpeningHoursSpecification.
  * All-or-nothing: anything unparseable returns null and the schema omits the field.
  *
- * The Hebrew display formatter (day letters with geresh, en-dash ranges) is NOT built:
- * no Hebrew day-letter table exists in the codebase, and the engineer may not author one
- * ("waocopy patch needed"). Copy keeps the owner's hours raw until that patch lands;
- * formatBusinessHoursHebrew() then only needs the table.
+ * formatBusinessHoursHebrew (M2a.2): the Hebrew display string, built in code from Noa's
+ * day-letter table (generationData.ts, copied from docs/copy/site-bot-generation-data.md).
+ * The model never writes days or hours; renderers inject this string.
  *
  * HEBREW-SAFETY: this module contains ZERO Hebrew bytes.
  */
+
+import { DAY_LETTERS } from './generationData';
 
 export const SCHEMA_DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'] as const;
 export type SchemaDay = (typeof SCHEMA_DAYS)[number];
@@ -80,10 +81,12 @@ export function parseBusinessHours(text: string | undefined): OpeningHoursSpecif
 }
 
 /**
- * Hebrew display string, given the day-letter table (index 0 = Sunday) from a waocopy patch.
- * Without the table (today) returns null and callers keep the owner's raw hours.
+ * Hebrew display string from the day-letter table (index 0 = Sunday; default Noa's table):
+ * day ranges and time ranges with an en-dash and no spaces (Noa's typography rule), segments
+ * joined by ", ". Unparseable or non-contiguous hours return null (callers then show nothing
+ * or the owner's own Hebrew wording, never raw Latin day names).
  */
-export function formatBusinessHoursHebrew(text: string | undefined, dayLetters: readonly string[] | null): string | null {
+export function formatBusinessHoursHebrew(text: string | undefined, dayLetters: readonly string[] | null = DAY_LETTERS): string | null {
   if (!dayLetters || dayLetters.length !== 7) return null;
   const segments = parseBusinessHoursSegments(text);
   if (!segments) return null;
@@ -95,4 +98,19 @@ export function formatBusinessHoursHebrew(text: string | undefined, dayLetters: 
     const days = segment.days.length > 1 ? `${first}–${last}` : first;
     return `${days} ${segment.opens}–${segment.closes}`;
   }).join(', ');
+}
+
+/** True when the text contains a Hebrew letter. */
+function hasHebrew(value: string): boolean {
+  return /[\u05D0-\u05EA]/.test(value);
+}
+
+/**
+ * What a researched site shows for the owner's hours (M2a.2): the code-formatted Hebrew string;
+ * else the owner's own wording when it is already Hebrew; else nothing (never raw "Sun-Thu").
+ */
+export function displayBusinessHours(text: string | undefined): string | null {
+  const raw = (text ?? '').trim();
+  if (!raw) return null;
+  return formatBusinessHoursHebrew(raw) ?? (hasHebrew(raw) ? raw : null);
 }

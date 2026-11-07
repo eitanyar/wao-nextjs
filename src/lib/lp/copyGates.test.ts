@@ -4,6 +4,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { CLAIM_RULES, PLURAL_ADDRESS_TOKENS, WAO_SERVICE_TERMS_HE, WE_FORM_TOKENS } from './copyGates.config';
+import { CLAIM_TOKENS } from './generationData';
 import { copyGateContext, GATE_RULES, longestCommonSubstring, runCopyGates, tokenPattern, type CopyGateContext } from './copyGates';
 import {
   applySafeDeterministicFixes,
@@ -89,8 +90,8 @@ test('A3 claims (warranty, thermal) are rejected unless the owner facts carry th
   assert.deepEqual(runCopyGates(copy, ctx({ ownerFields: { guarantee: 'Two-year warranty' } })).map(hit => hit.actual), ['claim:thermal']);
   assert.deepEqual(runCopyGates(copy, ctx({ ownerFactsText: 'usp: thermal camera and a warranty' })), []);
   assert.deepEqual(runCopyGates(copy, ctx({ ownerFactsText: `${warranty} ${thermal}` })), []);
-  // Address / walk-in rules exist in the config but carry no Hebrew tokens yet (waocopy patch pending).
-  for (const id of ['street_address', 'walk_in']) assert.deepEqual(CLAIM_RULES.find(rule => rule.id === id)?.tokens, []);
+  // M2a.2: address / walk-in (and the other Noa kinds) carry Noa's data-file tokens.
+  for (const id of ['street_address', 'walk_in']) assert.deepEqual(CLAIM_RULES.find(rule => rule.id === id)?.tokens, CLAIM_TOKENS[id]);
 });
 
 test('A4 WAO-offer terms (Hebrew eval leak and Latin brand terms) are rejected, and the client prompt no longer carries the offer', () => {
@@ -116,8 +117,11 @@ test('A5 the customer quote may appear only in reviewFeatured: long overlaps els
 });
 
 test('copyGateContext reads owner facts, quote and star rating from the owner data', () => {
-  const gates = copyGateContext({ guarantee: 'Two years', reviewQuote: ' Great ', starRating: '' }, [LABEL_A]);
-  assert.equal(gates.reviewQuote, 'Great');
+  const gates = copyGateContext({ guarantee: 'Two years', reviewQuote: ` ${HE_WORD} `, starRating: '' }, [LABEL_A]);
+  assert.equal(gates.reviewQuote, HE_WORD);
+  // M2a.2: a quote that is not mostly Hebrew is never shown (and never authorises a claim).
+  assert.equal(copyGateContext({ reviewQuote: 'Great' }, []).reviewQuote, null);
+  assert.ok(!copyGateContext({ reviewQuote: 'warranty' }, []).ownerFactsText.includes('warranty'));
   assert.equal(gates.starRating, null);
   assert.ok(gates.ownerFactsText.includes('Two years'));
   assert.deepEqual(gates.serviceLabels, [LABEL_A]);
@@ -154,18 +158,18 @@ test('B prompts: singular rule in Tamar + Noa + repair system prompts, typograph
   assert.match(users[0], /never by dropping a verb's object|Never shorten by dropping a verb's object/);
   assert.match(users[0], /never mirror an English idiom/);
   assert.match(users[0], /appears once per site and the homepage already has it/);
-  assert.match(users[0], /never coin license grades/);
+  assert.match(users[0], /never translate or map it to a license grade/);
   assert.match(users[1], /SYSTEM FIELDS \(never change them\)/);
 });
 
 test('B system fields: heroCta is the fixed singular label, serviceItems are the confirmed names, the quote is verbatim without context', async () => {
-  const data = { businessNiche: 'plumber', reviewQuote: 'Came within an hour' };
+  const data = { businessNiche: 'plumber', reviewQuote: `${HE_WORD} ${LABEL_B}` };
   const copy = await generateResearchPageCopy(briefWithSite(), data, {
     callJson: async () => JSON.stringify({ ...base, heroCta: 'model cta', serviceItems: ['made up'], reviewFeatured: 'paraphrased', serviceDetails: [{ name: LABEL_B, description: 'd' }] }),
   });
   assert.equal(copy.heroCta, primaryCtaLabel(data));
   assert.deepEqual(copy.serviceItems, [LABEL_A, LABEL_B]);
-  assert.equal(copy.reviewFeatured, 'Came within an hour');
+  assert.equal(copy.reviewFeatured, `${HE_WORD} ${LABEL_B}`);
   assert.equal(copy.reviewContext, null);
 });
 

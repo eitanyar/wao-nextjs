@@ -9,7 +9,7 @@ import type { CollectedData } from '@/lib/bot/prompts';
 import { renderStaticHtml, type RenderStaticHtmlParams } from './renderStaticHtml';
 import { buildPrivacyHtml, buildAccessibilityHtml, isAccessibilityExempt } from './legalPages';
 import { buildFraudBlockerTrackerHtml } from '../fraud-blocker/tracker';
-import { parseBusinessHours } from './businessHours';
+import { displayBusinessHours, parseBusinessHours } from './businessHours';
 
 export interface RenderSitePagesParams extends Omit<RenderStaticHtmlParams, 'copy' | 'mode' | 'siteUrl'> {
   copy: SiteCopy;
@@ -18,6 +18,11 @@ export interface RenderSitePagesParams extends Omit<RenderStaticHtmlParams, 'cop
   siteUrl: string;
   /** Researched sites (M2a.1) pass ownerFactsOnly schema options; unset = legacy schema, unchanged. */
   schemaOptions?: LocalBusinessSchemaOptions;
+  /**
+   * Researched sites (M2a.2): contact <title> (Yonatan's formula), `| brand` legal titles and the
+   * owner's hours formatted in code (never raw Latin day names). Unset = legacy, unchanged.
+   */
+  researched?: { contactTitle: string | null };
 }
 
 export function renderSitePages(p: RenderSitePagesParams): Record<string, string> {
@@ -29,14 +34,14 @@ export function renderSitePages(p: RenderSitePagesParams): Record<string, string
     'about.html': buildAboutHtml(p, siteUrl),
     'services.html': buildServicesHtml(p, siteUrl),
     'contact.html': buildContactHtml(p, siteUrl),
-    'privacy.html': buildPrivacyHtml({ theme: p.theme, data: p.data, canonicalUrl: `${siteUrl}/privacy.html`, homeHref: '/', fraudBlockerSid: p.fraudBlockerSid }),
+    'privacy.html': buildPrivacyHtml({ theme: p.theme, data: p.data, canonicalUrl: `${siteUrl}/privacy.html`, homeHref: '/', fraudBlockerSid: p.fraudBlockerSid, ...(p.researched ? { pipeTitle: true } : {}) }),
     'sitemap.xml': buildSitemap(siteUrl),
   };
 
   // No exemption exists for the privacy page — always built. Accessibility
   // is gated: absent entirely (not a stub) when the client is exempt.
   if (!exempt) {
-    pages['accessibility.html'] = buildAccessibilityHtml({ theme: p.theme, data: p.data, canonicalUrl: `${siteUrl}/accessibility.html`, homeHref: '/', fraudBlockerSid: p.fraudBlockerSid });
+    pages['accessibility.html'] = buildAccessibilityHtml({ theme: p.theme, data: p.data, canonicalUrl: `${siteUrl}/accessibility.html`, homeHref: '/', fraudBlockerSid: p.fraudBlockerSid, ...(p.researched ? { pipeTitle: true } : {}) });
   }
 
   return pages;
@@ -544,7 +549,7 @@ function buildContactHtml(p: RenderSitePagesParams, siteUrl: string): string {
 
   const head = pageHead({
     t,
-    title: `${esc(copy.formHeadline)} — ${esc(businessName)}`,
+    title: p.researched?.contactTitle ?? `${esc(copy.formHeadline)} — ${esc(businessName)}`,
     description: copy.heroSubheadline,
     canonicalUrl,
     ogImage: heroImageUrl,
@@ -552,8 +557,10 @@ function buildContactHtml(p: RenderSitePagesParams, siteUrl: string): string {
     fraudBlockerSid: p.fraudBlockerSid,
   });
 
-  const hoursHtml = data.businessHours
-    ? `<p style="color:${t.textMuted};font-size:0.9rem;margin-top:8px;">🕒 ${esc(data.businessHours)}</p>`
+  // M2a.2: researched sites show the hours formatted in code (Hebrew day letters), never raw Latin.
+  const hours = p.researched ? displayBusinessHours(data.businessHours) : data.businessHours;
+  const hoursHtml = hours
+    ? `<p style="color:${t.textMuted};font-size:0.9rem;margin-top:8px;">🕒 ${esc(hours)}</p>`
     : '';
 
   const body = `${stickyHeader(t, businessName, phone, phoneHref)}

@@ -19,6 +19,7 @@ import {
   runResearchToSite,
   safeOpportunityIdentity,
 } from './researchToSite';
+import { SERVICE_LABEL_PINS } from '../lp/generationData';
 
 const now = () => new Date('2026-11-08T00:00:00.000Z');
 
@@ -90,10 +91,12 @@ test('fixture business: no dossier -> research -> architecture_ready -> copy_rea
     { fromId: 'svc-drain-unblocking', toId: 'home' }, { fromId: 'svc-drain-unblocking', toId: 'svc-leak-detection' },
   ]);
   // Site identity was resolved once (deterministic here: no model) and persisted on the plan.
+  // M2a.2: "leak detection" carries its pinned label (Noa / Yonatan serviceLabelPins).
+  const leakPin = SERVICE_LABEL_PINS['leak detection'];
   assert.deepEqual(dossier?.siteIdentity?.services.map(item => [item.source, item.label, item.slug]), [
-    ['leak detection', 'leak detection', 'leak-detection'], ['drain unblocking', 'drain unblocking', 'drain-unblocking'],
+    ['leak detection', leakPin, 'leak-detection'], ['drain unblocking', 'drain unblocking', 'drain-unblocking'],
   ]);
-  assert.deepEqual(record.researchedPages.map((item: { seo?: { name: string } }) => item.seo?.name), ['plumber', 'leak detection', 'drain unblocking']);
+  assert.deepEqual(record.researchedPages.map((item: { seo?: { name: string } }) => item.seo?.name), ['plumber', leakPin, 'drain unblocking']);
 
   // Re-runnable: a copy_ready dossier regenerates from its persisted plan without re-running research.
   const calls: string[] = [];
@@ -192,12 +195,17 @@ test('non-Latin or reserved service names get a stable opaque ID and path; colli
 
 test('briefs carry owner facts verbatim, English scaffolding, no FAQ, and pass the bounded brief check', async () => {
   const planned = planCopyReadyDossier(baseDossier('architecture_ready'), now);
-  const briefs = buildPageBriefs(planned, { ...data, reviewQuote: 'Came in an hour', starRating: '5' });
+  const hebrewQuote = '\u05D0\u05D1\u05D2 \u05D3\u05D4\u05D5';
+  const briefs = buildPageBriefs(planned, { ...data, reviewQuote: hebrewQuote, starRating: '5', businessHours: 'Sun-Thu 08:00-18:00' });
+  // M2a.2: a quote that is not mostly Hebrew never reaches the brief; hours never reach the model.
+  const latin = buildPageBriefs(planned, { ...data, reviewQuote: 'Came in an hour', starRating: '5' });
+  assert.ok(!latin[0].firstPartyProof.some(item => item.value.includes('Came in an hour')));
   assert.deepEqual(briefs.map(brief => brief.page.id), ['home', 'svc-alpha']);
   const [home, service] = briefs;
   assert.equal(home.faqPolicy, 'none');
   assert.ok(home.firstPartyProof.some(item => item.value === 'Years in the field (owner-stated): 12'));
-  assert.ok(home.firstPartyProof.some(item => item.value.includes('Came in an hour | star rating: 5')));
+  assert.ok(home.firstPartyProof.some(item => item.value.includes(`${hebrewQuote} | star rating: 5`)));
+  assert.ok(!home.firstPartyProof.some(item => item.value.includes('08:00')));
   assert.ok(home.assertableLocalFacts.some(item => item.value === 'Service area (owner-stated; name only these places, never a wider area): Holon, Bat Yam'));
   assert.deepEqual(home.site, {
     pageName: 'plumber', relevanceTerm: 'leak detection', city: 'Holon', serviceArea: ['Holon', 'Bat Yam'],

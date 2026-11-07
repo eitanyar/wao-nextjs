@@ -18,7 +18,7 @@ export interface LPCopy {
   serviceItems: string[];        // 4-6 items. Each item: short label (max 25 chars).
   faqHeadline: string;           // Section headline. Max 30 chars.
   faqItems: LPCopyFAQItem[];    // 4-5 items. Real pre-call questions. a: max 120 chars.
-  guaranteeBlock: string;        // 1-2 sentences. Max 100 chars total.
+  guaranteeBlock: string | null; // 1-2 sentences. Max 100 chars total. M2a.2: null when the owner has no guarantee (renderer omits the block).
   reviewFeatured: string | null; // EXACT text from reviewQuote field, no edits — null when no real review exists (never fabricate).
   reviewContext: string | null;  // e.g. "4.9 כוכבים | 64 ביקורות בגוגל" — null alongside reviewFeatured when no real review exists.
   responseTimeBadge: string | null;  // e.g. "מגיע תוך 20 דקות" — null if not applicable
@@ -63,6 +63,8 @@ export interface LpCopyPromptOptions {
   relevanceTerm?: string;
   /** Leave responseTimeBadge blank in the template so the model writes it (instead of the raw owner answer). */
   blankResponseTimeBadge?: boolean;
+  /** M2a.2: the owner has no guarantee; the template shows guaranteeBlock as null (no filler guarantee). */
+  nullGuarantee?: boolean;
 }
 
 export function buildLpCopyPrompt(data: CollectedData, options: LpCopyPromptOptions = {}): string {
@@ -217,7 +219,7 @@ OUTPUT (JSON only, no markdown):
   "serviceItems": ["", "", "", ""],
   "faqHeadline": "",
   "faqItems": [{"q": "", "a": ""}, {"q": "", "a": ""}, {"q": "", "a": ""}, {"q": "", "a": ""}],
-  "guaranteeBlock": "",
+  "guaranteeBlock": ${options.nullGuarantee ? 'null' : '""'},
   "reviewFeatured": ${hasRealReview ? `"${data.reviewQuote}"` : 'null'},
   "reviewContext": ${hasRealReview && data.starRating ? `"${data.starRating} כוכבים בגוגל"` : 'null'},
   "responseTimeBadge": ${data.responseTime ? (options.blankResponseTimeBadge ? '""' : `"${data.responseTime}"`) : 'null'},

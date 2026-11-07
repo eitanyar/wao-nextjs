@@ -28,6 +28,19 @@ interface LegalPageOpts {
   /** Relative href back to the home page, e.g. '/' or '/index.html' */
   homeHref: string;
   fraudBlockerSid?: string;
+  /**
+   * M2a.2 (researched sites): `<page> | <brand>` title, with an RLM before " | " for a Latin
+   * brand (Yonatan's formula / CLAUDE.md bidi rule). Unset = legacy `<page> — <brand>`.
+   */
+  pipeTitle?: boolean;
+}
+
+const RLM = '\u200F';
+
+function legalTitle(opts: LegalPageOpts, title: string, businessName: string): string {
+  if (!opts.pipeTitle) return `${esc(title)} \u2014 ${businessName}`;
+  if (!businessName) return esc(title);
+  return `${esc(title)}${/[\u05D0-\u05EA]/.test(businessName) ? '' : RLM} | ${businessName}`;
 }
 
 function contactLine(data: CollectedData): { ownerName: string; phone: string; email?: string } {
@@ -48,7 +61,7 @@ function legalDocument(opts: LegalPageOpts, title: string, bodyHtml: string): st
   ${opts.fraudBlockerSid ? buildFraudBlockerTrackerHtml(opts.fraudBlockerSid) : ''}
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>${esc(title)} — ${businessName}</title>
+  <title>${legalTitle(opts, title, businessName)}</title>
   <meta name="robots" content="noindex,follow" />
   <link rel="canonical" href="${canonicalUrl}" />
   <style>

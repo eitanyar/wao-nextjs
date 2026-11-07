@@ -23,6 +23,22 @@
 
 import { createHash } from 'node:crypto';
 import type { CollectedData } from '../bot/prompts';
+import { SERVICE_LABEL_PINS } from '../lp/generationData';
+
+/**
+ * Pinned display label for an owner service wording (M2a.2, item 4: Noa / Yonatan
+ * serviceLabelPins, scripted copy). Pins beat the model and the owner's translated wording;
+ * they flow into title, H1, link anchors, serviceItems and schema Service.name.
+ */
+export function pinnedServiceLabel(source: string): string | null {
+  const key = source.trim().toLowerCase().replace(/\s+/g, ' ');
+  return Object.prototype.hasOwnProperty.call(SERVICE_LABEL_PINS, key) ? SERVICE_LABEL_PINS[key] : null;
+}
+
+/** Re-apply the pins to a (possibly persisted, pre-pin) identity; slugs never change. */
+export function withPinnedLabels(identity: SiteIdentity): SiteIdentity {
+  return { ...identity, services: identity.services.map(service => ({ ...service, label: pinnedServiceLabel(service.source) ?? service.label })) };
+}
 
 export interface SiteIdentityService {
   /** Owner-confirmed service name, as stored in the research dossier. */
@@ -129,7 +145,7 @@ interface IdentityItem { key: string; text: string; kind: 'service' | 'place' | 
 
 function items(input: SiteIdentityInput): IdentityItem[] {
   const out: IdentityItem[] = [];
-  input.services.forEach((text, index) => out.push({ key: `service-${index}`, text, kind: 'service', needsLabel: !isHebrewText(text), needsSlug: !latinServiceSlug(text) }));
+  input.services.forEach((text, index) => out.push({ key: `service-${index}`, text, kind: 'service', needsLabel: !isHebrewText(text) && !pinnedServiceLabel(text), needsSlug: !latinServiceSlug(text) }));
   input.places.forEach((text, index) => out.push({ key: `place-${index}`, text, kind: 'place', needsLabel: !isHebrewText(text), needsSlug: false }));
   if (input.businessNiche) out.push({ key: 'trade', text: input.businessNiche, kind: 'trade', needsLabel: !isHebrewText(input.businessNiche), needsSlug: false });
   return out;
@@ -169,7 +185,7 @@ export function assembleSiteIdentity(input: SiteIdentityInput, answer: ModelAnsw
       slug = validModelSlug(answer?.[`service-${index}`]?.slug);
       if (slug) usedModel = true;
     }
-    return { source: text, label: label(`service-${index}`, text), slug: slug || hashSlug(`service:${norm(text)}`) };
+    return { source: text, label: pinnedServiceLabel(text) ?? label(`service-${index}`, text), slug: slug || hashSlug(`service:${norm(text)}`) };
   });
   const serviceArea = input.places.map((text, index) => label(`place-${index}`, text));
   const baseIndex = input.baseCity ? input.places.findIndex(place => norm(place) === norm(input.baseCity!)) : -1;

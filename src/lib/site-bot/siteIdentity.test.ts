@@ -6,12 +6,15 @@ import {
   assembleSiteIdentity,
   buildSiteIdentityPrompt,
   latinServiceSlug,
+  pinnedServiceLabel,
   resolveSiteIdentity,
+  withPinnedLabels,
   siteIdentityInput,
   validModelLabel,
   validModelSlug,
 } from './siteIdentity';
 import { planCopyReadyDossier } from './researchToSite';
+import { SERVICE_LABEL_PINS } from '../lp/generationData';
 import type { SiteResearchDossier } from './research/types';
 
 // Synthetic Hebrew-script letter sequences (test data, not copy).
@@ -42,7 +45,7 @@ test('labels: Latin owner wording gets a validated Hebrew label from the model; 
   assert.equal(validModelLabel(HE_A), HE_A);
   assert.equal(validModelLabel(`${HE_A} plus`), '');
   assert.equal(validModelLabel('x'.repeat(30)), '');
-  const input = siteIdentityInput(['leak detection'], { businessNiche: 'plumber', targetLocation: 'Holon', specificCities: 'Holon, Bat Yam' });
+  const input = siteIdentityInput(['drain unblocking'], { businessNiche: 'plumber', targetLocation: 'Holon', specificCities: 'Holon, Bat Yam' });
   assert.deepEqual(input.places, ['Holon', 'Bat Yam']);
   const prompt = buildSiteIdentityPrompt(input)!;
   assert.match(prompt, /never.*|no region or "and surroundings"/);
@@ -51,10 +54,27 @@ test('labels: Latin owner wording gets a validated Hebrew label from the model; 
     'service-0': { label: HE_A }, 'place-0': { label: HE_B }, 'place-1': { label: 'Bat Yam and area' }, trade: { label: '' },
   }, now);
   assert.equal(identity.services[0].label, HE_A);
-  assert.equal(identity.services[0].slug, 'leak-detection');
+  assert.equal(identity.services[0].slug, 'drain-unblocking');
   assert.deepEqual(identity.serviceArea, [HE_B, 'Bat Yam']);
   assert.equal(identity.baseCity, HE_B);
   assert.equal(identity.trade, 'plumber');
+});
+
+test('M2a.2 item 4: pinned service labels beat the model and the owner wording, also on persisted identities; slugs unchanged', () => {
+  const input = siteIdentityInput(['Leak  Detection', 'water heater install', 'drain unblocking'], { businessNiche: 'plumber', targetLocation: 'Holon' });
+  // Pinned items are not sent to the model for a label.
+  assert.doesNotMatch(buildSiteIdentityPrompt(input)!, /"key":"service-0","kind":"service","text":"Leak  Detection","needsLabel":true/);
+  const identity = assembleSiteIdentity(input, { 'service-0': { label: HE_A }, 'service-1': { label: HE_B }, 'service-2': { label: HE_B } }, now);
+  assert.deepEqual(identity.services.map(item => [item.label, item.slug]), [
+    [SERVICE_LABEL_PINS['leak detection'], 'leak-detection'],
+    [SERVICE_LABEL_PINS['water heater install'], 'water-heater-install'],
+    [HE_B, 'drain-unblocking'],
+  ]);
+  assert.equal(pinnedServiceLabel('drain unblocking'), null);
+  const persisted = { ...identity, services: identity.services.map(item => ({ ...item, label: HE_A })) };
+  assert.deepEqual(withPinnedLabels(persisted).services.map(item => [item.label, item.slug]), [
+    [SERVICE_LABEL_PINS['leak detection'], 'leak-detection'], [SERVICE_LABEL_PINS['water heater install'], 'water-heater-install'], [HE_A, 'drain-unblocking'],
+  ]);
 });
 
 test('resolveSiteIdentity makes at most one model call and degrades to deterministic output on any failure', async () => {

@@ -164,10 +164,10 @@ export function renderStaticHtml(p: RenderStaticHtmlParams): string {
   <!-- Guarantee + Review -->
   <section id="reviews" style="padding:40px 20px;background:${t.surface};">
     <div style="max-width:700px;margin:0 auto;">
-      <div style="background:${t.trustBadgeBg};border:1px solid ${t.border};border-radius:${t.radiusMd};padding:24px 20px;margin-bottom:24px;border-inline-start:4px solid ${t.accent};">
+      ${copy.guaranteeBlock ? `<div style="background:${t.trustBadgeBg};border:1px solid ${t.border};border-radius:${t.radiusMd};padding:24px 20px;margin-bottom:24px;border-inline-start:4px solid ${t.accent};">
         <h3 style="font-weight:700;font-size:1rem;color:${t.primary};margin:0 0 8px;">${assets.badgeEmoji} ${esc(copy.guaranteeBlock.split('.')[0])}</h3>
         <p style="color:${t.textMuted};font-size:0.9rem;line-height:1.5;">${esc(copy.guaranteeBlock)}</p>
-      </div>
+      </div>` : ''}
       ${copy.reviewFeatured ? `
       <div style="background:${t.trustBadgeBg};border:1px solid ${t.border};border-radius:${t.radiusMd};padding:24px 20px;border-inline-start:4px solid ${t.accent};">
         <p style="font-style:italic;font-size:1.05rem;color:${t.textPrimary};line-height:1.6;margin-bottom:12px;">״${esc(copy.reviewFeatured)}״</p>

@@ -5,14 +5,16 @@
 
 import type { CollectedData } from '../bot/prompts';
 import type { SiteCopy } from './lpCopyPrompt';
-import { buildSiteCopyPrompt, hasRealReviewQuote, primaryCtaLabel } from './lpCopyPrompt';
+import { buildSiteCopyPrompt, primaryCtaLabel } from './lpCopyPrompt';
 import { callQwenJSON, type CallQwenJSONOptions } from '../ai/qwen-fast';
 import type { PageBrief } from '../site-bot/research/pageBrief';
 import type { SiteResearchDossier } from '../site-bot/research/types';
 import { PLURAL_ADDRESS_TOKENS, WE_FORM_TOKENS } from './copyGates.config';
+import { TYPOGRAPHY_RULE_TEXT } from './generationData';
 import {
   copyGateContext,
   describeGateViolation,
+  effectiveReviewQuote,
   GATE_RULES,
   runCopyGates,
   type CopyGateContext,
@@ -43,9 +45,11 @@ export interface ResearchPageCopyDependencies {
 export const SINGULAR_ADDRESS_RULE =
   `ADDRESS (hard rule, binding): address the reader in the singular masculine second person only, as one man. Never use plural or second-person-plural forms. Forbidden forms, including with attached prefix letters: ${PLURAL_ADDRESS_TOKENS.map(entry => entry.token).join(', ')}. The business is a solo operator: the owner speaks in the first-person singular, never in the first-person plural. Forbidden: ${WE_FORM_TOKENS.map(entry => entry.token).join(', ')}.`;
 
-/** Hebrew typography spec for the Noa stage (M2a.1, B). Characters are written as escapes. */
-export const TYPOGRAPHY_RULE =
-  'TYPOGRAPHY (binding): use gershayim (\u05F4) in Hebrew acronyms and geresh (\u05F3) in abbreviations and borrowed sounds; never an ASCII double quote (") or apostrophe (\') inside Hebrew text. An em-dash (—) has exactly one space on each side. Ranges of numbers, times or days use an en-dash (–) with no spaces (08:00–18:00). A Hebrew prefix letter joins a following number or Latin word with a maqaf (\u05BE) or plain hyphen and no spaces. Never use double spaces.';
+/**
+ * Hebrew typography spec for the Noa and repair stages: Noa's typographyRule (M2a.2), copied
+ * byte-exact by scripts/site-bot/build-generation-data.mjs into generationData.ts (escapes only).
+ */
+export const TYPOGRAPHY_RULE = TYPOGRAPHY_RULE_TEXT;
 
 const COPY_SYSTEM_PROMPT =
   `You are Tamar, a Hebrew conversion copywriter. Follow the supplied research brief and JSON schema exactly. Return only the requested JSON object, with no prose or markdown.\n\n${SINGULAR_ADDRESS_RULE}`;
@@ -64,12 +68,14 @@ const REPAIR_SYSTEM_PROMPT =
 /** Required, non-empty string fields: max characters (JS string length). */
 export const SITE_COPY_STRING_LIMITS = {
   heroHeadline: 68, heroSubheadline: 90, heroCta: 15, aboutBlurb: 320,
-  servicesHeadline: 35, faqHeadline: 30, guaranteeBlock: 100,
+  servicesHeadline: 35, faqHeadline: 30,
   formHeadline: 35, stickyBarLine: 25, aboutPageHeadline: 50, aboutPageBody: 400,
 } as const;
 /** Optional string-or-null fields: max characters when set. */
 export const SITE_COPY_OPTIONAL_STRING_LIMITS = {
   reviewFeatured: 400, reviewContext: 160, responseTimeBadge: 100,
+  // M2a.2 (item 7): null when the owner has no guarantee; the renderer then omits the block.
+  guaranteeBlock: 100,
 } as const;
 /** Lists of plain strings. */
 export const SITE_COPY_STRING_LIST_LIMITS = {
@@ -311,7 +317,12 @@ export function buildResearchCopyRules(brief: PageBrief): string[] {
     '- heroCta is fixed by the system: output it exactly as given in the schema.',
     '- reviewFeatured is filled in by the system: output it exactly as given in the schema. reviewContext: only when the data supplies a star rating, otherwise null.',
     '- responseTimeBadge: when the owner gave a response time, write a short native Hebrew badge from it; otherwise null.',
-    '- If a license is in the allowed facts, name it with one consistent term exactly as the owner stated it, on every page; never coin license grades or titles.',
+    '- LICENSE (binding): if the owner\'s license wording is in Hebrew, name it exactly in that wording, with one consistent term on every page. If it is not in Hebrew (it arrived translated), say only that he is licensed: never translate or map it to a license grade, level or title (for example "master"), never add a grade the owner did not state in Hebrew.',
+    '- HOURS (binding): never write business days or hours in any field: no day names, no day letters, no clock times. The system shows the owner\'s hours.',
+    '- guaranteeBlock: when the schema gives it as null (the owner has no guarantee), output null. Never write a filler promise in its place.',
+    '- Never attribute a statement to a customer or to customers (no "a customer told me", no "customers say"). The only customer voice on the page is the verbatim quote in reviewFeatured, when there is one.',
+    '- When you list several places as locations, attach the locative prefix letter (\u05D1) to every place in the list, including after the conjunction (\u05D5); never only to the first.',
+    '- Write place names exactly as given in the service-area local fact: never insert a hyphen or maqaf into a place name.',
     '- Name only the places in the service-area local fact (use their display names); never a wider region and never "and surroundings".',
   ];
   if (site) {
@@ -439,6 +450,11 @@ function topField(field: string): string {
 
 /** Fields the system fills in; never sent to the model for repair. */
 const SYSTEM_FIELDS = ['heroCta', 'serviceItems', 'reviewFeatured', 'faqItems'];
+
+/** True when the owner stated a guarantee (item 7: otherwise guaranteeBlock is system-null). */
+export function ownerHasGuarantee(data: CollectedData): boolean {
+  return typeof data.guarantee === 'string' && data.guarantee.trim().length > 0;
+}
 /** Gate rules settled by a safe fix, not by the model. */
 const SAFE_FIX_GATE_RULES: readonly string[] = [GATE_RULES.reviewContext];
 
@@ -608,6 +624,8 @@ export function applySafeDeterministicFixes(value: Loose, gates: CopyGateContext
  * - faqItems: the brief's supported candidates (a discarded model FAQ can never fail a page);
  * - with site facts (M2a.1): heroCta = the fixed singular label, serviceItems = the
  *   owner-confirmed service names, reviewFeatured = the owner's quote verbatim (or null).
+ * - M2a.2: reviewFeatured is null unless the quote is mostly Hebrew script (never translated);
+ *   guaranteeBlock is null when the owner has no guarantee (no filler guarantee).
  */
 export function withSystemFields(value: Loose, brief: PageBrief, data: CollectedData): Loose {
   const next: Loose = { ...value, faqItems: supportedFaqItems(brief) };
@@ -615,8 +633,9 @@ export function withSystemFields(value: Loose, brief: PageBrief, data: Collected
   next.heroCta = primaryCtaLabel(data);
   const itemLimit = SITE_COPY_STRING_LIST_LIMITS.serviceItems;
   next.serviceItems = brief.site.serviceLabels.filter(label => label.length <= itemLimit.itemMaxChars).slice(0, itemLimit.maxItems);
-  const quote = typeof data.reviewQuote === 'string' ? data.reviewQuote.trim() : '';
-  next.reviewFeatured = hasRealReviewQuote(data) && quote && quote.length <= SITE_COPY_OPTIONAL_STRING_LIMITS.reviewFeatured ? quote : null;
+  const quote = effectiveReviewQuote(data);
+  next.reviewFeatured = quote && quote.length <= SITE_COPY_OPTIONAL_STRING_LIMITS.reviewFeatured ? quote : null;
+  if (!ownerHasGuarantee(data)) next.guaranteeBlock = null;
   return next;
 }
 
@@ -635,7 +654,8 @@ async function repairFields(ctx: RepairContext, stage: CopyValidationStage, valu
 }
 
 function systemFieldsFor(ctx: RepairContext): readonly string[] {
-  return ctx.brief.site ? SYSTEM_FIELDS : ['faqItems'];
+  if (!ctx.brief.site) return ['faqItems'];
+  return ownerHasGuarantee(ctx.data) ? SYSTEM_FIELDS : [...SYSTEM_FIELDS, 'guaranteeBlock'];
 }
 
 /** Validate one stage's output against the validator and the gates, spending repair budget, then safe fixes; throws with what remains. */
@@ -681,15 +701,34 @@ function assertGatesAt(stage: CopyValidationStage, value: Loose, gates: CopyGate
 const LEGACY_PERSONA_LINE = "You are Tamar, WAO's Sabra conversion copywriter.";
 const RESEARCH_PERSONA_LINE = 'You are Tamar, a Sabra conversion copywriter writing for one local business.';
 
+/** The legacy prompt's invented license-grade example (aboutBlurb opener); cut from the research prompt (item 3). */
+const LICENSE_EXAMPLE_START = 'Example 2 \u2014 aboutBlurb opener';
+const LICENSE_EXAMPLE_END = 'Example 3 \u2014';
+
 export function buildResearchPageGenerationPrompt(brief: PageBrief, data: CollectedData): string {
-  const schema = buildSiteCopyPrompt(data, {
+  // M2a.2: a quote that is not mostly Hebrew never reaches the model (never translated, item 8),
+  // and with no owner guarantee the schema shows guaranteeBlock as null (item 7).
+  const promptData: CollectedData = brief.site && !effectiveReviewQuote(data) ? { ...data, reviewQuote: '' } : data;
+  const schema = buildSiteCopyPrompt(promptData, {
     blankResponseTimeBadge: true,
-    ...(brief.site ? { relevanceTerm: brief.site.relevanceTerm } : {}),
+    ...(brief.site ? { relevanceTerm: brief.site.relevanceTerm, nullGuarantee: !ownerHasGuarantee(data) } : {}),
   });
   // A4: the client copy prompt never names WAO (a WAO-offer leak put a copywriting agency's services on a plumber page).
   if (!schema.includes(LEGACY_PERSONA_LINE)) throw new Error('Site copy schema prompt persona line changed; update the research persona swap.');
-  const clientSchema = schema.replace(LEGACY_PERSONA_LINE, RESEARCH_PERSONA_LINE);
+  let clientSchema = schema.replace(LEGACY_PERSONA_LINE, RESEARCH_PERSONA_LINE);
+  if (brief.site) {
+    const start = clientSchema.indexOf(LICENSE_EXAMPLE_START);
+    const end = clientSchema.indexOf(LICENSE_EXAMPLE_END, start);
+    if (start < 0 || end < 0) throw new Error('Site copy schema prompt license example changed; update the research example cut.');
+    clientSchema = `${clientSchema.slice(0, start)}${clientSchema.slice(end)}`;
+  }
   return `${buildResearchPageCopyPrompt(brief)}\n\nOWNER FACTS AND SITE COPY SCHEMA:\n${clientSchema}\n\n${buildSiteCopyHardLimitsBlock()}`;
+}
+
+/** Owner-stated places for the place gates: base city first, then the service area. */
+export function gatePlaces(brief: PageBrief): string[] {
+  const site = brief.site;
+  return site ? [...new Set([...(site.city ? [site.city] : []), ...site.serviceArea])] : [];
 }
 
 export function buildNoaQaMessage(copy: SiteCopy, brief?: PageBrief): string {
@@ -713,7 +752,7 @@ export async function generateResearchPageCopy(
     remaining: Number.isInteger(requested) ? Math.max(0, Math.min(MAX_COPY_REPAIRS, requested)) : MAX_COPY_REPAIRS,
     used: 0,
     deterministicFixes: dependencies.deterministicFixes ?? true,
-    gates: dependencies.gates === false ? null : copyGateContext(data, brief.site?.serviceLabels ?? [], brief.site?.soloOperator ?? true),
+    gates: dependencies.gates === false ? null : copyGateContext(data, brief.site?.serviceLabels ?? [], brief.site?.soloOperator ?? true, gatePlaces(brief)),
     emit: event => {
       try { dependencies.onEvent?.(event); } catch { /* diagnostics never break generation */ }
     },

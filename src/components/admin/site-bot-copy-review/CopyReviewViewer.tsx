@@ -16,7 +16,7 @@ const RESERVED = new Set(['api', 'assets', 'static', 'index', 'privacy', 'access
 const CLASSES = new Set(['homepage', 'service_hub', 'money_service', 'qualified_service_area',
   'trust', 'process', 'pricing', 'proof', 'supporting']);
 const REQUIRED_COPY = ['heroHeadline', 'heroSubheadline', 'heroCta', 'aboutBlurb', 'servicesHeadline',
-  'faqHeadline', 'guaranteeBlock', 'formHeadline', 'stickyBarLine', 'aboutPageHeadline', 'aboutPageBody'];
+  'faqHeadline', 'formHeadline', 'stickyBarLine', 'aboutPageHeadline', 'aboutPageBody'];
 
 function object(value: unknown): value is Record<string, unknown> {
   return value !== null && typeof value === 'object' && !Array.isArray(value);
@@ -31,7 +31,9 @@ function identity(value: unknown): value is Page {
     (value.classification === 'homepage' ? value.targetPath === '/' : value.targetPath !== '/');
 }
 function completeCopy(copy: Record<string, unknown>): boolean {
+  // M2a.2: guaranteeBlock is null when the owner has no guarantee; when set it must be non-empty.
   return REQUIRED_COPY.every(key => typeof copy[key] === 'string' && (copy[key] as string).trim().length > 0) &&
+    (copy.guaranteeBlock === null || (typeof copy.guaranteeBlock === 'string' && copy.guaranteeBlock.trim().length > 0)) &&
     Array.isArray(copy.trustBarItems) && copy.trustBarItems.every(item => typeof item === 'string') &&
     Array.isArray(copy.serviceItems) && copy.serviceItems.every(item => typeof item === 'string') &&
     Array.isArray(copy.faqItems) && copy.faqItems.every(item => object(item) && typeof item.q === 'string' && typeof item.a === 'string') &&

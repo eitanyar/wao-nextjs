@@ -158,6 +158,8 @@
     "src/lib/lp/copyGates.ts",
     "src/lib/lp/copyGates.test.ts",
     "src/lib/lp/businessHours.ts",
+    "src/lib/lp/generationData.ts",
+    "src/lib/lp/factAccuracy.test.ts",
     "src/lib/lp/researchedSeo.test.ts",
     "src/lib/lp/verticalThemes.ts",
     "src/lib/lp/verticalAssets.ts",

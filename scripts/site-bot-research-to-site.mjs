@@ -20,7 +20,7 @@
 // Writes: <out>/outcome.json, usage.json, events.json, and when generated site-record.json
 // (verbatim generated copy) plus copy.txt (the same strings, one field per line, unedited),
 // html/<page>.html (the rendered researched site) and pages.json (title, canonical URL, H1,
-// final gate hits per page; M2a.1).
+// final gate hits per page; M2a.1; review flags, M2a.2).
 import fs from 'node:fs';
 import path from 'node:path';
 import { createRequire } from 'node:module';
@@ -77,8 +77,8 @@ if (!fs.existsSync(entry)) die('dist/ build missing: run `npx tsc -p tsconfig.te
 fs.writeFileSync(path.join(root, 'dist/package.json'), JSON.stringify({ type: 'commonjs' }));
 const { runResearchToSite } = require(entry);
 const { callQwenJSON } = require(path.join(root, 'dist/lib/ai/qwen-fast.js'));
-const { assertBoundedGeneratedSiteCopy, generateResearchPageCopy, gateViolations } = require(path.join(root, 'dist/lib/lp/researchPageCopy.js'));
-const { copyGateContext } = require(path.join(root, 'dist/lib/lp/copyGates.js'));
+const { assertBoundedGeneratedSiteCopy, generateResearchPageCopy, gateViolations, gatePlaces } = require(path.join(root, 'dist/lib/lp/researchPageCopy.js'));
+const { copyGateContext, copyReviewFlags } = require(path.join(root, 'dist/lib/lp/copyGates.js'));
 const { renderResearchedSitePages, researchedPageTitle, researchedPageH1 } = require(path.join(root, 'dist/lib/lp/researchedSite.js'));
 const { researchedRenderInputs, buildPageBriefs } = require(entry);
 
@@ -176,7 +176,7 @@ if (outcome.status === 'generated') {
   const businessName = record.collectedData.businessName || record.collectedData.businessNiche || '';
   const pageFacts = record.researchedPages.map(page => {
     const brief = briefs.get(page.opportunityId);
-    const gates = copyGateContext(record.collectedData, brief?.site?.serviceLabels ?? [], brief?.site?.soloOperator ?? true);
+    const gates = copyGateContext(record.collectedData, brief?.site?.serviceLabels ?? [], brief?.site?.soloOperator ?? true, brief ? gatePlaces(brief) : []);
     const file = page.classification === 'homepage' ? 'index.html' : Object.keys(html).find(name => name === `${page.targetPath.slice(1)}.html`);
     const body = file ? html[file] : '';
     return {
@@ -188,6 +188,8 @@ if (outcome.status === 'generated') {
       h1: researchedPageH1(page.copy.heroHeadline, page.seo),
       inSitemap: Boolean(html['sitemap.xml']?.includes(`<loc>${/<link rel="canonical" href="([^"]+)"/.exec(body)?.[1]}</loc>`)),
       finalGateHits: gateViolations(page.copy, gates),
+      // M2a.2: non-blocking findings for human review (arrival time in an installation heading).
+      reviewFlags: copyReviewFlags(page.copy, gates),
     };
   });
   fs.writeFileSync(path.join(outDir, 'pages.json'), JSON.stringify({ siteIdentity: dossier.siteIdentity ?? null, pages: pageFacts }, null, 2));
