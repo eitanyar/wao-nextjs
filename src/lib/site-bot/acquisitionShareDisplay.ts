@@ -22,7 +22,7 @@ export const SHARE_DISPLAY_COPY = {
   LABEL_COPIED: 'הועתק ללוח!',
   LABEL_OUTBOUND_DETECTED: 'מותאם אישית לפי ממצאי הבדיקה:',
   LABEL_OUTBOUND_CATEGORIES: 'זוהו קטגוריות חסרות בפרופיל',
-  LABEL_OUTBOUND_HOURS: 'זוהו שעות פעילות חסרות',
+  LABEL_OUTBOUND_HOURS: 'זוהו שעות פתיחה חסרות',
   LABEL_OUTBOUND_PHOTOS: 'זוהה מחסור בתמונות אותנטיות',
   LABEL_OUTBOUND_GENERAL: 'פנייה כללית לבדיקת פרופיל',
   LABEL_HOOK_STEP_1: 'הודעה ראשונה (הוק):',
