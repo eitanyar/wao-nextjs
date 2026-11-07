@@ -36,6 +36,9 @@ export function cacheKey(endpoint, params) {
 export function cachePath(cacheDir, endpoint, params) {
   return path.join(cacheDir, endpoint.replace(/^\//, '').replace(/\//g, '_'), `${cacheKey(endpoint, params)}.json`);
 }
+// When a schema upgrade re-buys a request (e.g. the 2.3 Stage-1 organic re-buy), the first-fetched
+// entry is preserved here, so a stage scored on the original sample (Stage 1) never shifts.
+export const originalPath = file => file.replace(/\.json$/, '.orig.json');
 
 // Worst-case price of one request (refunds for unreturned depth only make it cheaper).
 export function estimateCost(endpoint, params, prices) {
@@ -176,6 +179,12 @@ export function createDfsClient({
     peek(endpoint, params, minSchema = 1) {
       return readCache(endpoint, params, minSchema)?.data;
     },
+    // The first-fetched version of a request (pre-upgrade original if one was preserved).
+    peekOriginal(endpoint, params) {
+      const orig = originalPath(cachePath(cacheDir, endpoint, params));
+      if (fs.existsSync(orig)) return JSON.parse(fs.readFileSync(orig, 'utf8')).data;
+      return readCache(endpoint, params, 1)?.data;
+    },
     async call(endpoint, params, minSchema = 1) {
       const hit = readCache(endpoint, params, minSchema);
       if (hit) {
@@ -220,6 +229,7 @@ export function createDfsClient({
       const data = task.status_code === NO_RESULTS ? emptyResult(endpoint, { organicFields }) : projectResult(endpoint, task.result, { organicFields });
       const file = cachePath(cacheDir, endpoint, params);
       fs.mkdirSync(path.dirname(file), { recursive: true });
+      if (fs.existsSync(file) && !fs.existsSync(originalPath(file))) fs.renameSync(file, originalPath(file));
       fs.writeFileSync(file, JSON.stringify({ endpoint, params, task_id: task.id ?? null, cost_usd: cost, fetched_at: now().toISOString(), data }));
       log(`fetched ${endpoint} cost=${cost} spent=${ledger.spentUsd.toFixed(4)}/${capUsd}`);
       return data;

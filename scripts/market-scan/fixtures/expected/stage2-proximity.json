@@ -1,5 +1,5 @@
 {
- "run_id": "f89933e854d2",
+ "run_id": "619936c08eb5",
  "cells": [
   {
    "cell_id": "A",
@@ -24,5 +24,5 @@
   }
  ],
  "mean_survivors_of_3": 2,
- "rule": "if < 2 of 3 on average, M4 big cities use a 3-point mean S3"
+ "rule": "spec 2.9: proximity is a property of the cell; M4 scores big-city cells on a 3-point (Jerusalem 5-point) mean S3. Pilot probes are logged only."
 }

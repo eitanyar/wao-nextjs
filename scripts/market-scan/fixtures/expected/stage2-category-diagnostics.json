@@ -1,12 +1,12 @@
 {
- "run_id": "f89933e854d2",
+ "run_id": "619936c08eb5",
  "note": "R4: per cell, every top-20 Maps category text that matched no rule (append-only rule extensions: Yonatan)",
  "cells": [
   {
    "cell_id": "A",
    "profession": "alpha",
    "city": "c1",
-   "skipped": "killed at step 1 (no Maps call; Local Finder items carry no category)"
+   "skipped": "stopped at step 1 (step1_saturated; no Maps call; Local Finder items carry no category)"
   },
   {
    "cell_id": "B",

@@ -1,0 +1,213 @@
+{
+ "run_id": "73ecfd6063af",
+ "cells": 411,
+ "ranked_cells": 410,
+ "calibration_cells": [
+  {
+   "cell_id": "C",
+   "slug": "pergolas",
+   "city": "karmiel",
+   "S3_step1": 0.6845,
+   "S3": 0.7845,
+   "S3_band": "saturated",
+   "P_w": 1.25,
+   "score_unkilled": 0.4773
+  }
+ ],
+ "step1": {
+  "killed_saturated": 65,
+  "flagged_step1_only": 19,
+  "passed": 326,
+  "forced": 1,
+  "multi_point_cells": 107
+ },
+ "step2": {
+  "bought": 327,
+  "pending": 0,
+  "killed_saturated_joined": 156,
+  "killed_pw_below": 151,
+  "pooled_members": 62,
+  "survived_scored": 54
+ },
+ "ring2_pools": [
+  {
+   "cell_id": "locksmith@R1-ring2",
+   "members": "givat-shmuel;or-yehuda;rosh-haayin;yehud-monosson",
+   "P_w": 19.1,
+   "S3": 0.5077,
+   "score": 598.1178,
+   "kill_reason": ""
+  },
+  {
+   "cell_id": "locksmith@R3-ring2",
+   "members": "beer-yaakov;gan-yavne;gedera;shoham",
+   "P_w": 15.3,
+   "S3": 0.3098,
+   "score": 450.4482,
+   "kill_reason": ""
+  },
+  {
+   "cell_id": "movers@R9-ring2",
+   "members": "kiryat-gat;kiryat-malakhi;sderot",
+   "P_w": 8.5,
+   "S3": 0.3079,
+   "score": 312.3888,
+   "kill_reason": ""
+  },
+  {
+   "cell_id": "roofing@R3-ring2",
+   "members": "beer-yaakov;gan-yavne;gedera;mazkeret-batya",
+   "P_w": 8.6,
+   "S3": 0.619,
+   "score": 96.069,
+   "kill_reason": ""
+  },
+  {
+   "cell_id": "renovation@R5-ring2",
+   "members": "kiryat-ata;kiryat-motzkin;kiryat-yam;nesher;tirat-carmel",
+   "P_w": 31,
+   "S3": 0.6109,
+   "score": 87.2815,
+   "kill_reason": ""
+  },
+  {
+   "cell_id": "ac-repair@R1-ring2",
+   "members": "givat-shmuel;kiryat-ono;yehud-monosson",
+   "P_w": 19.55,
+   "S3": 0.4811,
+   "score": 71.6698,
+   "kill_reason": ""
+  },
+  {
+   "cell_id": "electrician@R1-ring2",
+   "members": "or-yehuda;rosh-haayin",
+   "P_w": 18.65,
+   "S3": 0.6391,
+   "score": 71.4843,
+   "kill_reason": ""
+  },
+  {
+   "cell_id": "electrician@R2-ring2",
+   "members": "kadima-zoran;kfar-yona;tel-mond",
+   "P_w": 33,
+   "S3": 0.6011,
+   "score": 36.7564,
+   "kill_reason": ""
+  },
+  {
+   "cell_id": "electrician@R3-ring2",
+   "members": "gedera;shoham",
+   "P_w": 8.2,
+   "S3": 0.5454,
+   "score": 30.0519,
+   "kill_reason": ""
+  },
+  {
+   "cell_id": "ac-repair@R3-ring2",
+   "members": "gan-yavne;shoham",
+   "P_w": 9.45,
+   "S3": 0.5647,
+   "score": 15.1842,
+   "kill_reason": ""
+  },
+  {
+   "cell_id": "ac-repair@R2-ring2",
+   "members": "even-yehuda;kadima-zoran;kfar-yona",
+   "P_w": 10.85,
+   "S3": 0.6177,
+   "score": 14.1524,
+   "kill_reason": ""
+  },
+  {
+   "cell_id": "roofing@R2-ring2",
+   "members": "even-yehuda;kadima-zoran;kfar-yona;tel-mond",
+   "P_w": 2.35,
+   "S3": 0.5478,
+   "score": 0,
+   "kill_reason": "P_w<8"
+  },
+  {
+   "cell_id": "movers@R1-ring2",
+   "members": "givat-shmuel;kiryat-ono;or-yehuda;rosh-haayin;yehud-monosson",
+   "P_w": 5.95,
+   "S3": 0.3218,
+   "score": 0,
+   "kill_reason": "P_w<8"
+  },
+  {
+   "cell_id": "locksmith@R2-ring2",
+   "members": "even-yehuda;kadima-zoran;kfar-yona;tel-mond",
+   "P_w": 5,
+   "S3": 0.4786,
+   "score": 0,
+   "kill_reason": "P_w<8"
+  },
+  {
+   "cell_id": "movers@R3-ring2",
+   "members": "beer-yaakov;gan-yavne;gedera;mazkeret-batya;shoham",
+   "P_w": 4.85,
+   "S3": 0.3638,
+   "score": 0,
+   "kill_reason": "P_w<8"
+  },
+  {
+   "cell_id": "movers@R2-ring2",
+   "members": "even-yehuda;kadima-zoran;kfar-yona;tel-mond",
+   "P_w": 0,
+   "S3": 0.3242,
+   "score": 0,
+   "kill_reason": "P_w<8"
+  },
+  {
+   "cell_id": "aluminum@R1-ring2",
+   "members": "rosh-haayin;yehud-monosson",
+   "P_w": 6.9,
+   "S3": 0.6324,
+   "score": 0,
+   "kill_reason": "P_w<8"
+  },
+  {
+   "cell_id": "solar@R2-ring2",
+   "members": "even-yehuda;kadima-zoran;tel-mond",
+   "P_w": 1.1,
+   "S3": 0.6335,
+   "score": 0,
+   "kill_reason": "P_w<8"
+  }
+ ],
+ "bands_final": {
+  "open": 44,
+  "middle": 139,
+  "saturated": 228
+ },
+ "homepage": {
+  "hosts": 1130,
+  "cached": 1130,
+  "by_outcome": {
+   "blocked": 69,
+   "failed": 169,
+   "ok": 839,
+   "skipped_robots": 9,
+   "timeout": 44
+  },
+  "by_reason": {
+   "challenge_200": 1,
+   "challenge_403": 4,
+   "connect_or_tls_both_schemes": 16,
+   "dns_nxdomain": 101,
+   "parked": 14,
+   "robots_500": 2,
+   "robots_503": 2,
+   "robots_challenge_202": 24,
+   "robots_challenge_403": 17,
+   "robots_disallow": 4,
+   "robots_timeout": 44,
+   "robots_unreachable": 1,
+   "status_403": 22,
+   "status_404_410": 37,
+   "status_456": 1,
+   "status_5xx_after_retry": 1
+  },
+  "failed_fraction": 0.1496
+ }
+}

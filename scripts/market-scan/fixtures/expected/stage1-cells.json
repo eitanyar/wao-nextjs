@@ -20,7 +20,7 @@
   "kit_level": 2,
   "urgency_lead_gen": false,
   "flags": "",
-  "run_id": "f89933e854d2"
+  "run_id": "619936c08eb5"
  },
  {
   "value_rank": 2,
@@ -43,7 +43,7 @@
   "kit_level": 2,
   "urgency_lead_gen": false,
   "flags": "haredi_majority",
-  "run_id": "f89933e854d2"
+  "run_id": "619936c08eb5"
  },
  {
   "value_rank": 3,
@@ -66,7 +66,7 @@
   "kit_level": 2,
   "urgency_lead_gen": false,
   "flags": "",
-  "run_id": "f89933e854d2"
+  "run_id": "619936c08eb5"
  },
  {
   "value_rank": 4,
@@ -89,7 +89,7 @@
   "kit_level": 0,
   "urgency_lead_gen": true,
   "flags": "",
-  "run_id": "f89933e854d2"
+  "run_id": "619936c08eb5"
  },
  {
   "value_rank": 5,
@@ -112,7 +112,7 @@
   "kit_level": 0,
   "urgency_lead_gen": true,
   "flags": "haredi_majority",
-  "run_id": "f89933e854d2"
+  "run_id": "619936c08eb5"
  },
  {
   "value_rank": 6,
@@ -135,6 +135,6 @@
   "kit_level": 0,
   "urgency_lead_gen": true,
   "flags": "",
-  "run_id": "f89933e854d2"
+  "run_id": "619936c08eb5"
  }
 ]

@@ -4,14 +4,15 @@ import os from 'node:os';
 import path from 'node:path';
 import test from 'node:test';
 import { runEngine, loadConfig } from './lib/engine.mjs';
-import { createDfsClient, cacheKey, cachePath, BudgetExceededError, projectResult, breadcrumbHost, ORGANIC_SCHEMA } from './lib/dfs.mjs';
-import { professionVolume, ticketProxy, scoreStage1 } from './lib/stage1.mjs';
-import { businessStrength, strengthComponents, topStrength, compositeScore, gaps, orderRows, s3Band, categoryId, joinLf, planStep1, ORGANIC_ENDPOINT } from './lib/stage2.mjs';
+import { createDfsClient, cacheKey, cachePath, originalPath, BudgetExceededError, projectResult, breadcrumbHost, ORGANIC_SCHEMA } from './lib/dfs.mjs';
+import { professionVolume, ticketProxy, scoreStage1, organicParams } from './lib/stage1.mjs';
+import { businessStrength, strengthComponents, topStrength, compositeScore, gaps, orderRows, s3Band, categoryId, joinLf, planStep1, planStep2, step1Gate, proximityPoints, cellPoints, assignProspects, poolRing2, ORGANIC_ENDPOINT, LOCAL_FINDER_ENDPOINT, MAPS_ENDPOINT } from './lib/stage2.mjs';
 import { classifyRelevance, titleTerms } from './lib/relevance.mjs';
-import { classifyOrganic } from './lib/organic.mjs';
-import { checkHomepage, homepageCache, robotsAllows, siteVerdict, HOMEPAGE_CACHE_SUBDIR } from './lib/homepage.mjs';
+import { classifyOrganic, nationalBrandDomains } from './lib/organic.mjs';
+import { checkHomepage, checkHomepageFull, homepageCache, homepageTextStore, robotsAllows, siteVerdict, HOMEPAGE_CACHE_SUBDIR, HOMEPAGE_TEXT_SUBDIR } from './lib/homepage.mjs';
 import { parseProfessions, parseRegions, SPEC_PATH } from './lib/spec.mjs';
 import { extractR12, mergeR12 } from './apply-r12.mjs';
+import { extractR2_12, mergeR2_12 } from './apply-r2-12.mjs';
 import { createFakeFetch, networkForbidden, createFakeWeb } from './fixtures/fake-dataforseo.mjs';
 
 const HERE = path.dirname(new URL(import.meta.url).pathname);
@@ -133,8 +134,9 @@ test('Stage-1 formulas match a hand-computed example (spec 3.2-3.7)', () => {
   });
 });
 
-test('Stage-2 formulas match a hand-computed example (spec 4.4-5.3, R1 missing-field policy, R10)', () => {
-  const run = loadConfig(FIXTURE_CONFIG).run;
+test('Stage-2 formulas match a hand-computed example (spec 4.4-5.3, legacy R1 renormalise policy, R10)', () => {
+  const run = structuredClone(loadConfig(FIXTURE_CONFIG).run);
+  run.stage2.s3_missing_field_policy = 'renormalize'; // legacy policy kept selectable; 2.1 neutral is tested below
   const ctx = { run, profession: { terms: ['alpha one', 'alpha two'] }, city: { he_name: 'City One' } };
   // Maxed business: 0.40 + 0.15 + 0.20 + 0.10 + 0.15 = 1.0
   const strong = { title: 'alpha one Pro', domain: 'alpha.example', total_photos: 50, rating: { value: 5, votes_count: 150 } };
@@ -232,17 +234,20 @@ test('two-step pilot: a saturated cell stops at step 1 before any Maps call; sur
   const rows = JSON.parse(fs.readFileSync(path.join(base, 'out', 'stage2-pilot.json'), 'utf8'));
   const A = rows.find(r => r.cell_id === 'A');
   assert.deepEqual([A.stopped_at, A.maps_bought, A.S3_band, A.kill_reason, A.P_w, A.score], ['step1', false, 'saturated', 'saturated', null, 0]);
-  // strong LF top 3: (0.40 * 1 + 0.15 * 0.9333 + 0.15 * 1) / 0.70 per business
-  assert.equal(A.S3, 0.9857);
-  assert.equal(A.lf_pack_overlap, 3); // LF top 3 vs organic local_pack cross-check
+  // 2.1 neutral fill, strong LF top 3: 0.40 * 1 + 0.15 * 0.9333 + 0.5 * (0.20 + 0.10) + 0.15 * 1 = 0.84 >= 0.75
+  assert.equal(A.S3, 0.84);
+  assert.equal(A.gate_reason, 'step1_saturated');
+  assert.equal(A.lf_pack_overlap, null); // organic is a step-2 purchase now (2.11); killed cells never read it
   const B = rows.find(r => r.cell_id === 'B');
   assert.deepEqual([B.stopped_at, B.maps_bought, B.lf_top3_joined], ['step2', true, 2]);
   // proximity probe: north keeps 3 of 3, south 1 of 3 -> mean 2
   const prox = JSON.parse(fs.readFileSync(path.join(base, 'out', 'stage2-proximity.json'), 'utf8'));
   assert.deepEqual(prox.cells[0].probes.map(p => p.survivors), [3, 1]);
   assert.equal(prox.mean_survivors_of_3, 2);
-  // the pilot planner asks organic for schema 2 only
-  assert.ok(planStep1(loadConfig(FIXTURE_CONFIG)).filter(r => r.endpoint === ORGANIC_ENDPOINT).every(r => r.minSchema === ORGANIC_SCHEMA));
+  // organic moved to step 2 (2.11) and is always asked for schema 2
+  const cfg = loadConfig(FIXTURE_CONFIG);
+  assert.equal(planStep1(cfg).filter(r => r.endpoint === ORGANIC_ENDPOINT).length, 0);
+  assert.ok(planStep2(cfg, ['A', 'B', 'C']).filter(r => r.endpoint === ORGANIC_ENDPOINT).every(r => r.minSchema === ORGANIC_SCHEMA));
 });
 
 test('R4 category rules: exact / contains+exclude / generic+title / conditional+title, with unmatched diagnostics', () => {
@@ -278,14 +283,18 @@ test('R12 config: all 17 professions have category rules copied byte-exact from 
   const runConfig = JSON.parse(fs.readFileSync(path.join(ROOT, 'config/market-scanner/run-config.json'), 'utf8'));
   const professions = JSON.parse(fs.readFileSync(path.join(ROOT, 'config/market-scanner/professions.json'), 'utf8')).professions;
   assert.deepEqual(Object.keys(runConfig.stage2.category_rules).sort(), professions.map(p => p.slug).sort());
-  assert.deepEqual(runConfig.stage2.category_rules, r12.stage2.category_rules);
+  // R12 rules with the 2.12 replacements (roofing / renovation conditional) - all byte-exact from the spec.
+  const r2 = extractR2_12(spec);
+  const expectedRules = structuredClone(r12.stage2.category_rules);
+  for (const [slug, rule] of Object.entries(r2.stage2.category_rules)) Object.assign(expectedRules[slug], rule);
+  assert.deepEqual(runConfig.stage2.category_rules, expectedRules);
   assert.deepEqual(runConfig.stage2.generic_categories, r12.stage2.generic_categories);
   assert.deepEqual(runConfig.languages, { ads_language_code: 'iw', serp_language_code: 'he' });
   assert.deepEqual(runConfig.stage2.zooms, ['13z']);
   for (const k of ['category_allowlist', 'prospect_min_gaps', 'prospect_pass', 'prospect_kill_below']) assert.equal(runConfig.stage2[k], undefined, k);
   assert.equal(runConfig.pilot.cells.length, 6);
-  // idempotent: merging again changes nothing but the provenance stamp
-  const again = mergeR12(runConfig, r12, runConfig.r12_applied.spec_sha256);
+  // idempotent: R12 then 2.12 again changes nothing
+  const again = mergeR2_12(mergeR12(runConfig, r12, runConfig.r12_applied.spec_sha256), r2, runConfig.r2_12_applied.spec_sha256);
   assert.deepEqual(again, runConfig);
 });
 
@@ -306,13 +315,13 @@ test('R6 prospects: weak ranking gate, lead-gen phones, weighted count; R7 direc
   assert.deepEqual(prospects('C').map(r => [r.cid, r.w_b]), [['32', 1.25]]);
   const C = rows.find(r => r.cell_id === 'C');
   assert.deepEqual([C.urgency_lead_gen, C.lead_gen_listings, C.P, C.P_w], [true, 2, 1, 1.25]);
-  // R7 on B's organic top 10: directory, social, local (pool), local (default), unresolved, media
-  // -> counted 5, L_share 2/5, D_share 1/5, O = 0.80 + 0.40 * 0.4 = 0.96; AI Overview logged.
-  assert.deepEqual([B.organic_counted, B.organic_unresolved, B.L_share, B.D_share, B.O, B.has_ai_overview], [5, 1, 0.4, 0.2, 0.96, true]);
+  // R7 + 2.2 on B's organic top 10: directory, social, local (pool), local (default, half weight),
+  // unresolved, media -> counted 5, L_share (1 + 0.5) / 5 = 0.3, D_share 1/5, O = 0.80 + 0.40 * 0.3 = 0.92.
+  assert.deepEqual([B.organic_counted, B.organic_unresolved, B.L_share, B.D_share, B.O, B.has_ai_overview, B.local_pool, B.local_default], [5, 1, 0.3, 0.2, 0.92, true, 1, 1]);
   const run = loadConfig(FIXTURE_CONFIG).run;
   const allDirs = classifyOrganic({ items: [1, 2].map(i => ({ type: 'organic', rank_group: i, domain: `www.dir.example` })) }, { run });
   assert.deepEqual([allDirs.L_share, allDirs.O], [0, 0.8]);
-  const allLocal = classifyOrganic({ items: [{ type: 'organic', rank_group: 1, domain: 'a.example' }] }, { run });
+  const allLocal = classifyOrganic({ items: [{ type: 'organic', rank_group: 1, domain: 'a.example' }] }, { run, poolDomains: new Set(['a.example']) });
   assert.ok(Math.abs(allLocal.O - 1.2) < 1e-12);
   const national = classifyOrganic({ items: [{ type: 'organic', rank_group: 1, domain: 'chain.example' }, { type: 'organic', rank_group: 2, domain: 'pool.example' }] }, { run, chainDomains: new Set(['chain.example', 'pool.example']), poolDomains: new Set(['pool.example']) });
   assert.deepEqual(national.rows.map(r => r.class), ['national_brand', 'local_site_pool']); // pool match beats chain flag
@@ -328,7 +337,8 @@ test('R8 homepage check: robots respected, http fallback, derived fields only - 
   const dir = path.join(base, 'cache', HOMEPAGE_CACHE_SUBDIR);
   const recs = fs.readdirSync(dir).map(f => ({ f, text: fs.readFileSync(path.join(dir, f), 'utf8') }));
   assert.equal(recs.length, 5);
-  const ALLOWED = new Set(['host', 'checked_at', 'site_check', 'scheme_tried', 'status', 'final_host', 'fetch_ok', 'parked', 'https', 'viewport', 'title', 'h1', 'internal_paths', 'multi_page', 'fetch_ms', 'fetch_ms_note', 'platform', 'bytes', 'error']);
+  // 2.7: the cache record carries no page text; title / first h1 live in the private store only
+  const ALLOWED = new Set(['schema', 'host', 'checked_at', 'site_check', 'reason', 'scheme_tried', 'status', 'final_host', 'fetch_ok', 'parked', 'https', 'viewport', 'internal_paths', 'multi_page', 'fetch_ms', 'fetch_ms_note', 'platform', 'bytes', 'error', 'requests']);
   for (const { text } of recs) {
     assert.ok(!/[<>]/.test(text), 'cached homepage record contains markup');
     assert.ok(!/secretInlineScript|doctype|xxxxxxxx/i.test(text), 'cached homepage record contains page body');
@@ -337,29 +347,37 @@ test('R8 homepage check: robots respected, http fallback, derived fields only - 
   const byHost = Object.fromEntries(recs.map(r => JSON.parse(r.text)).map(r => [r.host, r]));
   assert.equal(byHost['robots.example'].site_check, 'skipped_robots');
   assert.deepEqual([byHost['site13.example'].scheme_tried, byHost['site13.example'].https, byHost['site13.example'].viewport, byHost['site13.example'].fetch_ok], ['http', false, false, true]);
-  assert.deepEqual([byHost['site12.example'].internal_paths, byHost['site12.example'].multi_page, byHost['site12.example'].platform, byHost['site12.example'].title], [3, true, 'wordpress', 'alpha one in City Three']);
+  assert.deepEqual([byHost['site12.example'].internal_paths, byHost['site12.example'].multi_page, byHost['site12.example'].platform, byHost['site12.example'].title], [3, true, 'wordpress', undefined]);
   assert.deepEqual([byHost['b7.example'].final_host, byHost['b7.example'].platform], ['www.b7.example', 'wix']);
-  assert.deepEqual([byHost['b8.example'].status, byHost['b8.example'].fetch_ok], [500, false]);
+  // 2.5: a 500 after one retry is a hard failure
+  assert.deepEqual([byHost['b8.example'].status, byHost['b8.example'].site_check, byHost['b8.example'].reason], [500, 'failed', 'status_5xx_after_retry']);
+  const texts = homepageTextStore(path.join(base, 'private'), loadConfig(FIXTURE_CONFIG).run.homepage_check, FIXED_NOW);
+  assert.deepEqual(texts.get('site12.example'), { host: 'site12.example', checked_at: '2026-11-07T12:00:00.000Z', title: 'alpha one in City Three', first_h1: 'Welcome' });
   // weak-site rule
   const cfg = loadConfig(FIXTURE_CONFIG).run.homepage_check;
   const ctx = { cityNames: ['City Three'], titleTerms: ['alpha one'] };
-  assert.deepEqual(siteVerdict(byHost['site12.example'], ctx, cfg), { city_hit: true, service_hit: true, hard: false, soft: 0, weak_site: false });
-  assert.equal(siteVerdict(byHost['site13.example'], ctx, cfg).weak_site, true); // hard: no https, no viewport
-  assert.equal(siteVerdict({ fetch_ok: true, https: true, viewport: true, title: 'Home', h1: '', multi_page: true, fetch_ms: 100 }, ctx, cfg).weak_site, true); // soft 2: no city + no service
-  assert.equal(siteVerdict({ site_check: 'skipped_robots' }, ctx, cfg), null);
+  assert.deepEqual(siteVerdict(byHost['site12.example'], { title: 'alpha one in City Three', h1: 'Welcome' }, ctx, cfg), { city_hit: true, service_hit: true, hard: false, soft: 0, weak_site: false });
+  assert.equal(siteVerdict(byHost['site13.example'], { title: 'Home', h1: 'Hello' }, ctx, cfg).weak_site, true); // hard: no https, no viewport
+  assert.equal(siteVerdict({ site_check: 'ok', fetch_ok: true, https: true, viewport: true, multi_page: true, fetch_ms: 100 }, { title: 'Home', h1: '' }, ctx, cfg).weak_site, true); // soft 2: no city + no service
+  assert.equal(siteVerdict({ site_check: 'skipped_robots' }, null, ctx, cfg), null);
+  assert.equal(siteVerdict(byHost['b8.example'], null, ctx, cfg).weak_site, true);
   // robots parsing
   assert.equal(robotsAllows('User-agent: *\nDisallow: /', cfg.user_agent), false);
   assert.equal(robotsAllows('User-agent: *\nDisallow: /\nAllow: /$', cfg.user_agent), true);
   assert.equal(robotsAllows('User-agent: WAO-MarketScan\nDisallow:\n\nUser-agent: *\nDisallow: /', cfg.user_agent), true);
   assert.equal(robotsAllows('', cfg.user_agent), true);
-  // unreachable host -> error record, never throws
+  // NXDOMAIN host -> failed record (2.5 hard fail), never throws
   const err = await checkHomepage('nowhere.example', { fetchImpl: createFakeWeb(), cfg, now: FIXED_NOW });
-  assert.deepEqual([err.site_check, err.fetch_ok, err.error], ['error', false, 'ENOTFOUND']);
+  assert.deepEqual([err.site_check, err.fetch_ok, err.reason], ['failed', false, 'dns_nxdomain']);
   // 30-day retention
   const later = homepageCache(path.join(base, 'cache'), cfg, () => new Date('2026-12-08T12:00:00Z'));
   assert.equal(later.get('site12.example'), undefined);
   assert.equal(later.purge(), 5);
   assert.equal(fs.readdirSync(dir).length, 0);
+  const laterText = homepageTextStore(path.join(base, 'private'), cfg, () => new Date('2026-12-08T12:00:00Z'));
+  assert.equal(laterText.get('site12.example'), undefined);
+  assert.ok(laterText.purge() >= 1);
+  assert.equal(fs.readdirSync(path.join(base, 'private', HOMEPAGE_TEXT_SUBDIR)).length, 0);
 });
 
 test('Stage-1 R5: per-profession region cap and grouped dedupe only at volume >= 50', async () => {
@@ -406,7 +424,7 @@ test('config Hebrew is sliced byte-exact from the spec and engine sources carry 
   const specCities = parseRegions(spec).flatMap(r => [...r.core, ...r.ring2].map(c => c.he_name));
   assert.deepEqual(areas.regions.flatMap(r => r.cities.map(c => c.he_name)), specCities);
   assert.equal(specCities.length, 71);
-  const sources = ['run.mjs', 'build-config.mjs', 'free-checks.mjs', 'category-catalog.mjs', 'apply-r12.mjs', 'lib/spec.mjs', 'lib/cities.mjs', 'lib/dfs.mjs', 'lib/stage1.mjs', 'lib/stage2.mjs', 'lib/engine.mjs', 'lib/output.mjs', 'lib/relevance.mjs', 'lib/organic.mjs', 'lib/homepage.mjs'];
+  const sources = ['run.mjs', 'build-config.mjs', 'free-checks.mjs', 'category-catalog.mjs', 'apply-r12.mjs', 'apply-r2-12.mjs', 'price-check.mjs', 'lib/spec.mjs', 'lib/cities.mjs', 'lib/dfs.mjs', 'lib/stage1.mjs', 'lib/stage2.mjs', 'lib/engine.mjs', 'lib/output.mjs', 'lib/relevance.mjs', 'lib/organic.mjs', 'lib/homepage.mjs'];
   for (const f of sources) assert.ok(!/[\u0590-\u05ff]/.test(fs.readFileSync(path.join(HERE, f), 'utf8')), `${f} contains Hebrew`);
 });
 
@@ -422,4 +440,264 @@ test('40102 No Search Results is cached as a billed empty SERP and never re-boug
   const b = createDfsClient({ token: 'fake', fetchImpl: networkForbidden(), cacheDir: base, capUsd: 1, prices });
   assert.equal((await b.call('/serp/google/maps/live/advanced', params)).no_results, true);
   assert.equal(calls, 1);
+});
+
+// ---- Revision 2 (spec 2.1-2.12) -----------------------------------------------------------------
+const fixtureConfig = () => loadConfig(FIXTURE_CONFIG);
+const lfRedirect = (cid, title, votes = 150, rating = 5) => ({ type: 'local_pack', rank_group: 1, cid: String(cid), title, domain: 'google.com', url: `https://google.com/goto?url=${cid}`, rating: { value: rating, votes_count: votes } });
+
+test('2.1 neutral fill: missing = 0.5 x weight, bounds 0 / 1; step-1 gate kills only at >= 0.75', () => {
+  const config = fixtureConfig();
+  const { run } = config;
+  const ctx = { run, profession: { terms: ['alpha one'] }, city: { he_name: 'City One' } };
+  const lf = lfRedirect(5, 'x');
+  // site + photos unknown: 0.40 + 0.15 + 0.5 * (0.20 + 0.10) = 0.70; low 0.55; high 0.85
+  assert.ok(Math.abs(businessStrength(lf, ctx) - 0.70) < 1e-12);
+  assert.ok(Math.abs(businessStrength(lf, ctx, 0) - 0.55) < 1e-12);
+  assert.ok(Math.abs(businessStrength(lf, ctx, 1) - 0.85) < 1e-12);
+  // no website at all is a known 0 - only photos is missing: 0.40 + 0.15 + 0 + 0.05 = 0.60
+  assert.ok(Math.abs(businessStrength({ cid: '6', title: 'x', rating: { value: 5, votes_count: 150 } }, ctx) - 0.60) < 1e-12);
+  // gate on synthetic LF responses
+  const lfFor = items => (endpoint, params) => (endpoint === LOCAL_FINDER_ENDPOINT ? { items: items(params) } : undefined);
+  const three = title => () => [1, 2, 3].map(i => ({ ...lfRedirect(i, title), rank_group: i }));
+  const gate = (specs, items) => step1Gate(config, lfFor(items), { specs, mode: 'm4' }).cells.map(c => [c.cell.id, Math.round(c.S3_step1 * 1e4) / 1e4, c.survives, c.gate_reason]);
+  // 0.70 survives step 1 (0.70 is the joined-S3 kill, not the step-1 kill); stuffed titles -> 0.85 killed
+  assert.deepEqual(gate([{ id: 'X', profession: 'alpha', city: 'c3' }], three('plain')), [['X', 0.7, true, 'step1_pass']]);
+  assert.deepEqual(gate([{ id: 'X', profession: 'alpha', city: 'c3' }], three('alpha one Pro')), [['X', 0.85, false, 'step1_saturated']]);
+  // haredi-flagged cell: step 1 only whatever its S3; calibration cell: forced through
+  assert.deepEqual(gate([{ id: 'H', profession: 'alpha', city: 'c2' }], three('plain')), [['H', 0.7, false, 'haredi_flag_step1_only']]);
+  assert.deepEqual(gate([{ id: 'K', profession: 'alpha', city: 'c3', force_step2: true }], three('alpha one Pro')), [['K', 0.85, true, 'forced_calibration']]);
+});
+
+test('2.9 proximity: N/S for big cities, extra E/W per city, none for flagged cells; pilot probes logged only', () => {
+  const config = fixtureConfig();
+  const { run } = config;
+  const city = { lat: 32, lng: 34.8 };
+  // 3 km = 0.02695 deg latitude; longitude scaled by cos(32 deg) -> 0.03178
+  assert.deepEqual(proximityPoints(city, 3, ['N', 'S', 'E', 'W']), [
+    { dir: 'north', lat: 32.02695, lng: 34.8 }, { dir: 'south', lat: 31.97305, lng: 34.8 },
+    { dir: 'east', lat: 32, lng: 34.83178 }, { dir: 'west', lat: 32, lng: 34.76822 },
+  ]);
+  const [c1, c2, c3] = ['c1', 'c2', 'c3'].map(slug => config.areas.regions.flatMap(r => r.cities).find(c => c.slug === slug));
+  const dirs = (cityObj, mode, extra = {}) => cellPoints({ city: cityObj, ...extra }, run, mode);
+  assert.deepEqual(dirs(c1, 'm4').scored.map(p => p.dir), ['centroid', 'north', 'south', 'east', 'west']); // pop 1000 > 900, + E/W by city
+  assert.deepEqual(dirs(c3, 'm4').scored.map(p => p.dir), ['centroid', 'north', 'south']);
+  assert.deepEqual(dirs(c2, 'm4').scored.map(p => p.dir), ['centroid']); // haredi-flagged: no probes
+  assert.deepEqual(dirs(c1, 'pilot', { proximity_probe: true }), { scored: [{ dir: 'centroid', lat: 32, lng: 34.8 }], logged: proximityPoints(c1, 3) });
+  // the N/S points are byte-identical to the M3 probes, so cached probes are reused
+  assert.deepEqual(proximityPoints(c1, 3).map(p => p.dir), ['north', 'south']);
+});
+
+test('2.2 organic lists match by host suffix; chain_retail class; default hosts count half', () => {
+  const run = fixtureConfig().run;
+  const o = (rank, domain) => ({ type: 'organic', rank_group: rank, domain });
+  const data = { items: [o(1, 'www.dir.example'), o(2, 'he-il.facebook.com'), o(3, 'sub.news.example'), o(4, 'bigbox.example'), o(5, 'pool.example'), o(6, 'nat.example'), o(7, 'other.example'), o(8, 'x.press.example')] };
+  const res = classifyOrganic(data, { run, poolDomains: new Set(['pool.example']), nationalDomains: new Set(['nat.example']) });
+  assert.deepEqual(res.rows.map(r => r.class), ['directory', 'social', 'media_info', 'chain_retail', 'local_site_pool', 'national_brand', 'local_default', 'media_info']);
+  // L_share = (1 pool + 0.5 x 1 default) / 8 = 0.1875; D_share 1/8; O = 0.80 + 0.40 x 0.1875 = 0.875
+  assert.deepEqual([res.L_share, res.D_share, res.O, res.local_pool, res.local_default], [0.1875, 0.125, 0.875, 1, 1]);
+});
+
+test('2.3 national brand: >= 3 regions across re-buy + cell SERPs; a Maps-pool match still wins', () => {
+  const run = fixtureConfig().run;
+  const serp = hosts => ({ items: hosts.map((d, i) => ({ type: 'organic', rank_group: i + 1, domain: d })) });
+  const national = nationalBrandDomains([
+    { profession: 'alpha', region: 'R1', data: serp(['www.nat.example', 'two.example']) },
+    { profession: 'alpha', region: 'R2', data: serp(['nat.example', 'two.example']) },
+    { profession: 'alpha', region: 'R3', data: serp(['nat.example']) }, // e.g. a cell SERP in a third region
+    { profession: 'beta', region: 'R4', data: serp(['nat.example']) }, // other profession: not counted
+  ], 3);
+  assert.deepEqual([...national.get('alpha')], ['nat.example']);
+  assert.deepEqual([...national.get('beta')], []);
+  const res = classifyOrganic(serp(['nat.example']), { run, nationalDomains: national.get('alpha') });
+  assert.equal(res.rows[0].class, 'national_brand');
+  assert.equal(classifyOrganic(serp(['nat.example']), { run, nationalDomains: national.get('alpha'), poolDomains: new Set(['nat.example']) }).rows[0].class, 'local_site_pool');
+});
+
+test('2.3 re-buy: the schema upgrade preserves the original Stage-1 sample', async () => {
+  const base = tmp();
+  const config = fixtureConfig();
+  const params = organicParams(config.professions[0], config.areas.regions[0], config.run);
+  const file = cachePath(base, ORGANIC_ENDPOINT, params);
+  fs.mkdirSync(path.dirname(file), { recursive: true });
+  const v1 = { item_types: ['organic'], items: [{ type: 'organic', rank_group: 1, domain: 'google.com' }] }; // no local pack
+  fs.writeFileSync(file, JSON.stringify({ endpoint: ORGANIC_ENDPOINT, params, data: v1 }));
+  const client = createDfsClient({ token: 'fake', fetchImpl: createFakeFetch(), cacheDir: base, capUsd: 1, prices: config.run.prices_usd });
+  const fresh = await client.call(ORGANIC_ENDPOINT, params, ORGANIC_SCHEMA);
+  assert.equal(fresh.schema, ORGANIC_SCHEMA);
+  assert.ok(fs.existsSync(originalPath(file)));
+  assert.deepEqual(client.peekOriginal(ORGANIC_ENDPOINT, params), v1); // Stage 1 keeps scoring on this
+  assert.equal(client.peek(ORGANIC_ENDPOINT, params, ORGANIC_SCHEMA).schema, ORGANIC_SCHEMA);
+  // a second upgrade-write never overwrites the preserved original
+  fs.writeFileSync(file, JSON.stringify({ endpoint: ORGANIC_ENDPOINT, params, data: v1 }));
+  await client.call(ORGANIC_ENDPOINT, params, ORGANIC_SCHEMA);
+  assert.deepEqual(client.peekOriginal(ORGANIC_ENDPOINT, params), v1);
+});
+
+test('2.5 / 2.6 anti-bot and fetch failures: challenges are not_checked, never failed; robots first', async () => {
+  const cfg = fixtureConfig().run.homepage_check;
+  const ok = { status: 200, type: 'text/html', body: `<html><head><title>t</title><meta name="viewport" content="width=device-width"></head><body><h1>h</h1>${'x'.repeat(5000)}</body></html>` };
+  const r404 = { status: 404, type: 'text/plain', body: '' };
+  const sites = {
+    'https://sg.example/robots.txt': r404, 'https://sg.example/': { status: 202, headers: { 'sg-captcha': 'challenge' }, body: '<meta http-equiv="refresh" content="0;/.well-known/sgcaptcha/">' },
+    'https://cf.example/robots.txt': r404, 'https://cf.example/': { status: 403, headers: { 'cf-mitigated': 'challenge' }, body: 'x'.repeat(9000) },
+    'https://jam.example/robots.txt': r404, 'https://jam.example/': { status: 200, body: '<html><title>Just a moment...</title></html>' },
+    'https://rate.example/robots.txt': r404, 'https://rate.example/': { status: 429, body: '' },
+    'https://odd.example/robots.txt': r404, 'https://odd.example/': { status: 406, body: 'Not Acceptable' },
+    'https://slow.example/robots.txt': r404, 'https://slow.example/': { throws: 'timeout' },
+    'https://retry.example/robots.txt': r404, 'https://retry.example/': { sequence: [{ throws: 'timeout' }, ok] },
+    'https://gone.example/robots.txt': r404, 'https://gone.example/': { status: 410, body: '' },
+    'https://down.example/robots.txt': r404, 'https://down.example/': { status: 500, body: 'oops' },
+    'https://busy.example/robots.txt': r404, 'https://busy.example/': { status: 503, body: '<p>imunify360 bot protection</p>' },
+    'https://tls.example/robots.txt': { throws: 'CERT_HAS_EXPIRED' }, 'http://tls.example/robots.txt': { throws: 'ECONNREFUSED' },
+    'https://r5.example/robots.txt': { status: 503, type: 'text/plain', body: '' },
+    'https://r4.example/robots.txt': { status: 403, type: 'text/plain', body: '' }, 'https://r4.example/': ok,
+    'https://parked.example/robots.txt': r404, 'https://parked.example/': { status: 200, body: '<html><title>x</title></html>' },
+  };
+  const calls = [];
+  const fetchImpl = createFakeWeb({ sites, onCall: u => calls.push(u) });
+  const check = async host => checkHomepage(host, { fetchImpl, cfg, now: FIXED_NOW });
+  const outcome = async host => { const r = await check(host); return [r.site_check, r.reason]; };
+  assert.deepEqual(await outcome('sg.example'), ['blocked', 'challenge_202']); // SiteGround 202 + sg-captcha
+  assert.deepEqual(await outcome('cf.example'), ['blocked', 'challenge_403']);
+  assert.deepEqual(await outcome('jam.example'), ['blocked', 'challenge_200']); // challenge marker, never "parked"
+  assert.deepEqual(await outcome('rate.example'), ['blocked', 'status_429']);
+  assert.deepEqual(await outcome('odd.example'), ['blocked', 'status_406']);
+  assert.deepEqual(await outcome('slow.example'), ['timeout', 'timeout_twice']);
+  assert.equal(calls.filter(u => u === 'https://slow.example/').length, 2); // one retry
+  assert.equal((await check('retry.example')).site_check, 'ok');
+  assert.deepEqual(await outcome('gone.example'), ['failed', 'status_404_410']);
+  assert.deepEqual(await outcome('down.example'), ['failed', 'status_5xx_after_retry']);
+  assert.equal(calls.filter(u => u === 'https://down.example/').length, 2);
+  assert.deepEqual(await outcome('busy.example'), ['blocked', 'challenge_503']); // 503 + marker: not retried, not failed
+  assert.deepEqual(await outcome('tls.example'), ['failed', 'connect_or_tls_both_schemes']);
+  assert.ok(calls.filter(u => u.includes('tls.example')).length <= 4);
+  assert.deepEqual(await outcome('r5.example'), ['skipped_robots', 'robots_503']); // RFC 9309: 5xx -> disallow
+  assert.equal(calls.includes('https://r5.example/'), false);
+  assert.equal((await check('r4.example')).site_check, 'ok'); // RFC 9309: 4xx -> allowed
+  assert.deepEqual(await outcome('parked.example'), ['failed', 'parked']);
+  assert.deepEqual(await outcome('nx.example'), ['failed', 'dns_nxdomain']);
+  // robots before the homepage, always
+  for (const host of ['sg.example', 'gone.example', 'r4.example']) assert.ok(calls.indexOf(`https://${host}/robots.txt`) < calls.indexOf(`https://${host}/`));
+  // weights: not checked -> 1.00, failed -> 1.10 (has a domain)
+  const ctx = { cityNames: ['City'], titleTerms: ['alpha'] };
+  assert.equal(siteVerdict(await check('sg.example'), null, ctx, cfg), null);
+  assert.equal(siteVerdict(await check('gone.example'), null, ctx, cfg).weak_site, true);
+  // the full check returns page text separately from the cacheable record (2.7)
+  const full = await checkHomepageFull('r4.example', { fetchImpl, cfg, now: FIXED_NOW });
+  assert.deepEqual(full.text, { title: 't', h1: 'h' });
+  assert.equal(full.record.title, undefined);
+});
+
+test('2.8 one business -> one cell per profession: nearest centroid, tie -> city slug asc', () => {
+  const run = fixtureConfig().run;
+  const b = (id, lat, lng) => ({ _id: id, cid: id, phone: `+972-${id}`, rating: { votes_count: 3 }, latitude: lat, longitude: lng, address_info: { city: 'Elsewhere' } });
+  const cell = (slug, city, lat, lng, items) => ({ cellKey: `${slug}|${city}`, cell: { profession: { slug } }, city: { slug: city, lat, lng, he_name: city }, lfTop3: [], lfTop3Ids: new Set(), ranked: items, rawRank: new Map(items.map(x => [x._id, 5])) });
+  const near = b('1', 31.01, 34.9); // nearer cz (31.0) than ca (31.04)
+  const tie = b('2', 31.02, 34.9); // equidistant from ca (31.04) and cz (31.0)
+  const cells = [cell('alpha', 'cz', 31.0, 34.9, [near, tie]), cell('alpha', 'ca', 31.04, 34.9, [near, tie]), cell('beta', 'cz', 31.0, 34.9, [tie])];
+  const out = assignProspects(cells, new Set(), new Map(), run);
+  assert.deepEqual(out.get('alpha|cz').map(p => p.id), ['1']);
+  assert.deepEqual(out.get('alpha|ca').map(p => p.id), ['2']); // tie -> city slug asc ("ca" < "cz")
+  assert.deepEqual(out.get('beta|cz').map(p => p.id), ['2']); // same cid may count in another profession
+  // a business in the LF top 3 of any scored point never counts as a prospect
+  const inTop = cell('alpha', 'cq', 31.0, 34.9, [near]);
+  inTop.lfTop3Ids = new Set(['1']);
+  assert.deepEqual(assignProspects([inTop], new Set(), new Map(), run).get('alpha|cq'), []);
+});
+
+test('2.8 ring2 pooling: P_w summed, S3 / O population-weighted, value summed; core never pools', () => {
+  const run = fixtureConfig().run;
+  const row = (city, ring, extra) => ({ cell_id: city, slug: 'alpha', trade_he: 'T', region: 'R9', city, ring, maps_bought: true, ranked: true, flags: '', P: 4, kit_level: 1, W: 0.5, ...extra });
+  const rows = [
+    row('t1', 'ring2', { population: 1000, S3: 0.5, O: 1.0, value_usd: 100, P_w: 5 }),
+    row('t2', 'ring2', { population: 3000, S3: 0.6, O: 0.9, value_usd: 200, P_w: 6 }),
+    row('t3', 'ring2', { population: 500, S3: 0.75, O: 1, value_usd: 50, P_w: 4 }), // saturated: never pooled
+    row('t4', 'ring2', { population: 500, S3: 0.3, O: 1, value_usd: 50, P_w: 20 }), // P_w >= 15: stands alone
+    row('k1', 'core', { population: 9000, S3: 0.3, O: 1, value_usd: 500, P_w: 3 }),
+  ];
+  const [cluster, ...more] = poolRing2(rows, run);
+  assert.equal(more.length, 0);
+  // S3 = (1000 x 0.5 + 3000 x 0.6) / 4000 = 0.575; O = 0.925; score = 300 x 0.425^2 x 11/15 x 0.925 = 36.7572
+  assert.deepEqual([cluster.cell_id, cluster.pool_members, cluster.P_w, cluster.S3, cluster.O, cluster.value_usd, cluster.score, cluster.kill_reason], ['alpha@R9-ring2', 't1;t2', 11, 0.575, 0.925, 300, 36.7572, '']);
+  assert.deepEqual(rows.map(r => r.pooled_into ?? null), ['alpha@R9-ring2', 'alpha@R9-ring2', null, null, null]);
+});
+
+async function m4Fixture() {
+  const base = tmp();
+  const cfgDir = path.join(base, 'config');
+  fs.cpSync(FIXTURE_CONFIG, cfgDir, { recursive: true });
+  const runCfg = JSON.parse(fs.readFileSync(path.join(cfgDir, 'run-config.json'), 'utf8'));
+  Object.assign(runCfg.stage1, { min_region_volume: 0, value_top_fraction: 1, max_pairs_per_profession: 1 }); // alpha R1 + beta R1 advance
+  fs.writeFileSync(path.join(cfgDir, 'run-config.json'), JSON.stringify(runCfg));
+  const d = { ...dirs(base), configDir: cfgDir };
+  await runEngine({ stage: '1', ...d, token: 'fake', fetchImpl: createFakeFetch(), now: FIXED_NOW });
+  return { base, d };
+}
+const M4_FILES = ['m4-cells.csv', 'm4-cells.json', 'm4-cells.md', 'm4-top.md', 'm4-summary.json', 'm4-category-diagnostics.json', 'm4-organic-diagnostics.json', 'm4-proximity.json'];
+
+test('M4 on fixtures: flagged cells step 1 only, calibration forced + unranked, multi-point S3, determinism, cap', async () => {
+  const { base, d } = await m4Fixture();
+  const est = await runEngine({ stage: 'm4', ...d, estimateOnly: true });
+  // cells: alpha@c1 (5 points), alpha@c2 (flagged, 1), beta@c1 (5), beta@c2 (flagged, 1), K = alpha x c3 (3 points)
+  assert.equal(est.cells, 5);
+  assert.equal(est.step1_uncached, 15);
+  // worst-case step 2: alpha@c1, beta@c1, K -> 2 Maps each (organic: c1 and c3 are region anchors, cached by Stage 1)
+  assert.equal(est.step2_worst_case_uncached, 6);
+  assert.equal(est.estimate_usd, 0.042);
+  // the cap is checked on the worst case before any call, and never raised
+  let calls = 0;
+  await assert.rejects(runEngine({ stage: 'm4', ...d, token: 'fake', fetchImpl: createFakeFetch({ onCall: () => { calls += 1; } }), cap: 0.04 }), err => err instanceof BudgetExceededError && /preflight/.test(err.message));
+  assert.equal(calls, 0);
+  await assert.rejects(runEngine({ stage: 'm4', ...d, cap: 1.01, estimateOnly: true }), /never raised/);
+
+  const seen = [];
+  const live = await runEngine({ stage: 'm4', ...d, token: 'fake', fetchImpl: createFakeFetch({ onCall: (e, t) => seen.push({ e, t }) }), siteFetchImpl: createFakeWeb(), now: FIXED_NOW });
+  const maps = seen.filter(c => c.e === MAPS_ENDPOINT);
+  // no Maps for the step-1 kill (alpha@c1) or the flagged cells (c2 = 32.05): beta@c1 + K only
+  assert.deepEqual(maps.map(c => `${c.t.keyword}@${c.t.location_coordinate}`).sort(), ['alpha one@31,34.9,13z', 'alpha two@31,34.9,13z', 'beta one@32,34.8,13z', 'beta two@32,34.8,13z']);
+  assert.equal(seen.filter(c => c.e === LOCAL_FINDER_ENDPOINT).length, 15);
+  assert.ok(!seen.some(c => c.t.location_coordinate?.startsWith('32.05')) || seen.filter(c => c.t.location_coordinate?.startsWith('32.05')).every(c => c.e === LOCAL_FINDER_ENDPOINT));
+  assert.equal(live.spent_usd, 0.038);
+  const rows = JSON.parse(fs.readFileSync(path.join(base, 'out', 'm4-cells.json'), 'utf8'));
+  const by = id => rows.find(r => r.cell_id === id);
+  assert.deepEqual([by('alpha@c1').points, by('alpha@c1').gate_reason, by('alpha@c1').maps_bought, by('alpha@c1').kill_reason], [5, 'step1_saturated', false, 'saturated']);
+  assert.deepEqual([by('alpha@c2').points, by('alpha@c2').gate_reason, by('alpha@c2').maps_bought, by('alpha@c2').kill_reason], [1, 'haredi_flag_step1_only', false, 'saturated;haredi_majority']);
+  assert.deepEqual([by('K').ranked, by('K').rank, by('K').gate_reason, by('K').maps_bought, by('K').points, by('K').calibration], [false, null, 'forced_calibration', true, 3, 'K']);
+  // alpha@c1 points: centroid strong (0.84), north = same three (0.84), south = 1 strong + 2 new strong, E/W fall back to the weak list
+  assert.equal(by('alpha@c1').S3_points.split('/').length, 5);
+  assert.equal(by('beta@c1').maps_bought, true);
+  const summary = JSON.parse(fs.readFileSync(path.join(base, 'out', 'm4-summary.json'), 'utf8'));
+  assert.deepEqual(summary.step1, { killed_saturated: 1, flagged_step1_only: 2, passed: 1, forced: 1, multi_point_cells: 3 });
+  // committed outputs carry no business names, phones or domains
+  for (const f of M4_FILES) {
+    const text = fs.readFileSync(path.join(base, 'out', f), 'utf8');
+    assert.ok(!/Biz \d|Seven Co|\+972|\.example/.test(text), `${f} leaks business data`);
+  }
+  assert.ok(fs.readFileSync(path.join(base, 'private', 'm4-businesses.json'), 'utf8').includes('+972'));
+  assert.ok(fs.existsSync(path.join(base, 'private', 'm4-default-hosts.json')));
+
+  // determinism: cached rerun and offline replay are byte-identical with zero network calls
+  const first = Object.fromEntries(M4_FILES.map(f => [f, read(path.join(base, 'out'), f)]));
+  const again = await runEngine({ stage: 'm4', ...d, token: 'fake', fetchImpl: networkForbidden(), siteFetchImpl: webForbidden(), now: FIXED_NOW });
+  assert.equal(again.network_calls, 0);
+  for (const f of M4_FILES) assert.ok(read(path.join(base, 'out'), f).equals(first[f]), `${f} changed on cached rerun`);
+  await runEngine({ stage: 'm4', ...d, outDir: path.join(base, 'out2'), offline: true, now: FIXED_NOW });
+  for (const f of M4_FILES) assert.ok(read(path.join(base, 'out2'), f).equals(first[f]), `${f} differs on offline replay`);
+});
+
+test('2.12 config: merged byte-exact from the spec; cap 6 approved; *_append arrays appended', () => {
+  const spec = fs.readFileSync(path.join(ROOT, SPEC_PATH), 'utf8');
+  const patch = extractR2_12(spec);
+  const runConfig = JSON.parse(fs.readFileSync(path.join(ROOT, 'config/market-scanner/run-config.json'), 'utf8'));
+  assert.equal(runConfig.caps_usd['stage2-full'], 6);
+  assert.equal(runConfig.stage2.s3_missing_field_policy, 'neutral');
+  assert.equal(runConfig.stage2.step1_kill_s3, 0.75);
+  assert.deepEqual(runConfig.stage2.proximity, patch.stage2.proximity);
+  assert.deepEqual(runConfig.stage2.category_rules.roofing.conditional, patch.stage2.category_rules.roofing.conditional);
+  assert.deepEqual(runConfig.stage2.category_rules.renovation.conditional, patch.stage2.category_rules.renovation.conditional);
+  for (const k of ['organic_directories', 'organic_media', 'not_a_site']) for (const d of patch.stage2[`${k}_append`]) assert.ok(runConfig.stage2[k].includes(d), `${k} misses ${d}`);
+  assert.deepEqual(runConfig.homepage_check.challenge_markers, patch.homepage_check.challenge_markers);
+  assert.deepEqual(runConfig.m4, patch.m4);
+  assert.deepEqual(mergeR2_12(runConfig, patch, runConfig.r2_12_applied.spec_sha256), runConfig); // idempotent
 });

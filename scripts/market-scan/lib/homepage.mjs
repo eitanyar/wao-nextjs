@@ -1,7 +1,8 @@
-// R8 homepage-quality check: one GET of the homepage per host (robots.txt first), derived fields
-// only. Raw HTML is parsed in memory and dropped; the cache stores booleans, counts, a platform
-// label and the tag-stripped <title> / first <h1> text (<= 200 chars, needed for the per-cell
-// city/service hits). 30-day retention. No Hebrew literals in this file.
+// R8 homepage-quality check (as revised by spec 2.5-2.7): robots.txt then one GET of the homepage
+// per host, derived fields only. Raw HTML is parsed in memory and dropped; the cache stores
+// booleans, counts and a platform label. The tag-stripped <title> / first <h1> text (<= 200 chars,
+// needed for the per-cell city/service hits) goes to the private text store only (2.7).
+// 30-day retention for both. No Hebrew literals in this file.
 import fs from 'node:fs';
 import path from 'node:path';
 import { createHash } from 'node:crypto';
@@ -147,95 +148,172 @@ async function getFollow(url, { fetchImpl, cfg, signal }) {
       continue;
     }
     const { text, bytes } = await readCapped(res, cfg.max_bytes);
-    return { status: res.status, finalUrl: current, contentType: res.headers?.get?.('content-type') ?? '', text, bytes };
+    return { status: res.status, finalUrl: current, contentType: res.headers?.get?.('content-type') ?? '', header: name => res.headers?.get?.(name) ?? null, text, bytes };
   }
   throw Object.assign(new Error('too many redirects'), { code: 'too_many_redirects' });
 }
 
 // TimeoutError / AbortError are DOMExceptions whose numeric `code` (23 / 20) is meaningless here.
-const errorCode = err => (err?.name === 'TimeoutError' || err?.name === 'AbortError' ? 'timeout' : null) ?? err?.cause?.code ?? (typeof err?.code === 'string' ? err.code : null) ?? 'fetch_failed';
+const errorCode = err => (err?.name === 'TimeoutError' || err?.name === 'AbortError' ? 'timeout' : null) ?? err?.code ?? err?.cause?.code ?? 'fetch_failed';
+// Spec 2.5 error classes: DNS NXDOMAIN (hard fail), timeout (not checked), connect/TLS (try the
+// other scheme; both failing = hard fail). EAI_AGAIN is a transient resolver error, not NXDOMAIN.
+export function errorClass(code) {
+  if (code === 'timeout') return 'timeout';
+  if (code === 'ENOTFOUND' || code === 'EAI_NONAME') return 'dns';
+  if (code === 'too_many_redirects') return 'redirects';
+  return 'connect';
+}
 
-// One host -> one derived record. Never throws.
-export async function checkHomepage(host, { fetchImpl, cfg, now = () => new Date(), clock = () => performance.now() }) {
-  const base = { host, checked_at: now().toISOString() };
-  let lastError = null;
-  for (const scheme of ['https', 'http']) {
-    const signal = AbortSignal.timeout(cfg.timeout_ms);
-    if (cfg.respect_robots) {
-      try {
-        const robots = await getFollow(`${scheme}://${host}/robots.txt`, { fetchImpl, cfg: { ...cfg, max_bytes: 256 * 1024 }, signal });
-        if (robots.status >= 200 && robots.status < 300 && !/html/i.test(robots.contentType) && !robotsAllows(robots.text, cfg.user_agent, '/')) {
-          return { ...base, site_check: 'skipped_robots' };
-        }
-      } catch (err) {
-        // unreachable robots.txt = no restriction; the homepage fetch below reports the real error
-        lastError = errorCode(err);
+// HOMEPAGE_SCHEMA 2 = spec 2.5-2.7 outcomes (ok / failed / blocked / timeout / skipped_robots) and
+// no page text in the cache record (title / first h1 live in the private text store, 2.7).
+export const HOMEPAGE_SCHEMA = 2;
+
+// Challenge / bot-wall response (2.5): a header marker, or a small body with a challenge marker.
+export function isChallenge(res, cfg) {
+  const headers = cfg.challenge_headers ?? [];
+  if (headers.some(h => res.header?.(h) !== null && res.header?.(h) !== undefined)) return true;
+  if (res.bytes > (cfg.challenge_max_bytes ?? 4096)) return false;
+  const body = String(res.text ?? '').toLowerCase();
+  return (cfg.challenge_markers ?? []).some(m => body.includes(m.toLowerCase()));
+}
+
+// One request (redirects followed) -> { res } or { error: class, code }. Never throws.
+async function attempt(url, { fetchImpl, cfg, maxBytes }) {
+  try {
+    const page = await getFollow(url, { fetchImpl, cfg: { ...cfg, max_bytes: maxBytes ?? cfg.max_bytes }, signal: AbortSignal.timeout(cfg.timeout_ms) });
+    return { res: page };
+  } catch (err) {
+    const code = errorCode(err);
+    return { error: errorClass(code), code };
+  }
+}
+
+// Spec 2.5 retries: a timeout is retried `timeout_retries` times; a 5xx that is not a challenge
+// is retried once. Returns the last outcome and the number of requests made.
+async function attemptWithRetry(url, opts) {
+  const { cfg } = opts;
+  let out = await attempt(url, opts);
+  let requests = 1;
+  for (let i = 0; i < (cfg.timeout_retries ?? 1) && out.error === 'timeout'; i += 1) { out = await attempt(url, opts); requests += 1; }
+  if (out.res && out.res.status >= 500 && !isChallenge(out.res, cfg)) { out = await attempt(url, opts); requests += 1; }
+  return { ...out, requests };
+}
+
+const notChecked = (base, site_check, reason, extra = {}) => ({ ...base, site_check, reason, ...extra });
+const failed = (base, reason, extra = {}) => ({ ...base, site_check: 'failed', reason, fetch_ok: false, https: false, viewport: false, ...extra });
+
+// One host -> one derived record + its private text ({ title, h1 } or null). Never throws.
+// Order per scheme (2.6): GET /robots.txt, then GET /. HTTPS first; HTTP only when HTTPS cannot
+// connect (connection / TLS failure), worst case 4 requests on a host with broken HTTPS.
+export async function checkHomepageFull(host, { fetchImpl, cfg, now = () => new Date(), clock = () => performance.now() }) {
+  const base = { schema: HOMEPAGE_SCHEMA, host, checked_at: now().toISOString() };
+  const schemes = cfg.http_fallback === false ? ['https'] : ['https', 'http'];
+  const notCheckedStatuses = new Set(cfg.not_checked_statuses ?? [202, 401, 403, 429]);
+  const robotsCfg = cfg.robots ?? {};
+  let requests = 0;
+  let lastConnect = null;
+  for (const scheme of schemes) {
+    if (cfg.respect_robots !== false) {
+      const r = await attemptWithRetry(`${scheme}://${host}${robotsCfg.path ?? '/robots.txt'}`, { fetchImpl, cfg, maxBytes: 256 * 1024 });
+      requests += r.requests;
+      if (r.error === 'dns') return { record: failed(base, 'dns_nxdomain', { requests }), text: null };
+      if (r.error === 'connect') { lastConnect = r.code; continue; }
+      if (r.error === 'timeout') return { record: notChecked(base, 'timeout', 'robots_timeout', { requests }), text: null };
+      if (r.error === 'redirects') return { record: notChecked(base, 'skipped_robots', 'robots_unreachable', { requests }), text: null };
+      const res = r.res;
+      if (isChallenge(res, cfg) || res.status === 202) return { record: notChecked(base, 'blocked', `robots_challenge_${res.status}`, { requests, status: res.status }), text: null };
+      // RFC 9309: 4xx -> no restriction; 5xx / unreachable -> treat as disallowed.
+      if (res.status >= 500) return { record: notChecked(base, 'skipped_robots', `robots_${res.status}`, { requests, status: res.status }), text: null };
+      if (res.status >= 200 && res.status < 300 && !/html/i.test(res.contentType) && !robotsAllows(res.text, robotsCfg.ua_token ?? cfg.user_agent, '/')) {
+        return { record: notChecked(base, 'skipped_robots', 'robots_disallow', { requests }), text: null };
       }
     }
     const t0 = clock();
-    try {
-      const page = await getFollow(`${scheme}://${host}/`, { fetchImpl, cfg, signal: AbortSignal.timeout(cfg.timeout_ms) });
-      const fetchMs = Math.round(clock() - t0);
-      const isHtml = /html/i.test(page.contentType) || /<html[\s>]/i.test(page.text.slice(0, 2048));
-      const ok2xx = page.status >= 200 && page.status < 300;
-      const derived = ok2xx && isHtml ? analyzeHtml(page.text, page, cfg) : { viewport: false, title: '', h1: '', internal_paths: 0, platform: null, parked: false };
-      const finalUrl = new URL(page.finalUrl);
-      return {
+    const p = await attemptWithRetry(`${scheme}://${host}/`, { fetchImpl, cfg });
+    requests += p.requests;
+    const fetchMs = Math.round(clock() - t0);
+    if (p.error === 'dns') return { record: failed(base, 'dns_nxdomain', { requests }), text: null };
+    if (p.error === 'connect') { lastConnect = p.code; continue; }
+    if (p.error === 'timeout') return { record: notChecked(base, 'timeout', 'timeout_twice', { requests }), text: null };
+    if (p.error === 'redirects') return { record: failed(base, 'too_many_redirects', { requests }), text: null };
+    const page = p.res;
+    const status = page.status;
+    // A bot wall says nothing about what a customer's phone sees -> not checked, never failed.
+    if (isChallenge(page, cfg)) return { record: notChecked(base, 'blocked', `challenge_${status}`, { requests, status }), text: null };
+    if (notCheckedStatuses.has(status)) return { record: notChecked(base, 'blocked', `status_${status}`, { requests, status }), text: null };
+    if (status === 404 || status === 410) return { record: failed(base, 'status_404_410', { requests, status }), text: null };
+    if (status >= 500) return { record: failed(base, 'status_5xx_after_retry', { requests, status }), text: null };
+    // Engineer reading (flagged in the M4 report): other 4xx (400, 405, 406, ...) are typical of
+    // UA filtering, not of a broken site -> not checked.
+    if (status >= 400) return { record: notChecked(base, 'blocked', `status_${status}`, { requests, status }), text: null };
+    const isHtml = /html/i.test(page.contentType) || /<html[\s>]/i.test(page.text.slice(0, 2048));
+    const ok2xx = status >= 200 && status < 300;
+    const derived = ok2xx && isHtml ? analyzeHtml(page.text, page, cfg) : { viewport: false, title: '', h1: '', internal_paths: 0, platform: null, parked: false };
+    if (derived.parked) return { record: failed(base, 'parked', { requests, status }), text: null };
+    const finalUrl = new URL(page.finalUrl);
+    return {
+      record: {
         ...base,
         site_check: 'ok',
         scheme_tried: scheme,
-        status: page.status,
+        status,
         final_host: finalUrl.hostname,
-        fetch_ok: ok2xx && isHtml && !derived.parked,
-        parked: derived.parked,
+        fetch_ok: ok2xx && isHtml,
+        parked: false,
         https: finalUrl.protocol === 'https:',
         viewport: derived.viewport,
-        title: derived.title,
-        h1: derived.h1,
         internal_paths: derived.internal_paths,
         multi_page: derived.internal_paths >= cfg.multi_page_min_internal_paths,
         fetch_ms: fetchMs,
         fetch_ms_note: 'rough: measured from the scanner host, not a phone',
         platform: derived.platform,
         bytes: page.bytes,
-      };
-    } catch (err) {
-      lastError = errorCode(err);
-    }
+        requests,
+      },
+      text: { title: derived.title, h1: derived.h1 },
+    };
   }
-  return { ...base, site_check: 'error', fetch_ok: false, https: false, viewport: false, error: lastError };
+  return { record: failed(base, 'connect_or_tls_both_schemes', { error: lastConnect, requests }), text: null };
 }
 
-// R8 weak-site rule for one cell context.
-export function siteVerdict(check, { cityNames, titleTerms }, cfg) {
-  if (!check || check.site_check === 'skipped_robots') return null;
-  const text = `${check.title ?? ''} ${check.h1 ?? ''}`;
-  const city_hit = cityNames.some(n => n && text.includes(n));
-  const service_hit = titleTerms.some(t => t && text.includes(t));
+// Back-compat wrapper: the derived record only.
+export async function checkHomepage(host, opts) {
+  return (await checkHomepageFull(host, opts)).record;
+}
+
+// R8 weak-site rule for one cell context (2.5 outcomes): not checked -> null (w_b 1.00);
+// failed -> weak (hard); ok -> R8 hard / soft rule on the private title + first h1 text.
+export function siteVerdict(check, ctxOrText, cfgOrCtx, maybeCfg) {
+  // siteVerdict(check, text, ctx, cfg) - or legacy siteVerdict(check, ctx, cfg) with text on the record.
+  const [text, ctx, cfg] = maybeCfg === undefined ? [check, ctxOrText, cfgOrCtx] : [ctxOrText, cfgOrCtx, maybeCfg];
+  if (!check || ['skipped_robots', 'blocked', 'timeout'].includes(check.site_check)) return null;
+  if (check.site_check === 'failed') return { city_hit: false, service_hit: false, hard: true, soft: null, weak_site: true };
+  const { cityNames, titleTerms } = ctx;
+  const t = `${text?.title ?? ''} ${text?.h1 ?? ''}`;
+  const city_hit = cityNames.some(n => n && t.includes(n));
+  const service_hit = titleTerms.some(x => x && t.includes(x));
   const hard = !check.fetch_ok || !check.https || !check.viewport;
   const soft = Number(!service_hit) + Number(!city_hit) + Number(!check.multi_page) + Number((check.fetch_ms ?? 0) > cfg.slow_fetch_ms);
   return { city_hit, service_hit, hard, soft, weak_site: hard || soft >= cfg.weak_soft_min };
 }
 
-// ---- cache (derived records only) --------------------------------------------------------------
-export function homepageCache(cacheDir, cfg, now = () => new Date()) {
-  const dir = path.join(cacheDir, HOMEPAGE_CACHE_SUBDIR);
-  const file = host => path.join(dir, `${createHash('sha256').update(`homepage\n${host}`).digest('hex')}.json`);
-  const maxAgeMs = cfg.cache_retention_days * 864e5;
-  const fresh = rec => rec && now() - new Date(rec.checked_at) <= maxAgeMs;
+// ---- cache (derived records only) + private text store (2.7) ----------------------------------
+const hostFile = (dir, host) => path.join(dir, `${createHash('sha256').update(`homepage\n${host}`).digest('hex')}.json`);
+function retentionStore(dir, maxAgeMs, now, valid = () => true) {
+  const fresh = rec => rec && valid(rec) && now() - new Date(rec.checked_at) <= maxAgeMs;
   return {
     dir,
     get(host) {
-      const f = file(host);
+      const f = hostFile(dir, host);
       if (!fs.existsSync(f)) return undefined;
       const rec = JSON.parse(fs.readFileSync(f, 'utf8'));
       return fresh(rec) ? rec : undefined;
     },
     set(host, rec) {
       fs.mkdirSync(dir, { recursive: true });
-      fs.writeFileSync(file(host), JSON.stringify(rec));
+      fs.writeFileSync(hostFile(dir, host), JSON.stringify(rec));
     },
-    // 30-day retention, like the audit reports.
+    // 30-day retention, like the audit reports. Stale-schema records are dropped too.
     purge() {
       if (!fs.existsSync(dir)) return 0;
       let n = 0;
@@ -248,15 +326,29 @@ export function homepageCache(cacheDir, cfg, now = () => new Date()) {
   };
 }
 
-export async function runHomepageChecks(hosts, { cache, fetchImpl, cfg, now, log = () => {} }) {
+export function homepageCache(cacheDir, cfg, now = () => new Date()) {
+  return retentionStore(path.join(cacheDir, HOMEPAGE_CACHE_SUBDIR), cfg.cache_retention_days * 864e5, now, rec => (rec.schema ?? 1) >= HOMEPAGE_SCHEMA);
+}
+
+// Tag-stripped <title> and first <h1> (each <= 200 chars), private dir only, 30-day retention.
+export const HOMEPAGE_TEXT_SUBDIR = 'homepage-text';
+export function homepageTextStore(privateDir, cfg, now = () => new Date()) {
+  const st = cfg.store_text_private ?? {};
+  return retentionStore(path.join(privateDir, HOMEPAGE_TEXT_SUBDIR), (st.retention_days ?? cfg.cache_retention_days) * 864e5, now);
+}
+
+export async function runHomepageChecks(hosts, { cache, textStore = null, fetchImpl, cfg, now, log = () => {} }) {
   const queue = [...new Set(hosts)].filter(h => cache.get(h) === undefined).sort();
+  const max = cfg.store_text_private?.max_chars ?? TEXT_MAX;
   let done = 0;
   async function worker() {
     while (queue.length) {
       const host = queue.shift();
-      const rec = await checkHomepage(host, { fetchImpl, cfg, now });
-      cache.set(host, rec);
+      const { record, text } = await checkHomepageFull(host, { fetchImpl, cfg, now });
+      cache.set(host, record);
+      if (textStore && text) textStore.set(host, { host, checked_at: record.checked_at, title: text.title.slice(0, max), first_h1: text.h1.slice(0, max) });
       done += 1;
+      if (done % 100 === 0) log(`homepage checks: ${done} fetched, ${queue.length} queued`);
     }
   }
   await Promise.all(Array.from({ length: Math.max(1, cfg.concurrency) }, worker));

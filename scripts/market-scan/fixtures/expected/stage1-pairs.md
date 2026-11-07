@@ -1,8 +1,8 @@
-## Stage 1 - profession x region pairs (run f89933e854d2)
+## Stage 1 - profession x region pairs (run 619936c08eb5)
 
 | value_rank | slug | trade_he | region | region_name | V_region | T_p_usd | M | value_usd | stage1_pass | advance | fail_reason | kit_level | urgency_lead_gen | run_id |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| 1 | alpha | Alpha Trade | R1 | Region One | 400 | 3 | 1 | 1200 | true | true |  | 2 | false | f89933e854d2 |
-| 2 | alpha | Alpha Trade | R2 | Region Two | 50 | 3 | 0.4 | 60 | false | false | V_region<150 | 2 | false | f89933e854d2 |
-| 3 | beta | Beta Trade | R1 | Region One | 40 | 1 | 0.4 | 16 | false | false | V_region<150;value_below_top_50pct | 0 | true | f89933e854d2 |
-| 4 | beta | Beta Trade | R2 | Region Two | 0 | 1 | 1 | 0 | false | false | V_region<150;value_below_top_50pct | 0 | true | f89933e854d2 |
+| 1 | alpha | Alpha Trade | R1 | Region One | 400 | 3 | 1 | 1200 | true | true |  | 2 | false | 619936c08eb5 |
+| 2 | alpha | Alpha Trade | R2 | Region Two | 50 | 3 | 0.4 | 60 | false | false | V_region<150 | 2 | false | 619936c08eb5 |
+| 3 | beta | Beta Trade | R1 | Region One | 40 | 1 | 0.4 | 16 | false | false | V_region<150;value_below_top_50pct | 0 | true | 619936c08eb5 |
+| 4 | beta | Beta Trade | R2 | Region Two | 0 | 1 | 1 | 0 | false | false | V_region<150;value_below_top_50pct | 0 | true | 619936c08eb5 |

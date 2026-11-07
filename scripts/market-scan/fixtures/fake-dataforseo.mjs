@@ -161,13 +161,22 @@ export const SITES = {
   'https://b8.example/': { status: 500, type: 'text/html', body: '<html>error</html>' },
 };
 
-export function createFakeWeb({ onCall = () => {} } = {}) {
+// Site entries: { status, type, body, location, headers } | { throws: code } | { throws: 'timeout' } |
+// { sequence: [entry, entry, ...] } (one entry per request, last one repeats) - for retry rules.
+export function createFakeWeb({ onCall = () => {}, sites = SITES } = {}) {
+  const hits = new Map();
   return async (url, init = {}) => {
     onCall(url, init);
-    const site = SITES[url];
-    if (!site) throw Object.assign(new Error(`ENOTFOUND ${url}`), { code: 'ENOTFOUND' });
+    let site = sites[url];
+    if (site?.sequence) {
+      const n = hits.get(url) ?? 0;
+      hits.set(url, n + 1);
+      site = site.sequence[Math.min(n, site.sequence.length - 1)];
+    }
+    if (!site) throw Object.assign(new TypeError('fetch failed'), { cause: { code: 'ENOTFOUND' } });
+    if (site.throws === 'timeout') throw Object.assign(new Error('The operation was aborted due to timeout'), { name: 'TimeoutError', code: 23 });
     if (site.throws) throw Object.assign(new TypeError('fetch failed'), { cause: { code: site.throws } });
-    const headers = new Map(Object.entries({ 'content-type': site.type ?? 'text/html', ...(site.location ? { location: site.location } : {}) }));
+    const headers = new Map(Object.entries({ 'content-type': site.type ?? 'text/html', ...(site.location ? { location: site.location } : {}), ...(site.headers ?? {}) }));
     return { status: site.status, headers: { get: k => headers.get(k.toLowerCase()) ?? null }, text: async () => site.body ?? '' };
   };
 }

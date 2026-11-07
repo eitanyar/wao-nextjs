@@ -1,24 +1,221 @@
 {
- "run_id": "df19e422e595",
+ "run_id": "73ecfd6063af",
  "note": "R4: per cell, every top-20 Maps category text that matched no rule (append-only rule extensions: Yonatan)",
  "cells": [
   {
    "cell_id": "A",
    "profession": "roofing",
    "city": "petah-tikva",
-   "skipped": "killed at step 1 (no Maps call; Local Finder items carry no category)"
+   "skipped": "stopped at step 1 (step1_saturated; no Maps call; Local Finder items carry no category)"
   },
   {
    "cell_id": "B",
    "profession": "roofing",
    "city": "rosh-haayin",
-   "skipped": "killed at step 1 (no Maps call; Local Finder items carry no category)"
+   "top20_relevance": {
+    "exact": 15,
+    "not_relevant": 5
+   },
+   "unmatched": [
+    {
+     "category": "שרברב",
+     "items": 3,
+     "items_relevant_anyway": 3
+    },
+    {
+     "category": "קבלן טיח",
+     "items": 2,
+     "items_relevant_anyway": 1
+    },
+    {
+     "category": "קבלן קירות גבס",
+     "items": 2,
+     "items_relevant_anyway": 1
+    },
+    {
+     "category": "קבלן ריצוף",
+     "items": 2,
+     "items_relevant_anyway": 1
+    },
+    {
+     "category": "חנות חומרי בניין",
+     "items": 1,
+     "items_relevant_anyway": 0
+    },
+    {
+     "category": "טייחות",
+     "items": 1,
+     "items_relevant_anyway": 1
+    },
+    {
+     "category": "מהנדס מבנים",
+     "items": 1,
+     "items_relevant_anyway": 1
+    },
+    {
+     "category": "מפקח בנייה",
+     "items": 1,
+     "items_relevant_anyway": 1
+    },
+    {
+     "category": "קבלן בתים",
+     "items": 1,
+     "items_relevant_anyway": 0
+    },
+    {
+     "category": "קבלן למעצבי פנים",
+     "items": 1,
+     "items_relevant_anyway": 1
+    },
+    {
+     "category": "שירות שיפוץ משרדים",
+     "items": 1,
+     "items_relevant_anyway": 1
+    },
+    {
+     "category": "שירות שיקום בניינים",
+     "items": 1,
+     "items_relevant_anyway": 1
+    },
+    {
+     "category": "שירות תיקונים לאחר נזקי מים",
+     "items": 1,
+     "items_relevant_anyway": 1
+    },
+    {
+     "category": "שירותים ציבוריים",
+     "items": 1,
+     "items_relevant_anyway": 0
+    }
+   ]
   },
   {
    "cell_id": "C",
    "profession": "pergolas",
    "city": "karmiel",
-   "skipped": "killed at step 1 (no Maps call; Local Finder items carry no category)"
+   "top20_relevance": {
+    "exact": 3,
+    "conditional_title": 2,
+    "not_relevant": 13,
+    "generic_title": 1
+   },
+   "unmatched": [
+    {
+     "category": "חברת בנייה",
+     "items": 2,
+     "items_relevant_anyway": 0
+    },
+    {
+     "category": "חלון אלומיניום",
+     "items": 2,
+     "items_relevant_anyway": 1
+    },
+    {
+     "category": "בית מלאכה למתכות",
+     "items": 1,
+     "items_relevant_anyway": 0
+    },
+    {
+     "category": "בית מלון",
+     "items": 1,
+     "items_relevant_anyway": 0
+    },
+    {
+     "category": "גגן",
+     "items": 1,
+     "items_relevant_anyway": 0
+    },
+    {
+     "category": "גן",
+     "items": 1,
+     "items_relevant_anyway": 0
+    },
+    {
+     "category": "חנות לציוד סטריאו לרכב",
+     "items": 1,
+     "items_relevant_anyway": 1
+    },
+    {
+     "category": "מוסך",
+     "items": 1,
+     "items_relevant_anyway": 1
+    },
+    {
+     "category": "מעצב גינות",
+     "items": 1,
+     "items_relevant_anyway": 0
+    },
+    {
+     "category": "מפעל ברזל",
+     "items": 1,
+     "items_relevant_anyway": 1
+    },
+    {
+     "category": "סוחר נגררים",
+     "items": 1,
+     "items_relevant_anyway": 1
+    },
+    {
+     "category": "ספק אזעקות לרכב",
+     "items": 1,
+     "items_relevant_anyway": 1
+    },
+    {
+     "category": "ספק חלונות",
+     "items": 1,
+     "items_relevant_anyway": 1
+    },
+    {
+     "category": "ספק חלונות PVC",
+     "items": 1,
+     "items_relevant_anyway": 1
+    },
+    {
+     "category": "ספק מסגרות אלומיניום",
+     "items": 1,
+     "items_relevant_anyway": 0
+    },
+    {
+     "category": "ספקים לתעשיית המתכת",
+     "items": 1,
+     "items_relevant_anyway": 0
+    },
+    {
+     "category": "קבלן מעקות",
+     "items": 1,
+     "items_relevant_anyway": 0
+    },
+    {
+     "category": "שיפוצניק",
+     "items": 1,
+     "items_relevant_anyway": 0
+    },
+    {
+     "category": "שירות השכרת נגררים",
+     "items": 1,
+     "items_relevant_anyway": 1
+    },
+    {
+     "category": "שירות התקנת חלונות",
+     "items": 1,
+     "items_relevant_anyway": 1
+    },
+    {
+     "category": "שירות התקנת רצפות עץ",
+     "items": 1,
+     "items_relevant_anyway": 0
+    },
+    {
+     "category": "שירות חשמל לרכב",
+     "items": 1,
+     "items_relevant_anyway": 1
+    },
+    {
+     "category": "תיקון ותחזוקה של כלי רכב",
+     "items": 1,
+     "items_relevant_anyway": 1
+    }
+   ]
   },
   {
    "cell_id": "D",
@@ -35,21 +232,6 @@
      "items_relevant_anyway": 0
     },
     {
-     "category": "ספק חומרי בידוד",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "עבודות בגובה רב",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "קבלן בנייה",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
      "category": "קבלן בריכות שחייה",
      "items": 1,
      "items_relevant_anyway": 0
@@ -63,11 +245,6 @@
      "category": "שירות גימור לריצוף",
      "items": 1,
      "items_relevant_anyway": 0
-    },
-    {
-     "category": "תחזוקת נכסים",
-     "items": 1,
-     "items_relevant_anyway": 1
     }
    ]
   },
@@ -75,7 +252,62 @@
    "cell_id": "E",
    "profession": "roofing",
    "city": "gedera",
-   "skipped": "killed at step 1 (no Maps call; Local Finder items carry no category)"
+   "top20_relevance": {
+    "exact": 10,
+    "not_relevant": 4
+   },
+   "unmatched": [
+    {
+     "category": "קבלן בטון",
+     "items": 2,
+     "items_relevant_anyway": 0
+    },
+    {
+     "category": "קבלן למעצבי פנים",
+     "items": 2,
+     "items_relevant_anyway": 0
+    },
+    {
+     "category": "קבלן ריצוף",
+     "items": 2,
+     "items_relevant_anyway": 0
+    },
+    {
+     "category": "עיצוב פנים",
+     "items": 1,
+     "items_relevant_anyway": 0
+    },
+    {
+     "category": "קבלן בתים",
+     "items": 1,
+     "items_relevant_anyway": 0
+    },
+    {
+     "category": "קבלן הריסה",
+     "items": 1,
+     "items_relevant_anyway": 0
+    },
+    {
+     "category": "קבלן טיח",
+     "items": 1,
+     "items_relevant_anyway": 0
+    },
+    {
+     "category": "קבלן מיזוג אוויר",
+     "items": 1,
+     "items_relevant_anyway": 0
+    },
+    {
+     "category": "קבלן תשתיות",
+     "items": 1,
+     "items_relevant_anyway": 0
+    },
+    {
+     "category": "שרברב",
+     "items": 1,
+     "items_relevant_anyway": 0
+    }
+   ]
   },
   {
    "cell_id": "F",
@@ -84,33 +316,12 @@
    "top20_relevance": {
     "generic_title": 6,
     "exact": 9,
-    "conditional_title": 3,
-    "not_relevant": 1,
+    "conditional_title": 4,
     "contains": 1
    },
    "unmatched": [
     {
-     "category": "צבע",
-     "items": 2,
-     "items_relevant_anyway": 1
-    },
-    {
      "category": "וילה",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "מעצב מטבחים מחדש",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "קבלן קירות גבס",
-     "items": 1,
-     "items_relevant_anyway": 1
-    },
-    {
-     "category": "קבלן ריצוף",
      "items": 1,
      "items_relevant_anyway": 1
     }

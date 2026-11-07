@@ -42,7 +42,8 @@
   },
   "caps_usd": {
     "stage1": 10,
-    "stage2-pilot": 1
+    "stage2-pilot": 1,
+    "stage2-full": 6
   },
   "approved_caps_note": "Caps approved by Eitan 2026-11-07. The CLI may lower a cap with --cap but never raise it.",
   "rate_limits": {
@@ -78,6 +79,15 @@
       "plumber",
       "locksmith",
       "movers"
+    ],
+    "organic_rebuy_m4": true,
+    "organic_store_fields": [
+      "type",
+      "rank_group",
+      "rank_absolute",
+      "domain",
+      "url",
+      "title"
     ]
   },
   "stage2": {
@@ -120,12 +130,13 @@
       "zap.co.il",
       "yad2.co.il",
       "google.com",
-      "sites.google.com"
+      "sites.google.com",
+      "renovations-israel.co.il"
     ],
     "s3_source": "local_finder",
     "s3_terms": 1,
     "s3_relevance_filter": false,
-    "s3_missing_field_policy": "renormalize",
+    "s3_missing_field_policy": "neutral",
     "maps_terms": 2,
     "two_step": true,
     "organic_depth_cell": 10,
@@ -179,7 +190,8 @@
       "shiplus.co.il",
       "adbarabetuha.co.il",
       "moving-israel.co.il",
-      "piper.co.il"
+      "piper.co.il",
+      "renovations-israel.co.il"
     ],
     "organic_social": [
       "facebook.com",
@@ -200,7 +212,8 @@
       "hon.co.il",
       "financa.co.il",
       "wikipedia.org",
-      "gov.il"
+      "gov.il",
+      "reporto.co.il"
     ],
     "generic_categories": [
       "קבלן",
@@ -318,7 +331,11 @@
         ],
         "conditional": [
           "שיפוצניק",
-          "קבלן בידוד"
+          "קבלן בידוד",
+          "ספק חומרי בידוד",
+          "עבודות בגובה רב",
+          "קבלן בנייה",
+          "תחזוקת נכסים"
         ],
         "exclude": [
           "חנות"
@@ -467,7 +484,11 @@
         "conditional": [
           "קבלן",
           "קבלן בנייה",
-          "חברת בנייה"
+          "חברת בנייה",
+          "צבע",
+          "מעצב מטבחים מחדש",
+          "קבלן קירות גבס",
+          "קבלן ריצוף"
         ],
         "exclude": [
           "חנות"
@@ -499,7 +520,46 @@
         "איטום",
         "גג"
       ]
-    }
+    },
+    "s3_neutral_fill": 0.5,
+    "step1_kill_s3": 0.75,
+    "s3_log_bounds": true,
+    "organic_step": 2,
+    "flagged_cells_step1_only": true,
+    "proximity": {
+      "enabled": true,
+      "min_population": 150000,
+      "offset_km": 3,
+      "points": [
+        "N",
+        "S"
+      ],
+      "extra_points_by_city": {
+        "jerusalem": [
+          "E",
+          "W"
+        ]
+      },
+      "aggregate": "mean",
+      "skip_flagged": true,
+      "unjoined_policy": "neutral"
+    },
+    "list_match": "host_suffix",
+    "organic_local_default_weight": 0.5,
+    "organic_log_default_hosts": true,
+    "organic_chain_retail": [
+      "homecenter.co.il",
+      "ace.co.il",
+      "ikea.com",
+      "ikea.co.il"
+    ],
+    "national_brand_sources": [
+      "stage1_organic_rebuy",
+      "stage2_cell_organic"
+    ],
+    "media_article_path_rule": false,
+    "weak_rank_source": "raw_rank_group",
+    "cid_assignment": "nearest_centroid_per_profession"
   },
   "pilot": {
     "cells": [
@@ -565,12 +625,76 @@
     "slow_fetch_ms": 3000,
     "parked_max_bytes": 2048,
     "weak_soft_min": 2,
-    "cache_retention_days": 30
+    "cache_retention_days": 30,
+    "requests_per_host": 2,
+    "http_fallback": true,
+    "robots": {
+      "path": "/robots.txt",
+      "ua_token": "WAO-MarketScan",
+      "on_4xx": "allow",
+      "on_5xx_or_unreachable": "skip",
+      "cache_days": 30
+    },
+    "not_checked_statuses": [
+      202,
+      401,
+      403,
+      429
+    ],
+    "challenge_headers": [
+      "sg-captcha",
+      "cf-mitigated"
+    ],
+    "challenge_markers": [
+      "sgcaptcha",
+      "cf-chl",
+      "challenge-platform",
+      "just a moment",
+      "captcha",
+      "imunify"
+    ],
+    "challenge_max_bytes": 4096,
+    "status_503_rule": "not_checked_if_challenge_else_retry_then_failed",
+    "timeout_retries": 1,
+    "timeout_outcome": "not_checked",
+    "hard_fail": [
+      "dns_nxdomain",
+      "connect_or_tls_both_schemes",
+      "status_404_410",
+      "status_5xx_after_retry",
+      "parked"
+    ],
+    "store_text_private": {
+      "title": true,
+      "first_h1": true,
+      "max_chars": 200,
+      "dir": "data/market-scan/private/",
+      "retention_days": 30
+    }
   },
   "r12_applied": {
     "spec": "docs/research/site-bot/market-scanner-scoring-spec.md",
     "spec_sha256": "64e90e73457f35c27686152f514687abf9bd78faf6f99885f11e2e41ffb6843e",
     "date": "2026-11-07",
     "by": "scripts/market-scan/apply-r12.mjs"
+  },
+  "m4": {
+    "pairs": "stage1_advancing",
+    "calibration_cells": [
+      {
+        "id": "C",
+        "profession": "pergolas",
+        "city": "karmiel",
+        "force_step2": true,
+        "ranked": false
+      }
+    ]
+  },
+  "r2_12_applied": {
+    "spec": "docs/research/site-bot/market-scanner-scoring-spec.md",
+    "spec_sha256": "b9b5ca797156f41590380759e361eee3fe7d13a49c24466be65fb96b5699f43e",
+    "date": "2026-11-07",
+    "by": "scripts/market-scan/apply-r2-12.mjs",
+    "cap_note": "caps_usd.stage2-full = 6 approved by Eitan 2026-11-07"
   }
 }
