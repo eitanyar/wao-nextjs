@@ -13,6 +13,11 @@
 // - M2a.4 round 2: sections 16-18 (serviceArea tail/head/region/nearby tokens, free tokens / callout
 //   tokens / scope nouns, weFormVerbs). From the prose notes: the head tokens that take a lamed before
 //   the place (section 16) and the words that exclude a free hit when they follow it (section 17).
+// - M2a.5: section 19 voiceRules (Tamar, Noa-proofed): generic-adjective words / phrases / exempt phrases,
+//   bad idioms, signature-word groups, service stages + CTA label sets, sticky action tokens, bare-verb
+//   sentence openers. From the prose notes: the owner-voice and bare-verb field scopes, the prefix letters
+//   of the generic words and of the subject-carry tokens, the two bad-idiom replacement notes, and the
+//   English prompt rules P1-P7 (plus the example-of-the-move bullet), all byte-exact.
 // - M2a.3: section 8 replaces the section 2 prose arrival list and section 9 replaces the
 //   M2a.2 repo-derived paraphrase guard; GUARD_TOKEN_SOURCES records where each list came from.
 // - The generated module escapes every non-ASCII character as \uXXXX, so it holds ZERO
@@ -42,7 +47,7 @@ export function jsonBlocks(text) {
 
 /** Expected entry counts per data list (asserted; a data edit must update these deliberately). */
 export const EXPECTED_COUNTS = {
-  jsonBlocks: 23,
+  jsonBlocks: 32,
   claimKinds: 11,
   claimTokens: 59,
   claimTokenWordEnd: 3,
@@ -73,6 +78,30 @@ export const EXPECTED_COUNTS = {
   freeScopeNouns: 29,
   freeExclusionWords: 5,
   weFormVerbs: 64,
+  // M2a.5, section 19 (recounted from the file; see the M2a.5 report for differences from the brief).
+  genericAdjectiveWords: 22,
+  genericAdjectivePhrases: 18,
+  genericAdjectiveExemptPhrases: 5,
+  genericAdjectivePrefixLetters: 6,
+  badIdiomEntries: 6,
+  badIdiomTokens: 15,
+  badIdiomGate: 4,
+  badIdiomSpellingFix: 1,
+  badIdiomPromptOnly: 1,
+  badIdiomNotes: 2,
+  signatureGroups: 8,
+  signatureVariants: 20,
+  emergencyServiceKinds: 15,
+  plannedServiceKinds: 8,
+  ctaStageStrings: 17,
+  stickyActionTokens: 7,
+  bareVerbSentenceOpeners: 23,
+  subjectCarryTokens: 2,
+  subjectCarryPrefixes: 3,
+  bareVerbExclusions: 4,
+  ownerVoiceFields: 12,
+  bareVerbFields: 2,
+  voicePromptRules: 8,
 };
 
 /** Text of one data-file section (from its "## N." heading to the next heading). */
@@ -109,6 +138,84 @@ export function freeExclusionWords(text) {
   const words = quotedWords(line.slice(from, to));
   assert(words.length === EXPECTED_COUNTS.freeExclusionWords, `expected ${EXPECTED_COUNTS.freeExclusionWords} free exclusion words, got ${words.length}`);
   return words;
+}
+
+/** Section 19 prose: the backticked field names of the bullet that starts with `lead` (one line). */
+function backtickedFields(section, lead, name) {
+  const line = section.split('\n').find(item => item.startsWith(lead));
+  assert(line, `section 19 ${name} note missing`);
+  const fields = [...line.matchAll(/`([^`]+)`/g)].map(match => match[1]);
+  assert(fields.length === EXPECTED_COUNTS[name], `expected ${EXPECTED_COUNTS[name]} ${name}, got ${fields.length}`);
+  return fields;
+}
+
+/** Hebrew runs of the prose between two markers on the line that starts with `lead`. */
+function hebrewRunsBetween(section, lead, from, to, name) {
+  const line = section.split('\n').find(item => item.startsWith(lead));
+  assert(line, `section 19 ${name} note missing`);
+  const start = line.indexOf(from);
+  const end = line.indexOf(to, start + from.length);
+  assert(start >= 0 && end > start, `section 19 ${name} markers missing`);
+  const runs = line.slice(start + from.length, end).match(/[\u05D0-\u05EA]+/g) ?? [];
+  assert(runs.length === EXPECTED_COUNTS[name], `expected ${EXPECTED_COUNTS[name]} ${name}, got ${runs.length}`);
+  return runs;
+}
+
+/**
+ * Section 19 prose (M2a.5): field scopes, prefix letters, bad-idiom notes and the English prompt rules.
+ * Every value is a byte-exact slice of the data file.
+ */
+export function voiceProse(text) {
+  const section = sectionText(text, 19);
+  const ownerVoiceFields = backtickedFields(section, '- **Owner-voice fields**:', 'ownerVoiceFields');
+  const bareVerbFields = backtickedFields(section, '- **Fields**:', 'bareVerbFields');
+  const genericPrefixLetters = hebrewRunsBetween(section, '- `genericAdjectiveWords`:', 'only the prefix letters', 'may appear', 'genericAdjectivePrefixLetters');
+  assert(genericPrefixLetters.every(item => item.length === 1), 'a generic-adjective prefix is not one letter');
+  const subjectCarryPrefixes = hebrewRunsBetween(section, '- **Hit**:', 'may take the prefixes', '(', 'subjectCarryPrefixes');
+  const idiomStart = section.indexOf('### 19.2');
+  const idiomEnd = section.indexOf('### 19.3');
+  assert(idiomStart >= 0 && idiomEnd > idiomStart, 'section 19.2 missing');
+  const idiomNotes = section.slice(idiomStart, idiomEnd).split('\n').filter(line => /^The `[a-z_]+` replacement /.test(line));
+  assert(idiomNotes.length === EXPECTED_COUNTS.badIdiomNotes, `expected ${EXPECTED_COUNTS.badIdiomNotes} bad-idiom notes, got ${idiomNotes.length}`);
+  const rulesAt = section.indexOf('### 19.6');
+  assert(rulesAt >= 0, 'section 19.6 missing');
+  const promptRules = section.slice(rulesAt).split('\n').filter(line => /^- \*\*(?:P\d \u2014 |Example of the move)/.test(line))
+    .map(line => {
+      const id = /^- \*\*(P\d)/.exec(line)?.[1] ?? 'example';
+      return { id, text: line.slice(2).replace(/\*\*/g, '') };
+    });
+  assert(promptRules.length === EXPECTED_COUNTS.voicePromptRules, `expected ${EXPECTED_COUNTS.voicePromptRules} prompt rules, got ${promptRules.length}`);
+  assert(promptRules.map(rule => rule.id).join(',') === 'P1,P2,example,P3,P4,P5,P6,P7', 'prompt rules out of order');
+  return { ownerVoiceFields, bareVerbFields, genericPrefixLetters, subjectCarryPrefixes, idiomNotes, promptRules };
+}
+
+/** Section 19.2: bad-idiom entries; the match rule is parsed ('substring' or whole word with prefix letters). */
+function badIdioms(entries) {
+  assert(Array.isArray(entries) && entries.length === EXPECTED_COUNTS.badIdiomEntries, `expected ${EXPECTED_COUNTS.badIdiomEntries} bad-idiom entries`);
+  const out = entries.map(entry => {
+    assert(typeof entry.id === 'string' && Array.isArray(entry.tokens) && entry.tokens.length > 0 && entry.tokens.every(token => typeof token === 'string' && token.length > 0), 'a bad-idiom entry is malformed');
+    assert(['gate', 'spellingFix', 'promptOnly'].includes(entry.type), `bad-idiom ${entry.id} has an unknown type`);
+    assert(typeof entry.replacement === 'string' && entry.replacement.length > 0 && typeof entry.meant === 'string', `bad-idiom ${entry.id} has no replacement`);
+    let wholeWord = false;
+    let prefixLetters = [];
+    if (entry.match !== 'substring') {
+      assert(entry.match.startsWith('whole word; prefixes ') && entry.match.endsWith(' in any combination'), `bad-idiom ${entry.id} has an unknown match rule`);
+      wholeWord = true;
+      prefixLetters = entry.match.match(/[\u05D0-\u05EA]/g) ?? [];
+      assert(prefixLetters.length > 0, `bad-idiom ${entry.id} has no prefix letters`);
+    }
+    return {
+      id: entry.id, tokens: entry.tokens, wholeWord, prefixLetters, type: entry.type, meant: entry.meant,
+      replacement: entry.replacement, ...(entry.replacementFeminine ? { replacementFeminine: entry.replacementFeminine } : {}),
+    };
+  });
+  const tokenCount = out.reduce((sum, entry) => sum + entry.tokens.length, 0);
+  assert(tokenCount === EXPECTED_COUNTS.badIdiomTokens, `expected ${EXPECTED_COUNTS.badIdiomTokens} bad-idiom tokens, got ${tokenCount}`);
+  for (const [type, key] of [['gate', 'badIdiomGate'], ['spellingFix', 'badIdiomSpellingFix'], ['promptOnly', 'badIdiomPromptOnly']]) {
+    const count = out.filter(entry => entry.type === type).length;
+    assert(count === EXPECTED_COUNTS[key], `expected ${EXPECTED_COUNTS[key]} ${type} bad idioms, got ${count}`);
+  }
+  return out;
 }
 
 /** M2a.3 tokens of the plural-address list in copyGates.config.ts (before the section 10 additions). */
@@ -230,6 +337,36 @@ export function extractGenerationData(text) {
   const weFormVerbs = stringList(merged.weFormVerbs, 'weFormVerbs');
   for (const verb of weFormVerbs) assert(!weTokens.includes(verb), 'a weFormVerbs entry is already a weTokens entry');
 
+  // M2a.5: section 19 voiceRules.
+  const genericAdjectiveWords = stringList(merged.genericAdjectiveWords, 'genericAdjectiveWords');
+  const genericAdjectivePhrases = stringList(merged.genericAdjectivePhrases, 'genericAdjectivePhrases');
+  const genericAdjectiveExemptPhrases = stringList(merged.genericAdjectiveExemptPhrases, 'genericAdjectiveExemptPhrases');
+  const idioms = badIdioms(merged.badIdiomTokens);
+  const signature = merged.signatureWordTokens;
+  assert(signature && typeof signature === 'object' && Object.keys(signature).length === EXPECTED_COUNTS.signatureGroups, `expected ${EXPECTED_COUNTS.signatureGroups} signature groups`);
+  assert(Object.values(signature).every(list => Array.isArray(list) && list.length > 0 && list.every(item => typeof item === 'string' && item.length > 0)), 'signatureWordTokens must be lists of strings');
+  const variantCount = Object.values(signature).reduce((sum, list) => sum + list.length, 0);
+  assert(variantCount === EXPECTED_COUNTS.signatureVariants, `expected ${EXPECTED_COUNTS.signatureVariants} signature variants, got ${variantCount}`);
+  const emergencyServiceKinds = stringList(merged.emergencyServiceKinds, 'emergencyServiceKinds');
+  const plannedServiceKinds = stringList(merged.plannedServiceKinds, 'plannedServiceKinds');
+  for (const kind of [...emergencyServiceKinds, ...plannedServiceKinds]) assert(/^[a-z-]+$/.test(kind), 'a service kind is not a lower-case slug part');
+  const cta = merged.ctaLabelSets;
+  assert(cta && typeof cta.formHeadlineFallback === 'string' && cta.formHeadlineFallback.length > 0, 'ctaLabelSets has no formHeadlineFallback');
+  let ctaCount = 0;
+  for (const stage of ['emergency', 'planned', 'neutral']) {
+    const set = cta[stage];
+    assert(set && Array.isArray(set.heroCta) && set.formHeadline && Array.isArray(set.formHeadline.labels) && Array.isArray(set.formHeadline.examples), `ctaLabelSets.${stage} is malformed`);
+    for (const item of [...set.heroCta, ...set.formHeadline.labels, ...set.formHeadline.examples]) assert(typeof item === 'string' && item.length > 0, `ctaLabelSets.${stage} has an empty label`);
+    ctaCount += set.heroCta.length + set.formHeadline.labels.length + set.formHeadline.examples.length;
+  }
+  assert(Object.keys(cta).length === 4, 'ctaLabelSets must hold exactly 3 stages and the fallback');
+  assert(ctaCount === EXPECTED_COUNTS.ctaStageStrings, `expected ${EXPECTED_COUNTS.ctaStageStrings} stage CTA strings, got ${ctaCount}`);
+  const stickyActionTokens = stringList(merged.stickyActionTokens, 'stickyActionTokens');
+  const bareVerbSentenceOpeners = stringList(merged.bareVerbSentenceOpeners, 'bareVerbSentenceOpeners');
+  const subjectCarryTokens = stringList(merged.subjectCarryTokens, 'subjectCarryTokens');
+  const bareVerbExclusions = stringList(merged.bareVerbExclusions, 'bareVerbExclusions');
+  const voice = voiceProse(text);
+
   const sources = {
     claimTokens: sectionOf(text, 'claimTokens'),
     claimTokenWordEnd: sectionOf(text, 'claimTokenWordEnd'),
@@ -257,6 +394,16 @@ export function extractGenerationData(text) {
     freeScopeNouns: sectionOf(text, 'freeScopeNouns'),
     freeExclusionWords: `${sectionOf(text, 'freeTokens')} freeTokens note (exclusion)`,
     weFormVerbs: `${sectionOf(text, 'weFormVerbs')} (appended to the we-form list, allowPrefix: true)`,
+    genericAdjectiveWords: `${sectionOf(text, 'genericAdjectiveWords')} 19.1 (whole word, prefix letters from the note)`,
+    genericAdjectivePhrases: `${sectionOf(text, 'genericAdjectivePhrases')} 19.1 (substring)`,
+    genericAdjectiveExemptPhrases: `${sectionOf(text, 'genericAdjectiveExemptPhrases')} 19.1 (masked before matching, like businessName)`,
+    badIdiomTokens: `${sectionOf(text, 'badIdiomTokens')} 19.2 (gate and spellingFix reject; promptOnly in the prompt)`,
+    signatureWordTokens: `${sectionOf(text, 'signatureWordTokens')} 19.3 (max 1 hit per group per page)`,
+    serviceKinds: `${sectionOf(text, 'emergencyServiceKinds')} 19.4 (slug substring; stage chooses the CTA set)`,
+    ctaLabelSets: `${sectionOf(text, 'ctaLabelSets')} 19.4 (prompt only)`,
+    stickyActionTokens: `${sectionOf(text, 'stickyActionTokens')} 19.4 (stickyBarLine; not equal to heroCta)`,
+    bareVerbSentenceOpeners: `${sectionOf(text, 'bareVerbSentenceOpeners')} 19.5 (aboutBlurb / aboutPageBody only)`,
+    voicePromptRules: `${DATA_PATH} section 19.6 (P1-P7, English, byte-exact)`,
   };
   for (const value of Object.values(sources)) assert(!/[\u0590-\u05FF]/.test(value), 'a source heading has Hebrew');
 
@@ -292,6 +439,19 @@ export function extractGenerationData(text) {
     freeScopeNouns: scope,
     freeExclusionWords: freeExclusion,
     weFormVerbs,
+    genericAdjectiveWords,
+    genericAdjectivePhrases,
+    genericAdjectiveExemptPhrases,
+    badIdioms: idioms,
+    signatureWordTokens: signature,
+    emergencyServiceKinds,
+    plannedServiceKinds,
+    ctaLabelSets: cta,
+    stickyActionTokens,
+    bareVerbSentenceOpeners,
+    subjectCarryTokens,
+    bareVerbExclusions,
+    voice,
     sources,
   };
 }
@@ -313,6 +473,9 @@ export function renderModule(text) {
  * Every Hebrew value is copied byte-exact by the script and written as \\u escapes:
  * HEBREW-SAFETY: this module contains ZERO Hebrew bytes.
  */
+
+/** One stage of CTA_LABEL_SETS (Tamar section 19.4). */
+export interface CtaStageSet { heroCta: readonly string[]; formHeadline: { labels: readonly string[]; examples: readonly string[] } }
 
 /** Noa section 1: Hebrew day letters with geresh, index 0 = Sunday. */
 ${emit('DAY_LETTERS', data.dayLetters, 'readonly string[]')}
@@ -369,6 +532,32 @@ ${emit('FREE_SCOPE_NOUNS', data.freeScopeNouns, 'Readonly<Record<string, readonl
 ${emit('FREE_EXCLUSION_WORDS', data.freeExclusionWords, 'readonly string[]')}
 /** Noa section 18: first-person-plural verbs and forms (appended to the we-form list; allowPrefix: true). */
 ${emit('WE_FORM_VERBS', data.weFormVerbs, 'readonly string[]')}
+/** Tamar section 19 (M2a.5): owner-voice fields (the section 19 gates check only these) and the bare-verb fields. */
+${emit('OWNER_VOICE_FIELDS', data.voice.ownerVoiceFields, 'readonly string[]')}
+${emit('BARE_VERB_FIELDS', data.voice.bareVerbFields, 'readonly string[]')}
+/** Tamar section 19.1: empty quality words (whole word; GENERIC_ADJECTIVE_PREFIX_LETTERS before), phrases (substring), exempt phrases (masked). */
+${emit('GENERIC_ADJECTIVE_WORDS', data.genericAdjectiveWords, 'readonly string[]')}
+${emit('GENERIC_ADJECTIVE_PHRASES', data.genericAdjectivePhrases, 'readonly string[]')}
+${emit('GENERIC_ADJECTIVE_EXEMPT_PHRASES', data.genericAdjectiveExemptPhrases, 'readonly string[]')}
+${emit('GENERIC_ADJECTIVE_PREFIX_LETTERS', data.voice.genericPrefixLetters, 'readonly string[]')}
+/** Tamar section 19.2: bad idioms ('gate' and 'spellingFix' reject and regenerate; 'promptOnly' is a prompt rule). Never auto-replaced. */
+${emit('BAD_IDIOMS', data.badIdioms, "ReadonlyArray<{ id: string; tokens: readonly string[]; wholeWord: boolean; prefixLetters: readonly string[]; type: 'gate' | 'spellingFix' | 'promptOnly'; meant: string; replacement: string; replacementFeminine?: string }>")}
+${emit('BAD_IDIOM_NOTES', data.voice.idiomNotes, 'readonly string[]')}
+/** Tamar section 19.3: signature-phrase groups (all variants count; at most 1 hit per group per page). */
+${emit('SIGNATURE_WORD_TOKENS', data.signatureWordTokens, 'Readonly<Record<string, readonly string[]>>')}
+/** Tamar section 19.4: service stage kinds (lower-case slug substring) and the CTA label sets per stage. */
+${emit('EMERGENCY_SERVICE_KINDS', data.emergencyServiceKinds, 'readonly string[]')}
+${emit('PLANNED_SERVICE_KINDS', data.plannedServiceKinds, 'readonly string[]')}
+${emit('CTA_LABEL_SETS', data.ctaLabelSets, 'Readonly<{ emergency: CtaStageSet; planned: CtaStageSet; neutral: CtaStageSet; formHeadlineFallback: string }>')}
+/** Tamar section 19.4: stickyBarLine must contain one of these (substring) and must not equal heroCta. */
+${emit('STICKY_ACTION_TOKENS', data.stickyActionTokens, 'readonly string[]')}
+/** Tamar section 19.5: bare first-person verb sentence openers (aboutBlurb / aboutPageBody), subject carry tokens + prefixes, exclusions. */
+${emit('BARE_VERB_SENTENCE_OPENERS', data.bareVerbSentenceOpeners, 'readonly string[]')}
+${emit('SUBJECT_CARRY_TOKENS', data.subjectCarryTokens, 'readonly string[]')}
+${emit('SUBJECT_CARRY_PREFIXES', data.voice.subjectCarryPrefixes, 'readonly string[]')}
+${emit('BARE_VERB_EXCLUSIONS', data.bareVerbExclusions, 'readonly string[]')}
+/** Tamar section 19.6: English prompt rules P1-P7 and the example-of-the-move bullet, byte-exact (Hebrew lists are inserted by name). */
+${emit('VOICE_PROMPT_RULES', data.voice.promptRules, 'ReadonlyArray<{ id: string; text: string }>')}
 /** Where each data list came from (data-file section; how it combines with the config lists). */
 ${emit('GUARD_TOKEN_SOURCES', data.sources, 'Readonly<Record<string, string>>')}`;
 }
@@ -384,5 +573,5 @@ if (process.argv[1] && path.resolve(process.argv[1]) === path.resolve(new URL(im
   }
   fs.writeFileSync(OUT, out);
   const data = extractGenerationData(text);
-  process.stdout.write(`${JSON.stringify({ dayLetters: data.dayLetters.length, claimKinds: Object.keys(data.claimTokens).length, claimTokens: Object.values(data.claimTokens).flat().length, pins: Object.keys(data.serviceLabelPins).length, wordEnd: data.claimTokenWordEnd.length, lead: data.fixTimeLeadTokens.length, within: data.fixTimeWithinWords.length, arrival: data.arrivalTokens.length, stems: data.customerStems.length, verbs: data.speechVerbs.length, plural: data.pluralAddressTokens.length, we: data.weTokens.length, wao: data.waoServiceTerms.length, thermal: data.thermalTokens.length, templates: Object.keys(data.templateStrings).length, sameDay: data.sameDayTokens.length, sameDayFinish: data.sameDayFinishVerbs.length, priceLock: data.priceLockTokens.length, prefixModes: Object.keys(data.pluralPrefixModes).length, tail: data.serviceAreaTailTokens.length, head: data.serviceAreaHeadTokens.length, region: data.serviceAreaRegionTokens.length, nearby: data.serviceAreaNearbyTokens.length, lamedHeads: data.serviceAreaLamedHeads.length, free: data.freeTokens.length, freeCallout: data.freeCalloutTokens.length, scopeNouns: Object.values(data.freeScopeNouns).flat().length, freeExclusion: data.freeExclusionWords.length, weFormVerbs: data.weFormVerbs.length, typographyChars: data.typographyRule.length })}\n`);
+  process.stdout.write(`${JSON.stringify({ dayLetters: data.dayLetters.length, claimKinds: Object.keys(data.claimTokens).length, claimTokens: Object.values(data.claimTokens).flat().length, pins: Object.keys(data.serviceLabelPins).length, wordEnd: data.claimTokenWordEnd.length, lead: data.fixTimeLeadTokens.length, within: data.fixTimeWithinWords.length, arrival: data.arrivalTokens.length, stems: data.customerStems.length, verbs: data.speechVerbs.length, plural: data.pluralAddressTokens.length, we: data.weTokens.length, wao: data.waoServiceTerms.length, thermal: data.thermalTokens.length, templates: Object.keys(data.templateStrings).length, sameDay: data.sameDayTokens.length, sameDayFinish: data.sameDayFinishVerbs.length, priceLock: data.priceLockTokens.length, prefixModes: Object.keys(data.pluralPrefixModes).length, tail: data.serviceAreaTailTokens.length, head: data.serviceAreaHeadTokens.length, region: data.serviceAreaRegionTokens.length, nearby: data.serviceAreaNearbyTokens.length, lamedHeads: data.serviceAreaLamedHeads.length, free: data.freeTokens.length, freeCallout: data.freeCalloutTokens.length, scopeNouns: Object.values(data.freeScopeNouns).flat().length, freeExclusion: data.freeExclusionWords.length, weFormVerbs: data.weFormVerbs.length, genericWords: data.genericAdjectiveWords.length, genericPhrases: data.genericAdjectivePhrases.length, genericExempt: data.genericAdjectiveExemptPhrases.length, genericPrefixes: data.voice.genericPrefixLetters.length, badIdioms: data.badIdioms.length, badIdiomTokens: data.badIdioms.flatMap(entry => entry.tokens).length, signatureGroups: Object.keys(data.signatureWordTokens).length, signatureVariants: Object.values(data.signatureWordTokens).flat().length, emergencyKinds: data.emergencyServiceKinds.length, plannedKinds: data.plannedServiceKinds.length, sticky: data.stickyActionTokens.length, openers: data.bareVerbSentenceOpeners.length, carry: data.subjectCarryTokens.length, carryPrefixes: data.voice.subjectCarryPrefixes.length, exclusions: data.bareVerbExclusions.length, ownerVoiceFields: data.voice.ownerVoiceFields.length, promptRules: data.voice.promptRules.length, typographyChars: data.typographyRule.length })}\n`);
 }

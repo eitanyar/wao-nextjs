@@ -53,6 +53,7 @@ import {
   buildResearchedSiteGeneration,
   persistResearchedSiteRecordAtomic,
   preflightResearchedSiteTarget,
+  type ResearchedSiteGenerationContext,
   type ResearchedSiteGenerationDependencies,
 } from './researchedSiteGeneration';
 
@@ -403,7 +404,7 @@ export interface ResearchToSiteDependencies {
    * model call via callJson when given, else deterministic (owner wording, Latin/hash slugs).
    */
   resolveIdentity?: (dossier: SiteResearchDossier, data: CollectedData) => Promise<SiteIdentity>;
-  generateCopy?: (brief: PageBrief, data: CollectedData) => Promise<SiteCopy>;
+  generateCopy?: (brief: PageBrief, data: CollectedData, site?: ResearchedSiteGenerationContext) => Promise<SiteCopy>;
   onCopyEvent?: (pageId: string, event: CopyRepairEvent) => void;
   now?: () => Date;
 }
@@ -467,16 +468,17 @@ export async function runResearchToSite(input: ResearchToSiteInput, deps: Resear
   }
 
   let currentPage: string | undefined;
-  const generateCopy = deps.generateCopy ?? ((brief: PageBrief, data: CollectedData) => generateResearchPageCopy(brief, data, {
+  const generateCopy = deps.generateCopy ?? ((brief: PageBrief, data: CollectedData, site?: ResearchedSiteGenerationContext) => generateResearchPageCopy(brief, data, {
     ...(deps.callJson ? { callJson: deps.callJson } : {}),
+    ...(site ? { priorHeroHeadlines: site.priorHeroHeadlines } : {}),
     onEvent: event => deps.onCopyEvent?.(brief.page.id, event),
   }));
   let record;
   try {
     record = await buildResearchedSiteGeneration({ slug, researchId, collectedData, dossier: plannedDossier, pageBriefs, graphEdges }, {
-      generateCopy: async (brief, data) => {
+      generateCopy: async (brief, data, site) => {
         currentPage = brief.page.id;
-        return generateCopy(brief, data);
+        return generateCopy(brief, data, site);
       },
       renderInputs: researchedRenderInputs(collectedData, slug),
       now,

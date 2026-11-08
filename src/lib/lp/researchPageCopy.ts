@@ -10,7 +10,20 @@ import { callQwenJSON, type CallQwenJSONOptions } from '../ai/qwen-fast';
 import type { PageBrief } from '../site-bot/research/pageBrief';
 import type { SiteResearchDossier } from '../site-bot/research/types';
 import { PLURAL_ADDRESS_TOKENS, SERVICE_DESCRIPTION_MIN_CHARS, WE_FORM_TOKENS } from './copyGates.config';
-import { CLAIM_TOKENS, TYPOGRAPHY_RULE_TEXT } from './generationData';
+import {
+  ARRIVAL_TOKENS,
+  BAD_IDIOM_NOTES,
+  BAD_IDIOMS,
+  CLAIM_TOKENS,
+  CTA_LABEL_SETS,
+  GENERIC_ADJECTIVE_EXEMPT_PHRASES,
+  GENERIC_ADJECTIVE_PHRASES,
+  GENERIC_ADJECTIVE_WORDS,
+  SIGNATURE_WORD_TOKENS,
+  STICKY_ACTION_TOKENS,
+  TYPOGRAPHY_RULE_TEXT,
+  VOICE_PROMPT_RULES,
+} from './generationData';
 import {
   copyGateContext,
   describeGateViolation,
@@ -18,8 +31,12 @@ import {
   fixTimeScope,
   GATE_RULES,
   isInstallService,
+  promptSignatureVariants,
   runCopyGates,
+  serviceStage,
+  STICKY_ARRIVAL_TOKENS,
   type CopyGateContext,
+  type ServiceStage,
 } from './copyGates';
 
 export type QwenJsonCaller = (
@@ -38,6 +55,8 @@ export interface ResearchPageCopyDependencies {
   onEvent?: (event: CopyRepairEvent) => void;
   /** Deterministic copy gates (M2a.1). Default true. */
   gates?: boolean;
+  /** M2a.5: heroHeadlines of the site's pages generated before this one (duplicate-hook gate). */
+  priorHeroHeadlines?: readonly string[];
 }
 
 /**
@@ -57,14 +76,47 @@ export const TYPOGRAPHY_RULE = TYPOGRAPHY_RULE_TEXT;
 export const REDUPLICATION_RULE =
   'A repeated word pair (the "line by line" form) is joined by a maqaf (\u05BE) with no spaces, never by a hyphen, a dash or a space.';
 
+// ---------------------------------------------------------------------------
+// M2a.5: Tamar's voice rules (data section 19.6, English, byte-exact from generationData.ts). The rules
+// refer to Hebrew lists by name; voiceListLines() inserts those lists, all from generationData.ts.
+// ---------------------------------------------------------------------------
+
+function voiceRule(id: string): string {
+  const rule = VOICE_PROMPT_RULES.find(item => item.id === id);
+  if (!rule) throw new Error(`generationData has no voice prompt rule ${id}`);
+  return `- ${rule.text}`;
+}
+
+/** The section 19 Hebrew lists that the P-rules name (never the matching-only signature spellings). */
+export function voiceListLines(options: { stickyArrival?: boolean } = {}): string[] {
+  return [
+    `- genericAdjectiveWords: ${JSON.stringify(GENERIC_ADJECTIVE_WORDS)}`,
+    `- genericAdjectivePhrases: ${JSON.stringify(GENERIC_ADJECTIVE_PHRASES)}`,
+    `- These exact phrases are not quality claims and stay allowed: ${JSON.stringify(GENERIC_ADJECTIVE_EXEMPT_PHRASES)}`,
+    `- badIdiomTokens (never write the tokens; use the replacement idea, re-inflected to fit the sentence): ${JSON.stringify(BAD_IDIOMS.map(entry => ({ never: entry.tokens, meant: entry.meant, instead: entry.replacement, ...(entry.replacementFeminine ? { insteadFeminine: entry.replacementFeminine } : {}) })))}`,
+    ...BAD_IDIOM_NOTES.map(note => `  ${note}`),
+    `- signatureWordTokens (each inner list is one signature phrase; at most one of them, once, per page): ${JSON.stringify(Object.keys(SIGNATURE_WORD_TOKENS).map(promptSignatureVariants))}`,
+    `- stickyActionTokens: ${JSON.stringify(options.stickyArrival === false ? STICKY_ACTION_TOKENS.filter(token => !STICKY_ARRIVAL_TOKENS.includes(token)) : STICKY_ACTION_TOKENS)}`,
+  ];
+}
+
+/** Voice rules for the Tamar and repair system prompts (P3 words, P4 subject, P5 idioms) with their lists. */
+const VOICE_SYSTEM_RULES = `VOICE (binding):\n${[voiceRule('P3'), voiceRule('P4'), voiceRule('P5')].join('\n')}\nLists named above:\n${voiceListLines().slice(0, 5).join('\n')}`;
+
 const COPY_SYSTEM_PROMPT =
   `You are Tamar, a Hebrew conversion copywriter. Follow the supplied research brief and JSON schema exactly. Return only the requested JSON object, with no prose or markdown.\n\n${SINGULAR_ADDRESS_RULE}`;
+
+/** M2a.5: the research-site Tamar prompt adds the voice rules; the plain prompt stays as it was. */
+const SITE_COPY_SYSTEM_PROMPT = `${COPY_SYSTEM_PROMPT}\n\n${VOICE_SYSTEM_RULES}`;
 
 const QA_SYSTEM_PROMPT =
   `You are Noa, a Hebrew language QA editor. Correct only language and typography in the supplied JSON, preserve all factual claims and structure, and return only valid JSON.\n\n${SINGULAR_ADDRESS_RULE} If any field breaks this rule, rewrite that sentence in singular masculine address.\n\n${TYPOGRAPHY_RULE} ${REDUPLICATION_RULE}`;
 
 const REPAIR_SYSTEM_PROMPT =
   `You are Tamar, a Hebrew conversion copywriter. You are repairing specific fields of a site-copy JSON object that broke hard validator limits or copy rules. Return only a JSON object containing exactly the requested keys, with no prose or markdown.\n\n${SINGULAR_ADDRESS_RULE}\n\n${TYPOGRAPHY_RULE} ${REDUPLICATION_RULE}`;
+
+/** M2a.5: research-site repairs also carry the voice rules, so a repair never trades one hit for another. */
+const SITE_REPAIR_SYSTEM_PROMPT = `${REPAIR_SYSTEM_PROMPT}\n\n${VOICE_SYSTEM_RULES}`;
 
 // ---------------------------------------------------------------------------
 // Hard limits: the single source of truth for the validator, the violation
@@ -357,8 +409,43 @@ export function buildResearchCopyRules(brief: PageBrief, data: CollectedData = {
         ? '- The "my name is <first name>" opener appears once per site: this is that page. Use it at most once here (aboutBlurb); aboutPageBody must not repeat it.'
         : '- The "my name is <first name>" opener appears once per site and the homepage already has it. Do not open aboutBlurb or aboutPageBody with it or any other self-introduction by name; this overrides the ABOUT SECTION opener instruction below.',
     );
+    rules.push(...buildVoiceRules(brief, data));
   }
   return rules;
+}
+
+/** Service slug that decides the page's stage: the money page's own slug; on the homepage, its first service (section 19.4). */
+export function stageSlug(brief: PageBrief): string {
+  const path = brief.page.pageClass === 'homepage'
+    ? brief.links.find(link => link.relationship === 'service_child')?.targetPath ?? ''
+    : brief.page.targetPath;
+  return path.split('/').filter(Boolean).pop() ?? '';
+}
+
+/** The page's service stage (section 19.4). */
+export function pageStage(brief: PageBrief): ServiceStage {
+  return serviceStage(stageSlug(brief));
+}
+
+/**
+ * M2a.5: Tamar's prompt rules P1-P7 (section 19.6, byte-exact) plus the lists they name and this page's
+ * stage CTA set. Every CTA string still passes the fact gates of this page, so a label the owner's facts
+ * cannot carry (an arrival or same-day promise without a response time) is never offered.
+ */
+export function buildVoiceRules(brief: PageBrief, data: CollectedData = {}): string[] {
+  const stage = pageStage(brief);
+  const gates = briefGateContext(brief, data);
+  const responseTime = typeof data.responseTime === 'string' && data.responseTime.trim().length > 0;
+  // An arrival promise (section 8 tokens) needs the owner's response time; every other fact gate runs as usual.
+  const passes = (line: string) => runCopyGates({ formHeadline: line }, gates).length === 0 && (responseTime || !ARRIVAL_TOKENS.some(token => line.includes(token)));
+  const set = CTA_LABEL_SETS[stage];
+  return [
+    'VOICE RULES (Tamar, binding; the Hebrew lists they name are given after them):',
+    ...VOICE_PROMPT_RULES.map(rule => `- ${rule.text}`),
+    'Lists named in the voice rules:',
+    ...voiceListLines({ stickyArrival: responseTime }),
+    `- This page's stage (section 19.4 above): ${stage}. heroCta is fixed by the system (see above); choose formHeadline from these ctaLabelSets entries for this stage. Labels: ${JSON.stringify(set.formHeadline.labels.filter(passes))}. Patterns (use one as a pattern, adapted to this service): ${JSON.stringify(set.formHeadline.examples.filter(passes))}. formHeadlineFallback, only when nothing more specific fits: ${JSON.stringify(passes(CTA_LABEL_SETS.formHeadlineFallback) ? CTA_LABEL_SETS.formHeadlineFallback : '')}.`,
+  ];
 }
 
 export function buildResearchPageCopyPrompt(brief: PageBrief, data: CollectedData = {}): string {
@@ -650,8 +737,26 @@ export function applySafeDeterministicFixes(value: Loose, gates: CopyGateContext
       next[key] = null;
     }
   }
+  // M2a.5 (Adam): when one trustBarItems entry is the page's only gate hit and at least
+  // TRUST_BAR_MIN_KEPT other items remain, drop that whole item (never edited) instead of failing.
+  if (gates && Array.isArray(next.trustBarItems)) {
+    const hits = runCopyGates(next, gates);
+    const indices = new Set(hits.map(hit => /^trustBarItems\[(\d+)\]$/.exec(hit.field)?.[1] ?? 'other'));
+    const [only] = [...indices];
+    if (hits.length && indices.size === 1 && only !== 'other' && next.trustBarItems.length - 1 >= TRUST_BAR_MIN_KEPT) {
+      const kept = next.trustBarItems.filter((_, index) => index !== Number(only));
+      const candidate = { ...next, trustBarItems: kept };
+      if (runCopyGates(candidate, gates).length === 0) {
+        fixes.push(`drop_gated_item:trustBarItems:${next.trustBarItems.length}->${kept.length}`);
+        return { value: candidate, fixes };
+      }
+    }
+  }
   return { value: next, fixes };
 }
+
+/** M2a.5: a gated trust-bar item is dropped only while at least this many other items remain. */
+export const TRUST_BAR_MIN_KEPT = 3;
 
 /**
  * System-filled fields, re-applied after every model response:
@@ -679,7 +784,7 @@ async function repairFields(ctx: RepairContext, stage: CopyValidationStage, valu
   ctx.remaining--;
   ctx.used++;
   ctx.emit({ stage, kind: 'repair', attempt: ctx.used, fields, violations });
-  const raw = await ctx.callJson(REPAIR_SYSTEM_PROMPT, buildCopyRepairPrompt(value, violations, fields, ctx.gates), { thinkingBudget: 1000 });
+  const raw = await ctx.callJson(ctx.brief.site ? SITE_REPAIR_SYSTEM_PROMPT : REPAIR_SYSTEM_PROMPT, buildCopyRepairPrompt(value, violations, fields, ctx.gates), { thinkingBudget: 1000 });
   const parsed = parseLoose(raw);
   if (!parsed.value) return value;
   const merged: Loose = { ...value };
@@ -829,13 +934,13 @@ export async function generateResearchPageCopy(
     remaining: Number.isInteger(requested) ? Math.max(0, Math.min(MAX_COPY_REPAIRS, requested)) : MAX_COPY_REPAIRS,
     used: 0,
     deterministicFixes: dependencies.deterministicFixes ?? true,
-    gates: dependencies.gates === false ? null : briefGateContext(brief, data),
+    gates: dependencies.gates === false ? null : { ...briefGateContext(brief, data), priorHeroHeadlines: [...(dependencies.priorHeroHeadlines ?? [])] },
     emit: event => {
       try { dependencies.onEvent?.(event); } catch { /* diagnostics never break generation */ }
     },
   };
   const prompt = buildResearchPageGenerationPrompt(brief, data);
-  const tamarCopy = await settleStage(ctx, 'tamar', () => callJson(COPY_SYSTEM_PROMPT, prompt, { thinkingBudget: 1500 }));
+  const tamarCopy = await settleStage(ctx, 'tamar', () => callJson(brief.site ? SITE_COPY_SYSTEM_PROMPT : COPY_SYSTEM_PROMPT, prompt, { thinkingBudget: 1500 }));
   const noaCopy = await settleStage(ctx, 'noa', () => callJson(QA_SYSTEM_PROMPT, buildNoaQaMessage(tamarCopy, brief), { think: false }));
   const finalCopy = withSystemFields(applyFaqPolicy(noaCopy, brief) as unknown as Loose, brief, data) as unknown as SiteCopy;
   assertCopyAt('final', finalCopy);

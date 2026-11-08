@@ -4,7 +4,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { CLAIM_RULES, PLURAL_ADDRESS_TOKENS, WAO_SERVICE_TERMS_HE, WE_FORM_TOKENS } from './copyGates.config';
-import { CLAIM_TOKENS } from './generationData';
+import { CLAIM_TOKENS, STICKY_ACTION_TOKENS } from './generationData';
 import { copyGateContext, GATE_RULES, longestCommonSubstring, runCopyGates, tokenPattern, type CopyGateContext } from './copyGates';
 import {
   applySafeDeterministicFixes,
@@ -25,6 +25,8 @@ const HE_WORD = '\u05D0\u05D1\u05D2\u05D3';
 const LABEL_A = '\u05D2\u05D3\u05D4 \u05D6\u05D7\u05D8';
 const LABEL_B = '\u05D8\u05D9\u05DA \u05E1\u05E2';
 
+/** M2a.5: a sticky-bar line that carries a section 19.4 action token (gate_sticky_action). */
+const STICKY_LINE = `${STICKY_ACTION_TOKENS[0]} Sticky`;
 const ctx = (overrides: Partial<CopyGateContext> = {}): CopyGateContext => ({
   soloOperator: true, serviceLabels: [], ownerFactsText: '', ownerFields: {}, reviewQuote: null, starRating: null, ...overrides,
 });
@@ -33,7 +35,7 @@ const base: SiteCopy = {
   heroHeadline: 'Headline', heroSubheadline: 'Sub', heroCta: 'Call', trustBarItems: ['Proof'], aboutBlurb: 'About',
   servicesHeadline: 'Services', serviceItems: ['Alpha'], faqHeadline: 'FAQ', faqItems: [], guaranteeBlock: 'Promise',
   reviewFeatured: null, reviewContext: null, responseTimeBadge: null, scarcityLine: null, formHeadline: 'Form',
-  stickyBarLine: 'Sticky', aboutPageHeadline: 'About page', aboutPageBody: 'About body',
+  stickyBarLine: STICKY_LINE, aboutPageHeadline: 'About page', aboutPageBody: 'About body',
   serviceDetails: [{ name: 'Alpha', description: 'Detail' }],
 };
 const loose = (copy: Partial<SiteCopy>) => ({ ...base, ...copy }) as unknown as Record<string, unknown>;

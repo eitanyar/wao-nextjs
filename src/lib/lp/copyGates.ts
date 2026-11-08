@@ -12,9 +12,14 @@ import type { CollectedData } from '../bot/prompts';
 import { buildLpCopyPrompt, hasRealReviewQuote } from './lpCopyPrompt';
 import {
   ARRIVAL_TOKENS,
+  BAD_IDIOMS,
+  BARE_VERB_EXCLUSIONS,
+  BARE_VERB_FIELDS,
+  BARE_VERB_SENTENCE_OPENERS,
   CLAIM_TOKEN_WORD_END,
   CLAIM_TOKENS,
   DAY_LETTERS,
+  EMERGENCY_SERVICE_KINDS,
   FIX_TIME_LEAD_TOKENS,
   FIX_TIME_WITHIN_WORDS,
   FREE_CALLOUT_TOKENS,
@@ -22,7 +27,13 @@ import {
   FREE_SCOPE_NOUNS,
   FREE_TOKENS,
   GUARD_CUSTOMER_STEMS,
+  GENERIC_ADJECTIVE_EXEMPT_PHRASES,
+  GENERIC_ADJECTIVE_PHRASES,
+  GENERIC_ADJECTIVE_PREFIX_LETTERS,
+  GENERIC_ADJECTIVE_WORDS,
   GUARD_SPEECH_VERBS,
+  OWNER_VOICE_FIELDS,
+  PLANNED_SERVICE_KINDS,
   SAME_DAY_FINISH_VERBS,
   SAME_DAY_TOKENS,
   SERVICE_AREA_HEAD_TOKENS,
@@ -31,6 +42,10 @@ import {
   SERVICE_AREA_REGION_TOKENS,
   SERVICE_AREA_TAIL_TOKENS,
   SERVICE_LABEL_PINS,
+  SIGNATURE_WORD_TOKENS,
+  STICKY_ACTION_TOKENS,
+  SUBJECT_CARRY_PREFIXES,
+  SUBJECT_CARRY_TOKENS,
 } from './generationData';
 import {
   CLAIM_EXCLUDED_FACT_FIELDS,
@@ -87,6 +102,13 @@ export const GATE_RULES = {
   shortDescription: 'gate_short_description',
   // M2a.4 round 2 (Noa section 16)
   serviceArea: 'gate_service_area',
+  // M2a.5 (Tamar section 19 voice rules + the duplicate-hook check)
+  genericAdjective: 'gate_generic_adjective',
+  badIdiom: 'gate_bad_idiom',
+  signatureRepeat: 'gate_signature_repeat',
+  duplicateHook: 'gate_duplicate_hook',
+  stickyAction: 'gate_sticky_action',
+  bareVerbOpener: 'gate_bare_verb_opener',
 } as const;
 export type GateRule = (typeof GATE_RULES)[keyof typeof GATE_RULES];
 
@@ -128,6 +150,10 @@ export interface CopyGateContext {
   ownerFirstName?: string | null;
   /** M2a.4: research-bound site page (serviceDetails descriptions have a minimum length). */
   researchSite?: boolean;
+  /** M2a.5: the owner's business name, masked before the section 19.1 generic-adjective match. */
+  businessName?: string | null;
+  /** M2a.5: heroHeadline of every page already generated for this site (duplicate-hook check). */
+  priorHeroHeadlines?: readonly string[];
 }
 
 /** One non-blocking finding for human review (never copy text). */
@@ -740,6 +766,167 @@ function countMatches(value: string, pattern: RegExp): number {
   return (value.match(new RegExp(pattern.source, pattern.flags.includes('g') ? pattern.flags : `${pattern.flags}g`)) ?? []).length;
 }
 
+// ---------------------------------------------------------------------------
+// M2a.5: Tamar's section 19 voice rules (docs/copy/site-bot-generation-data.md). Every token list is
+// in generationData.ts; owner-voice fields only. Gates detect; nothing is ever auto-replaced.
+// ---------------------------------------------------------------------------
+
+const VOICE_FIELD_PATTERNS = OWNER_VOICE_FIELDS.map(name => new RegExp(`^${name.includes('[]')
+  ? name.split('[]').map(escapeRegExp).join('\\[\\d+\\]')
+  : `${escapeRegExp(name)}(?:\\[\\d+\\])?`}$`));
+/** True when a gated field path is an owner-voice field (section 19 field scope). */
+export function isOwnerVoiceField(field: string): boolean {
+  return VOICE_FIELD_PATTERNS.some(pattern => pattern.test(field));
+}
+
+const VOICE_MASK = '\uE001';
+const wordAlternatives = (tokens: readonly string[]) => [...tokens].sort((a, b) => b.length - a.length).map(escapeRegExp).join('|');
+const GENERIC_WORD_PATTERNS = GENERIC_ADJECTIVE_WORDS.map(word =>
+  new RegExp(`(?<!${HEB_CLASS})[${GENERIC_ADJECTIVE_PREFIX_LETTERS.join('')}]*${escapeRegExp(word)}(?!${HEB_CLASS})`, 'gu'));
+
+/** A value with the owner's business name and the exempt phrases masked (section 19.1). */
+function maskGeneric(value: string, ctx: Pick<CopyGateContext, 'businessName'>): string {
+  let out = value;
+  const masks = [...(ctx.businessName?.trim() ? [ctx.businessName.trim()] : []), ...GENERIC_ADJECTIVE_EXEMPT_PHRASES].sort((a, b) => b.length - a.length);
+  for (const mask of masks) out = out.split(mask).join(VOICE_MASK);
+  return out;
+}
+
+export interface GenericAdjectiveHit { kind: 'word' | 'phrase'; index: number }
+
+/** Every generic-adjective occurrence in one string (section 19.1), after masking. */
+export function genericAdjectiveHits(value: string, ctx: Pick<CopyGateContext, 'businessName'>): GenericAdjectiveHit[] {
+  const masked = maskGeneric(value, ctx);
+  const hits: GenericAdjectiveHit[] = [];
+  GENERIC_WORD_PATTERNS.forEach((pattern, index) => {
+    hits.push(...Array.from(masked.matchAll(pattern), () => ({ kind: 'word' as const, index })));
+  });
+  GENERIC_ADJECTIVE_PHRASES.forEach((phrase, index) => {
+    for (let at = masked.indexOf(phrase); at >= 0; at = masked.indexOf(phrase, at + phrase.length)) hits.push({ kind: 'phrase', index });
+  });
+  return hits;
+}
+
+/** Section 19.2 gate entries ('gate' and 'spellingFix'; 'promptOnly' never gates). */
+const IDIOM_GATES = BAD_IDIOMS.filter(entry => entry.type !== 'promptOnly').map(entry => ({
+  id: entry.id,
+  patterns: entry.tokens.map(token => entry.wholeWord
+    ? new RegExp(`(?<!${HEB_CLASS})[${entry.prefixLetters.join('')}]*${escapeRegExp(token)}(?!${HEB_CLASS})`, 'u')
+    : new RegExp(escapeRegExp(token), 'u')),
+}));
+
+/** Bad-idiom gate ids hit by one string (section 19.2). */
+export function badIdiomHits(value: string): string[] {
+  return IDIOM_GATES.filter(entry => entry.patterns.some(pattern => pattern.test(value))).map(entry => entry.id);
+}
+
+/** Signature-phrase hits per group in one string: non-overlapping, longest variant first (section 19.3). */
+export function signatureCounts(value: string): Record<string, number> {
+  const out: Record<string, number> = {};
+  for (const [group, variants] of Object.entries(SIGNATURE_WORD_TOKENS)) {
+    const count = spans(value, variants).length;
+    if (count) out[group] = count;
+  }
+  return out;
+}
+
+/**
+ * Signature variants that may be shown to the model: every variant except the hyphen and space
+ * spellings of a maqaf variant (section 19.3: matching only, never shown or inserted into a prompt).
+ */
+export function promptSignatureVariants(group: string): string[] {
+  const variants = SIGNATURE_WORD_TOKENS[group] ?? [];
+  const matchingOnly = new Set(variants.filter(item => item.includes('\u05BE')).flatMap(item => [item.split('\u05BE').join('-'), item.split('\u05BE').join(' ')]));
+  return variants.filter(item => !matchingOnly.has(item));
+}
+
+/** The hero hook: the text before the first question mark or em-dash (trimmed); null when it has neither. */
+export function heroHook(headline: string): string | null {
+  const at = headline.search(/[?\u2014]/);
+  return at >= 0 ? headline.slice(0, at).trim() : null;
+}
+
+/** Duplicate-hook kind against the site's earlier heroHeadlines: 'headline', 'hook' or null. */
+export function duplicateHookKind(headline: string, prior: readonly string[]): 'headline' | 'hook' | null {
+  if (prior.includes(headline)) return 'headline';
+  const hook = heroHook(headline);
+  return hook && prior.some(other => heroHook(other) === hook) ? 'hook' : null;
+}
+
+/** Sticky-action tokens that are also arrival promises (section 8): they need the owner's response time. */
+export const STICKY_ARRIVAL_TOKENS: readonly string[] = STICKY_ACTION_TOKENS.filter(token => ARRIVAL_TOKENS.includes(token));
+
+/** Sticky-bar problems (section 19.4): no action token, equal to the hero CTA, an unauthorised arrival action. */
+export function stickyActionProblems(value: string, heroCta: unknown, ctx: CopyGateContext): Array<'no_action' | 'equals_cta' | 'arrival'> {
+  const out: Array<'no_action' | 'equals_cta' | 'arrival'> = [];
+  if (!STICKY_ACTION_TOKENS.some(token => value.includes(token))) out.push('no_action');
+  if (typeof heroCta === 'string' && value === heroCta) out.push('equals_cta');
+  if (STICKY_ARRIVAL_TOKENS.some(token => value.includes(token)) && !ownerStatesResponseTime(ctx)) out.push('arrival');
+  return out;
+}
+
+const BARE_VERB_FIELD_SET = new Set(BARE_VERB_FIELDS);
+const SUBJECT_CARRY_PATTERN = new RegExp(
+  `(?<!${HEB_CLASS})(?:${wordAlternatives(SUBJECT_CARRY_PREFIXES)})?(?:${wordAlternatives(SUBJECT_CARRY_TOKENS)})(?!${HEB_CLASS})`, 'u');
+const FIRST_HEBREW_WORD = new RegExp(`^${HEB_CLASS}+`, 'u');
+
+/**
+ * Bare-verb sentence openers in one aboutBlurb / aboutPageBody value (section 19.5): a sentence (start
+ * of the field, or after ". ", "? ", "! ") whose first word is exactly an opener, unless it starts with
+ * an exclusion phrase or the previous sentence (or, engineer reading of P4, the sentence itself) holds a
+ * subject-carry word. Returns the opener indices hit.
+ */
+export function bareVerbOpenerHits(value: string): number[] {
+  const parts = value.split(/(?<=[.?!])\s+/).map(item => item.trim()).filter(Boolean);
+  const hits: number[] = [];
+  parts.forEach((sentence, index) => {
+    const word = FIRST_HEBREW_WORD.exec(sentence)?.[0];
+    const opener = word ? BARE_VERB_SENTENCE_OPENERS.indexOf(word) : -1;
+    if (opener < 0) return;
+    if (BARE_VERB_EXCLUSIONS.some(phrase => sentence.startsWith(phrase))) return;
+    if (SUBJECT_CARRY_PATTERN.test(sentence)) return;
+    if (index > 0 && SUBJECT_CARRY_PATTERN.test(parts[index - 1])) return;
+    hits.push(opener);
+  });
+  return hits;
+}
+
+export type ServiceStage = 'emergency' | 'planned' | 'neutral';
+/** Service stage from a service slug (section 19.4): lower-case substring; both lists = emergency. */
+export function serviceStage(slug: string): ServiceStage {
+  const lower = slug.toLowerCase();
+  if (EMERGENCY_SERVICE_KINDS.some(kind => lower.includes(kind))) return 'emergency';
+  if (PLANNED_SERVICE_KINDS.some(kind => lower.includes(kind))) return 'planned';
+  return 'neutral';
+}
+
+/** Section 19 + duplicate-hook gates for one page (owner-voice fields only). */
+function voiceGates(copy: Record<string, unknown>, strings: Array<{ field: string; value: string }>, ctx: CopyGateContext): GateViolation[] {
+  const out: GateViolation[] = [];
+  const signatureSeen: Record<string, number> = {};
+  for (const { field, value } of strings) {
+    if (!isOwnerVoiceField(field)) continue;
+    const generic = new Set(genericAdjectiveHits(value, ctx).map(hit => `generic_${hit.kind}:${hit.index}`));
+    for (const actual of generic) out.push({ field, rule: GATE_RULES.genericAdjective, actual });
+    for (const id of badIdiomHits(value)) out.push({ field, rule: GATE_RULES.badIdiom, actual: `idiom:${id}` });
+    for (const [group, count] of Object.entries(signatureCounts(value))) {
+      signatureSeen[group] = (signatureSeen[group] ?? 0) + count;
+      if (signatureSeen[group] > 1) out.push({ field, rule: GATE_RULES.signatureRepeat, actual: `signature:${group}` });
+    }
+    if (BARE_VERB_FIELD_SET.has(field)) {
+      for (const index of new Set(bareVerbOpenerHits(value))) out.push({ field, rule: GATE_RULES.bareVerbOpener, actual: `opener:${index}` });
+    }
+    if (field === 'stickyBarLine') {
+      for (const problem of stickyActionProblems(value, copy.heroCta, ctx)) out.push({ field, rule: GATE_RULES.stickyAction, actual: `sticky:${problem}` });
+    }
+  }
+  if (typeof copy.heroHeadline === 'string' && ctx.priorHeroHeadlines?.length) {
+    const kind = duplicateHookKind(copy.heroHeadline, ctx.priorHeroHeadlines);
+    if (kind) out.push({ field: 'heroHeadline', rule: GATE_RULES.duplicateHook, actual: `duplicate:${kind}` });
+  }
+  return out;
+}
+
 /** Run every gate. Returns violations (field paths + rule + config id), never copy text. */
 export function runCopyGates(copy: Record<string, unknown>, ctx: CopyGateContext): GateViolation[] {
   const out: GateViolation[] = [];
@@ -836,6 +1023,8 @@ export function runCopyGates(copy: Record<string, unknown>, ctx: CopyGateContext
 
   // A review context is only supportable from an owner-supplied star rating.
   if (typeof copy.reviewContext === 'string' && !ctx.starRating) out.push({ field: 'reviewContext', rule: GATE_RULES.reviewContext });
+  // M2a.5: section 19 voice gates and the duplicate-hook check (research-bound sites only).
+  if (ctx.researchSite) out.push(...voiceGates(copy, strings, ctx));
   return out;
 }
 
@@ -884,6 +1073,8 @@ export interface CopyGatePageOptions {
   installPage?: boolean;
   /** M2a.4: research-bound site page (service description minimum length). */
   researchSite?: boolean;
+  /** M2a.5: heroHeadlines of the site's pages generated before this one (duplicate-hook check). */
+  priorHeroHeadlines?: readonly string[];
 }
 
 /** Build the gate context from owner data plus the page's confirmed service names and owner-stated places. */
@@ -908,6 +1099,8 @@ export function copyGateContext(data: CollectedData, serviceLabels: readonly str
     // Same first name as the prompt's self-introduction (lpCopyPrompt.ts): owner name, else business name.
     ownerFirstName: (data.ownerName || data.businessName || '').split(/[\s,]/)[0] || null,
     researchSite: page.researchSite ?? false,
+    businessName: typeof data.businessName === 'string' && data.businessName.trim() ? data.businessName.trim() : null,
+    priorHeroHeadlines: page.priorHeroHeadlines ?? [],
   };
 }
 
@@ -982,6 +1175,32 @@ export function describeGateViolation(violation: GateViolation, ctx: CopyGateCon
       return `${violation.field} widens the service area beyond the places the owner named (a region, "and surroundings", "the area of", nearby towns); name only these places: ${(ctx.places ?? []).join(' / ')}. A travel distance may be stated as a number, never as "surroundings"`;
     case GATE_RULES.shortDescription:
       return `${violation.field} is shorter than ${SERVICE_DESCRIPTION_MIN_CHARS} characters; write one complete sentence on what this service includes for the customer (at least ${SERVICE_DESCRIPTION_MIN_CHARS} characters, within the limit), without repeating proof points`;
+    case GATE_RULES.genericAdjective: {
+      const [kind, at] = (violation.actual ?? '').split(':');
+      const token = kind === 'generic_phrase' ? GENERIC_ADJECTIVE_PHRASES[Number(at)] : GENERIC_ADJECTIVE_WORDS[Number(at)];
+      return `${violation.field} uses the empty quality ${kind === 'generic_phrase' ? 'phrase' : 'word'} ${JSON.stringify(token ?? '')}, which claims quality without saying what the owner does; replace it with the concrete physical action behind it (what he opens, checks, measures, takes apart, shows the customer or cleans up), in verbs. Do not use any other word or phrase from that list either: ${JSON.stringify([...GENERIC_ADJECTIVE_WORDS, ...GENERIC_ADJECTIVE_PHRASES])}`;
+    }
+    case GATE_RULES.badIdiom: {
+      const entry = BAD_IDIOMS.find(item => item.id === (violation.actual ?? '').split(':')[1]);
+      if (!entry) return `${violation.field} uses a wrong or non-native idiom; rewrite it in plain native Hebrew`;
+      return `${violation.field} uses ${JSON.stringify(entry.tokens)}, which does not mean what is intended (meant: ${entry.meant}); rewrite the whole sentence in plain native Hebrew with this idea: ${JSON.stringify(entry.replacement)}${entry.replacementFeminine ? ` (feminine subject: ${JSON.stringify(entry.replacementFeminine)})` : ''}, keeping every adjective and verb in agreement`;
+    }
+    case GATE_RULES.signatureRepeat: {
+      const group = (violation.actual ?? '').split(':')[1] ?? '';
+      return `${violation.field} repeats the signature phrase ${JSON.stringify(promptSignatureVariants(group))}, which already appears elsewhere on this page (at most once per page, in any spelling); remove it from this field and say something new instead: a different owner fact, a consequence for the customer, or a concrete step of the job`;
+    }
+    case GATE_RULES.duplicateHook:
+      return `${violation.field} repeats the hero headline, or its opening hook before the first question mark or em-dash, of another page of this site; write a new headline for this page that opens with this service's own pain or moment, not the same opening`;
+    case GATE_RULES.stickyAction: {
+      const problem = (violation.actual ?? '').split(':')[1];
+      if (problem === 'equals_cta') return `${violation.field} is identical to the hero button label; write a different short action line that contains one of these actions: ${JSON.stringify(STICKY_ACTION_TOKENS.filter(token => !STICKY_ARRIVAL_TOKENS.includes(token) || ownerStatesResponseTime(ctx)))}`;
+      if (problem === 'arrival') return `${violation.field} promises an arrival (${JSON.stringify(STICKY_ARRIVAL_TOKENS)}) but the owner gave no response time; use a different action from: ${JSON.stringify(STICKY_ACTION_TOKENS.filter(token => !STICKY_ARRIVAL_TOKENS.includes(token)))}`;
+      return `${violation.field} must be a short action line, not a label or a claim; it must contain one of these actions: ${JSON.stringify(STICKY_ACTION_TOKENS.filter(token => !STICKY_ARRIVAL_TOKENS.includes(token) || ownerStatesResponseTime(ctx)))}, and it must differ from the hero button label`;
+    }
+    case GATE_RULES.bareVerbOpener: {
+      const opener = BARE_VERB_SENTENCE_OPENERS[index];
+      return `${violation.field} has a sentence that starts with the bare first-person verb ${JSON.stringify(opener ?? '')} with no subject; give that sentence its subject (${JSON.stringify(SUBJECT_CARRY_TOKENS[0] ?? '')}), or join it to a previous sentence that already has it. Never open a sentence or paragraph with a bare verb or a bare-noun fragment`;
+    }
     default:
       return `${violation.field}: ${violation.rule}`;
   }

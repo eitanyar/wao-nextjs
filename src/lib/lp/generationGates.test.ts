@@ -31,11 +31,27 @@ import {
   SERVICE_AREA_REGION_TOKENS,
   SERVICE_AREA_TAIL_TOKENS,
   SERVICE_LABEL_PINS,
+  STICKY_ACTION_TOKENS,
+  SUBJECT_CARRY_TOKENS,
   TEMPLATE_STRINGS,
   THERMAL_TOKENS,
   WAO_SERVICE_TERMS_DATA,
   WE_FORM_VERBS,
   WE_TOKENS_DATA,
+  BAD_IDIOMS,
+  BARE_VERB_EXCLUSIONS,
+  BARE_VERB_SENTENCE_OPENERS,
+  CTA_LABEL_SETS,
+  EMERGENCY_SERVICE_KINDS,
+  GENERIC_ADJECTIVE_EXEMPT_PHRASES,
+  GENERIC_ADJECTIVE_PHRASES,
+  GENERIC_ADJECTIVE_PREFIX_LETTERS,
+  GENERIC_ADJECTIVE_WORDS,
+  OWNER_VOICE_FIELDS,
+  PLANNED_SERVICE_KINDS,
+  SIGNATURE_WORD_TOKENS,
+  SUBJECT_CARRY_PREFIXES,
+  VOICE_PROMPT_RULES,
 } from './generationData';
 import { CLAIM_RULES, FACT_PHRASE_REPEAT_MAX, FACT_REPEAT_MAX, PLURAL_ADDRESS_TOKENS, SERVICE_DESCRIPTION_MIN_CHARS, WAO_SERVICE_TERMS_HE, WE_FORM_TOKENS } from './copyGates.config';
 import {
@@ -53,6 +69,16 @@ import {
   runCopyGates,
   sameDayFinishScope,
   tokenPattern,
+  badIdiomHits,
+  bareVerbOpenerHits,
+  duplicateHookKind,
+  genericAdjectiveHits,
+  heroHook,
+  isOwnerVoiceField,
+  promptSignatureVariants,
+  serviceStage,
+  STICKY_ARRIVAL_TOKENS,
+  stickyActionProblems,
   type CopyGateContext,
 } from './copyGates';
 import {
@@ -61,7 +87,9 @@ import {
   buildResearchPageGenerationPrompt,
   generateResearchPageCopy,
   isInstallPage,
+  pageStage,
   REDUPLICATION_RULE,
+  TRUST_BAR_MIN_KEPT,
   SINGULAR_ADDRESS_RULE,
   withSystemFields,
 } from './researchPageCopy';
@@ -86,6 +114,8 @@ const LABEL_A = '\u05D2\u05D3\u05D4 \u05D6\u05D7\u05D8';
 const INSTALL_LABEL = SERVICE_LABEL_PINS['water heater install'];
 const LEAK_LABEL = SERVICE_LABEL_PINS['leak detection'];
 
+/** M2a.5: a sticky-bar line that carries a section 19.4 action token (gate_sticky_action). */
+const STICKY_LINE = `${STICKY_ACTION_TOKENS[0]} Sticky`;
 const ctx = (overrides: Partial<CopyGateContext> = {}): CopyGateContext => ({
   soloOperator: true, serviceLabels: [], ownerFactsText: '', ownerFields: {}, reviewQuote: null, starRating: null, ...overrides,
 });
@@ -93,7 +123,7 @@ const base: SiteCopy = {
   heroHeadline: 'Headline', heroSubheadline: 'Sub', heroCta: 'Call', trustBarItems: ['Proof'], aboutBlurb: 'About',
   servicesHeadline: 'Services', serviceItems: [], faqHeadline: 'FAQ', faqItems: [], guaranteeBlock: 'Promise',
   reviewFeatured: null, reviewContext: null, responseTimeBadge: null, scarcityLine: null, formHeadline: 'Form',
-  stickyBarLine: 'Sticky', aboutPageHeadline: 'About page', aboutPageBody: 'About body', serviceDetails: [],
+  stickyBarLine: STICKY_LINE, aboutPageHeadline: 'About page', aboutPageBody: 'About body', serviceDetails: [],
 };
 const loose = (copy: Partial<SiteCopy>) => ({ ...base, ...copy }) as unknown as Record<string, unknown>;
 const ids = (hits: ReturnType<typeof runCopyGates>) => hits.map(hit => hit.actual ?? hit.rule);
@@ -116,7 +146,7 @@ function brief(pageName: string, labels: string[], sources: string[], pageClass 
 test('M2a.3 1: generationData.ts carries data sections 6-13 byte-exact; config lists extend / replace the M2a.1 lists; --check passes', () => {
   const text = fs.readFileSync(DATA_FILE, 'utf8');
   const blocks = [...text.matchAll(/\n~~~json\n([\s\S]*?)\n~~~/g)].map(match => JSON.parse(match[1]));
-  assert.equal(blocks.length, 23);
+  assert.equal(blocks.length, 32); // M2a.4: 23; M2a.5 section 19 adds 9
   const data = Object.assign({}, ...blocks);
   assert.deepEqual([...CLAIM_TOKEN_WORD_END], data.claimTokenWordEnd);
   assert.deepEqual([...FIX_TIME_LEAD_TOKENS], data.fixTimeLeadTokens);
@@ -263,9 +293,11 @@ test('M2a.3 6: on an installation page every arrival-time phrase is a hard repai
   const arrival = `${ARRIVAL_TOKENS[0]} ${FIX_TIME_LEAD_TOKENS[0]} 20 ${FIX_TIME_WITHIN_WORDS[0]}`;
   const numberOnly = `${ARRIVAL_TOKENS[0]} 20 ${FIX_TIME_WITHIN_WORDS[0]}`;
   const data: CollectedData = { businessNiche: 'plumber', responseTime: '20 minutes', guarantee: 'x' };
+  // M2a.5: the about blurb keeps its subject and the sticky bar carries an action (section 19 voice gates).
+  const voiced = (field: string) => field === 'aboutBlurb' ? `${SUBJECT_CARRY_TOKENS[0]} ${arrival}` : field === 'stickyBarLine' ? `${STICKY_ACTION_TOKENS[0]} ${arrival}` : arrival;
   for (const field of ['heroHeadline', 'heroSubheadline', 'aboutBlurb', 'stickyBarLine'] as const) {
-    assert.deepEqual(runCopyGates(loose({ [field]: arrival }), briefGateContext(install, data)).map(hit => hit.rule), [GATE_RULES.installArrival], field);
-    assert.deepEqual(runCopyGates(loose({ [field]: arrival }), briefGateContext(repair, data)), [], `${field} on a repair page`);
+    assert.deepEqual(runCopyGates(loose({ [field]: voiced(field) }), briefGateContext(install, data)).map(hit => hit.rule), [GATE_RULES.installArrival], field);
+    assert.deepEqual(runCopyGates(loose({ [field]: voiced(field) }), briefGateContext(repair, data)), [], `${field} on a repair page`);
   }
   assert.deepEqual(runCopyGates(loose({ trustBarItems: [numberOnly] }), briefGateContext(install, data)).map(hit => hit.rule), [GATE_RULES.installArrival]);
   assert.equal(withSystemFields(loose({ responseTimeBadge: arrival }), install, data).responseTimeBadge, null);
@@ -656,4 +688,208 @@ test('M2a.4 r2 4: section 18 we-form verbs are caught with prefixes; a same-day 
   assert.deepEqual(sameDay(`${HE_WORD} ${day}`, responseOnly), [], 'no label: arrival rule');
   assert.deepEqual(sameDay(`${LEAK_LABEL} ${day}`, { ...responseOnly, usp: 'Same-day leak fixes' }), [], 'in scope');
   assert.deepEqual(sameDay(`${INSTALL_LABEL} ${ARRIVAL_TOKENS[0]} ${day}`, responseOnly), [], 'arrival token keeps the arrival rule');
+});
+
+// ---------------------------------------------------------------------------
+// M2a.5: Tamar's section 19 voice rules + the duplicate-hook gate + the trust-bar safe fix.
+// ---------------------------------------------------------------------------
+
+/** Research-site gate context (the section 19 gates run on research-bound sites only). */
+const vctx = (data: CollectedData = {}, overrides: Partial<CopyGateContext> = {}): CopyGateContext =>
+  ({ ...copyGateContext(data, [], true, [], { researchSite: true }), ...overrides });
+const voiceIds = (copy: Record<string, unknown>, gates: CopyGateContext, rule: string) =>
+  runCopyGates(copy, gates).filter(hit => hit.rule === rule).map(hit => `${hit.field}=${hit.actual}`);
+const CARRY = SUBJECT_CARRY_TOKENS[0];
+
+test('M2a.5 1: generationData.ts carries section 19 byte-exact, counted and sourced; P1-P7 are slices of the data file', () => {
+  const text = fs.readFileSync(DATA_FILE, 'utf8');
+  const data = Object.assign({}, ...[...text.matchAll(/\n~~~json\n([\s\S]*?)\n~~~/g)].map(match => JSON.parse(match[1])));
+  assert.deepEqual([...GENERIC_ADJECTIVE_WORDS], data.genericAdjectiveWords);
+  assert.deepEqual([...GENERIC_ADJECTIVE_PHRASES], data.genericAdjectivePhrases);
+  assert.deepEqual([...GENERIC_ADJECTIVE_EXEMPT_PHRASES], data.genericAdjectiveExemptPhrases);
+  assert.deepEqual(BAD_IDIOMS.map(entry => [entry.id, [...entry.tokens], entry.type, entry.replacement]), data.badIdiomTokens.map((entry: { id: string; tokens: string[]; type: string; replacement: string }) => [entry.id, entry.tokens, entry.type, entry.replacement]));
+  assert.deepEqual(JSON.parse(JSON.stringify(SIGNATURE_WORD_TOKENS)), data.signatureWordTokens);
+  assert.deepEqual([...EMERGENCY_SERVICE_KINDS], data.emergencyServiceKinds);
+  assert.deepEqual([...PLANNED_SERVICE_KINDS], data.plannedServiceKinds);
+  assert.deepEqual(JSON.parse(JSON.stringify(CTA_LABEL_SETS)), data.ctaLabelSets);
+  assert.deepEqual([...STICKY_ACTION_TOKENS], data.stickyActionTokens);
+  assert.deepEqual([...BARE_VERB_SENTENCE_OPENERS], data.bareVerbSentenceOpeners);
+  assert.deepEqual([...SUBJECT_CARRY_TOKENS], data.subjectCarryTokens);
+  assert.deepEqual([...BARE_VERB_EXCLUSIONS], data.bareVerbExclusions);
+  // Counts (the file is the truth; recounted for M2a.5).
+  assert.deepEqual([GENERIC_ADJECTIVE_WORDS.length, GENERIC_ADJECTIVE_PHRASES.length, GENERIC_ADJECTIVE_EXEMPT_PHRASES.length, GENERIC_ADJECTIVE_PREFIX_LETTERS.length], [22, 18, 5, 6]);
+  assert.deepEqual([BAD_IDIOMS.length, BAD_IDIOMS.flatMap(entry => entry.tokens).length, BAD_IDIOMS.filter(entry => entry.type === 'gate').length, BAD_IDIOMS.filter(entry => entry.type === 'spellingFix').length, BAD_IDIOMS.filter(entry => entry.type === 'promptOnly').length], [6, 15, 4, 1, 1]);
+  assert.deepEqual([Object.keys(SIGNATURE_WORD_TOKENS).length, Object.values(SIGNATURE_WORD_TOKENS).flat().length], [8, 20]);
+  assert.deepEqual([EMERGENCY_SERVICE_KINDS.length, PLANNED_SERVICE_KINDS.length, STICKY_ACTION_TOKENS.length], [15, 8, 7]);
+  assert.deepEqual([BARE_VERB_SENTENCE_OPENERS.length, SUBJECT_CARRY_TOKENS.length, SUBJECT_CARRY_PREFIXES.length, BARE_VERB_EXCLUSIONS.length], [23, 2, 3, 4]);
+  assert.equal(OWNER_VOICE_FIELDS.length, 12);
+  assert.deepEqual(VOICE_PROMPT_RULES.map(rule => rule.id), ['P1', 'P2', 'example', 'P3', 'P4', 'P5', 'P6', 'P7']);
+  const lines = text.split('\n');
+  for (const rule of VOICE_PROMPT_RULES) assert.ok(lines.some(line => line.startsWith('- **') && line.slice(2).split('**').join('') === rule.text), rule.id);
+  for (const key of ['genericAdjectiveWords', 'genericAdjectivePhrases', 'genericAdjectiveExemptPhrases', 'badIdiomTokens', 'signatureWordTokens', 'serviceKinds', 'ctaLabelSets', 'stickyActionTokens', 'bareVerbSentenceOpeners']) {
+    assert.match(GUARD_TOKEN_SOURCES[key] ?? '', /^docs\/copy\/site-bot-generation-data\.md section 19\. /, key);
+  }
+  assert.equal(execFileSync('node', [path.join(ROOT, 'scripts/site-bot/build-generation-data.mjs'), '--check'], { encoding: 'utf8' }).trim(), 'generationData.ts up to date');
+});
+
+test('M2a.5 2: generic adjectives: whole word with the listed prefixes, phrases as substrings, business name and exempt phrases masked, owner-voice fields only', () => {
+  const word = GENERIC_ADJECTIVE_WORDS[0];
+  const prefixes = GENERIC_ADJECTIVE_PREFIX_LETTERS.join('');
+  assert.deepEqual(genericAdjectiveHits(`${HE_WORD} ${word}`, {}), [{ kind: 'word', index: 0 }]);
+  assert.deepEqual(genericAdjectiveHits(`${HE_WORD} ${prefixes}${word}.`, {}), [{ kind: 'word', index: 0 }], 'any prefix combination');
+  assert.deepEqual(genericAdjectiveHits(`${HE_WORD} ${word}${BET}`, {}), [], 'a Hebrew letter after');
+  assert.deepEqual(genericAdjectiveHits(`${HE_WORD} \u05DE${word}`, {}), [], 'mem is not a listed prefix');
+  for (const [index, item] of GENERIC_ADJECTIVE_WORDS.entries()) assert.ok(genericAdjectiveHits(item, {}).some(hit => hit.kind === 'word' && hit.index === index), item);
+  for (const [index, item] of GENERIC_ADJECTIVE_PHRASES.entries()) assert.ok(genericAdjectiveHits(`${HE_WORD}${item}`, {}).some(hit => hit.kind === 'phrase' && hit.index === index), item);
+  for (const item of GENERIC_ADJECTIVE_EXEMPT_PHRASES) assert.deepEqual(genericAdjectiveHits(`${HE_WORD} ${item} ${HE_WORD}`, {}), [], item);
+  const businessName = `${GENERIC_ADJECTIVE_WORDS.at(-1)} ${HE_WORD}`;
+  assert.deepEqual(genericAdjectiveHits(`${W1} ${businessName}`, { businessName }), [], 'business name masked');
+  assert.equal(genericAdjectiveHits(`${W1} ${businessName}`, { businessName: null }).length, 1);
+  // Gate: owner-voice fields only; the customer's words and the pinned service names are never checked.
+  const gates = vctx({ businessName: 'Biz' });
+  assert.deepEqual(voiceIds(loose({ aboutPageHeadline: `${word} ${HE_WORD}` }), gates, GATE_RULES.genericAdjective), ['aboutPageHeadline=generic_word:0']);
+  assert.deepEqual(voiceIds(loose({ serviceDetails: [{ name: word, description: `${HE_WORD} ${GENERIC_ADJECTIVE_PHRASES[1]}` }] }), gates, GATE_RULES.genericAdjective), ['serviceDetails[0].description=generic_phrase:1']);
+  assert.deepEqual(voiceIds(loose({ reviewContext: word, servicesHeadline: word, faqHeadline: word }), gates, GATE_RULES.genericAdjective), []);
+  assert.deepEqual(voiceIds(loose({ aboutBlurb: `${CARRY} ${word}` }), ctx(), GATE_RULES.genericAdjective), [], 'legacy (non-research) copy is not voice-gated');
+  for (const field of ['heroHeadline', 'trustBarItems[2]', 'serviceDetails[3].description', 'stickyBarLine', 'formHeadline']) assert.ok(isOwnerVoiceField(field), field);
+  for (const field of ['reviewFeatured', 'reviewContext', 'serviceItems[0]', 'serviceDetails[0].name', 'servicesHeadline', 'faqHeadline']) assert.ok(!isOwnerVoiceField(field), field);
+});
+
+test('M2a.5 3: bad idioms: gate and spellingFix entries reject (never auto-replaced), promptOnly never gates, the spelling entry is whole-word', () => {
+  for (const entry of BAD_IDIOMS) {
+    for (const token of entry.tokens) assert.deepEqual(badIdiomHits(`${HE_WORD} ${token} ${HE_WORD}`), entry.type === 'promptOnly' ? [] : [entry.id], token);
+  }
+  const spelling = BAD_IDIOMS.find(entry => entry.type === 'spellingFix')!;
+  assert.equal(spelling.wholeWord, true);
+  assert.deepEqual(badIdiomHits(`${spelling.prefixLetters.join('')}${spelling.tokens[0]}`), [spelling.id]);
+  assert.deepEqual(badIdiomHits(`${spelling.tokens[0]}${BET}`), [], 'whole word only');
+  const gate = BAD_IDIOMS.find(entry => entry.type === 'gate')!;
+  assert.deepEqual(voiceIds(loose({ heroSubheadline: `${HE_WORD} ${gate.tokens[0]}` }), vctx(), GATE_RULES.badIdiom), [`heroSubheadline=idiom:${gate.id}`]);
+  assert.deepEqual(voiceIds(loose({ reviewContext: gate.tokens[0] }), vctx(), GATE_RULES.badIdiom), [], 'customer words are not checked');
+});
+
+test('M2a.5 4: signature phrases: at most one hit per group per page, all spellings counted; the matching-only spellings never reach a prompt', () => {
+  const group = 'lineByLine';
+  const variants = SIGNATURE_WORD_TOKENS[group];
+  const maqaf = variants.find(item => item.includes('\u05BE'))!;
+  const hyphen = maqaf.split('\u05BE').join('-');
+  const space = maqaf.split('\u05BE').join(' ');
+  assert.ok(variants.includes(hyphen) && variants.includes(space));
+  assert.deepEqual(promptSignatureVariants(group), variants.filter(item => item !== hyphen && item !== space));
+  const gates = vctx();
+  assert.deepEqual(voiceIds(loose({ heroHeadline: `${HE_WORD} ${maqaf}` }), gates, GATE_RULES.signatureRepeat), [], 'once is fine');
+  assert.deepEqual(voiceIds(loose({ heroHeadline: `${HE_WORD} ${maqaf}`, aboutPageBody: `${CARRY} ${hyphen}` }), gates, GATE_RULES.signatureRepeat), [`aboutPageBody=signature:${group}`]);
+  assert.deepEqual(voiceIds(loose({ aboutBlurb: `${CARRY} ${variants[0]}, ${space}` }), gates, GATE_RULES.signatureRepeat), [`aboutBlurb=signature:${group}`]);
+  assert.deepEqual(voiceIds(loose({ heroHeadline: `${HE_WORD} ${maqaf}`, reviewContext: maqaf }), gates, GATE_RULES.signatureRepeat), [], 'customer words are not counted');
+  const exactly = SIGNATURE_WORD_TOKENS.exactly[0];
+  assert.deepEqual(voiceIds(loose({ heroSubheadline: exactly, formHeadline: exactly, stickyBarLine: `${STICKY_LINE} ${exactly}` }), gates, GATE_RULES.signatureRepeat), ['formHeadline=signature:exactly', 'stickyBarLine=signature:exactly']);
+  // No prompt (generation, Tamar, repair) carries a matching-only spelling.
+  const site = brief(LEAK_LABEL, [LEAK_LABEL], ['leak detection']);
+  const prompt = buildResearchPageGenerationPrompt(site, { businessNiche: 'plumber' });
+  for (const item of [hyphen, space]) assert.ok(!prompt.includes(item), item);
+  assert.ok(prompt.includes(JSON.stringify(maqaf)));
+});
+
+test('M2a.5 5: duplicate hook: a later page whose heroHeadline, or its hook before the first ? or em-dash, equals an earlier page\'s fails and is repaired', async () => {
+  const first = `${W1} ${W2} \u2014 ${W3}`;
+  assert.equal(heroHook(first), `${W1} ${W2}`);
+  assert.equal(heroHook(`${W1}? ${W2}`), W1);
+  assert.equal(heroHook(W1), null);
+  assert.equal(duplicateHookKind(first, [first]), 'headline');
+  assert.equal(duplicateHookKind(`${W1} ${W2} \u2014 ${HE_WORD}`, [first]), 'hook');
+  assert.equal(duplicateHookKind(`${W1} ${W2}? ${HE_WORD}`, [first]), 'hook');
+  assert.equal(duplicateHookKind(`${W1} ${W3} \u2014 ${W3}`, [first]), null);
+  assert.equal(duplicateHookKind(first, []), null);
+  assert.deepEqual(voiceIds(loose({ heroHeadline: first }), vctx({}, { priorHeroHeadlines: [first] }), GATE_RULES.duplicateHook), ['heroHeadline=duplicate:headline']);
+  assert.deepEqual(voiceIds(loose({ heroHeadline: first }), vctx(), GATE_RULES.duplicateHook), [], 'the first page never fails');
+  // generateResearchPageCopy takes the earlier headlines and repairs the hook.
+  const site = brief(LEAK_LABEL, [LEAK_LABEL], ['leak detection']);
+  const events: string[] = [];
+  const result = await generateResearchPageCopy(site, { businessNiche: 'plumber', guarantee: 'x' }, {
+    priorHeroHeadlines: [first],
+    onEvent: event => { for (const violation of event.violations ?? []) events.push(violation.rule); },
+    callJson: async (system, user) => {
+      if (/repairing specific fields/.test(system)) {
+        assert.match(user, /repeats the hero headline, or its opening hook/);
+        return JSON.stringify({ heroHeadline: `${W3} ${LEAK_LABEL}` });
+      }
+      const parsed: unknown = /^You are Noa/.test(system) ? JSON.parse(user.slice(0, user.indexOf('\n\nHARD LIMITS'))) : { ...base, heroHeadline: first, serviceItems: [LEAK_LABEL], serviceDetails: [{ name: LEAK_LABEL, description: 'x'.repeat(SERVICE_DESCRIPTION_MIN_CHARS) }] };
+      return JSON.stringify(parsed);
+    },
+  });
+  assert.equal(result.heroHeadline, `${W3} ${LEAK_LABEL}`);
+  assert.ok(events.includes(GATE_RULES.duplicateHook));
+});
+
+test('M2a.5 6: sticky bar: needs an action token, never equals the hero CTA, an arrival action needs the response time', () => {
+  const gates = vctx();
+  const action = STICKY_ACTION_TOKENS.find(token => !STICKY_ARRIVAL_TOKENS.includes(token))!;
+  assert.ok(STICKY_ARRIVAL_TOKENS.length >= 1 && STICKY_ARRIVAL_TOKENS.every(token => ARRIVAL_TOKENS.includes(token)));
+  assert.deepEqual(stickyActionProblems(`${HE_WORD} ${W1}`, 'Call', gates), ['no_action']);
+  assert.deepEqual(stickyActionProblems(`${action} ${HE_WORD}`, 'Call', gates), []);
+  assert.deepEqual(stickyActionProblems(action, action, gates), ['equals_cta']);
+  assert.deepEqual(stickyActionProblems(`${HE_WORD} ${STICKY_ARRIVAL_TOKENS[0]}`, 'Call', gates), ['arrival']);
+  assert.deepEqual(stickyActionProblems(`${HE_WORD} ${STICKY_ARRIVAL_TOKENS[0]}`, 'Call', vctx({ responseTime: '30 minutes' })), []);
+  assert.deepEqual(voiceIds(loose({ stickyBarLine: 'Call', heroCta: 'Call' }), gates, GATE_RULES.stickyAction), ['stickyBarLine=sticky:no_action', 'stickyBarLine=sticky:equals_cta']);
+  assert.deepEqual(voiceIds(loose({}), gates, GATE_RULES.stickyAction), []);
+});
+
+test('M2a.5 7: bare-verb sentence openers: aboutBlurb / aboutPageBody only, sentence starts only, subject carry (with its prefixes) and exclusions pass', () => {
+  const opener = BARE_VERB_SENTENCE_OPENERS[1];
+  const index = 1;
+  assert.deepEqual(bareVerbOpenerHits(`${opener} ${HE_WORD}.`), [index], 'first sentence of the field');
+  assert.deepEqual(bareVerbOpenerHits(`${HE_WORD} ${W1}. ${opener} ${HE_WORD}`), [index], 'previous sentence has no subject');
+  assert.deepEqual(bareVerbOpenerHits(`${HE_WORD}! ${opener} ${HE_WORD}`), [index]);
+  assert.deepEqual(bareVerbOpenerHits(`${CARRY} ${W1}. ${opener} ${HE_WORD}`), [], 'subject carried');
+  for (const prefix of SUBJECT_CARRY_PREFIXES) assert.deepEqual(bareVerbOpenerHits(`${W2} ${prefix}${CARRY} ${W1}. ${opener} ${HE_WORD}`), [], prefix);
+  assert.deepEqual(bareVerbOpenerHits(`${W2} ${BET}${CARRY} ${W1}. ${opener} ${HE_WORD}`), [index], 'bet is not a carry prefix');
+  assert.deepEqual(bareVerbOpenerHits(`${HE_WORD}, ${opener} ${W1}: ${opener}`), [], 'not after a comma or colon');
+  assert.deepEqual(bareVerbOpenerHits(`\u05D5${opener} ${HE_WORD}`), [], 'no prefix letters');
+  assert.deepEqual(bareVerbOpenerHits(`${opener}${BET} ${HE_WORD}`), [], 'whole word');
+  assert.deepEqual(bareVerbOpenerHits(`${HE_WORD}. ${BARE_VERB_EXCLUSIONS[0]} ${HE_WORD}`), [], 'exclusion phrase');
+  assert.deepEqual(bareVerbOpenerHits(`${HE_WORD}. ${opener} ${CARRY} ${HE_WORD}`), [], 'the sentence holds its own subject (P4)');
+  const gates = vctx();
+  assert.deepEqual(voiceIds(loose({ aboutBlurb: `${opener} ${HE_WORD}`, aboutPageBody: `${HE_WORD}. ${opener} ${W1}` }), gates, GATE_RULES.bareVerbOpener), [`aboutBlurb=opener:${index}`, `aboutPageBody=opener:${index}`]);
+  assert.deepEqual(voiceIds(loose({ heroSubheadline: `${opener} ${HE_WORD}`, trustBarItems: [`${opener} ${HE_WORD}`], stickyBarLine: `${STICKY_LINE}. ${opener}` }), gates, GATE_RULES.bareVerbOpener), [], 'telegraphic fields are prompt-only');
+});
+
+test('M2a.5 8: service stage from the slug (both lists = emergency, neither = neutral, the homepage takes its first service); the prompt carries P1-P7 and the stage CTA set', () => {
+  for (const slug of ['ac-repair', 'leak-detection', 'leak-repair', 'drain-unblocking', 'emergency-electrician']) assert.equal(serviceStage(slug), 'emergency', slug);
+  for (const slug of ['ac-installation', 'ac-cleaning', 'water-heater-install', 'solar-heater-installation', 'electrical-panel-upgrade', 'ev-charger-install']) assert.equal(serviceStage(slug), 'planned', slug);
+  assert.equal(serviceStage('repair-install'), 'emergency');
+  assert.equal(serviceStage('about'), 'neutral');
+  const service = (slug: string) => ({ ...brief(LEAK_LABEL, [LEAK_LABEL], ['leak detection']), page: { id: 'svc', targetPath: `/services/${slug}`, pageClass: 'money_service' } });
+  assert.equal(pageStage(service('water-heater-install')), 'planned');
+  const home = { ...brief(LEAK_LABEL, [LEAK_LABEL], ['leak detection'], 'homepage'), links: [{ targetPath: '/services/leak-detection', relationship: 'service_child', evidenceIds: ['entity-1'] }, { targetPath: '/services/water-heater-install', relationship: 'service_child', evidenceIds: ['entity-1'] }] };
+  assert.equal(pageStage(home), 'emergency');
+  assert.equal(pageStage({ ...home, links: [] }), 'neutral');
+  const data: CollectedData = { businessNiche: 'plumber' };
+  const prompt = buildResearchPageGenerationPrompt(service('leak-detection'), data);
+  for (const rule of VOICE_PROMPT_RULES) assert.ok(prompt.includes(rule.text), rule.id);
+  assert.match(prompt, /This page's stage \(section 19\.4 above\): emergency\./);
+  for (const label of CTA_LABEL_SETS.emergency.formHeadline.labels) assert.ok(prompt.includes(JSON.stringify(label)), label);
+  for (const label of CTA_LABEL_SETS.planned.formHeadline.labels) assert.ok(!prompt.includes(JSON.stringify(label)) || CTA_LABEL_SETS.emergency.formHeadline.labels.includes(label), label);
+  // An arrival example is offered only when the owner gave a response time.
+  const arrivalExample = CTA_LABEL_SETS.emergency.formHeadline.examples.find(item => ARRIVAL_TOKENS.some(token => item.includes(token)))!;
+  assert.ok(arrivalExample);
+  assert.ok(!prompt.includes(JSON.stringify(arrivalExample)));
+  assert.ok(buildResearchPageGenerationPrompt(service('leak-detection'), { ...data, responseTime: '30 minutes' }).includes(JSON.stringify(arrivalExample)));
+  assert.match(buildResearchPageGenerationPrompt(service('ev-charger-install'), data), /This page's stage \(section 19\.4 above\): planned\./);
+  // Legacy (non-site) briefs get no voice block.
+  assert.ok(!buildResearchPageGenerationPrompt({ ...service('leak-detection'), site: undefined }, data).includes('VOICE RULES'));
+});
+
+test('M2a.5 9: trust-bar safe fix: a single gated trust item is dropped only when it is the only gate hit and at least 3 items remain', () => {
+  const gates = vctx();
+  const bad = `${HE_WORD} ${GENERIC_ADJECTIVE_WORDS[0]}`;
+  const four = loose({ trustBarItems: [W1, bad, W2, W3] });
+  assert.equal(TRUST_BAR_MIN_KEPT, 3);
+  const fixed = applySafeDeterministicFixes(four, gates);
+  assert.deepEqual(fixed.value.trustBarItems, [W1, W2, W3]);
+  assert.deepEqual(fixed.fixes, ['drop_gated_item:trustBarItems:4->3']);
+  assert.deepEqual(runCopyGates(fixed.value, gates), []);
+  assert.deepEqual(applySafeDeterministicFixes(loose({ trustBarItems: [W1, bad, W2] }), gates).value.trustBarItems, [W1, bad, W2], 'only 2 would remain');
+  assert.deepEqual(applySafeDeterministicFixes({ ...four, aboutPageHeadline: bad }, gates).value.trustBarItems, [W1, bad, W2, W3], 'another field also hits');
+  assert.deepEqual(applySafeDeterministicFixes(loose({ trustBarItems: [W1, bad, `${bad} ${W1}`, W3] }), gates).value.trustBarItems, [W1, bad, `${bad} ${W1}`, W3], 'two items hit');
+  assert.deepEqual(applySafeDeterministicFixes(four, null).value.trustBarItems, [W1, bad, W2, W3], 'gates off: no fix');
 });

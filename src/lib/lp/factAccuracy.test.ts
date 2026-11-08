@@ -16,6 +16,7 @@ import {
   GUARD_CUSTOMER_STEMS,
   GUARD_SPEECH_VERBS,
   SERVICE_LABEL_PINS,
+  STICKY_ACTION_TOKENS,
   TYPOGRAPHY_RULE_TEXT,
 } from './generationData';
 import { CLAIM_RULES, FACT_REPEAT_MAX } from './copyGates.config';
@@ -48,6 +49,8 @@ const PLACE_A = '\u05D7\u05D8\u05DC\u05DF'; // one word
 const PLACE_B = '\u05D2\u05D3 \u05D9\u05DD'; // two words, starts with a non-bet letter
 const LABEL = '\u05D2\u05D3\u05D4 \u05D6\u05D7\u05D8';
 
+/** M2a.5: a sticky-bar line that carries a section 19.4 action token (gate_sticky_action). */
+const STICKY_LINE = `${STICKY_ACTION_TOKENS[0]} Sticky`;
 const ctx = (overrides: Partial<CopyGateContext> = {}): CopyGateContext => ({
   soloOperator: true, serviceLabels: [], ownerFactsText: '', ownerFields: {}, reviewQuote: null, starRating: null, ...overrides,
 });
@@ -55,7 +58,7 @@ const base: SiteCopy = {
   heroHeadline: 'Headline', heroSubheadline: 'Sub', heroCta: 'Call', trustBarItems: ['Proof'], aboutBlurb: 'About',
   servicesHeadline: 'Services', serviceItems: ['Alpha'], faqHeadline: 'FAQ', faqItems: [], guaranteeBlock: 'Promise',
   reviewFeatured: null, reviewContext: null, responseTimeBadge: null, scarcityLine: null, formHeadline: 'Form',
-  stickyBarLine: 'Sticky', aboutPageHeadline: 'About page', aboutPageBody: 'About body', serviceDetails: [],
+  stickyBarLine: STICKY_LINE, aboutPageHeadline: 'About page', aboutPageBody: 'About body', serviceDetails: [],
 };
 const loose = (copy: Partial<SiteCopy>) => ({ ...base, ...copy }) as unknown as Record<string, unknown>;
 const rules = (hits: ReturnType<typeof runCopyGates>) => hits.map(hit => hit.rule);
@@ -292,7 +295,7 @@ test('8 review quote: shown only when mostly Hebrew (else null, never sent to th
 test('9 owner-fact repetition: a fact phrase (digit run of an owner fact) above the cap per page triggers a repair', async () => {
   const gates = copyGateContext({ yearsInField: '18 years', usp: 'within 20 minutes', phone: '050-0000001', reviewQuote: '15' }, []);
   assert.deepEqual(gates.factPhrases, ['18', '20']);
-  const copy = loose({ heroSubheadline: `18 ${HE_WORD}`, trustBarItems: [`18 ${HE_WORD}`], aboutBlurb: `${HE_WORD} 18`, stickyBarLine: `18 ${HE_WORD}` });
+  const copy = loose({ heroSubheadline: `18 ${HE_WORD}`, trustBarItems: [`18 ${HE_WORD}`], aboutBlurb: `${HE_WORD} 18`, stickyBarLine: `${STICKY_LINE} 18` });
   const hits = runCopyGates(copy, gates).filter(hit => hit.rule === GATE_RULES.factRepeat);
   assert.equal(FACT_REPEAT_MAX, 2);
   assert.deepEqual(hits.map(hit => hit.field).sort(), ['aboutBlurb', 'stickyBarLine'].sort());
@@ -304,12 +307,12 @@ test('9 owner-fact repetition: a fact phrase (digit run of an owner fact) above 
       calls++;
       if (/repairing specific fields/.test(system)) {
         assert.match(user, /repeats the owner fact "18"/);
-        return JSON.stringify({ stickyBarLine: HE_WORD, aboutBlurb: HE_WORD });
+        return JSON.stringify({ stickyBarLine: STICKY_LINE, aboutBlurb: HE_WORD });
       }
       return JSON.stringify({ ...base, ...copy, serviceItems: [LABEL] });
     },
   });
-  assert.equal(repaired.stickyBarLine, HE_WORD);
+  assert.equal(repaired.stickyBarLine, STICKY_LINE);
   assert.ok(calls >= 3);
 });
 
