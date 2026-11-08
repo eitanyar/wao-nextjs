@@ -10,9 +10,20 @@
  * M2a.2: the claim tokens for the ten Noa claim kinds come from generationData.ts (scripted
  * copy of docs/copy/site-bot-generation-data.md). Tokens below that are NOT from that file
  * (plural / we forms, WAO-service terms, warranty, thermal) are logged for Noa to confirm.
+ *
+ * M2a.3: Noa's data sections 10-12 extend the plural / we / WAO-term lists below (appended after
+ * the M2a.1 entries, so existing indices are stable) and replace the thermal token. Sources are
+ * recorded in GUARD_TOKEN_SOURCES (generationData.ts).
  */
 
-import { CLAIM_TOKENS } from './generationData';
+import {
+  CLAIM_TOKENS,
+  GUARD_TOKEN_SOURCES,
+  PLURAL_ADDRESS_TOKENS_DATA,
+  THERMAL_TOKENS,
+  WAO_SERVICE_TERMS_DATA,
+  WE_TOKENS_DATA,
+} from './generationData';
 
 export interface GateToken {
   token: string;
@@ -32,13 +43,22 @@ export const PLURAL_ADDRESS_TOKENS: readonly GateToken[] = [
   { token: "לכם", allowPrefix: true, source: "noa: לכם" },
   { token: "שלכם", allowPrefix: true, source: "noa: בואו נדבר על הלוח שלכם" },
   { token: "אליכם", allowPrefix: true, source: "noa: ספרו לי מה צריך — אני חוזר אליכם" },
+  // M2a.3, Noa data section 10. Noa set no prefix rule for these: matched as whole words (allowPrefix: false).
+  ...dataTokens(PLURAL_ADDRESS_TOKENS_DATA, false, GUARD_TOKEN_SOURCES.pluralAddressTokens),
 ];
 
 /** First-person plural ("we") forms: rejected on solo-operator sites. */
 export const WE_FORM_TOKENS: readonly GateToken[] = [
   { token: "שלנו", allowPrefix: true, source: "noa: השירותים שלנו" },
   { token: "אנחנו", allowPrefix: true, source: "brief: we forms; bytes from lpCopyPrompt.ts:130" },
+  // M2a.3, Noa data section 10: every weTokens entry is allowPrefix: true.
+  ...dataTokens(WE_TOKENS_DATA, true, GUARD_TOKEN_SOURCES.weTokens),
 ];
+
+/** Data tokens not already in the M2a.1 list above (appended; the M2a.1 entries keep their indices). */
+function dataTokens(tokens: readonly string[], allowPrefix: boolean, source: string): GateToken[] {
+  return tokens.map(token => ({ token, allowPrefix, source }));
+}
 
 /** WAO's own services leaking into client copy (plumber-2:52-57 of the M2a eval). Substring match. */
 export const WAO_SERVICE_TERMS_HE: readonly string[] = [
@@ -48,6 +68,8 @@ export const WAO_SERVICE_TERMS_HE: readonly string[] = [
   "אופטימיזציה להמרות",
   "כתיבת מודעות",
   "ייעוץ אסטרטגי",
+  // M2a.3, Noa data section 11 (substring match).
+  ...WAO_SERVICE_TERMS_DATA,
 ];
 /** Latin WAO-service terms (word match, case-insensitive). */
 export const WAO_SERVICE_TERMS_LATIN: readonly string[] = ['WAO', 'copywriting', 'landing page', 'landing pages'];
@@ -61,6 +83,8 @@ export interface ClaimRule {
    * the owner's facts. English keywords never authorise such a rule (never map a grade).
    */
   perToken?: boolean;
+  /** M2a.3: tokens are not substring-matched; the rule is decided by a sentence check in copyGates.ts. */
+  sentenceOnly?: boolean;
   /** Owner-data fields whose non-empty value authorises the claim. */
   ownerFields: readonly string[];
   /** English keywords in any owner fact that authorise the claim (case-insensitive). */
@@ -68,10 +92,29 @@ export interface ClaimRule {
   source: string;
 }
 
+/** English owner-fact keywords that authorise a solo-operator claim (M2a.3, Noa section 6 note). */
+export const SOLO_OPERATOR_KEYWORDS: readonly string[] = [
+  'answer myself', 'answers himself', 'answer personally', 'answers personally', 'personally', 'myself',
+  'work alone', 'works alone', 'working alone', 'by myself', 'on my own', 'solo', 'one-man', 'one man',
+  'no subcontractor', 'no sub-contractor', 'no call centre', 'no call center', 'no middlemen', 'no middleman',
+];
+
+/** English owner-fact keywords that authorise a fix_time claim (M2a.2 list; scope-checked since M2a.3). */
+export const FIX_TIME_KEYWORDS: readonly string[] = [
+  'fix within', 'fixed within', 'repair within', 'install within', 'installed within', 'finish within', 'same-day', 'same day',
+];
+
+/**
+ * Owner fields that never authorise a fix_time claim: the response time is an ARRIVAL time
+ * ("same day in Holon"), not a promise to finish the job (M2a.3).
+ */
+export const FIX_TIME_EXCLUDED_FIELDS: readonly string[] = ['responseTime'];
+
 /** Claims rejected unless they are in the owner facts. */
 export const CLAIM_RULES: readonly ClaimRule[] = [
   { id: 'warranty', tokens: ["אחריות"], ownerFields: ['guarantee'], ownerKeywords: ['warranty', 'guarantee'], source: "noa: אחריות מלאה (e5:66)" },
-  { id: 'thermal', tokens: ["תרמית"], ownerFields: [], ownerKeywords: ['thermal'], source: "noa: מצלמה תרמית (p3:108, p4:47, p5:24)" },
+  // M2a.3: Noa data section 12 replaces the single M2a.1 token (the first token also covers its inflections as a substring).
+  { id: 'thermal', tokens: THERMAL_TOKENS, ownerFields: [], ownerKeywords: ['thermal'], source: GUARD_TOKEN_SOURCES.thermalTokens },
   // M2a.2: Noa's claimTokens (docs/copy/site-bot-generation-data.md section 2), loaded by script.
   { id: 'street_address', tokens: claimTokens('street_address'), ownerFields: ['streetAddress'], ownerKeywords: [], source: 'noa data §2' },
   { id: 'walk_in', tokens: claimTokens('walk_in'), ownerFields: [], ownerKeywords: ['walk-in', 'walk in', 'no appointment', 'without an appointment'], source: 'noa data §2' },
@@ -81,7 +124,12 @@ export const CLAIM_RULES: readonly ClaimRule[] = [
   { id: 'report_included', tokens: claimTokens('report_included'), ownerFields: [], ownerKeywords: ['report'], source: 'noa data §2' },
   { id: 'sealing_test', tokens: claimTokens('sealing_test'), ownerFields: [], ownerKeywords: ['sealing', 'waterproofing', 'pressure test'], source: 'noa data §2' },
   { id: 'apprenticeship_bio', tokens: claimTokens('apprenticeship_bio'), ownerFields: [], ownerKeywords: ['apprentice', 'started as', 'started working', 'learned the trade', 'worked for', 'at age'], source: 'noa data §2' },
-  { id: 'fix_time', tokens: claimTokens('fix_time'), ownerFields: [], ownerKeywords: ['fix within', 'fixed within', 'repair within', 'install within', 'installed within', 'finish within', 'same-day', 'same day'], source: 'noa data §2 (+ sentence check, copyGates.ts)' },
+  // M2a.3: a solo-operator claim (works alone, answers personally, no subcontractors / call centre) needs an owner fact.
+  { id: 'solo_operator', tokens: claimTokens('solo_operator'), ownerFields: [], ownerKeywords: SOLO_OPERATOR_KEYWORDS, source: 'noa data §2 + §6 note' },
+  // M2a.3: fix_time is decided by the sentence check only (copyGates.ts: lead token + digit or within-word,
+  // fix verbs from these tokens); the plain "<verb> <lead>" substrings collided with "while" usage. Authorised
+  // only by an owner fact outside responseTime, and only for the services that fact names (FIX_TIME_SCOPE).
+  { id: 'fix_time', tokens: claimTokens('fix_time'), sentenceOnly: true, ownerFields: [], ownerKeywords: FIX_TIME_KEYWORDS, source: 'noa data §2 + §7 (sentence check, copyGates.ts)' },
   { id: 'license_grade', tokens: claimTokens('license_grade'), perToken: true, ownerFields: [], ownerKeywords: [], source: 'noa data §2' },
 ];
 
@@ -101,6 +149,22 @@ export const CLAIM_EXCLUDED_FACT_FIELDS: readonly string[] = ['reviewQuote', 'st
 export const FACT_PHRASE_FIELDS: readonly string[] = ['yearsInField', 'guarantee', 'license', 'usp', 'responseTime', 'pricingNotes'];
 /** A fact phrase may appear at most this many times per page. */
 export const FACT_REPEAT_MAX = 2;
+
+/**
+ * M2a.3 phrase-level repetition (item 5): owner fields whose Hebrew clauses are fact phrases, besides
+ * the page's own trustBarItems and guaranteeBlock (the model's short statement of each proof point).
+ */
+export const FACT_PHRASE_TEXT_FIELDS: readonly string[] = ['guarantee', 'pricingNotes', 'usp'];
+/**
+ * Fields not counted by the phrase-level cap: the trust bar and the guarantee block state each proof
+ * point once by design (they are the phrase sources), and the response-time badge states the owner's
+ * response time once by design. System-filled fields are never gated.
+ */
+export const FACT_PHRASE_EXEMPT_FIELDS: readonly string[] = ['trustBarItems', 'guaranteeBlock', 'responseTimeBadge'];
+/** A phrase key is two adjacent Hebrew words with at least this many letters each. */
+export const FACT_PHRASE_MIN_WORD_LETTERS = 3;
+/** Only the first words of each source clause (the head of the proof point) form phrase keys. */
+export const FACT_PHRASE_MAX_WORDS = 3;
 
 /** A quote overlap of at least this many characters outside reviewFeatured is a violation. */
 export const QUOTE_OVERLAP_MIN_CHARS = 24;

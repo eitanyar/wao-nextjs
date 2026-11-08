@@ -55,8 +55,9 @@ test('A1 plural address: every configured token is caught in a gated field, with
 
 test('A1 we-forms are rejected on solo-operator sites only; system fields are exempt', () => {
   const copy = loose({ servicesHeadline: `${HE_WORD} ${WE_FORM_TOKENS[0].token}`, aboutBlurb: WE_FORM_TOKENS[1].token });
-  assert.deepEqual(runCopyGates(copy, ctx()).map(hit => [hit.field, hit.rule]), [
-    ['aboutBlurb', GATE_RULES.we], ['servicesHeadline', GATE_RULES.we],
+  // M2a.3: Noa's data we-forms overlap the M2a.1 ones (a prefixed form of one is another), so compare distinct field/rule pairs.
+  assert.deepEqual([...new Set(runCopyGates(copy, ctx()).map(hit => `${hit.field}|${hit.rule}`))], [
+    `aboutBlurb|${GATE_RULES.we}`, `servicesHeadline|${GATE_RULES.we}`,
   ]);
   assert.deepEqual(runCopyGates(copy, ctx({ soloOperator: false })), []);
   // heroCta / serviceItems / reviewFeatured / faqItems are system-filled: never gated as text.
@@ -96,7 +97,8 @@ test('A3 claims (warranty, thermal) are rejected unless the owner facts carry th
 
 test('A4 WAO-offer terms (Hebrew eval leak and Latin brand terms) are rejected, and the client prompt no longer carries the offer', () => {
   const hits = runCopyGates(loose({ serviceDetails: [{ name: WAO_SERVICE_TERMS_HE[0], description: 'd' }], aboutBlurb: 'Built by WAO' }), ctx());
-  assert.deepEqual(hits.map(hit => [hit.field, hit.rule]), [['aboutBlurb', GATE_RULES.waoOffer], ['serviceDetails[0].name', GATE_RULES.waoOffer]]);
+  // M2a.3: Noa's data terms are substrings of some M2a.1 terms, so compare distinct field/rule pairs.
+  assert.deepEqual([...new Set(hits.map(hit => `${hit.field}|${hit.rule}`))], [`aboutBlurb|${GATE_RULES.waoOffer}`, `serviceDetails[0].name|${GATE_RULES.waoOffer}`]);
   const brief = briefWithSite();
   const prompt = buildResearchPageGenerationPrompt(brief, { businessNiche: 'plumber', usp: 'Same-day leaks' });
   assert.doesNotMatch(prompt, /"offer":/);

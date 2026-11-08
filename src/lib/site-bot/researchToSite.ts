@@ -338,6 +338,8 @@ export function buildPageBriefs(dossier: SiteResearchDossier, data: CollectedDat
         city: identity.baseCity,
         serviceArea: identity.serviceArea,
         serviceLabels,
+        // M2a.3: owner wording per label (identity source, else the label itself).
+        serviceSources: serviceLabels.map(label => identity.services.find(service => service.label === label)?.source ?? label),
         businessName: dossier.businessTruth.businessName,
         // Site Bot serves solo operators; CollectedData has no team-size answer yet.
         soloOperator: true,

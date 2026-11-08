@@ -10,12 +10,14 @@ import { callQwenJSON, type CallQwenJSONOptions } from '../ai/qwen-fast';
 import type { PageBrief } from '../site-bot/research/pageBrief';
 import type { SiteResearchDossier } from '../site-bot/research/types';
 import { PLURAL_ADDRESS_TOKENS, WE_FORM_TOKENS } from './copyGates.config';
-import { TYPOGRAPHY_RULE_TEXT } from './generationData';
+import { CLAIM_TOKENS, TYPOGRAPHY_RULE_TEXT } from './generationData';
 import {
   copyGateContext,
   describeGateViolation,
   effectiveReviewQuote,
+  fixTimeScope,
   GATE_RULES,
+  isInstallService,
   runCopyGates,
   type CopyGateContext,
 } from './copyGates';
@@ -43,7 +45,7 @@ export interface ResearchPageCopyDependencies {
  * (copyGates.config.ts), so the prompt and the gate can never drift apart.
  */
 export const SINGULAR_ADDRESS_RULE =
-  `ADDRESS (hard rule, binding): address the reader in the singular masculine second person only, as one man. Never use plural or second-person-plural forms. Forbidden forms, including with attached prefix letters: ${PLURAL_ADDRESS_TOKENS.map(entry => entry.token).join(', ')}. The business is a solo operator: the owner speaks in the first-person singular, never in the first-person plural. Forbidden: ${WE_FORM_TOKENS.map(entry => entry.token).join(', ')}.`;
+  `ADDRESS (hard rule, binding): address the reader in the singular masculine second person only, as one man. Never use plural or second-person-plural forms. Forbidden forms, including with attached prefix letters: ${PLURAL_ADDRESS_TOKENS.map(entry => entry.token).join(', ')}. VOICE (grammar only): the owner speaks in the first-person singular, never in the first-person plural. Forbidden: ${WE_FORM_TOKENS.map(entry => entry.token).join(', ')}. This is a grammar rule, not a fact about the business: never state or imply that the owner works alone, answers the phone personally, or has no subcontractors or no call centre, unless an owner fact says so.`;
 
 /**
  * Hebrew typography spec for the Noa and repair stages: Noa's typographyRule (M2a.2), copied
@@ -306,11 +308,12 @@ function applyFaqPolicy(copy: SiteCopy, brief: PageBrief): SiteCopy {
 }
 
 /** M2a.1 copy rules (English). Site-specific lines only when the brief carries site facts. */
-export function buildResearchCopyRules(brief: PageBrief): string[] {
+export function buildResearchCopyRules(brief: PageBrief, data: CollectedData = {}): string[] {
   const site = brief.site;
   const rules = [
     SINGULAR_ADDRESS_RULE,
     '- Use each owner fact at most twice per page; rotate proof points across fields instead of repeating the same fact.',
+    '- Every proof point you put in trustBarItems or guaranteeBlock (and every owner guarantee, pricing or USP point) may appear in at most two other fields of the page, in any wording; the system counts it. In serviceDetails descriptions, describe the service itself instead of repeating proof points.',
     '- When a field must be shorter, cut a whole idea. Never shorten by dropping a verb\'s object or leaving a sentence grammatically incomplete.',
     '- Owner facts may arrive translated or in English. Render their meaning in native, idiomatic Hebrew; never mirror an English idiom or English word order, and never copy English wording into the copy (proper names excepted).',
     '- The customer quote may appear only in reviewFeatured, which the system fills in verbatim. Never quote, paraphrase or echo it in any other field.',
@@ -324,8 +327,16 @@ export function buildResearchCopyRules(brief: PageBrief): string[] {
     '- When you list several places as locations, attach the locative prefix letter (\u05D1) to every place in the list, including after the conjunction (\u05D5); never only to the first.',
     '- Write place names exactly as given in the service-area local fact: never insert a hyphen or maqaf into a place name.',
     '- Name only the places in the service-area local fact (use their display names); never a wider region and never "and surroundings".',
+    // M2a.3 (items 7-8).
+    '- The customer quote and the customer\'s fear are not owner facts. Never turn what a customer said (for example that the price did not change, a fast arrival, a clean job) or the opposite of the customer\'s fear (for example "the price never changes", "no surprises in the price") into the owner\'s promise or guarantee, unless an owner fact states it.',
+    '- AVAILABILITY (binding): state hours or availability only in the owner\'s own terms. Never write an availability figure such as 24/7 or 24/6 unless the owner wrote exactly that figure.',
   ];
   if (site) {
+    const scope = fixTimeScope(briefGateContext(brief, data));
+    if (isInstallPage(brief)) {
+      rules.push('- INSTALLATION PAGE (binding): this page is about an installation service. Never state an arrival or response time on it (no "arrives within <time>"): the emergency response time belongs on repair pages only.');
+    }
+    if (scope instanceof Set) rules.push(`- A same-day / fix-within promise from the owner covers only these services: ${JSON.stringify([...scope])}. Never extend it to any other service.`);
     rules.push(
       `- serviceItems is filled in by the system. serviceDetails: at most one entry per service; every name must be exactly one of these owner-confirmed service names, character for character: ${JSON.stringify(site.serviceLabels)}. Never add any other service.`,
       `- This page is about: ${JSON.stringify(site.pageName)}${site.city ? ` in ${JSON.stringify(site.city)}` : ''}. Where it reads naturally, heroHeadline contains that name${site.city ? ' and that city' : ''}.`,
@@ -337,7 +348,7 @@ export function buildResearchCopyRules(brief: PageBrief): string[] {
   return rules;
 }
 
-export function buildResearchPageCopyPrompt(brief: PageBrief): string {
+export function buildResearchPageCopyPrompt(brief: PageBrief, data: CollectedData = {}): string {
   return `RESEARCH BRIEF (authoritative; use no claim not supported here):
 ${JSON.stringify({
   page: brief.page,
@@ -366,7 +377,7 @@ RESEARCH RULES:
 - Keep required internal-link targets limited to links.
 
 COPY RULES (binding):
-${buildResearchCopyRules(brief).join('\n')}
+${buildResearchCopyRules(brief, data).join('\n')}
 
 The following owner-fact prompt provides the required SiteCopy JSON schema. Treat its owner facts as context only; use a fact in output only when the research brief authorizes it. Its HARD RULES, BANNED PHRASES, address and voice rules are NOT context: they are binding, together with the COPY RULES above.`;
 }
@@ -563,7 +574,7 @@ function currentViolations(value: Loose, gates: CopyGateContext | null = null): 
 
 /**
  * Last-resort fixes that cannot damage copy: drop whole list items past the item
- * limit, null a review context that has no quote, set always-null fields (missing or
+ * limit or over their character limit (M2a.3; only while another item remains), null a review context that has no quote, set always-null fields (missing or
  * not) to null, drop unknown keys. With gates: drop whole serviceDetails entries naming
  * a service the owner did not confirm, and null a reviewContext with no star rating.
  * Never shortens or edits any string, and never nulls the owner's quote.
@@ -583,6 +594,16 @@ export function applySafeDeterministicFixes(value: Loose, gates: CopyGateContext
     if (Array.isArray(list) && list.length > max) {
       next[key] = list.slice(0, max);
       fixes.push(`trim_items:${key}:${list.length}->${max}`);
+    }
+    // M2a.3: a whole item over its character limit is dropped (never shortened), only while another item remains.
+    const current = next[key];
+    const itemMax = SITE_COPY_STRING_LIST_LIMITS[key].itemMaxChars;
+    if (Array.isArray(current)) {
+      const kept = current.filter(item => !(typeof item === 'string' && item.length > itemMax));
+      if (kept.length && kept.length !== current.length) {
+        next[key] = kept;
+        fixes.push(`drop_overlong_items:${key}:${current.length}->${kept.length}`);
+      }
     }
   }
   if (gates?.serviceLabels.length && Array.isArray(next.serviceDetails)) {
@@ -636,6 +657,8 @@ export function withSystemFields(value: Loose, brief: PageBrief, data: Collected
   const quote = effectiveReviewQuote(data);
   next.reviewFeatured = quote && quote.length <= SITE_COPY_OPTIONAL_STRING_LIMITS.reviewFeatured ? quote : null;
   if (!ownerHasGuarantee(data)) next.guaranteeBlock = null;
+  // M2a.3 (item 6): the response-time badge is the emergency arrival promise; never on an installation page.
+  if (isInstallPage(brief)) next.responseTimeBadge = null;
   return next;
 }
 
@@ -655,7 +678,8 @@ async function repairFields(ctx: RepairContext, stage: CopyValidationStage, valu
 
 function systemFieldsFor(ctx: RepairContext): readonly string[] {
   if (!ctx.brief.site) return ['faqItems'];
-  return ownerHasGuarantee(ctx.data) ? SYSTEM_FIELDS : [...SYSTEM_FIELDS, 'guaranteeBlock'];
+  const fields = ownerHasGuarantee(ctx.data) ? SYSTEM_FIELDS : [...SYSTEM_FIELDS, 'guaranteeBlock'];
+  return isInstallPage(ctx.brief) ? [...fields, 'responseTimeBadge'] : fields;
 }
 
 /** Validate one stage's output against the validator and the gates, spending repair budget, then safe fixes; throws with what remains. */
@@ -701,9 +725,21 @@ function assertGatesAt(stage: CopyValidationStage, value: Loose, gates: CopyGate
 const LEGACY_PERSONA_LINE = "You are Tamar, WAO's Sabra conversion copywriter.";
 const RESEARCH_PERSONA_LINE = 'You are Tamar, a Sabra conversion copywriter writing for one local business.';
 
+/**
+ * M2a.3 (item 4): the legacy banned-phrase list explains one ban with an invented solo-operator
+ * example (answers personally, no call centre). The research prompt cuts that parenthetical (from
+ * this anchor to the end of its closing line), so the model is never shown an unstated solo claim.
+ */
+const SOLO_EXAMPLE_START = '   (banned only BARE';
+const SOLO_EXAMPLE_END = ')\n';
+
 /** The legacy prompt's invented license-grade example (aboutBlurb opener); cut from the research prompt (item 3). */
 const LICENSE_EXAMPLE_START = 'Example 2 \u2014 aboutBlurb opener';
 const LICENSE_EXAMPLE_END = 'Example 3 \u2014';
+
+function ownerFactText(data: CollectedData): string {
+  return Object.values(data).filter((value): value is string => typeof value === 'string').join('\n');
+}
 
 export function buildResearchPageGenerationPrompt(brief: PageBrief, data: CollectedData): string {
   // M2a.2: a quote that is not mostly Hebrew never reaches the model (never translated, item 8),
@@ -721,8 +757,35 @@ export function buildResearchPageGenerationPrompt(brief: PageBrief, data: Collec
     const end = clientSchema.indexOf(LICENSE_EXAMPLE_END, start);
     if (start < 0 || end < 0) throw new Error('Site copy schema prompt license example changed; update the research example cut.');
     clientSchema = `${clientSchema.slice(0, start)}${clientSchema.slice(end)}`;
+    const soloStart = clientSchema.indexOf(SOLO_EXAMPLE_START);
+    const soloEnd = clientSchema.indexOf(SOLO_EXAMPLE_END, clientSchema.indexOf('e.g.', soloStart));
+    if (soloStart < 0 || soloEnd < 0) throw new Error('Site copy schema prompt solo example changed; update the research example cut.');
+    clientSchema = `${clientSchema.slice(0, soloStart)}${clientSchema.slice(soloEnd + 1)}`;
+    // Owner facts may authorise a solo claim; the prompt template itself never may.
+    const template = buildSiteCopyPrompt({}, { blankResponseTimeBadge: true });
+    if ((CLAIM_TOKENS.solo_operator ?? []).some(token => template.includes(token) && clientSchema.includes(token) && !ownerFactText(data).includes(token))) {
+      throw new Error('Site copy schema prompt shows an unstated solo-operator claim; update the research example cut.');
+    }
   }
-  return `${buildResearchPageCopyPrompt(brief)}\n\nOWNER FACTS AND SITE COPY SCHEMA:\n${clientSchema}\n\n${buildSiteCopyHardLimitsBlock()}`;
+  return `${buildResearchPageCopyPrompt(brief, data)}\n\nOWNER FACTS AND SITE COPY SCHEMA:\n${clientSchema}\n\n${buildSiteCopyHardLimitsBlock()}`;
+}
+
+/** True when the brief's page is about an installation service (item 6). */
+export function isInstallPage(brief: PageBrief): boolean {
+  const site = brief.site;
+  if (!site || brief.page.pageClass === 'homepage') return false;
+  const index = site.serviceLabels.indexOf(site.pageName);
+  return isInstallService(site.pageName, index >= 0 ? site.serviceSources?.[index] ?? '' : '');
+}
+
+/** The gate context for one brief (M2a.3: service scope, page service, installation page). */
+export function briefGateContext(brief: PageBrief, data: CollectedData): CopyGateContext {
+  const site = brief.site;
+  return copyGateContext(data, site?.serviceLabels ?? [], site?.soloOperator ?? true, gatePlaces(brief), {
+    serviceSources: site?.serviceSources ?? [],
+    pageServiceLabel: site && brief.page.pageClass !== 'homepage' ? site.pageName : null,
+    installPage: isInstallPage(brief),
+  });
 }
 
 /** Owner-stated places for the place gates: base city first, then the service area. */
@@ -752,7 +815,7 @@ export async function generateResearchPageCopy(
     remaining: Number.isInteger(requested) ? Math.max(0, Math.min(MAX_COPY_REPAIRS, requested)) : MAX_COPY_REPAIRS,
     used: 0,
     deterministicFixes: dependencies.deterministicFixes ?? true,
-    gates: dependencies.gates === false ? null : copyGateContext(data, brief.site?.serviceLabels ?? [], brief.site?.soloOperator ?? true, gatePlaces(brief)),
+    gates: dependencies.gates === false ? null : briefGateContext(brief, data),
     emit: event => {
       try { dependencies.onEvent?.(event); } catch { /* diagnostics never break generation */ }
     },

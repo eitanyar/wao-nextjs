@@ -1,0 +1,20 @@
+{
+  "businessName": "TEST M2a3 Plumbing",
+  "businessNiche": "plumber",
+  "primaryService": "leak detection",
+  "secondaryServices": "drain unblocking",
+  "priorityServices": ["leak detection"],
+  "serviceModel": "field",
+  "targetLocation": "Rehovot",
+  "specificCities": "Rehovot, Ness Ziona",
+  "travelBoundary": "Up to 15 km from Rehovot",
+  "ownerName": "Test Owner C",
+  "usp": "Finds hidden leaks with acoustic equipment and explains the repair options before any work starts",
+  "idealClientFear": "A plumber who opens the wall in the wrong place and leaves a mess",
+  "yearsInField": "9 years",
+  "guarantee": "One-year warranty on repairs",
+  "contactMethod": "phone",
+  "phone": "050-0000002",
+  "whatsappNumber": "050-0000002",
+  "businessHours": "Sun-Thu 08:00-18:00, Fri 08:00-13:00"
+}

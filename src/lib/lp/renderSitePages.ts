@@ -10,6 +10,7 @@ import { renderStaticHtml, type RenderStaticHtmlParams } from './renderStaticHtm
 import { buildPrivacyHtml, buildAccessibilityHtml, isAccessibilityExempt } from './legalPages';
 import { buildFraudBlockerTrackerHtml } from '../fraud-blocker/tracker';
 import { displayBusinessHours, parseBusinessHours } from './businessHours';
+import { TEMPLATE_STRINGS } from './generationData';
 
 export interface RenderSitePagesParams extends Omit<RenderStaticHtmlParams, 'copy' | 'mode' | 'siteUrl'> {
   copy: SiteCopy;
@@ -25,6 +26,22 @@ export interface RenderSitePagesParams extends Omit<RenderStaticHtmlParams, 'cop
   researched?: { contactTitle: string | null };
 }
 
+/**
+ * M2a.3 (item 9): system strings of the lead form on researched sites. Unset = legacy markup,
+ * byte-identical (the button repeats the hero CTA, the legacy thanks line, an H2 headline).
+ */
+export interface LeadFormOptions {
+  /** Submit-button label (Noa templateStrings.formSubmitLabel): the button sends the form, it does not call. */
+  submitLabel?: string;
+  /** Form-success line (Noa templateStrings.formThanks). */
+  thanks?: string;
+  /** False = no H2 (the page's H1 already carries the same headline). Default true. */
+  headline?: boolean;
+}
+
+/** The researched-site lead-form strings (Noa templateStrings). */
+export const RESEARCHED_LEAD_FORM: Readonly<LeadFormOptions> = { submitLabel: TEMPLATE_STRINGS.formSubmitLabel, thanks: TEMPLATE_STRINGS.formThanks };
+
 export function renderSitePages(p: RenderSitePagesParams): Record<string, string> {
   const siteUrl = p.siteUrl.replace(/\/$/, '');
   const exempt = isAccessibilityExempt(p.data.vatStatus);
@@ -34,14 +51,14 @@ export function renderSitePages(p: RenderSitePagesParams): Record<string, string
     'about.html': buildAboutHtml(p, siteUrl),
     'services.html': buildServicesHtml(p, siteUrl),
     'contact.html': buildContactHtml(p, siteUrl),
-    'privacy.html': buildPrivacyHtml({ theme: p.theme, data: p.data, canonicalUrl: `${siteUrl}/privacy.html`, homeHref: '/', fraudBlockerSid: p.fraudBlockerSid, ...(p.researched ? { pipeTitle: true } : {}) }),
+    'privacy.html': buildPrivacyHtml({ theme: p.theme, data: p.data, canonicalUrl: `${siteUrl}/privacy.html`, homeHref: '/', fraudBlockerSid: p.fraudBlockerSid, ...(p.researched ? { pipeTitle: true, prefixRule: true } : {}) }),
     'sitemap.xml': buildSitemap(siteUrl),
   };
 
   // No exemption exists for the privacy page — always built. Accessibility
   // is gated: absent entirely (not a stub) when the client is exempt.
   if (!exempt) {
-    pages['accessibility.html'] = buildAccessibilityHtml({ theme: p.theme, data: p.data, canonicalUrl: `${siteUrl}/accessibility.html`, homeHref: '/', fraudBlockerSid: p.fraudBlockerSid, ...(p.researched ? { pipeTitle: true } : {}) });
+    pages['accessibility.html'] = buildAccessibilityHtml({ theme: p.theme, data: p.data, canonicalUrl: `${siteUrl}/accessibility.html`, homeHref: '/', fraudBlockerSid: p.fraudBlockerSid, ...(p.researched ? { pipeTitle: true, prefixRule: true } : {}) });
   }
 
   return pages;
@@ -317,10 +334,14 @@ export function trustBarSection(t: VerticalTheme, items: string[]): string {
 }
 
 // Lead form section (same markup/behavior as renderStaticHtml's Lead Form).
-export function leadFormSection(t: VerticalTheme, headline: string, ctaLabel: string): string {
+export function leadFormSection(t: VerticalTheme, headline: string, ctaLabel: string, options: LeadFormOptions = {}): string {
+  const submitLabel = options.submitLabel ?? ctaLabel;
+  const heading = options.headline === false
+    ? ''
+    : `
+      <h2 style="font-family:'Secular One',sans-serif;font-weight:${t.headingWeight};font-size:1.35rem;color:${t.primary};margin-bottom:20px;text-align:center;">${esc(headline)}</h2>`;
   return `  <section style="padding:40px 20px;background:${t.surfaceAlt};">
-    <div style="max-width:480px;margin:0 auto;">
-      <h2 style="font-family:'Secular One',sans-serif;font-weight:${t.headingWeight};font-size:1.35rem;color:${t.primary};margin-bottom:20px;text-align:center;">${esc(headline)}</h2>
+    <div style="max-width:480px;margin:0 auto;">${heading}
       <form id="lead-form" style="display:flex;flex-direction:column;gap:14px;">
         <input type="text" id="f-name" placeholder="שם מלא" aria-label="שם מלא" required style="padding:14px 16px;border-radius:${t.radiusSm};border:1px solid ${t.border};font-size:1rem;color:${t.textPrimary};background:${t.surface};" />
         <input type="tel" id="f-phone" placeholder="050-0000000" aria-label="מספר טלפון" dir="ltr" required style="padding:14px 16px;border-radius:${t.radiusSm};border:1px solid ${t.border};font-size:1rem;color:${t.textPrimary};background:${t.surface};text-align:right;" />
@@ -329,9 +350,9 @@ export function leadFormSection(t: VerticalTheme, headline: string, ctaLabel: st
           <span style="font-size:0.8rem;color:${t.textMuted};line-height:1.4;">אני מסכים/ה ל<a href="/privacy.html" style="color:${t.textMuted};text-decoration:underline;">מדיניות הפרטיות</a>.</span>
         </label>
         <div id="form-error">שגיאה בשליחה — נסה שוב או התקשר ישירות.</div>
-        <button type="submit" class="submit-btn">${esc(ctaLabel)}</button>
+        <button type="submit" class="submit-btn">${esc(submitLabel)}</button>
       </form>
-      <div id="form-success">✅ תודה! נחזור אליך בהקדם.</div>
+      <div id="form-success">${options.thanks !== undefined ? esc(options.thanks) : '✅ תודה! נחזור אליך בהקדם.'}</div>
     </div>
   </section>`;
 }
@@ -577,7 +598,10 @@ function buildContactHtml(p: RenderSitePagesParams, siteUrl: string): string {
     </div>
   </section>
 
-${leadFormSection(t, copy.formHeadline, copy.heroCta)}
+${p.researched
+    // M2a.3 (item 9): the H1 above already shows formHeadline, so the researched form drops its H2.
+    ? leadFormSection(t, copy.formHeadline, copy.heroCta, { ...RESEARCHED_LEAD_FORM, headline: false })
+    : leadFormSection(t, copy.formHeadline, copy.heroCta)}
 
 ${pageScript({
     slug,
@@ -586,7 +610,7 @@ ${pageScript({
     formConversionLabel: p.formConversionLabel || '',
     phoneConversionLabel: p.phoneConversionLabel || '',
     whatsappConversionLabel: p.whatsappConversionLabel || '',
-    ctaLabel: copy.heroCta,
+    ctaLabel: p.researched ? RESEARCHED_LEAD_FORM.submitLabel ?? copy.heroCta : copy.heroCta,
     includeLeadForm: true,
   })}`;
 

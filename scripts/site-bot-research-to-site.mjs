@@ -77,7 +77,7 @@ if (!fs.existsSync(entry)) die('dist/ build missing: run `npx tsc -p tsconfig.te
 fs.writeFileSync(path.join(root, 'dist/package.json'), JSON.stringify({ type: 'commonjs' }));
 const { runResearchToSite } = require(entry);
 const { callQwenJSON } = require(path.join(root, 'dist/lib/ai/qwen-fast.js'));
-const { assertBoundedGeneratedSiteCopy, generateResearchPageCopy, gateViolations, gatePlaces } = require(path.join(root, 'dist/lib/lp/researchPageCopy.js'));
+const { assertBoundedGeneratedSiteCopy, generateResearchPageCopy, gateViolations, briefGateContext } = require(path.join(root, 'dist/lib/lp/researchPageCopy.js'));
 const { copyGateContext, copyReviewFlags } = require(path.join(root, 'dist/lib/lp/copyGates.js'));
 const { renderResearchedSitePages, researchedPageTitle, researchedPageH1 } = require(path.join(root, 'dist/lib/lp/researchedSite.js'));
 const { researchedRenderInputs, buildPageBriefs } = require(entry);
@@ -176,7 +176,8 @@ if (outcome.status === 'generated') {
   const businessName = record.collectedData.businessName || record.collectedData.businessNiche || '';
   const pageFacts = record.researchedPages.map(page => {
     const brief = briefs.get(page.opportunityId);
-    const gates = copyGateContext(record.collectedData, brief?.site?.serviceLabels ?? [], brief?.site?.soloOperator ?? true, brief ? gatePlaces(brief) : []);
+    // M2a.3: the same per-brief gate context the generator uses (service scope, installation page).
+    const gates = brief ? briefGateContext(brief, record.collectedData) : copyGateContext(record.collectedData, []);
     const file = page.classification === 'homepage' ? 'index.html' : Object.keys(html).find(name => name === `${page.targetPath.slice(1)}.html`);
     const body = file ? html[file] : '';
     return {
@@ -188,7 +189,7 @@ if (outcome.status === 'generated') {
       h1: researchedPageH1(page.copy.heroHeadline, page.seo),
       inSitemap: Boolean(html['sitemap.xml']?.includes(`<loc>${/<link rel="canonical" href="([^"]+)"/.exec(body)?.[1]}</loc>`)),
       finalGateHits: gateViolations(page.copy, gates),
-      // M2a.2: non-blocking findings for human review (arrival time in an installation heading).
+      // M2a.2/M2a.3: non-blocking findings for human review (arrival time in an installation heading, fix-time scope).
       reviewFlags: copyReviewFlags(page.copy, gates),
     };
   });

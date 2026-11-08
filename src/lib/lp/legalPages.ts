@@ -33,6 +33,17 @@ interface LegalPageOpts {
    * brand (Yonatan's formula / CLAUDE.md bidi rule). Unset = legacy `<page> — <brand>`.
    */
   pipeTitle?: boolean;
+  /**
+   * M2a.3 (researched sites, Noa section 13): a Hebrew prefix letter takes a hyphen only before a
+   * name starting with a Latin letter or a digit; before a Hebrew name it attaches directly.
+   * Unset = legacy, always a hyphen (byte-identical).
+   */
+  prefixRule?: boolean;
+}
+
+/** The joiner between a prefix letter and `name` (M2a.3 prefixRule; legacy: always a hyphen). */
+function prefixJoiner(opts: LegalPageOpts, name: string): string {
+  return !opts.prefixRule || /^[A-Za-z0-9]/.test(name.trim()) ? '-' : '';
 }
 
 const RLM = '\u200F';
@@ -100,7 +111,7 @@ export function buildPrivacyHtml(opts: LegalPageOpts): string {
     <p>הפרטים שתשאיר/י בטופס באתר זה (שם וטלפון) נאספים על ידי <strong>${businessName}</strong> כבעל השליטה במידע, ומשמשים אך ורק ליצירת קשר חוזר בנוגע לפנייתך.</p>
     <p>המידע לא יועבר לצד שלישי, למעט אם נדרש על פי דין.</p>
     <p>מסירת הפרטים היא לפי בחירתך בלבד. ללא מסירתם לא נוכל לחזור אליך.</p>
-    <p>ניתן בכל עת לבקש לעיין במידע שנמסר, לבקש את תיקונו או את מחיקתו, בפנייה ל-${esc(ownerName)} בטלפון ${esc(phone)}${emailPart}.</p>
+    <p>ניתן בכל עת לבקש לעיין במידע שנמסר, לבקש את תיקונו או את מחיקתו, בפנייה ל${prefixJoiner(opts, ownerName)}${esc(ownerName)} בטלפון ${esc(phone)}${emailPart}.</p>
   `;
 
   return legalDocument(opts, 'מדיניות פרטיות', body);
@@ -113,7 +124,7 @@ export function buildAccessibilityHtml(opts: LegalPageOpts): string {
 
   const body = `
     <p>אתר זה נבנה תוך התייחסות לדרישות תקן ישראלי 5568 (התאמות נגישות בהתאם ל-WCAG 2.0 ברמה AA), ככל הניתן.</p>
-    <p>אם נתקלת בבעיה או שיש לך הערה בנושא נגישות האתר, ניתן לפנות ל-${esc(ownerName)} בטלפון ${esc(phone)}${emailPart}.</p>
+    <p>אם נתקלת בבעיה או שיש לך הערה בנושא נגישות האתר, ניתן לפנות ל${prefixJoiner(opts, ownerName)}${esc(ownerName)} בטלפון ${esc(phone)}${emailPart}.</p>
   `;
 
   return legalDocument(opts, 'הצהרת נגישות', body);

@@ -209,7 +209,7 @@ test('briefs carry owner facts verbatim, English scaffolding, no FAQ, and pass t
   assert.ok(home.assertableLocalFacts.some(item => item.value === 'Service area (owner-stated; name only these places, never a wider area): Holon, Bat Yam'));
   assert.deepEqual(home.site, {
     pageName: 'plumber', relevanceTerm: 'leak detection', city: 'Holon', serviceArea: ['Holon', 'Bat Yam'],
-    serviceLabels: ['alpha'], businessName: 'TEST Biz', soloOperator: true, ownerIntroPage: true,
+    serviceLabels: ['alpha'], serviceSources: ['alpha'], businessName: 'TEST Biz', soloOperator: true, ownerIntroPage: true,
   });
   assert.equal(service.site?.pageName, 'alpha');
   assert.equal(service.site?.relevanceTerm, 'alpha');

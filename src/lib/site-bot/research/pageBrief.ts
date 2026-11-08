@@ -50,6 +50,8 @@ export interface PageBriefSite {
   serviceArea: string[];
   /** Every owner-confirmed service name, this page's own first. */
   serviceLabels: string[];
+  /** M2a.3: the owner's wording of each service, aligned with serviceLabels (scopes fix-time claims). */
+  serviceSources?: string[];
   businessName: string;
   soloOperator: boolean;
   /** True on the one page per site that may use the "my name is <owner>" opener. */
@@ -161,7 +163,8 @@ export function assertBoundedPageBrief(value: unknown): asserts value is PageBri
     const list = (items: unknown) => denseArray(items, MAX_ITEMS_PER_SECTION) && items.every(boundedText);
     if (!plainObject(site) || !boundedText(site.pageName) || !boundedText(site.relevanceTerm) ||
       (site.city !== null && !boundedText(site.city)) || !list(site.serviceArea) || !list(site.serviceLabels) ||
-      !boundedText(site.businessName) || typeof site.soloOperator !== 'boolean' || typeof site.ownerIntroPage !== 'boolean') invalidBrief();
+      !boundedText(site.businessName) || typeof site.soloOperator !== 'boolean' || typeof site.ownerIntroPage !== 'boolean' ||
+      (site.serviceSources !== undefined && (!list(site.serviceSources) || site.serviceSources.length !== site.serviceLabels.length))) invalidBrief();
   }
   try {
     if (JSON.stringify(value).length > MAX_PAGE_BRIEF_PAYLOAD_CHARS) invalidBrief();

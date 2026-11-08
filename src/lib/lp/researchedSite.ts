@@ -14,6 +14,7 @@ import {
   contacts,
   esc,
   leadFormSection,
+  RESEARCHED_LEAD_FORM,
   localBusinessObject,
   pageHead,
   pageScript,
@@ -279,9 +280,9 @@ function buildPageHtml(page: ResearchedSitePage, params: RenderResearchedSitePag
     ${links ? `<nav aria-label="Related pages" style="padding:20px;display:flex;flex-wrap:wrap;gap:14px;justify-content:center;background:${theme.surfaceAlt};">${links}</nav>` : ''}
     ${reviewSection(page, theme)}
     ${faq ? `<section style="padding:32px 20px;background:${theme.surfaceAlt};"><div style="max-width:700px;margin:0 auto;display:flex;flex-direction:column;gap:12px;">${faq}</div></section>` : ''}
-    ${leadFormSection(theme, page.copy.formHeadline, page.copy.heroCta)}
+    ${leadFormSection(theme, page.copy.formHeadline, page.copy.heroCta, RESEARCHED_LEAD_FORM)}
   </main>
-  ${pageScript({ slug, businessName, googleAdsCustomerId: params.googleAdsCustomerId || '', formConversionLabel: params.formConversionLabel || '', phoneConversionLabel: params.phoneConversionLabel || '', whatsappConversionLabel: params.whatsappConversionLabel || '', ctaLabel: page.copy.heroCta, includeLeadForm: true })}`;
+  ${pageScript({ slug, businessName, googleAdsCustomerId: params.googleAdsCustomerId || '', formConversionLabel: params.formConversionLabel || '', phoneConversionLabel: params.phoneConversionLabel || '', whatsappConversionLabel: params.whatsappConversionLabel || '', ctaLabel: RESEARCHED_LEAD_FORM.submitLabel ?? page.copy.heroCta, includeLeadForm: true })}`;
   return assembleDocument(theme, head, body, params.gtagSnippet, data);
 }
 

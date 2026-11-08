@@ -12,7 +12,7 @@ import {
   CLAIM_TOKENS,
   CONTACT_TITLE_PREFIX,
   DAY_LETTERS,
-  FIX_TIME_WITHIN,
+  FIX_TIME_LEAD_TOKENS,
   GUARD_CUSTOMER_STEMS,
   GUARD_SPEECH_VERBS,
   SERVICE_LABEL_PINS,
@@ -86,8 +86,7 @@ test('generationData.ts equals the ~~~json blocks of docs/copy/site-bot-generati
   assert.deepEqual(Object.fromEntries(Object.entries(data.serviceLabelPins).map(([key, pin]) => [key, (pin as { label: string }).label])), SERVICE_LABEL_PINS);
   assert.equal(CONTACT_TITLE_PREFIX, data.contactTitlePrefix);
   assert.equal(TYPOGRAPHY_RULE_TEXT, (data.typographyRule as string).replace(/\\u([0-9A-Fa-f]{4})/g, (_, hex: string) => String.fromCharCode(parseInt(hex, 16))));
-  assert.ok(text.includes(`"${FIX_TIME_WITHIN}"`));
-  for (const token of ARRIVAL_TOKENS) assert.ok(text.includes(`"${token}"`), token);
+  // M2a.3 sections 6-13 are checked in generationGates.test.ts.
   for (const file of ['src/lib/lp/generationData.ts', 'src/lib/lp/copyGates.ts', 'src/lib/lp/researchPageCopy.ts', 'src/lib/lp/businessHours.ts', 'src/lib/site-bot/siteIdentity.ts', 'scripts/site-bot/build-generation-data.mjs']) {
     assert.doesNotMatch(fs.readFileSync(path.join(ROOT, file), 'utf8'), /[\u0590-\u05FF]/, file);
   }
@@ -146,6 +145,8 @@ test('2 every claimTokens token is rejected in final copy unless the owner state
     const rule = CLAIM_RULES.find(item => item.id === kind);
     assert.ok(rule, kind);
     assert.deepEqual([...rule!.tokens], [...tokens], kind);
+    // M2a.3: fix_time is decided by the sentence check only (generationGates.test.ts).
+    if (rule!.sentenceOnly) continue;
     for (const token of tokens) {
       const hits = runCopyGates(loose({ aboutBlurb: `${HE_WORD} ${token} ${HE_WORD}` }), ctx());
       assert.ok(hits.some(hit => hit.actual === `claim:${kind}`), `${kind}: ${token}`);
@@ -167,6 +168,7 @@ test('2 every claimTokens token is rejected in final copy unless the owner state
 test('2 fix_time sentence check: pinned label + "within <number>" is a hit unless the verb is arrival; arrival in an installation heading is flagged for review', () => {
   const installLabel = SERVICE_LABEL_PINS['water heater install'];
   const labels = [LABEL, installLabel];
+  const FIX_TIME_WITHIN = FIX_TIME_LEAD_TOKENS[0];
   const fix = `${LABEL} ${FIX_TIME_WITHIN} 30 ${HE_WORD}.`;
   assert.deepEqual(runCopyGates(noSvc({ aboutBlurb: fix }), ctx({ serviceLabels: labels })).map(hit => hit.actual), ['claim:fix_time']);
   assert.deepEqual(runCopyGates(noSvc({ aboutBlurb: `${HE_WORD} ${FIX_TIME_WITHIN} 30` }), ctx({ serviceLabels: labels })), [], 'no label -> no hit');
