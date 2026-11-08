@@ -63,6 +63,18 @@ type RendererInputs = Omit<
 /** M2a.5: what the generator knows about the site's pages generated so far (duplicate-hook gate). */
 export interface ResearchedSiteGenerationContext {
   priorHeroHeadlines: readonly string[];
+  /** M2a.6: the same, in route order, for the site-wide about-headline and about-opening checks. */
+  priorAboutPageHeadlines: readonly string[];
+  priorAboutPageBodies: readonly string[];
+}
+
+/** M2a.6: the site context for the next page, from the pages generated so far (route order, home first). */
+export function siteGenerationContext(pages: ReadonlyArray<{ copy: SiteCopy }>): ResearchedSiteGenerationContext {
+  return {
+    priorHeroHeadlines: pages.map(page => page.copy.heroHeadline),
+    priorAboutPageHeadlines: pages.map(page => page.copy.aboutPageHeadline),
+    priorAboutPageBodies: pages.map(page => page.copy.aboutPageBody),
+  };
 }
 
 export interface ResearchedSiteGenerationDependencies {
@@ -178,7 +190,7 @@ export async function buildResearchedSiteGeneration(
 
   for (const sourceBrief of input.pageBriefs) {
     const brief = structuredClone(sourceBrief);
-    const generatedCopy = await dependencies.generateCopy(brief, structuredClone(input.collectedData), { priorHeroHeadlines: pages.map(page => page.copy.heroHeadline) });
+    const generatedCopy = await dependencies.generateCopy(brief, structuredClone(input.collectedData), siteGenerationContext(pages));
     assertBoundedGeneratedSiteCopy(generatedCopy);
     pages.push({
       opportunityId: brief.page.id,

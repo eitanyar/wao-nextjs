@@ -8,6 +8,7 @@ import type { PageBrief } from '../site-bot/research/pageBrief';
 import type { PageClassification } from '../site-bot/research/pagePortfolio';
 import type { SiteCopy } from './lpCopyPrompt';
 import { CONTACT_TITLE_PREFIX } from './generationData';
+import { heroAnchorMissing } from './copyGates';
 import type { RenderSitePagesParams } from './renderSitePages';
 import {
   assembleDocument,
@@ -127,12 +128,14 @@ export function researchedContactTitle(trade: string, city: string | null, busin
   return name ? buildResearchedPageTitle(`${CONTACT_TITLE_PREFIX} ${name}`, city, businessName) : null;
 }
 
-/** H1 (C1): the hero hook only if it contains the page name and the city; otherwise name + city. */
+/**
+ * H1 (C1): the hero hook only if it contains the page name and the city; otherwise name + city.
+ * M2a.6 (Yonatan): the containment check is the H1 anchor gate's own (heroAnchorMissing: NFC + whitespace
+ * normalisation), so a hook that passes the gate is never swapped; the swap stays as the safety net.
+ */
 export function researchedPageH1(hook: string, seo: ResearchedPageSeo | undefined): string {
   if (!seo) return hook;
-  const hasName = hook.includes(seo.name.trim());
-  const hasCity = !seo.city || hook.includes(seo.city.trim());
-  return hasName && hasCity ? hook : pageNameWithCity(seo.name, seo.city);
+  return heroAnchorMissing(hook, seo.name, seo.city) ? pageNameWithCity(seo.name, seo.city) : hook;
 }
 
 function outputPath(page: ResearchedSitePage): string | null {

@@ -470,7 +470,7 @@ export async function runResearchToSite(input: ResearchToSiteInput, deps: Resear
   let currentPage: string | undefined;
   const generateCopy = deps.generateCopy ?? ((brief: PageBrief, data: CollectedData, site?: ResearchedSiteGenerationContext) => generateResearchPageCopy(brief, data, {
     ...(deps.callJson ? { callJson: deps.callJson } : {}),
-    ...(site ? { priorHeroHeadlines: site.priorHeroHeadlines } : {}),
+    ...(site ? { priorHeroHeadlines: site.priorHeroHeadlines, priorAboutPageHeadlines: site.priorAboutPageHeadlines, priorAboutPageBodies: site.priorAboutPageBodies } : {}),
     onEvent: event => deps.onCopyEvent?.(brief.page.id, event),
   }));
   let record;

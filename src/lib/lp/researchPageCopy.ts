@@ -19,13 +19,18 @@ import {
   GENERIC_ADJECTIVE_EXEMPT_PHRASES,
   GENERIC_ADJECTIVE_PHRASES,
   GENERIC_ADJECTIVE_WORDS,
-  SIGNATURE_WORD_TOKENS,
+  HERO_CTA_OVERRIDE,
+  M2A6_PROMPT_RULES,
   STICKY_ACTION_TOKENS,
+  TRADE_TERMS,
   TYPOGRAPHY_RULE_TEXT,
   VOICE_PROMPT_RULES,
 } from './generationData';
+import { pageNameWithCity } from './researchedSite';
 import {
   copyGateContext,
+  DIFFERENTIATOR_SIGNATURE_CAP,
+  differentiatorGroups,
   describeGateViolation,
   effectiveReviewQuote,
   fixTimeScope,
@@ -34,6 +39,8 @@ import {
   promptSignatureVariants,
   runCopyGates,
   serviceStage,
+  SIGNATURE_GROUPS,
+  slugVertical,
   STICKY_ARRIVAL_TOKENS,
   type CopyGateContext,
   type ServiceStage,
@@ -57,6 +64,9 @@ export interface ResearchPageCopyDependencies {
   gates?: boolean;
   /** M2a.5: heroHeadlines of the site's pages generated before this one (duplicate-hook gate). */
   priorHeroHeadlines?: readonly string[];
+  /** M2a.6: aboutPageHeadline / aboutPageBody of the site's pages generated before this one (route order). */
+  priorAboutPageHeadlines?: readonly string[];
+  priorAboutPageBodies?: readonly string[];
 }
 
 /**
@@ -88,14 +98,17 @@ function voiceRule(id: string): string {
 }
 
 /** The section 19 Hebrew lists that the P-rules name (never the matching-only signature spellings). */
-export function voiceListLines(options: { stickyArrival?: boolean } = {}): string[] {
+export function voiceListLines(options: { stickyArrival?: boolean; differentiatorGroups?: readonly string[] } = {}): string[] {
+  const differentiator = options.differentiatorGroups ?? [];
   return [
     `- genericAdjectiveWords: ${JSON.stringify(GENERIC_ADJECTIVE_WORDS)}`,
     `- genericAdjectivePhrases: ${JSON.stringify(GENERIC_ADJECTIVE_PHRASES)}`,
     `- These exact phrases are not quality claims and stay allowed: ${JSON.stringify(GENERIC_ADJECTIVE_EXEMPT_PHRASES)}`,
     `- badIdiomTokens (never write the tokens; use the replacement idea, re-inflected to fit the sentence): ${JSON.stringify(BAD_IDIOMS.map(entry => ({ never: entry.tokens, meant: entry.meant, instead: entry.replacement, ...(entry.replacementFeminine ? { insteadFeminine: entry.replacementFeminine } : {}) })))}`,
     ...BAD_IDIOM_NOTES.map(note => `  ${note}`),
-    `- signatureWordTokens (each inner list is one signature phrase; at most one of them, once, per page): ${JSON.stringify(Object.keys(SIGNATURE_WORD_TOKENS).map(promptSignatureVariants))}`,
+    `- signatureWordTokens (each inner list is one signature phrase; at most one of them, once, per page): ${JSON.stringify(Object.keys(SIGNATURE_GROUPS).map(promptSignatureVariants))}`,
+    // M2a.6 (Adam): the owner's own differentiator phrase may appear twice per page.
+    ...differentiator.map(group => `  The owner's differentiator phrase ${JSON.stringify(promptSignatureVariants(group))} may appear at most ${DIFFERENTIATOR_SIGNATURE_CAP} times per page.`),
     `- stickyActionTokens: ${JSON.stringify(options.stickyArrival === false ? STICKY_ACTION_TOKENS.filter(token => !STICKY_ARRIVAL_TOKENS.includes(token)) : STICKY_ACTION_TOKENS)}`,
   ];
 }
@@ -103,11 +116,29 @@ export function voiceListLines(options: { stickyArrival?: boolean } = {}): strin
 /** Voice rules for the Tamar and repair system prompts (P3 words, P4 subject, P5 idioms) with their lists. */
 const VOICE_SYSTEM_RULES = `VOICE (binding):\n${[voiceRule('P3'), voiceRule('P4'), voiceRule('P5')].join('\n')}\nLists named above:\n${voiceListLines().slice(0, 5).join('\n')}`;
 
+/** M2a.6: Tamar's section 20.8 prompt rule by id (English, byte-exact). */
+function m2a6Rule(id: string): string {
+  const rule = M2A6_PROMPT_RULES.find(item => item.id === id);
+  if (!rule) throw new Error(`generationData has no section 20 prompt rule ${id}`);
+  return `- ${rule.text}`;
+}
+
+/** M2a.6: section 20.6 trade terms for the prompt (acOnly entries only on an AC page). Never auto-replaced. */
+export function tradeTermLine(acPage: boolean): string {
+  return `- tradeTermTokens (never write the wrong term; use the correct one, re-inflected to fit the sentence): ${JSON.stringify(TRADE_TERMS.filter(entry => !entry.acOnly || acPage).map(entry => ({
+    ...(entry.tokens.length ? { never: entry.match === 'leadVerb' ? (entry.leadVerbs ?? []).map(verb => `${verb} ${entry.tokens[0]}`) : entry.tokens } : {}),
+    meant: entry.meant, instead: entry.replacement,
+  })))}`;
+}
+
+/** M2a.6: R2 (scene), R3 (before), R6 (trade accuracy) also bind the Tamar and repair system prompts. */
+const M2A6_SYSTEM_RULES = `${[m2a6Rule('R2'), m2a6Rule('R3'), m2a6Rule('R6')].join('\n')}`;
+
 const COPY_SYSTEM_PROMPT =
   `You are Tamar, a Hebrew conversion copywriter. Follow the supplied research brief and JSON schema exactly. Return only the requested JSON object, with no prose or markdown.\n\n${SINGULAR_ADDRESS_RULE}`;
 
 /** M2a.5: the research-site Tamar prompt adds the voice rules; the plain prompt stays as it was. */
-const SITE_COPY_SYSTEM_PROMPT = `${COPY_SYSTEM_PROMPT}\n\n${VOICE_SYSTEM_RULES}`;
+const SITE_COPY_SYSTEM_PROMPT = `${COPY_SYSTEM_PROMPT}\n\n${VOICE_SYSTEM_RULES}\n${M2A6_SYSTEM_RULES}`;
 
 const QA_SYSTEM_PROMPT =
   `You are Noa, a Hebrew language QA editor. Correct only language and typography in the supplied JSON, preserve all factual claims and structure, and return only valid JSON.\n\n${SINGULAR_ADDRESS_RULE} If any field breaks this rule, rewrite that sentence in singular masculine address.\n\n${TYPOGRAPHY_RULE} ${REDUPLICATION_RULE}`;
@@ -116,7 +147,7 @@ const REPAIR_SYSTEM_PROMPT =
   `You are Tamar, a Hebrew conversion copywriter. You are repairing specific fields of a site-copy JSON object that broke hard validator limits or copy rules. Return only a JSON object containing exactly the requested keys, with no prose or markdown.\n\n${SINGULAR_ADDRESS_RULE}\n\n${TYPOGRAPHY_RULE} ${REDUPLICATION_RULE}`;
 
 /** M2a.5: research-site repairs also carry the voice rules, so a repair never trades one hit for another. */
-const SITE_REPAIR_SYSTEM_PROMPT = `${REPAIR_SYSTEM_PROMPT}\n\n${VOICE_SYSTEM_RULES}`;
+const SITE_REPAIR_SYSTEM_PROMPT = `${REPAIR_SYSTEM_PROMPT}\n\n${VOICE_SYSTEM_RULES}\n${M2A6_SYSTEM_RULES}`;
 
 // ---------------------------------------------------------------------------
 // Hard limits: the single source of truth for the validator, the violation
@@ -125,7 +156,9 @@ const SITE_REPAIR_SYSTEM_PROMPT = `${REPAIR_SYSTEM_PROMPT}\n\n${VOICE_SYSTEM_RUL
 
 /** Required, non-empty string fields: max characters (JS string length). */
 export const SITE_COPY_STRING_LIMITS = {
-  heroHeadline: 68, heroSubheadline: 90, heroCta: 15, aboutBlurb: 320,
+  // M2a.6: heroCta is system-set on research sites; the section 20.7 planned/phone label is longer than the
+  // old 15, so the limit is the longest system label (derived, never a hand-kept number).
+  heroHeadline: 68, heroSubheadline: 90, heroCta: Math.max(15, HERO_CTA_OVERRIDE.planned.phone.length), aboutBlurb: 320,
   servicesHeadline: 35, faqHeadline: 30,
   formHeadline: 35, stickyBarLine: 25, aboutPageHeadline: 50, aboutPageBody: 400,
 } as const;
@@ -404,7 +437,7 @@ export function buildResearchCopyRules(brief: PageBrief, data: CollectedData = {
     rules.push(
       `- serviceDetails descriptions: one complete sentence of at least ${SERVICE_DESCRIPTION_MIN_CHARS} characters on what the service includes for the customer (within the length limit); never just the service name restated.`,
       `- serviceItems is filled in by the system. serviceDetails: at most one entry per service; every name must be exactly one of these owner-confirmed service names, character for character: ${JSON.stringify(site.serviceLabels)}. Never add any other service.`,
-      `- This page is about: ${JSON.stringify(site.pageName)}${site.city ? ` in ${JSON.stringify(site.city)}` : ''}. Where it reads naturally, heroHeadline contains that name${site.city ? ' and that city' : ''}.`,
+      heroAnchorRule(brief),
       site.ownerIntroPage
         ? '- The "my name is <first name>" opener appears once per site: this is that page. Use it at most once here (aboutBlurb); aboutPageBody must not repeat it.'
         : '- The "my name is <first name>" opener appears once per site and the homepage already has it. Do not open aboutBlurb or aboutPageBody with it or any other self-introduction by name; this overrides the ABOUT SECTION opener instruction below.',
@@ -412,6 +445,20 @@ export function buildResearchCopyRules(brief: PageBrief, data: CollectedData = {
     rules.push(...buildVoiceRules(brief, data));
   }
   return rules;
+}
+
+/**
+ * Yonatan's H1 anchor rule (M2a.6, signed off), replacing the M2a.1 soft "where it reads naturally" line. The
+ * anchor is the title's page.seo name and city; the example interpolates the title formula's city prefix.
+ */
+export function heroAnchorRule(brief: PageBrief): string {
+  const site = brief.site;
+  if (!site) return '';
+  const name = JSON.stringify(site.pageName);
+  const city = site.city ? JSON.stringify(site.city) : null;
+  const home = brief.page.pageClass === 'homepage';
+  const subject = home ? `This homepage's search anchor is the trade ${name}` : `This page's search anchor is ${name}`;
+  return `- ${subject}${city ? ` in ${city}` : ''}. heroHeadline MUST contain ${home ? 'the trade ' : ''}${name} exactly${city ? ` and ${city} exactly` : ''}. Open with the customer's pain as a short first clause if you want, then put the anchor in the next clause: '<hook>? ${pageNameWithCity(site.pageName, site.city)} \u2014 <differentiator>'.`;
 }
 
 /** Service slug that decides the page's stage: the money page's own slug; on the homepage, its first service (section 19.4). */
@@ -442,9 +489,12 @@ export function buildVoiceRules(brief: PageBrief, data: CollectedData = {}): str
   return [
     'VOICE RULES (Tamar, binding; the Hebrew lists they name are given after them):',
     ...VOICE_PROMPT_RULES.map(rule => `- ${rule.text}`),
+    // M2a.6: Tamar's section 20.8 rules R1-R7 (byte-exact).
+    ...M2A6_PROMPT_RULES.map(rule => `- ${rule.text}`),
     'Lists named in the voice rules:',
-    ...voiceListLines({ stickyArrival: responseTime }),
-    `- This page's stage (section 19.4 above): ${stage}. heroCta is fixed by the system (see above); choose formHeadline from these ctaLabelSets entries for this stage. Labels: ${JSON.stringify(set.formHeadline.labels.filter(passes))}. Patterns (use one as a pattern, adapted to this service): ${JSON.stringify(set.formHeadline.examples.filter(passes))}. formHeadlineFallback, only when nothing more specific fits: ${JSON.stringify(passes(CTA_LABEL_SETS.formHeadlineFallback) ? CTA_LABEL_SETS.formHeadlineFallback : '')}.`,
+    ...voiceListLines({ stickyArrival: responseTime, differentiatorGroups: differentiatorGroups(gates) }),
+    tradeTermLine(slugVertical(stageSlug(brief)) === 'ac'),
+    `- This page's stage (section 19.4 above): ${stage}. heroCta is fixed by the system (on this page: ${JSON.stringify(researchHeroCta(brief, data))}; the stickyBarLine must differ from it); choose formHeadline from these ctaLabelSets entries for this stage. Labels: ${JSON.stringify(set.formHeadline.labels.filter(passes))}. Patterns (use one as a pattern, adapted to this service): ${JSON.stringify(set.formHeadline.examples.filter(passes))}. formHeadlineFallback, only when nothing more specific fits: ${JSON.stringify(passes(CTA_LABEL_SETS.formHeadlineFallback) ? CTA_LABEL_SETS.formHeadlineFallback : '')}.`,
   ];
 }
 
@@ -766,10 +816,21 @@ export const TRUST_BAR_MIN_KEPT = 3;
  * - M2a.2: reviewFeatured is null unless the quote is mostly Hebrew script (never translated);
  *   guaranteeBlock is null when the owner has no guarantee (no filler guarantee).
  */
+/**
+ * heroCta on a research site (M2a.6, Tamar section 20.7): the system contact label, except on a planned-stage
+ * page of a phone site, where it is HERO_CTA_OVERRIDE.planned.phone. A phone site is one whose system label is
+ * the call label (primaryCtaLabel's phone branch, which is also its default); WhatsApp-only and form-only sites
+ * keep their label, as do emergency and neutral pages.
+ */
+export function researchHeroCta(brief: PageBrief, data: CollectedData): string {
+  const label = primaryCtaLabel(data);
+  return pageStage(brief) === 'planned' && label === primaryCtaLabel({}) ? HERO_CTA_OVERRIDE.planned.phone : label;
+}
+
 export function withSystemFields(value: Loose, brief: PageBrief, data: CollectedData): Loose {
   const next: Loose = { ...value, faqItems: supportedFaqItems(brief) };
   if (!brief.site) return next;
-  next.heroCta = primaryCtaLabel(data);
+  next.heroCta = researchHeroCta(brief, data);
   const itemLimit = SITE_COPY_STRING_LIST_LIMITS.serviceItems;
   next.serviceItems = brief.site.serviceLabels.filter(label => label.length <= itemLimit.itemMaxChars).slice(0, itemLimit.maxItems);
   const quote = effectiveReviewQuote(data);
@@ -904,6 +965,10 @@ export function briefGateContext(brief: PageBrief, data: CollectedData): CopyGat
     pageServiceLabel: site && brief.page.pageClass !== 'homepage' ? site.pageName : null,
     installPage: isInstallPage(brief),
     researchSite: Boolean(site),
+    // M2a.6: vertical slug (section 20.4 / 20.6) and Yonatan's H1 anchor (the same strings as page.seo, which build the title).
+    pageSlug: site ? stageSlug(brief) : '',
+    anchorName: site ? site.pageName : null,
+    anchorCity: site ? site.city : null,
   });
 }
 
@@ -934,7 +999,12 @@ export async function generateResearchPageCopy(
     remaining: Number.isInteger(requested) ? Math.max(0, Math.min(MAX_COPY_REPAIRS, requested)) : MAX_COPY_REPAIRS,
     used: 0,
     deterministicFixes: dependencies.deterministicFixes ?? true,
-    gates: dependencies.gates === false ? null : { ...briefGateContext(brief, data), priorHeroHeadlines: [...(dependencies.priorHeroHeadlines ?? [])] },
+    gates: dependencies.gates === false ? null : {
+      ...briefGateContext(brief, data),
+      priorHeroHeadlines: [...(dependencies.priorHeroHeadlines ?? [])],
+      priorAboutPageHeadlines: [...(dependencies.priorAboutPageHeadlines ?? [])],
+      priorAboutPageBodies: [...(dependencies.priorAboutPageBodies ?? [])],
+    },
     emit: event => {
       try { dependencies.onEvent?.(event); } catch { /* diagnostics never break generation */ }
     },

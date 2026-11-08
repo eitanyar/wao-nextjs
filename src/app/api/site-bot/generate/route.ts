@@ -192,7 +192,7 @@ export async function POST(req: Request) {
       // M2a: bounded repair pass + safe fixes run inside generateResearchPageCopy;
       // log what they did (field names, limits, lengths and fix kinds only, never copy text).
       generateCopy: (brief, data, site) => generateResearchPageCopy(brief, data, {
-        ...(site ? { priorHeroHeadlines: site.priorHeroHeadlines } : {}),
+        ...(site ? { priorHeroHeadlines: site.priorHeroHeadlines, priorAboutPageHeadlines: site.priorAboutPageHeadlines, priorAboutPageBodies: site.priorAboutPageBodies } : {}),
         onEvent: event => {
           if (event.kind === 'violations') return;
           console.info(`[site-bot generate] copy_${event.kind} ${JSON.stringify({ slug, page: brief.page.id, stage: event.stage, attempt: event.attempt, fields: event.fields, fixes: event.fixes })}`);

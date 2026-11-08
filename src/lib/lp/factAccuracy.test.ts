@@ -17,6 +17,7 @@ import {
   GUARD_SPEECH_VERBS,
   SERVICE_LABEL_PINS,
   STICKY_ACTION_TOKENS,
+  STICKY_PROBLEM_WORDS,
   TYPOGRAPHY_RULE_TEXT,
 } from './generationData';
 import { CLAIM_RULES, FACT_REPEAT_MAX } from './copyGates.config';
@@ -50,12 +51,14 @@ const PLACE_B = '\u05D2\u05D3 \u05D9\u05DD'; // two words, starts with a non-bet
 const LABEL = '\u05D2\u05D3\u05D4 \u05D6\u05D7\u05D8';
 
 /** M2a.5: a sticky-bar line that carries a section 19.4 action token (gate_sticky_action). */
-const STICKY_LINE = `${STICKY_ACTION_TOKENS[0]} Sticky`;
+// M2a.6: it also names a section 20.4 problem word (gate_sticky_naming).
+const STICKY_LINE = `${STICKY_ACTION_TOKENS[0]} ${STICKY_PROBLEM_WORDS.general[0]}`;
 const ctx = (overrides: Partial<CopyGateContext> = {}): CopyGateContext => ({
   soloOperator: true, serviceLabels: [], ownerFactsText: '', ownerFields: {}, reviewQuote: null, starRating: null, ...overrides,
 });
 const base: SiteCopy = {
-  heroHeadline: 'Headline', heroSubheadline: 'Sub', heroCta: 'Call', trustBarItems: ['Proof'], aboutBlurb: 'About',
+  // M2a.6: the hero carries the research brief's search anchor (gate_hero_anchor).
+  heroHeadline: LABEL, heroSubheadline: 'Sub', heroCta: 'Call', trustBarItems: ['Proof'], aboutBlurb: 'About',
   servicesHeadline: 'Services', serviceItems: ['Alpha'], faqHeadline: 'FAQ', faqItems: [], guaranteeBlock: 'Promise',
   reviewFeatured: null, reviewContext: null, responseTimeBadge: null, scarcityLine: null, formHeadline: 'Form',
   stickyBarLine: STICKY_LINE, aboutPageHeadline: 'About page', aboutPageBody: 'About body', serviceDetails: [],

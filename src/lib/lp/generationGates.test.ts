@@ -32,6 +32,7 @@ import {
   SERVICE_AREA_TAIL_TOKENS,
   SERVICE_LABEL_PINS,
   STICKY_ACTION_TOKENS,
+  STICKY_PROBLEM_WORDS,
   SUBJECT_CARRY_TOKENS,
   TEMPLATE_STRINGS,
   THERMAL_TOKENS,
@@ -77,6 +78,7 @@ import {
   isOwnerVoiceField,
   promptSignatureVariants,
   serviceStage,
+  SIGNATURE_GROUPS,
   STICKY_ARRIVAL_TOKENS,
   stickyActionProblems,
   type CopyGateContext,
@@ -115,7 +117,8 @@ const INSTALL_LABEL = SERVICE_LABEL_PINS['water heater install'];
 const LEAK_LABEL = SERVICE_LABEL_PINS['leak detection'];
 
 /** M2a.5: a sticky-bar line that carries a section 19.4 action token (gate_sticky_action). */
-const STICKY_LINE = `${STICKY_ACTION_TOKENS[0]} Sticky`;
+// M2a.6: it also names a section 20.4 problem word (gate_sticky_naming).
+const STICKY_LINE = `${STICKY_ACTION_TOKENS[0]} ${STICKY_PROBLEM_WORDS.general[0]}`;
 const ctx = (overrides: Partial<CopyGateContext> = {}): CopyGateContext => ({
   soloOperator: true, serviceLabels: [], ownerFactsText: '', ownerFields: {}, reviewQuote: null, starRating: null, ...overrides,
 });
@@ -146,7 +149,7 @@ function brief(pageName: string, labels: string[], sources: string[], pageClass 
 test('M2a.3 1: generationData.ts carries data sections 6-13 byte-exact; config lists extend / replace the M2a.1 lists; --check passes', () => {
   const text = fs.readFileSync(DATA_FILE, 'utf8');
   const blocks = [...text.matchAll(/\n~~~json\n([\s\S]*?)\n~~~/g)].map(match => JSON.parse(match[1]));
-  assert.equal(blocks.length, 32); // M2a.4: 23; M2a.5 section 19 adds 9
+  assert.equal(blocks.length, 43); // M2a.4: 23; M2a.5 section 19 adds 9; M2a.6 section 20 adds 11
   const data = Object.assign({}, ...blocks);
   assert.deepEqual([...CLAIM_TOKEN_WORD_END], data.claimTokenWordEnd);
   assert.deepEqual([...FIX_TIME_LEAD_TOKENS], data.fixTimeLeadTokens);
@@ -294,12 +297,14 @@ test('M2a.3 6: on an installation page every arrival-time phrase is a hard repai
   const numberOnly = `${ARRIVAL_TOKENS[0]} 20 ${FIX_TIME_WITHIN_WORDS[0]}`;
   const data: CollectedData = { businessNiche: 'plumber', responseTime: '20 minutes', guarantee: 'x' };
   // M2a.5: the about blurb keeps its subject and the sticky bar carries an action (section 19 voice gates).
-  const voiced = (field: string) => field === 'aboutBlurb' ? `${SUBJECT_CARRY_TOKENS[0]} ${arrival}` : field === 'stickyBarLine' ? `${STICKY_ACTION_TOKENS[0]} ${arrival}` : arrival;
+  const voiced = (field: string) => field === 'aboutBlurb' ? `${SUBJECT_CARRY_TOKENS[0]} ${arrival}` : field === 'stickyBarLine' ? `${STICKY_LINE} ${arrival}` : arrival;
+  // M2a.6: the hero carries the page's search anchor (gate_hero_anchor).
+  const anchored = (page: PageBrief, field: string) => loose({ heroHeadline: page.site!.pageName, [field]: field === 'heroHeadline' ? `${page.site!.pageName} ${voiced(field)}` : voiced(field) });
   for (const field of ['heroHeadline', 'heroSubheadline', 'aboutBlurb', 'stickyBarLine'] as const) {
-    assert.deepEqual(runCopyGates(loose({ [field]: voiced(field) }), briefGateContext(install, data)).map(hit => hit.rule), [GATE_RULES.installArrival], field);
-    assert.deepEqual(runCopyGates(loose({ [field]: voiced(field) }), briefGateContext(repair, data)), [], `${field} on a repair page`);
+    assert.deepEqual(runCopyGates(anchored(install, field), briefGateContext(install, data)).map(hit => hit.rule), [GATE_RULES.installArrival], field);
+    assert.deepEqual(runCopyGates(anchored(repair, field), briefGateContext(repair, data)), [], `${field} on a repair page`);
   }
-  assert.deepEqual(runCopyGates(loose({ trustBarItems: [numberOnly] }), briefGateContext(install, data)).map(hit => hit.rule), [GATE_RULES.installArrival]);
+  assert.deepEqual(runCopyGates(loose({ heroHeadline: INSTALL_LABEL, trustBarItems: [numberOnly] }), briefGateContext(install, data)).map(hit => hit.rule), [GATE_RULES.installArrival]);
   assert.equal(withSystemFields(loose({ responseTimeBadge: arrival }), install, data).responseTimeBadge, null);
   assert.equal(withSystemFields(loose({ responseTimeBadge: arrival }), repair, data).responseTimeBadge, arrival);
   assert.match(buildResearchPageGenerationPrompt(install, data), /INSTALLATION PAGE \(binding\)/);
@@ -534,8 +539,8 @@ test('M2a.4 5: the self-introduction must use the owner name exactly as in the f
 
 test('M2a.4 6: serviceDetails descriptions have a minimum length on research sites only', () => {
   const site = briefGateContext(brief(LABEL_A, [LABEL_A], ['alpha']), {});
-  const short = loose({ serviceDetails: [{ name: LABEL_A, description: 'x'.repeat(SERVICE_DESCRIPTION_MIN_CHARS - 1) }] });
-  const long = loose({ serviceDetails: [{ name: LABEL_A, description: 'x'.repeat(SERVICE_DESCRIPTION_MIN_CHARS) }] });
+  const short = loose({ heroHeadline: LABEL_A, serviceDetails: [{ name: LABEL_A, description: 'x'.repeat(SERVICE_DESCRIPTION_MIN_CHARS - 1) }] });
+  const long = loose({ heroHeadline: LABEL_A, serviceDetails: [{ name: LABEL_A, description: 'x'.repeat(SERVICE_DESCRIPTION_MIN_CHARS) }] });
   assert.deepEqual(runCopyGates(short, site).map(item => `${item.field}|${item.rule}`), [`serviceDetails[0].description|${GATE_RULES.shortDescription}`]);
   assert.deepEqual(runCopyGates(long, site), []);
   assert.deepEqual(runCopyGates(short, copyGateContext({}, [LABEL_A])), [], 'non-research context');
@@ -562,7 +567,7 @@ test('M2a.4 8: prompt rules for we-forms in every tense, exact names, service ar
   assert.ok(prompt.includes(REDUPLICATION_RULE));
   assert.ok(prompt.includes(`at least ${SERVICE_DESCRIPTION_MIN_CHARS} characters`));
   const systems: string[] = [];
-  const copy = { ...base, serviceDetails: [{ name: LABEL_A, description: 'x'.repeat(SERVICE_DESCRIPTION_MIN_CHARS) }], formHeadline: `${W1}-${W1}` };
+  const copy = { ...base, heroHeadline: LABEL_A, serviceDetails: [{ name: LABEL_A, description: 'x'.repeat(SERVICE_DESCRIPTION_MIN_CHARS) }], formHeadline: `${W1}-${W1}` };
   await generateResearchPageCopy(site, { businessNiche: 'plumber' }, {
     callJson: async (system, user) => {
       systems.push(system);
@@ -770,7 +775,7 @@ test('M2a.5 3: bad idioms: gate and spellingFix entries reject (never auto-repla
 
 test('M2a.5 4: signature phrases: at most one hit per group per page, all spellings counted; the matching-only spellings never reach a prompt', () => {
   const group = 'lineByLine';
-  const variants = SIGNATURE_WORD_TOKENS[group];
+  const variants = SIGNATURE_GROUPS[group]; // M2a.6: section 19.3 plus the section 20.1 additions
   const maqaf = variants.find(item => item.includes('\u05BE'))!;
   const hyphen = maqaf.split('\u05BE').join('-');
   const space = maqaf.split('\u05BE').join(' ');

@@ -11,8 +11,40 @@
 import type { CollectedData } from '../bot/prompts';
 import { buildLpCopyPrompt, hasRealReviewQuote } from './lpCopyPrompt';
 import {
+  AC_SEGMENT_KEYWORD,
+  AC_VERTICAL_SLUG_KEYWORDS,
   ARRIVAL_TOKENS,
+  ARRIVE_LOCATE_LEAD_PREFIXES,
+  ARRIVE_LOCATE_NEXT_WORD_EXCLUSIONS,
   BAD_IDIOMS,
+  BEFORE_CAP,
+  BEFORE_TIME_WORD_EXCLUSIONS,
+  BEFORE_TOKENS,
+  ELECTRIC_SLUG_KEYWORDS,
+  HERO_SIGNATURE_CAP,
+  MORAL_ENDING_FOLLOWING_EXCLUSIONS,
+  MORAL_ENDING_TOKENS,
+  MORAL_FIELDS,
+  SERVICE_DETAILS_OPENER_TOKEN,
+  SIGNATURE_WORD_TOKEN_ADDITIONS,
+  STICKY_BARE_FORMS,
+  STICKY_PROBLEM_WORDS,
+  STICKY_WHOLE_WORD_PREFIXES,
+  STICKY_WHOLE_WORDS,
+  STORY_CUSTOMER_NOUNS,
+  STORY_FIELDS,
+  STORY_NOUN_PREFIXES,
+  STORY_PAST_VERBS,
+  STORY_QUANTIFIER_EXCLUSIONS,
+  STORY_QUANTIFIER_PREFIXES,
+  STORY_TIME_ANCHORS,
+  STORY_VERB_PREFIXES,
+  TILES_BREAK_EXCLUSIONS_PRECEDING_WORD,
+  TILES_BREAK_FORMS,
+  TILES_BREAK_PREFIX_LETTERS,
+  TILES_BREAK_STRIP_PREFIXES,
+  TIME_WORD_TOKENS,
+  TRADE_TERMS,
   BARE_VERB_EXCLUSIONS,
   BARE_VERB_FIELDS,
   BARE_VERB_SENTENCE_OPENERS,
@@ -109,6 +141,17 @@ export const GATE_RULES = {
   duplicateHook: 'gate_duplicate_hook',
   stickyAction: 'gate_sticky_action',
   bareVerbOpener: 'gate_bare_verb_opener',
+  // M2a.6 (Tamar section 20 + Adam's site-wide checks + Yonatan's H1 anchor)
+  heroSignatureCap: 'gate_hero_signature_cap',
+  duplicateAboutHeadline: 'gate_duplicate_about_headline',
+  duplicateAboutOpening: 'gate_duplicate_about_opening',
+  inventedStory: 'gate_invented_story',
+  moralEnding: 'gate_moral_ending',
+  beforeCap: 'gate_before_cap',
+  stickyNaming: 'gate_sticky_naming',
+  serviceDetailsOpener: 'gate_service_details_opener',
+  tradeTerm: 'gate_trade_term',
+  heroAnchor: 'gate_hero_anchor',
 } as const;
 export type GateRule = (typeof GATE_RULES)[keyof typeof GATE_RULES];
 
@@ -154,6 +197,14 @@ export interface CopyGateContext {
   businessName?: string | null;
   /** M2a.5: heroHeadline of every page already generated for this site (duplicate-hook check). */
   priorHeroHeadlines?: readonly string[];
+  /** M2a.6: aboutPageHeadline / aboutPageBody of every page already generated for this site (route order). */
+  priorAboutPageHeadlines?: readonly string[];
+  priorAboutPageBodies?: readonly string[];
+  /** M2a.6: the slug that decides the page's vertical (money page: its own; homepage: its first service). */
+  pageSlug?: string;
+  /** M2a.6 (Yonatan): the title's search anchor, page.seo.name and page.seo.city; the gate is off when anchorName is unset. */
+  anchorName?: string | null;
+  anchorCity?: string | null;
 }
 
 /** One non-blocking finding for human review (never copy text). */
@@ -820,12 +871,54 @@ export function badIdiomHits(value: string): string[] {
   return IDIOM_GATES.filter(entry => entry.patterns.some(pattern => pattern.test(value))).map(entry => entry.id);
 }
 
-/** Signature-phrase hits per group in one string: non-overlapping, longest variant first (section 19.3). */
+/** M2a.6: section 19.3 groups with the section 20.1 additions appended (pointByPoint is a new group). */
+export const SIGNATURE_GROUPS: Readonly<Record<string, readonly string[]>> = Object.fromEntries(
+  [...new Set([...Object.keys(SIGNATURE_WORD_TOKENS), ...Object.keys(SIGNATURE_WORD_TOKEN_ADDITIONS)])]
+    .map(group => [group, [...(SIGNATURE_WORD_TOKENS[group] ?? []), ...(SIGNATURE_WORD_TOKEN_ADDITIONS[group] ?? [])]]));
+/** The section 20.1 group that also counts the tile-breaking forms. */
+export const TILES_GROUP = 'tiles';
+
+/** True when a word, as written or with leading prefix letters stripped one by one, is in the list. */
+function strippedWordIn(word: string, prefixes: readonly string[], list: readonly string[]): boolean {
+  for (let rest = word; rest; rest = rest.slice(1)) {
+    if (list.includes(rest)) return true;
+    if (!prefixes.includes(rest[0])) return false;
+  }
+  return false;
+}
+
+/** The Hebrew word right before a position (only whitespace between), or null. */
+function wordBefore(value: string, at: number): string | null {
+  return new RegExp(`(${HEB_CLASS}+)\\s+$`, 'u').exec(value.slice(0, at))?.[1] ?? null;
+}
+
+const TILES_BREAK_PATTERN = new RegExp(
+  `(?<!${HEB_CLASS})[${TILES_BREAK_PREFIX_LETTERS.join('')}]*(?:${wordAlternatives(TILES_BREAK_FORMS)})(?!${HEB_CLASS})`, 'gu');
+
+/** Section 20.1: tile-breaking forms (whole word, prefixes), unless the preceding word (prefixes stripped) is an exclusion. */
+export function tilesBreakSpans(value: string): Span[] {
+  const out: Span[] = [];
+  for (const match of value.matchAll(TILES_BREAK_PATTERN)) {
+    const at = match.index ?? 0;
+    const before = wordBefore(value, at);
+    if (before && strippedWordIn(before, TILES_BREAK_STRIP_PREFIXES, TILES_BREAK_EXCLUSIONS_PRECEDING_WORD)) continue;
+    out.push({ start: at, end: at + match[0].length, value: match[0] });
+  }
+  return out;
+}
+
+/**
+ * Signature-phrase hits per group in one string: non-overlapping, longest variant first (section 19.3);
+ * M2a.6: the section 20.1 additions count, and tiles also counts its breaking forms (an overlap counts once).
+ */
 export function signatureCounts(value: string): Record<string, number> {
   const out: Record<string, number> = {};
-  for (const [group, variants] of Object.entries(SIGNATURE_WORD_TOKENS)) {
-    const count = spans(value, variants).length;
-    if (count) out[group] = count;
+  for (const [group, variants] of Object.entries(SIGNATURE_GROUPS)) {
+    const found = spans(value, variants);
+    if (group === TILES_GROUP) {
+      for (const span of tilesBreakSpans(value)) if (!found.some(item => item.start < span.end && span.start < item.end)) found.push(span);
+    }
+    if (found.length) out[group] = found.length;
   }
   return out;
 }
@@ -835,9 +928,9 @@ export function signatureCounts(value: string): Record<string, number> {
  * spellings of a maqaf variant (section 19.3: matching only, never shown or inserted into a prompt).
  */
 export function promptSignatureVariants(group: string): string[] {
-  const variants = SIGNATURE_WORD_TOKENS[group] ?? [];
+  const variants = SIGNATURE_GROUPS[group] ?? [];
   const matchingOnly = new Set(variants.filter(item => item.includes('\u05BE')).flatMap(item => [item.split('\u05BE').join('-'), item.split('\u05BE').join(' ')]));
-  return variants.filter(item => !matchingOnly.has(item));
+  return [...variants.filter(item => !matchingOnly.has(item)), ...(group === TILES_GROUP ? TILES_BREAK_FORMS : [])];
 }
 
 /** The hero hook: the text before the first question mark or em-dash (trimmed); null when it has neither. */
@@ -900,18 +993,237 @@ export function serviceStage(slug: string): ServiceStage {
   return 'neutral';
 }
 
+// ---------------------------------------------------------------------------
+// M2a.6: Tamar's section 20 voice rules, Adam's site-wide checks and Yonatan's H1 anchor gate. Every Hebrew
+// token is in generationData.ts (byte-exact from the data file). Gates detect; nothing is auto-replaced.
+// ---------------------------------------------------------------------------
+
+/** Adam (M2a.6): the per-page signature cap for the group(s) holding the owner's own differentiator; every other group stays at 1. */
+export const DIFFERENTIATOR_SIGNATURE_CAP = 2;
+
+/** Signature groups that the owner's own differentiator (usp) carries a token of (Adam: their per-page cap is 2). */
+export function differentiatorGroups(ctx: Pick<CopyGateContext, 'ownerFields'>): string[] {
+  const usp = ctx.ownerFields?.usp;
+  return typeof usp === 'string' ? Object.keys(signatureCounts(usp)) : [];
+}
+
+/** Site-wide hero cap (section 20.1): the groups of this hero that already appear in HERO_SIGNATURE_CAP earlier heroes. */
+export function heroSignatureCapGroups(headline: string, prior: readonly string[]): string[] {
+  return Object.keys(signatureCounts(headline)).filter(group => prior.filter(other => signatureCounts(other)[group]).length >= HERO_SIGNATURE_CAP);
+}
+
+/** Section 20.1: an aboutPageHeadline byte-identical (after trimming) to an earlier page's. */
+export function duplicateAboutHeadline(headline: string, prior: readonly string[]): boolean {
+  const own = headline.trim();
+  return Boolean(own) && prior.some(other => other.trim() === own);
+}
+
+/** Section 20.2: the first three whitespace tokens of aboutPageBody, punctuation stripped from the third; null with fewer than three. */
+export function aboutOpeningKey(body: string): string | null {
+  const tokens = body.trim().split(/\s+/).filter(Boolean).slice(0, 3);
+  if (tokens.length < 3) return null;
+  tokens[2] = tokens[2].replace(/\p{P}/gu, '');
+  return tokens.join(' ');
+}
+
+/** Section 20.2: this aboutPageBody opens with the same three words as an earlier page's. */
+export function duplicateAboutOpening(body: string, prior: readonly string[]): boolean {
+  const key = aboutOpeningKey(body);
+  return key !== null && prior.some(other => aboutOpeningKey(other) === key);
+}
+
+/** Field-path matchers for a list of data-file field names (`a[].b` matches `a[3].b`). */
+function fieldMatchers(names: readonly string[]): RegExp[] {
+  return names.map(name => new RegExp(`^${name.includes('[]')
+    ? name.split('[]').map(escapeRegExp).join('\\[\\d+\\]')
+    : `${escapeRegExp(name)}(?:\\[\\d+\\])?`}$`));
+}
+const STORY_FIELD_PATTERNS = fieldMatchers(STORY_FIELDS);
+const MORAL_FIELD_PATTERNS = fieldMatchers(MORAL_FIELDS);
+const VAV = '\u05D5';
+
+const STORY_NOUN_PATTERN = new RegExp(
+  `(?<!${HEB_CLASS})(?:${wordAlternatives(STORY_NOUN_PREFIXES)})?(?:${wordAlternatives(STORY_CUSTOMER_NOUNS)})(?!${HEB_CLASS})`, 'gu');
+const STORY_VERB_PATTERN = new RegExp(
+  `(?<!${HEB_CLASS})(?:${wordAlternatives(STORY_VERB_PREFIXES)})?(?:${wordAlternatives(STORY_PAST_VERBS)})(?!${HEB_CLASS})`, 'u');
+
+/**
+ * Invented customer story in one string (section 20.2): 'noun_verb' (pattern A: a customer noun, not after a
+ * quantifier, with a past verb later in the same clause) and/or 'time_anchor' (pattern B: a clause opening with
+ * a past-time anchor, a single vav allowed). Clauses as in section 17.
+ */
+export function inventedStoryKinds(value: string): Array<'noun_verb' | 'time_anchor'> {
+  const kinds = new Set<'noun_verb' | 'time_anchor'>();
+  for (const clause of value.split(FREE_CLAUSE_SPLIT)) {
+    for (const match of clause.matchAll(STORY_NOUN_PATTERN)) {
+      const at = match.index ?? 0;
+      const before = wordBefore(clause, at);
+      if (before && strippedWordIn(before, STORY_QUANTIFIER_PREFIXES, STORY_QUANTIFIER_EXCLUSIONS)) continue;
+      if (STORY_VERB_PATTERN.test(clause.slice(at + match[0].length))) kinds.add('noun_verb');
+    }
+    const opening = clause.trim();
+    if (STORY_TIME_ANCHORS.some(anchor => opening.startsWith(anchor) || opening.startsWith(`${VAV}${anchor}`))) kinds.add('time_anchor');
+  }
+  return [...kinds];
+}
+
+/** The Hebrew word that starts at a position (the shin of a TIME_WORD_TOKENS token). */
+function wordAt(value: string, at: number): string {
+  return new RegExp(`^${HEB_CLASS}+`, 'u').exec(value.slice(at))?.[0] ?? '';
+}
+
+/** True when the hit of a TIME_WORD_TOKENS token at `at` is a time phrase (its last letter starts a BEFORE_TIME_WORD_EXCLUSIONS word). */
+function timeWordExcluded(value: string, token: string, at: number): boolean {
+  return TIME_WORD_TOKENS.includes(token) && BEFORE_TIME_WORD_EXCLUSIONS.includes(wordAt(value, at + token.length - 1));
+}
+
+/** Moral-ending token indices in one string (section 20.2): plain substring, minus the following-word and time-word exclusions. */
+export function moralEndingHits(value: string): number[] {
+  const hits: number[] = [];
+  MORAL_ENDING_TOKENS.forEach((token, index) => {
+    for (let at = value.indexOf(token); at >= 0; at = value.indexOf(token, at + token.length)) {
+      const after = value.slice(at + token.length);
+      if (MORAL_ENDING_FOLLOWING_EXCLUSIONS.some(word => after.startsWith(` ${word}`))) continue;
+      if (timeWordExcluded(value, token, at)) continue;
+      hits.push(index);
+    }
+  });
+  return hits;
+}
+
+const BEFORE_PATTERNS = BEFORE_TOKENS.map(token => ({ token, pattern: new RegExp(`(?<!${HEB_CLASS})${VAV}?${escapeRegExp(token)}`, 'gu') }));
+
+/** "Before" hits in one string (section 20.3): left edge (a single vav allowed), the time-word exclusion on its shin token. */
+export function beforeHitCount(value: string): number {
+  let count = 0;
+  for (const { token, pattern } of BEFORE_PATTERNS) {
+    for (const match of value.matchAll(pattern)) {
+      const at = (match.index ?? 0) + match[0].length - token.length;
+      if (!timeWordExcluded(value, token, at)) count++;
+    }
+  }
+  return count;
+}
+
+export type Vertical = 'ac' | 'electric' | 'plumbing';
+/** AC vertical (section 20.6): a hyphen segment equal to AC_SEGMENT_KEYWORD, or another keyword as a substring. */
+export function isAcSlug(slug: string): boolean {
+  const lower = slug.toLowerCase();
+  return AC_VERTICAL_SLUG_KEYWORDS.some(keyword => keyword === AC_SEGMENT_KEYWORD ? lower.split('-').includes(keyword) : lower.includes(keyword));
+}
+/** Vertical of a slug (section 20.4): ac, electric (ELECTRIC_SLUG_KEYWORDS substring), else plumbing. */
+export function slugVertical(slug: string): Vertical {
+  if (isAcSlug(slug)) return 'ac';
+  const lower = slug.toLowerCase();
+  return ELECTRIC_SLUG_KEYWORDS.some(keyword => lower.includes(keyword)) ? 'electric' : 'plumbing';
+}
+
+const STICKY_WHOLE_PATTERNS = new Map(STICKY_WHOLE_WORDS.map(word => [word,
+  new RegExp(`(?<!${HEB_CLASS})[${STICKY_WHOLE_WORD_PREFIXES.join('')}]*${escapeRegExp(word)}(?!${HEB_CLASS})`, 'u')]));
+
+/** The problem words of a vertical plus the general words (section 20.4). */
+export function stickyProblemWordsFor(vertical: Vertical): string[] {
+  return [...STICKY_PROBLEM_WORDS[vertical], ...STICKY_PROBLEM_WORDS.general];
+}
+
+/** Sticky naming (section 20.4): 'bare' (a bare action form) or 'unnamed' (names neither the service nor a problem word). */
+export function stickyNamingProblems(value: string, serviceLabel: string | null, vertical: Vertical): Array<'bare' | 'unnamed'> {
+  const core = value.trim().replace(/[!.\s]+$/u, '');
+  if (STICKY_BARE_FORMS.includes(core)) return ['bare'];
+  if (serviceLabel && value.includes(serviceLabel)) return [];
+  const named = stickyProblemWordsFor(vertical).some(word => STICKY_WHOLE_PATTERNS.get(word)?.test(value) ?? value.includes(word));
+  return named ? [] : ['unnamed'];
+}
+
+/** Section 20.5: indices of the serviceDetails descriptions that start with the opener word past the floor(half) cap. */
+export function serviceDetailsOpenerOverCap(copy: Record<string, unknown>): number[] {
+  const details = Array.isArray(copy.serviceDetails) ? copy.serviceDetails : [];
+  const starts = details.flatMap((item, index) => {
+    const description = item && typeof item === 'object' ? (item as Record<string, unknown>).description : undefined;
+    return typeof description === 'string' && description.trimStart().startsWith(`${SERVICE_DETAILS_OPENER_TOKEN} `) ? [index] : [];
+  });
+  const cap = Math.floor(details.length / 2);
+  return starts.length > cap ? starts.slice(cap) : [];
+}
+
+const LEAD_PREFIX_ALT = wordAlternatives(ARRIVE_LOCATE_LEAD_PREFIXES);
+const TRADE_GATES = TRADE_TERMS.filter(entry => entry.type !== 'promptOnly').map(entry => ({
+  entry,
+  pattern: entry.match === 'leadVerb'
+    ? new RegExp(`(?<!${HEB_CLASS})(?:${LEAD_PREFIX_ALT})?(?:${wordAlternatives(entry.leadVerbs ?? [])}) (?:${wordAlternatives(entry.tokens)})(?!${HEB_CLASS})`, 'gu')
+    : entry.match === 'wholeWord'
+      ? new RegExp(`(?<!${HEB_CLASS})[${entry.prefixLetters.join('')}]*(?:${wordAlternatives(entry.tokens)})(?!${HEB_CLASS})`, 'gu')
+      : new RegExp(wordAlternatives(entry.tokens), 'gu'),
+}));
+const AC_SEWAGE_ID = 'ac_sewage';
+const NEXT_WORD = new RegExp(`^\\s+(${HEB_CLASS}+)`, 'u');
+
+/** Trade-term gate ids hit by one string (section 20.6); acOnly entries only on an AC page. */
+export function tradeTermHits(value: string, acPage: boolean): string[] {
+  const hits: string[] = [];
+  for (const { entry, pattern } of TRADE_GATES) {
+    if (entry.acOnly && !acPage) continue;
+    const hit = [...value.matchAll(pattern)].some(match => {
+      const at = match.index ?? 0;
+      if (entry.match === 'leadVerb') {
+        const next = NEXT_WORD.exec(value.slice(at + match[0].length))?.[1];
+        return !(next && ARRIVE_LOCATE_NEXT_WORD_EXCLUSIONS.includes(next));
+      }
+      // Noa (ac_sewage): ignored when its replacement word (the condensate drain) is earlier in the same clause (section 17 clauses).
+      if (entry.id === AC_SEWAGE_ID && (value.slice(0, at).split(FREE_CLAUSE_SPLIT).pop() ?? '').includes(entry.replacement)) return false;
+      return true;
+    });
+    if (hit) hits.push(entry.id);
+  }
+  return hits;
+}
+
+/** Yonatan (M2a.6): NFC, whitespace runs (NBSP included) to one space, trimmed. No other folding. */
+export function normalizeAnchorText(value: string): string {
+  return value.normalize('NFC').replace(/\s+/g, ' ').trim();
+}
+
+/** Yonatan's H1 anchor rule: what the heroHeadline lacks of the page name and city ('name' | 'city' | 'both'), or null. */
+export function heroAnchorMissing(headline: string, name: string, city: string | null | undefined): 'name' | 'city' | 'both' | null {
+  const hook = normalizeAnchorText(headline);
+  const place = city == null ? '' : normalizeAnchorText(city);
+  const hasName = hook.includes(normalizeAnchorText(name));
+  const hasCity = !place || hook.includes(place);
+  return hasName && hasCity ? null : !hasName && !hasCity ? 'both' : !hasName ? 'name' : 'city';
+}
+
 /** Section 19 + duplicate-hook gates for one page (owner-voice fields only). */
 function voiceGates(copy: Record<string, unknown>, strings: Array<{ field: string; value: string }>, ctx: CopyGateContext): GateViolation[] {
   const out: GateViolation[] = [];
   const signatureSeen: Record<string, number> = {};
+  // M2a.6 (Adam): the owner's differentiator group(s) may appear twice per page.
+  const differentiator = new Set(differentiatorGroups(ctx));
+  const vertical = slugVertical(ctx.pageSlug ?? '');
+  const serviceLabel = ctx.pageServiceLabel ?? (Array.isArray(copy.serviceItems) && typeof copy.serviceItems[0] === 'string' ? copy.serviceItems[0] : null);
+  let beforeSeen = 0;
   for (const { field, value } of strings) {
     if (!isOwnerVoiceField(field)) continue;
+    if (STORY_FIELD_PATTERNS.some(pattern => pattern.test(field))) {
+      for (const kind of inventedStoryKinds(value)) out.push({ field, rule: GATE_RULES.inventedStory, actual: `story:${kind}` });
+    }
+    if (MORAL_FIELD_PATTERNS.some(pattern => pattern.test(field))) {
+      for (const index of new Set(moralEndingHits(value))) out.push({ field, rule: GATE_RULES.moralEnding, actual: `moral:${index}` });
+    }
+    const before = beforeHitCount(value);
+    if (before) {
+      beforeSeen += before;
+      if (beforeSeen > BEFORE_CAP) out.push({ field, rule: GATE_RULES.beforeCap, actual: `before:${beforeSeen}` });
+    }
+    for (const id of tradeTermHits(value, vertical === 'ac')) out.push({ field, rule: GATE_RULES.tradeTerm, actual: `trade:${id}` });
+    if (field === 'stickyBarLine') {
+      for (const problem of stickyNamingProblems(value, serviceLabel, vertical)) out.push({ field, rule: GATE_RULES.stickyNaming, actual: `sticky_naming:${problem}` });
+    }
     const generic = new Set(genericAdjectiveHits(value, ctx).map(hit => `generic_${hit.kind}:${hit.index}`));
     for (const actual of generic) out.push({ field, rule: GATE_RULES.genericAdjective, actual });
     for (const id of badIdiomHits(value)) out.push({ field, rule: GATE_RULES.badIdiom, actual: `idiom:${id}` });
     for (const [group, count] of Object.entries(signatureCounts(value))) {
       signatureSeen[group] = (signatureSeen[group] ?? 0) + count;
-      if (signatureSeen[group] > 1) out.push({ field, rule: GATE_RULES.signatureRepeat, actual: `signature:${group}` });
+      if (signatureSeen[group] > (differentiator.has(group) ? DIFFERENTIATOR_SIGNATURE_CAP : 1)) out.push({ field, rule: GATE_RULES.signatureRepeat, actual: `signature:${group}` });
     }
     if (BARE_VERB_FIELD_SET.has(field)) {
       for (const index of new Set(bareVerbOpenerHits(value))) out.push({ field, rule: GATE_RULES.bareVerbOpener, actual: `opener:${index}` });
@@ -923,6 +1235,22 @@ function voiceGates(copy: Record<string, unknown>, strings: Array<{ field: strin
   if (typeof copy.heroHeadline === 'string' && ctx.priorHeroHeadlines?.length) {
     const kind = duplicateHookKind(copy.heroHeadline, ctx.priorHeroHeadlines);
     if (kind) out.push({ field: 'heroHeadline', rule: GATE_RULES.duplicateHook, actual: `duplicate:${kind}` });
+  }
+  // M2a.6: site-wide checks against the pages generated before this one (route order, home first).
+  if (typeof copy.heroHeadline === 'string' && ctx.priorHeroHeadlines?.length) {
+    for (const group of heroSignatureCapGroups(copy.heroHeadline, ctx.priorHeroHeadlines)) out.push({ field: 'heroHeadline', rule: GATE_RULES.heroSignatureCap, actual: `hero_cap:${group}` });
+  }
+  if (typeof copy.aboutPageHeadline === 'string' && ctx.priorAboutPageHeadlines?.length && duplicateAboutHeadline(copy.aboutPageHeadline, ctx.priorAboutPageHeadlines)) {
+    out.push({ field: 'aboutPageHeadline', rule: GATE_RULES.duplicateAboutHeadline, actual: 'duplicate:about_headline' });
+  }
+  if (typeof copy.aboutPageBody === 'string' && ctx.priorAboutPageBodies?.length && duplicateAboutOpening(copy.aboutPageBody, ctx.priorAboutPageBodies)) {
+    out.push({ field: 'aboutPageBody', rule: GATE_RULES.duplicateAboutOpening, actual: 'duplicate:about_opening' });
+  }
+  for (const index of serviceDetailsOpenerOverCap(copy)) out.push({ field: `serviceDetails[${index}].description`, rule: GATE_RULES.serviceDetailsOpener, actual: `opener_cap:${index}` });
+  // Yonatan's H1 anchor: heroHeadline holds the exact page name and city (normalised), else the renderer swaps the H1.
+  if (typeof copy.heroHeadline === 'string' && ctx.anchorName) {
+    const missing = heroAnchorMissing(copy.heroHeadline, ctx.anchorName, ctx.anchorCity);
+    if (missing) out.push({ field: 'heroHeadline', rule: GATE_RULES.heroAnchor, actual: `missing:${missing}` });
   }
   return out;
 }
@@ -1075,6 +1403,14 @@ export interface CopyGatePageOptions {
   researchSite?: boolean;
   /** M2a.5: heroHeadlines of the site's pages generated before this one (duplicate-hook check). */
   priorHeroHeadlines?: readonly string[];
+  /** M2a.6: aboutPageHeadline / aboutPageBody of the pages generated before this one. */
+  priorAboutPageHeadlines?: readonly string[];
+  priorAboutPageBodies?: readonly string[];
+  /** M2a.6: slug that decides the vertical (section 20.4 / 20.6). */
+  pageSlug?: string;
+  /** M2a.6 (Yonatan): the title's search anchor (page.seo.name / page.seo.city). */
+  anchorName?: string | null;
+  anchorCity?: string | null;
 }
 
 /** Build the gate context from owner data plus the page's confirmed service names and owner-stated places. */
@@ -1101,6 +1437,11 @@ export function copyGateContext(data: CollectedData, serviceLabels: readonly str
     researchSite: page.researchSite ?? false,
     businessName: typeof data.businessName === 'string' && data.businessName.trim() ? data.businessName.trim() : null,
     priorHeroHeadlines: page.priorHeroHeadlines ?? [],
+    priorAboutPageHeadlines: page.priorAboutPageHeadlines ?? [],
+    priorAboutPageBodies: page.priorAboutPageBodies ?? [],
+    pageSlug: page.pageSlug ?? '',
+    anchorName: page.anchorName ?? null,
+    anchorCity: page.anchorCity ?? null,
   };
 }
 
@@ -1187,7 +1528,8 @@ export function describeGateViolation(violation: GateViolation, ctx: CopyGateCon
     }
     case GATE_RULES.signatureRepeat: {
       const group = (violation.actual ?? '').split(':')[1] ?? '';
-      return `${violation.field} repeats the signature phrase ${JSON.stringify(promptSignatureVariants(group))}, which already appears elsewhere on this page (at most once per page, in any spelling); remove it from this field and say something new instead: a different owner fact, a consequence for the customer, or a concrete step of the job`;
+      const cap = differentiatorGroups(ctx).includes(group) ? DIFFERENTIATOR_SIGNATURE_CAP : 1;
+      return `${violation.field} repeats the signature phrase ${JSON.stringify(promptSignatureVariants(group))}, which already appears elsewhere on this page (at most ${cap === 1 ? 'once' : `${cap} times`} per page, in any spelling); remove it from this field and say something new instead: a different owner fact, a consequence for the customer, or a concrete step of the job`;
     }
     case GATE_RULES.duplicateHook:
       return `${violation.field} repeats the hero headline, or its opening hook before the first question mark or em-dash, of another page of this site; write a new headline for this page that opens with this service's own pain or moment, not the same opening`;
@@ -1200,6 +1542,43 @@ export function describeGateViolation(violation: GateViolation, ctx: CopyGateCon
     case GATE_RULES.bareVerbOpener: {
       const opener = BARE_VERB_SENTENCE_OPENERS[index];
       return `${violation.field} has a sentence that starts with the bare first-person verb ${JSON.stringify(opener ?? '')} with no subject; give that sentence its subject (${JSON.stringify(SUBJECT_CARRY_TOKENS[0] ?? '')}), or join it to a previous sentence that already has it. Never open a sentence or paragraph with a bare verb or a bare-noun fragment`;
+    }
+    case GATE_RULES.heroSignatureCap: {
+      const group = (violation.actual ?? '').split(':')[1] ?? '';
+      return `${violation.field} uses the signature phrase ${JSON.stringify(promptSignatureVariants(group))}, which already appears in ${HERO_SIGNATURE_CAP} earlier hero headlines of this site; the owner's differentiator belongs only in the home hero and the one service hero it fits best. Rewrite this headline to lead with this service's own pain or moment, without that phrase or any paraphrase of it`;
+    }
+    case GATE_RULES.duplicateAboutHeadline:
+      return `${violation.field} is identical to the aboutPageHeadline of another page of this site; write a new about headline for this page, about this service`;
+    case GATE_RULES.duplicateAboutOpening:
+      return `${violation.field} opens with the same first three words as the aboutPageBody of another page of this site; open this page's about body with different words, from this service's own scene`;
+    case GATE_RULES.inventedStory: {
+      const kind = (violation.actual ?? '').split(':')[1];
+      return `${violation.field} narrates a past job${kind === 'time_anchor' ? ' (a clause opens with a past-time phrase)' : ' (a customer did something in the past)'}; the owner never gave a real job story, so this is an invented case study. Rewrite it in the second person, present tense: the reader, in his home, now. No past customer, named or unnamed, and no specific past occasion. Do not use these words for it: ${JSON.stringify([...STORY_CUSTOMER_NOUNS, ...STORY_TIME_ANCHORS])}`;
+    }
+    case GATE_RULES.moralEnding: {
+      const token = MORAL_ENDING_TOKENS[index];
+      return `${violation.field} draws a lesson, a motto or a principle (${JSON.stringify(token ?? '')}); end on a fact or on what the customer gets instead. Do not use any of: ${JSON.stringify(MORAL_ENDING_TOKENS)}`;
+    }
+    case GATE_RULES.beforeCap:
+      return `${violation.field} brings this page to more than ${BEFORE_CAP} uses of the "before" construction (${JSON.stringify(BEFORE_TOKENS)}); remove it from this field and show the order of the work with a concrete sequence of steps instead`;
+    case GATE_RULES.stickyNaming: {
+      const problem = (violation.actual ?? '').split(':')[1];
+      const vertical = slugVertical(ctx.pageSlug ?? '');
+      const label = ctx.pageServiceLabel;
+      return `${violation.field} ${problem === 'bare' ? 'is a bare action with nothing else' : 'names neither the customer\'s problem nor the service'}; the sticky bar must name the problem or the service plus an action: a problem-word question plus an action, or "tell me what the [appliance] is doing". Use one of these problem words${label ? ` or the service name ${JSON.stringify(label)}` : ''}: ${JSON.stringify(stickyProblemWordsFor(vertical))}`;
+    }
+    case GATE_RULES.serviceDetailsOpener:
+      return `${violation.field} starts with ${JSON.stringify(SERVICE_DETAILS_OPENER_TOKEN)} like more than half of this page's service descriptions; start this one with the action or the object instead`;
+    case GATE_RULES.tradeTerm: {
+      const entry = TRADE_TERMS.find(item => item.id === (violation.actual ?? '').split(':')[1]);
+      if (!entry) return `${violation.field} uses a wrong trade term; rewrite it with the correct term`;
+      return `${violation.field} uses ${JSON.stringify(entry.match === 'leadVerb' ? (entry.leadVerbs ?? []).map(verb => `${verb} ${entry.tokens[0]}`) : entry.tokens)}, which is the wrong ${entry.type === 'spellingFix' ? 'spelling' : 'term'} (meant: ${entry.meant}); rewrite the whole sentence in plain native Hebrew with this idea: ${JSON.stringify(entry.replacement)}, keeping every word in agreement`;
+    }
+    case GATE_RULES.heroAnchor: {
+      const missing = (violation.actual ?? '').split(':')[1];
+      const name = JSON.stringify(ctx.anchorName ?? '');
+      const city = ctx.anchorCity ? JSON.stringify(ctx.anchorCity) : null;
+      return `${violation.field} is missing ${missing === 'both' ? 'the page name and the city' : missing === 'city' ? 'the city' : 'the page name'} of this page's search anchor; keep the opening hook clause exactly as it is, then add the exact page name ${name}${city ? ` and the exact city ${city}` : ''} in the next clause, character for character, and stay within the heroHeadline length limit stated for this field (shorten the rest of the headline, never the anchor)`;
     }
     default:
       return `${violation.field}: ${violation.rule}`;
