@@ -130,7 +130,7 @@ function brief(slug: string, pageName = LABEL, city: string | null = null, pageC
 test('M2a.6 1: generationData.ts carries section 20 byte-exact, counted and sourced; R1-R7 are slices of the data file; --check passes', () => {
   const text = fs.readFileSync(DATA_FILE, 'utf8');
   const blocks = [...text.matchAll(/\n~~~json\n([\s\S]*?)\n~~~/g)].map(match => JSON.parse(match[1]));
-  assert.equal(blocks.length, 43);
+  assert.equal(blocks.length, 48); // M2a.7 adds 5 blocks (sections 20 and 21)
   const data = Object.assign({}, ...blocks);
   const same = (actual: unknown, expected: unknown) => assert.deepEqual(JSON.parse(JSON.stringify(actual)), expected);
   same(SIGNATURE_WORD_TOKEN_ADDITIONS, data.signatureWordTokenAdditions);
@@ -157,17 +157,24 @@ test('M2a.6 1: generationData.ts carries section 20 byte-exact, counted and sour
   assert.deepEqual([STORY_CUSTOMER_NOUNS.length, STORY_PAST_VERBS.length, STORY_QUANTIFIER_EXCLUSIONS.length, STORY_TIME_ANCHORS.length], [2, 28, 3, 5]);
   assert.deepEqual([MORAL_ENDING_TOKENS.length, MORAL_ENDING_FOLLOWING_EXCLUSIONS.length, BEFORE_TOKENS.length, BEFORE_TIME_WORD_EXCLUSIONS.length], [12, 2, 3, 21]);
   assert.deepEqual([STICKY_BARE_FORMS.length, Object.values(STICKY_PROBLEM_WORDS).flat().length, STICKY_WHOLE_WORDS.length, AC_VERTICAL_SLUG_KEYWORDS.length, ARRIVE_LOCATE_NEXT_WORD_EXCLUSIONS.length], [12, 24, 3, 5, 4]);
-  assert.deepEqual([TRADE_TERMS.length, TRADE_TERMS.filter(entry => entry.type === 'gate').length, TRADE_TERMS.filter(entry => entry.type === 'spellingFix').length, TRADE_TERMS.filter(entry => entry.type === 'promptOnly').length], [7, 3, 1, 3]);
+  // M2a.7: services_headline_preposition and water_flows_again were promoted from promptOnly to gate.
+  assert.deepEqual([TRADE_TERMS.length, TRADE_TERMS.filter(entry => entry.type === 'gate').length, TRADE_TERMS.filter(entry => entry.type === 'spellingFix').length, TRADE_TERMS.filter(entry => entry.type === 'promptOnly').length], [7, 5, 1, 1]);
   assert.deepEqual([TILES_BREAK_PREFIX_LETTERS.length, TILES_BREAK_STRIP_PREFIXES.length, STORY_NOUN_PREFIXES.length, STORY_VERB_PREFIXES.length, STORY_QUANTIFIER_PREFIXES.length, STICKY_WHOLE_WORD_PREFIXES.length, ARRIVE_LOCATE_LEAD_PREFIXES.length], [6, 6, 2, 1, 6, 7, 3]);
   assert.deepEqual([...STORY_FIELDS], ['aboutBlurb', 'aboutPageBody', 'heroSubheadline', 'serviceDetails[].description']);
   assert.deepEqual([...MORAL_FIELDS], ['aboutBlurb', 'aboutPageBody']);
-  assert.deepEqual([BEFORE_CAP, HERO_SIGNATURE_CAP], [2, 2]);
+  assert.deepEqual([BEFORE_CAP, HERO_SIGNATURE_CAP], [3, 2]); // M2a.7: before cap raised from 2
   assert.ok(TIME_WORD_TOKENS.length === 2 && TIME_WORD_TOKENS.some(token => MORAL_ENDING_TOKENS.includes(token)) && TIME_WORD_TOKENS.some(token => BEFORE_TOKENS.includes(token)));
   // Section 19.4 edit (Tamar): one planned heroCta label left, and it is the section 20.7 override.
   assert.deepEqual([...CTA_LABEL_SETS.planned.heroCta], [HERO_CTA_OVERRIDE.planned.phone]);
-  assert.deepEqual(M2A6_PROMPT_RULES.map(rule => rule.id), ['R1', 'R2', 'R3', 'R4', 'R5', 'R6', 'R7']);
+  assert.deepEqual(M2A6_PROMPT_RULES.map(rule => rule.id), ['R1', 'R2', 'R3', 'R4', 'R5', 'R6', 'R7', 'R8']);
   const lines = text.split('\n');
-  for (const rule of M2A6_PROMPT_RULES) assert.ok(lines.some(line => line.startsWith('- **') && line.slice(2).split('**').join('') === rule.text), rule.id);
+  // M2a.7: R8 keeps its indented sub-bullets; the rule text is the header line plus the following sub-bullet lines, byte-exact.
+  for (const rule of M2A6_PROMPT_RULES) {
+    const [head, ...subs] = rule.text.split('\n');
+    const at = lines.findIndex(line => line.startsWith('- **') && line.slice(2).split('**').join('') === head);
+    assert.ok(at >= 0, rule.id);
+    assert.deepEqual(subs, lines.slice(at + 1, at + 1 + subs.length), rule.id);
+  }
   for (const key of ['signatureWordTokenAdditions', 'tilesBreakForms', 'storyTokens', 'moralEndingTokens', 'beforeTokens', 'stickyNaming', 'serviceDetailsOpenerToken', 'tradeTermTokens', 'heroCtaOverride']) {
     assert.match(GUARD_TOKEN_SOURCES[key] ?? '', /^docs\/copy\/site-bot-generation-data\.md section 20\. /, key);
   }
@@ -223,22 +230,23 @@ test('M2a.6 3: site-wide checks: hero cap in route order, duplicate aboutPageHea
   assert.deepEqual(hitsOf(loose({ aboutPageBody: `${CARRY} ${W1} ${W2}` }), vctx({ priorAboutPageBodies: [`${CARRY} ${W1} ${W2}.`] }), GATE_RULES.duplicateAboutOpening), ['aboutPageBody=duplicate:about_opening']);
   assert.deepEqual(hitsOf(loose({ aboutPageHeadline: W1, aboutPageBody: `${CARRY} ${W1} ${W2}` }), vctx(), GATE_RULES.duplicateAboutOpening), [], 'the first page never fails');
   const pages = [{ copy: { ...base, heroHeadline: W1, aboutPageHeadline: W2, aboutPageBody: W3 } }];
-  assert.deepEqual(siteGenerationContext(pages), { priorHeroHeadlines: [W1], priorAboutPageHeadlines: [W2], priorAboutPageBodies: [W3] });
-  // generateResearchPageCopy takes the earlier about headlines and repairs the duplicate.
+  assert.deepEqual(siteGenerationContext(pages), { priorHeroHeadlines: [W1], priorAboutPageHeadlines: [W2], priorAboutPageBodies: [W3], priorHeroFacts: [] });
+  // generateResearchPageCopy takes the earlier about headlines. M2a.7: aboutPageHeadline is not rendered yet, so the
+  // duplicate is a logged warning (no repair call); the repair wording is still there for M2b.
   const events: string[] = [];
+  let repairs = 0;
   const result = await generateResearchPageCopy(brief('leak-detection'), { businessNiche: 'plumber', guarantee: 'x' }, {
     priorAboutPageHeadlines: [W1],
-    onEvent: event => { for (const violation of event.violations ?? []) events.push(violation.rule); },
+    onEvent: event => { if (event.kind === 'warnings') for (const violation of event.violations ?? []) events.push(violation.rule); },
     callJson: async (system, user) => {
-      if (/repairing specific fields/.test(system)) {
-        assert.match(user, /is identical to the aboutPageHeadline of another page/);
-        return JSON.stringify({ aboutPageHeadline: W2 });
-      }
+      if (/repairing specific fields/.test(system)) repairs++;
       return JSON.stringify(/^You are Noa/.test(system) ? JSON.parse(user.slice(0, user.indexOf('\n\nHARD LIMITS'))) : { ...base, aboutPageHeadline: W1 });
     },
   });
-  assert.equal(result.aboutPageHeadline, W2);
+  assert.equal(result.aboutPageHeadline, W1);
+  assert.equal(repairs, 0);
   assert.ok(events.includes(GATE_RULES.duplicateAboutHeadline));
+  assert.match(describeGateViolation({ field: 'aboutPageHeadline', rule: GATE_RULES.duplicateAboutHeadline }, vctx()), /is identical to the aboutPageHeadline of another page/);
 });
 
 test('M2a.6 4: invented customer story: pattern A (noun + later past verb in one clause, quantifier excluded), pattern B (clause-start anchor); story fields only', () => {
@@ -284,10 +292,11 @@ test('M2a.6 5: moral ending (about fields, substring) with the following-word an
   for (const word of BEFORE_TIME_WORD_EXCLUSIONS) assert.equal(beforeHitCount(`${shinBefore.slice(0, -1)}${word}`), 0, word);
   const one = `${CARRY} ${BEFORE_TOKENS[0]}${W1}`;
   const other = `${CARRY} ${BEFORE_TOKENS[1]} ${W2}`;
-  assert.deepEqual(hitsOf(loose({ heroSubheadline: one, aboutBlurb: other }), vctx(), GATE_RULES.beforeCap), [], `${BEFORE_CAP} is fine`);
-  assert.deepEqual(hitsOf(loose({ heroSubheadline: one, aboutBlurb: other, aboutPageBody: one }), vctx(), GATE_RULES.beforeCap), ['aboutPageBody=before:3']);
-  assert.deepEqual(hitsOf(loose({ heroSubheadline: one, aboutBlurb: `${one} ${BEFORE_TOKENS[1]} ${W2}` }), vctx(), GATE_RULES.beforeCap), ['aboutBlurb=before:3'], 'counted across fields');
-  assert.deepEqual(hitsOf(loose({ heroSubheadline: one, aboutBlurb: one, reviewContext: one }), vctx(), GATE_RULES.beforeCap), [], 'customer words do not count');
+  // M2a.7: the cap is 3 per page (was 2).
+  assert.deepEqual(hitsOf(loose({ heroSubheadline: one, aboutBlurb: other, aboutPageBody: one }), vctx(), GATE_RULES.beforeCap), [], `${BEFORE_CAP} is fine`);
+  assert.deepEqual(hitsOf(loose({ heroSubheadline: one, aboutBlurb: other, aboutPageBody: one, aboutPageHeadline: other }), vctx(), GATE_RULES.beforeCap), ['aboutPageBody=before:4']);
+  assert.deepEqual(hitsOf(loose({ heroSubheadline: one, aboutBlurb: `${one} ${BEFORE_TOKENS[1]} ${W2} ${BEFORE_TOKENS[1]} ${W3}` }), vctx(), GATE_RULES.beforeCap), ['aboutBlurb=before:4'], 'counted across fields');
+  assert.deepEqual(hitsOf(loose({ heroSubheadline: one, aboutBlurb: one, aboutPageBody: one, reviewContext: one }), vctx(), GATE_RULES.beforeCap), [], 'customer words do not count');
 });
 
 test('M2a.6 6: sticky naming: bare forms fail, the line names the service or a problem word of the page vertical (three whole words), slug verticals', () => {

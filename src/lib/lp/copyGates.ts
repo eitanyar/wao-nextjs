@@ -20,7 +20,18 @@ import {
   BEFORE_CAP,
   BEFORE_TIME_WORD_EXCLUSIONS,
   BEFORE_TOKENS,
+  DIFFERENTIATOR_CAP,
+  DIFFERENTIATOR_EXCLUDED_GROUPS,
+  DIFFERENTIATOR_USP_KEYWORDS,
   ELECTRIC_SLUG_KEYWORDS,
+  EXTRA_GATE_FIELDS,
+  HERO_CAP_AC_ONLY,
+  HERO_CAP_CONCEPT_ADDITIONS,
+  NAME_INTRO_LEAD_INS,
+  NAME_INTRO_TOKEN,
+  PREPOSITION_PAIR_NEXT_LETTER,
+  PREPOSITION_SKIP_ADVERBS,
+  WRONG_PREPOSITION_TOKENS,
   HERO_SIGNATURE_CAP,
   MORAL_ENDING_FOLLOWING_EXCLUSIONS,
   MORAL_ENDING_TOKENS,
@@ -152,6 +163,9 @@ export const GATE_RULES = {
   serviceDetailsOpener: 'gate_service_details_opener',
   tradeTerm: 'gate_trade_term',
   heroAnchor: 'gate_hero_anchor',
+  // M2a.7 (Noa section 20.6 typo gates)
+  tripledLetter: 'gate_tripled_letter',
+  wrongPreposition: 'gate_wrong_preposition',
 } as const;
 export type GateRule = (typeof GATE_RULES)[keyof typeof GATE_RULES];
 
@@ -205,6 +219,19 @@ export interface CopyGateContext {
   /** M2a.6 (Yonatan): the title's search anchor, page.seo.name and page.seo.city; the gate is off when anchorName is unset. */
   anchorName?: string | null;
   anchorCity?: string | null;
+  /**
+   * M2a.7: the copy fields the research-site renderer shows (RESEARCHED_RENDERED_FIELDS in researchedSite.ts). When set, a
+   * hit on any other field is a warning, except ALWAYS_BLOCKING_RULES; unset (legacy sites) = every hit blocks.
+   */
+  renderedFields?: readonly string[];
+  /** M2a.7: hero-cap facts (masked service labels, AC page) of every page already generated, aligned with priorHeroHeadlines. */
+  priorHeroFacts?: readonly HeroCapPageFacts[];
+}
+
+/** M2a.7: what the site-wide hero cap needs of one page: the service labels masked in its hero, and whether it is an AC page. */
+export interface HeroCapPageFacts {
+  maskLabels: readonly string[];
+  acPage: boolean;
 }
 
 /** One non-blocking finding for human review (never copy text). */
@@ -553,7 +580,15 @@ export const NAME_OPENER: string = (() => {
   const match = new RegExp(`Open with: "(\\S+) ${OPENER_PROBE}," or "(\\S+) ${OPENER_PROBE},"`).exec(buildLpCopyPrompt({ ownerName: OPENER_PROBE }));
   return match ? match[1] : '';
 })();
-const NAME_OPENER_PATTERN = NAME_OPENER ? new RegExp(`(?<!${HEB_CLASS})${escapeRegExp(NAME_OPENER)}\\s+([^\\s,.;:!?\u2014]+)`, 'gu') : null;
+/**
+ * M2a.7 (Noa section 21): the name opener is a homograph, so it is a name intro only at a sentence start (the start of
+ * the field, or right after ". ", "? " or "! ") or right after a NAME_INTRO_LEAD_INS entry (a whole word) plus ", ".
+ * Whole word, no prefix letters. The same position rule makes it a subject-carry word (section 19.5).
+ */
+const NAME_INTRO_POSITION = `(?:^\\s*|(?<=[.?!] )|(?<=(?<!${HEB_CLASS})(?:${[...NAME_INTRO_LEAD_INS].sort((a, b) => b.length - a.length).map(escapeRegExp).join('|')}), ))`;
+const NAME_OPENER_PATTERN = NAME_INTRO_TOKEN ? new RegExp(`${NAME_INTRO_POSITION}${escapeRegExp(NAME_INTRO_TOKEN)}\\s+([^\\s,.;:!?\u2014]+)`, 'gu') : null;
+/** M2a.7: the name opener as a subject-carry word: same position rule, whole word. */
+const NAME_INTRO_CARRY_PATTERN = new RegExp(`${NAME_INTRO_POSITION}${escapeRegExp(NAME_INTRO_TOKEN)}(?!${HEB_CLASS})`, 'u');
 
 /** True when the self-introduction names the owner in another spelling or script (e.g. a transliterated Latin name). */
 function nameSpellingHit(value: string, ctx: CopyGateContext): boolean {
@@ -959,8 +994,10 @@ export function stickyActionProblems(value: string, heroCta: unknown, ctx: CopyG
 }
 
 const BARE_VERB_FIELD_SET = new Set(BARE_VERB_FIELDS);
-const SUBJECT_CARRY_PATTERN = new RegExp(
-  `(?<!${HEB_CLASS})(?:${wordAlternatives(SUBJECT_CARRY_PREFIXES)})?(?:${wordAlternatives(SUBJECT_CARRY_TOKENS)})(?!${HEB_CLASS})`, 'u');
+// M2a.7 (section 21): the name-intro token carries the subject only by NAME_INTRO_CARRY_PATTERN; the others keep the 19.5 rule.
+const PRONOUN_CARRY_PATTERN = new RegExp(
+  `(?<!${HEB_CLASS})(?:${wordAlternatives(SUBJECT_CARRY_PREFIXES)})?(?:${wordAlternatives(SUBJECT_CARRY_TOKENS.filter(token => token !== NAME_INTRO_TOKEN))})(?!${HEB_CLASS})`, 'u');
+const SUBJECT_CARRY_PATTERN = { test: (sentence: string): boolean => PRONOUN_CARRY_PATTERN.test(sentence) || NAME_INTRO_CARRY_PATTERN.test(sentence) };
 const FIRST_HEBREW_WORD = new RegExp(`^${HEB_CLASS}+`, 'u');
 
 /**
@@ -998,18 +1035,69 @@ export function serviceStage(slug: string): ServiceStage {
 // token is in generationData.ts (byte-exact from the data file). Gates detect; nothing is auto-replaced.
 // ---------------------------------------------------------------------------
 
-/** Adam (M2a.6): the per-page signature cap for the group(s) holding the owner's own differentiator; every other group stays at 1. */
-export const DIFFERENTIATOR_SIGNATURE_CAP = 2;
+/** The per-page signature cap for the group(s) holding the owner's own differentiator (section 20.1, M2a.7); every other group stays at 1. */
+export const DIFFERENTIATOR_SIGNATURE_CAP: number = DIFFERENTIATOR_CAP;
 
-/** Signature groups that the owner's own differentiator (usp) carries a token of (Adam: their per-page cap is 2). */
+/** Owner fields the differentiator is read from (section 20.1, M2a.7: the guarantee too, when it states a work method). */
+export const DIFFERENTIATOR_SOURCE_FIELDS: readonly string[] = ['usp', 'guarantee'];
+
+/**
+ * Signature groups holding the owner's own differentiator (section 20.1, M2a.7): a Hebrew usp / guarantee with a section
+ * 19.3 / 20.1 variant of the group, or an English one with a DIFFERENTIATOR_USP_KEYWORDS entry of the group (case-insensitive
+ * substring, hyphens read as spaces). A keyword only states a work method, so a guarantee that matches one states a method.
+ * DIFFERENTIATOR_EXCLUDED_GROUPS never count. Returned in signature-group order.
+ */
 export function differentiatorGroups(ctx: Pick<CopyGateContext, 'ownerFields'>): string[] {
-  const usp = ctx.ownerFields?.usp;
-  return typeof usp === 'string' ? Object.keys(signatureCounts(usp)) : [];
+  const found = new Set<string>();
+  for (const key of DIFFERENTIATOR_SOURCE_FIELDS) {
+    const value = ctx.ownerFields?.[key];
+    if (typeof value !== 'string' || !value.trim()) continue;
+    for (const group of Object.keys(signatureCounts(value))) found.add(group);
+    const english = value.toLowerCase().replace(/-/g, ' ');
+    for (const [group, keywords] of Object.entries(DIFFERENTIATOR_USP_KEYWORDS)) if (keywords.some(keyword => english.includes(keyword))) found.add(group);
+  }
+  for (const group of DIFFERENTIATOR_EXCLUDED_GROUPS) found.delete(group);
+  return Object.keys(SIGNATURE_GROUPS).filter(group => found.has(group));
 }
 
-/** Site-wide hero cap (section 20.1): the groups of this hero that already appear in HERO_SIGNATURE_CAP earlier heroes. */
-export function heroSignatureCapGroups(headline: string, prior: readonly string[]): string[] {
-  return Object.keys(signatureCounts(headline)).filter(group => prior.filter(other => signatureCounts(other)[group]).length >= HERO_SIGNATURE_CAP);
+/** A hero with the given service labels masked (longest first), so an entry inside the page's own label never counts. */
+function maskHeroLabels(headline: string, labels: readonly string[]): string {
+  let out = headline;
+  for (const label of [...labels].map(item => item.trim()).filter(Boolean).sort((a, b) => b.length - a.length)) out = out.split(label).join(VOICE_MASK);
+  return out;
+}
+
+/**
+ * Signature groups one hero counts for in the site-wide hero cap (section 20.1, M2a.7): the page's own service label(s)
+ * masked first, then the per-page signature variants plus HERO_CAP_CONCEPT_ADDITIONS (plain substring; HERO_CAP_AC_ONLY
+ * entries only on an AC page).
+ */
+export function heroCapGroups(headline: string, facts: HeroCapPageFacts = { maskLabels: [], acPage: false }): string[] {
+  const masked = maskHeroLabels(headline, facts.maskLabels);
+  const groups = new Set(Object.keys(signatureCounts(masked)));
+  for (const [group, entries] of Object.entries(HERO_CAP_CONCEPT_ADDITIONS)) {
+    if (entries.some(entry => (facts.acPage || !HERO_CAP_AC_ONLY.includes(entry)) && masked.includes(entry))) groups.add(group);
+  }
+  return Object.keys(SIGNATURE_GROUPS).filter(group => groups.has(group));
+}
+
+/** Hero-cap facts of the page being gated: its own label (homepage: every serviceItems label) and its vertical. */
+export function currentHeroCapFacts(copy: Record<string, unknown>, ctx: Pick<CopyGateContext, 'pageServiceLabel' | 'serviceLabels' | 'pageSlug'>): HeroCapPageFacts {
+  const items = Array.isArray(copy.serviceItems) ? copy.serviceItems.filter((item): item is string => typeof item === 'string') : [];
+  return {
+    maskLabels: ctx.pageServiceLabel ? [ctx.pageServiceLabel] : items.length ? items : [...ctx.serviceLabels],
+    acPage: slugVertical(ctx.pageSlug ?? '') === 'ac',
+  };
+}
+
+/**
+ * Site-wide hero cap (section 20.1): the groups of this hero that already appear in HERO_SIGNATURE_CAP earlier heroes.
+ * M2a.7: groups per heroCapGroups(); `priorFacts` aligns with `prior` (a missing entry uses this page's facts).
+ */
+export function heroSignatureCapGroups(headline: string, prior: readonly string[], facts?: HeroCapPageFacts, priorFacts: readonly HeroCapPageFacts[] = []): string[] {
+  const own = facts ?? { maskLabels: [], acPage: false };
+  const earlier = prior.map((other, index) => heroCapGroups(other, priorFacts[index] ?? { maskLabels: own.maskLabels, acPage: own.acPage }));
+  return heroCapGroups(headline, own).filter(group => earlier.filter(groups => groups.includes(group)).length >= HERO_SIGNATURE_CAP);
 }
 
 /** Section 20.1: an aboutPageHeadline byte-identical (after trimming) to an earlier page's. */
@@ -1147,22 +1235,68 @@ export function serviceDetailsOpenerOverCap(copy: Record<string, unknown>): numb
 }
 
 const LEAD_PREFIX_ALT = wordAlternatives(ARRIVE_LOCATE_LEAD_PREFIXES);
+/** M2a.7: the trade terms whose match rule is a section 20.6 prose note (the build script asserts the notes). */
+const PREPOSITION_ID = 'services_headline_preposition';
+const WATER_ID = 'water_flows_again';
+/** M2a.7: trade terms that also run on EXTRA_GATE_FIELDS (section 20.6: "this gate names its own field"). */
+export const EXTRA_FIELD_TRADE_IDS: readonly string[] = [PREPOSITION_ID];
+const SKIP_ADVERB_SET = new Set(PREPOSITION_SKIP_ADVERBS);
+const FOLLOWING_WORDS = new RegExp(`^ (${HEB_CLASS}+)(?: (${HEB_CLASS}+))?`, 'u');
+
+/**
+ * services_headline_preposition (section 20.6, M2a.7): token 0 (one verb) is a plain substring with no Hebrew letter right
+ * before it; token 1 (two verbs) is a plain substring unless a space and a word starting with PREPOSITION_PAIR_NEXT_LETTER
+ * follow it, after skipping at most one PREPOSITION_SKIP_ADVERBS word.
+ */
+function prepositionNoteHit(value: string, tokens: readonly string[]): boolean {
+  const [single, pair] = tokens;
+  if (new RegExp(`(?<!${HEB_CLASS})${escapeRegExp(single)}`, 'u').test(value)) return true;
+  for (let at = value.indexOf(pair); at >= 0; at = value.indexOf(pair, at + 1)) {
+    const next = FOLLOWING_WORDS.exec(value.slice(at + pair.length));
+    const word = next && SKIP_ADVERB_SET.has(next[1]) ? next[2] : next?.[1];
+    if (!word || !word.startsWith(PREPOSITION_PAIR_NEXT_LETTER)) return true;
+  }
+  return false;
+}
+
+/**
+ * water_flows_again (section 20.6, M2a.7): token 0 is a whole word (its own vav prefix only, no Hebrew letter after);
+ * token 1 is a plain substring with no Hebrew letter before it except that same vav.
+ */
+function waterNotePattern(tokens: readonly string[]): RegExp {
+  const [whole, phrase] = tokens;
+  const vav = whole.slice(0, whole.length - phrase.split(' ')[0].length);
+  return new RegExp(`(?<!${HEB_CLASS})(?:${escapeRegExp(whole)}(?!${HEB_CLASS})|(?:${escapeRegExp(vav)})?${escapeRegExp(phrase)})`, 'gu');
+}
+
 const TRADE_GATES = TRADE_TERMS.filter(entry => entry.type !== 'promptOnly').map(entry => ({
   entry,
-  pattern: entry.match === 'leadVerb'
+  pattern: entry.match === 'note'
+    ? entry.id === WATER_ID ? waterNotePattern(entry.tokens) : null
+    : entry.match === 'leadVerb'
     ? new RegExp(`(?<!${HEB_CLASS})(?:${LEAD_PREFIX_ALT})?(?:${wordAlternatives(entry.leadVerbs ?? [])}) (?:${wordAlternatives(entry.tokens)})(?!${HEB_CLASS})`, 'gu')
     : entry.match === 'wholeWord'
       ? new RegExp(`(?<!${HEB_CLASS})[${entry.prefixLetters.join('')}]*(?:${wordAlternatives(entry.tokens)})(?!${HEB_CLASS})`, 'gu')
       : new RegExp(wordAlternatives(entry.tokens), 'gu'),
 }));
+if (TRADE_GATES.some(({ entry, pattern }) => entry.match === 'note' && entry.id !== PREPOSITION_ID && !pattern)) throw new Error('copyGates: a note-matched trade term has no matcher');
 const AC_SEWAGE_ID = 'ac_sewage';
 const NEXT_WORD = new RegExp(`^\\s+(${HEB_CLASS}+)`, 'u');
 
-/** Trade-term gate ids hit by one string (section 20.6); acOnly entries only on an AC page. */
-export function tradeTermHits(value: string, acPage: boolean): string[] {
+/**
+ * Trade-term gate ids hit by one string (section 20.6); acOnly entries only on an AC page. M2a.7: with `extraFieldOnly`
+ * (a field of EXTRA_GATE_FIELDS), only the EXTRA_FIELD_TRADE_IDS entries run.
+ */
+export function tradeTermHits(value: string, acPage: boolean, extraFieldOnly = false): string[] {
   const hits: string[] = [];
   for (const { entry, pattern } of TRADE_GATES) {
     if (entry.acOnly && !acPage) continue;
+    if (extraFieldOnly && !EXTRA_FIELD_TRADE_IDS.includes(entry.id)) continue;
+    if (entry.id === PREPOSITION_ID) {
+      if (prepositionNoteHit(value, entry.tokens)) hits.push(entry.id);
+      continue;
+    }
+    if (!pattern) continue;
     const hit = [...value.matchAll(pattern)].some(match => {
       const at = match.index ?? 0;
       if (entry.match === 'leadVerb') {
@@ -1176,6 +1310,21 @@ export function tradeTermHits(value: string, acPage: boolean): string[] {
     if (hit) hits.push(entry.id);
   }
   return hits;
+}
+
+/**
+ * M2a.7 (Noa section 20.6) tripled_letter: a Hebrew letter (U+05D0-U+05EA) three or more times in a row, except vav, which
+ * needs four or more (a vav prefix on a word that starts with a double vav is legal). No Hebrew data.
+ */
+const TRIPLED_LETTER_PATTERN = new RegExp(`([\u05D0-\u05D4\u05D6-\u05EA])\\1\\1|${VAV}{4}`, 'u');
+export function tripledLetterHit(value: string): boolean {
+  return TRIPLED_LETTER_PATTERN.test(value);
+}
+
+/** M2a.7 (Noa section 20.6): wrong-preposition token indices in one string (no Hebrew letter before or after the token). */
+const WRONG_PREPOSITION_PATTERNS = WRONG_PREPOSITION_TOKENS.map(token => new RegExp(`(?<!${HEB_CLASS})${escapeRegExp(token)}(?!${HEB_CLASS})`, 'u'));
+export function wrongPrepositionHits(value: string): number[] {
+  return WRONG_PREPOSITION_PATTERNS.flatMap((pattern, index) => (pattern.test(value) ? [index] : []));
 }
 
 /** Yonatan (M2a.6): NFC, whitespace runs (NBSP included) to one space, trimmed. No other folding. */
@@ -1202,7 +1351,16 @@ function voiceGates(copy: Record<string, unknown>, strings: Array<{ field: strin
   const serviceLabel = ctx.pageServiceLabel ?? (Array.isArray(copy.serviceItems) && typeof copy.serviceItems[0] === 'string' ? copy.serviceItems[0] : null);
   let beforeSeen = 0;
   for (const { field, value } of strings) {
-    if (!isOwnerVoiceField(field)) continue;
+    const ownerVoice = isOwnerVoiceField(field);
+    // M2a.7 (Noa section 20.6): the typo gates and services_headline_preposition also cover EXTRA_GATE_FIELDS.
+    const extraField = !ownerVoice && EXTRA_GATE_FIELDS.includes(field);
+    if (!ownerVoice && !extraField) continue;
+    if (tripledLetterHit(value)) out.push({ field, rule: GATE_RULES.tripledLetter, actual: 'typo:tripled_letter' });
+    for (const index of wrongPrepositionHits(value)) out.push({ field, rule: GATE_RULES.wrongPreposition, actual: `wrong_preposition:${index}` });
+    if (extraField) {
+      for (const id of tradeTermHits(value, vertical === 'ac', true)) out.push({ field, rule: GATE_RULES.tradeTerm, actual: `trade:${id}` });
+      continue;
+    }
     if (STORY_FIELD_PATTERNS.some(pattern => pattern.test(field))) {
       for (const kind of inventedStoryKinds(value)) out.push({ field, rule: GATE_RULES.inventedStory, actual: `story:${kind}` });
     }
@@ -1238,7 +1396,10 @@ function voiceGates(copy: Record<string, unknown>, strings: Array<{ field: strin
   }
   // M2a.6: site-wide checks against the pages generated before this one (route order, home first).
   if (typeof copy.heroHeadline === 'string' && ctx.priorHeroHeadlines?.length) {
-    for (const group of heroSignatureCapGroups(copy.heroHeadline, ctx.priorHeroHeadlines)) out.push({ field: 'heroHeadline', rule: GATE_RULES.heroSignatureCap, actual: `hero_cap:${group}` });
+    // M2a.7: each hero with its own service label(s) masked; a prior page without facts gets every service label masked.
+    const own = currentHeroCapFacts(copy, ctx);
+    const priorFacts = ctx.priorHeroHeadlines.map((_, index) => ctx.priorHeroFacts?.[index] ?? { maskLabels: [...ctx.serviceLabels], acPage: own.acPage });
+    for (const group of heroSignatureCapGroups(copy.heroHeadline, ctx.priorHeroHeadlines, own, priorFacts)) out.push({ field: 'heroHeadline', rule: GATE_RULES.heroSignatureCap, actual: `hero_cap:${group}` });
   }
   if (typeof copy.aboutPageHeadline === 'string' && ctx.priorAboutPageHeadlines?.length && duplicateAboutHeadline(copy.aboutPageHeadline, ctx.priorAboutPageHeadlines)) {
     out.push({ field: 'aboutPageHeadline', rule: GATE_RULES.duplicateAboutHeadline, actual: 'duplicate:about_headline' });
@@ -1255,10 +1416,59 @@ function voiceGates(copy: Record<string, unknown>, strings: Array<{ field: strin
   return out;
 }
 
+// ---------------------------------------------------------------------------
+// M2a.7 (Eitan-approved until M2b): on a research site a gate hit in a field the renderer does not show is a warning
+// (logged, never fails the page, never spends repair budget), except ALWAYS_BLOCKING_RULES. WARNING_ONLY_RULES are
+// warnings in every field (data sections 20.2 and 20.5, M2a.7). Legacy sites (no renderedFields) are unchanged.
+// ---------------------------------------------------------------------------
+
+/** Trust and fact gates: they fail the page in every field, rendered or not (they will render from M2b). */
+export const ALWAYS_BLOCKING_RULES: readonly GateRule[] = [
+  GATE_RULES.inventedStory,
+  GATE_RULES.claim, // every claim:* fact gate, including price_lock, free:*, same_day_*, fix_time, solo_operator, license_grade
+  GATE_RULES.serviceArea,
+  GATE_RULES.nameSpelling,
+  // Engineer additions (same trust / fact class; flagged in the M2a.7 report):
+  GATE_RULES.customerAttribution,
+  GATE_RULES.customerSource,
+  GATE_RULES.waoOffer,
+  GATE_RULES.unconfirmedService,
+  GATE_RULES.availability,
+  GATE_RULES.installArrival,
+  GATE_RULES.hours,
+];
+/** Former gates that are warnings only, in every field (M2a.7: same-opening check, serviceDetails opener cap). */
+export const WARNING_ONLY_RULES: readonly GateRule[] = [GATE_RULES.duplicateAboutOpening, GATE_RULES.serviceDetailsOpener];
+
+/** True when a gate hit is a warning, not a page failure (see ALWAYS_BLOCKING_RULES / WARNING_ONLY_RULES). */
+export function isWarningHit(hit: Pick<GateViolation, 'field' | 'rule'>, ctx: Pick<CopyGateContext, 'renderedFields'>): boolean {
+  if (WARNING_ONLY_RULES.includes(hit.rule)) return true;
+  if (!ctx.renderedFields || ALWAYS_BLOCKING_RULES.includes(hit.rule)) return false;
+  return !ctx.renderedFields.includes(topFieldOf(hit.field));
+}
+/** The hits that fail the page. */
+export function blockingGateHits<T extends Pick<GateViolation, 'field' | 'rule'>>(hits: readonly T[], ctx: Pick<CopyGateContext, 'renderedFields'>): T[] {
+  return hits.filter(hit => !isWarningHit(hit, ctx));
+}
+/** The hits that are only logged. */
+export function warningGateHits<T extends Pick<GateViolation, 'field' | 'rule'>>(hits: readonly T[], ctx: Pick<CopyGateContext, 'renderedFields'>): T[] {
+  return hits.filter(hit => isWarningHit(hit, ctx));
+}
+
+/**
+ * Gated strings in gate order. With renderedFields, the rendered fields come first (otherwise in copy order), so a
+ * per-page count (signature, before, fact repeats) lands on a rendered field only when the rendered fields alone break it.
+ */
+function gateOrder(strings: Array<{ field: string; value: string }>, renderedFields?: readonly string[]): Array<{ field: string; value: string }> {
+  if (!renderedFields) return strings;
+  const rendered = (item: { field: string }) => renderedFields.includes(topFieldOf(item.field));
+  return [...strings.filter(rendered), ...strings.filter(item => !rendered(item))];
+}
+
 /** Run every gate. Returns violations (field paths + rule + config id), never copy text. */
 export function runCopyGates(copy: Record<string, unknown>, ctx: CopyGateContext): GateViolation[] {
   const out: GateViolation[] = [];
-  const strings = gatedStrings(copy);
+  const strings = gateOrder(gatedStrings(copy), ctx.renderedFields);
   const authorised = CLAIM_RULES.map((_, index) => claimAuthorised(index, ctx));
   const quote = ctx.reviewQuote ? normalizeSpace(ctx.reviewQuote) : '';
   const places = ctx.places ?? [];
@@ -1411,6 +1621,10 @@ export interface CopyGatePageOptions {
   /** M2a.6 (Yonatan): the title's search anchor (page.seo.name / page.seo.city). */
   anchorName?: string | null;
   anchorCity?: string | null;
+  /** M2a.7: fields the research renderer shows (hits elsewhere are warnings); unset = every hit blocks. */
+  renderedFields?: readonly string[];
+  /** M2a.7: hero-cap facts of the pages generated before this one (aligned with priorHeroHeadlines). */
+  priorHeroFacts?: readonly HeroCapPageFacts[];
 }
 
 /** Build the gate context from owner data plus the page's confirmed service names and owner-stated places. */
@@ -1442,6 +1656,8 @@ export function copyGateContext(data: CollectedData, serviceLabels: readonly str
     pageSlug: page.pageSlug ?? '',
     anchorName: page.anchorName ?? null,
     anchorCity: page.anchorCity ?? null,
+    ...(page.renderedFields ? { renderedFields: [...page.renderedFields] } : {}),
+    ...(page.priorHeroFacts ? { priorHeroFacts: page.priorHeroFacts } : {}),
   };
 }
 
@@ -1545,7 +1761,8 @@ export function describeGateViolation(violation: GateViolation, ctx: CopyGateCon
     }
     case GATE_RULES.heroSignatureCap: {
       const group = (violation.actual ?? '').split(':')[1] ?? '';
-      return `${violation.field} uses the signature phrase ${JSON.stringify(promptSignatureVariants(group))}, which already appears in ${HERO_SIGNATURE_CAP} earlier hero headlines of this site; the owner's differentiator belongs only in the home hero and the one service hero it fits best. Rewrite this headline to lead with this service's own pain or moment, without that phrase or any paraphrase of it`;
+      const concepts = HERO_CAP_CONCEPT_ADDITIONS[group] ?? [];
+      return `${violation.field} uses the signature phrase ${JSON.stringify(promptSignatureVariants(group))}${concepts.length ? ` (or one of the same idea: ${JSON.stringify(concepts)})` : ''}, which already appears in ${HERO_SIGNATURE_CAP} earlier hero headlines of this site; the owner's differentiator belongs only in the home hero and the one service hero it fits best. Rewrite this headline to lead with this service's own pain or moment, without that phrase or any paraphrase of it`;
     }
     case GATE_RULES.duplicateAboutHeadline:
       return `${violation.field} is identical to the aboutPageHeadline of another page of this site; write a new about headline for this page, about this service`;
@@ -1572,7 +1789,16 @@ export function describeGateViolation(violation: GateViolation, ctx: CopyGateCon
     case GATE_RULES.tradeTerm: {
       const entry = TRADE_TERMS.find(item => item.id === (violation.actual ?? '').split(':')[1]);
       if (!entry) return `${violation.field} uses a wrong trade term; rewrite it with the correct term`;
+      if (entry.replacementPair) {
+        return `${violation.field} uses ${JSON.stringify(entry.tokens)} with the wrong preposition (meant: ${entry.meant}); rewrite the whole sentence in plain native Hebrew: for one verb use ${JSON.stringify(entry.replacement)}, for two verbs that share one object use ${JSON.stringify(entry.replacementPair)}, keeping every word in agreement`;
+      }
       return `${violation.field} uses ${JSON.stringify(entry.match === 'leadVerb' ? (entry.leadVerbs ?? []).map(verb => `${verb} ${entry.tokens[0]}`) : entry.tokens)}, which is the wrong ${entry.type === 'spellingFix' ? 'spelling' : 'term'} (meant: ${entry.meant}); rewrite the whole sentence in plain native Hebrew with this idea: ${JSON.stringify(entry.replacement)}, keeping every word in agreement`;
+    }
+    case GATE_RULES.tripledLetter:
+      return `${violation.field} has the same Hebrew letter three or more times in a row (a typo); rewrite that word with its correct spelling`;
+    case GATE_RULES.wrongPreposition: {
+      const token = WRONG_PREPOSITION_TOKENS[index];
+      return `${violation.field} uses ${JSON.stringify(token ?? '')}, the wrong preposition after this verb of fear (it takes the prefix lamed or mem, never this one); rewrite that phrase with the correct preposition, keeping the owner's verb`;
     }
     case GATE_RULES.heroAnchor: {
       const missing = (violation.actual ?? '').split(':')[1];

@@ -21,13 +21,15 @@ import {
   GENERIC_ADJECTIVE_WORDS,
   HERO_CTA_OVERRIDE,
   M2A6_PROMPT_RULES,
+  PREPOSITION_PROMPT_LINE,
   STICKY_ACTION_TOKENS,
   TRADE_TERMS,
   TYPOGRAPHY_RULE_TEXT,
   VOICE_PROMPT_RULES,
 } from './generationData';
-import { pageNameWithCity } from './researchedSite';
+import { pageNameWithCity, RESEARCHED_RENDERED_FIELDS } from './researchedSite';
 import {
+  blockingGateHits,
   copyGateContext,
   DIFFERENTIATOR_SIGNATURE_CAP,
   differentiatorGroups,
@@ -42,7 +44,9 @@ import {
   SIGNATURE_GROUPS,
   slugVertical,
   STICKY_ARRIVAL_TOKENS,
+  warningGateHits,
   type CopyGateContext,
+  type HeroCapPageFacts,
   type ServiceStage,
 } from './copyGates';
 
@@ -67,6 +71,8 @@ export interface ResearchPageCopyDependencies {
   /** M2a.6: aboutPageHeadline / aboutPageBody of the site's pages generated before this one (route order). */
   priorAboutPageHeadlines?: readonly string[];
   priorAboutPageBodies?: readonly string[];
+  /** M2a.7: hero-cap facts (masked labels, AC page) of the site's pages generated before this one, aligned with priorHeroHeadlines. */
+  priorHeroFacts?: readonly HeroCapPageFacts[];
 }
 
 /**
@@ -127,12 +133,12 @@ function m2a6Rule(id: string): string {
 export function tradeTermLine(acPage: boolean): string {
   return `- tradeTermTokens (never write the wrong term; use the correct one, re-inflected to fit the sentence): ${JSON.stringify(TRADE_TERMS.filter(entry => !entry.acOnly || acPage).map(entry => ({
     ...(entry.tokens.length ? { never: entry.match === 'leadVerb' ? (entry.leadVerbs ?? []).map(verb => `${verb} ${entry.tokens[0]}`) : entry.tokens } : {}),
-    meant: entry.meant, instead: entry.replacement,
+    meant: entry.meant, instead: entry.replacement, ...(entry.replacementPair ? { insteadForTwoVerbs: entry.replacementPair } : {}),
   })))}`;
 }
 
-/** M2a.6: R2 (scene), R3 (before), R6 (trade accuracy) also bind the Tamar and repair system prompts. */
-const M2A6_SYSTEM_RULES = `${[m2a6Rule('R2'), m2a6Rule('R3'), m2a6Rule('R6')].join('\n')}`;
+/** M2a.6: R2 (scene), R3 (before), R6 (trade accuracy) also bind the Tamar and repair system prompts; M2a.7: plus Noa's verb / preposition line. */
+const M2A6_SYSTEM_RULES = `${[m2a6Rule('R2'), m2a6Rule('R3'), m2a6Rule('R6'), `- ${PREPOSITION_PROMPT_LINE}`].join('\n')}`;
 
 const COPY_SYSTEM_PROMPT =
   `You are Tamar, a Hebrew conversion copywriter. Follow the supplied research brief and JSON schema exactly. Return only the requested JSON object, with no prose or markdown.\n\n${SINGULAR_ADDRESS_RULE}`;
@@ -489,8 +495,9 @@ export function buildVoiceRules(brief: PageBrief, data: CollectedData = {}): str
   return [
     'VOICE RULES (Tamar, binding; the Hebrew lists they name are given after them):',
     ...VOICE_PROMPT_RULES.map(rule => `- ${rule.text}`),
-    // M2a.6: Tamar's section 20.8 rules R1-R7 (byte-exact).
+    // M2a.6: Tamar's section 20.8 rules R1-R8 (byte-exact; M2a.7 adds R8), and Noa's verb / preposition line (M2a.7).
     ...M2A6_PROMPT_RULES.map(rule => `- ${rule.text}`),
+    `- ${PREPOSITION_PROMPT_LINE}`,
     'Lists named in the voice rules:',
     ...voiceListLines({ stickyArrival: responseTime, differentiatorGroups: differentiatorGroups(gates) }),
     tradeTermLine(slugVertical(stageSlug(brief)) === 'ac'),
@@ -579,7 +586,7 @@ export function buildSiteCopyHardLimitsBlock(heading = 'HARD LIMITS'): string {
   return lines.join('\n');
 }
 
-export type CopyRepairEventKind = 'violations' | 'repair' | 'stage_retry' | 'deterministic_fix';
+export type CopyRepairEventKind = 'violations' | 'repair' | 'stage_retry' | 'deterministic_fix' | 'warnings';
 
 /** Diagnostic event from the copy pipeline. Field names, limits and lengths only. */
 export interface CopyRepairEvent {
@@ -712,10 +719,16 @@ function validatorViolations(value: Loose): CopyViolation[] {
   }
 }
 
-/** Copy-gate hits as CopyViolations (field + rule + config id; never copy text). */
+/** Copy-gate hits that fail the page, as CopyViolations (field + rule + config id; never copy text). M2a.7: warnings excluded. */
 export function gateViolations(value: Loose, gates: CopyGateContext | null): CopyViolation[] {
   if (!gates) return [];
-  return runCopyGates(value, gates).map(hit => ({ field: hit.field, rule: hit.rule, ...(hit.actual ? { actual: hit.actual } : {}) }));
+  return blockingGateHits(runCopyGates(value, gates), gates).map(hit => ({ field: hit.field, rule: hit.rule, ...(hit.actual ? { actual: hit.actual } : {}) }));
+}
+
+/** M2a.7: copy-gate hits that are warnings only (unrendered research-site fields, WARNING_ONLY_RULES); logged, never repaired. */
+export function gateWarnings(value: Loose, gates: CopyGateContext | null): CopyViolation[] {
+  if (!gates) return [];
+  return warningGateHits(runCopyGates(value, gates), gates).map(hit => ({ field: hit.field, rule: hit.rule, ...(hit.actual ? { actual: hit.actual } : {}) }));
 }
 
 function currentViolations(value: Loose, gates: CopyGateContext | null = null): CopyViolation[] {
@@ -790,13 +803,14 @@ export function applySafeDeterministicFixes(value: Loose, gates: CopyGateContext
   // M2a.5 (Adam): when one trustBarItems entry is the page's only gate hit and at least
   // TRUST_BAR_MIN_KEPT other items remain, drop that whole item (never edited) instead of failing.
   if (gates && Array.isArray(next.trustBarItems)) {
-    const hits = runCopyGates(next, gates);
+    // M2a.7: blocking hits only (a warning never fails the page, so it never needs the drop).
+    const hits = blockingGateHits(runCopyGates(next, gates), gates);
     const indices = new Set(hits.map(hit => /^trustBarItems\[(\d+)\]$/.exec(hit.field)?.[1] ?? 'other'));
     const [only] = [...indices];
     if (hits.length && indices.size === 1 && only !== 'other' && next.trustBarItems.length - 1 >= TRUST_BAR_MIN_KEPT) {
       const kept = next.trustBarItems.filter((_, index) => index !== Number(only));
       const candidate = { ...next, trustBarItems: kept };
-      if (runCopyGates(candidate, gates).length === 0) {
+      if (blockingGateHits(runCopyGates(candidate, gates), gates).length === 0) {
         fixes.push(`drop_gated_item:trustBarItems:${next.trustBarItems.length}->${kept.length}`);
         return { value: candidate, fixes };
       }
@@ -868,7 +882,10 @@ async function settleStage(ctx: RepairContext, stage: CopyValidationStage, call:
   let value = parsed.value ? settle(parsed.value) : undefined;
   for (;;) {
     const violations = value ? currentViolations(value, ctx.gates) : parsed.violations;
-    if (value && violations.length === 0) return value as unknown as SiteCopy;
+    if (value && violations.length === 0) {
+      emitWarnings(stage, value, ctx.gates, ctx.emit);
+      return value as unknown as SiteCopy;
+    }
     ctx.emit({ stage, kind: 'violations', violations });
     if (ctx.remaining <= 0) break;
     if (!value || structural(violations)) {
@@ -892,11 +909,19 @@ async function settleStage(ctx: RepairContext, stage: CopyValidationStage, call:
     }
   }
   assertCopyAt(stage, value);
-  assertGatesAt(stage, value, ctx.gates);
+  assertGatesAt(stage, value, ctx.gates, ctx.emit);
   return value as unknown as SiteCopy;
 }
 
-function assertGatesAt(stage: CopyValidationStage, value: Loose, gates: CopyGateContext | null): void {
+/** M2a.7: one 'warnings' event for the settled copy of a stage (gate hits that never fail the page). */
+function emitWarnings(stage: CopyValidationStage, value: Loose, gates: CopyGateContext | null, emit?: (event: CopyRepairEvent) => void): void {
+  const warnings = gateWarnings(value, gates);
+  if (warnings.length) emit?.({ stage, kind: 'warnings', violations: warnings });
+}
+
+/** Throws on blocking gate hits; M2a.7: first logs the warnings of the settled copy (one 'warnings' event per stage). */
+function assertGatesAt(stage: CopyValidationStage, value: Loose, gates: CopyGateContext | null, emit?: (event: CopyRepairEvent) => void): void {
+  emitWarnings(stage, value, gates, emit);
   const hits = gateViolations(value, gates);
   if (hits.length) throw new GeneratedCopyValidationError(stage, hits);
 }
@@ -969,7 +994,19 @@ export function briefGateContext(brief: PageBrief, data: CollectedData): CopyGat
     pageSlug: site ? stageSlug(brief) : '',
     anchorName: site ? site.pageName : null,
     anchorCity: site ? site.city : null,
+    // M2a.7: hits outside the rendered fields are warnings until M2b (research sites only).
+    ...(site ? { renderedFields: RESEARCHED_RENDERED_FIELDS } : {}),
   });
+}
+
+/** M2a.7: this page's hero-cap facts for the later pages of the site (own label, homepage: every serviceItems label; AC vertical). */
+export function heroCapFacts(brief: PageBrief, copy: Pick<SiteCopy, 'serviceItems'>): HeroCapPageFacts {
+  const site = brief.site;
+  const home = brief.page.pageClass === 'homepage';
+  return {
+    maskLabels: home ? [...(copy.serviceItems ?? site?.serviceLabels ?? [])] : site ? [site.pageName] : [],
+    acPage: slugVertical(stageSlug(brief)) === 'ac',
+  };
 }
 
 /** Owner-stated places for the place gates: base city first, then the service area. */
@@ -1004,6 +1041,7 @@ export async function generateResearchPageCopy(
       priorHeroHeadlines: [...(dependencies.priorHeroHeadlines ?? [])],
       priorAboutPageHeadlines: [...(dependencies.priorAboutPageHeadlines ?? [])],
       priorAboutPageBodies: [...(dependencies.priorAboutPageBodies ?? [])],
+      ...(dependencies.priorHeroFacts ? { priorHeroFacts: [...dependencies.priorHeroFacts] } : {}),
     },
     emit: event => {
       try { dependencies.onEvent?.(event); } catch { /* diagnostics never break generation */ }
@@ -1014,7 +1052,7 @@ export async function generateResearchPageCopy(
   const noaCopy = await settleStage(ctx, 'noa', () => callJson(QA_SYSTEM_PROMPT, buildNoaQaMessage(tamarCopy, brief), { think: false }));
   const finalCopy = withSystemFields(applyFaqPolicy(noaCopy, brief) as unknown as Loose, brief, data) as unknown as SiteCopy;
   assertCopyAt('final', finalCopy);
-  assertGatesAt('final', finalCopy as unknown as Loose, ctx.gates);
+  assertGatesAt('final', finalCopy as unknown as Loose, ctx.gates, ctx.emit);
   return finalCopy;
 }
 

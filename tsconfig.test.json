@@ -162,6 +162,7 @@
     "src/lib/lp/factAccuracy.test.ts",
     "src/lib/lp/generationGates.test.ts",
     "src/lib/lp/voiceRulesM2a6.test.ts",
+    "src/lib/lp/voiceRulesM2a7.test.ts",
     "src/lib/lp/researchedSeo.test.ts",
     "src/lib/lp/verticalThemes.ts",
     "src/lib/lp/verticalAssets.ts",

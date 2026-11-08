@@ -467,7 +467,7 @@ Same field scope as section 19: owner-voice fields only, never `reviewFeatured`,
 
 ### 20.1 Signature variants and the site-wide hero cap (hard gates)
 
-**Additions to section 19.3.** Append these variants to the existing `signatureWordTokens` groups, and add the new group `pointByPoint`. Matching works as in section 19.3, with one exception: `tilesBreakForms` are matched as whole words (rule below). Every variant also counts toward the per-page cap of 1.
+**Additions to section 19.3.** Append these variants to the existing `signatureWordTokens` groups, and add the new group `pointByPoint`. Matching works as in section 19.3, with one exception: `tilesBreakForms` are matched as whole words (rule below). Every variant also counts toward the per-page cap: 2 for the owner's differentiator group and 1 for every other group (M2a.7; see "Per-page cap" below).
 
 Which group each new variant belongs to:
 - `lineByLine`: "כל שורה", "שורה אחרי שורה".
@@ -504,7 +504,67 @@ On the M2a.5 evidence:
 - It fails electrician-4: all four heroes carry `noSurprises`.
 - It fails split-hours-1: the home and leak heroes carry `wrongPlace`, and the drain hero adds a `tiles` hit. That makes `tiles` 3 of 3 once `tilesBreakForms` counts "לשבור".
 
-**Watch item.** With the breaking-stem forms added, the per-page cap of 1 is strict for a plumber whose differentiator is "no broken tiles". If first-pass `signature_repeat` hits on `tiles` stay above about half of plumber pages after M2a.6, raise the per-page cap to 2 for the group that holds the owner's own differentiator only. Leave every other group at 1.
+**Hero-cap concept list (M2a.7, site-wide hero cap only).** The site-wide hero cap also counts the `heroCapConceptAdditions` below. A hero that contains any entry of a group counts as a hit for that group. The entries match as plain substrings on `heroHeadline` only. They never count toward the per-page cap, which keeps its narrower section 19.3 + 20.1 list.
+
+These entries are the synonyms the model used on M2a.6 heroes to get past the cap:
+- "כל סעיף": electrician-1, home.
+- "הפתעות", "מהפתעות": electrician-1 panel and EV, electrician-2 home.
+- "מחיר כפול": electrician-2, panel.
+- "האריחים": "חושש על האריחים?", plumber-4, water heater.
+- "בלי נזק": plumber-3, water heater.
+- "פותח רק": split-hours-1, home.
+
+Two matching notes:
+- "אריח" matches every inflection as a substring (אריחים, האריחים, באריח), and "הפתעה" and "הפתעות" are listed separately because neither is a substring of the other.
+- Inside a hero, these words are always the differentiator, so substring matching there doesn't overfire. It would overfire in body fields, which is why the list is hero-only.
+
+Noa (QA, M2a.7), three matching rules plus two list changes, re-scored on the 48 M2a.6 heroHeadline lines:
+- **Service-label exclusion**: before matching, mask the page's own pinned service label (`siteIdentity.services[].label`; on the homepage, every label in `serviceItems`) inside the hero. An entry that hits only inside the label never counts. A hero is never penalised for naming its own service (e.g. a future "איתור דליפות" or "מילוי גז" label).
+- **AC only**: the `fromTheRoot` entries "דליפה", "ממלא גז", "ממלאים גז", "מילאו גז" and "מילאו לך גז" count only on pages of the AC vertical (section 20.6 detection). On a plumbing page "דליפה" is the pain itself ("דליפה מהתקרה?"), not the AC differentiator.
+- "רצפה" is dropped: "מים על הרצפה?" is the real pain hook of a flood or leak page.
+- "המקום הנכון" is replaced by "במקום הנכון": "הגעת למקום הנכון" is a generic ad opener, not the differentiator.
+- **Result on M2a.6**: 21 true positives and 0 false positives. כל סעיף 1, הפתעות 4, מחיר כפול 1, אריח 6, בלי נזק 1, פותח רק 1, דליפה 3 (all AC), ממלאים גז 2, מילאו גז 1, מילאו לך גז 1. Every other entry has 0 hits.
+- "הפתעה", "ממלא גז" and "מילאו גז" do not match inside "הפתעות", "ממלאים גז" or "מילאו לך גז". Each form is a separate entry on purpose.
+
+~~~json
+{
+  "heroCapConceptAdditions": {
+    "lineByLine": ["כל סעיף"],
+    "noSurprises": ["הפתעות", "הפתעה", "מחיר כפול", "מכפיל"],
+    "tiles": ["אריח", "ריצוף", "בלי נזק"],
+    "wrongPlace": ["במקום הנכון", "הנקודה הנכונה", "פותח רק"],
+    "fromTheRoot": ["דליפה", "התקלה האמיתית", "ממלא גז", "ממלאים גז", "מילאו גז", "מילאו לך גז"]
+  }
+}
+~~~
+
+`fromTheRoot` is the AC differentiator. With these entries, an AC run may put "doesn't just refill gas" in the home and repair heroes. It fails on a third. On M2a.6, ac-repair-3 and ac-repair-4 have it in exactly 2 heroes (home and repair), so they pass.
+
+**Per-page cap for the owner's differentiator group (M2a.7, replaces the M2a.6 watch item).** The watch item triggered on M2a.6. There were 38 first-pass `tiles` hits on about 20 plumber and split-hours pages, and 38 `lineByLine` hits on about 16 electrician pages.
+- The group or groups that hold the owner's differentiator get a per-page cap of 2. Every other group stays at 1. `exactly` ("בדיוק") is never a differentiator group.
+- The site-wide hero cap is unchanged: at most 2 heroes per group.
+
+Detecting the owner's group from `usp` (the `guarantee` field too, if it states a work method):
+- **Hebrew `usp`** (the current behaviour): a group is the owner's when any of its section 19.3 or 20.1 variants appears in the usp.
+- **English `usp`** (new): a group is the owner's when any of its `differentiatorUspKeywords` entries appears in the usp. Match case-insensitive substrings, after lower-casing the usp and turning every hyphen into a space ("line-by-line" becomes "line by line").
+- A usp may match more than one group, and each group it matches gets the cap of 2. For example, "I explain every line of the quote, no surprises in the wall" matches `lineByLine` and `noSurprises`.
+
+~~~json
+{
+  "differentiatorUspKeywords": {
+    "lineByLine": ["line by line", "every line", "each line", "itemized", "itemised", "itemize", "itemise", "walk you through the quote", "explain the quote", "explain every item", "explain each item"],
+    "noSurprises": ["no surprises", "no surprise", "no hidden", "hidden cost", "hidden fee", "no extra charges later", "price won't change"],
+    "transparent": ["transparent", "transparency", "open quote"],
+    "tiles": ["tile", "without breaking", "no breaking", "don't break", "dont break", "non destructive", "no demolition", "without demolition", "without opening walls", "without opening the wall", "no digging", "without digging"],
+    "fromTheRoot": ["root cause", "real cause", "real fault", "actual fault", "find the fault", "not just refill", "not just gas", "not just top up", "find the gas leak", "fix it properly"],
+    "noMess": ["no mess", "clean up", "cleanup", "leave it clean", "leave the place clean", "tidy"],
+    "wrongPlace": ["wrong place", "wrong spot", "right spot", "exact spot", "pinpoint", "before opening", "acoustic", "thermal camera"],
+    "pointByPoint": ["point by point", "step by step", "check every point", "every connection", "each connection"]
+  }
+}
+~~~
+
+Each English keyword is chosen so that it shows up only in a usp that states that method. "leak", "price", "clean" on its own, and "quality" are deliberately absent, because every trade's usp uses them.
 
 **aboutPageHeadline duplicates (hard gate, no Hebrew).** If two pages of the same run have byte-identical `aboutPageHeadline` strings (after trimming whitespace), the later page fails. On M2a.5 this catches electrician-1, where home and emergency share "אני מסביר כל שורה בהצעה לפני שאני מתחיל". The near-duplicates in other runs (e.g. hebrew-plumber-3, home and leak) differ by a word. They are caught instead by the per-page and site-wide signature caps where they share a signature phrase.
 
@@ -540,7 +600,9 @@ On the M2a.5 evidence, Pattern A catches all four stories: "לקוח בראשו�
 
 **Second person, present tense (prompt-only).** The scene happens to "you", now: "אתה…", "המזגן שלך…". The owner may describe what other technicians usually do in the present tense ("רוב הטכנאים ממלאים גז והולכים"), never as a past event with a person in it. First-person past narration ("הגעתי לדירה ב…", "השבוע תיקנתי אצל…") is also off-rule. There is no gate for that yet, so the prompt carries it.
 
-**Same opening across pages (hard gate, no Hebrew).** Split `aboutPageBody` on whitespace and take the first three tokens, with punctuation stripped from the third. If two pages of the same run match, the later page fails. On M2a.5 this catches:
+**Same opening across pages (M2a.7: downgraded to prompt-only; it was a hard gate in M2a.6).** It had 20 first-pass hits on M2a.6. The model passed it by changing the third word ("אתה עומד מול…" / "אתה עומד במטבח…" / "אתה עומד ליד…", electrician-1), or by rewording the same scene (hebrew-plumber-2: home "אתה מתעורר באמצע הלילה ושומע מים מטפטפים מהתקרה", leak "טפטוף מהתקרה מעיר אותך באמצע הלילה"). That is surface variety, not a new scene, and it used up repair budget. Prompt rule R2 now carries the requirement: a different scene on every page. The engineer may keep the three-token check as a warning in the run log only.
+
+The old check, for reference: split `aboutPageBody` on whitespace and take the first three tokens, with punctuation stripped from the third. On M2a.5 it caught:
 - hebrew-plumber-4, home and leak: "מים מטפטפים מהתקרה".
 - plumber-2, home and leak: "מים מטפטפים מהתקרה,", which becomes "מהתקרה" after stripping.
 - electrician-3, home and emergency: "אתה עומד במטבח,".
@@ -571,9 +633,11 @@ Noa (QA), two exclusions so that bio facts don't trip the gate:
 }
 ~~~
 
-### 20.3 "Before" cap (hard gate, at most 2 per page)
+### 20.3 "Before" cap (hard gate, at most 3 per page; raised from 2 in M2a.7)
 
-Count every hit of `beforeTokens` across the owner-voice fields of one page. The page fails above 2. On M2a.5 that is 117 hits in 58 pages, and 3–5 per page in electrician.
+Count every hit of `beforeTokens` across the owner-voice fields of one page. The page fails above 3.
+- On M2a.5 there were 117 hits in 58 pages, and 3–5 per page in electrician. On M2a.6, with the cap at 2, there were 38 hits in about 52 pages.
+- The cap was raised because for an owner whose differentiator is "explain before I start", a cap of 2 failed valid lines. The electrician-4 failure was "אני בודק כל חיבור לפני שאני סוגר את הלוח" in the about headline, as the third hit.
 - **Left edge**: the token must not have a Hebrew letter before it, except a single vav ("ולפני ש…" counts). "מלפני" is not a hit.
 - **"לפני ש"**: plain substring after the left-edge check, so it matches "לפני שאני", "לפני שמתחילים", "לפני ששוברים" and so on. It is not a hit when the whole word that starts at its ש is in `beforeTimeWordExclusions`. "לפני שבוע" and "לפני שנים" are time phrases, not the crutch.
 - **"לפני כל" and "לפני תחילת"**: plain substring after the left-edge check. They are the same crutch ("לפני כל עבודה", "לפני תחילת העבודה").
@@ -613,9 +677,16 @@ Noa (QA), full count on the 58 M2a.5 sticky lines: 16 pass and 42 fail. The 42 f
 }
 ~~~
 
-### 20.5 serviceDetails openings (hard gate, no new Hebrew)
+### 20.5 serviceDetails openings (M2a.7: downgraded to prompt-only; it was a hard gate in M2a.6)
 
-Count the `serviceDetails[].description` strings on a page whose first word is exactly "אני": whole word, no prefix, followed by a space. The page fails if the count is above half the number of descriptions, rounded down. That means at most 1 of 2 or 1 of 3, and at most 2 of 4 or 2 of 5.
+The gate had 76 first-pass hits on M2a.6, the most of any gate, and it made the cards worse. To dodge "אני", the model mixed three shapes in one card set:
+- a bare verb: "מאתר את התקלה, מסביר לך מה קרה ומה צריך לתקן" (electrician-1, home)
+- a noun chain: "פתיחת היחידה, מדידת לחצים, איתור הדליפה ומילוי גז" (ac-repair-1, repair)
+- a passive: "הלוח הישן מוחלף בלוח חדש…" (electrician-1, EV) and "עמדת טעינה לרכב חשמלי מותקנת ומחוברת ללוח הביתי" (electrician-4)
+
+Prompt rule R5 replaces the gate: all service cards on a page share one shape. The engineer may keep the count below as a warning in the run log only.
+
+The old check, for reference: count the `serviceDetails[].description` strings on a page whose first word is exactly "אני" (whole word, no prefix, followed by a space). It failed when the count was above half the number of descriptions, rounded down.
 - "ואני", "שאני" and "כשאני" at the start don't count. They are rare openers, and they are already a different sentence shape.
 - On M2a.5, electrician-1 fails on every page (3 of 3).
 
@@ -643,6 +714,27 @@ Same entry format as section 19.2. Types are `gate`, `spellingFix` (reject and r
 
 `ac_sewage`, Noa (QA): a hit is ignored when "ניקוז" appears earlier in the same clause (clauses as in section 17). Connecting the condensate drain to the sewer line ("מחבר את הניקוז לביוב") is real AC practice. None of the 4 M2a.5 hits has "ניקוז" before it in its clause, so all 4 still fire.
 
+`services_headline_preposition` (M2a.7: promoted from prompt-only to a gate, because the prompt rule didn't hold. "מה אני מטפל" came back in electrician-4, emergency servicesHeadline, failed sample.)
+- **Fields**: every owner-voice field, plus `servicesHeadline`. This gate names its own field, and `servicesHeadline` is where both hits appeared.
+- **"מה אני מטפל"**: plain substring, but only when no Hebrew letter comes right before "מה". So "במה אני מטפל", the correct form, never hits.
+- **"מתקין ומטפל"**: plain substring, but only when it is not followed by a space and a word that starts with ב. So "אני מתקין ומטפל במזגנים" (correct) passes, and "מה אני מתקין ומטפל" (M2a.5 electrician-4, EV servicesHeadline) fails.
+- Noa (QA): before the ב check, skip one `prepositionSkipAdverbs` word. So "מתקין ומטפל גם במזגנים" and "מתקין ומטפל אישית בכל עבודה" pass.
+- Noa (QA): "מה אני מטפל" with the not-after-a-Hebrew-letter check is sound. "במה" and "למה" never hit. No overfire on the M2a.6 copy.
+
+~~~json
+{
+  "prepositionSkipAdverbs": ["גם", "רק", "אישית"]
+}
+~~~
+- **Replacements**: `replacement` is for the single-verb hit, `replacementPair` for the two-verb hit.
+
+`water_flows_again` (M2a.7: promoted from prompt-only to a gate, because the prompt rule didn't hold. "מוציא את הגורם ומזרים" came back in plumber-4, drain hero.)
+- **"ומזרים"**: whole word, with no other prefix and no Hebrew letter after it.
+- **"מזרים את"**: plain substring. The only letter allowed right before "מזרים" is a vav, which is already covered by "ומזרים".
+- **No overfire on the M2a.6 copy.** The homograph מ+זרים ("from strangers") is not used in trade copy.
+- **Replacement idea**: the prompt tells the model to make the water the subject ("המים זורמים שוב"), not the owner.
+- The noun "הזרמת המים" (plumber-3, drain card) isn't gated. It falls under R5's one-shape rule.
+
 ~~~json
 {
   "tradeTermTokens": [
@@ -651,12 +743,29 @@ Same entry format as section 19.2. Types are `gate`, `spellingFix` (reject and r
     {"id": "load_bearing", "tokens": ["לא עומס מספיק"], "match": "substring", "meant": "the panel cannot carry the load", "replacement": "לא עומד בעומס", "type": "gate", "acOnly": false},
     {"id": "wrong_arrive_locate", "leadVerbs": ["מגיע", "אגיע", "מגיעה"], "tokens": ["לאתר"], "match": "a leadVerbs word, one space, then the whole word לאתר", "meant": "I arrive and locate the fault", "replacement": "אני מגיע ומאתר", "type": "gate", "acOnly": false},
     {"id": "main_valve", "tokens": [], "match": "none (prompt-only)", "meant": "in a flood or a leak scene, the owner or the customer closes the main water valve, never opens it; opening it is only for testing after the repair", "replacement": "לסגור את הברז הראשי", "type": "promptOnly", "acOnly": false},
-    {"id": "services_headline_preposition", "tokens": [], "match": "none (prompt-only)", "meant": "two verbs that share one object must take the same preposition; מטפל needs ב", "replacement": "מה אני מתקין ובמה אני מטפל", "type": "promptOnly", "acOnly": false},
-    {"id": "water_flows_again", "tokens": [], "match": "none (prompt-only)", "meant": "the water drains again after unblocking; the transitive מזרים sounds stiff", "replacement": "המים זורמים שוב", "type": "promptOnly", "acOnly": false}
+    {"id": "services_headline_preposition", "tokens": ["מה אני מטפל", "מתקין ומטפל"], "match": "see services_headline_preposition note", "meant": "two verbs that share one object must take the same preposition; מטפל needs ב", "replacement": "במה אני מטפל", "replacementPair": "מה אני מתקין ובמה אני מטפל", "type": "gate", "acOnly": false},
+    {"id": "water_flows_again", "tokens": ["ומזרים", "מזרים את"], "match": "see water_flows_again note", "meant": "the water drains again after unblocking; the transitive מזרים sounds stiff", "replacement": "המים זורמים שוב", "type": "gate", "acOnly": false}
   ],
   "arriveLocateNextWordExclusions": ["הבנייה", "בנייה", "העבודה", "עבודה"]
 }
 ~~~
+
+**Typo gates (Noa, M2a.7).** These cover owner-voice fields plus `servicesHeadline`. Both are reject-and-regenerate, never auto-replace.
+- **`tripled_letter`** (no Hebrew data): a hit is any Hebrew letter (U+05D0–U+05EA) three or more times in a row, except vav. For vav, a hit is four or more in a row. Three vavs are legal when the vav prefix meets a word that starts with וו ("ווילון" → "וווילון", "וואטסאפ" → "ווואטסאפ"). Three of any other letter never occur in correct Hebrew. It catches "ויייעלם" (plumber-2, leak about body).
+- **`wrongPrepositionTokens`**: a token must have no Hebrew letter before it or after it, so "חושש עליו" and "חושב על" never hit. Fear takes ל or מ ("חושש לאריחים", "חושש מהפתעות"), not על. It catches "חושש על האריחים?" (plumber-4, water-heater hero).
+- **Re-scored on all saved eval copy (M2a.3 to M2a.6)**: 1 true positive each, 0 false positives.
+
+~~~json
+{
+  "wrongPrepositionTokens": ["חושש על", "חוששת על", "חוששים על"]
+}
+~~~
+
+Prompt-only (no cheap generic gate without overfire):
+- **"מחובר ובודק"** (plumber-2, water-heater about headline): passive and active participles are mixed; the intended form is "מחובר ונבדק". A passive + "ו" + active gate overfires on correct sentences such as "מוודא שהכול מחובר ובודק את הלחץ".
+- **"אני לא מתקין על מערכות…"** (hebrew-plumber-2, solar about body): the exclusion fact's verb was swapped (the intake says "לא עובד על"). "מתקין על" is correct in "מתקין על הגג", which is common on solar pages.
+- **"ואת מצנרת המים"** (same page): a one-off garbled word. The intended text is "את צנרת המים" or "את מצב הצנרת". There is no generic pattern to gate.
+- **Prompt line**: "Re-read every exclusion and fact sentence: keep the owner's verb, and make sure each verb takes its correct preposition."
 
 On M2a.5:
 - `ac_sewage` catches "מגיע לסלילים ולביוב" and its repeats (ac-repair-1, cleaning page: subheadline, blurb, about body and details).
@@ -680,28 +789,50 @@ On M2a.5:
 ### 20.8 Prompt rules for M2a.6 (ready to paste)
 
 - **R1 — Differentiator across the site.** Put the owner's differentiator in the home hero and in the hero of the one service it fits best, and nowhere else in a hero. Every other hero leads with the pain of that specific service. Don't use synonyms or paraphrases to repeat it; any phrasing of the same idea counts as a repeat.
-- **R2 — Scene.** Write the about-body scene in the second person, present tense: the reader, in his home, now. Never narrate a past job, a named or unnamed past customer, or something the owner did on a specific past occasion. Open each page's about body with different words from every other page of the site. End on a fact or on what the customer gets, never on a lesson, a motto or a principle.
-- **R3 — "Before" crutch.** Use "before I start / before I touch / before every job" constructions at most twice per page. Show the order of the work with a concrete sequence instead.
+- **R2 — Scene.** Write the about-body scene in the second person, present tense: the reader, in his home, now. Never narrate a past job, a named or unnamed past customer, or something the owner did on a specific past occasion. Every page of the site gets a different scene: a different room, moment or failure that belongs to that page's service. The same scene in new words doesn't count. Don't open two pages with the same "you are standing in…" frame. End on a fact or on what the customer gets, never on a lesson, a motto or a principle.
+- **R3 — "Before" crutch.** Use "before I start / before I touch / before every job" constructions at most three times per page. Show the order of the work with a concrete sequence instead.
 - **R4 — Sticky bar.** The sticky bar names the customer's problem or the service, plus an action: problem-word question plus action, or "tell me what the [appliance] is doing". Never a bare action on its own.
-- **R5 — Service cards.** Vary the openings of the service descriptions. At most half may start with the first-person pronoun; the rest start with the action or the object.
+- **R5 — Service cards (M2a.7).** Write all service cards in one shape: short first-person action phrases. That means present-tense verbs of what the owner does, in order, on every card of the page. Don't mix in noun chains (a list of verbal nouns) or passive phrasing. Don't start more than one card with the same three words.
 - **R6 — Trade accuracy.** Use the correct trade term and the correct safety action. An AC unit has a condensate drain, never sewage. In a flood the main water valve is closed, not opened. When two verbs share one object, check that both take the same preposition.
 - **R7 — Hero anchor (from Yonatan's H1 anchor rule; he owns the gate).** The hero headline opens with the pain hook. The next clause carries the exact service label and the city, as written in the owner's facts. Never drop the service label or the city to make room for the hook.
+- **R8 — Hero hook shape (M2a.7).**
+  - The hook is at most 4 words, and it is a question the reader asks himself at that moment, in his own words.
+  - On a planned-stage page (section 19.4), the hook may be the decision question the reader is weighing, instead of a failure. Example of the move, not text to copy: asking whether the home's panel can carry a new charger.
+  - Never invent an abstract failure noun to fill the hook slot, such as an adjective about how hastily something was installed.
+  - After the hook and the anchor clause (R7), a third clause is optional. If used, it is at most 4 words and carries one fact or one action, never a list.
+  - Drop the third clause if the full hero would run past about 60 characters.
 
-Gates vs prompt-only in section 20:
+Gates vs prompt-only in section 20 (as of M2a.7):
 - **Hard gates**:
-  - the `signatureWordTokenAdditions` and `tilesBreakForms` (per-page cap, as in section 19.3)
-  - the site-wide hero cap
+  - the `signatureWordTokenAdditions` and `tilesBreakForms` (per-page cap: 2 for the owner's differentiator group, detected from the Hebrew or English usp with `differentiatorUspKeywords`; 1 for every other group)
+  - the site-wide hero cap, counting `heroCapConceptAdditions` as well
   - the `aboutPageHeadline` duplicate check
   - `storyCustomerNouns` with `storyPastVerbs`, and `storyTimeAnchors`
-  - the same-opening check
   - `moralEndingTokens`
-  - the `beforeTokens` cap
+  - the `beforeTokens` cap (3 per page)
   - `stickyBareForms` with the `stickyProblemWords` naming check
-  - the `serviceDetailsOpenerToken` half cap
-  - the `gate` and `spellingFix` entries of `tradeTermTokens`
+  - the `gate` and `spellingFix` entries of `tradeTermTokens`, now including `services_headline_preposition` and `water_flows_again`
 - **System mapping, not a gate**: `heroCtaOverride`.
+- **Warning only (run log), formerly gates**: the same-opening check (20.2) and the `serviceDetailsOpenerToken` half cap (20.5).
 - **Prompt-only**:
-  - R1–R7 as wording
+  - R1–R8 as wording
   - the second-person / present-tense rule and first-person past narration (no gate)
-  - the `main_valve`, `services_headline_preposition` and `water_flows_again` entries
+  - the `main_valve` entry
   - R7, whose gate is Yonatan's
+
+M2b note: until M2b renders the trust bar, about section, service cards and hero call button on research sites, a gate hit in a field that isn't rendered is logged as a warning and doesn't fail the page. Every rule above still applies to the copy, and the gates become blocking for those fields from M2b.
+
+## 21. nameIntroRule (Noa M2a.6)
+
+`gate_name_spelling` checks the word after the name opener against the owner's first name. The opener is a homograph: "שמי" is "my name", but also ש + מי ("that whoever"), as in "אתה חושש שמי שיגיע ישבור אריחים". So the gate fires only when the opener starts a sentence: the start of the field, or the first word after ". ", "? " or "! ". It also fires when the opener comes right after a `nameIntroLeadIns` entry followed by a comma and a space ("שלום, שמי יוסי"). Anywhere else it is not a name intro and is never checked. Whole word, no prefix letters ("ושמי" is not matched). Do not use a next-word exclusion list: many owner names start with ש ("שמי שלומי", "שמי שרון").
+
+The same position rule applies to "שמי" as a section 19.5 `subjectCarryTokens` word. It carries the subject only at sentence start or after a lead-in plus ", ". "אתה חושש שמי שיגיע…" carries nothing. "אני" keeps the 19.5 rule as it is (whole word, prefixes ו, ש, כש allowed).
+
+On M2a.6 this clears both false failures (plumber-1 leak-detection and split-hours-2 drain, both "אתה חושש שמי שיגיע…"). It keeps all 13 real "שמי <name>," intros, which each open their aboutBlurb.
+
+~~~json
+{
+  "nameIntroToken": "שמי",
+  "nameIntroLeadIns": ["שלום", "היי", "הי", "נעים מאוד", "נעים להכיר"]
+}
+~~~

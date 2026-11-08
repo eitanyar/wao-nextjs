@@ -13,7 +13,8 @@ import {
   type ResearchedSiteGraphEdge,
   type ResearchedSitePage,
 } from '../lp/researchedSite';
-import { assertBoundedGeneratedSiteCopy, isApprovedPortfolioBrief } from '../lp/researchPageCopy';
+import { assertBoundedGeneratedSiteCopy, heroCapFacts, isApprovedPortfolioBrief } from '../lp/researchPageCopy';
+import type { HeroCapPageFacts } from '../lp/copyGates';
 import { isSafeDeploymentSlug } from '../deployment/deploy-access';
 import { assertBoundedPageBrief, type PageBrief } from './research/pageBrief';
 import type { PageClassification } from './research/pagePortfolio';
@@ -66,14 +67,17 @@ export interface ResearchedSiteGenerationContext {
   /** M2a.6: the same, in route order, for the site-wide about-headline and about-opening checks. */
   priorAboutPageHeadlines: readonly string[];
   priorAboutPageBodies: readonly string[];
+  /** M2a.7: hero-cap facts (masked service labels, AC page) of the same pages, for the site-wide hero cap. */
+  priorHeroFacts: readonly HeroCapPageFacts[];
 }
 
-/** M2a.6: the site context for the next page, from the pages generated so far (route order, home first). */
-export function siteGenerationContext(pages: ReadonlyArray<{ copy: SiteCopy }>): ResearchedSiteGenerationContext {
+/** M2a.6: the site context for the next page, from the pages generated so far (route order, home first); M2a.7: plus their hero-cap facts. */
+export function siteGenerationContext(pages: ReadonlyArray<{ copy: SiteCopy }>, facts: readonly HeroCapPageFacts[] = []): ResearchedSiteGenerationContext {
   return {
     priorHeroHeadlines: pages.map(page => page.copy.heroHeadline),
     priorAboutPageHeadlines: pages.map(page => page.copy.aboutPageHeadline),
     priorAboutPageBodies: pages.map(page => page.copy.aboutPageBody),
+    priorHeroFacts: [...facts],
   };
 }
 
@@ -187,11 +191,13 @@ export async function buildResearchedSiteGeneration(
 ): Promise<ResearchedSiteGenerationRecord> {
   const homepage = validatePortfolio(input);
   const pages: ResearchedSitePage[] = [];
+  const heroFacts: HeroCapPageFacts[] = [];
 
   for (const sourceBrief of input.pageBriefs) {
     const brief = structuredClone(sourceBrief);
-    const generatedCopy = await dependencies.generateCopy(brief, structuredClone(input.collectedData), siteGenerationContext(pages));
+    const generatedCopy = await dependencies.generateCopy(brief, structuredClone(input.collectedData), siteGenerationContext(pages, heroFacts));
     assertBoundedGeneratedSiteCopy(generatedCopy);
+    heroFacts.push(heroCapFacts(brief, generatedCopy));
     pages.push({
       opportunityId: brief.page.id,
       classification: brief.page.pageClass as PageClassification,

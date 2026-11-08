@@ -303,19 +303,33 @@ test('9 owner-fact repetition: a fact phrase (digit run of an owner fact) above 
   assert.equal(FACT_REPEAT_MAX, 2);
   assert.deepEqual(hits.map(hit => hit.field).sort(), ['aboutBlurb', 'stickyBarLine'].sort());
   assert.deepEqual(runCopyGates(loose({ aboutBlurb: `${HE_WORD} 180 118` }), gates), [], 'digit boundaries');
-  // The repair loop receives the fact-repeat fields.
+  // M2a.7: on a research site the repeats in unrendered fields (aboutBlurb, stickyBarLine) are warnings: no repair call.
+  const events: string[] = [];
   let calls = 0;
+  const kept = await generateResearchPageCopy(briefWithSite(), { businessNiche: 'plumber', yearsInField: '18 years', guarantee: 'x' }, {
+    callJson: async (system) => {
+      calls++;
+      assert.doesNotMatch(system, /repairing specific fields/);
+      return JSON.stringify({ ...base, ...copy, serviceItems: [LABEL] });
+    },
+    onEvent: event => { if (event.kind === 'warnings') events.push(...(event.violations ?? []).map(item => `${item.field}:${item.rule}`)); },
+  });
+  assert.equal(kept.stickyBarLine, `${STICKY_LINE} 18`);
+  assert.equal(calls, 2);
+  assert.ok(events.includes(`stickyBarLine:${GATE_RULES.factRepeat}`) && events.includes(`aboutBlurb:${GATE_RULES.factRepeat}`));
+  // The repair loop still receives a fact repeat in a rendered field.
+  calls = 0;
   const repaired = await generateResearchPageCopy(briefWithSite(), { businessNiche: 'plumber', yearsInField: '18 years', guarantee: 'x' }, {
     callJson: async (system, user) => {
       calls++;
       if (/repairing specific fields/.test(system)) {
         assert.match(user, /repeats the owner fact "18"/);
-        return JSON.stringify({ stickyBarLine: STICKY_LINE, aboutBlurb: HE_WORD });
+        return JSON.stringify({ heroSubheadline: HE_WORD });
       }
-      return JSON.stringify({ ...base, ...copy, serviceItems: [LABEL] });
+      return JSON.stringify({ ...base, heroSubheadline: `18 ${HE_WORD} 18 ${HE_WORD} 18`, serviceItems: [LABEL] });
     },
   });
-  assert.equal(repaired.stickyBarLine, STICKY_LINE);
+  assert.equal(repaired.heroSubheadline, HE_WORD);
   assert.ok(calls >= 3);
 });
 

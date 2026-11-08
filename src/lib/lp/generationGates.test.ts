@@ -149,7 +149,7 @@ function brief(pageName: string, labels: string[], sources: string[], pageClass 
 test('M2a.3 1: generationData.ts carries data sections 6-13 byte-exact; config lists extend / replace the M2a.1 lists; --check passes', () => {
   const text = fs.readFileSync(DATA_FILE, 'utf8');
   const blocks = [...text.matchAll(/\n~~~json\n([\s\S]*?)\n~~~/g)].map(match => JSON.parse(match[1]));
-  assert.equal(blocks.length, 43); // M2a.4: 23; M2a.5 section 19 adds 9; M2a.6 section 20 adds 11
+  assert.equal(blocks.length, 48); // M2a.4: 23; M2a.5 section 19 adds 9; M2a.6 section 20 adds 11; M2a.7 adds 5 (sections 20 and 21)
   const data = Object.assign({}, ...blocks);
   assert.deepEqual([...CLAIM_TOKEN_WORD_END], data.claimTokenWordEnd);
   assert.deepEqual([...FIX_TIME_LEAD_TOKENS], data.fixTimeLeadTokens);

@@ -260,6 +260,14 @@ export function researchedPageTitle(page: ResearchedSitePage, businessName: stri
   return page.seo ? buildResearchedPageTitle(page.seo.name, page.seo.city, businessName) : `${page.copy.heroHeadline} \u2014 ${businessName}`;
 }
 
+/**
+ * M2a.7: the copy fields buildPageHtml (and the contact page, from the home copy) actually shows on a research site:
+ * the hero headline (as the H1), the hero subheadline (also the meta description), the form headline, the FAQ and the
+ * review pair. Gate hits on every other field are warnings until M2b renders them (copyGates.ts ALWAYS_BLOCKING_RULES
+ * still fail everywhere). M2b: when a field starts rendering, add it here; this is the only list to change.
+ */
+export const RESEARCHED_RENDERED_FIELDS: readonly string[] = ['heroHeadline', 'heroSubheadline', 'formHeadline', 'faqItems', 'reviewFeatured', 'reviewContext'];
+
 function buildPageHtml(page: ResearchedSitePage, params: RenderResearchedSitePagesParams, siteUrl: string, output: string, allPages: ResearchedSitePage[], outputs: Map<string, string>): string {
   const { theme, data, heroImageUrl, slug } = params;
   const { phone, phoneHref, businessName } = contacts(data);

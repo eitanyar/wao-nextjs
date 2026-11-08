@@ -51,7 +51,7 @@ export function jsonBlocks(text) {
 
 /** Expected entry counts per data list (asserted; a data edit must update these deliberately). */
 export const EXPECTED_COUNTS = {
-  jsonBlocks: 43,
+  jsonBlocks: 48, // M2a.7: + heroCapConceptAdditions, differentiatorUspKeywords, prepositionSkipAdverbs, wrongPrepositionTokens, section 21.
   claimKinds: 11,
   claimTokens: 59,
   claimTokenWordEnd: 3,
@@ -135,12 +135,23 @@ export const EXPECTED_COUNTS = {
   electricSlugKeywords: 3,
   acVerticalSlugKeywords: 5,
   tradeTermEntries: 7,
-  tradeTermGate: 3,
+  tradeTermGate: 5, // M2a.7: services_headline_preposition and water_flows_again promoted (were promptOnly).
   tradeTermSpellingFix: 1,
-  tradeTermPromptOnly: 3,
+  tradeTermPromptOnly: 1,
   arriveLocateNextWordExclusions: 4,
   arriveLocateLeadPrefixes: 3,
-  m2a6PromptRules: 7,
+  m2a6PromptRules: 8, // M2a.7: R8 (hero hook shape) added; R2, R3, R5 reworded.
+  // M2a.7, section 20 edits (Tamar + Noa) and section 21 (recounted from the file).
+  r8SubBullets: 5,
+  heroCapConceptGroups: 5,
+  heroCapConceptAdditions: 17,
+  heroCapAcOnly: 5,
+  differentiatorUspGroups: 8,
+  differentiatorUspKeywords: 62,
+  prepositionSkipAdverbs: 3,
+  prepositionPairNextLetter: 1,
+  wrongPrepositionTokens: 3,
+  nameIntroLeadIns: 5,
 };
 
 /** Text of one data-file section (from its "## N." heading to the next heading). */
@@ -289,15 +300,90 @@ export function voiceProseM2a6(text) {
   const arriveLocateLeadPrefixes = runsBetween(lineStarting(section, '- Noa (QA): the lead verb may carry', 'arriveLocateLeadPrefixes'), 'the lead verb may carry the prefixes', '(', 'arriveLocateLeadPrefixes');
   const rulesAt = section.indexOf('### 20.8');
   assert(rulesAt >= 0, 'section 20.8 missing');
-  const promptRules = section.slice(rulesAt).split('\n').filter(line => /^- \*\*R\d \u2014 /.test(line))
-    .map(line => ({ id: /^- \*\*(R\d)/.exec(line)[1], text: line.slice(2).replace(/\*\*/g, '') }));
+  // M2a.7: a rule may carry indented sub-bullets (R8); they stay part of the rule, byte-exact, one per line.
+  const ruleLines = section.slice(rulesAt).split('\n');
+  const promptRules = [];
+  ruleLines.forEach((line, index) => {
+    if (!/^- \*\*R\d \u2014 /.test(line)) return;
+    const subs = [];
+    for (let next = index + 1; next < ruleLines.length && ruleLines[next].startsWith('  - '); next++) subs.push(ruleLines[next]);
+    promptRules.push({ id: /^- \*\*(R\d)/.exec(line)[1], text: [line.slice(2).replace(/\*\*/g, ''), ...subs].join('\n') });
+  });
   assert(promptRules.length === EXPECTED_COUNTS.m2a6PromptRules, `expected ${EXPECTED_COUNTS.m2a6PromptRules} section 20 prompt rules, got ${promptRules.length}`);
-  assert(promptRules.map(rule => rule.id).join(',') === 'R1,R2,R3,R4,R5,R6,R7', 'section 20 prompt rules out of order');
+  assert(promptRules.map(rule => rule.id).join(',') === 'R1,R2,R3,R4,R5,R6,R7,R8', 'section 20 prompt rules out of order');
+  const r8Subs = promptRules.find(rule => rule.id === 'R8').text.split('\n').length - 1;
+  assert(r8Subs === EXPECTED_COUNTS.r8SubBullets, `expected ${EXPECTED_COUNTS.r8SubBullets} R8 sub-bullets, got ${r8Subs}`);
+  assert(promptRules.filter(rule => rule.id !== 'R8').every(rule => !rule.text.includes('\n')), 'only R8 may carry sub-bullets');
   return {
     tilesBreakPrefixLetters, tilesBreakStripPrefixes, storyFields, storyNounPrefixes, storyVerbPrefixes, storyQuantifierPrefixes,
     moralFields, timeWordTokens, beforeCap, heroCap, stickyWholeWords, stickyWholeWordPrefixes, electricSlugKeywords, acSegment,
     arriveLocateLeadPrefixes, promptRules,
   };
+}
+
+/** M2a.7: trade terms whose match rule is a section 20.6 prose note (implemented per id in copyGates.ts). */
+export const NOTE_MATCH_IDS = ['services_headline_preposition', 'water_flows_again'];
+
+/** One section-20 prose fact that the gate code relies on: the exact English sentence must still be in the file. */
+function assertProse(section, phrase, name) {
+  assert(section.includes(phrase), `${name}: the data file no longer says ${JSON.stringify(phrase)}`);
+}
+
+/**
+ * M2a.7 prose (Tamar's section 20 edits, Noa's notes, section 21): the AC-only hero-cap entries, the differentiator cap,
+ * the excluded group, the typo-gate field scope, the preposition gate's next letter, Noa's prompt line, and asserted
+ * English sentences for every rule the gate code implements without data. Every Hebrew value is a byte-exact slice.
+ */
+export function voiceProseM2a7(text, trade, heroConcepts) {
+  const section = sectionText(text, 20);
+  const acLine = lineStarting(section, '- **AC only**: the `', 'heroCapAcOnly');
+  const acGroup = /^- \*\*AC only\*\*: the `(\w+)` entries/.exec(acLine)?.[1];
+  assert(acGroup && acGroup in heroConcepts, 'section 20.1 AC-only group is not a heroCapConceptAdditions group');
+  const heroCapAcOnly = quotedBetween(acLine, '` entries', ' count only on pages of the AC vertical', 'heroCapAcOnly');
+  for (const entry of heroCapAcOnly) assert(heroConcepts[acGroup].includes(entry), 'an AC-only hero-cap entry is not in its group');
+  assertProse(section, "**Service-label exclusion**: before matching, mask the page's own pinned service label (`siteIdentity.services[].label`; on the homepage, every label in `serviceItems`) inside the hero.", 'service-label mask');
+  assertProse(section, 'The entries match as plain substrings on `heroHeadline` only. They never count toward the per-page cap', 'hero-cap concepts scope');
+  const cap = /- The group or groups that hold the owner's differentiator get a per-page cap of (\d+)\. Every other group stays at (\d+)\./.exec(section);
+  assert(cap, 'section 20.1 differentiator cap sentence missing');
+  const differentiatorCap = Number(cap[1]);
+  const otherGroupCap = Number(cap[2]);
+  assert(differentiatorCap === 2 && otherGroupCap === 1, 'differentiator / other-group caps changed: update the gate code');
+  const excluded = [...section.matchAll(/`(\w+)` \("[^"]+"\) is never a differentiator group/g)].map(match => match[1]);
+  assert(excluded.length === 1, 'section 20.1 never-a-differentiator group missing');
+  assertProse(section, "Detecting the owner's group from `usp` (the `guarantee` field too, if it states a work method):", 'differentiator guarantee field');
+  assertProse(section, 'Match case-insensitive substrings, after lower-casing the usp and turning every hyphen into a space', 'English usp normalisation');
+  assertProse(section, 'A usp may match more than one group, and each group it matches gets the cap of 2.', 'differentiator multi-group');
+  // Section 20.6: services_headline_preposition / water_flows_again notes and the typo gates.
+  const scopeLine = lineStarting(section, '- **Fields**: every owner-voice field, plus `', 'prepositionFields');
+  const prepositionFields = [...scopeLine.slice(0, scopeLine.indexOf('. This gate')).matchAll(/`([^`]+)`/g)].map(match => match[1]);
+  const typoLine = lineStarting(section, '**Typo gates (Noa, M2a.7).** These cover owner-voice fields plus `', 'typoFields');
+  const typoFields = [...typoLine.slice(0, typoLine.indexOf('. Both')).matchAll(/`([^`]+)`/g)].map(match => match[1]);
+  assert(prepositionFields.length === 1 && typoFields.join(',') === prepositionFields.join(','), 'the preposition and typo gates must add the same one field to the owner-voice scope');
+  const prep = trade.find(entry => entry.id === 'services_headline_preposition');
+  const water = trade.find(entry => entry.id === 'water_flows_again');
+  assert(prep && water && prep.match === 'note' && water.match === 'note' && prep.replacementPair, 'section 20.6 note-matched trade terms missing');
+  const single = lineStarting(section, `- **"${prep.tokens[0]}"**: plain substring, but only when no Hebrew letter comes right before "`, 'prepositionSingle');
+  assert(single.includes(`right before "${prep.tokens[0].split(' ')[0]}"`), 'services_headline_preposition: the left-edge word is not the first word of the single-verb token');
+  const pairLine = lineStarting(section, `- **"${prep.tokens[1]}"**: plain substring, but only when it is not followed by a space and a word that starts with `, 'prepositionPairNextLetter');
+  const [pairNextLetter] = runsBetween(pairLine, 'a word that starts with', '.', 'prepositionPairNextLetter');
+  assert(pairNextLetter.length === 1, 'the preposition next-letter is not one letter');
+  assertProse(section, `- Noa (QA): before the ${pairNextLetter} check, skip one \`prepositionSkipAdverbs\` word.`, 'preposition skip adverb');
+  lineStarting(section, `- **"${water.tokens[0]}"**: whole word, with no other prefix and no Hebrew letter after it.`, 'waterWholeWord');
+  const waterSub = lineStarting(section, `- **"${water.tokens[1]}"**: plain substring. The only letter allowed right before "`, 'waterSubstring');
+  assert(water.tokens[0].endsWith(water.tokens[1].split(' ')[0]) && waterSub.includes('is a vav, which is already covered by'), 'water_flows_again: the vav note changed');
+  assertProse(section, '**`tripled_letter`** (no Hebrew data): a hit is any Hebrew letter (U+05D0\u2013U+05EA) three or more times in a row, except vav. For vav, a hit is four or more in a row.', 'tripled_letter');
+  assertProse(section, '**`wrongPrepositionTokens`**: a token must have no Hebrew letter before it or after it', 'wrongPrepositionTokens');
+  assertProse(section, 'Both are reject-and-regenerate, never auto-replace.', 'typo gates reject');
+  const promptLine = /^- \*\*Prompt line\*\*: "(.+)"$/.exec(lineStarting(section, '- **Prompt line**: "', 'prompt line'))?.[1];
+  assert(promptLine && !/[\u0590-\u05FF]/.test(promptLine), 'Noa prompt line missing or not English');
+  assertProse(section, '- **Warning only (run log), formerly gates**: the same-opening check (20.2) and the `serviceDetailsOpenerToken` half cap (20.5).', 'warning-only gates');
+  assertProse(section, "a gate hit in a field that isn't rendered is logged as a warning and doesn't fail the page", 'M2b warn-only note');
+  // Section 21: the name-intro position rule (also for the subject-carry word).
+  const s21 = sectionText(text, 21);
+  assertProse(s21, 'So the gate fires only when the opener starts a sentence: the start of the field, or the first word after ". ", "? " or "! ". It also fires when the opener comes right after a `nameIntroLeadIns` entry followed by a comma and a space', 'name-intro position');
+  assertProse(s21, 'Anywhere else it is not a name intro and is never checked. Whole word, no prefix letters', 'name-intro whole word');
+  assertProse(s21, 'The same position rule applies to', 'name-intro subject carry');
+  return { heroCapAcGroup: acGroup, heroCapAcOnly, differentiatorCap, differentiatorExcludedGroups: excluded, extraGateFields: prepositionFields, pairNextLetter, promptLine };
 }
 
 /** Section 20.6: trade-term entries; the match rule is parsed ('substring', whole word with prefix letters, lead verb + word, none). */
@@ -318,6 +404,10 @@ function tradeTerms(entries) {
       match = 'wholeWord';
       prefixLetters = entry.match.slice(0, entry.match.indexOf(' in any combination')).match(/[\u05D0-\u05EA]/g) ?? [];
       assert(prefixLetters.length > 0, `trade term ${entry.id} has no prefix letters`);
+    } else if (entry.match === `see ${entry.id} note`) {
+      // M2a.7: the match rule is a section 20.6 prose note (checked in voiceProseM2a7); the gate code implements it per id.
+      assert(NOTE_MATCH_IDS.includes(entry.id) && entry.tokens.length === 2, `trade term ${entry.id}: note match is only for ${NOTE_MATCH_IDS.join(', ')} with 2 tokens`);
+      match = 'note';
     } else if (entry.match.startsWith('a leadVerbs word, one space, then the whole word ')) {
       assert(Array.isArray(entry.leadVerbs) && entry.leadVerbs.length > 0 && entry.tokens.length === 1 && entry.match.endsWith(entry.tokens[0]), `trade term ${entry.id}: lead-verb rule is malformed`);
       match = 'leadVerb';
@@ -325,7 +415,8 @@ function tradeTerms(entries) {
       assert(false, `trade term ${entry.id} has an unknown match rule`);
     }
     assert(match === 'none' || entry.tokens.length > 0, `trade term ${entry.id} has no tokens`);
-    return { id: entry.id, tokens: entry.tokens, ...(entry.leadVerbs ? { leadVerbs: entry.leadVerbs } : {}), match, prefixLetters, type: entry.type, acOnly: entry.acOnly, meant: entry.meant, replacement: entry.replacement };
+    if (entry.replacementPair !== undefined) assert(typeof entry.replacementPair === 'string' && entry.replacementPair.length > 0, `trade term ${entry.id}: replacementPair is empty`);
+    return { id: entry.id, tokens: entry.tokens, ...(entry.leadVerbs ? { leadVerbs: entry.leadVerbs } : {}), match, prefixLetters, type: entry.type, acOnly: entry.acOnly, meant: entry.meant, replacement: entry.replacement, ...(entry.replacementPair ? { replacementPair: entry.replacementPair } : {}) };
   });
   for (const [type, key] of [['gate', 'tradeTermGate'], ['spellingFix', 'tradeTermSpellingFix'], ['promptOnly', 'tradeTermPromptOnly']]) {
     const count = out.filter(entry => entry.type === type).length;
@@ -558,6 +649,28 @@ export function extractGenerationData(text) {
   for (const field of [...prose20.storyFields, ...prose20.moralFields]) assert(ownerVoiceFieldSet.has(field), `section 20 field ${field} is not an owner-voice field`);
   const voice20 = { ...prose20 };
 
+  // M2a.7: Tamar's section 20 edits (hero-cap concepts, English differentiator keywords), Noa's notes and section 21.
+  const groupLists = (value, name, groupsKey, entriesKey) => {
+    assert(value && typeof value === 'object' && Object.keys(value).length === EXPECTED_COUNTS[groupsKey], `expected ${EXPECTED_COUNTS[groupsKey]} ${name} groups`);
+    assert(Object.values(value).every(list => Array.isArray(list) && list.length > 0 && list.every(item => typeof item === 'string' && item.length > 0)), `${name} must be lists of strings`);
+    const count = Object.values(value).reduce((sum, list) => sum + list.length, 0);
+    assert(count === EXPECTED_COUNTS[entriesKey], `expected ${EXPECTED_COUNTS[entriesKey]} ${name} entries, got ${count}`);
+    for (const group of Object.keys(value)) assert(group in signature || group in additions, `${name} group ${group} is not a signature group`);
+    for (const list of Object.values(value)) assert(new Set(list).size === list.length, `${name} has duplicates`);
+    return value;
+  };
+  const heroCapConceptAdditions = groupLists(merged.heroCapConceptAdditions, 'heroCapConceptAdditions', 'heroCapConceptGroups', 'heroCapConceptAdditions');
+  const differentiatorUspKeywords = groupLists(merged.differentiatorUspKeywords, 'differentiatorUspKeywords', 'differentiatorUspGroups', 'differentiatorUspKeywords');
+  for (const list of Object.values(differentiatorUspKeywords)) for (const keyword of list) assert(/^[a-z' ]+$/.test(keyword), 'a differentiatorUspKeywords entry is not lower-case English without hyphens');
+  const prepositionSkipAdverbs = stringList(merged.prepositionSkipAdverbs, 'prepositionSkipAdverbs');
+  const wrongPrepositionTokens = stringList(merged.wrongPrepositionTokens, 'wrongPrepositionTokens');
+  const nameIntroToken = merged.nameIntroToken;
+  assert(typeof nameIntroToken === 'string' && /^[\u05D0-\u05EA]+$/.test(nameIntroToken), 'nameIntroToken must be one Hebrew word');
+  assert(subjectCarryTokens.includes(nameIntroToken), 'nameIntroToken is not a section 19.5 subjectCarryTokens word');
+  const nameIntroLeadIns = stringList(merged.nameIntroLeadIns, 'nameIntroLeadIns');
+  const prose21 = voiceProseM2a7(text, trade, heroCapConceptAdditions);
+  for (const group of prose21.differentiatorExcludedGroups) assert(group in signature && !(group in differentiatorUspKeywords), 'the never-a-differentiator group must be a signature group with no English keywords');
+
   const sources = {
     claimTokens: sectionOf(text, 'claimTokens'),
     claimTokenWordEnd: sectionOf(text, 'claimTokenWordEnd'),
@@ -605,7 +718,12 @@ export function extractGenerationData(text) {
     serviceDetailsOpenerToken: `${sectionOf(text, 'serviceDetailsOpenerToken')} 20.5 (at most half the descriptions)`,
     tradeTermTokens: `${sectionOf(text, 'tradeTermTokens')} 20.6 (gate and spellingFix reject; promptOnly in the prompt)`,
     heroCtaOverride: `${sectionOf(text, 'heroCtaOverride')} 20.7 (planned stage, phone sites; system mapping)`,
-    m2a6PromptRules: `${DATA_PATH} section 20.8 (R1-R7, English, byte-exact)`,
+    m2a6PromptRules: `${DATA_PATH} section 20.8 (R1-R8, English, byte-exact; R8 keeps its sub-bullets)`,
+    heroCapConceptAdditions: `${sectionOf(text, 'heroCapConceptAdditions')} 20.1 (site-wide hero cap only; substring on heroHeadline; own service label masked; AC-only entries)`,
+    differentiatorUspKeywords: `${sectionOf(text, 'differentiatorUspKeywords')} 20.1 (owner differentiator from an English usp / guarantee; lower-case, hyphens to spaces, substring)`,
+    prepositionSkipAdverbs: `${sectionOf(text, 'prepositionSkipAdverbs')} 20.6 (services_headline_preposition: one adverb skipped before the next-letter check)`,
+    wrongPrepositionTokens: `${sectionOf(text, 'wrongPrepositionTokens')} 20.6 (typo gate; no Hebrew letter before or after)`,
+    nameIntro: `${sectionOf(text, 'nameIntroToken')} (name opener and subject carry only at sentence start or after a lead-in plus comma)`,
   };
   for (const value of Object.values(sources)) assert(!/[\u0590-\u05FF]/.test(value), 'a source heading has Hebrew');
 
@@ -673,6 +791,13 @@ export function extractGenerationData(text) {
     arriveLocateNextWordExclusions,
     heroCtaOverride: override,
     voice20,
+    heroCapConceptAdditions,
+    differentiatorUspKeywords,
+    prepositionSkipAdverbs,
+    wrongPrepositionTokens,
+    nameIntroToken,
+    nameIntroLeadIns,
+    voice21: prose21,
     sources,
   };
 }
@@ -817,13 +942,30 @@ ${emit('SERVICE_DETAILS_OPENER_TOKEN', data.serviceDetailsOpenerToken, 'string')
 /** Tamar section 20.6: AC slug keywords (AC_SEGMENT_KEYWORD matches a whole hyphen segment, the rest as substrings), trade terms, arrive-locate exclusions and lead prefixes. */
 ${emit('AC_VERTICAL_SLUG_KEYWORDS', data.acVerticalSlugKeywords, 'readonly string[]')}
 ${emit('AC_SEGMENT_KEYWORD', data.voice20.acSegment, 'string')}
-${emit('TRADE_TERMS', data.tradeTerms, "ReadonlyArray<{ id: string; tokens: readonly string[]; leadVerbs?: readonly string[]; match: 'substring' | 'wholeWord' | 'leadVerb' | 'none'; prefixLetters: readonly string[]; type: 'gate' | 'spellingFix' | 'promptOnly'; acOnly: boolean; meant: string; replacement: string }>")}
+${emit('TRADE_TERMS', data.tradeTerms, "ReadonlyArray<{ id: string; tokens: readonly string[]; leadVerbs?: readonly string[]; match: 'substring' | 'wholeWord' | 'leadVerb' | 'note' | 'none'; prefixLetters: readonly string[]; type: 'gate' | 'spellingFix' | 'promptOnly'; acOnly: boolean; meant: string; replacement: string; replacementPair?: string }>")}
 ${emit('ARRIVE_LOCATE_NEXT_WORD_EXCLUSIONS', data.arriveLocateNextWordExclusions, 'readonly string[]')}
 ${emit('ARRIVE_LOCATE_LEAD_PREFIXES', data.voice20.arriveLocateLeadPrefixes, 'readonly string[]')}
 /** Tamar section 20.7: heroCta on a planned-stage page of a phone site (system mapping, not a gate). */
 ${emit('HERO_CTA_OVERRIDE', data.heroCtaOverride, 'Readonly<{ planned: Readonly<{ phone: string }> }>')}
-/** Tamar section 20.8: English prompt rules R1-R7, byte-exact. */
+/** Tamar section 20.8: English prompt rules R1-R8, byte-exact (M2a.7: R8 keeps its indented sub-bullets, one per line). */
 ${emit('M2A6_PROMPT_RULES', data.voice20.promptRules, 'ReadonlyArray<{ id: string; text: string }>')}
+/** M2a.7 (section 20.1): extra hero-cap concepts per signature group (site-wide hero cap only; plain substring on heroHeadline, own service label masked), and the entries that count only on AC pages. */
+${emit('HERO_CAP_CONCEPT_ADDITIONS', data.heroCapConceptAdditions, 'Readonly<Record<string, readonly string[]>>')}
+${emit('HERO_CAP_AC_ONLY', data.voice21.heroCapAcOnly, 'readonly string[]')}
+/** M2a.7 (section 20.1): English usp / guarantee keywords that mark a signature group as the owner's differentiator; the per-page cap for those groups; the group that never is one. */
+${emit('DIFFERENTIATOR_USP_KEYWORDS', data.differentiatorUspKeywords, 'Readonly<Record<string, readonly string[]>>')}
+${emit('DIFFERENTIATOR_CAP', data.voice21.differentiatorCap, 'number')}
+${emit('DIFFERENTIATOR_EXCLUDED_GROUPS', data.voice21.differentiatorExcludedGroups, 'readonly string[]')}
+/** M2a.7 (section 20.6): the field the preposition and typo gates add to the owner-voice scope; the preposition gate's next letter and skip adverbs; the wrong-preposition tokens. */
+${emit('EXTRA_GATE_FIELDS', data.voice21.extraGateFields, 'readonly string[]')}
+${emit('PREPOSITION_PAIR_NEXT_LETTER', data.voice21.pairNextLetter, 'string')}
+${emit('PREPOSITION_SKIP_ADVERBS', data.prepositionSkipAdverbs, 'readonly string[]')}
+${emit('WRONG_PREPOSITION_TOKENS', data.wrongPrepositionTokens, 'readonly string[]')}
+/** M2a.7 (Noa, section 20.6): the English prompt line on verbs and prepositions, byte-exact. */
+${emit('PREPOSITION_PROMPT_LINE', data.voice21.promptLine, 'string')}
+/** M2a.7 (Noa, section 21): the name opener and its lead-ins (a name intro only at sentence start or after a lead-in plus ", "). */
+${emit('NAME_INTRO_TOKEN', data.nameIntroToken, 'string')}
+${emit('NAME_INTRO_LEAD_INS', data.nameIntroLeadIns, 'readonly string[]')}
 /** Where each data list came from (data-file section; how it combines with the config lists). */
 ${emit('GUARD_TOKEN_SOURCES', data.sources, 'Readonly<Record<string, string>>')}`;
 }
@@ -839,5 +981,5 @@ if (process.argv[1] && path.resolve(process.argv[1]) === path.resolve(new URL(im
   }
   fs.writeFileSync(OUT, out);
   const data = extractGenerationData(text);
-  process.stdout.write(`${JSON.stringify({ dayLetters: data.dayLetters.length, claimKinds: Object.keys(data.claimTokens).length, claimTokens: Object.values(data.claimTokens).flat().length, pins: Object.keys(data.serviceLabelPins).length, wordEnd: data.claimTokenWordEnd.length, lead: data.fixTimeLeadTokens.length, within: data.fixTimeWithinWords.length, arrival: data.arrivalTokens.length, stems: data.customerStems.length, verbs: data.speechVerbs.length, plural: data.pluralAddressTokens.length, we: data.weTokens.length, wao: data.waoServiceTerms.length, thermal: data.thermalTokens.length, templates: Object.keys(data.templateStrings).length, sameDay: data.sameDayTokens.length, sameDayFinish: data.sameDayFinishVerbs.length, priceLock: data.priceLockTokens.length, prefixModes: Object.keys(data.pluralPrefixModes).length, tail: data.serviceAreaTailTokens.length, head: data.serviceAreaHeadTokens.length, region: data.serviceAreaRegionTokens.length, nearby: data.serviceAreaNearbyTokens.length, lamedHeads: data.serviceAreaLamedHeads.length, free: data.freeTokens.length, freeCallout: data.freeCalloutTokens.length, scopeNouns: Object.values(data.freeScopeNouns).flat().length, freeExclusion: data.freeExclusionWords.length, weFormVerbs: data.weFormVerbs.length, genericWords: data.genericAdjectiveWords.length, genericPhrases: data.genericAdjectivePhrases.length, genericExempt: data.genericAdjectiveExemptPhrases.length, genericPrefixes: data.voice.genericPrefixLetters.length, badIdioms: data.badIdioms.length, badIdiomTokens: data.badIdioms.flatMap(entry => entry.tokens).length, signatureGroups: Object.keys(data.signatureWordTokens).length, signatureVariants: Object.values(data.signatureWordTokens).flat().length, emergencyKinds: data.emergencyServiceKinds.length, plannedKinds: data.plannedServiceKinds.length, sticky: data.stickyActionTokens.length, openers: data.bareVerbSentenceOpeners.length, carry: data.subjectCarryTokens.length, carryPrefixes: data.voice.subjectCarryPrefixes.length, exclusions: data.bareVerbExclusions.length, ownerVoiceFields: data.voice.ownerVoiceFields.length, promptRules: data.voice.promptRules.length, signatureAdditions: Object.values(data.signatureWordTokenAdditions).flat().length, tilesBreakForms: data.tilesBreakForms.length, tilesBreakExclusions: data.tilesBreakExclusionsPrecedingWord.length, storyNouns: data.storyCustomerNouns.length, storyVerbs: data.storyPastVerbs.length, storyQuantifiers: data.storyQuantifierExclusions.length, storyAnchors: data.storyTimeAnchors.length, moralTokens: data.moralEndingTokens.length, moralFollowing: data.moralEndingFollowingExclusions.length, beforeTokens: data.beforeTokens.length, beforeTimeWords: data.beforeTimeWordExclusions.length, stickyBare: data.stickyBareForms.length, stickyProblem: Object.values(data.stickyProblemWords).flat().length, acSlugKeywords: data.acVerticalSlugKeywords.length, tradeTerms: data.tradeTerms.length, arriveLocateExclusions: data.arriveLocateNextWordExclusions.length, m2a6Rules: data.voice20.promptRules.length, beforeCap: data.voice20.beforeCap, heroCap: data.voice20.heroCap, typographyChars: data.typographyRule.length })}\n`);
+  process.stdout.write(`${JSON.stringify({ dayLetters: data.dayLetters.length, claimKinds: Object.keys(data.claimTokens).length, claimTokens: Object.values(data.claimTokens).flat().length, pins: Object.keys(data.serviceLabelPins).length, wordEnd: data.claimTokenWordEnd.length, lead: data.fixTimeLeadTokens.length, within: data.fixTimeWithinWords.length, arrival: data.arrivalTokens.length, stems: data.customerStems.length, verbs: data.speechVerbs.length, plural: data.pluralAddressTokens.length, we: data.weTokens.length, wao: data.waoServiceTerms.length, thermal: data.thermalTokens.length, templates: Object.keys(data.templateStrings).length, sameDay: data.sameDayTokens.length, sameDayFinish: data.sameDayFinishVerbs.length, priceLock: data.priceLockTokens.length, prefixModes: Object.keys(data.pluralPrefixModes).length, tail: data.serviceAreaTailTokens.length, head: data.serviceAreaHeadTokens.length, region: data.serviceAreaRegionTokens.length, nearby: data.serviceAreaNearbyTokens.length, lamedHeads: data.serviceAreaLamedHeads.length, free: data.freeTokens.length, freeCallout: data.freeCalloutTokens.length, scopeNouns: Object.values(data.freeScopeNouns).flat().length, freeExclusion: data.freeExclusionWords.length, weFormVerbs: data.weFormVerbs.length, genericWords: data.genericAdjectiveWords.length, genericPhrases: data.genericAdjectivePhrases.length, genericExempt: data.genericAdjectiveExemptPhrases.length, genericPrefixes: data.voice.genericPrefixLetters.length, badIdioms: data.badIdioms.length, badIdiomTokens: data.badIdioms.flatMap(entry => entry.tokens).length, signatureGroups: Object.keys(data.signatureWordTokens).length, signatureVariants: Object.values(data.signatureWordTokens).flat().length, emergencyKinds: data.emergencyServiceKinds.length, plannedKinds: data.plannedServiceKinds.length, sticky: data.stickyActionTokens.length, openers: data.bareVerbSentenceOpeners.length, carry: data.subjectCarryTokens.length, carryPrefixes: data.voice.subjectCarryPrefixes.length, exclusions: data.bareVerbExclusions.length, ownerVoiceFields: data.voice.ownerVoiceFields.length, promptRules: data.voice.promptRules.length, signatureAdditions: Object.values(data.signatureWordTokenAdditions).flat().length, tilesBreakForms: data.tilesBreakForms.length, tilesBreakExclusions: data.tilesBreakExclusionsPrecedingWord.length, storyNouns: data.storyCustomerNouns.length, storyVerbs: data.storyPastVerbs.length, storyQuantifiers: data.storyQuantifierExclusions.length, storyAnchors: data.storyTimeAnchors.length, moralTokens: data.moralEndingTokens.length, moralFollowing: data.moralEndingFollowingExclusions.length, beforeTokens: data.beforeTokens.length, beforeTimeWords: data.beforeTimeWordExclusions.length, stickyBare: data.stickyBareForms.length, stickyProblem: Object.values(data.stickyProblemWords).flat().length, acSlugKeywords: data.acVerticalSlugKeywords.length, tradeTerms: data.tradeTerms.length, arriveLocateExclusions: data.arriveLocateNextWordExclusions.length, m2a6Rules: data.voice20.promptRules.length, heroCapConcepts: Object.values(data.heroCapConceptAdditions).flat().length, heroCapAcOnly: data.voice21.heroCapAcOnly.length, uspKeywords: Object.values(data.differentiatorUspKeywords).flat().length, uspGroups: Object.keys(data.differentiatorUspKeywords).length, skipAdverbs: data.prepositionSkipAdverbs.length, wrongPreposition: data.wrongPrepositionTokens.length, leadIns: data.nameIntroLeadIns.length, differentiatorCap: data.voice21.differentiatorCap, beforeCap: data.voice20.beforeCap, heroCap: data.voice20.heroCap, typographyChars: data.typographyRule.length })}\n`);
 }
