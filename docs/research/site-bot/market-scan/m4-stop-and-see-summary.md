@@ -87,8 +87,10 @@ network), and the network-held locksmith towns are now visible as such.
 - **Roofing, Rehovot:** only about 4 real names once network listings are removed.
 - **Reserves** if a top-5 cell fails at outreach: electricians in Kfar Saba and Modiin. Neither is hand-checked yet.
 
-## Slot 5 — your decision
-I recommend **AC repair in Rishon LeZion**. The trade-off: we get a second trade and an off-season pitch, but its top 3
+## Slot 5 — decided
+**Approved by Eitan 2026-11-08: AC repair in Rishon LeZion.** The final top 5 is locked as listed above.
+
+Yonatan's recommendation was **AC repair in Rishon LeZion**. The trade-off: we get a second trade and an off-season pitch, but its top 3
 is tougher (two real firms with websites) and we can't reuse the electrician kit. Roofing stays parked until a
 roofing cell has enough names.
 
