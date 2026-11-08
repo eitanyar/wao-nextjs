@@ -7,6 +7,12 @@
 //   contactTitlePrefix) and M2a.3 sections 6-13 (claimTokenWordEnd, fixTimeLeadTokens,
 //   fixTimeWithinWords, arrivalTokens, paraphraseGuard, pluralAddressTokens, weTokens,
 //   waoServiceTerms, thermalTokens, templateStrings).
+// - M2a.4: sections 14-15 (sameDayTokens, sameDayFinishVerbs, priceLockTokens) and the section 10
+//   prefix note (Noa M2a.3): each plural-address token's prefix mode ('vav' or 'full') is parsed from
+//   the note's bullets, with every token asserted to be in exactly one bullet.
+// - M2a.4 round 2: sections 16-18 (serviceArea tail/head/region/nearby tokens, free tokens / callout
+//   tokens / scope nouns, weFormVerbs). From the prose notes: the head tokens that take a lamed before
+//   the place (section 16) and the words that exclude a free hit when they follow it (section 17).
 // - M2a.3: section 8 replaces the section 2 prose arrival list and section 9 replaces the
 //   M2a.2 repo-derived paraphrase guard; GUARD_TOKEN_SOURCES records where each list came from.
 // - The generated module escapes every non-ASCII character as \uXXXX, so it holds ZERO
@@ -36,7 +42,7 @@ export function jsonBlocks(text) {
 
 /** Expected entry counts per data list (asserted; a data edit must update these deliberately). */
 export const EXPECTED_COUNTS = {
-  jsonBlocks: 13,
+  jsonBlocks: 23,
   claimKinds: 11,
   claimTokens: 59,
   claimTokenWordEnd: 3,
@@ -50,7 +56,93 @@ export const EXPECTED_COUNTS = {
   waoServiceTerms: 9,
   thermalTokens: 2,
   templateStrings: 2,
+  sameDayTokens: 10,
+  sameDayFinishVerbs: 9,
+  priceLockTokens: 23,
+  pluralPrefixModes: 31,
+  pluralPrefixVav: 13,
+  pluralPrefixFull: 18,
+  serviceAreaTailTokens: 11,
+  serviceAreaHeadTokens: 6,
+  serviceAreaRegionTokens: 18,
+  serviceAreaNearbyTokens: 16,
+  serviceAreaLamedHeads: 2,
+  freeTokens: 22,
+  freeCalloutTokens: 9,
+  freeScopeClasses: 6,
+  freeScopeNouns: 29,
+  freeExclusionWords: 5,
+  weFormVerbs: 64,
 };
+
+/** Text of one data-file section (from its "## N." heading to the next heading). */
+function sectionText(text, number) {
+  const start = text.indexOf(`\n## ${number}.`);
+  assert(start >= 0, `section ${number} missing`);
+  const end = text.indexOf('\n## ', start + 1);
+  return text.slice(start, end < 0 ? text.length : end);
+}
+
+/** Quoted single Hebrew words in a piece of prose. */
+function quotedWords(prose) {
+  return [...prose.matchAll(/"([\u0590-\u05FF]+)"/g)].map(match => match[1]);
+}
+
+/** Section 16 note: the head tokens after which the place takes a lamed. */
+export function lamedHeads(text) {
+  const line = sectionText(text, 16).split('\n').find(item => item.startsWith('- `serviceAreaHeadTokens`'));
+  assert(line, 'section 16 head-token note missing');
+  const at = line.indexOf('the place takes a lamed');
+  assert(at >= 0, 'section 16 lamed note missing');
+  const words = quotedWords(line.slice(line.lastIndexOf('After', at), at));
+  assert(words.length === EXPECTED_COUNTS.serviceAreaLamedHeads, `expected ${EXPECTED_COUNTS.serviceAreaLamedHeads} lamed heads, got ${words.length}`);
+  return words;
+}
+
+/** Section 17 note: words that, following a free token, make it not a free hit. */
+export function freeExclusionWords(text) {
+  const line = sectionText(text, 17).split('\n').find(item => item.startsWith('- `freeTokens`'));
+  assert(line, 'section 17 freeTokens note missing');
+  const from = line.indexOf('Exclusion:');
+  const to = line.indexOf('it is not a free hit', from);
+  assert(from >= 0 && to > from, 'section 17 exclusion note missing');
+  const words = quotedWords(line.slice(from, to));
+  assert(words.length === EXPECTED_COUNTS.freeExclusionWords, `expected ${EXPECTED_COUNTS.freeExclusionWords} free exclusion words, got ${words.length}`);
+  return words;
+}
+
+/** M2a.3 tokens of the plural-address list in copyGates.config.ts (before the section 10 additions). */
+export const M2A1_PLURAL_TOKEN_COUNT = 9;
+
+/**
+ * Section 10 prefix note (Noa M2a.3): one bullet per prefix class. A bullet that says "vav prefix only"
+ * gives 'vav'; "full prefix set" gives 'full'. The tokens are the quoted single words of the bullet
+ * (quoted phrases with a space, like the "customers who called" example, are not tokens).
+ */
+export function pluralPrefixModes(text) {
+  const start = text.indexOf('\n## 10.');
+  assert(start >= 0, 'section 10 missing');
+  const section = text.slice(start, text.indexOf('\n## ', start + 1));
+  const noteAt = section.indexOf('Prefix note for pluralAddressTokens');
+  assert(noteAt >= 0, 'section 10 prefix note missing');
+  const bullets = section.slice(noteAt).split('\n').filter(line => line.startsWith('- '));
+  assert(bullets.length === 4, `expected 4 prefix-note bullets, got ${bullets.length}`);
+  const modes = {};
+  for (const bullet of bullets) {
+    const vav = bullet.includes('vav prefix only');
+    const full = bullet.includes('full prefix set');
+    assert(vav !== full, 'a prefix-note bullet names neither or both prefix classes');
+    for (const match of bullet.matchAll(/"([\u0590-\u05FF]+)"/g)) {
+      assert(!(match[1] in modes), 'a token is in two prefix-note bullets');
+      modes[match[1]] = vav ? 'vav' : 'full';
+    }
+  }
+  const count = Object.keys(modes).length;
+  assert(count === EXPECTED_COUNTS.pluralPrefixModes, `expected ${EXPECTED_COUNTS.pluralPrefixModes} prefix-note tokens, got ${count}`);
+  const vavCount = Object.values(modes).filter(mode => mode === 'vav').length;
+  assert(vavCount === EXPECTED_COUNTS.pluralPrefixVav && count - vavCount === EXPECTED_COUNTS.pluralPrefixFull, `expected ${EXPECTED_COUNTS.pluralPrefixVav} vav / ${EXPECTED_COUNTS.pluralPrefixFull} full prefix-note tokens, got ${vavCount} / ${count - vavCount}`);
+  return modes;
+}
 
 function stringList(value, name) {
   assert(Array.isArray(value) && value.every(item => typeof item === 'string' && item.length > 0), `${name} must be a list of non-empty strings`);
@@ -111,6 +203,33 @@ export function extractGenerationData(text) {
     typeof templateStrings.formSubmitLabel === 'string' && templateStrings.formSubmitLabel.length > 0 &&
     typeof templateStrings.formThanks === 'string' && templateStrings.formThanks.length > 0, 'templateStrings must hold formSubmitLabel and formThanks');
 
+  // M2a.4: sections 14-15 and the section 10 prefix note.
+  const sameDayTokens = stringList(merged.sameDayTokens, 'sameDayTokens');
+  const sameDayFinishVerbs = stringList(merged.sameDayFinishVerbs, 'sameDayFinishVerbs');
+  const priceLockTokens = stringList(merged.priceLockTokens, 'priceLockTokens');
+  const prefixModes = pluralPrefixModes(text);
+  for (const token of pluralAddressTokens) assert(token in prefixModes, 'a section 10 plural token has no prefix-note class');
+  assert(Object.keys(prefixModes).length - pluralAddressTokens.length === M2A1_PLURAL_TOKEN_COUNT, 'prefix note does not cover exactly the M2a.1 + section 10 plural tokens');
+
+  // M2a.4 round 2: sections 16-18.
+  const serviceAreaTailTokens = stringList(merged.serviceAreaTailTokens, 'serviceAreaTailTokens');
+  const serviceAreaHeadTokens = stringList(merged.serviceAreaHeadTokens, 'serviceAreaHeadTokens');
+  const serviceAreaRegionTokens = stringList(merged.serviceAreaRegionTokens, 'serviceAreaRegionTokens');
+  const serviceAreaNearbyTokens = stringList(merged.serviceAreaNearbyTokens, 'serviceAreaNearbyTokens');
+  const serviceAreaLamedHeads = lamedHeads(text);
+  for (const head of serviceAreaLamedHeads) assert(serviceAreaHeadTokens.includes(head), 'a lamed head is not a head token');
+  const freeTokens = stringList(merged.freeTokens, 'freeTokens');
+  const freeCalloutTokens = stringList(merged.freeCalloutTokens, 'freeCalloutTokens');
+  const scope = merged.freeScopeNouns;
+  assert(scope && typeof scope === 'object' && Object.keys(scope).length === EXPECTED_COUNTS.freeScopeClasses, `expected ${EXPECTED_COUNTS.freeScopeClasses} free scope classes`);
+  assert(Object.values(scope).every(list => Array.isArray(list) && list.every(item => typeof item === 'string' && item.length > 0)), 'freeScopeNouns must be lists of strings');
+  const nounCount = Object.values(scope).reduce((sum, list) => sum + list.length, 0);
+  assert(nounCount === EXPECTED_COUNTS.freeScopeNouns, `expected ${EXPECTED_COUNTS.freeScopeNouns} free scope nouns, got ${nounCount}`);
+  assert(scope.callout, 'freeScopeNouns has no callout class');
+  const freeExclusion = freeExclusionWords(text);
+  const weFormVerbs = stringList(merged.weFormVerbs, 'weFormVerbs');
+  for (const verb of weFormVerbs) assert(!weTokens.includes(verb), 'a weFormVerbs entry is already a weTokens entry');
+
   const sources = {
     claimTokens: sectionOf(text, 'claimTokens'),
     claimTokenWordEnd: sectionOf(text, 'claimTokenWordEnd'),
@@ -124,6 +243,20 @@ export function extractGenerationData(text) {
     waoServiceTerms: `${sectionOf(text, 'waoServiceTerms')} (appended to the M2a.1 list in copyGates.config.ts)`,
     thermalTokens: `${sectionOf(text, 'thermalTokens')} (replaces the M2a.1 single thermal token)`,
     templateStrings: sectionOf(text, 'templateStrings'),
+    sameDayTokens: sectionOf(text, 'sameDayTokens'),
+    sameDayFinishVerbs: sectionOf(text, 'sameDayFinishVerbs'),
+    priceLockTokens: sectionOf(text, 'priceLockTokens'),
+    pluralPrefixModes: `${sectionOf(text, 'pluralAddressTokens')} prefix note (M2a.3; applies to the M2a.1 config tokens and the additions)`,
+    serviceAreaTailTokens: sectionOf(text, 'serviceAreaTailTokens'),
+    serviceAreaHeadTokens: sectionOf(text, 'serviceAreaHeadTokens'),
+    serviceAreaRegionTokens: sectionOf(text, 'serviceAreaRegionTokens'),
+    serviceAreaNearbyTokens: sectionOf(text, 'serviceAreaNearbyTokens'),
+    serviceAreaLamedHeads: `${sectionOf(text, 'serviceAreaHeadTokens')} head-token note (place takes a lamed)`,
+    freeTokens: sectionOf(text, 'freeTokens'),
+    freeCalloutTokens: sectionOf(text, 'freeCalloutTokens'),
+    freeScopeNouns: sectionOf(text, 'freeScopeNouns'),
+    freeExclusionWords: `${sectionOf(text, 'freeTokens')} freeTokens note (exclusion)`,
+    weFormVerbs: `${sectionOf(text, 'weFormVerbs')} (appended to the we-form list, allowPrefix: true)`,
   };
   for (const value of Object.values(sources)) assert(!/[\u0590-\u05FF]/.test(value), 'a source heading has Hebrew');
 
@@ -145,6 +278,20 @@ export function extractGenerationData(text) {
     waoServiceTerms,
     thermalTokens,
     templateStrings,
+    sameDayTokens,
+    sameDayFinishVerbs,
+    priceLockTokens,
+    pluralPrefixModes: prefixModes,
+    serviceAreaTailTokens,
+    serviceAreaHeadTokens,
+    serviceAreaRegionTokens,
+    serviceAreaNearbyTokens,
+    serviceAreaLamedHeads,
+    freeTokens,
+    freeCalloutTokens,
+    freeScopeNouns: scope,
+    freeExclusionWords: freeExclusion,
+    weFormVerbs,
     sources,
   };
 }
@@ -199,6 +346,29 @@ ${emit('WAO_SERVICE_TERMS_DATA', data.waoServiceTerms, 'readonly string[]')}
 ${emit('THERMAL_TOKENS', data.thermalTokens, 'readonly string[]')}
 /** Noa section 13: system HTML strings on researched client sites. */
 ${emit('TEMPLATE_STRINGS', data.templateStrings, 'Readonly<{ formSubmitLabel: string; formThanks: string }>')}
+/** Noa section 14: same-day tokens (substring match; a same-day promise). */
+${emit('SAME_DAY_TOKENS', data.sameDayTokens, 'readonly string[]')}
+/** Noa section 14: with one of these, a same-day sentence promises to finish the job that day. */
+${emit('SAME_DAY_FINISH_VERBS', data.sameDayFinishVerbs, 'readonly string[]')}
+/** Noa section 15: price-lock tokens (substring match; owner-stated only, never from a review). */
+${emit('PRICE_LOCK_TOKENS', data.priceLockTokens, 'readonly string[]')}
+/** Noa section 10 prefix note: prefix class of every plural-address token ('vav' = vav prefix only; 'full' = the full prefix set). */
+${emit('PLURAL_PREFIX_MODES', data.pluralPrefixModes, "Readonly<Record<string, 'vav' | 'full'>>")}
+/** Noa section 16: service-area widening tokens (tail after a place, head before a place, region, nearby). */
+${emit('SERVICE_AREA_TAIL_TOKENS', data.serviceAreaTailTokens, 'readonly string[]')}
+${emit('SERVICE_AREA_HEAD_TOKENS', data.serviceAreaHeadTokens, 'readonly string[]')}
+${emit('SERVICE_AREA_REGION_TOKENS', data.serviceAreaRegionTokens, 'readonly string[]')}
+${emit('SERVICE_AREA_NEARBY_TOKENS', data.serviceAreaNearbyTokens, 'readonly string[]')}
+/** Noa section 16 note: head tokens after which the place takes a lamed. */
+${emit('SERVICE_AREA_LAMED_HEADS', data.serviceAreaLamedHeads, 'readonly string[]')}
+/** Noa section 17: free tokens (scoped by FREE_SCOPE_NOUNS), callout free tokens (scope built in), scope nouns by class. */
+${emit('FREE_TOKENS', data.freeTokens, 'readonly string[]')}
+${emit('FREE_CALLOUT_TOKENS', data.freeCalloutTokens, 'readonly string[]')}
+${emit('FREE_SCOPE_NOUNS', data.freeScopeNouns, 'Readonly<Record<string, readonly string[]>>')}
+/** Noa section 17 note: a free token followed by one of these words is not a free hit. */
+${emit('FREE_EXCLUSION_WORDS', data.freeExclusionWords, 'readonly string[]')}
+/** Noa section 18: first-person-plural verbs and forms (appended to the we-form list; allowPrefix: true). */
+${emit('WE_FORM_VERBS', data.weFormVerbs, 'readonly string[]')}
 /** Where each data list came from (data-file section; how it combines with the config lists). */
 ${emit('GUARD_TOKEN_SOURCES', data.sources, 'Readonly<Record<string, string>>')}`;
 }
@@ -214,5 +384,5 @@ if (process.argv[1] && path.resolve(process.argv[1]) === path.resolve(new URL(im
   }
   fs.writeFileSync(OUT, out);
   const data = extractGenerationData(text);
-  process.stdout.write(`${JSON.stringify({ dayLetters: data.dayLetters.length, claimKinds: Object.keys(data.claimTokens).length, claimTokens: Object.values(data.claimTokens).flat().length, pins: Object.keys(data.serviceLabelPins).length, wordEnd: data.claimTokenWordEnd.length, lead: data.fixTimeLeadTokens.length, within: data.fixTimeWithinWords.length, arrival: data.arrivalTokens.length, stems: data.customerStems.length, verbs: data.speechVerbs.length, plural: data.pluralAddressTokens.length, we: data.weTokens.length, wao: data.waoServiceTerms.length, thermal: data.thermalTokens.length, templates: Object.keys(data.templateStrings).length, typographyChars: data.typographyRule.length })}\n`);
+  process.stdout.write(`${JSON.stringify({ dayLetters: data.dayLetters.length, claimKinds: Object.keys(data.claimTokens).length, claimTokens: Object.values(data.claimTokens).flat().length, pins: Object.keys(data.serviceLabelPins).length, wordEnd: data.claimTokenWordEnd.length, lead: data.fixTimeLeadTokens.length, within: data.fixTimeWithinWords.length, arrival: data.arrivalTokens.length, stems: data.customerStems.length, verbs: data.speechVerbs.length, plural: data.pluralAddressTokens.length, we: data.weTokens.length, wao: data.waoServiceTerms.length, thermal: data.thermalTokens.length, templates: Object.keys(data.templateStrings).length, sameDay: data.sameDayTokens.length, sameDayFinish: data.sameDayFinishVerbs.length, priceLock: data.priceLockTokens.length, prefixModes: Object.keys(data.pluralPrefixModes).length, tail: data.serviceAreaTailTokens.length, head: data.serviceAreaHeadTokens.length, region: data.serviceAreaRegionTokens.length, nearby: data.serviceAreaNearbyTokens.length, lamedHeads: data.serviceAreaLamedHeads.length, free: data.freeTokens.length, freeCallout: data.freeCalloutTokens.length, scopeNouns: Object.values(data.freeScopeNouns).flat().length, freeExclusion: data.freeExclusionWords.length, weFormVerbs: data.weFormVerbs.length, typographyChars: data.typographyRule.length })}\n`);
 }

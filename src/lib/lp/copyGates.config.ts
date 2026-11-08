@@ -14,26 +14,38 @@
  * M2a.3: Noa's data sections 10-12 extend the plural / we / WAO-term lists below (appended after
  * the M2a.1 entries, so existing indices are stable) and replace the thermal token. Sources are
  * recorded in GUARD_TOKEN_SOURCES (generationData.ts).
+ *
+ * M2a.4: the plural-address prefix classes come from Noa's section 10 prefix note (PLURAL_PREFIX_MODES:
+ * imperatives / past-plural and feminine imperatives take a vav prefix only; future-plural and pronoun
+ * forms take the full prefix set). Section 15 adds the price_lock claim; section 14 drives the same-day
+ * sentence check in copyGates.ts.
  */
 
 import {
   CLAIM_TOKENS,
   GUARD_TOKEN_SOURCES,
   PLURAL_ADDRESS_TOKENS_DATA,
+  PLURAL_PREFIX_MODES,
+  PRICE_LOCK_TOKENS,
   THERMAL_TOKENS,
   WAO_SERVICE_TERMS_DATA,
+  WE_FORM_VERBS,
   WE_TOKENS_DATA,
 } from './generationData';
 
 export interface GateToken {
   token: string;
-  /** Allow attached Hebrew prefix letters (vav/shin/he/bet/kaf/lamed/mem) before the token. */
-  allowPrefix: boolean;
+  /**
+   * Attached Hebrew prefix letters before the token: true = the full set (vav/shin/he/bet/kaf/lamed/mem,
+   * up to two), 'vav' = a vav prefix only (M2a.4, Noa section 10 prefix note), false = none.
+   */
+  allowPrefix: boolean | 'vav';
   source: string;
 }
 
 /** Plural / second-person-plural address. Singular male address is the house rule. */
-export const PLURAL_ADDRESS_TOKENS: readonly GateToken[] = [
+export const PLURAL_ADDRESS_TOKENS: readonly GateToken[] = ([
+  // M2a.4: the M2a.1 allowPrefix flags below are superseded by Noa's section 10 prefix note (mapped at the end).
   { token: "התקשרו", allowPrefix: false, source: "noa: התקשרו עכשיו" },
   { token: "ספרו", allowPrefix: false, source: "noa: ספרו לי מה קורה, אני מגיע" },
   { token: "בואו", allowPrefix: false, source: "noa: בואו נדבר על הלוח שלכם" },
@@ -43,9 +55,16 @@ export const PLURAL_ADDRESS_TOKENS: readonly GateToken[] = [
   { token: "לכם", allowPrefix: true, source: "noa: לכם" },
   { token: "שלכם", allowPrefix: true, source: "noa: בואו נדבר על הלוח שלכם" },
   { token: "אליכם", allowPrefix: true, source: "noa: ספרו לי מה צריך — אני חוזר אליכם" },
-  // M2a.3, Noa data section 10. Noa set no prefix rule for these: matched as whole words (allowPrefix: false).
-  ...dataTokens(PLURAL_ADDRESS_TOKENS_DATA, false, GUARD_TOKEN_SOURCES.pluralAddressTokens),
-];
+  // M2a.3, Noa data section 10; M2a.4: prefix class from the section 10 prefix note.
+  ...PLURAL_ADDRESS_TOKENS_DATA.map(token => ({ token, allowPrefix: false, source: GUARD_TOKEN_SOURCES.pluralAddressTokens })),
+] as GateToken[]).map(entry => ({ ...entry, allowPrefix: prefixMode(entry.token) }));
+
+/** Prefix class of a plural-address token from Noa's section 10 prefix note (every token must have one). */
+function prefixMode(token: string): boolean | 'vav' {
+  const mode = PLURAL_PREFIX_MODES[token];
+  if (!mode) throw new Error('generationData has no prefix-note class for a plural-address token');
+  return mode === 'vav' ? 'vav' : true;
+}
 
 /** First-person plural ("we") forms: rejected on solo-operator sites. */
 export const WE_FORM_TOKENS: readonly GateToken[] = [
@@ -53,6 +72,8 @@ export const WE_FORM_TOKENS: readonly GateToken[] = [
   { token: "אנחנו", allowPrefix: true, source: "brief: we forms; bytes from lpCopyPrompt.ts:130" },
   // M2a.3, Noa data section 10: every weTokens entry is allowPrefix: true.
   ...dataTokens(WE_TOKENS_DATA, true, GUARD_TOKEN_SOURCES.weTokens),
+  // M2a.4 round 2, Noa data section 18: we-form verbs, matched like weTokens.
+  ...dataTokens(WE_FORM_VERBS, true, GUARD_TOKEN_SOURCES.weFormVerbs),
 ];
 
 /** Data tokens not already in the M2a.1 list above (appended; the M2a.1 entries keep their indices). */
@@ -85,6 +106,8 @@ export interface ClaimRule {
   perToken?: boolean;
   /** M2a.3: tokens are not substring-matched; the rule is decided by a sentence check in copyGates.ts. */
   sentenceOnly?: boolean;
+  /** M2a.4: owner fields that never authorise this claim (besides CLAIM_EXCLUDED_FACT_FIELDS). */
+  excludedFields?: readonly string[];
   /** Owner-data fields whose non-empty value authorises the claim. */
   ownerFields: readonly string[];
   /** English keywords in any owner fact that authorise the claim (case-insensitive). */
@@ -110,6 +133,23 @@ export const FIX_TIME_KEYWORDS: readonly string[] = [
  */
 export const FIX_TIME_EXCLUDED_FIELDS: readonly string[] = ['responseTime'];
 
+/**
+ * English owner-fact keywords that authorise a price-lock claim (M2a.4, Noa section 15: fixed price,
+ * final price, price won't change, no extras).
+ */
+export const PRICE_LOCK_KEYWORDS: readonly string[] = [
+  'fixed price', 'final price', 'price is fixed', 'price is final', "price won't change", 'price will not change',
+  "price doesn't change", 'price does not change', 'price never changes', 'no extras', 'no extra charges', 'no hidden',
+  'no added charges', 'nothing added', 'price stays',
+];
+
+/** English owner-fact keywords that authorise a same-day finish claim (M2a.4, Noa section 14; usp / guarantee only). */
+export const SAME_DAY_FINISH_KEYWORDS: readonly string[] = ['same-day', 'same day'];
+/** Owner fields that may authorise a same-day finish claim (Noa section 14). */
+export const SAME_DAY_FINISH_FIELDS: readonly string[] = ['usp', 'guarantee'];
+/** Owner field that authorises a same-day arrival claim (Noa section 14). */
+export const SAME_DAY_ARRIVAL_FIELD = 'responseTime';
+
 /** Claims rejected unless they are in the owner facts. */
 export const CLAIM_RULES: readonly ClaimRule[] = [
   { id: 'warranty', tokens: ["אחריות"], ownerFields: ['guarantee'], ownerKeywords: ['warranty', 'guarantee'], source: "noa: אחריות מלאה (e5:66)" },
@@ -131,6 +171,9 @@ export const CLAIM_RULES: readonly ClaimRule[] = [
   // only by an owner fact outside responseTime, and only for the services that fact names (FIX_TIME_SCOPE).
   { id: 'fix_time', tokens: claimTokens('fix_time'), sentenceOnly: true, ownerFields: [], ownerKeywords: FIX_TIME_KEYWORDS, source: 'noa data §2 + §7 (sentence check, copyGates.ts)' },
   { id: 'license_grade', tokens: claimTokens('license_grade'), perToken: true, ownerFields: [], ownerKeywords: [], source: 'noa data §2' },
+  // M2a.4: Noa section 15. A customer's review never authorises it (CLAIM_EXCLUDED_FACT_FIELDS) and
+  // neither does the customer's fear (reflecting the fear stays allowed; inverting it into a promise does not).
+  { id: 'price_lock', tokens: PRICE_LOCK_TOKENS, excludedFields: ['idealClientFear'], ownerFields: [], ownerKeywords: PRICE_LOCK_KEYWORDS, source: GUARD_TOKEN_SOURCES.priceLockTokens },
 ];
 
 function claimTokens(kind: string): readonly string[] {
@@ -147,8 +190,16 @@ export const CLAIM_EXCLUDED_FACT_FIELDS: readonly string[] = ['reviewQuote', 'st
  * phrases counted per page. Contact, internal and customer fields are excluded.
  */
 export const FACT_PHRASE_FIELDS: readonly string[] = ['yearsInField', 'guarantee', 'license', 'usp', 'responseTime', 'pricingNotes'];
-/** A fact phrase may appear at most this many times per page. */
+/** A fact phrase (owner digit run) may appear at most this many times per page. */
 export const FACT_REPEAT_MAX = 2;
+/**
+ * M2a.4: the phrase-level cap was over-firing (generic two-word heads such as a price-quote phrase).
+ * A proof phrase may appear in at most this many gated fields per page; repeats inside one field count once.
+ */
+export const FACT_PHRASE_REPEAT_MAX = 3;
+
+/** M2a.4: minimum length (characters) of a serviceDetails description on research-bound sites. */
+export const SERVICE_DESCRIPTION_MIN_CHARS = 30;
 
 /**
  * M2a.3 phrase-level repetition (item 5): owner fields whose Hebrew clauses are fact phrases, besides
@@ -168,3 +219,31 @@ export const FACT_PHRASE_MAX_WORDS = 3;
 
 /** A quote overlap of at least this many characters outside reviewFeatured is a violation. */
 export const QUOTE_OVERLAP_MIN_CHARS = 24;
+
+// ---------------------------------------------------------------------------
+// M2a.4 round 2: service area (Noa section 16) and free claims (Noa section 17). English lists only;
+// the Hebrew tokens are in generationData.ts.
+// ---------------------------------------------------------------------------
+
+/** Owner fields that are the owner's own area answer (only these may authorise a tail / head / nearby phrase). */
+export const SERVICE_AREA_OWNER_FIELDS: readonly string[] = ['targetLocation', 'specificCities'];
+/** Owner fields that never authorise a wider area (Noa section 16). */
+export const SERVICE_AREA_EXCLUDED_FIELDS: readonly string[] = ['travelBoundary', 'responseTime', 'reviewQuote'];
+/** English owner wording that widens the area ("and surroundings", "the X area", "nearby towns", "nationwide"). */
+export const SERVICE_AREA_WIDENING_KEYWORDS: readonly string[] = [
+  'surroundings', 'surrounding', 'area', 'nearby', 'neighbouring', 'neighboring', 'nationwide', 'whole country', 'all over the country', 'region',
+];
+
+/** English free words in owner facts (Noa section 17). */
+export const FREE_WORDS_EN: readonly string[] = ['free', 'for free', 'free of charge', 'at no cost', 'no charge', 'complimentary', 'waived', 'no call-out fee', 'no visit fee'];
+/** English scope nouns per free-scope class (Noa section 17). */
+export const FREE_SCOPE_EN: Readonly<Record<string, readonly string[]>> = {
+  quote: ['quote', 'estimate', 'pricing'],
+  callout: ['call-out', 'callout', 'visit', 'travel', 'arrival'],
+  inspection: ['inspection', 'check', 'diagnosis', 'detection', 'camera'],
+  consultation: ['consultation', 'advice'],
+  warranty_return: ['return visit', 're-fix'],
+  work: ['labour', 'labor', 'work', 'repair', 'install', 'parts'],
+};
+/** Owner fields that never authorise a free claim (a customer's words). */
+export const FREE_EXCLUDED_FIELDS: readonly string[] = ['reviewQuote'];

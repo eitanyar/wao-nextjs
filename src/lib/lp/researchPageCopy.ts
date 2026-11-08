@@ -9,7 +9,7 @@ import { buildSiteCopyPrompt, primaryCtaLabel } from './lpCopyPrompt';
 import { callQwenJSON, type CallQwenJSONOptions } from '../ai/qwen-fast';
 import type { PageBrief } from '../site-bot/research/pageBrief';
 import type { SiteResearchDossier } from '../site-bot/research/types';
-import { PLURAL_ADDRESS_TOKENS, WE_FORM_TOKENS } from './copyGates.config';
+import { PLURAL_ADDRESS_TOKENS, SERVICE_DESCRIPTION_MIN_CHARS, WE_FORM_TOKENS } from './copyGates.config';
 import { CLAIM_TOKENS, TYPOGRAPHY_RULE_TEXT } from './generationData';
 import {
   copyGateContext,
@@ -53,14 +53,18 @@ export const SINGULAR_ADDRESS_RULE =
  */
 export const TYPOGRAPHY_RULE = TYPOGRAPHY_RULE_TEXT;
 
+/** M2a.4: the reduplicated "line by line" form takes a maqaf (gate_reduplication_dash). Escape-only. */
+export const REDUPLICATION_RULE =
+  'A repeated word pair (the "line by line" form) is joined by a maqaf (\u05BE) with no spaces, never by a hyphen, a dash or a space.';
+
 const COPY_SYSTEM_PROMPT =
   `You are Tamar, a Hebrew conversion copywriter. Follow the supplied research brief and JSON schema exactly. Return only the requested JSON object, with no prose or markdown.\n\n${SINGULAR_ADDRESS_RULE}`;
 
 const QA_SYSTEM_PROMPT =
-  `You are Noa, a Hebrew language QA editor. Correct only language and typography in the supplied JSON, preserve all factual claims and structure, and return only valid JSON.\n\n${SINGULAR_ADDRESS_RULE} If any field breaks this rule, rewrite that sentence in singular masculine address.\n\n${TYPOGRAPHY_RULE}`;
+  `You are Noa, a Hebrew language QA editor. Correct only language and typography in the supplied JSON, preserve all factual claims and structure, and return only valid JSON.\n\n${SINGULAR_ADDRESS_RULE} If any field breaks this rule, rewrite that sentence in singular masculine address.\n\n${TYPOGRAPHY_RULE} ${REDUPLICATION_RULE}`;
 
 const REPAIR_SYSTEM_PROMPT =
-  `You are Tamar, a Hebrew conversion copywriter. You are repairing specific fields of a site-copy JSON object that broke hard validator limits or copy rules. Return only a JSON object containing exactly the requested keys, with no prose or markdown.\n\n${SINGULAR_ADDRESS_RULE}\n\n${TYPOGRAPHY_RULE}`;
+  `You are Tamar, a Hebrew conversion copywriter. You are repairing specific fields of a site-copy JSON object that broke hard validator limits or copy rules. Return only a JSON object containing exactly the requested keys, with no prose or markdown.\n\n${SINGULAR_ADDRESS_RULE}\n\n${TYPOGRAPHY_RULE} ${REDUPLICATION_RULE}`;
 
 // ---------------------------------------------------------------------------
 // Hard limits: the single source of truth for the validator, the violation
@@ -330,6 +334,14 @@ export function buildResearchCopyRules(brief: PageBrief, data: CollectedData = {
     // M2a.3 (items 7-8).
     '- The customer quote and the customer\'s fear are not owner facts. Never turn what a customer said (for example that the price did not change, a fast arrival, a clean job) or the opposite of the customer\'s fear (for example "the price never changes", "no surprises in the price") into the owner\'s promise or guarantee, unless an owner fact states it.',
     '- AVAILABILITY (binding): state hours or availability only in the owner\'s own terms. Never write an availability figure such as 24/7 or 24/6 unless the owner wrote exactly that figure.',
+    // M2a.4.
+    '- VOICE (binding): the first-person plural is forbidden in every tense and form, not only the listed words: no "we did", "we started", "we will", "our" or "us". The owner always speaks as "I".',
+    '- NAMES (binding): write the business name and the owner\'s name exactly as they appear in the owner facts, in their original script and spelling, character for character. Never transliterate a Latin name into Hebrew letters and never translate a name.',
+    '- SERVICE AREA (binding): every field, including trustBarItems, names only the places in the service-area local fact. Never add a region, a district, nearby towns or "and surroundings", even when the owner gave a travel distance.',
+    '- FREE OF CHARGE (binding): never say that anything is free or at no cost unless an owner fact says that exact item is free. A free quote does not make an inspection, a visit or a repair free.',
+    '- PRICE (binding): never promise that the price is fixed, final or will not change, or that nothing will be added to it, unless an owner fact states it. A customer review never counts as an owner fact.',
+    '- SAME DAY (binding): promise a same-day arrival only when the owner gave a response time. Promise to finish or fix a job the same day only when the owner\'s USP or guarantee says so, and only for the service it names.',
+    `- ${REDUPLICATION_RULE}`,
   ];
   if (site) {
     const scope = fixTimeScope(briefGateContext(brief, data));
@@ -338,6 +350,7 @@ export function buildResearchCopyRules(brief: PageBrief, data: CollectedData = {
     }
     if (scope instanceof Set) rules.push(`- A same-day / fix-within promise from the owner covers only these services: ${JSON.stringify([...scope])}. Never extend it to any other service.`);
     rules.push(
+      `- serviceDetails descriptions: one complete sentence of at least ${SERVICE_DESCRIPTION_MIN_CHARS} characters on what the service includes for the customer (within the length limit); never just the service name restated.`,
       `- serviceItems is filled in by the system. serviceDetails: at most one entry per service; every name must be exactly one of these owner-confirmed service names, character for character: ${JSON.stringify(site.serviceLabels)}. Never add any other service.`,
       `- This page is about: ${JSON.stringify(site.pageName)}${site.city ? ` in ${JSON.stringify(site.city)}` : ''}. Where it reads naturally, heroHeadline contains that name${site.city ? ' and that city' : ''}.`,
       site.ownerIntroPage
@@ -785,6 +798,7 @@ export function briefGateContext(brief: PageBrief, data: CollectedData): CopyGat
     serviceSources: site?.serviceSources ?? [],
     pageServiceLabel: site && brief.page.pageClass !== 'homepage' ? site.pageName : null,
     installPage: isInstallPage(brief),
+    researchSite: Boolean(site),
   });
 }
 

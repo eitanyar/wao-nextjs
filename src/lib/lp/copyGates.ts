@@ -9,7 +9,7 @@
  */
 
 import type { CollectedData } from '../bot/prompts';
-import { hasRealReviewQuote } from './lpCopyPrompt';
+import { buildLpCopyPrompt, hasRealReviewQuote } from './lpCopyPrompt';
 import {
   ARRIVAL_TOKENS,
   CLAIM_TOKEN_WORD_END,
@@ -17,8 +17,19 @@ import {
   DAY_LETTERS,
   FIX_TIME_LEAD_TOKENS,
   FIX_TIME_WITHIN_WORDS,
+  FREE_CALLOUT_TOKENS,
+  FREE_EXCLUSION_WORDS,
+  FREE_SCOPE_NOUNS,
+  FREE_TOKENS,
   GUARD_CUSTOMER_STEMS,
   GUARD_SPEECH_VERBS,
+  SAME_DAY_FINISH_VERBS,
+  SAME_DAY_TOKENS,
+  SERVICE_AREA_HEAD_TOKENS,
+  SERVICE_AREA_LAMED_HEADS,
+  SERVICE_AREA_NEARBY_TOKENS,
+  SERVICE_AREA_REGION_TOKENS,
+  SERVICE_AREA_TAIL_TOKENS,
   SERVICE_LABEL_PINS,
 } from './generationData';
 import {
@@ -28,11 +39,22 @@ import {
   FACT_PHRASE_FIELDS,
   FACT_PHRASE_MAX_WORDS,
   FACT_PHRASE_MIN_WORD_LETTERS,
+  FACT_PHRASE_REPEAT_MAX,
   FACT_PHRASE_TEXT_FIELDS,
   FACT_REPEAT_MAX,
   FIX_TIME_EXCLUDED_FIELDS,
+  FREE_EXCLUDED_FIELDS,
+  FREE_SCOPE_EN,
+  FREE_WORDS_EN,
   PLURAL_ADDRESS_TOKENS,
   QUOTE_OVERLAP_MIN_CHARS,
+  SAME_DAY_ARRIVAL_FIELD,
+  SAME_DAY_FINISH_FIELDS,
+  SAME_DAY_FINISH_KEYWORDS,
+  SERVICE_AREA_EXCLUDED_FIELDS,
+  SERVICE_AREA_OWNER_FIELDS,
+  SERVICE_AREA_WIDENING_KEYWORDS,
+  SERVICE_DESCRIPTION_MIN_CHARS,
   WAO_SERVICE_TERMS_HE,
   WAO_SERVICE_TERMS_LATIN,
   WE_FORM_TOKENS,
@@ -59,6 +81,12 @@ export const GATE_RULES = {
   availability: 'gate_availability',
   installArrival: 'gate_install_arrival',
   customerSource: 'gate_customer_source_claim',
+  // M2a.4
+  reduplicationDash: 'gate_reduplication_dash',
+  nameSpelling: 'gate_name_spelling',
+  shortDescription: 'gate_short_description',
+  // M2a.4 round 2 (Noa section 16)
+  serviceArea: 'gate_service_area',
 } as const;
 export type GateRule = (typeof GATE_RULES)[keyof typeof GATE_RULES];
 
@@ -96,6 +124,10 @@ export interface CopyGateContext {
   installPage?: boolean;
   /** M2a.3: names that may repeat freely (business, owner); excluded from phrase keys. */
   freeNames?: readonly string[];
+  /** M2a.4: the owner's first name exactly as in the facts (the prompt's self-introduction name). */
+  ownerFirstName?: string | null;
+  /** M2a.4: research-bound site page (serviceDetails descriptions have a minimum length). */
+  researchSite?: boolean;
 }
 
 /** One non-blocking finding for human review (never copy text). */
@@ -117,7 +149,8 @@ function escapeRegExp(value: string): string {
 }
 
 export function tokenPattern(entry: GateToken): RegExp {
-  const prefix = entry.allowPrefix ? `[${PREFIX_LETTERS}]{0,2}` : '';
+  // M2a.4 (Noa section 10 prefix note): 'vav' = an optional vav prefix only.
+  const prefix = entry.allowPrefix === 'vav' ? '\u05D5?' : entry.allowPrefix ? `[${PREFIX_LETTERS}]{0,2}` : '';
   return new RegExp(`(?<![${HEBREW_LETTER}])${prefix}${escapeRegExp(entry.token)}(?![${HEBREW_LETTER}])`, 'u');
 }
 
@@ -188,9 +221,20 @@ function claimAuthorised(ruleIndex: number, ctx: CopyGateContext): boolean {
     const value = ctx.ownerFields[field];
     return typeof value === 'string' ? value.trim().length > 0 : Boolean(value);
   })) return true;
-  const facts = ctx.ownerFactsText.toLowerCase();
+  const text = rule.excludedFields?.length ? ownerFactsWithout(ctx, rule.excludedFields) : ctx.ownerFactsText;
+  const facts = text.toLowerCase();
   if (rule.ownerKeywords.some(keyword => facts.includes(keyword.toLowerCase()))) return true;
-  return rule.tokens.some(token => claimTokenIn(ctx.ownerFactsText, token));
+  return rule.tokens.some(token => claimTokenIn(text, token));
+}
+
+/** Owner facts without some fields (M2a.4); falls back to the concatenated facts for hand-built contexts. */
+function ownerFactsWithout(ctx: CopyGateContext, excluded: readonly string[]): string {
+  const fields = Object.entries(ctx.ownerFields);
+  if (!fields.length) return ctx.ownerFactsText;
+  return fields.flatMap(([key, value]) => {
+    if (CLAIM_EXCLUDED_FACT_FIELDS.includes(key) || excluded.includes(key)) return [];
+    return typeof value === 'string' ? [value] : Array.isArray(value) ? value.filter((item): item is string => typeof item === 'string') : [];
+  }).join('\n');
 }
 
 /** Per-token rules (license_grade): only the exact token the owner stated is allowed. */
@@ -342,15 +386,24 @@ const SCOPE_STOP_WORDS = new Set(['with', 'from', 'that', 'this', 'every', 'same
 export function fixTimeScope(ctx: CopyGateContext): 'all' | Set<string> | null {
   const rule = CLAIM_RULES[FIX_TIME_INDEX];
   if (!rule) return null;
+  return ownerClaimScope(ctx, fixTimeOwnerTexts(ctx), sentence => {
+    const lower = sentence.toLowerCase();
+    return rule.ownerKeywords.some(keyword => lower.includes(keyword.toLowerCase())) || fixTimeSentences(sentence, ctx.serviceLabels).claims.length > 0;
+  });
+}
+
+/**
+ * Scope of an owner claim (M2a.3 fix_time, M2a.4 same-day finish): null = no authorising owner sentence;
+ * 'all' = one names no service; otherwise the service labels the authorising sentences name.
+ */
+function ownerClaimScope(ctx: CopyGateContext, ownerSentences: readonly string[], authorises: (sentence: string) => boolean): 'all' | Set<string> | null {
   const labels = ctx.serviceLabels;
   const sources = ctx.serviceSources ?? [];
   let all = false;
   const scoped = new Set<string>();
-  for (const sentence of fixTimeOwnerTexts(ctx)) {
+  for (const sentence of ownerSentences) {
+    if (!authorises(sentence)) continue;
     const lower = sentence.toLowerCase();
-    const english = rule.ownerKeywords.some(keyword => lower.includes(keyword.toLowerCase()));
-    const hebrew = !english && fixTimeSentences(sentence, labels).claims.length > 0;
-    if (!english && !hebrew) continue;
     const words = new Set(lower.split(/[^a-z]+/).filter(word => word.length >= 4 && !SCOPE_STOP_WORDS.has(word)));
     const named = labels.filter((label, index) => sentence.includes(label) ||
       (sources[index] ?? '').toLowerCase().split(/[^a-z]+/).some(word => word.length >= 4 && !SCOPE_STOP_WORDS.has(word) && words.has(word)));
@@ -359,6 +412,210 @@ export function fixTimeScope(ctx: CopyGateContext): 'all' | Set<string> | null {
   }
   if (all) return 'all';
   return scoped.size ? scoped : null;
+}
+
+// ---------------------------------------------------------------------------
+// M2a.4 same-day promises (Noa section 14). A sentence with a same-day token is a same-day promise:
+// with a finish verb it promises to finish the job that day (owner usp / guarantee only, scoped to the
+// services it names); otherwise with an arrival token it is an arrival promise (the owner's response
+// time authorises it). A same-day sentence with neither is held to the arrival rule (engineer default,
+// flagged to Noa). Plain substring matching.
+// ---------------------------------------------------------------------------
+
+/** Owner sentences of the fields that may authorise a same-day finish (usp / guarantee). */
+function sameDayFinishOwnerTexts(ctx: CopyGateContext): string[] {
+  return SAME_DAY_FINISH_FIELDS.flatMap(field => {
+    const value = ctx.ownerFields[field];
+    return typeof value === 'string' ? sentences(value) : [];
+  });
+}
+
+/** Same-day finish authorisation scope (null = not authorised). */
+export function sameDayFinishScope(ctx: CopyGateContext): 'all' | Set<string> | null {
+  return ownerClaimScope(ctx, sameDayFinishOwnerTexts(ctx), sentence => {
+    const lower = sentence.toLowerCase();
+    return SAME_DAY_FINISH_KEYWORDS.some(keyword => lower.includes(keyword)) ||
+      (SAME_DAY_TOKENS.some(token => sentence.includes(token)) && SAME_DAY_FINISH_VERBS.some(verb => sentence.includes(verb)));
+  });
+}
+
+function ownerStatesResponseTime(ctx: CopyGateContext): boolean {
+  const value = ctx.ownerFields[SAME_DAY_ARRIVAL_FIELD];
+  return typeof value === 'string' && value.trim().length > 0;
+}
+
+/** Same-day claim ids of one string: 'same_day_finish' and/or 'same_day_arrival' (unauthorised ones only). */
+function sameDayHits(value: string, ctx: CopyGateContext, finishScope: 'all' | Set<string> | null): string[] {
+  const hits = new Set<string>();
+  for (const sentence of sentences(value)) {
+    if (!SAME_DAY_TOKENS.some(token => sentence.includes(token))) continue;
+    const named = ctx.serviceLabels.filter(label => label && sentence.includes(label));
+    // Noa (M2a.4 call 1): with neither a finish verb nor an arrival token, a sentence naming a service label is a finish promise.
+    if (SAME_DAY_FINISH_VERBS.some(verb => sentence.includes(verb)) || (!hasArrival(sentence) && named.length)) {
+      if (fixTimeClaimUnauthorised(named, finishScope, ctx)) hits.add('same_day_finish');
+    } else if (!ownerStatesResponseTime(ctx)) {
+      hits.add('same_day_arrival');
+    }
+  }
+  return [...hits];
+}
+
+// ---------------------------------------------------------------------------
+// M2a.4 typography and names.
+// ---------------------------------------------------------------------------
+
+/** A reduplicated Hebrew word joined by a hyphen or en-dash (the line-by-line form takes a maqaf). */
+const REDUPLICATION_DASH_PATTERN = new RegExp(`(?<!${HEB_CLASS})(${HEB_CLASS}{2,})\\s*[-\u2013]\\s*\\1(?!${HEB_CLASS})`, 'u');
+
+const OPENER_PROBE = 'ZQXOWNERPROBE';
+/**
+ * The self-introduction opener word ("my name is", the first of the legacy prompt's two openers), read
+ * from the prompt template at load time so the gate and the prompt never drift. Empty if the template changed.
+ */
+export const NAME_OPENER: string = (() => {
+  const match = new RegExp(`Open with: "(\\S+) ${OPENER_PROBE}," or "(\\S+) ${OPENER_PROBE},"`).exec(buildLpCopyPrompt({ ownerName: OPENER_PROBE }));
+  return match ? match[1] : '';
+})();
+const NAME_OPENER_PATTERN = NAME_OPENER ? new RegExp(`(?<!${HEB_CLASS})${escapeRegExp(NAME_OPENER)}\\s+([^\\s,.;:!?\u2014]+)`, 'gu') : null;
+
+/** True when the self-introduction names the owner in another spelling or script (e.g. a transliterated Latin name). */
+function nameSpellingHit(value: string, ctx: CopyGateContext): boolean {
+  const name = ctx.ownerFirstName;
+  if (!name || !NAME_OPENER_PATTERN) return false;
+  for (const match of value.matchAll(NAME_OPENER_PATTERN)) if (match[1] !== name) return true;
+  return false;
+}
+
+// ---------------------------------------------------------------------------
+// M2a.4 round 2: service-area widening (Noa section 16). The owner's Hebrew place labels (the identity
+// step's base city + service area, gatePlaces) are masked first, so a region token inside a city name
+// never hits; the mask marks where a place stood for the tail / head rules.
+// ---------------------------------------------------------------------------
+
+const PLACE_MARK = '\uE000';
+/** Section 16 prefix letters for head and region tokens: vav, bet, lamed, mem, shin, kaf (never he). */
+const AREA_PREFIX = '[\u05D5\u05D1\u05DC\u05DE\u05E9\u05DB]{0,3}';
+const LAMED = '\u05DC';
+const alternatives = (tokens: readonly string[]) => [...tokens].sort((a, b) => b.length - a.length).map(escapeRegExp).join('|');
+const REGION_ALT = alternatives(SERVICE_AREA_REGION_TOKENS);
+const REGION_PATTERN = new RegExp(`(?<!${HEB_CLASS})${AREA_PREFIX}(${REGION_ALT})(?!${HEB_CLASS})`, 'gu');
+/** A place: the mask (after prefix letters) or a region token. */
+const PLACE_WORD = `(?:${AREA_PREFIX}${PLACE_MARK}|${AREA_PREFIX}(?:${REGION_ALT})(?!${HEB_CLASS}))`;
+const TAIL_PATTERN = new RegExp(`${PLACE_MARK}(?:\\s|,\\s)(${alternatives(SERVICE_AREA_TAIL_TOKENS)})(?!${HEB_CLASS})`, 'gu');
+const LAMED_HEADS = SERVICE_AREA_HEAD_TOKENS.filter(token => SERVICE_AREA_LAMED_HEADS.includes(token));
+const DIRECT_HEADS = SERVICE_AREA_HEAD_TOKENS.filter(token => !SERVICE_AREA_LAMED_HEADS.includes(token));
+const HEAD_PATTERN = new RegExp(
+  `(?<!${HEB_CLASS})${AREA_PREFIX}(?:(${alternatives(DIRECT_HEADS)})\\s+${PLACE_WORD}|(${alternatives(LAMED_HEADS)})\\s+${LAMED}${PLACE_MARK})`, 'gu');
+
+/** Owner Hebrew place labels, longest first (the mask order). */
+function maskPlaces(value: string, places: readonly string[]): string {
+  let out = value;
+  for (const place of [...places].filter(item => HEBREW.test(item)).sort((a, b) => b.length - a.length)) out = out.split(place).join(PLACE_MARK);
+  return out;
+}
+
+export interface ServiceAreaHit { kind: 'tail' | 'head' | 'region' | 'nearby'; token: string }
+
+function areaOwnerText(ctx: CopyGateContext, fields: readonly string[] | null): string {
+  const entries = Object.entries(ctx.ownerFields);
+  if (!entries.length) return fields ? '' : ctx.ownerFactsText;
+  return entries.filter(([key]) => (fields ? fields.includes(key) : true) && !SERVICE_AREA_EXCLUDED_FIELDS.includes(key) && !CLAIM_EXCLUDED_FACT_FIELDS.includes(key))
+    .flatMap(([, value]) => (typeof value === 'string' ? [value] : [])).join('\n');
+}
+
+/** Unauthorised widening phrases in one string (Noa section 16). */
+export function serviceAreaHits(value: string, ctx: CopyGateContext): ServiceAreaHit[] {
+  const masked = maskPlaces(value, ctx.places ?? []);
+  const owner = areaOwnerText(ctx, null);
+  const area = areaOwnerText(ctx, SERVICE_AREA_OWNER_FIELDS);
+  const areaLower = area.toLowerCase();
+  // A tail / head / nearby phrase only when the owner's own area answer widens the area itself.
+  const widened = SERVICE_AREA_WIDENING_KEYWORDS.some(keyword => areaLower.includes(keyword)) ||
+    [...SERVICE_AREA_TAIL_TOKENS, ...SERVICE_AREA_HEAD_TOKENS, ...SERVICE_AREA_NEARBY_TOKENS].some(token => area.includes(token));
+  const hits: ServiceAreaHit[] = [];
+  for (const match of masked.matchAll(REGION_PATTERN)) if (!owner.includes(match[1])) hits.push({ kind: 'region', token: match[1] });
+  if (!widened) {
+    for (const match of masked.matchAll(TAIL_PATTERN)) hits.push({ kind: 'tail', token: match[1] });
+    for (const match of masked.matchAll(HEAD_PATTERN)) hits.push({ kind: 'head', token: match[1] ?? match[2] });
+    for (const token of SERVICE_AREA_NEARBY_TOKENS) if (masked.includes(token)) hits.push({ kind: 'nearby', token });
+  }
+  return hits;
+}
+
+// ---------------------------------------------------------------------------
+// M2a.4 round 2: free claims (Noa section 17). A free token is scoped by the nearest scope noun in its
+// clause (before it, else after it; longest match first); the owner must have said free for that class.
+// ---------------------------------------------------------------------------
+
+const FREE_CLAUSE_SPLIT = /[.,\u2014:;?!\n]+/;
+const FREE_EXCLUSION_PATTERN = new RegExp(`^\\s*(?:${alternatives(FREE_EXCLUSION_WORDS)})(?!${HEB_CLASS})`, 'u');
+
+interface Span { start: number; end: number; value: string }
+
+/** Non-overlapping occurrences of the tokens in a text, longest match first. */
+function spans(text: string, tokens: readonly string[]): Span[] {
+  const found: Span[] = [];
+  for (const token of [...tokens].sort((a, b) => b.length - a.length)) {
+    for (let at = text.indexOf(token); at >= 0; at = text.indexOf(token, at + 1)) {
+      const span = { start: at, end: at + token.length, value: token };
+      if (!found.some(item => item.start < span.end && span.start < item.end)) found.push(span);
+    }
+  }
+  return found.sort((a, b) => a.start - b.start);
+}
+
+const SCOPE_CLASS_OF = new Map<string, string>(Object.entries(FREE_SCOPE_NOUNS).flatMap(([cls, nouns]) => nouns.map(noun => [noun, cls] as [string, string])));
+const SCOPE_NOUNS = [...SCOPE_CLASS_OF.keys()];
+
+/** Free claims of one string: their scope class, or null when the clause has no scope noun. */
+export function freeClaims(value: string): Array<string | null> {
+  const out: Array<string | null> = [];
+  for (const clause of value.split(FREE_CLAUSE_SPLIT)) {
+    const nouns = spans(clause, SCOPE_NOUNS);
+    for (const span of spans(clause, [...FREE_CALLOUT_TOKENS, ...FREE_TOKENS])) {
+      if (FREE_CALLOUT_TOKENS.includes(span.value)) { out.push('callout'); continue; }
+      if (FREE_EXCLUSION_PATTERN.test(clause.slice(span.end))) continue;
+      const others = nouns.filter(noun => noun.end <= span.start || noun.start >= span.end);
+      const before = others.filter(noun => noun.end <= span.start).pop();
+      const after = others.find(noun => noun.start >= span.end);
+      const noun = before ?? after;
+      out.push(noun ? SCOPE_CLASS_OF.get(noun.value) ?? null : null);
+    }
+  }
+  return out;
+}
+
+function englishWordPattern(words: readonly string[]): RegExp {
+  return new RegExp(`(?<![a-z])(?:${[...words].sort((a, b) => b.length - a.length).map(escapeRegExp).join('|')})(?![a-z])`, 'g');
+}
+const FREE_WORD_EN_PATTERN = englishWordPattern(FREE_WORDS_EN);
+const SCOPE_EN = Object.entries(FREE_SCOPE_EN).flatMap(([cls, nouns]) => nouns.map(noun => ({ cls, noun })));
+
+/** Free-scope classes the owner authorised: one owner clause holds a free word and a scope noun of the class. */
+export function ownerFreeClasses(ctx: CopyGateContext): Set<string> {
+  const classes = new Set<string>();
+  const entries = Object.entries(ctx.ownerFields);
+  const texts = entries.length
+    ? entries.filter(([key]) => !FREE_EXCLUDED_FIELDS.includes(key) && !CLAIM_EXCLUDED_FACT_FIELDS.includes(key)).flatMap(([, value]) => (typeof value === 'string' ? [value] : []))
+    : [ctx.ownerFactsText];
+  for (const text of texts) {
+    for (const clause of text.split(FREE_CLAUSE_SPLIT)) {
+      if (spans(clause, [...FREE_CALLOUT_TOKENS, ...FREE_TOKENS]).length) {
+        for (const span of spans(clause, SCOPE_NOUNS)) classes.add(SCOPE_CLASS_OF.get(span.value)!);
+        if (spans(clause, FREE_CALLOUT_TOKENS).length) classes.add('callout');
+      }
+      const lower = clause.toLowerCase();
+      if (new RegExp(FREE_WORD_EN_PATTERN.source).test(lower)) {
+        // Longest English scope noun first; a shorter noun inside a longer one does not count.
+        let rest = lower;
+        for (const { cls, noun } of [...SCOPE_EN].sort((a, b) => b.noun.length - a.noun.length)) {
+          const pattern = englishWordPattern([noun]);
+          if (pattern.test(rest)) { classes.add(cls); rest = rest.replace(englishWordPattern([noun]), ' '); }
+        }
+      }
+    }
+  }
+  return classes;
 }
 
 /** True when one fix_time claim sentence is outside the owner's authorised scope. */
@@ -496,6 +753,8 @@ export function runCopyGates(copy: Record<string, unknown>, ctx: CopyGateContext
   LAST_PHRASES.set(ctx, phrases);
   const phraseSeen = phrases.map(() => 0);
   const scope = FIX_TIME_INDEX >= 0 ? fixTimeScope(ctx) : 'all';
+  const finishScope = sameDayFinishScope(ctx);
+  const freeClasses = ownerFreeClasses(ctx);
   const customerKeys = customerOnlyKeys(ctx).map(keyPattern);
 
   for (const { field, value } of strings) {
@@ -518,6 +777,11 @@ export function runCopyGates(copy: Record<string, unknown>, ctx: CopyGateContext
     if (FIX_TIME_INDEX >= 0 && fixTimeSentences(value, ctx.serviceLabels, scope instanceof Set).claims.some(named => fixTimeClaimUnauthorised(named, scope, ctx))) {
       out.push({ field, rule: GATE_RULES.claim, actual: 'claim:fix_time' });
     }
+    for (const id of sameDayHits(value, ctx, finishScope)) out.push({ field, rule: GATE_RULES.claim, actual: `claim:${id}` });
+    for (const cls of new Set(freeClaims(value).filter(item => item === null || !freeClasses.has(item)))) {
+      out.push({ field, rule: GATE_RULES.claim, actual: `claim:free:${cls ?? 'unscoped'}` });
+    }
+    for (const kind of new Set(serviceAreaHits(value, ctx).map(hit => hit.kind))) out.push({ field, rule: GATE_RULES.serviceArea, actual: `service_area:${kind}` });
     WAO_SERVICE_TERMS_HE.forEach((term, index) => {
       if (value.includes(term)) out.push({ field, rule: GATE_RULES.waoOffer, actual: `wao_he:${index}` });
     });
@@ -539,16 +803,21 @@ export function runCopyGates(copy: Record<string, unknown>, ctx: CopyGateContext
       if (factSeen[index] > FACT_REPEAT_MAX) out.push({ field, rule: GATE_RULES.factRepeat, actual: `fact:${index}` });
     });
     if (!FACT_PHRASE_EXEMPT_FIELDS.includes(topFieldOf(field))) {
+      // M2a.4: a field counts once per phrase; the cap is FACT_PHRASE_REPEAT_MAX fields per page.
       phrases.forEach((phrase, index) => {
-        const count = phraseMentions(value, phrase);
-        if (!count) return;
-        phraseSeen[index] += count;
-        if (phraseSeen[index] > FACT_REPEAT_MAX) out.push({ field, rule: GATE_RULES.factRepeat, actual: `phrase:${index}` });
+        if (!phraseMentions(value, phrase)) return;
+        phraseSeen[index] += 1;
+        if (phraseSeen[index] > FACT_PHRASE_REPEAT_MAX) out.push({ field, rule: GATE_RULES.factRepeat, actual: `phrase:${index}` });
       });
     }
     if (availabilityHit(value, ctx)) out.push({ field, rule: GATE_RULES.availability });
     if (ctx.installPage && arrivalTimeHit(value)) out.push({ field, rule: GATE_RULES.installArrival });
     if (customerKeys.some(pattern => new RegExp(pattern.source, 'u').test(value))) out.push({ field, rule: GATE_RULES.customerSource });
+    if (REDUPLICATION_DASH_PATTERN.test(value)) out.push({ field, rule: GATE_RULES.reduplicationDash });
+    if (nameSpellingHit(value, ctx)) out.push({ field, rule: GATE_RULES.nameSpelling });
+    if (ctx.researchSite && /^serviceDetails\[\d+\]\.description$/.test(field) && value.trim().length < SERVICE_DESCRIPTION_MIN_CHARS) {
+      out.push({ field, rule: GATE_RULES.shortDescription });
+    }
   }
 
   // Unconfirmed services: every serviceItems / serviceDetails[].name entry must be an owner-confirmed name.
@@ -613,6 +882,8 @@ export interface CopyGatePageOptions {
   serviceSources?: readonly string[];
   pageServiceLabel?: string | null;
   installPage?: boolean;
+  /** M2a.4: research-bound site page (service description minimum length). */
+  researchSite?: boolean;
 }
 
 /** Build the gate context from owner data plus the page's confirmed service names and owner-stated places. */
@@ -634,6 +905,9 @@ export function copyGateContext(data: CollectedData, serviceLabels: readonly str
     pageServiceLabel: page.pageServiceLabel ?? null,
     installPage: page.installPage ?? false,
     freeNames: [data.businessName, data.ownerName].filter((name): name is string => typeof name === 'string' && name.trim().length > 0),
+    // Same first name as the prompt's self-introduction (lpCopyPrompt.ts): owner name, else business name.
+    ownerFirstName: (data.ownerName || data.businessName || '').split(/[\s,]/)[0] || null,
+    researchSite: page.researchSite ?? false,
   };
 }
 
@@ -659,6 +933,15 @@ export function describeGateViolation(violation: GateViolation, ctx: CopyGateCon
       const id = (violation.actual ?? '').split(':')[1];
       if (id === 'license_grade') return `${violation.field} names a license grade the owner did not state; name the license only in the owner's own wording, or just say he is licensed, with no grade or title`;
       if (id === 'fix_time') return `${violation.field} promises a time to fix or finish a job that the owner did not state for this service; remove the time promise (an arrival time stated by the owner is fine)`;
+      if (id === 'free') {
+        const cls = (violation.actual ?? '').split(':')[2];
+        return cls === 'unscoped'
+          ? `${violation.field} says something is free without saying what; remove the free claim`
+          : `${violation.field} says the ${cls.replace('_', ' ')} is free; the owner never said that this is free, remove the free claim (only what the owner said is free may be called free)`;
+      }
+      if (id === 'price_lock') return `${violation.field} promises that the price is fixed or will not change, or that nothing will be added to it; the owner never stated that, remove the price promise (naming the customer's fear of surprises is fine, promising it away is not)`;
+      if (id === 'same_day_finish') return `${violation.field} promises to finish or fix the job the same day; the owner did not state a same-day fix for this service, remove that promise (an owner-stated arrival time is fine)`;
+      if (id === 'same_day_arrival') return `${violation.field} promises a same-day arrival; the owner gave no response time, remove that promise`;
       if (id === 'solo_operator') return `${violation.field} states or implies that the owner works alone, answers personally or has no subcontractors / call centre; the owner never said so, remove that claim (first-person singular is only the grammar of the copy)`;
       return `${violation.field} makes a "${id}" claim that is not in the owner facts; remove that claim entirely`;
     }
@@ -681,7 +964,7 @@ export function describeGateViolation(violation: GateViolation, ctx: CopyGateCon
     case GATE_RULES.factRepeat: {
       if ((violation.actual ?? '').startsWith('phrase:')) {
         const phrase = pagePhrasesFor(ctx)[index];
-        return `${violation.field} repeats the proof point "${phrase?.display ?? ''}" more than ${FACT_REPEAT_MAX} times on this page (counted wording: ${(phrase?.keys ?? []).map(key => `"${key}"`).join(', ')}; the trust bar, guarantee block and response badge do not count); remove that proof point and its wording from this field entirely and use a different proof point or none`;
+        return `${violation.field} repeats the proof point "${phrase?.display ?? ''}" in more than ${FACT_PHRASE_REPEAT_MAX} fields of this page (counted wording: ${(phrase?.keys ?? []).map(key => `"${key}"`).join(', ')}; the trust bar, guarantee block and response badge do not count); remove that proof point and its wording from this field entirely and use a different proof point or none`;
       }
       return `${violation.field} repeats the owner fact "${(ctx.factPhrases ?? [])[index] ?? ''}" more than ${FACT_REPEAT_MAX} times on this page; remove it from this field and use a different proof point or none`;
     }
@@ -691,6 +974,14 @@ export function describeGateViolation(violation: GateViolation, ctx: CopyGateCon
       return `${violation.field} states an arrival or response time on an installation page; remove the arrival time from this field (the emergency response time belongs on repair pages only)`;
     case GATE_RULES.customerSource:
       return `${violation.field} turns words from the customer's review into the owner's own claim; remove them (a customer's experience is not the owner's promise)`;
+    case GATE_RULES.reduplicationDash:
+      return `${violation.field} joins a repeated word with a hyphen or dash; join the two words with a maqaf (\u05BE) and no spaces`;
+    case GATE_RULES.nameSpelling:
+      return `${violation.field} introduces the owner by a name spelled differently from the owner facts (for example a Latin name written in Hebrew letters); write the name exactly as given, character for character: ${JSON.stringify(ctx.ownerFirstName ?? '')}`;
+    case GATE_RULES.serviceArea:
+      return `${violation.field} widens the service area beyond the places the owner named (a region, "and surroundings", "the area of", nearby towns); name only these places: ${(ctx.places ?? []).join(' / ')}. A travel distance may be stated as a number, never as "surroundings"`;
+    case GATE_RULES.shortDescription:
+      return `${violation.field} is shorter than ${SERVICE_DESCRIPTION_MIN_CHARS} characters; write one complete sentence on what this service includes for the customer (at least ${SERVICE_DESCRIPTION_MIN_CHARS} characters, within the limit), without repeating proof points`;
     default:
       return `${violation.field}: ${violation.rule}`;
   }

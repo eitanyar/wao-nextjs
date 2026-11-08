@@ -37,6 +37,8 @@ const base: SiteCopy = {
   serviceDetails: [{ name: 'Alpha', description: 'Detail' }],
 };
 const loose = (copy: Partial<SiteCopy>) => ({ ...base, ...copy }) as unknown as Record<string, unknown>;
+/** M2a.4: a serviceDetails description at the research-site minimum length (gate_short_description). */
+const DESC = 'A complete description of the service.';
 
 test('A1 plural address: every configured token is caught in a gated field, with and without allowed prefixes', () => {
   PLURAL_ADDRESS_TOKENS.forEach((entry, index) => {
@@ -44,7 +46,9 @@ test('A1 plural address: every configured token is caught in a gated field, with
     assert.ok(hits.length >= 1 && hits.every(hit => hit.field === 'formHeadline' && hit.rule === GATE_RULES.plural), entry.token);
     assert.ok(hits.some(hit => hit.actual === `plural:${index}`), entry.token);
     const prefixed = runCopyGates(loose({ formHeadline: `${VAV}${entry.token}` }), ctx());
-    assert.equal(prefixed.some(hit => hit.actual === `plural:${index}`), entry.allowPrefix, `prefixed ${entry.token}`);
+    assert.equal(prefixed.some(hit => hit.actual === `plural:${index}`), Boolean(entry.allowPrefix), `prefixed ${entry.token}`);
+    // M2a.4 (Noa section 10 prefix note): a vav-only token never matches after shin.
+    if (entry.allowPrefix === 'vav') assert.equal(runCopyGates(loose({ formHeadline: `\u05E9${entry.token}` }), ctx()).some(hit => hit.actual === `plural:${index}`), false, `shin ${entry.token}`);
   });
   // Embedded inside a longer word is not a hit (no Hebrew letter may follow the token).
   for (const entry of PLURAL_ADDRESS_TOKENS) assert.equal(tokenPattern(entry).test(`${entry.token}${BET}`), false, entry.token);
@@ -148,7 +152,7 @@ test('B prompts: singular rule in Tamar + Noa + repair system prompts, typograph
   await generateResearchPageCopy(brief, { businessNiche: 'plumber' }, {
     callJson: async (system, user) => {
       systems.push(system); users.push(user);
-      return JSON.stringify({ ...base, serviceDetails: [{ name: LABEL_A, description: 'd' }] });
+      return JSON.stringify({ ...base, serviceDetails: [{ name: LABEL_A, description: DESC }] });
     },
   });
   assert.equal(systems.length, 2);
@@ -167,7 +171,7 @@ test('B prompts: singular rule in Tamar + Noa + repair system prompts, typograph
 test('B system fields: heroCta is the fixed singular label, serviceItems are the confirmed names, the quote is verbatim without context', async () => {
   const data = { businessNiche: 'plumber', reviewQuote: `${HE_WORD} ${LABEL_B}` };
   const copy = await generateResearchPageCopy(briefWithSite(), data, {
-    callJson: async () => JSON.stringify({ ...base, heroCta: 'model cta', serviceItems: ['made up'], reviewFeatured: 'paraphrased', serviceDetails: [{ name: LABEL_B, description: 'd' }] }),
+    callJson: async () => JSON.stringify({ ...base, heroCta: 'model cta', serviceItems: ['made up'], reviewFeatured: 'paraphrased', serviceDetails: [{ name: LABEL_B, description: DESC }] }),
   });
   assert.equal(copy.heroCta, primaryCtaLabel(data));
   assert.deepEqual(copy.serviceItems, [LABEL_A, LABEL_B]);
@@ -187,7 +191,7 @@ test('gate hit -> repair loop -> clean page; still failing after the budget -> t
         assert.match(user, /plural \/ second-person-plural address/);
         return JSON.stringify({ formHeadline: 'Fixed form' });
       }
-      return JSON.stringify({ ...base, formHeadline: `${HE_WORD} ${plural}`, serviceDetails: [{ name: LABEL_A, description: 'd' }] });
+      return JSON.stringify({ ...base, formHeadline: `${HE_WORD} ${plural}`, serviceDetails: [{ name: LABEL_A, description: DESC }] });
     },
   });
   assert.equal(repaired.formHeadline, 'Fixed form');
@@ -199,7 +203,7 @@ test('gate hit -> repair loop -> clean page; still failing after the budget -> t
   await assert.rejects(generateResearchPageCopy(briefWithSite(), { businessNiche: 'plumber' }, {
     callJson: async system => (/repairing specific fields/.test(system)
       ? JSON.stringify({ formHeadline: `${plural}` })
-      : JSON.stringify({ ...base, formHeadline: `${HE_WORD} ${plural}`, serviceDetails: [{ name: LABEL_A, description: 'd' }] })),
+      : JSON.stringify({ ...base, formHeadline: `${HE_WORD} ${plural}`, serviceDetails: [{ name: LABEL_A, description: DESC }] })),
   }), (error: Error & { violations?: Array<{ rule: string }> }) => {
     assert.ok(error.violations?.some(v => v.rule === GATE_RULES.plural));
     return true;

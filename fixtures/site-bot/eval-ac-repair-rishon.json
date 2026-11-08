@@ -1,0 +1,21 @@
+{
+  "businessName": "TEST M2a4 AC Repair",
+  "businessNiche": "air conditioning technician",
+  "primaryService": "AC repair",
+  "secondaryServices": "AC installation, AC cleaning",
+  "priorityServices": ["AC repair"],
+  "serviceModel": "field",
+  "targetLocation": "Rishon LeZion",
+  "specificCities": "Rishon LeZion, Holon",
+  "travelBoundary": "Up to 15 km from Rishon LeZion",
+  "ownerName": "Test Owner D",
+  "usp": "Finds the real fault on the first visit and gives a fixed price before any work starts",
+  "idealClientFear": "A technician who refills the gas without finding the leak, so the AC breaks again a month later",
+  "yearsInField": "10 years",
+  "guarantee": "Six-month warranty on repairs",
+  "responseTime": "Same day in Rishon LeZion",
+  "contactMethod": "phone",
+  "phone": "050-0000003",
+  "whatsappNumber": "050-0000003",
+  "businessHours": "Sun-Thu 08:00-19:00, Fri 08:00-13:00"
+}

@@ -42,8 +42,14 @@ async function json(file, value) {
 // All filesystem loaders resolve into this private cwd; no production data hook.
 test('GEO client login, first recommendation, admin visibility and closed authorization matrix', { timeout: 360000 }, async t => {
   const root = await fs.mkdtemp(path.join(os.tmpdir(), 'wao-geo-navigation-'));
+  // The private app copy (src, public, .next dev build) is large: remove it after every run, pass or fail,
+  // so repeated runs never fill tmpfs. Set WAO_KEEP_GEO_NAVIGATION_EVIDENCE=1 to keep it for debugging.
+  const keepEvidence = process.env.WAO_KEEP_GEO_NAVIGATION_EVIDENCE === '1';
+  t.after(async () => {
+    if (!keepEvidence) await fs.rm(root, { recursive: true, force: true, maxRetries: 3 });
+  });
   await fs.chmod(root, 0o700);
-  t.diagnostic(`Private evidence: ${root}`);
+  t.diagnostic(keepEvidence ? `Private evidence: ${root}` : `Private evidence (removed after the run; WAO_KEEP_GEO_NAVIGATION_EVIDENCE=1 keeps it): ${root}`);
   const app = path.join(root, 'app');
   await fs.mkdir(app);
   if (sourceRoot !== repo) {
