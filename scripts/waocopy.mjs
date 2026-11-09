@@ -41,7 +41,8 @@ function systemPrompt(patches) {
     'Everything you need is in the brief. Where the charter mentions tools, editing files,',
     'or handing off to other agents, deliver the text instead.',
     'Always address the reader in Hebrew singular masculine.',
-    'Keep sentences to 12-15 words in anything that may be read aloud.',
+    'Only in copy that will be voiced (narration, voice-over, bot speech): keep sentences to 12-15 words.',
+    'Everywhere else, vary the rhythm on purpose: 2-4-word punches between longer lines; never a run of equal-length sentences.',
     'State your chosen angle in one English line first, then the deliverable.',
   ];
   if (patches) {
