@@ -44,6 +44,7 @@ import {
   runCopyGates,
   servicesHeadlineInSet,
   WARNING_ONLY_RULES,
+  warningGateHits,
   type CopyGateContext,
 } from './copyGates';
 import {
@@ -70,7 +71,6 @@ import {
 } from '../site-bot/researchedSiteGeneration';
 import { runResearchToSite } from '../site-bot/researchToSite';
 import {
-  RESEARCHED_ALL_FIELDS_BLOCKING_ENV,
   RESEARCHED_HOME_HUB_ONLY_FIELDS,
   RESEARCHED_RENDERED_WARN_ONLY_FIELDS,
   researchedGatedFieldsFor,
@@ -181,7 +181,7 @@ test('M2b.1d 3: aboutHeadlineNoPromise: a signature variant, a hero-cap concept 
   const acGroup = Object.entries(HERO_CAP_CONCEPT_ADDITIONS).find(([, list]) => list.includes(acOnly))![0];
   assert.ok(!aboutHeadlinePromiseKinds(`${W1} ${acOnly}`, { maskLabels: [], acPage: false }).includes(`concept:${acGroup}`), 'AC-only entry off AC pages');
   assert.ok(aboutHeadlinePromiseKinds(`${W1} ${acOnly}`, { maskLabels: [], acPage: true }).includes(`concept:${acGroup}`));
-  // As a gate: on the homepage / hub it fails (warn-only field until the all-five eval); a money page does not generate it.
+  // As a gate: on the homepage / hub it fails (a hard gate since M2b.1f); a money page does not generate it.
   const hub = briefGateContext(brief('services', 'service_hub'), {});
   const money = briefGateContext(brief('leak-detection'), {});
   const copy = loose({ aboutPageHeadline: `${W1} ${tile}` });
@@ -320,22 +320,21 @@ test('M2b.1d 7: duplicate about checks compare homepage / hub pages only; the op
   assert.deepEqual([...WARNING_ONLY_RULES], [GATE_RULES.duplicateAboutOpening]);
 });
 
-test('M2b.1d 8: the eval switch makes all five M2b fields blocking; default off (trustBarItems and servicesHeadline already block)', () => {
-  const saved = process.env[RESEARCHED_ALL_FIELDS_BLOCKING_ENV];
-  try {
-    delete process.env[RESEARCHED_ALL_FIELDS_BLOCKING_ENV];
-    for (const field of RESEARCHED_RENDERED_WARN_ONLY_FIELDS) assert.ok(!researchedGatedFieldsFor('homepage').includes(field), field);
-    for (const field of ['trustBarItems', 'servicesHeadline']) assert.ok(researchedGatedFieldsFor('homepage').includes(field), field);
-    process.env[RESEARCHED_ALL_FIELDS_BLOCKING_ENV] = '1';
-    for (const field of ['trustBarItems', 'servicesHeadline', 'serviceDetails', 'aboutPageHeadline', 'aboutPageBody']) assert.ok(researchedGatedFieldsFor('service_hub').includes(field), field);
-    assert.ok(!researchedGatedFieldsFor('money_service').includes('aboutPageBody'), 'still never where not rendered');
-    const tile = SIGNATURE_WORD_TOKENS.tiles[0];
-    const hub = briefGateContext(brief('services', 'service_hub'), {});
-    assert.deepEqual(blockingGateHits(runCopyGates(loose({ aboutPageHeadline: `${W1} ${tile}` }), hub), hub).map(hit => hit.rule), [GATE_RULES.aboutHeadlinePromise]);
-  } finally {
-    if (saved === undefined) delete process.env[RESEARCHED_ALL_FIELDS_BLOCKING_ENV];
-    else process.env[RESEARCHED_ALL_FIELDS_BLOCKING_ENV] = saved;
-  }
+test('M2b.1d 8 (M2b.1f): all five M2b fields block by default; an injected warn-only list still holds a field back; never gated where not rendered', () => {
+  assert.deepEqual([...RESEARCHED_RENDERED_WARN_ONLY_FIELDS], []);
+  const five = ['trustBarItems', 'servicesHeadline', 'serviceDetails', 'aboutPageHeadline', 'aboutPageBody'];
+  for (const pageClass of ['homepage', 'service_hub']) for (const field of five) assert.ok(researchedGatedFieldsFor(pageClass).includes(field), `${pageClass}: ${field}`);
+  assert.ok(!researchedGatedFieldsFor('money_service').includes('aboutPageBody'), 'still never where not rendered');
+  const held = researchedGatedFieldsFor('homepage', ['aboutPageHeadline', 'aboutPageBody', 'serviceDetails']);
+  for (const field of ['aboutPageHeadline', 'aboutPageBody', 'serviceDetails']) assert.ok(!held.includes(field), field);
+  for (const field of ['trustBarItems', 'servicesHeadline']) assert.ok(held.includes(field), field);
+  const tile = SIGNATURE_WORD_TOKENS.tiles[0];
+  const hub = briefGateContext(brief('services', 'service_hub'), {});
+  const copy = loose({ aboutPageHeadline: `${W1} ${tile}` });
+  assert.deepEqual(blockingGateHits(runCopyGates(copy, hub), hub).map(hit => hit.rule), [GATE_RULES.aboutHeadlinePromise]);
+  const heldHub = { ...hub, renderedFields: researchedGatedFieldsFor('service_hub', ['aboutPageHeadline']) };
+  assert.deepEqual(blockingGateHits(runCopyGates(copy, heldHub), heldHub).map(hit => hit.rule), []);
+  assert.deepEqual(warningGateHits(runCopyGates(copy, heldHub), heldHub).filter(hit => hit.field === 'aboutPageHeadline').map(hit => hit.rule), [GATE_RULES.aboutHeadlinePromise]);
 });
 
 test('M2b.1d 9 (B7): a response-time noun phrase in the trust bar of an emergency page trips no fix-time, same-day, install-arrival or trust-bar gate, nor the arrival-on-installation review flag', () => {

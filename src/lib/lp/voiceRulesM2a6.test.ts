@@ -231,8 +231,8 @@ test('M2a.6 3: site-wide checks: hero cap in route order, duplicate aboutPageHea
   assert.deepEqual(hitsOf(loose({ aboutPageHeadline: W1, aboutPageBody: `${CARRY} ${W1} ${W2}` }), vctx(), GATE_RULES.duplicateAboutOpening), [], 'the first page never fails');
   const pages = [{ copy: { ...base, heroHeadline: W1, aboutPageHeadline: W2, aboutPageBody: W3 } }];
   assert.deepEqual(siteGenerationContext(pages), { priorHeroHeadlines: [W1], priorAboutPageHeadlines: [W2], priorAboutPageBodies: [W3], priorHeroFacts: [] });
-  // generateResearchPageCopy takes the earlier about headlines. M2a.7: aboutPageHeadline is not rendered yet, so the
-  // duplicate is a logged warning (no repair call); the repair wording is still there for M2b.
+  // generateResearchPageCopy takes the earlier about headlines. M2b.1f: aboutPageHeadline is a hard gate (it was warn-only
+  // through M2b.1e), so the duplicate costs one repair call and the repaired headline is kept; it is never a warning.
   const events: string[] = [];
   let repairs = 0;
   // M2b.1d: the about section is generated on the homepage / services hub only, so this runs on the hub.
@@ -240,13 +240,13 @@ test('M2a.6 3: site-wide checks: hero cap in route order, duplicate aboutPageHea
     priorAboutPageHeadlines: [W1],
     onEvent: event => { if (event.kind === 'warnings') for (const violation of event.violations ?? []) events.push(violation.rule); },
     callJson: async (system, user) => {
-      if (/repairing specific fields/.test(system)) repairs++;
+      if (/repairing specific fields/.test(system)) { repairs++; return JSON.stringify({ aboutPageHeadline: W2 }); }
       return JSON.stringify(/^You are Noa/.test(system) ? JSON.parse(user.slice(0, user.indexOf('\n\nHARD LIMITS'))) : { ...base, aboutPageHeadline: W1 });
     },
   });
-  assert.equal(result.aboutPageHeadline, W1);
-  assert.equal(repairs, 0);
-  assert.ok(events.includes(GATE_RULES.duplicateAboutHeadline));
+  assert.equal(result.aboutPageHeadline, W2);
+  assert.equal(repairs, 1);
+  assert.ok(!events.includes(GATE_RULES.duplicateAboutHeadline));
   assert.match(describeGateViolation({ field: 'aboutPageHeadline', rule: GATE_RULES.duplicateAboutHeadline }, vctx()), /is identical to the aboutPageHeadline of another page/);
 });
 

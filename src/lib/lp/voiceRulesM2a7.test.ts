@@ -59,7 +59,7 @@ import {
   heroCapFacts,
   tradeTermLine,
 } from './researchPageCopy';
-import { RESEARCHED_GATED_FIELDS, RESEARCHED_RENDERED_FIELDS, RESEARCHED_RENDERED_WARN_ONLY_FIELDS } from './researchedSite';
+import { RESEARCHED_GATED_FIELDS, RESEARCHED_HOME_HUB_ONLY_FIELDS, RESEARCHED_RENDERED_FIELDS, RESEARCHED_RENDERED_WARN_ONLY_FIELDS, researchedGatedFieldsFor } from './researchedSite';
 import type { SiteCopy } from './lpCopyPrompt';
 import { siteGenerationContext } from '../site-bot/researchedSiteGeneration';
 import type { PageBrief } from '../site-bot/research/pageBrief';
@@ -135,13 +135,21 @@ test('M2a.7 1: generationData carries the M2a.7 data byte-exact and counted; R8 
 test('M2a.7 2: warn-only: a hit on a field the research renderer does not show is a warning (no repair, page passes); fact / trust gates and rendered fields still fail; legacy unchanged', async () => {
   // M2b.1: the renderer shows more fields; the gate context gets the rendered fields minus the warn-only set.
   assert.deepEqual([...RESEARCHED_RENDERED_FIELDS], ['heroHeadline', 'heroSubheadline', 'formHeadline', 'faqItems', 'reviewFeatured', 'reviewContext', 'heroCta', 'trustBarItems', 'aboutPageHeadline', 'aboutPageBody', 'servicesHeadline', 'serviceDetails']);
-  // M2b.1d (section 22.4): trustBarItems and servicesHeadline are hard gates; the other three stay warn-only.
-  assert.deepEqual([...RESEARCHED_RENDERED_WARN_ONLY_FIELDS], ['aboutPageHeadline', 'aboutPageBody', 'serviceDetails']);
-  assert.deepEqual([...RESEARCHED_GATED_FIELDS], ['heroHeadline', 'heroSubheadline', 'formHeadline', 'faqItems', 'reviewFeatured', 'reviewContext', 'heroCta', 'trustBarItems', 'servicesHeadline']);
+  // M2b.1f (eval 18/18): no rendered field is warn-only any more; every rendered field is gated.
+  assert.deepEqual([...RESEARCHED_RENDERED_WARN_ONLY_FIELDS], []);
+  assert.deepEqual([...RESEARCHED_GATED_FIELDS], [...RESEARCHED_RENDERED_FIELDS]);
   const site = briefGateContext(brief('leak-detection'), {});
-  // A money page renders (and generates) no services headline.
-  assert.deepEqual(site.renderedFields, RESEARCHED_GATED_FIELDS.filter(field => field !== 'servicesHeadline'));
-  assert.deepEqual(briefGateContext(brief('services', 'service_hub'), {}).renderedFields, [...RESEARCHED_GATED_FIELDS]);
+  // A money page renders (and generates) none of the home/hub-only fields.
+  assert.deepEqual(site.renderedFields, RESEARCHED_GATED_FIELDS.filter(field => !RESEARCHED_HOME_HUB_ONLY_FIELDS.includes(field)));
+  const hubSite = briefGateContext(brief('services', 'service_hub'), {});
+  assert.deepEqual(hubSite.renderedFields, [...RESEARCHED_GATED_FIELDS]);
+  // The warn-only mechanism (kept for future voice rounds), via an injected list: a voice hit on a rendered field held
+  // warn-only is a warning; with the default (empty) list it blocks; fact / trust gates block either way.
+  const heldHub = { renderedFields: researchedGatedFieldsFor('service_hub', ['serviceDetails']) };
+  assert.ok(!heldHub.renderedFields.includes('serviceDetails') && heldHub.renderedFields.includes('aboutPageBody'));
+  assert.equal(isWarningHit({ field: 'serviceDetails[0].description', rule: GATE_RULES.beforeCap }, heldHub), true);
+  assert.equal(isWarningHit({ field: 'serviceDetails[0].description', rule: GATE_RULES.beforeCap }, hubSite), false);
+  for (const rule of ALWAYS_BLOCKING_RULES) assert.equal(isWarningHit({ field: 'serviceDetails[0].description', rule }, heldHub), false, rule);
   assert.equal(isWarningHit({ field: 'aboutBlurb', rule: GATE_RULES.signatureRepeat }, site), true);
   assert.equal(isWarningHit({ field: 'serviceDetails[2].description', rule: GATE_RULES.beforeCap }, site), true);
   assert.equal(isWarningHit({ field: 'heroSubheadline', rule: GATE_RULES.signatureRepeat }, site), false);

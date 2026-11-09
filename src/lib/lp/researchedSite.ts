@@ -307,22 +307,10 @@ export const RESEARCHED_RENDERED_FIELDS: readonly string[] = [
  * M2b.1: rendered fields whose voice-gate hits stay warnings until the next Tamar/Noa voice round. Fact/trust gates
  * (copyGates.ts ALWAYS_BLOCKING_RULES) still fail these fields. Remove a field from this list to make it a hard gate.
  * M2b.1d (Tamar section 22.4): trustBarItems and servicesHeadline are hard gates now; serviceDetails, aboutPageHeadline and
- * aboutPageBody stay warn-only until the 18-run eval with all five blocking clears >= 16/18 (RESEARCHED_ALL_FIELDS_BLOCKING_ENV).
+ * aboutPageBody stay warn-only until the 18-run eval with all five blocking clears >= 16/18.
+ * M2b.1f (2026-11-09): that eval cleared 18/18 (US$3.18, 0 final gate hits), so all five are hard gates; the list is empty.
  */
-export const RESEARCHED_RENDERED_WARN_ONLY_FIELDS: readonly string[] = ['aboutPageHeadline', 'aboutPageBody', 'serviceDetails'];
-
-/**
- * M2b.1d: the eval switch. With this environment variable set to "1", RESEARCHED_RENDERED_WARN_ONLY_FIELDS is ignored, so
- * all five M2b fields (trustBarItems, servicesHeadline, serviceDetails, aboutPageHeadline, aboutPageBody) block. Default off.
- * Read at call time (researchedWarnOnlyFields), so an eval process can set it without a rebuild.
- */
-export const RESEARCHED_ALL_FIELDS_BLOCKING_ENV = 'SITE_BOT_M2B_ALL_FIELDS_BLOCKING';
-
-/** The warn-only fields in force: RESEARCHED_RENDERED_WARN_ONLY_FIELDS, or none with the eval switch on. */
-export function researchedWarnOnlyFields(): readonly string[] {
-  const env = typeof process !== 'undefined' ? process.env?.[RESEARCHED_ALL_FIELDS_BLOCKING_ENV] : undefined;
-  return env === '1' ? [] : RESEARCHED_RENDERED_WARN_ONLY_FIELDS;
-}
+export const RESEARCHED_RENDERED_WARN_ONLY_FIELDS: readonly string[] = [];
 
 /** The fields whose gate hits fail a research page (copyGates renderedFields): rendered minus the default warn-only set. */
 export const RESEARCHED_GATED_FIELDS: readonly string[] = RESEARCHED_RENDERED_FIELDS.filter(field => !RESEARCHED_RENDERED_WARN_ONLY_FIELDS.includes(field));
@@ -339,12 +327,13 @@ export function rendersSiteSections(classification: string): boolean {
 }
 
 /**
- * The gated fields of one page type (M2b.1b): the rendered fields minus the warn-only fields in force (M2b.1d:
- * researchedWarnOnlyFields, so the eval switch applies), minus the home/hub-only fields on a page type that does not render
- * them, so a field is never gated where it is not shown (M2b.1d: those pages do not generate them either).
+ * The gated fields of one page type (M2b.1b): the rendered fields minus the warn-only fields (default
+ * RESEARCHED_RENDERED_WARN_ONLY_FIELDS; M2b.1f: injectable, so the warn-only mechanism stays testable while the list is
+ * empty), minus the home/hub-only fields on a page type that does not render them, so a field is never gated where it is
+ * not shown (M2b.1d: those pages do not generate them either). M2b.1f removed the SITE_BOT_M2B_ALL_FIELDS_BLOCKING eval
+ * switch: with the list empty, all fields block by default.
  */
-export function researchedGatedFieldsFor(classification: string): readonly string[] {
-  const warnOnly = researchedWarnOnlyFields();
+export function researchedGatedFieldsFor(classification: string, warnOnly: readonly string[] = RESEARCHED_RENDERED_WARN_ONLY_FIELDS): readonly string[] {
   const gated = RESEARCHED_RENDERED_FIELDS.filter(field => !warnOnly.includes(field));
   return rendersSiteSections(classification) ? gated : gated.filter(field => !RESEARCHED_HOME_HUB_ONLY_FIELDS.includes(field));
 }
