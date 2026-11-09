@@ -6,7 +6,7 @@
 import type { CollectedData } from '../bot/prompts';
 import type { PageBrief } from '../site-bot/research/pageBrief';
 import type { PageClassification } from '../site-bot/research/pagePortfolio';
-import type { SiteCopy } from './lpCopyPrompt';
+import { primaryCtaLabel, type SiteCopy } from './lpCopyPrompt';
 import { CONTACT_TITLE_PREFIX } from './generationData';
 import { heroAnchorMissing } from './copyGates';
 import type { RenderSitePagesParams } from './renderSitePages';
@@ -21,7 +21,10 @@ import {
   pageScript,
   renderSitePages,
   stickyHeader,
+  trustBarSection,
 } from './renderSitePages';
+import { listedServedAreas } from '../site-bot/servedAreas';
+import { RESEARCHED_SITE_LABELS } from './researchedSiteLabels';
 
 const RESERVED_SEGMENTS = new Set(['api', 'assets', 'static', 'index', 'privacy', 'accessibility', 'contact', 'sitemap']);
 const RENDERABLE_CLASSES = new Set<PageClassification>([
@@ -261,12 +264,91 @@ export function researchedPageTitle(page: ResearchedSitePage, businessName: stri
 }
 
 /**
- * M2a.7: the copy fields buildPageHtml (and the contact page, from the home copy) actually shows on a research site:
- * the hero headline (as the H1), the hero subheadline (also the meta description), the form headline, the FAQ and the
- * review pair. Gate hits on every other field are warnings until M2b renders them (copyGates.ts ALWAYS_BLOCKING_RULES
- * still fail everywhere). M2b: when a field starts rendering, add it here; this is the only list to change.
+ * The copy fields buildPageHtml (and the contact page, from the home copy) actually shows on a research site.
+ * M2a.7: the hero headline (as the H1), the hero subheadline (also the meta description), the form headline, the FAQ
+ * and the review pair. M2b.1: the hero call button label (heroCta), the trust bar, the about section
+ * (aboutPageHeadline + aboutPageBody), the service cards (servicesHeadline + serviceDetails).
+ * Not rendered (still warnings): aboutBlurb, serviceItems, faqHeadline, guaranteeBlock, responseTimeBadge,
+ * scarcityLine, stickyBarLine. When a field starts rendering, add it here.
  */
-export const RESEARCHED_RENDERED_FIELDS: readonly string[] = ['heroHeadline', 'heroSubheadline', 'formHeadline', 'faqItems', 'reviewFeatured', 'reviewContext'];
+export const RESEARCHED_RENDERED_FIELDS: readonly string[] = [
+  'heroHeadline', 'heroSubheadline', 'formHeadline', 'faqItems', 'reviewFeatured', 'reviewContext',
+  'heroCta', 'trustBarItems', 'aboutPageHeadline', 'aboutPageBody', 'servicesHeadline', 'serviceDetails',
+];
+
+/**
+ * M2b.1: rendered fields whose voice-gate hits stay warnings until the next Tamar/Noa voice round. Gating them now
+ * drops the fixture below the M2a bar (>= 9/10 valid): no-repair re-score of the M2a.7 eval final copy, 17/18 valid
+ * today; gating all of them 2/18; one at a time trustBarItems 16/18, servicesHeadline 13/18, serviceDetails 13/18,
+ * aboutPageBody 9/18, aboutPageHeadline 8/18 (heroCta 17/18, gated). Fact/trust gates (copyGates.ts
+ * ALWAYS_BLOCKING_RULES) still fail these fields. Remove a field from this list to make it a hard gate.
+ */
+export const RESEARCHED_RENDERED_WARN_ONLY_FIELDS: readonly string[] = ['trustBarItems', 'aboutPageHeadline', 'aboutPageBody', 'servicesHeadline', 'serviceDetails'];
+
+/** The fields whose gate hits fail a research page (copyGates renderedFields): rendered minus the warn-only set. */
+export const RESEARCHED_GATED_FIELDS: readonly string[] = RESEARCHED_RENDERED_FIELDS.filter(field => !RESEARCHED_RENDERED_WARN_ONLY_FIELDS.includes(field));
+
+const PHONE_EMOJI = '\u{1F4DE}';
+
+/**
+ * tel: href in E.164 for an Israeli number (national 0XXXXXXXX / 0XXXXXXXXX, or +972 / 972 forms), else null
+ * (the hero call button is then omitted; the header keeps its legacy link).
+ */
+export function israeliPhoneE164(raw: string | undefined): string | null {
+  const compact = (raw ?? '').replace(/[^\d+]/g, '');
+  const national = compact.startsWith('+972') ? `0${compact.slice(4)}` : compact.startsWith('972') ? `0${compact.slice(3)}` : compact;
+  return /^0[1-9]\d{7,8}$/.test(national) ? `+972${national.slice(1)}` : null;
+}
+
+/**
+ * Hero call button (M2b.1, Eitan-approved). Label: the page's heroCta on a phone site (it is the system call
+ * label there, Tamar section 20.7); on a WhatsApp- or form-first site the default call label. Number in an LTR
+ * isolate, href in E.164, 48px tap target.
+ */
+function heroCallButton(page: ResearchedSitePage, data: CollectedData, theme: RenderResearchedSitePagesParams['theme']): string {
+  const phone = (data.phone ?? '').trim();
+  const href = israeliPhoneE164(phone);
+  if (!href) return '';
+  const callLabel = primaryCtaLabel({});
+  const label = primaryCtaLabel(data) === callLabel && page.copy.heroCta ? page.copy.heroCta : callLabel;
+  return `<div style="margin-top:22px;"><a href="tel:${href}" data-hero-call style="display:inline-flex;align-items:center;justify-content:center;gap:10px;min-height:48px;min-width:44px;padding:12px 26px;background:${theme.ctaGradient};color:#fff;border-radius:${theme.radiusSm};font-weight:800;font-size:1.05rem;"><span aria-hidden="true">${PHONE_EMOJI}</span><span>${esc(label)}</span><bdi dir="ltr">${esc(phone)}</bdi></a></div>`;
+}
+
+const nonEmpty = (value: unknown): value is string => typeof value === 'string' && value.trim() !== '';
+
+/** Trust bar (M2b.1): the page's trustBarItems; nothing when empty. */
+function trustBar(page: ResearchedSitePage, theme: RenderResearchedSitePagesParams['theme']): string {
+  const items = (page.copy.trustBarItems ?? []).filter(nonEmpty);
+  return items.length ? trustBarSection(theme, items) : '';
+}
+
+/** Service cards (M2b.1): servicesHeadline as the H2 (only with cards), one H3 card per serviceDetails item. */
+function serviceDetailsSection(page: ResearchedSitePage, theme: RenderResearchedSitePagesParams['theme']): string {
+  const cards = (page.copy.serviceDetails ?? []).filter(item => item && nonEmpty(item.name)).map(item => `<div style="background:${theme.surface};border:1px solid ${theme.border};border-radius:${theme.radiusMd};padding:20px;border-inline-start:3px solid ${theme.accent};"><h3 style="font-weight:700;font-size:1rem;color:${theme.primary};margin-bottom:8px;">${esc(item.name)}</h3>${nonEmpty(item.description) ? `<p style="color:${theme.textMuted};font-size:0.9rem;line-height:1.5;">${esc(item.description)}</p>` : ''}</div>`).join('');
+  if (!cards) return '';
+  const heading = nonEmpty(page.copy.servicesHeadline) ? `<h2 style="font-size:1.35rem;color:${theme.primary};margin-bottom:20px;text-align:center;">${esc(page.copy.servicesHeadline)}</h2>` : '';
+  return `<section data-section="service-details" style="padding:36px 20px;background:${theme.surfaceAlt};"><div style="max-width:760px;margin:0 auto;">${heading}<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;">${cards}</div></div></section>`;
+}
+
+/** About (M2b.1): aboutPageHeadline as the H2 (only with a body), aboutPageBody; nothing without a body. */
+function aboutSection(page: ResearchedSitePage, theme: RenderResearchedSitePagesParams['theme']): string {
+  if (!nonEmpty(page.copy.aboutPageBody)) return '';
+  const heading = nonEmpty(page.copy.aboutPageHeadline) ? `<h2 style="font-size:1.35rem;color:${theme.primary};margin-bottom:14px;">${esc(page.copy.aboutPageHeadline)}</h2>` : '';
+  return `<section data-section="about" style="padding:36px 20px;background:${theme.surface};"><div style="max-width:700px;margin:0 auto;text-align:center;">${heading}<p style="color:${theme.textMuted};line-height:1.7;">${esc(page.copy.aboutPageBody)}</p></div></section>`;
+}
+
+/**
+ * Service areas (M2b.1, Yonatan: base page only, no city pages): the owner-named localities
+ * (collectedData.servedAreaNames.listed, max 3; overflow never rendered). Homepage only; nothing when empty.
+ * Schema areaServed is unchanged (page.seo.serviceArea).
+ */
+function serviceAreasSection(page: ResearchedSitePage, data: CollectedData, theme: RenderResearchedSitePagesParams['theme']): string {
+  if (page.classification !== 'homepage') return '';
+  const areas = listedServedAreas(data);
+  if (!areas.length) return '';
+  const items = areas.map(name => `<li style="background:${theme.surface};border:1px solid ${theme.border};border-radius:${theme.radiusSm};padding:8px 16px;font-weight:600;color:${theme.textPrimary};">${esc(name)}</li>`).join('');
+  return `<section data-section="service-areas" aria-labelledby="service-areas-heading" style="padding:32px 20px;background:${theme.surfaceAlt};"><div style="max-width:700px;margin:0 auto;text-align:center;"><h2 id="service-areas-heading" style="font-size:1.25rem;color:${theme.primary};margin-bottom:14px;">${esc(RESEARCHED_SITE_LABELS.serviceAreasHeading)}</h2><ul role="list" style="list-style:none;display:flex;flex-wrap:wrap;gap:10px;justify-content:center;">${items}</ul></div></section>`;
+}
 
 function buildPageHtml(page: ResearchedSitePage, params: RenderResearchedSitePagesParams, siteUrl: string, output: string, allPages: ResearchedSitePage[], outputs: Map<string, string>): string {
   const { theme, data, heroImageUrl, slug } = params;
@@ -287,9 +369,13 @@ function buildPageHtml(page: ResearchedSitePage, params: RenderResearchedSitePag
   });
   const body = `${stickyHeader(theme, businessName, phone, phoneHref)}
   <main>
-    <section style="padding:44px 20px;background:${theme.surface};text-align:center;"><div style="max-width:700px;margin:0 auto;"><h1 style="color:${theme.primary};font-size:clamp(1.6rem,4vw,2.3rem);margin-bottom:16px;">${esc(researchedPageH1(page.copy.heroHeadline, page.seo))}</h1><p style="color:${theme.textMuted};line-height:1.7;">${esc(page.copy.heroSubheadline)}</p></div></section>
+    <section style="padding:44px 20px;background:${theme.surface};text-align:center;"><div style="max-width:700px;margin:0 auto;"><h1 style="color:${theme.primary};font-size:clamp(1.6rem,4vw,2.3rem);margin-bottom:16px;">${esc(researchedPageH1(page.copy.heroHeadline, page.seo))}</h1><p style="color:${theme.textMuted};line-height:1.7;">${esc(page.copy.heroSubheadline)}</p>${heroCallButton(page, data, theme)}</div></section>
+    ${trustBar(page, theme)}
     ${links ? `<nav aria-label="Related pages" style="padding:20px;display:flex;flex-wrap:wrap;gap:14px;justify-content:center;background:${theme.surfaceAlt};">${links}</nav>` : ''}
+    ${serviceDetailsSection(page, theme)}
     ${reviewSection(page, theme)}
+    ${aboutSection(page, theme)}
+    ${serviceAreasSection(page, data, theme)}
     ${faq ? `<section style="padding:32px 20px;background:${theme.surfaceAlt};"><div style="max-width:700px;margin:0 auto;display:flex;flex-direction:column;gap:12px;">${faq}</div></section>` : ''}
     ${leadFormSection(theme, page.copy.formHeadline, page.copy.heroCta, RESEARCHED_LEAD_FORM)}
   </main>
