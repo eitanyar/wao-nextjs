@@ -24,6 +24,7 @@
 import { createHash } from 'node:crypto';
 import type { CollectedData } from '../bot/prompts';
 import { SERVICE_LABEL_PINS } from '../lp/generationData';
+import { listedServedAreas } from './servedAreas';
 
 /**
  * Pinned display label for an owner service wording (M2a.2, item 4: Noa / Yonatan
@@ -110,10 +111,9 @@ export function validModelLabel(value: unknown): string {
   return label.length >= 2 && label.length <= MAX_LABEL_CHARS && HEBREW_LABEL.test(label) && HEBREW.test(label) ? label : '';
 }
 
-/** M1: localities the owner named in travelBoundary (listed only, max 3; overflow is never used). */
+/** M1: localities the owner named in travelBoundary (listed only; overflow is never used). M2b.1g: servedAreas.listedServedAreas. */
 function namedServedAreas(data: CollectedData): string[] {
-  const listed = data.servedAreaNames?.listed;
-  return Array.isArray(listed) ? listed.filter((item): item is string => typeof item === 'string').slice(0, 3) : [];
+  return listedServedAreas(data);
 }
 
 /**

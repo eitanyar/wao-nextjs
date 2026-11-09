@@ -36,6 +36,7 @@ import {
   SUBJECT_CARRY_TOKENS,
   TEMPLATE_STRINGS,
   THERMAL_TOKENS,
+  USP_TOOL_GROUPS,
   WAO_SERVICE_TERMS_DATA,
   WE_FORM_VERBS,
   WE_TOKENS_DATA,
@@ -152,7 +153,7 @@ function brief(pageName: string, labels: string[], sources: string[], pageClass 
 test('M2a.3 1: generationData.ts carries data sections 6-13 byte-exact; config lists extend / replace the M2a.1 lists; --check passes', () => {
   const text = fs.readFileSync(DATA_FILE, 'utf8');
   const blocks = [...text.matchAll(/\n~~~json\n([\s\S]*?)\n~~~/g)].map(match => JSON.parse(match[1]));
-  assert.equal(blocks.length, 52); // M2a.4: 23; M2a.5 section 19 adds 9; M2a.6 section 20 adds 11; M2a.7 adds 5 (sections 20 and 21); M2b.1d adds 4 (section 22)
+  assert.equal(blocks.length, 60); // M2a.4: 23; M2a.5 section 19 adds 9; M2a.6 section 20 adds 11; M2a.7 adds 5 (sections 20 and 21); M2b.1d adds 4 (section 22); M2b.1g adds 8 (section 23)
   const data = Object.assign({}, ...blocks);
   assert.deepEqual([...CLAIM_TOKEN_WORD_END], data.claimTokenWordEnd);
   assert.deepEqual([...FIX_TIME_LEAD_TOKENS], data.fixTimeLeadTokens);
@@ -175,7 +176,8 @@ test('M2a.3 1: generationData.ts carries data sections 6-13 byte-exact; config l
   // M2a.4 round 2: the section 18 verbs follow the section 10 weTokens.
   assert.deepEqual(WE_FORM_TOKENS.slice(-(WE_TOKENS_DATA.length + WE_FORM_VERBS.length), -WE_FORM_VERBS.length).map(entry => [entry.token, entry.allowPrefix]), WE_TOKENS_DATA.map(token => [token, true]));
   assert.deepEqual(WAO_SERVICE_TERMS_HE.slice(-WAO_SERVICE_TERMS_DATA.length), [...WAO_SERVICE_TERMS_DATA]);
-  assert.deepEqual([...CLAIM_RULES.find(rule => rule.id === 'thermal')!.tokens], [...THERMAL_TOKENS]);
+  // M2b.1g (Adam): claim:thermal uses the narrower section 23 thermal `he` list; it supersedes section 12 for that rule.
+  assert.deepEqual([...CLAIM_RULES.find(rule => rule.id === 'thermal')!.tokens], [...USP_TOOL_GROUPS.thermal.he]);
   // Every list records its data-file section.
   for (const key of ['claimTokens', 'claimTokenWordEnd', 'fixTimeLeadTokens', 'fixTimeWithinWords', 'arrivalTokens', 'customerStems', 'speechVerbs', 'pluralAddressTokens', 'weTokens', 'waoServiceTerms', 'thermalTokens', 'templateStrings']) {
     assert.match(GUARD_TOKEN_SOURCES[key] ?? '', /^docs\/copy\/site-bot-generation-data\.md section \d+\. /, key);

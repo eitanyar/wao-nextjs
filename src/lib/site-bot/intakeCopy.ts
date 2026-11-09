@@ -40,6 +40,12 @@ export const INTAKE_COPY = {
   M1_Q2_TRAVEL_BOUNDARY: 'כמה רחוק אתה מוכן לנסוע, ואילו אזורים אתה מכסה בדרך כלל?',
   M1_Q2_SERVICE_AREA: 'בוא נבין את אזור השירות — מאילו אזורים הלקוחות שלך מגיעים אליך בדרך כלל?',
   M1_Q3_USP: 'למה לבחור בך ולא במתחרה ממול? משהו קונקרטי, לא רק מקצועי ואמין.',
+
+  // M2b.1g (Yonatan's area cap, Eitan's concern): the travel-boundary step. Hint under the question; the reason and the
+  // swap hint when the answer names more than 2 towns besides the base city (the /site-bot/start intake chat).
+  M1_Q2_AREA_INTRO_HINT: 'העיר שלך כבר בפנים. אפשר להוסיף עד שתי ערים קרובות שבהן אתה באמת עובד.',
+  M1_Q2_AREA_LIMIT_REASON: 'גוגל מראה עסקים בעיקר למי שמחפש קרוב אליהם, ולכן עוד עיר ברשימה כמעט לא מוסיפה לך פניות.',
+  M1_Q2_AREA_LIMIT_SWAP_HINT: 'אפשר להסיר עיר ולהוסיף אחרת במקומה.',
 } as const;
 
 export type IntakeCopyKey = keyof typeof INTAKE_COPY;

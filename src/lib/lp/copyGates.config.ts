@@ -23,11 +23,13 @@
 
 import {
   CLAIM_TOKENS,
+  FACT_REPEAT_MAX_DATA,
+  FACT_PHRASE_REPEAT_MAX_DATA,
   GUARD_TOKEN_SOURCES,
   PLURAL_ADDRESS_TOKENS_DATA,
   PLURAL_PREFIX_MODES,
   PRICE_LOCK_TOKENS,
-  THERMAL_TOKENS,
+  USP_TOOL_GROUPS,
   WAO_SERVICE_TERMS_DATA,
   WE_FORM_VERBS,
   WE_TOKENS_DATA,
@@ -153,8 +155,10 @@ export const SAME_DAY_ARRIVAL_FIELD = 'responseTime';
 /** Claims rejected unless they are in the owner facts. */
 export const CLAIM_RULES: readonly ClaimRule[] = [
   { id: 'warranty', tokens: ["אחריות"], ownerFields: ['guarantee'], ownerKeywords: ['warranty', 'guarantee'], source: "noa: אחריות מלאה (e5:66)" },
-  // M2a.3: Noa data section 12 replaces the single M2a.1 token (the first token also covers its inflections as a substring).
-  { id: 'thermal', tokens: THERMAL_TOKENS, ownerFields: [], ownerKeywords: ['thermal'], source: GUARD_TOKEN_SOURCES.thermalTokens },
+  // M2a.3: Noa data section 12 replaced the single M2a.1 token. M2b.1g (Adam, from Noa's section 23 note): the section 23
+  // thermal `he` list SUPERSEDES section 12 here. The bare section 12 stem also hit ordinary trade words (AC pipe insulation,
+  // an electrical thermal breaker / relay); the section 23 list keeps only the camera / scan forms.
+  { id: 'thermal', tokens: USP_TOOL_GROUPS.thermal.he, ownerFields: [], ownerKeywords: ['thermal'], source: GUARD_TOKEN_SOURCES.uspToolGroups },
   // M2a.2: Noa's claimTokens (docs/copy/site-bot-generation-data.md section 2), loaded by script.
   { id: 'street_address', tokens: claimTokens('street_address'), ownerFields: ['streetAddress'], ownerKeywords: [], source: 'noa data §2' },
   { id: 'walk_in', tokens: claimTokens('walk_in'), ownerFields: [], ownerKeywords: ['walk-in', 'walk in', 'no appointment', 'without an appointment'], source: 'noa data §2' },
@@ -190,13 +194,13 @@ export const CLAIM_EXCLUDED_FACT_FIELDS: readonly string[] = ['reviewQuote', 'st
  * phrases counted per page. Contact, internal and customer fields are excluded.
  */
 export const FACT_PHRASE_FIELDS: readonly string[] = ['yearsInField', 'guarantee', 'license', 'usp', 'responseTime', 'pricingNotes'];
-/** A fact phrase (owner digit run) may appear at most this many times per page. */
-export const FACT_REPEAT_MAX = 2;
+/** A fact phrase (owner digit run) may appear at most this many times per page. M2b.1g: from section 23.2 (f). */
+export const FACT_REPEAT_MAX: number = FACT_REPEAT_MAX_DATA;
 /**
  * M2a.4: the phrase-level cap was over-firing (generic two-word heads such as a price-quote phrase).
  * A proof phrase may appear in at most this many gated fields per page; repeats inside one field count once.
  */
-export const FACT_PHRASE_REPEAT_MAX = 3;
+export const FACT_PHRASE_REPEAT_MAX: number = FACT_PHRASE_REPEAT_MAX_DATA;
 
 /** M2a.4: minimum length (characters) of a serviceDetails description on research-bound sites. */
 export const SERVICE_DESCRIPTION_MIN_CHARS = 30;
@@ -212,6 +216,16 @@ export const FACT_PHRASE_TEXT_FIELDS: readonly string[] = ['guarantee', 'pricing
  * response time once by design. System-filled fields are never gated.
  */
 export const FACT_PHRASE_EXEMPT_FIELDS: readonly string[] = ['trustBarItems', 'guaranteeBlock', 'responseTimeBadge'];
+/**
+ * M2b.1g (Adam's decisions on Noa's section 23 flags; byte-exact from Noa's language-qa report, approved by Adam):
+ * - CAMERA_SATISFIES_ONLY: the camera verb form. It satisfies uspToolRequired for the camera group (and marks a Hebrew usp
+ *   as naming the camera), but it is NOT a foreignTool stem: an owner without a camera may still use the verb.
+ * - WARRANTY_SPELLED_DURATION_SOURCE: spelled-out durations, matched after the definite warranty exactly like the digit
+ *   form of WARRANTY_DEFINITE_BARE_DURATION (a RegExp source; top-level alternation).
+ */
+export const CAMERA_SATISFIES_ONLY: readonly string[] = ['מצלם'];
+export const WARRANTY_SPELLED_DURATION_SOURCE = '(?:שלוש|ארבע|חמש|עשר)\\s+שנים|(?:שלושה|ארבעה|חמישה|שישה|תשעה)\\s+חודשים';
+
 /** A phrase key is two adjacent Hebrew words with at least this many letters each. */
 export const FACT_PHRASE_MIN_WORD_LETTERS = 3;
 /** Only the first words of each source clause (the head of the proof point) form phrase keys. */

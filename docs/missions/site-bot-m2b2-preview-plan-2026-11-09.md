@@ -52,6 +52,10 @@ Everything flag-gated (`SITE_BOT_PAID_FLOW==='1' && NODE_ENV!=='production'` —
   `deploy-client-auth.security.test.mjs` + "deploy does not import previewSession/previewStore".
 - Engineer never authors Hebrew: `PREVIEW_COPY` keys start as `__HE_TODO_` + `PREVIEW_COPY_PENDING` flag (S7 fills).
 - Aside (separate S fix): `admin-auth.ts verifyAdminToken` uses `===` for the signature, not constant-time.
+- **S6 areas confirm (M2b.1g):** use the same cap as the intake, `MAX_LISTED_SERVED_AREAS` (2 besides the base city,
+  `src/lib/site-bot/servedAreas.ts`), and the same strings (`INTAKE_COPY.M1_Q2_AREA_LIMIT_REASON` /
+  `M1_Q2_AREA_LIMIT_SWAP_HINT`): never drop a town silently; over the cap, show the reason and let the owner swap.
+  Records written before M2b.1g may list 3 (`STORED_LISTED_SERVED_AREAS_MAX`); honour them, never re-cut.
 
 ## Acceptance (slices, in order — one engineer run each)
 - **S1** host helper + `previewRender` pure transform (S). No `index,follow`/canonical/og:url/`<script`/external

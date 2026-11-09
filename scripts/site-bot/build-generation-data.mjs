@@ -30,6 +30,10 @@
 //   keywords, the aboutHeadlineNoPromise list names, the servicesHeadlineOptions closed set, the trust-bar filler phrases
 //   and size caps, and the English prompt rules B1-B6 (with their indented sub-lines), all byte-exact; plus asserted
 //   English sentences for every section 22 rule the gate code implements without data.
+// - M2b.1g: section 23 voiceRules M2b.2 (Tamar, Noa-proofed): the usp tool groups (uspToolRequired / foreignTool), the
+//   about-headline / about-card / card-phrase echo settings, the city-prefix letters and list joins, the place-list build,
+//   the ba-initial places (tests), the fact-count scope, the definite-warranty pattern, the period fields, and the English
+//   prompt rules C1-C6 (with their sub-lines); plus the B5 / B6 lines that C2 / C1 replace and asserted English sentences.
 // This file has no Hebrew literals. Idempotent.
 //   node scripts/site-bot/build-generation-data.mjs [--check]
 import fs from 'node:fs';
@@ -55,7 +59,7 @@ export function jsonBlocks(text) {
 
 /** Expected entry counts per data list (asserted; a data edit must update these deliberately). */
 export const EXPECTED_COUNTS = {
-  jsonBlocks: 52, // M2a.7: + heroCapConceptAdditions, differentiatorUspKeywords, prepositionSkipAdverbs, wrongPrepositionTokens, section 21. M2b.1d: + 4 section 22 blocks.
+  jsonBlocks: 60, // M2a.7: + heroCapConceptAdditions, differentiatorUspKeywords, prepositionSkipAdverbs, wrongPrepositionTokens, section 21. M2b.1d: + 4 section 22 blocks. M2b.1g: + 8 section 23 blocks.
   claimKinds: 11,
   claimTokens: 59,
   claimTokenWordEnd: 3,
@@ -164,6 +168,21 @@ export const EXPECTED_COUNTS = {
   trustBarFillerPhrases: 11,
   m2bPromptRules: 6,
   m2bRuleSubLines: 30,
+  // M2b.1g, section 23 (recounted from the file).
+  uspToolGroups: 3,
+  uspToolKeywords: 9,
+  uspToolHeStems: 13,
+  aboutHeadlineFailWhen: 2,
+  cityPrefixLetters: 3,
+  cityPrefixListJoins: 2,
+  bInitialPlaces: 14,
+  factPhraseExemptFieldsResearch: 2,
+  sentenceFinalPeriodFields: 2,
+  noFinalPeriodFields: 10,
+  m2b2PromptRules: 6,
+  m2b2RuleSubLines: 19,
+  b5ReplacedLines: 4,
+  b6ReplacedLines: 1,
 };
 
 /** Text of one data-file section (from its "## N." heading to the next heading). */
@@ -439,6 +458,71 @@ export function voiceProseM2b(text, numbers) {
   assertProse(section, '- **`service_details_opener` (106)**: R5 makes', 'service_details_opener deleted');
   assertProse(section, '- **`duplicate_about_opening` (25)**: at most two about bodies render per site, so keep the check only for the homepage against the hub.', 'duplicate_about_opening scope');
   return { promptRules, everyPageRuleIds };
+}
+
+/**
+ * M2b.1g, section 23 prose (Tamar M2b.2): the English prompt rules C1-C6 (with their indented sub-lines, byte-exact), the
+ * rules that apply on every page, the B5 / B6 lines that C2 / C1 replace (removed from the section 22 rules in the prompt),
+ * and asserted English sentences for every section 23 ruling the gate code implements. Every value is a byte-exact slice.
+ */
+export function voiceProseM2b2(text, m2bRules) {
+  const section = sectionText(text, 23);
+  const rulesAt = section.indexOf('### 23.3');
+  const rulesEnd = section.indexOf('### 23.4');
+  assert(rulesAt >= 0 && rulesEnd > rulesAt, 'section 23.3 missing');
+  const lines = section.slice(rulesAt, rulesEnd).split('\n');
+  const promptRules = [];
+  lines.forEach((line, index) => {
+    if (!/^- \*\*C\d \u2014 /.test(line)) return;
+    const subs = [];
+    for (let next = index + 1; next < lines.length && lines[next].startsWith('  '); next++) subs.push(lines[next]);
+    promptRules.push({ id: /^- \*\*(C\d)/.exec(line)[1], text: [line.slice(2).replace(/\*\*/g, ''), ...subs].join('\n') });
+  });
+  assert(promptRules.length === EXPECTED_COUNTS.m2b2PromptRules, `expected ${EXPECTED_COUNTS.m2b2PromptRules} section 23 prompt rules, got ${promptRules.length}`);
+  assert(promptRules.map(rule => rule.id).join(',') === 'C1,C2,C3,C4,C5,C6', 'section 23 prompt rules out of order');
+  const subLines = promptRules.reduce((sum, rule) => sum + rule.text.split('\n').length - 1, 0);
+  assert(subLines === EXPECTED_COUNTS.m2b2RuleSubLines, `expected ${EXPECTED_COUNTS.m2b2RuleSubLines} section 23 rule sub-lines, got ${subLines}`);
+  const scope = /These apply on pages that render the about section and the service cards \(the homepage and the services hub\), except (C\d) and (C\d), which apply on every page\. Sections 19, 20 and 22 still apply\. (C\d) replaces the example at the end of (B\d)\. (C\d) replaces the option list in (B\d)\./.exec(section);
+  assert(scope, 'section 23.3 page-scope sentence changed');
+  const everyPageRuleIds = [scope[1], scope[2]];
+  for (const id of everyPageRuleIds) assert(promptRules.some(rule => rule.id === id), 'a section 23 every-page rule is not a section 23 rule');
+  assert(scope[3] === 'C1' && scope[4] === 'B6' && scope[5] === 'C2' && scope[6] === 'B5', 'section 23.3 replacement targets changed: update the B5 / B6 cut');
+  // C1 replaces the example bullet of B6; C2 replaces the option list of B5 (its lead-in line and the nested options).
+  const b5 = m2bRules.find(rule => rule.id === 'B5');
+  const b6 = m2bRules.find(rule => rule.id === 'B6');
+  assert(b5 && b6, 'section 22 B5 / B6 missing');
+  const b6Lines = b6.text.split('\n').filter(line => line.startsWith('  - **Example of the move'));
+  assert(b6Lines.length === EXPECTED_COUNTS.b6ReplacedLines, `expected ${EXPECTED_COUNTS.b6ReplacedLines} B6 example line, got ${b6Lines.length}`);
+  const b5All = b5.text.split('\n');
+  const leadAt = b5All.findIndex(line => /^  - At most \d+ words, built from one of:$/.test(line));
+  assert(leadAt > 0, 'section 22 B5 option-list lead-in missing');
+  let end = leadAt + 1;
+  while (end < b5All.length && b5All[end].startsWith('    - ')) end++;
+  const b5Lines = b5All.slice(leadAt, end);
+  assert(b5Lines.length === EXPECTED_COUNTS.b5ReplacedLines, `expected ${EXPECTED_COUNTS.b5ReplacedLines} B5 option-list lines, got ${b5Lines.length}`);
+  const replaced = { B5: b5Lines, B6: b6Lines };
+  const m2bRulesAfterM2b2 = m2bRules.map(rule => {
+    const drop = replaced[rule.id];
+    return drop ? { id: rule.id, text: rule.text.split('\n').filter(line => !drop.includes(line)).join('\n') } : rule;
+  });
+  // 23.2: the gate rulings the code implements (an edit to any of these sentences must be reviewed against copyGates.ts).
+  assertProse(section, "- **Tool groups**: an owner's usp matches a group when it contains one of the group's `uspKeywords` (English: lower-case it, then plain substring) or one of its `he` stems (Hebrew usp: plain substring).", 'tool groups match');
+  assertProse(section, "- **`uspToolRequired`**: on a page that renders the about section, when the usp matches a group, `aboutPageBody` must contain one of that group's `he` stems.", 'uspToolRequired');
+  assertProse(section, "- **`foreignTool`**: any rendered field that contains a `he` stem of a group the usp does not match fails. It goes into `ALWAYS_BLOCKING_RULES`", 'foreignTool');
+  assertProse(section, 'A hit inside an owner-confirmed service label is exempt', 'foreignTool label exemption');
+  assertProse(section, '- **A thermal match also counts as a camera match.**', 'thermal counts as camera');
+  assertProse(section, '- it shares a digit run with any `trustBarItems` entry on the same page', 'aboutHeadlineNoTrustRepeat digits');
+  assertProse(section, '- it contains any trimmed `trustBarItems` entry verbatim', 'aboutHeadlineNoTrustRepeat verbatim');
+  assertProse(section, '- **Extension (Noa)**: the same rule for \u05DC and \u05DE. The first place\'s locative letter is the last letter of its prefix (\u05D1, \u05DC or \u05DE), and every later place in the same list needs that same letter as the last letter of its prefix.', 'city prefix extension');
+  assertProse(section, '- **List joins only**: a later place belongs to the list only when the text between it and the previous place is ", " or a single space with the place\'s prefix starting with \u05D5.', 'city prefix list joins');
+  assertProse(section, "Don't add `city_prefix` to `ALWAYS_BLOCKING_RULES`.", 'city prefix not always blocking');
+  assertProse(section, '- **Scope**: count only the page\'s rendered fields.', 'fact count scope');
+  assertProse(section, '**the trust bar counts as one** on research sites.', 'trust bar counts as one');
+  assertProse(section, '- **Sentence fields**: each `serviceDetails[].description` and `aboutPageBody` ends with "." when it doesn\'t already end with . ! or ?. Code appends it.', 'sentence-final period');
+  assertProse(section, '- **Label fields** never end with ".". Code strips a trailing ".".', 'label period strip');
+  assertProse(section, '- **`heroSubheadline` is untouched.**', 'hero subheadline untouched');
+  assertProse(section, 'The engineer passes `guaranteeBlockRendered` into the prompt.', 'guaranteeBlockRendered');
+  return { promptRules, everyPageRuleIds, m2bRulesAfterM2b2, replacedLines: replaced };
 }
 
 /** Section 20.6: trade-term entries; the match rule is parsed ('substring', whole word with prefix letters, lead verb + word, none). */
@@ -743,6 +827,46 @@ export function extractGenerationData(text) {
   assert(Number.isInteger(trustBarMaxItems) && trustBarMaxItems > 0 && Number.isInteger(trustBarMaxChars) && trustBarMaxChars > 0, 'trustBarMaxItems / trustBarMaxChars must be positive integers');
   const prose22 = voiceProseM2b(text, { trustBarMaxItems, trustBarMaxChars });
 
+  // M2b.1g: section 23 voiceRules M2b.2.
+  const tools = merged.uspToolGroups;
+  assert(tools && typeof tools === 'object' && Object.keys(tools).join(',') === 'camera,acoustic,thermal', 'uspToolGroups must hold camera, acoustic and thermal');
+  assert(Object.keys(tools).length === EXPECTED_COUNTS.uspToolGroups, 'uspToolGroups group count');
+  for (const [group, entry] of Object.entries(tools)) {
+    assert(Object.keys(entry).join(',') === 'uspKeywords,he', `uspToolGroups.${group} must hold uspKeywords and he`);
+    for (const list of [entry.uspKeywords, entry.he]) assert(Array.isArray(list) && list.length > 0 && list.every(item => typeof item === 'string' && item.length > 0) && new Set(list).size === list.length, `uspToolGroups.${group} lists malformed`);
+    for (const keyword of entry.uspKeywords) assert(/^[a-z ]+$/.test(keyword), `uspToolGroups.${group} keyword is not lower-case English`);
+    for (const stem of entry.he) assert(/^[\u05D0-\u05EA ]+$/.test(stem), `uspToolGroups.${group} stem is not Hebrew`);
+  }
+  const toolKeywordCount = Object.values(tools).reduce((sum, entry) => sum + entry.uspKeywords.length, 0);
+  const toolStemCount = Object.values(tools).reduce((sum, entry) => sum + entry.he.length, 0);
+  assert(toolKeywordCount === EXPECTED_COUNTS.uspToolKeywords && toolStemCount === EXPECTED_COUNTS.uspToolHeStems, `expected ${EXPECTED_COUNTS.uspToolKeywords} tool keywords / ${EXPECTED_COUNTS.uspToolHeStems} stems, got ${toolKeywordCount} / ${toolStemCount}`);
+  assert(merged.uspToolRequired?.field === 'aboutPageBody' && merged.uspToolRequired?.scope === 'pages that render the about section', 'uspToolRequired changed: update the gate code');
+  assert(merged.foreignTool?.fields === 'every rendered field' && merged.foreignTool?.blocking === 'always' && merged.foreignTool?.exempt === 'a stem hit inside an owner-confirmed service label', 'foreignTool changed: update the gate code');
+  const trustRepeat = merged.aboutHeadlineNoTrustRepeat;
+  assert(trustRepeat?.field === 'aboutPageHeadline' && Array.isArray(trustRepeat.failWhen) && trustRepeat.failWhen.length === EXPECTED_COUNTS.aboutHeadlineFailWhen && trustRepeat.scope === 'pages that render the about section', 'aboutHeadlineNoTrustRepeat changed: update the gate code');
+  const echo = merged.aboutCardEcho;
+  assert(echo?.fields?.join(',') === 'aboutPageBody,serviceDetails[].description' && Number.isInteger(echo.minSharedWords) && echo.minSharedWords > 0 && echo.scope === 'pages that render the about section', 'aboutCardEcho changed: update the gate code');
+  assert(echo.tokenize === 'remove , . ; : ! ? and the em-dash; split on whitespace; maqaf, geresh and gershayim stay inside the word; ASCII hyphen inside a word becomes maqaf; strip one leading vav from every token; then exact token match', 'aboutCardEcho tokenizer changed: update the gate code');
+  const cardEcho = merged.cardPhraseEcho;
+  assert(cardEcho?.field === 'serviceDetails[].description' && Number.isInteger(cardEcho.minSharedWords) && Number.isInteger(cardEcho.minHebrewLettersPerWord) && cardEcho.tokenize === 'as aboutCardEcho' && cardEcho.severity.startsWith('warn'), 'cardPhraseEcho changed: update the gate code');
+  const cityPrefixLetters = stringList(merged.cityPrefixLetters, 'cityPrefixLetters');
+  for (const letter of cityPrefixLetters) assert(/^[\u05D0-\u05EA]$/.test(letter), 'a cityPrefixLetters entry is not one Hebrew letter');
+  const cityPrefixListJoins = stringList(merged.cityPrefixListJoins, 'cityPrefixListJoins');
+  const build = merged.placeListBuild;
+  assert(build && build.separator === cityPrefixListJoins[0] && typeof build.lastJoin === 'string' && /^[\u05D0-\u05EA]$/.test(build.lastJoin) && cityPrefixListJoins[1] === ` ${build.lastJoin}` && build.trustTilePrefix === '' && build.badgePrefixOnEveryPlace === true, 'placeListBuild changed: update the place-list code');
+  const bInitialPlaces = stringList(merged.bInitialPlaces, 'bInitialPlaces');
+  for (const place of bInitialPlaces) assert(place.startsWith(cityPrefixLetters[0]) && !place.includes('-'), 'a bInitialPlaces entry does not start with the first locative letter, or has an ASCII hyphen');
+  assert(merged.factCountScope === 'rendered fields of the page only', 'factCountScope changed: update the fact counters');
+  assert(Number.isInteger(merged.factRepeatMax) && Number.isInteger(merged.factPhraseRepeatMax), 'factRepeatMax / factPhraseRepeatMax must be integers');
+  const factPhraseExemptFieldsResearch = stringList(merged.factPhraseExemptFieldsResearch, 'factPhraseExemptFieldsResearch');
+  const warranty = merged.warrantyDefiniteBareDuration;
+  assert(warranty && typeof warranty.pattern === 'string' && warranty.flags === 'u' && warranty.fields === 'every rendered field', 'warrantyDefiniteBareDuration changed: update the gate code');
+  new RegExp(warranty.pattern, warranty.flags); // must compile
+  const sentenceFinalPeriodFields = stringList(merged.sentenceFinalPeriodFields, 'sentenceFinalPeriodFields');
+  const noFinalPeriodFields = stringList(merged.noFinalPeriodFields, 'noFinalPeriodFields');
+  for (const field of sentenceFinalPeriodFields) assert(!noFinalPeriodFields.includes(field), 'a field is both a sentence field and a label field');
+  const prose23 = voiceProseM2b2(text, prose22.promptRules);
+
   const sources = {
     claimTokens: sectionOf(text, 'claimTokens'),
     claimTokenWordEnd: sectionOf(text, 'claimTokenWordEnd'),
@@ -801,6 +925,10 @@ export function extractGenerationData(text) {
     servicesHeadlineOptions: `${sectionOf(text, 'servicesHeadlineOptions')} 22.2 (closed set; byte-identical after trimming; the system sets the first entry otherwise)`,
     trustBarFillerPhrases: `${sectionOf(text, 'trustBarFillerPhrases')} 22.2 (substring, trustBarItems only; exempt when verbatim in the owner facts)`,
     m2bPromptRules: `${DATA_PATH} section 22.3 (B1-B6, English, byte-exact; sub-lines kept; B2 on every page, the rest on homepage / services hub)`,
+    uspToolGroups: `${sectionOf(text, 'uspToolGroups')} 23.2 (uspToolRequired on aboutPageBody; foreignTool in every rendered field, always blocking; thermal counts as camera)`,
+    bInitialPlaces: `${sectionOf(text, 'bInitialPlaces')} 23.2 (tests and C5 only; never a gate input)`,
+    warrantyDefiniteBareDuration: `${sectionOf(text, 'warrantyDefiniteBareDuration')} 23.2 (every rendered field)`,
+    m2b2PromptRules: `${DATA_PATH} section 23.3 (C1-C6, English, byte-exact; sub-lines kept; C4 and C5 on every page; C1 / C2 replace the B6 example / B5 option list)`,
   };
   for (const value of Object.values(sources)) assert(!/[\u0590-\u05FF]/.test(value), 'a source heading has Hebrew');
 
@@ -883,6 +1011,21 @@ export function extractGenerationData(text) {
     trustBarMaxItems,
     trustBarMaxChars,
     voice22: prose22,
+    uspToolGroups: tools,
+    aboutCardEchoMinWords: echo.minSharedWords,
+    cardPhraseEchoMinWords: cardEcho.minSharedWords,
+    cardPhraseEchoMinLetters: cardEcho.minHebrewLettersPerWord,
+    cityPrefixLetters,
+    cityPrefixListJoins,
+    placeListBuild: build,
+    bInitialPlaces,
+    factRepeatMax: merged.factRepeatMax,
+    factPhraseRepeatMax: merged.factPhraseRepeatMax,
+    factPhraseExemptFieldsResearch,
+    warrantyDefiniteBareDuration: { pattern: warranty.pattern, flags: warranty.flags },
+    sentenceFinalPeriodFields,
+    noFinalPeriodFields,
+    voice23: prose23,
     sources,
   };
 }
@@ -1065,6 +1208,32 @@ ${emit('TRUST_BAR_MAX_CHARS', data.trustBarMaxChars, 'number')}
 /** M2b.1d (section 22.3): English prompt rules B1-B6, byte-exact with their indented sub-lines; the ids that apply on every page. */
 ${emit('M2B_PROMPT_RULES', data.voice22.promptRules, 'ReadonlyArray<{ id: string; text: string }>')}
 ${emit('M2B_EVERY_PAGE_RULE_IDS', data.voice22.everyPageRuleIds, 'readonly string[]')}
+/** M2b.1g (Tamar section 23.2): the usp tool groups (English usp keywords, Hebrew stems) for uspToolRequired and foreignTool. */
+${emit('USP_TOOL_GROUPS', data.uspToolGroups, 'Readonly<Record<string, Readonly<{ uspKeywords: readonly string[]; he: readonly string[] }>>>')}
+/** M2b.1g (section 23.2): aboutCardEcho / cardPhraseEcho minimum shared words, and the card-phrase minimum Hebrew letters per word. */
+${emit('ABOUT_CARD_ECHO_MIN_WORDS', data.aboutCardEchoMinWords, 'number')}
+${emit('CARD_PHRASE_ECHO_MIN_WORDS', data.cardPhraseEchoMinWords, 'number')}
+${emit('CARD_PHRASE_ECHO_MIN_LETTERS', data.cardPhraseEchoMinLetters, 'number')}
+/** M2b.1g (section 23.2 e): the locative letters of city_prefix, its list joins, and the code-built place lists (trust tile, badge). */
+${emit('CITY_PREFIX_LETTERS', data.cityPrefixLetters, 'readonly string[]')}
+${emit('CITY_PREFIX_LIST_JOINS', data.cityPrefixListJoins, 'readonly string[]')}
+${emit('PLACE_LIST_BUILD', data.placeListBuild, 'Readonly<{ separator: string; lastJoin: string; trustTilePrefix: string; badgePrefixOnEveryPlace: boolean }>')}
+/** M2b.1g (section 23.2 e): ba-initial towns (tests and the C5 prompt rule only; never a gate input). */
+${emit('B_INITIAL_PLACES', data.bInitialPlaces, 'readonly string[]')}
+/** M2b.1g (section 23.2 f): the fact caps (digit runs; worded proof points) and the phrase-cap exempt fields on research sites. */
+${emit('FACT_REPEAT_MAX_DATA', data.factRepeatMax, 'number')}
+${emit('FACT_PHRASE_REPEAT_MAX_DATA', data.factPhraseRepeatMax, 'number')}
+${emit('FACT_PHRASE_EXEMPT_FIELDS_RESEARCH', data.factPhraseExemptFieldsResearch, 'readonly string[]')}
+/** M2b.1g (section 23.2): the definite warranty plus a bare duration (every rendered field). */
+${emit('WARRANTY_DEFINITE_BARE_DURATION', data.warrantyDefiniteBareDuration, 'Readonly<{ pattern: string; flags: string }>')}
+/** M2b.1g (section 23.2): fields that end with a sentence-final mark (code appends "."), and label fields that never end with ".". */
+${emit('SENTENCE_FINAL_PERIOD_FIELDS', data.sentenceFinalPeriodFields, 'readonly string[]')}
+${emit('NO_FINAL_PERIOD_FIELDS', data.noFinalPeriodFields, 'readonly string[]')}
+/** M2b.1g (section 23.3): English prompt rules C1-C6, byte-exact with their sub-lines; the ids that apply on every page. */
+${emit('M2B2_PROMPT_RULES', data.voice23.promptRules, 'ReadonlyArray<{ id: string; text: string }>')}
+${emit('M2B2_EVERY_PAGE_RULE_IDS', data.voice23.everyPageRuleIds, 'readonly string[]')}
+/** M2b.1g (section 23.3): the section 22 rules B1-B6 with the B5 option list and the B6 example removed (C2 / C1 replace them). */
+${emit('M2B_PROMPT_RULES_AFTER_M2B2', data.voice23.m2bRulesAfterM2b2, 'ReadonlyArray<{ id: string; text: string }>')}
 /** Where each data list came from (data-file section; how it combines with the config lists). */
 ${emit('GUARD_TOKEN_SOURCES', data.sources, 'Readonly<Record<string, string>>')}`;
 }

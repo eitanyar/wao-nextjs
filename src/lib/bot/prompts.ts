@@ -29,8 +29,12 @@ export interface CollectedData {
   // Site Bot M1: localities the owner literally named in travelBoundary, matched against
   // config/market-scanner/areas.json at checkout init (never trusted from the client). Feed
   // schema areaServed + the service-area fact only; NEVER city pages (those need a per-city
-  // owner fact). listed = up to 3 besides the base city; overflow kept for the M2b one-tap confirm.
+  // owner fact). listed = up to 2 besides the base city (M2b.1g; records before it may hold 3); overflow kept
+  // for the M2b one-tap confirm.
   servedAreaNames?: { listed: string[]; overflow: string[]; source: 'travel_boundary'; ownerConfirmed: boolean };
+  // Site Bot M2b.1g: the towns the owner picked in the intake when his answer named more than the cap. Only selects
+  // among the towns checkout init parses from travelBoundary; consumed there, never stored.
+  servedAreaChoice?: string[];
   geographicExclusions?: string[];
   researchGateApprovals?: Record<string, { evidenceDigest: string; approvedAt: string }>;
   researchGateAnswers?: Record<string, unknown>;

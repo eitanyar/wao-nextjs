@@ -11,6 +11,8 @@ import { seedFromPrefillSnapshot } from "@/lib/site-bot/seedPrefill";
 import type { PrefillSnapshot } from "@/lib/site-bot/placePrefill";
 import { displayBusinessHours } from "@/lib/lp/businessHours";
 import { INTAKE_COPY } from "@/lib/site-bot/intakeCopy";
+import { ISRAELI_LOCALITIES } from "@/lib/site-bot/israeliLocalities";
+import { MAX_LISTED_SERVED_AREAS, servedAreaCandidates } from "@/lib/site-bot/servedAreas";
 import {
   buildIntakeCollectedData,
   emptyIntakeCard,
@@ -43,6 +45,13 @@ import {
 // Owner name, client fear, years/guarantee, review, contact, hours and slug are no longer
 // asked: they are derived from GBP (src/lib/site-bot/startIntake.ts) or dropped.
 // Every new string is a slot in src/lib/site-bot/intakeCopy.ts.
+// M2b.1g (Yonatan's cap, Eitan's concern): the travel-boundary answer is free text, parsed against the tracked locality
+// list (the same parse checkout init runs). The step shows the area hint under the question. When the answer names more
+// than MAX_LISTED_SERVED_AREAS towns besides the base city, the answer is not cut behind the owner's back: the reason and
+// the swap hint appear inline (aria-live), the text input is disabled (described by the reason), and the parsed towns
+// become toggle chips. Once MAX_LISTED_SERVED_AREAS are selected the rest are soft-blocked (aria-disabled, described by the
+// reason); un-selecting one frees a slot for another (swap). Send confirms; checkout re-validates the pick
+// (servedAreaChoice) against its own parse and keeps every other town in overflow.
 //
 // Payment: once the questions are done, collected data is handed to
 // /api/site-bot/checkout/init and the user is routed to /site-bot/pay/[sessionId],
@@ -51,6 +60,13 @@ import {
 interface Message {
   role: "assistant" | "user";
   content: string;
+}
+
+/** M2b.1g: the open area choice (the owner's answer text, the towns it names, the ones he keeps). */
+interface AreaChoice {
+  text: string;
+  candidates: string[];
+  selected: string[];
 }
 
 function isGenericUsp(text: string): boolean {
@@ -136,7 +152,9 @@ function SiteBotStartContent() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [probed, setProbed] = useState(false);
   const [pendingAnswer, setPendingAnswer] = useState<string | null>(null);
+  const [areaChoice, setAreaChoice] = useState<AreaChoice | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const firstAreaRef = useRef<HTMLButtonElement>(null);
   const chatInputRef = useRef<HTMLInputElement>(null);
   const firstChoiceRef = useRef<HTMLButtonElement>(null);
 
@@ -168,6 +186,8 @@ function SiteBotStartContent() {
   const currentKey = phase === "chat" ? questions[stepIndex] : undefined;
   const awaitingChoice = currentKey === "travelBoundary" && travelStepNeedsServiceModel(card);
   const lastAssistantIndex = messages.reduce((found, message, index) => (message.role === "assistant" ? index : found), -1);
+  const onTravelStep = currentKey === "travelBoundary" && !awaitingChoice;
+  const areaChoiceOpen = areaChoice !== null;
 
   // M1 a11y: after the card is confirmed and after every new question, focus moves to the
   // answer control (the first service-model button when Q2 asks for it, else the chat input).
@@ -176,10 +196,12 @@ function SiteBotStartContent() {
     // Deferred one tick so the keystroke that submitted the previous answer never lands on the new control.
     const timer = setTimeout(() => {
       if (awaitingChoice) firstChoiceRef.current?.focus();
+      else if (areaChoiceOpen) firstAreaRef.current?.focus();
       else chatInputRef.current?.focus({ preventScroll: true });
     }, 0);
     return () => clearTimeout(timer);
-  }, [phase, stepIndex, awaitingChoice, messages.length]);
+    // M2b.1g: focus moves to the first town chip when the area choice opens, back to the input when it closes.
+  }, [phase, stepIndex, awaitingChoice, messages.length, areaChoiceOpen]);
 
   function fieldValue(field: IntakeCardField): string {
     // Display only: time ranges are isolated LTR so the RTL input shows 08:00-18:00, not 18:00-08:00.
@@ -222,11 +244,26 @@ function SiteBotStartContent() {
   }
 
   function handleSend() {
+    if (areaChoice) {
+      confirmAreaChoice();
+      return;
+    }
     const text = inputValue.trim();
     if (!text || phase !== "chat" || !currentKey || awaitingChoice) return;
 
     const userMsg: Message = { role: "user", content: text };
     setInputValue("");
+
+    // M2b.1g: more towns than the cap -> the owner picks which ones are listed (never cut behind his back).
+    if (currentKey === "travelBoundary") {
+      const candidates = servedAreaCandidates(text, card.city, ISRAELI_LOCALITIES);
+      if (candidates.length > MAX_LISTED_SERVED_AREAS) {
+        setMessages((prev) => [...prev, userMsg]);
+        setAreaChoice({ text, candidates, selected: candidates.slice(0, MAX_LISTED_SERVED_AREAS) });
+        scrollDown();
+        return;
+      }
+    }
 
     // One-shot anti-generic probe on the differentiator only.
     if (currentKey === "usp" && !probed && isGenericUsp(text)) {
@@ -240,6 +277,23 @@ function SiteBotStartContent() {
     const finalText = currentKey === "usp" && pendingAnswer ? `${pendingAnswer}. ${text}` : text;
     setPendingAnswer(null);
     advance({ ...answers, [currentKey]: finalText }, card, userMsg);
+  }
+
+  // M2b.1g: a selected town is removed by pressing it again; an unselected one is added only while a slot is free.
+  function toggleArea(name: string) {
+    setAreaChoice((prev) => {
+      if (!prev) return prev;
+      if (prev.selected.includes(name)) return { ...prev, selected: prev.selected.filter((item) => item !== name) };
+      if (prev.selected.length >= MAX_LISTED_SERVED_AREAS) return prev;
+      return { ...prev, selected: [...prev.selected, name] };
+    });
+  }
+
+  function confirmAreaChoice() {
+    if (!areaChoice || areaChoice.selected.length === 0) return;
+    const picked = areaChoice.candidates.filter((name) => areaChoice.selected.includes(name));
+    setAreaChoice(null);
+    advance({ ...answers, travelBoundary: areaChoice.text, servedAreaChoice: picked }, card, { role: "user", content: picked.join(", ") });
   }
 
   function chooseServiceModel(model: IntakeServiceModel) {
@@ -461,12 +515,83 @@ function SiteBotStartContent() {
           </div>
         )}
 
+        {phase === "chat" && onTravelStep && (
+          <p id="intake-area-hint" data-intake-area-hint="true" style={{ margin: "0 0 12px", fontSize: "0.9rem", lineHeight: 1.5, color: "var(--muted)", fontFamily: "var(--font-body), sans-serif" }}>
+            {renderMixed(INTAKE_COPY.M1_Q2_AREA_INTRO_HINT)}
+          </p>
+        )}
+
+        {phase === "chat" && onTravelStep && (
+          <div aria-live="polite" data-intake-area-live="true">
+            {areaChoice && (
+              <div
+                data-intake-area-limit="true"
+                style={{ border: "1px solid var(--accent)", borderRadius: "var(--radius-md)", background: "var(--surface)", padding: "12px 16px", marginBottom: "12px", fontFamily: "var(--font-body), sans-serif", lineHeight: 1.5 }}
+              >
+                <p id="intake-area-limit-reason" style={{ margin: 0, color: "var(--text)" }}>
+                  {renderMixed(INTAKE_COPY.M1_Q2_AREA_LIMIT_REASON)}
+                </p>
+                <p id="intake-area-swap-hint" style={{ margin: "6px 0 0", fontSize: "0.9rem", color: "var(--muted)" }}>
+                  {renderMixed(INTAKE_COPY.M1_Q2_AREA_LIMIT_SWAP_HINT)}
+                </p>
+              </div>
+            )}
+          </div>
+        )}
+
+        {phase === "chat" && onTravelStep && areaChoice && (
+          <div
+            role="group"
+            aria-labelledby="intake-area-limit-reason"
+            aria-describedby="intake-area-swap-hint"
+            data-intake-area-choice="true"
+            style={{ display: "flex", flexWrap: "wrap", gap: "10px", marginBottom: "12px" }}
+          >
+            {areaChoice.candidates.map((name, index) => {
+              const selected = areaChoice.selected.includes(name);
+              const blocked = !selected && areaChoice.selected.length >= MAX_LISTED_SERVED_AREAS;
+              return (
+                <button
+                  key={name}
+                  ref={index === 0 ? firstAreaRef : undefined}
+                  type="button"
+                  className="wao-intake-choice"
+                  aria-pressed={selected}
+                  aria-disabled={blocked || undefined}
+                  aria-describedby={blocked ? "intake-area-limit-reason" : undefined}
+                  data-intake-area-town={selected ? "selected" : blocked ? "blocked" : "free"}
+                  onClick={() => toggleArea(name)}
+                  style={{
+                    minHeight: "44px",
+                    minWidth: "44px",
+                    background: selected ? "var(--accent)" : "transparent",
+                    color: selected ? "#0a0a0a" : "var(--text)",
+                    borderStyle: blocked ? "dashed" : "solid",
+                    opacity: blocked ? 0.55 : 1,
+                    cursor: blocked ? "not-allowed" : "pointer",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: "8px",
+                  }}
+                >
+                  {selected && <span aria-hidden="true">✓</span>}
+                  <span>{renderMixed(name)}</span>
+                  {selected && <span aria-hidden="true">×</span>}
+                </button>
+              );
+            })}
+          </div>
+        )}
+
         {phase === "chat" && !awaitingChoice && (
           <div style={{ display: "flex", gap: "10px" }}>
             <input
               ref={chatInputRef}
               className="wao-intake-field"
               aria-labelledby={lastAssistantIndex >= 0 ? `intake-message-${lastAssistantIndex}` : undefined}
+              aria-describedby={onTravelStep ? (areaChoice ? "intake-area-limit-reason intake-area-swap-hint" : "intake-area-hint") : undefined}
+              disabled={Boolean(areaChoice)}
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
               onFocus={scrollDown}
@@ -487,7 +612,7 @@ function SiteBotStartContent() {
                 fontFamily: "var(--font-body), sans-serif",
               }}
             />
-            <button type="button" onClick={handleSend} className="btn-primary" style={{ padding: "12px 24px" }}>
+            <button type="button" onClick={handleSend} className="btn-primary" disabled={areaChoice !== null && areaChoice.selected.length === 0} style={{ padding: "12px 24px", minHeight: "44px" }}>
               שלח
             </button>
           </div>

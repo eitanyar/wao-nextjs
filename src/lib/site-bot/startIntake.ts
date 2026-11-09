@@ -36,7 +36,8 @@ export interface IntakeEvidence {
 }
 
 export type IntakeQuestionKey = 'priorityServices' | 'travelBoundary' | 'usp';
-export type IntakeAnswers = Partial<Record<IntakeQuestionKey, string>>;
+/** M2b.1g: servedAreaChoice = the towns the owner picked when his travel answer named more than the cap (checkout re-validates). */
+export type IntakeAnswers = Partial<Record<IntakeQuestionKey, string>> & { servedAreaChoice?: string[] };
 
 export const MAX_INTAKE_QUESTIONS = 3;
 /** The card cannot be confirmed without these: checkout needs a niche, the site needs a name and phone, serviceability needs a base. */
@@ -151,6 +152,7 @@ export function buildIntakeCollectedData(card: IntakeCard, evidence: IntakeEvide
     ...(address && (model === 'location' || model === 'mixed') ? { streetAddress: address } : {}),
     ...(services.length ? { priorityServices: services, secondaryServices: services.join(', ') } : {}),
     ...(travel ? { travelBoundary: travel } : {}),
+    ...(travel && answers.servedAreaChoice?.length ? { servedAreaChoice: answers.servedAreaChoice.map(text).filter(Boolean) } : {}),
     ...(usp ? { usp } : {}),
     ...(phone ? { phone, whatsappNumber: phone } : {}),
     ...(hours ? { businessHours: hours } : {}),

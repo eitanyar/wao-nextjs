@@ -94,8 +94,19 @@ import {
   STICKY_ACTION_TOKENS,
   SUBJECT_CARRY_PREFIXES,
   SUBJECT_CARRY_TOKENS,
+  ABOUT_CARD_ECHO_MIN_WORDS,
+  CARD_PHRASE_ECHO_MIN_LETTERS,
+  CARD_PHRASE_ECHO_MIN_WORDS,
+  CITY_PREFIX_LETTERS,
+  CITY_PREFIX_LIST_JOINS,
+  FACT_PHRASE_EXEMPT_FIELDS_RESEARCH,
+  PLACE_LIST_BUILD,
+  USP_TOOL_GROUPS,
+  WARRANTY_DEFINITE_BARE_DURATION,
 } from './generationData';
+import { PREFIX_LETTERS } from './hebrewPrefixLetters';
 import {
+  CAMERA_SATISFIES_ONLY,
   CLAIM_EXCLUDED_FACT_FIELDS,
   CLAIM_RULES,
   FACT_PHRASE_EXEMPT_FIELDS,
@@ -120,6 +131,7 @@ import {
   SERVICE_DESCRIPTION_MIN_CHARS,
   WAO_SERVICE_TERMS_HE,
   WAO_SERVICE_TERMS_LATIN,
+  WARRANTY_SPELLED_DURATION_SOURCE,
   WE_FORM_TOKENS,
   type GateToken,
 } from './copyGates.config';
@@ -175,6 +187,14 @@ export const GATE_RULES = {
   aboutHeadlinePromise: 'gate_about_headline_promise',
   trustBarFiller: 'gate_trust_bar_filler',
   trustBarSize: 'gate_trust_bar_size',
+  // M2b.1g (Tamar section 23.2; Yonatan's about-headline place guard)
+  uspToolRequired: 'gate_usp_tool_required',
+  foreignTool: 'gate_foreign_tool',
+  aboutHeadlineTrustRepeat: 'gate_about_headline_trust_repeat',
+  aboutHeadlinePlaces: 'gate_about_headline_places',
+  aboutCardEcho: 'gate_about_card_echo',
+  cardPhraseEcho: 'gate_card_phrase_echo',
+  warrantyDefinite: 'gate_warranty_definite_bare_duration',
 } as const;
 export type GateRule = (typeof GATE_RULES)[keyof typeof GATE_RULES];
 
@@ -257,8 +277,8 @@ export interface GateReviewFlag {
 
 const HEBREW_LETTER = '\u05D0-\u05EA';
 const HEBREW = new RegExp(`[${HEBREW_LETTER}]`);
-// vav, shin, he, bet, kaf, lamed, mem: the attachable prefix letters.
-export const PREFIX_LETTERS = '\u05D5\u05E9\u05D4\u05D1\u05DB\u05DC\u05DE';
+// vav, shin, he, bet, kaf, lamed, mem: the attachable prefix letters (M2b.1g: defined in hebrewPrefixLetters.ts).
+export { PREFIX_LETTERS };
 
 /** Fields the system fills (never model-authored) are exempt from text gates. */
 export const GATE_EXEMPT_FIELDS: readonly string[] = ['heroCta', 'serviceItems', 'reviewFeatured', 'faqItems', 'scarcityLine'];
@@ -390,7 +410,6 @@ const WITHIN_WORD_PATTERN = new RegExp(`(?<!${HEB_CLASS})[${PREFIX_LETTERS}]{0,2
 export const FIX_TIME_VERBS: readonly string[] = [...new Set((CLAIM_TOKENS.fix_time ?? []).map(token => token.split(' ')[0]).filter(Boolean))];
 const FIX_VERB_PATTERN = new RegExp(`(?<!${HEB_CLASS})[${PREFIX_LETTERS}]{0,2}(?:${FIX_TIME_VERBS.map(escapeRegExp).join('|')})(?!${HEB_CLASS})`, 'u');
 const FIX_TIME_INDEX = CLAIM_RULES.findIndex(rule => rule.id === 'fix_time');
-const BET_LETTER = '\u05D1';
 /** First word of the pinned installation label: marks a service label as an installation service. */
 const INSTALL_WORD = (SERVICE_LABEL_PINS['water heater install'] ?? '').split(' ')[0];
 /** M2a.3 (item 6): fields checked by the arrival-on-installation review flag (headings plus the short proof lines). */
@@ -426,10 +445,6 @@ export function effectiveReviewQuote(data: CollectedData): string | null {
   return quote && hasRealReviewQuote(data) && isMostlyHebrew(quote) ? quote : null;
 }
 
-function placePattern(place: string, prefix: boolean): RegExp {
-  const body = place.trim().split(/\s+/).map(escapeRegExp).join('\\s+');
-  return new RegExp(`(?<!${HEB_CLASS})${prefix ? `([${PREFIX_LETTERS}]{0,3}?)` : ''}${body}(?!${HEB_CLASS})`, 'gu');
-}
 
 /** Place names with a hyphen or maqaf where the owner's name has a space. */
 function placeHyphenHit(value: string, places: readonly string[]): boolean {
@@ -441,22 +456,121 @@ function placeHyphenHit(value: string, places: readonly string[]): boolean {
   });
 }
 
+// ---------------------------------------------------------------------------
+// M2b.1g (section 23.2 e): place lists. A place matches with up to three attached prefix letters; a space, an ASCII
+// hyphen and a maqaf are the same separator inside a place name (as in placeHyphenHit). A later place belongs to the
+// previous place's list only through a CITY_PREFIX_LIST_JOINS join: ", ", or one space with the place's prefix starting
+// with the conjunction letter. The list's locative letter is the last letter of the first place's prefix (one of
+// CITY_PREFIX_LETTERS); every later place's prefix must end with that same letter.
+// ---------------------------------------------------------------------------
+
+const PLACE_SEPARATOR = '[\\s\\-\u05BE]+';
+const [LIST_SEPARATOR, LIST_CONJUNCTION_JOIN] = CITY_PREFIX_LIST_JOINS;
+const LIST_CONJUNCTION_SPACE = LIST_CONJUNCTION_JOIN.slice(0, 1);
+const LIST_CONJUNCTION = LIST_CONJUNCTION_JOIN.slice(1);
+if (LIST_CONJUNCTION_SPACE !== ' ' || LIST_CONJUNCTION !== PLACE_LIST_BUILD.lastJoin) throw new Error('copyGates: the city-prefix list joins changed; update the place-list code');
+const LOCATIVE_LETTERS: ReadonlySet<string> = new Set(CITY_PREFIX_LETTERS);
+
+function placeListPattern(place: string): RegExp {
+  const body = place.trim().split(/[\s\-\u05BE]+/).filter(Boolean).map(escapeRegExp).join(PLACE_SEPARATOR);
+  return new RegExp(`(?<!${HEB_CLASS})([${PREFIX_LETTERS}]{0,3}?)${body}(?!${HEB_CLASS})`, 'gu');
+}
+
+/** One owner place found in a text: its span (prefix letters included), the attached prefix and the owner's display name. */
+export interface PlaceHit { start: number; end: number; prefix: string; place: string }
+
+/** Owner Hebrew places in a text, in order; a hit inside a longer hit is dropped. */
+export function placeHits(text: string, places: readonly string[]): PlaceHit[] {
+  const hits: PlaceHit[] = [];
+  for (const place of [...new Set(places.map(item => item.trim()))].filter(item => HEBREW.test(item))) {
+    for (const match of text.matchAll(placeListPattern(place))) hits.push({ start: match.index ?? 0, end: (match.index ?? 0) + match[0].length, prefix: match[1] ?? '', place });
+  }
+  const kept = hits.filter(hit => !hits.some(other => other !== hit && other.end - other.start > hit.end - hit.start && other.start <= hit.start && other.end >= hit.end));
+  return kept.sort((a, b) => a.start - b.start).filter((hit, index, all) => index === 0 || hit.start !== all[index - 1].start);
+}
+
+function joinsList(text: string, previous: PlaceHit, current: PlaceHit): boolean {
+  const between = text.slice(previous.end, current.start);
+  return between === LIST_SEPARATOR || (between === LIST_CONJUNCTION_SPACE && current.prefix.startsWith(LIST_CONJUNCTION));
+}
+
+/** Place lists of a text (section 23.2 e): runs of owner places joined only by the list joins. A single place is a list of one. */
+export function placeLists(text: string, places: readonly string[]): PlaceHit[][] {
+  const lists: PlaceHit[][] = [];
+  for (const hit of placeHits(text, places)) {
+    const last = lists[lists.length - 1];
+    if (last && joinsList(text, last[last.length - 1], hit)) last.push(hit);
+    else lists.push([hit]);
+  }
+  return lists;
+}
+
+/** The locative letter of a prefix: its last letter, when that is one of CITY_PREFIX_LETTERS; else null. */
+function locativeOf(prefix: string): string | null {
+  const letter = prefix.slice(-1);
+  return LOCATIVE_LETTERS.has(letter) ? letter : null;
+}
+
 /**
- * A locative list of known places must carry the bet prefix on every place (item 10): when the
- * first place of a sentence has it, every later place in that sentence needs it too.
+ * city_prefix (item 10, M2b.1g section 23.2 e): in a list of known places whose first place carries a locative prefix
+ * (bet, lamed or mem), every later place in that list must carry the same letter at the end of its prefix.
  */
 function cityPrefixHit(value: string, places: readonly string[]): boolean {
-  const hebrewPlaces = places.filter(place => HEBREW.test(place));
-  if (hebrewPlaces.length < 2) return false;
-  return sentences(value).some(sentence => {
-    const found: Array<{ at: number; prefix: string }> = [];
-    for (const place of hebrewPlaces) {
-      for (const match of sentence.matchAll(placePattern(place, true))) found.push({ at: match.index ?? 0, prefix: match[1] ?? '' });
-    }
-    if (found.length < 2) return false;
-    found.sort((a, b) => a.at - b.at);
-    return found[0].prefix.includes(BET_LETTER) && found.slice(1).some(item => !item.prefix.includes(BET_LETTER));
-  });
+  if (places.filter(place => HEBREW.test(place)).length < 2) return false;
+  return sentences(value).some(sentence => placeLists(sentence, places).some(list => {
+    const letter = list.length > 1 ? locativeOf(list[0].prefix) : null;
+    return Boolean(letter) && list.slice(1).some(hit => hit.prefix.slice(-1) !== letter);
+  }));
+}
+
+/**
+ * A place list built from the area array (section 23.2 e, placeListBuild): `letter` on every place, joined with the
+ * separator and a final conjunction ("A, B and C"). Plain concatenation is correct for every town (ba-initial ones too).
+ */
+export function buildPlaceList(places: readonly string[], letter = ''): string {
+  const names = places.map(place => place.trim()).filter(Boolean);
+  if (names.length <= 1) return names.length ? `${letter}${names[0]}` : '';
+  const head = names.slice(0, -1).map(name => `${letter}${name}`).join(PLACE_LIST_BUILD.separator);
+  return `${head}${LIST_CONJUNCTION_SPACE}${PLACE_LIST_BUILD.lastJoin}${letter}${names[names.length - 1]}`;
+}
+
+/**
+ * The trust-bar area tile (section 23.2 e): the owner's places, base city first, with no prefix. M2b.1g engineer rule:
+ * when the whole list is longer than `maxChars` code points, the longest leading run that fits (the base city always
+ * leads; the full list still renders in the service-areas section and schema). Null when nothing fits or no place.
+ */
+export function buildAreaTile(places: readonly string[], maxChars: number): string | null {
+  const names = places.map(place => place.trim()).filter(Boolean);
+  for (let count = names.length; count > 0; count--) {
+    const tile = buildPlaceList(names.slice(0, count), PLACE_LIST_BUILD.trustTilePrefix);
+    if (codePointLength(tile) <= maxChars) return tile;
+  }
+  return null;
+}
+
+/** True when a trust-bar item is only a list of owner places (no other word): a model-written area tile. */
+export function isAreaTile(item: string, places: readonly string[]): boolean {
+  const hits = placeHits(item, places);
+  if (!hits.length) return false;
+  let rest = item;
+  for (const hit of [...hits].reverse()) rest = `${rest.slice(0, hit.start)} ${rest.slice(hit.end)}`;
+  return rest.replace(/[\s,]/g, '') === '';
+}
+
+/**
+ * The badge place part built in code (section 23.2 e): every multi-place list whose first place carries a locative prefix
+ * is rebuilt from the owner's place names with that letter on every place (the first place keeps any conjunction before
+ * its letter). Only the list span changes; the rest of the string is untouched.
+ */
+export function withPlaceListPrefixes(value: string, places: readonly string[]): string {
+  let out = value;
+  for (const list of placeLists(value, places).reverse()) {
+    const letter = list.length > 1 ? locativeOf(list[0].prefix) : null;
+    if (!letter) continue;
+    const rebuilt = `${list[0].prefix.slice(0, -1)}${buildPlaceList(list.map(hit => hit.place), letter)}`;
+    out = `${out.slice(0, list[0].start)}${rebuilt}${out.slice(list[list.length - 1].end)}`;
+  }
+  return out;
 }
 
 function customerAttributionHit(value: string): boolean {
@@ -1219,6 +1333,195 @@ export function trustBarHits(copy: Record<string, unknown>, ctx: Pick<CopyGateCo
   return out;
 }
 
+// ---------------------------------------------------------------------------
+// M2b.1g: Tamar's section 23.2 gates (the owner's tool, about headline vs trust bar, about / card echo, the definite
+// warranty) and Yonatan's about-headline place guard. Hebrew data from generationData.ts and copyGates.config.ts.
+// ---------------------------------------------------------------------------
+
+const CAMERA_GROUP = 'camera';
+const THERMAL_GROUP = 'thermal';
+/** The usp tool groups in data order. */
+export const USP_TOOL_GROUP_IDS: readonly string[] = Object.keys(USP_TOOL_GROUPS);
+if (!USP_TOOL_GROUP_IDS.includes(CAMERA_GROUP) || !USP_TOOL_GROUP_IDS.includes(THERMAL_GROUP)) throw new Error('copyGates: the usp tool groups changed; update the tool gates');
+
+/**
+ * The stems that satisfy uspToolRequired for a group (Adam M2b.1g): the group's `he` stems, plus CAMERA_SATISFIES_ONLY for
+ * the camera group. foreignTool uses the `he` stems only (toolForeignStems).
+ */
+export function toolSatisfyStems(group: string): readonly string[] {
+  const stems = USP_TOOL_GROUPS[group]?.he ?? [];
+  return group === CAMERA_GROUP ? [...stems, ...CAMERA_SATISFIES_ONLY] : stems;
+}
+export function toolForeignStems(group: string): readonly string[] {
+  return USP_TOOL_GROUPS[group]?.he ?? [];
+}
+
+/**
+ * The tool groups the owner's usp names (section 23.2 a): an English uspKeywords entry (lower-cased usp, plain substring)
+ * or a Hebrew stem (plain substring; engineer reading: the satisfy stems, so a usp with the camera verb names the camera).
+ */
+export function uspToolGroups(ctx: Pick<CopyGateContext, 'ownerFields'>): string[] {
+  const usp = ctx.ownerFields?.usp;
+  if (typeof usp !== 'string' || !usp.trim()) return [];
+  const lower = usp.toLowerCase();
+  return USP_TOOL_GROUP_IDS.filter(group => USP_TOOL_GROUPS[group].uspKeywords.some(keyword => lower.includes(keyword)) || toolSatisfyStems(group).some(stem => usp.includes(stem)));
+}
+
+/** The groups a page may name (section 23.2 a): the usp's groups, and the camera group whenever the thermal group is one. */
+export function allowedToolGroups(ctx: Pick<CopyGateContext, 'ownerFields'>): Set<string> {
+  const groups = new Set(uspToolGroups(ctx));
+  if (groups.has(THERMAL_GROUP)) groups.add(CAMERA_GROUP);
+  return groups;
+}
+
+/** A value with the owner-confirmed service labels masked (longest first): a stem inside a label is exempt. */
+function maskServiceLabels(value: string, labels: readonly string[]): string {
+  return maskHeroLabels(value, labels);
+}
+
+/** The foreign tool groups one string names: a `he` stem of a group the page may not name, outside the masked labels. */
+export function foreignToolGroups(value: string, allowed: ReadonlySet<string>, labels: readonly string[], exemptGroups: ReadonlySet<string> = new Set()): string[] {
+  const masked = maskServiceLabels(value, labels);
+  return USP_TOOL_GROUP_IDS.filter(group => !allowed.has(group) && !exemptGroups.has(group) && toolForeignStems(group).some(stem => masked.includes(stem)));
+}
+
+/** The groups whose stem appears in an owner-confirmed card label: the whole card (label and description) is exempt for them (Adam M2b.1g). */
+function cardExemptGroups(name: unknown, labels: readonly string[]): Set<string> {
+  const label = typeof name === 'string' ? name.replace(/\s+/g, ' ').trim() : '';
+  if (!label || !labels.some(item => item.replace(/\s+/g, ' ').trim() === label)) return new Set();
+  return new Set(USP_TOOL_GROUP_IDS.filter(group => toolForeignStems(group).some(stem => label.includes(stem))));
+}
+
+/** Echo tokens (section 23.2 c): punctuation and em-dash removed, whitespace split, word-internal hyphen to maqaf, one leading vav stripped. */
+export function echoTokens(value: string): string[] {
+  return value.replace(/[,.;:!?\u2014]/g, '').split(/\s+/).filter(Boolean)
+    .map(token => token.replace(/(?<=\p{L})-(?=\p{L})/gu, '\u05BE'))
+    .map(token => (token.length > 1 && token.startsWith(VAV) ? token.slice(1) : token));
+}
+
+/** Longest run of consecutive equal tokens shared by two token lists. */
+export function longestSharedRun(a: readonly string[], b: readonly string[]): number {
+  let best = 0;
+  let previous = new Array<number>(b.length + 1).fill(0);
+  for (let i = 1; i <= a.length; i++) {
+    const current = new Array<number>(b.length + 1).fill(0);
+    for (let j = 1; j <= b.length; j++) {
+      if (a[i - 1] === b[j - 1]) {
+        current[j] = previous[j - 1] + 1;
+        if (current[j] > best) best = current[j];
+      }
+    }
+    previous = current;
+  }
+  return best;
+}
+
+const hebrewLetterCount = (token: string) => (token.match(new RegExp(HEB_CLASS, 'gu')) ?? []).length;
+/** cardPhraseEcho (section 23.2): two adjacent tokens, each with CARD_PHRASE_ECHO_MIN_LETTERS+ Hebrew letters, shared by two cards. */
+export function sharedCardPhrase(a: string, b: string): boolean {
+  const pairs = (tokens: string[]) => {
+    const out = new Set<string>();
+    for (let i = 0; i + CARD_PHRASE_ECHO_MIN_WORDS <= tokens.length; i++) {
+      const run = tokens.slice(i, i + CARD_PHRASE_ECHO_MIN_WORDS);
+      if (run.every(token => hebrewLetterCount(token) >= CARD_PHRASE_ECHO_MIN_LETTERS)) out.add(run.join(' '));
+    }
+    return out;
+  };
+  const left = pairs(echoTokens(a));
+  return [...pairs(echoTokens(b))].some(key => left.has(key));
+}
+
+/** The digit runs of a string. */
+const digitRuns = (value: string) => new Set(value.match(/\d+/g) ?? []);
+
+/**
+ * aboutHeadlineNoTrustRepeat (section 23.2 b): 'digits' when the headline shares a digit run with a trust-bar item;
+ * 'item:<i>' when it holds a trimmed trust item verbatim. M2b.1g engineer rule: the system-built area tile (a pure place
+ * list, isAreaTile) is not compared verbatim, since C2 allows one town; Yonatan's place guard covers place lists.
+ */
+export function aboutHeadlineTrustRepeats(headline: string, trustItems: readonly unknown[], places: readonly string[]): string[] {
+  const out: string[] = [];
+  const digits = digitRuns(headline);
+  const items = trustItems.filter((item): item is string => typeof item === 'string');
+  if (items.some(item => [...digitRuns(item)].some(run => digits.has(run)))) out.push('digits');
+  items.forEach((item, index) => {
+    const trimmed = item.trim();
+    if (trimmed && headline.includes(trimmed) && !isAreaTile(trimmed, places)) out.push(`item:${index}`);
+  });
+  return out;
+}
+
+/** Yonatan (M2b.1g, C2 guard): the distinct owner places an about headline names. */
+export function aboutHeadlinePlaceCount(headline: string, places: readonly string[]): number {
+  return new Set(placeHits(headline, places).map(hit => hit.place)).size;
+}
+/** Yonatan's guard: at most this many places in the about headline. */
+export const ABOUT_HEADLINE_MAX_PLACES = 1;
+
+const WARRANTY_DURATION_ANCHOR = '\\s+(?:';
+/**
+ * warrantyDefiniteBareDuration (section 23.2) plus the spelled-out durations (Adam M2b.1g, Noa's regex): the data pattern
+ * with WARRANTY_SPELLED_DURATION_SOURCE added as one more duration alternative, after the same definite warranty.
+ */
+export const WARRANTY_DEFINITE_PATTERN: RegExp = (() => {
+  const source = WARRANTY_DEFINITE_BARE_DURATION.pattern;
+  const at = source.indexOf(WARRANTY_DURATION_ANCHOR);
+  if (at < 0 || source.indexOf(WARRANTY_DURATION_ANCHOR, at + 1) >= 0) throw new Error('copyGates: the warranty pattern changed; update the spelled-duration splice');
+  const splice = at + WARRANTY_DURATION_ANCHOR.length;
+  return new RegExp(`${source.slice(0, splice)}(?:${WARRANTY_SPELLED_DURATION_SOURCE})|${source.slice(splice)}`, WARRANTY_DEFINITE_BARE_DURATION.flags);
+})();
+
+/** True when the field is rendered on this page (unset renderedFields: every field). */
+function isRenderedField(field: string, ctx: Pick<CopyGateContext, 'renderedFields'>): boolean {
+  return !ctx.renderedFields || ctx.renderedFields.includes(topFieldOf(field));
+}
+
+/** Section 23.2 gates for one research page (rendered fields only; the about checks only where the about section is generated). */
+function m2b2Gates(copy: Record<string, unknown>, strings: Array<{ field: string; value: string }>, ctx: CopyGateContext): GateViolation[] {
+  const out: GateViolation[] = [];
+  const allowed = allowedToolGroups(ctx);
+  const places = ctx.places ?? [];
+  const details = Array.isArray(copy.serviceDetails) ? copy.serviceDetails : [];
+  for (const { field, value } of strings) {
+    if (!isRenderedField(field, ctx)) continue;
+    const card = /^serviceDetails\[(\d+)\]\./.exec(field);
+    const cardItem = card ? details[Number(card[1])] : undefined;
+    const exempt = card ? cardExemptGroups(cardItem && typeof cardItem === 'object' ? (cardItem as Record<string, unknown>).name : undefined, ctx.serviceLabels) : new Set<string>();
+    for (const group of foreignToolGroups(value, allowed, ctx.serviceLabels, exempt)) out.push({ field, rule: GATE_RULES.foreignTool, actual: `foreign_tool:${group}` });
+    if (WARRANTY_DEFINITE_PATTERN.test(value)) out.push({ field, rule: GATE_RULES.warrantyDefinite, actual: 'warranty:definite_bare_duration' });
+  }
+  const skip = ctx.ungeneratedFields ?? [];
+  const body = !skip.includes('aboutPageBody') && isRenderedField('aboutPageBody', ctx) && typeof copy.aboutPageBody === 'string' ? copy.aboutPageBody : null;
+  if (body !== null) {
+    for (const group of uspToolGroups(ctx)) {
+      if (!toolSatisfyStems(group).some(stem => body.includes(stem))) out.push({ field: 'aboutPageBody', rule: GATE_RULES.uspToolRequired, actual: `usp_tool:${group}` });
+    }
+  }
+  const headline = !skip.includes('aboutPageHeadline') && isRenderedField('aboutPageHeadline', ctx) && typeof copy.aboutPageHeadline === 'string' ? copy.aboutPageHeadline : null;
+  if (headline !== null && headline.trim()) {
+    for (const kind of aboutHeadlineTrustRepeats(headline, Array.isArray(copy.trustBarItems) ? copy.trustBarItems : [], places)) out.push({ field: 'aboutPageHeadline', rule: GATE_RULES.aboutHeadlineTrustRepeat, actual: `about_trust:${kind}` });
+    const count = aboutHeadlinePlaceCount(headline, places);
+    if (count > ABOUT_HEADLINE_MAX_PLACES) out.push({ field: 'aboutPageHeadline', rule: GATE_RULES.aboutHeadlinePlaces, actual: `about_places:${count}` });
+  }
+  if (!skip.includes('serviceDetails') && isRenderedField('serviceDetails', ctx)) {
+    const descriptions = details.map(item => (item && typeof item === 'object' && typeof (item as Record<string, unknown>).description === 'string' ? (item as Record<string, unknown>).description as string : null));
+    const bodyTokens = body !== null && body.trim() ? echoTokens(body) : null;
+    descriptions.forEach((description, index) => {
+      if (description === null) return;
+      const field = `serviceDetails[${index}].description`;
+      if (bodyTokens) {
+        const run = longestSharedRun(bodyTokens, echoTokens(description));
+        if (run >= ABOUT_CARD_ECHO_MIN_WORDS) out.push({ field, rule: GATE_RULES.aboutCardEcho, actual: `about_card_echo:${run}` });
+      }
+      for (let earlier = 0; earlier < index; earlier++) {
+        const other = descriptions[earlier];
+        if (other !== null && sharedCardPhrase(other, description)) { out.push({ field, rule: GATE_RULES.cardPhraseEcho, actual: `card_phrase_echo:${earlier}` }); break; }
+      }
+    });
+  }
+  return out;
+}
+
 /** Field-path matchers for a list of data-file field names (`a[].b` matches `a[3].b`). */
 function fieldMatchers(names: readonly string[]): RegExp[] {
   return names.map(name => new RegExp(`^${name.includes('[]')
@@ -1533,12 +1836,18 @@ export const ALWAYS_BLOCKING_RULES: readonly GateRule[] = [
   GATE_RULES.availability,
   GATE_RULES.installArrival,
   GATE_RULES.hours,
+  // M2b.1g (section 23.2 a): naming a tool the owner does not use is a false claim about him (the claim class).
+  GATE_RULES.foreignTool,
 ];
 /**
  * Former gates that are warnings only, in every field (M2a.7: the same-opening check). M2b.1d (section 22.2): the
  * serviceDetails opener cap is deleted; the same-opening check compares the homepage and the services hub only.
  */
-export const WARNING_ONLY_RULES: readonly GateRule[] = [GATE_RULES.duplicateAboutOpening];
+export const WARNING_ONLY_RULES: readonly GateRule[] = [
+  GATE_RULES.duplicateAboutOpening,
+  // M2b.1g (section 23.2): warn-only for the rescore; a hard gate only if every rescore hit is a real echo.
+  GATE_RULES.cardPhraseEcho,
+];
 
 /** True when a gate hit is a warning, not a page failure (see ALWAYS_BLOCKING_RULES / WARNING_ONLY_RULES). */
 export function isWarningHit(hit: Pick<GateViolation, 'field' | 'rule'>, ctx: Pick<CopyGateContext, 'renderedFields'>): boolean {
@@ -1577,6 +1886,10 @@ export function runCopyGates(copy: Record<string, unknown>, ctx: CopyGateContext
   const phrases = pagePhrases(copy, ctx);
   LAST_PHRASES.set(ctx, phrases);
   const phraseSeen = phrases.map(() => 0);
+  const phraseUnits = phrases.map(() => new Set<string>());
+  // M2b.1g: research sites (renderedFields set) count rendered fields only, with the section 23 phrase-cap exemptions.
+  const researchCounts = Boolean(ctx.researchSite && ctx.renderedFields);
+  const phraseExempt = researchCounts ? FACT_PHRASE_EXEMPT_FIELDS_RESEARCH : FACT_PHRASE_EXEMPT_FIELDS;
   const scope = FIX_TIME_INDEX >= 0 ? fixTimeScope(ctx) : 'all';
   const finishScope = sameDayFinishScope(ctx);
   const freeClasses = ownerFreeClasses(ctx);
@@ -1621,16 +1934,21 @@ export function runCopyGates(copy: Record<string, unknown>, ctx: CopyGateContext
     if (GERESH_QUOTE_PATTERN.test(value)) out.push({ field, rule: GATE_RULES.gereshQuote });
     if (cityPrefixHit(value, places)) out.push({ field, rule: GATE_RULES.cityPrefix });
     if (customerAttributionHit(value)) out.push({ field, rule: GATE_RULES.customerAttribution });
-    factPatterns.forEach((pattern, index) => {
+    // M2b.1g (section 23.2 f): on a research site both fact counters count the page's rendered fields only.
+    const counted = !researchCounts || isRenderedField(field, ctx);
+    if (counted) factPatterns.forEach((pattern, index) => {
       const count = countMatches(value, pattern);
       if (!count) return;
       factSeen[index] += count;
       if (factSeen[index] > FACT_REPEAT_MAX) out.push({ field, rule: GATE_RULES.factRepeat, actual: `fact:${index}` });
     });
-    if (!FACT_PHRASE_EXEMPT_FIELDS.includes(topFieldOf(field))) {
-      // M2a.4: a field counts once per phrase; the cap is FACT_PHRASE_REPEAT_MAX fields per page.
+    if (counted && !phraseExempt.includes(topFieldOf(field))) {
+      // M2a.4: a field counts once per phrase; the cap is FACT_PHRASE_REPEAT_MAX fields per page. M2b.1g: on a research
+      // site the trust bar counts, as one field (all its items together).
+      const unit = researchCounts && topFieldOf(field) === 'trustBarItems' ? 'trustBarItems' : field;
       phrases.forEach((phrase, index) => {
-        if (!phraseMentions(value, phrase)) return;
+        if (!phraseMentions(value, phrase) || phraseUnits[index].has(unit)) return;
+        phraseUnits[index].add(unit);
         phraseSeen[index] += 1;
         if (phraseSeen[index] > FACT_PHRASE_REPEAT_MAX) out.push({ field, rule: GATE_RULES.factRepeat, actual: `phrase:${index}` });
       });
@@ -1661,8 +1979,8 @@ export function runCopyGates(copy: Record<string, unknown>, ctx: CopyGateContext
 
   // A review context is only supportable from an owner-supplied star rating.
   if (typeof copy.reviewContext === 'string' && !ctx.starRating) out.push({ field: 'reviewContext', rule: GATE_RULES.reviewContext });
-  // M2a.5: section 19 voice gates and the duplicate-hook check (research-bound sites only).
-  if (ctx.researchSite) out.push(...voiceGates(copy, strings, ctx));
+  // M2a.5: section 19 voice gates and the duplicate-hook check (research-bound sites only). M2b.1g: section 23 gates.
+  if (ctx.researchSite) out.push(...voiceGates(copy, strings, ctx), ...m2b2Gates(copy, strings, ctx));
   return out;
 }
 
@@ -1811,7 +2129,7 @@ export function describeGateViolation(violation: GateViolation, ctx: CopyGateCon
     case GATE_RULES.gereshQuote:
       return `${violation.field} uses a geresh (\u05F3) as a quotation mark; use a gershayim pair (\u05F4...\u05F4) or rephrase without quotes`;
     case GATE_RULES.cityPrefix:
-      return `${violation.field} lists places with the locative prefix (\u05D1) on the first place only; attach it to every place in the list (also after the conjunction \u05D5)`;
+      return `${violation.field} lists places with a locative prefix (${CITY_PREFIX_LETTERS.join(', ')}) on the first place only; attach the same letter to every place in the list (also after the conjunction \u05D5, and also before a town that already starts with that letter)`;
     case GATE_RULES.customerAttribution:
       return `${violation.field} attributes a statement to a customer; remove it (only the verbatim quote in reviewFeatured may speak for a customer)`;
     case GATE_RULES.factRepeat: {
@@ -1892,8 +2210,27 @@ export function describeGateViolation(violation: GateViolation, ctx: CopyGateCon
       const what = kind === 'before'
         ? `a "before" construction (${JSON.stringify(BEFORE_TOKENS)})`
         : `the signature phrase ${JSON.stringify(promptSignatureVariants(group ?? ''))}${kind === 'concept' ? ` (or one of the same idea: ${JSON.stringify(HERO_CAP_CONCEPT_ADDITIONS[group ?? ''] ?? [])})` : ''}`;
-      return `${violation.field} repeats the hero's promise with ${what}; the about headline introduces the man, not the promise. In at most 7 words, use one of: his years in the trade with the trade or the city; his first name with his trade (only when the name is written in Hebrew); or the tool or method from his usp, as a plain first-person fact. No signature phrase or synonym, no "before" construction, no quality adjective`;
+      return `${violation.field} repeats the hero's promise with ${what}; the about headline introduces the man, not the promise. In at most 7 words, build it from what he does with his tool or his hands (first person, at most 6 words) or from one town of his area with his trade; his first name may come first only when it is written in Hebrew. No number, no trust-bar item, no signature phrase or synonym, no "before" construction, no quality adjective`;
     }
+    case GATE_RULES.uspToolRequired: {
+      const group = (violation.actual ?? '').split(':')[1] ?? '';
+      return `${violation.field} never names the owner's own tool from his usp (${group}); in the sentence about what he does when he arrives, name that tool and what he does with it, in plain trade words, using one of these words: ${JSON.stringify(toolSatisfyStems(group))}. Do not name any other tool`;
+    }
+    case GATE_RULES.foreignTool: {
+      const group = (violation.actual ?? '').split(':')[1] ?? '';
+      const own = uspToolGroups(ctx);
+      return `${violation.field} names a tool this owner never named (${group}: ${JSON.stringify(toolForeignStems(group))}); that is a false claim about him. Remove it and describe ${own.length ? `his own tool from his usp (${own.join(', ')})` : 'the check he does with his hands and eyes'} instead. Never copy a scene from the instructions`;
+    }
+    case GATE_RULES.aboutHeadlineTrustRepeat:
+      return `${violation.field} repeats ${(violation.actual ?? '').includes('digits') ? 'a number' : 'an item'} of the trust bar, which already gave the years and the warranty; rewrite it from what he does with his tool or his hands (first person, at most 6 words) or from one town of his area with his trade, with no number and no trust-bar item, at most 7 words`;
+    case GATE_RULES.aboutHeadlinePlaces:
+      return `${violation.field} names more than ${ABOUT_HEADLINE_MAX_PLACES} place; name at most one town, naturally, never a list of towns and never "<town> and surroundings". Prefer a neighbouring town he serves over repeating the hero's city: ${(ctx.places ?? []).join(' / ')}`;
+    case GATE_RULES.aboutCardEcho:
+      return `${violation.field} repeats ${(violation.actual ?? '').split(':')[1] ?? ABOUT_CARD_ECHO_MIN_WORDS} words in a row of the about body; the explanation of how he works appears once on the page, and the about body keeps it. Rewrite this card in its own words and end it on its own result`;
+    case GATE_RULES.cardPhraseEcho:
+      return `${violation.field} shares a phrase with an earlier service card; each card ends on its own result, in its own words`;
+    case GATE_RULES.warrantyDefinite:
+      return `${violation.field} writes the warranty with the article and a bare duration, which is ungrammatical; follow rule C4: in a full sentence write the duration with the prefix lamed, and the warranty is received, never seen`;
     case GATE_RULES.servicesHeadlineSet:
       return `${violation.field} must be exactly one of these entries, word for word: ${JSON.stringify(SERVICES_HEADLINE_OPTIONS)}`;
     case GATE_RULES.trustBarFiller: {

@@ -2,7 +2,7 @@ import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
-import { extractServedAreaNames, isRadiusAnswer, localitiesNamedIn, MAX_LISTED_SERVED_AREAS, withServedAreaNames, type Locality } from './servedAreas';
+import { extractServedAreaNames, isRadiusAnswer, listedServedAreas, localitiesNamedIn, MAX_LISTED_SERVED_AREAS, servedAreaCandidates, STORED_LISTED_SERVED_AREAS_MAX, withServedAreaNames, type Locality } from './servedAreas';
 import { PREFIX_LETTERS } from '../lp/copyGates';
 import { buildSiteResearchInput } from './research/researchInput';
 import { compileBusinessTruthModel } from './research/businessTruth';
@@ -30,16 +30,36 @@ describe('servedAreas: radius answers', () => {
 describe('servedAreas: named localities', () => {
   it('keeps the owner order, dedups, drops the base city and attaches prefixes', () => {
     const answer = `${base.he_name}, ${b.he_name}, ${a.he_name} ${VAV}${BET}${c.he_name}, ${b.he_name}`;
+    // M2b.1g: the cap is 2 besides the base city; the third town is kept in overflow, never dropped.
     assert.deepEqual(extractServedAreaNames(answer, base.he_name, LOCALITIES), {
-      listed: [b.he_name, a.he_name, c.he_name], overflow: [], source: 'travel_boundary', ownerConfirmed: false,
+      listed: [b.he_name, a.he_name], overflow: [c.he_name], source: 'travel_boundary', ownerConfirmed: false,
     });
+    assert.deepEqual(servedAreaCandidates(answer, base.he_name, LOCALITIES), [b.he_name, a.he_name, c.he_name]);
   });
 
-  it('caps at base + 3 and keeps the overflow', () => {
+  it('caps at base + 2 (M2b.1g) and keeps the overflow', () => {
+    assert.equal(MAX_LISTED_SERVED_AREAS, 2);
     const names = extractServedAreaNames([a, b, c, d, e].map(item => item.he_name).join(', '), base.he_name, LOCALITIES);
     assert.equal(names?.listed.length, MAX_LISTED_SERVED_AREAS);
-    assert.deepEqual(names?.listed, [a.he_name, b.he_name, c.he_name]);
-    assert.deepEqual(names?.overflow, [d.he_name, e.he_name]);
+    assert.deepEqual(names?.listed, [a.he_name, b.he_name]);
+    assert.deepEqual(names?.overflow, [c.he_name, d.he_name, e.he_name]);
+  });
+
+  it('M2b.1g: the owner\'s intake choice picks the listed towns among the parsed ones; the rest stay in overflow', () => {
+    const answer = [a, b, c, d].map(item => item.he_name).join(', ');
+    assert.deepEqual(extractServedAreaNames(answer, base.he_name, LOCALITIES, [d.he_name, b.he_name]),
+      { listed: [b.he_name, d.he_name], overflow: [a.he_name, c.he_name], source: 'travel_boundary', ownerConfirmed: false });
+    // A name the parse did not find never becomes listed; a choice past the cap is cut to the cap; an empty choice is ignored.
+    assert.deepEqual(extractServedAreaNames(answer, base.he_name, LOCALITIES, ['client injected', c.he_name])?.listed, [c.he_name]);
+    assert.deepEqual(extractServedAreaNames(answer, base.he_name, LOCALITIES, [a.he_name, b.he_name, c.he_name])?.listed, [a.he_name, b.he_name]);
+    assert.deepEqual(extractServedAreaNames(answer, base.he_name, LOCALITIES, [])?.listed, [a.he_name, b.he_name]);
+    // Checkout consumes the choice: it never reaches the stored record.
+    const derivedChoice = withServedAreaNames({ businessNiche: 'Plumber', targetLocation: base.he_name, travelBoundary: answer, servedAreaChoice: [c.he_name, d.he_name] }, LOCALITIES);
+    assert.deepEqual(derivedChoice.servedAreaNames?.listed, [c.he_name, d.he_name]);
+    assert.equal('servedAreaChoice' in derivedChoice, false);
+    // Stored M1 records with 3 listed towns are honoured, never re-cut.
+    assert.equal(STORED_LISTED_SERVED_AREAS_MAX, 3);
+    assert.deepEqual(listedServedAreas({ servedAreaNames: { listed: [a.he_name, b.he_name, c.he_name], overflow: [], source: 'travel_boundary', ownerConfirmed: false } }), [a.he_name, b.he_name, c.he_name]);
   });
 
   it('ignores unknown words, Latin text and names glued to other letters', () => {

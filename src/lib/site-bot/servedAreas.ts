@@ -6,7 +6,10 @@
  *   config/market-scanner/areas.json via ./israeliLocalities). Unknown words are ignored.
  * - A radius / distance answer (any digit) never produces localities: it stays in travelBoundary.
  * - Result: deduplicated in the owner's order, the base city removed (it is always first
- *   elsewhere), at most 3 listed, the rest kept as overflow for the M2b one-tap confirm.
+ *   elsewhere), at most MAX_LISTED_SERVED_AREAS listed, the rest kept as overflow for the M2b
+ *   one-tap confirm. M2b.1g (Yonatan): 2 besides the base city. Never dropped silently: the intake
+ *   shows the reason and lets the owner choose which towns are listed (servedAreaChoice), and any
+ *   town not listed stays in overflow.
  * - The result feeds schema areaServed and the service-area brief fact only. It must never
  *   reach specificCities / businessTruth.servedAreas, which is what creates city pages.
  *
@@ -19,9 +22,15 @@
  * HEBREW-SAFETY: this module contains ZERO Hebrew bytes.
  */
 import type { CollectedData } from '../bot/prompts';
-import { PREFIX_LETTERS } from '../lp/copyGates';
+import { PREFIX_LETTERS } from '../lp/hebrewPrefixLetters';
 
-export const MAX_LISTED_SERVED_AREAS = 3;
+/** M2b.1g (Yonatan, Eitan's concern): at most 2 listed towns besides the base city (the base city is not counted). */
+export const MAX_LISTED_SERVED_AREAS = 2;
+/**
+ * Records written before M2b.1g may list 3 towns (the M1 cap). Readers honour up to this many, so a stored list is never
+ * re-cut behind the owner's back; new records never exceed MAX_LISTED_SERVED_AREAS.
+ */
+export const STORED_LISTED_SERVED_AREAS_MAX = 3;
 
 export interface LocalityMatchGuard {
   prefix_letters?: string[];
@@ -91,40 +100,56 @@ export function localitiesNamedIn(answer: string, localities: readonly Locality[
 }
 
 /**
- * The servedAreaNames field for this answer, or undefined when nothing qualifies. The base
- * city (card city) is dropped by name key, or by locality when the base is a known locality
- * or alias. Display names are the canonical he_name from the list, never the owner's spelling
- * fragment, so schema and gates see one stable name per place.
+ * Every locality the answer names besides the base city (canonical he_name, owner's order), or [] for an empty or radius
+ * answer. The base city (card city) is dropped by name key, or by locality when the base is a known locality or alias.
+ * Browser-safe: the M2b.1g intake runs it live to show the area limit before the answer is sent.
  */
-export function extractServedAreaNames(answer: string | undefined, baseCity: string | undefined, localities: readonly Locality[]): ServedAreaNames | undefined {
+export function servedAreaCandidates(answer: string | undefined, baseCity: string | undefined, localities: readonly Locality[]): string[] {
   const text = (answer ?? '').trim();
-  if (!text || isRadiusAnswer(text)) return undefined;
+  if (!text || isRadiusAnswer(text)) return [];
   const baseKey = nameKey(baseCity ?? '');
   const baseSlug = baseKey
     ? localities.find(item => [item.he_name, ...(item.he_aliases ?? [])].some(name => nameKey(name) === baseKey))?.slug
     : undefined;
-  const named = localitiesNamedIn(text, localities)
+  return localitiesNamedIn(text, localities)
     .filter(item => item.slug !== baseSlug && nameKey(item.he_name) !== baseKey)
     .map(item => item.he_name);
+}
+
+/**
+ * The servedAreaNames field for this answer, or undefined when nothing qualifies. Display names are the canonical he_name
+ * from the list, never the owner's spelling fragment, so schema and gates see one stable name per place.
+ * M2b.1g: `choice` is the owner's pick in the intake (when the answer names more than MAX_LISTED_SERVED_AREAS towns). Only
+ * names this parse found count, in the owner's order, at most MAX_LISTED_SERVED_AREAS; every other named town stays in
+ * overflow. Without a valid choice the first towns are listed and the rest kept in overflow (nothing is dropped).
+ */
+export function extractServedAreaNames(answer: string | undefined, baseCity: string | undefined, localities: readonly Locality[], choice?: readonly unknown[]): ServedAreaNames | undefined {
+  const named = servedAreaCandidates(answer, baseCity, localities);
   if (!named.length) return undefined;
+  const picked = Array.isArray(choice) ? named.filter(name => choice.some(item => typeof item === 'string' && nameKey(item) === nameKey(name))).slice(0, MAX_LISTED_SERVED_AREAS) : [];
+  const listed = picked.length ? picked : named.slice(0, MAX_LISTED_SERVED_AREAS);
   return {
-    listed: named.slice(0, MAX_LISTED_SERVED_AREAS),
-    overflow: named.slice(MAX_LISTED_SERVED_AREAS),
+    listed,
+    overflow: named.filter(name => !listed.includes(name)),
     source: 'travel_boundary',
     ownerConfirmed: false,
   };
 }
 
-/** Recomputes the field from travelBoundary + the base city, discarding any client-sent value. */
+/**
+ * Recomputes the field from travelBoundary + the base city, discarding any client-sent value. M2b.1g: the client's
+ * servedAreaChoice only selects among the towns this parse finds; it is consumed here and never stored.
+ */
 export function withServedAreaNames(data: CollectedData, localities: readonly Locality[]): CollectedData {
   const rest: CollectedData = { ...data };
   delete rest.servedAreaNames;
-  const names = extractServedAreaNames(data.travelBoundary, data.targetLocation, localities);
+  delete rest.servedAreaChoice;
+  const names = extractServedAreaNames(data.travelBoundary, data.targetLocation, localities, data.servedAreaChoice);
   return names ? { ...rest, servedAreaNames: names } : rest;
 }
 
-/** The listed names a renderer may use (overflow is never rendered in M1). */
+/** The listed names a renderer may use (overflow is never rendered in M1). Stored lists are honoured up to the M1 cap. */
 export function listedServedAreas(data: CollectedData): string[] {
   const listed = data.servedAreaNames?.listed;
-  return Array.isArray(listed) ? listed.filter((item): item is string => typeof item === 'string' && item.trim() !== '').slice(0, MAX_LISTED_SERVED_AREAS) : [];
+  return Array.isArray(listed) ? listed.filter((item): item is string => typeof item === 'string' && item.trim() !== '').slice(0, STORED_LISTED_SERVED_AREAS_MAX) : [];
 }

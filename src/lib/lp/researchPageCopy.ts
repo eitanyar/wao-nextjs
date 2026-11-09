@@ -22,8 +22,12 @@ import {
   HERO_CTA_OVERRIDE,
   M2A6_PROMPT_RULES,
   M2B_EVERY_PAGE_RULE_IDS,
-  M2B_PROMPT_RULES,
+  M2B_PROMPT_RULES_AFTER_M2B2,
+  M2B2_EVERY_PAGE_RULE_IDS,
+  M2B2_PROMPT_RULES,
+  NO_FINAL_PERIOD_FIELDS,
   PREPOSITION_PROMPT_LINE,
+  SENTENCE_FINAL_PERIOD_FIELDS,
   SERVICES_HEADLINE_OPTIONS,
   STICKY_ACTION_TOKENS,
   TRADE_TERMS,
@@ -33,9 +37,10 @@ import {
   TYPOGRAPHY_RULE_TEXT,
   VOICE_PROMPT_RULES,
 } from './generationData';
-import { pageNameWithCity, researchedGatedFieldsFor, researchedUngeneratedFieldsFor } from './researchedSite';
+import { pageNameWithCity, RESEARCHED_RENDERED_FIELDS, researchedGatedFieldsFor, researchedUngeneratedFieldsFor } from './researchedSite';
 import {
   blockingGateHits,
+  buildAreaTile,
   copyGateContext,
   DIFFERENTIATOR_SIGNATURE_CAP,
   differentiatorGroups,
@@ -43,6 +48,7 @@ import {
   effectiveReviewQuote,
   fixTimeScope,
   GATE_RULES,
+  isAreaTile,
   isInstallService,
   promptSignatureVariants,
   runCopyGates,
@@ -51,6 +57,7 @@ import {
   slugVertical,
   STICKY_ARRIVAL_TOKENS,
   warningGateHits,
+  withPlaceListPrefixes,
   type CopyGateContext,
   type HeroCapPageFacts,
   type ServiceStage,
@@ -510,10 +517,34 @@ export function pageStage(brief: PageBrief): ServiceStage {
  * stage CTA set. Every CTA string still passes the fact gates of this page, so a label the owner's facts
  * cannot carry (an arrival or same-day promise without a response time) is never offered.
  */
-/** M2b.1d: the section 22.3 rules of this page (all six on a page that generates the about section; else the every-page ones). */
+/**
+ * M2b.1d: the section 22.3 rules of this page (all six on a page that generates the about section; else the every-page ones).
+ * M2b.1g: with the section 23.3 cuts (C2 replaces the B5 option list, C1 the B6 example; build-generation-data asserts them).
+ */
 export function m2bRulesFor(brief: PageBrief): ReadonlyArray<{ id: string; text: string }> {
   const sections = !ungeneratedFieldsFor(brief).includes('aboutPageBody');
-  return M2B_PROMPT_RULES.filter(rule => sections || M2B_EVERY_PAGE_RULE_IDS.includes(rule.id));
+  return M2B_PROMPT_RULES_AFTER_M2B2.filter(rule => sections || M2B_EVERY_PAGE_RULE_IDS.includes(rule.id));
+}
+
+/** M2b.1g: the section 23.3 rules of this page (all six on a page that generates the about section; else C4 and C5). */
+export function m2b2RulesFor(brief: PageBrief): ReadonlyArray<{ id: string; text: string }> {
+  const sections = !ungeneratedFieldsFor(brief).includes('aboutPageBody');
+  return M2B2_PROMPT_RULES.filter(rule => sections || M2B2_EVERY_PAGE_RULE_IDS.includes(rule.id));
+}
+
+/** M2b.1g (section 23.2 d): whether the research renderer shows the guarantee block (C4 is written conditionally on it). */
+export const GUARANTEE_BLOCK_RENDERED: boolean = RESEARCHED_RENDERED_FIELDS.includes('guaranteeBlock');
+
+/**
+ * M2b.1g (Yonatan, C2 guard; English, engineer-placed): at most one place in the about headline, natural, never a town list
+ * or "and surroundings"; a neighbouring served town is preferred over the hero city. Gated by gate_about_headline_places.
+ */
+export const ABOUT_HEADLINE_PLACE_RULE = '- About headline place (SEO guard, binding): aboutPageHeadline names at most one place, and only where it reads naturally. Never a list of towns, and never "<town> and surroundings". When you name a place there, prefer a neighbouring town from his service area over repeating the hero\'s city.';
+
+/** M2b.1g (C5): the trust-bar area tile is system-built from the area array; the model writes the other items only. */
+export function trustTileRule(brief: PageBrief): string | null {
+  const tile = buildAreaTile(gatePlaces(brief), TRUST_BAR_MAX_CHARS);
+  return tile ? `- trustBarItems: the system builds the service-area item (rule C5) and adds it as one of the ${TRUST_BAR_MAX_ITEMS} items. Write at most ${TRUST_BAR_MAX_ITEMS - 1} items yourself, and none of them may be a place or a list of places.` : null;
 }
 
 export function buildVoiceRules(brief: PageBrief, data: CollectedData = {}): string[] {
@@ -532,6 +563,12 @@ export function buildVoiceRules(brief: PageBrief, data: CollectedData = {}): str
     // M2b.1d: Tamar's section 22.3 rules (byte-exact): B2 on every page, the rest only where the about section and the
     // service cards render (and are generated).
     ...m2bRulesFor(brief).map(rule => `- ${rule.text}`),
+    // M2b.1g: Tamar's section 23.3 rules (byte-exact): C4 and C5 on every page, the rest where the about section renders;
+    // Yonatan's about-headline place guard with C2; the guarantee-block fact C4 reads; the C5 trust-tile note.
+    ...m2b2RulesFor(brief).map(rule => `- ${rule.text}`),
+    ...(m2b2RulesFor(brief).some(rule => rule.id === 'C2') ? [ABOUT_HEADLINE_PLACE_RULE] : []),
+    `- guaranteeBlockRendered on this page (rule C4): ${GUARANTEE_BLOCK_RENDERED}.`,
+    ...[trustTileRule(brief)].filter((line): line is string => Boolean(line)),
     'Lists named in the voice rules:',
     ...voiceListLines({ stickyArrival: responseTime, differentiatorGroups: differentiatorGroups(gates) }),
     `- trustBarFillerPhrases: ${JSON.stringify(TRUST_BAR_FILLER_PHRASES)}`,
@@ -939,7 +976,77 @@ export function withSystemFields(value: Loose, brief: PageBrief, data: Collected
   if (!ownerHasGuarantee(data)) next.guaranteeBlock = null;
   // M2a.3 (item 6): the response-time badge is the emergency arrival promise; never on an installation page.
   if (isInstallPage(brief)) next.responseTimeBadge = null;
+  // M2b.1g (section 23.2 e): the trust-bar area tile and the badge's place list are built from the area array.
+  const places = gatePlaces(brief);
+  if (Array.isArray(next.trustBarItems)) next.trustBarItems = withAreaTile(next.trustBarItems, places);
+  if (typeof next.responseTimeBadge === 'string') next.responseTimeBadge = withPlaceListPrefixes(next.responseTimeBadge, places);
+  // M2b.1g (section 23.2, Noa's slip 3): sentence-final periods, then the invariant.
+  normalizeFinalPeriods(next);
+  assertFinalPeriods(next);
   return next;
+}
+
+/**
+ * M2b.1g (section 23.2 e): the trust bar with the system-built area tile. A model-written area tile (an item that is only
+ * owner places) is replaced in place by the built one (and any second one dropped); otherwise the tile is appended while the
+ * bar has room. Other items are never edited.
+ */
+export function withAreaTile(items: readonly unknown[], places: readonly string[]): unknown[] {
+  const tile = buildAreaTile(places, TRUST_BAR_MAX_CHARS);
+  if (!tile) return [...items];
+  const isTile = (item: unknown) => typeof item === 'string' && isAreaTile(item, places);
+  const at = items.findIndex(isTile);
+  if (at >= 0) return items.flatMap((item, index) => (index === at ? [tile] : isTile(item) ? [] : [item]));
+  return items.length < TRUST_BAR_MAX_ITEMS ? [...items, tile] : [...items];
+}
+
+/** A sentence-final mark, allowing closing quotes / a bracket after it (section 23.2: . ! or ?). */
+const SENTENCE_END = /[.!?][\u05F4\u201D")]*\s*$/u;
+const LABEL_PERIOD = /\.+\s*$/u;
+
+/** Apply `fn` to every non-empty string of one data-file field name (`a`, `a[]` or `a[].b`), in place. */
+function mapFieldStrings(copy: Loose, name: string, fn: (value: string) => string): void {
+  const [top, inner] = name.split('[]');
+  if (inner === undefined) {
+    const value = copy[top];
+    if (typeof value === 'string' && value.trim()) copy[top] = fn(value);
+    return;
+  }
+  const list = copy[top];
+  if (!Array.isArray(list)) return;
+  const key = inner.replace(/^\./, '');
+  copy[top] = list.map(item => {
+    if (!key) return typeof item === 'string' && item.trim() ? fn(item) : item;
+    if (!plainObject(item) || typeof item[key] !== 'string' || !(item[key] as string).trim()) return item;
+    return { ...item, [key]: fn(item[key] as string) };
+  });
+}
+
+/** Every non-empty string of one data-file field name, with its path (for the invariant). */
+function fieldStrings(copy: Loose, name: string): Array<{ field: string; value: string }> {
+  const out: Array<{ field: string; value: string }> = [];
+  mapFieldStrings({ ...copy }, name, value => { out.push({ field: name, value }); return value; });
+  return out;
+}
+
+/**
+ * M2b.1g (section 23.2, Noa's slip 3): SENTENCE_FINAL_PERIOD_FIELDS end with "." unless they already end with . ! or ?;
+ * NO_FINAL_PERIOD_FIELDS lose a trailing ".". Punctuation only; heroSubheadline is untouched (Noa owns it).
+ */
+export function normalizeFinalPeriods(copy: Loose): Loose {
+  for (const name of SENTENCE_FINAL_PERIOD_FIELDS) mapFieldStrings(copy, name, value => (SENTENCE_END.test(value) ? value : `${value.trimEnd()}.`));
+  for (const name of NO_FINAL_PERIOD_FIELDS) mapFieldStrings(copy, name, value => (LABEL_PERIOD.test(value) ? value.replace(LABEL_PERIOD, '') : value));
+  return copy;
+}
+
+/** The section 23.2 assertion: every sentence field ends in . ! or ?, and no label field ends in ".". Throws otherwise. */
+export function assertFinalPeriods(copy: Loose): void {
+  for (const name of SENTENCE_FINAL_PERIOD_FIELDS) {
+    for (const { field, value } of fieldStrings(copy, name)) if (!SENTENCE_END.test(value)) throw new Error(`site copy punctuation invariant: ${field} has no sentence-final mark`);
+  }
+  for (const name of NO_FINAL_PERIOD_FIELDS) {
+    for (const { field, value } of fieldStrings(copy, name)) if (LABEL_PERIOD.test(value)) throw new Error(`site copy punctuation invariant: ${field} ends with a period`);
+  }
 }
 
 async function repairFields(ctx: RepairContext, stage: CopyValidationStage, value: Loose, violations: CopyViolation[], fields: string[]): Promise<Loose> {

@@ -39,6 +39,7 @@ import type { PipelineHoldReason } from './research/pipelineState';
 import { buildSiteResearchInput } from './research/researchInput';
 import { readResearchDossier, writeResearchDossierAtomic } from './research/researchStore';
 import { runSiteResearch } from './research/runResearch';
+import { listedServedAreas } from './servedAreas';
 import { transitionResearchStatus, type HumanGate, type PageOpportunity, type ResearchStatus, type SiteResearchDossier } from './research/types';
 import {
   assembleSiteIdentity,
@@ -276,7 +277,7 @@ export function buildPageBriefs(dossier: SiteResearchDossier, data: CollectedDat
   if (review) proof.push(approved('proof-review', `Customer review quote (owner-supplied; quote verbatim or not at all): ${review}${clean(data.starRating) ? ` | star rating: ${clean(data.starRating)}` : ''}`));
   // C5: the owner's own wording, never widened. Held city evidence never reaches the brief (compactEvidence drops it).
   // M1: the localities the owner named in travelBoundary join the stated area (never city pages).
-  const ownerArea = [...new Set([clean(data.specificCities) || location, ...(data.servedAreaNames?.listed ?? []).slice(0, 3).map(clean)].filter(Boolean))].join(', ');
+  const ownerArea = [...new Set([clean(data.specificCities) || location, ...listedServedAreas(data).map(clean)].filter(Boolean))].join(', ');
   const areaLabels = identity.serviceArea.join(', ');
   const localFacts = [
     ...(ownerArea ? [approved('local-area', `Service area (owner-stated; name only these places, never a wider area): ${ownerArea}${areaLabels && areaLabels !== ownerArea ? ` | display names: ${areaLabels}` : ''}`)] : []),

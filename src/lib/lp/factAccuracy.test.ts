@@ -304,6 +304,8 @@ test('9 owner-fact repetition: a fact phrase (digit run of an owner fact) above 
   assert.deepEqual(hits.map(hit => hit.field).sort(), ['aboutBlurb', 'stickyBarLine'].sort());
   assert.deepEqual(runCopyGates(loose({ aboutBlurb: `${HE_WORD} 180 118` }), gates), [], 'digit boundaries');
   // M2a.7: on a research site the repeats in unrendered fields (aboutBlurb, stickyBarLine) are warnings: no repair call.
+  // M2b.1g (section 23.2 f): on a research site the counters count rendered fields only, so the unrendered repeats are not
+  // counted at all (no warning either).
   const events: string[] = [];
   let calls = 0;
   const kept = await generateResearchPageCopy(briefWithSite(), { businessNiche: 'plumber', yearsInField: '18 years', guarantee: 'x' }, {
@@ -316,7 +318,7 @@ test('9 owner-fact repetition: a fact phrase (digit run of an owner fact) above 
   });
   assert.equal(kept.stickyBarLine, `${STICKY_LINE} 18`);
   assert.equal(calls, 2);
-  assert.ok(events.includes(`stickyBarLine:${GATE_RULES.factRepeat}`) && events.includes(`aboutBlurb:${GATE_RULES.factRepeat}`));
+  assert.ok(!events.includes(`stickyBarLine:${GATE_RULES.factRepeat}`) && !events.includes(`aboutBlurb:${GATE_RULES.factRepeat}`));
   // The repair loop still receives a fact repeat in a rendered field.
   calls = 0;
   const repaired = await generateResearchPageCopy(briefWithSite(), { businessNiche: 'plumber', yearsInField: '18 years', guarantee: 'x' }, {

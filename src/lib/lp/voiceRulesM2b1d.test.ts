@@ -22,6 +22,7 @@ import {
   HERO_CAP_CONCEPT_ADDITIONS,
   M2B_EVERY_PAGE_RULE_IDS,
   M2B_PROMPT_RULES,
+  M2B_PROMPT_RULES_AFTER_M2B2,
   SAME_DAY_TOKENS,
   SERVICE_LABEL_PINS,
   SERVICES_HEADLINE_OPTIONS,
@@ -116,7 +117,7 @@ function brief(slug: string, pageClass = 'money_service', pageName = LABEL, serv
 test('M2b.1d 1: generationData carries section 22 byte-exact and counted; B1-B6 are slices of the data file; --check passes', () => {
   const text = fs.readFileSync(DATA_FILE, 'utf8');
   const blocks = [...text.matchAll(/\n~~~json\n([\s\S]*?)\n~~~/g)].map(match => JSON.parse(match[1]));
-  assert.equal(blocks.length, 52);
+  assert.equal(blocks.length, 60); // M2b.1g adds 8 (section 23)
   const data = Object.assign({}, ...blocks);
   const same = (actual: unknown, expected: unknown) => assert.deepEqual(JSON.parse(JSON.stringify(actual)), expected);
   same(DIFFERENTIATOR_SOURCE_FIELDS_ADD, data.differentiatorSourceFieldsAdd);
@@ -259,11 +260,13 @@ test('M2b.1d 6: home/hub-only fields: money pages never generate, gate or send t
   }
   assert.ok(!/Output exactly these keys and no others: [^\n]*aboutPageBody/.test(moneyPrompt));
   assert.ok(moneyPrompt.length < hubPrompt.length);
-  // Prompt rules: B2 on every page, B1-B6 on home / hub; the lists they name.
-  for (const rule of M2B_PROMPT_RULES) {
+  // Prompt rules: B2 on every page, B1-B6 on home / hub; the lists they name. M2b.1g: with the section 23.3 cuts (C2 replaces
+  // the B5 option list, C1 the B6 example), so the full B5 / B6 never reach a prompt.
+  for (const rule of M2B_PROMPT_RULES_AFTER_M2B2) {
     assert.ok(hubPrompt.includes(rule.text), `hub ${rule.id}`);
     assert.equal(moneyPrompt.includes(rule.text), M2B_EVERY_PAGE_RULE_IDS.includes(rule.id), `money ${rule.id}`);
   }
+  for (const rule of M2B_PROMPT_RULES.filter(item => ['B5', 'B6'].includes(item.id))) assert.ok(!hubPrompt.includes(rule.text), `hub full ${rule.id}`);
   assert.ok(moneyPrompt.includes(`trustBarFillerPhrases: ${JSON.stringify(TRUST_BAR_FILLER_PHRASES)}`));
   assert.ok(hubPrompt.includes(`servicesHeadlineOptions: ${JSON.stringify(SERVICES_HEADLINE_OPTIONS)}`));
   assert.ok(!moneyPrompt.includes(`servicesHeadlineOptions: ${JSON.stringify(SERVICES_HEADLINE_OPTIONS)}`));
@@ -317,7 +320,8 @@ test('M2b.1d 7: duplicate about checks compare homepage / hub pages only; the op
   ];
   assert.deepEqual(siteGenerationContext(pages), { priorHeroHeadlines: [W1, W2, HE_WORD], priorAboutPageHeadlines: [W1, HE_WORD], priorAboutPageBodies: [W1, HE_WORD], priorHeroFacts: [] });
   assert.ok(!('serviceDetailsOpener' in GATE_RULES));
-  assert.deepEqual([...WARNING_ONLY_RULES], [GATE_RULES.duplicateAboutOpening]);
+  // M2b.1g: section 23 cardPhraseEcho is warn-only for the rescore.
+  assert.deepEqual([...WARNING_ONLY_RULES], [GATE_RULES.duplicateAboutOpening, GATE_RULES.cardPhraseEcho]);
 });
 
 test('M2b.1d 8 (M2b.1f): all five M2b fields block by default; an injected warn-only list still holds a field back; never gated where not rendered', () => {

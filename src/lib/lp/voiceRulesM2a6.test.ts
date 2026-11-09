@@ -130,7 +130,7 @@ function brief(slug: string, pageName = LABEL, city: string | null = null, pageC
 test('M2a.6 1: generationData.ts carries section 20 byte-exact, counted and sourced; R1-R7 are slices of the data file; --check passes', () => {
   const text = fs.readFileSync(DATA_FILE, 'utf8');
   const blocks = [...text.matchAll(/\n~~~json\n([\s\S]*?)\n~~~/g)].map(match => JSON.parse(match[1]));
-  assert.equal(blocks.length, 52); // M2a.7 adds 5 blocks (sections 20 and 21); M2b.1d adds 4 (section 22)
+  assert.equal(blocks.length, 60); // M2a.7 adds 5 blocks (sections 20 and 21); M2b.1d adds 4 (section 22); M2b.1g adds 8 (section 23)
   const data = Object.assign({}, ...blocks);
   const same = (actual: unknown, expected: unknown) => assert.deepEqual(JSON.parse(JSON.stringify(actual)), expected);
   same(SIGNATURE_WORD_TOKEN_ADDITIONS, data.signatureWordTokenAdditions);
