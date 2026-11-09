@@ -304,15 +304,27 @@ export const RESEARCHED_RENDERED_FIELDS: readonly string[] = [
 ];
 
 /**
- * M2b.1: rendered fields whose voice-gate hits stay warnings until the next Tamar/Noa voice round. Gating them now
- * drops the fixture below the M2a bar (>= 9/10 valid): no-repair re-score of the M2a.7 eval final copy, 17/18 valid
- * today; gating all of them 2/18; one at a time trustBarItems 16/18, servicesHeadline 13/18, serviceDetails 13/18,
- * aboutPageBody 9/18, aboutPageHeadline 8/18 (heroCta 17/18, gated). Fact/trust gates (copyGates.ts
- * ALWAYS_BLOCKING_RULES) still fail these fields. Remove a field from this list to make it a hard gate.
+ * M2b.1: rendered fields whose voice-gate hits stay warnings until the next Tamar/Noa voice round. Fact/trust gates
+ * (copyGates.ts ALWAYS_BLOCKING_RULES) still fail these fields. Remove a field from this list to make it a hard gate.
+ * M2b.1d (Tamar section 22.4): trustBarItems and servicesHeadline are hard gates now; serviceDetails, aboutPageHeadline and
+ * aboutPageBody stay warn-only until the 18-run eval with all five blocking clears >= 16/18 (RESEARCHED_ALL_FIELDS_BLOCKING_ENV).
  */
-export const RESEARCHED_RENDERED_WARN_ONLY_FIELDS: readonly string[] = ['trustBarItems', 'aboutPageHeadline', 'aboutPageBody', 'servicesHeadline', 'serviceDetails'];
+export const RESEARCHED_RENDERED_WARN_ONLY_FIELDS: readonly string[] = ['aboutPageHeadline', 'aboutPageBody', 'serviceDetails'];
 
-/** The fields whose gate hits fail a research page (copyGates renderedFields): rendered minus the warn-only set. */
+/**
+ * M2b.1d: the eval switch. With this environment variable set to "1", RESEARCHED_RENDERED_WARN_ONLY_FIELDS is ignored, so
+ * all five M2b fields (trustBarItems, servicesHeadline, serviceDetails, aboutPageHeadline, aboutPageBody) block. Default off.
+ * Read at call time (researchedWarnOnlyFields), so an eval process can set it without a rebuild.
+ */
+export const RESEARCHED_ALL_FIELDS_BLOCKING_ENV = 'SITE_BOT_M2B_ALL_FIELDS_BLOCKING';
+
+/** The warn-only fields in force: RESEARCHED_RENDERED_WARN_ONLY_FIELDS, or none with the eval switch on. */
+export function researchedWarnOnlyFields(): readonly string[] {
+  const env = typeof process !== 'undefined' ? process.env?.[RESEARCHED_ALL_FIELDS_BLOCKING_ENV] : undefined;
+  return env === '1' ? [] : RESEARCHED_RENDERED_WARN_ONLY_FIELDS;
+}
+
+/** The fields whose gate hits fail a research page (copyGates renderedFields): rendered minus the default warn-only set. */
 export const RESEARCHED_GATED_FIELDS: readonly string[] = RESEARCHED_RENDERED_FIELDS.filter(field => !RESEARCHED_RENDERED_WARN_ONLY_FIELDS.includes(field));
 
 /** M2b.1b: page types that render the about section and the service cards. */
@@ -327,12 +339,19 @@ export function rendersSiteSections(classification: string): boolean {
 }
 
 /**
- * The gated fields of one page type (M2b.1b): RESEARCHED_GATED_FIELDS minus the home/hub-only fields on a page type
- * that does not render them, so a field is never gated where it is not shown. Today the home/hub-only fields are all
- * warn-only, so every page type gets RESEARCHED_GATED_FIELDS; this matters once one of them leaves the warn-only set.
+ * The gated fields of one page type (M2b.1b): the rendered fields minus the warn-only fields in force (M2b.1d:
+ * researchedWarnOnlyFields, so the eval switch applies), minus the home/hub-only fields on a page type that does not render
+ * them, so a field is never gated where it is not shown (M2b.1d: those pages do not generate them either).
  */
 export function researchedGatedFieldsFor(classification: string): readonly string[] {
-  return rendersSiteSections(classification) ? RESEARCHED_GATED_FIELDS : RESEARCHED_GATED_FIELDS.filter(field => !RESEARCHED_HOME_HUB_ONLY_FIELDS.includes(field));
+  const warnOnly = researchedWarnOnlyFields();
+  const gated = RESEARCHED_RENDERED_FIELDS.filter(field => !warnOnly.includes(field));
+  return rendersSiteSections(classification) ? gated : gated.filter(field => !RESEARCHED_HOME_HUB_ONLY_FIELDS.includes(field));
+}
+
+/** M2b.1d: the top-level copy fields a page type does not generate (the home/hub-only fields off the homepage / services hub). */
+export function researchedUngeneratedFieldsFor(classification: string): readonly string[] {
+  return rendersSiteSections(classification) ? [] : RESEARCHED_HOME_HUB_ONLY_FIELDS;
 }
 
 const PHONE_EMOJI = '\u{1F4DE}';

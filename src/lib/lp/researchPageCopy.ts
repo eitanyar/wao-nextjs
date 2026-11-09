@@ -5,7 +5,7 @@
 
 import type { CollectedData } from '../bot/prompts';
 import type { SiteCopy } from './lpCopyPrompt';
-import { buildSiteCopyPrompt, primaryCtaLabel } from './lpCopyPrompt';
+import { buildLpCopyPrompt, buildSiteCopyPrompt, primaryCtaLabel } from './lpCopyPrompt';
 import { callQwenJSON, type CallQwenJSONOptions } from '../ai/qwen-fast';
 import type { PageBrief } from '../site-bot/research/pageBrief';
 import type { SiteResearchDossier } from '../site-bot/research/types';
@@ -21,13 +21,18 @@ import {
   GENERIC_ADJECTIVE_WORDS,
   HERO_CTA_OVERRIDE,
   M2A6_PROMPT_RULES,
+  M2B_EVERY_PAGE_RULE_IDS,
+  M2B_PROMPT_RULES,
   PREPOSITION_PROMPT_LINE,
+  SERVICES_HEADLINE_OPTIONS,
   STICKY_ACTION_TOKENS,
   TRADE_TERMS,
+  TRUST_BAR_FILLER_PHRASES,
+  TRUST_BAR_MAX_ITEMS,
   TYPOGRAPHY_RULE_TEXT,
   VOICE_PROMPT_RULES,
 } from './generationData';
-import { pageNameWithCity, researchedGatedFieldsFor } from './researchedSite';
+import { pageNameWithCity, researchedGatedFieldsFor, researchedUngeneratedFieldsFor } from './researchedSite';
 import {
   blockingGateHits,
   copyGateContext,
@@ -209,6 +214,15 @@ const SITE_COPY_KEYS = [
 /** Exactly the keys a SiteCopy object must have (validator order). */
 export const SITE_COPY_KEY_LIST: readonly string[] = SITE_COPY_KEYS;
 
+/**
+ * M2b.1d: shape options of the bounded validator. `ungenerated` lists the top-level fields the page does not generate
+ * (ungeneratedFieldsFor): those string fields may be empty, and serviceDetails may be an empty list (it always may).
+ * Everything else is unchanged, so copy saved before M2b.1d (all fields filled) still passes.
+ */
+export interface SiteCopyShapeOptions {
+  ungenerated?: readonly string[];
+}
+
 function invalidCopy(): never {
   throw new Error('Invalid bounded generated site copy.');
 }
@@ -251,11 +265,16 @@ function stringPair(value: unknown, keys: readonly string[], limits: readonly nu
   return Reflect.ownKeys(value).every(key => typeof key === 'string' && keys.includes(key));
 }
 
-export function assertBoundedGeneratedSiteCopy(value: unknown): asserts value is SiteCopy {
+/** M2b.1d: an ungenerated required string field may be exactly empty. */
+function allowedEmpty(key: string, value: unknown, options: SiteCopyShapeOptions): boolean {
+  return value === '' && (options.ungenerated ?? []).includes(key);
+}
+
+export function assertBoundedGeneratedSiteCopy(value: unknown, options: SiteCopyShapeOptions = {}): asserts value is SiteCopy {
   if (!plainObject(value)) invalidCopy();
   exactFields(value, SITE_COPY_KEYS);
   for (const [key, max] of Object.entries(COPY_FIELDS)) {
-    if (!boundedString(value[key], max)) invalidCopy();
+    if (!boundedString(value[key], max) && !allowedEmpty(key, value[key], options)) invalidCopy();
   }
   for (const [key, max] of Object.entries(OPTIONAL_FIELDS)) {
     if (value[key] !== null && !boundedString(value[key], max)) invalidCopy();
@@ -339,14 +358,14 @@ function pairViolations(field: string, entry: unknown, keys: readonly string[], 
  * Explains why assertBoundedGeneratedSiteCopy rejects a value: every violation, not
  * just the first. Diagnostic only; the assert stays the single source of truth.
  */
-export function explainGeneratedSiteCopyViolations(value: unknown): CopyViolation[] {
+export function explainGeneratedSiteCopyViolations(value: unknown, options: SiteCopyShapeOptions = {}): CopyViolation[] {
   if (!plainObject(value)) return [{ field: '$', rule: 'not_object' }];
   const out: CopyViolation[] = [];
   const own = Object.keys(value);
   for (const key of SITE_COPY_KEYS) if (!own.includes(key)) out.push({ field: key, rule: 'missing' });
   for (const key of own) if (!SITE_COPY_KEYS.includes(key)) out.push({ field: key, rule: 'unexpected' });
   for (const [key, max] of Object.entries(COPY_FIELDS)) {
-    if (!own.includes(key)) continue;
+    if (!own.includes(key) || allowedEmpty(key, value[key], options)) continue;
     const violation = stringViolation(key, value[key], max);
     if (violation) out.push(violation);
   }
@@ -383,11 +402,11 @@ export function explainGeneratedSiteCopyViolations(value: unknown): CopyViolatio
   return out;
 }
 
-function assertCopyAt(stage: CopyValidationStage, value: unknown): asserts value is SiteCopy {
+function assertCopyAt(stage: CopyValidationStage, value: unknown, options: SiteCopyShapeOptions = {}): asserts value is SiteCopy {
   try {
-    assertBoundedGeneratedSiteCopy(value);
+    assertBoundedGeneratedSiteCopy(value, options);
   } catch {
-    const violations = explainGeneratedSiteCopyViolations(value);
+    const violations = explainGeneratedSiteCopyViolations(value, options);
     // The assert also rejects shapes the explainer does not itemise (e.g. accessor properties).
     throw new GeneratedCopyValidationError(stage, violations.length ? violations : [{ field: '$', rule: 'structure' }]);
   }
@@ -440,9 +459,13 @@ export function buildResearchCopyRules(brief: PageBrief, data: CollectedData = {
       rules.push('- INSTALLATION PAGE (binding): this page is about an installation service. Never state an arrival or response time on it (no "arrives within <time>"): the emergency response time belongs on repair pages only.');
     }
     if (scope instanceof Set) rules.push(`- A same-day / fix-within promise from the owner covers only these services: ${JSON.stringify([...scope])}. Never extend it to any other service.`);
+    // M2b.1d: the serviceDetails lines only on a page that generates the service cards.
+    const cards = !ungeneratedFieldsFor(brief).includes('serviceDetails');
     rules.push(
-      `- serviceDetails descriptions: one complete sentence of at least ${SERVICE_DESCRIPTION_MIN_CHARS} characters on what the service includes for the customer (within the length limit); never just the service name restated.`,
-      `- serviceItems is filled in by the system. serviceDetails: at most one entry per service; every name must be exactly one of these owner-confirmed service names, character for character: ${JSON.stringify(site.serviceLabels)}. Never add any other service.`,
+      ...(cards ? [`- serviceDetails descriptions: one complete sentence of at least ${SERVICE_DESCRIPTION_MIN_CHARS} characters on what the service includes for the customer (within the length limit); never just the service name restated.`] : []),
+      cards
+        ? `- serviceItems is filled in by the system. serviceDetails: at most one entry per service; every name must be exactly one of these owner-confirmed service names, character for character: ${JSON.stringify(site.serviceLabels)}. Never add any other service.`
+        : '- serviceItems is filled in by the system.',
       heroAnchorRule(brief),
       site.ownerIntroPage
         ? '- The "my name is <first name>" opener appears once per site: this is that page. Use it at most once here (aboutBlurb); aboutPageBody must not repeat it.'
@@ -485,6 +508,12 @@ export function pageStage(brief: PageBrief): ServiceStage {
  * stage CTA set. Every CTA string still passes the fact gates of this page, so a label the owner's facts
  * cannot carry (an arrival or same-day promise without a response time) is never offered.
  */
+/** M2b.1d: the section 22.3 rules of this page (all six on a page that generates the about section; else the every-page ones). */
+export function m2bRulesFor(brief: PageBrief): ReadonlyArray<{ id: string; text: string }> {
+  const sections = !ungeneratedFieldsFor(brief).includes('aboutPageBody');
+  return M2B_PROMPT_RULES.filter(rule => sections || M2B_EVERY_PAGE_RULE_IDS.includes(rule.id));
+}
+
 export function buildVoiceRules(brief: PageBrief, data: CollectedData = {}): string[] {
   const stage = pageStage(brief);
   const gates = briefGateContext(brief, data);
@@ -498,8 +527,13 @@ export function buildVoiceRules(brief: PageBrief, data: CollectedData = {}): str
     // M2a.6: Tamar's section 20.8 rules R1-R8 (byte-exact; M2a.7 adds R8), and Noa's verb / preposition line (M2a.7).
     ...M2A6_PROMPT_RULES.map(rule => `- ${rule.text}`),
     `- ${PREPOSITION_PROMPT_LINE}`,
+    // M2b.1d: Tamar's section 22.3 rules (byte-exact): B2 on every page, the rest only where the about section and the
+    // service cards render (and are generated).
+    ...m2bRulesFor(brief).map(rule => `- ${rule.text}`),
     'Lists named in the voice rules:',
     ...voiceListLines({ stickyArrival: responseTime, differentiatorGroups: differentiatorGroups(gates) }),
+    `- trustBarFillerPhrases: ${JSON.stringify(TRUST_BAR_FILLER_PHRASES)}`,
+    ...(m2bRulesFor(brief).some(rule => rule.id === 'B3') ? [`- servicesHeadlineOptions: ${JSON.stringify(SERVICES_HEADLINE_OPTIONS)}`] : []),
     tradeTermLine(slugVertical(stageSlug(brief)) === 'ac'),
     `- This page's stage (section 19.4 above): ${stage}. heroCta is fixed by the system (on this page: ${JSON.stringify(researchHeroCta(brief, data))}; the stickyBarLine must differ from it); choose formHeadline from these ctaLabelSets entries for this stage. Labels: ${JSON.stringify(set.formHeadline.labels.filter(passes))}. Patterns (use one as a pattern, adapted to this service): ${JSON.stringify(set.formHeadline.examples.filter(passes))}. formHeadlineFallback, only when nothing more specific fits: ${JSON.stringify(passes(CTA_LABEL_SETS.formHeadlineFallback) ? CTA_LABEL_SETS.formHeadlineFallback : '')}.`,
   ];
@@ -558,20 +592,22 @@ export function buildSimulationGenerationResult(data: CollectedData) {
  * English hard-limits block, generated from the validator constants so the prompt
  * can never drift from what assertBoundedGeneratedSiteCopy enforces.
  */
-export function buildSiteCopyHardLimitsBlock(heading = 'HARD LIMITS'): string {
+export function buildSiteCopyHardLimitsBlock(heading = 'HARD LIMITS', omit: readonly string[] = []): string {
+  // M2b.1d: `omit` = the fields this page does not generate (ungeneratedFieldsFor); they leave the block and the key list.
+  const keep = (key: string) => !omit.includes(key);
   const lines: string[] = [
     `${heading} (validator-enforced; output that breaks any of these is rejected. They override every softer length or count guidance above):`,
     '- Length means the number of characters in the string, counting every letter, space, digit and punctuation mark. Aim for at most 85% of each limit to leave a margin.',
     '- Required non-empty strings (every one must be present and non-empty, including faqHeadline when faqItems is empty):',
-    ...Object.entries(SITE_COPY_STRING_LIMITS).map(([key, max]) => `  - ${key}: max ${max} characters`),
+    ...Object.entries(SITE_COPY_STRING_LIMITS).filter(([key]) => keep(key)).map(([key, max]) => `  - ${key}: max ${max} characters`),
     '- Optional fields (a string, or null):',
     ...Object.entries(SITE_COPY_OPTIONAL_STRING_LIMITS).map(([key, max]) => `  - ${key}: max ${max} characters when set`),
     '- Lists:',
-    ...STRING_LIST_KEYS.map(key => {
+    ...STRING_LIST_KEYS.filter(keep).map(key => {
       const limit = SITE_COPY_STRING_LIST_LIMITS[key];
       return `  - ${key}: at most ${limit.maxItems} strings; each string max ${limit.itemMaxChars} characters`;
     }),
-    ...PAIR_LIST_KEYS.map(key => {
+    ...PAIR_LIST_KEYS.filter(keep).map(key => {
       const limit = SITE_COPY_PAIR_LIST_LIMITS[key];
       const parts = limit.keys.map((name, index) => `"${name}" max ${limit.maxChars[index]} characters`).join(', ');
       return `  - ${key}: at most ${limit.maxItems} objects with exactly the keys ${limit.keys.map(name => `"${name}"`).join(' and ')}; ${parts}`;
@@ -579,7 +615,7 @@ export function buildSiteCopyHardLimitsBlock(heading = 'HARD LIMITS'): string {
     `- ${SITE_COPY_REVIEW_PAIR[0]} is the owner's quote, verbatim, and may stand alone. ${SITE_COPY_REVIEW_PAIR[1]} may be set only when ${SITE_COPY_REVIEW_PAIR[0]} is set and the data supplies a star rating; otherwise ${SITE_COPY_REVIEW_PAIR[1]} is null. Never invent a ${SITE_COPY_REVIEW_PAIR[1]}. Never shorten or rephrase a quote.`,
     `- ${SITE_COPY_ALWAYS_NULL.join(', ')}: always null.`,
     '- faqItems: follow the faqPolicy rule in the research rules above.',
-    `- Output exactly these keys and no others: ${SITE_COPY_KEYS.join(', ')}.`,
+    `- Output exactly these keys and no others: ${SITE_COPY_KEYS.filter(keep).join(', ')}.`,
     `- The whole JSON object must be at most ${SITE_COPY_MAX_BYTES} bytes in UTF-8.`,
     '- If a field is too long, rephrase it shorter in complete, natural wording. Never cut text mid-word or mid-sentence and never use an ellipsis.',
   ];
@@ -709,12 +745,12 @@ function parseLoose(raw: unknown): { value?: Loose; violations: CopyViolation[] 
   return { value, violations: [] };
 }
 
-function validatorViolations(value: Loose): CopyViolation[] {
+function validatorViolations(value: Loose, options: SiteCopyShapeOptions = {}): CopyViolation[] {
   try {
-    assertBoundedGeneratedSiteCopy(value);
+    assertBoundedGeneratedSiteCopy(value, options);
     return [];
   } catch {
-    const violations = explainGeneratedSiteCopyViolations(value);
+    const violations = explainGeneratedSiteCopyViolations(value, options);
     return violations.length ? violations : [{ field: '$', rule: 'structure' }];
   }
 }
@@ -731,8 +767,8 @@ export function gateWarnings(value: Loose, gates: CopyGateContext | null): CopyV
   return warningGateHits(runCopyGates(value, gates), gates).map(hit => ({ field: hit.field, rule: hit.rule, ...(hit.actual ? { actual: hit.actual } : {}) }));
 }
 
-function currentViolations(value: Loose, gates: CopyGateContext | null = null): CopyViolation[] {
-  return [...validatorViolations(value), ...gateViolations(value, gates)];
+function currentViolations(value: Loose, gates: CopyGateContext | null = null, options: SiteCopyShapeOptions = {}): CopyViolation[] {
+  return [...validatorViolations(value, options), ...gateViolations(value, gates)];
 }
 
 /**
@@ -804,7 +840,19 @@ export function applySafeDeterministicFixes(value: Loose, gates: CopyGateContext
   // TRUST_BAR_MIN_KEPT other items remain, drop that whole item (never edited) instead of failing.
   if (gates && Array.isArray(next.trustBarItems)) {
     // M2a.7: blocking hits only (a warning never fails the page, so it never needs the drop).
-    const hits = blockingGateHits(runCopyGates(next, gates), gates);
+    const all = blockingGateHits(runCopyGates(next, gates), gates);
+    // M2b.1d: the item-count hit (section 22.2) marks the items past the cap, not a bad item. Alone, the items past the
+    // cap are dropped (whole items, never edited, like trim_items); next to one bad item it is ignored, since dropping
+    // that item may bring the list under the cap (the re-gate below decides).
+    const hits = all.filter(hit => !isTrustBarCountHit(hit));
+    if (!hits.length && all.length) {
+      const kept = next.trustBarItems.slice(0, TRUST_BAR_MAX_ITEMS);
+      const candidate = { ...next, trustBarItems: kept };
+      if (blockingGateHits(runCopyGates(candidate, gates), gates).length === 0) {
+        fixes.push(`trim_gated_items:trustBarItems:${next.trustBarItems.length}->${kept.length}`);
+        return { value: candidate, fixes };
+      }
+    }
     const indices = new Set(hits.map(hit => /^trustBarItems\[(\d+)\]$/.exec(hit.field)?.[1] ?? 'other'));
     const [only] = [...indices];
     if (hits.length && indices.size === 1 && only !== 'other' && next.trustBarItems.length - 1 >= TRUST_BAR_MIN_KEPT) {
@@ -821,6 +869,11 @@ export function applySafeDeterministicFixes(value: Loose, gates: CopyGateContext
 
 /** M2a.5: a gated trust-bar item is dropped only while at least this many other items remain. */
 export const TRUST_BAR_MIN_KEPT = 3;
+
+/** M2b.1d: the section 22.2 item-count hit (trustBarItems past TRUST_BAR_MAX_ITEMS). */
+function isTrustBarCountHit(hit: { rule: string; actual?: string }): boolean {
+  return hit.rule === GATE_RULES.trustBarSize && (hit.actual ?? '').startsWith('trust_items:');
+}
 
 /**
  * System-filled fields, re-applied after every model response:
@@ -841,9 +894,41 @@ export function researchHeroCta(brief: PageBrief, data: CollectedData): string {
   return pageStage(brief) === 'planned' && label === primaryCtaLabel({}) ? HERO_CTA_OVERRIDE.planned.phone : label;
 }
 
+/**
+ * M2b.1d (Tamar's cost note, Adam-approved): the top-level fields this page does not generate. On a research site, a page
+ * type that does not render the about section and the service cards (everything except the homepage and the services hub)
+ * never generates aboutPageHeadline, aboutPageBody, servicesHeadline or serviceDetails: they leave the prompt and the
+ * schema, no gate runs on them, and withSystemFields fills them. Legacy (no site facts): none.
+ */
+export function ungeneratedFieldsFor(brief: PageBrief): readonly string[] {
+  return brief.site ? researchedUngeneratedFieldsFor(brief.page.pageClass) : [];
+}
+
+/** M2b.1d: the bounded-validator shape options of a brief's page. */
+export function shapeOptions(brief: PageBrief): SiteCopyShapeOptions {
+  const ungenerated = ungeneratedFieldsFor(brief);
+  return ungenerated.length ? { ungenerated } : {};
+}
+
+/**
+ * M2b.1d (section 22.2): the services headline is a closed set. A value byte-identical to an entry after trimming becomes
+ * that entry; anything else becomes the first entry (deterministic, never a repair call: the H2 is a fixed signpost).
+ */
+export function normalizedServicesHeadline(value: unknown): string {
+  const trimmed = typeof value === 'string' ? value.trim() : '';
+  return SERVICES_HEADLINE_OPTIONS.includes(trimmed) ? trimmed : SERVICES_HEADLINE_OPTIONS[0];
+}
+
 export function withSystemFields(value: Loose, brief: PageBrief, data: CollectedData): Loose {
   const next: Loose = { ...value, faqItems: supportedFaqItems(brief) };
   if (!brief.site) return next;
+  // M2b.1d: ungenerated fields are system-filled (empty about pair and cards; the first services headline entry), and the
+  // services headline of a page that generates it is normalised to the closed set.
+  const ungenerated = ungeneratedFieldsFor(brief);
+  if (ungenerated.includes('aboutPageHeadline')) next.aboutPageHeadline = '';
+  if (ungenerated.includes('aboutPageBody')) next.aboutPageBody = '';
+  if (ungenerated.includes('serviceDetails')) next.serviceDetails = [];
+  next.servicesHeadline = normalizedServicesHeadline(ungenerated.includes('servicesHeadline') ? null : next.servicesHeadline);
   next.heroCta = researchHeroCta(brief, data);
   const itemLimit = SITE_COPY_STRING_LIST_LIMITS.serviceItems;
   next.serviceItems = brief.site.serviceLabels.filter(label => label.length <= itemLimit.itemMaxChars).slice(0, itemLimit.maxItems);
@@ -871,7 +956,8 @@ async function repairFields(ctx: RepairContext, stage: CopyValidationStage, valu
 
 function systemFieldsFor(ctx: RepairContext): readonly string[] {
   if (!ctx.brief.site) return ['faqItems'];
-  const fields = ownerHasGuarantee(ctx.data) ? SYSTEM_FIELDS : [...SYSTEM_FIELDS, 'guaranteeBlock'];
+  // M2b.1d: the fields this page does not generate are system-filled, and the services headline is system-normalised.
+  const fields = [...(ownerHasGuarantee(ctx.data) ? SYSTEM_FIELDS : [...SYSTEM_FIELDS, 'guaranteeBlock']), ...ungeneratedFieldsFor(ctx.brief)];
   return isInstallPage(ctx.brief) ? [...fields, 'responseTimeBadge'] : fields;
 }
 
@@ -881,7 +967,7 @@ async function settleStage(ctx: RepairContext, stage: CopyValidationStage, call:
   let parsed = parseLoose(await call());
   let value = parsed.value ? settle(parsed.value) : undefined;
   for (;;) {
-    const violations = value ? currentViolations(value, ctx.gates) : parsed.violations;
+    const violations = value ? currentViolations(value, ctx.gates, shapeOptions(ctx.brief)) : parsed.violations;
     if (value && violations.length === 0) {
       emitWarnings(stage, value, ctx.gates, ctx.emit);
       return value as unknown as SiteCopy;
@@ -908,7 +994,7 @@ async function settleStage(ctx: RepairContext, stage: CopyValidationStage, call:
       value = fixed.value;
     }
   }
-  assertCopyAt(stage, value);
+  assertCopyAt(stage, value, shapeOptions(ctx.brief));
   assertGatesAt(stage, value, ctx.gates, ctx.emit);
   return value as unknown as SiteCopy;
 }
@@ -949,10 +1035,14 @@ export function buildResearchPageGenerationPrompt(brief: PageBrief, data: Collec
   // M2a.2: a quote that is not mostly Hebrew never reaches the model (never translated, item 8),
   // and with no owner guarantee the schema shows guaranteeBlock as null (item 7).
   const promptData: CollectedData = brief.site && !effectiveReviewQuote(data) ? { ...data, reviewQuote: '' } : data;
-  const schema = buildSiteCopyPrompt(promptData, {
+  const schemaOptions = {
     blankResponseTimeBadge: true,
     ...(brief.site ? { relevanceTerm: brief.site.relevanceTerm, nullGuarantee: !ownerHasGuarantee(data) } : {}),
-  });
+  };
+  // M2b.1d: a page that does not render the about section and the service cards gets the LP schema (no about-page /
+  // service-detail block or keys) without the servicesHeadline key; the system fills those fields.
+  const omit = ungeneratedFieldsFor(brief);
+  const schema = omit.length ? withoutSchemaKey(buildLpCopyPrompt(promptData, schemaOptions), 'servicesHeadline') : buildSiteCopyPrompt(promptData, schemaOptions);
   // A4: the client copy prompt never names WAO (a WAO-offer leak put a copywriting agency's services on a plumber page).
   if (!schema.includes(LEGACY_PERSONA_LINE)) throw new Error('Site copy schema prompt persona line changed; update the research persona swap.');
   let clientSchema = schema.replace(LEGACY_PERSONA_LINE, RESEARCH_PERSONA_LINE);
@@ -971,7 +1061,15 @@ export function buildResearchPageGenerationPrompt(brief: PageBrief, data: Collec
       throw new Error('Site copy schema prompt shows an unstated solo-operator claim; update the research example cut.');
     }
   }
-  return `${buildResearchPageCopyPrompt(brief, data)}\n\nOWNER FACTS AND SITE COPY SCHEMA:\n${clientSchema}\n\n${buildSiteCopyHardLimitsBlock()}`;
+  return `${buildResearchPageCopyPrompt(brief, data)}\n\nOWNER FACTS AND SITE COPY SCHEMA:\n${clientSchema}\n\n${buildSiteCopyHardLimitsBlock('HARD LIMITS', omit)}`;
+}
+
+/** M2b.1d: the schema template without one `"key": "",` line (asserted: exactly one such line). */
+function withoutSchemaKey(schema: string, key: string): string {
+  const line = `\n  "${key}": "",`;
+  const at = schema.indexOf(line);
+  if (at < 0 || schema.indexOf(line, at + 1) >= 0) throw new Error(`Site copy schema prompt ${key} line changed; update the M2b.1d schema cut.`);
+  return `${schema.slice(0, at)}${schema.slice(at + line.length)}`;
 }
 
 /** True when the brief's page is about an installation service (item 6). */
@@ -998,6 +1096,8 @@ export function briefGateContext(brief: PageBrief, data: CollectedData): CopyGat
     // warn-only for the next voice round (RESEARCHED_RENDERED_WARN_ONLY_FIELDS) are excluded too. M2b.1b: per page type
     // (about / service cards render on the homepage and service hub only).
     ...(site ? { renderedFields: researchedGatedFieldsFor(brief.page.pageClass) } : {}),
+    // M2b.1d: the fields this page does not generate are never gated.
+    ...(site ? { ungeneratedFields: [...ungeneratedFieldsFor(brief)] } : {}),
   });
 }
 
@@ -1021,7 +1121,10 @@ export function buildNoaQaMessage(copy: SiteCopy, brief?: PageBrief): string {
   const fixed = brief?.site
     ? '\n\nSYSTEM FIELDS (never change them): heroCta, serviceItems, reviewFeatured, faqItems, and every serviceDetails[].name.'
     : '';
-  return `${JSON.stringify(copy)}\n\n${buildSiteCopyHardLimitsBlock('HARD LIMITS FOR YOUR CORRECTIONS (never lengthen a field past its limit)')}${fixed}`;
+  // M2b.1d: the fields this page does not generate never reach Noa (withSystemFields fills them again).
+  const omit = brief ? ungeneratedFieldsFor(brief) : [];
+  const shown = omit.length ? Object.fromEntries(Object.entries(copy).filter(([key]) => !omit.includes(key))) : copy;
+  return `${JSON.stringify(shown)}\n\n${buildSiteCopyHardLimitsBlock('HARD LIMITS FOR YOUR CORRECTIONS (never lengthen a field past its limit)', omit)}${fixed}`;
 }
 
 export async function generateResearchPageCopy(
@@ -1053,7 +1156,7 @@ export async function generateResearchPageCopy(
   const tamarCopy = await settleStage(ctx, 'tamar', () => callJson(brief.site ? SITE_COPY_SYSTEM_PROMPT : COPY_SYSTEM_PROMPT, prompt, { thinkingBudget: 1500 }));
   const noaCopy = await settleStage(ctx, 'noa', () => callJson(QA_SYSTEM_PROMPT, buildNoaQaMessage(tamarCopy, brief), { think: false }));
   const finalCopy = withSystemFields(applyFaqPolicy(noaCopy, brief) as unknown as Loose, brief, data) as unknown as SiteCopy;
-  assertCopyAt('final', finalCopy);
+  assertCopyAt('final', finalCopy, shapeOptions(brief));
   assertGatesAt('final', finalCopy as unknown as Loose, ctx.gates, ctx.emit);
   return finalCopy;
 }

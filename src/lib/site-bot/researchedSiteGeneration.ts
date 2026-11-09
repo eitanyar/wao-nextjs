@@ -9,11 +9,12 @@ import type { CollectedData } from '../bot/prompts';
 import type { SiteCopy } from '../lp/lpCopyPrompt';
 import {
   renderResearchedSitePages,
+  rendersSiteSections,
   type RenderResearchedSitePagesParams,
   type ResearchedSiteGraphEdge,
   type ResearchedSitePage,
 } from '../lp/researchedSite';
-import { assertBoundedGeneratedSiteCopy, heroCapFacts, isApprovedPortfolioBrief } from '../lp/researchPageCopy';
+import { assertBoundedGeneratedSiteCopy, heroCapFacts, isApprovedPortfolioBrief, shapeOptions } from '../lp/researchPageCopy';
 import type { HeroCapPageFacts } from '../lp/copyGates';
 import { isSafeDeploymentSlug } from '../deployment/deploy-access';
 import { assertBoundedPageBrief, type PageBrief } from './research/pageBrief';
@@ -72,11 +73,17 @@ export interface ResearchedSiteGenerationContext {
 }
 
 /** M2a.6: the site context for the next page, from the pages generated so far (route order, home first); M2a.7: plus their hero-cap facts. */
-export function siteGenerationContext(pages: ReadonlyArray<{ copy: SiteCopy }>, facts: readonly HeroCapPageFacts[] = []): ResearchedSiteGenerationContext {
+/**
+ * The site-wide gate context for the next page. M2b.1d (section 22.2): the about checks compare only pages that render the
+ * about section (homepage / services hub), so the about priors skip every other page type (a page without a classification
+ * counts, for hand-built callers).
+ */
+export function siteGenerationContext(pages: ReadonlyArray<{ copy: SiteCopy; classification?: string }>, facts: readonly HeroCapPageFacts[] = []): ResearchedSiteGenerationContext {
+  const about = pages.filter(page => page.classification === undefined || rendersSiteSections(page.classification));
   return {
     priorHeroHeadlines: pages.map(page => page.copy.heroHeadline),
-    priorAboutPageHeadlines: pages.map(page => page.copy.aboutPageHeadline),
-    priorAboutPageBodies: pages.map(page => page.copy.aboutPageBody),
+    priorAboutPageHeadlines: about.map(page => page.copy.aboutPageHeadline),
+    priorAboutPageBodies: about.map(page => page.copy.aboutPageBody),
     priorHeroFacts: [...facts],
   };
 }
@@ -196,7 +203,7 @@ export async function buildResearchedSiteGeneration(
   for (const sourceBrief of input.pageBriefs) {
     const brief = structuredClone(sourceBrief);
     const generatedCopy = await dependencies.generateCopy(brief, structuredClone(input.collectedData), siteGenerationContext(pages, heroFacts));
-    assertBoundedGeneratedSiteCopy(generatedCopy);
+    assertBoundedGeneratedSiteCopy(generatedCopy, shapeOptions(brief));
     heroFacts.push(heroCapFacts(brief, generatedCopy));
     pages.push({
       opportunityId: brief.page.id,

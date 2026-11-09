@@ -48,6 +48,19 @@ function prefixJoiner(opts: LegalPageOpts, name: string): string {
 
 const RLM = '\u200F';
 
+/**
+ * M2b.1d: the legal pages load the same web fonts as every other site page (renderSitePages pageHead) and use the theme's
+ * body and heading families, so they no longer fall back to a system font.
+ */
+const FONT_LINKS = `<link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Secular+One&family=Assistant:wght@400;600;700;800&display=swap" rel="stylesheet" />`;
+
+/** The first family of a theme font stack, quoted, then the site's fallbacks (same rule as renderSitePages styleBlock). */
+function themeFamily(stack: string): string {
+  return `'${stack.split(',')[0].replace(/['"]/g, '')}', Assistant, sans-serif`;
+}
+
 function legalTitle(opts: LegalPageOpts, title: string, businessName: string): string {
   if (!opts.pipeTitle) return `${esc(title)} \u2014 ${businessName}`;
   if (!businessName) return esc(title);
@@ -75,9 +88,11 @@ function legalDocument(opts: LegalPageOpts, title: string, bodyHtml: string): st
   <title>${legalTitle(opts, title, businessName)}</title>
   <meta name="robots" content="noindex,follow" />
   <link rel="canonical" href="${canonicalUrl}" />
+  ${FONT_LINKS}
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: Assistant, sans-serif; background: ${t.bg}; color: ${t.textPrimary}; }
+    body { font-family: ${themeFamily(t.fontBody)}; background: ${t.bg}; color: ${t.textPrimary}; }
+    h1 { font-family: ${themeFamily(t.fontHeading)}; font-weight: ${t.headingWeight}; }
     html { background: ${t.surface}; }
     a { color: ${t.accentText}; }
     p { line-height: 1.8; font-size: 0.98rem; color: ${t.textPrimary}; margin-bottom: 14px; }
@@ -106,13 +121,15 @@ function legalDocument(opts: LegalPageOpts, title: string, bodyHtml: string): st
 export function buildPrivacyHtml(opts: LegalPageOpts): string {
   const { ownerName, phone, email } = contactLine(opts.data);
   const businessName = esc(opts.data.businessName || opts.data.businessNiche || '');
-  const emailPart = email ? ` או במייל: ${esc(email)}` : '';
+  // M2b.1d: with no phone the phone clause is omitted and the email (if any) leads, without the joining word.
+  const phonePart = phone ? ` בטלפון ${esc(phone)}` : '';
+  const emailPart = email ? `${phone ? ' או' : ''} במייל: ${esc(email)}` : '';
 
   const body = `
     <p>הפרטים שתשאיר/י בטופס באתר זה (שם וטלפון) נאספים על ידי <strong>${businessName}</strong> כבעל השליטה במידע, ומשמשים אך ורק ליצירת קשר חוזר בנוגע לפנייתך.</p>
     <p>המידע לא יועבר לצד שלישי, למעט אם נדרש על פי דין.</p>
     <p>מסירת הפרטים היא לפי בחירתך בלבד. ללא מסירתם לא נוכל לחזור אליך.</p>
-    <p>ניתן בכל עת לבקש לעיין במידע שנמסר, לבקש את תיקונו או את מחיקתו, בפנייה ל${prefixJoiner(opts, ownerName)}${esc(ownerName)} בטלפון ${esc(phone)}${emailPart}.</p>
+    <p>ניתן בכל עת לבקש לעיין במידע שנמסר, לבקש את תיקונו או את מחיקתו, בפנייה ל${prefixJoiner(opts, ownerName)}${esc(ownerName)}${phonePart}${emailPart}.</p>
   `;
 
   return legalDocument(opts, 'מדיניות פרטיות', body);
@@ -121,11 +138,13 @@ export function buildPrivacyHtml(opts: LegalPageOpts): string {
 // Lawyer-approved wording (approved 2026-08-01) — same re-approval rule as buildPrivacyHtml above.
 export function buildAccessibilityHtml(opts: LegalPageOpts): string {
   const { ownerName, phone, email } = contactLine(opts.data);
-  const emailPart = email ? ` או במייל: ${esc(email)}` : '';
+  // M2b.1d: with no phone the phone clause is omitted and the email (if any) leads, without the joining word.
+  const phonePart = phone ? ` בטלפון ${esc(phone)}` : '';
+  const emailPart = email ? `${phone ? ' או' : ''} במייל: ${esc(email)}` : '';
 
   const body = `
     <p>אתר זה נבנה תוך התייחסות לדרישות תקן ישראלי 5568 (התאמות נגישות בהתאם ל-WCAG 2.0 ברמה AA), ככל הניתן.</p>
-    <p>אם נתקלת בבעיה או שיש לך הערה בנושא נגישות האתר, ניתן לפנות ל${prefixJoiner(opts, ownerName)}${esc(ownerName)} בטלפון ${esc(phone)}${emailPart}.</p>
+    <p>אם נתקלת בבעיה או שיש לך הערה בנושא נגישות האתר, ניתן לפנות ל${prefixJoiner(opts, ownerName)}${esc(ownerName)}${phonePart}${emailPart}.</p>
   `;
 
   return legalDocument(opts, 'הצהרת נגישות', body);

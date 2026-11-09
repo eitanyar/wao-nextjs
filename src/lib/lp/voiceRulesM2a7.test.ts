@@ -135,10 +135,13 @@ test('M2a.7 1: generationData carries the M2a.7 data byte-exact and counted; R8 
 test('M2a.7 2: warn-only: a hit on a field the research renderer does not show is a warning (no repair, page passes); fact / trust gates and rendered fields still fail; legacy unchanged', async () => {
   // M2b.1: the renderer shows more fields; the gate context gets the rendered fields minus the warn-only set.
   assert.deepEqual([...RESEARCHED_RENDERED_FIELDS], ['heroHeadline', 'heroSubheadline', 'formHeadline', 'faqItems', 'reviewFeatured', 'reviewContext', 'heroCta', 'trustBarItems', 'aboutPageHeadline', 'aboutPageBody', 'servicesHeadline', 'serviceDetails']);
-  assert.deepEqual([...RESEARCHED_RENDERED_WARN_ONLY_FIELDS], ['trustBarItems', 'aboutPageHeadline', 'aboutPageBody', 'servicesHeadline', 'serviceDetails']);
-  assert.deepEqual([...RESEARCHED_GATED_FIELDS], ['heroHeadline', 'heroSubheadline', 'formHeadline', 'faqItems', 'reviewFeatured', 'reviewContext', 'heroCta']);
+  // M2b.1d (section 22.4): trustBarItems and servicesHeadline are hard gates; the other three stay warn-only.
+  assert.deepEqual([...RESEARCHED_RENDERED_WARN_ONLY_FIELDS], ['aboutPageHeadline', 'aboutPageBody', 'serviceDetails']);
+  assert.deepEqual([...RESEARCHED_GATED_FIELDS], ['heroHeadline', 'heroSubheadline', 'formHeadline', 'faqItems', 'reviewFeatured', 'reviewContext', 'heroCta', 'trustBarItems', 'servicesHeadline']);
   const site = briefGateContext(brief('leak-detection'), {});
-  assert.deepEqual(site.renderedFields, [...RESEARCHED_GATED_FIELDS]);
+  // A money page renders (and generates) no services headline.
+  assert.deepEqual(site.renderedFields, RESEARCHED_GATED_FIELDS.filter(field => field !== 'servicesHeadline'));
+  assert.deepEqual(briefGateContext(brief('services', 'service_hub'), {}).renderedFields, [...RESEARCHED_GATED_FIELDS]);
   assert.equal(isWarningHit({ field: 'aboutBlurb', rule: GATE_RULES.signatureRepeat }, site), true);
   assert.equal(isWarningHit({ field: 'serviceDetails[2].description', rule: GATE_RULES.beforeCap }, site), true);
   assert.equal(isWarningHit({ field: 'heroSubheadline', rule: GATE_RULES.signatureRepeat }, site), false);
@@ -226,11 +229,14 @@ test('M2a.7 4: services_headline_preposition (left edge, next-letter check after
   assert.deepEqual(tradeTermHits(`${W1} ${BET}${whole}`, false), [], 'other prefix');
   assert.deepEqual(tradeTermHits(`${W1} ${phrase} ${W2}`, false), [water.id]);
   assert.deepEqual(tradeTermHits(`${W1}${phrase}`, false), [], 'a non-vav letter before the phrase');
-  // servicesHeadline is gated for the preposition only; it is not rendered yet, so the hit is a warning.
+  // servicesHeadline is gated for the preposition only. M2b.1d: it is a hard gate on the pages that render it (homepage /
+  // services hub), and a money page does not generate it at all.
   const site = briefGateContext(brief('leak-detection'), {});
+  const hub = briefGateContext(brief('services', 'service_hub'), {});
   const copy = loose({ servicesHeadline: `${single} ${whole}` });
-  assert.deepEqual(rulesOf(copy, site, GATE_RULES.tradeTerm), [`servicesHeadline=trade:${prep.id}`]);
-  assert.deepEqual(gateViolations(copy, site).filter(item => item.rule === GATE_RULES.tradeTerm), []);
+  assert.deepEqual(rulesOf(copy, hub, GATE_RULES.tradeTerm), [`servicesHeadline=trade:${prep.id}`]);
+  assert.deepEqual(gateViolations(copy, hub).filter(item => item.rule === GATE_RULES.tradeTerm).map(item => item.field), ['servicesHeadline']);
+  assert.deepEqual(rulesOf(copy, site, GATE_RULES.tradeTerm), [], 'money page: not generated, not gated');
   assert.deepEqual(gateViolations(loose({ heroHeadline: `${LABEL} ${whole}` }), site).map(item => `${item.field}:${item.actual}`), [`heroHeadline:trade:${water.id}`]);
 });
 

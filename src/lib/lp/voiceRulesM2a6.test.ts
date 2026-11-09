@@ -63,7 +63,6 @@ import {
   normalizeAnchorText,
   promptSignatureVariants,
   runCopyGates,
-  serviceDetailsOpenerOverCap,
   SIGNATURE_GROUPS,
   signatureCounts,
   slugVertical,
@@ -79,6 +78,7 @@ import {
   buildResearchPageGenerationPrompt,
   generateResearchPageCopy,
   researchHeroCta,
+  shapeOptions,
   SITE_COPY_STRING_LIMITS,
   tradeTermLine,
   withSystemFields,
@@ -130,7 +130,7 @@ function brief(slug: string, pageName = LABEL, city: string | null = null, pageC
 test('M2a.6 1: generationData.ts carries section 20 byte-exact, counted and sourced; R1-R7 are slices of the data file; --check passes', () => {
   const text = fs.readFileSync(DATA_FILE, 'utf8');
   const blocks = [...text.matchAll(/\n~~~json\n([\s\S]*?)\n~~~/g)].map(match => JSON.parse(match[1]));
-  assert.equal(blocks.length, 48); // M2a.7 adds 5 blocks (sections 20 and 21)
+  assert.equal(blocks.length, 52); // M2a.7 adds 5 blocks (sections 20 and 21); M2b.1d adds 4 (section 22)
   const data = Object.assign({}, ...blocks);
   const same = (actual: unknown, expected: unknown) => assert.deepEqual(JSON.parse(JSON.stringify(actual)), expected);
   same(SIGNATURE_WORD_TOKEN_ADDITIONS, data.signatureWordTokenAdditions);
@@ -235,7 +235,8 @@ test('M2a.6 3: site-wide checks: hero cap in route order, duplicate aboutPageHea
   // duplicate is a logged warning (no repair call); the repair wording is still there for M2b.
   const events: string[] = [];
   let repairs = 0;
-  const result = await generateResearchPageCopy(brief('leak-detection'), { businessNiche: 'plumber', guarantee: 'x' }, {
+  // M2b.1d: the about section is generated on the homepage / services hub only, so this runs on the hub.
+  const result = await generateResearchPageCopy(brief('services', LABEL, null, 'service_hub'), { businessNiche: 'plumber', guarantee: 'x' }, {
     priorAboutPageHeadlines: [W1],
     onEvent: event => { if (event.kind === 'warnings') for (const violation of event.violations ?? []) events.push(violation.rule); },
     callJson: async (system, user) => {
@@ -329,20 +330,10 @@ test('M2a.6 6: sticky naming: bare forms fail, the line names the service or a p
   assert.deepEqual(hitsOf(loose({ stickyBarLine: `${W2}? ${action}` }), { ...home, pageServiceLabel: W2 }, GATE_RULES.stickyNaming), []);
 });
 
-test('M2a.6 7: serviceDetails openers: at most floor(half) of the descriptions start with the whole opener word', () => {
-  const desc = (opener: boolean) => ({ name: LABEL, description: `${opener ? `${SERVICE_DETAILS_OPENER_TOKEN} ` : ''}${HE_WORD} ${W1} ${W2} ${W3} ${HE_WORD} ${W1} ${W2}` });
-  const over = (flags: boolean[]) => serviceDetailsOpenerOverCap({ serviceDetails: flags.map(desc) });
-  assert.deepEqual(over([true, true]), [1]);
-  assert.deepEqual(over([true, false]), []);
-  assert.deepEqual(over([true, false, false]), []);
-  assert.deepEqual(over([true, true, false]), [1]);
-  assert.deepEqual(over([true, true, false, false]), []);
-  assert.deepEqual(over([true, true, true, false]), [2]);
-  assert.deepEqual(over([true, true, true, true, true]), [2, 3, 4]);
-  const prefixed = { name: LABEL, description: `${VAV}${SERVICE_DETAILS_OPENER_TOKEN} ${HE_WORD}` };
-  assert.deepEqual(serviceDetailsOpenerOverCap({ serviceDetails: [prefixed, prefixed] }), [], 'a prefixed opener does not count');
-  assert.deepEqual(serviceDetailsOpenerOverCap({ serviceDetails: [{ name: LABEL, description: `${SERVICE_DETAILS_OPENER_TOKEN}${BET} ${HE_WORD}` }] }), [], 'whole word only');
-  assert.deepEqual(hitsOf(loose({ serviceDetails: [desc(true), desc(true)] }), vctx(), GATE_RULES.serviceDetailsOpener), ['serviceDetails[1].description=opener_cap:1']);
+test('M2a.6 7 (M2b.1d: deleted per section 22.2): an all-opener card set raises no gate hit and no warning', () => {
+  const desc = { name: LABEL, description: `${SERVICE_DETAILS_OPENER_TOKEN} ${HE_WORD} ${W1} ${W2} ${W3} ${HE_WORD} ${W1} ${W2}` };
+  const hits = runCopyGates(loose({ serviceDetails: [desc, desc, desc] }), vctx());
+  assert.ok(!hits.some(hit => hit.field.startsWith('serviceDetails') && hit.rule.includes('opener')), JSON.stringify(hits));
 });
 
 test('M2a.6 8: trade terms: gate and spellingFix reject (acOnly on AC pages, ac_sewage excused after its replacement in the clause), the arrive-locate lead verbs with prefixes and exclusions; promptOnly never gates', () => {
@@ -401,7 +392,9 @@ test('M2a.6 9: heroCta override: planned-stage pages of phone sites get the sect
   assert.equal(researchHeroCta(homePlanned, {}), override, 'the homepage takes its first service stage');
   assert.equal(withSystemFields(loose({}), { ...planned, site: undefined }, {}).heroCta, 'Call', 'legacy briefs keep the model value');
   assert.equal(SITE_COPY_STRING_LIMITS.heroCta, Math.max(15, override.length));
-  assert.doesNotThrow(() => assertBoundedGeneratedSiteCopy(withSystemFields(loose({}), planned, {})));
+  // M2b.1d: a money page does not generate the about pair (empty, allowed by its shape options).
+  assert.doesNotThrow(() => assertBoundedGeneratedSiteCopy(withSystemFields(loose({}), planned, {}), shapeOptions(planned)));
+  assert.throws(() => assertBoundedGeneratedSiteCopy(withSystemFields(loose({}), planned, {})), 'without the shape options the empty about pair is invalid');
   // The sticky bar may not equal the override either.
   assert.deepEqual(hitsOf(loose({ heroCta: override, stickyBarLine: override }), vctx(), GATE_RULES.stickyAction).filter(item => item.endsWith('equals_cta')), ['stickyBarLine=sticky:equals_cta']);
 });

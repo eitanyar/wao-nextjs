@@ -2,17 +2,25 @@ import type { SiteCopy } from '../lp/lpCopyPrompt';
 import type { ResearchedSiteGraphEdge, ResearchedSitePage } from '../lp/researchedSite';
 
 const OPAQUE_ID = /^[A-Za-z0-9][A-Za-z0-9_-]*$/;
+/**
+ * M2b.1d: page types that render (and generate) the about section; elsewhere the about pair is empty. Kept inline (this
+ * module stays import-free for the deploy preflight sandbox); mirrors researchedSite.ts rendersSiteSections.
+ */
+const ABOUT_SECTION_CLASSES = new Set(['homepage', 'service_hub']);
+const ABOUT_PAIR: readonly string[] = ['aboutPageHeadline', 'aboutPageBody'];
 const RENDERABLE_CLASSES = new Set([
   'homepage', 'service_hub', 'money_service', 'qualified_service_area', 'trust', 'process', 'pricing', 'proof', 'supporting',
 ]);
 
-function requireSiteCopy(value: SiteCopy): void {
+function requireSiteCopy(value: SiteCopy, classification: string): void {
   if (!value || typeof value !== 'object') throw new Error('Research page copy is malformed.');
   const requiredStrings: Array<keyof SiteCopy> = [
     'heroHeadline', 'heroSubheadline', 'heroCta', 'aboutBlurb', 'servicesHeadline', 'faqHeadline',
     'formHeadline', 'stickyBarLine', 'aboutPageHeadline', 'aboutPageBody',
   ];
-  if (requiredStrings.some(key => typeof value[key] !== 'string' || !(value[key] as string).trim())) {
+  // M2b.1d: a page type that does not render the about section does not generate it (an empty about pair is valid there).
+  const mayBeEmpty: readonly string[] = ABOUT_SECTION_CLASSES.has(classification) ? [] : ABOUT_PAIR;
+  if (requiredStrings.some(key => typeof value[key] !== 'string' || (!(value[key] as string).trim() && !(mayBeEmpty.includes(key) && value[key] === '')))) {
     throw new Error('Research page copy is malformed.');
   }
   // M2a.2: guaranteeBlock is null when the owner has no guarantee; when set it must be non-empty.
@@ -38,7 +46,7 @@ export function assertResearchedSiteGraphSafe(pages: ResearchedSitePage[], edges
       (page.classification !== 'homepage' && (!/^\/(?:[A-Za-z0-9_-]+\/)*[A-Za-z0-9_-]+$/.test(page.targetPath) || page.targetPath.includes('..')))) {
       throw new Error('Research page path is unsafe.');
     }
-    requireSiteCopy(page.copy);
+    requireSiteCopy(page.copy, page.classification);
     const output = page.classification === 'homepage' ? 'index.html' : page.targetPath.slice(1).replace(/\/$/, '') || 'index.html';
     if (outputs.has(output)) throw new Error('Research pages contain a duplicate output path.');
     outputs.add(output);

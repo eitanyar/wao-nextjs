@@ -26,6 +26,10 @@
 //   M2a.2 repo-derived paraphrase guard; GUARD_TOKEN_SOURCES records where each list came from.
 // - The generated module escapes every non-ASCII character as \uXXXX, so it holds ZERO
 //   Hebrew bytes; the runtime values are the real characters.
+// - M2b.1d: section 22 voiceRules M2b (Tamar, Noa-proofed): the idealClientFear differentiator source and its English
+//   keywords, the aboutHeadlineNoPromise list names, the servicesHeadlineOptions closed set, the trust-bar filler phrases
+//   and size caps, and the English prompt rules B1-B6 (with their indented sub-lines), all byte-exact; plus asserted
+//   English sentences for every section 22 rule the gate code implements without data.
 // This file has no Hebrew literals. Idempotent.
 //   node scripts/site-bot/build-generation-data.mjs [--check]
 import fs from 'node:fs';
@@ -51,7 +55,7 @@ export function jsonBlocks(text) {
 
 /** Expected entry counts per data list (asserted; a data edit must update these deliberately). */
 export const EXPECTED_COUNTS = {
-  jsonBlocks: 48, // M2a.7: + heroCapConceptAdditions, differentiatorUspKeywords, prepositionSkipAdverbs, wrongPrepositionTokens, section 21.
+  jsonBlocks: 52, // M2a.7: + heroCapConceptAdditions, differentiatorUspKeywords, prepositionSkipAdverbs, wrongPrepositionTokens, section 21. M2b.1d: + 4 section 22 blocks.
   claimKinds: 11,
   claimTokens: 59,
   claimTokenWordEnd: 3,
@@ -152,6 +156,14 @@ export const EXPECTED_COUNTS = {
   prepositionPairNextLetter: 1,
   wrongPrepositionTokens: 3,
   nameIntroLeadIns: 5,
+  // M2b.1d, section 22 (recounted from the file).
+  differentiatorFearGroups: 5,
+  differentiatorFearKeywords: 24,
+  aboutHeadlineForbidLists: 5,
+  servicesHeadlineOptions: 2,
+  trustBarFillerPhrases: 11,
+  m2bPromptRules: 6,
+  m2bRuleSubLines: 30,
 };
 
 /** Text of one data-file section (from its "## N." heading to the next heading). */
@@ -384,6 +396,49 @@ export function voiceProseM2a7(text, trade, heroConcepts) {
   assertProse(s21, 'Anywhere else it is not a name intro and is never checked. Whole word, no prefix letters', 'name-intro whole word');
   assertProse(s21, 'The same position rule applies to', 'name-intro subject carry');
   return { heroCapAcGroup: acGroup, heroCapAcOnly, differentiatorCap, differentiatorExcludedGroups: excluded, extraGateFields: prepositionFields, pairNextLetter, promptLine };
+}
+
+/**
+ * M2b.1d, section 22 prose (Tamar M2b): the English prompt rules B1-B6 (each with its indented sub-lines, byte-exact), the
+ * rules that apply on every page (the rest apply on pages that render the about section and the service cards), and
+ * asserted English sentences for every rule the gate code implements. Every value is a byte-exact slice of the file.
+ */
+export function voiceProseM2b(text, numbers) {
+  const section = sectionText(text, 22);
+  const rulesAt = section.indexOf('### 22.3');
+  const rulesEnd = section.indexOf('### 22.4');
+  assert(rulesAt >= 0 && rulesEnd > rulesAt, 'section 22.3 missing');
+  const lines = section.slice(rulesAt, rulesEnd).split('\n');
+  const promptRules = [];
+  lines.forEach((line, index) => {
+    if (!/^- \*\*B\d \u2014 /.test(line)) return;
+    const subs = [];
+    for (let next = index + 1; next < lines.length && lines[next].startsWith('  '); next++) subs.push(lines[next]);
+    promptRules.push({ id: /^- \*\*(B\d)/.exec(line)[1], text: [line.slice(2).replace(/\*\*/g, ''), ...subs].join('\n') });
+  });
+  assert(promptRules.length === EXPECTED_COUNTS.m2bPromptRules, `expected ${EXPECTED_COUNTS.m2bPromptRules} section 22 prompt rules, got ${promptRules.length}`);
+  assert(promptRules.map(rule => rule.id).join(',') === 'B1,B2,B3,B4,B5,B6', 'section 22 prompt rules out of order');
+  const subLines = promptRules.reduce((sum, rule) => sum + rule.text.split('\n').length - 1, 0);
+  assert(subLines === EXPECTED_COUNTS.m2bRuleSubLines, `expected ${EXPECTED_COUNTS.m2bRuleSubLines} section 22 rule sub-lines, got ${subLines}`);
+  const scope = /These apply on pages that render the about section and the service cards \(the homepage and the services hub\)\. (B\d) applies on every page\. Sections 19 and 20 still apply\./.exec(section);
+  assert(scope, 'section 22.3 page-scope sentence changed');
+  const everyPageRuleIds = [scope[1]];
+  assert(promptRules.some(rule => rule.id === everyPageRuleIds[0]), 'the every-page rule is not a section 22 rule');
+  // 22.2: the gate rulings the code implements (an edit to any of these sentences must be reviewed against copyGates.ts).
+  assertProse(section, '- **Hebrew fear**: as for a Hebrew usp (the section 19.3 and 20.1 variants).', 'Hebrew fear source');
+  assertProse(section, '- **English fear**: lower-case it and turn every hyphen into a space. Then match plain substrings against `differentiatorUspKeywords` and the `differentiatorFearKeywords` below.', 'English fear source');
+  assertProse(section, 'It applies only on pages that render the about section.', 'aboutHeadlineNoPromise scope');
+  assertProse(section, "- a `heroCapConceptAdditions` entry, with the section 20.1 service-label mask and the AC-only rule", 'aboutHeadlineNoPromise hero concepts');
+  assertProse(section, '- a `beforeTokens` hit, with the section 20.3 left-edge rule and time exclusions', 'aboutHeadlineNoPromise before');
+  assertProse(section, '- **Gate**: the trimmed value must be byte-identical to one entry of `servicesHeadlineOptions`.', 'services headline closed set');
+  assertProse(section, '- **Who sets it**: the model may pick an entry, or the engineer may system-set the first one. Either is fine.', 'services headline system set');
+  assertProse(section, '- **`trustBarFillerPhrases`** (new): plain substring, `trustBarItems` only. A hit fails the page.', 'trust-bar filler');
+  assertProse(section, `- **\`trustBarMaxItems\`** (no Hebrew): more than ${numbers.trustBarMaxItems} items fails.`, 'trust-bar max items');
+  assertProse(section, `- **\`trustBarMaxChars\`** (no Hebrew): any item over ${numbers.trustBarMaxChars} characters fails. Count Unicode code points, including spaces and punctuation.`, 'trust-bar max chars');
+  assertProse(section, '**`duplicate_about_headline`: keep it, but compare only pages that render the about section.**', 'duplicate about headline scope');
+  assertProse(section, '- **`service_details_opener` (106)**: R5 makes', 'service_details_opener deleted');
+  assertProse(section, '- **`duplicate_about_opening` (25)**: at most two about bodies render per site, so keep the check only for the homepage against the hub.', 'duplicate_about_opening scope');
+  return { promptRules, everyPageRuleIds };
 }
 
 /** Section 20.6: trade-term entries; the match rule is parsed ('substring', whole word with prefix letters, lead verb + word, none). */
@@ -671,6 +726,23 @@ export function extractGenerationData(text) {
   const prose21 = voiceProseM2a7(text, trade, heroCapConceptAdditions);
   for (const group of prose21.differentiatorExcludedGroups) assert(group in signature && !(group in differentiatorUspKeywords), 'the never-a-differentiator group must be a signature group with no English keywords');
 
+  // M2b.1d: section 22 voiceRules M2b.
+  const sourceAdd = merged.differentiatorSourceFieldsAdd;
+  assert(Array.isArray(sourceAdd) && sourceAdd.join(',') === 'idealClientFear', 'differentiatorSourceFieldsAdd must be ["idealClientFear"]');
+  const differentiatorFearKeywords = groupLists(merged.differentiatorFearKeywords, 'differentiatorFearKeywords', 'differentiatorFearGroups', 'differentiatorFearKeywords');
+  for (const list of Object.values(differentiatorFearKeywords)) for (const keyword of list) assert(/^[a-z' ]+$/.test(keyword), 'a differentiatorFearKeywords entry is not lower-case English without hyphens');
+  for (const group of prose21.differentiatorExcludedGroups) assert(!(group in differentiatorFearKeywords), 'the never-a-differentiator group has fear keywords');
+  const noPromise = merged.aboutHeadlineNoPromise;
+  assert(noPromise && noPromise.field === 'aboutPageHeadline' && Array.isArray(noPromise.forbidLists) && noPromise.forbidLists.length === EXPECTED_COUNTS.aboutHeadlineForbidLists, 'aboutHeadlineNoPromise must name aboutPageHeadline and its lists');
+  assert(noPromise.forbidLists.join(',') === 'signatureWordTokens,signatureWordTokenAdditions,tilesBreakForms,heroCapConceptAdditions,beforeTokens', 'aboutHeadlineNoPromise lists changed: update the gate code');
+  for (const name of noPromise.forbidLists) assert(name in merged, `aboutHeadlineNoPromise names an unknown list ${name}`);
+  const servicesHeadlineOptions = stringList(merged.servicesHeadlineOptions, 'servicesHeadlineOptions');
+  for (const option of servicesHeadlineOptions) assert(option === option.trim() && /[\u05D0-\u05EA]/.test(option), 'a servicesHeadlineOptions entry is not trimmed Hebrew');
+  const trustBarFillerPhrases = stringList(merged.trustBarFillerPhrases, 'trustBarFillerPhrases');
+  const { trustBarMaxItems, trustBarMaxChars } = merged;
+  assert(Number.isInteger(trustBarMaxItems) && trustBarMaxItems > 0 && Number.isInteger(trustBarMaxChars) && trustBarMaxChars > 0, 'trustBarMaxItems / trustBarMaxChars must be positive integers');
+  const prose22 = voiceProseM2b(text, { trustBarMaxItems, trustBarMaxChars });
+
   const sources = {
     claimTokens: sectionOf(text, 'claimTokens'),
     claimTokenWordEnd: sectionOf(text, 'claimTokenWordEnd'),
@@ -724,6 +796,11 @@ export function extractGenerationData(text) {
     prepositionSkipAdverbs: `${sectionOf(text, 'prepositionSkipAdverbs')} 20.6 (services_headline_preposition: one adverb skipped before the next-letter check)`,
     wrongPrepositionTokens: `${sectionOf(text, 'wrongPrepositionTokens')} 20.6 (typo gate; no Hebrew letter before or after)`,
     nameIntro: `${sectionOf(text, 'nameIntroToken')} (name opener and subject carry only at sentence start or after a lead-in plus comma)`,
+    differentiatorFearKeywords: `${sectionOf(text, 'differentiatorFearKeywords')} 22.2 (owner differentiator from an English idealClientFear; lower-case, hyphens to spaces; Adam M2b.1d: word boundaries, plural / -y forms allowed)`,
+    aboutHeadlineNoPromise: `${sectionOf(text, 'aboutHeadlineNoPromise')} 22.2 (aboutPageHeadline on pages that render the about section)`,
+    servicesHeadlineOptions: `${sectionOf(text, 'servicesHeadlineOptions')} 22.2 (closed set; byte-identical after trimming; the system sets the first entry otherwise)`,
+    trustBarFillerPhrases: `${sectionOf(text, 'trustBarFillerPhrases')} 22.2 (substring, trustBarItems only; exempt when verbatim in the owner facts)`,
+    m2bPromptRules: `${DATA_PATH} section 22.3 (B1-B6, English, byte-exact; sub-lines kept; B2 on every page, the rest on homepage / services hub)`,
   };
   for (const value of Object.values(sources)) assert(!/[\u0590-\u05FF]/.test(value), 'a source heading has Hebrew');
 
@@ -798,6 +875,14 @@ export function extractGenerationData(text) {
     nameIntroToken,
     nameIntroLeadIns,
     voice21: prose21,
+    differentiatorSourceFieldsAdd: sourceAdd,
+    differentiatorFearKeywords,
+    aboutHeadlineNoPromise: { field: noPromise.field, forbidLists: noPromise.forbidLists },
+    servicesHeadlineOptions,
+    trustBarFillerPhrases,
+    trustBarMaxItems,
+    trustBarMaxChars,
+    voice22: prose22,
     sources,
   };
 }
@@ -966,6 +1051,20 @@ ${emit('PREPOSITION_PROMPT_LINE', data.voice21.promptLine, 'string')}
 /** M2a.7 (Noa, section 21): the name opener and its lead-ins (a name intro only at sentence start or after a lead-in plus ", "). */
 ${emit('NAME_INTRO_TOKEN', data.nameIntroToken, 'string')}
 ${emit('NAME_INTRO_LEAD_INS', data.nameIntroLeadIns, 'readonly string[]')}
+/** M2b.1d (Tamar section 22.2): owner fields added to the differentiator sources, and the English fear keywords per signature group. */
+${emit('DIFFERENTIATOR_SOURCE_FIELDS_ADD', data.differentiatorSourceFieldsAdd, 'readonly string[]')}
+${emit('DIFFERENTIATOR_FEAR_KEYWORDS', data.differentiatorFearKeywords, 'Readonly<Record<string, readonly string[]>>')}
+/** M2b.1d (section 22.2): the about headline may hold none of these lists (by data-file name). */
+${emit('ABOUT_HEADLINE_NO_PROMISE', data.aboutHeadlineNoPromise, 'Readonly<{ field: string; forbidLists: readonly string[] }>')}
+/** M2b.1d (section 22.2): the services headline closed set (byte-identical after trimming). */
+${emit('SERVICES_HEADLINE_OPTIONS', data.servicesHeadlineOptions, 'readonly string[]')}
+/** M2b.1d (section 22.2): trust-bar filler phrases (substring, trustBarItems only) and the trust-bar size caps (items; code points per item). */
+${emit('TRUST_BAR_FILLER_PHRASES', data.trustBarFillerPhrases, 'readonly string[]')}
+${emit('TRUST_BAR_MAX_ITEMS', data.trustBarMaxItems, 'number')}
+${emit('TRUST_BAR_MAX_CHARS', data.trustBarMaxChars, 'number')}
+/** M2b.1d (section 22.3): English prompt rules B1-B6, byte-exact with their indented sub-lines; the ids that apply on every page. */
+${emit('M2B_PROMPT_RULES', data.voice22.promptRules, 'ReadonlyArray<{ id: string; text: string }>')}
+${emit('M2B_EVERY_PAGE_RULE_IDS', data.voice22.everyPageRuleIds, 'readonly string[]')}
 /** Where each data list came from (data-file section; how it combines with the config lists). */
 ${emit('GUARD_TOKEN_SOURCES', data.sources, 'Readonly<Record<string, string>>')}`;
 }
@@ -981,5 +1080,5 @@ if (process.argv[1] && path.resolve(process.argv[1]) === path.resolve(new URL(im
   }
   fs.writeFileSync(OUT, out);
   const data = extractGenerationData(text);
-  process.stdout.write(`${JSON.stringify({ dayLetters: data.dayLetters.length, claimKinds: Object.keys(data.claimTokens).length, claimTokens: Object.values(data.claimTokens).flat().length, pins: Object.keys(data.serviceLabelPins).length, wordEnd: data.claimTokenWordEnd.length, lead: data.fixTimeLeadTokens.length, within: data.fixTimeWithinWords.length, arrival: data.arrivalTokens.length, stems: data.customerStems.length, verbs: data.speechVerbs.length, plural: data.pluralAddressTokens.length, we: data.weTokens.length, wao: data.waoServiceTerms.length, thermal: data.thermalTokens.length, templates: Object.keys(data.templateStrings).length, sameDay: data.sameDayTokens.length, sameDayFinish: data.sameDayFinishVerbs.length, priceLock: data.priceLockTokens.length, prefixModes: Object.keys(data.pluralPrefixModes).length, tail: data.serviceAreaTailTokens.length, head: data.serviceAreaHeadTokens.length, region: data.serviceAreaRegionTokens.length, nearby: data.serviceAreaNearbyTokens.length, lamedHeads: data.serviceAreaLamedHeads.length, free: data.freeTokens.length, freeCallout: data.freeCalloutTokens.length, scopeNouns: Object.values(data.freeScopeNouns).flat().length, freeExclusion: data.freeExclusionWords.length, weFormVerbs: data.weFormVerbs.length, genericWords: data.genericAdjectiveWords.length, genericPhrases: data.genericAdjectivePhrases.length, genericExempt: data.genericAdjectiveExemptPhrases.length, genericPrefixes: data.voice.genericPrefixLetters.length, badIdioms: data.badIdioms.length, badIdiomTokens: data.badIdioms.flatMap(entry => entry.tokens).length, signatureGroups: Object.keys(data.signatureWordTokens).length, signatureVariants: Object.values(data.signatureWordTokens).flat().length, emergencyKinds: data.emergencyServiceKinds.length, plannedKinds: data.plannedServiceKinds.length, sticky: data.stickyActionTokens.length, openers: data.bareVerbSentenceOpeners.length, carry: data.subjectCarryTokens.length, carryPrefixes: data.voice.subjectCarryPrefixes.length, exclusions: data.bareVerbExclusions.length, ownerVoiceFields: data.voice.ownerVoiceFields.length, promptRules: data.voice.promptRules.length, signatureAdditions: Object.values(data.signatureWordTokenAdditions).flat().length, tilesBreakForms: data.tilesBreakForms.length, tilesBreakExclusions: data.tilesBreakExclusionsPrecedingWord.length, storyNouns: data.storyCustomerNouns.length, storyVerbs: data.storyPastVerbs.length, storyQuantifiers: data.storyQuantifierExclusions.length, storyAnchors: data.storyTimeAnchors.length, moralTokens: data.moralEndingTokens.length, moralFollowing: data.moralEndingFollowingExclusions.length, beforeTokens: data.beforeTokens.length, beforeTimeWords: data.beforeTimeWordExclusions.length, stickyBare: data.stickyBareForms.length, stickyProblem: Object.values(data.stickyProblemWords).flat().length, acSlugKeywords: data.acVerticalSlugKeywords.length, tradeTerms: data.tradeTerms.length, arriveLocateExclusions: data.arriveLocateNextWordExclusions.length, m2a6Rules: data.voice20.promptRules.length, heroCapConcepts: Object.values(data.heroCapConceptAdditions).flat().length, heroCapAcOnly: data.voice21.heroCapAcOnly.length, uspKeywords: Object.values(data.differentiatorUspKeywords).flat().length, uspGroups: Object.keys(data.differentiatorUspKeywords).length, skipAdverbs: data.prepositionSkipAdverbs.length, wrongPreposition: data.wrongPrepositionTokens.length, leadIns: data.nameIntroLeadIns.length, differentiatorCap: data.voice21.differentiatorCap, beforeCap: data.voice20.beforeCap, heroCap: data.voice20.heroCap, typographyChars: data.typographyRule.length })}\n`);
+  process.stdout.write(`${JSON.stringify({ dayLetters: data.dayLetters.length, claimKinds: Object.keys(data.claimTokens).length, claimTokens: Object.values(data.claimTokens).flat().length, pins: Object.keys(data.serviceLabelPins).length, wordEnd: data.claimTokenWordEnd.length, lead: data.fixTimeLeadTokens.length, within: data.fixTimeWithinWords.length, arrival: data.arrivalTokens.length, stems: data.customerStems.length, verbs: data.speechVerbs.length, plural: data.pluralAddressTokens.length, we: data.weTokens.length, wao: data.waoServiceTerms.length, thermal: data.thermalTokens.length, templates: Object.keys(data.templateStrings).length, sameDay: data.sameDayTokens.length, sameDayFinish: data.sameDayFinishVerbs.length, priceLock: data.priceLockTokens.length, prefixModes: Object.keys(data.pluralPrefixModes).length, tail: data.serviceAreaTailTokens.length, head: data.serviceAreaHeadTokens.length, region: data.serviceAreaRegionTokens.length, nearby: data.serviceAreaNearbyTokens.length, lamedHeads: data.serviceAreaLamedHeads.length, free: data.freeTokens.length, freeCallout: data.freeCalloutTokens.length, scopeNouns: Object.values(data.freeScopeNouns).flat().length, freeExclusion: data.freeExclusionWords.length, weFormVerbs: data.weFormVerbs.length, genericWords: data.genericAdjectiveWords.length, genericPhrases: data.genericAdjectivePhrases.length, genericExempt: data.genericAdjectiveExemptPhrases.length, genericPrefixes: data.voice.genericPrefixLetters.length, badIdioms: data.badIdioms.length, badIdiomTokens: data.badIdioms.flatMap(entry => entry.tokens).length, signatureGroups: Object.keys(data.signatureWordTokens).length, signatureVariants: Object.values(data.signatureWordTokens).flat().length, emergencyKinds: data.emergencyServiceKinds.length, plannedKinds: data.plannedServiceKinds.length, sticky: data.stickyActionTokens.length, openers: data.bareVerbSentenceOpeners.length, carry: data.subjectCarryTokens.length, carryPrefixes: data.voice.subjectCarryPrefixes.length, exclusions: data.bareVerbExclusions.length, ownerVoiceFields: data.voice.ownerVoiceFields.length, promptRules: data.voice.promptRules.length, signatureAdditions: Object.values(data.signatureWordTokenAdditions).flat().length, tilesBreakForms: data.tilesBreakForms.length, tilesBreakExclusions: data.tilesBreakExclusionsPrecedingWord.length, storyNouns: data.storyCustomerNouns.length, storyVerbs: data.storyPastVerbs.length, storyQuantifiers: data.storyQuantifierExclusions.length, storyAnchors: data.storyTimeAnchors.length, moralTokens: data.moralEndingTokens.length, moralFollowing: data.moralEndingFollowingExclusions.length, beforeTokens: data.beforeTokens.length, beforeTimeWords: data.beforeTimeWordExclusions.length, stickyBare: data.stickyBareForms.length, stickyProblem: Object.values(data.stickyProblemWords).flat().length, acSlugKeywords: data.acVerticalSlugKeywords.length, tradeTerms: data.tradeTerms.length, arriveLocateExclusions: data.arriveLocateNextWordExclusions.length, m2a6Rules: data.voice20.promptRules.length, heroCapConcepts: Object.values(data.heroCapConceptAdditions).flat().length, heroCapAcOnly: data.voice21.heroCapAcOnly.length, uspKeywords: Object.values(data.differentiatorUspKeywords).flat().length, uspGroups: Object.keys(data.differentiatorUspKeywords).length, skipAdverbs: data.prepositionSkipAdverbs.length, wrongPreposition: data.wrongPrepositionTokens.length, leadIns: data.nameIntroLeadIns.length, fearKeywords: Object.values(data.differentiatorFearKeywords).flat().length, servicesHeadlineOptions: data.servicesHeadlineOptions.length, trustBarFiller: data.trustBarFillerPhrases.length, trustBarMaxItems: data.trustBarMaxItems, trustBarMaxChars: data.trustBarMaxChars, m2bRules: data.voice22.promptRules.length, differentiatorCap: data.voice21.differentiatorCap, beforeCap: data.voice20.beforeCap, heroCap: data.voice20.heroCap, typographyChars: data.typographyRule.length })}\n`);
 }

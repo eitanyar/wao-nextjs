@@ -107,6 +107,8 @@ export default function LandingPage({ theme, assets, copy, data, heroImageUrl, s
 
   const [menuOpen, setMenuOpen] = useState(false);
   const HEADER_HEIGHT = 56;
+  // M2b.1d (Maya, WCAG 2.5.5): every header icon link and the menu button is a 44x44 px tap target (the icons stay 20 px).
+  const HEADER_TAP_TARGET = { color: t.primary, display: 'flex', alignItems: 'center', justifyContent: 'center', minWidth: '44px', minHeight: '44px' } as const;
 
   // In-page nav — only linking to sections that actually render for this
   // client (faq is conditional on copy.faqItems.length). "Why Us / Reviews"
@@ -215,22 +217,22 @@ export default function LandingPage({ theme, assets, copy, data, heroImageUrl, s
           {businessName}
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '18px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '2px' }}>
           {showPhone && (
-            <a href={phoneHref} onClick={() => pingClick('phone-click')} aria-label={`התקשר — ${phone}`} style={{ color: t.primary, display: 'flex' }}>
+            <a href={phoneHref} onClick={() => pingClick('phone-click')} aria-label={`התקשר — ${phone}`} style={HEADER_TAP_TARGET}>
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                 <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92Z" />
               </svg>
             </a>
           )}
           {showWhatsApp && (
-            <a href={whatsappHref} target="_blank" rel="noopener noreferrer" aria-label="וואטסאפ (נפתח בחלון חדש)" onClick={() => pingClick('whatsapp-click')} style={{ color: t.primary, display: 'flex' }}>
+            <a href={whatsappHref} target="_blank" rel="noopener noreferrer" aria-label="וואטסאפ (נפתח בחלון חדש)" onClick={() => pingClick('whatsapp-click')} style={HEADER_TAP_TARGET}>
               <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                 <path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.79.47 3.47 1.29 4.94L2 22l5.29-1.39a9.87 9.87 0 0 0 4.75 1.21h.01c5.46 0 9.9-4.45 9.9-9.91C21.96 6.45 17.5 2 12.04 2Zm0 18.05h-.01a8.15 8.15 0 0 1-4.15-1.14l-.3-.18-3.14.82.84-3.06-.19-.32a8.13 8.13 0 0 1-1.25-4.35c0-4.5 3.66-8.16 8.17-8.16 2.18 0 4.23.85 5.77 2.4a8.11 8.11 0 0 1 2.39 5.77c0 4.5-3.67 8.22-8.13 8.22Zm4.47-6.13c-.24-.12-1.44-.71-1.67-.79-.22-.08-.39-.12-.55.12-.16.24-.63.79-.78.95-.14.16-.28.18-.53.06-.24-.12-1.02-.38-1.94-1.2-.72-.64-1.2-1.43-1.34-1.67-.14-.24-.02-.37.11-.49.11-.11.24-.28.36-.42.12-.14.16-.24.24-.4.08-.16.04-.3-.02-.42-.06-.12-.55-1.33-.76-1.82-.2-.48-.4-.42-.55-.42-.14 0-.3-.02-.46-.02-.16 0-.42.06-.64.3-.22.24-.84.82-.84 2s.86 2.32.98 2.48c.12.16 1.7 2.6 4.12 3.64.58.25 1.03.4 1.38.51.58.18 1.11.16 1.53.1.47-.07 1.44-.59 1.64-1.16.2-.57.2-1.06.14-1.16-.06-.1-.22-.16-.46-.28Z" />
               </svg>
             </a>
           )}
-          <a href="#contact" aria-label="קפיצה לטופס יצירת קשר" style={{ color: t.primary, display: 'flex' }}>
+          <a href="#contact" aria-label="קפיצה לטופס יצירת קשר" style={HEADER_TAP_TARGET}>
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
               <rect x="2.5" y="4.5" width="19" height="15" rx="2" />
               <path d="M3 6.5l9 6.5 9-6.5" />
@@ -243,7 +245,7 @@ export default function LandingPage({ theme, assets, copy, data, heroImageUrl, s
             aria-label={menuOpen ? 'סגור תפריט' : 'פתח תפריט'}
             aria-expanded={menuOpen}
             aria-controls="lp-nav-menu"
-            style={{ cursor: 'pointer', padding: '4px', background: 'none', border: 'none', display: 'flex' }}
+            style={{ cursor: 'pointer', padding: 0, background: 'none', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', minWidth: '44px', minHeight: '44px' }}
           >
             <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
               {[0, 1, 2].map((i) => (
@@ -283,6 +285,7 @@ export default function LandingPage({ theme, assets, copy, data, heroImageUrl, s
           top: `${HEADER_HEIGHT}px`,
           zIndex: 199,
           overflow: 'hidden',
+          // CAPACITY: 400px fits at most ~7 nav links of ~47px each (today navItems has 3-4). Raise it if navItems grows.
           maxHeight: menuOpen ? '400px' : '0',
           transition: 'max-height 0.3s ease',
           backgroundColor: t.surface,

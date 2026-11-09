@@ -78,6 +78,7 @@ fs.writeFileSync(path.join(root, 'dist/package.json'), JSON.stringify({ type: 'c
 const { runResearchToSite } = require(entry);
 const { callQwenJSON } = require(path.join(root, 'dist/lib/ai/qwen-fast.js'));
 const { assertBoundedGeneratedSiteCopy, generateResearchPageCopy, gateViolations, briefGateContext } = require(path.join(root, 'dist/lib/lp/researchPageCopy.js'));
+const { researchedUngeneratedFieldsFor } = require(path.join(root, 'dist/lib/lp/researchedSite.js'));
 const { copyGateContext, copyReviewFlags } = require(path.join(root, 'dist/lib/lp/copyGates.js'));
 const { renderResearchedSitePages, researchedPageTitle, researchedPageH1 } = require(path.join(root, 'dist/lib/lp/researchedSite.js'));
 const { researchedRenderInputs, buildPageBriefs } = require(entry);
@@ -153,7 +154,7 @@ if (outcome.status === 'generated') {
   const pageResults = [];
   for (const page of record.researchedPages) {
     let valid = true;
-    try { assertBoundedGeneratedSiteCopy(page.copy); } catch { valid = false; }
+    try { assertBoundedGeneratedSiteCopy(page.copy, { ungenerated: researchedUngeneratedFieldsFor(page.classification) }); } catch { valid = false; }
     pageResults.push({ page: page.opportunityId, valid });
     lines.push(`=== ${page.opportunityId} ${page.targetPath} (${page.classification}) validator=${valid ? 'PASS' : 'FAIL'}`);
     for (const [key, value] of Object.entries(page.copy)) {

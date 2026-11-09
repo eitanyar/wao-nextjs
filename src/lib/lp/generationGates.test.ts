@@ -50,6 +50,7 @@ import {
   GENERIC_ADJECTIVE_WORDS,
   OWNER_VOICE_FIELDS,
   PLANNED_SERVICE_KINDS,
+  SERVICES_HEADLINE_OPTIONS,
   SIGNATURE_WORD_TOKENS,
   SUBJECT_CARRY_PREFIXES,
   VOICE_PROMPT_RULES,
@@ -124,7 +125,8 @@ const ctx = (overrides: Partial<CopyGateContext> = {}): CopyGateContext => ({
 });
 const base: SiteCopy = {
   heroHeadline: 'Headline', heroSubheadline: 'Sub', heroCta: 'Call', trustBarItems: ['Proof'], aboutBlurb: 'About',
-  servicesHeadline: 'Services', serviceItems: [], faqHeadline: 'FAQ', faqItems: [], guaranteeBlock: 'Promise',
+  // M2b.1d: a research-site services headline is a closed-set entry (withSystemFields normalises it).
+  servicesHeadline: SERVICES_HEADLINE_OPTIONS[0], serviceItems: [], faqHeadline: 'FAQ', faqItems: [], guaranteeBlock: 'Promise',
   reviewFeatured: null, reviewContext: null, responseTimeBadge: null, scarcityLine: null, formHeadline: 'Form',
   stickyBarLine: STICKY_LINE, aboutPageHeadline: 'About page', aboutPageBody: 'About body', serviceDetails: [],
 };
@@ -149,7 +151,7 @@ function brief(pageName: string, labels: string[], sources: string[], pageClass 
 test('M2a.3 1: generationData.ts carries data sections 6-13 byte-exact; config lists extend / replace the M2a.1 lists; --check passes', () => {
   const text = fs.readFileSync(DATA_FILE, 'utf8');
   const blocks = [...text.matchAll(/\n~~~json\n([\s\S]*?)\n~~~/g)].map(match => JSON.parse(match[1]));
-  assert.equal(blocks.length, 48); // M2a.4: 23; M2a.5 section 19 adds 9; M2a.6 section 20 adds 11; M2a.7 adds 5 (sections 20 and 21)
+  assert.equal(blocks.length, 52); // M2a.4: 23; M2a.5 section 19 adds 9; M2a.6 section 20 adds 11; M2a.7 adds 5 (sections 20 and 21); M2b.1d adds 4 (section 22)
   const data = Object.assign({}, ...blocks);
   assert.deepEqual([...CLAIM_TOKEN_WORD_END], data.claimTokenWordEnd);
   assert.deepEqual([...FIX_TIME_LEAD_TOKENS], data.fixTimeLeadTokens);
@@ -538,7 +540,9 @@ test('M2a.4 5: the self-introduction must use the owner name exactly as in the f
 });
 
 test('M2a.4 6: serviceDetails descriptions have a minimum length on research sites only', () => {
-  const site = briefGateContext(brief(LABEL_A, [LABEL_A], ['alpha']), {});
+  // M2b.1d: the service cards are generated (and gated) on the homepage / services hub only.
+  const site = briefGateContext(brief(LABEL_A, [LABEL_A], ['alpha'], 'service_hub'), {});
+  assert.deepEqual(runCopyGates(loose({ heroHeadline: LABEL_A, serviceDetails: [{ name: LABEL_A, description: 'x' }] }), briefGateContext(brief(LABEL_A, [LABEL_A], ['alpha']), {})), [], 'a money page does not generate the cards');
   const short = loose({ heroHeadline: LABEL_A, serviceDetails: [{ name: LABEL_A, description: 'x'.repeat(SERVICE_DESCRIPTION_MIN_CHARS - 1) }] });
   const long = loose({ heroHeadline: LABEL_A, serviceDetails: [{ name: LABEL_A, description: 'x'.repeat(SERVICE_DESCRIPTION_MIN_CHARS) }] });
   assert.deepEqual(runCopyGates(short, site).map(item => `${item.field}|${item.rule}`), [`serviceDetails[0].description|${GATE_RULES.shortDescription}`]);
@@ -556,8 +560,10 @@ test('M2a.4 7: the phrase cap counts fields (repeats inside one field count once
 });
 
 test('M2a.4 8: prompt rules for we-forms in every tense, exact names, service area, free of charge, price lock, same day, maqaf and description length', async () => {
-  const site = brief(LABEL_A, [LABEL_A], ['alpha']);
+  // M2b.1d: the services hub generates the service cards (a money page no longer does).
+  const site = brief(LABEL_A, [LABEL_A], ['alpha'], 'service_hub');
   const prompt = buildResearchPageGenerationPrompt(site, { businessNiche: 'plumber' });
+  assert.ok(!buildResearchPageGenerationPrompt(brief(LABEL_A, [LABEL_A], ['alpha']), { businessNiche: 'plumber' }).includes(`at least ${SERVICE_DESCRIPTION_MIN_CHARS} characters`), 'money page: no card rule');
   assert.match(prompt, /VOICE \(binding\): the first-person plural is forbidden in every tense and form/);
   assert.match(prompt, /NAMES \(binding\): .*Never transliterate a Latin name into Hebrew letters/);
   assert.match(prompt, /SERVICE AREA \(binding\): every field, including trustBarItems, names only the places/);

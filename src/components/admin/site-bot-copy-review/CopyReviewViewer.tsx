@@ -30,9 +30,12 @@ function identity(value: unknown): value is Page {
     typeof value.classification === 'string' && CLASSES.has(value.classification) && safePath(value.targetPath) &&
     (value.classification === 'homepage' ? value.targetPath === '/' : value.targetPath !== '/');
 }
-function completeCopy(copy: Record<string, unknown>): boolean {
+/** M2b.1d: the about pair a page type does not render is not generated (empty) off the homepage / services hub. */
+const ABOUT_PAIR = ['aboutPageHeadline', 'aboutPageBody'];
+function completeCopy(copy: Record<string, unknown>, classification: string): boolean {
+  const mayBeEmpty = classification === 'homepage' || classification === 'service_hub' ? [] : ABOUT_PAIR;
   // M2a.2: guaranteeBlock is null when the owner has no guarantee; when set it must be non-empty.
-  return REQUIRED_COPY.every(key => typeof copy[key] === 'string' && (copy[key] as string).trim().length > 0) &&
+  return REQUIRED_COPY.every(key => typeof copy[key] === 'string' && ((copy[key] as string).trim().length > 0 || (mayBeEmpty.includes(key) && copy[key] === ''))) &&
     (copy.guaranteeBlock === null || (typeof copy.guaranteeBlock === 'string' && copy.guaranteeBlock.trim().length > 0)) &&
     Array.isArray(copy.trustBarItems) && copy.trustBarItems.every(item => typeof item === 'string') &&
     Array.isArray(copy.serviceItems) && copy.serviceItems.every(item => typeof item === 'string') &&
@@ -74,7 +77,7 @@ function reviewPayload(value: unknown, researchId: string, slug: string): Review
   const expectedPages = packet.pages;
   const pages = value.pages.map((page: unknown, index: number) => {
     const expected = expectedPages[index];
-    if (!identity(page) || !identity(expected) || !object(page.copy) || !completeCopy(page.copy) ||
+    if (!identity(page) || !identity(expected) || !object(page.copy) || !completeCopy(page.copy, page.classification) ||
       page.opportunityId !== expected.opportunityId || page.classification !== expected.classification ||
       page.targetPath !== expected.targetPath || ids.has(page.opportunityId) || paths.has(page.targetPath)) {
       throw new Error('Invalid review');

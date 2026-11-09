@@ -22,7 +22,13 @@ import {
   BEFORE_TOKENS,
   DIFFERENTIATOR_CAP,
   DIFFERENTIATOR_EXCLUDED_GROUPS,
+  DIFFERENTIATOR_FEAR_KEYWORDS,
+  DIFFERENTIATOR_SOURCE_FIELDS_ADD,
   DIFFERENTIATOR_USP_KEYWORDS,
+  SERVICES_HEADLINE_OPTIONS,
+  TRUST_BAR_FILLER_PHRASES,
+  TRUST_BAR_MAX_CHARS,
+  TRUST_BAR_MAX_ITEMS,
   ELECTRIC_SLUG_KEYWORDS,
   EXTRA_GATE_FIELDS,
   HERO_CAP_AC_ONLY,
@@ -36,7 +42,6 @@ import {
   MORAL_ENDING_FOLLOWING_EXCLUSIONS,
   MORAL_ENDING_TOKENS,
   MORAL_FIELDS,
-  SERVICE_DETAILS_OPENER_TOKEN,
   SIGNATURE_WORD_TOKEN_ADDITIONS,
   STICKY_BARE_FORMS,
   STICKY_PROBLEM_WORDS,
@@ -160,12 +165,16 @@ export const GATE_RULES = {
   moralEnding: 'gate_moral_ending',
   beforeCap: 'gate_before_cap',
   stickyNaming: 'gate_sticky_naming',
-  serviceDetailsOpener: 'gate_service_details_opener',
   tradeTerm: 'gate_trade_term',
   heroAnchor: 'gate_hero_anchor',
   // M2a.7 (Noa section 20.6 typo gates)
   tripledLetter: 'gate_tripled_letter',
   wrongPreposition: 'gate_wrong_preposition',
+  // M2b.1d (Tamar section 22.2)
+  servicesHeadlineSet: 'gate_services_headline_set',
+  aboutHeadlinePromise: 'gate_about_headline_promise',
+  trustBarFiller: 'gate_trust_bar_filler',
+  trustBarSize: 'gate_trust_bar_size',
 } as const;
 export type GateRule = (typeof GATE_RULES)[keyof typeof GATE_RULES];
 
@@ -226,6 +235,12 @@ export interface CopyGateContext {
   renderedFields?: readonly string[];
   /** M2a.7: hero-cap facts (masked service labels, AC page) of every page already generated, aligned with priorHeroHeadlines. */
   priorHeroFacts?: readonly HeroCapPageFacts[];
+  /**
+   * M2b.1d (Tamar's cost note, Adam-approved): top-level fields this page does not generate, because its page type does not
+   * render them (the about section and the service cards off the homepage / services hub). The system fills them; no gate
+   * runs on them.
+   */
+  ungeneratedFields?: readonly string[];
 }
 
 /** M2a.7: what the site-wide hero cap needs of one page: the service labels masked in its hero, and whether it is an AC page. */
@@ -273,6 +288,12 @@ function claimTokenIn(value: string, token: string): boolean {
 const PLURAL_PATTERNS = PLURAL_ADDRESS_TOKENS.map(tokenPattern);
 const WE_PATTERNS = WE_FORM_TOKENS.map(tokenPattern);
 const LATIN_WAO_PATTERNS = WAO_SERVICE_TERMS_LATIN.map(term => new RegExp(`(?<![A-Za-z])${escapeRegExp(term)}(?![A-Za-z])`, 'i'));
+
+/** M2b.1d: the gated strings of the fields this page generates (ctx.ungeneratedFields are system-filled and never gated). */
+function generatedStrings(copy: Record<string, unknown>, ctx: Pick<CopyGateContext, 'ungeneratedFields'>): Array<{ field: string; value: string }> {
+  const skip = ctx.ungeneratedFields ?? [];
+  return gatedStrings(copy).filter(item => !skip.includes(item.field.split(/[.[]/)[0]));
+}
 
 /** Every gated (model-authored) string in a copy object, with its field path. */
 export function gatedStrings(copy: Record<string, unknown>): Array<{ field: string; value: string }> {
@@ -1038,11 +1059,32 @@ export function serviceStage(slug: string): ServiceStage {
 /** The per-page signature cap for the group(s) holding the owner's own differentiator (section 20.1, M2a.7); every other group stays at 1. */
 export const DIFFERENTIATOR_SIGNATURE_CAP: number = DIFFERENTIATOR_CAP;
 
-/** Owner fields the differentiator is read from (section 20.1, M2a.7: the guarantee too, when it states a work method). */
-export const DIFFERENTIATOR_SOURCE_FIELDS: readonly string[] = ['usp', 'guarantee'];
+/**
+ * Owner fields the differentiator is read from (section 20.1, M2a.7: the guarantee too, when it states a work method;
+ * M2b.1d, section 22.2: the customer's fear, DIFFERENTIATOR_SOURCE_FIELDS_ADD).
+ */
+export const DIFFERENTIATOR_SOURCE_FIELDS: readonly string[] = ['usp', 'guarantee', ...DIFFERENTIATOR_SOURCE_FIELDS_ADD];
+/** M2b.1d: the source fields whose English text is matched on word boundaries (the fear), not as plain substrings. */
+const WORD_BOUNDARY_SOURCE_FIELDS: readonly string[] = DIFFERENTIATOR_SOURCE_FIELDS_ADD;
+/**
+ * M2b.1d (Adam): an English fear keyword matches on word boundaries, so "mess" never matches inside "message". The word
+ * may end in one of these suffixes (plural, -y, past), so "messes", "messy", "tiles" and "surprises" still match.
+ */
+export const FEAR_KEYWORD_SUFFIXES: readonly string[] = ['s', 'es', 'y', 'd', 'ed'];
+const FEAR_SUFFIX_ALT = `(?:${FEAR_KEYWORD_SUFFIXES.join('|')})?`;
+const englishKeywordPattern = (keyword: string) => new RegExp(`(?<![a-z])${escapeRegExp(keyword)}${FEAR_SUFFIX_ALT}(?![a-z])`);
+const FEAR_KEYWORD_GROUPS: ReadonlyArray<[string, RegExp[]]> = [...new Set([...Object.keys(DIFFERENTIATOR_USP_KEYWORDS), ...Object.keys(DIFFERENTIATOR_FEAR_KEYWORDS)])]
+  .map(group => [group, [...(DIFFERENTIATOR_USP_KEYWORDS[group] ?? []), ...(DIFFERENTIATOR_FEAR_KEYWORDS[group] ?? [])].map(englishKeywordPattern)]);
+
+/** M2b.1d: the signature groups an English fear names (lower-cased, hyphens to spaces; usp + fear keywords, word boundaries). */
+export function fearKeywordGroups(fear: string): string[] {
+  const english = fear.toLowerCase().replace(/-/g, ' ');
+  return FEAR_KEYWORD_GROUPS.filter(([, patterns]) => patterns.some(pattern => pattern.test(english))).map(([group]) => group);
+}
 
 /**
- * Signature groups holding the owner's own differentiator (section 20.1, M2a.7): a Hebrew usp / guarantee with a section
+ * Signature groups holding the owner's own differentiator (section 20.1, M2a.7; M2b.1d: the fear too, English keywords on
+ * word boundaries): a Hebrew usp / guarantee / fear with a section
  * 19.3 / 20.1 variant of the group, or an English one with a DIFFERENTIATOR_USP_KEYWORDS entry of the group (case-insensitive
  * substring, hyphens read as spaces). A keyword only states a work method, so a guarantee that matches one states a method.
  * DIFFERENTIATOR_EXCLUDED_GROUPS never count. Returned in signature-group order.
@@ -1053,6 +1095,10 @@ export function differentiatorGroups(ctx: Pick<CopyGateContext, 'ownerFields'>):
     const value = ctx.ownerFields?.[key];
     if (typeof value !== 'string' || !value.trim()) continue;
     for (const group of Object.keys(signatureCounts(value))) found.add(group);
+    if (WORD_BOUNDARY_SOURCE_FIELDS.includes(key)) {
+      for (const group of fearKeywordGroups(value)) found.add(group);
+      continue;
+    }
     const english = value.toLowerCase().replace(/-/g, ' ');
     for (const [group, keywords] of Object.entries(DIFFERENTIATOR_USP_KEYWORDS)) if (keywords.some(keyword => english.includes(keyword))) found.add(group);
   }
@@ -1118,6 +1164,59 @@ export function aboutOpeningKey(body: string): string | null {
 export function duplicateAboutOpening(body: string, prior: readonly string[]): boolean {
   const key = aboutOpeningKey(body);
   return key !== null && prior.some(other => aboutOpeningKey(other) === key);
+}
+
+// ---------------------------------------------------------------------------
+// M2b.1d: Tamar's section 22.2 gates (about headline, services headline closed set, trust bar). Hebrew data from
+// generationData.ts; nothing is auto-replaced except the services headline, which withSystemFields sets from the set.
+// ---------------------------------------------------------------------------
+
+/**
+ * aboutHeadlineNoPromise (section 22.2): what makes an about headline repeat the hero's promise. 'signature:<group>' for a
+ * section 19.3 / 20.1 variant (tile-breaking forms included); 'concept:<group>' for a heroCapConceptAdditions entry, after
+ * masking the page's own service label(s) (homepage: every serviceItems label), AC-only entries only on an AC page;
+ * 'before' for a beforeTokens hit (left edge, time-word exclusion). Each kind once; one hit per group (signature first).
+ */
+export function aboutHeadlinePromiseKinds(headline: string, facts: HeroCapPageFacts = { maskLabels: [], acPage: false }): string[] {
+  const signature = Object.keys(signatureCounts(headline));
+  const kinds = signature.map(group => `signature:${group}`);
+  const masked = maskHeroLabels(headline, facts.maskLabels);
+  for (const [group, entries] of Object.entries(HERO_CAP_CONCEPT_ADDITIONS)) {
+    if (signature.includes(group)) continue; // one hit per group: the signature variant already names it
+    if (entries.some(entry => (facts.acPage || !HERO_CAP_AC_ONLY.includes(entry)) && masked.includes(entry))) kinds.push(`concept:${group}`);
+  }
+  if (beforeHitCount(headline) > 0) kinds.push('before');
+  return kinds;
+}
+
+/** The services headline closed set (section 22.2): byte-identical to one SERVICES_HEADLINE_OPTIONS entry after trimming. */
+export function servicesHeadlineInSet(value: string): boolean {
+  return SERVICES_HEADLINE_OPTIONS.includes(value.trim());
+}
+
+/** Unicode code points of a string (section 22.2: spaces and punctuation count). */
+export function codePointLength(value: string): number {
+  return [...value].length;
+}
+
+/**
+ * Trust-bar gates (section 22.2): a TRUST_BAR_FILLER_PHRASES substring (Adam M2b.1d: exempt when the phrase appears verbatim
+ * in the owner's own facts, as the solo-operator wording is), more than TRUST_BAR_MAX_ITEMS items (each item past the cap is
+ * one hit, so the safe item drop can remove it) and an item over TRUST_BAR_MAX_CHARS code points.
+ */
+export function trustBarHits(copy: Record<string, unknown>, ctx: Pick<CopyGateContext, 'ownerFactsText'>): GateViolation[] {
+  const items = Array.isArray(copy.trustBarItems) ? copy.trustBarItems : [];
+  const out: GateViolation[] = [];
+  items.forEach((item, index) => {
+    if (typeof item !== 'string') return;
+    const field = `trustBarItems[${index}]`;
+    TRUST_BAR_FILLER_PHRASES.forEach((phrase, at) => {
+      if (item.includes(phrase) && !ctx.ownerFactsText.includes(phrase)) out.push({ field, rule: GATE_RULES.trustBarFiller, actual: `trust_filler:${at}` });
+    });
+    if (index >= TRUST_BAR_MAX_ITEMS) out.push({ field, rule: GATE_RULES.trustBarSize, actual: `trust_items:${items.length}` });
+    if (codePointLength(item) > TRUST_BAR_MAX_CHARS) out.push({ field, rule: GATE_RULES.trustBarSize, actual: `trust_chars:${codePointLength(item)}` });
+  });
+  return out;
 }
 
 /** Field-path matchers for a list of data-file field names (`a[].b` matches `a[3].b`). */
@@ -1221,17 +1320,6 @@ export function stickyNamingProblems(value: string, serviceLabel: string | null,
   if (serviceLabel && value.includes(serviceLabel)) return [];
   const named = stickyProblemWordsFor(vertical).some(word => STICKY_WHOLE_PATTERNS.get(word)?.test(value) ?? value.includes(word));
   return named ? [] : ['unnamed'];
-}
-
-/** Section 20.5: indices of the serviceDetails descriptions that start with the opener word past the floor(half) cap. */
-export function serviceDetailsOpenerOverCap(copy: Record<string, unknown>): number[] {
-  const details = Array.isArray(copy.serviceDetails) ? copy.serviceDetails : [];
-  const starts = details.flatMap((item, index) => {
-    const description = item && typeof item === 'object' ? (item as Record<string, unknown>).description : undefined;
-    return typeof description === 'string' && description.trimStart().startsWith(`${SERVICE_DETAILS_OPENER_TOKEN} `) ? [index] : [];
-  });
-  const cap = Math.floor(details.length / 2);
-  return starts.length > cap ? starts.slice(cap) : [];
 }
 
 const LEAD_PREFIX_ALT = wordAlternatives(ARRIVE_LOCATE_LEAD_PREFIXES);
@@ -1401,13 +1489,22 @@ function voiceGates(copy: Record<string, unknown>, strings: Array<{ field: strin
     const priorFacts = ctx.priorHeroHeadlines.map((_, index) => ctx.priorHeroFacts?.[index] ?? { maskLabels: [...ctx.serviceLabels], acPage: own.acPage });
     for (const group of heroSignatureCapGroups(copy.heroHeadline, ctx.priorHeroHeadlines, own, priorFacts)) out.push({ field: 'heroHeadline', rule: GATE_RULES.heroSignatureCap, actual: `hero_cap:${group}` });
   }
-  if (typeof copy.aboutPageHeadline === 'string' && ctx.priorAboutPageHeadlines?.length && duplicateAboutHeadline(copy.aboutPageHeadline, ctx.priorAboutPageHeadlines)) {
-    out.push({ field: 'aboutPageHeadline', rule: GATE_RULES.duplicateAboutHeadline, actual: 'duplicate:about_headline' });
+  // M2b.1d (section 22.2): the about checks run only on pages that generate (render) the about section; the earlier pages
+  // they compare with are the homepage / services hub only (siteGenerationContext filters them).
+  const skip = ctx.ungeneratedFields ?? [];
+  if (!skip.includes('aboutPageHeadline') && typeof copy.aboutPageHeadline === 'string') {
+    if (ctx.priorAboutPageHeadlines?.length && duplicateAboutHeadline(copy.aboutPageHeadline, ctx.priorAboutPageHeadlines)) {
+      out.push({ field: 'aboutPageHeadline', rule: GATE_RULES.duplicateAboutHeadline, actual: 'duplicate:about_headline' });
+    }
+    for (const kind of aboutHeadlinePromiseKinds(copy.aboutPageHeadline, currentHeroCapFacts(copy, ctx))) out.push({ field: 'aboutPageHeadline', rule: GATE_RULES.aboutHeadlinePromise, actual: `about_promise:${kind}` });
   }
-  if (typeof copy.aboutPageBody === 'string' && ctx.priorAboutPageBodies?.length && duplicateAboutOpening(copy.aboutPageBody, ctx.priorAboutPageBodies)) {
+  if (!skip.includes('aboutPageBody') && typeof copy.aboutPageBody === 'string' && ctx.priorAboutPageBodies?.length && duplicateAboutOpening(copy.aboutPageBody, ctx.priorAboutPageBodies)) {
     out.push({ field: 'aboutPageBody', rule: GATE_RULES.duplicateAboutOpening, actual: 'duplicate:about_opening' });
   }
-  for (const index of serviceDetailsOpenerOverCap(copy)) out.push({ field: `serviceDetails[${index}].description`, rule: GATE_RULES.serviceDetailsOpener, actual: `opener_cap:${index}` });
+  if (!skip.includes('servicesHeadline') && typeof copy.servicesHeadline === 'string' && !servicesHeadlineInSet(copy.servicesHeadline)) {
+    out.push({ field: 'servicesHeadline', rule: GATE_RULES.servicesHeadlineSet, actual: 'services_headline:not_in_set' });
+  }
+  if (!skip.includes('trustBarItems')) out.push(...trustBarHits(copy, ctx));
   // Yonatan's H1 anchor: heroHeadline holds the exact page name and city (normalised), else the renderer swaps the H1.
   if (typeof copy.heroHeadline === 'string' && ctx.anchorName) {
     const missing = heroAnchorMissing(copy.heroHeadline, ctx.anchorName, ctx.anchorCity);
@@ -1437,8 +1534,11 @@ export const ALWAYS_BLOCKING_RULES: readonly GateRule[] = [
   GATE_RULES.installArrival,
   GATE_RULES.hours,
 ];
-/** Former gates that are warnings only, in every field (M2a.7: same-opening check, serviceDetails opener cap). */
-export const WARNING_ONLY_RULES: readonly GateRule[] = [GATE_RULES.duplicateAboutOpening, GATE_RULES.serviceDetailsOpener];
+/**
+ * Former gates that are warnings only, in every field (M2a.7: the same-opening check). M2b.1d (section 22.2): the
+ * serviceDetails opener cap is deleted; the same-opening check compares the homepage and the services hub only.
+ */
+export const WARNING_ONLY_RULES: readonly GateRule[] = [GATE_RULES.duplicateAboutOpening];
 
 /** True when a gate hit is a warning, not a page failure (see ALWAYS_BLOCKING_RULES / WARNING_ONLY_RULES). */
 export function isWarningHit(hit: Pick<GateViolation, 'field' | 'rule'>, ctx: Pick<CopyGateContext, 'renderedFields'>): boolean {
@@ -1468,7 +1568,7 @@ function gateOrder(strings: Array<{ field: string; value: string }>, renderedFie
 /** Run every gate. Returns violations (field paths + rule + config id), never copy text. */
 export function runCopyGates(copy: Record<string, unknown>, ctx: CopyGateContext): GateViolation[] {
   const out: GateViolation[] = [];
-  const strings = gateOrder(gatedStrings(copy), ctx.renderedFields);
+  const strings = gateOrder(generatedStrings(copy, ctx), ctx.renderedFields);
   const authorised = CLAIM_RULES.map((_, index) => claimAuthorised(index, ctx));
   const quote = ctx.reviewQuote ? normalizeSpace(ctx.reviewQuote) : '';
   const places = ctx.places ?? [];
@@ -1552,7 +1652,7 @@ export function runCopyGates(copy: Record<string, unknown>, ctx: CopyGateContext
     if (Array.isArray(items)) items.forEach((item, index) => {
       if (typeof item !== 'string' || !allowed.has(normalizeSpace(item))) out.push({ field: `serviceItems[${index}]`, rule: GATE_RULES.unconfirmedService });
     });
-    const details = copy.serviceDetails;
+    const details = (ctx.ungeneratedFields ?? []).includes('serviceDetails') ? null : copy.serviceDetails;
     if (Array.isArray(details)) details.forEach((item, index) => {
       const name = item && typeof item === 'object' ? (item as Record<string, unknown>).name : undefined;
       if (typeof name !== 'string' || !allowed.has(normalizeSpace(name))) out.push({ field: `serviceDetails[${index}].name`, rule: GATE_RULES.unconfirmedService });
@@ -1576,7 +1676,7 @@ export function copyReviewFlags(copy: Record<string, unknown>, ctx: CopyGateCont
   const sources = ctx.serviceSources ?? [];
   const install = ctx.serviceLabels.filter((label, index) => isInstallService(label, sources[index] ?? ''));
   if (install.length) {
-    for (const { field, value } of gatedStrings(copy)) {
+    for (const { field, value } of generatedStrings(copy, ctx)) {
       if (HEADING_FIELDS.test(field) && fixTimeSentences(value, install).arrival &&
         sentences(value).some(sentence => install.some(label => sentence.includes(label)) && hasArrival(sentence) && TIME_PROMISE_PATTERN.test(sentence))) {
         flags.push({ field, flag: 'arrival_time_in_installation_heading' });
@@ -1625,6 +1725,8 @@ export interface CopyGatePageOptions {
   renderedFields?: readonly string[];
   /** M2a.7: hero-cap facts of the pages generated before this one (aligned with priorHeroHeadlines). */
   priorHeroFacts?: readonly HeroCapPageFacts[];
+  /** M2b.1d: top-level fields this page does not generate (never gated). */
+  ungeneratedFields?: readonly string[];
 }
 
 /** Build the gate context from owner data plus the page's confirmed service names and owner-stated places. */
@@ -1658,6 +1760,7 @@ export function copyGateContext(data: CollectedData, serviceLabels: readonly str
     anchorCity: page.anchorCity ?? null,
     ...(page.renderedFields ? { renderedFields: [...page.renderedFields] } : {}),
     ...(page.priorHeroFacts ? { priorHeroFacts: page.priorHeroFacts } : {}),
+    ...(page.ungeneratedFields?.length ? { ungeneratedFields: [...page.ungeneratedFields] } : {}),
   };
 }
 
@@ -1784,8 +1887,25 @@ export function describeGateViolation(violation: GateViolation, ctx: CopyGateCon
       const label = ctx.pageServiceLabel;
       return `${violation.field} ${problem === 'bare' ? 'is a bare action with nothing else' : 'names neither the customer\'s problem nor the service'}; the sticky bar must name the problem or the service plus an action: a problem-word question plus an action, or "tell me what the [appliance] is doing". Use one of these problem words${label ? ` or the service name ${JSON.stringify(label)}` : ''}: ${JSON.stringify(stickyProblemWordsFor(vertical))}`;
     }
-    case GATE_RULES.serviceDetailsOpener:
-      return `${violation.field} starts with ${JSON.stringify(SERVICE_DETAILS_OPENER_TOKEN)} like more than half of this page's service descriptions; start this one with the action or the object instead`;
+    case GATE_RULES.aboutHeadlinePromise: {
+      const [, kind, group] = (violation.actual ?? '').split(':');
+      const what = kind === 'before'
+        ? `a "before" construction (${JSON.stringify(BEFORE_TOKENS)})`
+        : `the signature phrase ${JSON.stringify(promptSignatureVariants(group ?? ''))}${kind === 'concept' ? ` (or one of the same idea: ${JSON.stringify(HERO_CAP_CONCEPT_ADDITIONS[group ?? ''] ?? [])})` : ''}`;
+      return `${violation.field} repeats the hero's promise with ${what}; the about headline introduces the man, not the promise. In at most 7 words, use one of: his years in the trade with the trade or the city; his first name with his trade (only when the name is written in Hebrew); or the tool or method from his usp, as a plain first-person fact. No signature phrase or synonym, no "before" construction, no quality adjective`;
+    }
+    case GATE_RULES.servicesHeadlineSet:
+      return `${violation.field} must be exactly one of these entries, word for word: ${JSON.stringify(SERVICES_HEADLINE_OPTIONS)}`;
+    case GATE_RULES.trustBarFiller: {
+      const phrase = TRUST_BAR_FILLER_PHRASES[index];
+      return `${violation.field} uses the filler phrase ${JSON.stringify(phrase ?? '')}, which claims something a customer cannot check; replace the item with a checkable fact from the owner facts (years in the trade, a licence or certification, the warranty length, the service area, or the response time), as a short noun phrase. Never use any of: ${JSON.stringify(TRUST_BAR_FILLER_PHRASES)}`;
+    }
+    case GATE_RULES.trustBarSize: {
+      const kind = (violation.actual ?? '').split(':')[0];
+      return kind === 'trust_items'
+        ? `trustBarItems has more than ${TRUST_BAR_MAX_ITEMS} items; keep at most ${TRUST_BAR_MAX_ITEMS}, one per kind (years, credential, warranty, service area, response time), and drop the rest`
+        : `${violation.field} is longer than ${TRUST_BAR_MAX_CHARS} characters; write it as a shorter noun phrase with no verb, at most ${TRUST_BAR_MAX_CHARS} characters including spaces`;
+    }
     case GATE_RULES.tradeTerm: {
       const entry = TRADE_TERMS.find(item => item.id === (violation.actual ?? '').split(':')[1]);
       if (!entry) return `${violation.field} uses a wrong trade term; rewrite it with the correct term`;
