@@ -77,22 +77,23 @@ function legalDocument(opts: LegalPageOpts, title: string, bodyHtml: string): st
   <link rel="canonical" href="${canonicalUrl}" />
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: Assistant, sans-serif; background: ${t.bg}; color: ${t.textPrimary}; min-height: 100vh; }
+    body { font-family: Assistant, sans-serif; background: ${t.bg}; color: ${t.textPrimary}; }
+    html { background: ${t.surface}; }
     a { color: ${t.accentText}; }
     p { line-height: 1.8; font-size: 0.98rem; color: ${t.textPrimary}; margin-bottom: 14px; }
   </style>
 </head>
 <body>
-  <header style="padding:16px 20px;background:${t.surface};border-bottom:1px solid ${t.border};">
-    <a href="${homeHref}" style="font-weight:700;text-decoration:none;color:${t.primary};">${businessName}</a>
+  <header style="padding:6px 20px;background:${t.surface};border-bottom:1px solid ${t.border};">
+    <a href="${homeHref}" style="display:inline-flex;align-items:center;min-height:44px;font-weight:700;text-decoration:none;color:${t.primary};">${businessName}</a>
   </header>
   <main style="max-width:640px;margin:0 auto;padding:44px 20px;">
     <h1 style="font-size:1.4rem;margin-bottom:20px;color:${t.primary};">${esc(title)}</h1>
     ${bodyHtml}
-    <p style="margin-top:32px;"><a href="${homeHref}">חזרה לעמוד הבית</a></p>
+    <p style="margin-top:32px;"><a href="${homeHref}" style="display:inline-flex;align-items:center;min-height:44px;">חזרה לעמוד הבית</a></p>
   </main>
-  <footer style="text-align:center;padding:24px 20px 32px;background:${t.surface};border-top:1px solid ${t.border};font-size:0.8rem;color:${t.textMuted};">
-    <a href="https://wao.co.il" style="color:${t.textMuted};text-decoration:none;">נבנה עם <strong>WAO</strong> 🚀</a>
+  <footer style="text-align:center;padding:14px 20px 22px;background:${t.surface};border-top:1px solid ${t.border};font-size:0.8rem;color:${t.textMuted};">
+    <a href="https://wao.co.il" style="display:inline-flex;align-items:center;gap:0.3em;min-height:44px;padding:0 8px;color:${t.textMuted};text-decoration:none;">נבנה עם <strong>WAO</strong> 🚀</a>
   </footer>
 </body>
 </html>`;

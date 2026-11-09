@@ -311,7 +311,7 @@ export default function LandingPage({ theme, assets, copy, data, heroImageUrl, s
 
         <div style={{ position: 'relative', zIndex: 1, maxWidth: '600px', padding: '48px 0' }}>
           {copy.responseTimeBadge && (
-            <div style={{ display: 'inline-block', background: t.accent, color: '#fff', padding: '6px 16px', borderRadius: t.radiusSm, fontSize: '0.85rem', fontWeight: 700, marginBottom: '16px' }}>
+            <div style={{ display: 'inline-block', background: t.accent, color: t.accentFillText, padding: '6px 16px', borderRadius: t.radiusSm, fontSize: '0.85rem', fontWeight: 700, marginBottom: '16px' }}>
               ⚡ {copy.responseTimeBadge}
             </div>
           )}
@@ -452,8 +452,8 @@ export default function LandingPage({ theme, assets, copy, data, heroImageUrl, s
             <form aria-labelledby="lead-form-heading" style={{ display: 'flex', flexDirection: 'column', gap: '14px' }} onSubmit={handleSubmit}>
               <input ref={nameInputRef} type="text" placeholder="שם מלא" aria-label="שם מלא" required style={{ padding: '14px 16px', borderRadius: t.radiusSm, border: `1px solid ${t.border}`, fontSize: '1rem', fontFamily: t.fontBody, color: t.textPrimary, background: t.surface }} />
               <input ref={phoneInputRef} type="tel" placeholder="050-0000000" aria-label="מספר טלפון" dir="ltr" required style={{ padding: '14px 16px', borderRadius: t.radiusSm, border: `1px solid ${t.border}`, fontSize: '1rem', fontFamily: t.fontBody, color: t.textPrimary, background: t.surface, textAlign: 'right' }} />
-              <label style={{ display: 'flex', gap: '8px', alignItems: 'flex-start', cursor: 'pointer' }}>
-                <input ref={consentCheckboxRef} type="checkbox" required style={{ marginTop: '3px', accentColor: t.accent, flexShrink: 0 }} />
+              <label style={{ display: 'flex', gap: '10px', alignItems: 'center', minHeight: '44px', cursor: 'pointer' }}>
+                <input ref={consentCheckboxRef} type="checkbox" required style={{ width: '24px', height: '24px', margin: 0, accentColor: t.accent, flexShrink: 0, cursor: 'pointer' }} />
                 <span style={{ fontSize: '0.8rem', color: t.textMuted, lineHeight: 1.4 }}>
                   אני מסכים/ה ל<strong>מדיניות הפרטיות</strong>.
                 </span>
@@ -468,9 +468,9 @@ export default function LandingPage({ theme, assets, copy, data, heroImageUrl, s
               </button>
             </form>
           )}
-          <div style={{ display: 'flex', justifyContent: 'center', gap: '20px', marginTop: '20px', fontSize: '0.75rem', color: t.textMuted }}>
-            <a href="/privacy" style={{ color: t.textMuted, padding: '8px 6px' }}>מדיניות פרטיות</a>
-            <a href="/accessibility" style={{ color: t.textMuted, padding: '8px 6px' }}>הצהרת נגישות</a>
+          <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', marginTop: '12px', fontSize: '0.75rem', color: t.textMuted }}>
+            <a href="/privacy" style={{ display: 'inline-flex', alignItems: 'center', minHeight: '44px', color: t.textMuted, padding: '0 8px' }}>מדיניות פרטיות</a>
+            <a href="/accessibility" style={{ display: 'inline-flex', alignItems: 'center', minHeight: '44px', color: t.textMuted, padding: '0 8px' }}>הצהרת נגישות</a>
           </div>
         </div>
       </section>

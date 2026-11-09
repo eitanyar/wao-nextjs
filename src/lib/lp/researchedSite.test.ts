@@ -253,3 +253,46 @@ test('M2b.1: the pending flag matches the labels (flip it when the last placehol
   const pending = Object.values(RESEARCHED_SITE_LABELS).some(value => value.includes(HE_TODO_PREFIX));
   assert.equal(RESEARCHED_SITE_LABELS_PENDING_COPY, pending);
 });
+
+test('M2b.1c: more than 6 source areas: visible list and both areaServed arrays capped at 6, identical, base city first', () => {
+  const source = ['Holon', 'Bat Yam', 'Rishon', 'Azor', 'Yavne', 'Lod', 'Ramla', 'Rehovot', 'Ness Ziona', 'Yehud'];
+  assert.ok(source.length > RESEARCHED_SERVICE_AREA_CAP);
+  const seo = { name: 'Plumber', city: 'Holon', serviceArea: source };
+  const home = page({ opportunityId: 'home', classification: 'homepage', targetPath: '/', copy: copy('Home'), seo });
+  const html = renderResearchedSitePages(params({ data: fullData, pages: [home, page({ seo })], graphEdges: [{ fromId: 'home', toId: 'money-alpha' }] }))['index.html'];
+  const listed = [...html.match(/<ul role="list"[^>]*>([^]*?)<\/ul>/)![1].matchAll(/<li[^>]*>([^<]+)<\/li>/g)].map(m => m[1]);
+  assert.equal(listed.length, 6);
+  assert.equal(listed[0], 'Holon', 'base city first');
+  assert.deepEqual(listed, source.slice(0, 6));
+  const graph = JSON.parse(html.match(/<script type="application\/ld\+json">([^<]+)<\/script>/)![1])['@graph'];
+  const declared = graph.filter((node: Record<string, unknown>) => node.areaServed).map((node: { '@type': string; areaServed: Array<{ name: string }> }) => ({ type: node['@type'], names: node.areaServed.map(a => a.name) }));
+  assert.equal(declared.length, 2, 'Service + LocalBusiness');
+  assert.ok(declared.some((d: { type: string }) => d.type === 'Service'));
+  for (const d of declared) assert.deepEqual(d.names, listed, `${d.type} areaServed === visible list`);
+  for (const beyond of source.slice(6)) assert.ok(!html.includes(beyond), `${beyond}: beyond the cap`);
+});
+
+test('M2b.1c: 44px tap targets (footer links, FAQ summary, consent label + 24px checkbox, separately tappable privacy link), contact phone bidi, no dead sticky-bar padding', () => {
+  const pages = renderResearchedSitePages(params({ data: fullData }));
+  for (const [file, html] of Object.entries(pages)) {
+    if (!file.endsWith('.html')) continue;
+    const footer = html.match(/<footer[^>]*>([^]*?)<\/footer>/)![1];
+    const links = [...footer.matchAll(/<a href="[^"]+" style="([^"]*)"/g)];
+    assert.ok(links.length >= 1, `${file}: footer links`);
+    for (const [, style] of links) assert.match(style, /display:inline-flex;align-items:center;(?:gap:0\.3em;)?min-height:44px;/, `${file}: footer link`);
+    assert.doesNotMatch(html, /padding-bottom: calc\(80px/, `${file}: no padding reserved for an absent sticky bar`);
+    assert.match(html, /html \{ background: #FFFFFF; \}/, `${file}: leftover viewport below a short page takes the footer (surface) colour`);
+  }
+  const summaries = [...pages['services/alpha-service.html'].matchAll(/<summary style="([^"]*)"/g)];
+  assert.ok(summaries.length >= 1, 'FAQ rendered');
+  for (const [, style] of summaries) {
+    assert.match(style, /min-height:44px;padding:12px 0;cursor:pointer;/);
+    assert.doesNotMatch(style, /display:/, 'native disclosure marker kept (summary stays list-item)');
+  }
+  for (const file of ['index.html', 'contact.html']) {
+    const html = pages[file];
+    assert.match(html, /<label style="display:flex;gap:10px;align-items:center;min-height:44px;cursor:pointer;">\s*<input type="checkbox" id="f-consent" required style="width:24px;height:24px;/, `${file}: consent`);
+    assert.match(html, /<a href="\/privacy.html" style="display:inline-block;padding:14px 0;margin:-14px 0;/, `${file}: privacy link hit box`);
+  }
+  assert.match(pages['contact.html'], /<a href="tel:050-0000000" style="display:inline-flex;align-items:center;gap:6px;min-height:44px;[^"]*"><span aria-hidden="true">\u{1F4DE}<\/span><bdi dir="ltr">050-0000000<\/bdi><\/a>/u);
+});

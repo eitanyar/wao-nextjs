@@ -152,9 +152,9 @@ function buildCoreThirtyNodeHtml(
     </div>`;
 
   const faqHtml = copy.faqItems.map(item => `
-    <details style="background:${t.surface};border:1px solid ${t.border};border-radius:${t.radiusMd};padding:14px 18px;">
-      <summary style="font-weight:700;color:${t.primary};cursor:pointer;">${esc(item.q)}</summary>
-      <p style="color:${t.textMuted};font-size:0.9rem;line-height:1.5;margin-top:8px;">${esc(item.a)}</p>
+    <details style="background:${t.surface};border:1px solid ${t.border};border-radius:${t.radiusMd};padding:0 18px;">
+      <summary style="min-height:44px;padding:12px 0;font-weight:700;color:${t.primary};cursor:pointer;">${esc(item.q)}</summary>
+      <p style="color:${t.textMuted};font-size:0.9rem;line-height:1.5;margin-top:-4px;padding-bottom:14px;">${esc(item.a)}</p>
     </details>`).join('');
 
   const relatedLinksHtml = buildRelatedLinksBlock(node, params.nodes, t);

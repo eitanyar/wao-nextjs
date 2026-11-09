@@ -448,7 +448,7 @@ function buildPageHtml(page: ResearchedSitePage, params: RenderResearchedSitePag
     const target = outputs.get(item.opportunityId);
     return target ? [`<a href="/${target === 'index.html' ? '' : target}" style="display:inline-block;padding:12px 8px;min-height:44px;color:${theme.accentText};text-decoration:underline;font-weight:700;">${esc(anchorText(item, businessName))}</a>`] : [];
   }).join('');
-  const faq = approvedFaqs(page).map(item => `<details style="background:${theme.surface};border:1px solid ${theme.border};border-radius:${theme.radiusMd};padding:14px;"><summary style="font-weight:700;color:${theme.primary};">${esc(item.q)}</summary><p style="color:${theme.textMuted};margin-top:8px;">${esc(item.a)}</p></details>`).join('');
+  const faq = approvedFaqs(page).map(item => `<details style="background:${theme.surface};border:1px solid ${theme.border};border-radius:${theme.radiusMd};padding:0 14px;"><summary style="min-height:44px;padding:12px 0;cursor:pointer;font-weight:700;color:${theme.primary};">${esc(item.q)}</summary><p style="color:${theme.textMuted};margin-top:-4px;padding-bottom:14px;">${esc(item.a)}</p></details>`).join('');
   const head = pageHead({
     t: theme,
     title: researchedPageTitle(page, businessName),

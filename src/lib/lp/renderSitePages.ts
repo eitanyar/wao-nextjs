@@ -6,7 +6,7 @@
 import type { VerticalTheme } from './verticalThemes';
 import type { SiteCopy } from './lpCopyPrompt';
 import type { CollectedData } from '@/lib/bot/prompts';
-import { renderStaticHtml, type RenderStaticHtmlParams } from './renderStaticHtml';
+import { renderStaticHtml, CONSENT_CHECKBOX_STYLE, CONSENT_LABEL_STYLE, CONSENT_LINK_STYLE, type RenderStaticHtmlParams } from './renderStaticHtml';
 import { buildPrivacyHtml, buildAccessibilityHtml, isAccessibilityExempt } from './legalPages';
 import { buildFraudBlockerTrackerHtml } from '../fraud-blocker/tracker';
 import { displayBusinessHours, parseBusinessHours } from './businessHours';
@@ -116,7 +116,9 @@ export function contacts(data: CollectedData) {
 export function styleBlock(t: VerticalTheme): string {
   return `<style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: '${t.fontBody.split(',')[0].replace(/['"]/g, '')}', Assistant, sans-serif; background: ${t.bg}; color: ${t.textPrimary}; min-height: 100vh; padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px)); }
+    body { font-family: '${t.fontBody.split(',')[0].replace(/['"]/g, '')}', Assistant, sans-serif; background: ${t.bg}; color: ${t.textPrimary}; }
+    /* M2b.1c: a short page's leftover viewport below the footer takes the footer colour, not a blank bg strip. */
+    html { background: ${t.surface}; }
     a { text-decoration: none; }
     input, button { font-family: inherit; }
     a:focus-visible, button:focus-visible, summary:focus-visible, input:focus-visible { outline: 3px solid ${t.textPrimary}; outline-offset: 2px; }
@@ -174,11 +176,11 @@ function researchNavBar(t: VerticalTheme, o: ResearchNavOptions): string {
 
 export function footerBadge(t: VerticalTheme, exempt: boolean): string {
   return `  <footer style="text-align:center;padding:24px 20px 32px;background:${t.surface};border-top:1px solid ${t.border};font-size:0.8rem;color:${t.textMuted};">
-    <div style="margin-bottom:10px;display:flex;gap:14px;justify-content:center;">
-      <a href="/privacy.html" style="color:${t.textMuted};">מדיניות פרטיות</a>
-      ${exempt ? '' : '<a href="/accessibility.html" style="color:' + t.textMuted + ';">הצהרת נגישות</a>'}
+    <div style="margin-bottom:4px;display:flex;flex-wrap:wrap;gap:4px 6px;justify-content:center;">
+      <a href="/privacy.html" style="display:inline-flex;align-items:center;min-height:44px;padding:0 8px;color:${t.textMuted};">מדיניות פרטיות</a>
+      ${exempt ? '' : '<a href="/accessibility.html" style="display:inline-flex;align-items:center;min-height:44px;padding:0 8px;color:' + t.textMuted + ';">הצהרת נגישות</a>'}
     </div>
-    <a href="https://wao.co.il" style="color:${t.textMuted};text-decoration:none;">נבנה עם <strong>WAO</strong> 🚀</a>
+    <a href="https://wao.co.il" style="display:inline-flex;align-items:center;gap:0.3em;min-height:44px;padding:0 8px;color:${t.textMuted};text-decoration:none;">נבנה עם <strong>WAO</strong> 🚀</a>
   </footer>`;
 }
 
@@ -386,9 +388,9 @@ export function leadFormSection(t: VerticalTheme, headline: string, ctaLabel: st
       <form id="lead-form" style="display:flex;flex-direction:column;gap:14px;">
         <input type="text" id="f-name" placeholder="שם מלא" aria-label="שם מלא" required style="padding:14px 16px;border-radius:${t.radiusSm};border:1px solid ${t.border};font-size:1rem;color:${t.textPrimary};background:${t.surface};" />
         <input type="tel" id="f-phone" placeholder="050-0000000" aria-label="מספר טלפון" dir="ltr" required style="padding:14px 16px;border-radius:${t.radiusSm};border:1px solid ${t.border};font-size:1rem;color:${t.textPrimary};background:${t.surface};text-align:right;" />
-        <label style="display:flex;gap:8px;align-items:flex-start;cursor:pointer;">
-          <input type="checkbox" id="f-consent" required style="margin-top:3px;flex-shrink:0;" />
-          <span style="font-size:0.8rem;color:${t.textMuted};line-height:1.4;">אני מסכים/ה ל<a href="/privacy.html" style="color:${t.textMuted};text-decoration:underline;">מדיניות הפרטיות</a>.</span>
+        <label style="${CONSENT_LABEL_STYLE}">
+          <input type="checkbox" id="f-consent" required style="${CONSENT_CHECKBOX_STYLE}" />
+          <span style="font-size:0.8rem;color:${t.textMuted};line-height:1.4;">אני מסכים/ה ל<a href="/privacy.html" style="${CONSENT_LINK_STYLE}color:${t.textMuted};text-decoration:underline;">מדיניות הפרטיות</a>.</span>
         </label>
         <div id="form-error">שגיאה בשליחה — נסה שוב או התקשר ישירות.</div>
         <button type="submit" class="submit-btn">${esc(submitLabel)}</button>
@@ -632,8 +634,8 @@ function buildContactHtml(p: RenderSitePagesParams, siteUrl: string): string {
     <div style="max-width:500px;margin:0 auto;">
       <h1 style="font-family:'Secular One',sans-serif;font-weight:${t.headingWeight};font-size:clamp(1.4rem,4vw,1.9rem);color:${t.primary};margin-bottom:16px;">${esc(copy.formHeadline)}</h1>
       <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-bottom:8px;">
-        ${phone ? `<a href="${phoneHref}" style="background:${t.ctaGradient};color:${t.ctaText};padding:12px 24px;border-radius:${t.radiusSm};font-weight:800;font-size:1rem;">📞 ${esc(phone)}</a>` : ''}
-        ${whatsapp ? `<a href="${whatsappHref}" target="_blank" rel="noopener noreferrer" style="background:#25D366;color:#fff;padding:12px 24px;border-radius:${t.radiusSm};font-weight:800;font-size:1rem;">💬 וואטסאפ</a>` : ''}
+        ${phone ? `<a href="${phoneHref}" style="display:inline-flex;align-items:center;gap:6px;min-height:44px;background:${t.ctaGradient};color:${t.ctaText};padding:12px 24px;border-radius:${t.radiusSm};font-weight:800;font-size:1rem;"><span aria-hidden="true">📞</span><bdi dir="ltr">${esc(phone)}</bdi></a>` : ''}
+        ${whatsapp ? `<a href="${whatsappHref}" target="_blank" rel="noopener noreferrer" style="display:inline-flex;align-items:center;gap:6px;min-height:44px;background:#25D366;color:#fff;padding:12px 24px;border-radius:${t.radiusSm};font-weight:800;font-size:1rem;"><span aria-hidden="true">💬</span>וואטסאפ</a>` : ''}
       </div>
       ${hoursHtml}
     </div>

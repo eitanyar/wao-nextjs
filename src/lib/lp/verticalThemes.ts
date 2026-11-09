@@ -29,6 +29,7 @@ export interface VerticalTheme {
   ctaGradient: string;         // CTA button gradient
   ctaText: string;             // Text/icon colour on ctaGradient (>= 4.5:1 on every stop, verticalThemes.test.ts)
   accentText: string;          // accent hue darkened for TEXT on bg/surface/surfaceAlt (>= 4.5:1); accent stays for borders/fills
+  accentFillText: string;      // Text colour on a solid `accent` fill (badges): #FFFFFF where white >= 4.5:1, else a dark value (verticalThemes.test.ts)
   trustBadgeBg: string;        // Trust badge background
   // Typography
   fontHeading: string;         // CSS font-family for H1/H2
@@ -64,6 +65,7 @@ export const VERTICAL_THEMES: Record<VerticalKey, VerticalTheme> = {
     ctaGradient: 'linear-gradient(135deg, #C43C08 0%, #A82E00 100%)',
     ctaText: '#FFFFFF',
     accentText: '#A82E00',
+    accentFillText: '#0D1B2A',   // white on accent < 4.5:1 in this theme; textPrimary passes
     trustBadgeBg: 'rgba(27,58,92,0.08)',
     fontHeading: '"Secular One", "Assistant", sans-serif',
     fontBody: '"Assistant", sans-serif',
@@ -94,6 +96,7 @@ export const VERTICAL_THEMES: Record<VerticalKey, VerticalTheme> = {
     ctaGradient: 'linear-gradient(135deg, #D4842A 0%, #E8B040 100%)',
     ctaText: '#1A2410',
     accentText: '#8A4F0A',
+    accentFillText: '#1A2410',   // white on accent < 4.5:1 in this theme; textPrimary passes
     trustBadgeBg: 'rgba(45,80,22,0.07)',
     fontHeading: '"Assistant", sans-serif',
     fontBody: '"Assistant", sans-serif',
@@ -124,6 +127,7 @@ export const VERTICAL_THEMES: Record<VerticalKey, VerticalTheme> = {
     ctaGradient: 'linear-gradient(135deg, #0D6B7A 0%, #117A89 100%)',
     ctaText: '#FFFFFF',
     accentText: '#0D6B7A',
+    accentFillText: '#0A2E33',   // white on accent < 4.5:1 in this theme; textPrimary passes
     trustBadgeBg: 'rgba(58,191,191,0.10)',
     fontHeading: '"Assistant", sans-serif',
     fontBody: '"Assistant", sans-serif',
@@ -154,6 +158,7 @@ export const VERTICAL_THEMES: Record<VerticalKey, VerticalTheme> = {
     ctaGradient: 'linear-gradient(135deg, #7A5E10 0%, #5C4400 100%)',
     ctaText: '#FFFFFF',
     accentText: '#7A5E10',
+    accentFillText: '#0D0D1A',   // white on accent < 4.5:1 in this theme; textPrimary passes
     trustBadgeBg: 'rgba(201,168,76,0.10)',
     fontHeading: '"Assistant", sans-serif',
     fontBody: '"Assistant", sans-serif',
@@ -184,6 +189,7 @@ export const VERTICAL_THEMES: Record<VerticalKey, VerticalTheme> = {
     ctaGradient: 'linear-gradient(135deg, #8B5E2A 0%, #6B3F10 100%)',
     ctaText: '#FFFFFF',
     accentText: '#8B5E2A',
+    accentFillText: '#0A0A0A',   // white on accent < 4.5:1 in this theme; textPrimary passes
     trustBadgeBg: 'rgba(201,160,122,0.10)',
     fontHeading: '"Secular One", "Assistant", sans-serif',
     fontBody: '"Assistant", sans-serif',
@@ -214,6 +220,7 @@ export const VERTICAL_THEMES: Record<VerticalKey, VerticalTheme> = {
     ctaGradient: 'linear-gradient(135deg, #1A7040 0%, #0F5028 100%)',
     ctaText: '#FFFFFF',
     accentText: '#1A7040',
+    accentFillText: '#0A1F18',   // white on accent < 4.5:1 in this theme; textPrimary passes
     trustBadgeBg: 'rgba(46,204,113,0.10)',
     fontHeading: '"Secular One", "Assistant", sans-serif',
     fontBody: '"Assistant", sans-serif',
@@ -244,6 +251,7 @@ export const VERTICAL_THEMES: Record<VerticalKey, VerticalTheme> = {
     ctaGradient: 'linear-gradient(135deg, #8B3050 0%, #6B1A35 100%)',
     ctaText: '#FFFFFF',
     accentText: '#A5405E',
+    accentFillText: '#1A0A14',   // white on accent < 4.5:1 in this theme; textPrimary passes
     trustBadgeBg: 'rgba(196,116,138,0.10)',
     fontHeading: '"Assistant", sans-serif',
     fontBody: '"Assistant", sans-serif',
@@ -274,6 +282,7 @@ export const VERTICAL_THEMES: Record<VerticalKey, VerticalTheme> = {
     ctaGradient: 'linear-gradient(135deg, #1E3A4A 0%, #2D5566 100%)',
     ctaText: '#FFFFFF',
     accentText: '#3F6B52',
+    accentFillText: '#0D1E28',   // white on accent < 4.5:1 in this theme; textPrimary passes
     trustBadgeBg: 'rgba(123,158,135,0.10)',
     fontHeading: '"Assistant", sans-serif',
     fontBody: '"Assistant", sans-serif',

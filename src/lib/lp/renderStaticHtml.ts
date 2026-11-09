@@ -4,6 +4,15 @@ import type { LPCopy } from './lpCopyPrompt';
 import type { CollectedData } from '@/lib/bot/prompts';
 import { buildFraudBlockerTrackerHtml } from '../fraud-blocker/tracker';
 
+/**
+ * M2b.1c: consent row tap targets. The whole <label> is the checkbox hit area (>= 44px tall), the checkbox itself is
+ * 24px, and the privacy link inside the label gets its own >= 44px hit box via vertical padding cancelled by negative
+ * margins (the text line box is unchanged). Shared with renderSitePages' leadFormSection.
+ */
+export const CONSENT_LABEL_STYLE = 'display:flex;gap:10px;align-items:center;min-height:44px;cursor:pointer;';
+export const CONSENT_CHECKBOX_STYLE = 'width:24px;height:24px;margin:0;flex-shrink:0;cursor:pointer;';
+export const CONSENT_LINK_STYLE = 'display:inline-block;padding:14px 0;margin:-14px 0;';
+
 export interface RenderStaticHtmlParams {
   theme: VerticalTheme;
   assets: VerticalAssets;
@@ -119,14 +128,14 @@ export function renderStaticHtml(p: RenderStaticHtmlParams): string {
   <!-- Header -->
   <header style="position:sticky;top:0;z-index:50;background:${t.surface};border-bottom:1px solid ${t.border};padding:12px 20px;display:flex;justify-content:space-between;align-items:center;box-shadow:0 2px 8px rgba(0,0,0,0.06);">
     <div style="font-family:'Secular One',sans-serif;font-weight:${t.headingWeight};font-size:1.1rem;color:${t.primary};">${esc(businessName)}</div>
-    ${phone ? `<a href="${phoneHref}" ${phoneClick} style="background:${t.ctaGradient};color:${t.ctaText};padding:10px 18px;border-radius:${t.radiusSm};font-weight:700;font-size:0.9rem;white-space:nowrap;">📞 ${esc(phone)}</a>` : ''}
+    ${phone ? `<a href="${phoneHref}" ${phoneClick} style="display:inline-flex;align-items:center;gap:6px;min-height:44px;background:${t.ctaGradient};color:${t.ctaText};padding:10px 18px;border-radius:${t.radiusSm};font-weight:700;font-size:0.9rem;white-space:nowrap;"><span aria-hidden="true">📞</span><bdi dir="ltr">${esc(phone)}</bdi></a>` : ''}
   </header>
 
   <!-- Hero -->
   <section style="position:relative;min-height:300px;background-image:url(${heroImageUrl});background-size:cover;background-position:center;display:flex;align-items:center;justify-content:center;text-align:${t.heroTextAlign};padding:0 20px;">
     <div style="position:absolute;inset:0;background:${t.heroGradient};"></div>
     <div style="position:relative;z-index:1;max-width:600px;padding:48px 0;">
-      ${copy.responseTimeBadge ? `<div style="display:inline-block;background:${t.accent};color:#fff;padding:6px 16px;border-radius:${t.radiusSm};font-size:0.85rem;font-weight:700;margin-bottom:16px;">⚡ ${esc(copy.responseTimeBadge)}</div>` : ''}
+      ${copy.responseTimeBadge ? `<div style="display:inline-block;background:${t.accent};color:${t.accentFillText};padding:6px 16px;border-radius:${t.radiusSm};font-size:0.85rem;font-weight:700;margin-bottom:16px;">⚡ ${esc(copy.responseTimeBadge)}</div>` : ''}
       <h1 style="font-family:'Secular One',sans-serif;font-weight:${t.headingWeight};font-size:clamp(1.6rem,5vw,2.4rem);color:#fff;line-height:1.2;margin-bottom:16px;">${esc(copy.heroHeadline)}</h1>
       <p style="font-size:clamp(1rem,3vw,1.15rem);color:rgba(255,255,255,0.88);margin-bottom:28px;line-height:1.5;">${esc(copy.heroSubheadline)}</p>
       <div style="display:flex;gap:12px;justify-content:${t.heroTextAlign === 'center' ? 'center' : 'flex-start'};flex-wrap:wrap;">
@@ -202,9 +211,9 @@ export function renderStaticHtml(p: RenderStaticHtmlParams): string {
       <form id="lead-form" style="display:flex;flex-direction:column;gap:14px;">
         <input type="text" id="f-name" placeholder="שם מלא" aria-label="שם מלא" required style="padding:14px 16px;border-radius:${t.radiusSm};border:1px solid ${t.border};font-size:1rem;color:${t.textPrimary};background:${t.surface};" />
         <input type="tel" id="f-phone" placeholder="050-0000000" aria-label="מספר טלפון" dir="ltr" required style="padding:14px 16px;border-radius:${t.radiusSm};border:1px solid ${t.border};font-size:1rem;color:${t.textPrimary};background:${t.surface};text-align:right;" />
-        <label style="display:flex;gap:8px;align-items:flex-start;cursor:pointer;">
-          <input type="checkbox" id="f-consent" required style="margin-top:3px;flex-shrink:0;" />
-          <span style="font-size:0.8rem;color:${t.textMuted};line-height:1.4;">אני מסכים/ה ל<a href="/privacy.html" style="color:${t.textMuted};text-decoration:underline;">מדיניות הפרטיות</a>.</span>
+        <label style="${CONSENT_LABEL_STYLE}">
+          <input type="checkbox" id="f-consent" required style="${CONSENT_CHECKBOX_STYLE}" />
+          <span style="font-size:0.8rem;color:${t.textMuted};line-height:1.4;">אני מסכים/ה ל<a href="/privacy.html" style="${CONSENT_LINK_STYLE}color:${t.textMuted};text-decoration:underline;">מדיניות הפרטיות</a>.</span>
         </label>
         <div id="form-error">שגיאה בשליחה — נסה שוב או התקשר ישירות.</div>
         <button type="submit" class="submit-btn">${esc(copy.heroCta)}</button>
