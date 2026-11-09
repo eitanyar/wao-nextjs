@@ -78,7 +78,8 @@ const render = () => renderResearchedSitePages({
 });
 
 function navHrefs(html: string): string[] {
-  const nav = /<nav aria-label="Related pages"[^>]*>([\s\S]*?)<\/nav>/.exec(html)?.[1] ?? '';
+  // M2b.1b: the related-links block is labelled by its visible heading (data-section="related-links").
+  const nav = /<nav data-section="related-links"[^>]*>([\s\S]*?)<\/nav>/.exec(html)?.[1] ?? '';
   return [...nav.matchAll(/href="([^"]+)"/g)].map(match => match[1]);
 }
 

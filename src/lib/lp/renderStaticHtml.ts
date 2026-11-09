@@ -108,9 +108,9 @@ export function renderStaticHtml(p: RenderStaticHtmlParams): string {
     body { font-family: '${t.fontBody.split(',')[0].replace(/['"]/g, '')}', Assistant, sans-serif; background: ${t.bg}; color: ${t.textPrimary}; min-height: 100vh; padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px)); }
     a { text-decoration: none; }
     input, button { font-family: inherit; }
-    #form-success { display: none; text-align: center; color: ${t.accent}; font-weight: 700; font-size: 1.1rem; padding: 20px; }
+    #form-success { display: none; text-align: center; color: ${t.accentText}; font-weight: 700; font-size: 1.1rem; padding: 20px; }
     #form-error { display: none; text-align: center; color: #e53e3e; font-size: 0.9rem; padding: 8px; }
-    .submit-btn { padding: 15px; background: ${t.ctaGradient}; color: #fff; border: none; border-radius: ${t.radiusSm}; font-weight: 800; font-size: 1.05rem; cursor: pointer; width: 100%; }
+    .submit-btn { padding: 15px; background: ${t.ctaGradient}; color: ${t.ctaText}; border: none; border-radius: ${t.radiusSm}; font-weight: 800; font-size: 1.05rem; cursor: pointer; width: 100%; }
     .submit-btn:disabled { opacity: 0.6; cursor: not-allowed; }
   </style>
 </head>
@@ -119,7 +119,7 @@ export function renderStaticHtml(p: RenderStaticHtmlParams): string {
   <!-- Header -->
   <header style="position:sticky;top:0;z-index:50;background:${t.surface};border-bottom:1px solid ${t.border};padding:12px 20px;display:flex;justify-content:space-between;align-items:center;box-shadow:0 2px 8px rgba(0,0,0,0.06);">
     <div style="font-family:'Secular One',sans-serif;font-weight:${t.headingWeight};font-size:1.1rem;color:${t.primary};">${esc(businessName)}</div>
-    ${phone ? `<a href="${phoneHref}" ${phoneClick} style="background:${t.ctaGradient};color:#fff;padding:10px 18px;border-radius:${t.radiusSm};font-weight:700;font-size:0.9rem;white-space:nowrap;">📞 ${esc(phone)}</a>` : ''}
+    ${phone ? `<a href="${phoneHref}" ${phoneClick} style="background:${t.ctaGradient};color:${t.ctaText};padding:10px 18px;border-radius:${t.radiusSm};font-weight:700;font-size:0.9rem;white-space:nowrap;">📞 ${esc(phone)}</a>` : ''}
   </header>
 
   <!-- Hero -->
@@ -130,7 +130,7 @@ export function renderStaticHtml(p: RenderStaticHtmlParams): string {
       <h1 style="font-family:'Secular One',sans-serif;font-weight:${t.headingWeight};font-size:clamp(1.6rem,5vw,2.4rem);color:#fff;line-height:1.2;margin-bottom:16px;">${esc(copy.heroHeadline)}</h1>
       <p style="font-size:clamp(1rem,3vw,1.15rem);color:rgba(255,255,255,0.88);margin-bottom:28px;line-height:1.5;">${esc(copy.heroSubheadline)}</p>
       <div style="display:flex;gap:12px;justify-content:${t.heroTextAlign === 'center' ? 'center' : 'flex-start'};flex-wrap:wrap;">
-        ${phone ? `<a href="${phoneHref}" ${phoneClick} style="background:${t.ctaGradient};color:#fff;padding:14px 28px;border-radius:${t.radiusSm};font-weight:800;font-size:1.05rem;display:inline-block;">📞 ${esc(copy.heroCta)}</a>` : ''}
+        ${phone ? `<a href="${phoneHref}" ${phoneClick} style="background:${t.ctaGradient};color:${t.ctaText};padding:14px 28px;border-radius:${t.radiusSm};font-weight:800;font-size:1.05rem;display:inline-block;">📞 ${esc(copy.heroCta)}</a>` : ''}
         ${whatsapp ? `<a href="${whatsappHref}" target="_blank" rel="noopener noreferrer" ${waClick} style="background:#25D366;color:#fff;padding:14px 28px;border-radius:${t.radiusSm};font-weight:800;font-size:1.05rem;display:inline-block;">💬 וואטסאפ</a>` : ''}
       </div>
       ${copy.scarcityLine ? `<p style="margin-top:16px;color:rgba(255,255,255,0.75);font-size:0.9rem;">⏰ ${esc(copy.scarcityLine)}</p>` : ''}
@@ -188,7 +188,7 @@ export function renderStaticHtml(p: RenderStaticHtmlParams): string {
   <!-- About -->
   <section style="padding:36px 20px;background:${t.surface};">
     <div style="max-width:600px;margin:0 auto;text-align:center;">
-      <div style="width:60px;height:60px;border-radius:50%;background:${t.ctaGradient};margin:0 auto 16px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:900;font-size:1.4rem;">
+      <div style="width:60px;height:60px;border-radius:50%;background:${t.ctaGradient};margin:0 auto 16px;display:flex;align-items:center;justify-content:center;color:${t.ctaText};font-weight:900;font-size:1.4rem;">
         ${esc((data.ownerName || businessName || '?')[0])}
       </div>
       <p style="color:${t.textMuted};font-size:0.95rem;line-height:1.6;">${esc(copy.aboutBlurb)}</p>
@@ -217,7 +217,7 @@ export function renderStaticHtml(p: RenderStaticHtmlParams): string {
   <div style="position:fixed;bottom:0;left:0;right:0;background:${t.surface};border-top:1px solid ${t.border};padding-top:10px;padding-bottom:calc(10px + env(safe-area-inset-bottom,0px));padding-left:16px;padding-right:16px;z-index:50;box-shadow:0 -2px 12px rgba(0,0,0,0.08);">
     <p style="text-align:center;font-size:0.78rem;color:${t.textMuted};margin-bottom:8px;font-weight:600;">${esc(copy.stickyBarLine)}</p>
     <div style="display:flex;gap:10px;">
-      ${phone ? `<a href="${phoneHref}" ${phoneClick} style="flex:1;background:${t.ctaGradient};color:#fff;padding:14px;border-radius:${t.radiusSm};font-weight:800;font-size:1rem;text-align:center;display:block;">📞 התקשר</a>` : ''}
+      ${phone ? `<a href="${phoneHref}" ${phoneClick} style="flex:1;background:${t.ctaGradient};color:${t.ctaText};padding:14px;border-radius:${t.radiusSm};font-weight:800;font-size:1rem;text-align:center;display:block;">📞 התקשר</a>` : ''}
       ${whatsapp ? `<a href="${whatsappHref}" target="_blank" rel="noopener noreferrer" ${waClick} style="flex:1;background:#25D366;color:#fff;padding:14px;border-radius:${t.radiusSm};font-weight:800;font-size:1rem;text-align:center;display:block;">💬 וואטסאפ</a>` : ''}
     </div>
   </div>

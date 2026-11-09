@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { buildResearchedSchemaGraph, buildResearchedSitemapUrls, buildStablePageSlug, israeliPhoneE164, renderResearchedSitePages, type RenderResearchedSitePagesParams, type ResearchedSitePage } from './researchedSite';
+import { buildResearchedSchemaGraph, buildResearchedSitemapUrls, buildStablePageSlug, israeliPhoneE164, renderResearchedSitePages, RESEARCHED_GATED_FIELDS, RESEARCHED_HOME_HUB_ONLY_FIELDS, RESEARCHED_SERVICE_AREA_CAP, researchedGatedFieldsFor, type RenderResearchedSitePagesParams, type ResearchedSitePage } from './researchedSite';
 import { HE_TODO_PREFIX, RESEARCHED_SITE_LABELS, RESEARCHED_SITE_LABELS_PENDING_COPY } from './researchedSiteLabels';
 import { VERTICAL_THEMES } from './verticalThemes';
 import { VERTICAL_ASSETS } from './verticalAssets';
@@ -121,23 +121,105 @@ function emptyCopy(headline: string): SiteCopy {
   return { ...copy(headline), trustBarItems: [], aboutPageHeadline: 'Orphan about headline', aboutPageBody: '', servicesHeadline: 'Orphan services headline', serviceDetails: [] };
 }
 
-test('M2b.1: every research page renders the trust bar, service cards, about section and hero call button; the homepage lists the service areas', () => {
-  const pages = renderResearchedSitePages(params({ data: fullData }));
+test('M2b.1/M2b.1b: trust bar, review and hero call on every page; cards and about on homepage + hub only; areas list === areaServed on the homepage', () => {
+  const seo = { name: 'Plumber', city: 'Holon', serviceArea: ['Holon', 'Bat Yam', 'holon', 'Rishon', 'Azor', 'Yavne', 'Lod', 'Ramla', ' '] };
+  const home = page({ opportunityId: 'home', classification: 'homepage', targetPath: '/', copy: { ...copy('Home'), reviewFeatured: 'Great job' }, seo });
+  const hub = page({ opportunityId: 'hub', classification: 'service_hub', targetPath: '/services', copy: copy('Service hub'), seo });
+  const money = page({ copy: { ...copy('Alpha service'), reviewFeatured: 'Great job' }, seo });
+  const pages = renderResearchedSitePages(params({ data: fullData, pages: [home, hub, money] }));
   for (const file of ['index.html', 'services.html', 'services/alpha-service.html']) {
     const html = pages[file];
     assert.match(html, />\s*Licensed\s*</, `${file} trust bar`);
-    assert.match(html, /data-section="service-details"[^]*<h2[^>]*>Services<\/h2>[^]*<h3[^>]*>Alpha<\/h3><p[^>]*>Alpha description\.<\/p>/, `${file} service cards`);
-    assert.match(html, /data-section="about"[^]*<h2[^>]*>About<\/h2><p[^>]*>About body<\/p>/, `${file} about`);
     assert.match(html, /<a href="tel:\+972500000000" data-hero-call [^>]*min-height:48px[^>]*>[^]*<span>Contact<\/span><bdi dir="ltr">050-0000000<\/bdi><\/a>/, `${file} hero call button`);
   }
-  const home = pages['index.html'];
-  assert.match(home, /data-section="service-areas" aria-labelledby="service-areas-heading"/);
-  assert.match(home, /<h2 id="service-areas-heading"[^>]*>[^<]+<\/h2><ul role="list"[^>]*><li[^>]*>Bat Yam<\/li><li[^>]*>Rishon<\/li><li[^>]*>Azor<\/li><\/ul>/);
-  assert.doesNotMatch(home, /Yavne/, 'overflow is never rendered');
-  for (const file of ['services.html', 'services/alpha-service.html']) assert.doesNotMatch(pages[file], /service-areas/, `${file}: base page only`);
-  // No new pages, schema areaServed unchanged (page.seo absent here: no areaServed at all).
+  for (const file of ['index.html', 'services.html']) {
+    const html = pages[file];
+    assert.match(html, /<section id="services" data-section="service-details" aria-labelledby="services-heading"[^]*<h2 id="services-heading"[^>]*>Services<\/h2>[^]*<h3[^>]*>Alpha<\/h3><p[^>]*>Alpha description\.<\/p>/, `${file} service cards`);
+    assert.match(html, /<section id="about" data-section="about" aria-labelledby="about-heading"[^]*<h2 id="about-heading"[^>]*>About<\/h2><p[^>]*>About body<\/p>/, `${file} about`);
+  }
+  const service = pages['services/alpha-service.html'];
+  for (const marker of ['data-section="service-details"', 'data-section="about"', 'id="services"', 'id="about"']) assert.ok(!service.includes(marker), `service page: ${marker}`);
+  // Order (Maya C6, C2): trust bar, review, cards, about, areas, FAQ, related links, form.
+  const homeHtml = pages['index.html'];
+  const order = ['Licensed', 'Great job', 'data-section="service-details"', 'data-section="about"', 'data-section="service-areas"', 'data-section="faq"', 'data-section="related-links"', 'id="contact"'].map(marker => homeHtml.indexOf(marker));
+  assert.ok(order.every(index => index > 0), `markers present: ${order}`);
+  assert.deepEqual([...order].sort((a, b) => a - b), order, 'section order');
+  // Areas: page.seo.serviceArea, deduped, capped at 6, same order as schema areaServed (Service and LocalBusiness).
+  const expected = ['Holon', 'Bat Yam', 'Rishon', 'Azor', 'Yavne', 'Lod'];
+  assert.equal(RESEARCHED_SERVICE_AREA_CAP, 6);
+  const listed = [...homeHtml.match(/<ul role="list"[^>]*>([^]*?)<\/ul>/)![1].matchAll(/<li[^>]*>([^<]+)<\/li>/g)].map(m => m[1]);
+  assert.deepEqual(listed, expected);
+  assert.match(homeHtml, /data-section="service-areas" aria-labelledby="service-areas-heading"/);
+  const graph = JSON.parse(homeHtml.match(/<script type="application\/ld\+json">([^<]+)<\/script>/)![1])['@graph'];
+  for (const node of graph.filter((item: Record<string, unknown>) => item.areaServed)) assert.deepEqual(node.areaServed.map((a: { name: string }) => a.name), expected);
+  assert.equal(graph.filter((item: Record<string, unknown>) => item.areaServed).length, 2);
+  assert.doesNotMatch(homeHtml, /Ramla/, 'beyond the cap: not listed, not in schema');
+  for (const file of ['services.html', 'services/alpha-service.html']) assert.doesNotMatch(pages[file], /service-areas/, `${file}: homepage only`);
   assert.deepEqual(Object.keys(pages).sort(), Object.keys(renderResearchedSitePages(params())).sort());
-  assert.doesNotMatch(home, /"areaServed"/);
+  // servedAreaNames.listed alone (no page.seo) never renders the list.
+  assert.doesNotMatch(renderResearchedSitePages(params({ data: fullData }))['index.html'], /service-areas|"areaServed"/);
+});
+
+test('M2b.1b: an area with a selected qualified_service_area page links to it (plain city name); others are plain text', () => {
+  const seo = { name: 'Plumber', city: 'Holon', serviceArea: ['Holon', 'Bat Yam'] };
+  const home = page({ opportunityId: 'home', classification: 'homepage', targetPath: '/', copy: copy('Home'), seo });
+  const city = page({ opportunityId: 'city-bat-yam', classification: 'qualified_service_area', targetPath: '/areas/bat-yam', copy: copy('Bat Yam plumber'), seo: { name: 'Plumber', city: 'Bat Yam', serviceArea: ['Bat Yam'] } });
+  const pages = renderResearchedSitePages(params({ pages: [home, city], graphEdges: [{ fromId: 'home', toId: 'city-bat-yam' }] }));
+  const list = pages['index.html'].match(/<ul role="list"[^>]*>([^]*?)<\/ul>/)![1];
+  assert.match(list, /<li[^>]*>Holon<\/li>/);
+  assert.match(list, /<li[^>]*><a href="\/areas\/bat-yam.html" [^>]*>Bat Yam<\/a><\/li>/);
+});
+
+test('M2b.1b: research nav uses same-page anchors that exist, an aria-label, 44px targets; FAQ and related links are labelled; a11y markup', () => {
+  const pages = renderResearchedSitePages(params({ data: fullData }));
+  const ids = (html: string) => new Set([...html.matchAll(/ id="([^"]+)"/g)].map(m => m[1]));
+  const homeIds = ids(pages['index.html']);
+  for (const [file, html] of Object.entries(pages)) {
+    if (!file.endsWith('.html')) continue;
+    assert.doesNotMatch(html, /href="\/about\.html"/, `${file}: no dead about.html link`);
+    const nav = html.match(/<nav aria-label="([^"]+)" style="[^"]*justify-content:flex-start;[^"]*">([^]*?)<\/nav>/);
+    if (file === 'privacy.html' || file === 'accessibility.html') continue;
+    assert.ok(nav, `${file}: research nav`);
+    assert.equal(nav![1], RESEARCHED_SITE_LABELS.mainNavLabel);
+    for (const [, href, style] of nav![2].matchAll(/<a href="([^"]+)" style="([^"]+)"/g)) {
+      assert.match(style, /min-height:44px/, `${file} ${href}`);
+      if (href.startsWith('#')) assert.ok(file === 'index.html' && homeIds.has(href.slice(1)), `${file}: ${href}`);
+      else if (href.startsWith('/#')) assert.ok(homeIds.has(href.slice(2)), `${file}: ${href}`);
+      else assert.ok(href === '/' || pages[href.slice(1)], `${file}: ${href} resolves`);
+    }
+  }
+  const home = pages['index.html'];
+  assert.match(home, /<nav aria-label="[^"]+"[^>]*><a href="\/"[^>]*>[^<]+<\/a><a href="#services"[^>]*>[^<]+<\/a><a href="#about"[^>]*>[^<]+<\/a><a href="\/contact.html"/);
+  assert.match(pages['services/alpha-service.html'], /<a href="\/#services"[^>]*>[^<]+<\/a><a href="\/#about"/);
+  assert.match(pages['contact.html'], /<a href="\/#services"/);
+  assert.match(home, /<section id="contact" style=/);
+  const money = pages['services.html']; // the hub: FAQ + an outgoing link
+  assert.match(money, new RegExp(`<section data-section="faq" aria-labelledby="faq-heading"[^>]*><div[^>]*><h2 id="faq-heading"[^>]*>${RESEARCHED_SITE_LABELS.faqHeading}</h2>`));
+  assert.match(money, new RegExp(`<nav data-section="related-links" aria-labelledby="related-links-heading"[^>]*><h2 id="related-links-heading"[^>]*>${RESEARCHED_SITE_LABELS.relatedLinksLabel}</h2>`));
+  assert.ok(money.indexOf('data-section="faq"') < money.indexOf('data-section="related-links"'), 'related links below the FAQ');
+  for (const [, style] of money.matchAll(/data-section="related-links"[^]*?<\/nav>/g).next().value![0].matchAll(/<a href="[^"]+" style="([^"]+)"/g)) {
+    assert.match(style, /display:inline-block;padding:12px 8px;min-height:44px;color:#A82E00;text-decoration:underline;/);
+  }
+  assert.match(home, /<a href="tel:050-0000000" style="display:inline-flex;align-items:center;gap:6px;min-height:44px;[^"]*"><span aria-hidden="true">\u{1F4DE}<\/span><bdi dir="ltr">050-0000000<\/bdi><\/a>/u);
+  assert.match(home, /a:focus-visible, button:focus-visible, summary:focus-visible, input:focus-visible \{ outline: 3px solid #0D1B2A; outline-offset: 2px; \}/);
+  assert.match(home, /data-hero-call style="[^"]*color:#FFFFFF;/, 'hero call uses ctaText');
+});
+
+test('M2b.1b: a section with content but no headline keeps an H2 (hidden, nav link text) so headings never skip', () => {
+  const home = page({ opportunityId: 'home', classification: 'homepage', targetPath: '/', copy: { ...copy('Home'), servicesHeadline: '', aboutPageHeadline: '' } });
+  const html = renderResearchedSitePages(params({ pages: [home, page({ opportunityId: 'hub', classification: 'service_hub', targetPath: '/services', copy: copy('Hub') }), page()] }))['index.html'];
+  assert.match(html, /<h2 id="services-heading" class="sr-only">[^<]+<\/h2>/);
+  assert.match(html, /<h2 id="about-heading" class="sr-only">[^<]+<\/h2>/);
+  const levels = [...html.matchAll(/<h([1-6])[\s>]/g)].map(m => Number(m[1]));
+  for (let i = 1; i < levels.length; i++) assert.ok(levels[i] <= levels[i - 1] + 1, `heading skip at ${i}: ${levels}`);
+});
+
+test('M2b.1b: gated fields per page type never include a field the page type does not render', () => {
+  assert.deepEqual([...researchedGatedFieldsFor('homepage')], [...RESEARCHED_GATED_FIELDS]);
+  assert.deepEqual([...researchedGatedFieldsFor('service_hub')], [...RESEARCHED_GATED_FIELDS]);
+  for (const pageClass of ['money_service', 'qualified_service_area', 'trust']) {
+    for (const field of RESEARCHED_HOME_HUB_ONLY_FIELDS) assert.ok(!researchedGatedFieldsFor(pageClass).includes(field), `${pageClass}: ${field}`);
+  }
 });
 
 test('M2b.1: empty fields collapse their sections (no empty headings), no phone = no hero call button', () => {

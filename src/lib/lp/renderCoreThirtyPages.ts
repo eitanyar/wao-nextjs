@@ -212,7 +212,7 @@ function buildRelatedLinksBlock(node: CoreThirtyNode, allNodes: CoreThirtyNode[]
 
   const links = siblings
     .slice(0, MAX_RELATED_LINKS)
-    .map((n) => `<a href="/sherut/${n.id}.html" style="color:${t.accent};font-weight:600;font-size:0.85rem;">${esc(n.service)} ${esc(n.city)}</a>`)
+    .map((n) => `<a href="/sherut/${n.id}.html" style="color:${t.accentText};font-weight:600;font-size:0.85rem;">${esc(n.service)} ${esc(n.city)}</a>`)
     .join('\n      ');
 
   return `  <!-- Related Pages -->

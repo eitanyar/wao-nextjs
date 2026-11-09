@@ -15,9 +15,18 @@ export const HE_TODO_PREFIX = '__HE_TODO_';
 export const RESEARCHED_SITE_LABELS: Readonly<{
   /** H2 above the homepage list of the owner-named service areas (collectedData.servedAreaNames.listed). */
   serviceAreasHeading: string;
+  /** M2b.1b (Maya C1): accessible name (aria-label) of the research-site main navigation bar. */
+  mainNavLabel: string;
+  /** M2b.1b (Maya C3): visible H2 above the FAQ list (aria-labelledby target of the FAQ section). */
+  faqHeading: string;
+  /** M2b.1b (Maya C2): small visible heading of the related-links block, also its accessible name. */
+  relatedLinksLabel: string;
 }> = {
-  serviceAreasHeading: '__HE_TODO_serviceAreasHeading__',
+  serviceAreasHeading: 'אזורי שירות',
+  mainNavLabel: 'תפריט ראשי',
+  faqHeading: 'שאלות נפוצות',
+  relatedLinksLabel: 'שירותים נוספים',
 };
 
 /** True while any label above is still a placeholder. Flip to false when the copy patches land. */
-export const RESEARCHED_SITE_LABELS_PENDING_COPY = true;
+export const RESEARCHED_SITE_LABELS_PENDING_COPY = false;

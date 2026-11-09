@@ -24,6 +24,8 @@ export interface RenderSitePagesParams extends Omit<RenderStaticHtmlParams, 'cop
    * owner's hours formatted in code (never raw Latin day names). Unset = legacy, unchanged.
    */
   researched?: { contactTitle: string | null };
+  /** M2b.1b: research-site nav for the emitted standalone pages (contact.html). Unset = legacy nav, unchanged. */
+  researchNav?: ResearchNavOptions;
 }
 
 /**
@@ -37,6 +39,8 @@ export interface LeadFormOptions {
   thanks?: string;
   /** False = no H2 (the page's H1 already carries the same headline). Default true. */
   headline?: boolean;
+  /** M2b.1b: id of the form <section> (in-page contact target). Unset = no id (legacy markup unchanged). */
+  sectionId?: string;
 }
 
 /** The researched-site lead-form strings (Noa templateStrings). */
@@ -115,20 +119,57 @@ export function styleBlock(t: VerticalTheme): string {
     body { font-family: '${t.fontBody.split(',')[0].replace(/['"]/g, '')}', Assistant, sans-serif; background: ${t.bg}; color: ${t.textPrimary}; min-height: 100vh; padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px)); }
     a { text-decoration: none; }
     input, button { font-family: inherit; }
-    #form-success { display: none; text-align: center; color: ${t.accent}; font-weight: 700; font-size: 1.1rem; padding: 20px; }
+    a:focus-visible, button:focus-visible, summary:focus-visible, input:focus-visible { outline: 3px solid ${t.textPrimary}; outline-offset: 2px; }
+    .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+    #form-success { display: none; text-align: center; color: ${t.accentText}; font-weight: 700; font-size: 1.1rem; padding: 20px; }
     #form-error { display: none; text-align: center; color: #e53e3e; font-size: 0.9rem; padding: 8px; }
-    .submit-btn { padding: 15px; background: ${t.ctaGradient}; color: #fff; border: none; border-radius: ${t.radiusSm}; font-weight: 800; font-size: 1.05rem; cursor: pointer; width: 100%; }
+    .submit-btn { padding: 15px; background: ${t.ctaGradient}; color: ${t.ctaText}; border: none; border-radius: ${t.radiusSm}; font-weight: 800; font-size: 1.05rem; cursor: pointer; width: 100%; }
     .submit-btn:disabled { opacity: 0.6; cursor: not-allowed; }
   </style>`;
 }
 
-export function navBar(t: VerticalTheme): string {
+/**
+ * Main-nav link texts (moved verbatim out of the legacy navBar markup in M2b.1b; the research nav reuses them, and
+ * researchedSite.ts uses services/about as the accessible-name fallback of a section without its own headline).
+ */
+export const NAV_LINK_TEXT = { home: 'בית', services: 'שירותים', about: 'אודות', contact: 'צור קשר' } as const;
+
+/**
+ * M2b.1b (Maya C1): research-site nav. Legacy services.html / about.html do not exist there, so the services and
+ * about links are same-page anchors on the homepage (`#services`, `#about`) and `/#services`, `/#about` elsewhere,
+ * each drawn only when the homepage renders that section. `contactHref` is null when no contact page is emitted.
+ */
+export interface ResearchNavOptions {
+  /** Accessible name of the nav (RESEARCHED_SITE_LABELS.mainNavLabel). */
+  label: string;
+  /** True on the homepage (anchors are same-page `#id`), false on every other page (`/#id`). */
+  onHome: boolean;
+  /** The homepage renders `id="services"` / `id="about"`. */
+  homeHasServices: boolean;
+  homeHasAbout: boolean;
+  contactHref: string | null;
+}
+
+export function navBar(t: VerticalTheme, research?: ResearchNavOptions): string {
+  if (research) return researchNavBar(t, research);
   return `  <nav style="background:${t.surface};border-bottom:1px solid ${t.border};padding:10px 20px;display:flex;gap:20px;justify-content:flex-end;font-size:0.9rem;">
-    <a href="/">בית</a>
-    <a href="/services.html">שירותים</a>
-    <a href="/about.html">אודות</a>
-    <a href="/contact.html">צור קשר</a>
+    <a href="/">${NAV_LINK_TEXT.home}</a>
+    <a href="/services.html">${NAV_LINK_TEXT.services}</a>
+    <a href="/about.html">${NAV_LINK_TEXT.about}</a>
+    <a href="/contact.html">${NAV_LINK_TEXT.contact}</a>
   </nav>`;
+}
+
+function researchNavBar(t: VerticalTheme, o: ResearchNavOptions): string {
+  const anchor = (id: string) => (o.onHome ? `#${id}` : `/#${id}`);
+  const links: Array<[string, string]> = [
+    ['/', NAV_LINK_TEXT.home],
+    ...(o.homeHasServices ? [[anchor('services'), NAV_LINK_TEXT.services] as [string, string]] : []),
+    ...(o.homeHasAbout ? [[anchor('about'), NAV_LINK_TEXT.about] as [string, string]] : []),
+    ...(o.contactHref ? [[o.contactHref, NAV_LINK_TEXT.contact] as [string, string]] : []),
+  ];
+  const items = links.map(([href, text]) => `<a href="${href}" style="display:inline-flex;align-items:center;min-height:44px;padding:0 10px;color:${t.textPrimary};">${text}</a>`).join('');
+  return `  <nav aria-label="${esc(o.label)}" style="background:${t.surface};border-bottom:1px solid ${t.border};padding:0 10px;display:flex;flex-wrap:wrap;gap:4px;justify-content:flex-start;font-size:0.9rem;">${items}</nav>`;
 }
 
 export function footerBadge(t: VerticalTheme, exempt: boolean): string {
@@ -144,7 +185,7 @@ export function footerBadge(t: VerticalTheme, exempt: boolean): string {
 export function stickyHeader(t: VerticalTheme, businessName: string, phone: string, phoneHref: string): string {
   return `  <header style="position:sticky;top:0;z-index:50;background:${t.surface};border-bottom:1px solid ${t.border};padding:12px 20px;display:flex;justify-content:space-between;align-items:center;box-shadow:0 2px 8px rgba(0,0,0,0.06);">
     <div style="font-family:'Secular One',sans-serif;font-weight:${t.headingWeight};font-size:1.1rem;color:${t.primary};">${esc(businessName)}</div>
-    ${phone ? `<a href="${phoneHref}" style="background:${t.ctaGradient};color:#fff;padding:10px 18px;border-radius:${t.radiusSm};font-weight:700;font-size:0.9rem;white-space:nowrap;">📞 ${esc(phone)}</a>` : ''}
+    ${phone ? `<a href="${phoneHref}" style="display:inline-flex;align-items:center;gap:6px;min-height:44px;background:${t.ctaGradient};color:${t.ctaText};padding:10px 18px;border-radius:${t.radiusSm};font-weight:700;font-size:0.9rem;white-space:nowrap;"><span aria-hidden="true">📞</span><bdi dir="ltr">${esc(phone)}</bdi></a>` : ''}
   </header>`;
 }
 
@@ -340,7 +381,7 @@ export function leadFormSection(t: VerticalTheme, headline: string, ctaLabel: st
     ? ''
     : `
       <h2 style="font-family:'Secular One',sans-serif;font-weight:${t.headingWeight};font-size:1.35rem;color:${t.primary};margin-bottom:20px;text-align:center;">${esc(headline)}</h2>`;
-  return `  <section style="padding:40px 20px;background:${t.surfaceAlt};">
+  return `  <section${options.sectionId ? ` id="${esc(options.sectionId)}"` : ''} style="padding:40px 20px;background:${t.surfaceAlt};">
     <div style="max-width:480px;margin:0 auto;">${heading}
       <form id="lead-form" style="display:flex;flex-direction:column;gap:14px;">
         <input type="text" id="f-name" placeholder="שם מלא" aria-label="שם מלא" required style="padding:14px 16px;border-radius:${t.radiusSm};border:1px solid ${t.border};font-size:1rem;color:${t.textPrimary};background:${t.surface};" />
@@ -477,7 +518,7 @@ function buildAboutHtml(p: RenderSitePagesParams, siteUrl: string): string {
   <!-- About Hero -->
   <section style="padding:44px 20px 36px;background:${t.surface};text-align:center;">
     <div style="max-width:600px;margin:0 auto;">
-      <div style="width:72px;height:72px;border-radius:50%;background:${t.ctaGradient};margin:0 auto 20px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:900;font-size:1.7rem;">
+      <div style="width:72px;height:72px;border-radius:50%;background:${t.ctaGradient};margin:0 auto 20px;display:flex;align-items:center;justify-content:center;color:${t.ctaText};font-weight:900;font-size:1.7rem;">
         ${esc((data.ownerName || businessName || '?')[0])}
       </div>
       <h1 style="font-family:'Secular One',sans-serif;font-weight:${t.headingWeight};font-size:clamp(1.5rem,4.5vw,2.1rem);color:${t.primary};line-height:1.25;margin-bottom:18px;">${esc(copy.aboutPageHeadline)}</h1>
@@ -489,7 +530,7 @@ ${trustBar}
 
   <!-- CTA -->
   <section style="padding:36px 20px;background:${t.surfaceAlt};text-align:center;">
-    <a href="/contact.html" style="display:inline-block;background:${t.ctaGradient};color:#fff;padding:14px 32px;border-radius:${t.radiusSm};font-weight:800;font-size:1.05rem;">${esc(copy.heroCta)}</a>
+    <a href="/contact.html" style="display:inline-block;background:${t.ctaGradient};color:${t.ctaText};padding:14px 32px;border-radius:${t.radiusSm};font-weight:800;font-size:1.05rem;">${esc(copy.heroCta)}</a>
   </section>
 
 ${pageScript({
@@ -591,7 +632,7 @@ function buildContactHtml(p: RenderSitePagesParams, siteUrl: string): string {
     <div style="max-width:500px;margin:0 auto;">
       <h1 style="font-family:'Secular One',sans-serif;font-weight:${t.headingWeight};font-size:clamp(1.4rem,4vw,1.9rem);color:${t.primary};margin-bottom:16px;">${esc(copy.formHeadline)}</h1>
       <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-bottom:8px;">
-        ${phone ? `<a href="${phoneHref}" style="background:${t.ctaGradient};color:#fff;padding:12px 24px;border-radius:${t.radiusSm};font-weight:800;font-size:1rem;">📞 ${esc(phone)}</a>` : ''}
+        ${phone ? `<a href="${phoneHref}" style="background:${t.ctaGradient};color:${t.ctaText};padding:12px 24px;border-radius:${t.radiusSm};font-weight:800;font-size:1rem;">📞 ${esc(phone)}</a>` : ''}
         ${whatsapp ? `<a href="${whatsappHref}" target="_blank" rel="noopener noreferrer" style="background:#25D366;color:#fff;padding:12px 24px;border-radius:${t.radiusSm};font-weight:800;font-size:1rem;">💬 וואטסאפ</a>` : ''}
       </div>
       ${hoursHtml}
@@ -614,18 +655,18 @@ ${pageScript({
     includeLeadForm: true,
   })}`;
 
-  return assembleDocument(t, head, body, p.gtagSnippet, data);
+  return assembleDocument(t, head, body, p.gtagSnippet, data, p.researchNav);
 }
 
 // Assembles <head> + <body> with nav bar (top) and footer badge (bottom) for
 // the 3 standalone pages (index.html has its own injection path above).
-export function assembleDocument(t: VerticalTheme, head: string, bodyInner: string, gtagSnippet: string | undefined, data: CollectedData): string {
+export function assembleDocument(t: VerticalTheme, head: string, bodyInner: string, gtagSnippet: string | undefined, data: CollectedData, nav?: ResearchNavOptions): string {
   const headWithGtag = gtagSnippet ? head.replace('</head>', () => `  ${gtagSnippet}\n</head>`) : head;
   return `<!DOCTYPE html>
 <html lang="he" dir="rtl">
 ${headWithGtag}
 <body>
-${navBar(t)}
+${navBar(t, nav)}
 
 ${bodyInner}
 

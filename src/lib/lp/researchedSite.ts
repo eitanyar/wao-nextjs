@@ -17,13 +17,14 @@ import {
   leadFormSection,
   RESEARCHED_LEAD_FORM,
   localBusinessObject,
+  NAV_LINK_TEXT,
   pageHead,
   pageScript,
   renderSitePages,
   stickyHeader,
   trustBarSection,
+  type ResearchNavOptions,
 } from './renderSitePages';
-import { listedServedAreas } from '../site-bot/servedAreas';
 import { RESEARCHED_SITE_LABELS } from './researchedSiteLabels';
 
 const RESERVED_SEGMENTS = new Set(['api', 'assets', 'static', 'index', 'privacy', 'accessibility', 'contact', 'sitemap']);
@@ -218,8 +219,32 @@ function navigationLinks(page: ResearchedSitePage, pages: ResearchedSitePage[], 
   return pages.filter(item => item.opportunityId !== page.opportunityId && outputs.has(item.opportunityId)).slice(0, 3);
 }
 
+/**
+ * M2b.1b (Yonatan): the most service areas a page shows or declares. The homepage list and schema areaServed
+ * (Service and LocalBusiness, every page) are the same capped list, same order.
+ */
+export const RESEARCHED_SERVICE_AREA_CAP = 6;
+
+/**
+ * The page's service areas (M2b.1b, Yonatan): page.seo.serviceArea (ownerPlaces order: base city, specificCities,
+ * owner-named; deduped there and again here), capped at RESEARCHED_SERVICE_AREA_CAP. Empty without page.seo.
+ */
+export function researchedServiceAreas(page: Pick<ResearchedSitePage, 'seo'>): string[] {
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const raw of page.seo?.serviceArea ?? []) {
+    const name = typeof raw === 'string' ? raw.trim() : '';
+    const key = name.normalize('NFC').toLowerCase();
+    if (!name || seen.has(key)) continue;
+    seen.add(key);
+    out.push(name);
+  }
+  return out.slice(0, RESEARCHED_SERVICE_AREA_CAP);
+}
+
 function schemaGraph(page: ResearchedSitePage, data: CollectedData, siteUrl: string, heroImageUrl: string, output: string): string {
   const { businessName } = contacts(data);
+  const areas = researchedServiceAreas(page);
   const cleanUrl = siteUrl.replace(/\/$/, '');
   const faq = approvedFaqs(page);
   const service: Record<string, unknown> = {
@@ -228,12 +253,12 @@ function schemaGraph(page: ResearchedSitePage, data: CollectedData, siteUrl: str
     name: page.seo?.name ?? page.copy.heroHeadline,
     provider: { '@id': `${cleanUrl}/#business` },
     description: page.copy.heroSubheadline,
-    ...(page.seo?.serviceArea.length
-      ? { areaServed: page.seo.serviceArea.map(name => ({ '@type': 'City', name })) }
+    ...(areas.length
+      ? { areaServed: areas.map(name => ({ '@type': 'City', name })) }
       : page.areaServed ? { areaServed: { '@type': page.areaServed.type ?? 'Place', name: page.areaServed.name } } : {}),
   };
   const business = page.seo
-    ? localBusinessObject(data, businessName, cleanUrl, heroImageUrl, { ownerFactsOnly: true, areaServed: page.seo.serviceArea })
+    ? localBusinessObject(data, businessName, cleanUrl, heroImageUrl, { ownerFactsOnly: true, areaServed: areas })
     : localBusinessObject(data, businessName, cleanUrl, heroImageUrl);
   const graph: Record<string, unknown>[] = [business, service];
   if (faq.length) graph.push({
@@ -268,6 +293,8 @@ export function researchedPageTitle(page: ResearchedSitePage, businessName: stri
  * M2a.7: the hero headline (as the H1), the hero subheadline (also the meta description), the form headline, the FAQ
  * and the review pair. M2b.1: the hero call button label (heroCta), the trust bar, the about section
  * (aboutPageHeadline + aboutPageBody), the service cards (servicesHeadline + serviceDetails).
+ * M2b.1b (Yonatan): the about section and the service cards render on the homepage and the service hub only
+ * (RESEARCHED_HOME_HUB_ONLY_FIELDS); every other page type renders the rest. researchedGatedFieldsFor() applies that.
  * Not rendered (still warnings): aboutBlurb, serviceItems, faqHeadline, guaranteeBlock, responseTimeBadge,
  * scarcityLine, stickyBarLine. When a field starts rendering, add it here.
  */
@@ -287,6 +314,26 @@ export const RESEARCHED_RENDERED_WARN_ONLY_FIELDS: readonly string[] = ['trustBa
 
 /** The fields whose gate hits fail a research page (copyGates renderedFields): rendered minus the warn-only set. */
 export const RESEARCHED_GATED_FIELDS: readonly string[] = RESEARCHED_RENDERED_FIELDS.filter(field => !RESEARCHED_RENDERED_WARN_ONLY_FIELDS.includes(field));
+
+/** M2b.1b: page types that render the about section and the service cards. */
+const HOME_HUB_CLASSES: ReadonlySet<string> = new Set<PageClassification>(['homepage', 'service_hub']);
+
+/** M2b.1b: rendered fields shown on the homepage / service hub only (aboutSection, serviceDetailsSection). */
+export const RESEARCHED_HOME_HUB_ONLY_FIELDS: readonly string[] = ['aboutPageHeadline', 'aboutPageBody', 'servicesHeadline', 'serviceDetails'];
+
+/** True when this page type renders the about section and the service cards. */
+export function rendersSiteSections(classification: string): boolean {
+  return HOME_HUB_CLASSES.has(classification);
+}
+
+/**
+ * The gated fields of one page type (M2b.1b): RESEARCHED_GATED_FIELDS minus the home/hub-only fields on a page type
+ * that does not render them, so a field is never gated where it is not shown. Today the home/hub-only fields are all
+ * warn-only, so every page type gets RESEARCHED_GATED_FIELDS; this matters once one of them leaves the warn-only set.
+ */
+export function researchedGatedFieldsFor(classification: string): readonly string[] {
+  return rendersSiteSections(classification) ? RESEARCHED_GATED_FIELDS : RESEARCHED_GATED_FIELDS.filter(field => !RESEARCHED_HOME_HUB_ONLY_FIELDS.includes(field));
+}
 
 const PHONE_EMOJI = '\u{1F4DE}';
 
@@ -311,7 +358,7 @@ function heroCallButton(page: ResearchedSitePage, data: CollectedData, theme: Re
   if (!href) return '';
   const callLabel = primaryCtaLabel({});
   const label = primaryCtaLabel(data) === callLabel && page.copy.heroCta ? page.copy.heroCta : callLabel;
-  return `<div style="margin-top:22px;"><a href="tel:${href}" data-hero-call style="display:inline-flex;align-items:center;justify-content:center;gap:10px;min-height:48px;min-width:44px;padding:12px 26px;background:${theme.ctaGradient};color:#fff;border-radius:${theme.radiusSm};font-weight:800;font-size:1.05rem;"><span aria-hidden="true">${PHONE_EMOJI}</span><span>${esc(label)}</span><bdi dir="ltr">${esc(phone)}</bdi></a></div>`;
+  return `<div style="margin-top:22px;"><a href="tel:${href}" data-hero-call style="display:inline-flex;align-items:center;justify-content:center;gap:10px;min-height:48px;min-width:44px;padding:12px 26px;background:${theme.ctaGradient};color:${theme.ctaText};border-radius:${theme.radiusSm};font-weight:800;font-size:1.05rem;"><span aria-hidden="true">${PHONE_EMOJI}</span><span>${esc(label)}</span><bdi dir="ltr">${esc(phone)}</bdi></a></div>`;
 }
 
 const nonEmpty = (value: unknown): value is string => typeof value === 'string' && value.trim() !== '';
@@ -322,40 +369,84 @@ function trustBar(page: ResearchedSitePage, theme: RenderResearchedSitePagesPara
   return items.length ? trustBarSection(theme, items) : '';
 }
 
-/** Service cards (M2b.1): servicesHeadline as the H2 (only with cards), one H3 card per serviceDetails item. */
-function serviceDetailsSection(page: ResearchedSitePage, theme: RenderResearchedSitePagesParams['theme']): string {
-  const cards = (page.copy.serviceDetails ?? []).filter(item => item && nonEmpty(item.name)).map(item => `<div style="background:${theme.surface};border:1px solid ${theme.border};border-radius:${theme.radiusMd};padding:20px;border-inline-start:3px solid ${theme.accent};"><h3 style="font-weight:700;font-size:1rem;color:${theme.primary};margin-bottom:8px;">${esc(item.name)}</h3>${nonEmpty(item.description) ? `<p style="color:${theme.textMuted};font-size:0.9rem;line-height:1.5;">${esc(item.description)}</p>` : ''}</div>`).join('');
-  if (!cards) return '';
-  const heading = nonEmpty(page.copy.servicesHeadline) ? `<h2 style="font-size:1.35rem;color:${theme.primary};margin-bottom:20px;text-align:center;">${esc(page.copy.servicesHeadline)}</h2>` : '';
-  return `<section data-section="service-details" style="padding:36px 20px;background:${theme.surfaceAlt};"><div style="max-width:760px;margin:0 auto;">${heading}<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;">${cards}</div></div></section>`;
+/**
+ * Section heading (M2b.1b, Maya C7): the copy headline as a visible H2, else a visually hidden H2 with the
+ * section's existing nav link text, so the heading levels never skip and the section keeps an accessible name.
+ */
+function sectionHeading(id: string, headline: string | null | undefined, fallback: string, style: string): string {
+  return nonEmpty(headline)
+    ? `<h2 id="${id}" style="${style}">${esc(headline)}</h2>`
+    : `<h2 id="${id}" class="sr-only">${esc(fallback)}</h2>`;
 }
 
-/** About (M2b.1): aboutPageHeadline as the H2 (only with a body), aboutPageBody; nothing without a body. */
-function aboutSection(page: ResearchedSitePage, theme: RenderResearchedSitePagesParams['theme']): string {
-  if (!nonEmpty(page.copy.aboutPageBody)) return '';
-  const heading = nonEmpty(page.copy.aboutPageHeadline) ? `<h2 style="font-size:1.35rem;color:${theme.primary};margin-bottom:14px;">${esc(page.copy.aboutPageHeadline)}</h2>` : '';
-  return `<section data-section="about" style="padding:36px 20px;background:${theme.surface};"><div style="max-width:700px;margin:0 auto;text-align:center;">${heading}<p style="color:${theme.textMuted};line-height:1.7;">${esc(page.copy.aboutPageBody)}</p></div></section>`;
+/** True when serviceDetailsSection renders cards for this page (the nav's #services target). */
+function hasServiceCards(page: ResearchedSitePage): boolean {
+  return rendersSiteSections(page.classification) && (page.copy.serviceDetails ?? []).some(item => item && nonEmpty(item.name));
+}
+
+/** True when aboutSection renders for this page (the nav's #about target). */
+function hasAbout(page: ResearchedSitePage): boolean {
+  return rendersSiteSections(page.classification) && nonEmpty(page.copy.aboutPageBody);
 }
 
 /**
- * Service areas (M2b.1, Yonatan: base page only, no city pages): the owner-named localities
- * (collectedData.servedAreaNames.listed, max 3; overflow never rendered). Homepage only; nothing when empty.
- * Schema areaServed is unchanged (page.seo.serviceArea).
+ * Service cards (M2b.1): servicesHeadline as the H2, one H3 card per serviceDetails item. M2b.1b: homepage and
+ * service hub only (Yonatan), id="services" (nav target), labelled by its H2 (fallback: hidden nav-text H2).
  */
-function serviceAreasSection(page: ResearchedSitePage, data: CollectedData, theme: RenderResearchedSitePagesParams['theme']): string {
+function serviceDetailsSection(page: ResearchedSitePage, theme: RenderResearchedSitePagesParams['theme']): string {
+  if (!hasServiceCards(page)) return '';
+  const cards = (page.copy.serviceDetails ?? []).filter(item => item && nonEmpty(item.name)).map(item => `<div style="background:${theme.surface};border:1px solid ${theme.border};border-radius:${theme.radiusMd};padding:20px;border-inline-start:3px solid ${theme.accent};"><h3 style="font-weight:700;font-size:1rem;color:${theme.primary};margin-bottom:8px;">${esc(item.name)}</h3>${nonEmpty(item.description) ? `<p style="color:${theme.textMuted};font-size:0.9rem;line-height:1.5;">${esc(item.description)}</p>` : ''}</div>`).join('');
+  const heading = sectionHeading('services-heading', page.copy.servicesHeadline, NAV_LINK_TEXT.services, `font-size:1.35rem;color:${theme.primary};margin-bottom:20px;text-align:center;`);
+  return `<section id="services" data-section="service-details" aria-labelledby="services-heading" style="padding:36px 20px;background:${theme.surfaceAlt};"><div style="max-width:760px;margin:0 auto;">${heading}<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;">${cards}</div></div></section>`;
+}
+
+/**
+ * About (M2b.1): aboutPageHeadline as the H2, aboutPageBody; nothing without a body. M2b.1b: homepage and service
+ * hub only (Yonatan), id="about" (nav target), labelled by its H2 (fallback: hidden nav-text H2).
+ */
+function aboutSection(page: ResearchedSitePage, theme: RenderResearchedSitePagesParams['theme']): string {
+  if (!hasAbout(page)) return '';
+  const heading = sectionHeading('about-heading', page.copy.aboutPageHeadline, NAV_LINK_TEXT.about, `font-size:1.35rem;color:${theme.primary};margin-bottom:14px;`);
+  return `<section id="about" data-section="about" aria-labelledby="about-heading" style="padding:36px 20px;background:${theme.surface};"><div style="max-width:700px;margin:0 auto;text-align:center;">${heading}<p style="color:${theme.textMuted};line-height:1.7;">${esc(page.copy.aboutPageBody)}</p></div></section>`;
+}
+
+const placeKey = (value: string | null | undefined) => (value ?? '').trim().normalize('NFC').toLowerCase();
+
+/**
+ * Service areas (M2b.1b, Yonatan): researchedServiceAreas(page) (page.seo.serviceArea, capped), the same list and order
+ * as schema areaServed. Homepage only; nothing when empty. Plain place names; an item links to the selected
+ * qualified_service_area page of that city when one exists (plain city name as link text), else no link.
+ */
+function serviceAreasSection(page: ResearchedSitePage, allPages: ResearchedSitePage[], outputs: Map<string, string>, theme: RenderResearchedSitePagesParams['theme']): string {
   if (page.classification !== 'homepage') return '';
-  const areas = listedServedAreas(data);
+  const areas = researchedServiceAreas(page);
   if (!areas.length) return '';
-  const items = areas.map(name => `<li style="background:${theme.surface};border:1px solid ${theme.border};border-radius:${theme.radiusSm};padding:8px 16px;font-weight:600;color:${theme.textPrimary};">${esc(name)}</li>`).join('');
+  const areaPage = (name: string) => allPages.find(item => item.classification === 'qualified_service_area' && outputs.has(item.opportunityId)
+    && [item.seo?.city, item.areaServed?.name].some(city => placeKey(city) === placeKey(name)));
+  const items = areas.map(name => {
+    const target = areaPage(name);
+    const text = target ? `<a href="/${outputs.get(target.opportunityId)}" style="display:inline-block;padding:12px 8px;min-height:44px;color:${theme.accentText};text-decoration:underline;">${esc(name)}</a>` : esc(name);
+    return `<li style="background:${theme.surface};border:1px solid ${theme.border};border-radius:${theme.radiusSm};padding:${target ? '0 8px' : '8px 16px'};font-weight:600;color:${theme.textPrimary};">${text}</li>`;
+  }).join('');
   return `<section data-section="service-areas" aria-labelledby="service-areas-heading" style="padding:32px 20px;background:${theme.surfaceAlt};"><div style="max-width:700px;margin:0 auto;text-align:center;"><h2 id="service-areas-heading" style="font-size:1.25rem;color:${theme.primary};margin-bottom:14px;">${esc(RESEARCHED_SITE_LABELS.serviceAreasHeading)}</h2><ul role="list" style="list-style:none;display:flex;flex-wrap:wrap;gap:10px;justify-content:center;">${items}</ul></div></section>`;
 }
 
-function buildPageHtml(page: ResearchedSitePage, params: RenderResearchedSitePagesParams, siteUrl: string, output: string, allPages: ResearchedSitePage[], outputs: Map<string, string>): string {
+/**
+ * Research-site nav (M2b.1b, Maya C1): the services / about links point at the homepage sections and are drawn only when
+ * the homepage renders them; the contact link only when the contact page is emitted.
+ */
+export function researchNavOptions(home: ResearchedSitePage, onHome: boolean, contactHref: string | null): ResearchNavOptions {
+  return { label: RESEARCHED_SITE_LABELS.mainNavLabel, onHome, homeHasServices: hasServiceCards(home), homeHasAbout: hasAbout(home), contactHref };
+}
+
+const CONTACT_HREF = '/contact.html';
+
+function buildPageHtml(page: ResearchedSitePage, params: RenderResearchedSitePagesParams, siteUrl: string, output: string, allPages: ResearchedSitePage[], outputs: Map<string, string>, contactHref: string | null): string {
   const { theme, data, heroImageUrl, slug } = params;
   const { phone, phoneHref, businessName } = contacts(data);
   const links = navigationLinks(page, allPages, outputs, params.graphEdges ?? []).flatMap(item => {
     const target = outputs.get(item.opportunityId);
-    return target ? [`<a href="/${target === 'index.html' ? '' : target}" style="color:${theme.accent};font-weight:700;">${esc(anchorText(item, businessName))}</a>`] : [];
+    return target ? [`<a href="/${target === 'index.html' ? '' : target}" style="display:inline-block;padding:12px 8px;min-height:44px;color:${theme.accentText};text-decoration:underline;font-weight:700;">${esc(anchorText(item, businessName))}</a>`] : [];
   }).join('');
   const faq = approvedFaqs(page).map(item => `<details style="background:${theme.surface};border:1px solid ${theme.border};border-radius:${theme.radiusMd};padding:14px;"><summary style="font-weight:700;color:${theme.primary};">${esc(item.q)}</summary><p style="color:${theme.textMuted};margin-top:8px;">${esc(item.a)}</p></details>`).join('');
   const head = pageHead({
@@ -371,16 +462,17 @@ function buildPageHtml(page: ResearchedSitePage, params: RenderResearchedSitePag
   <main>
     <section style="padding:44px 20px;background:${theme.surface};text-align:center;"><div style="max-width:700px;margin:0 auto;"><h1 style="color:${theme.primary};font-size:clamp(1.6rem,4vw,2.3rem);margin-bottom:16px;">${esc(researchedPageH1(page.copy.heroHeadline, page.seo))}</h1><p style="color:${theme.textMuted};line-height:1.7;">${esc(page.copy.heroSubheadline)}</p>${heroCallButton(page, data, theme)}</div></section>
     ${trustBar(page, theme)}
-    ${links ? `<nav aria-label="Related pages" style="padding:20px;display:flex;flex-wrap:wrap;gap:14px;justify-content:center;background:${theme.surfaceAlt};">${links}</nav>` : ''}
-    ${serviceDetailsSection(page, theme)}
     ${reviewSection(page, theme)}
+    ${serviceDetailsSection(page, theme)}
     ${aboutSection(page, theme)}
-    ${serviceAreasSection(page, data, theme)}
-    ${faq ? `<section style="padding:32px 20px;background:${theme.surfaceAlt};"><div style="max-width:700px;margin:0 auto;display:flex;flex-direction:column;gap:12px;">${faq}</div></section>` : ''}
-    ${leadFormSection(theme, page.copy.formHeadline, page.copy.heroCta, RESEARCHED_LEAD_FORM)}
+    ${serviceAreasSection(page, allPages, outputs, theme)}
+    ${faq ? `<section data-section="faq" aria-labelledby="faq-heading" style="padding:32px 20px;background:${theme.surfaceAlt};"><div style="max-width:700px;margin:0 auto;display:flex;flex-direction:column;gap:12px;"><h2 id="faq-heading" style="font-size:1.25rem;color:${theme.primary};text-align:center;">${esc(RESEARCHED_SITE_LABELS.faqHeading)}</h2>${faq}</div></section>` : ''}
+    ${links ? `<nav data-section="related-links" aria-labelledby="related-links-heading" style="padding:20px;background:${theme.surface};text-align:center;"><h2 id="related-links-heading" style="font-size:0.95rem;font-weight:700;color:${theme.textPrimary};margin-bottom:6px;">${esc(RESEARCHED_SITE_LABELS.relatedLinksLabel)}</h2><div style="display:flex;flex-wrap:wrap;gap:6px 14px;justify-content:center;">${links}</div></nav>` : ''}
+    ${leadFormSection(theme, page.copy.formHeadline, page.copy.heroCta, { ...RESEARCHED_LEAD_FORM, sectionId: 'contact' })}
   </main>
   ${pageScript({ slug, businessName, googleAdsCustomerId: params.googleAdsCustomerId || '', formConversionLabel: params.formConversionLabel || '', phoneConversionLabel: params.phoneConversionLabel || '', whatsappConversionLabel: params.whatsappConversionLabel || '', ctaLabel: RESEARCHED_LEAD_FORM.submitLabel ?? page.copy.heroCta, includeLeadForm: true })}`;
-  return assembleDocument(theme, head, body, params.gtagSnippet, data);
+  const home = allPages.find(item => item.classification === 'homepage') ?? page;
+  return assembleDocument(theme, head, body, params.gtagSnippet, data, researchNavOptions(home, page.classification === 'homepage', contactHref));
 }
 
 export function buildResearchedSitemapUrls(pages: ResearchedSitePage[], siteUrl = ''): string[] {
@@ -415,20 +507,24 @@ export function renderResearchedSitePages(params: RenderResearchedSitePagesParam
   const siteUrl = params.siteUrl.replace(/\/$/, '');
   const outputs = new Map(pages.map(page => [page.opportunityId, outputPath(page)!]));
   const homeSeo = home[0].seo;
+  // The legacy renderer always emits contact.html; the research nav links it (and the sitemap lists it).
+  const contactNav = researchNavOptions(home[0], false, CONTACT_HREF);
   const legacy = renderSitePages({
     ...params,
     copy: home[0].copy,
+    researchNav: contactNav,
     ...(homeSeo ? {
-      schemaOptions: { ownerFactsOnly: true, areaServed: homeSeo.serviceArea },
+      schemaOptions: { ownerFactsOnly: true, areaServed: researchedServiceAreas(home[0]) },
       researched: { contactTitle: researchedContactTitle(homeSeo.name, homeSeo.city, contacts(params.data).businessName) },
     } : {}),
   });
+  const contactHref = legacy['contact.html'] ? CONTACT_HREF : null;
   delete legacy['index.html'];
   delete legacy['about.html'];
   delete legacy['services.html'];
   const rendered = Object.fromEntries(pages.map(page => {
     const output = outputs.get(page.opportunityId)!;
-    return [output, buildPageHtml(page, params, siteUrl, output, pages, outputs)];
+    return [output, buildPageHtml(page, params, siteUrl, output, pages, outputs, contactHref)];
   }));
   return {
     ...legacy,

@@ -78,7 +78,7 @@ function legalDocument(opts: LegalPageOpts, title: string, bodyHtml: string): st
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: Assistant, sans-serif; background: ${t.bg}; color: ${t.textPrimary}; min-height: 100vh; }
-    a { color: ${t.accent}; }
+    a { color: ${t.accentText}; }
     p { line-height: 1.8; font-size: 0.98rem; color: ${t.textPrimary}; margin-bottom: 14px; }
   </style>
 </head>

@@ -27,7 +27,7 @@ import {
   TYPOGRAPHY_RULE_TEXT,
   VOICE_PROMPT_RULES,
 } from './generationData';
-import { pageNameWithCity, RESEARCHED_GATED_FIELDS } from './researchedSite';
+import { pageNameWithCity, researchedGatedFieldsFor } from './researchedSite';
 import {
   blockingGateHits,
   copyGateContext,
@@ -995,8 +995,9 @@ export function briefGateContext(brief: PageBrief, data: CollectedData): CopyGat
     anchorName: site ? site.pageName : null,
     anchorCity: site ? site.city : null,
     // M2a.7: hits outside the rendered fields are warnings (research sites only). M2b.1: rendered fields still held
-    // warn-only for the next voice round (RESEARCHED_RENDERED_WARN_ONLY_FIELDS) are excluded too.
-    ...(site ? { renderedFields: RESEARCHED_GATED_FIELDS } : {}),
+    // warn-only for the next voice round (RESEARCHED_RENDERED_WARN_ONLY_FIELDS) are excluded too. M2b.1b: per page type
+    // (about / service cards render on the homepage and service hub only).
+    ...(site ? { renderedFields: researchedGatedFieldsFor(brief.page.pageClass) } : {}),
   });
 }
 

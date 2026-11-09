@@ -326,7 +326,7 @@ export default function LandingPage({ theme, assets, copy, data, heroImageUrl, s
 
           <div style={{ display: 'flex', gap: '12px', justifyContent: t.heroTextAlign === 'center' ? 'center' : 'flex-start', flexWrap: 'wrap' }}>
             {showPhone && (
-              <a href={phoneHref} onClick={() => pingClick('phone-click')} style={{ background: t.ctaGradient, color: '#fff', padding: '14px 28px', borderRadius: t.radiusSm, fontWeight: 800, fontSize: '1.05rem', textDecoration: 'none', display: 'inline-block' }}>
+              <a href={phoneHref} onClick={() => pingClick('phone-click')} style={{ background: t.ctaGradient, color: t.ctaText, padding: '14px 28px', borderRadius: t.radiusSm, fontWeight: 800, fontSize: '1.05rem', textDecoration: 'none', display: 'inline-block' }}>
                 📞 {copy.heroCta}
               </a>
             )}
@@ -431,7 +431,7 @@ export default function LandingPage({ theme, assets, copy, data, heroImageUrl, s
       {/* ── About ───────────────────────────────────────────────── */}
       <section style={{ padding: '36px 20px', backgroundColor: t.surface }}>
         <div style={{ maxWidth: '600px', margin: '0 auto', textAlign: 'center' }}>
-          <div style={{ width: '60px', height: '60px', borderRadius: '50%', background: t.ctaGradient, margin: '0 auto 16px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 900, fontSize: '1.4rem' }}>
+          <div style={{ width: '60px', height: '60px', borderRadius: '50%', background: t.ctaGradient, margin: '0 auto 16px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: t.ctaText, fontWeight: 900, fontSize: '1.4rem' }}>
             {(data.ownerName || businessName || '?')[0]}
           </div>
           <p style={{ color: t.textMuted, fontSize: '0.95rem', lineHeight: 1.6 }}>{copy.aboutBlurb}</p>
@@ -463,7 +463,7 @@ export default function LandingPage({ theme, assets, copy, data, heroImageUrl, s
                   שגיאה בשליחה — נסה שוב או התקשר ישירות.
                 </div>
               )}
-              <button type="submit" disabled={formStatus === 'submitting'} style={{ padding: '15px', background: t.ctaGradient, color: '#fff', border: 'none', borderRadius: t.radiusSm, fontWeight: 800, fontSize: '1.05rem', cursor: formStatus === 'submitting' ? 'default' : 'pointer', fontFamily: t.fontBody, opacity: formStatus === 'submitting' ? 0.7 : 1 }}>
+              <button type="submit" disabled={formStatus === 'submitting'} style={{ padding: '15px', background: t.ctaGradient, color: t.ctaText, border: 'none', borderRadius: t.radiusSm, fontWeight: 800, fontSize: '1.05rem', cursor: formStatus === 'submitting' ? 'default' : 'pointer', fontFamily: t.fontBody, opacity: formStatus === 'submitting' ? 0.7 : 1 }}>
                 {formStatus === 'submitting' ? 'שולח...' : 'שלח, לחזרה מהירה'}
               </button>
             </form>

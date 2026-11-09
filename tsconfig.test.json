@@ -176,6 +176,7 @@
     "src/lib/lp/renderCoreThirtyPages.test.ts",
     "src/lib/lp/researchedSite.ts",
     "src/lib/lp/researchedSite.test.ts",
+    "src/lib/lp/verticalThemes.test.ts",
     "src/lib/site-bot/researchedSiteGeneration.ts",
     "src/lib/site-bot/researchedSiteGeneration.test.ts",
     "src/lib/site-bot/researchToSite.ts",
