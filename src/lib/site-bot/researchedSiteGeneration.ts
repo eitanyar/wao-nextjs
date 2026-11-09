@@ -192,10 +192,24 @@ function validatePortfolio(input: ResearchedSiteGenerationInput): PageBrief {
   return homepage;
 }
 
+/**
+ * M2b.1e (Adam): every generated site ships a privacy and an accessibility page that must say how to reach the owner. With
+ * neither a phone nor an email there is no way to, so generation stops before any model call.
+ */
+export const OWNER_CONTACT_MISSING = 'owner_contact_missing';
+export const OWNER_CONTACT_MISSING_MESSAGE = 'Site generation needs the owner\'s phone or email: the privacy and accessibility pages must say how to reach the owner.';
+
+/** True when the owner data has neither a phone nor an email (the legal pages' contact fields). */
+export function ownerContactMissing(data: Pick<CollectedData, 'phone' | 'email'> | null | undefined): boolean {
+  const filled = (value: unknown) => typeof value === 'string' && value.trim().length > 0;
+  return !filled(data?.phone) && !filled(data?.email);
+}
+
 export async function buildResearchedSiteGeneration(
   input: ResearchedSiteGenerationInput,
   dependencies: ResearchedSiteGenerationDependencies,
 ): Promise<ResearchedSiteGenerationRecord> {
+  if (ownerContactMissing(input.collectedData)) fail(OWNER_CONTACT_MISSING_MESSAGE);
   const homepage = validatePortfolio(input);
   const pages: ResearchedSitePage[] = [];
   const heroFacts: HeroCapPageFacts[] = [];

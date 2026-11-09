@@ -112,7 +112,7 @@ test('bounded copy rejects malformed shapes, excess fields and sparse arrays gen
     { ...copy, heroHeadline: 'x'.repeat(69) }, { ...copy, extra: 'private model content' },
     { ...copy, reviewContext: 'Context' },
     { ...copy, scarcityLine: 'Limited' }, { ...copy, responseTimeBadge: 12 },
-    { ...copy, trustBarItems: sparse }, { ...copy, trustBarItems: ['x'.repeat(21)] },
+    { ...copy, trustBarItems: sparse }, { ...copy, trustBarItems: ['x'.repeat(25)] },
     { ...copy, serviceItems: Array(7).fill('Item') },
     { ...copy, faqItems: [{ q: 'Q', a: '' }] },
     { ...copy, faqItems: [{ q: 'Q', a: 'A', extra: 'no' }] },
@@ -189,7 +189,7 @@ test('validator failures carry stage + every field/limit/actual, never the copy 
     ...copy,
     stickyBarLine: 's'.repeat(33),
     servicesHeadline: 'h'.repeat(54),
-    trustBarItems: ['t'.repeat(21)],
+    trustBarItems: ['t'.repeat(25)],
     serviceItems: ['ok', 'v'.repeat(26)],
     reviewFeatured: null,
     reviewContext: 'secret context text',
@@ -203,7 +203,7 @@ test('validator failures carry stage + every field/limit/actual, never the copy 
     { field: 'servicesHeadline', rule: 'max_length', limit: 35, actual: 54 },
     { field: 'stickyBarLine', rule: 'max_length', limit: 25, actual: 33 },
     { field: 'reviewFeatured+reviewContext', rule: 'context_requires_quote', actual: 'reviewContext_only' },
-    { field: 'trustBarItems[0]', rule: 'max_length', limit: 20, actual: 21 },
+    { field: 'trustBarItems[0]', rule: 'max_length', limit: 24, actual: 25 },
     { field: 'serviceItems[1]', rule: 'max_length', limit: 25, actual: 26 },
   ]);
   assert.doesNotMatch(JSON.stringify(caught.violations), /secret context|sss|hhh/);

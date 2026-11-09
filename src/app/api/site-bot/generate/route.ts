@@ -17,6 +17,9 @@ import { deriveSiteSlug } from '@/lib/site-bot/siteSlug';
 import {
   assertResearchedGenerationReady,
   buildResearchedSiteGeneration,
+  OWNER_CONTACT_MISSING,
+  OWNER_CONTACT_MISSING_MESSAGE,
+  ownerContactMissing,
   preflightResearchedSiteTarget,
   persistResearchedSiteRecordAtomic,
 } from '@/lib/site-bot/researchedSiteGeneration';
@@ -128,6 +131,11 @@ export async function POST(req: Request) {
       deployable: false,
       copy: buildSimulationGenerationResult(collectedData),
     });
+  }
+
+  // M2b.1e: a site whose legal pages cannot name a phone or an email never starts generating.
+  if (ownerContactMissing(collectedData)) {
+    return postReply({ error: OWNER_CONTACT_MISSING, message: OWNER_CONTACT_MISSING_MESSAGE, deployable: false }, 400);
   }
 
   if (

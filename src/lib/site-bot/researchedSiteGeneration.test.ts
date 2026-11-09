@@ -701,7 +701,7 @@ test('canonical generation suite exercises synthetic actual-handler route cases'
   const output = execFileSync(process.execPath, [
     '--test', path.join(process.cwd(), 'src/app/api/site-bot/generate/route.test.mjs'),
   ], { cwd: process.cwd(), encoding: 'utf8', timeout: 30_000, env: { NODE_ENV: 'test' } });
-  assert.match(output, /tests 8/);
-  assert.match(output, /pass 8/);
+  assert.match(output, /tests 9/); // M2b.1e: + the owner-contact guard case
+  assert.match(output, /pass 9/);
   assert.match(output, /fail 0/);
 });

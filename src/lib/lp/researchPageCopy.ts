@@ -28,6 +28,7 @@ import {
   STICKY_ACTION_TOKENS,
   TRADE_TERMS,
   TRUST_BAR_FILLER_PHRASES,
+  TRUST_BAR_MAX_CHARS,
   TRUST_BAR_MAX_ITEMS,
   TYPOGRAPHY_RULE_TEXT,
   VOICE_PROMPT_RULES,
@@ -181,7 +182,8 @@ export const SITE_COPY_OPTIONAL_STRING_LIMITS = {
 } as const;
 /** Lists of plain strings. */
 export const SITE_COPY_STRING_LIST_LIMITS = {
-  trustBarItems: { maxItems: 4, itemMaxChars: 20 },
+  // M2b.1e (section 22.2, Maya-confirmed at 360 px): the trust bar shares its caps with the gate (one constant each).
+  trustBarItems: { maxItems: TRUST_BAR_MAX_ITEMS, itemMaxChars: TRUST_BAR_MAX_CHARS },
   serviceItems: { maxItems: 6, itemMaxChars: 25 },
 } as const;
 /** Lists of two-key objects; maxChars is per key, in keys order. */
@@ -867,8 +869,8 @@ export function applySafeDeterministicFixes(value: Loose, gates: CopyGateContext
   return { value: next, fixes };
 }
 
-/** M2a.5: a gated trust-bar item is dropped only while at least this many other items remain. */
-export const TRUST_BAR_MIN_KEPT = 3;
+/** M2a.5: a gated trust-bar item is dropped only while at least this many other items remain. M2b.1e (B2: two facts, two items): 2. */
+export const TRUST_BAR_MIN_KEPT = 2;
 
 /** M2b.1d: the section 22.2 item-count hit (trustBarItems past TRUST_BAR_MAX_ITEMS). */
 function isTrustBarCountHit(hit: { rule: string; actual?: string }): boolean {

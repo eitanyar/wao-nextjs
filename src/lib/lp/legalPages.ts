@@ -36,14 +36,18 @@ interface LegalPageOpts {
   /**
    * M2a.3 (researched sites, Noa section 13): a Hebrew prefix letter takes a hyphen only before a
    * name starting with a Latin letter or a digit; before a Hebrew name it attaches directly.
-   * Unset = legacy, always a hyphen (byte-identical).
+   * Unset = legacy, always a hyphen (byte-identical). M2b.1e (Noa): the rule now applies on every page (prefixJoiner), so
+   * this flag no longer changes the output; kept so existing callers stay valid.
    */
   prefixRule?: boolean;
 }
 
-/** The joiner between a prefix letter and `name` (M2a.3 prefixRule; legacy: always a hyphen). */
-function prefixJoiner(opts: LegalPageOpts, name: string): string {
-  return !opts.prefixRule || /^[A-Za-z0-9]/.test(name.trim()) ? '-' : '';
+/**
+ * The joiner between a prefix letter and `name`: a hyphen only before a Latin letter or a digit (Noa section 13). M2b.1e
+ * (Noa): legacy pages too, so a Hebrew owner name attaches directly; Latin / digit names keep the hyphen (byte-identical).
+ */
+export function prefixJoiner(name: string): string {
+  return /^[A-Za-z0-9]/.test(name.trim()) ? '-' : '';
 }
 
 const RLM = '\u200F';
@@ -70,8 +74,9 @@ function legalTitle(opts: LegalPageOpts, title: string, businessName: string): s
 function contactLine(data: CollectedData): { ownerName: string; phone: string; email?: string } {
   return {
     ownerName: data.ownerName || data.businessName || data.businessNiche || 'בעל העסק',
-    phone: data.phone || '',
-    email: data.email,
+    // M2b.1e: whitespace-only counts as missing.
+    phone: (data.phone || '').trim(),
+    email: data.email?.trim() || undefined,
   };
 }
 
@@ -129,7 +134,7 @@ export function buildPrivacyHtml(opts: LegalPageOpts): string {
     <p>הפרטים שתשאיר/י בטופס באתר זה (שם וטלפון) נאספים על ידי <strong>${businessName}</strong> כבעל השליטה במידע, ומשמשים אך ורק ליצירת קשר חוזר בנוגע לפנייתך.</p>
     <p>המידע לא יועבר לצד שלישי, למעט אם נדרש על פי דין.</p>
     <p>מסירת הפרטים היא לפי בחירתך בלבד. ללא מסירתם לא נוכל לחזור אליך.</p>
-    <p>ניתן בכל עת לבקש לעיין במידע שנמסר, לבקש את תיקונו או את מחיקתו, בפנייה ל${prefixJoiner(opts, ownerName)}${esc(ownerName)}${phonePart}${emailPart}.</p>
+    <p>ניתן בכל עת לבקש לעיין במידע שנמסר, לבקש את תיקונו או את מחיקתו, בפנייה ל${prefixJoiner(ownerName)}${esc(ownerName)}${phonePart}${emailPart}.</p>
   `;
 
   return legalDocument(opts, 'מדיניות פרטיות', body);
@@ -144,7 +149,7 @@ export function buildAccessibilityHtml(opts: LegalPageOpts): string {
 
   const body = `
     <p>אתר זה נבנה תוך התייחסות לדרישות תקן ישראלי 5568 (התאמות נגישות בהתאם ל-WCAG 2.0 ברמה AA), ככל הניתן.</p>
-    <p>אם נתקלת בבעיה או שיש לך הערה בנושא נגישות האתר, ניתן לפנות ל${prefixJoiner(opts, ownerName)}${esc(ownerName)}${phonePart}${emailPart}.</p>
+    <p>אם נתקלת בבעיה או שיש לך הערה בנושא נגישות האתר, ניתן לפנות ל${prefixJoiner(ownerName)}${esc(ownerName)}${phonePart}${emailPart}.</p>
   `;
 
   return legalDocument(opts, 'הצהרת נגישות', body);

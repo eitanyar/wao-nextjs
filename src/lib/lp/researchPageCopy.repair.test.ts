@@ -100,7 +100,7 @@ test('generation prompt ends with the hard-limits block (after the schema) and N
 });
 
 test('repair loop: violating Tamar output is repaired field-by-field, then validated, then sent to Noa', async () => {
-  const broken = { ...valid, stickyBarLine: x(33), trustBarItems: ['ok', x(23), 'b', 'c', 'd'], reviewFeatured: 'quote', reviewContext: 'ctx' };
+  const broken = { ...valid, stickyBarLine: x(33), trustBarItems: ['ok', x(27), 'b', 'c', 'd'], reviewFeatured: 'quote', reviewContext: 'ctx' };
   const prompts: Array<{ system: string; user: string }> = [];
   const events: CopyRepairEvent[] = [];
   const result = await generateResearchPageCopy(brief, {}, {
@@ -108,7 +108,7 @@ test('repair loop: violating Tamar output is repaired field-by-field, then valid
     callJson: async (system, user) => {
       prompts.push({ system, user });
       if (prompts.length === 1) return JSON.stringify(broken);
-      if (prompts.length === 2) return JSON.stringify({ stickyBarLine: x(20), trustBarItems: ['ok', 'short', 'b', 'c'], heroHeadline: 'IGNORED unrequested key' });
+      if (prompts.length === 2) return JSON.stringify({ stickyBarLine: x(20), trustBarItems: ['ok', 'short', 'b'], heroHeadline: 'IGNORED unrequested key' });
       return user.slice(0, user.indexOf('\n\nHARD LIMITS')); // Noa echoes valid copy
     },
   });
@@ -116,13 +116,13 @@ test('repair loop: violating Tamar output is repaired field-by-field, then valid
   const repair = prompts[1];
   assert.match(repair.system, /repairing specific fields/);
   assert.match(repair.user, /- stickyBarLine: non-empty string, max 25 characters\.\n {2}Problems: stickyBarLine is 33 characters \(max 25\)\./);
-  assert.match(repair.user, /trustBarItems has 5 items \(max 4\)/);
-  assert.match(repair.user, /trustBarItems\[1\] is 23 characters \(max 20\)/);
+  assert.match(repair.user, /trustBarItems has 5 items \(max 3\)/);
+  assert.match(repair.user, /trustBarItems\[1\] is 27 characters \(max 24\)/);
   assert.match(repair.user, /exactly these keys: stickyBarLine, trustBarItems\./);
   // Only the violating fields are sent; untouched fields are not in the request.
   assert.doesNotMatch(repair.user, /About page body|Subheadline/);
   assert.equal(result.stickyBarLine, x(20));
-  assert.deepEqual(result.trustBarItems, ['ok', 'short', 'b', 'c']);
+  assert.deepEqual(result.trustBarItems, ['ok', 'short', 'b']); // M2b.1e: 3 x 24 (section 22.2)
   assert.equal(result.heroHeadline, 'Headline', 'unrequested keys in a repair reply are ignored');
   assert.deepEqual(events.filter(event => event.kind === 'repair').map(event => event.fields), [['stickyBarLine', 'trustBarItems']]);
   assert.doesNotMatch(JSON.stringify(events), /xxxxxxxxxx|quote/, 'events carry no copy text');
@@ -211,7 +211,7 @@ test('deterministic fixes: trim list counts, null a context without a quote, nev
   };
   const { value, fixes } = applySafeDeterministicFixes(input);
   assert.equal(value.heroHeadline, x(90));
-  assert.deepEqual(value.trustBarItems, ['a', 'b', 'c', 'd']);
+  assert.deepEqual(value.trustBarItems, ['a', 'b', 'c']);
   assert.equal((value.serviceItems as string[]).length, 6);
   assert.equal((value.serviceDetails as unknown[]).length, 6);
   // The owner's quote is never nulled by a safe fix (M2a.1), even with no context.
@@ -220,7 +220,7 @@ test('deterministic fixes: trim list counts, null a context without a quote, nev
   assert.equal(value.scarcityLine, null);
   assert.equal('extra' in value, false);
   assert.deepEqual(fixes, [
-    'drop_unexpected:extra', 'trim_items:trustBarItems:6->4', 'trim_items:serviceItems:9->6',
+    'drop_unexpected:extra', 'trim_items:trustBarItems:6->3', 'trim_items:serviceItems:9->6',
     'trim_items:serviceDetails:8->6', 'null_field:scarcityLine',
   ]);
   // Every string that survives is byte-identical to an input string.

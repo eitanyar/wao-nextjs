@@ -55,9 +55,20 @@ import {
   generateResearchPageCopy,
   normalizedServicesHeadline,
   shapeOptions,
+  SITE_COPY_STRING_LIST_LIMITS,
+  TRUST_BAR_MIN_KEPT,
   ungeneratedFieldsFor,
   withSystemFields,
 } from './researchPageCopy';
+import { buildAccessibilityHtml, buildPrivacyHtml, prefixJoiner } from './legalPages';
+import { VERTICAL_THEMES } from './verticalThemes';
+import {
+  buildResearchedSiteGeneration,
+  OWNER_CONTACT_MISSING,
+  OWNER_CONTACT_MISSING_MESSAGE,
+  ownerContactMissing,
+} from '../site-bot/researchedSiteGeneration';
+import { runResearchToSite } from '../site-bot/researchToSite';
 import {
   RESEARCHED_ALL_FIELDS_BLOCKING_ENV,
   RESEARCHED_HOME_HUB_ONLY_FIELDS,
@@ -221,13 +232,14 @@ test('M2b.1d 5: trust bar: filler phrases fail (exempt when verbatim in the owne
   // Hard gate now: a trust-bar voice hit fails a money page.
   const money = briefGateContext(brief('leak-detection'), {});
   assert.deepEqual(blockingGateHits(runCopyGates(loose({ trustBarItems: [W1, `${filler} ${W2}`, W2] }), money), money).map(hit => hit.rule), [GATE_RULES.trustBarFiller]);
-  // Last-resort safe fixes: only the count hit -> the items past the cap are dropped; one bad item of four -> that item.
+  // Last-resort safe fixes (M2b.1e: the validator shares the 3-item cap, so the list trim does it): the items past the cap
+  // are dropped; then one bad item of the three is dropped too (min kept 2).
   const trimmed = applySafeDeterministicFixes(loose({ trustBarItems: [W1, W2, HE_WORD, LABEL] }), money);
   assert.deepEqual(trimmed.value.trustBarItems, [W1, W2, HE_WORD]);
-  assert.deepEqual(trimmed.fixes, ['trim_gated_items:trustBarItems:4->3']);
+  assert.deepEqual(trimmed.fixes, ['trim_items:trustBarItems:4->3']);
   const dropped = applySafeDeterministicFixes(loose({ trustBarItems: [W1, `${filler} ${W2}`, W2, HE_WORD] }), money);
-  assert.deepEqual(dropped.value.trustBarItems, [W1, W2, HE_WORD]);
-  assert.deepEqual(dropped.fixes, ['drop_gated_item:trustBarItems:4->3']);
+  assert.deepEqual(dropped.value.trustBarItems, [W1, W2]);
+  assert.deepEqual(dropped.fixes, ['trim_items:trustBarItems:4->3', 'drop_gated_item:trustBarItems:3->2']);
 });
 
 test('M2b.1d 6: home/hub-only fields: money pages never generate, gate or send to Noa the about pair, the service cards or the services headline; the system fills them; the validators accept that', async () => {
@@ -353,4 +365,63 @@ test('M2b.1d 9 (B7): a response-time noun phrase in the trust bar of an emergenc
   // The same items on the installation page itself are the existing hard gate (no arrival time there), as intended.
   const installCtx = copyGateContext(data, labels, true, [], { serviceSources: ['leak detection', 'water heater install'], pageServiceLabel: install, installPage: true, researchSite: true, pageSlug: 'water-heater-install' });
   assert.ok(runCopyGates(loose({ heroHeadline: install, trustBarItems: [items[0]] }), installCtx).some(hit => hit.rule === GATE_RULES.installArrival));
+});
+
+// ---------------------------------------------------------------------------
+// M2b.1e (Adam): the trust bar 3 x 24 shared limit, min kept 2, the owner-contact guard; Noa's legal-page fixes.
+// ---------------------------------------------------------------------------
+
+test('M2b.1e 1: the validator and the gate share one trust-bar limit (3 items, 24 per item); a filler item in a 3-item bar is dropped (min kept 2)', () => {
+  assert.deepEqual({ ...SITE_COPY_STRING_LIST_LIMITS.trustBarItems }, { maxItems: TRUST_BAR_MAX_ITEMS, itemMaxChars: TRUST_BAR_MAX_CHARS });
+  assert.deepEqual([TRUST_BAR_MAX_ITEMS, TRUST_BAR_MAX_CHARS, TRUST_BAR_MIN_KEPT], [3, 24, 2]);
+  const at = (n: number) => '\u05D0'.repeat(n);
+  assert.doesNotThrow(() => assertBoundedGeneratedSiteCopy(loose({ trustBarItems: [at(24), at(21), at(21)] })));
+  assert.throws(() => assertBoundedGeneratedSiteCopy(loose({ trustBarItems: [at(25)] })));
+  assert.throws(() => assertBoundedGeneratedSiteCopy(loose({ trustBarItems: [W1, W2, HE_WORD, LABEL] })));
+  const money = briefGateContext(brief('leak-detection'), {});
+  const filler = `${TRUST_BAR_FILLER_PHRASES[0]} ${W2}`;
+  const fixed = applySafeDeterministicFixes(loose({ trustBarItems: [W1, filler, W2] }), money);
+  assert.deepEqual(fixed.value.trustBarItems, [W1, W2]);
+  assert.deepEqual(fixed.fixes, ['drop_gated_item:trustBarItems:3->2']);
+  assert.deepEqual(blockingGateHits(runCopyGates(fixed.value, money), money), [], 'the page passes');
+});
+
+test('M2b.1e 2: generation fails early with a clear error when the owner has neither a phone nor an email', async () => {
+  assert.equal(ownerContactMissing({}), true);
+  assert.equal(ownerContactMissing({ phone: '   ', email: '' }), true, 'whitespace is not a contact');
+  assert.equal(ownerContactMissing({ phone: '050-0000000' }), false);
+  assert.equal(ownerContactMissing({ email: 'owner@example.com' }), false);
+  assert.equal(ownerContactMissing(null), true);
+  let copyCalls = 0;
+  await assert.rejects(() => buildResearchedSiteGeneration({ slug: 'x', researchId: 'r', collectedData: { businessNiche: 'plumber' } } as unknown as Parameters<typeof buildResearchedSiteGeneration>[0], {
+    generateCopy: async () => { copyCalls++; throw new Error('never'); }, renderInputs: {} as never,
+  }), (error: Error) => error.message === OWNER_CONTACT_MISSING_MESSAGE);
+  assert.equal(copyCalls, 0, 'before any model call');
+  // The orchestrator stops at the input step, before research or the identity call.
+  let research = 0;
+  const outcome = await runResearchToSite({ slug: 'test-site', researchId: 'research-1', collectedData: { businessNiche: 'plumber', phone: ' ' } }, {
+    runResearch: async () => { research++; throw new Error('never'); },
+    callJson: async () => { research++; return '{}'; },
+  });
+  assert.deepEqual(outcome, { status: 'failed', researchId: 'research-1', step: 'input', reason: OWNER_CONTACT_MISSING });
+  assert.equal(research, 0);
+});
+
+test('M2b.1e 3 (Noa): the legal prefix takes a hyphen only before a Latin letter or a digit, on every page; a whitespace phone is no phone', () => {
+  assert.equal(prefixJoiner(HE_WORD), '');
+  assert.equal(prefixJoiner('Test Owner A'), '-');
+  assert.equal(prefixJoiner(' 9 Stars'), '-');
+  const theme = Object.values(VERTICAL_THEMES)[0];
+  const html = (data: Record<string, unknown>, researched: boolean) => [buildPrivacyHtml, buildAccessibilityHtml].map(build => build({ theme, data, canonicalUrl: 'https://x/p.html', homeHref: '/', ...(researched ? { pipeTitle: true, prefixRule: true } : {}) }));
+  for (const researched of [false, true]) {
+    for (const page of html({ ownerName: HE_WORD, phone: '050-0000000' }, researched)) assert.ok(page.includes(`\u05DC${HE_WORD}`) && !page.includes(`-${HE_WORD}`), `hebrew, researched=${researched}`);
+    for (const page of html({ ownerName: 'Test Owner A', phone: '050-0000000' }, researched)) assert.ok(page.includes('\u05DC-Test Owner A'), `latin, researched=${researched}`);
+  }
+  // contactLine trims: a whitespace-only phone is omitted and the email leads; a padded phone is trimmed.
+  const [privacy] = html({ ownerName: 'Test Owner A', phone: '   ', email: ' owner@example.com ' }, true);
+  const last = [...privacy.matchAll(/<p>(.*?)<\/p>/g)].map(match => match[1]).pop()!;
+  assert.ok(!/\d/.test(last.slice(last.indexOf('Test Owner A'))), 'no phone clause');
+  assert.ok(last.includes(' owner@example.com.') && !last.includes('  '), 'email trimmed');
+  const [padded] = html({ ownerName: 'Test Owner A', phone: ' 050-0000000 ' }, true);
+  assert.ok(padded.includes(' 050-0000000.') && !padded.includes('  050'), 'phone trimmed');
 });

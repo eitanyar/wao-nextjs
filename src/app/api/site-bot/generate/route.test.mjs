@@ -9,6 +9,8 @@ import ts from 'typescript';
 const requireCompiled = createRequire(path.join(process.cwd(), 'dist/package.json'));
 const { assertBoundedPageBrief, compilePageBrief } = requireCompiled('./lib/site-bot/research/pageBrief.js');
 const siteSlug = requireCompiled('./lib/site-bot/siteSlug.js');
+// M2b.1e: the real owner-contact guard (pure; no IO) from the compiled module.
+const { ownerContactMissing, OWNER_CONTACT_MISSING, OWNER_CONTACT_MISSING_MESSAGE } = requireCompiled('./lib/site-bot/researchedSiteGeneration.js');
 
 const routePath = path.join(process.cwd(), 'src/app/api/site-bot/generate/route.ts');
 const source = fs.readFileSync(routePath, 'utf8');
@@ -112,6 +114,7 @@ function harness({ authorized = true, simulation = false, target = 'absent', dos
     '@/lib/deployment/deploy-access': { isSafeDeploymentSlug: slug => slug === 'synthetic-site' },
     '@/lib/site-bot/siteSlug': siteSlug,
     '@/lib/site-bot/researchedSiteGeneration': {
+      ownerContactMissing, OWNER_CONTACT_MISSING, OWNER_CONTACT_MISSING_MESSAGE,
       assertResearchedGenerationReady: (actual, researchId) => {
         expectResearch('gate');
         assert.equal(actual, dossier);
@@ -187,7 +190,7 @@ const counts = (overrides = {}) => ({
 const input = {
   slug: 'synthetic-site',
   researchId: 'synthetic-research',
-  collectedData: { businessNiche: 'synthetic-niche' },
+  collectedData: { businessNiche: 'synthetic-niche', phone: '050-0000000' },
   pageBriefs: [compilePageBrief({
     page: { id: 'home', targetPath: '/', pageClass: 'homepage' },
     persona: { id: 'persona', value: 'buyer', status: 'approved' },
@@ -340,6 +343,17 @@ test('unauthorized and shallow-invalid requests never access a dossier', async (
     assert.deepEqual(route.order, ['auth', 'json']);
     assert.deepEqual(route.calls, counts({ path: 0, stat: 0, dossier: 0, cwd: 0 }));
   }
+});
+
+test('M2b.1e: no owner phone and no email fails before any research, dossier or paid work; either one is enough', async () => {
+  for (const collectedData of [{ businessNiche: 'synthetic-niche' }, { businessNiche: 'synthetic-niche', phone: '   ', email: '' }]) {
+    const route = harness();
+    assert.deepEqual(await route.post({ ...input, collectedData }), { status: 400, body: { error: OWNER_CONTACT_MISSING, message: OWNER_CONTACT_MISSING_MESSAGE, deployable: false } });
+    assert.deepEqual(route.order, ['auth', 'json']);
+    assert.deepEqual(route.calls, counts({ path: 0, stat: 0, dossier: 0, cwd: 0 }));
+  }
+  const emailOnly = harness();
+  assert.equal((await emailOnly.post({ ...input, collectedData: { businessNiche: 'synthetic-niche', email: 'owner@example.com' } })).status, 200);
 });
 
 test('simulation still returns its copy without dossier, generation or persistence', async () => {

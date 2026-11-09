@@ -52,6 +52,7 @@ import {
   PLANNED_SERVICE_KINDS,
   SERVICES_HEADLINE_OPTIONS,
   SIGNATURE_WORD_TOKENS,
+  TRUST_BAR_MAX_CHARS,
   SUBJECT_CARRY_PREFIXES,
   VOICE_PROMPT_RULES,
 } from './generationData';
@@ -410,12 +411,14 @@ test('M2a.3 9: researched forms use templateStrings (submit label, thanks); cont
     assert.ok(latin.includes('-Test Owner A'), `${file} latin`);
   }
   assert.ok(site['accessibility.html'].includes('-WCAG 2.0'));
-  // Legacy path: hero CTA on the button, legacy thanks line, H2 on the contact form, hyphen before every name.
+  // Legacy path: hero CTA on the button, legacy thanks line, H2 on the contact form. M2b.1e (Noa): the legal-page prefix
+  // attaches directly to a Hebrew name on legacy pages too (hyphen only before a Latin letter or a digit).
   const legacy = renderSitePages({ ...renderInputs, data: splitHours, copy: pageCopy() });
   assert.ok(legacy['contact.html'].includes('class="submit-btn">CallNow</button>'));
   assert.ok(!legacy['contact.html'].includes(TEMPLATE_STRINGS.formThanks));
   assert.equal((legacy['contact.html'].match(/>FormHead<\/h[12]>/g) ?? []).length, 2);
-  assert.ok(legacy['privacy.html'].includes(`-${HE_WORD}`));
+  assert.ok(legacy['privacy.html'].includes(HE_WORD) && !legacy['privacy.html'].includes(`-${HE_WORD}`));
+  assert.ok(renderSitePages({ ...renderInputs, data: { ...splitHours, ownerName: 'Test Owner A' }, copy: pageCopy() })['privacy.html'].includes('-Test Owner A'), 'legacy latin');
 });
 
 test('M2a.3 10: split Sun-Thu + Fri hours render with the ", " join on a researched contact page', () => {
@@ -429,7 +432,7 @@ test('M2a.3 10: split Sun-Thu + Fri hours render with the ", " join on a researc
 });
 
 test('M2a.3 safe fix: a list item over its character limit is dropped whole (never shortened) while another item remains', () => {
-  const long = 'x'.repeat(21);
+  const long = 'x'.repeat(TRUST_BAR_MAX_CHARS + 1); // M2b.1e: the shared trust-bar item cap
   const fixed = applySafeDeterministicFixes(loose({ trustBarItems: ['ok', long, 'fine'] }));
   assert.deepEqual(fixed.value.trustBarItems, ['ok', 'fine']);
   assert.deepEqual(fixed.fixes, ['drop_overlong_items:trustBarItems:3->2']);
@@ -890,17 +893,17 @@ test('M2a.5 8: service stage from the slug (both lists = emergency, neither = ne
   assert.ok(!buildResearchPageGenerationPrompt({ ...service('leak-detection'), site: undefined }, data).includes('VOICE RULES'));
 });
 
-test('M2a.5 9: trust-bar safe fix: a single gated trust item is dropped only when it is the only gate hit and at least 3 items remain', () => {
+test('M2a.5 9 (M2b.1e: min kept 2): a single gated trust item is dropped only when it is the only gate hit and at least 2 items remain', () => {
   const gates = vctx();
   const bad = `${HE_WORD} ${GENERIC_ADJECTIVE_WORDS[0]}`;
-  const four = loose({ trustBarItems: [W1, bad, W2, W3] });
-  assert.equal(TRUST_BAR_MIN_KEPT, 3);
-  const fixed = applySafeDeterministicFixes(four, gates);
-  assert.deepEqual(fixed.value.trustBarItems, [W1, W2, W3]);
-  assert.deepEqual(fixed.fixes, ['drop_gated_item:trustBarItems:4->3']);
+  const three = loose({ trustBarItems: [W1, bad, W2] });
+  assert.equal(TRUST_BAR_MIN_KEPT, 2);
+  const fixed = applySafeDeterministicFixes(three, gates);
+  assert.deepEqual(fixed.value.trustBarItems, [W1, W2], 'B2: two facts, two items');
+  assert.deepEqual(fixed.fixes, ['drop_gated_item:trustBarItems:3->2']);
   assert.deepEqual(runCopyGates(fixed.value, gates), []);
-  assert.deepEqual(applySafeDeterministicFixes(loose({ trustBarItems: [W1, bad, W2] }), gates).value.trustBarItems, [W1, bad, W2], 'only 2 would remain');
-  assert.deepEqual(applySafeDeterministicFixes({ ...four, aboutPageHeadline: bad }, gates).value.trustBarItems, [W1, bad, W2, W3], 'another field also hits');
-  assert.deepEqual(applySafeDeterministicFixes(loose({ trustBarItems: [W1, bad, `${bad} ${W1}`, W3] }), gates).value.trustBarItems, [W1, bad, `${bad} ${W1}`, W3], 'two items hit');
-  assert.deepEqual(applySafeDeterministicFixes(four, null).value.trustBarItems, [W1, bad, W2, W3], 'gates off: no fix');
+  assert.deepEqual(applySafeDeterministicFixes(loose({ trustBarItems: [W1, bad] }), gates).value.trustBarItems, [W1, bad], 'only 1 would remain');
+  assert.deepEqual(applySafeDeterministicFixes({ ...three, aboutPageHeadline: bad }, gates).value.trustBarItems, [W1, bad, W2], 'another field also hits');
+  assert.deepEqual(applySafeDeterministicFixes(loose({ trustBarItems: [W1, bad, `${bad} ${W1}`] }), gates).value.trustBarItems, [W1, bad, `${bad} ${W1}`], 'two items hit');
+  assert.deepEqual(applySafeDeterministicFixes(three, null).value.trustBarItems, [W1, bad, W2], 'gates off: no fix');
 });

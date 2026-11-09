@@ -51,6 +51,8 @@ import {
 } from './siteIdentity';
 import {
   buildResearchedSiteGeneration,
+  OWNER_CONTACT_MISSING,
+  ownerContactMissing,
   persistResearchedSiteRecordAtomic,
   preflightResearchedSiteTarget,
   type ResearchedSiteGenerationContext,
@@ -420,6 +422,8 @@ export async function runResearchToSite(input: ResearchToSiteInput, deps: Resear
   if (!isSafeDeploymentSlug(slug) || typeof researchId !== 'string' || !OPAQUE_ID.test(researchId) || !collectedData?.businessNiche) {
     return { status: 'failed', researchId: String(researchId), step: 'input', reason: 'invalid_input' };
   }
+  // M2b.1e: no phone and no email = no legal-page contact; stop before research or any model call.
+  if (ownerContactMissing(collectedData)) return { status: 'failed', researchId, step: 'input', reason: OWNER_CONTACT_MISSING };
   const now = deps.now ?? (() => new Date());
   const baseDir = deps.researchBaseDir;
   let dossier = await readResearchDossier(researchId, baseDir, { bounded: true });
