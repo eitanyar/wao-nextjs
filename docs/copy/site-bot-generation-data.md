@@ -836,3 +836,182 @@ On M2a.6 this clears both false failures (plumber-1 leak-detection and split-hou
   "nameIntroLeadIns": ["שלום", "היי", "הי", "נעים מאוד", "נעים להכיר"]
 }
 ~~~
+
+## 22. voiceRules M2b (Tamar, from the M2b.1b read of the five newly rendered fields)
+
+Source: the 17 saved M2a.7 site records in `scratch/m2a7/eval/` (electrician-1 saved none), read as the homeowner sees them on a phone, plus the M2b.1 and M2b.1b re-scores. Field scope is the same as section 20. Rendering since M2b.1b: `trustBarItems` on every page. `servicesHeadline`, `serviceDetails`, `aboutPageHeadline` and `aboutPageBody` render on the homepage and the services hub only. The same quote convention as sections 14–21 applies.
+
+### 22.1 The read: what a homeowner sees on one scroll
+
+- **The about section repeats the hero instead of proving it.** On the plumber-1 homepage, the tiles promise appears 5 times: the hero ("אריחים שבורים?"), the about headline ("מאתר את הנזילה בלי לגעת באריח"), the about body twice ("אריחים שבורים", "בלי לשבור אריח אחד") and the first card ("בלי לשבור אריחים"). The reader got the promise in the first line. By the fifth time it sounds like a tic, not a commitment.
+- **The proof is missing.** All four plumber runs have the usp "camera inspection". The camera appears 0 times in their copy, on any page. The model replaced the owner's method with the answer to his customer's fear. A homeowner believes "no broken tiles" when he hears how it's done. Split-hours, whose usp names acoustic equipment, did use it, and that gives the strongest about body in the set (split-hours-2 home: "מצמיד ציוד אקוסטי לקיר ומקשיב עד שאני מוצא את הנקודה").
+- **Electricians use up the cap in the hero.** electrician-2 and -3 put `lineByLine` in both the hero headline and the subheadline. Any mention in the about section is then the third.
+- **About headlines repeat the differentiator.** 14 of 17 homepage about headlines carry a signature group, a hero-cap concept or a "before" construction (6 are "…לפני שאני…"). Only split-hours-2, ac-repair-2 and hebrew-plumber-4 carry none.
+- **The trust bar mostly works.** Almost every set is years, then warranty or licence, then area, in 3 items ("15 שנה בשטח", "רישיון מס׳ 4821", "אחריות שנה לעבודה"). The misses:
+  - the prefix on the first city only: "בראשון לציון וחולון" (ac-repair-3, install)
+  - a missing ו: "ראשון לציון נס ציונה" (electrician-2, EV)
+  - a filler set: "שירות מהיר", "מחיר הוגן" (ac-repair-2, failed install sample)
+  - 4 items (hebrew-plumber-2, home)
+  - an arrival promise in a fact slot: "מגיע היום בחולון" (plumber-1, home), right under a hero that already says "מגיע היום"
+- **The services headline is a signpost, and it is mostly right.** "במה אני מטפל" and "מה אני עושה" read naturally. The 4 hits are real errors:
+  - "מה אני מטפל": hebrew-plumber-1 home, plumber-4 leak.
+  - "מה אני מתקין ומטפל": hebrew-plumber-3 solar, ac-repair-4 install.
+- **The cards kept R5's one shape.** Every card is "אני" plus present-tense verbs. The weak spots:
+  - card 1 copies the about-body sentence word for word (plumber-1 and plumber-3 home: "…בלי לשבור אריחים ומראה לך בדיוק איפה הבעיה")
+  - the warranty is tacked onto the repair card (ac-repair-1, -3 and -4 home)
+  - literary register: "ומחזיר את זרימת המים לקדמותה" (plumber-1 home, drain card)
+
+### 22.2 Gate rulings
+
+**`signature_repeat` (per-page cap): the cap is right; the differentiator detection is wrong.** One homepage with the promise in the hero and once in the about body is exactly where the promise belongs, and cap 2 allows it. That is not too strict, and the cap stays as it is.
+
+The detection is what's wrong. `DIFFERENTIATOR_SOURCE_FIELDS` reads only `usp` and `guarantee`. The plumber's tiles promise comes from `idealClientFear` ("breaks the bathroom tiles"), so `tiles` runs at cap 1. Even a correct page, with the hero plus one about mention, fails. The fix is to add `idealClientFear` as a source:
+- **Hebrew fear**: as for a Hebrew usp (the section 19.3 and 20.1 variants).
+- **English fear**: lower-case it and turn every hyphen into a space. Then match plain substrings against `differentiatorUspKeywords` and the `differentiatorFearKeywords` below.
+- **On the M2a.7 fears**:
+  - plumber: `tiles` and `noMess`
+  - AC: `fromTheRoot`
+  - electrician: `noSurprises`
+  - split-hours: `tiles`, `wrongPlace` and `noMess`
+  - the Hebrew fear "הצפה בבית באמצע הלילה": none
+- **Deliberately absent**: "dust" (it matches "industrial"), "floor" (a flood fear is not the tiles promise) and "comes back" (a tradesman who never comes back is not a root-cause fear). `exactly` is still never a differentiator group.
+- **What it does**: this alone does not rescue the plumber-1 homepage (5 hits); rules B1, B4 and B5 do that. What it does is stop the gate from failing a correct page.
+
+~~~json
+{
+  "differentiatorSourceFieldsAdd": ["idealClientFear"],
+  "differentiatorFearKeywords": {
+    "tiles": ["tile", "opens the wall", "open the wall", "breaks the wall", "break the wall", "demolition", "digs up", "dig up"],
+    "noSurprises": ["surprise", "doubles the price", "double the price", "price goes up", "hidden cost", "hidden fee", "extra charge"],
+    "fromTheRoot": ["refills the gas", "refill the gas", "without finding", "breaks again", "same problem"],
+    "wrongPlace": ["wrong place", "wrong spot"],
+    "noMess": ["mess", "dirty"]
+  }
+}
+~~~
+
+**New hard gate `aboutHeadlineNoPromise` (no new Hebrew).** The about headline fails when it contains any of these:
+- a hit of any signature group (sections 19.3 and 20.1, including `tilesBreakForms`)
+- a `heroCapConceptAdditions` entry, with the section 20.1 service-label mask and the AC-only rule
+- a `beforeTokens` hit, with the section 20.3 left-edge rule and time exclusions
+
+It applies only on pages that render the about section. It replaces a rule the model ignores with one it can follow (rule B5).
+
+On M2a.7 it fails the 14 homepage headlines listed in 22.1 and passes the other 3.
+
+~~~json
+{
+  "aboutHeadlineNoPromise": {
+    "field": "aboutPageHeadline",
+    "forbidLists": ["signatureWordTokens", "signatureWordTokenAdditions", "tilesBreakForms", "heroCapConceptAdditions", "beforeTokens"],
+    "matching": "each list as defined in sections 19.3, 20.1 and 20.3"
+  }
+}
+~~~
+
+**`services_headline_preposition`: a real error, so keep it, and close the field.** "מה אני מטפל" is wrong in Hebrew: מטפל takes ב, so the correct form is "במה אני מטפל". "מה אני מתקין ומטפל" makes two verbs share one object with different prepositions. Any native editor would fix both. This H2 sits right below the hero, and a grammar slip there costs trust with exactly the reader who notices.
+
+The H2 is a signpost, and a model can't do that job better than a fixed line. Free generation produced 4 errors in 63 pages. So the field becomes a closed set:
+- **Gate**: the trimmed value must be byte-identical to one entry of `servicesHeadlineOptions`.
+- **Who sets it**: the model may pick an entry, or the engineer may system-set the first one. Either is fine.
+- **Backup**: the preposition gate stays as a backup for every other field.
+- **Not in the set**: "מה אני מתקין ובמה אני מטפל" (the M2a.7 `replacementPair`) is correct, but too heavy for an H2.
+- **Flag for Yonatan**: if he wants a head term in this H2, he supplies the formula and the set changes. Until then the H2 carries no keyword.
+
+~~~json
+{
+  "servicesHeadlineOptions": ["במה אני מטפל", "מה אני עושה"]
+}
+~~~
+
+**Trust bar: keep `city_prefix`, and add a filler list plus a size cap.**
+- **`city_prefix`**: a real error ("בראשון לציון וחולון"). Rule B2 also drops the prefix from the trust bar altogether, so the case stops arising.
+- **`trustBarFillerPhrases`** (new): plain substring, `trustBarItems` only. A hit fails the page. These phrases claim something a customer can't check. They stay out of `genericAdjectivePhrases` because a body-wide list needs its own overfire check first.
+- **`trustBarMaxItems`** (no Hebrew): more than 3 items fails.
+- **`trustBarMaxChars`** (no Hebrew): any item over 24 characters fails. Count Unicode code points, including spaces and punctuation. The longest valid M2a.7 items are 20 characters, and 24 still fits the full three-city list "תל אביב, גבעתיים ורמת גן". Maya to confirm the width on a 360 px screen.
+
+~~~json
+{
+  "trustBarFillerPhrases": ["שירות מהיר", "שירות אמין", "שירות אישי", "יחס אישי", "מחיר הוגן", "מחירים הוגנים", "מחיר משתלם", "מחירים משתלמים", "זמינות גבוהה", "לקוחות מרוצים", "אמינות"],
+  "trustBarMaxItems": 3,
+  "trustBarMaxChars": 24
+}
+~~~
+
+**`duplicate_about_headline`: keep it, but compare only pages that render the about section.** Both M2a.7 hits were on money-service pages (electrician-4 EV and hebrew-plumber-3 leak), where nobody sees the about section. The check matters only between the homepage and the services hub.
+
+**Run-log warnings to delete:**
+- **`service_details_opener` (106)**: R5 makes "אני" plus a verb the shape on purpose, so the warning counts the rule being followed.
+- **`duplicate_about_opening` (25)**: at most two about bodies render per site, so keep the check only for the homepage against the hub.
+
+**`before_cap`: keep it at 3, with no new exclusion.** The two hits are real crutches. One example is ac-repair-2's repair page: "לפני שאני ממלא גז" on a card, then "לפני שאני נוגע בגז" in both the about headline and the about body. "לפני שאני עוזב" is not excluded either. It ends a card on the owner's habit, not on what the customer gets, and B4 moves the card ending to the result.
+
+**These rulings stand as they are: `fact_repeat`, `moral_ending`, `bare_verb_opener`, `water_flows_again`.** Each hit is real:
+- **`fact_repeat`**: "15 שנה" appears in the trust bar, the about headline and the about body (hebrew-plumber-4 home).
+- **`moral_ending`**: "12 שנה בשטח לימדו אותי ש…" is a lesson ending (plumber-3 drain).
+- **`bare_verb_opener`**: three subject-less sentences in a row (plumber-4 water heater, "מנקה את הרצפה…").
+- **`water_flows_again`**: "ומזרים את המים בחזרה לזרימה מלאה" (plumber-1 water heater card).
+
+**Note for Adam (cost, not voice).** Money-service pages still generate the about and card fields, which nobody sees. Dropping them from money-service generation would save tokens and repair calls.
+
+### 22.3 Prompt rules for M2b (ready to paste)
+
+These apply on pages that render the about section and the service cards (the homepage and the services hub). B2 applies on every page. Sections 19 and 20 still apply.
+
+- **B1 — Promise twice, proof once.**
+  - The owner's differentiator comes from his usp, or from the answer to his customer's fear.
+  - It appears exactly twice on the page: once in the hero (the headline or the subheadline, never both) and once in the about body.
+  - It never appears, in any wording or synonym, in the trust bar, the services headline, a service card or the about headline.
+  - Never use the `exactly` group in any field.
+- **B2 — Trust bar: who is coming into my home.**
+  - At most 3 items. Each is at most 24 characters and is a noun phrase with no verb.
+  - Choose from these kinds, one item per kind:
+    - years in the trade
+    - a credential (licence number, licence or certification)
+    - warranty length
+    - the service area: the cities as written in the owner facts, joined with ו, with no locative prefix
+    - response time, only if neither the hero headline nor the subheadline states it
+  - Never use the service name, an adjective, a price word, a work-style claim, the differentiator, or anything in `trustBarFillerPhrases`.
+  - If the owner gave only two facts, write two items.
+- **B3 — Services headline.** Use one entry of `servicesHeadlineOptions`, word for word.
+- **B4 — Service cards: what will happen in his home.**
+  - One card per service, 8 to 14 words, in the R5 shape: first person, present-tense verbs, in the order the owner works.
+  - Give two or three steps. Include one physical detail that belongs only to that service: the tool, the part or the measurement.
+  - End on a result the homeowner can check himself once the job is done (the water drains, the unit blows cold, the breaker holds). Never end on the owner's habit or on him leaving.
+  - Never use the differentiator, the warranty, a price, a "before" construction or the `exactly` group.
+  - Use plain spoken words, never a literary or formal register. No card repeats a sentence from the about body.
+- **B5 — About headline: the man, not the promise.**
+  - The hero sold the promise. This line introduces the person who will knock on the door.
+  - At most 7 words, built from one of:
+    - years in the trade, with the trade or the city
+    - the owner's first name with his trade (only when the name is written in Hebrew)
+    - the tool or method from his usp that makes the promise possible, said as a plain first-person fact
+  - Never use a signature phrase or its synonyms, a "before" construction, or a quality adjective.
+- **B6 — About body: scene, proof, result.** Three or four sentences, 12 to 15 words each, in the singular male voice.
+  1. One scene in the second person and present tense, of the problem itself: what the reader sees, hears or smells in his home right now. It is not his fear of the tradesman, because the hero already named that.
+  2. What the owner physically does when he arrives, naming the tool or method from his usp. This is the proof behind the hero's promise, and the only place on the page where the promise may come back, once.
+  3. End on something the reader can check after the owner leaves, or on one owner fact the page hasn't used yet.
+  - Each owner fact appears at most twice on the page, and the trust bar counts. Before you use years, warranty or area here, check how many times the hero, the subheadline and the trust bar have already used it.
+  - R2 (no past story, no lesson) and P4 (keep the subject) still apply.
+  - **Example of the move (a description, not text to copy):** the strongest body in the eval opens on a damp patch on a kitchen wall and not knowing where the water comes from. The owner presses his acoustic equipment to the wall and listens until he finds the spot, explains the options, and only then starts. The tool makes "I won't open the wall in the wrong place" believable without saying it. Do the same with this owner's own tool and facts, in new words every time.
+
+### 22.4 Hard gate or warn-only, per field
+
+- **`trustBarItems`: hard gate now.** The only hits were real errors (one city prefix, plus the always-blocking service-area fact gate). The new filler list and size caps are mechanical checks with no judgment calls. A wrong trust bar shows on every page, so it should never ship.
+- **`servicesHeadline`: hard gate now, with the closed set.** The closed set means a valid run can't fail it. Every M2a.7 hit was a real grammar error in the first H2 under the hero.
+- **`serviceDetails`: hard gate once B1 and B4 land.**
+  - Its blocking hits were the differentiator in card 1 (signature), `exactly`, the "before" crutch and one `water_flows_again`. All of them are real.
+  - B1 and B4 take the differentiator out of the cards, so a correct card set passes by construction.
+  - The opener warning is deleted, so R5's shape no longer counts against it.
+- **`aboutPageHeadline`: hard gate once B5 and `aboutHeadlineNoPromise` land.** Today it repeats the hero in 14 of 17 homepages, which is the reader's most visible repetition. The new gate is mechanical and comes with a clear alternative job in the prompt.
+- **`aboutPageBody`: hard gate once B1, B6 and the `idealClientFear` source land.**
+  - With the fear source, a body that says the promise once next to the hero passes.
+  - What still fails is the promise said twice inside the body, a repeated fact or a lesson ending. All of these are things the reader actually sees.
+
+Acceptance for the flip: re-run the 18 evals with all five fields blocking, scored by page type. At least 16 of 18 runs must be valid (today's baseline, with these fields warn-only, is 17 of 18). If one field alone costs more than one run, keep only that field warn-only for one more round, and send its copy back to me. Don't loosen the rule instead.
+
+Gates vs prompt-only in section 22:
+- **Hard gates**: the `idealClientFear` differentiator source (it changes the existing cap), `aboutHeadlineNoPromise`, the `servicesHeadlineOptions` closed set, `trustBarFillerPhrases`, `trustBarMaxItems`, `trustBarMaxChars`, and the scope fix for `duplicate_about_headline`.
+- **Deleted run-log warnings**: `service_details_opener`; `duplicate_about_opening`, except homepage against hub.
+- **Prompt-only**: B1–B6 as wording.
+- **Handoffs**: Noa to proof `servicesHeadlineOptions` and `trustBarFillerPhrases`. Yonatan to confirm that the services H2 carries no keyword. Maya to confirm the 24-character trust-bar item on a 360 px screen.
