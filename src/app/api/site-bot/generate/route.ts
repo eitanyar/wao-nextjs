@@ -13,6 +13,7 @@ import { VERTICAL_THEMES } from '@/lib/lp/verticalThemes';
 import { VERTICAL_ASSETS } from '@/lib/lp/verticalAssets';
 import { ADMIN_COOKIE_NAME, verifyAdminToken } from '@/lib/admin-auth';
 import { isSafeDeploymentSlug } from '@/lib/deployment/deploy-access';
+import { deriveSiteSlug } from '@/lib/site-bot/siteSlug';
 import {
   assertResearchedGenerationReady,
   buildResearchedSiteGeneration,
@@ -21,19 +22,6 @@ import {
 } from '@/lib/site-bot/researchedSiteGeneration';
 
 export const dynamic = 'force-dynamic';
-
-function slugify(name: string, phone?: string): string {
-  const latin = name
-    .toLowerCase()
-    .replace(/[^a-z0-9\s-]/g, '')
-    .replace(/\s+/g, '-')
-    .replace(/-+/g, '-')
-    .slice(0, 40)
-    .replace(/^-|-$/g, '');
-  if (latin.length >= 3) return latin;
-  const suffix = (phone || '').replace(/\D/g, '').slice(-4) || Date.now().toString(36).slice(-4);
-  return `wao-client-${suffix}`;
-}
 
 function opaqueId(value: unknown): value is string {
   return typeof value === 'string' && /^[A-Za-z0-9][A-Za-z0-9_-]*$/.test(value);
@@ -125,9 +113,9 @@ export async function POST(req: Request) {
   }
 
   const hasExplicitSlug = Object.prototype.hasOwnProperty.call(body, 'slug');
-  const slug = hasExplicitSlug
-    ? body.slug
-    : slugify(collectedData.businessName || collectedData.businessNiche, collectedData.phone);
+  // M1 (B15): no explicit slug -> collectedData.preferredSlug (the intake derives it
+  // deterministically), else website domain -> Latin name -> wao-client-<phone>.
+  const slug = hasExplicitSlug ? body.slug : deriveSiteSlug(collectedData);
   if (!isSafeDeploymentSlug(slug)) {
     return postReply({ error: 'invalid_deployment_slug', deployable: false }, 400);
   }

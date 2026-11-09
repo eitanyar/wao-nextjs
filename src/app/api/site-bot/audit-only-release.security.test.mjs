@@ -87,6 +87,7 @@ test('paid handlers are imported only by their own gated stub', () => {
     'src/app/api/site-bot/checkout/init/route.ts',
     'src/app/api/site-bot/connect-gbp/route.ts',
     'src/app/api/site-bot/connect-status/route.ts',
+    'src/app/api/site-bot/prefill/route.ts',
   ]);
 });
 
@@ -576,4 +577,134 @@ test('pay page and start flow gate navigation and "done" on the checked response
   assert.match(finish, /const sessionId = checkoutInitSessionId\(res\.ok, json\);\s*if \(!sessionId\) throw/);
   assert.match(finish, /router\.push\(`\/site-bot\/pay\/\$\{sessionId\}`\)/);
   assert.doesNotMatch(finish, /json\.sessionId|res\.json\(\)/);
+});
+
+test('GBP pre-fill GET stays disabled unless the off-production rehearsal flag is set (M1 B11)', async () => {
+  await assertGatedStub('src/app/api/site-bot/prefill/route.ts', 'GET', 'prefill_disabled');
+  // The paid handler is a thin wiring of the pure, unit-tested handler; it never writes the audit store.
+  const paid = read('src/app/api/site-bot/prefill/paid.ts');
+  assert.match(paid, /handlePrefillRequest\(/);
+  for (const forbidden of ['writeAuditRecord', 'bindAuditLocation', 'fs.', 'data/audits', 'searchPlacesByName']) {
+    assert.equal(paid.includes(forbidden), false, `unexpected prefill seam: ${forbidden}`);
+  }
+});
+
+test('audit layout renders children unchanged and never the buy-CTA provider unless the off-production rehearsal flag is set (M1 F1)', async () => {
+  const { default: ts } = await import('typescript');
+  const { default: vm } = await import('node:vm');
+  const layoutPath = path.join(root, 'src/app/(app)/site-bot/audit/layout.tsx');
+  const source = read('src/app/(app)/site-bot/audit/layout.tsx');
+  assert.equal(source.trim(), `import type { Metadata } from 'next';
+import type { ReactNode } from 'react';
+import { PaidBuyCtaProvider } from './paidBuyCta';
+
+export const metadata: Metadata = {
+  robots: { index: false },
+};
+
+// Paid-journey v2 M1 (F1): the audit result shows the buy CTA ONLY when
+// SITE_BOT_PAID_FLOW=1 on a non-production server. With the flag unset (prod
+// default) this returns children exactly as the audit-only release does, and
+// <PaidBuyCtaSlot> on the page renders nothing.
+export default function AuditLayout({ children }: { children: ReactNode }) {
+  if (process.env.SITE_BOT_PAID_FLOW === '1' && process.env.NODE_ENV !== 'production') {
+    return <PaidBuyCtaProvider>{children}</PaidBuyCtaProvider>;
+  }
+  return children;
+}`);
+  const code = ts.transpileModule(source, {
+    fileName: layoutPath,
+    compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022, esModuleInterop: true, jsx: ts.JsxEmit.ReactJSX },
+  }).outputText;
+  const load = env => {
+    const unexpected = [];
+    const deny = name => { unexpected.push(name); throw new Error(`unexpected ${name}`); };
+    const rendered = [];
+    const PaidBuyCtaProvider = new Proxy(function PaidBuyCtaProvider() {}, { get: (_, key) => deny(`PaidBuyCtaProvider.${String(key)}`) });
+    const exports = {};
+    vm.runInNewContext(code, {
+      exports,
+      require: name => {
+        if (name === 'react/jsx-runtime') return { jsx: (type, props) => { rendered.push(type); return { type, props }; } };
+        if (name === './paidBuyCta') return { PaidBuyCtaProvider };
+        return deny(`import: ${name}`);
+      },
+      process: gatedProcess(env, deny),
+      fetch: () => deny('fetch'),
+      console: new Proxy({}, { get: (_, name) => deny(`console.${String(name)}`) }),
+      Date: class { constructor() { deny('clock'); } static now() { deny('clock'); } },
+      setTimeout: () => deny('setTimeout'),
+      setInterval: () => deny('setInterval'),
+    }, { filename: layoutPath });
+    return { exports, unexpected, rendered, PaidBuyCtaProvider };
+  };
+  const children = new Proxy({}, { get: (_, key) => { throw new Error(`children inspected: ${String(key)}`); } });
+  for (const env of CLOSED_GATE_ENVS) {
+    const { exports, unexpected, rendered } = load(env);
+    assert.deepEqual(Object.keys(exports).sort(), ['default', 'metadata']);
+    assert.equal(exports.metadata.robots.index, false);
+    assert.equal(exports.default({ children }), children, JSON.stringify(env));
+    assert.deepEqual(rendered, []);
+    assert.deepEqual(unexpected, [], JSON.stringify(env));
+  }
+  for (const env of OPEN_GATE_ENVS) {
+    const { exports, unexpected, rendered, PaidBuyCtaProvider } = load(env);
+    const element = exports.default({ children });
+    assert.equal(element.type, PaidBuyCtaProvider);
+    assert.equal(element.props.children, children);
+    assert.deepEqual(rendered, [PaidBuyCtaProvider]);
+    assert.deepEqual(unexpected, []);
+  }
+});
+
+test('buy CTA renders nothing without the gated provider; only the audit layout renders the provider (M1 F1)', async () => {
+  const { default: ts } = await import('typescript');
+  const { default: vm } = await import('node:vm');
+  const React = (await import('react')).default;
+  const jsxRuntime = await import('react/jsx-runtime');
+  const { renderToStaticMarkup } = await import('react-dom/server');
+  const ctaPath = path.join(root, 'src/app/(app)/site-bot/audit/paidBuyCta.tsx');
+  const code = ts.transpileModule(read('src/app/(app)/site-bot/audit/paidBuyCta.tsx'), {
+    fileName: ctaPath,
+    compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022, esModuleInterop: true, jsx: ts.JsxEmit.ReactJSX },
+  }).outputText;
+  const copyCode = ts.transpileModule(read('src/lib/site-bot/intakeCopy.ts'), {
+    compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 },
+  }).outputText;
+  const copyExports = {};
+  vm.runInNewContext(copyCode, { exports: copyExports });
+  const exports = {};
+  vm.runInNewContext(code, {
+    exports, URLSearchParams,
+    require: name => {
+      if (name === 'react') return React;
+      if (name === 'react/jsx-runtime') return jsxRuntime;
+      if (name === 'next/link') return { __esModule: true, default: props => React.createElement('a', props) };
+      if (name === '@/lib/site-bot/intakeCopy') return copyExports;
+      throw new Error(`unexpected import: ${name}`);
+    },
+  }, { filename: ctaPath });
+  const auditId = '123e4567-e89b-42d3-a456-426614174000';
+  const slot = React.createElement(exports.PaidBuyCtaSlot, { auditId, placeId: 'ChIJ-synthetic' });
+  // Flag off: the layout returns children as-is, so the slot has no provider and renders nothing.
+  assert.equal(renderToStaticMarkup(slot), '');
+  const open = renderToStaticMarkup(React.createElement(exports.PaidBuyCtaProvider, null, slot));
+  assert.match(open, /data-paid-buy-cta="true"/);
+  assert.match(open, new RegExp(`href="/site-bot/start\\?auditId=${auditId}&amp;placeId=ChIJ-synthetic"`));
+  assert.equal(renderToStaticMarkup(React.createElement(exports.PaidBuyCtaProvider, null, React.createElement(exports.PaidBuyCtaSlot, { auditId }))), '');
+  const offenders = [];
+  const walk = dir => {
+    for (const entry of fs.readdirSync(path.join(root, dir), { withFileTypes: true })) {
+      const rel = path.join(dir, entry.name);
+      if (entry.isDirectory()) { walk(rel); continue; }
+      if (!/\.(ts|tsx|mjs|js)$/.test(entry.name) || /\.test\.|testkit/.test(entry.name)) continue;
+      if (/PaidBuyCtaProvider/.test(read(rel))) offenders.push(rel);
+    }
+  };
+  walk('src');
+  assert.deepEqual(offenders.sort(), ['src/app/(app)/site-bot/audit/layout.tsx', 'src/app/(app)/site-bot/audit/paidBuyCta.tsx']);
+  // The page holds only the slot; the start URL lives in the gated CTA module.
+  const page = read('src/app/(app)/site-bot/audit/page.tsx');
+  assert.match(page, /<PaidBuyCtaSlot auditId=\{identity\?\.auditId\} placeId=\{identity\?\.placeId\} \/>/);
+  assert.equal(page.includes('/site-bot/start'), false);
 });

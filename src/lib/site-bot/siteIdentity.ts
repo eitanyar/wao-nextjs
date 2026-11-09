@@ -110,10 +110,21 @@ export function validModelLabel(value: unknown): string {
   return label.length >= 2 && label.length <= MAX_LABEL_CHARS && HEBREW_LABEL.test(label) && HEBREW.test(label) ? label : '';
 }
 
+/** M1: localities the owner named in travelBoundary (listed only, max 3; overflow is never used). */
+function namedServedAreas(data: CollectedData): string[] {
+  const listed = data.servedAreaNames?.listed;
+  return Array.isArray(listed) ? listed.filter((item): item is string => typeof item === 'string').slice(0, 3) : [];
+}
+
+/**
+ * Owner-stated places: base, specificCities, then the M1 named served areas. Feeds the site
+ * identity serviceArea (schema areaServed, the brief's service-area fact, the place gates).
+ * City PAGES never come from here: they come from businessTruth.servedAreas (specificCities only).
+ */
 export function ownerPlaces(data: CollectedData): string[] {
   const seen = new Set<string>();
   const out: string[] = [];
-  for (const value of [clean(data.targetLocation), ...clean(data.specificCities).split(',')]) {
+  for (const value of [clean(data.targetLocation), ...clean(data.specificCities).split(','), ...namedServedAreas(data)]) {
     const place = clean(value);
     if (!place || seen.has(norm(place))) continue;
     seen.add(norm(place));

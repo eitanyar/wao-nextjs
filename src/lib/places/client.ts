@@ -22,6 +22,7 @@
 
 const SEARCH_TEXT_URL = 'https://places.googleapis.com/v1/places:searchText';
 const LEGACY_DETAILS_URL = 'https://maps.googleapis.com/maps/api/place/details/json';
+const DETAILS_URL = 'https://places.googleapis.com/v1/places/';
 
 // Byte-exact field mask from spec 2026-08-25_001 Requirement 1 + places.location (spec 2026-08-27_001).
 const FIELD_MASK =
@@ -154,6 +155,29 @@ export function mapPlace(p: RawPlace): NormalizedPlace {
   }
 
   return out;
+}
+
+/**
+ * Place Details (New) for ONE place id (Site Bot M1 pre-fill). The caller supplies the
+ * field mask and must already have proven the id belongs to the requester's audit; this
+ * wrapper never caches (see TERMS NOTE above). Throws when the key is missing and on any
+ * non-2xx (status only: the body may echo the request).
+ */
+export async function getPlaceDetailsRaw(placeId: string, fieldMask: string): Promise<unknown> {
+  if (!hasPlacesKey()) {
+    throw new Error('Places API key not configured (PLACES_API_KEY)');
+  }
+  const res = await fetch(`${DETAILS_URL}${encodeURIComponent(placeId)}?languageCode=he&regionCode=IL`, {
+    method: 'GET',
+    headers: {
+      'X-Goog-Api-Key': process.env.PLACES_API_KEY!,
+      'X-Goog-FieldMask': fieldMask,
+    },
+  });
+  if (!res.ok) {
+    throw new Error(`Places details failed: ${res.status}`);
+  }
+  return res.json();
 }
 
 /**

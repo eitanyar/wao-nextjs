@@ -35,7 +35,8 @@ export function buildSiteResearchInput(
       ...(collectedData.travelBoundary ? { travelBoundary: { value: collectedData.travelBoundary, owner } } : {}),
       servedAreas: (collectedData.specificCities ?? '').split(',').map(value => value.trim()).filter(Boolean).map(value => ({ value, owner })),
       excludedAreas: (collectedData.geographicExclusions ?? []).map(value => ({ value, owner })),
-      ...(serviceModel === 'fixed' ? { customerTravel: { value: true, owner } } : {}),
+      // M1: 'mixed' (hybrid) is the owner saying customers also come to them, same as 'fixed'.
+      ...(serviceModel === 'fixed' || serviceModel === 'hybrid' ? { customerTravel: { value: true, owner } } : {}),
     },
     seeds: services,
   };

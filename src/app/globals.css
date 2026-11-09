@@ -1439,3 +1439,23 @@ html.wao-a11y-high-contrast .wao-a11y-panel button[aria-pressed="true"] { backgr
 html.wao-a11y-high-contrast .wao-a11y-statement { color: #ffdf00; }
 html.wao-a11y-underline-links a { text-decoration: underline !important; text-underline-offset: 3px; }
 @media (prefers-reduced-motion: reduce) { .wao-a11y-control * { transition: none !important; animation: none !important; } }
+
+/* --- Site Bot intake (/site-bot/start, paid-journey v2 M1) --- */
+.wao-intake .wao-intake-choice { flex: 1 1 160px; min-height: 44px; padding: 10px 16px; border: 1px solid var(--accent); border-radius: var(--radius-pill); background: transparent; color: var(--text); font: inherit; cursor: pointer; }
+.wao-intake .wao-intake-choice:hover { background: rgba(74, 222, 128, 0.08); }
+.wao-intake .wao-intake-choice:focus-visible,
+.wao-intake .wao-intake-field:focus-visible,
+.wao-intake .btn-primary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.wao-intake .wao-intake-field,
+.wao-intake .btn-primary { scroll-margin-bottom: 120px; }
+.wao-intake .btn-primary:disabled,
+.wao-intake .btn-primary:disabled:hover { background: transparent; color: var(--muted); border: 1px dashed var(--muted); box-shadow: none; transform: none; cursor: not-allowed; }
+/* The cookie banner is fixed at the bottom; keep the card, confirm and chat input reachable above it. */
+body:has(.wao-cookie-banner) .wao-intake { padding-bottom: 220px; }
+body:has(.wao-cookie-banner) .wao-intake .wao-intake-field,
+body:has(.wao-cookie-banner) .wao-intake .btn-primary { scroll-margin-bottom: 240px; }
+@media (max-width: 640px) {
+  body:has(.wao-cookie-banner) .wao-intake { padding-bottom: 380px; }
+  body:has(.wao-cookie-banner) .wao-intake .wao-intake-field,
+  body:has(.wao-cookie-banner) .wao-intake .btn-primary { scroll-margin-bottom: 400px; }
+}

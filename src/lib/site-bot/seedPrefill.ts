@@ -1,5 +1,6 @@
 import type { NormalizedPlace } from '../places/client';
 import type { CollectedData } from '../bot/prompts';
+import { periodsToBusinessHours, type PrefillSnapshot } from './placePrefill';
 
 export const FIXED_LOCATION_TYPES: string[] = [
   'restaurant',
@@ -73,5 +74,23 @@ export function seedFromAudit(place: NormalizedPlace): Partial<CollectedData> {
     result.serviceModel = 'field';
   }
 
+  return result;
+}
+
+/**
+ * Paid-journey v2 M1 (B11): sibling of seedFromAudit for the fresh Places Details
+ * snapshot from /api/site-bot/prefill. Adds what the audit store never kept: the GBP
+ * category (as businessNiche), opening hours (owner-hours format) and website. Everything
+ * stays editable on the intake card. No rating or review: Places content is never
+ * republished on client sites (reviews come from the owner's own GBP in M4).
+ */
+export function seedFromPrefillSnapshot(snapshot: PrefillSnapshot): Partial<CollectedData> {
+  const result = seedFromAudit({ ...snapshot, types: snapshot.types ?? [] });
+  const niche = snapshot.primaryTypeDisplayName?.trim();
+  if (niche) result.businessNiche = niche;
+  const hours = periodsToBusinessHours(snapshot.regularOpeningHours?.periods);
+  if (hours) result.businessHours = hours;
+  if (snapshot.websiteUri) result.websiteUri = snapshot.websiteUri;
+  result.hasGoogleBusiness = true;
   return result;
 }

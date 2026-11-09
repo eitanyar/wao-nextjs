@@ -8,6 +8,7 @@ import ts from 'typescript';
 
 const requireCompiled = createRequire(path.join(process.cwd(), 'dist/package.json'));
 const { assertBoundedPageBrief, compilePageBrief } = requireCompiled('./lib/site-bot/research/pageBrief.js');
+const siteSlug = requireCompiled('./lib/site-bot/siteSlug.js');
 
 const routePath = path.join(process.cwd(), 'src/app/api/site-bot/generate/route.ts');
 const source = fs.readFileSync(routePath, 'utf8');
@@ -109,6 +110,7 @@ function harness({ authorized = true, simulation = false, target = 'absent', dos
       },
     },
     '@/lib/deployment/deploy-access': { isSafeDeploymentSlug: slug => slug === 'synthetic-site' },
+    '@/lib/site-bot/siteSlug': siteSlug,
     '@/lib/site-bot/researchedSiteGeneration': {
       assertResearchedGenerationReady: (actual, researchId) => {
         expectResearch('gate');
@@ -348,4 +350,21 @@ test('simulation still returns its copy without dossier, generation or persisten
   });
   assert.deepEqual(route.calls, counts({ path: 0, stat: 0, dossier: 0, simulated: 1, cwd: 0 }));
   assert.deepEqual(route.order, ['auth', 'json', 'simulated']);
+});
+
+test('M1 (B15): without an explicit slug, collectedData.preferredSlug wins, then the website domain', async () => {
+  const { slug: _explicit, ...withoutSlug } = input;
+  const cases = [
+    [{ businessNiche: 'synthetic-niche', preferredSlug: 'synthetic-site', websiteUri: 'https://other-brand.co.il', businessName: 'Other Name' }, 200],
+    [{ businessNiche: 'synthetic-niche', websiteUri: 'https://www.synthetic-site.co.il/', businessName: 'Other Name' }, 200],
+    [{ businessNiche: 'synthetic-niche', businessName: 'Synthetic Site' }, 200],
+    [{ businessNiche: 'synthetic-niche', preferredSlug: 'Not Safe!' }, 400],
+  ];
+  for (const [collectedData, status] of cases) {
+    const route = harness({ simulation: true });
+    const result = await route.post({ ...withoutSlug, collectedData, simulation: true });
+    assert.equal(result.status, status, JSON.stringify(collectedData));
+    if (status === 200) assert.equal(result.body.slug, 'synthetic-site');
+    else assert.deepEqual(result.body, { error: 'invalid_deployment_slug', deployable: false });
+  }
 });

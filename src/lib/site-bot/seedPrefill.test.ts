@@ -1,6 +1,7 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { seedFromAudit, PREFILLABLE_KEYS } from './seedPrefill';
+import { seedFromAudit, seedFromPrefillSnapshot, PREFILLABLE_KEYS } from './seedPrefill';
+import { buildFixtureSnapshot } from './placePrefill';
 import type { NormalizedPlace } from '../places/client';
 
 describe('seedPrefill', () => {
@@ -77,5 +78,27 @@ describe('seedPrefill', () => {
       'whatsappNumber',
       'serviceModel',
     ]);
+  });
+});
+
+describe('seedFromPrefillSnapshot (M1)', () => {
+  it('adds niche, hours and website to the audit seed; never a Places rating or review', () => {
+    const snapshot = buildFixtureSnapshot({ placeId: 'fixture-place-1', displayName: 'Synthetic Business', formattedAddress: '1 Synthetic St' });
+    const seeded = seedFromPrefillSnapshot(snapshot);
+    assert.equal(seeded.businessName, 'Synthetic Business');
+    assert.equal(seeded.streetAddress, '1 Synthetic St');
+    assert.equal(seeded.targetLocation, 'Fixture City');
+    assert.equal(seeded.phone, '03-555-0123');
+    assert.equal(seeded.serviceModel, 'field');
+    assert.equal(seeded.businessNiche, 'Plumber');
+    assert.equal(seeded.businessHours, 'Sun-Thu 08:00-18:00, Fri 08:00-13:00');
+    assert.equal(seeded.websiteUri, 'https://www.fixture-plumbing.example/');
+    for (const key of ['starRating', 'reviewCount', 'reviewQuote']) assert.equal(key in seeded, false, key);
+    assert.equal(seeded.hasGoogleBusiness, true);
+  });
+
+  it('a bare snapshot seeds only what it has', () => {
+    const seeded = seedFromPrefillSnapshot({ placeId: 'p', displayName: 'Bare', formattedAddress: '', types: [] });
+    assert.deepEqual(seeded, { businessName: 'Bare', serviceModel: 'field', hasGoogleBusiness: true });
   });
 });

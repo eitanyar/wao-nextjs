@@ -26,6 +26,11 @@ export interface CollectedData {
   specificCities?: string;
   streetAddress?: string; // Site Bot — only asked when serviceModel is storefront-based; feeds LocalBusiness schema
   travelBoundary?: string;
+  // Site Bot M1: localities the owner literally named in travelBoundary, matched against
+  // config/market-scanner/areas.json at checkout init (never trusted from the client). Feed
+  // schema areaServed + the service-area fact only; NEVER city pages (those need a per-city
+  // owner fact). listed = up to 3 besides the base city; overflow kept for the M2b one-tap confirm.
+  servedAreaNames?: { listed: string[]; overflow: string[]; source: 'travel_boundary'; ownerConfirmed: boolean };
   geographicExclusions?: string[];
   researchGateApprovals?: Record<string, { evidenceDigest: string; approvedAt: string }>;
   researchGateAnswers?: Record<string, unknown>;
@@ -58,6 +63,7 @@ export interface CollectedData {
 
   // Digital presence
   hasGoogleBusiness?: boolean;
+  websiteUri?: string; // Site Bot M1: the GBP websiteUri (owner-confirmed on the intake card); slug source, existing-domain input for M4
   googleMapsUrl?: string; // GBP / Google Maps listing URL; feeds researched-site schema sameAs only when present (not collected yet)
   gbpVerified?: boolean; // true = client's GBP listing already shows on Maps/Search (fast-track
     // Manager-access onboarding); false = not yet claimed/verified (needs owner-driven Google

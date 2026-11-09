@@ -65,6 +65,10 @@ orchestration, not re-enabling. New order (critical path = a site that generates
 - **M2a generation engine (M/L):** copy limits in the prompt + bounded repair pass (B4); research → `copy_ready`
   → `compilePageBrief` orchestration (B3). Acceptance: fixture business generates a valid site record ≥ 9/10 runs.
 - **M1** pre-fill + ≤ 3 questions + buy CTA on the result (B11, B15, F1–F4; truth-gap fields asked up front).
+  **DONE 2026-11-09** (flag-gated): Places Details pre-fill on the audit's confirmed placeId (no reviews/rating —
+  Places ToS; reviews come from owner GBP in M4), confirm card + 3 questions (priorityServices / travelBoundary / usp),
+  owner-named cities → `servedAreaNames` → areaServed only (no extra city pages; Yonatan), slug from domain/Latin name.
+  Carried to M2b: visible service-areas list on the base page, editable slug + one-tap area confirm on the preview.
 - **M2b** preview before pay on noindex staging host (B2, B12, F6); customer-scoped session replaces the admin gate (B1).
 - **M3** ₪199/mo on the existing subscriptions engine + cancel + status page + login (B6, F5, F7, F12).
 - **M4** GBP add-manager with real verification + UI (B8, F11); existing-domain path: domain capture, DNS/MX read

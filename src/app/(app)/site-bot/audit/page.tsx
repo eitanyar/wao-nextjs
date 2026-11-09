@@ -12,6 +12,7 @@ import type { ReadyIdentity, Candidate } from '@/lib/site-bot/auditJourneyState'
 import { createHelpSubmission, helpAttemptKey } from '@/lib/site-bot/helpSubmission.mjs';
 import PrivacyConsent from '@/components/PrivacyConsent';
 import HELP_COPY from '@/content/site-bot-help-form-copy.json';
+import { PaidBuyCtaSlot } from './paidBuyCta';
 
 type PageState = 'form' | 'loading' | 'pick' | 'confirm' | 'ready' | 'not_found' | 'recovery';
 interface Operation { generation: number; controller: AbortController; urlKey: string }
@@ -706,6 +707,9 @@ function AuditContent() {
               {auditResult.dimensions.map(renderDimensionCard)}
             </div>
             <p style={{ whiteSpace: 'pre-line' }}>{COPY.SB_CHECKLIST_CANDOR}</p>
+
+            {/* M1 (F1): renders nothing unless the audit layout opened the paid-flow gate. */}
+            <PaidBuyCtaSlot auditId={identity?.auditId} placeId={identity?.placeId} />
 
             {renderHelpForm()}
           </div>

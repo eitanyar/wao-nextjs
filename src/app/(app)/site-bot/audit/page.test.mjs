@@ -32,6 +32,13 @@ const acquisitionCopy = load(local('src/lib/site-bot/acquisitionCopy.ts')).ACQUI
 const stateModule = load(local('src/lib/site-bot/auditJourneyState.ts'));
 // Approved help-form copy is asserted from the same JSON module the page imports, never typed here.
 const helpCopy = JSON.parse(fs.readFileSync(local('src/content/site-bot-help-form-copy.json'), 'utf8'));
+// M1 (F1): the real buy-CTA slot module. These harnesses render the page without the audit
+// layout, i.e. with the paid-flow gate closed, so the slot must render nothing (prod output).
+const intakeCopy = load(local('src/lib/site-bot/intakeCopy.ts'));
+const paidBuyCta = load(fileURLToPath(new URL('./paidBuyCta.tsx', import.meta.url)), {
+  react: React, 'react/jsx-runtime': jsx, 'next/link': { __esModule: true, default: props => React.createElement('a', props) },
+  '@/lib/site-bot/intakeCopy': intakeCopy,
+});
 const fakeDocument = { elements: {}, getElementById(key) { return this.elements[key] ?? null; } };
 const privacyStub = props => React.createElement('input', { type: 'checkbox', checked: props.checked, onChange: props.onChange });
 const id = '123e4567-e89b-42d3-a456-426614174000';
@@ -97,6 +104,7 @@ function harness(initial = '', adapter = () => fail('unplanned fetch'), storage 
     '@/lib/site-bot/helpSubmission.mjs': { createHelpSubmission, helpAttemptKey },
     '@/components/PrivacyConsent': { __esModule: true, default: privacyStub },
     '@/content/site-bot-help-form-copy.json': helpCopy,
+    './paidBuyCta': paidBuyCta,
   }, { document: fakeDocument, crypto: { randomUUID: () => otherId }, window: { location,
     sessionStorage: { getItem: key => storage.get(key) ?? null, setItem: (key, value) => storage.set(key, value) },
     history: { replaceState(_state, _unused, url) { location.href = String(url); dirty = true; } } },
@@ -174,6 +182,17 @@ test('fresh sole lookup requires name/address confirmation, authoritative tuple 
   await view.submit(); await view.flush(); await confirm(view); report(view);
   assert.deepEqual(JSON.parse(view.calls[0].options.body), { businessName: 'Synthetic Lookup' });
   assert.equal(view.calls.length, 4);
+});
+
+test('M1: with the paid-flow gate closed the confirmed report carries the CTA slot but renders no CTA or start link', async () => {
+  const view = harness('', async url => response(url === '/api/site-bot/audit-lookup' ? { auditId: id } : ready()));
+  await view.flush(); await view.submit(); await view.flush(); await confirm(view); report(view);
+  const slot = view.all().find(node => node.type === paidBuyCta.PaidBuyCtaSlot);
+  assert.ok(slot, 'slot sits in the confirmed report');
+  assert.deepEqual([slot.props.auditId, slot.props.placeId], [id, 'place-1']);
+  const html = view.html();
+  assert.doesNotMatch(html, /data-paid-buy-cta|\/site-bot\/start/);
+  assert.equal(html.includes(intakeCopy.INTAKE_COPY.M1_CTA_LABEL), false);
 });
 
 test('confirmed report keeps the free result visible and permits an optional consented durable help request', async () => {

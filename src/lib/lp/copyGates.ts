@@ -243,7 +243,7 @@ export interface GateReviewFlag {
 const HEBREW_LETTER = '\u05D0-\u05EA';
 const HEBREW = new RegExp(`[${HEBREW_LETTER}]`);
 // vav, shin, he, bet, kaf, lamed, mem: the attachable prefix letters.
-const PREFIX_LETTERS = '\u05D5\u05E9\u05D4\u05D1\u05DB\u05DC\u05DE';
+export const PREFIX_LETTERS = '\u05D5\u05E9\u05D4\u05D1\u05DB\u05DC\u05DE';
 
 /** Fields the system fills (never model-authored) are exempt from text gates. */
 export const GATE_EXEMPT_FIELDS: readonly string[] = ['heroCta', 'serviceItems', 'reviewFeatured', 'faqItems', 'scarcityLine'];

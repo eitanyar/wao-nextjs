@@ -273,7 +273,8 @@ export function buildPageBriefs(dossier: SiteResearchDossier, data: CollectedDat
   const review = effectiveReviewQuote(data) ?? '';
   if (review) proof.push(approved('proof-review', `Customer review quote (owner-supplied; quote verbatim or not at all): ${review}${clean(data.starRating) ? ` | star rating: ${clean(data.starRating)}` : ''}`));
   // C5: the owner's own wording, never widened. Held city evidence never reaches the brief (compactEvidence drops it).
-  const ownerArea = clean(data.specificCities) || location;
+  // M1: the localities the owner named in travelBoundary join the stated area (never city pages).
+  const ownerArea = [...new Set([clean(data.specificCities) || location, ...(data.servedAreaNames?.listed ?? []).slice(0, 3).map(clean)].filter(Boolean))].join(', ');
   const areaLabels = identity.serviceArea.join(', ');
   const localFacts = [
     ...(ownerArea ? [approved('local-area', `Service area (owner-stated; name only these places, never a wider area): ${ownerArea}${areaLabels && areaLabels !== ownerArea ? ` | display names: ${areaLabels}` : ''}`)] : []),
