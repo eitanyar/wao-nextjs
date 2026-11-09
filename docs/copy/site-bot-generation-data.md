@@ -1015,3 +1015,227 @@ Gates vs prompt-only in section 22:
 - **Deleted run-log warnings**: `service_details_opener`; `duplicate_about_opening`, except homepage against hub.
 - **Prompt-only**: B1–B6 as wording.
 - **Handoffs**: Noa to proof `servicesHeadlineOptions` and `trustBarFillerPhrases`. Yonatan to confirm that the services H2 carries no keyword. Maya to confirm the 24-character trust-bar item on a 360 px screen.
+
+## 23. voiceRules M2b.2 (Tamar, from the M2b.1d eval read; scope approved by Adam; Noa's eval slips folded in)
+
+Source: the 18 saved M2b.1d site records in `scratch/m2b1d/eval/` (all five section 22 fields blocking, 18 of 18 valid), their `pages.json` warnings, and the M2a.7 records for comparison. Rendered fields are as in `RESEARCHED_RENDERED_FIELDS` (M2b.1f): `aboutBlurb`, `guaranteeBlock`, `responseTimeBadge`, `stickyBarLine` and `serviceItems` do **not** render. The same quote convention as sections 14–22 applies.
+
+### 23.1 The read: what changed, what didn't
+
+- **Fixed: the hero promise no longer echoes through the page.** In M2a.7 plumber-1 the tiles promise was rendered 5 times. In M2b.1d plumber-1 it is in the hero only ("נזילה בבית? אינסטלטור בחולון — בלי לשבור אריחים"). The about headline is now "12 שנה מאתר נזילות בחולון", and each card describes its own job.
+- **Correction to my first M2b.1d read.** I counted the warranty "about 5 times" on plumber-1, which included `aboutBlurb` and `guaranteeBlock`. Neither renders. The rendered count is 3: the hero subheadline, the trust bar and the about body. All 24 `fact_repeat` warnings and both `city_prefix` warnings are in unrendered fields (`aboutBlurb` and `responseTimeBadge`). The homeowner sees none of them.
+- **Not fixed: the owner's tool.** All four plumber usps name a camera inspection. The camera appears in 1 of 4 about bodies:
+  - plumber-3 (the target): "אני מגיע עם מצלמה, סורק את הצנרת ומראה לך על המסך איפה הנקודה"
+  - plumber-1 and plumber-4 invent a vague method: "עובר קיר־קיר עד שאני מוצא את הנקודה"
+  - **plumber-2 states a false fact:** "מצמיד ציוד אקוסטי לקיר ומקשיב עד שאני מוצא את הנקודה". This owner uses a camera. The acoustic scene is the section 22.3 B6 example, copied into the wrong owner. My example caused it.
+- **New: the about headline repeats trust tile 1.** 16 of 18 homepage about headlines start with the years in the trade, and the years are already in the first trust tile. The worst case is ac-repair-1: the tile "10 שנים בתחום", then the headline "10 שנים בתחום, בראשון לציון". Most of the rest are the same move in different words: "12 שנה מאתר נזילות", "9 שנות איתור נזילות ברחובות", "יוסי כהן, 15 שנה בשטח". The two that don't do it read better: "פותח לוח, בודק כל מעגל" (electrician-4) and "יוסי כהן, אינסטלטור בתל אביב" (hebrew-plumber-4).
+- **New: the explaining sentence moved into card 1.**
+  - plumber-2: card 1 "מאתר את מקור הנזילה, מסביר לך מה מצאתי ורק אז מתחיל לתקן"; about body "מסביר לך מה מצאתי ורק אז מתחיל לעבוד".
+  - plumber-1: card 1 "אני עובר קיר־קיר עד שאני מוצא את מקור הנזילה, ומסביר לך מה מצאתי לפני שאני מתחיל"; about body "אני מגיע, עובר קיר־קיר עד שאני מוצא את הנקודה, ומסביר לך מה מצאתי."
+- **New: one phrase repeated across the card set.** electrician-2 card 1 "…הלוח מחזיק עומס בלי קפיצות"; card 3 "…הרכב נטען בלי קפיצות." The about body ends "…לוח שמחזיק עומס בלי קפיצות." (Noa)
+- **Hebrew slips (Noa, confirmed):**
+  - warranty plus a bare duration, with the article: hebrew-plumber-1 about body "אתה רואה את התיקון ואת האחריות שנה." It is ungrammatical, and a warranty is received, not seen. The fix is "אתה רואה את התיקון ומקבל עליו אחריות לשנה."
+  - preposition on the first town only: "הגעה באותו יום בחולון ובת ים" (plumber-1 and plumber-3, `responseTimeBadge`, not rendered). The fix is "בחולון ובבת ים".
+  - card punctuation: electrician-2 cards 2 and 3 end with "." and card 1 doesn't.
+- **Visible across runs, not inside one site: the about body template.** About 12 of 18 bodies open "אתה עומד ב…", then "אני מגיע, … עד שאני מוצא את הנקודה", then the warranty. A homeowner sees one site, so this isn't a gate. It is noted for the day two clients in the same trade compare their sites.
+
+### 23.2 Gate rulings
+
+**(a) `uspToolRequired` and `foreignTool`: new hard gates.** The tool is the proof behind the promise (section 22.1), and naming the wrong tool is a false claim about the owner.
+- **Tool groups**: an owner's usp matches a group when it contains one of the group's `uspKeywords` (English: lower-case it, then plain substring) or one of its `he` stems (Hebrew usp: plain substring).
+- **`uspToolRequired`**: on a page that renders the about section, when the usp matches a group, `aboutPageBody` must contain one of that group's `he` stems. A usp can match two groups (a "thermal camera" matches `camera` and `thermal`), and "מצלמה תרמית" satisfies both.
+- **`foreignTool`**: any rendered field that contains a `he` stem of a group the usp does not match fails. It goes into `ALWAYS_BLOCKING_RULES` (it's in the same class as `claim`). A hit inside an owner-confirmed service label is exempt, so a security-camera installer can name his service.
+- **Deliberately absent**: the pressure gauge and the meter. They are every technician's ordinary tools, not a differentiator. The AC bodies' "מחבר את מד הלחץ" stays allowed.
+- **`thermal`** has its own `he` list, narrower than the section 12 `thermalTokens` (Noa M2b.2). The bare stem "תרמי" also matches "בידוד תרמי" (AC pipe insulation) and "מפסק תרמי" / "ממסר תרמי" (electrical protection), which are ordinary trade words. As an always-blocking `foreignTool` stem it would fail AC and electrician pages. The list keeps the feminine forms that go with a camera or a scan ("מצלמה תרמית", "סריקה תרמית", "מצלמות תרמיות"), plus "צילום תרמי" and "תרמוגרפ".
+- **A thermal match also counts as a camera match.** A usp that matches `thermal` only ("thermal imaging", "תרמוגרפיה") would otherwise fail `foreignTool` on its own "מצלמה תרמית", because "מצלמ" is a camera stem.
+- **On M2b.1d**: `uspToolRequired` fails plumber-1, -2 and -4; plumber-3 and split-hours-1 and -2 pass. `foreignTool` fails plumber-2. The other niches name no tool in their usp, so they get no requirement.
+
+~~~json
+{
+  "uspToolGroups": {
+    "camera": { "uspKeywords": ["camera", "endoscope", "borescope"], "he": ["מצלמ", "אנדוסקופ", "צילום צנרת", "צילום הצנרת", "צילום ביוב"] },
+    "acoustic": { "uspKeywords": ["acoustic", "listening device", "geophone"], "he": ["אקוסט", "גיאופון", "גאופון", "האזנה"] },
+    "thermal": { "uspKeywords": ["thermal", "infrared", "thermograph"], "he": ["תרמית", "תרמיות", "צילום תרמי", "תרמוגרפ"] }
+  },
+  "uspToolRequired": { "field": "aboutPageBody", "scope": "pages that render the about section" },
+  "foreignTool": { "fields": "every rendered field", "blocking": "always", "exempt": "a stem hit inside an owner-confirmed service label" }
+}
+~~~
+
+**(b) `aboutHeadlineNoTrustRepeat`: new hard gate, no new Hebrew.** On a page that renders the about section, `aboutPageHeadline` fails when either of these holds:
+- it shares a digit run with any `trustBarItems` entry on the same page
+- it contains any trimmed `trustBarItems` entry verbatim
+
+The prompt side is C2 below, which replaces the option list of B5. Years are no longer an option, and the headline leads with the method or the place.
+- **On M2b.1d**: it fails about 16 of 18 homepages, every headline that starts with the years. That is expected. The rescore only confirms it fires where designed, and C2 is the fix.
+
+~~~json
+{
+  "aboutHeadlineNoTrustRepeat": {
+    "field": "aboutPageHeadline",
+    "failWhen": ["shares a digit run with any trustBarItems entry on the page", "contains any trimmed trustBarItems entry verbatim"],
+    "scope": "pages that render the about section"
+  }
+}
+~~~
+
+**(c) `aboutCardEcho`: new hard gate, no Hebrew.** On a page that renders the about section, `aboutPageBody` and any `serviceDetails[].description` fail when they share a run of 4 or more consecutive words.
+- **Tokenizing**: remove , . ; : ! ? and the em-dash, then split on whitespace. A maqaf, geresh or gershayim stays inside its word. Before comparing, turn an ASCII hyphen inside a word into a maqaf, and remove one leading ו from every token (Noa M2b.2: "ומסביר" and "מסביר" are the same words, and the conjunction is the only clitic safe to strip). Tokens must then match exactly. The other prefixes (ה, ב, ל, מ, ש) stay, because they change the meaning.
+- **`aboutBlurb`**: it doesn't render, so it doesn't count.
+- **On M2b.1d**: it fails plumber-2 ("מסביר לך מה מצאתי ורק אז מתחיל", 7 words) and plumber-1 ("עובר קיר־קיר עד שאני מוצא את", 6 words; "ומסביר לך מה מצאתי", 4 words). electrician-2 passes, because "מחזיק" and "שמחזיק" are different tokens, so its "בלי קפיצות" echo between card and body is left to the prompt (C3).
+- **Why not 3 words**: at 3, "אני פותח את" (electrician-2, card 1 and body) would fail, and a shared opening verb is not an echo.
+
+~~~json
+{
+  "aboutCardEcho": {
+    "fields": ["aboutPageBody", "serviceDetails[].description"],
+    "minSharedWords": 4,
+    "tokenize": "remove , . ; : ! ? and the em-dash; split on whitespace; maqaf, geresh and gershayim stay inside the word; ASCII hyphen inside a word becomes maqaf; strip one leading vav from every token; then exact token match",
+    "scope": "pages that render the about section"
+  }
+}
+~~~
+
+**`cardPhraseEcho` (Noa's in-set repetition): warn-only for the rescore, then a hard gate if every hit is a real echo.** Two `serviceDetails[].description` entries on one page fail when they share two adjacent words, each of 3 or more Hebrew letters, with the same tokenizing as `aboutCardEcho`. On M2b.1d it catches electrician-2 ("בלי קפיצות"). A two-word window can overfire on trade vocabulary shared by two services, which is why the rescore decides. If it overfires, raise it to 3 words. Don't drop it.
+
+~~~json
+{
+  "cardPhraseEcho": {
+    "field": "serviceDetails[].description",
+    "minSharedWords": 2,
+    "minHebrewLettersPerWord": 3,
+    "tokenize": "as aboutCardEcho",
+    "severity": "warn for the rescore; hard gate if every rescore hit is a real echo"
+  }
+}
+~~~
+
+**(d) Warranty at the end of the about body: prompt-only.** `guaranteeBlock` renders on no page today, so the condition "close on the warranty only when the guarantee block isn't rendered" is always met. The real limit is the fact cap in (f). Write C4 conditionally anyway, so the rule holds the day the guarantee block starts rendering. The engineer passes `guaranteeBlockRendered` into the prompt.
+
+**(e) `city_prefix`: it is already a hard gate in every rendered field; extend it to ל and מ, and build the place phrases in code.**
+- **Today**: `cityPrefixHit` runs on every field, and any hit in a rendered field blocks. Both M2b.1d hits were in `responseTimeBadge`, which doesn't render, so they were correctly warnings. Don't add `city_prefix` to `ALWAYS_BLOCKING_RULES`. Blocking invisible text spends repair budget on nothing the reader sees.
+- **Why it is a real error**: a locative list repeats its preposition on every town. "בחולון ובת ים" reads as "in Holon, and Bat Yam", and ב-initial towns hide the missing letter. The forms are "בחולון ובבת ים", "לבני ברק", "מבאר שבע".
+- **Extension (Noa)**: the same rule for ל and מ. The first place's locative letter is the last letter of its prefix (ב, ל or מ), and every later place in the same list needs that same letter as the last letter of its prefix.
+- **List joins only**: a later place belongs to the list only when the text between it and the previous place is ", " or a single space with the place's prefix starting with ו. This keeps "מחולון ועד בת ים" and "מחולון לבת ים" correct (neither is a list). The current ב check has no join condition. Applying the join condition to ב as well loses no M2b.1d hit, since both were list joins.
+- **Build in code (Noa's proposal, agreed)**: wherever a field is a fixed template over the owner's area, build it from the area array instead of letting the model type it:
+  - the trust-bar area tile: no prefix, joined with ", " and a final ו ("חולון ובת ים"; "תל אביב, גבעתיים ורמת גן")
+  - the place part of `responseTimeBadge`: the preposition on every town ("בחולון ובבת ים")
+  - Plain concatenation is correct for every town, including the ב-initial ones (ב + "בת ים" = "בבת ים"; ו + ב + "בת ים" = "ובבת ים"). No town needs a special case.
+- **`bInitialPlaces`**: needed only for C5 (the model writes free-prose lists itself) and for the engineer's tests. It is not a gate input. It lists ב-initial municipalities and large towns. Hyphenated names (Noa ruling): write them with the maqaf (U+05BE), never an ASCII hyphen, and list them under the name owners actually type. So "באקה אל־גרביה" is added (a city), while "בנימינה" stays as typed instead of the official "בנימינה־גבעת עדה". Tests should treat a space, an ASCII hyphen and a maqaf as the same separator, as the existing place-hyphen check (`placeHyphenHit`) already does.
+
+~~~json
+{
+  "cityPrefixLetters": ["ב", "ל", "מ"],
+  "cityPrefixListJoins": [", ", " ו"],
+  "placeListBuild": { "separator": ", ", "lastJoin": "ו", "trustTilePrefix": "", "badgePrefixOnEveryPlace": true },
+  "bInitialPlaces": ["בת ים", "בני ברק", "באר שבע", "בית שמש", "בית שאן", "ביתר עילית", "בית דגן", "באר יעקב", "בנימינה", "בני עי״ש", "בסמת טבעון", "בית אל", "בית ג׳ן", "באקה אל־גרביה"]
+}
+~~~
+
+**(f) Fact cap on one scroll: a hard gate, by fixing the counting scope of the existing `fact_repeat`.** Both counters exist already. What's wrong is what they count:
+- **Scope**: count only the page's rendered fields. Today the counters also run over `aboutBlurb` and `responseTimeBadge`, which is the source of all 24 warnings. Field order then decides which field gets blamed, and invisible text uses up the reader's budget.
+- **Phrase facts** (warranty, licence and other worded proof points): at most 3 rendered fields per page, and **the trust bar counts as one** on research sites. The reader sees the tile, and the old reason for exempting it was a generation detail, not a reading one. `guaranteeBlock` and `responseTimeBadge` stay exempt (they don't render).
+- **Digit facts** (years, months of warranty, licence number, minutes): keep `FACT_REPEAT_MAX` at 2. It is already within the cap of 3, and a number said three times is louder than a phrase said three times. If Adam wants one uniform 3, raising it is a one-line change, and I wouldn't object.
+- **On M2b.1d**: plumber-1's warranty is in 3 rendered fields (hero subheadline, trust bar, about body), so it passes. The rescore gives the full count.
+
+~~~json
+{
+  "factCountScope": "rendered fields of the page only",
+  "factRepeatMax": 2,
+  "factPhraseRepeatMax": 3,
+  "factPhraseExemptFieldsResearch": ["guaranteeBlock", "responseTimeBadge"]
+}
+~~~
+
+**`warrantyDefiniteBareDuration` (Noa's slip 1): a hard gate, narrowed from Noa's pattern.** Noa proposed failing every "אחריות" plus a bare duration without ל or של. Bare indefinite "אחריות שנה", "אחריות שנתיים" and "אחריות 6 חודשים" are standard trade Hebrew, and the hebrew-plumber owner wrote "אחריות שנה על כל עבודה" himself. As a gate it would fail most trust bars and the owner's own words. The real error is the definite form: "האחריות שנה" is a broken construct. So the gate fails the definite form only, in every rendered field. The indefinite stays allowed, and the ל form is preferred in running sentences (C4).
+
+~~~json
+{
+  "warrantyDefiniteBareDuration": {
+    "pattern": "(?<![\\u05D0-\\u05EA])[ובלמכש]{0,2}ה(?:אחריות|ערבות)\\s+(?:שנה|שנתיים|חודש|חודשיים|חצי שנה|\\d+\\s*(?:שנים|שנה|חודשים))(?![\\u05D0-\\u05EA])",
+    "flags": "u",
+    "fields": "every rendered field"
+  }
+}
+~~~
+
+**Sentence-final period (Noa's slip 3): a code fix plus an assertion, no gate.**
+- **Sentence fields**: each `serviceDetails[].description` and `aboutPageBody` ends with "." when it doesn't already end with . ! or ?. Code appends it.
+- **Label fields** never end with ".". Code strips a trailing ".". The label fields are `heroHeadline`, `heroCta`, `trustBarItems[]`, `servicesHeadline`, `serviceDetails[].name`, `aboutPageHeadline`, `formHeadline`, `stickyBarLine`, `responseTimeBadge` and `guaranteeBlock`.
+- **`heroSubheadline` is untouched.** It is sometimes two sentences (electrician-2), and Noa owns that case.
+- **Assertion**: after the fix, every sentence field ends in . ! or ?, and no label field ends in ".".
+- This is punctuation only. The engineer adds no Hebrew.
+
+~~~json
+{
+  "sentenceFinalPeriodFields": ["serviceDetails[].description", "aboutPageBody"],
+  "noFinalPeriodFields": ["heroHeadline", "heroCta", "trustBarItems[]", "servicesHeadline", "serviceDetails[].name", "aboutPageHeadline", "formHeadline", "stickyBarLine", "responseTimeBadge", "guaranteeBlock"]
+}
+~~~
+
+**Remaining warnings, and whether the reader sees them:**
+- **`fact_repeat` (24)**: all in unrendered fields. They disappear with the (f) scope fix.
+- **`city_prefix` (2)**: both in the unrendered badge. They disappear with the (e) code build.
+- **`signature_repeat:lineByLine` (7, electricians)**: a reader-visible tic only when it is three in a row. In electrician-2, the hero "שורה־שורה" and the subheadline "מסביר כל שורה בהצעה" are 2 of the allowed 2. The third, word for word, is in `aboutBlurb`, which doesn't render. No change.
+- **`sticky_naming:unnamed` (2)**: `stickyBarLine` doesn't render, and a homeowner doesn't need the business name in "נזילה? דבר איתי". No change.
+
+### 23.3 Prompt rules for M2b.2 (ready to paste)
+
+These apply on pages that render the about section and the service cards (the homepage and the services hub), except C4 and C5, which apply on every page. Sections 19, 20 and 22 still apply. C1 replaces the example at the end of B6. C2 replaces the option list in B5.
+
+- **C1 — His tool, not a tool.**
+  - If his usp names a tool (a camera, acoustic equipment, a thermal camera), the about body names that tool and what he does with it, in his trade's plain words.
+  - If his usp names no tool, describe the check he does with his hands and eyes. Never add equipment he didn't name.
+  - Never name a tool from another trade or another owner. Never copy a scene from these instructions.
+- **C2 — About headline: the method or the place, never a number.**
+  - The trust bar already gave the years and the warranty. This headline must not repeat any number or any item from the trust bar.
+  - Build it from one of:
+    - what he does with his tool or his hands, in the first person, at most 6 words
+    - one town from his area with his trade, never the full list of towns
+  - His first name may come first (only when it is written in Hebrew), followed by one of the above.
+  - At most 7 words. B5's bans still apply.
+- **C3 — Say the explanation once.**
+  - The sentence that explains how he works ("explains what he found, and only then starts") appears once on the page: in the about body, or in card 1, never both.
+  - No card repeats a phrase of the about body, and no two cards share a phrase. Each card ends on its own result, in its own words.
+- **C4 — Warranty: once in prose, said correctly.**
+  - Count before you write: the warranty may appear at most 3 times on the page, and the hero subheadline and the trust bar count.
+  - If the guarantee block is rendered on this page, don't end the about body on the warranty.
+  - In a full sentence, write the duration with ל: "אחריות לשנה", "אחריות לשנתיים", "אחריות לשישה חודשים". Never "האחריות שנה".
+  - A warranty is received, never seen: "ומקבל אחריות לשנה", not "רואה את האחריות".
+  - In the trust bar, the bare form is fine: "אחריות שנה".
+- **C5 — Towns: the preposition on every town.**
+  - In any sentence that lists his towns, repeat the preposition (ב, ל or מ) on every town: "בחולון ובבת ים", "לרמת גן ולגבעתיים".
+  - A town that starts with ב still takes the preposition: "בבת ים", "בבני ברק", "מבאר שבע".
+  - The trust-bar area tile is built for you. Don't write it.
+- **C6 — Card punctuation.** Every card description is one full sentence ending with ".". Labels and headlines never end with ".".
+
+### 23.4 Gate or prompt, and the eval
+
+Gates vs prompt-only in section 23:
+- **New hard gates**:
+  - `uspToolRequired`
+  - `foreignTool` (always blocking)
+  - `aboutHeadlineNoTrustRepeat`
+  - `aboutCardEcho`
+  - `warrantyDefiniteBareDuration`
+  - the ל and מ extension of `city_prefix` with the list-join condition
+  - the rendered-fields scope for both `fact_repeat` counters, with the trust bar counted in the phrase cap
+- **Warn-only, then decide**: `cardPhraseEcho`.
+- **Code, no gate**: the place-list build (trust tile and badge) and the sentence-final period with its assertion.
+- **Prompt-only**: C1–C6, and condition (d).
+
+The eval: a free rescore first, then a targeted run of 8, not the full 18.
+1. **Rescore the 18 saved M2b.1d records with the new gates (zero cost).**
+   - Expected: `uspToolRequired` on plumber-1, -2 and -4; `foreignTool` on plumber-2; `aboutCardEcho` on plumber-1 and -2; `aboutHeadlineNoTrustRepeat` on about 16 homepages; `warrantyDefiniteBareDuration` on hebrew-plumber-1; zero `fact_repeat` and zero `city_prefix`.
+   - Any hit outside these is an overfire. Send it back to me before the paid run. Also check every `cardPhraseEcho` hit by hand.
+2. **Targeted generation run (about US$1.41 at the M2b.1d rate of US$0.177 a run).**
+   - plumber-1 to -4 (C1 and C3), split-hours-1 (acoustic still required, no camera), electrician-2 (C2 without a tool; the "בלי קפיצות" set), and hebrew-plumber-1 and -2 (C2 with a Hebrew name, C4).
+   - Four plumbers alone (about US$0.71) would not test C2, which changes every niche's headline, or the Hebrew-name case.
+   - Acceptance: 8 of 8 valid; the camera named in all four plumber about bodies; no acoustic stem outside split-hours.
+3. **A full 18-run eval only if a targeted run fails**, or if `cardPhraseEcho` is promoted to a hard gate.
+4. The code changes (place build, periods, scope fix) are deterministic. Unit tests prove them, and they need no eval.
+
+Handoffs:
+- **Noa**: proof the `he` tool stems, `bInitialPlaces`, the C4 and C5 example forms, and the narrowed warranty pattern.
+- **Yonatan**: no keyword anchor is touched. The about headline was never an anchor, but confirm C2's single-town option is welcome.
+- **Engineer**: everything above is data, punctuation or counting scope. There is no new Hebrew to author outside the JSON blocks and the C rules quoted here.
