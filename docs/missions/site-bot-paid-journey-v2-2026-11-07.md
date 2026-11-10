@@ -69,6 +69,13 @@ domain (301s from old URLs, MX/email untouched), not only no-website businesses.
     part of this promise.
   - Preview wait (pre-pay) measured at ~3–5 min per site on fixtures (M2b.1d eval). Re-measure with live research
     before stating minutes on the waiting screen.
+- **Prospect targeting tiers (Eitan 2026-11-10):** outreach / audit prospects for Site-Bot are ranked tier 1 = GBP rating ≥ 4.0
+  with ≥ 10 reviews; tier 2 = rating ≥ 4.0 with 5–9 reviews (pitched on review growth). Below that is not targeted. Reason: real
+  reviews to show on the site, owners proud of their reputation, likelier success stories. Same 4.0 / 10 bar as
+  `scripts/lib/ads-fit-scorecard.mjs`. To wire into prospect selection (not the market-level scorer in scripts/market-scan).
+- **Design track (Eitan 2026-11-10, started):** richer generated sites, reference aaasada.com/azkarot — real-review carousel from the
+  owner's GBP (M4 manager access; never sample reviews on a live site), GBP photos, hero rating badge, service icons, sticky
+  call / WhatsApp bar, "us vs the usual" table from owner facts only. Dana (tokens) + Maya (layout / a11y) spec first.
 - M5: owner voice notes as an input option.
 - M6: walkthrough video recorded from the real flow (pipeline + narration), placed on /site-bot after Noa + Eitan.
 
