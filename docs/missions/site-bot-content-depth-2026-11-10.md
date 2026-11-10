@@ -81,3 +81,13 @@ numbers (fixed price, free quote, no call-out fee, no hidden costs), (c) neither
   your field and area show X") and offer the matching options; explain it lifts conversion;
 - rare → don't ask for a number; at most offer a pricing promise.
 Whatever he picks becomes an owner fact; the generator never guesses a price. Wording via waocopy → Noa.
+- **Yonatan's data (2026-11-10, cached SERPs 2026-11-07, 4 trade × city SERPs, 12 business pages):** 7 promise-only, 4 show ₪
+  (3 of them multi-city lead-gen networks; the only single business with ₪ sat at #7), 1 neither. A pricing promise is near
+  universal; numbers are not the norm for single local businesses. Price is not a ranking factor (Google GBP help, 2026-11-10).
+  Best page pattern: a number WITH its conditions (range + night surcharge + "price confirmed by phone before I leave") plus an
+  FAQ "how much does <service> cost in <city>" answered in its first sentence (AIO-quotable).
+- **Resulting default:** every site gets one prominent promise line in the hero beside the call button, from owner-checked
+  options only (free quote / price confirmed before work or before leaving / no call-out fee / no hidden costs). Numbers are an
+  optional owner input (call-out fee, "starting from" for 1–3 common jobs, night/Shabbat surcharge); when given they attach to
+  B2 as a small table + one cost FAQ, never a second price block. The market-norm prompt shows the owner what his top
+  competitors do (re-run per niche + city at intake; exact-query SERPs ≈ $0.002 each).
