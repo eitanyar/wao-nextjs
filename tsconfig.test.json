@@ -171,6 +171,7 @@
     "src/lib/lp/ownerFactCopy.ts",
     "src/lib/lp/ownerFactCopy.test.ts",
     "src/lib/lp/ownerFactWiring.test.ts",
+    "src/lib/lp/promptV2.test.ts",
     "src/lib/lp/hebrewPrefixLetters.ts",
     "src/lib/lp/researchedSeo.test.ts",
     "src/lib/lp/verticalThemes.ts",
