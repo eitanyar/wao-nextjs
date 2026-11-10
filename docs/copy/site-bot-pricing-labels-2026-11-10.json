@@ -1,0 +1,19 @@
+{
+ "promiseFreeQuote": "הצעת מחיר חינם",
+ "promisePriceBeforeWork": "מחיר סגור לפני תחילת העבודה",
+ "promisePriceByPhoneBeforeLeaving": "מחיר סגור בטלפון לפני ההגעה",
+ "promiseNoCalloutFee": "בלי דמי הגעה",
+ "promiseNoHiddenCosts": "בלי עלויות נסתרות",
+ "promiseLineLabel": "מחירים",
+ "priceTableHeading": "כמה זה עולה",
+ "priceTableJobColumn": "עבודה",
+ "priceTableFromColumn": "מחיר התחלתי",
+ "priceFromPrefix": "החל מ־",
+ "calloutFeeRow": "דמי הגעה",
+ "surchargeRow": "תוספת לילה / שבת",
+ "costFaqQuestion": "כמה עולה {service} ב{city}?",
+ "costFaqAnswerFrom": "אצל {business}, המחיר ל{service} ב{city} מתחיל מ־{amount}.",
+ "costFaqAnswerCallout": "דמי ההגעה: {amount}.",
+ "costFaqAnswerSurcharge": "תוספת: {policy}.",
+ "_rules": "city values Hebrew; {service} head noun singular; no space between מ־ and the amount <bdi>; cells under priceTableFromColumn carry no prefix; strip trailing punctuation from {policy}; show at most one of the two \"price confirmed\" chips per site (Noa 2026-11-10)."
+}
