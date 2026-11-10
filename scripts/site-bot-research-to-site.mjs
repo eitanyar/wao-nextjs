@@ -151,9 +151,12 @@ if (outcome.status === 'generated') {
   const record = JSON.parse(recordText);
   const lines = [];
   const pageResults = [];
+  // Bug-1 fix (rerun 3): card names may equal an owner label longer than the fixed limit (site identity labels).
+  const identityPath = path.join(path.resolve(process.env.WAO_SITE_RESEARCH_DIR), researchId, 'dossier.json');
+  const recordServiceLabels = fs.existsSync(identityPath) ? (JSON.parse(fs.readFileSync(identityPath, 'utf8')).siteIdentity?.services ?? []).map(item => item.label) : [];
   for (const page of record.researchedPages) {
     let valid = true;
-    try { assertBoundedGeneratedSiteCopy(page.copy, researchedRecordShapeOptions(page.classification)); } catch { valid = false; }
+    try { assertBoundedGeneratedSiteCopy(page.copy, researchedRecordShapeOptions(page.classification, recordServiceLabels)); } catch { valid = false; }
     pageResults.push({ page: page.opportunityId, valid });
     lines.push(`=== ${page.opportunityId} ${page.targetPath} (${page.classification}) validator=${valid ? 'PASS' : 'FAIL'}`);
     for (const [key, value] of Object.entries(page.copy)) {

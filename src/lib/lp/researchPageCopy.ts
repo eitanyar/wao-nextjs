@@ -307,11 +307,32 @@ export interface SiteCopyShapeOptions {
    * the renderer omits the line). Set only while code owns the facts, and for stored research records (relaxation only).
    */
   emptyCardDescriptions?: boolean;
+  /**
+   * The site's owner-confirmed service labels (site identity). A serviceDetails name that is exactly one of them is valid at
+   * the label's own length: the prompt orders card names to match the labels character for character, and a label is the
+   * owner's verbatim wording (never cut), so the card-name limit is derived from the labels rather than capping them. The
+   * card heading wraps (grid cell minmax 220px, no nowrap), so a longer label only adds a line. Any other name keeps the
+   * fixed limit.
+   */
+  serviceLabels?: readonly string[];
 }
 
 /** The keys of one pair list that may be '' under these shape options. */
 function pairEmptyKeys(key: string, options: SiteCopyShapeOptions): readonly string[] {
   return key === 'serviceDetails' && options.emptyCardDescriptions ? ['description'] : [];
+}
+
+/** The per-key limits of one pair-list entry: a serviceDetails name equal to an owner label may be that label's length. */
+function pairLimits(key: string, entry: unknown, limits: readonly number[], options: SiteCopyShapeOptions): readonly number[] {
+  if (key !== 'serviceDetails' || !options.serviceLabels?.length || !plainObject(entry)) return limits;
+  const name = entry.name;
+  return typeof name === 'string' && options.serviceLabels.includes(name) && name.length > limits[0] ? [name.length, ...limits.slice(1)] : limits;
+}
+
+/** The longest owner label over the fixed card-name limit (prompt wording), or 0. */
+export function longServiceLabelChars(labels: readonly string[] = []): number {
+  const max = SITE_COPY_PAIR_LIST_LIMITS.serviceDetails.maxChars[0];
+  return labels.reduce((longest, label) => (label.length > max && label.length > longest ? label.length : longest), 0);
 }
 
 function invalidCopy(): never {
@@ -395,7 +416,7 @@ export function assertBoundedGeneratedSiteCopy(value: unknown, options: SiteCopy
     }) ||
     PAIR_LIST_KEYS.some(key => {
       const limit = SITE_COPY_PAIR_LIST_LIMITS[key];
-      return !boundedArray(value[key], limit.maxItems, item => stringPair(item, limit.keys, limit.maxChars, pairEmptyKeys(key, options)));
+      return !boundedArray(value[key], limit.maxItems, item => stringPair(item, limit.keys, pairLimits(key, item, limit.maxChars, options), pairEmptyKeys(key, options)));
     })) invalidCopy();
   try {
     if (Buffer.byteLength(JSON.stringify(withoutDepthKeys(value)), 'utf8') > SITE_COPY_MAX_BYTES) invalidCopy();
@@ -506,7 +527,7 @@ export function explainGeneratedSiteCopyViolations(value: unknown, options: Site
   // Pair lists keep the M0.5 report order: faqItems before serviceDetails.
   for (const key of PAIR_LIST_KEYS) {
     const limit = SITE_COPY_PAIR_LIST_LIMITS[key];
-    out.push(...arrayViolations(key, value[key], limit.maxItems, (entry, index) => pairViolations(`${key}[${index}]`, entry, limit.keys, limit.maxChars, pairEmptyKeys(key, options))));
+    out.push(...arrayViolations(key, value[key], limit.maxItems, (entry, index) => pairViolations(`${key}[${index}]`, entry, limit.keys, pairLimits(key, entry, limit.maxChars, options), pairEmptyKeys(key, options))));
   }
   try {
     const bytes = Buffer.byteLength(JSON.stringify(withoutDepthKeys(value)), 'utf8');
@@ -1025,7 +1046,10 @@ export function buildSiteCopyHardLimitsBlock(heading = 'HARD LIMITS', omit: read
     ...PAIR_LIST_KEYS.filter(keep).map(key => {
       const limit = SITE_COPY_PAIR_LIST_LIMITS[key];
       const parts = limit.keys.map((name, index) => `"${name}" max ${limit.maxChars[index]} characters`).join(', ');
-      return `  - ${key}: at most ${limit.maxItems} objects with exactly the keys ${limit.keys.map(name => `"${name}"`).join(' and ')}; ${parts}`;
+      // Bug-1 fix (rerun 3): a card name that must equal a longer owner label may be that label's length.
+      const long = key === 'serviceDetails' ? longServiceLabelChars(layout.serviceLabels) : 0;
+      const labelNote = long ? ` (a "name" that is exactly one of the owner-confirmed service names keeps that name's length, up to ${long} characters)` : '';
+      return `  - ${key}: at most ${limit.maxItems} objects with exactly the keys ${limit.keys.map(name => `"${name}"`).join(' and ')}; ${parts}${labelNote}`;
     }),
     `- ${SITE_COPY_REVIEW_PAIR[0]} is the owner's quote, verbatim, and may stand alone. ${SITE_COPY_REVIEW_PAIR[1]} may be set only when ${SITE_COPY_REVIEW_PAIR[0]} is set and the data supplies a star rating; otherwise ${SITE_COPY_REVIEW_PAIR[1]} is null. Never invent a ${SITE_COPY_REVIEW_PAIR[1]}. Never shorten or rephrase a quote.`,
     `- ${SITE_COPY_ALWAYS_NULL.join(', ')}: always null.`,
@@ -1666,16 +1690,19 @@ function modelHiddenProofIds(brief: PageBrief, data: CollectedData): string[] {
  * Copy v2 slice 2: shape options for validating a stored research page record. Relaxation only: the never-rendered strings may
  * be '' (copy generated with code-owned facts); copy saved before passes exactly as before.
  */
-export function researchedRecordShapeOptions(classification: string): SiteCopyShapeOptions {
-  return { ungenerated: [...researchedUngeneratedFieldsFor(classification), ...RESEARCH_UNRENDERED_FIELDS], emptyCardDescriptions: true };
+export function researchedRecordShapeOptions(classification: string, serviceLabels: readonly string[] = []): SiteCopyShapeOptions {
+  return { ungenerated: [...researchedUngeneratedFieldsFor(classification), ...RESEARCH_UNRENDERED_FIELDS], emptyCardDescriptions: true, ...(serviceLabels.length ? { serviceLabels: [...serviceLabels] } : {}) };
 }
 
 /** M2b.1d: the bounded-validator shape options of a brief's page. */
 export function shapeOptions(brief: PageBrief): SiteCopyShapeOptions {
   const ungenerated = ungeneratedFieldsFor(brief);
+  // Bug-1 fix (rerun 3): card names may equal an owner label longer than the fixed limit.
+  const labels = brief.site?.serviceLabels ?? [];
+  const named = longServiceLabelChars(labels) ? { serviceLabels: [...labels] } : {};
   // Copy v2 slices 4-5: a dropped card description is '' (code-owned facts only).
-  if (codeOwnsFacts(brief)) return { ungenerated, emptyCardDescriptions: true };
-  return ungenerated.length ? { ungenerated } : {};
+  if (codeOwnsFacts(brief)) return { ungenerated, emptyCardDescriptions: true, ...named };
+  return ungenerated.length || named.serviceLabels ? { ...(ungenerated.length ? { ungenerated } : {}), ...named } : {};
 }
 
 /**
@@ -2320,11 +2347,14 @@ export interface CopyLayout {
   story?: boolean;
   /** Content depth: the depth blocks this page generates (empty / unset = none). */
   depth?: readonly DepthBlockId[];
+  /** The owner-confirmed service labels (card names may equal a label longer than the fixed limit). */
+  serviceLabels?: readonly string[];
 }
 
 export function layoutFor(brief: Pick<PageBrief, 'site' | 'page' | 'blocksEnabled'>): CopyLayout {
   const depth = depthLayout(brief);
-  return { pitch: pitchFirstPage(brief), story: storyPage(brief), ...(depth.length ? { depth } : {}) };
+  const labels = brief.site?.serviceLabels ?? [];
+  return { pitch: pitchFirstPage(brief), story: storyPage(brief), ...(depth.length ? { depth } : {}), ...(longServiceLabelChars(labels) ? { serviceLabels: [...labels] } : {}) };
 }
 
 /**
@@ -2422,7 +2452,8 @@ export function buildNoaQaMessage(copy: SiteCopy, brief?: PageBrief): string {
   // M2b.1h: Noa never sees the pitch (it is not shown; the system carries Tamar's over); the story fields are hers to correct.
   const hidden = [...omit, 'pitch'];
   const shown = Object.keys(copy).some(key => hidden.includes(key)) ? Object.fromEntries(Object.entries(copy).filter(([key]) => !hidden.includes(key))) : copy;
-  const layout = brief ? { story: storyPage(brief), depth: depthLayout(brief) } : {};
+  const labels = brief?.site?.serviceLabels ?? [];
+  const layout: CopyLayout = brief ? { story: storyPage(brief), depth: depthLayout(brief), ...(longServiceLabelChars(labels) ? { serviceLabels: [...labels] } : {}) } : {};
   const depthNote = layout.depth?.length ? `\n\n${DEPTH_NOA_NOTE}` : '';
   return `${JSON.stringify(shown)}\n\n${buildSiteCopyHardLimitsBlock('HARD LIMITS FOR YOUR CORRECTIONS (never lengthen a field past its limit)', omit, layout)}${fixed}${depthNote}`;
 }
