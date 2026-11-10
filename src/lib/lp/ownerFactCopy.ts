@@ -98,6 +98,19 @@ export const FACT_TEMPLATE_SLOTS = {
   responseOneHour: [],
   responseTwoHours: [],
   responseHours: ['{n}'],
+  // Noa r2 (2026-11-10). A warranty with a scope tail ("{duration} on repairs"): the owner's tail verbatim.
+  /** "There is a {duration} warranty {scope}." {duration} from the warrantyLamed* set; {scope} the owner's tail. */
+  proofWarrantyScoped: ['{duration}', '{scope}'],
+  /** Arrival with a place tail (Adam: a place-scoped response gets only this proof, no trust chip). */
+  proofResponseScoped: ['{time}', '{scope}'],
+  proofResponseSameDayScoped: ['{scope}'],
+  /** Adam: the intake asks how fast the owner CALLS BACK, so the response fact renders with the callback set. */
+  trustCallback: ['{time}'],
+  trustCallbackSameDay: [],
+  proofCallback: ['{time}'],
+  proofCallbackSameDay: [],
+  /** Slice 6: the code-built lead in front of a model-written Q&A answer ("At {business} in {city}:"). */
+  qaAnswerLead: ['{business}', '{city}'],
 } as const satisfies Record<string, readonly string[]>;
 
 export type FactTemplateKey = keyof typeof FACT_TEMPLATE_SLOTS;
@@ -142,16 +155,43 @@ export const FACT_PARSE_TOKEN_KEYS = [
 
 export type FactParseTokenKey = (typeof FACT_PARSE_TOKEN_KEYS)[number];
 
+/**
+ * Noa r2 rule lists (2026-11-10). Unlike FACT_PARSE_TOKEN_KEYS they are matched as whole words with NO prefix stripping,
+ * and they are kept out of parsePrefixLetters (which reads FACT_PARSE_TOKEN_KEYS only).
+ */
+export const FACT_RULE_TOKEN_KEYS = [
+  /** The warranty noun, removed before the scope test. */
+  'parseWarrantyWords',
+  /** The standalone preposition a warranty scope tail opens with. */
+  'warrantyScopeLeadWords',
+  /** Words ignored before a warranty scope tail / a response place tail. */
+  'parseFillerWords',
+  /** An answer opening with one of these is a "no": no guarantee / licence fact. */
+  'parseNegationWords',
+  /** Approximate / conditional answers: no code-rendered number (years, warranty, response). */
+  'parseHedgeWords',
+  /** Response only: "up to" leads that let a bare hour / minute word (the last word) count. Hedges for warranty / years. */
+  'parseWithinWords',
+  /** proofLicense only when the licence text's first word equals one of these exactly. */
+  'licenseDocumentNouns',
+  /** The attached letter a response place tail opens with. */
+  'responseScopeLeadLetters',
+  /** Slice 6: cost / price question tokens (buildQuestionPool). */
+  'costQuestionTokens',
+] as const;
+
+export type FactRuleTokenKey = (typeof FACT_RULE_TOKEN_KEYS)[number];
+
 /** Template keys the loader accepts but never requires (absent = not used). responseSameDay is never a {time} value. */
 export const FACT_OPTIONAL_TEMPLATE_KEYS = [
   'responseSameDay',
 ] as const;
 export type FactOptionalTemplateKey = (typeof FACT_OPTIONAL_TEMPLATE_KEYS)[number];
 
-export type OwnerFactTemplates = Readonly<Record<FactTemplateKey, string> & Record<FactParseTokenKey, readonly string[]> & Partial<Record<FactOptionalTemplateKey, string>>>;
+export type OwnerFactTemplates = Readonly<Record<FactTemplateKey, string> & Record<FactParseTokenKey | FactRuleTokenKey, readonly string[]> & Partial<Record<FactOptionalTemplateKey, string>>>;
 
-/** Every key the template file must hold, in file order (templates, then parse token lists). */
-export const FACT_TEMPLATE_KEYS: readonly string[] = [...Object.keys(FACT_TEMPLATE_SLOTS), ...FACT_PARSE_TOKEN_KEYS];
+/** Every key the template file must hold, in file order (templates, then parse token lists, then the r2 rule lists). */
+export const FACT_TEMPLATE_KEYS: readonly string[] = [...Object.keys(FACT_TEMPLATE_SLOTS), ...FACT_PARSE_TOKEN_KEYS, ...FACT_RULE_TOKEN_KEYS];
 
 // BEGIN OWNER_FACT_TEMPLATES (written by scripts/apply-fact-templates.mjs from FACT_TEMPLATES_SOURCE; never hand-edit)
 export const OWNER_FACT_TEMPLATES: OwnerFactTemplates = {
@@ -173,7 +213,7 @@ export const OWNER_FACT_TEMPLATES: OwnerFactTemplates = {
   "proofLicense": "יש לי {license}.",
   "proofLicenseVerbatim": "{license}.",
   "proofLicenseNumber": "יש לי רישיון מס׳ {number}.",
-  "proofWarranty": "על כל עבודה יש אחריות {duration}.",
+  "proofWarranty": "יש אחריות {duration} על העבודה שלי.",
   "proofWarrantyVerbatim": "{warranty}.",
   "proofResponse": "אני אצלך תוך {time}.",
   "proofResponseSameDay": "אני אצלך עוד באותו יום.",
@@ -199,6 +239,14 @@ export const OWNER_FACT_TEMPLATES: OwnerFactTemplates = {
   "responseOneHour": "שעה",
   "responseTwoHours": "שעתיים",
   "responseHours": "{n} שעות",
+  "proofWarrantyScoped": "יש אחריות {duration} {scope}.",
+  "proofResponseScoped": "אני אצלך תוך {time} {scope}.",
+  "proofResponseSameDayScoped": "אני אצלך עוד באותו יום {scope}.",
+  "trustCallback": "מענה תוך {time}",
+  "trustCallbackSameDay": "מענה באותו יום",
+  "proofCallback": "אחזור אליך תוך {time}.",
+  "proofCallbackSameDay": "אחזור אליך עוד באותו יום.",
+  "qaAnswerLead": "אצל {business} ב{city}:",
   "parseMinuteWords": [
     "דקות",
     "דקה",
@@ -269,6 +317,109 @@ export const OWNER_FACT_TEMPLATES: OwnerFactTemplates = {
     "ביום הפנייה",
     "ביום הקריאה"
   ],
+  "parseWarrantyWords": [
+    "אחריות"
+  ],
+  "warrantyScopeLeadWords": [
+    "על"
+  ],
+  "parseFillerWords": [
+    "יש",
+    "של",
+    "כן",
+    "אני",
+    "נותן",
+    "נותנת",
+    "מגיע",
+    "מגיעה",
+    "הגעה",
+    "זמן"
+  ],
+  "parseNegationWords": [
+    "אין",
+    "ללא",
+    "בלי",
+    "לא",
+    "עדיין לא"
+  ],
+  "parseHedgeWords": [
+    "בערך",
+    "בסביבות",
+    "סביב",
+    "בקירוב",
+    "משהו כמו",
+    "פחות או יותר",
+    "כמעט",
+    "בדרך כלל",
+    "בד״כ",
+    "בד\"כ",
+    "לרוב",
+    "בממוצע",
+    "תלוי",
+    "לפעמים",
+    "כ־",
+    "כ-"
+  ],
+  "parseWithinWords": [
+    "עד",
+    "לכל היותר",
+    "מקסימום"
+  ],
+  "licenseDocumentNouns": [
+    "רישיון",
+    "רשיון",
+    "רישיונות",
+    "תעודה",
+    "תעודת",
+    "תעודות",
+    "הסמכה",
+    "הסמכת",
+    "הסמכות",
+    "היתר",
+    "היתרים",
+    "אישור",
+    "אישורים",
+    "רישום",
+    "תואר"
+  ],
+  "responseScopeLeadLetters": [
+    "ב"
+  ],
+  "costQuestionTokens": [
+    "מחיר",
+    "המחיר",
+    "מחירים",
+    "המחירים",
+    "במחיר",
+    "מחירון",
+    "הצעת מחיר",
+    "מה המחיר",
+    "עלות",
+    "העלות",
+    "עלויות",
+    "תעריף",
+    "התעריף",
+    "תעריפים",
+    "כמה עולה",
+    "כמה עולים",
+    "כמה עולות",
+    "כמה זה עולה",
+    "כמה יעלה",
+    "כמה זה יעלה",
+    "כמה תעלה",
+    "כמה לוקחים",
+    "כמה אתה לוקח",
+    "כמה את לוקחת",
+    "כמה גובים",
+    "כמה צריך לשלם",
+    "יקר",
+    "זול",
+    "תקציב",
+    "₪",
+    "ש״ח",
+    "שקל",
+    "שקלים"
+  ],
   "responseSameDay": "אותו יום"
 };
 // END OWNER_FACT_TEMPLATES
@@ -293,7 +444,7 @@ export function factTemplateProblems(templates: unknown): string[] {
     const found = templateSlots(value);
     if (found.length !== slots.length || slots.some(slot => !found.includes(slot))) problems.push(`${key}:slots`);
   }
-  for (const key of FACT_PARSE_TOKEN_KEYS) {
+  for (const key of [...FACT_PARSE_TOKEN_KEYS, ...FACT_RULE_TOKEN_KEYS]) {
     const value = record[key];
     if (!Array.isArray(value) || value.length === 0) { problems.push(`${key}:missing`); continue; }
     if (value.some(item => typeof item !== 'string' || !item.trim() || item.includes(HE_TODO_PREFIX))) problems.push(`${key}:pending`);
@@ -352,7 +503,8 @@ export interface OwnerFact {
   kind: OwnerFactKind;
   source: OwnerFactSource;
   /**
-   * Slot values (without braces), e.g. { n: '15' }. Response: { minutes } (with form 'halfHour' when the owner said "half
+   * Slot values (without braces), e.g. { n: '15' }. Warranty: { months } plus scope / proofVerbatim / noProof (Noa r2).
+   * Response: optional scope (a place tail). Response: { minutes } (with form 'halfHour' when the owner said "half
    * an hour") or { sameDay: '1' }.
    */
   slots: Readonly<Record<string, string>>;
@@ -439,6 +591,17 @@ function afterWithin(value: string, tokens: readonly string[], prefixes: string)
     `(?<![${HEBREW_LETTER}])${escapeRegExp(lead)}\\s+(?:\\S+\\s+)?${prefix}${escapeRegExp(token.trim())}(?![${HEBREW_LETTER}])`, 'u').test(value)));
 }
 
+/**
+ * Noa r2 (parseWithinWords, response only): an "up to" lead lets a bare hour / minute word count, one word apart at most,
+ * and only when that unit word is the LAST word of the answer (trailing punctuation stripped).
+ */
+function afterUpTo(value: string, tokens: readonly string[], templates: OwnerFactTemplates, prefixes: string): boolean {
+  const raw = stripTrailingPunctuation(value);
+  const prefix = prefixes ? `[${prefixes}]?` : '';
+  return templates.parseWithinWords.some(lead => lead.trim() && tokens.some(token => token.trim() && new RegExp(
+    `(?<![${HEBREW_LETTER}])${escapeRegExp(lead.normalize('NFC').trim())}\\s+(?:\\S+\\s+)?${prefix}${escapeRegExp(token.trim())}$`, 'u').test(raw)));
+}
+
 const EN = {
   minutes: ['minutes', 'minute', 'mins', 'min'],
   hours: ['hours', 'hour', 'hrs', 'hr', 'h'],
@@ -506,8 +669,8 @@ export function parseResponse(value: unknown, templates: OwnerFactTemplates): Pa
     const minutes = asMinutes !== null && asHours === null ? ok(asMinutes) : asHours !== null && asMinutes === null ? ok(asHours * 60) : null;
     return minutes === null ? null : { minutes };
   }
-  if (afterWithin(raw, templates.parseOneHourWords, prefixes) || hasToken(raw, EN.oneHour, '')) return { minutes: 60 };
-  if (afterWithin(raw, templates.parseMinuteWords, prefixes)) return { minutes: 1 };
+  if (afterWithin(raw, templates.parseOneHourWords, prefixes) || afterUpTo(raw, templates.parseOneHourWords, templates, prefixes) || hasToken(raw, EN.oneHour, '')) return { minutes: 60 };
+  if (afterWithin(raw, templates.parseMinuteWords, prefixes) || afterUpTo(raw, templates.parseMinuteWords, templates, prefixes)) return { minutes: 1 };
   if (hasToken(raw, [...templates.parseSameDayWords, ...EN.sameDay], prefixes)) return { sameDay: true };
   return null;
 }
@@ -583,20 +746,199 @@ export function verbatimHebrew(value: unknown): string | null {
 }
 
 /**
- * Noa: the document nouns (licence, certificate, certification, permit) that let a licence text take proofLicense ("I have
- * {license}."). Sliced from the template file, never typed: the first word of trustLicenseNumber. Only the licence noun has
- * a source today; any other Hebrew licence text takes proofLicenseVerbatim ("{license}."), which is always grammatical.
+ * Noa r2: the document nouns that let a licence text take proofLicense ("I have {license}."): the template file's
+ * licenseDocumentNouns list, plus the noun sliced from trustLicenseNumber (kept as a guaranteed member). Never typed.
  */
 export function licenseDocumentNouns(templates: OwnerFactTemplates): string[] {
   const first = templates.trustLicenseNumber.replace(/\{[a-z]+\}/g, ' ').trim().split(/\s+/u)[0] ?? '';
-  return first && /[\u05D0-\u05EA]/u.test(first) ? [first.normalize('NFC')] : [];
+  const sliced = first && /[\u05D0-\u05EA]/u.test(first) ? [first.normalize('NFC')] : [];
+  return [...new Set([...sliced, ...(templates.licenseDocumentNouns ?? []).map(noun => noun.normalize('NFC').trim()).filter(Boolean)])];
 }
 
-/** True when a licence text opens with a document noun (one stripped prefix letter allowed). */
+/** Noa r2: true when a licence text's FIRST word equals a document noun EXACTLY (no prefix-letter stripping). */
 export function opensWithDocumentNoun(license: string, templates: OwnerFactTemplates): boolean {
   const first = license.normalize('NFC').trim().split(/\s+/u)[0] ?? '';
+  return licenseDocumentNouns(templates).includes(first);
+}
+
+// ---------------------------------------------------------------------------
+// Noa r2 rules: negation, hedges, "up to" leads, scope tails (whole words, no prefix stripping).
+// ---------------------------------------------------------------------------
+
+/** A whole-word / whole-phrase test with no prefix stripping. */
+function hasPlainToken(value: string, tokens: readonly string[]): boolean {
+  return hasToken(value, tokens, '');
+}
+
+/** English negation openers (code, Noa: English equivalents belong in code). Only for answers without digits ("No. 4821"). */
+const EN_NEGATION = ['no', 'none', 'not', 'without', 'n/a'];
+
+/**
+ * Noa r2 (parseNegationWords): an answer whose first word(s) match an entry is a "no" answer: no fact of that kind (guarantee
+ * and licence), never verbatim. Whole words, no prefix stripping.
+ */
+export function opensWithNegation(value: unknown, templates: OwnerFactTemplates): boolean {
+  const raw = text(value);
+  if (!raw) return false;
+  const opens = (token: string) => new RegExp(`^${escapeRegExp(token.normalize('NFC').trim())}(?![${HEBREW_LETTER}A-Za-z])`, 'iu').test(raw);
+  if (templates.parseNegationWords.some(token => token.trim() && opens(token))) return true;
+  return !/\d/.test(raw) && EN_NEGATION.some(token => new RegExp(`^${escapeRegExp(token)}(?![A-Za-z.])`, 'i').test(raw));
+}
+
+/** English hedges (code). */
+const EN_HEDGES = ['about', 'around', 'approx', 'approximately', 'roughly', 'almost', 'nearly', 'usually', 'typically', 'depends', 'up to'];
+
+/**
+ * Noa r2 (parseHedgeWords): an approximate or conditional answer. Entries ending in maqaf / hyphen match directly before a
+ * digit, and so does their bare first letter; whole words otherwise. English hedges and "~" in code. For warranty and years,
+ * parseWithinWords count as hedges too (withinIsHedge).
+ */
+export function hasHedge(value: unknown, templates: OwnerFactTemplates, withinIsHedge: boolean): boolean {
+  const raw = text(value);
+  if (!raw) return false;
+  if (/~/.test(raw)) return true;
+  const beforeDigit: string[] = [];
+  const words: string[] = [...EN_HEDGES, ...(withinIsHedge ? templates.parseWithinWords : [])];
+  for (const entry of templates.parseHedgeWords.map(item => item.normalize('NFC').trim()).filter(Boolean)) {
+    if (/[-\u05BE]$/u.test(entry)) beforeDigit.push(entry, entry.slice(0, -1).slice(0, 1));
+    else words.push(entry);
+  }
+  if (beforeDigit.some(lead => lead && new RegExp(`(?<![${HEBREW_LETTER}A-Za-z])${escapeRegExp(lead)}\\d`, 'u').test(raw))) return true;
+  return hasPlainToken(raw, words);
+}
+
+/** Noa r2: a scope tail carries no internal , ; : ( ) or dash, no digits. */
+const SCOPE_FORBIDDEN = /[\d,;:()\-\u05BE\u2010-\u2015]/u;
+/** Longest scope tail (warranty and response), code points. */
+export const SCOPE_TAIL_MAX_CHARS = 30;
+
+/** Remove the first match of any pattern (longest pattern first) from a text; returns null when none matched. */
+function removeFirst(value: string, patterns: RegExp[]): string | null {
+  for (const pattern of patterns) {
+    const match = pattern.exec(value);
+    if (match) return `${value.slice(0, match.index)} ${value.slice(match.index + match[0].length)}`;
+  }
+  return null;
+}
+
+function phrasePatterns(tokens: readonly string[], prefixes: string): RegExp[] {
+  return [...tokens].map(token => token.normalize('NFC').trim()).filter(Boolean).sort((a, b) => b.length - a.length).map(token => wordRegExp(token, prefixes));
+}
+
+/** A number with one of its unit words, with an attached prefix letter plus maqaf / hyphen in front ("for-3 years"). */
+function numberUnitPatterns(tokens: readonly string[], prefixes: string): RegExp[] {
+  const prefix = prefixes ? `(?:[${prefixes}][-\u05BE]?)?` : '';
+  return [...tokens].map(token => token.trim()).filter(Boolean).sort((a, b) => b.length - a.length)
+    .map(word => new RegExp(`(?<![${HEBREW_LETTER}A-Za-z])${prefix}\\d+\\s*[-\u05BE]?\\s*${escapeRegExp(word)}(?![${HEBREW_LETTER}A-Za-z])`, 'iu'));
+}
+
+/** The answer with its warranty duration phrase removed (same order as parseWarrantyMonths), or null. */
+function withoutWarrantyDuration(raw: string, templates: OwnerFactTemplates): string | null {
   const prefixes = parsePrefixLetters(templates);
-  return licenseDocumentNouns(templates).some(noun => first === noun || (first.length > 1 && prefixes.includes(first[0]) && first.slice(1) === noun));
+  const groups: RegExp[][] = [
+    phrasePatterns([...templates.parseOneAndHalfYearWords, ...EN.oneAndHalfYears], prefixes),
+    phrasePatterns([...templates.parseHalfYearWords, ...EN.halfYear], prefixes),
+    phrasePatterns([...templates.parseTwoYearWords, ...EN.twoYears], prefixes),
+    phrasePatterns([...templates.parseTwoMonthWords, ...EN.twoMonths], prefixes),
+    numberUnitPatterns([...templates.parseMonthWords, ...EN.months, ...templates.parseYearWords, ...EN.years], prefixes),
+    phrasePatterns([...templates.parseOneYearWords, ...EN.oneYear], prefixes),
+    phrasePatterns([...templates.parseOneMonthWords, ...EN.oneMonth], prefixes),
+  ];
+  for (const group of groups) {
+    const out = removeFirst(raw, group);
+    if (out !== null) return out;
+  }
+  return null;
+}
+
+const EN_WARRANTY_WORDS = ['warranty', 'guarantee', 'guaranteed'];
+const EN_FILLER_WORDS = ['a', 'an', 'the', 'i', 'we', 'give', 'offer', 'yes', 'within', 'in', 'under', 'max', 'maximum', 'is', 'of'];
+
+/** The words of a text that are not punctuation-only. */
+function words(value: string): string[] {
+  return value.normalize('NFC').split(/\s+/u).filter(word => /[\p{L}\p{N}]/u.test(word));
+}
+
+/** A word with its edge punctuation removed (for the whole-word list tests). */
+function bare(word: string): string {
+  return word.replace(/^[^\p{L}\p{N}]+|[^\p{L}\p{N}]+$/gu, '');
+}
+
+/** Scope tail checks shared by warranty and response (Noa r2). */
+function scopeTailFits(tail: string, minWords: number, maxWords: number): boolean {
+  const count = words(tail).length;
+  return count >= minWords && count <= maxWords && codePointLength(tail) <= SCOPE_TAIL_MAX_CHARS && isMostlyHebrew(tail) && !SCOPE_FORBIDDEN.test(tail);
+}
+
+/** The whitespace-normalised original contains the tail as one contiguous run (the tail is the owner's words, verbatim). */
+function isVerbatimRun(original: string, tail: string): boolean {
+  return original.replace(/\s+/g, ' ').includes(tail.replace(/\s+/g, ' '));
+}
+
+export type WarrantyScope = { kind: 'none' } | { kind: 'scoped'; scope: string } | { kind: 'unfit' };
+
+/**
+ * Noa r2 warranty scope: remove the warranty words, the filler words and the matched duration phrase; the tail opens at the
+ * first STANDALONE warrantyScopeLeadWords word and runs to the end; nothing else may remain before it; 2-5 words including
+ * the lead, at most SCOPE_TAIL_MAX_CHARS code points, mostly Hebrew, no digits or , ; : ( ) dash. 'none' = only the
+ * duration (and ignorable words) remain; 'unfit' = something remains but is not a fitting tail.
+ */
+export function warrantyScope(value: unknown, templates: OwnerFactTemplates): WarrantyScope {
+  const raw = stripTrailingPunctuation(text(value));
+  const rest = withoutWarrantyDuration(raw, templates);
+  if (rest === null) return { kind: 'unfit' };
+  const ignorable = new Set([...templates.parseWarrantyWords, ...templates.parseFillerWords, ...EN_WARRANTY_WORDS, ...EN_FILLER_WORDS].map(item => item.normalize('NFC').trim().toLowerCase()));
+  const leads = new Set(templates.warrantyScopeLeadWords.map(item => item.normalize('NFC').trim()));
+  const list = words(rest);
+  const at = list.findIndex(word => leads.has(word));
+  const before = at < 0 ? list : list.slice(0, at);
+  if (before.some(word => !ignorable.has(bare(word).toLowerCase()))) return { kind: 'unfit' };
+  if (at < 0) return { kind: 'none' };
+  const tail = stripTrailingPunctuation(list.slice(at).join(' '));
+  return scopeTailFits(tail, 2, 5) && isVerbatimRun(raw, tail) ? { kind: 'scoped', scope: tail } : { kind: 'unfit' };
+}
+
+export type ResponseScope = { kind: 'none' } | { kind: 'scoped'; scope: string } | { kind: 'unfit' };
+
+/** The answer with its response duration / same-day phrase removed (same order as parseResponse), or null. */
+function withoutResponseDuration(raw: string, templates: OwnerFactTemplates): string | null {
+  const prefixes = parsePrefixLetters(templates);
+  const groups: RegExp[][] = [
+    phrasePatterns([...templates.parseHalfHourWords, ...EN.halfHour], prefixes),
+    phrasePatterns([...templates.parseTwoHourWords, ...EN.twoHours], prefixes),
+    numberUnitPatterns([...templates.parseMinuteWords, ...EN.minutes, ...templates.parseHourWords, ...EN.hours], prefixes),
+    phrasePatterns([...templates.parseOneHourWords, ...EN.oneHour, ...templates.parseMinuteWords], prefixes),
+    phrasePatterns([...templates.parseSameDayWords, ...EN.sameDay], prefixes),
+  ];
+  for (const group of groups) {
+    const out = removeFirst(raw, group);
+    if (out !== null) return out;
+  }
+  return null;
+}
+
+/**
+ * Noa r2 response place tail: after removing the duration phrase, FIX_TIME_LEAD_TOKENS, parseWithinWords and the filler
+ * words, the remaining tail's first word opens with a responseScopeLeadLetters letter; at most SCOPE_TAIL_MAX_CHARS code
+ * points, mostly Hebrew, no digits. Leads and fillers count only before the tail.
+ */
+export function responseScope(value: unknown, templates: OwnerFactTemplates): ResponseScope {
+  const raw = stripTrailingPunctuation(text(value));
+  const rest = withoutResponseDuration(raw, templates);
+  if (rest === null) return { kind: 'unfit' };
+  let remaining = rest;
+  // Multi-word leads first (whole phrases), then single words.
+  for (const lead of [...FIX_TIME_LEAD_TOKENS, ...templates.parseWithinWords, 'up to'].map(item => item.normalize('NFC').trim()).filter(item => /\s/.test(item))) {
+    remaining = remaining.replace(new RegExp(wordRegExp(lead, '').source, 'giu'), ' ');
+  }
+  const ignorable = new Set([...FIX_TIME_LEAD_TOKENS, ...templates.parseWithinWords, ...templates.parseFillerWords, ...EN_FILLER_WORDS].map(item => item.normalize('NFC').trim().toLowerCase()));
+  const list = words(remaining);
+  const at = list.findIndex(word => !ignorable.has(bare(word).toLowerCase()));
+  if (at < 0) return { kind: 'none' };
+  const tail = stripTrailingPunctuation(list.slice(at).join(' '));
+  const letters = templates.responseScopeLeadLetters.map(item => item.normalize('NFC').trim()).filter(Boolean);
+  const fits = letters.some(letter => tail.startsWith(letter) && tail.length > letter.length) && scopeTailFits(tail, 1, Number.POSITIVE_INFINITY) && isVerbatimRun(raw, tail);
+  return fits ? { kind: 'scoped', scope: tail } : { kind: 'unfit' };
 }
 
 /** The brief's owner places, base city first (mirrors researchPageCopy.gatePlaces; kept here to avoid an import cycle). */
@@ -620,22 +962,20 @@ export function ownerFacts(data: CollectedData, brief: Pick<PageBrief, 'site' | 
   const fact = (kind: OwnerFactKind, source: OwnerFactSource, slots: Record<string, string>, dataKey: keyof CollectedData | null): OwnerFact => ({
     kind, source, slots, dataKey, factId: dataKey ? proofIdFor(brief, dataKey) : null,
   });
-  const years = parseYears(data.yearsInField, templates);
+  // Noa r2: a hedged years answer renders no number.
+  const years = hasHedge(data.yearsInField, templates, true) ? null : parseYears(data.yearsInField, templates);
   if (years !== null) facts.years = fact('years', 'parsed', { n: String(years) }, 'yearsInField');
-  const licenseNumber = parseLicenseNumber(data.license, templates);
-  const license = licenseNumber === null ? verbatimHebrew(data.license) : null;
-  if (licenseNumber !== null) facts.license = fact('licenseNumber', 'parsed', { number: licenseNumber }, 'license');
-  else if (license !== null) facts.license = fact('license', 'verbatim', { license }, 'license');
-  const months = parseWarrantyMonths(data.guarantee, templates);
-  if (months !== null && warrantyDurationKeys(months)) facts.warranty = fact('warranty', 'parsed', { months: String(months) }, 'guarantee');
-  else {
-    const warranty = verbatimHebrew(data.guarantee);
-    if (warranty !== null) facts.warranty = fact('warrantyVerbatim', 'verbatim', { warranty }, 'guarantee');
+  // Noa r2: a licence answer that opens with a negation word is a "no" (no chip, no proof, never verbatim).
+  if (!opensWithNegation(data.license, templates)) {
+    const licenseNumber = parseLicenseNumber(data.license, templates);
+    const license = licenseNumber === null ? verbatimHebrew(data.license) : null;
+    if (licenseNumber !== null) facts.license = fact('licenseNumber', 'parsed', { number: licenseNumber }, 'license');
+    else if (license !== null) facts.license = fact('license', 'verbatim', { license }, 'license');
   }
-  const response = parseResponse(data.responseTime, templates);
-  if (response) {
-    facts.response = fact('response', 'parsed', 'sameDay' in response ? { sameDay: '1' } : { minutes: String(response.minutes), ...(response.form ? { form: response.form } : {}) }, 'responseTime');
-  }
+  const warranty = warrantyFact(data.guarantee, templates);
+  if (warranty) facts.warranty = fact(warranty.kind, warranty.source, warranty.slots, 'guarantee');
+  const response = responseFact(data.responseTime, templates);
+  if (response) facts.response = fact('response', 'parsed', response, 'responseTime');
   const rating = parseRating(data.starRating);
   if (rating !== null) {
     const count = parseReviewCount(data.reviewCount);
@@ -647,14 +987,52 @@ export function ownerFacts(data: CollectedData, brief: Pick<PageBrief, 'site' | 
 }
 
 /**
+ * Noa r2 warranty: a negation opener -> none; a hedge (or an "up to" word) -> the verbatim fallback; a parsed duration with
+ * no scope tail -> warranty (proofWarranty); with a fitting tail -> warranty + scope (proofWarrantyScoped); with a tail that
+ * does not fit -> warranty + proofVerbatim (proofWarrantyVerbatim with the owner's full answer) or noProof. Never the
+ * unscoped proof when a tail exists. An unparsed Hebrew answer stays verbatim (unchanged).
+ */
+function warrantyFact(value: unknown, templates: OwnerFactTemplates): { kind: OwnerFactKind; source: OwnerFactSource; slots: Record<string, string> } | null {
+  if (!text(value) || opensWithNegation(value, templates)) return null;
+  const verbatim = verbatimHebrew(value);
+  const months = hasHedge(value, templates, true) ? null : parseWarrantyMonths(value, templates);
+  if (months === null || !warrantyDurationKeys(months)) return verbatim === null ? null : { kind: 'warrantyVerbatim', source: 'verbatim', slots: { warranty: verbatim } };
+  const scope = warrantyScope(value, templates);
+  const slots: Record<string, string> = { months: String(months) };
+  if (scope.kind === 'scoped') slots.scope = scope.scope;
+  else if (scope.kind === 'unfit') {
+    if (verbatim !== null) slots.proofVerbatim = verbatim;
+    else slots.noProof = '1';
+  }
+  return { kind: 'warranty', source: 'parsed', slots };
+}
+
+/**
+ * Noa r2 response: a hedge -> no fact; a parsed duration / same day with no tail -> the callback chip and proof (Adam);
+ * with a place tail (responseScopeLeadLetters) -> scope, which renders only the scoped proof and no chip (Adam); a tail that
+ * does not fit -> no fact.
+ */
+function responseFact(value: unknown, templates: OwnerFactTemplates): Record<string, string> | null {
+  if (hasHedge(value, templates, false)) return null;
+  const response = parseResponse(value, templates);
+  if (!response) return null;
+  const scope = responseScope(value, templates);
+  if (scope.kind === 'unfit') return null;
+  const slots: Record<string, string> = 'sameDay' in response ? { sameDay: '1' } : { minutes: String(response.minutes), ...(response.form ? { form: response.form } : {}) };
+  if (scope.kind === 'scoped') slots.scope = scope.scope;
+  return slots;
+}
+
+/**
  * The CollectedData keys whose answer is neither parsed nor accepted verbatim (English non-numeric text): slice 2 keeps them
  * out of the model's prompt so they are never translated. An empty answer is not listed.
  */
 export function droppedOwnerFactKeys(data: CollectedData, templates: OwnerFactTemplates): Array<keyof CollectedData> {
   const out: Array<keyof CollectedData> = [];
-  if (text(data.license) && parseLicenseNumber(data.license, templates) === null && verbatimHebrew(data.license) === null) out.push('license');
+  // Noa r2: a "no" answer (negation opener) is never a fact and never shown to the model as one.
+  if (text(data.license) && (opensWithNegation(data.license, templates) || (parseLicenseNumber(data.license, templates) === null && verbatimHebrew(data.license) === null))) out.push('license');
   const months = parseWarrantyMonths(data.guarantee, templates);
-  if (text(data.guarantee) && !(months !== null && warrantyDurationKeys(months)) && verbatimHebrew(data.guarantee) === null) out.push('guarantee');
+  if (text(data.guarantee) && (opensWithNegation(data.guarantee, templates) || (!(months !== null && warrantyDurationKeys(months)) && verbatimHebrew(data.guarantee) === null))) out.push('guarantee');
   if (text(data.responseTime) && parseResponse(data.responseTime, templates) === null && !isMostlyHebrew(text(data.responseTime))) out.push('responseTime');
   return out;
 }
@@ -725,9 +1103,11 @@ export function trustText(fact: OwnerFact, templates: OwnerFactTemplates): strin
     case 'licenseNumber': return fillTemplate(templates.trustLicenseNumber, fact.slots);
     case 'warranty': return fillTemplate(templates.trustWarranty, { duration: durationText(fact, 'bare', templates) });
     case 'warrantyVerbatim': return fillTemplate(templates.trustWarrantyVerbatim, fact.slots);
-    case 'response': return sameDay(fact)
-      ? fillTemplate(templates.trustResponseSameDay, {})
-      : fillTemplate(templates.trustResponse, { time: responseTimeText(Number(fact.slots.minutes), templates, fact.slots.form) });
+    // Adam: the callback set (the intake asks how fast the owner calls back); a place-scoped answer has no chip.
+    case 'response': if (fact.slots.scope) return null;
+      return sameDay(fact)
+        ? fillTemplate(templates.trustCallbackSameDay, {})
+        : fillTemplate(templates.trustCallback, { time: responseTimeText(Number(fact.slots.minutes), templates, fact.slots.form) });
     case 'rating': return fact.slots.count
       ? fillTemplate(fact.slots.count === '1' ? templates.trustRatingOneReview : templates.trustRating, fact.slots.count === '1' ? { rating: fact.slots.rating } : fact.slots)
       : fillTemplate(templates.trustRatingNoCount, fact.slots);
@@ -741,11 +1121,22 @@ export function proofText(fact: OwnerFact, templates: OwnerFactTemplates): strin
     case 'years': return yearsText(fact, 'proofYearsOne', 'proofYearsTwo', 'proofYears', templates);
     case 'license': return fillTemplate(opensWithDocumentNoun(fact.slots.license, templates) ? templates.proofLicense : templates.proofLicenseVerbatim, fact.slots);
     case 'licenseNumber': return fillTemplate(templates.proofLicenseNumber, fact.slots);
-    case 'warranty': return fillTemplate(templates.proofWarranty, { duration: durationText(fact, 'lamed', templates) });
+    // Noa r2: no tail -> proofWarranty; a fitting tail -> proofWarrantyScoped; a tail that does not fit -> the owner's full
+    // answer through proofWarrantyVerbatim, else no sentence (never the unscoped form when a tail exists).
+    case 'warranty':
+      if (fact.slots.scope) return fillTemplate(templates.proofWarrantyScoped, { duration: durationText(fact, 'lamed', templates), scope: fact.slots.scope });
+      if (fact.slots.proofVerbatim) return fillTemplate(templates.proofWarrantyVerbatim, { warranty: fact.slots.proofVerbatim });
+      if (fact.slots.noProof) return null;
+      return fillTemplate(templates.proofWarranty, { duration: durationText(fact, 'lamed', templates) });
     case 'warrantyVerbatim': return fillTemplate(templates.proofWarrantyVerbatim, fact.slots);
-    case 'response': return sameDay(fact)
-      ? fillTemplate(templates.proofResponseSameDay, {})
-      : fillTemplate(templates.proofResponse, { time: responseTimeText(Number(fact.slots.minutes), templates, fact.slots.form) });
+    // Adam: the callback set; a place-scoped answer takes the scoped arrival proof (proofResponseScoped / SameDayScoped).
+    case 'response':
+      if (fact.slots.scope) return sameDay(fact)
+        ? fillTemplate(templates.proofResponseSameDayScoped, { scope: fact.slots.scope })
+        : fillTemplate(templates.proofResponseScoped, { time: responseTimeText(Number(fact.slots.minutes), templates, fact.slots.form), scope: fact.slots.scope });
+      return sameDay(fact)
+        ? fillTemplate(templates.proofCallbackSameDay, {})
+        : fillTemplate(templates.proofCallback, { time: responseTimeText(Number(fact.slots.minutes), templates, fact.slots.form) });
     default: return null;
   }
 }

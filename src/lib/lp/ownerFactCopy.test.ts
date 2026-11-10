@@ -13,12 +13,17 @@ import {
   codeOwnedFactTemplates,
   droppedOwnerFactKeys,
   FACT_PARSE_TOKEN_KEYS,
+  FACT_RULE_TOKEN_KEYS,
   FACT_TEMPLATE_KEYS,
   FACT_TEMPLATE_SLOTS,
   FACT_TEMPLATES_PENDING_COPY,
   FACT_TEMPLATES_SOURCE,
   factTemplateProblems,
   fillTemplate,
+  licenseDocumentNouns,
+  opensWithNegation,
+  responseScope,
+  warrantyScope,
   OWNER_FACT_TEMPLATES,
   ownerFacts,
   parseLicenseNumber,
@@ -67,10 +72,13 @@ const STAND_IN_TEMPLATES: OwnerFactTemplates = {
   warrantyLamedSixMonths: 'l6mo', warrantyLamedOneYear: 'l1yr', warrantyLamedTwoYears: 'l2yr', warrantyLamedNYears: 'l{n}yr',
   responseMinutes: '{n}min', responseOneHour: '1h', responseTwoHours: '2h', responseHours: '{n}h',
   trustYearsOne: 'Y:1', trustYearsTwo: 'Y:2', trustResponseSameDay: 'R:sameday', trustRatingOneReview: '{rating}*/1', proofYearsOne: 'I have one year.', proofYearsTwo: 'I have two years.', proofLicenseVerbatim: '{license}.', proofResponseSameDay: 'I arrive the same day.', warrantyBareOneMonth: '1mo', warrantyBareTwoMonths: '2mo', warrantyBareNMonths: '{n}mo', warrantyBareOneAndHalfYears: '18mo', warrantyLamedOneMonth: 'l1mo', warrantyLamedTwoMonths: 'l2mo', warrantyLamedNMonths: 'l{n}mo', warrantyLamedOneAndHalfYears: 'l18mo', responseOneMinute: '1min!', responseHalfHour: 'half-h',
+  proofWarrantyScoped: 'You get a warranty for {duration} {scope}.', proofResponseScoped: 'I arrive within {time} {scope}.', proofResponseSameDayScoped: 'I arrive the same day {scope}.', trustCallback: 'R:{time}', trustCallbackSameDay: 'R:sameday', proofCallback: 'I call back within {time}.', proofCallbackSameDay: 'I call back the same day.', qaAnswerLead: 'At {business} in {city}:',
   parseMinuteWords: [HE_MINUTES], parseHourWords: [HE_HOURS], parseOneHourWords: [HE_ONE_HOUR], parseTwoHourWords: [HE_TWO_HOURS],
   parseHalfHourWords: [HE_HALF_HOUR], parseMonthWords: [HE_MONTHS], parseYearWords: [HE_YEARS], parseOneYearWords: [HE_ONE_YEAR],
   parseTwoYearWords: [HE_TWO_YEARS], parseHalfYearWords: [HE_HALF_YEAR], parseLicenseNumberWords: [`${HE_NO}'`],
   parseOneMonthWords: [HE_ONE_MONTH], parseTwoMonthWords: [HE_TWO_MONTHS], parseOneAndHalfYearWords: [HE_YEAR_AND_HALF], parseSameDayWords: [HE_SAME_DAY],
+  parseWarrantyWords: [HE(22, 5)], warrantyScopeLeadWords: [HE(3, 2)], parseFillerWords: [HE(14, 2)], parseNegationWords: [HE(19, 3)], parseHedgeWords: [HE(24, 4)],
+  parseWithinWords: [HE(26, 2)], licenseDocumentNouns: [HE(7, 5)], responseScopeLeadLetters: [HE(1, 1)], costQuestionTokens: [HE(11, 4)],
 };
 const T = STAND_IN_TEMPLATES;
 
@@ -84,7 +92,7 @@ const brief = (proofIds: string[] = ['proof-yearsInField', 'proof-license', 'pro
 
 test('template set: the stand-ins are complete; the shipped constant is pending until the Tamar -> Noa file is applied', () => {
   assert.deepEqual(factTemplateProblems(T), []);
-  assert.equal(FACT_TEMPLATE_KEYS.length, Object.keys(FACT_TEMPLATE_SLOTS).length + FACT_PARSE_TOKEN_KEYS.length);
+  assert.equal(FACT_TEMPLATE_KEYS.length, Object.keys(FACT_TEMPLATE_SLOTS).length + FACT_PARSE_TOKEN_KEYS.length + FACT_RULE_TOKEN_KEYS.length);
   // Incomplete sets are named by key (never copy text): missing, placeholder, wrong slots, empty parse list.
   const { trustYears: _drop, ...missing } = T;
   void _drop;
@@ -242,7 +250,7 @@ test('proofItemsFromFacts: one sentence per traced fact, existing proof ids, wit
     { text: 'I have 18 years.', factIds: ['proof-yearsInField'] },
     { text: `${hebrewLicense}.`, factIds: ['proof-license'] },
     { text: 'You get a warranty for l1yr.', factIds: ['proof-guarantee'] },
-    { text: 'I arrive within 30min.', factIds: ['proof-responseTime'] },
+    { text: 'I call back within 30min.', factIds: ['proof-responseTime'] },
   ]);
   assert.equal(proofItemsFromFacts(facts, { installPage: true }, T).length, 3, 'no response time on an installation page');
   assert.ok(proofItemsFromFacts(facts, { installPage: false }, T).length <= DEPTH_BLOCK_LIMITS.proof.maxItems);
@@ -272,9 +280,9 @@ test('Noa rule: branch on n / count (years 1 / 2 / N, minutes 1, months 1 / 2 / 
   assert.equal(trustText(fact('years', { n: '3' }), R), R.trustYears.replace('{n}', '3'));
   assert.equal(proofText(fact('years', { n: '1' }), R), R.proofYearsOne);
   assert.equal(proofText(fact('years', { n: '2' }), R), R.proofYearsTwo);
-  assert.equal(trustText(fact('response', { minutes: '1' }), R), R.trustResponse.replace('{time}', R.responseOneMinute));
-  assert.equal(trustText(fact('response', { minutes: '30', form: 'halfHour' }), R), R.trustResponse.replace('{time}', R.responseHalfHour));
-  assert.equal(trustText(fact('response', { minutes: '30' }), R), R.trustResponse.replace('{time}', R.responseMinutes.replace('{n}', '30')), 'digits stay digits');
+  assert.equal(trustText(fact('response', { minutes: '1' }), R), R.trustCallback.replace('{time}', R.responseOneMinute));
+  assert.equal(trustText(fact('response', { minutes: '30', form: 'halfHour' }), R), R.trustCallback.replace('{time}', R.responseHalfHour));
+  assert.equal(trustText(fact('response', { minutes: '30' }), R), R.trustCallback.replace('{time}', R.responseMinutes.replace('{n}', '30')), 'digits stay digits');
   for (const [months, key] of [['1', 'warrantyBareOneMonth'], ['2', 'warrantyBareTwoMonths'], ['6', 'warrantyBareSixMonths'], ['12', 'warrantyBareOneYear'], ['18', 'warrantyBareOneAndHalfYears'], ['24', 'warrantyBareTwoYears']] as const) {
     assert.equal(trustText(fact('warranty', { months }), R), R.trustWarranty.replace('{duration}', R[key]), months);
   }
@@ -291,10 +299,10 @@ test('Noa rule: a same-day answer uses the two SameDay keys, never a duration sl
   assert.deepEqual(parseResponse('same day', R), { sameDay: true });
   const facts = ownerFacts({ responseTime: R.parseSameDayWords[0] }, brief(), R);
   assert.deepEqual(facts.response?.slots, { sameDay: '1' });
-  assert.equal(trustText(facts.response!, R), R.trustResponseSameDay);
-  assert.equal(proofText(facts.response!, R), R.proofResponseSameDay);
+  assert.equal(trustText(facts.response!, R), R.trustCallbackSameDay, 'Adam: the callback set');
+  assert.equal(proofText(facts.response!, R), R.proofCallbackSameDay);
   const filled = [trustText(facts.response!, R), proofText(facts.response!, R)];
-  assert.ok(R.responseSameDay && filled.every(item => item !== R.trustResponse.replace('{time}', R.responseSameDay ?? '')), 'responseSameDay never fills {time}');
+  assert.ok(R.responseSameDay && filled.every(item => item !== R.trustCallback.replace('{time}', R.responseSameDay ?? '')), 'responseSameDay never fills {time}');
 });
 
 test('Noa rule: proofLicense only for licence text that opens with a document noun; otherwise proofLicenseVerbatim', () => {
@@ -352,4 +360,173 @@ test('Noa rule: licence-number and verbatim chips longer than 24 characters are 
   const longVerbatim = `${R.parseSameDayWords[5]} ${R.parseSameDayWords[6]} ${R.parseSameDayWords[7]}`;
   assert.ok(longVerbatim.length > 24 && longVerbatim.length <= 60);
   assert.deepEqual(trustBarFromFacts(ownerFacts({ guarantee: longVerbatim }, noBrief, R), { installPage: false }, R), []);
+});
+
+// ---------------------------------------------------------------------------
+// Noa r2 (2026-11-10, docs/copy/site-bot-fact-templates-2026-11-10.json `_rules`): one test per rule, against the real
+// templates. Hebrew is sliced from the template constant or the committed fixture-answer file, never typed.
+// ---------------------------------------------------------------------------
+type FixtureAnswers = Record<string, Record<string, string>>;
+const fixtureAnswers = (): FixtureAnswers => JSON.parse(fs.readFileSync(path.resolve(__dirname, '../../../docs/copy/site-bot-eval-fixture-owner-answers-2026-11-10.json'), 'utf8')) as FixtureAnswers;
+const proofOf = (data: CollectedData, kind: 'warranty' | 'response' | 'license' | 'years') => {
+  const facts = ownerFacts(data, brief(), R);
+  return facts[kind] ? proofText(facts[kind]!, R) : undefined;
+};
+const W = () => R.parseWarrantyWords[0];
+const LAMED = () => R.warrantyLamedOneYear[0];
+/** The words of a fixture answer after its first n words (a verbatim tail, sliced). */
+const tailAfter = (value: string, n: number) => value.split(' ').slice(n).join(' ');
+
+test('Noa r2 proofWarranty: no scope tail (picker values, duration alone) -> the unscoped proof', () => {
+  live();
+  for (const [answer, lamed] of [[R.warrantyBareSixMonths, R.warrantyLamedSixMonths], [R.warrantyBareOneYear, R.warrantyLamedOneYear], [R.warrantyBareTwoYears, R.warrantyLamedTwoYears], [`${W()} ${R.parseOneYearWords[0]}`, R.warrantyLamedOneYear]]) {
+    assert.equal(proofOf({ guarantee: answer }, 'warranty'), R.proofWarranty.replace('{duration}', lamed), answer);
+  }
+});
+
+test('Noa r2 proofWarrantyScoped: the owner tail verbatim (ac-repair, plumber, the intake placeholder shape)', () => {
+  live();
+  const answers = fixtureAnswers();
+  const ac = answers['ac-repair'].guarantee;
+  const plumber = answers.plumber.guarantee;
+  assert.equal(proofOf({ guarantee: ac }, 'warranty'), R.proofWarrantyScoped.replace('{duration}', R.warrantyLamedSixMonths).replace('{scope}', tailAfter(ac, 3)));
+  assert.equal(proofOf({ guarantee: plumber }, 'warranty'), R.proofWarrantyScoped.replace('{duration}', R.warrantyLamedTwoYears).replace('{scope}', tailAfter(plumber, 2)));
+  const placeholder = `3 ${R.parseYearWords[0]} ${tailAfter(ac, 3)}`;
+  assert.equal(proofOf({ guarantee: placeholder }, 'warranty'), R.proofWarrantyScoped.replace('{duration}', R.warrantyLamedNYears.replace('{n}', '3')).replace('{scope}', tailAfter(ac, 3)));
+  for (const answer of [ac, plumber, placeholder]) assert.notEqual(proofOf({ guarantee: answer }, 'warranty'), R.proofWarranty.replace('{duration}', R.warrantyLamedSixMonths), 'never the unscoped form');
+  // A tail that fails the grammar (a digit, punctuation, too many words) -> the owner's full answer verbatim, never unscoped.
+  const digits = `${ac} 2`;
+  assert.equal(proofOf({ guarantee: digits }, 'warranty'), R.proofWarrantyVerbatim.replace('{warranty}', digits));
+  const comma = `${W()} ${R.parseOneYearWords[0]} ${R.warrantyScopeLeadWords[0]} ${tailAfter(ac, 3)}, ${tailAfter(ac, 3)}`;
+  assert.equal(proofOf({ guarantee: comma }, 'warranty'), R.proofWarrantyVerbatim.replace('{warranty}', comma));
+  const long = `${ac} ${tailAfter(plumber, 3)} ${tailAfter(plumber, 3)}`;
+  assert.equal(proofOf({ guarantee: long }, 'warranty'), R.proofWarrantyVerbatim.replace('{warranty}', long));
+  // A tail that fails and a full answer that is not Hebrew -> no warranty sentence at all (the chip still shows the duration).
+  const english = '1 year warranty on all plumbing jobs';
+  assert.equal(proofOf({ guarantee: english }, 'warranty'), null);
+  assert.equal(proofItemsFromFacts(ownerFacts({ guarantee: english }, brief(), R), { installPage: false }, R).length, 0);
+});
+
+test('Noa r2 parseWarrantyWords: the warranty noun is removed before the scope test (whole word)', () => {
+  live();
+  assert.equal(warrantyScope(`${W()} ${R.parseTwoYearWords[0]}`, R).kind, 'none');
+  assert.equal(warrantyScope(`${R.parseTwoYearWords[0]} ${W()}`, R).kind, 'none');
+  assert.equal(warrantyScope(`${W()}${W()} ${R.parseTwoYearWords[0]}`, R).kind, 'unfit', 'not a whole word: something else remains');
+});
+
+test('Noa r2 warrantyScopeLeadWords: a tail must open with the standalone lead; an attached-prefix lead is not a scope', () => {
+  live();
+  const ac = fixtureAnswers()['ac-repair'].guarantee;
+  const prefixed = `${W()} ${R.parseOneYearWords[0]} ${LAMED()}${tailAfter(ac, 3)}`;
+  assert.equal(warrantyScope(prefixed, R).kind, 'unfit');
+  assert.equal(proofOf({ guarantee: prefixed }, 'warranty'), R.proofWarrantyVerbatim.replace('{warranty}', prefixed));
+  assert.deepEqual(warrantyScope(`${W()} ${R.parseOneYearWords[0]} ${tailAfter(ac, 3)}`, R), { kind: 'scoped', scope: tailAfter(ac, 3) });
+});
+
+test('Noa r2 parseFillerWords: fillers before the fact are ignored (warranty and response), whole words only', () => {
+  live();
+  const ac = fixtureAnswers()['ac-repair'].guarantee;
+  for (const filler of R.parseFillerWords) {
+    assert.deepEqual(warrantyScope(`${filler} ${ac}`, R), { kind: 'scoped', scope: tailAfter(ac, 3) }, filler);
+    assert.equal(responseScope(`${filler} 20 ${R.parseMinuteWords[0]}`, R).kind, 'none', filler);
+  }
+});
+
+test('Noa r2 parseNegationWords: a "no" answer is no fact (guarantee and licence), never verbatim, never shown to the model', () => {
+  live();
+  for (const negation of R.parseNegationWords) {
+    const warranty = `${negation} ${W()}`;
+    assert.equal(ownerFacts({ guarantee: warranty }, brief(), R).warranty, undefined, warranty);
+    const license = `${negation} ${R.licenseDocumentNouns[0]}`;
+    assert.equal(ownerFacts({ license }, brief(), R).license, undefined, license);
+    assert.deepEqual(droppedOwnerFactKeys({ guarantee: warranty, license }, R), ['license', 'guarantee']);
+  }
+  assert.equal(ownerFacts({ guarantee: 'no warranty' }, brief(), R).warranty, undefined);
+  assert.equal(opensWithNegation('No. 4821', R), false, 'the English licence-number abbreviation is not a negation');
+  assert.equal(ownerFacts({ license: 'No. 4821' }, brief(), R).license?.kind, 'licenseNumber');
+});
+
+test('Noa r2 parseHedgeWords: a hedged answer renders no number (years, response; warranty falls back to verbatim)', () => {
+  live();
+  for (const hedge of R.parseHedgeWords) {
+    const glued = /[-\u05BE]$/u.test(hedge);
+    const years = glued ? `${hedge}20 ${R.parseYearWords[0]}` : `${hedge} 20 ${R.parseYearWords[0]}`;
+    assert.equal(ownerFacts({ yearsInField: years }, brief(), R).years, undefined, years);
+    const response = glued ? `${hedge}20 ${R.parseMinuteWords[0]}` : `${hedge} 20 ${R.parseMinuteWords[0]}`;
+    assert.equal(ownerFacts({ responseTime: response }, brief(), R).response, undefined, response);
+    const warranty = glued ? `${hedge}3 ${R.parseYearWords[0]}` : `${hedge} ${R.parseOneYearWords[0]}`;
+    const fact = ownerFacts({ guarantee: warranty }, brief(), R).warranty;
+    assert.ok(!fact || fact.kind === 'warrantyVerbatim', warranty);
+    if (glued) assert.equal(ownerFacts({ yearsInField: `${hedge[0]}20 ${R.parseYearWords[0]}` }, brief(), R).years, undefined, 'the bare first letter before a digit');
+  }
+  assert.equal(ownerFacts({ yearsInField: 'almost 20 years' }, brief(), R).years, undefined);
+  assert.equal(ownerFacts({ responseTime: 'about 20 minutes' }, brief(), R).response, undefined);
+  assert.equal(ownerFacts({ yearsInField: '20 years' }, brief(), R).years?.slots.n, '20');
+});
+
+test('Noa r2 parseWithinWords: response only, the bare unit word must be the last word; a hedge for warranty and years', () => {
+  live();
+  for (const within of R.parseWithinWords) {
+    assert.equal(parseResponseMinutes(`${within} ${R.parseOneHourWords[0]}`, R), 60, within);
+    assert.equal(parseResponseMinutes(`${within} ${R.parseOneHourWords[0]}.`, R), 60, 'trailing punctuation stripped');
+    assert.equal(parseResponseMinutes(`${within} ${R.parseOneHourWords[0]} ${R.parseFillerWords[0]}`, R), null, 'the unit word is not last');
+    assert.equal(parseResponseMinutes(`${within} 3 ${R.parseHourWords[0]}`, R), 180, 'number with unit needs no lead');
+    assert.equal(ownerFacts({ yearsInField: `${within} 10 ${R.parseYearWords[0]}` }, brief(), R).years, undefined, 'years: a hedge');
+    const warranty = ownerFacts({ guarantee: `${within} ${R.parseOneYearWords[0]}` }, brief(), R).warranty;
+    assert.ok(!warranty || warranty.kind === 'warrantyVerbatim', 'warranty: a hedge');
+  }
+});
+
+test('Noa r2 licenseDocumentNouns: exact first-word match, no prefix stripping, kept out of parsePrefixLetters', () => {
+  live();
+  const tail = fixtureAnswers().electrician.license.split(' ').slice(1, 3).join(' ');
+  for (const noun of R.licenseDocumentNouns) {
+    assert.equal(proofOf({ license: `${noun} ${tail}` }, 'license'), R.proofLicense.replace('{license}', `${noun} ${tail}`), noun);
+    const prefixed = `${LAMED()}${noun} ${tail}`;
+    assert.equal(proofOf({ license: prefixed }, 'license'), R.proofLicenseVerbatim.replace('{license}', prefixed), 'a prefixed first word');
+  }
+  assert.ok(licenseDocumentNouns(R).includes(R.trustLicenseNumber.split(' ')[0]), 'the sliced noun stays a member');
+  assert.equal(parsePrefixLetters(R).length, 4, 'the r2 lists do not change the prefix letters');
+});
+
+test('Noa r2 proofResponseScoped: a duration with a place tail -> the scoped proof only, no trust chip (Adam)', () => {
+  live();
+  const place = tailAfter(fixtureAnswers().plumber.responseTime, 2);
+  const answer = `20 ${R.parseMinuteWords[0]} ${place}`;
+  const facts = ownerFacts({ responseTime: answer }, brief(), R);
+  assert.equal(proofText(facts.response!, R), R.proofResponseScoped.replace('{time}', R.responseMinutes.replace('{n}', '20')).replace('{scope}', place));
+  assert.equal(trustText(facts.response!, R), null);
+  assert.equal(trustBarFromFacts({ response: facts.response }, { installPage: false }, R).length, 0);
+});
+
+test('Noa r2 proofResponseSameDayScoped: ac-repair and plumber fixtures', () => {
+  live();
+  const answers = fixtureAnswers();
+  for (const key of ['ac-repair', 'plumber']) {
+    const answer = answers[key].responseTime;
+    assert.equal(proofOf({ responseTime: answer }, 'response'), R.proofResponseSameDayScoped.replace('{scope}', tailAfter(answer, 2)), key);
+    assert.equal(trustBarFromFacts(ownerFacts({ responseTime: answer }, { ...brief(), site: undefined }, R), { installPage: false }, R).length, 0, 'no chip');
+  }
+});
+
+test('Noa r2 responseScopeLeadLetters: a place tail without the lead letter -> no response fact (never unscoped)', () => {
+  live();
+  const city = fixtureAnswers().plumber.targetLocation;
+  assert.ok(!R.responseScopeLeadLetters.some(letter => city.startsWith(letter)));
+  assert.equal(ownerFacts({ responseTime: `20 ${R.parseMinuteWords[0]} ${city}` }, brief(), R).response, undefined);
+  assert.equal(ownerFacts({ responseTime: `${R.parseSameDayWords[3]} ${city}` }, brief(), R).response, undefined);
+});
+
+test('Noa r2 callback set (Adam): responseTime renders as a callback, chip and proof; arrival templates unused', () => {
+  live();
+  const minutes = ownerFacts({ responseTime: `20 ${R.parseMinuteWords[0]}` }, brief(), R).response!;
+  const time = R.responseMinutes.replace('{n}', '20');
+  assert.equal(trustText(minutes, R), R.trustCallback.replace('{time}', time));
+  assert.equal(proofText(minutes, R), R.proofCallback.replace('{time}', time));
+  const sameDay = ownerFacts({ responseTime: R.parseSameDayWords[0] }, brief(), R).response!;
+  assert.equal(trustText(sameDay, R), R.trustCallbackSameDay);
+  assert.equal(proofText(sameDay, R), R.proofCallbackSameDay);
+  for (const value of [trustText(minutes, R), proofText(minutes, R), trustText(sameDay, R), proofText(sameDay, R)]) {
+    assert.ok(![R.trustResponse.replace('{time}', time), R.proofResponse.replace('{time}', time), R.trustResponseSameDay, R.proofResponseSameDay].includes(value ?? ''));
+  }
 });

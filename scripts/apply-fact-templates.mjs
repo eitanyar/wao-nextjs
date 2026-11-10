@@ -33,6 +33,10 @@ const parseBlock = /export const FACT_PARSE_TOKEN_KEYS = \[([\s\S]*?)\n\] as con
 if (!slotsBlock || !parseBlock) die('could not read FACT_TEMPLATE_SLOTS / FACT_PARSE_TOKEN_KEYS from ownerFactCopy.ts');
 const slots = Object.fromEntries([...slotsBlock[1].matchAll(/^\s+([A-Za-z]+): \[([^\]]*)\],/gm)].map(m => [m[1], [...m[2].matchAll(/'(\{[a-z]+\})'/g)].map(s => s[1])]));
 const parseKeys = [...parseBlock[1].matchAll(/^\s+'([A-Za-z]+)',/gm)].map(m => m[1]);
+// Noa r2 rule lists (no prefix stripping; kept out of parsePrefixLetters) are required lists too.
+const ruleBlock = /export const FACT_RULE_TOKEN_KEYS = \[([\s\S]*?)\n\] as const/.exec(ts);
+if (!ruleBlock) die('could not read FACT_RULE_TOKEN_KEYS from ownerFactCopy.ts');
+parseKeys.push(...[...ruleBlock[1].matchAll(/^\s+'([A-Za-z]+)',/gm)].map(m => m[1]));
 // Optional fixed phrases (no slots): copied when present, never required.
 const optionalBlock = /export const FACT_OPTIONAL_TEMPLATE_KEYS = \[([\s\S]*?)\n\] as const/.exec(ts);
 const optionalKeys = optionalBlock ? [...optionalBlock[1].matchAll(/^\s+'([A-Za-z]+)',/gm)].map(m => m[1]) : [];
