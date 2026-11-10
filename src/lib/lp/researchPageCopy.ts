@@ -14,6 +14,7 @@ import { briefFactTexts } from '../site-bot/research/pageBrief';
 import { codeOwnedFactTemplates, droppedOwnerFactKeys, ownerFacts, proofItemsFromFacts, trustBarFromFacts, type OwnerFactTemplates } from './ownerFactCopy';
 import { costFaq, formatShekels, ownerPricing, pricingPromisePhrases } from './researchedPricing';
 import { proseSentences, restatementMatches, type FactRestatementSpec, type RestatementFact } from './factRestatement';
+import { budgetStrings, repetitionBudgetDecisions, type BudgetOptions, type BudgetString } from './repetitionBudget';
 import {
   DEPTH_BLOCK_KEYS,
   DEPTH_BLOCK_LIMITS,
@@ -75,6 +76,7 @@ import {
   fixTimeScope,
   GATE_RULES,
   pageVisibleWords,
+  phraseRepeatFreeTokens,
   isAreaTile,
   PHRASE_REPEAT_MAX_FIELDS,
   PHRASE_REPEAT_MIN_WORDS,
@@ -1064,8 +1066,39 @@ function settleWithDrops(ctx: RepairContext, stage: CopyValidationStage, value: 
 /** The slice 4-5 drops in place (off while the fact templates are pending or the gates are off). Returns the fix notes. */
 export function applyDeterministicDrops(value: Loose, brief: PageBrief, data: CollectedData, gates: CopyGateContext | null, priorMechanismKeys?: readonly string[]): string[] {
   if (!gates?.factRestatement) return [];
-  void brief; void data; void priorMechanismKeys;
-  return dropRestatements(value, gates);
+  return [...dropRestatements(value, gates), ...applyRepetitionBudget(value, brief, data, gates, priorMechanismKeys)];
+}
+
+/** The budget inputs of a page: its rendered strings in render order (code-built ones included) and the options. */
+export function repetitionBudgetInputs(value: Loose, brief: PageBrief, data: CollectedData, gates: CopyGateContext, priorMechanismKeys?: readonly string[]): { strings: BudgetString[]; options: BudgetOptions } {
+  const built = codeBuiltFactStrings(brief, data);
+  const strings = budgetStrings(value, {
+    pricePromises: built?.pricePromises ?? [],
+    costFaq: built?.costFaq ?? null,
+    codeOwnedFields: gates.codeOwnedFields ?? [],
+  }, researchedRenderedFieldsFor(brief.page.pageClass));
+  return { strings, options: { free: phraseRepeatFreeTokens(gates), minSentences: PROSE_MIN_SENTENCES, ...(priorMechanismKeys?.length ? { priorKeys: priorMechanismKeys } : {}) } };
+}
+
+/**
+ * Copy v2 slice 5: apply the repetition budget (repetitionBudget.ts) in place: one drop plan for every decision (so sentence
+ * indices stay those of the text the decisions read). Notes: budget_drop_sentence / budget_drop_item (with the reason),
+ * story_headline_echo, story_about_echo; plus the depth-block notes when a block falls below its minimum.
+ */
+export function applyRepetitionBudget(value: Loose, brief: PageBrief, data: CollectedData, gates: CopyGateContext, priorMechanismKeys?: readonly string[]): string[] {
+  const { strings, options } = repetitionBudgetInputs(value, brief, data, gates, priorMechanismKeys);
+  const decisions = repetitionBudgetDecisions(value, strings, options);
+  if (!decisions.length) return [];
+  const plan = emptyDropPlan();
+  const notes: string[] = [];
+  for (const decision of decisions) {
+    if (!planFieldDrop(plan, decision.field, decision.sentence)) continue;
+    const where = decision.sentence === undefined ? decision.field : `${decision.field}#${decision.sentence}`;
+    if (decision.reason === 'story_headline_echo' || decision.reason === 'story_about_echo') notes.push(`${decision.reason}:${where}`);
+    else notes.push(`${decision.sentence === undefined ? 'budget_drop_item' : 'budget_drop_sentence'}:${where}:${decision.reason}`);
+  }
+  const applied = applyDropPlan(value, plan, 'budget');
+  return [...notes, ...applied.filter(note => note.includes('drop_depth_block'))];
 }
 
 type Loose = Record<string, unknown>;

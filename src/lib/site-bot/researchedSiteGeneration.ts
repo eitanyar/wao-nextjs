@@ -14,7 +14,10 @@ import {
   type ResearchedSiteGraphEdge,
   type ResearchedSitePage,
 } from '../lp/researchedSite';
-import { assertBoundedGeneratedSiteCopy, heroCapFacts, isApprovedPortfolioBrief, shapeOptions } from '../lp/researchPageCopy';
+import { assertBoundedGeneratedSiteCopy, CODE_OWNED_FACT_FIELDS, heroCapFacts, isApprovedPortfolioBrief, shapeOptions } from '../lp/researchPageCopy';
+import { codeOwnedFactTemplates } from '../lp/ownerFactCopy';
+import { statementKeys } from '../lp/repetitionBudget';
+import { researchedRenderedFieldsFor } from '../lp/researchedSite';
 import type { HeroCapPageFacts } from '../lp/copyGates';
 import { isSafeDeploymentSlug } from '../deployment/deploy-access';
 import { assertBoundedPageBrief, type PageBrief } from './research/pageBrief';
@@ -72,6 +75,11 @@ export interface ResearchedSiteGenerationContext {
   priorHeroFacts: readonly HeroCapPageFacts[];
   /** 2026-11-10 (Noa's pattern F): the homepage's trust-bar items, so later pages reuse its term for each proof point. */
   siteTerms?: readonly string[];
+  /**
+   * Copy v2 slice 5: the clause keys of the homepage's model-written statements, so a later page uses each at most twice
+   * (repetitionBudget.ts). Set only while code owns the facts.
+   */
+  priorMechanismKeys?: readonly string[];
 }
 
 /** M2a.6: the site context for the next page, from the pages generated so far (route order, home first); M2a.7: plus their hero-cap facts. */
@@ -90,6 +98,12 @@ export function siteGenerationContext(pages: ReadonlyArray<{ copy: SiteCopy; cla
     priorAboutPageBodies: about.map(page => page.copy.aboutPageBody),
     priorHeroFacts: [...facts],
     ...(siteTerms.length ? { siteTerms } : {}),
+    ...(() => {
+      const home = pages.find(page => page.classification === 'homepage');
+      if (!home || codeOwnedFactTemplates() === null) return {};
+      const keys = statementKeys(home.copy as unknown as Record<string, unknown>, researchedRenderedFieldsFor('homepage'), CODE_OWNED_FACT_FIELDS);
+      return keys.length ? { priorMechanismKeys: keys } : {};
+    })(),
   };
 }
 
