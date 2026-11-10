@@ -1674,16 +1674,32 @@ export interface FactPageOptions {
  * TRUST_BAR_MAX_CHARS code points is skipped (never cut); no response time on an installation page.
  */
 export function trustBarFromFacts(facts: OwnerFacts, options: FactPageOptions, templates: OwnerFactTemplates): string[] {
-  const items: string[] = [];
+  return trustBarEntries(facts, options, templates).map(entry => entry.text);
+}
+
+/** The trust-bar chips with the fact kind each one shows (rerun-3 item 6b: the proof drops the facts a chip already shows). */
+export function trustBarEntries(facts: OwnerFacts, options: FactPageOptions, templates: OwnerFactTemplates): Array<{ kind: keyof OwnerFacts; text: string }> {
+  const items: Array<{ kind: keyof OwnerFacts; text: string }> = [];
   for (const kind of TRUST_BAR_FACT_ORDER) {
     if (items.length >= TRUST_BAR_MAX_ITEMS) break;
     const fact = facts[kind];
     if (!fact || (kind === 'response' && options.installPage)) continue;
     const item = trustText(fact, templates);
     if (item && GUARDED_CHIP_KINDS.includes(fact.kind) && codePointLength(item) > VERBATIM_CHIP_MAX_CHARS) continue;
-    if (item && codePointLength(item) <= TRUST_BAR_MAX_CHARS && !items.includes(item)) items.push(item);
+    if (item && codePointLength(item) <= TRUST_BAR_MAX_CHARS && !items.some(entry => entry.text === item)) items.push({ kind, text: item });
   }
   return items;
+}
+
+/**
+ * Rerun-3 item 6b: the B6 proof items of a page, without the facts the same page's trust bar already shows (same fact ->
+ * the proof item goes; the chip stays). May be empty (the section is then hidden).
+ */
+export function pageProofItems(facts: OwnerFacts, options: FactPageOptions, templates: OwnerFactTemplates): DepthProofItem[] {
+  const shown = new Set(trustBarEntries(facts, options, templates).map(entry => entry.kind));
+  const remaining: OwnerFacts = { ...facts };
+  for (const kind of shown) delete remaining[kind];
+  return proofItemsFromFacts(remaining, options, templates);
 }
 
 /**

@@ -34,7 +34,9 @@ import {
   pricingPromisePhrases,
   RESEARCHED_PRICING_LABELS,
   RESEARCHED_PRICING_LABELS_PENDING_COPY,
+  startingPriceFor,
 } from './researchedPricing';
+import { codeOwnedFactTemplates } from './ownerFactCopy';
 import { DEPTH_BLOCK_KEYS, DEPTH_BLOCK_LIMITS, rendersDepthBlocks } from './depthBlocks';
 
 const RESERVED_SEGMENTS = new Set(['api', 'assets', 'static', 'index', 'privacy', 'accessibility', 'contact', 'sitemap']);
@@ -444,12 +446,17 @@ function priceSection(page: ResearchedSitePage, data: CollectedData, theme: Rend
   if (copy.pending || !rendersDepthBlocks(page.classification)) return '';
   const pricing = ownerPricing(data);
   if (!hasPriceNumbers(pricing)) return '';
+  // Rerun-3 item 6a: only this page's own starting price (another service's row never shows); the call-out fee and the
+  // surcharge policy are general and stay. Nothing left -> no section.
+  const own = page.seo ? startingPriceFor(pricing, page.seo.name) : null;
+  const startingPrices = own ? [own] : [];
+  if (!startingPrices.length && pricing.calloutFee === null && !pricing.surchargePolicy) return '';
   const labels = copy.labels;
   const cell = `padding:10px 12px;border-bottom:1px solid ${theme.border};text-align:start;`;
   const row = (label: string, value: string) => `<tr><th scope="row" style="${cell}font-weight:600;color:${theme.textPrimary};">${esc(label)}</th><td style="${cell}color:${theme.textPrimary};">${value}</td></tr>`;
   const rows = [
     // Noa: cells under the priceTableFromColumn header carry no prefix (the header already says "starting price").
-    ...pricing.startingPrices.map(item => row(item.job, `<bdi>${esc(formatShekels(item.from))}</bdi>`)),
+    ...startingPrices.map(item => row(item.job, `<bdi>${esc(formatShekels(item.from))}</bdi>`)),
     ...(pricing.calloutFee !== null ? [row(labels.calloutFeeRow, `<bdi>${esc(formatShekels(pricing.calloutFee))}</bdi>`)] : []),
     ...(pricing.surchargePolicy ? [row(labels.surchargeRow, esc(pricing.surchargePolicy))] : []),
   ].join('');
@@ -546,7 +553,9 @@ function proofSection(page: ResearchedSitePage, theme: RenderResearchedSitePages
   const reviews = proofReviews(page);
   const context = page.copy.reviewContext ? `<div style="font-size:0.85rem;color:${theme.textMuted};margin-top:10px;">${esc(page.copy.reviewContext)}</div>` : '';
   const quotes = reviews.map((quote, index) => `<blockquote style="margin:18px 0 0;text-align:center;"><p style="font-style:italic;font-size:1.05rem;color:${theme.textPrimary};line-height:1.6;">\u05F4${esc(quote)}\u05F4</p>${index === 0 ? context : ''}</blockquote>`).join('');
-  const fallback = reviews.length ? RESEARCHED_SITE_LABELS.proofHeadingReviews : RESEARCHED_SITE_LABELS.proofHeadingFactsOnly;
+  // Rerun-3 item 6c: while code owns the facts the proof items are the owner's own first-person facts, so the customers'
+  // heading never sits over them: the approved facts heading is reused (a dedicated label is Tamar's, pending).
+  const fallback = reviews.length && !codeOwnedFactTemplates() ? RESEARCHED_SITE_LABELS.proofHeadingReviews : RESEARCHED_SITE_LABELS.proofHeadingFactsOnly;
   return `<section id="proof" data-section="proof" aria-labelledby="proof-heading" style="padding:32px 20px;background:${theme.surface};"><div style="max-width:700px;margin:0 auto;">${depthHeading('proof-heading', page.copy.proofHeadline, fallback, theme)}<ul role="list" style="list-style:none;display:flex;flex-direction:column;gap:8px;padding:0;margin:0;">${facts}</ul>${quotes}</div></section>`;
 }
 

@@ -293,7 +293,9 @@ test('pricing: hero promise line from checked promises only; price table + one c
   }
   assert.ok(!home.includes('data-section="prices"'), 'no price table on the homepage');
   assert.equal((money.match(/data-section="prices"/g) ?? []).length, 1, 'one price block');
-  assert.ok(money.includes('<th scope="row"') && money.includes('leak repair') && money.includes('1,200'));
+  assert.ok(money.includes('<th scope="row"') && money.includes('leak repair') && money.includes(formatShekels(350)));
+  // Rerun-3 item 6a: another service's starting price never shows on this page.
+  assert.ok(!money.includes(formatShekels(1200)), 'no drain row on the leak-repair page');
   assert.ok(money.includes('S night +50%.') || money.includes('night +50%'));
   const faq = money.match(/<div data-cost-faq[^>]*><h3[^>]*>([^<]*)<\/h3><p[^>]*>/);
   assert.ok(faq, 'one cost FAQ');
@@ -340,7 +342,7 @@ test('pricing: real labels with owner data render the promise line, table and co
   // Noa: cells under priceTableFromColumn carry no prefix.
   assert.ok(!money.includes(RESEARCHED_PRICING_LABELS.priceFromPrefix));
   assert.match(money, new RegExp(`<td [^>]*><bdi>${formatShekels(350)}</bdi></td>`));
-  assert.match(money, new RegExp(`<td [^>]*><bdi>${formatShekels(1200)}</bdi></td>`));
+  assert.doesNotMatch(money, new RegExp(`<td [^>]*><bdi>${formatShekels(1200)}</bdi></td>`), 'rerun-3 item 6a: only this page\'s own starting price');
 });
 
 test('pricing (Noa rules): Hebrew city only; owner-named service only; policy punctuation; one price-confirmed chip', () => {

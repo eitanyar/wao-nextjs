@@ -11,7 +11,7 @@ import type { PageBrief } from '../site-bot/research/pageBrief';
 import type { SiteResearchDossier } from '../site-bot/research/types';
 import { CLAIM_RULES, PLURAL_ADDRESS_TOKENS, SERVICE_DESCRIPTION_MIN_CHARS, WE_FORM_TOKENS } from './copyGates.config';
 import { briefFactTexts } from '../site-bot/research/pageBrief';
-import { codeOwnedFactTemplates, droppedOwnerFactKeys, ownerFacts, proofItemsFromFacts, responseScope, trustBarFromFacts, type OwnerFactTemplates } from './ownerFactCopy';
+import { codeOwnedFactTemplates, droppedOwnerFactKeys, ownerFacts, pageProofItems, responseScope, trustBarFromFacts, trustText, type OwnerFactTemplates } from './ownerFactCopy';
 import { buildFearPromiseSpec, buildSameDayScopeSpec, type FearPromiseSpec, type SameDayScopeSpec } from './claimScope';
 import { costFaq, formatShekels, ownerPricing, pricingPromisePhrases } from './researchedPricing';
 import { proseSentences, restatementMatches, type FactRestatementSpec, type RestatementFact } from './factRestatement';
@@ -1494,7 +1494,39 @@ export function ungeneratedFieldsFor(brief: PageBrief): readonly string[] {
  * (ownerFactCopy.ts) while the fact templates are complete. Gate-exempt (CopyGateContext.codeOwnedFields), system-filled,
  * hidden from Noa, never repaired.
  */
-export const CODE_OWNED_FACT_FIELDS: readonly string[] = ['trustBarItems', 'proofItems', 'proofHeadline'];
+export const CODE_OWNED_FACT_FIELDS: readonly string[] = ['trustBarItems', 'proofItems', 'proofHeadline', 'reviewContext'];
+
+/** Fields whose strings are never the model's (system / owner / code-built), so the typography fix leaves them alone. */
+const EM_DASH_SKIP_FIELDS: readonly string[] = ['heroCta', 'serviceItems', 'reviewFeatured', 'faqItems', 'trustBarItems', 'proofItems', 'proofHeadline', 'reviewContext'];
+const SPACED_EN_DASH = /(\S*)[ \u00A0]\u2013[ \u00A0](\S*)/gu;
+
+/** One string with every spaced en-dash as a single-spaced em-dash; a repeated word around it stays (the reduplication gate's). */
+export function emDashText(value: string): string {
+  return value.replace(SPACED_EN_DASH, (match, before: string, after: string) => (before && before === after ? match : `${before} \u2014 ${after}`));
+}
+
+/**
+ * Rerun-3 item 6f: the en-dash fix on the model-written strings of a settled copy (in place). Card names, Q&A questions and the
+ * system / code-built fields are never touched.
+ */
+export function withEmDashes(next: Loose): void {
+  for (const [key, value] of Object.entries(next)) {
+    if (EM_DASH_SKIP_FIELDS.includes(key)) continue;
+    if (typeof value === 'string') next[key] = emDashText(value);
+    else if (Array.isArray(value)) {
+      next[key] = value.map(item => {
+        if (!item || typeof item !== 'object') return typeof item === 'string' ? emDashText(item) : item;
+        const entry = { ...(item as Loose) };
+        for (const [inner, text] of Object.entries(entry)) {
+          if (typeof text !== 'string' || (key === 'serviceDetails' && inner === 'name') || (key === 'qaItems' && inner === 'q') || DEPTH_REFERENCE_FIELD_KEYS.includes(inner)) continue;
+          entry[inner] = emDashText(text);
+        }
+        return entry;
+      });
+    }
+  }
+}
+const DEPTH_REFERENCE_FIELD_KEYS: readonly string[] = ['factIds', 'questionId'];
 /**
  * Copy v2 slice 2: SiteCopy fields a research site never renders (researchedSite.ts RESEARCHED_RENDERED_FIELDS note):
  * not generated while code owns the facts; withSystemFields sets the strings to '' and the optional ones to null.
@@ -1818,10 +1850,16 @@ export function withSystemFields(value: Loose, brief: PageBrief, data: Collected
     const options = { installPage: isInstallPage(brief) };
     next.trustBarItems = trustBarFromFacts(facts, options, templates);
     if (depthPage(brief) && brief.blocksEnabled?.proof) {
-      const proof = proofItemsFromFacts(facts, options, templates);
+      // Rerun-3 item 6b: a fact the trust bar shows is not repeated as a proof item; no item left -> no proof section.
+      const proof = pageProofItems(facts, options, templates);
       next.proofItems = proof.length ? proof : null;
       next.proofHeadline = null;
     }
+    // Rerun-3 item 6d: the review label is the rating chip's own format, the same on every page (never model-written).
+    const ratingLabel = facts.rating ? trustText(facts.rating, templates) : null;
+    next.reviewContext = next.reviewFeatured && ratingLabel && ratingLabel.length <= SITE_COPY_OPTIONAL_STRING_LIMITS.reviewContext ? ratingLabel : null;
+    // Rerun-3 item 6f: a spaced en-dash in a model-written field becomes the em-dash (punctuation only, H1 included).
+    withEmDashes(next);
     for (const key of RESEARCH_UNRENDERED_FIELDS) next[key] = RESEARCH_UNRENDERED_NULL_FIELDS.includes(key) ? null : '';
   } else {
     if (Array.isArray(next.trustBarItems)) next.trustBarItems = withAreaTile(next.trustBarItems, places);
@@ -2068,7 +2106,7 @@ export function buildResearchPageGenerationPrompt(brief: PageBrief, data: Collec
   const lpSchema = omit.includes('serviceDetails');
   const baseSchema = lpSchema ? withoutSchemaKey(buildLpCopyPrompt(promptData, schemaOptions), 'servicesHeadline') : buildSiteCopyPrompt(promptData, schemaOptions);
   // Copy v2 slice 2: the code-owned and never-rendered keys leave the schema's OUTPUT object too.
-  const schema = codeOwnsFacts(brief) ? withoutSchemaLines(baseSchema, ['trustBarItems', ...RESEARCH_UNRENDERED_FIELDS]) : baseSchema;
+  const schema = codeOwnsFacts(brief) ? withoutSchemaLines(baseSchema, ['trustBarItems', 'reviewContext', ...RESEARCH_UNRENDERED_FIELDS]) : baseSchema;
   // A4: the client copy prompt never names WAO (a WAO-offer leak put a copywriting agency's services on a plumber page).
   if (!schema.includes(LEGACY_PERSONA_LINE)) throw new Error('Site copy schema prompt persona line changed; update the research persona swap.');
   let clientSchema = schema.replace(LEGACY_PERSONA_LINE, RESEARCH_PERSONA_LINE);
@@ -2136,7 +2174,7 @@ export function codeBuiltFactStrings(brief: PageBrief, data: CollectedData): Cod
   if (!templates || !brief.site) return null;
   const facts = ownerFacts(data, brief, templates);
   const options = { installPage: isInstallPage(brief) };
-  const proof = depthPage(brief) && brief.blocksEnabled?.proof ? proofItemsFromFacts(facts, options, templates).map(item => item.text) : [];
+  const proof = depthPage(brief) && brief.blocksEnabled?.proof ? pageProofItems(facts, options, templates).map(item => item.text) : [];
   const faq = rendersDepthBlocks(brief.page.pageClass)
     ? costFaq(data, { service: brief.site.pageName, city: brief.site.city ?? null, business: data.businessName || data.businessNiche || '' })
     : null;
@@ -2189,7 +2227,7 @@ export function buildResearchCopyRulesV2(brief: PageBrief, data: CollectedData =
     '- CUSTOMER VOICE (binding): the customer quote appears only in reviewFeatured, which the system fills in verbatim. Never quote, paraphrase or echo it in another field, never attribute a statement to a customer or to customers, and never turn what a customer said, or the opposite of his fear, into the owner\'s promise.',
     FACT_LEDGER_RULES[1],
     '- FACT LEDGER (binding; in your reasoning, before you write; do not output it): list every tool and every process step you plan to name, and next to each the owner field it comes from. Drop every one that has no named owner field.',
-    '- heroCta, reviewFeatured, serviceItems and faqItems are filled in by the system: output them exactly as given in the schema. reviewContext: only when the data supplies a star rating, otherwise null.',
+    '- heroCta, reviewFeatured, serviceItems and faqItems are filled in by the system: output them exactly as given in the schema.',
   ];
   const out: PromptV2Section[] = [
     { heading: 'ROLE AND FACTS', rules: [

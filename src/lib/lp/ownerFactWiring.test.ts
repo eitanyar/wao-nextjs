@@ -171,9 +171,9 @@ test('code-owned facts: withSystemFields overwrites the trust bar and the proof 
     const page = brief('money_service');
     assert.equal(page.blocksEnabled?.proof, true, 'the fixture enables the proof block');
     const service = withSystemFields(loose({ ...modelCopy(), proofHeadline: 'Model proof heading', proofItems: [{ text: 'Model proof', factIds: ['proof-yearsInField'] }] }), page, data);
+    // Rerun-3 item 6b: the years and the warranty are on this page's trust bar, so only the response proof stays.
+    assert.deepEqual(service.trustBarItems, ['Y:12', 'W:1yr', 'Holon']);
     assert.deepEqual(service.proofItems, [
-      { text: 'I have 12 years.', factIds: ['proof-yearsInField'] },
-      { text: 'You get a warranty for l1yr.', factIds: ['proof-guarantee'] },
       { text: 'I call back within 30min.', factIds: ['proof-responseTime'] },
     ]);
     assert.equal(service.proofHeadline, null, 'the approved fallback heading renders');
@@ -213,7 +213,7 @@ test('code-owned facts end to end (mocked model, no network): the final copy car
     assert.equal(calls.length, 2, 'Tamar and Noa, no repair');
     assert.deepEqual(copy.trustBarItems, ['Y:12', 'W:1yr', 'Holon']);
     assert.equal((copy as unknown as Record<string, unknown>).proofHeadline, null);
-    assert.equal(((copy as unknown as Record<string, unknown>).proofItems as unknown[]).length, 3);
+    assert.equal(((copy as unknown as Record<string, unknown>).proofItems as unknown[]).length, 1, 'rerun-3 item 6b: chips are not repeated as proof');
     assert.equal(copy.stickyBarLine, '');
     for (const field of NEW_FIELDS) assert.equal(calls[1].user.slice(0, calls[1].user.indexOf('\n\nHARD LIMITS')).includes(`"${field}"`), false, `${field} not sent to Noa`);
   });

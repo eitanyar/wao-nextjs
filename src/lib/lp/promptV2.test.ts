@@ -131,7 +131,7 @@ test('v2 prompt: the removed rules are gone, the kept ones are there, the facts 
       assert.deepEqual(Object.keys(skeleton).filter(key => ungeneratedFieldsFor(page).includes(key)), []);
     }
     const proofPage = buildResearchPageGenerationPromptV2(brief('money_service'), data);
-    assert.ok(proofPage.includes('"I have 12 years."'), 'the code-built proof is listed on a service page');
+    assert.ok(proofPage.includes('"I call back within 30min."'), 'the code-built proof is listed on a service page (chip facts deduped, item 6b)');
     assert.ok(proofPage.includes('never output those keys'), 'the depth section says the system builds the proof');
   });
 });
@@ -153,7 +153,7 @@ test('v2 prompt: rule count (about 30, down from about 90) and a pinned snapshot
 });
 
 /** Re-pin deliberately when a v2 rule changes (print the new values with the assert message). */
-const PINNED_V2 = { home: '0a89941562b516f0', service: '43d293a95d6516d6' };
+const PINNED_V2 = { home: '5ed13a9c5d8cb10e', service: 'f80a59b051660889' };
 
 test('rerun-3 item 3: no code-gate token list reaches a v2 prompt (user prompt, Tamar / repair / Noa system prompts)', async () => {
   await codeOwned(() => {

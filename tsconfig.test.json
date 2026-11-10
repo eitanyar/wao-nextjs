@@ -175,6 +175,7 @@
     "src/lib/lp/qaCodeOwned.test.ts",
     "src/lib/lp/serviceCardNameLimit.test.ts",
     "src/lib/lp/claimScope.test.ts",
+    "src/lib/lp/rerun3CodeBuilt.test.ts",
     "src/lib/lp/copyV2Slices78.test.ts",
     "src/lib/lp/ownerFactWiring.test.ts",
     "src/lib/lp/promptV2.test.ts",
