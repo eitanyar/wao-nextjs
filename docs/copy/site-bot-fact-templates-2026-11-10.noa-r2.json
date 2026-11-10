@@ -1,0 +1,96 @@
+{
+ "proofWarranty": "יש אחריות {duration} על העבודה שלי.",
+ "proofWarrantyScoped": "יש אחריות {duration} {scope}.",
+ "parseWarrantyWords": [
+  "אחריות"
+ ],
+ "warrantyScopeLeadWords": [
+  "על"
+ ],
+ "parseFillerWords": [
+  "יש",
+  "של",
+  "כן",
+  "אני",
+  "נותן",
+  "נותנת",
+  "מגיע",
+  "מגיעה",
+  "הגעה",
+  "זמן"
+ ],
+ "parseNegationWords": [
+  "אין",
+  "ללא",
+  "בלי",
+  "לא",
+  "עדיין לא"
+ ],
+ "parseHedgeWords": [
+  "בערך",
+  "בסביבות",
+  "סביב",
+  "בקירוב",
+  "משהו כמו",
+  "פחות או יותר",
+  "כמעט",
+  "בדרך כלל",
+  "בד״כ",
+  "בד\"כ",
+  "לרוב",
+  "בממוצע",
+  "תלוי",
+  "לפעמים",
+  "כ־",
+  "כ-"
+ ],
+ "parseWithinWords": [
+  "עד",
+  "לכל היותר",
+  "מקסימום"
+ ],
+ "licenseDocumentNouns": [
+  "רישיון",
+  "רשיון",
+  "רישיונות",
+  "תעודה",
+  "תעודת",
+  "תעודות",
+  "הסמכה",
+  "הסמכת",
+  "הסמכות",
+  "היתר",
+  "היתרים",
+  "אישור",
+  "אישורים",
+  "רישום",
+  "תואר"
+ ],
+ "proofResponseScoped": "אני אצלך תוך {time} {scope}.",
+ "proofResponseSameDayScoped": "אני אצלך עוד באותו יום {scope}.",
+ "responseScopeLeadLetters": [
+  "ב"
+ ],
+ "trustCallback": "מענה תוך {time}",
+ "trustCallbackSameDay": "מענה באותו יום",
+ "proofCallback": "אחזור אליך תוך {time}.",
+ "proofCallbackSameDay": "אחזור אליך עוד באותו יום.",
+ "_rules": {
+  "proofWarranty": "CHANGED (replaces the 'every job' wording, which widened the owner's promise). Use ONLY when the warranty answer has no scope tail: picker values warrantySixMonths / warrantyOneYear / warrantyTwoYears (months 6 / 12 / 24), or free text that reduces to the duration alone (e.g. 'אחריות שנה', 'שנה'). 'on my work' mirrors the intake question 'on the work' and adds no quantifier. {duration} = warrantyLamed* as today.",
+  "proofWarrantyScoped": "NEW. Use when the duration parsed AND a scope tail exists that fits the scope grammar. {scope} = the owner's tail, verbatim, trailing punctuation stripped. Scope grammar: (1) remove parseWarrantyWords, parseFillerWords and the matched duration phrase from the answer; (2) the tail starts at the first standalone word from warrantyScopeLeadWords and runs to the end; (3) nothing else may remain BEFORE the tail; (4) the tail is 2-5 words including the lead word, at most 30 code points, mostly Hebrew (isMostlyHebrew), no digits, no internal , ; : ( ) or dash. Fallback when a tail exists but fails any test: proofWarrantyVerbatim with the owner's FULL answer (verbatimHebrew); if that fails too, NO warranty proof sentence. Never fall back to proofWarranty when any tail exists (that is the overclaim). Fixtures: ac-repair -> 'יש אחריות לחצי שנה על תיקונים.'; plumber -> 'יש אחריות לשנתיים על עבודות צנרת.'; intake placeholder '3 שנים על העבודה' -> 'יש אחריות ל־3 שנים על העבודה.'",
+  "parseWarrantyWords": "The warranty noun, removed before the scope test. Whole word, no prefix stripping.",
+  "warrantyScopeLeadWords": "The standalone preposition a warranty scope tail must open with. Whole word only; an attached-prefix form (e.g. a tail opening with a lamed-prefixed 'every') is NOT a scoped tail -> verbatim fallback.",
+  "parseFillerWords": "Words ignored when deciding whether anything other than the fact remains (warranty: before the scope tail; response: before the place tail). Whole words, no prefix stripping.",
+  "parseNegationWords": "An answer whose FIRST word(s) match an entry is a 'no' answer: NO fact of that kind (no chip, no proof, never verbatim). Applies to guarantee and license. Today 'ללא אחריות' (the warrantyNone picker label) or 'אין' would pass verbatimHebrew and render as a trust chip. The warrantyNone picker should map to 'no warranty' in code and never put the label text in the field; this list is the free-text backstop.",
+  "parseHedgeWords": "An approximate or conditional answer: a hedge anywhere in a years / response / warranty answer -> no code-rendered number (response: no fact, the model path keeps the Hebrew text as today; warranty: proofWarrantyVerbatim fallback; years: no fact). Reason: 'about 20 minutes' must not become the firm promise 'within 20 minutes', and 'almost 20 years' must not become '20 years'. Entries ending in maqaf or hyphen match directly before a digit; the bare first letter of those entries directly before a digit counts too. Whole words otherwise. English equivalents (about, around, approx, approximately, roughly, almost, nearly, usually, typically, depends, ~) belong in code.",
+  "parseWithinWords": "NEW, response time only: 'up to' leads that, like FIX_TIME_LEAD_TOKENS, let a bare hour / minute word count. Extra guard for these leads: the bare unit word must be the LAST word of the answer (after stripping trailing punctuation), so 'until a late hour' is never read as one hour. Number-with-unit answers ('up to 3 hours') already parse without a lead and need no change. For GUARANTEE and YEARS these same words are hedges ('up to a year' warranty depends on the job) -> treat as parseHedgeWords there.",
+  "licenseDocumentNouns": "Replaces the single noun sliced from trustLicenseNumber (keep that sliced noun as a guaranteed member). proofLicense ('I have {license}.') only when the licence text's FIRST word equals an entry EXACTLY. Change from the earlier rule: no prefix-letter stripping here; any prefixed first word makes 'I have ...' ungrammatical, so it takes proofLicenseVerbatim. Deliberately excluded: adjectives such as 'licensed' / 'certified' (they would read 'I have certified ...'). The unprefixed variant spelling without yod is listed because owners type it; it is only matched, never rendered by the template.",
+  "proofResponseScoped": "NEW. A parsed response duration with a place tail: after removing the duration phrase, FIX_TIME_LEAD_TOKENS, parseWithinWords and parseFillerWords, the remaining tail's first word opens with a letter from responseScopeLeadLetters; tail at most 30 code points, mostly Hebrew, no digits. {scope} = that tail verbatim. With a place tail, the trust chip is omitted (or shown only on pages whose city is named in the tail; engineer's call with Adam). A tail that fails the test -> no response fact (no chip, no proof); never the unscoped template.",
+  "proofResponseSameDayScoped": "NEW. Same as proofResponseScoped for a same-day answer. Fixtures: ac-repair -> 'אני אצלך עוד באותו יום בראשון לציון.'; plumber -> 'אני אצלך עוד באותו יום בחולון ובבת ים.' Today both render the unscoped same-day chip and proof on every city page.",
+  "responseScopeLeadLetters": "The attached preposition a response place tail must open with (first letter of the tail's first word).",
+  "trustCallback": "ALTERNATIVE set, product decision needed. The only intake question that collects responseTime (prompts.ts T13) asks how fast the owner RETURNS A CALL; trustResponse / proofResponse render it as ARRIVAL. If the site-bot keeps that question, use the callback set instead of the arrival set. Same {time} values (response*).",
+  "trustCallbackSameDay": "Callback set, same-day answer.",
+  "proofCallback": "Callback set. First person future, gender-neutral for the owner. A place tail on a callback answer -> no response fact.",
+  "proofCallbackSameDay": "Callback set, same-day answer."
+ }
+}
