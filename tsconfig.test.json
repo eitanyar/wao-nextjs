@@ -224,6 +224,8 @@
     "src/lib/site-bot/siteSlug.test.ts",
     "src/lib/site-bot/startIntake.ts",
     "src/lib/site-bot/startIntake.test.ts",
+    "src/lib/site-bot/credentialsCopy.ts",
+    "src/lib/site-bot/credentialsCopy.test.ts",
     "src/lib/site-bot/prefillHandler.ts",
     "src/lib/site-bot/prefillHandler.test.ts",
     "src/lib/site-bot/intakeCopy.ts",

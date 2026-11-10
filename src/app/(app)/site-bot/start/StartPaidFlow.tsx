@@ -14,6 +14,7 @@ import { INTAKE_COPY } from "@/lib/site-bot/intakeCopy";
 import { startVoiceNote, VOICE_NOTE_CONTROL_LABELS, voiceNoteStepAvailable, type VoiceNoteRecording } from "@/lib/site-bot/voiceNote";
 import { ISRAELI_LOCALITIES } from "@/lib/site-bot/israeliLocalities";
 import { MAX_LISTED_SERVED_AREAS, servedAreaCandidates } from "@/lib/site-bot/servedAreas";
+import { CREDENTIALS_COPY, showsLicenseQuestions, WARRANTY_CHOICE_COPY_KEY, WARRANTY_CHOICES, type CredentialsAnswers } from "@/lib/site-bot/credentialsCopy";
 import {
   buildIntakeCollectedData,
   emptyIntakeCard,
@@ -43,8 +44,9 @@ import {
 //   B. at most 3 typed questions, the truth gaps M0 found: priority services, travel
 //      boundary / service area (service model first, as buttons, when the card could not
 //      infer it), and the differentiator with Tamar's one-shot anti-generic probe.
-// Owner name, client fear, years/guarantee, review, contact, hours and slug are no longer
-// asked: they are derived from GBP (src/lib/site-bot/startIntake.ts) or dropped.
+// Owner name, client fear, review, contact, hours and slug are no longer asked: they are
+// derived from GBP (src/lib/site-bot/startIntake.ts) or dropped. Years / licence / warranty come
+// from the optional credentials step after the questions (2026-11-10).
 // Every new string is a slot in src/lib/site-bot/intakeCopy.ts.
 // M2b.1g (Yonatan's cap, Eitan's concern): the travel-boundary answer is free text, parsed against the tracked locality
 // list (the same parse checkout init runs). The step shows the area hint under the question. When the answer names more
@@ -130,9 +132,12 @@ function questionText(key: IntakeQuestionKey, card: IntakeCard): string {
   return card.serviceModel === "location" ? INTAKE_COPY.M1_Q2_SERVICE_AREA : INTAKE_COPY.M1_Q2_TRAVEL_BOUNDARY;
 }
 
+// "credentials" is the optional, skippable credentials step right after the 3 questions (years, licence for licensed
+// trades only, warranty chips; src/lib/site-bot/credentialsCopy.ts). Its answers reach checkout init through
+// buildIntakeCollectedData (yearsInField / license / guarantee).
 // Content depth: "voice" is the optional voice-note step after the 3 questions. voiceNoteStepAvailable() is false
 // (src/lib/site-bot/voiceNote.ts: no safe storage / transcription / control labels yet), so the flow never enters it today.
-type Phase = "loading" | "card" | "chat" | "voice" | "routing" | "error";
+type Phase = "loading" | "card" | "chat" | "credentials" | "voice" | "routing" | "error";
 
 function SiteBotStartContent() {
   const router = useRouter();
@@ -158,6 +163,9 @@ function SiteBotStartContent() {
   const [areaChoice, setAreaChoice] = useState<AreaChoice | null>(null);
   const [voiceData, setVoiceData] = useState<CollectedData | null>(null);
   const [recording, setRecording] = useState<VoiceNoteRecording | null>(null);
+  const [credentials, setCredentials] = useState<CredentialsAnswers>({});
+  const [credentialsCard, setCredentialsCard] = useState<IntakeCard | null>(null);
+  const credentialsHeadingRef = useRef<HTMLHeadingElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const firstAreaRef = useRef<HTMLButtonElement>(null);
   const chatInputRef = useRef<HTMLInputElement>(null);
@@ -207,6 +215,13 @@ function SiteBotStartContent() {
     return () => clearTimeout(timer);
     // M2b.1g: focus moves to the first town chip when the area choice opens, back to the input when it closes.
   }, [phase, stepIndex, awaitingChoice, messages.length, areaChoiceOpen]);
+
+  // The credentials step takes focus when it opens (its heading, so a screen reader reads the intro first).
+  useEffect(() => {
+    if (phase !== "credentials") return;
+    const timer = setTimeout(() => credentialsHeadingRef.current?.focus(), 0);
+    return () => clearTimeout(timer);
+  }, [phase]);
 
   function fieldValue(field: IntakeCardField): string {
     // Display only: time ranges are isolated LTR so the RTL input shows 08:00-18:00, not 18:00-08:00.
@@ -324,16 +339,34 @@ function SiteBotStartContent() {
       scrollDown();
       return;
     }
-    const data = buildIntakeCollectedData(nextCard, evidence, nextAnswers);
+    // The optional credentials step comes next (skippable); it builds the collected data when it closes.
+    setMessages((prev) => [...prev, userMsg]);
+    setCredentialsCard(nextCard);
+    setCredentials({});
+    setPhase("credentials");
+    scrollDown();
+  }
+
+  /** Leaves the credentials step: skip = no credentials (nothing written), continue = the answers given. */
+  function finishCredentialsStep(skip: boolean) {
+    if (phase !== "credentials" || !credentialsCard) return;
+    const nextAnswers: IntakeAnswers = skip ? answers : { ...answers, credentials };
+    setAnswers(nextAnswers);
+    const data = buildIntakeCollectedData(credentialsCard, evidence, nextAnswers);
+    setCredentialsCard(null);
+    afterQuestions(data);
+  }
+
+  function afterQuestions(data: CollectedData) {
     // Content depth: the optional voice note, only when it is available (it is off; see voiceNote.ts).
     if (voiceNoteStepAvailable(typeof window === "undefined" ? {} : { MediaRecorder: window.MediaRecorder, mediaDevices: navigator.mediaDevices })) {
       setVoiceData(data);
-      setMessages((prev) => [...prev, userMsg, { role: "assistant", content: INTAKE_COPY.M1_VOICE_NOTE_PROMPT }]);
+      setMessages((prev) => [...prev, { role: "assistant", content: INTAKE_COPY.M1_VOICE_NOTE_PROMPT }]);
       setPhase("voice");
       scrollDown();
       return;
     }
-    setMessages((prev) => [...prev, userMsg, { role: "assistant", content: DONE_MESSAGE }]);
+    setMessages((prev) => [...prev, { role: "assistant", content: DONE_MESSAGE }]);
     scrollDown();
     finish(data);
   }
@@ -621,6 +654,143 @@ function SiteBotStartContent() {
               );
             })}
           </div>
+        )}
+
+        {phase === "credentials" && credentialsCard && (
+          <form
+            data-intake-credentials="true"
+            aria-labelledby="intake-credentials-intro"
+            onSubmit={(e) => {
+              e.preventDefault();
+              finishCredentialsStep(false);
+            }}
+            style={{
+              border: "1px solid var(--border)",
+              borderRadius: "var(--radius-md)",
+              background: "var(--surface)",
+              padding: "20px",
+              display: "flex",
+              flexDirection: "column",
+              gap: "16px",
+              marginBottom: "16px",
+              fontFamily: "var(--font-body), sans-serif",
+              overflowWrap: "anywhere",
+            }}
+          >
+            <h2 id="intake-credentials-intro" ref={credentialsHeadingRef} tabIndex={-1} style={{ margin: 0, fontSize: "1rem", fontWeight: 600, lineHeight: 1.5, color: "var(--text)" }}>
+              {renderMixed(CREDENTIALS_COPY.stepIntro)}
+            </h2>
+
+            <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+              <label htmlFor="intake-credentials-years" style={{ fontSize: "0.92rem", fontWeight: 600, color: "var(--text)" }}>
+                {renderMixed(CREDENTIALS_COPY.yearsQuestion)}
+              </label>
+              <input
+                id="intake-credentials-years"
+                name="yearsInField"
+                type="text"
+                inputMode="numeric"
+                pattern="[0-9]*"
+                maxLength={2}
+                className="wao-intake-field"
+                placeholder={CREDENTIALS_COPY.yearsPlaceholder}
+                value={credentials.years ?? ""}
+                onChange={(e) => setCredentials((prev) => ({ ...prev, years: e.target.value.replace(/[^0-9]/g, "") }))}
+                style={{ ...fieldInputStyle, maxWidth: "140px" }}
+              />
+            </div>
+
+            {showsLicenseQuestions(credentialsCard.businessNiche) && (
+              <fieldset style={{ border: "none", margin: 0, padding: 0, display: "flex", flexDirection: "column", gap: "8px" }}>
+                <legend style={{ fontSize: "0.92rem", fontWeight: 600, color: "var(--text)", marginBottom: "8px", padding: 0 }}>
+                  {renderMixed(CREDENTIALS_COPY.licenseQuestion)}
+                </legend>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: "10px" }}>
+                  {(["yes", "no"] as const).map((value) => {
+                    const selected = credentials.license === value;
+                    return (
+                      <button
+                        key={value}
+                        type="button"
+                        className="wao-intake-choice"
+                        aria-pressed={selected}
+                        data-intake-credentials-license={value}
+                        onClick={() => setCredentials((prev) => ({ ...prev, license: selected ? undefined : value }))}
+                        style={{ minHeight: "44px", background: selected ? "var(--accent)" : "transparent", color: selected ? "#0a0a0a" : "var(--text)" }}
+                      >
+                        {renderMixed(value === "yes" ? CREDENTIALS_COPY.licenseYes : CREDENTIALS_COPY.licenseNo)}
+                      </button>
+                    );
+                  })}
+                </div>
+                {credentials.license === "yes" && (
+                  <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                    <label htmlFor="intake-credentials-license" style={{ fontSize: "0.88rem", color: "var(--text)" }}>
+                      {renderMixed(CREDENTIALS_COPY.licenseTypePrompt)}
+                    </label>
+                    <input
+                      id="intake-credentials-license"
+                      name="license"
+                      type="text"
+                      maxLength={60}
+                      className="wao-intake-field"
+                      placeholder={CREDENTIALS_COPY.licenseTypePlaceholder}
+                      value={credentials.licenseText ?? ""}
+                      onChange={(e) => setCredentials((prev) => ({ ...prev, licenseText: e.target.value }))}
+                      style={fieldInputStyle}
+                    />
+                  </div>
+                )}
+              </fieldset>
+            )}
+
+            <fieldset style={{ border: "none", margin: 0, padding: 0, display: "flex", flexDirection: "column", gap: "8px" }}>
+              <legend style={{ fontSize: "0.92rem", fontWeight: 600, color: "var(--text)", marginBottom: "8px", padding: 0 }}>
+                {renderMixed(CREDENTIALS_COPY.warrantyQuestion)}
+              </legend>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: "10px" }}>
+                {WARRANTY_CHOICES.map((choice) => {
+                  const selected = credentials.warranty === choice;
+                  return (
+                    <button
+                      key={choice}
+                      type="button"
+                      className="wao-intake-choice"
+                      aria-pressed={selected}
+                      data-intake-credentials-warranty={choice}
+                      onClick={() => setCredentials((prev) => ({ ...prev, warranty: selected ? undefined : choice }))}
+                      style={{ minHeight: "44px", background: selected ? "var(--accent)" : "transparent", color: selected ? "#0a0a0a" : "var(--text)" }}
+                    >
+                      {renderMixed(CREDENTIALS_COPY[WARRANTY_CHOICE_COPY_KEY[choice]])}
+                    </button>
+                  );
+                })}
+              </div>
+              {credentials.warranty === "other" && (
+                <input
+                  id="intake-credentials-warranty-other"
+                  name="guarantee"
+                  type="text"
+                  maxLength={60}
+                  aria-label={CREDENTIALS_COPY.warrantyQuestion}
+                  className="wao-intake-field"
+                  placeholder={CREDENTIALS_COPY.warrantyOtherPlaceholder}
+                  value={credentials.warrantyOther ?? ""}
+                  onChange={(e) => setCredentials((prev) => ({ ...prev, warrantyOther: e.target.value }))}
+                  style={fieldInputStyle}
+                />
+              )}
+            </fieldset>
+
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "10px" }}>
+              <button type="submit" className="btn-primary" data-intake-credentials-continue="true" style={{ padding: "12px 24px", minHeight: "44px", justifyContent: "center" }}>
+                {renderMixed(CREDENTIALS_COPY.continueButton)}
+              </button>
+              <button type="button" className="wao-intake-choice" data-intake-credentials-skip="true" onClick={() => finishCredentialsStep(true)} style={{ minHeight: "44px" }}>
+                {renderMixed(CREDENTIALS_COPY.skipButton)}
+              </button>
+            </div>
+          </form>
         )}
 
         {phase === "voice" && VOICE_NOTE_CONTROL_LABELS.record && VOICE_NOTE_CONTROL_LABELS.stop && (

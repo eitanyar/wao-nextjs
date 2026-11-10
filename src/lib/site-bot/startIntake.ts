@@ -13,6 +13,7 @@
  */
 import type { CollectedData } from '../bot/prompts';
 import { derivePreferredSlug } from './siteSlug';
+import { credentialsCollectedFields, type CredentialsAnswers } from './credentialsCopy';
 
 export type IntakeServiceModel = 'field' | 'location' | 'mixed' | 'remote';
 export const INTAKE_SERVICE_MODELS: readonly IntakeServiceModel[] = ['field', 'location', 'mixed', 'remote'];
@@ -37,7 +38,8 @@ export interface IntakeEvidence {
 
 export type IntakeQuestionKey = 'priorityServices' | 'travelBoundary' | 'usp';
 /** M2b.1g: servedAreaChoice = the towns the owner picked when his travel answer named more than the cap (checkout re-validates). */
-export type IntakeAnswers = Partial<Record<IntakeQuestionKey, string>> & { servedAreaChoice?: string[] };
+/** credentials: the optional credentials step after the 3 questions (credentialsCopy.ts); absent = skipped. */
+export type IntakeAnswers = Partial<Record<IntakeQuestionKey, string>> & { servedAreaChoice?: string[]; credentials?: CredentialsAnswers };
 
 export const MAX_INTAKE_QUESTIONS = 3;
 /** The card cannot be confirmed without these: checkout needs a niche, the site needs a name and phone, serviceability needs a base. */
@@ -158,6 +160,8 @@ export function buildIntakeCollectedData(card: IntakeCard, evidence: IntakeEvide
     ...(hours ? { businessHours: hours } : {}),
     ...(website ? { websiteUri: website } : {}),
     ...(evidence.hasGoogleBusiness ? { hasGoogleBusiness: true } : {}),
+    // The optional credentials step: yearsInField / license / guarantee (the licence only for licensed trades).
+    ...credentialsCollectedFields(answers.credentials, niche),
   };
   const slug = derivePreferredSlug({ websiteUri: website, businessName: data.businessName, businessNiche: niche, phone });
   if (slug) data.preferredSlug = slug;
