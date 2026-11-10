@@ -72,3 +72,12 @@ Eval: 8/8 gates pass, US$1.50 (scratch/m2b1g/eval). Tamar (Opus seat): NEW BETTE
    describe a state true for the reader, tails must be backed by the body (H1 → Yonatan sign-off); H no object-less transitive verbs,
    no verbless relative clauses, Hebrew geresh not ASCII.
 5. **Bug check:** owner `reviewQuote` renders on no page in the eval — find whether a gate/validator nulls it.
+
+## Pricing input — market-driven, not a blank fact (Eitan 2026-11-10)
+The owner price question is advice, not a form field. Research already pulls the top SERP for his niche + base city; add a
+"pricing norm" read: share of top local competitors showing (a) a starting price / price list, (b) a pricing promise without
+numbers (fixed price, free quote, no call-out fee, no hidden costs), (c) neither. The intake then adapts:
+- norm (threshold set from Yonatan's 2026-11-10 pricing research) → tell him what his market does ("most leading competitors in
+  your field and area show X") and offer the matching options; explain it lifts conversion;
+- rare → don't ask for a number; at most offer a pricing promise.
+Whatever he picks becomes an owner fact; the generator never guesses a price. Wording via waocopy → Noa.
