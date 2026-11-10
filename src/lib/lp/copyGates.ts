@@ -105,6 +105,7 @@ import {
   WARRANTY_DEFINITE_BARE_DURATION,
 } from './generationData';
 import { PREFIX_LETTERS } from './hebrewPrefixLetters';
+import { factRestatementHits, type FactRestatementSpec } from './factRestatement';
 import {
   DEPTH_REFERENCE_KEYS,
   factTraceHits,
@@ -214,6 +215,8 @@ export const GATE_RULES = {
   // within their suggested usage.
   factTrace: 'gate_fact_trace',
   termDensity: 'gate_term_density',
+  // Copy v2 slice 4: a model field restates an owner fact the code already shows (trust bar, proof, prices).
+  factRestatement: 'gate_fact_restatement',
 } as const;
 export type GateRule = (typeof GATE_RULES)[keyof typeof GATE_RULES];
 
@@ -302,6 +305,11 @@ export interface CopyGateContext {
    * the fact-trace and term-density gates run on the depth blocks; unset (every other page and legacy sites) = off.
    */
   depth?: CopyGateDepth;
+  /**
+   * Copy v2 slice 4: the code-owned owner facts (digits and phrases) no model field may restate (factRestatement.ts). Set only
+   * while code owns the facts; unset = the gate is off (today's path).
+   */
+  factRestatement?: FactRestatementSpec;
 }
 
 /** Content depth gate inputs (see CopyGateContext.depth). */
@@ -2063,6 +2071,8 @@ export const ALWAYS_BLOCKING_RULES: readonly GateRule[] = [
   // Content depth (2026-11-10, Yonatan's hard gates): block items trace to cited owner facts; terms within suggested usage.
   GATE_RULES.factTrace,
   GATE_RULES.termDensity,
+  // Copy v2 slice 4: restating a code-owned owner fact fails the page in every field (story and depth blocks too).
+  GATE_RULES.factRestatement,
 ];
 
 /** M2b.1h: the only gates that run on the unrendered pitch: the truth / owner-fact gates and the foreign-script check. */
@@ -2131,10 +2141,11 @@ export function runCopyGates(copy: Record<string, unknown>, ctx: CopyGateContext
 }
 
 function runAllGates(copy: Record<string, unknown>, ctx: CopyGateContext): GateViolation[] {
-  if (!Object.prototype.hasOwnProperty.call(copy, 'pitch')) return [...runPageGates(copy, ctx), ...depthGateHits(copy, ctx)];
+  if (!Object.prototype.hasOwnProperty.call(copy, 'pitch')) return [...runPageGates(copy, ctx), ...depthGateHits(copy, ctx), ...restatementGateHits(copy, ctx)];
   const { pitch, ...page } = copy;
   const out = runPageGates(page, ctx);
   out.push(...depthGateHits(page, ctx));
+  out.push(...restatementGateHits(page, ctx));
   if (typeof pitch === 'string' && pitch.trim()) out.push(...pitchGateHits(pitch, ctx));
   return out;
 }
@@ -2191,6 +2202,17 @@ function pitchGateHits(pitch: string, ctx: CopyGateContext): GateViolation[] {
     priorHeroHeadlines: [], priorAboutPageHeadlines: [], priorAboutPageBodies: [], priorHeroFacts: [],
   };
   return runPageGates({ pitch }, alone).filter(hit => hit.field === 'pitch' && PITCH_GATE_RULES.includes(hit.rule));
+}
+
+/** The model-written strings the restatement gate reads: generated fields minus the system-set service names / headline. */
+export function restatementGateStrings(copy: Record<string, unknown>, ctx: CopyGateContext): Array<{ field: string; value: string }> {
+  return generatedStrings(copy, ctx).filter(item => item.field !== 'servicesHeadline' && !/^serviceDetails\[\d+\]\.name$/.test(item.field) && item.value.trim());
+}
+
+/** Copy v2 slice 4: gate_fact_restatement (off unless ctx.factRestatement is set; never on the unrendered pitch). */
+function restatementGateHits(copy: Record<string, unknown>, ctx: CopyGateContext): GateViolation[] {
+  if (!ctx.factRestatement) return [];
+  return factRestatementHits(restatementGateStrings(copy, ctx), ctx.factRestatement).map(hit => ({ field: hit.field, rule: GATE_RULES.factRestatement, actual: `restatement:${hit.kind}` }));
 }
 
 function runPageGates(copy: Record<string, unknown>, ctx: CopyGateContext): GateViolation[] {
@@ -2279,7 +2301,8 @@ function runPageGates(copy: Record<string, unknown>, ctx: CopyGateContext): Gate
     if (REDUPLICATION_DASH_PATTERN.test(value)) out.push({ field, rule: GATE_RULES.reduplicationDash });
     if (ctx.researchSite && FOREIGN_SCRIPT_PATTERN.test(value)) out.push({ field, rule: GATE_RULES.foreignScript, actual: 'foreign_script:non_hebrew' });
     if (nameSpellingHit(value, ctx)) out.push({ field, rule: GATE_RULES.nameSpelling });
-    if (ctx.researchSite && /^serviceDetails\[\d+\]\.description$/.test(field) && value.trim().length < SERVICE_DESCRIPTION_MIN_CHARS) {
+    // Copy v2 slices 4-5: with code-owned facts a card may lose its description (dropped whole; the card keeps its name).
+    if (ctx.researchSite && /^serviceDetails\[\d+\]\.description$/.test(field) && value.trim().length < SERVICE_DESCRIPTION_MIN_CHARS && !(value === '' && ctx.codeOwnedFields?.length)) {
       out.push({ field, rule: GATE_RULES.shortDescription });
     }
   }
@@ -2378,6 +2401,8 @@ export interface CopyGatePageOptions {
   phraseRepeatFields?: readonly string[];
   /** Content depth: the service page's depth gate inputs (see CopyGateContext.depth). */
   depth?: CopyGateDepth;
+  /** Copy v2 slice 4: see CopyGateContext.factRestatement. */
+  factRestatement?: FactRestatementSpec;
 }
 
 /** Build the gate context from owner data plus the page's confirmed service names and owner-stated places. */
@@ -2416,6 +2441,7 @@ export function copyGateContext(data: CollectedData, serviceLabels: readonly str
     ...(page.promiseRestatement ? { promiseRestatement: true } : {}),
     ...(page.phraseRepeatFields ? { phraseRepeatFields: [...page.phraseRepeatFields] } : {}),
     ...(page.depth ? { depth: page.depth } : {}),
+    ...(page.factRestatement ? { factRestatement: page.factRestatement } : {}),
   };
 }
 
@@ -2490,6 +2516,8 @@ export function describeGateViolation(violation: GateViolation, ctx: CopyGateCon
       return `${violation.field} introduces the owner by a name spelled differently from the owner facts (for example a Latin name written in Hebrew letters); write the name exactly as given, character for character: ${JSON.stringify(ctx.ownerFirstName ?? '')}`;
     case GATE_RULES.serviceArea:
       return `${violation.field} widens the service area beyond the places the owner named (a region, "and surroundings", "the area of", nearby towns); name only these places: ${(ctx.places ?? []).join(' / ')}. A travel distance may be stated as a number, never as "surroundings"`;
+    case GATE_RULES.factRestatement:
+      return `${violation.field} restates an owner fact (${(violation.actual ?? '').split(':')[1] ?? 'fact'}: years in the trade, licence, warranty, response time or price) that the system already shows on this page in fixed wording; remove it from this field entirely and say something the page does not say yet (never the fact in other words or other numbers)`;
     case GATE_RULES.shortDescription:
       return `${violation.field} is shorter than ${SERVICE_DESCRIPTION_MIN_CHARS} characters; write one complete sentence on what this service includes for the customer (at least ${SERVICE_DESCRIPTION_MIN_CHARS} characters, within the limit), without repeating proof points`;
     case GATE_RULES.genericAdjective: {

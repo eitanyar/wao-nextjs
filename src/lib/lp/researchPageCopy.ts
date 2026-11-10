@@ -9,10 +9,11 @@ import { buildLpCopyPrompt, buildSiteCopyPrompt, primaryCtaLabel } from './lpCop
 import { callQwenJSON, type CallQwenJSONOptions } from '../ai/qwen-fast';
 import type { PageBrief } from '../site-bot/research/pageBrief';
 import type { SiteResearchDossier } from '../site-bot/research/types';
-import { PLURAL_ADDRESS_TOKENS, SERVICE_DESCRIPTION_MIN_CHARS, WE_FORM_TOKENS } from './copyGates.config';
+import { CLAIM_RULES, PLURAL_ADDRESS_TOKENS, SERVICE_DESCRIPTION_MIN_CHARS, WE_FORM_TOKENS } from './copyGates.config';
 import { briefFactTexts } from '../site-bot/research/pageBrief';
-import { codeOwnedFactTemplates, droppedOwnerFactKeys, ownerFacts, proofItemsFromFacts, trustBarFromFacts } from './ownerFactCopy';
-import { costFaq, pricingPromisePhrases } from './researchedPricing';
+import { codeOwnedFactTemplates, droppedOwnerFactKeys, ownerFacts, proofItemsFromFacts, trustBarFromFacts, type OwnerFactTemplates } from './ownerFactCopy';
+import { costFaq, formatShekels, ownerPricing, pricingPromisePhrases } from './researchedPricing';
+import { proseSentences, restatementMatches, type FactRestatementSpec, type RestatementFact } from './factRestatement';
 import {
   DEPTH_BLOCK_KEYS,
   DEPTH_BLOCK_LIMITS,
@@ -296,6 +297,16 @@ export const SITE_COPY_KEY_LIST: readonly string[] = SITE_COPY_KEYS;
  */
 export interface SiteCopyShapeOptions {
   ungenerated?: readonly string[];
+  /**
+   * Copy v2 slices 4-5: a serviceDetails description may be exactly '' (the drop path removed it; the card keeps its name and
+   * the renderer omits the line). Set only while code owns the facts, and for stored research records (relaxation only).
+   */
+  emptyCardDescriptions?: boolean;
+}
+
+/** The keys of one pair list that may be '' under these shape options. */
+function pairEmptyKeys(key: string, options: SiteCopyShapeOptions): readonly string[] {
+  return key === 'serviceDetails' && options.emptyCardDescriptions ? ['description'] : [];
 }
 
 function invalidCopy(): never {
@@ -333,12 +344,13 @@ function boundedArray(value: unknown, max: number, check: (item: unknown) => boo
   return true;
 }
 
-function stringPair(value: unknown, keys: readonly string[], limits: readonly number[]): boolean {
+function stringPair(value: unknown, keys: readonly string[], limits: readonly number[], emptyKeys: readonly string[] = []): boolean {
   if (!plainObject(value)) return false;
   if (Reflect.ownKeys(value).length !== keys.length) return false;
   for (let index = 0; index < keys.length; index++) {
     const descriptor = Object.getOwnPropertyDescriptor(value, keys[index]);
-    if (!descriptor || !descriptor.enumerable || !('value' in descriptor) || !boundedString(descriptor.value, limits[index])) return false;
+    if (!descriptor || !descriptor.enumerable || !('value' in descriptor)) return false;
+    if (!boundedString(descriptor.value, limits[index]) && !(descriptor.value === '' && emptyKeys.includes(keys[index]))) return false;
   }
   return Reflect.ownKeys(value).every(key => typeof key === 'string' && keys.includes(key));
 }
@@ -378,7 +390,7 @@ export function assertBoundedGeneratedSiteCopy(value: unknown, options: SiteCopy
     }) ||
     PAIR_LIST_KEYS.some(key => {
       const limit = SITE_COPY_PAIR_LIST_LIMITS[key];
-      return !boundedArray(value[key], limit.maxItems, item => stringPair(item, limit.keys, limit.maxChars));
+      return !boundedArray(value[key], limit.maxItems, item => stringPair(item, limit.keys, limit.maxChars, pairEmptyKeys(key, options)));
     })) invalidCopy();
   try {
     if (Buffer.byteLength(JSON.stringify(withoutDepthKeys(value)), 'utf8') > SITE_COPY_MAX_BYTES) invalidCopy();
@@ -434,11 +446,12 @@ function arrayViolations(
   return out;
 }
 
-function pairViolations(field: string, entry: unknown, keys: readonly string[], limits: readonly number[]): CopyViolation[] {
+function pairViolations(field: string, entry: unknown, keys: readonly string[], limits: readonly number[], emptyKeys: readonly string[] = []): CopyViolation[] {
   if (!plainObject(entry)) return [{ field, rule: 'type', actual: entry === null ? 'null' : Array.isArray(entry) ? 'array' : typeof entry }];
   const out: CopyViolation[] = [];
   for (const key of Object.keys(entry)) if (!keys.includes(key)) out.push({ field: `${field}.${key}`, rule: 'unexpected' });
   keys.forEach((key, index) => {
+    if (entry[key] === '' && emptyKeys.includes(key)) return;
     const violation = stringViolation(`${field}.${key}`, entry[key], limits[index]);
     if (violation) out.push(violation);
   });
@@ -488,7 +501,7 @@ export function explainGeneratedSiteCopyViolations(value: unknown, options: Site
   // Pair lists keep the M0.5 report order: faqItems before serviceDetails.
   for (const key of PAIR_LIST_KEYS) {
     const limit = SITE_COPY_PAIR_LIST_LIMITS[key];
-    out.push(...arrayViolations(key, value[key], limit.maxItems, (entry, index) => pairViolations(`${key}[${index}]`, entry, limit.keys, limit.maxChars)));
+    out.push(...arrayViolations(key, value[key], limit.maxItems, (entry, index) => pairViolations(`${key}[${index}]`, entry, limit.keys, limit.maxChars, pairEmptyKeys(key, options))));
   }
   try {
     const bytes = Buffer.byteLength(JSON.stringify(withoutDepthKeys(value)), 'utf8');
@@ -1032,6 +1045,27 @@ interface RepairContext {
   emit: (event: CopyRepairEvent) => void;
   /** Copy v2 slice 3: the prompt version of this page (repairs use the matching system prompt). */
   promptVersion?: PromptVersion;
+  /** Copy v2 slice 4: repair calls already spent on restatement hits (shared by the Tamar and Noa stages). */
+  restatementRepairs?: number;
+  /** Copy v2 slice 5: the homepage's clause keys (site-wide budget). */
+  priorMechanismKeys?: readonly string[];
+}
+
+/**
+ * Copy v2 slices 4-5: the deterministic drops of a settled copy (code-owned facts only): restated facts first, then the
+ * repetition budget. Logged as one deterministic_fix event; never a repair.
+ */
+function settleWithDrops(ctx: RepairContext, stage: CopyValidationStage, value: Loose): Loose {
+  const fixes = applyDeterministicDrops(value, ctx.brief, ctx.data, ctx.gates, ctx.priorMechanismKeys);
+  if (fixes.length) ctx.emit({ stage, kind: 'deterministic_fix', fixes });
+  return value;
+}
+
+/** The slice 4-5 drops in place (off while the fact templates are pending or the gates are off). Returns the fix notes. */
+export function applyDeterministicDrops(value: Loose, brief: PageBrief, data: CollectedData, gates: CopyGateContext | null, priorMechanismKeys?: readonly string[]): string[] {
+  if (!gates?.factRestatement) return [];
+  void brief; void data; void priorMechanismKeys;
+  return dropRestatements(value, gates);
 }
 
 type Loose = Record<string, unknown>;
@@ -1367,6 +1401,159 @@ export function codeOwnsFacts(brief: Pick<PageBrief, 'site'>): boolean {
   return Boolean(brief.site) && codeOwnedFactTemplates() !== null;
 }
 
+// ---------------------------------------------------------------------------
+// Copy v2 slice 4: gate_fact_restatement inputs and the cheaper fix path (drop first, then one repair, then fail).
+// ---------------------------------------------------------------------------
+
+/** Fact template keys whose fixed wording (slots removed) is a "years in the trade" phrase (optional keys skipped). */
+export const YEARS_PHRASE_TEMPLATE_KEYS: readonly string[] = ['trustYears', 'trustYearsOne', 'trustYearsTwo'];
+
+/** A template's fixed words (slots and sentence punctuation removed), when at least two words remain; else null. */
+export function templatePhrase(template: string | undefined): string | null {
+  if (typeof template !== 'string') return null;
+  const words = template.replace(/\{[a-z]+\}/g, ' ').replace(/[.,:;!?]/g, ' ').normalize('NFC').trim().split(/\s+/u).filter(Boolean);
+  return words.length >= 2 ? words.join(' ') : null;
+}
+
+function digitRunsOf(value: unknown, minLength = 1): string[] {
+  const text = typeof value === 'string' ? value : typeof value === 'number' && Number.isFinite(value) ? String(value) : '';
+  return [...new Set((text.match(/\d+/g) ?? []).filter(run => run.length >= minLength))];
+}
+
+const answered = (value: unknown) => (typeof value === 'string' && value.trim().length > 0) || (typeof value === 'number' && Number.isFinite(value));
+
+/**
+ * The restatement spec of one page: per code-owned fact the owner gave, its digit runs and its word phrases (years: the
+ * template's fixed wording; warranty: the existing warranty claim tokens; licence: the license_grade claim tokens and his
+ * Hebrew wording verbatim). Single-digit warranty / response runs are left to the warranty words (a bare "1" is too common).
+ */
+export function factRestatementSpec(brief: PageBrief, data: CollectedData, templates: OwnerFactTemplates): FactRestatementSpec {
+  const facts: RestatementFact[] = [];
+  const parsed = ownerFacts(data, brief, templates);
+  if (answered(data.yearsInField)) {
+    const record = templates as unknown as Record<string, unknown>;
+    const phrases = YEARS_PHRASE_TEMPLATE_KEYS.map(key => templatePhrase(record[key] as string | undefined)).filter((item): item is string => Boolean(item));
+    facts.push({ kind: 'years', digits: [...new Set([...(parsed.years ? [parsed.years.slots.n] : []), ...digitRunsOf(data.yearsInField)])], phrases });
+  }
+  if (answered(data.guarantee)) {
+    facts.push({ kind: 'warranty', digits: digitRunsOf(data.guarantee, 2), phrases: CLAIM_RULES.find(rule => rule.id === 'warranty')?.tokens ?? [] });
+  }
+  if (answered(data.license)) {
+    const wording = parsed.license?.kind === 'license' ? [parsed.license.slots.license] : [];
+    facts.push({ kind: 'license', digits: digitRunsOf(data.license, 3), phrases: [...(CLAIM_TOKENS.license_grade ?? []), ...wording] });
+  }
+  if (answered(data.responseTime)) facts.push({ kind: 'response', digits: digitRunsOf(data.responseTime, 2), phrases: [] });
+  const pricing = ownerPricing(data);
+  const amounts = [...(pricing.calloutFee !== null ? [pricing.calloutFee] : []), ...pricing.startingPrices.map(item => item.from)];
+  if (amounts.length) {
+    facts.push({ kind: 'price', digits: [...new Set(amounts.flatMap(amount => [String(amount), formatShekels(amount).replace(/\s*\S$/u, '')]))], phrases: pricingPromisePhrases(data) });
+  } else if (pricingPromisePhrases(data).length) {
+    // The hero price promise line is code-built too: its exact phrases are never restated.
+    facts.push({ kind: 'price', digits: [], phrases: pricingPromisePhrases(data) });
+  }
+  return { facts, usp: typeof data.usp === 'string' ? data.usp : '' };
+}
+
+/** The minimum sentence count a prose field keeps when the system drops a sentence (story: STORY_MIN_SENTENCES; about: B6). */
+export const PROSE_MIN_SENTENCES: Readonly<Record<string, number>> = { storyBody: STORY_MIN_SENTENCES, aboutPageBody: 3 };
+/** Model fields the system may set to null when they break a drop rule (the renderer shows the approved fallback heading). */
+const NULLABLE_HEADINGS: readonly string[] = ['storyHeadline', 'processHeadline', 'qaHeadline'];
+
+/** Fields whose every restatement / budget fix is a drop, never a repair (whole items or sentences; nothing is edited). */
+export interface DropPlan {
+  /** Prose field -> sentence indices to drop. */
+  sentences: Map<string, Set<number>>;
+  /** serviceDetails indices whose description is dropped (the card keeps its name). */
+  cardDescriptions: Set<number>;
+  /** Depth items to drop. */
+  depthItems: Map<DepthBlockId, Set<number>>;
+  /** Headings set to null. */
+  headings: Set<string>;
+}
+
+export function emptyDropPlan(): DropPlan {
+  return { sentences: new Map(), cardDescriptions: new Set(), depthItems: new Map(), headings: new Set() };
+}
+
+/** Plan the drop of one field path (false when the field cannot be dropped: it goes to the repair). */
+export function planFieldDrop(plan: DropPlan, field: string, sentenceIndex?: number): boolean {
+  const card = /^serviceDetails\[(\d+)\]\.description$/.exec(field);
+  if (card) { plan.cardDescriptions.add(Number(card[1])); return true; }
+  const depth = depthItemOf(field);
+  if (depth && depth.block !== 'proof') {
+    const set = plan.depthItems.get(depth.block) ?? new Set<number>();
+    set.add(depth.index);
+    plan.depthItems.set(depth.block, set);
+    return true;
+  }
+  if (NULLABLE_HEADINGS.includes(field)) { plan.headings.add(field); return true; }
+  if (field in PROSE_MIN_SENTENCES && sentenceIndex !== undefined) {
+    const set = plan.sentences.get(field) ?? new Set<number>();
+    set.add(sentenceIndex);
+    plan.sentences.set(field, set);
+    return true;
+  }
+  return false;
+}
+
+/**
+ * Apply a drop plan in place. A prose field keeps its minimum sentence count (a drop that would break it is skipped: the gate
+ * then stays and the field goes to the repair); a depth block below its minimum becomes null with its headline. Returns the
+ * fix notes (field names and counts; never copy text).
+ */
+export function applyDropPlan(copy: Loose, plan: DropPlan, tag: string): string[] {
+  const fixes: string[] = [];
+  for (const [field, drop] of plan.sentences) {
+    const value = copy[field];
+    if (typeof value !== 'string') continue;
+    const parts = proseSentences(value);
+    const kept = parts.filter((_, index) => !drop.has(index));
+    if (kept.length === parts.length || kept.length < (PROSE_MIN_SENTENCES[field] ?? parts.length)) continue;
+    copy[field] = kept.join(' ');
+    fixes.push(`${tag}_drop_sentence:${field}:${parts.length}->${kept.length}`);
+  }
+  if (plan.cardDescriptions.size && Array.isArray(copy.serviceDetails)) {
+    copy.serviceDetails = copy.serviceDetails.map((item, index) => {
+      if (!plan.cardDescriptions.has(index) || !plainObject(item) || item.description === '') return item;
+      fixes.push(`${tag}_drop_item:serviceDetails[${index}].description`);
+      return { ...item, description: '' };
+    });
+  }
+  for (const field of plan.headings) {
+    if (typeof copy[field] === 'string') {
+      copy[field] = null;
+      fixes.push(`${tag}_null:${field}`);
+    }
+  }
+  if (plan.depthItems.size) fixes.push(...dropDepthItems(copy, plan.depthItems).map(fix => `${tag}_${fix}`));
+  return fixes;
+}
+
+/**
+ * Copy v2 slice 4: drop what restates a code-owned fact (story / about sentence while the minimum holds; card description;
+ * process step or Q&A item; a nullable heading). Whatever cannot be dropped stays a blocking hit: one repair, then the page fails.
+ */
+export function dropRestatements(copy: Loose, gates: CopyGateContext): string[] {
+  const spec = gates.factRestatement;
+  if (!spec) return [];
+  const hits = blockingGateHits(runCopyGates(copy, gates), gates).filter(hit => hit.rule === GATE_RULES.factRestatement);
+  if (!hits.length) return [];
+  const plan = emptyDropPlan();
+  for (const field of new Set(hits.map(hit => hit.field))) {
+    if (field in PROSE_MIN_SENTENCES) {
+      const value = copy[field];
+      if (typeof value !== 'string') continue;
+      proseSentences(value).forEach((sentence, index) => { if (restatementMatches(sentence, spec).length) planFieldDrop(plan, field, index); });
+    } else {
+      planFieldDrop(plan, field);
+    }
+  }
+  return applyDropPlan(copy, plan, 'restatement');
+}
+
+/** Copy v2 slice 4: restatement hits get one repair per page; after that they are not sent to the model again (the page fails). */
+export const RESTATEMENT_MAX_REPAIRS = 1;
+
 /** Copy v2 slice 2: the brief proof ids of owner answers the model never sees (English non-numeric text). */
 function modelHiddenProofIds(brief: PageBrief, data: CollectedData): string[] {
   const templates = brief.site ? codeOwnedFactTemplates() : null;
@@ -1378,12 +1565,14 @@ function modelHiddenProofIds(brief: PageBrief, data: CollectedData): string[] {
  * be '' (copy generated with code-owned facts); copy saved before passes exactly as before.
  */
 export function researchedRecordShapeOptions(classification: string): SiteCopyShapeOptions {
-  return { ungenerated: [...researchedUngeneratedFieldsFor(classification), ...RESEARCH_UNRENDERED_FIELDS] };
+  return { ungenerated: [...researchedUngeneratedFieldsFor(classification), ...RESEARCH_UNRENDERED_FIELDS], emptyCardDescriptions: true };
 }
 
 /** M2b.1d: the bounded-validator shape options of a brief's page. */
 export function shapeOptions(brief: PageBrief): SiteCopyShapeOptions {
   const ungenerated = ungeneratedFieldsFor(brief);
+  // Copy v2 slices 4-5: a dropped card description is '' (code-owned facts only).
+  if (codeOwnsFacts(brief)) return { ungenerated, emptyCardDescriptions: true };
   return ungenerated.length ? { ungenerated } : {};
 }
 
@@ -1542,7 +1731,7 @@ function systemFieldsFor(ctx: RepairContext): readonly string[] {
 
 /** Validate one stage's output against the validator and the gates, spending repair budget, then safe fixes; throws with what remains. */
 async function settleStage(ctx: RepairContext, stage: CopyValidationStage, call: () => Promise<string>): Promise<SiteCopy> {
-  const settle = (raw: Loose) => withSystemFields(raw, ctx.brief, ctx.data);
+  const settle = (raw: Loose) => settleWithDrops(ctx, stage, withSystemFields(raw, ctx.brief, ctx.data));
   // M2b.1h: the pitch / story shape notes of each fresh model response (warnings only; never repaired, never fail the page).
   const note = (raw: Loose | undefined) => {
     const warnings = raw ? optionalFieldWarnings(raw, ctx.brief, stage) : [];
@@ -1568,9 +1757,13 @@ async function settleStage(ctx: RepairContext, stage: CopyValidationStage, call:
       value = parsed.value ? settle(parsed.value) : undefined;
       continue;
     }
-    const fields = repairableFields(violations, systemFieldsFor(ctx));
+    // Copy v2 slice 4: restatement hits get RESTATEMENT_MAX_REPAIRS repair per page; after that the page fails on them.
+    const restated = violations.filter(violation => violation.rule === GATE_RULES.factRestatement);
+    const sendable = (ctx.restatementRepairs ?? 0) >= RESTATEMENT_MAX_REPAIRS ? violations.filter(violation => !restated.includes(violation)) : violations;
+    const fields = repairableFields(sendable, systemFieldsFor(ctx));
     if (!fields.length) break;
-    value = settle(await repairFields(ctx, stage, value, violations, fields));
+    if (restated.length && sendable.length === violations.length) ctx.restatementRepairs = (ctx.restatementRepairs ?? 0) + 1;
+    value = settle(await repairFields(ctx, stage, value, sendable, fields));
   }
   if (!value) throw new GeneratedCopyValidationError(stage, parsed.violations);
   if (ctx.deterministicFixes) {
@@ -2033,6 +2226,8 @@ export function briefGateContext(brief: PageBrief, data: CollectedData): CopyGat
     ...(site ? { ungeneratedFields: [...ungeneratedFieldsFor(brief)] } : {}),
     // Copy v2 slice 2: the code-built fields never carry a gate hit (set only while the fact templates are complete).
     ...(site && codeOwnsFacts(brief) ? { codeOwnedFields: [...CODE_OWNED_FACT_FIELDS] } : {}),
+    // Copy v2 slice 4: the code-owned facts no model field may restate (gate_fact_restatement).
+    ...(site && codeOwnsFacts(brief) ? { factRestatement: factRestatementSpec(brief, data, codeOwnedFactTemplates() as OwnerFactTemplates) } : {}),
     // M2b.1h: pitch-first pages may restate the promise in fresh words; every research page blocks verbatim repeats.
     ...(site ? { promiseRestatement: pitchFirstPage(brief), phraseRepeatFields: researchedRenderedFieldsFor(brief.page.pageClass) } : {}),
     // Content depth: the fact-trace and term-density inputs of a service page with depth blocks.
@@ -2100,6 +2295,7 @@ export async function generateResearchPageCopy(
       try { dependencies.onEvent?.(event); } catch { /* diagnostics never break generation */ }
     },
     promptVersion: version,
+    ...(dependencies.priorMechanismKeys?.length ? { priorMechanismKeys: [...dependencies.priorMechanismKeys] } : {}),
   };
   const prompt = version === 'v2' ? buildResearchPageGenerationPromptV2(brief, data) : buildResearchPageGenerationPrompt(brief, data, dependencies.siteTerms);
   const tamarSystem = !brief.site ? COPY_SYSTEM_PROMPT : version === 'v2' ? SITE_COPY_SYSTEM_PROMPT_V2 : SITE_COPY_SYSTEM_PROMPT;
@@ -2108,6 +2304,8 @@ export async function generateResearchPageCopy(
   const noaCall = async () => withTamarDepthReferences(await callJson(QA_SYSTEM_PROMPT, buildNoaQaMessage(tamarCopy, brief), { think: false }), tamarCopy as unknown as Loose, brief);
   const noaCopy = await settleStage(ctx, 'noa', noaCall);
   const finalCopy = withSystemFields(carryOptionalFields(applyFaqPolicy(noaCopy, brief) as unknown as Loose, tamarCopy as unknown as Loose), brief, data) as unknown as SiteCopy;
+  const finalFixes = applyDeterministicDrops(finalCopy as unknown as Loose, brief, data, ctx.gates, ctx.priorMechanismKeys);
+  if (finalFixes.length) ctx.emit({ stage: 'final', kind: 'deterministic_fix', fixes: finalFixes });
   assertCopyAt('final', finalCopy, shapeOptions(brief));
   assertGatesAt('final', finalCopy as unknown as Loose, ctx.gates, ctx.emit);
   const gap = depthLengthNote(finalCopy as unknown as Loose, brief);
