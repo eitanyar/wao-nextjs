@@ -448,12 +448,13 @@ function priceSection(page: ResearchedSitePage, data: CollectedData, theme: Rend
   const cell = `padding:10px 12px;border-bottom:1px solid ${theme.border};text-align:start;`;
   const row = (label: string, value: string) => `<tr><th scope="row" style="${cell}font-weight:600;color:${theme.textPrimary};">${esc(label)}</th><td style="${cell}color:${theme.textPrimary};">${value}</td></tr>`;
   const rows = [
-    ...pricing.startingPrices.map(item => row(item.job, `${esc(labels.priceFromPrefix)} <bdi>${esc(formatShekels(item.from))}</bdi>`)),
+    // Noa: cells under the priceTableFromColumn header carry no prefix (the header already says "starting price").
+    ...pricing.startingPrices.map(item => row(item.job, `<bdi>${esc(formatShekels(item.from))}</bdi>`)),
     ...(pricing.calloutFee !== null ? [row(labels.calloutFeeRow, `<bdi>${esc(formatShekels(pricing.calloutFee))}</bdi>`)] : []),
     ...(pricing.surchargePolicy ? [row(labels.surchargeRow, esc(pricing.surchargePolicy))] : []),
   ].join('');
-  const faq = page.seo ? costFaq(data, { service: page.seo.name, city: page.seo.city ?? null, business: contacts(data).businessName }, labels, copy.pending) : null;
-  const faqHtml = faq ? `<div data-cost-faq style="margin-top:16px;background:${theme.surface};border:1px solid ${theme.border};border-radius:${theme.radiusMd};padding:14px 16px;"><h3 style="font-weight:700;font-size:1rem;color:${theme.primary};margin-bottom:6px;">${esc(faq.q)}</h3><p style="color:${theme.textMuted};line-height:1.6;">${esc(faq.a)}</p></div>` : '';
+  const faq = page.seo ? costFaq(data, { service: page.seo.name, city: page.seo.city ?? null, business: contacts(data).businessName }, labels, copy.pending, esc) : null;
+  const faqHtml = faq ? `<div data-cost-faq style="margin-top:16px;background:${theme.surface};border:1px solid ${theme.border};border-radius:${theme.radiusMd};padding:14px 16px;"><h3 style="font-weight:700;font-size:1rem;color:${theme.primary};margin-bottom:6px;">${esc(faq.q)}</h3><p style="color:${theme.textMuted};line-height:1.6;">${faq.aHtml}</p></div>` : '';
   return `<section id="prices" data-section="prices" aria-labelledby="prices-heading" style="padding:32px 20px;background:${theme.surface};"><div style="max-width:700px;margin:0 auto;"><h2 id="prices-heading" style="${depthHeadingStyle(theme)}">${esc(labels.priceTableHeading)}</h2><table style="width:100%;border-collapse:collapse;"><thead><tr><th scope="col" style="${cell}color:${theme.textMuted};">${esc(labels.priceTableJobColumn)}</th><th scope="col" style="${cell}color:${theme.textMuted};">${esc(labels.priceTableFromColumn)}</th></tr></thead><tbody>${rows}</tbody></table>${faqHtml}</div></section>`;
 }
 

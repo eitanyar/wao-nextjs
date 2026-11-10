@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import test   from 'node:test';
 import {
   scoreAdsFit,
+  siteBotProspectTier,
   ADMISSION_PILOT_MIN_SCORE,
   ADMISSION_CONDITIONAL_MIN_SCORE,
   ADMISSION_MAX_SCORE,
@@ -221,4 +222,18 @@ test('scoreAdsFit: weakestSignal picks the lowest-scored, non-null signal', () =
   });
   assert.equal(result.signals.reputationFloor, 0);
   assert.equal(result.weakestSignal, 'reputationFloor');
+});
+
+// ── Site Bot prospect tiers (outreach targeting, 2026-11-10) ───────────────
+test('siteBotProspectTier: 1 for >=4.0 with >=10 reviews, 2 for >=4.0 with 5-9, null otherwise', () => {
+  assert.equal(siteBotProspectTier({ rating: 4.0, reviewCount: 10 }), 1);
+  assert.equal(siteBotProspectTier({ rating: 4.9, reviewCount: 250 }), 1);
+  assert.equal(siteBotProspectTier({ rating: 4.0, reviewCount: 9 }), 2);
+  assert.equal(siteBotProspectTier({ rating: 4.5, reviewCount: 5 }), 2);
+  assert.equal(siteBotProspectTier({ rating: 4.5, reviewCount: 4 }), null, 'too few reviews');
+  assert.equal(siteBotProspectTier({ rating: 3.99, reviewCount: 100 }), null, 'rating below 4.0');
+  assert.equal(siteBotProspectTier({ rating: null, reviewCount: 0 }), null, 'no profile rating');
+  assert.equal(siteBotProspectTier({ rating: 4.5, reviewCount: undefined }), null);
+  assert.equal(siteBotProspectTier({ rating: Number.NaN, reviewCount: 50 }), null);
+  assert.equal(siteBotProspectTier(), null);
 });

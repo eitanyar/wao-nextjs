@@ -60,6 +60,26 @@ function reputationFloorScore(gbp) {
   return 0;
 }
 
+/** Site Bot outreach targeting (2026-11-10): minimum GBP rating for a prospect tier. */
+export const SITE_BOT_TIER_MIN_RATING = 4.0;
+/** Tier 1 needs at least this many reviews; tier 2 needs at least SITE_BOT_TIER_2_MIN_REVIEWS (below tier 1's floor). */
+export const SITE_BOT_TIER_1_MIN_REVIEWS = 10;
+export const SITE_BOT_TIER_2_MIN_REVIEWS = 5;
+
+/**
+ * Site Bot prospect tier from the GBP reputation signals: 1 = rating >= 4.0 with >= 10 reviews, 2 = rating >= 4.0 with
+ * 5-9 reviews, null = excluded (no rating, rating below 4.0, or fewer than 5 reviews).
+ * @param {{ rating: number|null|undefined, reviewCount: number|null|undefined }} gbp
+ * @returns {1 | 2 | null}
+ */
+export function siteBotProspectTier({ rating, reviewCount } = {}) {
+  if (typeof rating !== 'number' || !Number.isFinite(rating) || rating < SITE_BOT_TIER_MIN_RATING) return null;
+  const reviews = typeof reviewCount === 'number' && Number.isFinite(reviewCount) ? reviewCount : 0;
+  if (reviews >= SITE_BOT_TIER_1_MIN_REVIEWS) return 1;
+  if (reviews >= SITE_BOT_TIER_2_MIN_REVIEWS) return 2;
+  return null;
+}
+
 /**
  * @param {{
  *   gbp: { rating: number|null, reviewCount: number },

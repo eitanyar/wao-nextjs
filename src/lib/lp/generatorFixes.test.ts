@@ -38,6 +38,7 @@ import {
 } from './researchPageCopy';
 import {
   costFaq,
+  costFaqCityOk,
   formatShekels,
   ownerPricing,
   PRICING_TEMPLATE_SLOTS,
@@ -45,7 +46,7 @@ import {
   RESEARCHED_PRICING_LABELS,
   RESEARCHED_PRICING_LABELS_PENDING_COPY,
 } from './researchedPricing';
-import { HE_TODO_PREFIX } from './researchedSiteLabels';
+import { HE_TODO_PREFIX, RESEARCHED_SITE_LABELS } from './researchedSiteLabels';
 import { renderResearchedSitePages, type PricingCopy, type ResearchedSitePage } from './researchedSite';
 import { VERTICAL_ASSETS } from './verticalAssets';
 import { VERTICAL_THEMES } from './verticalThemes';
@@ -244,13 +245,17 @@ function renderParams(pages: ResearchedSitePage[], collected: CollectedData = { 
   };
 }
 
+// Noa: {city} must be Hebrew. This file authors no Hebrew, so the test city is an opaque Hebrew-only token borrowed from an
+// approved label (any Hebrew-letter string without Latin letters or digits exercises the rule).
+const HE_CITY = RESEARCHED_SITE_LABELS.serviceAreasHeading;
 const pricingData: CollectedData = {
   businessName: 'TEST Biz', businessNiche: 'plumber', phone: '050-0000000',
+  primaryService: 'leak repair', secondaryServices: 'drain, boiler',
   pricingPromises: ['no_hidden_costs', 'free_quote', 'no_callout_fee'],
   startingPrices: [{ job: 'leak repair', from: 350 }, { job: 'drain', from: 1200 }],
   surchargePolicy: 'night +50%',
 };
-const seo = { name: 'leak repair', city: 'Holon', serviceArea: ['Holon'] };
+const seo = { name: 'leak repair', city: HE_CITY, serviceArea: [HE_CITY] };
 const pricingPages = (): ResearchedSitePage[] => [
   { opportunityId: 'home', classification: 'homepage', targetPath: '/', copy: baseCopy(), seo },
   { opportunityId: 'svc', classification: 'money_service', targetPath: '/services/leak-repair', copy: baseCopy(), seo },
@@ -285,10 +290,10 @@ test('pricing: hero promise line from checked promises only; price table + one c
   assert.equal((money.match(/data-section="prices"/g) ?? []).length, 1, 'one price block');
   assert.ok(money.includes('<th scope="row"') && money.includes('leak repair') && money.includes('1,200'));
   assert.ok(money.includes('S night +50%.') || money.includes('night +50%'));
-  const faq = money.match(/<div data-cost-faq[^>]*><h3[^>]*>([^<]*)<\/h3><p[^>]*>([^<]*)<\/p>/);
+  const faq = money.match(/<div data-cost-faq[^>]*><h3[^>]*>([^<]*)<\/h3><p[^>]*>/);
   assert.ok(faq, 'one cost FAQ');
-  assert.equal(faq![1], 'Q leak repair Holon?');
-  assert.ok(faq![2].startsWith('A TEST Biz leak repair Holon 350'), 'answered in its first sentence');
+  assert.equal(faq![1], `Q leak repair ${HE_CITY}?`);
+  assert.ok(money.includes(`A TEST Biz leak repair ${HE_CITY} <bdi>${formatShekels(350)}</bdi>.`), 'answered in its first sentence, amount isolated');
   assert.equal((money.match(/data-cost-faq/g) ?? []).length, 1);
   // Promise-only owner: the line, no table, no FAQ.
   const promiseOnly = renderResearchedSitePages(renderParams(pricingPages(), { ...pricingData, startingPrices: [], surchargePolicy: undefined }, LIVE))['services/leak-repair.html'];
@@ -299,17 +304,67 @@ test('pricing: hero promise line from checked promises only; price table + one c
   assert.equal(costFaq(pricingData, { service: 'leak repair', city: null, business: 'B' }, standIn, false), null, 'no city, no FAQ');
 });
 
-test('pricing: no owner pricing data, or pending labels, renders byte-identical to a record without the fields', () => {
+test('pricing: no owner pricing data renders byte-identical to a record without the fields; pending labels render nothing', () => {
   const plain = renderResearchedSitePages(renderParams(pricingPages()));
   assert.deepEqual(renderResearchedSitePages(renderParams(pricingPages(), undefined, LIVE)), plain, 'no data: no promise line, no table');
   for (const html of Object.values(plain)) assert.ok(!html.includes('data-price-promise') && !html.includes('data-section="prices"'));
-  // The real labels are pending: the pricing UI renders nothing, even with owner data.
-  assert.equal(RESEARCHED_PRICING_LABELS_PENDING_COPY, true);
-  const pending = renderResearchedSitePages(renderParams(pricingPages(), pricingData));
-  const withoutPricing = renderResearchedSitePages(renderParams(pricingPages(), { businessName: 'TEST Biz', businessNiche: 'plumber', phone: '050-0000000' }));
+  // The real (Noa-approved) labels are live, and without owner pricing data they add nothing.
+  assert.equal(RESEARCHED_PRICING_LABELS_PENDING_COPY, false);
+  const noData: CollectedData = { businessName: 'TEST Biz', businessNiche: 'plumber', phone: '050-0000000', primaryService: 'leak repair' };
+  const realNoData = renderResearchedSitePages(renderParams(pricingPages(), noData));
+  for (const html of Object.values(realNoData)) assert.ok(!html.includes('data-price-promise') && !html.includes('data-section="prices"') && !html.includes(HE_TODO_PREFIX));
+  // Pending labels (a stand-in set flagged pending) still render nothing, even with owner data.
+  const pending = renderResearchedSitePages(renderParams(pricingPages(), pricingData, { labels: standIn, pending: true }));
+  const withoutPricing = renderResearchedSitePages(renderParams(pricingPages(), { businessName: 'TEST Biz', businessNiche: 'plumber', phone: '050-0000000', primaryService: 'leak repair', secondaryServices: 'drain, boiler' }, { labels: standIn, pending: true }));
   assert.deepEqual(pending, withoutPricing);
-  for (const html of Object.values(pending)) assert.ok(!html.includes(HE_TODO_PREFIX));
-  assert.deepEqual(pricingPromisePhrases(pricingData), []);
+  assert.deepEqual(pricingPromisePhrases(pricingData, standIn, true), []);
+});
+
+test('pricing: real labels with owner data render the promise line, table and cost FAQ, with no __HE_TODO_ anywhere', () => {
+  const files = renderResearchedSitePages(renderParams(pricingPages(), pricingData));
+  for (const html of Object.values(files)) assert.ok(!html.includes(HE_TODO_PREFIX));
+  const money = files['services/leak-repair.html'];
+  assert.ok(files['index.html'].includes('data-price-promise') && money.includes('data-price-promise'));
+  assert.ok(money.includes(`>${RESEARCHED_PRICING_LABELS.priceTableHeading}</h2>`));
+  assert.ok(money.includes(RESEARCHED_PRICING_LABELS.promiseFreeQuote));
+  assert.ok(money.includes('data-cost-faq'));
+  // Noa: no space between the maqaf prefix and the amount <bdi> (the text right before {amount} in the template).
+  const beforeAmount = RESEARCHED_PRICING_LABELS.costFaqAnswerFrom.split('{amount}')[0].slice(-2);
+  assert.ok(!/\s$/.test(beforeAmount), 'template glues the prefix to the amount');
+  assert.ok(money.includes(`${beforeAmount}<bdi>${formatShekels(350)}</bdi>`), 'no space before the amount <bdi>');
+  // Noa: cells under priceTableFromColumn carry no prefix.
+  assert.ok(!money.includes(RESEARCHED_PRICING_LABELS.priceFromPrefix));
+  assert.match(money, new RegExp(`<td [^>]*><bdi>${formatShekels(350)}</bdi></td>`));
+  assert.match(money, new RegExp(`<td [^>]*><bdi>${formatShekels(1200)}</bdi></td>`));
+});
+
+test('pricing (Noa rules): Hebrew city only; owner-named service only; policy punctuation; one price-confirmed chip', () => {
+  const page = (city: string | null, service = 'leak repair') => ({ service, city, business: 'B' });
+  // {city}: a Latin letter or a digit means no cost FAQ.
+  assert.ok(costFaq(pricingData, page(HE_CITY), standIn, false));
+  for (const city of ['Holon', `${HE_CITY} 2`, `${HE_CITY}-A`, '', null]) assert.equal(costFaq(pricingData, page(city), standIn, false), null, String(city));
+  assert.equal(costFaqCityOk('  '), false);
+  // {service}: the matched job must equal a service name the owner gave; a containment match alone is not enough.
+  const notOwnerNamed: CollectedData = { ...pricingData, primaryService: 'plumbing', secondaryServices: undefined };
+  assert.equal(costFaq(notOwnerNamed, page(HE_CITY), standIn, false), null, 'job is not an owner service name');
+  const viaPriority: CollectedData = { ...notOwnerNamed, priorityServices: ['  Leak   Repair '] };
+  assert.equal(costFaq(viaPriority, page(HE_CITY), standIn, false)?.q, `Q leak repair ${HE_CITY}?`, 'priorityServices count, normalised; slot is the owner job text');
+  const contained = costFaq({ ...pricingData, startingPrices: [{ job: 'leak', from: 100 }] }, page(HE_CITY), standIn, false);
+  assert.equal(contained, null, 'contained job "leak" is not an owner service name');
+  const viaSecondary = costFaq({ ...pricingData, startingPrices: [{ job: 'drain', from: 100 }] }, page(HE_CITY, 'drain'), standIn, false);
+  assert.equal(viaSecondary?.q, `Q drain ${HE_CITY}?`, 'secondaryServices count');
+  // Amount HTML: escaped text, amount in <bdi>.
+  const html = costFaq({ ...pricingData, businessName: 'A&B' }, { service: 'leak repair', city: HE_CITY, business: 'A&B' }, standIn, false, value => value.replace(/&/g, '&amp;'));
+  assert.ok(html!.aHtml.startsWith(`A A&amp;B leak repair ${HE_CITY} <bdi>${formatShekels(350)}</bdi>.`));
+  assert.ok(html!.a.startsWith(`A A&B leak repair ${HE_CITY} ${formatShekels(350)}.`));
+  // {policy}: trailing sentence punctuation stripped; a trailing % stays.
+  assert.equal(ownerPricing({ surchargePolicy: 'night +50%.' }).surchargePolicy, 'night +50%');
+  assert.equal(ownerPricing({ surchargePolicy: 'double on Shabbat!! ' }).surchargePolicy, 'double on Shabbat');
+  assert.equal(ownerPricing({ surchargePolicy: '...' }).surchargePolicy, null);
+  assert.ok(costFaq(pricingData, page(HE_CITY), standIn, false)!.a.endsWith('S night +50%.'));
+  // Chips: at most one "price confirmed" chip; price_before_work wins.
+  assert.deepEqual(ownerPricing({ pricingPromises: ['price_by_phone_before_leaving', 'price_before_work', 'free_quote'] }).promises, ['free_quote', 'price_before_work']);
+  assert.deepEqual(ownerPricing({ pricingPromises: ['price_by_phone_before_leaving'] }).promises, ['price_by_phone_before_leaving']);
 });
 
 test('pricing labels: the pending flag matches the placeholders, and patched templates must keep their slots', () => {

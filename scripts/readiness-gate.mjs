@@ -47,7 +47,7 @@ import { textSearch, placeDetails, buildEntrySignals } from './lib/places-client
 import { crawlSite } from './lib/site-crawl.mjs';
 import { classifyVertical } from './lib/vertical-classifier.mjs';
 import { routeDecision } from './lib/routing-tree.mjs';
-import { scoreAdsFit } from './lib/ads-fit-scorecard.mjs';
+import { scoreAdsFit, siteBotProspectTier } from './lib/ads-fit-scorecard.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -192,6 +192,8 @@ export async function runReadinessGate({ businessName, city, category, siteUrl, 
   const siteCrawl = await crawlSite(siteUrl, { fetchImpl });
   const vertical = classifyVertical(category);
   const adsFit = scoreAdsFit({ gbp, category });
+  // Site Bot outreach targeting: 1 / 2 / null (excluded), from the same GBP rating + review count.
+  const prospectTier = siteBotProspectTier({ rating: gbp.rating, reviewCount: gbp.reviewCount });
 
   const routingCore = routeDecision({ siteCrawl, vertical });
   const routing = {
@@ -210,6 +212,7 @@ export async function runReadinessGate({ businessName, city, category, siteUrl, 
     siteCrawl,
     vertical,
     routing,
+    siteBotProspectTier: prospectTier,
     generatedAt: new Date().toISOString(),
     presentableReportText,
   };
