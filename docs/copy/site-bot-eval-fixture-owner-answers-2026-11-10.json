@@ -1,0 +1,52 @@
+{
+ "plumber": {
+  "primaryService": "איתור נזילות",
+  "secondaryServices": "פתיחת סתימות, התקנת דודים",
+  "targetLocation": "חולון",
+  "specificCities": "חולון, בת ים",
+  "travelBoundary": "עד 15 ק״מ מחולון",
+  "usp": "מתקן נזילות באותו יום עם בדיקת מצלמה, ואחריות שנתיים על כל עבודת צנרת",
+  "idealClientFear": "שהאינסטלטור ישבור את האריחים בחדר האמבטיה, ישאיר בלגן וייעלם לשבוע",
+  "yearsInField": "12 שנים",
+  "guarantee": "אחריות שנתיים על עבודות צנרת",
+  "responseTime": "אותו יום בחולון ובבת ים",
+  "businessHours": "א׳–ה׳ 08:00–18:00"
+ },
+ "electrician": {
+  "primaryService": "שדרוג לוח חשמל",
+  "secondaryServices": "חשמלאי חירום, התקנת עמדת טעינה לרכב חשמלי",
+  "targetLocation": "ראשון לציון",
+  "specificCities": "ראשון לציון, נס ציונה",
+  "travelBoundary": "עד 20 ק״מ מראשון לציון",
+  "usp": "חשמלאי ראשי עם רישיון, מסביר את ההצעה שורה שורה לפני שמתחילים לעבוד",
+  "idealClientFear": "חשמלאי שנותן הצעה זולה, מוצא הפתעות בתוך הקיר ומכפיל את המחיר",
+  "yearsInField": "18 שנים",
+  "license": "רישיון חשמלאי ראשי (TEST, ללא מספר)",
+  "businessHours": "א׳–ו׳ 07:00–17:00"
+ },
+ "ac-repair": {
+  "primaryService": "תיקון מזגנים",
+  "secondaryServices": "התקנת מזגנים, ניקוי מזגנים",
+  "targetLocation": "ראשון לציון",
+  "specificCities": "ראשון לציון, חולון",
+  "travelBoundary": "עד 15 ק״מ מראשון לציון",
+  "usp": "מוצא את התקלה האמיתית כבר בביקור הראשון ונותן מחיר קבוע לפני שמתחילים",
+  "idealClientFear": "טכנאי שממלא גז בלי למצוא את הדליפה, והמזגן שוב מתקלקל אחרי חודש",
+  "yearsInField": "10 שנים",
+  "guarantee": "אחריות חצי שנה על תיקונים",
+  "responseTime": "אותו יום בראשון לציון",
+  "businessHours": "א׳–ה׳ 08:00–19:00, ו׳ 08:00–13:00"
+ },
+ "split-hours": {
+  "primaryService": "איתור נזילות",
+  "secondaryServices": "פתיחת סתימות",
+  "targetLocation": "רחובות",
+  "specificCities": "רחובות, נס ציונה",
+  "travelBoundary": "עד 15 ק״מ מרחובות",
+  "usp": "מאתר נזילות סמויות עם ציוד אקוסטי ומסביר את אפשרויות התיקון לפני שמתחילים",
+  "idealClientFear": "אינסטלטור שפותח את הקיר במקום הלא נכון ומשאיר בלגן",
+  "yearsInField": "9 שנים",
+  "guarantee": "אחריות שנה על תיקונים",
+  "businessHours": "א׳–ה׳ 08:00–18:00, ו׳ 08:00–13:00"
+ }
+}
