@@ -32,11 +32,15 @@ and an "us vs the usual" table — every block built only from real data and abs
 - Maya audit at 390×844 and 360×640: bidi, overflow, carousel keyboard use, focus not obscured by the sticky bar, reduced motion.
 - Eitan sees each component on a localhost render before it ships.
 
-## Open owner decisions (bundle for Eitan)
-(a) hero badge minimum (proposed ≥ 5 reviews and ≥ 4.0); (b) show only 4★+ reviews or all (Google discourages misleading
-selection); (c) customer-uploaded photos allowed or owner-only (proposed owner-only); (d) "usual" column wording (proposed a
-neutral "not always" mark, no claims about competitors); (e) check current Google attribution / display terms for Business
-Profile reviews before launch.
+## Owner decisions (Eitan 2026-11-10)
+(a) Hero badge only with ≥ 5 reviews and ≥ 4.0 — approved. (b) Show all reviews (no 4★+ filter) — approved.
+(c) Photos: owner-uploaded GBP photos only, but most owners have few or none — so photos are a pipeline, not just a read:
+    optional "send me 3–6 photos of your work" at intake (WhatsApp/upload), a monthly photo ask inside the ₪199 plan, and every
+    photo we receive is also posted to his GBP (fresh photos help his profile too). Gallery renders only at ≥ 3 photos; until
+    then the site carries its richness through icons, cards, badges and colour, never stock photos posing as his work.
+(d) Comparison table only when backed by real owner data (≥ 3 distinguishing owner facts); otherwise, or in professions where
+    it doesn't fit, it is simply not rendered. Lowest build priority.
+(e) No separate Google terms check — Eitan: not needed.
 
 ## Verifier
 Roni: runtime render of homepage + service page with fixture reviews/photos (desktop + mobile, RTL), carousel with JS on and
