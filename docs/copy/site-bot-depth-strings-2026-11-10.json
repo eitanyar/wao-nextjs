@@ -1,0 +1,8 @@
+{
+ "voiceNotePrompt": "אם בא לך — תספר בקול על עבודה רגילה, מהטלפון הראשון ועד שהעבודה נגמרת. חצי דקה, לא חובה.",
+ "voiceNoteSkip": "לא עכשיו",
+ "processHeadingFallback": "שלבי העבודה",
+ "qaHeadingFallback": "מה שואלים אותי",
+ "proofHeadingReviews": "לקוחות מספרים",
+ "proofHeadingFactsOnly": "עובדות על העסק"
+}
