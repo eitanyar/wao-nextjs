@@ -165,6 +165,18 @@ export interface SiteResearchDossier {
   siteIdentity?: SiteIdentity;
   /** Content depth (2026-11-10): NeuronWriter analysis per shortlisted service keyword (key: the keyword). */
   neuronQueries?: Record<string, NeuronQueryData>;
+  /**
+   * Research latency (2026-11-10): shortlisted keywords whose NeuronWriter analysis was not ready within the research
+   * budget (status neuron_pending). Pages are generated without that data; the monthly refresh re-reads queryId.
+   */
+  neuronPending?: NeuronPendingKeyword[];
+}
+
+export interface NeuronPendingKeyword {
+  keyword: string;
+  queryId: string;
+  status: 'neuron_pending';
+  recordedAt: string;
 }
 
 const RESEARCH_STATUS_TRANSITIONS: Readonly<Record<ResearchStatus, readonly ResearchStatus[]>> = {

@@ -19,7 +19,7 @@ import {
   fetchKeywordMetrics,
   fetchLocalSerpEvidence,
 } from './dataForSeoResearch';
-import { createServiceQuery, getServiceQuery, NEURON_WRITER_BASE_URL, pollServiceQuery } from './neuronWriter';
+import { createServiceQuery, getServiceQuery, NEURON_WRITER_BASE_URL } from './neuronWriter';
 import type { ResearchProviders } from './runResearch';
 
 const DATAFORSEO_PREFIX = 'https://api.dataforseo.com/v3';
@@ -197,7 +197,6 @@ export function fixtureResearchProviders(calls: FixtureFetchCall[] = []): Resear
     neuron: {
       create: input => createServiceQuery(input, neuron),
       get: (queryId, input) => getServiceQuery(queryId, input, neuron),
-      poll: (queryId, input) => pollServiceQuery(queryId, input, neuron, { attempts: 2, intervalMs: 0, sleep: async () => {} }),
     },
   };
 }

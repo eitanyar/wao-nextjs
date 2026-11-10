@@ -26,6 +26,15 @@ import {
   type ResearchNavOptions,
 } from './renderSitePages';
 import { RESEARCHED_SITE_LABELS } from './researchedSiteLabels';
+import {
+  costFaq,
+  formatShekels,
+  hasPriceNumbers,
+  ownerPricing,
+  pricingPromisePhrases,
+  RESEARCHED_PRICING_LABELS,
+  RESEARCHED_PRICING_LABELS_PENDING_COPY,
+} from './researchedPricing';
 import { DEPTH_BLOCK_KEYS, DEPTH_BLOCK_LIMITS, rendersDepthBlocks } from './depthBlocks';
 
 const RESERVED_SEGMENTS = new Set(['api', 'assets', 'static', 'index', 'privacy', 'accessibility', 'contact', 'sitemap']);
@@ -67,7 +76,17 @@ export interface ResearchedSiteGraphEdge {
 export interface RenderResearchedSitePagesParams extends Omit<RenderSitePagesParams, 'copy'> {
   pages: ResearchedSitePage[];
   graphEdges?: ResearchedSiteGraphEdge[];
+  /** Pricing default: label set and pending flag (default the module's; tests inject stand-in labels). */
+  pricingCopy?: PricingCopy;
 }
+
+/** The pricing labels a render uses, and whether they are still pending (pending = render no pricing UI). */
+export interface PricingCopy {
+  labels: typeof RESEARCHED_PRICING_LABELS;
+  pending: boolean;
+}
+
+const DEFAULT_PRICING_COPY: PricingCopy = { labels: RESEARCHED_PRICING_LABELS, pending: RESEARCHED_PRICING_LABELS_PENDING_COPY };
 
 function normalizePath(value: string): string | null {
   const raw = value.trim().replace(/\\/g, '/');
@@ -405,6 +424,39 @@ function heroCallButton(page: ResearchedSitePage, data: CollectedData, theme: Re
 
 const nonEmpty = (value: unknown): value is string => typeof value === 'string' && value.trim() !== '';
 
+/**
+ * Pricing default (2026-11-10): the hero's one pricing promise line, beside the call button, from the owner-checked
+ * promises only. Nothing without owner promises, and nothing while the pricing labels are pending (records without the
+ * fields render byte-identical).
+ */
+function pricePromiseLine(data: CollectedData, theme: RenderResearchedSitePagesParams['theme'], copy: PricingCopy = DEFAULT_PRICING_COPY): string {
+  const phrases = pricingPromisePhrases(data, copy.labels, copy.pending);
+  if (!phrases.length) return '';
+  return `<p data-price-promise aria-label="${esc(copy.labels.promiseLineLabel)}" style="margin-top:12px;font-weight:700;color:${theme.textPrimary};">${phrases.map(esc).join(' \u00B7 ')}</p>`;
+}
+
+/**
+ * Pricing default: the service-page price table plus the one cost FAQ, at the B2 position (after the B1 steps, before the
+ * B6 proof). Only with an owner number (call-out fee or a starting price); never on the homepage; nothing while the
+ * pricing labels are pending.
+ */
+function priceSection(page: ResearchedSitePage, data: CollectedData, theme: RenderResearchedSitePagesParams['theme'], copy: PricingCopy = DEFAULT_PRICING_COPY): string {
+  if (copy.pending || !rendersDepthBlocks(page.classification)) return '';
+  const pricing = ownerPricing(data);
+  if (!hasPriceNumbers(pricing)) return '';
+  const labels = copy.labels;
+  const cell = `padding:10px 12px;border-bottom:1px solid ${theme.border};text-align:start;`;
+  const row = (label: string, value: string) => `<tr><th scope="row" style="${cell}font-weight:600;color:${theme.textPrimary};">${esc(label)}</th><td style="${cell}color:${theme.textPrimary};">${value}</td></tr>`;
+  const rows = [
+    ...pricing.startingPrices.map(item => row(item.job, `${esc(labels.priceFromPrefix)} <bdi>${esc(formatShekels(item.from))}</bdi>`)),
+    ...(pricing.calloutFee !== null ? [row(labels.calloutFeeRow, `<bdi>${esc(formatShekels(pricing.calloutFee))}</bdi>`)] : []),
+    ...(pricing.surchargePolicy ? [row(labels.surchargeRow, esc(pricing.surchargePolicy))] : []),
+  ].join('');
+  const faq = page.seo ? costFaq(data, { service: page.seo.name, city: page.seo.city ?? null, business: contacts(data).businessName }, labels, copy.pending) : null;
+  const faqHtml = faq ? `<div data-cost-faq style="margin-top:16px;background:${theme.surface};border:1px solid ${theme.border};border-radius:${theme.radiusMd};padding:14px 16px;"><h3 style="font-weight:700;font-size:1rem;color:${theme.primary};margin-bottom:6px;">${esc(faq.q)}</h3><p style="color:${theme.textMuted};line-height:1.6;">${esc(faq.a)}</p></div>` : '';
+  return `<section id="prices" data-section="prices" aria-labelledby="prices-heading" style="padding:32px 20px;background:${theme.surface};"><div style="max-width:700px;margin:0 auto;"><h2 id="prices-heading" style="${depthHeadingStyle(theme)}">${esc(labels.priceTableHeading)}</h2><table style="width:100%;border-collapse:collapse;"><thead><tr><th scope="col" style="${cell}color:${theme.textMuted};">${esc(labels.priceTableJobColumn)}</th><th scope="col" style="${cell}color:${theme.textMuted};">${esc(labels.priceTableFromColumn)}</th></tr></thead><tbody>${rows}</tbody></table>${faqHtml}</div></section>`;
+}
+
 /** Trust bar (M2b.1): the page's trustBarItems; nothing when empty. */
 function trustBar(page: ResearchedSitePage, theme: RenderResearchedSitePagesParams['theme']): string {
   const items = (page.copy.trustBarItems ?? []).filter(nonEmpty);
@@ -577,8 +629,8 @@ function buildPageHtml(page: ResearchedSitePage, params: RenderResearchedSitePag
   });
   const body = `${stickyHeader(theme, businessName, phone, phoneHref)}
   <main>
-    <section style="padding:44px 20px;background:${theme.surface};text-align:center;"><div style="max-width:700px;margin:0 auto;"><h1 style="color:${theme.primary};font-size:clamp(1.6rem,4vw,2.3rem);margin-bottom:16px;">${esc(researchedPageH1(page.copy.heroHeadline, page.seo))}</h1><p style="color:${theme.textMuted};line-height:1.7;">${esc(page.copy.heroSubheadline)}</p>${heroCallButton(page, data, theme)}</div></section>
-    ${trustBar(page, theme)}${storySection(page, theme)}${processSection(page, theme)}${proofSection(page, theme)}
+    <section style="padding:44px 20px;background:${theme.surface};text-align:center;"><div style="max-width:700px;margin:0 auto;"><h1 style="color:${theme.primary};font-size:clamp(1.6rem,4vw,2.3rem);margin-bottom:16px;">${esc(researchedPageH1(page.copy.heroHeadline, page.seo))}</h1><p style="color:${theme.textMuted};line-height:1.7;">${esc(page.copy.heroSubheadline)}</p>${heroCallButton(page, data, theme)}${pricePromiseLine(data, theme, params.pricingCopy)}</div></section>
+    ${trustBar(page, theme)}${storySection(page, theme)}${processSection(page, theme)}${priceSection(page, data, theme, params.pricingCopy)}${proofSection(page, theme)}
     ${hasProof(page) ? '' : reviewSection(page, theme)}${qaSection(page, theme)}
     ${serviceDetailsSection(page, theme)}
     ${aboutSection(page, theme)}

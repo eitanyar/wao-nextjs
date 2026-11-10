@@ -68,12 +68,14 @@ import {
   differentiatorGroups,
   describeGateViolation,
   effectiveReviewQuote,
+  reviewQuoteDropReason,
   fixTimeScope,
   GATE_RULES,
   pageVisibleWords,
   isAreaTile,
   PHRASE_REPEAT_MAX_FIELDS,
   PHRASE_REPEAT_MIN_WORDS,
+  CLAUSE_REPEAT_MIN_WORDS,
   isInstallService,
   promptSignatureVariants,
   runCopyGates,
@@ -111,6 +113,8 @@ export interface ResearchPageCopyDependencies {
   priorAboutPageBodies?: readonly string[];
   /** M2a.7: hero-cap facts (masked labels, AC page) of the site's pages generated before this one, aligned with priorHeroHeadlines. */
   priorHeroFacts?: readonly HeroCapPageFacts[];
+  /** 2026-11-10 (Noa's pattern F): the homepage's trust-bar proof-point wording, reused term for term on later pages. */
+  siteTerms?: readonly string[];
 }
 
 /**
@@ -496,7 +500,7 @@ export const PROOF_POINT_RULE = '- Every proof point you put in trustBarItems or
 /** M2b.1h: the proof-point copy rule of a pitch-first page: proof points stay capped, the one big promise may be restated in fresh words. */
 export const PITCH_FIRST_PROOF_POINT_RULE = '- Every proof point you put in trustBarItems or guaranteeBlock (years, a licence, the warranty, the area) may appear in at most two other fields of the page. The one big promise (from the owner\'s usp, guarantee or pricing) may come back in more fields, each time in fresh words (see PITCH FIRST below). In serviceDetails descriptions, describe the service itself instead of repeating proof points.';
 
-export function buildResearchCopyRules(brief: PageBrief, data: CollectedData = {}): string[] {
+export function buildResearchCopyRules(brief: PageBrief, data: CollectedData = {}, siteTerms?: readonly string[]): string[] {
   const site = brief.site;
   const rules = [
     SINGULAR_ADDRESS_RULE,
@@ -546,8 +550,65 @@ export function buildResearchCopyRules(brief: PageBrief, data: CollectedData = {
         : '- The "my name is <first name>" opener appears once per site and the homepage already has it. Do not open aboutBlurb or aboutPageBody with it or any other self-introduction by name; this overrides the ABOUT SECTION opener instruction below.',
     );
     rules.push(...buildVoiceRules(brief, data));
+    // 2026-11-10 generator fixes (Tamar items 1-3, Noa's patterns A-H).
+    rules.push(...FACT_LEDGER_RULES, ...repetitionBudgetRules(brief), ...(pitchFirstPage(brief) ? cutContractRules(brief) : []), ...HEBREW_PATTERN_RULES);
+    const terms = siteTermsRule(siteTerms);
+    if (terms && brief.page.pageClass !== 'homepage') rules.push(terms);
   }
   return rules;
+}
+
+// ---------------------------------------------------------------------------
+// 2026-11-10 generator fixes from the M2b.1h eval (Tamar: fact ledger, cut contract, clause budget; Noa: Hebrew patterns
+// A-H). English only and abstract: no Hebrew example lines (rule examples leak into output).
+// ---------------------------------------------------------------------------
+
+/** Tamar item 1: the fact ledger, decided before the pitch (or the copy) is written. */
+export const FACT_LEDGER_RULES: readonly string[] = [
+  '- FACT LEDGER (binding; in your reasoning, before you write the pitch or any field; do not output it): list every claim you plan to make (each tool, process step, outcome, scope, credential and its tier, time or availability, and logistics such as who comes, when and how) and next to each the owner field it comes from. Drop every claim that has no named owner field.',
+  '- FEAR IS NOT A GUARANTEE (binding): answer the customer\'s fear only with what the owner states, at the strength he states it. Never turn the fear into an absolute promise or guarantee (never "never", "always", "guaranteed" or "zero risk" unless an owner field says exactly that).',
+  '- CREDENTIAL TIER (binding): name every credential at exactly the tier the owner states. Never raise it (a trained or certified person into a licensed, senior or master one) and never lower it (a licensed owner into merely experienced).',
+  '- LOGISTICS (binding): who comes, when, how and with what is stated the same way in every field. No field may contradict, widen or vary what another field says about it.',
+  '- USP ABOVE THE FOLD (binding): every clause of the owner\'s usp, including any time or availability clause, appears above the fold: in heroHeadline, heroSubheadline or the trust bar. Never leave a usp clause only further down the page.',
+];
+
+/** Tamar item 3: the clause-level repetition budget (gate_clause_repeat counts it). */
+export function repetitionBudgetRules(brief: Pick<PageBrief, 'site' | 'page' | 'blocksEnabled'>): string[] {
+  return [
+    `- REPETITION BUDGET (binding): each owner fact gets one full statement on the page plus at most one short reference (three words or fewer) in one other field. Never the same run of ${CLAUSE_REPEAT_MIN_WORDS} or more words in two fields, not even inside a longer sentence; the system checks every clause.`,
+    ...(depthLayout(brief).includes('proof') ? ['- PROOF HOME (binding on this page): proofItems is the home of the proof facts (years, licence, warranty, response time). State each of them in full there, once; anywhere else on this page, at most a short reference. The proof-point counts above do not count proofItems.'] : []),
+  ];
+}
+
+/** Tamar item 2: the cut contract of a pitch-first page (story lines on the homepage only). */
+export function cutContractRules(brief: Pick<PageBrief, 'site' | 'page'>): string[] {
+  const story = storyPage(brief);
+  return [
+    '- CUT CONTRACT (binding): heroSubheadline is one benefit sentence built on a verb: what the reader gets. Never a list of nouns, features or proof points joined by commas.',
+    ...(story ? [
+      '- storyBody keeps the pitch\'s single highest-tension agitation line, states the mechanism once, and ends on the reader\'s outcome (his situation once the job is done), never on the tool or on the owner.',
+      '- storyBody and aboutPageBody use different moments: never the same scene, time, room or step in both. If one is set at the moment of the problem, the other opens on a different moment of the job.',
+    ] : []),
+  ];
+}
+
+/** Noa's Hebrew patterns A-H (M2b.1h eval), as abstract English rules. G keeps the anchor rule unchanged (H1 changes need Yonatan). */
+export const HEBREW_PATTERN_RULES: readonly string[] = [
+  'HEBREW PATTERNS (Noa, binding on every field):',
+  '- A. Subject: in body text (story, about, service descriptions, process steps, proof items, answers), a sentence that starts with a first-person present-tense verb carries the first-person subject pronoun, unless the previous sentence already does. Verbless fragments are allowed only in the hero subheadline, badges and the trust bar.',
+  '- B. Modals: a "shouldn\'t" or "doesn\'t have to" construction takes its idiomatic Hebrew form and always carries the verb it completes; never a bare modal.',
+  '- C. Collocations: use the fixed verb and noun pairs a native speaker uses: the verb that goes with giving a warranty, the trade\'s own noun for the fault, and the verb that goes with closing or sealing it. Never pair a noun with a verb translated literally from English.',
+  '- D. After a verb, describe the action with the adverb form, never with an adjective that agrees with a noun.',
+  '- E. Write the words of the "all / everything" family in standard full spelling, the same way everywhere.',
+  '- F. One term per concept per site: the credential, the warranty and the years in the trade each get one term. The homepage sets it; every other page reuses the homepage\'s exact term, never a synonym or a different construction.',
+  '- G. Question hooks: when heroHeadline opens with a question or a hook, it describes a state that is true for the reader who searched this page, right now; its tail (the promise) must be backed by the body of the page. The anchor rule above applies unchanged.',
+  '- H. Every transitive verb has its object, every relative clause has its verb, and abbreviations and quotes use the Hebrew geresh and gershayim, never ASCII apostrophes or quotes.',
+];
+
+/** Pattern F on a page after the homepage: the homepage's own proof-point wording, to reuse term for term. */
+export function siteTermsRule(siteTerms: readonly string[] | undefined): string | null {
+  const terms = (siteTerms ?? []).map(item => item.trim()).filter(Boolean);
+  return terms.length ? `- SITE TERMS (pattern F): the homepage words its proof points as ${JSON.stringify(terms)}. When this page names the same credential, warranty or years, use the homepage's term for it exactly; never a synonym.` : null;
 }
 
 /**
@@ -747,7 +808,7 @@ export function buildVoiceRules(brief: PageBrief, data: CollectedData = {}): str
   ];
 }
 
-export function buildResearchPageCopyPrompt(brief: PageBrief, data: CollectedData = {}): string {
+export function buildResearchPageCopyPrompt(brief: PageBrief, data: CollectedData = {}, siteTerms?: readonly string[]): string {
   return `RESEARCH BRIEF (authoritative; use no claim not supported here):
 ${JSON.stringify({
   page: brief.page,
@@ -784,7 +845,7 @@ RESEARCH RULES:
 - Keep required internal-link targets limited to links.
 
 COPY RULES (binding):
-${buildResearchCopyRules(brief, data).join('\n')}
+${buildResearchCopyRules(brief, data, siteTerms).join('\n')}
 ${pitchFirstPage(brief) ? `\n${buildPitchFirstSection(brief)}\n` : ''}${depthPage(brief) ? `\n${buildDepthSection(brief)}\n` : ''}
 The following owner-fact prompt provides the required SiteCopy JSON schema. Treat its owner facts as context only; use a fact in output only when the research brief authorizes it. Its HARD RULES, BANNED PHRASES, address and voice rules are NOT context: they are binding, together with the COPY RULES above.`;
 }
@@ -1500,7 +1561,7 @@ function ownerFactText(data: CollectedData): string {
   return Object.values(data).filter((value): value is string => typeof value === 'string').join('\n');
 }
 
-export function buildResearchPageGenerationPrompt(brief: PageBrief, data: CollectedData): string {
+export function buildResearchPageGenerationPrompt(brief: PageBrief, data: CollectedData, siteTerms?: readonly string[]): string {
   // M2a.2: a quote that is not mostly Hebrew never reaches the model (never translated, item 8),
   // and with no owner guarantee the schema shows guaranteeBlock as null (item 7).
   const promptData: CollectedData = brief.site && !effectiveReviewQuote(data) ? { ...data, reviewQuote: '' } : data;
@@ -1531,7 +1592,7 @@ export function buildResearchPageGenerationPrompt(brief: PageBrief, data: Collec
     }
   }
   if (pitchFirstPage(brief)) clientSchema = pitchFirstSchema(clientSchema, storyPage(brief));
-  return `${buildResearchPageCopyPrompt(brief, data)}\n\nOWNER FACTS AND SITE COPY SCHEMA:\n${clientSchema}\n\n${buildSiteCopyHardLimitsBlock('HARD LIMITS', omit, layoutFor(brief))}`;
+  return `${buildResearchPageCopyPrompt(brief, data, siteTerms)}\n\nOWNER FACTS AND SITE COPY SCHEMA:\n${clientSchema}\n\n${buildSiteCopyHardLimitsBlock('HARD LIMITS', omit, layoutFor(brief))}`;
 }
 
 /** M2b.1h: the legacy schema's hero shape line; on a pitch-first page the headline carries the promise instead. */
@@ -1666,7 +1727,7 @@ export async function generateResearchPageCopy(
       try { dependencies.onEvent?.(event); } catch { /* diagnostics never break generation */ }
     },
   };
-  const prompt = buildResearchPageGenerationPrompt(brief, data);
+  const prompt = buildResearchPageGenerationPrompt(brief, data, dependencies.siteTerms);
   const tamarCopy = await settleStage(ctx, 'tamar', () => callJson(brief.site ? SITE_COPY_SYSTEM_PROMPT : COPY_SYSTEM_PROMPT, prompt, { thinkingBudget: pitchFirstPage(brief) ? PITCH_FIRST_THINKING_BUDGET : 1500 }));
   // Content depth: Tamar's factIds / questionId go back into Noa's raw answer before it is settled (Noa edits text only).
   const noaCall = async () => withTamarDepthReferences(await callJson(QA_SYSTEM_PROMPT, buildNoaQaMessage(tamarCopy, brief), { think: false }), tamarCopy as unknown as Loose, brief);
@@ -1676,6 +1737,9 @@ export async function generateResearchPageCopy(
   assertGatesAt('final', finalCopy as unknown as Loose, ctx.gates, ctx.emit);
   const gap = depthLengthNote(finalCopy as unknown as Loose, brief);
   if (gap) ctx.emit({ stage: 'final', kind: 'warnings', violations: [gap] });
+  // 2026-11-10 (reviewQuote bug): an owner quote the site cannot show is logged, never silently dropped.
+  const dropped = brief.site ? reviewQuoteDropReason(data, SITE_COPY_OPTIONAL_STRING_LIMITS.reviewFeatured) : null;
+  if (dropped) ctx.emit({ stage: 'final', kind: 'warnings', violations: [{ field: 'reviewFeatured', rule: `review_dropped_${dropped}` }] });
   return finalCopy;
 }
 

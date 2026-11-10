@@ -321,10 +321,11 @@ test('M2b.1d 7: duplicate about checks compare homepage / hub pages only; the op
     { classification: 'money_service', copy: { ...base, heroHeadline: W2, aboutPageHeadline: W2, aboutPageBody: W2 } },
     { classification: 'service_hub', copy: { ...base, heroHeadline: HE_WORD, aboutPageHeadline: HE_WORD, aboutPageBody: HE_WORD } },
   ];
-  assert.deepEqual(siteGenerationContext(pages), { priorHeroHeadlines: [W1, W2, HE_WORD], priorAboutPageHeadlines: [W1, HE_WORD], priorAboutPageBodies: [W1, HE_WORD], priorHeroFacts: [] });
+  assert.deepEqual(siteGenerationContext(pages), { priorHeroHeadlines: [W1, W2, HE_WORD], priorAboutPageHeadlines: [W1, HE_WORD], priorAboutPageBodies: [W1, HE_WORD], priorHeroFacts: [], siteTerms: base.trustBarItems });
   assert.ok(!('serviceDetailsOpener' in GATE_RULES));
   // M2b.1g: section 23 cardPhraseEcho is warn-only for the rescore.
-  assert.deepEqual([...WARNING_ONLY_RULES], [GATE_RULES.duplicateAboutOpening, GATE_RULES.cardPhraseEcho]);
+  // 2026-11-10: Noa's pattern A beyond the about pair is warn-only too.
+  assert.deepEqual([...WARNING_ONLY_RULES], [GATE_RULES.duplicateAboutOpening, GATE_RULES.cardPhraseEcho, GATE_RULES.subjectPronoun]);
 });
 
 test('M2b.1d 8 (M2b.1f): all five M2b fields block by default; an injected warn-only list still holds a field back; never gated where not rendered', () => {

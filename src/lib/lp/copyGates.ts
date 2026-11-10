@@ -9,7 +9,7 @@
  */
 
 import type { CollectedData } from '../bot/prompts';
-import { buildLpCopyPrompt, hasRealReviewQuote } from './lpCopyPrompt';
+import { buildLpCopyPrompt } from './lpCopyPrompt';
 import {
   AC_SEGMENT_KEYWORD,
   AC_VERTICAL_SLUG_KEYWORDS,
@@ -207,6 +207,9 @@ export const GATE_RULES = {
   // M2b.1h (pitch-first copy): block verbatim repetition across fields; no foreign script in any generated field.
   phraseRepeat: 'gate_phrase_repeat',
   foreignScript: 'gate_foreign_script',
+  // 2026-11-10 generator fixes (Tamar's clause budget; Noa's pattern A as a warning).
+  clauseRepeat: 'gate_clause_repeat',
+  subjectPronoun: 'gate_subject_pronoun',
   // Content depth (2026-11-10): every service-page block item traces to the owner facts it cites; NeuronWriter terms stay
   // within their suggested usage.
   factTrace: 'gate_fact_trace',
@@ -479,10 +482,24 @@ export function isMostlyHebrew(value: string): boolean {
   return hebrewShare(value) > 0.5;
 }
 
-/** The owner's customer quote as it may be shown: verbatim, real, and mostly Hebrew; else null. */
+/**
+ * The owner's customer quote as it may be shown on a research site: verbatim and mostly Hebrew; else null.
+ * 2026-11-10 (reviewQuote bug): the legacy LP bot's "no reviews" check (hasRealReviewQuote: the quote contains the
+ * no-word marker anywhere) is not applied here. It nulled real praise that uses that common word, and the Site-Bot
+ * intake never asks the free-text yes / no review turn; an explicit "no trust assets" answer still means no quote.
+ */
 export function effectiveReviewQuote(data: CollectedData): string | null {
   const quote = typeof data.reviewQuote === 'string' ? data.reviewQuote.trim() : '';
-  return quote && hasRealReviewQuote(data) && isMostlyHebrew(quote) ? quote : null;
+  return quote && data.hasTrustAssets !== false && isMostlyHebrew(quote) ? quote : null;
+}
+
+/** Why an owner quote that exists is not shown on a research site (null: shown, or there is none). */
+export function reviewQuoteDropReason(data: CollectedData, maxChars: number): 'not_hebrew' | 'too_long' | 'no_trust_assets' | null {
+  const quote = typeof data.reviewQuote === 'string' ? data.reviewQuote.trim() : '';
+  if (!quote) return null;
+  if (data.hasTrustAssets === false) return 'no_trust_assets';
+  if (!isMostlyHebrew(quote)) return 'not_hebrew';
+  return quote.length > maxChars ? 'too_long' : null;
 }
 
 
@@ -1553,6 +1570,75 @@ function phraseRepeatHits(strings: Array<{ field: string; value: string }>, ctx:
   return out;
 }
 
+// ---------------------------------------------------------------------------
+// 2026-11-10 (Tamar, clause-level repetition budget): each fact gets one full statement plus at most one short reference
+// per page. gate_clause_repeat: the same run of CLAUSE_REPEAT_MIN_WORDS+ consecutive words INSIDE one clause (clauses split
+// at sentence and clause punctuation, so a run never spans two clauses) in more than CLAUSE_REPEAT_MAX_FIELDS field of the
+// page fails every later field. A short reference (fewer words in common) never hits. On a service page with depth blocks
+// the B6 proof items are the designated home of the proof facts: they are counted first, so the other field is the repeat.
+// ---------------------------------------------------------------------------
+
+export const CLAUSE_REPEAT_MIN_WORDS = 4;
+export const CLAUSE_REPEAT_MAX_FIELDS = 1;
+/** Fields that state the proof facts in full by design on a depth page (B6); counted before every other field. */
+export const PROOF_HOME_FIELDS: readonly string[] = ['proofItems'];
+
+/** The counted clause runs of one string: CLAUSE_REPEAT_MIN_WORDS consecutive tokens of one clause, at least two not free. */
+export function clauseRepeatKeys(value: string, free: ReadonlySet<string>): string[] {
+  const out = new Set<string>();
+  for (const clause of value.normalize('NFC').split(CLAUSE_SPLIT)) {
+    const tokens = echoTokens(clause);
+    for (let i = 0; i + CLAUSE_REPEAT_MIN_WORDS <= tokens.length; i++) {
+      const run = tokens.slice(i, i + CLAUSE_REPEAT_MIN_WORDS);
+      if (run.filter(token => !isPhraseFreeToken(token, free)).length >= 2) out.add(run.join(' '));
+    }
+  }
+  return [...out];
+}
+
+const LAST_REPEATED_CLAUSES = new WeakMap<CopyGateContext, string[]>();
+
+function clauseRepeatHits(strings: Array<{ field: string; value: string }>, ctx: CopyGateContext): GateViolation[] {
+  const allowed = ctx.phraseRepeatFields ?? [];
+  const free = phraseRepeatFreeTokens(ctx);
+  const places = ctx.places ?? [];
+  const home = (field: string) => Boolean(ctx.depth) && PROOF_HOME_FIELDS.includes(topFieldOf(field));
+  const ordered = [...strings.filter(item => home(item.field)), ...strings.filter(item => !home(item.field))];
+  const owners = new Map<string, Set<string>>();
+  const clauses: string[] = [];
+  const hitFields = new Set<string>();
+  const out: GateViolation[] = [];
+  for (const { field, value } of ordered) {
+    const unit = allowed.includes(topFieldOf(field)) ? phraseRepeatUnit(field) : null;
+    if (!unit || (unit === 'trustBarItems' && isAreaTile(value.trim(), places))) continue;
+    // The B6 items are one home: the proof block states each fact once, across its items.
+    const counted = home(field) ? topFieldOf(field) : unit;
+    for (const key of clauseRepeatKeys(value, free)) {
+      const seen = owners.get(key) ?? new Set<string>();
+      if (seen.has(counted)) continue;
+      seen.add(counted);
+      owners.set(key, seen);
+      if (seen.size > CLAUSE_REPEAT_MAX_FIELDS && !hitFields.has(field)) {
+        hitFields.add(field);
+        const known = clauses.indexOf(key);
+        out.push({ field, rule: GATE_RULES.clauseRepeat, actual: `clause_repeat:${known >= 0 ? known : clauses.push(key) - 1}` });
+      }
+    }
+  }
+  LAST_REPEATED_CLAUSES.set(ctx, clauses);
+  return out;
+}
+
+/**
+ * 2026-11-10 (Noa's pattern A, deterministic part; warning only): body fields beyond the about pair (where
+ * gate_bare_verb_opener already blocks) whose sentence opens with a listed bare first-person verb and carries no subject.
+ * Uses Tamar's section 19.5 lists unchanged (BARE_VERB_SENTENCE_OPENERS, SUBJECT_CARRY_TOKENS); fragments stay allowed in
+ * the hero subheadline, badges and the trust bar, which are not listed here.
+ */
+export const SUBJECT_PRONOUN_WARN_FIELDS: readonly RegExp[] = [
+  /^storyBody$/, /^serviceDetails\[\d+\]\.description$/, /^processSteps\[\d+\]\.text$/, /^proofItems\[\d+\]\.text$/, /^qaItems\[\d+\]\.a$/,
+];
+
 /** The digit runs of a string. */
 const digitRuns = (value: string) => new Set(value.match(/\d+/g) ?? []);
 
@@ -1868,6 +1954,10 @@ function voiceGates(copy: Record<string, unknown>, strings: Array<{ field: strin
     const ownerVoice = isOwnerVoiceField(field);
     // M2a.7 (Noa section 20.6): the typo gates and services_headline_preposition also cover EXTRA_GATE_FIELDS.
     const extraField = !ownerVoice && EXTRA_GATE_FIELDS.includes(field);
+    // 2026-11-10 (Noa's pattern A beyond the about pair; warning only): body fields, owner-voice or not (depth items too).
+    if (!BARE_VERB_FIELD_SET.has(field) && SUBJECT_PRONOUN_WARN_FIELDS.some(pattern => pattern.test(field))) {
+      for (const index of new Set(bareVerbOpenerHits(value))) out.push({ field, rule: GATE_RULES.subjectPronoun, actual: `opener:${index}` });
+    }
     if (!ownerVoice && !extraField) continue;
     if (tripledLetterHit(value)) out.push({ field, rule: GATE_RULES.tripledLetter, actual: 'typo:tripled_letter' });
     for (const index of wrongPrepositionHits(value)) out.push({ field, rule: GATE_RULES.wrongPreposition, actual: `wrong_preposition:${index}` });
@@ -1986,6 +2076,8 @@ export const WARNING_ONLY_RULES: readonly GateRule[] = [
   GATE_RULES.duplicateAboutOpening,
   // M2b.1g (section 23.2): warn-only for the rescore; a hard gate only if every rescore hit is a real echo.
   GATE_RULES.cardPhraseEcho,
+  // 2026-11-10 (Noa's pattern A beyond the about pair): logged for the next eval; the verb list covers Tamar's openers only.
+  GATE_RULES.subjectPronoun,
 ];
 
 /** M2b.1h: on a pitch-first page, the two-word phrase cap (gate_fact_repeat `phrase:`) is a warning (CopyGateContext.promiseRestatement). */
@@ -2145,7 +2237,9 @@ function runPageGates(copy: Record<string, unknown>, ctx: CopyGateContext): Gate
     if (cityPrefixHit(value, places)) out.push({ field, rule: GATE_RULES.cityPrefix });
     if (customerAttributionHit(value)) out.push({ field, rule: GATE_RULES.customerAttribution });
     // M2b.1g (section 23.2 f): on a research site both fact counters count the page's rendered fields only.
-    const counted = !researchCounts || isRenderedField(field, ctx);
+    // 2026-11-10: on a service page with depth blocks, B6 is the designated home of the proof facts; it never counts
+    // against the per-page proof-point caps.
+    const counted = (!researchCounts || isRenderedField(field, ctx)) && !(ctx.depth && PROOF_HOME_FIELDS.includes(topFieldOf(field)));
     if (counted) factPatterns.forEach((pattern, index) => {
       const count = countMatches(value, pattern);
       if (!count) return;
@@ -2194,6 +2288,8 @@ function runPageGates(copy: Record<string, unknown>, ctx: CopyGateContext): Gate
   if (ctx.researchSite) out.push(...voiceGates(copy, strings, ctx), ...m2b2Gates(copy, strings, ctx));
   // M2b.1h: the same phrase of PHRASE_REPEAT_MIN_WORDS+ words in more than PHRASE_REPEAT_MAX_FIELDS rendered fields.
   if (ctx.researchSite && ctx.phraseRepeatFields) out.push(...phraseRepeatHits(strings, ctx));
+  // 2026-11-10: one full statement per clause per page (Tamar's clause budget).
+  if (ctx.researchSite && ctx.phraseRepeatFields) out.push(...clauseRepeatHits(strings, ctx));
   return out;
 }
 
@@ -2491,6 +2587,14 @@ export function describeGateViolation(violation: GateViolation, ctx: CopyGateCon
     case GATE_RULES.phraseRepeat: {
       const phrase = (LAST_REPEATED_PHRASES.get(ctx) ?? [])[index] ?? '';
       return `${violation.field} repeats the phrase ${JSON.stringify(phrase)} word for word, and ${PHRASE_REPEAT_MAX_FIELDS} other fields of this page already use it; keep the idea here only if it serves the reader, and then say it in fresh words (no run of ${PHRASE_REPEAT_MIN_WORDS} or more of the same words), or drop it from this field`;
+    }
+    case GATE_RULES.clauseRepeat: {
+      const clause = (LAST_REPEATED_CLAUSES.get(ctx) ?? [])[index] ?? '';
+      return `${violation.field} repeats the clause ${JSON.stringify(clause)} that another field of this page already states; each fact is stated in full once per page${ctx.depth ? ' (on this page the proof block is its home)' : ''}. Here, either drop it or refer to it in at most three words, and use the space for something the page has not said yet`;
+    }
+    case GATE_RULES.subjectPronoun: {
+      const opener = BARE_VERB_SENTENCE_OPENERS[index];
+      return `${violation.field} has a sentence that starts with the bare first-person verb ${JSON.stringify(opener ?? '')} with no subject; give that sentence its subject (${JSON.stringify(SUBJECT_CARRY_TOKENS[0] ?? '')}), or join it to a previous sentence that already has it`;
     }
     case GATE_RULES.foreignScript:
       return `${violation.field} contains characters of a non-Hebrew script (Chinese, Japanese, Korean, Cyrillic or Arabic); rewrite it in Hebrew only (a proper name in Latin letters is fine)`;

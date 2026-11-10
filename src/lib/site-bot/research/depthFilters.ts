@@ -6,12 +6,15 @@
  * HEBREW-SAFETY: this module contains ZERO Hebrew bytes (place names come from the tracked locality JSON, everything else
  * from the caller's data).
  */
+import fs from 'node:fs';
+import path from 'node:path';
 import { prefixForms, stemSet, textWords } from '../../lp/depthBlocks';
 import { PREFIX_LETTERS } from '../../lp/hebrewPrefixLetters';
 import { matchedVertical } from '../../lp/verticalDetect';
 import type { VerticalKey } from '../../lp/verticalThemes';
 import type { DepthTextFilters } from './pageBrief';
 import type { Locality } from '../servedAreas';
+import { PRICE_LEXICON_DATA } from './priceLexiconData';
 
 const bare = (word: string) => word.replace(/^[^\p{L}\p{N}]+|[^\p{L}\p{N}]+$/gu, '').normalize('NFC').toLowerCase();
 const words = (text: string) => textWords(text).map(bare).filter(Boolean);
@@ -80,6 +83,80 @@ export function namesOtherLocality(text: string, localities: readonly Locality[]
   return false;
 }
 
+// ---------------------------------------------------------------------------
+// Price lexicon (Tamar -> Noa, docs/copy/site-bot-price-lexicon-2026-11-10.json, loaded byte-exact when present).
+// Matching rule (Noa, recorded in the file under _matching):
+// - priceStems: substring of the term;
+// - pricePhrases: a whole space-separated word sequence anywhere in the term, after stripping punctuation and hyphens
+//   (ASCII double quote and gershayim are one character; ASCII apostrophe and geresh likewise). Never a raw substring
+//   (a phrase inside a longer word is not a hit) and never whole-term equality (a phrase inside a longer term is a hit).
+// ---------------------------------------------------------------------------
+
+export const PRICE_LEXICON_PATH = 'docs/copy/site-bot-price-lexicon-2026-11-10.json';
+
+export interface PriceLexicon {
+  priceStems: string[];
+  pricePhrases: string[];
+}
+
+const GERSHAYIM = '\u05F4';
+const GERESH = '\u05F3';
+
+/** Phrase-matching normal form: NFC, lower case, quote marks unified, hyphens / maqaf / dashes and other punctuation to spaces. */
+export function priceWords(text: string): string[] {
+  const unified = text.normalize('NFC').toLowerCase()
+    .replace(/["\u201C\u201D\u05F4]/gu, GERSHAYIM)
+    .replace(/['\u2018\u2019\u05F3]/gu, GERESH)
+    .replace(/[-\u05BE\u2010-\u2015]/gu, ' ')
+    .replace(/[^\p{L}\p{N}\p{M}\u05F3\u05F4\s]/gu, ' ');
+  // A quote mark at a word edge is punctuation (a quoted word); inside a word it is part of an abbreviation.
+  return unified.split(/\s+/).map(word => word.replace(/^[\u05F3\u05F4]+|[\u05F3\u05F4]+$/gu, '')).filter(Boolean);
+}
+
+function validLexicon(value: unknown): value is PriceLexicon {
+  const record = value && typeof value === 'object' ? value as Record<string, unknown> : null;
+  const list = (entry: unknown) => Array.isArray(entry) && entry.every(item => typeof item === 'string');
+  return Boolean(record && list(record.priceStems) && list(record.pricePhrases));
+}
+
+/** The price lexicon from PRICE_LEXICON_PATH (under `root`, default the working directory); null when absent or malformed. */
+export function loadPriceLexicon(root: string = process.cwd(), file: string = PRICE_LEXICON_PATH): PriceLexicon | null {
+  try {
+    const parsed: unknown = JSON.parse(fs.readFileSync(path.join(root, file), 'utf8'));
+    if (!validLexicon(parsed)) return null;
+    return { priceStems: parsed.priceStems.filter(item => item.trim()), pricePhrases: parsed.pricePhrases.filter(item => item.trim()) };
+  } catch {
+    return null;
+  }
+}
+
+let cachedLexicon: PriceLexicon | undefined;
+/**
+ * The process-wide price lexicon (read once): the file when present (the working tree), else the generated copy
+ * (priceLexiconData.ts, byte-exact from the same file; the standalone build does not ship docs/).
+ */
+export function defaultPriceLexicon(): PriceLexicon {
+  if (cachedLexicon === undefined) cachedLexicon = loadPriceLexicon() ?? PRICE_LEXICON_DATA;
+  return cachedLexicon;
+}
+
+/** A price-lexicon predicate under Noa's matching rule (see above). */
+export function priceLexiconMatcher(lexicon: PriceLexicon): (text: string) => boolean {
+  const stems = lexicon.priceStems.map(stem => stem.normalize('NFC').toLowerCase());
+  const phrases = lexicon.pricePhrases.map(priceWords).filter(list => list.length > 0);
+  return text => {
+    const raw = text.normalize('NFC').toLowerCase();
+    if (stems.some(stem => raw.includes(stem))) return true;
+    const tokens = priceWords(text);
+    return phrases.some(phrase => {
+      for (let at = 0; at + phrase.length <= tokens.length; at++) {
+        if (phrase.every((word, offset) => tokens[at + offset] === word)) return true;
+      }
+      return false;
+    });
+  };
+}
+
 export interface DepthFilterInput {
   competitorTitles: readonly string[];
   basicTerms: readonly string[];
@@ -93,15 +170,19 @@ export interface DepthFilterInput {
   widensArea?: (text: string) => boolean;
   /** The page's search keyword (a Latin keyword allows Latin terms). */
   keyword?: string;
+  /** Price lexicon; default the Noa-gated file at PRICE_LEXICON_PATH (null: digits / currency / percent only). */
+  priceLexicon?: PriceLexicon | null;
 }
 
 /**
  * The four depth filters. Limits, stated for the report: brands = title brand words (coarse); places = the tracked locality
  * list plus the gate's widening check; unoffered services = another vertical's trade words only (no per-trade service list
- * exists yet); price = digits, currency and percent signs only (no Hebrew price lexicon exists yet: needs Noa).
+ * exists yet); price = digits, currency and percent signs, plus the Noa-gated price lexicon when its file is present.
  */
 export function buildDepthFilters(input: DepthFilterInput): DepthTextFilters {
   const brands = competitorBrandWords(input.competitorTitles, input.basicTerms, input.anchorText);
+  const lexicon = input.priceLexicon === undefined ? defaultPriceLexicon() : input.priceLexicon;
+  const lexiconHit = lexicon ? priceLexiconMatcher(lexicon) : () => false;
   return {
     competitorBrand: text => namesAny(text, brands),
     otherPlace: text => namesOtherLocality(text, input.localities, input.ownerPlaces) || Boolean(input.widensArea?.(text)),
@@ -109,7 +190,7 @@ export function buildDepthFilters(input: DepthFilterInput): DepthTextFilters {
       const vertical = matchedVertical(text);
       return vertical !== null && vertical !== input.siteVertical;
     },
-    price: text => /[\d\u20AA$%]/u.test(text),
+    price: text => /[\d\u20AA$%]/u.test(text) || lexiconHit(text),
     latinAllowed: /[A-Za-z]/.test(input.keyword ?? ''),
   };
 }

@@ -10,7 +10,7 @@ import {
 } from './dataForSeoResearch';
 import { compileBusinessTruthModel, findBusinessTruthGaps, type BusinessTruthInput } from './businessTruth';
 import { compileCityEvidence, compileSemanticEvidenceGraph } from './evidenceGraph';
-import { createServiceQuery, getServiceQuery, pollServiceQuery, type NeuronServiceQuery, type ServiceQueryInput } from './neuronWriter';
+import { createServiceQuery, getServiceQuery, type NeuronServiceQuery, type ServiceQueryInput } from './neuronWriter';
 import { fixtureResearchProviders } from './fixtureProviders';
 import { readResearchDossier, writeResearchDossierAtomic } from './researchStore';
 import type { EvidenceNode, HumanGate, NeuronQuestion, SiteResearchDossier } from './types';
@@ -28,8 +28,6 @@ export interface ResearchProviders {
   neuron: {
     create(input: ServiceQueryInput): Promise<NeuronServiceQuery>;
     get(queryId: string, input: Pick<ServiceQueryInput, 'serviceKeyword' | 'intentCluster'>): Promise<NeuronServiceQuery>;
-    /** Content depth: bounded wait for a not-yet-ready query (get-query only; never a new analysis). Optional. */
-    poll?(queryId: string, input: Pick<ServiceQueryInput, 'serviceKeyword' | 'intentCluster'>): Promise<NeuronServiceQuery>;
   };
 }
 
@@ -38,10 +36,38 @@ export interface SiteResearchInput {
   seeds?: string[];
 }
 
+/**
+ * Research latency (2026-11-10): the NeuronWriter stage creates every query up front, then polls all not-ready ones in
+ * parallel under ONE overall budget. Keywords still not ready when the budget runs out are generated without NeuronWriter
+ * data and recorded in dossier.neuronPending (neuron_pending) for the monthly refresh.
+ */
+export interface NeuronStageOptions {
+  /** Overall wait budget for the whole NeuronWriter stage, in ms (default 90 000; env SITE_BOT_NEURON_BUDGET_MS). */
+  budgetMs?: number;
+  /** Wait between parallel poll rounds, in ms (default 15 000; never longer than the remaining budget). */
+  intervalMs?: number;
+  /** Injected for tests (fake timers). */
+  sleep?: (ms: number) => Promise<void>;
+  /** Monotonic clock in ms, injected for tests (default Date.now). */
+  clockMs?: () => number;
+}
+
+export const DEFAULT_NEURON_BUDGET_MS = 90_000;
+export const DEFAULT_NEURON_POLL_INTERVAL_MS = 15_000;
+
 export interface SiteResearchOptions {
   providers?: ResearchProviders;
   now?: () => Date;
   baseDir?: string;
+  neuron?: NeuronStageOptions;
+}
+
+/** Budget in ms: explicit option, else SITE_BOT_NEURON_BUDGET_MS (a non-negative integer), else 90 s. */
+export function resolveNeuronBudgetMs(option: number | undefined, env: Readonly<Record<string, string | undefined>> = process.env): number {
+  if (option !== undefined && Number.isFinite(option) && option >= 0) return Math.floor(option);
+  const raw = env.SITE_BOT_NEURON_BUDGET_MS?.trim();
+  if (raw && /^\d+$/.test(raw)) return Number(raw);
+  return DEFAULT_NEURON_BUDGET_MS;
 }
 
 export interface SiteResearchResult {
@@ -87,7 +113,7 @@ function defaultProviders(): ResearchProviders {
   }
   return {
     dataForSeo: { expand: expandServiceSeeds, metrics: fetchKeywordMetrics, intent: classifySearchIntent, serps: fetchLocalSerpEvidence },
-    neuron: { create: createServiceQuery, get: getServiceQuery, poll: (queryId, input) => pollServiceQuery(queryId, input) },
+    neuron: { create: createServiceQuery, get: getServiceQuery },
   };
 }
 
@@ -208,6 +234,74 @@ export function applyNeuron(dossier: SiteResearchDossier, query: NeuronServiceQu
   };
 }
 
+/**
+ * Research latency (2026-11-10): create (or re-read) every shortlisted query up front, then poll all not-ready ones in
+ * parallel rounds under one overall budget. A failing create still holds the research (provider outage); a failing
+ * get during polling only leaves that keyword pending. Not-ready keywords end up in dossier.neuronPending.
+ */
+export async function runNeuronStage(
+  dossier: SiteResearchDossier,
+  keywords: readonly string[],
+  providers: ResearchProviders,
+  options: SiteResearchOptions,
+  now: () => Date,
+): Promise<void> {
+  const stage = options.neuron ?? {};
+  const budgetMs = resolveNeuronBudgetMs(stage.budgetMs);
+  const intervalMs = Math.max(0, Math.floor(stage.intervalMs ?? DEFAULT_NEURON_POLL_INTERVAL_MS));
+  const sleep = stage.sleep ?? (ms => new Promise<void>(resolve => setTimeout(resolve, ms)));
+  const clockMs = stage.clockMs ?? (() => Date.now());
+  const started = clockMs();
+  const inputFor = (keyword: string) => ({ serviceKeyword: keyword, intentCluster: keyword, pageClass: 'service' as const });
+
+  // 1. Create all queries up front (an existing query ID is re-read, never re-created: /new-query spends quota).
+  const initial = await Promise.all(keywords.map(keyword => {
+    const queryEvidence = dossier.evidence.find(item => item.id === `neuron-query:${keyword.toLowerCase().replace(/\s+/g, '-')}`);
+    const queryInput = inputFor(keyword);
+    return queryEvidence?.providerRecordId ? providers.neuron.get(queryEvidence.providerRecordId, queryInput) : providers.neuron.create(queryInput);
+  }));
+  const pending = new Map<string, NeuronServiceQuery>();
+  initial.forEach((query, index) => {
+    applyNeuron(dossier, query, now);
+    if (query.status !== 'ready') pending.set(keywords[index], query);
+  });
+  await save(dossier, options, now);
+
+  // 2. Poll every pending query in parallel; the first round is immediate (get-query is free), then wait between rounds.
+  let round = 0;
+  const maxRounds = intervalMs === 0 ? 1 : Math.ceil(budgetMs / intervalMs);
+  while (pending.size) {
+    const remaining = budgetMs - (clockMs() - started);
+    if (round > 0) {
+      if (remaining <= 0) break;
+      await sleep(Math.min(intervalMs, remaining));
+    }
+    round += 1;
+    const results = await Promise.all([...pending].map(async ([keyword, query]) => {
+      try { return await providers.neuron.get(query.id, inputFor(keyword)); } catch { return null; }
+    }));
+    let changed = false;
+    [...pending.keys()].forEach((keyword, index) => {
+      const result = results[index];
+      if (result?.status !== 'ready') return;
+      applyNeuron(dossier, result, now);
+      pending.delete(keyword);
+      changed = true;
+    });
+    if (changed) await save(dossier, options, now);
+    // Safety: a zero interval or a clock that does not advance must never spin; cap rounds by the budget.
+    if (intervalMs === 0 || round > maxRounds) break;
+  }
+
+  // 3. Whatever is not ready is generated without NeuronWriter data and refreshed later (monthly loop).
+  const recordedAt = nowIso(now);
+  const stillPending = keywords.filter(keyword => pending.has(keyword));
+  const previous = new Map((dossier.neuronPending ?? []).map(item => [item.keyword, item]));
+  dossier.neuronPending = stillPending.map(keyword => previous.get(keyword) ?? { keyword, queryId: pending.get(keyword)!.id, status: 'neuron_pending' as const, recordedAt });
+  if (!dossier.neuronPending.length) delete dossier.neuronPending;
+  await save(dossier, options, now);
+}
+
 function applyGraph(dossier: SiteResearchDossier, cityFacts: Array<{ value: string; owner: { sourceId: string; capturedAt: string } }>, now: () => Date): void {
   const graph = compileSemanticEvidenceGraph({
     entities: dossier.businessTruth.assertions.map(assertion => ({ name: assertion.claim, type: 'service' as const, capabilityConfirmed: true, sources: [{ kind: 'owner' as const, sourceId: assertion.providerRecordId ?? assertion.id, confidence: assertion.confidence }] })),
@@ -285,15 +379,7 @@ export async function runSiteResearch(researchId: string, input: SiteResearchInp
       applySerps(dossier, serpResult.evidence, now);
       await save(dossier, options, now);
     }
-    for (const keyword of shortlisted) {
-      const queryEvidence = dossier.evidence.find(item => item.id === `neuron-query:${keyword.toLowerCase().replace(/\s+/g, '-')}`);
-      const queryInput = { serviceKeyword: keyword, intentCluster: keyword, pageClass: 'service' as const };
-      let query = queryEvidence?.providerRecordId ? await providers.neuron.get(queryEvidence.providerRecordId, queryInput) : await providers.neuron.create(queryInput);
-      // Content depth: /new-query answers before the analysis is done; wait (bounded) so the data reaches the briefs.
-      if (query.status !== 'ready' && providers.neuron.poll) query = await providers.neuron.poll(query.id, queryInput);
-      applyNeuron(dossier, query, now);
-      await save(dossier, options, now);
-    }
+    await runNeuronStage(dossier, shortlisted, providers, options, now);
     applyGraph(dossier, truth.cityPageEligibleAreas.flatMap(city => {
       const match = [...truth.servedAreas, ...(truth.base ? [truth.base] : [])].find(item => item.value === city);
       return match ? [match] : [];

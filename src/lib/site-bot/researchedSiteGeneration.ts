@@ -70,6 +70,8 @@ export interface ResearchedSiteGenerationContext {
   priorAboutPageBodies: readonly string[];
   /** M2a.7: hero-cap facts (masked service labels, AC page) of the same pages, for the site-wide hero cap. */
   priorHeroFacts: readonly HeroCapPageFacts[];
+  /** 2026-11-10 (Noa's pattern F): the homepage's trust-bar items, so later pages reuse its term for each proof point. */
+  siteTerms?: readonly string[];
 }
 
 /** M2a.6: the site context for the next page, from the pages generated so far (route order, home first); M2a.7: plus their hero-cap facts. */
@@ -80,11 +82,14 @@ export interface ResearchedSiteGenerationContext {
  */
 export function siteGenerationContext(pages: ReadonlyArray<{ copy: SiteCopy; classification?: string }>, facts: readonly HeroCapPageFacts[] = []): ResearchedSiteGenerationContext {
   const about = pages.filter(page => page.classification === undefined || rendersSiteSections(page.classification));
+  const siteTerms = (pages.find(page => page.classification === 'homepage')?.copy.trustBarItems ?? [])
+    .filter((item): item is string => typeof item === 'string' && item.trim().length > 0);
   return {
     priorHeroHeadlines: pages.map(page => page.copy.heroHeadline),
     priorAboutPageHeadlines: about.map(page => page.copy.aboutPageHeadline),
     priorAboutPageBodies: about.map(page => page.copy.aboutPageBody),
     priorHeroFacts: [...facts],
+    ...(siteTerms.length ? { siteTerms } : {}),
   };
 }
 

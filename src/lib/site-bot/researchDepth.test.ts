@@ -11,7 +11,8 @@ import type { SiteCopy } from '../lp/lpCopyPrompt';
 import { copyGateContext, serviceAreaHits } from '../lp/copyGates';
 import { ISRAELI_LOCALITIES } from './israeliLocalities';
 import { runResearchToSite } from './researchToSite';
-import { buildDepthFilters, competitorBrandWords, namesOtherLocality } from './research/depthFilters';
+import { PRICE_LEXICON_DATA } from './research/priceLexiconData';
+import { buildDepthFilters, competitorBrandWords, defaultPriceLexicon, loadPriceLexicon, namesOtherLocality, PRICE_LEXICON_PATH, priceLexiconMatcher, priceWords } from './research/depthFilters';
 import { fixtureResearchProviders } from './research/fixtureProviders';
 import { getServiceQuery, type NeuronServiceQuery } from './research/neuronWriter';
 import {
@@ -242,4 +243,90 @@ test('fixture providers: NeuronWriter data reaches the dossier and the service b
   } finally {
     fs.rmSync(root, { recursive: true, force: true });
   }
+});
+
+// Price lexicon (Noa-gated, docs/copy/site-bot-price-lexicon-2026-11-10.json). Every Hebrew string below is taken from the
+// file or built by slicing its entries; HE_SYN is synthetic letters (not a word), as in the other test files.
+const HE_SYN = '\u05D0\u05D1\u05D2\u05D3';
+const HE_SYN2 = '\u05D4\u05D5\u05D6\u05D7';
+
+function realLexicon() {
+  const raw = JSON.parse(fs.readFileSync(path.join(process.cwd(), PRICE_LEXICON_PATH), 'utf8')) as { priceStems: string[]; pricePhrases: string[] };
+  const lexicon = loadPriceLexicon();
+  assert.ok(lexicon, 'the lexicon file loads');
+  assert.deepEqual(lexicon, { priceStems: raw.priceStems, pricePhrases: raw.pricePhrases });
+  // The generated copy (standalone builds do not ship docs/) is byte-exact; re-run scripts/site-bot/build-price-lexicon.mjs.
+  assert.deepEqual(PRICE_LEXICON_DATA, lexicon);
+  assert.deepEqual(defaultPriceLexicon(), lexicon);
+  // Index map of the file (2026-11-10): phrases 21 = "cheap", 28 = "expensive", 37 = "shekel", 40 / 41 = the shekel
+  // abbreviation with gershayim / with an ASCII double quote, 0 = "visit fee" (two words); stems 0 / 1 / 15 = price, costs, estimate.
+  const phrase = (index: number) => raw.pricePhrases[index];
+  const stem = (index: number) => raw.priceStems[index];
+  assert.equal(priceWords(phrase(21)).length, 1);
+  assert.equal(priceWords(phrase(0)).length, 2);
+  assert.ok(phrase(41).includes('"') && !phrase(40).includes('"'));
+  return { lexicon, raw, phrase, stem };
+}
+
+test('price lexicon: Noa\'s false positives (a phrase inside a longer word) are not price terms', () => {
+  const { lexicon, raw, phrase, stem } = realLexicon();
+  const price = priceLexiconMatcher(lexicon);
+  const alef = stem(15)[0];
+  const mem = stem(0)[0];
+  const ayin = stem(1)[0];
+  const yod = phrase(28)[0];
+  // A surname containing "cheap", "weight" containing "shekel", "main point" containing "expensive" (Noa's three pairs).
+  const falsePositives = [`${alef}${phrase(21)}${alef}${yod}`, `${mem}${phrase(37)}`, `${ayin}${phrase(28)}`];
+  for (const word of falsePositives) {
+    assert.ok(!raw.priceStems.some(item => word.includes(item)), 'the built word holds no stem');
+    assert.equal(price(word), false);
+    assert.equal(price(`${HE_SYN} ${word}`), false);
+  }
+  // Only the first word of a two-word phrase is not the phrase.
+  assert.equal(price(`${priceWords(phrase(0))[0]} ${HE_SYN}`), false);
+  assert.equal(price(`${HE_SYN} ${HE_SYN2}`), false);
+});
+
+test('price lexicon: true positives (a phrase anywhere in a longer term, after punctuation and quote normalisation)', () => {
+  const { lexicon, raw, phrase, stem } = realLexicon();
+  const price = priceLexiconMatcher(lexicon);
+  // Never whole-term equality: "<service words> cheap" matches.
+  assert.equal(price(`${HE_SYN} ${HE_SYN2} ${phrase(21)}`), true);
+  assert.equal(price(`${phrase(28)} ${HE_SYN}`), true);
+  assert.equal(price(`${HE_SYN}, ${phrase(37)}!`), true);
+  assert.equal(price(`${HE_SYN}-${phrase(21)}`), true, 'a hyphen is stripped to a word break');
+  assert.equal(price(`"${phrase(21)}"`), true, 'quotes around a word are punctuation');
+  assert.equal(price(`${HE_SYN} ${phrase(0)} ${HE_SYN2}`), true, 'a two-word phrase anywhere in the term');
+  // The abbreviation matches in either quote form, whichever form the term uses.
+  assert.equal(price(`${HE_SYN} ${phrase(40)}`), true);
+  assert.equal(price(`${HE_SYN} ${phrase(41)}`), true);
+  const onlyAscii = priceLexiconMatcher({ priceStems: [], pricePhrases: [phrase(41)] });
+  assert.equal(onlyAscii(`${HE_SYN} ${phrase(40)}`), true);
+  // Stems are substrings: a stem inside a longer word is a hit.
+  assert.equal(price(`${HE_SYN}${stem(0)}${HE_SYN2}`), true);
+  // Every lexicon entry matches itself inside a longer term.
+  for (const entry of [...raw.priceStems, ...raw.pricePhrases]) assert.equal(price(`${HE_SYN} ${entry} ${HE_SYN2}`), true);
+});
+
+test('price lexicon hook: buildDepthFilters uses the file by default, an injected lexicon, or none', () => {
+  const { phrase } = realLexicon();
+  const base = { competitorTitles: [], basicTerms: [], anchorText: '', ownerPlaces: [], localities: [], siteVertical: 'emergency-trades' as const };
+  assert.equal(buildDepthFilters(base).price?.(`${HE_SYN} ${phrase(21)}`), true);
+  assert.equal(buildDepthFilters({ ...base, priceLexicon: null }).price?.(`${HE_SYN} ${phrase(21)}`), false);
+  assert.equal(buildDepthFilters({ ...base, priceLexicon: null }).price?.('price 300'), true, 'digits still count without a lexicon');
+  // ASCII stand-in (the file shape): stems are substrings, phrases whole words.
+  const standIn = buildDepthFilters({ ...base, priceLexicon: { priceStems: ['pric'], pricePhrases: ['cheap'] } });
+  assert.equal(standIn.price?.('best prices'), true);
+  assert.equal(standIn.price?.('fast cheap repair'), true);
+  assert.equal(standIn.price?.('cheapskate'), false);
+  // A missing or malformed file is no lexicon.
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'price-lexicon-'));
+  try {
+    assert.equal(loadPriceLexicon(dir), null);
+    fs.mkdirSync(path.join(dir, path.dirname(PRICE_LEXICON_PATH)), { recursive: true });
+    fs.writeFileSync(path.join(dir, PRICE_LEXICON_PATH), JSON.stringify({ priceStems: 'x' }));
+    assert.equal(loadPriceLexicon(dir), null);
+    fs.writeFileSync(path.join(dir, PRICE_LEXICON_PATH), JSON.stringify({ priceStems: ['pric'], pricePhrases: ['cheap'], _matching: 'x' }));
+    assert.deepEqual(loadPriceLexicon(dir), { priceStems: ['pric'], pricePhrases: ['cheap'] });
+  } finally { fs.rmSync(dir, { recursive: true, force: true }); }
 });

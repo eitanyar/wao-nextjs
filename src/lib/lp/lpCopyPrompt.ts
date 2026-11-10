@@ -64,9 +64,12 @@ export function primaryCtaLabel(data: CollectedData): string {
   return contactLabel;
 }
 
+/** The legacy LP bot's "no reviews" answer marker (turn 21); the research path does not use it (effectiveReviewQuote). */
+export const NO_REVIEW_ANSWER_MARKER = 'אין';
+
 /** True when the owner supplied a real customer quote. */
 export function hasRealReviewQuote(data: CollectedData): boolean {
-  return !!data.reviewQuote && !data.reviewQuote.includes('אין');
+  return !!data.reviewQuote && !data.reviewQuote.includes(NO_REVIEW_ANSWER_MARKER);
 }
 
 /** Research-path prompt options (M2a.1). Unset = the legacy prompt, byte-identical. */

@@ -3,6 +3,15 @@
  * Script v6 — 28.6.2026
  */
 
+/** Pricing default (2026-11-10): the fixed owner-checkable pricing promises. */
+export type PricingPromiseId = 'free_quote' | 'price_before_work' | 'price_by_phone_before_leaving' | 'no_callout_fee' | 'no_hidden_costs';
+
+/** One owner "starting from" price. */
+export interface StartingPrice {
+  job: string;
+  from: number;
+}
+
 export interface CollectedData {
   // Business basics
   businessNiche?: string;
@@ -21,6 +30,16 @@ export interface CollectedData {
   serviceAttributes?: Record<string, string>;
   /** Content depth: the owner's own walkthrough of a typical job (the intake voice note, once transcribed). Not collected yet. */
   jobWalkthrough?: string;
+
+  // Pricing default (2026-11-10; no intake UI yet: it arrives with the market-norm prompt). Owner facts only; never guessed.
+  /** The pricing promises the owner checked, from the fixed set (researchedPricing.ts PRICING_PROMISE_IDS). */
+  pricingPromises?: PricingPromiseId[];
+  /** Call-out fee in NIS, when the owner states one. */
+  calloutFee?: number;
+  /** "Starting from" prices for 1-3 common jobs (job in the owner's words, amount in NIS). */
+  startingPrices?: StartingPrice[];
+  /** Night / Shabbat surcharge policy, in the owner's words. */
+  surchargePolicy?: string;
 
   // Service model + location
   serviceModel?: 'field' | 'location' | 'event' | 'remote' | 'mixed';
