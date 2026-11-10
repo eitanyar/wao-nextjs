@@ -539,6 +539,9 @@ export function heroAnchorRule(brief: PageBrief): string {
 }
 
 /** M2b.1h: a pitch-first page (research site, homepage or service hub): the model writes a free pitch first and cuts the fields from it. */
+/** M2b.1h (Adam): pitch-first pages also decide stage / promise / mechanism before the pitch; Qwen is flat-rate, so only latency grows. */
+export const PITCH_FIRST_THINKING_BUDGET = 3000;
+
 export function pitchFirstPage(brief: Pick<PageBrief, 'site' | 'page'>): boolean {
   return Boolean(brief.site) && rendersSiteSections(brief.page.pageClass);
 }
@@ -1500,7 +1503,7 @@ export async function generateResearchPageCopy(
     },
   };
   const prompt = buildResearchPageGenerationPrompt(brief, data);
-  const tamarCopy = await settleStage(ctx, 'tamar', () => callJson(brief.site ? SITE_COPY_SYSTEM_PROMPT : COPY_SYSTEM_PROMPT, prompt, { thinkingBudget: 1500 }));
+  const tamarCopy = await settleStage(ctx, 'tamar', () => callJson(brief.site ? SITE_COPY_SYSTEM_PROMPT : COPY_SYSTEM_PROMPT, prompt, { thinkingBudget: pitchFirstPage(brief) ? PITCH_FIRST_THINKING_BUDGET : 1500 }));
   const noaCopy = await settleStage(ctx, 'noa', () => callJson(QA_SYSTEM_PROMPT, buildNoaQaMessage(tamarCopy, brief), { think: false }));
   const finalCopy = withSystemFields(carryOptionalFields(applyFaqPolicy(noaCopy, brief) as unknown as Loose, tamarCopy as unknown as Loose), brief, data) as unknown as SiteCopy;
   assertCopyAt('final', finalCopy, shapeOptions(brief));
