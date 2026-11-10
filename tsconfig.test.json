@@ -294,6 +294,7 @@
     "src/lib/site-bot/researchLatency.test.ts",
     "src/lib/site-bot/research/fixtureProviders.ts",
     "src/lib/site-bot/research/fixtureProviders.test.ts",
+    "src/lib/site-bot/research/fixtureQuestions.test.ts",
     "src/lib/site-bot/research/serpClustering.ts",
     "src/lib/site-bot/research/serpClustering.test.ts",
     "src/lib/site-bot/research/pagePortfolio.ts",

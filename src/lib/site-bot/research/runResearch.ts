@@ -11,7 +11,7 @@ import {
 import { compileBusinessTruthModel, findBusinessTruthGaps, type BusinessTruthInput } from './businessTruth';
 import { compileCityEvidence, compileSemanticEvidenceGraph } from './evidenceGraph';
 import { createServiceQuery, getServiceQuery, type NeuronServiceQuery, type ServiceQueryInput } from './neuronWriter';
-import { fixtureResearchProviders } from './fixtureProviders';
+import { fixtureQuestionsFromEnv, fixtureResearchProviders } from './fixtureProviders';
 import { readResearchDossier, writeResearchDossierAtomic } from './researchStore';
 import type { EvidenceNode, HumanGate, NeuronQuestion, SiteResearchDossier } from './types';
 
@@ -109,7 +109,10 @@ export function resolveResearchProviderMode(
 function defaultProviders(): ResearchProviders {
   if (resolveResearchProviderMode() === 'fixture') {
     console.warn('[site-bot research] FIXTURE providers active (SITE_BOT_RESEARCH_PROVIDERS=fixture): zero network, synthetic evidence, task IDs prefixed fixture-');
-    return fixtureResearchProviders();
+    // Rerun-3 bug 2: an eval may supply realistic pool questions (SITE_BOT_FIXTURE_QUESTIONS_FILE); unset = synthetic.
+    const questions = fixtureQuestionsFromEnv();
+    if (questions) console.warn(`[site-bot research] fixture questions from SITE_BOT_FIXTURE_QUESTIONS_FILE: ${Object.keys(questions).length} keyword(s)`);
+    return fixtureResearchProviders([], questions);
   }
   return {
     dataForSeo: { expand: expandServiceSeeds, metrics: fetchKeywordMetrics, intent: classifySearchIntent, serps: fetchLocalSerpEvidence },

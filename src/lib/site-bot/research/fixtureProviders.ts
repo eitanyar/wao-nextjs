@@ -19,6 +19,7 @@ import {
   fetchKeywordMetrics,
   fetchLocalSerpEvidence,
 } from './dataForSeoResearch';
+import fs from 'node:fs';
 import { createServiceQuery, getServiceQuery, NEURON_WRITER_BASE_URL } from './neuronWriter';
 import type { ResearchProviders } from './runResearch';
 
@@ -103,11 +104,52 @@ function dataForSeoResponse(endpoint: string, body: unknown): Json | null {
 }
 
 /**
+ * Rerun-3 bug 2: optional question text per NeuronWriter keyword, one per ideas group. The synthetic default
+ * (`<keyword> paa question?` ...) names no code-owned fact topic, so a fixture run can never build a code-built Q&A item
+ * (copy v2 slice 6) and every Q&A item is model-written. An eval supplies realistic pool questions here (a JSON file named by
+ * SITE_BOT_FIXTURE_QUESTIONS_FILE, keyed by the exact keyword). A group missing from an entry keeps its synthetic default.
+ */
+export interface FixtureQuestionSet {
+  paa?: string;
+  suggested?: string;
+  topic?: string;
+  content?: string;
+}
+export type FixtureQuestions = Readonly<Record<string, FixtureQuestionSet>>;
+const QUESTION_GROUPS: readonly (keyof FixtureQuestionSet)[] = ['paa', 'suggested', 'topic', 'content'];
+
+/** Validate a fixture question file's parsed JSON; throws on anything but { keyword: { group: non-empty string } }. */
+export function parseFixtureQuestions(value: unknown): FixtureQuestions {
+  const isRecord = (item: unknown): item is Record<string, unknown> => Boolean(item) && typeof item === 'object' && !Array.isArray(item);
+  if (!isRecord(value)) throw new Error('fixture questions: expected an object keyed by keyword');
+  const out: Record<string, FixtureQuestionSet> = {};
+  for (const [keyword, entry] of Object.entries(value)) {
+    if (!isRecord(entry)) throw new Error(`fixture questions: entry for ${JSON.stringify(keyword)} is not an object`);
+    const set: FixtureQuestionSet = {};
+    for (const [group, question] of Object.entries(entry)) {
+      if (!QUESTION_GROUPS.includes(group as keyof FixtureQuestionSet)) throw new Error(`fixture questions: unknown group ${JSON.stringify(group)}`);
+      if (typeof question !== 'string' || !question.trim()) throw new Error(`fixture questions: ${JSON.stringify(group)} for ${JSON.stringify(keyword)} must be a non-empty string`);
+      set[group as keyof FixtureQuestionSet] = question;
+    }
+    out[keyword] = set;
+  }
+  return out;
+}
+
+/** The fixture questions named by SITE_BOT_FIXTURE_QUESTIONS_FILE (unset = none). Fails closed on an unreadable or bad file. */
+export function fixtureQuestionsFromEnv(env: { SITE_BOT_FIXTURE_QUESTIONS_FILE?: string } = process.env): FixtureQuestions | undefined {
+  const file = env.SITE_BOT_FIXTURE_QUESTIONS_FILE;
+  if (!file) return undefined;
+  return parseFixtureQuestions(JSON.parse(fs.readFileSync(file, 'utf8')));
+}
+
+/**
  * A ready /get-query payload in the real response shape (testdata/neuronwriter-get-query-he.json), with synthetic Latin
  * terms built from the keyword: word-count target, content terms with sugg_usage ranges, H2 terms, and questions in every
  * ideas group (PAA, suggested, topic matrix, content).
  */
-export function fixtureNeuronReadyPayload(queryId: string, keyword: string): Json {
+export function fixtureNeuronReadyPayload(queryId: string, keyword: string, questions?: FixtureQuestions): Json {
+  const set: FixtureQuestionSet = (questions && Object.prototype.hasOwnProperty.call(questions, keyword) ? questions[keyword] : undefined) ?? {};
   return {
     status: 'ready',
     query: queryId,
@@ -128,16 +170,16 @@ export function fixtureNeuronReadyPayload(queryId: string, keyword: string): Jso
       entities: [{ t: `${keyword} entity`, importance: 5, relevance: 0.5, confidence: 0.5, links: [] }],
     },
     ideas: {
-      suggest_questions: [{ q: `${keyword} suggested question?` }],
-      people_also_ask: [{ q: `${keyword} paa question?` }],
-      topic_matrix: { [`${keyword} topic question?`]: { importance: 8 } },
-      content_questions: [{ q: `${keyword} content question?` }],
+      suggest_questions: [{ q: set.suggested ?? `${keyword} suggested question?` }],
+      people_also_ask: [{ q: set.paa ?? `${keyword} paa question?` }],
+      topic_matrix: { [set.topic ?? `${keyword} topic question?`]: { importance: 8 } },
+      content_questions: [{ q: set.content ?? `${keyword} content question?` }],
     },
     competitors: [{ rank: 1, url: 'https://fixture-local-1.example/', title: 'Fixture Local Business 1', desc: 'fixture', headers: [], content_score: 50, word_count: 420 }],
   };
 }
 
-function neuronResponse(endpoint: string, body: unknown, keywords: Map<string, string>): Json | Json[] | null {
+function neuronResponse(endpoint: string, body: unknown, keywords: Map<string, string>, questions?: FixtureQuestions): Json | Json[] | null {
   const record = body && typeof body === 'object' && !Array.isArray(body) ? body as Json : {};
   switch (endpoint) {
     case '/list-projects':
@@ -152,7 +194,7 @@ function neuronResponse(endpoint: string, body: unknown, keywords: Map<string, s
     case '/get-query': {
       const id = typeof record.query === 'string' ? record.query : '';
       const keyword = keywords.get(id);
-      return keyword === undefined ? { status: 'not found' } : fixtureNeuronReadyPayload(id, keyword);
+      return keyword === undefined ? { status: 'not found' } : fixtureNeuronReadyPayload(id, keyword, questions);
     }
     default:
       return null;
@@ -165,7 +207,7 @@ export interface FixtureFetchCall {
 }
 
 /** A fetch stand-in that answers only from fixtures. `calls` records every request it served. */
-export function createFixtureFetch(calls: FixtureFetchCall[] = []): typeof globalThis.fetch {
+export function createFixtureFetch(calls: FixtureFetchCall[] = [], questions?: FixtureQuestions): typeof globalThis.fetch {
   const neuronKeywords = new Map<string, string>();
   return (async (input: RequestInfo | URL, init?: RequestInit) => {
     const url = typeof input === 'string' ? input : input instanceof URL ? input.href : input.url;
@@ -175,7 +217,7 @@ export function createFixtureFetch(calls: FixtureFetchCall[] = []): typeof globa
     const payload = url.startsWith(`${DATAFORSEO_PREFIX}/`)
       ? dataForSeoResponse(url.slice(DATAFORSEO_PREFIX.length), body)
       : url.startsWith(`${NEURON_PREFIX}/`)
-        ? neuronResponse(url.slice(NEURON_PREFIX.length), body, neuronKeywords)
+        ? neuronResponse(url.slice(NEURON_PREFIX.length), body, neuronKeywords, questions)
         : null;
     if (!payload) throw new Error(`fixture transport has no recording for ${method} ${url}`);
     return new Response(JSON.stringify(payload), { status: 200, headers: { 'Content-Type': 'application/json' } });
@@ -183,8 +225,8 @@ export function createFixtureFetch(calls: FixtureFetchCall[] = []): typeof globa
 }
 
 /** Real adapters on the fixture transport. Fresh caches per call so runs are independent. */
-export function fixtureResearchProviders(calls: FixtureFetchCall[] = []): ResearchProviders {
-  const fetch = createFixtureFetch(calls);
+export function fixtureResearchProviders(calls: FixtureFetchCall[] = [], questions?: FixtureQuestions): ResearchProviders {
+  const fetch = createFixtureFetch(calls, questions);
   const dataForSeo = { token: FIXTURE_CREDENTIAL, fetch, cache: new Map() };
   const neuron = { apiKey: FIXTURE_CREDENTIAL, projectId: FIXTURE_NEURON_PROJECT_ID, fetch, queryIds: new Map<string, string>() };
   return {
