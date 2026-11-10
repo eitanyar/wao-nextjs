@@ -17,7 +17,11 @@ import {
   promptV2RuleCount,
   resolvePromptVersion,
   ungeneratedFieldsFor,
+  PROMPT_V2_SYSTEM_PROMPTS,
 } from './researchPageCopy';
+import { SIGNATURE_GROUPS } from './copyGates';
+import { PLURAL_ADDRESS_TOKENS, WE_FORM_TOKENS } from './copyGates.config';
+import { BAD_IDIOMS, CTA_LABEL_SETS, SERVICES_HEADLINE_OPTIONS, GENERIC_ADJECTIVE_EXEMPT_PHRASES, GENERIC_ADJECTIVE_PHRASES, GENERIC_ADJECTIVE_WORDS, TRADE_TERMS } from './generationData';
 
 const T: OwnerFactTemplates = {
   trustYears: 'Y:{n}', trustLicense: 'L:{license}', trustLicenseNumber: 'LN:{number}', trustWarranty: 'W:{duration}',
@@ -149,7 +153,33 @@ test('v2 prompt: rule count (about 30, down from about 90) and a pinned snapshot
 });
 
 /** Re-pin deliberately when a v2 rule changes (print the new values with the assert message). */
-const PINNED_V2 = { home: '6dbc747fcd8d2597', service: 'd33519c23974194e' };
+const PINNED_V2 = { home: '0a89941562b516f0', service: '43d293a95d6516d6' };
+
+test('rerun-3 item 3: no code-gate token list reaches a v2 prompt (user prompt, Tamar / repair / Noa system prompts)', async () => {
+  await codeOwned(() => {
+    // The closed servicesHeadline set is a choice, not a ban list (a trade-term token is a substring of one option).
+    const keep = new Set<string>(SERVICES_HEADLINE_OPTIONS);
+    const ctaExamples = (['emergency', 'planned', 'neutral'] as const).flatMap(stage => CTA_LABEL_SETS[stage].formHeadline.examples);
+    const lists: Record<string, readonly string[]> = {
+      signature: Object.values(SIGNATURE_GROUPS).flat(),
+      genericAdjectiveWords: GENERIC_ADJECTIVE_WORDS, genericAdjectivePhrases: GENERIC_ADJECTIVE_PHRASES, exempt: GENERIC_ADJECTIVE_EXEMPT_PHRASES,
+      badIdioms: BAD_IDIOMS.flatMap(entry => [...entry.tokens, entry.replacement, ...(entry.replacementFeminine ? [entry.replacementFeminine] : [])]),
+      tradeTerms: TRADE_TERMS.flatMap(entry => [...entry.tokens, ...(entry.leadVerbs ?? []), entry.replacement, ...(entry.replacementPair ? [entry.replacementPair] : [])]),
+      pluralAddress: PLURAL_ADDRESS_TOKENS.map(entry => entry.token), weForms: WE_FORM_TOKENS.map(entry => entry.token),
+      formHeadlineExamples: ctaExamples,
+    };
+    const texts = { ...PROMPT_V2_SYSTEM_PROMPTS, home: buildResearchPageGenerationPromptV2(brief('homepage'), data), service: buildResearchPageGenerationPromptV2(brief('money_service'), data) };
+    for (const [where, text] of Object.entries(texts)) {
+      for (const [list, tokens] of Object.entries(lists)) {
+        const leaked = tokens.filter(token => token.trim().length > 1 && ![...keep].some(option => option.includes(token)) && text.includes(token));
+        assert.deepEqual(leaked.length, 0, `${where}: ${list} (${leaked.length} token(s))`);
+      }
+      for (const name of ['signatureWordTokens', 'genericAdjectiveWords', 'genericAdjectivePhrases', 'badIdiomTokens', 'tradeTermTokens', 'Forbidden forms', 'Never use: ']) {
+        assert.equal(text.includes(name), false, `${where}: ${name}`);
+      }
+    }
+  });
+});
 
 test('v2 end to end (mocked model): Tamar gets the v2 prompt and the short system prompt; v1 on request', async () => {
   await codeOwned(async () => {

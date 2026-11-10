@@ -168,6 +168,32 @@ function voiceRule(id: string): string {
   return `- ${rule.text}`;
 }
 
+/**
+ * Rerun-3 item 3 (phrase bleed): the v2 model-facing prompts print no code-gate token list. A printed ban list primes the
+ * model to write its phrases (a signature-phrase entry appeared verbatim on two sites whose owners never named it). The gates
+ * keep every list in code; the v2 rules state the rule without the tokens. v1 stays byte-identical (A/B pin).
+ */
+export const SINGULAR_ADDRESS_RULE_V2 =
+  'ADDRESS (hard rule, binding): address the reader in the singular masculine second person only, as one man. Never use plural or second-person-plural forms, including with attached prefix letters. VOICE (grammar only): the owner speaks in the first-person singular, never in the first-person plural. This is a grammar rule, not a fact about the business: never state or imply that the owner works alone, answers the phone personally, or has no subcontractors or no call centre, unless an owner fact says so.';
+
+/** The P3 / P5 sentences that name a token list, and their v2 list-free replacement ('' = the sentence is removed). */
+const V2_LIST_REFERENCE_CUTS: ReadonlyArray<readonly [string, string, string]> = [
+  ['P3', 'Never use the words in `genericAdjectiveWords` or `genericAdjectivePhrases`.', 'Never use a generic quality adjective or a generic quality phrase.'],
+  ['P5', ' Never use the tokens in `badIdiomTokens`; use the listed replacement idea instead.', ''],
+];
+
+/** A voice rule for the v2 prompts: the sentence naming a token list is replaced (asserted present exactly once). */
+export function voiceRuleV2(id: string): string {
+  let text = voiceRule(id);
+  for (const [rule, cut, replacement] of V2_LIST_REFERENCE_CUTS) {
+    if (rule !== id) continue;
+    const at = text.indexOf(cut);
+    if (at < 0 || text.indexOf(cut, at + 1) >= 0) throw new Error(`generationData rule ${id} changed; update the copy v2 list-reference cut.`);
+    text = `${text.slice(0, at)}${replacement}${text.slice(at + cut.length)}`;
+  }
+  return text;
+}
+
 /** The section 19 Hebrew lists that the P-rules name (never the matching-only signature spellings). */
 export function voiceListLines(options: { stickyArrival?: boolean; differentiatorGroups?: readonly string[] } = {}): string[] {
   const differentiator = options.differentiatorGroups ?? [];
@@ -224,8 +250,12 @@ const SITE_REPAIR_SYSTEM_PROMPT = `${REPAIR_SYSTEM_PROMPT}\n\n${VOICE_SYSTEM_RUL
  * Copy v2 slice 3: the v2 system prompts. Tamar's carries only the role and the address rule (the v2 user prompt holds the
  * rest); the repair prompt keeps the voice rules, with pattern A in place of P4 (no aboutBlurb / sticky-bar mentions).
  */
-const SITE_COPY_SYSTEM_PROMPT_V2 = COPY_SYSTEM_PROMPT;
-const SITE_REPAIR_SYSTEM_PROMPT_V2 = `${REPAIR_SYSTEM_PROMPT}\n\nVOICE (binding):\n${[voiceRule('P3'), '- A. Subject: in body text, a sentence that starts with a first-person present-tense verb carries the first-person subject pronoun, unless the previous sentence already does.', voiceRule('P5')].join('\n')}\nLists named above:\n${voiceListLines().slice(0, 5).join('\n')}\n${M2A6_SYSTEM_RULES}`;
+// Rerun-3 item 3: the v2 system prompts carry the list-free address rule and no token list.
+const SITE_COPY_SYSTEM_PROMPT_V2 = COPY_SYSTEM_PROMPT.replace(SINGULAR_ADDRESS_RULE, SINGULAR_ADDRESS_RULE_V2);
+const SITE_REPAIR_SYSTEM_PROMPT_V2 = `${REPAIR_SYSTEM_PROMPT.replace(SINGULAR_ADDRESS_RULE, SINGULAR_ADDRESS_RULE_V2)}\n\nVOICE (binding):\n${[voiceRuleV2('P3'), '- A. Subject: in body text, a sentence that starts with a first-person present-tense verb carries the first-person subject pronoun, unless the previous sentence already does.', voiceRuleV2('P5')].join('\n')}\n${M2A6_SYSTEM_RULES}`;
+const QA_SYSTEM_PROMPT_V2 = QA_SYSTEM_PROMPT.replace(SINGULAR_ADDRESS_RULE, SINGULAR_ADDRESS_RULE_V2);
+/** Rerun-3 item 3 (tests / diagnostics): the v2 system prompts as sent. */
+export const PROMPT_V2_SYSTEM_PROMPTS: Readonly<Record<'tamar' | 'repair' | 'noa', string>> = { tamar: SITE_COPY_SYSTEM_PROMPT_V2, repair: SITE_REPAIR_SYSTEM_PROMPT_V2, noa: QA_SYSTEM_PROMPT_V2 };
 
 // ---------------------------------------------------------------------------
 // Hard limits: the single source of truth for the validator, the violation
@@ -2135,7 +2165,7 @@ export function buildResearchCopyRulesV2(brief: PageBrief, data: CollectedData =
   ];
   const out: PromptV2Section[] = [
     { heading: 'ROLE AND FACTS', rules: [
-      SINGULAR_ADDRESS_RULE.startsWith('- ') ? SINGULAR_ADDRESS_RULE : `- ${SINGULAR_ADDRESS_RULE}`,
+      `- ${SINGULAR_ADDRESS_RULE_V2}`,
       '- FACTS (binding): use only the facts in the research brief and the owner facts below. Never add a number, tool, place, price, guarantee, credential or story they do not state, and never fill an information gap with an inference or make a claim listed in prohibitedClaims.',
       alreadyOnPageRule(codeBuiltFactStrings(brief, data)),
     ] },
@@ -2173,9 +2203,9 @@ export function buildResearchCopyRulesV2(brief: PageBrief, data: CollectedData =
     '- The system drops what adds nothing new: a card description, process step or answer whose words are already on the page is removed, and so is a sentence of the story or the about body that repeats another field. Every item must add a new step, detail or outcome.',
   ] });
   out.push({ heading: 'VOICE', rules: [
-    voiceRule('P3'),
+    voiceRuleV2('P3'),
     HEBREW_PATTERN_RULES[1],
-    voiceRule('P5'),
+    voiceRuleV2('P5'),
     p6WithoutSticky(),
     m2a6Rule('R2'),
     m2a6Rule('R6'),
@@ -2192,7 +2222,8 @@ function formHeadlineChoice(brief: PageBrief, data: CollectedData): string {
   const responseTime = typeof data.responseTime === 'string' && data.responseTime.trim().length > 0;
   const passes = (line: string) => runCopyGates({ formHeadline: line }, gates).length === 0 && (responseTime || !ARRIVAL_TOKENS.some(token => line.includes(token)));
   const set = CTA_LABEL_SETS[stage];
-  return `this page's stage is ${stage}; choose from these labels: ${JSON.stringify(set.formHeadline.labels.filter(passes))}, or use one of these patterns, adapted to this service: ${JSON.stringify(set.formHeadline.examples.filter(passes))}. Only when nothing more specific fits: ${JSON.stringify(passes(CTA_LABEL_SETS.formHeadlineFallback) ? CTA_LABEL_SETS.formHeadlineFallback : '')}.`;
+  // Rerun-3 item 3: the example patterns (other trades' phrases) are not printed; the label set and the fallback are a choice.
+  return `this page's stage is ${stage}; choose from these labels: ${JSON.stringify(set.formHeadline.labels.filter(passes))}, or write a short invitation in the same shape about this service. Only when nothing more specific fits: ${JSON.stringify(passes(CTA_LABEL_SETS.formHeadlineFallback) ? CTA_LABEL_SETS.formHeadlineFallback : '')}.`;
 }
 
 /** Copy v2: the number of binding rules of a page's v2 prompt (lists, the toolkit and the depth section excluded). */
@@ -2202,14 +2233,10 @@ export function promptV2RuleCount(brief: PageBrief, data: CollectedData = {}): n
 
 /** v2 lists the rules name (data-file lists, moved byte-exact; no sticky-bar or trust-bar lists). */
 function v2ListLines(brief: PageBrief, data: CollectedData): string[] {
-  const gates = briefGateContext(brief, data);
-  const lines = voiceListLines({ differentiatorGroups: differentiatorGroups(gates) }).filter(line => !line.startsWith('- stickyActionTokens'));
-  return [
-    ...lines,
-    tradeTermLine(slugVertical(stageSlug(brief)) === 'ac'),
-    ...(rendersSiteSections(brief.page.pageClass) ? [`- servicesHeadlineOptions: ${JSON.stringify(SERVICES_HEADLINE_OPTIONS)}`] : []),
-    legacyCadenceLine(),
-  ];
+  void data;
+  // Rerun-3 item 3: no gate token list (generic adjectives and their exemptions, bad idioms and their replacements, signature
+  // phrases and the differentiator cap line, trade terms, legacy cadence words). Only the closed set the model picks from.
+  return rendersSiteSections(brief.page.pageClass) ? [`- servicesHeadlineOptions: ${JSON.stringify(SERVICES_HEADLINE_OPTIONS)}`] : [];
 }
 
 /** v2 owner facts: the narrative answers only (the code-built facts are listed in ALREADY ON THE PAGE), labelled in English. */
@@ -2490,7 +2517,7 @@ export async function generateResearchPageCopy(
   const tamarSystem = !brief.site ? COPY_SYSTEM_PROMPT : version === 'v2' ? SITE_COPY_SYSTEM_PROMPT_V2 : SITE_COPY_SYSTEM_PROMPT;
   const tamarCopy = await settleStage(ctx, 'tamar', () => callJson(tamarSystem, prompt, { thinkingBudget: pitchFirstPage(brief) ? PITCH_FIRST_THINKING_BUDGET : 1500 }));
   // Content depth: Tamar's factIds / questionId go back into Noa's raw answer before it is settled (Noa edits text only).
-  const noaCall = async () => withTamarDepthReferences(await callJson(QA_SYSTEM_PROMPT, buildNoaQaMessage(tamarCopy, brief), { think: false }), tamarCopy as unknown as Loose, brief);
+  const noaCall = async () => withTamarDepthReferences(await callJson(brief.site && version === 'v2' ? QA_SYSTEM_PROMPT_V2 : QA_SYSTEM_PROMPT, buildNoaQaMessage(tamarCopy, brief), { think: false }), tamarCopy as unknown as Loose, brief);
   const noaCopy = await settleStage(ctx, 'noa', noaCall);
   // Copy v2 slice 7: the warn-only promise-contradiction judge (off by default; never repaired).
   const contradictions = await promiseContradictionWarnings(noaCopy as unknown as Loose, callJson, dependencies.promiseJudge ?? PROMISE_JUDGE_ENABLED);
