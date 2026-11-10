@@ -106,3 +106,7 @@ Whatever he picks becomes an owner fact; the generator never guesses a price. Wo
 - Maya: visible fallback H2s, service-page order hero → trust → B1 → B6 → B4, B6 absorbing the single review.
 - Proof-point caps clash with B6 restating proof facts (warnings only on warn-only fields) — resolve with the "Next" fixes.
 - Acceptance (a) median ≥ 250 words and (e) Noa PASS need the next paid eval (B1 won't fire: no walkthrough in fixtures).
+- **Pricing consistency check (Adam 2026-11-10, found in the 3-run eval):** the owner's free-text pricing notes can contradict the
+  structured pricing fields (eval fixture said "no call-out fee" in text while calloutFee was set — Adam's fixture error). Add a
+  validation at intake/brief time: a stated call-out fee conflicts with a no-call-out-fee note or promise → ask the owner, never
+  render both.
