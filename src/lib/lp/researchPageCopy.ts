@@ -11,6 +11,7 @@ import type { PageBrief } from '../site-bot/research/pageBrief';
 import type { SiteResearchDossier } from '../site-bot/research/types';
 import { PLURAL_ADDRESS_TOKENS, SERVICE_DESCRIPTION_MIN_CHARS, WE_FORM_TOKENS } from './copyGates.config';
 import { briefFactTexts } from '../site-bot/research/pageBrief';
+import { codeOwnedFactTemplates, droppedOwnerFactKeys, ownerFacts, proofItemsFromFacts, trustBarFromFacts } from './ownerFactCopy';
 import {
   DEPTH_BLOCK_KEYS,
   DEPTH_BLOCK_LIMITS,
@@ -500,8 +501,15 @@ export const PROOF_POINT_RULE = '- Every proof point you put in trustBarItems or
 /** M2b.1h: the proof-point copy rule of a pitch-first page: proof points stay capped, the one big promise may be restated in fresh words. */
 export const PITCH_FIRST_PROOF_POINT_RULE = '- Every proof point you put in trustBarItems or guaranteeBlock (years, a licence, the warranty, the area) may appear in at most two other fields of the page. The one big promise (from the owner\'s usp, guarantee or pricing) may come back in more fields, each time in fresh words (see PITCH FIRST below). In serviceDetails descriptions, describe the service itself instead of repeating proof points.';
 
+/**
+ * Copy v2 slice 2: the LICENSE rule when code owns the facts. The credential is code-built (trust bar / B6) and a non-Hebrew
+ * licence never reaches the model, so only the Hebrew-wording and no-grade clauses stay.
+ */
+export const LICENSE_RULE_CODE_OWNED = '- LICENSE (binding): if the owner\'s license wording is in Hebrew, name it exactly in that wording, with one consistent term on every page. Never translate a license or map it to a license grade, level or title (for example "master"), and never add a grade the owner did not state in Hebrew.';
+
 export function buildResearchCopyRules(brief: PageBrief, data: CollectedData = {}, siteTerms?: readonly string[]): string[] {
   const site = brief.site;
+  const codeOwns = codeOwnsFacts(brief);
   const rules = [
     SINGULAR_ADDRESS_RULE,
     '- Use each owner fact at most twice per page; rotate proof points across fields instead of repeating the same fact.',
@@ -511,10 +519,13 @@ export function buildResearchCopyRules(brief: PageBrief, data: CollectedData = {
     '- The customer quote may appear only in reviewFeatured, which the system fills in verbatim. Never quote, paraphrase or echo it in any other field.',
     '- heroCta is fixed by the system: output it exactly as given in the schema.',
     '- reviewFeatured is filled in by the system: output it exactly as given in the schema. reviewContext: only when the data supplies a star rating, otherwise null.',
-    '- responseTimeBadge: when the owner gave a response time, write a short native Hebrew badge from it; otherwise null.',
-    '- LICENSE (binding): if the owner\'s license wording is in Hebrew, name it exactly in that wording, with one consistent term on every page. If it is not in Hebrew (it arrived translated), say only that he is licensed: never translate or map it to a license grade, level or title (for example "master"), never add a grade the owner did not state in Hebrew.',
+    // Copy v2 slice 2: with code-owned facts the badge and the guarantee block are not generated (never rendered on a
+    // research site), and the licence is never shown to the model in English, so the "say only that he is licensed"
+    // downgrade is gone.
+    ...(codeOwns ? [] : ['- responseTimeBadge: when the owner gave a response time, write a short native Hebrew badge from it; otherwise null.']),
+    codeOwns ? LICENSE_RULE_CODE_OWNED : '- LICENSE (binding): if the owner\'s license wording is in Hebrew, name it exactly in that wording, with one consistent term on every page. If it is not in Hebrew (it arrived translated), say only that he is licensed: never translate or map it to a license grade, level or title (for example "master"), never add a grade the owner did not state in Hebrew.',
     '- HOURS (binding): never write business days or hours in any field: no day names, no day letters, no clock times. The system shows the owner\'s hours.',
-    '- guaranteeBlock: when the schema gives it as null (the owner has no guarantee), output null. Never write a filler promise in its place.',
+    ...(codeOwns ? [] : ['- guaranteeBlock: when the schema gives it as null (the owner has no guarantee), output null. Never write a filler promise in its place.']),
     '- Never attribute a statement to a customer or to customers (no "a customer told me", no "customers say"). The only customer voice on the page is the verbatim quote in reviewFeatured, when there is one.',
     '- When you list several places as locations, attach the locative prefix letter (\u05D1) to every place in the list, including after the conjunction (\u05D5); never only to the first.',
     '- Write place names exactly as given in the service-area local fact: never insert a hyphen or maqaf into a place name.',
@@ -798,7 +809,8 @@ export function buildVoiceRules(brief: PageBrief, data: CollectedData = {}): str
     ...m2b2RulesFor(brief).map(rule => `- ${rule.text}`),
     ...(m2b2RulesFor(brief).some(rule => rule.id === 'C2') ? [ABOUT_HEADLINE_PLACE_RULE] : []),
     `- guaranteeBlockRendered on this page (rule C4): ${GUARANTEE_BLOCK_RENDERED}.`,
-    ...[trustTileRule(brief)].filter((line): line is string => Boolean(line)),
+    // Copy v2 slice 2: with code-owned facts the whole trust bar is system-built (no C5 tile note).
+    ...[codeOwnsFacts(brief) ? null : trustTileRule(brief)].filter((line): line is string => Boolean(line)),
     'Lists named in the voice rules:',
     ...voiceListLines({ stickyArrival: responseTime, differentiatorGroups: differentiatorGroups(gates) }),
     `- trustBarFillerPhrases: ${JSON.stringify(TRUST_BAR_FILLER_PHRASES)}`,
@@ -809,6 +821,9 @@ export function buildVoiceRules(brief: PageBrief, data: CollectedData = {}): str
 }
 
 export function buildResearchPageCopyPrompt(brief: PageBrief, data: CollectedData = {}, siteTerms?: readonly string[]): string {
+  const codeOwns = codeOwnsFacts(brief);
+  // Copy v2 slice 2: an owner answer that is English non-numeric text (droppedOwnerFactKeys) is never shown to the model.
+  const hidden = modelHiddenProofIds(brief, data);
   return `RESEARCH BRIEF (authoritative; use no claim not supported here):
 ${JSON.stringify({
   page: brief.page,
@@ -816,7 +831,7 @@ ${JSON.stringify({
   entities: brief.approvedEntityAnchors,
   queries: brief.targetQueries,
   allowedFacts: {
-    firstPartyProof: brief.firstPartyProof,
+    firstPartyProof: hidden.length ? brief.firstPartyProof.filter(item => !hidden.includes(item.id)) : brief.firstPartyProof,
     localFacts: brief.assertableLocalFacts,
     customerDecisions: brief.customerDecisions,
     constraints: brief.constraints,
@@ -825,7 +840,8 @@ ${JSON.stringify({
   ...(depthPage(brief) ? {
     offer: brief.waoOffer,
     lengthBand: brief.lengthBand,
-    blocksEnabled: brief.blocksEnabled,
+    // Copy v2 slice 2: the B6 proof is code-built, so the model is told it is not one of its blocks.
+    blocksEnabled: codeOwns && brief.blocksEnabled ? { ...brief.blocksEnabled, proof: false } : brief.blocksEnabled,
     ...(brief.blocksEnabled?.qa ? { questionPool: brief.questionPool ?? [] } : {}),
     suggestedTerms: brief.suggestedTerms ?? [],
   } : {}),
@@ -901,13 +917,15 @@ export function buildDepthSection(brief: PageBrief): string {
       `- Each answer's first sentence answers the question directly and names the business (${business})${city ? ` and the base city (${city})` : ''}. Answer only from the owner facts: skip every question his facts do not answer, and never guess. If fewer than ${limits.qa.minItems} questions can be answered, output null for qaItems and qaHeadline.`,
       `- qaHeadline: the heading of the questions, at most ${limits.headlineMaxChars} characters, or null.`,
     ] : []),
-    ...(enabled?.proof ? [
+    ...(enabled?.proof && !codeOwnsFacts(brief) ? [
       `- proofItems (B6): ${limits.proof.minItems} to ${limits.proof.maxItems} short facts the owner stated that prove his work (for example his years in the trade, his license, his warranty or his response time, only where he stated them), each at most ${limits.proof.maxWords} words and each citing its fact. The customer review is shown by the system next to them: never quote, paraphrase or mention it here.`,
       `- proofHeadline: the heading of the proof, at most ${limits.headlineMaxChars} characters, or null.`,
     ] : []),
     `- The block headings never repeat ${name} word for word: the page's main heading carries it.`,
     `- suggestedTerms are optional wording ideas from competitor pages, never requirements. Use a term only where it reads naturally and the owner's facts support it, at most its "max" times across these blocks, and at most once when the page is shorter than ${TERM_DENSITY_SHORT_PAGE_WORDS} words. Never stuff terms, never name a competitor, and never let a term add a claim.`,
-    `- Shapes: "processSteps": [{"text": "", "factIds": [""]}], "qaItems": [{"questionId": "", "q": "", "a": "", "factIds": [""]}], "proofItems": [{"text": "", "factIds": [""]}]. Leave out the keys of every block that is not listed above.`,
+    codeOwnsFacts(brief)
+      ? `- Shapes: "processSteps": [{"text": "", "factIds": [""]}], "qaItems": [{"questionId": "", "q": "", "a": "", "factIds": [""]}]. Leave out the keys of every block that is not listed above. The system builds the proof block (proofHeadline, proofItems): never output those keys.`
+      : `- Shapes: "processSteps": [{"text": "", "factIds": [""]}], "qaItems": [{"questionId": "", "q": "", "a": "", "factIds": [""]}], "proofItems": [{"text": "", "factIds": [""]}]. Leave out the keys of every block that is not listed above.`,
   ].join('\n');
 }
 
@@ -935,15 +953,15 @@ export function buildSiteCopyHardLimitsBlock(heading = 'HARD LIMITS', omit: read
   // M2b.1h: `layout` adds the pitch (first key) and the story fields where the page generates them.
   const keep = (key: string) => !omit.includes(key);
   const presence = SITE_COPY_OPTIONAL_PRESENCE_LIMITS;
-  const depthKeys = DEPTH_BLOCKS.filter(block => layout.depth?.includes(block.id)).flatMap(block => [block.headline, block.items]);
+  const depthKeys = DEPTH_BLOCKS.filter(block => layout.depth?.includes(block.id)).flatMap(block => [block.headline, block.items]).filter(keep);
   const keys = [...(layout.pitch ? ['pitch'] : []), ...SITE_COPY_KEYS.filter(keep), ...(layout.story ? STORY_FIELDS_M2B1H : []), ...depthKeys];
   const lines: string[] = [
     `${heading} (validator-enforced; output that breaks any of these is rejected. They override every softer length or count guidance above):`,
     '- Length means the number of characters in the string, counting every letter, space, digit and punctuation mark. Aim for at most 85% of each limit to leave a margin.',
-    '- Required non-empty strings (every one must be present and non-empty, including faqHeadline when faqItems is empty):',
+    `- Required non-empty strings (every one must be present and non-empty${keep('faqHeadline') ? ', including faqHeadline when faqItems is empty' : ''}):`,
     ...Object.entries(SITE_COPY_STRING_LIMITS).filter(([key]) => keep(key)).map(([key, max]) => `  - ${key}: max ${max} characters`),
     '- Optional fields (a string, or null):',
-    ...Object.entries(SITE_COPY_OPTIONAL_STRING_LIMITS).map(([key, max]) => `  - ${key}: max ${max} characters when set`),
+    ...Object.entries(SITE_COPY_OPTIONAL_STRING_LIMITS).filter(([key]) => keep(key)).map(([key, max]) => `  - ${key}: max ${max} characters when set`),
     ...(layout.story ? STORY_FIELDS_M2B1H.map(key => `  - ${key}: max ${presence[key]} characters when set`) : []),
     ...(layout.pitch ? [`- pitch (string): ${PITCH_MIN_WORDS} to ${PITCH_MAX_WORDS} words, max ${presence.pitch} characters. It is the only limit on the pitch.`] : []),
     ...depthKeys.map(key => `- ${key}: ${describeDepthLimit(key)}`),
@@ -1196,7 +1214,8 @@ export function applySafeDeterministicFixes(value: Loose, gates: CopyGateContext
   if (gates?.depth) fixes.push(...dropFailingDepthItems(next, gates));
   // M2a.5 (Adam): when one trustBarItems entry is the page's only gate hit and at least
   // TRUST_BAR_MIN_KEPT other items remain, drop that whole item (never edited) instead of failing.
-  if (gates && Array.isArray(next.trustBarItems)) {
+  // Copy v2 slice 2: a code-built trust bar is never trimmed or dropped (no gate hit lands on it).
+  if (gates && Array.isArray(next.trustBarItems) && !gates.codeOwnedFields?.includes('trustBarItems')) {
     // M2a.7: blocking hits only (a warning never fails the page, so it never needs the drop).
     const all = blockingGateHits(runCopyGates(next, gates), gates);
     // M2b.1d: the item-count hit (section 22.2) marks the items past the cap, not a bad item. Alone, the items past the
@@ -1298,7 +1317,43 @@ export function researchHeroCta(brief: PageBrief, data: CollectedData): string {
  * schema, no gate runs on them, and withSystemFields fills them. Legacy (no site facts): none.
  */
 export function ungeneratedFieldsFor(brief: PageBrief): readonly string[] {
-  return brief.site ? researchedUngeneratedFieldsFor(brief.page.pageClass) : [];
+  if (!brief.site) return [];
+  const base = researchedUngeneratedFieldsFor(brief.page.pageClass);
+  // Copy v2 slice 2: with complete fact templates the code builds the trust bar and the proof, and the fields a research
+  // page never renders are not generated. While the templates are pending: unchanged.
+  return codeOwnsFacts(brief) ? [...base, ...CODE_OWNED_FACT_FIELDS, ...RESEARCH_UNRENDERED_FIELDS] : base;
+}
+
+/**
+ * Copy v2 slice 2 (docs/missions/site-bot-code-owns-facts-2026-11-10.md): the fields the code builds from the owner facts
+ * (ownerFactCopy.ts) while the fact templates are complete. Gate-exempt (CopyGateContext.codeOwnedFields), system-filled,
+ * hidden from Noa, never repaired.
+ */
+export const CODE_OWNED_FACT_FIELDS: readonly string[] = ['trustBarItems', 'proofItems', 'proofHeadline'];
+/**
+ * Copy v2 slice 2: SiteCopy fields a research site never renders (researchedSite.ts RESEARCHED_RENDERED_FIELDS note):
+ * not generated while code owns the facts; withSystemFields sets the strings to '' and the optional ones to null.
+ */
+export const RESEARCH_UNRENDERED_FIELDS: readonly string[] = ['stickyBarLine', 'aboutBlurb', 'guaranteeBlock', 'responseTimeBadge', 'faqHeadline'];
+const RESEARCH_UNRENDERED_NULL_FIELDS: readonly string[] = ['guaranteeBlock', 'responseTimeBadge'];
+
+/** Copy v2 slice 2: true when this research page's trust bar and proof are code-built (fact templates complete). */
+export function codeOwnsFacts(brief: Pick<PageBrief, 'site'>): boolean {
+  return Boolean(brief.site) && codeOwnedFactTemplates() !== null;
+}
+
+/** Copy v2 slice 2: the brief proof ids of owner answers the model never sees (English non-numeric text). */
+function modelHiddenProofIds(brief: PageBrief, data: CollectedData): string[] {
+  const templates = brief.site ? codeOwnedFactTemplates() : null;
+  return templates ? droppedOwnerFactKeys(data, templates).map(key => `proof-${String(key)}`) : [];
+}
+
+/**
+ * Copy v2 slice 2: shape options for validating a stored research page record. Relaxation only: the never-rendered strings may
+ * be '' (copy generated with code-owned facts); copy saved before passes exactly as before.
+ */
+export function researchedRecordShapeOptions(classification: string): SiteCopyShapeOptions {
+  return { ungenerated: [...researchedUngeneratedFieldsFor(classification), ...RESEARCH_UNRENDERED_FIELDS] };
 }
 
 /** M2b.1d: the bounded-validator shape options of a brief's page. */
@@ -1346,8 +1401,23 @@ export function withSystemFields(value: Loose, brief: PageBrief, data: Collected
   if (isInstallPage(brief)) next.responseTimeBadge = null;
   // M2b.1g (section 23.2 e): the trust-bar area tile and the badge's place list are built from the area array.
   const places = gatePlaces(brief);
-  if (Array.isArray(next.trustBarItems)) next.trustBarItems = withAreaTile(next.trustBarItems, places);
-  if (typeof next.responseTimeBadge === 'string') next.responseTimeBadge = withPlaceListPrefixes(next.responseTimeBadge, places);
+  const templates = codeOwnedFactTemplates();
+  if (templates) {
+    // Copy v2 slice 2: the trust bar and the B6 proof are code-built from the owner facts; the proof heading falls back to
+    // the approved label; the never-rendered fields are system-blank.
+    const facts = ownerFacts(data, brief, templates);
+    const options = { installPage: isInstallPage(brief) };
+    next.trustBarItems = trustBarFromFacts(facts, options, templates);
+    if (depthPage(brief) && brief.blocksEnabled?.proof) {
+      const proof = proofItemsFromFacts(facts, options, templates);
+      next.proofItems = proof.length ? proof : null;
+      next.proofHeadline = null;
+    }
+    for (const key of RESEARCH_UNRENDERED_FIELDS) next[key] = RESEARCH_UNRENDERED_NULL_FIELDS.includes(key) ? null : '';
+  } else {
+    if (Array.isArray(next.trustBarItems)) next.trustBarItems = withAreaTile(next.trustBarItems, places);
+    if (typeof next.responseTimeBadge === 'string') next.responseTimeBadge = withPlaceListPrefixes(next.responseTimeBadge, places);
+  }
   // M2b.1g (section 23.2, Noa's slip 3): sentence-final periods, then the invariant.
   normalizeFinalPeriods(next);
   assertFinalPeriods(next);
@@ -1564,7 +1634,11 @@ function ownerFactText(data: CollectedData): string {
 export function buildResearchPageGenerationPrompt(brief: PageBrief, data: CollectedData, siteTerms?: readonly string[]): string {
   // M2a.2: a quote that is not mostly Hebrew never reaches the model (never translated, item 8),
   // and with no owner guarantee the schema shows guaranteeBlock as null (item 7).
-  const promptData: CollectedData = brief.site && !effectiveReviewQuote(data) ? { ...data, reviewQuote: '' } : data;
+  const quoteData: CollectedData = brief.site && !effectiveReviewQuote(data) ? { ...data, reviewQuote: '' } : data;
+  // Copy v2 slice 2: an owner answer that is English non-numeric text never reaches the model (never translated).
+  const factTemplates = brief.site ? codeOwnedFactTemplates() : null;
+  const hiddenKeys = factTemplates ? droppedOwnerFactKeys(data, factTemplates) : [];
+  const promptData: CollectedData = hiddenKeys.length ? { ...quoteData, ...Object.fromEntries(hiddenKeys.map(key => [key, ''])) } : quoteData;
   const schemaOptions = {
     blankResponseTimeBadge: true,
     ...(brief.site ? { relevanceTerm: brief.site.relevanceTerm, nullGuarantee: !ownerHasGuarantee(data) } : {}),
@@ -1572,7 +1646,10 @@ export function buildResearchPageGenerationPrompt(brief: PageBrief, data: Collec
   // M2b.1d: a page that does not render the about section and the service cards gets the LP schema (no about-page /
   // service-detail block or keys) without the servicesHeadline key; the system fills those fields.
   const omit = ungeneratedFieldsFor(brief);
-  const schema = omit.length ? withoutSchemaKey(buildLpCopyPrompt(promptData, schemaOptions), 'servicesHeadline') : buildSiteCopyPrompt(promptData, schemaOptions);
+  const lpSchema = omit.includes('serviceDetails');
+  const baseSchema = lpSchema ? withoutSchemaKey(buildLpCopyPrompt(promptData, schemaOptions), 'servicesHeadline') : buildSiteCopyPrompt(promptData, schemaOptions);
+  // Copy v2 slice 2: the code-owned and never-rendered keys leave the schema's OUTPUT object too.
+  const schema = codeOwnsFacts(brief) ? withoutSchemaLines(baseSchema, ['trustBarItems', ...RESEARCH_UNRENDERED_FIELDS]) : baseSchema;
   // A4: the client copy prompt never names WAO (a WAO-offer leak put a copywriting agency's services on a plumber page).
   if (!schema.includes(LEGACY_PERSONA_LINE)) throw new Error('Site copy schema prompt persona line changed; update the research persona swap.');
   let clientSchema = schema.replace(LEGACY_PERSONA_LINE, RESEARCH_PERSONA_LINE);
@@ -1627,6 +1704,22 @@ export function layoutFor(brief: Pick<PageBrief, 'site' | 'page' | 'blocksEnable
   return { pitch: pitchFirstPage(brief), story: storyPage(brief), ...(depth.length ? { depth } : {}) };
 }
 
+/**
+ * Copy v2 slice 2: the schema's OUTPUT object without the `"key": <value>` line of each key (asserted: exactly one per key);
+ * a trailing comma left before the closing brace is removed.
+ */
+function withoutSchemaLines(schema: string, keys: readonly string[]): string {
+  let out = schema;
+  for (const key of keys) {
+    const pattern = new RegExp(`\\n  "${key}": [^\\n]*`, 'g');
+    const hits = out.match(pattern) ?? [];
+    if (hits.length !== 1) throw new Error(`Site copy schema prompt ${key} line changed; update the copy v2 schema cut.`);
+    out = out.replace(pattern, '');
+  }
+  const close = out.lastIndexOf('\n}');
+  return close > 0 && out[close - 1] === ',' ? `${out.slice(0, close - 1)}${out.slice(close)}` : out;
+}
+
 /** M2b.1d: the schema template without one `"key": "",` line (asserted: exactly one such line). */
 function withoutSchemaKey(schema: string, key: string): string {
   const line = `\n  "${key}": "",`;
@@ -1661,6 +1754,8 @@ export function briefGateContext(brief: PageBrief, data: CollectedData): CopyGat
     ...(site ? { renderedFields: researchedGatedFieldsFor(brief.page.pageClass) } : {}),
     // M2b.1d: the fields this page does not generate are never gated.
     ...(site ? { ungeneratedFields: [...ungeneratedFieldsFor(brief)] } : {}),
+    // Copy v2 slice 2: the code-built fields never carry a gate hit (set only while the fact templates are complete).
+    ...(site && codeOwnsFacts(brief) ? { codeOwnedFields: [...CODE_OWNED_FACT_FIELDS] } : {}),
     // M2b.1h: pitch-first pages may restate the promise in fresh words; every research page blocks verbatim repeats.
     ...(site ? { promiseRestatement: pitchFirstPage(brief), phraseRepeatFields: researchedRenderedFieldsFor(brief.page.pageClass) } : {}),
     // Content depth: the fact-trace and term-density inputs of a service page with depth blocks.

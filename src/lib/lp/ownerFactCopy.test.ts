@@ -132,6 +132,11 @@ test('numbers parse in any language; anything else is not a number', () => {
   assert.equal(parseWarrantyMonths('a year on all work', T), 12);
   assert.equal(parseWarrantyMonths('6 months', T), 6);
   assert.equal(parseWarrantyMonths('two years', T), 24);
+  assert.equal(parseWarrantyMonths('Six-month warranty on repairs', T), 6, 'English number words read as digits');
+  assert.equal(parseWarrantyMonths('5-year warranty', T), 60);
+  assert.equal(parseResponseMinutes('within one hour', T), 60);
+  assert.equal(parseYears('twelve years'), 12);
+  assert.equal(parseYears('someone with 15 years'), 15, 'a word containing "one" is not a number');
   assert.equal(parseWarrantyMonths(`${HE(22, 5)} ${HE_HALF_YEAR}`, T), 6, 'half a year wins over the year word it contains');
   assert.equal(parseWarrantyMonths(`${HE(22, 5)} ${HE_ONE_YEAR} ${HE(3, 2)} ${HE(7, 3)}`, T), 12);
   assert.equal(parseWarrantyMonths(`${HE(22, 5)} ${HE_TWO_YEARS}`, T), 24);

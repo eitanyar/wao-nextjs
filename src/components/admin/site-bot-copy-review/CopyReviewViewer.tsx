@@ -33,7 +33,8 @@ function identity(value: unknown): value is Page {
 /** M2b.1d: the about pair a page type does not render is not generated (empty) off the homepage / services hub. */
 const ABOUT_PAIR = ['aboutPageHeadline', 'aboutPageBody'];
 function completeCopy(copy: Record<string, unknown>, classification: string): boolean {
-  const mayBeEmpty = classification === 'homepage' || classification === 'service_hub' ? [] : ABOUT_PAIR;
+  // Copy v2 slice 2: the strings a research site never renders may be empty on every page type.
+  const mayBeEmpty = [...(classification === 'homepage' || classification === 'service_hub' ? [] : ABOUT_PAIR), 'aboutBlurb', 'faqHeadline', 'stickyBarLine'];
   // M2a.2: guaranteeBlock is null when the owner has no guarantee; when set it must be non-empty.
   return REQUIRED_COPY.every(key => typeof copy[key] === 'string' && ((copy[key] as string).trim().length > 0 || (mayBeEmpty.includes(key) && copy[key] === ''))) &&
     (copy.guaranteeBlock === null || (typeof copy.guaranteeBlock === 'string' && copy.guaranteeBlock.trim().length > 0)) &&

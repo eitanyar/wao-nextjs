@@ -282,20 +282,28 @@ function numberWithUnit(value: string, tokens: readonly string[]): number | null
 const EN = {
   minutes: ['minutes', 'minute', 'mins', 'min'],
   hours: ['hours', 'hour', 'hrs', 'hr', 'h'],
-  oneHour: ['an hour', 'one hour'],
-  twoHours: ['two hours'],
+  oneHour: ['an hour'],
+  twoHours: [],
   halfHour: ['half an hour', 'half hour'],
   months: ['months', 'month', 'mos', 'mo'],
   years: ['years', 'year', 'yrs', 'yr'],
-  oneYear: ['a year', 'one year'],
-  twoYears: ['two years'],
-  halfYear: ['half a year', 'half year', 'six months'],
+  oneYear: ['a year'],
+  twoYears: [],
+  halfYear: ['half a year', 'half year'],
   licenseNumber: ['license', 'licence', 'lic', 'no', 'number', 'num', 'nr'],
 } as const;
 
+/** English number words one to twelve as digits ("Six-month warranty" -> "6-month warranty"); other text unchanged. */
+const EN_NUMBER_WORDS: Readonly<Record<string, string>> = {
+  one: '1', two: '2', three: '3', four: '4', five: '5', six: '6', seven: '7', eight: '8', nine: '9', ten: '10', eleven: '11', twelve: '12',
+};
+function withEnglishDigits(value: string): string {
+  return value.replace(/\b(one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve)\b/gi, word => EN_NUMBER_WORDS[word.toLowerCase()]);
+}
+
 /** Years in the trade: the one integer in the answer, 1 to OWNER_YEARS_MAX (any language). */
 export function parseYears(value: unknown): number | null {
-  const raw = text(value);
+  const raw = withEnglishDigits(text(value));
   const numbers = integers(raw);
   if (numbers.length !== 1 || !Number.isInteger(numbers[0])) return null;
   return numbers[0] >= 1 && numbers[0] <= OWNER_YEARS_MAX ? numbers[0] : null;
@@ -303,7 +311,7 @@ export function parseYears(value: unknown): number | null {
 
 /** Response time in minutes (any language), or null when the answer is not one clear duration. */
 export function parseResponseMinutes(value: unknown, templates: OwnerFactTemplates): number | null {
-  const raw = text(value);
+  const raw = withEnglishDigits(text(value));
   if (!raw) return null;
   const numbers = integers(raw);
   if (numbers.length > 1 || numbers.some(number => !Number.isInteger(number))) return null;
@@ -321,7 +329,7 @@ export function parseResponseMinutes(value: unknown, templates: OwnerFactTemplat
 
 /** Warranty length in months (any language), or null when the answer is not one clear duration. */
 export function parseWarrantyMonths(value: unknown, templates: OwnerFactTemplates): number | null {
-  const raw = text(value);
+  const raw = withEnglishDigits(text(value));
   if (!raw) return null;
   const numbers = integers(raw);
   if (numbers.length > 1 || numbers.some(number => !Number.isInteger(number))) return null;

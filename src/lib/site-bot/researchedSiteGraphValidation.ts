@@ -8,6 +8,8 @@ const OPAQUE_ID = /^[A-Za-z0-9][A-Za-z0-9_-]*$/;
  */
 const ABOUT_SECTION_CLASSES = new Set(['homepage', 'service_hub']);
 const ABOUT_PAIR: readonly string[] = ['aboutPageHeadline', 'aboutPageBody'];
+/** Copy v2 slice 2: never-rendered required strings (mirrors researchPageCopy RESEARCH_UNRENDERED_FIELDS, string ones). */
+const UNRENDERED_STRINGS: readonly string[] = ['aboutBlurb', 'faqHeadline', 'stickyBarLine'];
 const RENDERABLE_CLASSES = new Set([
   'homepage', 'service_hub', 'money_service', 'qualified_service_area', 'trust', 'process', 'pricing', 'proof', 'supporting',
 ]);
@@ -19,7 +21,8 @@ function requireSiteCopy(value: SiteCopy, classification: string): void {
     'formHeadline', 'stickyBarLine', 'aboutPageHeadline', 'aboutPageBody',
   ];
   // M2b.1d: a page type that does not render the about section does not generate it (an empty about pair is valid there).
-  const mayBeEmpty: readonly string[] = ABOUT_SECTION_CLASSES.has(classification) ? [] : ABOUT_PAIR;
+  // Copy v2 slice 2: the strings a research site never renders may be empty on every page type.
+  const mayBeEmpty: readonly string[] = [...(ABOUT_SECTION_CLASSES.has(classification) ? [] : ABOUT_PAIR), ...UNRENDERED_STRINGS];
   if (requiredStrings.some(key => typeof value[key] !== 'string' || (!(value[key] as string).trim() && !(mayBeEmpty.includes(key) && value[key] === '')))) {
     throw new Error('Research page copy is malformed.');
   }

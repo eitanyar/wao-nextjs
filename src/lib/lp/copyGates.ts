@@ -281,6 +281,13 @@ export interface CopyGateContext {
    */
   ungeneratedFields?: readonly string[];
   /**
+   * Copy v2 slice 2 (code owns the facts): top-level fields the code builds from owner facts through fixed templates
+   * (trustBarItems, proofItems, proofHeadline; researchPageCopy CODE_OWNED_FACT_FIELDS). Set only while the fact templates
+   * are complete. No gate hit ever lands on them (the per-page GATE_EXEMPT_FIELDS); their text still counts as a source
+   * where a gate compares other fields against the page. Unset = today's model-written path.
+   */
+  codeOwnedFields?: readonly string[];
+  /**
    * M2b.1h (pitch-first pages): the promise may be restated in fresh words, so the two-word phrase cap (gate_fact_repeat
    * `phrase:` hits) is a warning here; the digit cap (`fact:`) and the verbatim phrase gate (gate_phrase_repeat) still block.
    */
@@ -2117,6 +2124,13 @@ function gateOrder(strings: Array<{ field: string; value: string }>, renderedFie
  * which only the PITCH_GATE_RULES hits are kept.
  */
 export function runCopyGates(copy: Record<string, unknown>, ctx: CopyGateContext): GateViolation[] {
+  // Copy v2 slice 2: hits on code-owned fields are dropped (the fields are system-built, never repaired).
+  const owned = ctx.codeOwnedFields;
+  const hits = runAllGates(copy, ctx);
+  return owned?.length ? hits.filter(hit => !owned.includes(topFieldOf(hit.field))) : hits;
+}
+
+function runAllGates(copy: Record<string, unknown>, ctx: CopyGateContext): GateViolation[] {
   if (!Object.prototype.hasOwnProperty.call(copy, 'pitch')) return [...runPageGates(copy, ctx), ...depthGateHits(copy, ctx)];
   const { pitch, ...page } = copy;
   const out = runPageGates(page, ctx);
@@ -2159,7 +2173,9 @@ export function depthGateHits(copy: Record<string, unknown>, ctx: CopyGateContex
   for (const hit of termDensityHits(copy, depth.terms, pageVisibleWords(copy, ctx), depthAnchorStems(ctx))) {
     out.push({ field: hit.field, rule: GATE_RULES.termDensity, actual: `term:${hit.termIndex}:${hit.count}/${hit.limit}` });
   }
-  return out;
+  // Copy v2 slice 2: the code-built proof items are never traced or dropped (gate_fact_trace off on proofItems).
+  const owned = ctx.codeOwnedFields;
+  return owned?.length ? out.filter(hit => !owned.includes(topFieldOf(hit.field))) : out;
 }
 
 /** Content depth: the trace kinds of a hit's actual id (repair text and the deterministic item drop). */
@@ -2354,6 +2370,8 @@ export interface CopyGatePageOptions {
   priorHeroFacts?: readonly HeroCapPageFacts[];
   /** M2b.1d: top-level fields this page does not generate (never gated). */
   ungeneratedFields?: readonly string[];
+  /** Copy v2 slice 2: code-built fields (see CopyGateContext.codeOwnedFields). */
+  codeOwnedFields?: readonly string[];
   /** M2b.1h: pitch-first page (see CopyGateContext.promiseRestatement). */
   promiseRestatement?: boolean;
   /** M2b.1h: the rendered fields gate_phrase_repeat compares (see CopyGateContext.phraseRepeatFields). */
@@ -2394,6 +2412,7 @@ export function copyGateContext(data: CollectedData, serviceLabels: readonly str
     ...(page.renderedFields ? { renderedFields: [...page.renderedFields] } : {}),
     ...(page.priorHeroFacts ? { priorHeroFacts: page.priorHeroFacts } : {}),
     ...(page.ungeneratedFields?.length ? { ungeneratedFields: [...page.ungeneratedFields] } : {}),
+    ...(page.codeOwnedFields?.length ? { codeOwnedFields: [...page.codeOwnedFields] } : {}),
     ...(page.promiseRestatement ? { promiseRestatement: true } : {}),
     ...(page.phraseRepeatFields ? { phraseRepeatFields: [...page.phraseRepeatFields] } : {}),
     ...(page.depth ? { depth: page.depth } : {}),
