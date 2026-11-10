@@ -697,6 +697,21 @@ test('generate route authenticates before parsing or touching generation and per
   assert.ok(persistence > generation);
 });
 
+test('M2b.1h: the pitch moves from the generated copy to the page record; it is never in the copy or the rendered HTML', async () => {
+  const pitch = 'Pitch letter text that is stored but never shown.';
+  const record = await buildResearchedSiteGeneration(buildInput(), dependencies(async item => (
+    item.page.pageClass === 'homepage' ? { ...copy(item.page.id), pitch, storyHeadline: 'Story', storyBody: 'Story body.' } : copy(item.page.id)
+  )));
+  const home = record.researchedPages.find(page => page.classification === 'homepage')!;
+  assert.equal(home.pitch, pitch);
+  assert.ok(!('pitch' in home.copy) && !('pitch' in record.copy));
+  assert.equal(home.copy.storyBody, 'Story body.');
+  assert.ok(record.researchedPages.filter(page => page.classification !== 'homepage').every(page => !('pitch' in page)));
+  const rendered = renderResearchedSitePages({ ...dependencies().renderInputs, data: record.collectedData, slug: record.slug, pages: record.researchedPages, graphEdges: record.researchedGraphEdges });
+  assert.ok(Object.values(rendered).every(body => !body.includes(pitch)));
+  assert.match(rendered['index.html'], /data-section="story"/);
+});
+
 test('canonical generation suite exercises synthetic actual-handler route cases', () => {
   const output = execFileSync(process.execPath, [
     '--test', path.join(process.cwd(), 'src/app/api/site-bot/generate/route.test.mjs'),

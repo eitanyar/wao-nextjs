@@ -195,6 +195,9 @@ export const GATE_RULES = {
   aboutCardEcho: 'gate_about_card_echo',
   cardPhraseEcho: 'gate_card_phrase_echo',
   warrantyDefinite: 'gate_warranty_definite_bare_duration',
+  // M2b.1h (pitch-first copy): block verbatim repetition across fields; no foreign script in any generated field.
+  phraseRepeat: 'gate_phrase_repeat',
+  foreignScript: 'gate_foreign_script',
 } as const;
 export type GateRule = (typeof GATE_RULES)[keyof typeof GATE_RULES];
 
@@ -261,6 +264,16 @@ export interface CopyGateContext {
    * runs on them.
    */
   ungeneratedFields?: readonly string[];
+  /**
+   * M2b.1h (pitch-first pages): the promise may be restated in fresh words, so the two-word phrase cap (gate_fact_repeat
+   * `phrase:` hits) is a warning here; the digit cap (`fact:`) and the verbatim phrase gate (gate_phrase_repeat) still block.
+   */
+  promiseRestatement?: boolean;
+  /**
+   * M2b.1h: the rendered fields (gated and warn-only) that gate_phrase_repeat compares. Unset = the gate is off. System-set
+   * strings are never compared (heroCta, servicesHeadline, serviceDetails[].name, the area tile, FAQ, review).
+   */
+  phraseRepeatFields?: readonly string[];
 }
 
 /** M2a.7: what the site-wide hero cap needs of one page: the service labels masked in its hero, and whether it is an AC page. */
@@ -992,7 +1005,13 @@ function countMatches(value: string, pattern: RegExp): number {
 // in generationData.ts; owner-voice fields only. Gates detect; nothing is ever auto-replaced.
 // ---------------------------------------------------------------------------
 
-const VOICE_FIELD_PATTERNS = OWNER_VOICE_FIELDS.map(name => new RegExp(`^${name.includes('[]')
+/**
+ * M2b.1h: the story section (storyHeadline / storyBody, homepage) and the unrendered pitch are owner-voice fields too, so the
+ * voice gates (and the invented-story truth gate) reach them. Engineer-placed extension of the data list; story hits stay
+ * warnings while the story fields are warn-only, and only the truth gates ever run on the pitch (PITCH_GATE_RULES).
+ */
+export const M2B1H_VOICE_FIELDS: readonly string[] = ['storyHeadline', 'storyBody', 'pitch'];
+const VOICE_FIELD_PATTERNS = [...OWNER_VOICE_FIELDS, ...M2B1H_VOICE_FIELDS].map(name => new RegExp(`^${name.includes('[]')
   ? name.split('[]').map(escapeRegExp).join('\\[\\d+\\]')
   : `${escapeRegExp(name)}(?:\\[\\d+\\])?`}$`));
 /** True when a gated field path is an owner-voice field (section 19 field scope). */
@@ -1431,6 +1450,82 @@ export function sharedCardPhrase(a: string, b: string): boolean {
   return [...pairs(echoTokens(b))].some(key => left.has(key));
 }
 
+// ---------------------------------------------------------------------------
+// M2b.1h: block verbatim, allow restatement. The page's one big promise may come back in fresh words in several fields; the
+// same run of PHRASE_REPEAT_MIN_WORDS+ consecutive words may appear in at most PHRASE_REPEAT_MAX_FIELDS rendered fields.
+// ---------------------------------------------------------------------------
+
+/** System-set strings that gate_phrase_repeat never compares (the model cannot change them, so a repair could not fix them). */
+const PHRASE_REPEAT_SYSTEM_FIELDS: readonly string[] = ['heroCta', 'servicesHeadline', 'serviceItems', 'faqItems', 'reviewFeatured', 'reviewContext', 'scarcityLine'];
+
+/** The counting unit of a field path (the trust bar is one field, like the section 23 fact count), or null when never compared. */
+function phraseRepeatUnit(field: string): string | null {
+  const top = topFieldOf(field);
+  if (PHRASE_REPEAT_SYSTEM_FIELDS.includes(top) || /^serviceDetails\[\d+\]\.name$/.test(field)) return null;
+  return top === 'trustBarItems' ? 'trustBarItems' : field;
+}
+
+/** Tokens that never make a run count on their own: the owner's names, places, service labels and the page's search anchor. */
+export function phraseRepeatFreeTokens(ctx: Pick<CopyGateContext, 'serviceLabels' | 'places' | 'freeNames' | 'anchorName' | 'anchorCity'>): Set<string> {
+  return new Set([...ctx.serviceLabels, ...(ctx.places ?? []), ...(ctx.freeNames ?? []), ctx.anchorName ?? '', ctx.anchorCity ?? ''].flatMap(echoTokens));
+}
+
+/** A free token, also with up to two attached prefix letters. */
+function isPhraseFreeToken(token: string, free: ReadonlySet<string>): boolean {
+  if (free.has(token)) return true;
+  for (let strip = 1; strip <= 2 && strip < token.length; strip++) {
+    if (!PREFIX_LETTERS.includes(token[strip - 1])) break;
+    if (free.has(token.slice(strip))) return true;
+  }
+  return false;
+}
+
+/**
+ * The counted runs of one string (echoTokens): every run of PHRASE_REPEAT_MIN_WORDS consecutive tokens with at least two
+ * tokens that are not free, so the required search anchor (trade + city) or a service label + town never counts as a repeat.
+ */
+export function phraseRepeatKeys(value: string, free: ReadonlySet<string>): string[] {
+  const tokens = echoTokens(value.normalize('NFC'));
+  const out = new Set<string>();
+  for (let i = 0; i + PHRASE_REPEAT_MIN_WORDS <= tokens.length; i++) {
+    const run = tokens.slice(i, i + PHRASE_REPEAT_MIN_WORDS);
+    if (run.filter(token => !isPhraseFreeToken(token, free)).length >= 2) out.add(run.join(' '));
+  }
+  return [...out];
+}
+
+/**
+ * gate_phrase_repeat: a counted run in more than PHRASE_REPEAT_MAX_FIELDS of the page's phraseRepeatFields fails each field
+ * past the cap, in gate order (gated fields first, so a warn-only field such as the story never pushes a gated field over).
+ * The system-built area tile is not compared. `actual` is `phrase_repeat:<index>` into the phrases kept for the repair prompt.
+ */
+function phraseRepeatHits(strings: Array<{ field: string; value: string }>, ctx: CopyGateContext): GateViolation[] {
+  const allowed = ctx.phraseRepeatFields ?? [];
+  const free = phraseRepeatFreeTokens(ctx);
+  const places = ctx.places ?? [];
+  const units = new Map<string, Set<string>>();
+  const phrases: string[] = [];
+  const hitFields = new Set<string>();
+  const out: GateViolation[] = [];
+  for (const { field, value } of strings) {
+    const unit = allowed.includes(topFieldOf(field)) ? phraseRepeatUnit(field) : null;
+    if (!unit || (unit === 'trustBarItems' && isAreaTile(value.trim(), places))) continue;
+    for (const key of phraseRepeatKeys(value, free)) {
+      const seen = units.get(key) ?? new Set<string>();
+      if (seen.has(unit)) continue;
+      seen.add(unit);
+      units.set(key, seen);
+      if (seen.size > PHRASE_REPEAT_MAX_FIELDS && !hitFields.has(field)) {
+        hitFields.add(field);
+        const known = phrases.indexOf(key);
+        out.push({ field, rule: GATE_RULES.phraseRepeat, actual: `phrase_repeat:${known >= 0 ? known : phrases.push(key) - 1}` });
+      }
+    }
+  }
+  LAST_REPEATED_PHRASES.set(ctx, phrases);
+  return out;
+}
+
 /** The digit runs of a string. */
 const digitRuns = (value: string) => new Set(value.match(/\d+/g) ?? []);
 
@@ -1528,7 +1623,8 @@ function fieldMatchers(names: readonly string[]): RegExp[] {
     ? name.split('[]').map(escapeRegExp).join('\\[\\d+\\]')
     : `${escapeRegExp(name)}(?:\\[\\d+\\])?`}$`));
 }
-const STORY_FIELD_PATTERNS = fieldMatchers(STORY_FIELDS);
+// M2b.1h: the story body and the pitch are checked for invented past-job stories too (a truth gate).
+const STORY_FIELD_PATTERNS = fieldMatchers([...STORY_FIELDS, 'storyBody', 'pitch']);
 const MORAL_FIELD_PATTERNS = fieldMatchers(MORAL_FIELDS);
 const VAV = '\u05D5';
 
@@ -1838,7 +1934,20 @@ export const ALWAYS_BLOCKING_RULES: readonly GateRule[] = [
   GATE_RULES.hours,
   // M2b.1g (section 23.2 a): naming a tool the owner does not use is a false claim about him (the claim class).
   GATE_RULES.foreignTool,
+  // M2b.1h: a CJK / Cyrillic / Arabic character in any generated field (the AGENTS.md served-HTML check, at generation time).
+  GATE_RULES.foreignScript,
 ];
+
+/** M2b.1h: the only gates that run on the unrendered pitch: the truth / owner-fact gates and the foreign-script check. */
+export const PITCH_GATE_RULES: readonly GateRule[] = ALWAYS_BLOCKING_RULES;
+
+/** M2b.1h: characters of a script that never belongs in the Hebrew copy (Chinese, Japanese, Korean, Cyrillic, Arabic). */
+export const FOREIGN_SCRIPT_PATTERN = /[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Hangul}\p{Script=Cyrillic}\p{Script=Arabic}]/u;
+
+/** M2b.1h (gate_phrase_repeat): a run of this many consecutive words ... */
+export const PHRASE_REPEAT_MIN_WORDS = 4;
+/** ... may appear in at most this many rendered fields of a page (the trust bar counts as one field). */
+export const PHRASE_REPEAT_MAX_FIELDS = 2;
 /**
  * Former gates that are warnings only, in every field (M2a.7: the same-opening check). M2b.1d (section 22.2): the
  * serviceDetails opener cap is deleted; the same-opening check compares the homepage and the services hub only.
@@ -1849,18 +1958,24 @@ export const WARNING_ONLY_RULES: readonly GateRule[] = [
   GATE_RULES.cardPhraseEcho,
 ];
 
+/** M2b.1h: on a pitch-first page, the two-word phrase cap (gate_fact_repeat `phrase:`) is a warning (CopyGateContext.promiseRestatement). */
+export function isRelaxedPhraseCapHit(hit: Pick<GateViolation, 'rule' | 'actual'>, ctx: Pick<CopyGateContext, 'promiseRestatement'>): boolean {
+  return Boolean(ctx.promiseRestatement) && hit.rule === GATE_RULES.factRepeat && (hit.actual ?? '').startsWith('phrase:');
+}
+
 /** True when a gate hit is a warning, not a page failure (see ALWAYS_BLOCKING_RULES / WARNING_ONLY_RULES). */
-export function isWarningHit(hit: Pick<GateViolation, 'field' | 'rule'>, ctx: Pick<CopyGateContext, 'renderedFields'>): boolean {
+export function isWarningHit(hit: Pick<GateViolation, 'field' | 'rule' | 'actual'>, ctx: Pick<CopyGateContext, 'renderedFields' | 'promiseRestatement'>): boolean {
   if (WARNING_ONLY_RULES.includes(hit.rule)) return true;
+  if (isRelaxedPhraseCapHit(hit, ctx)) return true;
   if (!ctx.renderedFields || ALWAYS_BLOCKING_RULES.includes(hit.rule)) return false;
   return !ctx.renderedFields.includes(topFieldOf(hit.field));
 }
 /** The hits that fail the page. */
-export function blockingGateHits<T extends Pick<GateViolation, 'field' | 'rule'>>(hits: readonly T[], ctx: Pick<CopyGateContext, 'renderedFields'>): T[] {
+export function blockingGateHits<T extends Pick<GateViolation, 'field' | 'rule' | 'actual'>>(hits: readonly T[], ctx: Pick<CopyGateContext, 'renderedFields' | 'promiseRestatement'>): T[] {
   return hits.filter(hit => !isWarningHit(hit, ctx));
 }
 /** The hits that are only logged. */
-export function warningGateHits<T extends Pick<GateViolation, 'field' | 'rule'>>(hits: readonly T[], ctx: Pick<CopyGateContext, 'renderedFields'>): T[] {
+export function warningGateHits<T extends Pick<GateViolation, 'field' | 'rule' | 'actual'>>(hits: readonly T[], ctx: Pick<CopyGateContext, 'renderedFields' | 'promiseRestatement'>): T[] {
   return hits.filter(hit => isWarningHit(hit, ctx));
 }
 
@@ -1874,8 +1989,29 @@ function gateOrder(strings: Array<{ field: string; value: string }>, renderedFie
   return [...strings.filter(rendered), ...strings.filter(item => !rendered(item))];
 }
 
-/** Run every gate. Returns violations (field paths + rule + config id), never copy text. */
+/**
+ * Run every gate. Returns violations (field paths + rule + config id), never copy text.
+ * M2b.1h: the unrendered `pitch` is kept out of the page's gates (and out of every per-page count); it gets its own run, of
+ * which only the PITCH_GATE_RULES hits are kept.
+ */
 export function runCopyGates(copy: Record<string, unknown>, ctx: CopyGateContext): GateViolation[] {
+  if (!Object.prototype.hasOwnProperty.call(copy, 'pitch')) return runPageGates(copy, ctx);
+  const { pitch, ...page } = copy;
+  const out = runPageGates(page, ctx);
+  if (typeof pitch === 'string' && pitch.trim()) out.push(...pitchGateHits(pitch, ctx));
+  return out;
+}
+
+/** M2b.1h: the truth / foreign-script hits of the pitch, gated alone (no prior pages, no page counts; it is its own field). */
+function pitchGateHits(pitch: string, ctx: CopyGateContext): GateViolation[] {
+  const alone: CopyGateContext = {
+    ...ctx, renderedFields: ['pitch'], ungeneratedFields: [], phraseRepeatFields: undefined,
+    priorHeroHeadlines: [], priorAboutPageHeadlines: [], priorAboutPageBodies: [], priorHeroFacts: [],
+  };
+  return runPageGates({ pitch }, alone).filter(hit => hit.field === 'pitch' && PITCH_GATE_RULES.includes(hit.rule));
+}
+
+function runPageGates(copy: Record<string, unknown>, ctx: CopyGateContext): GateViolation[] {
   const out: GateViolation[] = [];
   const strings = gateOrder(generatedStrings(copy, ctx), ctx.renderedFields);
   const authorised = CLAIM_RULES.map((_, index) => claimAuthorised(index, ctx));
@@ -1957,6 +2093,7 @@ export function runCopyGates(copy: Record<string, unknown>, ctx: CopyGateContext
     if (ctx.installPage && arrivalTimeHit(value)) out.push({ field, rule: GATE_RULES.installArrival });
     if (customerKeys.some(pattern => new RegExp(pattern.source, 'u').test(value))) out.push({ field, rule: GATE_RULES.customerSource });
     if (REDUPLICATION_DASH_PATTERN.test(value)) out.push({ field, rule: GATE_RULES.reduplicationDash });
+    if (ctx.researchSite && FOREIGN_SCRIPT_PATTERN.test(value)) out.push({ field, rule: GATE_RULES.foreignScript, actual: 'foreign_script:non_hebrew' });
     if (nameSpellingHit(value, ctx)) out.push({ field, rule: GATE_RULES.nameSpelling });
     if (ctx.researchSite && /^serviceDetails\[\d+\]\.description$/.test(field) && value.trim().length < SERVICE_DESCRIPTION_MIN_CHARS) {
       out.push({ field, rule: GATE_RULES.shortDescription });
@@ -1981,6 +2118,8 @@ export function runCopyGates(copy: Record<string, unknown>, ctx: CopyGateContext
   if (typeof copy.reviewContext === 'string' && !ctx.starRating) out.push({ field: 'reviewContext', rule: GATE_RULES.reviewContext });
   // M2a.5: section 19 voice gates and the duplicate-hook check (research-bound sites only). M2b.1g: section 23 gates.
   if (ctx.researchSite) out.push(...voiceGates(copy, strings, ctx), ...m2b2Gates(copy, strings, ctx));
+  // M2b.1h: the same phrase of PHRASE_REPEAT_MIN_WORDS+ words in more than PHRASE_REPEAT_MAX_FIELDS rendered fields.
+  if (ctx.researchSite && ctx.phraseRepeatFields) out.push(...phraseRepeatHits(strings, ctx));
   return out;
 }
 
@@ -2045,6 +2184,10 @@ export interface CopyGatePageOptions {
   priorHeroFacts?: readonly HeroCapPageFacts[];
   /** M2b.1d: top-level fields this page does not generate (never gated). */
   ungeneratedFields?: readonly string[];
+  /** M2b.1h: pitch-first page (see CopyGateContext.promiseRestatement). */
+  promiseRestatement?: boolean;
+  /** M2b.1h: the rendered fields gate_phrase_repeat compares (see CopyGateContext.phraseRepeatFields). */
+  phraseRepeatFields?: readonly string[];
 }
 
 /** Build the gate context from owner data plus the page's confirmed service names and owner-stated places. */
@@ -2079,11 +2222,15 @@ export function copyGateContext(data: CollectedData, serviceLabels: readonly str
     ...(page.renderedFields ? { renderedFields: [...page.renderedFields] } : {}),
     ...(page.priorHeroFacts ? { priorHeroFacts: page.priorHeroFacts } : {}),
     ...(page.ungeneratedFields?.length ? { ungeneratedFields: [...page.ungeneratedFields] } : {}),
+    ...(page.promiseRestatement ? { promiseRestatement: true } : {}),
+    ...(page.phraseRepeatFields ? { phraseRepeatFields: [...page.phraseRepeatFields] } : {}),
   };
 }
 
 /** The phrases of the copy last gated with this context (set by runCopyGates; used by describeGateViolation). */
 const LAST_PHRASES = new WeakMap<CopyGateContext, FactPhrase[]>();
+/** M2b.1h: the repeated runs of the copy last gated with this context (gate_phrase_repeat; used by describeGateViolation). */
+const LAST_REPEATED_PHRASES = new WeakMap<CopyGateContext, string[]>();
 function pagePhrasesFor(ctx: CopyGateContext): FactPhrase[] {
   return LAST_PHRASES.get(ctx) ?? [];
 }
@@ -2261,8 +2408,15 @@ export function describeGateViolation(violation: GateViolation, ctx: CopyGateCon
       const missing = (violation.actual ?? '').split(':')[1];
       const name = JSON.stringify(ctx.anchorName ?? '');
       const city = ctx.anchorCity ? JSON.stringify(ctx.anchorCity) : null;
-      return `${violation.field} is missing ${missing === 'both' ? 'the page name and the city' : missing === 'city' ? 'the city' : 'the page name'} of this page's search anchor; keep the opening hook clause exactly as it is, then add the exact page name ${name}${city ? ` and the exact city ${city}` : ''} in the next clause, character for character, and stay within the heroHeadline length limit stated for this field (shorten the rest of the headline, never the anchor)`;
+      // M2b.1h: no fixed headline shape; keep the headline's promise and fit the anchor in where it reads naturally.
+      return `${violation.field} is missing ${missing === 'both' ? 'the page name and the city' : missing === 'city' ? 'the city' : 'the page name'} of this page's search anchor; keep the headline's promise, and add the exact page name ${name}${city ? ` and the exact city ${city}` : ''} where they read naturally, character for character, and stay within the heroHeadline length limit stated for this field (shorten the rest of the headline, never the anchor)`;
     }
+    case GATE_RULES.phraseRepeat: {
+      const phrase = (LAST_REPEATED_PHRASES.get(ctx) ?? [])[index] ?? '';
+      return `${violation.field} repeats the phrase ${JSON.stringify(phrase)} word for word, and ${PHRASE_REPEAT_MAX_FIELDS} other fields of this page already use it; keep the idea here only if it serves the reader, and then say it in fresh words (no run of ${PHRASE_REPEAT_MIN_WORDS} or more of the same words), or drop it from this field`;
+    }
+    case GATE_RULES.foreignScript:
+      return `${violation.field} contains characters of a non-Hebrew script (Chinese, Japanese, Korean, Cyrillic or Arabic); rewrite it in Hebrew only (a proper name in Latin letters is fine)`;
     default:
       return `${violation.field}: ${violation.rule}`;
   }

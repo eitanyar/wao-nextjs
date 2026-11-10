@@ -219,6 +219,8 @@ export async function buildResearchedSiteGeneration(
     const generatedCopy = await dependencies.generateCopy(brief, structuredClone(input.collectedData), siteGenerationContext(pages, heroFacts));
     assertBoundedGeneratedSiteCopy(generatedCopy, shapeOptions(brief));
     heroFacts.push(heroCapFacts(brief, generatedCopy));
+    // M2b.1h: the pitch moves from the copy to the page record (stored, never rendered).
+    const { pitch, ...pageCopy } = generatedCopy;
     pages.push({
       opportunityId: brief.page.id,
       classification: brief.page.pageClass as PageClassification,
@@ -227,7 +229,8 @@ export async function buildResearchedSiteGeneration(
         faqPolicy: brief.faqPolicy,
         faqCandidates: structuredClone(brief.faqCandidates),
       },
-      copy: structuredClone(generatedCopy),
+      copy: structuredClone(pageCopy),
+      ...(typeof pitch === 'string' && pitch.trim() ? { pitch } : {}),
       ...(brief.site ? { seo: { name: brief.site.pageName, city: brief.site.city, serviceArea: [...brief.site.serviceArea] } } : {}),
     });
   }

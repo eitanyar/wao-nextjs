@@ -37,7 +37,14 @@ import {
   TYPOGRAPHY_RULE_TEXT,
   VOICE_PROMPT_RULES,
 } from './generationData';
-import { pageNameWithCity, RESEARCHED_RENDERED_FIELDS, researchedGatedFieldsFor, researchedUngeneratedFieldsFor } from './researchedSite';
+import {
+  RESEARCHED_RENDERED_FIELDS,
+  researchedGatedFieldsFor,
+  researchedRenderedFieldsFor,
+  researchedUngeneratedFieldsFor,
+  rendersSiteSections,
+  rendersStory,
+} from './researchedSite';
 import {
   blockingGateHits,
   buildAreaTile,
@@ -49,6 +56,8 @@ import {
   fixTimeScope,
   GATE_RULES,
   isAreaTile,
+  PHRASE_REPEAT_MAX_FIELDS,
+  PHRASE_REPEAT_MIN_WORDS,
   isInstallService,
   promptSignatureVariants,
   runCopyGates,
@@ -198,6 +207,19 @@ export const SITE_COPY_PAIR_LIST_LIMITS = {
   faqItems: { maxItems: 20, keys: ['q', 'a'], maxChars: [120, 120] },
   serviceDetails: { maxItems: 6, keys: ['name', 'description'], maxChars: [25, 80] },
 } as const;
+/**
+ * M2b.1h (pitch-first copy): fields that may be absent (every record saved before M2b.1h lacks them). When present: a
+ * non-empty string within the limit, or null. pitch = the free sales letter of a pitch-first page (homepage, service hub),
+ * stored on the page record and never rendered; storyHeadline / storyBody = the homepage story section.
+ */
+export const PITCH_MIN_WORDS = 120;
+export const PITCH_MAX_WORDS = 220;
+export const STORY_MIN_SENTENCES = 3;
+export const STORY_MAX_SENTENCES = 5;
+export const SITE_COPY_OPTIONAL_PRESENCE_LIMITS = { pitch: 1600, storyHeadline: 40, storyBody: 360 } as const;
+type OptionalPresenceKey = keyof typeof SITE_COPY_OPTIONAL_PRESENCE_LIMITS;
+const OPTIONAL_PRESENCE_KEYS = Object.keys(SITE_COPY_OPTIONAL_PRESENCE_LIMITS) as OptionalPresenceKey[];
+export const STORY_FIELDS_M2B1H: readonly OptionalPresenceKey[] = ['storyHeadline', 'storyBody'];
 export const SITE_COPY_MAX_BYTES = 16 * 1024;
 /** Fields that must always be null. */
 export const SITE_COPY_ALWAYS_NULL = ['scarcityLine'] as const;
@@ -241,9 +263,12 @@ function plainObject(value: unknown): value is Record<string, unknown> {
     (Object.getPrototypeOf(value) === Object.prototype || Object.getPrototypeOf(value) === null);
 }
 
-function exactFields(value: Record<string, unknown>, keys: readonly string[]): void {
+function exactFields(value: Record<string, unknown>, required: readonly string[], optional: readonly string[] = []): void {
   const own = Reflect.ownKeys(value);
-  if (own.length !== keys.length || own.some(key => typeof key !== 'string' || !keys.includes(key))) invalidCopy();
+  if (own.some(key => typeof key !== 'string' || (!required.includes(key) && !optional.includes(key)))) invalidCopy();
+  if (required.some(key => !own.includes(key))) invalidCopy();
+  // M2b.1h: the optional-presence keys are checked like the required ones when present.
+  const keys = [...required, ...optional.filter(key => own.includes(key))];
   if (keys.some(key => {
     const descriptor = Object.getOwnPropertyDescriptor(value, key);
     return !descriptor || !descriptor.enumerable || !('value' in descriptor);
@@ -281,12 +306,15 @@ function allowedEmpty(key: string, value: unknown, options: SiteCopyShapeOptions
 
 export function assertBoundedGeneratedSiteCopy(value: unknown, options: SiteCopyShapeOptions = {}): asserts value is SiteCopy {
   if (!plainObject(value)) invalidCopy();
-  exactFields(value, SITE_COPY_KEYS);
+  exactFields(value, SITE_COPY_KEYS, OPTIONAL_PRESENCE_KEYS);
   for (const [key, max] of Object.entries(COPY_FIELDS)) {
     if (!boundedString(value[key], max) && !allowedEmpty(key, value[key], options)) invalidCopy();
   }
   for (const [key, max] of Object.entries(OPTIONAL_FIELDS)) {
     if (value[key] !== null && !boundedString(value[key], max)) invalidCopy();
+  }
+  for (const [key, max] of Object.entries(SITE_COPY_OPTIONAL_PRESENCE_LIMITS)) {
+    if (key in value && value[key] !== null && !boundedString(value[key], max)) invalidCopy();
   }
   if (SITE_COPY_ALWAYS_NULL.some(key => value[key] !== null) ||
     (value[SITE_COPY_REVIEW_PAIR[0]] === null && value[SITE_COPY_REVIEW_PAIR[1]] !== null) ||
@@ -372,13 +400,18 @@ export function explainGeneratedSiteCopyViolations(value: unknown, options: Site
   const out: CopyViolation[] = [];
   const own = Object.keys(value);
   for (const key of SITE_COPY_KEYS) if (!own.includes(key)) out.push({ field: key, rule: 'missing' });
-  for (const key of own) if (!SITE_COPY_KEYS.includes(key)) out.push({ field: key, rule: 'unexpected' });
+  for (const key of own) if (!SITE_COPY_KEYS.includes(key) && !(OPTIONAL_PRESENCE_KEYS as string[]).includes(key)) out.push({ field: key, rule: 'unexpected' });
   for (const [key, max] of Object.entries(COPY_FIELDS)) {
     if (!own.includes(key) || allowedEmpty(key, value[key], options)) continue;
     const violation = stringViolation(key, value[key], max);
     if (violation) out.push(violation);
   }
   for (const [key, max] of Object.entries(OPTIONAL_FIELDS)) {
+    if (!own.includes(key) || value[key] === null) continue;
+    const violation = stringViolation(key, value[key], max);
+    if (violation) out.push(violation);
+  }
+  for (const [key, max] of Object.entries(SITE_COPY_OPTIONAL_PRESENCE_LIMITS)) {
     if (!own.includes(key) || value[key] === null) continue;
     const violation = stringViolation(key, value[key], max);
     if (violation) out.push(violation);
@@ -431,12 +464,17 @@ function applyFaqPolicy(copy: SiteCopy, brief: PageBrief): SiteCopy {
 }
 
 /** M2a.1 copy rules (English). Site-specific lines only when the brief carries site facts. */
+/** The proof-point copy rule of a page that is not pitch-first (unchanged since M2a). */
+export const PROOF_POINT_RULE = '- Every proof point you put in trustBarItems or guaranteeBlock (and every owner guarantee, pricing or USP point) may appear in at most two other fields of the page, in any wording; the system counts it. In serviceDetails descriptions, describe the service itself instead of repeating proof points.';
+/** M2b.1h: the proof-point copy rule of a pitch-first page: proof points stay capped, the one big promise may be restated in fresh words. */
+export const PITCH_FIRST_PROOF_POINT_RULE = '- Every proof point you put in trustBarItems or guaranteeBlock (years, a licence, the warranty, the area) may appear in at most two other fields of the page. The one big promise (from the owner\'s usp, guarantee or pricing) may come back in more fields, each time in fresh words (see PITCH FIRST below). In serviceDetails descriptions, describe the service itself instead of repeating proof points.';
+
 export function buildResearchCopyRules(brief: PageBrief, data: CollectedData = {}): string[] {
   const site = brief.site;
   const rules = [
     SINGULAR_ADDRESS_RULE,
     '- Use each owner fact at most twice per page; rotate proof points across fields instead of repeating the same fact.',
-    '- Every proof point you put in trustBarItems or guaranteeBlock (and every owner guarantee, pricing or USP point) may appear in at most two other fields of the page, in any wording; the system counts it. In serviceDetails descriptions, describe the service itself instead of repeating proof points.',
+    pitchFirstPage(brief) ? PITCH_FIRST_PROOF_POINT_RULE : PROOF_POINT_RULE,
     '- When a field must be shorter, cut a whole idea. Never shorten by dropping a verb\'s object or leaving a sentence grammatically incomplete.',
     '- Owner facts may arrive translated or in English. Render their meaning in native, idiomatic Hebrew; never mirror an English idiom or English word order, and never copy English wording into the copy (proper names excepted).',
     '- The customer quote may appear only in reviewFeatured, which the system fills in verbatim. Never quote, paraphrase or echo it in any other field.',
@@ -496,7 +534,105 @@ export function heroAnchorRule(brief: PageBrief): string {
   const city = site.city ? JSON.stringify(site.city) : null;
   const home = brief.page.pageClass === 'homepage';
   const subject = home ? `This homepage's search anchor is the trade ${name}` : `This page's search anchor is ${name}`;
-  return `- ${subject}${city ? ` in ${city}` : ''}. heroHeadline MUST contain ${home ? 'the trade ' : ''}${name} exactly${city ? ` and ${city} exactly` : ''}. Open with the customer's pain as a short first clause if you want, then put the anchor in the next clause: '<hook>? ${pageNameWithCity(site.pageName, site.city)} \u2014 <differentiator>'.`;
+  // M2b.1h: the forced '<hook>? <name city> \u2014 <differentiator>' pattern is gone; the anchor words and the gate stay.
+  return `- ${subject}${city ? ` in ${city}` : ''}. heroHeadline MUST contain ${home ? 'the trade ' : ''}${name} exactly${city ? ` and ${city} exactly` : ''}, character for character, wherever they read naturally.`;
+}
+
+/** M2b.1h: a pitch-first page (research site, homepage or service hub): the model writes a free pitch first and cuts the fields from it. */
+export function pitchFirstPage(brief: Pick<PageBrief, 'site' | 'page'>): boolean {
+  return Boolean(brief.site) && rendersSiteSections(brief.page.pageClass);
+}
+
+/** M2b.1h: a page that generates (and renders) the story section: the research-site homepage. */
+export function storyPage(brief: Pick<PageBrief, 'site' | 'page'>): boolean {
+  return Boolean(brief.site) && rendersStory(brief.page.pageClass);
+}
+
+/**
+ * M2b.1h (Adam, Eitan-approved 2026-11-10): on a pitch-first page the promise may be restated in fresh words, and the hero has
+ * no fixed shape. These byte-exact English cuts relax the count caps of the data-file rules (P1, R1, B1, B6) on those pages
+ * only; each anchor must occur exactly once in its rule (a data edit fails the prompt build instead of silently skipping).
+ * The placement rules stay: the promise never goes in the trust bar, the services headline, a card or the about headline.
+ */
+export const PITCH_FIRST_RULE_EDITS: Readonly<Record<string, ReadonlyArray<readonly [string, string]>>> = {
+  P1: [
+    ['P1 \u2014 One differentiator, said once. State the owner\'s main differentiator in full once per page, in the hero or the about body, and at most once more anywhere else on that page. Every other field must add something new:',
+      'P1 \u2014 One differentiator, one big promise. The owner\'s main differentiator is the page\'s one big promise: the hero headline carries it, and other fields may restate it in fresh words (see PITCH FIRST), never with the same phrase. Every field must also add something new:'],
+  ],
+  R1: [
+    ['Don\'t use synonyms or paraphrases to repeat it; any phrasing of the same idea counts as a repeat.',
+      'Don\'t use synonyms or paraphrases to repeat it in another hero; in a hero, any phrasing of the same idea counts as a repeat. Within this page, restating it in fresh words is allowed (see PITCH FIRST).'],
+  ],
+  B1: [
+    ['B1 \u2014 Promise twice, proof once.', 'B1 \u2014 One promise, restated in fresh words.'],
+    ['  - It appears exactly twice on the page: once in the hero (the headline or the subheadline, never both) and once in the about body.',
+      `  - The hero headline carries it. It may come back in fresh words in the subheadline, the story section (homepage) and the about body, wherever it serves the reader. Never the same phrase of ${PHRASE_REPEAT_MIN_WORDS} or more words in more than ${PHRASE_REPEAT_MAX_FIELDS} fields.`],
+    ['  - It never appears, in any wording or synonym, in the trust bar, the services headline, a service card or the about headline.',
+      '  - It never appears in the trust bar, the services headline, a service card or the about headline: those fields have their own jobs (rules B2 to B5).'],
+  ],
+  B6: [
+    ['This is the proof behind the hero\'s promise, and the only place on the page where the promise may come back, once.',
+      'This is the proof behind the hero\'s promise; when the promise comes back here, say it in fresh words.'],
+  ],
+};
+
+/** M2b.1h: rules dropped on a pitch-first page: R7 / R8 force the hook-then-anchor hero shape (the anchor stays in heroAnchorRule). */
+export const PITCH_FIRST_DROPPED_RULE_IDS: readonly string[] = ['R7', 'R8'];
+
+/** One rule's text on a pitch-first page (PITCH_FIRST_RULE_EDITS applied, each anchor asserted unique). */
+export function pitchFirstRuleText(rule: { id: string; text: string }): string {
+  let text = rule.text;
+  for (const [from, to] of PITCH_FIRST_RULE_EDITS[rule.id] ?? []) {
+    const at = text.indexOf(from);
+    if (at < 0 || text.indexOf(from, at + 1) >= 0) throw new Error(`generationData rule ${rule.id} changed; update the M2b.1h pitch-first edit.`);
+    text = `${text.slice(0, at)}${to}${text.slice(at + from.length)}`;
+  }
+  return text;
+}
+
+/**
+ * M2b.1h: the direct-response toolkit (copywriter.md, "Direct-response formulas \u2014 the fathers' toolkit", the 8 points and
+ * the process paragraph), adapted to the generator: the owner speaks in the first person, the facts are only his facts, and
+ * every example is abstract English (a concrete example once leaked into output as an invented tool).
+ */
+export const DIRECT_RESPONSE_TOOLKIT: readonly string[] = [
+  '1. Position first (Schwartz, Breakthrough Advertising). Decide the reader\'s awareness stage and the market\'s sophistication stage (how many similar promises he has already heard). Channel a desire he already has; never try to create one. At high sophistication, lead with the unique mechanism: the specific how that makes this owner\'s promise believable.',
+  '2. One big promise. Every section serves it. Restate it deliberately in fresh words; never the same phrase twice.',
+  '3. Headline (Caples, Ogilvy; Bly\'s 4 U\'s). The headline carries the promise: self-interest, news or curiosity. Make it useful, urgent, unique and ultra-specific. Specific numbers and concrete nouns beat adjectives.',
+  '4. Reason-why and specificity (Hopkins, Scientific Advertising). Every claim gets a reason or a checkable fact, and the only facts are the owner\'s facts. A number the owner gave beats an adjective; the owner\'s own method, described plainly, beats a quality word.',
+  '5. Body (PAS + Sugarman\'s slippery slide). Problem, then agitate (the felt scene: the reader is there, now), then the solution through the mechanism. Each sentence\'s only job is to make him read the next one.',
+  '6. Features to benefits (FAB). Feature, then what it does, then what he gets. End on his outcome, not the tool.',
+  '7. Objections and risk reversal (Halbert, Kennedy). Answer his fear before he says it, with what the owner actually offers (his price policy, his warranty, his method), never with a promise the owner did not make. Then a reason to act now, taken from the owner\'s facts (never an invented deadline, discount or scarcity), and the moment after the problem is solved.',
+  '8. Rhythm. Mix short punches with longer lines. Read it aloud: if every sentence has the same length, it reads as AI.',
+];
+
+/** M2b.1h: the PITCH FIRST prompt section of a pitch-first page (English only; story lines on the homepage). */
+export function buildPitchFirstSection(brief: Pick<PageBrief, 'site' | 'page'>): string {
+  const story = storyPage(brief);
+  const limits = SITE_COPY_OPTIONAL_PRESENCE_LIMITS;
+  return [
+    'PITCH FIRST (binding on this page; it overrides any instruction to write the copy field by field):',
+    'You write this page the way the classic direct-response masters did. The owner speaks in the first person, to one reader, in the singular. The only facts you may use are the owner\'s facts and the research brief above: never a number, tool, place, price policy, guarantee or story they do not state.',
+    '',
+    'Before you write anything, decide three things in your reasoning (do not output them):',
+    '- The reader\'s awareness stage and the market\'s sophistication stage.',
+    '- The one big promise of this page, from the owner\'s usp (or, if it has none, from his strongest fact against the customer\'s fear).',
+    '- The unique mechanism: the specific how, from the owner\'s usp, that makes the promise believable.',
+    '',
+    'The toolkit (use the formula that fits each part):',
+    ...DIRECT_RESPONSE_TOOLKIT,
+    '',
+    'Process for this page: first write the whole pitch as one free-flowing short sales letter, with no field limits. Then cut and fit it into the required fields, keeping the strongest lines. Never write field by field from scratch.',
+    '',
+    `- "pitch" is the first key of your JSON output: that sales letter, ${PITCH_MIN_WORDS} to ${PITCH_MAX_WORDS} words of Hebrew prose (at most ${limits.pitch} characters), in the owner's first person, addressed to the reader. No field limit applies to it, but every binding rule above does: no claim beyond the owner's facts, no business days or hours, no customer quote, no past-job story. The system stores it and never shows it.`,
+    '- Then write every other key by cutting it from the pitch: keep its strongest lines, and fit each one to its field\'s limit and rules.',
+    '- heroHeadline carries the one big promise. It has no fixed shape: no required hook, question, dash or clause order. It must still contain the anchor words (see the anchor rule above) and stay within its length limit.',
+    `- Restate the promise in fresh words where it serves the page; never reuse the same phrase. The same run of ${PHRASE_REPEAT_MIN_WORDS} or more consecutive words may appear in at most ${PHRASE_REPEAT_MAX_FIELDS} fields of the page (the trust bar counts as one field); the system counts it.`,
+    ...(story ? [
+      `- storyBody: the story section, shown right below the hero. ${STORY_MIN_SENTENCES} to ${STORY_MAX_SENTENCES} sentences, at most ${limits.storyBody} characters, taken from the pitch's strongest lines: the felt scene of the reader's problem, then the owner's mechanism. First person, varied sentence length, and none of the hero's wording.`,
+      `- storyHeadline: the story section's heading, at most ${limits.storyHeadline} characters, or null. It names the scene or the mechanism, never the hero's promise word for word.`,
+    ] : []),
+  ].join('\n');
 }
 
 /** Service slug that decides the page's stage: the money page's own slug; on the homepage, its first service (section 19.4). */
@@ -554,15 +690,18 @@ export function buildVoiceRules(brief: PageBrief, data: CollectedData = {}): str
   // An arrival promise (section 8 tokens) needs the owner's response time; every other fact gate runs as usual.
   const passes = (line: string) => runCopyGates({ formHeadline: line }, gates).length === 0 && (responseTime || !ARRIVAL_TOKENS.some(token => line.includes(token)));
   const set = CTA_LABEL_SETS[stage];
+  // M2b.1h: on a pitch-first page the count caps are relaxed (PITCH_FIRST_RULE_EDITS) and the hero-shape rules R7 / R8 drop.
+  const pitch = pitchFirstPage(brief);
+  const text = (rule: { id: string; text: string }) => `- ${pitch ? pitchFirstRuleText(rule) : rule.text}`;
   return [
     'VOICE RULES (Tamar, binding; the Hebrew lists they name are given after them):',
-    ...VOICE_PROMPT_RULES.map(rule => `- ${rule.text}`),
+    ...VOICE_PROMPT_RULES.map(text),
     // M2a.6: Tamar's section 20.8 rules R1-R8 (byte-exact; M2a.7 adds R8), and Noa's verb / preposition line (M2a.7).
-    ...M2A6_PROMPT_RULES.map(rule => `- ${rule.text}`),
+    ...M2A6_PROMPT_RULES.filter(rule => !pitch || !PITCH_FIRST_DROPPED_RULE_IDS.includes(rule.id)).map(text),
     `- ${PREPOSITION_PROMPT_LINE}`,
     // M2b.1d: Tamar's section 22.3 rules (byte-exact): B2 on every page, the rest only where the about section and the
     // service cards render (and are generated).
-    ...m2bRulesFor(brief).map(rule => `- ${rule.text}`),
+    ...m2bRulesFor(brief).map(text),
     // M2b.1g: Tamar's section 23.3 rules (byte-exact): C4 and C5 on every page, the rest where the about section renders;
     // Yonatan's about-headline place guard with C2; the guarantee-block fact C4 reads; the C5 trust-tile note.
     ...m2b2RulesFor(brief).map(rule => `- ${rule.text}`),
@@ -608,7 +747,7 @@ RESEARCH RULES:
 
 COPY RULES (binding):
 ${buildResearchCopyRules(brief, data).join('\n')}
-
+${pitchFirstPage(brief) ? `\n${buildPitchFirstSection(brief)}\n` : ''}
 The following owner-fact prompt provides the required SiteCopy JSON schema. Treat its owner facts as context only; use a fact in output only when the research brief authorizes it. Its HARD RULES, BANNED PHRASES, address and voice rules are NOT context: they are binding, together with the COPY RULES above.`;
 }
 
@@ -631,9 +770,12 @@ export function buildSimulationGenerationResult(data: CollectedData) {
  * English hard-limits block, generated from the validator constants so the prompt
  * can never drift from what assertBoundedGeneratedSiteCopy enforces.
  */
-export function buildSiteCopyHardLimitsBlock(heading = 'HARD LIMITS', omit: readonly string[] = []): string {
+export function buildSiteCopyHardLimitsBlock(heading = 'HARD LIMITS', omit: readonly string[] = [], layout: CopyLayout = {}): string {
   // M2b.1d: `omit` = the fields this page does not generate (ungeneratedFieldsFor); they leave the block and the key list.
+  // M2b.1h: `layout` adds the pitch (first key) and the story fields where the page generates them.
   const keep = (key: string) => !omit.includes(key);
+  const presence = SITE_COPY_OPTIONAL_PRESENCE_LIMITS;
+  const keys = [...(layout.pitch ? ['pitch'] : []), ...SITE_COPY_KEYS.filter(keep), ...(layout.story ? STORY_FIELDS_M2B1H : [])];
   const lines: string[] = [
     `${heading} (validator-enforced; output that breaks any of these is rejected. They override every softer length or count guidance above):`,
     '- Length means the number of characters in the string, counting every letter, space, digit and punctuation mark. Aim for at most 85% of each limit to leave a margin.',
@@ -641,6 +783,8 @@ export function buildSiteCopyHardLimitsBlock(heading = 'HARD LIMITS', omit: read
     ...Object.entries(SITE_COPY_STRING_LIMITS).filter(([key]) => keep(key)).map(([key, max]) => `  - ${key}: max ${max} characters`),
     '- Optional fields (a string, or null):',
     ...Object.entries(SITE_COPY_OPTIONAL_STRING_LIMITS).map(([key, max]) => `  - ${key}: max ${max} characters when set`),
+    ...(layout.story ? STORY_FIELDS_M2B1H.map(key => `  - ${key}: max ${presence[key]} characters when set`) : []),
+    ...(layout.pitch ? [`- pitch (string): ${PITCH_MIN_WORDS} to ${PITCH_MAX_WORDS} words, max ${presence.pitch} characters. It is the only limit on the pitch.`] : []),
     '- Lists:',
     ...STRING_LIST_KEYS.filter(keep).map(key => {
       const limit = SITE_COPY_STRING_LIST_LIMITS[key];
@@ -654,7 +798,7 @@ export function buildSiteCopyHardLimitsBlock(heading = 'HARD LIMITS', omit: read
     `- ${SITE_COPY_REVIEW_PAIR[0]} is the owner's quote, verbatim, and may stand alone. ${SITE_COPY_REVIEW_PAIR[1]} may be set only when ${SITE_COPY_REVIEW_PAIR[0]} is set and the data supplies a star rating; otherwise ${SITE_COPY_REVIEW_PAIR[1]} is null. Never invent a ${SITE_COPY_REVIEW_PAIR[1]}. Never shorten or rephrase a quote.`,
     `- ${SITE_COPY_ALWAYS_NULL.join(', ')}: always null.`,
     '- faqItems: follow the faqPolicy rule in the research rules above.',
-    `- Output exactly these keys and no others: ${SITE_COPY_KEYS.filter(keep).join(', ')}.`,
+    `- Output exactly these keys and no others${layout.pitch ? ', with pitch first' : ''}: ${keys.join(', ')}.`,
     `- The whole JSON object must be at most ${SITE_COPY_MAX_BYTES} bytes in UTF-8.`,
     '- If a field is too long, rephrase it shorter in complete, natural wording. Never cut text mid-word or mid-sentence and never use an ellipsis.',
   ];
@@ -712,11 +856,12 @@ function repairableFields(violations: CopyViolation[], systemFields: readonly st
     if (violation.field === '$' || violation.rule === 'context_requires_quote' || violation.rule === 'must_be_null' ||
       SAFE_FIX_GATE_RULES.includes(violation.rule)) continue;
     const field = topField(violation.field);
-    if (systemFields.includes(field) || !SITE_COPY_KEYS.includes(field) || (SITE_COPY_ALWAYS_NULL as readonly string[]).includes(field)) continue;
+    const known = SITE_COPY_KEYS.includes(field) || (OPTIONAL_PRESENCE_KEYS as string[]).includes(field);
+    if (systemFields.includes(field) || !known || (SITE_COPY_ALWAYS_NULL as readonly string[]).includes(field)) continue;
     if (violation.rule === 'unexpected' && !violation.field.includes('.')) continue;
     fields.add(field);
   }
-  return SITE_COPY_KEYS.filter(key => fields.has(key));
+  return [...SITE_COPY_KEYS, ...OPTIONAL_PRESENCE_KEYS].filter(key => fields.has(key));
 }
 
 function structural(violations: CopyViolation[]): boolean {
@@ -726,6 +871,8 @@ function structural(violations: CopyViolation[]): boolean {
 function describeLimit(field: string): string {
   if (field in SITE_COPY_STRING_LIMITS) return `non-empty string, max ${SITE_COPY_STRING_LIMITS[field as keyof typeof SITE_COPY_STRING_LIMITS]} characters`;
   if (field in SITE_COPY_OPTIONAL_STRING_LIMITS) return `string or null, max ${SITE_COPY_OPTIONAL_STRING_LIMITS[field as keyof typeof SITE_COPY_OPTIONAL_STRING_LIMITS]} characters when set`;
+  if (field === 'pitch') return `string or null: the free sales letter, ${PITCH_MIN_WORDS} to ${PITCH_MAX_WORDS} words, max ${SITE_COPY_OPTIONAL_PRESENCE_LIMITS.pitch} characters`;
+  if (field in SITE_COPY_OPTIONAL_PRESENCE_LIMITS) return `string or null, max ${SITE_COPY_OPTIONAL_PRESENCE_LIMITS[field as OptionalPresenceKey]} characters when set`;
   if (field in SITE_COPY_STRING_LIST_LIMITS) {
     const limit = SITE_COPY_STRING_LIST_LIMITS[field as StringListKey];
     return `array of at most ${limit.maxItems} non-empty strings, each max ${limit.itemMaxChars} characters`;
@@ -821,7 +968,7 @@ export function applySafeDeterministicFixes(value: Loose, gates: CopyGateContext
   const next: Loose = { ...value };
   const fixes: string[] = [];
   for (const key of Object.keys(next)) {
-    if (!SITE_COPY_KEYS.includes(key)) {
+    if (!SITE_COPY_KEYS.includes(key) && !(OPTIONAL_PRESENCE_KEYS as string[]).includes(key)) {
       delete next[key];
       fixes.push(`drop_unexpected:${key}`);
     }
@@ -961,6 +1108,14 @@ export function normalizedServicesHeadline(value: unknown): string {
 export function withSystemFields(value: Loose, brief: PageBrief, data: CollectedData): Loose {
   const next: Loose = { ...value, faqItems: supportedFaqItems(brief) };
   if (!brief.site) return next;
+  // M2b.1h: the pitch (pitch-first pages) and the story fields (homepage) stay only where the page generates them, and only as
+  // a non-empty string within the limit (else null: dropped whole, never edited; settleStage logs why). An absent key stays absent.
+  for (const key of OPTIONAL_PRESENCE_KEYS) {
+    if (!(key === 'pitch' ? pitchFirstPage(brief) : storyPage(brief))) { delete next[key]; continue; }
+    if (!(key in next)) continue;
+    const field = next[key];
+    next[key] = typeof field === 'string' && field.trim() && field.length <= SITE_COPY_OPTIONAL_PRESENCE_LIMITS[key] ? field : null;
+  }
   // M2b.1d: ungenerated fields are system-filled (empty about pair and cards; the first services headline entry), and the
   // services headline of a page that generates it is normalised to the closed set.
   const ungenerated = ungeneratedFieldsFor(brief);
@@ -1033,18 +1188,24 @@ function fieldStrings(copy: Loose, name: string): Array<{ field: string; value: 
  * M2b.1g (section 23.2, Noa's slip 3): SENTENCE_FINAL_PERIOD_FIELDS end with "." unless they already end with . ! or ?;
  * NO_FINAL_PERIOD_FIELDS lose a trailing ".". Punctuation only; heroSubheadline is untouched (Noa owns it).
  */
+/** M2b.1h: the story body is a sentence field and its headline a label field (engineer extension of the section 23.2 lists). */
+export const M2B1H_SENTENCE_FIELDS: readonly string[] = ['storyBody'];
+export const M2B1H_LABEL_FIELDS: readonly string[] = ['storyHeadline'];
+const sentenceFields = () => [...SENTENCE_FINAL_PERIOD_FIELDS, ...M2B1H_SENTENCE_FIELDS];
+const labelFields = () => [...NO_FINAL_PERIOD_FIELDS, ...M2B1H_LABEL_FIELDS];
+
 export function normalizeFinalPeriods(copy: Loose): Loose {
-  for (const name of SENTENCE_FINAL_PERIOD_FIELDS) mapFieldStrings(copy, name, value => (SENTENCE_END.test(value) ? value : `${value.trimEnd()}.`));
-  for (const name of NO_FINAL_PERIOD_FIELDS) mapFieldStrings(copy, name, value => (LABEL_PERIOD.test(value) ? value.replace(LABEL_PERIOD, '') : value));
+  for (const name of sentenceFields()) mapFieldStrings(copy, name, value => (SENTENCE_END.test(value) ? value : `${value.trimEnd()}.`));
+  for (const name of labelFields()) mapFieldStrings(copy, name, value => (LABEL_PERIOD.test(value) ? value.replace(LABEL_PERIOD, '') : value));
   return copy;
 }
 
 /** The section 23.2 assertion: every sentence field ends in . ! or ?, and no label field ends in ".". Throws otherwise. */
 export function assertFinalPeriods(copy: Loose): void {
-  for (const name of SENTENCE_FINAL_PERIOD_FIELDS) {
+  for (const name of sentenceFields()) {
     for (const { field, value } of fieldStrings(copy, name)) if (!SENTENCE_END.test(value)) throw new Error(`site copy punctuation invariant: ${field} has no sentence-final mark`);
   }
-  for (const name of NO_FINAL_PERIOD_FIELDS) {
+  for (const name of labelFields()) {
     for (const { field, value } of fieldStrings(copy, name)) if (LABEL_PERIOD.test(value)) throw new Error(`site copy punctuation invariant: ${field} ends with a period`);
   }
 }
@@ -1073,7 +1234,13 @@ function systemFieldsFor(ctx: RepairContext): readonly string[] {
 /** Validate one stage's output against the validator and the gates, spending repair budget, then safe fixes; throws with what remains. */
 async function settleStage(ctx: RepairContext, stage: CopyValidationStage, call: () => Promise<string>): Promise<SiteCopy> {
   const settle = (raw: Loose) => withSystemFields(raw, ctx.brief, ctx.data);
+  // M2b.1h: the pitch / story shape notes of each fresh model response (warnings only; never repaired, never fail the page).
+  const note = (raw: Loose | undefined) => {
+    const warnings = raw ? optionalFieldWarnings(raw, ctx.brief, stage) : [];
+    if (warnings.length) ctx.emit({ stage, kind: 'warnings', violations: warnings });
+  };
   let parsed = parseLoose(await call());
+  note(parsed.value);
   let value = parsed.value ? settle(parsed.value) : undefined;
   for (;;) {
     const violations = value ? currentViolations(value, ctx.gates, shapeOptions(ctx.brief)) : parsed.violations;
@@ -1088,6 +1255,7 @@ async function settleStage(ctx: RepairContext, stage: CopyValidationStage, call:
       ctx.used++;
       ctx.emit({ stage, kind: 'stage_retry', attempt: ctx.used, violations });
       parsed = parseLoose(await call());
+      note(parsed.value);
       value = parsed.value ? settle(parsed.value) : undefined;
       continue;
     }
@@ -1106,6 +1274,41 @@ async function settleStage(ctx: RepairContext, stage: CopyValidationStage, call:
   assertCopyAt(stage, value, shapeOptions(ctx.brief));
   assertGatesAt(stage, value, ctx.gates, ctx.emit);
   return value as unknown as SiteCopy;
+}
+
+/** Sentences of a text (split after . ! or ?), for the story's sentence-count note. */
+function sentenceCount(value: string): number {
+  return value.split(/(?<=[.!?])\s+/u).filter(part => part.trim()).length;
+}
+
+/**
+ * M2b.1h: shape notes on the pitch (Tamar stage; Noa never sees it) and the story fields (homepage) of a raw model response:
+ * missing, over the limit (withSystemFields then drops it), the pitch word count and the story sentence count. Lengths and
+ * counts only, never copy text.
+ */
+export function optionalFieldWarnings(raw: Loose, brief: PageBrief, stage: CopyValidationStage): CopyViolation[] {
+  const out: CopyViolation[] = [];
+  const check = (key: OptionalPresenceKey, required: boolean) => {
+    const value = raw[key];
+    if (value === undefined) { if (required) out.push({ field: key, rule: 'missing' }); return null; }
+    if (value === null) return null;
+    if (typeof value !== 'string' || !value.trim()) { out.push({ field: key, rule: typeof value === 'string' ? 'empty' : 'type' }); return null; }
+    const max = SITE_COPY_OPTIONAL_PRESENCE_LIMITS[key];
+    if (value.length > max) { out.push({ field: key, rule: 'max_length', limit: max, actual: value.length }); return null; }
+    return value;
+  };
+  if (pitchFirstPage(brief) && stage === 'tamar') {
+    const pitch = check('pitch', true);
+    const words = pitch ? pitch.trim().split(/\s+/u).length : 0;
+    if (pitch && (words < PITCH_MIN_WORDS || words > PITCH_MAX_WORDS)) out.push({ field: 'pitch', rule: 'word_count', limit: PITCH_MAX_WORDS, actual: words });
+  }
+  if (storyPage(brief)) {
+    check('storyHeadline', false);
+    const body = check('storyBody', true);
+    const sentences = body ? sentenceCount(body) : 0;
+    if (body && (sentences < STORY_MIN_SENTENCES || sentences > STORY_MAX_SENTENCES)) out.push({ field: 'storyBody', rule: 'sentence_count', limit: STORY_MAX_SENTENCES, actual: sentences });
+  }
+  return out;
 }
 
 /** M2a.7: one 'warnings' event for the settled copy of a stage (gate hits that never fail the page). */
@@ -1170,7 +1373,37 @@ export function buildResearchPageGenerationPrompt(brief: PageBrief, data: Collec
       throw new Error('Site copy schema prompt shows an unstated solo-operator claim; update the research example cut.');
     }
   }
-  return `${buildResearchPageCopyPrompt(brief, data)}\n\nOWNER FACTS AND SITE COPY SCHEMA:\n${clientSchema}\n\n${buildSiteCopyHardLimitsBlock('HARD LIMITS', omit)}`;
+  if (pitchFirstPage(brief)) clientSchema = pitchFirstSchema(clientSchema, storyPage(brief));
+  return `${buildResearchPageCopyPrompt(brief, data)}\n\nOWNER FACTS AND SITE COPY SCHEMA:\n${clientSchema}\n\n${buildSiteCopyHardLimitsBlock('HARD LIMITS', omit, layoutFor(brief))}`;
+}
+
+/** M2b.1h: the legacy schema's hero shape line; on a pitch-first page the headline carries the promise instead. */
+export const LEGACY_HERO_SHAPE_LINE = "- heroHeadline: open with the client's fear/problem, close with the relief. Max 68 chars.";
+export const PITCH_FIRST_HERO_LINE = '- heroHeadline: carries the one big promise, in no fixed shape (see PITCH FIRST). Max 68 chars.';
+
+/** One asserted replacement in the schema template (exactly one occurrence, else the M2b.1h cut is stale). */
+function replaceOnce(text: string, from: string, to: string, what: string): string {
+  const at = text.indexOf(from);
+  if (at < 0 || text.indexOf(from, at + 1) >= 0) throw new Error(`Site copy schema prompt ${what} changed; update the M2b.1h schema cut.`);
+  return `${text.slice(0, at)}${to}${text.slice(at + from.length)}`;
+}
+
+/** M2b.1h: the schema of a pitch-first page: "pitch" as the first output key, the story keys (homepage), the free hero line. */
+export function pitchFirstSchema(schema: string, story: boolean): string {
+  let out = replaceOnce(schema, LEGACY_HERO_SHAPE_LINE, PITCH_FIRST_HERO_LINE, 'hero shape line');
+  out = replaceOnce(out, '{\n  "heroHeadline": "",', '{\n  "pitch": "",\n  "heroHeadline": "",', 'first output key');
+  if (story) out = replaceOnce(out, '\n  "heroSubheadline": "",', '\n  "heroSubheadline": "",\n  "storyHeadline": "",\n  "storyBody": "",', 'heroSubheadline key');
+  return out;
+}
+
+/** M2b.1h: which optional-presence fields a page generates (the hard-limits block and the output key list). */
+export interface CopyLayout {
+  pitch?: boolean;
+  story?: boolean;
+}
+
+export function layoutFor(brief: Pick<PageBrief, 'site' | 'page'>): CopyLayout {
+  return { pitch: pitchFirstPage(brief), story: storyPage(brief) };
 }
 
 /** M2b.1d: the schema template without one `"key": "",` line (asserted: exactly one such line). */
@@ -1207,6 +1440,8 @@ export function briefGateContext(brief: PageBrief, data: CollectedData): CopyGat
     ...(site ? { renderedFields: researchedGatedFieldsFor(brief.page.pageClass) } : {}),
     // M2b.1d: the fields this page does not generate are never gated.
     ...(site ? { ungeneratedFields: [...ungeneratedFieldsFor(brief)] } : {}),
+    // M2b.1h: pitch-first pages may restate the promise in fresh words; every research page blocks verbatim repeats.
+    ...(site ? { promiseRestatement: pitchFirstPage(brief), phraseRepeatFields: researchedRenderedFieldsFor(brief.page.pageClass) } : {}),
   });
 }
 
@@ -1232,8 +1467,11 @@ export function buildNoaQaMessage(copy: SiteCopy, brief?: PageBrief): string {
     : '';
   // M2b.1d: the fields this page does not generate never reach Noa (withSystemFields fills them again).
   const omit = brief ? ungeneratedFieldsFor(brief) : [];
-  const shown = omit.length ? Object.fromEntries(Object.entries(copy).filter(([key]) => !omit.includes(key))) : copy;
-  return `${JSON.stringify(shown)}\n\n${buildSiteCopyHardLimitsBlock('HARD LIMITS FOR YOUR CORRECTIONS (never lengthen a field past its limit)', omit)}${fixed}`;
+  // M2b.1h: Noa never sees the pitch (it is not shown; the system carries Tamar's over); the story fields are hers to correct.
+  const hidden = [...omit, 'pitch'];
+  const shown = Object.keys(copy).some(key => hidden.includes(key)) ? Object.fromEntries(Object.entries(copy).filter(([key]) => !hidden.includes(key))) : copy;
+  const layout = brief ? { story: storyPage(brief) } : {};
+  return `${JSON.stringify(shown)}\n\n${buildSiteCopyHardLimitsBlock('HARD LIMITS FOR YOUR CORRECTIONS (never lengthen a field past its limit)', omit, layout)}${fixed}`;
 }
 
 export async function generateResearchPageCopy(
@@ -1264,10 +1502,21 @@ export async function generateResearchPageCopy(
   const prompt = buildResearchPageGenerationPrompt(brief, data);
   const tamarCopy = await settleStage(ctx, 'tamar', () => callJson(brief.site ? SITE_COPY_SYSTEM_PROMPT : COPY_SYSTEM_PROMPT, prompt, { thinkingBudget: 1500 }));
   const noaCopy = await settleStage(ctx, 'noa', () => callJson(QA_SYSTEM_PROMPT, buildNoaQaMessage(tamarCopy, brief), { think: false }));
-  const finalCopy = withSystemFields(applyFaqPolicy(noaCopy, brief) as unknown as Loose, brief, data) as unknown as SiteCopy;
+  const finalCopy = withSystemFields(carryOptionalFields(applyFaqPolicy(noaCopy, brief) as unknown as Loose, tamarCopy as unknown as Loose), brief, data) as unknown as SiteCopy;
   assertCopyAt('final', finalCopy, shapeOptions(brief));
   assertGatesAt('final', finalCopy as unknown as Loose, ctx.gates, ctx.emit);
   return finalCopy;
+}
+
+/**
+ * M2b.1h: the pitch is Tamar's (Noa never sees it), and a story key Noa's output lacks comes back from Tamar's settled copy
+ * (an explicit null from Noa stays null).
+ */
+export function carryOptionalFields(noa: Loose, tamar: Loose): Loose {
+  const next: Loose = { ...noa };
+  if ('pitch' in tamar) next.pitch = tamar.pitch;
+  for (const key of STORY_FIELDS_M2B1H) if (!(key in next) && key in tamar) next[key] = tamar[key];
+  return next;
 }
 
 export function isApprovedPortfolioBrief(dossier: SiteResearchDossier, brief: PageBrief): boolean {

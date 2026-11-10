@@ -165,6 +165,7 @@
     "src/lib/lp/voiceRulesM2a7.test.ts",
     "src/lib/lp/voiceRulesM2b1d.test.ts",
     "src/lib/lp/voiceRulesM2b1g.test.ts",
+    "src/lib/lp/voiceRulesM2b1h.test.ts",
     "src/lib/lp/hebrewPrefixLetters.ts",
     "src/lib/lp/researchedSeo.test.ts",
     "src/lib/lp/verticalThemes.ts",

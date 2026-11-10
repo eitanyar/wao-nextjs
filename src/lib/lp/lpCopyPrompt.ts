@@ -33,6 +33,10 @@ export interface SiteCopy extends LPCopy {
   aboutPageHeadline: string;      // H1 for /about.html. Max 50 chars.
   aboutPageBody: string;          // 3-4 sentences expanding aboutBlurb. Max 400 chars.
   serviceDetails: { name: string; description: string }[]; // 4-6 services with descriptions. Each description max 80 chars.
+  // M2b.1h (research sites, optional: absent on records before M2b.1h).
+  storyHeadline?: string | null;  // Homepage story H2. Max 40 chars; null = no visible headline.
+  storyBody?: string | null;      // Homepage story: 3-5 first-person sentences cut from the pitch. Max 360 chars.
+  pitch?: string | null;          // Generation only: the free sales letter the fields were cut from. Never rendered; moved to the page record.
 }
 
 /** Fixed singular primary CTA label (the copy step injects it; the model never writes heroCta). */

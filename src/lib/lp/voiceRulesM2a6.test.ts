@@ -426,10 +426,13 @@ test('M2a.6 10: Yonatan\'s H1 anchor: normalised containment of page name and ci
   assert.equal(briefGateContext(home, data).anchorName, W3);
   assert.deepEqual(hitsOf(loose({ heroHeadline: `${W1} ${CITY}` }), briefGateContext(home, data), GATE_RULES.heroAnchor), ['heroHeadline=missing:name']);
   const text = describeGateViolation({ field: 'heroHeadline', rule: GATE_RULES.heroAnchor, actual: 'missing:both' }, briefGateContext(money, data));
-  assert.ok(text.includes('keep the opening hook clause exactly') && text.includes(JSON.stringify(LABEL)) && text.includes(JSON.stringify(CITY)));
+  // M2b.1h: the repair keeps the headline's promise and fits the anchor in naturally (no forced hook clause).
+  assert.ok(text.includes("keep the headline's promise") && !text.includes('hook') && text.includes(JSON.stringify(LABEL)) && text.includes(JSON.stringify(CITY)));
   // Prompt: Yonatan's wording replaces the soft rule; the example uses the title formula's city prefix.
   const prompt = buildResearchPageGenerationPrompt(money, data);
-  assert.ok(prompt.includes(`- This page's search anchor is ${JSON.stringify(LABEL)} in ${JSON.stringify(CITY)}. heroHeadline MUST contain ${JSON.stringify(LABEL)} exactly and ${JSON.stringify(CITY)} exactly. Open with the customer's pain as a short first clause if you want, then put the anchor in the next clause: '<hook>? ${pageNameWithCity(LABEL, CITY)} \u2014 <differentiator>'.`));
+  // M2b.1h: the anchor words stay required; the forced '<hook>? <name city> - <differentiator>' pattern is gone.
+  assert.ok(prompt.includes(`- This page's search anchor is ${JSON.stringify(LABEL)} in ${JSON.stringify(CITY)}. heroHeadline MUST contain ${JSON.stringify(LABEL)} exactly and ${JSON.stringify(CITY)} exactly, character for character, wherever they read naturally.`));
+  assert.ok(!prompt.includes('<hook>') && !prompt.includes(`? ${pageNameWithCity(LABEL, CITY)} \u2014`));
   assert.doesNotMatch(prompt, /Where it reads naturally/);
   assert.match(buildResearchPageGenerationPrompt(home, data), /This homepage's search anchor is the trade /);
   for (const rule of M2A6_PROMPT_RULES) assert.ok(prompt.includes(rule.text), rule.id);

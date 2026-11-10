@@ -134,10 +134,10 @@ test('M2a.7 1: generationData carries the M2a.7 data byte-exact and counted; R8 
 
 test('M2a.7 2: warn-only: a hit on a field the research renderer does not show is a warning (no repair, page passes); fact / trust gates and rendered fields still fail; legacy unchanged', async () => {
   // M2b.1: the renderer shows more fields; the gate context gets the rendered fields minus the warn-only set.
-  assert.deepEqual([...RESEARCHED_RENDERED_FIELDS], ['heroHeadline', 'heroSubheadline', 'formHeadline', 'faqItems', 'reviewFeatured', 'reviewContext', 'heroCta', 'trustBarItems', 'aboutPageHeadline', 'aboutPageBody', 'servicesHeadline', 'serviceDetails']);
-  // M2b.1f (eval 18/18): no rendered field is warn-only any more; every rendered field is gated.
-  assert.deepEqual([...RESEARCHED_RENDERED_WARN_ONLY_FIELDS], []);
-  assert.deepEqual([...RESEARCHED_GATED_FIELDS], [...RESEARCHED_RENDERED_FIELDS]);
+  assert.deepEqual([...RESEARCHED_RENDERED_FIELDS], ['heroHeadline', 'heroSubheadline', 'formHeadline', 'faqItems', 'reviewFeatured', 'reviewContext', 'heroCta', 'trustBarItems', 'aboutPageHeadline', 'aboutPageBody', 'servicesHeadline', 'serviceDetails', 'storyHeadline', 'storyBody']);
+  // M2b.1f (eval 18/18): every M2b field is gated. M2b.1h: the new homepage story section is warn-only until its paid eval.
+  assert.deepEqual([...RESEARCHED_RENDERED_WARN_ONLY_FIELDS], ['storyHeadline', 'storyBody']);
+  assert.deepEqual([...RESEARCHED_GATED_FIELDS], RESEARCHED_RENDERED_FIELDS.filter(field => !field.startsWith('story')));
   const site = briefGateContext(brief('leak-detection'), {});
   // A money page renders (and generates) none of the home/hub-only fields.
   assert.deepEqual(site.renderedFields, RESEARCHED_GATED_FIELDS.filter(field => !RESEARCHED_HOME_HUB_ONLY_FIELDS.includes(field)));

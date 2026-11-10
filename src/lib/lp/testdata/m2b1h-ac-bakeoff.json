@@ -1,0 +1,68 @@
+{
+  "_source": "M2b.1h AC case: waocopy (Tamar) bake-off output for scratch/m2b1d/eval/ac-repair-1 (2026-11-10), copied byte-exact by script; seo / serviceItems / collectedData from that saved site record. Test data only, never rendered.",
+  "collectedData": {
+    "businessName": "TEST M2a4 AC Repair",
+    "businessNiche": "air conditioning technician",
+    "primaryService": "AC repair",
+    "secondaryServices": "AC installation, AC cleaning",
+    "priorityServices": [
+      "AC repair"
+    ],
+    "serviceModel": "field",
+    "targetLocation": "Rishon LeZion",
+    "specificCities": "Rishon LeZion, Holon",
+    "travelBoundary": "Up to 15 km from Rishon LeZion",
+    "ownerName": "Test Owner D",
+    "usp": "Finds the real fault on the first visit and gives a fixed price before any work starts",
+    "idealClientFear": "A technician who refills the gas without finding the leak, so the AC breaks again a month later",
+    "yearsInField": "10 years",
+    "guarantee": "Six-month warranty on repairs",
+    "responseTime": "Same day in Rishon LeZion",
+    "contactMethod": "phone",
+    "phone": "050-0000003",
+    "whatsappNumber": "050-0000003",
+    "businessHours": "Sun-Thu 08:00-19:00, Fri 08:00-13:00"
+  },
+  "seo": {
+    "name": "טכנאי מיזוג אוויר",
+    "city": "ראשון לציון",
+    "serviceArea": [
+      "ראשון לציון",
+      "חולון"
+    ]
+  },
+  "serviceItems": [
+    "תיקון מזגנים",
+    "התקנת מזגנים",
+    "ניקוי מזגנים"
+  ],
+  "pitch": "כשהמזגן נופל ביום חם, הבית נעשה כבד, והראש מתחיל לחשב: כמה זה יעלה, אם יעבדו עליי, וכמה זמן זה יחזיק. אני לא מוכר לך ניחוש. אני טכנאי מיזוג אוויר עם 10 שנות ניסיון, והשיטה שלי פשוטה: קודם לאתר את התקלה האמיתית כבר בביקור הראשון, אחר כך לתת לך מחיר קבוע — ורק אז להתחיל לעבוד. לא מילוי גז שמתנדף אחרי חודש. לא ״נראה לי״. אתה יודע מה התקלה, מה המחיר ומה התיקון. אתה לא צריך לשלם על עבודה שלא ברורה לך. אני מטפל בתיקון, התקנה וניקוי מזגנים בראשון לציון ועד 15 ק״מ. על תיקון יש אחריות 6 חודשים. אני זמין באותו יום בראשון לציון, וניתן לתפוס אותי ראשון עד חמישי 08:00-19:00 ושישי 08:00-13:00. אם אתה רוצה מזגן מטופל בלי הפתעות — התקשר עכשיו.",
+  "copy": {
+    "heroHeadline": "טכנאי מיזוג אוויר ראשון לציון — מחיר קבוע לפני שמתחילים",
+    "heroSubheadline": "אני מאתר תקלה אמיתית בביקור הראשון, נותן מחיר קבוע לפני העבודה — בלי מילוי גז שמחזיק חודש",
+    "heroCta": "התקשר עכשיו",
+    "trustBarItems": [
+      "מחיר קבוע לפני עבודה",
+      "אחריות 6 חודשים לתיקון",
+      "אותו יום בראשון לציון"
+    ],
+    "servicesHeadline": "במה אני מטפל",
+    "serviceDetails": [
+      {
+        "name": "תיקון מזגנים",
+        "description": "אני מאתר את התקלה האמיתית בביקור הראשון ונותן מחיר קבוע לפני העבודה."
+      },
+      {
+        "name": "התקנת מזגנים",
+        "description": "אני מגיע אליך להתקנה ונותן מחיר קבוע לפני תחילת העבודה."
+      },
+      {
+        "name": "ניקוי מזגנים",
+        "description": "אני מנקה את המזגן ונותן מחיר קבוע לפני תחילת העבודה."
+      }
+    ],
+    "aboutPageHeadline": "10 שנות ניסיון, מחיר קבוע לפני עבודה",
+    "aboutPageBody": "אני טכנאי מיזוג אוויר עם 10 שנות ניסיון, ועובד לפי עיקרון אחד: קודם לאתר את התקלה האמיתית, אחר כך לתת לך מחיר קבוע — ורק אז להתחיל לעבוד. ככה אתה יודע מה הבעיה, מה המחיר ומה התיקון. יש אחריות 6 חודשים על תיקון, ואני זמין באותו יום בראשון לציון.",
+    "formHeadline": "קבל מחיר קבוע לפני עבודה"
+  }
+}

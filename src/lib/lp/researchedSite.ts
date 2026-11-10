@@ -42,6 +42,11 @@ export interface ResearchedSitePage {
   persistedSlug?: string;
   /** M2a.1 (C1): plain page name + city for the title formula, H1 rule, schema and link anchors. */
   seo?: ResearchedPageSeo;
+  /**
+   * M2b.1h: the free sales letter the page's copy was cut from (pitch-first pages: homepage, service hub). Stored for review
+   * and later re-cuts; never rendered. Absent on records generated before M2b.1h.
+   */
+  pitch?: string;
 }
 
 export interface ResearchedPageSeo {
@@ -301,6 +306,8 @@ export function researchedPageTitle(page: ResearchedSitePage, businessName: stri
 export const RESEARCHED_RENDERED_FIELDS: readonly string[] = [
   'heroHeadline', 'heroSubheadline', 'formHeadline', 'faqItems', 'reviewFeatured', 'reviewContext',
   'heroCta', 'trustBarItems', 'aboutPageHeadline', 'aboutPageBody', 'servicesHeadline', 'serviceDetails',
+  // M2b.1h: the homepage story section (RESEARCHED_HOMEPAGE_ONLY_FIELDS).
+  'storyHeadline', 'storyBody',
 ];
 
 /**
@@ -310,7 +317,11 @@ export const RESEARCHED_RENDERED_FIELDS: readonly string[] = [
  * aboutPageBody stay warn-only until the 18-run eval with all five blocking clears >= 16/18.
  * M2b.1f (2026-11-09): that eval cleared 18/18 (US$3.18, 0 final gate hits), so all five are hard gates; the list is empty.
  */
-export const RESEARCHED_RENDERED_WARN_ONLY_FIELDS: readonly string[] = [];
+export const RESEARCHED_RENDERED_WARN_ONLY_FIELDS: readonly string[] = [
+  // M2b.1h (Adam): the new story section is warn-only until a paid eval proves it; its truth gates (ALWAYS_BLOCKING_RULES)
+  // still fail the page.
+  'storyHeadline', 'storyBody',
+];
 
 /** The fields whose gate hits fail a research page (copyGates renderedFields): rendered minus the default warn-only set. */
 export const RESEARCHED_GATED_FIELDS: readonly string[] = RESEARCHED_RENDERED_FIELDS.filter(field => !RESEARCHED_RENDERED_WARN_ONLY_FIELDS.includes(field));
@@ -326,6 +337,20 @@ export function rendersSiteSections(classification: string): boolean {
   return HOME_HUB_CLASSES.has(classification);
 }
 
+/** M2b.1h: rendered (and generated) on the homepage only: the story section. */
+export const RESEARCHED_HOMEPAGE_ONLY_FIELDS: readonly string[] = ['storyHeadline', 'storyBody'];
+
+/** M2b.1h: true when this page type renders (and generates) the story section. */
+export function rendersStory(classification: string): boolean {
+  return classification === 'homepage';
+}
+
+/** M2b.1h: the fields one page type renders (gated or warn-only): the home/hub-only and homepage-only fields where shown. */
+export function researchedRenderedFieldsFor(classification: string): readonly string[] {
+  return RESEARCHED_RENDERED_FIELDS.filter(field => (rendersSiteSections(classification) || !RESEARCHED_HOME_HUB_ONLY_FIELDS.includes(field))
+    && (rendersStory(classification) || !RESEARCHED_HOMEPAGE_ONLY_FIELDS.includes(field)));
+}
+
 /**
  * The gated fields of one page type (M2b.1b): the rendered fields minus the warn-only fields (default
  * RESEARCHED_RENDERED_WARN_ONLY_FIELDS; M2b.1f: injectable, so the warn-only mechanism stays testable while the list is
@@ -334,8 +359,7 @@ export function rendersSiteSections(classification: string): boolean {
  * switch: with the list empty, all fields block by default.
  */
 export function researchedGatedFieldsFor(classification: string, warnOnly: readonly string[] = RESEARCHED_RENDERED_WARN_ONLY_FIELDS): readonly string[] {
-  const gated = RESEARCHED_RENDERED_FIELDS.filter(field => !warnOnly.includes(field));
-  return rendersSiteSections(classification) ? gated : gated.filter(field => !RESEARCHED_HOME_HUB_ONLY_FIELDS.includes(field));
+  return researchedRenderedFieldsFor(classification).filter(field => !warnOnly.includes(field));
 }
 
 /** M2b.1d: the top-level copy fields a page type does not generate (the home/hub-only fields off the homepage / services hub). */
@@ -395,6 +419,31 @@ function hasServiceCards(page: ResearchedSitePage): boolean {
 /** True when aboutSection renders for this page (the nav's #about target). */
 function hasAbout(page: ResearchedSitePage): boolean {
   return rendersSiteSections(page.classification) && nonEmpty(page.copy.aboutPageBody);
+}
+
+/**
+ * M2b.1h: accessible-name fallback of the story H2 when the copy has no storyHeadline. Null until Tamar -> Noa supply the
+ * byte-exact Hebrew label (the engineer never authors Hebrew); while null, a story without a headline renders as an unnamed
+ * <section> with no H2 (no heading level is skipped, and an unnamed section is not a landmark).
+ */
+export const RESEARCHED_STORY_FALLBACK_HEADING: string | null = null;
+
+/** M2b.1h: true when storySection renders for this page (homepage with a non-empty storyBody). */
+function hasStory(page: ResearchedSitePage): boolean {
+  return rendersStory(page.classification) && nonEmpty(page.copy.storyBody);
+}
+
+/**
+ * Story (M2b.1h): the homepage's storyHeadline as the H2 (labelling the section) and storyBody, between the hero and the
+ * services section. Nothing without a body (records before M2b.1h render unchanged). Theme tokens only; the body is
+ * start-aligned (RTL) at a readable measure.
+ */
+function storySection(page: ResearchedSitePage, theme: RenderResearchedSitePagesParams['theme']): string {
+  if (!hasStory(page)) return '';
+  const style = `font-size:1.35rem;color:${theme.primary};margin-bottom:14px;text-align:center;`;
+  const named = nonEmpty(page.copy.storyHeadline) || nonEmpty(RESEARCHED_STORY_FALLBACK_HEADING);
+  const heading = named ? sectionHeading('story-heading', page.copy.storyHeadline, RESEARCHED_STORY_FALLBACK_HEADING ?? '', style) : '';
+  return `<section id="story" data-section="story"${named ? ' aria-labelledby="story-heading"' : ''} style="padding:36px 20px;background:${theme.surfaceAlt};"><div style="max-width:640px;margin:0 auto;">${heading}<p style="color:${theme.textPrimary};font-size:1.05rem;line-height:1.8;text-align:start;">${esc(page.copy.storyBody ?? '')}</p></div></section>`;
 }
 
 /**
@@ -469,7 +518,7 @@ function buildPageHtml(page: ResearchedSitePage, params: RenderResearchedSitePag
   const body = `${stickyHeader(theme, businessName, phone, phoneHref)}
   <main>
     <section style="padding:44px 20px;background:${theme.surface};text-align:center;"><div style="max-width:700px;margin:0 auto;"><h1 style="color:${theme.primary};font-size:clamp(1.6rem,4vw,2.3rem);margin-bottom:16px;">${esc(researchedPageH1(page.copy.heroHeadline, page.seo))}</h1><p style="color:${theme.textMuted};line-height:1.7;">${esc(page.copy.heroSubheadline)}</p>${heroCallButton(page, data, theme)}</div></section>
-    ${trustBar(page, theme)}
+    ${trustBar(page, theme)}${storySection(page, theme)}
     ${reviewSection(page, theme)}
     ${serviceDetailsSection(page, theme)}
     ${aboutSection(page, theme)}

@@ -56,6 +56,7 @@ import {
   buildResearchPageGenerationPrompt,
   generateResearchPageCopy,
   normalizedServicesHeadline,
+  pitchFirstRuleText,
   shapeOptions,
   SITE_COPY_STRING_LIST_LIMITS,
   TRUST_BAR_MIN_KEPT,
@@ -262,8 +263,9 @@ test('M2b.1d 6: home/hub-only fields: money pages never generate, gate or send t
   assert.ok(moneyPrompt.length < hubPrompt.length);
   // Prompt rules: B2 on every page, B1-B6 on home / hub; the lists they name. M2b.1g: with the section 23.3 cuts (C2 replaces
   // the B5 option list, C1 the B6 example), so the full B5 / B6 never reach a prompt.
+  // M2b.1h: the hub is a pitch-first page, so its B1 / B6 carry the asserted promise-restatement edits.
   for (const rule of M2B_PROMPT_RULES_AFTER_M2B2) {
-    assert.ok(hubPrompt.includes(rule.text), `hub ${rule.id}`);
+    assert.ok(hubPrompt.includes(pitchFirstRuleText(rule)), `hub ${rule.id}`);
     assert.equal(moneyPrompt.includes(rule.text), M2B_EVERY_PAGE_RULE_IDS.includes(rule.id), `money ${rule.id}`);
   }
   for (const rule of M2B_PROMPT_RULES.filter(item => ['B5', 'B6'].includes(item.id))) assert.ok(!hubPrompt.includes(rule.text), `hub full ${rule.id}`);
@@ -325,7 +327,8 @@ test('M2b.1d 7: duplicate about checks compare homepage / hub pages only; the op
 });
 
 test('M2b.1d 8 (M2b.1f): all five M2b fields block by default; an injected warn-only list still holds a field back; never gated where not rendered', () => {
-  assert.deepEqual([...RESEARCHED_RENDERED_WARN_ONLY_FIELDS], []);
+  // M2b.1h: the new story section is warn-only until a paid eval proves it (the five M2b fields still block).
+  assert.deepEqual([...RESEARCHED_RENDERED_WARN_ONLY_FIELDS], ['storyHeadline', 'storyBody']);
   const five = ['trustBarItems', 'servicesHeadline', 'serviceDetails', 'aboutPageHeadline', 'aboutPageBody'];
   for (const pageClass of ['homepage', 'service_hub']) for (const field of five) assert.ok(researchedGatedFieldsFor(pageClass).includes(field), `${pageClass}: ${field}`);
   assert.ok(!researchedGatedFieldsFor('money_service').includes('aboutPageBody'), 'still never where not rendered');
