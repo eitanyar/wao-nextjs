@@ -922,12 +922,22 @@ export function depthLayout(brief: Pick<PageBrief, 'site' | 'page' | 'blocksEnab
   return depthPage(brief) ? DEPTH_BLOCKS.filter(block => brief.blocksEnabled?.[block.id]).map(block => block.id) : [];
 }
 
+/**
+ * Adam (2026-11-10, d): the Q&A minimum is DEPTH_BLOCK_LIMITS.qa.minItems (2) once code owns the facts. The v1 path (fact
+ * templates pending) keeps its frozen prompt wording, V1_QA_MIN_ITEMS, so its prompts stay byte-identical (the validator's
+ * lower minimum only relaxes it).
+ */
+export const V1_QA_MIN_ITEMS = 3;
+export function promptQaMinItems(): number {
+  return codeOwnedFactTemplates() ? DEPTH_BLOCK_LIMITS.qa.minItems : V1_QA_MIN_ITEMS;
+}
+
 /** Hard-limit text of one depth key (null for any other field). */
 export function describeDepthLimit(field: string): string | null {
   const limits = DEPTH_BLOCK_LIMITS;
   if (['processHeadline', 'qaHeadline', 'proofHeadline'].includes(field)) return `string or null, max ${limits.headlineMaxChars} characters when set`;
   if (field === 'processSteps') return `array of ${limits.process.minItems} to ${limits.process.maxItems} objects {"text", "factIds"}, or null; each text max ${limits.process.maxWords} words and ${limits.process.maxChars} characters; factIds 1 to ${limits.maxFactIds} fact ids`;
-  if (field === 'qaItems') return `array of ${limits.qa.minItems} to ${limits.qa.maxItems} objects {"questionId", "q", "a", "factIds"}, or null; q max ${limits.qa.maxQuestionChars} characters; a max ${limits.qa.maxAnswerWords} words and ${limits.qa.maxAnswerChars} characters; factIds 1 to ${limits.maxFactIds} fact ids`;
+  if (field === 'qaItems') return `array of ${promptQaMinItems()} to ${limits.qa.maxItems} objects {"questionId", "q", "a", "factIds"}, or null; q max ${limits.qa.maxQuestionChars} characters; a max ${limits.qa.maxAnswerWords} words and ${limits.qa.maxAnswerChars} characters; factIds 1 to ${limits.maxFactIds} fact ids`;
   if (field === 'proofItems') return `array of ${limits.proof.minItems} to ${limits.proof.maxItems} objects {"text", "factIds"}, or null; each text max ${limits.proof.maxWords} words and ${limits.proof.maxChars} characters; factIds 1 to ${limits.maxFactIds} fact ids`;
   return null;
 }
@@ -955,8 +965,8 @@ export function buildDepthSection(brief: PageBrief, data?: CollectedData): strin
     ] : []),
     ...(enabled?.qa && data && codeOwnedQa(brief, data) ? codeOwnedQaRules(brief, data) : []),
     ...(enabled?.qa && !(data && codeOwnedQa(brief, data)) ? [
-      `- qaItems (B4): ${limits.qa.minItems} to ${limits.qa.maxItems} questions from questionPool that the owner's facts answer. Each item: "questionId" (the id of the question in questionPool), "q" (that question in natural Hebrew, addressed to one person in the singular, keeping its meaning), "a" (the answer, at most ${limits.qa.maxAnswerWords} words) and "factIds".`,
-      `- Each answer's first sentence answers the question directly and names the business (${business})${city ? ` and the base city (${city})` : ''}. Answer only from the owner facts: skip every question his facts do not answer, and never guess. If fewer than ${limits.qa.minItems} questions can be answered, output null for qaItems and qaHeadline.`,
+      `- qaItems (B4): ${promptQaMinItems()} to ${limits.qa.maxItems} questions from questionPool that the owner's facts answer. Each item: "questionId" (the id of the question in questionPool), "q" (that question in natural Hebrew, addressed to one person in the singular, keeping its meaning), "a" (the answer, at most ${limits.qa.maxAnswerWords} words) and "factIds".`,
+      `- Each answer's first sentence answers the question directly and names the business (${business})${city ? ` and the base city (${city})` : ''}. Answer only from the owner facts: skip every question his facts do not answer, and never guess. If fewer than ${promptQaMinItems()} questions can be answered, output null for qaItems and qaHeadline.`,
       `- qaHeadline: the heading of the questions, at most ${limits.headlineMaxChars} characters, or null.`,
     ] : []),
     ...(enabled?.proof && !codeOwnsFacts(brief) ? [

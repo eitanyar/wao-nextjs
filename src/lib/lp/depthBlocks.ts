@@ -26,11 +26,14 @@ export interface DepthBlockCopy {
 
 export type DepthBlockId = 'process' | 'qa' | 'proof';
 
-/** Block limits (brief: B1 3-6 steps of at most 25 words; B4 3-6 items, answers at most 60 words; B6 proof facts). */
+/**
+ * Block limits (brief: B1 3-6 steps of at most 25 words; B4 2-6 items, answers at most 60 words; B6 proof facts).
+ * Adam (2026-11-10, d): the Q&A minimum is 2 (was 3).
+ */
 export const DEPTH_BLOCK_LIMITS = {
   headlineMaxChars: 40,
   process: { minItems: 3, maxItems: 6, maxWords: 25, maxChars: 200 },
-  qa: { minItems: 3, maxItems: 6, maxQuestionChars: 160, maxAnswerWords: 60, maxAnswerChars: 420 },
+  qa: { minItems: 2, maxItems: 6, maxQuestionChars: 160, maxAnswerWords: 60, maxAnswerChars: 420 },
   proof: { minItems: 1, maxItems: 4, maxWords: 25, maxChars: 200 },
   /** B6: at most this many verbatim reviews (system-filled from the owner's review data). */
   maxReviews: 2,

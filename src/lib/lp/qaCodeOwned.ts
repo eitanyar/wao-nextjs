@@ -175,6 +175,7 @@ export interface QaPlan {
 }
 
 export interface QaPlanOptions {
+  /** Kept for the callers; Adam (2026-11-10, e): callback Q&A items are allowed on install pages too. */
   installPage: boolean;
 }
 
@@ -191,6 +192,7 @@ function qaItemFits(q: string, a: string): boolean {
  * has an owner fact), which are dropped. Pure; deterministic for a brief and its data.
  */
 export function planQa(brief: PageBrief, data: CollectedData, templates: OwnerFactTemplates, options: QaPlanOptions): QaPlan {
+  void options; // Adam (e): no install-page rule left in the Q&A plan (the trust bar and proof keep theirs).
   const pool = brief.questionPool ?? [];
   const facts = ownerFacts(data, brief, templates);
   const site = brief.site;
@@ -215,8 +217,8 @@ export function planQa(brief: PageBrief, data: CollectedData, templates: OwnerFa
       }
       case 'callback': {
         const fact = facts.response;
-        // Noa r3: no callback answer with a place tail (Adam), none on install pages.
-        if (!fact || !fact.factId || fact.slots.scope || options.installPage) return null;
+        // Adam (2026-11-10): (a) a response with a place tail is no fact, so it never reaches here; (e) install pages too.
+        if (!fact || !fact.factId) return null;
         const text = responseQaAnswer(fact, shape.callbackShaped, templates);
         return text ? { a: text, factIds: [fact.factId] } : null;
       }

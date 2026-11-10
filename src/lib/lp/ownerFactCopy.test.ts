@@ -41,6 +41,8 @@ import {
   VERBATIM_CHIP_MAX_CHARS,
   setOwnerFactTemplatesForTests,
   trustBarFromFacts,
+  uspRepeatsResponseNumber,
+  warrantyHasTail,
   type OwnerFactTemplates,
 } from './ownerFactCopy';
 
@@ -491,23 +493,26 @@ test('Noa r2 licenseDocumentNouns: exact first-word match, no prefix stripping, 
   assert.equal(parsePrefixLetters(R).length, 4, 'the r2 lists do not change the prefix letters');
 });
 
-test('Noa r2 proofResponseScoped: a duration with a place tail -> the scoped proof only, no trust chip (Adam)', () => {
+test('Adam (2026-11-10, a): a response with a place tail -> no response fact at all (no chip, no proof); scoped templates unused', () => {
   live();
   const place = tailAfter(fixtureAnswers().plumber.responseTime, 2);
   const answer = `20 ${R.parseMinuteWords[0]} ${place}`;
+  assert.equal(responseScope(answer, R).kind, 'scoped', 'the tail is still read as a place tail');
   const facts = ownerFacts({ responseTime: answer }, brief(), R);
-  assert.equal(proofText(facts.response!, R), R.proofResponseScoped.replace('{time}', R.responseMinutes.replace('{n}', '20')).replace('{scope}', place));
-  assert.equal(trustText(facts.response!, R), null);
-  assert.equal(trustBarFromFacts({ response: facts.response }, { installPage: false }, R).length, 0);
+  assert.equal(facts.response, undefined);
+  assert.deepEqual(trustBarFromFacts(facts, { installPage: false }, R), trustBarFromFacts({ area: facts.area }, { installPage: false }, R), 'the area tile only');
+  assert.equal(proofItemsFromFacts(facts, { installPage: false }, R).length, 0);
+  // The scoped arrival templates stay in the file and never render.
+  assert.ok(R.proofResponseScoped && R.proofResponseSameDayScoped);
 });
 
-test('Noa r2 proofResponseSameDayScoped: ac-repair and plumber fixtures', () => {
+test('Adam (a): the ac-repair and plumber same-day answers with a place tail -> no response fact', () => {
   live();
   const answers = fixtureAnswers();
   for (const key of ['ac-repair', 'plumber']) {
     const answer = answers[key].responseTime;
-    assert.equal(proofOf({ responseTime: answer }, 'response'), R.proofResponseSameDayScoped.replace('{scope}', tailAfter(answer, 2)), key);
-    assert.equal(trustBarFromFacts(ownerFacts({ responseTime: answer }, { ...brief(), site: undefined }, R), { installPage: false }, R).length, 0, 'no chip');
+    assert.equal(responseScope(answer, R).kind, 'scoped', key);
+    assert.equal(ownerFacts({ responseTime: answer }, brief(), R).response, undefined, key);
   }
 });
 
@@ -531,4 +536,48 @@ test('Noa r2 callback set (Adam): responseTime renders as a callback, chip and p
   for (const value of [trustText(minutes, R), proofText(minutes, R), trustText(sameDay, R), proofText(sameDay, R)]) {
     assert.ok(![R.trustResponse.replace('{time}', time), R.proofResponse.replace('{time}', time), R.trustResponseSameDay, R.proofResponseSameDay].includes(value ?? ''));
   }
+});
+
+test('Adam (2026-11-10, b): a scoped / verbatim / no-proof warranty has no trust chip on any page; unscoped keeps it', () => {
+  live();
+  const scopedAnswer = fixtureAnswers()['ac-repair'].guarantee;
+  const pages = [{ installPage: false }, { installPage: true }];
+  const scoped = ownerFacts({ guarantee: scopedAnswer }, brief(), R).warranty!;
+  assert.ok(scoped.slots.scope && warrantyHasTail(scoped));
+  assert.equal(trustText(scoped, R), null);
+  for (const page of pages) assert.ok(!trustBarFromFacts({ warranty: scoped }, page, R).length, 'no chip');
+  assert.ok(proofText(scoped, R)?.length, 'the proof sentence carries it');
+  // A tail that does not fit (the scope lead word removed) -> the verbatim proof, no chip.
+  const words = scopedAnswer.split(' ');
+  const unfitAnswer = words.filter(word => !R.warrantyScopeLeadWords.includes(word)).join(' ');
+  assert.notEqual(unfitAnswer, scopedAnswer);
+  const verbatim = ownerFacts({ guarantee: unfitAnswer }, brief(), R).warranty!;
+  assert.ok(verbatim.slots.proofVerbatim);
+  assert.equal(trustText(verbatim, R), null);
+  assert.equal(proofText(verbatim, R), R.proofWarrantyVerbatim.replace('{warranty}', unfitAnswer));
+  // An English tail (no Hebrew verbatim): no proof and no chip, never an unscoped chip that widens it.
+  const noProof = ownerFacts({ guarantee: '1 year for repairs' }, brief(), R).warranty!;
+  assert.ok(noProof.slots.noProof);
+  assert.equal(trustText(noProof, R), null);
+  assert.equal(proofText(noProof, R), null);
+  // Unscoped (picker value) keeps its chip.
+  const unscoped = ownerFacts({ guarantee: '1 year' }, brief(), R).warranty!;
+  assert.equal(warrantyHasTail(unscoped), false);
+  assert.equal(trustText(unscoped, R), R.trustWarranty.replace('{duration}', R.warrantyBareOneYear));
+  // An unparsed Hebrew answer (kind warrantyVerbatim) is the owner's own words: its chip stays.
+  const hebrewOnly = ownerFacts({ guarantee: R.parseWarrantyWords[0] }, brief(), R).warranty;
+  if (hebrewOnly) assert.equal(warrantyHasTail(hebrewOnly), false);
+});
+
+test('Adam (2026-11-10, c): the usp names the response number -> no response fact (chip, proof, Q&A)', () => {
+  live();
+  const minutes = `20 ${R.parseMinuteWords[0]}`;
+  assert.equal(ownerFacts({ responseTime: minutes, usp: `X 20 ${R.parseMinuteWords[0]}` }, brief(), R).response, undefined);
+  assert.equal(ownerFacts({ responseTime: '20 minutes', usp: 'I arrive within 20 minutes' }, brief(), R).response, undefined);
+  assert.ok(ownerFacts({ responseTime: minutes, usp: 'Since 2005, 30 minutes away' }, brief(), R).response, 'another number');
+  assert.ok(ownerFacts({ responseTime: minutes, usp: 'X 200 Y' }, brief(), R).response, 'whole numbers only (200 is not 20)');
+  assert.ok(ownerFacts({ responseTime: minutes }, brief(), R).response, 'no usp');
+  assert.ok(ownerFacts({ responseTime: R.parseSameDayWords[0], usp: 'X 20 Y' }, brief(), R).response, 'a same-day answer has no number');
+  assert.equal(uspRepeatsResponseNumber('within twenty', '20 minutes'), false, 'digits only (English number words above twelve stay words)');
+  assert.equal(uspRepeatsResponseNumber('020', '20 minutes'), true, 'the number, not the digit string');
 });

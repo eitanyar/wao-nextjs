@@ -173,8 +173,9 @@ test('drop first: about sentence (minimum kept), Q&A items; the story at its min
     assert.deepEqual(restated(copy, ctx), []);
     const panel = real('electrician-2', 'svc-electrical-panel-upgrade');
     const panelCopy = withSystemFields(panel.copy, panel.brief, panel.data);
-    assert.deepEqual(dropRestatements(panelCopy, briefGateContext(panel.brief, panel.data)), ['restatement_drop_depth_block:qaItems:3->0'], 'below the Q&A minimum: null');
-    assert.equal(panelCopy.qaItems, null);
+    // Adam (2026-11-10, d): the Q&A minimum is 2, so 2 of 3 items survive (was: below the minimum of 3 -> null).
+    assert.deepEqual(dropRestatements(panelCopy, briefGateContext(panel.brief, panel.data)), ['restatement_drop_depth_items:qaItems:3->2'], 'at the Q&A minimum: kept');
+    assert.equal((panelCopy.qaItems as unknown[]).length, 2);
     const plumber = real('hebrew-plumber-1', 'home');
     const plumberCtx = briefGateContext(plumber.brief, plumber.data);
     const plumberCopy = withSystemFields(plumber.copy, plumber.brief, plumber.data);

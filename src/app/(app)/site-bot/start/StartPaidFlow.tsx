@@ -14,6 +14,7 @@ import { INTAKE_COPY } from "@/lib/site-bot/intakeCopy";
 import { startVoiceNote, VOICE_NOTE_CONTROL_LABELS, voiceNoteStepAvailable, type VoiceNoteRecording } from "@/lib/site-bot/voiceNote";
 import { ISRAELI_LOCALITIES } from "@/lib/site-bot/israeliLocalities";
 import { MAX_LISTED_SERVED_AREAS, servedAreaCandidates } from "@/lib/site-bot/servedAreas";
+import { chatBubbleDir } from "@/lib/site-bot/chatBubbleDir";
 import { CREDENTIALS_COPY, credentialTier, licenseQuestionCopy, showsLicenseQuestions, WARRANTY_CHOICE_COPY_KEY, WARRANTY_CHOICES, type CredentialsAnswers } from "@/lib/site-bot/credentialsCopy";
 import {
   buildIntakeCollectedData,
@@ -546,6 +547,8 @@ function SiteBotStartContent() {
             <div
               key={i}
               id={`intake-message-${i}`}
+              dir={chatBubbleDir(m.content)}
+              data-intake-message-role={m.role}
               style={{
                 alignSelf: m.role === "assistant" ? "flex-start" : "flex-end",
                 background: m.role === "assistant" ? "var(--bg)" : "var(--accent)",

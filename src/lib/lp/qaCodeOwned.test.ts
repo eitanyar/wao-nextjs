@@ -18,6 +18,7 @@ import {
 } from './ownerFactCopy';
 import { optionalList, planQa, qaQuestionDisposition, qaTopicsPending, qaTopicTokens, questionTopic, QA_TOPIC_EXCLUDE_KEYS, QA_TOPIC_PRIORITY } from './qaCodeOwned';
 import { PREFIX_LETTERS } from './hebrewPrefixLetters';
+import { DEPTH_BLOCK_LIMITS } from './depthBlocks';
 import { FACT_OPTIONAL_LIST_KEYS, responseTimeText } from './ownerFactCopy';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -142,7 +143,7 @@ test('one code-built item per fact type: q = the pool question verbatim, a = the
   });
 });
 
-test('no owner fact -> no item and no question (never a filler answer); install pages never answer the callback', async () => {
+test('no owner fact -> no item and no question (never a filler answer); install pages answer the callback too (Adam e)', async () => {
   await codeOwned(() => {
     const page = brief();
     const bare: CollectedData = { ...data, license: undefined, guarantee: undefined, responseTime: undefined, yearsInField: undefined, startingPrices: undefined };
@@ -150,9 +151,10 @@ test('no owner fact -> no item and no question (never a filler answer); install 
     assert.deepEqual(plan.codeItems, []);
     assert.equal(plan.droppedQuestionIds.length, 5);
     assert.deepEqual(plan.modelPool.map(item => item.question), QUESTIONS.slice(5));
+    // Adam (2026-11-10, e): install pages answer the callback question too.
     const install = planQa(page, data, T, { installPage: true });
-    assert.ok(!install.codeItems.some(item => item.q === QUESTIONS[2]));
-    assert.ok(install.droppedQuestionIds.includes('question-3'));
+    assert.ok(install.codeItems.some(item => item.q === QUESTIONS[2] && item.a === 'I call back within 20min.'));
+    assert.ok(!install.droppedQuestionIds.includes('question-3'));
   });
 });
 
@@ -282,9 +284,18 @@ test('lead: an answer that no longer fits with its lead is dropped (never cut); 
     ] }, page, data);
     const notes = withQaAnswerLeads(copy, page, data);
     assert.ok(notes.includes('qa_lead_drop_item:qaItems[0]'));
-    assert.ok(notes.some(note => note.startsWith('qa_lead_drop_depth_block')));
-    assert.equal(copy.qaItems, null);
-    assert.equal(copy.qaHeadline, null);
+    // Adam (2026-11-10, d): the minimum is 2: two items left keep the block.
+    assert.equal(DEPTH_BLOCK_LIMITS.qa.minItems, 2);
+    assert.equal((copy.qaItems as Loose[]).length, 2);
+    // One item left: under the minimum, the block and its headline go.
+    const short = withSystemFields({ qaHeadline: 'Q', qaItems: [
+      { questionId: 'question-1', q: 'x', a: long, factIds: ['offer'] },
+      { questionId: 'question-2', q: 'x', a: 'I come and find the leak first.', factIds: ['offer'] },
+    ] }, page, data);
+    const shortNotes = withQaAnswerLeads(short, page, data);
+    assert.ok(shortNotes.some(note => note.startsWith('qa_lead_drop_depth_block')));
+    assert.equal(short.qaItems, null);
+    assert.equal(short.qaHeadline, null);
   });
 });
 
@@ -481,4 +492,15 @@ test('Noa r3 proofCallbackArrival / SameDay: callback-shaped -> proofCallback; a
   assert.equal(await answerOf(`${token} ${callbackWord}?`, sameDay), RT.proofCallbackSameDay);
   // The arrival answer never states an arrival time (no trustResponse / proofResponse wording).
   assert.notEqual(arrival, RT.proofResponse.replace('{time}', time));
+});
+
+test('Adam (2026-11-10, a / c): a response with a place tail, or one the usp states -> no callback Q&A item (dropped)', async () => {
+  const token = pick(RT.qaResponseQuestionTokens, item => disposition(item).kind !== 'topic');
+  const placeTail: CollectedData = { ...data, responseTime: fixtureOwner('plumber').responseTime };
+  assert.equal(ownerFacts(placeTail, brief(), RT).response, undefined);
+  assert.equal(await droppedOf(`${token}?`, placeTail), true);
+  const usp: CollectedData = { ...data, usp: `${data.usp} 20` };
+  assert.equal(await droppedOf(`${token}?`, usp), true);
+  assert.ok(await answerOf(`${token}?`), 'the plain callback fact still answers');
+  assert.ok(await answerOf(`${token}?`, data, true), 'Adam (e): on an install page too');
 });

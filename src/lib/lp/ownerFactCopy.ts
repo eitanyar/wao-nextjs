@@ -1432,7 +1432,9 @@ export function ownerFacts(data: CollectedData, brief: Pick<PageBrief, 'site' | 
   const warranty = warrantyFact(data.guarantee, templates);
   if (warranty) facts.warranty = fact(warranty.kind, warranty.source, warranty.slots, 'guarantee');
   const response = responseFact(data.responseTime, templates);
-  if (response) facts.response = fact('response', 'parsed', response, 'responseTime');
+  // Adam (2026-11-10, c): the usp already states the response number ("arrives within 20 minutes"): no response fact (the
+  // callback reading would contradict it).
+  if (response && !uspRepeatsResponseNumber(data.usp, data.responseTime)) facts.response = fact('response', 'parsed', response, 'responseTime');
   const rating = parseRating(data.starRating);
   if (rating !== null) {
     const count = parseReviewCount(data.reviewCount);
@@ -1468,6 +1470,13 @@ export function contractorDetail(value: string, templates: OwnerFactTemplates): 
   return contractorDetailRepeatWords(templates).some(word => raw.startsWith(word)) ? null : raw;
 }
 
+/** Adam (c): true when the usp names, as a whole number, a number the response answer carries ("20" in both). */
+export function uspRepeatsResponseNumber(usp: unknown, responseTime: unknown): boolean {
+  const numbers = (value: unknown) => new Set((withEnglishDigits(text(value)).match(/\d+/g) ?? []).map(run => String(Number(run))));
+  const inUsp = numbers(usp);
+  return [...numbers(responseTime)].some(number => inUsp.has(number));
+}
+
 /**
  * Noa r2 warranty: a negation opener -> none; a hedge (or an "up to" word) -> the verbatim fallback; a parsed duration with
  * no scope tail -> warranty (proofWarranty); with a fitting tail -> warranty + scope (proofWarrantyScoped); with a tail that
@@ -1490,19 +1499,16 @@ function warrantyFact(value: unknown, templates: OwnerFactTemplates): { kind: Ow
 }
 
 /**
- * Noa r2 response: a hedge -> no fact; a parsed duration / same day with no tail -> the callback chip and proof (Adam);
- * with a place tail (responseScopeLeadLetters) -> scope, which renders only the scoped proof and no chip (Adam); a tail that
- * does not fit -> no fact.
+ * Noa r2 response: a hedge -> no fact; a parsed duration / same day with no tail -> the callback chip and proof (Adam).
+ * Adam (2026-11-10, a, reversing the scoped-arrival decision): any tail, a place tail included -> no response fact at all
+ * (no chip, no proof, no Q&A item). proofResponseScoped / proofResponseSameDayScoped stay in the file, unused.
  */
 function responseFact(value: unknown, templates: OwnerFactTemplates): Record<string, string> | null {
   if (hasHedge(value, templates, false)) return null;
   const response = parseResponse(value, templates);
   if (!response) return null;
-  const scope = responseScope(value, templates);
-  if (scope.kind === 'unfit') return null;
-  const slots: Record<string, string> = 'sameDay' in response ? { sameDay: '1' } : { minutes: String(response.minutes), ...(response.form ? { form: response.form } : {}) };
-  if (scope.kind === 'scoped') slots.scope = scope.scope;
-  return slots;
+  if (responseScope(value, templates).kind !== 'none') return null;
+  return 'sameDay' in response ? { sameDay: '1' } : { minutes: String(response.minutes), ...(response.form ? { form: response.form } : {}) };
 }
 
 /**
@@ -1605,11 +1611,13 @@ export function trustText(fact: OwnerFact, templates: OwnerFactTemplates): strin
     case 'licenseNumber': return fillTemplate(templates.trustLicenseNumber, fact.slots);
     // Noa r3: the detail is never in the chip.
     case 'contractorRegistered': return fillTemplate(templates.trustContractorRegistered, {});
-    case 'warranty': return fillTemplate(templates.trustWarranty, { duration: durationText(fact, 'bare', templates) });
+    // Adam (2026-11-10, b): a warranty with a tail (scoped, the verbatim proof, or no proof) has no chip on any page: the
+    // proof sentence carries it (an unscoped chip would widen it). An unscoped warranty keeps its chip.
+    case 'warranty': if (warrantyHasTail(fact)) return null;
+      return fillTemplate(templates.trustWarranty, { duration: durationText(fact, 'bare', templates) });
     case 'warrantyVerbatim': return fillTemplate(templates.trustWarrantyVerbatim, fact.slots);
-    // Adam: the callback set (the intake asks how fast the owner calls back); a place-scoped answer has no chip.
-    case 'response': if (fact.slots.scope) return null;
-      return sameDay(fact)
+    // Adam: the callback set (the intake asks how fast the owner calls back).
+    case 'response': return sameDay(fact)
         ? fillTemplate(templates.trustCallbackSameDay, {})
         : fillTemplate(templates.trustCallback, { time: responseTimeText(Number(fact.slots.minutes), templates, fact.slots.form) });
     case 'rating': return fact.slots.count
@@ -1636,11 +1644,8 @@ export function proofText(fact: OwnerFact, templates: OwnerFactTemplates): strin
       if (fact.slots.noProof) return null;
       return fillTemplate(templates.proofWarranty, { duration: durationText(fact, 'lamed', templates) });
     case 'warrantyVerbatim': return fillTemplate(templates.proofWarrantyVerbatim, fact.slots);
-    // Adam: the callback set; a place-scoped answer takes the scoped arrival proof (proofResponseScoped / SameDayScoped).
+    // Adam: the callback set (a response with a tail is no fact at all, so there is no scoped form).
     case 'response':
-      if (fact.slots.scope) return sameDay(fact)
-        ? fillTemplate(templates.proofResponseSameDayScoped, { scope: fact.slots.scope })
-        : fillTemplate(templates.proofResponseScoped, { time: responseTimeText(Number(fact.slots.minutes), templates, fact.slots.form), scope: fact.slots.scope });
       return sameDay(fact)
         ? fillTemplate(templates.proofCallbackSameDay, {})
         : fillTemplate(templates.proofCallback, { time: responseTimeText(Number(fact.slots.minutes), templates, fact.slots.form) });
