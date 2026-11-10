@@ -91,3 +91,18 @@ Whatever he picks becomes an owner fact; the generator never guesses a price. Wo
   optional owner input (call-out fee, "starting from" for 1–3 common jobs, night/Shabbat surcharge); when given they attach to
   B2 as a small table + one cost FAQ, never a second price block. The market-norm prompt shows the owner what his top
   competitors do (re-run per niche + city at intake; exact-query SERPs ≈ $0.002 each).
+
+## Built 2026-11-10 (9f6f2fb, local) — follow-ups
+- NeuronWriter adapter had never worked live (wrong host api. vs app.neuronwriter.com, wrong /new-query body, query-id not parsed,
+  nested metrics/terms/ideas dropped). Fixed against one real Hebrew /get-query fixture (testdata/neuronwriter-get-query-he.json).
+- **Research latency (must fix before M3):** research now polls each not-ready keyword up to ~3 min, sequentially (worst case
+  ~30 min for 10 keywords) — breaks the 3–5 min preview promise. Fix: create all queries up front, poll in parallel with one
+  overall budget, and generate without NeuronWriter data for any keyword not ready in time (fill in later in the monthly loop).
+- Price-word lexicon for the term filter (Hebrew data → Tamar → Noa); per-trade service list for the unoffered-service filter.
+- Voice note stays off (VOICE_NOTE_STEP_ENABLED=false) until: a private session-bound upload route (not public/uploads), Hebrew
+  transcription into CollectedData.jobWalkthrough, record/stop labels (Tamar → Noa).
+- Yonatan: confirm term-density scope (depth blocks only, anchors exempt) and whether topic-matrix questions count as real
+  searched questions (PAA/suggested were empty in the live fixture).
+- Maya: visible fallback H2s, service-page order hero → trust → B1 → B6 → B4, B6 absorbing the single review.
+- Proof-point caps clash with B6 restating proof facts (warnings only on warn-only fields) — resolve with the "Next" fixes.
+- Acceptance (a) median ≥ 250 words and (e) Noa PASS need the next paid eval (B1 won't fire: no walkthrough in fixtures).
