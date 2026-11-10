@@ -21,11 +21,14 @@ export const RESEARCHED_SITE_LABELS: Readonly<{
   faqHeading: string;
   /** M2b.1b (Maya C2): small visible heading of the related-links block, also its accessible name. */
   relatedLinksLabel: string;
+  /** M2b.1h (Maya; Tamar -> Noa 2026-11-10): visually hidden H2 of the homepage story section when the copy has no storyHeadline. */
+  storyFallbackHeading: string;
 }> = {
   serviceAreasHeading: 'אזורי שירות',
   mainNavLabel: 'תפריט ראשי',
   faqHeading: 'שאלות נפוצות',
   relatedLinksLabel: 'שירותים נוספים',
+  storyFallbackHeading: 'איך זה קורה',
 };
 
 /** True while any label above is still a placeholder. Flip to false when the copy patches land. */

@@ -426,7 +426,7 @@ function hasAbout(page: ResearchedSitePage): boolean {
  * byte-exact Hebrew label (the engineer never authors Hebrew); while null, a story without a headline renders as an unnamed
  * <section> with no H2 (no heading level is skipped, and an unnamed section is not a landmark).
  */
-export const RESEARCHED_STORY_FALLBACK_HEADING: string | null = null;
+export const RESEARCHED_STORY_FALLBACK_HEADING: string | null = RESEARCHED_SITE_LABELS.storyFallbackHeading;
 
 /** M2b.1h: true when storySection renders for this page (homepage with a non-empty storyBody). */
 function hasStory(page: ResearchedSitePage): boolean {
@@ -440,10 +440,10 @@ function hasStory(page: ResearchedSitePage): boolean {
  */
 function storySection(page: ResearchedSitePage, theme: RenderResearchedSitePagesParams['theme']): string {
   if (!hasStory(page)) return '';
-  const style = `font-size:1.35rem;color:${theme.primary};margin-bottom:14px;text-align:center;`;
+  const style = `font-size:1.35rem;font-weight:700;color:${theme.primary};margin-bottom:14px;text-align:center;`;
   const named = nonEmpty(page.copy.storyHeadline) || nonEmpty(RESEARCHED_STORY_FALLBACK_HEADING);
   const heading = named ? sectionHeading('story-heading', page.copy.storyHeadline, RESEARCHED_STORY_FALLBACK_HEADING ?? '', style) : '';
-  return `<section id="story" data-section="story"${named ? ' aria-labelledby="story-heading"' : ''} style="padding:36px 20px;background:${theme.surfaceAlt};"><div style="max-width:640px;margin:0 auto;">${heading}<p style="color:${theme.textPrimary};font-size:1.05rem;line-height:1.8;text-align:start;">${esc(page.copy.storyBody ?? '')}</p></div></section>`;
+  return `<section id="story" data-section="story"${named ? ' aria-labelledby="story-heading"' : ''} style="padding:28px 20px;background:${theme.surfaceAlt};border-block:1px solid ${theme.border};"><div style="max-width:640px;margin:0 auto;">${heading}<p style="color:${theme.textPrimary};font-size:1.125rem;line-height:1.7;text-align:start;border-inline-start:3px solid ${theme.accent};padding-inline-start:14px;">${esc(page.copy.storyBody ?? '')}</p></div></section>`;
 }
 
 /**

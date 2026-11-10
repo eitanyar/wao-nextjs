@@ -350,11 +350,12 @@ test('M2b.1h 8: the story section renders on the homepage only, between the hero
   assert.ok(section.includes(`background:${theme.surfaceAlt}`) && section.includes(`color:${theme.textPrimary}`) && section.includes('max-width:640px'));
   assert.doesNotMatch(section, HEBREW);
   for (const [name, item] of Object.entries(VERTICAL_THEMES)) assert.ok(contrast(item.textPrimary, item.surfaceAlt) >= 4.5, `${name}: textPrimary on surfaceAlt`);
-  // No headline: with no approved fallback label yet, an unnamed section (no H2, no aria-labelledby); text escaped.
-  assert.equal(RESEARCHED_STORY_FALLBACK_HEADING, null);
+  // No headline: the Noa-approved fallback label names the section through a visually hidden H2; text escaped.
+  assert.ok(typeof RESEARCHED_STORY_FALLBACK_HEADING === 'string' && RESEARCHED_STORY_FALLBACK_HEADING.trim().length > 0);
   const bare = renderResearchedSitePages(renderParams([home({ storyHeadline: null, storyBody: 'Body <b>' })]))['index.html'];
-  assert.match(bare, /<section id="story" data-section="story" style="[^"]*"><div [^>]*><p [^>]*>Body &lt;b&gt;<\/p>/);
-  assert.ok(!bare.includes('story-heading'));
+  assert.ok(bare.includes(`<section id="story" data-section="story" aria-labelledby="story-heading" style="`));
+  assert.ok(bare.includes(`<h2 id="story-heading" class="sr-only">${RESEARCHED_STORY_FALLBACK_HEADING}</h2><p `));
+  assert.match(bare, /<p [^>]*>Body &lt;b&gt;<\/p>/);
   // Absent when the field is missing: a record without story keys (before M2b.1h), a null or blank body.
   const old = renderResearchedSitePages(renderParams([home({})]))['index.html'];
   assert.ok(!old.includes('data-section="story"'));
