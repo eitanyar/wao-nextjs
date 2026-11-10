@@ -105,7 +105,8 @@ import {
   WARRANTY_DEFINITE_BARE_DURATION,
 } from './generationData';
 import { PREFIX_LETTERS } from './hebrewPrefixLetters';
-import { factRestatementHits, type FactRestatementSpec } from './factRestatement';
+import { factRestatementHits, proseSentences, type FactRestatementSpec } from './factRestatement';
+import { fearPromiseMatches, sameDayOutOfScope, type FearPromiseSpec, type SameDayScopeSpec } from './claimScope';
 import {
   DEPTH_REFERENCE_KEYS,
   factTraceHits,
@@ -219,6 +220,10 @@ export const GATE_RULES = {
   factRestatement: 'gate_fact_restatement',
   /** Copy v2 slice 6: a model-written Q&A answer names the business (the code-built lead already does). */
   qaBrandInAnswer: 'gate_qa_brand_in_answer',
+  /** Rerun-3 item 4: a sentence negates a word of the owner's fear that his usp / guarantee does not (claimScope.ts). */
+  fearPromise: 'gate_fear_promise',
+  /** Rerun-3 item 5: a same-day word without a response fact, in a sentence naming no place of the owner's response tail. */
+  sameDayScope: 'gate_same_day_scope',
 } as const;
 export type GateRule = (typeof GATE_RULES)[keyof typeof GATE_RULES];
 
@@ -319,6 +324,10 @@ export interface CopyGateContext {
   qaCodeOwnership?: QaCodeOwnership;
   /** Copy v2 slice 6: the page's qaAnswerLead (removed before gate_qa_brand_in_answer reads an answer). */
   qaAnswerLead?: string | null;
+  /** Rerun-3 item 4: gate_fear_promise inputs (unset = off). */
+  fearPromise?: FearPromiseSpec;
+  /** Rerun-3 item 5: gate_same_day_scope inputs (unset = off: the owner has a response fact). */
+  sameDayScope?: SameDayScopeSpec;
 }
 
 /** Content depth gate inputs (see CopyGateContext.depth). */
@@ -2195,12 +2204,13 @@ export function runCopyGates(copy: Record<string, unknown>, ctx: CopyGateContext
 }
 
 function runAllGates(copy: Record<string, unknown>, ctx: CopyGateContext): GateViolation[] {
-  if (!Object.prototype.hasOwnProperty.call(copy, 'pitch')) return [...runPageGates(copy, ctx), ...depthGateHits(copy, ctx), ...restatementGateHits(copy, ctx), ...qaBrandHits(copy, ctx)];
+  if (!Object.prototype.hasOwnProperty.call(copy, 'pitch')) return [...runPageGates(copy, ctx), ...depthGateHits(copy, ctx), ...restatementGateHits(copy, ctx), ...qaBrandHits(copy, ctx), ...claimScopeHits(copy, ctx)];
   const { pitch, ...page } = copy;
   const out = runPageGates(page, ctx);
   out.push(...depthGateHits(page, ctx));
   out.push(...restatementGateHits(page, ctx));
   out.push(...qaBrandHits(page, ctx));
+  out.push(...claimScopeHits(page, ctx));
   if (typeof pitch === 'string' && pitch.trim()) out.push(...pitchGateHits(pitch, ctx));
   return out;
 }
@@ -2268,6 +2278,30 @@ export function restatementGateStrings(copy: Record<string, unknown>, ctx: CopyG
 function restatementGateHits(copy: Record<string, unknown>, ctx: CopyGateContext): GateViolation[] {
   if (!ctx.factRestatement) return [];
   return factRestatementHits(restatementGateStrings(copy, ctx), ctx.factRestatement).map(hit => ({ field: hit.field, rule: GATE_RULES.factRestatement, actual: `restatement:${hit.kind}` }));
+}
+
+/** The sentences of one gated string (prose split at . ! ?; a short field is one sentence). */
+export function claimSentences(value: string): string[] {
+  return proseSentences(value);
+}
+
+/** Rerun-3 items 4-5: true when a sentence breaks gate_fear_promise / gate_same_day_scope under this context. */
+export function claimScopeSentenceRules(sentence: string, ctx: Pick<CopyGateContext, 'fearPromise' | 'sameDayScope'>): GateRule[] {
+  const out: GateRule[] = [];
+  if (ctx.fearPromise && fearPromiseMatches(sentence, ctx.fearPromise).length) out.push(GATE_RULES.fearPromise);
+  if (ctx.sameDayScope && sameDayOutOfScope(sentence, ctx.sameDayScope)) out.push(GATE_RULES.sameDayScope);
+  return out;
+}
+
+/** Rerun-3 items 4-5: the claim-scope hits of the model-written strings (never the pitch, the services headline or card names). */
+function claimScopeHits(copy: Record<string, unknown>, ctx: CopyGateContext): GateViolation[] {
+  if (!ctx.fearPromise && !ctx.sameDayScope) return [];
+  const out: GateViolation[] = [];
+  for (const item of restatementGateStrings(copy, ctx)) {
+    const rules = new Set(claimSentences(item.value).flatMap(sentence => claimScopeSentenceRules(sentence, ctx)));
+    for (const rule of rules) out.push({ field: item.field, rule });
+  }
+  return out;
 }
 
 function runPageGates(copy: Record<string, unknown>, ctx: CopyGateContext): GateViolation[] {
@@ -2461,6 +2495,9 @@ export interface CopyGatePageOptions {
   /** Copy v2 slice 6: see CopyGateContext.qaCodeOwnership / qaAnswerLead. */
   qaCodeOwnership?: QaCodeOwnership;
   qaAnswerLead?: string | null;
+  /** Rerun-3 items 4-5: see CopyGateContext.fearPromise / sameDayScope. */
+  fearPromise?: FearPromiseSpec;
+  sameDayScope?: SameDayScopeSpec;
 }
 
 /** Build the gate context from owner data plus the page's confirmed service names and owner-stated places. */
@@ -2502,6 +2539,8 @@ export function copyGateContext(data: CollectedData, serviceLabels: readonly str
     ...(page.factRestatement ? { factRestatement: page.factRestatement } : {}),
     ...(page.qaCodeOwnership ? { qaCodeOwnership: { ...page.qaCodeOwnership } } : {}),
     ...(page.qaAnswerLead ? { qaAnswerLead: page.qaAnswerLead } : {}),
+    ...(page.fearPromise ? { fearPromise: page.fearPromise } : {}),
+    ...(page.sameDayScope ? { sameDayScope: page.sameDayScope } : {}),
   };
 }
 
@@ -2578,6 +2617,10 @@ export function describeGateViolation(violation: GateViolation, ctx: CopyGateCon
       return `${violation.field} widens the service area beyond the places the owner named (a region, "and surroundings", "the area of", nearby towns); name only these places: ${(ctx.places ?? []).join(' / ')}. A travel distance may be stated as a number, never as "surroundings"`;
     case GATE_RULES.qaBrandInAnswer:
       return `${violation.field} names the business; the system already puts the business name and city in front of every answer, so write the answer without the business name, in the owner's first person`;
+    case GATE_RULES.fearPromise:
+      return `${violation.field} promises that the customer's fear will not happen (a "without" or "no" sentence about the thing he fears), which the owner never promised; remove that promise and say what the owner actually does instead, in his own facts`;
+    case GATE_RULES.sameDayScope:
+      return `${violation.field} promises a same-day visit or job, but the owner gave no general response time; remove the same-day promise from this field`;
     case GATE_RULES.factRestatement:
       return `${violation.field} restates an owner fact (${(violation.actual ?? '').split(':')[1] ?? 'fact'}: years in the trade, licence, warranty, response time or price) that the system already shows on this page in fixed wording; remove it from this field entirely and say something the page does not say yet (never the fact in other words or other numbers)`;
     case GATE_RULES.shortDescription:

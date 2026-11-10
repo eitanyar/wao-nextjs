@@ -11,7 +11,8 @@ import type { PageBrief } from '../site-bot/research/pageBrief';
 import type { SiteResearchDossier } from '../site-bot/research/types';
 import { CLAIM_RULES, PLURAL_ADDRESS_TOKENS, SERVICE_DESCRIPTION_MIN_CHARS, WE_FORM_TOKENS } from './copyGates.config';
 import { briefFactTexts } from '../site-bot/research/pageBrief';
-import { codeOwnedFactTemplates, droppedOwnerFactKeys, ownerFacts, proofItemsFromFacts, trustBarFromFacts, type OwnerFactTemplates } from './ownerFactCopy';
+import { codeOwnedFactTemplates, droppedOwnerFactKeys, ownerFacts, proofItemsFromFacts, responseScope, trustBarFromFacts, type OwnerFactTemplates } from './ownerFactCopy';
+import { buildFearPromiseSpec, buildSameDayScopeSpec, type FearPromiseSpec, type SameDayScopeSpec } from './claimScope';
 import { costFaq, formatShekels, ownerPricing, pricingPromisePhrases } from './researchedPricing';
 import { proseSentences, restatementMatches, type FactRestatementSpec, type RestatementFact } from './factRestatement';
 import { budgetStrings, repetitionBudgetDecisions, type BudgetOptions, type BudgetString } from './repetitionBudget';
@@ -94,6 +95,7 @@ import {
   type CopyGateContext,
   type HeroCapPageFacts,
   type ServiceStage,
+  claimScopeSentenceRules,
 } from './copyGates';
 
 export type QwenJsonCaller = (
@@ -1117,6 +1119,8 @@ interface RepairContext {
   promptVersion?: PromptVersion;
   /** Copy v2 slice 4: repair calls already spent on restatement hits (shared by the Tamar and Noa stages). */
   restatementRepairs?: number;
+  /** Rerun-3 items 4-5: repair calls already spent on claim-scope hits (shared by the stages). */
+  claimScopeRepairs?: number;
   /** Copy v2 slice 5: the homepage's clause keys (site-wide budget). */
   priorMechanismKeys?: readonly string[];
 }
@@ -1134,7 +1138,7 @@ function settleWithDrops(ctx: RepairContext, stage: CopyValidationStage, value: 
 /** The slice 4-5 drops in place (off while the fact templates are pending or the gates are off). Returns the fix notes. */
 export function applyDeterministicDrops(value: Loose, brief: PageBrief, data: CollectedData, gates: CopyGateContext | null, priorMechanismKeys?: readonly string[]): string[] {
   if (!gates?.factRestatement) return [];
-  return [...dropRestatements(value, gates), ...dropQaBrandAnswers(value, gates), ...applyRepetitionBudget(value, brief, data, gates, priorMechanismKeys)];
+  return [...dropRestatements(value, gates), ...dropClaimScope(value, gates), ...dropQaBrandAnswers(value, gates), ...applyRepetitionBudget(value, brief, data, gates, priorMechanismKeys)];
 }
 
 /** The budget inputs of a page: its rendered strings in render order (code-built ones included) and the options. */
@@ -1654,6 +1658,32 @@ export function dropRestatements(copy: Loose, gates: CopyGateContext): string[] 
   return applyDropPlan(copy, plan, 'restatement');
 }
 
+/** Rerun-3 items 4-5: the rules whose hits are dropped where the field allows it, then get one repair, then fail the page. */
+export const CLAIM_SCOPE_RULES: readonly string[] = [GATE_RULES.fearPromise, GATE_RULES.sameDayScope];
+export const CLAIM_SCOPE_MAX_REPAIRS = 1;
+
+/**
+ * Rerun-3 items 4-5: drop what breaks gate_fear_promise / gate_same_day_scope where the field is droppable: the sentence of a
+ * prose field (keeping its minimum), a card description, a depth item, a nullable heading. Other fields (hero, H1 ...) keep
+ * the hit for one repair.
+ */
+export function dropClaimScope(copy: Loose, gates: CopyGateContext): string[] {
+  if (!gates.fearPromise && !gates.sameDayScope) return [];
+  const hits = blockingGateHits(runCopyGates(copy, gates), gates).filter(hit => CLAIM_SCOPE_RULES.includes(hit.rule));
+  if (!hits.length) return [];
+  const plan = emptyDropPlan();
+  for (const field of new Set(hits.map(hit => hit.field))) {
+    if (field in PROSE_MIN_SENTENCES) {
+      const value = copy[field];
+      if (typeof value !== 'string') continue;
+      proseSentences(value).forEach((sentence, index) => { if (claimScopeSentenceRules(sentence, gates).length) planFieldDrop(plan, field, index); });
+    } else {
+      planFieldDrop(plan, field);
+    }
+  }
+  return applyDropPlan(copy, plan, 'claim_scope');
+}
+
 /** Copy v2 slice 6: a model-written Q&A answer that names the business is dropped (never repaired; the lead names it). */
 export function dropQaBrandAnswers(copy: Loose, gates: CopyGateContext): string[] {
   if (!gates.qaCodeOwnership) return [];
@@ -1924,10 +1954,15 @@ async function settleStage(ctx: RepairContext, stage: CopyValidationStage, call:
     }
     // Copy v2 slice 4: restatement hits get RESTATEMENT_MAX_REPAIRS repair per page; after that the page fails on them.
     const restated = violations.filter(violation => violation.rule === GATE_RULES.factRestatement);
-    const sendable = (ctx.restatementRepairs ?? 0) >= RESTATEMENT_MAX_REPAIRS ? violations.filter(violation => !restated.includes(violation)) : violations;
+    // Rerun-3 items 4-5: claim-scope hits get CLAIM_SCOPE_MAX_REPAIRS repair per page too (counted separately).
+    const scoped = violations.filter(violation => CLAIM_SCOPE_RULES.includes(violation.rule));
+    const spentRestatement = (ctx.restatementRepairs ?? 0) >= RESTATEMENT_MAX_REPAIRS;
+    const spentScope = (ctx.claimScopeRepairs ?? 0) >= CLAIM_SCOPE_MAX_REPAIRS;
+    const sendable = violations.filter(violation => !(spentRestatement && restated.includes(violation)) && !(spentScope && scoped.includes(violation)));
     const fields = repairableFields(sendable, systemFieldsFor(ctx));
     if (!fields.length) break;
-    if (restated.length && sendable.length === violations.length) ctx.restatementRepairs = (ctx.restatementRepairs ?? 0) + 1;
+    if (restated.length && !spentRestatement) ctx.restatementRepairs = (ctx.restatementRepairs ?? 0) + 1;
+    if (scoped.length && !spentScope) ctx.claimScopeRepairs = (ctx.claimScopeRepairs ?? 0) + 1;
     value = settle(await repairFields(ctx, stage, value, sendable, fields));
   }
   if (!value) throw new GeneratedCopyValidationError(stage, parsed.violations);
@@ -2126,13 +2161,6 @@ function p6WithoutSticky(): string {
   const at = text.indexOf(P6_STICKY_SENTENCE);
   if (at < 0 || text.indexOf(P6_STICKY_SENTENCE, at + 1) >= 0) throw new Error('generationData rule P6 changed; update the copy v2 sticky cut.');
   return `${text.slice(0, at)}${text.slice(at + P6_STICKY_SENTENCE.length)}`;
-}
-
-/** The legacy schema's translated-cadence ban line, moved byte-exact (asserted unique) from buildLpCopyPrompt. */
-function legacyCadenceLine(): string {
-  const lines = buildLpCopyPrompt({}).split('\n').filter(line => line.startsWith('- Never use: '));
-  if (lines.length !== 1) throw new Error('Site copy schema prompt cadence line changed; update the copy v2 move.');
-  return lines[0];
 }
 
 /** v2 ALREADY ON THE PAGE rule: the code-built strings, which the model never restates (gate_fact_restatement checks it). */
@@ -2416,6 +2444,21 @@ export function isInstallPage(brief: PageBrief): boolean {
   return isInstallService(site.pageName, index >= 0 ? site.serviceSources?.[index] ?? '' : '');
 }
 
+/**
+ * Rerun-3 items 4-5: the claim-scope specs of a page. Fear words exclude the trade, the business name, the service labels and
+ * the places; the owner's usp and guarantee may negate a fear word themselves. The same-day gate is on only without a response
+ * fact; a sentence naming a place of the owner's response place tail may keep the same-day words.
+ */
+export function claimScopeSpecs(brief: PageBrief, data: CollectedData, templates: OwnerFactTemplates): { fearPromise?: FearPromiseSpec; sameDayScope?: SameDayScopeSpec } {
+  const site = brief.site;
+  const places = gatePlaces(brief);
+  const excluded = [data.businessNiche, data.businessName, site?.businessName, site?.pageName, ...(site?.serviceLabels ?? []), ...places].filter((item): item is string => typeof item === 'string' && item.trim().length > 0);
+  const fear = buildFearPromiseSpec(data.idealClientFear, templates.parseNegationWords, excluded, [data.usp, data.guarantee]);
+  const scope = responseScope(data.responseTime, templates);
+  const sameDay = buildSameDayScopeSpec(Boolean(ownerFacts(data, brief, templates).response), templates.parseSameDayWords, scope.kind === 'scoped' ? scope.scope : null, places);
+  return { ...(fear ? { fearPromise: fear } : {}), ...(sameDay ? { sameDayScope: sameDay } : {}) };
+}
+
 /** The gate context for one brief (M2a.3: service scope, page service, installation page). */
 export function briefGateContext(brief: PageBrief, data: CollectedData): CopyGateContext {
   const site = brief.site;
@@ -2438,6 +2481,8 @@ export function briefGateContext(brief: PageBrief, data: CollectedData): CopyGat
     ...(site && codeOwnsFacts(brief) ? { codeOwnedFields: [...CODE_OWNED_FACT_FIELDS] } : {}),
     // Copy v2 slice 4: the code-owned facts no model field may restate (gate_fact_restatement).
     ...(site && codeOwnsFacts(brief) ? { factRestatement: factRestatementSpec(brief, data, codeOwnedFactTemplates() as OwnerFactTemplates) } : {}),
+    // Rerun-3 items 4-5: fear-into-promise and same-day-without-scope (code-owned facts only).
+    ...(site && codeOwnsFacts(brief) ? claimScopeSpecs(brief, data, codeOwnedFactTemplates() as OwnerFactTemplates) : {}),
     // M2b.1h: pitch-first pages may restate the promise in fresh words; every research page blocks verbatim repeats.
     ...(site ? { promiseRestatement: pitchFirstPage(brief), phraseRepeatFields: researchedRenderedFieldsFor(brief.page.pageClass) } : {}),
     // Copy v2 slice 6: the code-built Q&A items and every pool question are code-owned; the lead is not the model's.
