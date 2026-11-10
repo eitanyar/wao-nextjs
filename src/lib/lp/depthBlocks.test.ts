@@ -40,6 +40,11 @@ import { renderResearchedSitePages, researchedGatedFieldsFor, researchedRendered
 import { RESEARCHED_SITE_LABELS } from './researchedSiteLabels';
 import { VERTICAL_ASSETS } from './verticalAssets';
 import { VERTICAL_THEMES } from './verticalThemes';
+import { setOwnerFactTemplatesForTests } from './ownerFactCopy';
+
+// Copy v2 (2026-11-10): these tests cover the model-written v1 path (kept for the A/B and as the pending fallback), so the
+// fact templates are forced pending here. The live code-owned path: ownerFactWiring, promptV2, factRestatement, repetitionBudget.
+setOwnerFactTemplatesForTests(null);
 
 const HEBREW = /[\u0590-\u05FF]/;
 type Loose = Record<string, unknown>;

@@ -37,6 +37,11 @@ import { VERTICAL_ASSETS } from './verticalAssets';
 import type { SiteCopy } from './lpCopyPrompt';
 import type { PageBrief } from '../site-bot/research/pageBrief';
 import type { CollectedData } from '../bot/prompts';
+import { setOwnerFactTemplatesForTests } from './ownerFactCopy';
+
+// Copy v2 (2026-11-10): these tests cover the model-written v1 path (kept for the A/B and as the pending fallback), so the
+// fact templates are forced pending here. The live code-owned path: ownerFactWiring, promptV2, factRestatement, repetitionBudget.
+setOwnerFactTemplatesForTests(null);
 
 const ROOT = path.resolve(__dirname, '../../..');
 const RLM = '\u200F';

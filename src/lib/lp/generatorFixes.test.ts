@@ -50,6 +50,11 @@ import { HE_TODO_PREFIX, RESEARCHED_SITE_LABELS } from './researchedSiteLabels';
 import { renderResearchedSitePages, type PricingCopy, type ResearchedSitePage } from './researchedSite';
 import { VERTICAL_ASSETS } from './verticalAssets';
 import { VERTICAL_THEMES } from './verticalThemes';
+import { setOwnerFactTemplatesForTests } from './ownerFactCopy';
+
+// Copy v2 (2026-11-10): these tests cover the model-written v1 path (kept for the A/B and as the pending fallback), so the
+// fact templates are forced pending here. The live code-owned path: ownerFactWiring, promptV2, factRestatement, repetitionBudget.
+setOwnerFactTemplatesForTests(null);
 
 const HEBREW = /[\u0590-\u05FF]/;
 const W = ['\u05D0\u05D1\u05D2', '\u05D3\u05D4\u05D5', '\u05D6\u05D7\u05D8', '\u05D9\u05DB\u05DC', '\u05DE\u05E0\u05E1', '\u05E2\u05E4\u05E6'];

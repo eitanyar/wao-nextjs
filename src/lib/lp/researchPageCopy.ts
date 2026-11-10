@@ -1475,7 +1475,8 @@ export function factRestatementSpec(brief: PageBrief, data: CollectedData, templ
     const wording = parsed.license?.kind === 'license' ? [parsed.license.slots.license] : [];
     facts.push({ kind: 'license', digits: digitRunsOf(data.license, 3), phrases: [...(CLAIM_TOKENS.license_grade ?? []), ...wording] });
   }
-  if (answered(data.responseTime)) facts.push({ kind: 'response', digits: digitRunsOf(data.responseTime, 2), phrases: [] });
+  // A same-day answer is shown as the same-day chip: its words are not restated either.
+  if (answered(data.responseTime)) facts.push({ kind: 'response', digits: digitRunsOf(data.responseTime, 2), phrases: parsed.response?.slots.sameDay === '1' ? templates.parseSameDayWords : [] });
   const pricing = ownerPricing(data);
   const amounts = [...(pricing.calloutFee !== null ? [pricing.calloutFee] : []), ...pricing.startingPrices.map(item => item.from)];
   if (amounts.length) {

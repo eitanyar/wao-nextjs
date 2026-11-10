@@ -17,6 +17,11 @@ import {
 import type { SiteCopy } from './lpCopyPrompt';
 import { primaryCtaLabel } from './lpCopyPrompt';
 import type { PageBrief } from '../site-bot/research/pageBrief';
+import { setOwnerFactTemplatesForTests } from './ownerFactCopy';
+
+// Copy v2 (2026-11-10): these tests cover the model-written v1 path (kept for the A/B and as the pending fallback), so the
+// fact templates are forced pending here. The live code-owned path: ownerFactWiring, promptV2, factRestatement, repetitionBudget.
+setOwnerFactTemplatesForTests(null);
 
 const VAV = '\u05D5';
 const BET = '\u05D1';

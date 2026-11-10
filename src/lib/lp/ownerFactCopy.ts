@@ -19,7 +19,7 @@ import type { CollectedData } from '../bot/prompts';
 import type { PageBrief } from '../site-bot/research/pageBrief';
 import { buildAreaTile, codePointLength, isMostlyHebrew } from './copyGates';
 import { DEPTH_BLOCK_LIMITS, wordCount, type DepthProofItem } from './depthBlocks';
-import { TRUST_BAR_MAX_CHARS, TRUST_BAR_MAX_ITEMS } from './generationData';
+import { FIX_TIME_LEAD_TOKENS, TRUST_BAR_MAX_CHARS, TRUST_BAR_MAX_ITEMS } from './generationData';
 import { PREFIX_LETTERS } from './hebrewPrefixLetters';
 import { HE_TODO_PREFIX } from './researchedSiteLabels';
 
@@ -29,44 +29,72 @@ export const FACT_TEMPLATES_SOURCE = 'docs/copy/site-bot-fact-templates-2026-11-
 /**
  * Template strings: key -> the slots the patched text must carry (every slot, and no other). A key with no slots is a
  * fixed phrase. Trust items must fit TRUST_BAR_MAX_CHARS once filled; proof items are full first-person sentences.
+ * Noa's code rules (2026-11-10, with the templates): branch on n / count (One / Two / N keys), never fill a same-day answer
+ * into a duration slot, proofLicense only for licence text that opens with a document noun, verbatim slots lose their
+ * trailing punctuation (the template closes the sentence), verbatim / licence-number chips at most VERBATIM_CHIP_MAX_CHARS.
  */
 export const FACT_TEMPLATE_SLOTS = {
-  // Trust bar (bare noun phrases, no verb unless the meaning needs one, e.g. "arrives within {time}").
-  /** "{n} years in the trade" (the single site term). */
+  // Trust bar (bare noun phrases).
+  /** "{n} years in the trade" (n >= 3; the single site term). */
   trustYears: ['{n}'],
+  /** "one year in the trade" (n = 1). */
+  trustYearsOne: [],
+  /** "two years in the trade" (n = 2, dual form). */
+  trustYearsTwo: [],
   /** The owner's Hebrew licence wording, verbatim. */
   trustLicense: ['{license}'],
   /** "licence no. {number}" when the owner gave only a number. */
   trustLicenseNumber: ['{number}'],
-  /** "{duration} warranty", bare form (C4: no lamed in the trust bar); {duration} from the warrantyBare* set. */
+  /** "{duration} warranty", bare form (C4); {duration} from the warrantyBare* set. */
   trustWarranty: ['{duration}'],
-  /** A Hebrew warranty answer the parser could not read, verbatim (the owner's text usually already says "warranty"). */
+  /** A Hebrew warranty answer the parser could not read, verbatim. */
   trustWarrantyVerbatim: ['{warranty}'],
-  /** "arrives within {time}"; {time} from the response* set. */
+  /** "arrives within {time}"; {time} from the response* set (never the same-day phrase). */
   trustResponse: ['{time}'],
-  /** "{rating} stars from {count} reviews". */
+  /** "arrives the same day" (a same-day answer). */
+  trustResponseSameDay: [],
+  /** "{rating} stars from {count} reviews" (count >= 2). */
   trustRating: ['{rating}', '{count}'],
+  /** "{rating} stars from one review" (count = 1). */
+  trustRatingOneReview: ['{rating}'],
   /** "{rating} stars" (a rating with no review count). */
   trustRatingNoCount: ['{rating}'],
   // B6 proof items (full sentences, first person singular).
   proofYears: ['{n}'],
+  proofYearsOne: [],
+  proofYearsTwo: [],
+  /** "I have {license}." Only for licence text that opens with a document noun (LICENSE_DOCUMENT_NOUNS). */
   proofLicense: ['{license}'],
+  /** "{license}." Any other Hebrew licence text. */
+  proofLicenseVerbatim: ['{license}'],
   proofLicenseNumber: ['{number}'],
   /** Warranty sentence with the lamed form (C4); {duration} from the warrantyLamed* set. */
   proofWarranty: ['{duration}'],
   proofWarrantyVerbatim: ['{warranty}'],
   proofResponse: ['{time}'],
-  // Warranty durations: bare (trust bar) and with lamed (proof sentence).
+  proofResponseSameDay: [],
+  // Warranty durations: bare (trust bar) and with lamed (proof sentence). Months 1 / 2 / 6 and years 1 / 1.5 / 2 have their
+  // own forms; other whole years are NYears, other months NMonths.
+  warrantyBareOneMonth: [],
+  warrantyBareTwoMonths: [],
+  warrantyBareNMonths: ['{n}'],
   warrantyBareSixMonths: [],
   warrantyBareOneYear: [],
+  warrantyBareOneAndHalfYears: [],
   warrantyBareTwoYears: [],
   warrantyBareNYears: ['{n}'],
+  warrantyLamedOneMonth: [],
+  warrantyLamedTwoMonths: [],
+  warrantyLamedNMonths: ['{n}'],
   warrantyLamedSixMonths: [],
   warrantyLamedOneYear: [],
+  warrantyLamedOneAndHalfYears: [],
   warrantyLamedTwoYears: [],
   warrantyLamedNYears: ['{n}'],
   // Response times (the {time} slot of trustResponse / proofResponse).
+  responseOneMinute: [],
   responseMinutes: ['{n}'],
+  responseHalfHour: [],
   responseOneHour: [],
   responseTwoHours: [],
   responseHours: ['{n}'],
@@ -76,14 +104,15 @@ export type FactTemplateKey = keyof typeof FACT_TEMPLATE_SLOTS;
 
 /**
  * Parse token lists (Hebrew words the parser needs to read a Hebrew owner answer; each list non-empty). Matched as whole
- * words, with up to two attached prefix letters. English unit words are parsed in code (ASCII).
+ * words, with at most ONE attached prefix letter stripped (the letters the lexicon itself attaches; parsePrefixLetters).
+ * English unit words are parsed in code (ASCII).
  */
 export const FACT_PARSE_TOKEN_KEYS = [
   /** Minutes, with a number ("20 minutes"). */
   'parseMinuteWords',
   /** Hours, plural, with a number ("3 hours"). */
   'parseHourWords',
-  /** "an hour" (one word, no number). */
+  /** "an hour" (one word, no number; counts only right after a "within" word). */
   'parseOneHourWords',
   /** "two hours" (dual form, no number). */
   'parseTwoHourWords',
@@ -91,64 +120,156 @@ export const FACT_PARSE_TOKEN_KEYS = [
   'parseHalfHourWords',
   /** Months, with a number ("6 months"). */
   'parseMonthWords',
-  /** Years, with a number ("3 years"; include the singular form used after numbers above 10). */
+  /** "a month" (no number). */
+  'parseOneMonthWords',
+  /** "two months" (dual form, no number). */
+  'parseTwoMonthWords',
+  /** Years, with a number ("3 years"; the singular form used after numbers above 10 too). */
   'parseYearWords',
   /** "a year" (one word, no number). */
   'parseOneYearWords',
+  /** "a year and a half". */
+  'parseOneAndHalfYearWords',
   /** "two years" (dual form, no number). */
   'parseTwoYearWords',
   /** "half a year". */
   'parseHalfYearWords',
   /** Words that may stand next to a licence number in a number-only answer ("no.", "number", "licence"). */
   'parseLicenseNumberWords',
+  /** A response answer that means "the same day". */
+  'parseSameDayWords',
 ] as const;
 
 export type FactParseTokenKey = (typeof FACT_PARSE_TOKEN_KEYS)[number];
 
-export type OwnerFactTemplates = Readonly<Record<FactTemplateKey, string> & Record<FactParseTokenKey, readonly string[]>>;
+/** Template keys the loader accepts but never requires (absent = not used). responseSameDay is never a {time} value. */
+export const FACT_OPTIONAL_TEMPLATE_KEYS = [
+  'responseSameDay',
+] as const;
+export type FactOptionalTemplateKey = (typeof FACT_OPTIONAL_TEMPLATE_KEYS)[number];
+
+export type OwnerFactTemplates = Readonly<Record<FactTemplateKey, string> & Record<FactParseTokenKey, readonly string[]> & Partial<Record<FactOptionalTemplateKey, string>>>;
 
 /** Every key the template file must hold, in file order (templates, then parse token lists). */
 export const FACT_TEMPLATE_KEYS: readonly string[] = [...Object.keys(FACT_TEMPLATE_SLOTS), ...FACT_PARSE_TOKEN_KEYS];
 
 // BEGIN OWNER_FACT_TEMPLATES (written by scripts/apply-fact-templates.mjs from FACT_TEMPLATES_SOURCE; never hand-edit)
 export const OWNER_FACT_TEMPLATES: OwnerFactTemplates = {
-  "trustYears": "__HE_TODO_trustYears__",
-  "trustLicense": "__HE_TODO_trustLicense__",
-  "trustLicenseNumber": "__HE_TODO_trustLicenseNumber__",
-  "trustWarranty": "__HE_TODO_trustWarranty__",
-  "trustWarrantyVerbatim": "__HE_TODO_trustWarrantyVerbatim__",
-  "trustResponse": "__HE_TODO_trustResponse__",
-  "trustRating": "__HE_TODO_trustRating__",
-  "trustRatingNoCount": "__HE_TODO_trustRatingNoCount__",
-  "proofYears": "__HE_TODO_proofYears__",
-  "proofLicense": "__HE_TODO_proofLicense__",
-  "proofLicenseNumber": "__HE_TODO_proofLicenseNumber__",
-  "proofWarranty": "__HE_TODO_proofWarranty__",
-  "proofWarrantyVerbatim": "__HE_TODO_proofWarrantyVerbatim__",
-  "proofResponse": "__HE_TODO_proofResponse__",
-  "warrantyBareSixMonths": "__HE_TODO_warrantyBareSixMonths__",
-  "warrantyBareOneYear": "__HE_TODO_warrantyBareOneYear__",
-  "warrantyBareTwoYears": "__HE_TODO_warrantyBareTwoYears__",
-  "warrantyBareNYears": "__HE_TODO_warrantyBareNYears__",
-  "warrantyLamedSixMonths": "__HE_TODO_warrantyLamedSixMonths__",
-  "warrantyLamedOneYear": "__HE_TODO_warrantyLamedOneYear__",
-  "warrantyLamedTwoYears": "__HE_TODO_warrantyLamedTwoYears__",
-  "warrantyLamedNYears": "__HE_TODO_warrantyLamedNYears__",
-  "responseMinutes": "__HE_TODO_responseMinutes__",
-  "responseOneHour": "__HE_TODO_responseOneHour__",
-  "responseTwoHours": "__HE_TODO_responseTwoHours__",
-  "responseHours": "__HE_TODO_responseHours__",
-  "parseMinuteWords": ["__HE_TODO_parseMinuteWords__"],
-  "parseHourWords": ["__HE_TODO_parseHourWords__"],
-  "parseOneHourWords": ["__HE_TODO_parseOneHourWords__"],
-  "parseTwoHourWords": ["__HE_TODO_parseTwoHourWords__"],
-  "parseHalfHourWords": ["__HE_TODO_parseHalfHourWords__"],
-  "parseMonthWords": ["__HE_TODO_parseMonthWords__"],
-  "parseYearWords": ["__HE_TODO_parseYearWords__"],
-  "parseOneYearWords": ["__HE_TODO_parseOneYearWords__"],
-  "parseTwoYearWords": ["__HE_TODO_parseTwoYearWords__"],
-  "parseHalfYearWords": ["__HE_TODO_parseHalfYearWords__"],
-  "parseLicenseNumberWords": ["__HE_TODO_parseLicenseNumberWords__"]
+  "trustYears": "{n} שנים במקצוע",
+  "trustYearsOne": "שנה במקצוע",
+  "trustYearsTwo": "שנתיים במקצוע",
+  "trustLicense": "{license}",
+  "trustLicenseNumber": "רישיון מס׳ {number}",
+  "trustWarranty": "אחריות {duration}",
+  "trustWarrantyVerbatim": "{warranty}",
+  "trustResponse": "הגעה תוך {time}",
+  "trustResponseSameDay": "הגעה באותו יום",
+  "trustRating": "{rating} ★ · {count} ביקורות",
+  "trustRatingOneReview": "{rating} ★ · ביקורת אחת",
+  "trustRatingNoCount": "{rating} ★",
+  "proofYears": "אני במקצוע כבר {n} שנים.",
+  "proofYearsOne": "אני במקצוע כבר שנה.",
+  "proofYearsTwo": "אני במקצוע כבר שנתיים.",
+  "proofLicense": "יש לי {license}.",
+  "proofLicenseVerbatim": "{license}.",
+  "proofLicenseNumber": "יש לי רישיון מס׳ {number}.",
+  "proofWarranty": "על כל עבודה יש אחריות {duration}.",
+  "proofWarrantyVerbatim": "{warranty}.",
+  "proofResponse": "אני אצלך תוך {time}.",
+  "proofResponseSameDay": "אני אצלך עוד באותו יום.",
+  "warrantyBareOneMonth": "חודש",
+  "warrantyBareTwoMonths": "חודשיים",
+  "warrantyBareNMonths": "{n} חודשים",
+  "warrantyBareSixMonths": "חצי שנה",
+  "warrantyBareOneYear": "שנה",
+  "warrantyBareOneAndHalfYears": "שנה וחצי",
+  "warrantyBareTwoYears": "שנתיים",
+  "warrantyBareNYears": "{n} שנים",
+  "warrantyLamedOneMonth": "לחודש",
+  "warrantyLamedTwoMonths": "לחודשיים",
+  "warrantyLamedNMonths": "ל־{n} חודשים",
+  "warrantyLamedSixMonths": "לחצי שנה",
+  "warrantyLamedOneYear": "לשנה",
+  "warrantyLamedOneAndHalfYears": "לשנה וחצי",
+  "warrantyLamedTwoYears": "לשנתיים",
+  "warrantyLamedNYears": "ל־{n} שנים",
+  "responseOneMinute": "דקה",
+  "responseMinutes": "{n} דקות",
+  "responseHalfHour": "חצי שעה",
+  "responseOneHour": "שעה",
+  "responseTwoHours": "שעתיים",
+  "responseHours": "{n} שעות",
+  "parseMinuteWords": [
+    "דקות",
+    "דקה",
+    "דק׳",
+    "דק'"
+  ],
+  "parseHourWords": [
+    "שעות",
+    "שעה",
+    "שע׳",
+    "שע'"
+  ],
+  "parseOneHourWords": [
+    "שעה"
+  ],
+  "parseTwoHourWords": [
+    "שעתיים"
+  ],
+  "parseHalfHourWords": [
+    "חצי שעה"
+  ],
+  "parseMonthWords": [
+    "חודשים",
+    "חודש"
+  ],
+  "parseOneMonthWords": [
+    "חודש",
+    "לחודש"
+  ],
+  "parseTwoMonthWords": [
+    "חודשיים",
+    "לחודשיים"
+  ],
+  "parseYearWords": [
+    "שנים",
+    "שנה"
+  ],
+  "parseOneYearWords": [
+    "שנה",
+    "לשנה"
+  ],
+  "parseOneAndHalfYearWords": [
+    "שנה וחצי",
+    "לשנה וחצי"
+  ],
+  "parseTwoYearWords": [
+    "שנתיים",
+    "לשנתיים"
+  ],
+  "parseHalfYearWords": [
+    "חצי שנה",
+    "לחצי שנה"
+  ],
+  "parseLicenseNumberWords": [
+    "מס׳",
+    "מס'",
+    "מס.",
+    "מס",
+    "מספר"
+  ],
+  "parseSameDayWords": [
+    "באותו יום",
+    "אותו יום",
+    "באותו היום",
+    "עוד באותו יום",
+    "עוד היום",
+    "עד סוף היום",
+    "ביום הפנייה",
+    "ביום הקריאה"
+  ],
+  "responseSameDay": "אותו יום"
 };
 // END OWNER_FACT_TEMPLATES
 
@@ -176,6 +297,12 @@ export function factTemplateProblems(templates: unknown): string[] {
     const value = record[key];
     if (!Array.isArray(value) || value.length === 0) { problems.push(`${key}:missing`); continue; }
     if (value.some(item => typeof item !== 'string' || !item.trim() || item.includes(HE_TODO_PREFIX))) problems.push(`${key}:pending`);
+  }
+  // Optional keys: absent is fine; present must be a filled fixed phrase.
+  for (const key of FACT_OPTIONAL_TEMPLATE_KEYS) {
+    if (!(key in record)) continue;
+    const value = record[key];
+    if (typeof value !== 'string' || !value.trim() || value.includes(HE_TODO_PREFIX) || templateSlots(value).length) problems.push(`${key}:optional`);
   }
   return problems;
 }
@@ -209,6 +336,8 @@ export function setOwnerFactTemplatesForTests(templates: OwnerFactTemplates | nu
 
 /** Longest owner text accepted verbatim (licence wording, an unparsed warranty); longer text is dropped, never cut. */
 export const OWNER_FACT_VERBATIM_MAX_CHARS = 60;
+/** Noa's length guard: a licence-number or verbatim trust chip longer than this is dropped (never cut). */
+export const VERBATIM_CHIP_MAX_CHARS = 24;
 /** Years in the trade accepted from the owner (anything else is treated as not given). */
 export const OWNER_YEARS_MAX = 70;
 /** Longest response time accepted, in minutes (48 hours). */
@@ -222,7 +351,10 @@ export type OwnerFactSource = 'parsed' | 'verbatim';
 export interface OwnerFact {
   kind: OwnerFactKind;
   source: OwnerFactSource;
-  /** Slot values (without braces), e.g. { n: '15' }. */
+  /**
+   * Slot values (without braces), e.g. { n: '15' }. Response: { minutes } (with form 'halfHour' when the owner said "half
+   * an hour") or { sameDay: '1' }.
+   */
   slots: Readonly<Record<string, string>>;
   /** The CollectedData key the fact came from (null for the area, which comes from the brief). */
   dataKey: keyof CollectedData | null;
@@ -258,14 +390,35 @@ function integers(value: string): number[] {
   return (value.match(/\d+(?:[.,]\d+)?/g) ?? []).map(part => Number(part.replace(',', '.')));
 }
 
-/** A whole-word token test with up to two attached prefix letters (Hebrew) or a plain word boundary (Latin). */
-function hasToken(value: string, tokens: readonly string[]): boolean {
-  return tokens.some(token => {
-    const word = token.trim();
-    if (!word) return false;
-    const pattern = new RegExp(`(?<![${HEBREW_LETTER}A-Za-z])[${PREFIX_LETTERS}]{0,2}${escapeRegExp(word)}(?![${HEBREW_LETTER}A-Za-z])`, 'u');
-    return pattern.test(value);
-  });
+const PREFIX_CACHE = new WeakMap<object, string>();
+
+/**
+ * Noa: at most ONE leading prefix letter is stripped before whole-word matching, and only the letters the lexicon itself
+ * attaches (taken from the template file by slicing, never typed): every parse word that is another parse word with one
+ * prefix letter in front gives that letter (the lamed of the "for a year" form, for example). Empty for a lexicon with no such pair (ASCII stand-ins).
+ */
+export function parsePrefixLetters(templates: OwnerFactTemplates): string {
+  const cached = PREFIX_CACHE.get(templates);
+  if (cached !== undefined) return cached;
+  const words = new Set(FACT_PARSE_TOKEN_KEYS.flatMap(key => templates[key]).flatMap(item => item.normalize('NFC').split(/\s+/u)).filter(Boolean));
+  const letters = new Set<string>();
+  for (const word of words) {
+    const head = word[0];
+    if (word.length > 2 && PREFIX_LETTERS.includes(head) && words.has(word.slice(1))) letters.add(head);
+  }
+  const out = [...letters].sort().join('');
+  PREFIX_CACHE.set(templates, out);
+  return out;
+}
+
+function wordRegExp(word: string, prefixes: string, flags = 'iu'): RegExp {
+  const prefix = prefixes ? `[${prefixes}]?` : '';
+  return new RegExp(`(?<![${HEBREW_LETTER}A-Za-z])${prefix}${escapeRegExp(word.normalize('NFC'))}(?![${HEBREW_LETTER}A-Za-z])`, flags);
+}
+
+/** A whole-word token test, at most one stripped prefix letter (Hebrew) or a plain word boundary (Latin). */
+function hasToken(value: string, tokens: readonly string[], prefixes: string): boolean {
+  return tokens.some(token => token.trim() !== '' && wordRegExp(token.trim(), prefixes).test(value));
 }
 
 /** "a number followed by a unit word" for any of the unit tokens (Hebrew lists from the templates, English in code). */
@@ -279,6 +432,13 @@ function numberWithUnit(value: string, tokens: readonly string[]): number | null
   return null;
 }
 
+/** Noa: a bare unit word ("hour", "minute") counts only right after a "within" word (FIX_TIME_LEAD_TOKENS), one word apart at most. */
+function afterWithin(value: string, tokens: readonly string[], prefixes: string): boolean {
+  const prefix = prefixes ? `[${prefixes}]?` : '';
+  return FIX_TIME_LEAD_TOKENS.some(lead => tokens.some(token => token.trim() && new RegExp(
+    `(?<![${HEBREW_LETTER}])${escapeRegExp(lead)}\\s+(?:\\S+\\s+)?${prefix}${escapeRegExp(token.trim())}(?![${HEBREW_LETTER}])`, 'u').test(value)));
+}
+
 const EN = {
   minutes: ['minutes', 'minute', 'mins', 'min'],
   hours: ['hours', 'hour', 'hrs', 'hr', 'h'],
@@ -286,10 +446,14 @@ const EN = {
   twoHours: [],
   halfHour: ['half an hour', 'half hour'],
   months: ['months', 'month', 'mos', 'mo'],
+  oneMonth: ['a month'],
+  twoMonths: [],
   years: ['years', 'year', 'yrs', 'yr'],
   oneYear: ['a year'],
+  oneAndHalfYears: ['a year and a half', 'one and a half years', 'year and a half'],
   twoYears: [],
   halfYear: ['half a year', 'half year'],
+  sameDay: ['same day', 'same-day', 'the same day'],
   licenseNumber: ['license', 'licence', 'lic', 'no', 'number', 'num', 'nr'],
 } as const;
 
@@ -298,51 +462,86 @@ const EN_NUMBER_WORDS: Readonly<Record<string, string>> = {
   one: '1', two: '2', three: '3', four: '4', five: '5', six: '6', seven: '7', eight: '8', nine: '9', ten: '10', eleven: '11', twelve: '12',
 };
 function withEnglishDigits(value: string): string {
-  return value.replace(/\b(one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve)\b/gi, word => EN_NUMBER_WORDS[word.toLowerCase()]);
+  // "one and a half" stays words (it is a phrase of its own, matched before the numbers).
+  return value.replace(/\b(one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve)\b(?! and a half)/gi, word => EN_NUMBER_WORDS[word.toLowerCase()]);
 }
 
-/** Years in the trade: the one integer in the answer, 1 to OWNER_YEARS_MAX (any language). */
-export function parseYears(value: unknown): number | null {
+/**
+ * Years in the trade: the one integer in the answer, 1 to OWNER_YEARS_MAX (any language). With the templates, a Hebrew
+ * answer with no digits reads its dual ("two years") and bare ("a year") words (never "a year and a half" or "half a year").
+ */
+export function parseYears(value: unknown, templates?: OwnerFactTemplates): number | null {
   const raw = withEnglishDigits(text(value));
   const numbers = integers(raw);
+  if (numbers.length === 0 && templates) {
+    const prefixes = parsePrefixLetters(templates);
+    if (hasToken(raw, [...templates.parseOneAndHalfYearWords, ...templates.parseHalfYearWords], prefixes)) return null;
+    if (hasToken(raw, templates.parseTwoYearWords, prefixes)) return 2;
+    if (hasToken(raw, templates.parseOneYearWords, prefixes)) return 1;
+    return null;
+  }
   if (numbers.length !== 1 || !Number.isInteger(numbers[0])) return null;
   return numbers[0] >= 1 && numbers[0] <= OWNER_YEARS_MAX ? numbers[0] : null;
 }
 
-/** Response time in minutes (any language), or null when the answer is not one clear duration. */
-export function parseResponseMinutes(value: unknown, templates: OwnerFactTemplates): number | null {
+/** A parsed response answer: a duration in minutes (form halfHour when said as "half an hour") or the same day. */
+export type ParsedResponse = { minutes: number; form?: 'halfHour' } | { sameDay: true };
+
+/**
+ * Response time (any language). Noa's order, most specific first: half an hour, two hours, a number with its unit, a bare
+ * hour / minute word right after "within", then the same-day words. Null when the answer is not one clear answer.
+ */
+export function parseResponse(value: unknown, templates: OwnerFactTemplates): ParsedResponse | null {
   const raw = withEnglishDigits(text(value));
   if (!raw) return null;
+  const prefixes = parsePrefixLetters(templates);
   const numbers = integers(raw);
+  const ok = (minutes: number): number | null => (minutes > 0 && minutes <= OWNER_RESPONSE_MAX_MINUTES ? minutes : null);
+  if (hasToken(raw, [...templates.parseHalfHourWords, ...EN.halfHour], prefixes)) return numbers.length ? null : { minutes: 30, form: 'halfHour' };
+  if (hasToken(raw, [...templates.parseTwoHourWords, ...EN.twoHours], prefixes)) return numbers.length ? null : { minutes: 120 };
   if (numbers.length > 1 || numbers.some(number => !Number.isInteger(number))) return null;
-  let minutes: number | null = null;
   if (numbers.length === 1) {
     const asMinutes = numberWithUnit(raw, [...templates.parseMinuteWords, ...EN.minutes]);
     const asHours = numberWithUnit(raw, [...templates.parseHourWords, ...EN.hours]);
-    if (asMinutes !== null && asHours === null) minutes = asMinutes;
-    else if (asHours !== null && asMinutes === null) minutes = asHours * 60;
-  } else if (hasToken(raw, [...templates.parseHalfHourWords, ...EN.halfHour])) minutes = 30;
-  else if (hasToken(raw, [...templates.parseTwoHourWords, ...EN.twoHours])) minutes = 120;
-  else if (hasToken(raw, [...templates.parseOneHourWords, ...EN.oneHour])) minutes = 60;
-  return minutes !== null && minutes > 0 && minutes <= OWNER_RESPONSE_MAX_MINUTES ? minutes : null;
+    const minutes = asMinutes !== null && asHours === null ? ok(asMinutes) : asHours !== null && asMinutes === null ? ok(asHours * 60) : null;
+    return minutes === null ? null : { minutes };
+  }
+  if (afterWithin(raw, templates.parseOneHourWords, prefixes) || hasToken(raw, EN.oneHour, '')) return { minutes: 60 };
+  if (afterWithin(raw, templates.parseMinuteWords, prefixes)) return { minutes: 1 };
+  if (hasToken(raw, [...templates.parseSameDayWords, ...EN.sameDay], prefixes)) return { sameDay: true };
+  return null;
 }
 
-/** Warranty length in months (any language), or null when the answer is not one clear duration. */
+/** Response time in minutes (any language), or null (also for a same-day answer, which has no duration). */
+export function parseResponseMinutes(value: unknown, templates: OwnerFactTemplates): number | null {
+  const parsed = parseResponse(value, templates);
+  return parsed && 'minutes' in parsed ? parsed.minutes : null;
+}
+
+/**
+ * Warranty length in months (any language), or null. Noa's order, most specific first: a year and a half, half a year,
+ * two years, two months, a number with its unit, then the bare year / month words.
+ */
 export function parseWarrantyMonths(value: unknown, templates: OwnerFactTemplates): number | null {
   const raw = withEnglishDigits(text(value));
   if (!raw) return null;
+  const prefixes = parsePrefixLetters(templates);
   const numbers = integers(raw);
+  const ok = (months: number): number | null => (months > 0 && months <= OWNER_WARRANTY_MAX_MONTHS ? months : null);
+  const phrase = (tokens: readonly string[]) => hasToken(raw, tokens, prefixes);
+  if (phrase([...templates.parseOneAndHalfYearWords, ...EN.oneAndHalfYears])) return numbers.length ? null : 18;
+  if (phrase([...templates.parseHalfYearWords, ...EN.halfYear])) return numbers.length ? null : 6;
+  if (phrase([...templates.parseTwoYearWords, ...EN.twoYears])) return numbers.length ? null : 24;
+  if (phrase([...templates.parseTwoMonthWords, ...EN.twoMonths])) return numbers.length ? null : 2;
   if (numbers.length > 1 || numbers.some(number => !Number.isInteger(number))) return null;
-  let months: number | null = null;
   if (numbers.length === 1) {
     const asMonths = numberWithUnit(raw, [...templates.parseMonthWords, ...EN.months]);
     const asYears = numberWithUnit(raw, [...templates.parseYearWords, ...EN.years]);
-    if (asMonths !== null && asYears === null) months = asMonths;
-    else if (asYears !== null && asMonths === null) months = asYears * 12;
-  } else if (hasToken(raw, [...templates.parseHalfYearWords, ...EN.halfYear])) months = 6;
-  else if (hasToken(raw, [...templates.parseTwoYearWords, ...EN.twoYears])) months = 24;
-  else if (hasToken(raw, [...templates.parseOneYearWords, ...EN.oneYear])) months = 12;
-  return months !== null && months > 0 && months <= OWNER_WARRANTY_MAX_MONTHS ? months : null;
+    return asMonths !== null && asYears === null ? ok(asMonths) : asYears !== null && asMonths === null ? ok(asYears * 12) : null;
+  }
+  if (phrase([...templates.parseOneYearWords, ...EN.oneYear])) return 12;
+  if (phrase([...templates.parseOneMonthWords, ...EN.oneMonth])) return 1;
+  return null;
 }
 
 /** A licence answer that is only a number (with optional "no." / "licence" words): the number, else null. */
@@ -351,8 +550,9 @@ export function parseLicenseNumber(value: unknown, templates: OwnerFactTemplates
   const digits = raw.match(/\d[\d-]*\d|\d/g) ?? [];
   if (digits.length !== 1 || digits[0].replace(/-/g, '').length < 3) return null;
   let rest = raw.replace(digits[0], ' ');
+  const prefixes = parsePrefixLetters(templates);
   for (const word of [...templates.parseLicenseNumberWords, ...EN.licenseNumber].map(item => item.trim()).filter(Boolean).sort((a, b) => b.length - a.length)) {
-    rest = rest.replace(new RegExp(`(?<![${HEBREW_LETTER}A-Za-z])[${PREFIX_LETTERS}]{0,2}${escapeRegExp(word)}(?![${HEBREW_LETTER}A-Za-z])`, 'giu'), ' ');
+    rest = rest.replace(new RegExp(wordRegExp(word, prefixes).source, 'giu'), ' ');
   }
   return /[\p{L}]/u.test(rest) ? null : digits[0];
 }
@@ -371,10 +571,32 @@ export function parseReviewCount(value: unknown): number | null {
   return Number.isInteger(number) && number > 0 && number <= 100_000 ? number : null;
 }
 
-/** Owner text that may render verbatim: mostly Hebrew and within OWNER_FACT_VERBATIM_MAX_CHARS. */
+/** Noa: a verbatim slot loses its trailing punctuation (the templates close the sentence themselves). */
+export function stripTrailingPunctuation(value: string): string {
+  return value.replace(/[\s.,;:!?…\u05C3]+$/u, '');
+}
+
+/** Owner text that may render verbatim: mostly Hebrew and within OWNER_FACT_VERBATIM_MAX_CHARS, trailing punctuation removed. */
 export function verbatimHebrew(value: unknown): string | null {
-  const raw = text(value);
+  const raw = stripTrailingPunctuation(text(value));
   return raw && raw.length <= OWNER_FACT_VERBATIM_MAX_CHARS && isMostlyHebrew(raw) ? raw : null;
+}
+
+/**
+ * Noa: the document nouns (licence, certificate, certification, permit) that let a licence text take proofLicense ("I have
+ * {license}."). Sliced from the template file, never typed: the first word of trustLicenseNumber. Only the licence noun has
+ * a source today; any other Hebrew licence text takes proofLicenseVerbatim ("{license}."), which is always grammatical.
+ */
+export function licenseDocumentNouns(templates: OwnerFactTemplates): string[] {
+  const first = templates.trustLicenseNumber.replace(/\{[a-z]+\}/g, ' ').trim().split(/\s+/u)[0] ?? '';
+  return first && /[\u05D0-\u05EA]/u.test(first) ? [first.normalize('NFC')] : [];
+}
+
+/** True when a licence text opens with a document noun (one stripped prefix letter allowed). */
+export function opensWithDocumentNoun(license: string, templates: OwnerFactTemplates): boolean {
+  const first = license.normalize('NFC').trim().split(/\s+/u)[0] ?? '';
+  const prefixes = parsePrefixLetters(templates);
+  return licenseDocumentNouns(templates).some(noun => first === noun || (first.length > 1 && prefixes.includes(first[0]) && first.slice(1) === noun));
 }
 
 /** The brief's owner places, base city first (mirrors researchPageCopy.gatePlaces; kept here to avoid an import cycle). */
@@ -398,7 +620,7 @@ export function ownerFacts(data: CollectedData, brief: Pick<PageBrief, 'site' | 
   const fact = (kind: OwnerFactKind, source: OwnerFactSource, slots: Record<string, string>, dataKey: keyof CollectedData | null): OwnerFact => ({
     kind, source, slots, dataKey, factId: dataKey ? proofIdFor(brief, dataKey) : null,
   });
-  const years = parseYears(data.yearsInField);
+  const years = parseYears(data.yearsInField, templates);
   if (years !== null) facts.years = fact('years', 'parsed', { n: String(years) }, 'yearsInField');
   const licenseNumber = parseLicenseNumber(data.license, templates);
   const license = licenseNumber === null ? verbatimHebrew(data.license) : null;
@@ -410,8 +632,10 @@ export function ownerFacts(data: CollectedData, brief: Pick<PageBrief, 'site' | 
     const warranty = verbatimHebrew(data.guarantee);
     if (warranty !== null) facts.warranty = fact('warrantyVerbatim', 'verbatim', { warranty }, 'guarantee');
   }
-  const minutes = parseResponseMinutes(data.responseTime, templates);
-  if (minutes !== null) facts.response = fact('response', 'parsed', { minutes: String(minutes) }, 'responseTime');
+  const response = parseResponse(data.responseTime, templates);
+  if (response) {
+    facts.response = fact('response', 'parsed', 'sameDay' in response ? { sameDay: '1' } : { minutes: String(response.minutes), ...(response.form ? { form: response.form } : {}) }, 'responseTime');
+  }
   const rating = parseRating(data.starRating);
   if (rating !== null) {
     const count = parseReviewCount(data.reviewCount);
@@ -431,7 +655,7 @@ export function droppedOwnerFactKeys(data: CollectedData, templates: OwnerFactTe
   if (text(data.license) && parseLicenseNumber(data.license, templates) === null && verbatimHebrew(data.license) === null) out.push('license');
   const months = parseWarrantyMonths(data.guarantee, templates);
   if (text(data.guarantee) && !(months !== null && warrantyDurationKeys(months)) && verbatimHebrew(data.guarantee) === null) out.push('guarantee');
-  if (text(data.responseTime) && parseResponseMinutes(data.responseTime, templates) === null && !isMostlyHebrew(text(data.responseTime))) out.push('responseTime');
+  if (text(data.responseTime) && parseResponse(data.responseTime, templates) === null && !isMostlyHebrew(text(data.responseTime))) out.push('responseTime');
   return out;
 }
 
@@ -448,17 +672,29 @@ export function fillTemplate(template: string, slots: Readonly<Record<string, st
   }).replace(/\s+/g, ' ').trim();
 }
 
-/** The duration template keys of a warranty length (the fixed set), or null for any other length. */
+/**
+ * The duration template keys of a warranty length (Noa: months 1 / 2 / 6 and years 1 / 1.5 / 2 have their own forms;
+ * other whole years take NYears, any other number of months NMonths).
+ */
 export function warrantyDurationKeys(months: number): { bare: FactTemplateKey; lamed: FactTemplateKey; n?: number } | null {
+  if (!Number.isInteger(months) || months <= 0) return null;
+  if (months === 1) return { bare: 'warrantyBareOneMonth', lamed: 'warrantyLamedOneMonth' };
+  if (months === 2) return { bare: 'warrantyBareTwoMonths', lamed: 'warrantyLamedTwoMonths' };
   if (months === 6) return { bare: 'warrantyBareSixMonths', lamed: 'warrantyLamedSixMonths' };
   if (months === 12) return { bare: 'warrantyBareOneYear', lamed: 'warrantyLamedOneYear' };
+  if (months === 18) return { bare: 'warrantyBareOneAndHalfYears', lamed: 'warrantyLamedOneAndHalfYears' };
   if (months === 24) return { bare: 'warrantyBareTwoYears', lamed: 'warrantyLamedTwoYears' };
   if (months > 24 && months % 12 === 0) return { bare: 'warrantyBareNYears', lamed: 'warrantyLamedNYears', n: months / 12 };
-  return null;
+  return { bare: 'warrantyBareNMonths', lamed: 'warrantyLamedNMonths', n: months };
 }
 
-/** The {time} text of a response time in minutes (whole hours from 60 minutes up; minutes below or between). */
-export function responseTimeText(minutes: number, templates: OwnerFactTemplates): string {
+/**
+ * The {time} text of a parsed duration (Noa: 1 minute and half an hour have their own forms; 1 / 2 hours too; whole hours
+ * above 2 take responseHours, anything else responseMinutes). Never called for a same-day answer.
+ */
+export function responseTimeText(minutes: number, templates: OwnerFactTemplates, form?: string): string {
+  if (form === 'halfHour') return fillTemplate(templates.responseHalfHour, {});
+  if (minutes === 1) return fillTemplate(templates.responseOneMinute, {});
   if (minutes === 60) return fillTemplate(templates.responseOneHour, {});
   if (minutes === 120) return fillTemplate(templates.responseTwoHours, {});
   if (minutes > 120 && minutes % 60 === 0) return fillTemplate(templates.responseHours, { n: String(minutes / 60) });
@@ -467,20 +703,34 @@ export function responseTimeText(minutes: number, templates: OwnerFactTemplates)
 
 function durationText(fact: OwnerFact, form: 'bare' | 'lamed', templates: OwnerFactTemplates): string {
   const keys = warrantyDurationKeys(Number(fact.slots.months));
-  if (!keys) throw new Error('warranty fact without a duration in the fixed set');
+  if (!keys) throw new Error('warranty fact without a duration');
   return fillTemplate(templates[keys[form]], keys.n === undefined ? {} : { n: String(keys.n) });
+}
+
+/** Years: n = 1 / 2 have their own forms (Noa); n >= 3 fills the {n} template. */
+function yearsText(fact: OwnerFact, one: FactTemplateKey, two: FactTemplateKey, many: FactTemplateKey, templates: OwnerFactTemplates): string {
+  const n = Number(fact.slots.n);
+  return n === 1 ? fillTemplate(templates[one], {}) : n === 2 ? fillTemplate(templates[two], {}) : fillTemplate(templates[many], fact.slots);
+}
+
+function sameDay(fact: OwnerFact): boolean {
+  return fact.slots.sameDay === '1';
 }
 
 /** The trust-bar text of one fact (null when the kind has no trust form). */
 export function trustText(fact: OwnerFact, templates: OwnerFactTemplates): string | null {
   switch (fact.kind) {
-    case 'years': return fillTemplate(templates.trustYears, fact.slots);
+    case 'years': return yearsText(fact, 'trustYearsOne', 'trustYearsTwo', 'trustYears', templates);
     case 'license': return fillTemplate(templates.trustLicense, fact.slots);
     case 'licenseNumber': return fillTemplate(templates.trustLicenseNumber, fact.slots);
     case 'warranty': return fillTemplate(templates.trustWarranty, { duration: durationText(fact, 'bare', templates) });
     case 'warrantyVerbatim': return fillTemplate(templates.trustWarrantyVerbatim, fact.slots);
-    case 'response': return fillTemplate(templates.trustResponse, { time: responseTimeText(Number(fact.slots.minutes), templates) });
-    case 'rating': return fillTemplate(fact.slots.count ? templates.trustRating : templates.trustRatingNoCount, fact.slots);
+    case 'response': return sameDay(fact)
+      ? fillTemplate(templates.trustResponseSameDay, {})
+      : fillTemplate(templates.trustResponse, { time: responseTimeText(Number(fact.slots.minutes), templates, fact.slots.form) });
+    case 'rating': return fact.slots.count
+      ? fillTemplate(fact.slots.count === '1' ? templates.trustRatingOneReview : templates.trustRating, fact.slots.count === '1' ? { rating: fact.slots.rating } : fact.slots)
+      : fillTemplate(templates.trustRatingNoCount, fact.slots);
     case 'area': return fact.slots.area;
   }
 }
@@ -488,15 +738,20 @@ export function trustText(fact: OwnerFact, templates: OwnerFactTemplates): strin
 /** The B6 proof sentence of one fact (null when the kind has no proof form: rating, area). */
 export function proofText(fact: OwnerFact, templates: OwnerFactTemplates): string | null {
   switch (fact.kind) {
-    case 'years': return fillTemplate(templates.proofYears, fact.slots);
-    case 'license': return fillTemplate(templates.proofLicense, fact.slots);
+    case 'years': return yearsText(fact, 'proofYearsOne', 'proofYearsTwo', 'proofYears', templates);
+    case 'license': return fillTemplate(opensWithDocumentNoun(fact.slots.license, templates) ? templates.proofLicense : templates.proofLicenseVerbatim, fact.slots);
     case 'licenseNumber': return fillTemplate(templates.proofLicenseNumber, fact.slots);
     case 'warranty': return fillTemplate(templates.proofWarranty, { duration: durationText(fact, 'lamed', templates) });
     case 'warrantyVerbatim': return fillTemplate(templates.proofWarrantyVerbatim, fact.slots);
-    case 'response': return fillTemplate(templates.proofResponse, { time: responseTimeText(Number(fact.slots.minutes), templates) });
+    case 'response': return sameDay(fact)
+      ? fillTemplate(templates.proofResponseSameDay, {})
+      : fillTemplate(templates.proofResponse, { time: responseTimeText(Number(fact.slots.minutes), templates, fact.slots.form) });
     default: return null;
   }
 }
+
+/** Kinds whose trust chip carries owner text or a licence number: Noa's VERBATIM_CHIP_MAX_CHARS guard applies. */
+const GUARDED_CHIP_KINDS: readonly OwnerFactKind[] = ['license', 'licenseNumber', 'warrantyVerbatim'];
 
 /**
  * Trust-bar kind order (B2: years, credential, warranty, area, response). The rating is not a B2 kind; it sits after the
@@ -522,6 +777,7 @@ export function trustBarFromFacts(facts: OwnerFacts, options: FactPageOptions, t
     const fact = facts[kind];
     if (!fact || (kind === 'response' && options.installPage)) continue;
     const item = trustText(fact, templates);
+    if (item && GUARDED_CHIP_KINDS.includes(fact.kind) && codePointLength(item) > VERBATIM_CHIP_MAX_CHARS) continue;
     if (item && codePointLength(item) <= TRUST_BAR_MAX_CHARS && !items.includes(item)) items.push(item);
   }
   return items;

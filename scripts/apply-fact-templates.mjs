@@ -33,6 +33,9 @@ const parseBlock = /export const FACT_PARSE_TOKEN_KEYS = \[([\s\S]*?)\n\] as con
 if (!slotsBlock || !parseBlock) die('could not read FACT_TEMPLATE_SLOTS / FACT_PARSE_TOKEN_KEYS from ownerFactCopy.ts');
 const slots = Object.fromEntries([...slotsBlock[1].matchAll(/^\s+([A-Za-z]+): \[([^\]]*)\],/gm)].map(m => [m[1], [...m[2].matchAll(/'(\{[a-z]+\})'/g)].map(s => s[1])]));
 const parseKeys = [...parseBlock[1].matchAll(/^\s+'([A-Za-z]+)',/gm)].map(m => m[1]);
+// Optional fixed phrases (no slots): copied when present, never required.
+const optionalBlock = /export const FACT_OPTIONAL_TEMPLATE_KEYS = \[([\s\S]*?)\n\] as const/.exec(ts);
+const optionalKeys = optionalBlock ? [...optionalBlock[1].matchAll(/^\s+'([A-Za-z]+)',/gm)].map(m => m[1]) : [];
 if (Object.keys(slots).length < 20 || parseKeys.length < 5) die('key list parse looks wrong');
 
 if (!fs.existsSync(source)) die(`missing ${path.relative(root, source)} (templates stay pending)`);
@@ -53,6 +56,12 @@ for (const key of parseKeys) {
   const value = json[key];
   if (!Array.isArray(value) || !value.length) { problems.push(`${key}:missing`); continue; }
   if (value.some(item => typeof item !== 'string' || !item.trim() || item.includes(HE_TODO))) { problems.push(`${key}:pending`); continue; }
+  out[key] = value;
+}
+for (const key of optionalKeys) {
+  if (!(key in json)) continue;
+  const value = json[key];
+  if (typeof value !== 'string' || !value.trim() || value.includes(HE_TODO) || /\{[a-z]+\}/.test(value)) { problems.push(`${key}:optional`); continue; }
   out[key] = value;
 }
 if (problems.length) die(`incomplete (${problems.length}): ${problems.join(', ')}`);
