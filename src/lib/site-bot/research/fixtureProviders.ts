@@ -137,7 +137,7 @@ export function parseFixtureQuestions(value: unknown): FixtureQuestions {
 }
 
 /** The fixture questions named by SITE_BOT_FIXTURE_QUESTIONS_FILE (unset = none). Fails closed on an unreadable or bad file. */
-export function fixtureQuestionsFromEnv(env: { SITE_BOT_FIXTURE_QUESTIONS_FILE?: string } = process.env): FixtureQuestions | undefined {
+export function fixtureQuestionsFromEnv(env: Readonly<Record<string, string | undefined>> = process.env): FixtureQuestions | undefined {
   const file = env.SITE_BOT_FIXTURE_QUESTIONS_FILE;
   if (!file) return undefined;
   return parseFixtureQuestions(JSON.parse(fs.readFileSync(file, 'utf8')));
