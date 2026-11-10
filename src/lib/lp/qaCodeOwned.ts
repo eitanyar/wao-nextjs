@@ -15,8 +15,18 @@
  * Topic tokens: price = costQuestionTokens (Noa); warranty = the warranty claim tokens; licence = the license_grade claim
  * tokens plus the licence noun family of licenseDocumentNouns; years = the "years in the trade" template phrases (the
  * restatement spec's lists). Optional Noa lists in the template file (qaLicenseQuestionTokens, qaResponseQuestionTokens,
- * qaWarrantyQuestionTokens, qaYearsQuestionTokens) replace them when present. The callback / response topic has no
- * approved list yet: it is not detected (QA_TOPICS_PENDING) and its questions stay with the model, as before.
+ * qaWarrantyQuestionTokens, qaYearsQuestionTokens) replace them when present. A topic with no list is not detected and its
+ * questions stay with the model.
+ *
+ * Noa r3 order per pool question (`_rules._matching`, every list with hasTopicToken semantics):
+ *   (1) qaAvailabilityQuestionTokens -> drop;
+ *   (2) questionTopic (price also from qaPriceSurchargeQuestionTokens, as the LAST topic: a surcharge question names no
+ *       cost token, and a question that names another topic keeps it);
+ *   (3) the detected topic's exclude list -> drop (an exclude list never creates a topic);
+ *   (4) shape rules: price callout / surcharge questions only with that owner input; warranty-scope questions only with the
+ *       scoped / verbatim proof; response questions take the callback proof only when callback-shaped and not
+ *       arrival-shaped, else the callback-arrival answer;
+ *   (5) the item. Dropped = removed from the pool (not code-built, not sent to the model).
  *
  * HEBREW-SAFETY: this module contains ZERO Hebrew bytes.
  */
@@ -27,8 +37,8 @@ import { withoutQaLead as withoutLead, type QaCodeOwnership } from './copyGates'
 import { DEPTH_BLOCK_LIMITS, wordCount, type DepthQaItem } from './depthBlocks';
 import { CLAIM_TOKENS } from './generationData';
 import { PREFIX_LETTERS } from './hebrewPrefixLetters';
-import { fillTemplate, licenseDocumentNouns, ownerFacts, proofText, type FactOptionalListKey, type OwnerFactTemplates } from './ownerFactCopy';
-import { costFaq } from './researchedPricing';
+import { fillTemplate, licenseDocumentNouns, ownerFacts, proofText, responseQaAnswer, type FactOptionalListKey, type OwnerFactTemplates } from './ownerFactCopy';
+import { costFaq, ownerPricing } from './researchedPricing';
 
 export type QaFactTopic = 'price' | 'license' | 'callback' | 'warranty' | 'years';
 /** Yonatan: when the Q&A slot count is limited, code-built items in this order. */
@@ -41,6 +51,21 @@ export const QA_TOPIC_TOKEN_KEYS: Readonly<Record<Exclude<QaFactTopic, 'price'>,
   warranty: 'qaWarrantyQuestionTokens',
   years: 'qaYearsQuestionTokens',
 };
+
+/** Noa r3: the exclude list of each topic (consulted only for the detected topic). */
+export const QA_TOPIC_EXCLUDE_KEYS: Readonly<Record<QaFactTopic, FactOptionalListKey>> = {
+  price: 'qaPriceQuestionExcludeTokens',
+  license: 'qaLicenseQuestionExcludeTokens',
+  callback: 'qaResponseQuestionExcludeTokens',
+  warranty: 'qaWarrantyQuestionExcludeTokens',
+  years: 'qaYearsQuestionExcludeTokens',
+};
+
+/** An optional list of the template file, or [] when absent / malformed (the rule it drives is then inactive). */
+export function optionalList(templates: OwnerFactTemplates, key: FactOptionalListKey): readonly string[] {
+  const value = templates[key];
+  return Array.isArray(value) && value.length && value.every(item => typeof item === 'string' && item.trim()) ? value : [];
+}
 
 /** The fixed words of a template (slots and sentence punctuation removed), when at least two words remain. */
 function phraseOf(template: string): string | null {
@@ -83,11 +108,58 @@ function hasTopicToken(text: string, token: string): boolean {
   return new RegExp(`(?<![${EDGE}])[${PREFIX_LETTERS}]?${escapeRegExp(word)}(?![${EDGE}])`, 'iu').test(text);
 }
 
-/** The code-owned topic of a pool question (the first in QA_TOPIC_PRIORITY whose tokens it names), else null. */
+function hasAny(text: string, tokens: readonly string[]): boolean {
+  return tokens.some(token => hasTopicToken(text, token));
+}
+
+/**
+ * The code-owned topic of a pool question (the first in QA_TOPIC_PRIORITY whose tokens it names), else price when it names
+ * a qaPriceSurchargeQuestionTokens entry (Noa r3, Adam: "is there a night surcharge?" is a price question), else null.
+ */
 export function questionTopic(question: string, templates: OwnerFactTemplates): QaFactTopic | null {
   const text = question.normalize('NFC');
   const tokens = qaTopicTokens(templates);
-  return QA_TOPIC_PRIORITY.find(topic => tokens[topic].some(token => hasTopicToken(text, token))) ?? null;
+  const topic = QA_TOPIC_PRIORITY.find(item => hasAny(text, tokens[item])) ?? null;
+  return topic ?? (hasAny(text, optionalList(templates, 'qaPriceSurchargeQuestionTokens')) ? 'price' : null);
+}
+
+/** Why a pool question is removed (Noa r3). */
+export type QaDropReason = 'availability' | 'exclude';
+
+/** What happens to one pool question before the owner facts are read (Noa r3 steps 1-4). */
+export type QaQuestionDisposition =
+  | { kind: 'model' }
+  | { kind: 'drop'; reason: QaDropReason; topic: QaFactTopic | null }
+  | {
+    kind: 'topic';
+    topic: QaFactTopic;
+    /** price: asks about the visit / diagnosis fee (answer only with a callout fee). */
+    callout: boolean;
+    /** price: asks about a night / Shabbat / holiday surcharge (answer only with a surcharge policy). */
+    surcharge: boolean;
+    /** warranty: asks what the warranty covers (answer only with the scoped / verbatim proof). */
+    warrantyScope: boolean;
+    /** callback: callback-shaped and not arrival-shaped (proofCallback); otherwise the callback-arrival answer. */
+    callbackShaped: boolean;
+  };
+
+/** Noa r3 steps 1-4 for one pool question (pure; no owner facts). */
+export function qaQuestionDisposition(question: string, templates: OwnerFactTemplates): QaQuestionDisposition {
+  const text = question.normalize('NFC');
+  if (hasAny(text, optionalList(templates, 'qaAvailabilityQuestionTokens'))) return { kind: 'drop', reason: 'availability', topic: null };
+  const topic = questionTopic(text, templates);
+  if (!topic) return { kind: 'model' };
+  if (hasAny(text, optionalList(templates, QA_TOPIC_EXCLUDE_KEYS[topic]))) return { kind: 'drop', reason: 'exclude', topic };
+  return {
+    kind: 'topic',
+    topic,
+    callout: topic === 'price' && hasAny(text, optionalList(templates, 'qaPriceCalloutQuestionTokens')),
+    surcharge: topic === 'price' && hasAny(text, optionalList(templates, 'qaPriceSurchargeQuestionTokens')),
+    warrantyScope: topic === 'warranty' && hasAny(text, optionalList(templates, 'qaWarrantyScopeQuestionTokens')),
+    callbackShaped: topic === 'callback'
+      && hasAny(text, optionalList(templates, 'qaResponseCallbackShapeTokens'))
+      && !hasAny(text, optionalList(templates, 'qaResponseArrivalShapeTokens')),
+  };
 }
 
 export interface QaPlan {
@@ -95,7 +167,10 @@ export interface QaPlan {
   modelPool: BriefQuestion[];
   /** Code-built items, in QA_TOPIC_PRIORITY (they sit first in qaItems). */
   codeItems: DepthQaItem[];
-  /** Pool questions on a code-owned topic the page has no fact for (dropped: never answered). */
+  /**
+   * Pool questions removed: on a code-owned topic the page has no (fitting) fact for, an availability question, or a topic
+   * question its exclude list removes (never answered).
+   */
   droppedQuestionIds: string[];
 }
 
@@ -119,24 +194,30 @@ export function planQa(brief: PageBrief, data: CollectedData, templates: OwnerFa
   const pool = brief.questionPool ?? [];
   const facts = ownerFacts(data, brief, templates);
   const site = brief.site;
-  const answer = (topic: QaFactTopic): { a: string; factIds: string[] } | null => {
-    switch (topic) {
+  const pricing = ownerPricing(data);
+  const answer = (shape: Extract<QaQuestionDisposition, { kind: 'topic' }>): { a: string; factIds: string[] } | null => {
+    switch (shape.topic) {
       case 'price': {
         if (!site) return null;
+        // Noa r3: a visit-fee question only with a callout fee; a surcharge question only with a surcharge policy.
+        if ((shape.callout && pricing.calloutFee === null) || (shape.surcharge && !pricing.surchargePolicy)) return null;
         const faq = costFaq(data, { service: site.pageName, city: site.city ?? null, business: data.businessName || data.businessNiche || '' });
         if (!faq) return null;
         const id = [...brief.constraints, ...brief.firstPartyProof].find(item => item.id === 'constraint-pricingNotes')?.id ?? SYSTEM_PRICE_FACT_ID;
         return { a: faq.a, factIds: [id] };
       }
       case 'license': case 'warranty': case 'years': {
-        const fact = facts[topic];
+        const fact = facts[shape.topic];
+        // Noa r3: "what does the warranty cover?" only from the scoped / verbatim proof (the owner said what it covers).
+        if (fact && shape.warrantyScope && !(fact.kind === 'warrantyVerbatim' || fact.slots.scope || fact.slots.proofVerbatim)) return null;
         const text = fact ? proofText(fact, templates) : null;
         return fact && fact.factId && text ? { a: text, factIds: [fact.factId] } : null;
       }
       case 'callback': {
         const fact = facts.response;
-        if (!fact || !fact.factId || options.installPage) return null;
-        const text = proofText(fact, templates);
+        // Noa r3: no callback answer with a place tail (Adam), none on install pages.
+        if (!fact || !fact.factId || fact.slots.scope || options.installPage) return null;
+        const text = responseQaAnswer(fact, shape.callbackShaped, templates);
         return text ? { a: text, factIds: [fact.factId] } : null;
       }
     }
@@ -145,9 +226,11 @@ export function planQa(brief: PageBrief, data: CollectedData, templates: OwnerFa
   const codeByTopic = new Map<QaFactTopic, DepthQaItem>();
   const droppedQuestionIds: string[] = [];
   for (const question of pool) {
-    const topic = questionTopic(question.question, templates);
-    if (!topic) { modelPool.push(question); continue; }
-    const built = codeByTopic.has(topic) ? null : answer(topic);
+    const shape = qaQuestionDisposition(question.question, templates);
+    if (shape.kind === 'model') { modelPool.push(question); continue; }
+    if (shape.kind === 'drop') { droppedQuestionIds.push(question.id); continue; }
+    const topic = shape.topic;
+    const built = codeByTopic.has(topic) ? null : answer(shape);
     if (built && qaItemFits(question.question, built.a)) codeByTopic.set(topic, { questionId: question.id, q: question.question, a: built.a, factIds: built.factIds });
     else droppedQuestionIds.push(question.id);
   }

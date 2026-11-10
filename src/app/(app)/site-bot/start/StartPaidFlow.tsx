@@ -14,7 +14,7 @@ import { INTAKE_COPY } from "@/lib/site-bot/intakeCopy";
 import { startVoiceNote, VOICE_NOTE_CONTROL_LABELS, voiceNoteStepAvailable, type VoiceNoteRecording } from "@/lib/site-bot/voiceNote";
 import { ISRAELI_LOCALITIES } from "@/lib/site-bot/israeliLocalities";
 import { MAX_LISTED_SERVED_AREAS, servedAreaCandidates } from "@/lib/site-bot/servedAreas";
-import { CREDENTIALS_COPY, showsLicenseQuestions, WARRANTY_CHOICE_COPY_KEY, WARRANTY_CHOICES, type CredentialsAnswers } from "@/lib/site-bot/credentialsCopy";
+import { CREDENTIALS_COPY, credentialTier, licenseQuestionCopy, showsLicenseQuestions, WARRANTY_CHOICE_COPY_KEY, WARRANTY_CHOICES, type CredentialsAnswers } from "@/lib/site-bot/credentialsCopy";
 import {
   buildIntakeCollectedData,
   emptyIntakeCard,
@@ -703,7 +703,7 @@ function SiteBotStartContent() {
             {showsLicenseQuestions(credentialsCard.businessNiche) && (
               <fieldset style={{ border: "none", margin: 0, padding: 0, display: "flex", flexDirection: "column", gap: "8px" }}>
                 <legend style={{ fontSize: "0.92rem", fontWeight: 600, color: "var(--text)", marginBottom: "8px", padding: 0 }}>
-                  {renderMixed(CREDENTIALS_COPY.licenseQuestion)}
+                  {renderMixed(licenseQuestionCopy(credentialsCard.businessNiche).question)}
                 </legend>
                 <div style={{ display: "flex", flexWrap: "wrap", gap: "10px" }}>
                   {(["yes", "no"] as const).map((value) => {
@@ -715,10 +715,11 @@ function SiteBotStartContent() {
                         className="wao-intake-choice"
                         aria-pressed={selected}
                         data-intake-credentials-license={value}
+                        data-intake-credentials-tier={credentialTier(credentialsCard.businessNiche)}
                         onClick={() => setCredentials((prev) => ({ ...prev, license: selected ? undefined : value }))}
                         style={{ minHeight: "44px", background: selected ? "var(--accent)" : "transparent", color: selected ? "#0a0a0a" : "var(--text)" }}
                       >
-                        {renderMixed(value === "yes" ? CREDENTIALS_COPY.licenseYes : CREDENTIALS_COPY.licenseNo)}
+                        {renderMixed(value === "yes" ? licenseQuestionCopy(credentialsCard.businessNiche).yes : licenseQuestionCopy(credentialsCard.businessNiche).no)}
                       </button>
                     );
                   })}
@@ -726,7 +727,7 @@ function SiteBotStartContent() {
                 {credentials.license === "yes" && (
                   <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
                     <label htmlFor="intake-credentials-license" style={{ fontSize: "0.88rem", color: "var(--text)" }}>
-                      {renderMixed(CREDENTIALS_COPY.licenseTypePrompt)}
+                      {renderMixed(licenseQuestionCopy(credentialsCard.businessNiche).typePrompt)}
                     </label>
                     <input
                       id="intake-credentials-license"
@@ -734,7 +735,7 @@ function SiteBotStartContent() {
                       type="text"
                       maxLength={60}
                       className="wao-intake-field"
-                      placeholder={CREDENTIALS_COPY.licenseTypePlaceholder}
+                      placeholder={licenseQuestionCopy(credentialsCard.businessNiche).typePlaceholder}
                       value={credentials.licenseText ?? ""}
                       onChange={(e) => setCredentials((prev) => ({ ...prev, licenseText: e.target.value }))}
                       style={fieldInputStyle}

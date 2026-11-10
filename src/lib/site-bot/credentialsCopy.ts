@@ -6,15 +6,18 @@
  *
  * HEBREW-SAFETY: the only Hebrew in this module is CREDENTIALS_STEP_SOURCE, written byte-exact by
  * scripts/apply-credentials-copy.mjs from docs/copy/site-bot-credentials-step-2026-11-10.json (Tamar -> Noa),
- * docs/copy/site-bot-licensed-trades-2026-11-10.json (Yonatan -> Noa) and the fact templates' parseNegationWords. The
- * engineer never authors it. Pure and browser-safe.
+ * docs/copy/site-bot-licensed-trades-2026-11-10.json (Yonatan -> Noa) and the fact templates' parseNegationWords and
+ * contractor* strings (Noa r3). The engineer never authors it. Pure and browser-safe.
  */
 import type { CollectedData } from '../bot/prompts';
+import { contractorLicenseValue } from './contractorRegistration';
 
 export type CredentialsCopyKey =
   | 'stepIntro' | 'yearsQuestion' | 'yearsPlaceholder' | 'licenseQuestion' | 'licenseYes' | 'licenseNo' | 'licenseTypePrompt'
   | 'licenseTypePlaceholder' | 'warrantyQuestion' | 'warrantyNone' | 'warrantySixMonths' | 'warrantyOneYear' | 'warrantyTwoYears'
-  | 'warrantyOther' | 'warrantyOtherPlaceholder' | 'continueButton' | 'skipButton';
+  | 'warrantyOther' | 'warrantyOtherPlaceholder' | 'continueButton' | 'skipButton'
+  // Noa r3 (from the fact template file): the contractor tier's licence wording.
+  | 'contractorLicenseQuestion' | 'contractorLicenseYes' | 'contractorLicenseNo' | 'contractorLicenseTypePrompt' | 'contractorLicenseTypePlaceholder';
 
 export interface CredentialsStepSource {
   copy: Record<CredentialsCopyKey, string>;
@@ -41,7 +44,12 @@ export const CREDENTIALS_STEP_SOURCE: CredentialsStepSource = {
     "warrantyOther": "אחר",
     "warrantyOtherPlaceholder": "למשל: 3 שנים על העבודה",
     "continueButton": "שמור והמשך",
-    "skipButton": "לא עכשיו"
+    "skipButton": "לא עכשיו",
+    "contractorLicenseQuestion": "אתה קבלן רשום?",
+    "contractorLicenseYes": "כן, אני רשום",
+    "contractorLicenseNo": "לא",
+    "contractorLicenseTypePrompt": "באיזה ענף וסיווג אתה רשום?",
+    "contractorLicenseTypePlaceholder": "למשל: ענף 100, סיווג ג1"
   },
   "trades": {
     "licenseExclude": [
@@ -211,11 +219,26 @@ export function credentialTier(niche: string | undefined, source: CredentialsSte
 }
 
 /**
- * The contractor wording ("registered contractor?", Yonatan's research) has no approved copy yet: there is no key for it in
- * docs/copy/site-bot-credentials-step-2026-11-10.json. Until Tamar -> Noa supply it, contractors see no licence question
- * (never the generic licence wording, which over-asks a small renovator). Set from the copy file once it exists.
+ * The contractor wording ("registered contractor?", Yonatan's research): Noa r3 supplied it (the contractor* keys of the
+ * fact template file). While pending, contractors saw no licence question (never the generic licence wording).
  */
-export const CONTRACTOR_LICENSE_WORDING_PENDING = true;
+export const CONTRACTOR_LICENSE_WORDING_PENDING = false;
+
+/** The five licence strings a niche sees: the contractor wording for the contractor tier, else the licence wording. */
+export interface LicenseQuestionCopy {
+  question: string;
+  yes: string;
+  no: string;
+  typePrompt: string;
+  typePlaceholder: string;
+}
+
+export function licenseQuestionCopy(niche: string | undefined, source: CredentialsStepSource = CREDENTIALS_STEP_SOURCE): LicenseQuestionCopy {
+  const copy = source.copy;
+  return credentialTier(niche, source) === 'contractor'
+    ? { question: copy.contractorLicenseQuestion, yes: copy.contractorLicenseYes, no: copy.contractorLicenseNo, typePrompt: copy.contractorLicenseTypePrompt, typePlaceholder: copy.contractorLicenseTypePlaceholder }
+    : { question: copy.licenseQuestion, yes: copy.licenseYes, no: copy.licenseNo, typePrompt: copy.licenseTypePrompt, typePlaceholder: copy.licenseTypePlaceholder };
+}
 
 /** True when the licence questions render for this niche. */
 export function showsLicenseQuestions(niche: string | undefined, source: CredentialsStepSource = CREDENTIALS_STEP_SOURCE): boolean {
@@ -269,7 +292,9 @@ function clean(value: string | undefined): string {
 /**
  * The CollectedData fields one credentials answer set writes (absent = not given). A skipped step writes nothing.
  * - years: a whole number 1..CREDENTIALS_YEARS_MAX, stored as digits;
- * - licence: only when the questions render for the niche, the owner said yes and typed a text that is not a "no";
+ * - licence: only when the questions render for the niche and the owner said yes. Licensed trades: a typed text that is
+ *   not a "no". Contractors (Noa r3): the code value of contractorRegistration.ts (yes alone counts; the typed branch /
+ *   class detail rides along and is guarded at render time, never here);
  * - warranty: none -> NO_WARRANTY_VALUE; a picker duration -> its code value; other -> the typed text, or
  *   NO_WARRANTY_VALUE when the typed text opens with a negation word.
  */
@@ -283,7 +308,10 @@ export function credentialsCollectedFields(
   const years = clean(answers.years);
   if (/^\d{1,2}$/.test(years) && Number(years) >= 1 && Number(years) <= CREDENTIALS_YEARS_MAX) out.yearsInField = String(Number(years));
   const license = clean(answers.licenseText).slice(0, CREDENTIALS_TEXT_MAX_CHARS).trim();
-  if (showsLicenseQuestions(niche, source) && answers.license === 'yes' && license && !opensWithNegationWord(license, source)) out.license = license;
+  if (showsLicenseQuestions(niche, source) && answers.license === 'yes') {
+    if (credentialTier(niche, source) === 'contractor') out.license = contractorLicenseValue(license);
+    else if (license && !opensWithNegationWord(license, source)) out.license = license;
+  }
   const choice = answers.warranty;
   if (choice === 'none') out.guarantee = NO_WARRANTY_VALUE;
   else if (choice === 'sixMonths' || choice === 'oneYear' || choice === 'twoYears') out.guarantee = WARRANTY_PICKER_VALUES[choice];

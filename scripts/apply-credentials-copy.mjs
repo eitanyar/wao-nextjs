@@ -9,7 +9,8 @@
 // Sources:
 //   docs/copy/site-bot-credentials-step-2026-11-10.json   (every key except "_rules")
 //   docs/copy/site-bot-licensed-trades-2026-11-10.json    (licenseExclude, licensedTrades, contractorKeywords)
-//   docs/copy/site-bot-fact-templates-2026-11-10.json     (parseNegationWords: the typed-"none" guard)
+//   docs/copy/site-bot-fact-templates-2026-11-10.json     (parseNegationWords: the typed-"none" guard; Noa r3: the five
+//                                                          contractor* strings of the contractor tier)
 // No Hebrew literals in this script.
 import fs from 'node:fs';
 import path from 'node:path';
@@ -34,6 +35,8 @@ const COPY_KEYS = ['stepIntro', 'yearsQuestion', 'yearsPlaceholder', 'licenseQue
   'licenseTypePlaceholder', 'warrantyQuestion', 'warrantyNone', 'warrantySixMonths', 'warrantyOneYear', 'warrantyTwoYears', 'warrantyOther',
   'warrantyOtherPlaceholder', 'continueButton', 'skipButton'];
 const TRADE_KEYS = ['licenseExclude', 'licensedTrades', 'contractorKeywords'];
+// Noa r3 (item 4): the contractor tier's licence wording lives in the fact template file.
+const CONTRACTOR_KEYS = ['contractorLicenseQuestion', 'contractorLicenseYes', 'contractorLicenseNo', 'contractorLicenseTypePrompt', 'contractorLicenseTypePlaceholder'];
 
 const copy = read('docs/copy/site-bot-credentials-step-2026-11-10.json');
 const trades = read('docs/copy/site-bot-licensed-trades-2026-11-10.json');
@@ -52,6 +55,10 @@ for (const key of TRADE_KEYS) {
   if (!Array.isArray(list) || !list.length || list.some(item => typeof item !== 'string' || !item.trim())) problems.push(`trades.${key}`);
   else out.trades[key] = list;
 }
+for (const key of CONTRACTOR_KEYS) {
+  if (typeof facts[key] !== 'string' || !facts[key].trim()) problems.push(`facts.${key}`);
+  else out.copy[key] = facts[key];
+}
 if (!Array.isArray(facts.parseNegationWords) || !facts.parseNegationWords.length) problems.push('parseNegationWords');
 else out.negationWords = facts.parseNegationWords;
 if (problems.length) die(`incomplete: ${problems.join(', ')}`);
@@ -69,4 +76,4 @@ const written = fs.readFileSync(target, 'utf8');
 const block = written.slice(written.indexOf(BEGIN), written.indexOf(END));
 const literal = /= (\{[\s\S]*\});\n$/.exec(block);
 if (!literal || JSON.stringify(JSON.parse(literal[1])) !== JSON.stringify(out)) die('byte mismatch after write');
-console.log(`apply-credentials-copy: wrote ${COPY_KEYS.length} strings, ${TRADE_KEYS.length} trade lists, ${out.negationWords.length} negation words (byte-exact).`);
+console.log(`apply-credentials-copy: wrote ${COPY_KEYS.length + CONTRACTOR_KEYS.length} strings, ${TRADE_KEYS.length} trade lists, ${out.negationWords.length} negation words (byte-exact).`);

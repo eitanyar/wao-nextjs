@@ -79,6 +79,8 @@ const STAND_IN_TEMPLATES: OwnerFactTemplates = {
   parseOneMonthWords: [HE_ONE_MONTH], parseTwoMonthWords: [HE_TWO_MONTHS], parseOneAndHalfYearWords: [HE_YEAR_AND_HALF], parseSameDayWords: [HE_SAME_DAY],
   parseWarrantyWords: [HE(22, 5)], warrantyScopeLeadWords: [HE(3, 2)], parseFillerWords: [HE(14, 2)], parseNegationWords: [HE(19, 3)], parseHedgeWords: [HE(24, 4)],
   parseWithinWords: [HE(26, 2)], licenseDocumentNouns: [HE(7, 5)], responseScopeLeadLetters: [HE(1, 1)], costQuestionTokens: [HE(11, 4)],
+  proofCallbackArrival: 'I call back within {time} and book a visit.', proofCallbackArrivalSameDay: 'I call back the same day and book a visit.',
+  trustContractorRegistered: 'RC', proofContractorRegistered: 'I am in the register.', proofContractorRegisteredDetail: 'I am in the register, {detail}.',
 };
 const T = STAND_IN_TEMPLATES;
 

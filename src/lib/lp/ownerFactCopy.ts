@@ -22,6 +22,7 @@ import { DEPTH_BLOCK_LIMITS, wordCount, type DepthProofItem } from './depthBlock
 import { FIX_TIME_LEAD_TOKENS, TRUST_BAR_MAX_CHARS, TRUST_BAR_MAX_ITEMS } from './generationData';
 import { PREFIX_LETTERS } from './hebrewPrefixLetters';
 import { HE_TODO_PREFIX } from './researchedSiteLabels';
+import { parseContractorLicense } from '../site-bot/contractorRegistration';
 
 /** The template file the apply script reads (Tamar -> Noa). */
 export const FACT_TEMPLATES_SOURCE = 'docs/copy/site-bot-fact-templates-2026-11-10.json';
@@ -111,6 +112,16 @@ export const FACT_TEMPLATE_SLOTS = {
   proofCallbackSameDay: [],
   /** Slice 6: the code-built lead in front of a model-written Q&A answer ("At {business} in {city}:"). */
   qaAnswerLead: ['{business}', '{city}'],
+  /**
+   * Noa r3: the Q&A answer to an arrival-shaped (or neutral) response question when the owner fact is a callback time:
+   * "I will call you back within {time} and set an arrival time with you." It never states an arrival time.
+   */
+  proofCallbackArrival: ['{time}'],
+  proofCallbackArrivalSameDay: [],
+  /** Noa r3: the contractor tier ("registered contractor"): chip, proof, and proof with the owner's branch / class detail. */
+  trustContractorRegistered: [],
+  proofContractorRegistered: [],
+  proofContractorRegisteredDetail: ['{detail}'],
 } as const satisfies Record<string, readonly string[]>;
 
 export type FactTemplateKey = keyof typeof FACT_TEMPLATE_SLOTS;
@@ -197,6 +208,19 @@ export const FACT_OPTIONAL_LIST_KEYS = [
   'qaResponseQuestionTokens',
   'qaWarrantyQuestionTokens',
   'qaYearsQuestionTokens',
+  // Noa r3 (qaCodeOwned.ts `_rules._matching`): per-topic exclude lists (consulted only for the detected topic; they never
+  // create one), the response shape lists, the availability drop list and the conditional price / warranty-scope lists.
+  'qaResponseQuestionExcludeTokens',
+  'qaResponseCallbackShapeTokens',
+  'qaResponseArrivalShapeTokens',
+  'qaAvailabilityQuestionTokens',
+  'qaPriceQuestionExcludeTokens',
+  'qaPriceCalloutQuestionTokens',
+  'qaPriceSurchargeQuestionTokens',
+  'qaLicenseQuestionExcludeTokens',
+  'qaYearsQuestionExcludeTokens',
+  'qaWarrantyQuestionExcludeTokens',
+  'qaWarrantyScopeQuestionTokens',
 ] as const;
 export type FactOptionalListKey = (typeof FACT_OPTIONAL_LIST_KEYS)[number];
 
@@ -259,6 +283,11 @@ export const OWNER_FACT_TEMPLATES: OwnerFactTemplates = {
   "proofCallback": "אחזור אליך תוך {time}.",
   "proofCallbackSameDay": "אחזור אליך עוד באותו יום.",
   "qaAnswerLead": "אצל {business} ב{city}:",
+  "proofCallbackArrival": "אחזור אליך תוך {time} ואתאם איתך מועד הגעה.",
+  "proofCallbackArrivalSameDay": "אחזור אליך עוד באותו יום ואתאם איתך מועד הגעה.",
+  "trustContractorRegistered": "קבלן רשום",
+  "proofContractorRegistered": "יש לי רישום בפנקס הקבלנים.",
+  "proofContractorRegisteredDetail": "יש לי רישום בפנקס הקבלנים, {detail}.",
   "parseMinuteWords": [
     "דקות",
     "דקה",
@@ -432,7 +461,410 @@ export const OWNER_FACT_TEMPLATES: OwnerFactTemplates = {
     "שקל",
     "שקלים"
   ],
-  "responseSameDay": "אותו יום"
+  "responseSameDay": "אותו יום",
+  "qaLicenseQuestionTokens": [
+    "רישיון",
+    "רשיון",
+    "רישיונות",
+    "מוסמך",
+    "מוסמכת",
+    "מוסמכים",
+    "הסמכה",
+    "קבלן רשום",
+    "קבלנים רשומים",
+    "רשם הקבלנים",
+    "פנקס הקבלנים",
+    "סיווג קבלני",
+    "חשמלאי ראשי",
+    "חשמלאי מוסמך",
+    "חשמלאי מעשי",
+    "הנדסאי",
+    "מהנדס חשמל"
+  ],
+  "qaResponseQuestionTokens": [
+    "כמה מהר",
+    "תוך כמה זמן",
+    "בתוך כמה זמן",
+    "תוך כמה דקות",
+    "תוך כמה שעות",
+    "אחרי כמה זמן",
+    "כמה זמן לוקח להגיע",
+    "כמה זמן לוקח לך להגיע",
+    "כמה זמן לוקח לכם להגיע",
+    "כמה זמן עד שמגיעים",
+    "כמה זמן עד שאתה מגיע",
+    "כמה זמן עד שאתם מגיעים",
+    "כמה זמן עד שחוזרים",
+    "כמה זמן מחכים",
+    "כמה צריך לחכות",
+    "כמה לחכות",
+    "מתי תגיע",
+    "מתי תגיעו",
+    "מתי אתה מגיע",
+    "מתי אתם מגיעים",
+    "מתי מגיעים",
+    "מתי יגיע",
+    "מתי יגיעו",
+    "מתי תחזור",
+    "מתי תחזרו",
+    "מתי חוזרים",
+    "מתי עונים",
+    "מגיע מהר",
+    "מגיעים מהר",
+    "להגיע מהר",
+    "תגיע מהר",
+    "תגיעו מהר",
+    "חוזרים מהר",
+    "עונים מהר",
+    "מגיע היום",
+    "מגיעים היום",
+    "להגיע היום",
+    "תגיע היום",
+    "תגיעו היום",
+    "עוד היום",
+    "כבר היום",
+    "באותו יום",
+    "באותו היום",
+    "עוד באותו יום",
+    "זמן הגעה",
+    "זמני הגעה",
+    "זמן תגובה",
+    "זמני תגובה",
+    "זמן מענה",
+    "זמני מענה",
+    "מענה מהיר",
+    "הגעה מהירה",
+    "שירות מהיר",
+    "דחוף",
+    "דחופה",
+    "דחופים",
+    "בדחיפות"
+  ],
+  "qaWarrantyQuestionTokens": [
+    "אחריות",
+    "גרנטי",
+    "התקלה חוזרת",
+    "התקלה תחזור",
+    "יתקלקל שוב",
+    "תתקלקל שוב",
+    "שוב אותה תקלה"
+  ],
+  "qaYearsQuestionTokens": [
+    "שנים במקצוע",
+    "שנים בתחום",
+    "שנים בענף",
+    "שנות ניסיון",
+    "כמה ניסיון",
+    "ניסיון",
+    "ותק",
+    "וותק",
+    "מנוסה",
+    "מנוסים",
+    "כמה זמן אתה בתחום",
+    "כמה זמן אתם בתחום",
+    "כמה זמן אתה במקצוע",
+    "כמה זמן אתם במקצוע",
+    "כמה שנים אתה",
+    "כמה שנים אתם"
+  ],
+  "qaResponseQuestionExcludeTokens": [
+    "מסיימים",
+    "לסיים",
+    "תסיים",
+    "תסיימו",
+    "מסתיים",
+    "מסתיימת",
+    "נגמר",
+    "נגמרת",
+    "גומרים",
+    "לגמור",
+    "יתוקן",
+    "מוכן",
+    "מוכנה",
+    "יבש",
+    "מתייבש",
+    "להתייבש",
+    "ייבוש",
+    "תוצאות",
+    "תוצאה",
+    "משפיע",
+    "להשפיע",
+    "יעבוד",
+    "תעבוד",
+    "לגור",
+    "לישון",
+    "להיכנס",
+    "לחזור הביתה",
+    "להשתמש",
+    "אספקה",
+    "משלוח",
+    "להזמין",
+    "חלק",
+    "חלקים",
+    "חלפים",
+    "מה עושים",
+    "מה לעשות",
+    "בינתיים",
+    "נחשב",
+    "נחשבת",
+    "זה דחוף",
+    "חירום"
+  ],
+  "qaResponseCallbackShapeTokens": [
+    "חוזר",
+    "חוזרים",
+    "תחזור",
+    "תחזרו",
+    "יחזרו",
+    "לחזור אליי",
+    "עונה",
+    "עונים",
+    "תענה",
+    "תענו",
+    "לענות",
+    "מענה",
+    "תגובה",
+    "טלפון",
+    "להתקשר",
+    "מתקשרים",
+    "שיחה",
+    "הודעה",
+    "וואטסאפ",
+    "ווטסאפ",
+    "פנייה",
+    "פניה"
+  ],
+  "qaResponseArrivalShapeTokens": [
+    "מגיע",
+    "מגיעה",
+    "מגיעים",
+    "תגיע",
+    "תגיעו",
+    "להגיע",
+    "יגיע",
+    "יגיעו",
+    "הגעה",
+    "לבוא",
+    "תבוא",
+    "תבואו",
+    "באים",
+    "יבוא",
+    "יבואו",
+    "שולחים",
+    "לשלוח",
+    "טכנאי"
+  ],
+  "qaAvailabilityQuestionTokens": [
+    "עובד בשבת",
+    "עובדים בשבת",
+    "מגיע בשבת",
+    "מגיעים בשבת",
+    "פתוחים בשבת",
+    "עובד בלילה",
+    "עובדים בלילה",
+    "מגיע בלילה",
+    "מגיעים בלילה",
+    "בשעות הלילה",
+    "בחגים",
+    "בסוף השבוע",
+    "בסופ״ש",
+    "בסופ\"ש",
+    "בסופש",
+    "24/7",
+    "24 שעות ביממה",
+    "מסביב לשעון",
+    "שירות חירום",
+    "קריאת חירום",
+    "קריאות חירום"
+  ],
+  "qaPriceQuestionExcludeTokens": [
+    "יקפוץ",
+    "יעלה באמצע",
+    "באמצע",
+    "יתייקר",
+    "להתייקר",
+    "ישתנה",
+    "משתנה",
+    "להשתנות",
+    "הפתעות",
+    "נוסף",
+    "נוספת",
+    "נוספים",
+    "נוספות",
+    "תוספות",
+    "מוסתר",
+    "מוסתרות",
+    "נסתרות",
+    "חבויות",
+    "סופי",
+    "קבוע",
+    "סגור",
+    "מראש",
+    "מתחייב",
+    "מתחייבים",
+    "התחייבות",
+    "מובטח",
+    "מבטיחים",
+    "להבטיח",
+    "כולל",
+    "כלול",
+    "כלולה",
+    "כלולים",
+    "מע״מ",
+    "מע\"מ",
+    "חשבונית",
+    "איך משלמים",
+    "אמצעי תשלום",
+    "בתשלומים",
+    "באשראי",
+    "במזומן",
+    "בביט",
+    "חינם",
+    "ללא עלות",
+    "בלי עלות",
+    "איך מקבלים",
+    "לקבל הצעת",
+    "בטלפון",
+    "חלק",
+    "חלקים",
+    "חלפים",
+    "חומרים",
+    "לקנות",
+    "קונים",
+    "רכישה",
+    "לרכוש",
+    "דגם",
+    "מותג",
+    "יותר",
+    "הכי",
+    "למה",
+    "משפיע",
+    "משפיעים",
+    "נקבע",
+    "מורכב",
+    "תלוי",
+    "כדאי",
+    "שווה",
+    "משתלם",
+    "עדיף"
+  ],
+  "qaPriceCalloutQuestionTokens": [
+    "דמי הגעה",
+    "דמי ביקור",
+    "ביקור",
+    "תשלום על הגעה",
+    "על ההגעה",
+    "על הבדיקה",
+    "בדיקה בתשלום",
+    "אבחון",
+    "קריאת שירות",
+    "פתיחת קריאה"
+  ],
+  "qaPriceSurchargeQuestionTokens": [
+    "תוספת",
+    "לילה",
+    "בלילה",
+    "שבת",
+    "חג",
+    "חגים",
+    "סופ״ש",
+    "סופ\"ש"
+  ],
+  "qaLicenseQuestionExcludeTokens": [
+    "צריך",
+    "צריכים",
+    "חובה",
+    "נדרש",
+    "נדרשת",
+    "נדרשים",
+    "דרוש",
+    "להוציא",
+    "להגיש",
+    "מותר",
+    "חוקי",
+    "חוק",
+    "רישיון עסק",
+    "רישיון נהיגה",
+    "רישיון רכב",
+    "רישוי",
+    "יצרן",
+    "ביטוח",
+    "טכנאים",
+    "העובדים",
+    "עובדים",
+    "צוות",
+    "כולם"
+  ],
+  "qaYearsQuestionExcludeTokens": [
+    "לפי הניסיון",
+    "מהניסיון",
+    "מניסיונך",
+    "מניסיונכם",
+    "ניסיון עם",
+    "ניסיון בעבודה עם",
+    "צריך",
+    "חשוב",
+    "טכנאים",
+    "העובדים",
+    "עובדים",
+    "צוות",
+    "העסק",
+    "החברה",
+    "קיים",
+    "קיימים"
+  ],
+  "qaWarrantyQuestionExcludeTokens": [
+    "יצרן",
+    "מכשיר",
+    "המכשיר",
+    "מוצר",
+    "המוצר",
+    "עצמו",
+    "עצמה",
+    "חלקים",
+    "חלפים",
+    "בכתב",
+    "כתובה",
+    "תעודת אחריות",
+    "מסמך",
+    "לממש",
+    "מממשים",
+    "מימוש",
+    "איך פונים",
+    "מורחבת",
+    "להאריך",
+    "הארכת",
+    "לא באחריות",
+    "מחוץ לאחריות",
+    "אחרי האחריות",
+    "פג",
+    "פגה",
+    "נגמרה",
+    "הסתיימה",
+    "מבטל",
+    "מבטלת",
+    "יבטל",
+    "תבטל",
+    "לבטל",
+    "באחריות מי",
+    "באחריות של",
+    "ועד הבית",
+    "המשכיר",
+    "השוכר",
+    "בעל הדירה"
+  ],
+  "qaWarrantyScopeQuestionTokens": [
+    "מה כוללת",
+    "מה כולל",
+    "מה מכסה",
+    "מה מכוסה",
+    "על מה",
+    "כוללת",
+    "מכסה",
+    "מכוסה",
+    "חלה על",
+    "תקפה"
+  ]
 };
 // END OWNER_FACT_TEMPLATES
 
@@ -521,7 +953,7 @@ export interface OwnerFact {
   source: OwnerFactSource;
   /**
    * Slot values (without braces), e.g. { n: '15' }. Warranty: { months } plus scope / proofVerbatim / noProof (Noa r2).
-   * Response: optional scope (a place tail). Response: { minutes } (with form 'halfHour' when the owner said "half
+   * Contractor: optional { detail }. Response: { minutes } (with form 'halfHour' when the owner said "half
    * an hour") or { sameDay: '1' }.
    */
   slots: Readonly<Record<string, string>>;
@@ -531,11 +963,14 @@ export interface OwnerFact {
   factId: string | null;
 }
 
-export type OwnerFactKind = 'years' | 'license' | 'licenseNumber' | 'warranty' | 'warrantyVerbatim' | 'response' | 'rating' | 'area';
+export type OwnerFactKind = 'years' | 'license' | 'licenseNumber' | 'contractorRegistered' | 'warranty' | 'warrantyVerbatim' | 'response' | 'rating' | 'area';
 
 export interface OwnerFacts {
   years?: OwnerFact;
-  /** The licence: Hebrew wording verbatim (kind license) or a number only (kind licenseNumber). */
+  /**
+   * The licence: Hebrew wording verbatim (kind license), a number only (kind licenseNumber), or a registered contractor
+   * (kind contractorRegistered, Noa r3: optional { detail }).
+   */
   license?: OwnerFact;
   /** The warranty: a parsed duration (kind warranty) or Hebrew text verbatim (kind warrantyVerbatim). */
   warranty?: OwnerFact;
@@ -982,8 +1417,13 @@ export function ownerFacts(data: CollectedData, brief: Pick<PageBrief, 'site' | 
   // Noa r2: a hedged years answer renders no number.
   const years = hasHedge(data.yearsInField, templates, true) ? null : parseYears(data.yearsInField, templates);
   if (years !== null) facts.years = fact('years', 'parsed', { n: String(years) }, 'yearsInField');
-  // Noa r2: a licence answer that opens with a negation word is a "no" (no chip, no proof, never verbatim).
-  if (!opensWithNegation(data.license, templates)) {
+  // Noa r3: a registered contractor (the credentials step's code value) never goes through trustLicense / proofLicense.
+  const contractor = parseContractorLicense(data.license);
+  if (contractor) {
+    const detail = contractor.detail === null ? null : contractorDetail(contractor.detail, templates);
+    facts.license = fact('contractorRegistered', 'parsed', detail === null ? {} : { detail }, 'license');
+  } else if (!opensWithNegation(data.license, templates)) {
+    // Noa r2: a licence answer that opens with a negation word is a "no" (no chip, no proof, never verbatim).
     const licenseNumber = parseLicenseNumber(data.license, templates);
     const license = licenseNumber === null ? verbatimHebrew(data.license) : null;
     if (licenseNumber !== null) facts.license = fact('licenseNumber', 'parsed', { number: licenseNumber }, 'license');
@@ -1001,6 +1441,31 @@ export function ownerFacts(data: CollectedData, brief: Pick<PageBrief, 'site' | 
   const tile = buildAreaTile(briefPlaces(brief), TRUST_BAR_MAX_CHARS);
   if (tile) facts.area = fact('area', 'parsed', { area: tile }, null);
   return facts;
+}
+
+/** Longest contractor detail kept verbatim (Noa r3: proofContractorRegisteredDetail), code points. */
+export const CONTRACTOR_DETAIL_MAX_CHARS = 30;
+
+/**
+ * Noa r3: the words a contractor detail may not open with (it would repeat the sentence): the first word of
+ * trustContractorRegistered ("contractor") and the third word of proofContractorRegistered ("registration"), sliced from the
+ * template file, never typed.
+ */
+export function contractorDetailRepeatWords(templates: OwnerFactTemplates): string[] {
+  const wordsOf = (value: string) => value.replace(/\{[a-z]+\}/g, ' ').replace(/[.,]/g, ' ').normalize('NFC').trim().split(/\s+/u);
+  return [wordsOf(templates.trustContractorRegistered)[0], wordsOf(templates.proofContractorRegistered)[2]].filter((word): word is string => Boolean(word));
+}
+
+/**
+ * Noa r3 contractor detail guards: the owner's text verbatim, trailing punctuation stripped, when mostly Hebrew, at most
+ * CONTRACTOR_DETAIL_MAX_CHARS code points (digits allowed), not opening with a parseNegationWords entry and not opening with
+ * a contractorDetailRepeatWords word. Anything else -> null (the yes holds; the detail is dropped, never paraphrased).
+ */
+export function contractorDetail(value: string, templates: OwnerFactTemplates): string | null {
+  const raw = stripTrailingPunctuation(text(value));
+  if (!raw || codePointLength(raw) > CONTRACTOR_DETAIL_MAX_CHARS || !isMostlyHebrew(raw)) return null;
+  if (opensWithNegation(raw, templates)) return null;
+  return contractorDetailRepeatWords(templates).some(word => raw.startsWith(word)) ? null : raw;
 }
 
 /**
@@ -1047,7 +1512,9 @@ function responseFact(value: unknown, templates: OwnerFactTemplates): Record<str
 export function droppedOwnerFactKeys(data: CollectedData, templates: OwnerFactTemplates): Array<keyof CollectedData> {
   const out: Array<keyof CollectedData> = [];
   // Noa r2: a "no" answer (negation opener) is never a fact and never shown to the model as one.
-  if (text(data.license) && (opensWithNegation(data.license, templates) || (parseLicenseNumber(data.license, templates) === null && verbatimHebrew(data.license) === null))) out.push('license');
+  // Noa r3: the contractor code value is English by design: the model never sees it (code renders the fact).
+  if (parseContractorLicense(data.license)) out.push('license');
+  else if (text(data.license) && (opensWithNegation(data.license, templates) || (parseLicenseNumber(data.license, templates) === null && verbatimHebrew(data.license) === null))) out.push('license');
   const months = parseWarrantyMonths(data.guarantee, templates);
   if (text(data.guarantee) && (opensWithNegation(data.guarantee, templates) || (!(months !== null && warrantyDurationKeys(months)) && verbatimHebrew(data.guarantee) === null))) out.push('guarantee');
   if (text(data.responseTime) && parseResponse(data.responseTime, templates) === null && !isMostlyHebrew(text(data.responseTime))) out.push('responseTime');
@@ -1112,12 +1579,32 @@ function sameDay(fact: OwnerFact): boolean {
   return fact.slots.sameDay === '1';
 }
 
+/** A parsed warranty whose answer had a tail (scoped proof, verbatim proof, or no proof). */
+export function warrantyHasTail(fact: OwnerFact): boolean {
+  return fact.kind === 'warranty' && Boolean(fact.slots.scope || fact.slots.proofVerbatim || fact.slots.noProof);
+}
+
+/**
+ * Noa r3: the Q&A answer to a response question. Callback-shaped (a qaResponseCallbackShapeTokens match and no
+ * qaResponseArrivalShapeTokens match) -> proofCallback / proofCallbackSameDay; any other question -> proofCallbackArrival /
+ * proofCallbackArrivalSameDay (never lets a callback time read as an arrival time).
+ */
+export function responseQaAnswer(fact: OwnerFact, callbackShaped: boolean, templates: OwnerFactTemplates): string | null {
+  if (fact.kind !== 'response') return null;
+  if (callbackShaped) return proofText(fact, templates);
+  return sameDay(fact)
+    ? fillTemplate(templates.proofCallbackArrivalSameDay, {})
+    : fillTemplate(templates.proofCallbackArrival, { time: responseTimeText(Number(fact.slots.minutes), templates, fact.slots.form) });
+}
+
 /** The trust-bar text of one fact (null when the kind has no trust form). */
 export function trustText(fact: OwnerFact, templates: OwnerFactTemplates): string | null {
   switch (fact.kind) {
     case 'years': return yearsText(fact, 'trustYearsOne', 'trustYearsTwo', 'trustYears', templates);
     case 'license': return fillTemplate(templates.trustLicense, fact.slots);
     case 'licenseNumber': return fillTemplate(templates.trustLicenseNumber, fact.slots);
+    // Noa r3: the detail is never in the chip.
+    case 'contractorRegistered': return fillTemplate(templates.trustContractorRegistered, {});
     case 'warranty': return fillTemplate(templates.trustWarranty, { duration: durationText(fact, 'bare', templates) });
     case 'warrantyVerbatim': return fillTemplate(templates.trustWarrantyVerbatim, fact.slots);
     // Adam: the callback set (the intake asks how fast the owner calls back); a place-scoped answer has no chip.
@@ -1138,6 +1625,9 @@ export function proofText(fact: OwnerFact, templates: OwnerFactTemplates): strin
     case 'years': return yearsText(fact, 'proofYearsOne', 'proofYearsTwo', 'proofYears', templates);
     case 'license': return fillTemplate(opensWithDocumentNoun(fact.slots.license, templates) ? templates.proofLicense : templates.proofLicenseVerbatim, fact.slots);
     case 'licenseNumber': return fillTemplate(templates.proofLicenseNumber, fact.slots);
+    case 'contractorRegistered': return fact.slots.detail
+      ? fillTemplate(templates.proofContractorRegisteredDetail, { detail: fact.slots.detail })
+      : fillTemplate(templates.proofContractorRegistered, {});
     // Noa r2: no tail -> proofWarranty; a fitting tail -> proofWarrantyScoped; a tail that does not fit -> the owner's full
     // answer through proofWarrantyVerbatim, else no sentence (never the unscoped form when a tail exists).
     case 'warranty':

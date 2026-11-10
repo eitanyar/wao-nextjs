@@ -11,6 +11,7 @@ import {
   CREDENTIALS_STEP_SOURCE as S,
   credentialsCollectedFields,
   credentialTier,
+  licenseQuestionCopy,
   NO_WARRANTY_VALUE,
   opensWithNegationWord,
   showsLicenseQuestions,
@@ -19,7 +20,8 @@ import {
   WARRANTY_PICKER_VALUES,
 } from './credentialsCopy';
 import { buildIntakeCollectedData, emptyIntakeCard } from './startIntake';
-import { OWNER_FACT_TEMPLATES as R, ownerFacts, proofText } from '../lp/ownerFactCopy';
+import { contractorDetailRepeatWords, droppedOwnerFactKeys, OWNER_FACT_TEMPLATES as R, ownerFacts, proofItemsFromFacts, proofText, trustBarFromFacts, trustText } from '../lp/ownerFactCopy';
+import { CONTRACTOR_REGISTERED_VALUE, contractorLicenseValue, parseContractorLicense } from './contractorRegistration';
 
 const root = path.resolve(__dirname, '../../..');
 const json = (rel: string) => JSON.parse(fs.readFileSync(path.join(root, rel), 'utf8')) as Record<string, unknown>;
@@ -28,8 +30,11 @@ const licensedNiche = S.trades.licensedTrades[0];
 describe('credentials step: the copy and lists are the source files, byte-exact', () => {
   it('every string and list equals its docs/copy source', () => {
     const copy = json('docs/copy/site-bot-credentials-step-2026-11-10.json');
-    for (const [key, value] of Object.entries(CREDENTIALS_COPY)) assert.equal(value, copy[key], key);
-    assert.equal(Object.keys(CREDENTIALS_COPY).length, Object.keys(copy).filter(key => key !== '_rules').length);
+    const facts = json('docs/copy/site-bot-fact-templates-2026-11-10.json');
+    const contractorKeys = Object.keys(CREDENTIALS_COPY).filter(key => key.startsWith('contractor'));
+    assert.equal(contractorKeys.length, 5, 'Noa r3: the five contractor strings come from the fact template file');
+    for (const [key, value] of Object.entries(CREDENTIALS_COPY)) assert.equal(value, (key.startsWith('contractor') ? facts : copy)[key], key);
+    assert.equal(Object.keys(CREDENTIALS_COPY).length, Object.keys(copy).filter(key => key !== '_rules').length + contractorKeys.length);
     const trades = json('docs/copy/site-bot-licensed-trades-2026-11-10.json');
     for (const key of ['licenseExclude', 'licensedTrades', 'contractorKeywords'] as const) assert.deepEqual(S.trades[key], trades[key], key);
     assert.deepEqual(S.negationWords, R.parseNegationWords);
@@ -53,10 +58,21 @@ describe('credentials step: licence gating (licenseExclude -> licensedTrades -> 
     const traps = S.trades.licenseExclude.filter(exclude => S.trades.licensedTrades.some(keyword => exclude.includes(keyword)) || S.trades.contractorKeywords.some(keyword => exclude.includes(keyword)));
     assert.ok(traps.length >= 5, 'the list holds real substring traps');
   });
-  it('contractors get the contractor tier; their wording is pending, so no licence question yet', () => {
+  it('contractors get the contractor tier and, with Noa r3, the contractor wording (never the licence wording)', () => {
     for (const keyword of S.trades.contractorKeywords) assert.equal(credentialTier(keyword), 'contractor', keyword);
-    assert.equal(CONTRACTOR_LICENSE_WORDING_PENDING, true);
-    assert.equal(showsLicenseQuestions(S.trades.contractorKeywords[0]), false);
+    assert.equal(CONTRACTOR_LICENSE_WORDING_PENDING, false);
+    for (const keyword of S.trades.contractorKeywords) assert.equal(showsLicenseQuestions(keyword), true, keyword);
+    const contractor = licenseQuestionCopy(S.trades.contractorKeywords[0]);
+    assert.deepEqual(contractor, {
+      question: CREDENTIALS_COPY.contractorLicenseQuestion, yes: CREDENTIALS_COPY.contractorLicenseYes, no: CREDENTIALS_COPY.contractorLicenseNo,
+      typePrompt: CREDENTIALS_COPY.contractorLicenseTypePrompt, typePlaceholder: CREDENTIALS_COPY.contractorLicenseTypePlaceholder,
+    });
+    assert.deepEqual(licenseQuestionCopy(licensedNiche), {
+      question: CREDENTIALS_COPY.licenseQuestion, yes: CREDENTIALS_COPY.licenseYes, no: CREDENTIALS_COPY.licenseNo,
+      typePrompt: CREDENTIALS_COPY.licenseTypePrompt, typePlaceholder: CREDENTIALS_COPY.licenseTypePlaceholder,
+    });
+    // Noa: contractorLicenseNo is in parseNegationWords, so it is safe if it ever reaches the field.
+    assert.equal(opensWithNegationWord(CREDENTIALS_COPY.contractorLicenseNo), true);
   });
   it('an open trade or an empty niche never sees the licence question', () => {
     for (const niche of ['Plumber', 'Locksmith', '', undefined]) assert.equal(showsLicenseQuestions(niche), false, String(niche));
@@ -129,5 +145,60 @@ describe('credentials step: the stored values render the right facts (real templ
     assert.equal(credentialsCollectedFields({ license: 'yes', licenseText: CREDENTIALS_COPY.licenseNo }, licensedNiche).license, undefined, 'the "no" label typed in');
     assert.equal(opensWithNegationWord('none'), true);
     assert.equal(opensWithNegationWord('No. 4821'), false);
+  });
+});
+
+describe('credentials step: the contractor tier (Noa r3 trustContractorRegistered / proofContractorRegistered / Detail)', () => {
+  const contractorNiche = S.trades.contractorKeywords[0];
+  const brief = { firstPartyProof: [{ id: 'proof-license', value: 'l' }], site: undefined };
+  // Noa's own example detail, sliced from the placeholder ("e.g.: <branch>, <class>"), never typed.
+  const placeholder = CREDENTIALS_COPY.contractorLicenseTypePlaceholder;
+  const detail = placeholder.slice(placeholder.indexOf(': ') + 2);
+  const proofOf = (license: string) => {
+    const facts = ownerFacts({ license }, brief, R);
+    return { fact: facts.license, proof: facts.license ? proofText(facts.license, R) : null, chip: facts.license ? trustText(facts.license, R) : null };
+  };
+
+  it('writes: yes -> the code value (with the typed detail); no -> nothing; never the chip label', () => {
+    assert.equal(credentialsCollectedFields({ license: 'yes' }, contractorNiche).license, CONTRACTOR_REGISTERED_VALUE);
+    assert.equal(credentialsCollectedFields({ license: 'yes', licenseText: `  ${detail} ` }, contractorNiche).license, contractorLicenseValue(detail));
+    assert.equal(credentialsCollectedFields({ license: 'no', licenseText: detail }, contractorNiche).license, undefined);
+    assert.deepEqual(parseContractorLicense(contractorLicenseValue(detail)), { detail });
+    assert.deepEqual(parseContractorLicense(CONTRACTOR_REGISTERED_VALUE), { detail: null });
+    assert.equal(parseContractorLicense(detail), null, 'typed licence text is not a contractor value');
+    const data = buildIntakeCollectedData({ ...emptyIntakeCard(), businessName: 'TEST', businessNiche: contractorNiche, phone: '050-0000000', city: 'Fixture City', serviceModel: 'field' as const }, {}, { credentials: { license: 'yes' } });
+    assert.equal(data.license, CONTRACTOR_REGISTERED_VALUE);
+  });
+
+  it('yes alone -> trustContractorRegistered chip and proofContractorRegistered (never trustLicense / proofLicense)', () => {
+    const { fact, proof, chip } = proofOf(CONTRACTOR_REGISTERED_VALUE);
+    assert.equal(fact?.kind, 'contractorRegistered');
+    assert.equal(chip, R.trustContractorRegistered);
+    assert.equal(proof, R.proofContractorRegistered);
+    const facts = ownerFacts({ license: CONTRACTOR_REGISTERED_VALUE }, brief, R);
+    assert.deepEqual(trustBarFromFacts(facts, { installPage: false }, R), [R.trustContractorRegistered]);
+    assert.deepEqual(proofItemsFromFacts(facts, { installPage: false }, R), [{ text: R.proofContractorRegistered, factIds: ['proof-license'] }]);
+    // The English code value never reaches the model.
+    assert.ok(droppedOwnerFactKeys({ license: CONTRACTOR_REGISTERED_VALUE }, R).includes('license'));
+    assert.ok(droppedOwnerFactKeys({ license: contractorLicenseValue(detail) }, R).includes('license'));
+  });
+
+  it('yes + a fitting detail -> proofContractorRegisteredDetail verbatim (Noa example); the chip never carries the detail', () => {
+    const expected = R.proofContractorRegisteredDetail.replace('{detail}', detail);
+    assert.equal(proofOf(contractorLicenseValue(detail)).proof, expected);
+    assert.equal(proofOf(contractorLicenseValue(`${detail}.`)).proof, expected, 'trailing punctuation stripped');
+    assert.equal(proofOf(contractorLicenseValue(detail)).chip, R.trustContractorRegistered);
+  });
+
+  it('detail guards: not mostly Hebrew, over 30 code points, a negation opener, or a repeat opener -> the plain proof', () => {
+    // The repeat openers are sliced from the templates: "contractor" and "registration".
+    assert.deepEqual(contractorDetailRepeatWords(R), ['\u05E7\u05D1\u05DC\u05DF', '\u05E8\u05D9\u05E9\u05D5\u05DD']);
+    const plain = R.proofContractorRegistered;
+    assert.equal(proofOf(contractorLicenseValue('Branch 100, class C1')).proof, plain, 'English');
+    assert.equal(proofOf(contractorLicenseValue(`${detail} ${detail}`)).proof, plain, 'over 30 code points');
+    assert.ok([...`${detail} ${detail}`].length > 30);
+    assert.equal(proofOf(contractorLicenseValue(`${R.parseNegationWords[0]} ${detail}`)).proof, plain, 'negation opener');
+    for (const word of contractorDetailRepeatWords(R)) assert.equal(proofOf(contractorLicenseValue(`${word} ${detail}`)).proof, plain, 'repeat opener');
+    assert.equal(proofOf(contractorLicenseValue('100')).proof, plain, 'digits only: not mostly Hebrew');
   });
 });
