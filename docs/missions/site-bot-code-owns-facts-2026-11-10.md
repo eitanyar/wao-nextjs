@@ -145,3 +145,9 @@ Inputs: m2b1i eval (Tamar-Opus NO, Noa FAIL 34 🟠). Execute slice by slice; by
 - /home/eitanya/wao/src/lib/site-bot/research/pageBrief.ts (`buildQuestionPool`: cost filter, verbatim `q`)
 - /home/eitanya/wao/src/lib/site-bot/researchedSiteGeneration.ts (`siteGenerationContext`: `priorMechanismKeys`) and /home/eitanya/wao/scratch/m2b1i/research-to-site-eval.mjs:184 (the dropped `siteTerms`)
 - New: /home/eitanya/wao/src/lib/lp/ownerFactCopy.ts, /home/eitanya/wao/src/lib/lp/repetitionBudget.ts, and the template JSON under /home/eitanya/wao/docs/copy/
+
+## Intake credentials step (Eitan approved 2026-11-10)
+After the 3 questions, one optional quick-tap step (skippable, ~15 s): years in the trade (number), licence (none / yes + its
+type or number, free text in Hebrew), warranty (chips: none / 6 months / 1 year / 2 years / other). Answers land in the existing
+CollectedData fields (yearsInField, license, guarantee) so the code-owned trust bar and proof fill on real sites. Strings via
+waocopy → Noa → docs/copy; built after copy v2 slices 3–5.
