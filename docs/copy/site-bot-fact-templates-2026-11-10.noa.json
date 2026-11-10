@@ -1,0 +1,153 @@
+{
+ "trustYears": "{n} שנים במקצוע",
+ "trustYearsOne": "שנה במקצוע",
+ "trustYearsTwo": "שנתיים במקצוע",
+ "trustLicense": "{license}",
+ "trustLicenseNumber": "רישיון מס׳ {number}",
+ "trustWarranty": "אחריות {duration}",
+ "trustWarrantyVerbatim": "{warranty}",
+ "trustResponse": "הגעה תוך {time}",
+ "trustResponseSameDay": "הגעה באותו יום",
+ "trustRating": "{rating} ★ · {count} ביקורות",
+ "trustRatingOneReview": "{rating} ★ · ביקורת אחת",
+ "trustRatingNoCount": "{rating} ★",
+ "proofYears": "אני במקצוע כבר {n} שנים.",
+ "proofYearsOne": "אני במקצוע כבר שנה.",
+ "proofYearsTwo": "אני במקצוע כבר שנתיים.",
+ "proofLicense": "יש לי {license}.",
+ "proofLicenseVerbatim": "{license}.",
+ "proofLicenseNumber": "יש לי רישיון מס׳ {number}.",
+ "proofWarranty": "על כל עבודה יש אחריות {duration}.",
+ "proofWarrantyVerbatim": "{warranty}.",
+ "proofResponse": "אני אצלך תוך {time}.",
+ "proofResponseSameDay": "אני אצלך עוד באותו יום.",
+ "warrantyBareOneMonth": "חודש",
+ "warrantyBareTwoMonths": "חודשיים",
+ "warrantyBareNMonths": "{n} חודשים",
+ "warrantyBareSixMonths": "חצי שנה",
+ "warrantyBareOneYear": "שנה",
+ "warrantyBareOneAndHalfYears": "שנה וחצי",
+ "warrantyBareTwoYears": "שנתיים",
+ "warrantyBareNYears": "{n} שנים",
+ "warrantyLamedOneMonth": "לחודש",
+ "warrantyLamedTwoMonths": "לחודשיים",
+ "warrantyLamedNMonths": "ל־{n} חודשים",
+ "warrantyLamedSixMonths": "לחצי שנה",
+ "warrantyLamedOneYear": "לשנה",
+ "warrantyLamedOneAndHalfYears": "לשנה וחצי",
+ "warrantyLamedTwoYears": "לשנתיים",
+ "warrantyLamedNYears": "ל־{n} שנים",
+ "responseOneMinute": "דקה",
+ "responseMinutes": "{n} דקות",
+ "responseHalfHour": "חצי שעה",
+ "responseOneHour": "שעה",
+ "responseTwoHours": "שעתיים",
+ "responseHours": "{n} שעות",
+ "responseSameDay": "אותו יום",
+ "parseMinuteWords": [
+  "דקות",
+  "דקה",
+  "דק׳",
+  "דק'"
+ ],
+ "parseHourWords": [
+  "שעות",
+  "שעה",
+  "שע׳",
+  "שע'"
+ ],
+ "parseOneHourWords": [
+  "שעה"
+ ],
+ "parseTwoHourWords": [
+  "שעתיים"
+ ],
+ "parseHalfHourWords": [
+  "חצי שעה"
+ ],
+ "parseMonthWords": [
+  "חודשים",
+  "חודש"
+ ],
+ "parseOneMonthWords": [
+  "חודש",
+  "לחודש"
+ ],
+ "parseTwoMonthWords": [
+  "חודשיים",
+  "לחודשיים"
+ ],
+ "parseYearWords": [
+  "שנים",
+  "שנה"
+ ],
+ "parseOneYearWords": [
+  "שנה",
+  "לשנה"
+ ],
+ "parseOneAndHalfYearWords": [
+  "שנה וחצי",
+  "לשנה וחצי"
+ ],
+ "parseTwoYearWords": [
+  "שנתיים",
+  "לשנתיים"
+ ],
+ "parseHalfYearWords": [
+  "חצי שנה",
+  "לחצי שנה"
+ ],
+ "parseLicenseNumberWords": [
+  "מס׳",
+  "מס'",
+  "מס.",
+  "מס",
+  "מספר"
+ ],
+ "parseSameDayWords": [
+  "באותו יום",
+  "אותו יום",
+  "באותו היום",
+  "עוד באותו יום",
+  "עוד היום",
+  "עד סוף היום",
+  "ביום הפנייה",
+  "ביום הקריאה"
+ ],
+ "qaAnswerLead": "אצל {business} ב{city}:",
+ "costQuestionTokens": [
+  "מחיר",
+  "המחיר",
+  "מחירים",
+  "המחירים",
+  "במחיר",
+  "מחירון",
+  "הצעת מחיר",
+  "מה המחיר",
+  "עלות",
+  "העלות",
+  "עלויות",
+  "תעריף",
+  "התעריף",
+  "תעריפים",
+  "כמה עולה",
+  "כמה עולים",
+  "כמה עולות",
+  "כמה זה עולה",
+  "כמה יעלה",
+  "כמה זה יעלה",
+  "כמה תעלה",
+  "כמה לוקחים",
+  "כמה אתה לוקח",
+  "כמה את לוקחת",
+  "כמה גובים",
+  "כמה צריך לשלם",
+  "יקר",
+  "זול",
+  "תקציב",
+  "₪",
+  "ש״ח",
+  "שקל",
+  "שקלים"
+ ]
+}
