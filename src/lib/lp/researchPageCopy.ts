@@ -15,6 +15,7 @@ import { codeOwnedFactTemplates, droppedOwnerFactKeys, ownerFacts, proofItemsFro
 import { costFaq, formatShekels, ownerPricing, pricingPromisePhrases } from './researchedPricing';
 import { proseSentences, restatementMatches, type FactRestatementSpec, type RestatementFact } from './factRestatement';
 import { budgetStrings, repetitionBudgetDecisions, type BudgetOptions, type BudgetString } from './repetitionBudget';
+import { applyQaAnswerLeads, assembleQaItems, planQa, qaAnswerLead, type QaPlan } from './qaCodeOwned';
 import {
   DEPTH_BLOCK_KEYS,
   DEPTH_BLOCK_LIMITS,
@@ -127,6 +128,8 @@ export interface ResearchPageCopyDependencies {
   promptVersion?: PromptVersion;
   /** Copy v2 slice 5: the clause keys of the homepage's own statements (siteGenerationContext), for the site-wide budget. */
   priorMechanismKeys?: readonly string[];
+  /** Copy v2 slice 7: run the warn-only promise-contradiction judge (default PROMISE_JUDGE_ENABLED, which is off). */
+  promiseJudge?: boolean;
 }
 
 export type PromptVersion = 'v1' | 'v2';
@@ -933,7 +936,7 @@ export function describeDepthLimit(field: string): string | null {
 export const DEPTH_NOA_NOTE = 'DEPTH BLOCKS: in processSteps, qaItems and proofItems, correct only the text keys (text, q, a) and the headlines. Keep every factIds and questionId exactly as given, keep the items in the same order, and never add or remove an item.';
 
 /** The DEPTH BLOCKS prompt section of a service page (English only; one line per enabled block). */
-export function buildDepthSection(brief: PageBrief): string {
+export function buildDepthSection(brief: PageBrief, data?: CollectedData): string {
   const band = brief.lengthBand;
   const limits = DEPTH_BLOCK_LIMITS;
   const site = brief.site;
@@ -950,7 +953,8 @@ export function buildDepthSection(brief: PageBrief): string {
       `- processSteps (B1): how a typical job of this service runs, from the first call to the end, as ${limits.process.minItems} to ${limits.process.maxItems} steps in order. Each step at most ${limits.process.maxWords} words, in the owner's first person, taken from serviceFacts and the other owner facts only. If the facts do not describe at least ${limits.process.minItems} real steps, output null for processSteps and processHeadline.`,
       `- processHeadline: the heading of the steps, at most ${limits.headlineMaxChars} characters, or null.`,
     ] : []),
-    ...(enabled?.qa ? [
+    ...(enabled?.qa && data && codeOwnedQa(brief, data) ? codeOwnedQaRules(brief, data) : []),
+    ...(enabled?.qa && !(data && codeOwnedQa(brief, data)) ? [
       `- qaItems (B4): ${limits.qa.minItems} to ${limits.qa.maxItems} questions from questionPool that the owner's facts answer. Each item: "questionId" (the id of the question in questionPool), "q" (that question in natural Hebrew, addressed to one person in the singular, keeping its meaning), "a" (the answer, at most ${limits.qa.maxAnswerWords} words) and "factIds".`,
       `- Each answer's first sentence answers the question directly and names the business (${business})${city ? ` and the base city (${city})` : ''}. Answer only from the owner facts: skip every question his facts do not answer, and never guess. If fewer than ${limits.qa.minItems} questions can be answered, output null for qaItems and qaHeadline.`,
       `- qaHeadline: the heading of the questions, at most ${limits.headlineMaxChars} characters, or null.`,
@@ -1066,7 +1070,7 @@ function settleWithDrops(ctx: RepairContext, stage: CopyValidationStage, value: 
 /** The slice 4-5 drops in place (off while the fact templates are pending or the gates are off). Returns the fix notes. */
 export function applyDeterministicDrops(value: Loose, brief: PageBrief, data: CollectedData, gates: CopyGateContext | null, priorMechanismKeys?: readonly string[]): string[] {
   if (!gates?.factRestatement) return [];
-  return [...dropRestatements(value, gates), ...applyRepetitionBudget(value, brief, data, gates, priorMechanismKeys)];
+  return [...dropRestatements(value, gates), ...dropQaBrandAnswers(value, gates), ...applyRepetitionBudget(value, brief, data, gates, priorMechanismKeys)];
 }
 
 /** The budget inputs of a page: its rendered strings in render order (code-built ones included) and the options. */
@@ -1076,6 +1080,7 @@ export function repetitionBudgetInputs(value: Loose, brief: PageBrief, data: Col
     pricePromises: built?.pricePromises ?? [],
     costFaq: built?.costFaq ?? null,
     codeOwnedFields: gates.codeOwnedFields ?? [],
+    qaCodeItems: gates.qaCodeOwnership?.codeItems ?? 0,
   }, researchedRenderedFieldsFor(brief.page.pageClass));
   return { strings, options: { free: phraseRepeatFreeTokens(gates), minSentences: PROSE_MIN_SENTENCES, ...(priorMechanismKeys?.length ? { priorKeys: priorMechanismKeys } : {}) } };
 }
@@ -1585,6 +1590,59 @@ export function dropRestatements(copy: Loose, gates: CopyGateContext): string[] 
   return applyDropPlan(copy, plan, 'restatement');
 }
 
+/** Copy v2 slice 6: a model-written Q&A answer that names the business is dropped (never repaired; the lead names it). */
+export function dropQaBrandAnswers(copy: Loose, gates: CopyGateContext): string[] {
+  if (!gates.qaCodeOwnership) return [];
+  const hits = runCopyGates(copy, gates).filter(hit => hit.rule === GATE_RULES.qaBrandInAnswer);
+  if (!hits.length) return [];
+  const plan = emptyDropPlan();
+  for (const field of new Set(hits.map(hit => hit.field))) planFieldDrop(plan, field);
+  return applyDropPlan(copy, plan, 'qa_brand');
+}
+
+const HEB_LETTER = '[\u05D0-\u05EA]';
+/**
+ * Copy v2 slice 8: ASCII quote marks in Hebrew text become the Hebrew marks, deterministically: a single-quoted Hebrew run
+ * becomes a gershayim pair; " between Hebrew letters (an abbreviation) and every other " become gershayim; ' after a Hebrew
+ * letter (a geresh) and every other ' become geresh. Text without Hebrew is returned unchanged.
+ */
+export function hebrewQuoteMarks(text: string): string {
+  if (!new RegExp(HEB_LETTER, 'u').test(text) || !/["']/.test(text)) return text;
+  return text
+    .replace(new RegExp(`(?<!${HEB_LETTER})'(${HEB_LETTER}[^'\n]*?)'(?!${HEB_LETTER})`, 'gu'), '\u05F4$1\u05F4')
+    .replace(/"/g, '\u05F4')
+    .replace(/'/g, '\u05F3');
+}
+
+/** Copy v2 slice 7 (warn-only): the judge call is stubbed and OFF; promote only after Noa reads its precision (>= 90%). */
+export const PROMISE_JUDGE_ENABLED = false;
+/** The fields the judge reads (hero, story, about, cards). */
+export const PROMISE_JUDGE_FIELDS: readonly string[] = ['heroHeadline', 'heroSubheadline', 'storyBody', 'aboutPageBody', 'serviceDetails'];
+export const PROMISE_JUDGE_SYSTEM_PROMPT = 'You check one Hebrew landing page for internal contradictions. Reply with JSON only.';
+
+/** The judge's message: the page's promise fields, and the JSON shape it must return. English instructions only. */
+export function buildPromiseJudgeMessage(copy: Loose): string {
+  const fields = Object.fromEntries(PROMISE_JUDGE_FIELDS.filter(key => key in copy).map(key => [key, copy[key]]));
+  return `PAGE FIELDS:\n${JSON.stringify(fields)}\n\nState the page's one main promise as heroHeadline and heroSubheadline make it (including any order of the work: something done before something else). Then list every sentence in the other fields that contradicts that promise or its order, quoted exactly. Output JSON only: {"promise": "", "contradictingSentences": [{"field": "", "sentence": ""}]}`;
+}
+
+/**
+ * Copy v2 slice 7: the warn-only promise-contradiction judge (think:false). Off unless enabled; logged as warnings, never
+ * repaired, never fails the page; a failed or malformed call is ignored. Field names and counts only, never copy text.
+ */
+export async function promiseContradictionWarnings(copy: Loose, callJson: QwenJsonCaller, enabled: boolean = PROMISE_JUDGE_ENABLED): Promise<CopyViolation[]> {
+  if (!enabled) return [];
+  try {
+    const raw = await callJson(PROMISE_JUDGE_SYSTEM_PROMPT, buildPromiseJudgeMessage(copy), { think: false });
+    const parsed: unknown = JSON.parse(raw);
+    const list = plainObject(parsed) && Array.isArray(parsed.contradictingSentences) ? parsed.contradictingSentences : [];
+    const fields = list.flatMap(item => (plainObject(item) && typeof item.field === 'string' && PROMISE_JUDGE_FIELDS.includes(topField(item.field)) ? [topField(item.field)] : []));
+    return [...new Set(fields)].map(field => ({ field, rule: 'gate_promise_contradiction', actual: fields.filter(item => item === field).length }));
+  } catch {
+    return [];
+  }
+}
+
 /** Copy v2 slice 4: restatement hits get one repair per page; after that they are not sent to the model again (the page fails). */
 export const RESTATEMENT_MAX_REPAIRS = 1;
 
@@ -1621,6 +1679,10 @@ export function normalizedServicesHeadline(value: unknown): string {
 
 export function withSystemFields(value: Loose, brief: PageBrief, data: CollectedData): Loose {
   const next: Loose = { ...value, faqItems: supportedFaqItems(brief) };
+  // Copy v2 slice 6: code-built Q&A items first (owner facts on pool questions), then the model's items on the other pool
+  // questions with the pool wording as q (the lead goes in front of each answer after the final gates).
+  const qa = codeOwnedQa(brief, data);
+  if (qa && ('qaItems' in next || qa.plan.codeItems.length)) next.qaItems = assembleQaItems(next.qaItems, qa.plan, qa.lead);
   // Content depth: the blocks stay only on a service page that may generate them (settleDepthBlocks drops the rest).
   settleDepthBlocks(next, depthPage(brief) ? brief.blocksEnabled ?? null : null, brief.site?.pageName ?? null);
   if (!brief.site) return next;
@@ -1632,6 +1694,8 @@ export function withSystemFields(value: Loose, brief: PageBrief, data: Collected
     const field = next[key];
     next[key] = typeof field === 'string' && field.trim() && field.length <= SITE_COPY_OPTIONAL_PRESENCE_LIMITS[key] ? field : null;
   }
+  // Copy v2 slice 8: the unrendered pitch gets the deterministic ASCII-quote -> geresh / gershayim fix (no Noa stage sees it).
+  if (typeof next.pitch === 'string' && codeOwnedFactTemplates()) next.pitch = hebrewQuoteMarks(next.pitch);
   // M2b.1d: ungenerated fields are system-filled (empty about pair and cards; the first services headline entry), and the
   // services headline of a page that generates it is normalised to the closed set.
   const ungenerated = ungeneratedFieldsFor(brief);
@@ -1932,6 +1996,31 @@ export function buildResearchPageGenerationPrompt(brief: PageBrief, data: Collec
 // v1 (buildResearchPageGenerationPrompt) stays byte-identical for one A/B round.
 // ---------------------------------------------------------------------------
 
+/**
+ * Copy v2 slice 6: the Q&A plan and answer lead of a code-owned service page with a Q&A block (null otherwise: pending
+ * templates, no depth page, Q&A off).
+ */
+export function codeOwnedQa(brief: PageBrief, data: CollectedData): { plan: QaPlan; lead: string | null } | null {
+  const templates = brief.site ? codeOwnedFactTemplates() : null;
+  if (!templates || !depthPage(brief) || !brief.blocksEnabled?.qa) return null;
+  return { plan: planQa(brief, data, templates, { installPage: isInstallPage(brief) }), lead: qaAnswerLead(brief, data, templates) };
+}
+
+/** Copy v2 slice 6: how many leading qaItems of a page are code-built (rescore / diagnostics). */
+export function codeQaItemCount(copy: Loose, brief: PageBrief, data: CollectedData): number {
+  const qa = codeOwnedQa(brief, data);
+  return qa && Array.isArray(copy.qaItems) ? Math.min(qa.plan.codeItems.length, copy.qaItems.length) : 0;
+}
+
+/**
+ * Copy v2 slice 6, after the final gates: the qaAnswerLead in front of every model-written answer (in the same string, so
+ * it renders in the same paragraph). Returns the fix notes; nothing on other pages.
+ */
+export function withQaAnswerLeads(copy: Loose, brief: PageBrief, data: CollectedData): string[] {
+  const qa = codeOwnedQa(brief, data);
+  return qa ? applyQaAnswerLeads(copy, { codeItems: qa.plan.codeItems.length }, qa.lead) : [];
+}
+
 /** The code-built strings of one page (what the reader already sees from the system), or null while the templates are pending. */
 export interface CodeBuiltFactStrings {
   trustBarItems: string[];
@@ -2037,6 +2126,7 @@ export function buildResearchCopyRulesV2(brief: PageBrief, data: CollectedData =
       `- ${M2B_PROMPT_RULES_AFTER_M2B2.find(rule => rule.id === 'B3')?.text ?? 'B3: use one entry of servicesHeadlineOptions, word for word.'}`,
       `- serviceDetails: at most one card per service, each name exactly one of ${JSON.stringify(site?.serviceLabels ?? [])}, character for character. Each description is one full first-person sentence of 8 to 14 words (at least ${SERVICE_DESCRIPTION_MIN_CHARS} characters): present-tense verbs in the order he works, one physical detail that belongs only to that service, ending on a result the homeowner can check. Never the differentiator, a fact the system shows, a price or a "before" construction, and no two cards start with the same three words.`,
     ] : []),
+    ...(brief.page.pageClass === 'homepage' ? ['- The usp\'s mechanism \u2014 the specific how, not just its outcome \u2014 appears in heroHeadline or heroSubheadline, unless the code-built trust bar already shows it.'] : []),
     `- formHeadline: ${formHeadlineChoice(brief, data)}`,
     '- ORDER AND LOGISTICS (binding): who comes, when, how and with what is stated the same way in every field. heroHeadline and heroSubheadline may claim an order of the work (something done before something else) only when the owner\'s usp states that order, and every other field keeps it.',
   ];
@@ -2146,7 +2236,8 @@ export function buildResearchPageGenerationPromptV2(brief: PageBrief, data: Coll
       offer: brief.waoOffer,
       lengthBand: brief.lengthBand,
       blocksEnabled: brief.blocksEnabled ? { ...brief.blocksEnabled, proof: false } : brief.blocksEnabled,
-      ...(brief.blocksEnabled?.qa ? { questionPool: brief.questionPool ?? [] } : {}),
+      // Copy v2 slice 6: questions on a code-owned fact never reach the model (code-built or dropped).
+      ...(brief.blocksEnabled?.qa ? { questionPool: codeOwnedQa(brief, data)?.plan.modelPool ?? brief.questionPool ?? [] } : {}),
       suggestedTerms: brief.suggestedTerms ?? [],
     } : {}),
     informationGainGaps: brief.informationGainGaps,
@@ -2159,7 +2250,7 @@ ${JSON.stringify(brief2)}
 
 COPY RULES (binding):
 ${ruleText}
-${pitchFirstPage(brief) ? `\nDIRECT-RESPONSE TOOLKIT:\n${DIRECT_RESPONSE_TOOLKIT.join('\n')}\n` : ''}${depthPage(brief) ? `\n${buildDepthSection(brief)}\n` : ''}
+${pitchFirstPage(brief) ? `\nDIRECT-RESPONSE TOOLKIT:\n${DIRECT_RESPONSE_TOOLKIT.join('\n')}\n` : ''}${depthPage(brief) ? `\n${buildDepthSection(brief, data)}\n` : ''}
 LISTS NAMED IN THE RULES:
 ${v2ListLines(brief, data).join('\n')}
 
@@ -2170,6 +2261,24 @@ OUTPUT (JSON only, no markdown; the system values are filled in):
 ${v2OutputSkeleton(brief, data)}
 
 ${replaceOnce(buildSiteCopyHardLimitsBlock('HARD LIMITS', ungeneratedFieldsFor(brief), layoutFor(brief)), V1_FAQ_LIMIT_LINE, V2_FAQ_LIMIT_LINE, 'faqItems hard-limit line')}`;
+}
+
+/**
+ * Copy v2 slice 6 (+ Yonatan's amendment): the Q&A lines of a code-owned service page. The model answers only the pool it is
+ * given; the system adds the code-built items, keeps the pool wording as q and puts the lead in front of every answer.
+ */
+export function codeOwnedQaRules(brief: PageBrief, data: CollectedData): string[] {
+  const qa = codeOwnedQa(brief, data);
+  const limits = DEPTH_BLOCK_LIMITS;
+  const built = qa?.plan.codeItems.length ?? 0;
+  const room = Math.max(0, limits.qa.maxItems - built);
+  const need = Math.max(0, limits.qa.minItems - built);
+  return [
+    `- qaItems (B4): at most ${room} questions from questionPool that the owner's facts answer${built ? ` (the system adds ${built} more itself, on the facts it shows)` : ''}. Each item: "questionId" (the id of the question in questionPool), "q" (that question exactly as written in questionPool; the system keeps the pool wording), "a" (the answer, in the owner's first person, at most ${limits.qa.maxAnswerWords} words) and "factIds".`,
+    '- Answer the question directly in the first sentence: yes or no, or the fact itself. Write each answer self-contained: never a pointer such as "as above", "see below" or "as I said".',
+    `- Never name the business in an answer: the system puts ${JSON.stringify(qa?.lead ?? '')} in front of every answer. Answer only from the owner facts: skip every question his facts do not answer, and never guess.${need ? ` If fewer than ${need} questions can be answered, output null for qaItems and qaHeadline.` : ' If none can be answered, output an empty list for qaItems.'}`,
+    `- qaHeadline: the heading of the questions, at most ${limits.headlineMaxChars} characters, or null.`,
+  ];
 }
 
 /** v2 has no faqPolicy rule (faqItems are system-filled), so the hard-limits faq line says so. */
@@ -2264,6 +2373,11 @@ export function briefGateContext(brief: PageBrief, data: CollectedData): CopyGat
     ...(site && codeOwnsFacts(brief) ? { factRestatement: factRestatementSpec(brief, data, codeOwnedFactTemplates() as OwnerFactTemplates) } : {}),
     // M2b.1h: pitch-first pages may restate the promise in fresh words; every research page blocks verbatim repeats.
     ...(site ? { promiseRestatement: pitchFirstPage(brief), phraseRepeatFields: researchedRenderedFieldsFor(brief.page.pageClass) } : {}),
+    // Copy v2 slice 6: the code-built Q&A items and every pool question are code-owned; the lead is not the model's.
+    ...(() => {
+      const qa = codeOwnedQa(brief, data);
+      return qa ? { qaCodeOwnership: { codeItems: qa.plan.codeItems.length }, qaAnswerLead: qa.lead } : {};
+    })(),
     // Content depth: the fact-trace and term-density inputs of a service page with depth blocks.
     ...(depthPage(brief) ? { depth: {
       factTexts: Object.fromEntries(briefFactTexts(brief)),
@@ -2337,11 +2451,18 @@ export async function generateResearchPageCopy(
   // Content depth: Tamar's factIds / questionId go back into Noa's raw answer before it is settled (Noa edits text only).
   const noaCall = async () => withTamarDepthReferences(await callJson(QA_SYSTEM_PROMPT, buildNoaQaMessage(tamarCopy, brief), { think: false }), tamarCopy as unknown as Loose, brief);
   const noaCopy = await settleStage(ctx, 'noa', noaCall);
+  // Copy v2 slice 7: the warn-only promise-contradiction judge (off by default; never repaired).
+  const contradictions = await promiseContradictionWarnings(noaCopy as unknown as Loose, callJson, dependencies.promiseJudge ?? PROMISE_JUDGE_ENABLED);
+  if (contradictions.length) ctx.emit({ stage: 'noa', kind: 'warnings', violations: contradictions });
   const finalCopy = withSystemFields(carryOptionalFields(applyFaqPolicy(noaCopy, brief) as unknown as Loose, tamarCopy as unknown as Loose), brief, data) as unknown as SiteCopy;
   const finalFixes = applyDeterministicDrops(finalCopy as unknown as Loose, brief, data, ctx.gates, ctx.priorMechanismKeys);
   if (finalFixes.length) ctx.emit({ stage: 'final', kind: 'deterministic_fix', fixes: finalFixes });
   assertCopyAt('final', finalCopy, shapeOptions(brief));
   assertGatesAt('final', finalCopy as unknown as Loose, ctx.gates, ctx.emit);
+  // Copy v2 slice 6: the answer lead goes in after the final gates (it names the business; the gates read the model's words).
+  const leadFixes = withQaAnswerLeads(finalCopy as unknown as Loose, brief, data);
+  if (leadFixes.length) ctx.emit({ stage: 'final', kind: 'deterministic_fix', fixes: leadFixes });
+  assertCopyAt('final', finalCopy, shapeOptions(brief));
   const gap = depthLengthNote(finalCopy as unknown as Loose, brief);
   if (gap) ctx.emit({ stage: 'final', kind: 'warnings', violations: [gap] });
   // 2026-11-10 (reviewQuote bug): an owner quote the site cannot show is logged, never silently dropped.

@@ -50,6 +50,8 @@ export interface BudgetCodeStrings {
   costFaq: { q: string; a: string } | null;
   /** Copy fields the code builds (CODE_OWNED_FACT_FIELDS while code owns the facts). */
   codeOwnedFields: readonly string[];
+  /** Copy v2 slice 6: the first N qaItems are code-built (one code-owned fact with its trust / proof twin; never dropped). */
+  qaCodeItems?: number;
 }
 
 const nonEmpty = (value: unknown): value is string => typeof value === 'string' && value.trim() !== '';
@@ -76,8 +78,10 @@ export function budgetStrings(copy: Loose, code: BudgetCodeStrings, renderedFiel
     value.forEach((item, index) => {
       if (typeof item === 'string') push(`${slot}[${index}]`, item, isCode);
       else if (isPlain(item)) {
-        // The Q&A question is the pool's (slice 6 makes it code-owned): only the answer is budgeted.
-        for (const key of slot === 'qaItems' ? ['a'] : slot === 'serviceDetails' ? ['description'] : ['text']) push(`${slot}[${index}].${key}`, item[key], isCode);
+        // The Q&A question is the pool's (slice 6 makes it code-owned): only the answer is budgeted. A code-built Q&A item
+        // is a code string (it owns its keys with the proof item it repeats; never dropped).
+        const codeItem = isCode || (slot === 'qaItems' && index < (code.qaCodeItems ?? 0));
+        for (const key of slot === 'qaItems' ? ['a'] : slot === 'serviceDetails' ? ['description'] : ['text']) push(`${slot}[${index}].${key}`, item[key], codeItem);
       }
     });
   }

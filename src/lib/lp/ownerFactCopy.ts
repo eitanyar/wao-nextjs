@@ -188,7 +188,19 @@ export const FACT_OPTIONAL_TEMPLATE_KEYS = [
 ] as const;
 export type FactOptionalTemplateKey = (typeof FACT_OPTIONAL_TEMPLATE_KEYS)[number];
 
-export type OwnerFactTemplates = Readonly<Record<FactTemplateKey, string> & Record<FactParseTokenKey | FactRuleTokenKey, readonly string[]> & Partial<Record<FactOptionalTemplateKey, string>>>;
+/**
+ * Copy v2 slice 6: optional Noa question-topic lists (qaCodeOwned.ts). Absent = the topic falls back to the restatement
+ * spec's lists (licence, warranty, years) or stays undetected (callback / response). Copied when present, never required.
+ */
+export const FACT_OPTIONAL_LIST_KEYS = [
+  'qaLicenseQuestionTokens',
+  'qaResponseQuestionTokens',
+  'qaWarrantyQuestionTokens',
+  'qaYearsQuestionTokens',
+] as const;
+export type FactOptionalListKey = (typeof FACT_OPTIONAL_LIST_KEYS)[number];
+
+export type OwnerFactTemplates = Readonly<Record<FactTemplateKey, string> & Record<FactParseTokenKey | FactRuleTokenKey, readonly string[]> & Partial<Record<FactOptionalTemplateKey, string>> & Partial<Record<FactOptionalListKey, readonly string[]>>>;
 
 /** Every key the template file must hold, in file order (templates, then parse token lists, then the r2 rule lists). */
 export const FACT_TEMPLATE_KEYS: readonly string[] = [...Object.keys(FACT_TEMPLATE_SLOTS), ...FACT_PARSE_TOKEN_KEYS, ...FACT_RULE_TOKEN_KEYS];
@@ -454,6 +466,11 @@ export function factTemplateProblems(templates: unknown): string[] {
     if (!(key in record)) continue;
     const value = record[key];
     if (typeof value !== 'string' || !value.trim() || value.includes(HE_TODO_PREFIX) || templateSlots(value).length) problems.push(`${key}:optional`);
+  }
+  for (const key of FACT_OPTIONAL_LIST_KEYS) {
+    if (!(key in record)) continue;
+    const value = record[key];
+    if (!Array.isArray(value) || !value.length || value.some(item => typeof item !== 'string' || !item.trim() || item.includes(HE_TODO_PREFIX))) problems.push(`${key}:optional`);
   }
   return problems;
 }

@@ -217,6 +217,8 @@ export const GATE_RULES = {
   termDensity: 'gate_term_density',
   // Copy v2 slice 4: a model field restates an owner fact the code already shows (trust bar, proof, prices).
   factRestatement: 'gate_fact_restatement',
+  /** Copy v2 slice 6: a model-written Q&A answer names the business (the code-built lead already does). */
+  qaBrandInAnswer: 'gate_qa_brand_in_answer',
 } as const;
 export type GateRule = (typeof GATE_RULES)[keyof typeof GATE_RULES];
 
@@ -310,6 +312,13 @@ export interface CopyGateContext {
    * while code owns the facts; unset = the gate is off (today's path).
    */
   factRestatement?: FactRestatementSpec;
+  /**
+   * Copy v2 slice 6: the Q&A of a code-owned page. The first `codeItems` qaItems are code-built (whole items code-owned) and
+   * every item's `q` is the pool question (code-owned); no gate hit lands on them. Set only while code owns the facts.
+   */
+  qaCodeOwnership?: QaCodeOwnership;
+  /** Copy v2 slice 6: the page's qaAnswerLead (removed before gate_qa_brand_in_answer reads an answer). */
+  qaAnswerLead?: string | null;
 }
 
 /** Content depth gate inputs (see CopyGateContext.depth). */
@@ -1053,6 +1062,50 @@ export function customerOnlyKeys(ctx: CopyGateContext): string[] {
 
 function topFieldOf(field: string): string {
   return field.split(/[.[]/)[0];
+}
+
+/** Copy v2 slice 6: what the gates and the budget treat as code-owned in qaItems (see CopyGateContext.qaCodeOwnership). */
+export interface QaCodeOwnership {
+  codeItems: number;
+}
+
+/** True when a field path is code-owned under the Q&A ownership (a code-built item, or any item's question). */
+export function isCodeOwnedQaField(field: string, ownership: QaCodeOwnership | undefined): boolean {
+  if (!ownership) return false;
+  const match = /^qaItems\[(\d+)\](?:\.(\w+))?$/.exec(field);
+  if (!match) return false;
+  return Number(match[1]) < ownership.codeItems || match[2] === 'q';
+}
+
+/** An answer without a leading qaAnswerLead (a record that already carries it, settled again). */
+export function withoutQaLead(answer: string, lead: string | null | undefined): string {
+  if (!lead) return answer;
+  const text = answer.trimStart();
+  return text.startsWith(lead) ? text.slice(lead.length).trimStart() : answer;
+}
+
+/** Copy v2 slice 6: gate_qa_brand_in_answer on the model-written answers (code-built items are skipped). */
+function qaBrandHits(copy: Record<string, unknown>, ctx: CopyGateContext): GateViolation[] {
+  const name = (ctx.businessName ?? '').normalize('NFC').trim().toLowerCase();
+  const items = copy.qaItems;
+  const ownership = ctx.qaCodeOwnership;
+  if (!ownership || !name || !Array.isArray(items)) return [];
+  const out: GateViolation[] = [];
+  items.forEach((item, index) => {
+    if (index < ownership.codeItems || !item || typeof item !== 'object') return;
+    const answer = (item as Record<string, unknown>).a;
+    if (typeof answer === 'string' && withoutQaLead(answer, ctx.qaAnswerLead).normalize('NFC').toLowerCase().includes(name)) {
+      out.push({ field: `qaItems[${index}].a`, rule: GATE_RULES.qaBrandInAnswer });
+    }
+  });
+  return out;
+}
+
+/** Hits on code-owned fields (top-level code-built fields, code-built Q&A items, every Q&A question) are dropped. */
+function withoutCodeOwnedHits<T extends { field: string }>(hits: T[], ctx: Pick<CopyGateContext, 'codeOwnedFields' | 'qaCodeOwnership'>): T[] {
+  const owned = ctx.codeOwnedFields ?? [];
+  if (!owned.length && !ctx.qaCodeOwnership) return hits;
+  return hits.filter(hit => !owned.includes(topFieldOf(hit.field)) && !isCodeOwnedQaField(hit.field, ctx.qaCodeOwnership));
 }
 
 function countMatches(value: string, pattern: RegExp): number {
@@ -2073,6 +2126,8 @@ export const ALWAYS_BLOCKING_RULES: readonly GateRule[] = [
   GATE_RULES.termDensity,
   // Copy v2 slice 4: restating a code-owned owner fact fails the page in every field (story and depth blocks too).
   GATE_RULES.factRestatement,
+  // Copy v2 slice 6: the business name inside a model-written Q&A answer (dropped deterministically before any repair).
+  GATE_RULES.qaBrandInAnswer,
 ];
 
 /** M2b.1h: the only gates that run on the unrendered pitch: the truth / owner-fact gates and the foreign-script check. */
@@ -2134,18 +2189,18 @@ function gateOrder(strings: Array<{ field: string; value: string }>, renderedFie
  * which only the PITCH_GATE_RULES hits are kept.
  */
 export function runCopyGates(copy: Record<string, unknown>, ctx: CopyGateContext): GateViolation[] {
-  // Copy v2 slice 2: hits on code-owned fields are dropped (the fields are system-built, never repaired).
-  const owned = ctx.codeOwnedFields;
-  const hits = runAllGates(copy, ctx);
-  return owned?.length ? hits.filter(hit => !owned.includes(topFieldOf(hit.field))) : hits;
+  // Copy v2 slice 2: hits on code-owned fields are dropped (the fields are system-built, never repaired). Slice 6: the
+  // code-built Q&A items and every Q&A question too.
+  return withoutCodeOwnedHits(runAllGates(copy, ctx), ctx);
 }
 
 function runAllGates(copy: Record<string, unknown>, ctx: CopyGateContext): GateViolation[] {
-  if (!Object.prototype.hasOwnProperty.call(copy, 'pitch')) return [...runPageGates(copy, ctx), ...depthGateHits(copy, ctx), ...restatementGateHits(copy, ctx)];
+  if (!Object.prototype.hasOwnProperty.call(copy, 'pitch')) return [...runPageGates(copy, ctx), ...depthGateHits(copy, ctx), ...restatementGateHits(copy, ctx), ...qaBrandHits(copy, ctx)];
   const { pitch, ...page } = copy;
   const out = runPageGates(page, ctx);
   out.push(...depthGateHits(page, ctx));
   out.push(...restatementGateHits(page, ctx));
+  out.push(...qaBrandHits(page, ctx));
   if (typeof pitch === 'string' && pitch.trim()) out.push(...pitchGateHits(pitch, ctx));
   return out;
 }
@@ -2184,9 +2239,9 @@ export function depthGateHits(copy: Record<string, unknown>, ctx: CopyGateContex
   for (const hit of termDensityHits(copy, depth.terms, pageVisibleWords(copy, ctx), depthAnchorStems(ctx))) {
     out.push({ field: hit.field, rule: GATE_RULES.termDensity, actual: `term:${hit.termIndex}:${hit.count}/${hit.limit}` });
   }
-  // Copy v2 slice 2: the code-built proof items are never traced or dropped (gate_fact_trace off on proofItems).
-  const owned = ctx.codeOwnedFields;
-  return owned?.length ? out.filter(hit => !owned.includes(topFieldOf(hit.field))) : out;
+  // Copy v2 slice 2: the code-built proof items are never traced or dropped (gate_fact_trace off on proofItems). Slice 6:
+  // nor are the code-built Q&A items.
+  return withoutCodeOwnedHits(out, ctx);
 }
 
 /** Content depth: the trace kinds of a hit's actual id (repair text and the deterministic item drop). */
@@ -2403,6 +2458,9 @@ export interface CopyGatePageOptions {
   depth?: CopyGateDepth;
   /** Copy v2 slice 4: see CopyGateContext.factRestatement. */
   factRestatement?: FactRestatementSpec;
+  /** Copy v2 slice 6: see CopyGateContext.qaCodeOwnership / qaAnswerLead. */
+  qaCodeOwnership?: QaCodeOwnership;
+  qaAnswerLead?: string | null;
 }
 
 /** Build the gate context from owner data plus the page's confirmed service names and owner-stated places. */
@@ -2442,6 +2500,8 @@ export function copyGateContext(data: CollectedData, serviceLabels: readonly str
     ...(page.phraseRepeatFields ? { phraseRepeatFields: [...page.phraseRepeatFields] } : {}),
     ...(page.depth ? { depth: page.depth } : {}),
     ...(page.factRestatement ? { factRestatement: page.factRestatement } : {}),
+    ...(page.qaCodeOwnership ? { qaCodeOwnership: { ...page.qaCodeOwnership } } : {}),
+    ...(page.qaAnswerLead ? { qaAnswerLead: page.qaAnswerLead } : {}),
   };
 }
 
@@ -2516,6 +2576,8 @@ export function describeGateViolation(violation: GateViolation, ctx: CopyGateCon
       return `${violation.field} introduces the owner by a name spelled differently from the owner facts (for example a Latin name written in Hebrew letters); write the name exactly as given, character for character: ${JSON.stringify(ctx.ownerFirstName ?? '')}`;
     case GATE_RULES.serviceArea:
       return `${violation.field} widens the service area beyond the places the owner named (a region, "and surroundings", "the area of", nearby towns); name only these places: ${(ctx.places ?? []).join(' / ')}. A travel distance may be stated as a number, never as "surroundings"`;
+    case GATE_RULES.qaBrandInAnswer:
+      return `${violation.field} names the business; the system already puts the business name and city in front of every answer, so write the answer without the business name, in the owner's first person`;
     case GATE_RULES.factRestatement:
       return `${violation.field} restates an owner fact (${(violation.actual ?? '').split(':')[1] ?? 'fact'}: years in the trade, licence, warranty, response time or price) that the system already shows on this page in fixed wording; remove it from this field entirely and say something the page does not say yet (never the fact in other words or other numbers)`;
     case GATE_RULES.shortDescription:

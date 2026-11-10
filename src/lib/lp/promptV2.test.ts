@@ -136,7 +136,7 @@ test('v2 prompt: rule count (about 30, down from about 90) and a pinned snapshot
     const home = brief('homepage');
     const service = brief('money_service');
     const counts = { home: promptV2RuleCount(home, data), service: promptV2RuleCount(service, data) };
-    assert.deepEqual(counts, { home: 38, service: 27 });
+    assert.deepEqual(counts, { home: 39, service: 27 });
     for (const section of [...buildResearchCopyRulesV2(home, data), ...buildResearchCopyRulesV2(service, data)]) {
       for (const rule of section.rules) assert.ok(rule.startsWith('- '), `${section.heading}: every rule is one bullet`);
     }
@@ -148,7 +148,7 @@ test('v2 prompt: rule count (about 30, down from about 90) and a pinned snapshot
 });
 
 /** Re-pin deliberately when a v2 rule changes (print the new values with the assert message). */
-const PINNED_V2 = { home: '25ee05e2091aa6dd', service: 'd33519c23974194e' };
+const PINNED_V2 = { home: '6dbc747fcd8d2597', service: 'd33519c23974194e' };
 
 test('v2 end to end (mocked model): Tamar gets the v2 prompt and the short system prompt; v1 on request', async () => {
   await codeOwned(async () => {
