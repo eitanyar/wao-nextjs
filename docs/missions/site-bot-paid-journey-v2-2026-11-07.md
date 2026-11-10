@@ -52,6 +52,23 @@ domain (301s from old URLs, MX/email untouched), not only no-website businesses.
 - M3: ₪199 Takbull hosted checkout (mock until creds), cancel online, account status page, magic-link/WhatsApp login.
 - M4: GBP add-manager flow + domain paths: client domain, MX untouched, 301 map from old URLs, domain-access
   guide, content-reuse consent; `${slug}.wao.co.il` only for preview.
+- **M4 baseline snapshot (added 2026-11-09, Yonatan; makes "your site brings calls" provable for no-site AND weak-site
+  clients):**
+  - At GBP-connect / domain-bind, store a GBP Performance API pull (monthly search keywords; daily Maps/Search
+    impressions, call clicks, website clicks, directions) plus one Maps grid run (3 terms × 5×5 points around the base,
+    by place_id; DataForSEO Maps `location_coordinate`).
+  - Add a GSC Domain property ourselves (we own the build / DNS path); for an existing site, ask the owner to add WAO
+    *before* the rebuild, since data starts only when the property is added.
+  - Generator template logs tel: / WhatsApp clicks and puts UTM on the GBP website link.
+  - Repeat the snapshot at 30 and 90 days inside the monthly digest (₪199 bundle). Yonatan signs off the term list and
+    grid spec.
+- **Go-live promise (Eitan 2026-11-09, shown on the buy screen, the payment confirmation and the M3 status page):**
+  - live on `<slug>.wao.co.il` within 1 business day of payment (after the human check);
+  - live on the client's own domain within **max 3 business days** of receiving working domain access;
+  - the clock pauses while waiting on the client (registrar approval, MX confirmation). GBP is a separate track and not
+    part of this promise.
+  - Preview wait (pre-pay) measured at ~3–5 min per site on fixtures (M2b.1d eval). Re-measure with live research
+    before stating minutes on the waiting screen.
 - M5: owner voice notes as an input option.
 - M6: walkthrough video recorded from the real flow (pipeline + narration), placed on /site-bot after Noa + Eitan.
 
