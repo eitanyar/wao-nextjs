@@ -10,6 +10,20 @@ import { callQwenJSON, type CallQwenJSONOptions } from '../ai/qwen-fast';
 import type { PageBrief } from '../site-bot/research/pageBrief';
 import type { SiteResearchDossier } from '../site-bot/research/types';
 import { PLURAL_ADDRESS_TOKENS, SERVICE_DESCRIPTION_MIN_CHARS, WE_FORM_TOKENS } from './copyGates.config';
+import { briefFactTexts } from '../site-bot/research/pageBrief';
+import {
+  DEPTH_BLOCK_KEYS,
+  DEPTH_BLOCK_LIMITS,
+  DEPTH_BLOCKS,
+  DEPTH_BLOCKS_MAX_BYTES,
+  depthShapeViolations,
+  dropDepthItems,
+  mergeDepthBlocks,
+  rendersDepthBlocks,
+  settleDepthBlocks,
+  TERM_DENSITY_SHORT_PAGE_WORDS,
+  type DepthBlockId,
+} from './depthBlocks';
 import {
   ARRIVAL_TOKENS,
   BAD_IDIOM_NOTES,
@@ -49,12 +63,14 @@ import {
   blockingGateHits,
   buildAreaTile,
   copyGateContext,
+  depthGateHits,
   DIFFERENTIATOR_SIGNATURE_CAP,
   differentiatorGroups,
   describeGateViolation,
   effectiveReviewQuote,
   fixTimeScope,
   GATE_RULES,
+  pageVisibleWords,
   isAreaTile,
   PHRASE_REPEAT_MAX_FIELDS,
   PHRASE_REPEAT_MIN_WORDS,
@@ -304,9 +320,19 @@ function allowedEmpty(key: string, value: unknown, options: SiteCopyShapeOptions
   return value === '' && (options.ungenerated ?? []).includes(key);
 }
 
+/** Content depth: the optional-presence keys of the bounded validator (pitch / story, and the depth blocks). */
+const PRESENCE_KEYS: readonly string[] = [...OPTIONAL_PRESENCE_KEYS, ...DEPTH_BLOCK_KEYS];
+
+/** The copy without its depth keys (the base byte budget; the depth blocks have their own). */
+function withoutDepthKeys(value: Record<string, unknown>): Record<string, unknown> {
+  if (!DEPTH_BLOCK_KEYS.some(key => key in value)) return value;
+  return Object.fromEntries(Object.entries(value).filter(([key]) => !DEPTH_BLOCK_KEYS.includes(key)));
+}
+
 export function assertBoundedGeneratedSiteCopy(value: unknown, options: SiteCopyShapeOptions = {}): asserts value is SiteCopy {
   if (!plainObject(value)) invalidCopy();
-  exactFields(value, SITE_COPY_KEYS, OPTIONAL_PRESENCE_KEYS);
+  exactFields(value, SITE_COPY_KEYS, PRESENCE_KEYS);
+  if (depthShapeViolations(value).length) invalidCopy();
   for (const [key, max] of Object.entries(COPY_FIELDS)) {
     if (!boundedString(value[key], max) && !allowedEmpty(key, value[key], options)) invalidCopy();
   }
@@ -327,7 +353,7 @@ export function assertBoundedGeneratedSiteCopy(value: unknown, options: SiteCopy
       return !boundedArray(value[key], limit.maxItems, item => stringPair(item, limit.keys, limit.maxChars));
     })) invalidCopy();
   try {
-    if (Buffer.byteLength(JSON.stringify(value), 'utf8') > SITE_COPY_MAX_BYTES) invalidCopy();
+    if (Buffer.byteLength(JSON.stringify(withoutDepthKeys(value)), 'utf8') > SITE_COPY_MAX_BYTES) invalidCopy();
   } catch {
     invalidCopy();
   }
@@ -400,7 +426,8 @@ export function explainGeneratedSiteCopyViolations(value: unknown, options: Site
   const out: CopyViolation[] = [];
   const own = Object.keys(value);
   for (const key of SITE_COPY_KEYS) if (!own.includes(key)) out.push({ field: key, rule: 'missing' });
-  for (const key of own) if (!SITE_COPY_KEYS.includes(key) && !(OPTIONAL_PRESENCE_KEYS as string[]).includes(key)) out.push({ field: key, rule: 'unexpected' });
+  for (const key of own) if (!SITE_COPY_KEYS.includes(key) && !PRESENCE_KEYS.includes(key)) out.push({ field: key, rule: 'unexpected' });
+  out.push(...depthShapeViolations(value));
   for (const [key, max] of Object.entries(COPY_FIELDS)) {
     if (!own.includes(key) || allowedEmpty(key, value[key], options)) continue;
     const violation = stringViolation(key, value[key], max);
@@ -436,7 +463,7 @@ export function explainGeneratedSiteCopyViolations(value: unknown, options: Site
     out.push(...arrayViolations(key, value[key], limit.maxItems, (entry, index) => pairViolations(`${key}[${index}]`, entry, limit.keys, limit.maxChars)));
   }
   try {
-    const bytes = Buffer.byteLength(JSON.stringify(value), 'utf8');
+    const bytes = Buffer.byteLength(JSON.stringify(withoutDepthKeys(value)), 'utf8');
     if (bytes > SITE_COPY_MAX_BYTES) out.push({ field: '$', rule: 'max_bytes', limit: SITE_COPY_MAX_BYTES, actual: bytes });
   } catch {
     out.push({ field: '$', rule: 'not_serializable' });
@@ -732,7 +759,15 @@ ${JSON.stringify({
     localFacts: brief.assertableLocalFacts,
     customerDecisions: brief.customerDecisions,
     constraints: brief.constraints,
+    ...(depthPage(brief) && brief.serviceFacts?.length ? { serviceFacts: brief.serviceFacts } : {}),
   },
+  ...(depthPage(brief) ? {
+    offer: brief.waoOffer,
+    lengthBand: brief.lengthBand,
+    blocksEnabled: brief.blocksEnabled,
+    ...(brief.blocksEnabled?.qa ? { questionPool: brief.questionPool ?? [] } : {}),
+    suggestedTerms: brief.suggestedTerms ?? [],
+  } : {}),
   informationGainGaps: brief.informationGainGaps,
   prohibitedClaims: brief.prohibitedClaims,
   faqPolicy: brief.faqPolicy,
@@ -750,8 +785,69 @@ RESEARCH RULES:
 
 COPY RULES (binding):
 ${buildResearchCopyRules(brief, data).join('\n')}
-${pitchFirstPage(brief) ? `\n${buildPitchFirstSection(brief)}\n` : ''}
+${pitchFirstPage(brief) ? `\n${buildPitchFirstSection(brief)}\n` : ''}${depthPage(brief) ? `\n${buildDepthSection(brief)}\n` : ''}
 The following owner-fact prompt provides the required SiteCopy JSON schema. Treat its owner facts as context only; use a fact in output only when the research brief authorizes it. Its HARD RULES, BANNED PHRASES, address and voice rules are NOT context: they are binding, together with the COPY RULES above.`;
+}
+
+// ---------------------------------------------------------------------------
+// Content depth (Yonatan, Eitan-approved 2026-11-10; before-M3 part): B1 process, B4 Q&A, B6 proof on service pages.
+// Every instruction is English; the model writes the Hebrew. No Hebrew examples (rule examples leak into output).
+// ---------------------------------------------------------------------------
+
+/** True when this page generates depth blocks: a research service page whose brief enables at least one block. */
+export function depthPage(brief: Pick<PageBrief, 'site' | 'page' | 'blocksEnabled'>): boolean {
+  return Boolean(brief.site && brief.blocksEnabled) && rendersDepthBlocks(brief.page.pageClass) && Object.values(brief.blocksEnabled ?? {}).some(Boolean);
+}
+
+/** The depth blocks this page generates, in output order. */
+export function depthLayout(brief: Pick<PageBrief, 'site' | 'page' | 'blocksEnabled'>): DepthBlockId[] {
+  return depthPage(brief) ? DEPTH_BLOCKS.filter(block => brief.blocksEnabled?.[block.id]).map(block => block.id) : [];
+}
+
+/** Hard-limit text of one depth key (null for any other field). */
+export function describeDepthLimit(field: string): string | null {
+  const limits = DEPTH_BLOCK_LIMITS;
+  if (['processHeadline', 'qaHeadline', 'proofHeadline'].includes(field)) return `string or null, max ${limits.headlineMaxChars} characters when set`;
+  if (field === 'processSteps') return `array of ${limits.process.minItems} to ${limits.process.maxItems} objects {"text", "factIds"}, or null; each text max ${limits.process.maxWords} words and ${limits.process.maxChars} characters; factIds 1 to ${limits.maxFactIds} fact ids`;
+  if (field === 'qaItems') return `array of ${limits.qa.minItems} to ${limits.qa.maxItems} objects {"questionId", "q", "a", "factIds"}, or null; q max ${limits.qa.maxQuestionChars} characters; a max ${limits.qa.maxAnswerWords} words and ${limits.qa.maxAnswerChars} characters; factIds 1 to ${limits.maxFactIds} fact ids`;
+  if (field === 'proofItems') return `array of ${limits.proof.minItems} to ${limits.proof.maxItems} objects {"text", "factIds"}, or null; each text max ${limits.proof.maxWords} words and ${limits.proof.maxChars} characters; factIds 1 to ${limits.maxFactIds} fact ids`;
+  return null;
+}
+
+/** Noa's note on a page with depth blocks: she corrects the text keys only; the references stay. */
+export const DEPTH_NOA_NOTE = 'DEPTH BLOCKS: in processSteps, qaItems and proofItems, correct only the text keys (text, q, a) and the headlines. Keep every factIds and questionId exactly as given, keep the items in the same order, and never add or remove an item.';
+
+/** The DEPTH BLOCKS prompt section of a service page (English only; one line per enabled block). */
+export function buildDepthSection(brief: PageBrief): string {
+  const band = brief.lengthBand;
+  const limits = DEPTH_BLOCK_LIMITS;
+  const site = brief.site;
+  const enabled = brief.blocksEnabled;
+  const name = site ? JSON.stringify(site.pageName) : 'the page name';
+  const business = site ? JSON.stringify(site.businessName) : 'the business';
+  const city = site?.city ? JSON.stringify(site.city) : null;
+  return [
+    'DEPTH BLOCKS (binding on this service page):',
+    'This page answers the searcher in more depth than a short landing page, but only with the owner\'s facts.',
+    ...(band ? [`- Length: aim for about ${band.target} visible words on the whole page, never more than ${band.ceiling}. Never pad: when the facts run out, write less. A shorter true page beats a longer generic one, and a sentence that would be true of any business in this trade is filler: leave it out.`] : []),
+    '- Every block item lists in "factIds" the ids of the owner facts it was written from: ids from allowedFacts, entities and offer in the research brief only (never a query, the persona or a question id). Every number, tool, method and story in an item must appear in the facts it cites. The system checks this and removes any item that fails.',
+    ...(enabled?.process ? [
+      `- processSteps (B1): how a typical job of this service runs, from the first call to the end, as ${limits.process.minItems} to ${limits.process.maxItems} steps in order. Each step at most ${limits.process.maxWords} words, in the owner's first person, taken from serviceFacts and the other owner facts only. If the facts do not describe at least ${limits.process.minItems} real steps, output null for processSteps and processHeadline.`,
+      `- processHeadline: the heading of the steps, at most ${limits.headlineMaxChars} characters, or null.`,
+    ] : []),
+    ...(enabled?.qa ? [
+      `- qaItems (B4): ${limits.qa.minItems} to ${limits.qa.maxItems} questions from questionPool that the owner's facts answer. Each item: "questionId" (the id of the question in questionPool), "q" (that question in natural Hebrew, addressed to one person in the singular, keeping its meaning), "a" (the answer, at most ${limits.qa.maxAnswerWords} words) and "factIds".`,
+      `- Each answer's first sentence answers the question directly and names the business (${business})${city ? ` and the base city (${city})` : ''}. Answer only from the owner facts: skip every question his facts do not answer, and never guess. If fewer than ${limits.qa.minItems} questions can be answered, output null for qaItems and qaHeadline.`,
+      `- qaHeadline: the heading of the questions, at most ${limits.headlineMaxChars} characters, or null.`,
+    ] : []),
+    ...(enabled?.proof ? [
+      `- proofItems (B6): ${limits.proof.minItems} to ${limits.proof.maxItems} short facts the owner stated that prove his work (for example his years in the trade, his license, his warranty or his response time, only where he stated them), each at most ${limits.proof.maxWords} words and each citing its fact. The customer review is shown by the system next to them: never quote, paraphrase or mention it here.`,
+      `- proofHeadline: the heading of the proof, at most ${limits.headlineMaxChars} characters, or null.`,
+    ] : []),
+    `- The block headings never repeat ${name} word for word: the page's main heading carries it.`,
+    `- suggestedTerms are optional wording ideas from competitor pages, never requirements. Use a term only where it reads naturally and the owner's facts support it, at most its "max" times across these blocks, and at most once when the page is shorter than ${TERM_DENSITY_SHORT_PAGE_WORDS} words. Never stuff terms, never name a competitor, and never let a term add a claim.`,
+    `- Shapes: "processSteps": [{"text": "", "factIds": [""]}], "qaItems": [{"questionId": "", "q": "", "a": "", "factIds": [""]}], "proofItems": [{"text": "", "factIds": [""]}]. Leave out the keys of every block that is not listed above.`,
+  ].join('\n');
 }
 
 export function buildSimulationGenerationResult(data: CollectedData) {
@@ -778,7 +874,8 @@ export function buildSiteCopyHardLimitsBlock(heading = 'HARD LIMITS', omit: read
   // M2b.1h: `layout` adds the pitch (first key) and the story fields where the page generates them.
   const keep = (key: string) => !omit.includes(key);
   const presence = SITE_COPY_OPTIONAL_PRESENCE_LIMITS;
-  const keys = [...(layout.pitch ? ['pitch'] : []), ...SITE_COPY_KEYS.filter(keep), ...(layout.story ? STORY_FIELDS_M2B1H : [])];
+  const depthKeys = DEPTH_BLOCKS.filter(block => layout.depth?.includes(block.id)).flatMap(block => [block.headline, block.items]);
+  const keys = [...(layout.pitch ? ['pitch'] : []), ...SITE_COPY_KEYS.filter(keep), ...(layout.story ? STORY_FIELDS_M2B1H : []), ...depthKeys];
   const lines: string[] = [
     `${heading} (validator-enforced; output that breaks any of these is rejected. They override every softer length or count guidance above):`,
     '- Length means the number of characters in the string, counting every letter, space, digit and punctuation mark. Aim for at most 85% of each limit to leave a margin.',
@@ -788,6 +885,7 @@ export function buildSiteCopyHardLimitsBlock(heading = 'HARD LIMITS', omit: read
     ...Object.entries(SITE_COPY_OPTIONAL_STRING_LIMITS).map(([key, max]) => `  - ${key}: max ${max} characters when set`),
     ...(layout.story ? STORY_FIELDS_M2B1H.map(key => `  - ${key}: max ${presence[key]} characters when set`) : []),
     ...(layout.pitch ? [`- pitch (string): ${PITCH_MIN_WORDS} to ${PITCH_MAX_WORDS} words, max ${presence.pitch} characters. It is the only limit on the pitch.`] : []),
+    ...depthKeys.map(key => `- ${key}: ${describeDepthLimit(key)}`),
     '- Lists:',
     ...STRING_LIST_KEYS.filter(keep).map(key => {
       const limit = SITE_COPY_STRING_LIST_LIMITS[key];
@@ -859,12 +957,12 @@ function repairableFields(violations: CopyViolation[], systemFields: readonly st
     if (violation.field === '$' || violation.rule === 'context_requires_quote' || violation.rule === 'must_be_null' ||
       SAFE_FIX_GATE_RULES.includes(violation.rule)) continue;
     const field = topField(violation.field);
-    const known = SITE_COPY_KEYS.includes(field) || (OPTIONAL_PRESENCE_KEYS as string[]).includes(field);
+    const known = SITE_COPY_KEYS.includes(field) || PRESENCE_KEYS.includes(field);
     if (systemFields.includes(field) || !known || (SITE_COPY_ALWAYS_NULL as readonly string[]).includes(field)) continue;
     if (violation.rule === 'unexpected' && !violation.field.includes('.')) continue;
     fields.add(field);
   }
-  return [...SITE_COPY_KEYS, ...OPTIONAL_PRESENCE_KEYS].filter(key => fields.has(key));
+  return [...SITE_COPY_KEYS, ...PRESENCE_KEYS].filter(key => fields.has(key));
 }
 
 function structural(violations: CopyViolation[]): boolean {
@@ -876,6 +974,8 @@ function describeLimit(field: string): string {
   if (field in SITE_COPY_OPTIONAL_STRING_LIMITS) return `string or null, max ${SITE_COPY_OPTIONAL_STRING_LIMITS[field as keyof typeof SITE_COPY_OPTIONAL_STRING_LIMITS]} characters when set`;
   if (field === 'pitch') return `string or null: the free sales letter, ${PITCH_MIN_WORDS} to ${PITCH_MAX_WORDS} words, max ${SITE_COPY_OPTIONAL_PRESENCE_LIMITS.pitch} characters`;
   if (field in SITE_COPY_OPTIONAL_PRESENCE_LIMITS) return `string or null, max ${SITE_COPY_OPTIONAL_PRESENCE_LIMITS[field as OptionalPresenceKey]} characters when set`;
+  const depth = describeDepthLimit(field);
+  if (depth) return depth;
   if (field in SITE_COPY_STRING_LIST_LIMITS) {
     const limit = SITE_COPY_STRING_LIST_LIMITS[field as StringListKey];
     return `array of at most ${limit.maxItems} non-empty strings, each max ${limit.itemMaxChars} characters`;
@@ -920,10 +1020,15 @@ FIELDS TO FIX:
 ${blocks.join('\n')}`;
 }
 
-function parseLoose(raw: unknown): { value?: Loose; violations: CopyViolation[] } {
+/** The raw-response byte cap of a page: the base budget, plus the depth-block budget on a page that generates them. */
+function rawMaxBytes(brief: PageBrief): number {
+  return SITE_COPY_MAX_BYTES + (depthPage(brief) ? DEPTH_BLOCKS_MAX_BYTES : 0);
+}
+
+function parseLoose(raw: unknown, rawMax: number = SITE_COPY_MAX_BYTES): { value?: Loose; violations: CopyViolation[] } {
   if (typeof raw !== 'string') return { violations: [{ field: '$', rule: 'type', actual: typeof raw }] };
   const bytes = Buffer.byteLength(raw, 'utf8');
-  if (bytes > SITE_COPY_MAX_BYTES) return { violations: [{ field: '$', rule: 'max_bytes', limit: SITE_COPY_MAX_BYTES, actual: bytes }] };
+  if (bytes > rawMax) return { violations: [{ field: '$', rule: 'max_bytes', limit: rawMax, actual: bytes }] };
   let value: unknown;
   try {
     value = JSON.parse(raw);
@@ -971,7 +1076,7 @@ export function applySafeDeterministicFixes(value: Loose, gates: CopyGateContext
   const next: Loose = { ...value };
   const fixes: string[] = [];
   for (const key of Object.keys(next)) {
-    if (!SITE_COPY_KEYS.includes(key) && !(OPTIONAL_PRESENCE_KEYS as string[]).includes(key)) {
+    if (!SITE_COPY_KEYS.includes(key) && !PRESENCE_KEYS.includes(key)) {
       delete next[key];
       fixes.push(`drop_unexpected:${key}`);
     }
@@ -1025,6 +1130,9 @@ export function applySafeDeterministicFixes(value: Loose, gates: CopyGateContext
       next[key] = null;
     }
   }
+  // Content depth: an item that fails the fact trace or the term density is dropped whole (never edited); a block left under
+  // its minimum is dropped with its headline. Skip rather than guess (Yonatan).
+  if (gates?.depth) fixes.push(...dropFailingDepthItems(next, gates));
   // M2a.5 (Adam): when one trustBarItems entry is the page's only gate hit and at least
   // TRUST_BAR_MIN_KEPT other items remain, drop that whole item (never edited) instead of failing.
   if (gates && Array.isArray(next.trustBarItems)) {
@@ -1054,6 +1162,45 @@ export function applySafeDeterministicFixes(value: Loose, gates: CopyGateContext
     }
   }
   return { value: next, fixes };
+}
+
+/** Content depth: the block and item index of a depth field path (null for a headline or a non-depth field). */
+function depthItemOf(field: string): { block: DepthBlockId; index: number } | null {
+  for (const block of DEPTH_BLOCKS) {
+    const match = new RegExp(`^${block.items}\\[(\\d+)\\]`).exec(field);
+    if (match) return { block: block.id, index: Number(match[1]) };
+  }
+  return null;
+}
+
+/** Content depth: drop the depth items with blocking fact-trace / term-density hits until none remain (bounded). */
+function dropFailingDepthItems(next: Loose, gates: CopyGateContext): string[] {
+  const fixes: string[] = [];
+  for (let round = 0; round < 12; round++) {
+    const hits = blockingGateHits(depthGateHits(next, gates), gates);
+    if (!hits.length) break;
+    const drop = new Map<DepthBlockId, Set<number>>();
+    const headlines = new Set<string>();
+    for (const hit of hits) {
+      const item = depthItemOf(hit.field);
+      if (item) {
+        const set = drop.get(item.block) ?? new Set<number>();
+        set.add(item.index);
+        drop.set(item.block, set);
+        // Term density: one item per term per round, so the count falls one item at a time.
+        if (hit.rule === GATE_RULES.termDensity) break;
+      } else if ((DEPTH_BLOCKS as ReadonlyArray<{ headline: string }>).some(block => block.headline === hit.field)) {
+        headlines.add(hit.field);
+      }
+    }
+    for (const field of headlines) {
+      next[field] = null;
+      fixes.push(`null_depth_headline:${field}`);
+    }
+    fixes.push(...dropDepthItems(next, drop));
+    if (!drop.size && !headlines.size) break;
+  }
+  return fixes;
 }
 
 /** M2a.5: a gated trust-bar item is dropped only while at least this many other items remain. M2b.1e (B2: two facts, two items): 2. */
@@ -1110,6 +1257,8 @@ export function normalizedServicesHeadline(value: unknown): string {
 
 export function withSystemFields(value: Loose, brief: PageBrief, data: CollectedData): Loose {
   const next: Loose = { ...value, faqItems: supportedFaqItems(brief) };
+  // Content depth: the blocks stay only on a service page that may generate them (settleDepthBlocks drops the rest).
+  settleDepthBlocks(next, depthPage(brief) ? brief.blocksEnabled ?? null : null, brief.site?.pageName ?? null);
   if (!brief.site) return next;
   // M2b.1h: the pitch (pitch-first pages) and the story fields (homepage) stay only where the page generates them, and only as
   // a non-empty string within the limit (else null: dropped whole, never edited; settleStage logs why). An absent key stays absent.
@@ -1218,7 +1367,7 @@ async function repairFields(ctx: RepairContext, stage: CopyValidationStage, valu
   ctx.used++;
   ctx.emit({ stage, kind: 'repair', attempt: ctx.used, fields, violations });
   const raw = await ctx.callJson(ctx.brief.site ? SITE_REPAIR_SYSTEM_PROMPT : REPAIR_SYSTEM_PROMPT, buildCopyRepairPrompt(value, violations, fields, ctx.gates), { thinkingBudget: 1000 });
-  const parsed = parseLoose(raw);
+  const parsed = parseLoose(raw, rawMaxBytes(ctx.brief));
   if (!parsed.value) return value;
   const merged: Loose = { ...value };
   for (const field of fields) {
@@ -1242,7 +1391,7 @@ async function settleStage(ctx: RepairContext, stage: CopyValidationStage, call:
     const warnings = raw ? optionalFieldWarnings(raw, ctx.brief, stage) : [];
     if (warnings.length) ctx.emit({ stage, kind: 'warnings', violations: warnings });
   };
-  let parsed = parseLoose(await call());
+  let parsed = parseLoose(await call(), rawMaxBytes(ctx.brief));
   note(parsed.value);
   let value = parsed.value ? settle(parsed.value) : undefined;
   for (;;) {
@@ -1257,7 +1406,7 @@ async function settleStage(ctx: RepairContext, stage: CopyValidationStage, call:
       ctx.remaining--;
       ctx.used++;
       ctx.emit({ stage, kind: 'stage_retry', attempt: ctx.used, violations });
-      parsed = parseLoose(await call());
+      parsed = parseLoose(await call(), rawMaxBytes(ctx.brief));
       note(parsed.value);
       value = parsed.value ? settle(parsed.value) : undefined;
       continue;
@@ -1304,6 +1453,11 @@ export function optionalFieldWarnings(raw: Loose, brief: PageBrief, stage: CopyV
     const pitch = check('pitch', true);
     const words = pitch ? pitch.trim().split(/\s+/u).length : 0;
     if (pitch && (words < PITCH_MIN_WORDS || words > PITCH_MAX_WORDS)) out.push({ field: 'pitch', rule: 'word_count', limit: PITCH_MAX_WORDS, actual: words });
+  }
+  if (depthPage(brief)) {
+    const clone: Loose = { ...raw };
+    for (const note of settleDepthBlocks(clone, brief.blocksEnabled ?? null, brief.site?.pageName ?? null)) out.push(note);
+    for (const block of DEPTH_BLOCKS) if (brief.blocksEnabled?.[block.id] && !(block.items in raw)) out.push({ field: block.items, rule: 'missing' });
   }
   if (storyPage(brief)) {
     check('storyHeadline', false);
@@ -1403,10 +1557,13 @@ export function pitchFirstSchema(schema: string, story: boolean): string {
 export interface CopyLayout {
   pitch?: boolean;
   story?: boolean;
+  /** Content depth: the depth blocks this page generates (empty / unset = none). */
+  depth?: readonly DepthBlockId[];
 }
 
-export function layoutFor(brief: Pick<PageBrief, 'site' | 'page'>): CopyLayout {
-  return { pitch: pitchFirstPage(brief), story: storyPage(brief) };
+export function layoutFor(brief: Pick<PageBrief, 'site' | 'page' | 'blocksEnabled'>): CopyLayout {
+  const depth = depthLayout(brief);
+  return { pitch: pitchFirstPage(brief), story: storyPage(brief), ...(depth.length ? { depth } : {}) };
 }
 
 /** M2b.1d: the schema template without one `"key": "",` line (asserted: exactly one such line). */
@@ -1445,6 +1602,12 @@ export function briefGateContext(brief: PageBrief, data: CollectedData): CopyGat
     ...(site ? { ungeneratedFields: [...ungeneratedFieldsFor(brief)] } : {}),
     // M2b.1h: pitch-first pages may restate the promise in fresh words; every research page blocks verbatim repeats.
     ...(site ? { promiseRestatement: pitchFirstPage(brief), phraseRepeatFields: researchedRenderedFieldsFor(brief.page.pageClass) } : {}),
+    // Content depth: the fact-trace and term-density inputs of a service page with depth blocks.
+    ...(depthPage(brief) ? { depth: {
+      factTexts: Object.fromEntries(briefFactTexts(brief)),
+      questionIds: (brief.questionPool ?? []).map(item => item.id),
+      terms: brief.suggestedTerms ?? [],
+    } } : {}),
   });
 }
 
@@ -1473,8 +1636,9 @@ export function buildNoaQaMessage(copy: SiteCopy, brief?: PageBrief): string {
   // M2b.1h: Noa never sees the pitch (it is not shown; the system carries Tamar's over); the story fields are hers to correct.
   const hidden = [...omit, 'pitch'];
   const shown = Object.keys(copy).some(key => hidden.includes(key)) ? Object.fromEntries(Object.entries(copy).filter(([key]) => !hidden.includes(key))) : copy;
-  const layout = brief ? { story: storyPage(brief) } : {};
-  return `${JSON.stringify(shown)}\n\n${buildSiteCopyHardLimitsBlock('HARD LIMITS FOR YOUR CORRECTIONS (never lengthen a field past its limit)', omit, layout)}${fixed}`;
+  const layout = brief ? { story: storyPage(brief), depth: depthLayout(brief) } : {};
+  const depthNote = layout.depth?.length ? `\n\n${DEPTH_NOA_NOTE}` : '';
+  return `${JSON.stringify(shown)}\n\n${buildSiteCopyHardLimitsBlock('HARD LIMITS FOR YOUR CORRECTIONS (never lengthen a field past its limit)', omit, layout)}${fixed}${depthNote}`;
 }
 
 export async function generateResearchPageCopy(
@@ -1504,11 +1668,39 @@ export async function generateResearchPageCopy(
   };
   const prompt = buildResearchPageGenerationPrompt(brief, data);
   const tamarCopy = await settleStage(ctx, 'tamar', () => callJson(brief.site ? SITE_COPY_SYSTEM_PROMPT : COPY_SYSTEM_PROMPT, prompt, { thinkingBudget: pitchFirstPage(brief) ? PITCH_FIRST_THINKING_BUDGET : 1500 }));
-  const noaCopy = await settleStage(ctx, 'noa', () => callJson(QA_SYSTEM_PROMPT, buildNoaQaMessage(tamarCopy, brief), { think: false }));
+  // Content depth: Tamar's factIds / questionId go back into Noa's raw answer before it is settled (Noa edits text only).
+  const noaCall = async () => withTamarDepthReferences(await callJson(QA_SYSTEM_PROMPT, buildNoaQaMessage(tamarCopy, brief), { think: false }), tamarCopy as unknown as Loose, brief);
+  const noaCopy = await settleStage(ctx, 'noa', noaCall);
   const finalCopy = withSystemFields(carryOptionalFields(applyFaqPolicy(noaCopy, brief) as unknown as Loose, tamarCopy as unknown as Loose), brief, data) as unknown as SiteCopy;
   assertCopyAt('final', finalCopy, shapeOptions(brief));
   assertGatesAt('final', finalCopy as unknown as Loose, ctx.gates, ctx.emit);
+  const gap = depthLengthNote(finalCopy as unknown as Loose, brief);
+  if (gap) ctx.emit({ stage: 'final', kind: 'warnings', violations: [gap] });
   return finalCopy;
+}
+
+/** Content depth: Noa's raw JSON with Tamar's depth references merged back (unparseable or non-depth answers pass unchanged). */
+export function withTamarDepthReferences(raw: string, tamar: Loose, brief: PageBrief): string {
+  if (!depthPage(brief) || typeof raw !== 'string') return raw;
+  try {
+    const parsed: unknown = JSON.parse(raw);
+    if (!plainObject(parsed)) return raw;
+    return JSON.stringify(mergeDepthBlocks(parsed, tamar));
+  } catch {
+    return raw;
+  }
+}
+
+/**
+ * Content depth: the page-length note of a service page with depth blocks (never pads, never fails): `fact_gap` under the
+ * band's floor (a monthly owner question later), `below_target` between the floor and the target. Counts only.
+ */
+export function depthLengthNote(copy: Loose, brief: PageBrief): CopyViolation | null {
+  if (!depthPage(brief) || !brief.lengthBand) return null;
+  const words = pageVisibleWords(copy, { phraseRepeatFields: researchedRenderedFieldsFor(brief.page.pageClass) });
+  if (words < brief.lengthBand.floor) return { field: '$page', rule: 'fact_gap', limit: brief.lengthBand.floor, actual: words };
+  if (words < brief.lengthBand.target) return { field: '$page', rule: 'below_target', limit: brief.lengthBand.target, actual: words };
+  return null;
 }
 
 /**
@@ -1516,7 +1708,8 @@ export async function generateResearchPageCopy(
  * (an explicit null from Noa stays null).
  */
 export function carryOptionalFields(noa: Loose, tamar: Loose): Loose {
-  const next: Loose = { ...noa };
+  // Content depth: Noa's text corrections, Tamar's factIds / questionId (and any block key Noa dropped).
+  const next: Loose = mergeDepthBlocks(noa, tamar);
   if ('pitch' in tamar) next.pitch = tamar.pitch;
   for (const key of STORY_FIELDS_M2B1H) if (!(key in next) && key in tamar) next[key] = tamar[key];
   return next;

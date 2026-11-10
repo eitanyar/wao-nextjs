@@ -106,6 +106,15 @@ import {
 } from './generationData';
 import { PREFIX_LETTERS } from './hebrewPrefixLetters';
 import {
+  DEPTH_REFERENCE_KEYS,
+  factTraceHits,
+  stemSet,
+  termDensityHits,
+  visibleCopyStrings,
+  visibleWordCount,
+  type FactTraceKind,
+} from './depthBlocks';
+import {
   CAMERA_SATISFIES_ONLY,
   CLAIM_EXCLUDED_FACT_FIELDS,
   CLAIM_RULES,
@@ -198,6 +207,10 @@ export const GATE_RULES = {
   // M2b.1h (pitch-first copy): block verbatim repetition across fields; no foreign script in any generated field.
   phraseRepeat: 'gate_phrase_repeat',
   foreignScript: 'gate_foreign_script',
+  // Content depth (2026-11-10): every service-page block item traces to the owner facts it cites; NeuronWriter terms stay
+  // within their suggested usage.
+  factTrace: 'gate_fact_trace',
+  termDensity: 'gate_term_density',
 } as const;
 export type GateRule = (typeof GATE_RULES)[keyof typeof GATE_RULES];
 
@@ -274,6 +287,18 @@ export interface CopyGateContext {
    * strings are never compared (heroCta, servicesHeadline, serviceDetails[].name, the area tile, FAQ, review).
    */
   phraseRepeatFields?: readonly string[];
+  /**
+   * Content depth (service pages): the brief's citable owner facts, its question-pool IDs and its NeuronWriter terms. Set =
+   * the fact-trace and term-density gates run on the depth blocks; unset (every other page and legacy sites) = off.
+   */
+  depth?: CopyGateDepth;
+}
+
+/** Content depth gate inputs (see CopyGateContext.depth). */
+export interface CopyGateDepth {
+  factTexts: Readonly<Record<string, string>>;
+  questionIds: readonly string[];
+  terms: ReadonlyArray<{ t: string; min: number; max: number }>;
 }
 
 /** M2a.7: what the site-wide hero cap needs of one page: the service labels masked in its hero, and whether it is an AC page. */
@@ -339,6 +364,8 @@ export function gatedStrings(copy: Record<string, unknown>): Array<{ field: stri
         if (typeof item === 'string') out.push({ field: `${key}[${index}]`, value: item });
         else if (item && typeof item === 'object') {
           for (const [inner, innerValue] of Object.entries(item as Record<string, unknown>)) {
+            // Content depth: factIds / questionId are references to the brief, never page copy.
+            if (DEPTH_REFERENCE_KEYS.includes(inner)) continue;
             if (typeof innerValue === 'string') out.push({ field: `${key}[${index}].${inner}`, value: innerValue });
           }
         }
@@ -1936,6 +1963,9 @@ export const ALWAYS_BLOCKING_RULES: readonly GateRule[] = [
   GATE_RULES.foreignTool,
   // M2b.1h: a CJK / Cyrillic / Arabic character in any generated field (the AGENTS.md served-HTML check, at generation time).
   GATE_RULES.foreignScript,
+  // Content depth (2026-11-10, Yonatan's hard gates): block items trace to cited owner facts; terms within suggested usage.
+  GATE_RULES.factTrace,
+  GATE_RULES.termDensity,
 ];
 
 /** M2b.1h: the only gates that run on the unrendered pitch: the truth / owner-fact gates and the foreign-script check. */
@@ -1995,11 +2025,55 @@ function gateOrder(strings: Array<{ field: string; value: string }>, renderedFie
  * which only the PITCH_GATE_RULES hits are kept.
  */
 export function runCopyGates(copy: Record<string, unknown>, ctx: CopyGateContext): GateViolation[] {
-  if (!Object.prototype.hasOwnProperty.call(copy, 'pitch')) return runPageGates(copy, ctx);
+  if (!Object.prototype.hasOwnProperty.call(copy, 'pitch')) return [...runPageGates(copy, ctx), ...depthGateHits(copy, ctx)];
   const { pitch, ...page } = copy;
   const out = runPageGates(page, ctx);
+  out.push(...depthGateHits(page, ctx));
   if (typeof pitch === 'string' && pitch.trim()) out.push(...pitchGateHits(pitch, ctx));
   return out;
+}
+
+/** Content depth: tool groups a text names (owner-confirmed service labels masked, as in gate_foreign_tool). */
+function depthToolGroups(text: string, ctx: Pick<CopyGateContext, 'serviceLabels'>): string[] {
+  const masked = maskServiceLabels(text, ctx.serviceLabels);
+  const lower = masked.toLowerCase();
+  return USP_TOOL_GROUP_IDS.filter(group => toolSatisfyStems(group).some(stem => masked.includes(stem)) || USP_TOOL_GROUPS[group].uspKeywords.some(keyword => lower.includes(keyword)));
+}
+
+/** Content depth: the visible words of a page (its rendered fields; every generated field when the context has none). */
+export function pageVisibleWords(copy: Record<string, unknown>, ctx: Pick<CopyGateContext, 'phraseRepeatFields'>): number {
+  const fields = ctx.phraseRepeatFields ?? Object.keys(copy).filter(key => key !== 'pitch');
+  return visibleWordCount(visibleCopyStrings(copy, fields));
+}
+
+/** Content depth: the anchor stems exempt from term density (the H1 head term, the city, the places, the business name). */
+function depthAnchorStems(ctx: CopyGateContext): Set<string> {
+  return stemSet([ctx.anchorName, ctx.anchorCity, ctx.businessName, ...(ctx.places ?? [])].filter((item): item is string => typeof item === 'string').join(' '));
+}
+
+/**
+ * Content depth (2026-11-10): the fact-trace and term-density gates of the service-page blocks (both always block).
+ * Actual ids: `trace:<kind>[:<tool group>]`, `term:<index into ctx.depth.terms>:<count>/<limit>` (never copy text).
+ */
+export function depthGateHits(copy: Record<string, unknown>, ctx: CopyGateContext): GateViolation[] {
+  const depth = ctx.depth;
+  if (!depth) return [];
+  const out: GateViolation[] = [];
+  const trace = factTraceHits(copy, { factTexts: depth.factTexts, questionIds: depth.questionIds }, {
+    toolGroups: text => depthToolGroups(text, ctx),
+    tellsStory: text => inventedStoryKinds(text).length > 0,
+  });
+  for (const hit of trace) out.push({ field: hit.field, rule: GATE_RULES.factTrace, actual: `trace:${hit.kind}${hit.detail ? `:${hit.detail}` : ''}` });
+  for (const hit of termDensityHits(copy, depth.terms, pageVisibleWords(copy, ctx), depthAnchorStems(ctx))) {
+    out.push({ field: hit.field, rule: GATE_RULES.termDensity, actual: `term:${hit.termIndex}:${hit.count}/${hit.limit}` });
+  }
+  return out;
+}
+
+/** Content depth: the trace kinds of a hit's actual id (repair text and the deterministic item drop). */
+export function factTraceKind(actual: string | undefined): FactTraceKind | null {
+  const kind = (actual ?? '').split(':')[1];
+  return ['fact_ids', 'unknown_fact', 'number', 'tool', 'story', 'question'].includes(kind) ? kind as FactTraceKind : null;
 }
 
 /** M2b.1h: the truth / foreign-script hits of the pitch, gated alone (no prior pages, no page counts; it is its own field). */
@@ -2188,6 +2262,8 @@ export interface CopyGatePageOptions {
   promiseRestatement?: boolean;
   /** M2b.1h: the rendered fields gate_phrase_repeat compares (see CopyGateContext.phraseRepeatFields). */
   phraseRepeatFields?: readonly string[];
+  /** Content depth: the service page's depth gate inputs (see CopyGateContext.depth). */
+  depth?: CopyGateDepth;
 }
 
 /** Build the gate context from owner data plus the page's confirmed service names and owner-stated places. */
@@ -2224,6 +2300,7 @@ export function copyGateContext(data: CollectedData, serviceLabels: readonly str
     ...(page.ungeneratedFields?.length ? { ungeneratedFields: [...page.ungeneratedFields] } : {}),
     ...(page.promiseRestatement ? { promiseRestatement: true } : {}),
     ...(page.phraseRepeatFields ? { phraseRepeatFields: [...page.phraseRepeatFields] } : {}),
+    ...(page.depth ? { depth: page.depth } : {}),
   };
 }
 
@@ -2417,6 +2494,20 @@ export function describeGateViolation(violation: GateViolation, ctx: CopyGateCon
     }
     case GATE_RULES.foreignScript:
       return `${violation.field} contains characters of a non-Hebrew script (Chinese, Japanese, Korean, Cyrillic or Arabic); rewrite it in Hebrew only (a proper name in Latin letters is fine)`;
+    case GATE_RULES.factTrace: {
+      const kind = factTraceKind(violation.actual);
+      if (kind === 'fact_ids' || kind === 'unknown_fact') return `${violation.field} must list the IDs of the owner facts this item was written from, using only IDs from allowedFacts / entities / offer / serviceFacts in the research brief`;
+      if (kind === 'question') return `${violation.field} must be the id of one question in questionPool`;
+      if (kind === 'number') return `${violation.field} states a number that is not in the owner facts it cites; remove the number or cite the fact that states it`;
+      if (kind === 'tool') return `${violation.field} names a tool or method that is not in the owner facts it cites; remove it`;
+      if (kind === 'story') return `${violation.field} tells a customer story that is not in the owner facts it cites; remove the story`;
+      return `${violation.field} contains a claim that is not in the owner facts it cites`;
+    }
+    case GATE_RULES.termDensity: {
+      const [, termIndex, ratio] = (violation.actual ?? '').split(':');
+      const term = ctx.depth?.terms[Number(termIndex)]?.t;
+      return `${violation.field} uses the search term ${term ? JSON.stringify(term) : 'listed in suggestedTerms'} more often than allowed on this page (${ratio ?? 'over the limit'} uses across the process, Q&A and proof blocks); use it less, never stuff search terms`;
+    }
     default:
       return `${violation.field}: ${violation.rule}`;
   }

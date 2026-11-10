@@ -61,6 +61,7 @@ import {
 } from './researchPageCopy';
 import { RESEARCHED_GATED_FIELDS, RESEARCHED_HOME_HUB_ONLY_FIELDS, RESEARCHED_RENDERED_FIELDS, RESEARCHED_RENDERED_WARN_ONLY_FIELDS, researchedGatedFieldsFor } from './researchedSite';
 import type { SiteCopy } from './lpCopyPrompt';
+import { DEPTH_BLOCK_KEYS } from './depthBlocks';
 import { siteGenerationContext } from '../site-bot/researchedSiteGeneration';
 import type { PageBrief } from '../site-bot/research/pageBrief';
 
@@ -134,10 +135,11 @@ test('M2a.7 1: generationData carries the M2a.7 data byte-exact and counted; R8 
 
 test('M2a.7 2: warn-only: a hit on a field the research renderer does not show is a warning (no repair, page passes); fact / trust gates and rendered fields still fail; legacy unchanged', async () => {
   // M2b.1: the renderer shows more fields; the gate context gets the rendered fields minus the warn-only set.
-  assert.deepEqual([...RESEARCHED_RENDERED_FIELDS], ['heroHeadline', 'heroSubheadline', 'formHeadline', 'faqItems', 'reviewFeatured', 'reviewContext', 'heroCta', 'trustBarItems', 'aboutPageHeadline', 'aboutPageBody', 'servicesHeadline', 'serviceDetails', 'storyHeadline', 'storyBody']);
+  assert.deepEqual([...RESEARCHED_RENDERED_FIELDS], ['heroHeadline', 'heroSubheadline', 'formHeadline', 'faqItems', 'reviewFeatured', 'reviewContext', 'heroCta', 'trustBarItems', 'aboutPageHeadline', 'aboutPageBody', 'servicesHeadline', 'serviceDetails', 'storyHeadline', 'storyBody', ...DEPTH_BLOCK_KEYS]);
   // M2b.1f (eval 18/18): every M2b field is gated. M2b.1h: the new homepage story section is warn-only until its paid eval.
-  assert.deepEqual([...RESEARCHED_RENDERED_WARN_ONLY_FIELDS], ['storyHeadline', 'storyBody']);
-  assert.deepEqual([...RESEARCHED_GATED_FIELDS], RESEARCHED_RENDERED_FIELDS.filter(field => !field.startsWith('story')));
+  // Content depth (2026-11-10): the service-page block fields are rendered and warn-only, like the story.
+  assert.deepEqual([...RESEARCHED_RENDERED_WARN_ONLY_FIELDS], ['storyHeadline', 'storyBody', ...DEPTH_BLOCK_KEYS]);
+  assert.deepEqual([...RESEARCHED_GATED_FIELDS], RESEARCHED_RENDERED_FIELDS.filter(field => !field.startsWith('story') && !DEPTH_BLOCK_KEYS.includes(field)));
   const site = briefGateContext(brief('leak-detection'), {});
   // A money page renders (and generates) none of the home/hub-only fields.
   assert.deepEqual(site.renderedFields, RESEARCHED_GATED_FIELDS.filter(field => !RESEARCHED_HOME_HUB_ONLY_FIELDS.includes(field)));

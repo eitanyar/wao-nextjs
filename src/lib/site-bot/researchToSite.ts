@@ -21,7 +21,10 @@ import { createHash } from 'node:crypto';
 import type { CollectedData } from '../bot/prompts';
 import { sitesDir } from '../dataRoots';
 import { isSafeDeploymentSlug } from '../deployment/deploy-access';
-import { effectiveReviewQuote } from '../lp/copyGates';
+import { copyGateContext, effectiveReviewQuote, serviceAreaHits } from '../lp/copyGates';
+import { rendersDepthBlocks } from '../lp/depthBlocks';
+import { buildDepthFilters } from './research/depthFilters';
+import { ISRAELI_LOCALITIES } from './israeliLocalities';
 import {
   generateResearchPageCopy,
   GeneratedCopyValidationError,
@@ -34,13 +37,13 @@ import type { ResearchedSiteGraphEdge } from '../lp/researchedSite';
 import { detectVertical } from '../lp/verticalDetect';
 import { VERTICAL_ASSETS } from '../lp/verticalAssets';
 import { VERTICAL_THEMES } from '../lp/verticalThemes';
-import { compilePageBrief, type BriefEvidence, type PageBrief, type PageBriefLink } from './research/pageBrief';
+import { compilePageBrief, type BriefEvidence, type PageBrief, type PageBriefDepthInput, type PageBriefLink } from './research/pageBrief';
 import type { PipelineHoldReason } from './research/pipelineState';
 import { buildSiteResearchInput } from './research/researchInput';
 import { readResearchDossier, writeResearchDossierAtomic } from './research/researchStore';
 import { runSiteResearch } from './research/runResearch';
 import { listedServedAreas } from './servedAreas';
-import { transitionResearchStatus, type HumanGate, type PageOpportunity, type ResearchStatus, type SiteResearchDossier } from './research/types';
+import { transitionResearchStatus, type HumanGate, type NeuronQueryData, type PageOpportunity, type ResearchStatus, type SiteResearchDossier } from './research/types';
 import {
   assembleSiteIdentity,
   isSiteIdentity,
@@ -256,6 +259,34 @@ function commercialQueries(dossier: SiteResearchDossier): string[] {
     .map(item => item.keyword);
 }
 
+/**
+ * Content depth: the ready NeuronWriter analysis for one service page: the keyword equal to the service, else the first
+ * page query that has one, else the first ready analysis whose keyword contains the service name.
+ */
+export function neuronDataFor(dossier: SiteResearchDossier, subject: string, pageQueries: readonly string[]): NeuronQueryData | null {
+  const ready = Object.values(dossier.neuronQueries ?? {}).filter(item => item.status === 'ready');
+  const byKeyword = (keyword: string) => ready.find(item => norm(item.keyword) === norm(keyword));
+  return byKeyword(subject)
+    ?? pageQueries.map(byKeyword).find((item): item is NeuronQueryData => Boolean(item))
+    ?? ready.find(item => norm(item.keyword).includes(norm(subject)))
+    ?? null;
+}
+
+/**
+ * Content depth: the owner's service facts of one page (they enable B1). The job walkthrough (the intake voice note, once
+ * transcribed) describes a typical job, so it goes to the primary service's page only (never the same steps on every page);
+ * service attributes go to the service they are keyed by.
+ */
+export function serviceFactsFor(data: CollectedData, subject: string, label: string, primary: boolean): BriefEvidence[] {
+  const out: BriefEvidence[] = [];
+  const walkthrough = clean(data.jobWalkthrough);
+  if (primary && walkthrough) out.push(approved('service-walkthrough', `How a typical job runs (owner's own words): ${walkthrough}`));
+  const attributes = Object.entries(data.serviceAttributes ?? {})
+    .filter(([key, value]) => (norm(key) === norm(subject) || norm(key) === norm(label)) && clean(value));
+  attributes.forEach(([, value], index) => out.push(approved(`service-attributes-${index + 1}`, `Service details (owner-stated): ${clean(value)}`)));
+  return out;
+}
+
 /** Pure. One brief per ready planned page, homepage first. Requires a planned copy_ready dossier. */
 export function buildPageBriefs(dossier: SiteResearchDossier, data: CollectedData): PageBrief[] {
   if (dossier.status !== 'copy_ready' || !planned(dossier)) throw new Error('Dossier has no copy_ready plan.');
@@ -318,6 +349,12 @@ export function buildPageBriefs(dossier: SiteResearchDossier, data: CollectedDat
     const pageLabel = isHome ? (identity.trade || niche || dossier.businessTruth.businessName) : labelFor(subject);
     const ownLabels = readyServices.map(item => labelFor(item.opportunity));
     const serviceLabels = isHome ? ownLabels : [pageLabel, ...ownLabels.filter(label => label !== pageLabel)];
+    // Content depth (2026-11-10): service pages get NeuronWriter's word target, filtered terms and questions, and the
+    // owner's service facts. The homepage and other page types are unchanged.
+    const places = [...new Set([...(identity.baseCity ? [identity.baseCity] : []), ...identity.serviceArea])];
+    const depth: PageBriefDepthInput | undefined = !isHome && rendersDepthBlocks(page.pageClass ?? 'money_service')
+      ? depthInputFor(dossier, data, { subject, pageLabel, pageQueries, serviceLabels, places, primary: norm(subject) === norm(clean(data.primaryService) || readyServices[0]?.opportunity || '') })
+      : undefined;
     return compilePageBrief({
       page: { id: page.id, targetPath: page.targetPath, pageClass: page.pageClass ?? 'money_service' },
       persona: approved('persona', isHome
@@ -350,8 +387,36 @@ export function buildPageBriefs(dossier: SiteResearchDossier, data: CollectedDat
         soloOperator: true,
         ownerIntroPage: isHome,
       },
+      ...(depth ? { depth } : {}),
     });
   });
+}
+
+/** Content depth: the depth input of one service page (NeuronWriter data through the filters, plus service facts). */
+function depthInputFor(
+  dossier: SiteResearchDossier,
+  data: CollectedData,
+  page: { subject: string; pageLabel: string; pageQueries: readonly string[]; serviceLabels: readonly string[]; places: readonly string[]; primary: boolean },
+): PageBriefDepthInput {
+  const neuron = neuronDataFor(dossier, page.subject, page.pageQueries);
+  const gates = copyGateContext(data, page.serviceLabels, true, page.places);
+  const filters = buildDepthFilters({
+    competitorTitles: neuron?.competitorTitles ?? [],
+    basicTerms: (neuron?.bodyTerms ?? []).filter(term => term.tier === 'basic').map(term => term.t),
+    anchorText: [page.subject, page.pageLabel, ...page.serviceLabels, ...page.places, clean(data.businessNiche), clean(data.primaryService), dossier.businessTruth.businessName].join(' '),
+    ownerPlaces: page.places,
+    localities: ISRAELI_LOCALITIES,
+    siteVertical: detectVertical(data.businessNiche ?? ''),
+    widensArea: text => serviceAreaHits(text, gates).length > 0,
+    keyword: neuron?.keyword ?? page.subject,
+  });
+  return {
+    ...(neuron?.wordTarget !== undefined ? { wordTarget: neuron.wordTarget } : {}),
+    terms: (neuron?.bodyTerms ?? []).map(term => ({ t: term.t, min: term.min, max: term.max })),
+    questions: neuron?.questions ?? [],
+    serviceFacts: serviceFactsFor(data, page.subject, page.pageLabel, page.primary),
+    filters,
+  };
 }
 
 /** The persisted identity, or (pre-M2a.1 plans) a deterministic one with owner wording as labels. */

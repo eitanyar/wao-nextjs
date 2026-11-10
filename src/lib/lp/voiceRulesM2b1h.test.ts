@@ -56,6 +56,7 @@ import {
 import { VERTICAL_THEMES } from './verticalThemes';
 import { VERTICAL_ASSETS } from './verticalAssets';
 import type { SiteCopy } from './lpCopyPrompt';
+import { DEPTH_BLOCK_KEYS } from './depthBlocks';
 import type { PageBrief } from '../site-bot/research/pageBrief';
 import type { CollectedData } from '../bot/prompts';
 
@@ -287,7 +288,8 @@ test('M2b.1h 6: the pitch is excluded from the copy gates except the truth / for
 });
 
 test('M2b.1h 7: the story fields: homepage only, warn-only (truth gates still block), dropped when invalid, logged', () => {
-  assert.deepEqual([...RESEARCHED_RENDERED_WARN_ONLY_FIELDS], ['storyHeadline', 'storyBody']);
+  // Content depth (2026-11-10) appends the service-page block fields, warn-only like the story.
+  assert.deepEqual([...RESEARCHED_RENDERED_WARN_ONLY_FIELDS], ['storyHeadline', 'storyBody', ...DEPTH_BLOCK_KEYS]);
   assert.ok(researchedRenderedFieldsFor('homepage').includes('storyBody') && !researchedGatedFieldsFor('homepage').includes('storyBody'));
   for (const pageClass of ['service_hub', 'money_service']) assert.ok(!researchedRenderedFieldsFor(pageClass).includes('storyBody'), pageClass);
   const brief = acBrief();

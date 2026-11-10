@@ -46,6 +46,11 @@ export const INTAKE_COPY = {
   M1_Q2_AREA_INTRO_HINT: 'העיר שלך כבר בפנים. אפשר להוסיף עד שתי ערים קרובות שבהן אתה באמת עובד.',
   M1_Q2_AREA_LIMIT_REASON: 'גוגל מראה עסקים בעיקר למי שמחפש קרוב אליהם, ולכן עוד עיר ברשימה כמעט לא מוסיפה לך פניות.',
   M1_Q2_AREA_LIMIT_SWAP_HINT: 'אפשר להסיר עיר ולהוסיף אחרת במקומה.',
+
+  // Content depth (Noa-approved 2026-11-10): the optional voice note after the 3 questions ("walk me through a typical
+  // job"). Rendered only behind VOICE_NOTE_STEP_ENABLED (src/lib/site-bot/voiceNote.ts), which is off.
+  M1_VOICE_NOTE_PROMPT: 'אם בא לך — תספר בקול על עבודה רגילה, מהטלפון הראשון ועד שהעבודה נגמרת. חצי דקה, לא חובה.',
+  M1_VOICE_NOTE_SKIP: 'לא עכשיו',
 } as const;
 
 export type IntakeCopyKey = keyof typeof INTAKE_COPY;

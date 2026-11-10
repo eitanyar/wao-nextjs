@@ -116,6 +116,34 @@ export interface BusinessTruthModel {
   status: AssertionStatus;
 }
 
+/** One NeuronWriter question with the ideas group it came from. */
+export interface NeuronQuestion {
+  question: string;
+  source: 'paa' | 'suggested' | 'topic' | 'content';
+}
+
+/**
+ * Content depth (2026-11-10): the NeuronWriter analysis of one shortlisted service keyword, stored by applyNeuron() so it
+ * reaches the page briefs. Suggestions only: titleTerms / h1Terms are deliberately not stored (they never flow into the
+ * title, the H1 or the hero badge; Yonatan's formula).
+ */
+export interface NeuronQueryData {
+  queryId: string;
+  keyword: string;
+  status: 'waiting' | 'ready';
+  retrievedAt: string;
+  /** metrics.word_count.target (competitor median-derived visible word target). */
+  wordTarget?: number;
+  h2Terms: string[];
+  /** Content terms with NeuronWriter's suggested usage range (sugg_usage [min, max]). */
+  bodyTerms: Array<{ t: string; min: number; max: number; tier?: 'basic' | 'extended' }>;
+  entities: string[];
+  /** PAA first, then suggested, topic-matrix and content questions (deduped, in that order). */
+  questions: NeuronQuestion[];
+  /** Competitor result titles (brand filtering of terms and questions). */
+  competitorTitles: string[];
+}
+
 export interface SiteResearchDossier {
   researchId: string;
   status: ResearchStatus;
@@ -135,6 +163,8 @@ export interface SiteResearchDossier {
   pipelineChecks?: ResearchPipelineChecks;
   /** Set once by the copy_ready plan (M2a.1): service labels/slugs, trade and service-area labels. Never regenerated. */
   siteIdentity?: SiteIdentity;
+  /** Content depth (2026-11-10): NeuronWriter analysis per shortlisted service keyword (key: the keyword). */
+  neuronQueries?: Record<string, NeuronQueryData>;
 }
 
 const RESEARCH_STATUS_TRANSITIONS: Readonly<Record<ResearchStatus, readonly ResearchStatus[]>> = {

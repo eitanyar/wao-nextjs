@@ -2,6 +2,7 @@
 // Input: CollectedData. Output: LPCopy JSON. No prose exploration allowed.
 
 import type { CollectedData } from '@/lib/bot/prompts';
+import type { DepthProcessStep, DepthProofItem, DepthQaItem } from './depthBlocks';
 
 export interface LPCopyFAQItem {
   q: string;
@@ -37,6 +38,13 @@ export interface SiteCopy extends LPCopy {
   storyHeadline?: string | null;  // Homepage story H2. Max 40 chars; null = no visible headline.
   storyBody?: string | null;      // Homepage story: 3-5 first-person sentences cut from the pitch. Max 360 chars.
   pitch?: string | null;          // Generation only: the free sales letter the fields were cut from. Never rendered; moved to the page record.
+  // Content depth (service pages; absent on older records): B1 process, B4 Q&A, B6 proof. Each item cites brief fact IDs.
+  processHeadline?: string | null;
+  processSteps?: DepthProcessStep[] | null;
+  qaHeadline?: string | null;
+  qaItems?: DepthQaItem[] | null;
+  proofHeadline?: string | null;
+  proofItems?: DepthProofItem[] | null;
 }
 
 /** Fixed singular primary CTA label (the copy step injects it; the model never writes heroCta). */

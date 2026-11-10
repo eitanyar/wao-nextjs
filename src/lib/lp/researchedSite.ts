@@ -26,6 +26,7 @@ import {
   type ResearchNavOptions,
 } from './renderSitePages';
 import { RESEARCHED_SITE_LABELS } from './researchedSiteLabels';
+import { DEPTH_BLOCK_KEYS, DEPTH_BLOCK_LIMITS, rendersDepthBlocks } from './depthBlocks';
 
 const RESERVED_SEGMENTS = new Set(['api', 'assets', 'static', 'index', 'privacy', 'accessibility', 'contact', 'sitemap']);
 const RENDERABLE_CLASSES = new Set<PageClassification>([
@@ -308,6 +309,8 @@ export const RESEARCHED_RENDERED_FIELDS: readonly string[] = [
   'heroCta', 'trustBarItems', 'aboutPageHeadline', 'aboutPageBody', 'servicesHeadline', 'serviceDetails',
   // M2b.1h: the homepage story section (RESEARCHED_HOMEPAGE_ONLY_FIELDS).
   'storyHeadline', 'storyBody',
+  // Content depth (2026-11-10): the service-page blocks B1 process, B4 Q&A, B6 proof (RESEARCHED_DEPTH_ONLY_FIELDS).
+  ...DEPTH_BLOCK_KEYS,
 ];
 
 /**
@@ -321,6 +324,9 @@ export const RESEARCHED_RENDERED_WARN_ONLY_FIELDS: readonly string[] = [
   // M2b.1h (Adam): the new story section is warn-only until a paid eval proves it; its truth gates (ALWAYS_BLOCKING_RULES)
   // still fail the page.
   'storyHeadline', 'storyBody',
+  // Content depth (2026-11-10): warn-only until a paid eval proves them, like the story; the fact-trace and term-density
+  // gates (ALWAYS_BLOCKING_RULES) and every other truth gate still fail the page.
+  ...DEPTH_BLOCK_KEYS,
 ];
 
 /** The fields whose gate hits fail a research page (copyGates renderedFields): rendered minus the default warn-only set. */
@@ -345,10 +351,14 @@ export function rendersStory(classification: string): boolean {
   return classification === 'homepage';
 }
 
+/** Content depth: rendered (and generated) on service (money) pages only: the B1 / B4 / B6 blocks. */
+export const RESEARCHED_DEPTH_ONLY_FIELDS: readonly string[] = DEPTH_BLOCK_KEYS;
+
 /** M2b.1h: the fields one page type renders (gated or warn-only): the home/hub-only and homepage-only fields where shown. */
 export function researchedRenderedFieldsFor(classification: string): readonly string[] {
   return RESEARCHED_RENDERED_FIELDS.filter(field => (rendersSiteSections(classification) || !RESEARCHED_HOME_HUB_ONLY_FIELDS.includes(field))
-    && (rendersStory(classification) || !RESEARCHED_HOMEPAGE_ONLY_FIELDS.includes(field)));
+    && (rendersStory(classification) || !RESEARCHED_HOMEPAGE_ONLY_FIELDS.includes(field))
+    && (rendersDepthBlocks(classification) || !RESEARCHED_DEPTH_ONLY_FIELDS.includes(field)));
 }
 
 /**
@@ -446,6 +456,56 @@ function storySection(page: ResearchedSitePage, theme: RenderResearchedSitePages
   return `<section id="story" data-section="story"${named ? ' aria-labelledby="story-heading"' : ''} style="padding:28px 20px;background:${theme.surfaceAlt};border-block:1px solid ${theme.border};"><div style="max-width:640px;margin:0 auto;">${heading}<p style="color:${theme.textPrimary};font-size:1.125rem;line-height:1.7;text-align:start;border-inline-start:3px solid ${theme.accent};padding-inline-start:14px;">${esc(page.copy.storyBody ?? '')}</p></div></section>`;
 }
 
+/** Content depth: the non-empty text items of one depth list (a record without the field renders nothing). */
+function depthItems<T extends object>(value: readonly T[] | null | undefined, keys: readonly (keyof T)[]): T[] {
+  return (Array.isArray(value) ? value : []).filter(item => item && keys.every(key => nonEmpty(item[key])));
+}
+
+const depthHeadingStyle = (theme: RenderResearchedSitePagesParams['theme']) => `font-size:1.35rem;font-weight:700;color:${theme.primary};margin-bottom:16px;text-align:center;`;
+
+/** Content depth: a block's H2, the generated headline or the approved fallback label (visible either way). */
+function depthHeading(id: string, headline: string | null | undefined, fallback: string, theme: RenderResearchedSitePagesParams['theme']): string {
+  return `<h2 id="${id}" style="${depthHeadingStyle(theme)}">${esc(nonEmpty(headline) ? headline : fallback)}</h2>`;
+}
+
+/** Content depth (B1): the process steps as an ordered list; service pages only; nothing without steps. */
+function processSection(page: ResearchedSitePage, theme: RenderResearchedSitePagesParams['theme']): string {
+  if (!rendersDepthBlocks(page.classification)) return '';
+  const steps = depthItems(page.copy.processSteps, ['text']);
+  if (!steps.length) return '';
+  const items = steps.map(step => `<li style="background:${theme.surface};border:1px solid ${theme.border};border-radius:${theme.radiusMd};padding:14px 16px;border-inline-start:3px solid ${theme.accent};color:${theme.textPrimary};line-height:1.6;">${esc(step.text)}</li>`).join('');
+  return `<section id="process" data-section="process" aria-labelledby="process-heading" style="padding:32px 20px;background:${theme.surfaceAlt};"><div style="max-width:700px;margin:0 auto;">${depthHeading('process-heading', page.copy.processHeadline, RESEARCHED_SITE_LABELS.processHeadingFallback, theme)}<ol style="display:flex;flex-direction:column;gap:10px;padding-inline-start:22px;margin:0;">${items}</ol></div></section>`;
+}
+
+/** Content depth (B6): owner-stated proof facts plus at most DEPTH_BLOCK_LIMITS.maxReviews verbatim reviews; nothing without facts. */
+function proofReviews(page: ResearchedSitePage): string[] {
+  return [page.copy.reviewFeatured].filter(nonEmpty).slice(0, DEPTH_BLOCK_LIMITS.maxReviews);
+}
+
+/** True when the B6 proof section renders (and then carries the page's review instead of reviewSection). */
+function hasProof(page: ResearchedSitePage): boolean {
+  return rendersDepthBlocks(page.classification) && depthItems(page.copy.proofItems, ['text']).length > 0;
+}
+
+function proofSection(page: ResearchedSitePage, theme: RenderResearchedSitePagesParams['theme']): string {
+  if (!hasProof(page)) return '';
+  const facts = depthItems(page.copy.proofItems, ['text']).map(item => `<li style="background:${theme.surface};border:1px solid ${theme.border};border-radius:${theme.radiusSm};padding:10px 14px;font-weight:600;color:${theme.textPrimary};">${esc(item.text)}</li>`).join('');
+  const reviews = proofReviews(page);
+  const context = page.copy.reviewContext ? `<div style="font-size:0.85rem;color:${theme.textMuted};margin-top:10px;">${esc(page.copy.reviewContext)}</div>` : '';
+  const quotes = reviews.map((quote, index) => `<blockquote style="margin:18px 0 0;text-align:center;"><p style="font-style:italic;font-size:1.05rem;color:${theme.textPrimary};line-height:1.6;">\u05F4${esc(quote)}\u05F4</p>${index === 0 ? context : ''}</blockquote>`).join('');
+  const fallback = reviews.length ? RESEARCHED_SITE_LABELS.proofHeadingReviews : RESEARCHED_SITE_LABELS.proofHeadingFactsOnly;
+  return `<section id="proof" data-section="proof" aria-labelledby="proof-heading" style="padding:32px 20px;background:${theme.surface};"><div style="max-width:700px;margin:0 auto;">${depthHeading('proof-heading', page.copy.proofHeadline, fallback, theme)}<ul role="list" style="list-style:none;display:flex;flex-direction:column;gap:8px;padding:0;margin:0;">${facts}</ul>${quotes}</div></section>`;
+}
+
+/** Content depth (B4): the Q&A, each question an H3 with its answer; service pages only; nothing without items. */
+function qaSection(page: ResearchedSitePage, theme: RenderResearchedSitePagesParams['theme']): string {
+  if (!rendersDepthBlocks(page.classification)) return '';
+  const items = depthItems(page.copy.qaItems, ['q', 'a']);
+  if (!items.length) return '';
+  const body = items.map(item => `<div style="background:${theme.surface};border:1px solid ${theme.border};border-radius:${theme.radiusMd};padding:14px 16px;"><h3 style="font-weight:700;font-size:1rem;color:${theme.primary};margin-bottom:6px;">${esc(item.q)}</h3><p style="color:${theme.textMuted};line-height:1.6;">${esc(item.a)}</p></div>`).join('');
+  return `<section id="qa" data-section="qa" aria-labelledby="qa-heading" style="padding:32px 20px;background:${theme.surfaceAlt};"><div style="max-width:700px;margin:0 auto;display:flex;flex-direction:column;gap:12px;">${depthHeading('qa-heading', page.copy.qaHeadline, RESEARCHED_SITE_LABELS.qaHeadingFallback, theme)}${body}</div></section>`;
+}
+
 /**
  * Service cards (M2b.1): servicesHeadline as the H2, one H3 card per serviceDetails item. M2b.1b: homepage and
  * service hub only (Yonatan), id="services" (nav target), labelled by its H2 (fallback: hidden nav-text H2).
@@ -518,8 +578,8 @@ function buildPageHtml(page: ResearchedSitePage, params: RenderResearchedSitePag
   const body = `${stickyHeader(theme, businessName, phone, phoneHref)}
   <main>
     <section style="padding:44px 20px;background:${theme.surface};text-align:center;"><div style="max-width:700px;margin:0 auto;"><h1 style="color:${theme.primary};font-size:clamp(1.6rem,4vw,2.3rem);margin-bottom:16px;">${esc(researchedPageH1(page.copy.heroHeadline, page.seo))}</h1><p style="color:${theme.textMuted};line-height:1.7;">${esc(page.copy.heroSubheadline)}</p>${heroCallButton(page, data, theme)}</div></section>
-    ${trustBar(page, theme)}${storySection(page, theme)}
-    ${reviewSection(page, theme)}
+    ${trustBar(page, theme)}${storySection(page, theme)}${processSection(page, theme)}${proofSection(page, theme)}
+    ${hasProof(page) ? '' : reviewSection(page, theme)}${qaSection(page, theme)}
     ${serviceDetailsSection(page, theme)}
     ${aboutSection(page, theme)}
     ${serviceAreasSection(page, allPages, outputs, theme)}

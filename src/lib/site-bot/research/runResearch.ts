@@ -10,10 +10,10 @@ import {
 } from './dataForSeoResearch';
 import { compileBusinessTruthModel, findBusinessTruthGaps, type BusinessTruthInput } from './businessTruth';
 import { compileCityEvidence, compileSemanticEvidenceGraph } from './evidenceGraph';
-import { createServiceQuery, getServiceQuery, type NeuronServiceQuery, type ServiceQueryInput } from './neuronWriter';
+import { createServiceQuery, getServiceQuery, pollServiceQuery, type NeuronServiceQuery, type ServiceQueryInput } from './neuronWriter';
 import { fixtureResearchProviders } from './fixtureProviders';
 import { readResearchDossier, writeResearchDossierAtomic } from './researchStore';
-import type { EvidenceNode, HumanGate, SiteResearchDossier } from './types';
+import type { EvidenceNode, HumanGate, NeuronQuestion, SiteResearchDossier } from './types';
 
 export const RESEARCH_STAGES = ['truth', 'seed_expansion', 'metrics', 'intent', 'shortlist', 'live_serps', 'neuron_enrichment', 'evidence_graph', 'usage_ledger', 'readiness'] as const;
 export type ResearchStage = (typeof RESEARCH_STAGES)[number];
@@ -28,6 +28,8 @@ export interface ResearchProviders {
   neuron: {
     create(input: ServiceQueryInput): Promise<NeuronServiceQuery>;
     get(queryId: string, input: Pick<ServiceQueryInput, 'serviceKeyword' | 'intentCluster'>): Promise<NeuronServiceQuery>;
+    /** Content depth: bounded wait for a not-yet-ready query (get-query only; never a new analysis). Optional. */
+    poll?(queryId: string, input: Pick<ServiceQueryInput, 'serviceKeyword' | 'intentCluster'>): Promise<NeuronServiceQuery>;
   };
 }
 
@@ -85,7 +87,7 @@ function defaultProviders(): ResearchProviders {
   }
   return {
     dataForSeo: { expand: expandServiceSeeds, metrics: fetchKeywordMetrics, intent: classifySearchIntent, serps: fetchLocalSerpEvidence },
-    neuron: { create: createServiceQuery, get: getServiceQuery },
+    neuron: { create: createServiceQuery, get: getServiceQuery, poll: (queryId, input) => pollServiceQuery(queryId, input) },
   };
 }
 
@@ -165,10 +167,45 @@ function applySerps(dossier: SiteResearchDossier, evidence: LocalSerpEvidence[],
   dossier.serpObservations = evidence.flatMap(item => [...item.localPack, ...item.organic].map(result => ({ query: item.query, ...(result.rank === undefined ? {} : { rank: result.rank }), ...(result.url ? { observedUrl: result.url } : {}), observation: result.classification, sourceKind: 'serp_provider' as const, providerRecordId: item.taskId ?? `serp:${item.query}`, retrievedAt: nowIso(now), expiresAt: expiresAt(now, SERP_TTL_MS), timeSensitive: true, confidence: 0.8, assertionStatus: 'verified' })));
 }
 
-function applyNeuron(dossier: SiteResearchDossier, query: NeuronServiceQuery, now: () => Date): void {
+/** Content depth: the questions of one analysis, PAA first (real searched questions), then suggested, topic and content. */
+export function neuronQuestions(query: NeuronServiceQuery): NeuronQuestion[] {
+  const out: NeuronQuestion[] = [];
+  const seen = new Set<string>();
+  const groups: Array<[NeuronQuestion['source'], string[]]> = [
+    ['paa', query.paaQuestions], ['suggested', query.suggestedQuestions], ['topic', query.topicQuestions ?? []], ['content', query.contentQuestions],
+  ];
+  for (const [source, questions] of groups) {
+    for (const question of questions) {
+      const key = question.trim().replace(/\s+/g, ' ').toLowerCase();
+      if (!key || seen.has(key)) continue;
+      seen.add(key);
+      out.push({ question: question.trim(), source });
+    }
+  }
+  return out;
+}
+
+export function applyNeuron(dossier: SiteResearchDossier, query: NeuronServiceQuery, now: () => Date): void {
   const id = `neuron-query:${query.serviceKeyword.toLowerCase().replace(/\s+/g, '-')}`;
   dossier.evidence = dossier.evidence.filter(item => item.id !== id);
   dossier.evidence.push({ id, claim: query.serviceKeyword, sourceKind: 'provider', providerRecordId: query.id, retrievedAt: nowIso(now), confidence: query.status === 'ready' ? 0.8 : 0.6, assertionStatus: query.status === 'ready' ? 'verified' : 'held' });
+  // Content depth (2026-11-10): the analysis itself, per service keyword. Only a ready analysis carries data.
+  const ready = query.status === 'ready';
+  dossier.neuronQueries = {
+    ...(dossier.neuronQueries ?? {}),
+    [query.serviceKeyword]: {
+      queryId: query.id,
+      keyword: query.serviceKeyword,
+      status: query.status,
+      retrievedAt: nowIso(now),
+      ...(ready && query.wordTarget !== undefined ? { wordTarget: query.wordTarget } : {}),
+      h2Terms: ready ? [...query.h2Terms] : [],
+      bodyTerms: ready ? (query.bodyTermUsage ?? []).map(term => ({ t: term.t, min: term.min, max: term.max, tier: term.tier })) : [],
+      entities: ready ? [...query.entities] : [],
+      questions: ready ? neuronQuestions(query) : [],
+      competitorTitles: ready ? query.competitors.flatMap(item => (item.title ? [item.title] : [])) : [],
+    },
+  };
 }
 
 function applyGraph(dossier: SiteResearchDossier, cityFacts: Array<{ value: string; owner: { sourceId: string; capturedAt: string } }>, now: () => Date): void {
@@ -251,7 +288,9 @@ export async function runSiteResearch(researchId: string, input: SiteResearchInp
     for (const keyword of shortlisted) {
       const queryEvidence = dossier.evidence.find(item => item.id === `neuron-query:${keyword.toLowerCase().replace(/\s+/g, '-')}`);
       const queryInput = { serviceKeyword: keyword, intentCluster: keyword, pageClass: 'service' as const };
-      const query = queryEvidence?.providerRecordId ? await providers.neuron.get(queryEvidence.providerRecordId, queryInput) : await providers.neuron.create(queryInput);
+      let query = queryEvidence?.providerRecordId ? await providers.neuron.get(queryEvidence.providerRecordId, queryInput) : await providers.neuron.create(queryInput);
+      // Content depth: /new-query answers before the analysis is done; wait (bounded) so the data reaches the briefs.
+      if (query.status !== 'ready' && providers.neuron.poll) query = await providers.neuron.poll(query.id, queryInput);
       applyNeuron(dossier, query, now);
       await save(dossier, options, now);
     }

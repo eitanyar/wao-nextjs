@@ -11,6 +11,7 @@ import { seedFromPrefillSnapshot } from "@/lib/site-bot/seedPrefill";
 import type { PrefillSnapshot } from "@/lib/site-bot/placePrefill";
 import { displayBusinessHours } from "@/lib/lp/businessHours";
 import { INTAKE_COPY } from "@/lib/site-bot/intakeCopy";
+import { startVoiceNote, VOICE_NOTE_CONTROL_LABELS, voiceNoteStepAvailable, type VoiceNoteRecording } from "@/lib/site-bot/voiceNote";
 import { ISRAELI_LOCALITIES } from "@/lib/site-bot/israeliLocalities";
 import { MAX_LISTED_SERVED_AREAS, servedAreaCandidates } from "@/lib/site-bot/servedAreas";
 import {
@@ -129,7 +130,9 @@ function questionText(key: IntakeQuestionKey, card: IntakeCard): string {
   return card.serviceModel === "location" ? INTAKE_COPY.M1_Q2_SERVICE_AREA : INTAKE_COPY.M1_Q2_TRAVEL_BOUNDARY;
 }
 
-type Phase = "loading" | "card" | "chat" | "routing" | "error";
+// Content depth: "voice" is the optional voice-note step after the 3 questions. voiceNoteStepAvailable() is false
+// (src/lib/site-bot/voiceNote.ts: no safe storage / transcription / control labels yet), so the flow never enters it today.
+type Phase = "loading" | "card" | "chat" | "voice" | "routing" | "error";
 
 function SiteBotStartContent() {
   const router = useRouter();
@@ -153,6 +156,8 @@ function SiteBotStartContent() {
   const [probed, setProbed] = useState(false);
   const [pendingAnswer, setPendingAnswer] = useState<string | null>(null);
   const [areaChoice, setAreaChoice] = useState<AreaChoice | null>(null);
+  const [voiceData, setVoiceData] = useState<CollectedData | null>(null);
+  const [recording, setRecording] = useState<VoiceNoteRecording | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const firstAreaRef = useRef<HTMLButtonElement>(null);
   const chatInputRef = useRef<HTMLInputElement>(null);
@@ -319,9 +324,43 @@ function SiteBotStartContent() {
       scrollDown();
       return;
     }
+    const data = buildIntakeCollectedData(nextCard, evidence, nextAnswers);
+    // Content depth: the optional voice note, only when it is available (it is off; see voiceNote.ts).
+    if (voiceNoteStepAvailable(typeof window === "undefined" ? {} : { MediaRecorder: window.MediaRecorder, mediaDevices: navigator.mediaDevices })) {
+      setVoiceData(data);
+      setMessages((prev) => [...prev, userMsg, { role: "assistant", content: INTAKE_COPY.M1_VOICE_NOTE_PROMPT }]);
+      setPhase("voice");
+      scrollDown();
+      return;
+    }
     setMessages((prev) => [...prev, userMsg, { role: "assistant", content: DONE_MESSAGE }]);
     scrollDown();
-    finish(buildIntakeCollectedData(nextCard, evidence, nextAnswers));
+    finish(data);
+  }
+
+  // Content depth: leaves the voice-note step. The recording is never uploaded or stored (no safe path yet).
+  function finishVoiceStep() {
+    if (phase !== "voice" || !voiceData) return;
+    const data = voiceData;
+    setVoiceData(null);
+    setMessages((prev) => [...prev, { role: "assistant", content: DONE_MESSAGE }]);
+    scrollDown();
+    finish(data);
+  }
+
+  async function toggleVoiceRecording() {
+    if (phase !== "voice") return;
+    if (recording) {
+      setRecording(null);
+      await recording.stop();
+      finishVoiceStep();
+      return;
+    }
+    try {
+      setRecording(await startVoiceNote());
+    } catch {
+      // Microphone refused or unavailable: the step stays skippable.
+    }
   }
 
   const visibleSteps = questions;
@@ -581,6 +620,17 @@ function SiteBotStartContent() {
                 </button>
               );
             })}
+          </div>
+        )}
+
+        {phase === "voice" && VOICE_NOTE_CONTROL_LABELS.record && VOICE_NOTE_CONTROL_LABELS.stop && (
+          <div data-intake-voice-note="true" style={{ display: "flex", flexWrap: "wrap", gap: "10px" }}>
+            <button type="button" className="btn-primary" aria-pressed={recording !== null} onClick={toggleVoiceRecording} style={{ padding: "12px 24px", minHeight: "44px" }}>
+              {renderMixed(recording ? VOICE_NOTE_CONTROL_LABELS.stop : VOICE_NOTE_CONTROL_LABELS.record)}
+            </button>
+            <button type="button" className="wao-intake-choice" disabled={recording !== null} onClick={finishVoiceStep} style={{ minHeight: "44px" }}>
+              {renderMixed(INTAKE_COPY.M1_VOICE_NOTE_SKIP)}
+            </button>
           </div>
         )}
 

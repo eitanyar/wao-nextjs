@@ -45,6 +45,16 @@ const VERTICAL_MAP: Array<{ keywords: string[]; vertical: VerticalKey }> = [
 ];
 
 /**
+ * Content depth: the vertical whose keywords a text names, or null when it names none (detectVertical falls back to
+ * 'skilled-trades' instead, so it cannot tell "no match" apart).
+ */
+export function matchedVertical(text: string): VerticalKey | null {
+  if (!text) return null;
+  const lower = text.toLowerCase();
+  return VERTICAL_MAP.find(entry => entry.keywords.some(k => lower.includes(k)))?.vertical ?? null;
+}
+
+/**
  * Maps a free-text businessNiche string to one of the 8 vertical keys.
  * Falls back to 'skilled-trades' (neutral, not urgency-colored) if unknown.
  */

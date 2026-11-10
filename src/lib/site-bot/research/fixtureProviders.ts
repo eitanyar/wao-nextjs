@@ -19,11 +19,11 @@ import {
   fetchKeywordMetrics,
   fetchLocalSerpEvidence,
 } from './dataForSeoResearch';
-import { createServiceQuery, getServiceQuery } from './neuronWriter';
+import { createServiceQuery, getServiceQuery, NEURON_WRITER_BASE_URL, pollServiceQuery } from './neuronWriter';
 import type { ResearchProviders } from './runResearch';
 
 const DATAFORSEO_PREFIX = 'https://api.dataforseo.com/v3';
-const NEURON_PREFIX = 'https://api.neuronwriter.com/neuron-api/0.5/writer';
+const NEURON_PREFIX = NEURON_WRITER_BASE_URL;
 export const FIXTURE_CREDENTIAL = 'fixture-no-network';
 export const FIXTURE_NEURON_PROJECT_ID = 'fixture-project';
 
@@ -102,22 +102,58 @@ function dataForSeoResponse(endpoint: string, body: unknown): Json | null {
   }
 }
 
-function neuronResponse(endpoint: string, body: unknown): Json | null {
+/**
+ * A ready /get-query payload in the real response shape (testdata/neuronwriter-get-query-he.json), with synthetic Latin
+ * terms built from the keyword: word-count target, content terms with sugg_usage ranges, H2 terms, and questions in every
+ * ideas group (PAA, suggested, topic matrix, content).
+ */
+export function fixtureNeuronReadyPayload(queryId: string, keyword: string): Json {
+  return {
+    status: 'ready',
+    query: queryId,
+    keyword,
+    language: 'Hebrew',
+    engine: 'google.co.il',
+    metrics: { word_count: { median: 380, target: 420 }, readability: { median: 60, target: 60 } },
+    terms: {
+      title: [{ t: keyword, usage_pc: 90 }],
+      desc: [{ t: keyword, usage_pc: 80 }],
+      h1: [{ t: keyword, usage_pc: 70 }],
+      h2: [{ t: `${keyword} steps`, usage_pc: 40 }, { t: `${keyword} questions`, usage_pc: 30 }],
+      content_basic: [
+        { t: keyword, usage_pc: 100, sugg_usage: [2, 5] },
+        { t: `${keyword} method`, usage_pc: 60, sugg_usage: [1, 2] },
+      ],
+      content_extended: [{ t: `${keyword} detail`, usage_pc: 30, sugg_usage: [1, 1] }],
+      entities: [{ t: `${keyword} entity`, importance: 5, relevance: 0.5, confidence: 0.5, links: [] }],
+    },
+    ideas: {
+      suggest_questions: [{ q: `${keyword} suggested question?` }],
+      people_also_ask: [{ q: `${keyword} paa question?` }],
+      topic_matrix: { [`${keyword} topic question?`]: { importance: 8 } },
+      content_questions: [{ q: `${keyword} content question?` }],
+    },
+    competitors: [{ rank: 1, url: 'https://fixture-local-1.example/', title: 'Fixture Local Business 1', desc: 'fixture', headers: [], content_score: 50, word_count: 420 }],
+  };
+}
+
+function neuronResponse(endpoint: string, body: unknown, keywords: Map<string, string>): Json | Json[] | null {
   const record = body && typeof body === 'object' && !Array.isArray(body) ? body as Json : {};
-  const query = typeof record.query === 'string' ? record.query : '';
   switch (endpoint) {
-    case '/projects':
-      return { projects: [{ id: FIXTURE_NEURON_PROJECT_ID, name: 'fixture', search_engine: 'google.co.il', language: 'Hebrew' }] };
-    case '/new-query':
-      return { query: {
-        id: `fixture-neuron-${hash(query)}`,
-        status: 'ready',
-        terms: { title: [query], h1: [query], body: [query] },
-        questions: { suggested: [`${query}?`] },
-        competitors: [{ url: 'https://fixture-local-1.example/', title: 'Fixture Local Business 1', score: 50 }],
-      } };
-    case '/get-query':
-      return { id: query, status: 'ready' };
+    case '/list-projects':
+      return [{ project: FIXTURE_NEURON_PROJECT_ID, name: 'fixture', engine: 'google.co.il', language: 'Hebrew' }];
+    case '/new-query': {
+      // The real /new-query answers with the new query ID only; the analysis is read back through /get-query.
+      const keyword = typeof record.keyword === 'string' ? record.keyword : '';
+      const id = `fixture-neuron-${hash(keyword)}`;
+      keywords.set(id, keyword);
+      return { query: id, query_url: `https://fixture-neuron.example/analysis/view/${id}` };
+    }
+    case '/get-query': {
+      const id = typeof record.query === 'string' ? record.query : '';
+      const keyword = keywords.get(id);
+      return keyword === undefined ? { status: 'not found' } : fixtureNeuronReadyPayload(id, keyword);
+    }
     default:
       return null;
   }
@@ -130,6 +166,7 @@ export interface FixtureFetchCall {
 
 /** A fetch stand-in that answers only from fixtures. `calls` records every request it served. */
 export function createFixtureFetch(calls: FixtureFetchCall[] = []): typeof globalThis.fetch {
+  const neuronKeywords = new Map<string, string>();
   return (async (input: RequestInfo | URL, init?: RequestInit) => {
     const url = typeof input === 'string' ? input : input instanceof URL ? input.href : input.url;
     const method = init?.method ?? 'GET';
@@ -138,7 +175,7 @@ export function createFixtureFetch(calls: FixtureFetchCall[] = []): typeof globa
     const payload = url.startsWith(`${DATAFORSEO_PREFIX}/`)
       ? dataForSeoResponse(url.slice(DATAFORSEO_PREFIX.length), body)
       : url.startsWith(`${NEURON_PREFIX}/`)
-        ? neuronResponse(url.slice(NEURON_PREFIX.length), body)
+        ? neuronResponse(url.slice(NEURON_PREFIX.length), body, neuronKeywords)
         : null;
     if (!payload) throw new Error(`fixture transport has no recording for ${method} ${url}`);
     return new Response(JSON.stringify(payload), { status: 200, headers: { 'Content-Type': 'application/json' } });
@@ -160,6 +197,7 @@ export function fixtureResearchProviders(calls: FixtureFetchCall[] = []): Resear
     neuron: {
       create: input => createServiceQuery(input, neuron),
       get: (queryId, input) => getServiceQuery(queryId, input, neuron),
+      poll: (queryId, input) => pollServiceQuery(queryId, input, neuron, { attempts: 2, intervalMs: 0, sleep: async () => {} }),
     },
   };
 }

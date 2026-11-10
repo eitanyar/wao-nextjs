@@ -65,6 +65,7 @@ import {
 } from './researchPageCopy';
 import { buildAccessibilityHtml, buildPrivacyHtml, prefixJoiner } from './legalPages';
 import { VERTICAL_THEMES } from './verticalThemes';
+import { DEPTH_BLOCK_KEYS } from './depthBlocks';
 import {
   buildResearchedSiteGeneration,
   OWNER_CONTACT_MISSING,
@@ -328,7 +329,8 @@ test('M2b.1d 7: duplicate about checks compare homepage / hub pages only; the op
 
 test('M2b.1d 8 (M2b.1f): all five M2b fields block by default; an injected warn-only list still holds a field back; never gated where not rendered', () => {
   // M2b.1h: the new story section is warn-only until a paid eval proves it (the five M2b fields still block).
-  assert.deepEqual([...RESEARCHED_RENDERED_WARN_ONLY_FIELDS], ['storyHeadline', 'storyBody']);
+  // Content depth (2026-11-10) appends the service-page block fields, warn-only like the story.
+  assert.deepEqual([...RESEARCHED_RENDERED_WARN_ONLY_FIELDS], ['storyHeadline', 'storyBody', ...DEPTH_BLOCK_KEYS]);
   const five = ['trustBarItems', 'servicesHeadline', 'serviceDetails', 'aboutPageHeadline', 'aboutPageBody'];
   for (const pageClass of ['homepage', 'service_hub']) for (const field of five) assert.ok(researchedGatedFieldsFor(pageClass).includes(field), `${pageClass}: ${field}`);
   assert.ok(!researchedGatedFieldsFor('money_service').includes('aboutPageBody'), 'still never where not rendered');

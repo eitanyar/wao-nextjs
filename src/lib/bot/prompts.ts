@@ -19,6 +19,8 @@ export interface CollectedData {
   secondaryServices?: string;
   priorityServices?: string[];
   serviceAttributes?: Record<string, string>;
+  /** Content depth: the owner's own walkthrough of a typical job (the intake voice note, once transcribed). Not collected yet. */
+  jobWalkthrough?: string;
 
   // Service model + location
   serviceModel?: 'field' | 'location' | 'event' | 'remote' | 'mixed';

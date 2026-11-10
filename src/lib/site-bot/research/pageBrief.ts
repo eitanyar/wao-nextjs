@@ -58,6 +58,36 @@ export interface PageBriefSite {
   ownerIntroPage: boolean;
 }
 
+/**
+ * Content depth (Yonatan, 2026-11-10; before-M3 part). Service (money) pages size their copy from NeuronWriter's competitor
+ * word target, clamped to [floor, ceiling]; never padded (facts run out -> a shorter page and a logged fact_gap).
+ */
+export const DEPTH_WORD_FLOOR = 250;
+export const DEPTH_WORD_CEILING = 600;
+export const MAX_QUESTION_POOL = 8;
+export const MAX_SUGGESTED_TERMS = MAX_ITEMS_PER_SECTION;
+/** B4 renders 3 to 6 Q&A items, so the block is enabled only with at least this many pooled questions. */
+export const QA_MIN_POOL = 3;
+
+export interface LengthBand { floor: number; target: number; ceiling: number }
+/** A NeuronWriter content term: a suggestion, never a requirement; at most `max` uses on the page. */
+export interface BriefTerm { t: string; min: number; max: number }
+export type BriefQuestionSource = 'paa' | 'suggested' | 'topic' | 'content';
+export interface BriefQuestion { id: string; question: string; source: BriefQuestionSource }
+/** Which service-page blocks this page may generate, from the owner facts that exist (B1 process, B4 Q&A, B6 proof). */
+export interface BlocksEnabled { process: boolean; qa: boolean; proof: boolean }
+
+/** Depth inputs of one service page: NeuronWriter data (already filtered by the caller's predicates) and service facts. */
+export interface PageBriefDepthInput {
+  wordTarget?: number;
+  terms: BriefTerm[];
+  questions: Array<{ question: string; source: BriefQuestionSource }>;
+  /** Owner facts about how this service is done (the job walkthrough / service attributes). They enable B1. */
+  serviceFacts?: BriefEvidence[];
+  /** Brand / place / service / price predicates (functions; input only, never on the compiled brief). */
+  filters?: DepthTextFilters;
+}
+
 export interface PageBriefInput {
   page: {
     id: string;
@@ -78,6 +108,8 @@ export interface PageBriefInput {
   faqCandidates: PageBriefFaqCandidate[];
   siblingFaqQuestions?: string[];
   site?: PageBriefSite;
+  /** Content depth: service pages only; absent = no depth fields on the brief (homepage, legacy briefs). */
+  depth?: PageBriefDepthInput;
 }
 
 export interface PageBrief {
@@ -96,6 +128,12 @@ export interface PageBrief {
   faqPolicy: FaqPolicy;
   faqCandidates: PageBriefFaqCandidate[];
   site?: PageBriefSite;
+  /** Content depth (service pages only; every field absent on other and older briefs). */
+  lengthBand?: LengthBand;
+  suggestedTerms?: BriefTerm[];
+  questionPool?: BriefQuestion[];
+  blocksEnabled?: BlocksEnabled;
+  serviceFacts?: Array<{ id: string; value: string }>;
 }
 
 function plainObject(value: unknown): value is Record<string, unknown> {
@@ -137,10 +175,16 @@ export function assertBoundedPageBrief(value: unknown): asserts value is PageBri
     const sectionIds = new Set<string>();
     for (const item of items) evidence(item, sectionIds);
   }
+  if (value.serviceFacts !== undefined) {
+    if (!denseArray(value.serviceFacts, MAX_ITEMS_PER_SECTION)) invalidBrief();
+    const sectionIds = new Set<string>();
+    for (const item of value.serviceFacts) evidence(item, sectionIds);
+  }
   for (const key of ['informationGainGaps', 'prohibitedClaims'] as const) {
     const items = value[key];
     if (!denseArray(items, MAX_ITEMS_PER_SECTION) || !items.every(boundedText)) invalidBrief();
   }
+  assertDepthFields(value);
   if (value.faqPolicy !== 'none' && value.faqPolicy !== 'optional' &&
     value.faqPolicy !== 'required_for_user_clarity') invalidBrief();
   if (!denseArray(value.faqCandidates, MAX_FAQ_ITEMS) || !denseArray(value.links, MAX_ITEMS_PER_SECTION)) invalidBrief();
@@ -170,6 +214,37 @@ export function assertBoundedPageBrief(value: unknown): asserts value is PageBri
     if (JSON.stringify(value).length > MAX_PAGE_BRIEF_PAYLOAD_CHARS) invalidBrief();
   } catch {
     invalidBrief();
+  }
+}
+
+const wholeCount = (value: unknown, min: number, max: number): boolean =>
+  typeof value === 'number' && Number.isInteger(value) && value >= min && value <= max;
+
+/** Content depth: the optional depth fields of a request brief (each absent, or well-formed and bounded). */
+function assertDepthFields(value: Record<string, unknown>): void {
+  if (value.lengthBand !== undefined) {
+    const band = value.lengthBand;
+    if (!plainObject(band) || !wholeCount(band.floor, 0, 5000) || !wholeCount(band.target, 0, 5000) || !wholeCount(band.ceiling, 0, 5000) ||
+      (band.floor as number) > (band.target as number) || (band.target as number) > (band.ceiling as number)) invalidBrief();
+  }
+  if (value.suggestedTerms !== undefined) {
+    if (!denseArray(value.suggestedTerms, MAX_SUGGESTED_TERMS)) invalidBrief();
+    for (const term of value.suggestedTerms) {
+      if (!plainObject(term) || !boundedText(term.t) || !wholeCount(term.min, 0, 100) || !wholeCount(term.max, 0, 100) || (term.min as number) > (term.max as number)) invalidBrief();
+    }
+  }
+  if (value.questionPool !== undefined) {
+    if (!denseArray(value.questionPool, MAX_QUESTION_POOL)) invalidBrief();
+    const ids = new Set<string>();
+    for (const item of value.questionPool) {
+      if (!plainObject(item) || !boundedText(item.id) || ids.has(item.id) || !boundedText(item.question) ||
+        !['paa', 'suggested', 'topic', 'content'].includes(item.source as string)) invalidBrief();
+      ids.add(item.id as string);
+    }
+  }
+  if (value.blocksEnabled !== undefined) {
+    const blocks = value.blocksEnabled;
+    if (!plainObject(blocks) || ['process', 'qa', 'proof'].some(key => typeof blocks[key] !== 'boolean')) invalidBrief();
   }
 }
 
@@ -258,12 +333,107 @@ function ensurePayloadBound(brief: PageBrief): PageBrief {
   };
 }
 
+/** Content depth: clamp(NeuronWriter word target, floor, ceiling); no target -> the floor. */
+export function lengthBandFor(wordTarget: number | undefined): LengthBand {
+  const raw = typeof wordTarget === 'number' && Number.isFinite(wordTarget) ? Math.round(wordTarget) : DEPTH_WORD_FLOOR;
+  return { floor: DEPTH_WORD_FLOOR, target: Math.min(DEPTH_WORD_CEILING, Math.max(DEPTH_WORD_FLOOR, raw)), ceiling: DEPTH_WORD_CEILING };
+}
+
+/**
+ * Content depth: what the caller's filters decide about one NeuronWriter term or question (pure here; the predicates live
+ * with the gate data). A term is dropped when any predicate rejects it: a competitor brand, a place outside the owner's
+ * stated area, a service he does not offer, or a price.
+ */
+export interface DepthTextFilters {
+  competitorBrand?: (text: string) => boolean;
+  otherPlace?: (text: string) => boolean;
+  unofferedService?: (text: string) => boolean;
+  price?: (text: string) => boolean;
+  /**
+   * Latin-letter terms are dropped (on a Hebrew page they are brands, domains or platform names) unless the page's own search
+   * keyword is Latin (synthetic fixtures, Latin trade names).
+   */
+  latinAllowed?: boolean;
+}
+
+function rejectedBy(text: string, filters: DepthTextFilters): boolean {
+  return [filters.competitorBrand, filters.otherPlace, filters.unofferedService, filters.price].some(check => Boolean(check?.(text)));
+}
+
+/** Suggested terms: bounded, deduped, Latin-free unless allowed (brands and domains are Latin), and passing every filter. */
+export function filterSuggestedTerms(terms: readonly BriefTerm[], filters: DepthTextFilters = {}): BriefTerm[] {
+  const out: BriefTerm[] = [];
+  const seen = new Set<string>();
+  for (const term of terms) {
+    const t = normalizeText(term.t);
+    const key = t.toLowerCase();
+    if (!t || seen.has(key) || (!filters.latinAllowed && /[A-Za-z]/.test(t)) || !Number.isInteger(term.min) || !Number.isInteger(term.max) || term.min < 0 || term.max < term.min) continue;
+    if (rejectedBy(t, filters)) continue;
+    seen.add(key);
+    out.push({ t, min: term.min, max: term.max });
+    if (out.length === MAX_SUGGESTED_TERMS) break;
+  }
+  return out;
+}
+
+/** The question pool: deduped (canonical form), filtered like the terms (minus the price filter), at most MAX_QUESTION_POOL. */
+export function buildQuestionPool(questions: PageBriefDepthInput['questions'], filters: DepthTextFilters = {}, exclude: ReadonlySet<string> = new Set()): BriefQuestion[] {
+  const out: BriefQuestion[] = [];
+  const seen = new Set(exclude);
+  const { price: _price, latinAllowed: _latin, ...questionFilters } = filters;
+  void _price;
+  void _latin;
+  for (const item of questions) {
+    const question = normalizeText(item.question);
+    const canonical = canonicalQuestion(question);
+    if (!canonical || seen.has(canonical) || rejectedBy(question, questionFilters)) continue;
+    seen.add(canonical);
+    out.push({ id: `question-${out.length + 1}`, question, source: item.source });
+    if (out.length === MAX_QUESTION_POOL) break;
+  }
+  return out;
+}
+
+/** Content depth: the fact IDs a block item may cite (owner facts only: never the persona, the queries or a question). */
+export function briefFactTexts(brief: Pick<PageBrief, 'waoOffer' | 'approvedEntityAnchors' | 'firstPartyProof' | 'assertableLocalFacts' | 'customerDecisions' | 'constraints' | 'serviceFacts'>): Map<string, string> {
+  return new Map([
+    brief.waoOffer,
+    ...brief.approvedEntityAnchors,
+    ...brief.firstPartyProof,
+    ...brief.assertableLocalFacts,
+    ...brief.customerDecisions,
+    ...brief.constraints,
+    ...(brief.serviceFacts ?? []),
+  ].map(item => [item.id, item.value]));
+}
+
+function compileDepth(input: PageBriefInput, proof: Array<{ id: string; value: string }>): Pick<PageBrief, 'lengthBand' | 'suggestedTerms' | 'questionPool' | 'blocksEnabled' | 'serviceFacts'> | null {
+  const depth = input.depth;
+  if (!depth) return null;
+  const serviceFacts = compactEvidence(depth.serviceFacts ?? []);
+  const questionPool = buildQuestionPool(depth.questions, depth.filters ?? {}, new Set((input.siblingFaqQuestions ?? []).map(canonicalQuestion).filter(Boolean)));
+  const ownerAnswerFacts = proof.length + serviceFacts.length + compactEvidence(input.constraints).length;
+  return {
+    lengthBand: lengthBandFor(depth.wordTarget),
+    suggestedTerms: filterSuggestedTerms(depth.terms, depth.filters ?? {}),
+    questionPool,
+    blocksEnabled: {
+      process: serviceFacts.length > 0,
+      qa: questionPool.length >= QA_MIN_POOL && ownerAnswerFacts > 0,
+      proof: proof.length > 0,
+    },
+    serviceFacts,
+  };
+}
+
 export function compilePageBrief(input: PageBriefInput): PageBrief {
   const persona = compactEvidence([input.persona])[0];
   const waoOffer = compactEvidence([input.waoOffer])[0];
   if (!persona || !waoOffer) throw new Error('An approved persona and WAO offer are required for a page brief.');
 
   const supportedEvidenceIds = approvedIdSet(input);
+  const firstPartyProof = compactEvidence(input.firstPartyProof);
+  const depth = compileDepth(input, firstPartyProof);
   const faqCandidates = selectFaqCandidates(
     input.faqCandidates,
     new Set((input.siblingFaqQuestions ?? []).map(canonicalQuestion).filter(Boolean)),
@@ -283,7 +453,7 @@ export function compilePageBrief(input: PageBriefInput): PageBrief {
     waoOffer,
     targetQueries: compactEvidence(input.targetQueries),
     approvedEntityAnchors: compactEvidence(input.entityAnchors),
-    firstPartyProof: compactEvidence(input.firstPartyProof),
+    firstPartyProof,
     assertableLocalFacts: compactEvidence(input.localFacts),
     customerDecisions: compactEvidence(input.customerDecisions),
     constraints: compactEvidence(input.constraints),
@@ -293,5 +463,6 @@ export function compilePageBrief(input: PageBriefInput): PageBrief {
     faqPolicy,
     faqCandidates,
     ...(input.site ? { site: structuredClone(input.site) } : {}),
+    ...(depth ?? {}),
   });
 }

@@ -23,12 +23,24 @@ export const RESEARCHED_SITE_LABELS: Readonly<{
   relatedLinksLabel: string;
   /** M2b.1h (Maya; Tamar -> Noa 2026-11-10): visually hidden H2 of the homepage story section when the copy has no storyHeadline. */
   storyFallbackHeading: string;
+  /** Content depth (Noa-approved 2026-11-10): H2 of the B1 process steps when the copy has no processHeadline. */
+  processHeadingFallback: string;
+  /** Content depth (Noa-approved 2026-11-10): H2 of the B4 Q&A when the copy has no qaHeadline. */
+  qaHeadingFallback: string;
+  /** Content depth (Noa-approved 2026-11-10): H2 of the B6 proof when the copy has no proofHeadline and a review renders in it. */
+  proofHeadingReviews: string;
+  /** Content depth (Noa-approved 2026-11-10): H2 of the B6 proof when the copy has no proofHeadline and no review renders. */
+  proofHeadingFactsOnly: string;
 }> = {
   serviceAreasHeading: 'אזורי שירות',
   mainNavLabel: 'תפריט ראשי',
   faqHeading: 'שאלות נפוצות',
   relatedLinksLabel: 'שירותים נוספים',
   storyFallbackHeading: 'איך זה קורה',
+  processHeadingFallback: 'שלבי העבודה',
+  qaHeadingFallback: 'מה שואלים אותי',
+  proofHeadingReviews: 'לקוחות מספרים',
+  proofHeadingFactsOnly: 'עובדות על העסק',
 };
 
 /** True while any label above is still a placeholder. Flip to false when the copy patches land. */
