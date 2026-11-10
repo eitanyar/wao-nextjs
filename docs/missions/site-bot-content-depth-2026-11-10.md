@@ -54,3 +54,21 @@ Principles (Yonatan, Google sources fetched 2026-11-10):
 ## Verifier
 Roni: (a)–(f) on the eval output plus a runtime render of a service page (desktop + mobile, RTL, no overflow, blocks
 absent when their facts are missing); `git diff data/clients/` empty.
+
+## Next: generator fixes from the M2b.1h eval (2026-11-10; run after the depth build)
+Eval: 8/8 gates pass, US$1.50 (scratch/m2b1g/eval). Tamar (Opus seat): NEW BETTER but below Eitan's bar. Noa: PASS-WITH-FIXES,
+0 🔴 / 40 🟠 (32 rendered, 8 pitch). Fix at generator level — rules stay abstract (no Hebrew example lines; they leak):
+1. **Fact ledger before the pitch** (Tamar): every claim — tool, process step, outcome, scope, credential tier — traces to a named
+   owner field; never turn the reader's fear into an absolute guarantee; never up/downgrade a credential; logistics consistent
+   across fields; every clause of the USP (incl. time/availability) above the fold.
+2. **Cut contract** (Tamar): story keeps the pitch's highest-tension agitation line, the mechanism once, and ends on the reader's
+   outcome; hero subhead = a benefit sentence, not a noun list; story and about use different moments.
+3. **Clause-level repetition budget** (Tamar): each fact one full statement + at most one short reference per page; gate shared
+   clauses (≥ 4 words) across fields, not only whole blocks.
+4. **Hebrew patterns** (Noa): A body sentences starting with a first-person present verb carry the subject pronoun (fragments only in
+   hero subhead, badges, trust bar); B modal "shouldn't / doesn't have to" in idiomatic form with its completing verb; C fixed
+   verb–noun collocations (warranty is given, a leak is the leak term, fixing closes the leak); D adverb not adjective after verbs;
+   E full spelling for the "all" family; F one term per concept per site, set on the homepage and reused; G question hooks in H1
+   describe a state true for the reader, tails must be backed by the body (H1 → Yonatan sign-off); H no object-less transitive verbs,
+   no verbless relative clauses, Hebrew geresh not ASCII.
+5. **Bug check:** owner `reviewQuote` renders on no page in the eval — find whether a gate/validator nulls it.
