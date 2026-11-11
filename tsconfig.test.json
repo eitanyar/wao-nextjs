@@ -285,6 +285,7 @@
     "src/lib/site-bot/research/neuronWriter.ts",
     "src/lib/site-bot/research/neuronWriter.test.ts",
     "src/lib/site-bot/researchDepth.test.ts",
+    "src/lib/site-bot/rerun3bLivePath.test.ts",
     "src/lib/lp/depthBlocks.ts",
     "src/lib/lp/depthBlocks.test.ts",
     "src/lib/site-bot/research/evidenceGraph.ts",

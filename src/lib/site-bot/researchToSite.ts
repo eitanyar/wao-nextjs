@@ -34,7 +34,8 @@ import {
 } from '../lp/researchPageCopy';
 import type { SiteCopy } from '../lp/lpCopyPrompt';
 import type { ResearchedSiteGraphEdge } from '../lp/researchedSite';
-import { detectVertical } from '../lp/verticalDetect';
+import { detectVertical, matchedVertical } from '../lp/verticalDetect';
+import type { VerticalKey } from '../lp/verticalThemes';
 import { VERTICAL_ASSETS } from '../lp/verticalAssets';
 import { VERTICAL_THEMES } from '../lp/verticalThemes';
 import { compilePageBrief, type BriefEvidence, type PageBrief, type PageBriefDepthInput, type PageBriefLink } from './research/pageBrief';
@@ -392,6 +393,11 @@ export function buildPageBriefs(dossier: SiteResearchDossier, data: CollectedDat
   });
 }
 
+/** Rerun-3b bug A: the verticals the owner's own service names match (offered by definition; see DepthFilterInput). */
+export function offeredVerticalsFor(serviceNames: readonly string[]): VerticalKey[] {
+  return [...new Set(serviceNames.map(name => matchedVertical(name)).filter((item): item is VerticalKey => item !== null))];
+}
+
 /** Content depth: the depth input of one service page (NeuronWriter data through the filters, plus service facts). */
 function depthInputFor(
   dossier: SiteResearchDossier,
@@ -407,6 +413,7 @@ function depthInputFor(
     ownerPlaces: page.places,
     localities: ISRAELI_LOCALITIES,
     siteVertical: detectVertical(data.businessNiche ?? ''),
+    offeredVerticals: offeredVerticalsFor([page.subject, page.pageLabel, ...page.serviceLabels, clean(data.primaryService)]),
     widensArea: text => serviceAreaHits(text, gates).length > 0,
     keyword: neuron?.keyword ?? page.subject,
   });

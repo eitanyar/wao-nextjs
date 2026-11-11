@@ -166,6 +166,12 @@ export interface DepthFilterInput {
   localities: readonly Locality[];
   /** The site's vertical: a text naming another vertical's trade words is an unoffered service. */
   siteVertical: VerticalKey;
+  /**
+   * Rerun-3b bug A: the verticals the owner's own confirmed services name (page subject, labels, primary service). They are
+   * offered by definition, so a question naming the page's own service is never an "unoffered service", even when the
+   * free-text niche resolves to another vertical (or to the skilled-trades fallback).
+   */
+  offeredVerticals?: readonly VerticalKey[];
   /** Service-area widening (the copy gate's own check, e.g. "and surroundings"). */
   widensArea?: (text: string) => boolean;
   /** The page's search keyword (a Latin keyword allows Latin terms). */
@@ -188,7 +194,7 @@ export function buildDepthFilters(input: DepthFilterInput): DepthTextFilters {
     otherPlace: text => namesOtherLocality(text, input.localities, input.ownerPlaces) || Boolean(input.widensArea?.(text)),
     unofferedService: text => {
       const vertical = matchedVertical(text);
-      return vertical !== null && vertical !== input.siteVertical;
+      return vertical !== null && vertical !== input.siteVertical && !(input.offeredVerticals ?? []).includes(vertical);
     },
     price: text => /[\d\u20AA$%]/u.test(text) || lexiconHit(text),
     latinAllowed: /[A-Za-z]/.test(input.keyword ?? ''),
