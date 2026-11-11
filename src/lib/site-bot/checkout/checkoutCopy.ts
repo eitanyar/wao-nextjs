@@ -1,12 +1,13 @@
 /**
  * Site-Bot pay page: the price / terms copy (SITE_BOT_PLAN: monthly, + VAT; approved terms 2026-11-07).
  * HEBREW-SAFETY: the engineer never authors Hebrew. Every value below is copied by script, byte-exact, from
- * the approved checkout file in docs/copy (CHECKOUT_COPY_SOURCE in plans.test.ts; waocopy -> Noa, 2026-11-11);
+ * the approved checkout files in docs/copy (CHECKOUT_COPY_SOURCES in plans.test.ts; waocopy -> Noa, 2026-11-11);
  * plans.test.ts fails if a value
  * drifts from that file. To change copy, change the docs/copy source (Tamar -> Noa) and re-apply by script.
  *
  * Tokens: `{net}` = the price before VAT, `{total}` = the VAT-inclusive charge, `{vatPercent}` = the VAT rate in percent.
  * Numbers are filled in by code from SITE_BOT_PLAN (plans.ts), never typed into the copy.
+ * `{termsLink}` (termsConsent only) = a link to SITE_BOT_TERMS_PATH whose text is termsLinkLabel; split by siteBotTermsConsentParts.
  * The paid pages stay behind SITE_BOT_PAID_FLOW (off-production only) until go-live.
  */
 
@@ -25,6 +26,12 @@ export const SITE_BOT_CHECKOUT_COPY: Readonly<{
   pageSubheading: string;
   /** Pay button: "Pay {total} and start the monthly plan". */
   payButton: string;
+  /** Domain timing (terms section 6): temporary WAO address first; a co.il domain in the customer's name after the second monthly payment. */
+  domainLine: string;
+  /** Small print above the pay button: "By paying you agree to the {termsLink}." `{termsLink}` is a link, not text (siteBotTermsConsentParts). */
+  termsConsent: string;
+  /** The text of the {termsLink} link to /site-bot/terms: "the terms of use". */
+  termsLinkLabel: string;
 }> = {
   priceSuffix: "+ מע״מ לחודש",
   priceTotalLine: "{total} כולל מע״מ ({vatPercent}%). החיוב בכרטיס מתבצע היום, ואז באותו תאריך בכל חודש.",
@@ -32,6 +39,9 @@ export const SITE_BOT_CHECKOUT_COPY: Readonly<{
   termsCancelOnline: "אפשר לבטל אונליין בכל עת. הביטול נכנס לתוקף בסוף החודש ששילמת עליו.",
   pageSubheading: "אחרי שהתשלום הראשון מתאשר, האתר שלך נבנה, עובר בדיקה אנושית ורק אז מתפרסם.",
   payButton: "שלם {total} והתחל מסלול חודשי",
+  domainLine: "האתר עולה קודם בכתובת זמנית של WAO. אחרי התשלום החודשי השני תקבל דומיין co.il על שמך, ואנחנו משלמים עליו כל עוד אתה מנוי. כבר יש לך דומיין? נחבר אותו.",
+  termsConsent: "בביצוע התשלום אתה מסכים ל{termsLink}.",
+  termsLinkLabel: "תנאי השימוש",
 };
 
 /**
@@ -52,4 +62,14 @@ export function siteBotCheckoutText(key: SiteBotCheckoutCopyKey, plan: BillingPl
     vatPercent: String(Math.round(summary.vatRate * 100)),
   };
   return SITE_BOT_CHECKOUT_COPY[key].replace(/\{(net|total|vatPercent)\}/g, (_, name: string) => values[name]);
+}
+
+/** The published Site-Bot terms of use (src/app/(app)/site-bot/terms, generated from docs/legal/site-bot-terms-of-use.md). */
+export const SITE_BOT_TERMS_PATH = '/site-bot/terms';
+
+/** termsConsent split around its single `{termsLink}` token: render `before`, the terms link (termsLinkLabel), then `after`. */
+export function siteBotTermsConsentParts(): { before: string; linkLabel: string; after: string } {
+  const parts = SITE_BOT_CHECKOUT_COPY.termsConsent.split('{termsLink}');
+  if (parts.length !== 2) throw new Error('termsConsent must contain exactly one {termsLink}');
+  return { before: parts[0], linkLabel: SITE_BOT_CHECKOUT_COPY.termsLinkLabel, after: parts[1] };
 }

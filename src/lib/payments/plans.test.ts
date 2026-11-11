@@ -7,7 +7,7 @@ import path from 'path';
 import { SITE_BOT_PLAN, getBillingPlan, planChargeAmount, planSummary, planVatAmount, formatShekels } from './plans';
 import { paymentProviderKind } from './get-provider';
 import { HE_TODO_PREFIX } from '../lp/researchedSiteLabels';
-import { SITE_BOT_CHECKOUT_COPY, SITE_BOT_CHECKOUT_COPY_PENDING, siteBotCheckoutText } from '../site-bot/checkout/checkoutCopy';
+import { SITE_BOT_CHECKOUT_COPY, SITE_BOT_CHECKOUT_COPY_PENDING, SITE_BOT_TERMS_PATH, siteBotCheckoutText, siteBotTermsConsentParts } from '../site-bot/checkout/checkoutCopy';
 import { cardFieldDefaults } from '../site-bot/checkout/mockCard';
 import { ACCOUNT_PAGE_PATH, SITE_BOT_ACCOUNT_COPY, SITE_BOT_ACCOUNT_COPY_PENDING, accountLinkHref, customerVisibleLabel } from '../site-bot/checkout/accountCopy';
 
@@ -165,14 +165,23 @@ test('pending copy: the homepage-copy trial_line stays unrendered until Tamar re
 // Pay-page copy (pending Tamar -> Noa) and the mock card.
 // ---------------------------------------------------------------------------------------------------------------------
 
-/** The approved pay-page copy (waocopy -> Noa 2026-11-11). checkoutCopy.ts must match it byte for byte. */
-const CHECKOUT_COPY_SOURCE = 'docs/copy/site-bot-checkout-199-2026-11-11.json';
+/** The approved pay-page copy (waocopy -> Noa 2026-11-11). checkoutCopy.ts must match their union byte for byte. */
+const CHECKOUT_COPY_SOURCES = ['docs/copy/site-bot-checkout-199-2026-11-11.json', 'docs/copy/site-bot-pay-terms-lines-2026-11-11.json'];
+/** Keys that carry a non-number token, rendered as an element by the pay client (not by siteBotCheckoutText). */
+const LINK_TOKEN_KEYS = ['termsConsent'];
 
 test('checkout copy: byte-exact from the approved docs/copy source; the numbers come from the plan', () => {
-  const approved = JSON.parse(fs.readFileSync(path.join(root, CHECKOUT_COPY_SOURCE), 'utf8')).checkout as Record<string, string>;
+  const approved: Record<string, string> = {};
+  for (const file of CHECKOUT_COPY_SOURCES) {
+    const checkout = JSON.parse(fs.readFileSync(path.join(root, file), 'utf8')).checkout as Record<string, string>;
+    for (const [key, value] of Object.entries(checkout)) {
+      assert.ok(!(key in approved), `${key}: defined in two copy sources`);
+      approved[key] = value;
+    }
+  }
   assert.deepEqual({ ...SITE_BOT_CHECKOUT_COPY }, approved);
   assert.deepEqual(Object.keys(SITE_BOT_CHECKOUT_COPY).sort(),
-    ['pageSubheading', 'payButton', 'priceSuffix', 'priceTotalLine', 'termsCancelOnline', 'termsNoCommitment']);
+    ['domainLine', 'pageSubheading', 'payButton', 'priceSuffix', 'priceTotalLine', 'termsCancelOnline', 'termsConsent', 'termsLinkLabel', 'termsNoCommitment']);
   for (const [key, value] of Object.entries(SITE_BOT_CHECKOUT_COPY)) {
     assert.doesNotMatch(value, /\d/, `${key}: no number typed into the copy (use {net} / {total} / {vatPercent})`);
     assert.ok(!value.includes(HE_TODO_PREFIX), `${key}: placeholder`);
@@ -184,8 +193,23 @@ test('checkout copy: byte-exact from the approved docs/copy source; the numbers 
   assert.ok(total.startsWith('\u20AA234.82 ') && total.includes('(18%)'), total);
   assert.ok(siteBotCheckoutText('payButton', SITE_BOT_PLAN).includes(' \u20AA234.82 '));
   for (const key of Object.keys(SITE_BOT_CHECKOUT_COPY) as Array<keyof typeof SITE_BOT_CHECKOUT_COPY>) {
+    if (LINK_TOKEN_KEYS.includes(key)) continue;
     assert.doesNotMatch(siteBotCheckoutText(key, SITE_BOT_PLAN), /\{/, `${key}: every token filled`);
   }
+  // termsConsent: exactly one {termsLink}, nothing else; split into text + link label + text with nothing lost.
+  assert.equal(SITE_BOT_CHECKOUT_COPY.termsConsent.match(/\{[^}]*\}/g)?.join(), '{termsLink}');
+  const consent = siteBotTermsConsentParts();
+  assert.equal(consent.before + '{termsLink}' + consent.after, SITE_BOT_CHECKOUT_COPY.termsConsent);
+  assert.equal(consent.linkLabel, SITE_BOT_CHECKOUT_COPY.termsLinkLabel);
+  assert.ok(consent.before.length > 0 && consent.linkLabel.length > 0);
+  assert.equal(SITE_BOT_TERMS_PATH, '/site-bot/terms');
+  assert.ok(fs.existsSync(path.join(root, 'src/app/(app)/site-bot/terms/page.tsx')), 'the terms route exists');
+  // The pay client shows the domain line with the terms lines and links the consent to the terms page.
+  const client = fs.readFileSync(path.join(root, 'src/components/site-bot/SiteBotPayClient.tsx'), 'utf8');
+  assert.match(client, /siteBotCheckoutText\("domainLine", SITE_BOT_PLAN\)/);
+  assert.match(client, /const termsConsent = siteBotTermsConsentParts\(\);/);
+  assert.match(client, /href=\{SITE_BOT_TERMS_PATH\}/);
+  assert.ok(client.indexOf('data-terms-consent') < client.indexOf('siteBotCheckoutText("payButton"'), 'consent sits above the pay button');
 });
 
 test('customer pages never render a __HE_TODO_ placeholder: customerVisibleLabel hides it; the pay client renders only through it', () => {

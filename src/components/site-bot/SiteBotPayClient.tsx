@@ -8,7 +8,7 @@ import type { CollectedData } from "@/lib/bot/prompts";
 import type { ResearchGate } from "@/lib/site-bot/research/gates";
 import { RESEARCH_COPY } from "@/lib/site-bot/researchCopy";
 import { checkoutCallbackOutcome, readJsonBody } from "@/lib/site-bot/checkout/customerError";
-import { SITE_BOT_CHECKOUT_COPY_PENDING, siteBotCheckoutText } from "@/lib/site-bot/checkout/checkoutCopy";
+import { SITE_BOT_CHECKOUT_COPY_PENDING, SITE_BOT_TERMS_PATH, siteBotCheckoutText, siteBotTermsConsentParts } from "@/lib/site-bot/checkout/checkoutCopy";
 import type { CardFieldDefaults } from "@/lib/site-bot/checkout/mockCard";
 import { SITE_BOT_ACCOUNT_COPY, accountLinkHref, customerVisibleLabel } from "@/lib/site-bot/checkout/accountCopy";
 import { SITE_BOT_PLAN, formatShekels } from "@/lib/payments/plans";
@@ -28,6 +28,9 @@ const GENERIC_ERROR = "משהו השתבש";
 
 /** The manage / cancel link label; null (link hidden) while it is still a copy placeholder. */
 const manageLinkLabel = customerVisibleLabel(SITE_BOT_ACCOUNT_COPY.manageLink);
+
+/** Consent small print above the pay button: text, then the terms-of-use link, then text (approved 2026-11-11). */
+const termsConsent = siteBotTermsConsentParts();
 
 type Phase = "form" | "charging" | "gates" | "submitting_gate" | "done" | "error";
 
@@ -151,6 +154,7 @@ export default function SiteBotPayClient({ cardDefaults }: { cardDefaults: CardF
           <ul style={{ margin: 0, paddingInlineStart: "20px", display: "flex", flexDirection: "column", gap: "4px" }}>
             <li>{renderMixed(siteBotCheckoutText("termsNoCommitment", SITE_BOT_PLAN))}</li>
             <li>{renderMixed(siteBotCheckoutText("termsCancelOnline", SITE_BOT_PLAN))}</li>
+            <li data-domain-line="site-bot">{renderMixed(siteBotCheckoutText("domainLine", SITE_BOT_PLAN))}</li>
           </ul>
         </div>
 
@@ -164,6 +168,13 @@ export default function SiteBotPayClient({ cardDefaults }: { cardDefaults: CardF
                   <input placeholder="CVC" defaultValue={cardDefaults.cvc} inputMode="numeric" autoComplete="cc-csc" style={inputStyle} />
                 </div>
               </div>
+              <p data-terms-consent="site-bot" style={{ color: "var(--muted)", fontSize: "0.82rem", lineHeight: 1.6, margin: "0 0 10px" }}>
+                {renderMixed(termsConsent.before)}
+                <a href={SITE_BOT_TERMS_PATH} target="_blank" rel="noopener" style={{ color: "var(--accent)", textDecoration: "underline" }}>
+                  {renderMixed(termsConsent.linkLabel)}
+                </a>
+                {renderMixed(termsConsent.after)}
+              </p>
               <button onClick={pay} className="btn-primary" style={{ width: "100%", padding: "14px" }}>
                 {renderMixed(siteBotCheckoutText("payButton", SITE_BOT_PLAN))}
               </button>
