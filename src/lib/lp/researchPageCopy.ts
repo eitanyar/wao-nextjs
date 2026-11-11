@@ -119,6 +119,8 @@ export interface ResearchPageCopyDependencies {
   /** M2a.6: aboutPageHeadline / aboutPageBody of the site's pages generated before this one (route order). */
   priorAboutPageHeadlines?: readonly string[];
   priorAboutPageBodies?: readonly string[];
+  /** Rerun-3b item F: heroSubheadlines (= meta descriptions) of the site's pages generated before this one. */
+  priorHeroSubheadlines?: readonly string[];
   /** M2a.7: hero-cap facts (masked labels, AC page) of the site's pages generated before this one, aligned with priorHeroHeadlines. */
   priorHeroFacts?: readonly HeroCapPageFacts[];
   /** 2026-11-10 (Noa's pattern F): the homepage's trust-bar proof-point wording, reused term for term on later pages. */
@@ -2603,6 +2605,7 @@ export async function generateResearchPageCopy(
       priorHeroHeadlines: [...(dependencies.priorHeroHeadlines ?? [])],
       priorAboutPageHeadlines: [...(dependencies.priorAboutPageHeadlines ?? [])],
       priorAboutPageBodies: [...(dependencies.priorAboutPageBodies ?? [])],
+      priorHeroSubheadlines: [...(dependencies.priorHeroSubheadlines ?? [])],
       ...(dependencies.priorHeroFacts ? { priorHeroFacts: [...dependencies.priorHeroFacts] } : {}),
     },
     emit: event => {

@@ -71,6 +71,8 @@ export interface ResearchedSiteGenerationContext {
   /** M2a.6: the same, in route order, for the site-wide about-headline and about-opening checks. */
   priorAboutPageHeadlines: readonly string[];
   priorAboutPageBodies: readonly string[];
+  /** Rerun-3b item F: every earlier page's heroSubheadline (= its meta description), for the site-wide uniqueness gate. */
+  priorHeroSubheadlines?: readonly string[];
   /** M2a.7: hero-cap facts (masked service labels, AC page) of the same pages, for the site-wide hero cap. */
   priorHeroFacts: readonly HeroCapPageFacts[];
   /** 2026-11-10 (Noa's pattern F): the homepage's trust-bar items, so later pages reuse its term for each proof point. */
@@ -96,6 +98,7 @@ export function siteGenerationContext(pages: ReadonlyArray<{ copy: SiteCopy; cla
     priorHeroHeadlines: pages.map(page => page.copy.heroHeadline),
     priorAboutPageHeadlines: about.map(page => page.copy.aboutPageHeadline),
     priorAboutPageBodies: about.map(page => page.copy.aboutPageBody),
+    priorHeroSubheadlines: pages.map(page => page.copy.heroSubheadline),
     priorHeroFacts: [...facts],
     ...(siteTerms.length ? { siteTerms } : {}),
     ...(() => {

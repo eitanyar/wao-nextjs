@@ -178,6 +178,8 @@ export const GATE_RULES = {
   badIdiom: 'gate_bad_idiom',
   signatureRepeat: 'gate_signature_repeat',
   duplicateHook: 'gate_duplicate_hook',
+  // Rerun-3b item F: the heroSubheadline is the page's meta description; it is unique across the site.
+  duplicateMetaDescription: 'gate_duplicate_meta_description',
   stickyAction: 'gate_sticky_action',
   bareVerbOpener: 'gate_bare_verb_opener',
   // M2a.6 (Tamar section 20 + Adam's site-wide checks + Yonatan's H1 anchor)
@@ -272,6 +274,8 @@ export interface CopyGateContext {
   /** M2a.6: aboutPageHeadline / aboutPageBody of every page already generated for this site (route order). */
   priorAboutPageHeadlines?: readonly string[];
   priorAboutPageBodies?: readonly string[];
+  /** Rerun-3b item F: heroSubheadline (= the meta description) of every page already generated for this site. */
+  priorHeroSubheadlines?: readonly string[];
   /** M2a.6: the slug that decides the page's vertical (money page: its own; homepage: its first service). */
   pageSlug?: string;
   /** M2a.6 (Yonatan): the title's search anchor, page.seo.name and page.seo.city; the gate is off when anchorName is unset. */
@@ -1256,6 +1260,17 @@ export function heroHook(headline: string): string | null {
 }
 
 /** Duplicate-hook kind against the site's earlier heroHeadlines: 'headline', 'hook' or null. */
+/** Rerun-3b item F: the comparison form of a meta description (NFC, letters and digits only, single spaces, lower case). */
+export function metaDescriptionKey(value: string): string {
+  return value.normalize('NFC').replace(/[^\p{L}\p{N}]+/gu, ' ').trim().toLowerCase();
+}
+
+/** Rerun-3b item F: true when a heroSubheadline (the meta description) equals an earlier page's of the same site. */
+export function duplicateMetaDescription(subheadline: string, prior: readonly string[]): boolean {
+  const key = metaDescriptionKey(subheadline);
+  return Boolean(key) && prior.some(item => typeof item === 'string' && metaDescriptionKey(item) === key);
+}
+
 export function duplicateHookKind(headline: string, prior: readonly string[]): 'headline' | 'hook' | null {
   if (prior.includes(headline)) return 'headline';
   const hook = heroHook(headline);
@@ -2077,6 +2092,9 @@ function voiceGates(copy: Record<string, unknown>, strings: Array<{ field: strin
       for (const problem of stickyActionProblems(value, copy.heroCta, ctx)) out.push({ field, rule: GATE_RULES.stickyAction, actual: `sticky:${problem}` });
     }
   }
+  if (typeof copy.heroSubheadline === 'string' && ctx.priorHeroSubheadlines?.length && duplicateMetaDescription(copy.heroSubheadline, ctx.priorHeroSubheadlines)) {
+    out.push({ field: 'heroSubheadline', rule: GATE_RULES.duplicateMetaDescription });
+  }
   if (typeof copy.heroHeadline === 'string' && ctx.priorHeroHeadlines?.length) {
     const kind = duplicateHookKind(copy.heroHeadline, ctx.priorHeroHeadlines);
     if (kind) out.push({ field: 'heroHeadline', rule: GATE_RULES.duplicateHook, actual: `duplicate:${kind}` });
@@ -2280,7 +2298,7 @@ export function factTraceKind(actual: string | undefined): FactTraceKind | null 
 function pitchGateHits(pitch: string, ctx: CopyGateContext): GateViolation[] {
   const alone: CopyGateContext = {
     ...ctx, renderedFields: ['pitch'], ungeneratedFields: [], phraseRepeatFields: undefined,
-    priorHeroHeadlines: [], priorAboutPageHeadlines: [], priorAboutPageBodies: [], priorHeroFacts: [],
+    priorHeroHeadlines: [], priorAboutPageHeadlines: [], priorAboutPageBodies: [], priorHeroSubheadlines: [], priorHeroFacts: [],
   };
   return runPageGates({ pitch }, alone).filter(hit => hit.field === 'pitch' && PITCH_GATE_RULES.includes(hit.rule));
 }
@@ -2659,6 +2677,8 @@ export function describeGateViolation(violation: GateViolation, ctx: CopyGateCon
       const cap = differentiatorGroups(ctx).includes(group) ? DIFFERENTIATOR_SIGNATURE_CAP : 1;
       return `${violation.field} repeats the signature phrase ${JSON.stringify(promptSignatureVariants(group))}, which already appears elsewhere on this page (at most ${cap === 1 ? 'once' : `${cap} times`} per page, in any spelling); remove it from this field and say something new instead: a different owner fact, a consequence for the customer, or a concrete step of the job`;
     }
+    case GATE_RULES.duplicateMetaDescription:
+      return `${violation.field} is also this page's meta description (the text Google shows under the title), and it is identical to the one of another page of this site; write a new one for this page, about this service`;
     case GATE_RULES.duplicateHook:
       return `${violation.field} repeats the hero headline, or its opening hook before the first question mark or em-dash, of another page of this site; write a new headline for this page that opens with this service's own pain or moment, not the same opening`;
     case GATE_RULES.stickyAction: {

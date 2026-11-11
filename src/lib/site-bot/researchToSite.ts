@@ -548,7 +548,7 @@ export async function runResearchToSite(input: ResearchToSiteInput, deps: Resear
   let currentPage: string | undefined;
   const generateCopy = deps.generateCopy ?? ((brief: PageBrief, data: CollectedData, site?: ResearchedSiteGenerationContext) => generateResearchPageCopy(brief, data, {
     ...(deps.callJson ? { callJson: deps.callJson } : {}),
-    ...(site ? { priorHeroHeadlines: site.priorHeroHeadlines, priorAboutPageHeadlines: site.priorAboutPageHeadlines, priorAboutPageBodies: site.priorAboutPageBodies, priorHeroFacts: site.priorHeroFacts, ...(site.siteTerms?.length ? { siteTerms: site.siteTerms } : {}), ...(site.priorMechanismKeys?.length ? { priorMechanismKeys: site.priorMechanismKeys } : {}) } : {}),
+    ...(site ? { priorHeroHeadlines: site.priorHeroHeadlines, priorAboutPageHeadlines: site.priorAboutPageHeadlines, priorAboutPageBodies: site.priorAboutPageBodies, ...(site.priorHeroSubheadlines ? { priorHeroSubheadlines: site.priorHeroSubheadlines } : {}), priorHeroFacts: site.priorHeroFacts, ...(site.siteTerms?.length ? { siteTerms: site.siteTerms } : {}), ...(site.priorMechanismKeys?.length ? { priorMechanismKeys: site.priorMechanismKeys } : {}) } : {}),
     onEvent: event => deps.onCopyEvent?.(brief.page.id, event),
   }));
   let record;

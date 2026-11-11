@@ -326,7 +326,7 @@ test('M2b.1d 7: duplicate about checks compare homepage / hub pages only; the op
     { classification: 'money_service', copy: { ...base, heroHeadline: W2, aboutPageHeadline: W2, aboutPageBody: W2 } },
     { classification: 'service_hub', copy: { ...base, heroHeadline: HE_WORD, aboutPageHeadline: HE_WORD, aboutPageBody: HE_WORD } },
   ];
-  assert.deepEqual(siteGenerationContext(pages), { priorHeroHeadlines: [W1, W2, HE_WORD], priorAboutPageHeadlines: [W1, HE_WORD], priorAboutPageBodies: [W1, HE_WORD], priorHeroFacts: [], siteTerms: base.trustBarItems });
+  assert.deepEqual(siteGenerationContext(pages), { priorHeroHeadlines: [W1, W2, HE_WORD], priorAboutPageHeadlines: [W1, HE_WORD], priorAboutPageBodies: [W1, HE_WORD], priorHeroSubheadlines: [base.heroSubheadline, base.heroSubheadline, base.heroSubheadline], priorHeroFacts: [], siteTerms: base.trustBarItems });
   assert.ok(!('serviceDetailsOpener' in GATE_RULES));
   // M2b.1g: section 23 cardPhraseEcho is warn-only for the rescore.
   // 2026-11-10: Noa's pattern A beyond the about pair is warn-only too.

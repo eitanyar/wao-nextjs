@@ -230,7 +230,7 @@ test('M2a.6 3: site-wide checks: hero cap in route order, duplicate aboutPageHea
   assert.deepEqual(hitsOf(loose({ aboutPageBody: `${CARRY} ${W1} ${W2}` }), vctx({ priorAboutPageBodies: [`${CARRY} ${W1} ${W2}.`] }), GATE_RULES.duplicateAboutOpening), ['aboutPageBody=duplicate:about_opening']);
   assert.deepEqual(hitsOf(loose({ aboutPageHeadline: W1, aboutPageBody: `${CARRY} ${W1} ${W2}` }), vctx(), GATE_RULES.duplicateAboutOpening), [], 'the first page never fails');
   const pages = [{ copy: { ...base, heroHeadline: W1, aboutPageHeadline: W2, aboutPageBody: W3 } }];
-  assert.deepEqual(siteGenerationContext(pages), { priorHeroHeadlines: [W1], priorAboutPageHeadlines: [W2], priorAboutPageBodies: [W3], priorHeroFacts: [] });
+  assert.deepEqual(siteGenerationContext(pages), { priorHeroHeadlines: [W1], priorAboutPageHeadlines: [W2], priorAboutPageBodies: [W3], priorHeroSubheadlines: [base.heroSubheadline], priorHeroFacts: [] });
   // generateResearchPageCopy takes the earlier about headlines. M2b.1f: aboutPageHeadline is a hard gate (it was warn-only
   // through M2b.1e), so the duplicate costs one repair call and the repaired headline is kept; it is never a warning.
   const events: string[] = [];
