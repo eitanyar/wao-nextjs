@@ -18,9 +18,16 @@ import { TakbullPaymentProvider } from './providers/takbull';
 
 let instance: PaymentProvider | null = null;
 
+export type PaymentProviderKind = 'mock' | 'takbull';
+
+/** Which provider getPaymentProvider() resolves to for `env` (the single selection rule). */
+export function paymentProviderKind(env: Readonly<Record<string, string | undefined>> = process.env): PaymentProviderKind {
+  return env.PAYMENT_PROVIDER === 'takbull' ? 'takbull' : 'mock';
+}
+
 export function getPaymentProvider(): PaymentProvider {
   if (!instance) {
-    instance = process.env.PAYMENT_PROVIDER === 'takbull' ? new TakbullPaymentProvider() : new MockPaymentProvider();
+    instance = paymentProviderKind() === 'takbull' ? new TakbullPaymentProvider() : new MockPaymentProvider();
   }
   return instance;
 }

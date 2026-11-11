@@ -126,6 +126,18 @@ function migrate(db: Database.Database): void {
   addColumnIfMissing(db, 'charges', 'refunded_at', 'TEXT');
   addColumnIfMissing(db, 'charges', 'refund_amount', 'REAL');
   addColumnIfMissing(db, 'charges', 'refund_provider_ref', 'TEXT');
+
+  // Additive migration (Site-Bot plan, 2026-11-11): plan-driven rows (`plan` set, see plans.ts) snapshot their price
+  // terms at sign-up and bill on a fixed anchor. NULL `plan` = the original trial engine, unchanged.
+  addColumnIfMissing(db, 'subscriptions', 'plan', 'TEXT');
+  addColumnIfMissing(db, 'subscriptions', 'net_amount', 'REAL');
+  addColumnIfMissing(db, 'subscriptions', 'vat_mode', 'TEXT');
+  addColumnIfMissing(db, 'subscriptions', 'vat_rate', 'REAL');
+  addColumnIfMissing(db, 'subscriptions', 'billing_interval', 'TEXT');
+  addColumnIfMissing(db, 'subscriptions', 'billing_anchor_at', 'TEXT');
+  addColumnIfMissing(db, 'subscriptions', 'periods_paid', 'INTEGER');
+  addColumnIfMissing(db, 'subscriptions', 'dunning_started_at', 'TEXT');
+  addColumnIfMissing(db, 'subscriptions', 'paused_at', 'TEXT');
 }
 
 /** Adds `column` to `table` (as `columnDefSql`, e.g. `'TEXT'`) if it doesn't
@@ -182,7 +194,8 @@ export interface SubscriptionRow {
   // 'pending' added in the trial-signup/self-cancel step (step 8): a
   // subscription row exists before the hosted-tokenization callback comes
   // back, so it needs a pre-chargeable status distinct from 'trialing'.
-  status: 'pending' | 'trialing' | 'active' | 'past_due' | 'canceled' | 'expired';
+  // 'paused' (Site-Bot plan): the dunning retries ran out; never charged again by the cron (see cron-charge.ts).
+  status: 'pending' | 'trialing' | 'active' | 'past_due' | 'canceled' | 'expired' | 'paused';
   provider: string;
   provider_token: string | null;
   card_last4: string | null;
@@ -209,7 +222,36 @@ export interface SubscriptionRow {
   // Free text: the eligibility basis/evidence shown (e.g. disability
   // certificate, ID, new-immigrant certificate) — admin-set alongside the flag.
   extended_flag_basis: string | null;
+  // Plan-driven rows (Site-Bot, plans.ts). Optional so pre-plan rows / fixtures need not set them; NULL on legacy rows.
+  /** BillingPlan id, e.g. 'site-bot'. NULL = the original trial engine. */
+  plan?: string | null;
+  /** Quoted price before VAT, snapshot at sign-up. `recurring_amount` is the VAT-inclusive charge. */
+  net_amount?: number | null;
+  vat_mode?: string | null;
+  vat_rate?: number | null;
+  /** e.g. 'month'. */
+  billing_interval?: string | null;
+  /** Sign-up timestamp every charge date is computed from: anchor + N months (never drifts with retries). */
+  billing_anchor_at?: string | null;
+  /** Periods successfully charged so far (1 after the sign-up charge). */
+  periods_paid?: number | null;
+  /** First failed attempt of the current period; retry offsets are measured from it. NULL when not in dunning. */
+  dunning_started_at?: string | null;
+  paused_at?: string | null;
 }
+
+/** Plan columns default to NULL so callers that predate them keep working. */
+const SUBSCRIPTION_PLAN_DEFAULTS = {
+  plan: null,
+  net_amount: null,
+  vat_mode: null,
+  vat_rate: null,
+  billing_interval: null,
+  billing_anchor_at: null,
+  periods_paid: null,
+  dunning_started_at: null,
+  paused_at: null,
+} as const;
 
 export interface ChargeRow {
   id: string;
@@ -268,7 +310,10 @@ export interface SubscriptionEventRow {
     // given calendar month (see cron-card-expiry.ts gating, which scopes this
     // check to the current YYYY-MM inside `metadata`). Additive-only change
     // to this union, per the db.ts-touch constraint.
-    | 'card_expiry_notice_sent';
+    | 'card_expiry_notice_sent'
+    // Site-Bot plan (2026-11-11): the first (sign-up) charge of a no-trial plan, and the dunning terminal state.
+    | 'plan_charged'
+    | 'paused';
   metadata: string | null;
   created_at: string;
 }
@@ -288,14 +333,21 @@ export function insertSubscription(db: Database.Database, row: SubscriptionRow):
       id, user_id, status, provider, provider_token, card_last4, card_expiry,
       trial_amount, recurring_amount, currency, next_charge_at, canceled_at,
       cancel_reason, failed_attempts, created_at, updated_at,
-      joined_at, extended_cancellation_flag, extended_flag_basis
+      joined_at, extended_cancellation_flag, extended_flag_basis,
+      plan, net_amount, vat_mode, vat_rate, billing_interval, billing_anchor_at, periods_paid,
+      dunning_started_at, paused_at
     ) VALUES (
       @id, @user_id, @status, @provider, @provider_token, @card_last4, @card_expiry,
       @trial_amount, @recurring_amount, @currency, @next_charge_at, @canceled_at,
       @cancel_reason, @failed_attempts, @created_at, @updated_at,
-      @joined_at, @extended_cancellation_flag, @extended_flag_basis
+      @joined_at, @extended_cancellation_flag, @extended_flag_basis,
+      @plan, @net_amount, @vat_mode, @vat_rate, @billing_interval, @billing_anchor_at, @periods_paid,
+      @dunning_started_at, @paused_at
     )`
-  ).run(row);
+  ).run({
+    ...row,
+    ...Object.fromEntries(Object.keys(SUBSCRIPTION_PLAN_DEFAULTS).map((key) => [key, row[key as keyof SubscriptionRow] ?? null])),
+  });
 }
 
 export function insertCharge(db: Database.Database, row: ChargeRow): void {

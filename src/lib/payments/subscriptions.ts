@@ -16,10 +16,11 @@ import {
   type SubscriptionRow,
 } from './db';
 import { encryptToken } from './crypto';
-import { getPaymentProvider } from './get-provider';
+import { getPaymentProvider, paymentProviderKind } from './get-provider';
 import { generateMagicLinkToken, validateAndConsumeMagicLinkToken } from './magic-link';
 import { sendTrialChargeConfirmationEmail, sendMagicLinkCancelEmail } from './email';
 import { issueInvoiceForCharge } from './invoicing';
+import { getBillingPlan, planChargeAmount, type BillingPlan } from './plans';
 
 function nowIso(): string {
   return new Date().toISOString();
@@ -377,4 +378,228 @@ export async function cancelSubscriptionByToken(token: string): Promise<CancelOu
   });
 
   return { ok: true, subscriptionId };
+}
+
+// ---------------------------------------------------------------------------
+// 5. Plan subscriptions (no trial): Site-Bot (SITE_BOT_PLAN, plans.ts)
+// ---------------------------------------------------------------------------
+
+export interface CreatePendingPlanSubscriptionParams {
+  plan: BillingPlan;
+  /** Customer identifier stored in `user_id` (the email when known). */
+  userId: string;
+  /** Where the provider's payment page returns the customer to. */
+  returnUrl: string;
+  now?: Date;
+}
+
+export interface CreatePendingPlanSubscriptionResult {
+  subscriptionId: string;
+  redirectUrl: string;
+  providerSessionId: string;
+}
+
+/**
+ * Creates a `pending` plan row that snapshots the plan's price terms (net, VAT, interval) and opens the provider's
+ * tokenization session for the first charge. Nothing is charged here.
+ */
+export async function createPendingPlanSubscription(
+  params: CreatePendingPlanSubscriptionParams
+): Promise<CreatePendingPlanSubscriptionResult> {
+  const { plan, userId, returnUrl } = params;
+  if (!userId) throw new Error('userId is required.');
+  const now = params.now ?? new Date();
+  const db = getDb();
+  const subscriptionId = crypto.randomUUID();
+  const timestamp = now.toISOString();
+  const chargeAmount = planChargeAmount(plan);
+
+  insertSubscription(db, {
+    id: subscriptionId,
+    user_id: userId,
+    status: 'pending',
+    provider: paymentProviderKind(),
+    provider_token: null,
+    card_last4: null,
+    card_expiry: null,
+    trial_amount: null,
+    recurring_amount: chargeAmount,
+    currency: plan.currency,
+    next_charge_at: null,
+    canceled_at: null,
+    cancel_reason: null,
+    failed_attempts: 0,
+    created_at: timestamp,
+    updated_at: timestamp,
+    joined_at: timestamp,
+    extended_cancellation_flag: null,
+    extended_flag_basis: null,
+    plan: plan.id,
+    net_amount: plan.netAmount,
+    vat_mode: plan.vat.mode,
+    vat_rate: plan.vat.rate,
+    billing_interval: plan.interval,
+    billing_anchor_at: null,
+    periods_paid: 0,
+    dunning_started_at: null,
+    paused_at: null,
+  });
+
+  insertSubscriptionEvent(db, {
+    id: crypto.randomUUID(),
+    subscription_id: subscriptionId,
+    event_type: 'created',
+    metadata: JSON.stringify({ plan: plan.id, netAmount: plan.netAmount, vatRate: plan.vat.rate, chargeAmount, currency: plan.currency }),
+    created_at: timestamp,
+  });
+
+  const session = await getPaymentProvider().createTokenizationSession({
+    customerId: subscriptionId,
+    returnUrl,
+    initialAmount: chargeAmount,
+    description: plan.chargeDescription,
+  });
+
+  return { subscriptionId, redirectUrl: session.redirectUrl, providerSessionId: session.sessionId };
+}
+
+export type PlanActivationOutcome =
+  | { ok: true; subscriptionId: string; alreadyActive: boolean }
+  | {
+      ok: false;
+      reason: 'subscription_not_found' | 'subscription_not_pending' | 'callback_invalid' | 'charge_failed';
+      retryable?: boolean;
+    };
+
+/**
+ * Turns a `pending` plan row into `active`: verifies the provider callback, takes the first (sign-up) charge, anchors
+ * billing at that moment and schedules the next charge one interval later. Re-running it after success is a no-op
+ * (`alreadyActive: true`), so a replayed callback never charges twice. A failed first charge leaves the row `pending`
+ * (the customer can try again; each try is a distinct attempt with its own idempotency key).
+ */
+export async function activatePlanSubscription(
+  subscriptionId: string,
+  callbackPayload: unknown,
+  now: Date = new Date()
+): Promise<PlanActivationOutcome> {
+  const db = getDb();
+  const subscription = getSubscriptionById(subscriptionId);
+  if (!subscription) return { ok: false, reason: 'subscription_not_found' };
+  const plan = getBillingPlan(subscription.plan);
+  if (!plan) return { ok: false, reason: 'subscription_not_found' };
+  if (subscription.status !== 'pending') {
+    if ((subscription.periods_paid ?? 0) >= 1) return { ok: true, subscriptionId, alreadyActive: true };
+    return { ok: false, reason: 'subscription_not_pending' };
+  }
+  const timestamp = now.toISOString();
+  const provider = getPaymentProvider();
+
+  // ===========================================================================================================
+  // TAKBULL SWAP POINT (the only one). With the mock, the pay page posts { sessionId } and the first charge is an
+  // explicit chargeToken() on the minted token. When Takbull's API contract exists, adapt HERE only:
+  //   1. callbackPayload = Takbull's signed return / webhook payload (verified inside providers/takbull.ts);
+  //   2. if Takbull charges the first amount on its hosted page, use verify.initialChargeSucceeded +
+  //      verify.providerTransactionId instead of the chargeToken() call below.
+  // providers/takbull.ts stays a stub until then; get-provider.ts selects it with PAYMENT_PROVIDER=takbull.
+  // ===========================================================================================================
+  const verify = await provider.verifyTokenizationCallback(callbackPayload);
+  if (!verify.valid || !verify.token) {
+    insertSubscriptionEvent(db, {
+      id: crypto.randomUUID(),
+      subscription_id: subscriptionId,
+      event_type: 'charge_failed',
+      metadata: JSON.stringify({ stage: 'plan_tokenization_callback', valid: verify.valid }),
+      created_at: timestamp,
+    });
+    return { ok: false, reason: 'callback_invalid' };
+  }
+  const priorAttempts = (db
+    .prepare(`SELECT COUNT(*) AS n FROM charges WHERE subscription_id = ? AND status = 'failed'`)
+    .get(subscriptionId) as { n: number }).n;
+  const attemptNumber = priorAttempts + 1;
+  const idempotencyKey = buildIdempotencyKey(subscriptionId, 'signup', attemptNumber);
+  const amount = subscription.recurring_amount ?? planChargeAmount(plan);
+  const charge = await provider.chargeToken({ token: verify.token, amount, description: plan.chargeDescription, idempotencyKey });
+
+  const chargeRow = {
+    id: crypto.randomUUID(),
+    subscription_id: subscriptionId,
+    idempotency_key: idempotencyKey,
+    amount,
+    status: charge.success ? ('succeeded' as const) : ('failed' as const),
+    attempt_number: attemptNumber,
+    provider_transaction_id: charge.providerTransactionId ?? null,
+    error_code: charge.success ? null : charge.errorCode ?? null,
+    error_message: charge.success ? null : charge.errorMessage ?? null,
+    invoice_id: null,
+    charged_at: charge.success ? timestamp : null,
+    created_at: timestamp,
+    refunded_at: null,
+    refund_amount: null,
+    refund_provider_ref: null,
+  };
+  insertCharge(db, chargeRow);
+
+  if (!charge.success) {
+    insertSubscriptionEvent(db, {
+      id: crypto.randomUUID(),
+      subscription_id: subscriptionId,
+      event_type: 'charge_failed',
+      metadata: JSON.stringify({ stage: 'plan_signup_charge', errorCode: charge.errorCode, attemptNumber }),
+      created_at: timestamp,
+    });
+    return { ok: false, reason: 'charge_failed', retryable: charge.isRetryable };
+  }
+
+  const nextChargeAt = planChargeDate(timestamp, 1);
+  db.prepare(
+    `UPDATE subscriptions
+     SET status = 'active',
+         provider_token = @provider_token,
+         card_last4 = @card_last4,
+         card_expiry = @card_expiry,
+         billing_anchor_at = @billing_anchor_at,
+         periods_paid = 1,
+         failed_attempts = 0,
+         dunning_started_at = NULL,
+         next_charge_at = @next_charge_at,
+         updated_at = @updated_at
+     WHERE id = @id`
+  ).run({
+    id: subscriptionId,
+    provider_token: encryptToken(verify.token),
+    card_last4: verify.cardLast4 ?? null,
+    card_expiry: verify.cardExpiry ?? null,
+    billing_anchor_at: timestamp,
+    next_charge_at: nextChargeAt,
+    updated_at: timestamp,
+  });
+
+  insertSubscriptionEvent(db, {
+    id: crypto.randomUUID(),
+    subscription_id: subscriptionId,
+    event_type: 'plan_charged',
+    metadata: JSON.stringify({
+      plan: plan.id,
+      amount,
+      netAmount: subscription.net_amount,
+      vatRate: subscription.vat_rate,
+      providerTransactionId: charge.providerTransactionId,
+      nextChargeAt,
+    }),
+    created_at: timestamp,
+  });
+
+  // Best-effort, never blocks the charge (invoicing.ts).
+  await issueInvoiceForCharge(chargeRow, subscription);
+
+  return { ok: true, subscriptionId, alreadyActive: false };
+}
+
+/**
+ * The charge date of period `periodIndex` (0 = the sign-up charge) of a monthly plan anchored at `anchorIso`. Always
+ * computed from the anchor, so Jan 31 -> Feb 28 -> Mar 31 and a late retry never shifts later charges.
+ */
+export function planChargeDate(anchorIso: string, periodIndex: number): string {
+  return addMonths(new Date(anchorIso), periodIndex).toISOString();
 }

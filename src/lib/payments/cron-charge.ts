@@ -52,7 +52,8 @@ import {
 import { decryptToken } from './crypto';
 import { getPaymentProvider } from './get-provider';
 import { generateMagicLinkToken } from './magic-link';
-import { buildCancelUrl } from './subscriptions';
+import { buildCancelUrl, planChargeDate } from './subscriptions';
+import { getBillingPlan, type BillingPlan } from './plans';
 import { issueInvoiceForCharge } from './invoicing';
 import {
   sendRenewalChargeConfirmationEmail,
@@ -81,6 +82,8 @@ export type ChargeOutcome =
   | 'retry_scheduled'
   | 'expired'
   | 'failed_non_retryable'
+  // Plan rows (Site-Bot): the dunning retries ran out; the row is 'paused' and never charged by the cron again.
+  | 'paused'
   | 'error';
 
 export interface ChargeCronRowResult {
@@ -147,6 +150,13 @@ export async function chargeOneSubscription(row: SubscriptionRow, now: Date): Pr
     return 'error';
   }
 
+  // Plan rows (plans.ts, e.g. Site-Bot) bill on a fixed anchor and follow the plan's dunning; NULL plan = legacy engine.
+  const plan = row.plan ? getBillingPlan(row.plan) : null;
+  if (row.plan && (!plan || !row.billing_anchor_at)) {
+    console.error(`[cron-charge] subscription=${row.id} has plan=${row.plan} but no known plan / billing anchor; skipping.`);
+    return 'error';
+  }
+
   const provider = getPaymentProvider();
   const token = decryptToken(row.provider_token);
   const amount = row.recurring_amount ?? 0;
@@ -155,12 +165,15 @@ export async function chargeOneSubscription(row: SubscriptionRow, now: Date): Pr
   const result = await provider.chargeToken({
     token,
     amount,
-    description: 'WAO subscription — recurring charge',
+    description: plan ? plan.chargeDescription : 'WAO subscription — recurring charge',
     idempotencyKey,
   });
 
   if (result.success) {
-    const nextChargeAt = addMonths(new Date(billingPeriodStartDate), 1).toISOString();
+    const periodsPaid = (row.periods_paid ?? 0) + 1;
+    const nextChargeAt = plan
+      ? planChargeDate(row.billing_anchor_at as string, periodsPaid)
+      : addMonths(new Date(billingPeriodStartDate), 1).toISOString();
 
     db.prepare(
       `UPDATE subscriptions
@@ -170,6 +183,10 @@ export async function chargeOneSubscription(row: SubscriptionRow, now: Date): Pr
            updated_at = @updated_at
        WHERE id = @id`
     ).run({ id: row.id, next_charge_at: nextChargeAt, updated_at: timestamp });
+    if (plan) {
+      db.prepare(`UPDATE subscriptions SET periods_paid = @periods_paid, dunning_started_at = NULL WHERE id = @id`)
+        .run({ id: row.id, periods_paid: periodsPaid });
+    }
 
     const chargeId = crypto.randomUUID();
     const chargeRow = {
@@ -238,6 +255,10 @@ export async function chargeOneSubscription(row: SubscriptionRow, now: Date): Pr
     refund_amount: null,
     refund_provider_ref: null,
   });
+
+  if (result.isRetryable && plan) {
+    return planDunningFailure(row, plan, now, attemptNumber, result.errorCode, result.errorMessage);
+  }
 
   if (result.isRetryable) {
     const newFailedAttempts = row.failed_attempts + 1;
@@ -339,6 +360,75 @@ export async function chargeOneSubscription(row: SubscriptionRow, now: Date): Pr
   }
 
   return 'failed_non_retryable';
+}
+
+/**
+ * Plan dunning (Site-Bot, approved 2026-11-07): a retryable failure is retried at the plan's offsets, measured from the
+ * FIRST failed attempt of the period (Site-Bot: +2, +4, +7 days = 3 retries over 7 days). When the last retry fails the
+ * subscription pauses: status 'paused', next_charge_at NULL (the cron never charges it again), a 'paused' event and the
+ * internal admin alert. No customer email: the pause notice needs approved copy (open item).
+ */
+async function planDunningFailure(
+  row: SubscriptionRow,
+  plan: BillingPlan,
+  now: Date,
+  attemptNumber: number,
+  errorCode: string | undefined,
+  errorMessage: string | undefined
+): Promise<ChargeOutcome> {
+  const db = getDb();
+  const timestamp = nowIso(now);
+  const offsets = plan.dunning.retryOffsetsDays;
+  const dunningStartedAt = row.dunning_started_at ?? timestamp;
+  const newFailedAttempts = row.failed_attempts + 1;
+
+  if (newFailedAttempts > offsets.length) {
+    db.prepare(
+      `UPDATE subscriptions
+       SET status = 'paused',
+           failed_attempts = @failed_attempts,
+           next_charge_at = NULL,
+           paused_at = @paused_at,
+           updated_at = @updated_at
+       WHERE id = @id`
+    ).run({ id: row.id, failed_attempts: newFailedAttempts, paused_at: timestamp, updated_at: timestamp });
+    insertSubscriptionEvent(db, {
+      id: crypto.randomUUID(),
+      subscription_id: row.id,
+      event_type: 'paused',
+      metadata: JSON.stringify({ plan: plan.id, reason: 'dunning_exhausted', retries: offsets.length, dunningStartedAt, errorCode, attemptNumber }),
+      created_at: timestamp,
+    });
+    try {
+      await sendBillingAdminAlertEmail({
+        subscriptionId: row.id,
+        userEmail: row.user_id,
+        reason: `plan ${plan.id} paused after ${offsets.length} retries: ${errorMessage ?? errorCode ?? 'unknown_retryable_failure'}`,
+      });
+    } catch (err) {
+      console.error(`[cron-charge] Failed to send internal admin alert for paused subscription=${row.id}:`, err);
+    }
+    return 'paused';
+  }
+
+  const nextRetryAt = addDays(new Date(dunningStartedAt), offsets[newFailedAttempts - 1]).toISOString();
+  db.prepare(
+    `UPDATE subscriptions
+     SET status = 'past_due',
+         failed_attempts = @failed_attempts,
+         dunning_started_at = @dunning_started_at,
+         next_charge_at = @next_charge_at,
+         updated_at = @updated_at
+     WHERE id = @id`
+  ).run({ id: row.id, failed_attempts: newFailedAttempts, dunning_started_at: dunningStartedAt, next_charge_at: nextRetryAt, updated_at: timestamp });
+  insertSubscriptionEvent(db, {
+    id: crypto.randomUUID(),
+    subscription_id: row.id,
+    event_type: 'charge_failed',
+    metadata: JSON.stringify({ terminal: false, plan: plan.id, errorCode, attemptNumber, retry: newFailedAttempts, nextRetryAt }),
+    created_at: timestamp,
+  });
+  return 'retry_scheduled';
 }
 
 /** Runs one full pass of the recurring-charge cron. Safe to call more often

@@ -566,7 +566,12 @@ export default function SiteBotPayLayout({ children }: { children: ReactNode }) 
 });
 
 test('pay page and start flow gate navigation and "done" on the checked response helpers (M0.5 B9/B10)', () => {
-  const pay = read('src/app/(product)/site-bot/pay/[sessionId]/page.tsx');
+  // 2026-11-11: page.tsx is the server wrapper (card-field defaults from the env); the flow lives in the client part.
+  const payPage = read('src/app/(product)/site-bot/pay/[sessionId]/page.tsx');
+  assert.match(payPage, /<SiteBotPayClient cardDefaults=\{cardFieldDefaults\(process\.env\)\} \/>/);
+  assert.doesNotMatch(payPage, /4242/);
+  const pay = read('src/components/site-bot/SiteBotPayClient.tsx');
+  assert.doesNotMatch(pay, /4242|defaultValue="/, 'no test card value in the client bundle');
   const pay_ = pay.slice(pay.indexOf('async function pay()'), pay.indexOf('async function submitGate()'));
   assert.match(pay_, /const outcome = checkoutCallbackOutcome\(res\.ok, json\);\s*if \(outcome\.kind === "error"\) throw/);
   assert.match(pay_, /await readJsonBody\(res\)/);

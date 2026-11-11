@@ -2,18 +2,20 @@ import { NextResponse } from 'next/server';
 import fs from 'fs';
 import path from 'path';
 import type { CollectedData } from '@/lib/bot/prompts';
-import { getPaymentProvider } from '@/lib/payments/get-provider';
-import { getInvoiceProvider } from '@/lib/payments/get-invoice-provider';
+import { activatePlanSubscription } from '@/lib/payments/subscriptions';
 import { deriveOpenResearchGates } from '@/lib/site-bot/research/gates';
 import { readResearchDossier } from '@/lib/site-bot/research/researchStore';
 import { runSiteResearch, type SiteResearchInput } from '@/lib/site-bot/research/runResearch';
 import { completePaidCheckoutResearch } from '@/lib/site-bot/checkout/researchCompletion';
 import { buildSiteResearchInput } from '@/lib/site-bot/research/researchInput';
 
-const SITE_BOT_PRICE = 9.9;
+// Site-Bot checkout callback: takes the sign-up charge of the monthly + VAT plan (SITE_BOT_PLAN) through the recurring engine
+// (activatePlanSubscription: first charge, billing anchor, next charge date, invoice), then starts the research.
+// Error replies are codes only; the detail goes to the server log, never to the customer.
 
 interface PendingRecord {
   collectedData: CollectedData;
+  subscriptionId?: string;
   createdAt: string;
 }
 
@@ -21,11 +23,15 @@ function researchInput(sessionId: string, collectedData: CollectedData): SiteRes
   return buildSiteResearchInput(`checkout:${sessionId}`, collectedData, () => new Date(), sessionId);
 }
 
+function errorReply(error: string, status: number, extra: Record<string, unknown> = {}) {
+  return NextResponse.json({ error, ...extra }, { status, headers: { 'Cache-Control': 'private, no-store' } });
+}
+
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const sessionId: string = body.sessionId;
-    if (!sessionId) return NextResponse.json({ error: 'sessionId is required' }, { status: 400 });
+    const sessionId: string = body?.sessionId;
+    if (!sessionId) return errorReply('invalid_input', 400);
 
     const existingDossier = await readResearchDossier(sessionId);
     if (existingDossier) {
@@ -42,42 +48,19 @@ export async function POST(req: Request) {
     try {
       pending = JSON.parse(fs.readFileSync(pendingPath, 'utf-8'));
     } catch {
-      return NextResponse.json({ error: 'Checkout session not found or already used' }, { status: 404 });
+      return errorReply('session_not_found', 404);
+    }
+    if (!pending.subscriptionId) {
+      console.error(`[site-bot checkout] session=${sessionId} has no subscriptionId (pre-plan pending record)`);
+      return errorReply('session_not_found', 404);
     }
 
-    const provider = getPaymentProvider();
-
-    const verify = await provider.verifyTokenizationCallback({ sessionId });
-    if (!verify.valid || !verify.token) {
-      return NextResponse.json({ error: 'אימות התשלום נכשל' }, { status: 402 });
-    }
-
-    const charge = await provider.chargeToken({
-      token: verify.token,
-      amount: SITE_BOT_PRICE,
-      description: 'WAO Site Bot — בניית אתר',
-      idempotencyKey: sessionId,
-    });
-    if (!charge.success) {
-      return NextResponse.json({ error: charge.errorMessage || 'החיוב נכשל', retryable: charge.isRetryable }, { status: 402 });
-    }
-
-    // Invoice issuance must never block or fail the already-succeeded charge
-    // (same invariant as invoicing.ts's issueInvoiceForCharge — this flow
-    // can't reuse that helper directly since it writes to the subscription
-    // engine's charges/subscriptions DB tables, which this one-time,
-    // DB-less checkout doesn't have rows in).
-    try {
-      const invoiceProvider = getInvoiceProvider();
-      await invoiceProvider.createInvoice({
-        customerName: pending.collectedData.businessName || pending.collectedData.ownerName || sessionId,
-        customerEmail: pending.collectedData.email || '',
-        amount: SITE_BOT_PRICE,
-        description: 'WAO Site Bot — בניית אתר',
-        externalId: charge.providerTransactionId || sessionId,
-      });
-    } catch (err) {
-      console.error(`[site-bot checkout] Failed to issue invoice for session=${sessionId}:`, err);
+    const activation = await activatePlanSubscription(pending.subscriptionId, { sessionId });
+    if (!activation.ok) {
+      console.error(`[site-bot checkout] activation failed session=${sessionId} subscription=${pending.subscriptionId}:`, activation);
+      if (activation.reason === 'charge_failed') return errorReply('charge_failed', 402, { retryable: activation.retryable === true });
+      if (activation.reason === 'callback_invalid') return errorReply('payment_verification_failed', 402);
+      return errorReply('checkout_failed', 409);
     }
 
     const openResearchGates = deriveOpenResearchGates(sessionId, pending.collectedData);
@@ -92,6 +75,6 @@ export async function POST(req: Request) {
     return NextResponse.json(response);
   } catch (error: unknown) {
     console.error('Site Bot checkout callback error:', error);
-    return NextResponse.json({ error: error instanceof Error ? error.message : 'Checkout failed' }, { status: 500 });
+    return errorReply('checkout_failed', 500);
   }
 }
