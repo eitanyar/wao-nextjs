@@ -138,7 +138,7 @@ test('breadcrumb: above the H1, crumb 2 is the plain Service.name (not linked, a
   const site = render();
   const money = site['services/leak-detection.html'];
   assert.ok(money.indexOf('data-section="breadcrumb"') < money.indexOf('<h1'), 'breadcrumb precedes the H1');
-  assert.match(money, /<nav data-section="breadcrumb" class="wao-breadcrumb" aria-label="[^"]+"><ol><li>/);
+  assert.match(money, /<nav data-section="breadcrumb" class="wao-breadcrumb" aria-label="[^"]+"><ol role="list"><li>/);
   // The approved label (docs/copy/site-bot-breadcrumb-label-2026-11-11.json, Tamar -> Noa), as escapes.
   assert.equal(RESEARCHED_SITE_LABELS.breadcrumbLabel, '\u05de\u05d9\u05e7\u05d5\u05de\u05da \u05d1\u05d0\u05ea\u05e8');
   assert.equal(/<nav data-section="breadcrumb"[^>]*aria-label="([^"]+)"/.exec(money)?.[1], RESEARCHED_SITE_LABELS.breadcrumbLabel);
@@ -153,7 +153,42 @@ test('breadcrumb: above the H1, crumb 2 is the plain Service.name (not linked, a
     theme: VERTICAL_THEMES['emergency-trades'], assets: VERTICAL_ASSETS['emergency-trades'], data: { ...data, businessName: HE_BRAND },
     heroImageUrl: 'https://example.test/hero.jpg', slug: 'test-client', siteUrl: 'https://test.wao.co.il', pages, graphEdges,
   });
-  assert.ok(breadcrumbHtml(hebrew['services/leak-detection.html']).startsWith(`<ol><li><a href="/">${HE_BRAND}</a></li>`));
+  assert.ok(breadcrumbHtml(hebrew['services/leak-detection.html']).startsWith(`<ol role="list"><li><a href="/">${HE_BRAND}</a></li>`));
+});
+
+function relativeLuminance(hex: string): number {
+  const m = /^#([0-9a-f]{6})$/i.exec(hex.trim());
+  if (!m) throw new Error(`not a #RRGGBB colour: ${hex}`);
+  const [r, g, b] = [0, 2, 4].map(i => parseInt(m[1].slice(i, i + 2), 16) / 255).map(c => (c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4));
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+}
+function wcagContrast(a: string, b: string): number {
+  const [hi, lo] = [relativeLuminance(a), relativeLuminance(b)].sort((x, y) => y - x);
+  return (hi + 0.05) / (lo + 0.05);
+}
+
+test('breadcrumb contrast (Maya): in EVERY vertical theme, the rendered crumb text (textMuted) and link (accentText) meet 4.5:1 on the hero surface', () => {
+  assert.equal(wcagContrast('#000000', '#FFFFFF').toFixed(1), '21.0');
+  const themes = Object.entries(VERTICAL_THEMES);
+  assert.equal(themes.length, 8);
+  for (const [key, theme] of themes) {
+    const site = renderResearchedSitePages({
+      theme, assets: VERTICAL_ASSETS[key as keyof typeof VERTICAL_ASSETS], data,
+      heroImageUrl: 'https://example.test/hero.jpg', slug: 'test-client', siteUrl: 'https://test.wao.co.il', pages, graphEdges,
+    });
+    const money = site['services/leak-detection.html'];
+    // What the page actually paints: the crumb colours from the breadcrumb CSS, the background of the section holding it.
+    const text = /\.wao-breadcrumb\{[^}]*color:(#[0-9A-Fa-f]{6});/.exec(money)?.[1];
+    const link = /\.wao-breadcrumb a\{[^}]*color:(#[0-9A-Fa-f]{6});/.exec(money)?.[1];
+    const background = /<section style="[^"]*background:(#[0-9A-Fa-f]{6});[^"]*"><div[^>]*><nav data-section="breadcrumb"/.exec(money)?.[1];
+    assert.equal(text, theme.textMuted, `${key}: crumb text is textMuted`);
+    assert.equal(link, theme.accentText, `${key}: crumb link is accentText`);
+    assert.equal(background, theme.surface, `${key}: breadcrumb sits on surface`);
+    for (const [name, colour] of [['textMuted', theme.textMuted], ['accentText', theme.accentText]] as const) {
+      const ratio = wcagContrast(colour, theme.surface);
+      assert.ok(ratio >= 4.5, `${key}: ${name} ${colour} on surface ${theme.surface} = ${ratio.toFixed(2)}`);
+    }
+  }
 });
 
 test('breadcrumb schema: BreadcrumbList in the @graph, 2 items, absolute URLs equal to the root and the canonical (and sitemap)', () => {

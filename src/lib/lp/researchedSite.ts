@@ -320,9 +320,10 @@ function breadcrumbCss(theme: RenderResearchedSitePagesParams['theme']): string 
   ].join('');
 }
 
+/** role="list" (Maya): list-style:none drops the list semantics in Safari / VoiceOver; the explicit role restores them. */
 function breadcrumbNav(homeName: string, serviceName: string): string {
   const home = HEBREW_LETTER.test(homeName) ? esc(homeName) : `<bdi>${esc(homeName)}</bdi>`;
-  return `<nav data-section="breadcrumb" class="wao-breadcrumb" aria-label="${esc(BREADCRUMB_ARIA_LABEL)}"><ol><li><a href="/">${home}</a></li><li><span aria-current="page">${esc(serviceName)}</span></li></ol></nav>`;
+  return `<nav data-section="breadcrumb" class="wao-breadcrumb" aria-label="${esc(BREADCRUMB_ARIA_LABEL)}"><ol role="list"><li><a href="/">${home}</a></li><li><span aria-current="page">${esc(serviceName)}</span></li></ol></nav>`;
 }
 
 function schemaGraph(page: ResearchedSitePage, data: CollectedData, siteUrl: string, heroImageUrl: string, output: string, homeName?: string): string {
