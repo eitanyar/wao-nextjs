@@ -65,9 +65,9 @@ domain (301s from old URLs, MX/email untouched), not only no-website businesses.
 - **Go-live promise (Eitan 2026-11-09, shown on the buy screen, the payment confirmation and the M3 status page):**
   - live on `<slug>.wao.co.il` within 1 business day of payment (after the human check);
   - live on the client's own domain within **max 3 business days** of receiving working domain access;
-  - **(Eitan 2026-11-11)** no own domain yet: WAO registers a .co.il in the client's name after the 2nd monthly payment
-    clears (month 1 runs on the noindexed subdomain) and pays renewals while he is subscribed; one added buy-screen line
-    says so (waocopy → Noa). See docs/reviews/site-bot-segment-domain-decision-fable52-2026-11-11.md.
+  - **(Eitan 2026-11-11, final)** no own domain yet: month 1 runs on the noindexed subdomain; the client buys his own
+    domain (his name, his cost and renewal; WAO may help on a short call) and WAO connects it. WAO never registers or pays
+    for domains (reseller automation revisited at ~20–30 clients). One buy-screen line says so (waocopy → Noa).
   - the clock pauses while waiting on the client (registrar approval, MX confirmation). GBP is a separate track and not
     part of this promise.
   - Preview wait (pre-pay) measured at ~3–5 min per site on fixtures (M2b.1d eval). Re-measure with live research

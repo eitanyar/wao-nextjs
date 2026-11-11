@@ -1,3 +1,5 @@
+> **Update 2026-11-11 (Eitan):** decision 2 changed after the registrar research — the client buys his own domain and WAO connects it; WAO does not register or pay for domains. Everything else stands.
+
 # Site-Bot go-to-market decision (2026-11-11)
 
 ## Decisions
