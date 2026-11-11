@@ -7,7 +7,7 @@ import type { VerticalTheme } from './verticalThemes';
 import type { SiteCopy } from './lpCopyPrompt';
 import type { CollectedData } from '@/lib/bot/prompts';
 import { renderStaticHtml, CONSENT_CHECKBOX_STYLE, CONSENT_LABEL_STYLE, CONSENT_LINK_STYLE, type RenderStaticHtmlParams } from './renderStaticHtml';
-import { buildPrivacyHtml, buildAccessibilityHtml, isAccessibilityExempt } from './legalPages';
+import { buildPrivacyHtml, buildAccessibilityHtml, buildNotFoundHtml, isAccessibilityExempt } from './legalPages';
 import { buildFraudBlockerTrackerHtml } from '../fraud-blocker/tracker';
 import { displayBusinessHours, parseBusinessHours } from './businessHours';
 import { TEMPLATE_STRINGS } from './generationData';
@@ -50,6 +50,36 @@ export interface LeadFormOptions {
 /** The researched-site lead-form strings (Noa templateStrings). */
 export const RESEARCHED_LEAD_FORM: Readonly<LeadFormOptions> = { submitLabel: TEMPLATE_STRINGS.formSubmitLabel, thanks: TEMPLATE_STRINGS.formThanks };
 
+/**
+ * M4 step 0 (URL hygiene): the path Cloudflare Pages serves a deploy file at. Files stay `*.html` on disk; Pages answers
+ * `/x.html` with a redirect to `/x`, so every canonical, og:url, sitemap <loc>, schema URL and internal link uses the
+ * extensionless form: 'index.html' (or '') -> '/', 'a/index.html' -> '/a/', 'about.html' -> '/about',
+ * 'sherut/x.html' -> '/sherut/x'.
+ */
+export function servedPath(file: string): string {
+  const clean = file.replace(/^\/+/, '');
+  if (clean === '' || clean === 'index.html') return '/';
+  if (clean.endsWith('/index.html')) return `/${clean.slice(0, -'index.html'.length)}`;
+  return `/${clean.replace(/\.html$/, '')}`;
+}
+
+/** Absolute served URL of a deploy file (see servedPath). */
+export function servedUrl(siteUrl: string, file: string): string {
+  return `${siteUrl.replace(/\/$/, '')}${servedPath(file)}`;
+}
+
+/**
+ * The ads-LP deploy (api/cloudflare-pages/deploy): the files written next to its single index.html -- privacy, the gated
+ * accessibility page, and the real 404.html (M4 step 0). Canonicals are the extensionless served URLs.
+ */
+export function buildLandingPageSupportPages(o: { theme: VerticalTheme; data: CollectedData; siteUrl: string; fraudBlockerSid?: string }): Record<string, string> {
+  const base = { theme: o.theme, data: o.data, homeHref: '/', fraudBlockerSid: o.fraudBlockerSid };
+  const pages: Record<string, string> = { 'privacy.html': buildPrivacyHtml({ ...base, canonicalUrl: servedUrl(o.siteUrl, 'privacy.html') }) };
+  if (!isAccessibilityExempt(o.data.vatStatus)) pages['accessibility.html'] = buildAccessibilityHtml({ ...base, canonicalUrl: servedUrl(o.siteUrl, 'accessibility.html') });
+  pages['404.html'] = buildNotFoundHtml(base);
+  return pages;
+}
+
 export function renderSitePages(p: RenderSitePagesParams): Record<string, string> {
   const siteUrl = p.siteUrl.replace(/\/$/, '');
   const exempt = isAccessibilityExempt(p.data.vatStatus);
@@ -59,14 +89,16 @@ export function renderSitePages(p: RenderSitePagesParams): Record<string, string
     'about.html': buildAboutHtml(p, siteUrl),
     'services.html': buildServicesHtml(p, siteUrl),
     'contact.html': buildContactHtml(p, siteUrl),
-    'privacy.html': buildPrivacyHtml({ theme: p.theme, data: p.data, canonicalUrl: `${siteUrl}/privacy.html`, homeHref: '/', fraudBlockerSid: p.fraudBlockerSid, ...(p.researched ? { pipeTitle: true, prefixRule: true } : {}) }),
+    'privacy.html': buildPrivacyHtml({ theme: p.theme, data: p.data, canonicalUrl: servedUrl(siteUrl, 'privacy.html'), homeHref: '/', fraudBlockerSid: p.fraudBlockerSid, ...(p.researched ? { pipeTitle: true, prefixRule: true } : {}) }),
     'sitemap.xml': buildSitemap(siteUrl),
+    // M4 step 0: a real 404 (Pages serves it with status 404 for unknown paths, instead of the homepage with 200).
+    '404.html': buildNotFoundHtml({ theme: p.theme, data: p.data, homeHref: '/', fraudBlockerSid: p.fraudBlockerSid, ...(p.researched ? { pipeTitle: true, prefixRule: true } : {}) }),
   };
 
   // No exemption exists for the privacy page — always built. Accessibility
   // is gated: absent entirely (not a stub) when the client is exempt.
   if (!exempt) {
-    pages['accessibility.html'] = buildAccessibilityHtml({ theme: p.theme, data: p.data, canonicalUrl: `${siteUrl}/accessibility.html`, homeHref: '/', fraudBlockerSid: p.fraudBlockerSid, ...(p.researched ? { pipeTitle: true, prefixRule: true } : {}) });
+    pages['accessibility.html'] = buildAccessibilityHtml({ theme: p.theme, data: p.data, canonicalUrl: servedUrl(siteUrl, 'accessibility.html'), homeHref: '/', fraudBlockerSid: p.fraudBlockerSid, ...(p.researched ? { pipeTitle: true, prefixRule: true } : {}) });
   }
 
   return pages;
@@ -78,7 +110,8 @@ export function renderSitePages(p: RenderSitePagesParams): Record<string, string
 // ─────────────────────────────────────────────────────────────────────────
 
 function buildIndexHtml(p: RenderSitePagesParams, siteUrl: string): string {
-  const html = renderStaticHtml({ ...p, mode: 'site', siteUrl });
+  // M4 step 0: the homepage canonical is the site root (renderStaticHtml's own default appends the business slug).
+  const html = renderStaticHtml({ ...p, mode: 'site', siteUrl, canonicalUrl: `${siteUrl}/` });
   const t = p.theme;
   const { businessName } = contacts(p.data);
 
@@ -160,9 +193,9 @@ export function navBar(t: VerticalTheme, research?: ResearchNavOptions): string 
   if (research) return researchNavBar(t, research);
   return `  <nav style="background:${t.surface};border-bottom:1px solid ${t.border};padding:10px 20px;display:flex;gap:20px;justify-content:flex-end;font-size:0.9rem;">
     <a href="/">${NAV_LINK_TEXT.home}</a>
-    <a href="/services.html">${NAV_LINK_TEXT.services}</a>
-    <a href="/about.html">${NAV_LINK_TEXT.about}</a>
-    <a href="/contact.html">${NAV_LINK_TEXT.contact}</a>
+    <a href="/services">${NAV_LINK_TEXT.services}</a>
+    <a href="/about">${NAV_LINK_TEXT.about}</a>
+    <a href="/contact">${NAV_LINK_TEXT.contact}</a>
   </nav>`;
 }
 
@@ -181,8 +214,8 @@ function researchNavBar(t: VerticalTheme, o: ResearchNavOptions): string {
 export function footerBadge(t: VerticalTheme, exempt: boolean): string {
   return `  <footer style="text-align:center;padding:24px 20px 32px;background:${t.surface};border-top:1px solid ${t.border};font-size:0.8rem;color:${t.textMuted};">
     <div style="margin-bottom:4px;display:flex;flex-wrap:wrap;gap:4px 6px;justify-content:center;">
-      <a href="/privacy.html" style="display:inline-flex;align-items:center;min-height:44px;padding:0 8px;color:${t.textMuted};">מדיניות פרטיות</a>
-      ${exempt ? '' : '<a href="/accessibility.html" style="display:inline-flex;align-items:center;min-height:44px;padding:0 8px;color:' + t.textMuted + ';">הצהרת נגישות</a>'}
+      <a href="/privacy" style="display:inline-flex;align-items:center;min-height:44px;padding:0 8px;color:${t.textMuted};">מדיניות פרטיות</a>
+      ${exempt ? '' : '<a href="/accessibility" style="display:inline-flex;align-items:center;min-height:44px;padding:0 8px;color:' + t.textMuted + ';">הצהרת נגישות</a>'}
     </div>
     <a href="https://wao.co.il" style="display:inline-flex;align-items:center;gap:0.3em;min-height:44px;padding:0 8px;color:${t.textMuted};text-decoration:none;">נבנה עם <strong>WAO</strong> 🚀</a>
   </footer>`;
@@ -398,7 +431,7 @@ export function leadFormSection(t: VerticalTheme, headline: string, ctaLabel: st
         <input type="tel" id="f-phone" placeholder="050-0000000" aria-label="מספר טלפון" dir="ltr" required style="padding:14px 16px;border-radius:${t.radiusSm};border:1px solid ${t.border};font-size:1rem;color:${t.textPrimary};background:${t.surface};text-align:right;" />
         <label style="${CONSENT_LABEL_STYLE}">
           <input type="checkbox" id="f-consent" required style="${CONSENT_CHECKBOX_STYLE}" />
-          <span style="font-size:0.8rem;color:${t.textMuted};line-height:1.4;">אני מסכים/ה ל<a href="/privacy.html" style="${CONSENT_LINK_STYLE}color:${t.textMuted};text-decoration:underline;">מדיניות הפרטיות</a>.</span>
+          <span style="font-size:0.8rem;color:${t.textMuted};line-height:1.4;">אני מסכים/ה ל<a href="/privacy" style="${CONSENT_LINK_STYLE}color:${t.textMuted};text-decoration:underline;">מדיניות הפרטיות</a>.</span>
         </label>
         <div id="form-error">שגיאה בשליחה — נסה שוב או התקשר ישירות.</div>
         <button type="submit" class="submit-btn">${esc(submitLabel)}</button>
@@ -509,7 +542,7 @@ export function pageScript(opts: {
 function buildAboutHtml(p: RenderSitePagesParams, siteUrl: string): string {
   const { theme: t, copy, data, heroImageUrl, slug } = p;
   const { phone, phoneHref, businessName } = contacts(data);
-  const canonicalUrl = `${siteUrl}/about.html`;
+  const canonicalUrl = servedUrl(siteUrl, 'about.html');
 
   const head = pageHead({
     t,
@@ -540,7 +573,7 @@ ${trustBar}
 
   <!-- CTA -->
   <section style="padding:36px 20px;background:${t.surfaceAlt};text-align:center;">
-    <a href="/contact.html" style="display:inline-block;background:${t.ctaGradient};color:${t.ctaText};padding:14px 32px;border-radius:${t.radiusSm};font-weight:800;font-size:1.05rem;">${esc(copy.heroCta)}</a>
+    <a href="/contact" style="display:inline-block;background:${t.ctaGradient};color:${t.ctaText};padding:14px 32px;border-radius:${t.radiusSm};font-weight:800;font-size:1.05rem;">${esc(copy.heroCta)}</a>
   </section>
 
 ${pageScript({
@@ -564,7 +597,7 @@ ${pageScript({
 function buildServicesHtml(p: RenderSitePagesParams, siteUrl: string): string {
   const { theme: t, copy, data, heroImageUrl, slug } = p;
   const { phone, phoneHref, businessName } = contacts(data);
-  const canonicalUrl = `${siteUrl}/services.html`;
+  const canonicalUrl = servedUrl(siteUrl, 'services.html');
 
   const head = pageHead({
     t,
@@ -617,7 +650,7 @@ ${pageScript({
 function buildContactHtml(p: RenderSitePagesParams, siteUrl: string): string {
   const { theme: t, copy, data, heroImageUrl, slug } = p;
   const { phone, phoneHref, whatsapp, whatsappHref, businessName } = contacts(data);
-  const canonicalUrl = `${siteUrl}/contact.html`;
+  const canonicalUrl = servedUrl(siteUrl, 'contact.html');
 
   const head = pageHead({
     t,
@@ -690,14 +723,12 @@ ${footerBadge(t, isAccessibilityExempt(data.vatStatus))}
 // sitemap.xml
 // ─────────────────────────────────────────────────────────────────────────
 
-// `extraPaths` — additional relative paths (e.g. core-30 `sherut/{id}.html`
-// entries) appended after the 4 static pages. Optional and backward
-// compatible: existing callers passing nothing still get the original
-// 4-URL-only sitemap, byte-identical to before this parameter existed.
+// `extraPaths` — additional relative deploy file paths (e.g. core-30 `sherut/{id}.html` entries) appended after the 4
+// static pages. M4 step 0: every <loc> is the extensionless served URL (servedUrl), never a redirecting `.html` URL.
 export function buildSitemap(siteUrl: string, extraPaths: string[] = []): string {
   const urls = ['', 'about.html', 'services.html', 'contact.html', ...extraPaths];
   const entries = urls.map(u => `  <url>
-    <loc>${siteUrl}/${u}</loc>
+    <loc>${servedUrl(siteUrl, u)}</loc>
   </url>`).join('\n');
 
   return `<?xml version="1.0" encoding="UTF-8"?>

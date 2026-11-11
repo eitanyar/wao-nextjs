@@ -85,10 +85,11 @@ test('builds a complete local bundle with a visible marker and local navigation'
   assert.ok(bundle.files['contact.html']);
   assert.ok(bundle.files['privacy.html']);
   assert.ok(bundle.files['accessibility.html']);
+  assert.ok(bundle.files['404.html'], 'M4 step 0: the real 404 page is part of the bundle');
   assert.ok(bundle.files['sitemap.xml']);
   assert.ok(bundle.files['preview-manifest.json']);
   assert.match(bundle.files['index.html'], /LOCAL PREVIEW - SYNTHETIC DATA - NO SUBMISSION/);
-  assert.match(bundle.files['index.html'], /href="\/services.html"/);
+  assert.match(bundle.files['index.html'], /href="\/services"/);
   assert.match(bundle.files['index.html'], /\/assets\/hero\.svg/);
   assert.match(bundle.files['sitemap.xml'], /https:\/\/synthetic-preview\.invalid/);
 });
@@ -146,6 +147,7 @@ test('builds a complete inert operator bundle without mutating the generated rec
   assert.equal(bundle.manifest.canonicalOrigin, 'https://operator-preview.invalid');
   assert.deepEqual(bundle.manifest.assets, []);
   assert.deepEqual(bundle.manifest.pages, [
+    '404.html',
     'accessibility.html',
     'contact.html',
     'index.html',
@@ -156,7 +158,7 @@ test('builds a complete inert operator bundle without mutating the generated rec
   assert.match(bundle.files['index.html'], /LOCAL OPERATOR PREVIEW - NOT PRODUCTION - NO SUBMISSION/);
   assert.match(bundle.files['index.html'], /data-local-preview-hero="true"/);
   assert.match(bundle.files['index.html'], new RegExp(pngDataUrl.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
-  assert.match(bundle.files['services.html'], /href="\/services\/synthetic-service\.html"/);
+  assert.match(bundle.files['services.html'], /href="\/services\/synthetic-service"/);
   assert.match(bundle.files['sitemap.xml'], /https:\/\/operator-preview\.invalid/);
   assert.doesNotMatch(bundle.files['index.html'].replaceAll('https://operator-preview.invalid', ''), /https?:\/\//i);
 });

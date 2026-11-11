@@ -69,8 +69,10 @@ test('researched rendering selects only approved hierarchy pages and makes money
   assert.equal(pages['about.html'], undefined);
   // The legacy services.html (its <!-- Services --> block) is replaced by the hub page.
   assert.doesNotMatch(pages['services.html'], /<!-- Services -->/);
-  assert.match(pages['index.html'], /href="\/services.html"/);
-  assert.match(pages['services.html'], /href="\/services\/alpha-service.html"/);
+  // M4 step 0: internal links are the extensionless served paths.
+  assert.match(pages['index.html'], /href="\/services"/);
+  assert.match(pages['services.html'], /href="\/services\/alpha-service"/);
+  assert.doesNotMatch(pages['index.html'], /href="[^"]*\.html"/);
 });
 
 test('unsafe paths are omitted and explicit graph orphans reject rendering', () => {
@@ -108,7 +110,8 @@ test('sitemap uses stable readable output paths and legacy output remains separa
     'services/alpha-service.html',
   ]);
   const sitemap = renderResearchedSitePages(params())['sitemap.xml'];
-  assert.match(sitemap, /https:\/\/test.wao.co.il\/services\/alpha-service.html/);
+  assert.match(sitemap, /<loc>https:\/\/test\.wao\.co\.il\/services\/alpha-service<\/loc>/);
+  assert.doesNotMatch(sitemap, /\.html/);
   assert.doesNotMatch(sitemap, /--/);
   assert.doesNotMatch(sitemap, /about.html/);
 });
@@ -167,7 +170,8 @@ test('M2b.1b: an area with a selected qualified_service_area page links to it (p
   const pages = renderResearchedSitePages(params({ pages: [home, city], graphEdges: [{ fromId: 'home', toId: 'city-bat-yam' }] }));
   const list = pages['index.html'].match(/<ul role="list"[^>]*>([^]*?)<\/ul>/)![1];
   assert.match(list, /<li[^>]*>Holon<\/li>/);
-  assert.match(list, /<li[^>]*><a href="\/areas\/bat-yam.html" [^>]*>Bat Yam<\/a><\/li>/);
+  assert.match(list, /<li[^>]*><a href="\/areas\/bat-yam" [^>]*>Bat Yam<\/a><\/li>/);
+  assert.ok(pages['areas/bat-yam.html'], 'the link resolves to the emitted file (Pages serves /areas/bat-yam from it)');
 });
 
 test('M2b.1b: research nav uses same-page anchors that exist, an aria-label, 44px targets; FAQ and related links are labelled; a11y markup', () => {
@@ -176,20 +180,21 @@ test('M2b.1b: research nav uses same-page anchors that exist, an aria-label, 44p
   const homeIds = ids(pages['index.html']);
   for (const [file, html] of Object.entries(pages)) {
     if (!file.endsWith('.html')) continue;
-    assert.doesNotMatch(html, /href="\/about\.html"/, `${file}: no dead about.html link`);
+    assert.doesNotMatch(html, /href="\/about(?:\.html)?"/, `${file}: no dead about link`);
     const nav = html.match(/<nav aria-label="([^"]+)" style="[^"]*justify-content:flex-start;[^"]*">([^]*?)<\/nav>/);
-    if (file === 'privacy.html' || file === 'accessibility.html') continue;
+    if (file === 'privacy.html' || file === 'accessibility.html' || file === '404.html') continue;
     assert.ok(nav, `${file}: research nav`);
     assert.equal(nav![1], RESEARCHED_SITE_LABELS.mainNavLabel);
     for (const [, href, style] of nav![2].matchAll(/<a href="([^"]+)" style="([^"]+)"/g)) {
       assert.match(style, /min-height:44px/, `${file} ${href}`);
       if (href.startsWith('#')) assert.ok(file === 'index.html' && homeIds.has(href.slice(1)), `${file}: ${href}`);
       else if (href.startsWith('/#')) assert.ok(homeIds.has(href.slice(2)), `${file}: ${href}`);
-      else assert.ok(href === '/' || pages[href.slice(1)], `${file}: ${href} resolves`);
+      // M4 step 0: links are extensionless; Pages serves /x from x.html.
+      else assert.ok(href === '/' || (!href.endsWith('.html') && pages[`${href.slice(1)}.html`]), `${file}: ${href} resolves`);
     }
   }
   const home = pages['index.html'];
-  assert.match(home, /<nav aria-label="[^"]+"[^>]*><a href="\/"[^>]*>[^<]+<\/a><a href="#services"[^>]*>[^<]+<\/a><a href="#about"[^>]*>[^<]+<\/a><a href="\/contact.html"/);
+  assert.match(home, /<nav aria-label="[^"]+"[^>]*><a href="\/"[^>]*>[^<]+<\/a><a href="#services"[^>]*>[^<]+<\/a><a href="#about"[^>]*>[^<]+<\/a><a href="\/contact"/);
   assert.match(pages['services/alpha-service.html'], /<a href="\/#services"[^>]*>[^<]+<\/a><a href="\/#about"/);
   assert.match(pages['contact.html'], /<a href="\/#services"/);
   assert.match(home, /<section id="contact" style=/);
@@ -292,7 +297,7 @@ test('M2b.1c: 44px tap targets (footer links, FAQ summary, consent label + 24px 
   for (const file of ['index.html', 'contact.html']) {
     const html = pages[file];
     assert.match(html, /<label style="display:flex;gap:10px;align-items:center;min-height:44px;cursor:pointer;">\s*<input type="checkbox" id="f-consent" required style="width:24px;height:24px;/, `${file}: consent`);
-    assert.match(html, /<a href="\/privacy.html" style="display:inline-block;padding:14px 0;margin:-14px 0;/, `${file}: privacy link hit box`);
+    assert.match(html, /<a href="\/privacy" style="display:inline-block;padding:14px 0;margin:-14px 0;/, `${file}: privacy link hit box`);
   }
   assert.match(pages['contact.html'], /<a href="tel:050-0000000" style="display:inline-flex;align-items:center;gap:6px;min-height:44px;[^"]*"><span aria-hidden="true">\u{1F4DE}<\/span><bdi dir="ltr">050-0000000<\/bdi><\/a>/u);
 });

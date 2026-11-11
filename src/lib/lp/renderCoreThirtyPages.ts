@@ -25,6 +25,7 @@ import {
   leadFormSection,
   pageScript,
   assembleDocument,
+  servedPath,
 } from './renderSitePages';
 
 export interface RenderCoreThirtyPagesParams {
@@ -63,8 +64,8 @@ export function renderCoreThirtyPages(params: RenderCoreThirtyPagesParams): Reco
   return pages;
 }
 
-// Pure helper: relative paths for every node that HAS a copy, suitable for
-// passing into buildSitemap()'s extraPaths parameter.
+// Pure helper: relative deploy file paths for every node that HAS a copy, suitable for
+// passing into buildSitemap()'s extraPaths parameter (which turns them into extensionless served URLs).
 export function buildCoreThirtySitemapUrls(
   nodes: CoreThirtyNode[],
   copies: Map<string, CoreThirtyPageCopy>
@@ -85,7 +86,7 @@ export function coreThirtyPageSchema(
 
   const serviceEntity: Record<string, unknown> = {
     '@type': 'Service',
-    '@id': `${cleanSiteUrl}/sherut/${node.id}.html#service`,
+    '@id': `${cleanSiteUrl}${servedPath(`sherut/${node.id}.html`)}#service`,
     name: copy.pageHeadline,
     serviceType: node.service,
     provider: {
@@ -103,7 +104,7 @@ export function coreThirtyPageSchema(
   if (copy.faqItems && copy.faqItems.length > 0) {
     const faqEntity: Record<string, unknown> = {
       '@type': 'FAQPage',
-      '@id': `${cleanSiteUrl}/sherut/${node.id}.html#faq`,
+      '@id': `${cleanSiteUrl}${servedPath(`sherut/${node.id}.html`)}#faq`,
       mainEntity: copy.faqItems.map((item) => ({
         '@type': 'Question',
         name: item.q,
@@ -132,7 +133,7 @@ function buildCoreThirtyNodeHtml(
 ): string {
   const { theme: t, data, heroImageUrl, slug } = params;
   const { phone, phoneHref, businessName } = contacts(data);
-  const canonicalUrl = `${siteUrl}/sherut/${node.id}.html`;
+  const canonicalUrl = `${siteUrl}${servedPath(`sherut/${node.id}.html`)}`;
 
   const head = pageHead({
     t,
@@ -212,7 +213,7 @@ function buildRelatedLinksBlock(node: CoreThirtyNode, allNodes: CoreThirtyNode[]
 
   const links = siblings
     .slice(0, MAX_RELATED_LINKS)
-    .map((n) => `<a href="/sherut/${n.id}.html" style="color:${t.accentText};font-weight:600;font-size:0.85rem;">${esc(n.service)} ${esc(n.city)}</a>`)
+    .map((n) => `<a href="${servedPath(`sherut/${n.id}.html`)}" style="color:${t.accentText};font-weight:600;font-size:0.85rem;">${esc(n.service)} ${esc(n.city)}</a>`)
     .join('\n      ');
 
   return `  <!-- Related Pages -->

@@ -24,6 +24,7 @@ import {
   stickyHeader,
   trustBarSection,
   type ResearchNavOptions,
+  servedPath,
 } from './renderSitePages';
 import { RESEARCHED_SITE_LABELS } from './researchedSiteLabels';
 import {
@@ -236,8 +237,9 @@ function reachablePageIds(pages: ResearchedSitePage[], edges: ResearchedSiteGrap
   return reachable;
 }
 
+/** M4 step 0: the extensionless URL Cloudflare Pages serves the output file at (canonical, og:url, schema, sitemap). */
 function pageUrl(siteUrl: string, output: string): string {
-  return output === 'index.html' ? `${siteUrl}/` : `${siteUrl}/${output}`;
+  return `${siteUrl}${servedPath(output)}`;
 }
 
 /**
@@ -674,7 +676,7 @@ function serviceAreasSection(page: ResearchedSitePage, allPages: ResearchedSiteP
     && [item.seo?.city, item.areaServed?.name].some(city => placeKey(city) === placeKey(name)));
   const items = areas.map(name => {
     const target = areaPage(name);
-    const text = target ? `<a href="/${outputs.get(target.opportunityId)}" style="display:inline-block;padding:12px 8px;min-height:44px;color:${theme.accentText};text-decoration:underline;">${esc(name)}</a>` : esc(name);
+    const text = target ? `<a href="${servedPath(outputs.get(target.opportunityId)!)}" style="display:inline-block;padding:12px 8px;min-height:44px;color:${theme.accentText};text-decoration:underline;">${esc(name)}</a>` : esc(name);
     return `<li style="background:${theme.surface};border:1px solid ${theme.border};border-radius:${theme.radiusSm};padding:${target ? '0 8px' : '8px 16px'};font-weight:600;color:${theme.textPrimary};">${text}</li>`;
   }).join('');
   return `<section data-section="service-areas" aria-labelledby="service-areas-heading" style="padding:32px 20px;background:${theme.surfaceAlt};"><div style="max-width:700px;margin:0 auto;text-align:center;"><h2 id="service-areas-heading" style="font-size:1.25rem;color:${theme.primary};margin-bottom:14px;">${esc(RESEARCHED_SITE_LABELS.serviceAreasHeading)}</h2><ul role="list" style="list-style:none;display:flex;flex-wrap:wrap;gap:10px;justify-content:center;">${items}</ul></div></section>`;
@@ -688,7 +690,7 @@ export function researchNavOptions(home: ResearchedSitePage, onHome: boolean, co
   return { label: RESEARCHED_SITE_LABELS.mainNavLabel, onHome, homeHasServices: hasServiceCards(home), homeHasAbout: hasAbout(home), contactHref };
 }
 
-const CONTACT_HREF = '/contact.html';
+const CONTACT_HREF = servedPath('contact.html');
 
 function buildPageHtml(page: ResearchedSitePage, params: RenderResearchedSitePagesParams, siteUrl: string, output: string, allPages: ResearchedSitePage[], outputs: Map<string, string>, contactHref: string | null): string {
   const { theme, data, heroImageUrl, slug } = params;
@@ -699,7 +701,7 @@ function buildPageHtml(page: ResearchedSitePage, params: RenderResearchedSitePag
   // Breadcrumb pages: the breadcrumb draws the edge to the homepage, so the related links are the siblings only.
   const links = navigationLinks(page, allPages, outputs, params.graphEdges ?? []).filter(item => !(breadcrumb && item.classification === 'homepage')).flatMap(item => {
     const target = outputs.get(item.opportunityId);
-    return target ? [`<a href="/${target === 'index.html' ? '' : target}" style="display:inline-block;padding:12px 8px;min-height:44px;color:${theme.accentText};text-decoration:underline;font-weight:700;">${esc(anchorText(item, businessName))}</a>`] : [];
+    return target ? [`<a href="${servedPath(target)}" style="display:inline-block;padding:12px 8px;min-height:44px;color:${theme.accentText};text-decoration:underline;font-weight:700;">${esc(anchorText(item, businessName))}</a>`] : [];
   }).join('');
   const faq = approvedFaqs(page).map(item => `<details style="background:${theme.surface};border:1px solid ${theme.border};border-radius:${theme.radiusMd};padding:0 14px;"><summary style="min-height:44px;padding:12px 0;cursor:pointer;font-weight:700;color:${theme.primary};">${esc(item.q)}</summary><p style="color:${theme.textMuted};margin-top:-4px;padding-bottom:14px;">${esc(item.a)}</p></details>`).join('');
   const head = pageHead({
@@ -738,7 +740,7 @@ export function buildResearchedSitemapUrls(pages: ResearchedSitePage[], siteUrl 
 
 function buildResearchedSitemap(siteUrl: string, pages: ResearchedSitePage[], contactIndexable = true): string {
   const cleanUrl = siteUrl.replace(/\/$/, '');
-  const urls = [...buildResearchedSitemapUrls(pages, cleanUrl), ...(contactIndexable ? [`${cleanUrl}/contact.html`] : [])];
+  const urls = [...buildResearchedSitemapUrls(pages, cleanUrl), ...(contactIndexable ? [pageUrl(cleanUrl, 'contact.html')] : [])];
   return `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 ${urls.map(url => `  <url><loc>${url}</loc></url>`).join('\n')}

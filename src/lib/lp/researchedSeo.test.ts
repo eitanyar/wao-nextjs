@@ -87,19 +87,21 @@ function navHrefs(html: string): string[] {
   return [...nav.matchAll(/href="([^"]+)"/g)].map(match => match[1]);
 }
 
-test('C3 clean URLs: /services/<slug>.html, no opportunity-ID suffix; canonical and sitemap match', () => {
+test('C3 clean URLs: files services/<slug>.html, served URL /services/<slug> (M4 step 0), no opportunity-ID suffix; canonical, og:url and sitemap match', () => {
   const site = render();
   assert.deepEqual(buildResearchedSitemapUrls(pages, 'https://test.wao.co.il'), [
-    'https://test.wao.co.il/', 'https://test.wao.co.il/services/leak-detection.html',
-    'https://test.wao.co.il/services/drain-unblocking.html', 'https://test.wao.co.il/services/water-heater.html',
+    'https://test.wao.co.il/', 'https://test.wao.co.il/services/leak-detection',
+    'https://test.wao.co.il/services/drain-unblocking', 'https://test.wao.co.il/services/water-heater',
   ]);
   for (const url of buildResearchedSitemapUrls(pages, 'https://test.wao.co.il')) {
-    const file = url === 'https://test.wao.co.il/' ? 'index.html' : url.replace('https://test.wao.co.il/', '');
+    const file = url === 'https://test.wao.co.il/' ? 'index.html' : `${url.replace('https://test.wao.co.il/', '')}.html`;
     assert.ok(site[file], file);
     assert.ok(site[file].includes(`<link rel="canonical" href="${url}" />`), file);
+    assert.ok(site[file].includes(`<meta property="og:url" content="${url}" />`), file);
     assert.ok(site['sitemap.xml'].includes(`<loc>${url}</loc>`), file);
   }
   assert.doesNotMatch(site['sitemap.xml'], /--/);
+  assert.doesNotMatch(site['sitemap.xml'], /\.html/, 'M4 step 0: no sitemap URL ends in .html');
 });
 
 test('C1 rendered <title> uses the formula; Service.name and link anchors are the plain service name', () => {
@@ -121,10 +123,10 @@ function breadcrumbHtml(html: string): string {
 
 test('C4 links: navigation draws exactly the graph edges (home -> all services; service -> home via the breadcrumb + siblings)', () => {
   const site = render();
-  assert.deepEqual(navHrefs(site['index.html']), ['/services/leak-detection.html', '/services/drain-unblocking.html', '/services/water-heater.html']);
+  assert.deepEqual(navHrefs(site['index.html']), ['/services/leak-detection', '/services/drain-unblocking', '/services/water-heater']);
   // 2026-11-11 (Yonatan): the related links of a service page are its siblings only; the home edge is the breadcrumb.
-  assert.deepEqual(navHrefs(site['services/leak-detection.html']), ['/services/drain-unblocking.html', '/services/water-heater.html']);
-  assert.deepEqual(navHrefs(site['services/water-heater.html']), ['/services/leak-detection.html', '/services/drain-unblocking.html']);
+  assert.deepEqual(navHrefs(site['services/leak-detection.html']), ['/services/drain-unblocking', '/services/water-heater']);
+  assert.deepEqual(navHrefs(site['services/water-heater.html']), ['/services/leak-detection', '/services/drain-unblocking']);
   for (const file of ['services/leak-detection.html', 'services/drain-unblocking.html', 'services/water-heater.html']) {
     const crumbs = breadcrumbHtml(site[file]);
     // Exactly one link to "/", in the breadcrumb; its anchor is the business name (Latin: in a bdi), not a hook.
@@ -194,7 +196,7 @@ test('breadcrumb contrast (Maya): in EVERY vertical theme, the rendered crumb te
 test('breadcrumb schema: BreadcrumbList in the @graph, 2 items, absolute URLs equal to the root and the canonical (and sitemap)', () => {
   const site = render();
   const money = site['services/leak-detection.html'];
-  const canonical = 'https://test.wao.co.il/services/leak-detection.html';
+  const canonical = 'https://test.wao.co.il/services/leak-detection';
   assert.ok(money.includes(`<link rel="canonical" href="${canonical}" />`));
   assert.ok(site['sitemap.xml'].includes(`<loc>${canonical}</loc>`) && site['sitemap.xml'].includes('<loc>https://test.wao.co.il/</loc>'));
   const graph = JSON.parse(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/.exec(money)![1])['@graph'];
@@ -272,7 +274,7 @@ test('contact meta (2026-11-11): its own description, built from the contact tit
   assert.equal(metaOf(site['contact.html']), expected.replace(/"/g, '&quot;'));
   assert.notEqual(metaOf(site['contact.html']), metaOf(site['index.html']));
   assert.equal(robotsOf(site['contact.html']), 'index,follow');
-  assert.ok(site['sitemap.xml'].includes('<loc>https://test.wao.co.il/contact.html</loc>'));
+  assert.ok(site['sitemap.xml'].includes('<loc>https://test.wao.co.il/contact</loc>'));
   // No valid phone: the title formula alone. No trade: no description -> noindex,follow and out of the sitemap.
   assert.equal(researchedContactDescription('plumber-he', HE_CITY, 'TEST M2a Plumbing', 'call me'), researchedContactTitle('plumber-he', HE_CITY, 'TEST M2a Plumbing'));
   assert.equal(researchedContactDescription('  ', HE_CITY, 'TEST M2a Plumbing', '050-0000000'), null);
@@ -282,7 +284,7 @@ test('contact meta (2026-11-11): its own description, built from the contact tit
     pages: [{ ...pages[0], seo: { ...pages[0].seo!, name: '' } }, ...pages.slice(1)], graphEdges,
   });
   assert.equal(robotsOf(noTrade['contact.html']), 'noindex,follow');
-  assert.doesNotMatch(noTrade['sitemap.xml'], /contact\.html/);
+  assert.doesNotMatch(noTrade['sitemap.xml'], /\/contact</);
 });
 
 test('site-wide meta uniqueness covers every indexable page (homepage, service pages, contact); noindex pages are out of scope', () => {
@@ -301,4 +303,26 @@ test('site-wide meta uniqueness covers every indexable page (homepage, service p
   assert.deepEqual([...duplicateIndexableMetaDescriptions(forged)[0]].sort(), ['contact.html', 'index.html']);
   // Legal pages are noindex: never compared.
   assert.equal(robotsOf(unique['privacy.html']), 'noindex,follow');
+});
+
+test('M4 step 0: a researched site deploy output has extensionless canonicals/og:url/schema/sitemap/links and a real noindex 404.html', () => {
+  const site = render();
+  const SITE = 'https://test.wao.co.il';
+  for (const [file, body] of Object.entries(site)) {
+    for (const [, href] of body.matchAll(/\shref="([^"]*)"/g)) assert.doesNotMatch(href, /\.html(?:[#?]|$)/, `${file}: ${href}`);
+    assert.doesNotMatch(body, /https:\/\/test\.wao\.co\.il\/[^"'<\s]*\.html/, `${file}: absolute .html URL`);
+  }
+  const urls = [...site['sitemap.xml'].matchAll(/<loc>([^<]*)<\/loc>/g)].map(m => m[1]);
+  assert.ok(urls.includes(`${SITE}/contact`));
+  for (const url of urls) {
+    const path = url.slice(SITE.length);
+    const file = path === '/' ? 'index.html' : `${path.slice(1)}.html`;
+    assert.ok(site[file], `${url} is served from ${file}`);
+    assert.ok(site[file].includes(`<link rel="canonical" href="${url}" />`), `${file}: canonical is the sitemap URL`);
+  }
+  const notFound = site['404.html'];
+  assert.ok(notFound, '404.html emitted');
+  assert.match(notFound, /<meta name="robots" content="noindex,follow" \/>/);
+  assert.doesNotMatch(notFound, /rel="canonical"/);
+  assert.ok(!urls.some(url => url.endsWith('/404')));
 });

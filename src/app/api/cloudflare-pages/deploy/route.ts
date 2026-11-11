@@ -4,7 +4,7 @@ import { mkdtempSync, writeFileSync, rmSync, readFileSync } from 'fs';
 import { tmpdir } from 'os';
 import path from 'path';
 import { renderStaticHtml } from '@/lib/lp/renderStaticHtml';
-import { buildPrivacyHtml, buildAccessibilityHtml, isAccessibilityExempt } from '@/lib/lp/legalPages';
+import { buildLandingPageSupportPages } from '@/lib/lp/renderSitePages';
 import { detectVertical } from '@/lib/lp/verticalDetect';
 import { VERTICAL_THEMES } from '@/lib/lp/verticalThemes';
 import { VERTICAL_ASSETS } from '@/lib/lp/verticalAssets';
@@ -132,16 +132,10 @@ export async function POST(req: Request) {
     writeFileSync(path.join(tmpDir, 'index.html'), htmlContent, 'utf-8');
 
     // Legal disclosure pages — same requirement as Site Bot's 5-page output.
-    // Privacy has no exemption; accessibility is gated on vatStatus.
-    const legalOpts = { theme, data: collectedData, canonicalUrl: '', homeHref: '/', fraudBlockerSid };
-    const legalPages: Record<string, string> = {
-      'privacy.html': buildPrivacyHtml({ ...legalOpts, canonicalUrl: `https://${slug}.wao.co.il/privacy.html` }),
-    };
-    writeFileSync(path.join(tmpDir, 'privacy.html'), legalPages['privacy.html'], 'utf-8');
-    if (!isAccessibilityExempt(collectedData.vatStatus)) {
-      legalPages['accessibility.html'] = buildAccessibilityHtml({ ...legalOpts, canonicalUrl: `https://${slug}.wao.co.il/accessibility.html` });
-      writeFileSync(path.join(tmpDir, 'accessibility.html'), legalPages['accessibility.html'], 'utf-8');
-    }
+    // Privacy has no exemption; accessibility is gated on vatStatus. M4 step 0: plus a real 404.html (unknown paths
+    // return 404, not the LP with 200) and extensionless canonicals.
+    const legalPages = buildLandingPageSupportPages({ theme, data: collectedData, siteUrl: `https://${slug}.wao.co.il`, fraudBlockerSid });
+    for (const [file, html] of Object.entries(legalPages)) writeFileSync(path.join(tmpDir, file), html, 'utf-8');
     if (fraudBlockerSid && !recordFraudBlockerTrackerInstallation({
       state: readFraudBlockerState(slug) ?? fraudBlockerFailureState(slug, fraudDomain, new Error('Fraud Blocker state was not persisted.')),
       pages: { 'index.html': htmlContent, ...legalPages },

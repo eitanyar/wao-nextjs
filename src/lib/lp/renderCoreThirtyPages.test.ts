@@ -116,7 +116,7 @@ test('lead-form section uses copy.formHeadline/copy.ctaLabel, not pageHeadline r
 
 // ── Canonical URL / file path scheme ────────────────────────────────────────
 
-test('canonical URL and file path both use the sherut/{id}.html scheme', () => {
+test('file path is sherut/{id}.html; canonical is the extensionless served URL /sherut/{id} (M4 step 0)', () => {
   const node = makeNode({ id: 'svc2-city3' });
   const pages = renderCoreThirtyPages(
     baseParams({ nodes: [node], copies: new Map([[node.id, makeCopy()]]), siteUrl: 'https://client.wao.co.il/' })
@@ -125,9 +125,10 @@ test('canonical URL and file path both use the sherut/{id}.html scheme', () => {
   const key = 'sherut/svc2-city3.html';
   assert.ok(pages[key], 'expected the file keyed at sherut/{id}.html');
   assert.ok(
-    pages[key].includes('<link rel="canonical" href="https://client.wao.co.il/sherut/svc2-city3.html" />'),
-    'expected canonical to point at sherut/{id}.html with the siteUrl trailing slash stripped'
+    pages[key].includes('<link rel="canonical" href="https://client.wao.co.il/sherut/svc2-city3" />'),
+    'expected canonical to point at /sherut/{id} with the siteUrl trailing slash stripped'
   );
+  assert.ok(pages[key].includes('<meta property="og:url" content="https://client.wao.co.il/sherut/svc2-city3" />'));
 });
 
 // ── Related-pages internal linking ──────────────────────────────────────────
@@ -145,9 +146,9 @@ test('related links: same-city-different-service siblings are linked, same-servi
   const pages = renderCoreThirtyPages(baseParams({ nodes: [nodeA, nodeB, nodeC], copies }));
   const html = pages['sherut/svc0-city0.html'];
 
-  assert.ok(html.includes('href="/sherut/svc1-city0.html"'), 'expected same-city sibling link');
+  assert.ok(html.includes('href="/sherut/svc1-city0"'), 'expected same-city sibling link');
   assert.ok(
-    !html.includes('href="/sherut/svc0-city1.html"'),
+    !html.includes('href="/sherut/svc0-city1"'),
     'expected NOT to also link the same-service sibling when a same-city sibling exists'
   );
 });
@@ -163,7 +164,7 @@ test('related links: falls back to same-service-different-city when no same-city
   const pages = renderCoreThirtyPages(baseParams({ nodes: [nodeA, nodeC], copies }));
   const html = pages['sherut/svc0-city0.html'];
 
-  assert.ok(html.includes('href="/sherut/svc0-city1.html"'), 'expected same-service sibling link as fallback');
+  assert.ok(html.includes('href="/sherut/svc0-city1"'), 'expected same-service sibling link as fallback');
 });
 
 test('related links: omitted entirely when no siblings exist at all (single node)', () => {
@@ -200,9 +201,10 @@ test('buildSitemap(siteUrl) with no second arg still returns exactly the origina
 
   assert.equal(urlCount, 4);
   assert.ok(xml.includes('<loc>https://example.wao.co.il/</loc>'));
-  assert.ok(xml.includes('<loc>https://example.wao.co.il/about.html</loc>'));
-  assert.ok(xml.includes('<loc>https://example.wao.co.il/services.html</loc>'));
-  assert.ok(xml.includes('<loc>https://example.wao.co.il/contact.html</loc>'));
+  assert.ok(xml.includes('<loc>https://example.wao.co.il/about</loc>'));
+  assert.ok(xml.includes('<loc>https://example.wao.co.il/services</loc>'));
+  assert.ok(xml.includes('<loc>https://example.wao.co.il/contact</loc>'));
+  assert.ok(!xml.includes('.html'), 'M4 step 0: no sitemap URL ends in .html');
 });
 
 test('buildSitemap(siteUrl, extraPaths) appends the extra URLs after the static 4', () => {
@@ -210,8 +212,9 @@ test('buildSitemap(siteUrl, extraPaths) appends the extra URLs after the static 
   const urlCount = (xml.match(/<url>/g) || []).length;
 
   assert.equal(urlCount, 6);
-  assert.ok(xml.includes('<loc>https://example.wao.co.il/sherut/svc0-city0.html</loc>'));
-  assert.ok(xml.includes('<loc>https://example.wao.co.il/sherut/svc1-city0.html</loc>'));
+  assert.ok(xml.includes('<loc>https://example.wao.co.il/sherut/svc0-city0</loc>'));
+  assert.ok(xml.includes('<loc>https://example.wao.co.il/sherut/svc1-city0</loc>'));
+  assert.ok(!xml.includes('.html'), 'M4 step 0: no sitemap URL ends in .html');
 });
 
 // ── coreThirtyPageSchema / Linked Schema Graph ──────────────────────────────
@@ -253,7 +256,7 @@ test('coreThirtyPageSchema produces valid JSON-LD @graph with LocalBusiness, Ser
 
   const service = parsed['@graph'].find((e: Record<string, unknown>) => e['@type'] === 'Service');
   assert.ok(service, 'expected Service entity in @graph');
-  assert.equal(service['@id'], 'https://test.wao.co.il/sherut/svc0-city0.html#service');
+  assert.equal(service['@id'], 'https://test.wao.co.il/sherut/svc0-city0#service');
   assert.equal(service.name, 'Service in City');
   assert.equal(service.serviceType, 'Test Service');
   assert.deepEqual(service.provider, { '@id': 'https://test.wao.co.il/#business' });
@@ -262,7 +265,7 @@ test('coreThirtyPageSchema produces valid JSON-LD @graph with LocalBusiness, Ser
 
   const faq = parsed['@graph'].find((e: Record<string, unknown>) => e['@type'] === 'FAQPage');
   assert.ok(faq, 'expected FAQPage entity in @graph');
-  assert.equal(faq['@id'], 'https://test.wao.co.il/sherut/svc0-city0.html#faq');
+  assert.equal(faq['@id'], 'https://test.wao.co.il/sherut/svc0-city0#faq');
   assert.ok(Array.isArray(faq.mainEntity));
   assert.equal(faq.mainEntity.length, 2);
   assert.deepEqual(faq.mainEntity[0], {

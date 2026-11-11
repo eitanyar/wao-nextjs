@@ -199,6 +199,7 @@
     "src/lib/lp/legalPages.ts",
     "src/lib/lp/renderSitePages.ts",
     "src/lib/lp/renderSitePages.test.ts",
+    "src/lib/lp/urlHygiene.test.ts",
     "src/lib/lp/renderCoreThirtyPages.ts",
     "src/lib/lp/renderCoreThirtyPages.test.ts",
     "src/lib/lp/researchedSite.ts",

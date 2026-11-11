@@ -69,9 +69,13 @@ export async function createLocalPreviewRuntime({
         response.writeHead(204, { 'Cache-Control': 'no-store' }).end();
         return;
       }
-      const relativePath = pathname === '/' ? 'index.html' : pathname.slice(1);
-      if (!relativePath || relativePath.includes('..') || !(relativePath in bundle.files)) {
-        response.writeHead(404).end();
+      // Pages-like lookup (M4 step 0): links are extensionless, so `/x` serves x.html and `/a/` serves a/index.html;
+      // an unknown path answers 404 with the site's 404.html.
+      const requested = pathname === '/' ? 'index.html' : pathname.slice(1);
+      const relativePath = [requested, `${requested}.html`, `${requested}index.html`].find(candidate => candidate in bundle.files);
+      if (!requested || requested.includes('..') || !relativePath) {
+        if (!requested.includes('..') && '404.html' in bundle.files) response.writeHead(404, { 'Content-Type': contentType('404.html'), 'Cache-Control': 'no-store' }).end(bundle.files['404.html']);
+        else response.writeHead(404).end();
         return;
       }
       response.writeHead(200, { 'Content-Type': contentType(relativePath), 'Cache-Control': 'no-store' });

@@ -32,6 +32,8 @@ export interface RenderStaticHtmlParams {
   mode?: 'ads-lp' | 'site';
   /** Required for 'site' mode: the live domain root, e.g. 'https://daniel-locksmith.co.il' */
   siteUrl?: string;
+  /** Site mode: the page's canonical / og:url, overriding the `${siteUrl}/${slug}` default (M4 step 0: the homepage passes the root). */
+  canonicalUrl?: string;
   /** Override the auto-generated <title>. Use keyword-first formula per Yonatan's sign-off. */
   pageTitle?: string;
   fraudBlockerSid?: string;
@@ -42,7 +44,7 @@ export function renderStaticHtml(p: RenderStaticHtmlParams): string {
 
   const isSite = (p.mode ?? 'ads-lp') === 'site';
   const siteRoot = p.siteUrl ? p.siteUrl.replace(/\/$/, '') : '';
-  const canonicalUrl = isSite && siteRoot ? `${siteRoot}/${slug === 'home' ? '' : slug}` : '';
+  const canonicalUrl = isSite && siteRoot ? (p.canonicalUrl ?? `${siteRoot}/${slug === 'home' ? '' : slug}`) : '';
 
   const phone = data.phone || '';
   const whatsapp = data.whatsappNumber || data.phone || '';
@@ -213,7 +215,7 @@ export function renderStaticHtml(p: RenderStaticHtmlParams): string {
         <input type="tel" id="f-phone" placeholder="050-0000000" aria-label="מספר טלפון" dir="ltr" required style="padding:14px 16px;border-radius:${t.radiusSm};border:1px solid ${t.border};font-size:1rem;color:${t.textPrimary};background:${t.surface};text-align:right;" />
         <label style="${CONSENT_LABEL_STYLE}">
           <input type="checkbox" id="f-consent" required style="${CONSENT_CHECKBOX_STYLE}" />
-          <span style="font-size:0.8rem;color:${t.textMuted};line-height:1.4;">אני מסכים/ה ל<a href="/privacy.html" style="${CONSENT_LINK_STYLE}color:${t.textMuted};text-decoration:underline;">מדיניות הפרטיות</a>.</span>
+          <span style="font-size:0.8rem;color:${t.textMuted};line-height:1.4;">אני מסכים/ה ל<a href="/privacy" style="${CONSENT_LINK_STYLE}color:${t.textMuted};text-decoration:underline;">מדיניות הפרטיות</a>.</span>
         </label>
         <div id="form-error">שגיאה בשליחה — נסה שוב או התקשר ישירות.</div>
         <button type="submit" class="submit-btn">${esc(copy.heroCta)}</button>

@@ -23,9 +23,12 @@ export function isAccessibilityExempt(vatStatus?: CollectedData['vatStatus']): b
 interface LegalPageOpts {
   theme: VerticalTheme;
   data: CollectedData;
-  /** This page's own canonical URL, e.g. `${siteUrl}/privacy.html` */
-  canonicalUrl: string;
-  /** Relative href back to the home page, e.g. '/' or '/index.html' */
+  /**
+   * This page's own canonical URL: the extensionless URL Cloudflare Pages serves (M4 step 0), e.g. `${siteUrl}/privacy`
+   * for the file privacy.html. null = no canonical (the 404 page).
+   */
+  canonicalUrl: string | null;
+  /** Relative href back to the home page, e.g. '/' */
   homeHref: string;
   fraudBlockerSid?: string;
   /**
@@ -80,6 +83,9 @@ function contactLine(data: CollectedData): { ownerName: string; phone: string; e
   };
 }
 
+/** The legal pages' link back to the homepage (existing approved copy; the 404 page reuses it). */
+export const LEGAL_HOME_LINK_TEXT = 'חזרה לעמוד הבית';
+
 function legalDocument(opts: LegalPageOpts, title: string, bodyHtml: string): string {
   const { theme: t, data, canonicalUrl, homeHref } = opts;
   const businessName = esc(data.businessName || data.businessNiche || '');
@@ -91,8 +97,8 @@ function legalDocument(opts: LegalPageOpts, title: string, bodyHtml: string): st
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>${legalTitle(opts, title, businessName)}</title>
-  <meta name="robots" content="noindex,follow" />
-  <link rel="canonical" href="${canonicalUrl}" />
+  <meta name="robots" content="noindex,follow" />${canonicalUrl === null ? '' : `
+  <link rel="canonical" href="${canonicalUrl}" />`}
   ${FONT_LINKS}
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -110,7 +116,7 @@ function legalDocument(opts: LegalPageOpts, title: string, bodyHtml: string): st
   <main style="max-width:640px;margin:0 auto;padding:44px 20px;">
     <h1 style="font-size:1.4rem;margin-bottom:20px;color:${t.primary};">${esc(title)}</h1>
     ${bodyHtml}
-    <p style="margin-top:32px;"><a href="${homeHref}" style="display:inline-flex;align-items:center;min-height:44px;">חזרה לעמוד הבית</a></p>
+    <p style="margin-top:32px;"><a href="${homeHref}" style="display:inline-flex;align-items:center;min-height:44px;">${LEGAL_HOME_LINK_TEXT}</a></p>
   </main>
   <footer style="text-align:center;padding:14px 20px 22px;background:${t.surface};border-top:1px solid ${t.border};font-size:0.8rem;color:${t.textMuted};">
     <a href="https://wao.co.il" style="display:inline-flex;align-items:center;gap:0.3em;min-height:44px;padding:0 8px;color:${t.textMuted};text-decoration:none;">נבנה עם <strong>WAO</strong> 🚀</a>
@@ -153,4 +159,14 @@ export function buildAccessibilityHtml(opts: LegalPageOpts): string {
   `;
 
   return legalDocument(opts, 'הצהרת נגישות', body);
+}
+
+/**
+ * M4 step 0: the site's real top-level 404.html. Cloudflare Pages serves it (status 404) for any unknown path; without it
+ * Pages treats the site as a single-page app and answers every unknown URL with the homepage and 200 (a soft 404).
+ * noindex,follow and no canonical. The legal-page shell: business name linking home, the h1, the approved home link, the
+ * WAO footer. HEBREW-SAFETY: no new Hebrew. The h1 is "404" until Tamar writes the not-found copy (title + one line).
+ */
+export function buildNotFoundHtml(opts: Omit<LegalPageOpts, 'canonicalUrl'>): string {
+  return legalDocument({ ...opts, canonicalUrl: null }, '404', '');
 }
