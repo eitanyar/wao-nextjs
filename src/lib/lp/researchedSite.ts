@@ -270,7 +270,52 @@ export function researchedServiceAreas(page: Pick<ResearchedSitePage, 'seo'>): s
   return out.slice(0, RESEARCHED_SERVICE_AREA_CAP);
 }
 
-function schemaGraph(page: ResearchedSitePage, data: CollectedData, siteUrl: string, heroImageUrl: string, output: string): string {
+/**
+ * Breadcrumb (Yonatan, signed off 2026-11-11): service (money) pages only, above the H1. Crumb 1 is the business name linked
+ * to the site root, crumb 2 the plain service name (Service.name), not linked, aria-current="page". No hook, no city. The
+ * homepage edge it draws replaces the home link of the related-links block.
+ */
+export function rendersBreadcrumb(classification: string): boolean {
+  return classification === 'money_service';
+}
+
+/**
+ * Accessible name of the breadcrumb nav. No approved Hebrew string fits yet, so this is a non-visible English label.
+ * OPEN for Tamar -> Noa: label key RESEARCHED_SITE_LABELS.breadcrumbLabel; swap this constant for it when it lands.
+ */
+export const BREADCRUMB_ARIA_LABEL = 'breadcrumb';
+
+/** Crumb 1 / ListItem 1 text: the business name (else the homepage's plain name). */
+function breadcrumbHomeName(businessName: string, home: ResearchedSitePage | undefined): string {
+  return businessName || home?.seo?.name || '';
+}
+
+/** Crumb 2 / ListItem 2 text: the same string as Service.name. */
+function servicePlainName(page: ResearchedSitePage): string {
+  return page.seo?.name ?? page.copy.heroHeadline;
+}
+
+/**
+ * The separator is CSS (a bordered chevron), never a glyph: it points right in LTR and is mirrored under dir="rtl", so it
+ * always points from crumb 1 towards crumb 2 in reading order.
+ */
+function breadcrumbCss(theme: RenderResearchedSitePagesParams['theme']): string {
+  return [
+    '.wao-breadcrumb{margin-bottom:10px;font-size:0.9rem;color:' + theme.textMuted + ';}',
+    '.wao-breadcrumb ol{list-style:none;display:flex;flex-wrap:wrap;align-items:center;justify-content:flex-start;}',
+    '.wao-breadcrumb li{display:inline-flex;align-items:center;}',
+    '.wao-breadcrumb li+li::before{content:"";display:inline-block;width:0.42em;height:0.42em;border-top:2px solid currentColor;border-right:2px solid currentColor;transform:rotate(45deg);margin-inline:0.55em;}',
+    '[dir="rtl"] .wao-breadcrumb li+li::before{transform:scaleX(-1) rotate(45deg);}',
+    '.wao-breadcrumb a{display:inline-flex;align-items:center;min-height:44px;padding:0 4px;color:' + theme.accentText + ';text-decoration:underline;}',
+  ].join('');
+}
+
+function breadcrumbNav(homeName: string, serviceName: string): string {
+  const home = HEBREW_LETTER.test(homeName) ? esc(homeName) : `<bdi>${esc(homeName)}</bdi>`;
+  return `<nav data-section="breadcrumb" class="wao-breadcrumb" aria-label="${BREADCRUMB_ARIA_LABEL}"><ol><li><a href="/">${home}</a></li><li><span aria-current="page">${esc(serviceName)}</span></li></ol></nav>`;
+}
+
+function schemaGraph(page: ResearchedSitePage, data: CollectedData, siteUrl: string, heroImageUrl: string, output: string, homeName?: string): string {
   const { businessName } = contacts(data);
   const areas = researchedServiceAreas(page);
   const cleanUrl = siteUrl.replace(/\/$/, '');
@@ -278,7 +323,7 @@ function schemaGraph(page: ResearchedSitePage, data: CollectedData, siteUrl: str
   const service: Record<string, unknown> = {
     '@type': 'Service',
     '@id': `${pageUrl(cleanUrl, output)}#service`,
-    name: page.seo?.name ?? page.copy.heroHeadline,
+    name: servicePlainName(page),
     provider: { '@id': `${cleanUrl}/#business` },
     description: page.copy.heroSubheadline,
     ...(areas.length
@@ -289,6 +334,15 @@ function schemaGraph(page: ResearchedSitePage, data: CollectedData, siteUrl: str
     ? localBusinessObject(data, businessName, cleanUrl, heroImageUrl, { ownerFactsOnly: true, areaServed: areas })
     : localBusinessObject(data, businessName, cleanUrl, heroImageUrl);
   const graph: Record<string, unknown>[] = [business, service];
+  const crumbHome = homeName ?? breadcrumbHomeName(businessName, undefined);
+  if (rendersBreadcrumb(page.classification) && crumbHome) graph.push({
+    '@type': 'BreadcrumbList',
+    '@id': `${pageUrl(cleanUrl, output)}#breadcrumb`,
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: crumbHome, item: `${cleanUrl}/` },
+      { '@type': 'ListItem', position: 2, name: servicePlainName(page), item: pageUrl(cleanUrl, output) },
+    ],
+  });
   if (faq.length) graph.push({
     '@type': 'FAQPage',
     '@id': `${pageUrl(cleanUrl, output)}#faq`,
@@ -628,7 +682,11 @@ const CONTACT_HREF = '/contact.html';
 function buildPageHtml(page: ResearchedSitePage, params: RenderResearchedSitePagesParams, siteUrl: string, output: string, allPages: ResearchedSitePage[], outputs: Map<string, string>, contactHref: string | null): string {
   const { theme, data, heroImageUrl, slug } = params;
   const { phone, phoneHref, businessName } = contacts(data);
-  const links = navigationLinks(page, allPages, outputs, params.graphEdges ?? []).flatMap(item => {
+  const home = allPages.find(item => item.classification === 'homepage') ?? page;
+  const homeName = breadcrumbHomeName(businessName, home);
+  const breadcrumb = rendersBreadcrumb(page.classification) && homeName !== '';
+  // Breadcrumb pages: the breadcrumb draws the edge to the homepage, so the related links are the siblings only.
+  const links = navigationLinks(page, allPages, outputs, params.graphEdges ?? []).filter(item => !(breadcrumb && item.classification === 'homepage')).flatMap(item => {
     const target = outputs.get(item.opportunityId);
     return target ? [`<a href="/${target === 'index.html' ? '' : target}" style="display:inline-block;padding:12px 8px;min-height:44px;color:${theme.accentText};text-decoration:underline;font-weight:700;">${esc(anchorText(item, businessName))}</a>`] : [];
   }).join('');
@@ -639,12 +697,13 @@ function buildPageHtml(page: ResearchedSitePage, params: RenderResearchedSitePag
     description: page.copy.heroSubheadline,
     canonicalUrl: pageUrl(siteUrl, output),
     ogImage: heroImageUrl,
-    schema: schemaGraph(page, data, siteUrl, heroImageUrl, output),
+    schema: schemaGraph(page, data, siteUrl, heroImageUrl, output, breadcrumb ? homeName : undefined),
     fraudBlockerSid: params.fraudBlockerSid,
+    ...(breadcrumb ? { extraCss: breadcrumbCss(theme) } : {}),
   });
   const body = `${stickyHeader(theme, businessName, phone, phoneHref)}
   <main>
-    <section style="padding:44px 20px;background:${theme.surface};text-align:center;"><div style="max-width:700px;margin:0 auto;"><h1 style="color:${theme.primary};font-size:clamp(1.6rem,4vw,2.3rem);margin-bottom:16px;">${esc(researchedPageH1(page.copy.heroHeadline, page.seo))}</h1><p style="color:${theme.textMuted};line-height:1.7;">${esc(page.copy.heroSubheadline)}</p>${heroCallButton(page, data, theme)}${pricePromiseLine(data, theme, params.pricingCopy)}</div></section>
+    <section style="padding:44px 20px;background:${theme.surface};text-align:center;"><div style="max-width:700px;margin:0 auto;">${breadcrumb ? breadcrumbNav(homeName, servicePlainName(page)) : ''}<h1 style="color:${theme.primary};font-size:clamp(1.6rem,4vw,2.3rem);margin-bottom:16px;">${esc(researchedPageH1(page.copy.heroHeadline, page.seo))}</h1><p style="color:${theme.textMuted};line-height:1.7;">${esc(page.copy.heroSubheadline)}</p>${heroCallButton(page, data, theme)}${pricePromiseLine(data, theme, params.pricingCopy)}</div></section>
     ${trustBar(page, theme)}${storySection(page, theme)}${processSection(page, theme)}${priceSection(page, data, theme, params.pricingCopy)}${proofSection(page, theme)}
     ${hasProof(page) ? '' : reviewSection(page, theme)}${qaSection(page, theme)}
     ${serviceDetailsSection(page, theme)}
@@ -655,7 +714,6 @@ function buildPageHtml(page: ResearchedSitePage, params: RenderResearchedSitePag
     ${leadFormSection(theme, page.copy.formHeadline, page.copy.heroCta, { ...RESEARCHED_LEAD_FORM, sectionId: 'contact' })}
   </main>
   ${pageScript({ slug, businessName, googleAdsCustomerId: params.googleAdsCustomerId || '', formConversionLabel: params.formConversionLabel || '', phoneConversionLabel: params.phoneConversionLabel || '', whatsappConversionLabel: params.whatsappConversionLabel || '', ctaLabel: RESEARCHED_LEAD_FORM.submitLabel ?? page.copy.heroCta, includeLeadForm: true })}`;
-  const home = allPages.find(item => item.classification === 'homepage') ?? page;
   return assembleDocument(theme, head, body, params.gtagSnippet, data, researchNavOptions(home, page.classification === 'homepage', contactHref));
 }
 

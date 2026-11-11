@@ -111,13 +111,62 @@ test('C1 rendered <title> uses the formula; Service.name and link anchors are th
   assert.deepEqual(service.areaServed, area.map(name => ({ '@type': 'City', name })));
 });
 
-test('C4 links: navigation draws exactly the graph edges (home -> all services; service -> home + siblings)', () => {
+function breadcrumbHtml(html: string): string {
+  return /<nav data-section="breadcrumb"[^>]*>([\s\S]*?)<\/nav>/.exec(html)?.[1] ?? '';
+}
+
+test('C4 links: navigation draws exactly the graph edges (home -> all services; service -> home via the breadcrumb + siblings)', () => {
   const site = render();
   assert.deepEqual(navHrefs(site['index.html']), ['/services/leak-detection.html', '/services/drain-unblocking.html', '/services/water-heater.html']);
-  assert.deepEqual(navHrefs(site['services/leak-detection.html']), ['/', '/services/drain-unblocking.html', '/services/water-heater.html']);
-  assert.deepEqual(navHrefs(site['services/water-heater.html']), ['/', '/services/leak-detection.html', '/services/drain-unblocking.html']);
-  // The home link anchor is the business name, not a hook.
-  assert.match(site['services/leak-detection.html'], /<a href="\/"[^>]*>TEST M2a Plumbing<\/a>/);
+  // 2026-11-11 (Yonatan): the related links of a service page are its siblings only; the home edge is the breadcrumb.
+  assert.deepEqual(navHrefs(site['services/leak-detection.html']), ['/services/drain-unblocking.html', '/services/water-heater.html']);
+  assert.deepEqual(navHrefs(site['services/water-heater.html']), ['/services/leak-detection.html', '/services/drain-unblocking.html']);
+  for (const file of ['services/leak-detection.html', 'services/drain-unblocking.html', 'services/water-heater.html']) {
+    const crumbs = breadcrumbHtml(site[file]);
+    // Exactly one link to "/", in the breadcrumb; its anchor is the business name (Latin: in a bdi), not a hook.
+    assert.equal([...crumbs.matchAll(/href="\/"/g)].length, 1, file);
+    assert.match(crumbs, /<a href="\/"><bdi>TEST M2a Plumbing<\/bdi><\/a>/, file);
+  }
+  assert.equal(breadcrumbHtml(site['index.html']), '', 'no breadcrumb on the homepage');
+});
+
+test('breadcrumb: above the H1, crumb 2 is the plain Service.name (not linked, aria-current), no city; CSS separator; Hebrew brand without bdi', () => {
+  const site = render();
+  const money = site['services/leak-detection.html'];
+  assert.ok(money.indexOf('data-section="breadcrumb"') < money.indexOf('<h1'), 'breadcrumb precedes the H1');
+  assert.match(money, /<nav data-section="breadcrumb" class="wao-breadcrumb" aria-label="[^"]+"><ol><li>/);
+  const crumbs = breadcrumbHtml(money);
+  assert.ok(crumbs.endsWith(`<li><span aria-current="page">${HE_SERVICE}</span></li></ol>`), crumbs);
+  assert.equal([...crumbs.matchAll(/<a /g)].length, 1, 'crumb 2 is not linked');
+  assert.ok(!crumbs.includes(HE_CITY), 'no city in the breadcrumb');
+  assert.equal(crumbs.replace(/<[^>]+>/g, ''), `TEST M2a Plumbing${HE_SERVICE}`, 'no separator glyph in the markup');
+  assert.match(money, /\[dir="rtl"\] \.wao-breadcrumb li\+li::before\{transform:scaleX\(-1\)/);
+  assert.doesNotMatch(site['index.html'], /wao-breadcrumb/);
+  const hebrew = renderResearchedSitePages({
+    theme: VERTICAL_THEMES['emergency-trades'], assets: VERTICAL_ASSETS['emergency-trades'], data: { ...data, businessName: HE_BRAND },
+    heroImageUrl: 'https://example.test/hero.jpg', slug: 'test-client', siteUrl: 'https://test.wao.co.il', pages, graphEdges,
+  });
+  assert.ok(breadcrumbHtml(hebrew['services/leak-detection.html']).startsWith(`<ol><li><a href="/">${HE_BRAND}</a></li>`));
+});
+
+test('breadcrumb schema: BreadcrumbList in the @graph, 2 items, absolute URLs equal to the root and the canonical (and sitemap)', () => {
+  const site = render();
+  const money = site['services/leak-detection.html'];
+  const canonical = 'https://test.wao.co.il/services/leak-detection.html';
+  assert.ok(money.includes(`<link rel="canonical" href="${canonical}" />`));
+  assert.ok(site['sitemap.xml'].includes(`<loc>${canonical}</loc>`) && site['sitemap.xml'].includes('<loc>https://test.wao.co.il/</loc>'));
+  const graph = JSON.parse(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/.exec(money)![1])['@graph'];
+  const lists = graph.filter((item: Record<string, unknown>) => item['@type'] === 'BreadcrumbList');
+  assert.equal(lists.length, 1);
+  assert.equal(lists[0]['@id'], `${canonical}#breadcrumb`);
+  assert.deepEqual(lists[0].itemListElement, [
+    { '@type': 'ListItem', position: 1, name: 'TEST M2a Plumbing', item: 'https://test.wao.co.il/' },
+    { '@type': 'ListItem', position: 2, name: HE_SERVICE, item: canonical },
+  ]);
+  const service = graph.find((item: Record<string, unknown>) => item['@type'] === 'Service');
+  assert.equal(lists[0].itemListElement[1].name, service.name);
+  const homeGraph = JSON.parse(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/.exec(site['index.html'])![1])['@graph'];
+  assert.equal(homeGraph.some((item: Record<string, unknown>) => item['@type'] === 'BreadcrumbList'), false);
 });
 
 test('C2 schema: no hard-coded priceRange/paymentAccepted, valid openingHoursSpecification, City areaServed, sameAs only when present, no invented address', () => {

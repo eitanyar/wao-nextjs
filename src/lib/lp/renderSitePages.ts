@@ -339,8 +339,10 @@ export function pageHead(opts: {
   ogImage: string;
   schema?: string;
   fraudBlockerSid?: string;
+  /** Page-specific CSS appended after the theme style block (unset = byte-identical head). */
+  extraCss?: string;
 }): string {
-  const { t, title, description, canonicalUrl, ogImage, schema, fraudBlockerSid } = opts;
+  const { t, title, description, canonicalUrl, ogImage, schema, fraudBlockerSid, extraCss } = opts;
   return `<head>
   ${fraudBlockerSid ? buildFraudBlockerTrackerHtml(fraudBlockerSid) : ''}
   <meta charset="UTF-8" />
@@ -358,7 +360,7 @@ export function pageHead(opts: {
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Secular+One&family=Assistant:wght@400;600;700;800&display=swap" rel="stylesheet" />
-  ${styleBlock(t)}
+  ${styleBlock(t)}${extraCss ? `\n  <style>${extraCss}</style>` : ''}
   ${schema || ''}
 </head>`;
 }
