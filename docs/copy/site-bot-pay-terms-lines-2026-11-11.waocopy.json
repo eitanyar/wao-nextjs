@@ -1,0 +1,11 @@
+Angle: checkout-stage reassurance — state the domain mechanics plainly and make consent explicit without new promises.
+
+{
+  "checkout": {
+    "domainLine": "תחילה האתר עולה לכתובת זמנית של WAO, ואחרי התשלום החודשי השני תקבל דומיין .co.il משלך — רשום על שמך ובתשלום שלנו כל עוד אתה נשאר; אם יש לך דומיין קיים, הוא יחובר.",
+    "termsConsent": "בביצוע התשלום אתה מסכים ל{termsLink}.",
+    "termsLinkLabel": "תנאי השימוש"
+  }
+}
+
+→ Noa to proof
