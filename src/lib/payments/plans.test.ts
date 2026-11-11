@@ -67,9 +67,6 @@ const PRICE_LITERAL = /SITE_BOT_PRICE|(?<![\d.])(?:9\.90?|199|234\.82)(?![\d.])/
  * files. Anything else quoting it fails. Entries must still match (fix one -> remove it here).
  */
 const RETIRED_PRICE_ALLOWED: Readonly<Record<string, string>> = {
-  // Stale Site-Bot marketing copy (Hebrew; the engineer cannot change it): Tamar keys, see the checkout hand-off.
-  'src/components/Hero.tsx': 'stale Site-Bot copy (Tamar)',
-  'src/components/Services.tsx': 'stale Site-Bot copy (Tamar)',
   // Not Site-Bot: the Google Ads onboarding bot has its own 9.9 activation price.
   'src/components/OnboardingSidebar.tsx': 'Google Ads bot',
   'src/app/api/bot/route.ts': 'Google Ads bot',
@@ -111,17 +108,26 @@ test('one config source: outside the Site-Bot surfaces, the retired 9.90 price a
 // Pay-page copy (pending Tamar -> Noa) and the mock card.
 // ---------------------------------------------------------------------------------------------------------------------
 
-test('checkout copy: the pending flag matches the placeholders; the numbers come from the plan', () => {
-  const pending = Object.values(SITE_BOT_CHECKOUT_COPY).some(value => value.includes(HE_TODO_PREFIX));
-  assert.equal(SITE_BOT_CHECKOUT_COPY_PENDING, pending);
+/** The approved pay-page copy (waocopy -> Noa 2026-11-11). checkoutCopy.ts must match it byte for byte. */
+const CHECKOUT_COPY_SOURCE = 'docs/copy/site-bot-checkout-199-2026-11-11.json';
+
+test('checkout copy: byte-exact from the approved docs/copy source; the numbers come from the plan', () => {
+  const approved = JSON.parse(fs.readFileSync(path.join(root, CHECKOUT_COPY_SOURCE), 'utf8')).checkout as Record<string, string>;
+  assert.deepEqual({ ...SITE_BOT_CHECKOUT_COPY }, approved);
   assert.deepEqual(Object.keys(SITE_BOT_CHECKOUT_COPY).sort(),
     ['pageSubheading', 'payButton', 'priceSuffix', 'priceTotalLine', 'termsCancelOnline', 'termsNoCommitment']);
   for (const [key, value] of Object.entries(SITE_BOT_CHECKOUT_COPY)) {
     assert.doesNotMatch(value, /\d/, `${key}: no number typed into the copy (use {net} / {total} / {vatPercent})`);
-    assert.doesNotMatch(value, /[\u0590-\u05FF]/, `${key}: Hebrew arrives only as a Tamar -> Noa patch`);
+    assert.ok(!value.includes(HE_TODO_PREFIX), `${key}: placeholder`);
   }
-  assert.ok(siteBotCheckoutText('priceTotalLine', SITE_BOT_PLAN).includes('₪234.82 (18%)'));
-  assert.ok(siteBotCheckoutText('payButton', SITE_BOT_PLAN).endsWith('₪234.82'));
+  // Ship gate: the cancel-online promise must be true in the product before the flag flips (see checkoutCopy.ts).
+  assert.equal(SITE_BOT_CHECKOUT_COPY_PENDING, true, 'flip only once self-serve end-of-period cancel works');
+  const total = siteBotCheckoutText('priceTotalLine', SITE_BOT_PLAN);
+  assert.ok(total.startsWith('\u20AA234.82 ') && total.includes('(18%)'), total);
+  assert.ok(siteBotCheckoutText('payButton', SITE_BOT_PLAN).includes(' \u20AA234.82 '));
+  for (const key of Object.keys(SITE_BOT_CHECKOUT_COPY) as Array<keyof typeof SITE_BOT_CHECKOUT_COPY>) {
+    assert.doesNotMatch(siteBotCheckoutText(key, SITE_BOT_PLAN), /\{/, `${key}: every token filled`);
+  }
 });
 
 test('mock card: the test card is pre-filled only on a dev server with the mock provider', () => {

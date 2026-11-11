@@ -1,16 +1,15 @@
 /**
  * Site-Bot pay page: the price / terms copy (SITE_BOT_PLAN: monthly, + VAT; approved terms 2026-11-07).
- * HEBREW-SAFETY: this module contains ZERO Hebrew bytes. The engineer never authors Hebrew: every key starts as a
- * `__HE_TODO_<key>__` placeholder (the researchedSiteLabels.ts pattern) and is replaced by a byte-exact
- * Tamar -> Noa patch. Set SITE_BOT_CHECKOUT_COPY_PENDING to false when the last placeholder is patched; a guard test
- * fails while the flag disagrees with the values.
+ * HEBREW-SAFETY: the engineer never authors Hebrew. Every value below is copied by script, byte-exact, from
+ * the approved checkout file in docs/copy (CHECKOUT_COPY_SOURCE in plans.test.ts; waocopy -> Noa, 2026-11-11);
+ * plans.test.ts fails if a value
+ * drifts from that file. To change copy, change the docs/copy source (Tamar -> Noa) and re-apply by script.
  *
  * Tokens: `{net}` = the price before VAT, `{total}` = the VAT-inclusive charge, `{vatPercent}` = the VAT rate in percent.
  * Numbers are filled in by code from SITE_BOT_PLAN (plans.ts), never typed into the copy.
  * The paid pages stay behind SITE_BOT_PAID_FLOW (off-production only) while this is pending.
  */
 
-import { HE_TODO_PREFIX } from '../../lp/researchedSiteLabels';
 import { formatShekels, planSummary, type BillingPlan } from '../../payments/plans';
 
 export const SITE_BOT_CHECKOUT_COPY: Readonly<{
@@ -27,15 +26,18 @@ export const SITE_BOT_CHECKOUT_COPY: Readonly<{
   /** Pay button: "Pay {total} and start the monthly plan". */
   payButton: string;
 }> = {
-  priceSuffix: `${HE_TODO_PREFIX}priceSuffix__`,
-  priceTotalLine: `${HE_TODO_PREFIX}priceTotalLine__ {total} ({vatPercent}%)`,
-  termsNoCommitment: `${HE_TODO_PREFIX}termsNoCommitment__`,
-  termsCancelOnline: `${HE_TODO_PREFIX}termsCancelOnline__`,
-  pageSubheading: `${HE_TODO_PREFIX}pageSubheading__`,
-  payButton: `${HE_TODO_PREFIX}payButton__ {total}`,
+  priceSuffix: "+ מע״מ לחודש",
+  priceTotalLine: "{total} כולל מע״מ ({vatPercent}%). החיוב בכרטיס מתבצע היום, ואז באותו תאריך בכל חודש.",
+  termsNoCommitment: "מתחדש מחודש לחודש, בלי תקופת התחייבות.",
+  termsCancelOnline: "אפשר לבטל אונליין בכל עת. הביטול נכנס לתוקף בסוף החודש ששילמת עליו.",
+  pageSubheading: "אחרי שהתשלום הראשון מתאשר, האתר שלך נבנה, עובר בדיקה אנושית ורק אז מתפרסם.",
+  payButton: "שלם {total} והתחל מסלול חודשי",
 };
 
-/** True while any key above is still a placeholder. */
+/**
+ * Ship gate. True while the copy is not yet safe to show: a key is still a placeholder, or a promise in it is not yet
+ * true in the product (termsCancelOnline promises self-serve online cancel, effective at the end of the paid month).
+ */
 export const SITE_BOT_CHECKOUT_COPY_PENDING = true;
 
 export type SiteBotCheckoutCopyKey = keyof typeof SITE_BOT_CHECKOUT_COPY;
