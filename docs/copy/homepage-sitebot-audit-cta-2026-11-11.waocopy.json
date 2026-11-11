@@ -1,0 +1,10 @@
+{
+  "patches": [
+    {
+      "file": "src/content/astra-authority-first-homepage-copy.json",
+      "old": "נתחיל עם האתר שלי",
+      "new": "בדוק את העסק שלי בגוגל — חינם",
+      "why": "Angle: homepage path-card reader is site-curious but not ready to pay; lead with the free Google visibility check. Hebrew label is short, singular masculine, direct, mentions Google and free, and matches the new destination."
+    }
+  ]
+}
