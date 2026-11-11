@@ -7,7 +7,7 @@
  *
  * Tokens: `{net}` = the price before VAT, `{total}` = the VAT-inclusive charge, `{vatPercent}` = the VAT rate in percent.
  * Numbers are filled in by code from SITE_BOT_PLAN (plans.ts), never typed into the copy.
- * The paid pages stay behind SITE_BOT_PAID_FLOW (off-production only) while this is pending.
+ * The paid pages stay behind SITE_BOT_PAID_FLOW (off-production only) until go-live.
  */
 
 import { formatShekels, planSummary, type BillingPlan } from '../../payments/plans';
@@ -36,9 +36,10 @@ export const SITE_BOT_CHECKOUT_COPY: Readonly<{
 
 /**
  * Ship gate. True while the copy is not yet safe to show: a key is still a placeholder, or a promise in it is not yet
- * true in the product (termsCancelOnline promises self-serve online cancel, effective at the end of the paid month).
+ * true in the product. False since 2026-11-11: termsCancelOnline's promise (self-serve online cancel, effective at the
+ * end of the paid month) is implemented by cancelSubscriptionByToken + finalizeScheduledCancellations (subscriptions.ts).
  */
-export const SITE_BOT_CHECKOUT_COPY_PENDING = true;
+export const SITE_BOT_CHECKOUT_COPY_PENDING = false;
 
 export type SiteBotCheckoutCopyKey = keyof typeof SITE_BOT_CHECKOUT_COPY;
 

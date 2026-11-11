@@ -10,6 +10,8 @@ import crypto from 'crypto';
 const tmpDbPath = path.join(os.tmpdir(), `wao-billing-test-plan-${crypto.randomUUID()}.db`);
 process.env.BILLING_DB_PATH = tmpDbPath;
 process.env.TOKEN_ENCRYPTION_KEY = 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA='; // 32 zero bytes, base64, test-only
+// Hermetic: never send real email from a test run, even if the shell exports a Resend key (email.ts reads it per call).
+delete process.env.RESEND_API_KEY;
 process.env.NEXT_PUBLIC_BASE_URL = 'https://wao.co.il';
 
 import { getDb, closeDb, type SubscriptionRow } from './db';
@@ -17,8 +19,21 @@ import { encryptToken } from './crypto';
 import { MockPaymentProvider } from './providers/mock';
 import { _resetPaymentProviderForTests } from './get-provider';
 import { SITE_BOT_PLAN, planChargeAmount } from './plans';
-import { activatePlanSubscription, createPendingPlanSubscription, getSubscriptionById, planChargeDate } from './subscriptions';
+import {
+  activatePlanSubscription,
+  applyTokenizationCallback,
+  cancelSubscriptionByToken,
+  createPendingPlanSubscription,
+  createPendingSubscription,
+  finalizeScheduledCancellations,
+  getSubscriptionById,
+  planChargeDate,
+  planPaidThrough,
+  subscriptionHasAccess,
+} from './subscriptions';
 import { runChargeCron } from './cron-charge';
+import { generateMagicLinkToken } from './magic-link';
+import { createCardUpdateSession } from './card-update';
 
 test.beforeEach(() => _resetPaymentProviderForTests());
 test.after(() => {
@@ -152,4 +167,123 @@ test('dunning: a retry that succeeds resumes on the sign-up anchor (the billing 
   assert.equal(r.dunning_started_at, null);
   assert.equal(r.periods_paid, 2);
   assert.equal(r.next_charge_at, '2027-01-11T09:00:00.000Z', 'next charge on the sign-up day, not retry date + 1 month');
+});
+
+// ---------------------------------------------------------------------------------------------------------------------
+// Self-serve cancel (approved terms 2026-11-07): online, effective at the end of the paid month, no further charge.
+// ---------------------------------------------------------------------------------------------------------------------
+
+const cancelAt = (id: string, now: Date) => cancelSubscriptionByToken(generateMagicLinkToken(id).token, now);
+const cronFor = async (id: string, now: Date) => {
+  const summary = await runChargeCron(now);
+  return { outcomes: summary.results.filter(r => r.subscriptionId === id).map(r => r.outcome), effective: summary.cancellationsEffective.includes(id) };
+};
+
+test('cancel mid-period: no further charge, access until the paid-through date, then canceled by the cron', async () => {
+  const signup = at('2026-11-11T09:00:00.000Z');
+  const row = await activeSiteBot(signup);
+  const requested = at('2026-11-20T15:00:00.000Z');
+
+  const outcome = await cancelAt(row.id, requested);
+  assert.deepEqual(outcome, { ok: true, subscriptionId: row.id, cancelAtPeriodEnd: true, effectiveAt: '2026-12-11T09:00:00.000Z' });
+  let r = getSubscriptionById(row.id)!;
+  assert.equal(r.status, 'active', 'still active: the month is paid for');
+  assert.equal(r.cancel_at_period_end, 1);
+  assert.equal(r.cancel_effective_at, '2026-12-11T09:00:00.000Z');
+  assert.equal(r.next_charge_at, null, 'nothing scheduled to charge');
+  assert.equal(r.canceled_at, requested.toISOString());
+  assert.equal(r.cancel_reason, 'self_serve_magic_link');
+  assert.deepEqual(events(row.id), ['created', 'plan_charged', 'cancel_scheduled']);
+  assert.equal(subscriptionHasAccess(r, at('2026-12-11T08:59:59.000Z')), true);
+  assert.equal(subscriptionHasAccess(r, at('2026-12-11T09:00:00.000Z')), false);
+
+  // A cron run before the period ends: no charge, still active.
+  assert.deepEqual(await cronFor(row.id, at('2026-12-01T03:00:00.000Z')), { outcomes: [], effective: false });
+  assert.equal(getSubscriptionById(row.id)!.status, 'active');
+  // The cron on (and after) the date the renewal would have been: no charge, the cancellation takes effect.
+  assert.deepEqual(await cronFor(row.id, at('2026-12-11T10:00:00.000Z')), { outcomes: [], effective: true });
+  r = getSubscriptionById(row.id)!;
+  assert.equal(r.status, 'canceled');
+  assert.equal(r.next_charge_at, null);
+  assert.equal(subscriptionHasAccess(r, at('2026-12-11T10:00:00.000Z')), false);
+  assert.deepEqual(events(row.id).slice(-1), ['cancellation_effective']);
+  // Later passes: nothing, ever (finalized once).
+  for (const later of ['2026-12-12T03:00:00.000Z', '2027-01-11T09:30:00.000Z', '2027-06-11T09:30:00.000Z']) {
+    assert.deepEqual(await cronFor(row.id, at(later)), { outcomes: [], effective: false }, later);
+  }
+  assert.deepEqual(finalizeScheduledCancellations(at('2027-07-01T00:00:00.000Z')).filter(id => id === row.id), []);
+  assert.deepEqual(charges(row.id), [{ amount: 234.82, status: 'succeeded', attempt_number: 1 }], 'only the sign-up charge');
+  assert.equal(events(row.id).filter(e => e === 'cancellation_effective').length, 1);
+});
+
+test('cancel: a second request is already_canceled (scheduled or done); card update is refused once cancelled', async () => {
+  const signup = at('2026-11-11T09:00:00.000Z');
+  const row = await activeSiteBot(signup);
+  assert.equal((await cancelAt(row.id, at('2026-11-12T09:00:00.000Z'))).ok, true);
+  assert.deepEqual(await cancelAt(row.id, at('2026-11-13T09:00:00.000Z')), { ok: false, reason: 'already_canceled' });
+  assert.deepEqual(await createCardUpdateSession(generateMagicLinkToken(row.id).token), { ok: false, reason: 'subscription_canceled' });
+  assert.equal(getSubscriptionById(row.id)!.cancel_effective_at, '2026-12-11T09:00:00.000Z', 'second request changes nothing');
+  await runChargeCron(at('2026-12-11T09:00:00.000Z'));
+  assert.equal(getSubscriptionById(row.id)!.status, 'canceled');
+  assert.deepEqual(await cancelAt(row.id, at('2026-12-20T09:00:00.000Z')), { ok: false, reason: 'already_canceled' });
+});
+
+test('cancel after a renewal: effective at the end of the period just paid (anchor + periods_paid, Jan 31 clamp)', async () => {
+  const signup = at('2027-01-31T10:00:00.000Z');
+  const row = await activeSiteBot(signup);
+  assert.deepEqual((await cronFor(row.id, at('2027-02-28T12:00:00.000Z'))).outcomes, ['succeeded']);
+  const outcome = await cancelAt(row.id, at('2027-03-05T08:00:00.000Z'));
+  assert.deepEqual(outcome, { ok: true, subscriptionId: row.id, cancelAtPeriodEnd: true, effectiveAt: '2027-03-31T10:00:00.000Z' });
+  assert.equal(planPaidThrough(getSubscriptionById(row.id)!), '2027-03-31T10:00:00.000Z');
+  assert.deepEqual(await cronFor(row.id, at('2027-03-31T09:59:00.000Z')), { outcomes: [], effective: false });
+  assert.deepEqual(await cronFor(row.id, at('2027-03-31T10:00:00.000Z')), { outcomes: [], effective: true });
+  assert.deepEqual(charges(row.id).map(c => c.status), ['succeeded', 'succeeded']);
+});
+
+test('cancel when the paid period is already over (dunning / paused): canceled at once, never charged again', async () => {
+  const signup = at('2026-11-11T09:00:00.000Z');
+  const dunning = await activeSiteBot(signup, MockPaymentProvider.INSUFFICIENT_FUNDS_TOKEN);
+  const first = at('2026-12-11T10:00:00.000Z');
+  assert.deepEqual((await cronFor(dunning.id, first)).outcomes, ['retry_scheduled']);
+  const now = plus(first, 1);
+  assert.deepEqual(await cancelAt(dunning.id, now), { ok: true, subscriptionId: dunning.id, cancelAtPeriodEnd: false, effectiveAt: now.toISOString() });
+  let r = getSubscriptionById(dunning.id)!;
+  assert.equal(r.status, 'canceled');
+  assert.equal(r.next_charge_at, null);
+  assert.equal(r.cancel_at_period_end, null);
+  assert.deepEqual((await cronFor(dunning.id, plus(first, 2))).outcomes, [], 'the +2 day retry never runs');
+
+  const paused = await activeSiteBot(signup, MockPaymentProvider.INSUFFICIENT_FUNDS_TOKEN);
+  for (const day of [0, 2, 4, 7]) await runChargeCron(new Date(plus(first, day).getTime() + 60_000));
+  assert.equal(getSubscriptionById(paused.id)!.status, 'paused');
+  assert.equal((await cancelAt(paused.id, plus(first, 10))).ok, true);
+  r = getSubscriptionById(paused.id)!;
+  assert.equal(r.status, 'canceled');
+  assert.equal(r.cancel_at_period_end, null);
+});
+
+test('cancel: an unpaid (pending) plan row and a legacy (non-plan) row keep the immediate cancel', async () => {
+  const now = at('2026-11-11T09:00:00.000Z');
+  const { subscriptionId: pendingId } = await createPendingPlanSubscription({ plan: SITE_BOT_PLAN, userId: 'p@example.com', returnUrl: 'https://wao.co.il/r', now });
+  assert.deepEqual(await cancelAt(pendingId, now), { ok: true, subscriptionId: pendingId, cancelAtPeriodEnd: false, effectiveAt: now.toISOString() });
+  assert.equal(getSubscriptionById(pendingId)!.status, 'canceled');
+
+  const { subscriptionId: legacyId } = await createPendingSubscription({ email: 'legacy@example.com', trialAmount: 5, recurringAmount: 50 });
+  assert.equal((await applyTokenizationCallback(legacyId, { sessionId: 'x' })).ok, true);
+  const legacy = await cancelAt(legacyId, now);
+  assert.equal(legacy.ok && legacy.cancelAtPeriodEnd, false);
+  const r = getSubscriptionById(legacyId)!;
+  assert.equal(r.status, 'canceled');
+  assert.equal(r.next_charge_at, null);
+  assert.equal(r.cancel_at_period_end, null);
+  assert.deepEqual(events(legacyId).slice(-1), ['canceled_by_user']);
+});
+
+test('the charge cron never charges a row with a cancellation requested, even if next_charge_at was set by hand', async () => {
+  const signup = at('2026-11-11T09:00:00.000Z');
+  const row = await activeSiteBot(signup);
+  await cancelAt(row.id, at('2026-11-12T09:00:00.000Z'));
+  getDb().prepare(`UPDATE subscriptions SET next_charge_at = ? WHERE id = ?`).run('2026-11-30T00:00:00.000Z', row.id);
+  assert.deepEqual((await cronFor(row.id, at('2026-12-01T00:00:00.000Z'))).outcomes, []);
+  assert.equal(charges(row.id).length, 1);
 });

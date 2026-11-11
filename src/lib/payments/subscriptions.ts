@@ -22,6 +22,8 @@ import { sendTrialChargeConfirmationEmail, sendMagicLinkCancelEmail } from './em
 import { issueInvoiceForCharge } from './invoicing';
 import { getBillingPlan, planChargeAmount, type BillingPlan } from './plans';
 
+const EMAIL_ADDRESS = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 function nowIso(): string {
   return new Date().toISOString();
 }
@@ -33,6 +35,19 @@ function resolveBaseUrl(): string {
 /** Builds the URL the account page reads its magic-link token from. */
 export function buildCancelUrl(token: string): string {
   return `${resolveBaseUrl()}/account/subscription?token=${encodeURIComponent(token)}`;
+}
+
+/**
+ * Same-origin path of the account page for a fresh magic-link token (the pay page links to it right after the
+ * sign-up charge). Never carries a host, so a client can render it as an internal link.
+ */
+export function buildAccountPath(token: string): string {
+  return `/account/subscription?token=${encodeURIComponent(token)}`;
+}
+
+/** Mints a magic-link token for `subscriptionId` and returns the account-page path that manages / cancels it. */
+export function issueAccountPath(subscriptionId: string): string {
+  return buildAccountPath(generateMagicLinkToken(subscriptionId).token);
 }
 
 /**
@@ -305,8 +320,41 @@ export async function requestMagicLinkForEmail(email: string): Promise<void> {
 // ---------------------------------------------------------------------------
 
 export type CancelOutcome =
-  | { ok: true; subscriptionId: string }
+  | {
+      ok: true;
+      subscriptionId: string;
+      /** true = a plan row that stays usable until `effectiveAt` (end of the paid period); false = canceled now. */
+      cancelAtPeriodEnd: boolean;
+      /** When the cancellation takes (took) effect. */
+      effectiveAt: string;
+    }
   | { ok: false; reason: 'invalid_token' | 'subscription_not_found' | 'already_canceled' };
+
+/** True when a cancellation is scheduled (plan row, end of paid period) or done. */
+export function isCancellationRequested(row: Pick<SubscriptionRow, 'status' | 'cancel_at_period_end'>): boolean {
+  return row.status === 'canceled' || row.cancel_at_period_end === 1;
+}
+
+/**
+ * End of the period the customer has already paid for on a plan row: anchor + periods_paid intervals. Null for legacy
+ * rows and for plan rows that were never charged.
+ */
+export function planPaidThrough(row: Pick<SubscriptionRow, 'plan' | 'billing_anchor_at' | 'periods_paid'>): string | null {
+  if (!getBillingPlan(row.plan) || !row.billing_anchor_at || !(row.periods_paid && row.periods_paid > 0)) return null;
+  return planChargeDate(row.billing_anchor_at, row.periods_paid);
+}
+
+/**
+ * Whether the customer is entitled to the service at `now`. Plan rows: active / in dunning, and a scheduled
+ * cancellation keeps access until the end of the paid period. Not yet read by any Site-Bot surface (nothing gates on
+ * billing status today); exported so the first consumer uses the same rule the engine applies.
+ */
+export function subscriptionHasAccess(row: SubscriptionRow, now: Date = new Date()): boolean {
+  if (row.cancel_at_period_end === 1) {
+    return row.status !== 'canceled' && !!row.cancel_effective_at && now.toISOString() < row.cancel_effective_at;
+  }
+  return row.status === 'active' || row.status === 'trialing' || row.status === 'past_due';
+}
 
 /**
  * Re-validates the magic-link token server-side (never trusts a client
@@ -314,8 +362,15 @@ export type CancelOutcome =
  * validate+consume happens first, before any other side effect — see
  * `magic-link.ts` doc comment for why this (not the page GET) is where
  * single-use consumption is enforced.
+ *
+ * Plan rows (Site-Bot, SITE_BOT_PLAN.cancellationEffective = 'end_of_period'): the cancellation takes effect at the end
+ * of the period already paid for. From the request on there is no further charge (`next_charge_at = NULL`, provider
+ * token deleted); the row keeps its status (access continues) with `cancel_at_period_end = 1` and
+ * `cancel_effective_at` = the paid-through date; the charge cron sets status 'canceled' once that date has passed
+ * (`finalizeScheduledCancellations`). A plan row whose paid period has already ended (in dunning, paused) is canceled
+ * at once. Legacy (non-plan) rows keep the original immediate cancel.
  */
-export async function cancelSubscriptionByToken(token: string): Promise<CancelOutcome> {
+export async function cancelSubscriptionByToken(token: string, now: Date = new Date()): Promise<CancelOutcome> {
   const consumeResult = validateAndConsumeMagicLinkToken(token);
   if (!consumeResult.valid) {
     return { ok: false, reason: 'invalid_token' };
@@ -328,12 +383,43 @@ export async function cancelSubscriptionByToken(token: string): Promise<CancelOu
     return { ok: false, reason: 'subscription_not_found' };
   }
 
-  if (subscription.status === 'canceled') {
+  if (isCancellationRequested(subscription)) {
     return { ok: false, reason: 'already_canceled' };
   }
 
   const db = getDb();
-  const timestamp = nowIso();
+  const timestamp = now.toISOString();
+  const plan = getBillingPlan(subscription.plan);
+  const paidThrough = plan && plan.cancellationEffective === 'end_of_period' ? planPaidThrough(subscription) : null;
+  const atPeriodEnd = paidThrough !== null && paidThrough > timestamp && subscription.status !== 'paused';
+
+  if (atPeriodEnd) {
+    db.prepare(
+      `UPDATE subscriptions
+       SET cancel_at_period_end = 1,
+           cancel_effective_at = @cancel_effective_at,
+           canceled_at = @canceled_at,
+           next_charge_at = NULL,
+           cancel_reason = @cancel_reason,
+           updated_at = @updated_at
+       WHERE id = @id`
+    ).run({
+      id: subscriptionId,
+      cancel_effective_at: paidThrough,
+      canceled_at: timestamp,
+      cancel_reason: 'self_serve_magic_link',
+      updated_at: timestamp,
+    });
+    await deleteProviderTokenBestEffort(subscription);
+    insertSubscriptionEvent(db, {
+      id: crypto.randomUUID(),
+      subscription_id: subscriptionId,
+      event_type: 'cancel_scheduled',
+      metadata: JSON.stringify({ cancel_reason: 'self_serve_magic_link', plan: subscription.plan, effectiveAt: paidThrough }),
+      created_at: timestamp,
+    });
+    return { ok: true, subscriptionId, cancelAtPeriodEnd: true, effectiveAt: paidThrough };
+  }
 
   db.prepare(
     `UPDATE subscriptions
@@ -350,6 +436,21 @@ export async function cancelSubscriptionByToken(token: string): Promise<CancelOu
     updated_at: timestamp,
   });
 
+  await deleteProviderTokenBestEffort(subscription);
+
+  insertSubscriptionEvent(db, {
+    id: crypto.randomUUID(),
+    subscription_id: subscriptionId,
+    event_type: 'canceled_by_user',
+    metadata: JSON.stringify({ cancel_reason: 'self_serve_magic_link' }),
+    created_at: timestamp,
+  });
+
+  return { ok: true, subscriptionId, cancelAtPeriodEnd: false, effectiveAt: timestamp };
+}
+
+async function deleteProviderTokenBestEffort(subscription: SubscriptionRow): Promise<void> {
+  const subscriptionId = subscription.id;
   if (subscription.provider_token) {
     const provider = getPaymentProvider();
     try {
@@ -368,16 +469,41 @@ export async function cancelSubscriptionByToken(token: string): Promise<CancelOu
       console.error(`[subscriptions/cancel] provider.deleteToken failed for subscription=${subscriptionId}:`, err);
     }
   }
+}
 
-  insertSubscriptionEvent(db, {
-    id: crypto.randomUUID(),
-    subscription_id: subscriptionId,
-    event_type: 'canceled_by_user',
-    metadata: JSON.stringify({ cancel_reason: 'self_serve_magic_link' }),
-    created_at: timestamp,
-  });
-
-  return { ok: true, subscriptionId };
+/**
+ * Turns every scheduled plan cancellation whose paid period has ended into status 'canceled'. Run by the charge cron
+ * before it looks for due charges; idempotent (a row is finalized once). Returns the finalized subscription ids.
+ */
+export function finalizeScheduledCancellations(now: Date = new Date()): string[] {
+  const db = getDb();
+  const timestamp = now.toISOString();
+  const due = db
+    .prepare(
+      `SELECT id, cancel_effective_at FROM subscriptions
+       WHERE cancel_at_period_end = 1 AND status != 'canceled'
+         AND cancel_effective_at IS NOT NULL AND cancel_effective_at <= ?`
+    )
+    .all(timestamp) as Array<{ id: string; cancel_effective_at: string }>;
+  const finalized: string[] = [];
+  for (const row of due) {
+    const changed = db
+      .prepare(
+        `UPDATE subscriptions SET status = 'canceled', next_charge_at = NULL, updated_at = @updated_at
+         WHERE id = @id AND status != 'canceled'`
+      )
+      .run({ id: row.id, updated_at: timestamp }).changes;
+    if (changed !== 1) continue;
+    insertSubscriptionEvent(db, {
+      id: crypto.randomUUID(),
+      subscription_id: row.id,
+      event_type: 'cancellation_effective',
+      metadata: JSON.stringify({ effectiveAt: row.cancel_effective_at }),
+      created_at: timestamp,
+    });
+    finalized.push(row.id);
+  }
+  return finalized;
 }
 
 // ---------------------------------------------------------------------------
@@ -592,6 +718,17 @@ export async function activatePlanSubscription(
 
   // Best-effort, never blocks the charge (invoicing.ts).
   await issueInvoiceForCharge(chargeRow, subscription);
+
+  // The cancel link ships with the sign-up charge (same rule as the trial confirmation). Reuses the existing
+  // manage-subscription email. Only when the customer identifier is an email: a Site-Bot owner who gave no valid
+  // email is stored as `site-bot:<sessionId>` and gets no email (open item: email vs WhatsApp at sign-up).
+  if (EMAIL_ADDRESS.test(subscription.user_id)) {
+    try {
+      await sendMagicLinkCancelEmail({ to: subscription.user_id, cancelUrl: buildCancelUrl(generateMagicLinkToken(subscriptionId).token) });
+    } catch (err) {
+      console.error(`[subscriptions/plan] Failed to send the manage-subscription email for subscription=${subscriptionId}:`, err);
+    }
+  }
 
   return { ok: true, subscriptionId, alreadyActive: false };
 }

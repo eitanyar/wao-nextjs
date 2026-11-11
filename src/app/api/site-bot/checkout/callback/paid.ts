@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import fs from 'fs';
 import path from 'path';
 import type { CollectedData } from '@/lib/bot/prompts';
-import { activatePlanSubscription } from '@/lib/payments/subscriptions';
+import { activatePlanSubscription, issueAccountPath } from '@/lib/payments/subscriptions';
 import { deriveOpenResearchGates } from '@/lib/site-bot/research/gates';
 import { readResearchDossier } from '@/lib/site-bot/research/researchStore';
 import { runSiteResearch, type SiteResearchInput } from '@/lib/site-bot/research/runResearch';
@@ -12,6 +12,9 @@ import { buildSiteResearchInput } from '@/lib/site-bot/research/researchInput';
 // Site-Bot checkout callback: takes the sign-up charge of the monthly + VAT plan (SITE_BOT_PLAN) through the recurring engine
 // (activatePlanSubscription: first charge, billing anchor, next charge date, invoice), then starts the research.
 // Error replies are codes only; the detail goes to the server log, never to the customer.
+// On a fresh activation the reply carries `manageUrl`: a same-origin magic-link path to /account/subscription, so the
+// pay-success state can link straight to self-serve cancel (single-use token, 30 minutes; the account page offers a new
+// link by email after that). Replays (dossier exists / already active) get no new token.
 
 interface PendingRecord {
   collectedData: CollectedData;
@@ -63,6 +66,7 @@ export async function POST(req: Request) {
       return errorReply('checkout_failed', 409);
     }
 
+    const manageUrl = activation.alreadyActive ? undefined : issueAccountPath(pending.subscriptionId);
     const openResearchGates = deriveOpenResearchGates(sessionId, pending.collectedData);
     const response = await completePaidCheckoutResearch({
       sessionId,
@@ -72,7 +76,7 @@ export async function POST(req: Request) {
       openResearchGates,
       removePending: () => fs.rmSync(pendingPath, { force: true }),
     });
-    return NextResponse.json(response);
+    return NextResponse.json(manageUrl ? { ...response, manageUrl } : response, { headers: { 'Cache-Control': 'private, no-store' } });
   } catch (error: unknown) {
     console.error('Site Bot checkout callback error:', error);
     return errorReply('checkout_failed', 500);

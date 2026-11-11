@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useRef, useState } from "react";
 import { useParams } from "next/navigation";
 import { renderMixed } from "@/lib/bidi";
@@ -9,6 +10,7 @@ import { RESEARCH_COPY } from "@/lib/site-bot/researchCopy";
 import { checkoutCallbackOutcome, readJsonBody } from "@/lib/site-bot/checkout/customerError";
 import { SITE_BOT_CHECKOUT_COPY_PENDING, siteBotCheckoutText } from "@/lib/site-bot/checkout/checkoutCopy";
 import type { CardFieldDefaults } from "@/lib/site-bot/checkout/mockCard";
+import { SITE_BOT_ACCOUNT_COPY, accountLinkHref } from "@/lib/site-bot/checkout/accountCopy";
 import { SITE_BOT_PLAN, formatShekels } from "@/lib/payments/plans";
 import {
   buildResearchGateAnswer,
@@ -34,6 +36,8 @@ interface CheckoutCallbackResponse {
   openGateCount?: number;
   collectedData?: CollectedData;
   openResearchGates?: ResearchGate[];
+  /** Fresh magic-link path to /account/subscription (manage / cancel), on a fresh activation only. */
+  manageUrl?: string;
 }
 
 export default function SiteBotPayClient({ cardDefaults }: { cardDefaults: CardFieldDefaults }) {
@@ -47,6 +51,7 @@ export default function SiteBotPayClient({ cardDefaults }: { cardDefaults: CardF
   const [openResearchGates, setOpenResearchGates] = useState<ResearchGate[]>([]);
   const [gateIndex, setGateIndex] = useState(0);
   const [answer, setAnswer] = useState("");
+  const [manageHref, setManageHref] = useState<string>(() => accountLinkHref(undefined));
   const answerInputRef = useRef<HTMLInputElement>(null);
 
   async function pay() {
@@ -63,6 +68,7 @@ export default function SiteBotPayClient({ cardDefaults }: { cardDefaults: CardF
       const outcome = checkoutCallbackOutcome(res.ok, json);
       if (outcome.kind === "error") throw new Error(`checkout callback ${res.status}: ${String(json.error ?? "")}`);
       setResearchStatus(json.status ?? null);
+      setManageHref(accountLinkHref(json.manageUrl));
       setGatesFinished(false);
       if (outcome.kind === "gates") {
         setResearchId(outcome.researchId);
@@ -224,6 +230,16 @@ export default function SiteBotPayClient({ cardDefaults }: { cardDefaults: CardF
             </div>
           )}
         </div>
+
+        {/* Self-serve cancel (approved terms: online, effective at the end of the paid month): shown as soon as the
+            sign-up charge succeeded (the research gates and the done state). */}
+        {(phase === "gates" || phase === "submitting_gate" || phase === "done") && (
+          <p style={{ marginTop: "16px", textAlign: "center" }}>
+            <Link href={manageHref} prefetch={false} data-account-link="site-bot" className="btn-outline" style={{ display: "inline-block", padding: "10px 20px" }}>
+              {renderMixed(SITE_BOT_ACCOUNT_COPY.manageLink)}
+            </Link>
+          </p>
+        )}
       </div>
     </section>
   );

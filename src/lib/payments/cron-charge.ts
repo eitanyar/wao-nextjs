@@ -52,7 +52,7 @@ import {
 import { decryptToken } from './crypto';
 import { getPaymentProvider } from './get-provider';
 import { generateMagicLinkToken } from './magic-link';
-import { buildCancelUrl, planChargeDate } from './subscriptions';
+import { buildCancelUrl, finalizeScheduledCancellations, planChargeDate } from './subscriptions';
 import { getBillingPlan, type BillingPlan } from './plans';
 import { issueInvoiceForCharge } from './invoicing';
 import {
@@ -96,6 +96,8 @@ export interface ChargeCronSummary {
   ranAt: string;
   candidates: number;
   results: ChargeCronRowResult[];
+  /** Plan rows whose scheduled (end-of-period) cancellation took effect on this pass: now status 'canceled'. */
+  cancellationsEffective: string[];
 }
 
 /** Finds every subscription due for a charge right now. Defensive: an explicit
@@ -112,6 +114,7 @@ function findDueSubscriptions(now: Date): SubscriptionRow[] {
        WHERE status IN ('trialing', 'active', 'past_due')
          AND next_charge_at IS NOT NULL
          AND next_charge_at <= ?
+         AND (cancel_at_period_end IS NULL OR cancel_at_period_end = 0)
        ORDER BY next_charge_at ASC`
     )
     .all(nowIso(now)) as SubscriptionRow[];
@@ -131,6 +134,8 @@ export async function chargeOneSubscription(row: SubscriptionRow, now: Date): Pr
   // Belt-and-suspenders: never charge a row with a null next_charge_at, no
   // matter how it got into the candidate list.
   if (!row.next_charge_at) return 'skipped_idempotent';
+  // A cancellation was requested: never charge again, whatever else the row says.
+  if (row.cancel_at_period_end === 1) return 'skipped_idempotent';
 
   const billingPeriodStartDate = row.next_charge_at;
   const attemptNumber = row.failed_attempts + 1;
@@ -434,6 +439,9 @@ async function planDunningFailure(
 /** Runs one full pass of the recurring-charge cron. Safe to call more often
  * than needed — it's a no-op for any subscription not actually due. */
 export async function runChargeCron(now: Date = new Date()): Promise<ChargeCronSummary> {
+  // Scheduled plan cancellations first: their rows never have a due charge (next_charge_at NULL), this only settles
+  // the status once the paid period is over.
+  const cancellationsEffective = finalizeScheduledCancellations(now);
   const due = findDueSubscriptions(now);
   const results: ChargeCronRowResult[] = [];
 
@@ -451,7 +459,7 @@ export async function runChargeCron(now: Date = new Date()): Promise<ChargeCronS
     }
   }
 
-  return { ranAt: nowIso(now), candidates: due.length, results };
+  return { ranAt: nowIso(now), candidates: due.length, results, cancellationsEffective };
 }
 
 // ---------------------------------------------------------------------------

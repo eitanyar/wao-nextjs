@@ -9,6 +9,7 @@ import { paymentProviderKind } from './get-provider';
 import { HE_TODO_PREFIX } from '../lp/researchedSiteLabels';
 import { SITE_BOT_CHECKOUT_COPY, SITE_BOT_CHECKOUT_COPY_PENDING, siteBotCheckoutText } from '../site-bot/checkout/checkoutCopy';
 import { cardFieldDefaults } from '../site-bot/checkout/mockCard';
+import { ACCOUNT_PAGE_PATH, SITE_BOT_ACCOUNT_COPY, SITE_BOT_ACCOUNT_COPY_PENDING, accountLinkHref } from '../site-bot/checkout/accountCopy';
 
 const root = process.cwd();
 
@@ -120,13 +121,26 @@ test('checkout copy: byte-exact from the approved docs/copy source; the numbers 
     assert.doesNotMatch(value, /\d/, `${key}: no number typed into the copy (use {net} / {total} / {vatPercent})`);
     assert.ok(!value.includes(HE_TODO_PREFIX), `${key}: placeholder`);
   }
-  // Ship gate: the cancel-online promise must be true in the product before the flag flips (see checkoutCopy.ts).
-  assert.equal(SITE_BOT_CHECKOUT_COPY_PENDING, true, 'flip only once self-serve end-of-period cancel works');
+  // Ship gate: the cancel-online promise is true in the product (plan-subscription.test.ts: end-of-period cancel).
+  assert.equal(SITE_BOT_CHECKOUT_COPY_PENDING, false);
+  assert.equal(SITE_BOT_PLAN.cancellationEffective, 'end_of_period');
   const total = siteBotCheckoutText('priceTotalLine', SITE_BOT_PLAN);
   assert.ok(total.startsWith('\u20AA234.82 ') && total.includes('(18%)'), total);
   assert.ok(siteBotCheckoutText('payButton', SITE_BOT_PLAN).includes(' \u20AA234.82 '));
   for (const key of Object.keys(SITE_BOT_CHECKOUT_COPY) as Array<keyof typeof SITE_BOT_CHECKOUT_COPY>) {
     assert.doesNotMatch(siteBotCheckoutText(key, SITE_BOT_PLAN), /\{/, `${key}: every token filled`);
+  }
+});
+
+test('account link copy (pending Tamar -> Noa): the flag matches the placeholders; the href is only a same-origin token path', () => {
+  const pending = Object.values(SITE_BOT_ACCOUNT_COPY).some(value => value.includes(HE_TODO_PREFIX));
+  assert.equal(SITE_BOT_ACCOUNT_COPY_PENDING, pending);
+  assert.deepEqual(Object.keys(SITE_BOT_ACCOUNT_COPY), ['manageLink']);
+  const token = 'a'.repeat(64);
+  assert.equal(accountLinkHref(`/account/subscription?token=${token}`), `/account/subscription?token=${token}`);
+  for (const bad of [undefined, null, 42, '', 'https://evil.example/account/subscription?token=' + token, `//evil.example/account/subscription?token=${token}`,
+    `/account/subscription?token=${token}&next=https://evil.example`, '/account/subscription?token=xyz', 'javascript:alert(1)']) {
+    assert.equal(accountLinkHref(bad), ACCOUNT_PAGE_PATH, String(bad));
   }
 });
 

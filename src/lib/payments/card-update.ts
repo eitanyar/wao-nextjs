@@ -36,7 +36,7 @@ import { getDb, insertSubscriptionEvent, type SubscriptionRow } from './db';
 import { encryptToken } from './crypto';
 import { getPaymentProvider } from './get-provider';
 import { peekMagicLinkToken, validateAndConsumeMagicLinkToken, generateMagicLinkToken } from './magic-link';
-import { getSubscriptionById, buildCardUpdateReturnUrl } from './subscriptions';
+import { getSubscriptionById, buildCardUpdateReturnUrl, isCancellationRequested } from './subscriptions';
 import { chargeOneSubscription, type ChargeOutcome } from './cron-charge';
 
 function nowIso(): string {
@@ -67,7 +67,8 @@ export async function createCardUpdateSession(magicLinkToken: string): Promise<C
     console.error(`[card-update] Token valid but subscription=${peek.subscriptionId} not found.`);
     return { ok: false, reason: 'subscription_not_found' };
   }
-  if (subscription.status === 'canceled') {
+  // A scheduled (end-of-period) cancellation counts too: nothing will be charged again, so no card is needed.
+  if (isCancellationRequested(subscription)) {
     return { ok: false, reason: 'subscription_canceled' };
   }
 

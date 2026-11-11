@@ -8,6 +8,8 @@ import crypto from 'crypto';
 const tmpDbPath = path.join(os.tmpdir(), `wao-billing-test-card-update-${crypto.randomUUID()}.db`);
 process.env.BILLING_DB_PATH = tmpDbPath;
 process.env.TOKEN_ENCRYPTION_KEY = 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA='; // 32 zero bytes, base64, test-only
+// Hermetic: never send real email from a test run, even if the shell exports a Resend key (email.ts reads it per call).
+delete process.env.RESEND_API_KEY;
 process.env.NEXT_PUBLIC_BASE_URL = 'https://wao.co.il';
 
 import { getDb, closeDb, insertSubscription, type SubscriptionRow } from './db';

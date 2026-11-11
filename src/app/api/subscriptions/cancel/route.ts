@@ -17,8 +17,13 @@ export async function POST(req: Request) {
       return NextResponse.json({ success: false, error: outcome.reason }, { status });
     }
 
-    return NextResponse.json({ success: true, subscriptionId: outcome.subscriptionId });
-  } catch (error: any) {
+    return NextResponse.json({
+      success: true,
+      subscriptionId: outcome.subscriptionId,
+      cancelAtPeriodEnd: outcome.cancelAtPeriodEnd,
+      effectiveAt: outcome.effectiveAt,
+    });
+  } catch (error: unknown) {
     console.error('[subscriptions/cancel] Error:', error);
     return NextResponse.json({ success: false, error: 'Failed to cancel subscription.' }, { status: 500 });
   }

@@ -28,7 +28,7 @@ export interface BillingPlan {
   readonly billingAnchor: 'signup_date';
   readonly trialDays: 0;
   readonly minimumCommitmentMonths: 0;
-  /** Approved term. The engine's self-serve cancel is still immediate: see the open item in the Site-Bot checkout. */
+  /** Approved term: a self-serve cancel stops further charges at once and takes effect when the paid period ends. */
   readonly cancellationEffective: 'end_of_period';
   /** Retry offsets in days, measured from the first failed attempt of the period; when they run out the plan pauses. */
   readonly dunning: { readonly retryOffsetsDays: readonly number[]; readonly whenExhausted: 'pause' };

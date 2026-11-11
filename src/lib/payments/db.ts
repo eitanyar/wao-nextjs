@@ -138,6 +138,11 @@ function migrate(db: Database.Database): void {
   addColumnIfMissing(db, 'subscriptions', 'periods_paid', 'INTEGER');
   addColumnIfMissing(db, 'subscriptions', 'dunning_started_at', 'TEXT');
   addColumnIfMissing(db, 'subscriptions', 'paused_at', 'TEXT');
+  // Additive migration (Site-Bot cancel, 2026-11-11): a plan row cancelled by the customer stays usable until the end of
+  // the period already paid for. `cancel_at_period_end = 1` + `next_charge_at = NULL` from the moment of the request (no
+  // further charge); the charge cron turns it 'canceled' once `cancel_effective_at` has passed. NULL on legacy rows.
+  addColumnIfMissing(db, 'subscriptions', 'cancel_at_period_end', 'INTEGER');
+  addColumnIfMissing(db, 'subscriptions', 'cancel_effective_at', 'TEXT');
 }
 
 /** Adds `column` to `table` (as `columnDefSql`, e.g. `'TEXT'`) if it doesn't
@@ -238,6 +243,10 @@ export interface SubscriptionRow {
   /** First failed attempt of the current period; retry offsets are measured from it. NULL when not in dunning. */
   dunning_started_at?: string | null;
   paused_at?: string | null;
+  /** 1 = the customer cancelled; the row stays usable until `cancel_effective_at`, then becomes 'canceled'. */
+  cancel_at_period_end?: number | null;
+  /** End of the last paid period (anchor + periods_paid months): when a scheduled cancellation takes effect. */
+  cancel_effective_at?: string | null;
 }
 
 /** Plan columns default to NULL so callers that predate them keep working. */
@@ -313,7 +322,10 @@ export interface SubscriptionEventRow {
     | 'card_expiry_notice_sent'
     // Site-Bot plan (2026-11-11): the first (sign-up) charge of a no-trial plan, and the dunning terminal state.
     | 'plan_charged'
-    | 'paused';
+    | 'paused'
+    // Site-Bot plan cancel: requested (effective at the end of the paid period) and then effective (status 'canceled').
+    | 'cancel_scheduled'
+    | 'cancellation_effective';
   metadata: string | null;
   created_at: string;
 }

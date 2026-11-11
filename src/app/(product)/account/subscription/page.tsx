@@ -2,6 +2,7 @@ import { peekMagicLinkToken } from '@/lib/payments/magic-link';
 import { getSubscriptionById } from '@/lib/payments/subscriptions';
 import CancelSubscriptionButton from './CancelSubscriptionButton';
 import CardUpdateButton from './CardUpdateButton';
+import RequestLinkForm from './RequestLinkForm';
 
 export const metadata = { robots: { index: false }, title: 'Manage subscription | WAO' };
 
@@ -12,6 +13,7 @@ const STATUS_LABEL: Record<string, string> = {
   past_due: 'Past due',
   canceled: 'Canceled',
   expired: 'Expired',
+  paused: 'Paused',
 };
 
 export default async function SubscriptionPage({
@@ -67,6 +69,7 @@ export default async function SubscriptionPage({
           <p className="mt-6 text-sm text-[var(--muted)]">
             This page needs a valid link from an email we sent you. Request a new one if you&apos;ve lost it.
           </p>
+          <RequestLinkForm />
         </div>
       </main>
     );
@@ -88,6 +91,7 @@ export default async function SubscriptionPage({
         <div className="w-full max-w-sm text-center">
           <span className="text-3xl font-black tracking-tight">WAO</span>
           <p className="mt-6 text-sm text-red-400">{message}</p>
+          <RequestLinkForm />
         </div>
       </main>
     );
@@ -107,6 +111,8 @@ export default async function SubscriptionPage({
   }
 
   const isCanceled = subscription.status === 'canceled';
+  // Plan rows (Site-Bot): the customer cancelled; access continues until the end of the paid period, no further charge.
+  const cancelScheduled = !isCanceled && subscription.cancel_at_period_end === 1 && !!subscription.cancel_effective_at;
   const isPastDue = subscription.status === 'past_due';
 
   return (
@@ -151,6 +157,12 @@ export default async function SubscriptionPage({
               <span className="font-semibold">•••• {subscription.card_last4}</span>
             </div>
           )}
+          {cancelScheduled && (
+            <div className="flex justify-between text-sm" data-cancel-at-period-end="true">
+              <span className="text-[var(--muted)]">Access until</span>
+              <span className="font-semibold">{new Date(subscription.cancel_effective_at as string).toLocaleDateString()}</span>
+            </div>
+          )}
           {subscription.next_charge_at && (
             <div className="flex justify-between text-sm">
               <span className="text-[var(--muted)]">Next charge</span>
@@ -161,6 +173,8 @@ export default async function SubscriptionPage({
           <div className="pt-2 space-y-3">
             {isCanceled ? (
               <p className="text-green-400 text-sm text-center">This subscription is already canceled.</p>
+            ) : cancelScheduled ? (
+              <p className="text-green-400 text-sm text-center">Your subscription has been canceled. You will not be charged again.</p>
             ) : (
               <>
                 <CardUpdateButton token={token} prominent={isPastDue} />
