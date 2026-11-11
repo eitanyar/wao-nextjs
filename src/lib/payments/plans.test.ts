@@ -105,6 +105,62 @@ test('one config source: outside the Site-Bot surfaces, the retired 9.90 price a
   assert.deepEqual(quoting.sort(), Object.keys(RETIRED_PRICE_ALLOWED).sort());
 });
 
+/**
+ * JSON content files under src/ (copy that components import). Content prose carries no version numbers, so here any
+ * bare 9.9 / 9.90 counts, with or without the shekel sign. Allowed only at these JSON key paths, each with a reason.
+ */
+const RETIRED_PRICE_JSON = /(?<![\d.])9\.90?(?![\d.])/;
+const RETIRED_PRICE_JSON_ALLOWED: Readonly<Record<string, string>> = {
+  'src/content/astra-homepage-copy.json#metadata.truth_constraints.1': 'internal note (metadata, never rendered): Google Ads bot pricing',
+  'src/content/astra-homepage-copy.json#metadata.truth_constraints.2': 'internal note (metadata, never rendered): history of the retired Site-Bot trial',
+  'src/content/astra-homepage-copy.json#paths.path_ads.pricing_guidance': 'internal guidance (never rendered): Google Ads bot pricing',
+  // PENDING COPY (Tamar -> Noa): advertises the retired Site-Bot trial. Stored, not rendered today (pinned below).
+  'src/content/astra-homepage-copy.json#paths.path_local.trial_line': 'pending copy: retired Site-Bot trial line (Tamar), not rendered',
+};
+
+function jsonFiles(dir: string): string[] {
+  const abs = path.join(root, dir);
+  if (!fs.existsSync(abs)) return [];
+  return fs.readdirSync(abs, { withFileTypes: true }).flatMap(entry => {
+    const rel = path.posix.join(dir, entry.name);
+    if (entry.isDirectory()) return jsonFiles(rel);
+    return entry.name.endsWith('.json') ? [rel] : [];
+  });
+}
+
+/** Every string leaf of a parsed JSON value, with its dotted key path. */
+function jsonStrings(value: unknown, at: string[] = []): Array<{ key: string; text: string }> {
+  if (typeof value === 'string') return [{ key: at.join('.'), text: value }];
+  if (Array.isArray(value)) return value.flatMap((item, i) => jsonStrings(item, [...at, String(i)]));
+  if (value && typeof value === 'object') return Object.entries(value).flatMap(([k, v]) => jsonStrings(v, [...at, k]));
+  return [];
+}
+
+test('one config source: JSON content under src/ quotes the retired 9.90 price only at the allowlisted keys', () => {
+  const files = jsonFiles('src');
+  assert.ok(files.includes('src/content/astra-homepage-copy.json'), `scan found ${files.length} JSON files`);
+  const quoting = files.flatMap(file => jsonStrings(JSON.parse(fs.readFileSync(path.join(root, file), 'utf8')))
+    .filter(({ text }) => RETIRED_PRICE_JSON.test(text))
+    .map(({ key }) => `${file}#${key}`));
+  assert.deepEqual(quoting.sort(), Object.keys(RETIRED_PRICE_JSON_ALLOWED).sort());
+});
+
+test('pending copy: the homepage-copy trial_line stays unrendered until Tamar replaces it', () => {
+  // The homepage JSON is read by property path only (AstraHome / Header / Footer / page.tsx). path_local is used only
+  // for its details_link; nothing reads trial_line, and nothing iterates the copy objects wholesale.
+  const offenders = sourceFiles('src').flatMap(file => {
+    const text = fs.readFileSync(path.join(root, file), 'utf8');
+    const problems: string[] = [];
+    if (text.includes('trial_line')) problems.push(`${file}: reads trial_line`);
+    if (text.includes('astra-homepage-copy.json')) {
+      for (const m of text.matchAll(/path_local(\.[A-Za-z_]+)?/g)) if (m[1] !== '.details_link') problems.push(`${file}: path_local${m[1] ?? ''}`);
+      if (/Object\.(values|entries|keys)\(\s*copy\b|\.\.\.\s*copy\b/.test(text)) problems.push(`${file}: iterates / spreads the homepage copy`);
+    }
+    return problems;
+  });
+  assert.deepEqual(offenders, []);
+});
+
 // ---------------------------------------------------------------------------------------------------------------------
 // Pay-page copy (pending Tamar -> Noa) and the mock card.
 // ---------------------------------------------------------------------------------------------------------------------
