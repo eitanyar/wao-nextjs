@@ -10,7 +10,7 @@ import { RESEARCH_COPY } from "@/lib/site-bot/researchCopy";
 import { checkoutCallbackOutcome, readJsonBody } from "@/lib/site-bot/checkout/customerError";
 import { SITE_BOT_CHECKOUT_COPY_PENDING, siteBotCheckoutText } from "@/lib/site-bot/checkout/checkoutCopy";
 import type { CardFieldDefaults } from "@/lib/site-bot/checkout/mockCard";
-import { SITE_BOT_ACCOUNT_COPY, accountLinkHref } from "@/lib/site-bot/checkout/accountCopy";
+import { SITE_BOT_ACCOUNT_COPY, accountLinkHref, customerVisibleLabel } from "@/lib/site-bot/checkout/accountCopy";
 import { SITE_BOT_PLAN, formatShekels } from "@/lib/payments/plans";
 import {
   buildResearchGateAnswer,
@@ -25,6 +25,9 @@ import {
 // Errors: the customer only ever sees the generic message; server error codes / exception text are logged, not shown.
 /** The generic customer-facing error (the existing copy, moved from the old customerErrorText fallback). */
 const GENERIC_ERROR = "משהו השתבש";
+
+/** The manage / cancel link label; null (link hidden) while it is still a copy placeholder. */
+const manageLinkLabel = customerVisibleLabel(SITE_BOT_ACCOUNT_COPY.manageLink);
 
 type Phase = "form" | "charging" | "gates" | "submitting_gate" | "done" | "error";
 
@@ -233,10 +236,10 @@ export default function SiteBotPayClient({ cardDefaults }: { cardDefaults: CardF
 
         {/* Self-serve cancel (approved terms: online, effective at the end of the paid month): shown as soon as the
             sign-up charge succeeded (the research gates and the done state). */}
-        {(phase === "gates" || phase === "submitting_gate" || phase === "done") && (
+        {manageLinkLabel && (phase === "gates" || phase === "submitting_gate" || phase === "done") && (
           <p style={{ marginTop: "16px", textAlign: "center" }}>
             <Link href={manageHref} prefetch={false} data-account-link="site-bot" className="btn-outline" style={{ display: "inline-block", padding: "10px 20px" }}>
-              {renderMixed(SITE_BOT_ACCOUNT_COPY.manageLink)}
+              {renderMixed(manageLinkLabel)}
             </Link>
           </p>
         )}

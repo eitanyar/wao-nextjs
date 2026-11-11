@@ -1,0 +1,9 @@
+{
+  "account": {
+    "manageLink": "ניהול או ביטול המנוי"
+  },
+  "_rules": {
+    "source": "waocopy request cf4e7681-28ce-48f7-9e8a-5716eec572b9 → Noa approved with fix 2026-11-11: nominal label kept (native UI form for a navigation button); dropped the calqued 'שלך' (Manage your subscription) and named the cancel action so the button visibly backs the 'אפשר לבטל אונליין בכל עת' promise above it",
+    "target": "src/lib/site-bot/checkout/accountCopy.ts SITE_BOT_ACCOUNT_COPY.manageLink"
+  }
+}

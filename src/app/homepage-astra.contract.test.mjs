@@ -20,7 +20,8 @@ const cssPath = "src/app/globals.css";
 const expectedHash = "2c859866cc013bbdc2fe5e8187fb1e24cf603bb183ae177d1ae71112979a2ef2";
 const finalSourcePath = "docs/copy/astra-authority-first-homepage-copy.qwen38-v3-2026-09-30.json";
 const finalContentPath = "src/content/astra-authority-first-homepage-copy.json";
-const finalHash = "6d33903daf80329a6cef0e6dc3475aa75d752b0c8299c40cc11332945b6b37d2";
+// 2026-11-11: Site-Bot path CTA -> free audit (docs/copy/homepage-sitebot-audit-cta-2026-11-11.json, Noa-approved).
+const finalHash = "1d57c32aa65f5c6516a84fe49e9091c8e486c2c32c063fdc6262bea15cd72bf7";
 const finalBytes = read(finalSourcePath);
 const finalCopy = JSON.parse(finalBytes.toString("utf8"));
 
@@ -167,7 +168,7 @@ test("final roles appear once at their assigned sections without old duplicate f
   assert.equal(finalCopy.partner_proof.badge_src, "/google-partner-badge.svg");
   assert.deepEqual(
     [finalCopy.paths.google_ads.primary_cta.href, finalCopy.paths.google_ads.supporting_link.href, finalCopy.paths.business_website.primary_cta.href, finalCopy.paths.business_website.supporting_link.href, finalCopy.paths.choosing_help.link.href, finalCopy.founder_authority.about_link.href],
-    ["/google-ads/onboarding", "/google-ads", "/site-bot/start", "/site-bot", "/contact#contact-form", "/about"],
+    ["/google-ads/onboarding", "/google-ads", "/site-bot/audit", "/site-bot", "/contact#contact-form", "/about"],
   );
   for (const reference of ["google_ads.primary_cta", "google_ads.supporting_link", "business_website.primary_cta", "business_website.supporting_link", "choosing_help.link"]) assert.match(section("paths"), new RegExp(`finalCopy\\.paths\\.${reference.replaceAll(".", "\\.")}\\.href`));
   assert.match(section("people"), /target="_blank" rel="noopener noreferrer"/);

@@ -9,7 +9,7 @@ import { paymentProviderKind } from './get-provider';
 import { HE_TODO_PREFIX } from '../lp/researchedSiteLabels';
 import { SITE_BOT_CHECKOUT_COPY, SITE_BOT_CHECKOUT_COPY_PENDING, siteBotCheckoutText } from '../site-bot/checkout/checkoutCopy';
 import { cardFieldDefaults } from '../site-bot/checkout/mockCard';
-import { ACCOUNT_PAGE_PATH, SITE_BOT_ACCOUNT_COPY, SITE_BOT_ACCOUNT_COPY_PENDING, accountLinkHref } from '../site-bot/checkout/accountCopy';
+import { ACCOUNT_PAGE_PATH, SITE_BOT_ACCOUNT_COPY, SITE_BOT_ACCOUNT_COPY_PENDING, accountLinkHref, customerVisibleLabel } from '../site-bot/checkout/accountCopy';
 
 const root = process.cwd();
 
@@ -188,7 +188,23 @@ test('checkout copy: byte-exact from the approved docs/copy source; the numbers 
   }
 });
 
-test('account link copy (pending Tamar -> Noa): the flag matches the placeholders; the href is only a same-origin token path', () => {
+test('customer pages never render a __HE_TODO_ placeholder: customerVisibleLabel hides it; the pay client renders only through it', () => {
+  assert.equal(customerVisibleLabel(`${HE_TODO_PREFIX}manageLink__`), null);
+  assert.equal(customerVisibleLabel(`  ${HE_TODO_PREFIX}x__`), null);
+  assert.equal(customerVisibleLabel(`label ${HE_TODO_PREFIX}x__`), null);
+  for (const empty of ['', '   ', undefined, null]) assert.equal(customerVisibleLabel(empty), null);
+  assert.equal(customerVisibleLabel('Manage'), 'Manage');
+  for (const value of Object.values(SITE_BOT_ACCOUNT_COPY)) {
+    assert.equal(customerVisibleLabel(value) === null, SITE_BOT_ACCOUNT_COPY_PENDING || value.trim() === '');
+  }
+  const client = fs.readFileSync(path.join(process.cwd(), 'src/components/site-bot/SiteBotPayClient.tsx'), 'utf8');
+  assert.match(client, /const manageLinkLabel = customerVisibleLabel\(SITE_BOT_ACCOUNT_COPY\.manageLink\);/);
+  assert.match(client, /\{manageLinkLabel && \(phase === /);
+  assert.equal(client.split('SITE_BOT_ACCOUNT_COPY.').length - 1, 1, 'SITE_BOT_ACCOUNT_COPY is read only through customerVisibleLabel');
+  assert.doesNotMatch(client, /HE_TODO/);
+});
+
+test('account link copy (Tamar -> Noa, applied 2026-11-11): the flag matches the placeholders; the href is only a same-origin token path', () => {
   const pending = Object.values(SITE_BOT_ACCOUNT_COPY).some(value => value.includes(HE_TODO_PREFIX));
   assert.equal(SITE_BOT_ACCOUNT_COPY_PENDING, pending);
   assert.deepEqual(Object.keys(SITE_BOT_ACCOUNT_COPY), ['manageLink']);
