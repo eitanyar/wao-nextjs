@@ -86,7 +86,18 @@ function contactLine(data: CollectedData): { ownerName: string; phone: string; e
 /** The legal pages' link back to the homepage (existing approved copy; the 404 page reuses it). */
 export const LEGAL_HOME_LINK_TEXT = 'חזרה לעמוד הבית';
 
-function legalDocument(opts: LegalPageOpts, title: string, bodyHtml: string): string {
+/**
+ * The 404 page copy (waocopy request 90f0786d-2cb4-4b7b-a0cf-b690b77ae770, Noa SHIP 2026-11-11;
+ * record: docs/copy/site-bot-404-page-2026-11-11.json). Inserted byte-exact from the record, do not retype.
+ */
+export const NOT_FOUND_COPY = {
+  title: 'עמוד לא נמצא',
+  h1: 'העמוד לא נמצא',
+  line: 'הכתובת שניסית לפתוח לא קיימת — הקישור למטה יחזיר אותך לעמוד הבית.',
+} as const;
+
+/** heading: the <h1> text when it differs from the <title> text (the 404 page); defaults to title. */
+function legalDocument(opts: LegalPageOpts, title: string, bodyHtml: string, heading: string = title): string {
   const { theme: t, data, canonicalUrl, homeHref } = opts;
   const businessName = esc(data.businessName || data.businessNiche || '');
 
@@ -114,7 +125,7 @@ function legalDocument(opts: LegalPageOpts, title: string, bodyHtml: string): st
     <a href="${homeHref}" style="display:inline-flex;align-items:center;min-height:44px;font-weight:700;text-decoration:none;color:${t.primary};">${businessName}</a>
   </header>
   <main style="max-width:640px;margin:0 auto;padding:44px 20px;">
-    <h1 style="font-size:1.4rem;margin-bottom:20px;color:${t.primary};">${esc(title)}</h1>
+    <h1 style="font-size:1.4rem;margin-bottom:20px;color:${t.primary};">${esc(heading)}</h1>
     ${bodyHtml}
     <p style="margin-top:32px;"><a href="${homeHref}" style="display:inline-flex;align-items:center;min-height:44px;">${LEGAL_HOME_LINK_TEXT}</a></p>
   </main>
@@ -165,8 +176,8 @@ export function buildAccessibilityHtml(opts: LegalPageOpts): string {
  * M4 step 0: the site's real top-level 404.html. Cloudflare Pages serves it (status 404) for any unknown path; without it
  * Pages treats the site as a single-page app and answers every unknown URL with the homepage and 200 (a soft 404).
  * noindex,follow and no canonical. The legal-page shell: business name linking home, the h1, the approved home link, the
- * WAO footer. HEBREW-SAFETY: no new Hebrew. The h1 is "404" until Tamar writes the not-found copy (title + one line).
+ * WAO footer. Copy: NOT_FOUND_COPY (approved). The line's <p> sits directly above the home link, nothing in between.
  */
 export function buildNotFoundHtml(opts: Omit<LegalPageOpts, 'canonicalUrl'>): string {
-  return legalDocument({ ...opts, canonicalUrl: null }, '404', '');
+  return legalDocument({ ...opts, canonicalUrl: null }, NOT_FOUND_COPY.title, `<p>${esc(NOT_FOUND_COPY.line)}</p>`, NOT_FOUND_COPY.h1);
 }

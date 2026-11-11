@@ -1,0 +1,11 @@
+{
+ "notFound": {
+  "title": "עמוד לא נמצא",
+  "h1": "העמוד לא נמצא",
+  "line": "הכתובת שניסית לפתוח לא קיימת — הקישור למטה יחזיר אותך לעמוד הבית."
+ },
+ "_rules": {
+  "source": "waocopy request 90f0786d-2cb4-4b7b-a0cf-b690b77ae770 → Noa SHIP 2026-11-11",
+  "target": "src/lib/lp/legalPages.ts NOT_FOUND_COPY (buildNotFoundHtml): title = <title> + the existing ' | {business name}' pattern; h1 = <h1>; line = one <p> directly above LEGAL_HOME_LINK_TEXT"
+ }
+}

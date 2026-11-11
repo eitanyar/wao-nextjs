@@ -7,7 +7,7 @@ import assert from 'node:assert/strict';
 import { buildLandingPageSupportPages, buildSitemap, renderSitePages, servedPath, servedUrl } from './renderSitePages';
 import type { RenderSitePagesParams } from './renderSitePages';
 import { renderCoreThirtyPages, buildCoreThirtySitemapUrls } from './renderCoreThirtyPages';
-import { LEGAL_HOME_LINK_TEXT } from './legalPages';
+import { LEGAL_HOME_LINK_TEXT, NOT_FOUND_COPY } from './legalPages';
 import { VERTICAL_THEMES } from './verticalThemes';
 import { VERTICAL_ASSETS } from './verticalAssets';
 import type { SiteCopy } from './lpCopyPrompt';
@@ -65,8 +65,13 @@ function assertReal404(files: Record<string, string>, sid?: string): void {
   assert.equal(canonicalOf(html), undefined, '404 has no canonical');
   assert.equal(ogUrlOf(html), undefined);
   assert.match(html, /<html lang="he" dir="rtl">/);
-  assert.match(html, /<h1[^>]*>404<\/h1>/);
-  assert.ok(html.includes(`<a href="/" style="display:inline-flex;align-items:center;min-height:44px;">${LEGAL_HOME_LINK_TEXT}</a>`), 'home link reuses the approved legal-page label');
+  assert.equal(html.match(/<h1[^>]*>([^<]*)<\/h1>/)?.[1], NOT_FOUND_COPY.h1, 'h1 = the approved not-found h1');
+  const title = html.match(/<title>([^<]*)<\/title>/)?.[1] ?? '';
+  assert.ok(title.startsWith(NOT_FOUND_COPY.title), `<title> leads with the approved not-found title: ${title}`);
+  assert.ok(!title.includes('404'), 'no placeholder 404 left in the <title>');
+  // The approved line sits directly above the home link: only whitespace between the two <p>s.
+  assert.match(html, new RegExp(`<p>${NOT_FOUND_COPY.line}</p>\\s*<p style="margin-top:32px;"><a href="/" style="display:inline-flex;align-items:center;min-height:44px;">${LEGAL_HOME_LINK_TEXT}</a></p>`), 'line <p> directly above the approved home link');
+  assert.equal((html.match(/<p[ >]/g) ?? []).length, 2, 'exactly the line + the home link in <main>');
   assert.ok(!locs(files['sitemap.xml'] ?? '').some(url => url.endsWith('/404')), '404 is not in the sitemap');
   if (sid) assert.ok(html.includes(sid), 'the Fraud Blocker tracker is on the 404 page too (deploy verification covers every .html)');
 }
@@ -102,7 +107,8 @@ test('legacy site: canonical + og:url are the extensionless final URL (homepage 
 test('researched-site legal output (renderSitePages with researched/researchNav) also carries the 404 with the pipe title', () => {
   const files = renderSitePages(params({ researched: { contactTitle: 'Contact | Client Business' } }));
   assertReal404(files);
-  assert.match(files['404.html'], /<title>404[^<]* \| Client Business<\/title>/);
+  // Latin business name: the existing pipe pattern anchors it with an RLM after the Hebrew title.
+  assert.ok(files['404.html'].includes(`<title>${NOT_FOUND_COPY.title}\u200F | Client Business</title>`), 'pipe title');
 });
 
 test('core-30 deploy output: canonical, schema @id, sibling links and sitemap are extensionless; files stay sherut/{id}.html', () => {
