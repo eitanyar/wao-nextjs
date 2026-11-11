@@ -292,11 +292,8 @@ export function rendersBreadcrumb(classification: string): boolean {
   return classification === 'money_service';
 }
 
-/**
- * Accessible name of the breadcrumb nav. No approved Hebrew string fits yet, so this is a non-visible English label.
- * OPEN for Tamar -> Noa: label key RESEARCHED_SITE_LABELS.breadcrumbLabel; swap this constant for it when it lands.
- */
-export const BREADCRUMB_ARIA_LABEL = 'breadcrumb';
+/** Accessible name of the breadcrumb nav (Tamar -> Noa 2026-11-11). */
+export const BREADCRUMB_ARIA_LABEL = RESEARCHED_SITE_LABELS.breadcrumbLabel;
 
 /** Crumb 1 / ListItem 1 text: the business name (else the homepage's plain name). */
 function breadcrumbHomeName(businessName: string, home: ResearchedSitePage | undefined): string {
@@ -325,7 +322,7 @@ function breadcrumbCss(theme: RenderResearchedSitePagesParams['theme']): string 
 
 function breadcrumbNav(homeName: string, serviceName: string): string {
   const home = HEBREW_LETTER.test(homeName) ? esc(homeName) : `<bdi>${esc(homeName)}</bdi>`;
-  return `<nav data-section="breadcrumb" class="wao-breadcrumb" aria-label="${BREADCRUMB_ARIA_LABEL}"><ol><li><a href="/">${home}</a></li><li><span aria-current="page">${esc(serviceName)}</span></li></ol></nav>`;
+  return `<nav data-section="breadcrumb" class="wao-breadcrumb" aria-label="${esc(BREADCRUMB_ARIA_LABEL)}"><ol><li><a href="/">${home}</a></li><li><span aria-current="page">${esc(serviceName)}</span></li></ol></nav>`;
 }
 
 function schemaGraph(page: ResearchedSitePage, data: CollectedData, siteUrl: string, heroImageUrl: string, output: string, homeName?: string): string {

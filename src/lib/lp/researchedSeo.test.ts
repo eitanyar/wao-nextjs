@@ -20,6 +20,7 @@ import {
 import { localBusinessObject } from './renderSitePages';
 import { formatBusinessHoursHebrew, parseBusinessHours } from './businessHours';
 import { VERTICAL_THEMES } from './verticalThemes';
+import { RESEARCHED_SITE_LABELS } from './researchedSiteLabels';
 import { VERTICAL_ASSETS } from './verticalAssets';
 import { primaryCtaLabel, type SiteCopy } from './lpCopyPrompt';
 import type { CollectedData } from '../bot/prompts';
@@ -138,6 +139,9 @@ test('breadcrumb: above the H1, crumb 2 is the plain Service.name (not linked, a
   const money = site['services/leak-detection.html'];
   assert.ok(money.indexOf('data-section="breadcrumb"') < money.indexOf('<h1'), 'breadcrumb precedes the H1');
   assert.match(money, /<nav data-section="breadcrumb" class="wao-breadcrumb" aria-label="[^"]+"><ol><li>/);
+  // The approved label (docs/copy/site-bot-breadcrumb-label-2026-11-11.json, Tamar -> Noa), as escapes.
+  assert.equal(RESEARCHED_SITE_LABELS.breadcrumbLabel, '\u05de\u05d9\u05e7\u05d5\u05de\u05da \u05d1\u05d0\u05ea\u05e8');
+  assert.equal(/<nav data-section="breadcrumb"[^>]*aria-label="([^"]+)"/.exec(money)?.[1], RESEARCHED_SITE_LABELS.breadcrumbLabel);
   const crumbs = breadcrumbHtml(money);
   assert.ok(crumbs.endsWith(`<li><span aria-current="page">${HE_SERVICE}</span></li></ol>`), crumbs);
   assert.equal([...crumbs.matchAll(/<a /g)].length, 1, 'crumb 2 is not linked');

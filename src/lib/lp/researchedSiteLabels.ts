@@ -31,6 +31,8 @@ export const RESEARCHED_SITE_LABELS: Readonly<{
   proofHeadingReviews: string;
   /** Content depth (Noa-approved 2026-11-10): H2 of the B6 proof when the copy has no proofHeadline and no review renders. */
   proofHeadingFactsOnly: string;
+  /** Breadcrumb (Tamar -> Noa 2026-11-11): accessible name (aria-label) of the breadcrumb nav on service pages. Screen-reader only. */
+  breadcrumbLabel: string;
 }> = {
   serviceAreasHeading: 'אזורי שירות',
   mainNavLabel: 'תפריט ראשי',
@@ -41,6 +43,7 @@ export const RESEARCHED_SITE_LABELS: Readonly<{
   qaHeadingFallback: 'מה שואלים אותי',
   proofHeadingReviews: 'לקוחות מספרים',
   proofHeadingFactsOnly: 'עובדות על העסק',
+  breadcrumbLabel: 'מיקומך באתר',
 };
 
 /** True while any label above is still a placeholder. Flip to false when the copy patches land. */
