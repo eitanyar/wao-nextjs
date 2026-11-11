@@ -1,5 +1,6 @@
 {
   "slug": "test-core30-verify",
+  "legacyCoreThirty": true,
   "collectedData": {
     "businessNiche": "אינסטלטור",
     "businessName": "בדיקה-core30",

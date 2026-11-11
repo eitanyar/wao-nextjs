@@ -128,6 +128,10 @@ function harness({ authorized = true, record, dossier = syntheticDossier(), read
     if (binding.expectedPaths && !binding.expectedPaths.includes(event)) return forbidden('unrecognized Cloudflare request')(event);
     if (binding.failRequest === event) throw new Error('synthetic provider network failure');
     if (binding.redirectRequest === event) throw new Error('synthetic redirect rejected by fetch');
+    if (method === 'GET' && pathname === domainPath) {
+      assert.equal(options.body, undefined);
+      return binding.domainList ?? response(true, 200, { success: true, result: [], result_info: { page: 1, count: 0, total_pages: 1 } });
+    }
     if (method === 'POST' && pathname === domainPath) {
       assert.deepEqual(JSON.parse(options.body), { name: hostname });
       return binding.domainPost ?? response(true, 200, { success: true, result: domain });
@@ -804,6 +808,7 @@ test('researchId-absent legacy record renders Core-30 nodes in the synthetic bin
   assert.equal(setup.io.close, 1);
   assert.deepEqual(setup.deployEvents, ['render', 'deduplicate', 'render-core', 'sitemap', 'tmpdir',
     'write', 'write-core', 'write-sitemap', 'project', 'deploy',
+    `GET /accounts/synthetic-account/pages/projects/${slug}/domains`,
     `POST /accounts/synthetic-account/pages/projects/${slug}/domains`, 'POST /zones/synthetic-zone/dns_records',
     'client-exists', 'client-record', 'pin', 'client-auth', 'session', 'cookie', 'cleanup']);
 });
@@ -901,6 +906,7 @@ test('explicit offline simulation retains the synthetic legacy render and bindin
   assert.equal(setup.calls.dossier, 0);
   assert.equal(setup.io.close, 1);
   assert.deepEqual(setup.deployEvents, ['render', 'tmpdir', 'write', 'project', 'deploy',
+    `GET /accounts/synthetic-account/pages/projects/${slug}/domains`,
     `POST /accounts/synthetic-account/pages/projects/${slug}/domains`, 'POST /zones/synthetic-zone/dns_records',
     'client-exists', 'client-record', 'pin', 'client-auth', 'session', 'cookie', 'cleanup']);
 });
@@ -915,6 +921,7 @@ test('test-only simulation with research identity and legacy flag retains the of
   assert.equal(setup.dossierLookups, 0);
   assert.equal(setup.io.close, 1);
   assert.deepEqual(setup.deployEvents, ['render', 'tmpdir', 'write', 'project', 'deploy',
+    `GET /accounts/synthetic-account/pages/projects/${slug}/domains`,
     `POST /accounts/synthetic-account/pages/projects/${slug}/domains`, 'POST /zones/synthetic-zone/dns_records',
     'client-exists', 'client-record', 'pin', 'client-auth', 'session', 'cookie', 'cleanup']);
 });
@@ -936,8 +943,13 @@ const cfResponse = (ok, status, data) => ({ ok, status, json: async () => data }
 const accepted = result => cfResponse(true, 200, { success: true, result });
 const rejected = (status = 400, errors = []) => cfResponse(false, status, { success: false, errors });
 const dnsConflict = rejected(400, [{ code: 81053 }]);
+const listedDomains = result => cfResponse(true, 200, { success: true, result,
+  result_info: { page: 1, count: result.length, total_pages: 1 } });
+const activeDomainResult = { ...domainResult, status: 'active',
+  validation_data: { method: 'http', status: 'active' }, verification_data: { status: 'active' } };
 const domainPostEvent = `POST /accounts/synthetic-account/pages/projects/${slug}/domains`;
 const domainGetEvent = `GET /accounts/synthetic-account/pages/projects/${slug}/domains/${hostname}`;
+const domainListEvent = `GET /accounts/synthetic-account/pages/projects/${slug}/domains`;
 const dnsPostEvent = 'POST /zones/synthetic-zone/dns_records';
 const dnsGetEvent = `GET /zones/synthetic-zone/dns_records?name.exact=${hostname}&per_page=2`;
 const beforeProvider = ['render', 'tmpdir', 'write', 'project', 'deploy'];
@@ -959,8 +971,8 @@ for (const [label, binding, expectedEvents] of [
   ['domain wrong zone', { domainPost: accepted({ ...domainResult, zone_tag: 'other-zone' }) }, [domainPostEvent]],
   ['domain missing zone', { domainPost: accepted({ ...domainResult, zone_tag: undefined }) }, [domainPostEvent]],
   ['domain contradictory project', { domainPost: accepted({ ...domainResult, project_name: 'other' }) }, [domainPostEvent]],
-  ['domain wrong account path', { expectedPaths: [`POST /accounts/other/pages/projects/${slug}/domains`] }, [domainPostEvent]],
-  ['domain wrong project path', { expectedPaths: [`POST /accounts/synthetic-account/pages/projects/other/domains`] }, [domainPostEvent]],
+  ['domain wrong account path', { expectedPaths: [domainListEvent, `POST /accounts/other/pages/projects/${slug}/domains`] }, [domainPostEvent]],
+  ['domain wrong project path', { expectedPaths: [domainListEvent, `POST /accounts/synthetic-account/pages/projects/other/domains`] }, [domainPostEvent]],
   ['domain redirect', { redirectRequest: domainPostEvent }, [domainPostEvent]],
   ['domain provider network failure', { failRequest: domainPostEvent }, [domainPostEvent]],
   ['domain malformed JSON', { domainPost: { ok: true, status: 200, json: async () => { throw new Error('synthetic invalid JSON'); } } }, [domainPostEvent]],
@@ -971,7 +983,7 @@ for (const [label, binding, expectedEvents] of [
   ['DNS wrong target', { dnsPost: accepted({ ...dnsResult, content: 'other.pages.dev' }) }, [domainPostEvent, dnsPostEvent]],
   ['DNS wrong name', { dnsPost: accepted({ ...dnsResult, name: 'other.wao.co.il' }) }, [domainPostEvent, dnsPostEvent]],
   ['DNS contradictory zone', { dnsPost: accepted({ ...dnsResult, zone_id: 'other-zone' }) }, [domainPostEvent, dnsPostEvent]],
-  ['DNS wrong zone path', { expectedPaths: [domainPostEvent, 'POST /zones/other/dns_records'] }, [domainPostEvent, dnsPostEvent]],
+  ['DNS wrong zone path', { expectedPaths: [domainListEvent, domainPostEvent, 'POST /zones/other/dns_records'] }, [domainPostEvent, dnsPostEvent]],
   ['DNS redirect', { redirectRequest: dnsPostEvent }, [domainPostEvent, dnsPostEvent]],
   ['DNS provider network failure', { failRequest: dnsPostEvent }, [domainPostEvent, dnsPostEvent]],
   ['DNS malformed JSON', { dnsPost: { ok: true, status: 200, json: async () => { throw new Error('synthetic invalid JSON'); } } }, [domainPostEvent, dnsPostEvent]],
@@ -984,21 +996,21 @@ for (const [label, binding, expectedEvents] of [
   ['81053 unpaginated readback', { dnsPost: dnsConflict, dnsGet: accepted([dnsResult]) }, [domainPostEvent, dnsPostEvent, dnsGetEvent]],
   ['81053 absent readback', { dnsPost: dnsConflict, dnsGet: cfResponse(true, 200, { success: true, result: [], result_info: { total_pages: 1, count: 0 } }) }, [domainPostEvent, dnsPostEvent, dnsGetEvent]],
   ['81053 extra pages', { dnsPost: dnsConflict, dnsGet: cfResponse(true, 200, { success: true, result: [dnsResult], result_info: { total_pages: 2, count: 1 } }) }, [domainPostEvent, dnsPostEvent, dnsGetEvent]],
-  ['81053 wrong zone path', { dnsPost: dnsConflict, expectedPaths: [domainPostEvent, dnsPostEvent, 'GET /zones/other/dns_records'] }, [domainPostEvent, dnsPostEvent, dnsGetEvent]],
+  ['81053 wrong zone path', { dnsPost: dnsConflict, expectedPaths: [domainListEvent, domainPostEvent, dnsPostEvent, 'GET /zones/other/dns_records'] }, [domainPostEvent, dnsPostEvent, dnsGetEvent]],
   ['81053 redirect', { dnsPost: dnsConflict, redirectRequest: dnsGetEvent }, [domainPostEvent, dnsPostEvent, dnsGetEvent]],
   ['domain conflict on another project', { domainPost: rejected(409), domainGet: accepted({ ...domainResult, project_name: 'other' }) }, [domainPostEvent, domainGetEvent]],
   ['domain conflict unprovable', { domainPost: rejected(409), domainGet: rejected(404) }, [domainPostEvent, domainGetEvent]],
   ['domain conflict wrong hostname', { domainPost: rejected(409), domainGet: accepted({ ...domainResult, name: 'other.wao.co.il' }) }, [domainPostEvent, domainGetEvent]],
   ['domain conflict missing result', { domainPost: rejected(409), domainGet: cfResponse(true, 200, { success: true }) }, [domainPostEvent, domainGetEvent]],
   ['domain conflict success-false', { domainPost: rejected(409), domainGet: cfResponse(true, 200, { success: false, result: domainResult }) }, [domainPostEvent, domainGetEvent]],
-  ['domain conflict wrong project path', { domainPost: rejected(409), expectedPaths: [domainPostEvent, `GET /accounts/synthetic-account/pages/projects/other/domains/${hostname}`] }, [domainPostEvent, domainGetEvent]],
+  ['domain conflict wrong project path', { domainPost: rejected(409), expectedPaths: [domainListEvent, domainPostEvent, `GET /accounts/synthetic-account/pages/projects/other/domains/${hostname}`] }, [domainPostEvent, domainGetEvent]],
   ['domain conflict redirect', { domainPost: rejected(409), redirectRequest: domainGetEvent }, [domainPostEvent, domainGetEvent]],
   ['domain conflict network failure', { domainPost: rejected(409), failRequest: domainGetEvent }, [domainPostEvent, domainGetEvent]],
 ]) {
   test(`${label} fails closed after Wrangler but before client bridge`, async () => {
     const setup = approvedHarness({ record: researchedRecord(), binding });
     assert.deepEqual(await setup.post(), failedBody);
-    assert.deepEqual(setup.deployEvents, [...beforeProvider, ...expectedEvents, 'cleanup']);
+    assert.deepEqual(setup.deployEvents, [...beforeProvider, domainListEvent, ...expectedEvents, 'cleanup']);
     assert.equal(setup.calls.forbidden, label.includes('wrong') && label.includes('path') ? 1 : 0);
   });
 }
@@ -1018,6 +1030,7 @@ const invalidDomainFields = [
 for (const [stage, bindingFor] of [
   ['POST', domain => ({ domainPost: accepted(domain) })],
   ['GET after 409', domain => ({ domainPost: rejected(409), domainGet: accepted(domain) })],
+  ['listed', domain => ({ domainList: listedDomains([domain]) })],
 ]) {
   for (const [label, mutate] of invalidDomainFields) {
     test(`domain ${stage} ${label} fails before client activation`, async () => {
@@ -1025,8 +1038,9 @@ for (const [stage, bindingFor] of [
       mutate(domain);
       const setup = approvedHarness({ record: researchedRecord(), binding: bindingFor(domain) });
       assert.deepEqual(await setup.post(), failedBody);
-      assert.deepEqual(setup.deployEvents, [...beforeProvider, domainPostEvent,
-        ...(stage === 'POST' ? [] : [domainGetEvent]), 'cleanup']);
+      assert.deepEqual(setup.deployEvents, [...beforeProvider,
+        ...(stage === 'listed' ? [domainListEvent] : [domainListEvent, domainPostEvent]),
+        ...(stage === 'GET after 409' ? [domainGetEvent] : []), 'cleanup']);
       assert.equal(setup.calls.forbidden, 0);
     });
   }
@@ -1043,7 +1057,7 @@ for (const [label, binding, events] of [
   test(`${label} reaches first-time client auth and cookie only after binding`, async () => {
     const setup = approvedHarness({ record: researchedRecord(), binding });
     assert.deepEqual(await setup.post(), successBody);
-    assert.deepEqual(setup.deployEvents, [...beforeProvider, ...events, 'client-exists', 'client-record', 'pin', 'client-auth', 'session', 'cookie', 'cleanup']);
+    assert.deepEqual(setup.deployEvents, [...beforeProvider, domainListEvent, ...events, 'client-exists', 'client-record', 'pin', 'client-auth', 'session', 'cookie', 'cleanup']);
     assert.equal(setup.calls.forbidden, 0);
   });
 }
@@ -1051,7 +1065,55 @@ for (const [label, binding, events] of [
 test('non-researched new binding also reaches the original first-time bridge', async () => {
   const setup = harness({ record: { slug, collectedData: { businessNiche: 'synthetic' }, copy: {} }, binding: {} });
   assert.deepEqual(await setup.post(), successBody);
-  assert.deepEqual(setup.deployEvents, [...beforeProvider, domainPostEvent, dnsPostEvent,
+  assert.deepEqual(setup.deployEvents, [...beforeProvider, domainListEvent, domainPostEvent, dnsPostEvent,
     'client-exists', 'client-record', 'pin', 'client-auth', 'session', 'cookie', 'cleanup']);
   assert.equal(setup.calls.forbidden, 0);
 });
+
+// Idempotent attach: a redeploy whose hostname is already on the Pages project
+// must never re-POST it (Cloudflare rejects that with a non-409 status).
+test('already-attached Pages domain skips the POST and still binds DNS', async () => {
+  const otherDomain = { ...activeDomainResult, name: 'other.wao.co.il' };
+  const setup = approvedHarness({ record: researchedRecord(),
+    binding: { domainList: listedDomains([otherDomain, activeDomainResult]), dnsPost: dnsConflict } });
+  assert.deepEqual(await setup.post(), successBody);
+  assert.ok(!setup.deployEvents.includes(domainPostEvent), 'no domain POST for an attached hostname');
+  assert.deepEqual(setup.deployEvents, [...beforeProvider, domainListEvent, dnsPostEvent, dnsGetEvent,
+    'client-exists', 'client-record', 'pin', 'client-auth', 'session', 'cookie', 'cleanup']);
+  assert.equal(setup.calls.forbidden, 0);
+});
+
+test('absent Pages domain is POSTed after the read-only listing', async () => {
+  const setup = approvedHarness({ record: researchedRecord(),
+    binding: { domainList: listedDomains([{ ...activeDomainResult, name: 'other.wao.co.il' }]) } });
+  assert.deepEqual(await setup.post(), successBody);
+  assert.deepEqual(setup.deployEvents, [...beforeProvider, domainListEvent, domainPostEvent, dnsPostEvent,
+    'client-exists', 'client-record', 'pin', 'client-auth', 'session', 'cookie', 'cleanup']);
+  assert.equal(setup.calls.forbidden, 0);
+});
+
+test('absent Pages domain whose POST fails with a non-409 still returns 502', async () => {
+  const setup = approvedHarness({ record: researchedRecord(),
+    binding: { domainPost: rejected(400, [{ code: 8000018 }]) } });
+  assert.deepEqual(await setup.post(), failedBody);
+  assert.deepEqual(setup.deployEvents, [...beforeProvider, domainListEvent, domainPostEvent, 'cleanup']);
+  assert.equal(setup.calls.forbidden, 0);
+});
+
+for (const [label, binding, events] of [
+  ['listing rejected', { domainList: rejected(403) }, [domainListEvent]],
+  ['listing success false', { domainList: cfResponse(true, 200, { success: false, result: [] }) }, [domainListEvent]],
+  ['listing non-array result', { domainList: accepted(activeDomainResult) }, [domainListEvent]],
+  ['listing network failure', { failRequest: domainListEvent }, [domainListEvent]],
+  ['listing redirect', { redirectRequest: domainListEvent }, [domainListEvent]],
+  ['listing duplicate hostname', { domainList: listedDomains([activeDomainResult, activeDomainResult]) }, [domainListEvent]],
+  ['listed hostname on wrong zone', { domainList: listedDomains([{ ...activeDomainResult, zone_tag: 'other-zone' }]) }, [domainListEvent]],
+  ['listed hostname blocked', { domainList: listedDomains([{ ...activeDomainResult, status: 'blocked' }]) }, [domainListEvent]],
+]) {
+  test(`${label} fails closed without a domain POST`, async () => {
+    const setup = approvedHarness({ record: researchedRecord(), binding });
+    assert.deepEqual(await setup.post(), failedBody);
+    assert.deepEqual(setup.deployEvents, [...beforeProvider, ...events, 'cleanup']);
+    assert.equal(setup.calls.forbidden, 0);
+  });
+}

@@ -177,6 +177,19 @@ function matchesDomain(data: unknown, name: string, zoneId: string, project: str
     ['pending', 'active'].includes((result.verification_data as { status?: string } | undefined)?.status ?? '');
 }
 
+// Returns the listed Pages domain entry for `name`, or null when the provider
+// proved it absent. Throws when the listing itself is not a trustworthy answer.
+function findListedDomain(listed: { ok: boolean; data: unknown }, name: string): Record<string, unknown> | null {
+  const data = listed.data as { success?: unknown; result?: unknown } | null;
+  if (!listed.ok || !data || typeof data !== 'object' || data.success !== true || !Array.isArray(data.result)) {
+    throw new Error('domain list unavailable');
+  }
+  const matches = data.result.filter((entry): entry is Record<string, unknown> =>
+    Boolean(entry) && typeof entry === 'object' && !Array.isArray(entry) && (entry as { name?: unknown }).name === name);
+  if (matches.length > 1) throw new Error('duplicate listed domain');
+  return matches[0] ?? null;
+}
+
 function matchesDnsRecord(result: Record<string, unknown> | null, name: string, target: string, zoneId: string): boolean {
   return result?.type === 'CNAME' && result.name === name && result.content === target &&
     (result.zone_id === undefined || result.zone_id === zoneId);
@@ -439,13 +452,22 @@ export async function POST(req: Request) {
       const target = `${slug}.pages.dev`;
       const domainPath = `/accounts/${accountId}/pages/projects/${slug}/domains`;
       try {
-        const domainRes = await cfPost(domainPath, { name: subdomain }, apiToken);
-        if (domainRes.ok) {
-          if (!matchesDomain(domainRes.data, subdomain, zoneId, slug)) throw new Error('unbound domain');
+        // Redeploys: Cloudflare rejects re-attaching an already-attached Pages
+        // domain with a non-409 status, so read the project's domains first and
+        // only POST when the hostname is absent. An attached-but-unhealthy
+        // domain still fails closed; it is never re-posted.
+        const attached = findListedDomain(await cfGet(domainPath, apiToken), subdomain);
+        if (attached) {
+          if (!matchesDomain({ success: true, result: attached }, subdomain, zoneId, slug)) throw new Error('attached domain unbound');
         } else {
-          if (domainRes.status !== 409) throw new Error('domain rejected');
-          const existing = await cfGet(`${domainPath}/${encodeURIComponent(subdomain)}`, apiToken);
-          if (!existing.ok || !matchesDomain(existing.data, subdomain, zoneId, slug)) throw new Error('domain conflict');
+          const domainRes = await cfPost(domainPath, { name: subdomain }, apiToken);
+          if (domainRes.ok) {
+            if (!matchesDomain(domainRes.data, subdomain, zoneId, slug)) throw new Error('unbound domain');
+          } else {
+            if (domainRes.status !== 409) throw new Error('domain rejected');
+            const existing = await cfGet(`${domainPath}/${encodeURIComponent(subdomain)}`, apiToken);
+            if (!existing.ok || !matchesDomain(existing.data, subdomain, zoneId, slug)) throw new Error('domain conflict');
+          }
         }
 
         const dnsPath = `/zones/${zoneId}/dns_records`;
