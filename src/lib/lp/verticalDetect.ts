@@ -67,6 +67,17 @@ function entryMatches(entry: { keywords: string[]; words?: string[] }, lower: st
 }
 
 /**
+ * 2026-11-11 (depth-question relevance): every trade keyword / word of the map that a text names, in map order. Two texts
+ * naming the same keyword share a trade anchor even when their word forms differ (a trade noun and its craft noun share
+ * the keyword stem), while another trade of the same vertical names a different keyword.
+ */
+export function tradeKeywordsIn(text: string): string[] {
+  if (!text) return [];
+  const lower = text.toLowerCase();
+  return VERTICAL_MAP.flatMap(entry => [...entry.keywords.filter(keyword => lower.includes(keyword)), ...(entry.words ?? []).filter(word => hasWord(lower, word))]);
+}
+
+/**
  * Content depth: the vertical whose keywords a text names, or null when it names none (detectVertical falls back to
  * 'skilled-trades' instead, so it cannot tell "no match" apart).
  */

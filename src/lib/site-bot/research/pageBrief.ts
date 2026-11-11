@@ -349,6 +349,8 @@ export interface DepthTextFilters {
   otherPlace?: (text: string) => boolean;
   unofferedService?: (text: string) => boolean;
   price?: (text: string) => boolean;
+  /** 2026-11-11: positive relevance, questions only -- a pool question must pass it (shares an anchor word with the page). */
+  relevant?: (text: string) => boolean;
   /**
    * Latin-letter terms are dropped (on a Hebrew page they are brands, domains or platform names) unless the page's own search
    * keyword is Latin (synthetic fixtures, Latin trade names).
@@ -376,17 +378,20 @@ export function filterSuggestedTerms(terms: readonly BriefTerm[], filters: Depth
   return out;
 }
 
-/** The question pool: deduped (canonical form), filtered like the terms (minus the price filter), at most MAX_QUESTION_POOL. */
+/**
+ * The question pool: deduped (canonical form), filtered like the terms (minus the price filter), relevant to the page when
+ * the filters carry a relevance check, at most MAX_QUESTION_POOL.
+ */
 export function buildQuestionPool(questions: PageBriefDepthInput['questions'], filters: DepthTextFilters = {}, exclude: ReadonlySet<string> = new Set()): BriefQuestion[] {
   const out: BriefQuestion[] = [];
   const seen = new Set(exclude);
-  const { price: _price, latinAllowed: _latin, ...questionFilters } = filters;
+  const { price: _price, latinAllowed: _latin, relevant, ...questionFilters } = filters;
   void _price;
   void _latin;
   for (const item of questions) {
     const question = normalizeText(item.question);
     const canonical = canonicalQuestion(question);
-    if (!canonical || seen.has(canonical) || rejectedBy(question, questionFilters)) continue;
+    if (!canonical || seen.has(canonical) || rejectedBy(question, questionFilters) || (relevant && !relevant(question))) continue;
     seen.add(canonical);
     out.push({ id: `question-${out.length + 1}`, question, source: item.source });
     if (out.length === MAX_QUESTION_POOL) break;

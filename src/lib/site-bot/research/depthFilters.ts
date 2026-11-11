@@ -10,7 +10,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { prefixForms, stemSet, textWords } from '../../lp/depthBlocks';
 import { PREFIX_LETTERS } from '../../lp/hebrewPrefixLetters';
-import { matchedVertical } from '../../lp/verticalDetect';
+import { matchedVertical, tradeKeywordsIn } from '../../lp/verticalDetect';
 import type { VerticalKey } from '../../lp/verticalThemes';
 import type { DepthTextFilters } from './pageBrief';
 import type { Locality } from '../servedAreas';
@@ -164,7 +164,10 @@ export interface DepthFilterInput {
   anchorText: string;
   ownerPlaces: readonly string[];
   localities: readonly Locality[];
-  /** The site's vertical: a text naming another vertical's trade words is an unoffered service. */
+  /**
+   * The site's vertical: a text naming another vertical's trade words is an unoffered service. Callers resolve it with
+   * siteVerticalFor (niche, else primary service, else the skilled-trades fallback).
+   */
   siteVertical: VerticalKey;
   /**
    * Rerun-3b bug A: the verticals the owner's own confirmed services name (page subject, labels, primary service). They are
@@ -172,6 +175,14 @@ export interface DepthFilterInput {
    * free-text niche resolves to another vertical (or to the skilled-trades fallback).
    */
   offeredVerticals?: readonly VerticalKey[];
+  /**
+   * 2026-11-11 (positive relevance, questions only): this page's anchor texts -- the subject, the page label, the page
+   * queries / keyword and NeuronWriter's basic terms. A pool question passes only if one of its words shares a stem (prefix
+   * forms) with one of these words. Unset = no relevance check.
+   */
+  relevanceTerms?: readonly string[];
+  /** Words never counted as a shared anchor (the owner's places and the business name: a city alone is not relevance). */
+  relevanceExclude?: readonly string[];
   /** Service-area widening (the copy gate's own check, e.g. "and surroundings"). */
   widensArea?: (text: string) => boolean;
   /** The page's search keyword (a Latin keyword allows Latin terms). */
@@ -181,7 +192,54 @@ export interface DepthFilterInput {
 }
 
 /**
- * The four depth filters. Limits, stated for the report: brands = title brand words (coarse); places = the tracked locality
+ * 2026-11-11 (Yonatan): the site vertical of the depth filter -- the niche's matched vertical, else the primary service's,
+ * else the skilled-trades fallback (detectVertical's own fallback). A Latin / unmapped niche no longer forces the fallback
+ * when the owner's primary service names a vertical.
+ */
+export function siteVerticalFor(niche: string | undefined, primaryService: string | undefined): VerticalKey {
+  return matchedVertical(niche ?? '') ?? matchedVertical(primaryService ?? '') ?? 'skilled-trades';
+}
+
+/** A relevance word keeps at least this many letters (shorter words are function words / prefixes, never an anchor). */
+export const RELEVANCE_MIN_WORD_LETTERS = 3;
+
+/** A word this long or longer may drop its final letter when compared (a final inflection letter, e.g. singular vs plural). */
+export const RELEVANCE_INFLECTION_MIN_LETTERS = 5;
+
+/**
+ * Two word forms share a stem: equal, or the longer starts with the shorter (a suffix added), or -- when the shorter has
+ * RELEVANCE_INFLECTION_MIN_LETTERS letters or more -- with the shorter minus its final letter (a final letter changed).
+ * Letter-agnostic: no language data.
+ */
+export function sharesStem(left: string, right: string): boolean {
+  if (left === right) return true;
+  const [short, long] = left.length <= right.length ? [left, right] : [right, left];
+  if (short.length < RELEVANCE_MIN_WORD_LETTERS) return false;
+  const head = short.length >= RELEVANCE_INFLECTION_MIN_LETTERS ? short.slice(0, -1) : short;
+  return long.startsWith(head);
+}
+
+/**
+ * Positive relevance (2026-11-11): true when the text shares at least one anchor with the page's anchor texts: a word (in
+ * some prefix form, through sharesStem; minus the excluded words -- places, business name -- and words under
+ * RELEVANCE_MIN_WORD_LETTERS), or a trade keyword of the vertical map (tradeKeywordsIn: the same trade stem in another
+ * word form).
+ */
+export function relevanceMatcher(anchorTexts: readonly string[], exclude: readonly string[] = []): (text: string) => boolean {
+  const excluded = stemSet(exclude.join(' '));
+  const anchors = new Set<string>();
+  for (const word of words(anchorTexts.join(' '))) {
+    if (prefixForms(word).some(form => excluded.has(form))) continue;
+    for (const form of prefixForms(word)) if (form.length >= RELEVANCE_MIN_WORD_LETTERS && !excluded.has(form)) anchors.add(form);
+  }
+  const tradeAnchors = new Set(tradeKeywordsIn(anchorTexts.join(' ')));
+  const anchorList = [...anchors];
+  return text => words(text).some(word => prefixForms(word).some(form => anchors.has(form) || anchorList.some(anchor => sharesStem(form, anchor))))
+    || tradeKeywordsIn(text).some(keyword => tradeAnchors.has(keyword));
+}
+
+/**
+ * The four depth filters (plus the questions' positive relevance check when relevanceTerms is set). Limits, stated for the report: brands = title brand words (coarse); places = the tracked locality
  * list plus the gate's widening check; unoffered services = another vertical's trade words only (no per-trade service list
  * exists yet); price = digits, currency and percent signs, plus the Noa-gated price lexicon when its file is present.
  */
@@ -198,5 +256,6 @@ export function buildDepthFilters(input: DepthFilterInput): DepthTextFilters {
     },
     price: text => /[\d\u20AA$%]/u.test(text) || lexiconHit(text),
     latinAllowed: /[A-Za-z]/.test(input.keyword ?? ''),
+    ...(input.relevanceTerms ? { relevant: relevanceMatcher(input.relevanceTerms, input.relevanceExclude ?? []) } : {}),
   };
 }

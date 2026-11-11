@@ -23,7 +23,7 @@ import { sitesDir } from '../dataRoots';
 import { isSafeDeploymentSlug } from '../deployment/deploy-access';
 import { copyGateContext, effectiveReviewQuote, serviceAreaHits } from '../lp/copyGates';
 import { rendersDepthBlocks } from '../lp/depthBlocks';
-import { buildDepthFilters } from './research/depthFilters';
+import { buildDepthFilters, siteVerticalFor, type DepthFilterInput } from './research/depthFilters';
 import { ISRAELI_LOCALITIES } from './israeliLocalities';
 import {
   generateResearchPageCopy,
@@ -398,6 +398,35 @@ export function offeredVerticalsFor(serviceNames: readonly string[]): VerticalKe
   return [...new Set(serviceNames.map(name => matchedVertical(name)).filter((item): item is VerticalKey => item !== null))];
 }
 
+/**
+ * The depth-filter input of one service page (pure; widensArea is added by the caller). 2026-11-11 (Yonatan):
+ * - siteVertical = the niche's vertical, else the primary service's, else skilled-trades (siteVerticalFor);
+ * - offeredVerticals = the verticals THIS page's own names match (subject, page label), not every service on the site;
+ * - questions must share an anchor word with this page (subject, page label, page queries / keyword, NeuronWriter basic
+ *   terms); the owner's places and the business name never count as a shared anchor.
+ */
+export function depthFilterInputFor(
+  data: CollectedData,
+  businessName: string,
+  page: { subject: string; pageLabel: string; pageQueries: readonly string[]; serviceLabels: readonly string[]; places: readonly string[] },
+  neuron: { competitorTitles: readonly string[]; basicTerms: readonly string[]; keyword: string } | null,
+): DepthFilterInput {
+  const basicTerms = neuron?.basicTerms ?? [];
+  const keyword = neuron?.keyword ?? page.subject;
+  return {
+    competitorTitles: neuron?.competitorTitles ?? [],
+    basicTerms,
+    anchorText: [page.subject, page.pageLabel, ...page.serviceLabels, ...page.places, clean(data.businessNiche), clean(data.primaryService), businessName].join(' '),
+    ownerPlaces: page.places,
+    localities: ISRAELI_LOCALITIES,
+    siteVertical: siteVerticalFor(clean(data.businessNiche), clean(data.primaryService)),
+    offeredVerticals: offeredVerticalsFor([page.subject, page.pageLabel]),
+    relevanceTerms: [page.subject, page.pageLabel, ...page.pageQueries, keyword, ...basicTerms],
+    relevanceExclude: [...page.places, businessName],
+    keyword,
+  };
+}
+
 /** Content depth: the depth input of one service page (NeuronWriter data through the filters, plus service facts). */
 function depthInputFor(
   dossier: SiteResearchDossier,
@@ -407,15 +436,12 @@ function depthInputFor(
   const neuron = neuronDataFor(dossier, page.subject, page.pageQueries);
   const gates = copyGateContext(data, page.serviceLabels, true, page.places);
   const filters = buildDepthFilters({
-    competitorTitles: neuron?.competitorTitles ?? [],
-    basicTerms: (neuron?.bodyTerms ?? []).filter(term => term.tier === 'basic').map(term => term.t),
-    anchorText: [page.subject, page.pageLabel, ...page.serviceLabels, ...page.places, clean(data.businessNiche), clean(data.primaryService), dossier.businessTruth.businessName].join(' '),
-    ownerPlaces: page.places,
-    localities: ISRAELI_LOCALITIES,
-    siteVertical: detectVertical(data.businessNiche ?? ''),
-    offeredVerticals: offeredVerticalsFor([page.subject, page.pageLabel, ...page.serviceLabels, clean(data.primaryService)]),
+    ...depthFilterInputFor(data, dossier.businessTruth.businessName, page, neuron ? {
+      competitorTitles: neuron.competitorTitles,
+      basicTerms: (neuron.bodyTerms ?? []).filter(term => term.tier === 'basic').map(term => term.t),
+      keyword: neuron.keyword,
+    } : null),
     widensArea: text => serviceAreaHits(text, gates).length > 0,
-    keyword: neuron?.keyword ?? page.subject,
   });
   return {
     ...(neuron?.wordTarget !== undefined ? { wordTarget: neuron.wordTarget } : {}),
