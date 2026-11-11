@@ -139,6 +139,11 @@ export interface BudgetOptions {
   priorKeys?: readonly string[];
   /** Minimum sentence counts of the prose fields. */
   minSentences: Readonly<Record<string, number>>;
+  /**
+   * Rerun-3b item C: item fields the budget never drops (they still own their keys, so a later repeat of them is the one
+   * over budget). The primary-service card description: dropping it left the money service as a bare card heading.
+   */
+  protectedFields?: readonly string[];
 }
 
 /**
@@ -229,7 +234,7 @@ export function repetitionBudgetDecisions(copy: Loose, strings: readonly BudgetS
       });
       continue;
     }
-    if (isBudgetItemField(item.field) || NULLABLE_HEADINGS.includes(item.field)) {
+    if ((isBudgetItemField(item.field) || NULLABLE_HEADINGS.includes(item.field)) && !(options.protectedFields ?? []).includes(item.field)) {
       const reason = overBudget(item.field, item.value) ?? (isBudgetItemField(item.field) && addsNothing(item.value, pageStems, free) ? 'no_novelty' : null);
       if (reason) { decisions.push({ field: item.field, reason }); continue; }
     }

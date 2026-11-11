@@ -24,6 +24,7 @@ import {
   applyRepetitionBudget,
   assertBoundedGeneratedSiteCopy,
   briefGateContext,
+  primaryCardDescriptionField,
   repetitionBudgetInputs,
   shapeOptions,
   withSystemFields,
@@ -173,4 +174,26 @@ test('pending templates: no drop, the copy is untouched; the site context carrie
     assert.ok((context.priorMechanismKeys ?? []).length > 0);
     assert.deepEqual(context.priorMechanismKeys, statementKeys(page.copy, ['heroHeadline', 'heroSubheadline', 'storyHeadline', 'storyBody', 'serviceDetails', 'aboutPageHeadline', 'aboutPageBody', 'formHeadline'], ['trustBarItems', 'proofItems', 'proofHeadline']));
   });
+});
+
+// Rerun-3b item C (Noa): 3/3 homepages rendered the primary-service card as a bare heading after
+// budget_drop_item:serviceDetails[0].description (over_budget / no_novelty). The budget never drops the primary card.
+test('rerun-3b C: the primary-service card description is protected from budget drops and still owns its keys', () => {
+  const strings = [
+    s('storyBody', 'alpha bravo charlie delta echo.'),
+    s('serviceDetails[0].description', 'alpha bravo charlie delta again'),
+    s('serviceDetails[1].description', 'alpha bravo charlie delta once more with new words here'),
+    s('aboutPageBody', 'zulu yankee xray whiskey. victor uniform tango sierra. romeo quebec papa oscar.'),
+  ];
+  const plain = repetitionBudgetDecisions({}, strings, { free: NO_FREE, minSentences: MIN });
+  assert.ok(plain.some(item => item.field === 'serviceDetails[0].description'), 'unprotected: dropped');
+  const kept = repetitionBudgetDecisions({}, strings, { free: NO_FREE, minSentences: MIN, protectedFields: ['serviceDetails[0].description'] });
+  assert.ok(!kept.some(item => item.field === 'serviceDetails[0].description'), 'protected: kept');
+  assert.ok(kept.some(item => item.field === 'serviceDetails[1].description'), 'the other card still pays for the repeat');
+  // The primary card is the one named the page's relevance term (the primary label), else the first card.
+  const site = { relevanceTerm: 'bravo' } as PageBrief['site'];
+  const page = { id: 'home', targetPath: '/', pageClass: 'homepage' } as PageBrief['page'];
+  assert.equal(primaryCardDescriptionField({ serviceDetails: [{ name: 'alpha', description: 'x' }, { name: 'bravo', description: 'y' }] }, { site, page }), 'serviceDetails[1].description');
+  assert.equal(primaryCardDescriptionField({ serviceDetails: [{ name: 'alpha', description: 'x' }] }, { site, page }), 'serviceDetails[0].description');
+  assert.equal(primaryCardDescriptionField({ serviceDetails: [] }, { site, page }), null);
 });

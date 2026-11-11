@@ -1150,7 +1150,21 @@ export function repetitionBudgetInputs(value: Loose, brief: PageBrief, data: Col
     codeOwnedFields: gates.codeOwnedFields ?? [],
     qaCodeItems: gates.qaCodeOwnership?.codeItems ?? 0,
   }, researchedRenderedFieldsFor(brief.page.pageClass));
-  return { strings, options: { free: phraseRepeatFreeTokens(gates), minSentences: PROSE_MIN_SENTENCES, ...(priorMechanismKeys?.length ? { priorKeys: priorMechanismKeys } : {}) } };
+  const primary = primaryCardDescriptionField(value, brief);
+  return { strings, options: { free: phraseRepeatFreeTokens(gates), minSentences: PROSE_MIN_SENTENCES, ...(priorMechanismKeys?.length ? { priorKeys: priorMechanismKeys } : {}), ...(primary ? { protectedFields: [primary] } : {}) } };
+}
+
+/**
+ * Rerun-3b item C: the description path of the primary-service card (the card named the page's relevance term, i.e. the
+ * primary service label on the homepage / hub; else the first card), or null without cards. The repetition budget never
+ * drops it (a copy-quality trim must not leave the money service as a bare heading); truth drops still apply.
+ */
+export function primaryCardDescriptionField(copy: Loose, brief: Pick<PageBrief, 'site' | 'page'>): string | null {
+  const cards = Array.isArray(copy.serviceDetails) ? copy.serviceDetails : [];
+  if (!cards.length || !brief.site) return null;
+  const key = (value: unknown) => (typeof value === 'string' ? value.trim().normalize('NFC') : '');
+  const named = cards.findIndex(item => plainObject(item) && key(item.name) === key(brief.site?.relevanceTerm));
+  return `serviceDetails[${named >= 0 ? named : 0}].description`;
 }
 
 /**
