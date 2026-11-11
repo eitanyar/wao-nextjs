@@ -1,0 +1,92 @@
+/* Site-Bot terms page: horizontally scrollable tables with an RTL-aware edge fade.
+   Logical properties only (inset-inline-*, :dir()) so the fade sits on the correct side in RTL and LTR.
+   Colors come from var(--bg); no hard-coded white. */
+
+.tableFrame {
+  position: relative;
+  margin: 8px 0 20px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+  container: terms-table / inline-size;
+  timeline-scope: --terms-table-x;
+}
+
+.tableScroll {
+  overflow-x: auto;
+}
+
+.tableScroll:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+  border-radius: 12px;
+}
+
+/* COUPLING: the fade container query below must use this same width (the table overflows only below it). */
+.table {
+  width: 100%;
+  min-width: 520px;
+}
+
+.fade {
+  position: absolute;
+  inset-block: 0;
+  inline-size: 28px;
+  pointer-events: none;
+  display: none;
+}
+
+.fadeStart {
+  inset-inline-start: 0;
+  background: linear-gradient(to right, var(--bg), transparent);
+}
+
+.fadeStart:dir(rtl) {
+  background: linear-gradient(to left, var(--bg), transparent);
+}
+
+.fadeEnd {
+  inset-inline-end: 0;
+  background: linear-gradient(to left, var(--bg), transparent);
+}
+
+.fadeEnd:dir(rtl) {
+  background: linear-gradient(to right, var(--bg), transparent);
+}
+
+/* Only when the table is wider than its frame (frame narrower than .table min-width = 520px): cue the hidden columns
+   at the inline end. Without scroll-driven animations the end fade stays on; the start fade needs them. */
+@container terms-table (width < 520px) {
+  .fadeEnd {
+    display: block;
+  }
+}
+
+@supports (animation-timeline: scroll()) {
+  .tableScroll {
+    scroll-timeline: --terms-table-x inline;
+  }
+
+  @container terms-table (width < 520px) {
+    .fadeStart {
+      display: block;
+      animation: termsFadeStart linear both;
+      animation-timeline: --terms-table-x;
+    }
+
+    .fadeEnd {
+      animation: termsFadeEnd linear both;
+      animation-timeline: --terms-table-x;
+    }
+  }
+}
+
+@keyframes termsFadeStart {
+  0% { opacity: 0; }
+  15%, 100% { opacity: 1; }
+}
+
+@keyframes termsFadeEnd {
+  0%, 85% { opacity: 1; }
+  100% { opacity: 0; }
+}

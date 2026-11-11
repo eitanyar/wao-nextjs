@@ -170,8 +170,9 @@ export default function SiteBotPayClient({ cardDefaults }: { cardDefaults: CardF
               </div>
               <p data-terms-consent="site-bot" style={{ color: "var(--muted)", fontSize: "0.82rem", lineHeight: 1.6, margin: "0 0 10px" }}>
                 {renderMixed(termsConsent.before)}
-                <a href={SITE_BOT_TERMS_PATH} target="_blank" rel="noopener" style={{ color: "var(--accent)", textDecoration: "underline" }}>
+                <a href={SITE_BOT_TERMS_PATH} target="_blank" rel="noopener noreferrer" style={{ color: "var(--accent)", textDecoration: "underline" }}>
                   {renderMixed(termsConsent.linkLabel)}
+                  <span aria-hidden="true">↗</span>
                 </a>
                 {renderMixed(termsConsent.after)}
               </p>

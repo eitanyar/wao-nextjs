@@ -210,6 +210,15 @@ test('checkout copy: byte-exact from the approved docs/copy source; the numbers 
   assert.match(client, /const termsConsent = siteBotTermsConsentParts\(\);/);
   assert.match(client, /href=\{SITE_BOT_TERMS_PATH\}/);
   assert.ok(client.indexOf('data-terms-consent') < client.indexOf('siteBotCheckoutText("payButton"'), 'consent sits above the pay button');
+  // The consent link opens a new tab safely and marks it with an aria-hidden north-east arrow after the label.
+  assert.match(client, /href=\{SITE_BOT_TERMS_PATH\} target="_blank" rel="noopener noreferrer"/);
+  assert.match(client, /\{renderMixed\(termsConsent\.linkLabel\)\}\s*<span aria-hidden="true">\u2197<\/span>\s*<\/a>/);
+  // Domain policy 2026-11-11 (client buys, WAO connects): domainLine is the patch's new pay line, and the pay-terms file agrees.
+  const domainPatch = JSON.parse(fs.readFileSync(path.join(root, 'docs/copy/site-bot-domain-client-buys-2026-11-11.json'), 'utf8'))
+    .patches.find((p: { file: string }) => p.file === 'src/lib/site-bot/checkout/checkoutCopy.ts');
+  assert.equal(SITE_BOT_CHECKOUT_COPY.domainLine, domainPatch.new);
+  assert.notEqual(SITE_BOT_CHECKOUT_COPY.domainLine, domainPatch.old);
+  assert.equal(approved.domainLine, domainPatch.new);
 });
 
 test('customer pages never render a __HE_TODO_ placeholder: customerVisibleLabel hides it; the pay client renders only through it', () => {

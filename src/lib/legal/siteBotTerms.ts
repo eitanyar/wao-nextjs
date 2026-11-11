@@ -1,6 +1,6 @@
 // AUTO-GENERATED from docs/legal/site-bot-terms-of-use.md (approved legal text). Do not edit by hand;
 // run `node scripts/build-site-bot-terms.mjs`. scripts/build-site-bot-terms.test.mjs checks it byte for byte.
-// Source SHA256: 44ec8fc84dfce9e42fd0244e96d3fc425a5f2cbe5f2b835dccd2eade438376e4
+// Source SHA256: 4cc15b329a09d4a04c02389b820d436f42863bf46835c8943217e2ccca6a63a0
 import type { LegalDoc } from './legalDoc';
 
 export const SITE_BOT_TERMS: LegalDoc = {
@@ -329,7 +329,7 @@ export const SITE_BOT_TERMS: LegalDoc = {
           "type": "p",
           "inlines": [
             {
-              "text": "בחודש הראשון האתר פועל תחת תת-דומיין של WAO. לאחר שהחיוב החודשי השני מתקבל, נרשום דומיין מסוג .co.il על שמך ונשלם על חידושו רק כל עוד אתה מנוי לשירות. לאחר סיום השירות, חידוש הדומיין הוא באחריותך, ולבקשתך נעביר את הדומיין מחשבוננו לכל יעד שתבחר. אם יש לך דומיין קיים, ניתן לחבר אותו לשירות."
+              "text": "בחודש הראשון האתר פועל תחת תת-דומיין של WAO. תוכל בכל עת לרכוש דומיין מסוג co.il על שמך ועל חשבונך, דרך כל חברת רישום שתבחר, ואנו נחבר אותו לאתר. נוכל גם לסייע לך בתהליך. רישום הדומיין, התשלום עליו וחידושו הם באחריותך בלבד. אם יש לך דומיין קיים, ניתן לחבר אותו לשירות."
             }
           ]
         },
@@ -939,20 +939,6 @@ export const SITE_BOT_TERMS: LegalDoc = {
           "inlines": [
             {
               "text": "וואו שיווק באינטרנט · ע.מ 034442921 · הפרח 80, ראשון לציון · eitan@wao.co.il"
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "id": "section-21",
-      "heading": "21. סטטוס",
-      "blocks": [
-        {
-          "type": "p",
-          "inlines": [
-            {
-              "text": "נוסח זה ממתין לאישור עורך דין."
             }
           ]
         }

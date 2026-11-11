@@ -26,7 +26,7 @@ export const SITE_BOT_CHECKOUT_COPY: Readonly<{
   pageSubheading: string;
   /** Pay button: "Pay {total} and start the monthly plan". */
   payButton: string;
-  /** Domain timing (terms section 6): temporary WAO address first; a co.il domain in the customer's name after the second monthly payment. */
+  /** Domain (terms section 6): temporary WAO address first; the customer buys a domain in their own name and WAO connects it. */
   domainLine: string;
   /** Small print above the pay button: "By paying you agree to the {termsLink}." `{termsLink}` is a link, not text (siteBotTermsConsentParts). */
   termsConsent: string;
@@ -39,7 +39,7 @@ export const SITE_BOT_CHECKOUT_COPY: Readonly<{
   termsCancelOnline: "אפשר לבטל אונליין בכל עת. הביטול נכנס לתוקף בסוף החודש ששילמת עליו.",
   pageSubheading: "אחרי שהתשלום הראשון מתאשר, האתר שלך נבנה, עובר בדיקה אנושית ורק אז מתפרסם.",
   payButton: "שלם {total} והתחל מסלול חודשי",
-  domainLine: "האתר עולה קודם בכתובת זמנית של WAO. אחרי התשלום החודשי השני תקבל דומיין co.il על שמך, ואנחנו משלמים עליו כל עוד אתה מנוי. כבר יש לך דומיין? נחבר אותו.",
+  domainLine: "האתר עולה קודם בכתובת זמנית של WAO. כשתרצה כתובת משלך, תוכל לרכוש דומיין על שמך, ואנחנו נחבר אותו ונעזור אם תצטרך. כבר יש לך דומיין? נחבר אותו.",
   termsConsent: "בביצוע התשלום אתה מסכים ל{termsLink}.",
   termsLinkLabel: "תנאי השימוש",
 };

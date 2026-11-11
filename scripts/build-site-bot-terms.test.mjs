@@ -30,7 +30,7 @@ test('emitted text equals the source, line by line (independent line-oriented ex
   assert.equal(doc.title, lines[0].replace(/^# /, ''));
   // Every heading, in order.
   assert.deepEqual(doc.sections.map(s => s.heading), lines.filter(l => l.startsWith('### ')).map(l => l.slice(4)));
-  assert.equal(doc.sections.length, 21);
+  assert.equal(doc.sections.length, 20);
   assert.deepEqual(doc.sections.map(s => s.id), doc.sections.map((_, i) => `section-${i + 1}`));
   // Every body line, in order, with the markdown syntax stripped.
   const emitted = [];
