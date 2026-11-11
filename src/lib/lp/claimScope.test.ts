@@ -4,11 +4,11 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { buildFearPromiseSpec, buildSameDayScopeSpec, claimWords, fearPromiseMatches, sameDayOutOfScope, wordForms } from './claimScope';
-import { copyGateContext, GATE_RULES, runCopyGates } from './copyGates';
+import { blockingGateHits, copyGateContext, GATE_RULES, isWarningHit, runCopyGates, warningGateHits } from './copyGates';
 import type { CollectedData } from '../bot/prompts';
 import { compilePageBrief, type PageBriefInput } from '../site-bot/research/pageBrief';
 import { FACT_PARSE_TOKEN_KEYS, FACT_RULE_TOKEN_KEYS, OWNER_FACT_TEMPLATES, setOwnerFactTemplatesForTests, type OwnerFactTemplates } from './ownerFactCopy';
-import { CLAIM_SCOPE_RULES, dropClaimScope, generateResearchPageCopy, GeneratedCopyValidationError, ungeneratedFieldsFor, type CopyRepairEvent } from './researchPageCopy';
+import { briefGateContext, CLAIM_SCOPE_RULES, dropClaimScope, generateResearchPageCopy, GeneratedCopyValidationError, ungeneratedFieldsFor, type CopyRepairEvent } from './researchPageCopy';
 
 const T = OWNER_FACT_TEMPLATES;
 const WITHOUT = T.parseNegationWords.find(word => !/\s/.test(word) && word.length === 3) as string;
@@ -120,5 +120,46 @@ test('end to end: a hero that promises the fear away gets exactly one repair, th
     assert.ok(error instanceof GeneratedCopyValidationError, String(error));
     assert.ok(error.violations.some(item => item.field === 'heroHeadline' && item.rule === GATE_RULES.fearPromise));
     assert.ok(repairs >= 1);
+  } finally { setOwnerFactTemplatesForTests(undefined); }
+});
+
+// Rerun-3b bug B: plumber-3 home shipped a fear promise in storyHeadline. The research gate context excludes the warn-only
+// rendered fields (story, depth blocks) from renderedFields, and gate_fear_promise / gate_same_day_scope were not
+// always-blocking, so a hit there was a warning: dropClaimScope (blocking hits only) never saw it. Policy (Adam): a fear or
+// same-day hit in ANY rendered field is dropped (nullable / droppable) or blocking (one repair, then fail); never warn-only.
+test('rerun-3b bug B: a fear / same-day hit in a warn-only rendered field blocks and is dropped; unrendered stays a warning', () => {
+  setOwnerFactTemplatesForTests(STANDIN);
+  try {
+    const approved = (id: string, value: string) => ({ id, value, status: 'approved' as const });
+    const home = compilePageBrief({
+      page: { id: 'home', targetPath: '/', pageClass: 'homepage' },
+      persona: approved('persona', 'A local customer in Holon'), waoOffer: approved('offer', 'TEST Biz'),
+      targetQueries: [approved('query-1', 'plumber Holon')], entityAnchors: [approved('entity-1', 'leak repair')],
+      firstPartyProof: [], localFacts: [approved('local-area', 'Service area (owner-stated): Holon')],
+      customerDecisions: [], constraints: [], informationGainGaps: [], prohibitedClaims: [], faqCandidates: [], links: [],
+      site: { pageName: 'plumber', relevanceTerm: 'leak repair', city: 'Holon', serviceArea: ['Holon'], serviceLabels: ['leak repair'], businessName: 'TEST Biz', soloOperator: true, ownerIntroPage: true },
+    } as PageBriefInput);
+    const data: CollectedData = { businessName: 'TEST Biz', businessNiche: 'plumber', targetLocation: 'Holon', specificCities: 'Holon', idealClientFear: 'that he breaks the bathroom tiles', usp: 'I find the leak with a camera', phone: '050-0000000' };
+    const ctx = briefGateContext(home, data);
+    assert.ok(ctx.fearPromise, 'the fear gate is on');
+    assert.ok(ctx.claimScopeFields?.includes('storyHeadline') && ctx.claimScopeFields.includes('storyBody'));
+    assert.ok(!ctx.renderedFields?.includes('storyHeadline'), 'storyHeadline is still warn-only for the voice gates');
+    const fear = 'zzparseNegationWords breaking tiles';
+    const copy: Record<string, unknown> = {
+      heroHeadline: 'leak repair in Holon', storyHeadline: fear,
+      storyBody: `I came at night. I found the leak. ${fear}. I cleaned up.`,
+    };
+    const hits = runCopyGates(copy, ctx).filter(hit => CLAIM_SCOPE_RULES.includes(hit.rule));
+    assert.deepEqual(hits.map(hit => hit.field).sort(), ['storyBody', 'storyHeadline']);
+    assert.deepEqual(warningGateHits(hits, ctx), [], 'never warn-only in a rendered field');
+    assert.equal(blockingGateHits(hits, ctx).length, 2);
+    const fixes = dropClaimScope(copy, ctx);
+    assert.equal(copy.storyHeadline, null, 'nullable heading dropped');
+    assert.equal(copy.storyBody, 'I came at night. I found the leak. I cleaned up.');
+    assert.ok(fixes.includes('claim_scope_null:storyHeadline'), fixes.join(','));
+    assert.deepEqual(runCopyGates(copy, ctx).filter(hit => CLAIM_SCOPE_RULES.includes(hit.rule)), []);
+    // A field the page does not render: a warning (no repair spent on invisible text).
+    assert.equal(isWarningHit({ field: 'stickyBarLine', rule: GATE_RULES.fearPromise }, ctx), true);
+    assert.equal(isWarningHit({ field: 'qaItems[0].a', rule: GATE_RULES.sameDayScope }, { ...ctx, claimScopeFields: [...ctx.claimScopeFields ?? [], 'qaItems'] }), false);
   } finally { setOwnerFactTemplatesForTests(undefined); }
 });

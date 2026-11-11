@@ -328,6 +328,12 @@ export interface CopyGateContext {
   fearPromise?: FearPromiseSpec;
   /** Rerun-3 item 5: gate_same_day_scope inputs (unset = off: the owner has a response fact). */
   sameDayScope?: SameDayScopeSpec;
+  /**
+   * Rerun-3b bug B: every field this page renders, the warn-only ones included (researchedRenderedFieldsFor). A
+   * CLAIM_SCOPE_GATE_RULES hit in one of them always blocks (so it is dropped where the field allows it, else one repair,
+   * then the page fails); a hit in an unrendered field is a warning. Unset = the renderedFields rule below applies.
+   */
+  claimScopeFields?: readonly string[];
 }
 
 /** Content depth gate inputs (see CopyGateContext.depth). */
@@ -2166,19 +2172,29 @@ export function isRelaxedPhraseCapHit(hit: Pick<GateViolation, 'rule' | 'actual'
   return Boolean(ctx.promiseRestatement) && hit.rule === GATE_RULES.factRepeat && (hit.actual ?? '').startsWith('phrase:');
 }
 
+/**
+ * Rerun-3b bug B (Adam's policy): a fear-promise or same-day hit in a rendered field is never warn-only. It blocks in every
+ * rendered field, the RESEARCHED_RENDERED_WARN_ONLY_FIELDS ones (story, depth blocks) included, so the drop step removes it
+ * where the field is droppable and anything else gets one repair, then fails the page (CopyGateContext.claimScopeFields).
+ */
+export const CLAIM_SCOPE_GATE_RULES: readonly GateRule[] = [GATE_RULES.fearPromise, GATE_RULES.sameDayScope];
+
+type WarningContext = Pick<CopyGateContext, 'renderedFields' | 'promiseRestatement'> & Partial<Pick<CopyGateContext, 'claimScopeFields'>>;
+
 /** True when a gate hit is a warning, not a page failure (see ALWAYS_BLOCKING_RULES / WARNING_ONLY_RULES). */
-export function isWarningHit(hit: Pick<GateViolation, 'field' | 'rule' | 'actual'>, ctx: Pick<CopyGateContext, 'renderedFields' | 'promiseRestatement'>): boolean {
+export function isWarningHit(hit: Pick<GateViolation, 'field' | 'rule' | 'actual'>, ctx: WarningContext): boolean {
   if (WARNING_ONLY_RULES.includes(hit.rule)) return true;
   if (isRelaxedPhraseCapHit(hit, ctx)) return true;
+  if (ctx.claimScopeFields && CLAIM_SCOPE_GATE_RULES.includes(hit.rule)) return !ctx.claimScopeFields.includes(topFieldOf(hit.field));
   if (!ctx.renderedFields || ALWAYS_BLOCKING_RULES.includes(hit.rule)) return false;
   return !ctx.renderedFields.includes(topFieldOf(hit.field));
 }
 /** The hits that fail the page. */
-export function blockingGateHits<T extends Pick<GateViolation, 'field' | 'rule' | 'actual'>>(hits: readonly T[], ctx: Pick<CopyGateContext, 'renderedFields' | 'promiseRestatement'>): T[] {
+export function blockingGateHits<T extends Pick<GateViolation, 'field' | 'rule' | 'actual'>>(hits: readonly T[], ctx: WarningContext): T[] {
   return hits.filter(hit => !isWarningHit(hit, ctx));
 }
 /** The hits that are only logged. */
-export function warningGateHits<T extends Pick<GateViolation, 'field' | 'rule' | 'actual'>>(hits: readonly T[], ctx: Pick<CopyGateContext, 'renderedFields' | 'promiseRestatement'>): T[] {
+export function warningGateHits<T extends Pick<GateViolation, 'field' | 'rule' | 'actual'>>(hits: readonly T[], ctx: WarningContext): T[] {
   return hits.filter(hit => isWarningHit(hit, ctx));
 }
 
@@ -2498,6 +2514,8 @@ export interface CopyGatePageOptions {
   /** Rerun-3 items 4-5: see CopyGateContext.fearPromise / sameDayScope. */
   fearPromise?: FearPromiseSpec;
   sameDayScope?: SameDayScopeSpec;
+  /** Rerun-3b bug B: see CopyGateContext.claimScopeFields. */
+  claimScopeFields?: readonly string[];
 }
 
 /** Build the gate context from owner data plus the page's confirmed service names and owner-stated places. */
@@ -2541,6 +2559,7 @@ export function copyGateContext(data: CollectedData, serviceLabels: readonly str
     ...(page.qaAnswerLead ? { qaAnswerLead: page.qaAnswerLead } : {}),
     ...(page.fearPromise ? { fearPromise: page.fearPromise } : {}),
     ...(page.sameDayScope ? { sameDayScope: page.sameDayScope } : {}),
+    ...(page.claimScopeFields ? { claimScopeFields: [...page.claimScopeFields] } : {}),
   };
 }
 

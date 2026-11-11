@@ -2519,8 +2519,9 @@ export function briefGateContext(brief: PageBrief, data: CollectedData): CopyGat
     ...(site && codeOwnsFacts(brief) ? { codeOwnedFields: [...CODE_OWNED_FACT_FIELDS] } : {}),
     // Copy v2 slice 4: the code-owned facts no model field may restate (gate_fact_restatement).
     ...(site && codeOwnsFacts(brief) ? { factRestatement: factRestatementSpec(brief, data, codeOwnedFactTemplates() as OwnerFactTemplates) } : {}),
-    // Rerun-3 items 4-5: fear-into-promise and same-day-without-scope (code-owned facts only).
-    ...(site && codeOwnsFacts(brief) ? claimScopeSpecs(brief, data, codeOwnedFactTemplates() as OwnerFactTemplates) : {}),
+    // Rerun-3 items 4-5: fear-into-promise and same-day-without-scope (code-owned facts only). Rerun-3b bug B: they block in
+    // every rendered field, the warn-only story / depth fields included (never a warning on what the reader sees).
+    ...(site && codeOwnsFacts(brief) ? { ...claimScopeSpecs(brief, data, codeOwnedFactTemplates() as OwnerFactTemplates), claimScopeFields: researchedRenderedFieldsFor(brief.page.pageClass) } : {}),
     // M2b.1h: pitch-first pages may restate the promise in fresh words; every research page blocks verbatim repeats.
     ...(site ? { promiseRestatement: pitchFirstPage(brief), phraseRepeatFields: researchedRenderedFieldsFor(brief.page.pageClass) } : {}),
     // Copy v2 slice 6: the code-built Q&A items and every pool question are code-owned; the lead is not the model's.
