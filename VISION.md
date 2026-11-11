@@ -37,7 +37,7 @@ Four independently sellable bots, one unified client portal (`/client/dashboard`
 | **Ads Bot** | ₪249/mo | Google Ads onboarding → campaign management → monthly recommendations (**demoted to product #3, 2026-08-23** — deferred behind Phone Bot: capture before amplification; arrives once the answer + attribution fabric can prove its ROI honestly, and it carries the roadmap's heaviest external gates — Developer Token production approval, RMF dashboard, billing isolation) |
 | **Content Bot** | ₪490/mo | SEO content plan → keyword cluster → article pipeline → publish (later-stage upsell; front door pivoting toward the Proof Engine — jobs/photos/voice-notes as the content input, per PURPLE_COW_OFFER_STRATEGY.md Part A) |
 
-Each bot is an agentic pipeline, not a human-delivered service. The LP markets the bot; the delivery IS the agent flow. **GEO Bot is retired as a separate acquisition channel (Eitan, 2026-08-21 — "kill it fully")** — WAO does not go to market for a second, content-ready-SMB buyer. Its content-authoring engine (`scripts/geo-generate-content.mjs` + `scripts/gsc-pareto.mjs`) is repurposed two ways: (1) core-30 page authorship under the Gate-1 content-safety rules, and (2) **restored as a late-stage upsell for WAO's own Site Bot clients** (Eitan, 2026-08-21) — see below. It is not sold to external content-ready SMBs. The single current *acquisition* product is Site Bot; **product #2 is Phone Bot (2026-08-23, supersedes Ads Bot's presumptive #2 slot)**; Ads Bot (#3) and Content Bot are deferred behind Phone Bot proof. The ₪9.90 trial is once per client, not per bot. **Pricing fork resolved (Eitan, 2026-08-21):** ₪9.90 trial → generate-only preview (cheap, ~₪2 LLM cost, no live deploy/GBP claim) → **₪199/month retainer unlocks the actual deploy** (live core-30 site + GBP claim + the recurring growth/GBP-monitoring/digest bundle, see Bots table above) → **₪299/month GEO Bot upgrade at month 4** once GSC has ≥90 days of real data. This replaces the old one-time ₪1,490–1,990 Site Bot price and the previously-deferred "Phase 2 pricing trigger" (see Monetization § below, now superseded) — it does not require bot-executed edit-via-chat, since the recurring value is the batch page-growth/GBP/digest bundle, not conversational editing.
+Each bot is an agentic pipeline, not a human-delivered service. The LP markets the bot; the delivery IS the agent flow. **GEO Bot is retired as a separate acquisition channel (Eitan, 2026-08-21 — "kill it fully")** — WAO does not go to market for a second, content-ready-SMB buyer. Its content-authoring engine (`scripts/geo-generate-content.mjs` + `scripts/gsc-pareto.mjs`) is repurposed two ways: (1) core-30 page authorship under the Gate-1 content-safety rules, and (2) **restored as a late-stage upsell for WAO's own Site Bot clients** (Eitan, 2026-08-21) — see below. It is not sold to external content-ready SMBs. The single current *acquisition* product is Site Bot; **product #2 is Phone Bot (2026-08-23, supersedes Ads Bot's presumptive #2 slot)**; Ads Bot (#3) and Content Bot are deferred behind Phone Bot proof. **Pricing (Eitan, 2026-08-21; trial removed 2026-11-07, reconfirmed 2026-11-11 — "no trial, ₪199/month from day one"):** free audit → free preview before pay (generate-only, no live deploy/GBP claim) → **₪199 + VAT/month retainer from day one unlocks the actual deploy** (live core-30 site + GBP claim + the recurring growth/GBP-monitoring/digest bundle, see Bots table above) → **₪299/month GEO Bot upgrade at month 4** once GSC has ≥90 days of real data. This replaces the old one-time ₪1,490–1,990 Site Bot price and the previously-deferred "Phase 2 pricing trigger" (see Monetization § below, now superseded) — it does not require bot-executed edit-via-chat, since the recurring value is the batch page-growth/GBP/digest bundle, not conversational editing.
 
 **Buyer routing (superseded 2026-08-21 by the single-segment wedge — see Phase 1):**
 - **Single target segment: no-website micro-business** (fixed-location plumber/electrician-class, in-home tutor, photographer). Enters via **Site Bot** (core-30 + GBP merged). Upsell ladder: **Content Bot once ≥15 pages exist → GEO Bot at ~month 4**, gated on (a) Google Search Console verified/installed on the client's own core-30 site at launch, and (b) ≥90 days of real GSC click/impression data accumulated (`gsc-pareto.mjs`'s hard data floor — confirmed earlier this session it cannot run without it) — ~4 months gives buffer past that floor. This is a same-client lifecycle upsell, not a re-opened acquisition channel — do not market GEO Bot externally or route new content-ready-SMB leads to it. Ads Bot deferred behind Site Bot proof.
@@ -61,10 +61,10 @@ Each bot is an agentic pipeline, not a human-delivered service. The LP markets t
 3. **Courses/webinars demoted to internal-capability status.** Existing course assets stay live
    (sunk, residual SEO); the course pipeline survives as the Phase-4 content-automation
    prototype; **no new course build; mass webinars are out of the growth model.** The funnel
-   top becomes **receipts**: the ₪9.90 preview (+ AI-visibility snapshot per Card 9), live
+   top becomes **receipts**: the free preview (+ AI-visibility snapshot per Card 9; the ₪9.90 paid rung was removed 2026-11-07), live
    client case studies, and referrals. The Iceberg's "visible" layer and the Phase-1
    "Trust & Funnel" course mission below are superseded accordingly (kept for history).
-4. Rung 0/2 packaging (from the same pass): the ₪9.90 preview additionally bundles a read-once
+4. Rung 0/2 packaging (from the same pass): the free preview additionally bundles a read-once
    **AI-visibility snapshot** ("here's what Google Maps + ChatGPT say about you today —
    nothing"); the month-4 ₪299 upgrade is sold as **"תופיע גם כשה-AI עונה"**, never as "GEO".
 
@@ -151,7 +151,7 @@ Every bot flow must be completable end-to-end by voice. Text input is a valid fa
 
 ```
 VISIBLE (Trust & Discovery — amended 2026-08-23):
-  Receipts: ₪9.90 preview + AI-visibility snapshot → live client case studies → referrals
+  Receipts: free preview + AI-visibility snapshot → live client case studies → referrals
 
 ─────────────────────────────────────────────────────────────────
 
@@ -196,7 +196,7 @@ Client always pays their Google Ads budget directly to Google — WAO never touc
 
 ### Growth Model (amended 2026-08-23 — mass webinars removed, Purple-Cow fork 3; a webinar funnel selects *against* the target owner)
 ```
-Receipts (₪9.90 preview + AI-visibility snapshot, case studies, referrals)
+Receipts (free preview + AI-visibility snapshot, case studies, referrals)
        ↓
 WhatsApp-native onboarding
        ↓
@@ -270,7 +270,7 @@ Rationale: the two-branch structure split a single founder's WoZ throughput acro
 
 **Separately blocking, GBP-side (Eitan-Dev, verified live 2026-08-21):** `GBP_CLIENT_ID` / `GBP_CLIENT_SECRET` / `GBP_REFRESH_TOKEN` are **not present** in `.env.local` — the "just granted" access never made it into this environment (or exists only server-side and was never synced). `runGbpScopeSmokeTest()` already exists in `src/lib/gbp/client.ts` and is ready to run the moment credentials land; nothing GBP-write (categories, services, completeness scoring — the core of the merged Site Bot deliverable) can start until then. This is now the **critical-path blocker**, ahead of payment.
 
-**Pricing/conversion fork — RESOLVED 2026-08-21 (Eitan):** ₪9.90 trial → generate-only preview → **₪199/month retainer unlocks deploy** (live site + GBP claim + recurring growth/GBP-monitoring/digest bundle) → ₪299/month GEO Bot upgrade at month 4. See Bots table (top of doc) and Buyer routing § for the full ladder and rationale. **Build implication, not yet done:** `checkout`/payment gating currently sits on `deploy/route.ts` per the pilot's WoZ-invoiced flow (see below) — it needs to reflect a recurring ₪199/mo charge, not a one-time ₪1,490–1,990 charge, before this is wired to real billing (Takbull, still not closed as of 2026-08-21).
+**Pricing/conversion fork — RESOLVED 2026-08-21 (Eitan); no trial since 2026-11-07, reconfirmed 2026-11-11:** free audit → free preview before pay → **₪199 + VAT/month from day one unlocks deploy** (live site + GBP claim + recurring growth/GBP-monitoring/digest bundle) → ₪299/month GEO Bot upgrade at month 4. See Bots table (top of doc) and Buyer routing § for the full ladder and rationale. **Build implication, not yet done:** `checkout`/payment gating currently sits on `deploy/route.ts` per the pilot's WoZ-invoiced flow (see below) — it needs to reflect a recurring ₪199/mo charge, not a one-time ₪1,490–1,990 charge, before this is wired to real billing (Takbull, still not closed as of 2026-08-21).
 
 - [ ] **Site Bot (core-30 + GBP) is the single MVP flow** — build and deliver it end-to-end to the first fixed-location micro-business (plumber/electrician-class) or in-home tutor.
   - Per-page Hebrew authored by Tamar (Gate 1) — no template substitution.

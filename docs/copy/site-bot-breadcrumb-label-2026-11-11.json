@@ -1,0 +1,6 @@
+{
+ "breadcrumbLabel": "מיקומך באתר",
+ "_rules": {
+  "breadcrumbLabel": "aria-label of the breadcrumb <nav> on Site-Bot service pages (RESEARCHED_SITE_LABELS.breadcrumbLabel). Tamar pick, Noa approved 2026-11-11. Screen-reader only; announced as 'ניווט, <label>, רשימה, 2 פריטים'."
+ }
+}
