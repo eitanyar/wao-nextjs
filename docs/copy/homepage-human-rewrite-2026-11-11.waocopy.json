@@ -1,0 +1,149 @@
+{
+  "angle": "Homepage reaches a solution-aware tradesman; lead with the concrete ad demo and lived missed-demand scenes, not abstract direction.",
+  "patches": [
+    {
+      "file": "src/content/astra-authority-first-homepage-copy.json",
+      "old": "אתה כל היום בעבודה – מי שמחפש שירות כמו שלך צריך למצוא אותך. ב-WAO תראה הדגמה: מודעה ודף נחיתה לעסק שלך.",
+      "new": "אתה כל היום אצל לקוחות, ואין לך זמן לשווק. מי שמחפש עכשיו את השירות שלך בגוגל צריך להגיע אליך, לא למתחרה. תראה איך ייראו המודעה ודף הנחיתה שלך, לפני שאתה משלם שקל.",
+      "why": "Replace abstract reveal with a lived scene and demo-before-payment."
+    },
+    {
+      "file": "src/content/astra-authority-first-homepage-copy.json",
+      "old": "אני רוצה לראות הדגמה",
+      "new": "תראה לי את המודעה שלי",
+      "why": "Unify demo CTA labels around the concrete ad."
+    },
+    {
+      "file": "src/content/astra-authority-first-homepage-copy.json",
+      "old": "איתן יריב, מייסד WAO, עומד מאחורי הכיוון המקצועי של כל עבודה כאן.",
+      "new": "כל קמפיין ודף שיוצאים מ-WAO עוברים אצלי לפני הפרסום. אני בשיווק דיגיטלי מאז 2006.",
+      "why": "Remove name echo and state confirmed founder accountability."
+    },
+    {
+      "file": "src/content/astra-authority-first-homepage-copy.json",
+      "old": "סרטון ההמלצות של לקוחות WAO",
+      "new": "לקוחות WAO",
+      "why": "Avoid characterising the video while keeping customer proof."
+    },
+    {
+      "file": "src/content/astra-authority-first-homepage-copy.json",
+      "old": "WAO רשומה בספריית השותפים הרשמית של גוגל כ-Google Partner, עם הסמכות Search ו-Display.",
+      "new": "WAO רשומה בספריית השותפים של גוגל, עם הסמכות לפרסום בחיפוש ולמודעות תצוגה.",
+      "why": "Remove English jargon and keep directory-verifiable status."
+    },
+    {
+      "file": "src/content/astra-authority-first-homepage-copy.json",
+      "old": "יש שתי דרכים להתחיל: להגיע עכשיו למי שמחפש אותך, או לסדר לעסק נוכחות קבועה ברשת.",
+      "new": "",
+      "why": "Cut intro that repeats headings and abstract buzzwords."
+    },
+    {
+      "file": "src/content/astra-authority-first-homepage-copy.json",
+      "old": "פרסום בגוגל – להגיע למי שכבר מחפש אותך",
+      "new": "פרסום בגוגל — להגיע ללקוח שמחפש עכשיו",
+      "why": "Fix en dash and keep head term with concrete intent."
+    },
+    {
+      "file": "src/content/astra-authority-first-homepage-copy.json",
+      "old": "כשלקוח מחפש בגוגל שירות כמו שלך, מודעה מדויקת שמה אותך מולו. הוא נכנס לדף נחיתה ברור, רואה מה אתה מציע – ומשאיר פנייה.",
+      "new": "מישהו באזור שלך מחפש עכשיו בגוגל את מה שאתה עושה. המודעה שלך מופיעה לו, הוא נכנס לדף שלך ומתקשר או משאיר פרטים.",
+      "why": "Add a concrete search scene and remove funnel calque."
+    },
+    {
+      "file": "src/content/astra-authority-first-homepage-copy.json",
+      "old": "פרסום חי יוצא לדרך רק כשתחליט. כל פנייה – מהטופס או מלחיצה – מקושרת למודעה שהביאה אותה.",
+      "new": "שום מודעה לא עולה לאוויר בלי האישור שלך. קודם אתה רואה מודעה ודף נחיתה לעסק שלך.",
+      "why": "Remove call-tracking implication and state approval-first demo."
+    },
+    {
+      "file": "src/content/astra-authority-first-homepage-copy.json",
+      "old": "מי ששמע עליך ורוצה לבדוק – צריך למצוא אותך בקלות. אתר מסודר ונוכחות מקומית נותנים לעסק שלך מקום ברור ברשת: מה אתה עושה, ואיך מגיעים אליך.",
+      "new": "שכן המליץ עליך, והלקוח בודק את השם שלך בגוגל. לא מצא אתר, טלפון ושעות? הוא מתקשר למישהו אחר.",
+      "why": "Add a concrete local trust scene and remove abstract web presence."
+    },
+    {
+      "file": "src/content/astra-authority-first-homepage-copy.json",
+      "old": "עוד על האתר לעסק",
+      "new": "עוד על אתר לעסק",
+      "why": "Make website link idiomatic."
+    },
+    {
+      "file": "src/content/astra-authority-first-homepage-copy.json",
+      "old": "מתלבט במה להתחיל? ספר לנו על העסק שלך, ונבחר יחד כיוון.",
+      "new": "לא בטוח מה מתאים לך? ספר לנו מה אתה עושה ואיפה, ונגיד לך מאיפה שווה להתחיל.",
+      "why": "Remove consultant-speak direction and give a simple next step."
+    },
+    {
+      "file": "src/content/astra-authority-first-homepage-copy.json",
+      "old": "איך זה ייראה אצלך?",
+      "new": "איך תיראה המודעה לעסק שלך?",
+      "why": "Make heading refer to the concrete ad demo."
+    },
+    {
+      "file": "src/content/astra-authority-first-homepage-copy.json",
+      "old": "תן לנו כמה מילים על העסק שלך, ותקבל כיוון ברור לצעד הבא.",
+      "new": "ספר לנו מה אתה עושה ובאיזה אזור. תראה מודעה ודף נחיתה לעסק שלך לפני שאתה מחליט.",
+      "why": "Align body with ad plus landing-page demo, not generic direction."
+    },
+    {
+      "file": "src/content/astra-authority-first-homepage-copy.json",
+      "old": "קדימה, להדגמה",
+      "new": "תראה לי את המודעה שלי",
+      "why": "Unify demo CTA labels around the concrete ad."
+    },
+    {
+      "file": "src/content/astra-homepage-copy.json",
+      "old": "בהחלט. מסלול המודעות מביא לקוחות לאתר שיש לך — או לדף נחיתה חדש וממוקד יותר.",
+      "new": "כן. המודעות יכולות להביא פניות לאתר הקיים שלך, או לדף נחיתה חדש וממוקד יותר.",
+      "why": "Direct answer and remove unused course term."
+    },
+    {
+      "file": "src/content/astra-homepage-copy.json",
+      "old": "להפך — בשביל זה אנחנו כאן. אתה איש המקצוע, ואנחנו מטפלים בצד השיווקי. אתה לא צריך ללמוד מקצוע נוסף.",
+      "new": "לא. אתה איש המקצוע, ואנחנו מטפלים בשיווק.",
+      "why": "Cut agency boast and answer directly."
+    },
+    {
+      "file": "src/content/astra-homepage-copy.json",
+      "old": "זה תלוי במסלול, בביקוש, בתחרות, בתקציב ובהצעה שלך. במודעות — הקצב תלוי בחשיפה. בנוכחות אורגנית — זה גדל בהדרגה, לא בן לילה.",
+      "new": "במודעות, פניות יכולות להגיע תוך כמה ימים אחרי שגוגל מאשרת את המודעות. האישור מגיע בדרך כלל תוך יום עסקים. השבועות הראשונים הם תקופת למידה, והקצב תלוי בביקוש המקומי, בתחרות ובתקציב. בפרופיל העסקי בגוגל, שיחות מגיעות בדרך כלל בחודשים הראשונים. הדירוגים של האתר עצמו בגוגל נבנים לאט יותר, ובדרך כלל משתלמים סביב חודשים 6 עד 12.",
+      "why": "Give approved timing without jargon or day-one claim."
+    },
+    {
+      "file": "src/content/astra-homepage-copy.json",
+      "old": "יש התחייבות או חוזה ארוך טווח?",
+      "new": "יש התחייבות או חוזה לטווח ארוך?",
+      "why": "Fix Hebrew noun phrase."
+    },
+    {
+      "file": "src/content/astra-homepage-copy.json",
+      "old": "התנאים המעודכנים מופיעים בדף כל שירות. בדוק אותם לפני שאתה מאשר תשלום.",
+      "new": "אין. העבודה מתנהלת מחודש לחודש, ואפשר לבטל אונליין בכל עת.",
+      "why": "State confirmed month-to-month terms."
+    },
+    {
+      "file": "src/content/astra-homepage-copy.json",
+      "old": "את השיטה מובילים אנשי השיווק של WAO, עם ניסיון אמיתי בשטח.",
+      "new": "אנשי השיווק של WAO מובילים את העבודה.",
+      "why": "Footer blurb first sentence: human-led work."
+    },
+    {
+      "file": "src/content/astra-homepage-copy.json",
+      "old": "סוכני AI מבצעים חלק גדול מהמחקר, מהכתיבה ומההקמה.",
+      "new": "סוכני AI עושים חלק גדול מהמחקר, מהכתיבה ומההקמה.",
+      "why": "Footer blurb second sentence: AI assistance."
+    },
+    {
+      "file": "src/content/astra-homepage-copy.json",
+      "old": "מאחורי המערכת יש אנשים אמיתיים, עם ניסיון בשיווק דיגיטלי מאז 2006.",
+      "new": "הניסיון שלנו בשיווק דיגיטלי החל ב-2006.",
+      "why": "Footer blurb third sentence: experience since 2006 without repetition."
+    },
+    {
+      "file": "src/components/Footer.tsx",
+      "old": "מערכת \"מה עובד\" (CRM)",
+      "new": "מערכת ״מה עובד״ (CRM)",
+      "why": "Replace ASCII quotes with Hebrew gershayim."
+    }
+  ]
+}

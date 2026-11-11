@@ -34,6 +34,13 @@ function SectionHeading({ children }: { children: React.ReactNode }) {
   return <h2 className="astra-section-title">{children}</h2>;
 }
 
+// Renders nothing for an empty copy value, so a field cleared in the approved copy leaves no empty <p>.
+// Takes the value once, which keeps each finalCopy reference single in the contract test.
+function OptionalParagraph({ text, className }: { text: string; className?: string }) {
+  if (!text.trim()) return null;
+  return <p className={className}>{text}</p>;
+}
+
 function TextLink({ href, children }: { href: string; children: React.ReactNode }) {
   return (
     <Link href={href} className="astra-text-link">
@@ -69,7 +76,7 @@ export default function AstraHome() {
         <div className="astra-container astra-proof-grid">
           <div className="astra-section-copy">
             <SectionHeading>{finalCopy.video_proof.heading}</SectionHeading>
-            <p className="astra-proof-intro">{finalCopy.video_proof.context_line}</p>
+            <OptionalParagraph className="astra-proof-intro" text={finalCopy.video_proof.context_line} />
           </div>
           <AstraProofVideo copy={finalCopy.video_proof} />
         </div>
@@ -79,7 +86,7 @@ export default function AstraHome() {
         <div className="astra-container">
           <div className="astra-section-intro">
             <SectionHeading>{finalCopy.paths.heading}</SectionHeading>
-            <p>{finalCopy.paths.intro}</p>
+            <OptionalParagraph text={finalCopy.paths.intro} />
           </div>
           <div className="astra-paths-grid">
             <article className="astra-path-card astra-path-card-featured">

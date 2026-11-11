@@ -17,11 +17,13 @@ const componentPath = "src/components/home/AstraHome.tsx";
 const headerPath = "src/components/Header.tsx";
 const footerPath = "src/components/Footer.tsx";
 const cssPath = "src/app/globals.css";
-const expectedHash = "2c859866cc013bbdc2fe5e8187fb1e24cf603bb183ae177d1ae71112979a2ef2";
+// 2026-11-11: human rewrite (FAQ answers + footer blurb), docs/copy/homepage-human-rewrite-2026-11-11.json.
+const expectedHash = "e013e6624e78cea2e7f47172718adf5899fc8b8b0160618cbd3ff1c17b6b2a4b";
 const finalSourcePath = "docs/copy/astra-authority-first-homepage-copy.qwen38-v3-2026-09-30.json";
 const finalContentPath = "src/content/astra-authority-first-homepage-copy.json";
 // 2026-11-11: Site-Bot path CTA -> free audit (docs/copy/homepage-sitebot-audit-cta-2026-11-11.json, Noa-approved).
-const finalHash = "1d57c32aa65f5c6516a84fe49e9091c8e486c2c32c063fdc6262bea15cd72bf7";
+// 2026-11-11: human rewrite, 15 patches (docs/copy/homepage-human-rewrite-2026-11-11.json, Eitan-approved).
+const finalHash = "96f68ff35275f9b7a3dbfbd48c08ce48aa7c2815d33ef6971c22bfdb1721660a";
 const finalBytes = read(finalSourcePath);
 const finalCopy = JSON.parse(finalBytes.toString("utf8"));
 
@@ -162,6 +164,8 @@ test("final roles appear once at their assigned sections without old duplicate f
     assert.ok(section(id).includes(reference), `${reference} absent from ${id}`);
     assert.equal(component.split(reference).length - 1, 1, `${reference} duplicated`);
   }
+  // Optional lines may be cleared in approved copy; they render through OptionalParagraph so "" leaves no empty <p>.
+  for (const field of ["video_proof.context_line", "paths.intro"]) assert.match(component, new RegExp(`<OptionalParagraph[^>]*text=\\{finalCopy\\.${field.replace(".", "\\.")}\\}`));
   assert.equal(finalCopy.metadata.exact_destinations.founder_photo, "/eitan-yariv.avif");
   assert.match(section("people"), /finalCopy\.metadata\.exact_destinations\.founder_photo/);
   assert.equal(finalCopy.partner_proof.directory_link.href, directory);
