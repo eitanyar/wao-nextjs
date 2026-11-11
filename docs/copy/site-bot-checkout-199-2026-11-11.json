@@ -1,0 +1,28 @@
+{
+ "checkout": {
+  "priceSuffix": "+ מע״מ לחודש",
+  "priceTotalLine": "{total} כולל מע״מ ({vatPercent}%). החיוב בכרטיס מתבצע היום, ואז באותו תאריך בכל חודש.",
+  "termsNoCommitment": "מתחדש מחודש לחודש, בלי תקופת התחייבות.",
+  "termsCancelOnline": "אפשר לבטל אונליין בכל עת. הביטול נכנס לתוקף בסוף החודש ששילמת עליו.",
+  "pageSubheading": "אחרי שהתשלום הראשון מתאשר, האתר שלך נבנה, עובר בדיקה אנושית ורק אז מתפרסם.",
+  "payButton": "שלם {total} והתחל מסלול חודשי"
+ },
+ "patches": [
+  {
+   "file": "src/components/Hero.tsx",
+   "old": "בניית אתר — מתחילים ב-₪9.90",
+   "new": "בניית אתר — התחל בבדיקה חינמית"
+  },
+  {
+   "file": "src/components/Services.tsx",
+   "old": "בלי מעצב ובלי טפסים. מתחילים ב-₪9.90.",
+   "new": "בלי מעצב ובלי טפסים. אפשר להתחיל קודם בבדיקה חינמית של העסק שלך בגוגל."
+  }
+ ],
+ "_rules": {
+  "source": "waocopy (Qwen 3.8 Max, request a4aea033-b602-48c6-bbe3-004de3c975a4) → Noa approved with fixes 2026-11-11 (termsNoCommitment, termsCancelOnline, Services tail reuses /site-bot page.tsx:29 sentence).",
+  "tokens": "{total} = formatShekels (e.g. ₪234.82), {vatPercent} = 18; filled by code.",
+  "shipGate": "termsCancelOnline promises self-serve online cancel effective end of paid month — keep SITE_BOT_CHECKOUT_COPY_PENDING until that path works.",
+  "heroHref": "Hero ctaPrimary now says 'start with the free audit' → its href must be /site-bot/audit (Adam 2026-11-11)."
+ }
+}

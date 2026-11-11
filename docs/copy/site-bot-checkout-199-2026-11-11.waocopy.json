@@ -1,0 +1,30 @@
+Angle: homepage entry points meet a problem-aware owner before price, so lead with the free audit; checkout copy states the terms plainly for a suspicious, ready-to-pay owner.
+
+```json
+{
+  "checkout": {
+    "priceSuffix": "+ מע״מ לחודש",
+    "priceTotalLine": "{total} כולל מע״מ ({vatPercent}%). החיוב בכרטיס מתבצע היום, ואז באותו תאריך בכל חודש.",
+    "termsNoCommitment": "חודש לחודש, בלי התחייבות מינימום.",
+    "termsCancelOnline": "אפשר לבטל אונליין בכל עת. הביטול נכנס לתוקף בסוף החודש שכבר שולם.",
+    "pageSubheading": "אחרי שהתשלום הראשון מתאשר, האתר שלך נבנה, עובר בדיקה אנושית ורק אז מתפרסם.",
+    "payButton": "שלם {total} והתחל מסלול חודשי"
+  },
+  "patches": [
+    {
+      "file": "src/components/Hero.tsx",
+      "old": "בניית אתר — מתחילים ב-₪9.90",
+      "new": "בניית אתר — התחל בבדיקה חינמית",
+      "why": "מחליף מחיר מיושן בהנעה לפעולה טבעית: בדיקה חינמית לפני תשלום."
+    },
+    {
+      "file": "src/components/Services.tsx",
+      "old": "…בלי מעצב ובלי טפסים. מתחילים ב-₪9.90.",
+      "new": "…בלי מעצב ובלי טפסים. השלב הראשון: בדיקה חינמית.",
+      "why": "מסיר שורת מחיר מיושנת ומכוון לשלב הבא: בדיקה חינמית לפני תשלום."
+    }
+  ]
+}
+```
+
+→ Noa to proof
