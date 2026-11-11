@@ -8,7 +8,10 @@ import {
   buildResearchedPageTitle,
   buildResearchedSchemaGraph,
   buildResearchedSitemapUrls,
+  duplicateIndexableMetaDescriptions,
   pageNameWithCity,
+  researchedContactDescription,
+  researchedContactTitle,
   renderResearchedSitePages,
   researchedPageH1,
   RESEARCHED_TITLE_TARGET_CHARS,
@@ -18,7 +21,7 @@ import { localBusinessObject } from './renderSitePages';
 import { formatBusinessHoursHebrew, parseBusinessHours } from './businessHours';
 import { VERTICAL_THEMES } from './verticalThemes';
 import { VERTICAL_ASSETS } from './verticalAssets';
-import type { SiteCopy } from './lpCopyPrompt';
+import { primaryCtaLabel, type SiteCopy } from './lpCopyPrompt';
 import type { CollectedData } from '../bot/prompts';
 
 const RLM = '\u200F';
@@ -218,4 +221,45 @@ test('the owner quote renders without a context line; with a context the line is
   });
   assert.match(withContext['index.html'], /\u05F4Came within an hour\u05F4<\/p><div[^>]*>5 stars<\/div><\/blockquote>/);
   assert.doesNotMatch(site['services/leak-detection.html'], /<blockquote/);
+});
+
+const metaOf = (html: string) => /<meta name="description" content="([^"]*)"/.exec(html)?.[1];
+const robotsOf = (html: string) => /<meta name="robots" content="([^"]*)"/.exec(html)?.[1];
+
+test('contact meta (2026-11-11): its own description, built from the contact title formula + call label + phone; never the homepage\'s', () => {
+  const site = render();
+  const expected = `${researchedContactTitle('plumber-he', HE_CITY, 'TEST M2a Plumbing')} \u2014 ${primaryCtaLabel({})} 050-0000000`;
+  assert.equal(researchedContactDescription('plumber-he', HE_CITY, 'TEST M2a Plumbing', '050-0000000'), expected);
+  assert.equal(metaOf(site['contact.html']), expected.replace(/"/g, '&quot;'));
+  assert.notEqual(metaOf(site['contact.html']), metaOf(site['index.html']));
+  assert.equal(robotsOf(site['contact.html']), 'index,follow');
+  assert.ok(site['sitemap.xml'].includes('<loc>https://test.wao.co.il/contact.html</loc>'));
+  // No valid phone: the title formula alone. No trade: no description -> noindex,follow and out of the sitemap.
+  assert.equal(researchedContactDescription('plumber-he', HE_CITY, 'TEST M2a Plumbing', 'call me'), researchedContactTitle('plumber-he', HE_CITY, 'TEST M2a Plumbing'));
+  assert.equal(researchedContactDescription('  ', HE_CITY, 'TEST M2a Plumbing', '050-0000000'), null);
+  const noTrade = renderResearchedSitePages({
+    theme: VERTICAL_THEMES['emergency-trades'], assets: VERTICAL_ASSETS['emergency-trades'], data,
+    heroImageUrl: 'https://example.test/hero.jpg', slug: 'test-client', siteUrl: 'https://test.wao.co.il',
+    pages: [{ ...pages[0], seo: { ...pages[0].seo!, name: '' } }, ...pages.slice(1)], graphEdges,
+  });
+  assert.equal(robotsOf(noTrade['contact.html']), 'noindex,follow');
+  assert.doesNotMatch(noTrade['sitemap.xml'], /contact\.html/);
+});
+
+test('site-wide meta uniqueness covers every indexable page (homepage, service pages, contact); noindex pages are out of scope', () => {
+  // The fixture copy gives every page the same heroSubheadline: home and the three service pages collide, contact does not.
+  assert.deepEqual(duplicateIndexableMetaDescriptions(render()), [['index.html', 'services/leak-detection.html', 'services/drain-unblocking.html', 'services/water-heater.html']]);
+  const unique = renderResearchedSitePages({
+    theme: VERTICAL_THEMES['emergency-trades'], assets: VERTICAL_ASSETS['emergency-trades'], data,
+    heroImageUrl: 'https://example.test/hero.jpg', slug: 'test-client', siteUrl: 'https://test.wao.co.il',
+    pages: pages.map(page => ({ ...page, copy: { ...page.copy, heroSubheadline: `Sub of ${page.opportunityId}` } })), graphEdges,
+  });
+  assert.deepEqual(duplicateIndexableMetaDescriptions(unique), []);
+  // The contact page is checked too: a contact description equal to the homepage's is caught (punctuation / case ignored).
+  const homeMeta = metaOf(unique['index.html'])!;
+  const forged = { ...unique, 'contact.html': unique['contact.html'].replace(/<meta name="description" content="[^"]*"/, `<meta name="description" content="${homeMeta.toUpperCase()}."`) };
+  assert.equal(duplicateIndexableMetaDescriptions(forged).length, 1);
+  assert.deepEqual([...duplicateIndexableMetaDescriptions(forged)[0]].sort(), ['contact.html', 'index.html']);
+  // Legal pages are noindex: never compared.
+  assert.equal(robotsOf(unique['privacy.html']), 'noindex,follow');
 });

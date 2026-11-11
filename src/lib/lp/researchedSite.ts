@@ -8,7 +8,7 @@ import type { PageBrief } from '../site-bot/research/pageBrief';
 import type { PageClassification } from '../site-bot/research/pagePortfolio';
 import { primaryCtaLabel, type SiteCopy } from './lpCopyPrompt';
 import { CONTACT_TITLE_PREFIX } from './generationData';
-import { heroAnchorMissing } from './copyGates';
+import { heroAnchorMissing, metaDescriptionKey } from './copyGates';
 import type { RenderSitePagesParams } from './renderSitePages';
 import {
   assembleDocument,
@@ -158,6 +158,19 @@ export function buildResearchedPageTitle(name: string, city: string | null, busi
 export function researchedContactTitle(trade: string, city: string | null, businessName: string): string | null {
   const name = trade.trim();
   return name ? buildResearchedPageTitle(`${CONTACT_TITLE_PREFIX} ${name}`, city, businessName) : null;
+}
+
+/**
+ * Contact page meta description (2026-11-11; rerun-3b replay: it copied the homepage's). Built in code from existing
+ * strings only: the contact title formula above (Yonatan's prefix + trade + city + brand) and, when the phone is a valid
+ * Israeli number, the default call label (primaryCtaLabel) and the owner's number, after a single-spaced em-dash.
+ * Null without a trade (the contact page is then noindex,follow).
+ */
+export function researchedContactDescription(trade: string, city: string | null, businessName: string, phone: string | undefined): string | null {
+  const title = researchedContactTitle(trade, city, businessName);
+  if (!title) return null;
+  const number = (phone ?? '').trim();
+  return israeliPhoneE164(number) ? `${title} \u2014 ${primaryCtaLabel({})} ${number}` : title;
 }
 
 /**
@@ -725,9 +738,9 @@ export function buildResearchedSitemapUrls(pages: ResearchedSitePage[], siteUrl 
   });
 }
 
-function buildResearchedSitemap(siteUrl: string, pages: ResearchedSitePage[]): string {
+function buildResearchedSitemap(siteUrl: string, pages: ResearchedSitePage[], contactIndexable = true): string {
   const cleanUrl = siteUrl.replace(/\/$/, '');
-  const urls = [...buildResearchedSitemapUrls(pages, cleanUrl), `${cleanUrl}/contact.html`];
+  const urls = [...buildResearchedSitemapUrls(pages, cleanUrl), ...(contactIndexable ? [`${cleanUrl}/contact.html`] : [])];
   return `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 ${urls.map(url => `  <url><loc>${url}</loc></url>`).join('\n')}
@@ -757,7 +770,10 @@ export function renderResearchedSitePages(params: RenderResearchedSitePagesParam
     researchNav: contactNav,
     ...(homeSeo ? {
       schemaOptions: { ownerFactsOnly: true, areaServed: researchedServiceAreas(home[0]) },
-      researched: { contactTitle: researchedContactTitle(homeSeo.name, homeSeo.city, contacts(params.data).businessName) },
+      researched: {
+        contactTitle: researchedContactTitle(homeSeo.name, homeSeo.city, contacts(params.data).businessName),
+        contactDescription: researchedContactDescription(homeSeo.name, homeSeo.city, contacts(params.data).businessName, params.data.phone),
+      },
     } : {}),
   });
   const contactHref = legacy['contact.html'] ? CONTACT_HREF : null;
@@ -771,6 +787,28 @@ export function renderResearchedSitePages(params: RenderResearchedSitePagesParam
   return {
     ...legacy,
     ...rendered,
-    'sitemap.xml': buildResearchedSitemap(siteUrl, pages),
+    'sitemap.xml': buildResearchedSitemap(siteUrl, pages, !legacy['contact.html'] || isIndexable(legacy['contact.html'])),
   };
+}
+
+function isIndexable(html: string): boolean {
+  return !/<meta name="robots" content="[^"]*noindex/.test(html);
+}
+
+/**
+ * Site-wide meta-description uniqueness (2026-11-11): every indexable page of a rendered site (robots without noindex:
+ * homepage, service pages, contact) has its own meta description, compared through metaDescriptionKey (the copy gate's
+ * own normal form). Returns the groups of files that share one; [] when all are unique.
+ */
+export function duplicateIndexableMetaDescriptions(files: Readonly<Record<string, string>>): string[][] {
+  const byKey = new Map<string, string[]>();
+  for (const [file, html] of Object.entries(files)) {
+    if (!file.endsWith('.html') || !isIndexable(html)) continue;
+    const raw = /<meta name="description" content="([^"]*)"/.exec(html)?.[1];
+    if (raw === undefined) continue;
+    const text = raw.replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&');
+    const key = metaDescriptionKey(text);
+    byKey.set(key, [...(byKey.get(key) ?? []), file]);
+  }
+  return [...byKey.values()].filter(group => group.length > 1);
 }

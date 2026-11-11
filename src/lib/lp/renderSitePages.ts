@@ -23,7 +23,11 @@ export interface RenderSitePagesParams extends Omit<RenderStaticHtmlParams, 'cop
    * Researched sites (M2a.2): contact <title> (Yonatan's formula), `| brand` legal titles and the
    * owner's hours formatted in code (never raw Latin day names). Unset = legacy, unchanged.
    */
-  researched?: { contactTitle: string | null };
+  /**
+   * contactDescription (2026-11-11): the contact page's own meta description (never the homepage's). null = no code-built
+   * description could be made: the contact page is noindex,follow (and left out of the research sitemap). Unset = legacy.
+   */
+  researched?: { contactTitle: string | null; contactDescription?: string | null };
   /** M2b.1b: research-site nav for the emitted standalone pages (contact.html). Unset = legacy nav, unchanged. */
   researchNav?: ResearchNavOptions;
 }
@@ -341,15 +345,17 @@ export function pageHead(opts: {
   fraudBlockerSid?: string;
   /** Page-specific CSS appended after the theme style block (unset = byte-identical head). */
   extraCss?: string;
+  /** robots meta content (unset = index,follow). */
+  robots?: string;
 }): string {
-  const { t, title, description, canonicalUrl, ogImage, schema, fraudBlockerSid, extraCss } = opts;
+  const { t, title, description, canonicalUrl, ogImage, schema, fraudBlockerSid, extraCss, robots } = opts;
   return `<head>
   ${fraudBlockerSid ? buildFraudBlockerTrackerHtml(fraudBlockerSid) : ''}
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>${esc(title)}</title>
   <meta name="description" content="${esc(description)}" />
-  <meta name="robots" content="index,follow" />
+  <meta name="robots" content="${robots ?? 'index,follow'}" />
   <link rel="canonical" href="${canonicalUrl}" />
   <meta property="og:type" content="website" />
   <meta property="og:title" content="${esc(title)}" />
@@ -616,7 +622,8 @@ function buildContactHtml(p: RenderSitePagesParams, siteUrl: string): string {
   const head = pageHead({
     t,
     title: p.researched?.contactTitle ?? `${esc(copy.formHeadline)} — ${esc(businessName)}`,
-    description: copy.heroSubheadline,
+    description: p.researched?.contactDescription ?? copy.heroSubheadline,
+    ...(p.researched?.contactDescription === null ? { robots: 'noindex,follow' } : {}),
     canonicalUrl,
     ogImage: heroImageUrl,
     schema: localBusinessSchema(data, businessName, siteUrl, heroImageUrl, p.schemaOptions),
