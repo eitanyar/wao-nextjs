@@ -35,7 +35,7 @@ they always resolve to the current generation.
 | Course design | Gil | `instructional-designer` | opus | curriculum and script structure |
 | Hebrew copy | Tamar | **waocopy** (`scripts/waocopy.mjs`) | Qwen 3.8 Max (DashScope) | all new Hebrew marketing / bot / narration copy |
 | Hebrew copy fallback | Tamar | `copywriter` | opus | only when DashScope is down or the edit is trivial |
-| Hebrew QA | Noa | `language-qa` | opus | correctness + native Sabra register gate |
+| Hebrew QA | Noa | `language-qa` | opus | correctness gate, full proofread, AI-signature removal, writing upgrades for waocopy |
 | UX / RTL / a11y | Maya | `ux` | sonnet | bidi technique, mobile, accessibility |
 | Runtime verifier | Roni | `verifier` | sonnet | PASS / FAIL / BLOCKED from running the app |
 | Brand design | Dana | `brand-designer` | sonnet | design tokens as TypeScript constants |

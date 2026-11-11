@@ -11,6 +11,8 @@ const TIMEOUT_MS = Number(process.env.WAOCOPY_TIMEOUT_MS) || 900_000;
 const CHARTER = path.resolve(import.meta.dirname, '../.claude/agents/copywriter.md');
 // Eitan-approved style references; every .md here is appended to the system prompt.
 const EXEMPLARS = path.resolve(import.meta.dirname, '../docs/copy/voice-exemplars');
+// Writing upgrades: abstract rules Noa derived from recurring patterns, approved by Adam/Eitan.
+const UPGRADES = path.resolve(import.meta.dirname, '../docs/copy/writing-upgrades.md');
 const EFFORTS = ['low', 'medium', 'high', 'default'];
 
 function parseArgs(argv) {
@@ -52,7 +54,17 @@ function systemPrompt(patches) {
       'Each "old" must be copied byte-for-byte from the brief so it can be applied with str.replace.',
     );
   }
-  return `${preamble.join('\n')}\n\n${loadCharter()}${loadExemplars()}`;
+  return `${preamble.join('\n')}\n\n${loadCharter()}${loadUpgrades()}${loadExemplars()}`;
+}
+
+function loadUpgrades() {
+  if (!fs.existsSync(UPGRADES)) return '';
+  // Only the bullet rules under "## Approved rules" are sent; the rest of the file is for humans.
+  const raw = fs.readFileSync(UPGRADES, 'utf8');
+  const m = raw.match(/^## Approved rules\n([\s\S]*?)(?=^## |(?![\s\S]))/m);
+  const rules = (m ? m[1] : '').split('\n').filter((l) => /^\s*[-*] /.test(l)).join('\n').trim();
+  if (!rules) return '';
+  return `\n\n# Writing upgrades (approved standing rules — apply to every text)\n\n${rules}\n`;
 }
 
 function loadExemplars() {
