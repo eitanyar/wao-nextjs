@@ -40,16 +40,18 @@ const markup = node => renderToStaticMarkup(React.createElement(React.Fragment, 
 const escaped = text => markup(text);
 const source = fs.readFileSync(local('docs/legal/site-bot-terms-of-use.md'), 'utf8');
 
-test('headings: every section heading renders its number as an LTR inline-block, then a space, then the rest', () => {
+test('headings: every section heading renders "N. " in the RTL flow (no LTR isolate), then the rest', () => {
   const h2s = [...html.matchAll(/<h2[^>]*>(.*?)<\/h2>/g)].map(m => m[1]);
   assert.equal(h2s.length, 20);
   assert.equal(TERMS.sections.length, 20);
   TERMS.sections.forEach((section, i) => {
     const [, n, rest] = section.heading.match(/^(\d+)\.\s+(.*)$/);
     assert.equal(n, String(i + 1));
-    assert.equal(h2s[i], `<span dir="ltr" style="display:inline-block">${n}.</span> ${markup(bidi.renderMixed(rest))}`);
+    assert.equal(h2s[i], `${n}. ${markup(bidi.renderMixed(rest))}`);
+    assert.ok(!h2s[i].startsWith('<'), 'the number is bare text at the start of the RTL heading');
     assert.ok(html.includes(`id="${section.id}"`), `${section.id} anchor kept`);
   });
+  assert.ok(!/<h2[^>]*>[^<]*<(span|bdi)[^>]*dir="ltr"[^>]*>\d+\./.test(html), 'no LTR isolate around a heading number');
   // Headings without a leading number fall back to renderMixed, whole.
   assert.equal(markup(termsText.renderHeading('Intro (A)')), markup(bidi.renderMixed('Intro (A)')));
 });

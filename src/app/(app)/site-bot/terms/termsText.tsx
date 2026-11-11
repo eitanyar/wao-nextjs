@@ -32,15 +32,16 @@ export function renderTermsText(text: string): React.ReactNode {
 }
 
 /**
- * "N. rest" -> the number in an LTR inline-block (so "5." keeps its dot on the right side of the digit in RTL), a space,
- * then the rest through renderMixed. Any other heading falls back to renderMixed whole. The text itself is untouched.
+ * "N. rest" -> "N. " as plain text in the RTL flow, then the rest through renderMixed. No LTR isolate on "N.": in the
+ * RTL paragraph the number sits at the right edge and the dot falls to its LEFT, between number and title (native
+ * Hebrew numbered-heading order). Any other heading falls back to renderMixed whole. The text itself is untouched.
  */
 export function renderHeading(heading: string): React.ReactNode {
   const match = heading.match(/^(\d+)\.\s+(.*)$/);
   if (!match) return renderMixed(heading);
   return (
     <>
-      <span dir="ltr" style={{ display: "inline-block" }}>{`${match[1]}.`}</span>{" "}{renderMixed(match[2])}
+      {`${match[1]}. `}{renderMixed(match[2])}
     </>
   );
 }
