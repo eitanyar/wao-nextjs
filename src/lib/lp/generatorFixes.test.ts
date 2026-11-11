@@ -311,6 +311,26 @@ test('pricing: hero promise line from checked promises only; price table + one c
   assert.equal(costFaq(pricingData, { service: 'leak repair', city: null, business: 'B' }, standIn, false), null, 'no city, no FAQ');
 });
 
+// Rerun-3b item D (Noa): the call-out fee row sat under the starting-price column on every service page; with no service
+// price it was the only row ("this service from <fee>"). The fee / surcharge never sit in the starting-price table.
+test('rerun-3b D: call-out fee and surcharge never under the starting-price column; no own price -> no table, the sentences only', () => {
+  const data: CollectedData = { ...pricingData, calloutFee: 150 } as CollectedData;
+  const money = renderResearchedSitePages(renderParams(pricingPages(), data, LIVE))['services/leak-repair.html'];
+  const table = money.match(/<table[\s\S]*?<\/table>/)?.[0] ?? '';
+  assert.equal((table.match(/<th scope="row"/g) ?? []).length, 1, 'only the own starting-price row');
+  assert.ok(!table.includes('[calloutFeeRow]') && !table.includes('[surchargeRow]') && !table.includes(formatShekels(150)));
+  assert.ok(money.includes(`C <bdi>${formatShekels(150)}</bdi>.`), 'the fee is stated once, in the cost FAQ answer');
+  assert.ok(!money.includes('data-price-notes'), 'the FAQ already states it');
+  // No price for this service (plumber-3 drain / water heater): no table at all; the fee and surcharge as sentences.
+  const noOwn = renderResearchedSitePages(renderParams(pricingPages(), { ...data, startingPrices: [{ job: 'drain', from: 1200 }] } as CollectedData, LIVE))['services/leak-repair.html'];
+  assert.ok(noOwn.includes('data-section="prices"') && !noOwn.includes('<table') && !noOwn.includes('data-cost-faq'));
+  assert.ok(noOwn.includes(`<p data-price-notes`) && noOwn.includes(`C <bdi>${formatShekels(150)}</bdi>. S night +50%.`));
+  // Own price but no cost FAQ (no Hebrew city): table with the price row, the fee below it, outside the table.
+  const latinCity = renderResearchedSitePages(renderParams(pricingPages().map(page => ({ ...page, seo: { ...seo, city: 'Holon' } })), data, LIVE))['services/leak-repair.html'];
+  assert.ok(latinCity.includes('<table') && !latinCity.includes('data-cost-faq'));
+  assert.ok(latinCity.indexOf('</table>') < latinCity.indexOf('data-price-notes'));
+});
+
 test('pricing: no owner pricing data renders byte-identical to a record without the fields; pending labels render nothing', () => {
   const plain = renderResearchedSitePages(renderParams(pricingPages()));
   assert.deepEqual(renderResearchedSitePages(renderParams(pricingPages(), undefined, LIVE)), plain, 'no data: no promise line, no table');

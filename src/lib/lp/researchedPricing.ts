@@ -190,6 +190,18 @@ function fillHtml(template: string, slots: Record<string, string>, escape: (valu
   }).join('');
 }
 
+/**
+ * Rerun-3b item D (Noa): the call-out fee and the surcharge are never starting prices, so they never sit in the
+ * priceTableFromColumn table. Outside the table they are the cost FAQ's own approved sentences (costFaqAnswerCallout,
+ * costFaqAnswerSurcharge), as escaped HTML with each amount an isolated <bdi>. Empty without either.
+ */
+export function pricingNoteSentencesHtml(pricing: OwnerPricing, labels = RESEARCHED_PRICING_LABELS, escape: (value: string) => string = value => value): string[] {
+  return [
+    ...(pricing.calloutFee !== null ? [fillHtml(labels.costFaqAnswerCallout, { amount: formatShekels(pricing.calloutFee) }, escape)] : []),
+    ...(pricing.surchargePolicy ? [fillHtml(labels.costFaqAnswerSurcharge, { policy: pricing.surchargePolicy }, escape)] : []),
+  ];
+}
+
 const LATIN_OR_DIGIT = /[A-Za-z0-9]/;
 const HEBREW_LETTER = /[\u05D0-\u05EA]/;
 
