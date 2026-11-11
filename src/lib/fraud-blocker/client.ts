@@ -15,11 +15,17 @@ export class FraudBlockerApiError extends Error {
   }
 }
 
+/**
+ * Normalized domain record. The wire format (Fraud Blocker OpenAPI `Domain` /
+ * `DomainCreated`) uses `domain_name`, `is_archived`, `created_on`; `asDomain()`
+ * maps those onto these internal field names.
+ */
 export interface FraudBlockerDomain {
   sid: string;
   domain: string;
   status?: string;
   archived?: boolean;
+  createdOn?: string;
 }
 
 export interface FraudBlockerClientOptions {
@@ -59,20 +65,18 @@ function asArray(value: unknown, field: string): unknown[] {
 
 function asDomain(value: unknown): FraudBlockerDomain | null {
   const item = record(value);
-  if (!item || typeof item.sid !== 'string' || !SID_PATTERN.test(item.sid) || typeof item.domain !== 'string') return null;
+  if (!item || typeof item.sid !== 'string' || !SID_PATTERN.test(item.sid) || typeof item.domain_name !== 'string') return null;
   return {
     sid: item.sid,
-    domain: item.domain,
+    domain: item.domain_name,
     ...(typeof item.status === 'string' ? { status: item.status } : {}),
-    ...(typeof item.archived === 'boolean' ? { archived: item.archived } : {}),
+    ...(typeof item.is_archived === 'boolean' ? { archived: item.is_archived } : {}),
+    ...(typeof item.created_on === 'string' ? { createdOn: item.created_on } : {}),
   };
 }
 
 function createdDomain(value: unknown): FraudBlockerDomain | null {
-  const direct = asDomain(value);
-  if (direct) return direct;
-  const root = record(value);
-  return asDomain(root?.domain) ?? asDomain(record(root?.data)?.domain);
+  return asDomain(value) ?? asDomain(record(value)?.data);
 }
 
 export function normalizeFraudBlockerDomain(value: string): string {
@@ -123,7 +127,7 @@ export function createFraudBlockerClient(options: FraudBlockerClientOptions = {}
       });
     },
     async createDomain(domain) {
-      return createdDomain(await request('/domains', { method: 'POST', body: JSON.stringify({ domain: normalizeFraudBlockerDomain(domain) }) }));
+      return createdDomain(await request('/domains', { method: 'POST', body: JSON.stringify({ domain_name: normalizeFraudBlockerDomain(domain) }) }));
     },
     async deleteDomain(sid) {
       if (!SID_PATTERN.test(sid)) throw new Error('Invalid Fraud Blocker SID');

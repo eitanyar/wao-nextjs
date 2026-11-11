@@ -19,11 +19,11 @@ test('client sends api_key header and only documented endpoints', async () => {
     baseUrl: 'https://adapter.test/api/',
     fetchImpl: async (url, init) => {
       calls.push({ url: String(url), init });
-      return response(200, { domains: [{ sid: 'sid_1', domain: 'example.com' }] });
+      return response(200, { domains: [{ sid: 'sid_1', domain_name: 'example.com', is_archived: false }] });
     },
   });
 
-  assert.deepEqual(await client.listDomains(), [{ sid: 'sid_1', domain: 'example.com' }]);
+  assert.deepEqual(await client.listDomains(), [{ sid: 'sid_1', domain: 'example.com', archived: false }]);
   await client.listIps();
   await client.getClickReport();
   await client.deleteDomain('sid_1');
@@ -50,7 +50,7 @@ test('ensure domain returns an existing matching SID without posting', async () 
     fetchImpl: async (url, init) => {
       if (init?.method === 'POST') posted = true;
       assert.equal(String(url), 'https://backend.fraudblocker.com/api/domains');
-      return response(200, { domains: [{ sid: 'existing_1', domain: 'example.com' }] });
+      return response(200, { domains: [{ sid: 'existing_1', domain_name: 'example.com', is_archived: false }] });
     },
   });
 
@@ -66,15 +66,15 @@ test('ensure domain provisions a new domain and returns its SID', async () => {
     fetchImpl: async (_url, init) => {
       if (init?.method === 'POST') {
         body = String(init.body);
-        return response(201, { sid: 'created_1', domain: 'example.com' });
+        return response(200, { sid: 'created_1', domain_name: 'example.com', status: 'created' });
       }
       listCalls += 1;
-      return response(200, listCalls === 1 ? { domains: [] } : { domains: [{ sid: 'created_1', domain: 'example.com' }] });
+      return response(200, listCalls === 1 ? { domains: [] } : { domains: [{ sid: 'created_1', domain_name: 'example.com', is_archived: false }] });
     },
   });
 
   assert.equal(await ensureFraudBlockerDomain(client, 'HTTPS://WWW.Example.com/path'), 'created_1');
-  assert.equal(body, '{"domain":"example.com"}');
+  assert.equal(body, '{"domain_name":"example.com"}');
 });
 
 test('ensure domain posts new domains and resolves a conflict by re-listing', async () => {
@@ -84,7 +84,7 @@ test('ensure domain posts new domains and resolves a conflict by re-listing', as
     fetchImpl: async (_url, init) => {
       if (init?.method === 'POST') return response(409, { message: 'already exists' });
       listCalls += 1;
-      return response(200, listCalls === 1 ? { domains: [] } : { domains: [{ sid: 'conflict_1', domain: 'example.com' }] });
+      return response(200, listCalls === 1 ? { domains: [] } : { domains: [{ sid: 'conflict_1', domain_name: 'example.com', is_archived: false }] });
     },
   });
 
@@ -96,15 +96,54 @@ test('ensure domain retries archived domains through provisioning and returns re
   const client = createFraudBlockerClient({
     apiKey: 'test-key',
     fetchImpl: async (_url, init) => {
-      if (init?.method === 'POST') return response(200, { sid: 'restored_1', domain: 'example.com' });
+      if (init?.method === 'POST') return response(200, { sid: 'restored_1', domain_name: 'example.com', status: 'restored' });
       listCalls += 1;
       return response(200, listCalls === 1
-        ? { domains: [{ sid: 'archived_1', domain: 'example.com', status: 'archived' }] }
-        : { domains: [{ sid: 'restored_1', domain: 'example.com', status: 'active' }] });
+        ? { domains: [{ sid: 'archived_1', domain_name: 'example.com', is_archived: true }] }
+        : { domains: [{ sid: 'restored_1', domain_name: 'example.com', is_archived: false }] });
     },
   });
 
   assert.equal(await ensureFraudBlockerDomain(client, 'example.com'), 'restored_1');
+});
+
+// Fixture shaped like the live GET /domains response (2026-11-11) and the
+// OpenAPI `DomainCreated` schema at docs.fraudblocker.com.
+const LIVE_DOMAIN_LIST = {
+  domains: [
+    { sid: 'eTWPFP1d2UDBMLFQDRwYy', domain_name: 'wao.co.il', is_archived: false, created_on: '2023-01-09T10:38:42.929Z' },
+    { sid: '8uD9jgVgGoJcSA7QRHoHH', domain_name: 'merlo-c.co.il', is_archived: false, created_on: '2023-01-25T08:24:37.644Z' },
+    { sid: '-GRcf6hthQQQBS3LQ_dUI', domain_name: 'dan.wao.co.il', is_archived: false, created_on: '2025-12-10T14:09:41.530Z' },
+  ],
+};
+
+test('listDomains parses the live API shape (domain_name, is_archived, created_on)', async () => {
+  const client = createFraudBlockerClient({ apiKey: 'test-key', fetchImpl: async () => response(200, LIVE_DOMAIN_LIST) });
+  const domains = await client.listDomains();
+  assert.equal(domains.length, 3);
+  assert.deepEqual(domains[2], { sid: '-GRcf6hthQQQBS3LQ_dUI', domain: 'dan.wao.co.il', archived: false, createdOn: '2025-12-10T14:09:41.530Z' });
+});
+
+test('ensure domain resolves after a real-shape create without invalid_response', async () => {
+  const created = { sid: 'V1StGXR8_Z5jdHi6B-myT', domain_name: 'test-plumber-tlv.wao.co.il', status: 'created' };
+  for (const relistIncludesNew of [true, false]) {
+    let listCalls = 0;
+    let body = '';
+    const client = createFraudBlockerClient({
+      apiKey: 'test-key',
+      fetchImpl: async (_url, init) => {
+        if (init?.method === 'POST') {
+          body = String(init.body);
+          return response(200, created);
+        }
+        listCalls += 1;
+        if (listCalls === 1 || !relistIncludesNew) return response(200, LIVE_DOMAIN_LIST);
+        return response(200, { domains: [...LIVE_DOMAIN_LIST.domains, { ...created, status: undefined, is_archived: false, created_on: '2026-11-11T10:00:00.000Z' }] });
+      },
+    });
+    assert.equal(await ensureFraudBlockerDomain(client, 'test-plumber-tlv.wao.co.il'), 'V1StGXR8_Z5jdHi6B-myT');
+    assert.equal(body, '{"domain_name":"test-plumber-tlv.wao.co.il"}');
+  }
 });
 
 test('provider limit and rate limit errors are explicit and sanitized', async () => {
