@@ -1,0 +1,592 @@
+{
+ "episodes": {
+  "A1": {
+   "title": "The meter",
+   "hooks": [
+    {
+     "voice": "[sighs] כל קליק עולה כסף. אף אחד לא מתקשר.",
+     "display": "כל קליק עולה כסף. אף אחד לא מתקשר.",
+     "tag_why": "sad fact performed with a sigh"
+    },
+    {
+     "voice": "[deadpan] אתה משלם על כל קליק. הטלפון שותק.",
+     "display": "אתה משלם על כל קליק. הטלפון שותק.",
+     "tag_why": "deadpan on money bleeding"
+    },
+    {
+     "voice": "[sarcastic] הכסף יורד על קליקים. שיחה? לא הייתה.",
+     "display": "הכסף יורד על קליקים. שיחה? לא הייתה.",
+     "tag_why": "flat disappointment"
+    }
+   ],
+   "script_30": [
+    {
+     "screen": "The screen of דַּשׁוֹנִי is a taxi meter; each click adds shekels; brand mark in corner from first frame.",
+     "voice": "[sighs] כל קליק עולה כסף. אף אחד לא מתקשר.",
+     "display": "כל קליק עולה כסף. אף אחד לא מתקשר.",
+     "tag_why": "opening sad fact"
+    },
+    {
+     "screen": "Three cursor-clicks appear, look around, leave; coins drift out of the jar.",
+     "voice": "[tired] שילמת על שלושה קליקים. אף צלצול.",
+     "display": "שילמת על שלושה קליקים. אף צלצול.",
+     "tag_why": "weariness at silent phone"
+    },
+    {
+     "screen": "Owner's hand picks up דַּשׁוֹנִי, checks missed enquiries; empty list.",
+     "voice": "[short pause] בדקת. אין פניות. כולם לחצו.",
+     "display": "בדקת. אין פניות. כולם לחצו.",
+     "tag_why": "blunt check, no enquiries"
+    },
+    {
+     "screen": "Meter keeps running; no call; דַּשׁוֹנִי stares deadpan.",
+     "voice": "[deadpan] הקליקים באים. הטלפון שותק.",
+     "display": "הקליקים באים. הטלפון שותק.",
+     "tag_why": "dry punchline"
+    },
+    {
+     "screen": "Real product screen; owner's thumb marks a lead as real; weekly cost line visible.",
+     "voice": "[calm] בוט מודעות לומד מהפניות שסגרת, לא מקליקים.",
+     "display": "בוט מודעות לומד מהפניות שסגרת, לא מקליקים.",
+     "tag_why": "confident mechanism contrast"
+    },
+    {
+     "screen": "End card with price, account in his name, and CTA.",
+     "voice": "[calm] איתן מוואו. בוט מודעות: מָאתַיִם אַרְבָּעִים וְתֵשַׁע שֶׁקֶל פלוס מַעַם לחודש.",
+     "display": "איתן מ-WAO. בוט מודעות: 249 ₪ + מע״מ לחודש.",
+     "tag_why": "straight monthly price"
+    }
+   ],
+   "script_15": [
+    {
+     "screen": "The screen of דַּשׁוֹנִי is a taxi meter; each click adds shekels; brand mark in corner.",
+     "voice": "[sighs] כל קליק עולה כסף. אף אחד לא מתקשר.",
+     "display": "כל קליק עולה כסף. אף אחד לא מתקשר.",
+     "tag_why": "opening sad fact"
+    },
+    {
+     "screen": "Meter speeds up; coins leave the jar by themselves.",
+     "voice": "[sarcastic] הכסף יורד על קליקים. שיחות? אין.",
+     "display": "הכסף יורד על קליקים. שיחות? אין.",
+     "tag_why": "dry observation of money leaving"
+    },
+    {
+     "screen": "Owner's hand checks דַּשׁוֹנִי; no missed enquiries.",
+     "voice": "[deadpan] כולם לחצו. הטלפון שותק.",
+     "display": "כולם לחצו. הטלפון שותק.",
+     "tag_why": "blunt letdown"
+    },
+    {
+     "screen": "Real product screen; lead marked real; end card with price and CTA.",
+     "voice": "[calm] בוט מודעות לומד מהפניות שסגרת, לא מקליקים. מָאתַיִם אַרְבָּעִים וְתֵשַׁע שֶׁקֶל פלוס מַעַם לחודש.",
+     "display": "בוט מודעות לומד מהפניות שסגרת, לא מקליקים. 249 ₪ + מע״מ לחודש.",
+     "tag_why": "mechanism then monthly price"
+    }
+   ],
+   "eitan_close": {
+    "voice": "[calm] איתן מוואו. בוט מודעות: מָאתַיִם אַרְבָּעִים וְתֵשַׁע שֶׁקֶל פלוס מַעַם לחודש.",
+    "display": "איתן מ-WAO. בוט מודעות: 249 ₪ + מע״מ לחודש.",
+    "tag_why": "simple closing monthly price"
+   }
+  },
+  "A2": {
+   "title": "Click-flies",
+   "hooks": [
+    {
+     "voice": "[deadpan] עוד קליקים, עוד כסף. אף לקוח.",
+     "display": "עוד קליקים, עוד כסף. אף לקוח.",
+     "tag_why": "dry money drain"
+    },
+    {
+     "voice": "[deadpan] קליק נראה תמים. אבל הוא עולה כסף.",
+     "display": "קליק נראה תמים. אבל הוא עולה כסף.",
+     "tag_why": "flat contrast"
+    },
+    {
+     "voice": "[deadpan] הקליקים גומרים לך את התקציב.",
+     "display": "הקליקים גומרים לך את התקציב.",
+     "tag_why": "funniest dry realization"
+    }
+   ],
+   "script_30": [
+    {
+     "screen": "A cloud of cursor-shaped flies circles the coin jar; דַּשׁוֹנִי swats one with its charging cable; brand mark in corner.",
+     "voice": "[deadpan] עוד קליקים, עוד כסף. אף לקוח.",
+     "display": "עוד קליקים, עוד כסף. אף לקוח.",
+     "tag_why": "dry money drain"
+    },
+    {
+     "screen": "The swarm grows; owner sprays; flies return.",
+     "voice": "[tired] חסמת קליקים. הם חוזרים.",
+     "display": "חסמת קליקים. הם חוזרים.",
+     "tag_why": "weary repetition"
+    },
+    {
+     "screen": "One fly stops, looks like it might call, then leaves.",
+     "voice": "[deadpan] מישהו כמעט התקשר. בעצם לא.",
+     "display": "מישהו כמעט התקשר. בעצם לא.",
+     "tag_why": "deadpan near-miss"
+    },
+    {
+     "screen": "Flies keep circling; jar lighter; דַּשׁוֹנִי looks tired.",
+     "voice": "[sighs] הרבה קליקים. בלי לקוחות.",
+     "display": "הרבה קליקים. בלי לקוחות.",
+     "tag_why": "sad fact"
+    },
+    {
+     "screen": "Real product screen; owner marks which enquiries were real jobs.",
+     "voice": "[calm] אתה מסמן עבודה אמיתית. הבוט לומד מזה.",
+     "display": "אתה מסמן עבודה אמיתית. הבוט לומד מזה.",
+     "tag_why": "mechanism in his action"
+    },
+    {
+     "screen": "End card with price, account in his name, and CTA.",
+     "voice": "[calm] איתן מוואו. בוט מודעות: מָאתַיִם אַרְבָּעִים וְתֵשַׁע שֶׁקֶל פלוס מַעַם לחודש.",
+     "display": "איתן מ-WAO. בוט מודעות: 249 ₪ + מע״מ לחודש.",
+     "tag_why": "straight monthly price"
+    }
+   ],
+   "script_15": [
+    {
+     "screen": "Cursor-flies circle the coin jar; דַּשׁוֹנִי swats one with its cable; brand mark in corner.",
+     "voice": "[deadpan] עוד קליקים, עוד כסף. אף לקוח.",
+     "display": "עוד קליקים, עוד כסף. אף לקוח.",
+     "tag_why": "dry money drain"
+    },
+    {
+     "screen": "Every fly takes a coin and leaves; דַּשׁוֹנִי counts, bored.",
+     "voice": "[tired] קליק, קליק, קליק. אף צלצול.",
+     "display": "קליק, קליק, קליק. אף צלצול.",
+     "tag_why": "counting clicks, no ring"
+    },
+    {
+     "screen": "Empty jar; דַּשׁוֹנִי stares at camera.",
+     "voice": "[sighs] הרבה קליקים. בלי לקוחות.",
+     "display": "הרבה קליקים. בלי לקוחות.",
+     "tag_why": "sad fact"
+    },
+    {
+     "screen": "Real product screen; owner marks real jobs; end card with price and CTA.",
+     "voice": "[calm] תסמן עבודות אמיתיות. הבוט לומד מזה. מָאתַיִם אַרְבָּעִים וְתֵשַׁע שֶׁקֶל פלוס מַעַם לחודש.",
+     "display": "תסמן עבודות אמיתיות. הבוט לומד מזה. 249 ₪ + מע״מ לחודש.",
+     "tag_why": "clear action then monthly price"
+    }
+   ],
+   "eitan_close": {
+    "voice": "[calm] איתן מוואו. בוט מודעות: מָאתַיִם אַרְבָּעִים וְתֵשַׁע שֶׁקֶל פלוס מַעַם לחודש.",
+    "display": "איתן מ-WAO. בוט מודעות: 249 ₪ + מע״מ לחודש.",
+    "tag_why": "simple closing monthly price"
+   }
+  },
+  "A3": {
+   "title": "The report",
+   "hooks": [
+    {
+     "voice": "[deadpan] דוח מבריק. לקוח? אין.",
+     "display": "דוח מבריק. לקוח? אין.",
+     "tag_why": "dry missing customer"
+    },
+    {
+     "voice": "[tired] עוד דוח יפה. העסק עדיין מחכה.",
+     "display": "עוד דוח יפה. העסק עדיין מחכה.",
+     "tag_why": "weary repetition"
+    },
+    {
+     "voice": "[deadpan] גרפים עולים. לקוחות לא.",
+     "display": "גרפים עולים. לקוחות לא.",
+     "tag_why": "clear contrast, no confusion"
+    }
+   ],
+   "script_30": [
+    {
+     "screen": "A glossy report slaps onto the windscreen from outside; big green arrows; דַּשׁוֹנִי reads it upside down; brand mark in corner.",
+     "voice": "[deadpan] דוח מבריק. לקוח? אין.",
+     "display": "דוח מבריק. לקוח? אין.",
+     "tag_why": "dry missing customer"
+    },
+    {
+     "screen": "Three reports pile up, each shinier; confetti for clicks and impressions.",
+     "voice": "[sarcastic] חגיגה על קליקים. איפה הלקוח?",
+     "display": "חגיגה על קליקים. איפה הלקוח?",
+     "tag_why": "dry question"
+    },
+    {
+     "screen": "Owner's hand taps the report; silence; one cricket.",
+     "voice": "[deadpan] שאלת על לקוחות? שקט.",
+     "display": "שאלת על לקוחות? שקט.",
+     "tag_why": "blunt silence"
+    },
+    {
+     "screen": "Confetti stops in mid-air; דַּשׁוֹנִי looks at camera.",
+     "voice": "[sighs] הדוחות יפים. הטלפון שקט.",
+     "display": "הדוחות יפים. הטלפון שקט.",
+     "tag_why": "sad fact"
+    },
+    {
+     "screen": "Real product screen; lead marked real; weekly cost line visible.",
+     "voice": "[calm] בוט מודעות לומד מהפניות שסגרת, לא מקליקים.",
+     "display": "בוט מודעות לומד מהפניות שסגרת, לא מקליקים.",
+     "tag_why": "confident mechanism contrast"
+    },
+    {
+     "screen": "End card with price, account in his name, and CTA.",
+     "voice": "[calm] איתן מוואו. בוט מודעות, בלי דוחות יפים. מָאתַיִם אַרְבָּעִים וְתֵשַׁע שֶׁקֶל פלוס מַעַם לחודש.",
+     "display": "איתן מ-WAO. בוט מודעות, בלי דוחות יפים. 249 ₪ + מע״מ לחודש.",
+     "tag_why": "closing promise and monthly price"
+    }
+   ],
+   "script_15": [
+    {
+     "screen": "Glossy report slaps onto windscreen; דַּשׁוֹנִי reads it upside down; brand mark in corner.",
+     "voice": "[deadpan] דוח מבריק. לקוח? אין.",
+     "display": "דוח מבריק. לקוח? אין.",
+     "tag_why": "dry missing customer"
+    },
+    {
+     "screen": "Confetti for clicks and impressions; דַּשׁוֹנִי asks which line is a customer; confetti stops.",
+     "voice": "[curious] איזו שורה היא לקוח?",
+     "display": "איזו שורה היא לקוח?",
+     "tag_why": "simple pointed question"
+    },
+    {
+     "screen": "Reports pile up; silent dashboard.",
+     "voice": "[tired] דוחות יפים. טלפון שקט.",
+     "display": "דוחות יפים. טלפון שקט.",
+     "tag_why": "weary contrast"
+    },
+    {
+     "screen": "Real product screen; lead marked real; end card with price and CTA.",
+     "voice": "[calm] בוט מודעות לומד מהפניות שסגרת, לא מקליקים. מָאתַיִם אַרְבָּעִים וְתֵשַׁע שֶׁקֶל פלוס מַעַם לחודש.",
+     "display": "בוט מודעות לומד מהפניות שסגרת, לא מקליקים. 249 ₪ + מע״מ לחודש.",
+     "tag_why": "mechanism then monthly price"
+    }
+   ],
+   "eitan_close": {
+    "voice": "[calm] איתן מוואו. בוט מודעות, בלי דוחות יפים. מָאתַיִם אַרְבָּעִים וְתֵשַׁע שֶׁקֶל פלוס מַעַם לחודש.",
+    "display": "איתן מ-WAO. בוט מודעות, בלי דוחות יפים. 249 ₪ + מע״מ לחודש.",
+    "tag_why": "closing promise and monthly price"
+   }
+  },
+  "S1": {
+   "title": "Ghost van",
+   "hooks": [
+    {
+     "voice": "[whispers] היא חיפשה אינסטלטור. לא מצאה אותך.",
+     "display": "היא חיפשה אינסטלטור. לא מצאה אותך.",
+     "tag_why": "hushed loss"
+    },
+    {
+     "voice": "[tired] אתה כאן. בגוגל אתה לא קיים.",
+     "display": "אתה כאן. בגוגל אתה לא קיים.",
+     "tag_why": "weary invisibility"
+    },
+    {
+     "voice": "[sighs] עוד לקוחה חיפשה. ומצאה מישהו אחר.",
+     "display": "עוד לקוחה חיפשה. ומצאה מישהו אחר.",
+     "tag_why": "resigned repetition"
+    }
+   ],
+   "script_30": [
+    {
+     "screen": "A woman on the pavement searches on her phone and walks straight through the see-through van; דַּשׁוֹנִי watches her pass; brand mark in corner.",
+     "voice": "[whispers] היא חיפשה אינסטלטור. לא מצאה אותך.",
+     "display": "היא חיפשה אינסטלטור. לא מצאה אותך.",
+     "tag_why": "hushed loss"
+    },
+    {
+     "screen": "Two more people walk through; one puts a coffee down on the bonnet and it falls.",
+     "voice": "[sighs] אנשים עוברים לידך. הולכים למתחרה.",
+     "display": "אנשים עוברים לידך. הולכים למתחרה.",
+     "tag_why": "sad loss on the street"
+    },
+    {
+     "screen": "Owner waves; nobody reacts; someone two streets away gets the job.",
+     "voice": "[deadpan] מישהו בשכונה הבאה קיבל את העבודה.",
+     "display": "מישהו בשכונה הבאה קיבל את העבודה.",
+     "tag_why": "blunt lost job"
+    },
+    {
+     "screen": "דַּשׁוֹנִי looks through the windscreen at passing searchers.",
+     "voice": "[tired] שנים של עבודה טובה. אף אחד לא רואה.",
+     "display": "שנים של עבודה טובה. אף אחד לא רואה.",
+     "tag_why": "years of unseen work"
+    },
+    {
+     "screen": "Real screens: service-led site next to the business profile, saying the same thing.",
+     "voice": "[calm] האתר שלך והפרופיל בגוגל אומרים אותו דבר על כל השירותים.",
+     "display": "האתר שלך והפרופיל בגוגל אומרים אותו דבר על כל השירותים.",
+     "tag_why": "plain aligned presence"
+    },
+    {
+     "screen": "End card with price and free check CTA.",
+     "voice": "[calm] איתן מוואו. סייט בוט: מֵאָה תִּשְׁעִים וְתֵשַׁע שֶׁקֶל פלוס מַעַם לחודש.",
+     "display": "איתן מ-WAO. סייט בוט: 199 ₪ + מע״מ לחודש.",
+     "tag_why": "straight monthly price"
+    }
+   ],
+   "script_15": [
+    {
+     "screen": "Woman searches on phone and walks through the see-through van; brand mark in corner.",
+     "voice": "[whispers] היא חיפשה אינסטלטור. לא מצאה אותך.",
+     "display": "היא חיפשה אינסטלטור. לא מצאה אותך.",
+     "tag_why": "hushed loss"
+    },
+    {
+     "screen": "More walk-throughs; coffee falls.",
+     "voice": "[sighs] אנשים עוברים לידך. הולכים למתחרה.",
+     "display": "אנשים עוברים לידך. הולכים למתחרה.",
+     "tag_why": "sad loss on the street"
+    },
+    {
+     "screen": "דַּשׁוֹנִי watches the pavement; owner unseen, still working.",
+     "voice": "[tired] שנים של עבודה טובה. אף אחד לא רואה.",
+     "display": "שנים של עבודה טובה. אף אחד לא רואה.",
+     "tag_why": "years of unseen work"
+    },
+    {
+     "screen": "Real screens: site and profile aligned; end card with price and free check CTA.",
+     "voice": "[calm] סייט בוט: אתר ופרופיל שאומרים אותו דבר. מֵאָה תִּשְׁעִים וְתֵשַׁע שֶׁקֶל פלוס מַעַם לחודש.",
+     "display": "סייט בוט: אתר ופרופיל שאומרים אותו דבר. 199 ₪ + מע״מ לחודש.",
+     "tag_why": "product then monthly price"
+    }
+   ],
+   "eitan_close": {
+    "voice": "[calm] איתן מוואו. סייט בוט: מֵאָה תִּשְׁעִים וְתֵשַׁע שֶׁקֶל פלוס מַעַם לחודש.",
+    "display": "איתן מ-WAO. סייט בוט: 199 ₪ + מע״מ לחודש.",
+    "tag_why": "simple closing monthly price"
+   }
+  },
+  "S2": {
+   "title": "The jar of stars",
+   "hooks": [
+    {
+     "voice": "[deadpan] מחמאות יש. לגוגל אין אוזניים.",
+     "display": "מחמאות יש. לגוגל אין אוזניים.",
+     "tag_why": "dry ears joke"
+    },
+    {
+     "voice": "[whispers] הלקוחה אמרה תודה. זה נגמר שם.",
+     "display": "הלקוחה אמרה תודה. זה נגמר שם.",
+     "tag_why": "quiet dead end"
+    },
+    {
+     "voice": "[sighs] כולם מרוצים. בגוגל אין ביקורות.",
+     "display": "כולם מרוצים. בגוגל אין ביקורות.",
+     "tag_why": "sad hidden praise"
+    }
+   ],
+   "script_30": [
+    {
+     "screen": "Glovebox opens; a jar of glowing stars rolls out; cartoon banner about compliments received in person; brand mark in corner.",
+     "voice": "[sighs] כולם מרוצים. בגוגל אין ביקורות.",
+     "display": "כולם מרוצים. בגוגל אין ביקורות.",
+     "tag_why": "sad hidden praise"
+    },
+    {
+     "screen": "Each star replays a silent thank-you at the door as a speech bubble; owner adds another star after a job.",
+     "voice": "[calm] עוד עבודה טובה. עוד תודה בסוף.",
+     "display": "עוד עבודה טובה. עוד תודה בסוף.",
+     "tag_why": "soft private thank-you"
+    },
+    {
+     "screen": "דַּשׁוֹנִי holds the jar up to the windscreen; passers-by cannot see it.",
+     "voice": "[tired] אתה שומע תודה. גוגל לא.",
+     "display": "אתה שומע תודה. גוגל לא.",
+     "tag_why": "blunt invisibility"
+    },
+    {
+     "screen": "Jar glows quietly; profile card stays empty.",
+     "voice": "[deadpan] לגוגל אין אוזניים.",
+     "display": "לגוגל אין אוזניים.",
+     "tag_why": "dry core joke"
+    },
+    {
+     "screen": "Real screen: simple flow that helps a customer leave a review.",
+     "voice": "[calm] אנחנו עוזרים ללקוחות שלך להשאיר ביקורת.",
+     "display": "אנחנו עוזרים ללקוחות שלך להשאיר ביקורת.",
+     "tag_why": "help, not steering"
+    },
+    {
+     "screen": "End card with price and free check CTA.",
+     "voice": "[calm] איתן מוואו. סייט בוט: מֵאָה תִּשְׁעִים וְתֵשַׁע שֶׁקֶל פלוס מַעַם לחודש.",
+     "display": "איתן מ-WAO. סייט בוט: 199 ₪ + מע״מ לחודש.",
+     "tag_why": "straight monthly price"
+    }
+   ],
+   "script_15": [
+    {
+     "screen": "Glovebox opens; jar of glowing stars rolls out; brand mark in corner.",
+     "voice": "[sighs] כולם מרוצים. בגוגל אין ביקורות.",
+     "display": "כולם מרוצים. בגוגל אין ביקורות.",
+     "tag_why": "sad hidden praise"
+    },
+    {
+     "screen": "Silent thank-you speech bubbles turn into stars.",
+     "voice": "[whispers] תודה בסוף העבודה. זהו.",
+     "display": "תודה בסוף העבודה. זהו.",
+     "tag_why": "quiet private praise"
+    },
+    {
+     "screen": "Jar held to windscreen; invisible to passers-by.",
+     "voice": "[deadpan] לגוגל אין אוזניים.",
+     "display": "לגוגל אין אוזניים.",
+     "tag_why": "dry core joke"
+    },
+    {
+     "screen": "Real screen: review flow; end card with price and free check CTA.",
+     "voice": "[calm] סייט בוט עוזר ללקוחות שלך להשאיר ביקורת. מֵאָה תִּשְׁעִים וְתֵשַׁע שֶׁקֶל פלוס מַעַם לחודש.",
+     "display": "סייט בוט עוזר ללקוחות שלך להשאיר ביקורת. 199 ₪ + מע״מ לחודש.",
+     "tag_why": "help then monthly price"
+    }
+   ],
+   "eitan_close": {
+    "voice": "[calm] איתן מוואו. סייט בוט: מֵאָה תִּשְׁעִים וְתֵשַׁע שֶׁקֶל פלוס מַעַם לחודש.",
+    "display": "איתן מ-WAO. סייט בוט: 199 ₪ + מע״מ לחודש.",
+    "tag_why": "simple closing monthly price"
+   }
+  },
+  "S3": {
+   "title": "The level",
+   "hooks": [
+    {
+     "voice": "[deadpan] כל מקום אומר מקצוע אחר.",
+     "display": "כל מקום אומר מקצוע אחר.",
+     "tag_why": "dry mismatch"
+    },
+    {
+     "voice": "[deadpan] אתר אומר דבר אחד. פרופיל אחר.",
+     "display": "אתר אומר דבר אחד. פרופיל אחר.",
+     "tag_why": "flat mismatch"
+    },
+    {
+     "voice": "[sighs] הלקוח מתאר מקצוע שלישי. אוי.",
+     "display": "הלקוח מתאר מקצוע שלישי. אוי.",
+     "tag_why": "sigh at confusion"
+    }
+   ],
+   "script_30": [
+    {
+     "screen": "Spirit level on dashboard, bubble jammed to one side; דַּשׁוֹנִי shows three labels for the same business; brand mark in corner.",
+     "voice": "[deadpan] כל מקום אומר מקצוע אחר.",
+     "display": "כל מקום אומר מקצוע אחר.",
+     "tag_why": "dry mismatch"
+    },
+    {
+     "screen": "Three mismatches appear one by one; bubble slides further each time.",
+     "voice": "[tired] אתר חשמלאי. פרופיל אינסטלטור. לקוח מיזוג.",
+     "display": "אתר חשמלאי. פרופיל אינסטלטור. לקוח מיזוג.",
+     "tag_why": "blunt mismatch list"
+    },
+    {
+     "screen": "Owner straightens a shelf by instinct but cannot straighten this.",
+     "voice": "[sighs] אתה מיישר מדף. את זה לא.",
+     "display": "אתה מיישר מדף. את זה לא.",
+     "tag_why": "wry tradesman truth"
+    },
+    {
+     "screen": "Three labels float around the van; bubble still off-centre.",
+     "voice": "[deadpan] שלושה סיפורים? גוגל לא מאמין.",
+     "display": "שלושה סיפורים? גוגל לא מאמין.",
+     "tag_why": "deadpan consequence"
+    },
+    {
+     "screen": "Real screens: one service story; site and profile aligned; bubble centres.",
+     "voice": "[calm] אתר ופרופיל מְסַפְּרִים אותו סיפור.",
+     "display": "אתר ופרופיל מספרים אותו סיפור.",
+     "tag_why": "simple alignment"
+    },
+    {
+     "screen": "End card with price and free check CTA.",
+     "voice": "[calm] איתן מוואו. סייט בוט: מֵאָה תִּשְׁעִים וְתֵשַׁע שֶׁקֶל פלוס מַעַם לחודש.",
+     "display": "איתן מ-WAO. סייט בוט: 199 ₪ + מע״מ לחודש.",
+     "tag_why": "straight monthly price"
+    }
+   ],
+   "script_15": [
+    {
+     "screen": "Spirit level bubble jammed; three mismatched labels; brand mark in corner.",
+     "voice": "[deadpan] כל מקום אומר מקצוע אחר.",
+     "display": "כל מקום אומר מקצוע אחר.",
+     "tag_why": "dry mismatch"
+    },
+    {
+     "screen": "Labels mismatch one by one; bubble slides further.",
+     "voice": "[tired] שלוש גרסאות. הלקוח מתבלבל.",
+     "display": "שלוש גרסאות. הלקוח מתבלבל.",
+     "tag_why": "weary confusion"
+    },
+    {
+     "screen": "Owner tries to straighten the shelf; cannot straighten the story.",
+     "voice": "[sighs] שלושה סיפורים. בלי אמון.",
+     "display": "שלושה סיפורים. בלי אמון.",
+     "tag_why": "sad consequence"
+    },
+    {
+     "screen": "Real screens: one service story, site and profile aligned; bubble centres; end card.",
+     "voice": "[calm] סייט בוט: אתר ופרופיל, סיפור אחד. מֵאָה תִּשְׁעִים וְתֵשַׁע שֶׁקֶל פלוס מַעַם לחודש.",
+     "display": "סייט בוט: אתר ופרופיל, סיפור אחד. 199 ₪ + מע״מ לחודש.",
+     "tag_why": "product then monthly price"
+    }
+   ],
+   "eitan_close": {
+    "voice": "[calm] איתן מוואו. סייט בוט: מֵאָה תִּשְׁעִים וְתֵשַׁע שֶׁקֶל פלוס מַעַם לחודש.",
+    "display": "איתן מ-WAO. סייט בוט: 199 ₪ + מע״מ לחודש.",
+    "tag_why": "simple closing monthly price"
+   }
+  }
+ },
+ "changes": [
+  {"episode": "A1", "path": "hooks[0].voice", "why": "'The click meter started' only means something if you see the taxi-meter drawing, and the TTS read מונה as 'muna'. Eyes-closed the plain fact is: every click costs money, nobody calls."},
+  {"episode": "A1", "path": "hooks[1].voice", "why": "'Every click takes a coin' is the jar drawing; a click costs shekels, not a coin, so by ear it sounds like nonsense."},
+  {"episode": "A1", "path": "hooks[2].voice", "why": "'The meter is ticking' depends on the taxi-meter picture; with the screen off there is no meter, just money leaving on clicks."},
+  {"episode": "A1", "path": "script_30[0].voice", "why": "Same meter line as the hook; replaced with the plain money fact so it lands without the drawing."},
+  {"episode": "A1", "path": "script_30[1].voice", "why": "'Three coins' is the drawing; the plain fact is he paid for three clicks and the phone never rang."},
+  {"episode": "A1", "path": "script_30[5].voice", "why": "Not an eyes-closed failure; brand moved to the approved plain-text form (מוואו) so the automatic TTS swap handles pronunciation. Price wording unchanged."},
+  {"episode": "A1", "path": "script_15[0].voice", "why": "Same meter line as the hook; replaced with the plain money fact."},
+  {"episode": "A1", "path": "script_15[1].voice", "why": "'The meter runs, the coins fly' is pure cartoon; eyes-closed it must say money is going out on clicks and no calls come."},
+  {"episode": "A1", "path": "eitan_close.voice", "why": "Not an eyes-closed failure; brand moved to plain-text מוואו per the TTS-swap convention. Closing structure and price unchanged."},
+  {"episode": "A2", "path": "hooks[0].voice", "why": "'Click-flies by the jar' is the drawing; eyes-closed the listener needs the plain fact: more paid clicks, more money gone, no customer."},
+  {"episode": "A2", "path": "hooks[1].voice", "why": "'They eat coins' is the jar drawing, and 'they' has no antecedent by ear; now a click itself looks innocent but costs money."},
+  {"episode": "A2", "path": "hooks[2].voice", "why": "'I heard buzzing' is the fly swarm; eyes-closed the joke must be the budget being finished off by clicks."},
+  {"episode": "A2", "path": "script_30[0].voice", "why": "Same fly-and-jar line as the hook; replaced with the plain money drain."},
+  {"episode": "A2", "path": "script_30[1].voice", "why": "'The spraying doesn't help' is the fly cartoon; the plain action is blocking clicks that keep coming back."},
+  {"episode": "A2", "path": "script_30[2].voice", "why": "'Almost calls' has no subject by ear (it was a fly pretending to call); now 'someone almost called, actually no'."},
+  {"episode": "A2", "path": "script_30[5].voice", "why": "Not an eyes-closed failure; brand moved to plain-text מוואו per the TTS-swap convention. Price unchanged."},
+  {"episode": "A2", "path": "script_15[0].voice", "why": "Same fly-and-jar line as the hook; replaced with the plain money drain."},
+  {"episode": "A2", "path": "script_15[1].voice", "why": "'One, two, three' counted coins/flies in the drawing; eyes-closed it must count the clicks themselves, then the missing ring."},
+  {"episode": "A2", "path": "eitan_close.voice", "why": "Not an eyes-closed failure; brand moved to plain-text מוואו per the TTS-swap convention. Closing structure and price unchanged."},
+  {"episode": "A3", "path": "script_30[1].voice", "why": "'Confetti for clicks' is the drawing; eyes-closed it's a celebration over clicks while the customer is missing."},
+  {"episode": "A3", "path": "script_30[5].voice", "why": "Not an eyes-closed failure; brand moved to plain-text מוואו per the TTS-swap convention. Price unchanged."},
+  {"episode": "A3", "path": "eitan_close.voice", "why": "Not an eyes-closed failure; brand moved to plain-text מוואו per the TTS-swap convention. Closing structure and price unchanged."},
+  {"episode": "S1", "path": "hooks[0].voice", "why": "'She passed through us' is the ghost-van drawing; eyes-closed it must say she searched for a plumber and didn't find you."},
+  {"episode": "S1", "path": "hooks[1].voice", "why": "'The van is here, Google doesn't see' leans on the ghost van; the plain fact is you exist but aren't on Google."},
+  {"episode": "S1", "path": "hooks[2].voice", "why": "'Passed through us' is again the ghost drawing; now she searched and found someone else."},
+  {"episode": "S1", "path": "script_30[0].voice", "why": "Same ghost walk-through line as the hook; replaced with the plain missed search."},
+  {"episode": "S1", "path": "script_30[1].voice", "why": "Coffee falling through the bonnet is a pure picture gag; eyes-closed it must say people walk past you to the competitor."},
+  {"episode": "S1", "path": "script_30[3].voice", "why": "'We're transparent' is the ghost drawing; plain words: years of good work and nobody sees it."},
+  {"episode": "S1", "path": "script_30[4].voice", "why": "'In the same line' (באותו קו) is vague by ear; now the site and the Google profile plainly say the same thing about every service."},
+  {"episode": "S1", "path": "script_30[5].voice", "why": "Not an eyes-closed failure; brand and product name moved to plain-text מוואו / סייט בוט per the TTS-swap convention. Price unchanged."},
+  {"episode": "S1", "path": "script_15[0].voice", "why": "Same ghost walk-through line as the hook; replaced with the plain missed search."},
+  {"episode": "S1", "path": "script_15[1].voice", "why": "'They pass through us, the coffee fell' is the ghost drawing plus a picture gag; now people walk past you to the competitor."},
+  {"episode": "S1", "path": "script_15[2].voice", "why": "'We're transparent' is the ghost drawing; plain words: years of good work and nobody sees it."},
+  {"episode": "S1", "path": "script_15[3].voice", "why": "Product name moved to plain-text סייט בוט (auto TTS swap) and the vague 'באותו קו' replaced with plain 'say the same thing'."},
+  {"episode": "S1", "path": "eitan_close.voice", "why": "Not an eyes-closed failure; brand and product name moved to plain-text forms per the TTS-swap convention. Closing structure and price unchanged."},
+  {"episode": "S2", "path": "hooks[0].voice", "why": "'A jar of compliments' is the drawing; the ears joke is verbal and stays, the jar goes."},
+  {"episode": "S2", "path": "hooks[2].voice", "why": "'All the stars are with us' is the star-jar drawing; eyes-closed the fact is everyone's happy but there are no Google reviews."},
+  {"episode": "S2", "path": "script_30[0].voice", "why": "Same star-jar line as the hook; replaced with the plain fact: happy customers, no reviews on Google."},
+  {"episode": "S2", "path": "script_30[1].voice", "why": "'Another star in the jar' is the drawing; plain: another good job, another thank-you at the end."},
+  {"episode": "S2", "path": "script_30[2].voice", "why": "'We see, they don't' has no referent by ear (the jar); now you hear the thanks, Google doesn't."},
+  {"episode": "S2", "path": "script_30[5].voice", "why": "Not an eyes-closed failure; brand and product name moved to plain-text forms per the TTS-swap convention. Price unchanged."},
+  {"episode": "S2", "path": "script_15[0].voice", "why": "Same star-jar line as the hook; replaced with the plain fact: happy customers, no reviews on Google."},
+  {"episode": "S2", "path": "script_15[1].voice", "why": "'A quiet star' is the drawing; plain: a thank-you at the end of the job, and that's where it ends."},
+  {"episode": "S2", "path": "script_15[3].voice", "why": "Product name moved to plain-text סייט בוט (auto TTS swap); the help-customers-leave-a-review wording is unchanged."},
+  {"episode": "S2", "path": "eitan_close.voice", "why": "Not an eyes-closed failure; brand and product name moved to plain-text forms per the TTS-swap convention. Closing structure and price unchanged."},
+  {"episode": "S3", "path": "hooks[0].voice", "why": "'The level is crooked' is the spirit-level drawing; eyes-closed the fact is every place names a different trade."},
+  {"episode": "S3", "path": "script_30[0].voice", "why": "Same spirit-level line as the hook; replaced with the plain mismatch."},
+  {"episode": "S3", "path": "script_30[5].voice", "why": "Not an eyes-closed failure; brand and product name moved to plain-text forms per the TTS-swap convention. Price unchanged."},
+  {"episode": "S3", "path": "script_15[0].voice", "why": "Same spirit-level line as the hook; replaced with the plain mismatch."},
+  {"episode": "S3", "path": "script_15[1].voice", "why": "'The bubble is squeezed' is the spirit-level drawing; plain: three versions and the customer gets confused."},
+  {"episode": "S3", "path": "script_15[3].voice", "why": "Product name moved to plain-text סייט בוט (auto TTS swap); 'in the same story' tightened to the plainer 'one story'."},
+  {"episode": "S3", "path": "eitan_close.voice", "why": "Not an eyes-closed failure; brand and product name moved to plain-text forms per the TTS-swap convention. Closing structure and price unchanged."}
+ ]
+}

@@ -1,0 +1,46 @@
+Angle: Slot = the generated business page itself; the visitor is a local customer at most-aware stage checking if this business is real, so every label stays factual — visible Google credit, hours as plain text, zero claims a static page can't keep.
+
+סיבוב 2, ניתוח קטן. הכול כאן מיושר לתנאים של יונתן, לא כתיבה מחדש. קודם הרשימה, אחר כך הסט המלא.
+
+**א. תיקונים והסרות (התנאים המחייבים)**
+- `hero.hours.open` + `hero.hours.closed` (זוג ״פתוח/סגור עכשיו״) → `hero.hours`: `{hours}` — עמוד סטטי לא יודע מה השעה. שעות כטקסט, זהו. כשאין שעות: השורה מוסתרת, אין מחרוזת. מאושר.
+- `review.date.relative` → `review.date`: `{month} {year}` — בלי ״לפני חודש״. חודש ושנה, שמות החודשים בעברית בפנים. מילת תווית מסביב לא צריך.
+- `review.name` → `{reviewerName}` — השם כלשונו מ-Google, בלי לחתוך לשם פרטי.
+
+**ב. תוספות חדשות**
+- `hero.rating.google`: `{count} ביקורות ב-Google` + גרסת יחיד — קרדיט גלוי בצ׳יפ הדירוג.
+- `reviews.source`: `הדירוג והביקורות מ-Google` — קרדיט מעל הביקורות, מכסה גם את הדירוג.
+- `reviews.selection`: `אלה הביקורות האחרונות מהפרופיל העסקי` — איך נבחרו. Google לא חוזר כאן כי השורה מעל כבר נקבה בו; גרסה עם Google מפורש מחכה ב-notes אם יונתן ירצה.
+- `og.fallback`: `{businessName} · {topService} · {city}` — רק משתנים, בלי מילות חיבור. אושר. המפרידים והפריסה הם של מאיה.
+
+שקיפות אחת, חשובה: אין לי גישה לקובץ סיבוב 1 מהמושב הזה. מפתחות הרקע בסט משוחזרים מהבריף, ולכן Eitan-Dev **ממזג** את סיבוב 2 לתוך הקובץ הקיים, לא מחליף אותו. כל מחרוזת שלא נגעה באחד הסעיפים האלה נשארת כלשונה מסיבוב 1.
+
+```json
+{
+  "labels": {
+    "hero.title": "{businessName}",
+    "hero.subtitle": "{topService} ב{city}",
+    "hero.rating": "{rating}",
+    "hero.rating.google": "{count} ביקורות ב-Google",
+    "hero.rating.google.one": "ביקורת אחת ב-Google",
+    "hero.hours": "{hours}",
+    "hero.hours.missing": "",
+    "hero.cta.call": "התקשר עכשיו",
+    "hero.cta.whatsapp": "שלח הודעה בוואטסאפ",
+    "hero.cta.navigate": "הוראות הגעה",
+    "reviews.heading": "מה לקוחות אומרים",
+    "reviews.source": "הדירוג והביקורות מ-Google",
+    "reviews.selection": "אלה הביקורות האחרונות מהפרופיל העסקי",
+    "review.name": "{reviewerName}",
+    "review.date": "{month} {year}",
+    "review.date.months": ["ינואר", "פברואר", "מרץ", "אפריל", "מאי", "יוני", "יולי", "אוגוסט", "ספטמבר", "אוקטובר", "נובמבר", "דצמבר"],
+    "review.text": "{text}",
+    "og.fallback": "{businessName} · {topService} · {city}"
+  },
+  "notes": "סיבוב 2 לפי התנאים של יונתן (2026-11-12). הוסרו: hero.hours.open, hero.hours.closed, review.date.relative. השעות כטקסט בלבד. כשאין שעות השורה מוסתרת ואין מחרוזת — אושר. תאריכים: חודש ושנה, בלי תאריך יחסי ובלי תווית מסביב — לא צריך. שמות החודשים בעברית ב-review.date.months. קרדיט Google גלוי בצ׳יפ ומעל הביקורות, Google נשאר בלטינית. ספירה 1 משתמשת ב-hero.rating.google.one. ספירה 0 מסתירה את הצ׳יפ ואת הסקשן — לוגיקה בקוד, לא קופי. שורת הבחירה לא חוזרת על Google כי הקרדיט מעליה נוקב בו. גרסה מפורשת אם יונתן ידרוש: ״אלה הביקורות האחרונות מהפרופיל העסקי ב-Google״. og.fallback: רק משתנים, בלי מילות חיבור — אושר. מפרידים ופריסה אצל מאיה. שמות מדרגים כלשונם מ-Google, בלי קיצור לשם פרטי. {hours} מפורמט בקוד: ימים א׳–ה׳, טווחים עם קו קצר (–), שעות 24h. אם אין אייקון שעון בעיצוב, החלופה היא ״שעות פתיחה: {hours}״. מפתחות הרקע (hero.title, hero.subtitle, hero.rating, שלושת הכפתורים, reviews.heading, review.text) שוחזרו מהבריף כי אין גישה לקובץ סיבוב 1 מהמושב הזה — למזג לתוך הקובץ הקיים, לא להחליף. כל מחרוזת אחרת מסיבוב 1 נשארת כלשונה."
+}
+```
+
+שני דברים קטנים לפני סגירה. טווחי שעות ומספרים מקבלים קו קצר (–), לא מקף ארוך — זה תקין לטווחים, נועה היא הסמכות הסופית. והכפתורים נשארים ביחיד זכר, כמו בכל הסט.
+
+→ נועה להגהה. → Eitan-Dev למיזוג לתוך `docs/copy/site-bot-redesign-ui-labels-2026-11-12.waocopy.json` ולפירמוט `{hours}` בקוד. → יונתן רק אם הוא רוצה את גרסת ה-Google המפורש בשורת הבחירה.

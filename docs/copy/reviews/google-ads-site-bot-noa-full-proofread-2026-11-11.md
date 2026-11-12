@@ -247,3 +247,23 @@ Coverage notes:
 - **Eitan/Adam:** all open facts above, especially "לתמיד" and the site-bot price decision.
 - **Eitan-Dev:** keep the /google-ads FAQPage schema in sync with any FAQ rewrite. The hero `tel:` link skips PhoneReveal attribution (Adam's call).
 - **Tamar:** both briefs above. After her rewrite, the copy comes back to me for a correctness pass.
+
+---
+
+# Facts settled by Eitan (2026-11-11)
+**/google-ads**
+1. Stats (200–400% ROI, 60% CPA drop, 8:1 benchmark): **cannot be backed → remove the whole stats block.** No performance numbers anywhere on the page.
+2. Commitment: month to month, **no minimum and no notice period**; billing is at the beginning of the month.
+3. What raises the fee above ₪1,500: unclear to Eitan → don't explain it; keep the existing "from ₪1,500" wording as is, add nothing about tiers.
+4. Fraud Blocker: **included** in the management fee.
+5. The free 30-minute call **does include** a look at the client's account.
+**/site-bot**
+6. Chat editing after cancellation: **no** → never "forever"; editing is part of an active subscription.
+7. Price: **show it** — ₪199 + VAT per month, monthly, no commitment, cancel online any time; cancellation takes effect at the end of the paid month (docs/legal/site-bot-terms-of-use.md §7–§8).
+8. Time to live: **one business day** on a WAO address; **three business days** with the client's own domain.
+9. The bot runs on its own (chat) from the start; Eitan is one chat message away when needed. Don't name WhatsApp; say "a message"/"chat" consistently.
+10. **One package only** → drop "החבילה המלאה".
+11. Google Business Profile: we **connect an existing one** (we don't create it). First customers are found through their existing Google Maps listings.
+- **Update (Eitan, later 2026-11-11):** Q3: the Google Ads management fee is **always ₪1,500/month**, flat, never "from". The /site-bot h1 changes too, since it says the build starts with a call; Yonatan specs it and Tamar writes it.
+- **CORRECTION (Eitan, later 2026-11-11):** ₪1,500/month is the **minimum ad spend (paid to Google)** needed to use the Google Ads Bot, or the manual retainer. It is **not** a management fee. The manual 1:1 retainer costs more than ₪1,500 on its own and is no longer pushed; the Ads Bot is the offer. The "flat ₪1,500 fee" update above is superseded.
+- **Ads Bot (Eitan, later 2026-11-11):** ₪249/month from day one, no trial, and open for sign-up once the Takbull gateway is live. The minimum ad spend is ₪1,500/month, paid to Google. A money-back guarantee and the policy on landing pages hosted on WAO subdomains are pending a strategist call (Fable 5.2).

@@ -1,0 +1,185 @@
+{
+  "angle": "Slot = /site-bot; solution-aware tradesman wants a site without editors, so lead with one package, price, ownership and message-based edits; emptied course section into FAQ6; FAQ literals feed FAQPage JSON-LD via FAQS.map, no separate duplicates.",
+  "patches": [
+    {
+      "file": "src/app/(app)/site-bot/page.tsx",
+      "old": "אתה באמצע יום עבודה וצריך לעדכן מחיר באתר? שלח הודעת WhatsApp והאתר מתעדכן. החבילה המלאה כוללת חמישה עמודים בדומיין שלך.",
+      "new": "אתה באמצע יום עבודה וצריך לעדכן מחיר? אתה שולח הודעה, והמחיר החדש כבר באתר. האתר כולל חמישה עמודים בדומיין על שמך.",
+      "why": "Keep the mid-workday scene but remove WhatsApp and the full-package claim."
+    },
+    {
+      "file": "src/app/(app)/site-bot/page.tsx",
+      "old": "            {renderMixed(\"משאירים פרטים, ואיתן חוזר אליך לשיחה על האתר. אפשר גם להתחיל בבדיקה חינמית של העסק שלך בגוגל.\")}",
+      "new": "            {renderMixed(\"תשאיר פרטים, ואיתן, מייסד WAO, יחזור אליך לשיחה על האתר.\")}",
+      "why": "Introduce Eitan once and remove audit echo from hero sub-line."
+    },
+    {
+      "file": "src/app/(app)/site-bot/page.tsx",
+      "old": "מתחיל בשיחה על העסק שלך, בלי לפתוח עורך אתרים.",
+      "new": "אתה מדבר עם איתן על העסק, בלי לפתוח עורך אתרים.",
+      "why": "Give step 1 an explicit subject."
+    },
+    {
+      "file": "src/app/(app)/site-bot/page.tsx",
+      "old": "מספר מה אתה עושה ולמי אתה רוצה שהאתר יפנה.",
+      "new": "אנחנו בונים את האתר ומעלים אותו לדומיין שרשום על שמך.",
+      "why": "Make step 2 an action with a clear subject."
+    },
+    {
+      "file": "src/app/(app)/site-bot/page.tsx",
+      "old": "החבילה המלאה כוללת אתר בדומיין שרשום על שמך.",
+      "new": "כשמשהו משתנה בעסק, אתה שולח הודעה אחת והעדכון עולה לאתר.",
+      "why": "Turn step 3 into the post-launch action and fix reversed logic."
+    },
+    {
+      "file": "src/app/(app)/site-bot/page.tsx",
+      "old": "כבר למדת לבנות אתר לבד? עכשיו תבחר איך לבזבז פחות זמן.",
+      "new": "",
+      "why": "Empty course-graduate section; merged into FAQ6 so engineer can remove wrapper."
+    },
+    {
+      "file": "src/app/(app)/site-bot/page.tsx",
+      "old": "למדת בקורס של WAO לבנות אתר בעצמך? מצוין, זאת עדיין אפשרות. אבל כשלקוח מחכה לתשובה, אולי לא תרצה לפתוח עורך אתרים. בחבילה המלאה אתה שולח הודעת WhatsApp כשמשהו משתנה באתר.",
+      "new": "",
+      "why": "Empty course-graduate section; merged into FAQ6 so engineer can remove wrapper."
+    },
+    {
+      "file": "src/app/(app)/site-bot/page.tsx",
+      "old": "כל אתר נבנה אחרי שיחה עם איתן על העסק שלך. רוצה לבדוק קודם איך העסק שלך נראה בגוגל? הבדיקה חינמית, וצריך רק את שם העסק.",
+      "new": "אתה משלם 199 ₪ + מע״מ לחודש. בלי התחייבות ובלי הודעה מוקדמת. אפשר לבטל אונליין בכל עת, והביטול נכנס לתוקף בסוף החודש ששולם.",
+      "why": "Publish settled price and cancellation terms instead of audit pitch."
+    },
+    {
+      "file": "src/app/(app)/site-bot/page.tsx",
+      "old": "הבדיקה לא מחייבת אותך לכלום. רק אחריה תחליט אם לדבר עם איתן על האתר.",
+      "new": "בלי התחייבות. עם כתובת של WAO האתר עולה תוך יום עסקים אחד.",
+      "why": "Replace audit line with settled time to live."
+    },
+    {
+      "file": "src/app/(app)/site-bot/page.tsx",
+      "old": "מה כוללת החבילה המלאה? חמישה עמודים, דומיין פרטי ועריכה בצ׳אט. גם GSC, הפרופיל העסקי בגוגל וטופס הלידים מחוברים לאתר.",
+      "new": "החבילה כוללת אתר בן חמישה עמודים בדומיין על שמך ועריכה בהודעה. יש גם חיבור לפרופיל העסקי הקיים שלך בגוגל, לכלי של גוגל שמראה איך אנשים מוצאים אותך ולטופס שמעביר אליך פניות.",
+      "why": "Replace jargon with plain ownership and included items."
+    },
+    {
+      "file": "src/app/(app)/site-bot/page.tsx",
+      "old": "לבנות לבד, לשכור מפתח, או לשלוח הודעה?",
+      "new": "לבנות לבד, לשכור מפתח או לשלוח הודעה?",
+      "why": "Remove serial comma."
+    },
+    {
+      "file": "src/app/(app)/site-bot/page.tsx",
+      "old": "אתה תלוי בתהליך ובמחיר שיסוכמו מול הספק, גם כשתרצה לעדכן.",
+      "new": "כשאתה רוצה לעדכן מחיר, אתה מחכה שמישהו אחר יתפנה לזה.",
+      "why": "Make developer option a lived moment without price claims."
+    },
+    {
+      "file": "src/app/(app)/site-bot/page.tsx",
+      "old": "אתה יכול לבנות לבד; רק תחליט כמה זמן תרצה להקדיש לתחזוקה.",
+      "new": "אתה בונה מהר, ואז כל תיקון, כל עדכון וכל תקלה נופלים עליך.",
+      "why": "State the real cost of DIY AI without semicolon."
+    },
+    {
+      "file": "src/app/(app)/site-bot/page.tsx",
+      "old": "Site Bot: אתר לעסק קטן, בדומיין שלך ועם עריכה בצ׳אט.",
+      "new": "Site Bot הוא אתר בן חמישה עמודים בדומיין על שמך, עם עדכונים בהודעה.",
+      "why": "Remove colon label and align with one-package wording."
+    },
+    {
+      "file": "src/app/(app)/site-bot/page.tsx",
+      "old": "            שאלות נפוצות",
+      "new": "            מה חשוב לך לדעת",
+      "why": "Change FAQ heading so it no longer duplicates the eyebrow."
+    },
+    {
+      "file": "src/app/(app)/site-bot/page.tsx",
+      "old": "כמה עולה בניית אתר לעסק קטן ב-Site Bot?",
+      "new": "כמה עולה לי אתר לעסק קטן?",
+      "why": "Put FAQ question in reader voice."
+    },
+    {
+      "file": "src/app/(app)/site-bot/page.tsx",
+      "old": "המחיר נקבע בשיחה אישית עם איתן, לפי מה שהעסק שלך צריך. אפשר להתחיל קודם בבדיקה חינמית של העסק שלך בגוגל.",
+      "new": "199 ₪ + מע״מ לחודש. בלי התחייבות ובלי הודעה מוקדמת. אפשר לבטל אונליין בכל עת, והביטול נכנס לתוקף בסוף החודש ששולם.",
+      "why": "Answer price directly with settled terms."
+    },
+    {
+      "file": "src/app/(app)/site-bot/page.tsx",
+      "old": "מתי האתר לעסק שלך עולה לאוויר?",
+      "new": "מתי האתר שלי עולה לאוויר?",
+      "why": "Put FAQ question in reader voice."
+    },
+    {
+      "file": "src/app/(app)/site-bot/page.tsx",
+      "old": "המועד נקבע בשיחה עם איתן, לפי היקף האתר. אתה לא צריך להקים כלום בעצמך.",
+      "new": "תוך יום עסקים אחד בכתובת של WAO. עם דומיין שרשום על שמך, תוך שלושה ימי עסקים.",
+      "why": "Answer timing directly with settled facts."
+    },
+    {
+      "file": "src/app/(app)/site-bot/page.tsx",
+      "old": "צריך לדעת לבנות אתר או לעבוד עם קוד?",
+      "new": "אני צריך לדעת קוד כדי שיהיה לי אתר?",
+      "why": "Put FAQ question in reader voice."
+    },
+    {
+      "file": "src/app/(app)/site-bot/page.tsx",
+      "old": "לא. אתה מספר על העסק בצ׳אט; החבילה המלאה כוללת אתר בדומיין פרטי, בלי להקים אותו בעצמך.",
+      "new": "לא. אתה מדבר איתנו על העסק, ואנחנו בונים ומעלים את האתר. אחר כך כל עדכון הוא הודעה.",
+      "why": "Answer directly, remove semicolon and full-package wording."
+    },
+    {
+      "file": "src/app/(app)/site-bot/page.tsx",
+      "old": "איך משנים מחיר או שירות אחרי שהאתר עלה?",
+      "new": "איך אני משנה מחיר או שירות אחרי שהאתר באוויר?",
+      "why": "Put FAQ question in reader voice."
+    },
+    {
+      "file": "src/app/(app)/site-bot/page.tsx",
+      "old": "לקוח שואל על שירות חדש? אתה שולח הודעת WhatsApp, והאתר מתעדכן. העריכה בצ׳אט כלולה בחבילה המלאה לתמיד; אין צורך לגעת בקוד.",
+      "new": "בהודעה אחת, התוכן באתר משתנה. העריכה כלולה כל עוד המינוי פעיל, בלי לגעת בקוד.",
+      "why": "Remove forever promise, WhatsApp and semicolon."
+    },
+    {
+      "file": "src/app/(app)/site-bot/page.tsx",
+      "old": "למה לא לבנות לבד ב-Wix או ב-WordPress?",
+      "new": "למה לי לא לבנות לבד ב-Wix או ב-WordPress?",
+      "why": "Put FAQ question in reader voice."
+    },
+    {
+      "file": "src/app/(app)/site-bot/page.tsx",
+      "old": "ב-Wix או ב-WordPress אתה בונה ומעדכן בעצמך. בחבילה המלאה הדומיין, Cloudflare ו-GitHub רשומים על שמך. רוצה לשנות משהו? אתה שולח הודעת WhatsApp במקום לפתוח שוב את העורך.",
+      "new": "ב-Wix או ב-WordPress אתה בונה ומעדכן בעצמך. כאן הדומיין רשום על שמך, ואת כל השינויים אתה מבקש בהודעה.",
+      "why": "Remove jargon, WhatsApp and rhetorical question."
+    },
+    {
+      "file": "src/app/(app)/site-bot/page.tsx",
+      "old": "כבר למדת לבנות אתר בקורס של WAO. למה לשלם?",
+      "new": "למדתי לבנות אתר בקורס של WAO. למה לי לשלם?",
+      "why": "Put FAQ question in reader voice and carry merged course objection."
+    },
+    {
+      "file": "src/app/(app)/site-bot/page.tsx",
+      "old": "אתה יכול לבנות לבד, אבל הזמן שלך לא בחינם. החבילה כוללת חמישה עמודים, דומיין פרטי ועריכה בצ׳אט לתמיד, וגם חיבור GSC, פרופיל עסקי בגוגל וטופס לידים.",
+      "new": "הזמן שלך שווה כסף. אתה יכול לבנות לבד, אבל כל עדכון יחזיר אותך לעורך. כאן אתה מעביר הודעה, בלי לפתוח עורך.",
+      "why": "Answer course-graduate objection without forever promise."
+    },
+    {
+      "file": "src/app/(app)/site-bot/page.tsx",
+      "old": "רוצה שגם ימצאו אותך בגוגל? קרא על הפרופיל העסקי.",
+      "new": "כך הפרופיל העסקי הקיים שלך בגוגל מתחבר לאתר.",
+      "why": "Align cross-link with existing Google profile connection fact."
+    },
+    {
+      "file": "src/app/(app)/site-bot/page.tsx",
+      "old": "<span className=\"text-gradient\">אתר לעסק</span>",
+      "new": "<span className=\"text-gradient\">אתר שמתעדכן בהודעה</span>",
+      "why": "Turn final CTA label into a benefit heading."
+    },
+    {
+      "file": "src/app/(app)/site-bot/page.tsx",
+      "old": "                {renderMixed(\"משאירים פרטים, ואיתן חוזר אליך לשיחה על האתר. אפשר גם להתחיל בבדיקה חינמית של העסק שלך בגוגל.\")}",
+      "new": "                {renderMixed(\"אחרי הודעה אחת, השינוי כבר באוויר. בלי עורך אתרים ובלי לחכות.\")}",
+      "why": "Give final CTA a unique payoff instead of repeating hero sub-line."
+    }
+  ]
+}

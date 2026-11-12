@@ -1,0 +1,623 @@
+{
+  "source": "waocopy 50adf345-0410-42ce-aa7e-6fc03a67ed67 + Noa fixes (docs/copy/reviews/google-ads-ads-bot-noa-qa-2026-11-11.md); + facts pass 2026-11-12 (docs/copy/reviews/google-ads-facts-pass-noa-qa-2026-11-12.md) + credit/verification (docs/copy/reviews/google-ads-credit-verification-noa-qa-2026-11-12.md)",
+  "apply": "in listed order, replace ALL occurrences (FAQ+JSON-LD dups). Stages build on each other: never re-sort across stages.",
+  "dropped": {
+    "22-30": "stats block — engineer deletes STATS const + section",
+    "21": "hero Ads Bot button — engineer removes the Link"
+  },
+  "engineer": [
+    "delete stats section + STATS const",
+    "delete step tags container + tags field",
+    "remove hero Ads Bot button (patch 21)",
+    "JSON-LD price 1500→249 (now a patch); add priceSpecification valueAddedTaxIncluded:false + monthly unit (Yonatan OK)",
+    "consider generating FAQPage schema from FAQS",
+    "Offer: add priceSpecification {\"@type\":\"UnitPriceSpecification\",price:\"249\",priceCurrency:\"ILS\",valueAddedTaxIncluded:false,unitCode:\"MON\"}; keep Offer price/priceCurrency (Yonatan APPROVED 2026-11-12)"
+  ],
+  "patches": [
+    {
+      "file": "src/app/(app)/google-ads/page.tsx",
+      "old": "כבר שילמת על קליקים בלי לדעת כמה פניות קיבלת? החשבון ופרופיל התשלומים נשארים שלך; WAO מנהלת את הקמפיינים דרך MCC. מתחילים ממדידת המרות עם GA4 ו-Google Tag Manager. מעדיף להתחיל בעצמך? בדוק את אפשרות ה-Ads Bot.",
+      "new": "כבר שילמת על קליקים ולא ידעת כמה פניות קיבלת? Ads Bot מקים את הקמפיינים, מנהל אותם ושולח דוח שבועי — ב-₪249 לחודש. אתה רואה כל שקל.",
+      "why": "Hero body explains the bot in one line, removes MCC/GA4/GTM and jargon.",
+      "idx": 18,
+      "occurrences": 1
+    },
+    {
+      "file": "src/app/(app)/google-ads/page.tsx",
+      "old": "בקידום ממומן אתה משלם על תנועה מהמודעות, והיא תלויה בתקציב. קידום אורגני אינו מחייב תשלום לקליק, אבל דורש עבודה וזמן. בוחרים ערוץ לפי העסק שלך, לא לפי הבטחה לתוצאות מיידיות.",
+      "new": "אתה יכול לבטל בכל חודש, בלי התחייבות ובלי הודעה מוקדמת. דפי הנחיתה נשארים באוויר עוד 30 יום אחרי סוף החודש ששילמת, ואז יורדים. אפשר לקנות אותם ב-₪900, ואחרי 12 חודשי תשלום תקבל אותם בחינם. הבוט מזהיר אותך ביום הביטול ושוב 7 ימים לפני שהדפים יורדים, ומציע להשהות את הקמפיינים או להפנות אותם לאתר שלך.",
+      "why": "State the full landing-page and cancellation policy openly in the FAQ.",
+      "noa": "replaced",
+      "idx": 11,
+      "occurrences": 1
+    },
+    {
+      "file": "src/app/(app)/google-ads/page.tsx",
+      "old": "Performance Max הוא סוג קמפיין שמציג מודעות בכמה ערוצים של Google. הוא לא מתאים אוטומטית לכל עסק; בודקים נתוני המרות, מטרה ותקציב לפני שבוחרים בו.",
+      "new": "כן, את דמי השירות, ₪249. את תקציב המודעות שילמת לגוגל, ולכן הוא לא חוזר. התקופה היא 30 יום, והיא מתחילה כשהמודעה הראשונה שלך עולה לאוויר. התנאים: המודעות רצו בקצב של ₪1,500 לחודש, החזר אחד לכל עסק, ואתה מבקש עד 7 ימים אחרי סוף 30 הימים. אם לא הצלחנו להעלות את המודעות שלך, ההחזר אוטומטי. זה בנוסף לזכות שלך לבטל תוך 14 יום לפי החוק.",
+      "why": "Give the refund conditions in plain language without result guarantees.",
+      "noa": "replaced",
+      "idx": 13,
+      "occurrences": 1
+    },
+    {
+      "file": "src/app/(app)/google-ads/page.tsx",
+      "old": "מפרידים בין חיפוש ממוקד ב-Search לבין חשיפה רחבה יותר ב-Performance Max. כשזה מתאים לעסק, בוחנים גם YouTube Ads מול המטרה והתקציב שלך.",
+      "new": "Ads Bot כותב את המודעות, בוחר חיפושים מתאימים ומקים דפי נחיתה במערכת של WAO. הבוט מחבר הכול לחשבון Google Ads שלך.",
+      "why": "Describe setup, ads and landing pages without campaign-type jargon.",
+      "idx": 37,
+      "occurrences": 1
+    },
+    {
+      "file": "src/app/(app)/google-ads/page.tsx",
+      "old": "דמי הניהול מתחילים ב-₪1,500 לחודש; תקציב המדיה נפרד ומשולם על ידך. חשבון Google Ads ופרופיל התשלומים בבעלותך, ו-WAO מנהלת דרך MCC.",
+      "new": "₪249 לחודש ל-WAO. בנוסף, אתה משלם מינימום של ₪1,500 לחודש למודעות ישירות לגוגל מחשבון Google Ads שלך. יש הסכם בכתב.",
+      "why": "Both occurrences: direct cost answer, no MCC, no from, syncs with FAQPage schema.",
+      "idx": 7,
+      "occurrences": 2
+    },
+    {
+      "file": "src/app/(app)/google-ads/page.tsx",
+      "old": "לא. אין חוזה ארוך טווח. חשבון Google Ads ופרופיל התשלומים נשארים בבעלותך; WAO פועלת דרך MCC. תקציב הפרסום משולם בנפרד מדמי הניהול.",
+      "new": "בפרסום בגוגל אתה משלם על כל קליק, וכשאתה מפסיק לשלם, המודעות יורדות. בקידום אורגני אתה לא משלם לגוגל על קליקים, אבל לוקח חודשים עד שמטפסים בתוצאות.",
+      "why": "Answer the channel difference directly, remove MCC and formal phrasing.",
+      "noa": "replaced",
+      "idx": 15,
+      "occurrences": 1
+    },
+    {
+      "file": "src/app/(app)/google-ads/page.tsx",
+      "old": "כבר שילמת על קליקים ולא ידעת מי פנה? מתחילים בבדיקת החשבון וההמרות. מגדירים מה נחשב פנייה, ורק אז מחליטים איפה נכון לפרסם.",
+      "new": "אנחנו בודקים את החשבון ואת המדידה לפני כל החלטה. אתה מגדיר מה נחשב פנייה, ורק אז מחליטים איפה נכון לפרסם.",
+      "why": "Keep measurement first without repeating the hero pain question.",
+      "idx": 35,
+      "occurrences": 1
+    },
+    {
+      "file": "src/app/(app)/google-ads/page.tsx",
+      "old": "המערכת צריכה לדעת איזו פנייה חשובה לך, ולא רק מי לחץ. בודקים את נתוני ההמרות לפני שמשנים הצעות מחיר או מרחיבים קמפיין.",
+      "new": "אתה משלם ל-WAO ₪249 לחודש. את תקציב המודעות, לפחות ₪1,500 לחודש, אתה משלם ישירות לגוגל מחשבון Google Ads שלך.",
+      "why": "State the fee and the Google-paid minimum clearly.",
+      "idx": 39,
+      "occurrences": 1
+    },
+    {
+      "file": "src/app/(app)/google-ads/page.tsx",
+      "old": "מחברים GA4 ו-Google Tag Manager כדי למדוד מה קורה אחרי הקליק. כך אפשר לבדוק אם הקמפיין מביא פניות מול הכסף שאתה מוציא.",
+      "new": "אתה יכול לבטל בכל חודש. הבוט מתריע ביום הביטול ושוב 7 ימים לפני כיבוי דפי הנחיתה, ומציע להשהות את הקמפיינים או להפנות אותם לאתר שלך.",
+      "why": "Use the last step for the cancellation warning.",
+      "idx": 43,
+      "occurrences": 1
+    },
+    {
+      "file": "src/app/(app)/google-ads/page.tsx",
+      "old": "המודעה שלך צריכה לענות על מה שהלקוח מחפש באותו רגע. בוחנים ניסוחים ונכסים לפי הפניות שהם מביאים, לא לפי קליקים בלבד.",
+      "new": "Ads Bot משפר את הקמפיינים לפי קליקים, חשיפות ועלות. אתה מקבל דוח שבועי, ו-Fraud Blocker חוסם קליקים מזויפים.",
+      "why": "Cover optimisation, reporting and included Fraud Blocker.",
+      "idx": 41,
+      "occurrences": 1
+    },
+    {
+      "file": "src/app/(app)/google-ads/page.tsx",
+      "old": "אין תאריך קבוע לתוצאות או מספר פניות שאפשר להבטיח. מחברים GA4 ו-Google Tag Manager, ואז בודקים פניות מול ההוצאה.",
+      "new": "אתה רואה בחשבון שלך קליקים, חשיפות ועלות בכל רגע, ו-Ads Bot שולח לך דוח כל שבוע. אף אחד לא יכול להבטיח מספר פניות מראש.",
+      "why": "Both occurrences: remove GA4/GTM, answer directly, sync with FAQPage schema.",
+      "noa": "replaced",
+      "idx": 9,
+      "occurrences": 2
+    },
+    {
+      "file": "src/app/(app)/google-ads/page.tsx",
+      "old": "בודקים את מבנה הקמפיינים ואת מדידת ההמרות לפני החלטות על התקציב. Fraud Blocker מסייע בהגנה מפני הונאת קליקים.",
+      "new": "החיוב בתחילת כל חודש, ואין תקופת ניסיון. אפשר לעזוב בכל חודש, בלי התחייבות.",
+      "why": "State the commercial terms next to the offer.",
+      "noa": "replaced",
+      "idx": 47,
+      "occurrences": 1
+    },
+    {
+      "file": "src/app/(app)/google-ads/page.tsx",
+      "old": "בשיחה חינמית של 30 דקות נבחן את החשבון ואת מדידת ההמרות. תראה מה כדאי לבדוק לפני שאתה מוסיף עוד כסף לפרסום.",
+      "new": "בשיחה חינם של 30 דקות אנחנו נבדוק את החשבון ונגיד לך מה לבדוק לפני שאתה מוסיף תקציב.",
+      "why": "CTA body states the free 30-minute account check and standardizes חינם.",
+      "idx": 60,
+      "occurrences": 1
+    },
+    {
+      "file": "src/app/(app)/google-ads/page.tsx",
+      "old": "ניהול קמפיינים בגוגל בחשבון שבבעלותך, דרך MCC. דמי ניהול מ-₪1,500 לחודש; תקציב הפרסום שלך נפרד.",
+      "new": "שילמת על קליקים ולא ראית פניות? פרסום בגוגל עם Ads Bot ב-₪249 לחודש, ולפחות ₪1,500 למודעות ישירות לגוגל. החזר דמי שירות אם לא תהיה מרוצה בחודש הראשון.",
+      "why": "Meta description now carries pain, head term, ₪249, Google-paid minimum and refund.",
+      "noa": "replaced",
+      "idx": 2,
+      "occurrences": 1
+    },
+    {
+      "file": "src/app/(app)/google-ads/page.tsx",
+      "old": "ניהול Google Ads בחשבון שלך, בלי חוזה ארוך. דמי ניהול מ-₪1,500 לחודש, תקציב המדיה נפרד.",
+      "new": "שילמת על קליקים ולא ראית פניות? פרסום בגוגל עם Ads Bot ב-₪249 לחודש, ולפחות ₪1,500 למודעות ישירות לגוגל. החזר דמי שירות אם לא תהיה מרוצה בחודש הראשון.",
+      "why": "OG description matches the meta description and the new offer.",
+      "noa": "replaced",
+      "idx": 3,
+      "occurrences": 1
+    },
+    {
+      "file": "src/app/(app)/google-ads/page.tsx",
+      "old": "ניהול Google Ads בחשבון הלקוח דרך MCC, החל מ-₪1,500 לחודש; תקציב מדיה נפרד.",
+      "new": "ניהול Google Ads עם Ads Bot ב-₪249 לחודש. הלקוח משלם לפחות ₪1,500 לחודש למודעות ישירות לגוגל.",
+      "why": "Service schema: remove MCC/from, state bot price and Google-paid minimum.",
+      "noa": "replaced",
+      "idx": 5,
+      "occurrences": 1
+    },
+    {
+      "file": "src/app/(app)/google-ads/page.tsx",
+      "old": "מתאימים את סוג הקמפיין לחיפוש, למטרה ולתקציב שלך; לא מפעילים הכול אוטומטית.",
+      "new": "אתה משלם מינימום של ₪1,500 לחודש ישירות לגוגל מחשבון Google Ads שלך.",
+      "why": "Clarify that the ad spend goes to Google, not WAO.",
+      "idx": 49,
+      "occurrences": 1
+    },
+    {
+      "file": "src/app/(app)/google-ads/page.tsx",
+      "old": "חשבון Google Ads נשאר שלך; אתה יכול לראות בעצמך את ההוצאה והביצועים.",
+      "new": "דפי הנחיתה פועלים במערכת WAO כחלק מהמנוי. אחרי ביטול הם נשארים 30 יום, ואפשר לקנות אותם ב-₪900 או לקבל חינם אחרי 12 חודשי תשלום.",
+      "why": "Disclose landing-page ownership, buyout and free-after-12 terms.",
+      "idx": 57,
+      "occurrences": 1
+    },
+    {
+      "file": "src/app/(app)/google-ads/page.tsx",
+      "old": "מחברים GA4 ו-Google Tag Manager כדי לראות פניות והמרות לצד ההוצאה.",
+      "new": "הבוט מקים קמפיינים, מודעות ודפי נחיתה, מבצע אופטימיזציה ושולח דוח שבועי. Fraud Blocker כלול, ואיתן, מייסד WAO, זמין בצ׳אט.",
+      "why": "List what the bot runs, including Fraud Blocker and Eitan.",
+      "noa": "replaced",
+      "idx": 53,
+      "occurrences": 1
+    },
+    {
+      "file": "src/app/(app)/google-ads/page.tsx",
+      "old": "בוחנים גם פרסום בווידאו כשהקהל והמטרה שלך מצדיקים את תקציב המדיה.",
+      "new": "חשבון Google Ads, הקמפיינים והנתונים שייכים אליך. WAO מנהלת אותם דרך חשבון ניהול, ויש הסכם בכתב. אתה רואה קליקים, חשיפות ועלות בכל רגע.",
+      "why": "Plain-language MCC disclosure, written agreement and transparency.",
+      "idx": 51,
+      "occurrences": 1
+    },
+    {
+      "file": "src/app/(app)/google-ads/page.tsx",
+      "old": "פרסום בגוגל בחשבון שלך — ניהול Google Ads מ-₪1,500 לחודש‏ | WAO",
+      "new": "פרסום בגוגל — Google Ads עם Ads Bot ב-₪249 לחודש‏ | WAO",
+      "why": "Replace old human-management price with the ₪249 bot offer, keep head term and end on Hebrew.",
+      "idx": 0,
+      "occurrences": 1
+    },
+    {
+      "file": "src/app/(app)/google-ads/page.tsx",
+      "old": "ניהול Google Ads דרך MCC בחשבון ובפרופיל תשלומים בבעלות הלקוח",
+      "new": "ניהול Google Ads עם Ads Bot ב-₪249 לחודש, בחשבון ובפרופיל תשלומים בבעלות הלקוח",
+      "why": "WebPage schema: remove MCC and add ₪249 without from-pricing.",
+      "idx": 4,
+      "occurrences": 1
+    },
+    {
+      "file": "src/app/(app)/google-ads/page.tsx",
+      "old": "בוחנים איזה ניסוח מדבר ללקוחות שלך ומביא פניות, לא רק חשיפות.",
+      "new": "לא מרוצה ב-30 הימים הראשונים? אנחנו מחזירים ₪249, דמי השירות בלבד. הספירה מתחילה כשהמודעה הראשונה עולה לאוויר. התנאים: המודעות רצו בקצב של ₪1,500 לחודש, החזר אחד לכל עסק, ובקשה עד 7 ימים אחרי סוף התקופה.",
+      "why": "State the three refund conditions beside the offer.",
+      "noa": "replaced",
+      "idx": 55,
+      "occurrences": 1
+    },
+    {
+      "file": "src/app/(app)/google-ads/page.tsx",
+      "old": "✓ שיחת ייעוץ חינם, 30 דקות · ✓ בלי חוזה ארוך · ✓ החשבון שלך",
+      "new": "✓ ₪249 לחודש · ✓ מינימום ₪1,500 לגוגל · ✓ החזר דמי שירות בכפוף לתנאים",
+      "why": "CTA strip reinforces the offer terms instead of repeating ownership.",
+      "idx": 62,
+      "occurrences": 1
+    },
+    {
+      "file": "src/app/(app)/google-ads/page.tsx",
+      "old": "<span className=\"text-gradient\">מבוססות נתונים</span>",
+      "new": "<span className=\"text-gradient\">Ads Bot עובד</span>",
+      "why": "Complete the new h2: how Ads Bot works.",
+      "idx": 33,
+      "occurrences": 1
+    },
+    {
+      "file": "src/app/(app)/google-ads/page.tsx",
+      "old": "כמה עולה ניהול קמפיינים בגוגל, ומי משלם על המודעות?",
+      "new": "כמה אני משלם על Ads Bot, ומי מקבל את תקציב המודעות?",
+      "why": "Both occurrences: FAQ question becomes first-person and syncs with FAQPage schema.",
+      "idx": 6,
+      "occurrences": 2
+    },
+    {
+      "file": "src/app/(app)/google-ads/page.tsx",
+      "old": "<span className=\"text-gradient\">בחשבון שלך</span>",
+      "new": "<span className=\"text-gradient\">עם Ads Bot</span>",
+      "why": "Keep the secondary anchor and name the product in the included h2.",
+      "idx": 45,
+      "occurrences": 1
+    },
+    {
+      "file": "src/app/(app)/google-ads/page.tsx",
+      "old": "פרסום בגוגל בחשבון שלך — ניהול Google Ads | WAO",
+      "new": "פרסום בגוגל — Google Ads עם Ads Bot ב-₪249 לחודש‏ | WAO",
+      "why": "OG title must be identical to the page title.",
+      "idx": 1,
+      "occurrences": 1
+    },
+    {
+      "file": "src/app/(app)/google-ads/page.tsx",
+      "old": "מה זה Performance Max, והאם הוא מתאים לעסק שלך?",
+      "new": "אם לא אהיה מרוצה, אני מקבל את הכסף בחזרה?",
+      "why": "Replace jargon FAQ with the refund question.",
+      "noa": "replaced",
+      "idx": 12,
+      "occurrences": 1
+    },
+    {
+      "file": "src/app/(app)/google-ads/page.tsx",
+      "old": "איך יודעים אם הפרסום בגוגל מביא פניות אמיתיות?",
+      "new": "איך אני יודע אם הפרסום בגוגל מביא פניות?",
+      "why": "Both occurrences: first-person FAQ question and schema sync.",
+      "idx": 8,
+      "occurrences": 2
+    },
+    {
+      "file": "src/app/(app)/google-ads/page.tsx",
+      "old": "החשבון שלך. התקציב שלך. אנחנו מנהלים דרך MCC.",
+      "new": "חודש בחודש. בלי התחייבות ובלי הודעה מוקדמת.",
+      "why": "Badge under 45 chars uses commercial terms and removes MCC.",
+      "noa": "replaced",
+      "idx": 16,
+      "occurrences": 1
+    },
+    {
+      "file": "src/app/(app)/google-ads/page.tsx",
+      "old": "מה ההבדל בין פרסום בגוגל לבין קידום אורגני?",
+      "new": "מה קורה אם אני מבטל את המנוי?",
+      "why": "Repurpose FAQ slot for the cancellation and landing-page policy.",
+      "idx": 10,
+      "occurrences": 1
+    },
+    {
+      "file": "src/app/(app)/google-ads/page.tsx",
+      "old": "משלם על קליקים, ולא יודע כמה פניות הגיעו?",
+      "new": "רוצה לבדוק את החשבון לפני שמוסיפים תקציב?",
+      "why": "CTA eyebrow stops repeating the hero pain question.",
+      "idx": 58,
+      "occurrences": 1
+    },
+    {
+      "file": "src/app/(app)/google-ads/page.tsx",
+      "old": "מחליטים לפי נתוני העסק, לא לפי תחושת בטן",
+      "new": "אתה משלם את התקציב לגוגל",
+      "why": "Make the payment split a step with an explicit subject.",
+      "idx": 38,
+      "occurrences": 1
+    },
+    {
+      "file": "src/app/(app)/google-ads/page.tsx",
+      "old": "האם אתה חייב להתחייב לניהול ארוך טווח?",
+      "new": "מה ההבדל מבחינתי בין פרסום בגוגל לקידום אורגני?",
+      "why": "Keep the organic-vs-paid FAQ in the reader's first-person voice.",
+      "idx": 14,
+      "occurrences": 1
+    },
+    {
+      "file": "src/app/(app)/google-ads/page.tsx",
+      "old": "מעדיף להתחיל לבד? בדוק את Ads Bot ←",
+      "new": "תראה איך Ads Bot עובד ←",
+      "why": "Direct, singular-masculine bot CTA with one product name.",
+      "noa": "replaced",
+      "idx": 61,
+      "occurrences": 1
+    },
+    {
+      "file": "src/app/(app)/google-ads/page.tsx",
+      "old": "ראה הדגמת Sandbox בלי תקציב חי ←",
+      "new": "תראה הדגמה בלי להוציא שקל ←",
+      "why": "Remove Sandbox jargon and the live-budget calque.",
+      "idx": 20,
+      "occurrences": 1
+    },
+    {
+      "file": "src/app/(app)/google-ads/page.tsx",
+      "old": "מעקב המרות לפני עוד שקל על פרסום",
+      "new": "אתה יכול לבטל בכל חודש",
+      "why": "Final step handles cancellation without jargon.",
+      "idx": 42,
+      "occurrences": 1
+    },
+    {
+      "file": "src/app/(app)/google-ads/page.tsx",
+      "old": "ניהול Search ו-Performance Max",
+      "new": "תקציב מודעות לגוגל",
+      "why": "Card title explains the ad-spend minimum.",
+      "idx": 48,
+      "occurrences": 1
+    },
+    {
+      "file": "src/app/(app)/google-ads/page.tsx",
+      "old": "החלטות לפי נתונים מהחשבון שלך",
+      "new": "דפי נחיתה וביטול",
+      "why": "Card title introduces the landing-page policy.",
+      "idx": 56,
+      "occurrences": 1
+    },
+    {
+      "file": "src/app/(app)/google-ads/page.tsx",
+      "old": "מפרסמים במקום שבו הלקוח מחפש",
+      "new": "Ads Bot מקים את הקמפיינים",
+      "why": "Name the product and the setup step.",
+      "idx": 36,
+      "occurrences": 1
+    },
+    {
+      "file": "src/app/(app)/google-ads/page.tsx",
+      "old": "YouTube Ads כשזה מתאים לעסק",
+      "new": "החשבון והנתונים שלך",
+      "why": "Card title carries the ownership disclosure.",
+      "idx": 50,
+      "occurrences": 1
+    },
+    {
+      "file": "src/app/(app)/google-ads/page.tsx",
+      "old": "מודעות שמדברות ללקוח הנכון",
+      "new": "אתה מקבל דוח שבועי",
+      "why": "Step title focuses on the visible report.",
+      "idx": 40,
+      "occurrences": 1
+    },
+    {
+      "file": "src/app/(app)/google-ads/page.tsx",
+      "old": "קודם בודקים לאן הכסף הולך",
+      "new": "אנחנו בודקים את החשבון",
+      "why": "Step title becomes an explicit action with a subject.",
+      "idx": 34,
+      "occurrences": 1
+    },
+    {
+      "file": "src/app/(app)/google-ads/page.tsx",
+      "old": "ניסוח מודעות ובדיקת מסרים",
+      "new": "החזר דמי שירות",
+      "why": "Card title puts the refund next to the offer.",
+      "idx": 54,
+      "occurrences": 1
+    },
+    {
+      "file": "src/app/(app)/google-ads/page.tsx",
+      "old": "נבדוק יחד לאן התקציב הולך",
+      "new": "נבדוק את החשבון שלך",
+      "why": "CTA h2 promises the account look included in the call.",
+      "idx": 59,
+      "occurrences": 1
+    },
+    {
+      "file": "src/app/(app)/google-ads/page.tsx",
+      "old": "דבר איתנו 30 דקות, בחינם",
+      "new": "דבר איתנו 30 דקות, חינם",
+      "why": "Standardize the free spelling for the call CTA.",
+      "idx": 19,
+      "occurrences": 1
+    },
+    {
+      "file": "src/app/(app)/google-ads/page.tsx",
+      "old": "חמישה צעדים בדרך להחלטות",
+      "new": "איך",
+      "why": "Rewrite the methodology h2 around the bot.",
+      "idx": 32,
+      "occurrences": 1
+    },
+    {
+      "file": "src/app/(app)/google-ads/page.tsx",
+      "old": "מדידת המרות עם GA4 ו-GTM",
+      "new": "מה Ads Bot עושה",
+      "why": "Card title names the product mechanism.",
+      "idx": 52,
+      "occurrences": 1
+    },
+    {
+      "file": "src/app/(app)/google-ads/page.tsx",
+      "old": "— בלי להינעל על סוכנות",
+      "new": "— בלי להיות כבול לסוכנות",
+      "why": "Fix the calque while keeping the ownership idea in the h1.",
+      "idx": 17,
+      "occurrences": 1
+    },
+    {
+      "file": "src/app/(app)/google-ads/page.tsx",
+      "old": "בדיקת חשבון Google Ads",
+      "new": "₪249 לחודש ל-WAO",
+      "why": "First included card states the service fee.",
+      "idx": 46,
+      "occurrences": 1
+    },
+    {
+      "file": "src/app/(app)/google-ads/page.tsx",
+      "old": "כך ניגשים לחשבון שלך",
+      "new": "התהליך",
+      "why": "Simplify the methodology eyebrow.",
+      "idx": 31,
+      "occurrences": 1
+    },
+    {
+      "file": "src/app/(app)/google-ads/page.tsx",
+      "old": "מה עושים בפועל",
+      "new": "מה אתה מקבל ומה אתה משלם",
+      "why": "Eyebrow now matches the offer section.",
+      "noa": "replaced",
+      "idx": 44,
+      "occurrences": 1
+    },
+    {
+      "stage": "facts-2026-11-12",
+      "old": "כן, את דמי השירות, ₪249. את תקציב המודעות שילמת לגוגל, ולכן הוא לא חוזר. התקופה היא 30 יום, והיא מתחילה כשהמודעה הראשונה שלך עולה לאוויר. התנאים: המודעות רצו בקצב של ₪1,500 לחודש, החזר אחד לכל עסק, ואתה מבקש עד 7 ימים אחרי סוף 30 הימים. אם לא הצלחנו להעלות את המודעות שלך, ההחזר אוטומטי. זה בנוסף לזכות שלך לבטל תוך 14 יום לפי החוק.",
+      "new": "כן, את דמי השירות, ₪249 + מע״מ. את תקציב המודעות שילמת לגוגל, ולכן הוא לא חוזר. התקופה היא 30 יום, והיא מתחילה כשהמודעה הראשונה שלך עולה לאוויר. התנאים: המודעות רצו בקצב של ₪1,500 לחודש, החזר אחד לכל עסק, ואתה מבקש עד 7 ימים אחרי סוף 30 הימים. אם לא הצלחנו להעלות את המודעות שלך, ההחזר אוטומטי. זה בנוסף לזכות שלך לבטל תוך 14 יום לפי החוק.",
+      "noa": "KEEP"
+    },
+    {
+      "stage": "facts-2026-11-12",
+      "old": "לא מרוצה ב-30 הימים הראשונים? אנחנו מחזירים ₪249, דמי השירות בלבד. הספירה מתחילה כשהמודעה הראשונה עולה לאוויר. התנאים: המודעות רצו בקצב של ₪1,500 לחודש, החזר אחד לכל עסק, ובקשה עד 7 ימים אחרי סוף התקופה.",
+      "new": "לא מרוצה ב-30 הימים הראשונים? אנחנו מחזירים ₪249 + מע״מ, דמי השירות בלבד. הספירה מתחילה כשהמודעה הראשונה עולה לאוויר. התנאים: המודעות רצו בקצב של ₪1,500 לחודש, החזר אחד לכל עסק, ובקשה עד 7 ימים אחרי סוף התקופה.",
+      "noa": "KEEP"
+    },
+    {
+      "stage": "facts-2026-11-12",
+      "old": "שילמת על קליקים ולא ראית פניות? פרסום בגוגל עם Ads Bot ב-₪249 לחודש, ולפחות ₪1,500 למודעות ישירות לגוגל. החזר דמי שירות אם לא תהיה מרוצה בחודש הראשון.",
+      "new": "שילמת על קליקים ולא ראית פניות? פרסום בגוגל עם Ads Bot ב-₪249 + מע״מ לחודש, ולפחות ₪1,500 למודעות ישירות לגוגל. החזר דמי שירות אם לא תהיה מרוצה בחודש הראשון.",
+      "noa": "KEEP"
+    },
+    {
+      "stage": "facts-2026-11-12",
+      "old": "חשבון Google Ads, הקמפיינים והנתונים שייכים אליך. WAO מנהלת אותם דרך חשבון ניהול, ויש הסכם בכתב. אתה רואה קליקים, חשיפות ועלות בכל רגע.",
+      "new": "חשבון Google Ads, הקמפיינים והנתונים שייכים אליך. WAO מנהלת אותם דרך חשבון ניהול, ויש הסכם בכתב.",
+      "noa": "FIX"
+    },
+    {
+      "stage": "facts-2026-11-12",
+      "old": "כבר שילמת על קליקים ולא ידעת כמה פניות קיבלת? Ads Bot מקים את הקמפיינים, מנהל אותם ושולח דוח שבועי — ב-₪249 לחודש. אתה רואה כל שקל.",
+      "new": "כבר שילמת על קליקים ולא ידעת מה יצא מזה? Ads Bot פותח חשבון Google Ads חדש על שמך, ומכוון את הקמפיינים לפי הפניות שהפכו אצלך לעבודה, לא רק לפי קליקים. וזה עולה ₪249 + מע״מ לחודש.",
+      "noa": "FIX"
+    },
+    {
+      "stage": "facts-2026-11-12",
+      "old": "אתה רואה בחשבון שלך קליקים, חשיפות ועלות בכל רגע, ו-Ads Bot שולח לך דוח כל שבוע. אף אחד לא יכול להבטיח מספר פניות מראש.",
+      "new": "כל פנייה מדף הנחיתה, בטופס, בשיחה או בוואטסאפ, נכנסת לרשימת הפניות שלך. בדוח השבועי אתה רואה כמה פניות הגיעו ומה עלתה כל פנייה. אף אחד לא יכול להבטיח מספר פניות מראש.",
+      "noa": "FIX"
+    },
+    {
+      "stage": "facts-2026-11-12",
+      "old": "₪249 לחודש ל-WAO. בנוסף, אתה משלם מינימום של ₪1,500 לחודש למודעות ישירות לגוגל מחשבון Google Ads שלך. יש הסכם בכתב.",
+      "new": "₪249 + מע״מ לחודש ל-WAO. בנוסף, אתה משלם מינימום של ₪1,500 לחודש למודעות ישירות לגוגל מחשבון Google Ads שלך. יש הסכם בכתב.",
+      "noa": "FIX"
+    },
+    {
+      "stage": "facts-2026-11-12",
+      "old": "אתה משלם ל-WAO ₪249 לחודש. את תקציב המודעות, לפחות ₪1,500 לחודש, אתה משלם ישירות לגוגל מחשבון Google Ads שלך.",
+      "new": "אתה משלם ל-WAO ₪249 + מע״מ לחודש. את תקציב המודעות, לפחות ₪1,500 לחודש, אתה משלם ישירות לגוגל מחשבון Google Ads שלך.",
+      "noa": "FIX"
+    },
+    {
+      "stage": "facts-2026-11-12",
+      "old": "Ads Bot משפר את הקמפיינים לפי קליקים, חשיפות ועלות. אתה מקבל דוח שבועי, ו-Fraud Blocker חוסם קליקים מזויפים.",
+      "new": "ליד כל אחת אתה מציין אם היא רלוונטית ואם היא נסגרה. Ads Bot מכוון את הקמפיינים לפי זה ומעביר את המידע לגוגל, שלומד אילו חיפושים מביאים עבודה.",
+      "noa": "FIX"
+    },
+    {
+      "stage": "facts-2026-11-12",
+      "old": "אנחנו בודקים את החשבון ואת המדידה לפני כל החלטה. אתה מגדיר מה נחשב פנייה, ורק אז מחליטים איפה נכון לפרסם.",
+      "new": "החשבון רשום על שמך, ו-Ads Bot בונה אותו מאפס בלי לגעת בחשבון שכבר יש לך. הוא מתחיל משירות אחד, זה שהכי משתלם לך לפרסם.",
+      "noa": "FIX"
+    },
+    {
+      "stage": "facts-2026-11-12",
+      "old": "ניהול Google Ads עם Ads Bot ב-₪249 לחודש. הלקוח משלם לפחות ₪1,500 לחודש למודעות ישירות לגוגל.",
+      "new": "ניהול Google Ads עם Ads Bot ב-₪249 + מע״מ לחודש. הלקוח משלם לפחות ₪1,500 לחודש למודעות ישירות לגוגל.",
+      "noa": "KEEP"
+    },
+    {
+      "stage": "facts-2026-11-12",
+      "old": "בשיחה חינם של 30 דקות אנחנו נבדוק את החשבון ונגיד לך מה לבדוק לפני שאתה מוסיף תקציב.",
+      "new": "בשיחה חינם נעבור יחד על הפרסום, האתר והפרופיל שלך בגוגל, ונגיד לך מאיפה כדאי להתחיל. אם תמשיך, Ads Bot בונה הכול מאפס.",
+      "noa": "FIX"
+    },
+    {
+      "stage": "facts-2026-11-12",
+      "old": "ניהול Google Ads עם Ads Bot ב-₪249 לחודש, בחשבון ובפרופיל תשלומים בבעלות הלקוח",
+      "new": "ניהול Google Ads עם Ads Bot ב-₪249 + מע״מ לחודש, בחשבון ובפרופיל תשלומים בבעלות הלקוח",
+      "noa": "KEEP"
+    },
+    {
+      "stage": "facts-2026-11-12",
+      "old": "הבוט מקים קמפיינים, מודעות ודפי נחיתה, מבצע אופטימיזציה ושולח דוח שבועי.",
+      "new": "הבוט מקים קמפיינים, מודעות ודפי נחיתה ושולח דוח שבועי.",
+      "noa": "ADD"
+    },
+    {
+      "stage": "facts-2026-11-12",
+      "old": "✓ ₪249 לחודש · ✓ מינימום ₪1,500 לגוגל · ✓ החזר דמי שירות בכפוף לתנאים",
+      "new": "✓ ₪249 + מע״מ לחודש · ✓ מינימום ₪1,500 לגוגל · ✓ החזר דמי שירות בכפוף לתנאים",
+      "noa": "KEEP"
+    },
+    {
+      "stage": "facts-2026-11-12",
+      "old": "פרסום בגוגל — Google Ads עם Ads Bot ב-₪249 לחודש‏ | WAO",
+      "new": "פרסום בגוגל — Google Ads עם Ads Bot ב-₪249 + מע״מ‏ | WAO",
+      "noa": "KEEP"
+    },
+    {
+      "stage": "facts-2026-11-12",
+      "old": "רוצה לבדוק את החשבון לפני שמוסיפים תקציב?",
+      "new": "לפני שאתה מוציא עוד שקל על מודעות",
+      "noa": "FIX"
+    },
+    {
+      "stage": "facts-2026-11-12",
+      "old": "אנחנו בודקים את החשבון",
+      "new": "Ads Bot פותח לך חשבון חדש",
+      "noa": "FIX"
+    },
+    {
+      "stage": "facts-2026-11-12",
+      "old": "נבדוק את החשבון שלך",
+      "new": "נסתכל על מה שיש לך היום",
+      "noa": "KEEP"
+    },
+    {
+      "stage": "facts-2026-11-12",
+      "old": "אתה מקבל דוח שבועי",
+      "new": "אתה מסמן את הפניות",
+      "noa": "ADD"
+    },
+    {
+      "stage": "facts-2026-11-12",
+      "old": "₪249 לחודש ל-WAO",
+      "new": "₪249 + מע״מ לחודש ל-WAO",
+      "noa": "KEEP"
+    },
+    {
+      "stage": "facts-2026-11-12",
+      "old": "1500",
+      "new": "249",
+      "noa": "KEEP"
+    },
+    {
+      "stage": "credit-2026-11-12",
+      "old": "אתה משלם מינימום של ₪1,500 לחודש ישירות לגוגל מחשבון Google Ads שלך.",
+      "new": "אתה משלם מינימום של ₪1,500 לחודש ישירות לגוגל מחשבון Google Ads שלך. אם העסק שלך חדש ב-Google Ads, ייתכן שתהיה זכאי לזיכוי פרסום, כשהחשבון נפתח דרך Google Partner כמו WAO. הזיכוי הוא של גוגל ולפי התנאים שלה, והוא לא חלק מה-₪249 ולא הנחה של WAO.",
+      "noa": "Noa rebased"
+    },
+    {
+      "stage": "credit-2026-11-12",
+      "old": "אתה משלם ל-WAO ₪249 + מע״מ לחודש. את תקציב המודעות, לפחות ₪1,500 לחודש, אתה משלם ישירות לגוגל מחשבון Google Ads שלך.",
+      "new": "את תקציב המודעות, לפחות ₪1,500 לחודש, אתה משלם ישירות לגוגל מחשבון Google Ads שלך. המודעות עולות לאוויר אחרי שגוגל מאמתת את פרטי התשלום, ואם היא מבקשת, גם את הזהות שלך. בדרך כלל זה לוקח כמה ימי עסקים, והזמן תלוי בגוגל.",
+      "noa": "Noa rebased"
+    },
+    {
+      "stage": "credit-2026-11-12",
+      "old": "חשבון Google Ads, הקמפיינים והנתונים שייכים אליך. WAO מנהלת אותם דרך חשבון ניהול, ויש הסכם בכתב.",
+      "new": "חשבון Google Ads, הקמפיינים והנתונים שייכים אליך. WAO מנהלת אותם דרך חשבון ניהול, ויש הסכם בכתב. את פרטי התשלום אתה מזין בעצמך ישירות מול גוגל, על שמך. WAO לא נוגעת בכרטיס האשראי שלך ולא בתעודה המזהה.",
+      "noa": "Noa rebased"
+    },
+    {
+      "stage": "anchors-2026-11-12",
+      "old": "פרסום בגוגל — Google Ads עם Ads Bot ב-₪249 + מע״מ‏ | WAO",
+      "new": "פרסום בגוגל — Google Ads ב-₪249 + מע״מ לחודש‏ | WAO",
+      "yonatan": "option (a)"
+    },
+    {
+      "stage": "anchors-2026-11-12",
+      "old": "שילמת על קליקים ולא ראית פניות? פרסום בגוגל עם Ads Bot ב-₪249 + מע״מ לחודש, ולפחות ₪1,500 למודעות ישירות לגוגל. החזר דמי שירות אם לא תהיה מרוצה בחודש הראשון.",
+      "new": "שילמת על קליקים ולא ראית פניות? פרסום בגוגל עם Ads Bot ב-₪249 + מע״מ לחודש, ולפחות ₪1,500 למודעות לגוגל. החזר דמי שירות אם לא תהיה מרוצה בחודש הראשון.",
+      "yonatan": "cut \"ישירות \""
+    },
+    {
+      "stage": "credit-bonus-2026-11-12",
+      "old": "אתה משלם מינימום של ₪1,500 לחודש ישירות לגוגל מחשבון Google Ads שלך. אם העסק שלך חדש ב-Google Ads, ייתכן שתהיה זכאי לזיכוי פרסום, כשהחשבון נפתח דרך Google Partner כמו WAO. הזיכוי הוא של גוגל ולפי התנאים שלה, והוא לא חלק מה-₪249 ולא הנחה של WAO.",
+      "new": "אתה משלם מינימום של ₪1,500 לחודש ישירות לגוגל מחשבון Google Ads שלך. ויש גם בונוס. WAO היא Google Partner, ואם העסק שלך חדש ב-Google Ads, היא מבקשת עבורך מגוגל זיכוי פרסום לחשבון החדש. בעל עסק שפותח חשבון לבד בדרך כלל לא רואה את האפשרות הזאת. זה כסף למודעות מגוגל, מעבר לתקציב שאתה משלם."
+    }
+  ]
+}

@@ -1,0 +1,36 @@
+Angle: most-aware consumer in a hurry on the owner's own site — labels stay plain signposts in the owner's I-voice, and every dead-end state (closed, submit) names the next step so urgency never turns into a lost lead.
+
+```json
+{
+  "labels": {
+    "nav.label": "ניווט ראשי",
+    "skip.link": "דלג לתוכן הראשי",
+    "hero.rating.count": {
+      "one": "ביקורת אחת בגוגל",
+      "two": "שתי ביקורות בגוגל",
+      "other": "{count} ביקורות בגוגל"
+    },
+    "hero.hours.open": "פתוח עכשיו",
+    "hero.hours.closed": "סגור עכשיו, אני פותח ב{time} — שלח הודעה ואחזור אליך",
+    "trust.label": "למה לסמוך עליי",
+    "reviews.heading": "מה לקוחות אומרים עליי",
+    "reviews.list.label": "ביקורות לקוחות מגוגל",
+    "reviews.seeAll": "לכל הביקורות בגוגל",
+    "review.date.relative": {
+      "days": { "one": "לפני יום", "two": "לפני יומיים", "other": "לפני {n} ימים" },
+      "weeks": { "one": "לפני שבוע", "two": "לפני שבועיים", "other": "לפני {n} שבועות" },
+      "months": { "one": "לפני חודש", "two": "לפני חודשיים", "other": "לפני {n} חודשים" },
+      "years": { "one": "לפני שנה", "two": "לפני שנתיים", "other": "לפני {n} שנים" }
+    },
+    "gallery.heading": "מהעבודות שלי",
+    "photo.alt.job": "עבודה גמורה של {businessName}",
+    "photo.alt.owner": "הבעלים של {businessName}",
+    "photo.alt.van": "רכב העבודה של {businessName}",
+    "about.heading": "קצת עליי",
+    "footer.hours.label": "שעות פעילות",
+    "footer.areas.label": "אזורי שירות",
+    "form.submit": "אני אחזור אליך"
+  },
+  "notes": "Plural keys are objects: one / two / other. two is the Hebrew dual (יומיים, שבועיים, חודשיים, שנתיים, שתי ביקורות) — if the template engine only branches one/other, drop two; the other forms stay grammatical with a numeral (2 ביקורות, לפני 2 ימים). years.one deliberately carries no {n}, per spec. {time} must arrive as a bare clock time or day+time (08:00, יום ראשון 08:00) — the label supplies the ב prefix, so never pass מחר inside {time}. The closed line and form.submit both promise a reply; that is grounded in the call-me-back flow, so keep it only where messages actually get answered. about.heading — genuine alternative: מי אני, if you want it to match the מה אני… heading family; picked קצת עליי because it promises a short bio. → Noa to proof before ship."
+}
+```

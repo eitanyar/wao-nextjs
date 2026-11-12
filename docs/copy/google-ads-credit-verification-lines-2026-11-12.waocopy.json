@@ -1,0 +1,23 @@
+{
+  "angle": "Place each trust fact at the exact decision moment — credit at account opening, Google approval at payment, card control in the ownership card.",
+  "patches": [
+    {
+      "file": "src/app/(app)/google-ads/page.tsx",
+      "old": "Ads Bot פותח חשבון Google Ads חדש בבעלותך ומתחיל מהשירות המרכזי עם ההזדמנות הגדולה ביותר, בלי לגעת בחשבון ישן.",
+      "new": "Ads Bot פותח חשבון Google Ads חדש בבעלותך ומתחיל מהשירות המרכזי עם ההזדמנות הגדולה ביותר, בלי לגעת בחשבון ישן. אם העסק שלך חדש ב-Google Ads, ייתכן שתהיה זכאי לזיכוי פרסום מגוגל בפתיחת החשבון דרך Google Partner כמו WAO. זה זיכוי של גוגל. הוא לא חלק מה-₪249 ולא הנחה של WAO, והכול לפי התנאים של גוגל.",
+      "why": "Adds the optional Google credit fact where the new account is opened, without promise or amount."
+    },
+    {
+      "file": "src/app/(app)/google-ads/page.tsx",
+      "old": "אתה משלם ל-WAO ₪249 + מע״מ לחודש. את תקציב המודעות, לפחות ₪1,500 לחודש, אתה משלם ישירות לגוגל מהחשבון החדש שנפתח בבעלותך.",
+      "new": "אתה משלם ל-WAO ₪249 + מע״מ לחודש. את תקציב המודעות, לפחות ₪1,500 לחודש, אתה משלם ישירות לגוגל מהחשבון החדש שנפתח בבעלותך. אתה רואה את המודעות באוויר אחרי שגוגל מאשרת את פרטי התשלום, ואם היא מבקשת, גם את פרטי הזהות. זה בדרך כלל לוקח כמה ימי עסקים. האישור הוא של גוגל.",
+      "why": "Sets an honest expectation that Google confirms payment details before ads go live."
+    },
+    {
+      "file": "src/app/(app)/google-ads/page.tsx",
+      "old": "חשבון Google Ads, הקמפיינים והנתונים שייכים אליך. WAO מנהלת אותם דרך חשבון ניהול, ויש הסכם בכתב. בדוח השבועי אתה רואה פניות ועלות לפי פנייה.",
+      "new": "חשבון Google Ads, הקמפיינים והנתונים שייכים אליך. אתה מזין את אמצעי התשלום שלך ישירות מול גוגל, והוא נשאר על שמך. אנחנו לא נוגעים בכרטיס האשראי שלך ולא בתעודה מזהה. אנחנו מנהלים אותם דרך חשבון ניהול, ויש הסכם בכתב. בדוח השבועי אתה רואה פניות ועלות לפי פנייה.",
+      "why": "Confirms he enters and owns the payment method, and WAO never touches his card or ID."
+    }
+  ]
+}

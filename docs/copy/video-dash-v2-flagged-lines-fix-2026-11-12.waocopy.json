@@ -1,0 +1,81 @@
+Mode B on voiced ads: the owner is problem-aware (feels clicks burning money), so I kept each script's metaphor, joke and arc, and only made the flagged lines native, ear-safe and true to what Ads Bot ships today.
+
+```json
+{
+  "fixes": [
+    {
+      "id": "A1.script_30[0]",
+      "old": "[deadpan] אתה סופר קליקים כמו מונה של מונית, וכל קליק הוא נוסע שנכנס אליך.",
+      "new": "[deadpan] אתה סופר קליקים כמו מונה נסיעות, וכל קליק הוא נוסע שעולה למונית.",
+      "display": "אתה סופר קליקים כמו מונה נסיעות, וכל קליק הוא נוסע שעולה למונית.",
+      "tag_why": "Deadpan sells the dry premise: you are the meter, every click is a fare.",
+      "why": "(B) A passenger boards a taxi, not 'you' — fixed 'שנכנס אליך' to 'שעולה למונית', and used the native 'מונה נסיעות' so מונית isn't repeated. Same metaphor, joke and spoken length."
+    },
+    {
+      "id": "A1.script_30[4]",
+      "old": "[calm] בוט מודעות מביא לך נוסעים שמשלמים, כי הוא לומד רק מעבודות שסגרת.",
+      "new": "[calm] בוט מודעות מביא לך נוסעים שמשלמים. אתה מסמן מה נסגר, וזה בונה את השלב הבא.",
+      "display": "בוט מודעות מביא לך נוסעים שמשלמים. אתה מסמן מה נסגר, וזה בונה את השלב הבא.",
+      "tag_why": "Calm lands the turn from the joke to a straight, confident promise.",
+      "why": "(A) Cut the false 'learns only from closed jobs'. Now only what ships: he marks what closed and that builds the next stage — no present-tense learning, no auto-switch. (B) Split the taxi payoff from the mechanism so נוסעים and סגירה don't clash in one sentence. A touch longer, kept truthful."
+    },
+    {
+      "id": "A2.script_15[1]",
+      "old": "[deadpan] הקהל השמין, הקופה לא.",
+      "new": "[deadpan] הקהל גדל, הקופה ריקה.",
+      "display": "הקהל גדל, הקופה ריקה.",
+      "tag_why": "Deadpan keeps the flat two-beat antithesis: crowd up, till empty.",
+      "why": "(B) Replaced the 'got fat' calque with a natural Hebrew contrast — crowd grows, till empty. Same 4-word deadpan punch, works by ear."
+    },
+    {
+      "id": "A2.script_15[2]",
+      "old": "[calm] בוט מודעות מביא לך קונים, לא טועמים, והקופה שלך סוף סוף משמינה.",
+      "new": "[calm] בוט מודעות מביא לך קונים, לא טועמים, והקופה שלך סוף סוף מתמלאת.",
+      "display": "בוט מודעות מביא לך קונים, לא טועמים, והקופה שלך סוף סוף מתמלאת.",
+      "tag_why": "Calm delivers the payoff as plain fact, no hype.",
+      "why": "(B) 'הקופה משמינה' (till gets fat) → 'מתמלאת' (fills up), the native phrasing. Same word and syllable count; keeps buyers-not-tasters."
+    },
+    {
+      "id": "A2.script_30[4]",
+      "old": "[deadpan] הקהל השמין, הקופה לא.",
+      "new": "[deadpan] הקהל גדל, הקופה ריקה.",
+      "display": "הקהל גדל, הקופה ריקה.",
+      "tag_why": "Deadpan keeps the flat two-beat antithesis: crowd up, till empty.",
+      "why": "(B) Replaced the 'got fat' calque with a natural Hebrew contrast — crowd grows, till empty. Same 4-word deadpan punch, works by ear."
+    },
+    {
+      "id": "A2.script_30[5]",
+      "old": "[calm] בוט מודעות מביא לך קונים, לא טועמים, והקופה שלך סוף סוף משמינה.",
+      "new": "[calm] בוט מודעות מביא לך קונים, לא טועמים, והקופה שלך סוף סוף מתמלאת.",
+      "display": "בוט מודעות מביא לך קונים, לא טועמים, והקופה שלך סוף סוף מתמלאת.",
+      "tag_why": "Calm delivers the payoff as plain fact, no hype.",
+      "why": "(B) 'הקופה משמינה' (till gets fat) → 'מתמלאת' (fills up), the native phrasing. Same word and syllable count; keeps buyers-not-tasters."
+    },
+    {
+      "id": "A3.script_15[1]",
+      "old": "[deadpan] הרבה עמודים בשביל ׳אין׳.",
+      "new": "[deadpan] הרבה עמודים בשביל כלום.",
+      "display": "הרבה עמודים בשביל כלום.",
+      "tag_why": "Deadpan keeps the flat verdict on the thick report.",
+      "why": "(A) 'בשביל ׳אין׳' was ungrammatical and quoted the on-screen stamp. Now 'בשביל כלום' — natural, passes eyes-closed, same 4-word punch."
+    },
+    {
+      "id": "A3.script_30[4]",
+      "old": "[deadpan] הרבה עמודים בשביל ׳אין׳.",
+      "new": "[deadpan] הרבה עמודים בשביל כלום.",
+      "display": "הרבה עמודים בשביל כלום.",
+      "tag_why": "Deadpan keeps the flat verdict on the thick report.",
+      "why": "(A) 'בשביל ׳אין׳' was ungrammatical and quoted the on-screen stamp. Now 'בשביל כלום' — natural, passes eyes-closed, same 4-word punch."
+    },
+    {
+      "id": "S2.script_15[2]",
+      "old": "[calm] עכשיו אתה מבין את הלקוחות. סייט בוט מביא לך עוד ביקורות מגוגל, לפני ש׳אחר כך׳ הופך ל׳אף פעם׳.",
+      "new": "[calm] עכשיו אתה מבין את הלקוחות. Site Bot מביא לך עוד ביקורות בגוגל, לפני ש׳אחר כך׳ הופך ל׳אף פעם׳.",
+      "display": "עכשיו אתה מבין את הלקוחות. Site Bot מביא לך עוד ביקורות בגוגל, לפני ש׳אחר כך׳ הופך ל׳אף פעם׳.",
+      "tag_why": "Calm, warm turn: the fix is easy, no scolding.",
+      "why": "(A) 'ביקורות מגוגל' → 'ביקורות בגוגל' (reviews on Google, not from Google); Site Bot written in Latin per the locked spelling. Rest untouched, same spoken length."
+    }
+  ],
+  "notes": "Mode B: all keep lines left byte-for-byte; only the flagged lines changed, tags kept. Flags: (1) A1 turn uses the allowed 'your marks build the next stage' fact; the target-cost-per-enquiry step is true but didn't fit the syllable budget — park it in the FAQ or a longer cut rather than shrink it silently. (2) S2 fix writes 'Site Bot' in Latin per the locked spelling, but the kept end card still reads 'סייט בוט' — identical audio, different caption; align the end card in a separate approved pass. (3) S2's 'עכשיו אתה מבין את הלקוחות' wasn't flagged, so I left it. Plain orthography for בוט מודעות/קליקים matches the keep lines; the voice step applies the niqqud locks. → Noa to proof the new lines."
+}
+```

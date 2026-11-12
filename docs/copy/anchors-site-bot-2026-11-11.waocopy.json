@@ -1,0 +1,41 @@
+{
+  "angle": "Angle: commercial product-aware tradesman; lead with true speed and message-only updates, no editor. title.absolute 60 chars including RLM; openGraph.title identical; description 150 chars; openGraph.description identical.",
+  "patches": [
+    {
+      "file": "src/app/(app)/site-bot/page.tsx",
+      "old": "    absolute: \"בניית אתר לעסק קטן — בלי עורך, עדכונים בהודעה‏ | WAO\",",
+      "new": "    absolute: \"בניית אתר לעסק קטן — עולה החל מיום עסקים, עדכון בהודעה‏ | WAO\",",
+      "why": "Title keeps the head term, drops editor, adds a true speed claim and message updates within 60 chars."
+    },
+    {
+      "file": "src/app/(app)/site-bot/page.tsx",
+      "old": "    title: \"בניית אתר לעסק קטן — בלי עורך, עדכונים בהודעה\",",
+      "new": "    title: \"בניית אתר לעסק קטן — עולה החל מיום עסקים, עדכון בהודעה‏ | WAO\",",
+      "why": "OG title must be identical to the absolute title, including the RLM and WAO suffix."
+    },
+    {
+      "file": "src/app/(app)/site-bot/page.tsx",
+      "old": "    \"בניית אתר לעסק קטן מתחילה בשיחה עם איתן על האתר שמתאים לעסק שלך. רוצה לראות קודם איך העסק שלך נראה בגוגל? הבדיקה חינמית.\",",
+      "new": "    \"בניית אתר לעסק קטן בצ׳אט. הבוט בונה איתך תוך יום עסקים בכתובת WAO או תוך שלושה ימי עסקים בדומיין שלך. עדכונים בהודעה. 199 ₪ + מע״מ לחודש, בלי התחייבות.\",",
+      "why": "Meta description includes head term once, chat build, true launch times, message updates, price, and no Eitan."
+    },
+    {
+      "file": "src/app/(app)/site-bot/page.tsx",
+      "old": "      \"בניית אתר לעסק קטן מתחילה בשיחה עם איתן על האתר שמתאים לעסק שלך. רוצה לראות קודם איך העסק שלך נראה בגוגל? הבדיקה חינמית.\",",
+      "new": "      \"בניית אתר לעסק קטן בצ׳אט. הבוט בונה איתך תוך יום עסקים בכתובת WAO או תוך שלושה ימי עסקים בדומיין שלך. עדכונים בהודעה. 199 ₪ + מע״מ לחודש, בלי התחייבות.\",",
+      "why": "OG description matches the new meta description."
+    },
+    {
+      "file": "src/app/(app)/site-bot/page.tsx",
+      "old": "            בניית אתר לעסק קטן, בלי להתעסק עם עורך",
+      "new": "            199 ₪ + מע״מ לחודש, בלי התחייבות",
+      "why": "Badge removes editor and states the settled price and no commitment."
+    },
+    {
+      "file": "src/app/(app)/site-bot/page.tsx",
+      "old": "            בניית אתר לעסק קטן מתחילה בשיחה עם איתן, ואחר כך אתה מעדכן את האתר בהודעה.",
+      "new": "            בניית אתר לעסק קטן מתחילה בצ׳אט — הבוט בונה איתך ואתה מעדכן את האתר בהודעה.",
+      "why": "H1 keeps head term, removes Eitan, uses feminine verb for building, and says bot builds in chat with message updates."
+    }
+  ]
+}

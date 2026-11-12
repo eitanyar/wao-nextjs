@@ -1,0 +1,23 @@
+{
+  "angle": "Angle: product-aware owner on a fixed-price Google Ads page; frame the credit as a hidden Google Partner perk WAO applies for him, with one eligibility qualifier.",
+  "patches": [
+    {
+      "file": "src/app/(app)/google-ads/page.tsx",
+      "old": "אתה משלם מינימום של ₪1,500 לחודש ישירות לגוגל מחשבון Google Ads שלך. אם העסק שלך חדש ב-Google Ads, ייתכן שתהיה זכאי לזיכוי פרסום, כשהחשבון נפתח דרך Google Partner כמו WAO. הזיכוי הוא של גוגל ולפי התנאים שלה, והוא לא חלק מה-₪249 ולא הנחה של WAO.",
+      "new": "אתה משלם מינימום של ₪1,500 לחודש ישירות לגוגל מחשבון Google Ads שלך. אם העסק שלך חדש ב-Google Ads, WAO מגישה עבורך את הצעת הזיכוי ששותפים של Google יכולים להגיש בפתיחת חשבון חדש — אפשרות שבעלי עסקים בדרך כלל לא פוגשים לבד. בכפוף לאישור גוגל ולתנאים שלה, הזיכוי מגיע ישירות לחשבון המודעות שלך, והוא אינו חלק מדמי השירות ולא הנחה מהם.",
+      "why": "Turn the credit from a disclaimer into a partner-delivered benefit while keeping eligibility and no-promise guardrails."
+    },
+    {
+      "file": "src/app/(app)/google-ads/page.tsx",
+      "old": "החשבון רשום על שמך, ו-Ads Bot בונה אותו מאפס בלי לגעת בחשבון שכבר יש לך. הוא מתחיל משירות אחד, זה שהכי משתלם לך לפרסם.",
+      "new": "החשבון רשום על שמך, ו-Ads Bot בונה אותו מאפס בלי לגעת בחשבון שכבר יש לך. הוא מתחיל משירות אחד, זה שהכי משתלם לך לפרסם. חשבון חדש מאפשר לנו, כשותף Google, להגיש עבורך הצעת זיכוי אם העסק שלך חדש ב-Google Ads.",
+      "why": "Reinforce the new-account mechanism where the reader learns the account is opened from scratch."
+    },
+    {
+      "file": "docs/legal/ads-bot-terms-of-use.md",
+      "old": "תקציב הפרסום אינו חלק מדמי השירות. הוא משולם ישירות ל-Google. איננו מקבלים אותו, איננו שולטים בו, ולא נחזיר אותו. עסקים חדשים ב-Google Ads עשויים להיות זכאים לזיכוי פרסום מ-Google, בכפוף לתנאי Google. הזיכוי ניתן על ידי Google, והזכאות לו וסכומו נקבעים על ידה בלבד. איננו מתחייבים לזיכוי, והוא אינו חלק מדמי השירות ואינו הנחה מהם.",
+      "new": "תקציב הפרסום אינו חלק מדמי השירות. הוא משולם ישירות ל-Google. איננו מקבלים אותו, איננו שולטים בו, ולא נחזיר אותו. כשותף של Google, אנחנו מגישים עבורך את הצעת הזיכוי ש-Google מאפשרת לשותפים להגיש לחשבון חדש, אם העסק שלך חדש ב-Google Ads. Google קובעת את הזכאות ואת התנאים. אם Google מאשרת את ההצעה, הזיכוי מגיע ישירות לחשבון המודעות שלך. הוא אינו חלק מדמי השירות ואינו הנחה מהם.",
+      "why": "Rewrite terms in positive legal register: WAO applies the partner offer subject to Google eligibility, not fee or discount."
+    }
+  ]
+}

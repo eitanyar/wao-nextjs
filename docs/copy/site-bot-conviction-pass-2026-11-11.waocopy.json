@@ -1,0 +1,71 @@
+{
+  "angle": "Page now claims Site Bot is the right choice for a one-man show because it costs about a DIY site-builder plan while saving his hours, and the patched Wix/WordPress and WAO-course FAQ answers are the FAQ strings synced into the generated JSON-LD.",
+  "patches": [
+    {
+      "file": "src/app/(app)/site-bot/page.tsx",
+      "old": "אתה באמצע יום עבודה וצריך לעדכן מחיר? אתה שולח הודעה, והמחיר החדש כבר באתר.",
+      "new": "אתה באמצע יום עבודה וצריך לעדכן מחיר? הודעה אחת, והמחיר החדש כבר באתר.",
+      "why": "Make the hero update claim immediate and remove a repeated verb phrase."
+    },
+    {
+      "file": "src/app/(app)/site-bot/page.tsx",
+      "old": "הבוט בונה איתך את האתר ומעלה אותו לאוויר.",
+      "new": "הבוט בונה איתך אתר בן חמישה עמודים ומעלה אותו לאוויר.",
+      "why": "State the concrete five-page deliverable in the proof steps."
+    },
+    {
+      "file": "src/app/(app)/site-bot/page.tsx",
+      "old": "כשמשהו משתנה בעסק, אתה שולח הודעה אחת והעדכון עולה לאתר.",
+      "new": "כשמשהו משתנה בעסק, אתה מעדכן בהודעה, והשינוי כבר באוויר.",
+      "why": "Make the update outcome sound immediate and lived-in."
+    },
+    {
+      "file": "src/app/(app)/site-bot/page.tsx",
+      "old": "ב-Wix או ב-WordPress אתה בונה ומעדכן בעצמך. כאן הדומיין רשום על שמך, ואת כל השינויים אתה מבקש בהודעה.",
+      "new": "אפשר, אבל ב-Wix או ב-WordPress התוכנית החודשית לא עולה הרבה פחות, והזמן שלך הולך על הבנייה והעדכונים. כאן האתר מתעדכן בהודעה.",
+      "why": "Answer the FAQ directly with the price-plus-time comparison; this FAQS string is also emitted in the generated FAQPage JSON-LD."
+    },
+    {
+      "file": "src/app/(app)/site-bot/page.tsx",
+      "old": "הזמן שלך שווה כסף. אתה יכול לבנות לבד, אבל כל עדכון יחזיר אותך לעורך. כאן אתה שולח הודעה.",
+      "new": "הזמן שלך שווה כסף. אתה יכול לבנות לבד, אבל כל עדכון יחזיר אותך לעורך. כאן אתה מעדכן בהודעה וחוזר לעבוד.",
+      "why": "End the course objection with the owner's time back; this FAQS string is also emitted in the generated FAQPage JSON-LD."
+    },
+    {
+      "file": "src/app/(app)/site-bot/page.tsx",
+      "old": "אתה משלם 199 ₪ + מע״מ לחודש ויכול לבטל אונליין מתי שתרצה.",
+      "new": "199 ₪ + מע״מ לחודש זה בערך המחיר של תוכנית אתר שאתה בונה בעצמך, בלי שהזמן שלך ילך על בנייה ועדכונים, ובלי התחייבות. אפשר לבטל אונליין מתי שתרצה.",
+      "why": "Put the price-versus-DIY-time argument black on white."
+    },
+    {
+      "file": "src/app/(app)/site-bot/page.tsx",
+      "old": "עם כתובת של WAO, האתר באוויר תוך יום עסקים אחד.",
+      "new": "עם כתובת של WAO, האתר באוויר תוך יום עסקים אחד. עם דומיין שלך, תוך שלושה ימי עסקים.",
+      "why": "Add the settled own-domain launch time without adding friction."
+    },
+    {
+      "file": "src/app/(app)/site-bot/page.tsx",
+      "old": "החבילה כוללת אתר בן חמישה עמודים בדומיין על שמך ועדכונים בהודעה. יש גם חיבור לפרופיל העסקי הקיים שלך בגוגל, לכלי של גוגל שמראה איך אנשים מוצאים אותך ולטופס שמעביר אליך פניות.",
+      "new": "החבילה כוללת אתר בן חמישה עמודים בדומיין על שמך ועדכונים בהודעה כל עוד המינוי פעיל. אנחנו מחברים את הפרופיל העסקי הקיים שלך בגוגל, את הכלי של גוגל שמראה איך אנשים מוצאים אותך ואת הטופס שמעביר אליך פניות.",
+      "why": "Make the package active, precise, and clear that updates are included while active."
+    },
+    {
+      "file": "src/app/(app)/site-bot/page.tsx",
+      "old": "אתה בונה בעצמך, ואז חוזר לעורך בכל פעם שמשהו בעסק משתנה.",
+      "new": "אתה בונה בעצמך, משלם על תוכנית חודשית בערך אותו מחיר, והזמן שלך הולך על כל שינוי.",
+      "why": "Sharpen the Wix/WordPress comparison with the same-price-plus-time claim."
+    },
+    {
+      "file": "src/app/(app)/site-bot/page.tsx",
+      "old": "Site Bot הוא אתר בן חמישה עמודים בדומיין על שמך, עם עדכונים בהודעה.",
+      "new": "Site Bot הוא הבחירה הנכונה לעסק של אדם אחד — חבילה אחת, מחיר חודשי אחד ועדכונים בהודעה.",
+      "why": "Close the comparison with a confident one-package claim."
+    },
+    {
+      "file": "src/app/(app)/site-bot/page.tsx",
+      "old": "אחרי הודעה אחת, השינוי כבר באוויר. בלי עורך אתרים.",
+      "new": "אחרי הודעה אחת, השינוי כבר באוויר. בלי עורך אתרים, בלי לחכות.",
+      "why": "Add no-wait conviction before the final CTA."
+    }
+  ]
+}

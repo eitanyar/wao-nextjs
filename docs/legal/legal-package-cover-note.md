@@ -47,3 +47,9 @@ Payment provider selection (Takbull vs. Payme.io vs. Grow) is an operational/tec
 - `site-bot-permissions-draft.md` (resolved — Cloudflare DPA question answered 2026-08-01)
 - `geo-bot-permissions-draft.md` (resolved — wa.me/Meta question answered 2026-08-01)
 - `legal-package-cover-note.md` (this file)
+
+## Added 2026-11-12: questions for the lawyer (Site Bot and Ads Bot terms)
+- **Anonymised results in marketing** (§10 in both terms, plus carve-outs in §12 and §18). WAO may use results combined with other clients' and stripped of identifying details. Is this enough as consent under the Privacy Protection Law and Amendment 13? Can anonymised aggregates survive the 30-day deletion after cancelling? Source: docs/legal/terms-anonymised-results-clause-2026-11-12.final.json.
+- **Ads Bot automatic refund** "if we never got a first ad live": the terms don't say when that's decided.
+- **Ads Bot §5/§10 "unless you gave explicit permission"**: could it read as an invitation to connect an existing account?
+- **Ads Bot refund wording** overall: first-impression clock, pause during a Google hold, 21-day Google-checks refund (docs/legal/ads-bot-terms-of-use.md §7).

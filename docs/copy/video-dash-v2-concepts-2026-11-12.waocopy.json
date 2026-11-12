@@ -1,0 +1,166 @@
+Angle: the reader is problem-aware and burned before (paid clicks, confetti reports, an invisible van, door-only thank-yous, three online identities), so every concept opens on one lived tradesman scene, escalates the pain into a laugh, and lets deadpan Dash land the unique mechanism as the only straight answer — no promises, no numbers, brand beat at the end.
+
+```json
+{
+  "episodes": {
+    "A1": {
+      "pain": "Every click costs money and the phone stays silent — he pays for visitors, not jobs.",
+      "concepts": [
+        {
+          "logline_en": "Dash explains that his campaign is a taxi where every passenger asks the price to the airport and leaves — and the driver pays for the question.",
+          "story_he": "דשוני מסתכל על בעל הבית שסופר קליקים כמו מונה מונית, ומסביר לו שכל קליק הוא נוסע שנכנס, שואל ״כמה עד נתב״ג?״, שומע מחיר ויוצא — והוא משלם על השאלה. הנהג היחיד בארץ שמשלם לנוסעים. ואז דשוני מראה לו את בוט המודעות של WAO — לומד רק מהעבודות שהוא סימן כסגורות, לא מכל ראש בדלת.",
+          "joke_en": "The laugh is the inversion — 'the only driver in the country who pays the passengers' — landing right after the perfectly ordinary taxi question 'how much to Ben Gurion?', so the ear recognises the scene before the absurd verdict hits.",
+          "callback_en": "The airport question from the first beat returns as the filter at the end: the bot counts only rides that reached a closed job, not every head in the door.",
+          "why_this_lands_en": "Every tradesman has paid for 'interest' that never became work, and every Israeli knows the taxi price question by heart."
+        },
+        {
+          "logline_en": "The owner installs a dealership-style sales bell and rings it for every click, until the bell is hoarse and the phone is still silent.",
+          "story_he": "בעל הבית תולה פעמון מכירות ליד הדשבורד ומצלצל על כל קליק, כמו בסוכנות רכב, ועד הצהריים הפעמון צרוד והטלפון שלו — דממה. דשוני, יבש — הפעמון התאמן, הטלפון לא. ואז הוא מראה לו את בוט המודעות של WAO — לומד מהעבודות שהוא מסמן כסגורות, לא מהקליקים.",
+          "joke_en": "The escalation is audible — ding, ding, ding all morning — and the punchline personifies the bell as the only thing that got a workout, a dry two-part contrast that needs no screen.",
+          "callback_en": "The bell from the opening returns in the verdict 'the bell trained, the phone didn't', and the end replaces it with the only count that matters: jobs he marks closed.",
+          "why_this_lands_en": "He knows the dealership bell ritual, and he knows the feeling of a busy day that produced nothing."
+        },
+        {
+          "logline_en": "Dash asks whether he'd keep an employee who charges for every passer-by that looks at the van — then reveals the campaign is that employee.",
+          "story_he": "דשוני שואל את בעל הבית שאלה אחת: עובד שמביא אנשים שמסתכלים על הרכב והולכים, ולוקח כסף על כל מבט — היית מפטר אותו? התשובה ברורה, תוך דקה. אז דשוני מסביר שהקמפיין הוא בדיוק העובד הזה, ומציג את בוט המודעות של WAO — לומד מהעבודות שסגרת בפועל, לא ממבטים.",
+          "joke_en": "The laugh is the trap — he answers 'fired in a minute' like any boss, then the reveal makes him the boss of that idiot employee; the question-and-answer rhythm works purely by ear.",
+          "callback_en": "'Would you fire him?' opens the story and closes it: the bot is the worker you keep, because it learns only from jobs you actually closed.",
+          "why_this_lands_en": "He judges workers by results all day; turning that exact standard on his own ads is the recognition and the joke at once."
+        }
+      ]
+    },
+    "A2": {
+      "pain": "The budget burns out again on clicks that land, look around and leave — traffic, never customers.",
+      "concepts": [
+        {
+          "logline_en": "Dash compares the campaign to a shuk stall handing out free tastings: the tasters keep coming back with friends, and nobody ever buys.",
+          "story_he": "דשוני מסביר לבעל הבית שהקמפיין שלו הוא דוכן טעימות בשוק: כולם טועמים, חוזרים, מביאים חברים — והקופה ריקה. הקהל השמין, הקופה לא. ואז הוא מראה לו את בוט המודעות של WAO — לומד ממי שבאמת סגר עבודה, לא ממי שרק טעם.",
+          "joke_en": "The laugh is the punchline contrast 'the crowd got fat, the till didn't', built on the universally heard shuk call 'come, taste' — the ear fills in the crowd noise without any screen.",
+          "callback_en": "The free tasting from the opening returns as the distinction the bot makes: it learns from buyers (closed jobs), not tasters (clicks).",
+          "why_this_lands_en": "Every Israeli has watched the shuk tasting crowd eat a stall's profit, and every advertiser has fed that same crowd."
+        },
+        {
+          "logline_en": "The owner feeds the campaign like a vending machine that eats coins — more coins, bigger bills, a shake — and the display just says thanks.",
+          "story_he": "בעל הבית מכניס עוד תקציב לקמפיין כמו למכונה אוטומטית שבולעת מטבעות — עוד מטבע, עוד שטר, ניעור קטן — והמסך מציג ״תודה״. דשוני, בלי למצמץ — המכונה מלאה, הטלפון ריק. ואז הוא מראה לו את בוט המודעות של WAO — מנהל את הקמפיין בגוגל ולומד רק מעבודות שסגרת וסימנת, לא מהמטבעות שנבלעו.",
+          "joke_en": "The escalation is physical and audible — coin, bill, shake, a polite 'thank you' on the display — and the deadpan verdict 'the machine is full, the phone is empty' flips the whole scene in one breath.",
+          "callback_en": "The machine's 'thank you' from the opening pays off at the end: the only thank-you that counts is a job he marks closed, and that's what the bot learns from.",
+          "why_this_lands_en": "Everyone has shaken a vending machine that ate their coin; every burned advertiser has shaken his budget the same way."
+        },
+        {
+          "logline_en": "The owner clicks his own ad to check it works, pays for the visit, and Dash congratulates him on being his own best customer.",
+          "story_he": "בעל הבית מחפש את השירות של עצמו בגוגל ולוחץ על המודעה שלו, רק כדי לבדוק שהיא עובדת — ומשלם על הביקור. דשוני, יבש — מזל טוב, אתה הלקוח הכי טוב של עצמך. ואז הוא מראה לו את בוט המודעות של WAO — לומד מעבודות אמיתיות שסגרת וסימנת, לא מלחיצות סקרנות.",
+          "joke_en": "The laugh is the mirror — 'congratulations, you're your own best customer' — because every owner has clicked his own ad 'just to check', so the recognition lands before the punchline does.",
+          "callback_en": "'Just checking it works' opens the story; at the end the bot is the thing that actually checks what works — the closed jobs he marks — instead of his own curiosity clicks.",
+          "why_this_lands_en": "It's the secret habit every advertiser has and never admits, said out loud in one dry line."
+        }
+      ]
+    },
+    "A3": {
+      "pain": "The agency's glossy reports throw confetti for clicks and impressions while the phone stays silent.",
+      "concepts": [
+        {
+          "logline_en": "The owner proudly reads the monthly report aloud to Dash — record clicks, green graphs — until one question, 'and customers?', turns it into a lot of pages for 'no'.",
+          "story_he": "בעל הבית מקריא לדשוני את הדוח החודשי בהתלהבות — שיא בקליקים, שיא בחשיפות, גרפים ירוקים — ודשוני שואל שאלה אחת: ולקוחות? הוא מדפדף, מדפדף, עוד גרף, ודשוני מסכם — הרבה עמודים בשביל ׳אין׳. ואז הוא מראה לו את בוט המודעות של WAO — בלי חגיגות, לומד מהעבודות שהוא מסמן כסגורות.",
+          "joke_en": "The laugh is the deflation — one small question against a wall of proud numbers, answered by the sound of page-flipping and the dry verdict 'a lot of pages for no', all audible.",
+          "callback_en": "'And customers?' is the question the report never answers; the end is the product that starts from exactly that answer — the jobs he marks closed.",
+          "why_this_lands_en": "He has sat through that exact presentation, nodded at the graphs, and gone home to a silent phone."
+        },
+        {
+          "logline_en": "Every month the agency sends a bigger cake celebrating record clicks, and the owner eats it alone in the van — gaining weight, not customers.",
+          "story_he": "כל חודש הסוכנות שולחת לבעל הבית עוגה עם ״מזל טוב על שיא הקליקים״, והוא אוכל אותה לבד ברכב — העוגות גדלות, והטלפון עדיין שותק. דשוני, מסתכל על הפירורים — עלית במשקל, לא בלקוחות. ואז הוא מראה לו את בוט המודעות של WAO — בלי עוגות, לומד מהעבודות שסגרת בפועל.",
+          "joke_en": "The laugh is the absurd escalation made personal — cakes growing while the phone stays silent — and the punchline 'you gained weight, not customers' is a two-part seesaw that needs no picture.",
+          "callback_en": "The celebration cake from the opening returns as crumbs in the verdict, and the end swaps the cake for the only celebration that counts: closed jobs he marks.",
+          "why_this_lands_en": "He knows agencies that celebrate their own metrics, and he knows the lonely van lunch — the cake just makes it literal."
+        },
+        {
+          "logline_en": "Dash hands the owner a glowing report about his driving — record honking, zero arrivals — and the owner's own outrage becomes the argument against his ads report.",
+          "story_he": "דשוני מגיש לבעל הבית דוח על הנהיגה שלו — החלפות נתיב מצוינות, שיא בצפירות, הגעות אין — ובעל הבית מתעצבן: מה שמעניין זה להגיע! דשוני, רגוע — זה מה שאני אומר לך על הקמפיין. ואז הוא מראה לו את בוט המודעות של WAO — לומד מהעבודות שסגרת, לא מהצפירות.",
+          "joke_en": "The laugh is the role reversal — he rejects the absurd report with the exact sentence that condemns his real one, 'what matters is arriving', and Dash just hands it back to him.",
+          "callback_en": "'What matters is arriving' is his own line from the middle, and it becomes the product's logic at the end: the bot counts arrivals — closed jobs — not honks.",
+          "why_this_lands_en": "Every Israeli driver has an opinion about honkers who go nowhere, and every advertiser has been handed that report in a nicer font."
+        }
+      ]
+    },
+    "S1": {
+      "pain": "Customers search for his trade right next to his van and can't find him — the job goes to someone two streets away.",
+      "concepts": [
+        {
+          "logline_en": "The van is parked exactly under the building with the leak, yet the woman upstairs searching for a plumber finds someone two streets away — the closest man is invisible.",
+          "story_he": "דשוני מסתכל על הרכב שחונה בדיוק מתחת לבניין עם הנזילה, ומסביר לבעל הבית שאישה למעלה מחפשת עכשיו אינסטלטור — ומוצאת מישהו משני רחובות ליד. הוא הכי קרוב, והיא בכלל לא רואה אותו. ואז דשוני מראה לו את סייט בוט של WAO — אתר שמכסה את כל השירותים, ופרופיל בגוגל שמספר אותו סיפור.",
+          "joke_en": "The laugh is the irony stated flat — physically closest, digitally invisible — and the image of a leak dripping on the van of the man who could fix it works entirely through narration.",
+          "callback_en": "'He's the closest and she can't see him' opens the story; the end is the fix for exactly that — one full story on the site and the profile, where she actually looks.",
+          "why_this_lands_en": "Every tradesman has parked under a job he never got, and every one of them knows the neighbour who got it instead."
+        },
+        {
+          "logline_en": "The owner escalates from a bigger magnetic sign to a flag to standing on the roof waving a wrench — while the searcher downstairs keeps finding the competitor on her phone.",
+          "story_he": "בעל הבית מגדיל את השלט המגנטי על הרכב, מוסיף דגל, ובסוף עומד על הגג עם מפתח שוודי ומנופף — והאישה למטה עדיין מוצאת בטלפון את המתחרה. דשוני, מהדשבורד — היא לא מחפשת ברחוב, היא מחפשת בגוגל. ואז הוא מראה לו את סייט בוט של WAO — אתר על כל השירותים ופרופיל שאומר אותו דבר, במקום שבו היא באמת מסתכלת.",
+          "joke_en": "The escalation is pure physical comedy you can hear — sign, flag, wrench on the roof — deflated by one dry sentence, 'she's not searching the street, she's searching Google', the whole lesson in a breath.",
+          "callback_en": "The waving wrench on the roof returns as the contrast at the end: stop shouting in the street, say one clear story where the search happens.",
+          "why_this_lands_en": "He has invested in signs, magnets and stickers while his Google presence stayed empty — the roof is just the honest ending of that road."
+        },
+        {
+          "logline_en": "Dash plays today's customer, searches 'plumber nearby', reads out three competitors and says 'calling him' — while the owner shouts 'I'm right here!'",
+          "story_he": "דשוני מחליט לשחק היום לקוח: מקליד ״אינסטלטור באזור״, מקריא את התוצאות — המתחרה, עוד מתחרה, ועוד אחד — ואומר ״יאללה, מתקשר אליו״. בעל הבית צועק ״אני פה!״, ודשוני עונה — אז תופיע איפה שהוא מחפש. ואז הוא מראה לו את סייט בוט של WAO — סיפור אחד על כל השירותים, גם באתר וגם בפרופיל בגוגל.",
+          "joke_en": "The laugh is the role reversal played straight — the phone becomes the customer and walks away, and 'I'm right here!' is the shout of every invisible business, answered by the one sentence that explains why.",
+          "callback_en": "'I'm right here!' is the opening shout; the end answers it — the site and the profile tell the same full story where the search happens, so 'here' finally means something.",
+          "why_this_lands_en": "He has watched someone choose a competitor while standing next to his own van; hearing his phone do it to him is the recognition and the joke."
+        }
+      ]
+    },
+    "S2": {
+      "pain": "Every customer thanks him at the door, but none of it reaches Google — his profile has no reviews.",
+      "concepts": [
+        {
+          "logline_en": "The customer promises a review at the door — 'sure!' — and by the elevator it has evaporated; Dash names the exact distance where thank-yous die.",
+          "story_he": "הלקוח בדלת אומר ״הצלת אותי, תודה!״, ובעל הבית מבקש יפה שיכתוב את זה בגוגל — הלקוח מבטיח ״בטח!״, ובדרך למעלית זה כבר נשכח. דשוני, יבש — בין הדלת למעלית, התודה מתאדה. ואז הוא מראה לו את סייט בוט של WAO — עוזר ללקוחות שלך להשאיר ביקורת בגוגל, בקלות, לפני שה׳בטח׳ מתאדה.",
+          "joke_en": "The laugh is the precise, universally known distance — 'between the door and the elevator, the thank-you evaporates' — a deadpan measurement of something every tradesman has lost exactly there.",
+          "callback_en": "The customer's 'sure!' at the door returns at the end: the product catches that 'sure' before the elevator eats it, by making the review easy to leave.",
+          "why_this_lands_en": "Every tradesman has heard 'sure, I'll write' and watched it die in the stairwell — naming the elevator makes it his story."
+        },
+        {
+          "logline_en": "To make customers 'tell Google' how good he is, the owner names his dog Google — and now every happy customer pets the dog and says 'good boy, Google', while the profile stays empty.",
+          "story_he": "בעל הבית מחליט שכל לקוח יספר לגוגל כמה הוא מקצועי, וכדי שזה יקרה הוא קורא לכלב שלו ״גוגל״ — ועכשיו כל לקוח מרוצה מלטף את הכלב ואומר ״כל הכבוד, גוגל״, והפרופיל בגוגל עדיין ריק. דשוני, בקול שטוח — הכלב אוסף ביקורות, הפרופיל לא. ואז הוא מראה לו את סייט בוט של WAO — עוזר ללקוחות שלך להשאיר ביקורת בגוגל עצמו, בפשטות.",
+          "joke_en": "The laugh is the absurd literalism — 'tell Google' becomes a dog named Google — and the punchline 'the dog collects reviews, the profile doesn't' lands as a clean two-part contrast with a bark built in.",
+          "callback_en": "'Tell Google' from the opening is the wish; the dog is its wrong address, and the end is the right one — a simple way for his customers to leave the review on Google itself.",
+          "why_this_lands_en": "He has literally said 'tell Google about me' and watched the thanks go everywhere except Google — the dog is that moment with a tail."
+        },
+        {
+          "logline_en": "His own AC breaks, the tech does great work, and the owner says 'thanks, you saved me!' and walks away — until Dash asks 'and the review?' and he hears himself say 'I'll get to it later'.",
+          "story_he": "המזגן של בעל הבית מתקלקל, הטכנאי עושה עבודה מעולה, ובעל הבית אומר לו בדלת ״תודה, הצלת אותי!״ והולך — עד שדשוני עוצר אותו: וביקורת? הוא עונה ״אחזור לזה אחר כך״, ודשוני אומר — עכשיו אתה מבין את הלקוחות שלך. ואז הוא מראה לו את סייט בוט של WAO — עוזר ללקוחות שלך להשאיר ביקורת, לפני ש׳אחר כך׳ נהיה אף פעם.",
+          "joke_en": "The laugh is the mirror — he becomes his own forgetful customer, and 'now you understand your customers' lands because the ear just heard him say the exact line he's been hearing for years.",
+          "callback_en": "'I'll get to it later' is his line from the middle; the end is the product that makes sure 'later' doesn't become never, by making the review easy right after the job.",
+          "why_this_lands_en": "Every tradesman has also been the customer who meant to write and didn't — hearing himself do it is the smile."
+        }
+      ]
+    },
+    "S3": {
+      "pain": "His site says electrician, his profile says plumber, the customer wants AC — three stories, so Google and customers can't tell what he does.",
+      "concepts": [
+        {
+          "logline_en": "The man who re-levels a shelf three times until the bubble sits dead centre lives with a business that's three different professions online — and Dash won't let him keep both standards.",
+          "story_he": "בעל הבית מיישר מדף שלוש פעמים עד שהבועה בפלס יושבת באמצע, אבל ברשת העסק שלו הוא שלושה מקצועות שונים — אתר חשמלאי, פרופיל אינסטלטור, ולקוחה שמחפשת מיזוג. דשוני, יבש — אריח עקום אתה לא מוכן לקבל, אבל את זה כן. ואז הוא מראה לו את סייט בוט של WAO — אתר ופרופיל בגוגל שמספרים אותו סיפור על כל השירותים, והבועה חוזרת לאמצע.",
+          "joke_en": "The laugh is the craftsman's own standard turned on him — 'a crooked tile you won't accept, but this you do' — and the level bubble is described, not shown, so the ear sees it.",
+          "callback_en": "The bubble jammed to one side opens the story and centres at the end, when the site and the profile finally tell one story about all his services.",
+          "why_this_lands_en": "Precision is his pride; showing him the one place he tolerates a crooked line is the recognition and the joke together."
+        },
+        {
+          "logline_en": "A confused customer calls — the site says electrician, the profile says plumber, so what are you? — and the owner gives the most correct and worst answer: 'yes'.",
+          "story_he": "לקוחה מתקשרת מבולבלת: באתר כתוב חשמלאי, בפרופיל אינסטלטור — אז מה אתה? בעל הבית עונה את התשובה הכי נכונה והכי גרועה — ״כן״. היא מנתקת, ודשוני מסביר ש׳כן׳ זה לא מקצוע — ואז מראה לו את סייט בוט של WAO: אתר ופרופיל שאומרים אותו דבר על כל שירות ושירות.",
+          "joke_en": "The laugh is the classic 'yes' to an or-question — the most honest answer that explains nothing — and 'yes is not a profession' is a dry verdict that needs only the dialogue, no screen.",
+          "callback_en": "'Yes' opens as the wrong answer and closes as the right one: one story on the site and the profile that says yes to every service he actually offers, in one voice.",
+          "why_this_lands_en": "Every multi-service tradesman has been asked 'so what do you actually do?' — and every Israeli has answered 'yes' to a question with 'or' in it."
+        },
+        {
+          "logline_en": "The owner walks into a clinic where the door says dentist, the diploma says vet, and the doctor says 'open wide' — he flees, and Dash asks how it felt, because that's his customers' experience online.",
+          "story_he": "בעל הבית נכנס למרפאה: על הדלת כתוב רופא שיניים, על התעודה וטרינר, והרופא אומר ״תגיד אהה״ — והוא בורח. דשוני שואל אותו איך זה הרגיש, כי ככה מרגישים לקוחות כשהאתר, הפרופיל והשירותים לא מספרים אותו סיפור. ואז הוא מראה לו את סייט בוט של WAO — אתר ופרופיל בגוגל עם סיפור אחד על כל השירותים.",
+          "joke_en": "The laugh is the absurd clinic built from three mismatched signs, capped by 'open wide' from a vet — and the role reversal lands when Dash asks 'how did that feel?', making the owner the confused customer.",
+          "callback_en": "The fleeing patient from the opening returns as the question 'how did that feel?' — and the end is the cure: one story on the site and the profile, so nobody has to flee.",
+          "why_this_lands_en": "He would never trust a clinic with three identities, and he instantly gets that his customers feel the same about his three online professions."
+        }
+      ]
+    }
+  }
+}
+```
+
+→ Noa to proof the Hebrew once a concept is picked per episode, before anyone writes the full scripts.

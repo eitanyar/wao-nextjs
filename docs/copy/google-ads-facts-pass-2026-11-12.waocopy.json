@@ -1,0 +1,137 @@
+{
+  "angle": "Facts pass for a burned, solution-aware owner: replace click/audit framing with new-account, lead-first mechanism and VAT-correct pricing.",
+  "patches": [
+    {
+      "file": "src/app/(app)/google-ads/page.tsx",
+      "old": "פרסום בגוגל — Google Ads עם Ads Bot ב-₪249 לחודש‏ | WAO",
+      "new": "פרסום בגוגל — Google Ads עם Ads Bot ב-₪249 + מע״מ‏ | WAO",
+      "why": "Occurs twice (title + OG); add VAT and keep under 60 chars."
+    },
+    {
+      "file": "src/app/(app)/google-ads/page.tsx",
+      "old": "שילמת על קליקים ולא ראית פניות? פרסום בגוגל עם Ads Bot ב-₪249 לחודש, ולפחות ₪1,500 למודעות ישירות לגוגל. החזר דמי שירות אם לא תהיה מרוצה בחודש הראשון.",
+      "new": "שילמת על קליקים ולא ראית פניות? פרסום בגוגל עם Ads Bot ב-₪249 + מע״מ לחודש, ולפחות ₪1,500 למודעות ישירות לגוגל. החזר דמי שירות אם לא תהיה מרוצה בחודש הראשון.",
+      "why": "Occurs twice (meta + OG); add VAT."
+    },
+    {
+      "file": "src/app/(app)/google-ads/page.tsx",
+      "old": "ניהול Google Ads עם Ads Bot ב-₪249 לחודש, בחשבון ובפרופיל תשלומים בבעלות הלקוח",
+      "new": "ניהול Google Ads עם Ads Bot ב-₪249 + מע״מ לחודש, בחשבון ובפרופיל תשלומים בבעלות הלקוח",
+      "why": "Add VAT to WebPage schema description."
+    },
+    {
+      "file": "src/app/(app)/google-ads/page.tsx",
+      "old": "ניהול Google Ads עם Ads Bot ב-₪249 לחודש. הלקוח משלם לפחות ₪1,500 לחודש למודעות ישירות לגוגל.",
+      "new": "ניהול Google Ads עם Ads Bot ב-₪249 + מע״מ לחודש. הלקוח משלם לפחות ₪1,500 לחודש למודעות ישירות לגוגל.",
+      "why": "Add VAT to Service schema description."
+    },
+    {
+      "file": "src/app/(app)/google-ads/page.tsx",
+      "old": "1500",
+      "new": "249",
+      "why": "Correct schema offer price from ad budget to service fee."
+    },
+    {
+      "file": "src/app/(app)/google-ads/page.tsx",
+      "old": "₪249 לחודש ל-WAO. בנוסף, אתה משלם מינימום של ₪1,500 לחודש למודעות ישירות לגוגל מחשבון Google Ads שלך. יש הסכם בכתב.",
+      "new": "₪249 + מע״מ לחודש ל-WAO. בנוסף, אתה משלם מינימום של ₪1,500 לחודש למודעות ישירות לגוגל מחשבון Google Ads חדש שנפתח על שמך. יש הסכם בכתב.",
+      "why": "Occurs twice (JSON-LD + FAQ); add VAT and state new account."
+    },
+    {
+      "file": "src/app/(app)/google-ads/page.tsx",
+      "old": "כן, את דמי השירות, ₪249. את תקציב המודעות שילמת לגוגל, ולכן הוא לא חוזר. התקופה היא 30 יום, והיא מתחילה כשהמודעה הראשונה שלך עולה לאוויר. התנאים: המודעות רצו בקצב של ₪1,500 לחודש, החזר אחד לכל עסק, ואתה מבקש עד 7 ימים אחרי סוף 30 הימים. אם לא הצלחנו להעלות את המודעות שלך, ההחזר אוטומטי. זה בנוסף לזכות שלך לבטל תוך 14 יום לפי החוק.",
+      "new": "כן, את דמי השירות, ₪249 + מע״מ. את תקציב המודעות שילמת לגוגל, ולכן הוא לא חוזר. התקופה היא 30 יום, והיא מתחילה כשהמודעה הראשונה שלך עולה לאוויר. התנאים: המודעות רצו בקצב של ₪1,500 לחודש, החזר אחד לכל עסק, ואתה מבקש עד 7 ימים אחרי סוף 30 הימים. אם לא הצלחנו להעלות את המודעות שלך, ההחזר אוטומטי. זה בנוסף לזכות שלך לבטל תוך 14 יום לפי החוק.",
+      "why": "Add VAT to refund answer."
+    },
+    {
+      "file": "src/app/(app)/google-ads/page.tsx",
+      "old": "אתה רואה בחשבון שלך קליקים, חשיפות ועלות בכל רגע, ו-Ads Bot שולח לך דוח כל שבוע. אף אחד לא יכול להבטיח מספר פניות מראש.",
+      "new": "כל פנייה מדף הנחיתה, בין אם טופס, שיחה או לחיצת וואטסאפ, נכנסת לרשימה פשוטה. אתה מסמן כל פנייה כטובה או לא רלוונטית, ואם היא נסגרה. הסימון חוזר לגוגל, והקמפיינים לומדים אילו חיפושים מביאים עבודה. הדוח השבועי מראה כמה פניות הגיעו ומה עלתה כל פנייה. אף אחד לא יכול להבטיח מספר פניות מראש.",
+      "why": "Occurs twice (JSON-LD + FAQ); replace click metrics with lead feedback and lead cost."
+    },
+    {
+      "file": "src/app/(app)/google-ads/page.tsx",
+      "old": "אנחנו בודקים את החשבון ואת המדידה לפני כל החלטה. אתה מגדיר מה נחשב פנייה, ורק אז מחליטים איפה נכון לפרסם.",
+      "new": "Ads Bot פותח חשבון Google Ads חדש בבעלותך ומתחיל מהשירות המרכזי עם ההזדמנות הגדולה ביותר, בלי לגעת בחשבון ישן.",
+      "why": "Replace audit step with new account and main service."
+    },
+    {
+      "file": "src/app/(app)/google-ads/page.tsx",
+      "old": "אנחנו בודקים את החשבון",
+      "new": "Ads Bot מתחיל מהשירות המשתלם ביותר",
+      "why": "Replace audit step title after desc patch."
+    },
+    {
+      "file": "src/app/(app)/google-ads/page.tsx",
+      "old": "Google Ads Audit",
+      "new": "New Account Setup",
+      "why": "Remove audit tag."
+    },
+    {
+      "file": "src/app/(app)/google-ads/page.tsx",
+      "old": "Ads Bot כותב את המודעות, בוחר חיפושים מתאימים ומקים דפי נחיתה במערכת של WAO. הבוט מחבר הכול לחשבון Google Ads שלך.",
+      "new": "Ads Bot כותב את המודעות, בוחר חיפושים מתאימים ומקים דפי נחיתה במערכת של WAO. הבוט מחבר הכול לחשבון החדש שנפתח בבעלותך.",
+      "why": "Align step 02 with new account."
+    },
+    {
+      "file": "src/app/(app)/google-ads/page.tsx",
+      "old": "אתה משלם ל-WAO ₪249 לחודש. את תקציב המודעות, לפחות ₪1,500 לחודש, אתה משלם ישירות לגוגל מחשבון Google Ads שלך.",
+      "new": "אתה משלם ל-WAO ₪249 + מע״מ לחודש. את תקציב המודעות, לפחות ₪1,500 לחודש, אתה משלם ישירות לגוגל מהחשבון החדש שנפתח בבעלותך.",
+      "why": "Add VAT and align step 03 with new account."
+    },
+    {
+      "file": "src/app/(app)/google-ads/page.tsx",
+      "old": "Ads Bot משפר את הקמפיינים לפי קליקים, חשיפות ועלות. אתה מקבל דוח שבועי, ו-Fraud Blocker חוסם קליקים מזויפים.",
+      "new": "Ads Bot מכוון את הקמפיינים לפי הפניות שאתה מסמן כעבודה אמיתית. הסימון חוזר לגוגל, והקמפיינים לומדים אילו חיפושים מביאים עבודה. הדוח השבועי מראה כמה פניות הגיעו ומה עלתה כל פנייה, ו-Fraud Blocker חוסם קליקים מזויפים.",
+      "why": "Optimize by marked leads and show lead cost."
+    },
+    {
+      "file": "src/app/(app)/google-ads/page.tsx",
+      "old": "כבר שילמת על קליקים ולא ידעת כמה פניות קיבלת? Ads Bot מקים את הקמפיינים, מנהל אותם ושולח דוח שבועי — ב-₪249 לחודש. אתה רואה כל שקל.",
+      "new": "כבר שילמת על קליקים ולא ידעת מה יצא מזה? Ads Bot פותח חשבון Google Ads חדש על שמך ומכוון לפי הפניות שאתה מסמן כעבודה, לא רק לפי קליקים. ב-₪249 + מע״מ לחודש.",
+      "why": "Land lead-first mechanism, new account and VAT in hero."
+    },
+    {
+      "file": "src/app/(app)/google-ads/page.tsx",
+      "old": "₪249 לחודש ל-WAO",
+      "new": "₪249 + מע״מ לחודש ל-WAO",
+      "why": "Add VAT to included price card."
+    },
+    {
+      "file": "src/app/(app)/google-ads/page.tsx",
+      "old": "לא מרוצה ב-30 הימים הראשונים? אנחנו מחזירים ₪249, דמי השירות בלבד. הספירה מתחילה כשהמודעה הראשונה עולה לאוויר. התנאים: המודעות רצו בקצב של ₪1,500 לחודש, החזר אחד לכל עסק, ובקשה עד 7 ימים אחרי סוף התקופה.",
+      "new": "לא מרוצה ב-30 הימים הראשונים? אנחנו מחזירים ₪249 + מע״מ, דמי השירות בלבד. הספירה מתחילה כשהמודעה הראשונה עולה לאוויר. התנאים: המודעות רצו בקצב של ₪1,500 לחודש, החזר אחד לכל עסק, ובקשה עד 7 ימים אחרי סוף התקופה.",
+      "why": "Add VAT to refund card."
+    },
+    {
+      "file": "src/app/(app)/google-ads/page.tsx",
+      "old": "חשבון Google Ads, הקמפיינים והנתונים שייכים אליך. WAO מנהלת אותם דרך חשבון ניהול, ויש הסכם בכתב. אתה רואה קליקים, חשיפות ועלות בכל רגע.",
+      "new": "חשבון Google Ads, הקמפיינים והנתונים שייכים אליך. WAO מנהלת אותם דרך חשבון ניהול, ויש הסכם בכתב. בדוח השבועי אתה רואה פניות ועלות לפי פנייה.",
+      "why": "Show leads and lead cost instead of clicks only."
+    },
+    {
+      "file": "src/app/(app)/google-ads/page.tsx",
+      "old": "רוצה לבדוק את החשבון לפני שמוסיפים תקציב?",
+      "new": "רוצה לדעת איפה ההזדמנות לפני שאתה מוסיף תקציב?",
+      "why": "Rewrite final CTA eyebrow away from checking account."
+    },
+    {
+      "file": "src/app/(app)/google-ads/page.tsx",
+      "old": "נבדוק את החשבון שלך",
+      "new": "נסתכל על מה שיש לך היום",
+      "why": "Rewrite final CTA span to current setup look."
+    },
+    {
+      "file": "src/app/(app)/google-ads/page.tsx",
+      "old": "בשיחה חינם של 30 דקות אנחנו נבדוק את החשבון ונגיד לך מה לבדוק לפני שאתה מוסיף תקציב.",
+      "new": "בשיחה חינם של 30 דקות אנחנו מסתכלים על מה שיש לך היום: פרסום, אתר ופרופיל, ומראים לך איפה ההזדמנות. אם אתה ממשיך, Ads Bot בונה הכול מאפס בחשבון חדש על שמך.",
+      "why": "Promise current setup look and fresh build, not repair."
+    },
+    {
+      "file": "src/app/(app)/google-ads/page.tsx",
+      "old": "✓ ₪249 לחודש · ✓ מינימום ₪1,500 לגוגל · ✓ החזר דמי שירות בכפוף לתנאים",
+      "new": "✓ ₪249 + מע״מ לחודש · ✓ מינימום ₪1,500 לגוגל · ✓ החזר דמי שירות בכפוף לתנאים",
+      "why": "Add VAT to final reassurance line."
+    }
+  ]
+}

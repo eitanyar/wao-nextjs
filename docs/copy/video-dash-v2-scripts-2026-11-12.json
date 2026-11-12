@@ -1,0 +1,535 @@
+{
+ "episodes": {
+  "A1": {
+   "hooks": [
+    {
+     "voice": "[deadpan] המונה בקמפיין שלך רץ כמו במונית, וכל קליק הוא נוסע שנכנס אליך.",
+     "display": "המונה בקמפיין שלך רץ כמו במונית, וכל קליק הוא נוסע שנכנס אליך.",
+     "tag_why": "flat setup, the meter is the campaign"
+    },
+    {
+     "voice": "[deadpan] יש לך מונית שמעלה נוסעים כל היום, ואף אחד מהם לא נוסע.",
+     "display": "יש לך מונית שמעלה נוסעים כל היום, ואף אחד מהם לא נוסע.",
+     "tag_why": "dry absurd fact, no judgement on him"
+    },
+    {
+     "voice": "[sarcastic] הקמפיין שלך הוא מונית עם דלת פתוחה, ואתה משלם על כל נוסע שנכנס.",
+     "display": "הקמפיין שלך הוא מונית עם דלת פתוחה, ואתה משלם על כל נוסע שנכנס.",
+     "tag_why": "dry edge on the billing inversion"
+    }
+   ],
+   "script_30": [
+    {
+     "screen": "Dashoni's dashboard screen is a taxi meter; the owner's thumb taps and each tap adds a fare; WAO mark in the corner from the first frame.",
+     "voice": "[deadpan] אתה סופר קליקים כמו מונה של מונית, וכל קליק הוא נוסע שנכנס אליך.",
+     "display": "אתה סופר קליקים כמו מונה של מונית, וכל קליק הוא נוסע שנכנס אליך.",
+     "tag_why": "flat setup, meter and passenger named for the ear"
+    },
+    {
+     "screen": "A cartoon passenger slides into the back seat, asks, hears the fare, and steps straight out; the meter keeps ticking.",
+     "voice": "[deadpan] ״כמה עד שדה התעופה?״ הוא שואל אותך, שומע את המחיר, ויוצא בלי לנסוע.",
+     "display": "״כמה עד שדה התעופה?״ הוא שואל אותך, שומע את המחיר, ויוצא בלי לנסוע.",
+     "tag_why": "the passenger quoted flat by Dash, the scene every Israeli knows"
+    },
+    {
+     "screen": "Two more passengers hop in and out in a loop; each exit drops a coin from the driver's pocket into the fare box.",
+     "voice": "[tired] אחריו נכנס עוד אחד, ועוד אחד, ואתה משלם על כל שאלה בנפרד.",
+     "display": "אחריו נכנס עוד אחד, ועוד אחד, ואתה משלם על כל שאלה בנפרד.",
+     "tag_why": "weariness at the loop, the billing lands on him paying them"
+    },
+    {
+     "screen": "Dashoni stares flat at camera; the taxi stands still, the meter spins, the driver's wallet empties into the passengers' hands.",
+     "voice": "[deadpan] אתה הנהג היחיד בארץ שמשלם לנוסעים.",
+     "display": "אתה הנהג היחיד בארץ שמשלם לנוסעים.",
+     "tag_why": "the inversion verdict, delivered with no lift"
+    },
+    {
+     "screen": "Real Ads Bot screen; the owner's thumb marks one lead as a closed job; the learning line updates from that mark, not from the click count.",
+     "voice": "[calm] בוט מודעות מביא לך נוסעים שמשלמים, כי הוא לומד רק מעבודות שסגרת.",
+     "display": "בוט מודעות מביא לך נוסעים שמשלמים, כי הוא לומד רק מעבודות שסגרת.",
+     "tag_why": "steady mechanism, the airport question returns as the filter"
+    },
+    {
+     "screen": "End card: WAO mark, the words בוט מודעות, the shared cancel-anytime stamp, one CTA button.",
+     "voice": "[excited] WAO! בוט מודעות.",
+     "display": "WAO! בוט מודעות.",
+     "tag_why": "brand upbeat, product name plain"
+    }
+   ],
+   "script_15": [
+    {
+     "screen": "Dashoni's screen is a taxi with an open door; one passenger leans in, asks, and steps out; the meter ticks once; WAO mark in corner from first frame.",
+     "voice": "[deadpan] הקמפיין שלך הוא מונית, וכל נוסע שואל ״כמה עד שדה התעופה?״ ויוצא.",
+     "display": "הקמפיין שלך הוא מונית, וכל נוסע שואל ״כמה עד שדה התעופה?״ ויוצא.",
+     "tag_why": "one passenger only, per the cut"
+    },
+    {
+     "screen": "Dashoni flat to camera; the fare box fills from the driver's own wallet while the taxi never moves.",
+     "voice": "[deadpan] אתה הנהג היחיד בארץ שמשלם לנוסעים.",
+     "display": "אתה הנהג היחיד בארץ שמשלם לנוסעים.",
+     "tag_why": "verdict lands alone, no setup line before it"
+    },
+    {
+     "screen": "Real Ads Bot screen; the owner's thumb marks one lead as a closed job; the learning line updates from that mark.",
+     "voice": "[calm] בוט מודעות מביא לך נוסעים שמשלמים, ואתה מפסיק לשלם על כל שאלה.",
+     "display": "בוט מודעות מביא לך נוסעים שמשלמים, ואתה מפסיק לשלם על כל שאלה.",
+     "tag_why": "mechanism plus the asked-versus-rode callback"
+    },
+    {
+     "screen": "End card: WAO mark, בוט מודעות, the shared stamp, one CTA button.",
+     "voice": "[excited] WAO! בוט מודעות.",
+     "display": "WAO! בוט מודעות.",
+     "tag_why": "brand upbeat close"
+    }
+   ]
+  },
+  "A2": {
+   "hooks": [
+    {
+     "voice": "[deadpan] הקמפיין שלך הוא דוכן טעימות בשוק, וכל קליק הוא מישהו שבא לטעום.",
+     "display": "הקמפיין שלך הוא דוכן טעימות בשוק, וכל קליק הוא מישהו שבא לטעום.",
+     "tag_why": "flat setup, the stall is the campaign"
+    },
+    {
+     "voice": "[deadpan] פתחת דוכן טעימות בשוק, וכל קליק הוא עוד מישהו שבא לטעום חינם.",
+     "display": "פתחת דוכן טעימות בשוק, וכל קליק הוא עוד מישהו שבא לטעום חינם.",
+     "tag_why": "you opened it, the free samples are his money"
+    },
+    {
+     "voice": "[sarcastic] הקמפיין שלך מחלק טעימות חינם, וכל קליק הוא עוד טועם על חשבונך.",
+     "display": "הקמפיין שלך מחלק טעימות חינם, וכל קליק הוא עוד טועם על חשבונך.",
+     "tag_why": "dry edge on who pays for the tasting"
+    }
+   ],
+   "script_30": [
+    {
+     "screen": "Dashoni's screen becomes a shuk tasting stall with toothpicks and little cups; the owner hands a sample to a cursor-shaped customer; WAO mark in corner from first frame.",
+     "voice": "[deadpan] הקמפיין שלך הוא דוכן טעימות בשוק, וכל קליק הוא מישהו שבא לטעום.",
+     "display": "הקמפיין שלך הוא דוכן טעימות בשוק, וכל קליק הוא מישהו שבא לטעום.",
+     "tag_why": "flat setup, stall and taster named for the ear"
+    },
+    {
+     "screen": "The same taster is back next morning with two friends from work; all three take samples; the till drawer stays shut.",
+     "voice": "[deadpan] הוא טועם, אומר תודה, וחוזר למחרת עם עוד שניים מהעבודה.",
+     "display": "הוא טועם, אומר תודה, וחוזר למחרת עם עוד שניים מהעבודה.",
+     "tag_why": "the scene happens to him, not a lecture"
+    },
+    {
+     "screen": "A crowd forms at the stall, everyone takes another piece; the owner's coin pocket thins; the till is empty.",
+     "voice": "[tired] ביום השלישי הם מביאים חברים, וכולם לוקחים עוד חתיכה על חשבונך.",
+     "display": "ביום השלישי הם מביאים חברים, וכולם לוקחים עוד חתיכה על חשבונך.",
+     "tag_why": "weariness as the crowd grows on his account"
+    },
+    {
+     "screen": "One regular hugs the owner, calls him brother, and walks off with another sample; the till stays empty.",
+     "voice": "[sarcastic] אחד כבר קורא לך ׳אחי׳, מחבק אותך, ועדיין לא קנה ממך כלום.",
+     "display": "אחד כבר קורא לך ׳אחי׳, מחבק אותך, ועדיין לא קנה ממך כלום.",
+     "tag_why": "the extra step up, warmth with a dry edge"
+    },
+    {
+     "screen": "Dashoni flat to camera; the crowd is round and happy, the till drawer is open and empty.",
+     "voice": "[deadpan] הקהל השמין, הקופה לא.",
+     "display": "הקהל השמין, הקופה לא.",
+     "tag_why": "the seesaw punchline, no lift"
+    },
+    {
+     "screen": "Real Ads Bot screen; the owner marks a lead as a closed job; the panel shows the campaign running on Google Ads.",
+     "voice": "[calm] בוט מודעות מביא לך קונים, לא טועמים, והקופה שלך סוף סוף משמינה.",
+     "display": "בוט מודעות מביא לך קונים, לא טועמים, והקופה שלך סוף סוף משמינה.",
+     "tag_why": "steady payoff, the till that stayed thin finally fattens"
+    },
+    {
+     "screen": "End card: WAO mark, בוט מודעות, the shared stamp, one CTA button.",
+     "voice": "[excited] WAO! בוט מודעות.",
+     "display": "WAO! בוט מודעות.",
+     "tag_why": "brand upbeat close"
+    }
+   ],
+   "script_15": [
+    {
+     "screen": "Dashoni's screen is a shuk tasting stall; a crowd takes samples on the owner's account and brings friends; WAO mark in corner from first frame.",
+     "voice": "[deadpan] הקמפיין שלך הוא דוכן טעימות בשוק, וכולם טועמים על חשבונך ומביאים חברים.",
+     "display": "הקמפיין שלך הוא דוכן טעימות בשוק, וכולם טועמים על חשבונך ומביאים חברים.",
+     "tag_why": "tastes plus friends in one breath, per the cut"
+    },
+    {
+     "screen": "Dashoni flat to camera; the crowd is round and happy, the till drawer open and empty.",
+     "voice": "[deadpan] הקהל השמין, הקופה לא.",
+     "display": "הקהל השמין, הקופה לא.",
+     "tag_why": "verdict alone"
+    },
+    {
+     "screen": "Real Ads Bot screen; the owner marks a lead as a closed job; the panel shows the campaign running on Google Ads.",
+     "voice": "[calm] בוט מודעות מביא לך קונים, לא טועמים, והקופה שלך סוף סוף משמינה.",
+     "display": "בוט מודעות מביא לך קונים, לא טועמים, והקופה שלך סוף סוף משמינה.",
+     "tag_why": "mechanism, buyers not tasters carried by the marking"
+    },
+    {
+     "screen": "End card: WAO mark, בוט מודעות, the shared stamp, one CTA button.",
+     "voice": "[excited] WAO! בוט מודעות.",
+     "display": "WAO! בוט מודעות.",
+     "tag_why": "brand upbeat close"
+    }
+   ]
+  },
+  "A3": {
+   "hooks": [
+    {
+     "voice": "[deadpan] אתה מקריא לי את הדוח החודשי: שיא בקליקים, שיא בחשיפות, וגרפים ירוקים.",
+     "display": "אתה מקריא לי את הדוח החודשי: שיא בקליקים, שיא בחשיפות, וגרפים ירוקים.",
+     "tag_why": "his pride read flat by Dash"
+    },
+    {
+     "voice": "[deadpan] קיבלת דוח חודשי עם שיא בקליקים, ואתה מקריא לי אותו כמו מגיש חדשות.",
+     "display": "קיבלת דוח חודשי עם שיא בקליקים, ואתה מקריא לי אותו כמו מגיש חדשות.",
+     "tag_why": "the news-anchor simile, dry"
+    },
+    {
+     "voice": "[sarcastic] הדוח החודשי שלך מלא גרפים ירוקים, ואתה מקריא לי כל מספר בהתלהבות.",
+     "display": "הדוח החודשי שלך מלא גרפים ירוקים, ואתה מקריא לי כל מספר בהתלהבות.",
+     "tag_why": "dry edge on the confetti before the deflation"
+    }
+   ],
+   "script_30": [
+    {
+     "screen": "Dashoni's screen shows a glossy monthly report; the owner reads aloud, green graphs climb; WAO mark in corner from first frame.",
+     "voice": "[deadpan] אתה מקריא לי את הדוח החודשי: שיא בקליקים, שיא בחשיפות, וגרפים ירוקים.",
+     "display": "אתה מקריא לי את הדוח החודשי: שיא בקליקים, שיא בחשיפות, וגרפים ירוקים.",
+     "tag_why": "proud numbers delivered flat, report and graphs named"
+    },
+    {
+     "screen": "A confetti icon over the agency logo; the owner waits for Dashoni to clap; Dashoni does not clap.",
+     "voice": "[tired] אתה אומר שהסוכנות חגגה, ומחכה שאני אתלהב מהמספרים.",
+     "display": "אתה אומר שהסוכנות חגגה, ומחכה שאני אתלהב מהמספרים.",
+     "tag_why": "weariness at the celebration he is asked to join"
+    },
+    {
+     "screen": "Dashoni asks one question; the owner flips a page, then another; every page is another green graph.",
+     "voice": "[deadpan] אני שואל אותך שאלה אחת: ולקוחות? אתה מדפדף לעמוד הבא, ועוד אחד.",
+     "display": "אני שואל אותך שאלה אחת: ולקוחות? אתה מדפדף לעמוד הבא, ועוד אחד.",
+     "tag_why": "one small question, page-flipping named for the ear"
+    },
+    {
+     "screen": "A pie chart fills the page; the owner points at it proudly; Dashoni's cursor blinks, waiting.",
+     "voice": "[tired] אתה מוצא גרף עוגה, אומר ״תראה איזה יפה״, ואני עדיין מחכה לתשובה.",
+     "display": "אתה מוצא גרף עוגה, אומר ״תראה איזה יפה״, ואני עדיין מחכה לתשובה.",
+     "tag_why": "the trance of the report, quoted flat"
+    },
+    {
+     "screen": "The report fans out into a thick stack of pages; one word stamps across them: אין.",
+     "voice": "[deadpan] הרבה עמודים בשביל ׳אין׳.",
+     "display": "הרבה עמודים בשביל ׳אין׳.",
+     "tag_why": "the deflation verdict, four words"
+    },
+    {
+     "screen": "Real Ads Bot screen; the owner marks a lead as a closed job; no confetti, just the updated learning line.",
+     "voice": "[calm] בוט מודעות עונה לך על ׳ולקוחות?׳ בעבודות סגורות, לא בעוד גרף יפה.",
+     "display": "בוט מודעות עונה לך על ׳ולקוחות?׳ בעבודות סגורות, לא בעוד גרף יפה.",
+     "tag_why": "mechanism starts from the unanswered question, quiet against the party"
+    },
+    {
+     "screen": "End card: WAO mark, בוט מודעות, the shared stamp, one CTA button.",
+     "voice": "[excited] WAO! בוט מודעות.",
+     "display": "WAO! בוט מודעות.",
+     "tag_why": "brand upbeat close"
+    }
+   ],
+   "script_15": [
+    {
+     "screen": "Dashoni's screen shows the report; the owner reads a record number, Dashoni asks one question, the owner flips a page; WAO mark in corner from first frame.",
+     "voice": "[deadpan] אתה מקריא לי שיא בקליקים מהדוח, ואני שואל אותך: ולקוחות? אתה מדפדף הלאה.",
+     "display": "אתה מקריא לי שיא בקליקים מהדוח, ואני שואל אותך: ולקוחות? אתה מדפדף הלאה.",
+     "tag_why": "one number, one question, one flip, per the cut"
+    },
+    {
+     "screen": "The report fans into a thick stack; one word stamps across it: אין.",
+     "voice": "[deadpan] הרבה עמודים בשביל ׳אין׳.",
+     "display": "הרבה עמודים בשביל ׳אין׳.",
+     "tag_why": "verdict alone"
+    },
+    {
+     "screen": "Real Ads Bot screen; the owner marks a lead as a closed job; no confetti.",
+     "voice": "[calm] בוט מודעות עונה לך על ׳ולקוחות?׳ בעבודות סגורות, לא בעוד גרף יפה.",
+     "display": "בוט מודעות עונה לך על ׳ולקוחות?׳ בעבודות סגורות, לא בעוד גרף יפה.",
+     "tag_why": "the question returns as the mechanism"
+    },
+    {
+     "screen": "End card: WAO mark, בוט מודעות, the shared stamp, one CTA button.",
+     "voice": "[excited] WAO! בוט מודעות.",
+     "display": "WAO! בוט מודעות.",
+     "tag_why": "brand upbeat close"
+    }
+   ]
+  },
+  "S1": {
+   "hooks": [
+    {
+     "voice": "[deadpan] הגדלת את השלט המגנטי על הרכב, ואחר כך הוספת דגל כדי שישימו לב אליך.",
+     "display": "הגדלת את השלט המגנטי על הרכב, ואחר כך הוספת דגל כדי שישימו לב אליך.",
+     "tag_why": "honest effort stated flat, sign and flag named"
+    },
+    {
+     "voice": "[deadpan] הזמנת שלט מגנטי ענק לרכב, הדבקת מדבקות, ועדיין אף אחד לא עוצר.",
+     "display": "הזמנת שלט מגנטי ענק לרכב, הדבקת מדבקות, ועדיין אף אחד לא עוצר.",
+     "tag_why": "the money he already spent on being seen"
+    },
+    {
+     "voice": "[tired] שילמת על שלט גדול יותר לרכב, ואחר כך על דגל, כדי שימצאו אותך.",
+     "display": "שילמת על שלט גדול יותר לרכב, ואחר כך על דגל, כדי שימצאו אותך.",
+     "tag_why": "weariness at the effort, never a scold"
+    }
+   ],
+   "script_30": [
+    {
+     "screen": "Dashoni's screen shows the owner's van; he swaps the magnetic sign for a bigger one, then tapes a flag to the roof; WAO mark in corner from first frame.",
+     "voice": "[deadpan] הגדלת את השלט המגנטי על הרכב, ואחר כך הוספת דגל כדי שישימו לב אליך.",
+     "display": "הגדלת את השלט המגנטי על הרכב, ואחר כך הוספת דגל כדי שישימו לב אליך.",
+     "tag_why": "setup, both visual beats named in the voice"
+    },
+    {
+     "screen": "The owner stands on the roof waving a Swedish wrench and shouting; the flag flaps; the street below is empty.",
+     "voice": "[tired] בסוף עלית על הגג עם מפתח שוודי, נופפת בו, וצעקת ״אני פה!״",
+     "display": "בסוף עלית על הגג עם מפתח שוודי, נופפת בו, וצעקת ״אני פה!״",
+     "tag_why": "the peak is heard, his shout quoted by Dash with warmth"
+    },
+    {
+     "screen": "A woman stands right below, looks at her phone, and taps the competitor's card two streets away; no ringtone, no phone SFX.",
+     "voice": "[deadpan] אישה שעומדת ממש מתחתיך מסתכלת בטלפון, ומוצאת את המתחרה שלך שני רחובות מכאן.",
+     "display": "אישה שעומדת ממש מתחתיך מסתכלת בטלפון, ומוצאת את המתחרה שלך שני רחובות מכאן.",
+     "tag_why": "the deflating fact, flat"
+    },
+    {
+     "screen": "Dashoni flat to camera; split frame: the roof above, her phone screen below with a Google search.",
+     "voice": "[deadpan] היא לא מחפשת ברחוב, היא מחפשת בגוגל.",
+     "display": "היא לא מחפשת ברחוב, היא מחפשת בגוגל.",
+     "tag_why": "the whole lesson in one dry breath"
+    },
+    {
+     "screen": "Real Site Bot screen: one site listing all his services and a Google profile saying the same thing; the owner climbs down off the roof.",
+     "voice": "[calm] סייט בוט מביא לך עוד עבודות ועוד ביקורות מגוגל. אתה יכול לרדת מהגג.",
+     "display": "סייט בוט מביא לך עוד עבודות ועוד ביקורות מגוגל. אתה יכול לרדת מהגג.",
+     "tag_why": "mechanism, then the roof pays off as relief not a joke on him"
+    },
+    {
+     "screen": "End card: WAO mark, סייט בוט, the shared stamp, one CTA button.",
+     "voice": "[excited] WAO! סייט בוט.",
+     "display": "WAO! סייט בוט.",
+     "tag_why": "brand upbeat close"
+    }
+   ],
+   "script_15": [
+    {
+     "screen": "Dashoni's screen: the owner on the roof waving a Swedish wrench and shouting; WAO mark in corner from first frame.",
+     "voice": "[tired] אתה על הגג עם מפתח שוודי, מנופף וצועק ״אני פה!״",
+     "display": "אתה על הגג עם מפתח שוודי, מנופף וצועק ״אני פה!״",
+     "tag_why": "opens on the roof and the shout, sign and flag dropped"
+    },
+    {
+     "screen": "A woman right below taps the competitor's card on her phone; split frame with a Google search; no ringtone, no phone SFX.",
+     "voice": "[deadpan] אישה למטה מוצאת את המתחרה בטלפון. היא לא מחפשת ברחוב, היא מחפשת בגוגל.",
+     "display": "אישה למטה מוצאת את המתחרה בטלפון. היא לא מחפשת ברחוב, היא מחפשת בגוגל.",
+     "tag_why": "the fact and the lesson in one line"
+    },
+    {
+     "screen": "Real Site Bot screen: one site with all his services and a Google profile saying the same thing.",
+     "voice": "[calm] סייט בוט מביא לך עוד עבודות ועוד ביקורות מגוגל. אתה יכול לרדת מהגג.",
+     "display": "סייט בוט מביא לך עוד עבודות ועוד ביקורות מגוגל. אתה יכול לרדת מהגג.",
+     "tag_why": "one story where she actually looks, no ranking promise"
+    },
+    {
+     "screen": "End card: WAO mark, סייט בוט, the shared stamp, one CTA button.",
+     "voice": "[excited] WAO! סייט בוט.",
+     "display": "WAO! סייט בוט.",
+     "tag_why": "brand upbeat close"
+    }
+   ]
+  },
+  "S2": {
+   "hooks": [
+    {
+     "voice": "[tired] המזגן שלך התקלקל באמצע הקיץ, והטכנאי שהגיע סידר אותו בשעה.",
+     "display": "המזגן שלך התקלקל באמצע הקיץ, והטכנאי שהגיע סידר אותו בשעה.",
+     "tag_why": "summer heat, the tech named for what follows"
+    },
+    {
+     "voice": "[deadpan] המזגן שלך מת באמצע גל חום, וטכנאי אחד הגיע והחזיר אותו לחיים.",
+     "display": "המזגן שלך מת באמצע גל חום, וטכנאי אחד הגיע והחזיר אותו לחיים.",
+     "tag_why": "flat rescue, sets up the mirror"
+    },
+    {
+     "voice": "[deadpan] הזמנת טכנאי למזגן שהתקלקל, והוא סידר לך אותו עוד באותו בוקר.",
+     "display": "הזמנת טכנאי למזגן שהתקלקל, והוא סידר לך אותו עוד באותו בוקר.",
+     "tag_why": "good work stated plainly, no praise inflation"
+    }
+   ],
+   "script_30": [
+    {
+     "screen": "Dashoni's screen shows the owner's living room in summer; the AC is dead; a technician arrives with a tool bag; WAO mark in corner from first frame.",
+     "voice": "[tired] המזגן שלך התקלקל באמצע הקיץ, והטכנאי שהגיע סידר אותו בשעה.",
+     "display": "המזגן שלך התקלקל באמצע הקיץ, והטכנאי שהגיע סידר אותו בשעה.",
+     "tag_why": "the heat felt, setup flat"
+    },
+    {
+     "screen": "The technician finishes the repair, cleans the filters, and wipes the floor before leaving; the owner smiles.",
+     "voice": "[deadpan] הוא החליף חלק, ניקה את הפילטרים, ואפילו ניגב את הרצפה לפני שהלך.",
+     "display": "הוא החליף חלק, ניקה את הפילטרים, ואפילו ניגב את הרצפה לפני שהלך.",
+     "tag_why": "insider detail so the mirror is fair, not a scold"
+    },
+    {
+     "screen": "At the door the owner says thanks, you saved me, and closes the door; the technician is already at the elevator.",
+     "voice": "[deadpan] אתה אומר לו ״תודה, הצלת אותי!״ וסוגר את הדלת.",
+     "display": "אתה אומר לו ״תודה, הצלת אותי!״ וסוגר את הדלת.",
+     "tag_why": "his own thank-you quoted flat, the door named"
+    },
+    {
+     "screen": "Dashoni asks one question; the owner waves a hand and says he will write it later.",
+     "voice": "[deadpan] אני שואל אותך: וביקורת? אתה עונה לי ״אחר כך אני אכתוב״.",
+     "display": "אני שואל אותך: וביקורת? אתה עונה לי ״אחר כך אני אכתוב״.",
+     "tag_why": "the line he has heard for years, now in his own mouth"
+    },
+    {
+     "screen": "Dashoni turns to camera, warm; a mirror panel shows his own customers saying the same line at his door.",
+     "voice": "[calm] עכשיו אתה מבין את הלקוחות שלך.",
+     "display": "עכשיו אתה מבין את הלקוחות שלך.",
+     "tag_why": "the mirror delivered warmly, never as a rebuke"
+    },
+    {
+     "screen": "Real Site Bot screen: a review request reaches his customer after the job; the customer picks the stars and writes the words; no suggested text anywhere.",
+     "voice": "[calm] סייט בוט מביא לך עוד עבודות ועוד ביקורות מגוגל. לפני ש׳אחר כך׳ הופך ל׳אף פעם׳.",
+     "display": "סייט בוט מביא לך עוד עבודות ועוד ביקורות מגוגל. לפני ש׳אחר כך׳ הופך ל׳אף פעם׳.",
+     "tag_why": "help only, his own later returns as the payoff"
+    },
+    {
+     "screen": "End card: WAO mark, סייט בוט, the shared stamp, one CTA button.",
+     "voice": "[excited] WAO! סייט בוט.",
+     "display": "WAO! סייט בוט.",
+     "tag_why": "brand upbeat close"
+    }
+   ],
+   "script_15": [
+    {
+     "screen": "Dashoni's screen: the owner at his door thanking the technician and closing it; the technician at the elevator; WAO mark in corner from first frame.",
+     "voice": "[deadpan] אתה אומר לטכנאי ״תודה, הצלת אותי!״ וסוגר את הדלת.",
+     "display": "אתה אומר לטכנאי ״תודה, הצלת אותי!״ וסוגר את הדלת.",
+     "tag_why": "opens at the door, AC backstory dropped per the cut"
+    },
+    {
+     "screen": "Dashoni asks one question; the owner waves a hand: later.",
+     "voice": "[deadpan] אני שואל: וביקורת? אתה עונה ״אחר כך אני אכתוב״.",
+     "display": "אני שואל: וביקורת? אתה עונה ״אחר כך אני אכתוב״.",
+     "tag_why": "the mirror line, flat"
+    },
+    {
+     "screen": "Dashoni warm to camera; real Site Bot screen: a review request reaches his customer, who picks the stars and the words; no suggested text.",
+     "voice": "[calm] עכשיו אתה מבין את הלקוחות. סייט בוט מביא לך עוד ביקורות מגוגל, לפני ש׳אחר כך׳ הופך ל׳אף פעם׳.",
+     "display": "עכשיו אתה מבין את הלקוחות. סייט בוט מביא לך עוד ביקורות מגוגל, לפני ש׳אחר כך׳ הופך ל׳אף פעם׳.",
+     "tag_why": "warm turn plus the later-to-never callback in one line"
+    },
+    {
+     "screen": "End card: WAO mark, סייט בוט, the shared stamp, one CTA button.",
+     "voice": "[excited] WAO! סייט בוט.",
+     "display": "WAO! סייט בוט.",
+     "tag_why": "brand upbeat close"
+    }
+   ]
+  },
+  "S3": {
+   "hooks": [
+    {
+     "voice": "[deadpan] לקוחה מתקשרת אליך מבולבלת: באתר כתוב חשמלאי, ובפרופיל בגוגל כתוב אינסטלטור.",
+     "display": "לקוחה מתקשרת אליך מבולבלת: באתר כתוב חשמלאי, ובפרופיל בגוגל כתוב אינסטלטור.",
+     "tag_why": "opens on her voice, no ringtone, the mismatch named"
+    },
+    {
+     "voice": "[deadpan] לקוחה רואה באתר חשמלאי, בפרופיל אינסטלטור, ומתקשרת אליך לברר מה קורה.",
+     "display": "לקוחה רואה באתר חשמלאי, בפרופיל אינסטלטור, ומתקשרת אליך לברר מה קורה.",
+     "tag_why": "two stories, one confused caller"
+    },
+    {
+     "voice": "[sarcastic] באתר שלך כתוב חשמלאי, בפרופיל בגוגל אינסטלטור, ולקוחה אחת מתקשרת מבולבלת.",
+     "display": "באתר שלך כתוב חשמלאי, בפרופיל בגוגל אינסטלטור, ולקוחה אחת מתקשרת מבולבלת.",
+     "tag_why": "dry edge on the split identity"
+    }
+   ],
+   "script_30": [
+    {
+     "screen": "Dashoni's screen splits: the owner's site says חשמלאי, his Google profile says אינסטלטור; a woman calls; no ringtone, no phone SFX; WAO mark in corner from first frame.",
+     "voice": "[deadpan] לקוחה מתקשרת אליך מבולבלת: באתר כתוב חשמלאי, ובפרופיל בגוגל כתוב אינסטלטור.",
+     "display": "לקוחה מתקשרת אליך מבולבלת: באתר כתוב חשמלאי, ובפרופיל בגוגל כתוב אינסטלטור.",
+     "tag_why": "her confusion quoted flat, both texts named for the ear"
+    },
+    {
+     "screen": "Her thought bubble shows an AC unit; she scrolls his site and his profile and finds no AC on either.",
+     "voice": "[tired] היא בכלל מחפשת מי שיתקין לה מזגן, ולא מוצאת אצלך, ומנסה להבין מה אתה עושה.",
+     "display": "היא בכלל מחפשת מי שיתקין לה מזגן, ולא מוצאת אצלך, ומנסה להבין מה אתה עושה.",
+     "tag_why": "the third story, the job he actually does"
+    },
+    {
+     "screen": "She asks the either/or question; the owner answers with one word that floats up alone: כן.",
+     "voice": "[deadpan] היא שואלת אותך: אז אתה חשמלאי או אינסטלטור? אתה עונה לה ׳כן׳.",
+     "display": "היא שואלת אותך: אז אתה חשמלאי או אינסטלטור? אתה עונה לה ׳כן׳.",
+     "tag_why": "the most correct and worst answer, no lift"
+    },
+    {
+     "screen": "She hangs up; the word כן floats alone; Dashoni stamps across it: not a profession.",
+     "voice": "[deadpan] היא מנתקת. ׳כן׳ זה לא מקצוע.",
+     "display": "היא מנתקת. ׳כן׳ זה לא מקצוע.",
+     "tag_why": "the hang-up is the pain, the verdict is four words"
+    },
+    {
+     "screen": "Real Site Bot screen: one site with all his services and a Google profile saying the same thing, side by side.",
+     "voice": "[calm] סייט בוט מביא לך עוד עבודות ועוד ביקורות מגוגל.",
+     "display": "סייט בוט מביא לך עוד עבודות ועוד ביקורות מגוגל.",
+     "tag_why": "one story in one voice, steady"
+    },
+    {
+     "screen": "Three clean lines on both the site and the profile: חשמל, אינסטלציה, מזגנים, each with a yes beside it.",
+     "voice": "[calm] הפעם ׳כן׳ זו תשובה: גם חשמל, גם אינסטלציה, וגם מזגנים.",
+     "display": "הפעם ׳כן׳ זו תשובה: גם חשמל, גם אינסטלציה, וגם מזגנים.",
+     "tag_why": "the wrong yes becomes three right ones, callback pays off"
+    },
+    {
+     "screen": "End card: WAO mark, סייט בוט, the shared stamp, one CTA button.",
+     "voice": "[excited] WAO! סייט בוט.",
+     "display": "WAO! סייט בוט.",
+     "tag_why": "brand upbeat close"
+    }
+   ],
+   "script_15": [
+    {
+     "screen": "Dashoni's screen splits: site says חשמלאי, profile says אינסטלטור; the woman asks the either/or question; no ringtone, no phone SFX; WAO mark in corner from first frame.",
+     "voice": "[deadpan] לקוחה שואלת: באתר כתוב חשמלאי, בפרופיל אינסטלטור. אתה חשמלאי או אינסטלטור?",
+     "display": "לקוחה שואלת: באתר כתוב חשמלאי, בפרופיל אינסטלטור. אתה חשמלאי או אינסטלטור?",
+     "tag_why": "opens directly on the either/or, per the cut"
+    },
+    {
+     "screen": "The owner answers with one word; it floats alone; Dashoni stamps it: not a profession. No hang-up shown.",
+     "voice": "[deadpan] אתה עונה לה ׳כן׳. ׳כן׳ זה לא מקצוע.",
+     "display": "אתה עונה לה ׳כן׳. ׳כן׳ זה לא מקצוע.",
+     "tag_why": "the answer and the verdict, hang-up dropped"
+    },
+    {
+     "screen": "Real Site Bot screen: one site with all his services and a Google profile saying the same thing.",
+     "voice": "[calm] סייט בוט מביא לך עוד עבודות ועוד ביקורות מגוגל. והפעם ׳כן׳ זו תשובה.",
+     "display": "סייט בוט מביא לך עוד עבודות ועוד ביקורות מגוגל. והפעם ׳כן׳ זו תשובה.",
+     "tag_why": "the fix in one steady line"
+    },
+    {
+     "screen": "End card: WAO mark, סייט בוט, the shared stamp, one CTA button.",
+     "voice": "[excited] WAO! סייט בוט.",
+     "display": "WAO! סייט בוט.",
+     "tag_why": "brand upbeat close"
+    }
+   ]
+  }
+ },
+ "end_screen": {
+  "options": [
+   "בלי התחייבות, מבטלים אונליין",
+   "מבטלים מתי שרוצים, בלי התחייבות",
+   "חודשי, בלי התחייבות, ביטול אונליין"
+  ],
+  "pick": "בלי התחייבות, מבטלים אונליין",
+  "why": "four words, an active verb in his own language, and אונליין kills the last fear — that cancelling means calling someone and being talked out of it"
+ }
+}
