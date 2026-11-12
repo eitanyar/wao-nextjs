@@ -115,6 +115,7 @@ const fieldInputStyle: CSSProperties = {
   width: "100%",
   boxSizing: "border-box",
   minWidth: 0,
+  minHeight: "44px",
   padding: "10px 14px",
   borderRadius: "var(--radius-md)",
   border: "1px solid var(--muted)",
@@ -271,7 +272,11 @@ function SiteBotStartContent() {
   // The contact and domain steps take focus on their heading when they open, like the credentials step.
   useEffect(() => {
     if (phase !== "contact" && phase !== "domain") return;
-    const timer = setTimeout(() => ownerHeadingRef.current?.focus(), 0);
+    // Touch users get no focus-scroll, so bring the step's top into view explicitly (scroll-padding keeps it off the banner).
+    const timer = setTimeout(() => {
+      ownerHeadingRef.current?.focus();
+      ownerHeadingRef.current?.scrollIntoView({ block: "start" });
+    }, 0);
     return () => clearTimeout(timer);
   }, [phase]);
 

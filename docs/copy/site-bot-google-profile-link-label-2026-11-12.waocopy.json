@@ -1,0 +1,9 @@
+Angle: the visitor is a local customer verifying a stranger before calling — so the link names the whole business on Google in the owner's voice, and leaves reviews to the later link.
+
+```json
+{
+  "label": "העסק שלי ב-Google",
+  "alternatives": ["לעסק שלי ב-Google", "כל הפרטים עליי ב-Google"],
+  "notes": "17 תווים, בלי משתנים. גוף ראשון כמו בשאר התוויות, והצורה ב-Google נשמרת. ״העסק״ ולא ״הפרופיל״ — ככה לקוח אומר את זה, לא גוגל. היעד הוא כרטיס העסק המלא בגוגל, לא רק ביקורות, ולכן אין כפילות עם ״לכל הביקורות ב-Google״. ויתרתי על ל׳ בהתחלה כדי שהשורה לא תיראה כמו תאום של קישור הביקורות. החלופה הראשונה מוסיפה ל׳, אם אתה רוצה אחידות עם קישורי האתר. השנייה שמה דגש על הפרטים — מיקום, שעות, תמונות. → נועה לבדיקת לשון, ואיתן-Dev להטמעה."
+}
+```

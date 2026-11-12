@@ -216,8 +216,9 @@ describe('ownerIntake: pending copy never reaches production', () => {
     }
   });
 
-  it('while any slot is pending, the start page stays off production (page gate and next.config 307 both in place)', () => {
-    if (!INTAKE_OWNER_COPY_PENDING) return;
+  // The copy flag going false does NOT un-gate /site-bot/start: opening it to production is a separate launch decision
+  // (Adam / Eitan). This assertion is unconditional until that decision lands, and is changed together with the gate.
+  it('the start page stays off production regardless of the copy flag (page gate and next.config 307 both in place)', () => {
     const page = read('src/app/(app)/site-bot/start/page.tsx');
     assert.match(page, /if \(process\.env\.SITE_BOT_PAID_FLOW === '1' && process\.env\.NODE_ENV !== 'production'\) \{\s*return <StartPaidFlow \/>;\s*\}\s*notFound\(\);/);
     const config = read('next.config.ts');

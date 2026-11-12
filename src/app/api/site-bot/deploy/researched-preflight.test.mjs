@@ -5,6 +5,7 @@ import path from 'node:path';
 import test from 'node:test';
 import util from 'node:util';
 import vm from 'node:vm';
+import { createRequire } from 'node:module';
 import ts from 'typescript';
 import { loadDataRoots } from '../../../../lib/dataRoots.testkit.mjs';
 
@@ -14,6 +15,10 @@ const code = ts.transpileModule(source, {
   fileName: routePath,
   compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022, esModuleInterop: true },
 }).outputText;
+// The real claim pre-check (pure; no IO), from the tsconfig.test.json build that `npm run test` runs first.
+const requireCompiled = createRequire(path.join(process.cwd(), 'dist/package.json'));
+const { researchedClaimBlockers: realResearchedClaimBlockers } = requireCompiled('./lib/lp/claimVerification.js');
+assert.equal(typeof realResearchedClaimBlockers, 'function');
 const validatorPath = path.resolve('src/lib/site-bot/researchedSiteGraphValidation.ts');
 const validatorCode = ts.transpileModule(fs.readFileSync(validatorPath, 'utf8'), {
   fileName: validatorPath,
@@ -90,7 +95,7 @@ function harness({ authorized = true, record, dossier = syntheticDossier(), read
   cloudflare = syntheticCloudflare, nodeEnv = 'test', offlineSimulation = false, failWranglerDeploy = false,
   binding = null, approved = false, rawBytes, bodyApproval, siteNodes = {}, dossierNodes = {},
   siteStatSize, siteStatType = 'file', siteReadBytes, siteReadChunk, siteReadError, siteOpenError, siteStatError, dossierReadError,
-  legacyRender = false } = {}) {
+  legacyRender = false, realClaimCheck = false } = {}) {
   const bytes = rawBytes ?? (record && Buffer.from(JSON.stringify(record)));
   if (approved) {
     assert.ok(dossier && bytes, 'approved fixture requires record and dossier');
@@ -257,7 +262,8 @@ function harness({ authorized = true, record, dossier = syntheticDossier(), read
       assert.deepEqual(urls, ['/synthetic-core']); deployEvents.push('sitemap'); return 'synthetic sitemap';
     } : forbidden('buildSitemap') },
     // Launch step 2 (B4): the claim pre-check runs after the copy-review match; the synthetic record carries no claim.
-    '@/lib/lp/claimVerification': { researchedClaimBlockers: (pages, data) => {
+    // realClaimCheck wires the real compiled researchedClaimBlockers (the 409 tests below).
+    '@/lib/lp/claimVerification': { researchedClaimBlockers: realClaimCheck ? realResearchedClaimBlockers : (pages, data) => {
       assert.ok(Array.isArray(pages) && data && typeof data === 'object');
       return [];
     } },
@@ -1131,3 +1137,30 @@ for (const [label, binding, events] of [
     assert.equal(setup.calls.forbidden, 0);
   });
 }
+
+// Launch step 2 (B4), with the real claim check: an unverified licence in a heading the renderer cannot drop stops the
+// deploy with 409 before any credential read or provider call.
+test('real claim check: an unverified licence number in the home H1 returns 409 unverified_claim_in_heading before any external call', async () => {
+  const record = researchedRecord();
+  record.collectedData.license = 'LIC 48211';
+  record.researchedPages[0].copy.heroHeadline = 'Licensed plumber LIC 48211 in town';
+  record.copy = structuredClone(record.researchedPages[0].copy);
+  const setup = harness({ record, approved: true, cloudflare: {}, realClaimCheck: true });
+  const response = await setup.post();
+  assert.equal(response.status, 409);
+  assert.deepEqual(response.body, { error: 'unverified_claim_in_heading', fields: ['home:heroHeadline'] });
+  assert.equal(setup.credentialReads, 0);
+  assert.deepEqual(setup.deployEvents, []);
+});
+
+test('real claim check control: the same record with no licence passes the claim check and reaches the provider-credential step', async () => {
+  const record = researchedRecord();
+  record.researchedPages[0].copy.heroHeadline = 'Licensed plumber LIC 48211 in town';
+  record.copy = structuredClone(record.researchedPages[0].copy);
+  const setup = harness({ record, approved: true, cloudflare: {}, realClaimCheck: true });
+  const response = await setup.post();
+  assert.notEqual(response.body.error, 'unverified_claim_in_heading');
+  assert.deepEqual(response, { status: 503, body: { error: 'deployment_provider_unavailable' } });
+  assert.ok(setup.credentialReads > 0, 'the claim check passed, so the route went on to read the provider credentials');
+  assert.deepEqual(setup.deployEvents, []);
+});

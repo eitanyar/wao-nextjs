@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -17,6 +17,8 @@ const SUPPRESS_ON = ["/contact", "/contact/quick", "/site-bot/audit", "/google-a
 export default function CookieBanner() {
   const [visible, setVisible] = useState(false);
   const pathname = usePathname();
+  const bannerRef = useRef<HTMLDivElement>(null);
+  const shown = visible && !SUPPRESS_ON.includes(pathname);
 
   useEffect(() => {
     if (!localStorage.getItem(STORAGE_KEY)) {
@@ -24,7 +26,26 @@ export default function CookieBanner() {
     }
   }, []);
 
-  if (!visible || SUPPRESS_ON.includes(pathname)) return null;
+  // Publish the banner's live height as --wao-cookie-h on <html> while it is shown (globals.css reserves that
+  // space and pads scroll targets above it); remove it when the banner is dismissed or suppressed.
+  useEffect(() => {
+    const banner = bannerRef.current;
+    const root = document.documentElement;
+    if (!shown || !banner) {
+      root.style.removeProperty("--wao-cookie-h");
+      return;
+    }
+    const publish = () => root.style.setProperty("--wao-cookie-h", `${Math.ceil(banner.getBoundingClientRect().height)}px`);
+    publish();
+    const observer = new ResizeObserver(publish);
+    observer.observe(banner);
+    return () => {
+      observer.disconnect();
+      root.style.removeProperty("--wao-cookie-h");
+    };
+  }, [shown]);
+
+  if (!shown) return null;
 
   function dismiss() {
     localStorage.setItem(STORAGE_KEY, "1");
@@ -33,6 +54,7 @@ export default function CookieBanner() {
 
   return (
     <div
+      ref={bannerRef}
       className="wao-cookie-banner"
       role="dialog"
       aria-label="הודעת עוגיות ופרטיות"
@@ -74,6 +96,10 @@ export default function CookieBanner() {
         <Link
           href="/privacy"
           style={{
+            display: "inline-flex",
+            alignItems: "center",
+            minHeight: "44px",
+            boxSizing: "border-box",
             padding: "10px 18px",
             fontSize: "0.82rem",
             color: "var(--muted)",
@@ -89,7 +115,7 @@ export default function CookieBanner() {
         <button
           onClick={dismiss}
           className="btn-primary"
-          style={{ padding: "10px 24px", fontSize: "0.88rem", whiteSpace: "nowrap" }}
+          style={{ minHeight: "44px", padding: "10px 24px", fontSize: "0.88rem", whiteSpace: "nowrap" }}
         >
           הבנתי ומסכים/ת
         </button>
