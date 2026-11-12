@@ -202,7 +202,7 @@ test('synthetic handler: malformed, unknown, and invalid mutation payloads fail 
 
 test('synthetic handler: public no-action capture keeps notification and orderId idempotency behavior', async () => {
   const freshHarness = createRouteHarness();
-  const freshResponse = await freshHarness.handler.POST(requestWithBody({ orderId: 'order-1', name: 'Name' }));
+  const freshResponse = await freshHarness.handler.POST(requestWithBody({ orderId: 'order-1', name: 'Name', phone: '0500000000' }));
   assert.equal(freshResponse.status, 200);
   assert.equal(freshHarness.calls.read, 1);
   assert.equal(freshHarness.calls.capture, 1);
@@ -211,12 +211,48 @@ test('synthetic handler: public no-action capture keeps notification and orderId
 
   const existing = { id: 7, orderId: 'order-1', name: 'Existing' };
   const retryHarness = createRouteHarness({ leads: [existing] });
-  const retryResponse = await retryHarness.handler.POST(requestWithBody({ orderId: 'order-1', name: 'Retry' }));
+  const retryResponse = await retryHarness.handler.POST(requestWithBody({ orderId: 'order-1', name: 'Retry', phone: '0500000000' }));
   assert.equal(retryResponse.status, 200);
   assert.equal(retryResponse.body.lead, existing);
   assert.deepEqual(retryHarness.calls, {
     capture: 0, conversion: 0, notification: 0, read: 1, reviewQueue: 0, write: 0,
   });
+});
+
+test('synthetic handler: public capture without a usable contact is rejected with no read, write or email', async () => {
+  const cases = [
+    { label: 'empty body', body: {} },
+    { label: 'whitespace-only phone', body: { phone: '   ', name: 'Name', type: 'form' } },
+    { label: 'blank phone and email', body: { phone: '', email: ' \t ', orderId: 'order-2' } },
+    { label: 'non-object body', body: ['phone'] },
+  ];
+  for (const { label, body } of cases) {
+    const harness = createRouteHarness();
+    const response = await harness.handler.POST(requestWithBody(body));
+    assert.equal(response.status, 400, label);
+    assert.equal(response.body.success, false, label);
+    assert.equal(response.body.error, 'A phone number or email is required', label);
+    assert.deepEqual(harness.calls, {
+      capture: 0, conversion: 0, notification: 0, read: 0, reviewQueue: 0, write: 0,
+    }, label);
+  }
+});
+
+test('synthetic handler: valid contact leads and click-tracking stubs are still captured', async () => {
+  const cases = [
+    { label: 'LP form with phone', body: { orderId: 'o-1', name: 'Name', phone: '0500000000', type: 'form', source: 'lp-x' } },
+    { label: 'email only', body: { email: 'owner@example.com' } },
+    { label: 'phone-click stub', body: { orderId: 'o-2', type: 'phone-click', source: 'lp-x', slug: 'x' } },
+    { label: 'whatsapp-click stub', body: { orderId: 'o-3', type: 'whatsapp-click', source: 'lp-x', slug: 'x' } },
+  ];
+  for (const { label, body } of cases) {
+    const harness = createRouteHarness();
+    const response = await harness.handler.POST(requestWithBody(body));
+    assert.equal(response.status, 200, label);
+    assert.equal(harness.calls.capture, 1, label);
+    assert.equal(harness.calls.write, 1, label);
+    assert.equal(harness.calls.notification, 1, label);
+  }
 });
 
 test('proxy.ts protects the /leads admin page with the admin-cookie gate', () => {

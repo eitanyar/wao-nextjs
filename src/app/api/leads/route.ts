@@ -140,6 +140,24 @@ function isBoundedString(value: unknown, maxLength: number): value is string {
   return typeof value === "string" && value.length <= maxLength;
 }
 
+/**
+ * Click pings from LandingPage.tsx (`pingClick`) are tracking stubs by design: the visitor tapped
+ * tel:/wa.me, so there is no form contact yet (an admin fills it later via `enrichStub`). Every
+ * other public capture must carry a usable contact.
+ */
+const CONTACTLESS_CAPTURE_TYPES = new Set(["phone-click", "whatsapp-click"]);
+
+function hasUsableContactValue(value: unknown): boolean {
+  if (typeof value === "string") return value.trim().length > 0;
+  return typeof value === "number" && Number.isFinite(value);
+}
+
+/** Public (no-action) capture needs a non-blank phone or email, unless it is a click stub. */
+function isUsableLeadCapture(body: JsonRecord): boolean {
+  if (typeof body.type === "string" && CONTACTLESS_CAPTURE_TYPES.has(body.type)) return true;
+  return hasUsableContactValue(body.phone) || hasUsableContactValue(body.email);
+}
+
 function isAdminMutationAction(value: unknown): value is AdminMutationAction {
   return typeof value === "string" && ADMIN_MUTATION_ACTIONS.has(value);
 }
@@ -184,6 +202,9 @@ export async function POST(req: Request) {
     }
 
     action = bodyRecord.action;
+  } else if (!bodyRecord || !isUsableLeadCapture(bodyRecord)) {
+    // An empty or contactless submission is rejected before any CRM read, write or notification.
+    return NextResponse.json({ success: false, error: "A phone number or email is required" }, { status: 400 });
   }
 
   try {
