@@ -14,6 +14,7 @@
 import type { CollectedData } from '../bot/prompts';
 import { derivePreferredSlug } from './siteSlug';
 import { credentialsCollectedFields, type CredentialsAnswers } from './credentialsCopy';
+import { ownerIntakeFields, type OwnerIntakeAnswers } from './ownerIntake';
 
 export type IntakeServiceModel = 'field' | 'location' | 'mixed' | 'remote';
 export const INTAKE_SERVICE_MODELS: readonly IntakeServiceModel[] = ['field', 'location', 'mixed', 'remote'];
@@ -39,7 +40,8 @@ export interface IntakeEvidence {
 export type IntakeQuestionKey = 'priorityServices' | 'travelBoundary' | 'usp';
 /** M2b.1g: servedAreaChoice = the towns the owner picked when his travel answer named more than the cap (checkout re-validates). */
 /** credentials: the optional credentials step after the 3 questions (credentialsCopy.ts); absent = skipped. */
-export type IntakeAnswers = Partial<Record<IntakeQuestionKey, string>> & { servedAreaChoice?: string[]; credentials?: CredentialsAnswers };
+/** owner: the owner-contact and domain steps after credentials (ownerIntake.ts); raw form values, normalised on build. */
+export type IntakeAnswers = Partial<Record<IntakeQuestionKey, string>> & { servedAreaChoice?: string[]; credentials?: CredentialsAnswers; owner?: OwnerIntakeAnswers };
 
 export const MAX_INTAKE_QUESTIONS = 3;
 /** The card cannot be confirmed without these: checkout needs a niche, the site needs a name and phone, serviceability needs a base. */
@@ -162,6 +164,9 @@ export function buildIntakeCollectedData(card: IntakeCard, evidence: IntakeEvide
     ...(evidence.hasGoogleBusiness ? { hasGoogleBusiness: true } : {}),
     // The optional credentials step: yearsInField / license / guarantee (the licence only for licensed trades).
     ...credentialsCollectedFields(answers.credentials, niche),
+    // Launch step 1: the owner's private contact (ownerContact) and the domain answer (domainChoice / ownerDomain),
+    // kept apart from the public phone above. Absent when the steps were not answered.
+    ...ownerIntakeFields(answers.owner),
   };
   const slug = derivePreferredSlug({ websiteUri: website, businessName: data.businessName, businessNiche: niche, phone });
   if (slug) data.preferredSlug = slug;

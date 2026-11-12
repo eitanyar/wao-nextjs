@@ -11,6 +11,8 @@ import { seedFromPrefillSnapshot } from "@/lib/site-bot/seedPrefill";
 import type { PrefillSnapshot } from "@/lib/site-bot/placePrefill";
 import { displayBusinessHours } from "@/lib/lp/businessHours";
 import { INTAKE_COPY } from "@/lib/site-bot/intakeCopy";
+import { INTAKE_OWNER_COPY } from "@/lib/site-bot/intakeOwnerCopy";
+import { DOMAIN_CHOICES, mobilePrefillFromListing, normalizeIsraeliMobile, normalizeOwnerDomain, normalizeOwnerEmail, type DomainChoice, type OwnerDomainRejection, type OwnerIntakeAnswers } from "@/lib/site-bot/ownerIntake";
 import { startVoiceNote, VOICE_NOTE_CONTROL_LABELS, voiceNoteStepAvailable, type VoiceNoteRecording } from "@/lib/site-bot/voiceNote";
 import { ISRAELI_LOCALITIES } from "@/lib/site-bot/israeliLocalities";
 import { MAX_LISTED_SERVED_AREAS, servedAreaCandidates } from "@/lib/site-bot/servedAreas";
@@ -56,6 +58,11 @@ import {
 // become toggle chips. Once MAX_LISTED_SERVED_AREAS are selected the rest are soft-blocked (aria-disabled, described by the
 // reason); un-selecting one frees a slot for another (swap). Send confirms; checkout re-validates the pick
 // (servedAreaChoice) against its own parse and keeps every other town in overflow.
+//
+// Launch step 1 (2026-11-12): after credentials come two required steps, the owner's own contact (mobile, pre-filled from
+// the listing phone only when it is a mobile, and email) and the domain question (yes + domain / no / not sure). Both are
+// validated in src/lib/site-bot/ownerIntake.ts and land on collectedData as ownerContact / domainChoice / ownerDomain,
+// apart from the public business phone. Their strings are slots in src/lib/site-bot/intakeOwnerCopy.ts.
 //
 // Payment: once the questions are done, collected data is handed to
 // /api/site-bot/checkout/init and the user is routed to /site-bot/pay/[sessionId],
@@ -117,6 +124,24 @@ const fieldInputStyle: CSSProperties = {
   fontSize: "1rem",
 };
 
+// Launch step 1: the owner-contact and domain step cards (same look as the credentials step).
+const ownerStepStyle: CSSProperties = {
+  border: "1px solid var(--border)",
+  borderRadius: "var(--radius-md)",
+  background: "var(--surface)",
+  padding: "20px",
+  display: "flex",
+  flexDirection: "column",
+  gap: "16px",
+  marginBottom: "16px",
+  fontFamily: "var(--font-body), sans-serif",
+  overflowWrap: "anywhere",
+};
+const ownerHeadingStyle: CSSProperties = { margin: 0, fontSize: "1rem", fontWeight: 600, lineHeight: 1.5, color: "var(--text)" };
+const ownerLabelStyle: CSSProperties = { fontSize: "0.92rem", fontWeight: 600, color: "var(--text)" };
+const ownerNoteStyle: CSSProperties = { margin: 0, fontSize: "0.88rem", lineHeight: 1.5, color: "var(--muted)" };
+const ownerErrorStyle: CSSProperties = { margin: 0, fontSize: "0.88rem", lineHeight: 1.5, color: "#e05555" };
+
 // M1 a11y: browser autofill hints for the card fields (none for trade or hours).
 const FIELD_AUTOCOMPLETE: Partial<Record<IntakeCardField, string>> = {
   businessName: "organization",
@@ -138,7 +163,18 @@ function questionText(key: IntakeQuestionKey, card: IntakeCard): string {
 // buildIntakeCollectedData (yearsInField / license / guarantee).
 // Content depth: "voice" is the optional voice-note step after the 3 questions. voiceNoteStepAvailable() is false
 // (src/lib/site-bot/voiceNote.ts: no safe storage / transcription / control labels yet), so the flow never enters it today.
-type Phase = "loading" | "card" | "chat" | "credentials" | "voice" | "routing" | "error";
+type Phase = "loading" | "card" | "chat" | "credentials" | "contact" | "domain" | "voice" | "routing" | "error";
+
+const DOMAIN_CHOICE_LABEL: Record<DomainChoice, string> = {
+  has_domain: INTAKE_OWNER_COPY.domainChoiceYes,
+  no_domain: INTAKE_OWNER_COPY.domainChoiceNo,
+  not_sure: INTAKE_OWNER_COPY.domainChoiceNotSure,
+};
+
+/** The error slot for a rejected domain ('empty' never shows: the field is required only after "yes"). */
+function domainErrorText(reason: OwnerDomainRejection): string {
+  return reason === "subdomain" ? INTAKE_OWNER_COPY.domainSubdomain : INTAKE_OWNER_COPY.domainInvalid;
+}
 
 function SiteBotStartContent() {
   const router = useRouter();
@@ -167,6 +203,14 @@ function SiteBotStartContent() {
   const [credentials, setCredentials] = useState<CredentialsAnswers>({});
   const [credentialsCard, setCredentialsCard] = useState<IntakeCard | null>(null);
   const credentialsHeadingRef = useRef<HTMLHeadingElement>(null);
+  const [owner, setOwner] = useState<OwnerIntakeAnswers>({});
+  const [mobilePrefilled, setMobilePrefilled] = useState(false);
+  const [contactErrors, setContactErrors] = useState<{ mobile: boolean; email: boolean }>({ mobile: false, email: false });
+  const [domainError, setDomainError] = useState<OwnerDomainRejection | null>(null);
+  const ownerHeadingRef = useRef<HTMLHeadingElement>(null);
+  const mobileInputRef = useRef<HTMLInputElement>(null);
+  const emailInputRef = useRef<HTMLInputElement>(null);
+  const domainInputRef = useRef<HTMLInputElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const firstAreaRef = useRef<HTMLButtonElement>(null);
   const chatInputRef = useRef<HTMLInputElement>(null);
@@ -221,6 +265,13 @@ function SiteBotStartContent() {
   useEffect(() => {
     if (phase !== "credentials") return;
     const timer = setTimeout(() => credentialsHeadingRef.current?.focus(), 0);
+    return () => clearTimeout(timer);
+  }, [phase]);
+
+  // The contact and domain steps take focus on their heading when they open, like the credentials step.
+  useEffect(() => {
+    if (phase !== "contact" && phase !== "domain") return;
+    const timer = setTimeout(() => ownerHeadingRef.current?.focus(), 0);
     return () => clearTimeout(timer);
   }, [phase]);
 
@@ -352,6 +403,38 @@ function SiteBotStartContent() {
   function finishCredentialsStep(skip: boolean) {
     if (phase !== "credentials" || !credentialsCard) return;
     const nextAnswers: IntakeAnswers = skip ? answers : { ...answers, credentials };
+    setAnswers(nextAnswers);
+    // Launch step 1: the owner-contact step is next. The listing phone pre-fills the mobile only when it is a mobile.
+    const prefill = mobilePrefillFromListing(credentialsCard.phone);
+    setOwner((prev) => ({ ...prev, mobile: prev.mobile ?? prefill }));
+    setMobilePrefilled(owner.mobile === undefined && prefill !== "");
+    setContactErrors({ mobile: false, email: false });
+    setPhase("contact");
+  }
+
+  /** Contact step: both fields required and valid; the first invalid field takes focus. */
+  function submitContact() {
+    if (phase !== "contact") return;
+    const errors = { mobile: !normalizeIsraeliMobile(owner.mobile), email: !normalizeOwnerEmail(owner.email) };
+    setContactErrors(errors);
+    if (errors.mobile) { mobileInputRef.current?.focus(); return; }
+    if (errors.email) { emailInputRef.current?.focus(); return; }
+    setDomainError(null);
+    setPhase("domain");
+  }
+
+  /** Domain step: a choice is required; "yes" also needs a registrable domain. Then the record is built. */
+  function submitDomain() {
+    if (phase !== "domain" || !credentialsCard || !owner.domainChoice) return;
+    if (owner.domainChoice === "has_domain") {
+      const result = normalizeOwnerDomain(owner.domain);
+      if (!result.ok) {
+        setDomainError(result.reason);
+        domainInputRef.current?.focus();
+        return;
+      }
+    }
+    const nextAnswers: IntakeAnswers = { ...answers, owner };
     setAnswers(nextAnswers);
     const data = buildIntakeCollectedData(credentialsCard, evidence, nextAnswers);
     setCredentialsCard(null);
@@ -794,6 +877,192 @@ function SiteBotStartContent() {
                 {renderMixed(CREDENTIALS_COPY.skipButton)}
               </button>
             </div>
+          </form>
+        )}
+
+        {phase === "contact" && (
+          <form
+            data-intake-owner-contact="true"
+            aria-labelledby="intake-owner-contact-title"
+            noValidate
+            onSubmit={(e) => {
+              e.preventDefault();
+              submitContact();
+            }}
+            style={ownerStepStyle}
+          >
+            <h2 id="intake-owner-contact-title" ref={ownerHeadingRef} tabIndex={-1} style={ownerHeadingStyle}>
+              {renderMixed(INTAKE_OWNER_COPY.contactTitle)}
+            </h2>
+            <p id="intake-owner-contact-intro" style={ownerNoteStyle}>
+              {renderMixed(INTAKE_OWNER_COPY.contactIntro)}
+            </p>
+
+            <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+              <label htmlFor="intake-owner-mobile" style={ownerLabelStyle}>
+                {renderMixed(INTAKE_OWNER_COPY.contactMobileLabel)}
+              </label>
+              <input
+                ref={mobileInputRef}
+                id="intake-owner-mobile"
+                name="ownerMobile"
+                type="tel"
+                dir="ltr"
+                inputMode="tel"
+                autoComplete="tel"
+                required
+                maxLength={20}
+                className="wao-intake-field"
+                aria-invalid={contactErrors.mobile || undefined}
+                aria-describedby={[mobilePrefilled ? "intake-owner-mobile-prefill" : "", contactErrors.mobile ? "intake-owner-mobile-error" : ""].filter(Boolean).join(" ") || undefined}
+                value={owner.mobile ?? ""}
+                onChange={(e) => {
+                  setMobilePrefilled(false);
+                  setContactErrors((prev) => ({ ...prev, mobile: false }));
+                  setOwner((prev) => ({ ...prev, mobile: e.target.value }));
+                }}
+                style={fieldInputStyle}
+              />
+              {mobilePrefilled && (
+                <p id="intake-owner-mobile-prefill" data-intake-owner-mobile-prefill="true" style={ownerNoteStyle}>
+                  {renderMixed(INTAKE_OWNER_COPY.contactMobilePrefillNote)}
+                </p>
+              )}
+              {contactErrors.mobile && (
+                <p id="intake-owner-mobile-error" role="alert" style={ownerErrorStyle}>
+                  {renderMixed(INTAKE_OWNER_COPY.contactMobileInvalid)}
+                </p>
+              )}
+            </div>
+
+            <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+              <label htmlFor="intake-owner-email" style={ownerLabelStyle}>
+                {renderMixed(INTAKE_OWNER_COPY.contactEmailLabel)}
+              </label>
+              <input
+                ref={emailInputRef}
+                id="intake-owner-email"
+                name="ownerEmail"
+                type="email"
+                dir="ltr"
+                inputMode="email"
+                autoComplete="email"
+                autoCapitalize="none"
+                spellCheck={false}
+                required
+                maxLength={254}
+                className="wao-intake-field"
+                aria-invalid={contactErrors.email || undefined}
+                aria-describedby={contactErrors.email ? "intake-owner-email-error" : undefined}
+                value={owner.email ?? ""}
+                onChange={(e) => {
+                  setContactErrors((prev) => ({ ...prev, email: false }));
+                  setOwner((prev) => ({ ...prev, email: e.target.value }));
+                }}
+                style={fieldInputStyle}
+              />
+              {contactErrors.email && (
+                <p id="intake-owner-email-error" role="alert" style={ownerErrorStyle}>
+                  {renderMixed(INTAKE_OWNER_COPY.contactEmailInvalid)}
+                </p>
+              )}
+            </div>
+
+            <button type="submit" className="btn-primary" data-intake-owner-contact-continue="true" style={{ padding: "12px 24px", minHeight: "44px", justifyContent: "center" }}>
+              {renderMixed(INTAKE_OWNER_COPY.contactContinue)}
+            </button>
+          </form>
+        )}
+
+        {phase === "domain" && (
+          <form
+            data-intake-owner-domain="true"
+            aria-labelledby="intake-owner-domain-title"
+            noValidate
+            onSubmit={(e) => {
+              e.preventDefault();
+              submitDomain();
+            }}
+            style={ownerStepStyle}
+          >
+            <fieldset style={{ border: "none", margin: 0, padding: 0, display: "flex", flexDirection: "column", gap: "10px" }}>
+              <legend style={{ padding: 0, marginBottom: "8px" }}>
+                <h2 id="intake-owner-domain-title" ref={ownerHeadingRef} tabIndex={-1} style={ownerHeadingStyle}>
+                  {renderMixed(INTAKE_OWNER_COPY.domainQuestion)}
+                </h2>
+              </legend>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: "10px" }}>
+                {DOMAIN_CHOICES.map((choice) => {
+                  const selected = owner.domainChoice === choice;
+                  return (
+                    <button
+                      key={choice}
+                      type="button"
+                      className="wao-intake-choice"
+                      aria-pressed={selected}
+                      data-intake-owner-domain-choice={choice}
+                      onClick={() => {
+                        setDomainError(null);
+                        setOwner((prev) => ({ ...prev, domainChoice: choice }));
+                      }}
+                      style={{ minHeight: "44px", background: selected ? "var(--accent)" : "transparent", color: selected ? "#0a0a0a" : "var(--text)" }}
+                    >
+                      {renderMixed(DOMAIN_CHOICE_LABEL[choice])}
+                    </button>
+                  );
+                })}
+              </div>
+            </fieldset>
+
+            <div aria-live="polite">
+              {owner.domainChoice === "no_domain" && (
+                <p data-intake-owner-domain-note="no_domain" style={ownerNoteStyle}>{renderMixed(INTAKE_OWNER_COPY.domainNoNote)}</p>
+              )}
+              {owner.domainChoice === "not_sure" && (
+                <p data-intake-owner-domain-note="not_sure" style={ownerNoteStyle}>{renderMixed(INTAKE_OWNER_COPY.domainNotSureNote)}</p>
+              )}
+            </div>
+
+            {owner.domainChoice === "has_domain" && (
+              <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                <label htmlFor="intake-owner-domain" style={ownerLabelStyle}>
+                  {renderMixed(INTAKE_OWNER_COPY.domainInputLabel)}
+                </label>
+                <input
+                  ref={domainInputRef}
+                  id="intake-owner-domain"
+                  name="ownerDomain"
+                  type="text"
+                  dir="ltr"
+                  inputMode="url"
+                  autoComplete="off"
+                  autoCapitalize="none"
+                  autoCorrect="off"
+                  spellCheck={false}
+                  required
+                  maxLength={253}
+                  placeholder="example.co.il"
+                  className="wao-intake-field"
+                  aria-invalid={domainError ? true : undefined}
+                  aria-describedby={domainError ? "intake-owner-domain-error" : undefined}
+                  value={owner.domain ?? ""}
+                  onChange={(e) => {
+                    setDomainError(null);
+                    setOwner((prev) => ({ ...prev, domain: e.target.value }));
+                  }}
+                  style={fieldInputStyle}
+                />
+                {domainError && (
+                  <p id="intake-owner-domain-error" role="alert" style={ownerErrorStyle}>
+                    {renderMixed(domainErrorText(domainError))}
+                  </p>
+                )}
+              </div>
+            )}
+
+            <button type="submit" className="btn-primary" data-intake-owner-domain-continue="true" disabled={!owner.domainChoice} style={{ padding: "12px 24px", minHeight: "44px", justifyContent: "center" }}>
+              {renderMixed(INTAKE_OWNER_COPY.domainContinue)}
+            </button>
           </form>
         )}
 

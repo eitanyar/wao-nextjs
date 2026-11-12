@@ -8,6 +8,7 @@ import { SITE_BOT_PLAN, planSummary } from '@/lib/payments/plans';
 import { createPendingPlanSubscription } from '@/lib/payments/subscriptions';
 import { withServedAreaNames } from '@/lib/site-bot/servedAreas';
 import { ISRAELI_LOCALITIES } from '@/lib/site-bot/israeliLocalities';
+import { withValidatedOwnerIntake } from '@/lib/site-bot/ownerIntake';
 
 // Site-Bot checkout init: the monthly + VAT plan (SITE_BOT_PLAN, the one config source for its price), routed through the
 // recurring engine (subscriptions.ts createPendingPlanSubscription). Nothing is charged here: the row is 'pending'
@@ -31,11 +32,14 @@ export async function POST(req: Request) {
     const submitted: CollectedData = body?.collectedData;
     if (!submitted?.businessNiche) return errorReply('invalid_input', 400);
     // M1: served-area localities are derived here from travelBoundary, never trusted from the client.
-    const collectedData = withServedAreaNames(submitted, ISRAELI_LOCALITIES);
+    // Launch step 1: ownerContact / domainChoice / ownerDomain are re-normalised here; invalid values are dropped.
+    const collectedData = withValidatedOwnerIntake(withServedAreaNames(submitted, ISRAELI_LOCALITIES));
 
     const sessionId = crypto.randomUUID();
     const origin = new URL(req.url).origin;
-    const email = typeof collectedData.email === 'string' && EMAIL.test(collectedData.email.trim()) ? collectedData.email.trim() : null;
+    // The subscription belongs to the owner: his own email first, the public business email only as a fallback.
+    const email = collectedData.ownerContact?.email
+      ?? (typeof collectedData.email === 'string' && EMAIL.test(collectedData.email.trim()) ? collectedData.email.trim() : null);
     const { subscriptionId } = await createPendingPlanSubscription({
       plan: SITE_BOT_PLAN,
       userId: email ?? `site-bot:${sessionId}`,

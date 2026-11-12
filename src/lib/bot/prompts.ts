@@ -111,6 +111,13 @@ export interface CollectedData {
   phone?: string;
   whatsappNumber?: string;
   email?: string;
+  // Site Bot intake (launch step 1, src/lib/site-bot/ownerIntake.ts): the owner's PRIVATE contact for receipts, the
+  // cancel link, review drafts and the monthly report. Never rendered on the public site (unlike phone / email above).
+  ownerContact?: { mobile: string; email: string };
+  // Site Bot intake: the domain question. has_domain -> ownerDomain (registrable, punycode; canonical www.{ownerDomain}
+  // once attached and live); no_domain -> {slug}.wao.co.il; not_sure -> staff follow up.
+  domainChoice?: 'has_domain' | 'no_domain' | 'not_sure';
+  ownerDomain?: string;
 
   // LTV / repeat behaviour
   hasRepeatClients?: boolean;
