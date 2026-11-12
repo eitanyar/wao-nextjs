@@ -71,7 +71,14 @@ test('AI Max guard: AI Max off, text + final URL automation opted out, no campai
   assert.match(route, /evaluateCampaignSetup\(/);
 });
 
-test('bot fallback strategy has no negativeKeywords (route defaults them) and fix-4 prompt drift is gone', () => {
+test('route always merges the day-one default negatives (conflict-guarded) into what it sends', () => {
+  assert.match(route, /const campaignNegatives = buildCampaignNegatives\(\{\s*strategyNegatives: strategyCheck\.negativeKeywords,\s*positiveKeywords: normalizedKeywords\.map\(k => k\.text\),\s*niche: collectedData\.businessNiche,\s*primaryService: collectedData\.primaryService,/);
+  assert.match(route, /const normalizedNegatives: string\[\] = campaignNegatives\.negatives;/);
+  assert.match(route, /campaignNegatives\.droppedDefaults\.length\) \{\s*console\.info\(/);
+  assert.doesNotMatch(route, /const normalizedNegatives: string\[\] = strategyCheck\.negativeKeywords;/);
+});
+
+test('bot fallback strategy object has no negativeKeywords (the route merges the defaults) and fix-4 prompt drift is gone', () => {
   const bot = fs.readFileSync(path.join(path.dirname(routePath), '..', '..', 'bot', 'route.ts'), 'utf8');
   const fallback = bot.slice(bot.indexOf('function generateFallbackStrategyAndCopy'), bot.indexOf('// ── Turn questions for simulation'));
   assert.ok(fallback.length > 0);

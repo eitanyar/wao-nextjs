@@ -11,6 +11,7 @@ import EditQAPanel from '@/components/geo/EditQAPanel';
 import CriticPanel from '@/components/geo/CriticPanel';
 import { buildApprovalLink } from '@/lib/geo/whatsapp';
 import { buildAllClientDigests } from '@/lib/google-ads/weekly-digest-batch';
+import { buildClientWeekNumbers } from '@/lib/crm/intelligence';
 import { buildWeeklyDigestWhatsAppLink } from '@/lib/google-ads/whatsapp-digest';
 
 export const metadata = { robots: { index: false } };
@@ -165,9 +166,11 @@ export default async function GeoDashboard() {
                   <SendButton
                     waLink={buildWeeklyDigestWhatsAppLink({
                       contactPhone: client.approvalWhatsapp,
-                      contactName: client.approvalContact || 'שלום',
+                      // Empty name -> the template's bare greeting (no name, no double space).
+                      contactName: client.approvalContact || '',
                       campaignName: adsResult.campaign.businessName || adsResult.campaign.slug,
                       digest: adsResult.digest,
+                      week: buildClientWeekNumbers({ campaign: adsResult.campaign }),
                     })}
                     label={`שלח סיכום ל${client.approvalContact || 'לקוח'}`}
                     disabled={!hasPhone}

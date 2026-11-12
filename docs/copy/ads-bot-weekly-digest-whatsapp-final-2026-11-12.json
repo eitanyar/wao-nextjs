@@ -1,0 +1,71 @@
+{
+ "gate": "Noa 2026-11-12 FIX applied; Adam ruling option (b): alerts + next action not shown to the client (English staff text); all-clear only when there are no alerts. Eitan spot-check pending.",
+ "engineer_notes": [
+  "empty contactName -> 'היי 👋' with no double space",
+  "no ASCII quotes around campaignName",
+  "markedReal==0: hide cost_per_real and unmarked reminders; leadsIn==0: hide mark_nudge_zero too",
+  "costPerReal: whole shekels, thousands separator"
+ ],
+ "template_lines": [
+  {
+   "id": "greeting",
+   "text": "היי {ownerName} 👋",
+   "when": "always"
+  },
+  {
+   "id": "week_frame",
+   "text": "שלושת המספרים של {campaignName} השבוע:",
+   "when": "always"
+  },
+  {
+   "id": "leads_in",
+   "text": "📥 פניות שנכנסו: {leadsIn}",
+   "when": "always"
+  },
+  {
+   "id": "marked_real",
+   "text": "✅ פניות שסימנת כאמיתיות: {markedReal}",
+   "when": "always"
+  },
+  {
+   "id": "cost_per_real",
+   "text": "💰 עלות לפנייה אמיתית: {costPerReal} ₪",
+   "when": "markedReal > 0"
+  },
+  {
+   "id": "mark_nudge_zero",
+   "text": "👆 תסמן ברשימה כל פנייה אמיתית, לחיצה אחת לפנייה, ותראה את המספר השלישי. {leadsLink}",
+   "when": "markedReal == 0 (replaces cost_per_real; suppress unmarked_reminder)"
+  },
+  {
+   "id": "unmarked_reminder",
+   "text": "⏳ עוד {unmarked} פניות מחכות לסימון, לחיצה אחת לכל אחת. {leadsLink}",
+   "when": "unmarked >= 2 && markedReal > 0"
+  },
+  {
+   "id": "unmarked_reminder_one",
+   "text": "⏳ עוד פנייה אחת מחכה לסימון, לחיצה אחת וזהו. {leadsLink}",
+   "when": "unmarked == 1 && markedReal > 0"
+  },
+  {
+   "id": "closed_deals_extra",
+   "text": "🤝 סגרת השבוע {closedDeals} עסקאות.",
+   "when": "closedDeals >= 2"
+  },
+  {
+   "id": "closed_deals_one",
+   "text": "🤝 סגרת השבוע עסקה אחת.",
+   "when": "closedDeals == 1"
+  },
+  {
+   "id": "alerts_all_clear",
+   "text": "🟢 הכול רץ כרגיל, שום דבר לא דורש טיפול.",
+   "when": "no open alerts (alerts themselves are NOT shown to the client)"
+  },
+  {
+   "id": "support_close",
+   "text": "💬 רוצה שנעדכן משהו? תכתוב לנו ונסדר.",
+   "when": "always"
+  }
+ ]
+}

@@ -433,6 +433,64 @@ export function buildWeeklyDigest(input: {
 }
 
 /**
+ * The owner-facing "three hub numbers" for the weekly WhatsApp digest (2026-11-12). Same lead
+ * source and campaign scoping as `buildWeeklyDigest` (`leads.json`, strict slug / customerId
+ * match), but strictly "enquiries created this week": a lead counts by its creation `date`
+ * (form submit, call tap and WhatsApp tap all land in `leads.json` via `captureLead`), not by
+ * `closedAt || date` the way the digest's trend window does. Live Google Ads conversions are
+ * never used here: they cannot be marked real / not real by the owner.
+ *   - leadsIn: created in the window.
+ *   - markedReal: of those, `quality === 'GOOD'` (the owner's mark on /client/leads; closing a
+ *     lead also sets GOOD).
+ *   - unmarked: of those, neither GOOD nor JUNK (PENDING / missing).
+ *   - closedDeals: closed in the window (`closedAt`), whenever the lead came in.
+ */
+export interface ClientWeekNumbers {
+  windowDays: number;
+  windowStart: string;
+  windowEnd: string;
+  leadsIn: number;
+  markedReal: number;
+  unmarked: number;
+  closedDeals: number;
+}
+
+export function buildClientWeekNumbers(input: {
+  campaign: Pick<CampaignConfig, 'slug' | 'customerId'>;
+  leads?: LeadRecord[];
+  now?: Date;
+  windowDays?: number;
+}): ClientWeekNumbers {
+  const leads = input.leads ?? readLeads();
+  const now = input.now ?? new Date();
+  const windowDays = input.windowDays ?? DEFAULT_WINDOW_DAYS;
+  const windowStart = new Date(now.getTime() - windowDays * 24 * 60 * 60 * 1000);
+  const inWindow = (value: string | null | undefined) => {
+    const d = parseDate(value ?? null);
+    return d ? d >= windowStart && d <= now : false;
+  };
+  const scoped = leads.filter(lead =>
+    lead.slug === input.campaign.slug ||
+    (!!lead.customerId && lead.customerId === input.campaign.customerId)
+  );
+  const created = scoped.filter(lead => inWindow(lead.date));
+  const markedReal = created.filter(lead => lead.quality === 'GOOD').length;
+  const unmarked = created.filter(lead => lead.quality !== 'GOOD' && lead.quality !== 'JUNK').length;
+  const closedDeals = scoped.filter(lead =>
+    (Boolean(lead.closed) || lead.status === 'closed') && inWindow(lead.closedAt)
+  ).length;
+  return {
+    windowDays,
+    windowStart: windowStart.toISOString(),
+    windowEnd: now.toISOString(),
+    leadsIn: created.length,
+    markedReal,
+    unmarked,
+    closedDeals,
+  };
+}
+
+/**
  * Separate ownership check from `buildWeeklyDigest`'s own scoping filter
  * (above) — both are strict (no untagged-lead wildcard) as of the Aug 2026
  * data-quality fix, but this one checks membership against ALL of a

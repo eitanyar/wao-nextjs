@@ -1,0 +1,89 @@
+Angle: most-aware existing client, high sophistication, reading on his phone between jobs — so the first screen cashes the hub's three-number promise in the hub's own labels, and the only ask is the one tap that produces the third number.
+
+```json
+{
+  "template_lines": [
+    {
+      "id": "greeting",
+      "text": "היי {ownerName} 👋",
+      "when": "always"
+    },
+    {
+      "id": "week_frame",
+      "text": "שלושת המספרים של {campaignName} השבוע:",
+      "when": "always"
+    },
+    {
+      "id": "leads_in",
+      "text": "📥 פניות שנכנסו: {leadsIn}",
+      "when": "always"
+    },
+    {
+      "id": "marked_real",
+      "text": "✅ פניות שסימנת כאמיתיות: {markedReal}",
+      "when": "always"
+    },
+    {
+      "id": "cost_per_real",
+      "text": "💰 העלות של כל פנייה אמיתית: {costPerReal} ש״ח",
+      "when": "markedReal > 0"
+    },
+    {
+      "id": "mark_nudge_zero",
+      "text": "👆 סמן מה אמיתי בטפיחה, אחת־אחת ברשימה — ותראה את המספר השלישי. {leadsLink}",
+      "when": "markedReal == 0 (replaces cost_per_real; suppress unmarked_reminder)"
+    },
+    {
+      "id": "unmarked_reminder",
+      "text": "⏳ עוד {unmarked} פניות מחכות לסימון — טפיחה אחת וזהו. {leadsLink}",
+      "when": "unmarked > 0 && markedReal > 0"
+    },
+    {
+      "id": "closed_deals_extra",
+      "text": "🤝 סגרת השבוע {closedDeals} עסקאות — זה מה שקובע.",
+      "when": "closedDeals > 0"
+    },
+    {
+      "id": "alerts_lead_in",
+      "text": "⚠️ כדאי שתדע:",
+      "when": "alertsBlock has at least one title"
+    },
+    {
+      "id": "alerts_block",
+      "text": "{alertsBlock}",
+      "when": "alertsBlock has at least one title (system titles, up to 3)"
+    },
+    {
+      "id": "alerts_all_clear",
+      "text": "🟢 הכול רץ כרגיל — אין משהו שדורש טיפול.",
+      "when": "alertsBlock is empty"
+    },
+    {
+      "id": "next_action_lead_in",
+      "text": "👉 הצעד הבא שלך:",
+      "when": "nextAction is present"
+    },
+    {
+      "id": "next_action",
+      "text": "{nextAction}",
+      "when": "nextAction is present"
+    },
+    {
+      "id": "support_close",
+      "text": "💬 רוצה שנעדכן משהו? כתוב לנו — ואנחנו נסדר.",
+      "when": "always"
+    }
+  ],
+  "notes": [
+    "התוויות זהות למילים שההאב מבטיח: ״פניות שנכנסו״, ״פניות שסימנת כאמיתיות״. השלישית משקפת את ״העלות של כל אחת בשקלים״, עם שם המושג בתוכה כדי שלא ישתמע שזה מחיר לפנייה בודדת.",
+    "אם אתה רוצה בלי המילה ״כל״ בשורה השלישית: ״עלות לפנייה אמיתית״ היא חלופה ישירה לאותה שורה. מסמן לך את זה ולא מכריע לבד.",
+    "{ownerName} לא נקוב בבריף — חבר אותו לשדה השם שכבר קיים בתבנית, או השמט אותו והשאר ״היי 👋״.",
+    "כש־{markedReal}=0: הצג את mark_nudge_zero במקום cost_per_real, ואל תציג גם את unmarked_reminder — אותה בקשה פעמיים ברצף.",
+    "כש־{leadsIn}=0 אין מה לסמן — השמט גם את mark_nudge_zero. הבריף לא כיסה את המצב הזה; אני מסמן ולא ממציא שורה.",
+    "בסיס העלות הוא מה שגוגל מדווחת לשבוע. לא כתבתי ״כל מה ששילמת״ ולא הזכרתי את השכר שלנו — לפי כלל ההשמטה, המגבלה לא מוכרזת בגוף ההודעה.",
+    "אין הבטחת תוצאות, אין תחזית לשבוע הבא, אין הבטחת זמן תגובה ואין ״נתקשר״. העסקאות שסגר נשארות שורת רשות מחוץ שלושת המספרים.",
+    "כל השורות עד 12 מילים; הארוכה ביותר 11. בלי markdown, בלי מרכאות ASCII — גרשיים עבריים בלבד.",
+    "→ נועה: מעבר הגהה על כל השורות. → איתן־Dev: להחיל ב־whatsapp-digest.ts, כולל לוגיקת ההשמטה מסעיפים 4–5."
+  ]
+}
+```

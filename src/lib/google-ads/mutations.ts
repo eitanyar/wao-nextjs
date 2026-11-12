@@ -138,6 +138,16 @@ export async function setCampaignDailyBudget(params: {
   }
 }
 
+/**
+ * Manual negatives default to PHRASE (2026-11-12): a multi-word negative blocks only that phrase,
+ * never each word on its own. An explicit BROAD or EXACT is kept as an override.
+ */
+export function negativeMatchTypeEnum(matchType?: string) {
+  if (matchType === 'EXACT') return enums.KeywordMatchType.EXACT;
+  if (matchType === 'BROAD') return enums.KeywordMatchType.BROAD;
+  return enums.KeywordMatchType.PHRASE;
+}
+
 export async function addNegativeKeywords(params: {
   campaignConfig: CampaignConfig;
   adGroupResourceName: string;
@@ -147,12 +157,7 @@ export async function addNegativeKeywords(params: {
 }): Promise<MutationResult> {
   try {
     const customer = resolveCustomer(params.campaignConfig, params.clientInstance);
-    const matchTypeEnum =
-      params.matchType === 'EXACT'
-        ? enums.KeywordMatchType.EXACT
-        : params.matchType === 'PHRASE'
-        ? enums.KeywordMatchType.PHRASE
-        : enums.KeywordMatchType.BROAD;
+    const matchTypeEnum = negativeMatchTypeEnum(params.matchType);
 
     const operations = params.keywords.map((kw) => ({
       ad_group: params.adGroupResourceName,

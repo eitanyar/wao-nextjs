@@ -1,6 +1,10 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { buildClient, resolveAdsAccount, resolveCustomer, resolveCustomerById } from './mutations';
+import fs from 'node:fs';
+import path from 'node:path';
+import { enums } from 'google-ads-api';
+import { addNegativeKeywords, buildClient, negativeMatchTypeEnum, resolveAdsAccount, resolveCustomer, resolveCustomerById } from './mutations';
+import type { CampaignConfig } from '../crm/intelligence';
 
 const keys = [
   'GOOGLE_ADS_TEST_REFRESH_TOKEN',
@@ -77,3 +81,39 @@ test('live mode retains live-only credentials even when test pair is present', (
   delete process.env.GOOGLE_ADS_MCC_CUSTOMER_ID;
   assert.throws(() => resolveAdsAccount('live'), /Live mode requires/);
 }));
+
+test('manual negatives: default PHRASE, explicit BROAD / EXACT kept', () => {
+  assert.equal(negativeMatchTypeEnum(undefined), enums.KeywordMatchType.PHRASE);
+  assert.equal(negativeMatchTypeEnum('PHRASE'), enums.KeywordMatchType.PHRASE);
+  assert.equal(negativeMatchTypeEnum('nonsense'), enums.KeywordMatchType.PHRASE);
+  assert.equal(negativeMatchTypeEnum('BROAD'), enums.KeywordMatchType.BROAD);
+  assert.equal(negativeMatchTypeEnum('EXACT'), enums.KeywordMatchType.EXACT);
+});
+
+test('addNegativeKeywords sends PHRASE when no match type is given, the override otherwise', async () => {
+  const previous = { token: process.env.GOOGLE_ADS_REFRESH_TOKEN, mcc: process.env.GOOGLE_ADS_MCC_CUSTOMER_ID };
+  process.env.GOOGLE_ADS_REFRESH_TOKEN = 'synthetic-live-token';
+  process.env.GOOGLE_ADS_MCC_CUSTOMER_ID = '999-888-7777';
+  try {
+    const sent: Array<Array<{ negative: boolean; keyword: { text: string; match_type: unknown } }>> = [];
+    const fake = {
+      Customer: () => ({ adGroupCriteria: { create: async (ops: (typeof sent)[number]) => { sent.push(ops); return { results: [{ resource_name: 'x' }] }; } } }),
+    } as unknown as ReturnType<typeof buildClient>;
+    const campaignConfig = { mode: 'live', customerId: '123', slug: 's' } as unknown as CampaignConfig;
+    for (const matchType of [undefined, 'BROAD', 'EXACT'] as const) {
+      const r = await addNegativeKeywords({ campaignConfig, adGroupResourceName: 'ag', keywords: [' free download '], matchType, clientInstance: fake });
+      assert.equal(r.success, true);
+    }
+    assert.deepEqual(sent.map((ops) => ops[0].keyword.match_type), [enums.KeywordMatchType.PHRASE, enums.KeywordMatchType.BROAD, enums.KeywordMatchType.EXACT]);
+    assert.ok(sent.every((ops) => ops[0].negative === true && ops[0].keyword.text === 'free download'));
+  } finally {
+    if (previous.token === undefined) delete process.env.GOOGLE_ADS_REFRESH_TOKEN; else process.env.GOOGLE_ADS_REFRESH_TOKEN = previous.token;
+    if (previous.mcc === undefined) delete process.env.GOOGLE_ADS_MCC_CUSTOMER_ID; else process.env.GOOGLE_ADS_MCC_CUSTOMER_ID = previous.mcc;
+  }
+});
+
+test('negative-keywords route defaults the match type to PHRASE, not BROAD', () => {
+  const route = fs.readFileSync(path.join(process.cwd(), 'src/app/api/google-ads/negative-keywords/route.ts'), 'utf8');
+  assert.match(route, /const matchType = body\.matchType \|\| 'PHRASE';/);
+  assert.doesNotMatch(route, /\|\| 'BROAD'/);
+});

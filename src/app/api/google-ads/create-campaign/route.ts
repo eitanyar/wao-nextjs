@@ -30,7 +30,7 @@ import {
   readConversionGoalState,
 } from '@/lib/google-ads/conversion-goals';
 import { recordGoalChange } from '@/lib/google-ads/bidding-phase-state';
-import { validateCampaignStrategy, NEGATIVE_MATCH_TYPE, type NormalizedKeyword } from '@/lib/google-ads/keyword-normalize';
+import { buildCampaignNegatives, validateCampaignStrategy, NEGATIVE_MATCH_TYPE, type NormalizedKeyword } from '@/lib/google-ads/keyword-normalize';
 import {
   buildGeoTargetTypeSetting,
   buildLocationCriteria,
@@ -490,13 +490,24 @@ export async function POST(req: Request) {
     }
 
     // Fix 3 (2026-11-12): validate before any Google Ads write. Keywords become plain text with
-    // EXACT/PHRASE, negatives default to [] (the bot's fallback strategy has none).
+    // EXACT/PHRASE, strategy negatives default to [] (the bot's fallback strategy has none).
     const strategyCheck = validateCampaignStrategy(strategy);
     if (!strategyCheck.ok) {
       return NextResponse.json({ error: strategyCheck.error }, { status: 400 });
     }
     const normalizedKeywords: NormalizedKeyword[] = strategyCheck.keywords;
-    const normalizedNegatives: string[] = strategyCheck.negativeKeywords;
+    // The day-one defaults are always merged in (so a campaign built on the fallback strategy
+    // still starts with them), minus any default that collides with this trade's own words.
+    const campaignNegatives = buildCampaignNegatives({
+      strategyNegatives: strategyCheck.negativeKeywords,
+      positiveKeywords: normalizedKeywords.map(k => k.text),
+      niche: collectedData.businessNiche,
+      primaryService: collectedData.primaryService,
+    });
+    if (campaignNegatives.droppedDefaults.length) {
+      console.info('[create-campaign] default negatives dropped (collide with own keywords/niche/service):', campaignNegatives.droppedDefaults);
+    }
+    const normalizedNegatives: string[] = campaignNegatives.negatives;
 
     const commercialSeeds = [...normalizedKeywords.map(k => k.text), ...(collectedData.extractedKeywords ?? [])];
     const avgJobValue = collectedData.avgJobValue || 500;

@@ -9,7 +9,7 @@ import {
   NEVER_BLOCK_NEGATIVES,
   isNeverBlockNegative,
 } from './default-negatives';
-import { NEGATIVE_MATCH_TYPE, normalizeNegativeKeywords, validateCampaignStrategy } from './keyword-normalize';
+import { NEGATIVE_MATCH_TYPE, buildCampaignNegatives, negativeCollidesWithPositives, normalizeNegativeKeywords, validateCampaignStrategy } from './keyword-normalize';
 
 // HEBREW-SAFETY: no Hebrew literals here. The expected list is read from Noa's review file.
 const repo = process.cwd();
@@ -71,4 +71,79 @@ test('bot mock campaign and the strategy prompt both use the shared default list
   assert.match(bot, /drorData\.negativeKeywords = normalizeNegativeKeywords\(drorData\.negativeKeywords\)/);
   const prompts = fs.readFileSync(path.join(repo, 'src/lib/bot/prompts.ts'), 'utf8');
   assert.match(prompts, /6\. Generic negatives \(phrase match\): \$\{DEFAULT_GENERIC_NEGATIVES\.join\(", "\)\}/);
+});
+
+// ── Fallback merge + conflict guard (2026-11-12). Fixture Hebrew is read from the repo, never typed:
+// the driving-teacher and plumber niche strings come from src/lib/lp/verticalDetect.ts.
+function verticalDetectSource(): string {
+  return fs.readFileSync(path.join(repo, 'src/lib/lp/verticalDetect.ts'), 'utf8');
+}
+function drivingTeacherNiche(): string {
+  const m = verticalDetectSource().match(/Driving teacher[\s\S]*?keywords: \['([^']+)'\]/);
+  assert.ok(m, 'driving-teacher keyword not found in verticalDetect.ts');
+  return m[1];
+}
+function plumberNiche(): string {
+  const m = verticalDetectSource().match(/Emergency Trades[\s\S]*?keywords: \['([^']+)'/);
+  assert.ok(m, 'plumber keyword not found in verticalDetect.ts');
+  return m[1];
+}
+const INSTRUCTOR_WORD = GENERIC_WORD_NEGATIVES[4]; // the "guide / instructor" word
+const COURSE_WORD = GENERIC_WORD_NEGATIVES[1]; // the "course" word
+
+test('fallback merge: no strategy negatives -> the full default list is sent, deduped and in order', () => {
+  const r = buildCampaignNegatives({ strategyNegatives: [], positiveKeywords: [plumberNiche()], niche: plumberNiche() });
+  assert.deepEqual(r.negatives, [...DEFAULT_GENERIC_NEGATIVES]);
+  assert.deepEqual(r.droppedDefaults, []);
+});
+
+test('merge: strategy negatives first, defaults appended, duplicates and bare free dropped', () => {
+  const [bare, inFree] = NEVER_BLOCK_NEGATIVES;
+  const own = `"${GENERIC_WORD_NEGATIVES[0]}"`; // a default, in phrase notation -> deduped
+  const r = buildCampaignNegatives({ strategyNegatives: [bare, inFree, own, 'extra-trade-negative'], positiveKeywords: ['plumber'] });
+  assert.equal(r.negatives[0], GENERIC_WORD_NEGATIVES[0]);
+  assert.equal(r.negatives[1], 'extra-trade-negative');
+  assert.equal(r.negatives.length, DEFAULT_GENERIC_NEGATIVES.length + 1);
+  assert.equal(new Set(r.negatives).size, r.negatives.length);
+  for (const neg of r.negatives) assert.equal(isNeverBlockNegative(neg), false, neg);
+});
+
+test('conflict guard: a plumber fixture gets the full list', () => {
+  const niche = plumberNiche();
+  const r = buildCampaignNegatives({ strategyNegatives: [], positiveKeywords: [niche, `${niche} 24/7`], niche, primaryService: niche });
+  assert.deepEqual(r.droppedDefaults, []);
+  assert.deepEqual(r.negatives, [...DEFAULT_GENERIC_NEGATIVES]);
+});
+
+test('conflict guard: a driving-instructor fixture keeps its core keywords unblocked', () => {
+  const niche = drivingTeacherNiche();
+  const drivingWord = niche.split(' ')[1];
+  assert.ok(drivingWord, 'driving word');
+  const positives = [niche, `${INSTRUCTOR_WORD} ${drivingWord}`, `${COURSE_WORD} ${drivingWord}`];
+  const r = buildCampaignNegatives({ strategyNegatives: [], positiveKeywords: positives, niche, primaryService: positives[1] });
+  // The instructor and course words, and every free-phrase built on them, are dropped.
+  assert.ok(r.droppedDefaults.includes(INSTRUCTOR_WORD));
+  assert.ok(r.droppedDefaults.includes(COURSE_WORD));
+  const freeOnThem = FREE_INTENT_PHRASE_NEGATIVES.filter((p) => p.startsWith(`${INSTRUCTOR_WORD} `) || p.startsWith(`${COURSE_WORD} `));
+  assert.equal(freeOnThem.length, 4);
+  for (const p of freeOnThem) assert.ok(r.droppedDefaults.includes(p), p);
+  assert.equal(r.droppedDefaults.length, 6);
+  // Nothing sent blocks a core keyword word.
+  for (const neg of r.negatives) assert.equal(negativeCollidesWithPositives(neg, positives), false, neg);
+  // Everything else is still sent.
+  assert.equal(r.negatives.length, DEFAULT_GENERIC_NEGATIVES.length - 6);
+});
+
+test('conflict guard compares word forms, not substrings', () => {
+  // Prefix letter attached (he, U+05D4) -> same word form.
+  assert.equal(negativeCollidesWithPositives(COURSE_WORD, [`\u05D4${COURSE_WORD}`]), true);
+  // Plural inflection (yod + final mem) -> same word form.
+  assert.equal(negativeCollidesWithPositives(COURSE_WORD, [`${COURSE_WORD}\u05D9\u05DD`]), true);
+  // Inside an unrelated longer word: not a collision (phrase match is word-level).
+  assert.equal(negativeCollidesWithPositives('job', ['jobsite cleaning']), false);
+  assert.equal(negativeCollidesWithPositives(COURSE_WORD, [`${COURSE_WORD}x`]), false);
+  // Ambiguous inflection-looking forms count as a collision on purpose: dropping a default
+  // negative is the safe direction (blocking the trade's own searches is not).
+  // The free word on its own never counts as a collision.
+  assert.equal(negativeCollidesWithPositives(FREE_INTENT_PHRASE_NEGATIVES[0], [`x ${NEVER_BLOCK_NEGATIVES[1]}`]), false);
 });

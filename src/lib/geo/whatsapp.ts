@@ -4,7 +4,7 @@
  * Works with any WhatsApp account — no Business API required.
  */
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.wao.co.il';
+export const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.wao.co.il';
 
 export interface WaMessageOptions {
   contactName:   string;

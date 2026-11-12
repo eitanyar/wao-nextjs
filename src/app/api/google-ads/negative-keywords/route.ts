@@ -86,7 +86,8 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Campaign ID missing from client index' }, { status: 409 });
     }
 
-    const matchType = body.matchType || 'BROAD';
+    // Default PHRASE (2026-11-12, same as create-campaign); an explicit BROAD / EXACT still wins.
+    const matchType = body.matchType || 'PHRASE';
     const result = await addNegativeKeywords({
       campaignConfig,
       adGroupResourceName,

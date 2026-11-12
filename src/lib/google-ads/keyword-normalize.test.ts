@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { normalizeKeyword, normalizeKeywords, normalizeNegativeKeywords, validateCampaignStrategy } from './keyword-normalize';
+import { DEFAULT_GENERIC_NEGATIVES } from './default-negatives';
+import { buildCampaignNegatives, normalizeKeyword, normalizeKeywords, normalizeNegativeKeywords, validateCampaignStrategy } from './keyword-normalize';
 
 test('[x] -> EXACT, "x" -> PHRASE, bare -> PHRASE (never BROAD)', () => {
   assert.deepEqual(normalizeKeyword('[plumber haifa]'), { text: 'plumber haifa', matchType: 'EXACT' });
@@ -45,7 +46,7 @@ test('validateCampaignStrategy: needs >= 1 keyword and a positive budget; negati
   if (ok.ok) assert.deepEqual(ok.negativeKeywords, []);
 });
 
-test('the bot fallback strategy shape (no negativeKeywords) passes validation', () => {
+test('the bot fallback strategy shape (no negativeKeywords) passes validation; the negatives SENT still include every default', () => {
   // Mirrors generateFallbackStrategyAndCopy in src/app/api/bot/route.ts (niche-based keywords,
   // budget / 30 daily, no negativeKeywords field), with a Latin niche.
   const niche = 'plumber';
@@ -60,6 +61,11 @@ test('the bot fallback strategy shape (no negativeKeywords) passes validation', 
   if (r.ok) {
     assert.equal(r.keywords.length, 3);
     assert.ok(r.keywords.every((k) => k.matchType === 'PHRASE'));
+    // The fallback strategy object itself stays empty...
     assert.deepEqual(r.negativeKeywords, []);
+    // ...but create-campaign merges the day-one list into what it sends.
+    const sent = buildCampaignNegatives({ strategyNegatives: r.negativeKeywords, positiveKeywords: r.keywords.map((k) => k.text), niche });
+    assert.deepEqual(sent.negatives, [...DEFAULT_GENERIC_NEGATIVES]);
+    assert.deepEqual(sent.droppedDefaults, []);
   }
 });

@@ -14,7 +14,8 @@
  * (the Hebrew negative lists live in default-negatives.ts).
  */
 
-import { isNeverBlockNegative } from './default-negatives';
+import { DEFAULT_GENERIC_NEGATIVES, NEVER_BLOCK_NEGATIVES, isNeverBlockNegative } from './default-negatives';
+import { PREFIX_LETTERS } from '../lp/hebrewPrefixLetters';
 
 export type NormalizedMatchType = 'EXACT' | 'PHRASE';
 
@@ -129,4 +130,100 @@ export function validateCampaignStrategy(strategy: CampaignStrategyInput | null 
     return { ok: false, error: 'strategy.suggestedDailyBudget must be a positive number' };
   }
   return { ok: true, keywords, negativeKeywords: normalizeNegativeKeywords(strategy.negativeKeywords ?? []), dailyBudgetIls };
+}
+
+// ── Day-one defaults + conflict guard (Adam's fallback decision + Dror's guard, 2026-11-12) ──
+
+/** Final-form letters (kaf, mem, nun, pe, tsadi) -> their regular form, so inflections compare. */
+const FINAL_FORMS: Record<string, string> = {
+  '\u05DA': '\u05DB',
+  '\u05DD': '\u05DE',
+  '\u05DF': '\u05E0',
+  '\u05E3': '\u05E4',
+  '\u05E5': '\u05E6',
+};
+
+/** Inflection endings, in regular form: plural masc / plural fem / he / tav / yod. */
+const INFLECTION_SUFFIXES = ['\u05D9\u05DE', '\u05D5\u05EA', '\u05D4', '\u05EA', '\u05D9'];
+
+const MIN_STEM = 3;
+
+function wordForm(word: string): string {
+  return word
+    .normalize('NFC')
+    .toLowerCase()
+    .replace(/[\u0591-\u05C7]/g, '')
+    .replace(/[\u05DA\u05DD\u05DF\u05E3\u05E5]/g, (c) => FINAL_FORMS[c] ?? c);
+}
+
+/** The word plus its forms with one or two attached prefix letters removed (stem kept >= 3 letters). */
+function wordVariants(word: string): string[] {
+  const w = wordForm(word);
+  const out = [w];
+  let cur = w;
+  for (let i = 0; i < 2; i++) {
+    if (cur.length - 1 < MIN_STEM || !PREFIX_LETTERS.includes(cur[0])) break;
+    cur = cur.slice(1);
+    out.push(cur);
+  }
+  return out;
+}
+
+function sameWordForm(a: string, b: string): boolean {
+  const va = wordVariants(a);
+  const vb = wordVariants(b);
+  for (const x of va) {
+    for (const y of vb) {
+      if (x === y) return true;
+      const [short, long] = x.length <= y.length ? [x, y] : [y, x];
+      if (short.length >= MIN_STEM && long.startsWith(short) && INFLECTION_SUFFIXES.includes(long.slice(short.length))) return true;
+    }
+  }
+  return false;
+}
+
+function words(text: string): string[] {
+  return text.split(/[^\p{L}\p{N}]+/u).filter(Boolean);
+}
+
+/**
+ * True when a default negative would block the campaign's own trade: one of its content words
+ * (the never-block free words excluded, they are the "free-intent" half of a phrase) has the
+ * same word form as a word in a positive keyword, the niche or the primary service. Word-level,
+ * not substring: a negative word inside an unrelated longer word is not a collision.
+ */
+export function negativeCollidesWithPositives(negative: string, positives: readonly string[]): boolean {
+  const freeWords = NEVER_BLOCK_NEGATIVES.map(wordForm);
+  const negWords = words(negative).filter((w) => !freeWords.includes(wordForm(w)));
+  const posWords = positives.flatMap((p) => (typeof p === 'string' ? words(p) : []));
+  return negWords.some((n) => posWords.some((p) => sameWordForm(n, p)));
+}
+
+export interface CampaignNegativesResult {
+  /** What is sent as ad-group negatives (PHRASE): strategy negatives first, then the kept defaults. */
+  negatives: string[];
+  /** Defaults dropped because they collide with the campaign's own keywords / niche / service. */
+  droppedDefaults: string[];
+}
+
+/**
+ * Every new campaign starts with DEFAULT_GENERIC_NEGATIVES merged into its strategy negatives,
+ * even when the AI strategy call failed and the fallback strategy has none. Deduped and
+ * normalized (bare "free" still dropped). Defaults that collide with the campaign's own
+ * positives (e.g. a driving instructor's niche word) are dropped and reported, never sent.
+ */
+export function buildCampaignNegatives(params: {
+  strategyNegatives: readonly string[];
+  positiveKeywords: readonly string[];
+  niche?: string | null;
+  primaryService?: string | null;
+}): CampaignNegativesResult {
+  const positives = [...params.positiveKeywords, params.niche ?? '', params.primaryService ?? ''].filter(Boolean);
+  const droppedDefaults: string[] = [];
+  const keptDefaults: string[] = [];
+  for (const neg of DEFAULT_GENERIC_NEGATIVES) {
+    if (negativeCollidesWithPositives(neg, positives)) droppedDefaults.push(neg);
+    else keptDefaults.push(neg);
+  }
+  return { negatives: normalizeNegativeKeywords([...params.strategyNegatives, ...keptDefaults]), droppedDefaults };
 }
