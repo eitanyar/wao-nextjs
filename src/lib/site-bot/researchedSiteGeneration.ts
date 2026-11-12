@@ -22,6 +22,7 @@ import type { HeroCapPageFacts } from '../lp/copyGates';
 import { isSafeDeploymentSlug } from '../deployment/deploy-access';
 import { assertBoundedPageBrief, type PageBrief } from './research/pageBrief';
 import type { PageClassification } from './research/pagePortfolio';
+import { refreshPlaceId, type PlaceIdChecker } from './placeIdRefresh';
 import type { SiteResearchDossier } from './research/types';
 
 const OPAQUE_ID = /^[A-Za-z0-9][A-Za-z0-9_-]*$/;
@@ -115,6 +116,12 @@ export interface ResearchedSiteGenerationDependencies {
   renderInputs: RendererInputs;
   renderPages?: typeof renderResearchedSitePages;
   now?: () => Date;
+  /**
+   * Yonatan C4: the id-only Place Details re-check (site-bot/placeIdRefresh.ts createPlaceIdChecker). Every regeneration
+   * re-checks a stored place_id; NOT_FOUND drops it (no Google-profile link, no sameAs) and flags placeIdNeedsRematch on the
+   * record. Unset = no check (tests, local re-renders).
+   */
+  checkPlaceId?: PlaceIdChecker;
 }
 
 type AtomicFileSystem = Pick<
@@ -233,12 +240,15 @@ export async function buildResearchedSiteGeneration(
 ): Promise<ResearchedSiteGenerationRecord> {
   if (ownerContactMissing(input.collectedData)) fail(OWNER_CONTACT_MISSING_MESSAGE);
   const homepage = validatePortfolio(input);
+  const sourceData = dependencies.checkPlaceId
+    ? (await refreshPlaceId(input.collectedData, dependencies.checkPlaceId, { force: true, now: (dependencies.now ?? (() => new Date()))() })).data
+    : input.collectedData;
   const pages: ResearchedSitePage[] = [];
   const heroFacts: HeroCapPageFacts[] = [];
 
   for (const sourceBrief of input.pageBriefs) {
     const brief = structuredClone(sourceBrief);
-    const generatedCopy = await dependencies.generateCopy(brief, structuredClone(input.collectedData), siteGenerationContext(pages, heroFacts));
+    const generatedCopy = await dependencies.generateCopy(brief, structuredClone(sourceData), siteGenerationContext(pages, heroFacts));
     assertBoundedGeneratedSiteCopy(generatedCopy, shapeOptions(brief));
     heroFacts.push(heroCapFacts(brief, generatedCopy));
     // M2b.1h: the pitch moves from the copy to the page record (stored, never rendered).
@@ -258,7 +268,7 @@ export async function buildResearchedSiteGeneration(
   }
 
   const graphEdges = structuredClone(input.graphEdges);
-  const collectedData = structuredClone(input.collectedData);
+  const collectedData = structuredClone(sourceData);
   const renderPages = dependencies.renderPages ?? renderResearchedSitePages;
   const rendered = renderPages({
     ...dependencies.renderInputs,

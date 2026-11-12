@@ -15,6 +15,7 @@ import {
   contacts,
   esc,
   escWithLatinIsolated,
+  jsonLdText,
   googleProfileUrl,
   type FooterProfileLink,
   leadFormSection,
@@ -400,7 +401,7 @@ function schemaGraph(page: ResearchedSitePage, data: CollectedData, siteUrl: str
     '@id': `${pageUrl(cleanUrl, output)}#faq`,
     mainEntity: faq.map(item => ({ '@type': 'Question', name: item.q, acceptedAnswer: { '@type': 'Answer', text: item.a } })),
   });
-  return `<script type="application/ld+json">${JSON.stringify({ '@context': 'https://schema.org', '@graph': graph })}</script>`;
+  return `<script type="application/ld+json">${jsonLdText({ '@context': 'https://schema.org', '@graph': graph })}</script>`;
 }
 
 /** Link anchor text (C1): the plain service name; the business name for the homepage. */

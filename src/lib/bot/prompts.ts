@@ -90,6 +90,12 @@ export interface CollectedData {
   hasGoogleBusiness?: boolean;
   websiteUri?: string; // Site Bot M1: the GBP websiteUri (owner-confirmed on the intake card); slug source, existing-domain input for M4
   googleMapsUrl?: string; // GBP / Google Maps listing URL; feeds researched-site schema sameAs only when present (not collected yet)
+    // Site Bot build step 6 writes the owner-authorised GBP `metadata.mapsUri` here; it then overrides the placeId-built
+    // URL (Yonatan C5). Never the Places `googleMapsUri` (Places content, not storable).
+  placeId?: string; // Site Bot intake: the Places place_id of the GBP the owner picked. The ONLY Places field we may keep
+    // indefinitely (Places policies). Builds the researched-site Google-profile link + sameAs (renderSitePages.googleProfileUrl).
+  placeIdCheckedAt?: string; // ISO time of the last id-only Place Details re-check (site-bot/placeIdRefresh.ts, C4).
+  placeIdNeedsRematch?: boolean; // true = the last re-check returned NOT_FOUND: placeId was dropped, staff must re-match.
   gbpVerified?: boolean; // true = client's GBP listing already shows on Maps/Search (fast-track
     // Manager-access onboarding); false = not yet claimed/verified (needs owner-driven Google
     // verification before WAO's GBP tooling can connect). Only meaningful when hasGoogleBusiness

@@ -113,6 +113,8 @@ function harness({ authorized = true, simulation = false, target = 'absent', dos
     },
     '@/lib/deployment/deploy-access': { isSafeDeploymentSlug: slug => slug === 'synthetic-site' },
     '@/lib/site-bot/siteSlug': siteSlug,
+    // Yonatan C4: the route passes a place_id checker; the stub never touches the network (or process.env).
+    '@/lib/site-bot/placeIdRefresh': { createPlaceIdChecker: () => async () => ({ status: 'unknown', reason: 'stub' }) },
     '@/lib/site-bot/researchedSiteGeneration': {
       ownerContactMissing, OWNER_CONTACT_MISSING, OWNER_CONTACT_MISSING_MESSAGE,
       assertResearchedGenerationReady: (actual, researchId) => {
@@ -142,6 +144,7 @@ function harness({ authorized = true, simulation = false, target = 'absent', dos
         assert.equal(input.graphEdges.length, 0);
         assert.equal(typeof dependencies.generateCopy, 'function');
         assert.equal(dependencies.renderInputs.siteUrl, 'https://synthetic-site.wao.co.il');
+        assert.equal(typeof dependencies.checkPlaceId, 'function', 'the C4 place_id re-check is wired');
         if (failure === 'copy') throw new Error('synthetic copy failure: private detail');
         if (failure === 'validation') throw new SyntheticCopyValidationError();
         return record;

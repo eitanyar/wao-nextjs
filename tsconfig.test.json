@@ -245,6 +245,8 @@
     "src/lib/site-bot/siteSlug.test.ts",
     "src/lib/site-bot/startIntake.ts",
     "src/lib/site-bot/startIntake.test.ts",
+    "src/lib/site-bot/placeIdRefresh.ts",
+    "src/lib/site-bot/placeIdRefresh.test.ts",
     "src/lib/site-bot/ownerIntake.ts",
     "src/lib/site-bot/ownerIntake.test.ts",
     "src/lib/site-bot/intakeOwnerCopy.ts",

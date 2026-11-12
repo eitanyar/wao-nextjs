@@ -14,6 +14,7 @@ import { VERTICAL_ASSETS } from '@/lib/lp/verticalAssets';
 import { ADMIN_COOKIE_NAME, verifyAdminToken } from '@/lib/admin-auth';
 import { isSafeDeploymentSlug } from '@/lib/deployment/deploy-access';
 import { deriveSiteSlug } from '@/lib/site-bot/siteSlug';
+import { createPlaceIdChecker } from '@/lib/site-bot/placeIdRefresh';
 import {
   assertResearchedGenerationReady,
   buildResearchedSiteGeneration,
@@ -201,6 +202,8 @@ export async function POST(req: Request) {
         heroImageUrl,
         siteUrl: `https://${slug}.wao.co.il`,
       },
+      // Yonatan C4: re-check the stored place_id (id-only Place Details); NOT_FOUND drops the profile link + sameAs.
+      checkPlaceId: createPlaceIdChecker(),
     });
 
     step = 'persist';

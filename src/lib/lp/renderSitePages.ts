@@ -91,22 +91,25 @@ export function buildLandingPageSupportPages(o: { theme: VerticalTheme; data: Co
 export function renderSitePages(p: RenderSitePagesParams): Record<string, string> {
   const siteUrl = p.siteUrl.replace(/\/$/, '');
   const exempt = isAccessibilityExempt(p.data.vatStatus);
+  // Launch step 2 (capability 9): the legal pages' footers carry the same Google-profile row as every other page.
+  const profileRow = footerProfileRow(p.theme, p.footerProfileLink);
+  const legalExtra = { ...(p.researched ? { pipeTitle: true, prefixRule: true } : {}), ...(profileRow ? { footerProfileRow: profileRow } : {}) };
 
   const pages: Record<string, string> = {
     'index.html': buildIndexHtml(p, siteUrl),
     'about.html': buildAboutHtml(p, siteUrl),
     'services.html': buildServicesHtml(p, siteUrl),
     'contact.html': buildContactHtml(p, siteUrl),
-    'privacy.html': buildPrivacyHtml({ theme: p.theme, data: p.data, canonicalUrl: servedUrl(siteUrl, 'privacy.html'), homeHref: '/', fraudBlockerSid: p.fraudBlockerSid, ...(p.researched ? { pipeTitle: true, prefixRule: true } : {}) }),
+    'privacy.html': buildPrivacyHtml({ theme: p.theme, data: p.data, canonicalUrl: servedUrl(siteUrl, 'privacy.html'), homeHref: '/', fraudBlockerSid: p.fraudBlockerSid, ...legalExtra }),
     'sitemap.xml': buildSitemap(siteUrl),
     // M4 step 0: a real 404 (Pages serves it with status 404 for unknown paths, instead of the homepage with 200).
-    '404.html': buildNotFoundHtml({ theme: p.theme, data: p.data, homeHref: '/', fraudBlockerSid: p.fraudBlockerSid, ...(p.researched ? { pipeTitle: true, prefixRule: true } : {}) }),
+    '404.html': buildNotFoundHtml({ theme: p.theme, data: p.data, homeHref: '/', fraudBlockerSid: p.fraudBlockerSid, ...legalExtra }),
   };
 
   // No exemption exists for the privacy page — always built. Accessibility
   // is gated: absent entirely (not a stub) when the client is exempt.
   if (!exempt) {
-    pages['accessibility.html'] = buildAccessibilityHtml({ theme: p.theme, data: p.data, canonicalUrl: servedUrl(siteUrl, 'accessibility.html'), homeHref: '/', fraudBlockerSid: p.fraudBlockerSid, ...(p.researched ? { pipeTitle: true, prefixRule: true } : {}) });
+    pages['accessibility.html'] = buildAccessibilityHtml({ theme: p.theme, data: p.data, canonicalUrl: servedUrl(siteUrl, 'accessibility.html'), homeHref: '/', fraudBlockerSid: p.fraudBlockerSid, ...legalExtra });
   }
 
   return pages;
@@ -223,9 +226,14 @@ function researchNavBar(t: VerticalTheme, o: ResearchNavOptions): string {
  * The footer. Launch step 2 (capability 9): with `profile`, the Google-profile link opens the footer, in its own row above
  * the legal links (data-footer-profile: the redesign's footer NAP block, Yonatan condition 10, takes this row as it is).
  */
-export function footerBadge(t: VerticalTheme, exempt: boolean, profile?: FooterProfileLink): string {
-  const profileRow = profile ? `
+/** The footer's Google-profile row (data-footer-profile), '' without a profile. One markup for every footer, the legal pages included. */
+export function footerProfileRow(t: VerticalTheme, profile?: FooterProfileLink): string {
+  return profile ? `
     <div data-footer-profile style="margin-bottom:4px;display:flex;justify-content:center;"><a href="${esc(profile.href)}" style="display:inline-flex;align-items:center;min-height:44px;padding:0 8px;color:${t.textMuted};text-decoration:underline;">${escWithLatinIsolated(profile.label)}</a></div>` : '';
+}
+
+export function footerBadge(t: VerticalTheme, exempt: boolean, profile?: FooterProfileLink): string {
+  const profileRow = footerProfileRow(t, profile);
   return `  <footer style="text-align:center;padding:24px 20px 32px;background:${t.surface};border-top:1px solid ${t.border};font-size:0.8rem;color:${t.textMuted};">${profileRow}
     <div style="margin-bottom:4px;display:flex;flex-wrap:wrap;gap:4px 6px;justify-content:center;">
       <a href="/privacy" style="display:inline-flex;align-items:center;min-height:44px;padding:0 8px;color:${t.textMuted};">מדיניות פרטיות</a>
@@ -318,12 +326,53 @@ export interface LocalBusinessSchemaOptions {
 
 const MAPS_URL = /^https:\/\/(?:(?:www\.)?google\.[a-z.]+\/maps|maps\.google\.[a-z.]+|maps\.app\.goo\.gl|g\.page|share\.google)\//i;
 
+/** Yonatan C3: a place_id we may build a link from. Anything else (e.g. `fixture-...` test ids) renders no link and no sameAs. */
+export const PLACE_ID_FORMAT = /^[A-Za-z0-9_-]{10,}$/;
+/** Yonatan C2: cap on the Maps URLs `query` (code points; the whole URL limit is 2,048). */
+export const MAPS_QUERY_MAX_CHARS = 100;
+
+/** True when the id may reach production output (C3): the documented format and never a `fixture-` id. */
+export function isUsablePlaceId(placeId: unknown): placeId is string {
+  return typeof placeId === 'string' && PLACE_ID_FORMAT.test(placeId) && !/^fixture/i.test(placeId);
+}
+
+function mapsQuery(value: string | undefined): string {
+  const clean = (value ?? '').replace(/\s+/g, ' ').trim();
+  return Array.from(clean).slice(0, MAPS_QUERY_MAX_CHARS).join('').trim();
+}
+
 /**
- * The owner's Google profile / Maps URL when it is one (MAPS_URL), else ''. One source for the schema sameAs and the visible
- * profile links (launch step 2, capability 9), so the two never differ.
+ * Yonatan C1/C2: the Maps URLs search link for a place_id. `query` = the owner-confirmed business name from intake (never a
+ * stored Places displayName); without one, a generic category + city query from intake. Built with URL/searchParams only
+ * (spaces become `+`, Hebrew is percent-encoded), never by hand. '' when the id is not usable (C3) or there is no query.
  */
-export function googleProfileUrl(data: Pick<CollectedData, 'googleMapsUrl'>): string {
-  return typeof data.googleMapsUrl === 'string' && MAPS_URL.test(data.googleMapsUrl.trim()) ? data.googleMapsUrl.trim() : '';
+export function buildPlaceIdMapsUrl(data: Pick<CollectedData, 'placeId' | 'businessName' | 'businessNiche' | 'targetLocation'>): string {
+  const placeId = typeof data.placeId === 'string' ? data.placeId.trim() : '';
+  if (!isUsablePlaceId(placeId)) return '';
+  const query = mapsQuery(data.businessName) || mapsQuery([data.businessNiche, data.targetLocation].map(v => (v ?? '').trim()).filter(Boolean).join(' '));
+  if (!query) return '';
+  const url = new URL('https://www.google.com/maps/search/');
+  url.searchParams.set('api', '1');
+  url.searchParams.set('query', query);
+  url.searchParams.set('query_place_id', placeId);
+  const href = url.toString();
+  return MAPS_URL.test(href) ? href : '';
+}
+
+/**
+ * The business's Google profile URL, else ''. One source for the schema sameAs and the visible profile links (launch step 2,
+ * capability 9), so the two never differ. Priority (Yonatan C5): the GBP `metadata.mapsUri` that build step 6 stores in
+ * googleMapsUrl (allowlisted by MAPS_URL), then the URL built from the stored place_id (buildPlaceIdMapsUrl). Never the
+ * Places `googleMapsUri`. A place_id that came back NOT_FOUND is already removed from the record (site-bot/placeIdRefresh.ts, C4).
+ */
+export function googleProfileUrl(data: Pick<CollectedData, 'googleMapsUrl' | 'placeId' | 'businessName' | 'businessNiche' | 'targetLocation'>): string {
+  if (typeof data.googleMapsUrl === 'string' && MAPS_URL.test(data.googleMapsUrl.trim())) return data.googleMapsUrl.trim();
+  return buildPlaceIdMapsUrl(data);
+}
+
+/** JSON for an inline <script type="application/ld+json">: `</` is written `<\/` so no value can close the script element. */
+export function jsonLdText(value: unknown): string {
+  return JSON.stringify(value).replace(/<\//g, '<\\/');
 }
 
 /** Escaped text with each Latin run (a brand such as Google) in its own <bdi>, so it never reorders the Hebrew around it. */
@@ -392,7 +441,7 @@ export function localBusinessSchema(data: CollectedData, businessName: string, s
     ...localBusinessObject(data, businessName, siteUrl, ogImage, options),
   };
 
-  return `<script type="application/ld+json">${JSON.stringify(schema)}</script>`;
+  return `<script type="application/ld+json">${jsonLdText(schema)}</script>`;
 }
 
 export function pageHead(opts: {

@@ -720,3 +720,27 @@ test('canonical generation suite exercises synthetic actual-handler route cases'
   assert.match(output, /pass 9/);
   assert.match(output, /fail 0/);
 });
+test('Yonatan C4: generation re-checks the stored place_id; NOT_FOUND drops it from the rendered pages and the record', async () => {
+  const placeId = 'ChIJAbCdEfGhIjKlMnOpQrStUvW';
+  const checked: string[] = [];
+  let renderedData: CollectedData | undefined;
+  const deps = dependencies();
+  const record = await buildResearchedSiteGeneration(buildInput({ collectedData: { ...collectedData, placeId } }), {
+    ...deps,
+    renderPages: params => { renderedData = params.data; return renderResearchedSitePages(params); },
+    checkPlaceId: async id => { checked.push(id); return { status: 'not_found' as const }; },
+  });
+  assert.deepEqual(checked, [placeId], 'one id-only check per generation');
+  assert.equal(renderedData?.placeId, undefined);
+  assert.equal(record.collectedData.placeId, undefined);
+  assert.equal(record.collectedData.placeIdNeedsRematch, true);
+  assert.equal(record.collectedData.placeIdCheckedAt, timestamp);
+  const ok = await buildResearchedSiteGeneration(buildInput({ collectedData: { ...collectedData, placeId } }), {
+    ...deps,
+    checkPlaceId: async () => ({ status: 'ok' as const, placeId }),
+  });
+  assert.equal(ok.collectedData.placeId, placeId);
+  // No checker (tests, local re-renders): the record is untouched.
+  const none = await buildResearchedSiteGeneration(buildInput({ collectedData: { ...collectedData, placeId } }), deps);
+  assert.deepEqual(none.collectedData, { ...collectedData, placeId });
+});

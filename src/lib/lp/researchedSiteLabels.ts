@@ -61,8 +61,8 @@ export const RESEARCHED_PROFILE_LINK_LABELS: Readonly<{
   /** Link text, homepage and footer: the business on Google (opens its Google profile / Maps listing). Latin "Google" is isolated in <bdi> by the renderer. */
   googleProfileLink: string;
 }> = {
-  googleProfileLink: '__HE_TODO_googleProfileLink__ Link text: see this business on Google (opens its Google profile / Maps listing, where its reviews are)',
+  googleProfileLink: 'העסק שלי ב-Google',
 };
 
 /** True while the profile-link label is a placeholder: no profile link renders. */
-export const RESEARCHED_PROFILE_LINK_LABELS_PENDING_COPY = true;
+export const RESEARCHED_PROFILE_LINK_LABELS_PENDING_COPY = false;

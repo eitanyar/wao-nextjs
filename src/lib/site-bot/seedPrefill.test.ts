@@ -95,10 +95,13 @@ describe('seedFromPrefillSnapshot (M1)', () => {
     assert.equal(seeded.websiteUri, 'https://www.fixture-plumbing.example/');
     for (const key of ['starRating', 'reviewCount', 'reviewQuote']) assert.equal(key in seeded, false, key);
     assert.equal(seeded.hasGoogleBusiness, true);
+    // The place_id is the one Places field we may keep (Yonatan C1-C5); never the Places googleMapsUri.
+    assert.equal(seeded.placeId, 'fixture-place-1');
+    assert.equal('googleMapsUrl' in seeded, false);
   });
 
   it('a bare snapshot seeds only what it has', () => {
     const seeded = seedFromPrefillSnapshot({ placeId: 'p', displayName: 'Bare', formattedAddress: '', types: [] });
-    assert.deepEqual(seeded, { businessName: 'Bare', serviceModel: 'field', hasGoogleBusiness: true });
+    assert.deepEqual(seeded, { businessName: 'Bare', serviceModel: 'field', hasGoogleBusiness: true, placeId: 'p' });
   });
 });

@@ -78,6 +78,9 @@ describe('startIntake: mapping', () => {
     assert.equal(data.usp, answers.usp);
     for (const key of ['reviewQuote', 'starRating', 'reviewCount']) assert.equal(key in data, false, key);
     assert.equal(data.hasGoogleBusiness, true);
+    // The picked GBP's place_id rides on the intake record (evidence, never edited by the owner).
+    assert.equal(evidence.placeId, 'fixture-place-1');
+    assert.equal(data.placeId, 'fixture-place-1');
     // Plumber is not a fixed-location type: field service, so no street address is published.
     assert.equal(data.serviceModel, 'field');
     assert.equal(data.streetAddress, undefined);

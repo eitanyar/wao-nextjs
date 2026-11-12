@@ -15,6 +15,7 @@ import {
   claimsNeedingCheck, isStaffClaimCheck, parseClaimVerification, researchedClaimBlockers, unverifiedClaims, UnverifiedClaimError, warrantyFromFixedChip,
 } from './claimVerification';
 import { WARRANTY_PICKER_VALUES } from '../site-bot/credentialsCopy';
+import { buildPlaceIdMapsUrl, escWithLatinIsolated, googleProfileUrl, isUsablePlaceId, jsonLdText, MAPS_QUERY_MAX_CHARS } from './renderSitePages';
 
 const T = OWNER_FACT_TEMPLATES;
 const HE_CITY = RESEARCHED_SITE_LABELS.serviceAreasHeading;
@@ -179,4 +180,110 @@ test('capability 9: with an approved label the homepage and every page footer li
     const out = render(pages, { ...data, googleMapsUrl: url }, { profileLinkCopy: standIn });
     for (const html of Object.values(out)) assert.ok(!html.includes('data-google-profile') && !html.includes('data-footer-profile'), String(url));
   }
+});
+
+// ---- Capability 9 from a stored place_id (Yonatan C1-C5): the Maps URLs search link. ----
+
+const PLACE = 'ChIJAbCdEfGhIjKlMnOpQrStUvW';
+
+test('C2: the place_id link is built with URL/searchParams: api=1, the owner name as query, query_place_id; spaces as +, Hebrew percent-encoded', () => {
+  const name = HE_CITY; // live Hebrew with a space (read from the labels, never typed)
+  const href = buildPlaceIdMapsUrl({ placeId: PLACE, businessName: `  ${name}  ` });
+  const url = new URL(href);
+  assert.equal(`${url.origin}${url.pathname}`, 'https://www.google.com/maps/search/');
+  assert.deepEqual([...url.searchParams.keys()], ['api', 'query', 'query_place_id']);
+  assert.equal(url.searchParams.get('api'), '1');
+  assert.equal(url.searchParams.get('query'), name, 'trimmed owner name');
+  assert.equal(url.searchParams.get('query_place_id'), PLACE);
+  assert.ok(!/[\u0590-\u05ff\s]/.test(href), 'no raw Hebrew or whitespace in the href');
+  assert.ok(href.includes(`query=${name.split(' ').map(encodeURIComponent).join('+')}&`), 'percent-encoded, space as +');
+  assert.equal(buildPlaceIdMapsUrl({ placeId: PLACE, businessName: 'Ben & Sons Plumbing' }), `https://www.google.com/maps/search/?api=1&query=Ben+%26+Sons+Plumbing&query_place_id=${PLACE}`);
+});
+
+test('C2: the query is capped at MAPS_QUERY_MAX_CHARS code points and the URL stays far under 2,048', () => {
+  const href = buildPlaceIdMapsUrl({ placeId: PLACE, businessName: HE_CITY.repeat(60) });
+  const query = new URL(href).searchParams.get('query')!;
+  assert.ok(Array.from(query).length <= MAPS_QUERY_MAX_CHARS);
+  assert.ok(HE_CITY.repeat(60).startsWith(query));
+  assert.ok(href.length < 2048);
+});
+
+test('C1: without an owner name the query is the intake category + city; no query at all = no link', () => {
+  const href = buildPlaceIdMapsUrl({ placeId: PLACE, businessName: ' ', businessNiche: 'plumber', targetLocation: 'Haifa' });
+  assert.equal(new URL(href).searchParams.get('query'), 'plumber Haifa');
+  assert.equal(buildPlaceIdMapsUrl({ placeId: PLACE, businessName: '' }), '');
+});
+
+test('C3: an invalid or fixture place_id renders no link and no sameAs', () => {
+  for (const placeId of [undefined, '', 'short', 'ChIJ with space xx', 'ChIJ<script>xxxxxx', '../../etc/passwdxx', 'fixture-place-1', 'fixture_place_abcdef']) {
+    assert.equal(buildPlaceIdMapsUrl({ placeId, businessName: 'TEST Biz' }), '', String(placeId));
+    assert.equal(isUsablePlaceId(placeId), false, String(placeId));
+  }
+  assert.equal(isUsablePlaceId(PLACE), true);
+  const data: CollectedData = { businessName: 'TEST Biz', businessNiche: 'plumber', phone: '050-0000000', placeId: 'fixture-place-1' };
+  const pages: ResearchedSitePage[] = [{ opportunityId: 'home', classification: 'homepage', targetPath: '/', copy: baseCopy('plumber'), seo: seo('plumber') }];
+  for (const html of Object.values(render(pages, data))) {
+    assert.ok(!html.includes('data-google-profile') && !html.includes('data-footer-profile') && !html.includes('"sameAs"'));
+  }
+});
+
+test('C5: the GBP mapsUri (googleMapsUrl, build step 6) overrides the place_id link; a non-Google URL never does', () => {
+  const data = { placeId: PLACE, businessName: 'TEST Biz' };
+  assert.equal(googleProfileUrl({ ...data, googleMapsUrl: MAPS }), MAPS);
+  assert.equal(googleProfileUrl({ ...data, googleMapsUrl: 'https://evil.example/maps/x' }), buildPlaceIdMapsUrl(data));
+  assert.equal(googleProfileUrl(data), buildPlaceIdMapsUrl(data));
+});
+
+test('capability 9 live label: the approved label renders on the homepage and every footer, Google in <bdi>, href == sameAs', () => {
+  assert.equal(RESEARCHED_PROFILE_LINK_LABELS_PENDING_COPY, false);
+  const labelHtml = escWithLatinIsolated(RESEARCHED_PROFILE_LINK_LABELS.googleProfileLink);
+  assert.ok(labelHtml.includes('<bdi>Google</bdi>'));
+  const data: CollectedData = { businessName: HE_CITY, businessNiche: 'plumber', phone: '050-0000000', placeId: PLACE };
+  const pages: ResearchedSitePage[] = [
+    { opportunityId: 'home', classification: 'homepage', targetPath: '/', copy: baseCopy('plumber'), seo: seo('plumber') },
+    { opportunityId: 'svc', classification: 'money_service', targetPath: '/services/leak-repair', copy: baseCopy('leak repair'), seo: seo('leak repair') },
+  ];
+  const files = render(pages, data);
+  const expected = buildPlaceIdMapsUrl(data);
+  const attr = expected.replace(/&/g, '&amp;');
+  const home = files['index.html'];
+  assert.ok(home.includes(`<a href="${attr}" data-google-profile`) && home.includes(`>${labelHtml}</a></section>`), 'home section');
+  for (const file of ['index.html', 'services/leak-repair.html', 'contact.html']) {
+    const row = /<div data-footer-profile[^>]*><a href="([^"]+)"[^>]*>(.*?)<\/a><\/div>/.exec(files[file]);
+    assert.ok(row, `${file}: footer row`);
+    assert.equal(row![1].replace(/&amp;/g, '&'), expected, `${file}: footer href`);
+    assert.equal(row![2], labelHtml, `${file}: footer label with <bdi>`);
+    assert.ok(!files[file].includes(HE_TODO_PREFIX));
+  }
+  const sameAs = /"sameAs":\["([^"]+)"\]/.exec(home)?.[1];
+  assert.equal(sameAs, expected, 'sameAs is the decoded href, byte for byte');
+});
+
+test('capability 9: every rendered page of a research site (all 7, the legal pages and 404 included) has the footer row; a fixture id gives none', () => {
+  const data: CollectedData = { businessName: HE_CITY, businessNiche: 'plumber', phone: '050-0000000', placeId: PLACE };
+  const pages: ResearchedSitePage[] = [
+    { opportunityId: 'home', classification: 'homepage', targetPath: '/', copy: baseCopy('plumber'), seo: seo('plumber') },
+    { opportunityId: 'svc', classification: 'money_service', targetPath: '/services/leak-repair', copy: baseCopy('leak repair'), seo: seo('leak repair') },
+    { opportunityId: 'svc2', classification: 'money_service', targetPath: '/services/drain-cleaning', copy: baseCopy('drain cleaning'), seo: seo('drain cleaning') },
+  ];
+  const files = render(pages, data);
+  const htmlFiles = Object.keys(files).filter(f => f.endsWith('.html')).sort();
+  assert.deepEqual(htmlFiles, ['404.html', 'accessibility.html', 'contact.html', 'index.html', 'privacy.html', 'services/drain-cleaning.html', 'services/leak-repair.html']);
+  const expected = buildPlaceIdMapsUrl(data);
+  const labelHtml = escWithLatinIsolated(RESEARCHED_PROFILE_LINK_LABELS.googleProfileLink);
+  for (const file of htmlFiles) {
+    assert.equal((files[file].match(/data-footer-profile/g) ?? []).length, 1, `${file}: exactly one footer row`);
+    const row = /<div data-footer-profile[^>]*><a href="([^"]+)"[^>]*>(.*?)<\/a><\/div>/.exec(files[file]);
+    assert.equal(row![1].replace(/&amp;/g, '&'), expected, `${file}: footer href`);
+    assert.equal(row![2], labelHtml, `${file}: footer label with <bdi>`);
+  }
+  const fixture = render(pages, { ...data, placeId: 'fixture-place-1' });
+  for (const file of Object.keys(fixture).filter(f => f.endsWith('.html'))) {
+    assert.ok(!fixture[file].includes('data-footer-profile') && !fixture[file].includes('data-google-profile'), `${file}: no row for a fixture id`);
+  }
+});
+
+test('JSON-LD: a `</` in any value is written `<\\/`, so it can never close the script element', () => {
+  assert.equal(jsonLdText({ name: 'a</script><b>' }), '{"name":"a<\\/script><b>"}');
+  assert.deepEqual(JSON.parse(jsonLdText({ name: 'a</script>' })), { name: 'a</script>' });
 });

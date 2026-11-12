@@ -44,6 +44,7 @@ import { buildSiteResearchInput } from './research/researchInput';
 import { readResearchDossier, writeResearchDossierAtomic } from './research/researchStore';
 import { runSiteResearch } from './research/runResearch';
 import { listedServedAreas } from './servedAreas';
+import { createPlaceIdChecker, type PlaceIdChecker } from './placeIdRefresh';
 import { transitionResearchStatus, type HumanGate, type NeuronQueryData, type PageOpportunity, type ResearchStatus, type SiteResearchDossier } from './research/types';
 import {
   assembleSiteIdentity,
@@ -509,6 +510,8 @@ export interface ResearchToSiteDependencies {
   generateCopy?: (brief: PageBrief, data: CollectedData, site?: ResearchedSiteGenerationContext) => Promise<SiteCopy>;
   onCopyEvent?: (pageId: string, event: CopyRepairEvent) => void;
   now?: () => Date;
+  /** Yonatan C4: the id-only place_id re-check before generation. Default: the live checker (no-op without PLACES_API_KEY); null = off. */
+  checkPlaceId?: PlaceIdChecker | null;
 }
 
 export type ResearchToSiteOutcome =
@@ -586,6 +589,7 @@ export async function runResearchToSite(input: ResearchToSiteInput, deps: Resear
       },
       renderInputs: researchedRenderInputs(collectedData, slug),
       now,
+      ...(deps.checkPlaceId === null ? {} : { checkPlaceId: deps.checkPlaceId ?? createPlaceIdChecker() }),
     });
   } catch (error) {
     if (error instanceof GeneratedCopyValidationError) {

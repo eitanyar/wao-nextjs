@@ -92,5 +92,9 @@ export function seedFromPrefillSnapshot(snapshot: PrefillSnapshot): Partial<Coll
   if (hours) result.businessHours = hours;
   if (snapshot.websiteUri) result.websiteUri = snapshot.websiteUri;
   result.hasGoogleBusiness = true;
+  // Google-profile link (Yonatan C1-C5): the place_id is the only Places field we may store indefinitely.
+  // Never the displayName copy or the Places googleMapsUri: the link's query is the owner-confirmed card name.
+  const placeId = snapshot.placeId?.trim();
+  if (placeId) result.placeId = placeId;
   return result;
 }

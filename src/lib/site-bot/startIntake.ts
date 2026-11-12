@@ -35,6 +35,12 @@ export interface IntakeCard {
 /** Facts carried into collectedData that the owner never edits. No Places rating/review content (M1 decision). */
 export interface IntakeEvidence {
   hasGoogleBusiness?: boolean;
+  /**
+   * The Places place_id of the picked GBP (seedFromPrefillSnapshot): the only Places field we may store indefinitely.
+   * Carried to collectedData.placeId for the site's Google-profile link + sameAs (renderSitePages.googleProfileUrl), whose
+   * query is the owner-confirmed card businessName (Yonatan C1), never the Places displayName.
+   */
+  placeId?: string;
 }
 
 export type IntakeQuestionKey = 'priorityServices' | 'travelBoundary' | 'usp';
@@ -80,6 +86,8 @@ export function intakeFromSeed(seed: Partial<CollectedData> | undefined): { card
   }
   const evidence: IntakeEvidence = {};
   if (seed.hasGoogleBusiness) evidence.hasGoogleBusiness = true;
+  const placeId = seed.placeId?.trim();
+  if (placeId) evidence.placeId = placeId;
   return { card, evidence };
 }
 
@@ -162,6 +170,7 @@ export function buildIntakeCollectedData(card: IntakeCard, evidence: IntakeEvide
     ...(hours ? { businessHours: hours } : {}),
     ...(website ? { websiteUri: website } : {}),
     ...(evidence.hasGoogleBusiness ? { hasGoogleBusiness: true } : {}),
+    ...(evidence.placeId?.trim() ? { placeId: evidence.placeId.trim() } : {}),
     // The optional credentials step: yearsInField / license / guarantee (the licence only for licensed trades).
     ...credentialsCollectedFields(answers.credentials, niche),
     // Launch step 1: the owner's private contact (ownerContact) and the domain answer (domainChoice / ownerDomain),

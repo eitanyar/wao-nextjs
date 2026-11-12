@@ -43,6 +43,11 @@ interface LegalPageOpts {
    * this flag no longer changes the output; kept so existing callers stay valid.
    */
   prefixRule?: boolean;
+  /**
+   * Launch step 2 (capability 9): the footer's Google-profile row, pre-rendered by renderSitePages footerProfileRow (one
+   * markup for every footer; the href comes from googleProfileUrl). Unset = no row (legacy markup unchanged).
+   */
+  footerProfileRow?: string;
 }
 
 /**
@@ -129,7 +134,7 @@ function legalDocument(opts: LegalPageOpts, title: string, bodyHtml: string, hea
     ${bodyHtml}
     <p style="margin-top:32px;"><a href="${homeHref}" style="display:inline-flex;align-items:center;min-height:44px;">${LEGAL_HOME_LINK_TEXT}</a></p>
   </main>
-  <footer style="text-align:center;padding:14px 20px 22px;background:${t.surface};border-top:1px solid ${t.border};font-size:0.8rem;color:${t.textMuted};">
+  <footer style="text-align:center;padding:14px 20px 22px;background:${t.surface};border-top:1px solid ${t.border};font-size:0.8rem;color:${t.textMuted};">${opts.footerProfileRow ?? ''}
     <a href="https://wao.co.il" style="display:inline-flex;align-items:center;gap:0.3em;min-height:44px;padding:0 8px;color:${t.textMuted};text-decoration:none;">נבנה עם <strong>WAO</strong> 🚀</a>
   </footer>
 </body>
