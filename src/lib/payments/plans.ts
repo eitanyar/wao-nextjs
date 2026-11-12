@@ -51,6 +51,13 @@ export const SITE_BOT_PLAN: BillingPlan = Object.freeze({
   chargeDescription: 'WAO Site Bot — בניית אתר',
 } as const);
 
+/**
+ * Ads Bot (Google Ads management): the monthly management fee before VAT, in ILS, as quoted on /google-ads
+ * ("249 + VAT a month"; the ad budget is paid to Google separately). Not a BillingPlan yet: Ads Bot checkout is not
+ * built on this module. The /google-ads copy and JSON-LD read the price from here (src/lib/google-ads/landingCopy.ts).
+ */
+export const ADS_BOT_MONTHLY_NET_ILS = 249;
+
 const PLANS: Readonly<Record<BillingPlan['id'], BillingPlan>> = Object.freeze({ 'site-bot': SITE_BOT_PLAN });
 
 export function getBillingPlan(id: string | null | undefined): BillingPlan | null {

@@ -167,6 +167,16 @@ test('pending copy: the homepage-copy trial_line stays unrendered until Tamar re
 
 /** The approved pay-page copy (waocopy -> Noa 2026-11-11). checkoutCopy.ts must match their union byte for byte. */
 const CHECKOUT_COPY_SOURCES = ['docs/copy/site-bot-checkout-199-2026-11-11.json', 'docs/copy/site-bot-pay-terms-lines-2026-11-11.json'];
+/** The 2026-11-12 terms section 6 + pay domain line (`key :: value` lines); its domainLine supersedes the JSON above. */
+const DOMAIN_LINE_FINAL_SOURCE = 'docs/copy/site-bot-terms-s6-and-checkout-final-2026-11-12.txt';
+
+function finalCopyFields(file: string): Record<string, string> {
+  return Object.fromEntries(fs.readFileSync(path.join(root, file), 'utf8').split('\n').filter(Boolean).map(line => {
+    const at = line.indexOf(' :: ');
+    assert.ok(at > 0, line);
+    return [line.slice(0, at), line.slice(at + 4)];
+  }));
+}
 /** Keys that carry a non-number token, rendered as an element by the pay client (not by siteBotCheckoutText). */
 const LINK_TOKEN_KEYS = ['termsConsent'];
 
@@ -179,6 +189,8 @@ test('checkout copy: byte-exact from the approved docs/copy source; the numbers 
       approved[key] = value;
     }
   }
+  // domainLine: the 2026-11-12 final file supersedes the 2026-11-11 pay-terms-lines value (own domain first).
+  approved.domainLine = finalCopyFields(DOMAIN_LINE_FINAL_SOURCE)['checkout.domainLine.new'];
   assert.deepEqual({ ...SITE_BOT_CHECKOUT_COPY }, approved);
   assert.deepEqual(Object.keys(SITE_BOT_CHECKOUT_COPY).sort(),
     ['domainLine', 'pageSubheading', 'payButton', 'priceSuffix', 'priceTotalLine', 'termsCancelOnline', 'termsConsent', 'termsLinkLabel', 'termsNoCommitment']);
@@ -213,12 +225,13 @@ test('checkout copy: byte-exact from the approved docs/copy source; the numbers 
   // The consent link opens a new tab safely and marks it with an aria-hidden north-east arrow after the label.
   assert.match(client, /href=\{SITE_BOT_TERMS_PATH\} target="_blank" rel="noopener noreferrer"/);
   assert.match(client, /\{renderMixed\(termsConsent\.linkLabel\)\}\s*<span aria-hidden="true">\u2197<\/span>\s*<\/a>/);
-  // Domain policy 2026-11-11 (client buys, WAO connects): domainLine is the patch's new pay line, and the pay-terms file agrees.
+  // Domain policy 2026-11-12 (own domain from the start, else a WAO address first): domainLine is the final file's
+  // line, byte for byte, and neither earlier pay line (2026-11-11 client-buys patch old / new) survives.
   const domainPatch = JSON.parse(fs.readFileSync(path.join(root, 'docs/copy/site-bot-domain-client-buys-2026-11-11.json'), 'utf8'))
     .patches.find((p: { file: string }) => p.file === 'src/lib/site-bot/checkout/checkoutCopy.ts');
-  assert.equal(SITE_BOT_CHECKOUT_COPY.domainLine, domainPatch.new);
+  assert.equal(SITE_BOT_CHECKOUT_COPY.domainLine, finalCopyFields(DOMAIN_LINE_FINAL_SOURCE)['checkout.domainLine.new']);
   assert.notEqual(SITE_BOT_CHECKOUT_COPY.domainLine, domainPatch.old);
-  assert.equal(approved.domainLine, domainPatch.new);
+  assert.notEqual(SITE_BOT_CHECKOUT_COPY.domainLine, domainPatch.new);
 });
 
 test('customer pages never render a __HE_TODO_ placeholder: customerVisibleLabel hides it; the pay client renders only through it', () => {

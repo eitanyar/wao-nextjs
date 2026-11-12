@@ -1,5 +1,5 @@
 // /site-bot/terms renderer: numbered headings, mailto units, scrollable table regions, and the domain policy text.
-// HEBREW-SAFETY: zero Hebrew bytes. Every Hebrew expectation is read from the md source or the docs/copy patch file.
+// HEBREW-SAFETY: zero Hebrew bytes. Every Hebrew expectation is read from the md source or the docs/copy patch files.
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -93,10 +93,23 @@ test('tables: keyboard-focusable scroll region named by its section heading, wit
   assert.equal((css.match(/@container terms-table \(width < 520px\)/g) ?? []).length, 2, 'fade query matches the table min-width');
 });
 
-test('domain policy: section 6 is the client-buys text; the WAO-registers wording is gone; the status section is removed', () => {
+/** `key :: value` fields of a docs/copy final file. */
+function copyFields(relative) {
+  return Object.fromEntries(fs.readFileSync(local(relative), 'utf8').split('\n').filter(Boolean).map(line => {
+    const at = line.indexOf(' :: ');
+    assert.ok(at > 0, line);
+    return [line.slice(0, at), line.slice(at + 4)];
+  }));
+}
+
+test('domain policy: section 6 is the 2026-11-12 own-domain-first text; older wordings are gone; the status section is removed', () => {
   const patch = JSON.parse(fs.readFileSync(local('docs/copy/site-bot-domain-client-buys-2026-11-11.json'), 'utf8')).patches;
   const terms = patch.find(p => p.file === 'docs/legal/site-bot-terms-of-use.md');
-  assert.equal(source.split(terms.new).length - 1, 1);
+  const final = copyFields('docs/copy/site-bot-terms-s6-and-checkout-final-2026-11-12.txt');
+  // 2026-11-12 supersedes the 2026-11-11 client-buys paragraph (its "new" is the 11-12 "old").
+  assert.equal(final['terms.s6.p1.old'], terms.new);
+  assert.equal(source.split(final['terms.s6.p1.new']).length - 1, 1);
+  assert.ok(!source.includes(final['terms.s6.p1.old']));
   assert.ok(!source.includes(terms.old));
   // The two words of the old policy named in the brief ("we will register", "from our account"), taken from the old text.
   const oldWords = terms.old.split(' ');
@@ -109,7 +122,7 @@ test('domain policy: section 6 is the client-buys text; the WAO-registers wordin
     assert.ok(!html.includes(word), 'old domain wording rendered');
   }
   const section6 = TERMS.sections.find(s => s.id === 'section-6');
-  assert.equal(section6.blocks[0].inlines.map(r => r.text).join(''), terms.new);
+  assert.equal(section6.blocks[0].inlines.map(r => r.text).join(''), final['terms.s6.p1.new']);
   assert.ok(!TERMS.sections.some(s => s.id === 'section-21'));
   assert.ok(!/^### 21\./m.test(source));
 });

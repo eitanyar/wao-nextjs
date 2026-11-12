@@ -140,8 +140,8 @@ test('offer page CTAs carry only their static ref to the existing contact form',
   const contact = read('src/app/(app)/contact/page.tsx');
   const allOfferHrefs = [...offer.matchAll(/<Link\s+href="([^"]+)"/g)].map(([, href]) => href);
   const offerHrefs = allOfferHrefs.filter(href => href.startsWith('/contact'));
-  // Checkout is offline: the three primary CTAs go to the contact form, never /site-bot/start.
-  assert.deepEqual(offerHrefs, Array(3).fill('/contact?ref=site-bot-build#contact-form'));
+  // Checkout is offline: the "talk to Eitan" CTAs (hero + close, r2 2026-11-12) go to the contact form, never /site-bot/start.
+  assert.deepEqual(offerHrefs, Array(2).fill('/contact?ref=site-bot-build#contact-form'));
   assert.equal(offer.includes('/site-bot/start'), false);
   assert.equal(allOfferHrefs.filter(href => href === '/site-bot/audit').length, 2);
   for (const href of offerHrefs) {
