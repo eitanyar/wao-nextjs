@@ -113,11 +113,12 @@ export function ownerImageUrl(url: string | undefined | null): string {
 
 /** The redesign's class CSS, driven by custom properties from the theme. Pages append their own CSS after it. */
 export function siteCss(t: VerticalTheme): string {
-  const bar = `calc(${ACTION_BAR_HEIGHT_PX}px + env(safe-area-inset-bottom, 0px))`;
+  const bar = `calc(${ACTION_BAR_HEIGHT_PX + 1}px + env(safe-area-inset-bottom, 0px))`; // +1: the bar's top border
   return [
     siteFontFaceCss(),
     `:root{--primary:${t.primary};--cta:${ctaSolid(t)};--cta-text:${t.ctaText};--wa:${WHATSAPP_FILL};--wa-text:${WHATSAPP_TEXT};--surface:${t.surface};--surface-alt:${t.surfaceAlt};--text:${t.textPrimary};--muted:${t.textMuted};--border:${t.border};--accent-text:${t.accentText};--r-sm:8px;--r-md:12px;--bar-h:${bar};}`,
-    `html{scroll-padding-bottom:calc(${ACTION_BAR_HEIGHT_PX}px + 24px);}`,
+    'html{scroll-padding-bottom:calc(var(--bar-h) + 24px);}',
+    '.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;}',
     `body{font-family:${SITE_FONT_STACK};line-height:1.6;}`,
     'h1,h2,h3,button,input{font-family:inherit;}',
     // Never italicise Hebrew (item 4): no element of a generated site renders in italics.
@@ -151,6 +152,7 @@ export function siteCss(t: VerticalTheme): string {
     '.hero-cta{display:grid;gap:12px;margin-top:24px;}',
     // A visible ring keeps the call button distinct where the theme's CTA colour equals its primary colour.
     '.hero .btn-call{box-shadow:0 0 0 2px #fff;}',
+    '.hero .btn-call:focus-visible{outline-offset:4px;}',
     '.hero-note{color:rgba(255,255,255,0.9);font-size:0.9375rem;margin-top:12px;}',
     '.hero-note strong{font-weight:700;color:#fff;}',
     // Trust facts (item 8): a checked list on white, one column on mobile, four across on desktop.
@@ -226,7 +228,7 @@ export function siteHeader(o: SiteHeaderOptions): string {
   const nav = o.nav && o.nav.links.length
     ? `<nav class="site-nav" aria-label="${esc(o.nav.label)}">${o.nav.links.map(link => `<a${link.home ? ' class="nav-home"' : ''} href="${esc(link.href)}">${esc(link.text)}</a>`).join('')}</nav>`
     : '';
-  const call = o.phone ? `<a class="btn btn-call hdr-call" href="${o.phoneHref}"${o.callAttrs ? ` ${o.callAttrs}` : ''}>${icon('phone')}<bdi dir="ltr">${esc(o.phone)}</bdi></a>` : '';
+  const call = o.phone ? `<a class="btn btn-call hdr-call" href="${o.phoneHref}"${o.callAttrs ? ` ${o.callAttrs}` : ''}>${icon('phone')}<span class="sr-only">${esc(SITE_DESIGN_LABELS.barCall)} </span><bdi dir="ltr">${esc(o.phone)}</bdi></a>` : '';
   return `  <header class="site-hdr"><div class="wrap">${brand}${nav}${call}</div></header>`;
 }
 

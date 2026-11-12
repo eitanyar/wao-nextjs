@@ -208,7 +208,7 @@ test('M2b.1b: research nav uses same-page anchors that exist, an aria-label, 44p
     assert.match(style, /display:inline-block;padding:12px 8px;min-height:44px;color:#A82E00;text-decoration:underline;/);
   }
   // Redesign A: the header call button (shown from the desktop breakpoint; the action bar owns the call on mobile).
-  assert.match(home, /<a class="btn btn-call hdr-call" href="tel:050-0000000"><svg class="ic" aria-hidden="true"[^>]*><use href="#i-phone"\/><\/svg><bdi dir="ltr">050-0000000<\/bdi><\/a>/);
+  assert.match(home, /<a class="btn btn-call hdr-call" href="tel:050-0000000"><svg class="ic" aria-hidden="true"[^>]*><use href="#i-phone"\/><\/svg><span class="sr-only">[^<]+ <\/span><bdi dir="ltr">050-0000000<\/bdi><\/a>/);
   assert.match(home, /\.site-hdr \.hdr-call\{display:none;\}/);
   assert.match(home, /a:focus-visible, button:focus-visible, summary:focus-visible, input:focus-visible \{ outline: 3px solid #0D1B2A; outline-offset: 2px; \}/);
   assert.match(home, /--cta-text:#FFFFFF;/, 'hero call uses ctaText');

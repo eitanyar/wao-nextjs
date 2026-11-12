@@ -137,7 +137,6 @@ ${skipLink()}
 ${siteHeader({ businessName, phone, phoneHref, nav: p.siteNav, homeHref: p.siteNav ? '/' : null, callAttrs: phoneClick })}
 
   <main id="main">
-  <!-- Hero (Redesign A item 7: solid primary, start-aligned, no stock image) -->
   <section class="hero on-dark" data-section="hero">
     <div class="hero-grid">
       <div class="hero-text">
