@@ -41,7 +41,7 @@ export default async function ClientLeadsPage({
             הלידים שלי
           </h1>
           <p style={{ color: 'var(--muted)', maxWidth: '600px', lineHeight: 1.5 }}>
-            כל הפניות שנכנסו מהקמפיין שלך — כולל לחיצות על טלפון ווואטסאפ. סמן ליד איכותי, ועדכן כשסגרת עסקה.
+            סמן אם הפנייה אמיתית או לא, ועדכן כשסגרת עסקה.
           </p>
         </div>
         <Link href="/client/dashboard" className="btn-secondary" style={{ padding: '10px 20px', borderRadius: '8px', textDecoration: 'none', whiteSpace: 'nowrap' }}>

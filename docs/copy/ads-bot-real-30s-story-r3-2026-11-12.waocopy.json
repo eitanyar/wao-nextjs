@@ -1,0 +1,159 @@
+**Angle:** Problem-aware, high-sophistication tradesman who already paid Google for clicks and got sightseers — the deadpan hook says he got exactly what he bought, and Adam's A3 turn now names the ads bot, puts the enquiries from his page in one list on his phone, and hands him the marking; the switch stays designed-to, the ask stays a free demo on a sample business.
+
+```json
+{
+  "angle": "Problem-aware, high-sophistication tradesman who already paid Google for clicks and got sightseers: the deadpan hook says he got exactly what he bought, the turn names the ads bot and puts the enquiries from his page in one list on his phone where he marks what is real, and the campaign is designed to move from clicks to the enquiries he marks. He already spots time-wasters on the job, so the ad hands him the marking and lets real footage and short silences carry the rest; the ask is a free demo on a sample business.",
+  "story_in_one_line": "A tradesman who paid for clicks and got tourists meets the ads bot, sees the enquiries from his page in one list on his phone and marks what is real, and the campaign is designed to move from clicks to the real ones he marks.",
+  "ad_30": [
+    {
+      "beat": "R01",
+      "voice": "שילמת על קליקים בגוגל. [deadpan] קיבלת תיירים.",
+      "display": "שילמת על קליקים בגוגל. קיבלת תיירים.",
+      "caption": "קיבלת תיירים",
+      "shot": "B1",
+      "tag_why": "Deadpan on the punchline lands the tautology joke: he got exactly what he paid for, nothing more.",
+      "removable": false,
+      "alt": null
+    },
+    {
+      "beat": "R03",
+      "voice": "[calm] עם בוט מודעות, פניות מהדף נוחתות ברשימה אחת בטלפון שלך, ואתה מסמן מה אמיתי.",
+      "display": "עם בוט מודעות, פניות מהדף נוחתות ברשימה אחת בטלפון שלך, ואתה מסמן מה אמיתי.",
+      "caption": "אתה מסמן מה אמיתי",
+      "shot": "B3",
+      "tag_why": "[calm] per Adam's A3 ruling: the turn is said level, like a tradesman explaining the job, so the control lands without hype. A3 absorbs the old R02 product-name turn; one line, one list, one mark.",
+      "removable": false,
+      "alt": null
+    },
+    {
+      "beat": "R05",
+      "voice": "הקמפיין מתוכנן לעבור מקליקים לפניות אמיתיות.",
+      "display": "הקמפיין מתוכנן לעבור מקליקים לפניות אמיתיות.",
+      "caption": "מקליקים לפניות אמיתיות",
+      "shot": "B9",
+      "tag_why": "No tag; the designed-to claim, said flat like a tradesman proud of the work. מתוכנן until phase 2 is live and Roni-verified.",
+      "removable": false,
+      "alt": null
+    },
+    {
+      "beat": "R06",
+      "voice": "דמו חינם, על עסק לדוגמה.",
+      "display": "דמו חינם, על עסק לדוגמה.",
+      "caption": "דמו חינם",
+      "shot": "B8",
+      "tag_why": "No tag; a low-friction offer, said easy over coffee.",
+      "removable": false,
+      "alt": null
+    },
+    {
+      "beat": "R07",
+      "voice": "[excited] WAO. בוט מודעות, מאתיים ארבעים ותשעה שקל פלוס מע״מ לחודש.",
+      "display": "WAO. בוט מודעות: 249 ₪ + מע״מ לחודש.",
+      "caption": "WAO. בוט מודעות",
+      "shot": "E1",
+      "tag_why": "Founder rule: the brand is said upbeat, [excited] directly before WAO.",
+      "removable": false,
+      "alt": null
+    }
+  ],
+  "ad_15": [
+    {
+      "beat": "R01",
+      "voice": "שילמת על קליקים בגוגל. [deadpan] קיבלת תיירים.",
+      "display": "שילמת על קליקים בגוגל. קיבלת תיירים.",
+      "caption": "קיבלת תיירים",
+      "shot": "B1",
+      "tag_why": "Deadpan punchline, same joke as the 30 compressed to its setup and pay-off.",
+      "removable": false,
+      "alt": null
+    },
+    {
+      "beat": "R02",
+      "voice": "[calm] עם בוט מודעות, פניות מהדף נוחתות ברשימה אחת בטלפון שלך, ואתה מסמן מה אמיתי.",
+      "display": "עם בוט מודעות, פניות מהדף נוחתות ברשימה אחת בטלפון שלך, ואתה מסמן מה אמיתי.",
+      "caption": "אתה מסמן מה אמיתי",
+      "shot": "B4",
+      "tag_why": "[calm] per Adam's A3 ruling, the same line as the 30s so the series says one thing; at this length the turn carries the product, the list and the mark in one breath.",
+      "removable": false,
+      "alt": null
+    },
+    {
+      "beat": "R03",
+      "voice": "[excited] WAO. בוט מודעות, מאתיים ארבעים ותשעה שקל פלוס מע״מ לחודש.",
+      "display": "WAO. בוט מודעות: 249 ₪ + מע״מ לחודש.",
+      "caption": "WAO. בוט מודעות",
+      "shot": "E1",
+      "tag_why": "Founder rule: brand upbeat, [excited] directly before WAO; price only in this last line.",
+      "removable": false,
+      "alt": null
+    }
+  ],
+  "ad_6": [
+    {
+      "beat": "R01",
+      "voice": "קליקים? [deadpan] תיירים.",
+      "display": "קליקים? תיירים.",
+      "caption": "קליקים? תיירים",
+      "shot": "B9",
+      "tag_why": "Deadpan lands the two-word joke; the card carries the clicks-to-tourists idea visually.",
+      "removable": false,
+      "alt": null
+    },
+    {
+      "beat": "R02",
+      "voice": "[excited] WAO. בוט מודעות.",
+      "display": "WAO. בוט מודעות: 249 ₪ + מע״מ לחודש.",
+      "caption": "WAO. בוט מודעות",
+      "shot": "E1",
+      "tag_why": "Founder rule: brand upbeat; price is shown on the end screen, not spoken at this length.",
+      "removable": false,
+      "alt": null
+    }
+  ],
+  "new_shots": [],
+  "flags": [
+    "R04 (the mark-goes-back-to-Google beat) is cut from every voiced cut per Adam's HOLD ruling, so Noa's replacement wording is not used this round. The 30s arc now rides on the R03 to R05 cut. Beat IDs stay stable (R04 is absent, and R02 is absorbed into R03) so Dror's gates still map. Gate-ready wording when GA1 passes: פנייה שֶׁסִּימַנְתָּ אמיתית חוזרת לגוגל.",
+    "Wanted to promise the phone fills with real jobs and that Google already learns from his marks today; the facts support only a designed-to switch after enough real marks accumulate, so R05 says מתוכנן לעבור and no result is promised anywhere in the three cuts.",
+    "Paid-media gates (Dror): the end card shows ₪249 + מע״מ, so this asset cannot run as paid media until checkout exists and /google-ads shows exactly ₪249 + VAT; R05's designed-to claim also stays out of paid media until phase 2 is live and the landing page discloses the condition. Organic and owned channels until then. The end-card digits are unchanged; Noa's round-3 fix spells the price in words in the voice only.",
+    "B3 and B4 footage must show the new אמיתית / לא אמיתית labels (leads-mark-labels brief); until it ships, shoot demo footage with those labels. With A3 the voice says ואתה מסמן מה אמיתי and no cut says זבל anymore, so the spoken line and the screen labels now match.",
+    "תיירים is Eitan's ear call. If he rejects it, swap to סקרנים in R01 voice, display and caption across all three cuts. One word, no count change, joke intact.",
+    "The blocked-searches mechanism is still out: it needs his approval plus three conditions, and the punch budget has no room for it. Omitted rather than weakened.",
+    "Re-count, spoken tokens with tags and symbols excluded: ad_30 = 41, ad_15 = 30, ad_6 = 5. The price-in-words rewrite adds four written tokens to each price line with zero added airtime, since TTS already read 249 ₪ as words. On spoken time the 30s is two words shorter than round 2 (43 → 41); the 15s is nine words denser (21 → 30) because A3 replaces its five-word tap beat. Adam's ruling governs that density. If the 15s read runs long it goes back to Adam — I did not trim Dror's from-your-page fact to buy time.",
+    "A3 absorbs the old R02 turn into R03, so B2 (the bouncer visual) is no longer referenced in any cut. B3 carries the 30s turn, B4 the 15s. If B2 was already shot it is spare footage, not a missing asset. The bouncer metaphor itself is gone by Adam's ruling, not by my edit.",
+    "[calm] is Adam-approved for the A3 line. [excited] before WAO stays per the founder rule but still waits on Eitan's tone test (Noa); if he rejects it, the tag changes, not the words.",
+    "The voice-pron-test file must carry the same production strings: the A3 line and the price in words. Noa's round-3 list already asks for both; the only delta from her quoted A3 string is the added מהדף."
+  ],
+  "changes": [
+    {
+      "id": "ad_30.R02, ad_30.R03",
+      "why": "Adam's A3 ruling: Noa's [calm] line is the turn. It already carries the product name, the one list on the phone and the mark, so keeping the old R02 bouncer line beside it would say בוט מודעות twice and restate the list. R02 is absorbed; R03 keeps the beat ID and shot B3, so Dror's real-or-junk intent still maps to the same beat. Added מהדף under Adam's ear option to hold Dror's FROM YOUR PAGE fact. Display matches voice; caption is the mark, the gain. The bouncer and the spoken זבל go with the merge — flagged, not silently dropped."
+    },
+    {
+      "id": "ad_15.R02",
+      "why": "Same A3 line, verbatim plus מהדף, so both cuts say one thing. Replaces לחיצה אחת: אמיתית או זֶבֶל. Beat ID and shot B4 unchanged. Density jump flagged for the timing read."
+    },
+    {
+      "id": "ad_30.R07, ad_15.R03",
+      "why": "Noa, binding: price spelled in words in the voice — מאתיים ארבעים ותשעה שקל פלוס מע״מ לחודש. Display, caption, shot and tag_why byte-for-byte; the end card keeps the digits. [excited] stays, pending Eitan's tone test."
+    },
+    {
+      "id": "YELLOW: זבל in ad_30.R03 / ad_15.R02",
+      "why": "My call, resolved by A3: no spoken זבל survives in any cut, so the voice now matches the screen's אמיתית / לא אמיתית labels and the footage dependency is clean. The tradesman's edge stays where it was always strongest — the deadpan תיירים hook."
+    },
+    {
+      "id": "angle, story_in_one_line",
+      "why": "Updated to the A3 turn: no thumb, no bouncer, no one-tap claim. He marks what is real; the switch stays designed-to. Awareness stage and sophistication unchanged."
+    },
+    {
+      "id": "flags",
+      "why": "Re-counted all three cuts with the airtime note, recorded the R02 absorption and the orphaned B2, refreshed the footage-label flag (no spoken זבל left), corrected the price-line sentence in the paid-media flag, and added the [calm]/[excited] status and the pron-test string handoff. The HOLD, designed-to, תיירים and blocked-searches flags are otherwise verbatim."
+    },
+    {
+      "id": "ad_6.R01, ad_6.R02, ad_30.R01, ad_30.R05, ad_30.R06, ad_15.R01, new_shots",
+      "why": "Byte-for-byte. No item in any of the three reviews touches them. Noa's other fixes belong to the explainer, FAQ, how-it-works, article, nurture, pron-test and leads-page files; Dror's verdict here is SHIP; Yonatan's sign-off changes no anchor in this asset — בוט מודעות is the confirmed product name throughout."
+    }
+  ]
+}
+```
+
+→ Noa: proof the changed lines only — the A3 string with מהדף, the price in words, [calm] spacing. → Adam: the 15s is now nine spoken words denser; if the read runs long, it's your call, not a silent trim. → Eitan: tone test on [excited] before WAO, and the ear on תיירים. → Eitan-Dev: the pron-test file gets the A3 line with מהדף; the leads-page subtitle fixes live in their own deliverable, not here.

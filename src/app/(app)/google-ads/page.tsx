@@ -1,9 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import PhoneReveal from "@/components/PhoneReveal";
+import SiloNav from "@/components/SiloNav";
 import { renderMixed } from "@/lib/bidi";
 import { ADS_BOT_MONTHLY_NET_ILS } from "@/lib/payments/plans";
 import { GOOGLE_ADS_LANDING_COPY as COPY } from "@/lib/google-ads/landingCopy";
+import { GOOGLE_ADS_DEMO_HREF } from "@/lib/google-ads/links";
+import { HOW_IT_WORKS_COPY } from "@/lib/google-ads/howItWorksCopy";
 
 const CANONICAL = "https://www.wao.co.il/google-ads";
 
@@ -83,7 +86,7 @@ const schemas = [
   },
 ];
 
-const DEMO_HREF = "/google-ads/onboarding?demo=1&mode=test&clientId=google-ads-sandbox";
+const DEMO_HREF = GOOGLE_ADS_DEMO_HREF;
 
 export default function GoogleAdsPage() {
   const glass: React.CSSProperties = {
@@ -127,6 +130,7 @@ export default function GoogleAdsPage() {
         <div aria-hidden style={{ position: "absolute", inset: 0, background: "radial-gradient(ellipse 70% 55% at 50% 0%, rgba(74,227,181,0.08) 0%, transparent 70%)", pointerEvents: "none" }} />
         <div className="hero-grid" />
         <div className="wao-container" style={{ position: "relative", zIndex: 1, maxWidth: "860px" }}>
+          <SiloNav currentPath="/google-ads" />
           <div className="badge" style={{ marginBottom: "28px" }}>
             <span className="badge-dot" />
             {renderMixed(COPY.hero.badge)}
@@ -193,6 +197,12 @@ export default function GoogleAdsPage() {
               </li>
             ))}
           </ol>
+          {/* Mechanism anchor: reserved for /google-ads/how-it-works only (Yonatan r2 sign-off). */}
+          <p style={{ ...bodyStyle, marginTop: "24px" }}>
+            <Link href={HOW_IT_WORKS_COPY.hub_link.href} style={{ color: "var(--accent)", fontWeight: 700, textDecoration: "underline" }}>
+              {HOW_IT_WORKS_COPY.hub_link.anchor}
+            </Link>
+          </p>
         </div>
       </section>
 

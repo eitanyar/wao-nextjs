@@ -1,0 +1,579 @@
+Angle: n/a — TTS pronunciation test; round 3 is surgery only: Noa's explicit swaps/additions, full round-5 risk-list coverage, and the one stale estimate vehicle realigned to the binding fact fix, all inside Adam's rulings; every other line byte-for-byte.
+
+```json
+{
+  "angle": "n/a: pronunciation test",
+  "items": [
+    {
+      "n": 1,
+      "target": "Google company name in Hebrew letters (concept 1), plain",
+      "voice": "אתמול חיפשתי את העסק שלי בגוגל.",
+      "display": "אתמול חיפשתי את העסק שלי בגוגל.",
+      "risk": "May say GO-gel or stress the second syllable instead of GOO-gul."
+    },
+    {
+      "n": 2,
+      "target": "Google (concept 1), niqqud variant on בגוגל",
+      "voice": "אתמול חיפשתי את העסק שלי בְּגוּגֶל.",
+      "display": "אתמול חיפשתי את העסק שלי בגוגל.",
+      "risk": "Check the niqqud forces GOO-gel and does not spell out letters."
+    },
+    {
+      "n": 3,
+      "target": "Google Ads as said aloud in Israel, גוגל אדס (concept 2), plain",
+      "voice": "אני משלם לגוגל אדס כל חודש.",
+      "display": "אני משלם לגוגל אדס כל חודש.",
+      "risk": "אדס may be read E-des or a-DES instead of ads."
+    },
+    {
+      "n": 4,
+      "target": "Google Ads (concept 2), niqqud variant on אדס",
+      "voice": "אני משלם לגוגל אַדְס כל חודש.",
+      "display": "אני משלם לגוגל אדס כל חודש.",
+      "risk": "Check it reads ads as one short syllable, not Edess."
+    },
+    {
+      "n": 5,
+      "target": "Click singular, קליק (concept 3)",
+      "voice": "קליק אחד יכול לעלות כמה שקלים.",
+      "display": "קליק אחד יכול לעלות כמה שקלים.",
+      "risk": "קליק may be read ka-LIK; check klik."
+    },
+    {
+      "n": 6,
+      "target": "Per click, על כל קליק (concept 3)",
+      "voice": "כמה שקלים אתה משלם על כל קליק?",
+      "display": "כמה שקלים אתה משלם על כל קליק?",
+      "risk": "Check the per-click phrasing and klik stress inside a question."
+    },
+    {
+      "n": 7,
+      "target": "Enquiry singular, פנייה אמיתית (concept 4)",
+      "voice": "אני מטפל בפנייה אמיתית בעצמי.",
+      "display": "אני מטפל בפנייה אמיתית בעצמי.",
+      "risk": "פנייה may be read pa-NEE-ya or pnuya; check pni-YA."
+    },
+    {
+      "n": 8,
+      "target": "Enquiries plural, פניות אמיתיות (concept 4), plain",
+      "voice": "אני סופר פניות אמיתיות בסוף היום.",
+      "display": "אני סופר פניות אמיתיות בסוף היום.",
+      "risk": "Unvowelled פניות can flip to pnuyot (available) instead of pniyot (enquiries)."
+    },
+    {
+      "n": 9,
+      "target": "Enquiries plural (concept 4), niqqud variant on פניות",
+      "voice": "אני סופר פְּנִיּוֹת אמיתיות בסוף היום.",
+      "display": "אני סופר פניות אמיתיות בסוף היום.",
+      "risk": "Check the niqqud forces pniyot."
+    },
+    {
+      "n": 10,
+      "target": "Click mode, מצב קליקים (concept 5)",
+      "voice": "אני עובד במצב קליקים כבר שבוע.",
+      "display": "אני עובד במצב קליקים כבר שבוע.",
+      "risk": "Check matzav klikim reads as one phrase."
+    },
+    {
+      "n": 11,
+      "target": "Enquiry mode, מצב פניות (concept 5)",
+      "voice": "אני בחרתי לעבוד במצב פניות מההתחלה.",
+      "display": "אני בחרתי לעבוד במצב פניות מההתחלה.",
+      "risk": "פניות inside the mode name may flip to pnuyot."
+    },
+    {
+      "n": 12,
+      "target": "Click price ceiling per trade, תקרה למחיר הקליק (concept 6), plain",
+      "voice": "אני שם תקרה למחיר הקליק, לפי המקצוע שלי.",
+      "display": "אני שם תקרה למחיר הקליק, לפי המקצוע שלי.",
+      "risk": "שם may read sham (there) instead of sam (put)."
+    },
+    {
+      "n": 13,
+      "target": "Click price ceiling (concept 6), niqqud variant on שם",
+      "voice": "אני שָׂם תקרה למחיר הקליק, לפי המקצוע שלי.",
+      "display": "אני שם תקרה למחיר הקליק, לפי המקצוע שלי.",
+      "risk": "Check שָׂם reads sam (put), not sham (there)."
+    },
+    {
+      "n": 14,
+      "target": "Condition line with digits and maqaf prefixes, כ־15 פניות ב־60 יום (concept 7), display form read aloud",
+      "voice": "התנאי הוא כ־15 פניות אמיתיות ב־60 יום, ולפחות שתי עבודות שנסגרו.",
+      "display": "התנאי הוא כ־15 פניות אמיתיות ב־60 יום, ולפחות שתי עבודות שנסגרו.",
+      "risk": "כ־15 needs ke-khamesh-ESRE before feminine פניות; ב־60 needs be-shishim YOM; check no English fifteen or sixty."
+    },
+    {
+      "n": 15,
+      "target": "Condition line spelled out as words, בערך חמש עשרה … בשישים יום (concept 7), voice form",
+      "voice": "התנאי הוא בערך חמש עשרה פניות אמיתיות בשישים יום, ולפחות שתי עבודות שנסגרו.",
+      "display": "התנאי הוא בערך חמש עשרה פניות אמיתיות בשישים יום, ולפחות שתי עבודות שנסגרו.",
+      "risk": "Check khamesh-ESRE agrees with feminine פניות; shishim YOM, not yamim; ve-lif-KHOT shtei avodot she-nis-ge-RU."
+    },
+    {
+      "n": 16,
+      "target": "Two to three months estimate, חודשיים עד שלושה (concept 8), production estimate line",
+      "voice": "בתקציב המינימום אנחנו מעריכים חודשיים עד שלושה, ולא כל עסק מגיע לזה.",
+      "display": "בתקציב המינימום אנחנו מעריכים חודשיים עד שלושה, ולא כל עסק מגיע לזה.",
+      "risk": "Dual חודשיים may read khodashim or mis-stress; check khod-sha-YIM. Estimate frame per Noa E8-06/q14, not a general fact."
+    },
+    {
+      "n": 17,
+      "target": "A search someone typed (concept 9)",
+      "voice": "אני רואה איזה חיפוש מישהו הקליד.",
+      "display": "אני רואה איזה חיפוש מישהו הקליד.",
+      "risk": "הקליד may mis-stress; check hik-LID."
+    },
+    {
+      "n": 18,
+      "target": "Negative keywords as blocked words, חוסם מילים (concept 10)",
+      "voice": "אני חוסם מילים שלא קשורות לעבודה שלי.",
+      "display": "אני חוסם מילים שלא קשורות לעבודה שלי.",
+      "risk": "חוסם may read KHO-sem instead of kho-SEM."
+    },
+    {
+      "n": 19,
+      "target": "Ad headline, כותרת (concept 11)",
+      "voice": "אני מחליף את הכותרת של המודעה.",
+      "display": "אני מחליף את הכותרת של המודעה.",
+      "risk": "כותרת may mis-stress; check ko-TE-ret."
+    },
+    {
+      "n": 20,
+      "target": "Ad description, תיאור (concept 11)",
+      "voice": "אני כותב תיאור קצר לכל מודעה.",
+      "display": "אני כותב תיאור קצר לכל מודעה.",
+      "risk": "תיאור may read TI-ur instead of te-UR."
+    },
+    {
+      "n": 21,
+      "target": "Landing page, דף נחיתה (concept 12)",
+      "voice": "בניתי דף נחיתה חדש לעסק שלי.",
+      "display": "בניתי דף נחיתה חדש לעסק שלי.",
+      "risk": "Check daf ne-khi-TA reads as one term, not word-by-word."
+    },
+    {
+      "n": 22,
+      "target": "WhatsApp in Hebrew letters (concept 13), plain",
+      "voice": "הלקוח שולח לי וואטסאפ אחרי העבודה.",
+      "display": "הלקוח שולח לי וואטסאפ אחרי העבודה.",
+      "risk": "Double vav may read ve-VAT-sapp or WATS-app; check VAHT-sapp."
+    },
+    {
+      "n": 23,
+      "target": "WhatsApp (concept 13), niqqud variant on וואטסאפ",
+      "voice": "הלקוח שולח לי וואַטְסְאַפּ אחרי העבודה.",
+      "display": "הלקוח שולח לי וואטסאפ אחרי העבודה.",
+      "risk": "Check the niqqud forces VAHT-sapp with no extra ve-."
+    },
+    {
+      "n": 24,
+      "target": "Tap on the call button, לוחץ על כפתור החיוג (concept 13)",
+      "voice": "הלקוח לוחץ על כפתור החיוג.",
+      "display": "הלקוח לוחץ על כפתור החיוג.",
+      "risk": "החיוג may misread; check ha-khi-YUG and lo-KHETS."
+    },
+    {
+      "n": 25,
+      "target": "Fake clicks, קליקים מזויפים (concept 14)",
+      "voice": "ראיתי קליקים מזויפים בחשבון הישן שלי.",
+      "display": "ראיתי קליקים מזויפים בחשבון הישן שלי.",
+      "risk": "מזויפים may read me-ZU-yafim; check me-zu-ya-FIM."
+    },
+    {
+      "n": 26,
+      "target": "Daily budget, תקציב יומי (concept 15)",
+      "voice": "אני קובע תקציב יומי קטן מאוד.",
+      "display": "אני קובע תקציב יומי קטן מאוד.",
+      "risk": "תקציב may stress TAK-tsiv instead of tak-TSIV."
+    },
+    {
+      "n": 27,
+      "target": "Monthly budget, תקציב חודשי (concept 15)",
+      "voice": "אני סוגר תקציב חודשי קבוע מראש.",
+      "display": "אני סוגר תקציב חודשי קבוע מראש.",
+      "risk": "Same tak-TSIV stress check in the monthly phrase."
+    },
+    {
+      "n": 28,
+      "target": "Quality Score, Hebrew term ציון איכות (concept 16)",
+      "voice": "אני בודק את ציון האיכות שלי.",
+      "display": "אני בודק את ציון האיכות שלי.",
+      "risk": "Check tsi-YUN ei-KHUT reads naturally."
+    },
+    {
+      "n": 29,
+      "target": "Quality Score, English term inside a Hebrew sentence (concept 16)",
+      "voice": "אני בודק את ה-Quality Score שלי.",
+      "display": "אני בודק את ה-Quality Score שלי.",
+      "risk": "Latin words may be skipped, spelled out, or read with Hebrew phonetics; check the ה- prefix."
+    },
+    {
+      "n": 30,
+      "target": "Ad Rank, Hebrew term דירוג המודעה (concept 16)",
+      "voice": "אני מסתכל על דירוג המודעה שלי.",
+      "display": "אני מסתכל על דירוג המודעה שלי.",
+      "risk": "דירוג may mis-stress; check di-RUG."
+    },
+    {
+      "n": 31,
+      "target": "Ad Rank, English term inside a Hebrew sentence (concept 16)",
+      "voice": "אני מסתכל על ה-Ad Rank שלי.",
+      "display": "אני מסתכל על ה-Ad Rank שלי.",
+      "risk": "Latin Ad Rank may be read as Hebrew letters or skipped; check the ה- prefix."
+    },
+    {
+      "n": 32,
+      "target": "Full closing line with VAT, 249 ₪ + מע״מ (concept 17), [excited] directly before the brand",
+      "voice": "[excited] WAO. בוט מודעות: 249 ₪ + מע״מ לחודש.",
+      "display": "WAO. בוט מודעות: 249 ₪ + מע״מ לחודש.",
+      "risk": "249 ₪ may read English or the wrong plural; + may read plus or ploos; מע״מ may spell mem-ayin-mem instead of ma'am; check the [excited] tag and WAO."
+    },
+    {
+      "n": 33,
+      "target": "Marking an enquiry as real, מסמן כאמיתית (concept 18)",
+      "voice": "אני מסמן את הפנייה הזאת כאמיתית.",
+      "display": "אני מסמן את הפנייה הזאת כאמיתית.",
+      "risk": "כאמיתית may mis-stress; check ka-a-mi-TIT."
+    },
+    {
+      "n": 34,
+      "target": "Marking an enquiry as not real, לא אמיתית + נספרת (concept 18), production line",
+      "voice": "אתה מסמן לא אמיתית, והפנייה לא נספרת.",
+      "display": "אתה מסמן לא אמיתית, והפנייה לא נספרת.",
+      "risk": "נספרת may mis-stress; check nis-PE-ret. Production label is לא אמיתית, not זבל."
+    },
+    {
+      "n": 35,
+      "target": "Google Ads (concept 2), niqqud variant אֶדְס (Noa's alternative to אַדְס)",
+      "voice": "אני משלם לגוגל אֶדְס כל חודש.",
+      "display": "אני משלם לגוגל אדס כל חודש.",
+      "risk": "Check אֶדְס reads ads as one short syllable, not E-dess; compare with n4 (אַדְס)."
+    },
+    {
+      "n": 36,
+      "target": "Google aims at real enquiries, לפניות + masculine מכוון (E8-04)",
+      "voice": "גוגל מכוון לפניות אמיתיות בלבד.",
+      "display": "גוגל מכוון לפניות אמיתיות בלבד.",
+      "risk": "לפניות may flip to la-pnu-YOT (available) instead of la-pni-YOT (enquiries); מכוון must stay masculine."
+    },
+    {
+      "n": 37,
+      "target": "Google masculine (E8-04), niqqud variant on מְכַוֵּן",
+      "voice": "גוגל מְכַוֵּן לפניות אמיתיות בלבד.",
+      "display": "גוגל מכוון לפניות אמיתיות בלבד.",
+      "risk": "Check the niqqud forces masculine me-kha-VEN, not feminine me-kha-VE-net."
+    },
+    {
+      "n": 38,
+      "target": "Closed/fixed, סָגוּר (concept 15)",
+      "voice": "התקציב החודשי סָגוּר מראש.",
+      "display": "התקציב החודשי סגור מראש.",
+      "risk": "סָגוּר may read SA-gur; check sa-GUR."
+    },
+    {
+      "n": 39,
+      "target": "That you closed, שֶׁסָּגַרְתָּ (E8-05 phrase)",
+      "voice": "עבודה שֶׁסָּגַרְתָּ שווה יותר מקליק.",
+      "display": "עבודה שסגרת שווה יותר מקליק.",
+      "risk": "Check she-sa-GAR-ta; unvowelled שסגרת may mis-stress."
+    },
+    {
+      "n": 40,
+      "target": "Fewer than fifty times, words in voice vs digits in display (E7-03 phrase)",
+      "voice": "המילה הזאת מופיעה פחות מחמישים פעם.",
+      "display": "המילה הזאת מופיעה פחות מ־50 פעם.",
+      "risk": "Voice: kha-mi-SHIM PA-am, not English fifty. Display: check how פחות מ־50 reads aloud."
+    },
+    {
+      "n": 41,
+      "target": "One-time, חד פעמי without maqaf in voice (E5-06/E7-07 phrase)",
+      "voice": "האישור הוא חד פעמי.",
+      "display": "האישור הוא חד־פעמי.",
+      "risk": "Check khad pa-a-MI as two words with no maqaf pause; display keeps חד־פעמי."
+    },
+    {
+      "n": 42,
+      "target": "Tap, טאפ, with the marking labels (R02)",
+      "voice": "טאפ אחד: אמיתית או זֶבֶל.",
+      "display": "טאפ אחד: אמיתית או זבל.",
+      "risk": "טאפ may read tah-PA; check tap. זֶבֶל check ZE-vel. Test only — production default is לחיצה per Adam's click/tap split."
+    },
+    {
+      "n": 43,
+      "target": "Selector joke, סלקטור and האגודל (R02 option, product named first)",
+      "voice": "עם בוט מודעות, האגודל שלך סלקטור.",
+      "display": "עם בוט מודעות, האגודל שלך סלקטור.",
+      "risk": "Check se-lek-TOR and ha-a-GU-dal; the joke lands dry."
+    },
+    {
+      "n": 44,
+      "target": "Tourists, תיירים (R01/ad_6, Eitan's ear call)",
+      "voice": "חלק מהקליקים הם תיירים, לא לקוחות.",
+      "display": "חלק מהקליקים הם תיירים, לא לקוחות.",
+      "risk": "Check ta-ya-RIM; Eitan's ear decides against the fallback."
+    },
+    {
+      "n": 45,
+      "target": "Curious browsers, סקרנים (fallback for תיירים)",
+      "voice": "חלק מהקליקים הם סקרנים, לא לקוחות.",
+      "display": "חלק מהקליקים הם סקרנים, לא לקוחות.",
+      "risk": "Check sak-ra-NIM; compare with n44 for Eitan's ear."
+    },
+    {
+      "n": 46,
+      "target": "Demo, דמו (q15)",
+      "voice": "בדמו אני רואה תוכנית מלאה על עסק לדוגמה.",
+      "display": "בדמו אני רואה תוכנית מלאה על עסק לדוגמה.",
+      "risk": "דמו may read de-MO; check DE-mo."
+    },
+    {
+      "n": 47,
+      "target": "Differentiator, מייחד",
+      "voice": "אני כותב מה שמייחד את העסק שלי.",
+      "display": "אני כותב מה שמייחד את העסק שלי.",
+      "risk": "מייחד may read MEY-khad; check me-ya-KHED."
+    },
+    {
+      "n": 48,
+      "target": "Switch, מתג, in the designed-to frame (phase 2)",
+      "voice": "המתג בין המצבים מתוכנן לפעול לבד.",
+      "display": "המתג בין המצבים מתוכנן לפעול לבד.",
+      "risk": "מתג may read MA-teg; check ME-teg. מתוכנן check me-tukh-NAN."
+    },
+    {
+      "n": 49,
+      "target": "Log/diary, יומן (neutral vehicle; the log beat is HOLD)",
+      "voice": "אני כותב ביומן כל ערב.",
+      "display": "אני כותב ביומן כל ערב.",
+      "risk": "יומן may read YU-man; check yo-MAN."
+    },
+    {
+      "n": 50,
+      "target": "Lower the price, להוזיל (E4-05)",
+      "voice": "מודעה טובה יכולה להוזיל את מחיר הקליק.",
+      "display": "מודעה טובה יכולה להוזיל את מחיר הקליק.",
+      "risk": "להוזיל may read le-HO-zil; check le-ho-ZIL."
+    },
+    {
+      "n": 51,
+      "target": "On/lit, דולק (neutral vehicle; the filter beat is HOLD)",
+      "voice": "אני בודק שהאור דולק.",
+      "display": "אני בודק שהאור דולק.",
+      "risk": "דולק may read DO-lek; check do-LEK."
+    },
+    {
+      "n": 52,
+      "target": "Spoken gershayim quotes inside a headline (concept 11)",
+      "voice": "הכותרת אומרת ״שירות מקצועי, מחיר הוגן״.",
+      "display": "הכותרת אומרת ״שירות מקצועי, מחיר הוגן״.",
+      "risk": "Check ״…״ reads as a quoted phrase with natural intonation, not spelled-out gershayim."
+    },
+    {
+      "n": 53,
+      "target": "Tag test [dry] on v4 (compare with [deadpan])",
+      "voice": "[dry] קליק הוא לא לקוח.",
+      "display": "קליק הוא לא לקוח.",
+      "risk": "[dry] is unproven on v4; if it fails or reads cheerful, production uses [deadpan]."
+    },
+    {
+      "n": 54,
+      "target": "Tag test [deadpan] on v4 (compare with [dry])",
+      "voice": "[deadpan] קליק הוא לא לקוח.",
+      "display": "קליק הוא לא לקוח.",
+      "risk": "Check flat, dry delivery; the proven fallback if [dry] fails."
+    },
+    {
+      "n": 55,
+      "target": "[excited] WAO mid-line (concept 17), compare with n32 and n56",
+      "voice": "בוט מודעות של [excited] WAO.",
+      "display": "בוט מודעות של WAO.",
+      "risk": "Check the tag lifts WAO mid-sentence without breaking the line."
+    },
+    {
+      "n": 56,
+      "target": "[excited] WAO on its own line (concept 17), compare with n32 and n55",
+      "voice": "בוט מודעות של\n[excited] WAO.",
+      "display": "בוט מודעות של WAO.",
+      "risk": "Check the tag applies across the line break; WAO stays excited, not reset."
+    },
+    {
+      "n": 57,
+      "target": "Price in words, מאתיים ארבעים ותשעה שקל פלוס מע״מ (concept 17), production voice form",
+      "voice": "[excited] WAO. בוט מודעות, מאתיים ארבעים ותשעה שקל פלוס מע״מ לחודש.",
+      "display": "WAO. בוט מודעות: 249 ₪ + מע״מ לחודש.",
+      "risk": "Check ma-TA-yim ar-ba-IM ve-TISH-a SHE-kel plus ma'am as words, no English digits; [excited] WAO at line start; compare with n32 digit form."
+    },
+    {
+      "n": 58,
+      "target": "A3 production line, [calm], enquiries land in one list on your phone",
+      "voice": "[calm] עם בוט מודעות, פניות מהדף נוחתות ברשימה אחת בטלפון שלך, ואתה מסמן מה אמיתי.",
+      "display": "עם בוט מודעות, פניות מהדף נוחתות ברשימה אחת בטלפון שלך, ואתה מסמן מה אמיתי.",
+      "risk": "Check [calm] holds the whole line; נוחתות no-KHA-tot; אמיתי a-mi-TI; 14 words in one breath."
+    },
+    {
+      "n": 59,
+      "target": "The till, הַקּוּפָּה (neutral vehicle)",
+      "voice": "אני סוגר את הַקּוּפָּה בסוף היום.",
+      "display": "אני סוגר את הקופה בסוף היום.",
+      "risk": "הַקּוּפָּה may read KU-pa; check ku-PA with dagesh on pe."
+    },
+    {
+      "n": 60,
+      "target": "Not counted, נִסְפֶּרֶת niqqud variant (concept 18), compare with n34",
+      "voice": "אתה מסמן לא אמיתית, והפנייה לא נִסְפֶּרֶת.",
+      "display": "אתה מסמן לא אמיתית, והפנייה לא נספרת.",
+      "risk": "Check the niqqud forces nis-PE-ret; compare with plain n34."
+    },
+    {
+      "n": 61,
+      "target": "Blocked, חָסוּם (E2-05 + E7-04), distinct from חוסם in n18",
+      "voice": "הניסוח הזה חָסוּם מהיום הראשון.",
+      "display": "הניסוח הזה חסום מהיום הראשון.",
+      "risk": "חָסוּם check kha-SUM (blocked), not KHA-sum and not kho-SEM (blocks, n18)."
+    },
+    {
+      "n": 62,
+      "target": "Recorded, רָשׁוּם (E4-08 production voice fragment)",
+      "voice": "ולכל פנייה רָשׁוּם הקליק שהביא אותה.",
+      "display": "ולכל פנייה רשום הקליק שהביא אותה.",
+      "risk": "רָשׁוּם check ra-SHUM, not RA-shum; the click-to-enquiry tie reads as one clause."
+    },
+    {
+      "n": 63,
+      "target": "Gathers, מְרַכֵּז (Dror's A3 mechanism: from your page into one list)",
+      "voice": "בוט מודעות מְרַכֵּז את הפניות מהדף שלך לרשימה אחת בטלפון.",
+      "display": "בוט מודעות מרכז את הפניות מהדף שלך לרשימה אחת בטלפון.",
+      "risk": "מְרַכֵּז check me-ra-KEZ, not me-RA-kez."
+    },
+    {
+      "n": 64,
+      "target": "The report, הַדּוּחַ (E7-01: which searches brought the clicks)",
+      "voice": "אני פותח את הַדּוּחַ של גוגל ורואה איזה חיפושים הביאו קליקים.",
+      "display": "אני פותח את הדוח של גוגל ורואה איזה חיפושים הביאו קליקים.",
+      "risk": "הַדּוּחַ check ha-DU-akh, not HA-du-akh or DO-akh."
+    },
+    {
+      "n": 65,
+      "target": "And how much, וּכמה (q06 check), shuruk vav",
+      "voice": "אני בודק כמה אנשים מחפשים וּכמה עולה קליק.",
+      "display": "אני בודק כמה אנשים מחפשים וכמה עולה קליק.",
+      "risk": "וּכמה check u-KHA-ma (shuruk), not ve-KHA-ma."
+    },
+    {
+      "n": 66,
+      "target": "Off, כבוי (neutral vehicle; minimal pair with n51 דולק)",
+      "voice": "אני בודק שהאור כבוי.",
+      "display": "אני בודק שהאור כבוי.",
+      "risk": "כבוי check ka-VUY, not KA-vuy."
+    },
+    {
+      "n": 67,
+      "target": "Mixes, מערבב (neutral vehicle; no mode-switch claim)",
+      "voice": "אני לא מערבב בין שני חשבונות.",
+      "display": "אני לא מערבב בין שני חשבונות.",
+      "risk": "מערבב check me-ar-BEV, not me-AR-bev."
+    },
+    {
+      "n": 68,
+      "target": "Five masculine, חמישה (neutral vehicle; number words)",
+      "voice": "יש לי חמישה לקוחות קבועים.",
+      "display": "יש לי חמישה לקוחות קבועים.",
+      "risk": "חמישה check kha-mi-SHA, masculine agreement with לקוחות; not English five."
+    },
+    {
+      "n": 69,
+      "target": "Day-one block list, מחפשי עבודה + יד שנייה (E2-05 corrected production line)",
+      "voice": "ומהיום הראשון יש רשימת חסימות: קורסים, יד שנייה, מחפשי עבודה.",
+      "display": "ומהיום הראשון יש רשימת חסימות: קורסים, יד שנייה, מחפשי עבודה.",
+      "risk": "מחפשי עבודה check me-kha-SHEI avoda; יד שנייה check yad she-ni-YA; the list reads as separate items, not a run-on."
+    },
+    {
+      "n": 70,
+      "target": "Free demo, דמו חינם (S1-05 production offer fragment)",
+      "voice": "דמו חינם, על עסק לדוגמה.",
+      "display": "דמו חינם, על עסק לדוגמה.",
+      "risk": "דמו check DE-mo; חינם check khi-NAM; reads as an offer line, not a question."
+    }
+  ],
+  "changes": [
+    {
+      "id": "n16",
+      "why": "Realigned the vehicle to Noa's binding E8-06/q14 replacement: an estimate at the minimum budget (אנחנו מעריכים), not the killed 'בדרך כלל זה לוקח' general-fact frame. Full production line, 12 words; the dual khod-sha-YIM test is unchanged."
+    },
+    {
+      "id": "n24",
+      "why": "Noa's exact fix: נותן לחיצה → לוחץ in voice and display; target and risk updated to lo-KHETS. The כפתור החיוג test is unchanged."
+    },
+    {
+      "id": "n34",
+      "why": "Noa's explicit swap to the production S1-03 line: אתה מסמן לא אמיתית, והפנייה לא נספרת. New label per E6-03/q09; risk now nis-PE-ret. The word זֶבֶל stays tested in n42 because the round-5 risk list still requires it."
+    },
+    {
+      "id": "n57",
+      "why": "Added the production price-in-words voice (ad_30 R07 / ad_15 R03 fix): מאתיים ארבעים ותשעה שקל פלוס מע״מ. Display keeps the digit form, identical to n32."
+    },
+    {
+      "id": "n58",
+      "why": "Added Adam's exact A3 line with [calm], verbatim. Left out the optional מהדף: Adam ruled the line already satisfies Dror's from-your-page concern, and the ear test has not run. 14 words, within the voiced cap."
+    },
+    {
+      "id": "n59",
+      "why": "Added הַקּוּפָּה per Noa's explicit addition, on a neutral till-closing vehicle; no source production line was supplied, so no product claim is voiced."
+    },
+    {
+      "id": "n60",
+      "why": "Added the נִסְפֶּרֶת niqqud variant from the round-5 risk list, paired against plain n34."
+    },
+    {
+      "id": "n61",
+      "why": "Added חָסוּם (risk list) on the E2-05 + E7-04 facts: the exact phrase is blocked from day one. Kept distinct from חוסם in n18."
+    },
+    {
+      "id": "n62",
+      "why": "Added רָשׁוּם with Noa's exact E4-08 voice fragment; display unvowelled."
+    },
+    {
+      "id": "n63",
+      "why": "Added מְרַכֵּז (risk list) on Dror's A3 mechanism: gathers the enquiries from your page into one list on your phone. No 'all' claim."
+    },
+    {
+      "id": "n64",
+      "why": "Added הַדּוּחַ (risk list) on the E7-01 intent: Google's report shows which searches brought the clicks."
+    },
+    {
+      "id": "n65",
+      "why": "Added וּכמה (risk list) on the q06 check; shuruk-vav test, no 'real volume' claim."
+    },
+    {
+      "id": "n66",
+      "why": "Added כבוי (risk list) as a neutral minimal pair with n51 דולק; the filter beat stays HOLD."
+    },
+    {
+      "id": "n67",
+      "why": "Added מערבב (risk list) on a neutral owner vehicle; no mode-switch claim, the phase-2 frame in n48 is untouched."
+    },
+    {
+      "id": "n68",
+      "why": "Added חמישה (risk list, masculine number) on a neutral owner vehicle. Not the dropped ₪15-per-click line; Adam's ruling stands."
+    },
+    {
+      "id": "n69",
+      "why": "Added the corrected E2-05 block-list production line with bare חינם dropped (Adam option A); covers מחפשי עבודה and יד שנייה."
+    },
+    {
+      "id": "n70",
+      "why": "Added דמו חינם (risk list) as the production offer fragment from the S1-05 closing."
+    },
+    {
+      "id": "n1–n15, n17–n23, n25–n33, n35–n56",
+      "why": "Kept byte-for-byte. The round-5 risk list is now fully covered; ותק appears in no voice string. The YELLOW 'זבל' call belongs to the ads file and does not change this suite: n42 keeps זֶבֶל per the risk list, and the production label אמיתית או לא is covered by n34/n60."
+    }
+  ]
+}
+```
+
+Outside this file — Adam's leads-page add-on (Tamar → Noa), two Mode B edits:
+- `src/app/(app)/leads/page.tsx:30`: `סמן ליד איכותי, ועדכן הכנסה כשסוגרים עסקה — זה מאמן את גוגל לשלוח לידים טובים יותר.` → `סמן פנייה כאמיתית או לא אמיתית, ועדכן הכנסה כשסוגרים עסקה.` — new labels, and the "trains Google to send better leads" claim dropped per Adam/Dror.
+- `src/app/(product)/client/leads/page.tsx:44`: `סמן ליד איכותי, ועדכן כשסגרת עסקה.` → `סמן פנייה כאמיתית או לא אמיתית, ועדכן כשסגרת עסקה.` — new labels only.
+
+→ Noa to proof the changed and added strings plus the two subtitles. → Eitan's ear on [calm], [dry], תיירים/סקרנים and טאפ once the suite runs on v4.

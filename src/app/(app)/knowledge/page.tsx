@@ -33,6 +33,7 @@ const CATEGORY_ICONS: Record<KnowledgeCategory, string> = {
   local: "📍",
   international: "🌍",
   tools: "🛠️",
+  ppc: "📣",
 };
 
 const categories = Object.keys(CATEGORY_LABELS) as KnowledgeCategory[];

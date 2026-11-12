@@ -1,9 +1,10 @@
 import Link from "next/link";
+import { HOW_IT_WORKS_COPY } from "@/lib/google-ads/howItWorksCopy";
 
 interface SiloItem {
   label: string;
   href: string;
-  icon: string;
+  icon?: string;
   badge?: string;
 }
 
@@ -32,7 +33,20 @@ export const SILOS: Record<string, Silo> = {
       { label: "סריקה מיידית", href: "/geo/scan", icon: "⚡", badge: "מיידי" },
     ],
   },
+  // Labels come byte-exact from the approved how-it-works copy (silo_nav), never typed here.
+  "/google-ads": googleAdsSilo(),
 };
+
+function googleAdsSilo(): Silo {
+  const { label, items } = HOW_IT_WORKS_COPY.silo_nav;
+  const hub = items.find((i) => i.role === "hub");
+  if (!hub) throw new Error("google-ads silo has no hub");
+  return {
+    label,
+    hub: { label: hub.label, href: hub.href },
+    spokes: items.filter((i) => i.role === "spoke").map((i) => ({ label: i.label, href: i.href })),
+  };
+}
 
 function getSilo(currentPath: string): { silo: Silo; isHub: boolean } | null {
   if (SILOS[currentPath]) return { silo: SILOS[currentPath], isHub: true };
@@ -69,7 +83,7 @@ export default function SiloNav({ currentPath }: { currentPath: string }) {
         pointerEvents: isCurrent ? "none" : "auto",
       }}
     >
-      <span aria-hidden>{item.icon}</span>
+      {item.icon && <span aria-hidden>{item.icon}</span>}
       {item.label}
       {item.badge && !isCurrent && (
         <span

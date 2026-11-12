@@ -1,0 +1,261 @@
+**Angle:** Problem-aware tradesmen still inside the felt scene — round 3 is binding replacements only: Noa's exact S1-03 and alt-closing strings go in verbatim, the S1-02 question direction is declined (questions here name pain, and S1-03's caption already asks one), everything else stays byte-for-byte.
+
+```json
+{
+  "angle": "Problem-aware one-man tradesmen who have already lived these exact moments, so each short opens inside the felt scene and ends on a mechanism the bot really runs, never on a promised result. Round 2 splits the person per Adam: the pain beats stay first person (the junk call, the price he won't chase, the report full of clicks), the solution beats move to second person or to the product as subject, so no line reads as a client testimonial. The fixed closing line carries the only brand beat; the price is HOLD for paid media, so a price-free closing runs until Adam releases it.",
+  "shorts": {
+    "S1_junk": [
+      {
+        "beat": "S1-01",
+        "voice": "שילמתי על מודעה. קיבלתי מחפש עבודה.",
+        "display": "שילמתי על מודעה. קיבלתי מחפש עבודה.",
+        "caption": "קיבלתי מחפש עבודה",
+        "shot": "B2",
+        "tag_why": "No tag: the dry first-person line carries the joke.",
+        "removable": false,
+        "alt": null
+      },
+      {
+        "beat": "S1-02",
+        "voice": "יש חסימות מראש: דרושים, קורס.",
+        "display": "יש חסימות מראש: דרושים, קורס",
+        "caption": "דרושים וקורס בחוץ",
+        "shot": "B9",
+        "tag_why": "No tag: plain mechanism, the card shows the list.",
+        "removable": false,
+        "alt": null
+      },
+      {
+        "beat": "S1-03",
+        "voice": "אתה מסמן לא אמיתית, והפנייה לא נספרת.",
+        "display": "אתה מסמן לא אמיתית, והפנייה לא נספרת",
+        "caption": "לא אמיתית? לא נספרת",
+        "shot": "B5",
+        "tag_why": "No tag: the thumb does the acting.",
+        "removable": false,
+        "alt": null
+      },
+      {
+        "beat": "S1-04",
+        "voice": "גם מה שאתה לא עושה, חָסוּם מראש.",
+        "display": "גם מה שאתה לא עושה, חסום מראש",
+        "caption": "גם זה חסום",
+        "shot": "B9",
+        "tag_why": "No tag: extends the block-list beat without the search-term claim.",
+        "removable": false,
+        "alt": null
+      },
+      {
+        "beat": "S1-05",
+        "voice": "[excited] WAO. בוט מודעות, מאתיים ארבעים ותשעה שקל פלוס מע״מ לחודש.",
+        "display": "WAO. בוט מודעות: 249 ₪ + מע״מ לחודש.",
+        "caption": "בוט מודעות",
+        "shot": "E1",
+        "tag_why": "Founder rule: [excited] directly before the brand word. Tag still pending Eitan's tone test (Noa).",
+        "removable": false,
+        "hold": "PAID MEDIA — price on HOLD (Adam via Dror, 2026-11-12). Run the alt closing until released.",
+        "alt": {
+          "beat": "S1-05",
+          "voice": "[excited] WAO. בוט מודעות. דמו חינם, על עסק לדוגמה.",
+          "display": "WAO. בוט מודעות. דמו חינם, על עסק לדוגמה",
+          "caption": "דמו חינם",
+          "shot": "E1-NO_PRICE",
+          "tag_why": "Founder rule: [excited] directly before the brand word; no price while the HOLD stands.",
+          "removable": false,
+          "hold": null,
+          "alt": null
+        }
+      }
+    ],
+    "S2_cheap_competitor": [
+      {
+        "beat": "S2-01",
+        "voice": "ראיתי מחיר שאין לי איך להתחרות בו. הטלפון חזר לכיס.",
+        "display": "ראיתי מחיר שאין לי איך להתחרות בו. הטלפון חזר לכיס.",
+        "caption": "הטלפון חזר לכיס",
+        "shot": "B8",
+        "tag_why": "No tag: the physical beat is the joke.",
+        "removable": false,
+        "alt": null
+      },
+      {
+        "beat": "S2-02",
+        "voice": "אני מוכר עבודה, לא מחיר.",
+        "display": "אני מוכר עבודה, לא מחיר",
+        "caption": "עבודה, לא מחיר",
+        "shot": "B1",
+        "tag_why": "No tag: pride beat, flat and sure.",
+        "removable": false,
+        "alt": null
+      },
+      {
+        "beat": "S2-03",
+        "voice": "הבוט שואל אותך על אחריות, רישיון, וּכמה שנים אתה בתחום.",
+        "display": "הבוט שואל אותך על אחריות, רישיון, וכמה שנים אתה בתחום",
+        "caption": "אחריות, רישיון, ותק",
+        "shot": "B10",
+        "tag_why": "No tag: the real chat screen carries it.",
+        "removable": false,
+        "alt": null
+      },
+      {
+        "beat": "S2-04",
+        "voice": "הכותרות במודעה מסבירות למה לבחור בך.",
+        "display": "הכותרות במודעה מסבירות למה לבחור בך",
+        "caption": "סיבות לבחור בך",
+        "shot": "B9",
+        "tag_why": "No tag: let the moving text land the reason.",
+        "removable": false,
+        "alt": null
+      },
+      {
+        "beat": "S2-05",
+        "voice": "[excited] WAO. בוט מודעות, מאתיים ארבעים ותשעה שקל פלוס מע״מ לחודש.",
+        "display": "WAO. בוט מודעות: 249 ₪ + מע״מ לחודש.",
+        "caption": "בוט מודעות",
+        "shot": "E1",
+        "tag_why": "Founder rule: [excited] directly before the brand word. Tag still pending Eitan's tone test (Noa).",
+        "removable": false,
+        "hold": "PAID MEDIA — price on HOLD (Adam via Dror, 2026-11-12). Run the alt closing until released.",
+        "alt": {
+          "beat": "S2-05",
+          "voice": "[excited] WAO. בוט מודעות. דמו חינם, על עסק לדוגמה.",
+          "display": "WAO. בוט מודעות. דמו חינם, על עסק לדוגמה",
+          "caption": "דמו חינם",
+          "shot": "E1-NO_PRICE",
+          "tag_why": "Founder rule: [excited] directly before the brand word; no price while the HOLD stands.",
+          "removable": false,
+          "hold": null,
+          "alt": null
+        }
+      }
+    ],
+    "S3_see_nothing": [
+      {
+        "beat": "S3-01",
+        "voice": "שילמתי כל חודש. הדוח? מלא בקליקים.",
+        "display": "שילמתי כל חודש. הדוח? מלא בקליקים.",
+        "caption": "מלא בקליקים",
+        "shot": "B6",
+        "tag_why": "No tag: dry delivery sells the bitter joke.",
+        "removable": false,
+        "alt": null
+      },
+      {
+        "beat": "S3-02",
+        "voice": "עכשיו הפניות מהדף יושבות ברשימה אחת בטלפון שלך.",
+        "display": "עכשיו הפניות מהדף יושבות ברשימה אחת בטלפון שלך",
+        "caption": "הכול ברשימה אחת",
+        "shot": "B3",
+        "tag_why": "No tag: the real list on the phone is the proof.",
+        "removable": false,
+        "alt": null
+      },
+      {
+        "beat": "S3-03",
+        "voice": "רק פנייה שסימנת כאמיתית נספרת בחשבון כתוצאה.",
+        "display": "רק פנייה שסימנת כאמיתית נספרת בחשבון כתוצאה",
+        "caption": "אתה קובע מה אמיתי",
+        "shot": "B4",
+        "tag_why": "No tag: the thumb marks real while he says it.",
+        "removable": false,
+        "alt": null
+      },
+      {
+        "beat": "S3-04",
+        "voice": "החשבון על שמך.",
+        "display": "החשבון על שמך",
+        "caption": "על שמך",
+        "shot": "B9",
+        "tag_why": "No tag: three words, said with pride.",
+        "removable": false,
+        "alt": null
+      },
+      {
+        "beat": "S3-05",
+        "voice": "[excited] WAO. בוט מודעות, מאתיים ארבעים ותשעה שקל פלוס מע״מ לחודש.",
+        "display": "WAO. בוט מודעות: 249 ₪ + מע״מ לחודש.",
+        "caption": "בוט מודעות",
+        "shot": "E1",
+        "tag_why": "Founder rule: [excited] directly before the brand word. Tag still pending Eitan's tone test (Noa).",
+        "removable": false,
+        "hold": "PAID MEDIA — price on HOLD (Adam via Dror, 2026-11-12). Run the alt closing until released.",
+        "alt": {
+          "beat": "S3-05",
+          "voice": "[excited] WAO. בוט מודעות. דמו חינם, על עסק לדוגמה.",
+          "display": "WAO. בוט מודעות. דמו חינם, על עסק לדוגמה",
+          "caption": "דמו חינם",
+          "shot": "E1-NO_PRICE",
+          "tag_why": "Founder rule: [excited] directly before the brand word; no price while the HOLD stands.",
+          "removable": false,
+          "hold": null,
+          "alt": null
+        }
+      }
+    ]
+  },
+  "new_shots": [
+    "B10: phone in hand showing the bot's real opening chat screen (demo business, demo label), thumb typing a reply — no face, no Google UI",
+    "B5 spec for S1-03: thumb taps the ׳לא אמיתית׳ mark on a lead and the label flips in place — the lead stays in the list. No row disappears, so the voice matches the screen.",
+    "E1-NO_PRICE: brand end card, WAO + בוט מודעות + ׳דמו חינם, על עסק לדוגמה׳, no price line — the paid-media closing while the price HOLD stands."
+  ],
+  "pronunciation": [
+    "מע״מ",
+    "מאתיים ארבעים ותשעה שקל",
+    "חָסוּם",
+    "וּכמה",
+    "שֶׁסִּימַּנְתָּ",
+    "כַּאֲמִיתִית",
+    "נִסְפֶּרֶת",
+    "הַדּוּחַ",
+    "מְחַפֵּשׂ עבודה",
+    "לא אמיתית",
+    "הטלפון חזר לכיס",
+    "פנייה",
+    "דמו חינם",
+    "לא להגות ותק או וותק בקריינות — השורה אומרת ׳וכמה שנים אתה בתחום׳"
+  ],
+  "flags": [
+    "Wanted to promise the junk stops or that only real enquiries arrive — the facts support a block-list, a junk mark and search-term blocking only, so every line states a mechanism, never an outcome.",
+    "Wanted to say Google already learns from his marks and chases real enquiries — not shipped today; S3 scopes the counting to the account ('בחשבון') and nothing more.",
+    "Wanted the block-list size (10–15 words) and the ad structure (15 headlines, 4 descriptions) — numbers are forbidden outside the closing line, so the mechanisms are named without counts.",
+    "PRICE HOLD: S1-05 / S2-05 / S3-05 carry hold and must not run in paid media. The price-free alt closing is the runnable one, and it leaves the paid shorts with no number at all. The [excited] WAO tag still waits on Eitan's tone test.",
+    "PERSON: pain beats first person, solution beats second person or product as subject, per Adam's option A. No line describes a narrator using the product. Amit still needs to confirm whether any dramatisation label is required on top of this.",
+    "Wanted a third blocked word to replace חינם — the only words with a fact behind them are דרושים and קורס, so the list names two. The free-intent phrase list (Dror's list, Noa proofs the spelling, then the engineer applies it) is queued, so no free-intent phrase is named as blocked today.",
+    "The price-free closing points at the open demo on a demo business (Noa's final closing line, Yonatan's DEMO_HREF). If the demo isn't reachable from the ad placement, swap E1-NO_PRICE to a brand-only end card rather than promising a click that goes nowhere.",
+    "SCOPE: this file is the situation shorts only. The how-it-works page, the parked nurture sequence and the Quality Score article in the same reviews are separate deliverables; none of Yonatan's conditions (answer block, בקצרה box, official terms, links, schema, glossary B5) attach to the shorts, so no fields were added here for them. The live /google-ads line-27 gender fix and line-48 weekly-report claim also sit outside this file."
+  ],
+  "changes": [
+    {
+      "id": "passing-lines",
+      "why": "S1-01, S1-02, S1-04, S2-01 עד S2-04, S3-01 עד S3-04, all three priced closings with their hold text, and every caption, shot and tag_why not named below kept byte-for-byte. Dror ships the shorts and Yonatan's conditions attach to other files, so no fact or anchor edit landed here."
+    },
+    {
+      "id": "S1-03",
+      "why": "Noa's exact replacement: והיא → והפנייה, so the pronoun's antecedent is the nearest matching noun inside the same short. Display keeps the batch's no-trailing-period convention for a single sentence. Caption and the B5 label-flip spec still match: the lead stays in the list, it just isn't counted."
+    },
+    {
+      "id": "S1-05 / S2-05 / S3-05 alt",
+      "why": "Noa's exact alt closing verbatim in voice, display and caption: דמו חינם, על עסק לדוגמה. It also lands on Yonatan's approved demo-led label for DEMO_HREF, so the runnable paid closing names the same thing the destination delivers. Priced closings and the HOLD untouched."
+    },
+    {
+      "id": "S1-02 YELLOW declined",
+      "why": "Kept ׳יש חסימות מראש: דרושים, קורס.׳ A rhetorical question here names pain, and this is the mechanism beat right after the pain beat; S1-03's caption already asks ׳לא אמיתית? לא נספרת׳, so a question in S1-02 would put two in neighbouring elements. The flat line also states the mechanism with conviction, keeps the existence starter יש and a colon for a real list, and B9 shows the list. Noa's direction noted, not applied."
+    },
+    {
+      "id": "pronunciation",
+      "why": "Added פנייה and דמו חינם, both on Noa's round-5 risk list, because the corrected S1-03 line and the new alt closing put them in the talent's mouth. Nothing removed; the ותק instruction stays last."
+    },
+    {
+      "id": "new_shots",
+      "why": "E1-NO_PRICE now spells the end-card line as Noa wrote it, so the card renders what the voice says. B10 and the B5 spec kept byte-for-byte."
+    },
+    {
+      "id": "flags",
+      "why": "Two provenance corrections only: the free-intent phrase list is Dror's now (Noa proofs the spelling, then the engineer applies it), and the price-free closing's source is Noa's final line rather than the parked M5 draft. No new flags — the HOLD, the Amit label question and the demo dependency all still stand."
+    }
+  ]
+}
+```
+
+את ההחלטה על S1-02 ואת שתי תוספות ההגייה תעביר לנועה. השורות שהיא כבר נתנה מילה במילה לא צריכות מעבר נוסף — רק מה שנגעתי בו מעבר להן. את שאלת תווית ההמחשה סוגר עמית, והיא עדיין פתוחה אחרי המעבר לגוף שני. לפני שידור: איתן-Dev מחיל את ה-HOLD על המחיר, את כרטיס הסיום בלי מחיר ואת רשימת ההגייה. ואם הדמו לא נגיש ממיקום המודעה — תחליף את E1-NO_PRICE לכרטיס מותג בלבד, אל תבטיח קליק שהולך לשום מקום.

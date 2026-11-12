@@ -4,6 +4,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { KNOWLEDGE_ARTICLES, CATEGORY_LABELS, type KnowledgeCategory } from "@/data/knowledge";
 import { renderMixed } from "@/lib/bidi";
+import SiloNav from "@/components/SiloNav";
 
 const AUTHOR_IMG = "https://www.wao.co.il/eitan-yariv.avif";
 const AUTHOR_SAME_AS = [
@@ -52,6 +53,7 @@ const CATEGORY_ICONS: Record<KnowledgeCategory, string> = {
   local: "📍",
   international: "🌍",
   tools: "🛠️",
+  ppc: "📣",
 };
 
 const HEADING: React.CSSProperties = {
@@ -143,27 +145,82 @@ function renderWithInlineCode(text: string): React.ReactNode {
 
 // Renders a full section content string:
 // splits on blank lines → each chunk is either a code block or a prose paragraph.
+// Lines that start with "• " become list items; consecutive bullet lines (also across blank lines) share one <ul>.
+const BULLET = "\u2022 ";
 function renderSectionContent(text: string, bodyStyle: React.CSSProperties): React.ReactNode {
-  const chunks = text.split(/\n\n+/);
-  return (
-    <>
-      {chunks.map((chunk, i) => {
-        if (!chunk.trim()) return null;
-        if (isCodeBlock(chunk)) {
-          return (
-            <pre key={i} style={CODE_BLOCK_STYLE}>
-              <code>{chunk.trim()}</code>
-            </pre>
-          );
-        }
-        return (
-          <p key={i} style={{ ...bodyStyle, margin: 0 }}>
-            {renderWithInlineCode(chunk)}
-          </p>
-        );
-      })}
-    </>
-  );
+  const blocks: React.ReactNode[] = [];
+  let items: string[] = [];
+  const flush = () => {
+    if (!items.length) return;
+    const list = items;
+    items = [];
+    blocks.push(
+      <ul key={`ul${blocks.length}`} style={{ ...bodyStyle, margin: 0, paddingInlineStart: "1.25rem", display: "flex", flexDirection: "column", gap: "8px" }}>
+        {list.map((item, j) => (
+          <li key={j}>{renderWithInlineCode(item)}</li>
+        ))}
+      </ul>
+    );
+  };
+  text.split(/\n\n+/).forEach((chunk, i) => {
+    if (!chunk.trim()) return;
+    if (isCodeBlock(chunk)) {
+      flush();
+      blocks.push(
+        <pre key={`pre${i}`} style={CODE_BLOCK_STYLE}>
+          <code>{chunk.trim()}</code>
+        </pre>
+      );
+      return;
+    }
+    const lines = chunk.split("\n");
+    const firstBullet = lines.findIndex((l) => l.startsWith(BULLET));
+    if (firstBullet === -1) {
+      flush();
+      blocks.push(
+        <p key={`p${i}`} style={{ ...bodyStyle, margin: 0 }}>
+          {renderWithInlineCode(chunk)}
+        </p>
+      );
+      return;
+    }
+    if (firstBullet > 0) {
+      flush();
+      blocks.push(
+        <p key={`p${i}`} style={{ ...bodyStyle, margin: 0 }}>
+          {renderWithInlineCode(lines.slice(0, firstBullet).join("\n"))}
+        </p>
+      );
+    }
+    for (const line of lines.slice(firstBullet)) {
+      if (line.startsWith(BULLET)) items.push(line.slice(BULLET.length));
+      else items[items.length - 1] += "\n" + line;
+    }
+  });
+  flush();
+  return <>{blocks}</>;
+}
+
+// Links each source label at its first occurrence in the sources line (external, new tab).
+function renderSourcesLine(line: string, links: { label: string; url: string }[]): React.ReactNode {
+  const hits = links
+    .map((l) => ({ ...l, at: line.indexOf(l.label) }))
+    .filter((l) => l.at >= 0)
+    .sort((a, b) => a.at - b.at);
+  const out: React.ReactNode[] = [];
+  let last = 0;
+  hits.forEach((h, i) => {
+    if (h.at < last) return;
+    if (h.at > last) out.push(<Fragment key={`t${i}`}>{renderMixed(line.slice(last, h.at))}</Fragment>);
+    out.push(
+      <a key={`a${i}`} href={h.url} target="_blank" rel="noopener noreferrer" style={{ color: "var(--accent)", textDecoration: "underline" }}>
+        {h.label}
+      </a>
+    );
+    last = h.at + h.label.length;
+  });
+  if (last < line.length) out.push(<Fragment key="tail">{renderMixed(line.slice(last))}</Fragment>);
+  return <>{out}</>;
 }
 
 function slugifyId(text: string): string {
@@ -305,6 +362,7 @@ export default async function KnowledgeArticlePage({
             {article.titleShort}
           </span>
         </nav>
+        <SiloNav currentPath={`/knowledge/${article.slug}`} />
 
         <div
           className="knowledge-layout"
@@ -430,6 +488,47 @@ export default async function KnowledgeArticlePage({
                   <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
                     {renderSectionContent(section.content, { ...BODY, fontSize: "0.97rem" })}
                   </div>
+                  {i === 0 && article.keyFacts && (
+                    <div style={{ marginTop: "28px", padding: "20px", background: "var(--surface)", border: "1px solid var(--border)", borderRadius: "var(--radius-md)" }}>
+                      <h2 style={{ ...HEADING, fontSize: "1.1rem", fontWeight: 700, marginTop: 0, marginBottom: "14px" }}>
+                        {renderMixed(article.keyFacts.heading)}
+                      </h2>
+                      <div style={{ overflowX: "auto" }}>
+                        <table style={{ ...BODY, width: "100%", borderCollapse: "collapse", fontSize: "0.88rem", minWidth: "520px" }}>
+                          <thead>
+                            <tr>
+                              <td style={{ borderBottom: "2px solid var(--border)" }} />
+                              {article.keyFacts.columns.map((c) => (
+                                <th key={c} scope="col" style={{ textAlign: "start", padding: "8px 10px", borderBottom: "2px solid var(--border)", color: "var(--muted)", fontWeight: 700 }}>
+                                  {renderMixed(c)}
+                                </th>
+                              ))}
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {article.keyFacts.rows.map(([term, ...cells]) => (
+                              <tr key={term}>
+                                <th scope="row" style={{ textAlign: "start", padding: "10px", borderBottom: "1px solid var(--border)", fontWeight: 700, whiteSpace: "nowrap", verticalAlign: "top" }}>
+                                  {renderMixed(term)}
+                                </th>
+                                {cells.map((cell, j) => (
+                                  <td key={j} style={{ padding: "10px", borderBottom: "1px solid var(--border)", verticalAlign: "top" }}>
+                                    {renderMixed(cell)}
+                                  </td>
+                                ))}
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                      {article.keyFacts.footnote && (
+                        <p style={{ ...BODY, fontSize: "0.82rem", color: "var(--muted)", margin: "12px 0 0" }}>{renderMixed(article.keyFacts.footnote)}</p>
+                      )}
+                      {article.keyFacts.note && (
+                        <p style={{ ...BODY, fontSize: "0.82rem", color: "var(--muted)", margin: "8px 0 0" }}>{renderMixed(article.keyFacts.note)}</p>
+                      )}
+                    </div>
+                  )}
                 </section>
                 );
               })}
@@ -456,6 +555,13 @@ export default async function KnowledgeArticlePage({
                   ))}
                 </div>
               </div>
+            )}
+
+            {/* Sources */}
+            {article.sources && (
+              <p style={{ ...BODY, fontSize: "0.82rem", color: "var(--muted)", marginTop: "32px", marginBottom: 0 }}>
+                {renderSourcesLine(article.sources.line, article.sources.links)}
+              </p>
             )}
 
             {/* Author bio */}
@@ -555,8 +661,9 @@ export default async function KnowledgeArticlePage({
 
             {/* CTA */}
             {(() => {
-              const cta =
-                article.category === "ai"
+              const cta: { headline?: string; body?: string; buttonText: string; href: string } = article.cta
+                ? { body: article.cta.support, buttonText: article.cta.button, href: article.cta.href }
+                : article.category === "ai"
                   ? {
                       headline: "הבינה המלאכותית עונה לגולשים. שהיא תצטט אותך.",
                       body: "GEO Bot מטייב את התוכן שלך, כדי שהתשובות של Google יפנו אליך. הכול אוטומטי, ב-₪199 בחודש.",
@@ -591,19 +698,23 @@ export default async function KnowledgeArticlePage({
                   }}
                 >
                   <div style={{ flex: 1, minWidth: "200px" }}>
-                    <p
-                      style={{
-                        ...HEADING,
-                        fontSize: "1rem",
-                        fontWeight: 700,
-                        marginBottom: "4px",
-                      }}
-                    >
-                      {renderMixed(cta.headline)}
-                    </p>
-                    <p style={{ ...BODY, fontSize: "0.85rem", color: "var(--muted)" }}>
-                      {renderMixed(cta.body)}
-                    </p>
+                    {cta.headline && (
+                      <p
+                        style={{
+                          ...HEADING,
+                          fontSize: "1rem",
+                          fontWeight: 700,
+                          marginBottom: "4px",
+                        }}
+                      >
+                        {renderMixed(cta.headline)}
+                      </p>
+                    )}
+                    {cta.body && (
+                      <p style={{ ...BODY, fontSize: "0.85rem", color: "var(--muted)" }}>
+                        {renderMixed(cta.body)}
+                      </p>
+                    )}
                   </div>
                   <Link
                     href={cta.href}

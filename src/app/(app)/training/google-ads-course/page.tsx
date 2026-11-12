@@ -977,7 +977,7 @@ function StaticCourse({ chapters }: { chapters: typeof CHAPTERS }) {
               {
                 rule: "05",
                 title: <><GT term="Core Web Vitals">Core Web Vitals</GT>: <GT term="LCP">LCP</GT> מתחת ל-2.5 שניות</>,
-                desc: <>Google מדרגת <GT term="Landing Page">Landing Pages</GT> לפי מהירות. <GT term="LCP">LCP</GT> מעל 3 שניות = <GT term="Quality Score">Quality Score</GT> נמוך, <GT term="CPC">CPC</GT> גבוה יותר, <GT term="Conversion Rate">Conversion Rate</GT> נמוך יותר. <GT term="Mobile-First">Mobile-first</GT> — לא בחירה.</>,
+                desc: <>דף שנפתח לאט בטלפון פוגע בחוויית המשתמש בדף הנחיתה, אחד משלושת מרכיבי ציון האיכות. גוגל לא מפרסם מספר שניות שקובע ציון איכות נמוך — הוא מדרג את החוויה מול מפרסמים אחרים.</>,
               },
             ].map((item) => (
               <div

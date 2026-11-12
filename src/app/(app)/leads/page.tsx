@@ -27,7 +27,7 @@ export default function LeadsDashboard() {
           </h1>
           <p style={{ color: "var(--muted)", maxWidth: "600px", lineHeight: 1.5 }}>
             כאן נכנסים כל הלידים מדף הנחיתה — גם פניות דרך הטופס וגם לחיצות על טלפון/וואטסאפ.
-            סמן ליד איכותי, ועדכן הכנסה כשסוגרים עסקה — זה מאמן את גוגל לשלוח לידים טובים יותר.
+            סמן אם הפנייה אמיתית או לא, ועדכן הכנסה כשסגרת עסקה.
           </p>
         </div>
         <Link href="/google-ads" className="btn-secondary" style={{ padding: "10px 20px", borderRadius: "8px", textDecoration: "none", whiteSpace: "nowrap" }}>

@@ -1,0 +1,269 @@
+Angle (unchanged): problem-aware, trust-burned owner — each episode sells a visible control, never a result promise; round 3 applies only the binding B-file fixes (אמיתית/לא labels, we-estimate timeline, explicit subject, plural search-terms line), everything else byte-for-byte.
+
+```json
+{
+  "angle": "Through-line: 'your money is guarded, and your only job is one tap' — each episode hands a problem-aware, trust-burned owner a visible control (per-trade cap, his mark, precise block, designed-to switch) instead of a result promise. I open each with the guardrail or the one-second action in his working day, then the mechanism, because he is solution-aware enough to want the how but allergic to 'leave it to us'. HOLD lines are cut from the voiced cuts, so each episode closes on the strongest verified control it has left.",
+  "episodes": {
+    "E5": {
+      "title": "מה שומר על הכסף שלך",
+      "lines": [
+        {
+          "beat": "E5-01",
+          "voice": "חשבון המודעות חדש, והוא עוד לא מכיר את הלקוחות שלך.",
+          "display": "חשבון המודעות חדש, והוא עוד לא מכיר את הלקוחות שלך.",
+          "screen": "WAO Ads Bot dashboard for the demo plumber: a brand-new campaign, empty performance history.",
+          "tag_why": "Hook: the account starts blind, so the owner needs a guardrail before anything else.",
+          "removable": false,
+          "alt": null
+        },
+        {
+          "beat": "E5-02",
+          "voice": "בוט מודעות של [excited] WAO מתחיל עם תקרה למחיר הקליק, לפי המקצוע שלך.",
+          "display": "בוט מודעות של WAO מתחיל עם תקרה למחיר הקליק, לפי המקצוע שלך.",
+          "screen": "WAO campaign settings for the demo plumber: maximum cost-per-click field set to the ceiling for his trade, no number shown.",
+          "tag_why": "Names product and brand once; per-trade click ceiling with no number, per Adam's CPC ruling. קליק, not לחיצה.",
+          "removable": false,
+          "alt": null
+        },
+        {
+          "beat": "E5-03",
+          "voice": "הוא אף פעם לא מעלה את התקציב היומי מעל מה שקבעת.",
+          "display": "הוא אף פעם לא מעלה את התקציב היומי מעל מה שקבעת.",
+          "screen": "WAO autonomy settings: daily budget locked at the amount the owner set, no auto-increase.",
+          "tag_why": "The budget guard in his words: the bot never raises what he set.",
+          "removable": false,
+          "alt": null
+        },
+        {
+          "beat": "E5-04",
+          "voice": "כשפנייה אמיתית עולה יותר ממה שהעבודה שלך מצדיקה, הוא לא מבקש עוד תקציב.",
+          "display": "כשפנייה אמיתית עולה יותר ממה שהעבודה שלך מצדיקה, הוא לא מבקש עוד תקציב.",
+          "screen": "WAO dashboard card: cost per real enquiry beside the limit computed from the plumber's job value; no budget-increase prompt shown.",
+          "tag_why": "Second money guard: no push for more budget while a real enquiry costs above his job-value limit. States the bot's behavior, not a cost cap.",
+          "removable": false,
+          "alt": null
+        },
+        {
+          "beat": "E5-06",
+          "voice": "הוא פועל לבד רק אחרי אישור חד פעמי שלך, בגבולות שאתה רואה.",
+          "display": "הוא פועל לבד רק אחרי אישור חד־פעמי שלך, בגבולות שאתה רואה.",
+          "screen": "WAO autonomy consent screen: one-time approval toggle and the visible limits it authorizes.",
+          "tag_why": "Autonomy is conditional on his one-time approval inside visible limits — answers 'leave it to us' distrust. Now the episode's closing control beat.",
+          "removable": false,
+          "alt": null
+        }
+      ]
+    },
+    "E6": {
+      "title": "התפקיד שלך: אמיתית או לא",
+      "lines": [
+        {
+          "beat": "E6-01",
+          "voice": "בוט מודעות של [excited] WAO לא מנחש איזו פנייה אמיתית. אתה אומר לו.",
+          "display": "בוט מודעות של WAO לא מנחש איזו פנייה אמיתית. אתה אומר לו.",
+          "screen": "WAO Ads Bot leads screen for the demo plumber, first enquiries arriving.",
+          "tag_why": "Hook + brand: the bot does not guess quality; the owner is the authority. Sets up his one-second job.",
+          "removable": false,
+          "alt": null
+        },
+        {
+          "beat": "E6-02",
+          "voice": "פניות מהדף שלך נוחתות ברשימה אחת: טופס, לחיצה על כפתור החיוג או וואטסאפ.",
+          "display": "פניות מהדף שלך נוחתות ברשימה אחת: טופס, לחיצה על כפתור החיוג או וואטסאפ.",
+          "screen": "WAO leads list: one form lead, one call-button tap, one WhatsApp tap in a single table.",
+          "tag_why": "Scoped to page enquiries per Dror (ad call-button calls skip the list) and Adam's no-every ruling. לחיצה stays a tap on a page button.",
+          "removable": false,
+          "alt": null
+        },
+        {
+          "beat": "E6-03",
+          "voice": "אתה מסמן כל אחת בלחיצה: אמיתית או לא.",
+          "display": "אתה מסמן כל אחת בלחיצה: אמיתית או לא.",
+          "screen": "WAO leads table row: the real / not-real toggle being tapped.",
+          "tag_why": "The one-second action, in his words.",
+          "removable": false,
+          "alt": null
+        },
+        {
+          "beat": "E6-04",
+          "voice": "כשעבודה נסגרת, אתה מסמן סָגוּר וכותב כמה היא הייתה שווה.",
+          "display": "כשעבודה נסגרת, אתה מסמן סגור וכותב כמה היא הייתה שווה.",
+          "screen": "WAO leads table: a lead marked closed, the job-value amount field filled.",
+          "tag_why": "Closed-job marking and value; niqqud on סָגוּר so it is heard as 'closed', not the imperative 'close'.",
+          "removable": false,
+          "alt": null
+        },
+        {
+          "beat": "E6-05",
+          "voice": "בחשבון המודעות, רק פנייה שסימנת כאמיתית היא תוצאה. קליקים לא נספרים.",
+          "display": "בחשבון המודעות, רק פנייה שסימנת כאמיתית היא תוצאה. קליקים לא נספרים.",
+          "screen": "WAO campaign goals view: only 'real enquiry' is the goal; clicks shown as recorded, not as goals.",
+          "tag_why": "The core rule: only his real-marked enquiry counts as a result, not clicks. קליקים per the click/tap rule.",
+          "removable": false,
+          "alt": null
+        },
+        {
+          "beat": "E6-07",
+          "voice": "בלי הסימונים שלך, לקמפיין אין על מה להיבנות.",
+          "display": "בלי הסימונים שלך, לקמפיין אין על מה להיבנות.",
+          "screen": "Plain card over the leads list: 'הסימונים שלך = הדלק של הקמפיין'.",
+          "tag_why": "The fuel line: without his marks there is nothing to build on. Carries the episode close now that the send-back beat is HOLD.",
+          "removable": false,
+          "alt": null
+        }
+      ]
+    },
+    "E7": {
+      "title": "מה נחסם ומה מקודם",
+      "lines": [
+        {
+          "beat": "E7-01",
+          "voice": "בוט מודעות של [excited] WAO רואה בדיווח של גוגל אילו חיפושים הביאו את הקליקים.",
+          "display": "בוט מודעות של WAO רואה בדיווח של גוגל אילו חיפושים הביאו את הקליקים.",
+          "screen": "WAO search-terms report for the demo plumber: the searches Google reports behind each click.",
+          "tag_why": "Hook + brand: sees in Google's report which searches brought the clicks, per Dror's soft fix — not a claim about literal typed queries, and no כל per Adam.",
+          "removable": false,
+          "alt": null
+        },
+        {
+          "beat": "E7-02",
+          "voice": "באישור חד פעמי שלך, הבוט יכול לחסום חיפוש בזבזני. התנאי: לפחות חמישה קליקים, עלות מעל הרף שלך, ובלי פנייה שסימנת כאמיתית.",
+          "display": "באישור חד־פעמי שלך, הבוט יכול לחסום חיפוש בזבזני. התנאי: לפחות 5 קליקים, עלות מעל הרף שלך, ובלי פנייה שסימנת כאמיתית.",
+          "screen": "WAO search-terms scoring: a query with 5+ clicks, cost above the computed bar, zero real-marked enquiries, marked blocked under the owner's one-time approval.",
+          "tag_why": "Block rule with Dror's consent and no-real-enquiry conditions. Split into action + condition list so each sentence stays under the punch cap; numbers as words in voice, digits in display.",
+          "removable": false,
+          "alt": null
+        },
+        {
+          "beat": "E7-03",
+          "voice": "חיפוש שהמודעה הופיעה בו פחות מחמישים פעם לא נחסם אף פעם.",
+          "display": "חיפוש שהמודעה הופיעה בו פחות מ־50 פעם לא נחסם אף פעם.",
+          "screen": "WAO search-terms screen: a query under 50 showings marked 'watch only', not blocked.",
+          "tag_why": "Thin-data guard: under 50 showings it is never blocked (the 20-showing ignore rule is subsumed).",
+          "removable": false,
+          "alt": null
+        },
+        {
+          "beat": "E7-04",
+          "voice": "הוא חוסם רק את הניסוח הזה, לא נושא שלם ולא מילה בודדת.",
+          "display": "הוא חוסם רק את הניסוח הזה, לא נושא שלם ולא מילה בודדת.",
+          "screen": "WAO negative-keyword screen: the exact search wording blocked; no topic block and no single-word block applied.",
+          "tag_why": "Precise block per Dror: only that search wording, never a whole topic or a single loose word that could hide good searches.",
+          "removable": false,
+          "alt": null
+        },
+        {
+          "beat": "E7-05",
+          "voice": "שתי פניות אמיתיות במחיר שבגבול שלך, והחיפוש הופך למילה שהקמפיין רודף אחריה בכוונה.",
+          "display": "שתי פניות אמיתיות במחיר שבגבול שלך, והחיפוש הופך למילה שהקמפיין רודף אחריה בכוונה.",
+          "screen": "WAO search-terms screen: a query with 2 real enquiries within the limit promoted to its own keyword.",
+          "tag_why": "The other direction: a proven search is promoted so the campaign goes after it on purpose. Noa's verb kept verbatim; front restructured to fit the punch cap.",
+          "removable": false,
+          "alt": null
+        },
+        {
+          "beat": "E7-06",
+          "voice": "זה מתחיל רק אחרי השבועיים הראשונים של הקמפיין.",
+          "display": "זה מתחיל רק אחרי השבועיים הראשונים של הקמפיין.",
+          "screen": "Plain card over the campaign timeline: 'מתחיל אחרי השבועיים הראשונים'.",
+          "tag_why": "Timing guard: promotion starts only after the first two weeks. Now the episode's closing guard.",
+          "removable": false,
+          "alt": null
+        }
+      ]
+    },
+    "E8": {
+      "title": "מקליקים לפניות אמיתיות",
+      "lines": [
+        {
+          "beat": "E8-01",
+          "voice": "קליק הוא לא עבודה. בוט מודעות של [excited] WAO יודע את זה.",
+          "display": "קליק הוא לא עבודה. בוט מודעות של WAO יודע את זה.",
+          "screen": "WAO Ads Bot dashboard for the demo plumber: clicks and real enquiries as two separate counters.",
+          "tag_why": "Founder's headline point opened as a scene: a click is not a job. Names product and brand once.",
+          "removable": false,
+          "alt": null
+        },
+        {
+          "beat": "E8-02",
+          "voice": "בהתחלה הקמפיין במצב קליקים, עם תקרה למחיר הקליק לפי המקצוע שלך.",
+          "display": "בהתחלה הקמפיין במצב קליקים, עם תקרה למחיר הקליק לפי המקצוע שלך.",
+          "screen": "WAO campaign screen: mode 'מצב קליקים', max cost-per-click set to the trade ceiling, no number shown.",
+          "tag_why": "Stage one stated plainly: click mode under the per-trade ceiling, no number per Adam. Approved term מצב קליקים kept.",
+          "removable": false,
+          "alt": null
+        },
+        {
+          "beat": "E8-04",
+          "voice": "הקמפיין מתוכנן לעבור לבד למצב פניות, שבו גוגל מְכַוֵּן לפניות אמיתיות בלבד.",
+          "display": "הקמפיין מתוכנן לעבור לבד למצב פניות, שבו גוגל מכוון לפניות אמיתיות בלבד.",
+          "screen": "Plain card: 'מצב קליקים → מצב פניות', labelled 'מתוכנן לעבור לבד'.",
+          "tag_why": "The designed-to switch per Adam until phase 2 is live and Roni-verified; enquiry mode aims at real enquiries only. Google masculine, niqqud on מְכַוֵּן so it is heard as active 'aims'.",
+          "removable": false,
+          "alt": null
+        },
+        {
+          "beat": "E8-05",
+          "voice": "התנאי הוא בערך חמש עשרה פניות אמיתיות בשישים יום, ולפחות שתי עבודות שנסגרו.",
+          "display": "התנאי הוא כ־15 פניות אמיתיות ב־60 יום, ולפחות שתי עבודות שנסגרו.",
+          "screen": "Plain card: 'כ־15 פניות אמיתיות ב־60 יום, ולפחות 2 עבודות שנסגרו'.",
+          "tag_why": "The design condition: ~15 real enquiries in 60 days PLUS at least two closed jobs, per Adam's wording everywhere. Not attributed to Google, not a closed-jobs-only trigger. שנסגרו also removes the homograph/niqqud dependency.",
+          "removable": false,
+          "alt": null
+        },
+        {
+          "beat": "E8-06",
+          "voice": "בתקציב המינימום אנחנו מעריכים חודשיים עד שלושה, ולא כל עסק מגיע לזה.",
+          "display": "בתקציב המינימום אנחנו מעריכים חודשיים־שלושה, ולא כל עסק מגיע לזה.",
+          "screen": "Plain card: 'הערכה: חודשיים־שלושה בתקציב המינימום'.",
+          "tag_why": "Honest estimate at minimum budget (אנחנו מעריכים per Noa/Dror), and the honest caveat that not every business gets there. No area talk.",
+          "removable": false,
+          "alt": null
+        },
+        {
+          "beat": "E8-07",
+          "voice": "אם לא, הקמפיין נשאר במצב קליקים וממשיך לעבוד.",
+          "display": "אם לא, הקמפיין נשאר במצב קליקים וממשיך לעבוד.",
+          "screen": "WAO campaign screen: still 'מצב קליקים', active and running.",
+          "tag_why": "The honest fallback: click mode keeps working; no doom, no pressure.",
+          "removable": false,
+          "alt": null
+        },
+        {
+          "beat": "E8-08",
+          "voice": "הקמפיין מתוכנן לחזור לבד למצב קליקים אם מצב פניות עובד פחות טוב.",
+          "display": "הקמפיין מתוכנן לחזור לבד למצב קליקים אם מצב פניות עובד פחות טוב.",
+          "screen": "Plain card: 'מצב פניות עובד פחות טוב → הקמפיין מתוכנן לחזור לבד למצב קליקים'.",
+          "tag_why": "Safety net in the designed-to frame per Adam. Restructured so E8-07 and E8-08 no longer open with two אם in a row. Closes on control.",
+          "removable": false,
+          "alt": null
+        }
+      ]
+    }
+  },
+  "flags": [
+    "Wanted Google-learning and budget-shift language in stage one; the brief fixes stage one as click-buying, so all aiming language sits inside the designed-to enquiry mode in E8-04.",
+    "Wanted a concrete cost guard; Adam removed the ₪15 number, so only the per-trade click ceiling appears (E5-02, E8-02). No enquiry-cost promise anywhere.",
+    "Switch and rollback are מתוכנן per Adam until phase 2 is live and Roni-verified. Condition: ~15 real enquiries in 60 days plus at least two closed jobs; minimum-budget estimate חודשיים עד שלושה; not every trade gets there. No area talk.",
+    "HOLD cuts per Adam: E5-05 (fake-click filter), E5-07 (stop switch + log), E7-07 (approval/once-a-day), E6-06 (send-back) are out of the voiced cuts until their gates pass. E5 now closes on approval/limits, E7 on the two-week timing guard. Restore them the moment the gates pass — they are the strongest control closers.",
+    "E8-03 (send-back) was dropped to hold E8 at the 80-word cap after the designed-to and closed-jobs fixes lengthened it; Dror marks it removable behind GA1. The Google send-back fact now appears nowhere in B's voiced cuts — restore E8-03 or E6-06 as soon as GA1 passes; it is the mechanism that makes the designed-to switch believable.",
+    "If any E8 cut runs as paid media: the designed-to switch/rollback lines stay out until phase 2 is live and the landing page discloses the condition (Dror's paid-media policy). No price appears in this file, so the price block is clean.",
+    "Wanted to close E8 with the monthly budget that would open the switch as a concrete next step; supported but cut for the founder word budget — restore in a longer cut.",
+    "Cap taken as 80 voiced words per episode, inferred from Noa's E5=81 flag (round 1 E7 sat at 80 unflagged). E8 lands at 79 after the round-3 estimate fix; if the brief's cap is lower, flag it — I did not cut passing or mandated content to guess."
+  ],
+  "changes": [
+    {"id": "E6-title", "why": "Noa exact: התפקיד שלך: אמיתית או זבל → התפקיד שלך: אמיתית או לא; matches Adam's אמיתית / לא אמיתית labels."},
+    {"id": "E6-02", "why": "Noa exact (voice + display): dropped the comma before או — טופס, לחיצה על כפתור החיוג או וואטסאפ. 13 words, unchanged count."},
+    {"id": "E6-03", "why": "Noa exact (voice + display): אמיתית או זבל → אמיתית או לא. Screen toggle junk → not-real so the production note matches the new labels — the same voice/screen mismatch Noa flagged YELLOW in the other cuts. 8 words."},
+    {"id": "E7-01", "why": "Dror soft fix (voice + display): איזה חיפוש הביא כל קליק → אילו חיפושים הביאו את הקליקים — plural searches/clicks, and כל drops out per Adam's no-every ruling. 13 words; tag_why updated, screen already plural and kept."},
+    {"id": "E7-04", "why": "Noa exact (voice + display): em-dash → comma — הוא חוסם רק את הניסוח הזה, לא נושא שלם ולא מילה בודדת. 12 words."},
+    {"id": "E8-06", "why": "Noa exact + Dror (voice + display + screen): זה בדרך כלל → אנחנו מעריכים; screen card → הערכה: חודשיים־שלושה בתקציב המינימום. An estimate we own, not a promised timeline. 12 words (one fewer); tag_why updated."},
+    {"id": "E8-07", "why": "Noa exact (voice + display): הוא → הקמפיין — explicit subject, nearest antecedent in the same short, per the proposed pronoun upgrades. 8 words, unchanged count."},
+    {"id": "flags", "why": "Two consequential corrections only: minimum-budget timeline → estimate (Dror's we-estimate framing); E8 lands at 79, not 80, after E8-06 lost one word. All other flags byte-for-byte."},
+    {"id": "word-counts", "why": "Re-counted voiced words: E5 untouched, E6=62, E7=78, E8=79 against the inferred 80-word episode cap; every sentence ≤13. Every line not listed in these changes kept byte-for-byte."},
+    {"id": "scope", "why": "Only explainer-B items applied. Yonatan's round-2 sign-off has no items for this file — no anchor or term touched. A3, FAQ, how-it-works, article, leads-page subtitles and pron-test items belong to their own deliverables; Dror's product/negatives items route to the engineer via Adam."}
+  ]
+}
+```
+
+→ Noa to proof the changed strings, especially E7-01's plural and the E6-03 screen label; → Eitan-Dev to apply in the explainer B copy file and update the E6-03 / E8-06 screens. Yonatan: nothing for this file, anchors clean.

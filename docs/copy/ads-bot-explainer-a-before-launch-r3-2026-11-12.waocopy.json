@@ -1,0 +1,293 @@
+Angle unchanged (product-aware, burned by "leave it to us" — every gate inspectable before spend). Round 3 is polish only: the four Explainer-A items from Adam/Noa/Dror, no YELLOW touches this file, everything else byte-for-byte.
+
+```json
+{
+  "angle": "He is product-aware and has been burned by 'leave it to us', so the through-line is 'watch every gate your money passes before it is spent': the demand math, one service with a refusal list, an ad built from his own facts, and a page that repeats his search. Each episode shows one inspectable decision on a real screen instead of a promise, in a calm voice that never sells a result.",
+  "series_title": "לפני השקל הראשון",
+  "episodes": {
+    "E1": {
+      "title": "קודם חשבון, אחר כך פרסום",
+      "lines": [
+        {
+          "beat": "E1-01",
+          "voice": "אתה מכיר את זה: שילמת על קליקים, והטלפון שתק.",
+          "display": "אתה מכיר את זה: שילמת על קליקים, והטלפון שתק.",
+          "screen": "Plain card: a work phone lying silent on a van dashboard, no notifications.",
+          "tag_why": "No tag — the pain scene is read flat and dry."
+        },
+        {
+          "beat": "E1-02",
+          "voice": "בוט מודעות של [excited] WAO מתחיל בבדיקה, לא בפרסום.",
+          "display": "בוט מודעות של WAO מתחיל בבדיקה, לא בפרסום.",
+          "screen": "Plain brand card: WAO wordmark with the product name בוט מודעות, no Google logo.",
+          "tag_why": "The episode's single [excited], directly before WAO, on the line that names בוט מודעות."
+        },
+        {
+          "beat": "E1-03",
+          "voice": "הוא שואל אותך כמה שווה לך עבודה וכמה פניות אתה סוגר.",
+          "display": "הוא שואל אותך כמה שווה לך עבודה וכמה פניות אתה סוגר.",
+          "screen": "Demo opening chat: the bot asks the plumber what a job is worth and how many enquiries he closes.",
+          "tag_why": "No tag — a calm question, not a sell."
+        },
+        {
+          "beat": "E1-04",
+          "voice": "ואז הוא בודק בגוגל כמה אנשים מחפשים את השירות שלך.",
+          "display": "ואז הוא בודק בגוגל כמה אנשים מחפשים את השירות שלך.",
+          "screen": "Demand-readiness screen: real search volume for the plumber's main service.",
+          "tag_why": "No tag — the data is stated as a fact."
+        },
+        {
+          "beat": "E1-05",
+          "voice": "וכמה עולה קליק אחד על המודעה.",
+          "display": "וכמה עולה קליק אחד על המודעה.",
+          "screen": "Demand-readiness screen: the expected cost-per-click line highlighted.",
+          "tag_why": "No tag — short punch, kept flat."
+        },
+        {
+          "beat": "E1-06",
+          "voice": "המחיר הזה חייב להסתדר עם מה שאתה לוקח על עבודה.",
+          "display": "המחיר הזה חייב להסתדר עם מה שאתה לוקח על עבודה.",
+          "screen": "Demand-readiness screen: the click cost beside the plumber's average job value.",
+          "tag_why": "No tag — the math is read like a tradesman's check."
+        },
+        {
+          "beat": "E1-07",
+          "voice": "אם לא, הבוט לא מפרסם.",
+          "display": "אם לא, הבוט לא מפרסם.",
+          "screen": "Demand-readiness verdict: the stop state, campaign not created.",
+          "tag_why": "No tag — the refusal lands harder without lift."
+        },
+        {
+          "beat": "E1-08",
+          "voice": "וגם כשהמספרים מסתדרים, הפרסום נשאר כבוי עד שראית את התוכנית.",
+          "display": "וגם כשהמספרים מסתדרים, הפרסום נשאר כבוי עד שראית את התוכנית.",
+          "screen": "Campaign screen: the new campaign shown paused, with the full plan preview open.",
+          "tag_why": "No tag — the gate is a calm promise, not excitement."
+        }
+      ]
+    },
+    "E2": {
+      "title": "שירות אחד, ורשימת מילים חסומות",
+      "lines": [
+        {
+          "beat": "E2-01",
+          "voice": "לא כל מי שמקליד בגוגל הוא לקוח שלך.",
+          "display": "לא כל מי שמקליד בגוגל הוא לקוח שלך.",
+          "screen": "Plain card: three typed searches that are not customers — job seeker, free download, DIY course.",
+          "tag_why": "No tag — the hook stays dry."
+        },
+        {
+          "beat": "E2-02",
+          "voice": "בוט מודעות של [excited] WAO בוחר את השירות שהכי משתלם לך.",
+          "display": "בוט מודעות של WAO בוחר את השירות שהכי משתלם לך.",
+          "screen": "Demo chat: the bot confirms the plumber's one main, most profitable service.",
+          "tag_why": "Single [excited] before WAO on the product-name line; the rest is calm."
+        },
+        {
+          "beat": "E2-03",
+          "voice": "רק שלוש עד חמש מילות חיפוש, כולן לאותו שירות.",
+          "display": "רק שלוש עד חמש מילות חיפוש, כולן לאותו שירות.",
+          "screen": "Campaign build screen: one ad group holding three to five phrases, all for that service.",
+          "tag_why": "No tag — a restriction stated plainly."
+        },
+        {
+          "beat": "E2-04",
+          "voice": "המודעה מופיעה רק כשמחפשים את השירות שלך, גם במילים אחרות.",
+          "display": "המודעה מופיעה רק כשמחפשים את השירות שלך, גם במילים אחרות.",
+          "screen": "Campaign build screen: the phrase-match setting on the keywords.",
+          "tag_why": "No tag — precision is a fact, not a boast."
+        },
+        {
+          "beat": "E2-05",
+          "voice": "ומהיום הראשון יש רשימת חסימות: קורסים, יד שנייה, מחפשי עבודה.",
+          "display": "ומהיום הראשון יש רשימת חסימות: קורסים, יד שנייה, מחפשי עבודה.",
+          "screen": "Campaign build screen: a demo day-one negative list — courses, second hand, job seekers. Not the live list until fix 3 ships (it still contains מחיר).",
+          "tag_why": "No tag — the list is read like an inventory."
+        },
+        {
+          "beat": "E2-06",
+          "voice": "היא כוללת גם מה שאמרת לבוט שאתה לא עושה.",
+          "display": "היא כוללת גם מה שאמרת לבוט שאתה לא עושה.",
+          "screen": "Demo chat: the plumber says what he does not do; that phrase joins the block list.",
+          "tag_why": "No tag — his own words, kept flat."
+        },
+        {
+          "beat": "E2-07",
+          "voice": "גוגל חוסם רק את המילים שברשימה, לא מילים דומות. הבוט בוחר כל מילה בכוונה.",
+          "display": "גוגל חוסם רק את המילים שברשימה, לא מילים דומות. הבוט בוחר כל מילה בכוונה.",
+          "screen": "Plain card: the block list with a note that Google blocks only the listed word itself.",
+          "tag_why": "No tag — Google's rule and the deliberate build, read flat."
+        },
+        {
+          "beat": "E2-08",
+          "voice": "המודעות מופיעות רק בתוצאות חיפוש, לא כבאנרים באתרים.",
+          "display": "המודעות מופיעות רק בתוצאות חיפוש, לא כבאנרים באתרים.",
+          "screen": "Campaign settings card: text ads in search results only, no display banners.",
+          "tag_why": "No tag — the boundary is calm."
+        }
+      ]
+    },
+    "E3": {
+      "title": "המודעה נבנית מהאמת שלך",
+      "lines": [
+        {
+          "beat": "E3-01",
+          "voice": "שלוש מודעות בגוגל, וכולן אומרות ״שירות מקצועי, מחיר הוגן״.",
+          "display": "שלוש מודעות בגוגל, וכולן אומרות ״שירות מקצועי, מחיר הוגן״.",
+          "screen": "Plain card: three look-alike ad texts, all saying professional service and a fair price.",
+          "tag_why": "No tag — the generic scene is read with a straight face."
+        },
+        {
+          "beat": "E3-02",
+          "voice": "בוט מודעות של [excited] WAO שואל אותך מה מייחד אותך.",
+          "display": "בוט מודעות של WAO שואל אותך מה מייחד אותך.",
+          "screen": "Demo chat: the bot asks the plumber what makes him different.",
+          "tag_why": "Single [excited] before WAO on the product-name line."
+        },
+        {
+          "beat": "E3-03",
+          "voice": "אחריות, רישיון, שנות ניסיון, וכמה מהר אתה מגיע.",
+          "display": "אחריות, רישיון, שנות ניסיון, וכמה מהר אתה מגיע.",
+          "screen": "Demo chat: his answers — guarantee, licence, years in the trade, arrival time.",
+          "tag_why": "No tag — his facts, listed calmly."
+        },
+        {
+          "beat": "E3-04",
+          "voice": "מהתשובות הוא בונה עד חמש עשרה כותרות וארבעה תיאורים.",
+          "display": "מהתשובות הוא בונה עד חמש עשרה כותרות וארבעה תיאורים.",
+          "screen": "Ad build screen: up to fifteen headlines and four descriptions filled for the plumber.",
+          "tag_why": "No tag — the structure is a fact."
+        },
+        {
+          "beat": "E3-05",
+          "voice": "הכותרות מציגות יתרונות שונים, לא אותו משפט במילים אחרות.",
+          "display": "הכותרות מציגות יתרונות שונים, לא אותו משפט במילים אחרות.",
+          "screen": "Ad build screen: two headlines highlighted, each a different selling point.",
+          "tag_why": "No tag — the differentiator is stated, not hyped."
+        },
+        {
+          "beat": "E3-06",
+          "voice": "השירות המרכזי שלך מופיע בכותרות.",
+          "display": "השירות המרכזי שלך מופיע בכותרות.",
+          "screen": "Ad build screen: the main service name written into the headlines.",
+          "tag_why": "No tag — a detail, kept flat."
+        },
+        {
+          "beat": "E3-07",
+          "voice": "גוגל מערבב את הכותרות, ומחליט בכל חיפוש מה להציג.",
+          "display": "גוגל מערבב את הכותרות, ומחליט בכל חיפוש מה להציג.",
+          "screen": "Plain preview card: two different headline combinations of the same ad.",
+          "tag_why": "No tag — Google's action, neutral."
+        },
+        {
+          "beat": "E3-08",
+          "voice": "לפעמים גוגל מוסיף מתחת למודעה כפתור חיוג או תמונות שלך.",
+          "display": "לפעמים גוגל מוסיף מתחת למודעה כפתור חיוג או תמונות שלך.",
+          "screen": "Ad assets screen: call asset with the plumber's number; his own photos only once the account is eligible for image assets (usually not in the first weeks).",
+          "tag_why": "No tag — the hedge 'לפעמים' must stay calm and honest."
+        }
+      ]
+    },
+    "E4": {
+      "title": "הדף ממשיך את החיפוש",
+      "lines": [
+        {
+          "beat": "E4-01",
+          "voice": "מישהו מחפש תיקון ברז, ומגיע לדף שמדבר על הכול.",
+          "display": "מישהו מחפש תיקון ברז, ומגיע לדף שמדבר על הכול.",
+          "screen": "Plain card: a tap-repair search above a generic page that talks about everything.",
+          "tag_why": "No tag — the mismatch scene is dry."
+        },
+        {
+          "beat": "E4-02",
+          "voice": "בוט מודעות של [excited] WAO בונה דף שמדבר רק על השירות שלך.",
+          "display": "בוט מודעות של WAO בונה דף שמדבר רק על השירות שלך.",
+          "screen": "Landing-page builder: the dedicated page generated for the plumber's one service.",
+          "tag_why": "Single [excited] before WAO on the product-name line."
+        },
+        {
+          "beat": "E4-03",
+          "voice": "הכותרת של הדף חייבת להכיל את שם השירות שחיפשו.",
+          "display": "הכותרת של הדף חייבת להכיל את שם השירות שחיפשו.",
+          "screen": "Landing page hero: the headline containing the exact searched service name.",
+          "tag_why": "No tag — the hard rule is stated plainly."
+        },
+        {
+          "beat": "E4-04",
+          "voice": "גוגל בודק גם את הדף, לא רק את המודעה.",
+          "display": "גוגל בודק גם את הדף, לא רק את המודעה.",
+          "screen": "Plain card: two checks side by side — the ad and the landing page.",
+          "tag_why": "No tag — Google's check, neutral."
+        },
+        {
+          "beat": "E4-05",
+          "voice": "לפי גוגל, איכות גבוהה יכולה להוזיל את מחיר הקליק.",
+          "display": "לפי גוגל, איכות גבוהה יכולה להוזיל את מחיר הקליק.",
+          "screen": "Plain quote card: Google's own help wording that higher quality can often lower click prices.",
+          "tag_why": "No tag — an attributed quote must not sound like a promise."
+        },
+        {
+          "beat": "E4-06",
+          "voice": "בדף יש שלוש דרכים אליך: טופס, חיוג או וואטסאפ.",
+          "display": "בדף יש שלוש דרכים אליך: טופס, חיוג או וואטסאפ.",
+          "screen": "Landing page: the form, call button and WhatsApp button visible together.",
+          "tag_why": "No tag — the three ways are an inventory."
+        },
+        {
+          "beat": "E4-07",
+          "voice": "הפניות מהדף נוחתות ברשימה אחת בטלפון שלך.",
+          "display": "הפניות מהדף נוחתות ברשימה אחת בטלפון שלך.",
+          "screen": "Client leads screen on a phone: form, call-tap and WhatsApp leads in one list; footage uses the אמיתית / לא אמיתית labels once the leads-mark-labels brief ships.",
+          "tag_why": "No tag — the list is a calm gain."
+        },
+        {
+          "beat": "E4-08",
+          "voice": "ולכל פנייה רָשׁוּם הקליק שהביא אותה.",
+          "display": "ולכל פנייה רשום הקליק שהביא אותה.",
+          "screen": "Lead detail card: the source ad click attached to the lead.",
+          "tag_why": "No tag — the payoff is stated flat, like a fact."
+        }
+      ]
+    }
+  },
+  "flags": [
+    "Wanted to say the block list keeps updating as new waste searches appear; the brief cites Google's rule that such a list must be maintained, but no product fact commits the bot to ongoing updates, so E2 states only the day-one list.",
+    "Wanted to give the pre-launch check as a concrete ceiling (a share of his average job value); saying it aloud would read as a promised cost per enquiry, so E1 keeps the math qualitative and lands only the stop decision.",
+    "Wanted to close E1 with the bot's own honest line that the first month roughly breaks even; it is a real product behaviour but sits too close to the no-results rule, so I cut it rather than risk a payback promise."
+  ],
+  "changes": [
+    {
+      "id": "E2-05",
+      "why": "voice+display: 'ומהיום הראשון יש רשימת חסימות: חינם, קורסים, יד שנייה, מחפשי עבודה.' → 'ומהיום הראשון יש רשימת חסימות: קורסים, יד שנייה, מחפשי עבודה.' (Adam q09 option A; Noa exact; Dror: bare חינם is never blocked — free-intent phrases replace it in the live list). E2-06's 'היא' still refers to רשימת חסימות, checked."
+    },
+    {
+      "id": "E2-01 screen",
+      "why": "'free' → 'free download' (Noa exact): the typed search on the card is a free-download intent, matching Dror's phrase negatives, not the bare word we no longer block."
+    },
+    {
+      "id": "E2-05 screen",
+      "why": "Consequential sync, flagged for Adam: dropped 'free' from the demo negative list so the screen matches the spoken list and the never-block-bare-חינם ruling. Kept the 'not the live list until fix 3 ships (מחיר)' caveat byte-for-byte — Dror still has to confirm the live list is safe to record."
+    },
+    {
+      "id": "E2-07",
+      "why": "voice+display: 'גוגל חוסם רק מילים שברשימה, לא דומות. הבוט בוחר כל מילה בכוונה.' → 'גוגל חוסם רק את המילים שברשימה, לא מילים דומות. הבוט בוחר כל מילה בכוונה.' (Noa exact, binding; 14 voiced words, inside the 12–15 ceiling)."
+    },
+    {
+      "id": "E4-08",
+      "why": "voice only: 'רשום' → 'רָשׁוּם' (Noa exact; niqqud so the voice reads the verb, not the noun 'registry' — writing upgrade 4). Display stays unpointed, byte-for-byte."
+    },
+    {
+      "id": "E3-05",
+      "why": "voice+display: 'כל כותרת מציגה יתרון אחר, לא אותו משפט במילים אחרות.' → 'הכותרות מציגות יתרונות שונים, לא אותו משפט במילים אחרות.' (Dror soft, my call: up to fifteen headlines can't carry a per-headline guarantee; the collective plural keeps the contrast with E3-01's generic ads and the gain intact). New Hebrew line I authored → Noa to proof."
+    },
+    {
+      "id": "word-counts",
+      "why": "Voice words per episode after round 3, tags excluded: E1 69, E2 78, E3 68, E4 69 (E4 recount corrects round-2's 67; only niqqud changed there). Longest voiced line: E2-07 at 14 words. Every line not named above kept byte-for-byte."
+    },
+    {
+      "id": "handoff",
+      "why": "→ Noa: proof the new E3-05 line and the E4-08 niqqud. → Eitan-Dev (recording notes): E2-05 demo negatives without bare free, E2-01 'free download' search, E3-08 image-asset eligibility, E4-07 leads labels. For Adam: Dror's step-3 fact (the bot adds wasteful searches later, with one-time approval) now supports the ongoing-updates line flag 1 wanted — no item asked to extend E2, so it stays day-one this round. No YELLOW item concerns this file; the leads-page subtitles, A3, scripts, FAQ, how-it-works and article items belong to their own deliverables."
+    }
+  ]
+}
+```

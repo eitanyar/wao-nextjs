@@ -1,0 +1,109 @@
+Round 3 scope = nurture only: the reader stays problem-aware and funnel-allergic (angle unchanged), so I apply Noa's four exact fixes, take my three YELLOW calls, and record Dror's confirmed phrase list — Dror verdicts SHIP (parked) and Yonatan sets no nurture conditions, so every other line stays byte-for-byte.
+
+```json
+{
+  "angle": "The arc follows his shekel from a stranger's click to an enquiry he marked real: blocked words, demand check, quality pricing, budget brakes, then what actually counts as a result. He is problem-aware and funnel-allergic, so each text teaches one waste-or-protection lesson he can use without buying, and the last one walks him back to the demo.",
+  "opt_out": "רוצה לעצור? תשיב ״די״ או ״stop״ ונפסיק מיד.",
+  "sender_footer": "שולח: WAO, {{company_address}}. ליצירת קשר: {{contact_link}}",
+  "messages": [
+    {
+      "n": 1,
+      "day": 0,
+      "fact_used": "From day one, 10–15 words are blocked (job seekers, courses, second-hand, what he does not do; bare 'חינם' dropped per Adam's free-intent-phrase ruling, phrase list confirmed by Dror — see flags). Google will not block these searches for you, and a blocked word does not cover its singular, plural and synonyms, so the list is built on purpose.",
+      "text": "פרסומת\nקליק של מחפש עבודה עולה לך כמו קליק של לקוח אמיתי. מי שמחפש ״קורס תיקון מזגנים״, ״מזגן יד שנייה״ או ״איך לתקן לבד״ יכול להקליק על המודעה שלך, ואתה משלם. גוגל לא יחסום את החיפושים האלה בשבילך. בוט מודעות חוסם מהיום הראשון 10–15 מילים: דרושים, קורסים, יד שנייה, ומה שאתה לא עושה. ומילה חסומה לא מכסה את היחיד, הרבים והמילים הנרדפות שלה — לכן הרשימה נבנית בכוונה. הדמו פתוח: {{demo_link}}",
+      "link": "{{demo_link}}"
+    },
+    {
+      "n": 2,
+      "day": 4,
+      "fact_used": "Before a live campaign is created, Google's estimates of search volume and click price for his service are checked; if the numbers cannot work for his job value, it is not created. DIY check named: Google Keyword Planner (מתכנן מילות המפתח), per Noa's SALE item with Dror's confirmation.",
+      "text": "פרסומת\nיש שירותים שאנשים כמעט לא מחפשים, ופנייה דרכם עולה יותר ממה שהעבודה מצדיקה. את זה אתה יכול לבדוק גם לבד, במתכנן מילות המפתח של גוגל, לפני שאתה מוציא שקל. בוט מודעות בודק לפני כל קמפיין חי את ההערכות של גוגל: כמה מחפשים את השירות שלך ומה עולה קליק. אם המספרים לא מסתדרים עם שווי העבודה אצלך, אנחנו לא מקימים קמפיין. שאלה על השירות שלך? תכתוב כאן, תקבל תשובה בכתב.",
+      "link": null
+    },
+    {
+      "n": 3,
+      "day": 9,
+      "fact_used": "Google says higher-quality ads and pages can often lead to lower click prices; a good page opens on the exact service searched; in our build the page headline carries the service's name and the page is written around the service's search phrases.",
+      "text": "פרסומת\nגוגל עצמו אומר שמודעה ודף איכותיים יותר יכולים להוזיל את מחיר הקליק. מה מרכיב את האיכות? בין השאר, הדף שהמודעה מובילה אליו. כדאי שהכותרת שלו תהיה בדיוק השירות שהלקוח חיפש, לא כותרת כללית. בוט מודעות כותב את הדף סביב ביטויי החיפוש של השירות שלך, ושם השירות מופיע בכותרת. אותן מילים במודעה ובדף. גם בלי בוט מודעות, שווה לבדוק את זה בדף שלך. איך זה עובד אצלנו, צעד אחרי צעד: {{how_it_works_link}}",
+      "link": "{{how_it_works_link}}"
+    },
+    {
+      "n": 4,
+      "day": 15,
+      "fact_used": "The daily budget is an average Google works to over the month (up to 2× on a given day, monthly cap 30.4× — the 2× detail stays out of the text); the bot never raises it above what he set. At the start there is a ceiling on one click's price, set per trade; no ₪15 figure.",
+      "text": "פרסומת\nבוט מודעות אף פעם לא מעלה את התקציב היומי שלך מעל מה שקבעת. התקציב הזה הוא ממוצע שגוגל עובד לפיו לאורך החודש. בתחילת הדרך יש תקרה על המחיר של כל קליק, לפי המקצוע שלך. גם אם תנהל את הקמפיין לבד, תקרת מחיר קליק ותקציב יומי קבוע הם הבלמים שלך.",
+      "link": null
+    },
+    {
+      "n": 5,
+      "day": 22,
+      "fact_used": "Enquiries from his page land in one list; one tap marks real or not; each enquiry he marks real goes back to Google from day one tied to the click that brought it (clause removable behind GA1), and only those count as results in the account.",
+      "text": "פרסומת\nקליקים הם לא תוצאה. פניות אמיתיות הן תוצאה. עם בוט מודעות, הפניות מהדף נוחתות ברשימה אחת, ובלחיצה אחת אתה מסמן: אמיתית או לא. פנייה שסימנת כאמיתית חוזרת לגוגל מהיום הראשון, עם הקליק שהביא אותה, ורק היא נספרת בחשבון כתוצאה. גם בלי בוט מודעות, תסמן כל פנייה שנכנסה ותספור רק את האמיתיות. הדמו של WAO על העסק לדוגמה עדיין פתוח. תציץ שוב: {{demo_link}}",
+      "link": "{{demo_link}}"
+    }
+  ],
+  "flags": [
+    "PARKED per Adam (Amit): nothing sends until the consent form + proof, inbound opt-out webhook, dedicated marketing number, pre-approved MARKETING templates and scheduler quiet-hours are built. Revisit after the 29.11 launch; Adam asked to check email-first through the existing exit opt-in as the alternative.",
+    "Cadence updated to Amit's days 0/4/9/15/22, Sun–Thu 07:00–08:00 or 19:30–21:00, never Friday afternoon, Shabbat or holidays. Stop on opt-out or signup, pause on any reply and hand to support, drop messages 4–5 if 1–3 got no engagement, handle Meta per-user cap error 131049 with no retry loop.",
+    "Assembly per sent message: text (already starts with ׳פרסומת׳) + opt_out + sender_footer. Links render as URL buttons on fixed domains. Every template carries Meta's Stop promotions button; code halts immediately on di / hasser / stop / the button. The button lives in the template, so the copy does not describe it.",
+    "{{company_address}} and {{contact_link}} are placeholders: the brief carries no postal address or contact fact. Flagged, not invented — the engineer fills real values before template approval.",
+    "Free-intent phrase negatives confirmed by Dror (Adam's ruling; prompts.ts and intent-dictionaries.ts:30 queued after the current Ads Bot fixes): הורדה בחינם, להוריד בחינם, קורס בחינם, מדריך בחינם, תוכנה בחינם, אפליקציה בחינם, plus the non-ב forms, phrase match. Never block bare ׳חינם׳, ׳הצעת מחיר (בחינם)׳ or ׳בדיקה/ייעוץ חינם׳ — free-quote and free-check buyers still reach him. Noa proofs the spelling before the engineer applies. Message 1 no longer features bare ׳חינם׳ as a blocked word.",
+    "Message 5's tied-to-its-click clause is removable behind GA1 per Dror; if consent gating drops the click tie, remove only that clause.",
+    "Skipped the click-mode to enquiry-mode auto-switch fact: approved design, not live. Dror's ׳we estimate two to three months׳ framing belongs to the how-it-works page, and the switch conditions would break the 70-word ceiling and the no-implied-switch rule.",
+    "Skipped the Google ₪1,500 credit and the ₪249 fee: price is HOLD for paid media (Dror), neither is a waste-or-protection lesson, and the credit's eligibility caveats would read as funnel; the how-it-works page should carry both.",
+    "Message 5 states the day-one feedback to Google but stops before saying Google optimizes on his marks, to respect the stage-one bidding limit.",
+    "Message 2 now names מתכנן מילות המפתח של גוגל (Noa SALE item, Dror confirmed); the how-it-works page should still carry a DIY demand-check step.",
+    "Word counts (49–69) cover the body only and exclude the ׳פרסומת׳ opening, opt_out, sender_footer and link placeholders (URL buttons). No demo contents are asserted; links only invite a look.",
+    "Yonatan's new-element conditions (answer block, בקצרה box, Google's official terms, links, schema) target the how-it-works page and the Quality Score article, not this sequence. His round-2 sign-off sets no nurture conditions, so no such fields were added here — route those elements to the revision rounds of the two pages.",
+    "Handoffs: Noa proofs the revised Hebrew and the phrase-list spelling; Dror re-checks every Google statement on publish day; Amit clears consent wording, opt-out and MARKETING template category before anything sends; Eitan-Dev builds the wrapper and footer values, the negatives list and Amit's infrastructure blockers."
+  ],
+  "changes": [
+    {
+      "id": "NOA-M1-searches",
+      "why": "׳גוגל לא יחסום אותם בשבילך.׳ → Noa's exact ׳גוגל לא יחסום את החיפושים האלה בשבילך.׳ — the pronoun now names the searches, not the searchers."
+    },
+    {
+      "id": "NOA-M3-price",
+      "why": "׳יכולים להוזיל את הקליק.׳ → Noa's exact ׳יכולים להוזיל את מחיר הקליק.׳ — what gets cheaper is the price, not the click."
+    },
+    {
+      "id": "NOA-M3-headline",
+      "why": "׳ושם השירות בכותרת.׳ → Noa's exact ׳ושם השירות מופיע בכותרת.׳ — the verb removes the שם (name/there) ambiguity and carries the clause."
+    },
+    {
+      "id": "NOA-M5-cut",
+      "why": "Cut ׳אתה סופר פניות שאישרת בעצמך.׳ per Noa — the DIY line already lands on counting only the real ones, so the payoff stays without the repeat."
+    },
+    {
+      "id": "NOA-footer-sender",
+      "why": "sender_footer → Noa's exact ׳שולח: WAO, {{company_address}}. ליצירת קשר: {{contact_link}}׳ — the sender is named before the address."
+    },
+    {
+      "id": "TAMAR-M1-ending-YELLOW",
+      "why": "My call: M1 and M5 shared ׳תציץ שוב: {{demo_link}}׳. M1 now closes ׳הדמו פתוח: {{demo_link}}׳; M5 keeps Noa's approved walk-back line. This also holds M1 at 68 body words after the +2-word fix, under the 70-word ceiling."
+    },
+    {
+      "id": "TAMAR-M5-subject-YELLOW",
+      "why": "My call: accepted the subject direction as ׳עם בוט מודעות, הפניות מהדף…׳ rather than ׳אצל׳ — ׳עם׳ matches Adam's approved A3 framing and pairs with ׳גם בלי בוט מודעות׳ later in the same text. The list is the bot's, not a claim about his current page; ׳מהדף׳ keeps Dror's no-all scope."
+    },
+    {
+      "id": "TAMAR-M4-object-YELLOW",
+      "why": "My call: accepted Noa's direction — ׳גם אם תנהל לבד׳ → ׳גם אם תנהל את הקמפיין לבד׳, so the verb carries its object."
+    },
+    {
+      "id": "DROR-free-phrases-final",
+      "why": "Flag updated from my round-2 proposal to Dror's confirmed list: ב- forms plus אפליקציה בחינם and the non-ב forms, phrase match; never block bare חינם, הצעת מחיר (בחינם), בדיקה/ייעוץ חינם; intent-dictionaries.ts:30 aligned; Noa proofs spelling before the engineer applies. M1 fact_used status moved from queued to confirmed. Adam's q09 option A needed no edit here — M1 already carries no bare חינם."
+    },
+    {
+      "id": "SCOPE-round3",
+      "why": "Only nurture items applied. Dror's round-2 verdict on nurture is SHIP (still parked) and Yonatan's sign-off sets no nurture conditions; explainer, FAQ, how-it-works, article, A3 and leads-page items belong to their own files. This round-3 log replaces round-2's; all unflagged lines kept byte-for-byte."
+    },
+    {
+      "id": "META-counts",
+      "why": "Word-count flag refreshed to 49–69 body words, now explicitly excluding link placeholders (they render as URL buttons). M1 68, M2 69, M3 69, M4 49, M5 61."
+    }
+  ]
+}
+```
+
+→ Noa to proof the three YELLOW calls (M1 ending, M5 ׳עם בוט מודעות׳, M4 object) and the phrase-list spelling; → Eitan-Dev via Adam for the negatives list and footer values; nothing sends until Amit's PARKED blockers are built.

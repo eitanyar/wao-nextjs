@@ -1,0 +1,5 @@
+{
+  "admin_leads_subtitle": "סמן אם הפנייה אמיתית או לא, ועדכן הכנסה כשסגרת עסקה.",
+  "client_leads_subtitle": "סמן אם הפנייה אמיתית או לא, ועדכן כשסגרת עסקה.",
+  "notes": "Angle: utility subtitle above the leads table — the reader is product-aware and mid-task, so this is a plain instruction in the new label wording, not a pitch. Mode B, before → after: (A) 'ליד איכותי' → 'הפנייה אמיתית או לא' — matches the Noa-approved labels and the /google-ads wording (פנייה, feminine); removed 'זה מאמן את גוגל לשלוח לידים טובים יותר' (not how it works today) and the 'כל הלידים / כל הפניות' source list (brief omits 'every enquiry'); 'כשסוגרים' → 'כשסגרת' for singular male address. (B) Kept 'הכנסה' in the admin line because the old line had it — drop that word if the admin table has no revenue field. No Google-training claim, no future promise, no 'כל', and the limitation is never announced in the copy. No SEO anchor touched. → Noa to proof; → Eitan-Dev to apply in src/app/(app)/leads/page.tsx:30 and src/app/(product)/client/leads/page.tsx:44."
+}
