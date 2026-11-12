@@ -219,7 +219,9 @@ export async function POST(req: Request) {
 
         if (quality === "GOOD") {
           const lead = findLeadById(leads, id);
-          if (lead?.gclid || lead?.wbraid || lead?.gbraid) {
+          // 0c: always attempted so a no-click-ID lead is persisted as skipped_no_click_id
+          // (uploadLeadConversion returns that before any token exchange or network call).
+          if (lead) {
             uploadConversion(lead, planUploadsForTrigger(lead, "good")).catch(console.error);
           }
         }
@@ -255,7 +257,7 @@ export async function POST(req: Request) {
       await writeLeads(updatedLeads);
 
       const lead = findLeadById(leads, id);
-      if (lead?.gclid || lead?.wbraid || lead?.gbraid) {
+      if (lead) {
         uploadConversion(lead, planUploadsForTrigger(lead, "closed")).catch(console.error);
       }
 

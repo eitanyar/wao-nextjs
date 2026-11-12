@@ -31,15 +31,28 @@ test('weekly-digest-batch.ts provides listGoogleAdsBoundClientIds and buildAllCl
   assert.match(batchCode, /computeBlendedCplDisplay/);
 });
 
-test('campaign-enumeration.ts pulls metrics.all_conversions, not metrics.conversions (§8.4)', () => {
+test('campaign-enumeration.ts: the enumeration (reporting) query pulls all_conversions; only the verified-lead query reads metrics.conversions (§8.4, ads-bot-phase2 §3 0f)', () => {
   assert.match(enumerationCode, /metrics\.all_conversions/);
-  // The GAQL SELECT clause itself must never select the plain `metrics.conversions` field
-  // (a doc comment is allowed to name it for contrast, e.g. "not `metrics.conversions`" —
-  // that's documentation, not a live field selection, so this checks the SELECT block only).
-  const selectBlock = enumerationCode.match(/SELECT[\s\S]*?FROM campaign/)?.[0] ?? '';
-  assert.doesNotMatch(selectBlock, /metrics\.conversions\b(?!\w)/);
-  assert.match(selectBlock, /metrics\.all_conversions/);
-  assert.match(enumerationCode, /campaign\.status = 'ENABLED'/);
+  const selectBlocks = [...enumerationCode.matchAll(/SELECT[\s\S]*?FROM campaign[\s\S]*?`/g)].map((m) => m[0]);
+  // §8.4 — the ENABLED-campaign enumeration query (spend + reporting conversions) selects
+  // all_conversions and never the plain `metrics.conversions` field.
+  const enumerationQuery = selectBlocks.find((q) => /campaign\.status = 'ENABLED'/.test(q)) ?? '';
+  assert.ok(enumerationQuery, 'enumeration query not found');
+  assert.doesNotMatch(enumerationQuery, /metrics\.conversions\b(?!\w)/);
+  assert.match(enumerationQuery, /metrics\.all_conversions/);
+  // 0f — the one query allowed to select `metrics.conversions` is the verified-lead count, and
+  // it is always filtered to the single verified-lead conversion action.
+  const conversionsQueries = selectBlocks.filter((q) => /metrics\.conversions\b(?!\w)/.test(q.split('FROM')[0]));
+  assert.equal(conversionsQueries.length, 1);
+  assert.match(conversionsQueries[0], /WHERE segments\.conversion_action = '\$\{verifiedLeadConversionResourceName\}'/);
+  assert.doesNotMatch(conversionsQueries[0], /all_conversions/);
+});
+
+test('weekly-digest-batch.ts: per-campaign digests count verified leads via cplGateConversions (0g); the blended roll-up stays all_conversions (display)', () => {
+  assert.match(batchCode, /verifiedLeadConversionResourceName: campaign\.verifiedLeadConversionResourceName/);
+  assert.match(batchCode, /cplGateConversions\(c\)/);
+  assert.doesNotMatch(batchCode, /conversions: c\.conversions/);
+  assert.match(batchCode, /blended: computeBlendedCplDisplay\(enumerated\)/);
 });
 
 test('whatsapp-digest.ts provides composeWeeklyDigestWhatsAppMessage and buildWeeklyDigestWhatsAppLink', () => {

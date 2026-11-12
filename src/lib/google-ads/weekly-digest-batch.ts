@@ -10,6 +10,7 @@ import {
   type WeeklyDigest,
 } from '@/lib/crm/intelligence';
 import {
+  cplGateConversions,
   enumerateEnabledCampaigns,
   computeBlendedCplDisplay,
   readWeeklySpendIls,
@@ -117,6 +118,8 @@ export async function buildAllClientDigests(now?: Date): Promise<ClientDigestRes
         customerId: index.primaryCustomerId,
         clientId,
         mode: campaign.mode === 'live' ? 'live' : 'test',
+        // ads-bot-phase2 spec §3 0f/0g: per-campaign digests count verified leads only.
+        verifiedLeadConversionResourceName: campaign.verifiedLeadConversionResourceName,
       });
 
       if (!enumerated.length) {
@@ -137,9 +140,12 @@ export async function buildAllClientDigests(now?: Date): Promise<ClientDigestRes
           campaign,
           now,
           windowDays: ENUMERATION_WINDOW_DAYS,
+          // 0g: the verified-lead count (0f) for accounts with a WAO verified-lead action,
+          // all_conversions only for accounts without one. When the 0f read failed this is
+          // undefined, so the digest falls back to the CRM count instead of all_conversions.
           performance: {
             spendMicros: Math.round(c.spendIls * 1_000_000),
-            conversions: c.conversions,
+            conversions: cplGateConversions(c),
           },
         }),
       }));

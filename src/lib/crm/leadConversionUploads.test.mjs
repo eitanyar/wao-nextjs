@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
+import { execFileSync } from 'node:child_process';
 import { toEventTimestamp } from '../google-ads/data-manager-events.js';
 import { parseLeadDateUtc } from './leadDate.js';
 import {
@@ -45,6 +46,39 @@ test('0b: output is never earlier than the input instant, and never the old fake
     assert.ok(out.endsWith('Z'));
     assert.ok(!out.endsWith('+03:00'));
   }
+});
+
+// Israel DST 2026: clocks go 02:00 -> 03:00 on Fri 27 Mar (00:00Z) and 02:00 -> 01:00 on
+// Sun 25 Oct (23:00Z on the 24th).
+test('0b: DST boundaries — instants on both sides of each Israeli switch keep their exact instant', () => {
+  const cases = [
+    ['2026-03-27T01:59:00+02:00', '2026-03-26T23:59:00.000Z'], // last winter minute
+    ['2026-03-27T03:00:00+03:00', '2026-03-27T00:00:00.000Z'], // first summer minute
+    ['2026-10-25T01:59:00+03:00', '2026-10-24T22:59:00.000Z'], // last summer minute
+    ['2026-10-25T01:00:00+02:00', '2026-10-24T23:00:00.000Z'], // first winter minute (01:00 again)
+  ];
+  for (const [input, expected] of cases) assert.equal(toEventTimestamp(input), expected, input);
+  // Every zoneless captureLead value in the 4 hours around each switch maps to the same UTC
+  // instant, minute by minute: no hour is skipped or doubled.
+  for (const startIso of ['2026-03-26T22:00:00.000Z', '2026-10-24T21:00:00.000Z']) {
+    const start = new Date(startIso).getTime();
+    for (let m = 0; m <= 240; m += 1) {
+      const instant = new Date(start + m * 60_000);
+      const stored = instant.toISOString().replace('T', ' ').substring(0, 16);
+      assert.equal(toEventTimestamp(stored), instant.toISOString(), stored);
+    }
+  }
+});
+
+test('0b: the result does not depend on the server time zone (Asia/Jerusalem, UTC, New York)', () => {
+  const moduleUrl = new URL('../google-ads/data-manager-events.js', import.meta.url).href;
+  const inputs = ['2026-01-15 10:00', '2026-07-15 10:00', '2026-03-27 00:30', '2026-10-24 23:30'];
+  const script = `import(${JSON.stringify(moduleUrl)}).then((m) => process.stdout.write(JSON.stringify(${JSON.stringify(inputs)}.map(m.toEventTimestamp))))`;
+  const outputs = ['Asia/Jerusalem', 'UTC', 'America/New_York'].map((tz) =>
+    execFileSync(process.execPath, ['--input-type=module', '-e', script], { env: { ...process.env, TZ: tz }, encoding: 'utf8' }));
+  assert.deepEqual(JSON.parse(outputs[0]), ['2026-01-15T10:00:00.000Z', '2026-07-15T10:00:00.000Z', '2026-03-27T00:30:00.000Z', '2026-10-24T23:30:00.000Z']);
+  assert.equal(outputs[1], outputs[0]);
+  assert.equal(outputs[2], outputs[0]);
 });
 
 test('0b: unparseable / empty input falls back to now, never throws', () => {

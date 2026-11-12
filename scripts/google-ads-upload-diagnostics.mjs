@@ -14,10 +14,17 @@
  * Only `customer.query()` (GAQL SELECT) is ever called — no mutate, no upload. Never writes a
  * file. Run:
  *   node scripts/google-ads-upload-diagnostics.mjs [--customer 1234567890[:test|:live]]...
+ *
+ * Per-upload diagnostics (Data Manager API, read-only GET): for the `requestId` persisted on a
+ * lead's `verifiedUpload` / `closedUpload` (spec §3 0c), prints Google's
+ * `requestStatus:retrieve` result (SUCCESS / PROCESSING / FAILED / PARTIAL_SUCCESS + error
+ * reasons per destination):
+ *   node scripts/google-ads-upload-diagnostics.mjs --request-id <requestId>[:test|:live]
  */
 import fs from 'node:fs';
 import path from 'node:path';
 import { GoogleAdsApi } from 'google-ads-api';
+import { getDataManagerAccessToken, resolveDataManagerRefreshToken } from '../src/lib/google-ads/data-manager-events.js';
 
 const repoRoot = process.cwd();
 
@@ -119,7 +126,40 @@ const QUERIES = {
     FROM customer_conversion_goal`,
 };
 
+function requestIdsFromArgs() {
+  const out = [];
+  const argv = process.argv.slice(2);
+  for (let i = 0; i < argv.length; i += 1) {
+    if (argv[i] === '--request-id' && argv[i + 1]) {
+      const [requestId, mode = 'live'] = argv[i + 1].split(':');
+      out.push({ requestId, mode });
+      i += 1;
+    }
+  }
+  return out;
+}
+
+/** GET requestStatus:retrieve — read-only, changes nothing at Google. */
+async function retrieveRequestStatus({ requestId, mode }) {
+  const refreshToken = resolveDataManagerRefreshToken(mode) || process.env.GOOGLE_DATAMANAGER_REFRESH_TOKEN;
+  if (!refreshToken) return { error: `no Data Manager refresh token for mode ${mode}` };
+  const token = await getDataManagerAccessToken(refreshToken);
+  if (!token.accessToken) return { error: token.error, status: token.status };
+  const url = `https://datamanager.googleapis.com/v1/requestStatus:retrieve?requestId=${encodeURIComponent(requestId)}`;
+  const response = await fetch(url, { method: 'GET', headers: { Authorization: `Bearer ${token.accessToken}` } });
+  const body = await response.json().catch(() => null);
+  return { status: response.status, body };
+}
+
 async function main() {
+  const requestIds = requestIdsFromArgs();
+  if (requestIds.length) {
+    for (const item of requestIds) {
+      console.log(`\n==== Data Manager request ${item.requestId} (${item.mode})`);
+      console.log(JSON.stringify(await retrieveRequestStatus(item), null, 2));
+    }
+    return;
+  }
   const { GOOGLE_ADS_CLIENT_ID, GOOGLE_ADS_CLIENT_SECRET, GOOGLE_ADS_DEVELOPER_TOKEN } = process.env;
   if (!GOOGLE_ADS_CLIENT_ID || !GOOGLE_ADS_CLIENT_SECRET || !GOOGLE_ADS_DEVELOPER_TOKEN) {
     console.error('Google Ads API credentials not configured');

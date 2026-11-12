@@ -147,3 +147,66 @@ test('conflict guard compares word forms, not substrings', () => {
   // The free word on its own never counts as a collision.
   assert.equal(negativeCollidesWithPositives(FREE_INTENT_PHRASE_NEGATIVES[0], [`x ${NEVER_BLOCK_NEGATIVES[1]}`]), false);
 });
+
+// Roni's 2026-11-13 finding: a positive keyword in construct form (the "studies of" / "work of"
+// forms) did not drop the matching default negative (plural / singular form). Fixture Hebrew is
+// read from the repo, never typed: the construct keywords come from credentialsCopy.ts (a
+// licensed-trade credential name ending in the driving word) and verticalAssets.ts (an image alt).
+// Both lookups would fail loudly if the strings ever left the repo.
+const STUDIES_WORD = GENERIC_WORD_NEGATIVES[2]; // the "studies" word (plural)
+const WORK_WORD = GENERIC_WORD_NEGATIVES[5]; // the "work" word (singular, he ending)
+
+function constructDrivingKeyword(): string {
+  const drivingWord = drivingTeacherNiche().split(' ')[1];
+  const source = fs.readFileSync(path.join(repo, 'src/lib/site-bot/credentialsCopy.ts'), 'utf8');
+  const quoted = [...source.matchAll(/"([^"\n]+)"/g)].map((m) => m[1]);
+  // The construct form of the plural default: same letters minus the plural's final mem.
+  const construct = STUDIES_WORD.slice(0, -1);
+  const hit = quoted.find((q) => {
+    const parts = q.split(' ');
+    return parts.length === 2 && parts[1] === drivingWord && parts[0] === construct;
+  });
+  assert.ok(hit, 'construct-form driving keyword not found in credentialsCopy.ts');
+  return hit;
+}
+
+function constructWorkPhrase(): string {
+  const source = fs.readFileSync(path.join(repo, 'src/lib/lp/verticalAssets.ts'), 'utf8');
+  // An alt text whose first word is the singular default with a different last letter (tav).
+  const stem = WORK_WORD.slice(0, -1);
+  const alts = [...source.matchAll(/alt: '([^']+)'/g)].map((m) => m[1]);
+  const hit = alts.find((a) => {
+    const first = a.split(' ')[0];
+    return first.length === WORK_WORD.length && first.startsWith(stem) && first !== WORK_WORD;
+  });
+  assert.ok(hit, 'construct-form work phrase not found in verticalAssets.ts');
+  return hit;
+}
+
+test('conflict guard: a construct-state positive drops the plural default negative (studies)', () => {
+  const keyword = constructDrivingKeyword();
+  // Precondition: the construct form is neither the default itself nor default + an ending.
+  assert.notEqual(keyword.split(' ')[0], STUDIES_WORD);
+  assert.equal(negativeCollidesWithPositives(STUDIES_WORD, [keyword]), true);
+  const niche = drivingTeacherNiche();
+  const r = buildCampaignNegatives({ strategyNegatives: [], positiveKeywords: [niche, keyword], niche });
+  assert.ok(r.droppedDefaults.includes(STUDIES_WORD));
+  assert.ok(!r.negatives.includes(STUDIES_WORD));
+  for (const neg of r.negatives) assert.equal(negativeCollidesWithPositives(neg, [niche, keyword]), false, neg);
+});
+
+test('conflict guard: a construct-state positive drops the singular default negative (work)', () => {
+  const phrase = constructWorkPhrase();
+  assert.notEqual(phrase.split(' ')[0], WORK_WORD);
+  assert.equal(negativeCollidesWithPositives(WORK_WORD, [phrase]), true);
+  const r = buildCampaignNegatives({ strategyNegatives: [], positiveKeywords: [phrase] });
+  assert.ok(r.droppedDefaults.includes(WORK_WORD));
+});
+
+test('conflict guard: stripping endings on both sides still never matches inside a longer unrelated word', () => {
+  assert.equal(negativeCollidesWithPositives(STUDIES_WORD, [`${STUDIES_WORD}x`]), false);
+  assert.equal(negativeCollidesWithPositives(WORK_WORD, ['jobsite']), false);
+  // The plumber fixture still gets the full default list.
+  const niche = plumberNiche();
+  assert.deepEqual(buildCampaignNegatives({ strategyNegatives: [], positiveKeywords: [niche], niche }).droppedDefaults, []);
+});

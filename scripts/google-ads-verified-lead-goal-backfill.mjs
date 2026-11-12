@@ -17,6 +17,14 @@
  *   --apply              mutates, reads back, records lastGoalChangeAt in
  *                        <clientsDir>/<id>/tasks/google-ads/bidding-phase.json
  *   --confirm-live       additionally required for --apply on a live (non-test) account
+ *   --state-fixture <f>  dry run against a JSON fixture instead of Google (no credentials, no
+ *                        network): { "<customerId>": { "conversion_action": [...],
+ *                        "customer_conversion_goal": [...], "campaign_conversion_goal": [...] } }
+ *                        Refused together with --apply / --validate-only.
+ *
+ * An --apply on an account that is already verified-lead-only records `signalIntegritySince`
+ * (soak start) without a goal change. Directory overrides (tests / fixtures): WAO_CLIENTS_DIR,
+ * WAO_CAMPAIGNS_DIR.
  *
  * Example: node scripts/google-ads-verified-lead-goal-backfill.mjs --client google-ads-sandbox
  */
@@ -29,7 +37,7 @@ import {
   planVerifiedLeadOnlyGoals,
   readConversionGoalState,
 } from '../src/lib/google-ads/conversion-goals.js';
-import { recordGoalChange } from '../src/lib/google-ads/bidding-phase-state.js';
+import { recordGoalChange, recordSignalIntegrity } from '../src/lib/google-ads/bidding-phase-state.js';
 
 const repoRoot = process.cwd();
 
@@ -47,24 +55,44 @@ function loadEnvLocal() {
 }
 
 function parseArgs(argv) {
-  const args = { client: null, apply: false, validateOnly: false, confirmLive: false };
+  const args = { client: null, apply: false, validateOnly: false, confirmLive: false, stateFixture: null };
   for (let i = 0; i < argv.length; i += 1) {
     const a = argv[i];
     if (a === '--client') { args.client = argv[i + 1] ?? null; i += 1; }
     else if (a === '--apply') args.apply = true;
     else if (a === '--validate-only') args.validateOnly = true;
     else if (a === '--confirm-live') args.confirmLive = true;
+    else if (a === '--state-fixture') { args.stateFixture = argv[i + 1] ?? null; i += 1; if (!args.stateFixture) throw new Error('--state-fixture needs a file'); }
     else if (a === '--dry-run') { /* default */ }
     else throw new Error(`Unknown argument: ${a}`);
   }
   if (!args.client || !/^[a-zA-Z0-9][a-zA-Z0-9_-]{0,127}$/.test(args.client)) throw new Error('--client <id> is required');
   if (args.apply && args.validateOnly) throw new Error('--apply and --validate-only are exclusive');
+  if (args.stateFixture && (args.apply || args.validateOnly)) throw new Error('--state-fixture is dry-run only');
   return args;
 }
 
 function clientsDir() {
   const override = process.env.WAO_CLIENTS_DIR?.trim();
   return override ? path.resolve(override) : path.join(repoRoot, 'data', 'clients');
+}
+
+function campaignsDir() {
+  const override = process.env.WAO_CAMPAIGNS_DIR?.trim();
+  return override ? path.resolve(override) : path.join(repoRoot, 'data', 'campaigns');
+}
+
+/** A read-only stand-in for a google-ads-api Customer, answering GAQL from a fixture. */
+function fixtureCustomer(fixture, customerId) {
+  const state = fixture[customerId];
+  if (!state) throw new Error(`state fixture has no customer ${customerId}`);
+  return {
+    query: async (gaql) => {
+      const resource = gaql.match(/FROM\s+(\w+)/)?.[1];
+      if (!resource || !Array.isArray(state[resource])) throw new Error(`state fixture has no ${resource} rows`);
+      return state[resource].map((row) => ({ [resource]: row }));
+    },
+  };
 }
 
 function readJson(filePath) {
@@ -104,14 +132,20 @@ async function main() {
   if (!fs.existsSync(indexPath)) throw new Error(`No google-ads.json for client ${args.client}`);
   const index = readJson(indexPath);
 
-  const { GOOGLE_ADS_CLIENT_ID, GOOGLE_ADS_CLIENT_SECRET, GOOGLE_ADS_DEVELOPER_TOKEN } = process.env;
-  if (!GOOGLE_ADS_CLIENT_ID || !GOOGLE_ADS_CLIENT_SECRET || !GOOGLE_ADS_DEVELOPER_TOKEN) throw new Error('Google Ads API credentials not configured');
-  const api = new GoogleAdsApi({ client_id: GOOGLE_ADS_CLIENT_ID, client_secret: GOOGLE_ADS_CLIENT_SECRET, developer_token: GOOGLE_ADS_DEVELOPER_TOKEN });
+  const fixture = args.stateFixture ? readJson(path.resolve(args.stateFixture)) : null;
+  let api = null;
+  if (!fixture) {
+    const { GOOGLE_ADS_CLIENT_ID, GOOGLE_ADS_CLIENT_SECRET, GOOGLE_ADS_DEVELOPER_TOKEN } = process.env;
+    if (!GOOGLE_ADS_CLIENT_ID || !GOOGLE_ADS_CLIENT_SECRET || !GOOGLE_ADS_DEVELOPER_TOKEN) throw new Error('Google Ads API credentials not configured');
+    api = new GoogleAdsApi({ client_id: GOOGLE_ADS_CLIENT_ID, client_secret: GOOGLE_ADS_CLIENT_SECRET, developer_token: GOOGLE_ADS_DEVELOPER_TOKEN });
+  } else {
+    console.log(`state fixture: ${args.stateFixture} (no Google calls)`);
+  }
 
   const seen = new Set();
   let failures = 0;
   for (const link of index.campaigns ?? []) {
-    const configPath = path.join(repoRoot, 'data', 'campaigns', `${link.slug}.json`);
+    const configPath = path.join(campaignsDir(), `${link.slug}.json`);
     if (!fs.existsSync(configPath)) { console.log(`\n-- ${link.slug}: no campaign config, skipped`); continue; }
     const config = readJson(configPath);
     const customerId = String(config.customerId).replace(/-/g, '');
@@ -121,8 +155,13 @@ async function main() {
     console.log(`\n-- customer ${customerId} (${mode}, slug ${config.slug})`);
 
     try {
-      const { refreshToken, mccId } = accountFor(mode);
-      const customer = api.Customer({ customer_id: customerId, login_customer_id: mccId, refresh_token: refreshToken });
+      let customer;
+      if (fixture) {
+        customer = fixtureCustomer(fixture, customerId);
+      } else {
+        const { refreshToken, mccId } = accountFor(mode);
+        customer = api.Customer({ customer_id: customerId, login_customer_id: mccId, refresh_token: refreshToken });
+      }
       const state = await readConversionGoalState(customer);
       const refusals = goalBackfillRefusals(state.actions, config.verifiedLeadConversionResourceName);
       if (refusals.length) {
@@ -131,7 +170,15 @@ async function main() {
       }
       const plan = planVerifiedLeadOnlyGoals(state, config.verifiedLeadConversionResourceName);
       const total = printPlan(plan);
-      if (!total) { console.log('  already verified-lead-only; nothing to do'); continue; }
+      if (!total) {
+        console.log('  already verified-lead-only; nothing to do');
+        // No goal change, but step 0 is now confirmed for this account: start its soak.
+        if (args.apply && (mode !== 'live' || args.confirmLive)) {
+          const recorded = recordSignalIntegrity({ clientId: args.client, baseDir: clientsDir(), at: new Date().toISOString(), customerId, source: 'verified-lead-goal-backfill' });
+          console.log(recorded ? `  signalIntegritySince ${recorded.signalIntegritySince}` : '  WARNING: bidding-phase.json write failed');
+        }
+        continue;
+      }
 
       if (args.validateOnly) {
         await applyVerifiedLeadOnlyGoals(customer, plan, { validateOnly: true });

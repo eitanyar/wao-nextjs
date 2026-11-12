@@ -259,3 +259,13 @@ test('proxy.ts protects the /leads admin page with the admin-cookie gate', () =>
   assert.match(proxyCode, /ADMIN_PROTECTED\s*=\s*\[[^\]]*'\/leads'/);
   assert.match(proxyCode, /matcher:\s*\[[^\]]*'\/leads\/:path\*'/);
 });
+
+test('0c: admin GOOD / close always runs the upload so a no-click-ID lead is persisted as skipped_no_click_id', () => {
+  const post = postHandler();
+  assert.match(post, /if \(lead\) \{\s*uploadConversion\(lead, planUploadsForTrigger\(lead, "good"\)\)/);
+  assert.match(post, /if \(lead\) \{\s*uploadConversion\(lead, planUploadsForTrigger\(lead, "closed"\)\)/);
+  assert.doesNotMatch(post, /lead\?\.gclid \|\| lead\?\.wbraid \|\| lead\?\.gbraid\) \{\s*uploadConversion/);
+  // And the skipped result maps to the persisted status.
+  const outcome = leadConversionUploads.outcomeFromUploadResult({ skipped: true, reason: 'no_click_id', message: 'x' }, undefined, new Date('2026-11-13T00:00:00.000Z'));
+  assert.equal(outcome.status, 'skipped_no_click_id');
+});

@@ -15,7 +15,7 @@ import {
   planGoalBiddabilityUpdates,
   planVerifiedLeadOnlyGoals,
 } from './conversion-goals.js';
-import { biddingPhasePath, readBiddingPhaseState, recordGoalChange } from './bidding-phase-state.js';
+import { SIGNAL_INTEGRITY_SOAK_DAYS, biddingPhasePath, evaluateSignalIntegritySoak, readBiddingPhaseState, recordGoalChange, recordSignalIntegrity } from './bidding-phase-state.js';
 
 // ads-bot-phase2 spec §11 "Step 0" — 0a (verified-lead is the only primary / biddable goal).
 
@@ -137,4 +137,62 @@ test('fix 2: the AD_CALL calls-from-ads action stays secondary and its goal is n
     { resource_name: 'a/QL', category: 22, status: 2 },
     { resource_name: 'a/CALLS', category: 11, status: 2, type: 2 },
   ], 'a/QL'), []);
+});
+
+// ── signalIntegritySince: soak enforcement (spec §3 "Soak requirement", §7) ─────────────────
+const DAY = 86_400_000;
+const T0 = '2026-11-15T08:00:00.000Z';
+const at = (days) => new Date(new Date(T0).getTime() + days * DAY);
+
+test('soak: fails closed without a state file, without signalIntegritySince, or with a bad / future timestamp', () => {
+  assert.equal(SIGNAL_INTEGRITY_SOAK_DAYS, 14);
+  for (const state of [null, undefined, {}, { lastGoalChangeAt: T0 }, { signalIntegritySince: 'not a date' }, { signalIntegritySince: T0, lastGoalChangeAt: 'garbage' }]) {
+    const r = evaluateSignalIntegritySoak(state, at(100));
+    assert.equal(r.ok, false);
+    assert.equal(r.reason, 'signal_integrity_not_recorded');
+  }
+  assert.equal(evaluateSignalIntegritySoak({ signalIntegritySince: at(5).toISOString() }, at(0)).reason, 'signal_integrity_not_recorded');
+});
+
+test('soak: 14 full days after signalIntegritySince (13.99 days blocks, 14 passes)', () => {
+  const state = { signalIntegritySince: T0, lastGoalChangeAt: T0 };
+  const early = evaluateSignalIntegritySoak(state, new Date(at(14).getTime() - 60_000));
+  assert.equal(early.ok, false);
+  assert.equal(early.reason, 'signal_integrity_soaking');
+  assert.equal(early.eligibleAt, at(14).toISOString());
+  assert.equal(evaluateSignalIntegritySoak(state, at(14)).ok, true);
+  assert.equal(evaluateSignalIntegritySoak({ signalIntegritySince: T0 }, at(14)).ok, true, 'no goal change recorded is fine once soaked');
+});
+
+test('soak: a later goal change re-opens a 14-day window even when signal integrity is old', () => {
+  const state = { signalIntegritySince: T0, lastGoalChangeAt: at(30).toISOString() };
+  const r = evaluateSignalIntegritySoak(state, at(40));
+  assert.equal(r.ok, false);
+  assert.equal(r.reason, 'goal_change_window');
+  assert.equal(r.eligibleAt, at(44).toISOString());
+  assert.equal(evaluateSignalIntegritySoak(state, at(44)).ok, true);
+});
+
+test('soak: create-campaign / backfill records drive it end to end (temp baseDir only)', () => {
+  const baseDir = fs.mkdtempSync(path.join(os.tmpdir(), 'bidding-phase-soak-'));
+  recordGoalChange({ clientId: 'client-s', baseDir, at: T0, customerId: '1', source: 'create-campaign' });
+  assert.equal(evaluateSignalIntegritySoak(readBiddingPhaseState('client-s', baseDir), at(13)).ok, false);
+  assert.equal(evaluateSignalIntegritySoak(readBiddingPhaseState('client-s', baseDir), at(14)).ok, true);
+  recordGoalChange({ clientId: 'client-s', baseDir, at: at(20).toISOString(), customerId: '1', source: 'verified-lead-goal-backfill' });
+  const after = readBiddingPhaseState('client-s', baseDir);
+  assert.equal(after.signalIntegritySince, T0, 'a goal change never resets signalIntegritySince');
+  assert.equal(evaluateSignalIntegritySoak(after, at(30)).reason, 'goal_change_window');
+});
+
+test('recordSignalIntegrity: starts the soak once, never moves it, never touches lastGoalChangeAt', () => {
+  const baseDir = fs.mkdtempSync(path.join(os.tmpdir(), 'bidding-phase-si-'));
+  const first = recordSignalIntegrity({ clientId: 'client-b', baseDir, at: T0, customerId: '2', source: 'verified-lead-goal-backfill' });
+  assert.equal(first.signalIntegritySince, T0);
+  assert.equal(first.phase, 'phase1_clicks');
+  assert.equal(first.lastGoalChangeAt, undefined);
+  const second = recordSignalIntegrity({ clientId: 'client-b', baseDir, at: at(3).toISOString(), customerId: '2', source: 'verified-lead-goal-backfill' });
+  assert.equal(second.signalIntegritySince, T0);
+  assert.equal(readBiddingPhaseState('client-b', baseDir).signalIntegritySince, T0);
+  assert.equal(recordSignalIntegrity({ clientId: '../x', baseDir, at: T0, source: 't' }), null);
+  assert.deepEqual(fs.readdirSync(path.dirname(biddingPhasePath('client-b', baseDir))), ['bidding-phase.json']);
 });

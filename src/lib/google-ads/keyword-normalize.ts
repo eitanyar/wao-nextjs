@@ -169,15 +169,25 @@ function wordVariants(word: string): string[] {
   return out;
 }
 
+/**
+ * A word form plus its stems with one inflection ending removed (stem kept >= MIN_STEM letters).
+ * Stripping both sides (not just "one is the other plus an ending") also matches two inflected
+ * forms of the same stem, e.g. a construct-state ending (yod, tav) against a plural (yod+mem) or
+ * the singular (he): Roni's 2026-11-13 finding — a positive keyword in construct form must
+ * still drop the matching default negative.
+ */
+function stemVariants(form: string): string[] {
+  const out = [form];
+  for (const suffix of INFLECTION_SUFFIXES) {
+    if (form.length - suffix.length >= MIN_STEM && form.endsWith(suffix)) out.push(form.slice(0, -suffix.length));
+  }
+  return out;
+}
+
 function sameWordForm(a: string, b: string): boolean {
-  const va = wordVariants(a);
-  const vb = wordVariants(b);
-  for (const x of va) {
-    for (const y of vb) {
-      if (x === y) return true;
-      const [short, long] = x.length <= y.length ? [x, y] : [y, x];
-      if (short.length >= MIN_STEM && long.startsWith(short) && INFLECTION_SUFFIXES.includes(long.slice(short.length))) return true;
-    }
+  const sa = new Set(wordVariants(a).flatMap(stemVariants));
+  for (const y of wordVariants(b).flatMap(stemVariants)) {
+    if (sa.has(y)) return true;
   }
   return false;
 }

@@ -1,0 +1,29 @@
+{
+  "1725891566": {
+    "conversion_action": [
+      { "resource_name": "customers/1725891566/conversionActions/7705676776", "name": "form", "type": 8, "category": 13, "origin": 2, "status": 2, "primary_for_goal": true },
+      { "resource_name": "customers/1725891566/conversionActions/7705676779", "name": "phone click", "type": 8, "category": 11, "origin": 2, "status": 2, "primary_for_goal": true },
+      { "resource_name": "customers/1725891566/conversionActions/7705676782", "name": "whatsapp click", "type": 8, "category": 18, "origin": 2, "status": 2, "primary_for_goal": true },
+      { "resource_name": "customers/1725891566/conversionActions/7705676785", "name": "verified lead", "type": 7, "category": 22, "origin": 2, "status": 2, "primary_for_goal": true },
+      { "resource_name": "customers/1725891566/conversionActions/7705676848", "name": "closed deal", "type": 7, "category": 23, "origin": 2, "status": 2, "primary_for_goal": true }
+    ],
+    "customer_conversion_goal": [
+      { "resource_name": "customers/1725891566/customerConversionGoals/PHONE_CALL_LEAD~WEBSITE", "category": 11, "origin": 2, "biddable": true },
+      { "resource_name": "customers/1725891566/customerConversionGoals/SUBMIT_LEAD_FORM~WEBSITE", "category": 13, "origin": 2, "biddable": true },
+      { "resource_name": "customers/1725891566/customerConversionGoals/CONTACT~WEBSITE", "category": 18, "origin": 2, "biddable": true },
+      { "resource_name": "customers/1725891566/customerConversionGoals/QUALIFIED_LEAD~WEBSITE", "category": 22, "origin": 2, "biddable": true },
+      { "resource_name": "customers/1725891566/customerConversionGoals/CONVERTED_LEAD~WEBSITE", "category": 23, "origin": 2, "biddable": true }
+    ],
+    "campaign_conversion_goal": [
+      { "resource_name": "customers/1725891566/campaignConversionGoals/23000000001~SUBMIT_LEAD_FORM~WEBSITE", "campaign": "customers/1725891566/campaigns/23000000001", "category": 13, "origin": 2, "biddable": true },
+      { "resource_name": "customers/1725891566/campaignConversionGoals/23000000001~QUALIFIED_LEAD~WEBSITE", "campaign": "customers/1725891566/campaigns/23000000001", "category": 22, "origin": 2, "biddable": true }
+    ]
+  },
+  "8344335641": {
+    "conversion_action": [
+      { "resource_name": "customers/8344335641/conversionActions/1", "name": "founder purchase", "type": 8, "category": 1, "origin": 2, "status": 2, "primary_for_goal": true }
+    ],
+    "customer_conversion_goal": [],
+    "campaign_conversion_goal": []
+  }
+}
