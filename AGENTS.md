@@ -33,7 +33,7 @@ they always resolve to the current generation.
 | Mission planning | Lior | `mission-planner` | opus | PROCEED / DEFER / DROP against `VISION.md` |
 | Distribution | Amit | `distribution-strategist` | opus | off-site channels, outreach compliance |
 | Course design | Gil | `instructional-designer` | opus | curriculum and script structure |
-| Hebrew copy | Tamar | **waocopy** (`scripts/waocopy.mjs`) | Qwen 3.8 Max (DashScope) | all new Hebrew marketing / bot / narration copy |
+| Hebrew copy | Tamar | **waocopy** (`scripts/waocopy.mjs`) | Qwen4 Max Preview (DashScope; auto-fallback Qwen 3.8 Max) | all new Hebrew marketing / bot / narration copy |
 | Hebrew copy fallback | Tamar | `copywriter` | opus | only when DashScope is down or the edit is trivial |
 | Hebrew QA | Noa | `language-qa` | opus | correctness gate, full proofread, AI-signature removal, writing upgrades for waocopy |
 | UX / RTL / a11y | Maya | `ux` | sonnet | bidi technique, mobile, accessibility |
@@ -42,7 +42,7 @@ they always resolve to the current generation.
 | Assets | Niv | `asset-director` | haiku | asset manifests |
 
 ## Hebrew ownership
-- **Authoring:** new Hebrew copy comes from waocopy (Qwen 3.8 Max). Run it as
+- **Authoring:** new Hebrew copy comes from waocopy (Qwen4 Max Preview, falls back to Qwen 3.8 Max). Run it as
   `node --env-file=.env.local scripts/waocopy.mjs <brief.md> [--out <file>] [--patches]`.
   Briefs are short: persona, offer/angle, entity anchors, keyword targets, where the copy goes.
   waocopy decides length and structure. Singular male, 12–15 words per sentence for anything
