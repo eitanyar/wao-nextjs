@@ -140,7 +140,7 @@ export default function LeadsTable({ leads: initialLeads, apiBase, highlightId }
             <th style={{ padding: "14px 16px", borderBottom: "1px solid var(--border)", fontWeight: "normal" }}>תאריך</th>
             <th style={{ padding: "14px 16px", borderBottom: "1px solid var(--border)", fontWeight: "normal" }}>שם</th>
             <th style={{ padding: "14px 16px", borderBottom: "1px solid var(--border)", fontWeight: "normal" }}>טלפון</th>
-            <th style={{ padding: "14px 16px", borderBottom: "1px solid var(--border)", fontWeight: "normal" }}>אמיתי או לא</th>
+            <th style={{ padding: "14px 16px", borderBottom: "1px solid var(--border)", fontWeight: "normal" }}>אמיתית או לא</th>
             <th style={{ padding: "14px 16px", borderBottom: "1px solid var(--border)", fontWeight: "normal" }}>עסקה</th>
           </tr>
         </thead>
@@ -257,7 +257,7 @@ export default function LeadsTable({ leads: initialLeads, apiBase, highlightId }
                         padding: "7px 14px", borderRadius: "20px", cursor: "pointer", fontSize: "0.82rem", fontWeight: "bold", transition: "all 0.2s"
                       }}
                     >
-                      {lead.quality === "PENDING" ? "סמן" : lead.quality === "GOOD" ? "🔥 אמיתי" : "❌ לא אמיתי"}
+                      {lead.quality === "PENDING" ? "סמן" : lead.quality === "GOOD" ? "🔥 אמיתית" : "❌ לא אמיתית"}
                     </button>
                   )}
                 </td>
