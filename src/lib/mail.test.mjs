@@ -47,7 +47,8 @@ function extractSendLeadNotificationEmail() {
 
 function makeMockSendResendEmail() {
   const calls = [];
-  const fn = async (params) => { calls.push(params); };
+  // Resolves true like the real sendResendEmail does when Resend accepted the email.
+  const fn = async (params) => { calls.push(params); return true; };
   fn.calls = () => calls;
   return fn;
 }
@@ -122,4 +123,67 @@ test('the three lead-type branches produce meaningfully different HTML from each
   assert.notEqual(htmls['form'], htmls['phone-click']);
   assert.notEqual(htmls['form'], htmls['whatsapp-click']);
   assert.notEqual(htmls['phone-click'], htmls['whatsapp-click']);
+});
+
+// sendResendEmail resolves false when RESEND_API_KEY is unset (the email was skipped). The success line must print only
+// when an email was actually sent.
+async function captureLogs(fn) {
+  const logs = [];
+  const errors = [];
+  const { log, error, warn } = console;
+  console.log = (...args) => { logs.push(args.join(' ')); };
+  console.error = (...args) => { errors.push(args.join(' ')); };
+  console.warn = () => {};
+  try {
+    await fn();
+  } finally {
+    Object.assign(console, { log, error, warn });
+  }
+  return { logs, errors };
+}
+
+const SUCCESS_LINE = /\[WAO Mail\] Lead notification email sent successfully!/;
+
+test('sendLeadNotificationEmail: logs success only when sendResendEmail reports a sent email', async () => {
+  const lead = { type: 'form', date: '2026-08-02 10:00' };
+  const sent = await captureLogs(() => extractSendLeadNotificationEmail()(async () => true)(lead));
+  assert.equal(sent.logs.filter(line => SUCCESS_LINE.test(line)).length, 1);
+
+  const skipped = await captureLogs(() => extractSendLeadNotificationEmail()(async () => false)(lead));
+  assert.equal(skipped.logs.filter(line => SUCCESS_LINE.test(line)).length, 0, 'no success line when the email was skipped');
+
+  const failed = await captureLogs(() => extractSendLeadNotificationEmail()(async () => { throw new Error('Failed to send email'); })(lead));
+  assert.equal(failed.logs.filter(line => SUCCESS_LINE.test(line)).length, 0, 'no success line when Resend failed');
+  assert.equal(failed.errors.length, 1);
+});
+
+test('every mail.ts success line is guarded by the sent flag, and sendResendEmail returns false on the missing-key early return', () => {
+  const successLines = mailCode.split('\n').filter(line => /email sent successfully!/.test(line));
+  assert.equal(successLines.length, 3);
+  for (const line of successLines) assert.match(line, /^\s*if \(sent\) console\.log\(/);
+  assert.equal((mailCode.match(/const sent = await sendResendEmail\(/g) ?? []).length, 3);
+
+  const start = mailCode.indexOf('async function sendResendEmail(');
+  const end = mailCode.indexOf('\n}\n', start);
+  const body = mailCode.slice(start, end);
+  assert.match(body, /if \(!apiKey\) \{[^}]*return false;/);
+  assert.match(body, /return true;\s*$/);
+});
+
+test('sendResendEmail at runtime: false with no RESEND_API_KEY (no fetch), true when Resend accepts', async () => {
+  const start = mailCode.indexOf('async function sendResendEmail(');
+  const end = mailCode.indexOf('\n}\n', start) + 2;
+  const source = mailCode.slice(start, end)
+    .replace(/\(params: \{[^)]*\}\): Promise<boolean>/, '(params)');
+  const fetchCalls = [];
+  const make = (env) => new Function('process', 'fetch', 'console', `${source}\nreturn sendResendEmail;`)(
+    { env },
+    async (...args) => { fetchCalls.push(args); return { ok: true, json: async () => ({}) }; },
+    { warn: () => {}, error: () => {}, log: () => {} },
+  );
+  const params = { subject: 's', html: 'h', to: ['a@example.com'], from: 'b@example.com' };
+  assert.equal(await make({})(params), false);
+  assert.equal(fetchCalls.length, 0);
+  assert.equal(await make({ RESEND_API_KEY: 'test-key' })(params), true);
+  assert.equal(fetchCalls.length, 1);
 });

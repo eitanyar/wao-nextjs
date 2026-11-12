@@ -1,8 +1,9 @@
-async function sendResendEmail(params: { subject: string; html: string; to: string[]; from: string }) {
+/** Returns true when Resend accepted the email, false when it was skipped (no RESEND_API_KEY). Throws on an API error. */
+async function sendResendEmail(params: { subject: string; html: string; to: string[]; from: string }): Promise<boolean> {
   const apiKey = process.env.RESEND_API_KEY;
   if (!apiKey) {
     console.warn("RESEND_API_KEY is not set. Email notification skipped.");
-    return;
+    return false;
   }
 
   const response = await fetch("https://api.resend.com/emails", {
@@ -19,6 +20,7 @@ async function sendResendEmail(params: { subject: string; html: string; to: stri
     console.error("Resend API error:", errorData);
     throw new Error("Failed to send email");
   }
+  return true;
 }
 
 /**
@@ -72,14 +74,14 @@ export async function sendLeadNotificationEmail(lead: any) {
   `;
 
   try {
-    await sendResendEmail({
+    const sent = await sendResendEmail({
       from: "WAO Leads <leads@wao.co.il>",
       to: ["eitan@wao.co.il", "leads@wao.co.il"],
       subject,
       html: htmlContent,
     });
 
-    console.log("[WAO Mail] Lead notification email sent successfully!");
+    if (sent) console.log("[WAO Mail] Lead notification email sent successfully!");
   } catch (error) {
     console.error("[WAO Mail] Error sending email notification:", error);
   }
@@ -116,14 +118,14 @@ export async function sendGoogleAdsOperatorApprovalEmail(params: {
   `;
 
   try {
-    await sendResendEmail({
+    const sent = await sendResendEmail({
       from: "WAO Operator <ads@wao.co.il>",
       to: ["eitan@wao.co.il", "leads@wao.co.il"],
       subject: `Google Ads operator status [${params.status || 'approved'}]: ${params.title}`,
       html: htmlContent,
     });
 
-    console.log("[WAO Mail] Google Ads operator approval email sent successfully!");
+    if (sent) console.log("[WAO Mail] Google Ads operator approval email sent successfully!");
   } catch (error) {
     console.error("[WAO Mail] Error sending Google Ads operator approval email:", error);
   }
@@ -175,14 +177,14 @@ export async function sendGeoLeadNotificationEmail(params: {
   `;
 
   try {
-    await sendResendEmail({
+    const sent = await sendResendEmail({
       from: "WAO GEO Bot <ads@wao.co.il>",
       to: ["eitan@wao.co.il", "leads@wao.co.il"],
       subject: `אונבורדינג GEO חדש: ${businessName}`,
       html: htmlContent,
     });
 
-    console.log("[WAO Mail] Geo lead notification email sent successfully!");
+    if (sent) console.log("[WAO Mail] Geo lead notification email sent successfully!");
   } catch (error) {
     console.error("[WAO Mail] Error sending geo lead notification email:", error);
   }
