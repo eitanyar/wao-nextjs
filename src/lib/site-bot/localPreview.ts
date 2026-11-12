@@ -201,8 +201,8 @@ export function buildOperatorLocalPreview(input: OperatorLocalPreviewInput): Loc
     files[path] = path.endsWith('.html') ? makeHtmlSafe(content, canonicalOrigin, OPERATOR_BANNER) : content;
   }
   files['index.html'] = files['index.html'].replace(
-    '<main>',
-    `<main><figure style="margin:0;background:#fff;text-align:center;"><img data-local-preview-hero="true" src="${heroDataUrl}" alt="" aria-hidden="true" style="display:block;width:100%;height:auto;max-height:360px;object-fit:cover;" /></figure>`,
+    /<main\b[^>]*>/,
+    match => `${match}<figure style="margin:0;background:#fff;text-align:center;"><img data-local-preview-hero="true" src="${heroDataUrl}" alt="" aria-hidden="true" style="display:block;width:100%;height:auto;max-height:360px;object-fit:cover;" /></figure>`,
   );
   const pages = Object.keys(files).filter(path => path.endsWith('.html')).sort();
   const manifest = {

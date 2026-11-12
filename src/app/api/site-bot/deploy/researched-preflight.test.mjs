@@ -293,6 +293,8 @@ function harness({ authorized = true, record, dossier = syntheticDossier(), read
         return ['/synthetic-core'];
       } : forbidden('renderCoreThirtyPages.buildCoreThirtySitemapUrls'),
     },
+    // Redesign A: the deploy writes the self-hosted font files with the pages; none in the synthetic deploy.
+    '@/lib/lp/siteFonts': { siteFontFiles: () => ({}) },
     '@/lib/geo/client': { clientRecordExists: binding === null ? forbidden('clientRecordExists') : id => {
       assert.equal(id, slug); deployEvents.push('client-exists'); return binding.existingClient ?? false;
     }, ensureSiteBotClientRecord: binding === null ? forbidden('ensureSiteBotClientRecord') : value => {

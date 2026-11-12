@@ -8,6 +8,7 @@
 import type { VerticalTheme } from './verticalThemes';
 import type { CollectedData } from '@/lib/bot/prompts';
 import { buildFraudBlockerTrackerHtml } from '../fraud-blocker/tracker';
+import { SITE_FONT_STACK, siteFontFaceCss, siteFontHead } from './siteDesign';
 
 function esc(s: string): string {
   return (s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
@@ -61,17 +62,10 @@ export function prefixJoiner(name: string): string {
 const RLM = '\u200F';
 
 /**
- * M2b.1d: the legal pages load the same web fonts as every other site page (renderSitePages pageHead) and use the theme's
- * body and heading families, so they no longer fall back to a system font.
+ * M2b.1d: the legal pages load the same web font as every other site page. Redesign A (item 4): the self-hosted Heebo
+ * (siteFonts.ts), one family for headings and body.
  */
-const FONT_LINKS = `<link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Secular+One&family=Assistant:wght@400;600;700;800&display=swap" rel="stylesheet" />`;
-
-/** The first family of a theme font stack, quoted, then the site's fallbacks (same rule as renderSitePages styleBlock). */
-function themeFamily(stack: string): string {
-  return `'${stack.split(',')[0].replace(/['"]/g, '')}', Assistant, sans-serif`;
-}
+const FONT_LINKS = siteFontHead();
 
 function legalTitle(opts: LegalPageOpts, title: string, businessName: string): string {
   if (!opts.pipeTitle) return `${esc(title)} \u2014 ${businessName}`;
@@ -117,9 +111,10 @@ function legalDocument(opts: LegalPageOpts, title: string, bodyHtml: string, hea
   <link rel="canonical" href="${canonicalUrl}" />`}
   ${FONT_LINKS}
   <style>
+    ${siteFontFaceCss()}
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: ${themeFamily(t.fontBody)}; background: ${t.bg}; color: ${t.textPrimary}; }
-    h1 { font-family: ${themeFamily(t.fontHeading)}; font-weight: ${t.headingWeight}; }
+    body { font-family: ${SITE_FONT_STACK}; background: ${t.bg}; color: ${t.textPrimary}; }
+    h1 { font-family: inherit; font-weight: 800; }
     html { background: ${t.surface}; }
     a { color: ${t.accentText}; }
     p { line-height: 1.8; font-size: 0.98rem; color: ${t.textPrimary}; margin-bottom: 14px; }
@@ -135,7 +130,7 @@ function legalDocument(opts: LegalPageOpts, title: string, bodyHtml: string, hea
     <p style="margin-top:32px;"><a href="${homeHref}" style="display:inline-flex;align-items:center;min-height:44px;">${LEGAL_HOME_LINK_TEXT}</a></p>
   </main>
   <footer style="text-align:center;padding:14px 20px 22px;background:${t.surface};border-top:1px solid ${t.border};font-size:0.8rem;color:${t.textMuted};">${opts.footerProfileRow ?? ''}
-    <a href="https://wao.co.il" style="display:inline-flex;align-items:center;gap:0.3em;min-height:44px;padding:0 8px;color:${t.textMuted};text-decoration:none;">נבנה עם <strong>WAO</strong> 🚀</a>
+    <a href="https://wao.co.il" style="display:inline-flex;align-items:center;gap:0.3em;min-height:44px;padding:0 8px;color:${t.textMuted};text-decoration:none;">נבנה עם <strong>WAO</strong></a>
   </footer>
 </body>
 </html>`;

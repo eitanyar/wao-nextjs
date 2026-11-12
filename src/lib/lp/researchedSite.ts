@@ -25,7 +25,6 @@ import {
   pageHead,
   pageScript,
   renderSitePages,
-  stickyHeader,
   trustBarSection,
   type ResearchNavOptions,
   servedPath,
@@ -45,6 +44,7 @@ import {
 import { codeOwnedFactTemplates } from './ownerFactCopy';
 import { DEPTH_BLOCK_KEYS, DEPTH_BLOCK_LIMITS, rendersDepthBlocks } from './depthBlocks';
 import { unverifiedClaimSpec, UnverifiedClaimError, withoutUnverifiedClaims, type ClaimVerification } from './claimVerification';
+import { heroHoursLine, heroPhotoSlot, icon } from './siteDesign';
 
 const RESERVED_SEGMENTS = new Set(['api', 'assets', 'static', 'index', 'privacy', 'accessibility', 'contact', 'sitemap']);
 const RENDERABLE_CLASSES = new Set<PageClassification>([
@@ -359,6 +359,9 @@ function breadcrumbCss(theme: RenderResearchedSitePagesParams['theme']): string 
     '.wao-breadcrumb li+li::before{content:"";display:inline-block;width:0.42em;height:0.42em;border-top:2px solid currentColor;border-right:2px solid currentColor;transform:rotate(45deg);margin-inline:0.55em;}',
     '[dir="rtl"] .wao-breadcrumb li+li::before{transform:scaleX(-1) rotate(45deg);}',
     '.wao-breadcrumb a{display:inline-flex;align-items:center;min-height:44px;padding:0 4px;color:' + theme.accentText + ';text-decoration:underline;}',
+    // Redesign A item 7: the breadcrumb sits in the solid primary hero, so crumb text and link are white there.
+    '.hero .wao-breadcrumb{color:#FFFFFF;}',
+    '.hero .wao-breadcrumb a{color:#FFFFFF;}',
   ].join('');
 }
 
@@ -415,7 +418,7 @@ function reviewSection(page: ResearchedSitePage, theme: RenderResearchedSitePage
   const quote = page.copy.reviewFeatured;
   if (!quote) return '';
   const context = page.copy.reviewContext ? `<div style="font-size:0.85rem;color:${theme.textMuted};margin-top:10px;">${esc(page.copy.reviewContext)}</div>` : '';
-  return `<section style="padding:28px 20px;background:${theme.surface};"><blockquote style="max-width:640px;margin:0 auto;text-align:center;"><p style="font-style:italic;font-size:1.05rem;color:${theme.textPrimary};line-height:1.6;">\u05F4${esc(quote)}\u05F4</p>${context}</blockquote></section>`;
+  return `<section style="padding:28px 20px;background:${theme.surface};"><blockquote style="max-width:640px;margin:0 auto;text-align:center;"><p style="font-size:1.05rem;color:${theme.textPrimary};line-height:1.6;">\u05F4${esc(quote)}\u05F4</p>${context}</blockquote></section>`;
 }
 
 /** The <title> of one researched page: the C1 formula when the page has SEO facts, else the legacy hook title. */
@@ -506,8 +509,6 @@ export function researchedUngeneratedFieldsFor(classification: string): readonly
   return rendersSiteSections(classification) ? [] : RESEARCHED_HOME_HUB_ONLY_FIELDS;
 }
 
-const PHONE_EMOJI = '\u{1F4DE}';
-
 /**
  * tel: href in E.164 for an Israeli number (national 0XXXXXXXX / 0XXXXXXXXX, or +972 / 972 forms), else null
  * (the hero call button is then omitted; the header keeps its legacy link).
@@ -523,13 +524,13 @@ export function israeliPhoneE164(raw: string | undefined): string | null {
  * label there, Tamar section 20.7); on a WhatsApp- or form-first site the default call label. Number in an LTR
  * isolate, href in E.164, 48px tap target.
  */
-function heroCallButton(page: ResearchedSitePage, data: CollectedData, theme: RenderResearchedSitePagesParams['theme']): string {
+function heroCallButton(page: ResearchedSitePage, data: CollectedData): string {
   const phone = (data.phone ?? '').trim();
   const href = israeliPhoneE164(phone);
   if (!href) return '';
   const callLabel = primaryCtaLabel({});
   const label = primaryCtaLabel(data) === callLabel && page.copy.heroCta ? page.copy.heroCta : callLabel;
-  return `<div style="margin-top:22px;"><a href="tel:${href}" data-hero-call style="display:inline-flex;align-items:center;justify-content:center;gap:10px;min-height:48px;min-width:44px;padding:12px 26px;background:${theme.ctaGradient};color:${theme.ctaText};border-radius:${theme.radiusSm};font-weight:800;font-size:1.05rem;"><span aria-hidden="true">${PHONE_EMOJI}</span><span>${esc(label)}</span><bdi dir="ltr">${esc(phone)}</bdi></a></div>`;
+  return `<div class="hero-cta"><a class="btn btn-call" href="tel:${href}" data-hero-call>${icon('phone')}<span>${esc(label)}</span><bdi dir="ltr" class="num">${esc(phone)}</bdi></a></div>`;
 }
 
 const nonEmpty = (value: unknown): value is string => typeof value === 'string' && value.trim() !== '';
@@ -539,10 +540,10 @@ const nonEmpty = (value: unknown): value is string => typeof value === 'string' 
  * promises only. Nothing without owner promises, and nothing while the pricing labels are pending (records without the
  * fields render byte-identical).
  */
-function pricePromiseLine(data: CollectedData, theme: RenderResearchedSitePagesParams['theme'], copy: PricingCopy = DEFAULT_PRICING_COPY): string {
+function pricePromiseLine(data: CollectedData, copy: PricingCopy = DEFAULT_PRICING_COPY): string {
   const phrases = pricingPromisePhrases(data, copy.labels, copy.pending);
   if (!phrases.length) return '';
-  return `<p data-price-promise aria-label="${esc(copy.labels.promiseLineLabel)}" style="margin-top:12px;font-weight:700;color:${theme.textPrimary};">${phrases.map(esc).join(' \u00B7 ')}</p>`;
+  return `<p data-price-promise aria-label="${esc(copy.labels.promiseLineLabel)}" style="margin-top:12px;font-weight:700;">${phrases.map(esc).join(' \u00B7 ')}</p>`;
 }
 
 /**
@@ -664,7 +665,7 @@ function proofSection(page: ResearchedSitePage, theme: RenderResearchedSitePages
   const facts = depthItems(page.copy.proofItems, ['text']).map(item => `<li style="background:${theme.surface};border:1px solid ${theme.border};border-radius:${theme.radiusSm};padding:10px 14px;font-weight:600;color:${theme.textPrimary};">${esc(item.text)}</li>`).join('');
   const reviews = proofReviews(page);
   const context = page.copy.reviewContext ? `<div style="font-size:0.85rem;color:${theme.textMuted};margin-top:10px;">${esc(page.copy.reviewContext)}</div>` : '';
-  const quotes = reviews.map((quote, index) => `<blockquote style="margin:18px 0 0;text-align:center;"><p style="font-style:italic;font-size:1.05rem;color:${theme.textPrimary};line-height:1.6;">\u05F4${esc(quote)}\u05F4</p>${index === 0 ? context : ''}</blockquote>`).join('');
+  const quotes = reviews.map((quote, index) => `<blockquote style="margin:18px 0 0;text-align:center;"><p style="font-size:1.05rem;color:${theme.textPrimary};line-height:1.6;">\u05F4${esc(quote)}\u05F4</p>${index === 0 ? context : ''}</blockquote>`).join('');
   // Rerun-3 item 6c: while code owns the facts the proof items are the owner's own first-person facts, so the customers'
   // heading never sits over them: the approved facts heading is reused (a dedicated label is Tamar's, pending).
   const fallback = reviews.length && !codeOwnedFactTemplates() ? RESEARCHED_SITE_LABELS.proofHeadingReviews : RESEARCHED_SITE_LABELS.proofHeadingFactsOnly;
@@ -680,15 +681,44 @@ function qaSection(page: ResearchedSitePage, theme: RenderResearchedSitePagesPar
   return `<section id="qa" data-section="qa" aria-labelledby="qa-heading" style="padding:32px 20px;background:${theme.surfaceAlt};"><div style="max-width:700px;margin:0 auto;display:flex;flex-direction:column;gap:12px;">${depthHeading('qa-heading', page.copy.qaHeadline, RESEARCHED_SITE_LABELS.qaHeadingFallback, theme)}${body}</div></section>`;
 }
 
+const cardKey = (value: string | null | undefined) => (value ?? '').normalize('NFC').replace(/\s+/g, ' ').trim();
+
+/**
+ * Redesign A item 5, Yonatan condition 3: the selected service page a card links to. A card links only when its name equals,
+ * exactly (NFC, whitespace-normalised), the anchorText of exactly one selected service (money) page with an output; the href is
+ * that page's real served URL and the link text is anchorText(target). Anything else: no link. Never the `/services` stand-in.
+ */
+export function serviceCardTarget(name: string, allPages: ResearchedSitePage[], outputs: Map<string, string>, businessName: string): { page: ResearchedSitePage; href: string; text: string } | null {
+  const key = cardKey(name);
+  if (!key) return null;
+  const matches = allPages.filter(item => item.classification === 'money_service' && outputs.has(item.opportunityId) && cardKey(anchorText(item, businessName)) === key);
+  if (matches.length !== 1) return null;
+  const href = servedPath(outputs.get(matches[0].opportunityId)!);
+  return href === '/services' ? null : { page: matches[0], href, text: anchorText(matches[0], businessName) };
+}
+
+/** The non-empty service cards of a page (serviceDetails with a name). */
+function serviceCards(page: ResearchedSitePage): Array<{ name: string; description?: string }> {
+  return (page.copy.serviceDetails ?? []).filter(item => item && nonEmpty(item.name));
+}
+
 /**
  * Service cards (M2b.1): servicesHeadline as the H2, one H3 card per serviceDetails item. M2b.1b: homepage and
  * service hub only (Yonatan), id="services" (nav target), labelled by its H2 (fallback: hidden nav-text H2).
+ * Redesign A item 5 (Yonatan C3): `<h3><a href>anchorText</a></h3><p>description</p>`, the whole card clickable through CSS,
+ * only for a card that exactly matches a selected service page (serviceCardTarget); other cards keep a plain H3.
  */
-function serviceDetailsSection(page: ResearchedSitePage, theme: RenderResearchedSitePagesParams['theme']): string {
+function serviceDetailsSection(page: ResearchedSitePage, theme: RenderResearchedSitePagesParams['theme'], allPages: ResearchedSitePage[], outputs: Map<string, string>, businessName: string): string {
   if (!hasServiceCards(page)) return '';
-  const cards = (page.copy.serviceDetails ?? []).filter(item => item && nonEmpty(item.name)).map(item => `<div style="background:${theme.surface};border:1px solid ${theme.border};border-radius:${theme.radiusMd};padding:20px;border-inline-start:3px solid ${theme.accent};"><h3 style="font-weight:700;font-size:1rem;color:${theme.primary};margin-bottom:8px;">${esc(item.name)}</h3>${nonEmpty(item.description) ? `<p style="color:${theme.textMuted};font-size:0.9rem;line-height:1.5;">${esc(item.description)}</p>` : ''}</div>`).join('');
+  const items = serviceCards(page);
+  const cards = items.map(item => {
+    const target = serviceCardTarget(item.name, allPages, outputs, businessName);
+    const title = target ? `<a href="${target.href}">${esc(target.text)}</a>` : esc(item.name);
+    const description = nonEmpty(item.description) ? `<p>${esc(item.description)}</p>` : '';
+    return `<li class="svc-card"${target ? ' data-card-link' : ''}><span class="tile">${icon('tool')}</span><div class="svc-body"><h3>${title}</h3>${description}</div>${target ? icon('chev', 'ic chev') : ''}</li>`;
+  }).join('');
   const heading = sectionHeading('services-heading', page.copy.servicesHeadline, NAV_LINK_TEXT.services, `font-size:1.35rem;color:${theme.primary};margin-bottom:20px;text-align:center;`);
-  return `<section id="services" data-section="service-details" aria-labelledby="services-heading" style="padding:36px 20px;background:${theme.surfaceAlt};"><div style="max-width:760px;margin:0 auto;">${heading}<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;">${cards}</div></div></section>`;
+  return `<section id="services" data-section="service-details" aria-labelledby="services-heading" style="padding:36px 20px;background:${theme.surfaceAlt};"><div style="max-width:1120px;margin:0 auto;">${heading}<ul class="svc" role="list" style="--cols:${Math.min(items.length, 4)};">${cards}</ul></div></section>`;
 }
 
 /**
@@ -734,12 +764,16 @@ const CONTACT_HREF = servedPath('contact.html');
 
 function buildPageHtml(page: ResearchedSitePage, params: RenderResearchedSitePagesParams, siteUrl: string, output: string, allPages: ResearchedSitePage[], outputs: Map<string, string>, contactHref: string | null): string {
   const { theme, data, heroImageUrl, slug } = params;
-  const { phone, phoneHref, businessName } = contacts(data);
+  const { businessName } = contacts(data);
   const home = allPages.find(item => item.classification === 'homepage') ?? page;
   const homeName = breadcrumbHomeName(businessName, home);
   const breadcrumb = rendersBreadcrumb(page.classification) && homeName !== '';
+  // Redesign A (Yonatan C3): on the homepage the related links drop the pages its service cards already link.
+  const cardLinked = new Set(page.classification === 'homepage' && hasServiceCards(page)
+    ? serviceCards(page).flatMap(item => { const target = serviceCardTarget(item.name, allPages, outputs, businessName); return target ? [target.page.opportunityId] : []; })
+    : []);
   // Breadcrumb pages: the breadcrumb draws the edge to the homepage, so the related links are the siblings only.
-  const links = navigationLinks(page, allPages, outputs, params.graphEdges ?? []).filter(item => !(breadcrumb && item.classification === 'homepage')).flatMap(item => {
+  const links = navigationLinks(page, allPages, outputs, params.graphEdges ?? []).filter(item => !(breadcrumb && item.classification === 'homepage') && !cardLinked.has(item.opportunityId)).flatMap(item => {
     const target = outputs.get(item.opportunityId);
     return target ? [`<a href="${servedPath(target)}" style="display:inline-block;padding:12px 8px;min-height:44px;color:${theme.accentText};text-decoration:underline;font-weight:700;">${esc(anchorText(item, businessName))}</a>`] : [];
   }).join('');
@@ -754,12 +788,14 @@ function buildPageHtml(page: ResearchedSitePage, params: RenderResearchedSitePag
     fraudBlockerSid: params.fraudBlockerSid,
     ...(breadcrumb ? { extraCss: breadcrumbCss(theme) } : {}),
   });
-  const body = `${stickyHeader(theme, businessName, phone, phoneHref)}
+  // Redesign A item 7: the solid primary hero, start-aligned, no image; the GBP photo slot renders nothing yet. The breadcrumb
+  // stays directly before the H1 (Yonatan C1); the hours line is the homepage's (hero.hours).
+  const body = `
   <main>
-    <section style="padding:44px 20px;background:${theme.surface};text-align:center;"><div style="max-width:700px;margin:0 auto;">${breadcrumb ? breadcrumbNav(homeName, servicePlainName(page)) : ''}<h1 style="color:${theme.primary};font-size:clamp(1.6rem,4vw,2.3rem);margin-bottom:16px;">${esc(researchedPageH1(page.copy.heroHeadline, page.seo))}</h1><p style="color:${theme.textMuted};line-height:1.7;">${esc(page.copy.heroSubheadline)}</p>${heroCallButton(page, data, theme)}${pricePromiseLine(data, theme, params.pricingCopy)}</div></section>
+    <section class="hero on-dark" data-section="hero"><div class="hero-grid"><div class="hero-text">${breadcrumb ? breadcrumbNav(homeName, servicePlainName(page)) : ''}<h1>${esc(researchedPageH1(page.copy.heroHeadline, page.seo))}</h1><p class="sub">${esc(page.copy.heroSubheadline)}</p>${heroCallButton(page, data)}${pricePromiseLine(data, params.pricingCopy)}${page.classification === 'homepage' ? heroHoursLine(data.businessHours) : ''}</div>${heroPhotoSlot()}</div></section>
     ${trustBar(page, theme)}${storySection(page, theme)}${processSection(page, theme)}${priceSection(page, data, theme, params.pricingCopy)}${proofSection(page, theme)}
     ${hasProof(page) ? '' : reviewSection(page, theme)}${qaSection(page, theme)}
-    ${serviceDetailsSection(page, theme)}
+    ${serviceDetailsSection(page, theme, allPages, outputs, businessName)}
     ${aboutSection(page, theme)}
     ${serviceAreasSection(page, allPages, outputs, theme)}
     ${profileLinkSection(page, researchedProfileLink(data, params.profileLinkCopy), theme)}

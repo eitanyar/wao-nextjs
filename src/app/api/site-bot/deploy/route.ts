@@ -19,6 +19,7 @@ import type { CoreThirtyPageCopy } from '@/lib/lp/coreThirtyCopy';
 import { checkNearDuplicates } from '@/lib/lp/duplicateCheck';
 import type { DuplicateCheckPage } from '@/lib/lp/duplicateCheck';
 import { renderCoreThirtyPages, buildCoreThirtySitemapUrls } from '@/lib/lp/renderCoreThirtyPages';
+import { siteFontFiles } from '@/lib/lp/siteFonts';
 import { ensureSiteBotClientRecord, clientRecordExists } from '@/lib/geo/client';
 import { provisionClientAuth } from '@/lib/client-auth-store';
 import { createSessionToken, COOKIE_NAME } from '@/lib/client-auth';
@@ -428,7 +429,9 @@ export async function POST(req: Request) {
     // ── Step 3: Write to a tmp dir ──────────────────────────────────────────
     const tmpDir = mkdtempSync(path.join(tmpdir(), 'wao-site-'));
     try {
-    for (const [filename, content] of Object.entries(allPages)) {
+    // Redesign A (item 4): the self-hosted Heebo font files ship inside every site, next to the pages that preload them.
+    const siteFiles: Record<string, string | Buffer> = { ...allPages, ...siteFontFiles() };
+    for (const [filename, content] of Object.entries(siteFiles)) {
       const filePath = path.join(tmpDir, filename);
       const parentPath = path.dirname(filePath);
       if (parentPath !== tmpDir) {

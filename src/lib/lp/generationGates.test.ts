@@ -101,6 +101,7 @@ import {
 import { renderResearchedSitePages, type ResearchedSitePage } from './researchedSite';
 import { renderSitePages } from './renderSitePages';
 import { formatBusinessHoursHebrew } from './businessHours';
+import { icon, withoutEmoji } from './siteDesign';
 import { VERTICAL_THEMES } from './verticalThemes';
 import { VERTICAL_ASSETS } from './verticalAssets';
 import type { SiteCopy } from './lpCopyPrompt';
@@ -404,7 +405,8 @@ test('M2a.3 9: researched forms use templateStrings (submit label, thanks); cont
     const html = site[file];
     assert.ok(html, file);
     assert.ok(html.includes(`class="submit-btn">${TEMPLATE_STRINGS.formSubmitLabel}</button>`), file);
-    assert.ok(html.includes(`<div id="form-success">${TEMPLATE_STRINGS.formThanks}</div>`), file);
+    // Redesign A: the thanks line ships without its emoji, a sprite check icon in its place.
+    assert.ok(html.includes(`<div id="form-success">${icon('check')} ${withoutEmoji(TEMPLATE_STRINGS.formThanks)}</div>`), file);
     assert.ok(!html.includes('class="submit-btn">CallNow<'), file);
     assert.ok(html.includes(`btn.textContent = '${TEMPLATE_STRINGS.formSubmitLabel}';`), `${file}: error reset label`);
   }
@@ -418,11 +420,13 @@ test('M2a.3 9: researched forms use templateStrings (submit label, thanks); cont
     assert.ok(latin.includes('-Test Owner A'), `${file} latin`);
   }
   assert.ok(site['accessibility.html'].includes('-WCAG 2.0'));
-  // Legacy path: hero CTA on the button, legacy thanks line, H2 on the contact form. M2b.1e (Noa): the legal-page prefix
+  // Legacy path: legacy thanks line, H2 on the contact form. Redesign A defect fix: the submit button sends the form, so
+  // legacy pages carry the same submit label (never the hero call label). M2b.1e (Noa): the legal-page prefix
   // attaches directly to a Hebrew name on legacy pages too (hyphen only before a Latin letter or a digit).
   const legacy = renderSitePages({ ...renderInputs, data: splitHours, copy: pageCopy() });
-  assert.ok(legacy['contact.html'].includes('class="submit-btn">CallNow</button>'));
-  assert.ok(!legacy['contact.html'].includes(TEMPLATE_STRINGS.formThanks));
+  assert.ok(legacy['contact.html'].includes(`class="submit-btn">${TEMPLATE_STRINGS.formSubmitLabel}</button>`));
+  assert.ok(!legacy['contact.html'].includes('class="submit-btn">CallNow</button>'));
+  assert.ok(!legacy['contact.html'].includes(withoutEmoji(TEMPLATE_STRINGS.formThanks)));
   assert.equal((legacy['contact.html'].match(/>FormHead<\/h[12]>/g) ?? []).length, 2);
   assert.ok(legacy['privacy.html'].includes(HE_WORD) && !legacy['privacy.html'].includes(`-${HE_WORD}`));
   assert.ok(renderSitePages({ ...renderInputs, data: { ...splitHours, ownerName: 'Test Owner A' }, copy: pageCopy() })['privacy.html'].includes('-Test Owner A'), 'legacy latin');

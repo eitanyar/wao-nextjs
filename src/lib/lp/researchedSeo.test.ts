@@ -169,7 +169,7 @@ function wcagContrast(a: string, b: string): number {
   return (hi + 0.05) / (lo + 0.05);
 }
 
-test('breadcrumb contrast (Maya): in EVERY vertical theme, the rendered crumb text (textMuted) and link (accentText) meet 4.5:1 on the hero surface', () => {
+test('breadcrumb contrast (Maya): in EVERY vertical theme, the rendered crumb text and link meet 4.5:1 on the hero background', () => {
   assert.equal(wcagContrast('#000000', '#FFFFFF').toFixed(1), '21.0');
   const themes = Object.entries(VERTICAL_THEMES);
   assert.equal(themes.length, 8);
@@ -179,16 +179,16 @@ test('breadcrumb contrast (Maya): in EVERY vertical theme, the rendered crumb te
       heroImageUrl: 'https://example.test/hero.jpg', slug: 'test-client', siteUrl: 'https://test.wao.co.il', pages, graphEdges,
     });
     const money = site['services/leak-detection.html'];
-    // What the page actually paints: the crumb colours from the breadcrumb CSS, the background of the section holding it.
-    const text = /\.wao-breadcrumb\{[^}]*color:(#[0-9A-Fa-f]{6});/.exec(money)?.[1];
-    const link = /\.wao-breadcrumb a\{[^}]*color:(#[0-9A-Fa-f]{6});/.exec(money)?.[1];
-    const background = /<section style="[^"]*background:(#[0-9A-Fa-f]{6});[^"]*"><div[^>]*><nav data-section="breadcrumb"/.exec(money)?.[1];
-    assert.equal(text, theme.textMuted, `${key}: crumb text is textMuted`);
-    assert.equal(link, theme.accentText, `${key}: crumb link is accentText`);
-    assert.equal(background, theme.surface, `${key}: breadcrumb sits on surface`);
-    for (const [name, colour] of [['textMuted', theme.textMuted], ['accentText', theme.accentText]] as const) {
-      const ratio = wcagContrast(colour, theme.surface);
-      assert.ok(ratio >= 4.5, `${key}: ${name} ${colour} on surface ${theme.surface} = ${ratio.toFixed(2)}`);
+    // Redesign A item 7: the breadcrumb sits in the solid hero (background: --primary = theme.primary); the hero override
+    // paints the crumb text and link white.
+    const text = /\.hero \.wao-breadcrumb\{color:(#[0-9A-Fa-f]{6});/.exec(money)?.[1];
+    const link = /\.hero \.wao-breadcrumb a\{color:(#[0-9A-Fa-f]{6});/.exec(money)?.[1];
+    assert.ok(/<section class="hero on-dark"[^>]*><div class="hero-grid"><div class="hero-text"><nav data-section="breadcrumb"/.test(money), `${key}: breadcrumb opens the hero`);
+    assert.ok(money.includes(`--primary:${theme.primary};`), `${key}: hero background token`);
+    for (const [name, colour] of [['text', text], ['link', link]] as const) {
+      assert.ok(colour, `${key}: crumb ${name} colour`);
+      const ratio = wcagContrast(colour!, theme.primary);
+      assert.ok(ratio >= 4.5, `${key}: crumb ${name} ${colour} on primary ${theme.primary} = ${ratio.toFixed(2)}`);
     }
   }
 });

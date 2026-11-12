@@ -133,7 +133,8 @@ test('M2b.1/M2b.1b: trust bar, review and hero call on every page; cards and abo
   for (const file of ['index.html', 'services.html', 'services/alpha-service.html']) {
     const html = pages[file];
     assert.match(html, />\s*Licensed\s*</, `${file} trust bar`);
-    assert.match(html, /<a href="tel:\+972500000000" data-hero-call [^>]*min-height:48px[^>]*>[^]*<span>Contact<\/span><bdi dir="ltr">050-0000000<\/bdi><\/a>/, `${file} hero call button`);
+    // Redesign A: the class button (52px from the site CSS), sprite icon, label and number in separate elements.
+    assert.match(html, /<a class="btn btn-call" href="tel:\+972500000000" data-hero-call><svg class="ic" aria-hidden="true"[^>]*><use href="#i-phone"\/><\/svg><span>Contact<\/span><bdi dir="ltr" class="num">050-0000000<\/bdi><\/a>/, `${file} hero call button`);
   }
   for (const file of ['index.html', 'services.html']) {
     const html = pages[file];
@@ -150,7 +151,7 @@ test('M2b.1/M2b.1b: trust bar, review and hero call on every page; cards and abo
   // Areas: page.seo.serviceArea, deduped, capped at 6, same order as schema areaServed (Service and LocalBusiness).
   const expected = ['Holon', 'Bat Yam', 'Rishon', 'Azor', 'Yavne', 'Lod'];
   assert.equal(RESEARCHED_SERVICE_AREA_CAP, 6);
-  const listed = [...homeHtml.match(/<ul role="list"[^>]*>([^]*?)<\/ul>/)![1].matchAll(/<li[^>]*>([^<]+)<\/li>/g)].map(m => m[1]);
+  const listed = [...homeHtml.match(/data-section="service-areas"[^]*?<ul role="list"[^>]*>([^]*?)<\/ul>/)![1].matchAll(/<li[^>]*>([^<]+)<\/li>/g)].map(m => m[1]);
   assert.deepEqual(listed, expected);
   assert.match(homeHtml, /data-section="service-areas" aria-labelledby="service-areas-heading"/);
   const graph = JSON.parse(homeHtml.match(/<script type="application\/ld\+json">([^<]+)<\/script>/)![1])['@graph'];
@@ -168,7 +169,7 @@ test('M2b.1b: an area with a selected qualified_service_area page links to it (p
   const home = page({ opportunityId: 'home', classification: 'homepage', targetPath: '/', copy: copy('Home'), seo });
   const city = page({ opportunityId: 'city-bat-yam', classification: 'qualified_service_area', targetPath: '/areas/bat-yam', copy: copy('Bat Yam plumber'), seo: { name: 'Plumber', city: 'Bat Yam', serviceArea: ['Bat Yam'] } });
   const pages = renderResearchedSitePages(params({ pages: [home, city], graphEdges: [{ fromId: 'home', toId: 'city-bat-yam' }] }));
-  const list = pages['index.html'].match(/<ul role="list"[^>]*>([^]*?)<\/ul>/)![1];
+  const list = pages['index.html'].match(/data-section="service-areas"[^]*?<ul role="list"[^>]*>([^]*?)<\/ul>/)![1];
   assert.match(list, /<li[^>]*>Holon<\/li>/);
   assert.match(list, /<li[^>]*><a href="\/areas\/bat-yam" [^>]*>Bat Yam<\/a><\/li>/);
   assert.ok(pages['areas/bat-yam.html'], 'the link resolves to the emitted file (Pages serves /areas/bat-yam from it)');
@@ -181,12 +182,13 @@ test('M2b.1b: research nav uses same-page anchors that exist, an aria-label, 44p
   for (const [file, html] of Object.entries(pages)) {
     if (!file.endsWith('.html')) continue;
     assert.doesNotMatch(html, /href="\/about(?:\.html)?"/, `${file}: no dead about link`);
-    const nav = html.match(/<nav aria-label="([^"]+)" style="[^"]*justify-content:flex-start;[^"]*">([^]*?)<\/nav>/);
+    // Redesign A item 1: the nav sits in the one header; its 48px tap targets come from the site CSS.
+    const nav = html.match(/<header class="site-hdr"><div class="wrap">[^]*?<nav class="site-nav" aria-label="([^"]+)">([^]*?)<\/nav>/);
     if (file === 'privacy.html' || file === 'accessibility.html' || file === '404.html') continue;
     assert.ok(nav, `${file}: research nav`);
     assert.equal(nav![1], RESEARCHED_SITE_LABELS.mainNavLabel);
-    for (const [, href, style] of nav![2].matchAll(/<a href="([^"]+)" style="([^"]+)"/g)) {
-      assert.match(style, /min-height:44px/, `${file} ${href}`);
+    assert.match(html, /\.site-nav a\{display:inline-flex;align-items:center;min-height:48px;/, `${file}: nav tap targets`);
+    for (const [, href] of nav![2].matchAll(/<a(?: class="nav-home")? href="([^"]+)"/g)) {
       if (href.startsWith('#')) assert.ok(file === 'index.html' && homeIds.has(href.slice(1)), `${file}: ${href}`);
       else if (href.startsWith('/#')) assert.ok(homeIds.has(href.slice(2)), `${file}: ${href}`);
       // M4 step 0: links are extensionless; Pages serves /x from x.html.
@@ -194,7 +196,7 @@ test('M2b.1b: research nav uses same-page anchors that exist, an aria-label, 44p
     }
   }
   const home = pages['index.html'];
-  assert.match(home, /<nav aria-label="[^"]+"[^>]*><a href="\/"[^>]*>[^<]+<\/a><a href="#services"[^>]*>[^<]+<\/a><a href="#about"[^>]*>[^<]+<\/a><a href="\/contact"/);
+  assert.match(home, /<nav class="site-nav" aria-label="[^"]+"><a class="nav-home" href="\/"[^>]*>[^<]+<\/a><a href="#services"[^>]*>[^<]+<\/a><a href="#about"[^>]*>[^<]+<\/a><a href="\/contact"/);
   assert.match(pages['services/alpha-service.html'], /<a href="\/#services"[^>]*>[^<]+<\/a><a href="\/#about"/);
   assert.match(pages['contact.html'], /<a href="\/#services"/);
   assert.match(home, /<section id="contact" style=/);
@@ -205,9 +207,12 @@ test('M2b.1b: research nav uses same-page anchors that exist, an aria-label, 44p
   for (const [, style] of money.matchAll(/data-section="related-links"[^]*?<\/nav>/g).next().value![0].matchAll(/<a href="[^"]+" style="([^"]+)"/g)) {
     assert.match(style, /display:inline-block;padding:12px 8px;min-height:44px;color:#A82E00;text-decoration:underline;/);
   }
-  assert.match(home, /<a href="tel:050-0000000" style="display:inline-flex;align-items:center;gap:6px;min-height:44px;[^"]*"><span aria-hidden="true">\u{1F4DE}<\/span><bdi dir="ltr">050-0000000<\/bdi><\/a>/u);
+  // Redesign A: the header call button (shown from the desktop breakpoint; the action bar owns the call on mobile).
+  assert.match(home, /<a class="btn btn-call hdr-call" href="tel:050-0000000"><svg class="ic" aria-hidden="true"[^>]*><use href="#i-phone"\/><\/svg><bdi dir="ltr">050-0000000<\/bdi><\/a>/);
+  assert.match(home, /\.site-hdr \.hdr-call\{display:none;\}/);
   assert.match(home, /a:focus-visible, button:focus-visible, summary:focus-visible, input:focus-visible \{ outline: 3px solid #0D1B2A; outline-offset: 2px; \}/);
-  assert.match(home, /data-hero-call style="[^"]*color:#FFFFFF;/, 'hero call uses ctaText');
+  assert.match(home, /--cta-text:#FFFFFF;/, 'hero call uses ctaText');
+  assert.match(home, /\.btn-call\{background:var\(--cta\);color:var\(--cta-text\);\}/);
 });
 
 test('M2b.1b: a section with content but no headline keeps an H2 (hidden, nav link text) so headings never skip', () => {
@@ -265,7 +270,7 @@ test('M2b.1c: more than 6 source areas: visible list and both areaServed arrays 
   const seo = { name: 'Plumber', city: 'Holon', serviceArea: source };
   const home = page({ opportunityId: 'home', classification: 'homepage', targetPath: '/', copy: copy('Home'), seo });
   const html = renderResearchedSitePages(params({ data: fullData, pages: [home, page({ seo })], graphEdges: [{ fromId: 'home', toId: 'money-alpha' }] }))['index.html'];
-  const listed = [...html.match(/<ul role="list"[^>]*>([^]*?)<\/ul>/)![1].matchAll(/<li[^>]*>([^<]+)<\/li>/g)].map(m => m[1]);
+  const listed = [...html.match(/data-section="service-areas"[^]*?<ul role="list"[^>]*>([^]*?)<\/ul>/)![1].matchAll(/<li[^>]*>([^<]+)<\/li>/g)].map(m => m[1]);
   assert.equal(listed.length, 6);
   assert.equal(listed[0], 'Holon', 'base city first');
   assert.deepEqual(listed, source.slice(0, 6));
@@ -299,5 +304,7 @@ test('M2b.1c: 44px tap targets (footer links, FAQ summary, consent label + 24px 
     assert.match(html, /<label style="display:flex;gap:10px;align-items:center;min-height:44px;cursor:pointer;">\s*<input type="checkbox" id="f-consent" required style="width:24px;height:24px;/, `${file}: consent`);
     assert.match(html, /<a href="\/privacy" style="display:inline-block;padding:14px 0;margin:-14px 0;/, `${file}: privacy link hit box`);
   }
-  assert.match(pages['contact.html'], /<a href="tel:050-0000000" style="display:inline-flex;align-items:center;gap:6px;min-height:44px;[^"]*"><span aria-hidden="true">\u{1F4DE}<\/span><bdi dir="ltr">050-0000000<\/bdi><\/a>/u);
+  // Redesign A: the contact page's call button is a 52px class button with the sprite icon; the number stays isolated.
+  assert.match(pages['contact.html'], /<a class="btn btn-call" href="tel:050-0000000"><svg class="ic" aria-hidden="true"[^>]*><use href="#i-phone"\/><\/svg><bdi dir="ltr">050-0000000<\/bdi><\/a>/);
+  assert.match(pages['contact.html'], /\.btn\{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:52px;/);
 });

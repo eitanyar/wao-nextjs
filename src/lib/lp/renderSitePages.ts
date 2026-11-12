@@ -11,6 +11,9 @@ import { buildPrivacyHtml, buildAccessibilityHtml, buildNotFoundHtml, isAccessib
 import { buildFraudBlockerTrackerHtml } from '../fraud-blocker/tracker';
 import { displayBusinessHours, parseBusinessHours } from './businessHours';
 import { TEMPLATE_STRINGS } from './generationData';
+import { RESEARCHED_SITE_LABELS } from './researchedSiteLabels';
+import { SITE_DESIGN_LABELS } from './siteDesignLabels';
+import { actionBar, icon, ownerImageUrl, siteCss, siteFontHead, siteHeader, skipLink, SITE_ICON_SPRITE, trustFacts, withoutEmoji, type SiteNavLink } from './siteDesign';
 
 export interface RenderSitePagesParams extends Omit<RenderStaticHtmlParams, 'copy' | 'mode' | 'siteUrl'> {
   copy: SiteCopy;
@@ -57,6 +60,9 @@ export interface LeadFormOptions {
 
 /** The researched-site lead-form strings (Noa templateStrings). */
 export const RESEARCHED_LEAD_FORM: Readonly<LeadFormOptions> = { submitLabel: TEMPLATE_STRINGS.formSubmitLabel, thanks: TEMPLATE_STRINGS.formThanks };
+
+/** Redesign A defect fix: the one submit label of every site form (never the call label). */
+export const FORM_SUBMIT_LABEL: string = TEMPLATE_STRINGS.formSubmitLabel;
 
 /**
  * M4 step 0 (URL hygiene): the path Cloudflare Pages serves a deploy file at. Files stay `*.html` on disk; Pages answers
@@ -122,7 +128,7 @@ export function renderSitePages(p: RenderSitePagesParams): Record<string, string
 
 function buildIndexHtml(p: RenderSitePagesParams, siteUrl: string): string {
   // M4 step 0: the homepage canonical is the site root (renderStaticHtml's own default appends the business slug).
-  const html = renderStaticHtml({ ...p, mode: 'site', siteUrl, canonicalUrl: `${siteUrl}/` });
+  const html = renderStaticHtml({ ...p, mode: 'site', siteUrl, canonicalUrl: `${siteUrl}/`, siteNav: siteNav() });
   const t = p.theme;
   const { businessName } = contacts(p.data);
 
@@ -131,12 +137,7 @@ function buildIndexHtml(p: RenderSitePagesParams, siteUrl: string): string {
     () => `  ${localBusinessSchema(p.data, businessName, siteUrl, p.heroImageUrl, p.schemaOptions)}\n</head>`
   );
 
-  const withNav = withSchema.replace(
-    '<body>\n\n  <!-- Header -->',
-    () => `<body>\n${navBar(t)}\n\n  <!-- Header -->`
-  );
-
-  const withFooter = withNav.replace(
+  const withFooter = withSchema.replace(
     '  <!-- Sticky Bottom Bar -->',
     () => `${footerBadge(t, isAccessibilityExempt(p.data.vatStatus))}\n\n  <!-- Sticky Bottom Bar -->`
   );
@@ -164,7 +165,7 @@ export function contacts(data: CollectedData) {
 export function styleBlock(t: VerticalTheme): string {
   return `<style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: '${t.fontBody.split(',')[0].replace(/['"]/g, '')}', Assistant, sans-serif; background: ${t.bg}; color: ${t.textPrimary}; }
+    body { background: ${t.bg}; color: ${t.textPrimary}; }
     /* M2b.1c: a short page's leftover viewport below the footer takes the footer colour, not a blank bg strip. */
     html { background: ${t.surface}; }
     a { text-decoration: none; }
@@ -173,8 +174,9 @@ export function styleBlock(t: VerticalTheme): string {
     .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
     #form-success { display: none; text-align: center; color: ${t.accentText}; font-weight: 700; font-size: 1.1rem; padding: 20px; }
     #form-error { display: none; text-align: center; color: #e53e3e; font-size: 0.9rem; padding: 8px; }
-    .submit-btn { padding: 15px; background: ${t.ctaGradient}; color: ${t.ctaText}; border: none; border-radius: ${t.radiusSm}; font-weight: 800; font-size: 1.05rem; cursor: pointer; width: 100%; }
+    .submit-btn { min-height: 52px; padding: 15px; background: var(--cta); color: ${t.ctaText}; border: none; border-radius: ${t.radiusSm}; font-weight: 800; font-size: 1.05rem; cursor: pointer; width: 100%; }
     .submit-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+    ${siteCss(t)}
   </style>`;
 }
 
@@ -200,26 +202,32 @@ export interface ResearchNavOptions {
   contactHref: string | null;
 }
 
-export function navBar(t: VerticalTheme, research?: ResearchNavOptions): string {
-  if (research) return researchNavBar(t, research);
-  return `  <nav style="background:${t.surface};border-bottom:1px solid ${t.border};padding:10px 20px;display:flex;gap:20px;justify-content:flex-end;font-size:0.9rem;">
-    <a href="/">${NAV_LINK_TEXT.home}</a>
-    <a href="/services">${NAV_LINK_TEXT.services}</a>
-    <a href="/about">${NAV_LINK_TEXT.about}</a>
-    <a href="/contact">${NAV_LINK_TEXT.contact}</a>
-  </nav>`;
-}
-
-function researchNavBar(t: VerticalTheme, o: ResearchNavOptions): string {
+/**
+ * Redesign A (item 1): the nav of the one site header. Legacy sites link the four legacy pages; research sites (M2b.1b,
+ * Maya C1) point the services / about links at the homepage sections, drawn only when the homepage renders them, and link the
+ * contact page only when it is emitted. One accessible name per landmark: RESEARCHED_SITE_LABELS.mainNavLabel (Noa fix 1).
+ */
+export function siteNav(research?: ResearchNavOptions): { label: string; links: SiteNavLink[] } {
+  if (!research) {
+    return {
+      label: RESEARCHED_SITE_LABELS.mainNavLabel,
+      links: [
+        { href: '/', text: NAV_LINK_TEXT.home, home: true },
+        { href: '/services', text: NAV_LINK_TEXT.services },
+        { href: '/about', text: NAV_LINK_TEXT.about },
+        { href: '/contact', text: NAV_LINK_TEXT.contact },
+      ],
+    };
+  }
+  const o = research;
   const anchor = (id: string) => (o.onHome ? `#${id}` : `/#${id}`);
-  const links: Array<[string, string]> = [
-    ['/', NAV_LINK_TEXT.home],
-    ...(o.homeHasServices ? [[anchor('services'), NAV_LINK_TEXT.services] as [string, string]] : []),
-    ...(o.homeHasAbout ? [[anchor('about'), NAV_LINK_TEXT.about] as [string, string]] : []),
-    ...(o.contactHref ? [[o.contactHref, NAV_LINK_TEXT.contact] as [string, string]] : []),
+  const links: SiteNavLink[] = [
+    { href: '/', text: NAV_LINK_TEXT.home, home: true },
+    ...(o.homeHasServices ? [{ href: anchor('services'), text: NAV_LINK_TEXT.services }] : []),
+    ...(o.homeHasAbout ? [{ href: anchor('about'), text: NAV_LINK_TEXT.about }] : []),
+    ...(o.contactHref ? [{ href: o.contactHref, text: NAV_LINK_TEXT.contact }] : []),
   ];
-  const items = links.map(([href, text]) => `<a href="${href}" style="display:inline-flex;align-items:center;min-height:44px;padding:0 10px;color:${t.textPrimary};">${text}</a>`).join('');
-  return `  <nav aria-label="${esc(o.label)}" style="background:${t.surface};border-bottom:1px solid ${t.border};padding:0 10px;display:flex;flex-wrap:wrap;gap:4px;justify-content:flex-start;font-size:0.9rem;">${items}</nav>`;
+  return { label: o.label, links };
 }
 
 /**
@@ -234,20 +242,13 @@ export function footerProfileRow(t: VerticalTheme, profile?: FooterProfileLink):
 
 export function footerBadge(t: VerticalTheme, exempt: boolean, profile?: FooterProfileLink): string {
   const profileRow = footerProfileRow(t, profile);
-  return `  <footer style="text-align:center;padding:24px 20px 32px;background:${t.surface};border-top:1px solid ${t.border};font-size:0.8rem;color:${t.textMuted};">${profileRow}
+  return `  <footer class="site-footer" style="text-align:center;padding:24px 20px 32px;background:${t.surface};border-top:1px solid ${t.border};font-size:0.8rem;color:${t.textMuted};">${profileRow}
     <div style="margin-bottom:4px;display:flex;flex-wrap:wrap;gap:4px 6px;justify-content:center;">
       <a href="/privacy" style="display:inline-flex;align-items:center;min-height:44px;padding:0 8px;color:${t.textMuted};">מדיניות פרטיות</a>
       ${exempt ? '' : '<a href="/accessibility" style="display:inline-flex;align-items:center;min-height:44px;padding:0 8px;color:' + t.textMuted + ';">הצהרת נגישות</a>'}
     </div>
-    <a href="https://wao.co.il" style="display:inline-flex;align-items:center;gap:0.3em;min-height:44px;padding:0 8px;color:${t.textMuted};text-decoration:none;">נבנה עם <strong>WAO</strong> 🚀</a>
+    <a href="https://wao.co.il" style="display:inline-flex;align-items:center;gap:0.3em;min-height:44px;padding:0 8px;color:${t.textMuted};text-decoration:none;">נבנה עם <strong>WAO</strong></a>
   </footer>`;
-}
-
-export function stickyHeader(t: VerticalTheme, businessName: string, phone: string, phoneHref: string): string {
-  return `  <header style="position:sticky;top:0;z-index:50;background:${t.surface};border-bottom:1px solid ${t.border};padding:12px 20px;display:flex;justify-content:space-between;align-items:center;box-shadow:0 2px 8px rgba(0,0,0,0.06);">
-    <div style="font-family:'Secular One',sans-serif;font-weight:${t.headingWeight};font-size:1.1rem;color:${t.primary};">${esc(businessName)}</div>
-    ${phone ? `<a href="${phoneHref}" style="display:inline-flex;align-items:center;gap:6px;min-height:44px;background:${t.ctaGradient};color:${t.ctaText};padding:10px 18px;border-radius:${t.radiusSm};font-weight:700;font-size:0.9rem;white-space:nowrap;"><span aria-hidden="true">📞</span><bdi dir="ltr">${esc(phone)}</bdi></a>` : ''}
-  </header>`;
 }
 
 // ─────────────────────────────────────────────────────────────────────────
@@ -391,12 +392,13 @@ function ownerFactsLocalBusiness(data: CollectedData, businessName: string, clea
   const hours = parseBusinessHours(data.businessHours);
   const places = (options.areaServed ?? ownerStatedPlaces(data)).map(name => name.trim()).filter(Boolean);
   const mapsUrl = googleProfileUrl(data);
+  const image = ownerImageUrl(ogImage);
   return {
     '@type': getSchemaOrgType(data.businessNiche),
     '@id': `${cleanSiteUrl}/#business`,
     name: businessName,
     url: cleanSiteUrl,
-    image: ogImage,
+    ...(image ? { image } : {}),
     ...(data.phone ? { telephone: data.phone } : {}),
     ...(data.streetAddress ? { address: { '@type': 'PostalAddress', streetAddress: data.streetAddress, ...(data.targetLocation ? { addressLocality: data.targetLocation } : {}), addressCountry: 'IL' } } : {}),
     ...(places.length ? { areaServed: places.map(name => ({ '@type': 'City', name })) } : {}),
@@ -416,13 +418,14 @@ export function localBusinessObject(data: CollectedData, businessName: string, s
         addressCountry: 'IL',
       }
     : undefined;
+  const image = ownerImageUrl(ogImage);
 
   return {
     '@type': getSchemaOrgType(data.businessNiche),
     '@id': `${cleanSiteUrl}/#business`,
     name: businessName,
     url: cleanSiteUrl,
-    image: ogImage,
+    ...(image ? { image } : {}),
     priceRange: '$$',
     currenciesAccepted: 'ILS',
     paymentAccepted: ['Cash', 'Credit Card', 'Bit', 'PayBox'],
@@ -457,7 +460,9 @@ export function pageHead(opts: {
   /** robots meta content (unset = index,follow). */
   robots?: string;
 }): string {
-  const { t, title, description, canonicalUrl, ogImage, schema, fraudBlockerSid, extraCss, robots } = opts;
+  const { t, title, description, canonicalUrl, schema, fraudBlockerSid, extraCss, robots } = opts;
+  // Redesign A (item 7): never a stock photo as og:image; without an owner photo there is none (condition 9's card comes later).
+  const ogImage = ownerImageUrl(opts.ogImage);
   return `<head>
   ${fraudBlockerSid ? buildFraudBlockerTrackerHtml(fraudBlockerSid) : ''}
   <meta charset="UTF-8" />
@@ -470,41 +475,32 @@ export function pageHead(opts: {
   <meta property="og:title" content="${esc(title)}" />
   <meta property="og:description" content="${esc(description)}" />
   <meta property="og:url" content="${canonicalUrl}" />
-  <meta property="og:image" content="${ogImage}" />
-  <meta property="og:locale" content="he_IL" />
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Secular+One&family=Assistant:wght@400;600;700;800&display=swap" rel="stylesheet" />
+${ogImage ? `  <meta property="og:image" content="${ogImage}" />\n` : ''}  <meta property="og:locale" content="he_IL" />
+  ${siteFontHead()}
   ${styleBlock(t)}${extraCss ? `\n  <style>${extraCss}</style>` : ''}
   ${schema || ''}
 </head>`;
 }
 
-// Trust bar (same items as homepage) — reusable section.
-export function trustBarSection(t: VerticalTheme, items: string[]): string {
-  const html = items.map(item => `
-    <div style="background:rgba(255,255,255,0.12);color:#fff;padding:6px 14px;border-radius:${t.radiusSm};font-size:0.85rem;font-weight:600;white-space:nowrap;">
-      ${esc(item)}
-    </div>`).join('');
-  return `  <section style="background:${t.primary};padding:16px 20px;">
-    <div style="max-width:700px;margin:0 auto;display:flex;flex-wrap:wrap;gap:8px;justify-content:center;">
-      ${html}
-    </div>
-  </section>`;
+// Trust strip (Redesign A item 8): the checked fact list on white (siteDesign.trustFacts); same items, same order.
+export function trustBarSection(_t: VerticalTheme, items: string[]): string {
+  return trustFacts(items);
 }
 
 // Lead form section (same markup/behavior as renderStaticHtml's Lead Form).
 export function leadFormSection(t: VerticalTheme, headline: string, ctaLabel: string, options: LeadFormOptions = {}): string {
-  const submitLabel = options.submitLabel ?? ctaLabel;
+  // Redesign A defect fix: the submit button sends the form, so it never repeats the call label (heroCta); every form uses
+  // the approved form-submit label (Noa templateStrings.formSubmitLabel), legacy pages included.
+  const submitLabel = options.submitLabel ?? FORM_SUBMIT_LABEL ?? ctaLabel;
   const heading = options.headline === false
     ? ''
     : `
-      <h2 style="font-family:'Secular One',sans-serif;font-weight:${t.headingWeight};font-size:1.35rem;color:${t.primary};margin-bottom:20px;text-align:center;">${esc(headline)}</h2>`;
+      <h2 style="font-weight:800;font-size:1.35rem;color:${t.primary};margin-bottom:20px;text-align:center;">${esc(headline)}</h2>`;
   return `  <section${options.sectionId ? ` id="${esc(options.sectionId)}"` : ''} style="padding:40px 20px;background:${t.surfaceAlt};">
     <div style="max-width:480px;margin:0 auto;">${heading}
       <form id="lead-form" style="display:flex;flex-direction:column;gap:14px;">
-        <input type="text" id="f-name" placeholder="שם מלא" aria-label="שם מלא" required style="padding:14px 16px;border-radius:${t.radiusSm};border:1px solid ${t.border};font-size:1rem;color:${t.textPrimary};background:${t.surface};" />
-        <input type="tel" id="f-phone" placeholder="050-0000000" aria-label="מספר טלפון" dir="ltr" required style="padding:14px 16px;border-radius:${t.radiusSm};border:1px solid ${t.border};font-size:1rem;color:${t.textPrimary};background:${t.surface};text-align:right;" />
+        <div><label class="fld-label" for="f-name">שם מלא</label><input type="text" id="f-name" autocomplete="name" required style="width:100%;min-height:52px;padding:14px 16px;border-radius:${t.radiusSm};border:1px solid ${t.border};font-size:1rem;color:${t.textPrimary};background:${t.surface};" /></div>
+        <div><label class="fld-label" for="f-phone">מספר טלפון</label><input type="tel" id="f-phone" placeholder="050-0000000" dir="ltr" inputmode="tel" autocomplete="tel" required style="width:100%;min-height:52px;padding:14px 16px;border-radius:${t.radiusSm};border:1px solid ${t.border};font-size:1rem;color:${t.textPrimary};background:${t.surface};text-align:right;" /></div>
         <label style="${CONSENT_LABEL_STYLE}">
           <input type="checkbox" id="f-consent" required style="${CONSENT_CHECKBOX_STYLE}" />
           <span style="font-size:0.8rem;color:${t.textMuted};line-height:1.4;">אני מסכים/ה ל<a href="/privacy" style="${CONSENT_LINK_STYLE}color:${t.textMuted};text-decoration:underline;">מדיניות הפרטיות</a>.</span>
@@ -512,7 +508,7 @@ export function leadFormSection(t: VerticalTheme, headline: string, ctaLabel: st
         <div id="form-error">שגיאה בשליחה — נסה שוב או התקשר ישירות.</div>
         <button type="submit" class="submit-btn">${esc(submitLabel)}</button>
       </form>
-      <div id="form-success">${options.thanks !== undefined ? esc(options.thanks) : '✅ תודה! נחזור אליך בהקדם.'}</div>
+      <div id="form-success">${icon('check')} ${esc(withoutEmoji(options.thanks !== undefined ? options.thanks : 'תודה! נחזור אליך בהקדם.'))}</div>
     </div>
   </section>`;
 }
@@ -617,7 +613,7 @@ export function pageScript(opts: {
 
 function buildAboutHtml(p: RenderSitePagesParams, siteUrl: string): string {
   const { theme: t, copy, data, heroImageUrl, slug } = p;
-  const { phone, phoneHref, businessName } = contacts(data);
+  const { businessName } = contacts(data);
   const canonicalUrl = servedUrl(siteUrl, 'about.html');
 
   const head = pageHead({
@@ -632,15 +628,14 @@ function buildAboutHtml(p: RenderSitePagesParams, siteUrl: string): string {
 
   const trustBar = trustBarSection(t, copy.trustBarItems);
 
-  const body = `${stickyHeader(t, businessName, phone, phoneHref)}
-
+  const body = `
   <!-- About Hero -->
   <section style="padding:44px 20px 36px;background:${t.surface};text-align:center;">
     <div style="max-width:600px;margin:0 auto;">
       <div style="width:72px;height:72px;border-radius:50%;background:${t.ctaGradient};margin:0 auto 20px;display:flex;align-items:center;justify-content:center;color:${t.ctaText};font-weight:900;font-size:1.7rem;">
         ${esc((data.ownerName || businessName || '?')[0])}
       </div>
-      <h1 style="font-family:'Secular One',sans-serif;font-weight:${t.headingWeight};font-size:clamp(1.5rem,4.5vw,2.1rem);color:${t.primary};line-height:1.25;margin-bottom:18px;">${esc(copy.aboutPageHeadline)}</h1>
+      <h1 style="font-weight:800;font-size:clamp(1.5rem,4.5vw,2.1rem);color:${t.primary};line-height:1.25;margin-bottom:18px;">${esc(copy.aboutPageHeadline)}</h1>
       <p style="color:${t.textMuted};font-size:1rem;line-height:1.7;">${esc(copy.aboutPageBody)}</p>
     </div>
   </section>
@@ -672,7 +667,7 @@ ${pageScript({
 
 function buildServicesHtml(p: RenderSitePagesParams, siteUrl: string): string {
   const { theme: t, copy, data, heroImageUrl, slug } = p;
-  const { phone, phoneHref, businessName } = contacts(data);
+  const { businessName } = contacts(data);
   const canonicalUrl = servedUrl(siteUrl, 'services.html');
 
   const head = pageHead({
@@ -691,12 +686,11 @@ function buildServicesHtml(p: RenderSitePagesParams, siteUrl: string): string {
       <p style="color:${t.textMuted};font-size:0.9rem;line-height:1.5;">${esc(s.description)}</p>
     </div>`).join('');
 
-  const body = `${stickyHeader(t, businessName, phone, phoneHref)}
-
+  const body = `
   <!-- Services -->
   <section style="padding:40px 20px;background:${t.surfaceAlt};">
     <div style="max-width:700px;margin:0 auto;">
-      <h1 style="font-family:'Secular One',sans-serif;font-weight:${t.headingWeight};font-size:clamp(1.4rem,4vw,1.9rem);color:${t.primary};margin-bottom:24px;text-align:center;">${esc(copy.servicesHeadline)}</h1>
+      <h1 style="font-weight:800;font-size:clamp(1.4rem,4vw,1.9rem);color:${t.primary};margin-bottom:24px;text-align:center;">${esc(copy.servicesHeadline)}</h1>
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;">
         ${cards}
       </div>
@@ -712,7 +706,7 @@ ${pageScript({
     formConversionLabel: p.formConversionLabel || '',
     phoneConversionLabel: p.phoneConversionLabel || '',
     whatsappConversionLabel: p.whatsappConversionLabel || '',
-    ctaLabel: copy.heroCta,
+    ctaLabel: FORM_SUBMIT_LABEL,
     includeLeadForm: true,
   })}`;
 
@@ -742,18 +736,17 @@ function buildContactHtml(p: RenderSitePagesParams, siteUrl: string): string {
   // M2a.2: researched sites show the hours formatted in code (Hebrew day letters), never raw Latin.
   const hours = p.researched ? displayBusinessHours(data.businessHours) : data.businessHours;
   const hoursHtml = hours
-    ? `<p style="color:${t.textMuted};font-size:0.9rem;margin-top:8px;">🕒 ${esc(hours)}</p>`
+    ? `<p style="color:${t.textMuted};font-size:0.9rem;margin-top:8px;"><strong>${esc(SITE_DESIGN_LABELS.hoursLabel)}</strong> ${esc(hours)}</p>`
     : '';
 
-  const body = `${stickyHeader(t, businessName, phone, phoneHref)}
-
+  const body = `
   <!-- Contact Intro -->
   <section style="padding:36px 20px 20px;background:${t.surface};text-align:center;">
     <div style="max-width:500px;margin:0 auto;">
-      <h1 style="font-family:'Secular One',sans-serif;font-weight:${t.headingWeight};font-size:clamp(1.4rem,4vw,1.9rem);color:${t.primary};margin-bottom:16px;">${esc(copy.formHeadline)}</h1>
+      <h1 style="font-weight:800;font-size:clamp(1.4rem,4vw,1.9rem);color:${t.primary};margin-bottom:16px;">${esc(copy.formHeadline)}</h1>
       <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-bottom:8px;">
-        ${phone ? `<a href="${phoneHref}" style="display:inline-flex;align-items:center;gap:6px;min-height:44px;background:${t.ctaGradient};color:${t.ctaText};padding:12px 24px;border-radius:${t.radiusSm};font-weight:800;font-size:1rem;"><span aria-hidden="true">📞</span><bdi dir="ltr">${esc(phone)}</bdi></a>` : ''}
-        ${whatsapp ? `<a href="${whatsappHref}" target="_blank" rel="noopener noreferrer" style="display:inline-flex;align-items:center;gap:6px;min-height:44px;background:#25D366;color:#fff;padding:12px 24px;border-radius:${t.radiusSm};font-weight:800;font-size:1rem;"><span aria-hidden="true">💬</span>וואטסאפ</a>` : ''}
+        ${phone ? `<a class="btn btn-call" href="${phoneHref}">${icon('phone')}<bdi dir="ltr">${esc(phone)}</bdi></a>` : ''}
+        ${whatsapp ? `<a class="btn btn-wa" href="${whatsappHref}" target="_blank" rel="noopener noreferrer">${icon('chat')}וואטסאפ</a>` : ''}
       </div>
       ${hoursHtml}
     </div>
@@ -771,26 +764,34 @@ ${pageScript({
     formConversionLabel: p.formConversionLabel || '',
     phoneConversionLabel: p.phoneConversionLabel || '',
     whatsappConversionLabel: p.whatsappConversionLabel || '',
-    ctaLabel: p.researched ? RESEARCHED_LEAD_FORM.submitLabel ?? copy.heroCta : copy.heroCta,
+    ctaLabel: FORM_SUBMIT_LABEL,
     includeLeadForm: true,
   })}`;
 
   return assembleDocument(t, head, body, p.gtagSnippet, data, p.researchNav, p.footerProfileLink);
 }
 
-// Assembles <head> + <body> with nav bar (top) and footer badge (bottom) for
-// the 3 standalone pages (index.html has its own injection path above).
+// Assembles <head> + <body> for the standalone pages (index.html has its own path above). Redesign A: the icon sprite, the
+// skip link, the one header (name, nav, call button from the desktop breakpoint), the page body inside <main id="main">
+// (a body that brings its own <main> gets the id there), the footer, then the mobile action bar.
 export function assembleDocument(t: VerticalTheme, head: string, bodyInner: string, gtagSnippet: string | undefined, data: CollectedData, nav?: ResearchNavOptions, profile?: FooterProfileLink): string {
   const headWithGtag = gtagSnippet ? head.replace('</head>', () => `  ${gtagSnippet}\n</head>`) : head;
+  const { phone, phoneHref, whatsapp, whatsappHref, businessName } = contacts(data);
+  const main = /<main\b/.test(bodyInner)
+    ? bodyInner.replace(/<main\b(?![^>]*\bid=)/, '<main id="main"')
+    : `<main id="main">\n${bodyInner}\n</main>`;
   return `<!DOCTYPE html>
 <html lang="he" dir="rtl">
 ${headWithGtag}
 <body>
-${navBar(t, nav)}
+${SITE_ICON_SPRITE}
+${skipLink()}
+${siteHeader({ businessName, phone, phoneHref, nav: siteNav(nav), homeHref: '/' })}
 
-${bodyInner}
+${main}
 
 ${footerBadge(t, isAccessibilityExempt(data.vatStatus), profile)}
+${actionBar({ phone, phoneHref, whatsapp, whatsappHref })}
 </body>
 </html>`;
 }

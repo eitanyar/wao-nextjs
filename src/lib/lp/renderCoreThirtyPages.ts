@@ -19,7 +19,6 @@ import type { CoreThirtyPageCopy } from './coreThirtyCopy';
 import {
   esc,
   contacts,
-  stickyHeader,
   localBusinessObject,
   pageHead,
   leadFormSection,
@@ -132,7 +131,7 @@ function buildCoreThirtyNodeHtml(
   siteUrl: string
 ): string {
   const { theme: t, data, heroImageUrl, slug } = params;
-  const { phone, phoneHref, businessName } = contacts(data);
+  const { businessName } = contacts(data);
   const canonicalUrl = `${siteUrl}${servedPath(`sherut/${node.id}.html`)}`;
 
   const head = pageHead({
@@ -160,12 +159,11 @@ function buildCoreThirtyNodeHtml(
 
   const relatedLinksHtml = buildRelatedLinksBlock(node, params.nodes, t);
 
-  const body = `${stickyHeader(t, businessName, phone, phoneHref)}
-
+  const body = `
   <!-- Core-30 Hero / Narrative -->
   <section style="padding:44px 20px 24px;background:${t.surface};text-align:center;">
     <div style="max-width:600px;margin:0 auto;">
-      <h1 style="font-family:'Secular One',sans-serif;font-weight:${t.headingWeight};font-size:clamp(1.5rem,4.5vw,2.1rem);color:${t.primary};line-height:1.25;margin-bottom:18px;">${esc(copy.pageHeadline)}</h1>
+      <h1 style="font-weight:800;font-size:clamp(1.5rem,4.5vw,2.1rem);color:${t.primary};line-height:1.25;margin-bottom:18px;">${esc(copy.pageHeadline)}</h1>
       <p style="color:${t.textMuted};font-size:1rem;line-height:1.7;">${esc(copy.narrative)}</p>
     </div>
   </section>
@@ -184,7 +182,7 @@ function buildCoreThirtyNodeHtml(
 
 ${relatedLinksHtml}
 
-${leadFormSection(t, copy.formHeadline, copy.ctaLabel)}
+${leadFormSection(t, copy.formHeadline, copy.ctaLabel, { submitLabel: copy.ctaLabel })}
 
 ${pageScript({
     slug,

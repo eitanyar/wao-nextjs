@@ -1,10 +1,11 @@
 import { NextResponse } from 'next/server';
 import { execFileSync } from 'child_process';
-import { mkdtempSync, writeFileSync, rmSync, readFileSync } from 'fs';
+import { mkdirSync, mkdtempSync, writeFileSync, rmSync, readFileSync } from 'fs';
 import { tmpdir } from 'os';
 import path from 'path';
 import { renderStaticHtml } from '@/lib/lp/renderStaticHtml';
 import { buildLandingPageSupportPages } from '@/lib/lp/renderSitePages';
+import { siteFontFiles } from '@/lib/lp/siteFonts';
 import { detectVertical } from '@/lib/lp/verticalDetect';
 import { VERTICAL_THEMES } from '@/lib/lp/verticalThemes';
 import { VERTICAL_ASSETS } from '@/lib/lp/verticalAssets';
@@ -136,6 +137,11 @@ export async function POST(req: Request) {
     // return 404, not the LP with 200) and extensionless canonicals.
     const legalPages = buildLandingPageSupportPages({ theme, data: collectedData, siteUrl: `https://${slug}.wao.co.il`, fraudBlockerSid });
     for (const [file, html] of Object.entries(legalPages)) writeFileSync(path.join(tmpDir, file), html, 'utf-8');
+    // Redesign A (item 4): the self-hosted Heebo font files the LP and its legal pages preload.
+    for (const [file, bytes] of Object.entries(siteFontFiles())) {
+      mkdirSync(path.dirname(path.join(tmpDir, file)), { recursive: true });
+      writeFileSync(path.join(tmpDir, file), bytes);
+    }
     if (fraudBlockerSid && !recordFraudBlockerTrackerInstallation({
       state: readFraudBlockerState(slug) ?? fraudBlockerFailureState(slug, fraudDomain, new Error('Fraud Blocker state was not persisted.')),
       pages: { 'index.html': htmlContent, ...legalPages },
