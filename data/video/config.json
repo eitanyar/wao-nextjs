@@ -1,0 +1,40 @@
+{
+  "version": 1,
+  "description": "WAO video pipeline config (scripts/video). The ONE place a video price, stamp, CTA and URL come from. No Hebrew is authored here: product names resolve from data/voice/pronunciation-lexicon.json, price wording from the approved script line. *_PENDING values are rendered visibly and block release.",
+  "products": {
+    "ads-bot": {
+      "price": { "amount": 249, "currency": "ILS" },
+      "pageSource": null,
+      "nameLexiconId": "bot-modaot",
+      "url": "wao.co.il/google-ads",
+      "stampText": "STAMP_TEXT_PENDING",
+      "ctaText": "CTA_TEXT_PENDING"
+    },
+    "site-bot": {
+      "price": { "amount": 199, "currency": "ILS" },
+      "pageSource": { "file": "src/lib/payments/plans.ts", "pattern": "netAmount:\\s*(\\d+)" },
+      "nameLexiconId": "site-bot",
+      "url": "wao.co.il/site-bot",
+      "stampText": "STAMP_TEXT_PENDING",
+      "ctaText": "CTA_TEXT_PENDING"
+    }
+  },
+  "brand": {
+    "bg": "#0D1117",
+    "accent": "#4AE3B5",
+    "text": "#F2F5F9",
+    "muted": "#9AA7B5",
+    "wordmark": "WAO",
+    "fontCss": "src/app/offline-fonts.css",
+    "fontDir": "public/offline-fonts",
+    "fontFamily": "Rubik",
+    "fontFallback": "Assistant, 'DejaVu Sans', sans-serif"
+  },
+  "video": { "fps": 30, "gapSeconds": 0.4, "endHoldMinSeconds": 3, "crf": 18, "loudnorm": true },
+  "captions": { "minWords": 2, "maxWords": 4 },
+  "aspects": {
+    "9x16": { "width": 1080, "height": 1920, "safe": { "top": 250, "right": 180, "bottom": 420, "left": 60 }, "captionFontPx": 76 },
+    "1x1": { "width": 1080, "height": 1080, "safe": { "top": 70, "right": 70, "bottom": 90, "left": 70 }, "captionFontPx": 64 },
+    "16x9": { "width": 1920, "height": 1080, "safe": { "top": 60, "right": 110, "bottom": 80, "left": 110 }, "captionFontPx": 68 }
+  }
+}

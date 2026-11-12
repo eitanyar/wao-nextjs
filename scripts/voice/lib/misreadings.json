@@ -1,0 +1,9 @@
+{
+  "description": "Likely WRONG readings (Latin transliteration only) of lexicon entries, used as the alternative in the Stage-2 forced-choice audio judge. Keyed by lexicon id. Sources: Eitan's ear verdicts 2026-11-12 (round2/round3 pron tests) and the plain-Hebrew alternative reading of the unvowelized form.",
+  "bot-modaot": ["bot muda-UT (awareness bot)"],
+  "modaot": ["muda-UT (awareness)"],
+  "me-klikim": ["mak-li-KIM (they click)"],
+  "meapniyot": ["me-haf-ni-YOT (p pronounced as f)"],
+  "site-bot": ["SEIT bot (rhymes with 'eight')"],
+  "brand-wao": ["VAV (the letter name)"]
+}

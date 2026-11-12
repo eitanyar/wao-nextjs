@@ -1,0 +1,208 @@
+{
+  "version": 1,
+  "description": "WAO Hebrew TTS pronunciation lexicon. 'clean' is copy spelling (captions/QA); 'tts' is the exact string sent to TTS. Never write tts spellings back into copy files.",
+  "defaultVoice": {
+    "voice": "Nimrod",
+    "voiceId": "ZiofZHcEBTn5sRySe5h8",
+    "model": "eleven_v4"
+  },
+  "homographs": [],
+  "entries": [
+    {
+      "id": "bot-modaot",
+      "clean": "בוט מודעות",
+      "match": [
+        "בוט מודעות"
+      ],
+      "tts": "בּוֹט מוֹדָעוֹת",
+      "reading": "bot modaot",
+      "meaning": "ads bot (product name); מודעות = ads, not awareness",
+      "status": "approved",
+      "allowPrefixes": false,
+      "verifiedOn": {
+        "voice": "Nimrod",
+        "voiceId": "ZiofZHcEBTn5sRySe5h8",
+        "model": "eleven_v4"
+      },
+      "date": "2026-11-12",
+      "note": "Full product-name phrase exactly as approved by ear (round2 #2). Longest match wins, so this beats the single-word entry when the whole phrase appears.",
+      "source": {
+        "clean": {
+          "file": "scratch/video-dash/pron-test/round2-lines.txt",
+          "lineIndex": 0
+        },
+        "tts": {
+          "file": "scratch/video-dash/pron-test/round2-lines.txt",
+          "lineIndex": 1
+        }
+      }
+    },
+    {
+      "id": "modaot",
+      "clean": "מודעות",
+      "match": [
+        "מודעות"
+      ],
+      "tts": "מוֹדָעוֹת",
+      "reading": "modaot",
+      "meaning": "ads; מודעות = ads, not awareness",
+      "status": "approved",
+      "allowPrefixes": true,
+      "verifiedOn": {
+        "voice": "Nimrod",
+        "voiceId": "ZiofZHcEBTn5sRySe5h8",
+        "model": "eleven_v4"
+      },
+      "date": "2026-11-12",
+      "note": "Word-level form of the approved phrase, so it also fixes the word inside other phrases and with attached prefixes.",
+      "source": {
+        "clean": {
+          "file": "scratch/video-dash/pron-test/round2-lines.txt",
+          "lineIndex": 0,
+          "tokenIndex": 1
+        },
+        "tts": {
+          "file": "scratch/video-dash/pron-test/round2-lines.txt",
+          "lineIndex": 1,
+          "tokenIndex": 1
+        }
+      }
+    },
+    {
+      "id": "me-klikim",
+      "clean": "מקליקים",
+      "match": [
+        "מקליקים"
+      ],
+      "tts": "מִקְּלִיקִים",
+      "reading": "me-klikim",
+      "meaning": "from clicks",
+      "status": "approved",
+      "allowPrefixes": false,
+      "verifiedOn": {
+        "voice": "Nimrod",
+        "voiceId": "ZiofZHcEBTn5sRySe5h8",
+        "model": "eleven_v4"
+      },
+      "date": "2026-11-12",
+      "note": "Prefix is part of the clean form; matched as an exact token.",
+      "source": {
+        "tts": {
+          "file": "scratch/video-dash/pron-test/round2-lines.txt",
+          "lineIndex": 2,
+          "tokenIndex": 1
+        },
+        "clean": {
+          "file": "scratch/video-dash/pron-test/round2-lines.txt",
+          "lineIndex": 2,
+          "tokenIndex": 1,
+          "transform": "strip-niqqud"
+        }
+      }
+    },
+    {
+      "id": "meapniyot",
+      "clean": "מהפניות",
+      "match": [
+        "מהפניות"
+      ],
+      "tts": "מֵהַ-פְּנִיּוֹת",
+      "reading": "meapniyot",
+      "meaning": "from the leads/inquiries",
+      "status": "approved",
+      "allowPrefixes": false,
+      "verifiedOn": {
+        "voice": "Nimrod",
+        "voiceId": "ZiofZHcEBTn5sRySe5h8",
+        "model": "eleven_v4"
+      },
+      "date": "2026-11-12",
+      "note": "hyphen required, it stops the voice reading the p as f",
+      "source": {
+        "tts": {
+          "file": "scratch/video-dash/pron-test/round3-lines.txt",
+          "lineIndex": 0,
+          "tokenIndex": 1
+        },
+        "clean": {
+          "file": "scratch/video-dash/pron-test/round3-lines.txt",
+          "lineIndex": 0,
+          "tokenIndex": 1,
+          "transform": "strip-niqqud+drop-hyphen"
+        }
+      }
+    },
+    {
+      "id": "site-bot",
+      "clean": "סייט בוט",
+      "match": [
+        "סַיְיט בּוֹט",
+        "סייט בוט",
+        "סַאיְט בּוֹט",
+        "סאיט בוט",
+        "Site Bot"
+      ],
+      "tts": "Site Bot",
+      "reading": "sait bot",
+      "meaning": "Site Bot (product name)",
+      "status": "approved",
+      "allowPrefixes": false,
+      "verifiedOn": {
+        "voice": "Nimrod",
+        "voiceId": "ZiofZHcEBTn5sRySe5h8",
+        "model": "eleven_v4"
+      },
+      "date": "2026-11-12",
+      "note": "Latin 'Site Bot' is the approved voicing (round2 #8). Hebrew spellings (r3 JSON and round2 #9) all map to it; the Latin form is listed so it counts as covered.",
+      "source": {
+        "tts": {
+          "file": "scratch/video-dash/pron-test/round2-lines.txt",
+          "lineIndex": 7
+        },
+        "match[0]": {
+          "file": "docs/copy/video-dash-scripts-r3-2026-11-12.json",
+          "lineIndex": "episodes.S1.eitan_close.voice",
+          "tokenIndex": "3-4"
+        },
+        "match[2]": {
+          "file": "scratch/video-dash/pron-test/round2-lines.txt",
+          "lineIndex": 8
+        }
+      }
+    },
+    {
+      "id": "brand-wao",
+      "clean": "WAO",
+      "match": [
+        "WAO",
+        "וָואוּ"
+      ],
+      "tts": "וואו",
+      "reading": "wow",
+      "meaning": "WAO (agency brand); read 'wow', as in someone amazed",
+      "status": "approved",
+      "allowPrefixes": true,
+      "verifiedOn": {
+        "voice": "Nimrod",
+        "voiceId": "ZiofZHcEBTn5sRySe5h8",
+        "model": "eleven_v4"
+      },
+      "date": "2026-11-12",
+      "note": "Approved by Eitan 2026-11-12 (relayed by Adam). Latin WAO and the vocalized r3 form both map here; attached prefixes are kept, e.g. mem + brand.",
+      "source": {
+        "tts": {
+          "file": "scratch/video-dash/pron-test/test-lines.txt",
+          "lineIndex": 0,
+          "tokenIndex": 1,
+          "transform": "drop-leading-mem"
+        },
+        "match[1]": {
+          "file": "docs/copy/video-dash-scripts-r3-2026-11-12.json",
+          "lineIndex": "episodes.S1.eitan_close.voice",
+          "tokenIndex": 2,
+          "transform": "drop-leading-mem+hiriq"
+        }
+      }
+    }
+  ]
+}

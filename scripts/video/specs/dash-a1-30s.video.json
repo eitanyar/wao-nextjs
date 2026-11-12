@@ -1,0 +1,23 @@
+{
+  "schema": "wao.video/1",
+  "id": "dash-a1",
+  "product": "ads-bot",
+  "slotSeconds": 30,
+  "version": 1,
+  "lang": "he",
+  "source": {
+    "file": "docs/copy/video-dash-scripts-r4-final-candidate-2026-11-12.json",
+    "episode": "A1",
+    "section": "script_30"
+  },
+  "voice": { "takesDirs": ["scratch/video-dash/check/r4-audio/A1-script_30"] },
+  "beats": [
+    { "line": 0, "visual": { "type": "illustration" } },
+    { "line": 1, "visual": { "type": "illustration" } },
+    { "line": 2, "visual": { "type": "illustration" } },
+    { "line": 3, "visual": { "type": "illustration" } },
+    { "line": 4, "visual": { "type": "screen" } },
+    { "line": 5, "visual": { "type": "endScreen" }, "captions": false }
+  ],
+  "endScreen": { "price": 249, "holdSeconds": 3 }
+}

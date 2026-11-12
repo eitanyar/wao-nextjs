@@ -143,3 +143,7 @@ data/audits/*
 # Site-bot market scanner — raw DataForSEO cache, scraped business rows, run ledgers.
 # Private, minimal fields; never committed (mission: docs/missions/site-bot-market-scanner-2026-11-07.md)
 data/market-scan/
+
+# local QA screenshot dumps
+/qa-screenshots-*/
+scripts/voice/lib/__pycache__/

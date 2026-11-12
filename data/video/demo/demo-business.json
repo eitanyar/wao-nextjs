@@ -1,0 +1,29 @@
+{
+  "schema": "wao.video.demo/1",
+  "description": "Seed for the video screen recorder (scripts/video/record). A fictional demo business only. No Hebrew is authored here: every Hebrew string the recordings show comes from the site record (generator output) or from the live UI. Spec: docs/missions/video-demo-business-spec-2026-11-12.md.",
+  "fictional": true,
+  "status": "STAND_IN",
+  "statusNote": "STAND_IN = an existing eval record (test names, copy not proofread). Recordings come out marked DRAFT and are blocked from release. Set APPROVED only after the spec's approval chain, with the three sign-offs filled in below.",
+  "approvals": { "copy": null, "languageQa": null, "founder": null },
+  "siteRecord": "data/video/demo/stand-in/site-record.json",
+  "siteRecordSource": "byte-exact copy of scratch/sell-r1/eval/plumber-3/site-record.json (sha256 6f62e8da42d6bea991984083a652b49de1e97c52be5ce35a06f14d7b93d0219b)",
+  "slug": "demo-plumber",
+  "canonicalOrigin": "https://demo-plumber.invalid",
+  "servicePath": "/services/leak-detection",
+  "audit": {
+    "auditId": "0d3e0000-0000-4000-8000-000000000001",
+    "placeId": "demo-place-0001",
+    "snapshot": {
+      "types": ["plumber", "point_of_interest", "establishment"],
+      "hasRegularOpeningHours": true,
+      "hasSpecialOpeningHours": false,
+      "hasPhone": true,
+      "hasWebsite": true,
+      "photosFetched": true,
+      "photoCount": 0,
+      "hasRating": true,
+      "userRatingCount": 4,
+      "hasEditorialSummary": false
+    }
+  }
+}

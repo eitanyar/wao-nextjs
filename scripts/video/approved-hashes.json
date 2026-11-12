@@ -1,0 +1,14 @@
+{
+  "description": "Script hashes cleared to render (scripts/video/build-video.mjs refuses anything else). The hash covers every beat's voice + clean text, caption overrides, end-screen copy and price. Get it with: node scripts/video/build-video.mjs <video.json> --hash. Add an entry only after the copy is approved (Noa for Hebrew; Eitan for founder-facing). Any copy change, including a new stamp or CTA, changes the hash.",
+  "approved": [
+    {
+      "hash": "9b26dd03bd770373f2edadcecd379f04f73b1667c31d6b255de346ae5bc44512",
+      "id": "dash-a1",
+      "spec": "scripts/video/specs/dash-a1-30s.video.json",
+      "source": "docs/copy/video-dash-scripts-r4-final-candidate-2026-11-12.json A1/script_30",
+      "approvedBy": "Eitan (pipeline build brief, 2026-11-12: 'the approved v1 Dash scripts')",
+      "date": "2026-11-12",
+      "note": "Pipeline proof. End screen still carries STAMP_TEXT_PENDING and CTA_TEXT_PENDING, so the render is marked not releasable; the final stamp/CTA will produce a new hash that needs its own entry."
+    }
+  ]
+}

@@ -1,0 +1,410 @@
+{
+  "slug": "sell-r1-eval-plumber-3",
+  "researchId": "sell-r1-eval-plumber-3",
+  "approvedPageId": "home",
+  "collectedData": {
+    "businessName": "TEST M2a Plumbing",
+    "businessNiche": "plumber",
+    "primaryService": "איתור נזילות",
+    "secondaryServices": "פתיחת סתימות, התקנת דודים",
+    "priorityServices": [
+      "leak detection"
+    ],
+    "serviceModel": "field",
+    "targetLocation": "חולון",
+    "specificCities": "חולון, בת ים",
+    "travelBoundary": "עד 15 ק״מ מחולון",
+    "ownerName": "Test Owner A",
+    "usp": "מתקן נזילות באותו יום עם בדיקת מצלמה, ואחריות שנתיים על כל עבודת צנרת",
+    "idealClientFear": "שהאינסטלטור ישבור את האריחים בחדר האמבטיה, ישאיר בלגן וייעלם לשבוע",
+    "yearsInField": "12 שנים",
+    "guarantee": "אחריות שנתיים על עבודות צנרת",
+    "responseTime": "אותו יום בחולון ובבת ים",
+    "reviewQuote": "הגיע תוך שעה, איתר את הנזילה הנסתרת עם מצלמה והשאיר את חדר האמבטיה נקי.",
+    "pricingPromises": [
+      "free_quote",
+      "price_before_work"
+    ],
+    "calloutFee": 150,
+    "startingPrices": [
+      {
+        "job": "איתור נזילות",
+        "from": 350
+      }
+    ],
+    "starRating": "5",
+    "contactMethod": "phone",
+    "phone": "050-0000000",
+    "whatsappNumber": "050-0000000",
+    "businessHours": "א׳–ה׳ 08:00–18:00"
+  },
+  "copy": {
+    "heroHeadline": "אינסטלטור בחולון: מאתר נזילות עם מצלמה ומתקן באותו יום",
+    "heroSubheadline": "אתה רואה את הנזילה על המסך לפני שאני נוגע בקיר",
+    "heroCta": "התקשר עכשיו",
+    "servicesHeadline": "במה אני מטפל",
+    "formHeadline": "ספר לי מה קרה",
+    "aboutPageHeadline": "מאתר נזילות בבת ים עם מצלמה",
+    "aboutPageBody": "אתה שומע טפטוף מאחורי הקיר בחדר האמבטיה ואין לך מושג מאיפה זה בא. אני מגיע עם מצלמה, סורק את הצנרת ומראה לך על המסך בדיוק איפה הנקודה. אתה יודע מה קורה אצלך בקיר.",
+    "reviewFeatured": "הגיע תוך שעה, איתר את הנזילה הנסתרת עם מצלמה והשאיר את חדר האמבטיה נקי.",
+    "serviceItems": [
+      "איתור נזילות",
+      "פתיחת סתימות",
+      "התקנת דודים"
+    ],
+    "faqItems": [],
+    "scarcityLine": null,
+    "serviceDetails": [
+      {
+        "name": "איתור נזילות",
+        "description": "אני מאתר את מקור הנזילה בלי שבירת קירות ובלי ניחושים."
+      },
+      {
+        "name": "פתיחת סתימות",
+        "description": "אני פותח את הסתימה ובודק שהמים זורמים חזק לפני שאני סוגר."
+      },
+      {
+        "name": "התקנת דודים",
+        "description": "אני מתקין את הדוד, מחבר לצנרת ומוודא שהמים החמים זורמים."
+      }
+    ],
+    "storyHeadline": null,
+    "storyBody": "אתה רואה כתם על התקרה ומיד חושב על אריחים שבורים ושבוע של בלגן. אני מגיע עם מצלמה, מאתר את הנזילה בלי לשבור כלום, ומתקן מול העיניים שלך. אתה נשאר עם חדר אמבטיה שלם.",
+    "closeLine": "הנזילה מתוקנת היום. תגיד לי מה שמעת ואני כבר בדרך.",
+    "trustBarItems": [
+      "12 שנים במקצוע",
+      "חולון ובת ים",
+      "5 ★"
+    ],
+    "reviewContext": "5 ★",
+    "stickyBarLine": "",
+    "aboutBlurb": "",
+    "guaranteeBlock": null,
+    "responseTimeBadge": null,
+    "faqHeadline": ""
+  },
+  "researchedPages": [
+    {
+      "opportunityId": "home",
+      "classification": "homepage",
+      "targetPath": "/",
+      "brief": {
+        "faqPolicy": "none",
+        "faqCandidates": []
+      },
+      "copy": {
+        "heroHeadline": "אינסטלטור בחולון: מאתר נזילות עם מצלמה ומתקן באותו יום",
+        "heroSubheadline": "אתה רואה את הנזילה על המסך לפני שאני נוגע בקיר",
+        "heroCta": "התקשר עכשיו",
+        "servicesHeadline": "במה אני מטפל",
+        "formHeadline": "ספר לי מה קרה",
+        "aboutPageHeadline": "מאתר נזילות בבת ים עם מצלמה",
+        "aboutPageBody": "אתה שומע טפטוף מאחורי הקיר בחדר האמבטיה ואין לך מושג מאיפה זה בא. אני מגיע עם מצלמה, סורק את הצנרת ומראה לך על המסך בדיוק איפה הנקודה. אתה יודע מה קורה אצלך בקיר.",
+        "reviewFeatured": "הגיע תוך שעה, איתר את הנזילה הנסתרת עם מצלמה והשאיר את חדר האמבטיה נקי.",
+        "serviceItems": [
+          "איתור נזילות",
+          "פתיחת סתימות",
+          "התקנת דודים"
+        ],
+        "faqItems": [],
+        "scarcityLine": null,
+        "serviceDetails": [
+          {
+            "name": "איתור נזילות",
+            "description": "אני מאתר את מקור הנזילה בלי שבירת קירות ובלי ניחושים."
+          },
+          {
+            "name": "פתיחת סתימות",
+            "description": "אני פותח את הסתימה ובודק שהמים זורמים חזק לפני שאני סוגר."
+          },
+          {
+            "name": "התקנת דודים",
+            "description": "אני מתקין את הדוד, מחבר לצנרת ומוודא שהמים החמים זורמים."
+          }
+        ],
+        "storyHeadline": null,
+        "storyBody": "אתה רואה כתם על התקרה ומיד חושב על אריחים שבורים ושבוע של בלגן. אני מגיע עם מצלמה, מאתר את הנזילה בלי לשבור כלום, ומתקן מול העיניים שלך. אתה נשאר עם חדר אמבטיה שלם.",
+        "closeLine": "הנזילה מתוקנת היום. תגיד לי מה שמעת ואני כבר בדרך.",
+        "trustBarItems": [
+          "12 שנים במקצוע",
+          "חולון ובת ים",
+          "5 ★"
+        ],
+        "reviewContext": "5 ★",
+        "stickyBarLine": "",
+        "aboutBlurb": "",
+        "guaranteeBlock": null,
+        "responseTimeBadge": null,
+        "faqHeadline": ""
+      },
+      "pitch": "אתה עומד בחדר האמבטיה, מסתכל על הכתם שמתפשט על התקרה של השכן למטה, ומחפש אינסטלטור. אתה כבר יודע מה אתה מפחד: שיבוא מישהו, ישבור לך אריחים, ישאיר בלגן וייעלם לשבוע.\nאני עושה את זה אחרת. אני מגיע עם מצלמה, מאתר את הנזילה בלי צורך לשבור, ומתקן באותו יום. אתה רואה על המסך בדיוק איפה הבעיה, ואני מטפל בה מול העיניים שלך.\nכשאני מסיים, אתה מקבל אחריות שנתיים על עבודת הצנרת. אם משהו זז, אני חוזר. בלי תירוצים.\nאתה לא צריך לנחש מי יגיע ומתי. אתה מתקשר, אני מגיע, ואתה רואה את הבעיה על המסך לפני שאני נוגע בכלום.",
+      "flags": [
+        "No specific non-destructive guarantee stated; camera implies precision but owner did not say 'never breaks tiles'"
+      ],
+      "seo": {
+        "name": "אינסטלטור",
+        "city": "חולון",
+        "serviceArea": [
+          "חולון",
+          "בת ים"
+        ]
+      }
+    },
+    {
+      "opportunityId": "svc-leak-detection",
+      "classification": "money_service",
+      "targetPath": "/services/leak-detection",
+      "brief": {
+        "faqPolicy": "none",
+        "faqCandidates": []
+      },
+      "copy": {
+        "heroHeadline": "איתור נזילות בחולון — עם מצלמה, באותו יום",
+        "heroSubheadline": "מאתר את הנזילה דרך הקיר ומגיע ישירות למקור.",
+        "heroCta": "התקשר עכשיו",
+        "formHeadline": "ספר לי מה קרה",
+        "reviewFeatured": "הגיע תוך שעה, איתר את הנזילה הנסתרת עם מצלמה והשאיר את חדר האמבטיה נקי.",
+        "serviceItems": [
+          "איתור נזילות",
+          "פתיחת סתימות",
+          "התקנת דודים"
+        ],
+        "faqItems": [],
+        "scarcityLine": null,
+        "closeLine": "בדיקת מצלמה בלי לשבור, ואחריות שנתיים על כל עבודת צנרת. ספר לי מה קורה.",
+        "qaHeadline": null,
+        "qaItems": [
+          {
+            "questionId": "question-1",
+            "q": "כמה עולה איתור נזילות בחולון?",
+            "a": "אצל TEST M2a Plumbing, המחיר לאיתור נזילות בחולון מתחיל מ־350 ₪. דמי ההגעה: 150 ₪.",
+            "factIds": [
+              "system-pricing"
+            ]
+          },
+          {
+            "questionId": "question-3",
+            "q": "איך יודעים אם יש נזילה סמויה בדירה?",
+            "a": "אצל TEST M2a Plumbing בחולון: בדיקת מצלמה מאתרת נזילה סמויה גם כשהיא נסתרת. אני מגיע באותו יום בחולון ובבת ים.",
+            "factIds": [
+              "offer",
+              "proof-responseTime"
+            ]
+          }
+        ],
+        "proofHeadline": null,
+        "proofItems": [
+          {
+            "text": "יש אחריות לשנתיים על עבודות צנרת.",
+            "factIds": [
+              "proof-guarantee"
+            ]
+          }
+        ],
+        "aboutPageHeadline": "",
+        "aboutPageBody": "",
+        "serviceDetails": [],
+        "servicesHeadline": "במה אני מטפל",
+        "trustBarItems": [
+          "12 שנים במקצוע",
+          "חולון ובת ים",
+          "5 ★"
+        ],
+        "reviewContext": "5 ★",
+        "stickyBarLine": "",
+        "aboutBlurb": "",
+        "guaranteeBlock": null,
+        "responseTimeBadge": null,
+        "faqHeadline": ""
+      },
+      "flags": [
+        "Question 4 (insurance coverage) skipped: no owner fact about insurance or coverage."
+      ],
+      "seo": {
+        "name": "איתור נזילות",
+        "city": "חולון",
+        "serviceArea": [
+          "חולון",
+          "בת ים"
+        ]
+      }
+    },
+    {
+      "opportunityId": "svc-drain-cleaning",
+      "classification": "money_service",
+      "targetPath": "/services/drain-cleaning",
+      "brief": {
+        "faqPolicy": "none",
+        "faqCandidates": []
+      },
+      "copy": {
+        "heroHeadline": "פתיחת סתימות בחולון — מגיע היום",
+        "heroSubheadline": "פותח לך את הסתימה בחדר האמבטיה",
+        "heroCta": "התקשר עכשיו",
+        "formHeadline": "ספר לי מה קרה",
+        "reviewFeatured": "הגיע תוך שעה, איתר את הנזילה הנסתרת עם מצלמה והשאיר את חדר האמבטיה נקי.",
+        "serviceItems": [
+          "פתיחת סתימות",
+          "איתור נזילות",
+          "התקנת דודים"
+        ],
+        "faqItems": [],
+        "scarcityLine": null,
+        "closeLine": "הסתימה לא תחכה. אחריות שנתיים על עבודות צנרת — התקשר.",
+        "qaHeadline": null,
+        "qaItems": null,
+        "proofHeadline": null,
+        "proofItems": [
+          {
+            "text": "יש אחריות לשנתיים על עבודות צנרת.",
+            "factIds": [
+              "proof-guarantee"
+            ]
+          }
+        ],
+        "aboutPageHeadline": "",
+        "aboutPageBody": "",
+        "serviceDetails": [],
+        "servicesHeadline": "במה אני מטפל",
+        "trustBarItems": [
+          "12 שנים במקצוע",
+          "חולון ובת ים",
+          "5 ★"
+        ],
+        "reviewContext": "5 ★",
+        "stickyBarLine": "",
+        "aboutBlurb": "",
+        "guaranteeBlock": null,
+        "responseTimeBadge": null,
+        "faqHeadline": ""
+      },
+      "flags": [
+        "USP names leak repair with camera; page is about drain cleaning — camera relevance to clogs not stated by owner",
+        "No owner fact describes his specific method for opening clogs without breaking tiles; claim built from fear contrast only"
+      ],
+      "seo": {
+        "name": "פתיחת סתימות",
+        "city": "חולון",
+        "serviceArea": [
+          "חולון",
+          "בת ים"
+        ]
+      }
+    },
+    {
+      "opportunityId": "svc-water-heater-installation",
+      "classification": "money_service",
+      "targetPath": "/services/water-heater-installation",
+      "brief": {
+        "faqPolicy": "none",
+        "faqCandidates": []
+      },
+      "copy": {
+        "heroHeadline": "התקנת דודים בחולון על הצנרת הקיימת",
+        "heroSubheadline": "אני מחבר את הדוד לצנרת הקיימת, בודק כל חיבור ומשאיר את המקום נקי.",
+        "heroCta": "התקשר להצעת מחיר",
+        "formHeadline": "ספר לי מה אתה מתכנן",
+        "reviewFeatured": "הגיע תוך שעה, איתר את הנזילה הנסתרת עם מצלמה והשאיר את חדר האמבטיה נקי.",
+        "serviceItems": [
+          "התקנת דודים",
+          "איתור נזילות",
+          "פתיחת סתימות"
+        ],
+        "faqItems": [],
+        "scarcityLine": null,
+        "closeLine": "הדוד החדש מחובר לצנרת, האמבטיה נקייה, ויש אחריות לשנתיים על עבודות צנרת.",
+        "qaHeadline": null,
+        "qaItems": null,
+        "proofHeadline": null,
+        "proofItems": [
+          {
+            "text": "יש אחריות לשנתיים על עבודות צנרת.",
+            "factIds": [
+              "proof-guarantee"
+            ]
+          }
+        ],
+        "aboutPageHeadline": "",
+        "aboutPageBody": "",
+        "serviceDetails": [],
+        "servicesHeadline": "במה אני מטפל",
+        "responseTimeBadge": null,
+        "trustBarItems": [
+          "12 שנים במקצוע",
+          "חולון ובת ים",
+          "5 ★"
+        ],
+        "reviewContext": "5 ★",
+        "stickyBarLine": "",
+        "aboutBlurb": "",
+        "guaranteeBlock": null,
+        "faqHeadline": ""
+      },
+      "flags": [
+        "No license info supplied; cannot answer who is authorized to install an electric water heater.",
+        "No sizing guidance supplied; cannot answer what liter capacity suits a family of four.",
+        "No criteria supplied for when to replace a heater vs. only the heating element.",
+        "USP is about leak detection (camera, same-day); no installation-specific method or tool stated."
+      ],
+      "seo": {
+        "name": "התקנת דודים",
+        "city": "חולון",
+        "serviceArea": [
+          "חולון",
+          "בת ים"
+        ]
+      }
+    }
+  ],
+  "researchedGraphEdges": [
+    {
+      "fromId": "home",
+      "toId": "svc-leak-detection"
+    },
+    {
+      "fromId": "home",
+      "toId": "svc-drain-cleaning"
+    },
+    {
+      "fromId": "home",
+      "toId": "svc-water-heater-installation"
+    },
+    {
+      "fromId": "svc-leak-detection",
+      "toId": "home"
+    },
+    {
+      "fromId": "svc-leak-detection",
+      "toId": "svc-drain-cleaning"
+    },
+    {
+      "fromId": "svc-leak-detection",
+      "toId": "svc-water-heater-installation"
+    },
+    {
+      "fromId": "svc-drain-cleaning",
+      "toId": "home"
+    },
+    {
+      "fromId": "svc-drain-cleaning",
+      "toId": "svc-leak-detection"
+    },
+    {
+      "fromId": "svc-drain-cleaning",
+      "toId": "svc-water-heater-installation"
+    },
+    {
+      "fromId": "svc-water-heater-installation",
+      "toId": "home"
+    },
+    {
+      "fromId": "svc-water-heater-installation",
+      "toId": "svc-leak-detection"
+    },
+    {
+      "fromId": "svc-water-heater-installation",
+      "toId": "svc-drain-cleaning"
+    }
+  ],
+  "createdAt": "2026-11-12T03:45:53.917Z"
+}
