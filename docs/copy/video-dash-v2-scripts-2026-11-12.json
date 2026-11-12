@@ -3,8 +3,8 @@
   "A1": {
    "hooks": [
     {
-     "voice": "[deadpan] המונה בקמפיין שלך רץ כמו במונית, וכל קליק הוא נוסע שנכנס אליך.",
-     "display": "המונה בקמפיין שלך רץ כמו במונית, וכל קליק הוא נוסע שנכנס אליך.",
+     "voice": "[deadpan] המונה בקמפיין שלך רץ כמו במונית, וכל קליק הוא עוד נוסע שעולה.",
+     "display": "המונה בקמפיין שלך רץ כמו במונית, וכל קליק הוא עוד נוסע שעולה.",
      "tag_why": "flat setup, the meter is the campaign"
     },
     {
@@ -21,8 +21,8 @@
    "script_30": [
     {
      "screen": "Dashoni's dashboard screen is a taxi meter; the owner's thumb taps and each tap adds a fare; WAO mark in the corner from the first frame.",
-     "voice": "[deadpan] אתה סופר קליקים כמו מונה של מונית, וכל קליק הוא נוסע שנכנס אליך.",
-     "display": "אתה סופר קליקים כמו מונה של מונית, וכל קליק הוא נוסע שנכנס אליך.",
+     "voice": "[deadpan] אתה סוֹפֵר קליקים כמו מונה של מונית, וכל קליק הוא עוד נוסע שעולה.",
+     "display": "אתה סופר קליקים כמו מונה של מונית, וכל קליק הוא עוד נוסע שעולה.",
      "tag_why": "flat setup, meter and passenger named for the ear"
     },
     {
@@ -44,9 +44,9 @@
      "tag_why": "the inversion verdict, delivered with no lift"
     },
     {
-     "screen": "Real Ads Bot screen; the owner's thumb marks one lead as a closed job; the learning line updates from that mark, not from the click count.",
-     "voice": "[calm] בוט מודעות מביא לך נוסעים שמשלמים, כי הוא לומד רק מעבודות שסגרת.",
-     "display": "בוט מודעות מביא לך נוסעים שמשלמים, כי הוא לומד רק מעבודות שסגרת.",
+     "screen": "Real Ads Bot screen; the enquiry list; the owner's thumb marks one enquiry as real.",
+     "voice": "[calm] עם בוט מודעות, כל פנייה אמיתית שאתה מסמן חוזרת לגוגל. כשיש מספיק כאלה, המודעות עוברות לבד לנוסעים שמשלמים, לא לשואלים.",
+     "display": "עם בוט מודעות, כל פנייה אמיתית שאתה מסמן חוזרת לגוגל. כשיש מספיק כאלה, המודעות עוברות לבד לנוסעים שמשלמים, לא לשואלים.",
      "tag_why": "steady mechanism, the airport question returns as the filter"
     },
     {
@@ -70,7 +70,7 @@
      "tag_why": "verdict lands alone, no setup line before it"
     },
     {
-     "screen": "Real Ads Bot screen; the owner's thumb marks one lead as a closed job; the learning line updates from that mark.",
+     "screen": "Real Ads Bot screen; the enquiry list; the owner's thumb marks one enquiry as real.",
      "voice": "[calm] בוט מודעות מביא לך נוסעים שמשלמים, ואתה מפסיק לשלם על כל שאלה.",
      "display": "בוט מודעות מביא לך נוסעים שמשלמים, ואתה מפסיק לשלם על כל שאלה.",
      "tag_why": "mechanism plus the asked-versus-rode callback"
@@ -128,14 +128,14 @@
     },
     {
      "screen": "Dashoni flat to camera; the crowd is round and happy, the till drawer is open and empty.",
-     "voice": "[deadpan] הקהל השמין, הקופה לא.",
-     "display": "הקהל השמין, הקופה לא.",
+     "voice": "[deadpan] הקהל גדל, הקוּפה ריקה.",
+     "display": "הקהל גדל, הקופה ריקה.",
      "tag_why": "the seesaw punchline, no lift"
     },
     {
-     "screen": "Real Ads Bot screen; the owner marks a lead as a closed job; the panel shows the campaign running on Google Ads.",
-     "voice": "[calm] בוט מודעות מביא לך קונים, לא טועמים, והקופה שלך סוף סוף משמינה.",
-     "display": "בוט מודעות מביא לך קונים, לא טועמים, והקופה שלך סוף סוף משמינה.",
+     "screen": "Real Ads Bot screen; the enquiry list; the owner marks one enquiry as real.",
+     "voice": "[calm] בוט מודעות מביא לך קונים, לא טועמים, והקוּפה שלך סוף סוף מתמלאת.",
+     "display": "בוט מודעות מביא לך קונים, לא טועמים, והקופה שלך סוף סוף מתמלאת.",
      "tag_why": "steady payoff, the till that stayed thin finally fattens"
     },
     {
@@ -154,14 +154,14 @@
     },
     {
      "screen": "Dashoni flat to camera; the crowd is round and happy, the till drawer open and empty.",
-     "voice": "[deadpan] הקהל השמין, הקופה לא.",
-     "display": "הקהל השמין, הקופה לא.",
+     "voice": "[deadpan] הקהל גדל, הקוּפה ריקה.",
+     "display": "הקהל גדל, הקופה ריקה.",
      "tag_why": "verdict alone"
     },
     {
-     "screen": "Real Ads Bot screen; the owner marks a lead as a closed job; the panel shows the campaign running on Google Ads.",
-     "voice": "[calm] בוט מודעות מביא לך קונים, לא טועמים, והקופה שלך סוף סוף משמינה.",
-     "display": "בוט מודעות מביא לך קונים, לא טועמים, והקופה שלך סוף סוף משמינה.",
+     "screen": "Real Ads Bot screen; the enquiry list; the owner marks one enquiry as real.",
+     "voice": "[calm] בוט מודעות מביא לך קונים, לא טועמים, והקוּפה שלך סוף סוף מתמלאת.",
+     "display": "בוט מודעות מביא לך קונים, לא טועמים, והקופה שלך סוף סוף מתמלאת.",
      "tag_why": "mechanism, buyers not tasters carried by the marking"
     },
     {
@@ -222,9 +222,9 @@
      "tag_why": "the deflation verdict, four words"
     },
     {
-     "screen": "Real Ads Bot screen; the owner marks a lead as a closed job; no confetti, just the updated learning line.",
-     "voice": "[calm] בוט מודעות עונה לך על ׳ולקוחות?׳ בעבודות סגורות, לא בעוד גרף יפה.",
-     "display": "בוט מודעות עונה לך על ׳ולקוחות?׳ בעבודות סגורות, לא בעוד גרף יפה.",
+     "screen": "Real Ads Bot screen; the enquiry list with several enquiries; the owner marks one as real and the list updates; no confetti.",
+     "voice": "[calm] בוט מודעות עונה לך על ׳ולקוחות?׳ בפניות אמיתיות שאתה רואה ומסמן, לא בעוד גרף יפה.",
+     "display": "בוט מודעות עונה לך על ׳ולקוחות?׳ בפניות אמיתיות שאתה רואה ומסמן, לא בעוד גרף יפה.",
      "tag_why": "mechanism starts from the unanswered question, quiet against the party"
     },
     {
@@ -248,9 +248,9 @@
      "tag_why": "verdict alone"
     },
     {
-     "screen": "Real Ads Bot screen; the owner marks a lead as a closed job; no confetti.",
-     "voice": "[calm] בוט מודעות עונה לך על ׳ולקוחות?׳ בעבודות סגורות, לא בעוד גרף יפה.",
-     "display": "בוט מודעות עונה לך על ׳ולקוחות?׳ בעבודות סגורות, לא בעוד גרף יפה.",
+     "screen": "Real Ads Bot screen; the enquiry list is open; the owner marks one enquiry as real; no confetti.",
+     "voice": "[calm] בוט מודעות עונה לך על ׳ולקוחות?׳ בפניות אמיתיות שאתה רואה ומסמן, לא בעוד גרף יפה.",
+     "display": "בוט מודעות עונה לך על ׳ולקוחות?׳ בפניות אמיתיות שאתה רואה ומסמן, לא בעוד גרף יפה.",
      "tag_why": "the question returns as the mechanism"
     },
     {
@@ -306,14 +306,14 @@
     },
     {
      "screen": "Real Site Bot screen: one site listing all his services and a Google profile saying the same thing; the owner climbs down off the roof.",
-     "voice": "[calm] סייט בוט מביא לך עוד עבודות ועוד ביקורות מגוגל. אתה יכול לרדת מהגג.",
-     "display": "סייט בוט מביא לך עוד עבודות ועוד ביקורות מגוגל. אתה יכול לרדת מהגג.",
+     "voice": "[calm] Site Bot מביא לך עוד עבודות ועוד ביקורות בגוגל. אתה יכול לרדת מהגג.",
+     "display": "Site Bot מביא לך עוד עבודות ועוד ביקורות בגוגל. אתה יכול לרדת מהגג.",
      "tag_why": "mechanism, then the roof pays off as relief not a joke on him"
     },
     {
-     "screen": "End card: WAO mark, סייט בוט, the shared stamp, one CTA button.",
-     "voice": "[excited] WAO! סייט בוט.",
-     "display": "WAO! סייט בוט.",
+     "screen": "End card: WAO mark, Site Bot, the shared stamp, one CTA button.",
+     "voice": "[excited] WAO! Site Bot.",
+     "display": "WAO! Site Bot.",
      "tag_why": "brand upbeat close"
     }
    ],
@@ -332,14 +332,14 @@
     },
     {
      "screen": "Real Site Bot screen: one site with all his services and a Google profile saying the same thing.",
-     "voice": "[calm] סייט בוט מביא לך עוד עבודות ועוד ביקורות מגוגל. אתה יכול לרדת מהגג.",
-     "display": "סייט בוט מביא לך עוד עבודות ועוד ביקורות מגוגל. אתה יכול לרדת מהגג.",
+     "voice": "[calm] Site Bot מביא לך עוד עבודות ועוד ביקורות בגוגל. אתה יכול לרדת מהגג.",
+     "display": "Site Bot מביא לך עוד עבודות ועוד ביקורות בגוגל. אתה יכול לרדת מהגג.",
      "tag_why": "one story where she actually looks, no ranking promise"
     },
     {
-     "screen": "End card: WAO mark, סייט בוט, the shared stamp, one CTA button.",
-     "voice": "[excited] WAO! סייט בוט.",
-     "display": "WAO! סייט בוט.",
+     "screen": "End card: WAO mark, Site Bot, the shared stamp, one CTA button.",
+     "voice": "[excited] WAO! Site Bot.",
+     "display": "WAO! Site Bot.",
      "tag_why": "brand upbeat close"
     }
    ]
@@ -395,14 +395,14 @@
     },
     {
      "screen": "Real Site Bot screen: a review request reaches his customer after the job; the customer picks the stars and writes the words; no suggested text anywhere.",
-     "voice": "[calm] סייט בוט מביא לך עוד עבודות ועוד ביקורות מגוגל. לפני ש׳אחר כך׳ הופך ל׳אף פעם׳.",
-     "display": "סייט בוט מביא לך עוד עבודות ועוד ביקורות מגוגל. לפני ש׳אחר כך׳ הופך ל׳אף פעם׳.",
+     "voice": "[calm] Site Bot מביא לך עוד עבודות ועוד ביקורות בגוגל, לפני ש׳אחר כך׳ הופך ל׳אף פעם׳.",
+     "display": "Site Bot מביא לך עוד עבודות ועוד ביקורות בגוגל, לפני ש׳אחר כך׳ הופך ל׳אף פעם׳.",
      "tag_why": "help only, his own later returns as the payoff"
     },
     {
-     "screen": "End card: WAO mark, סייט בוט, the shared stamp, one CTA button.",
-     "voice": "[excited] WAO! סייט בוט.",
-     "display": "WAO! סייט בוט.",
+     "screen": "End card: WAO mark, Site Bot, the shared stamp, one CTA button.",
+     "voice": "[excited] WAO! Site Bot.",
+     "display": "WAO! Site Bot.",
      "tag_why": "brand upbeat close"
     }
    ],
@@ -421,14 +421,14 @@
     },
     {
      "screen": "Dashoni warm to camera; real Site Bot screen: a review request reaches his customer, who picks the stars and the words; no suggested text.",
-     "voice": "[calm] עכשיו אתה מבין את הלקוחות. סייט בוט מביא לך עוד ביקורות מגוגל, לפני ש׳אחר כך׳ הופך ל׳אף פעם׳.",
-     "display": "עכשיו אתה מבין את הלקוחות. סייט בוט מביא לך עוד ביקורות מגוגל, לפני ש׳אחר כך׳ הופך ל׳אף פעם׳.",
+     "voice": "[calm] עכשיו אתה מבין את הלקוחות שלך. Site Bot מביא לך עוד ביקורות בגוגל, לפני ש׳אחר כך׳ הופך ל׳אף פעם׳.",
+     "display": "עכשיו אתה מבין את הלקוחות שלך. Site Bot מביא לך עוד ביקורות בגוגל, לפני ש׳אחר כך׳ הופך ל׳אף פעם׳.",
      "tag_why": "warm turn plus the later-to-never callback in one line"
     },
     {
-     "screen": "End card: WAO mark, סייט בוט, the shared stamp, one CTA button.",
-     "voice": "[excited] WAO! סייט בוט.",
-     "display": "WAO! סייט בוט.",
+     "screen": "End card: WAO mark, Site Bot, the shared stamp, one CTA button.",
+     "voice": "[excited] WAO! Site Bot.",
+     "display": "WAO! Site Bot.",
      "tag_why": "brand upbeat close"
     }
    ]
@@ -478,8 +478,8 @@
     },
     {
      "screen": "Real Site Bot screen: one site with all his services and a Google profile saying the same thing, side by side.",
-     "voice": "[calm] סייט בוט מביא לך עוד עבודות ועוד ביקורות מגוגל.",
-     "display": "סייט בוט מביא לך עוד עבודות ועוד ביקורות מגוגל.",
+     "voice": "[calm] Site Bot מביא לך עוד עבודות ועוד ביקורות בגוגל.",
+     "display": "Site Bot מביא לך עוד עבודות ועוד ביקורות בגוגל.",
      "tag_why": "one story in one voice, steady"
     },
     {
@@ -489,9 +489,9 @@
      "tag_why": "the wrong yes becomes three right ones, callback pays off"
     },
     {
-     "screen": "End card: WAO mark, סייט בוט, the shared stamp, one CTA button.",
-     "voice": "[excited] WAO! סייט בוט.",
-     "display": "WAO! סייט בוט.",
+     "screen": "End card: WAO mark, Site Bot, the shared stamp, one CTA button.",
+     "voice": "[excited] WAO! Site Bot.",
+     "display": "WAO! Site Bot.",
      "tag_why": "brand upbeat close"
     }
    ],
@@ -510,14 +510,14 @@
     },
     {
      "screen": "Real Site Bot screen: one site with all his services and a Google profile saying the same thing.",
-     "voice": "[calm] סייט בוט מביא לך עוד עבודות ועוד ביקורות מגוגל. והפעם ׳כן׳ זו תשובה.",
-     "display": "סייט בוט מביא לך עוד עבודות ועוד ביקורות מגוגל. והפעם ׳כן׳ זו תשובה.",
+     "voice": "[calm] Site Bot מציג את כל השירותים שלך, גם באתר וגם בפרופיל בגוגל. והפעם ׳כן׳ זו תשובה.",
+     "display": "Site Bot מציג את כל השירותים שלך, גם באתר וגם בפרופיל בגוגל. והפעם ׳כן׳ זו תשובה.",
      "tag_why": "the fix in one steady line"
     },
     {
-     "screen": "End card: WAO mark, סייט בוט, the shared stamp, one CTA button.",
-     "voice": "[excited] WAO! סייט בוט.",
-     "display": "WAO! סייט בוט.",
+     "screen": "End card: WAO mark, Site Bot, the shared stamp, one CTA button.",
+     "voice": "[excited] WAO! Site Bot.",
+     "display": "WAO! Site Bot.",
      "tag_why": "brand upbeat close"
     }
    ]

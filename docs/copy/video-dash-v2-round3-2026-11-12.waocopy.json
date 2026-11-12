@@ -1,0 +1,80 @@
+Angle: mid-ad proof lines for a problem-aware owner who's already been sold pretty dashboards — keep the dry jokes, swap the one result promise for the checkable mechanism (real enquiries he sees and marks), and let the screen carry the proof.
+
+```json
+{
+  "fixes": [
+    {
+      "id": "A1.hooks[0]",
+      "old": "[deadpan] המונה בקמפיין שלך רץ כמו במונית, וכל קליק הוא נוסע שנכנס אליך.",
+      "new": "[deadpan] המונה בקמפיין שלך רץ כמו במונית, וכל קליק הוא נוסע שנכנס למונית.",
+      "display": "המונה בקמפיין שלך רץ כמו במונית, וכל קליק הוא נוסע שנכנס למונית.",
+      "tag_why": "[deadpan] stays; the meter joke is dry and the fix is the passenger, not the delivery.",
+      "why": "׳נכנס אליך׳ read as a passenger entering you; now he gets into the taxi, which is what the meter screen shows. 12 words, no dashes, no double reading."
+    },
+    {
+      "id": "A3.script_15[2]",
+      "old": "[calm] בוט מודעות עונה לך על ׳ולקוחות?׳ בעבודות סגורות, לא בעוד גרף יפה.",
+      "new": "[calm] בוט מודעות עונה לך על ׳ולקוחות?׳ בפניות אמיתיות שאתה רואה ומסמן, לא בעוד גרף יפה.",
+      "display": "בוט מודעות עונה לך על ׳ולקוחות?׳ בפניות אמיתיות שאתה רואה ומסמן, לא בעוד גרף יפה.",
+      "tag_why": "[calm] stays; the payoff is a flat truth, not a hype beat, and the screen has no confetti.",
+      "why": "Truth fix: the closed-jobs promise is gone; the bot answers with real enquiries the owner sees and marks, exactly what the new screen shows. The ׳not another pretty graph׳ payoff stays. 15 words, one sentence, product named before the owner's action."
+    },
+    {
+      "id": "A3.script_30[5]",
+      "old": "[calm] בוט מודעות עונה לך על ׳ולקוחות?׳ בעבודות סגורות, לא בעוד גרף יפה.",
+      "new": "[calm] בוט מודעות עונה לך על ׳ולקוחות?׳ בפניות אמיתיות שאתה רואה ומסמן, לא בעוד גרף יפה.",
+      "display": "בוט מודעות עונה לך על ׳ולקוחות?׳ בפניות אמיתיות שאתה רואה ומסמן, לא בעוד גרף יפה.",
+      "tag_why": "[calm] stays; same flat truth as the 15s sibling.",
+      "why": "Same truth fix as A3.script_15[2]; the 15s and 30s lines stay identical. Closed jobs are no longer mentioned at all, so Noa's ׳עבודות שנסגרו׳ preference is moot."
+    },
+    {
+      "id": "S1.script_15[2]",
+      "old": "[calm] סייט בוט מביא לך עוד עבודות ועוד ביקורות מגוגל. אתה יכול לרדת מהגג.",
+      "new": "[calm] Site Bot מביא לך עוד עבודות ועוד ביקורות בגוגל. אתה יכול לרדת מהגג.",
+      "display": "Site Bot מביא לך עוד עבודות ועוד ביקורות בגוגל. אתה יכול לרדת מהגג.",
+      "tag_why": "[calm] stays; the roof joke lands dry.",
+      "why": "Site Bot in Latin instead of the transliteration; ביקורות בגוגל because the reviews live on his profile, not imported from Google. Product named before the benefit. Roof line kept: the screen shows him literally climbing down, so no double reading where it sits."
+    },
+    {
+      "id": "S1.script_30[4]",
+      "old": "[calm] סייט בוט מביא לך עוד עבודות ועוד ביקורות מגוגל. אתה יכול לרדת מהגג.",
+      "new": "[calm] Site Bot מביא לך עוד עבודות ועוד ביקורות בגוגל. אתה יכול לרדת מהגג.",
+      "display": "Site Bot מביא לך עוד עבודות ועוד ביקורות בגוגל. אתה יכול לרדת מהגג.",
+      "tag_why": "[calm] stays; same dry roof joke as the 15s sibling.",
+      "why": "Same two fixes as S1.script_15[2]; siblings stay identical. The roof descent on screen anchors the literal reading."
+    },
+    {
+      "id": "S2.script_30[5]",
+      "old": "[calm] סייט בוט מביא לך עוד עבודות ועוד ביקורות מגוגל. לפני ש׳אחר כך׳ הופך ל׳אף פעם׳.",
+      "new": "[calm] Site Bot מביא לך עוד עבודות ועוד ביקורות בגוגל, לפני ש׳אחר כך׳ הופך ל׳אף פעם׳.",
+      "display": "Site Bot מביא לך עוד עבודות ועוד ביקורות בגוגל, לפני ש׳אחר כך׳ הופך ל׳אף פעם׳.",
+      "tag_why": "[calm] stays; the urgency is a dry aside, not a shout.",
+      "why": "Latin name plus בגוגל, and the ׳לפני ש...׳ fragment joined to the first sentence with a comma: one 15-word sentence, urgency intact, no standalone fragment."
+    },
+    {
+      "id": "S3.script_30[4]",
+      "old": "[calm] סייט בוט מביא לך עוד עבודות ועוד ביקורות מגוגל.",
+      "new": "[calm] Site Bot מביא לך עוד עבודות ועוד ביקורות בגוגל.",
+      "display": "Site Bot מביא לך עוד עבודות ועוד ביקורות בגוגל.",
+      "tag_why": "[calm] stays.",
+      "why": "Latin name plus בגוגל; the sentence stays identical to the S1/S2 sibling. 9 words, product first."
+    }
+  ],
+  "s3_choice": "I can't pick blind: Noa's two S3.script_15[2] versions aren't quoted in the brief and I have no file access. Paste both and I'll choose in one line. My rule: take the version that matches the sibling fix — Site Bot in Latin, ביקורות בגוגל, one short sentence, no dashes, no result promise; if both qualify, the shorter one. Provisional pick: the minimal-fix version, the one identical to my S3.script_30[4] line. Whichever wins, mirror it in S3.script_30[4] so the siblings stay identical.",
+  "screen_notes": [
+    {
+      "id": "A3.script_15[2]",
+      "new": "Real Ads Bot screen; the enquiry list is open; the owner marks one enquiry as real; no confetti."
+    },
+    {
+      "id": "A3.script_30[5]",
+      "new": "Real Ads Bot screen; the enquiry list with several enquiries; the owner marks one as real and the list updates; no confetti."
+    },
+    {
+      "id": "A1.script_30[5]",
+      "new": "Real Ads Bot screen; the enquiry list; the owner's thumb marks one enquiry as real; no confetti."
+    }
+  ],
+  "notes": "All new voiced lines are 15 words or fewer, dash-free, singular masculine, product named before any action the owner takes. Closed jobs are gone from A3 voice and screens. ׳בוט מודעות׳ stays in Hebrew: it's a translated name, not a transliteration — only סייט בוט was flagged for Latin. The S lines' benefit claim is left as settled; the truth flag was scoped to A3. display = caption text with the emotion tag stripped; every tag unchanged. The A1 screen id is inferred: the brief didn't quote A1's learning-line note, so apply that text to whichever A1 screen still shows the learning line or a closed-job mark (possibly index [4] instead of [5]); A1.hooks[0]'s taxi-meter screen stays as is. DONE lines and end cards untouched. → Noa to proof the new A3 payoff and the joined S2 sentence; → Eitan-Dev/animator to apply the screen notes."
+}
+```
