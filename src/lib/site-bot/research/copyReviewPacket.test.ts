@@ -4,7 +4,7 @@ import { createHash } from 'node:crypto';
 import type { SiteCopy } from '../../lp/lpCopyPrompt';
 import { assertDeployReady } from './pipelineState';
 import type { SiteResearchDossier } from './types';
-import { buildResearchedCopyReviewPacket, matchesResearchedCopyReviewPacket } from './copyReviewPacket';
+import { approveResearchedCopyReview, buildResearchedCopyReviewPacket, matchesResearchedCopyReviewPacket } from './copyReviewPacket';
 
 const date = '2026-09-20T00:00:00.000Z';
 
@@ -152,4 +152,24 @@ test('matcher fails closed on forged, malformed, or mismatched packet metadata',
   ];
   for (const invalid of badPackets) assert.equal(matchesResearchedCopyReviewPacket(raw, invalid), false);
   assert.equal(matchesResearchedCopyReviewPacket(Buffer.from('bad'), packet), false);
+});
+
+// Site Bot launch step 2 (B4): the approval carries the staff checks of the licence / free-text warranty claims.
+test('approval: binds the reviewed sha256, stores valid staff checks only, and the deploy matcher accepts them', () => {
+  const raw = bytes(record());
+  const packet = buildResearchedCopyReviewPacket(raw, dossier());
+  assert.deepEqual(approveResearchedCopyReview(raw, dossier(), packet.sha256, undefined), packet, 'no checks: the plain packet');
+  assert.deepEqual(approveResearchedCopyReview(raw, dossier(), packet.sha256, {}), packet);
+  const licence = { verifiedBy: 'Staff A', verifiedAt: '2026-11-12' };
+  const approved = approveResearchedCopyReview(raw, dossier(), packet.sha256, { licence });
+  assert.deepEqual(approved, { ...packet, claimVerification: { licence } });
+  assert.equal(matchesResearchedCopyReviewPacket(raw, approved), true, 'deploy still matches the record');
+  assert.throws(() => approveResearchedCopyReview(raw, dossier(), 'f'.repeat(64), { licence }), /changed since/);
+  for (const bad of [{ licence: { verifiedBy: '', verifiedAt: '2026-11-12' } }, { licence: { verifiedBy: 'A', verifiedAt: '2026-02-30' } },
+    { licence: { verifiedBy: 'A', verifiedAt: '2999-01-01' } }, { licence: { ...licence, extra: 1 } }, { insurance: licence }, []]) {
+    assert.throws(() => approveResearchedCopyReview(raw, dossier(), packet.sha256, bad), /claim verification/, JSON.stringify(bad));
+  }
+  for (const forged of [{ ...packet, claimVerification: { licence: { verifiedBy: 'A' } } }, { ...packet, claimVerification: null }, { ...packet, claimVerification: { other: licence } }]) {
+    assert.equal(matchesResearchedCopyReviewPacket(raw, forged as typeof packet), false);
+  }
 });

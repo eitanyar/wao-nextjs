@@ -1,0 +1,27 @@
+Angle: mid-signup microcopy for a most-aware owner already sold on the ₪199 bot — every string removes one friction (privacy, wrong prefill, domain confusion) and keeps him moving to payment; no marketing, no support promises.
+
+```json
+{
+  "labels": {
+    "contactTitle": "איך אנחנו משיגים אותך?",
+    "contactIntro": "לכאן אנחנו שולחים לך קבלות, את הקישור לביטול המנוי, טיוטות תשובות לביקורות ואת הדוח החודשי. הנייד והמייל לא מופיעים באתר שלך.",
+    "contactMobileLabel": "הנייד שלך",
+    "contactMobilePrefillNote": "לקחנו את המספר מהפרופיל העסקי שלך בגוגל. זה לא הנייד שלך? תחליף אותו.",
+    "contactMobileInvalid": "זה לא מספר נייד ישראלי. הוא צריך להתחיל ב־05, למשל 050-1234567.",
+    "contactEmailLabel": "המייל שלך",
+    "contactEmailInvalid": "המייל לא נראה תקין. בדוק את הכתובת ונסה שוב.",
+    "contactContinue": "המשך",
+    "domainQuestion": "יש לך דומיין — כתובת אתר משלך?",
+    "domainChoiceYes": "כן, יש לי",
+    "domainChoiceNo": "אין לי",
+    "domainChoiceNotSure": "לא בטוח",
+    "domainNoNote": "אין בעיה. תקבל מאיתנו כתובת חינם שמסתיימת ב־wao.co.il. השם המדויק תלוי במה שפנוי.",
+    "domainNotSureNote": "בסדר גמור. אחרי ההרשמה נבדוק את זה יחד איתך.",
+    "domainInputLabel": "הדומיין שלך",
+    "domainInvalid": "זה לא נראה כמו דומיין. צריך כתובת כמו example.co.il.",
+    "domainSubdomain": "תרשום רק את הדומיין הראשי, בלי www או תוספת אחרת לפניו. למשל example.co.il.",
+    "domainContinue": "המשך לתשלום"
+  },
+  "notes": "One pick per key, all 18 under max (tightest: domainSubdomain 76/80, contactIntro 125/140). Support hours, calls and direct access stay out of the copy entirely — nothing promised, nothing announced. The privacy line names both fields and scopes them to his site; the cancel link is explicit as לביטול המנוי. דומיין is glossed once in the question (כתובת אתר משלך) and reused as-is in labels and errors; example.co.il stays Latin and the placeholder is untouched. The prefill note matches the site's existing term הפרופיל העסקי שלך בגוגל. Both continue buttons share one imperative form (המשך / המשך לתשלום); the three domain answers are parallel first-person replies. Maqaf (־) used before 05 and wao.co.il. → Noa to proof typography, lengths and register, then Eitan-Dev to wire the keys into /site-bot/start."
+}
+```

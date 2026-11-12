@@ -5,7 +5,10 @@ import { useEffect, useRef, useState } from 'react';
 type JsonLeaf = string | number | boolean | null;
 type CopyLeaf = { path: string; value: JsonLeaf | '[empty array]' | '[empty object]'; empty?: boolean };
 type Page = { opportunityId: string; classification: string; targetPath: string; copy: Record<string, unknown> };
-type Review = { sha256: string; reviewStatus: 'pending_human_review'; deployable: false; pages: Array<{ page: Page; leaves: CopyLeaf[] }> };
+type ClaimKind = 'licence' | 'warranty';
+type ReviewClaim = { claim: ClaimKind; ownerAnswer: string };
+type Review = { sha256: string; reviewStatus: 'pending_human_review'; deployable: false; pages: Array<{ page: Page; leaves: CopyLeaf[] }>; claims: ReviewClaim[] };
+type ClaimCheck = { confirmed: boolean; verifiedBy: string; verifiedAt: string };
 
 const ENDPOINT = '/api/site-bot/research/copy-review';
 const OPAQUE_ID = /^[A-Za-z0-9][A-Za-z0-9_-]*$/;
@@ -93,8 +96,19 @@ function reviewPayload(value: unknown, researchId: string, slug: string): Review
     pages.find(({ page }) => page.opportunityId === packet.approvedPageId)?.page.classification !== 'homepage') {
     throw new Error('Invalid review');
   }
-  return { sha256: packet.sha256, reviewStatus: value.reviewStatus, deployable: false, pages };
+  // Launch step 2 (B4): the licence / free-text warranty claims that render only after a staff check.
+  const claims: ReviewClaim[] = (Array.isArray(value.claims) ? value.claims : []).map((item: unknown) => {
+    if (!object(item) || (item.claim !== 'licence' && item.claim !== 'warranty') || typeof item.ownerAnswer !== 'string') throw new Error('Invalid review');
+    return { claim: item.claim, ownerAnswer: item.ownerAnswer };
+  });
+  return { sha256: packet.sha256, reviewStatus: value.reviewStatus, deployable: false, pages, claims };
 }
+
+const CLAIM_LABEL: Record<ClaimKind, string> = {
+  licence: 'Licence: checked against the official registry (or the licence document)',
+  warranty: 'Warranty (owner typed it himself): confirmed with the owner',
+};
+const DATE = /^\d{4}-\d{2}-\d{2}$/;
 
 export function CopyReviewViewer() {
   const [researchId, setResearchId] = useState('');
@@ -102,6 +116,9 @@ export function CopyReviewViewer() {
   const [review, setReview] = useState<Review | null>(null);
   const [status, setStatus] = useState('Enter both identifiers, then load the pending review.');
   const [loading, setLoading] = useState(false);
+  const [checks, setChecks] = useState<Partial<Record<ClaimKind, ClaimCheck>>>({});
+  const [approving, setApproving] = useState(false);
+  const [approval, setApproval] = useState('');
   const request = useRef<{ controller: AbortController; serial: number } | null>(null);
   const serial = useRef(0);
 
@@ -112,7 +129,47 @@ export function CopyReviewViewer() {
     request.current = null;
     setLoading(false);
     setReview(null);
+    setChecks({});
+    setApproval('');
     setStatus('Selection changed. Load the review again.');
+  }
+  function setCheck(claim: ClaimKind, patch: Partial<ClaimCheck>) {
+    setChecks(current => ({ ...current, [claim]: { confirmed: false, verifiedBy: '', verifiedAt: '', ...current[claim], ...patch } }));
+    setApproval('');
+  }
+  async function approve() {
+    if (!review || approving) return;
+    const claimVerification: Partial<Record<ClaimKind, { verifiedBy: string; verifiedAt: string }>> = {};
+    for (const { claim } of review.claims) {
+      const check = checks[claim];
+      if (!check?.confirmed) continue;
+      const verifiedBy = check.verifiedBy.trim();
+      if (!verifiedBy || !DATE.test(check.verifiedAt)) {
+        setApproval('Each confirmed claim needs the checker name and the check date.');
+        return;
+      }
+      claimVerification[claim] = { verifiedBy, verifiedAt: check.verifiedAt };
+    }
+    setApproving(true);
+    setApproval('Storing the approval...');
+    try {
+      const response = await fetch(ENDPOINT, {
+        method: 'POST', credentials: 'same-origin', cache: 'no-store', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ researchId, slug, sha256: review.sha256, ...(Object.keys(claimVerification).length ? { claimVerification } : {}) }),
+      });
+      const result: unknown = await response.json().catch(() => null);
+      if (!response.ok || !object(result) || result.approved !== true) {
+        const error = object(result) && typeof result.error === 'string' ? result.error : 'unknown';
+        setApproval(error === 'review_stale' ? 'The record changed since it was loaded. Load the review again.' : `Approval failed (${error}).`);
+        return;
+      }
+      const dropped = Array.isArray(result.unverifiedClaims) ? result.unverifiedClaims.filter((item): item is string => typeof item === 'string') : [];
+      setApproval(`Copy approved for this exact record. ${dropped.length ? `Unverified, dropped from the site: ${dropped.join(', ')}.` : 'No unverified claims.'} Deploy still needs Hebrew QA and the deploy-ready state.`);
+    } catch {
+      setApproval('Approval failed. Check your access and try again.');
+    } finally {
+      setApproving(false);
+    }
   }
   async function load() {
     if (loading) return;
@@ -175,6 +232,31 @@ export function CopyReviewViewer() {
           <div><dt>Deployable</dt><dd>{String(review.deployable)}</dd></div>
           <div><dt>Page count</dt><dd>{review.pages.length}</dd></div>
         </dl>
+        <section aria-label="Approve" className="min-w-0 rounded-xl border border-white/20 p-4 sm:p-6">
+          <h2 className="text-xl font-bold">Approve this copy</h2>
+          {review.claims.length ? <p className="mt-2 text-sm">A claim you do not confirm here is dropped from the generated site (trust bar, proof, Q&amp;A, FAQ and any sentence stating it).</p>
+            : <p className="mt-2 text-sm">This record carries no licence or free-text warranty claim.</p>}
+          {review.claims.map(({ claim, ownerAnswer }) => {
+            const check = checks[claim];
+            return <fieldset key={claim} className="mt-4 min-w-0 rounded-lg border border-white/15 p-3">
+              <legend className="px-1 text-sm font-semibold">{CLAIM_LABEL[claim]}</legend>
+              <p className="text-sm">Owner answer: <bdi dir="auto" className="font-semibold">{ownerAnswer}</bdi></p>
+              <label className="mt-2 flex items-center gap-2 text-sm"><input type="checkbox" checked={Boolean(check?.confirmed)} onChange={event => setCheck(claim, { confirmed: event.target.checked })} />I checked this claim and it is true</label>
+              {check?.confirmed && <div className="mt-2 grid min-w-0 gap-3 sm:grid-cols-2">
+                <label className="min-w-0 text-sm font-semibold">Checked by
+                  <input autoComplete="off" value={check.verifiedBy} maxLength={80} onChange={event => setCheck(claim, { verifiedBy: event.target.value })}
+                    className="mt-1 block w-full min-w-0 rounded border border-white/40 bg-transparent p-2 text-base" />
+                </label>
+                <label className="min-w-0 text-sm font-semibold">Check date
+                  <input type="date" value={check.verifiedAt} onChange={event => setCheck(claim, { verifiedAt: event.target.value })}
+                    className="mt-1 block w-full min-w-0 rounded border border-white/40 bg-transparent p-2 text-base" />
+                </label>
+              </div>}
+            </fieldset>;
+          })}
+          <button type="button" disabled={approving} onClick={approve} className="mt-4 rounded border border-white/40 px-4 py-2 disabled:opacity-50">Approve copy</button>
+          <p role="status" aria-live="polite" className="mt-3 text-sm">{approval}</p>
+        </section>
         {review.pages.map(({ page, leaves: fields }, index) => (
           <section key={page.opportunityId} aria-label={`Page ${index + 1}`} className="min-w-0 rounded-xl border border-white/20 p-4 sm:p-6">
             <h2 className="text-xl font-bold">Page {index + 1}</h2>

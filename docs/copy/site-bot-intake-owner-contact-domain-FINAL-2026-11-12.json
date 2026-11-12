@@ -1,0 +1,23 @@
+{
+  "_source": "Noa's final labels (Tamar waocopy + Noa fixes, 2026-11-12), saved verbatim by Adam. Apply to src/lib/site-bot/intakeOwnerCopy.ts replacing each __HE_TODO_<key>__ placeholder by key (byte-exact, asserted count 1), then set INTAKE_OWNER_COPY_PENDING = false. Maqaf in 'ב־05' and 'ב־wao.co.il' is U+05BE; em-dash in domainQuestion is U+2014.",
+  "labels": {
+    "contactTitle": "איך משיגים אותך?",
+    "contactIntro": "לכאן אנחנו שולחים לך קבלות, את הקישור לביטול המנוי, טיוטות תשובות לביקורות ואת הדוח החודשי. הנייד והמייל לא מופיעים באתר שלך.",
+    "contactMobileLabel": "הנייד שלך",
+    "contactMobilePrefillNote": "לקחנו את המספר מהפרופיל העסקי שלך בגוגל. זה לא הנייד שלך? תחליף אותו.",
+    "contactMobileInvalid": "תכתוב מספר נייד ישראלי: 10 ספרות שמתחילות ב־05, למשל 050-1234567.",
+    "contactEmailLabel": "המייל שלך",
+    "contactEmailInvalid": "המייל לא נראה תקין. תבדוק את הכתובת ותנסה שוב.",
+    "contactContinue": "המשך",
+    "domainQuestion": "יש לך דומיין — כתובת אתר משלך?",
+    "domainChoiceYes": "כן, יש לי",
+    "domainChoiceNo": "אין לי",
+    "domainChoiceNotSure": "לא בטוח",
+    "domainNoNote": "אין בעיה. תקבל מאיתנו כתובת חינם שמסתיימת ב־wao.co.il. השם המדויק תלוי במה שפנוי.",
+    "domainNotSureNote": "בסדר גמור. אחרי ההרשמה נבדוק את זה יחד איתך.",
+    "domainInputLabel": "הדומיין שלך",
+    "domainInvalid": "זה לא נראה כמו דומיין. תכתוב רק את כתובת האתר, למשל example.co.il.",
+    "domainSubdomain": "תכתוב רק את הדומיין הראשי, בלי תוספת לפניו. למשל example.co.il.",
+    "domainContinue": "המשך לתשלום"
+  }
+}

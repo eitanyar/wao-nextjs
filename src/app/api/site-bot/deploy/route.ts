@@ -8,6 +8,7 @@ import { dataRoot } from '@/lib/dataRoots';
 import { cookies } from 'next/headers';
 import { renderSitePages, buildSitemap } from '@/lib/lp/renderSitePages';
 import { renderResearchedSitePages, type ResearchedSitePage, type ResearchedSiteGraphEdge } from '@/lib/lp/researchedSite';
+import { researchedClaimBlockers } from '@/lib/lp/claimVerification';
 import { detectVertical } from '@/lib/lp/verticalDetect';
 import { VERTICAL_THEMES } from '@/lib/lp/verticalThemes';
 import { VERTICAL_ASSETS } from '@/lib/lp/verticalAssets';
@@ -301,6 +302,10 @@ export async function POST(req: Request) {
         !matchesResearchedCopyReviewPacket(recordBytes, dossier.approvedCopyReviewPacket)) {
         return privateJson({ error: 'copy_review_approval_required' }, 409);
       }
+      // Launch step 2 (B4): unverified licence / free-text warranty claims are dropped at render; one in a heading the
+      // renderer cannot drop stops the deploy here, before any provider call.
+      const claimBlockers = researchedClaimBlockers(record.researchedPages!, record.collectedData, dossier.approvedCopyReviewPacket.claimVerification);
+      if (claimBlockers.length) return privateJson({ error: 'unverified_claim_in_heading', fields: claimBlockers }, 409);
     }
 
     const apiToken = process.env.CLOUDFLARE_API_TOKEN;
@@ -341,7 +346,7 @@ export async function POST(req: Request) {
 
     // ── Step 2: Render researched or explicit legacy pages ─────────────────
     const pages = isResearchedRecord
-      ? renderResearchedSitePages({ ...renderParams, pages: record.researchedPages!, graphEdges: record.researchedGraphEdges })
+      ? renderResearchedSitePages({ ...renderParams, pages: record.researchedPages!, graphEdges: record.researchedGraphEdges, claimVerification: dossier?.approvedCopyReviewPacket?.claimVerification })
       : renderSitePages({ ...renderParams, copy });
 
     // ── Step 2b: Render the core-30 supplementary local-SEO pages ───────────

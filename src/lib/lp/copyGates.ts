@@ -106,7 +106,7 @@ import {
 } from './generationData';
 import { PREFIX_LETTERS } from './hebrewPrefixLetters';
 import { factRestatementHits, proseSentences, type FactRestatementSpec } from './factRestatement';
-import { fearPromiseMatches, sameDayOutOfScope, type FearPromiseSpec, type SameDayScopeSpec } from './claimScope';
+import { fearPromiseMatches, ownerNamedServices, sameDayOutOfScope, type FearPromiseSpec, type SameDayScopeSpec } from './claimScope';
 import {
   DEPTH_REFERENCE_KEYS,
   factTraceHits,
@@ -734,17 +734,23 @@ export function fixTimeScope(ctx: CopyGateContext): 'all' | Set<string> | null {
 /**
  * Scope of an owner claim (M2a.3 fix_time, M2a.4 same-day finish): null = no authorising owner sentence;
  * 'all' = one names no service; otherwise the service labels the authorising sentences name.
+ * Site Bot launch step 2 (B2): a sentence also names a label through its own words (claimScope.ownerNamedServices: prefix
+ * letters and word endings allowed; the trade, the business name and the places never name a service). Before, a Hebrew usp
+ * that named the job in other words than the exact label read as 'all', and its same-day promise reached every page.
  */
 function ownerClaimScope(ctx: CopyGateContext, ownerSentences: readonly string[], authorises: (sentence: string) => boolean): 'all' | Set<string> | null {
   const labels = ctx.serviceLabels;
   const sources = ctx.serviceSources ?? [];
+  const niche = ctx.ownerFields.businessNiche;
+  const excluded = [...(ctx.places ?? []), ...(ctx.businessName ? [ctx.businessName] : []), ...(typeof niche === 'string' ? [niche] : [])];
   let all = false;
   const scoped = new Set<string>();
   for (const sentence of ownerSentences) {
     if (!authorises(sentence)) continue;
     const lower = sentence.toLowerCase();
     const words = new Set(lower.split(/[^a-z]+/).filter(word => word.length >= 4 && !SCOPE_STOP_WORDS.has(word)));
-    const named = labels.filter((label, index) => sentence.includes(label) ||
+    const ownWords = new Set(ownerNamedServices(sentence, labels, excluded));
+    const named = labels.filter((label, index) => sentence.includes(label) || ownWords.has(label) ||
       (sources[index] ?? '').toLowerCase().split(/[^a-z]+/).some(word => word.length >= 4 && !SCOPE_STOP_WORDS.has(word) && words.has(word)));
     if (!named.length) all = true;
     for (const label of named) scoped.add(label);

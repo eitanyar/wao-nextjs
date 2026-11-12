@@ -30,6 +30,14 @@ export interface RenderSitePagesParams extends Omit<RenderStaticHtmlParams, 'cop
   researched?: { contactTitle: string | null; contactDescription?: string | null };
   /** M2b.1b: research-site nav for the emitted standalone pages (contact.html). Unset = legacy nav, unchanged. */
   researchNav?: ResearchNavOptions;
+  /** Launch step 2 (capability 9): the footer's visible Google-profile link on the emitted standalone pages. Unset = none. */
+  footerProfileLink?: FooterProfileLink;
+}
+
+/** Launch step 2 (capability 9): a visible link to the business's Google profile (the same URL as the schema sameAs). */
+export interface FooterProfileLink {
+  href: string;
+  label: string;
 }
 
 /**
@@ -211,8 +219,14 @@ function researchNavBar(t: VerticalTheme, o: ResearchNavOptions): string {
   return `  <nav aria-label="${esc(o.label)}" style="background:${t.surface};border-bottom:1px solid ${t.border};padding:0 10px;display:flex;flex-wrap:wrap;gap:4px;justify-content:flex-start;font-size:0.9rem;">${items}</nav>`;
 }
 
-export function footerBadge(t: VerticalTheme, exempt: boolean): string {
-  return `  <footer style="text-align:center;padding:24px 20px 32px;background:${t.surface};border-top:1px solid ${t.border};font-size:0.8rem;color:${t.textMuted};">
+/**
+ * The footer. Launch step 2 (capability 9): with `profile`, the Google-profile link opens the footer, in its own row above
+ * the legal links (data-footer-profile: the redesign's footer NAP block, Yonatan condition 10, takes this row as it is).
+ */
+export function footerBadge(t: VerticalTheme, exempt: boolean, profile?: FooterProfileLink): string {
+  const profileRow = profile ? `
+    <div data-footer-profile style="margin-bottom:4px;display:flex;justify-content:center;"><a href="${esc(profile.href)}" style="display:inline-flex;align-items:center;min-height:44px;padding:0 8px;color:${t.textMuted};text-decoration:underline;">${escWithLatinIsolated(profile.label)}</a></div>` : '';
+  return `  <footer style="text-align:center;padding:24px 20px 32px;background:${t.surface};border-top:1px solid ${t.border};font-size:0.8rem;color:${t.textMuted};">${profileRow}
     <div style="margin-bottom:4px;display:flex;flex-wrap:wrap;gap:4px 6px;justify-content:center;">
       <a href="/privacy" style="display:inline-flex;align-items:center;min-height:44px;padding:0 8px;color:${t.textMuted};">מדיניות פרטיות</a>
       ${exempt ? '' : '<a href="/accessibility" style="display:inline-flex;align-items:center;min-height:44px;padding:0 8px;color:' + t.textMuted + ';">הצהרת נגישות</a>'}
@@ -304,6 +318,19 @@ export interface LocalBusinessSchemaOptions {
 
 const MAPS_URL = /^https:\/\/(?:(?:www\.)?google\.[a-z.]+\/maps|maps\.google\.[a-z.]+|maps\.app\.goo\.gl|g\.page|share\.google)\//i;
 
+/**
+ * The owner's Google profile / Maps URL when it is one (MAPS_URL), else ''. One source for the schema sameAs and the visible
+ * profile links (launch step 2, capability 9), so the two never differ.
+ */
+export function googleProfileUrl(data: Pick<CollectedData, 'googleMapsUrl'>): string {
+  return typeof data.googleMapsUrl === 'string' && MAPS_URL.test(data.googleMapsUrl.trim()) ? data.googleMapsUrl.trim() : '';
+}
+
+/** Escaped text with each Latin run (a brand such as Google) in its own <bdi>, so it never reorders the Hebrew around it. */
+export function escWithLatinIsolated(value: string): string {
+  return value.split(/([A-Za-z][A-Za-z0-9.'&-]*(?: [A-Za-z][A-Za-z0-9.'&-]*)*)/).map((part, index) => (index % 2 ? `<bdi>${esc(part)}</bdi>` : esc(part))).join('');
+}
+
 function ownerStatedPlaces(data: CollectedData): string[] {
   const seen = new Set<string>();
   return [data.targetLocation, ...(data.specificCities ?? '').split(',')]
@@ -314,7 +341,7 @@ function ownerStatedPlaces(data: CollectedData): string[] {
 function ownerFactsLocalBusiness(data: CollectedData, businessName: string, cleanSiteUrl: string, ogImage: string, options: LocalBusinessSchemaOptions): Record<string, unknown> {
   const hours = parseBusinessHours(data.businessHours);
   const places = (options.areaServed ?? ownerStatedPlaces(data)).map(name => name.trim()).filter(Boolean);
-  const mapsUrl = typeof data.googleMapsUrl === 'string' && MAPS_URL.test(data.googleMapsUrl.trim()) ? data.googleMapsUrl.trim() : '';
+  const mapsUrl = googleProfileUrl(data);
   return {
     '@type': getSchemaOrgType(data.businessNiche),
     '@id': `${cleanSiteUrl}/#business`,
@@ -699,12 +726,12 @@ ${pageScript({
     includeLeadForm: true,
   })}`;
 
-  return assembleDocument(t, head, body, p.gtagSnippet, data, p.researchNav);
+  return assembleDocument(t, head, body, p.gtagSnippet, data, p.researchNav, p.footerProfileLink);
 }
 
 // Assembles <head> + <body> with nav bar (top) and footer badge (bottom) for
 // the 3 standalone pages (index.html has its own injection path above).
-export function assembleDocument(t: VerticalTheme, head: string, bodyInner: string, gtagSnippet: string | undefined, data: CollectedData, nav?: ResearchNavOptions): string {
+export function assembleDocument(t: VerticalTheme, head: string, bodyInner: string, gtagSnippet: string | undefined, data: CollectedData, nav?: ResearchNavOptions, profile?: FooterProfileLink): string {
   const headWithGtag = gtagSnippet ? head.replace('</head>', () => `  ${gtagSnippet}\n</head>`) : head;
   return `<!DOCTYPE html>
 <html lang="he" dir="rtl">
@@ -714,7 +741,7 @@ ${navBar(t, nav)}
 
 ${bodyInner}
 
-${footerBadge(t, isAccessibilityExempt(data.vatStatus))}
+${footerBadge(t, isAccessibilityExempt(data.vatStatus), profile)}
 </body>
 </html>`;
 }

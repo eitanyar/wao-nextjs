@@ -12,7 +12,7 @@ import type { SiteResearchDossier } from '../site-bot/research/types';
 import { CLAIM_RULES, PLURAL_ADDRESS_TOKENS, SERVICE_DESCRIPTION_MIN_CHARS, WE_FORM_TOKENS } from './copyGates.config';
 import { briefFactTexts } from '../site-bot/research/pageBrief';
 import { codeOwnedFactTemplates, droppedOwnerFactKeys, ownerFacts, pageProofItems, responseScope, trustBarFromFacts, trustText, type OwnerFactTemplates } from './ownerFactCopy';
-import { buildFearPromiseSpec, buildSameDayScopeSpec, type FearPromiseSpec, type SameDayScopeSpec } from './claimScope';
+import { buildFearPromiseSpec, buildSameDayScopeSpec, pageHasSameDayGrant, sameDayGrants, type FearPromiseSpec, type SameDayScopeSpec } from './claimScope';
 import { costFaq, formatShekels, ownerPricing, pricingPromisePhrases } from './researchedPricing';
 import { proseSentences, restatementMatches, type FactRestatementSpec, type RestatementFact } from './factRestatement';
 import { budgetStrings, repetitionBudgetDecisions, type BudgetOptions, type BudgetString } from './repetitionBudget';
@@ -2500,8 +2500,10 @@ export function isInstallPage(brief: PageBrief): boolean {
 
 /**
  * Rerun-3 items 4-5: the claim-scope specs of a page. Fear words exclude the trade, the business name, the service labels and
- * the places; the owner's usp and guarantee may negate a fear word themselves. The same-day gate is on only without a response
- * fact; a sentence naming a place of the owner's response place tail may keep the same-day words.
+ * the places; the owner's usp and guarantee may negate a fear word themselves. Site Bot launch step 2: the same-day gate is off
+ * only on a page the owner's same-day grants cover (claimScope.sameDayGrants: the response fact, or a usp / guarantee sentence,
+ * scoped to the services it names; the homepage takes only business-wide grants). Elsewhere a sentence naming a place of the
+ * owner's response place tail may keep the same-day words.
  */
 export function claimScopeSpecs(brief: PageBrief, data: CollectedData, templates: OwnerFactTemplates): { fearPromise?: FearPromiseSpec; sameDayScope?: SameDayScopeSpec } {
   const site = brief.site;
@@ -2509,7 +2511,12 @@ export function claimScopeSpecs(brief: PageBrief, data: CollectedData, templates
   const excluded = [data.businessNiche, data.businessName, site?.businessName, site?.pageName, ...(site?.serviceLabels ?? []), ...places].filter((item): item is string => typeof item === 'string' && item.trim().length > 0);
   const fear = buildFearPromiseSpec(data.idealClientFear, templates.parseNegationWords, excluded, [data.usp, data.guarantee]);
   const scope = responseScope(data.responseTime, templates);
-  const sameDay = buildSameDayScopeSpec(Boolean(ownerFacts(data, brief, templates).response), templates.parseSameDayWords, scope.kind === 'scoped' ? scope.scope : null, places);
+  const grants = sameDayGrants(
+    { responseFact: Boolean(ownerFacts(data, brief, templates).response), responseTime: data.responseTime, usp: data.usp, guarantee: data.guarantee },
+    templates.parseSameDayWords, site?.serviceLabels ?? [], [data.businessNiche, data.businessName, site?.businessName, ...places].filter((item): item is string => typeof item === 'string' && item.trim().length > 0),
+  );
+  const pageService = site && brief.page.pageClass !== 'homepage' ? site.pageName : null;
+  const sameDay = buildSameDayScopeSpec(pageHasSameDayGrant(grants, pageService), templates.parseSameDayWords, scope.kind === 'scoped' ? scope.scope : null, places);
   return { ...(fear ? { fearPromise: fear } : {}), ...(sameDay ? { sameDayScope: sameDay } : {}) };
 }
 

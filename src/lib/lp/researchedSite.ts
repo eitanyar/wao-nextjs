@@ -14,6 +14,9 @@ import {
   assembleDocument,
   contacts,
   esc,
+  escWithLatinIsolated,
+  googleProfileUrl,
+  type FooterProfileLink,
   leadFormSection,
   RESEARCHED_LEAD_FORM,
   localBusinessObject,
@@ -26,7 +29,7 @@ import {
   type ResearchNavOptions,
   servedPath,
 } from './renderSitePages';
-import { RESEARCHED_SITE_LABELS } from './researchedSiteLabels';
+import { RESEARCHED_PROFILE_LINK_LABELS, RESEARCHED_PROFILE_LINK_LABELS_PENDING_COPY, RESEARCHED_SITE_LABELS } from './researchedSiteLabels';
 import {
   costFaq,
   formatShekels,
@@ -40,6 +43,7 @@ import {
 } from './researchedPricing';
 import { codeOwnedFactTemplates } from './ownerFactCopy';
 import { DEPTH_BLOCK_KEYS, DEPTH_BLOCK_LIMITS, rendersDepthBlocks } from './depthBlocks';
+import { unverifiedClaimSpec, UnverifiedClaimError, withoutUnverifiedClaims, type ClaimVerification } from './claimVerification';
 
 const RESERVED_SEGMENTS = new Set(['api', 'assets', 'static', 'index', 'privacy', 'accessibility', 'contact', 'sitemap']);
 const RENDERABLE_CLASSES = new Set<PageClassification>([
@@ -82,6 +86,41 @@ export interface RenderResearchedSitePagesParams extends Omit<RenderSitePagesPar
   graphEdges?: ResearchedSiteGraphEdge[];
   /** Pricing default: label set and pending flag (default the module's; tests inject stand-in labels). */
   pricingCopy?: PricingCopy;
+  /**
+   * Launch step 2 (B4): the staff checks recorded at the copy-review approval (approvedCopyReviewPacket.claimVerification).
+   * Absent = nothing verified: every licence claim and every free-text warranty claim is dropped (claimVerification.ts).
+   */
+  claimVerification?: ClaimVerification;
+  /** Launch step 2 (capability 9): the profile-link label and its pending flag (default the module's; tests inject a stand-in). */
+  profileLinkCopy?: ProfileLinkCopy;
+}
+
+/** The Google-profile link label a render uses, and whether it is still pending (pending = no profile link at all). */
+export interface ProfileLinkCopy {
+  label: string;
+  pending: boolean;
+}
+
+const DEFAULT_PROFILE_LINK_COPY: ProfileLinkCopy = { label: RESEARCHED_PROFILE_LINK_LABELS.googleProfileLink, pending: RESEARCHED_PROFILE_LINK_LABELS_PENDING_COPY };
+
+/**
+ * Launch step 2 (capability 9): the visible Google-profile link of a research site: the owner's Google profile / Maps URL
+ * (googleProfileUrl, the same URL as the schema sameAs) with the approved label. Null without a URL or while the label is
+ * pending.
+ */
+export function researchedProfileLink(data: CollectedData, copy: ProfileLinkCopy = DEFAULT_PROFILE_LINK_COPY): FooterProfileLink | null {
+  const href = googleProfileUrl(data);
+  return href && !copy.pending && copy.label.trim() ? { href, label: copy.label } : null;
+}
+
+/**
+ * The homepage's Google-profile link (capability 9), after the service areas. Yonatan's redesign condition 6 (credit Google,
+ * link to the business's Google reviews) belongs to the deferred reviews block; this link is the plain profile link, and the
+ * footer carries the same one (footerBadge).
+ */
+function profileLinkSection(page: ResearchedSitePage, link: FooterProfileLink | null, theme: RenderResearchedSitePagesParams['theme']): string {
+  if (!link || page.classification !== 'homepage') return '';
+  return `<section data-section="google-profile" style="padding:20px;background:${theme.surface};text-align:center;"><a href="${esc(link.href)}" data-google-profile style="display:inline-flex;align-items:center;min-height:44px;padding:0 12px;color:${theme.accentText};text-decoration:underline;font-weight:700;">${escWithLatinIsolated(link.label)}</a></section>`;
 }
 
 /** The pricing labels a render uses, and whether they are still pending (pending = render no pricing UI). */
@@ -722,12 +761,13 @@ function buildPageHtml(page: ResearchedSitePage, params: RenderResearchedSitePag
     ${serviceDetailsSection(page, theme)}
     ${aboutSection(page, theme)}
     ${serviceAreasSection(page, allPages, outputs, theme)}
+    ${profileLinkSection(page, researchedProfileLink(data, params.profileLinkCopy), theme)}
     ${faq ? `<section data-section="faq" aria-labelledby="faq-heading" style="padding:32px 20px;background:${theme.surfaceAlt};"><div style="max-width:700px;margin:0 auto;display:flex;flex-direction:column;gap:12px;"><h2 id="faq-heading" style="font-size:1.25rem;color:${theme.primary};text-align:center;">${esc(RESEARCHED_SITE_LABELS.faqHeading)}</h2>${faq}</div></section>` : ''}
     ${links ? `<nav data-section="related-links" aria-labelledby="related-links-heading" style="padding:20px;background:${theme.surface};text-align:center;"><h2 id="related-links-heading" style="font-size:0.95rem;font-weight:700;color:${theme.textPrimary};margin-bottom:6px;">${esc(RESEARCHED_SITE_LABELS.relatedLinksLabel)}</h2><div style="display:flex;flex-wrap:wrap;gap:6px 14px;justify-content:center;">${links}</div></nav>` : ''}
     ${leadFormSection(theme, page.copy.formHeadline, page.copy.heroCta, { ...RESEARCHED_LEAD_FORM, sectionId: 'contact' })}
   </main>
   ${pageScript({ slug, businessName, googleAdsCustomerId: params.googleAdsCustomerId || '', formConversionLabel: params.formConversionLabel || '', phoneConversionLabel: params.phoneConversionLabel || '', whatsappConversionLabel: params.whatsappConversionLabel || '', ctaLabel: RESEARCHED_LEAD_FORM.submitLabel ?? page.copy.heroCta, includeLeadForm: true })}`;
-  return assembleDocument(theme, head, body, params.gtagSnippet, data, researchNavOptions(home, page.classification === 'homepage', contactHref));
+  return assembleDocument(theme, head, body, params.gtagSnippet, data, researchNavOptions(home, page.classification === 'homepage', contactHref), researchedProfileLink(data, params.profileLinkCopy) ?? undefined);
 }
 
 export function buildResearchedSitemapUrls(pages: ResearchedSitePage[], siteUrl = ''): string[] {
@@ -754,7 +794,17 @@ export function buildResearchedSchemaGraph(page: ResearchedSitePage, data: Colle
 }
 
 export function renderResearchedSitePages(params: RenderResearchedSitePagesParams): Record<string, string> {
-  const pages = selectedPages(params.pages);
+  // Launch step 2 (B4): an unverified licence / free-text warranty claim never renders (every page, the legacy contact page
+  // included, since it reads the scrubbed homepage copy); a heading that states one blocks the whole render.
+  const claims = unverifiedClaimSpec(params.data, params.claimVerification);
+  const blocked: string[] = [];
+  const pages = selectedPages(params.pages).map(page => {
+    if (!claims) return page;
+    const scrub = withoutUnverifiedClaims(page.copy, claims);
+    blocked.push(...scrub.blocked.map(field => `${page.opportunityId}:${field}`));
+    return { ...page, copy: scrub.copy };
+  });
+  if (blocked.length) throw new UnverifiedClaimError(blocked);
   const home = pages.filter(page => page.classification === 'homepage');
   if (home.length !== 1) throw new Error('A researched site requires exactly one selected homepage.');
   const reachable = reachablePageIds(pages, params.graphEdges ?? []);
@@ -768,6 +818,7 @@ export function renderResearchedSitePages(params: RenderResearchedSitePagesParam
     ...params,
     copy: home[0].copy,
     researchNav: contactNav,
+    ...(() => { const link = researchedProfileLink(params.data, params.profileLinkCopy); return link ? { footerProfileLink: link } : {}; })(),
     ...(homeSeo ? {
       schemaOptions: { ownerFactsOnly: true, areaServed: researchedServiceAreas(home[0]) },
       researched: {

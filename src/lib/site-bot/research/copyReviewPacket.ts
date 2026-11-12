@@ -4,6 +4,7 @@ import { isSafeDeploymentSlug } from '../../deployment/deploy-access';
 import type { ResearchedSitePage } from '../../lp/researchedSite';
 import { assertResearchedSiteGraphSafe } from '../researchedSiteGraphValidation';
 import type { SiteResearchDossier } from './types';
+import { parseClaimVerification, type ClaimVerification } from '../../lp/claimVerificationRecord';
 
 type PageIdentity = Pick<ResearchedSitePage, 'opportunityId' | 'classification' | 'targetPath'>;
 
@@ -14,6 +15,11 @@ export interface ResearchedCopyReviewPacket {
   approvedPageId: string;
   pages: PageIdentity[];
   pageCount: number;
+  /**
+   * Launch step 2 (B4): the staff checks of the licence / free-text warranty claims, recorded at approval. Absent = none
+   * verified (the renderer drops those claims). Regeneration deletes the whole packet, so a check never outlives its copy.
+   */
+  claimVerification?: ClaimVerification;
 }
 
 const OPAQUE_ID = /^[A-Za-z0-9][A-Za-z0-9_-]*$/;
@@ -113,15 +119,34 @@ export function matchesResearchedCopyReviewPacket(
     typeof packet.approvedPageId !== 'string' || !OPAQUE_ID.test(packet.approvedPageId) ||
     !Array.isArray(packet.pages) || packet.pages.length === 0 ||
     !packet.pages.every(identity) || packet.pageCount !== packet.pages.length ||
-    Object.keys(packet).sort().join(',') !== 'approvedPageId,pageCount,pages,researchId,sha256,slug' ||
+    Object.keys(packet).filter(key => key !== 'claimVerification').sort().join(',') !== 'approvedPageId,pageCount,pages,researchId,sha256,slug' ||
+    (Object.prototype.hasOwnProperty.call(packet, 'claimVerification') && parseClaimVerification(packet.claimVerification) === null) ||
     packet.pages.some(page => Object.keys(page).sort().join(',') !== 'classification,opportunityId,targetPath')) return false;
   const actual = Buffer.from(digest(recordBytes), 'hex');
   if (!timingSafeEqual(actual, Buffer.from(packet.sha256, 'hex'))) return false;
   try {
-    const { sha256: _sha256, ...metadata } = packet;
+    const { sha256: _sha256, claimVerification: _claims, ...metadata } = packet;
     void _sha256;
+    void _claims;
     return isDeepStrictEqual(recordInventory(recordBytes), metadata);
   } catch {
     return false;
   }
+}
+
+/**
+ * Launch step 2: the packet an approval stores. The reviewer must echo the sha256 of the bytes he reviewed (a record changed
+ * since he loaded it is refused); the staff checks are validated and stored only when at least one is given.
+ */
+export function approveResearchedCopyReview(
+  recordBytes: Buffer | Uint8Array,
+  dossier: SiteResearchDossier,
+  reviewedSha256: unknown,
+  claimVerification: unknown,
+): ResearchedCopyReviewPacket {
+  const packet = buildResearchedCopyReviewPacket(recordBytes, dossier);
+  if (typeof reviewedSha256 !== 'string' || reviewedSha256 !== packet.sha256) throw new Error('Reviewed record changed since it was loaded.');
+  const checks = claimVerification === undefined || claimVerification === null ? {} : parseClaimVerification(claimVerification);
+  if (checks === null) throw new Error('Invalid claim verification.');
+  return Object.keys(checks).length ? { ...packet, claimVerification: checks } : packet;
 }

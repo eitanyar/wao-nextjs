@@ -7,8 +7,11 @@
  * negation word). Fear content words: words of the fear of at least FEAR_MIN_STEM letters (after at most two attached prefix
  * letters), minus the trade, the business name, the service labels and the places (they name the job, not the fear).
  *
- * gate_same_day_scope (item 5): when the owner has no response fact (none given, a hedge, a tail, the usp rule), a sentence
- * may carry a same-day token (Noa's parseSameDayWords) only when it names a place from the owner's response place tail.
+ * gate_same_day_scope (item 5): on a page the owner gave no same-day grant for, a sentence may carry a same-day token (Noa's
+ * parseSameDayWords) only when it names a place from the owner's response place tail. Site Bot launch step 2: a grant is per
+ * page, not per owner. The response fact grants every page unless its text names services; a usp / guarantee sentence with a
+ * same-day token grants the services it names (ownerNamedServices), or every page when it names none. The homepage and the
+ * service hub (no page service) take only the grants that name no service.
  *
  * Matching: whole words, NFC, at most two attached prefix letters (PREFIX_LETTERS) on either side. Fix order (the generator):
  * drop the sentence where the field is droppable, one repair for every other field, then the page fails.
@@ -123,9 +126,12 @@ function containsPhrase(words: readonly string[], phrase: readonly string[]): bo
   return false;
 }
 
-/** The spec of a page without a response fact (null when the owner has one, or no same-day list is configured). */
-export function buildSameDayScopeSpec(hasResponseFact: boolean, sameDayWords: readonly string[], tail: string | null, places: readonly string[]): SameDayScopeSpec | null {
-  if (hasResponseFact) return null;
+/**
+ * The spec of a page the owner gave no same-day grant for (null when this page has one, see pageHasSameDayGrant, or no
+ * same-day list is configured).
+ */
+export function buildSameDayScopeSpec(pageGranted: boolean, sameDayWords: readonly string[], tail: string | null, places: readonly string[]): SameDayScopeSpec | null {
+  if (pageGranted) return null;
   const sameDay = sameDayWords.map(item => claimWords(item)).filter(item => item.length);
   if (!sameDay.length) return null;
   const tailWords = tail ? claimWords(tail) : [];
@@ -138,4 +144,100 @@ export function sameDayOutOfScope(sentence: string, spec: SameDayScopeSpec): boo
   const words = claimWords(sentence);
   if (!spec.sameDay.some(phrase => containsPhrase(words, phrase))) return false;
   return !spec.tailPlaces.some(place => containsPhrase(words, place));
+}
+
+// ---------------------------------------------------------------------------
+// Site Bot launch step 2 (capability 1, MVP review B2): which services an owner promise covers.
+// ---------------------------------------------------------------------------
+
+/** Shortest label word (after prefix letters) that may name a service on its own. */
+export const SERVICE_WORD_MIN = 3;
+/** Most letters two forms of one word may differ by in length (singular / plural, construct state). */
+const SERVICE_WORD_MAX_LENGTH_GAP = 2;
+
+/**
+ * Two word forms are one word: equal, or the same word with a different ending (a plural or construct suffix). Both at least
+ * SERVICE_WORD_MIN letters, lengths at most SERVICE_WORD_MAX_LENGTH_GAP apart, and they share a run from the start of at least
+ * the shorter form's length (shorter forms below 5 letters) or its length minus one (5 letters and more: a final letter that
+ * changes, e.g. a feminine ending into a plural one). Code points, NFC.
+ */
+export function sameServiceWord(a: string, b: string): boolean {
+  if (a === b) return true;
+  const x = [...a];
+  const y = [...b];
+  const shorter = Math.min(x.length, y.length);
+  if (shorter < SERVICE_WORD_MIN || Math.abs(x.length - y.length) > SERVICE_WORD_MAX_LENGTH_GAP) return false;
+  let common = 0;
+  while (common < shorter && x[common] === y[common]) common++;
+  return common >= (shorter >= 5 ? shorter - 1 : shorter);
+}
+
+function namesWord(textWords: readonly string[], labelWord: string): boolean {
+  const labelForms = wordForms(labelWord).filter(form => [...form].length >= SERVICE_WORD_MIN);
+  return textWords.some(word => wordForms(word).some(form => labelForms.some(labelForm => sameServiceWord(form, labelForm))));
+}
+
+/**
+ * The service labels an owner text names: the label as a phrase, or one of the label's distinctive words (a word of at least
+ * SERVICE_WORD_MIN letters after prefix letters, matched with sameServiceWord). Not distinctive: a word every label carries
+ * (with two labels or more) and the words of `excluded` (the trade, the business name, the places). Whole words, NFC.
+ *
+ * The B2 root cause: the claim scope used to name a service only by the exact label or an English source word, so a Hebrew usp
+ * that names the job in its own words (a verb form plus the label's noun) named no service and read as business-wide.
+ */
+export function ownerNamedServices(text: unknown, labels: readonly string[], excluded: readonly string[] = []): string[] {
+  if (typeof text !== 'string' || !text.trim()) return [];
+  const words = claimWords(text);
+  const skip = excluded.flatMap(item => claimWords(item));
+  const labelWords = labels.map(label => claimWords(label));
+  const shared = (word: string) => labelWords.length > 1 && labelWords.every(list => list.some(other => sameWord(other, word)));
+  return labels.filter((label, index) => {
+    const own = labelWords[index];
+    if (!own.length) return false;
+    if (containsPhrase(words, own)) return true;
+    // A Latin label word names the service from 4 letters (the English rule of copyGates.ownerClaimScope: no "and" / "for").
+    const long = (word: string) => !/^[A-Za-z]+$/.test(word) || word.length >= 4;
+    return own.some(word => long(word) && !shared(word) && !skip.some(other => sameWord(other, word)) && namesWord(words, word));
+  });
+}
+
+/** One owner same-day grant: the services it covers (empty = every page, the homepage included). */
+export interface SameDayGrant {
+  source: 'response' | 'usp' | 'guarantee';
+  services: string[];
+}
+
+/** Sentences of an owner text (split after . ! ? ; or a line break). */
+function ownerSentences(text: unknown): string[] {
+  return typeof text === 'string' ? text.split(/(?<=[.!?;])\s+|\n+/u).map(part => part.trim()).filter(Boolean) : [];
+}
+
+export interface SameDayGrantInput {
+  /** True when the owner has a response fact (ownerFacts().response). */
+  responseFact: boolean;
+  responseTime?: unknown;
+  usp?: unknown;
+  guarantee?: unknown;
+}
+
+/**
+ * The owner's same-day grants: the response fact (scoped to the services its text names, else every page), and every usp /
+ * guarantee sentence that carries a same-day word (scoped the same way).
+ */
+export function sameDayGrants(input: SameDayGrantInput, sameDayWords: readonly string[], labels: readonly string[], excluded: readonly string[] = []): SameDayGrant[] {
+  const sameDay = sameDayWords.map(item => claimWords(item)).filter(item => item.length);
+  const grants: SameDayGrant[] = [];
+  if (input.responseFact) grants.push({ source: 'response', services: ownerNamedServices(input.responseTime, labels, excluded) });
+  for (const source of ['usp', 'guarantee'] as const) {
+    for (const sentence of ownerSentences(input[source])) {
+      const words = claimWords(sentence);
+      if (sameDay.some(phrase => containsPhrase(words, phrase))) grants.push({ source, services: ownerNamedServices(sentence, labels, excluded) });
+    }
+  }
+  return grants;
+}
+
+/** True when a grant covers this page: a grant that names no service, or one naming the page's service (null = homepage / hub). */
+export function pageHasSameDayGrant(grants: readonly SameDayGrant[], pageService: string | null): boolean {
+  return grants.some(grant => !grant.services.length || (pageService !== null && grant.services.includes(pageService)));
 }

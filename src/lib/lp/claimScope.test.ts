@@ -3,12 +3,17 @@
 // runtime (Noa's parseNegationWords / parseSameDayWords); other Hebrew-like words are synthetic escapes (not words).
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { buildFearPromiseSpec, buildSameDayScopeSpec, claimWords, fearPromiseMatches, sameDayOutOfScope, wordForms } from './claimScope';
+import { buildFearPromiseSpec, buildSameDayScopeSpec, claimWords, fearPromiseMatches, ownerNamedServices, pageHasSameDayGrant, sameDayGrants, sameDayOutOfScope, sameServiceWord, wordForms } from './claimScope';
 import { blockingGateHits, copyGateContext, GATE_RULES, isWarningHit, runCopyGates, warningGateHits } from './copyGates';
 import type { CollectedData } from '../bot/prompts';
 import { compilePageBrief, type PageBriefInput } from '../site-bot/research/pageBrief';
 import { FACT_PARSE_TOKEN_KEYS, FACT_RULE_TOKEN_KEYS, OWNER_FACT_TEMPLATES, setOwnerFactTemplatesForTests, type OwnerFactTemplates } from './ownerFactCopy';
 import { briefGateContext, CLAIM_SCOPE_RULES, dropClaimScope, generateResearchPageCopy, GeneratedCopyValidationError, ungeneratedFieldsFor, type CopyRepairEvent } from './researchPageCopy';
+import { SAME_DAY_FINISH_VERBS, SAME_DAY_TOKENS } from './generationData';
+import type { SiteCopy } from './lpCopyPrompt';
+import { renderResearchedSitePages, type ResearchedSitePage } from './researchedSite';
+import { VERTICAL_ASSETS } from './verticalAssets';
+import { VERTICAL_THEMES } from './verticalThemes';
 
 const T = OWNER_FACT_TEMPLATES;
 const WITHOUT = T.parseNegationWords.find(word => !/\s/.test(word) && word.length === 3) as string;
@@ -45,7 +50,7 @@ test('fear promise: a negation followed by a fear content word hits; the owner\'
   assert.equal(buildFearPromiseSpec(fear, [], [], []), null);
 });
 
-test('same day: off with a response fact; a sentence naming a tail place may keep it; any other sentence hits', () => {
+test('same day: off on a granted page; a sentence naming a tail place may keep it; any other sentence hits', () => {
   assert.equal(buildSameDayScopeSpec(true, T.parseSameDayWords, null, [CITY_A]), null);
   const spec = buildSameDayScopeSpec(false, T.parseSameDayWords, `${SAME_DAY} ${CITY_A}`, [CITY_A, CITY_B]);
   assert.ok(spec);
@@ -162,4 +167,140 @@ test('rerun-3b bug B: a fear / same-day hit in a warn-only rendered field blocks
     assert.equal(isWarningHit({ field: 'stickyBarLine', rule: GATE_RULES.fearPromise }, ctx), true);
     assert.equal(isWarningHit({ field: 'qaItems[0].a', rule: GATE_RULES.sameDayScope }, { ...ctx, claimScopeFields: [...ctx.claimScopeFields ?? [], 'qaItems'] }), false);
   } finally { setOwnerFactTemplatesForTests(undefined); }
+});
+
+// ---- Site Bot launch step 2 (capability 1, MVP review B2): a scoped promise stays on its own service page. ----
+// plumber-3: usp "fixes leaks the same day ..." (one service) plus a business-wide response fact; the drain-cleaning H1
+// shipped "<drain cleaning> in Holon - same day". Two causes: the claim scope named a service only by the exact label (a
+// Hebrew usp that names the job in its own words read as business-wide), and the rerun-3 same-day gate was off on every page
+// whenever any response fact existed. Synthetic Hebrew letters (escapes) stand in for the words; the same-day and finish
+// tokens are read from the live data at runtime.
+
+// Synthetic words: a noun in a singular and a plural form, a second service's two words, a verb, the trade, a place.
+const STEM = '\u05E1\u05E2\u05E4\u05E6';
+const NOUN_ONE = `${STEM}\u05D4`;
+const NOUN_MANY = `${STEM}\u05D5\u05EA`;
+const SEARCH = '\u05D2\u05D3\u05D8\u05DB\u05DD';
+const OPEN = '\u05D6\u05D7\u05DC\u05DE\u05DF';
+const CLOGS = '\u05E7\u05E8\u05E9\u05EA\u05D5\u05EA';
+const LABEL_A = `${SEARCH} ${NOUN_MANY}`;
+const LABEL_B = `${OPEN} ${CLOGS}`;
+
+test('B2: ownerNamedServices names a label by its own words (prefix letters, singular / plural), never by the trade or a place', () => {
+  assert.equal(sameServiceWord(NOUN_ONE, NOUN_MANY), true, 'a feminine ending into a plural one');
+  assert.equal(sameServiceWord(STEM, `${STEM}\u05D9\u05DD`), true, 'a short stem plus a plural suffix');
+  assert.equal(sameServiceWord(`${STEM.slice(0, 3)}\u05D5`, STEM), false, 'four letters sharing three are two words');
+  assert.equal(sameServiceWord('\u05D0\u05D1', '\u05D0\u05D1'), true);
+  const verb = '\u05E9\u05E0\u05D1\u05DC';
+  assert.deepEqual(ownerNamedServices(`${verb} ${NOUN_MANY}`, [LABEL_A, LABEL_B]), [LABEL_A], 'the plumber-3 usp shape: verb + the label noun');
+  assert.deepEqual(ownerNamedServices(`${verb} \u05D1${NOUN_ONE}`, [LABEL_A, LABEL_B]), [LABEL_A], 'prefix letter and singular form');
+  assert.deepEqual(ownerNamedServices(`${verb} ${CITY_A}`, [LABEL_A, LABEL_B], [CITY_A]), [], 'no service named: business-wide');
+  assert.deepEqual(ownerNamedServices(`${TRADE} ${CITY_A}`, [`${TRADE} ${NOUN_MANY}`], [TRADE]), [], 'the trade never names a service');
+  assert.deepEqual(ownerNamedServices(LABEL_B, [LABEL_A, LABEL_B]), [LABEL_B], 'the label itself');
+  const shared = [`${SEARCH} ${NOUN_MANY}`, `${SEARCH} ${CLOGS}`];
+  assert.deepEqual(ownerNamedServices(`${SEARCH} ${CITY_A}`, shared), [], 'a word every label carries names none of them');
+  assert.deepEqual(ownerNamedServices('I fix leaks and drains', ['leak repair', 'AC and heating']), ['leak repair'], 'English: plural form; "and" is too short');
+});
+
+test('B2: same-day grants are per page: the usp names one service; a response fact names none (business-wide)', () => {
+  const words = T.parseSameDayWords;
+  const scopedUsp = sameDayGrants({ responseFact: false, usp: `${NOUN_MANY} ${SAME_DAY}. ${TRADE} ${CITY_A}` }, words, [LABEL_A, LABEL_B], [TRADE, CITY_A]);
+  assert.deepEqual(scopedUsp, [{ source: 'usp', services: [LABEL_A] }]);
+  assert.equal(pageHasSameDayGrant(scopedUsp, LABEL_A), true, 'its own service page');
+  assert.equal(pageHasSameDayGrant(scopedUsp, LABEL_B), false, 'another service page');
+  assert.equal(pageHasSameDayGrant(scopedUsp, null), false, 'the homepage takes business-wide grants only');
+  const wide = sameDayGrants({ responseFact: true, responseTime: `${SAME_DAY} ${CITY_A}`, usp: `${NOUN_MANY} ${SAME_DAY}` }, words, [LABEL_A, LABEL_B], [CITY_A]);
+  assert.deepEqual(wide.map(grant => [grant.source, grant.services]), [['response', []], ['usp', [LABEL_A]]]);
+  assert.equal(pageHasSameDayGrant(wide, LABEL_B) && pageHasSameDayGrant(wide, null), true, 'a business-wide response fact covers every page');
+  assert.deepEqual(sameDayGrants({ responseFact: false, usp: `${NOUN_MANY} ${CITY_A}` }, words, [LABEL_A]), [], 'no same-day word, no grant');
+  assert.ok(buildSameDayScopeSpec(pageHasSameDayGrant(scopedUsp, LABEL_B), words, null, []), 'the gate is on on the other page');
+  assert.equal(buildSameDayScopeSpec(pageHasSameDayGrant(scopedUsp, LABEL_A), words, null, []), null, 'and off on its own page');
+});
+
+test('B2 regression (plumber-3 shape): a usp same-day finish for one service blocks the same promise on another service page', () => {
+  const sameDay = SAME_DAY_TOKENS[0];
+  const finishVerb = SAME_DAY_FINISH_VERBS.find(verb => !/\s/.test(verb)) as string;
+  const data: CollectedData = {
+    businessName: 'TEST Biz', businessNiche: TRADE, targetLocation: CITY_A, specificCities: CITY_A,
+    usp: `${finishVerb} ${NOUN_MANY} ${sameDay}`, responseTime: `${sameDay} ${CITY_A}`, phone: '050-0000000',
+  };
+  const hits = (pageServiceLabel: string) => runCopyGates({ heroHeadline: `${pageServiceLabel} ${CITY_A} ${sameDay}` },
+    copyGateContext(data, [LABEL_A, LABEL_B], true, [CITY_A], { pageServiceLabel, researchSite: true })).map(hit => hit.actual);
+  assert.ok(!hits(LABEL_A).includes('claim:same_day_finish'), `own service page: ${hits(LABEL_A)}`);
+  assert.ok(hits(LABEL_B).includes('claim:same_day_finish'), `other service page: ${hits(LABEL_B)}`);
+});
+
+// End to end (mocked model, live templates): three pages generated and rendered. The model writes the owner's same-day promise
+// into every hero; the gates keep it on its own service page only, and on the homepage only when the owner gave it
+// business-wide (a response fact).
+const approvedItem = (id: string, value: string) => ({ id, value, status: 'approved' as const });
+function scopeBrief(pageClass: 'homepage' | 'money_service', pageName: string, id: string, targetPath: string) {
+  return compilePageBrief({
+    page: { id, targetPath, pageClass },
+    persona: approvedItem('persona', 'A local customer in Holon'), waoOffer: approvedItem('offer', 'TEST Biz'),
+    targetQueries: [approvedItem('query-1', `${pageName} Holon`)], entityAnchors: [approvedItem('entity-1', pageName)],
+    firstPartyProof: [], localFacts: [approvedItem('local-area', 'Service area (owner-stated): Holon')],
+    customerDecisions: [], constraints: [], informationGainGaps: [], prohibitedClaims: [], faqCandidates: [], links: [],
+    site: { pageName, relevanceTerm: pageName, city: 'Holon', serviceArea: ['Holon'], serviceLabels: ['leak repair', 'drain cleaning'], businessName: 'TEST Biz', soloOperator: true, ownerIntroPage: false },
+  } as PageBriefInput);
+}
+
+async function generateServicePage(pageName: string, slug: string, data: CollectedData): Promise<{ copy: SiteCopy; scopeRepairs: number }> {
+  const page = scopeBrief('money_service', pageName, `svc-${slug}`, `/services/${slug}`);
+  const promised = `${pageName} in Holon ${SAME_DAY}`;
+  const answer = Object.fromEntries(Object.entries({
+    heroHeadline: promised, heroSubheadline: `I explain the ${pageName} quote line by line`, heroCta: 'Call', trustBarItems: [], aboutBlurb: '', servicesHeadline: 'Services',
+    serviceItems: [pageName], faqHeadline: '', faqItems: [], guaranteeBlock: null, reviewFeatured: null, reviewContext: null, responseTimeBadge: null,
+    scarcityLine: null, formHeadline: 'Form', stickyBarLine: '', aboutPageHeadline: '', aboutPageBody: '', serviceDetails: [],
+  }).filter(([key]) => !ungeneratedFieldsFor(page).includes(key)));
+  const events: CopyRepairEvent[] = [];
+  const copy = await generateResearchPageCopy(page, data, {
+    onEvent: event => events.push(event),
+    callJson: async (system, user) => {
+      if (/repairing specific fields/.test(system)) return JSON.stringify({ heroHeadline: `${pageName} in Holon` });
+      return JSON.stringify(/^You are Noa/.test(system) ? JSON.parse(user.slice(0, user.indexOf('\n\nHARD LIMITS'))) : answer);
+    },
+  });
+  const scopeRepairs = events.filter(event => event.kind === 'repair' && (event.violations ?? []).some(item => item.rule === GATE_RULES.sameDayScope || /^claim:same_day_/.test(String(item.actual ?? '')))).length;
+  return { copy, scopeRepairs };
+}
+
+test('B2 end to end: two service pages generated and rendered; the scoped same-day promise appears only on its own page', async () => {
+  // The usp names "leak repair" in its own words ("leaks") with the same-day words; no response fact. Before the fix the
+  // claim scope read that usp as business-wide (no exact label in it) and the drain page kept the promise.
+  const data: CollectedData = { businessName: 'TEST Biz', businessNiche: 'plumber', targetLocation: 'Holon', specificCities: 'Holon', usp: `I fix leaks ${SAME_DAY} (same day)`, phone: '050-0000000' };
+  const leak = await generateServicePage('leak repair', 'leak-repair', data);
+  const drain = await generateServicePage('drain cleaning', 'drain-cleaning', data);
+  assert.equal(leak.scopeRepairs, 0, 'own service page: no same-day gate');
+  assert.equal(drain.scopeRepairs, 1, 'other service page: the same-day promise went to the repair');
+  assert.ok(leak.copy.heroHeadline.includes(SAME_DAY));
+  assert.ok(!drain.copy.heroHeadline.includes(SAME_DAY));
+  // Homepage (no page service): a usp scoped to one service grants nothing there; a business-wide response fact does.
+  const home = scopeBrief('homepage', 'plumber', 'home', '/');
+  const homeHits = (owner: CollectedData) => runCopyGates({ heroHeadline: `plumber in Holon ${SAME_DAY}` }, briefGateContext(home, owner)).filter(hit => hit.rule === GATE_RULES.sameDayScope);
+  assert.equal(homeHits(data).length, 1, 'scoped usp: blocked on the homepage');
+  assert.equal(homeHits({ ...data, responseTime: SAME_DAY }).length, 0, 'business-wide response fact: allowed on the homepage');
+  const homeCopy: SiteCopy = { ...leak.copy, heroHeadline: 'plumber in Holon', heroSubheadline: 'Home sub' };
+  const seo = (name: string) => ({ name, city: 'Holon', serviceArea: ['Holon'] });
+  const pages: ResearchedSitePage[] = [
+    { opportunityId: 'home', classification: 'homepage', targetPath: '/', copy: homeCopy, seo: seo('plumber') },
+    { opportunityId: 'svc-leak-repair', classification: 'money_service', targetPath: '/services/leak-repair', copy: leak.copy, seo: seo('leak repair') },
+    { opportunityId: 'svc-drain-cleaning', classification: 'money_service', targetPath: '/services/drain-cleaning', copy: drain.copy, seo: seo('drain cleaning') },
+  ];
+  const files = renderResearchedSitePages({
+    theme: VERTICAL_THEMES['emergency-trades'], assets: VERTICAL_ASSETS['emergency-trades'], data, heroImageUrl: 'https://example.test/hero.jpg',
+    slug: 'scope-test', siteUrl: 'https://scope.wao.co.il', pages, graphEdges: pages.slice(1).map(item => ({ fromId: 'home', toId: item.opportunityId })),
+  });
+  assert.ok(files['services/leak-repair.html'].includes(SAME_DAY), 'shown on its own service page');
+  assert.ok(!files['services/drain-cleaning.html'].includes(SAME_DAY), 'never on the other service page');
+  assert.ok(!files['index.html'].includes(SAME_DAY), 'never on the homepage for a one-service promise');
+  // The plumber-3 shape: the same scoped usp plus a business-wide response fact. The rerun-3 gate is off on every page (the
+  // response covers them), so the finish-scope claim gate is what keeps the drain page clean.
+  const withResponse: CollectedData = { ...data, responseTime: SAME_DAY };
+  const leakR = await generateServicePage('leak repair', 'leak-repair', withResponse);
+  const drainR = await generateServicePage('drain cleaning', 'drain-cleaning', withResponse);
+  assert.equal(leakR.scopeRepairs, 0);
+  assert.ok(leakR.copy.heroHeadline.includes(SAME_DAY));
+  assert.equal(drainR.scopeRepairs, 1, 'claim:same_day_finish on the other service page');
+  assert.ok(!drainR.copy.heroHeadline.includes(SAME_DAY));
 });

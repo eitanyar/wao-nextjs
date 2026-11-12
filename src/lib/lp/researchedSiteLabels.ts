@@ -48,3 +48,21 @@ export const RESEARCHED_SITE_LABELS: Readonly<{
 
 /** True while any label above is still a placeholder. Flip to false when the copy patches land. */
 export const RESEARCHED_SITE_LABELS_PENDING_COPY = false;
+
+/**
+ * Site Bot launch step 2 (capability 9): the visible link to the business's Google profile, on the homepage and in the
+ * footer of every research-site page (href: renderSitePages.googleProfileUrl, the same URL as the schema sameAs). New Hebrew,
+ * so it starts as a `__HE_TODO_<key>__` placeholder for Tamar -> Noa, with its own pending flag (separate from
+ * RESEARCHED_SITE_LABELS_PENDING_COPY so the live labels above stay live). While pending the renderer draws NO profile link
+ * (a placeholder can never ship); researchedSite.test.ts fails if the flag disagrees with the value, or if a pending label
+ * reaches the HTML. Flip the flag to false when the byte-exact patch lands.
+ */
+export const RESEARCHED_PROFILE_LINK_LABELS: Readonly<{
+  /** Link text, homepage and footer: the business on Google (opens its Google profile / Maps listing). Latin "Google" is isolated in <bdi> by the renderer. */
+  googleProfileLink: string;
+}> = {
+  googleProfileLink: '__HE_TODO_googleProfileLink__ Link text: see this business on Google (opens its Google profile / Maps listing, where its reviews are)',
+};
+
+/** True while the profile-link label is a placeholder: no profile link renders. */
+export const RESEARCHED_PROFILE_LINK_LABELS_PENDING_COPY = true;

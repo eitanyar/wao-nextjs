@@ -24,6 +24,14 @@ vm.runInNewContext(validatorCode, { exports: validatorExports, require: name => 
   throw new Error(`unexpected validator import: ${name}`);
 } }, { filename: validatorPath });
 assert.equal(typeof validatorExports.assertResearchedSiteGraphSafe, 'function');
+const claimRecordPath = path.resolve('src/lib/lp/claimVerificationRecord.ts');
+const claimRecordExports = {};
+vm.runInNewContext(ts.transpileModule(fs.readFileSync(claimRecordPath, 'utf8'), {
+  fileName: claimRecordPath,
+  compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022, esModuleInterop: true },
+}).outputText, { exports: claimRecordExports, require: name => {
+  throw new Error(`unexpected claim record import: ${name}`);
+} }, { filename: claimRecordPath });
 const packetPath = path.resolve('src/lib/site-bot/research/copyReviewPacket.ts');
 const packetCode = ts.transpileModule(fs.readFileSync(packetPath, 'utf8'), {
   fileName: packetPath,
@@ -37,6 +45,7 @@ vm.runInNewContext(packetCode, {
     if (name === 'node:util') return util;
     if (name === '../../deployment/deploy-access') return { isSafeDeploymentSlug: value => value === 'synthetic-preflight' || value === 'synthetic-foreign' };
     if (name === '../researchedSiteGraphValidation') return validatorExports;
+    if (name === '../../lp/claimVerificationRecord') return claimRecordExports;
     throw new Error(`unexpected packet import: ${name}`);
   },
 }, { filename: packetPath });
@@ -247,6 +256,11 @@ function harness({ authorized = true, record, dossier = syntheticDossier(), read
     }, buildSitemap: legacyRender ? (_siteUrl, urls) => {
       assert.deepEqual(urls, ['/synthetic-core']); deployEvents.push('sitemap'); return 'synthetic sitemap';
     } : forbidden('buildSitemap') },
+    // Launch step 2 (B4): the claim pre-check runs after the copy-review match; the synthetic record carries no claim.
+    '@/lib/lp/claimVerification': { researchedClaimBlockers: (pages, data) => {
+      assert.ok(Array.isArray(pages) && data && typeof data === 'object');
+      return [];
+    } },
     '@/lib/lp/researchedSite': { renderResearchedSitePages: activeDeploy ? () => {
       deployEvents.push('render');
       return { 'index.html': 'synthetic rendered page' };
