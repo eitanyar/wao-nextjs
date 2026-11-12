@@ -1,0 +1,135 @@
+{
+  "angle": "He paid Google for clicks and got tourists — sightseers who never meant to hire — and the deadpan laugh is that he got exactly what he bought; now his thumb is the bouncer working the door on real enquiries, and the campaign is built to chase what his thumb calls real. It fits him because he already spots time-wasters on the job, so the ad hands his thumb the door and lets the real footage and short silences carry the rest.",
+  "story_in_one_line": "A tradesman who paid for clicks and got tourists lets his thumb play bouncer on the enquiries list, and the campaign is built to move from clicks to the real ones he marks.",
+  "ad_30": [
+    {
+      "beat": "R01",
+      "voice": "שילמת על קליקים בגוגל. [dry] קיבלת תיירים.",
+      "display": "שילמת על קליקים בגוגל. קיבלת תיירים.",
+      "caption": "קיבלת תיירים",
+      "shot": "B1",
+      "tag_why": "Deadpan on the punchline lands the tautology joke: he got exactly what he paid for, nothing more.",
+      "removable": false,
+      "alt": null
+    },
+    {
+      "beat": "R02",
+      "voice": "עכשיו האגודל שלך סלקטור.",
+      "display": "עכשיו האגודל שלך סלקטור.",
+      "caption": "האגודל שלך סלקטור",
+      "shot": "B2",
+      "tag_why": "No tag; the bouncer metaphor carries the turn from pain to control on its own.",
+      "removable": false,
+      "alt": null
+    },
+    {
+      "beat": "R03",
+      "voice": "כל פנייה נוחתת בטלפון. טאפ: אמיתית או זֶבֶל.",
+      "display": "כל פנייה נוחתת בטלפון. טאפ: אמיתית או זבל.",
+      "caption": "טאפ: אמיתית או זבל",
+      "shot": "B3",
+      "tag_why": "No tag; a plain action beat, said flat so the tap is the hero.",
+      "removable": false,
+      "alt": null
+    },
+    {
+      "beat": "R04",
+      "voice": "כל סימון אמיתי חוזר לגוגל.",
+      "display": "כל סימון אמיתי חוזר לגוגל.",
+      "caption": "סימון אמיתי חוזר לגוגל",
+      "shot": "B4",
+      "tag_why": "No tag; a mechanism fact stated with quiet confidence, not hype.",
+      "removable": true,
+      "alt": "הסימונים שלך הם חומר הגלם."
+    },
+    {
+      "beat": "R05",
+      "voice": "הקמפיין בנוי לעבור מקליקים לפניות אמיתיות.",
+      "display": "הקמפיין בנוי לעבור מקליקים לפניות אמיתיות.",
+      "caption": "מקליקים לפניות אמיתיות",
+      "shot": "B9",
+      "tag_why": "No tag; the approved built-to claim, said like a tradesman proud of the work.",
+      "removable": false,
+      "alt": null
+    },
+    {
+      "beat": "R06",
+      "voice": "דמו חינם, על עסק לדוגמה.",
+      "display": "דמו חינם, על עסק לדוגמה.",
+      "caption": "דמו חינם",
+      "shot": "B8",
+      "tag_why": "No tag; a low-friction offer, said easy over coffee.",
+      "removable": false,
+      "alt": null
+    },
+    {
+      "beat": "R07",
+      "voice": "[excited] WAO. בוט מודעות: 249 ₪ + מע״מ לחודש.",
+      "display": "WAO. בוט מודעות: 249 ₪ + מע״מ לחודש.",
+      "caption": "WAO. בוט מודעות",
+      "shot": "E1",
+      "tag_why": "Founder rule: the brand is said upbeat, [excited] directly before WAO.",
+      "removable": false,
+      "alt": null
+    }
+  ],
+  "ad_15": [
+    {
+      "beat": "R01",
+      "voice": "שילמת על קליקים בגוגל. [dry] קיבלת תיירים.",
+      "display": "שילמת על קליקים בגוגל. קיבלת תיירים.",
+      "caption": "קיבלת תיירים",
+      "shot": "B1",
+      "tag_why": "Deadpan punchline, same joke as the 30 compressed to its setup and pay-off.",
+      "removable": false,
+      "alt": null
+    },
+    {
+      "beat": "R02",
+      "voice": "טאפ: אמיתי או זֶבֶל.",
+      "display": "טאפ: אמיתי או זבל.",
+      "caption": "טאפ: אמיתי או זבל",
+      "shot": "B4",
+      "tag_why": "No tag; the one-tap action is the whole solution beat at this length.",
+      "removable": false,
+      "alt": null
+    },
+    {
+      "beat": "R03",
+      "voice": "[excited] WAO. בוט מודעות: 249 ₪ + מע״מ לחודש.",
+      "display": "WAO. בוט מודעות: 249 ₪ + מע״מ לחודש.",
+      "caption": "WAO. בוט מודעות",
+      "shot": "E1",
+      "tag_why": "Founder rule: brand upbeat, [excited] directly before WAO; price only in this last line.",
+      "removable": false,
+      "alt": null
+    }
+  ],
+  "ad_6": [
+    {
+      "beat": "R01",
+      "voice": "קליקים? [dry] תיירים.",
+      "display": "קליקים? תיירים.",
+      "caption": "קליקים? תיירים",
+      "shot": "B9",
+      "tag_why": "Deadpan lands the two-word joke; the card carries the clicks-to-tourists idea visually.",
+      "removable": false,
+      "alt": null
+    },
+    {
+      "beat": "R02",
+      "voice": "[excited] WAO. בוט מודעות.",
+      "display": "WAO. בוט מודעות: 249 ₪ + מע״מ לחודש.",
+      "caption": "WAO. בוט מודעות",
+      "shot": "E1",
+      "tag_why": "Founder rule: brand upbeat; price is shown on the end screen, not spoken at this length.",
+      "removable": false,
+      "alt": null
+    }
+  ],
+  "new_shots": [],
+  "flags": [
+    "Wanted to promise the phone fills with real jobs and that Google already learns from his marks today; the facts only support 'built to move' once enough real marks accumulate, so every line stays at 'בנוי לעבור' and no result is promised.",
+    "Wanted to use the blocked-searches mechanism as a concrete savings proof; the fact supports blocking, but any savings or result framing is forbidden and the cut word budget forced the beat out, so it is omitted rather than weakened."
+  ]
+}

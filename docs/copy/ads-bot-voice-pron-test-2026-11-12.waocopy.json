@@ -1,0 +1,243 @@
+{
+  "angle": "n/a: pronunciation test",
+  "items": [
+    {
+      "n": 1,
+      "target": "Google company name in Hebrew letters (concept 1), plain",
+      "voice": "אתמול חיפשתי את העסק שלי בגוגל.",
+      "display": "אתמול חיפשתי את העסק שלי בגוגל.",
+      "risk": "May say GO-gel or stress the second syllable instead of GOO-gul."
+    },
+    {
+      "n": 2,
+      "target": "Google (concept 1), niqqud variant on בגוגל",
+      "voice": "אתמול חיפשתי את העסק שלי בְּגּוּגְל.",
+      "display": "אתמול חיפשתי את העסק שלי בגוגל.",
+      "risk": "Check the niqqud forces GOO-gul and does not spell out letters."
+    },
+    {
+      "n": 3,
+      "target": "Google Ads as said aloud in Israel, גוגל אדס (concept 2), plain",
+      "voice": "אני משלם לגוגל אדס כל חודש.",
+      "display": "אני משלם לגוגל אדס כל חודש.",
+      "risk": "אדס may be read E-des or a-DES instead of ads."
+    },
+    {
+      "n": 4,
+      "target": "Google Ads (concept 2), niqqud variant on אדס",
+      "voice": "אני משלם לגוגל אַדְס כל חודש.",
+      "display": "אני משלם לגוגל אדס כל חודש.",
+      "risk": "Check it reads ads as one short syllable, not Edess."
+    },
+    {
+      "n": 5,
+      "target": "Click singular, קליק (concept 3)",
+      "voice": "קליק אחד יכול לעלות כמה שקלים.",
+      "display": "קליק אחד יכול לעלות כמה שקלים.",
+      "risk": "קליק may be read ka-LIK; check klik."
+    },
+    {
+      "n": 6,
+      "target": "Per click, על כל קליק (concept 3)",
+      "voice": "כמה שקלים אתה משלם על כל קליק?",
+      "display": "כמה שקלים אתה משלם על כל קליק?",
+      "risk": "Check the per-click phrasing and klik stress inside a question."
+    },
+    {
+      "n": 7,
+      "target": "Enquiry singular, פנייה אמיתית (concept 4)",
+      "voice": "אני מטפל בכל פנייה אמיתית בעצמי.",
+      "display": "אני מטפל בכל פנייה אמיתית בעצמי.",
+      "risk": "פנייה may be read pa-NEE-ya or pnuya; check pni-YA."
+    },
+    {
+      "n": 8,
+      "target": "Enquiries plural, פניות אמיתיות (concept 4), plain",
+      "voice": "אני סופר פניות אמיתיות בסוף היום.",
+      "display": "אני סופר פניות אמיתיות בסוף היום.",
+      "risk": "Unvowelled פניות can flip to pnuyot (available) instead of pniyot (enquiries)."
+    },
+    {
+      "n": 9,
+      "target": "Enquiries plural (concept 4), niqqud variant on פניות",
+      "voice": "אני סופר פְּנִיּוֹת אמיתיות בסוף היום.",
+      "display": "אני סופר פניות אמיתיות בסוף היום.",
+      "risk": "Check the niqqud forces pniyot."
+    },
+    {
+      "n": 10,
+      "target": "Click mode, מצב קליקים (concept 5)",
+      "voice": "אני עובד במצב קליקים כבר שבוע.",
+      "display": "אני עובד במצב קליקים כבר שבוע.",
+      "risk": "Check matzav klikim reads as one phrase."
+    },
+    {
+      "n": 11,
+      "target": "Enquiry mode, מצב פניות (concept 5)",
+      "voice": "אני בחרתי לעבוד במצב פניות מההתחלה.",
+      "display": "אני בחרתי לעבוד במצב פניות מההתחלה.",
+      "risk": "פניות inside the mode name may flip to pnuyot."
+    },
+    {
+      "n": 12,
+      "target": "Click price ceiling, תקרה של 15 ₪ (concept 6), plain",
+      "voice": "אני שם תקרה של 15 ₪ לקליק.",
+      "display": "אני שם תקרה של 15 ₪ לקליק.",
+      "risk": "15 ₪ may be read in English or with the wrong plural; שם may read sham (there) instead of sam (put)."
+    },
+    {
+      "n": 13,
+      "target": "Click price ceiling (concept 6), niqqud variant on שם",
+      "voice": "אני שָׂם תקרה של 15 ₪ לקליק.",
+      "display": "אני שם תקרה של 15 ₪ לקליק.",
+      "risk": "Check שָׂם reads sam (put); also listen for khamisha-asar shekel."
+    },
+    {
+      "n": 14,
+      "target": "Number 15 next to enquiries (concept 7)",
+      "voice": "תאר לעצמך 15 פניות אמיתיות בשבוע.",
+      "display": "תאר לעצמך 15 פניות אמיתיות בשבוע.",
+      "risk": "15 before feminine פניות needs khamesh-ESRE; voice may use the masculine form or English fifteen."
+    },
+    {
+      "n": 15,
+      "target": "60 days (concept 7)",
+      "voice": "אני נותן לזה לפחות 60 ימים.",
+      "display": "אני נותן לזה לפחות 60 ימים.",
+      "risk": "May read sixty in English, or shishim yamim instead of spoken shishim yom."
+    },
+    {
+      "n": 16,
+      "target": "Two to three months, חודשיים עד שלושה חודשים (concept 8)",
+      "voice": "אני מחכה חודשיים עד שלושה חודשים.",
+      "display": "אני מחכה חודשיים עד שלושה חודשים.",
+      "risk": "Dual חודשיים may read khodashim or mis-stress; check khod-sha-YIM."
+    },
+    {
+      "n": 17,
+      "target": "A search someone typed (concept 9)",
+      "voice": "אני רואה איזה חיפוש מישהו הקליד.",
+      "display": "אני רואה איזה חיפוש מישהו הקליד.",
+      "risk": "הקליד may mis-stress; check hik-LID."
+    },
+    {
+      "n": 18,
+      "target": "Negative keywords as blocked words, חוסם מילים (concept 10)",
+      "voice": "אני חוסם מילים שלא קשורות לעבודה שלי.",
+      "display": "אני חוסם מילים שלא קשורות לעבודה שלי.",
+      "risk": "חוסם may read KHO-sem instead of kho-SEM."
+    },
+    {
+      "n": 19,
+      "target": "Ad headline, כותרת (concept 11)",
+      "voice": "אני מחליף את הכותרת של המודעה.",
+      "display": "אני מחליף את הכותרת של המודעה.",
+      "risk": "כותרת may mis-stress; check ko-TE-ret."
+    },
+    {
+      "n": 20,
+      "target": "Ad description, תיאור (concept 11)",
+      "voice": "אני כותב תיאור קצר לכל מודעה.",
+      "display": "אני כותב תיאור קצר לכל מודעה.",
+      "risk": "תיאור may read TI-ur instead of te-UR."
+    },
+    {
+      "n": 21,
+      "target": "Landing page, דף נחיתה (concept 12)",
+      "voice": "בניתי דף נחיתה חדש לעסק שלי.",
+      "display": "בניתי דף נחיתה חדש לעסק שלי.",
+      "risk": "Check daf ne-khi-TA reads as one term, not word-by-word."
+    },
+    {
+      "n": 22,
+      "target": "WhatsApp in Hebrew letters (concept 13), plain",
+      "voice": "הלקוח שולח לי וואטסאפ אחרי העבודה.",
+      "display": "הלקוח שולח לי וואטסאפ אחרי העבודה.",
+      "risk": "Double vav may read ve-VAT-sapp or WATS-app; check VAHT-sapp."
+    },
+    {
+      "n": 23,
+      "target": "WhatsApp (concept 13), niqqud variant on וואטסאפ",
+      "voice": "הלקוח שולח לי וואַטְסְאַפּ אחרי העבודה.",
+      "display": "הלקוח שולח לי וואטסאפ אחרי העבודה.",
+      "risk": "Check the niqqud forces VAHT-sapp with no extra ve-."
+    },
+    {
+      "n": 24,
+      "target": "Tap on the call button, לחיצה על כפתור החיוג (concept 13)",
+      "voice": "הלקוח נותן לחיצה על כפתור החיוג.",
+      "display": "הלקוח נותן לחיצה על כפתור החיוג.",
+      "risk": "החיוג may misread; check ha-khi-YUG and le-khi-TSA."
+    },
+    {
+      "n": 25,
+      "target": "Fake clicks, קליקים מזויפים (concept 14)",
+      "voice": "ראיתי קליקים מזויפים בחשבון הישן שלי.",
+      "display": "ראיתי קליקים מזויפים בחשבון הישן שלי.",
+      "risk": "מזויפים may read me-ZU-yafim; check me-zu-ya-FIM."
+    },
+    {
+      "n": 26,
+      "target": "Daily budget, תקציב יומי (concept 15)",
+      "voice": "אני קובע תקציב יומי קטן מאוד.",
+      "display": "אני קובע תקציב יומי קטן מאוד.",
+      "risk": "תקציב may stress TAK-tsiv instead of tak-TSIV."
+    },
+    {
+      "n": 27,
+      "target": "Monthly budget, תקציב חודשי (concept 15)",
+      "voice": "אני סוגר תקציב חודשי קבוע מראש.",
+      "display": "אני סוגר תקציב חודשי קבוע מראש.",
+      "risk": "Same tak-TSIV stress check in the monthly phrase."
+    },
+    {
+      "n": 28,
+      "target": "Quality Score, Hebrew term ציון איכות (concept 16)",
+      "voice": "אני בודק את ציון האיכות שלי.",
+      "display": "אני בודק את ציון האיכות שלי.",
+      "risk": "Check tsi-YUN ei-KHUT reads naturally."
+    },
+    {
+      "n": 29,
+      "target": "Quality Score, English term inside a Hebrew sentence (concept 16)",
+      "voice": "אני בודק את ה-Quality Score שלי.",
+      "display": "אני בודק את ה-Quality Score שלי.",
+      "risk": "Latin words may be skipped, spelled out, or read with Hebrew phonetics; check the ה- prefix."
+    },
+    {
+      "n": 30,
+      "target": "Ad Rank, Hebrew term דירוג המודעה (concept 16)",
+      "voice": "אני מסתכל על דירוג המודעה שלי.",
+      "display": "אני מסתכל על דירוג המודעה שלי.",
+      "risk": "דירוג may mis-stress; check di-RUG."
+    },
+    {
+      "n": 31,
+      "target": "Ad Rank, English term inside a Hebrew sentence (concept 16)",
+      "voice": "אני מסתכל על ה-Ad Rank שלי.",
+      "display": "אני מסתכל על ה-Ad Rank שלי.",
+      "risk": "Latin Ad Rank may be read as Hebrew letters or skipped; check the ה- prefix."
+    },
+    {
+      "n": 32,
+      "target": "Full closing line with VAT, 249 ₪ + מע״מ (concept 17), [excited] directly before the brand",
+      "voice": "[excited] WAO. בוט מודעות: 249 ₪ + מע״מ לחודש.",
+      "display": "WAO. בוט מודעות: 249 ₪ + מע״מ לחודש.",
+      "risk": "249 ₪ may read English or the wrong plural; + may read plus or ploos; מע״מ may spell mem-ayin-mem instead of ma'am; check the [excited] tag and WAO."
+    },
+    {
+      "n": 33,
+      "target": "Marking an enquiry as real, מסמן כאמיתית (concept 18)",
+      "voice": "אני מסמן את הפנייה הזאת כאמיתית.",
+      "display": "אני מסמן את הפנייה הזאת כאמיתית.",
+      "risk": "כאמיתית may mis-stress; check ka-a-mi-TIT."
+    },
+    {
+      "n": 34,
+      "target": "Marking an enquiry as junk, פניית זבל (concept 18)",
+      "voice": "אני מסמן פניית זבל ומוחק אותה.",
+      "display": "אני מסמן פניית זבל ומוחק אותה.",
+      "risk": "Construct פניית may read pa-NI-yat; check pni-YAT and ZE-vel."
+    }
+  ]
+}

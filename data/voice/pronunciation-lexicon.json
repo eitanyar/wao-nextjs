@@ -203,6 +203,25 @@
           "transform": "drop-leading-mem+hiriq"
         }
       }
+    },
+    {
+      "id": "ha-kupa",
+      "clean": "הקופה",
+      "match": [
+        "הקופה"
+      ],
+      "tts": "הַקּוּפָּה",
+      "reading": "ha-KU-pa",
+      "meaning": "the till / cash register (not 'the monkey'); founder heard 'ha-kupe' with הקוּפה (2026-11-12 round 4 #2)",
+      "status": "pending",
+      "allowPrefixes": true,
+      "verifiedOn": {
+        "voice": "Nimrod",
+        "voiceId": "ZiofZHcEBTn5sRySe5h8",
+        "model": "eleven_v4"
+      },
+      "date": "2026-11-12",
+      "note": "Candidate per Noa's niqqud advice + Eitan's ear: final qamats for 'a'. Re-test on Nimrod in the next pronunciation round before approval. verifiedOn = target voice (test convention); not yet approved by ear."
     }
   ]
 }

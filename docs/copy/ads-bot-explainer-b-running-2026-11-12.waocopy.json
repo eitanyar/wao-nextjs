@@ -1,0 +1,292 @@
+{
+  "angle": "Through-line: 'your money is guarded, and your only job is one tap' — each episode hands a problem-aware, trust-burned owner a visible control (cap, mark, block, built-to switch) instead of a result promise. I open each with the guardrail or the one-second action in his working day, then the mechanism, because he is solution-aware enough to want the how but allergic to 'leave it to us'.",
+  "episodes": {
+    "E5": {
+      "title": "מה שומר על הכסף שלך",
+      "lines": [
+        {
+          "beat": "E5-01",
+          "voice": "חשבון המודעות חדש, והוא עוד לא מכיר את הלקוחות שלך.",
+          "display": "חשבון המודעות חדש, והוא עוד לא מכיר את הלקוחות שלך.",
+          "screen": "WAO Ads Bot dashboard for the demo plumber: a brand-new campaign, empty performance history.",
+          "tag_why": "Hook: the account starts blind, so the owner needs a guardrail before anything else.",
+          "removable": false,
+          "alt": null
+        },
+        {
+          "beat": "E5-02",
+          "voice": "בוט מודעות של [excited] WAO מתחיל בתקרה של 15 ₪ ללחיצה על המודעה.",
+          "display": "בוט מודעות של WAO מתחיל בתקרה של 15 ₪ ללחיצה על המודעה.",
+          "screen": "WAO campaign settings for the demo plumber: maximum cost-per-click field set to 15 ₪.",
+          "tag_why": "Names product and brand once; the 15 ₪ click ceiling is the first concrete guard, and 'לחיצה על המודעה' explains 'click' plainly.",
+          "removable": false,
+          "alt": null
+        },
+        {
+          "beat": "E5-03",
+          "voice": "הוא אף פעם לא מעלה את התקציב היומי מעל מה שקבעת.",
+          "display": "הוא אף פעם לא מעלה את התקציב היומי מעל מה שקבעת.",
+          "screen": "WAO autonomy settings: daily budget locked at the amount the owner set, no auto-increase.",
+          "tag_why": "The budget guard in his words: the bot never raises what he set.",
+          "removable": false,
+          "alt": null
+        },
+        {
+          "beat": "E5-04",
+          "voice": "הוא לא מבקש עוד תקציב כשפנייה אמיתית עולה יותר מהגבול שחושב משווי העבודה שלך.",
+          "display": "הוא לא מבקש עוד תקציב כשפנייה אמיתית עולה יותר מהגבול שחושב משווי העבודה שלך.",
+          "screen": "WAO dashboard card: cost per real enquiry beside the limit computed from the plumber's job value; no budget-increase prompt shown.",
+          "tag_why": "Second money guard: no push for more budget while a real enquiry costs above his job-value limit. States the bot's behavior, not a cost cap.",
+          "removable": false,
+          "alt": null
+        },
+        {
+          "beat": "E5-05",
+          "voice": "מסנן קליקים מזויפים יושב על הדף שהמודעה מובילה אליו, והבוט בודק כל יום שהוא דולק.",
+          "display": "מסנן קליקים מזויפים יושב על הדף שהמודעה מובילה אליו, והבוט בודק כל יום שהוא דולק.",
+          "screen": "WAO landing-page protection status for the demo plumber: fake-click filter ON, last daily check timestamp.",
+          "tag_why": "Fake-click guard; marked removable so the episode still flows from the budget guards to the approval/limits beat without it.",
+          "removable": true,
+          "alt": null
+        },
+        {
+          "beat": "E5-06",
+          "voice": "הוא פועל לבד רק אחרי אישור חד־פעמי שלך, בגבולות שאתה רואה.",
+          "display": "הוא פועל לבד רק אחרי אישור חד־פעמי שלך, בגבולות שאתה רואה.",
+          "screen": "WAO autonomy consent screen: one-time approval toggle and the visible limits it authorizes.",
+          "tag_why": "Autonomy is conditional on his one-time approval inside visible limits — answers 'leave it to us' distrust.",
+          "removable": false,
+          "alt": null
+        },
+        {
+          "beat": "E5-07",
+          "voice": "יש מתג עצירה, וכל פעולה שלו נרשמת ביומן.",
+          "display": "יש מתג עצירה, וכל פעולה שלו נרשמת ביומן.",
+          "screen": "WAO activity log for the demo plumber: recent bot actions listed; stop switch visible.",
+          "tag_why": "Closes on control: a stop switch and a written log, so he can check everything.",
+          "removable": false,
+          "alt": null
+        }
+      ]
+    },
+    "E6": {
+      "title": "התפקיד שלך: אמיתית או זבל",
+      "lines": [
+        {
+          "beat": "E6-01",
+          "voice": "בוט מודעות של [excited] WAO לא מנחש אילו פניות אמיתיות. אתה אומר לו.",
+          "display": "בוט מודעות של WAO לא מנחש אילו פניות אמיתיות. אתה אומר לו.",
+          "screen": "WAO Ads Bot leads screen for the demo plumber, first enquiries arriving.",
+          "tag_why": "Hook + brand: the bot does not guess quality; the owner is the authority. Sets up his one-second job.",
+          "removable": false,
+          "alt": null
+        },
+        {
+          "beat": "E6-02",
+          "voice": "כל פנייה נוחתת ברשימה אחת: טופס, לחיצה על כפתור החיוג, או וואטסאפ.",
+          "display": "כל פנייה נוחתת ברשימה אחת: טופס, לחיצה על כפתור החיוג, או וואטסאפ.",
+          "screen": "WAO leads list: one form lead, one call-button tap, one WhatsApp tap in a single table.",
+          "tag_why": "One list for every source; 'לחיצה על כפתור החיוג' keeps it a tap, not a recorded call.",
+          "removable": false,
+          "alt": null
+        },
+        {
+          "beat": "E6-03",
+          "voice": "אתה מסמן כל אחת בלחיצה: אמיתית או זבל.",
+          "display": "אתה מסמן כל אחת בלחיצה: אמיתית או זבל.",
+          "screen": "WAO leads table row: the real / junk toggle being tapped.",
+          "tag_why": "The one-second action, in his words.",
+          "removable": false,
+          "alt": null
+        },
+        {
+          "beat": "E6-04",
+          "voice": "כשעבודה נסגרת, אתה מסמן סָגוּר וכותב כמה היא הייתה שווה.",
+          "display": "כשעבודה נסגרת, אתה מסמן סגור וכותב כמה היא הייתה שווה.",
+          "screen": "WAO leads table: a lead marked closed, the job-value amount field filled.",
+          "tag_why": "Closed-job marking and value; niqqud on סָגוּר so it is heard as 'closed', not the imperative 'close'.",
+          "removable": false,
+          "alt": null
+        },
+        {
+          "beat": "E6-05",
+          "voice": "בחשבון המודעות, רק פנייה שסימנת כאמיתית היא תוצאה. לחיצות לא נספרות.",
+          "display": "בחשבון המודעות, רק פנייה שסימנת כאמיתית היא תוצאה. לחיצות לא נספרות.",
+          "screen": "WAO campaign goals view: only 'real enquiry' is the goal; clicks shown as recorded, not as goals.",
+          "tag_why": "The core rule: only his real-marked enquiry counts as a result, not clicks.",
+          "removable": false,
+          "alt": null
+        },
+        {
+          "beat": "E6-06",
+          "voice": "כל פנייה אמיתית שסימנת נשלחת לגוגל מהיום הראשון, מחוברת ללחיצה שהביאה אותה.",
+          "display": "כל פנייה אמיתית שסימנת נשלחת לגוגל מהיום הראשון, מחוברת ללחיצה שהביאה אותה.",
+          "screen": "WAO lead detail: status 'sent to Google, tied to the click', with timestamp.",
+          "tag_why": "Send-back fact, tied to the click; removable. Alt drops Google and says only that his marks are what the next stage is built on.",
+          "removable": true,
+          "alt": "הסימונים שלך הם מה שהשלב הבא של הקמפיין נבנה עליו."
+        },
+        {
+          "beat": "E6-07",
+          "voice": "בלי הסימונים שלך, לקמפיין אין על מה להיבנות.",
+          "display": "בלי הסימונים שלך, לקמפיין אין על מה להיבנות.",
+          "screen": "Plain card over the leads list: 'הסימונים שלך = הדלק של הקמפיין'.",
+          "tag_why": "The fuel line: without his marks there is nothing to build on. Keeps the episode flowing if the send-back line is removed.",
+          "removable": false,
+          "alt": null
+        }
+      ]
+    },
+    "E7": {
+      "title": "מה נחסם ומה מקודם",
+      "lines": [
+        {
+          "beat": "E7-01",
+          "voice": "בוט מודעות של [excited] WAO קורא מה אנשים באמת הקלידו לפני שלחצו על המודעה.",
+          "display": "בוט מודעות של WAO קורא מה אנשים באמת הקלידו לפני שלחצו על המודעה.",
+          "screen": "WAO search-terms report for the demo plumber: the actual typed queries listed.",
+          "tag_why": "Hook + brand: the bot reads real typed searches, not guesses.",
+          "removable": false,
+          "alt": null
+        },
+        {
+          "beat": "E7-02",
+          "voice": "הוא חוסם חיפוש שצבר חמש לחיצות, עלה מעל רף שחושב מהעסק שלך, ולא הביא כלום.",
+          "display": "הוא חוסם חיפוש שצבר חמש לחיצות, עלה מעל רף שחושב מהעסק שלך, ולא הביא כלום.",
+          "screen": "WAO search-terms scoring: a query with 5+ clicks, cost above the computed bar, zero enquiries, marked blocked.",
+          "tag_why": "The block rule compressed to a true sentence: 5 clicks, above his business-derived bar, nothing brought.",
+          "removable": false,
+          "alt": null
+        },
+        {
+          "beat": "E7-03",
+          "voice": "חיפוש שהמודעה הופיעה בו פחות מ־50 פעם לא נחסם אף פעם.",
+          "display": "חיפוש שהמודעה הופיעה בו פחות מ־50 פעם לא נחסם אף פעם.",
+          "screen": "WAO search-terms screen: a query under 50 showings marked 'watch only', not blocked.",
+          "tag_why": "Thin-data guard: under 50 showings it is never blocked (the 20-showing ignore rule is subsumed).",
+          "removable": false,
+          "alt": null
+        },
+        {
+          "beat": "E7-04",
+          "voice": "הוא חוסם רק את הביטוי הזה, בלי לגעת בחיפושים טובים.",
+          "display": "הוא חוסם רק את הביטוי הזה, בלי לגעת בחיפושים טובים.",
+          "screen": "WAO negative-keyword screen: the exact phrase blocked; no broad block applied.",
+          "tag_why": "Precise block, never a loose one that could hide good searches.",
+          "removable": false,
+          "alt": null
+        },
+        {
+          "beat": "E7-05",
+          "voice": "חיפוש שהביא שתי פניות אמיתיות במחיר שעומד בגבול שלך הופך למילה שהקמפיין מחפש בכוונה.",
+          "display": "חיפוש שהביא שתי פניות אמיתיות במחיר שעומד בגבול שלך הופך למילה שהקמפיין מחפש בכוונה.",
+          "screen": "WAO search-terms screen: a query with 2 real enquiries within the limit promoted to its own keyword.",
+          "tag_why": "The other direction: a proven search is promoted so the campaign goes after it on purpose. Plain words for 'keyword'.",
+          "removable": false,
+          "alt": null
+        },
+        {
+          "beat": "E7-06",
+          "voice": "זה מתחיל רק אחרי השבועיים הראשונים של הקמפיין.",
+          "display": "זה מתחיל רק אחרי השבועיים הראשונים של הקמפיין.",
+          "screen": "Plain card over the campaign timeline: 'מתחיל אחרי השבועיים הראשונים'.",
+          "tag_why": "Timing guard: promotion starts only after the first two weeks.",
+          "removable": false,
+          "alt": null
+        },
+        {
+          "beat": "E7-07",
+          "voice": "הכול רץ באישור חד־פעמי שלך, לכל היותר פעם ביום.",
+          "display": "הכול רץ באישור חד־פעמי שלך, לכל היותר פעם ביום.",
+          "screen": "WAO autonomy settings: one-time approval, frequency capped at once per day.",
+          "tag_why": "Closes on control: his approval, at most once a day.",
+          "removable": false,
+          "alt": null
+        }
+      ]
+    },
+    "E8": {
+      "title": "מקליקים לפניות אמיתיות",
+      "lines": [
+        {
+          "beat": "E8-01",
+          "voice": "קליק הוא לא עבודה. בוט מודעות של [excited] WAO יודע את זה.",
+          "display": "קליק הוא לא עבודה. בוט מודעות של WAO יודע את זה.",
+          "screen": "WAO Ads Bot dashboard for the demo plumber: clicks and real enquiries as two separate counters.",
+          "tag_why": "Founder's headline point opened as a scene: a click is not a job. Names product and brand once.",
+          "removable": false,
+          "alt": null
+        },
+        {
+          "beat": "E8-02",
+          "voice": "בהתחלה הקמפיין במצב קליקים, עם תקרה של 15 ₪ ללחיצה.",
+          "display": "בהתחלה הקמפיין במצב קליקים, עם תקרה של 15 ₪ ללחיצה.",
+          "screen": "WAO campaign screen: mode 'מצב קליקים', max cost-per-click 15 ₪.",
+          "tag_why": "Stage one stated plainly: click mode under the 15 ₪ ceiling. Approved terms kept.",
+          "removable": false,
+          "alt": null
+        },
+        {
+          "beat": "E8-03",
+          "voice": "כל פנייה אמיתית שסימנת חוזרת לגוגל, מחוברת ללחיצה.",
+          "display": "כל פנייה אמיתית שסימנת חוזרת לגוגל, מחוברת ללחיצה.",
+          "screen": "WAO lead detail: real enquiry sent to Google, tied to the click.",
+          "tag_why": "The send-back, factual; no claim that Google learns or shifts budget in stage one.",
+          "removable": false,
+          "alt": null
+        },
+        {
+          "beat": "E8-04",
+          "voice": "הקמפיין בנוי לעבור לבד למצב פניות, שבו גוגל מְכַוֶּנֶת לפנייות אמיתיות בלבד.",
+          "display": "הקמפיין בנוי לעבור לבד למצב פניות, שבו גוגל מכוונת לפנייות אמיתיות בלבד.",
+          "screen": "Plain card: 'מצב קליקים → מצב פניות', labelled 'בנוי לעבור לבד'.",
+          "tag_why": "The built-to switch, never 'already switches'; enquiry mode aims at real enquiries only. Niqqud on מְכַוֶּנֶת so it is heard as active 'aims'.",
+          "removable": false,
+          "alt": null
+        },
+        {
+          "beat": "E8-05",
+          "voice": "התנאי הוא כ־15 פניות אמיתיות ב־60 יום, כולל שתי עבודות שֶׁסָּגַרְתָּ.",
+          "display": "התנאי הוא כ־15 פניות אמיתיות ב־60 יום, כולל שתי עבודות שסגרת.",
+          "screen": "Plain card: 'כ־15 פניות אמיתיות ב־60 יום, כולל 2 עבודות שנסגרו'.",
+          "tag_why": "The design condition: ~15 real enquiries in 60 days, two of them closed jobs. Not attributed to Google, not a closed-jobs-only trigger. Niqqud on שֶׁסָּגַרְתָּ = 'you closed'.",
+          "removable": false,
+          "alt": null
+        },
+        {
+          "beat": "E8-06",
+          "voice": "בתקציב המינימום זה בדרך כלל חודשיים־שלושה, ולא כל עסק מגיע לזה.",
+          "display": "בתקציב המינימום זה בדרך כלל חודשיים־שלושה, ולא כל עסק מגיע לזה.",
+          "screen": "Plain card: 'בתקציב המינימום: בדרך כלל חודשיים־שלושה'.",
+          "tag_why": "Honest timeline at minimum budget, and the honest caveat that not every trade/area gets there.",
+          "removable": false,
+          "alt": null
+        },
+        {
+          "beat": "E8-07",
+          "voice": "אם לא, הוא נשאר במצב קליקים וממשיך לעבוד.",
+          "display": "אם לא, הוא נשאר במצב קליקים וממשיך לעבוד.",
+          "screen": "WAO campaign screen: still 'מצב קליקים', active and running.",
+          "tag_why": "The honest fallback: click mode keeps working; no doom, no pressure.",
+          "removable": false,
+          "alt": null
+        },
+        {
+          "beat": "E8-08",
+          "voice": "אם מצב פניות עובד פחות טוב, הוא חוזר לבד למצב קליקים.",
+          "display": "אם מצב פניות עובד פחות טוב, הוא חוזר לבד למצב קליקים.",
+          "screen": "Plain card: 'אם מצב פניות עובד פחות טוב → חזרה אוטומטית למצב קליקים'.",
+          "tag_why": "Safety net: automatic return to click mode if enquiry mode does worse. Closes on control.",
+          "removable": false,
+          "alt": null
+        }
+      ]
+    }
+  },
+  "flags": [
+    "Wanted to say Google already learns from his marks and moves budget to better searches in stage one; the brief fixes stage one as click-buying, so the send-back stays factual and all aiming language sits inside the built-to enquiry mode in E8.",
+    "Wanted a cost-per-enquiry cap or a savings figure to make the guardrails tangible; only the 15 ₪ click ceiling is supported, so no enquiry-cost promise appears anywhere.",
+    "Wanted to promise the switch happens for every trade/area or by a date; only 'built to' with the 15/60/two-closed-jobs condition plus the minimum-budget caveat is supported, and E8 says exactly that.",
+    "Wanted to close E8 with the monthly budget that would open the switch as a concrete next step; it is supported but cut for the founder word budget — flagging so it can be restored in a longer cut."
+  ]
+}

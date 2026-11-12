@@ -1,0 +1,178 @@
+{
+  "angle": "Problem-aware one-man tradesmen who have already lived these exact moments, so each short opens inside the felt scene and ends on a mechanism the bot really runs, never on a promised result. First-person narration keeps the joke on his own day — the junk call, the price he won't chase, the report full of clicks — while the fixed closing line carries the only number and the only brand beat.",
+  "shorts": {
+    "S1_junk": [
+      {
+        "beat": "S1-01",
+        "voice": "שילמתי על מודעה. קיבלתי מחפש עבודה.",
+        "display": "שילמתי על מודעה. קיבלתי מחפש עבודה.",
+        "caption": "קיבלתי מחפש עבודה",
+        "shot": "B2",
+        "tag_why": "No tag: the dry first-person line carries the joke.",
+        "removable": false,
+        "alt": null
+      },
+      {
+        "beat": "S1-02",
+        "voice": "יש חסימות מראש: דרושים, חינם, קורס.",
+        "display": "יש חסימות מראש: דרושים, חינם, קורס",
+        "caption": "דרושים, חינם, קורס",
+        "shot": "B9",
+        "tag_why": "No tag: plain mechanism, the card shows the list.",
+        "removable": false,
+        "alt": null
+      },
+      {
+        "beat": "S1-03",
+        "voice": "אני מסמן זבל — זה יורד מהרשימה.",
+        "display": "אני מסמן זבל — זה יורד מהרשימה",
+        "caption": "זבל יורד מהרשימה",
+        "shot": "B5",
+        "tag_why": "No tag: the thumb does the acting.",
+        "removable": false,
+        "alt": null
+      },
+      {
+        "beat": "S1-04",
+        "voice": "הבוט חוסם חיפוש ששורף קליקים.",
+        "display": "הבוט חוסם חיפוש ששורף קליקים",
+        "caption": "הבוט חוסם",
+        "shot": "B9",
+        "tag_why": "No tag: flat statement of what the bot does.",
+        "removable": true,
+        "alt": {
+          "beat": "S1-04",
+          "voice": "גם מה שאני לא עושה — חסום מראש.",
+          "display": "גם מה שאני לא עושה — חסום מראש",
+          "caption": "גם זה חסום",
+          "shot": "B9",
+          "tag_why": "No tag: extends the block-list beat without the search-term claim.",
+          "removable": false,
+          "alt": null
+        }
+      },
+      {
+        "beat": "S1-05",
+        "voice": "[excited] WAO. בוט מודעות: 249 ₪ + מע״מ לחודש.",
+        "display": "WAO. בוט מודעות: 249 ₪ + מע״מ לחודש.",
+        "caption": "בוט מודעות",
+        "shot": "E1",
+        "tag_why": "Founder rule: [excited] directly before the brand word.",
+        "removable": false,
+        "alt": null
+      }
+    ],
+    "S2_cheap_competitor": [
+      {
+        "beat": "S2-01",
+        "voice": "ראיתי מחיר בעיר. סגרתי את הטלפון.",
+        "display": "ראיתי מחיר בעיר. סגרתי את הטלפון.",
+        "caption": "סגרתי את הטלפון",
+        "shot": "B8",
+        "tag_why": "No tag: the physical beat is the joke.",
+        "removable": false,
+        "alt": null
+      },
+      {
+        "beat": "S2-02",
+        "voice": "אני מוכר עבודה, לא מחיר.",
+        "display": "אני מוכר עבודה, לא מחיר",
+        "caption": "עבודה, לא מחיר",
+        "shot": "B1",
+        "tag_why": "No tag: pride beat, flat and sure.",
+        "removable": false,
+        "alt": null
+      },
+      {
+        "beat": "S2-03",
+        "voice": "הבוט שואל על אחריות, רישיון, ותק.",
+        "display": "הבוט שואל על אחריות, רישיון, ותק",
+        "caption": "אחריות, רישיון, ותק",
+        "shot": "B10",
+        "tag_why": "No tag: the real chat screen carries it.",
+        "removable": false,
+        "alt": null
+      },
+      {
+        "beat": "S2-04",
+        "voice": "כל כותרת — סיבה אחרת לבחור בי.",
+        "display": "כל כותרת — סיבה אחרת לבחור בי",
+        "caption": "סיבה אחרת בכל כותרת",
+        "shot": "B9",
+        "tag_why": "No tag: let the moving text land the reason.",
+        "removable": false,
+        "alt": null
+      },
+      {
+        "beat": "S2-05",
+        "voice": "[excited] WAO. בוט מודעות: 249 ₪ + מע״מ לחודש.",
+        "display": "WAO. בוט מודעות: 249 ₪ + מע״מ לחודש.",
+        "caption": "בוט מודעות",
+        "shot": "E1",
+        "tag_why": "Founder rule: [excited] directly before the brand word.",
+        "removable": false,
+        "alt": null
+      }
+    ],
+    "S3_see_nothing": [
+      {
+        "beat": "S3-01",
+        "voice": "שילמתי כל חודש. הדוח? מלא בקליקים.",
+        "display": "שילמתי כל חודש. הדוח? מלא בקליקים.",
+        "caption": "מלא בקליקים",
+        "shot": "B6",
+        "tag_why": "No tag: dry delivery sells the bitter joke.",
+        "removable": false,
+        "alt": null
+      },
+      {
+        "beat": "S3-02",
+        "voice": "היום כל פנייה ברשימה בטלפון שלי.",
+        "display": "היום כל פנייה ברשימה בטלפון שלי",
+        "caption": "כל פנייה ברשימה",
+        "shot": "B3",
+        "tag_why": "No tag: the real list on the phone is the proof.",
+        "removable": false,
+        "alt": null
+      },
+      {
+        "beat": "S3-03",
+        "voice": "בחשבון, רק מה שאני מסמן אמיתי נחשב תוצאה.",
+        "display": "בחשבון, רק מה שאני מסמן אמיתי נחשב תוצאה",
+        "caption": "אני קובע מה אמיתי",
+        "shot": "B4",
+        "tag_why": "No tag: the thumb marks real while he says it.",
+        "removable": false,
+        "alt": null
+      },
+      {
+        "beat": "S3-04",
+        "voice": "החשבון על שמי.",
+        "display": "החשבון על שמי",
+        "caption": "על שמי",
+        "shot": "B9",
+        "tag_why": "No tag: three words, said with pride.",
+        "removable": false,
+        "alt": null
+      },
+      {
+        "beat": "S3-05",
+        "voice": "[excited] WAO. בוט מודעות: 249 ₪ + מע״מ לחודש.",
+        "display": "WAO. בוט מודעות: 249 ₪ + מע״מ לחודש.",
+        "caption": "בוט מודעות",
+        "shot": "E1",
+        "tag_why": "Founder rule: [excited] directly before the brand word.",
+        "removable": false,
+        "alt": null
+      }
+    ]
+  },
+  "new_shots": [
+    "B10: phone in hand showing the bot's real opening chat screen (demo business, demo label), thumb typing a reply — no face, no Google UI"
+  ],
+  "flags": [
+    "Wanted to promise the junk stops or that only real enquiries arrive — the facts support a block-list, a junk mark and search-term blocking only, so every line states a mechanism, never an outcome.",
+    "Wanted to say Google already learns from his marks and chases real enquiries — not shipped today; S3 scopes the counting to the account ('בחשבון') and nothing more.",
+    "Wanted the block-list size (10–15 words) and the ad structure (15 headlines, 4 descriptions) — numbers are forbidden outside the closing line, so the mechanisms are named without counts."
+  ]
+}

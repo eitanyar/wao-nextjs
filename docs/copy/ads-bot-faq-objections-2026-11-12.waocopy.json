@@ -1,0 +1,201 @@
+{
+  "angle": "The reader is product-aware and burned: he already paid someone for Google ads management and is now hunting for the catch, so the bank opens with what is structurally different and what his money actually buys, then answers every suspicion with the real mechanism and its honest limit. No promise of calls, jobs or payback appears anywhere; trust is built from precision he can check himself — the demand gate before launch, the paused campaign, the 15 NIS click ceiling, his one-tap marking as the only counted result, the refund term and the free demo.",
+  "faq": [
+    {
+      "id": "q01",
+      "q": "כבר שרפתי כסף על ניהול קמפיינים בגוגל. מה אצלכם שונה?",
+      "a": "שלושה דברים. אנחנו בודקים ביקוש אמיתי ומחירי קליקים לפני ההשקה, ולא משיקים אם המספרים לא מצדיקים קמפיין. הקמפיין רץ על שירות אחד עם רשימת חסימה מהיום הראשון, וכל פנייה שסימנת כאמיתית נשלחת לגוגל. החשבון סופר פניות — לא קליקים.",
+      "facts_used": [
+        "System checks real search volume and click prices before a live campaign is created; not created if the numbers do not justify it (demand-readiness.ts:83-109; create-campaign/route.ts:460-487)",
+        "One main service, 3-5 search phrases, one group (prompts.ts:400; create-campaign/route.ts:672-686)",
+        "Block-list of 10-15 words from day one (prompts.ts:402-403; create-campaign/route.ts:688-693)",
+        "Each enquiry marked real goes back to Google tied to its click and is the only thing counted as a result (clientLeadsActions.js:55-82; conversion-goals.js:28-29)"
+      ],
+      "short": "אנחנו בודקים ביקוש ומחירי קליקים לפני ההשקה, רצים על שירות אחד, וסופרים פניות אמיתיות ולא קליקים."
+    },
+    {
+      "id": "q02",
+      "q": "כמה זה עולה לי בסך הכול, בלי הפתעות?",
+      "a": "249 ₪ בתוספת מע״מ בחודש על הניהול. תקציב המדיה נפרד והוא שלך: מינימום 1,500 ₪ בחודש, שזה בערך 50 ₪ ליום. אין התחייבות, ואפשר לעצור בכל חודש.",
+      "facts_used": [
+        "Management fee 249 NIS + VAT per month, no commitment, can leave any month (plans.ts:59; Ads Bot terms §7)",
+        "Ad budget is separate and his, minimum 1,500 NIS a month, about 50 NIS a day (Ads Bot terms §2)"
+      ],
+      "short": "הניהול 249 ₪ בתוספת מע״מ בחודש, ותקציב המדיה שלך בנפרד — מינימום 1,500 ₪ בחודש, בלי התחייבות."
+    },
+    {
+      "id": "q03",
+      "q": "לאן הכסף שלי הולך בפועל?",
+      "a": "שני כיסים נפרדים. דמי הניהול הם מה שאתה משלם ל־WAO על בוט מודעות שמנהל את הקמפיין, ותקציב המדיה נשאר שלך ויוצא על קליקים בחשבון שלך. הבוט לא מעלה את התקציב היומי מעל הסכום שאתה קבעת.",
+      "facts_used": [
+        "Management fee 249 NIS + VAT (plans.ts:59); ad budget separate and his (Ads Bot terms §2)",
+        "New account opened in his name (create-campaign/route.ts:498-502)",
+        "The bot never raises his daily budget above what he set (autonomy-consent.ts:44)"
+      ],
+      "short": "דמי הניהול ל־WAO, תקציב המדיה נשאר שלך ויוצא על קליקים, והבוט לא מעלה את התקציב היומי שקבעת."
+    },
+    {
+      "id": "q04",
+      "q": "החשבון בגוגל יהיה על שם מי?",
+      "a": "על שמך, לא על שמנו. אנחנו פותחים חשבון Google Ads חדש בשמך, ואתה רואה בו כל קליק וכל הוצאה. יש גם יומן פעילות שמראה מה הבוט עשה ומתי.",
+      "facts_used": [
+        "A new account, opened in his name, built from scratch (create-campaign/route.ts:498-502; Ads Bot terms §2)",
+        "Activity log alongside the stop switch and visible limits (autonomyCopy.ts:5-8)"
+      ],
+      "short": "החשבון נפתח על שמך, ואתה רואה בו כל קליק, כל הוצאה וכל פעולה של הבוט."
+    },
+    {
+      "id": "q05",
+      "q": "יש לי כבר חשבון ישן בגוגל. למה לא לתקן אותו?",
+      "a": "אנחנו לא מתקנים חשבון קיים — בונים חדש מאפס, על שמך. ככה הכול נבנה יחד מההתחלה: שירות אחד, רשימת חסימה, דף נחיתה תואם וספירה של פניות אמיתיות בלבד. החשבון הישן נשאר כמו שהוא, ואנחנו לא נוגעים בו.",
+      "facts_used": [
+        "We do not repair an existing account; a new account is opened in his name and built from scratch (create-campaign/route.ts:498-502; Ads Bot terms §2)",
+        "One main service and block-list (prompts.ts:400-403), landing page headline area contains the exact service name (lpCopyPrompt.ts:191-192), real enquiries are the only counted result (conversion-goals.js:28-29)"
+      ],
+      "short": "אנחנו לא מתקנים חשבון ישן — בונים חדש מאפס על שמך, והישן נשאר כמו שהוא."
+    },
+    {
+      "id": "q06",
+      "q": "מאיפה אתם יודעים שבכלל יש מי שמחפש את השירות שלי?",
+      "a": "אנחנו בודקים את זה לפני שנפתח קמפיין חי. המערכת מסתכלת על כמה אנשים באמת מחפשים את השירות שלך ומה עולה קליק בביטויים האלה. אם מעט מדי אנשים מחפשים, או שהפנייה צפויה לעלות יותר ממה שעבודה שלך שווה — הקמפיין לא נוצר. עדיף שתדע את זה לפני שאתה מתחיל, לא אחרי.",
+      "facts_used": [
+        "The system checks real search volume and click prices for his service before a live campaign is created; if too few people search or the expected cost per enquiry is more than his job value can carry, it is not created (demand-readiness.ts:83-109; create-campaign/route.ts:460-487)"
+      ],
+      "short": "המערכת בודקת נפח חיפוש אמיתי ומחירי קליקים לפני ההשקה, ולא פותחת קמפיין אם המספרים לא מצדיקים אותו."
+    },
+    {
+      "id": "q07",
+      "q": "אני עושה כמה דברים. המודעות יופיעו על כל השירותים?",
+      "a": "הקמפיין רץ על שירות מרכזי אחד, לא על כל הרשימה. שלושה עד חמישה ביטויי חיפוש וקבוצה אחת, כך שכל שקל הולך על הדבר שאתה רוצה שיתקשרו אליך עליו. כשמפזרים תקציב על כל השירותים, אי אפשר לדעת מה הביא את הפנייה ומה שרף את הכסף.",
+      "facts_used": [
+        "One main service, 3-5 search phrases for it, one group (prompts.ts:400; create-campaign/route.ts:672-686)"
+      ],
+      "short": "הקמפיין רץ על שירות מרכזי אחד עם שלושה עד חמישה ביטויי חיפוש, כדי שתדע מה מביא פניות ומה לא."
+    },
+    {
+      "id": "q08",
+      "q": "מה המודעה שלי תגיד, ולאן מי שלוחץ מגיע?",
+      "a": "אנחנו בונים את המודעה מנקודות המכירה האמיתיות שלך: עד 15 כותרות, ארבעה תיאורים וכפתור חיוג. מתחתיה, לפי הפרטים שמסרת, מופיעים גם רשימת השירותים, קישורים והתמונות שלך. מי שלוחץ מגיע לדף נחיתה שבראש שלו מופיע שם השירות שחיפש, עם טופס, כפתור חיוג וכפתור וואטסאפ. כל לחיצה שם נרשמת עם הקליק שהביא אותה, כך שאתה יודע מאיפה הגיעה כל פנייה.",
+      "facts_used": [
+        "An ad with up to 15 headlines and 4 descriptions built from his real selling points; call button, service list, links and his photos under it where his details allow (prompts.ts:436-443; create-campaign/route.ts:246-396, 698-721)",
+        "A landing page for that service whose headline area must contain the exact service name; form, call button and WhatsApp button, each recorded with the click that brought the person (lpCopyPrompt.ts:191-192; LandingPage.tsx:64-68, 83)"
+      ],
+      "short": "אנחנו בונים את המודעה מנקודות המכירה שלך, ודף הנחיתה פותח בשם השירות עם טופס, חיוג ווואטסאפ — וכל לחיצה משויכת לקליק שהביא אותה."
+    },
+    {
+      "id": "q09",
+      "q": "מה אם יתקשרו אליי רק מחפשי עבודה ואנשים שרוצים חינם?",
+      "a": "חסימה, מהיום הראשון. רשימה של עשר עד חמש עשרה מילים — דרושים, חינם, קורסים, איך לעשות לבד, יד שנייה ומה שאתה לא עושה — נכנסת לקמפיין לפני הקליק הראשון. אחר כך הבוט חוסם לבד חיפושים שלקחו לפחות חמישה קליקים, עלו מעל רף העלות ולא הביאו כלום. ופנייה שסימנת כזבל לא נספרת כתוצאה.",
+      "facts_used": [
+        "Block-list of 10-15 words from day one: job seekers, free, courses, how-to, second-hand, what he does not do (prompts.ts:402-403; create-campaign/route.ts:688-693)",
+        "It blocks searches that took at least five clicks, cost more than a set bar and brought nothing (search-term-scoring.ts:44-57, 224-258)",
+        "Only an enquiry marked real is counted as a result (clientLeadsActions.js:55-82; conversion-goals.js:28-29)"
+      ],
+      "short": "רשימת חסימה של עשר עד חמש עשרה מילים נכנסת מהיום הראשון, והבוט חוסם לבד חיפושים ששרפו קליקים ולא הביאו כלום."
+    },
+    {
+      "id": "q10",
+      "q": "מה עוצר את מחיר הקליק מלברוח לי?",
+      "a": "תקרה של 15 ₪ לקליק. בשלב הראשון, מצב קליקים, הבוט קונה קליקים מתחת לתקרה ולא מעלה את התקציב היומי שקבעת. וגוגל עצמה אומרת שמודעות ודף נחיתה איכותיים יכולים להוזיל את מחיר הקליק — לכן אנחנו בונים את שניהם סביב אותו שירות.",
+      "facts_used": [
+        "Stage one buys clicks with a 15 NIS ceiling on the price of a click (create-campaign/route.ts:641)",
+        "The bot never raises his daily budget above what he set (autonomy-consent.ts:44)",
+        "Google says higher quality ads can often lead to lower click prices (Google Ads Help, support.google.com/google-ads/answer/1722122, read 2026-11-12)"
+      ],
+      "short": "במצב קליקים יש תקרה של 15 ₪ לקליק, והבוט לא מעלה את התקציב היומי שקבעת."
+    },
+    {
+      "id": "q11",
+      "q": "מישהו יכול ללחוץ לי על המודעה כל היום. מה עוצר את זה?",
+      "a": "יש מסנן. הוא יושב על דף הנחיתה, והמערכת בודקת אותו כל יום. רק פנייה שסימנת כאמיתית נספרת כתוצאה, כך שקליק מזויף לא מזהם את הספירה. אתה רואה את הפניות עצמן, לא רק מספר לחיצות.",
+      "facts_used": [
+        "A fake-click filter on the landing page, checked daily (fraud-blocker/tracker.ts:5-6; autonomous-cycle.ts:248-256)",
+        "Only an enquiry marked real is counted as a result (conversion-goals.js:28-29)",
+        "All enquiries in one list (LeadsTable.tsx:81-117)"
+      ],
+      "short": "מסנן קליקים מזויפים יושב על דף הנחיתה ונבדק כל יום, ורק פניות שסימנת כאמיתיות נספרות כתוצאה."
+    },
+    {
+      "id": "q12",
+      "q": "מה אני צריך לעשות בעצמך, וכמה זמן זה ייקח לי?",
+      "a": "אתה רואה את התוכנית ומאשר פעם אחת. עד הרגע הזה הקמפיין מושהה. אחר כך כל הפניות יושבות ברשימה אחת: לחיצה מסמנת פנייה כאמיתית או כזבל, ועבודה שנסגרה אתה מסמן עם הסכום. את השאר הבוט עושה לבד, והתמיכה בכתב — רוב התשובות מהמערכת, וכשצריך נכנס בן אדם.",
+      "facts_used": [
+        "The campaign is created paused; nothing runs before he saw the plan (create-campaign/route.ts:639)",
+        "Everything runs after his one-time approval, inside visible limits (autonomyCopy.ts:5-8)",
+        "All enquiries in one list; one tap marks real or junk; a closed job is marked with its amount (LeadsTable.tsx:81-117)",
+        "Support is in writing; most questions are answered by the system, a person steps in when needed"
+      ],
+      "short": "אתה מאשר את התוכנית פעם אחת, ואחר כך רק מסמן פניות ועבודות שנסגרו — את השאר הבוט עושה."
+    },
+    {
+      "id": "q13",
+      "q": "ומה אם אני שוכח לסמן? אני בשטח כל היום.",
+      "a": "הסימון שלך הוא הדבר היחיד שהחשבון סופר כתוצאה. בלי סימונים הקמפיין נשאר במצב קליקים ולא מתקדם למצב פניות, כי אין לו מה לספור. הפניות לא נעלמות — הן יושבות ברשימה ומחכות לסימון שלך.",
+      "facts_used": [
+        "Each enquiry marked real goes back to Google tied to its click; it is the only thing the account counts as a result (clientLeadsActions.js:55-82; conversion-goals.js:28-29)",
+        "The campaign is built to move from click mode to enquiry mode after about 15 real enquiries within 60 days plus at least two closed jobs (docs/specs/ads-bot-phase2-volume-reality-2026-11-12.md §1.6)",
+        "All enquiries in one list (LeadsTable.tsx:81-117)"
+      ],
+      "short": "רק פנייה שסימנת כאמיתית נספרת כתוצאה, ובלי סימונים הקמפיין נשאר במצב קליקים."
+    },
+    {
+      "id": "q14",
+      "q": "מתי זה מתחיל לרדוף אחרי פניות אמיתיות, ומה אם אני לא מגיע לזה?",
+      "a": "הקמפיין בנוי לעבור לבד ממצב קליקים למצב פניות אחרי בערך 15 פניות אמיתיות ב־60 יום ושתי עבודות שנסגרו. בתקציב המינימלי זה בדרך כלל לוקח חודשיים עד שלושה. לא כל מקצוע ואזור מגיעים לזה בתקציב המינימלי, ואז אנחנו מראים לך איזה תקציב כן יגיע. ואם מצב פניות נותן תוצאות פחות טובות, הקמפיין חוזר לבד למצב קליקים.",
+      "facts_used": [
+        "Built to move by itself from click mode to enquiry mode after about 15 real enquiries within 60 days plus at least two closed jobs; at the minimum budget usually two to three months; not every trade and area gets there at the minimum budget, and then he is shown the budget that would; if enquiry mode does worse it goes back by itself (docs/specs/ads-bot-phase2-volume-reality-2026-11-12.md §1.6; built to because the automatic switch is scheduled, not live)"
+      ],
+      "short": "הקמפיין בנוי לעבור לבד למצב פניות אחרי כ־15 פניות אמיתיות ב־60 יום ושתי עבודות סגורות, ובתקציב המינימלי זה בדרך כלל חודשיים־שלושה."
+    },
+    {
+      "id": "q15",
+      "q": "אתם מבטיחים לי שיחות? כי כולם הבטיחו.",
+      "a": "אתה רואה את התוכנית המלאה לפני שאתה משלם, ואת כל הפניות אחרי — ברשימה אחת, עם הסכום של כל עבודה שנסגרה. הבטחה על מספר שיחות אין, כי אף אחד לא שולט במי יחפש אותך מחר. מה שכן יש: החזר של דמי הניהול ב־30 הימים הראשונים לפי התנאים שבתקנון, וחופש לעצור בכל חודש.",
+      "facts_used": [
+        "A free demo shows the plan before he pays anything (google-ads/page.tsx:86)",
+        "All enquiries in one list; a closed job is marked with its amount (LeadsTable.tsx:81-117)",
+        "30-day refund of the management fee under the conditions in the terms (Ads Bot terms §7)",
+        "No commitment; he can leave any month (plans.ts:59; Ads Bot terms §7)"
+      ],
+      "short": "אתה רואה את התוכנית לפני התשלום ואת הפניות אחרי, ויש החזר דמי ניהול ב־30 הימים הראשונים לפי התקנון — הבטחה על מספר שיחות אין."
+    },
+    {
+      "id": "q16",
+      "q": "אני יכול לעצור הכול באמצע? בלי להתחנן?",
+      "a": "יש מתג עצירה, ואתה מפעיל אותו מתי שאתה רוצה. אין התחייבות, ואפשר לעצור בכל חודש. הבוט פועל רק אחרי האישור שלך, בתוך גבולות שאתה רואה, וכל פעולה שלו נרשמת.",
+      "facts_used": [
+        "All of this runs after his one-time approval, inside visible limits, with a stop switch and an activity log (autonomyCopy.ts:5-8)",
+        "No commitment; he can leave any month (plans.ts:59; Ads Bot terms §7)"
+      ],
+      "short": "יש מתג עצירה, אין התחייבות, ואפשר לעצור בכל חודש."
+    },
+    {
+      "id": "q17",
+      "q": "מה זה הקרדיט הזה של גוגל ששמעתי עליו?",
+      "a": "גוגל מציעה כיום למפרסמים חדשים בישראל מבצע: מוציאים 1,500 ₪ על מדיה ומקבלים 1,500 ₪ קרדיט לפרסום. זה מיועד לעסקים שמעולם לא פרסמו בגוגל Ads, וגוגל בודקת זכאות וקובעת את התנאים. היא גם יכולה לשנות או להפסיק את המבצע, אז שווה לבדוק זכאות לפני שאתה בונה על זה.",
+      "facts_used": [
+        "Google's new-advertiser offer in Israel as seen in our Partner account on 2026-11-12: spend 1,500 NIS, get 1,500 NIS in ad credit; for businesses that never advertised on Google Ads; Google checks eligibility, sets the terms and can change or end it (docs/specs/ads-bot-phase2-volume-reality-2026-11-12.md, update of 2026-11-12)"
+      ],
+      "short": "גוגל מציעה למי שמעולם לא פרסם בגוגל Ads מבצע של 1,500 ₪ קרדיט על הוצאה של 1,500 ₪, בכפוף לבדיקת זכאות ולתנאים שלה."
+    },
+    {
+      "id": "q18",
+      "q": "אני יכול לראות איך זה נראה לפני שאני משלם?",
+      "a": "כן. יש דמו חינם על עסק אינסטלציה לדוגמה, שמראה לך את התוכנית המלאה לפני שאתה משלם שקל. וכשאתה מתקדם, הקמפיין שלך נוצר מושהה — שום דבר לא רץ לפני שראית אותו.",
+      "facts_used": [
+        "A free demo on a sample plumbing business shows the plan before he pays anything (google-ads/page.tsx:86)",
+        "The campaign is created paused; nothing runs before he saw the plan (create-campaign/route.ts:639)"
+      ],
+      "short": "יש דמו חינם על עסק אינסטלציה לדוגמה שמראה את התוכנית המלאה לפני שאתה משלם."
+    }
+  ],
+  "flags": [
+    "What will a real enquiry cost me in my trade and my area? The readiness gate uses an expected cost per enquiry internally, but there is no per-trade or per-area range he can be shown before launch, so the honest answer stays general.",
+    "Does the 15 NIS click ceiling still hold in enquiry mode? The facts define the ceiling for stage one only and state no cap for enquiry mode, which is exactly the follow-up a burned owner asks after q10.",
+    "Has anyone actually reached enquiry mode, and what changed for them? The automatic switch is scheduled, not live, so there is no live case or outcome to point at — only the built-to design.",
+    "What exactly do I have to do to get the 30-day refund, and what voids it? Terms §7 conditions are not spelled out in the brief, so the answer can name the term but cannot state the condition in one plain line.",
+    "What happens to my campaign, my landing page and my lead list the day I leave? No exit mechanics in the facts: who owns the landing page, whether it stays live, and what stays accessible in the account.",
+    "Can I add a second service or a second campaign later, and what does that cost? The facts cover one main service and one group only, with no expansion path or pricing.",
+    "Who is the person that steps in when the system cannot answer, and how fast do they reply? Support facts give no role and no response time, and both a name and a response time are barred here, so this question has no honest answer yet."
+  ]
+}

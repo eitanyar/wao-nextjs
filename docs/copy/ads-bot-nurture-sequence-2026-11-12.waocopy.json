@@ -1,0 +1,49 @@
+{
+  "angle": "The arc follows his shekel from a stranger's click to an enquiry he marked real: blocked words, demand check, quality pricing, budget ceiling, then what actually counts as a result. He is problem-aware and funnel-allergic, so each text teaches one waste-or-protection lesson he can use without buying, and the last one walks him back to the demo.",
+  "opt_out": "לא רוצה עוד הודעות? תכתוב ״די״ ונפסיק.",
+  "messages": [
+    {
+      "n": 1,
+      "day": 0,
+      "fact_used": "From day one, 10–15 words are blocked (job seekers, free, courses, how-to, second-hand, what he does not do); Google does not block look-alike words by itself.",
+      "text": "קליק של מחפש עבודה עולה לך כמו קליק של לקוח אמיתי. ״קורס תיקון מזגנים״, ״מזגן יד שנייה״, ״איך לתקן לבד״ — כל אלה יכולים ללחוץ על המודעה שלך, ואתה משלם. גוגל לא חוסמת לבד את המילים הדומות האלה. בוט מודעות חוסם מהיום הראשון 10–15 מילים: דרושים, חינם, קורסים, יד שנייה, ומה שאתה לא עושה. הדמו פתוח. תציץ שוב: {{demo_link}}",
+      "link": "{{demo_link}}"
+    },
+    {
+      "n": 2,
+      "day": 3,
+      "fact_used": "Before a live campaign is created, real search-volume and click-price data for his service is checked; if the numbers cannot work for his job value, it is not created.",
+      "text": "יש שירותים שאנשים כמעט לא מחפשים, וקליק בהם עולה יותר ממה שהעבודה שווה. את זה אתה יכול לבדוק גם לבד, לפני שאתה מוציא שקל. בוט מודעות בודק לפני כל קמפיין חי כמה אנשים באמת מחפשים את השירות שלך ומה עולה קליק. אם המספרים לא מסתדרים עם שווי העבודה אצלך, אנחנו לא מקימים קמפיין. בלי הימורים. שאלה על השירות שלך? תכתוב כאן, תקבל תשובה בכתב.",
+      "link": null
+    },
+    {
+      "n": 3,
+      "day": 6,
+      "fact_used": "The landing page must carry the exact service name searched; Google rates ad and page quality and says higher quality ads can often lead to lower click prices.",
+      "text": "גוגל עצמה אומרת שמודעה ודף איכותיים יותר יכולים להוזיל את הקליק. מה מרכיב את האיכות? בין השאר, הדף שהמודעה מובילה אליו. הוא חייב לשאת את שם השירות המדויק שהלקוח חיפש, לא כותרת כללית. בוט מודעות כותב את הדף סביב הביטויים האמיתיים שאנשים מקלידים. אותה שפה, מודעה ודף. גם בלי בוט מודעות, שווה לבדוק את זה בדף שלך. איך זה עובד אצלנו, צעד אחרי צעד: {{how_it_works_link}}",
+      "link": "{{how_it_works_link}}"
+    },
+    {
+      "n": 4,
+      "day": 10,
+      "fact_used": "At the start there is a ₪15 ceiling on the price of a click, and the bot never raises his daily budget above what he set.",
+      "text": "התקציב היומי שלך הוא תקרה, לא הצעה. בוט מודעות אף פעם לא מעלה אותו מעל מה שאתה קבעת. בתחילת הדרך, אף קליק לא עולה יותר מ־15 ₪. גם אם תנהל לבד, תקרת מחיר קליק ותקציב יומי קבוע הם הבלמים שלך. הכסף שלך, הקצב שלך. משהו לא ברור? תכתוב כאן, תקבל תשובה בכתב.",
+      "link": null
+    },
+    {
+      "n": 5,
+      "day": 14,
+      "fact_used": "Every enquiry lands in one list; one tap marks it real or junk; each one marked real goes back to Google from day one and is the only thing the account counts as a result.",
+      "text": "קליקים הם לא תוצאה. פניות אמיתיות הן תוצאה. כל פנייה נוחתת ברשימה אחת, ולחיצה אחת מסמנת אותה כאמיתית או כזבל. כל פנייה שסימנת כאמיתית חוזרת לגוגל מהיום הראשון, וזה הדבר היחיד שהחשבון סופר כתוצאה. בלי ניחושים. אתה סופר פניות שאישרת בעצמך. גם בלי בוט מודעות, שווה לסמן כל פנייה שנכנסה ולספור רק את האמיתיות. הדמו של WAO עדיין פתוח עם עסק לדוגמה, תציץ שוב: {{demo_link}}",
+      "link": "{{demo_link}}"
+    }
+  ],
+  "flags": [
+    "Skipped the click-mode to enquiry-mode auto-switch fact: approved design, not live, and its conditions would break the 70-word ceiling and the no-implied-switch rule.",
+    "Skipped the Google ₪1,500 credit and the ₪249 fee: neither is a waste-or-protection lesson, and the credit's eligibility caveats would read as funnel; the how-it-works page should carry both.",
+    "Message 5 states the day-one feedback to Google but stops before saying Google optimizes on his marks, to respect the stage-one bidding limit.",
+    "Message 2 tells him to check demand himself without naming a tool; if the step-by-step page has no DIY demand check, add one there.",
+    "Word counts (52–67) exclude the appended opt_out line; no demo contents are asserted, links only invite a second look.",
+    "Handoffs: Noa proofs the Hebrew, Dror checks the facts, Amit clears consent wording, opt-out and WhatsApp template category before anything is sent."
+  ]
+}
