@@ -4,6 +4,8 @@
  */
 
 /** Pricing default (2026-11-10): the fixed owner-checkable pricing promises. */
+import { DEFAULT_GENERIC_NEGATIVES, NEVER_BLOCK_NEGATIVES } from "../google-ads/default-negatives";
+
 export type PricingPromiseId = 'free_quote' | 'price_before_work' | 'price_by_phone_before_leaving' | 'no_callout_fee' | 'no_hidden_costs';
 
 /** One owner "starting from" price. */
@@ -400,7 +402,7 @@ RULES:
 3. One tight intent cluster (3–5 keywords) built from primaryService only. No mixed services or adjacent intents.
 4. Small city: no city in keyword → use radius targeting.
 5. Use exclusions to populate negative keywords.
-6. Generic negatives: דרושים, חינם, קורס, לימודים, איך לעשות, מדריך, עבודה, שכר, יד שניה.
+6. Generic negatives (phrase match): ${DEFAULT_GENERIC_NEGATIVES.join(", ")}. Never add the bare word "${NEVER_BLOCK_NEGATIVES[0]}" or "${NEVER_BLOCK_NEGATIVES[1]}" as a negative: free-quote and free-consultation searches are buyers.
 7. If noDigitalFootprint=true → note: client needs Google Business Profile set up first.
 8. BIDDING STRATEGY — cold-start rule (no conversion data):
    - Default for ALL cold-start accounts: Maximize Clicks with a max CPC cap. The system sets that cap per trade (lawyers ~₪28–35, dentists and locksmiths ~₪20, everything else ~₪15); do not compute or promise a different cap.

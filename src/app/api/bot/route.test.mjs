@@ -189,6 +189,8 @@ function loadPost(environment, qwenCalls, geminiCalls) {
     if (name === 'next/server') return { NextResponse: { json: (data, opts) => Response.json(data, opts) } };
     if (name === '@/lib/bot/prompts') return { ADAM_SYSTEM_PROMPT: 'adam', DROR_SYSTEM_PROMPT: 'dror', TAMAR_SYSTEM_PROMPT: 'tamar', T21_PHOTO_ASK_VERSION: 'test' };
     if (name === '@/lib/ads/keywordPlanner') return { getEstimatedCPC: async () => null };
+    if (name === '@/lib/google-ads/default-negatives') return { DEFAULT_GENERIC_NEGATIVES: [] };
+    if (name === '@/lib/google-ads/keyword-normalize') return { normalizeNegativeKeywords: (list) => list };
     if (name === '@/lib/google-ads/onboarding-response') return { resolveBoundedOnboardingResponse: async ({ live, timeoutMs }) => {
       assert.equal(timeoutMs, 12000);
       return live();

@@ -10,10 +10,19 @@
  * `+` (the retired Broad Match Modifier) and stray symbols are stripped, whitespace is
  * collapsed, empties are rejected and duplicates (same text + match type) are dropped.
  *
- * Pure: no network, no Google Ads SDK. HEBREW-SAFETY: this module contains ZERO Hebrew bytes.
+ * Pure: no network, no Google Ads SDK. HEBREW-SAFETY: this module contains ZERO Hebrew bytes
+ * (the Hebrew negative lists live in default-negatives.ts).
  */
 
+import { isNeverBlockNegative } from './default-negatives';
+
 export type NormalizedMatchType = 'EXACT' | 'PHRASE';
+
+/**
+ * Every ad-group negative is sent as PHRASE match: a multi-word negative ("download free")
+ * blocks only that phrase in order, never each word on its own. Was BROAD before 2026-11-12.
+ */
+export const NEGATIVE_MATCH_TYPE = 'PHRASE' as const;
 
 export interface NormalizedKeyword {
   text: string;
@@ -77,7 +86,9 @@ export function normalizeKeywords(raw: unknown): NormalizedKeyword[] {
 
 /**
  * Negative keywords: same cleaning, but the display notation decides nothing here, the
- * caller sends them as ad-group negatives. Returns plain, deduped texts.
+ * caller sends them as ad-group negatives with NEGATIVE_MATCH_TYPE. Returns plain, deduped
+ * texts, and drops the never-block words (bare "free", see default-negatives.ts) even when the
+ * strategy model emits them.
  */
 export function normalizeNegativeKeywords(raw: unknown): string[] {
   if (!Array.isArray(raw)) return [];
@@ -86,6 +97,7 @@ export function normalizeNegativeKeywords(raw: unknown): string[] {
   for (const entry of raw) {
     const normalized = normalizeKeyword(entry);
     if (!normalized) continue;
+    if (isNeverBlockNegative(normalized.text)) continue;
     const key = normalized.text.toLowerCase();
     if (seen.has(key)) continue;
     seen.add(key);

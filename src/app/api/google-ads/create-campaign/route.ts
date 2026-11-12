@@ -30,7 +30,7 @@ import {
   readConversionGoalState,
 } from '@/lib/google-ads/conversion-goals';
 import { recordGoalChange } from '@/lib/google-ads/bidding-phase-state';
-import { validateCampaignStrategy, type NormalizedKeyword } from '@/lib/google-ads/keyword-normalize';
+import { validateCampaignStrategy, NEGATIVE_MATCH_TYPE, type NormalizedKeyword } from '@/lib/google-ads/keyword-normalize';
 import {
   buildGeoTargetTypeSetting,
   buildLocationCriteria,
@@ -794,7 +794,7 @@ export async function POST(req: Request) {
         ad_group: adGroupResourceName,
         status: enums.AdGroupCriterionStatus.ENABLED,
         negative: true,
-        keyword: { text: kw, match_type: enums.KeywordMatchType.BROAD },
+        keyword: { text: kw, match_type: enums.KeywordMatchType[NEGATIVE_MATCH_TYPE] }, // PHRASE, never BROAD
       })),
     ]);
 

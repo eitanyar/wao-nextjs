@@ -1,3 +1,5 @@
+import { DEFAULT_GENERIC_NEGATIVES } from "@/lib/google-ads/default-negatives";
+import { normalizeNegativeKeywords } from "@/lib/google-ads/keyword-normalize";
 import { NextResponse } from "next/server";
 import { ADAM_SYSTEM_PROMPT, DROR_SYSTEM_PROMPT, TAMAR_SYSTEM_PROMPT, T21_PHOTO_ASK_VERSION, CollectedData } from "@/lib/bot/prompts";
 import { getEstimatedCPC } from "@/lib/ads/keywordPlanner";
@@ -736,7 +738,8 @@ function generateMockCampaign(data: CollectedData) {
   let strategyRationale = "";
   let copywritingRationale = "";
 
-  const genericNegatives = ["דרושים", "חינם", "קורס", "לימודים", "איך לעשות", "מדריך", "עבודה", "שכר", "יד שניה"];
+  // Day-one defaults live in src/lib/google-ads/default-negatives.ts (Noa-proofed phrases, no bare "free").
+  const genericNegatives = [...DEFAULT_GENERIC_NEGATIVES];
 
   if (isPlumber) {
     keywords = ["אינסטלטור מומלץ", "תיקון נזילות", "פתיחת סתימות", "אינסטלטור 24 שעות", "מאתר נזילות"];
@@ -983,6 +986,10 @@ Phone: ${collectedData.phone}
       const fallback = generateFallbackStrategyAndCopy(collectedData);
       drorData = fallback.strategy as unknown as Record<string, any>;
       tamarData = fallback.copy as unknown as Record<string, any>;
+    }
+    // The strategy model may still emit bare "free": drop it (and clean notation) before the panel shows it.
+    if (Array.isArray(drorData.negativeKeywords)) {
+      drorData.negativeKeywords = normalizeNegativeKeywords(drorData.negativeKeywords);
     }
 
     const presentPrompt = `

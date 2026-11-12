@@ -154,6 +154,8 @@
     "src/lib/google-ads/geo-targeting.test.ts",
     "src/lib/google-ads/keyword-normalize.ts",
     "src/lib/google-ads/keyword-normalize.test.ts",
+    "src/lib/google-ads/default-negatives.ts",
+    "src/lib/google-ads/default-negatives.test.ts",
     "src/lib/google-ads/cpc-cap.ts",
     "src/lib/google-ads/cpc-cap.test.ts",
     "src/lib/google-ads/campaign-setup-readback.ts",
