@@ -491,6 +491,32 @@ export function buildClientWeekNumbers(input: {
 }
 
 /**
+ * Whether this client's enquiries land in WAO's lead list (`leads.json`). Decided from the bound
+ * campaign's `finalUrl` in `google-ads.json`: a WAO-hosted page (`wao.co.il` or a `*.wao.co.il`
+ * subdomain) captures form / call / WhatsApp taps; any other host (the client's own site, e.g.
+ * founder-managed accounts) does not, so the CRM count would read a false zero. With no
+ * `finalUrl` recorded, a campaign WAO created (it always has a verified-lead conversion action)
+ * counts as captured; anything else as not captured.
+ */
+export const WAO_SITE_HOST = 'wao.co.il';
+
+export function leadsCapturedByWao(
+  index: Pick<GoogleAdsClientIndex, 'campaigns'> | null | undefined,
+  campaign: Pick<CampaignConfig, 'slug' | 'verifiedLeadConversionResourceName'>,
+): boolean {
+  const link = index?.campaigns?.find(c => c.slug === campaign.slug);
+  if (link?.finalUrl) {
+    try {
+      const host = new URL(link.finalUrl).hostname.toLowerCase();
+      return host === WAO_SITE_HOST || host.endsWith(`.${WAO_SITE_HOST}`);
+    } catch {
+      return false;
+    }
+  }
+  return Boolean(campaign.verifiedLeadConversionResourceName);
+}
+
+/**
  * Separate ownership check from `buildWeeklyDigest`'s own scoping filter
  * (above) — both are strict (no untagged-lead wildcard) as of the Aug 2026
  * data-quality fix, but this one checks membership against ALL of a

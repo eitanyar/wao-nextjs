@@ -3,6 +3,7 @@ import * as path from 'path';
 import { clientsDir } from '../dataRoots';
 import {
   buildWeeklyDigest,
+  leadsCapturedByWao,
   loadClientGoogleAdsIndex,
   loadCampaignConfigBySlug,
   type CampaignConfig,
@@ -11,6 +12,7 @@ import {
 import {
   enumerateEnabledCampaigns,
   computeBlendedCplDisplay,
+  readWeeklySpendIls,
   type EnumeratedCampaign,
 } from '@/lib/google-ads/campaign-enumeration';
 
@@ -57,6 +59,13 @@ export interface ClientDigestResult {
    * read by any gating function; every gate operates on one entry of `digests` at a time.
    */
   blended?: { spendIls: number; conversions: number; cpl: number | undefined };
+  /**
+   * Client WhatsApp digest (2026-11-12): whether this client's enquiries are in WAO's lead list
+   * (`leadsCapturedByWao`). `external` -> staff page does not build the client digest link.
+   */
+  leadCapture?: 'wao' | 'external';
+  /** Google-reported spend over LAST_7_DAYS (read-only). Undefined when not read or the read failed. */
+  weekSpendIls?: number;
   error?: string;
 }
 
@@ -91,6 +100,16 @@ export async function buildAllClientDigests(now?: Date): Promise<ClientDigestRes
         continue;
       }
 
+      // Client WhatsApp digest: only WAO-captured clients get the weekly spend read (read-only,
+      // fail-soft: a failed read leaves weekSpendIls undefined and the cost line hidden).
+      const leadCapture: 'wao' | 'external' = leadsCapturedByWao(index, campaign) ? 'wao' : 'external';
+      let weekSpendIls: number | undefined;
+      if (leadCapture === 'wao') {
+        const spend = await readWeeklySpendIls({ customerId: index.primaryCustomerId, mode: campaign.mode === 'live' ? 'live' : 'test' });
+        if (spend.ok) weekSpendIls = spend.spendIls;
+        else console.warn('[weekly-digest-batch] weekly spend read failed for client', clientId, spend.error);
+      }
+
       // §8.3 — enumerate every ENABLED campaign under this client's live customerId, not just
       // `index.primaryCampaignId` (the single WAO-bound, "highest spend at onboarding" campaign
       // that caused the AAAsada/Retter accuracy bug, §8.0).
@@ -106,7 +125,7 @@ export async function buildAllClientDigests(now?: Date): Promise<ClientDigestRes
         // performance) rather than going dark for this client — matches the pre-existing
         // fail-soft convention for every other live-pull site in this pipeline.
         const digest = buildWeeklyDigest({ campaign, now });
-        results.push({ clientId, status: 'ok', campaign, digest, digests: [], blended: undefined });
+        results.push({ clientId, status: 'ok', campaign, digest, digests: [], blended: undefined, leadCapture, weekSpendIls });
         continue;
       }
 
@@ -140,6 +159,8 @@ export async function buildAllClientDigests(now?: Date): Promise<ClientDigestRes
         // §8.5 — display-only roll-up, computed from the raw enumeration output, never from
         // any of the per-campaign `digests` gating fields.
         blended: computeBlendedCplDisplay(enumerated),
+        leadCapture,
+        weekSpendIls,
       });
     } catch (error) {
       results.push({

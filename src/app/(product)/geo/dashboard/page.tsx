@@ -12,7 +12,7 @@ import CriticPanel from '@/components/geo/CriticPanel';
 import { buildApprovalLink } from '@/lib/geo/whatsapp';
 import { buildAllClientDigests } from '@/lib/google-ads/weekly-digest-batch';
 import { buildClientWeekNumbers } from '@/lib/crm/intelligence';
-import { buildWeeklyDigestWhatsAppLink } from '@/lib/google-ads/whatsapp-digest';
+import { weeklyDigestSendState } from '@/lib/google-ads/whatsapp-digest';
 
 export const metadata = { robots: { index: false } };
 
@@ -131,6 +131,19 @@ export default async function GeoDashboard() {
 
         const hasPhone   = !!client.approvalWhatsapp;
         const totalScore = actions.reduce((s, a) => s + a.score, 0);
+        // Client WhatsApp digest: no link at all for clients whose enquiries are not in WAO's lead list.
+        const digestSend = adsResult?.status === 'ok' && adsResult.campaign && adsResult.digest
+          ? weeklyDigestSendState({
+              leadCapture: adsResult.leadCapture,
+              contactPhone: client.approvalWhatsapp,
+              // Empty name -> the template's bare greeting (no name, no double space).
+              contactName: client.approvalContact || '',
+              campaignName: adsResult.campaign.businessName || adsResult.campaign.slug,
+              digest: adsResult.digest,
+              week: buildClientWeekNumbers({ campaign: adsResult.campaign }),
+              weekSpendIls: adsResult.weekSpendIls,
+            })
+          : null;
 
         return (
           <section key={clientId} className="mb-12">
@@ -164,18 +177,14 @@ export default async function GeoDashboard() {
                     </span>
                   </div>
                   <SendButton
-                    waLink={buildWeeklyDigestWhatsAppLink({
-                      contactPhone: client.approvalWhatsapp,
-                      // Empty name -> the template's bare greeting (no name, no double space).
-                      contactName: client.approvalContact || '',
-                      campaignName: adsResult.campaign.businessName || adsResult.campaign.slug,
-                      digest: adsResult.digest,
-                      week: buildClientWeekNumbers({ campaign: adsResult.campaign }),
-                    })}
+                    waLink={digestSend?.enabled ? digestSend.waLink : ''}
                     label={`שלח סיכום ל${client.approvalContact || 'לקוח'}`}
-                    disabled={!hasPhone}
+                    disabled={!hasPhone || !digestSend?.enabled}
                   />
                 </div>
+                {digestSend && !digestSend.enabled && (
+                  <p dir="ltr" className="mb-2 text-xs text-yellow-400" data-testid="digest-disabled-note">{digestSend.note}</p>
+                )}
                 {/* §8.5 — display-only blended roll-up across every enumerated campaign, shown
                     alongside (never instead of) the per-campaign digest above. Never a gating
                     input; labeled explicitly as a roll-up, not a health metric. */}

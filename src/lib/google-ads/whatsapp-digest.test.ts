@@ -3,9 +3,13 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
 import test from 'node:test';
-import { buildClientWeekNumbers, type LeadRecord, type WeeklyDigest } from '../crm/intelligence';
+import { buildClientWeekNumbers, leadsCapturedByWao, type LeadRecord, type WeeklyDigest } from '../crm/intelligence';
+import { WEEKLY_SPEND_QUERY, fetchWeeklySpendIls, readWeeklySpendIls } from './campaign-enumeration';
+import type { buildClient } from './mutations';
 import {
   CLIENT_LEADS_URL,
+  DIGEST_DISABLED_EXTERNAL_LEADS_NOTE,
+  weeklyDigestSendState,
   buildWeeklyDigestWhatsAppLink,
   composeWeeklyDigestWhatsAppMessage,
   formatWholeShekels,
@@ -176,4 +180,108 @@ test('wa.me link: weekly spend used only when the digest covers the same 7 days;
   assert.ok(!monthly.includes(T('alerts_all_clear')));
   assert.doesNotMatch(monthly, /Staff-only/);
   assertAllFromTemplate(monthly);
+});
+
+// ── Weekly spend read (read-only, mocked client) ──
+function withLiveEnv<T>(run: () => Promise<T>): Promise<T> {
+  const prev = { token: process.env.GOOGLE_ADS_REFRESH_TOKEN, mcc: process.env.GOOGLE_ADS_MCC_CUSTOMER_ID };
+  process.env.GOOGLE_ADS_REFRESH_TOKEN = 'synthetic-live-token';
+  process.env.GOOGLE_ADS_MCC_CUSTOMER_ID = '999-888-7777';
+  return run().finally(() => {
+    if (prev.token === undefined) delete process.env.GOOGLE_ADS_REFRESH_TOKEN; else process.env.GOOGLE_ADS_REFRESH_TOKEN = prev.token;
+    if (prev.mcc === undefined) delete process.env.GOOGLE_ADS_MCC_CUSTOMER_ID; else process.env.GOOGLE_ADS_MCC_CUSTOMER_ID = prev.mcc;
+  });
+}
+function mockClient(query: (gaql: string) => Promise<unknown[]>, seen: string[] = []) {
+  return {
+    Customer: (opts: { customer_id: string }) => {
+      seen.push(opts.customer_id);
+      return { query };
+    },
+  } as unknown as ReturnType<typeof buildClient>;
+}
+
+test('weekly spend query is a read-only customer-level LAST_7_DAYS cost read', () => {
+  assert.match(WEEKLY_SPEND_QUERY, /^\s*SELECT metrics\.cost_micros\s+FROM customer\s+WHERE segments\.date DURING LAST_7_DAYS\s*$/);
+});
+
+test('7-day spend 3,700 / markedReal 3 -> the 1,233 cost line is present', () => withLiveEnv(async () => {
+  const queries: string[] = [];
+  const customers: string[] = [];
+  const client = mockClient(async (gaql) => {
+    queries.push(gaql);
+    return [{ metrics: { cost_micros: '2500000000' } }, { metrics: { cost_micros: 1_200_000_000 } }];
+  }, customers);
+  const spend = await readWeeklySpendIls({ customerId: '8344335641', mode: 'live', clientInstance: client });
+  assert.deepEqual(spend, { ok: true, spendIls: 3700 });
+  assert.deepEqual(queries, [WEEKLY_SPEND_QUERY]);
+  assert.deepEqual(customers, ['8344335641']);
+  const week = { windowDays: 7, windowStart: '', windowEnd: '', leadsIn: 5, markedReal: 3, unmarked: 1, closedDeals: 1 };
+  const msg = decode(buildWeeklyDigestWhatsAppLink({
+    contactPhone: '972500000000', contactName: 'Dana', campaignName: 'Acme',
+    digest: digest(30, 9000), week, weekSpendIls: spend.ok ? spend.spendIls : undefined,
+  }));
+  assert.ok(msg.split('\n').includes(T('cost_per_real').replace('{costPerReal}', '1,233')));
+  assertAllFromTemplate(msg);
+}));
+
+test('weekly spend read failure -> cost line hidden, never estimated', () => withLiveEnv(async () => {
+  const failing = mockClient(async () => { throw new Error('PERMISSION_DENIED'); });
+  const spend = await readWeeklySpendIls({ customerId: '1', clientInstance: failing });
+  assert.equal(spend.ok, false);
+  const failedSpend: number | undefined = undefined;
+  const bad = await fetchWeeklySpendIls({ customer: { query: async () => [{ metrics: { cost_micros: 'NaN' } }] } });
+  assert.equal(bad.ok, false);
+  const week = { windowDays: 7, windowStart: '', windowEnd: '', leadsIn: 5, markedReal: 3, unmarked: 0, closedDeals: 0 };
+  // 30-day digest (the staff page's) + failed read -> no spend source at all.
+  const msg = decode(buildWeeklyDigestWhatsAppLink({
+    contactPhone: '972500000000', contactName: 'Dana', campaignName: 'Acme',
+    digest: digest(30, 9000), week, weekSpendIls: failedSpend,
+  }));
+  assert.ok(!msg.includes(T('cost_per_real').split('{')[0]));
+  assertAllFromTemplate(msg);
+}));
+
+// ── Own-domain clients: no client digest link ──
+test('leadsCapturedByWao: WAO-hosted final URL yes, own domain no; no URL -> WAO-created campaign only', () => {
+  const idx = (finalUrl?: string) => ({ campaigns: [{ slug: 's', customerId: '1', campaignId: '2', createdAt: '', finalUrl }] });
+  const waoCampaign = { slug: 's', verifiedLeadConversionResourceName: 'customers/1/conversionActions/2' };
+  const founderCampaign = { slug: 's', verifiedLeadConversionResourceName: null };
+  assert.equal(leadsCapturedByWao(idx('https://emergency-trades-4567.wao.co.il'), founderCampaign), true);
+  assert.equal(leadsCapturedByWao(idx('https://www.wao.co.il/lp/s'), founderCampaign), true);
+  assert.equal(leadsCapturedByWao(idx('https://www.retter.co.il/'), waoCampaign), false);
+  assert.equal(leadsCapturedByWao(idx('https://aaasada.com/'), waoCampaign), false);
+  assert.equal(leadsCapturedByWao(idx('https://notwao.co.il/'), waoCampaign), false);
+  assert.equal(leadsCapturedByWao(idx('not a url'), waoCampaign), false);
+  assert.equal(leadsCapturedByWao(idx(undefined), waoCampaign), true);
+  assert.equal(leadsCapturedByWao(idx(undefined), founderCampaign), false);
+  assert.equal(leadsCapturedByWao(null, founderCampaign), false);
+});
+
+test('send state: external lead capture -> disabled with the staff-only note and no link; WAO -> link', () => {
+  const week = buildClientWeekNumbers({ campaign, leads: LEADS, now: NOW });
+  const base = { contactPhone: '972500000000', contactName: 'Dana', campaignName: 'Acme', digest: digest(30, 9000), week };
+  for (const leadCapture of ['external', undefined] as const) {
+    const off = weeklyDigestSendState({ ...base, leadCapture });
+    assert.deepEqual(off, { enabled: false, note: DIGEST_DISABLED_EXTERNAL_LEADS_NOTE });
+  }
+  assert.match(DIGEST_DISABLED_EXTERNAL_LEADS_NOTE, /^[\x20-\x7E]+$/);
+  const on = weeklyDigestSendState({ ...base, leadCapture: 'wao' });
+  assert.equal(on.enabled, true);
+  if (on.enabled) assert.match(on.waLink, /^https:\/\/wa\.me\/972500000000\?text=/);
+});
+
+test('staff page + batch wiring: send state gates the link; spend read only for WAO-captured clients', () => {
+  const page = fs.readFileSync(path.join(process.cwd(), 'src/app/(product)/geo/dashboard/page.tsx'), 'utf8');
+  assert.match(page, /weeklyDigestSendState\(\{\s*leadCapture: adsResult\.leadCapture,/);
+  assert.match(page, /weekSpendIls: adsResult\.weekSpendIls,/);
+  assert.match(page, /waLink=\{digestSend\?\.enabled \? digestSend\.waLink : ''\}/);
+  assert.match(page, /disabled=\{!hasPhone \|\| !digestSend\?\.enabled\}/);
+  assert.match(page, /\{digestSend\.note\}/);
+  assert.doesNotMatch(page, /buildWeeklyDigestWhatsAppLink/);
+  const batch = fs.readFileSync(path.join(process.cwd(), 'src/lib/google-ads/weekly-digest-batch.ts'), 'utf8');
+  assert.match(batch, /const leadCapture: 'wao' \| 'external' = leadsCapturedByWao\(index, campaign\)/);
+  assert.match(batch, /if \(leadCapture === 'wao'\) \{\s*const spend = await readWeeklySpendIls\(/);
+  assert.equal((batch.match(/leadCapture, weekSpendIls/g) ?? []).length, 1);
+  assert.match(batch, /leadCapture,\s*weekSpendIls,\s*\}\);/);
 });

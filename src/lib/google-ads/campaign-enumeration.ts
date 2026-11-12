@@ -238,6 +238,57 @@ export async function enumerateEnabledCampaigns(params: {
 }
 
 /**
+ * Read-only weekly spend for the client WhatsApp digest's cost-per-real-enquiry (2026-11-12).
+ * Customer-level total `metrics.cost_micros` over Google's `LAST_7_DAYS` (the 7 full days before
+ * today, account time zone), every campaign whatever its status, so a campaign paused mid-week
+ * still counts. No mutations. Never throws: `{ ok: false }` on any API / credential / data
+ * error, and the caller hides the cost line rather than estimating it.
+ */
+export const WEEKLY_SPEND_QUERY = `
+      SELECT metrics.cost_micros
+      FROM customer
+      WHERE segments.date DURING LAST_7_DAYS
+    `;
+
+export async function fetchWeeklySpendIls(params: {
+  customer: { query: (gaql: string) => Promise<unknown[]> };
+}): Promise<{ ok: true; spendIls: number } | { ok: false; error: string }> {
+  try {
+    const rows = (await params.customer.query(WEEKLY_SPEND_QUERY)) as Array<{ metrics?: { cost_micros?: string | number | null } }>;
+    if (!Array.isArray(rows)) return { ok: false, error: 'weekly spend query returned no rows array' };
+    let micros = 0;
+    for (const row of rows) {
+      const v = Number(row?.metrics?.cost_micros ?? 0);
+      if (!Number.isFinite(v) || v < 0) return { ok: false, error: `bad cost_micros: ${row?.metrics?.cost_micros}` };
+      micros += v;
+    }
+    return { ok: true, spendIls: micros / 1_000_000 };
+  } catch (err) {
+    return { ok: false, error: err instanceof Error ? err.message : String(err) };
+  }
+}
+
+/** Resolves the customer the same way enumeration does, then reads the weekly spend. Never throws. */
+export async function readWeeklySpendIls(params: {
+  customerId: string;
+  mode?: 'test' | 'live';
+  clientInstance?: ReturnType<typeof buildClient>;
+}): Promise<{ ok: true; spendIls: number } | { ok: false; error: string }> {
+  try {
+    const adsAccount = resolveAdsAccount(params.mode ?? 'live');
+    const client = params.clientInstance || buildClient();
+    const customer = client.Customer({
+      customer_id: params.customerId,
+      login_customer_id: adsAccount.mccId,
+      refresh_token: adsAccount.refreshToken,
+    });
+    return await fetchWeeklySpendIls({ customer: customer as unknown as { query: (gaql: string) => Promise<unknown[]> } });
+  } catch (err) {
+    return { ok: false, error: err instanceof Error ? err.message : String(err) };
+  }
+}
+
+/**
  * §8.5 — a true blended CPL, trivially computable from the enumeration output. This is
  * DISPLAY-ONLY: useful for founder-facing "total spend / total leads / blended CPL"
  * reconciliation (e.g. AAAsada's ~₪77.41/lead reconciling with the founder's observed

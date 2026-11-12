@@ -113,27 +113,46 @@ export function composeWeeklyDigestWhatsAppMessage(input: WeeklyDigestMessageInp
   return out.join('\n');
 }
 
-/**
- * The staff "send digest" wa.me link. `week` is the owner-facing numbers; `digest` only supplies the open-alert
- * count and, when its window is exactly the same 7 days and a live spend was pulled, the weekly spend.
- */
-export function buildWeeklyDigestWhatsAppLink(params: {
+export interface WeeklyDigestLinkParams {
   contactPhone: string;
   contactName: string;
   campaignName: string;
   digest: WeeklyDigest;
   week: ClientWeekNumbers;
+  /** Google-reported spend for the week (readWeeklySpendIls). Wins over the digest's own spend. */
+  weekSpendIls?: number;
   leadsLink?: string;
-}): string {
+}
+
+/**
+ * The staff "send digest" wa.me link. `week` is the owner-facing numbers; `digest` supplies the open-alert count
+ * and, only when no explicit `weekSpendIls` is given and its window is the same 7 days, the weekly spend.
+ */
+export function buildWeeklyDigestWhatsAppLink(params: WeeklyDigestLinkParams): string {
   const { digest, week } = params;
   const sameWeek = digest.windowDays === week.windowDays;
+  const weekSpendIls = params.weekSpendIls ?? (sameWeek ? digest.totals.spendIls : undefined);
   const message = composeWeeklyDigestWhatsAppMessage({
     contactName: params.contactName,
     campaignName: params.campaignName,
     week,
-    weekSpendIls: sameWeek ? digest.totals.spendIls : undefined,
+    weekSpendIls,
     openAlerts: digest.alerts.length,
     leadsLink: params.leadsLink ?? CLIENT_LEADS_URL,
   });
   return buildWaLink(params.contactPhone, message);
+}
+
+/** Staff-only note (internal page, English) when the client digest is not offered. */
+export const DIGEST_DISABLED_EXTERNAL_LEADS_NOTE = "Digest disabled: this client's enquiries are not captured in the WAO lead list.";
+
+export type WeeklyDigestSendState = { enabled: true; waLink: string } | { enabled: false; note: string };
+
+/**
+ * Whether the staff page offers the client digest. Clients whose enquiries are not captured in WAO's lead list
+ * (own-domain / founder-managed) would get false zeros, so no link is built for them at all.
+ */
+export function weeklyDigestSendState(params: WeeklyDigestLinkParams & { leadCapture: 'wao' | 'external' | undefined }): WeeklyDigestSendState {
+  if (params.leadCapture !== 'wao') return { enabled: false, note: DIGEST_DISABLED_EXTERNAL_LEADS_NOTE };
+  return { enabled: true, waLink: buildWeeklyDigestWhatsAppLink(params) };
 }
