@@ -71,7 +71,8 @@ test('uploadLeadConversion signature and UploadResult shape are unchanged from P
   assert.match(source, /export async function uploadLeadConversion\(\s*\{ leadId, type \}: UploadLeadConversionParams,/);
   assert.match(source, /export type UploadResult =/);
   assert.match(source, /\{ skipped: true; reason: 'no_click_id'; message: string \}/);
-  assert.match(source, /\{ success: true; leadId: number; type: ConversionType; conversionValue: number \}/);
+  // ads-bot-phase2 spec §3 0c (2026-11-12): additive optional `requestId` on success.
+  assert.match(source, /\{ success: true; leadId: number; type: ConversionType; conversionValue: number; requestId\?: string \}/);
   assert.match(source, /\{ success: false; leadId: number; type: ConversionType; partialError: string; status: 207 \}/);
 });
 

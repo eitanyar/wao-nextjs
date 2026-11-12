@@ -14,6 +14,8 @@
  * same signatures, same request/response shape (spec §1).
  */
 
+import { parseLeadDateUtc } from '../crm/leadDate.js';
+
 /**
  * `productDestinationId` is a bare numeric conversion-action ID, not the
  * resource-name string (`customers/{id}/conversionActions/{id}`) that
@@ -159,10 +161,16 @@ export async function sendConversionEvent({
   }
 }
 
-/** RFC 3339, e.g. 2026-08-02T14:30:00+03:00 (spec §1) — Israel = UTC+3. */
+/**
+ * RFC 3339 instant for `events[].eventTimestamp`, always in UTC (`…Z`).
+ *
+ * Fixed 2026-11-12 (ads-bot-phase2 spec §3 0b / F4): this used to print the UTC wall-clock and
+ * glue `+03:00` onto it, which moved every conversion at least 3 hours earlier than it really
+ * happened (often before the ad click, which Google rejects). Zoneless lead dates are UTC (see
+ * `parseLeadDateUtc`); strings that carry a zone keep it. Unparseable input falls back to now,
+ * as before.
+ */
 export function toEventTimestamp(isoOrDisplay) {
-  const offset = '+03:00';
-  const d = new Date(isoOrDisplay.includes('T') ? isoOrDisplay : isoOrDisplay.replace(' ', 'T'));
-  const safe = isNaN(d.getTime()) ? new Date() : d;
-  return safe.toISOString().slice(0, 19) + offset;
+  const d = parseLeadDateUtc(isoOrDisplay);
+  return (d ?? new Date()).toISOString();
 }

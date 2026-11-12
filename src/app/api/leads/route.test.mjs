@@ -5,6 +5,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import vm from 'node:vm';
 import ts from 'typescript';
+import * as leadConversionUploads from '../../../lib/crm/leadConversionUploads.js';
 
 const baseDir = path.dirname(fileURLToPath(import.meta.url));
 const routePath = path.join(baseDir, 'route.ts');
@@ -45,7 +46,11 @@ function createRouteHarness({ authorized = false, leads = [] } = {}) {
           findLeadById: (storedLeads, id) => storedLeads.find((lead) => lead.id === id),
           readLeads: async () => { calls.read += 1; return fixtureLeads; },
           writeLeads: async () => { calls.write += 1; },
+          patchLead: async () => { calls.write += 1; },
         };
+      case '@/lib/crm/leadConversionUploads':
+        // The real (pure) orchestration module; only its injected upload is synthetic.
+        return leadConversionUploads;
       case '@/lib/google-ads/conversion-upload':
         return { uploadLeadConversion: async () => { calls.conversion += 1; return { success: true }; } };
       case '@/lib/crm/intelligence':

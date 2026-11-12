@@ -44,7 +44,8 @@ function loadRoute(options: { kind?: GoogleAdsOperatorTask['kind']; authenticate
     },
     '@/lib/mail': { sendGoogleAdsOperatorApprovalEmail: async () => { track('email'); if (!options.kind) fail('email'); } },
     '@/lib/google-ads/executor': { executeGoogleAdsOperatorTask: async () => { track('executor'); if (!options.kind) fail('executor'); return { success: true }; } },
-    '@/lib/google-ads/campaign-enumeration': { enumerateEnabledCampaigns: async () => { track('enumerate'); return [{ campaignId: '456', campaignName: 'Synthetic', spendIls: 0, conversions: 0 }]; } },
+    // cplGateConversions: the route's 0g gate count (ads-bot-phase2 spec §3); this synthetic campaign has no verified-lead source, so all_conversions.
+    '@/lib/google-ads/campaign-enumeration': { enumerateEnabledCampaigns: async () => { track('enumerate'); return [{ campaignId: '456', campaignName: 'Synthetic', spendIls: 0, conversions: 0 }]; }, cplGateConversions: (c: { conversions: number }) => c.conversions },
     '@/lib/google-ads/campaignAge': { evaluateCampaignAge: () => ({ phase: 'growth', ageDays: 30 }) },
   };
   const source = fs.readFileSync(path.join(process.cwd(), 'src/app/api/google-ads/operator-task/route.ts'), 'utf8');

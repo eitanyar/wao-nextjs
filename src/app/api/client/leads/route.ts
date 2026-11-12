@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { COOKIE_NAME, verifySessionToken } from '@/lib/client-auth';
 import { loadClientGoogleAdsIndex } from '@/lib/crm/intelligence';
-import { readLeads, writeLeads } from '@/lib/crm/leadsStore';
+import { readLeads, writeLeads, patchLead } from '@/lib/crm/leadsStore';
 import { uploadLeadConversion } from '@/lib/google-ads/conversion-upload';
 import { leadMatchesClientIndex } from '@/lib/crm/ownership';
 import { applyClientLeadFeedback } from '@/lib/crm/clientLeadsActions';
@@ -75,6 +75,7 @@ export async function POST(req: Request) {
     clientIndex,
     writeLeads,
     uploadLeadConversion,
+    patchLead,
   });
 
   return NextResponse.json(result.body, { status: result.status });

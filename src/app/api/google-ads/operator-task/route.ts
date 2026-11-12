@@ -15,7 +15,7 @@ import {
 } from '@/lib/google-ads/operator';
 import { sendGoogleAdsOperatorApprovalEmail } from '@/lib/mail';
 import { executeGoogleAdsOperatorTask } from '@/lib/google-ads/executor';
-import { enumerateEnabledCampaigns } from '@/lib/google-ads/campaign-enumeration';
+import { cplGateConversions, enumerateEnabledCampaigns } from '@/lib/google-ads/campaign-enumeration';
 import { evaluateCampaignAge } from '@/lib/google-ads/campaignAge';
 
 /**
@@ -45,6 +45,8 @@ async function buildMergedTasks(params: {
     customerId,
     clientId,
     mode: campaign.mode === 'live' ? 'live' : 'test',
+    // ads-bot-phase2 spec §3 0f/0g: the CPL-ceiling gate counts verified leads only.
+    verifiedLeadConversionResourceName: campaign.verifiedLeadConversionResourceName,
   });
 
   const digestsByCampaignId = new Map<string | undefined, WeeklyDigest>();
@@ -65,6 +67,9 @@ async function buildMergedTasks(params: {
 
   const allTasks: GoogleAdsOperatorTask[] = [];
   for (const c of enumerated) {
+    // 0g: fail closed — the verified-lead read failed, so this campaign gets no gated tasks now.
+    const gateConversions = cplGateConversions(c);
+    if (gateConversions === undefined) continue;
     // 7-day digest for alert/pacing/next-action copy (unchanged cadence), 30-day digest for
     // the §4A.5 CPL-ceiling/baseline-watch gates — same split the pre-existing single-campaign
     // code already used, now applied per enumerated campaign instead of once for the client.
@@ -72,7 +77,7 @@ async function buildMergedTasks(params: {
     const cplDigest = buildWeeklyDigest({
       campaign,
       windowDays: 30,
-      performance: { spendMicros: Math.round(c.spendIls * 1_000_000), conversions: c.conversions },
+      performance: { spendMicros: Math.round(c.spendIls * 1_000_000), conversions: gateConversions },
     });
     const mergedDigest: WeeklyDigest = {
       ...digest,

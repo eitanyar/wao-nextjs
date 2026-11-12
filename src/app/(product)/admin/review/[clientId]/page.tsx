@@ -20,7 +20,7 @@ import {
 } from '@/lib/google-ads/operator';
 import { buildSearchTermCleanupPreview } from '@/lib/google-ads/executor';
 import { translateTaskToHebrew } from '@/lib/operators/hebrew-rewriter';
-import { enumerateEnabledCampaigns } from '@/lib/google-ads/campaign-enumeration';
+import { cplGateConversions, enumerateEnabledCampaigns } from '@/lib/google-ads/campaign-enumeration';
 import { evaluateCampaignAge } from '@/lib/google-ads/campaignAge';
 import ReviewContext from '@/components/admin/review/ReviewContext';
 import RecommendationCard from '@/components/admin/review/RecommendationCard';
@@ -49,6 +49,8 @@ async function buildMergedTasks(params: {
     customerId,
     clientId,
     mode: campaign.mode === 'live' ? 'live' : 'test',
+    // ads-bot-phase2 spec §3 0f/0g: the CPL-ceiling gate counts verified leads only.
+    verifiedLeadConversionResourceName: campaign.verifiedLeadConversionResourceName,
   });
 
   if (!enumerated.length) {
@@ -58,6 +60,9 @@ async function buildMergedTasks(params: {
 
   const allTasks: GoogleAdsOperatorTask[] = [];
   for (const c of enumerated) {
+    // 0g: fail closed — the verified-lead read failed, so this campaign gets no gated tasks now.
+    const gateConversions = cplGateConversions(c);
+    if (gateConversions === undefined) continue;
     const digest = buildWeeklyDigest({ campaign });
     // §4A.5 — a separate 30-day-windowed digest purely to feed the CPL-ceiling/baseline-watch
     // gates and campaign classification. The 7-day `digest` above still drives all existing
@@ -65,7 +70,7 @@ async function buildMergedTasks(params: {
     const cplDigest = buildWeeklyDigest({
       campaign,
       windowDays: 30,
-      performance: { spendMicros: Math.round(c.spendIls * 1_000_000), conversions: c.conversions },
+      performance: { spendMicros: Math.round(c.spendIls * 1_000_000), conversions: gateConversions },
     });
     const mergedDigest = {
       ...digest,

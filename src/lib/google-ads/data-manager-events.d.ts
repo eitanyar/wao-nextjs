@@ -42,4 +42,5 @@ export type SendConversionEventResult =
 
 export function sendConversionEvent(params: SendConversionEventParams): Promise<SendConversionEventResult>;
 
+/** RFC 3339 UTC instant (`…Z`); zoneless input is treated as UTC. */
 export function toEventTimestamp(isoOrDisplay: string): string;

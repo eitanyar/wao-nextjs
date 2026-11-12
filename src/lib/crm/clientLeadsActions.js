@@ -1,4 +1,5 @@
 import { leadMatchesClientIndex } from './ownership.js';
+import { planUploadsForTrigger, runLeadConversionUploads, summarizeConversionUpload } from './leadConversionUploads.js';
 
 /**
  * Applies a client-submitted lead-feedback action ({ quality } or { closed })
@@ -11,7 +12,13 @@ import { leadMatchesClientIndex } from './ownership.js';
  * function always performs the write first and never lets a rejected
  * `uploadLeadConversion` call fail or revert it — the caller (the route)
  * always gets `{ status: 200, body: { success: true, conversionUpload } }`
- * for an owned lead, with `conversionUpload` reporting 'ok' | 'failed'.
+ * for an owned lead, with `conversionUpload` reporting 'ok' | 'failed' | 'skipped'.
+ *
+ * ads-bot-phase2 spec §3 0c/0d (2026-11-12): the returned `UploadResult` is inspected (the
+ * upload is non-throwing by contract, so "no throw" meant nothing) and persisted on the lead
+ * as `verifiedUpload` / `closedUpload`. A close without a successful verified-lead upload
+ * sends verified-lead first, then closed-deal. Persisting goes through `patchLead` when given
+ * (locked re-read, so a concurrent write isn't clobbered); otherwise a second `writeLeads`.
  *
  * @param {object} params
  * @param {number} params.leadId
@@ -21,6 +28,8 @@ import { leadMatchesClientIndex } from './ownership.js';
  * @param {{ campaigns?: Array<{slug?:string, customerId?:string}> } | null} params.clientIndex
  * @param {(leads: Array<any>) => Promise<void>} params.writeLeads
  * @param {(args: { leadId: number, type: 'verified-lead'|'closed-deal' }) => Promise<any>} params.uploadLeadConversion
+ * @param {(leadId: number, patch: object) => Promise<void>} [params.patchLead]
+ * @param {() => Date} [params.now]
  * @returns {Promise<{ status: number, body: any }>}
  */
 export async function applyClientLeadFeedback({
@@ -31,6 +40,8 @@ export async function applyClientLeadFeedback({
   clientIndex,
   writeLeads,
   uploadLeadConversion,
+  patchLead,
+  now = () => new Date(),
 }) {
   const lead = leads.find((l) => l.id === leadId);
   if (!lead || !leadMatchesClientIndex(lead, clientIndex)) {
@@ -38,15 +49,16 @@ export async function applyClientLeadFeedback({
   }
 
   let updatedLead;
-  let conversionType = null;
+  /** @type {Array<'verified-lead'|'closed-deal'>} */
+  let conversionTypes = [];
 
   if (quality === 'GOOD' || quality === 'JUNK') {
     updatedLead = { ...lead, quality };
-    if (quality === 'GOOD') conversionType = 'verified-lead';
+    if (quality === 'GOOD') conversionTypes = planUploadsForTrigger(lead, 'good');
   } else if (closed && typeof closed.revenue === 'number') {
-    const closedAt = new Date().toISOString();
+    const closedAt = now().toISOString();
     updatedLead = { ...lead, closed: true, closedAt, revenue: closed.revenue, quality: 'GOOD' };
-    conversionType = 'closed-deal';
+    conversionTypes = planUploadsForTrigger(lead, 'closed');
   } else {
     return { status: 400, body: { success: false, error: 'Invalid feedback body — expected { quality } or { closed: { revenue } }' } };
   }
@@ -55,15 +67,17 @@ export async function applyClientLeadFeedback({
   await writeLeads(updatedLeads);
 
   let conversionUpload = 'not_applicable';
-  if (conversionType) {
+  if (conversionTypes.length) {
+    // Never throws (failures are logged loudly inside and mapped to outcomes), and never allowed
+    // to affect the 200 below.
+    const { patch, results } = await runLeadConversionUploads({ lead: updatedLead, types: conversionTypes, uploadLeadConversion, now });
+    conversionUpload = summarizeConversionUpload(results);
+    updatedLead = { ...updatedLead, ...patch };
     try {
-      await uploadLeadConversion({ leadId, type: conversionType });
-      conversionUpload = 'ok';
+      if (patchLead) await patchLead(leadId, patch);
+      else await writeLeads(updatedLeads.map((l) => (l.id === leadId ? updatedLead : l)));
     } catch (err) {
-      // Logged loudly per §1.2 — discoverable in PM2 logs, never swallowed,
-      // and never allowed to affect the response below.
-      console.error(`[client/leads] uploadLeadConversion(${conversionType}) failed for lead ${leadId}:`, err);
-      conversionUpload = 'failed';
+      console.error(`[client/leads] persisting upload outcome failed for lead ${leadId}:`, err);
     }
   }
 

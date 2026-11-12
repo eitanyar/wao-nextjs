@@ -27,8 +27,109 @@ export interface EnumeratedCampaign {
   /** From `metrics.all_conversions`, per §8.4 — not `metrics.conversions`. */
   conversions: number;
   /** `spendIls / conversions`, undefined when `conversions === 0` (that case belongs to §4,
-   * not the CPL-ceiling gate). */
+   * not the CPL-ceiling gate). Reporting only — gates use `cplGateConversions()`. */
   cpl: number | undefined;
+  /**
+   * Google-recorded verified-lead conversions (`metrics.conversions` segmented by the
+   * verified-lead conversion action) over the same window — ads-bot-phase2 spec §3 0f. Only set
+   * when `verifiedConversionsSource === 'verified_lead'`.
+   */
+  verifiedConversions?: number;
+  /**
+   * `verified_lead`: the 0f read ran. `not_configured`: the account has no WAO verified-lead
+   * action (founder-managed accounts such as Retter / AAAsada). `error`: the 0f read failed, so
+   * no gate may use this campaign's numbers this cycle. Absent = enumeration called without a
+   * verified-lead action (legacy callers), same as `not_configured`.
+   */
+  verifiedConversionsSource?: 'verified_lead' | 'not_configured' | 'error';
+}
+
+/** Raw shape of one row from the 0f verified-lead query. */
+export interface RawVerifiedConversionRow {
+  campaign?: { id?: string | number | null };
+  segments?: { conversion_action?: string | null };
+  metrics?: { conversions?: string | number | null };
+}
+
+const CONVERSION_ACTION_RESOURCE = /^customers\/\d+\/conversionActions\/\d+$/;
+const GAQL_DATE = /^\d{4}-\d{2}-\d{2}$/;
+
+export type GaqlDateRange = 'LAST_30_DAYS' | { startDate: string; endDate: string };
+
+/**
+ * ads-bot-phase2 spec §3 0f — the verified-only GAQL. Counts `metrics.conversions` of exactly
+ * one conversion action (the verified-lead resource name) per campaign over a date range.
+ * `metrics.conversions` (not `all_conversions`) because that is what Smart Bidding optimises
+ * to; the verified-lead action is the account's only primary action once 0a ran. Throws on a
+ * malformed resource name or date so nothing unvalidated reaches the query string.
+ */
+export function buildVerifiedLeadConversionsQuery(verifiedLeadConversionResourceName: string, range: GaqlDateRange = 'LAST_30_DAYS'): string {
+  if (!CONVERSION_ACTION_RESOURCE.test(verifiedLeadConversionResourceName)) {
+    throw new Error(`Malformed verified-lead conversion action resource name: ${verifiedLeadConversionResourceName}`);
+  }
+  let dateClause: string;
+  if (range === 'LAST_30_DAYS') {
+    dateClause = 'segments.date DURING LAST_30_DAYS';
+  } else {
+    if (!GAQL_DATE.test(range.startDate) || !GAQL_DATE.test(range.endDate)) throw new Error('Malformed GAQL date range');
+    dateClause = `segments.date BETWEEN '${range.startDate}' AND '${range.endDate}'`;
+  }
+  return `
+      SELECT
+        campaign.id,
+        segments.conversion_action,
+        metrics.conversions
+      FROM campaign
+      WHERE segments.conversion_action = '${verifiedLeadConversionResourceName}'
+        AND ${dateClause}
+    `;
+}
+
+/**
+ * Sums verified-lead conversions per campaign id. Rows for any other conversion action are
+ * ignored (defence in depth on top of the WHERE clause).
+ */
+export function mapVerifiedConversionRows(rows: RawVerifiedConversionRow[], verifiedLeadConversionResourceName: string): Map<string, number> {
+  const byCampaign = new Map<string, number>();
+  for (const row of rows) {
+    const id = row.campaign?.id;
+    if (id === undefined || id === null) continue;
+    if (row.segments?.conversion_action && row.segments.conversion_action !== verifiedLeadConversionResourceName) continue;
+    const key = String(id);
+    byCampaign.set(key, (byCampaign.get(key) ?? 0) + Number(row.metrics?.conversions ?? 0));
+  }
+  return byCampaign;
+}
+
+/**
+ * The 0f reader. Never throws: `{ ok: false }` on any API or validation error.
+ */
+export async function fetchVerifiedLeadConversionsByCampaign(params: {
+  customer: { query: (gaql: string) => Promise<unknown[]> };
+  verifiedLeadConversionResourceName: string;
+  range?: GaqlDateRange;
+}): Promise<{ ok: true; byCampaign: Map<string, number> } | { ok: false; error: string }> {
+  try {
+    const query = buildVerifiedLeadConversionsQuery(params.verifiedLeadConversionResourceName, params.range);
+    const rows = (await params.customer.query(query)) as RawVerifiedConversionRow[];
+    return { ok: true, byCampaign: mapVerifiedConversionRows(rows, params.verifiedLeadConversionResourceName) };
+  } catch (err) {
+    return { ok: false, error: err instanceof Error ? err.message : String(err) };
+  }
+}
+
+/**
+ * ads-bot-phase2 spec §3 0g — the conversion count the CPL-ceiling / `budget_tune` gate uses.
+ *   verified_lead  → the verified-lead count (0f);
+ *   error          → undefined: the caller must not gate on this campaign this cycle;
+ *   not_configured → `conversions` (all_conversions): accounts with no WAO verified-lead action
+ *                    keep their legacy behaviour.
+ * `conversions` / `cpl` on the campaign stay all_conversions-based for reporting.
+ */
+export function cplGateConversions(campaign: EnumeratedCampaign): number | undefined {
+  if (campaign.verifiedConversionsSource === 'verified_lead') return campaign.verifiedConversions ?? 0;
+  if (campaign.verifiedConversionsSource === 'error') return undefined;
+  return campaign.conversions;
 }
 
 /** Raw shape of one row from §8.3's enumeration GAQL query. */
@@ -88,8 +189,10 @@ export async function enumerateEnabledCampaigns(params: {
   clientId?: string;
   mode?: 'test' | 'live';
   clientInstance?: ReturnType<typeof buildClient>;
+  /** When given, also runs the 0f verified-lead read and fills `verifiedConversions`. */
+  verifiedLeadConversionResourceName?: string | null;
 }): Promise<EnumeratedCampaign[]> {
-  const { customerId, clientId, mode = 'live', clientInstance } = params;
+  const { customerId, clientId, mode = 'live', clientInstance, verifiedLeadConversionResourceName } = params;
   try {
     const adsAccount = resolveAdsAccount(mode);
     const client = clientInstance || buildClient();
@@ -114,7 +217,20 @@ export async function enumerateEnabledCampaigns(params: {
     `;
 
     const rows = (await customer.query(query)) as RawEnumeratedCampaignRow[];
-    return mapEnumeratedCampaignRows(rows, clientId);
+    const campaigns = mapEnumeratedCampaignRows(rows, clientId);
+    if (!verifiedLeadConversionResourceName) {
+      return campaigns.map((c) => ({ ...c, verifiedConversionsSource: 'not_configured' as const }));
+    }
+    const verified = await fetchVerifiedLeadConversionsByCampaign({ customer, verifiedLeadConversionResourceName });
+    if (!verified.ok) {
+      console.warn('[campaign-enumeration] Verified-lead conversion read failed for customer', customerId, verified.error);
+      return campaigns.map((c) => ({ ...c, verifiedConversionsSource: 'error' as const }));
+    }
+    return campaigns.map((c) => ({
+      ...c,
+      verifiedConversions: verified.byCampaign.get(c.campaignId) ?? 0,
+      verifiedConversionsSource: 'verified_lead' as const,
+    }));
   } catch (err) {
     console.warn('[campaign-enumeration] Failed to enumerate enabled campaigns for customer', customerId, err);
     return [];

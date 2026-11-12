@@ -31,6 +31,7 @@ const CALL_SITES = {
   'src/app/(product)/client/dashboard/page.tsx': ['path.join(clientsDir(), …)', 'path.join(clientsDir(), …)', 'path.join(clientsDir(), …)', 'path.join(clientsDir(), …)'],
   'src/app/(product)/geo/dashboard/page.tsx': ['path.join(clientsDir(), …)', 'path.join(clientsDir(), …)', 'clientsDir()'],
   'src/app/api/gbp/review-reply/route.ts': ['path.join(clientsDir(), …)'],
+  'src/app/api/google-ads/create-campaign/route.ts': ['clientsDir()'],
   'src/app/api/google-ads/live-readiness/route.ts': ['path.join(clientsDir(), …)'],
   'src/app/api/site-bot/deploy/route.ts': ["dataRoot('sites')", "dataRoot('siteResearch')"],
   'src/app/api/site-bot/generate/route.ts': ["dataRoot('siteResearch')", 'sitesDir()'],

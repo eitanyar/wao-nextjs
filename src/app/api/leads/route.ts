@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { sendLeadNotificationEmail } from "@/lib/mail";
 import { ADMIN_COOKIE_NAME, verifyAdminToken } from "@/lib/admin-auth";
-import { readLeads, writeLeads, findLeadById } from "@/lib/crm/leadsStore";
+import { readLeads, writeLeads, findLeadById, patchLead } from "@/lib/crm/leadsStore";
 import { uploadLeadConversion, type ConversionType } from "@/lib/google-ads/conversion-upload";
 import { loadCampaignConfigBySlug, type LeadRecord } from "@/lib/crm/intelligence";
 import { loadClient } from "@/lib/shared/clients";
@@ -10,21 +10,25 @@ import { buildReviewRequestOwnerNotification } from "@/lib/crm/reviewFlywheelCop
 import { buildWaLink } from "@/lib/gmb/whatsapp";
 import { appendReviewFlywheelQueueItem } from "@/lib/crm/reviewFlywheelStore";
 import { captureLead, type LeadCapturePayload } from "@/lib/crm/lead-capture";
+import { planUploadsForTrigger, runLeadConversionUploads } from "@/lib/crm/leadConversionUploads";
 
 /**
  * In-process call to `uploadLeadConversion()` (`@/lib/google-ads/conversion-upload`).
  * Replaces the old self-`fetch()` to `/api/google-ads/import-conversion`,
  * which never forwarded the `wao-client` session cookie and therefore got a
  * silent 401 on every attempt (docs/specs/priority-3 §0/§1.2/§3.2).
+ *
+ * ads-bot-phase2 spec §3 0c/0d (2026-11-12): runs the planned uploads in order (a close without
+ * a successful verified-lead upload sends verified-lead first), inspects each `UploadResult`,
+ * and persists the outcomes on the lead (`verifiedUpload` / `closedUpload`) under the file
+ * lock. Still fire-and-forget from the handler and never throws: the CRM write is the truth.
  */
-async function uploadConversion(leadId: number, type: ConversionType) {
+async function uploadConversion(lead: LeadRecord, types: ConversionType[]) {
   try {
-    const result = await uploadLeadConversion({ leadId, type });
-    if ("success" in result && result.success === false) {
-      console.error(`[uploadConversion] ${type} failed for lead ${leadId}:`, result);
-    }
+    const { patch } = await runLeadConversionUploads({ lead, types, uploadLeadConversion });
+    await patchLead(lead.id, patch);
   } catch (err) {
-    console.error(`[uploadConversion] ${type} threw for lead ${leadId}:`, err);
+    console.error(`[uploadConversion] ${types.join("+")} upload/persist threw for lead ${lead.id}:`, err);
   }
 }
 
@@ -195,7 +199,7 @@ export async function POST(req: Request) {
         if (quality === "GOOD") {
           const lead = findLeadById(leads, id);
           if (lead?.gclid || lead?.wbraid || lead?.gbraid) {
-            uploadConversion(id, "verified-lead").catch(console.error);
+            uploadConversion(lead, planUploadsForTrigger(lead, "good")).catch(console.error);
           }
         }
 
@@ -231,7 +235,7 @@ export async function POST(req: Request) {
 
       const lead = findLeadById(leads, id);
       if (lead?.gclid || lead?.wbraid || lead?.gbraid) {
-        uploadConversion(id, "closed-deal").catch(console.error);
+        uploadConversion(lead, planUploadsForTrigger(lead, "closed")).catch(console.error);
       }
 
       if (lead) {

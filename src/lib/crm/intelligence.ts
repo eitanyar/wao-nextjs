@@ -40,6 +40,24 @@ export interface LeadRecord {
   firstResponseLastError?: string;
   firstResponseClaimId?: string;
   firstResponseClaimedAt?: string;
+  /** Outcome of the latest `verified-lead` offline-conversion upload (ads-bot-phase2 spec §3 0c). */
+  verifiedUpload?: LeadUploadOutcome;
+  /** Outcome of the latest `closed-deal` offline-conversion upload (ads-bot-phase2 spec §3 0c). */
+  closedUpload?: LeadUploadOutcome;
+}
+
+/**
+ * Persisted per-lead record of what Google did with an offline-conversion upload. The CRM mark
+ * stays the truth; this only says whether the Ads push landed. `failed` and `pending_retry`
+ * are retried by the autonomous cycle (once a day, until the click is 85 days old).
+ */
+export interface LeadUploadOutcome {
+  status: 'ok' | 'failed' | 'skipped_no_click_id' | 'pending_retry';
+  /** ISO time of the latest attempt. */
+  at: string;
+  requestId?: string;
+  error?: string;
+  attempts: number;
 }
 
 export interface CampaignConfig {

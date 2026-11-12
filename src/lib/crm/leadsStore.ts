@@ -20,6 +20,12 @@ export interface LeadsStore {
   readLeads(): Promise<LeadRecord[]>;
   writeLeads(leads: LeadRecord[]): Promise<void>;
   updateLeads<T>(update: (leads: LeadRecord[]) => Promise<{ leads: LeadRecord[]; result: T }> | { leads: LeadRecord[]; result: T }): Promise<T>;
+  /**
+   * Merges `patch` into one lead under the file lock, re-reading the file first so a concurrent
+   * write isn't clobbered. Used to persist offline-upload outcomes (ads-bot-phase2 spec §3 0c)
+   * after the CRM mark itself was already written. No-op when the lead no longer exists.
+   */
+  patchLead(leadId: number, patch: Partial<LeadRecord>): Promise<void>;
 }
 
 function resolveLeadsFilePath(options: LeadsStoreOptions): string {
@@ -60,18 +66,26 @@ export function createLeadsStore(options: LeadsStoreOptions = {}): LeadsStore {
     }
   }
 
+  async function updateLeads<T>(update: (leads: LeadRecord[]) => Promise<{ leads: LeadRecord[]; result: T }> | { leads: LeadRecord[]; result: T }): Promise<T> {
+    return withLock(async () => {
+      const outcome = await update(await readFromDisk());
+      await fs.writeFile(filePath, JSON.stringify(outcome.leads, null, 2), 'utf-8');
+      return outcome.result;
+    });
+  }
+
   return {
     readLeads: readFromDisk,
     async writeLeads(leads: LeadRecord[]): Promise<void> {
       await fs.mkdir(path.dirname(filePath), { recursive: true });
       await fs.writeFile(filePath, JSON.stringify(leads, null, 2), 'utf-8');
     },
-    async updateLeads<T>(update: (leads: LeadRecord[]) => Promise<{ leads: LeadRecord[]; result: T }> | { leads: LeadRecord[]; result: T }): Promise<T> {
-      return withLock(async () => {
-        const outcome = await update(await readFromDisk());
-        await fs.writeFile(filePath, JSON.stringify(outcome.leads, null, 2), 'utf-8');
-        return outcome.result;
-      });
+    updateLeads,
+    async patchLead(leadId: number, patch: Partial<LeadRecord>): Promise<void> {
+      await updateLeads((leads) => ({
+        leads: leads.map((lead) => (lead.id === leadId ? { ...lead, ...patch } : lead)),
+        result: undefined,
+      }));
     },
   };
 }
@@ -80,6 +94,7 @@ const defaultLeadsStore = createLeadsStore();
 
 export const readLeads = defaultLeadsStore.readLeads;
 export const writeLeads = defaultLeadsStore.writeLeads;
+export const patchLead = (leadId: number, patch: Partial<LeadRecord>) => defaultLeadsStore.patchLead(leadId, patch);
 
 export function findLeadById(leads: LeadRecord[], id: number): LeadRecord | undefined {
   return leads.find((lead) => lead.id === id);

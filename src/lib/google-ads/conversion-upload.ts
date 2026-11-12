@@ -53,7 +53,7 @@ export interface UploadLeadConversionParams {
 
 export type UploadResult =
   | { skipped: true; reason: 'no_click_id'; message: string }
-  | { success: true; leadId: number; type: ConversionType; conversionValue: number }
+  | { success: true; leadId: number; type: ConversionType; conversionValue: number; requestId?: string }
   | { success: false; leadId: number; type: ConversionType; partialError: string; status: 207 }
   | { success: false; error: string; status: number };
 
@@ -171,6 +171,8 @@ export async function uploadLeadConversion(
   let eventTimestamp: string;
 
   if (type === 'verified-lead') {
+    // Always the lead-creation instant, including when the verified-lead is backfilled at close
+    // time (ads-bot-phase2 spec §3 0d).
     conversionActionResourceName = config.verifiedLeadConversionResourceName;
     conversionValue = Math.round(config.avgJobValue * config.closeRateEstimate * 100) / 100;
     eventTimestamp = toEventTimestamp(lead.date || '');
@@ -228,7 +230,7 @@ export async function uploadLeadConversion(
     });
 
     if (eventResult.ok) {
-      return { success: true, leadId, type, conversionValue };
+      return { success: true, leadId, type, conversionValue, ...(eventResult.requestId ? { requestId: eventResult.requestId } : {}) };
     }
 
     if (eventResult.fieldWarnings) {

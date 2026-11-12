@@ -8,7 +8,10 @@ import { collectHybridSnapshot, runHybridShadowPlan as runHybridShadowPlanIntern
 import type { HybridPlanResult } from '../hybrid/types';
 import { syncFraudBlockerHealthForClient, type FraudBlockerHealthResult } from '../fraud-blocker/health';
 import { evaluateCampaignAge } from './campaignAge';
-import { enumerateEnabledCampaigns, type EnumeratedCampaign } from './campaign-enumeration';
+import { cplGateConversions, enumerateEnabledCampaigns, type EnumeratedCampaign } from './campaign-enumeration';
+import { patchLead, readLeads } from '../crm/leadsStore';
+import { leadMatchesClientIndex } from '../crm/ownership.js';
+import { retryLeadConversionUploads, selectLeadsForUploadRetry } from '../crm/leadConversionUploads.js';
 import { executeGoogleAdsOperatorTask, type ExecutionResult } from './executor';
 import { buildGoogleAdsOperatorTasks, type GoogleAdsOperatorTask } from './operator';
 import {
@@ -33,7 +36,19 @@ export interface AutonomousCycleDependencies {
   execute?: (params: { clientId: string; task: GoogleAdsOperatorTask; campaign: CampaignConfig; campaignId: string }) => Promise<ExecutionResult & { details?: unknown }>;
   runHybridShadowPlan?: (params: { clientId: string; campaign: CampaignConfig; campaignId: string; digest: WeeklyDigest; now: Date; baseDir?: string; fraudBlocker?: FraudBlockerHealthResult['summary'] }) => Promise<HybridPlanResult>;
   syncFraudBlockerHealth?: (params: { clientId: string; baseDir?: string; now: Date }) => Promise<FraudBlockerHealthResult>;
+  /** ads-bot-phase2 spec §3 0e — retries this client's failed offline-conversion uploads. */
+  retryLeadUploads?: (params: { clientId: string; now: Date }) => Promise<LeadUploadRetrySummary>;
 }
+
+export interface LeadUploadRetrySummary {
+  attempted: number;
+  ok: number;
+  failed: number;
+  persistErrors: number;
+  leads: Array<{ leadId: number; types: string[]; statuses: string[] }>;
+}
+
+const EMPTY_RETRY_SUMMARY: LeadUploadRetrySummary = { attempted: 0, ok: 0, failed: 0, persistErrors: 0, leads: [] };
 
 export interface AutonomousCycleOptions {
   baseDir?: string;
@@ -57,6 +72,10 @@ export interface AutonomousClientCycleSummary {
   actions: AutonomousActionSummary[];
   hybrid?: HybridPlanResult;
   fraudBlockerHealth?: FraudBlockerHealthResult;
+  /** Offline-conversion upload retries run this cycle (0e). */
+  uploadRetry?: LeadUploadRetrySummary | { error: string };
+  /** Campaigns whose gates were skipped this cycle, e.g. the verified-lead read failed (0g). */
+  skippedCampaigns?: Array<{ campaignId: string; reason: 'verified_conversions_unavailable' }>;
 }
 
 export interface AutonomousBatchCycleSummary {
@@ -96,6 +115,23 @@ function actionId(clientId: string, task: GoogleAdsOperatorTask, digest: WeeklyD
   return createHash('sha256').update(JSON.stringify(canonicalize(payload)), 'utf8').digest('hex');
 }
 
+/**
+ * ads-bot-phase2 spec §3 0g — the 30-day digest that feeds the CPL-ceiling / `budget_tune` gate.
+ * Its conversion count is the verified-lead count (0f) for accounts that have a WAO
+ * verified-lead action, never `all_conversions`. Callers must skip the campaign when
+ * `cplGateConversions()` is undefined (the 0f read failed).
+ */
+export function buildCycleDigest(params: { campaign: CampaignConfig; enumerated: EnumeratedCampaign; now: Date; leads?: Parameters<typeof buildWeeklyDigest>[0]['leads'] }): WeeklyDigest {
+  const { campaign, enumerated, now, leads } = params;
+  return buildWeeklyDigest({
+    campaign,
+    now,
+    leads,
+    windowDays: 30,
+    performance: { spendMicros: Math.round(enumerated.spendIls * 1_000_000), conversions: cplGateConversions(enumerated) },
+  });
+}
+
 function defaultDependencies(): Required<AutonomousCycleDependencies> {
   return {
     now: () => new Date(),
@@ -113,8 +149,13 @@ function defaultDependencies(): Required<AutonomousCycleDependencies> {
       const campaign = loadCampaignConfigBySlug(index.primarySlug);
       return campaign ? { customerId: index.primaryCustomerId, campaign, campaignId: index.primaryCampaignId } : null;
     },
-    enumerateCampaigns: params => enumerateEnabledCampaigns({ clientId: params.clientId, customerId: params.customerId, mode: params.campaign.mode === 'live' ? 'live' : 'test' }),
-    buildDigest: ({ campaign, enumerated, now }) => buildWeeklyDigest({ campaign, now, windowDays: 30, performance: { spendMicros: Math.round(enumerated.spendIls * 1_000_000), conversions: enumerated.conversions } }),
+    enumerateCampaigns: params => enumerateEnabledCampaigns({
+      clientId: params.clientId,
+      customerId: params.customerId,
+      mode: params.campaign.mode === 'live' ? 'live' : 'test',
+      verifiedLeadConversionResourceName: params.campaign.verifiedLeadConversionResourceName,
+    }),
+    buildDigest: ({ campaign, enumerated, now }) => buildCycleDigest({ campaign, enumerated, now }),
     deriveTasks: (clientId, digest, campaign, enumerated) => buildGoogleAdsOperatorTasks({ clientId, digest, campaignConfig: campaign, campaignAge: evaluateCampaignAge({ startDate: campaign.createdAt }), campaignId: enumerated.campaignId, campaignName: enumerated.campaignName }),
     execute: ({ task, campaign, campaignId }) => executeGoogleAdsOperatorTask({ task, campaignConfig: campaign, campaignId }),
     runHybridShadowPlan: async ({ clientId, campaign, campaignId, digest, now, baseDir, fraudBlocker }) => runHybridShadowPlanInternal({
@@ -125,6 +166,14 @@ function defaultDependencies(): Required<AutonomousCycleDependencies> {
       collectSnapshot: () => collectHybridSnapshot({ clientId, campaignId, campaign, digest, now, baseDir, fraudBlocker }),
     }),
     syncFraudBlockerHealth: ({ clientId, baseDir, now }) => syncFraudBlockerHealthForClient({ clientId, baseDir, now }),
+    retryLeadUploads: async ({ clientId, now }) => {
+      const index = loadClientGoogleAdsIndex(clientId);
+      const leads = (await readLeads()).filter(lead => leadMatchesClientIndex(lead, index));
+      if (!selectLeadsForUploadRetry(leads, now).length) return EMPTY_RETRY_SUMMARY;
+      // Loaded lazily: the upload module pulls in the Data Manager client only when there is work.
+      const { uploadLeadConversion } = await import('./conversion-upload');
+      return retryLeadConversionUploads({ leads, now, uploadLeadConversion, patchLead });
+    },
   };
 }
 
@@ -186,8 +235,16 @@ export async function runAutonomousClientCycle(clientId: string, options: Autono
   try {
     const bound = dependencies.loadClient(clientId);
     if (!bound) return { clientId, status: 'unbound', error: 'bound_campaign_missing', actions: [] };
+    // 0e: offline-upload retries are not an account change (they re-send the owner's own marks),
+    // so they run for every bound client regardless of autonomy mode, and never break the cycle.
+    let uploadRetry: AutonomousClientCycleSummary['uploadRetry'];
+    try {
+      uploadRetry = await dependencies.retryLeadUploads({ clientId, now });
+    } catch (error) {
+      uploadRetry = { error: error instanceof Error ? error.message : String(error) };
+    }
     let policy = readAutonomyPolicy(clientId, options.baseDir);
-    if (!policy) return { clientId, status: 'unbound', error: 'policy_missing', actions: [] };
+    if (!policy) return { clientId, status: 'unbound', error: 'policy_missing', actions: [], uploadRetry };
     let fraudBlockerHealth: FraudBlockerHealthResult | undefined;
     try {
       fraudBlockerHealth = await dependencies.syncFraudBlockerHealth({ clientId, baseDir: options.baseDir, now });
@@ -201,8 +258,14 @@ export async function runAutonomousClientCycle(clientId: string, options: Autono
     const actions: AutonomousActionSummary[] = [];
     let actionsExecutedThisRun = 0;
     let hybridInput: { campaignId: string; digest: WeeklyDigest } | undefined;
+    const skippedCampaigns: NonNullable<AutonomousClientCycleSummary['skippedCampaigns']> = [];
 
     for (const enumerated of campaigns) {
+      // 0g: fail closed — no verified-lead count, no CPL gate, so no task for this campaign.
+      if (cplGateConversions(enumerated) === undefined) {
+        skippedCampaigns.push({ campaignId: enumerated.campaignId, reason: 'verified_conversions_unavailable' });
+        continue;
+      }
       const digest = dependencies.buildDigest({ campaign: bound.campaign, enumerated, now });
       hybridInput = { campaignId: enumerated.campaignId, digest };
       const tasks = dependencies.deriveTasks(clientId, digest, bound.campaign, enumerated);
@@ -228,7 +291,7 @@ export async function runAutonomousClientCycle(clientId: string, options: Autono
           continue;
         }
         const refreshedCampaign = (await dependencies.enumerateCampaigns({ clientId, customerId: bound.customerId, campaign: bound.campaign }))
-          .find(candidate => candidate.campaignId === enumerated.campaignId);
+          .find(candidate => candidate.campaignId === enumerated.campaignId && cplGateConversions(candidate) !== undefined);
         const refreshedDigest = refreshedCampaign ? dependencies.buildDigest({ campaign: bound.campaign, enumerated: refreshedCampaign, now: dependencies.now() }) : undefined;
         const refreshed = refreshedCampaign && refreshedDigest
           ? dependencies.deriveTasks(clientId, refreshedDigest, bound.campaign, refreshedCampaign).find(candidate => candidate.taskId === task.taskId)
@@ -267,7 +330,7 @@ export async function runAutonomousClientCycle(clientId: string, options: Autono
     } catch (error) {
       hybrid = { status: 'error', error: error instanceof Error ? error.message : String(error) };
     }
-    return { clientId, status: 'ok', actions, hybrid, fraudBlockerHealth };
+    return { clientId, status: 'ok', actions, hybrid, fraudBlockerHealth, uploadRetry, ...(skippedCampaigns.length ? { skippedCampaigns } : {}) };
   } catch (error) {
     return { clientId, status: 'error', error: error instanceof Error ? error.message : String(error), actions: [] };
   } finally {

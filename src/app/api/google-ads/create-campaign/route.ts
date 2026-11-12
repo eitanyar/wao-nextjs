@@ -22,6 +22,14 @@ import {
   type PaidSearchDemandEvidenceSummary,
 } from '@/lib/google-ads/demand-readiness';
 import { deriveCplCeilingIls } from '@/lib/crm/intelligence';
+import { clientsDir } from '@/lib/dataRoots';
+import {
+  applyVerifiedLeadOnlyGoals,
+  isPrimaryConversionCategory,
+  planVerifiedLeadOnlyGoals,
+  readConversionGoalState,
+} from '@/lib/google-ads/conversion-goals';
+import { recordGoalChange } from '@/lib/google-ads/bidding-phase-state';
 
 export interface CampaignConfig {
   clientId?: string;
@@ -132,6 +140,33 @@ function logAssetError(label: string, e: unknown) {
 
 function trim(s: string, max: number) {
   return s.length > max ? s.slice(0, max - 1) + '…' : s;
+}
+
+/**
+ * ads-bot-phase2 spec §3 0a — reads the new account's goals, makes only the verified-lead
+ * category biddable (customer + this campaign), then reads back and verifies nothing is left to
+ * change. Returns true only when the read-back is clean. Never throws.
+ */
+async function configureVerifiedLeadOnlyGoals(
+  newCustomer: ReturnType<GoogleAdsApi['Customer']>,
+  campaignResourceName: string,
+  verifiedLeadConversionResourceName: string | null,
+): Promise<boolean> {
+  try {
+    const state = await readConversionGoalState(newCustomer, { campaignResourceName });
+    const plan = planVerifiedLeadOnlyGoals(state, verifiedLeadConversionResourceName);
+    await applyVerifiedLeadOnlyGoals(newCustomer, plan);
+    const after = planVerifiedLeadOnlyGoals(await readConversionGoalState(newCustomer, { campaignResourceName }), verifiedLeadConversionResourceName);
+    const remaining = after.actions.length + after.customerGoals.length + after.campaignGoals.length;
+    if (remaining) {
+      console.error('Verified-lead-only goal read-back mismatch (non-fatal):', JSON.stringify(after));
+      return false;
+    }
+    return true;
+  } catch (e) {
+    logAssetError('Verified-lead-only goal configuration', e);
+    return false;
+  }
 }
 
 function slugify(name: string, fallbackNiche?: string, phone?: string): string {
@@ -481,6 +516,9 @@ export async function POST(req: Request) {
     });
 
     // ── Step 2: Create conversion actions ────────────────────────────────────
+    // Bidding goal (ads-bot-phase2 spec §3 0a): only the verified lead is primary_for_goal; the
+    // other four are secondary (recorded, never bid on). primary_for_goal defaults to true when
+    // omitted, so it is set explicitly on every action.
     // Tiered expected values — a click is not a closed job.
     // Estimated close rate for cold local-service leads ≈ 20%.
     // Calibrated per-account from real CRM closes over time.
@@ -491,6 +529,7 @@ export async function POST(req: Request) {
       {
         name: 'טופס — ליד',
         category: enums.ConversionActionCategory.SUBMIT_LEAD_FORM,
+        primary_for_goal: isPrimaryConversionCategory(enums.ConversionActionCategory.SUBMIT_LEAD_FORM),
         type: enums.ConversionActionType.WEBPAGE,
         status: enums.ConversionActionStatus.ENABLED,
         counting_type: enums.ConversionActionCountingType.ONE_PER_CLICK,
@@ -501,6 +540,7 @@ export async function POST(req: Request) {
         // ₪0 value — clicks are intent signals, not leads. Value comes from offline uploads.
         name: 'לחיצה על טלפון',
         category: enums.ConversionActionCategory.PHONE_CALL_LEAD,
+        primary_for_goal: isPrimaryConversionCategory(enums.ConversionActionCategory.PHONE_CALL_LEAD),
         type: enums.ConversionActionType.WEBPAGE,
         status: enums.ConversionActionStatus.ENABLED,
         counting_type: enums.ConversionActionCountingType.ONE_PER_CLICK,
@@ -510,6 +550,7 @@ export async function POST(req: Request) {
         // ₪0 value — same reasoning as phone click.
         name: 'לחיצה על וואטסאפ',
         category: enums.ConversionActionCategory.CONTACT,
+        primary_for_goal: isPrimaryConversionCategory(enums.ConversionActionCategory.CONTACT),
         type: enums.ConversionActionType.WEBPAGE,
         status: enums.ConversionActionStatus.ENABLED,
         counting_type: enums.ConversionActionCountingType.ONE_PER_CLICK,
@@ -520,6 +561,7 @@ export async function POST(req: Request) {
         // Value = expected value (avgJobValue × close-rate). Human marks GOOD in CRM → triggers upload.
         name: 'ליד מאומת',
         category: enums.ConversionActionCategory.QUALIFIED_LEAD,
+        primary_for_goal: isPrimaryConversionCategory(enums.ConversionActionCategory.QUALIFIED_LEAD),
         type: enums.ConversionActionType.UPLOAD_CLICKS,
         status: enums.ConversionActionStatus.ENABLED,
         counting_type: enums.ConversionActionCountingType.ONE_PER_CLICK,
@@ -532,6 +574,7 @@ export async function POST(req: Request) {
         // Value = real CRM revenue entered by client.
         name: 'עסקה סגורה',
         category: enums.ConversionActionCategory.CONVERTED_LEAD,
+        primary_for_goal: isPrimaryConversionCategory(enums.ConversionActionCategory.CONVERTED_LEAD),
         type: enums.ConversionActionType.UPLOAD_CLICKS,
         status: enums.ConversionActionStatus.ENABLED,
         counting_type: enums.ConversionActionCountingType.ONE_PER_CLICK,
@@ -610,6 +653,13 @@ export async function POST(req: Request) {
 
     const campaignResourceName = campaignRes.results[0].resource_name!;
     const campaignId = campaignResourceName.split('/').pop() || newCustomerId;
+
+    // ── Step 5b: Verified-lead-only conversion goals (ads-bot-phase2 spec §3 0a) ──
+    // Customer- and campaign-level goals: only QUALIFIED_LEAD~WEBSITE stays biddable. Done at
+    // launch on purpose: on Maximize Clicks a goal change has no bidding effect, later it would
+    // restart Learning. Non-fatal (the campaign is PAUSED and on clicks); the outcome is logged
+    // and the read-back plan must come back empty.
+    const goalsConfigured = await configureVerifiedLeadOnlyGoals(newCustomer, campaignResourceName, verifiedLeadConversionResourceName);
 
     // ── Step 6: Geo target — Israel (2376) ───────────────────────────────────
     await newCustomer.campaignCriteria.create([{
@@ -711,6 +761,10 @@ export async function POST(req: Request) {
       });
       if (autonomyPolicy && !writeAutonomyPolicy(autonomyPolicy)) {
         throw new Error('Unable to persist autonomy policy after campaign binding');
+      }
+      if (goalsConfigured) {
+        const recorded = recordGoalChange({ clientId: effectiveClientId, baseDir: clientsDir(), at: new Date().toISOString(), customerId: newCustomerId, source: 'create-campaign' });
+        if (!recorded) console.error('bidding-phase.json goal-change record failed (non-fatal) for client', effectiveClientId);
       }
     }
 

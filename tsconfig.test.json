@@ -135,6 +135,7 @@
     "src/lib/google-ads/autonomous-cycle.test.ts",
     "src/lib/google-ads/autonomous-cycle-route.ts",
     "src/lib/google-ads/autonomous-cycle-route.test.ts",
+    "src/lib/google-ads/signal-integrity-step0.test.ts",
     "src/lib/hybrid/types.ts",
     "src/lib/hybrid/snapshotStore.ts",
     "src/lib/hybrid/planner.ts",

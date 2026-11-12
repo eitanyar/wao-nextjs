@@ -52,16 +52,27 @@ function makeWriteLeadsMock() {
   return fn;
 }
 
-function makeUploadMock({ shouldReject = false } = {}) {
+function makeUploadMock({ shouldReject = false, result } = {}) {
   let callCount = 0;
   const calls = [];
   const fn = async (args) => {
     callCount += 1;
     calls.push(args);
     if (shouldReject) throw new Error('Google Ads upload failed (simulated)');
+    if (result) return typeof result === 'function' ? result(args) : result;
     return { success: true, leadId: args.leadId, type: args.type, conversionValue: 100 };
   };
   fn.callCount = () => callCount;
+  fn.calls = () => calls;
+  return fn;
+}
+
+function makePatchLeadMock({ shouldReject = false } = {}) {
+  const calls = [];
+  const fn = async (leadId, patch) => {
+    calls.push({ leadId, patch });
+    if (shouldReject) throw new Error('persist failed (simulated)');
+  };
   fn.calls = () => calls;
   return fn;
 }
@@ -108,6 +119,7 @@ test('POST feedback for a lead not owned by the authenticated client → 403, wr
 test("POST { quality: 'GOOD' } for an owned lead → 200, quality updated in the written file, uploadLeadConversion called once with type: 'verified-lead'", async () => {
   const writeLeads = makeWriteLeadsMock();
   const uploadLeadConversion = makeUploadMock();
+  const patchLead = makePatchLeadMock();
 
   const result = await applyClientLeadFeedback({
     leadId: 1,
@@ -116,11 +128,14 @@ test("POST { quality: 'GOOD' } for an owned lead → 200, quality updated in the
     clientIndex: CLIENT_A_INDEX,
     writeLeads,
     uploadLeadConversion,
+    patchLead,
   });
 
   assert.equal(result.status, 200);
   assert.equal(result.body.success, true);
   assert.equal(result.body.conversionUpload, 'ok');
+  assert.equal(patchLead.calls().length, 1);
+  assert.equal(patchLead.calls()[0].patch.verifiedUpload.status, 'ok');
 
   assert.equal(writeLeads.callCount(), 1);
   const written = writeLeads.lastArgs().find((l) => l.id === 1);
@@ -131,9 +146,12 @@ test("POST { quality: 'GOOD' } for an owned lead → 200, quality updated in the
 });
 
 // ── #13: POST { closed: { revenue } } for an owned lead ────────────────────────
-test("POST { closed: { revenue: 1200 } } for an owned lead → closed/closedAt/revenue/quality all set correctly, uploadLeadConversion called once with type: 'closed-deal'", async () => {
+// Updated 2026-11-12 (ads-bot-phase2 spec §3 0d): this lead was never marked GOOD, so the close
+// also uploads verified-lead first, then closed-deal.
+test("POST { closed: { revenue: 1200 } } for an owned lead never marked GOOD → closed/closedAt/revenue/quality set, uploads verified-lead then closed-deal", async () => {
   const writeLeads = makeWriteLeadsMock();
   const uploadLeadConversion = makeUploadMock();
+  const patchLead = makePatchLeadMock();
 
   const result = await applyClientLeadFeedback({
     leadId: 1,
@@ -142,6 +160,7 @@ test("POST { closed: { revenue: 1200 } } for an owned lead → closed/closedAt/r
     clientIndex: CLIENT_A_INDEX,
     writeLeads,
     uploadLeadConversion,
+    patchLead,
   });
 
   assert.equal(result.status, 200);
@@ -153,14 +172,18 @@ test("POST { closed: { revenue: 1200 } } for an owned lead → closed/closedAt/r
   assert.equal(written.revenue, 1200);
   assert.equal(written.quality, 'GOOD');
 
-  assert.equal(uploadLeadConversion.callCount(), 1);
-  assert.deepEqual(uploadLeadConversion.calls()[0], { leadId: 1, type: 'closed-deal' });
+  assert.equal(uploadLeadConversion.callCount(), 2);
+  assert.deepEqual(uploadLeadConversion.calls(), [{ leadId: 1, type: 'verified-lead' }, { leadId: 1, type: 'closed-deal' }]);
+  const { patch } = patchLead.calls()[0];
+  assert.equal(patch.verifiedUpload.status, 'ok');
+  assert.equal(patch.closedUpload.status, 'ok');
 });
 
 // ── #14: regression guard — a rejected upload never blocks/reverts the CRM write
 test("a Google Ads upload failure never blocks or reverts the client's lead rating", async () => {
   const writeLeads = makeWriteLeadsMock();
   const uploadLeadConversion = makeUploadMock({ shouldReject: true });
+  const patchLead = makePatchLeadMock();
 
   const result = await applyClientLeadFeedback({
     leadId: 1,
@@ -169,9 +192,83 @@ test("a Google Ads upload failure never blocks or reverts the client's lead rati
     clientIndex: CLIENT_A_INDEX,
     writeLeads,
     uploadLeadConversion,
+    patchLead,
   });
 
   assert.deepEqual(result, { status: 200, body: { success: true, lead: result.body.lead, conversionUpload: 'failed' } });
   assert.equal(writeLeads.callCount(), 1); // the write already happened before the (rejected) upload attempt
   assert.equal(result.body.lead.quality, 'GOOD');
+});
+
+// ── ads-bot-phase2 spec §11 Step 0 — 0c/0d: the UploadResult is inspected and persisted ──
+async function feedback(overrides) {
+  const writeLeads = makeWriteLeadsMock();
+  const patchLead = makePatchLeadMock();
+  const uploadLeadConversion = makeUploadMock(overrides.upload);
+  const result = await applyClientLeadFeedback({
+    leadId: 1,
+    leads: overrides.leads ?? LEADS,
+    clientIndex: CLIENT_A_INDEX,
+    writeLeads,
+    uploadLeadConversion,
+    patchLead: overrides.noPatchLead ? undefined : patchLead,
+    now: () => new Date('2026-11-12T08:00:00.000Z'),
+    ...overrides.body,
+  });
+  return { result, writeLeads, patchLead, uploadLeadConversion };
+}
+
+test('0c: { success: false } from the upload is persisted as failed (not reported ok)', async () => {
+  const { result, patchLead } = await feedback({ body: { quality: 'GOOD' }, upload: { result: { success: false, error: 'conversion before click', status: 400 } } });
+  assert.equal(result.status, 200);
+  assert.equal(result.body.conversionUpload, 'failed');
+  assert.deepEqual(patchLead.calls()[0], { leadId: 1, patch: { verifiedUpload: { status: 'failed', at: '2026-11-12T08:00:00.000Z', attempts: 1, error: 'conversion before click' } } });
+  assert.equal(result.body.lead.verifiedUpload.status, 'failed');
+});
+
+test('0c: { skipped } is persisted as skipped_no_click_id', async () => {
+  const { result, patchLead } = await feedback({ body: { quality: 'GOOD' }, upload: { result: { skipped: true, reason: 'no_click_id', message: 'x' } } });
+  assert.equal(result.body.conversionUpload, 'skipped');
+  assert.equal(patchLead.calls()[0].patch.verifiedUpload.status, 'skipped_no_click_id');
+});
+
+test('0c: success is persisted with the Data Manager requestId', async () => {
+  const { patchLead } = await feedback({ body: { quality: 'GOOD' }, upload: { result: (args) => ({ success: true, leadId: args.leadId, type: args.type, conversionValue: 100, requestId: 'dm-req-42' }) } });
+  assert.deepEqual(patchLead.calls()[0].patch.verifiedUpload, { status: 'ok', at: '2026-11-12T08:00:00.000Z', attempts: 1, requestId: 'dm-req-42' });
+});
+
+test('0d: closed with a prior OK verified upload uploads only closed-deal', async () => {
+  const leads = LEADS.map((l) => (l.id === 1 ? { ...l, quality: 'GOOD', verifiedUpload: { status: 'ok', at: '2026-11-01T00:00:00.000Z', attempts: 1 } } : l));
+  const { uploadLeadConversion, patchLead } = await feedback({ leads, body: { closed: { revenue: 900 } } });
+  assert.deepEqual(uploadLeadConversion.calls(), [{ leadId: 1, type: 'closed-deal' }]);
+  assert.deepEqual(Object.keys(patchLead.calls()[0].patch), ['closedUpload']);
+});
+
+test('0d: closed with a prior FAILED verified upload re-sends verified-lead then closed-deal', async () => {
+  const leads = LEADS.map((l) => (l.id === 1 ? { ...l, quality: 'GOOD', verifiedUpload: { status: 'failed', at: '2026-11-01T00:00:00.000Z', attempts: 1 } } : l));
+  const { uploadLeadConversion, patchLead } = await feedback({ leads, body: { closed: { revenue: 900 } } });
+  assert.deepEqual(uploadLeadConversion.calls(), [{ leadId: 1, type: 'verified-lead' }, { leadId: 1, type: 'closed-deal' }]);
+  assert.equal(patchLead.calls()[0].patch.verifiedUpload.attempts, 2);
+});
+
+test('0c: without patchLead the outcome is persisted by a second writeLeads; JUNK uploads nothing', async () => {
+  const { writeLeads, result } = await feedback({ noPatchLead: true, body: { quality: 'GOOD' } });
+  assert.equal(writeLeads.callCount(), 2);
+  assert.equal(writeLeads.lastArgs().find((l) => l.id === 1).verifiedUpload.status, 'ok');
+  assert.equal(result.body.lead.quality, 'GOOD');
+  const junk = await feedback({ body: { quality: 'JUNK' } });
+  assert.equal(junk.uploadLeadConversion.callCount(), 0);
+  assert.equal(junk.patchLead.calls().length, 0);
+  assert.equal(junk.result.body.conversionUpload, 'not_applicable');
+});
+
+test('0c: an outcome-persistence failure never affects the 200 or the CRM write', async () => {
+  const writeLeads = makeWriteLeadsMock();
+  const result = await applyClientLeadFeedback({
+    leadId: 1, quality: 'GOOD', leads: LEADS, clientIndex: CLIENT_A_INDEX, writeLeads,
+    uploadLeadConversion: makeUploadMock(), patchLead: makePatchLeadMock({ shouldReject: true }),
+  });
+  assert.equal(result.status, 200);
+  assert.equal(writeLeads.callCount(), 1);
+  assert.equal(writeLeads.lastArgs().find((l) => l.id === 1).quality, 'GOOD');
 });
