@@ -641,9 +641,16 @@ p { margin: 0; }
 }
 
 /* ─── Knowledge article page ─── */
+.knowledge-table-scroll:focus-visible {
+  outline: 2.5px solid var(--accent);
+  outline-offset: 3px;
+  border-radius: var(--radius-md);
+}
 @media (max-width: 900px) {
   .knowledge-layout {
-    grid-template-columns: 1fr !important;
+    /* minmax(0, …): a bare 1fr has an auto minimum, so a wide child (the key-facts table, minWidth 520px)
+       stretches the grid item past the viewport instead of scrolling inside its wrapper. */
+    grid-template-columns: minmax(0, 1fr) !important;
     gap: 24px !important;
   }
   .knowledge-sidebar { display: none; }

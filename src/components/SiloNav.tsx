@@ -69,6 +69,8 @@ export default function SiloNav({ currentPath }: { currentPath: string }) {
       style={{
         display: "inline-flex",
         alignItems: "center",
+        minHeight: "44px",
+        boxSizing: "border-box",
         gap: "6px",
         padding: "5px 13px",
         borderRadius: "var(--radius-pill)",

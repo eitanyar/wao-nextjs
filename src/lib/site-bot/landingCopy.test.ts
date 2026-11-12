@@ -93,8 +93,19 @@ test('google-ads: the clicks-to-real-leads change set (2026-11-12 FINAL, Noa + Y
   // Later approved patch (round 3, Noa-gated): the how-it-works file's hub_patch.line_27 gender fix.
   const r3 = read('docs/copy/google-ads-how-it-works-page-r3-2026-11-12.waocopy.json');
   const line27 = (JSON.parse(r3.split('```json\n')[1].split('\n```')[0]) as { hub_patch: { line_27: { old: string; new: string } } }).hub_patch.line_27;
+  // Later approved patch (Noa-gated, 2026-11-12): mechanism moment 3 reframed as designed, not live.
+  const moment3 = (JSON.parse(read('docs/copy/google-ads-hub-moment3-final-2026-11-12.json')) as {
+    patches: { file: string; old: string; new: string }[];
+  }).patches;
+  assert.equal(moment3.length, 2);
   for (const [key, value] of Object.entries(final.lines)) {
-    const expected = value.includes(line27.old) ? value.split(line27.old).join(line27.new) : value;
+    let expected = value.includes(line27.old) ? value.split(line27.old).join(line27.new) : value;
+    for (const p of moment3) {
+      if (p.file === key) {
+        assert.equal(expected, p.old, `${key}: moment-3 patch old matches the FINAL line`);
+        expected = p.new;
+      }
+    }
     assert.equal(fields.get(key), expected, key);
   }
   assert.deepEqual([...GOOGLE_ADS_LANDING_COPY.phases.items], final['phases.items']);

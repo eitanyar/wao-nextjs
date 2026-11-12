@@ -355,7 +355,7 @@ export default async function KnowledgeArticlePage({
             href={`/knowledge#${article.category}`}
             style={{ color: "var(--muted)", textDecoration: "none" }}
           >
-            {CATEGORY_ICONS[article.category]} {CATEGORY_LABELS[article.category]}
+            <span aria-hidden="true">{CATEGORY_ICONS[article.category]}</span> {CATEGORY_LABELS[article.category]}
           </Link>
           <span aria-hidden>›</span>
           <span style={{ color: "var(--text)", fontWeight: 600 }}>
@@ -373,8 +373,8 @@ export default async function KnowledgeArticlePage({
             alignItems: "start",
           }}
         >
-          {/* Main content */}
-          <article>
+          {/* Main content — minWidth 0 so wide children (key-facts table) scroll instead of widening the grid item */}
+          <article style={{ minWidth: 0 }}>
             {/* Category badge */}
             <div style={{ marginBottom: "12px" }}>
               <Link
@@ -493,11 +493,17 @@ export default async function KnowledgeArticlePage({
                       <h2 style={{ ...HEADING, fontSize: "1.1rem", fontWeight: 700, marginTop: 0, marginBottom: "14px" }}>
                         {renderMixed(article.keyFacts.heading)}
                       </h2>
-                      <div style={{ overflowX: "auto" }}>
+                      <div
+                        className="knowledge-table-scroll"
+                        tabIndex={0}
+                        role="region"
+                        aria-label={article.keyFacts.heading}
+                        style={{ overflowX: "auto" }}
+                      >
                         <table style={{ ...BODY, width: "100%", borderCollapse: "collapse", fontSize: "0.88rem", minWidth: "520px" }}>
                           <thead>
                             <tr>
-                              <td style={{ borderBottom: "2px solid var(--border)" }} />
+                              <td aria-hidden="true" style={{ borderBottom: "2px solid var(--border)" }} />
                               {article.keyFacts.columns.map((c) => (
                                 <th key={c} scope="col" style={{ textAlign: "start", padding: "8px 10px", borderBottom: "2px solid var(--border)", color: "var(--muted)", fontWeight: 700 }}>
                                   {renderMixed(c)}
@@ -651,7 +657,7 @@ export default async function KnowledgeArticlePage({
                           fontFamily: "var(--font-body), sans-serif",
                         }}
                       >
-                        {CATEGORY_ICONS[rel.category]} {CATEGORY_LABELS[rel.category]}
+                        <span aria-hidden="true">{CATEGORY_ICONS[rel.category]}</span> {CATEGORY_LABELS[rel.category]}
                       </span>
                     </Link>
                   ))}
