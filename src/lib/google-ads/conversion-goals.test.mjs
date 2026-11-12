@@ -13,6 +13,7 @@ import {
   isPrimaryConversionCategory,
   planConversionActionPrimaryUpdates,
   planGoalBiddabilityUpdates,
+  planVerifiedLeadOnlyGoals,
 } from './conversion-goals.js';
 import { biddingPhasePath, readBiddingPhaseState, recordGoalChange } from './bidding-phase-state.js';
 
@@ -30,13 +31,13 @@ test('0a: of the five WAO categories, exactly one (QUALIFIED_LEAD) is primary_fo
   assert.equal(isPrimaryConversionCategory('CONVERTED_LEAD'), false);
 });
 
-test('0a: create-campaign sets primary_for_goal explicitly on all five actions, true only for verified-lead', () => {
+test('0a: create-campaign sets primary_for_goal explicitly on all six actions (incl. AD_CALL calls from ads), true only for verified-lead', () => {
   const start = routeSource.indexOf('newCustomer.conversionActions.create([');
   const end = routeSource.indexOf(']);', start);
   assert.ok(start > 0 && end > start);
   const block = routeSource.slice(start, end);
   const objects = block.split(/\n {6}\{/).slice(1);
-  assert.equal(objects.length, 5, 'five conversion actions');
+  assert.equal(objects.length, 6, 'six conversion actions (fix 2 adds the AD_CALL calls-from-ads action)');
   let primaryCount = 0;
   for (const obj of objects) {
     const category = obj.match(/category: enums\.ConversionActionCategory\.([A-Z_]+),/)?.[1];
@@ -46,7 +47,7 @@ test('0a: create-campaign sets primary_for_goal explicitly on all five actions, 
     if (isPrimaryConversionCategory(category)) primaryCount += 1;
   }
   assert.equal(primaryCount, 1);
-  assert.equal((block.match(/primary_for_goal:/g) || []).length, 5);
+  assert.equal((block.match(/primary_for_goal:/g) || []).length, 6);
   assert.match(routeSource, /configureVerifiedLeadOnlyGoals\(newCustomer, campaignResourceName, verifiedLeadConversionResourceName\)/);
 });
 
@@ -114,4 +115,26 @@ test('bidding-phase.json: goal change recorded atomically in a temp baseDir; sig
   const dir = path.dirname(biddingPhasePath('client-a', baseDir));
   assert.deepEqual(fs.readdirSync(dir), ['bidding-phase.json'], 'no temp files left behind');
   assert.ok(biddingPhasePath('client-a', baseDir).startsWith(baseDir));
+});
+
+test('fix 2: the AD_CALL calls-from-ads action stays secondary and its goal is never biddable (read-back stays clean)', () => {
+  // Google creates a PHONE_CALL_LEAD~CALL_FROM_ADS (origin 5) goal for the new action.
+  const ops = planGoalBiddabilityUpdates([
+    { resource_name: 'g/CALLS', category: 11, origin: 5, biddable: true },
+    { resource_name: 'g/QL', category: 22, origin: 2, biddable: true },
+  ]);
+  assert.deepEqual(ops.map((o) => [o.resource_name, o.biddable]), [['g/CALLS', false]]);
+  const clean = planVerifiedLeadOnlyGoals({
+    actions: [
+      { resource_name: 'a/QL', category: 22, status: 2, primary_for_goal: true },
+      { resource_name: 'a/CALLS', category: 11, status: 2, type: 2, primary_for_goal: false },
+    ],
+    customerGoals: [{ resource_name: 'g/CALLS', category: 11, origin: 5, biddable: false }, { resource_name: 'g/QL', category: 22, origin: 2, biddable: true }],
+    campaignGoals: [{ resource_name: 'cg/CALLS', category: 11, origin: 5, biddable: false }],
+  }, 'a/QL');
+  assert.equal(clean.actions.length + clean.customerGoals.length + clean.campaignGoals.length, 0);
+  assert.deepEqual(goalBackfillRefusals([
+    { resource_name: 'a/QL', category: 22, status: 2 },
+    { resource_name: 'a/CALLS', category: 11, status: 2, type: 2 },
+  ], 'a/QL'), []);
 });

@@ -103,6 +103,38 @@ async function fetchAdGroupKeywordStates(params: FetchSearchTermReportParams): P
   return states;
 }
 
+/**
+ * Calls per search term (Dror fix 2, 2026-11-12): all_conversions of the phone-call category
+ * (the AD_CALL "calls from ads" action and the landing-page phone click), keyed
+ * `${adGroupId}|${searchTerm}`. scoreSearchTerms never cuts a term with a call. A read failure
+ * throws like the other queries: no call data means no safe cut, so the task must not score.
+ */
+async function fetchSearchTermCallCounts(params: FetchSearchTermReportParams, start: string, end: string): Promise<Map<string, number>> {
+  const { campaignConfig, campaignId, clientInstance } = params;
+  const customer = resolveCustomer(campaignConfig, clientInstance);
+  const query = `
+    SELECT search_term_view.search_term, ad_group.id, segments.conversion_action_category, metrics.all_conversions
+    FROM search_term_view
+    WHERE campaign.advertising_channel_type = 'SEARCH'
+      AND campaign.id = ${campaignId}
+      AND segments.conversion_action_category = 'PHONE_CALL_LEAD'
+      AND segments.date BETWEEN '${start}' AND '${end}'
+  `;
+  const rows = (await customer.query(query)) as Array<{
+    search_term_view?: { search_term?: string | null };
+    ad_group?: { id?: string | number };
+    metrics?: { all_conversions?: string | number | null };
+  }>;
+  const calls = new Map<string, number>();
+  for (const r of rows) {
+    const term = r.search_term_view?.search_term;
+    if (!term || r.ad_group?.id === undefined) continue;
+    const key = `${String(r.ad_group.id)}|${normalizeKeywordText(String(term))}`;
+    calls.set(key, (calls.get(key) ?? 0) + Number(r.metrics?.all_conversions ?? 0));
+  }
+  return calls;
+}
+
 export interface FetchSearchTermReportParams {
   campaignConfig: CampaignConfig;
   campaignId: string;
@@ -144,6 +176,7 @@ export async function fetchSearchTermReport(params: FetchSearchTermReportParams)
   }>;
 
   const keywordStates = await fetchAdGroupKeywordStates(params);
+  const callCounts = await fetchSearchTermCallCounts(params, start, end);
 
   return rows
     .filter((r) => r.search_term_view?.search_term && r.ad_group?.id !== undefined)
@@ -165,6 +198,7 @@ export async function fetchSearchTermReport(params: FetchSearchTermReportParams)
       clicks: Number(r.metrics?.clicks ?? 0),
       costMicros: Number(r.metrics?.cost_micros ?? 0),
       conversions: Number(r.metrics?.all_conversions ?? 0),
+      calls: callCounts.get(`${adGroupId}|${normalizeKeywordText(searchTerm)}`) ?? 0,
       triggeringMatchType: toMatchType(r.segments?.search_term_match_type),
       isExistingKeyword: states.some(
         (state) => !state.negative && state.enabled && normalizeKeywordText(state.text) === normalizeKeywordText(searchTerm)

@@ -58,3 +58,13 @@ In `src/lib/bot/prompts.ts`:
 
 ## Verifier
 Roni re-runs the sandbox read-backs, and verifies step 0 / GA1 (an uploaded verified-lead conversion accepted by Google on the sandbox).
+
+## Status 2026-11-12: fixes 1–4 + AI Max off + per-trade CPC cap SHIPPED (Roni PASS at code/test level)
+
+## BEFORE GOOGLE_ADS_ENABLE_LIVE_MODE IS EVER TURNED ON (hard gate)
+1. Google Ads TEST-account token (Eitan, about 15 min, guided): a test manager account + GOOGLE_ADS_TEST_REFRESH_TOKEN in .env.local, plus a harness that points data/campaigns and clientsDir at a temp folder (the campaigns path is fixed to process.cwd() today; the engineer makes it configurable).
+2. One sandbox create-campaign read-back through campaign-setup-readback.ts: every check true (locations + PRESENCE, AI Max off, asset automation opted out, Search Partners off, CPC cap per trade, call reporting on + call asset → secondary AD_CALL, keywords EXACT/PHRASE, goals read-back clean). Plus the 422 on an unknown city, and remote/storefront variants. Google's acceptance of the v24 fields is unproven until then.
+3. "₪9.9" owner-facing text removed: bot/route.ts ~664/697, OnboardingSidebar.tsx ~197/210. Replacement Hebrew from Tamar → Noa.
+4. Budget below ₪1,500 refused or warned: bot/route.ts ~559/720 and prompt Branch B "never decline". BUDGET_CLUSTERS minimums aligned (800/1,000/1,200 → 1,500).
+5. Step 0 / GA1: one verified-lead upload accepted by Google on the sandbox.
+6. Dror confirms the raised "Recommended" budgets (8 rows were lifted to 1,500).

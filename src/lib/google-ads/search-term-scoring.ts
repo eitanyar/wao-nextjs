@@ -111,6 +111,11 @@ export interface SearchTermReportRow {
   clicks: number;
   costMicros: number;
   conversions: number;
+  /**
+   * Phone-call conversions on this term (calls from the ad's call button + landing-page phone
+   * clicks). Dror fix 2, 2026-11-12: a term with >= 1 call is never cut. Undefined = not read.
+   */
+  calls?: number;
   triggeringMatchType: TriggeringMatchType;
   /** Enabled positive keyword with identical normalized text in this ad group. */
   isExistingKeyword?: boolean;
@@ -159,6 +164,11 @@ export interface ScoredSearchTerm {
   };
   /** Internal sort key — wasted-spend CUTs first, then combined-flag CUTs, then WATCH. */
   severityRank: number;
+}
+
+/** True when the term produced at least one phone call (calls from the ad or the page). */
+export function hasCall(row: Pick<SearchTermReportRow, 'calls'>): boolean {
+  return Number(row.calls ?? 0) >= 1;
 }
 
 function costIlsFromMicros(costMicros: number): number {
@@ -279,6 +289,10 @@ export function scoreSearchTerms(params: ScoreSearchTermsParams): ScoredSearchTe
     // §2 — eligibility gate. Below the floor, a term is pure noise: skip entirely, no
     // CUT, no WATCH, no card noise.
     if (row.impressions < MIN_IMPRESSIONS_ELIGIBLE) continue;
+
+    // Dror fix 2 (2026-11-12): a search term that produced a phone call is working. Never
+    // propose cutting it, whatever its CTR or click cost says.
+    if (hasCall(row)) continue;
 
     const confidence: 'low' | 'high' = row.impressions >= HIGH_CONFIDENCE_IMPRESSIONS ? 'high' : 'low';
     const baseline = baselines.get(row.adGroupId);

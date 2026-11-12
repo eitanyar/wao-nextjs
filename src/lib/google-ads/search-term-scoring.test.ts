@@ -5,6 +5,7 @@ import {
   MIN_IMPRESSIONS_ELIGIBLE,
   HIGH_CONFIDENCE_IMPRESSIONS,
   MAX_TERMS_PER_TASK,
+  hasCall,
   type SearchTermReportRow,
   type AdGroupBaseline,
 } from './search-term-scoring';
@@ -276,4 +277,19 @@ test('multi-word search term gets PHRASE negative match type, never BROAD', () =
 test('MIN_IMPRESSIONS_ELIGIBLE and HIGH_CONFIDENCE_IMPRESSIONS constants match the spec', () => {
   assert.equal(MIN_IMPRESSIONS_ELIGIBLE, 20);
   assert.equal(HIGH_CONFIDENCE_IMPRESSIONS, 50);
+});
+
+// -------------------------------------------------------------------------------------
+// Dror fix 2 (2026-11-12): a search term with a call is never cut
+// -------------------------------------------------------------------------------------
+
+test('a term with >= 1 call is never cut, even when it is a clear wasted-spend CUT', () => {
+  const waste = { impressions: 200, clicks: 12, costMicros: 900_000_000, conversions: 0 };
+  const withoutCall = scoreSearchTerms({ rows: [row({ searchTerm: 'calls term', ...waste })], baselines: baselinesMap(), wastedSpend: { trailingAvgCplIls: 50 } });
+  assert.equal(withoutCall[0]?.verdict, 'CUT', 'control: the same row without a call is a CUT');
+  const withCall = scoreSearchTerms({ rows: [row({ searchTerm: 'calls term', ...waste, calls: 1 })], baselines: baselinesMap(), wastedSpend: { trailingAvgCplIls: 50 } });
+  assert.equal(withCall.length, 0);
+  assert.equal(hasCall({ calls: 0 }), false);
+  assert.equal(hasCall({}), false);
+  assert.equal(hasCall({ calls: 2 }), true);
 });

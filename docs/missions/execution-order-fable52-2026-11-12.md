@@ -12,6 +12,13 @@ Read-only planning run by Fable 5.2 (claude-fable-5-2), founder-requested. Pendi
 
 **Bottom line:** the queue as approved is about 21 engineer-days against 15 available (10 working days, Sun 15.11 to Thu 26.11). The launch build alone uses all 15 with no slack, so the redesign fits only with extra sessions (decision 1), and Ads Bot phase 2 and the video pipeline wait until after 29.11.
 
+## POST-LAUNCH PRIORITY QUEUE (do not lose; first work after the 29.11 launch)
+Founder-ordered, 2026-11-12. In this order unless Eitan reorders:
+1. **Ads Bot phase 2: automatic switch to real-lead bidding + rollback** (docs/specs/ads-bot-phase2-auto-graduation-2026-11-12.md + volume-reality §1.6). Must be live before any client can reach the switch (G1 = 45 days). Slot 30.11–3.12. It makes the "designed to" copy become "built to".
+2. **WhatsApp nurture sequence, PARKED by founder until after launch; important, do not drop.** Spec: docs/copy/reviews/amit-nurture-compliance-2026-11-12.md. Build: demo mobile field + separate unticked consent checkbox + stored consent proof; inbound webhook with opt-out keywords + Meta "Stop promotions" button; opt-out list checked before every send; scheduler (days 0/4/9/15/22, quiet hours, stop/pause rules); 131049 handling; a DEDICATED marketing WhatsApp number; privacy-policy section naming Meta. Lawyer reviews the consent text (+ the direct-mail §17F point). Copy: docs/copy/ads-bot-nurture-sequence-r2-2026-11-12.waocopy.json (after Noa). About 2 engineer days.
+3. **Auto-reply when the owner can't answer:** switch it on after phase 2, then make that ad (Fable decision 3).
+4. **Ads Bot later items** (Dror): ad schedule + hours question; free-intent negative phrases instead of the bare "חינם"; default negative-intent dictionary; weekly clean-up in the first 30 days; budget_tune as an owner-approved proposal; sitelink Hebrew; AUTONOMY legal version in prod.
+
 ## 1. Engineer order, now to 29.11
 
 | # | Item | Days | Earliest start | Why here |

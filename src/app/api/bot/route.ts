@@ -228,7 +228,7 @@ function generateFallbackStrategyAndCopy(data: CollectedData) {
       targetLocation: location,
       suggestedDailyBudget: daily,
       biddingStrategy: "Maximize Clicks",
-      keywords: [`${niche}`, `${niche} מחיר`, `${niche} מקצועי`, `שירות ${niche}`],
+      keywords: [`${niche}`, `${niche} מקצועי`, `שירות ${niche}`],
       strategyRationale: `קמפיין חיפוש ממוקד בשלב איסוף נתונים (Maximize Clicks). תקציב יומי ₪${daily} בהתאם לתקציב החודשי.`,
     },
     copy: {
@@ -514,18 +514,6 @@ function handleSimulation(
         if (reviewCount16 >= 50 && starRating16 >= 4.5) lpCvr = Math.min(lpCvr * 1.25, 0.12);
         else if (reviewCount16 >= 10 && starRating16 >= 4.0) lpCvr = Math.min(lpCvr * 1.10, 0.12);
         else if (reviewCount16 < 5) lpCvr = lpCvr * 0.85;
-
-        // Locksmith redirect — Google Search PPC doesn't work for this vertical
-        const isLocksmith = ["מנעולן", "מנעול", "פריצה"].some(k => (data.businessNiche || "").includes(k));
-        if (isLocksmith) {
-          data.turnIndex = 19;
-          return NextResponse.json({
-            response: `רגע, לפני שנמשיך — יש משהו חשוב שאני חייב לשתף איתך.\n\nתחום המנעולנות הוא מהאתגרים הגדולים בגוגל Search. עלות הקליק גבוהה, העבודה הממוצעת נמוכה יחסית, ורוב הלקוחות לא חוזרים. המתמטיקה לא מטיבה עם Search רגיל.\n\nמה שעובד טוב יותר למנעולן זה **Google Local Services Ads**. אתה משלם רק על שיחות אמיתיות. אתה מופיע עם תג ״מאומת על ידי גוגל״. ועלות לפנייה — נמוכה בהרבה. רוצה שנדבר על איך להקים את זה במקום?`,
-            currentState,
-            collectedData: data,
-            isSimulation: true,
-          });
-        }
 
         const rec = vb.recommended;
         const avgJobVal = data.avgJobValue || 500;

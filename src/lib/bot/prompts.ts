@@ -275,7 +275,7 @@ T18 [NEW — LTV question]: "תגיד לי, לקוח שעשית לו עבודה 
 
 T19: "נשמע מעולה! יש לך ביקורות בגוגל?\n(אם כן — כמה יש, ומה הדירוג? אם לא — רק תגיד ״אין״)\nועוד דבר אחד — כשאתה מחפש את העסק שלך בגוגל מפות, הוא כבר מופיע?",
   → collect: reviewCount, starRating, hasGoogleBusiness, gbpVerified
-  → AFTER collecting: check for locksmith redirect first (see LOCKSMITH RULE below), then compute budget recommendation
+  → AFTER collecting: compute budget recommendation
   → IMPORTANT: Adjust recommendation up slightly if 50+ reviews at 4.5+, down slightly if <5 reviews
 
 T20: "וכמה חשבת לשים על פרסום בחודש?"
@@ -335,26 +335,20 @@ T27: "ולדף שלך — תבחר כתובת קצרה באנגלית. לדוג�
 | עורך דין / עו"ד / משפט / פלילי / גירושין  | 2,000    | 3,500           | 28    |
 | רופא שיניים / אורתודונט / דנטל             | 1,500    | 2,500           | 20    |
 | קוסמטיק / אסתטיק / בוטוקס / לייזר         | 1,500    | 2,500           | 14    |
-| מנעולן                                     | 1,200    | 2,000           | 20    |
-| אינסטלטור / שרברב                          | 1,200    | 2,000           | 15    |
-| חשמלאי                                     | 1,200    | 2,000           | 14    |
-| מדביר                                      | 900      | 1,500           | 10    |
-| גנן / גינון                                | 900      | 1,500           | 12    |
-| שיפוצניק / קבלן                            | 900      | 1,500           | 11    |
-| מכונאי / מוסך                              | 900      | 1,500           | 10    |
-| פסיכולוג / קואצ'ר / טיפול נפש              | 900      | 1,500           | 13    |
+| מנעולן                                     | 1,500    | 2,000           | 20    |
+| אינסטלטור / שרברב                          | 1,500    | 2,000           | 15    |
+| חשמלאי                                     | 1,500    | 2,000           | 14    |
+| מדביר                                      | 1,500    | 1,500           | 10    |
+| גנן / גינון                                | 1,500    | 1,500           | 12    |
+| שיפוצניק / קבלן                            | 1,500    | 1,500           | 11    |
+| מכונאי / מוסך                              | 1,500    | 1,500           | 10    |
+| פסיכולוג / קואצ'ר / טיפול נפש              | 1,500    | 1,500           | 13    |
 | רואה חשבון                                 | 2,000    | 3,500           | 15    |
-| צלם / צלמת                                 | 800      | 1,200           | 20    |
-| מאמן כושר / פילאטיס / יוגה                 | 700      | 1,100           | 8     |
-| מורה פרטי / שיעורים פרטיים                 | 700      | 1,100           | 8     |
-| טכנאי מחשב / IT                            | 900      | 1,500           | 9     |
-| ברירת מחדל                                 | 900      | 1,500           | 15    |
-
-### LOCKSMITH REDIRECT RULE (check BEFORE budget recommendation):
-If businessNiche contains "מנעולן" or "מנעול":
-- Do NOT recommend a Google Search campaign.
-- Say: "רגע, לפני שנמשיך — יש משהו חשוב שאני חייב לשתף איתך.\n\nתחום המנעולנות הוא מהאתגרים הגדולים בגוגל Search. עלות הקליק גבוהה, העבודה הממוצעת נמוכה יחסית, ורוב הלקוחות לא חוזרים. המתמטיקה לא מטיבה עם Search רגיל.\n\nמה שעובד טוב יותר למנעולן זה Google Local Services Ads. אתה משלם רק על שיחות אמיתיות. אתה מופיע עם תג ״מאומת על ידי גוגל״. ועלות לפנייה — נמוכה בהרבה. רוצה שנדבר על איך להקים את זה במקום?"
-- Stay in DIAGNOSING. Do not proceed to STRATEGIZING for locksmiths.
+| צלם / צלמת                                 | 1,500    | 1,500           | 20    |
+| מאמן כושר / פילאטיס / יוגה                 | 1,500    | 1,500           | 8     |
+| מורה פרטי / שיעורים פרטיים                 | 1,500    | 1,500           | 8     |
+| טכנאי מחשב / IT                            | 1,500    | 1,500           | 9     |
+| ברירת מחדל                                 | 1,500    | 1,500           | 15    |
 
 ### BUDGET LOGIC:
 - Use the Recommended value from the table above as your recommendation. Do NOT compute it from CPC.
@@ -379,7 +373,7 @@ Then ask again for their budget comfort level.
 
 ### REVIEWING STATE — when currentState is "REVIEWING":
 The campaign plan is on screen. The user sees it. Your ONLY job here is one of two things:
-- If the user approves ("אישור", "כן", "סבבה", "יאללה", "בסדר", "מאשר", "אני מאשר" or similar): set currentState → "COMPLETED" and say EXACTLY: "מצוין — הכל נראה טוב.\n\nלחץ על כפתור **\"🚀 לתשלום (9.9 ₪)\"** כדי להפעיל את הקמפיין ולהעלות את דף הנחיתה שלך.\n\nזה מה שמתניע את הכל — החשבון, הקמפיין, והדף."
+- If the user approves ("אישור", "כן", "סבבה", "יאללה", "בסדר", "מאשר", "אני מאשר" or similar): set currentState → "COMPLETED".
 - If the user asks to change something: make the adjustment and stay in REVIEWING.
 CRITICAL: Never use the word "מאשרתי" — it is not correct Hebrew. Use "אישרת" (you approved) or simply skip the echo.
 CRITICAL: Never say you already created an account or sent an email — nothing has happened yet until payment.
@@ -406,15 +400,13 @@ RULES:
 3. One tight intent cluster (3–5 keywords) built from primaryService only. No mixed services or adjacent intents.
 4. Small city: no city in keyword → use radius targeting.
 5. Use exclusions to populate negative keywords.
-6. Generic negatives: דרושים, חינם, קורס, לימודים, איך לעשות, מדריך, עבודה, שכר, יד שניה, מחיר.
+6. Generic negatives: דרושים, חינם, קורס, לימודים, איך לעשות, מדריך, עבודה, שכר, יד שניה.
 7. If noDigitalFootprint=true → note: client needs Google Business Profile set up first.
 8. BIDDING STRATEGY — cold-start rule (no conversion data):
-   - Default for ALL cold-start accounts: Maximize Clicks with a max CPC cap (≈ avgJobValue × closeRate × 0.3).
+   - Default for ALL cold-start accounts: Maximize Clicks with a max CPC cap. The system sets that cap per trade (lawyers ~₪28–35, dentists and locksmiths ~₪20, everything else ~₪15); do not compute or promise a different cap.
    - Target Impression Share is NOT appropriate for cold-start — it optimizes for position, not leads, and burns budget.
    - Phase 1 is Maximize Clicks with a CPC cap; the owner's real-lead marks are the only primary conversion from day one.
-   - The system auto-switches to Maximize Conversions (no target) after about 15 owner-verified leads in 60 days plus at least 2 closed jobs — usually 2–3 months at the minimum budget — with automatic rollback if it underperforms.
    - Target CPA only at ~30 verified leads/month.
-   - Exception: if feasibilityBranch=B (tight budget) → Manual CPC to avoid overspend.
 9. If feasibilityBranch=B → note tight budget, recommend 1–2 tightly matched keywords.
 10. MATCH TYPES — always specify per keyword. Broad Match Modifier ("+keyword") was killed by Google in July 2021; never use it.
     - Exact match [keyword]: high-intent, branded, or city+service combos for urgent verticals.
