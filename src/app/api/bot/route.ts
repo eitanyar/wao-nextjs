@@ -824,7 +824,7 @@ function generateMockCampaign(data: CollectedData) {
 
   const biddingStrategy = urgency === "urgent"
     ? "Target Impression Share (Top) — לקוחות בחירום לא גוללים מטה"
-    : "tCPA — ממטב להמרות לאחר צבירת 15+ המרות";
+    : "מצב קליקים עם תקרת מחיר, ואז מעבר אוטומטי למצב פניות אחרי כ־15 פניות אמיתיות.";
 
   return {
     strategy: {

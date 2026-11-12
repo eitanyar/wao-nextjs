@@ -1,0 +1,45 @@
+{
+  "_source": "Noa's merged final set (round 1 + round 2, QA'd 2026-11-12). Saved verbatim by Adam. Apply this file, not the waocopy outputs. Do NOT add hero.title / hero.subtitle (H1 comes only from researchedPageH1()). hero.cta.* are HOLD: apply only if the redesigned template has no CTA labels yet. Engineer must confirm the GBP review fetch sorts newest-first with no star filter, or reviews.selection is false.",
+  "labels": {
+    "nav.label": "ניווט ראשי",
+    "skip.link": "דלג לתוכן הראשי",
+    "hero.rating": "{rating}",
+    "hero.rating.aria": "דירוג {rating} מתוך 5",
+    "hero.rating.count": {
+      "one": "ביקורת אחת ב-Google",
+      "other": "{count} ביקורות ב-Google"
+    },
+    "hero.hours": "{hours}",
+    "hero.hours.label": "שעות פעילות",
+    "hours.days": ["א׳", "ב׳", "ג׳", "ד׳", "ה׳", "ו׳", "ש׳"],
+    "hours.closedDay": "סגור",
+    "hero.cta.call": "התקשר עכשיו",
+    "hero.cta.whatsapp": "שלח הודעה בוואטסאפ",
+    "hero.cta.navigate": "הוראות הגעה",
+    "trust.label": "למה לסמוך עליי",
+    "reviews.heading": "מה לקוחות אומרים עליי",
+    "reviews.source": "הדירוג והביקורות מ-Google",
+    "reviews.selection": "אלה הביקורות האחרונות מהפרופיל העסקי שלי",
+    "reviews.list.label": "ביקורות לקוחות מ-Google",
+    "reviews.seeAll": "לכל הביקורות ב-Google",
+    "review.name": "{reviewerName}",
+    "review.date": "{month} {year}",
+    "review.date.months": ["ינואר", "פברואר", "מרץ", "אפריל", "מאי", "יוני", "יולי", "אוגוסט", "ספטמבר", "אוקטובר", "נובמבר", "דצמבר"],
+    "review.stars.aria": {
+      "one": "כוכב אחד מתוך 5",
+      "other": "{stars} כוכבים מתוך 5"
+    },
+    "review.text": "{text}",
+    "gallery.heading": "מהעבודות שלי",
+    "photo.alt.job": "עבודה גמורה של {businessName}",
+    "photo.alt.owner": "הבעלים של {businessName}",
+    "photo.alt.van": "רכב העבודה של {businessName}",
+    "about.heading": "קצת עליי",
+    "footer.hours.label": "שעות פעילות",
+    "footer.areas.label": "אזורי שירות",
+    "form.submit": "אני אחזור אליך",
+    "og.fallback": "{businessName} · {topService} · {city}",
+    "og.alt": "{businessName}, {topService} ב{city}"
+  },
+  "_maya": "<bdi> around Google in the chip and the source line (render-time wrap, renderMixed approach); dir=auto on reviewer name and body; screen-reader label for the hours icon; repeated gallery alt text."
+}

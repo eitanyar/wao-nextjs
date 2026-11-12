@@ -213,7 +213,7 @@ export default function GoogleAdsPage() {
         </div>
       </section>
 
-      {/* -- Phases (new r2 block: one h2, two steps) -- */}
+      {/* -- Phases (one h2, then however many steps the copy source holds) -- */}
       <section className="wao-section" style={{ paddingBottom: 0 }}>
         <div className="wao-container" style={{ maxWidth: "860px" }}>
           <h2 style={{ ...h2Style, fontSize: "clamp(1.25rem,2.2vw,1.6rem)", lineHeight: 1.3, marginBottom: "20px" }}>{renderMixed(COPY.phases.h2)}</h2>

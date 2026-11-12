@@ -398,7 +398,9 @@ RULES:
 8. BIDDING STRATEGY — cold-start rule (no conversion data):
    - Default for ALL cold-start accounts: Maximize Clicks with a max CPC cap (≈ avgJobValue × closeRate × 0.3).
    - Target Impression Share is NOT appropriate for cold-start — it optimizes for position, not leads, and burns budget.
-   - Graduate to Maximize Conversions / tCPA only after 15–30 recorded conversions.
+   - Phase 1 is Maximize Clicks with a CPC cap; the owner's real-lead marks are the only primary conversion from day one.
+   - The system auto-switches to Maximize Conversions (no target) after about 15 owner-verified leads in 60 days plus at least 2 closed jobs — usually 2–3 months at the minimum budget — with automatic rollback if it underperforms.
+   - Target CPA only at ~30 verified leads/month.
    - Exception: if feasibilityBranch=B (tight budget) → Manual CPC to avoid overspend.
 9. If feasibilityBranch=B → note tight budget, recommend 1–2 tightly matched keywords.
 10. MATCH TYPES — always specify per keyword. Broad Match Modifier ("+keyword") was killed by Google in July 2021; never use it.

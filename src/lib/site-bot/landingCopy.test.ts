@@ -82,5 +82,21 @@ test('landing copy: the old no-price FAQ is gone from the Site Bot sources (its 
   assert.ok(billing.includes(String(SITE_BOT_PLAN.netAmount)));
   assert.equal(SITE_BOT_LANDING_COPY.faq.length, 8);
   assert.equal(GOOGLE_ADS_LANDING_COPY.faq.length, 9);
-  assert.equal(GOOGLE_ADS_LANDING_COPY.phases.items.length, 2);
+  assert.equal(GOOGLE_ADS_LANDING_COPY.phases.items.length, 4);
+});
+
+test('google-ads: the clicks-to-real-leads change set (2026-11-12 FINAL, Noa + Yonatan PASS) is live byte for byte', () => {
+  const final = JSON.parse(read('docs/copy/google-ads-clicks-to-leads-FINAL-2026-11-12.json')) as {
+    lines: Record<string, string>; 'phases.items': string[]; bot_bidding_label: string;
+  };
+  const fields = new Map(flatten(GOOGLE_ADS_LANDING_COPY));
+  for (const [key, value] of Object.entries(final.lines)) assert.equal(fields.get(key), value, key);
+  assert.deepEqual([...GOOGLE_ADS_LANDING_COPY.phases.items], final['phases.items']);
+  // The retired "tCPA after 15-30 conversions" claim is gone from the copy, the page and the chat bot.
+  assert.ok(!JSON.stringify(GOOGLE_ADS_LANDING_COPY).includes('15\u201330'));
+  assert.ok(!read('src/app/(app)/google-ads/page.tsx').includes('15\u201330'));
+  assert.ok(!read('src/lib/bot/prompts.ts').includes('15\u201330'));
+  const bot = read('src/app/api/bot/route.ts');
+  assert.ok(bot.includes(JSON.stringify(final.bot_bidding_label)), 'bot bidding label');
+  assert.ok(!bot.includes('tCPA \u2014'), 'old tCPA label gone');
 });
