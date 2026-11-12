@@ -34,6 +34,8 @@ export interface RestatementMatch {
 
 /** The fields whose single usp restatement is allowed (the hero). */
 export const RESTATEMENT_HERO_FIELDS: readonly string[] = ['heroHeadline', 'heroSubheadline'];
+/** Sell mission 2026-11-12: the close above the form gets its own single allowance (proof beside the promise). */
+export const RESTATEMENT_CLOSE_FIELDS: readonly string[] = ['closeLine'];
 
 const HEB = `${String.fromCharCode(0x05d0)}-${String.fromCharCode(0x05ea)}`;
 
@@ -81,18 +83,27 @@ export interface RestatementHit {
   kind: RestatementKind;
 }
 
+/** True when a restatement is a digit run (the owner's exact digits: the spec's digits come from his own answers). */
+export function isDigitMatch(match: RestatementMatch): boolean {
+  return /^\d/.test(match.text);
+}
+
 /**
- * The restatement hits of a page's model-written strings (one hit per field and kind). The hero allowance: when the hero
- * fields together carry exactly one restatement and it is part of the usp, it is not a hit.
+ * The restatement hits of a page's model-written strings (one hit per field and kind). The allowances (sell mission
+ * 2026-11-12): when the hero fields together carry exactly one restatement, and when closeLine carries exactly one, it is not
+ * a hit if it is the owner's exact digits or part of his usp (usp membership is no longer required for digits).
  */
 export function factRestatementHits(strings: ReadonlyArray<{ field: string; value: string }>, spec: FactRestatementSpec): RestatementHit[] {
   const perField = strings.map(item => ({ field: item.field, matches: restatementMatches(item.value, spec) }));
-  const hero = perField.filter(item => RESTATEMENT_HERO_FIELDS.includes(item.field));
-  const heroMatches = hero.flatMap(item => item.matches);
-  const allowed = heroMatches.length === 1 && inUsp(heroMatches[0], spec.usp) ? hero.find(item => item.matches.length === 1)?.field ?? null : null;
+  const allowance = (fields: readonly string[]): string | null => {
+    const group = perField.filter(item => fields.includes(item.field));
+    const matches = group.flatMap(item => item.matches);
+    return matches.length === 1 && (isDigitMatch(matches[0]) || inUsp(matches[0], spec.usp)) ? group.find(item => item.matches.length === 1)?.field ?? null : null;
+  };
+  const allowed = new Set([allowance(RESTATEMENT_HERO_FIELDS), allowance(RESTATEMENT_CLOSE_FIELDS)].filter((field): field is string => field !== null));
   const out: RestatementHit[] = [];
   for (const item of perField) {
-    if (item.field === allowed) continue;
+    if (allowed.has(item.field)) continue;
     for (const kind of [...new Set(item.matches.map(match => match.kind))]) out.push({ field: item.field, kind });
   }
   return out;

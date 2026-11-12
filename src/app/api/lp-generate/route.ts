@@ -3,48 +3,12 @@ import fs from 'fs';
 import path from 'path';
 import type { CollectedData } from '@/lib/bot/prompts';
 import type { LPCopy } from '@/lib/lp/lpCopyPrompt';
-import { buildLpCopyPrompt } from '@/lib/lp/lpCopyPrompt';
 import { callGeminiJSON } from '@/lib/ai/gemini-fast';
+import { callQwenJSON } from '@/lib/ai/qwen-fast';
+import { AdsLandingCopyGateError, generateAdsLandingCopy } from '@/lib/lp/adsLandingCopy';
 
-// buildLpCopyPrompt() is a complete, self-contained instruction set — unlike
-// the Ads Bot's TAMAR_SYSTEM_PROMPT (RSA headline/description schema), which
-// must NOT be reused here. See the identical fix in site-bot/generate/route.ts.
-const LP_COPY_SYSTEM_PROMPT = 'You are a Hebrew copywriter executing the exact instructions and JSON schema given in the user message. Return only the JSON object described there — no prose, no markdown fences.';
-
-// Noa's QA prompt — LOW effort, Haiku, checklist only
-const NOA_LP_QA_PROMPT = `You are Noa, Hebrew language QA editor.
-Apply ONLY these corrections to the LP copy JSON you receive. Return corrected JSON only.
-
-Checklist (fix silently — no explanations):
-1. Double spaces → single space
-2. Straight quotes (") → Hebrew gershayim (״) when opening/closing a quote
-3. Straight apostrophe (') → Hebrew geresh (׳) in Hebrew words
-4. Em-dash without spaces or with double spaces → em-dash with single space each side ( — )
-5. Plural male address → singular male (replace "אתם" with "אתה", "תוכלו" with "תוכל", etc.)
-6. Translated-Hebrew calques like "עשה לייק", "לחץ כאן" (too digital) → natural Hebrew
-7. "heroHeadline" must end in a noun or active verb — remove trailing "..." if present
-8. Enforce these max character lengths (Hebrew chars count 1 each). Any field over its
-   limit must be shortened to fit — cut filler words and redundant phrasing, never the
-   concrete detail/number/name that makes the line specific instead of generic:
-   - heroHeadline: max 68 chars
-   - heroSubheadline: max 90 chars
-   - heroCta: max 15 chars
-   - trustBarItems: each array item max 20 chars
-   - aboutBlurb: max 320 chars
-   - servicesHeadline: max 35 chars
-   - serviceItems: each array item max 25 chars
-   - faqHeadline: max 30 chars
-   - faqItems[].a: max 120 chars each (per FAQ answer)
-   - guaranteeBlock: max 100 chars total
-   - formHeadline: max 35 chars
-   - stickyBarLine: max 25 chars
-
-Rules 2 and 3 apply ONLY inside Hebrew text content (JSON string values). Never
-alter the JSON structural characters themselves — every property name and every
-string value must remain wrapped in exactly one pair of standard ASCII double
-quotes ("). The result must be syntactically valid JSON, parseable by JSON.parse.
-
-Return: corrected JSON object only. No prose.`;
+// Sell mission 2026-11-12: the copy step (system prompts, Qwen with Gemini fallback, the truth gates) lives in
+// lib/lp/adsLandingCopy.ts, so it is testable and the eval script runs the same code.
 
 function slugify(name: string, phone?: string): string {
   // Try Latin-only slug first (valid Cloudflare Pages project name)
@@ -112,22 +76,23 @@ export async function POST(req: Request) {
       : slugify(collectedData.businessName || collectedData.businessNiche || 'my-business', collectedData.phone);
     let copy: LPCopy;
 
-    if (process.env.GEMINI_API_KEY) {
-      // Tamar — write the LP copy. HIGH thinking: this is final, unattended-quality
-      // landing-page copy (not a live chat turn) — see [[feedback_thinking_budget_matches_workload]].
-      const tamarPrompt = buildLpCopyPrompt(collectedData);
-      const tamarRaw = await callGeminiJSON(LP_COPY_SYSTEM_PROMPT, tamarPrompt, { thinkingLevel: 'HIGH' });
-      const tamarCopy = JSON.parse(tamarRaw) as LPCopy;
-
-      // Noa — QA pass. Fail-soft: fall back to Tamar's copy rather than
-      // failing the whole generation over a polish step (see identical
-      // fix in site-bot/generate/route.ts for why this is fail-soft).
+    const qwenConfigured = Boolean(process.env.QWEN_API_KEY && process.env.QWEN_BASE_URL);
+    if (qwenConfigured || process.env.GEMINI_API_KEY) {
+      // Tamar + Noa on Qwen (Eitan: Qwen's Sabra tone), Gemini per call as the fallback. HIGH thinking on Gemini: this is
+      // final, unattended-quality landing-page copy (not a live chat turn) — see [[feedback_thinking_budget_matches_workload]].
       try {
-        const noaRaw = await callGeminiJSON(NOA_LP_QA_PROMPT, JSON.stringify(tamarCopy), { thinkingLevel: 'HIGH' });
-        copy = JSON.parse(noaRaw) as LPCopy;
-      } catch (e: any) {
-        console.warn('LP Noa QA pass failed, using unreviewed Tamar copy:', e.message);
-        copy = tamarCopy;
+        const result = await generateAdsLandingCopy(collectedData, {
+          ...(qwenConfigured ? { callQwen: (system: string, user: string) => callQwenJSON(system, user, { thinkingBudget: 1500 }) } : {}),
+          ...(process.env.GEMINI_API_KEY ? { callGemini: (system: string, user: string) => callGeminiJSON(system, user, { thinkingLevel: 'HIGH' }) } : {}),
+          onEvent: event => console.warn('LP copy step:', JSON.stringify(event)),
+        });
+        copy = result.copy;
+      } catch (e) {
+        // A false claim never ships: the truth gates failed after one repair on a field that cannot be dropped.
+        if (e instanceof AdsLandingCopyGateError) {
+          return NextResponse.json({ error: 'copy_gate_failed', hits: e.hits.map(hit => `${hit.field}:${hit.rule}`) }, { status: 422 });
+        }
+        throw e;
       }
     } else {
       // Simulation fallback — no LLM cost

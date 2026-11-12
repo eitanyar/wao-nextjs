@@ -12,7 +12,8 @@ import type { SiteResearchDossier } from '../site-bot/research/types';
 import { CLAIM_RULES, PLURAL_ADDRESS_TOKENS, SERVICE_DESCRIPTION_MIN_CHARS, WE_FORM_TOKENS } from './copyGates.config';
 import { briefFactTexts } from '../site-bot/research/pageBrief';
 import { codeOwnedFactTemplates, droppedOwnerFactKeys, ownerFacts, pageProofItems, responseScope, trustBarFromFacts, trustText, type OwnerFactTemplates } from './ownerFactCopy';
-import { buildFearPromiseSpec, buildSameDayScopeSpec, type FearPromiseSpec, type SameDayScopeSpec } from './claimScope';
+import { CLIENT_SELLING_RULES } from './clientSellingRules';
+import { buildFearPromiseSpec, buildSameDayScopeSpec, claimWords, type FearPromiseSpec, type SameDayScopeSpec } from './claimScope';
 import { costFaq, formatShekels, ownerPricing, pricingPromisePhrases } from './researchedPricing';
 import { proseSentences, restatementMatches, type FactRestatementSpec, type RestatementFact } from './factRestatement';
 import { budgetStrings, repetitionBudgetDecisions, type BudgetOptions, type BudgetString } from './repetitionBudget';
@@ -88,6 +89,7 @@ import {
   runCopyGates,
   serviceStage,
   SIGNATURE_GROUPS,
+  fearKeywordGroups,
   slugVertical,
   STICKY_ARRIVAL_TOKENS,
   warningGateHits,
@@ -96,6 +98,7 @@ import {
   type HeroCapPageFacts,
   type ServiceStage,
   claimScopeSentenceRules,
+  pitchSentenceBlocked,
 } from './copyGates';
 
 export type QwenJsonCaller = (
@@ -239,7 +242,8 @@ const COPY_SYSTEM_PROMPT =
   `You are Tamar, a Hebrew conversion copywriter. Follow the supplied research brief and JSON schema exactly. Return only the requested JSON object, with no prose or markdown.\n\n${SINGULAR_ADDRESS_RULE}`;
 
 /** M2a.5: the research-site Tamar prompt adds the voice rules; the plain prompt stays as it was. */
-const SITE_COPY_SYSTEM_PROMPT = `${COPY_SYSTEM_PROMPT}\n\n${VOICE_SYSTEM_RULES}\n${M2A6_SYSTEM_RULES}`;
+// Client selling rules (sell mission 2026-11-12): one English block, injected into the Tamar and repair prompts, v1 and v2.
+const SITE_COPY_SYSTEM_PROMPT = `${COPY_SYSTEM_PROMPT}\n\n${CLIENT_SELLING_RULES}\n\n${VOICE_SYSTEM_RULES}\n${M2A6_SYSTEM_RULES}`;
 
 const QA_SYSTEM_PROMPT =
   `You are Noa, a Hebrew language QA editor. Correct only language and typography in the supplied JSON, preserve all factual claims and structure, and return only valid JSON.\n\n${SINGULAR_ADDRESS_RULE} If any field breaks this rule, rewrite that sentence in singular masculine address.\n\n${TYPOGRAPHY_RULE} ${REDUPLICATION_RULE}`;
@@ -248,15 +252,15 @@ const REPAIR_SYSTEM_PROMPT =
   `You are Tamar, a Hebrew conversion copywriter. You are repairing specific fields of a site-copy JSON object that broke hard validator limits or copy rules. Return only a JSON object containing exactly the requested keys, with no prose or markdown.\n\n${SINGULAR_ADDRESS_RULE}\n\n${TYPOGRAPHY_RULE} ${REDUPLICATION_RULE}`;
 
 /** M2a.5: research-site repairs also carry the voice rules, so a repair never trades one hit for another. */
-const SITE_REPAIR_SYSTEM_PROMPT = `${REPAIR_SYSTEM_PROMPT}\n\n${VOICE_SYSTEM_RULES}\n${M2A6_SYSTEM_RULES}`;
+const SITE_REPAIR_SYSTEM_PROMPT = `${REPAIR_SYSTEM_PROMPT}\n\n${CLIENT_SELLING_RULES}\n\n${VOICE_SYSTEM_RULES}\n${M2A6_SYSTEM_RULES}`;
 
 /**
  * Copy v2 slice 3: the v2 system prompts. Tamar's carries only the role and the address rule (the v2 user prompt holds the
  * rest); the repair prompt keeps the voice rules, with pattern A in place of P4 (no aboutBlurb / sticky-bar mentions).
  */
 // Rerun-3 item 3: the v2 system prompts carry the list-free address rule and no token list.
-const SITE_COPY_SYSTEM_PROMPT_V2 = COPY_SYSTEM_PROMPT.replace(SINGULAR_ADDRESS_RULE, SINGULAR_ADDRESS_RULE_V2);
-const SITE_REPAIR_SYSTEM_PROMPT_V2 = `${REPAIR_SYSTEM_PROMPT.replace(SINGULAR_ADDRESS_RULE, SINGULAR_ADDRESS_RULE_V2)}\n\nVOICE (binding):\n${[voiceRuleV2('P3'), '- A. Subject: in body text, a sentence that starts with a first-person present-tense verb carries the first-person subject pronoun, unless the previous sentence already does.', voiceRuleV2('P5')].join('\n')}\n${M2A6_SYSTEM_RULES}`;
+const SITE_COPY_SYSTEM_PROMPT_V2 = `${COPY_SYSTEM_PROMPT.replace(SINGULAR_ADDRESS_RULE, SINGULAR_ADDRESS_RULE_V2)}\n\n${CLIENT_SELLING_RULES}`;
+const SITE_REPAIR_SYSTEM_PROMPT_V2 = `${REPAIR_SYSTEM_PROMPT.replace(SINGULAR_ADDRESS_RULE, SINGULAR_ADDRESS_RULE_V2)}\n\n${CLIENT_SELLING_RULES}\n\nVOICE (binding):\n${[voiceRuleV2('P3'), '- A. Subject: in body text, a sentence that starts with a first-person present-tense verb carries the first-person subject pronoun, unless the previous sentence already does.', voiceRuleV2('P5')].join('\n')}\n${M2A6_SYSTEM_RULES}`;
 const QA_SYSTEM_PROMPT_V2 = QA_SYSTEM_PROMPT.replace(SINGULAR_ADDRESS_RULE, SINGULAR_ADDRESS_RULE_V2);
 /** Rerun-3 item 3 (tests / diagnostics): the v2 system prompts as sent. */
 export const PROMPT_V2_SYSTEM_PROMPTS: Readonly<Record<'tamar' | 'repair' | 'noa', string>> = { tamar: SITE_COPY_SYSTEM_PROMPT_V2, repair: SITE_REPAIR_SYSTEM_PROMPT_V2, noa: QA_SYSTEM_PROMPT_V2 };
@@ -300,10 +304,26 @@ export const PITCH_MIN_WORDS = 120;
 export const PITCH_MAX_WORDS = 220;
 export const STORY_MIN_SENTENCES = 3;
 export const STORY_MAX_SENTENCES = 5;
-export const SITE_COPY_OPTIONAL_PRESENCE_LIMITS = { pitch: 1600, storyHeadline: 40, storyBody: 360 } as const;
+/** Sell mission 2026-11-12: the close above the form (every research-site page; rendered, voice gates warn-only for round 1). */
+export const CLOSE_LINE_MAX_CHARS = 140;
+export const SITE_COPY_OPTIONAL_PRESENCE_LIMITS = { pitch: 1600, storyHeadline: 40, storyBody: 360, closeLine: CLOSE_LINE_MAX_CHARS } as const;
+/**
+ * Sell mission 2026-11-12: `flags`, the unrendered operator notes (English; claims the model wanted but the facts could not
+ * prove). Warn-only for round 1: never validated as copy, never gated; withSystemFields normalises it, and the page record
+ * stores it off the copy (like the pitch).
+ */
+export const FLAGS_KEY = 'flags';
+export const FLAGS_MAX_ITEMS = 6;
+export const FLAGS_ITEM_MAX_CHARS = 200;
 type OptionalPresenceKey = keyof typeof SITE_COPY_OPTIONAL_PRESENCE_LIMITS;
 const OPTIONAL_PRESENCE_KEYS = Object.keys(SITE_COPY_OPTIONAL_PRESENCE_LIMITS) as OptionalPresenceKey[];
 export const STORY_FIELDS_M2B1H: readonly OptionalPresenceKey[] = ['storyHeadline', 'storyBody'];
+/** Sell mission 2026-11-12: the close keys of a research-site page (closeLine, then the unrendered flags). */
+export const CLOSE_FIELDS: readonly string[] = ['closeLine', FLAGS_KEY];
+/** Sell mission 2026-11-12: every research-site page generates (and renders) closeLine. */
+export function closePage(brief: Pick<PageBrief, 'site'>): boolean {
+  return Boolean(brief.site);
+}
 export const SITE_COPY_MAX_BYTES = 16 * 1024;
 /** Fields that must always be null. */
 export const SITE_COPY_ALWAYS_NULL = ['scarcityLine'] as const;
@@ -421,7 +441,7 @@ function allowedEmpty(key: string, value: unknown, options: SiteCopyShapeOptions
 }
 
 /** Content depth: the optional-presence keys of the bounded validator (pitch / story, and the depth blocks). */
-const PRESENCE_KEYS: readonly string[] = [...OPTIONAL_PRESENCE_KEYS, ...DEPTH_BLOCK_KEYS];
+const PRESENCE_KEYS: readonly string[] = [...OPTIONAL_PRESENCE_KEYS, ...DEPTH_BLOCK_KEYS, FLAGS_KEY];
 
 /** The copy without its depth keys (the base byte budget; the depth blocks have their own). */
 function withoutDepthKeys(value: Record<string, unknown>): Record<string, unknown> {
@@ -676,13 +696,14 @@ export const FACT_LEDGER_RULES: readonly string[] = [
   '- FEAR IS NOT A GUARANTEE (binding): answer the customer\'s fear only with what the owner states, at the strength he states it. Never turn the fear into an absolute promise or guarantee (never "never", "always", "guaranteed" or "zero risk" unless an owner field says exactly that).',
   '- CREDENTIAL TIER (binding): name every credential at exactly the tier the owner states. Never raise it (a trained or certified person into a licensed, senior or master one) and never lower it (a licensed owner into merely experienced).',
   '- LOGISTICS (binding): who comes, when, how and with what is stated the same way in every field. No field may contradict, widen or vary what another field says about it.',
-  '- USP ABOVE THE FOLD (binding): every clause of the owner\'s usp, including any time or availability clause, appears above the fold: in heroHeadline, heroSubheadline or the trust bar. Never leave a usp clause only further down the page.',
+  // Sell mission 2026-11-12 (:679): the promise and the mechanism above the fold, not every clause (comma-list subheadlines).
+  '- USP ABOVE THE FOLD (binding): the usp\'s promise and its mechanism appear above the fold, in heroHeadline or heroSubheadline; its other clauses may sit in the trust bar or further down the page.',
 ];
 
 /** Tamar item 3: the clause-level repetition budget (gate_clause_repeat counts it). */
 export function repetitionBudgetRules(brief: Pick<PageBrief, 'site' | 'page' | 'blocksEnabled'>): string[] {
   return [
-    `- REPETITION BUDGET (binding): each owner fact gets one full statement on the page plus at most one short reference (three words or fewer) in one other field. Never the same run of ${CLAUSE_REPEAT_MIN_WORDS} or more words in two fields, not even inside a longer sentence; the system checks every clause.`,
+    `- REPETITION BUDGET (binding): each owner fact and each process step gets one full statement on the page plus at most one short reference (three words or fewer) in one other field. The one big promise is exempt: restate it in fresh words at the top, the middle and the close. Never the same run of ${CLAUSE_REPEAT_MIN_WORDS} or more words in two fields, not even inside a longer sentence; the system checks every clause.`,
     ...(depthLayout(brief).includes('proof') ? ['- PROOF HOME (binding on this page): proofItems is the home of the proof facts (years, licence, warranty, response time). State each of them in full there, once; anywhere else on this page, at most a short reference. The proof-point counts above do not count proofItems.'] : []),
   ];
 }
@@ -697,6 +718,14 @@ export function cutContractRules(brief: Pick<PageBrief, 'site' | 'page'>): strin
       '- storyBody and aboutPageBody use different moments: never the same scene, time, room or step in both. If one is set at the moment of the problem, the other opens on a different moment of the job.',
     ] : []),
   ];
+}
+
+/**
+ * Sell mission 2026-11-12: the cut map of a pitch-first page (which job each rendered field takes from the pitch). The pitch's
+ * contrast line must survive into a rendered field (today the selling lines are lost in the cut).
+ */
+export function cutMapRule(story: boolean): string {
+  return `- CUT MAP (binding): heroHeadline is the promise; heroSubheadline is the mechanism told as a benefit; ${story ? 'storyBody is agitation, contrast, mechanism, outcome; ' : ''}aboutPageBody is the man and his pride; card descriptions are gains; closeLine is the promise plus risk reversal. The pitch\'s contrast line (the owner\'s way set against the experience the customer fears) must survive into at least one rendered field.`;
 }
 
 /** Noa's Hebrew patterns A-H (M2b.1h eval), as abstract English rules. G keeps the anchor rule unchanged (H1 changes need Yonatan). */
@@ -824,6 +853,7 @@ export function buildPitchFirstSection(brief: Pick<PageBrief, 'site' | 'page'>):
     '',
     `- "pitch" is the first key of your JSON output: that sales letter, ${PITCH_MIN_WORDS} to ${PITCH_MAX_WORDS} words of Hebrew prose (at most ${limits.pitch} characters), in the owner's first person, addressed to the reader. No field limit applies to it, but every binding rule above does: no claim beyond the owner's facts, no business days or hours, no customer quote, no past-job story. The system stores it and never shows it.`,
     '- Then write every other key by cutting it from the pitch: keep its strongest lines, and fit each one to its field\'s limit and rules.',
+    cutMapRule(story),
     '- heroHeadline carries the one big promise. It has no fixed shape: no required hook, question, dash or clause order. It must still contain the anchor words (see the anchor rule above) and stay within its length limit.',
     `- Restate the promise in fresh words where it serves the page; never reuse the same phrase. The same run of ${PHRASE_REPEAT_MIN_WORDS} or more consecutive words may appear in at most ${PHRASE_REPEAT_MAX_FIELDS} fields of the page (the trust bar counts as one field); the system counts it.`,
     ...(story ? [
@@ -913,6 +943,9 @@ export function buildVoiceRules(brief: PageBrief, data: CollectedData = {}): str
     ...(m2bRulesFor(brief).some(rule => rule.id === 'B3') ? [`- servicesHeadlineOptions: ${JSON.stringify(SERVICES_HEADLINE_OPTIONS)}`] : []),
     tradeTermLine(slugVertical(stageSlug(brief)) === 'ac'),
     `- This page's stage (section 19.4 above): ${stage}. heroCta is fixed by the system (on this page: ${JSON.stringify(researchHeroCta(brief, data))}; the stickyBarLine must differ from it); choose formHeadline from these ctaLabelSets entries for this stage. Labels: ${JSON.stringify(set.formHeadline.labels.filter(passes))}. Patterns (use one as a pattern, adapted to this service): ${JSON.stringify(set.formHeadline.examples.filter(passes))}. formHeadlineFallback, only when nothing more specific fits: ${JSON.stringify(passes(CTA_LABEL_SETS.formHeadlineFallback) ? CTA_LABEL_SETS.formHeadlineFallback : '')}.`,
+    // Sell mission 2026-11-12: the close above the form and the unrendered gap notes (v1 too).
+    CLOSE_LINE_RULE,
+    FLAGS_RULE,
   ];
 }
 
@@ -1021,7 +1054,7 @@ export function buildDepthSection(brief: PageBrief, data?: CollectedData): strin
     ...(enabled?.qa && data && codeOwnedQa(brief, data) ? codeOwnedQaRules(brief, data) : []),
     ...(enabled?.qa && !(data && codeOwnedQa(brief, data)) ? [
       `- qaItems (B4): ${promptQaMinItems()} to ${limits.qa.maxItems} questions from questionPool that the owner's facts answer. Each item: "questionId" (the id of the question in questionPool), "q" (that question in natural Hebrew, addressed to one person in the singular, keeping its meaning), "a" (the answer, at most ${limits.qa.maxAnswerWords} words) and "factIds".`,
-      `- Each answer's first sentence answers the question directly and names the business (${business})${city ? ` and the base city (${city})` : ''}. Answer only from the owner facts: skip every question his facts do not answer, and never guess. If fewer than ${promptQaMinItems()} questions can be answered, output null for qaItems and qaHeadline.`,
+      `- Each answer's first sentence answers the question directly and names the business (${business})${city ? ` and the base city (${city})` : ''}. Then add one sentence on why that is good news for the reader, from the facts the item cites. Answer only from the owner facts: skip every question his facts do not answer, and never guess. If fewer than ${promptQaMinItems()} questions can be answered, output null for qaItems and qaHeadline.`,
       `- qaHeadline: the heading of the questions, at most ${limits.headlineMaxChars} characters, or null.`,
     ] : []),
     ...(enabled?.proof && !codeOwnsFacts(brief) ? [
@@ -1061,7 +1094,7 @@ export function buildSiteCopyHardLimitsBlock(heading = 'HARD LIMITS', omit: read
   const keep = (key: string) => !omit.includes(key);
   const presence = SITE_COPY_OPTIONAL_PRESENCE_LIMITS;
   const depthKeys = DEPTH_BLOCKS.filter(block => layout.depth?.includes(block.id)).flatMap(block => [block.headline, block.items]).filter(keep);
-  const keys = [...(layout.pitch ? ['pitch'] : []), ...SITE_COPY_KEYS.filter(keep), ...(layout.story ? STORY_FIELDS_M2B1H : []), ...depthKeys];
+  const keys = [...(layout.pitch ? ['pitch'] : []), ...SITE_COPY_KEYS.filter(keep), ...(layout.story ? STORY_FIELDS_M2B1H : []), ...(layout.close ? CLOSE_FIELDS : []), ...depthKeys];
   const lines: string[] = [
     `${heading} (validator-enforced; output that breaks any of these is rejected. They override every softer length or count guidance above):`,
     '- Length means the number of characters in the string, counting every letter, space, digit and punctuation mark. Aim for at most 85% of each limit to leave a margin.',
@@ -1070,6 +1103,7 @@ export function buildSiteCopyHardLimitsBlock(heading = 'HARD LIMITS', omit: read
     '- Optional fields (a string, or null):',
     ...Object.entries(SITE_COPY_OPTIONAL_STRING_LIMITS).filter(([key]) => keep(key)).map(([key, max]) => `  - ${key}: max ${max} characters when set`),
     ...(layout.story ? STORY_FIELDS_M2B1H.map(key => `  - ${key}: max ${presence[key]} characters when set`) : []),
+    ...(layout.close ? [`  - closeLine: max ${presence.closeLine} characters when set`, `- flags: a list of at most ${FLAGS_MAX_ITEMS} English strings, each max ${FLAGS_ITEM_MAX_CHARS} characters (an empty list when there is no gap)`] : []),
     ...(layout.pitch ? [`- pitch (string): ${PITCH_MIN_WORDS} to ${PITCH_MAX_WORDS} words, max ${presence.pitch} characters. It is the only limit on the pitch.`] : []),
     ...depthKeys.map(key => `- ${key}: ${describeDepthLimit(key)}`),
     '- Lists:',
@@ -1140,7 +1174,20 @@ function settleWithDrops(ctx: RepairContext, stage: CopyValidationStage, value: 
 /** The slice 4-5 drops in place (off while the fact templates are pending or the gates are off). Returns the fix notes. */
 export function applyDeterministicDrops(value: Loose, brief: PageBrief, data: CollectedData, gates: CopyGateContext | null, priorMechanismKeys?: readonly string[]): string[] {
   if (!gates?.factRestatement) return [];
-  return [...dropRestatements(value, gates), ...dropClaimScope(value, gates), ...dropQaBrandAnswers(value, gates), ...applyRepetitionBudget(value, brief, data, gates, priorMechanismKeys)];
+  return [...dropPitchTruth(value, gates), ...dropRestatements(value, gates), ...dropClaimScope(value, gates), ...dropQaBrandAnswers(value, gates), ...applyRepetitionBudget(value, brief, data, gates, priorMechanismKeys)];
+}
+
+/**
+ * Sell mission 2026-11-12 (plumber-3 failed on a customer-source hit in the unrendered pitch): every pitch sentence with a
+ * truth / foreign-script hit is dropped; a pitch with no sentence left becomes null. Rendered fields still block.
+ */
+export function dropPitchTruth(copy: Loose, gates: CopyGateContext): string[] {
+  if (typeof copy.pitch !== 'string' || !copy.pitch.trim()) return [];
+  const sentences = proseSentences(copy.pitch);
+  const kept = sentences.filter(sentence => !pitchSentenceBlocked(sentence, gates));
+  if (kept.length === sentences.length) return [];
+  copy.pitch = kept.length ? kept.join(' ') : null;
+  return [`pitch_drop_sentence:pitch:${sentences.length}->${kept.length}`];
 }
 
 /** The budget inputs of a page: its rendered strings in render order (code-built ones included) and the options. */
@@ -1834,10 +1881,15 @@ export function withSystemFields(value: Loose, brief: PageBrief, data: Collected
   // M2b.1h: the pitch (pitch-first pages) and the story fields (homepage) stay only where the page generates them, and only as
   // a non-empty string within the limit (else null: dropped whole, never edited; settleStage logs why). An absent key stays absent.
   for (const key of OPTIONAL_PRESENCE_KEYS) {
-    if (!(key === 'pitch' ? pitchFirstPage(brief) : storyPage(brief))) { delete next[key]; continue; }
+    if (!(key === 'pitch' ? pitchFirstPage(brief) : key === 'closeLine' ? closePage(brief) : storyPage(brief))) { delete next[key]; continue; }
     if (!(key in next)) continue;
     const field = next[key];
     next[key] = typeof field === 'string' && field.trim() && field.length <= SITE_COPY_OPTIONAL_PRESENCE_LIMITS[key] ? field : null;
+  }
+  // Sell mission 2026-11-12: flags (warn-only) become a clean string list within the limits; never fail the page.
+  if (FLAGS_KEY in next) {
+    const list = Array.isArray(next[FLAGS_KEY]) ? next[FLAGS_KEY] as unknown[] : [];
+    next[FLAGS_KEY] = list.filter((item): item is string => typeof item === 'string' && item.trim().length > 0 && item.length <= FLAGS_ITEM_MAX_CHARS).map(item => item.trim()).slice(0, FLAGS_MAX_ITEMS);
   }
   // Copy v2 slice 8: the unrendered pitch gets the deterministic ASCII-quote -> geresh / gershayim fix (no Noa stage sees it).
   if (typeof next.pitch === 'string' && codeOwnedFactTemplates()) next.pitch = hebrewQuoteMarks(next.pitch);
@@ -2080,6 +2132,13 @@ function emitWarnings(stage: CopyValidationStage, value: Loose, gates: CopyGateC
 
 /** Throws on blocking gate hits; M2a.7: first logs the warnings of the settled copy (one 'warnings' event per stage). */
 function assertGatesAt(stage: CopyValidationStage, value: Loose, gates: CopyGateContext | null, emit?: (event: CopyRepairEvent) => void): void {
+  // Sell mission 2026-11-12: closeLine is optional copy. When it is the only field still failing a gate after the repairs, it
+  // is dropped (null: it only removes copy, never adds a claim) instead of failing the page. Every other field still fails.
+  const before = gateViolations(value, gates);
+  if (before.length && before.every(hit => topField(hit.field) === 'closeLine') && typeof value.closeLine === 'string') {
+    value.closeLine = null;
+    emit?.({ stage, kind: 'deterministic_fix', fixes: ['close_line_null:gate'] });
+  }
   emitWarnings(stage, value, gates, emit);
   const hits = gateViolations(value, gates);
   if (hits.length) throw new GeneratedCopyValidationError(stage, hits);
@@ -2127,10 +2186,9 @@ export function buildResearchPageGenerationPrompt(brief: PageBrief, data: Collec
   if (!schema.includes(LEGACY_PERSONA_LINE)) throw new Error('Site copy schema prompt persona line changed; update the research persona swap.');
   let clientSchema = schema.replace(LEGACY_PERSONA_LINE, RESEARCH_PERSONA_LINE);
   if (brief.site) {
-    const start = clientSchema.indexOf(LICENSE_EXAMPLE_START);
-    const end = clientSchema.indexOf(LICENSE_EXAMPLE_END, start);
-    if (start < 0 || end < 0) throw new Error('Site copy schema prompt license example changed; update the research example cut.');
-    clientSchema = `${clientSchema.slice(0, start)}${clientSchema.slice(end)}`;
+    // Sell mission 2026-11-12: lpCopyPrompt no longer carries the Hebrew example lines (abstract English descriptions instead),
+    // so the license-example cut has nothing to cut; it still asserts that no such example came back.
+    if (clientSchema.includes(LICENSE_EXAMPLE_START) || clientSchema.includes(LICENSE_EXAMPLE_END)) throw new Error('Site copy schema prompt carries example lines again; update the research example cut.');
     const soloStart = clientSchema.indexOf(SOLO_EXAMPLE_START);
     const soloEnd = clientSchema.indexOf(SOLO_EXAMPLE_END, clientSchema.indexOf('e.g.', soloStart));
     if (soloStart < 0 || soloEnd < 0) throw new Error('Site copy schema prompt solo example changed; update the research example cut.');
@@ -2220,8 +2278,11 @@ function p6WithoutSticky(): string {
 /** v2 ALREADY ON THE PAGE rule: the code-built strings, which the model never restates (gate_fact_restatement checks it). */
 export function alreadyOnPageRule(strings: CodeBuiltFactStrings | null): string {
   const shown = strings ? [...strings.pricePromises, ...strings.trustBarItems, ...strings.proofItems, ...(strings.costFaq ? [strings.costFaq.q, strings.costFaq.a] : [])] : [];
-  return `- ALREADY ON THE PAGE (binding): the system shows the owner's years in the trade, licence, warranty, response time, rating and prices itself, in fixed wording${shown.length ? `: ${JSON.stringify(shown)}` : ''}. Never restate any of them, or their numbers, in a field you write; the system checks every field. One exception: heroHeadline or heroSubheadline may carry one of them once, in the owner's exact digits, when it is part of his usp.`;
+  return `- ALREADY ON THE PAGE (binding): the system shows the owner's years in the trade, licence, warranty, response time, rating and prices itself, in fixed wording${shown.length ? `: ${JSON.stringify(shown)}` : ''}. Never restate any of them, or their numbers, in a field you write; the system checks every field. Two exceptions, as proof beside the promise: heroHeadline or heroSubheadline may carry one of them once, and closeLine one, in the owner's exact digits.`;
 }
+
+export const CLOSE_LINE_RULE = `- closeLine: the line right above the contact form, one or two sentences (at most ${CLOSE_LINE_MAX_CHARS} characters): restate the promise in new words, remove the last hesitation with one owner fact (his warranty or price terms when he gave them), and invite the page's one action. Never a condition, a limit or a list.`;
+export const FLAGS_RULE = `- flags: a list of at most ${FLAGS_MAX_ITEMS} short English notes for the operator (each at most ${FLAGS_ITEM_MAX_CHARS} characters), one per claim you wanted to make but the owner facts could not prove, so the gap is recorded instead of silently shrinking the copy. An empty list when there is no gap. Never shown on the page.`;
 
 /** Copy v2: the rules of one page, by section (the count is asserted in the tests). */
 export function buildResearchCopyRulesV2(brief: PageBrief, data: CollectedData = {}): PromptV2Section[] {
@@ -2259,6 +2320,7 @@ export function buildResearchCopyRulesV2(brief: PageBrief, data: CollectedData =
       '- Use the direct-response toolkit listed below, the formula that fits each part.',
       `- First write the whole pitch as one free-flowing short sales letter. "pitch" is the first key of your JSON output: ${PITCH_MIN_WORDS} to ${PITCH_MAX_WORDS} words of Hebrew prose (at most ${limits.pitch} characters), in the owner's first person, addressed to the reader; every binding rule applies to it. The system stores it and never shows it.`,
       '- Then write every other key by cutting it from the pitch: keep its strongest lines, and fit each one to its field\'s limit and job. Never write field by field from scratch.',
+      cutMapRule(story),
     ] });
   }
   const fields: string[] = [
@@ -2270,18 +2332,23 @@ export function buildResearchCopyRulesV2(brief: PageBrief, data: CollectedData =
       `- storyHeadline: the story's heading (at most ${limits.storyHeadline} characters) or null. It names the scene or the mechanism in words of its own: never the hero's promise and never a sentence of storyBody.`,
     ] : []),
     ...(sections ? [
+      // Sell mission 2026-11-12, STOP RULE (round 1): the pride about headline / pride about body were reverted: round 1 shipped
+      // invented conduct promises in rendered fields ("I don't leave until ..."), so the original rules are back.
       `- aboutPageHeadline: introduces the man who will knock on the door: what he does with his tool or his hands in the first person, or one town from his area with his trade (prefer a neighbouring town over the hero's city). At most 7 words, no number, never a list of towns, a signature phrase, a "before" construction or a quality adjective.`,
       `- aboutPageBody: ${STORY_MIN_SENTENCES} or 4 sentences: one scene in the second person and present tense of the problem itself, set at a different moment from ${story ? 'storyBody' : 'the hero'}; then what the owner physically does when he arrives, naming the tool or method of his usp; then something the reader can check after he leaves. Never open it with a self-introduction by name.`,
       `- ${M2B_PROMPT_RULES_AFTER_M2B2.find(rule => rule.id === 'B3')?.text ?? 'B3: use one entry of servicesHeadlineOptions, word for word.'}`,
       `- serviceDetails: at most one card per service, each name exactly one of ${JSON.stringify(site?.serviceLabels ?? [])}, character for character. Each description is one full first-person sentence of 8 to 14 words (at least ${SERVICE_DESCRIPTION_MIN_CHARS} characters): present-tense verbs in the order he works, one physical detail that belongs only to that service, ending on a result the homeowner can check. Never the differentiator, a fact the system shows, a price or a "before" construction, and no two cards start with the same three words.`,
+      // Sell mission 2026-11-12, STOP RULE (round 1): the "gains" card rule was reverted (round 1 cards promised outcomes the
+      // owner never stated, e.g. a clean home set against the "mess" fear); the original card rule is back.
     ] : []),
     ...(brief.page.pageClass === 'homepage' ? ['- The usp\'s mechanism \u2014 the specific how, not just its outcome \u2014 appears in heroHeadline or heroSubheadline, unless the code-built trust bar already shows it.'] : []),
     `- formHeadline: ${formHeadlineChoice(brief, data)}`,
+    ...(site ? [CLOSE_LINE_RULE, FLAGS_RULE] : []),
     '- ORDER AND LOGISTICS (binding): who comes, when, how and with what is stated the same way in every field. heroHeadline and heroSubheadline may claim an order of the work (something done before something else) only when the owner\'s usp states that order, and every other field keeps it.',
   ];
   out.push({ heading: 'FIELD JOBS', rules: fields });
   out.push({ heading: 'REPETITION', rules: [
-    `- REPETITION BUDGET (binding): each idea gets one full statement on the page, plus at most one short reference (three words or fewer) in one other field. Never the same run of ${CLAUSE_REPEAT_MIN_WORDS} or more words in two fields, not even inside a longer sentence.`,
+    `- REPETITION BUDGET (binding): each fact and each process step gets one full statement on the page, plus at most one short reference (three words or fewer) in one other field. The one big promise is exempt: restate it in fresh words at the top, the middle and the close. Never the same run of ${CLAUSE_REPEAT_MIN_WORDS} or more words in two fields, not even inside a longer sentence.`,
     '- The system drops what adds nothing new: a card description, process step or answer whose words are already on the page is removed, and so is a sentence of the story or the about body that repeats another field. Every item must add a new step, detail or outcome.',
   ] });
   out.push({ heading: 'VOICE', rules: [
@@ -2353,11 +2420,12 @@ export function v2OutputSkeleton(brief: PageBrief, data: CollectedData): string 
       case 'faqItems': return [];
       case 'trustBarItems': return [];
       case 'serviceDetails': return labels.slice(0, SITE_COPY_PAIR_LIST_LIMITS.serviceDetails.maxItems).map(name => ({ name, description: '' }));
-      case 'storyHeadline': case 'storyBody': case 'pitch': return '';
+      case 'storyHeadline': case 'storyBody': case 'pitch': case 'closeLine': return '';
+      case FLAGS_KEY: return [];
       default: return '';
     }
   };
-  const keys = [...(layout.pitch ? ['pitch'] : []), ...SITE_COPY_KEYS.filter(key => !omit.includes(key)), ...(layout.story ? STORY_FIELDS_M2B1H : [])];
+  const keys = [...(layout.pitch ? ['pitch'] : []), ...SITE_COPY_KEYS.filter(key => !omit.includes(key)), ...(layout.story ? STORY_FIELDS_M2B1H : []), ...(layout.close ? CLOSE_FIELDS : [])];
   return JSON.stringify(Object.fromEntries(keys.map(key => [key, value(key)])), null, 2);
 }
 
@@ -2421,7 +2489,7 @@ export function codeOwnedQaRules(brief: PageBrief, data: CollectedData): string[
   const need = Math.max(0, limits.qa.minItems - built);
   return [
     `- qaItems (B4): at most ${room} questions from questionPool that the owner's facts answer${built ? ` (the system adds ${built} more itself, on the facts it shows)` : ''}. Each item: "questionId" (the id of the question in questionPool), "q" (that question exactly as written in questionPool; the system keeps the pool wording), "a" (the answer, in the owner's first person, at most ${limits.qa.maxAnswerWords} words) and "factIds".`,
-    '- Answer the question directly in the first sentence: yes or no, or the fact itself. Write each answer self-contained: never a pointer such as "as above", "see below" or "as I said".',
+    '- Answer the question directly in the first sentence: yes or no, or the fact itself. Then add one sentence on why that is good news for the reader, from the facts the item cites (keep them in factIds). Write each answer self-contained: never a pointer such as "as above", "see below" or "as I said".',
     `- Never name the business in an answer: the system puts ${JSON.stringify(qa?.lead ?? '')} in front of every answer. Answer only from the owner facts: skip every question his facts do not answer, and never guess.${need ? ` If fewer than ${need} questions can be answered, output null for qaItems and qaHeadline.` : ' If none can be answered, output an empty list for qaItems.'}`,
     `- qaHeadline: the heading of the questions, at most ${limits.headlineMaxChars} characters, or null.`,
   ];
@@ -2432,7 +2500,8 @@ export const V1_FAQ_LIMIT_LINE = '- faqItems: follow the faqPolicy rule in the r
 export const V2_FAQ_LIMIT_LINE = '- faqItems: filled in by the system; output it exactly as given in the schema.';
 
 /** M2b.1h: the legacy schema's hero shape line; on a pitch-first page the headline carries the promise instead. */
-export const LEGACY_HERO_SHAPE_LINE = "- heroHeadline: open with the client's fear/problem, close with the relief. Max 68 chars.";
+// Sell mission 2026-11-12: lpCopyPrompt's hero line now carries the promise (the asserted anchor follows it).
+export const LEGACY_HERO_SHAPE_LINE = "- heroHeadline: carries the page's one big promise, as an outcome the customer wants, in no fixed shape. Max 68 chars.";
 export const PITCH_FIRST_HERO_LINE = '- heroHeadline: carries the one big promise, in no fixed shape (see PITCH FIRST). Max 68 chars.';
 
 /** One asserted replacement in the schema template (exactly one occurrence, else the M2b.1h cut is stale). */
@@ -2454,6 +2523,8 @@ export function pitchFirstSchema(schema: string, story: boolean): string {
 export interface CopyLayout {
   pitch?: boolean;
   story?: boolean;
+  /** Sell mission 2026-11-12: the page generates closeLine and flags (every research-site page). */
+  close?: boolean;
   /** Content depth: the depth blocks this page generates (empty / unset = none). */
   depth?: readonly DepthBlockId[];
   /** The owner-confirmed service labels (card names may equal a label longer than the fixed limit). */
@@ -2463,7 +2534,7 @@ export interface CopyLayout {
 export function layoutFor(brief: Pick<PageBrief, 'site' | 'page' | 'blocksEnabled'>): CopyLayout {
   const depth = depthLayout(brief);
   const labels = brief.site?.serviceLabels ?? [];
-  return { pitch: pitchFirstPage(brief), story: storyPage(brief), ...(depth.length ? { depth } : {}), ...(longServiceLabelChars(labels) ? { serviceLabels: [...labels] } : {}) };
+  return { pitch: pitchFirstPage(brief), story: storyPage(brief), ...(closePage(brief) ? { close: true } : {}), ...(depth.length ? { depth } : {}), ...(longServiceLabelChars(labels) ? { serviceLabels: [...labels] } : {}) };
 }
 
 /**
@@ -2507,10 +2578,36 @@ export function claimScopeSpecs(brief: PageBrief, data: CollectedData, templates
   const site = brief.site;
   const places = gatePlaces(brief);
   const excluded = [data.businessNiche, data.businessName, site?.businessName, site?.pageName, ...(site?.serviceLabels ?? []), ...places].filter((item): item is string => typeof item === 'string' && item.trim().length > 0);
-  const fear = buildFearPromiseSpec(data.idealClientFear, templates.parseNegationWords, excluded, [data.usp, data.guarantee]);
+  const source = fearPromiseSource(data, templates);
+  const fear = buildFearPromiseSpec(source.fear, templates.parseNegationWords, excluded, source.ownerTexts);
   const scope = responseScope(data.responseTime, templates);
   const sameDay = buildSameDayScopeSpec(Boolean(ownerFacts(data, brief, templates).response), templates.parseSameDayWords, scope.kind === 'scoped' ? scope.scope : null, places);
   return { ...(fear ? { fearPromise: fear } : {}), ...(sameDay ? { sameDayScope: sameDay } : {}) };
+}
+
+const HEBREW_LETTER_PATTERN = /[\u05D0-\u05EA]/u;
+
+/**
+ * Sell mission 2026-11-12 (the fear-promise gate was blind to an English fear): the fear text the gate reads, and the owner
+ * texts that may negate it. A fear with Hebrew letters is used as it is. An English fear is mapped through the existing token
+ * sources only: the signature groups its English keywords name (fearKeywordGroups), and of each group the Hebrew variants
+ * that carry a negation word (parseNegationWords), e.g. the "no surprises" shape. Their other words become the fear words.
+ * An English usp / guarantee naming the same group negates it himself (those variants join the owner texts). A concept with
+ * no such group is still blind: Noa's per-concept Hebrew fear tokens are the follow-up (reported, not typed here).
+ */
+export function fearPromiseSource(data: CollectedData, templates: Pick<OwnerFactTemplates, 'parseNegationWords'>): { fear: unknown; ownerTexts: unknown[] } {
+  const fear = data.idealClientFear;
+  const ownerTexts: unknown[] = [data.usp, data.guarantee];
+  if (typeof fear !== 'string' || !fear.trim() || HEBREW_LETTER_PATTERN.test(fear)) return { fear, ownerTexts };
+  const negations = new Set(templates.parseNegationWords.flatMap(item => claimWords(item)));
+  const negated = (group: string) => (SIGNATURE_GROUPS[group] ?? []).filter(variant => claimWords(variant).some(word => negations.has(word)));
+  const groups = fearKeywordGroups(fear).filter(group => negated(group).length);
+  if (!groups.length) return { fear, ownerTexts };
+  const owner = new Set([data.usp, data.guarantee].flatMap(text => (typeof text === 'string' && !HEBREW_LETTER_PATTERN.test(text) ? fearKeywordGroups(text) : [])));
+  return {
+    fear: groups.flatMap(negated).join('\n'),
+    ownerTexts: [...ownerTexts, ...groups.filter(group => owner.has(group)).flatMap(negated)],
+  };
 }
 
 /** The gate context for one brief (M2a.3: service scope, page service, installation page). */
@@ -2521,6 +2618,8 @@ export function briefGateContext(brief: PageBrief, data: CollectedData): CopyGat
     pageServiceLabel: site && brief.page.pageClass !== 'homepage' ? site.pageName : null,
     installPage: isInstallPage(brief),
     researchSite: Boolean(site),
+    // Sell mission 2026-11-12: numbers the owner never gave block on every research site.
+    ...(site ? { unknownNumberGate: true } : {}),
     // M2a.6: vertical slug (section 20.4 / 20.6) and Yonatan's H1 anchor (the same strings as page.seo, which build the title).
     pageSlug: site ? stageSlug(brief) : '',
     anchorName: site ? site.pageName : null,
@@ -2577,7 +2676,8 @@ export function buildNoaQaMessage(copy: SiteCopy, brief?: PageBrief): string {
   // M2b.1d: the fields this page does not generate never reach Noa (withSystemFields fills them again).
   const omit = brief ? ungeneratedFieldsFor(brief) : [];
   // M2b.1h: Noa never sees the pitch (it is not shown; the system carries Tamar's over); the story fields are hers to correct.
-  const hidden = [...omit, 'pitch'];
+  // Sell mission 2026-11-12: nor the unrendered flags (closeLine is copy: Noa corrects it).
+  const hidden = [...omit, 'pitch', FLAGS_KEY];
   const shown = Object.keys(copy).some(key => hidden.includes(key)) ? Object.fromEntries(Object.entries(copy).filter(([key]) => !hidden.includes(key))) : copy;
   const labels = brief?.site?.serviceLabels ?? [];
   const layout: CopyLayout = brief ? { story: storyPage(brief), depth: depthLayout(brief), ...(longServiceLabelChars(labels) ? { serviceLabels: [...labels] } : {}) } : {};
@@ -2672,6 +2772,8 @@ export function carryOptionalFields(noa: Loose, tamar: Loose): Loose {
   // Content depth: Noa's text corrections, Tamar's factIds / questionId (and any block key Noa dropped).
   const next: Loose = mergeDepthBlocks(noa, tamar);
   if ('pitch' in tamar) next.pitch = tamar.pitch;
+  if (FLAGS_KEY in tamar) next[FLAGS_KEY] = tamar[FLAGS_KEY];
+  if (!('closeLine' in next) && 'closeLine' in tamar) next.closeLine = tamar.closeLine;
   for (const key of STORY_FIELDS_M2B1H) if (!(key in next) && key in tamar) next[key] = tamar[key];
   return next;
 }

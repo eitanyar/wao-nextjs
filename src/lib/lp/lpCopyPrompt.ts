@@ -45,6 +45,9 @@ export interface SiteCopy extends LPCopy {
   qaItems?: DepthQaItem[] | null;
   proofHeadline?: string | null;
   proofItems?: DepthProofItem[] | null;
+  // Sell mission 2026-11-12 (research sites, optional: absent on older records).
+  closeLine?: string | null;      // The close right above the contact form. Max 140 chars.
+  flags?: string[];               // Generation only: unrendered gap notes; moved to the page record.
 }
 
 /** Fixed singular primary CTA label (the copy step injects it; the model never writes heroCta). */
@@ -94,7 +97,7 @@ Write LP copy for a Hebrew RTL landing page. Output ONLY valid JSON. No prose, n
 HARD RULES:
 - Hebrew only. Singular male address (אתה/שלך). No translated-Hebrew calques.
 - Never use: על מנת, כיצד, במידה ו, עם זאת, מהו, ניתן ל (prefer: אפשר).
-- Tone: warm Sabra expert talking directly to a stressed client. Not salesy. Not corporate.
+- Tone: warm Sabra expert talking directly to a stressed client. Sells with the pride of a tradesman; never corporate.
 - reviewFeatured: copy EXACTLY from the Review Quote field — do not rephrase a single word. If Review Quote is empty or "אין", output null — never write "אין" or any placeholder as if it were a quote.
 - scarcityLine: always output null. INTERNAL ONLY capacity fields (capacityUnit) must NEVER be surfaced verbatim here.
 
@@ -117,8 +120,8 @@ THE CORE MECHANISM — use their words, not safe paraphrases:
 
 THE TEST before you output any sentence: could this exact sentence appear on a COMPETITOR's
 site with zero changes? If yes — it is too generic. Rewrite it with a detail only THIS owner
-gave you. If a field genuinely has no concrete detail, stay quiet and specific with what you
-DO have — never inflate with corporate filler.
+gave you. If a field genuinely has no concrete detail, use a scene from the customer's day and the
+owner's pride in his craft — never filler.
 
 FALLBACK when a concrete detail is missing:
 - Missing/weak USP → build differentiation from the hardest concrete fact available
@@ -156,26 +159,16 @@ stop and replace it with a concrete detail from the BUSINESS DATA:
 Also banned (translated-Hebrew cadence, already partly above): על מנת, כיצד, במידה ו,
 עם זאת, מהו, ניתן ל.
 
-BEFORE → AFTER (generic → sharp). Invented data shown so the transformation is unambiguous;
-apply the SAME move to the real BUSINESS DATA:
+BEFORE → AFTER (the move, described; no example lines, they leak into output):
+- Hero headline: replace a generic promise about the trade with the customer's own fear as a
+  moment, then the relief the owner's stated facts make believable.
+- About opener: replace a corporate "we are a professional team" opener with the owner's first
+  name and his own stated credential, in the first person, claiming nothing the data does not say.
+- Trust bar item: replace a quality slogan with one concrete owner fact, in his exact numbers.
+- USP subheadline: replace "fast, reliable, fair prices" with the owner's stated way of working
+  as one benefit for the customer. Never a ranking (only, best, first) the data does not state.
 
-Example 1 — hero headline (fear: "אינסטלטור שפירק והשאיר הצפה"; data: מגיע תוך שעה):
-  GENERIC: "פתרונות אינסטלציה מקצועיים ואמינים באזורך"
-  SHARP:   "נתקעת עם הצפה? אינסטלטור אצלך תוך שעה — בלי להשאיר אחריו בלגן"
-
-Example 2 — aboutBlurb opener (owner: יוסי; 15 שנה; רישיון חשמלאי):
-  GENERIC: "אנחנו צוות מקצועי עם שנות ניסיון רבות ומחויבות למצוינות."
-  SHARP:   "שמי יוסי, 15 שנה חשמלאי מוסמך, ואני זה שמגיע אליך — לא שוליה ולא קבלן משנה."
-
-Example 3 — trust bar item (data: 10 שנות אחריות; חלקים מקוריים):
-  GENERIC: "איכות ללא פשרות"
-  SHARP:   "10 שנות אחריות, חלקים מקוריים בלבד"
-
-Example 4 — USP subheadline (data: היחיד באזור שמתקן דודי שמש תעשייתיים):
-  GENERIC: "שירות מהיר ואמין במחירים הוגנים"
-  SHARP:   "היחיד באזור שמתקן גם דודי שמש תעשייתיים — לא רק ביתיים"
-
-The move in every case: delete the adjective, promote the fact.
+The move in every case: delete the adjective, promote the fact, then say what the fact means for him.
 
 ABOUT SECTION (aboutBlurb) — most important field:
 - First-person voice. Open with: "שמי ${ownerFirstName}," or "אני ${ownerFirstName},"
@@ -190,14 +183,14 @@ ABOUT SECTION (aboutBlurb) — most important field:
 HERO:
 - primaryService: explicit required term: "${options.relevanceTerm ?? (data.primaryService || data.businessNiche || '')}"
 - QUALITY SCORE RELEVANCE RULE: heroHeadline or heroSubheadline MUST contain the exact literal primaryService term (or a natural Hebrew inflection of it). This is a strict Google Ads Quality Score relevance requirement, not a style preference.
-- heroHeadline: open with the client's fear/problem, close with the relief. Max 68 chars.
-- heroSubheadline: one specific, credible USP. Not a list — one sharp promise. Max 90 chars.
+- heroHeadline: carries the page's one big promise, as an outcome the customer wants, in no fixed shape. Max 68 chars.
+- heroSubheadline: one benefit sentence built on a verb: the owner's way of working as what the customer gets. Not a list. Max 90 chars.
 
 FAQ (faqItems):
 - 4-5 items covering what clients actually ask before calling.
 - Pick from: pricing transparency, response time, area coverage, warranty/guarantee,
   process after contact, certifications, evening/weekend availability, what's included.
-- Answers: 1-2 full natural sentences. Specific, not vague. Max 120 chars each.
+- Answers: open with the direct answer, then one sentence on why it is good news for him, from the facts. Max 120 chars each.
 
 BUSINESS DATA:
 Niche: ${data.businessNiche || ''}

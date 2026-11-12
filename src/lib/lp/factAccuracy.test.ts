@@ -204,7 +204,8 @@ test('3 license: an English owner grade never authorises a Hebrew grade; only th
   const prompt = buildResearchPageGenerationPrompt(briefWithSite(), { businessNiche: 'electrician', license: 'Master electrician license' });
   assert.match(prompt, /never translate or map it to a license grade/);
   assert.doesNotMatch(prompt, /Example 2 \u2014 aboutBlurb opener/);
-  assert.match(prompt, /Example 3 \u2014/);
+  // Sell mission 2026-11-12: every Hebrew example line left lpCopyPrompt (abstract English descriptions instead).
+  assert.doesNotMatch(prompt, /Example 3 \u2014/);
   for (const grade of grades) assert.ok(!prompt.includes(grade), grade);
 });
 

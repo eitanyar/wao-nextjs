@@ -187,7 +187,7 @@ function loadPost(environment, qwenCalls, geminiCalls) {
   const module = { exports: {} };
   const fakeRequire = name => {
     if (name === 'next/server') return { NextResponse: { json: (data, opts) => Response.json(data, opts) } };
-    if (name === '@/lib/bot/prompts') return { ADAM_SYSTEM_PROMPT: 'adam', DROR_SYSTEM_PROMPT: 'dror', TAMAR_SYSTEM_PROMPT: 'tamar', T21_PHOTO_ASK_VERSION: 'test' };
+    if (name === '@/lib/bot/prompts') return { ADAM_SYSTEM_PROMPT: 'adam', DROR_SYSTEM_PROMPT: 'dror', TAMAR_SYSTEM_PROMPT: 'tamar', T21_PHOTO_ASK_VERSION: 'test', buildRsaBrief: () => 'brief' };
     if (name === '@/lib/ads/keywordPlanner') return { getEstimatedCPC: async () => null };
     if (name === '@/lib/google-ads/onboarding-response') return { resolveBoundedOnboardingResponse: async ({ live, timeoutMs }) => {
       assert.equal(timeoutMs, 12000);

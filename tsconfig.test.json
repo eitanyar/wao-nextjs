@@ -194,6 +194,7 @@
     "src/lib/lp/promptV2.test.ts",
     "src/lib/lp/factRestatement.ts",
     "src/lib/lp/factRestatement.test.ts",
+    "src/lib/lp/sellMission.test.ts",
     "src/lib/lp/repetitionBudget.ts",
     "src/lib/lp/repetitionBudget.test.ts",
     "src/lib/lp/hebrewPrefixLetters.ts",

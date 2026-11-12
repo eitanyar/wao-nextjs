@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { ADAM_SYSTEM_PROMPT, DROR_SYSTEM_PROMPT, TAMAR_SYSTEM_PROMPT, T21_PHOTO_ASK_VERSION, CollectedData } from "@/lib/bot/prompts";
+import { ADAM_SYSTEM_PROMPT, DROR_SYSTEM_PROMPT, TAMAR_SYSTEM_PROMPT, T21_PHOTO_ASK_VERSION, CollectedData, buildRsaBrief } from "@/lib/bot/prompts";
 import { getEstimatedCPC } from "@/lib/ads/keywordPlanner";
 import { resolveBoundedOnboardingResponse } from "@/lib/google-ads/onboarding-response";
 import { callQwenChatJSON } from "@/lib/ai/qwen-fast";
@@ -951,38 +951,9 @@ async function handleLiveChat(
   liveChat: LiveChat
 ) {
   if (currentState === "STRATEGIZING") {
-    const brief = `
-Business Details:
-Primary Service: ${collectedData.primaryService}
-Niche: ${collectedData.businessNiche}
-Business Name: ${collectedData.businessName}
-Owner: ${collectedData.ownerName}
-Service Model: ${collectedData.serviceModel}
-Location: ${collectedData.targetLocation}
-Specific Cities: ${collectedData.specificCities}
-Ideal Client Fear: ${collectedData.idealClientFear}
-FAQ Questions: ${collectedData.faqQuestions}
-USP: ${collectedData.usp}
-Years in Field: ${collectedData.yearsInField}
-Guarantee: ${collectedData.guarantee}
-License: ${collectedData.license}
-Exclusions: ${collectedData.exclusions}
-Urgency: ${collectedData.urgencyLevel}
-Response Time: ${collectedData.responseTime}
-Pricing Notes: ${collectedData.pricingNotes}
-Revenue Model: ${collectedData.revenueModel}
-Avg Job Value: ${collectedData.avgJobValue}
-Close Rate: ${collectedData.closeRate}
-Monthly Budget: ${collectedData.monthlyBudget}
-Feasibility Branch: ${collectedData.feasibilityBranch}
-No Digital Footprint: ${collectedData.noDigitalFootprint}
-Has Google Business: ${collectedData.hasGoogleBusiness}
-GBP Verified: ${collectedData.gbpVerified}
-Review Quote: ${collectedData.reviewQuote}
-Star Rating: ${collectedData.starRating}
-Contact Method: ${collectedData.contactMethod}
-Phone: ${collectedData.phone}
-`;
+    // Sell mission 2026-11-12: the brief builder skips empty fields and carries the landing page's promise (built from the
+    // usp here: the landing page is generated after this step, from the same owner facts).
+    const brief = buildRsaBrief(collectedData);
 
     let drorData: Record<string, any>;
     let tamarData: Record<string, any>;

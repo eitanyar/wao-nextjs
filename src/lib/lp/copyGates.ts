@@ -226,6 +226,10 @@ export const GATE_RULES = {
   fearPromise: 'gate_fear_promise',
   /** Rerun-3 item 5: a same-day word without a response fact, in a sentence naming no place of the owner's response tail. */
   sameDayScope: 'gate_same_day_scope',
+  /** Sell mission 2026-11-12: a digit run in a model-written field that is in no owner fact (always blocking). */
+  unknownNumber: 'gate_unknown_number',
+  /** Sell mission 2026-11-12: a heroSubheadline that reads as a comma list (warning only). */
+  subheadlineList: 'gate_subheadline_list',
 } as const;
 export type GateRule = (typeof GATE_RULES)[keyof typeof GATE_RULES];
 
@@ -338,6 +342,8 @@ export interface CopyGateContext {
    * then the page fails); a hit in an unrendered field is a warning. Unset = the renderedFields rule below applies.
    */
   claimScopeFields?: readonly string[];
+  /** Sell mission 2026-11-12: gate_unknown_number is on (research sites and the Ads Bot set it; legacy contexts do not). */
+  unknownNumberGate?: boolean;
 }
 
 /** Content depth gate inputs (see CopyGateContext.depth). */
@@ -365,7 +371,8 @@ const HEBREW = new RegExp(`[${HEBREW_LETTER}]`);
 export { PREFIX_LETTERS };
 
 /** Fields the system fills (never model-authored) are exempt from text gates. */
-export const GATE_EXEMPT_FIELDS: readonly string[] = ['heroCta', 'serviceItems', 'reviewFeatured', 'faqItems', 'scarcityLine'];
+// Sell mission 2026-11-12: `flags` (the unrendered operator notes, English) is never gated.
+export const GATE_EXEMPT_FIELDS: readonly string[] = ['heroCta', 'serviceItems', 'reviewFeatured', 'faqItems', 'scarcityLine', 'flags'];
 
 function escapeRegExp(value: string): string {
   return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -1141,7 +1148,8 @@ function countMatches(value: string, pattern: RegExp): number {
  * voice gates (and the invented-story truth gate) reach them. Engineer-placed extension of the data list; story hits stay
  * warnings while the story fields are warn-only, and only the truth gates ever run on the pitch (PITCH_GATE_RULES).
  */
-export const M2B1H_VOICE_FIELDS: readonly string[] = ['storyHeadline', 'storyBody', 'pitch'];
+// Sell mission 2026-11-12: closeLine (the close above the form) is owner voice too; every gate blocks it.
+export const M2B1H_VOICE_FIELDS: readonly string[] = ['storyHeadline', 'storyBody', 'pitch', 'closeLine'];
 const VOICE_FIELD_PATTERNS = [...OWNER_VOICE_FIELDS, ...M2B1H_VOICE_FIELDS].map(name => new RegExp(`^${name.includes('[]')
   ? name.split('[]').map(escapeRegExp).join('\\[\\d+\\]')
   : `${escapeRegExp(name)}(?:\\[\\d+\\])?`}$`));
@@ -1332,7 +1340,9 @@ export function serviceStage(slug: string): ServiceStage {
 // ---------------------------------------------------------------------------
 
 /** The per-page signature cap for the group(s) holding the owner's own differentiator (section 20.1, M2a.7); every other group stays at 1. */
-export const DIFFERENTIATOR_SIGNATURE_CAP: number = DIFFERENTIATOR_CAP;
+// Sell mission 2026-11-12: raised from the data file's DIFFERENTIATOR_CAP (2) to 3, so the promise can return at the top, the
+// middle and the close. The data-doc cap line holds Hebrew and was not edited (reported for Noa / Adam to align the doc).
+export const DIFFERENTIATOR_SIGNATURE_CAP: number = Math.max(DIFFERENTIATOR_CAP, 3);
 
 /**
  * Owner fields the differentiator is read from (section 20.1, M2a.7: the guarantee too, when it states a work method;
@@ -2161,6 +2171,8 @@ export const ALWAYS_BLOCKING_RULES: readonly GateRule[] = [
   GATE_RULES.factRestatement,
   // Copy v2 slice 6: the business name inside a model-written Q&A answer (dropped deterministically before any repair).
   GATE_RULES.qaBrandInAnswer,
+  // Sell mission 2026-11-12: a number the owner never gave.
+  GATE_RULES.unknownNumber,
 ];
 
 /** M2b.1h: the only gates that run on the unrendered pitch: the truth / owner-fact gates and the foreign-script check. */
@@ -2183,7 +2195,33 @@ export const WARNING_ONLY_RULES: readonly GateRule[] = [
   GATE_RULES.cardPhraseEcho,
   // 2026-11-10 (Noa's pattern A beyond the about pair): logged for the next eval; the verb list covers Tamar's openers only.
   GATE_RULES.subjectPronoun,
+  // Sell mission 2026-11-12 (round 1, warn-only): every service page is an entry page (Yonatan reviews before any deploy);
+  // pride closers may read as morals (Tamar reads the hits); comma-list subheads. (gate_about_headline_promise was warn-only in
+  // round 1 and is blocking again: STOP RULE, the pride about headline was reverted.)
+  GATE_RULES.heroSignatureCap,
+  GATE_RULES.moralEnding,
+  GATE_RULES.subheadlineList,
 ];
+
+/**
+ * Sell mission 2026-11-12: the "expert" word family of genericAdjectiveWords (legitimate positioning) is a warning; every other
+ * generic word and phrase (ranking phrases included) still blocks. Selected by index from the data list (no Hebrew here); the
+ * indices are asserted to share one four-letter stem that no other entry has.
+ */
+export const GENERIC_EXPERT_WORD_INDICES: readonly number[] = (() => {
+  const indices = [16, 17, 18, 19, 20];
+  const stem = GENERIC_ADJECTIVE_WORDS[indices[0]]?.slice(0, 4) ?? '';
+  const shared = GENERIC_ADJECTIVE_WORDS.map((word, index) => (word.startsWith(stem) ? index : -1)).filter(index => index >= 0);
+  if (stem.length !== 4 || shared.join(',') !== indices.join(',')) throw new Error('genericAdjectiveWords changed: update GENERIC_EXPERT_WORD_INDICES');
+  return indices;
+})();
+
+/** True when a gate_generic_adjective hit is an "expert" family word (a warning, not a page failure). */
+export function isExpertWordHit(hit: Pick<GateViolation, 'rule' | 'actual'>): boolean {
+  if (hit.rule !== GATE_RULES.genericAdjective) return false;
+  const [kind, at] = (hit.actual ?? '').split(':');
+  return kind === 'generic_word' && GENERIC_EXPERT_WORD_INDICES.includes(Number(at));
+}
 
 /** M2b.1h: on a pitch-first page, the two-word phrase cap (gate_fact_repeat `phrase:`) is a warning (CopyGateContext.promiseRestatement). */
 export function isRelaxedPhraseCapHit(hit: Pick<GateViolation, 'rule' | 'actual'>, ctx: Pick<CopyGateContext, 'promiseRestatement'>): boolean {
@@ -2202,6 +2240,7 @@ type WarningContext = Pick<CopyGateContext, 'renderedFields' | 'promiseRestateme
 /** True when a gate hit is a warning, not a page failure (see ALWAYS_BLOCKING_RULES / WARNING_ONLY_RULES). */
 export function isWarningHit(hit: Pick<GateViolation, 'field' | 'rule' | 'actual'>, ctx: WarningContext): boolean {
   if (WARNING_ONLY_RULES.includes(hit.rule)) return true;
+  if (isExpertWordHit(hit)) return true;
   if (isRelaxedPhraseCapHit(hit, ctx)) return true;
   if (ctx.claimScopeFields && CLAIM_SCOPE_GATE_RULES.includes(hit.rule)) return !ctx.claimScopeFields.includes(topFieldOf(hit.field));
   if (!ctx.renderedFields || ALWAYS_BLOCKING_RULES.includes(hit.rule)) return false;
@@ -2301,6 +2340,14 @@ function pitchGateHits(pitch: string, ctx: CopyGateContext): GateViolation[] {
     priorHeroHeadlines: [], priorAboutPageHeadlines: [], priorAboutPageBodies: [], priorHeroSubheadlines: [], priorHeroFacts: [],
   };
   return runPageGates({ pitch }, alone).filter(hit => hit.field === 'pitch' && PITCH_GATE_RULES.includes(hit.rule));
+}
+
+/**
+ * Sell mission 2026-11-12: a truth hit in the unrendered pitch drops that pitch sentence (researchPageCopy dropPitchTruth);
+ * rendered fields still block. True when one pitch sentence, gated alone, has a PITCH_GATE_RULES hit.
+ */
+export function pitchSentenceBlocked(sentence: string, ctx: CopyGateContext): boolean {
+  return sentence.trim().length > 0 && pitchGateHits(sentence, ctx).length > 0;
 }
 
 /** The model-written strings the restatement gate reads: generated fields minus the system-set service names / headline. */
@@ -2452,7 +2499,52 @@ function runPageGates(copy: Record<string, unknown>, ctx: CopyGateContext): Gate
   if (ctx.researchSite && ctx.phraseRepeatFields) out.push(...phraseRepeatHits(strings, ctx));
   // 2026-11-10: one full statement per clause per page (Tamar's clause budget).
   if (ctx.researchSite && ctx.phraseRepeatFields) out.push(...clauseRepeatHits(strings, ctx));
+  // Sell mission 2026-11-12: numbers the owner never gave (every site), and the comma-list subheadline (research sites).
+  if (ctx.unknownNumberGate) out.push(...unknownNumberHits(strings, ctx));
+  if (ctx.researchSite) out.push(...subheadlineListHits(strings));
   return out;
+}
+
+/**
+ * Sell mission 2026-11-12: fields the system fills (never the model's numbers): the review pair, the services headline and the
+ * card names (owner labels). GATE_EXEMPT_FIELDS and the code-owned fields never reach the gate either.
+ */
+const UNKNOWN_NUMBER_SYSTEM_FIELDS: readonly string[] = ['reviewContext', 'servicesHeadline'];
+
+/** Sell mission 2026-11-12: the digit runs of the owner facts, the service labels and the places (the numbers he gave). */
+export function ownerDigitRuns(ctx: Pick<CopyGateContext, 'ownerFactsText' | 'serviceLabels' | 'places' | 'starRating'>): Set<string> {
+  const text = [ctx.ownerFactsText, ...ctx.serviceLabels, ...(ctx.places ?? []), ctx.starRating ?? ''].join('\n');
+  return new Set(text.normalize('NFC').match(/\d+/g) ?? []);
+}
+
+/**
+ * Sell mission 2026-11-12 (gate_unknown_number, always blocking): a digit run in a model-written field that appears in no owner
+ * fact. Actual id: `number:<digit run>` (digits only, never copy text).
+ */
+export function unknownNumberHits(strings: ReadonlyArray<{ field: string; value: string }>, ctx: CopyGateContext): GateViolation[] {
+  const known = ownerDigitRuns(ctx);
+  const out: GateViolation[] = [];
+  for (const { field, value } of strings) {
+    const top = topFieldOf(field);
+    if (UNKNOWN_NUMBER_SYSTEM_FIELDS.includes(top) || /^serviceDetails\[\d+\]\.name$/.test(field)) continue;
+    for (const run of new Set(value.normalize('NFC').match(/\d+/g) ?? [])) {
+      if (!known.has(run)) out.push({ field, rule: GATE_RULES.unknownNumber, actual: `number:${run}` });
+    }
+  }
+  return out;
+}
+
+/** Sell mission 2026-11-12: commas that make a heroSubheadline a list (gate_subheadline_list, warning only). */
+export const SUBHEADLINE_LIST_MIN_COMMAS = 2;
+
+/**
+ * Sell mission 2026-11-12: a heroSubheadline with SUBHEADLINE_LIST_MIN_COMMAS or more commas is a list, not a benefit sentence.
+ * The "no verb" half of the spec needs a Hebrew verb token class from Noa (not implemented: no such list exists in the repo).
+ */
+export function subheadlineListHits(strings: ReadonlyArray<{ field: string; value: string }>): GateViolation[] {
+  return strings
+    .filter(item => item.field === 'heroSubheadline' && (item.value.match(/[,\u060C]/g) ?? []).length >= SUBHEADLINE_LIST_MIN_COMMAS)
+    .map(item => ({ field: item.field, rule: GATE_RULES.subheadlineList, actual: 'list:commas' }));
 }
 
 /**
@@ -2534,6 +2626,8 @@ export interface CopyGatePageOptions {
   sameDayScope?: SameDayScopeSpec;
   /** Rerun-3b bug B: see CopyGateContext.claimScopeFields. */
   claimScopeFields?: readonly string[];
+  /** Sell mission 2026-11-12: gate_unknown_number is on (research sites and the Ads Bot set it; legacy contexts do not). */
+  unknownNumberGate?: boolean;
 }
 
 /** Build the gate context from owner data plus the page's confirmed service names and owner-stated places. */
@@ -2578,6 +2672,7 @@ export function copyGateContext(data: CollectedData, serviceLabels: readonly str
     ...(page.fearPromise ? { fearPromise: page.fearPromise } : {}),
     ...(page.sameDayScope ? { sameDayScope: page.sameDayScope } : {}),
     ...(page.claimScopeFields ? { claimScopeFields: [...page.claimScopeFields] } : {}),
+    ...(page.unknownNumberGate ? { unknownNumberGate: true } : {}),
   };
 }
 
@@ -2593,6 +2688,10 @@ function pagePhrasesFor(ctx: CopyGateContext): FactPhrase[] {
 export function describeGateViolation(violation: GateViolation, ctx: CopyGateContext): string {
   const index = Number((violation.actual ?? '').split(':')[1]);
   switch (violation.rule) {
+    case GATE_RULES.unknownNumber:
+      return `${violation.field} states the number ${(violation.actual ?? '').split(':')[1] ?? ''}, which appears in no owner fact; remove it, or use only a number the owner gave, at the strength he gave it`;
+    case GATE_RULES.subheadlineList:
+      return `${violation.field} reads as a list joined by commas; rewrite it as one benefit sentence built on a verb`;
     case GATE_RULES.plural:
       return `${violation.field} uses plural / second-person-plural address (form: ${PLURAL_ADDRESS_TOKENS[index]?.token ?? 'plural'}); rewrite in singular masculine address`;
     case GATE_RULES.we:

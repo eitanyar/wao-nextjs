@@ -222,8 +222,8 @@ test('M2b.1h 4: the prompt: PITCH FIRST (English, the 8-point toolkit, decisions
   // The schema: pitch first; the story keys after the subheadline (homepage); the key list and limits agree.
   assert.ok(home.indexOf('"pitch": ""') >= 0 && home.indexOf('"pitch": ""') < home.indexOf('"heroHeadline": ""'));
   assert.ok(home.includes('"heroSubheadline": "",\n  "storyHeadline": "",\n  "storyBody": "",'));
-  assert.match(home, /Output exactly these keys and no others, with pitch first: pitch, heroHeadline, [^\n]*serviceDetails, storyHeadline, storyBody\./);
-  assert.match(hub, /Output exactly these keys and no others, with pitch first: pitch, heroHeadline, [^\n]*serviceDetails\./);
+  assert.match(home, /Output exactly these keys and no others, with pitch first: pitch, heroHeadline, [^\n]*serviceDetails, storyHeadline, storyBody, closeLine, flags\./);
+  assert.match(hub, /Output exactly these keys and no others, with pitch first: pitch, heroHeadline, [^\n]*serviceDetails, closeLine, flags\./);
   assert.ok(!hub.includes('"storyBody"') && !money.includes('"pitch"'));
   // The count caps are relaxed by asserted edits (each anchor unique); the original wording no longer reaches these prompts.
   for (const rule of [...VOICE_PROMPT_RULES, ...M2A6_PROMPT_RULES, ...M2B_PROMPT_RULES_AFTER_M2B2]) {

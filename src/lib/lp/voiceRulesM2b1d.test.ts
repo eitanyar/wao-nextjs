@@ -172,7 +172,9 @@ test('M2b.1d 2: idealClientFear is a differentiator source; English fear keyword
   const tile = SIGNATURE_WORD_TOKENS.tiles[0];
   const gates = vctx({}, { idealClientFear: 'That the plumber breaks the bathroom tiles' });
   assert.deepEqual(rulesOf(loose({ heroHeadline: `${LABEL} ${tile}`, aboutPageBody: `${W1} ${tile}` }), gates, GATE_RULES.signatureRepeat), []);
-  assert.deepEqual(rulesOf(loose({ heroHeadline: `${LABEL} ${tile}`, aboutPageBody: `${W1} ${tile}`, aboutBlurb: `${W2} ${tile}` }), gates, GATE_RULES.signatureRepeat).length, 1);
+  // Sell mission 2026-11-12: cap 3, so a third use passes and a fourth fails.
+  assert.deepEqual(rulesOf(loose({ heroHeadline: `${LABEL} ${tile}`, aboutPageBody: `${W1} ${tile}`, aboutBlurb: `${W2} ${tile}` }), gates, GATE_RULES.signatureRepeat).length, 0);
+  assert.deepEqual(rulesOf(loose({ heroHeadline: `${LABEL} ${tile}`, aboutPageBody: `${W1} ${tile}`, aboutBlurb: `${W2} ${tile}`, storyBody: `${W1} ${tile}` }), gates, GATE_RULES.signatureRepeat).length, 1);
   assert.deepEqual(rulesOf(loose({ heroHeadline: `${LABEL} ${tile}`, aboutPageBody: `${W1} ${tile}` }), vctx(), GATE_RULES.signatureRepeat).length, 1, 'without the fear source the tiles cap is 1');
 });
 
@@ -330,7 +332,8 @@ test('M2b.1d 7: duplicate about checks compare homepage / hub pages only; the op
   assert.ok(!('serviceDetailsOpener' in GATE_RULES));
   // M2b.1g: section 23 cardPhraseEcho is warn-only for the rescore.
   // 2026-11-10: Noa's pattern A beyond the about pair is warn-only too.
-  assert.deepEqual([...WARNING_ONLY_RULES], [GATE_RULES.duplicateAboutOpening, GATE_RULES.cardPhraseEcho, GATE_RULES.subjectPronoun]);
+  // Sell mission 2026-11-12: the hero cap, the moral ending and the list subheadline warn (the about-headline promise blocks again).
+  assert.deepEqual([...WARNING_ONLY_RULES], [GATE_RULES.duplicateAboutOpening, GATE_RULES.cardPhraseEcho, GATE_RULES.subjectPronoun, GATE_RULES.heroSignatureCap, GATE_RULES.moralEnding, GATE_RULES.subheadlineList]);
 });
 
 test('M2b.1d 8 (M2b.1f): all five M2b fields block by default; an injected warn-only list still holds a field back; never gated where not rendered', () => {
@@ -346,6 +349,7 @@ test('M2b.1d 8 (M2b.1f): all five M2b fields block by default; an injected warn-
   const tile = SIGNATURE_WORD_TOKENS.tiles[0];
   const hub = briefGateContext(brief('services', 'service_hub'), {});
   const copy = loose({ aboutPageHeadline: `${W1} ${tile}` });
+  // Sell mission 2026-11-12: blocking again (the round-1 relaxation was reverted under the stop rule).
   assert.deepEqual(blockingGateHits(runCopyGates(copy, hub), hub).map(hit => hit.rule), [GATE_RULES.aboutHeadlinePromise]);
   const heldHub = { ...hub, renderedFields: researchedGatedFieldsFor('service_hub', ['aboutPageHeadline']) };
   assert.deepEqual(blockingGateHits(runCopyGates(copy, heldHub), heldHub).map(hit => hit.rule), []);

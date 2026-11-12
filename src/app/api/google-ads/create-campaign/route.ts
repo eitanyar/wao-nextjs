@@ -4,7 +4,9 @@ import { GoogleAdsApi, enums, services } from 'google-ads-api';
 import fs from 'fs';
 import path from 'path';
 import type { CollectedData } from '@/lib/bot/prompts';
-import { TAMAR_CALLOUT_SYSTEM_PROMPT, TAMAR_STRUCTURED_SNIPPET_SYSTEM_PROMPT } from '@/lib/bot/prompts';
+import { TAMAR_STRUCTURED_SNIPPET_SYSTEM_PROMPT } from '@/lib/bot/prompts';
+import { adsCalloutsFromFacts, settleRsaAssets } from '@/lib/bot/adsCopy';
+import { callQwenJSON } from '@/lib/ai/qwen-fast';
 import { detectVertical } from '@/lib/lp/verticalDetect';
 import { bindCampaignToClient } from '@/lib/crm/intelligence';
 import { COOKIE_NAME, verifySessionToken } from '@/lib/client-auth';
@@ -138,8 +140,17 @@ function logAssetError(label: string, e: unknown) {
   console.error(`${label} (non-fatal):`, JSON.stringify(detail, null, 2));
 }
 
-function trim(s: string, max: number) {
-  return s.length > max ? s.slice(0, max - 1) + '…' : s;
+// Sell mission 2026-11-12: RSA assets are never trimmed with an ellipsis (a cut headline can go live). settleRsaAssets
+// validates, sends the invalid ones in one repair call, then drops what still fails.
+async function rsaRepairCall(system: string, user: string): Promise<string> {
+  if (process.env.QWEN_API_KEY && process.env.QWEN_BASE_URL) {
+    try {
+      return await callQwenJSON(system, user, { thinkingBudget: 1000 });
+    } catch {
+      // fall through to Gemini
+    }
+  }
+  return callGeminiJSONWithRetry(system, user);
 }
 
 /**
@@ -221,10 +232,6 @@ async function callGeminiJSONWithRetry(systemPrompt: string, userMessage: string
   throw lastError;
 }
 
-interface CalloutPromptResult {
-  callouts?: string[];
-}
-
 interface StructuredSnippetPromptResult {
   header?: 'Service catalog' | 'Types' | 'Brands';
   values?: string[];
@@ -275,17 +282,9 @@ async function createCallAsset(newCustomer: ReturnType<GoogleAdsApi['Customer']>
 
 async function createCalloutAssets(newCustomer: ReturnType<GoogleAdsApi['Customer']>, campaignResourceName: string, collectedData: CollectedData) {
   try {
-    const brief = `
-guarantee: ${collectedData.guarantee ?? ''}
-yearsInField: ${collectedData.yearsInField ?? ''}
-license: ${collectedData.license ?? ''}
-starRating: ${collectedData.starRating ?? ''}
-responseTime: ${collectedData.responseTime ?? ''}
-pricingNotes: ${collectedData.pricingNotes ?? ''}
-`;
-    const raw = await callGeminiJSONWithRetry(TAMAR_CALLOUT_SYSTEM_PROMPT, brief);
-    const parsed = JSON.parse(raw) as CalloutPromptResult;
-    const callouts = (parsed.callouts ?? []).filter(c => c && c.length <= 25).slice(0, 8);
+    // Sell mission 2026-11-12: callouts come from the code-owned fact templates (the owner's own facts in fixed wording),
+    // never from the model (it mapped a licence to "insured"; no owner field holds insurance).
+    const callouts = adsCalloutsFromFacts(collectedData);
     if (!callouts.length) return;
 
     const assetRes = await newCustomer.assets.create(
@@ -695,8 +694,10 @@ export async function POST(req: Request) {
 
     // ── Step 9: RSA — finalUrl uses CF Pages subdomain ───────────────────────
     const finalUrl = `https://${slug}.wao.co.il`;
-    const headlines = copy.headlines.slice(0, 15).map(h => ({ text: trim(h, 30) }));
-    const descriptions = copy.descriptions.slice(0, 4).map(d => ({ text: trim(d, 90) }));
+    const settledRsa = await settleRsaAssets(copy, collectedData, { callJson: rsaRepairCall });
+    if (settledRsa.dropped.length) console.warn('RSA assets dropped after one repair:', JSON.stringify(settledRsa.dropped));
+    const headlines = settledRsa.headlines.map(text => ({ text }));
+    const descriptions = settledRsa.descriptions.map(text => ({ text }));
 
     await newCustomer.adGroupAds.create([{
       ad_group: adGroupResourceName,

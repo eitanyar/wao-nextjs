@@ -9,7 +9,7 @@
  *
  * What is over budget is dropped, whole: a card loses its description (the name stays), a process step or a Q&A item goes
  * (the block falls back to null below its minimum), a story / about sentence goes while the minimum sentence count holds, a
- * nullable heading becomes null. The hero, the about headline and the form headline are never dropped (the gates and the one
+ * nullable heading becomes null. The hero, the about headline, the close line and the form headline are never dropped (the gates and the one
  * repair take what is left). Depth items and card descriptions also pass a novelty test: an item that adds fewer than
  * NOVELTY_MIN_NEW_WORDS new words, or under NOVELTY_MIN_SHARE of its content words, adds nothing and is dropped.
  *
@@ -60,7 +60,10 @@ const isPlain = (value: unknown): value is Loose => value !== null && typeof val
 /** Render order of the research page (researchedSite.ts page body), with the code-built slots. */
 export const BUDGET_RENDER_ORDER: readonly string[] = [
   'heroHeadline', 'heroSubheadline', '$pricePromises', 'trustBarItems', 'storyHeadline', 'storyBody', 'processHeadline', 'processSteps',
-  '$costFaq', 'proofHeadline', 'proofItems', 'qaHeadline', 'qaItems', 'serviceDetails', 'aboutPageHeadline', 'aboutPageBody', 'formHeadline',
+  '$costFaq', 'proofHeadline', 'proofItems', 'qaHeadline', 'qaItems', 'serviceDetails', 'aboutPageHeadline', 'aboutPageBody',
+  // Sell mission 2026-11-12: the close above the form restates the promise by design: it counts, and is never dropped (it is
+  // neither a prose, an item nor a nullable-heading field).
+  'closeLine', 'formHeadline',
 ];
 
 /** The page's rendered strings in render order (fields the page type does not render are skipped; system names never count). */

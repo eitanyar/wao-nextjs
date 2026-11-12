@@ -61,6 +61,8 @@ export interface ResearchedSitePage {
    * and later re-cuts; never rendered. Absent on records generated before M2b.1h.
    */
   pitch?: string;
+  /** Sell mission 2026-11-12: the model's unrendered gap notes (claims the owner facts could not prove). Never rendered. */
+  flags?: string[];
 }
 
 export interface ResearchedPageSeo {
@@ -400,6 +402,9 @@ export const RESEARCHED_RENDERED_FIELDS: readonly string[] = [
   'storyHeadline', 'storyBody',
   // Content depth (2026-11-10): the service-page blocks B1 process, B4 Q&A, B6 proof (RESEARCHED_DEPTH_ONLY_FIELDS).
   ...DEPTH_BLOCK_KEYS,
+  // Sell mission 2026-11-12, STOP RULE (round 1b): closeLine is generated and stored but NOT rendered. Round 1 rendered it and
+  // it carried invented owner claims twice (a price promise in round 1a, "I answer you personally" in round 1b) that no gate
+  // caught. closeSection() stays for when the close is re-approved; add 'closeLine' back here and call it in buildPageHtml.
 ];
 
 /**
@@ -416,6 +421,8 @@ export const RESEARCHED_RENDERED_WARN_ONLY_FIELDS: readonly string[] = [
   // Content depth (2026-11-10): warn-only until a paid eval proves them, like the story; the fact-trace and term-density
   // gates (ALWAYS_BLOCKING_RULES) and every other truth gate still fail the page.
   ...DEPTH_BLOCK_KEYS,
+  // Sell mission 2026-11-12: closeLine is NOT warn-only: round 1 showed we-form / clause-repeat hits passing as warnings on a
+  // rendered field, and those gates must stay blocking. Every gate blocks it.
 ];
 
 /** The fields whose gate hits fail a research page (copyGates renderedFields): rendered minus the default warn-only set. */
@@ -588,6 +595,17 @@ function storySection(page: ResearchedSitePage, theme: RenderResearchedSitePages
   return `<section id="story" data-section="story"${named ? ' aria-labelledby="story-heading"' : ''} style="padding:28px 20px;background:${theme.surfaceAlt};border-block:1px solid ${theme.border};"><div style="max-width:640px;margin:0 auto;">${heading}<p style="color:${theme.textPrimary};font-size:1.125rem;line-height:1.7;text-align:start;border-inline-start:3px solid ${theme.accent};padding-inline-start:14px;">${esc(page.copy.storyBody ?? '')}</p></div></section>`;
 }
 
+/**
+ * Sell mission 2026-11-12: the close (the promise restated, the last hesitation removed) right above the contact form. Nothing
+ * without a closeLine (older records render unchanged). Theme tokens only. Presentation: Maya may restyle.
+ */
+/** Sell mission 2026-11-12: closeLine renders only while it is a rendered field (it is not, after the round-1b stop rule). */
+const CLOSE_LINE_RENDERED: boolean = RESEARCHED_RENDERED_FIELDS.includes('closeLine');
+function closeSection(page: ResearchedSitePage, theme: RenderResearchedSitePagesParams['theme']): string {
+  if (!nonEmpty(page.copy.closeLine)) return '';
+  return `<section data-section="close" style="padding:28px 20px 8px;background:${theme.surface};"><p style="max-width:640px;margin:0 auto;color:${theme.textPrimary};font-size:1.2rem;font-weight:700;line-height:1.6;text-align:center;">${esc(page.copy.closeLine ?? '')}</p></section>`;
+}
+
 /** Content depth: the non-empty text items of one depth list (a record without the field renders nothing). */
 function depthItems<T extends object>(value: readonly T[] | null | undefined, keys: readonly (keyof T)[]): T[] {
   return (Array.isArray(value) ? value : []).filter(item => item && keys.every(key => nonEmpty(item[key])));
@@ -724,7 +742,7 @@ function buildPageHtml(page: ResearchedSitePage, params: RenderResearchedSitePag
     ${serviceAreasSection(page, allPages, outputs, theme)}
     ${faq ? `<section data-section="faq" aria-labelledby="faq-heading" style="padding:32px 20px;background:${theme.surfaceAlt};"><div style="max-width:700px;margin:0 auto;display:flex;flex-direction:column;gap:12px;"><h2 id="faq-heading" style="font-size:1.25rem;color:${theme.primary};text-align:center;">${esc(RESEARCHED_SITE_LABELS.faqHeading)}</h2>${faq}</div></section>` : ''}
     ${links ? `<nav data-section="related-links" aria-labelledby="related-links-heading" style="padding:20px;background:${theme.surface};text-align:center;"><h2 id="related-links-heading" style="font-size:0.95rem;font-weight:700;color:${theme.textPrimary};margin-bottom:6px;">${esc(RESEARCHED_SITE_LABELS.relatedLinksLabel)}</h2><div style="display:flex;flex-wrap:wrap;gap:6px 14px;justify-content:center;">${links}</div></nav>` : ''}
-    ${leadFormSection(theme, page.copy.formHeadline, page.copy.heroCta, { ...RESEARCHED_LEAD_FORM, sectionId: 'contact' })}
+    ${CLOSE_LINE_RENDERED ? closeSection(page, theme) : ''}${leadFormSection(theme, page.copy.formHeadline, page.copy.heroCta, { ...RESEARCHED_LEAD_FORM, sectionId: 'contact' })}
   </main>
   ${pageScript({ slug, businessName, googleAdsCustomerId: params.googleAdsCustomerId || '', formConversionLabel: params.formConversionLabel || '', phoneConversionLabel: params.phoneConversionLabel || '', whatsappConversionLabel: params.whatsappConversionLabel || '', ctaLabel: RESEARCHED_LEAD_FORM.submitLabel ?? page.copy.heroCta, includeLeadForm: true })}`;
   return assembleDocument(theme, head, body, params.gtagSnippet, data, researchNavOptions(home, page.classification === 'homepage', contactHref));

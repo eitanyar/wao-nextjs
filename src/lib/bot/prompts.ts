@@ -3,6 +3,8 @@
  * Script v6 — 28.6.2026
  */
 
+import { ADS_RSA_SELLING_ADDENDUM, CLIENT_SELLING_RULES } from '../lp/clientSellingRules';
+
 /** Pricing default (2026-11-10): the fixed owner-checkable pricing promises. */
 export type PricingPromiseId = 'free_quote' | 'price_before_work' | 'price_by_phone_before_leaving' | 'no_callout_fee' | 'no_hidden_costs';
 
@@ -423,6 +425,13 @@ Write high-converting Google Ads RSA copy for an Israeli local/lead-gen business
 
 INPUT DATA AVAILABLE: primaryService, businessNiche, ownerName, usp, idealClientFear, faqQuestions, guarantee, yearsInField, reviewQuote, starRating, urgencyLevel, responseTime, pricingNotes, targetLocation.
 
+FACTS (binding): use facts only from the input. Skip every empty or missing field silently. Never add a number, guarantee,
+licence, insurance, rating, response time, price or result the input does not state, at the strength it states it.
+LANDING PAGE: the input may carry the landing page's promise. Every claim in an ad also appears on its landing page.
+
+${CLIENT_SELLING_RULES}
+${ADS_RSA_SELLING_ADDENDUM}
+
 RULES:
 - Headlines (10–15, fill Google's full RSA slot count — do not stop at 3–5): max 30 chars each.
   Include primaryService, not a different service, in H1. Vary the angle across headlines — draw
@@ -446,41 +455,8 @@ Output JSON:
 }
 `;
 
-export const TAMAR_CALLOUT_SYSTEM_PROMPT = `
-You are Tamar, WAO's Sabra Conversion Copywriter.
-Write Google Ads CALLOUT assets for an Israeli local/lead-gen business.
-
-WHAT A CALLOUT IS: a short, standalone trust phrase shown beneath the ad. Not a headline,
-not a CTA — a snackable proof point ("20 שנות ניסיון", "אחריות מלאה"). Google shows several
-side by side, so each must stand on its own and read cleanly next to the others.
-
-INPUT DATA AVAILABLE: guarantee, yearsInField, license, starRating, responseTime, pricingNotes.
-
-RULES:
-- Length: max 25 characters each (Hebrew included). Shorter is better — aim for 2–3 words.
-- Generate 4–8 callouts, strongest-trust-first. Use ONLY data actually provided — never invent
-  a guarantee, license, rating, or number that isn't in the input. Skip any empty field silently.
-- NO punctuation. NO CTA. NO instruction verbs. A callout is a noun phrase / claim, not a
-  sentence and not a command. Wrong: "התקשר עכשיו", "אנחנו מבטיחים". Right: "אחריות שנה מלאה",
-  "זמינות 24/7".
-- Each callout is ONE distinct trust signal — no two making the same point. Spread across
-  guarantee / experience / license / rating / speed / pricing.
-- Map by source:
-  - yearsInField  → "X שנות ניסיון"        (only if a real number exists)
-  - guarantee     → guarantee in 2–3 words  ("אחריות מלאה", "אחריות לשנה")
-  - license       → "מורשה ומבוטח" / "בעל רישיון"  (only if genuinely licensed)
-  - starRating    → "דירוג X בגוגל"         (only if a real rating exists)
-  - responseTime  → "הגעה תוך שעה" / "מענה מיידי"
-  - pricingNotes  → "הצעת מחיר חינם" / "בלי דמי הגעה"  (only if actually true)
-- Native spoken Israeli Hebrew. No translated-from-English phrasing, no jargon.
-
-Output JSON — ONLY this key, no other keys (no rationale/explanation field — a free-text
-prose field after the array has been observed to corrupt the JSON output; keep the response
-to structured data only):
-{
-  "callouts": ["4–8 Hebrew callouts ≤25 chars, no punctuation, each a distinct trust signal"]
-}
-`;
+// Sell mission 2026-11-12: callouts are built by code from the owner facts (lib/bot/adsCopy.ts adsCalloutsFromFacts, the
+// ownerFactCopy trust texts); the model callout prompt (with its Hebrew examples and its licence-to-"insured" map) is gone.
 
 export const TAMAR_STRUCTURED_SNIPPET_SYSTEM_PROMPT = `
 You are Tamar, WAO's Sabra Conversion Copywriter.
@@ -517,3 +493,25 @@ to structured data only):
   "values": ["3–10 Hebrew service names ≤25 chars each, or [] if fewer than 3 exist"]
 }
 `;
+
+/**
+ * Sell mission 2026-11-12: the RSA brief (moved out of the bot route), plus the landing page's promise: every ad claim must
+ * appear on its landing page. Without a generated page, the promise line is built from the owner's usp (the landing page's
+ * promise source). Empty fields are left out (the prompt says to skip them; "undefined" never reaches the model).
+ */
+export function buildRsaBrief(data: CollectedData, options: { landingPagePromise?: string | null } = {}): string {
+  const rows: Array<[string, unknown]> = [
+    ['Primary Service', data.primaryService], ['Niche', data.businessNiche], ['Business Name', data.businessName], ['Owner', data.ownerName],
+    ['Service Model', data.serviceModel], ['Location', data.targetLocation], ['Specific Cities', data.specificCities],
+    ['Ideal Client Fear', data.idealClientFear], ['FAQ Questions', data.faqQuestions], ['USP', data.usp], ['Years in Field', data.yearsInField],
+    ['Guarantee', data.guarantee], ['License', data.license], ['Exclusions', data.exclusions], ['Urgency', data.urgencyLevel],
+    ['Response Time', data.responseTime], ['Pricing Notes', data.pricingNotes], ['Revenue Model', data.revenueModel],
+    ['Avg Job Value', data.avgJobValue], ['Close Rate', data.closeRate], ['Monthly Budget', data.monthlyBudget],
+    ['Feasibility Branch', data.feasibilityBranch], ['No Digital Footprint', data.noDigitalFootprint], ['Has Google Business', data.hasGoogleBusiness],
+    ['GBP Verified', data.gbpVerified], ['Review Quote', data.reviewQuote], ['Star Rating', data.starRating], ['Contact Method', data.contactMethod],
+    ['Phone', data.phone],
+  ];
+  const lines = rows.filter(([, value]) => value !== undefined && value !== null && String(value).trim() !== '').map(([label, value]) => `${label}: ${value}`);
+  const promise = options.landingPagePromise?.trim() || (typeof data.usp === 'string' && data.usp.trim() ? `(built from the USP) ${data.usp.trim()}` : '');
+  return `\nBusiness Details:\n${lines.join('\n')}\n${promise ? `Landing Page Promise: ${promise}\n` : ''}`;
+}

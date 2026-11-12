@@ -129,7 +129,12 @@ test('hero allowance: one usp restatement in the hero is allowed once; a second,
   const hero = (headline: string, sub: string) => factRestatementHits([{ field: 'heroHeadline', value: headline }, { field: 'heroSubheadline', value: sub }], SPEC);
   assert.deepEqual(hero('Plumber, within 20 minutes', 'I fix it on the spot'), []);
   assert.deepEqual(hero('Plumber, within 20 minutes', 'with zzwarranty').map(hit => hit.field), ['heroHeadline', 'heroSubheadline'], 'two in the hero: both');
-  assert.deepEqual(hero('Plumber with 18 years', 'I fix it').map(hit => hit.kind), ['years'], 'not part of the usp');
+  // Sell mission 2026-11-12: the owner's exact digits are allowed once in the hero without usp membership; a phrase still needs it.
+  assert.deepEqual(hero('Plumber with 18 years', 'I fix it'), [], 'owner digits, not part of the usp');
+  assert.deepEqual(hero('Plumber with zzwarranty', 'I fix it').map(hit => hit.kind), ['warranty'], 'a phrase outside the usp');
+  const close = (value: string) => factRestatementHits([{ field: 'closeLine', value }], SPEC);
+  assert.deepEqual(close('Call: 18 years behind every job'), [], 'closeLine: one owner fact in his digits');
+  assert.deepEqual(close('18 years and within 20 minutes').map(hit => hit.field), ['closeLine', 'closeLine'], 'closeLine: two facts');
   assert.deepEqual(factRestatementHits([{ field: 'storyBody', value: 'within 20 minutes' }], SPEC).map(hit => hit.field), ['storyBody'], 'outside the hero: always a hit');
 });
 
@@ -204,20 +209,20 @@ test('drop plan: a card loses its description (the name stays); the validator ac
 test('repair order (mocked model): an undroppable restatement gets one repair, then the page fails on it', async () => {
   await codeOwned(async () => {
     const page = brief('money_service');
-    const answer = Object.fromEntries(Object.entries({ ...modelCopy(), heroSubheadline: 'I give 12 years to every leak' }).filter(([key]) => !ungeneratedFieldsFor(page).includes(key)));
+    const answer = Object.fromEntries(Object.entries({ ...modelCopy(), formHeadline: 'I give 12 years to every leak' }).filter(([key]) => !ungeneratedFieldsFor(page).includes(key)));
     const events: CopyRepairEvent[] = [];
     let repairs = 0;
     const run = (fixInRepair: boolean) => generateResearchPageCopy(page, data, {
       onEvent: event => events.push(event),
       callJson: async (system, user) => {
         if (/^You are Noa/.test(system)) return JSON.stringify(JSON.parse(user.slice(0, user.indexOf('\n\nHARD LIMITS'))));
-        if (/repairing specific fields/.test(system)) { repairs++; return JSON.stringify({ heroSubheadline: fixInRepair ? 'I find the leak first' : 'Still 12 years here' }); }
+        if (/repairing specific fields/.test(system)) { repairs++; return JSON.stringify({ formHeadline: fixInRepair ? 'I find the leak first' : 'Still 12 years here' }); }
         return JSON.stringify(answer);
       },
     });
     await assert.rejects(run(false), (error: unknown) => {
       assert.ok(error instanceof GeneratedCopyValidationError);
-      assert.ok(error.violations.some(violation => violation.rule === GATE_RULES.factRestatement && violation.field === 'heroSubheadline'));
+      assert.ok(error.violations.some(violation => violation.rule === GATE_RULES.factRestatement && violation.field === 'formHeadline'));
       return true;
     });
     const restatementRepairs = events.filter(event => event.kind === 'repair' && (event.violations ?? []).some(violation => violation.rule === GATE_RULES.factRestatement)).length;
@@ -225,7 +230,7 @@ test('repair order (mocked model): an undroppable restatement gets one repair, t
     repairs = 0;
     events.length = 0;
     const copy = await run(true);
-    assert.equal(copy.heroSubheadline, 'I find the leak first');
+    assert.equal(copy.formHeadline, 'I find the leak first');
     assert.equal(repairs, 1);
   });
 });

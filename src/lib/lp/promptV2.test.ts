@@ -141,7 +141,8 @@ test('v2 prompt: rule count (about 30, down from about 90) and a pinned snapshot
     const home = brief('homepage');
     const service = brief('money_service');
     const counts = { home: promptV2RuleCount(home, data), service: promptV2RuleCount(service, data) };
-    assert.deepEqual(counts, { home: 39, service: 27 });
+    // Sell mission 2026-11-12: + the cut map (home), closeLine and flags (both).
+    assert.deepEqual(counts, { home: 42, service: 29 });
     for (const section of [...buildResearchCopyRulesV2(home, data), ...buildResearchCopyRulesV2(service, data)]) {
       for (const rule of section.rules) assert.ok(rule.startsWith('- '), `${section.heading}: every rule is one bullet`);
     }
@@ -153,7 +154,8 @@ test('v2 prompt: rule count (about 30, down from about 90) and a pinned snapshot
 });
 
 /** Re-pin deliberately when a v2 rule changes (print the new values with the assert message). */
-const PINNED_V2 = { home: '5ed13a9c5d8cb10e', service: 'f80a59b051660889' };
+// Sell mission 2026-11-12: re-pinned (selling rules, cut map, closeLine / flags; the about / card rules were reverted).
+const PINNED_V2 = { home: 'c844e24f202c19cb', service: '41d6c14c68040861' };
 
 test('rerun-3 item 3: no code-gate token list reaches a v2 prompt (user prompt, Tamar / repair / Noa system prompts)', async () => {
   await codeOwned(() => {

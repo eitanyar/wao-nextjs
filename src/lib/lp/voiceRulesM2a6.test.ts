@@ -181,7 +181,7 @@ test('M2a.6 1: generationData.ts carries section 20 byte-exact, counted and sour
   assert.equal(execFileSync('node', [path.join(ROOT, 'scripts/site-bot/build-generation-data.mjs'), '--check'], { encoding: 'utf8' }).trim(), 'generationData.ts up to date');
 });
 
-test('M2a.6 2: signature additions, tile-breaking forms (whole word, prefixes, preceding-word exclusion), one count per overlap; the differentiator group is capped at 2', () => {
+test('M2a.6 2: signature additions, tile-breaking forms (whole word, prefixes, preceding-word exclusion), one count per overlap; the differentiator group is capped at 3 (sell mission)', () => {
   for (const [group, list] of Object.entries(SIGNATURE_WORD_TOKEN_ADDITIONS)) {
     assert.deepEqual([...SIGNATURE_GROUPS[group]], [...(SIGNATURE_WORD_TOKENS[group] ?? []), ...list], group);
     for (const item of list) assert.equal(signatureCounts(`${HE_WORD} ${item} ${HE_WORD}`)[group], 1, item);
@@ -200,9 +200,11 @@ test('M2a.6 2: signature additions, tile-breaking forms (whole word, prefixes, p
   const copy = loose({ heroHeadline: `${LABEL} ${form}`, aboutPageBody: `${CARRY} ${HE_WORD} ${form}` });
   assert.deepEqual(hitsOf(copy, vctx(), GATE_RULES.signatureRepeat), [`aboutPageBody=signature:${TILES_GROUP}`]);
   const usp = { usp: `${HE_WORD} ${SIGNATURE_WORD_TOKENS[TILES_GROUP][0]}` };
-  assert.equal(DIFFERENTIATOR_SIGNATURE_CAP, 2);
+  // Sell mission 2026-11-12: the differentiator cap is 3 (promise at the top, the middle and the close).
+  assert.equal(DIFFERENTIATOR_SIGNATURE_CAP, 3);
   assert.deepEqual(hitsOf(copy, vctx({}, usp), GATE_RULES.signatureRepeat), [], 'differentiator group: twice is fine');
-  assert.deepEqual(hitsOf({ ...copy, aboutBlurb: `${CARRY} ${form}` }, vctx({}, usp), GATE_RULES.signatureRepeat), [`aboutPageBody=signature:${TILES_GROUP}`], 'third use fails');
+  assert.deepEqual(hitsOf({ ...copy, aboutBlurb: `${CARRY} ${form}` }, vctx({}, usp), GATE_RULES.signatureRepeat), [], 'differentiator group: three times is fine');
+  assert.deepEqual(hitsOf({ ...copy, aboutBlurb: `${CARRY} ${form}`, storyBody: `${CARRY} ${form}` }, vctx({}, usp), GATE_RULES.signatureRepeat), [`storyBody=signature:${TILES_GROUP}`], 'fourth use fails');
   assert.deepEqual(hitsOf(loose({ heroHeadline: `${LABEL} ${SIGNATURE_WORD_TOKENS.exactly[0]}`, aboutPageBody: `${CARRY} ${SIGNATURE_WORD_TOKENS.exactly[0]}` }), vctx({}, usp), GATE_RULES.signatureRepeat), ['aboutPageBody=signature:exactly'], 'other groups stay at 1');
   // The matching-only pointByPoint spellings never reach a prompt; the maqaf form does.
   const maqaf = SIGNATURE_GROUPS.pointByPoint.find(item => item.includes('\u05BE'))!;

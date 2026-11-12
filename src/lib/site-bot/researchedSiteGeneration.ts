@@ -242,7 +242,8 @@ export async function buildResearchedSiteGeneration(
     assertBoundedGeneratedSiteCopy(generatedCopy, shapeOptions(brief));
     heroFacts.push(heroCapFacts(brief, generatedCopy));
     // M2b.1h: the pitch moves from the copy to the page record (stored, never rendered).
-    const { pitch, ...pageCopy } = generatedCopy;
+    // Sell mission 2026-11-12: the unrendered flags move off the copy too.
+    const { pitch, flags, ...pageCopy } = generatedCopy;
     pages.push({
       opportunityId: brief.page.id,
       classification: brief.page.pageClass as PageClassification,
@@ -253,6 +254,7 @@ export async function buildResearchedSiteGeneration(
       },
       copy: structuredClone(pageCopy),
       ...(typeof pitch === 'string' && pitch.trim() ? { pitch } : {}),
+      ...(Array.isArray(flags) ? { flags: [...flags] } : {}),
       ...(brief.site ? { seo: { name: brief.site.pageName, city: brief.site.city, serviceArea: [...brief.site.serviceArea] } } : {}),
     });
   }

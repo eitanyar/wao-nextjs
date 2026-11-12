@@ -120,7 +120,8 @@ test('M2a.7 1: generationData carries the M2a.7 data byte-exact and counted; R8 
   assert.deepEqual([Object.keys(DIFFERENTIATOR_USP_KEYWORDS).length, Object.values(DIFFERENTIATOR_USP_KEYWORDS).flat().length], [8, 62]);
   assert.deepEqual([PREPOSITION_SKIP_ADVERBS.length, WRONG_PREPOSITION_TOKENS.length, NAME_INTRO_LEAD_INS.length], [3, 3, 5]);
   assert.ok(HERO_CAP_AC_ONLY.every(entry => HERO_CAP_CONCEPT_ADDITIONS.fromTheRoot.includes(entry)));
-  assert.deepEqual([DIFFERENTIATOR_CAP, DIFFERENTIATOR_SIGNATURE_CAP], [2, 2]);
+  // Sell mission 2026-11-12: the data cap stays 2; the gate raises it to 3.
+  assert.deepEqual([DIFFERENTIATOR_CAP, DIFFERENTIATOR_SIGNATURE_CAP], [2, 3]);
   assert.deepEqual([...DIFFERENTIATOR_EXCLUDED_GROUPS], ['exactly']);
   assert.deepEqual([...EXTRA_GATE_FIELDS], ['servicesHeadline']);
   assert.equal(PREPOSITION_PAIR_NEXT_LETTER, BET);
@@ -320,9 +321,10 @@ test('M2a.7 7: the owner differentiator from a Hebrew or English usp / guarantee
   assert.deepEqual(groups('Fast service', `${DIFFERENTIATOR_USP_KEYWORDS.tiles[0]}s stay whole`), ['tiles'], 'the guarantee counts when it states a method');
   assert.deepEqual(groups(`${HE_WORD} ${SIGNATURE_WORD_TOKENS.tiles[0]}`), ['tiles'], 'Hebrew usp as before');
   assert.deepEqual(groups(`${HE_WORD} ${SIGNATURE_WORD_TOKENS.exactly[0]}`), [], 'exactly is never a differentiator group');
-  // Cap 2 for the English-detected group on a research page.
+  // Cap 3 (sell mission 2026-11-12) for the English-detected group on a research page.
   const ctx = { ...vctx(), ownerFields: { usp: `I explain ${lineKeyword}` } };
   const variant = SIGNATURE_WORD_TOKENS.lineByLine[0];
   assert.deepEqual(rulesOf(loose({ heroHeadline: `${LABEL} ${variant}`, aboutBlurb: `${CARRY} ${variant}` }), ctx, GATE_RULES.signatureRepeat), []);
-  assert.deepEqual(rulesOf(loose({ heroHeadline: `${LABEL} ${variant}`, aboutBlurb: `${CARRY} ${variant}`, aboutPageBody: `${CARRY} ${variant}` }), ctx, GATE_RULES.signatureRepeat), ['aboutPageBody=signature:lineByLine']);
+  assert.deepEqual(rulesOf(loose({ heroHeadline: `${LABEL} ${variant}`, aboutBlurb: `${CARRY} ${variant}`, aboutPageBody: `${CARRY} ${variant}` }), ctx, GATE_RULES.signatureRepeat), []);
+  assert.deepEqual(rulesOf(loose({ heroHeadline: `${LABEL} ${variant}`, aboutBlurb: `${CARRY} ${variant}`, aboutPageBody: `${CARRY} ${variant}`, storyBody: `${CARRY} ${variant}` }), ctx, GATE_RULES.signatureRepeat), ['storyBody=signature:lineByLine']);
 });
