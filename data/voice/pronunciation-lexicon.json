@@ -262,6 +262,25 @@
       },
       "date": "2026-11-13",
       "note": "Eitan round 5 #67: wants 've-kama'. Re-test next round."
+    },
+    {
+      "id": "shelet",
+      "clean": "שלט",
+      "match": [
+        "שלט"
+      ],
+      "tts": "שֶׁלֶט",
+      "reading": "SHE-let",
+      "meaning": "sign (as in a magnetic car sign), not 'shalat' (controlled)",
+      "status": "pending",
+      "allowPrefixes": true,
+      "verifiedOn": {
+        "voice": "Nimrod",
+        "voiceId": "ZiofZHcEBTn5sRySe5h8",
+        "model": "eleven_v4"
+      },
+      "date": "2026-11-13",
+      "note": "Eitan 2026-11-13 on S1 30s: heard 'shalat', wants 'shelet magneti'. Re-test next round."
     }
   ]
 }
