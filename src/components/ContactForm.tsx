@@ -34,12 +34,12 @@ const labelStyle: React.CSSProperties = {
   marginBottom: "6px",
 };
 
-export default function ContactForm({ source = "contact-page" }: { source?: string }) {
+export default function ContactForm({ source = "contact-page", defaultService = "" }: { source?: string; defaultService?: string }) {
   const [form, setForm] = useState({
     name: "",
     phone: "",
     email: "",
-    service: "",
+    service: SERVICES.some((s) => s.value === defaultService) ? defaultService : "",
     message: "",
   });
   const [privacyAccepted, setPrivacyAccepted] = useState(false);
@@ -255,7 +255,7 @@ export default function ContactForm({ source = "contact-page" }: { source?: stri
           cursor: status === "loading" ? "wait" : "pointer",
         }}
       >
-        {status === "loading" ? "שולח..." : "שלח פנייה — ייעוץ ראשון חינם"}
+        {status === "loading" ? "שולח..." : "שלח פנייה"}
       </button>
 
       <p
@@ -267,7 +267,7 @@ export default function ContactForm({ source = "contact-page" }: { source?: stri
           lineHeight: 1.6,
         }}
       >
-        ✓ ללא חוזה ✓ ייעוץ ראשון חינם ✓ מענה תוך 24 שעות
+        ✓ ללא חוזה ✓ מענה תוך 24 שעות
       </p>
     </form>
   );

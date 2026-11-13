@@ -602,8 +602,12 @@ test('audit layout renders children unchanged and never the buy-CTA provider unl
   assert.equal(source.trim(), `import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
 import { PaidBuyCtaProvider } from './paidBuyCta';
+import { SCORECARD_COPY } from '@/lib/site-bot/scorecardCopy';
 
+// Title = the existing scorecard form title (Yonatan 2026-11-13, anchor audit_title); the root
+// template appends the RLM-anchored brand. The page stays noindex.
 export const metadata: Metadata = {
+  title: SCORECARD_COPY.FORM_TITLE,
   robots: { index: false },
 };
 
@@ -632,6 +636,8 @@ export default function AuditLayout({ children }: { children: ReactNode }) {
       require: name => {
         if (name === 'react/jsx-runtime') return { jsx: (type, props) => { rendered.push(type); return { type, props }; } };
         if (name === './paidBuyCta') return { PaidBuyCtaProvider };
+        // Pure constants module, only for the metadata title (2026-11-13).
+        if (name === '@/lib/site-bot/scorecardCopy') return { SCORECARD_COPY: { FORM_TITLE: 'audit-title' } };
         return deny(`import: ${name}`);
       },
       process: gatedProcess(env, deny),

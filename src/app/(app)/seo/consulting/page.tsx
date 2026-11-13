@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { renderMixed } from "@/lib/bidi";
 import Link from "next/link";
+import ContactForm from "@/components/ContactForm";
 import SiloNav from "@/components/SiloNav";
 import GT from "@/components/GlossaryTerm";
 
@@ -12,9 +13,9 @@ const SAME_AS = [
 
 // ── Static metadata fallback ────────────────────────────────────────────────
 const STATIC_META = {
-  title: "יועץ קידום אתרים מנוסה — 20+ שנות ניסיון",
+  title: "יועץ קידום אתרים מנוסה — 20 שנות ניסיון",
   description:
-    "איתן יריב — יועץ SEO עם 20+ שנות ניסיון. ייעוץ אישי ומעשי: Topical Authority, Core Web Vitals, AI Overviews ו-Technical SEO. מנטורינג חודשי ב-950 ₪ ללא חוזה.",
+    "איתן יריב — יועץ SEO עם 20 שנות ניסיון. ייעוץ אישי ומעשי: Topical Authority, Core Web Vitals, AI Overviews ו-Technical SEO. מנטורינג חודשי ב-950 ₪ ללא חוזה.",
 };
 
 // ── Metadata ────────────────────────────────────────────────────────────────
@@ -56,7 +57,7 @@ const consultingServiceSchema = {
   serviceType: "SEO Consulting",
   name: "ייעוץ קידום אתרים אורגני",
   description:
-    "ייעוץ SEO אישי ומעשי מאיתן יריב — 20+ שנות ניסיון. Technical SEO, Topical Authority, AI Overviews ו-Core Web Vitals.",
+    "ייעוץ SEO אישי ומעשי מאיתן יריב — 20 שנות ניסיון. Technical SEO, Topical Authority, AI Overviews ו-Core Web Vitals.",
   url: CANONICAL,
   provider: {
     "@type": "Person",
@@ -192,7 +193,7 @@ function StaticPage() {
         <div className="wao-container" style={{ position: "relative", zIndex: 1, maxWidth: "820px" }}>
           <div className="badge" style={{ marginBottom: "28px" }}>
             <span className="badge-dot" />
-            ייעוץ SEO אישי — 20+ שנות ניסיון מוכח
+            ייעוץ SEO אישי — 20 שנות ניסיון מוכח
           </div>
 
           <h1
@@ -227,8 +228,8 @@ function StaticPage() {
           </p>
 
           <div style={{ display: "flex", gap: "14px", flexWrap: "wrap" }}>
-            <a href="tel:0526148860" className="btn-primary" style={{ fontSize: "1.05rem", padding: "15px 36px" }}>
-              📞 ייעוץ ראשון חינם
+            <a href="#request" className="btn-primary" style={{ fontSize: "1.05rem", padding: "15px 36px" }}>
+              שלח בקשה למנטורינג
             </a>
             <a href="#offer" className="btn-outline" style={{ fontSize: "1rem" }}>
               ← מנטורינג 950 ₪/חודש
@@ -261,7 +262,7 @@ function StaticPage() {
             <li><strong style={{ color: "var(--text)" }}>יועץ SEO</strong> = שותף שטח שמגיע עם אסטרטגיה, מפקח על ביצוע, ומוביל לתוצאות מדידות — לא מסמך PDF ועדכון חודשי.</li>
             <li>איתן יריב ניהל SEO עבור מותגים גדולים בישראל ובחו״ל — דפי זהב, בנק לאומי, למטייל — ומאז 2006 מוביל לקוחות <GT term="B2C">B2C</GT> לצמיחה אורגנית.</li>
             <li><strong style={{ color: "var(--text)" }}>2026:</strong> <GT term="AI Overviews">AI Overviews</GT>, <GT term="Topical Authority">Topical Authority</GT> ו-<GT term="Core Web Vitals">Core Web Vitals</GT> הפכו לדרישת מינימום. יועץ שלא שולט בהם — מוביל אתכם לאחור.</li>
-            <li><strong style={{ color: "var(--text)" }}>מנטורינג חודשי ב-950 ₪</strong> — מפגש אסטרטגיה, Roadmap עדכני, בדיקת <GT term="Technical SEO">Technical SEO</GT>. ללא חוזה, תשלום בסוף החודש.</li>
+            <li><strong style={{ color: "var(--text)" }}>מנטורינג חודשי ב-950 ₪</strong> — מפגש אסטרטגיה, Roadmap עדכני, בדיקת <GT term="Technical SEO">Technical SEO</GT>. ללא חוזה, תשלום מראש לכל חודש.</li>
             <li>שלושה תחומי עומק: ביצועי <GT term="Next.js">Next.js</GT> ו-<GT term="Core Web Vitals">Core Web Vitals</GT>, ניקוי <GT term="Indexing Bloat">Indexing Bloat</GT> וקאניבליזציה, אופטימיזציה <GT term="Mobile-First">מובייל-ראשית</GT> לדפי נחיתה.</li>
           </ul>
         </div>
@@ -492,10 +493,10 @@ function StaticPage() {
                   950 ₪
                 </div>
                 <div style={{ fontFamily: "var(--font-body), sans-serif", fontSize: "0.88rem", color: "var(--muted)", marginBottom: "24px" }}>
-                  לחודש · ללא חוזה · תשלום בסוף החודש
+                  לחודש · ללא חוזה · תשלום מראש
                 </div>
-                <a href="tel:0526148860" className="btn-primary" style={{ fontSize: "1rem", width: "100%", justifyContent: "center", marginBottom: "12px", display: "flex" }}>
-                  📞 התחל מנטורינג
+                <a href="#request" className="btn-primary" style={{ fontSize: "1rem", width: "100%", justifyContent: "center", marginBottom: "12px", display: "flex" }}>
+                  בקש מקום במנטורינג
                 </a>
                 <a href="mailto:eitan@wao.co.il" className="btn-outline" style={{ fontSize: "0.9rem", width: "100%", justifyContent: "center", display: "flex" }}>
                   שלח מייל
@@ -542,7 +543,7 @@ function StaticPage() {
             >
               ⚠️ <strong style={{ color: "var(--text)" }}>מספר מנטורינגים מוגבל:</strong>{" "}
               איתן עובד עם מקסימום 6 לקוחות מנטורינג במקביל כדי לשמור על רמת שירות גבוהה.
-              אפשר להתחיל עם חודש ניסיון ללא סיכון — תשלום רק אחרי שרואים ערך.
+              אין חוזה ואין התחייבות: משלמים מראש על חודש, ואם הוא לא הצדיק את עצמו, אתה פשוט לא ממשיך לחודש הבא.
             </div>
           </div>
         </div>
@@ -590,28 +591,37 @@ function StaticPage() {
           <div className="cta-banner" style={{ padding: "clamp(48px,8vw,80px) clamp(24px,6vw,64px)", textAlign: "center", position: "relative", overflow: "hidden" }}>
             <div aria-hidden style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%,-50%)", width: "60%", height: "100%", background: "radial-gradient(ellipse at center, rgba(74,227,181,0.06) 0%, transparent 70%)", pointerEvents: "none" }} />
             <div style={{ position: "relative", zIndex: 1 }}>
-              <div className="eyebrow" style={{ justifyContent: "center" }}>מוכנים להתחיל?</div>
+              <div className="eyebrow" style={{ justifyContent: "center" }}>מוכן להתחיל?</div>
               <h2 style={{ fontFamily: "var(--font-rubik), sans-serif", fontWeight: 900, fontSize: "clamp(1.6rem,3.5vw,2.6rem)", lineHeight: 1.15, marginBottom: "16px" }}>
-                ייעוץ SEO ראשון בחינם —{" "}
-                <span className="text-gradient">נגיד לכם בדיוק מה חסר</span>
+                מקסימום 6 לקוחות במקביל —{" "}
+                <span className="text-gradient">אחד מהם יכול להיות אתה</span>
               </h2>
               <p style={{ color: "var(--muted)", fontFamily: "var(--font-body), sans-serif", marginBottom: "32px", maxWidth: "480px", margin: "0 auto 32px", lineHeight: 1.75 }}>
-                שיחה של 30 דקות עם איתן. נבחן את המצב הקיים, נזהה את הפערים המשמעותיים,
-                ונחליט יחד אם מנטורינג מתאים.
+                בלי שיחת מכירה: אתה ממלא בקשה ורואה את המחיר, אנחנו שולחים קישור לתשלום,
+                ובמפגש הראשון איתן כבר מראה לך מה חסר באתר ומה מתקנים קודם.
               </p>
               <div style={{ display: "flex", gap: "16px", justifyContent: "center", flexWrap: "wrap" }}>
-                <a href="tel:0526148860" className="btn-primary" style={{ fontSize: "1.05rem", padding: "16px 40px" }}>
-                  📞 052-614-8860
+                <a href="#request" className="btn-primary" style={{ fontSize: "1.05rem", padding: "16px 40px" }}>
+                  שלח בקשה
                 </a>
                 <Link href="/seo" className="btn-outline" style={{ fontSize: "1rem" }}>
                   ← שירות SEO מלא
                 </Link>
               </div>
-              <p style={{ marginTop: "20px", fontSize: "0.8rem", color: "var(--muted)", fontFamily: "var(--font-body), sans-serif" }}>
-                ✓ ייעוץ ראשון חינם · ✓ ללא חוזה · ✓ 950 ₪/חודש מנטורינג
-              </p>
             </div>
           </div>
+        </div>
+      </section>
+
+      {/* ── Request form: no pre-sale call; reuses the /contact form and the /api/lead pipeline ── */}
+      <section id="request" className="wao-section" style={{ scrollMarginTop: "72px" }}>
+        <div className="wao-container" style={{ maxWidth: "720px" }}>
+          <div style={{ textAlign: "center", marginBottom: "24px" }}>
+            <p style={{ marginTop: "20px", fontSize: "0.8rem", color: "var(--muted)", fontFamily: "var(--font-body), sans-serif" }}>
+              ✓ 950 ₪ לחודש · ✓ תשלום מראש, חודש בכל פעם · ✓ ללא חוזה
+            </p>
+          </div>
+          <ContactForm source="seo-consulting-page" defaultService="seo" />
         </div>
       </section>
     </>

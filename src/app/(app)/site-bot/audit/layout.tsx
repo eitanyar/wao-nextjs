@@ -1,8 +1,12 @@
 import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
 import { PaidBuyCtaProvider } from './paidBuyCta';
+import { SCORECARD_COPY } from '@/lib/site-bot/scorecardCopy';
 
+// Title = the existing scorecard form title (Yonatan 2026-11-13, anchor audit_title); the root
+// template appends the RLM-anchored brand. The page stays noindex.
 export const metadata: Metadata = {
+  title: SCORECARD_COPY.FORM_TITLE,
   robots: { index: false },
 };
 

@@ -1,0 +1,802 @@
+{
+ "approval": "Eitan 2026-11-13, Noa-gated; anchors Yonatan-approved",
+ "approvedOn": "2026-11-13",
+ "generatedBy": "scripts/build-copy-polish-approval-batch2.mjs",
+ "count": 74,
+ "patches": [
+  {
+   "order": 0,
+   "page": "/consulting",
+   "file": "src/app/(app)/consulting/page.tsx",
+   "source": "fable",
+   "batch": "q5",
+   "n": 1,
+   "old": "אסטרטגיה + ביצוע בשירות אחד. ייעוץ ראשון ללא עלות.",
+   "new": "אסטרטגיה + ביצוע בשירות אחד. מ-3,500 ₪ לחודש, חודש-חודש, בלי חוזה."
+  },
+  {
+   "order": 1,
+   "page": "/consulting",
+   "file": "src/app/(app)/consulting/page.tsx",
+   "source": "fable",
+   "batch": "q5",
+   "n": 2,
+   "old": "אסטרטגיה + ביצוע. ייעוץ ראשון ללא עלות.",
+   "new": "אסטרטגיה + ביצוע. חודש-חודש, בלי חוזה."
+  },
+  {
+   "order": 2,
+   "page": "/consulting",
+   "file": "src/app/(app)/consulting/page.tsx",
+   "source": "tamar",
+   "batch": "q5",
+   "n": 3,
+   "old": "רוב היועצים מגיעים עם מצגת ונעלמים. אנחנו מגיעים עם אסטרטגיה, מוציאים אותה לפועל, ומודדים תוצאות בכל שלב. ללא חוזה, תשלום רק בסוף החודש. והביצוע בפועל? עובר היום דרך חבילת בוטי ה-AI של WAO — אתה מקבל ראש אסטרטגי אנושי, וביצוע שרץ מהר יותר משום סוכנות רגילה.",
+   "new": "רוב היועצים משאירים לך מצגת יפה והולכים. חודש אחרי היא עדיין במגירה, והטלפון לא מצלצל יותר מקודם. אצלנו מי שבונה איתך את התוכנית גם מעלה אותה לאוויר, ובודק איתך כל חודש מה היא הכניסה. בוטי ה-AI של WAO מריצים את העבודה השוטפת, ואיש שיווק ותיק עובר על כל דבר לפני שהוא עולה, אז הכול זז בקצב שסוכנות רגילה לא מחזיקה. <strong>84 לקוחות מאז 2006. ROI ממוצע של פי 2.2.</strong>"
+  },
+  {
+   "order": 3,
+   "page": "/consulting",
+   "file": "src/app/(app)/consulting/page.tsx",
+   "source": "tamar",
+   "batch": "q5",
+   "n": 4,
+   "old": "קבל אסטרטגיית שיווק במתנה",
+   "new": "התחל ליווי שיווקי"
+  },
+  {
+   "order": 4,
+   "page": "/consulting",
+   "file": "src/app/(app)/consulting/page.tsx",
+   "source": "fable",
+   "batch": "q5",
+   "n": 5,
+   "old": "תהליך שמתחיל ב",
+   "new": "מתחילים מהעסק שלך, לא מ"
+  },
+  {
+   "order": 5,
+   "page": "/consulting",
+   "file": "src/app/(app)/consulting/page.tsx",
+   "source": "fable",
+   "batch": "q5",
+   "n": 6,
+   "old": "הקשבה</span>",
+   "new": "תבנית</span>"
+  },
+  {
+   "order": 6,
+   "page": "/consulting",
+   "file": "src/app/(app)/consulting/page.tsx",
+   "source": "fable",
+   "batch": "q5",
+   "n": 7,
+   "old": "תהליך גילוי — לפני שמדברים על כסף",
+   "new": "שאלוני גילוי — מי הלקוח שלך ולמה שיבחר בך"
+  },
+  {
+   "order": 7,
+   "page": "/consulting",
+   "file": "src/app/(app)/consulting/page.tsx",
+   "source": "fable",
+   "batch": "q5",
+   "n": 8,
+   "old": "מעבירים לך שאלונים ממוקדים שעוזרים לנו (ולך) לחדד שני דברים: מי הלקוח האידיאלי שלך באמת, ומה הבידול והיתרון היחסי שלך בשוק. רק אחרי שיש לנו תמונה מלאה — יושבים יחד לתכנן.",
+   "new": "אתה ממלא שאלונים קצרים, ואנחנו מחדדים איתך שני דברים: מי הלקוח שהכי משתלם לך, ולמה שיבחר בך ולא במתחרה. על התשובות האלה נשען כל שקל שתוציא על פרסום אחר כך."
+  },
+  {
+   "order": 8,
+   "page": "/consulting",
+   "file": "src/app/(app)/consulting/page.tsx",
+   "source": "fable",
+   "batch": "q5",
+   "n": 9,
+   "old": "שיחת אסטרטגיה — עד 30 דקות, ללא עלות",
+   "new": "פגישת אסטרטגיה — יוצאים עם תוכנית עבודה"
+  },
+  {
+   "order": 9,
+   "page": "/consulting",
+   "file": "src/app/(app)/consulting/page.tsx",
+   "source": "tamar",
+   "batch": "q5",
+   "n": 10,
+   "old": "לאחר שמילאת את שאלוני הגילוי, אנחנו בוחנים את הנכסים הדיגיטליים שלך — אתר, דפי נחיתה ופרופילי הרשתות החברתיות. משם קובעים שיחה ממוקדת של עד 30 דקות להצגת כיוון אסטרטגי רלוונטי לעסק שלך.",
+   "new": "לפני הפגישה אנחנו עוברים על האתר, על דפי הנחיתה ועל הפרופילים שלך ברשתות. בפגישה עצמה מראים לך מה עובד, מה מבזבז לך תקציב ומה עושים קודם, ובסוף יש לך ביד לוח עבודה לחודשים הקרובים."
+  },
+  {
+   "order": 10,
+   "page": "/consulting",
+   "file": "src/app/(app)/consulting/page.tsx",
+   "source": "fable",
+   "batch": "q5",
+   "n": 11,
+   "old": "\"נכסים דיגיטליים\", \"30 דקות\"",
+   "new": "\"נכסים דיגיטליים\", \"תוכנית עבודה\""
+  },
+  {
+   "order": 11,
+   "page": "/consulting",
+   "file": "src/app/(app)/consulting/page.tsx",
+   "source": "fable",
+   "batch": "q5",
+   "n": 12,
+   "old": "ביצוע — אנחנו עושים, לא רק ממליצים",
+   "new": "ביצוע — אנחנו בונים ומעלים לאוויר"
+  },
+  {
+   "order": 12,
+   "page": "/consulting",
+   "file": "src/app/(app)/consulting/page.tsx",
+   "source": "tamar",
+   "batch": "q5",
+   "n": 13,
+   "old": "אם החלטת להתקדם איתנו — בונים את המשפך השיווקי ועולים לאוויר. SEO, Google Ads, תוכן, מדיה חברתית — בשילוב שמתאים לעסק שלך ולתקציב שהגדרת. בעידן ה-AI של 2026 חלק ניכר מהביצוע רץ דרך בוטי WAO — Site Bot, Ads Bot, Content Bot ו-GEO Bot — כך שהתוצאות מגיעות מהר יותר ובעלות תפעולית נמוכה יותר.",
+   "new": "בונים את המשפך השיווקי ועולים לאוויר: קידום אורגני, Google Ads, תוכן ורשתות חברתיות, בשילוב שמתאים לעסק ולתקציב שהגדרת. Site Bot ו-Ads Bot של WAO עושים את העבודה השחורה, מהאתר ועד הקמפיינים, ואנחנו מחליטים מה עולה לאוויר ומתי. ככה הכול זז מהר יותר, ויותר מהתקציב שלך נשאר לפרסום עצמו."
+  },
+  {
+   "order": 13,
+   "page": "/consulting",
+   "file": "src/app/(app)/consulting/page.tsx",
+   "source": "fable",
+   "batch": "q5",
+   "n": 14,
+   "old": "\"AI כלים\"",
+   "new": "\"כלי AI\""
+  },
+  {
+   "order": 14,
+   "page": "/consulting",
+   "file": "src/app/(app)/consulting/page.tsx",
+   "source": "fable",
+   "batch": "q5",
+   "n": 15,
+   "old": "מדידה ושיפור — ותשלום רק בסוף החודש",
+   "new": "מדידה ושיפור — כל חודש מחליטים מחדש"
+  },
+  {
+   "order": 15,
+   "page": "/consulting",
+   "file": "src/app/(app)/consulting/page.tsx",
+   "source": "tamar",
+   "batch": "q5",
+   "n": 16,
+   "old": "כל חודש בוחנים את התוצאות יחד. מה עבד, מה לשפר, ולאן ממשיכים. גובים תשלום רק בסוף החודש — ואז אתה מחליט אם להמשיך. אין אצלנו אותיות קטנות, עלויות נסתרות או חוזים שכובלים אותך.",
+   "new": "פעם בחודש יושבים יחד על החודש שעבר: מה הביא פניות, מה לא, ולאן מזיזים את התקציב בחודש הבא. מה שמביא עבודה מקבל יותר כסף, ומה שלא מביא נעצר."
+  },
+  {
+   "order": 16,
+   "page": "/consulting",
+   "file": "src/app/(app)/consulting/page.tsx",
+   "source": "fable",
+   "batch": "q5",
+   "n": 17,
+   "old": "אסטרטגיית שיווק מותאמת אישית\", desc: \"לא תבנית מוכנה. תכנית עבודה שנבנית לפי העסק, הלקוחות והתקציב שלך.",
+   "new": "תוכנית שיווק שנבנית לעסק שלך\", desc: \"תוכנית עבודה לפי הלקוחות שלך, האזור שלך והתקציב שלך. אתה יודע מה עושים החודש ומה זה אמור להביא."
+  },
+  {
+   "order": 17,
+   "page": "/consulting",
+   "file": "src/app/(app)/consulting/page.tsx",
+   "source": "fable",
+   "batch": "q5",
+   "n": 18,
+   "old": "אבחון דיגיטלי מקיף\", desc: \"בדיקת כל הנכסים הדיגיטליים: אתר, SEO, קמפיינים, מדיה חברתית — מה עובד ומה מבזבז תקציב.",
+   "new": "בדיקה של כל מה שכבר יש לך\", desc: \"עוברים על האתר, על הקידום האורגני, על הקמפיינים ועל הרשתות החברתיות, ומסמנים לך מה מביא לקוחות ומה שורף כסף."
+  },
+  {
+   "order": 18,
+   "page": "/consulting",
+   "file": "src/app/(app)/consulting/page.tsx",
+   "source": "fable",
+   "batch": "q5",
+   "n": 19,
+   "old": "מהחשיפה הראשונה ועד הרכישה — בונים מסע לקוח שמניע להמרות, כולל תוכן שמותאם לעידן ה-AI.",
+   "new": "בונים את הדרך של הלקוח מהחיפוש בגוגל ועד שהוא מרים טלפון או קונה, עם תוכן שכתוב גם לגוגל וגם לתשובות של ChatGPT."
+  },
+  {
+   "order": 19,
+   "page": "/consulting",
+   "file": "src/app/(app)/consulting/page.tsx",
+   "source": "tamar",
+   "batch": "q5",
+   "n": 20,
+   "old": "KPI Dashboard ודיווח שקוף\", desc: \"גישה מלאה לנתונים. דוח חודשי ברור. אתה תמיד יודע מה קורה עם הכסף שלך.",
+   "new": "כל שקל על השולחן\", desc: \"גישה מלאה לנתונים ודוח חודשי ברור. אתה תמיד יודע כמה נכנס, כמה יצא ומה זה הביא."
+  },
+  {
+   "order": 20,
+   "page": "/consulting",
+   "file": "src/app/(app)/consulting/page.tsx",
+   "source": "fable+noa",
+   "batch": "q5",
+   "n": 21,
+   "old": "מנהל שיווק צמוד — חודש בחודשו\", desc: \"כמו מנהל שיווק פנימי, רק במיקור חוץ: שיחת עדכון שבועית, מענה מהיר לשאלות, והתאמת האסטרטגיה כשהשוק משתנה. בלי חוזה. בלי הפתעות.",
+   "new": "מנהל שיווק צמוד, בלי להעסיק אחד\", desc: \"כמו מנהל שיווק משלך, בלי משכורת ובלי תנאים סוציאליים: שיחת עדכון כל שבוע, תשובה מהירה כשיש שאלה, ושינוי כיוון כשהשוק זז."
+  },
+  {
+   "order": 21,
+   "page": "/consulting",
+   "file": "src/app/(app)/consulting/page.tsx",
+   "source": "fable",
+   "batch": "q5",
+   "n": 22,
+   "old": "כל מה שרציתם לדעת על",
+   "new": "תשובות ישרות על"
+  },
+  {
+   "order": 22,
+   "page": "/consulting",
+   "file": "src/app/(app)/consulting/page.tsx",
+   "source": "fable+noa",
+   "batch": "q5",
+   "n": 23,
+   "old": "רוב היועצים מספקים מצגת ואסטרטגיה — ואז אתה לבד עם הביצוע. אנחנו לא רק יועצים, אלא מנהלי השיווק שלך במיקור חוץ: מגדירים את האסטרטגיה ביחד, מוציאים אותה לפועל, ולוקחים אחריות לתוצאות מדידות — לא רק למסמכים יפים. חוזה ארוך שאינו מחויב לתוצאות גורם לשיווק לעבור לטייס אוטומטי.",
+   "new": "אצל רוב היועצים אתה מקבל מצגת, ומשם אתה לבד עם הביצוע. אנחנו מנהלי השיווק שלך במיקור חוץ: קובעים איתך את התוכנית, מבצעים אותה ועומדים מאחורי התוצאות. ובגלל שאין חוזה ארוך, אנחנו צריכים להרוויח אותך מחדש כל חודש."
+  },
+  {
+   "order": 23,
+   "page": "/consulting",
+   "file": "src/app/(app)/consulting/page.tsx",
+   "source": "tamar",
+   "batch": "q5",
+   "n": 24,
+   "old": "WAO מתמחה בעסקי B2C — עסקים שמשווקים ישירות לצרכן הסופי. נדל\\\"ן, שירותים מקצועיים, מסחר קמעונאי, מוצרים. אם אתה עסק B2B — אנחנו לא הגוף הנכון עבורך ונגיד לך את זה ישר. אם אתה B2C עם תקציב שיווקי ריאלי ורצון לצמוח — כנראה שנסתדר.",
+   "new": "הליווי מתאים לעסקים שמוכרים ישירות ללקוח הפרטי: נדל״ן, שירותים מקצועיים, חנויות ומוצרים. מוכר לעסקים אחרים (B2B)? אנחנו לא הכתובת, ונגיד לך את זה ישר. מוכר ללקוחות פרטיים, יש לך תקציב שיווק ריאלי ואתה רוצה לגדול? הגעת למקום הנכון. ועסק של איש אחד לא צריך ליווי כזה: בשבילו בנינו את Site Bot ואת Ads Bot."
+  },
+  {
+   "order": 24,
+   "page": "/consulting",
+   "file": "src/app/(app)/consulting/page.tsx",
+   "source": "tamar",
+   "batch": "q5",
+   "n": 25,
+   "old": "מה זה 'אסטרטגיית שיווק במתנה' שאתם מציעים?",
+   "new": "איך אני מתחיל?"
+  },
+  {
+   "order": 25,
+   "page": "/consulting",
+   "file": "src/app/(app)/consulting/page.tsx",
+   "source": "tamar-r2",
+   "batch": "q5",
+   "n": 26,
+   "old": "שלושה שלבים פשוטים, ללא עלות: ממלאים שאלון קצר על ה-USP והבידול שלך — אנחנו בוחנים את הנכסים הדיגיטליים שלך (אתר, דפי נחיתה, פרופילי רשת) — וקובעים שיחה של עד 30 דקות לדיון בכיוון אסטרטגי רלוונטי. ללא התחייבות.",
+   "new": "אתה לוחץ על הכפתור וממלא טופס בקשה קצר, ובטופס עצמו אתה כבר רואה את המחיר המלא. בלי שיחת מכירה ובלי הפתעות. אחרי שהבקשה מגיעה אלינו, אנחנו שולחים לך קישור לתשלום. משלמים מראש על החודש הראשון, ואחרי התשלום מגיעים אליך שאלוני הגילוי. משם ממשיכים לפי ארבעת השלבים שלמעלה."
+  },
+  {
+   "order": 26,
+   "page": "/consulting",
+   "file": "src/app/(app)/consulting/page.tsx",
+   "source": "tamar",
+   "batch": "q5",
+   "n": 27,
+   "old": "אנחנו גובים מעל ממוצע השוק — כי לתוצאות חזקות, אחריות ו-20+ שנות ניסיון יש מחיר מתאים. ואנחנו שקופים לגמרי לגבי מה אתה מקבל בכל שקל.",
+   "new": "משלמים מראש על כל חודש. המחיר מעל ממוצע השוק, ובכוונה. ועדיין, זה חלק קטן ממה שעולה מנהל שיווק במשרה מלאה. בשביל זה אתה מקבל 20 שנות ניסיון וצוות שמודד את עצמו לפי הפניות שהביא לך."
+  },
+  {
+   "order": 27,
+   "page": "/consulting",
+   "file": "src/app/(app)/consulting/page.tsx",
+   "source": "fable",
+   "batch": "q5",
+   "n": 28,
+   "old": "ממש לא. עובדים חודש-חודש. גובים תשלום רק בסוף החודש — אחרי שראית תוצאות. בכל חודש אתה מחליט מחדש אם להמשיך איתנו. אנחנו לא מאמינים בחתונה קתולית עם לקוחות. הסיבה היחידה שלקוחות שלנו עובדים איתנו שנים — היא שהם רואים תוצאות.",
+   "new": "אין. עובדים חודש-חודש: משלמים מראש על החודש, ובסופו אתה מחליט אם להמשיך. אנחנו לא מאמינים בחתונה קתולית עם לקוחות. מי שנשאר איתנו שנים נשאר כי הוא רואה תוצאות."
+  },
+  {
+   "order": 28,
+   "page": "/consulting",
+   "file": "src/app/(app)/consulting/page.tsx",
+   "source": "fable",
+   "batch": "q5",
+   "n": 29,
+   "old": "מוכנים לשמוע אמת על השיווק שלכם?",
+   "new": "מוכן לשמוע את האמת על השיווק שלך?"
+  },
+  {
+   "order": 29,
+   "page": "/consulting",
+   "file": "src/app/(app)/consulting/page.tsx",
+   "source": "fable",
+   "batch": "q5",
+   "n": 30,
+   "old": "כיוון שיווקי מותאם לעסק שלכם —",
+   "new": "מנהל שיווק לעסק שלך —"
+  },
+  {
+   "order": 30,
+   "page": "/consulting",
+   "file": "src/app/(app)/consulting/page.tsx",
+   "source": "fable",
+   "batch": "q5",
+   "n": 31,
+   "old": "ללא עלות</span>",
+   "new": "בלי חוזה</span>"
+  },
+  {
+   "order": 31,
+   "page": "/consulting",
+   "file": "src/app/(app)/consulting/page.tsx",
+   "source": "tamar-r2",
+   "batch": "q5",
+   "n": 32,
+   "old": "מלאו שאלון קצר על ה-USP והבידול שלכם, אנחנו בוחנים את הנכסים הדיגיטליים — וקובעים שיחה של עד 30 דקות.",
+   "new": "בלי טלפונים ובלי לחצים: אתה ממלא בקשה ורואה את המחיר, אנחנו שולחים לך קישור לתשלום, ואחרי התשלום מתחילים לעבוד על העסק שלך."
+  },
+  {
+   "order": 32,
+   "page": "/consulting",
+   "file": "src/app/(app)/consulting/page.tsx",
+   "source": "tamar",
+   "batch": "q5",
+   "n": 33,
+   "old": "✓ ייעוץ ראשון חינם · ✓ ללא חוזה · ✓ תשלום רק בסוף החודש",
+   "new": "✓ מ-3,500 ₪ לחודש + תקציב מדיה · ✓ משלמים מראש, חודש בכל פעם · ✓ עוצרים מתי שרוצים"
+  },
+  {
+   "order": 33,
+   "page": "/knowledge/google-ads-quality-score",
+   "file": "src/data/knowledge.ts",
+   "source": "fable+noa",
+   "batch": "q5",
+   "n": 34,
+   "old": "הנה ההסבר בשפה של בעלי עסקים, ומה אתה יכול לעשות.",
+   "new": "בשפה פשוטה: מה עושים כדי שהקליק יעלה לך פחות."
+  },
+  {
+   "order": 34,
+   "page": "/knowledge/google-ads-quality-score",
+   "file": "src/data/knowledge.ts",
+   "source": "fable+noa",
+   "batch": "q5",
+   "n": 35,
+   "old": "לפי גוגל, מודעות איכותיות יותר יכולות הרבה פעמים להוביל למחיר נמוך יותר לקליק.",
+   "new": "לפי גוגל, מי שהמודעה שלו איכותית יותר משלם הרבה פעמים פחות על הקליק."
+  },
+  {
+   "order": 35,
+   "page": "/knowledge/google-ads-quality-score",
+   "file": "src/data/knowledge.ts",
+   "source": "fable",
+   "batch": "q5",
+   "n": 36,
+   "old": "ככה בדיוק גוגל מגדיר את הציון הזה",
+   "new": "ככה גוגל מגדיר את הציון הזה"
+  },
+  {
+   "order": 36,
+   "page": "/knowledge/google-ads-quality-score",
+   "file": "src/data/knowledge.ts",
+   "source": "fable",
+   "batch": "q5",
+   "n": 37,
+   "old": "אותו חיפוש — והמחיר לקליק יכול לצאת שונה. לא בגלל שהאחד קונה את המקום, אלא בגלל שהמכרז שוקל גם כמה המודעה שלו מתאימה למי שחיפש.",
+   "new": "אותו חיפוש, ומי שהדף שלו מדבר על פתיחת סתימות יכול לשלם פחות על הקליק ולהופיע גבוה יותר. הוא לא קנה את המקום. המודעה שלו מתאימה יותר למי שחיפש, והמכרז שוקל את זה."
+  },
+  {
+   "order": 37,
+   "page": "/knowledge/google-ads-quality-score",
+   "file": "src/data/knowledge.ts",
+   "source": "fable",
+   "batch": "q5",
+   "n": 38,
+   "old": "הוא בדיוק החלק שאפשר לתקן הכי מהר",
+   "new": "הוא החלק שאפשר לתקן הכי מהר"
+  },
+  {
+   "order": 38,
+   "page": "/knowledge/google-ads-quality-score",
+   "file": "src/data/knowledge.ts",
+   "source": "tamar",
+   "batch": "q5",
+   "n": 39,
+   "old": "בוט מודעות של WAO בנוי מהיסוד לפי העקרונות האלה: שירות ראשי אחד לקמפיין עם 3–5 ביטויי חיפוש, 10–15 מילים חסומות כבר מהיום הראשון, ומודעה של עד 15 כותרות ו-4 תיאורים שמבוססת על נקודות המכירה האמיתיות שלך. אזור הכותרת בדף הנחיתה חייב להכיל את שם השירות המדויק, וכשהפרטים שלך מאפשרים, הבוט מוסיף גם את הנכסים. אפשר לראות איך זה עובד בעמוד [פרסום בגוגל](/google-ads).",
+   "new": "את כל הרשימה הזאת בוט המודעות של WAO עושה במקומך, מהיום הראשון. הוא בונה קמפיין סביב השירות הראשי שלך עם 3–5 ביטויי חיפוש, חוסם מראש 10–15 מילים שמביאות את הלקוחות הלא נכונים, וכותב מודעה של עד 15 כותרות ו-4 תיאורים מנקודות המכירה האמיתיות שלך. דף הנחיתה נפתח עם שם השירות המדויק ועם כפתור חיוג, והנכסים מתווספים כשהפרטים שלך מאפשרים. אחרי העלייה לאוויר הוא ממשיך לחסום חיפושים שעולים לך כסף ולא מביאים עבודה, ובמהלך החודשים הראשונים מתחיל לכוון לבד את התקציב לפי הפניות שסימנת כאמיתיות. אתה ממשיך לעבוד, והמודעה שלך נכנסת לכל מכרז עם האיכות שגוגל מתגמל עליה. אפשר לראות איך זה עובד בעמוד [פרסום בגוגל](/google-ads)."
+  },
+  {
+   "order": 39,
+   "page": "/knowledge/google-ads-quality-score",
+   "file": "src/data/knowledge.ts",
+   "source": "fable",
+   "batch": "q5",
+   "n": 40,
+   "old": "בעמוד פרסום בגוגל מחכה גם דמו עם עסק לדוגמה.",
+   "new": "דמו חינם על עסק לדוגמה: אזור, תקציב, ביטויי חיפוש ומודעה מוכנה."
+  },
+  {
+   "order": 40,
+   "page": null,
+   "file": "src/app/(app)/consulting/page.tsx",
+   "source": "tamar",
+   "batch": "q5",
+   "n": null,
+   "old": "📞 052-614-8860",
+   "new": "התחל ליווי שיווקי"
+  },
+  {
+   "order": 41,
+   "page": null,
+   "file": "src/app/(app)/about/page.tsx",
+   "source": "tamar-r2+noa",
+   "batch": "b2",
+   "n": null,
+   "old": "\"WAO — סוכנות בוטיק B2C מאז 2006. איתן יריב + צוות מומחים. 500+ לקוחות מרוצים, 20+ שנות ניסיון, 4× ROI ממוצע. הכירו את הצוות שמאחורי התוצאות.\"",
+   "new": "\"WAO — סוכנות בוטיק B2C מאז 2006. איתן יריב וצוות מומחים. 84 לקוחות, 20 שנות ניסיון ו-ROI ממוצע של פי 2.2. תכיר את הצוות שמאחורי התוצאות.\""
+  },
+  {
+   "order": 42,
+   "page": null,
+   "file": "src/app/(app)/about/page.tsx",
+   "source": "tamar-r2",
+   "batch": "b2",
+   "n": null,
+   "old": "description: \"WAO — סוכנות בוטיק B2C מאז 2006. 500+ לקוחות, 20+ שנות ניסיון, 4× ROI.\",",
+   "new": "description: \"WAO — סוכנות בוטיק B2C מאז 2006. 84 לקוחות, 20 שנות ניסיון, ROI ממוצע של פי 2.2.\","
+  },
+  {
+   "order": 43,
+   "page": null,
+   "file": "src/app/(app)/about/page.tsx",
+   "source": "tamar-r2+noa",
+   "batch": "b2",
+   "n": null,
+   "old": "{ n: \"500+\", l: \"לקוחות שקיבלו תוצאות\" },",
+   "new": "{ n: \"84\", l: \"לקוחות שליווינו\" },"
+  },
+  {
+   "order": 44,
+   "page": null,
+   "file": "src/app/(app)/about/page.tsx",
+   "source": "tamar",
+   "batch": "b2",
+   "n": null,
+   "old": "{ n: \"4×\", l: \"ROI ממוצע ללקוח WAO\" },",
+   "new": "{ n: \"2.2×\", l: \"ROI ממוצע ללקוח WAO\" },"
+  },
+  {
+   "order": 45,
+   "page": null,
+   "file": "src/app/(app)/about/page.tsx",
+   "source": "tamar-r2",
+   "batch": "b2",
+   "n": null,
+   "old": "מאז עבד עם מאות לקוחות וניהל תקציבי פרסום של מיליונים.",
+   "new": "מאז ניהל תקציבי פרסום של מיליונים, ו-84 לקוחות הפקידו בידיו את השיווק שלהם."
+  },
+  {
+   "order": 46,
+   "page": null,
+   "file": "src/app/(app)/about/page.tsx",
+   "source": "tamar",
+   "batch": "b2",
+   "n": null,
+   "old": "                עשרים דקות בטלפון,{\" \"}\n                <span className=\"text-gradient\">ותדע מאיפה להתחיל</span>",
+   "new": "                שיחה קצרה בטלפון,{\" \"}\n                <span className=\"text-gradient\">ותדע איזה בוט יעבוד בשבילך</span>"
+  },
+  {
+   "order": 47,
+   "page": null,
+   "file": "src/app/(app)/about/page.tsx",
+   "source": "tamar",
+   "batch": "b2",
+   "n": null,
+   "old": "השיחה הראשונה חינם ובלי התחייבות. תספר מה אתה עושה ואיפה, ונגיד לך מה היינו עושים במקומך.",
+   "new": "השיחה חינם ובלי התחייבות. נבדוק כמה ביקורות יש לך בגוגל, איזה תקציב פרסום הגיוני בשבילך, ונענה על כל שאלה שיש לך."
+  },
+  {
+   "order": 48,
+   "page": null,
+   "file": "src/app/(app)/contact/page.tsx",
+   "source": "tamar",
+   "batch": "b2",
+   "n": null,
+   "old": "title: \"צור קשר — ייעוץ ראשון ללא עלות\",",
+   "new": "title: \"צור קשר — שיחת התאמה קצרה ללא עלות\","
+  },
+  {
+   "order": 49,
+   "page": null,
+   "file": "src/app/(app)/contact/page.tsx",
+   "source": "tamar",
+   "batch": "b2",
+   "n": null,
+   "old": "\"צרו קשר עם WAO לייעוץ שיווק דיגיטלי ראשון ללא עלות. מגיבים תוך 24 שעות. טלפון: 052-614-8860. מתמחים בעסקי B2C בלבד.\"",
+   "new": "\"צור קשר עם WAO לשיחת התאמה קצרה ללא עלות: נבדוק אם Site Bot או Ads Bot מתאים לעסק שלך. מגיבים תוך 24 שעות. טלפון: 052-614-8860.\""
+  },
+  {
+   "order": 50,
+   "page": null,
+   "file": "src/app/(app)/contact/page.tsx",
+   "source": "tamar",
+   "batch": "b2",
+   "n": null,
+   "old": "title: \"צור קשר — ייעוץ ראשון ללא עלות | WAO\",",
+   "new": "title: \"צור קשר — שיחת התאמה קצרה ללא עלות | WAO\","
+  },
+  {
+   "order": 51,
+   "page": null,
+   "file": "src/app/(app)/contact/page.tsx",
+   "source": "tamar",
+   "batch": "b2",
+   "n": null,
+   "old": "description: \"ייעוץ שיווק דיגיטלי ראשון ללא עלות. מגיבים תוך 24 שעות.\",",
+   "new": "description: \"שיחת התאמה קצרה ללא עלות: מתאים לך Site Bot או Ads Bot? מגיבים תוך 24 שעות.\","
+  },
+  {
+   "order": 52,
+   "page": null,
+   "file": "src/app/(app)/contact/page.tsx",
+   "source": "tamar",
+   "batch": "b2",
+   "n": null,
+   "old": "ייעוץ ראשון ללא עלות וללא התחייבות",
+   "new": "שיחת התאמה קצרה, בלי עלות ובלי התחייבות"
+  },
+  {
+   "order": 53,
+   "page": null,
+   "file": "src/app/(app)/contact/page.tsx",
+   "source": "tamar",
+   "batch": "b2",
+   "n": null,
+   "old": "            בואו נדבר —{\" \"}\n            <span className=\"text-gradient\">שיחה קצרה שיכולה</span>\n            <br className=\"hidden md:block\" />\n            {\" \"}לשנות את כיוון העסק שלך",
+   "new": "            בוא נדבר —{\" \"}\n            <span className=\"text-gradient\">שיחה קצרה אחת,</span>\n            <br className=\"hidden md:block\" />\n            {\" \"}ותדע אם זה בשבילך"
+  },
+  {
+   "order": 54,
+   "page": null,
+   "file": "src/app/(app)/contact/page.tsx",
+   "source": "tamar+noa",
+   "batch": "b2",
+   "n": null,
+   "old": "בעשרים דקות הוא מבין מה העסק שלך צריך ואומר לך מאיפה שווה להתחיל, גם אם התשובה היא ״לא אצלנו״.",
+   "new": "הוא שומע מה אתה עושה ואיפה, ואומר לך ישר אם יש בוט שיביא לך עבודה, גם אם התשובה היא ״לא אצלנו״."
+  },
+  {
+   "order": 55,
+   "page": null,
+   "file": "src/app/(app)/contact/page.tsx",
+   "source": "tamar",
+   "batch": "b2",
+   "n": null,
+   "old": "title: \"שיחת היכרות — 20 דקות\",\n    desc: \"אתה מספר מה אתה עושה, מה כבר ניסית ומה עבד. בשיחה הזאת לא מוכרים לך כלום.\",\n    tags: [\"Discovery\", \"Goals\", \"No-pressure\"],",
+   "new": "title: \"שיחת התאמה קצרה\",\n    desc: \"איתן מתקשר ושואל כמה שאלות על העסק. בשיחה הזאת לא מוכרים לך כלום.\",\n    tags: [\"Fit-check\", \"Budget\", \"No-pressure\"],"
+  },
+  {
+   "order": 56,
+   "page": null,
+   "file": "src/app/(app)/contact/page.tsx",
+   "source": "tamar-r2",
+   "batch": "b2",
+   "n": null,
+   "old": "title: \"חוזרים אליך עם תוכנית\",\n    desc: \"תוך 24–48 שעות אתה מקבל תוכנית כתובה: איפה לפרסם, כמה זה עולה ומה צריך לצאת מזה.\",\n    tags: [\"Proposal\", \"KPI\", \"Timeline\"],",
+   "new": "title: \"בוחרים את הבוט שמתאים לך\",\n    desc: \"אתה בוחר בין Site Bot ל-Ads Bot ונרשם אונליין, בלי פגישות.\",\n    tags: [\"Site Bot\", \"Ads Bot\", \"Online\"],"
+  },
+  {
+   "order": 57,
+   "page": null,
+   "file": "src/app/(app)/contact/page.tsx",
+   "source": "tamar",
+   "batch": "b2",
+   "n": null,
+   "old": "title: \"מתחילים — ורק אז משלמים\",",
+   "new": "title: \"הבוט יוצא לעבודה\","
+  },
+  {
+   "order": 58,
+   "page": null,
+   "file": "src/app/(app)/contact/page.tsx",
+   "source": "tamar",
+   "batch": "b2",
+   "n": null,
+   "old": "tags: [\"No-risk\", \"Pay-after\", \"Monthly\"],",
+   "new": "tags: [\"No-commitment\", \"Monthly\", \"Cancel-online\"],"
+  },
+  {
+   "order": 59,
+   "page": null,
+   "file": "src/app/(app)/contact/page.tsx",
+   "source": "tamar+noa",
+   "batch": "b2",
+   "n": null,
+   "old": "q: \"כמה עולה הייעוץ הראשון?\",\n    a: \"כלום. זו שיחה של 20–30 דקות שבה מבינים את העסק שלך ומציעים כיוון. על מחיר מדברים רק אם החלטת להמשיך איתנו.\",",
+   "new": "q: \"כמה עולה לי שיחת ההתאמה?\",\n    a: \"כלום. זו שיחה קצרה שבה איתן בודק אם Site Bot או Ads Bot יביא לך עבודה: כמה ביקורות יש לך בגוגל ואיזה תקציב פרסום הגיוני בשבילך. יש לך שאלות על ההרשמה? זה הזמן לשאול.\","
+  },
+  {
+   "order": 60,
+   "page": null,
+   "file": "src/app/(app)/seo/consulting/page.tsx",
+   "source": "tamar-r2",
+   "batch": "seo",
+   "n": null,
+   "old": "title: \"יועץ קידום אתרים מנוסה — 20+ שנות ניסיון\",",
+   "new": "title: \"יועץ קידום אתרים מנוסה — 20 שנות ניסיון\","
+  },
+  {
+   "order": 61,
+   "page": null,
+   "file": "src/app/(app)/seo/consulting/page.tsx",
+   "source": "tamar-r2",
+   "batch": "seo",
+   "n": null,
+   "old": "\"איתן יריב — יועץ SEO עם 20+ שנות ניסיון.",
+   "new": "\"איתן יריב — יועץ SEO עם 20 שנות ניסיון."
+  },
+  {
+   "order": 62,
+   "page": null,
+   "file": "src/app/(app)/seo/consulting/page.tsx",
+   "source": "tamar-r2",
+   "batch": "seo",
+   "n": null,
+   "old": "מאיתן יריב — 20+ שנות ניסיון.",
+   "new": "מאיתן יריב — 20 שנות ניסיון."
+  },
+  {
+   "order": 63,
+   "page": null,
+   "file": "src/app/(app)/seo/consulting/page.tsx",
+   "source": "tamar-r2",
+   "batch": "seo",
+   "n": null,
+   "old": "ייעוץ SEO אישי — 20+ שנות ניסיון מוכח",
+   "new": "ייעוץ SEO אישי — 20 שנות ניסיון מוכח"
+  },
+  {
+   "order": 64,
+   "page": null,
+   "file": "src/app/(app)/seo/consulting/page.tsx",
+   "source": "tamar-r2",
+   "batch": "seo",
+   "n": null,
+   "old": "📞 ייעוץ ראשון חינם",
+   "new": "שלח בקשה למנטורינג"
+  },
+  {
+   "order": 65,
+   "page": null,
+   "file": "src/app/(app)/seo/consulting/page.tsx",
+   "source": "tamar-r2",
+   "batch": "seo",
+   "n": null,
+   "old": "ללא חוזה, תשלום בסוף החודש.</li>",
+   "new": "ללא חוזה, תשלום מראש לכל חודש.</li>"
+  },
+  {
+   "order": 66,
+   "page": null,
+   "file": "src/app/(app)/seo/consulting/page.tsx",
+   "source": "tamar-r2",
+   "batch": "seo",
+   "n": null,
+   "old": "לחודש · ללא חוזה · תשלום בסוף החודש",
+   "new": "לחודש · ללא חוזה · תשלום מראש"
+  },
+  {
+   "order": 67,
+   "page": null,
+   "file": "src/app/(app)/seo/consulting/page.tsx",
+   "source": "tamar-r2",
+   "batch": "seo",
+   "n": null,
+   "old": "📞 התחל מנטורינג",
+   "new": "בקש מקום במנטורינג"
+  },
+  {
+   "order": 68,
+   "page": null,
+   "file": "src/app/(app)/seo/consulting/page.tsx",
+   "source": "tamar-r2",
+   "batch": "seo",
+   "n": null,
+   "old": "אפשר להתחיל עם חודש ניסיון ללא סיכון — תשלום רק אחרי שרואים ערך.",
+   "new": "אין חוזה ואין התחייבות: משלמים מראש על חודש, ואם הוא לא הצדיק את עצמו, אתה פשוט לא ממשיך לחודש הבא."
+  },
+  {
+   "order": 69,
+   "page": null,
+   "file": "src/app/(app)/seo/consulting/page.tsx",
+   "source": "tamar-r2",
+   "batch": "seo",
+   "n": null,
+   "old": "מוכנים להתחיל?",
+   "new": "מוכן להתחיל?"
+  },
+  {
+   "order": 70,
+   "page": null,
+   "file": "src/app/(app)/seo/consulting/page.tsx",
+   "source": "tamar-r2+noa",
+   "batch": "seo",
+   "n": null,
+   "old": "ייעוץ SEO ראשון בחינם —{\" \"}\n                <span className=\"text-gradient\">נגיד לכם בדיוק מה חסר</span>",
+   "new": "מקסימום 6 לקוחות במקביל —{\" \"}\n                <span className=\"text-gradient\">אחד מהם יכול להיות אתה</span>"
+  },
+  {
+   "order": 71,
+   "page": null,
+   "file": "src/app/(app)/seo/consulting/page.tsx",
+   "source": "tamar-r2+noa",
+   "batch": "seo",
+   "n": null,
+   "old": "שיחה של 30 דקות עם איתן. נבחן את המצב הקיים, נזהה את הפערים המשמעותיים,\n                ונחליט יחד אם מנטורינג מתאים.",
+   "new": "בלי שיחת מכירה: אתה ממלא בקשה ורואה את המחיר, אנחנו שולחים קישור לתשלום,\n                ובמפגש הראשון איתן כבר מראה לך מה חסר באתר ומה מתקנים קודם."
+  },
+  {
+   "order": 72,
+   "page": null,
+   "file": "src/app/(app)/seo/consulting/page.tsx",
+   "source": "tamar-r2",
+   "batch": "seo",
+   "n": null,
+   "old": "📞 052-614-8860",
+   "new": "שלח בקשה"
+  },
+  {
+   "order": 73,
+   "page": null,
+   "file": "src/app/(app)/seo/consulting/page.tsx",
+   "source": "tamar-r2",
+   "batch": "seo",
+   "n": null,
+   "old": "✓ ייעוץ ראשון חינם · ✓ ללא חוזה · ✓ 950 ₪/חודש מנטורינג",
+   "new": "✓ 950 ₪ לחודש · ✓ תשלום מראש, חודש בכל פעם · ✓ ללא חוזה"
+  }
+ ],
+ "anchors": {
+  "home_title": {
+   "value": "שיווק דיגיטלי לעסקים קטנים — יותר לקוחות מגוגל",
+   "target": "src/content/astra-homepage-copy.json metadata.seo.homepage_title_tag_current (+ \"\\u200f | WAO\"; docs/copy mirror kept in sync)"
+  },
+  "about_title": {
+   "value": "אודות WAO — שיווק דיגיטלי לעסקים קטנים מאז 2006",
+   "target": "src/app/(app)/about/page.tsx metadata.title.absolute and openGraph.title"
+  },
+  "about_badge": {
+   "value": "שיווק דיגיטלי לעסקים קטנים מאז 2006",
+   "target": "src/app/(app)/about/page.tsx hero badge"
+  },
+  "about_h1": {
+   "value": "יותר פניות ומכירות, בפחות כסף",
+   "target": "src/app/(app)/about/page.tsx h1 (gradient on the part after the comma)"
+  },
+  "google_ads_h1": {
+   "value": "פרסום בגוגל שרודף אחרי פניות אמיתיות, לא אחרי קליקים",
+   "target": "docs/copy/google-ads-r2-final-candidate-2026-11-12.txt hero.h1 -> regenerated landingCopy.generated.ts"
+  },
+  "onboarding_title": {
+   "value": "דמו חינם: תוכנית Google Ads לעסק לדוגמה",
+   "target": "src/app/(app)/google-ads/onboarding/layout.tsx metadata.title (robots noindex,follow)"
+  },
+  "onboarding_eyebrow": {
+   "value": "דמו חינם של בוט מודעות",
+   "target": "src/app/(app)/google-ads/onboarding/page.tsx eyebrow"
+  },
+  "onboarding_h1": {
+   "value": "התוכנית שלך ל־Google Ads, לפני שאתה משלם",
+   "target": "src/app/(app)/google-ads/onboarding/page.tsx h1 (gradient on \"Google Ads\")"
+  },
+  "site_bot_h1": {
+   "value": "בניית אתר לעסק קטן שמחובר לפרופיל גוגל ולביקורות",
+   "target": "docs/copy/site-bot-r2-final-candidate-2026-11-12.txt hero.h1 -> regenerated landingCopy.generated.ts"
+  },
+  "audit_title": {
+   "value": "בדיקה חינם של הפרופיל העסקי שלך בגוגל",
+   "target": "src/app/(app)/site-bot/audit/layout.tsx metadata.title = SCORECARD_COPY.FORM_TITLE (same string)"
+  },
+  "consulting_h1": {
+   "value": "יועצי שיווק שגם מבצעים את התוכנית",
+   "target": "src/app/(app)/consulting/page.tsx h1 (gradient on the words after the third)"
+  },
+  "consulting_title": {
+   "value": "יועץ שיווק דיגיטלי שגם מבצע — מנהל שיווק במיקור חוץ",
+   "target": "src/app/(app)/consulting/page.tsx metadata.title and openGraph.title (+ \"\\u200F | WAO\")"
+  },
+  "about_consulting_link_label": {
+   "value": "ליווי שיווקי לעסקים גדולים יותר",
+   "target": "src/app/(app)/about/page.tsx secondary link to /consulting"
+  }
+ }
+}

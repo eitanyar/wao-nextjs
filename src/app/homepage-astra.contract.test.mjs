@@ -18,7 +18,7 @@ const headerPath = "src/components/Header.tsx";
 const footerPath = "src/components/Footer.tsx";
 const cssPath = "src/app/globals.css";
 // 2026-11-11: human rewrite (FAQ answers + footer blurb), docs/copy/homepage-human-rewrite-2026-11-11.json.
-const expectedHash = "c15c7e7ce0e46959864776ad873e39651e898e1f79bcb066a0dee4a0e0702a40"; // re-pinned 2026-11-13: approved copy polish (Eitan, Noa-gated; docs/copy/copy-polish-approved-2026-11-13.json)
+const expectedHash = "1acadb1f8f01697fc0b50cc23ef61bb3b91320b4d4fc476d66198e8f00410534"; // re-pinned 2026-11-13: copy polish + batch 2 home title anchor (Yonatan; docs/copy/copy-polish-approved-2026-11-13-batch2.json)
 const finalSourcePath = "docs/copy/astra-authority-first-homepage-copy.qwen38-v3-2026-09-30.json";
 const finalContentPath = "src/content/astra-authority-first-homepage-copy.json";
 // 2026-11-11: Site-Bot path CTA -> free audit (docs/copy/homepage-sitebot-audit-cta-2026-11-11.json, Noa-approved).

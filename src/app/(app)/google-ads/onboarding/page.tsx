@@ -402,7 +402,7 @@ export default function OnboardingPage() {
       <div className="wao-container" style={{ width: "100%", maxWidth: "1200px" }}>
         {/* Header Section */}
         <div style={{ marginBottom: "32px", textAlign: "right" }}>
-          <div className="eyebrow">מערכת הקמת קמפיינים אוטומטית</div>
+          <div className="eyebrow">דמו חינם של בוט מודעות</div>
           <h1
             style={{
               fontSize: "clamp(1.8rem, 4vw, 2.5rem)",
@@ -411,7 +411,7 @@ export default function OnboardingPage() {
               marginBottom: "8px",
             }}
           >
-            לקוחות חדשים מ-<span className="text-gradient">Google Ads</span>
+            התוכנית שלך ל־<span className="text-gradient">Google Ads</span>, לפני שאתה משלם
           </h1>
           <p style={{ color: "var(--muted)", fontSize: "0.88rem", marginBottom: "8px" }}>
             ההקמה לוקחת דקות, לא שבועות — אבל תן לתוצאות כמה שבועות להבשיל.

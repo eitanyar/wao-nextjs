@@ -1,18 +1,17 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import GT from "@/components/GlossaryTerm";
 
 const CANONICAL = "https://www.wao.co.il/about";
 
 export const metadata: Metadata = {
-  title: "אודות WAO — סוכנות שיווק דיגיטלי B2C מאז 2006 | הצוות שלנו",
+  title: { absolute: "אודות WAO — שיווק דיגיטלי לעסקים קטנים מאז 2006" },
   description:
-    "WAO — סוכנות בוטיק B2C מאז 2006. איתן יריב + צוות מומחים. 500+ לקוחות מרוצים, 20+ שנות ניסיון, 4× ROI ממוצע. הכירו את הצוות שמאחורי התוצאות.",
+    "WAO — סוכנות בוטיק B2C מאז 2006. איתן יריב וצוות מומחים. 84 לקוחות, 20 שנות ניסיון ו-ROI ממוצע של פי 2.2. תכיר את הצוות שמאחורי התוצאות.",
   alternates: { canonical: CANONICAL },
   robots: { index: true, follow: true },
   openGraph: {
-    title: "אודות WAO — סוכנות שיווק דיגיטלי B2C מאז 2006",
-    description: "WAO — סוכנות בוטיק B2C מאז 2006. 500+ לקוחות, 20+ שנות ניסיון, 4× ROI.",
+    title: "אודות WAO — שיווק דיגיטלי לעסקים קטנים מאז 2006",
+    description: "WAO — סוכנות בוטיק B2C מאז 2006. 84 לקוחות, 20 שנות ניסיון, ROI ממוצע של פי 2.2.",
     url: CANONICAL,
     type: "website",
   },
@@ -67,9 +66,9 @@ const VALUES = [
 
 const STATS = [
   { n: "2006", l: "שנת הקמה" },
-  { n: "20+", l: "שנות ניסיון" },
-  { n: "500+", l: "לקוחות שקיבלו תוצאות" },
-  { n: "4×", l: "ROI ממוצע ללקוח WAO" },
+  { n: "20", l: "שנות ניסיון" },
+  { n: "84", l: "לקוחות שליווינו" },
+  { n: "2.2×", l: "ROI ממוצע ללקוח WAO" },
 ];
 
 const TEAM = [
@@ -77,7 +76,7 @@ const TEAM = [
     name: "איתן יריב",
     role: "מייסד ומנכ״ל WAO",
     initials: "א.י",
-    bio: "בשיווק דיגיטלי מאז 2006. כבר בשנה הראשונה קידם בגוגל את בנק לאומי, דפי זהב (היום זאפ) ופורטלים בחו״ל. מאז עבד עם מאות לקוחות וניהל תקציבי פרסום של מיליונים. היום הוא מעדיף לעבוד דווקא עם עסקים קטנים, אלה שיש להם הכי הרבה לאן לגדול.",
+    bio: "בשיווק דיגיטלי מאז 2006. כבר בשנה הראשונה קידם בגוגל את בנק לאומי, דפי זהב (היום זאפ) ופורטלים בחו״ל. מאז ניהל תקציבי פרסום של מיליונים, ו-84 לקוחות הפקידו בידיו את השיווק שלהם. היום הוא מעדיף לעבוד דווקא עם עסקים קטנים, אלה שיש להם הכי הרבה לאן לגדול.",
 
     linkedin: "https://www.linkedin.com/in/eitanyariv/",
   },
@@ -156,7 +155,7 @@ export default function AboutPage() {
         <div className="wao-container" style={{ position: "relative", zIndex: 1, maxWidth: "860px" }}>
           <div className="badge" style={{ marginBottom: "28px" }}>
             <span className="badge-dot" />
-            סוכנות בוטיק <GT term="B2C">B2C</GT> מאז 2006
+            שיווק דיגיטלי לעסקים קטנים מאז 2006
           </div>
           <h1
             style={{
@@ -168,7 +167,7 @@ export default function AboutPage() {
               marginBottom: "24px",
             }}
           >
-            הנוסחה: יותר פניות ומכירות{" "}
+            יותר פניות ומכירות,{" "}
             <span className="text-gradient">בפחות כסף</span>
           </h1>
           <p style={{ ...bodyStyle, fontSize: "clamp(1rem,1.8vw,1.2rem)", marginBottom: "40px", maxWidth: "620px" }}>
@@ -178,8 +177,11 @@ export default function AboutPage() {
             <a href="tel:0526148860" className="btn-primary" style={{ fontSize: "1.05rem", padding: "15px 36px" }}>
               להתקשר עכשיו
             </a>
-            <Link href="/consulting" className="btn-outline" style={{ fontSize: "1rem" }}>
+            <Link href="/#paths" className="btn-outline" style={{ fontSize: "1rem" }}>
               השירותים שלנו
+            </Link>
+            <Link href="/consulting" style={{ fontSize: "0.95rem", color: "var(--muted)", alignSelf: "center", textDecoration: "underline", textUnderlineOffset: "4px" }}>
+              ליווי שיווקי לעסקים גדולים יותר
             </Link>
           </div>
         </div>
@@ -314,11 +316,11 @@ export default function AboutPage() {
             <div style={{ position: "relative", zIndex: 1 }}>
               <div className="eyebrow" style={{ justifyContent: "center" }}>בוא נבדוק אם זה מתאים לך</div>
               <h2 style={{ fontFamily: "var(--font-rubik), sans-serif", fontWeight: 900, fontSize: "clamp(1.6rem,3.5vw,2.6rem)", lineHeight: 1.15, marginBottom: "16px" }}>
-                עשרים דקות בטלפון,{" "}
-                <span className="text-gradient">ותדע מאיפה להתחיל</span>
+                שיחה קצרה בטלפון,{" "}
+                <span className="text-gradient">ותדע איזה בוט יעבוד בשבילך</span>
               </h2>
               <p style={{ color: "var(--muted)", fontFamily: "var(--font-body), sans-serif", marginBottom: "32px", maxWidth: "480px", margin: "0 auto 32px", lineHeight: 1.75 }}>
-                השיחה הראשונה חינם ובלי התחייבות. תספר מה אתה עושה ואיפה, ונגיד לך מה היינו עושים במקומך.
+                השיחה חינם ובלי התחייבות. נבדוק כמה ביקורות יש לך בגוגל, איזה תקציב פרסום הגיוני בשבילך, ונענה על כל שאלה שיש לך.
               </p>
               <div style={{ display: "flex", gap: "16px", justifyContent: "center", flexWrap: "wrap" }}>
                 <a href="tel:0526148860" className="btn-primary" style={{ fontSize: "1.05rem", padding: "16px 40px" }}>

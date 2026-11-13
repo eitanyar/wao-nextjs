@@ -106,6 +106,12 @@ test('google-ads: the clicks-to-real-leads change set (2026-11-12 FINAL, Noa + Y
     patches: { file: string; field: string | null; old: string; new: string; oldValue?: string; newValue?: string }[];
   };
   assert.equal(polishRecord.approval, 'Eitan 2026-11-13, Noa-gated');
+  const batch2 = JSON.parse(read('docs/copy/copy-polish-approved-2026-11-13-batch2.json')) as {
+    approval: string; anchors: Record<string, { value: string }>;
+  };
+  assert.equal(batch2.approval, 'Eitan 2026-11-13, Noa-gated; anchors Yonatan-approved');
+  assert.ok('hero.h1' in final.lines, 'the FINAL set pins hero.h1');
+  assert.equal(SITE_BOT_LANDING_COPY.hero.h1, batch2.anchors.site_bot_h1.value, 'site-bot hero h1 anchor');
   const polish = polishRecord.patches.filter((p) => p.file === 'docs/copy/google-ads-r2-final-candidate-2026-11-12.txt');
   const used = new Set<number>();
   const applyPolish = (key: string, value: string) => {
@@ -133,6 +139,8 @@ test('google-ads: the clicks-to-real-leads change set (2026-11-12 FINAL, Noa + Y
       }
     }
     expected = applyPolish(key, expected);
+    // Batch 2 (Eitan 2026-11-13, Noa-gated; anchors Yonatan-approved): the hero h1 anchor.
+    if (key === 'hero.h1') expected = batch2.anchors.google_ads_h1.value;
     assert.equal(fields.get(key), expected, key);
   }
   assert.deepEqual([...GOOGLE_ADS_LANDING_COPY.phases.items], final['phases.items'].map((item, i) => applyPolish(`phases.items[${i}]`, item)));

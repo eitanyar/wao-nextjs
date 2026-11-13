@@ -5,14 +5,14 @@ import PhoneReveal from "@/components/PhoneReveal";
 const CANONICAL = "https://www.wao.co.il/contact";
 
 export const metadata: Metadata = {
-  title: "צור קשר — ייעוץ ראשון ללא עלות",
+  title: "צור קשר — שיחת התאמה קצרה ללא עלות",
   description:
-    "צרו קשר עם WAO לייעוץ שיווק דיגיטלי ראשון ללא עלות. מגיבים תוך 24 שעות. טלפון: 052-614-8860. מתמחים בעסקי B2C בלבד.",
+    "צור קשר עם WAO לשיחת התאמה קצרה ללא עלות: נבדוק אם Site Bot או Ads Bot מתאים לעסק שלך. מגיבים תוך 24 שעות. טלפון: 052-614-8860.",
   alternates: { canonical: CANONICAL },
   robots: { index: true, follow: true },
   openGraph: {
-    title: "צור קשר — ייעוץ ראשון ללא עלות | WAO",
-    description: "ייעוץ שיווק דיגיטלי ראשון ללא עלות. מגיבים תוך 24 שעות.",
+    title: "צור קשר — שיחת התאמה קצרה ללא עלות | WAO",
+    description: "שיחת התאמה קצרה ללא עלות: מתאים לך Site Bot או Ads Bot? מגיבים תוך 24 שעות.",
     url: CANONICAL,
     type: "website",
   },
@@ -60,28 +60,28 @@ const schemas = [
 const STEPS = [
   {
     n: "01",
-    title: "שיחת היכרות — 20 דקות",
-    desc: "אתה מספר מה אתה עושה, מה כבר ניסית ומה עבד. בשיחה הזאת לא מוכרים לך כלום.",
-    tags: ["Discovery", "Goals", "No-pressure"],
+    title: "שיחת התאמה קצרה",
+    desc: "איתן מתקשר ושואל כמה שאלות על העסק. בשיחה הזאת לא מוכרים לך כלום.",
+    tags: ["Fit-check", "Budget", "No-pressure"],
   },
   {
     n: "02",
-    title: "חוזרים אליך עם תוכנית",
-    desc: "תוך 24–48 שעות אתה מקבל תוכנית כתובה: איפה לפרסם, כמה זה עולה ומה צריך לצאת מזה.",
-    tags: ["Proposal", "KPI", "Timeline"],
+    title: "בוחרים את הבוט שמתאים לך",
+    desc: "אתה בוחר בין Site Bot ל-Ads Bot ונרשם אונליין, בלי פגישות.",
+    tags: ["Site Bot", "Ads Bot", "Online"],
   },
   {
     n: "03",
-    title: "מתחילים — ורק אז משלמים",
+    title: "הבוט יוצא לעבודה",
     desc: "מנוי חודשי פשוט: אתה משלם חודש מראש, ואנחנו מתחילים לעבוד מיד. אין חוזה ואין התחייבות.",
-    tags: ["No-risk", "Pay-after", "Monthly"],
+    tags: ["No-commitment", "Monthly", "Cancel-online"],
   },
 ];
 
 const FAQS = [
   {
-    q: "כמה עולה הייעוץ הראשון?",
-    a: "כלום. זו שיחה של 20–30 דקות שבה מבינים את העסק שלך ומציעים כיוון. על מחיר מדברים רק אם החלטת להמשיך איתנו.",
+    q: "כמה עולה לי שיחת ההתאמה?",
+    a: "כלום. זו שיחה קצרה שבה איתן בודק אם Site Bot או Ads Bot יביא לך עבודה: כמה ביקורות יש לך בגוגל ואיזה תקציב פרסום הגיוני בשבילך. יש לך שאלות על ההרשמה? זה הזמן לשאול.",
   },
   {
     q: "כמה זמן לוקח לקבל מענה?",
@@ -137,7 +137,7 @@ export default function ContactPage() {
         <div className="wao-container" style={{ position: "relative", zIndex: 1, maxWidth: "860px" }}>
           <div className="badge" style={{ marginBottom: "28px" }}>
             <span className="badge-dot" />
-            ייעוץ ראשון ללא עלות וללא התחייבות
+            שיחת התאמה קצרה, בלי עלות ובלי התחייבות
           </div>
           <h1
             style={{
@@ -149,13 +149,13 @@ export default function ContactPage() {
               marginBottom: "24px",
             }}
           >
-            בואו נדבר —{" "}
-            <span className="text-gradient">שיחה קצרה שיכולה</span>
+            בוא נדבר —{" "}
+            <span className="text-gradient">שיחה קצרה אחת,</span>
             <br className="hidden md:block" />
-            {" "}לשנות את כיוון העסק שלך
+            {" "}ותדע אם זה בשבילך
           </h1>
           <p style={{ ...bodyStyle, fontSize: "clamp(1rem,1.8vw,1.2rem)", maxWidth: "580px" }}>
-            משאירים פרטים, ואיתן חוזר אליך תוך יום עסקים. בעשרים דקות הוא מבין מה העסק שלך צריך ואומר לך מאיפה שווה להתחיל, גם אם התשובה היא ״לא אצלנו״.
+            משאירים פרטים, ואיתן חוזר אליך תוך יום עסקים. הוא שומע מה אתה עושה ואיפה, ואומר לך ישר אם יש בוט שיביא לך עבודה, גם אם התשובה היא ״לא אצלנו״.
           </p>
         </div>
       </section>
