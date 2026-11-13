@@ -1,5 +1,6 @@
 /**
  * Site-Bot client message box: Hebrew labels for the account-page box and the client confirmation email.
+ * Values applied 2026-11-13 byte-exact by Python str.replace from the waocopy -> Noa-gated copy (support/copy-final.json).
  * HEBREW-SAFETY: the engineer never authors Hebrew. Every key starts as a `__HE_TODO_<key>__` placeholder (the
  * accountCopy.ts / researchedSiteLabels.ts pattern). Values are applied later, byte-exact, by Python str.replace from a
  * Tamar -> Noa patch (spec briefs A and B), which also sets SITE_BOT_CLIENT_MESSAGE_COPY_PENDING to false.
@@ -34,30 +35,30 @@ export const CLIENT_MESSAGE_COPY_KEYS = [
 export type ClientMessageCopyKey = (typeof CLIENT_MESSAGE_COPY_KEYS)[number];
 
 export const SITE_BOT_CLIENT_MESSAGE_COPY: Readonly<Record<ClientMessageCopyKey, string> & { turnaroundLine: string }> = {
-  boxHeading: '__HE_TODO_boxHeading__',
-  boxIntro: '__HE_TODO_boxIntro__',
-  textareaLabel: '__HE_TODO_textareaLabel__',
-  textareaHint: '__HE_TODO_textareaHint__',
-  submit: '__HE_TODO_submit__',
-  sending: '__HE_TODO_sending__',
-  sentHeading: '__HE_TODO_sentHeading__',
-  sentBody: '__HE_TODO_sentBody__',
-  sendAnother: '__HE_TODO_sendAnother__',
-  errorRetry: '__HE_TODO_errorRetry__',
-  errorTooLong: '__HE_TODO_errorTooLong__',
-  errorRateLimited: '__HE_TODO_errorRateLimited__',
-  errorLinkExpired: '__HE_TODO_errorLinkExpired__',
-  cancelPointer: '__HE_TODO_cancelPointer__',
-  emailSubject: '__HE_TODO_emailSubject__',
-  emailBodyIntro: '__HE_TODO_emailBodyIntro__',
-  emailQuotedLabel: '__HE_TODO_emailQuotedLabel__',
-  emailBodyOutro: '__HE_TODO_emailBodyOutro__',
+  boxHeading: 'בקשה או שאלה?',
+  boxIntro: 'כתוב מה תרצה לשנות באתר או בפרופיל בגוגל, או כל שאלה שיש לך. בן אדם מהצוות שלנו קורא כל הודעה.',
+  textareaLabel: 'ההודעה שלך',
+  textareaHint: 'למשל: לשנות שעות פתיחה או לעדכן מספר טלפון. אפשר עד 2,000 תווים.',
+  submit: 'שלח הודעה',
+  sending: 'ההודעה בדרך…',
+  sentHeading: 'קיבלנו את ההודעה',
+  sentBody: 'שלחנו לך מייל אישור עם ההודעה שלך. נחזור אליך.',
+  sendAnother: 'שלח הודעה נוספת',
+  errorRetry: 'השליחה לא עברה. נסה שוב.',
+  errorTooLong: 'ההודעה ארוכה מדי. אפשר עד 2,000 תווים, קצר אותה ושלח שוב.',
+  errorRateLimited: 'שלחת יותר מדי הודעות בזמן קצר. נסה שוב בעוד כמה דקות.',
+  errorLinkExpired: 'קישור הכניסה פג תוקף או שכבר השתמשת בו. בקש קישור חדש בעמוד הזה.',
+  cancelPointer: 'לביטול המנוי, לחץ על כפתור הביטול בעמוד הזה.',
+  emailSubject: 'קיבלנו את ההודעה שלך',
+  emailBodyIntro: 'תודה שכתבת לנו. ההודעה שלך אצלנו.',
+  emailQuotedLabel: 'מה שכתבת:',
+  emailBodyOutro: 'בן אדם מהצוות שלנו יקרא את ההודעה ויחזור אליך. לא צריך לשלוח שוב.',
   // Optional; empty = not rendered (founder decision 2).
   turnaroundLine: '',
 };
 
 /** True while any required key above is still a placeholder. */
-export const SITE_BOT_CLIENT_MESSAGE_COPY_PENDING = true;
+export const SITE_BOT_CLIENT_MESSAGE_COPY_PENDING = false;
 
 export const EMAIL_COPY_KEYS = ['emailSubject', 'emailBodyIntro', 'emailQuotedLabel', 'emailBodyOutro'] as const satisfies readonly ClientMessageCopyKey[];
 

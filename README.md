@@ -46,12 +46,21 @@ the billing SQLite DB (`BILLING_DB_PATH`), table `site_bot_client_messages`.
 | Variable | Meaning |
 |---|---|
 | `SITE_BOT_CLIENT_MESSAGES_ENABLED` | `'true'` turns on the box, the endpoints, the cancel hook and the daily reminder. Anything else: box hidden, endpoints 503. |
-| `SITE_BOT_SUPPORT_ALERT_EMAIL` | Where staff alerts and the daily reminder go. Falls back to `BILLING_ADMIN_ALERT_EMAIL`. |
-| `SITE_BOT_SUPPORT_FROM_EMAIL` | Sender and reply-to of the client confirmation (and the address in terms §16). Must be a real, monitored mailbox. Not decided yet (founder decision 1): until it is set, no confirmation is sent. |
+| `SITE_BOT_SUPPORT_ALERT_EMAIL` | Where staff alerts and the daily reminder go: `eitan@wao.co.il` (founder decision, 2026-11-13). Falls back to `BILLING_ADMIN_ALERT_EMAIL`, then the code default `eitan@wao.co.il`. |
+| `SITE_BOT_SUPPORT_FROM_EMAIL` | Sender and reply-to of the client confirmation (and the address in terms §16): `eitan@wao.co.il` (founder decision, 2026-11-13; code default `SITE_BOT_SUPPORT_ADDRESS`). Must stay a real, monitored mailbox on the Resend-verified `wao.co.il` domain. |
 | `SITE_BOT_EMAIL_OUTBOX_PATH` | Optional absolute path for the dev outbox used when `RESEND_API_KEY` is unset (default `data/payments/email-outbox.jsonl`). |
 
 The box also stays hidden while `SITE_BOT_CLIENT_MESSAGE_COPY_PENDING` is true in
-`src/lib/site-bot/clientMessageCopy.ts` (Hebrew copy from Tamar -> Noa, applied by byte-exact patch).
+`src/lib/site-bot/clientMessageCopy.ts` (Hebrew copy from Tamar -> Noa, applied by byte-exact patch; approved and
+applied 2026-11-13, so the flag is false).
+
+Production `.env.production` lines:
+
+    SITE_BOT_SUPPORT_FROM_EMAIL=eitan@wao.co.il
+    SITE_BOT_SUPPORT_ALERT_EMAIL=eitan@wao.co.il
+
+`SITE_BOT_CLIENT_MESSAGES_ENABLED=true` is added only once terms §16 is patched (the box must not go live while §16
+still describes the old support channel).
 
 You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 

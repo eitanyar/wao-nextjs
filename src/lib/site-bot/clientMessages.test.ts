@@ -35,6 +35,7 @@ import {
 } from './clientMessages';
 import {
   CLIENT_MESSAGE_COPY_KEYS,
+  EMAIL_COPY_KEYS,
   SITE_BOT_CLIENT_MESSAGE_COPY,
   SITE_BOT_CLIENT_MESSAGE_COPY_PENDING,
   copyReady,
@@ -45,6 +46,7 @@ import {
   remindUnhandledClientMessages,
   sendClientMessageConfirmation,
   sendClientMessageStaffAlert,
+  SITE_BOT_SUPPORT_ADDRESS,
   type MailTransport,
   type OutgoingEmail,
 } from './clientMessageEmail';
@@ -199,33 +201,62 @@ test('copy gate: SITE_BOT_CLIENT_MESSAGE_COPY_PENDING agrees with the values; tu
     assert.ok(value === `__HE_TODO_${key}__` || isFilledCopy(value), `${key}: placeholder or approved copy`);
   }
   assert.equal(isFilledCopy(SITE_BOT_CLIENT_MESSAGE_COPY.turnaroundLine), false, 'founder decision 2: no reply-time line');
-  for (const file of ['clientMessages.ts', 'clientMessageEmail.ts', 'clientMessageCopy.ts']) {
+  for (const file of ['clientMessages.ts', 'clientMessageEmail.ts']) { // the copy file holds the approved Hebrew
     assert.doesNotMatch(fs.readFileSync(path.join(process.cwd(), 'src/lib/site-bot', file), 'utf8'), /[\u0590-\u05ff]/, `${file} has zero Hebrew`);
   }
 });
 
-test('14: with copy placeholders in place the confirmation is not sent', async () => {
+test('14: a placeholder email key blocks the confirmation (copyReady gate)', () => {
+  const placeholder = { ...SITE_BOT_CLIENT_MESSAGE_COPY, emailBodyOutro: '__HE_TODO_emailBodyOutro__' };
+  assert.equal(copyReady(EMAIL_COPY_KEYS, placeholder), false);
+  assert.equal(copyReady(EMAIL_COPY_KEYS, { ...SITE_BOT_CLIENT_MESSAGE_COPY, emailSubject: '  ' }), false);
+  assert.equal(copyReady(EMAIL_COPY_KEYS), !SITE_BOT_CLIENT_MESSAGE_COPY_PENDING);
+});
+
+test('confirmation: approved Hebrew, from + reply-to the support address, client text escaped, no turnaround line', async () => {
+  assert.equal(SITE_BOT_CLIENT_MESSAGE_COPY_PENDING, false, 'copy approved 2026-11-13');
   const sub = makeSubscription();
-  const { row } = createClientMessage({ id: crypto.randomUUID(), subscriptionId: sub, body: 'hello', now: NOW });
+  const body = 'Fix <b>hours</b> & "phone"\nsecond line';
+  const { row } = createClientMessage({ id: crypto.randomUUID(), subscriptionId: sub, body, now: NOW });
   const transport = recordingTransport();
-  process.env.SITE_BOT_SUPPORT_FROM_EMAIL = 'support@example.com';
+  assert.equal(await sendClientMessageConfirmation(row, transport), true);
+  const [email] = transport.calls;
+  assert.equal(email.from, SITE_BOT_SUPPORT_ADDRESS);
+  assert.equal(email.replyTo, SITE_BOT_SUPPORT_ADDRESS);
+  assert.equal(SITE_BOT_SUPPORT_ADDRESS, 'eitan@wao.co.il', 'founder decision 1');
+  assert.equal(email.to, row.contact_email);
+  assert.equal(email.subject, SITE_BOT_CLIENT_MESSAGE_COPY.emailSubject);
+  for (const key of EMAIL_COPY_KEYS.filter((k) => k !== 'emailSubject')) {
+    assert.ok(email.text.includes(SITE_BOT_CLIENT_MESSAGE_COPY[key]), `${key} in the text part`);
+    assert.ok(email.html!.includes(escapeHtml(SITE_BOT_CLIENT_MESSAGE_COPY[key])), `${key} in the html part`);
+  }
+  assert.ok(email.text.includes(body), 'client text quoted in the text part');
+  assert.ok(email.html!.startsWith('<div dir="rtl" lang="he">'));
+  assert.ok(email.html!.includes('Fix &lt;b&gt;hours&lt;/b&gt; &amp; &quot;phone&quot;<br>second line'), 'escaped quote in html');
+  assert.ok(!email.html!.includes('<b>'));
+  assert.ok(!email.subject.includes('Fix'), 'client text never in the subject');
+  const noEmail = { ...row, contact_email: null };
+  assert.equal(await sendClientMessageConfirmation(noEmail, transport), false, 'no client email -> not sent');
+  assert.equal(transport.calls.length, 1);
+  process.env.SITE_BOT_SUPPORT_FROM_EMAIL = 'override@example.com';
   try {
-    assert.equal(await sendClientMessageConfirmation(row, transport), false);
-    assert.equal(transport.calls.length, 0);
+    await sendClientMessageConfirmation(row, transport);
+    assert.equal(transport.calls[1].from, 'override@example.com', 'env overrides the default');
   } finally {
     delete process.env.SITE_BOT_SUPPORT_FROM_EMAIL;
   }
-  assert.equal(await sendClientMessageConfirmation(row, transport), false, 'no support address -> not sent');
 });
 
-test('staff alert: English plain text, body only in the text and never in the subject; no address -> skipped', async () => {
+test('staff alert: English plain text, body only in the text and never in the subject; default address eitan@wao.co.il', async () => {
   const sub = makeSubscription();
   linkSiteBotSession({ subscriptionId: sub, sessionId: 's', businessName: 'Acme', ownerMobile: null, now: NOW });
   const body = '<img src=x onerror=alert(1)> please change the phone';
   const { row } = createClientMessage({ id: crypto.randomUUID(), subscriptionId: sub, body, now: NOW });
   const transport = recordingTransport();
-  assert.equal(await sendClientMessageStaffAlert(row, transport), false, 'no alert address configured');
-  assert.equal(transport.calls.length, 0);
+  assert.equal(await sendClientMessageStaffAlert(row, recordingTransport()), true);
+  const defaultTransport = recordingTransport();
+  await sendClientMessageStaffAlert(row, defaultTransport);
+  assert.equal(defaultTransport.calls[0].to, 'eitan@wao.co.il', 'no env -> founder-decided default');
   process.env.BILLING_ADMIN_ALERT_EMAIL = 'billing-alerts@example.com';
   try {
     assert.equal(await sendClientMessageStaffAlert(row, transport), true);

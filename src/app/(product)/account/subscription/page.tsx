@@ -153,7 +153,7 @@ export default async function SubscriptionPage({
 
         {showMessageBox && (
           <div className="mb-6">
-            <ClientMessageBox token={token} />
+            <ClientMessageBox token={token} cancelAvailable={!isCanceled && !cancelScheduled} />
           </div>
         )}
 

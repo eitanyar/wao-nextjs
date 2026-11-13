@@ -4,7 +4,7 @@
 // Every label is approved Hebrew from clientMessageCopy.ts, shown only through customerVisibleLabel(), so a
 // placeholder can never render. The page renders this box only when SITE_BOT_CLIENT_MESSAGE_COPY_PENDING is false.
 // No phone number, no mailto to a person, no founder name (spec constraint).
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { renderMixed } from '@/lib/bidi';
 import { customerVisibleLabel } from '@/lib/site-bot/checkout/accountCopy';
 import { SITE_BOT_CLIENT_MESSAGE_COPY, type ClientMessageCopyKey } from '@/lib/site-bot/clientMessageCopy';
@@ -25,12 +25,23 @@ function errorKeyFor(status: number, code: unknown): ErrorKey {
   return 'errorRetry';
 }
 
-export default function ClientMessageBox({ token }: { token: string }) {
+/**
+ * `cancelAvailable`: true when the page shows its cancel button. The cancel pointer line ("cancel with the button on
+ * this page") renders only then, so it never points at a button that is not there.
+ */
+export default function ClientMessageBox({ token, cancelAvailable }: { token: string; cancelAvailable: boolean }) {
   const [body, setBody] = useState('');
   const [phase, setPhase] = useState<Phase>('idle');
   const [errorKey, setErrorKey] = useState<ErrorKey | null>(null);
   // Minted on first input and kept until a 200, so a retry of the same message can never duplicate it.
   const messageId = useRef<string | null>(null);
+  const sentHeadingRef = useRef<HTMLParagraphElement>(null);
+
+  // The sent state is announced twice over: the mounted role="status" region gets the heading text, and focus moves
+  // to the heading itself (the form that had focus is gone).
+  useEffect(() => {
+    if (phase === 'sent') sentHeadingRef.current?.focus();
+  }, [phase]);
 
   const onChange = (value: string) => {
     if (!messageId.current) messageId.current = crypto.randomUUID();
@@ -81,7 +92,7 @@ export default function ClientMessageBox({ token }: { token: string }) {
       <h2 id="client-message-heading" className="text-lg font-bold">{label('boxHeading')}</h2>
       {phase === 'sent' ? (
         <div className="mt-3 space-y-3">
-          <p className="font-semibold">{label('sentHeading')}</p>
+          <p ref={sentHeadingRef} tabIndex={-1} className="font-semibold outline-none">{label('sentHeading')}</p>
           <p className="text-sm text-[var(--muted)]">{label('sentBody')}</p>
           {label('turnaroundLine') && <p className="text-sm text-[var(--muted)]">{label('turnaroundLine')}</p>}
           <button type="button" onClick={sendAnother} className="min-h-11 w-full rounded-lg border border-white/20 px-4 py-2 text-base font-semibold">
@@ -120,7 +131,7 @@ export default function ClientMessageBox({ token }: { token: string }) {
         </form>
       )}
       <p role="status" aria-live="polite" className="sr-only">{statusText}</p>
-      <p className="mt-4 text-xs text-[var(--muted)]">{label('cancelPointer')}</p>
+      {cancelAvailable && <p className="mt-4 text-xs text-[var(--muted)]">{label('cancelPointer')}</p>}
     </section>
   );
 }

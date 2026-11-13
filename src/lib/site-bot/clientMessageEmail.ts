@@ -8,10 +8,11 @@
  * Privacy: message content is never written to server logs; console lines carry ids and codes only. The client's text
  * is quoted back HTML-escaped and is never put into a subject line.
  *
- * Addresses (founder decisions 1 and 3, not decided yet):
- * - Staff alerts and reminders go to SITE_BOT_SUPPORT_ALERT_EMAIL, falling back to BILLING_ADMIN_ALERT_EMAIL.
- * - The client confirmation is sent from, and replies go to, SITE_BOT_SUPPORT_FROM_EMAIL.
- *   TODO(founder decision 1): set the real, monitored support mailbox. Until it is set, no confirmation is sent.
+ * Addresses (founder decisions 1 and 3, decided 2026-11-13: eitan@wao.co.il for both):
+ * - Staff alerts and reminders go to SITE_BOT_SUPPORT_ALERT_EMAIL, then BILLING_ADMIN_ALERT_EMAIL, then
+ *   SITE_BOT_SUPPORT_ADDRESS.
+ * - The client confirmation is sent from, and replies go to, SITE_BOT_SUPPORT_FROM_EMAIL, then SITE_BOT_SUPPORT_ADDRESS.
+ * wao.co.il is the Resend sending domain already used by billing@ / leads@ / ads@.
  */
 import fs from 'fs';
 import path from 'path';
@@ -39,8 +40,8 @@ export interface OutgoingEmail {
 /** Returns 'sent' when delivered, 'stubbed' when only written to the dev outbox. Throws on a delivery error. */
 export type MailTransport = (email: OutgoingEmail) => Promise<'sent' | 'stubbed'>;
 
-/** Sender for staff mail when no support address is configured (the billing engine's verified sender). */
-const DEFAULT_STAFF_FROM = 'billing@wao.co.il';
+/** Founder decision 1 + 3 (2026-11-13): the support mailbox for the confirmation sender/reply-to and staff alerts. */
+export const SITE_BOT_SUPPORT_ADDRESS = 'eitan@wao.co.il';
 const REMINDER_AFTER_MS = 24 * 60 * 60 * 1000;
 const BODY_EXCERPT_CHARS = 500;
 
@@ -81,12 +82,12 @@ export const defaultMailTransport: MailTransport = async (email) => {
   return 'sent';
 };
 
-export function staffAlertAddress(env: Record<string, string | undefined> = process.env): string | null {
-  return env.SITE_BOT_SUPPORT_ALERT_EMAIL?.trim() || env.BILLING_ADMIN_ALERT_EMAIL?.trim() || null;
+export function staffAlertAddress(env: Record<string, string | undefined> = process.env): string {
+  return env.SITE_BOT_SUPPORT_ALERT_EMAIL?.trim() || env.BILLING_ADMIN_ALERT_EMAIL?.trim() || SITE_BOT_SUPPORT_ADDRESS;
 }
 
-export function supportFromAddress(env: Record<string, string | undefined> = process.env): string | null {
-  return env.SITE_BOT_SUPPORT_FROM_EMAIL?.trim() || null;
+export function supportFromAddress(env: Record<string, string | undefined> = process.env): string {
+  return env.SITE_BOT_SUPPORT_FROM_EMAIL?.trim() || SITE_BOT_SUPPORT_ADDRESS;
 }
 
 /** Same rendering as the staff inbox (`formatIsraelTime` in components/admin/site-bot-help/inbox.mjs). */
@@ -119,10 +120,6 @@ function queueUrl(): string {
 /** English, plain text, to the staff address. Returns true only when actually delivered. */
 export async function sendClientMessageStaffAlert(row: ClientMessageRow, transport: MailTransport = defaultMailTransport): Promise<boolean> {
   const to = staffAlertAddress();
-  if (!to) {
-    console.warn(`[site-bot-message-email] no SITE_BOT_SUPPORT_ALERT_EMAIL / BILLING_ADMIN_ALERT_EMAIL; staff alert skipped id=${row.id}`);
-    return false;
-  }
   const isCancel = row.kind === 'cancel_notice_due';
   const lines = [
     `Kind: ${isCancel ? 'cancel notice due' : 'client message'}`,
@@ -150,7 +147,7 @@ export async function sendClientMessageStaffAlert(row: ClientMessageRow, transpo
   lines.push('', `Queue: ${queueUrl()}`);
   const outcome = await transport({
     to,
-    from: supportFromAddress() ?? DEFAULT_STAFF_FROM,
+    from: supportFromAddress(),
     subject: isCancel ? `Site Bot cancel — notices due — ${who(row)}` : `Site Bot client message — ${who(row)}`,
     text: lines.join('\n'),
     tag: 'staff_alert',
@@ -161,15 +158,11 @@ export async function sendClientMessageStaffAlert(row: ClientMessageRow, transpo
 
 /**
  * Hebrew confirmation to the client, from/reply-to the support address. Not sent (returns false) when the row has no
- * email, the support address is not set, or any email copy key is still a placeholder.
+ * email or any email copy key is still a placeholder.
  */
 export async function sendClientMessageConfirmation(row: ClientMessageRow, transport: MailTransport = defaultMailTransport): Promise<boolean> {
   if (row.kind !== 'client_message' || !row.contact_email) return false;
   const from = supportFromAddress();
-  if (!from) {
-    console.warn(`[site-bot-message-email] SITE_BOT_SUPPORT_FROM_EMAIL not set; confirmation skipped id=${row.id}`);
-    return false;
-  }
   const copy = SITE_BOT_CLIENT_MESSAGE_COPY;
   if (!copyReady(EMAIL_COPY_KEYS, copy)) return false;
   const turnaround = isFilledCopy(copy.turnaroundLine) ? copy.turnaroundLine : null;
@@ -200,7 +193,7 @@ export async function sendClientMessageConfirmation(row: ClientMessageRow, trans
 /** One English email listing open items older than the cutoff. Returns the transport outcome, or null if skipped. */
 export async function sendUnhandledReminder(rows: readonly ClientMessageRow[], transport: MailTransport = defaultMailTransport): Promise<'sent' | 'stubbed' | null> {
   const to = staffAlertAddress();
-  if (!to || rows.length === 0) return null;
+  if (rows.length === 0) return null;
   const lines = [
     `${rows.length} Site Bot client message item${rows.length === 1 ? '' : 's'} still open after 24 hours:`,
     '',
@@ -210,7 +203,7 @@ export async function sendUnhandledReminder(rows: readonly ClientMessageRow[], t
   ];
   return transport({
     to,
-    from: supportFromAddress() ?? DEFAULT_STAFF_FROM,
+    from: supportFromAddress(),
     subject: `Site Bot client messages — ${rows.length} open over 24h`,
     text: lines.join('\n'),
     tag: 'staff_reminder',
