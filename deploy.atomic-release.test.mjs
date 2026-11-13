@@ -147,6 +147,7 @@ exec "$WAO_REAL_NODE" "$@"
 
 function runFixture(options = {}, envExtra = {}) {
   const f = fixture(options);
+  options.setup?.(f);
   const result = spawnSync('bash', [deployScript, 'synthetic-target'], {
     cwd: f.repo,
     encoding: 'utf8',
@@ -423,4 +424,37 @@ test('public assets copy into an existing standalone public directory without ne
   } finally {
     cleanup(root);
   }
+});
+
+function seedPruneTargets(f) {
+  const old = Date.now() / 1000 - 3 * 3600;
+  for (const name of ['release-older-1', 'release-older-2', '.candidate-stale-x']) {
+    fs.mkdirSync(path.join(f.releases, name, '.next'), { recursive: true });
+  }
+  fs.utimesSync(path.join(f.releases, '.candidate-stale-x'), old, old);
+  fs.mkdirSync(path.join(f.releases, '.candidate-fresh-x'));
+}
+
+test('successful activation prunes to the active release plus one rollback and stale candidates', () => {
+  const f = runFixture({ setup: seedPruneTargets });
+  try {
+    assert.equal(f.result.status, 0, f.result.stderr);
+    const entries = fs.readdirSync(f.releases).sort();
+    const active = path.basename(fs.realpathSync(path.join(f.releases, 'current')));
+    assert.match(active, /^release-deadbeefdead-/);
+    assert.deepEqual(entries, ['.candidate-fresh-x', 'current', active, 'release-previous'].sort());
+    assert.match(f.result.stdout, /Pruning old release release-older-1/);
+    assert.match(f.result.stdout, /Pruning stale candidate \.candidate-stale-x/);
+  } finally { cleanup(f.root); }
+});
+
+test('failed activation prunes nothing', () => {
+  const f = runFixture({ failure: 'verifier', setup: seedPruneTargets });
+  try {
+    assert.notEqual(f.result.status, 0);
+    for (const name of ['release-older-1', 'release-older-2', '.candidate-stale-x', 'release-previous']) {
+      assert.ok(fs.existsSync(path.join(f.releases, name)), name);
+    }
+    assert.doesNotMatch(f.result.stdout, /Pruning/);
+  } finally { cleanup(f.root); }
 });

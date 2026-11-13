@@ -155,6 +155,30 @@ verify_homepage_assets() {
   ')
 }
 
+# Keep exactly two releases: the one just activated and the rollback it replaced.
+# Releases live inside the project root, so unbounded growth bloats every build
+# trace and disk. Pruning is best-effort and never fails an activated deploy.
+prune_old_releases() {
+  local keep_active keep_rollback entry resolved
+  keep_active="$(readlink -f "$1")"
+  keep_rollback="$(readlink -f "$2")"
+  for entry in "$RELEASES_DIR"/release-*; do
+    [[ -d "$entry" && ! -L "$entry" ]] || continue
+    resolved="$(readlink -f "$entry")"
+    if [[ "$resolved" == "$keep_active" || "$resolved" == "$keep_rollback" ]]; then
+      continue
+    fi
+    printf 'Pruning old release %s\n' "${entry##*/}"
+    rm -rf -- "$entry" || printf 'Warning: could not prune %s\n' "$entry" >&2
+  done
+  # Candidates orphaned by a killed build (the EXIT trap never ran). The age
+  # floor keeps a concurrently running build's candidate safe (~18 min builds).
+  while IFS= read -r -d '' entry; do
+    printf 'Pruning stale candidate %s\n' "${entry##*/}"
+    rm -rf -- "$entry" || printf 'Warning: could not prune %s\n' "$entry" >&2
+  done < <(find "$RELEASES_DIR" -mindepth 1 -maxdepth 1 -type d -name '.candidate-*' -mmin +120 -print0 2>/dev/null || true)
+}
+
 restore_previous_release() {
   local previous="$1"
   [[ -n "$previous" && -d "$previous" && -s "$previous/.next/standalone/server.js" ]] || return 1
@@ -251,3 +275,4 @@ if ! replace_wao_process "$RELEASE" \
 fi
 
 printf 'Activated deployment %s from commit %s\n' "$DEPLOYMENT_ID" "$COMMIT"
+prune_old_releases "$RELEASE" "$PREVIOUS_RELEASE" || printf 'Warning: release pruning did not complete.\n' >&2
