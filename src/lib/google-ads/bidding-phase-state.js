@@ -143,3 +143,138 @@ export function evaluateSignalIntegritySoak(state, now, options = {}) {
   if (Number.isFinite(goalMs) && now.getTime() - goalMs < soakMs) return { ok: false, reason: 'goal_change_window', ...base, eligibleAt };
   return { ok: true, ...base, eligibleAt };
 }
+
+// ---------------------------------------------------------------------------------------------
+// Phase-2 state machine (post-launch week 1 spec, task A4). New exports only; the functions
+// above keep their behaviour. State is per campaign, under `campaigns[<campaignId>]` in the same
+// per-client file; the legacy top-level `phase` written by step 0 is left untouched.
+// ---------------------------------------------------------------------------------------------
+
+/** @typedef {'phase1_clicks'|'graduation_proposed'|'phase2_learning'|'phase2_active'|'rolled_back'|'manual_hold'} BiddingPhase */
+
+/** @type {ReadonlyArray<BiddingPhase>} */
+export const BIDDING_PHASES = Object.freeze(['phase1_clicks', 'graduation_proposed', 'phase2_learning', 'phase2_active', 'rolled_back', 'manual_hold']);
+
+/** After a rollback, no new graduation for this many days. */
+export const ROLLBACK_COOLDOWN_DAYS = 30;
+/** The rollback that makes this count goes to `manual_hold` instead of `rolled_back`. */
+export const MAX_ROLLBACKS = 2;
+
+/**
+ * Allowed automatic transitions. `manual_hold` has no automatic exit: a human edits the file.
+ * `graduation_proposed → graduation_proposed` is a repeat shadow proposal on a later day.
+ * @type {Readonly<Record<BiddingPhase, ReadonlyArray<BiddingPhase>>>}
+ */
+export const ALLOWED_TRANSITIONS = Object.freeze({
+  phase1_clicks: ['graduation_proposed', 'phase2_learning', 'manual_hold'],
+  graduation_proposed: ['graduation_proposed', 'phase1_clicks', 'phase2_learning', 'manual_hold'],
+  phase2_learning: ['phase2_active', 'rolled_back', 'manual_hold'],
+  phase2_active: ['rolled_back', 'manual_hold'],
+  rolled_back: ['graduation_proposed', 'phase2_learning', 'manual_hold'],
+  manual_hold: [],
+});
+
+const CAMPAIGN_ID_PATTERN = /^[a-zA-Z0-9][a-zA-Z0-9_-]{0,63}$/;
+const PHASE2 = new Set(['phase2_learning', 'phase2_active']);
+
+/**
+ * The per-campaign block of a parsed state file, with defaults (pure).
+ *
+ * @param {Record<string, any> | null | undefined} state
+ * @param {string} campaignId
+ * @returns {{ phase: BiddingPhase, transitions: Array<Record<string, any>>, rollbackCount: number, cooldownUntil: string | null, lastGraduationAt: string | null, phaseSince: string | null }}
+ */
+export function campaignPhaseState(state, campaignId) {
+  const raw = state && typeof state === 'object' && state.campaigns && typeof state.campaigns === 'object' ? state.campaigns[campaignId] : undefined;
+  const block = raw && typeof raw === 'object' && !Array.isArray(raw) ? raw : {};
+  return {
+    ...block,
+    phase: BIDDING_PHASES.includes(block.phase) ? block.phase : 'phase1_clicks',
+    transitions: Array.isArray(block.transitions) ? block.transitions : [],
+    rollbackCount: Number.isInteger(block.rollbackCount) && block.rollbackCount > 0 ? block.rollbackCount : 0,
+    cooldownUntil: typeof block.cooldownUntil === 'string' ? block.cooldownUntil : null,
+    lastGraduationAt: typeof block.lastGraduationAt === 'string' ? block.lastGraduationAt : null,
+    phaseSince: typeof block.phaseSince === 'string' ? block.phaseSince : null,
+  };
+}
+
+/**
+ * Reads one campaign's phase block. No file means `phase1_clicks`. Null on a bad id / baseDir.
+ *
+ * @param {string} clientId
+ * @param {string} baseDir
+ * @param {string} campaignId
+ */
+export function readPhase(clientId, baseDir, campaignId) {
+  if (!biddingPhasePath(clientId, baseDir) || !CAMPAIGN_ID_PATTERN.test(String(campaignId))) return null;
+  return campaignPhaseState(readBiddingPhaseState(clientId, baseDir), String(campaignId));
+}
+
+/**
+ * Records one phase transition for a campaign (atomic temp+rename, same writer as above).
+ *
+ * - `from` must equal the stored phase (guards against a stale read); `to` must be allowed.
+ * - Idempotent on `actionId`: a repeat returns the stored state with `duplicate: true`.
+ * - A rollback that brings `rollbackCount` to `MAX_ROLLBACKS` is stored as `manual_hold`.
+ * - A rollback sets `cooldownUntil = at + ROLLBACK_COOLDOWN_DAYS`; a switch to
+ *   `phase2_learning` sets `lastGraduationAt`. Both count as strategy changes.
+ * - Each transition stores time, from, to, action ID, baseline, ceiling, phase-1 average click
+ *   price and the full `before` snapshot.
+ *
+ * @param {{ clientId: string, baseDir: string, campaignId: string, at: string, from: BiddingPhase, to: BiddingPhase, actionId: string, baseline?: Record<string, any> | null, ceiling?: number | null, phase1AvgCpcIls?: number | null, before?: Record<string, any> | null, rule?: string | null }} params
+ * @returns {{ ok: true, duplicate: boolean, state: Record<string, any>, campaign: ReturnType<typeof campaignPhaseState> } | { ok: false, error: 'bad_input'|'phase_mismatch'|'transition_not_allowed'|'write_failed' }}
+ */
+export function recordTransition(params) {
+  const { clientId, baseDir, campaignId, at, from, to, actionId } = params;
+  const filePath = biddingPhasePath(clientId, baseDir);
+  if (!filePath || !CAMPAIGN_ID_PATTERN.test(String(campaignId)) || typeof actionId !== 'string' || !actionId
+    || !Number.isFinite(instantMs(at)) || !BIDDING_PHASES.includes(from) || !BIDDING_PHASES.includes(to)) {
+    return { ok: false, error: 'bad_input' };
+  }
+  const previous = readBiddingPhaseState(clientId, baseDir) ?? {};
+  const current = campaignPhaseState(previous, campaignId);
+  if (current.transitions.some((t) => t && t.actionId === actionId)) {
+    return { ok: true, duplicate: true, state: previous, campaign: current };
+  }
+  if (current.phase !== from) return { ok: false, error: 'phase_mismatch' };
+
+  const isRollback = PHASE2.has(from) && to === 'rolled_back';
+  const rollbackCount = current.rollbackCount + (isRollback ? 1 : 0);
+  const effectiveTo = isRollback && rollbackCount >= MAX_ROLLBACKS ? 'manual_hold' : to;
+  if (!ALLOWED_TRANSITIONS[from].includes(effectiveTo)) return { ok: false, error: 'transition_not_allowed' };
+
+  const strategyChange = effectiveTo === 'phase2_learning' || (PHASE2.has(from) && (effectiveTo === 'rolled_back' || effectiveTo === 'manual_hold'));
+  const transition = {
+    at,
+    from,
+    to: effectiveTo,
+    ...(effectiveTo !== to ? { requestedTo: to } : {}),
+    actionId,
+    strategyChange,
+    rule: params.rule ?? null,
+    baseline: params.baseline ?? null,
+    ceiling: params.ceiling ?? null,
+    phase1AvgCpcIls: params.phase1AvgCpcIls ?? null,
+    before: params.before ?? null,
+  };
+  const nextCampaign = {
+    ...current,
+    phase: effectiveTo,
+    phaseSince: at,
+    rollbackCount,
+    cooldownUntil: isRollback ? new Date(instantMs(at) + ROLLBACK_COOLDOWN_DAYS * 86_400_000).toISOString() : current.cooldownUntil,
+    lastGraduationAt: effectiveTo === 'phase2_learning' ? at : current.lastGraduationAt,
+    transitions: [...current.transitions, transition],
+  };
+  const prevCampaigns = previous.campaigns && typeof previous.campaigns === 'object' && !Array.isArray(previous.campaigns) ? previous.campaigns : {};
+  const next = {
+    version: 1,
+    clientId,
+    phase: previous.phase ?? 'phase1_clicks',
+    ...previous,
+    campaigns: { ...prevCampaigns, [campaignId]: nextCampaign },
+  };
+  const written = writeStateAtomic(filePath, next);
+  if (!written) return { ok: false, error: 'write_failed' };
+  return { ok: true, duplicate: false, state: written, campaign: campaignPhaseState(written, campaignId) };
+}

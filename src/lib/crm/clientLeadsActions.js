@@ -32,6 +32,32 @@ import { planUploadsForTrigger, runLeadConversionUploads, summarizeConversionUpl
  * @param {() => Date} [params.now]
  * @returns {Promise<{ status: number, body: any }>}
  */
+const QUALITY_MARKS = new Set(['GOOD', 'JUNK']);
+
+/**
+ * Sets `quality` and records when the owner marked it (post-launch week 1 spec, task A1). The
+ * graduation evaluator's delay `D` is the p75 of lead-to-mark lag, so the first mark time must
+ * survive repeat clicks: a repeat mark with the same quality keeps the existing
+ * `qualityMarkedAt`; a changed mark (GOOD <-> JUNK) or a first mark sets it to `nowIso`; going
+ * back to an unmarked quality (e.g. PENDING) drops it, since an unmarked lead has no mark time.
+ * Pure; also used by the admin route (`src/app/api/leads/route.ts`).
+ *
+ * @template {{ quality?: string, qualityMarkedAt?: string }} L
+ * @param {L} lead
+ * @param {string} quality
+ * @param {string} nowIso
+ * @returns {L}
+ */
+export function withQualityMark(lead, quality, nowIso) {
+  if (!QUALITY_MARKS.has(quality)) {
+    const unmarked = { ...lead, quality };
+    delete unmarked.qualityMarkedAt;
+    return unmarked;
+  }
+  const keep = lead.quality === quality && typeof lead.qualityMarkedAt === 'string' && lead.qualityMarkedAt;
+  return { ...lead, quality, qualityMarkedAt: keep ? lead.qualityMarkedAt : nowIso };
+}
+
 export async function applyClientLeadFeedback({
   leadId,
   quality,
@@ -53,11 +79,11 @@ export async function applyClientLeadFeedback({
   let conversionTypes = [];
 
   if (quality === 'GOOD' || quality === 'JUNK') {
-    updatedLead = { ...lead, quality };
+    updatedLead = withQualityMark(lead, quality, now().toISOString());
     if (quality === 'GOOD') conversionTypes = planUploadsForTrigger(lead, 'good');
   } else if (closed && typeof closed.revenue === 'number') {
     const closedAt = now().toISOString();
-    updatedLead = { ...lead, closed: true, closedAt, revenue: closed.revenue, quality: 'GOOD' };
+    updatedLead = { ...withQualityMark(lead, 'GOOD', closedAt), closed: true, closedAt, revenue: closed.revenue };
     conversionTypes = planUploadsForTrigger(lead, 'closed');
   } else {
     return { status: 400, body: { success: false, error: 'Invalid feedback body — expected { quality } or { closed: { revenue } }' } };

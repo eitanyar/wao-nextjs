@@ -6,6 +6,7 @@ import { fileURLToPath } from 'node:url';
 import vm from 'node:vm';
 import ts from 'typescript';
 import * as leadConversionUploads from '../../../lib/crm/leadConversionUploads.js';
+import * as clientLeadsActions from '../../../lib/crm/clientLeadsActions.js';
 
 const baseDir = path.dirname(fileURLToPath(import.meta.url));
 const routePath = path.join(baseDir, 'route.ts');
@@ -51,6 +52,9 @@ function createRouteHarness({ authorized = false, leads = [] } = {}) {
       case '@/lib/crm/leadConversionUploads':
         // The real (pure) orchestration module; only its injected upload is synthetic.
         return leadConversionUploads;
+      case '@/lib/crm/clientLeadsActions':
+        // The real (pure) module; the route only uses its `withQualityMark` (task A1).
+        return clientLeadsActions;
       case '@/lib/google-ads/conversion-upload':
         return { uploadLeadConversion: async () => { calls.conversion += 1; return { success: true }; } };
       case '@/lib/crm/intelligence':
@@ -268,4 +272,11 @@ test('0c: admin GOOD / close always runs the upload so a no-click-ID lead is per
   // And the skipped result maps to the persisted status.
   const outcome = leadConversionUploads.outcomeFromUploadResult({ skipped: true, reason: 'no_click_id', message: 'x' }, undefined, new Date('2026-11-13T00:00:00.000Z'));
   assert.equal(outcome.status, 'skipped_no_click_id');
+});
+
+test('A1: admin updateQuality and markClosed record qualityMarkedAt through withQualityMark', () => {
+  const post = postHandler();
+  assert.match(post, /withQualityMark\(lead, quality, markedAt\)/);
+  assert.match(post, /withQualityMark\(lead, "GOOD", closedAt\)/);
+  assert.doesNotMatch(post, /\{ \.\.\.lead, quality \}/);
 });

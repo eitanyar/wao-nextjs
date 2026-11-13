@@ -272,3 +272,33 @@ test('0c: an outcome-persistence failure never affects the 200 or the CRM write'
   assert.equal(writeLeads.callCount(), 1);
   assert.equal(writeLeads.lastArgs().find((l) => l.id === 1).quality, 'GOOD');
 });
+
+// ── post-launch week 1 spec, task A1 — qualityMarkedAt ──────────────────────────
+test('A1: marking real, junk and closed each sets qualityMarkedAt (written to the CRM file)', async () => {
+  for (const body of [{ quality: 'GOOD' }, { quality: 'JUNK' }, { closed: { revenue: 500 } }]) {
+    const { writeLeads, result } = await feedback({ body });
+    const written = writeLeads.lastArgs().find((l) => l.id === 1);
+    assert.equal(written.qualityMarkedAt, '2026-11-12T08:00:00.000Z', JSON.stringify(body));
+    assert.equal(result.body.lead.qualityMarkedAt, '2026-11-12T08:00:00.000Z');
+  }
+});
+
+test('A1: a repeat mark with the same quality keeps the first time; a changed mark resets it', async () => {
+  const first = '2026-11-01T09:00:00.000Z';
+  const good = LEADS.map((l) => (l.id === 1 ? { ...l, quality: 'GOOD', qualityMarkedAt: first } : l));
+  const repeat = await feedback({ leads: good, body: { quality: 'GOOD' } });
+  assert.equal(repeat.writeLeads.lastArgs().find((l) => l.id === 1).qualityMarkedAt, first);
+  const closed = await feedback({ leads: good, body: { closed: { revenue: 700 } } });
+  assert.equal(closed.writeLeads.lastArgs().find((l) => l.id === 1).qualityMarkedAt, first, 'close on an already-GOOD lead keeps the mark time');
+  assert.equal(closed.writeLeads.lastArgs().find((l) => l.id === 1).closedAt, '2026-11-12T08:00:00.000Z');
+  const changed = await feedback({ leads: good, body: { quality: 'JUNK' } });
+  assert.equal(changed.writeLeads.lastArgs().find((l) => l.id === 1).qualityMarkedAt, '2026-11-12T08:00:00.000Z');
+});
+
+test('A1: withQualityMark drops the mark time when the lead goes back to unmarked', async () => {
+  const { withQualityMark } = await import('../../../../lib/crm/clientLeadsActions.js');
+  const lead = { id: 9, quality: 'GOOD', qualityMarkedAt: '2026-11-01T09:00:00.000Z' };
+  assert.deepEqual(withQualityMark(lead, 'PENDING', '2026-11-12T08:00:00.000Z'), { id: 9, quality: 'PENDING' });
+  assert.equal(withQualityMark({ id: 9, quality: 'PENDING' }, 'GOOD', 'T').qualityMarkedAt, 'T');
+  assert.equal(withQualityMark({ id: 9, quality: 'GOOD' }, 'GOOD', 'T').qualityMarkedAt, 'T', 'a legacy GOOD lead with no time gets one');
+});

@@ -11,6 +11,7 @@ import { buildWaLink } from "@/lib/gmb/whatsapp";
 import { appendReviewFlywheelQueueItem } from "@/lib/crm/reviewFlywheelStore";
 import { captureLead, type LeadCapturePayload } from "@/lib/crm/lead-capture";
 import { planUploadsForTrigger, runLeadConversionUploads } from "@/lib/crm/leadConversionUploads";
+import { withQualityMark } from "@/lib/crm/clientLeadsActions";
 
 /**
  * In-process call to `uploadLeadConversion()` (`@/lib/google-ads/conversion-upload`).
@@ -214,7 +215,8 @@ export async function POST(req: Request) {
       if (action === "updateQuality") {
         const id = bodyRecord.id as number;
         const quality = bodyRecord.quality as string;
-        const updatedLeads = leads.map((lead) => lead.id === id ? { ...lead, quality } : lead);
+        const markedAt = new Date().toISOString();
+        const updatedLeads = leads.map((lead) => lead.id === id ? withQualityMark(lead, quality, markedAt) : lead);
         await writeLeads(updatedLeads);
 
         if (quality === "GOOD") {
@@ -252,7 +254,7 @@ export async function POST(req: Request) {
       const revenue = bodyRecord.revenue as number;
       const closedAt = new Date().toISOString();
       const updatedLeads = leads.map((lead) =>
-        lead.id === id ? { ...lead, closed: true, closedAt, revenue, quality: "GOOD" } : lead
+        lead.id === id ? { ...withQualityMark(lead, "GOOD", closedAt), closed: true, closedAt, revenue } : lead
       );
       await writeLeads(updatedLeads);
 

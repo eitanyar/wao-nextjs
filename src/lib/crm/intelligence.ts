@@ -14,6 +14,8 @@ export interface LeadRecord {
   date?: string;
   status?: string;
   quality?: string;
+  /** ISO time the owner/staff first set the current GOOD/JUNK mark (post-launch spec A1). Kept on a repeat same-quality mark. */
+  qualityMarkedAt?: string;
   revenue?: number;
   closed?: boolean;
   closedAt?: string | null;
