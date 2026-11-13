@@ -7,9 +7,9 @@
   "ad_30": [
     {
       "beat": "R01",
-      "voice": "שילמת על קליקים בגוגל. [deadpan] קיבלת תיירים.",
-      "display": "שילמת על קליקים בגוגל. קיבלת תיירים.",
-      "caption": "קיבלת תיירים",
+      "voice": "שילמת על קליקים בגוגל. [deadpan] קיבלת סקרנים.",
+      "display": "שילמת על קליקים בגוגל. קיבלת סקרנים.",
+      "caption": "קיבלת סקרנים",
       "shot": "B1",
       "tag_why": "Deadpan on the punchline lands the tautology joke: he got exactly what he paid for, nothing more.",
       "removable": false,
@@ -59,9 +59,9 @@
   "ad_15": [
     {
       "beat": "R01",
-      "voice": "שילמת על קליקים בגוגל. [deadpan] קיבלת תיירים.",
-      "display": "שילמת על קליקים בגוגל. קיבלת תיירים.",
-      "caption": "קיבלת תיירים",
+      "voice": "שילמת על קליקים בגוגל. [deadpan] קיבלת סקרנים.",
+      "display": "שילמת על קליקים בגוגל. קיבלת סקרנים.",
+      "caption": "קיבלת סקרנים",
       "shot": "B1",
       "tag_why": "Deadpan punchline, same joke as the 30 compressed to its setup and pay-off.",
       "removable": false,

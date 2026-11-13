@@ -188,7 +188,7 @@
         "model": "eleven_v4"
       },
       "date": "2026-11-12",
-      "note": "Approved by Eitan 2026-11-12 (relayed by Adam). Latin WAO and the vocalized r3 form both map here; attached prefixes are kept, e.g. mem + brand.",
+      "note": "Approved by Eitan 2026-11-12 (relayed by Adam). Latin WAO and the vocalized r3 form both map here; attached prefixes are kept, e.g. mem + brand. 2026-11-13: Eitan dropped the spoken WAO from all voiceover (every reading sounded off). Keep this entry only so any stray WAO is read consistently; do not write WAO into voice lines.",
       "source": {
         "tts": {
           "file": "scratch/video-dash/pron-test/test-lines.txt",
@@ -213,6 +213,26 @@
       "tts": "הַקּוּפָּה",
       "reading": "ha-KU-pa",
       "meaning": "the till / cash register (not 'the monkey'); founder heard 'ha-kupe' with הקוּפה (2026-11-12 round 4 #2)",
+      "status": "approved",
+      "allowPrefixes": true,
+      "verifiedOn": {
+        "voice": "Nimrod",
+        "voiceId": "ZiofZHcEBTn5sRySe5h8",
+        "model": "eleven_v4"
+      },
+      "date": "2026-11-13",
+      "note": "Approved by Eitan by ear 2026-11-13 (round 5 #1-2, not flagged)."
+    },
+    {
+      "id": "ha-doch",
+      "clean": "הדוח",
+      "match": [
+        "הדוח",
+        "הַדּוּחַ"
+      ],
+      "tts": "הַדּוֹחַ",
+      "reading": "ha-DOCH",
+      "meaning": "the report (spoken 'doch', not 'du-ach')",
       "status": "pending",
       "allowPrefixes": true,
       "verifiedOn": {
@@ -220,8 +240,28 @@
         "voiceId": "ZiofZHcEBTn5sRySe5h8",
         "model": "eleven_v4"
       },
-      "date": "2026-11-12",
-      "note": "Candidate per Noa's niqqud advice + Eitan's ear: final qamats for 'a'. Re-test on Nimrod in the next pronunciation round before approval. verifiedOn = target voice (test convention); not yet approved by ear."
+      "date": "2026-11-13",
+      "note": "Eitan round 5 #66: heard 'duh', wants 'doh'. Holam replaces shuruk; re-test next round."
+    },
+    {
+      "id": "ve-kama",
+      "clean": "וכמה",
+      "match": [
+        "וכמה",
+        "וּכמה"
+      ],
+      "tts": "וְכַמָּה",
+      "reading": "ve-KAMA",
+      "meaning": "and how much ('ve', not 'u')",
+      "status": "pending",
+      "allowPrefixes": false,
+      "verifiedOn": {
+        "voice": "Nimrod",
+        "voiceId": "ZiofZHcEBTn5sRySe5h8",
+        "model": "eleven_v4"
+      },
+      "date": "2026-11-13",
+      "note": "Eitan round 5 #67: wants 've-kama'. Re-test next round."
     }
   ]
 }
