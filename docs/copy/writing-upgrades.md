@@ -40,7 +40,7 @@ Cap: 35 rules. Selling rules come from the strategist (Fable 5.2) with Eitan's a
 - FAQ questions are in the reader's own voice, first person, the way he'd type them. The answer opens with the direct answer, then the reason that makes it good news where it is. When the honest answer is no, open with what he does get and give the no in one clause. State the price or the term itself. Never send him elsewhere for it.
 - A fact, term or figure is stated once in the body, briefly and as his gain. Its full list of items or conditions appears only in the FAQ. A step list and a feature grid never cover the same items.
 - Numbered steps are actions in time order, with an explicit subject and one grammatical form. A feature, a payment term or an exit term is not a step.
-- Say it the way he would say it aloud on a job: spoken time spans, no English idioms of position or motion, no literal translation of English sentence patterns.
+- Say it the way he would say it aloud on a job: spoken time spans, no English idioms of position or motion, no literal translation of English sentence patterns. Anything that will be voiced must be understood by ear alone, on first hearing, with no picture: say the plain thing in his money and work words, never a prop or metaphor that exists only on screen, and prefer words with one obvious reading when written without vowels.
 - Write in your own natural spoken Israeli Hebrew. When any rule pulls toward formal, careful or translated phrasing, the spoken voice wins.
 - A technical or platform term with no plain-language effect beside it is jargon. When a platform's official term means something else in his daily life, describe the thing plainly.
 - One name per product, channel, offer and person across a page. A named person gets his role on first mention. Don't switch between first and third person for the brand inside a paragraph.
@@ -52,7 +52,7 @@ Cap: 35 rules. Selling rules come from the strategist (Fable 5.2) with Eitan's a
 
 ## Proposed rules (not sent to the model until approved)
 
-- PROPOSED 2026-11-12 (Noa, from docs/copy/reviews/video-dash-scripts-r4-blind-noa-2026-11-12.md): amend the craft rule "Say it the way he would say it aloud on a job…" by appending: "Anything that will be voiced must be understood by ear alone, on first hearing, with no picture: say the plain thing in his money and work words, never a prop or metaphor that exists only on screen, and prefer words with one obvious reading when written without vowels." Merging keeps the count at 35, so no rule retires. Could it make a great sales page worse? No. It applies only to voiced text, and a page that isn't voiced is unaffected.
+(none)
 
 ## Log
 
@@ -62,3 +62,4 @@ Cap: 35 rules. Selling rules come from the strategist (Fable 5.2) with Eitan's a
 - 2026-11-12: repaired file structure (new rules had been pasted into the intro, so round 1 loaded the old 27); applied Fable 5.2's round-1 tweaks (docs/copy/strategy/assess-r1-fable52-2026-11-12.md §3), count stays 35.
 - 2026-11-12: round-2 tweak from Fable 5.2 (docs/copy/strategy/assess-r2-fable52-2026-11-12.md §3): body-vs-FAQ craft rule; count stays 35.
 - 2026-11-13: Eitan's complaints after the Fable 5.2 anti-slop pass ("stop being over protective… features that arrive after some time are fine… state benefits, not that the client reached the right place… be bold") plus Noa's recurring fixes and the anti-slop rulebook (github.com/miqdadbadjuber/anti-slop, copywriting skill): amended checkable line (sell roadmap features), dramatise the mechanism (felt gains), proof (platform + industry evidence makes claims bigger), colons/dashes → machine-patterns ban, active voice (subject can do the verb; tense after "before"). Eitan asked for it ("make waocopy write better copy taking into account the last complaints"); count stays 35. Check on the next copy run. Same day, Eitan added "and no AI slop": the machine-patterns rule became the full no-AI-slop rule.
+- 2026-11-13: Noa's proposed voiced-text rule (one obvious reading without vowels, understood by ear alone) merged into the spoken-voice craft rule; Eitan approved after repeated TTS homograph misreads (סופר, שלט). Count stays 35.

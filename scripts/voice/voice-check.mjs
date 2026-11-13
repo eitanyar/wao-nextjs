@@ -161,7 +161,9 @@ function issueSpan(issue, diff, sw) {
 }
 
 async function checkTake(line, k, targets, o, ctx, lexicon) {
-  const slug = slugId(line.id);
+  // The take name carries a hash of the spoken text, voice and model, so an edited line is
+  // never served a stale cached take (2026-11-13: changed lines reused the previous round's audio).
+  const slug = `${slugId(line.id)}-${sha([line.tts, ctx.voice.voiceId, ctx.voice.model]).slice(0, 8)}`;
   const takeFile = path.join(o.out, "takes", `${slug}-t${k}.mp3`);
   mkdirSync(path.dirname(takeFile), { recursive: true });
   if (!existsSync(takeFile)) {
