@@ -57,6 +57,8 @@ export interface LeadUploadOutcome {
   status: 'ok' | 'failed' | 'skipped_no_click_id' | 'pending_retry';
   /** ISO time of the latest attempt. */
   at: string;
+  /** ISO time of the first failure in the current failing streak (optional; R0 prefers it). */
+  firstFailedAt?: string;
   requestId?: string;
   error?: string;
   attempts: number;

@@ -38,6 +38,8 @@ export const G4_MIN_LEAD_AGE_DAYS = 3;
 export const G5_MIN_UPLOAD_SUCCESS = 0.9;
 export const G5_NO_FAILURE_HOURS = 72;
 export const G5_RECONCILIATION_TOLERANCE = 0.2;
+/** Small-number floor: G5 reconciliation also passes when |google − crm| ≤ 2 (Dror, 2026-11-13). */
+export const G5_RECONCILIATION_ABS_FLOOR = 2;
 export const G7_STABILITY_DAYS = 7;
 export const G8_WEEKDAYS: ReadonlyArray<number> = [0, 1, 2]; // Sunday–Tuesday
 export const G8_START_MINUTE = 6 * 60;
@@ -55,12 +57,15 @@ export const PHASE2_LEARNING_DAYS = 14;
 
 export const R0_UPLOAD_FAILING_HOURS = 72;
 export const R0_RECONCILIATION_TOLERANCE = 0.35;
+/** Small-number floor: R0 reconciliation is fine when |google − crm| ≤ 3 (Dror, 2026-11-13). */
+export const R0_RECONCILIATION_ABS_FLOOR = 3;
 export const R1_FROM_DAY = 15;
 export const R1_CPL_MULTIPLIER = 1.3;
 export const R2_FROM_DAY = 10;
 export const R2_VOLUME_SHARE = 0.4;
 export const R2_SPEND_SHARE = 0.5;
-export const R4_LAST_DAY = 9;
+/** R4 runs from day 1 until the delayed 7-day window opens: through day `7 + D − 1`. */
+export const R4_WINDOW_OPENS_AFTER_DAYS = 7;
 export const R4_SPEND_CEILINGS = 3;
 export const R4_MIN_PREDICTED = 2;
 export const R6_FROM_DAY = 10;
@@ -79,7 +84,13 @@ export interface DateRange {
 
 export interface WindowStats {
   range: DateRange;
-  /** Google-recorded verified-lead conversions (`metrics.conversions` of the verified-lead action). */
+  /**
+   * Google-recorded verified-lead conversions. CONTRACT for A6: the standard Conversions column
+   * (`metrics.conversions` segmented by `segments.date`) for the verified-lead conversion action
+   * only, i.e. attributed to the click/interaction date — NOT `metrics.conversions_by_conversion_date`
+   * ("by conv. time") and never `all_conversions`. The CRM side is bucketed by lead creation
+   * date, which is ≈ the click date, so the two line up.
+   */
   verified: number;
   costIls?: number;
   clicks?: number;
@@ -89,6 +100,8 @@ export interface UploadOutcomeLike {
   status?: string;
   at?: string;
   attempts?: number;
+  /** First failure of the current failing streak (optional; preferred over the attempts estimate). */
+  firstFailedAt?: string;
 }
 
 /** The fields of a CRM `LeadRecord` the evaluator reads. Pass this campaign's leads only. */
@@ -216,14 +229,16 @@ function finiteOr(value: unknown, fallback: number): number {
 
 /**
  * `D = max(3, p75 of lead-to-mark lag over 60 days, capped at 10)`, from `qualityMarkedAt`
- * (task A1). Samples: leads marked GOOD/JUNK in the last 60 days with a parseable creation
- * time. Fewer than 5 samples → 10. The p75 is nearest-rank, in fractional days, rounded up.
+ * (task A1). Samples (Dror, 2026-11-13): PAID leads (click ID or google_ads channel) marked GOOD
+ * or closed in the last 60 days, with a parseable creation time. JUNK marks are excluded (they
+ * never become a Google conversion). Fewer than 5 samples → 10. The p75 is nearest-rank, in
+ * fractional days, rounded up, clamped 3–10.
  */
 export function computeDelayDays(leads: GraduationLead[], now: Date): { delayDays: number; samples: number; p75Days: number | null } {
   const nowMs = now.getTime();
   const lags: number[] = [];
   for (const lead of leads) {
-    if (!isMarked(lead)) continue;
+    if (!isPaid(lead) || !(lead.quality === 'GOOD' || isClosed(lead))) continue;
     const marked = ms(lead.qualityMarkedAt);
     const created = leadCreatedMs(lead);
     if (!Number.isFinite(marked) || !Number.isFinite(created) || marked > nowMs || nowMs - marked > DELAY_SAMPLE_WINDOW_DAYS * DAY_MS) continue;
@@ -262,12 +277,11 @@ export interface UploadHealth {
 }
 
 /**
- * Verified-lead upload health from the per-lead outcomes (step 0c). Each lead keeps only its
- * latest attempt (`at`) and an `attempts` count; retries run at most once a day, so a failing
- * lead's first failure is estimated as `at − (attempts − 1) days`.
- * `failingForHours`: time since the latest successful upload (or, with none, since the
- * earliest estimated first failure), counted only while a failed / pending upload is newer
- * than that success.
+ * Verified-lead upload health from the per-lead outcomes (step 0c).
+ * `failingForHours` (R0, Dror 2026-11-13): the clock starts at the EARLIEST failure that began
+ * AFTER the latest successful upload; null when there is none (so a success 5 days ago plus one
+ * fresh failure is ~0h, not 120h). A failure's start is `firstFailedAt` when recorded; otherwise
+ * it is estimated as `at − (attempts − 1) days` (retries run at most once a day).
  */
 export function computeUploadHealth(leads: GraduationLead[], now: Date): UploadHealth {
   const nowMs = now.getTime();
@@ -275,8 +289,7 @@ export function computeUploadHealth(leads: GraduationLead[], now: Date): UploadH
   let ok30d = 0;
   let failedLast72h = 0;
   let lastOk = -Infinity;
-  let latestFailure = -Infinity;
-  let earliestFailureStart = Infinity;
+  const failureStarts: number[] = [];
   for (const lead of leads) {
     const u = lead.verifiedUpload;
     if (!u || typeof u !== 'object') continue;
@@ -285,9 +298,9 @@ export function computeUploadHealth(leads: GraduationLead[], now: Date): UploadH
     const failing = u.status === 'failed' || u.status === 'pending_retry';
     if (u.status === 'ok') lastOk = Math.max(lastOk, at);
     if (failing) {
-      latestFailure = Math.max(latestFailure, at);
+      const recorded = ms(u.firstFailedAt);
       const attempts = Number.isInteger(u.attempts) && (u.attempts as number) > 0 ? (u.attempts as number) : 1;
-      earliestFailureStart = Math.min(earliestFailureStart, at - (attempts - 1) * DAY_MS);
+      failureStarts.push(Number.isFinite(recorded) && recorded <= at ? recorded : at - (attempts - 1) * DAY_MS);
       if (u.status === 'failed' && nowMs - at < G5_NO_FAILURE_HOURS * HOUR_MS) failedLast72h += 1;
     }
     if ((u.status === 'ok' || failing) && nowMs - at <= 30 * DAY_MS) {
@@ -295,29 +308,34 @@ export function computeUploadHealth(leads: GraduationLead[], now: Date): UploadH
       if (u.status === 'ok') ok30d += 1;
     }
   }
-  let failingForHours: number | null = null;
-  if (latestFailure > lastOk) {
-    const since = Number.isFinite(lastOk) ? lastOk : earliestFailureStart;
-    failingForHours = (nowMs - since) / HOUR_MS;
-  }
+  const afterOk = failureStarts.filter((start) => start > lastOk);
+  const failingForHours = afterOk.length ? (nowMs - Math.min(...afterOk)) / HOUR_MS : null;
   return { attempts30d, ok30d, successRate: attempts30d ? ok30d / attempts30d : null, failedLast72h, failingForHours };
 }
 
 /**
- * Google's verified count vs CRM leads marked real (GOOD, incl. closed) with a click ID created
- * in the same Israel-date range. Returns the relative difference (google − crm) / crm; 0 when
- * both are 0; Infinity when only Google has conversions.
+ * Google's verified count (see `WindowStats.verified` for the click-date contract) vs CRM leads
+ * marked real — GOOD or closed (closing sets GOOD via `withQualityMark`) — with a click ID,
+ * created in the same Israel-date range, excluding leads whose verified upload was skipped.
+ * Returns the absolute difference and the relative one, (google − crm) / crm: 0 when both are
+ * 0, Infinity when only Google has conversions.
  */
-export function reconciliationDelta(googleVerified: number, leads: GraduationLead[], range: DateRange): { crmMarkedReal: number; delta: number } {
+export function reconciliationDelta(googleVerified: number, leads: GraduationLead[], range: DateRange): { crmMarkedReal: number; diff: number; delta: number } {
   let crm = 0;
   for (const lead of leads) {
-    if (lead.quality !== 'GOOD' || !hasClickId(lead)) continue;
+    if (!(lead.quality === 'GOOD' || isClosed(lead)) || !hasClickId(lead)) continue;
+    if (typeof lead.verifiedUpload?.status === 'string' && lead.verifiedUpload.status.startsWith('skipped')) continue;
     const created = leadCreatedMs(lead);
     if (!Number.isFinite(created)) continue;
     if (inRange(israelDate(new Date(created)), range)) crm += 1;
   }
   const delta = crm === 0 ? (googleVerified === 0 ? 0 : Infinity) : (googleVerified - crm) / crm;
-  return { crmMarkedReal: crm, delta };
+  return { crmMarkedReal: crm, diff: googleVerified - crm, delta };
+}
+
+/** Within tolerance when |google − crm| ≤ `absFloor` OR |relative delta| ≤ `relative`. */
+export function reconciliationWithinTolerance(recon: { diff: number; delta: number }, absFloor: number, relative: number): boolean {
+  return Math.abs(recon.diff) <= absFloor || Math.abs(recon.delta) <= relative + 1e-12;
 }
 
 // ---- caps (G10 and rollback) ------------------------------------------------------------------
@@ -419,13 +437,13 @@ export function evaluateGraduation(input: GraduationInput): GraduationResult {
   const recon = reconciliationDelta(g2, input.leads, windows.g2);
   const g5Pass = health.successRate !== null && health.successRate >= G5_MIN_UPLOAD_SUCCESS - 1e-12
     && health.failedLast72h === 0
-    && Math.abs(recon.delta) <= G5_RECONCILIATION_TOLERANCE + 1e-12;
+    && reconciliationWithinTolerance(recon, G5_RECONCILIATION_ABS_FLOOR, G5_RECONCILIATION_TOLERANCE);
   gates.push({
     id: 'G5',
     value: health.successRate,
     threshold: G5_MIN_UPLOAD_SUCCESS,
     pass: g5Pass,
-    detail: { ...health, crmMarkedReal: recon.crmMarkedReal, reconciliationDelta: Number.isFinite(recon.delta) ? recon.delta : null },
+    detail: { ...health, crmMarkedReal: recon.crmMarkedReal, reconciliationDiff: recon.diff, reconciliationDelta: Number.isFinite(recon.delta) ? recon.delta : null },
   });
 
   // G6: 60-day cost per verified lead vs the ceiling.
@@ -525,7 +543,7 @@ export function rollbackWindows(now: Date, switchedAt: string, delayDays: number
     r2: clip(addDaysIso(end, -6), end),
     sinceSwitch: { startDate: switchDate, endDate: today, days: daysBetweenIso(switchDate, today) + 1 },
     cpc14: clip(addDaysIso(today, -14), addDaysIso(today, -1)),
-    recon30: { startDate: addDaysIso(end, -29), endDate: end, days: 30 },
+    recon60: { startDate: addDaysIso(end, -(G2_WINDOW_DAYS - 1)), endDate: end, days: G2_WINDOW_DAYS },
   };
 }
 
@@ -549,8 +567,8 @@ export interface RollbackStats {
   sinceSwitch: WindowStats;
   /** R6 click price: last 14 complete days, clipped to post-switch. `costIls` + `clicks`. */
   cpc14: WindowStats;
-  /** R0 reconciliation: 30 days ending D ago. */
-  recon30: WindowStats;
+  /** R0 reconciliation: 60 days ending D ago (same window length as G5). */
+  recon60: WindowStats;
 }
 
 export interface RollbackInput {
@@ -599,7 +617,8 @@ function latestSwitch(campaign: ReturnType<typeof campaignPhaseState>): SwitchTr
 }
 
 /**
- * Rollback monitor for a campaign in `phase2_learning` / `phase2_active`. Precedence:
+ * Rollback monitor for a campaign in `phase2_learning` / `phase2_active`. R4 runs days
+ * 1..(7 + D − 1) on raw paid leads; R2/R6 keep their D-delayed windows. Precedence:
  * R5 (hold) → R0 (freeze; never roll back on missing or broken data) → R4 → R2 → R1 → R6.
  * R3 is dropped (no target to loosen).
  */
@@ -623,7 +642,7 @@ export function evaluateRollback(input: RollbackInput): RollbackResult {
   // INPUT: must be in phase 2 with a recorded switch, and stats for the derived windows.
   const stats = input.stats;
   const mismatched = windows && stats
-    ? (['r1', 'r2', 'sinceSwitch', 'cpc14', 'recon30'] as const).filter((k) => !sameRange(stats[k]?.range, windows[k]))
+    ? (['r1', 'r2', 'sinceSwitch', 'cpc14', 'recon60'] as const).filter((k) => !sameRange(stats[k]?.range, windows[k]))
     : [];
   const inputOk = inPhase2 && Boolean(windows) && Boolean(stats) && mismatched.length === 0;
   rules.push({
@@ -644,21 +663,21 @@ export function evaluateRollback(input: RollbackInput): RollbackResult {
   const ceiling = typeof input.ceilingIls === 'number' && input.ceilingIls > 0 ? input.ceilingIls : finiteOr(sw?.ceiling, NaN);
   const phase1Cpc = finiteOr(sw?.phase1AvgCpcIls, NaN);
   const health = computeUploadHealth(input.leads, now);
-  const recon = stats && windows ? reconciliationDelta(finiteOr(stats.recon30.verified, 0), input.leads, windows.recon30) : null;
+  const recon = stats && windows ? reconciliationDelta(finiteOr(stats.recon60.verified, 0), input.leads, windows.recon60) : null;
   const missing: string[] = [];
   if (!inputOk) missing.push('input');
   if (!Number.isFinite(baselineCpl) || !Number.isFinite(baselineCount) || baselineCount <= 0) missing.push('baseline');
   if (!Number.isFinite(ceiling)) missing.push('ceiling');
   const uploadsFailing = health.failingForHours !== null && health.failingForHours >= R0_UPLOAD_FAILING_HOURS;
-  const reconOff = recon !== null && Math.abs(recon.delta) > R0_RECONCILIATION_TOLERANCE;
+  const reconOff = recon !== null && !reconciliationWithinTolerance(recon, R0_RECONCILIATION_ABS_FLOOR, R0_RECONCILIATION_TOLERANCE);
   const r0 = missing.length > 0 || uploadsFailing || reconOff;
   rules.push({
     id: 'R0',
     evaluable: true,
     fired: r0,
-    value: missing.length ? `missing:${missing.join(',')}` : uploadsFailing ? `uploads_failing_${Math.floor(health.failingForHours!)}h` : reconOff ? `reconciliation_${recon!.delta}` : 'ok',
-    threshold: `uploads failing < ${R0_UPLOAD_FAILING_HOURS}h, reconciliation within ±${R0_RECONCILIATION_TOLERANCE * 100}%`,
-    detail: { ...health, reconciliationDelta: recon && Number.isFinite(recon.delta) ? recon.delta : null, crmMarkedReal: recon?.crmMarkedReal ?? null },
+    value: missing.length ? `missing:${missing.join(',')}` : uploadsFailing ? `uploads_failing_${Math.floor(health.failingForHours!)}h` : reconOff ? `reconciliation_${recon!.diff}` : 'ok',
+    threshold: `uploads failing < ${R0_UPLOAD_FAILING_HOURS}h, reconciliation within ±${R0_RECONCILIATION_ABS_FLOOR} or ±${R0_RECONCILIATION_TOLERANCE * 100}%`,
+    detail: { ...health, reconciliationDiff: recon?.diff ?? null, reconciliationDelta: recon && Number.isFinite(recon.delta) ? recon.delta : null, crmMarkedReal: recon?.crmMarkedReal ?? null },
   });
   if (r0) return { action: 'freeze', firedRule: 'R0', rules, dayIndex, alert: true, nextPhase: null, windows, ...base };
 
@@ -667,13 +686,19 @@ export function evaluateRollback(input: RollbackInput): RollbackResult {
   const day = w.dayIndex;
   const baselineDaily = baselineCount / baselineWindowDays;
 
-  // R4: days 1–9 emergency.
-  const r4Evaluable = day >= 1 && day <= R4_LAST_DAY;
+  // R4: emergency from day 1 until the delayed 7-day window opens (through day 7 + D − 1).
+  // Counts RAW paid leads since the switch (marked or not), so slow marking can't trigger it.
+  const r4LastDay = R4_WINDOW_OPENS_AFTER_DAYS + delay.delayDays - 1;
+  const r4Evaluable = day >= 1 && day <= r4LastDay;
   const spendSince = finiteOr(s.sinceSwitch.costIls, 0);
-  const verifiedSince = finiteOr(s.sinceSwitch.verified, 0);
+  const switchMs = ms(sw!.at);
+  const rawPaidLeadsSince = input.leads.filter((l) => {
+    const created = leadCreatedMs(l);
+    return isPaid(l) && Number.isFinite(created) && created >= switchMs && created <= now.getTime();
+  }).length;
   const predicted = baselineDaily * day;
-  const r4 = r4Evaluable && spendSince >= R4_SPEND_CEILINGS * ceiling && verifiedSince === 0 && predicted >= R4_MIN_PREDICTED;
-  rules.push({ id: 'R4', evaluable: r4Evaluable, fired: r4, value: spendSince, threshold: R4_SPEND_CEILINGS * ceiling, detail: { verifiedSince, predicted } });
+  const r4 = r4Evaluable && spendSince >= R4_SPEND_CEILINGS * ceiling && rawPaidLeadsSince === 0 && predicted >= R4_MIN_PREDICTED;
+  rules.push({ id: 'R4', evaluable: r4Evaluable, fired: r4, value: spendSince, threshold: R4_SPEND_CEILINGS * ceiling, detail: { rawPaidLeadsSince, predicted, lastDay: r4LastDay } });
 
   // R2: from day 10, 7-day volume collapse with real spend.
   const budget = typeof input.dailyBudgetIls === 'number' && input.dailyBudgetIls > 0 ? input.dailyBudgetIls : null;

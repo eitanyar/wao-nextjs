@@ -12,11 +12,14 @@ import {
   graduationWindows,
   isInPhase2Freeze,
   n4BudgetIls,
+  reconciliationDelta,
+  reconciliationWithinTolerance,
   rollbackWindows,
   type GraduationInput,
   type GraduationLead,
   type RollbackInput,
 } from './bidding-graduation';
+import { withQualityMark } from '../crm/clientLeadsActions.js';
 import { campaignPhaseState, readPhase, recordGoalChange, recordTransition, biddingPhasePath, evaluateSignalIntegritySoak } from './bidding-phase-state.js';
 
 const DAY = 86_400_000;
@@ -227,13 +230,23 @@ test('A3 D: floor 3, cap 10, p75 nearest-rank, and 10 with fewer than 5 samples'
   const now = SUNDAY_0700;
   const marked = (lags: number[]) => lags.map((lag, i) => {
     const created = new Date(now.getTime() - (30 + i) * DAY);
-    return { id: i, date: leadDate(created), quality: i % 2 ? 'JUNK' : 'GOOD', qualityMarkedAt: iso(new Date(created.getTime() + lag * DAY)) };
+    return { id: i, date: leadDate(created), quality: 'GOOD', gclid: `d-${i}`, qualityMarkedAt: iso(new Date(created.getTime() + lag * DAY)) };
   });
   assert.equal(computeDelayDays(marked([1, 1, 1, 1, 1]), now).delayDays, 3);
   assert.equal(computeDelayDays(marked([20, 20, 20, 20, 25]), now).delayDays, 10);
   assert.equal(computeDelayDays(marked([1, 1, 1, 1]), now).delayDays, 10);
   assert.equal(computeDelayDays(marked([1, 2, 5, 6, 7]), now).delayDays, 6);
   assert.equal(computeDelayDays([], now).delayDays, 10);
+  // Dror 2026-11-13: only GOOD / closed marks on PAID leads are samples; JUNK and unpaid excluded.
+  const junk = marked([1, 1, 1, 1, 1]).map((l) => ({ ...l, quality: 'JUNK' }));
+  assert.equal(computeDelayDays(junk, now).samples, 0);
+  const unpaid = marked([1, 1, 1, 1, 1]).map((l) => ({ ...l, gclid: undefined }));
+  assert.equal(computeDelayDays(unpaid, now).samples, 0);
+  const channelOnly = marked([1, 1, 1, 1, 1]).map((l) => ({ ...l, gclid: undefined, acquisitionChannel: 'google_ads' }));
+  assert.equal(computeDelayDays(channelOnly, now).samples, 5);
+  const closedLegacy = marked([1, 1, 1, 1, 1]).map((l) => ({ ...l, quality: 'PENDING', closed: true }));
+  assert.equal(computeDelayDays(closedLegacy, now).samples, 5, 'closed-job marks count');
+  assert.equal(computeDelayDays([...marked([1, 1, 1, 1, 1]), ...marked([9, 9, 9, 9, 9, 9, 9, 9]).map((l) => ({ ...l, quality: 'JUNK' }))], now).delayDays, 3, 'slow JUNK marks do not raise D');
   // Unmarked leads and marks older than 60 days are not samples.
   const old = marked([1, 1, 1, 1, 1]).map((l) => ({ ...l, qualityMarkedAt: iso(new Date(now.getTime() - 61 * DAY)) }));
   assert.equal(computeDelayDays(old, now).samples, 0);
@@ -289,31 +302,35 @@ function phase2State(extra: Record<string, unknown> = {}) {
   };
 }
 
-/** Five JUNK marks with a 1-day lag → D = 3, and nothing in the reconciliation count. */
-function delayLeads(now: Date): GraduationLead[] {
+/** Five GOOD paid leads from before the switch, marked after 1 day → D = 3; 5 in the CRM recon count. */
+function delayLeads(): GraduationLead[] {
   return Array.from({ length: 5 }, (_, i) => {
-    const created = new Date(now.getTime() - (8 + i) * DAY);
-    return { id: 300 + i, date: leadDate(created), quality: 'JUNK', qualityMarkedAt: iso(new Date(created.getTime() + DAY)) };
+    const created = new Date(SWITCH_AT.getTime() - (2 + i) * DAY);
+    return { id: 300 + i, date: leadDate(created), quality: 'GOOD', gclid: `p-${i}`, qualityMarkedAt: iso(new Date(created.getTime() + DAY)) };
   });
 }
 
-function rollbackInput(day: number, s: Partial<Record<'r1' | 'r2' | 'sinceSwitch' | 'cpc14' | 'recon30', Record<string, number>>> = {}, overrides: Partial<RollbackInput> = {}): RollbackInput {
+type RollbackKey = 'r1' | 'r2' | 'sinceSwitch' | 'cpc14' | 'recon60';
+function rollbackInput(day: number, s: Partial<Record<RollbackKey, Record<string, number>>> = {}, overrides: Partial<RollbackInput> = {}): RollbackInput {
   const now = new Date(SWITCH_AT.getTime() + day * DAY);
-  const w = rollbackWindows(now, iso(SWITCH_AT), 3);
-  const stat = (k: 'r1' | 'r2' | 'sinceSwitch' | 'cpc14' | 'recon30', defaults: Record<string, number>) => ({ range: { startDate: w[k].startDate, endDate: w[k].endDate }, verified: 0, ...defaults, ...(s[k] ?? {}) });
+  const leads = overrides.leads ?? delayLeads();
+  const w = rollbackWindows(now, iso(SWITCH_AT), computeDelayDays(leads, now).delayDays);
+  const stat = (k: RollbackKey, defaults: Record<string, number>) => ({ range: { startDate: w[k].startDate, endDate: w[k].endDate }, verified: 0, ...defaults, ...(s[k] ?? {}) });
+  // By default Google's recon count equals the CRM count (a clean reconciliation).
+  const crm = reconciliationDelta(0, leads, w.recon60).crmMarkedReal;
   return {
     now,
     campaignId: CAMPAIGN,
     state: phase2State(),
     policy: { mode: 'autonomous', killSwitch: false },
-    leads: delayLeads(now),
+    leads,
     dailyBudgetIls: 50,
     stats: {
       r1: stat('r1', { verified: 6, costIls: 600 }),
       r2: stat('r2', { verified: 3, costIls: 300 }),
-      sinceSwitch: stat('sinceSwitch', { verified: 4, costIls: 500 }),
+      sinceSwitch: stat('sinceSwitch', { verified: 4, costIls: 300 }),
       cpc14: stat('cpc14', { verified: 0, costIls: 300, clicks: 100 }),
-      recon30: stat('recon30', { verified: 0 }),
+      recon60: stat('recon60', { verified: crm }),
     },
     ...overrides,
   };
@@ -354,14 +371,38 @@ test('A4 R2: day 9 does not evaluate, day 10 rolls back on collapse with real sp
   assert.equal(evaluateRollback(rollbackInput(10, { r2: { verified: 1, costIls: 170 } })).action, 'none');
 });
 
-test('A4 R4: days 1–9, 3 × ceiling spent with zero verified while the baseline predicted ≥ 2', () => {
+test('A4 R4: 3 × ceiling spent with zero raw paid leads since the switch while the baseline predicted ≥ 2', () => {
   const emergency = { sinceSwitch: { verified: 0, costIls: 450 } };
   const d5 = evaluateRollback(rollbackInput(5, emergency));
   assert.equal(d5.action, 'rollback');
   assert.equal(d5.firedRule, 'R4');
   assert.equal(evaluateRollback(rollbackInput(3, emergency)).action, 'none', 'baseline predicted 1.5 < 2');
   assert.equal(evaluateRollback(rollbackInput(5, { sinceSwitch: { verified: 0, costIls: 449 } })).action, 'none');
-  assert.equal(evaluateRollback(rollbackInput(5, { sinceSwitch: { verified: 1, costIls: 900 } })).action, 'none');
+  // With D = 3, R4 runs through day 7 + 3 − 1 = 9.
+  assert.equal(evaluateRollback(rollbackInput(9, emergency)).firedRule, 'R4');
+  assert.equal(evaluateRollback(rollbackInput(10, emergency)).rules.find((x) => x.id === 'R4')!.evaluable, false);
+});
+
+test('A4 R4 (Dror 2026-11-13): with D = 10 it stays active through day 16, then hands over to R2', () => {
+  const emergency = { sinceSwitch: { verified: 0, costIls: 450 } };
+  const d16 = evaluateRollback(rollbackInput(16, emergency, { leads: [] }));
+  assert.equal(d16.delayDays, 10);
+  assert.equal(d16.firedRule, 'R4');
+  const d17 = evaluateRollback(rollbackInput(17, emergency, { leads: [] }));
+  assert.equal(d17.rules.find((x) => x.id === 'R4')!.evaluable, false);
+  assert.equal(d17.rules.find((x) => x.id === 'R2')!.evaluable, true, 'the delayed 7-day window is open');
+  assert.equal(d17.action, 'none');
+});
+
+test('A4 R4 (Dror 2026-11-13): slow marking with raw paid leads present → no rollback', () => {
+  const emergency = { sinceSwitch: { verified: 0, costIls: 900 } };
+  const unmarked: GraduationLead = { id: 700, date: leadDate(new Date(SWITCH_AT.getTime() + 2 * DAY)), quality: 'PENDING', gclid: 'raw-1' };
+  const r = evaluateRollback(rollbackInput(5, emergency, { leads: [...delayLeads(), unmarked] }));
+  assert.equal(r.action, 'none');
+  assert.equal(r.rules.find((x) => x.id === 'R4')!.detail!.rawPaidLeadsSince, 1);
+  // A lead from before the switch does not count as a post-switch lead.
+  const before: GraduationLead = { ...unmarked, date: leadDate(new Date(SWITCH_AT.getTime() - HOUR)) };
+  assert.equal(evaluateRollback(rollbackInput(5, emergency, { leads: [...delayLeads(), before] })).firedRule, 'R4');
 });
 
 test('A4 R6: needs both click price above 2× phase 1 and verified below the baseline rate', () => {
@@ -377,11 +418,15 @@ test('A4 R0: never rolls back on missing or broken data, even when R4 would fire
   const emergency = { sinceSwitch: { verified: 0, costIls: 900 } };
   const now = new Date(SWITCH_AT.getTime() + 5 * DAY);
   const failing: GraduationLead = { id: 900, gclid: 'g', verifiedUpload: { status: 'failed', at: iso(new Date(now.getTime() - HOUR)), attempts: 4 } };
-  const r = evaluateRollback(rollbackInput(5, emergency, { leads: [...delayLeads(now), failing] }));
+  const r = evaluateRollback(rollbackInput(5, emergency, { leads: [...delayLeads(), failing] }));
   assert.equal(r.action, 'freeze');
   assert.equal(r.firedRule, 'R0');
   assert.equal(r.alert, true);
-  assert.equal(evaluateRollback(rollbackInput(5, { ...emergency, recon30: { verified: 5 } })).action, 'freeze', 'reconciliation off');
+  // CRM count is 5: Google 9 (diff 4, +80%) freezes; Google 8 (diff 3) is inside the small-number floor.
+  assert.equal(evaluateRollback(rollbackInput(5, { ...emergency, recon60: { verified: 9 } })).action, 'freeze', 'reconciliation off');
+  assert.equal(evaluateRollback(rollbackInput(5, { recon60: { verified: 8 } })).action, 'none', '|diff| ≤ 3 passes');
+  assert.equal(evaluateRollback(rollbackInput(5, { recon60: { verified: 2 } })).action, 'none', '|diff| = 3 below passes');
+  assert.equal(evaluateRollback(rollbackInput(5, { recon60: { verified: 1 } })).action, 'freeze', '|diff| = 4 below, −80% freezes');
   assert.equal(evaluateRollback(rollbackInput(5, emergency, { stats: null })).action, 'freeze', 'no stats');
   const noBaseline = phase2State();
   (noBaseline.campaigns[CAMPAIGN].transitions[0] as { baseline: unknown }).baseline = null;
@@ -487,4 +532,57 @@ test('A4 state machine: bad input and an unwritable directory fail without leavi
   } finally {
     fs.rmSync(baseDir, { recursive: true, force: true });
   }
+});
+
+test('A4 R0 (Dror 2026-11-13): the 72h clock starts at the earliest failure after the last success', () => {
+  const now = new Date(SWITCH_AT.getTime() + 5 * DAY);
+  const ok5d: GraduationLead = { id: 910, verifiedUpload: { status: 'ok', at: iso(new Date(now.getTime() - 5 * DAY)), attempts: 1 } };
+  const fresh: GraduationLead = { id: 911, verifiedUpload: { status: 'failed', at: iso(new Date(now.getTime() - HOUR)), attempts: 1 } };
+  const r = evaluateRollback(rollbackInput(5, {}, { leads: [...delayLeads(), ok5d, fresh] }));
+  assert.equal(r.action, 'none', 'success 5 days ago + one fresh failure → no freeze');
+  assert.ok((r.rules.find((x) => x.id === 'R0')!.detail!.failingForHours as number) < 2);
+  // firstFailedAt is preferred over the attempts estimate.
+  const recorded80h: GraduationLead = { id: 912, verifiedUpload: { status: 'failed', at: iso(new Date(now.getTime() - HOUR)), attempts: 1, firstFailedAt: iso(new Date(now.getTime() - 80 * HOUR)) } };
+  assert.equal(evaluateRollback(rollbackInput(5, {}, { leads: [...delayLeads(), ok5d, recorded80h] })).action, 'freeze');
+  const recorded10h: GraduationLead = { id: 913, verifiedUpload: { status: 'failed', at: iso(new Date(now.getTime() - HOUR)), attempts: 5, firstFailedAt: iso(new Date(now.getTime() - 10 * HOUR)) } };
+  assert.equal(evaluateRollback(rollbackInput(5, {}, { leads: [...delayLeads(), recorded10h] })).action, 'none', 'attempts estimate (97h) ignored when firstFailedAt is set');
+  // A failure that began before the latest success does not start the clock.
+  const okRecent: GraduationLead = { id: 914, verifiedUpload: { status: 'ok', at: iso(new Date(now.getTime() - 2 * HOUR)), attempts: 1 } };
+  const oldStreak: GraduationLead = { id: 915, verifiedUpload: { status: 'failed', at: iso(new Date(now.getTime() - HOUR)), attempts: 1, firstFailedAt: iso(new Date(now.getTime() - 100 * HOUR)) } };
+  assert.equal(evaluateRollback(rollbackInput(5, {}, { leads: [...delayLeads(), okRecent, oldStreak] })).action, 'none');
+});
+
+test('A3/A4 reconciliation (Dror 2026-11-13): GOOD + closed with click ID, skipped excluded, small-number floor', () => {
+  const range = { startDate: '2027-01-01', endDate: '2027-01-31' };
+  const base = { date: '2027-01-10 08:00', gclid: 'g' };
+  // A close goes through withQualityMark, which keeps the lead GOOD.
+  const closedLead = { ...withQualityMark({ id: 1, ...base, quality: 'PENDING' }, 'GOOD', '2027-01-12T08:00:00.000Z'), closed: true, closedAt: '2027-01-12T08:00:00.000Z' };
+  assert.equal(closedLead.quality, 'GOOD');
+  const leads: GraduationLead[] = [
+    closedLead,
+    { id: 2, ...base, quality: 'GOOD' },
+    { id: 3, ...base, quality: 'PENDING', closed: true },
+    { id: 4, ...base, quality: 'GOOD', verifiedUpload: { status: 'skipped_no_click_id', at: '2027-01-10T09:00:00.000Z', attempts: 1 } },
+    { id: 5, ...base, quality: 'JUNK' },
+    { id: 6, date: base.date, quality: 'GOOD' },
+    { id: 7, ...base, date: '2027-02-01 08:00', quality: 'GOOD' },
+  ];
+  assert.deepEqual(reconciliationDelta(3, leads, range), { crmMarkedReal: 3, diff: 0, delta: 0 });
+  // G5: |diff| ≤ 2 OR ±20%.
+  assert.equal(reconciliationWithinTolerance(reconciliationDelta(5, leads, range), 2, 0.2), true, '+2 at 67% passes the floor');
+  assert.equal(reconciliationWithinTolerance(reconciliationDelta(6, leads, range), 2, 0.2), false);
+  assert.equal(reconciliationWithinTolerance({ diff: 4, delta: 0.2 }, 2, 0.2), true, '±20% still passes above the floor');
+  // R0: |diff| ≤ 3 OR ±35%.
+  assert.equal(reconciliationWithinTolerance(reconciliationDelta(6, leads, range), 3, 0.35), true);
+  assert.equal(reconciliationWithinTolerance(reconciliationDelta(7, leads, range), 3, 0.35), false);
+  assert.equal(reconciliationWithinTolerance(reconciliationDelta(2, [], range), 3, 0.35), true, 'only Google, but within 3');
+});
+
+test('A3 G5: the evaluator counts closed jobs on the CRM side', () => {
+  const input = passingInput();
+  // Two of the 16 GOOD leads are already closed; Google 16 = CRM 16 passes. Re-marking a closed
+  // lead's quality to a legacy value keeps it counted because it is closed.
+  const legacy = input.leads.map((l, i) => (i === 0 ? { ...l, quality: 'PENDING' } : l));
+  const r = evaluateGraduation({ ...input, leads: legacy });
+  assert.equal(r.gates.find((g) => g.id === 'G5')!.detail!.crmMarkedReal, 16);
 });
