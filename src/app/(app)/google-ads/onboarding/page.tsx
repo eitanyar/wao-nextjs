@@ -85,7 +85,7 @@ export default function OnboardingPage() {
   const [messages, setMessages] = useState<Message[]>([
     {
       role: "assistant",
-      content: "היי, אני אדם, מנהל הקמפיינים שלך בגוגל אדס ב-WAO. לפני שנדבר על העסק, בוא נבין איך השירות שלך מתבצע בפועל.",
+      content: "היי, אני אדם, מנהל הקמפיינים שלך ב־WAO. שאלה ראשונה, לפני הכול: איך אתה נותן את השירות?",
     },
   ]);
   const [inputValue, setInputValue] = useState("");
@@ -315,7 +315,7 @@ export default function OnboardingPage() {
     } catch {
       setMessages((prev) => [
         ...prev,
-        { role: "assistant", content: "אוי, נראה שיש לנו תקלת תקשורת קלה. בוא ננסה שוב!" },
+        { role: "assistant", content: "משהו נתקע בדרך, וההודעה לא עברה. שלח אותה שוב." },
       ]);
     } finally {
       setIsSubmitting(false);
@@ -556,7 +556,7 @@ export default function OnboardingPage() {
               color: "var(--muted)",
               lineHeight: 1.6,
             }}>
-              נכון לעכשיו, ההרשמה והתשלום המקוונים אינם זמינים. שום חיוב לא מתבצע. תוכל להמשיך לצפות בהדגמה.
+              ההרשמה והתשלום באתר עוד לא פתוחים, ולכן שום חיוב לא יורד. בינתיים אפשר להמשיך בהדגמה.
             </div>
           </div>
         </div>
@@ -612,7 +612,7 @@ export default function OnboardingPage() {
                   א
                 </div>
                 <div>
-                  <div style={{ fontWeight: 700, fontSize: "1rem" }}>אדם - יועץ Google Ads</div>
+                  <div style={{ fontWeight: 700, fontSize: "1rem" }}>אדם — מנהל הקמפיינים שלך</div>
                   <div style={{ fontSize: "0.75rem", color: "var(--accent)" }}>מחובר ומקשיב</div>
                 </div>
               </div>
@@ -827,7 +827,7 @@ export default function OnboardingPage() {
             {/* Status Steps Tracker */}
             <div style={{ ...glass, padding: "20px 24px" }}>
               <h3 style={{ fontSize: "1.05rem", fontWeight: 700, marginBottom: "16px" }}>
-                שלבי אפיון הקמפיין
+                מה אספנו עד עכשיו
               </h3>
               <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
                 {[
@@ -840,19 +840,19 @@ export default function OnboardingPage() {
                     num: 1,
                   },
                   {
-                    label: "מיקום ומודל שירות",
+                    label: "אזור ואופן השירות",
                     done: !!collectedData.targetLocation,
                     value: collectedData.targetLocation,
                     num: 2,
                   },
                   {
-                    label: "פרופיל לקוח ובידול",
+                    label: "הלקוחות שלך ומה מייחד אותך",
                     done: !!collectedData.usp,
                     value: collectedData.usp ? collectedData.usp.slice(0, 40) + (collectedData.usp.length > 40 ? "…" : "") : undefined,
                     num: 3,
                   },
                   {
-                    label: "תקציב ופיננסים",
+                    label: "תקציב ומספרים",
                     done: !!collectedData.monthlyBudget,
                     value: collectedData.monthlyBudget
                       ? `₪${collectedData.monthlyBudget.toLocaleString()} / חודש${collectedData.feasibilityBranch ? ` (ענף ${collectedData.feasibilityBranch})` : ""}`
@@ -860,7 +860,7 @@ export default function OnboardingPage() {
                     num: 4,
                   },
                   {
-                    label: "נכסי אמון",
+                    label: "ביקורות והוכחות",
                     done: !!collectedData.hasTrustAssets,
                     value: collectedData.starRating ? `${collectedData.starRating} כוכבים בגוגל` : collectedData.hasTrustAssets ? "יש ביקורות" : undefined,
                     num: 5,
@@ -908,7 +908,7 @@ export default function OnboardingPage() {
             {/* Campaign Plan Details Panel */}
             <div style={{ ...glass, padding: "24px", flex: 1, display: "flex", flexDirection: "column", gap: "20px" }}>
               <h3 style={{ fontSize: "1.15rem", fontWeight: 700, borderBottom: "1px solid var(--border)", paddingBottom: "12px" }}>
-                אסטרטגיית הקמפיין שלך
+                תוכנית הקמפיין שלך
               </h3>
 
               {budgetRecommendation && (
@@ -941,10 +941,10 @@ export default function OnboardingPage() {
                 >
                   <div style={{ fontSize: "2.5rem", marginBottom: "16px" }}>⚙️</div>
                   <p style={{ fontWeight: 600, color: "var(--text)", marginBottom: "8px" }}>
-                    ממתין להשלמת האפיון בצ׳אט
+                    התוכנית מחכה לתשובות שלך בצ׳אט
                   </p>
                   <p style={{ fontSize: "0.85rem", maxWidth: "260px" }}>
-                    ברגע שנאסוף את כל הפרטים, המערכת תבנה עבורך את הקמפיין באופן מיידי.
+                    כשנסיים את השאלות, התוכנית שלך תופיע כאן: אזור, תקציב, מילות חיפוש ומודעה.
                   </p>
                 </div>
               )}
@@ -965,7 +965,7 @@ export default function OnboardingPage() {
                   >
                     <div>
                       <div style={{ fontSize: "0.8rem", color: "var(--muted)", marginBottom: "4px" }}>
-                        מיקוד מיקום
+                        אזור הפרסום
                       </div>
                       <div style={{ fontWeight: 700, fontSize: "0.95rem", color: "var(--accent)" }}>
                         📍 {strategy?.targetLocation}
@@ -984,7 +984,7 @@ export default function OnboardingPage() {
                   {/* Keywords Block */}
                   <div>
                     <h4 style={{ fontSize: "0.9rem", fontWeight: 700, marginBottom: "8px" }}>
-                      🎯 מילות מפתח ממוקדות
+                      החיפושים שהמודעה שלך תופיע בהם
                     </h4>
                     <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
                       {strategy?.keywords.map((kw, idx) => (
@@ -1008,7 +1008,7 @@ export default function OnboardingPage() {
                   {/* Negative Keywords Block */}
                   <div>
                     <h4 style={{ fontSize: "0.9rem", fontWeight: 700, marginBottom: "8px", color: "#FF5E5E" }}>
-                      🚫 מילות מפתח שליליות (למניעת בזבוז כסף)
+                      מילים חסומות: חיפושים שלא תשלם עליהם
                     </h4>
                     <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
                       {strategy?.negativeKeywords.map((nkw, idx) => (
@@ -1032,7 +1032,7 @@ export default function OnboardingPage() {
                   {/* Ad Live Preview */}
                   <div>
                     <h4 style={{ fontSize: "0.9rem", fontWeight: 700, marginBottom: "8px" }}>
-                      👀 תצוגה מקדימה למודעה בגוגל (Google Search)
+                      ככה המודעה שלך תיראה בגוגל
                     </h4>
                     <div
                       style={{

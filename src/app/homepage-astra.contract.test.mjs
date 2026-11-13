@@ -18,12 +18,12 @@ const headerPath = "src/components/Header.tsx";
 const footerPath = "src/components/Footer.tsx";
 const cssPath = "src/app/globals.css";
 // 2026-11-11: human rewrite (FAQ answers + footer blurb), docs/copy/homepage-human-rewrite-2026-11-11.json.
-const expectedHash = "e013e6624e78cea2e7f47172718adf5899fc8b8b0160618cbd3ff1c17b6b2a4b";
+const expectedHash = "c15c7e7ce0e46959864776ad873e39651e898e1f79bcb066a0dee4a0e0702a40"; // re-pinned 2026-11-13: approved copy polish (Eitan, Noa-gated; docs/copy/copy-polish-approved-2026-11-13.json)
 const finalSourcePath = "docs/copy/astra-authority-first-homepage-copy.qwen38-v3-2026-09-30.json";
 const finalContentPath = "src/content/astra-authority-first-homepage-copy.json";
 // 2026-11-11: Site-Bot path CTA -> free audit (docs/copy/homepage-sitebot-audit-cta-2026-11-11.json, Noa-approved).
 // 2026-11-11: human rewrite, 15 patches (docs/copy/homepage-human-rewrite-2026-11-11.json, Eitan-approved).
-const finalHash = "96f68ff35275f9b7a3dbfbd48c08ce48aa7c2815d33ef6971c22bfdb1721660a";
+const finalHash = "5c2be25f77dc8088d391198bb7b7432ba708a020e204d7d1d17d4d1b7ddc3da6"; // re-pinned 2026-11-13: approved copy polish
 const finalBytes = read(finalSourcePath);
 const finalCopy = JSON.parse(finalBytes.toString("utf8"));
 

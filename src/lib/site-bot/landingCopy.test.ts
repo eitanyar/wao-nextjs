@@ -98,6 +98,32 @@ test('google-ads: the clicks-to-real-leads change set (2026-11-12 FINAL, Noa + Y
     patches: { file: string; old: string; new: string }[];
   }).patches;
   assert.equal(moment3.length, 2);
+  // Later approved patch set (Eitan 2026-11-13, Noa-gated): the anti-slop copy polish, applied
+  // on top in recorded order. Keyed patches replace their field's value; the rest are
+  // substring patches inside a line. The polish reverses moment 3's "designed" wording on purpose.
+  const polishRecord = JSON.parse(read('docs/copy/copy-polish-approved-2026-11-13.json')) as {
+    approval: string;
+    patches: { file: string; field: string | null; old: string; new: string; oldValue?: string; newValue?: string }[];
+  };
+  assert.equal(polishRecord.approval, 'Eitan 2026-11-13, Noa-gated');
+  const polish = polishRecord.patches.filter((p) => p.file === 'docs/copy/google-ads-r2-final-candidate-2026-11-12.txt');
+  const used = new Set<number>();
+  const applyPolish = (key: string, value: string) => {
+    let out = value;
+    polish.forEach((p, i) => {
+      if (p.field !== null) {
+        if (p.field === key) {
+          assert.equal(out, p.oldValue, `${key}: polish patch old matches the earlier approved line`);
+          out = p.newValue!;
+          used.add(i);
+        }
+      } else if (out.includes(p.old)) {
+        out = out.replace(p.old, p.new);
+        used.add(i);
+      }
+    });
+    return out;
+  };
   for (const [key, value] of Object.entries(final.lines)) {
     let expected = value.includes(line27.old) ? value.split(line27.old).join(line27.new) : value;
     for (const p of moment3) {
@@ -106,9 +132,13 @@ test('google-ads: the clicks-to-real-leads change set (2026-11-12 FINAL, Noa + Y
         expected = p.new;
       }
     }
+    expected = applyPolish(key, expected);
     assert.equal(fields.get(key), expected, key);
   }
-  assert.deepEqual([...GOOGLE_ADS_LANDING_COPY.phases.items], final['phases.items']);
+  assert.deepEqual([...GOOGLE_ADS_LANDING_COPY.phases.items], final['phases.items'].map((item, i) => applyPolish(`phases.items[${i}]`, item)));
+  // Every polish patch on a FINAL-pinned line was consumed (none silently skipped).
+  const pinned = new Set([...Object.keys(final.lines), ...final['phases.items'].map((_, i) => `phases.items[${i}]`)]);
+  for (const [i, p] of polish.entries()) if (p.field !== null && pinned.has(p.field)) assert.ok(used.has(i), `polish patch on ${p.field} applied`);
   // The retired "tCPA after 15-30 conversions" claim is gone from the copy, the page and the chat bot.
   assert.ok(!JSON.stringify(GOOGLE_ADS_LANDING_COPY).includes('15\u201330'));
   assert.ok(!read('src/app/(app)/google-ads/page.tsx').includes('15\u201330'));

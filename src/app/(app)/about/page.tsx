@@ -57,12 +57,12 @@ const schemas = [
 ];
 
 const VALUES = [
-  { n: "01", icon: "🎯", title: "פשטות — 20% שמביאים 80%", desc: "לא משקיעים בקישוטים וכל המסביב. תמיד מתמקדים ב-20% מהעבודה שמביאים 80% מהתוצאות.", tags: ["Focus", "80/20", "ROI"] },
-  { n: "02", icon: "📊", title: "תוצאות מדידות בכל רגע", desc: "שיווק דיגיטלי = נתונים. בכל רגע ניתן לחשב כמה שווה לך כל שקל שיווקי. שקיפות מלאה.", tags: ["Data", "Analytics", "Transparency"] },
-  { n: "03", icon: "📚", title: "ללמוד ולהשתכלל תמיד", desc: "משקיעים הרבה בלמידה מתמדת — כולל AI, כלים חדשים ושינויי גוגל — כדי שתהיו צעד לפני המתחרים.", tags: ["Learning", "AI", "Innovation"] },
-  { n: "04", icon: "🧪", title: "להתנסות בעצמנו קודם", desc: "כל פיצ'ר, כלי AI או טכנולוגיה — מנסים על עצמנו לפני שמציעים ללקוחות. רק מה שעובד מגיע לשולחן.", tags: ["Testing", "Validation", "Integrity"] },
-  { n: "05", icon: "🤝", title: "לחשוב יחד — כל הצוות", desc: "איתן הוא יועץ שיווק מנוסה, אבל לא רק. כל הצוות שותף בחשיבה אסטרטגית על האתגרים שלך.", tags: ["Teamwork", "Strategy", "Collaboration"] },
-  { n: "06", icon: "🛡️", title: "לשמור עליך מפני מתחרים", desc: "פרסום בגוגל, SEO ושיווק יכולים להיות מנוצלים ע\"י מתחרים כדי לפגוע בך. אנחנו תמיד לצידך.", tags: ["Protection", "Loyalty", "Vigilance"] },
+  { n: "01", icon: "🎯", title: "פשטות — 20% שמביאים 80%", desc: "הכסף שלך הולך למה שמביא פניות, לא לקישוטים. קודם עושים את ה-20% שמביאים 80% מהתוצאות, ורק אחר כך את השאר.", tags: ["Focus", "80/20", "ROI"] },
+  { n: "02", icon: "📊", title: "תוצאות מדידות בכל רגע", desc: "אתה יודע כמה פניות קיבלת וכמה עלתה לך כל אחת. אם שקל לא מחזיר את עצמו, רואים את זה מהר ומזיזים אותו למקום אחר.", tags: ["Data", "Analytics", "Transparency"] },
+  { n: "03", icon: "📚", title: "ללמוד ולהשתכלל תמיד", desc: "גוגל משנה את הכללים כל כמה חודשים, ו-AI משנה אותם עוד יותר מהר. אנחנו לומדים כל שינוי כזה, כדי שאתה תהיה צעד לפני המתחרים בלי לקרוא על זה מילה.", tags: ["Learning", "AI", "Innovation"] },
+  { n: "04", icon: "🧪", title: "קודם מנסים על עצמנו", desc: "כל כלי חדש אנחנו מנסים קודם על העסק שלנו ועל הכסף שלנו. אליך מגיע רק מה שהוכיח את עצמו.", tags: ["Testing", "Validation", "Integrity"] },
+  { n: "05", icon: "🤝", title: "לחשוב יחד — כל הצוות", desc: "על העסק שלך לא חושב רק איתן. כל מי שנוגע בקמפיין או באתר שלך מחפש את אותו דבר, את הפנייה הבאה שלך.", tags: ["Teamwork", "Strategy", "Collaboration"] },
+  { n: "06", icon: "🛡️", title: "לשמור עליך מפני מתחרים", desc: "מתחרים יודעים להקליק על המודעות שלך כדי לשרוף לך את התקציב. אנחנו מזהים הקלקות כאלה וחוסמים אותן, כדי שהכסף שלך ילך על לקוחות אמיתיים.", tags: ["Protection", "Loyalty", "Vigilance"] },
 ];
 
 const STATS = [
@@ -75,9 +75,9 @@ const STATS = [
 const TEAM = [
   {
     name: "איתן יריב",
-    role: "מייסד ומנכ\"ל WAO",
+    role: "מייסד ומנכ״ל WAO",
     initials: "א.י",
-    bio: "עשרים שנות ניסיון. כבר בשנה הראשונה קידם בגוגל את בנק לאומי, דפי זהב (היום זאפ) ופורטלים בחו\"ל. מאות לקוחות, תקציבי פרסום בסדרי גודל של מיליונים. היום, מעדיף לעזור דווקא לאלו שיש להם הרבה מאוד לאן לגדול.",
+    bio: "בשיווק דיגיטלי מאז 2006. כבר בשנה הראשונה קידם בגוגל את בנק לאומי, דפי זהב (היום זאפ) ופורטלים בחו״ל. מאז עבד עם מאות לקוחות וניהל תקציבי פרסום של מיליונים. היום הוא מעדיף לעבוד דווקא עם עסקים קטנים, אלה שיש להם הכי הרבה לאן לגדול.",
 
     linkedin: "https://www.linkedin.com/in/eitanyariv/",
   },
@@ -85,14 +85,14 @@ const TEAM = [
     name: "דינה יריב שטיינברג",
     role: "אחראית קשרי לקוחות ושותפה",
     initials: "ד.י",
-    bio: "מעל 8 שנות ניסיון במדיה ושיווק ברשתות החברתיות. מומחית בחיבור בין מותגים ולקוחות — מביאה סדר, חשיבה יצירתית ואנרגיה מיוחדת שמחברת את כולנו.",
+    bio: "מעל 8 שנות ניסיון במדיה ובשיווק ברשתות החברתיות. דינה היא הכתובת של הלקוחות. היא עושה סדר ודואגת ששום דבר לא ייפול בין הכיסאות.",
     linkedin: null,
   },
 ];
 
 const PARTNERS = [
-  { icon: "💻", name: "ניצ'ש ארנולד", role: "פיתוח WordPress ו-Full Stack" },
-  { icon: "✍️", name: "אביעד רבינוביץ'", role: "מדיה חברתית וקופירייטינג" },
+  { icon: "💻", name: "ניצ׳ש ארנולד", role: "פיתוח WordPress ו-Full Stack" },
+  { icon: "✍️", name: "אביעד רבינוביץ׳", role: "מדיה חברתית וקופירייטינג" },
   { icon: "🎨", name: "רויטל מור חיים", role: "עיצוב גרפי — Studio Zikit" },
   { icon: "📝", name: "יועבי שני", role: "קופירייטר" },
 ];
@@ -100,19 +100,19 @@ const PARTNERS = [
 const FAQS = [
   {
     q: "מי הלקוח האידיאלי של WAO?",
-    a: "עסקי B2C (שיווק לצרכן סופי) עם תקציב שיווקי של 10,000 ₪+ בחודש שרוצים צמיחה מדידה. נדל\"ן, שירותים מקצועיים, מסחר קמעונאי, מוצרים.",
+    a: "עסקי B2C (שיווק לצרכן סופי) עם תקציב שיווקי של 10,000 ₪+ בחודש שרוצים צמיחה מדידה. נדל״ן, שירותים מקצועיים, מסחר קמעונאי, מוצרים.",
   },
   {
     q: "האם WAO עובדת עם עסקים בתחילת הדרך?",
-    a: "כן, בתנאי שהם מבינים מה הבידול המשמעותי שלהם וקהל היעד האידיאלי שלהם. בלי זה לא ניתן לבנות שיווק שעובד.",
+    a: "כן, בתנאי שאתה יודע להגיד במשפט אחד למה שיבחרו דווקא בך, ומי הלקוח שאתה רוצה. בלי זה אין על מה לבנות שיווק.",
   },
   {
     q: "האם WAO עובדת עם עסקי B2B?",
-    a: "לא. מתמחים ב-B2C בלבד. אם אתה עסק B2B טהור — נגיד לך זאת ישר ולא נקח את הכסף שלך.",
+    a: "לא. אנחנו עובדים רק עם עסקים שמוכרים ללקוחות פרטיים. אם הלקוחות שלך הם עסקים אחרים, נגיד לך את זה ישר ולא ניקח ממך שקל.",
   },
   {
     q: "כמה עולה לעבוד עם WAO?",
-    a: "ניהול שוטף מתחיל מ-3,500 ₪ לחודש בתוספת תקציב מדיה. גובים תשלום רק בסוף החודש — אחרי שראיתם תוצאות.",
+    a: "ניהול שוטף מתחיל מ-3,500 ₪ לחודש בתוספת תקציב מדיה. מנוי חודשי בלי התחייבות. אתה משלם חודש מראש, ומבטל אונליין מתי שבא לך.",
   },
 ];
 
@@ -172,11 +172,11 @@ export default function AboutPage() {
             <span className="text-gradient">בפחות כסף</span>
           </h1>
           <p style={{ ...bodyStyle, fontSize: "clamp(1rem,1.8vw,1.2rem)", marginBottom: "40px", maxWidth: "620px" }}>
-            כדי לגרום לך לומר וואו, זה עובד! מאז 2006, אנחנו בונים שיווק דיגיטלי שמביא לקוחות מוכנים לרכישה — לא סתם תנועה ולייקים. היום אנחנו עושים את זה גם בעזרת חבילת בוטי AI משלנו — שבונה אתרים, מנהלת קמפיינים וכותבת תוכן, בפיקוח הצוות שלנו.
+            כדי שתגיד ״וואו, זה עובד!״ מאז 2006 אנחנו בונים שיווק שמביא לקוחות שבאים לקנות, לא תנועה ולייקים. היום הבוטים שלנו בונים אתרים, מריצים קמפיינים וכותבים תוכן, ואנשי הצוות בודקים כל דבר לפני שהוא יוצא. ככה גם עסק של איש אחד מקבל שיווק ברמה של סוכנות, במחיר שהוא יכול לעמוד בו.
           </p>
           <div style={{ display: "flex", gap: "14px", flexWrap: "wrap" }}>
             <a href="tel:0526148860" className="btn-primary" style={{ fontSize: "1.05rem", padding: "15px 36px" }}>
-              בדקו אם זה מתאים לכם
+              להתקשר עכשיו
             </a>
             <Link href="/consulting" className="btn-outline" style={{ fontSize: "1rem" }}>
               השירותים שלנו
@@ -205,8 +205,8 @@ export default function AboutPage() {
           <div style={{ marginBottom: "60px" }}>
             <div className="eyebrow">הערכים שלנו</div>
             <h2 style={{ ...h2Style, fontSize: "clamp(1.6rem,3vw,2.4rem)" }}>
-              זה מה שמנחה אותנו{" "}
-              <span className="text-gradient">בכל פרויקט</span>
+              שישה כללים{" "}
+              <span className="text-gradient">שאנחנו לא זזים מהם</span>
             </h2>
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
@@ -241,7 +241,7 @@ export default function AboutPage() {
             <div className="eyebrow">הצוות</div>
             <h2 style={{ ...h2Style, fontSize: "clamp(1.6rem,3vw,2.4rem)" }}>
               האנשים שרוצים{" "}
-              <span className="text-gradient">להקפיץ אותך לרמה הבאה</span>
+              <span className="text-gradient">שהטלפון שלך יצלצל</span>
             </h2>
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: "24px", marginBottom: "48px" }}>
@@ -289,7 +289,7 @@ export default function AboutPage() {
         <div className="wao-container" style={{ maxWidth: "800px" }}>
           <div className="eyebrow">שאלות נפוצות</div>
           <h2 style={{ ...h2Style, fontSize: "clamp(1.6rem,3vw,2.4rem)", marginBottom: "48px" }}>
-            כל מה שרציתם לדעת{" "}
+            ארבע שאלות ששואלים אותנו{" "}
             <span className="text-gradient">על WAO</span>
           </h2>
           <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
@@ -312,13 +312,13 @@ export default function AboutPage() {
           <div className="cta-banner" style={{ padding: "clamp(48px,8vw,80px) clamp(24px,6vw,64px)", textAlign: "center", position: "relative", overflow: "hidden" }}>
             <div aria-hidden style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%,-50%)", width: "60%", height: "100%", background: "radial-gradient(ellipse at center, rgba(74,227,181,0.06) 0%, transparent 70%)", pointerEvents: "none" }} />
             <div style={{ position: "relative", zIndex: 1 }}>
-              <div className="eyebrow" style={{ justifyContent: "center" }}>בדקו אם זה מתאים לכם</div>
+              <div className="eyebrow" style={{ justifyContent: "center" }}>בוא נבדוק אם זה מתאים לך</div>
               <h2 style={{ fontFamily: "var(--font-rubik), sans-serif", fontWeight: 900, fontSize: "clamp(1.6rem,3.5vw,2.6rem)", lineHeight: 1.15, marginBottom: "16px" }}>
-                שיחה קצרה שיכולה לשנות{" "}
-                <span className="text-gradient">את כיוון העסק שלך</span>
+                עשרים דקות בטלפון,{" "}
+                <span className="text-gradient">ותדע מאיפה להתחיל</span>
               </h2>
               <p style={{ color: "var(--muted)", fontFamily: "var(--font-body), sans-serif", marginBottom: "32px", maxWidth: "480px", margin: "0 auto 32px", lineHeight: 1.75 }}>
-                ייעוץ ראשון ללא עלות וללא התחייבות. נבין את האתגרים שלך ונספר לך בדיוק מה אפשר לעשות.
+                השיחה הראשונה חינם ובלי התחייבות. תספר מה אתה עושה ואיפה, ונגיד לך מה היינו עושים במקומך.
               </p>
               <div style={{ display: "flex", gap: "16px", justifyContent: "center", flexWrap: "wrap" }}>
                 <a href="tel:0526148860" className="btn-primary" style={{ fontSize: "1.05rem", padding: "16px 40px" }}>

@@ -330,7 +330,7 @@ export default function GoogleAdsPage() {
         <div className="wao-container" style={{ maxWidth: "800px" }}>
           <div className="eyebrow">שאלות נפוצות</div>
           <h2 style={{ ...h2Style, fontSize: "clamp(1.6rem,3vw,2.4rem)", marginBottom: "48px" }}>
-            כל מה שאתה צריך לדעת על{" "}
+            מה ששואלים אותנו לפני שמתחילים עם{" "}
             <span className="text-gradient">Google Ads</span>
           </h2>
           <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>

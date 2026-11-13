@@ -29,7 +29,7 @@ const footerLinks = [
       { label: "שיווק תוכן", href: "/content" },
       { label: "יועץ שיווקי", href: "/consulting" },
       { label: "בוט גוגל לעסק שלי", href: "/google-business" },
-      { label: copy.paths.path_local.details_link.label, href: copy.paths.path_local.details_link.href },
+      { label: copy.navigation.links[1].label, href: copy.navigation.links[1].href },
       { label: copy.navigation.primary_cta.label, href: copy.navigation.primary_cta.href },
     ],
   },

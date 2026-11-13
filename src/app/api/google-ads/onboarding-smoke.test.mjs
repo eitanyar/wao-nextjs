@@ -131,8 +131,14 @@ test('onboarding keeps test mode visibly labeled as Sandbox simulation', () => {
 test('onboarding displays the approved payment-unavailable notice instead of the old price offer', () => {
   const keyedLines = paymentUnavailableDraft.split('\n').filter((line) => line.startsWith('googleAdsOnboarding.paymentUnavailableNotice: '));
   assert.equal(keyedLines.length, 1, 'approved draft must have one keyed notice');
-  const notice = keyedLines[0].split(': ', 2)[1];
-  assert.ok(notice);
+  const draftNotice = keyedLines[0].split(': ', 2)[1];
+  assert.ok(draftNotice);
+  // Later approved polish (Eitan 2026-11-13, Noa-gated) replaced the notice; apply it on top.
+  const polish = JSON.parse(read('docs/copy/copy-polish-approved-2026-11-13.json'));
+  assert.equal(polish.approval, 'Eitan 2026-11-13, Noa-gated');
+  const noticePatches = polish.patches.filter((p) => p.file === 'src/app/(app)/google-ads/onboarding/page.tsx' && p.old === draftNotice);
+  assert.equal(noticePatches.length, 1, 'exactly one approved polish patch replaces the notice');
+  const notice = noticePatches[0].new;
   const comparisonBlock = onboardingPage.match(/lineHeight: 1\.6,\n            }}>\n([\s\S]*?)            <\/div>/);
   assert.ok(comparisonBlock, 'comparison block must remain in the onboarding render');
   assert.equal(comparisonBlock[1], `              ${notice}\n`);
