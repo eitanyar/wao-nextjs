@@ -55,6 +55,8 @@ import { generateMagicLinkToken } from './magic-link';
 import { buildCancelUrl, finalizeScheduledCancellations, planChargeDate } from './subscriptions';
 import { getBillingPlan, type BillingPlan } from './plans';
 import { issueInvoiceForCharge } from './invoicing';
+import { clientMessagesEnabled } from '../site-bot/clientMessages';
+import { remindUnhandledClientMessages } from '../site-bot/clientMessageEmail';
 import {
   sendRenewalChargeConfirmationEmail,
   sendCardUpdateNeededEmail,
@@ -442,6 +444,14 @@ export async function runChargeCron(now: Date = new Date()): Promise<ChargeCronS
   // Scheduled plan cancellations first: their rows never have a due charge (next_charge_at NULL), this only settles
   // the status once the paid period is over.
   const cancellationsEffective = finalizeScheduledCancellations(now);
+  // Site-Bot support queue: one daily staff reminder while client messages sit unhandled (flag-gated, log-only).
+  if (clientMessagesEnabled(process.env)) {
+    try {
+      await remindUnhandledClientMessages(now);
+    } catch {
+      console.error('[cron-charge] site-bot client-message reminder failed');
+    }
+  }
   const due = findDueSubscriptions(now);
   const results: ChargeCronRowResult[] = [];
 

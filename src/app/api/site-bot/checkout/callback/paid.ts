@@ -8,6 +8,7 @@ import { readResearchDossier } from '@/lib/site-bot/research/researchStore';
 import { runSiteResearch, type SiteResearchInput } from '@/lib/site-bot/research/runResearch';
 import { completePaidCheckoutResearch } from '@/lib/site-bot/checkout/researchCompletion';
 import { buildSiteResearchInput } from '@/lib/site-bot/research/researchInput';
+import { linkSiteBotSession } from '@/lib/site-bot/clientMessages';
 
 // Site-Bot checkout callback: takes the sign-up charge of the monthly + VAT plan (SITE_BOT_PLAN) through the recurring engine
 // (activatePlanSubscription: first charge, billing anchor, next charge date, invoice), then starts the research.
@@ -64,6 +65,20 @@ export async function POST(req: Request) {
       if (activation.reason === 'charge_failed') return errorReply('charge_failed', 402, { retryable: activation.retryable === true });
       if (activation.reason === 'callback_invalid') return errorReply('payment_verification_failed', 402);
       return errorReply('checkout_failed', 409);
+    }
+
+    // Support queue (2026-11-13): remember which business this subscription is for, once (fresh and alreadyActive paths).
+    // A failure here must never fail the checkout.
+    try {
+      linkSiteBotSession({
+        subscriptionId: pending.subscriptionId,
+        sessionId,
+        businessName: pending.collectedData?.businessName ?? null,
+        ownerMobile: pending.collectedData?.ownerContact?.mobile ?? null,
+        now: new Date(),
+      });
+    } catch {
+      console.error(`[site-bot checkout] session link failed session=${sessionId}`);
     }
 
     const manageUrl = activation.alreadyActive ? undefined : issueAccountPath(pending.subscriptionId);

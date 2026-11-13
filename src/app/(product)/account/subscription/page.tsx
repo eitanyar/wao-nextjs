@@ -3,6 +3,10 @@ import { getSubscriptionById } from '@/lib/payments/subscriptions';
 import CancelSubscriptionButton from './CancelSubscriptionButton';
 import CardUpdateButton from './CardUpdateButton';
 import RequestLinkForm from './RequestLinkForm';
+import ClientMessageBox from './ClientMessageBox';
+import { SITE_BOT_PLAN } from '@/lib/payments/plans';
+import { clientMessagesEnabled } from '@/lib/site-bot/clientMessages';
+import { SITE_BOT_CLIENT_MESSAGE_COPY_PENDING } from '@/lib/site-bot/clientMessageCopy';
 
 export const metadata = { robots: { index: false }, title: 'Manage subscription | WAO' };
 
@@ -114,10 +118,17 @@ export default async function SubscriptionPage({
   // Plan rows (Site-Bot): the customer cancelled; access continues until the end of the paid period, no further charge.
   const cancelScheduled = !isCanceled && subscription.cancel_at_period_end === 1 && !!subscription.cancel_effective_at;
   const isPastDue = subscription.status === 'past_due';
+  // Site-Bot client message box: only for Site-Bot plan rows past checkout, with the feature flag on and the Hebrew
+  // copy approved. Otherwise the page is byte-for-byte what it was.
+  const showMessageBox =
+    subscription.plan === SITE_BOT_PLAN.id &&
+    subscription.status !== 'pending' &&
+    clientMessagesEnabled(process.env) &&
+    !SITE_BOT_CLIENT_MESSAGE_COPY_PENDING;
 
   return (
     <main className="min-h-screen flex items-center justify-center px-4" dir="ltr">
-      <div className="w-full max-w-sm">
+      <div className={showMessageBox ? 'w-full max-w-md' : 'w-full max-w-sm'}>
         <div className="text-center mb-8">
           <span className="text-3xl font-black tracking-tight">WAO</span>
           <p className="text-[var(--muted)] mt-1 text-sm">Manage your subscription</p>
@@ -138,6 +149,12 @@ export default async function SubscriptionPage({
           <p className="mb-4 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-400 text-sm text-center py-2 px-3">
             We couldn&apos;t charge your card. Please update your payment method to keep your subscription active.
           </p>
+        )}
+
+        {showMessageBox && (
+          <div className="mb-6">
+            <ClientMessageBox token={token} />
+          </div>
         )}
 
         <div className="rounded-2xl border border-white/10 bg-white/5 p-8 space-y-4">

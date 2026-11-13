@@ -325,7 +325,10 @@ export interface SubscriptionEventRow {
     | 'paused'
     // Site-Bot plan cancel: requested (effective at the end of the paid period) and then effective (status 'canceled').
     | 'cancel_scheduled'
-    | 'cancellation_effective';
+    | 'cancellation_effective'
+    // Site-Bot support box (2026-11-13): links a subscription to the business it was bought for
+    // (`{ sessionId, businessName, ownerMobile }` in metadata). Written once at checkout. Additive only.
+    | 'site_bot_session_linked';
   metadata: string | null;
   created_at: string;
 }
