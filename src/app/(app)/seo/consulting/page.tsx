@@ -223,7 +223,7 @@ function StaticPage() {
           >
             לא עוד יועץ שמגיע, מציג מצגת, ונעלם. איתן יריב עובד לצדכם כשותף שטח —
             מזהה את הפערים ב-<GT term="Technical SEO">Technical SEO</GT>, מתעדף לפי{" "}
-            <GT term="ROI">ROI</GT>, ומוודא שהביצוע קורה. מאז 2007
+            <GT term="ROI">ROI</GT>, ומוודא שהביצוע קורה. מאז 2006
             ועד עידן <GT term="AI Overviews">AI Overviews</GT> של 2026.
           </p>
 
@@ -559,7 +559,7 @@ function StaticPage() {
             <div className="author-meta">
               <div className="author-name" itemProp="name">איתן יריב</div>
               <div className="author-title" itemProp="jobTitle">
-                {renderMixed("מייסד WAO | יועץ SEO בכיר ומנחה מאז 2007")}
+                {renderMixed("מייסד WAO | יועץ SEO בכיר ומנחה מאז 2006")}
               </div>
               <p className="author-text" itemProp="description">
                 עוסק ב-SEO מאז ימי ה-PageRank הידני. לאורך השנים ניהלתי פרויקטי קידום עבור דפי זהב (כיום
