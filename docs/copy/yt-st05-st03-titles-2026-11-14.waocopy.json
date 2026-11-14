@@ -1,0 +1,13 @@
+Angle: Demand Gen catches a problem-aware tradesman who is already paying for junk calls, so each title leads with the call he paid Google for, and each description turns that into the fix.
+
+{
+  "ST05": {
+    "title": "שילמת לגוגל על ״איך מחליפים ברז לבד?״ תשלם על ״הרצפה מוצפת״",
+    "description": "ב־7 בבוקר אתה מתחת לכיור, והטלפון מצלצל: ״אתם מחפשים עובדים?״ גם על זה שילמת לגוגל.\nhttps://www.wao.co.il/google-ads\nAds Bot פותח לך חשבון Google Ads חדש על שמך ולומד מהפניות שסימנת כאמיתיות. מי שמחפש עצה בחינם, עבודה או ״תעשה בעצמך״ לא רואה אותך בכלל. ואת המודעה שלך אתה רואה לפני שאתה משלם שקל."
+  },
+  "ST03": {
+    "title": "בנית לבד קמפיין בגוגל, ועכשיו אתה משלם כדי להסביר איך מנקים פילטר",
+    "description": "אתה מבין במערכות מורכבות, אז בנית לבד קמפיין בגוגל. אחרי שבועיים הטלפון מלא בסטודנטים, ועל כל אחד מהם שילמת.\nhttps://www.wao.co.il/google-ads\nAds Bot בונה לך מאפס חשבון Google Ads חדש על שמך. אתה רק מסמן איזו פנייה הייתה אמיתית, והקמפיין לומד להביא פחות סטודנטים ויותר לקוחות. את המודעה שלך אתה רואה לפני שאתה משלם שקל."
+  },
+  "why": "Awareness: problem-aware. The viewer has paid Google for calls that bring him no work, and the market has heard 'more leads' a thousand times. So both titles name the enemy through a call he has actually taken, and the descriptions carry the mechanism: a new account in his name, learning from the enquiries he marks as real, and seeing the ad before paying. ST05's title keeps the ad's joke and flips it into the wish (the flooded-floor call). ST03's title keeps the irony: the expert who ends up paying to give free lessons. Character counts: ST05 title 60, ST03 title 65. The link sits on line 2 so it survives the 'more' cut. No price, no founder name, no hashtags. Flags: (1) The brief gives no figure or named proof behind 'fewer students, more customers', so I kept it as the ad's own promise with no number. A real figure here would strengthen it. (2) I kept the product name as 'Ads Bot' exactly as in the brief. If there is a fixed Hebrew name, it needs to be swapped in both descriptions. (3) Wording for the end card and the button was not requested and not touched. → Noa to proof (especially the gershayim inside the titles and the spacing around the Latin terms)."
+}
