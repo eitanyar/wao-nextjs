@@ -1,0 +1,17 @@
+Angle: the viewer is a working owner, problem-aware at most. He hasn't yet noticed he pays for people who only ask. So the title carries the joke that makes him recognise himself. The description then gives the mechanism behind "learns from the enquiries you mark as real", since he has heard plenty of promises about advertising and AI.
+
+{
+  "A1-30": {
+    "title": "הקמפיין שלך בגוגל הפך אותך לנהג היחיד בארץ שמשלם לנוסעים",
+    "description": "כל קליק בגוגל הוא נוסע ששואל כמה עולה לנתב״ג, שומע מחיר ויורד. ואתה משלם על השאלה.\nhttps://www.wao.co.il/google-ads\nAds Bot פותח לך חשבון Google Ads חדש על שמך ולומד מכל פנייה שסימנת כאמיתית. כשמצטברות מספיק כאלה, הקמפיין עובר לבד לנוסעים שמשלמים.\nואת המודעה שלך תראה עוד לפני שאתה משלם שקל."
+  },
+  "A2-15": {
+    "title": "הקמפיין שלך בגוגל הוא דוכן טעימות. התור גדל, הקופה ריקה.",
+    "description": "כל קליק בגוגל טועם על חשבונך ומחר חוזר עם חבר. והקופה נשארת ריקה.\nhttps://www.wao.co.il/google-ads\nבחשבון Google Ads חדש על שמך, Ads Bot לומד מהפניות שסימנת כאמיתיות ומביא לך קונים במקום טועמים. את המודעה תראה לפני שאתה משלם שקל."
+  },
+  "A2-30": {
+    "title": "הטועם מגוגל כבר קורא לך ״אחי״ ועוד לא קנה כלום",
+    "description": "ביום הראשון הוא טועם. למחרת הוא חוזר עם שניים מהעבודה, וביום השלישי עם כל החבר׳ה. הכול על חשבונך.\nhttps://www.wao.co.il/google-ads\nAds Bot פותח לך חשבון Google Ads חדש על שמך ולומד מהפניות שסימנת כאמיתיות. ככה מגיעים אליך אלה שבאים לקנות.\nאת המודעה אתה רואה לפני שאתה משלם שקל."
+  },
+  "why": "Awareness: problem-aware at best. He runs Google ads and feels the leak but has not named it, so each title is the ad's punchline in his own words and names Google. Sophistication: high, so each description moves from the joke to the mechanism (he marks the real enquiries and the campaign learns from them), and then to the risk reversal of seeing the ad before paying a shekel. Formulas: Schwartz positioning plus Caples-style self-interest headlines, and PAS in miniature (scene, link, mechanism, risk reversal). The link sits on line 2 so it survives YouTube's truncation. A2-15 sells the empty till and A2-30 sells the 'bro' hug, so the two cuts of the stall story don't collide. Titles avoid the end-card line so the video doesn't repeat itself. Every checkable claim comes from the brief: the new account in his name, learning from enquiries he marks, the campaign switching by itself once there are enough, and the ad before payment. No claim was left unproven, and there is no price, no founder name and no hashtags. No Hebrew prefix touches a Latin term, so no maqaf was needed. Handoff: → Noa for one fresh read, since these are public-facing ad copy."
+}

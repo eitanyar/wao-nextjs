@@ -31,6 +31,9 @@ export function cleanTextProblems(text) {
 
 // ---------------------------------------------------------------- units + cards
 
+// a token without its trailing clause / sentence punctuation
+const bare = (s) => s.replace(/[.,:;!?\u2026\u05C3]+$/u, "");
+
 function tokenize(text) {
   return [...text.matchAll(/\S+/gu)].map((m) => ({ text: m[0], start: m.index, end: m.index + m[0].length }));
 }
@@ -56,6 +59,8 @@ export function captionUnits(text, lexicon = null) {
       } else if (i > 0) glue[i - 1] = true;
       else if (i + 1 < toks.length) glue[i] = true;
     } else if (PURE_LATIN.test(t.text) && i + 1 < toks.length && LATIN_START.test(toks[i + 1].text)) glue[i] = true;
+    // a doubled word (the same word twice in a row, e.g. "finally finally") reads as one beat: never split it
+    if (i + 1 < toks.length && WORDISH.test(t.text) && t.text === bare(toks[i + 1].text)) glue[i] = true;
   });
   if (lexicon)
     for (const h of findMatches(text, lexicon)) {
