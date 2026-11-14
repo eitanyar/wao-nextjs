@@ -103,14 +103,26 @@ export const BILLING_EMAIL_COPY = {
 const ACCOUNT_LOCALE = 'he-IL';
 const ACCOUNT_TIME_ZONE = 'Asia/Jerusalem';
 
-/** The VAT-inclusive amount as he-IL currency (number + shekel sign). Render it inside LTR isolation. */
+/**
+ * The VAT-inclusive amount as he-IL currency (number, one regular space, shekel sign). Intl's RLM marks are stripped and
+ * its no-break / narrow no-break space becomes a plain space, so the LTR-isolated value is not indented and reads the
+ * same in an email's plain text. Render it inside LTR isolation.
+ */
 export function formatAccountPrice(amount: number, currency: string | null | undefined = 'ILS'): string {
-  return new Intl.NumberFormat(ACCOUNT_LOCALE, { style: 'currency', currency: currency || 'ILS' }).format(amount);
+  return new Intl.NumberFormat(ACCOUNT_LOCALE, { style: 'currency', currency: currency || 'ILS' })
+    .format(amount)
+    .replace(/\u200f/g, '')
+    .replace(/[\u00a0\u202f]/g, ' ');
 }
 
-/** A stored ISO timestamp as an Israeli calendar date (fixed time zone, so server and browser agree on the day). */
+/** A stored ISO timestamp as an Israeli calendar date, DD.MM.YYYY (fixed time zone, so server and browser agree). */
 export function formatAccountDate(iso: string): string {
-  return new Date(iso).toLocaleDateString(ACCOUNT_LOCALE, { timeZone: ACCOUNT_TIME_ZONE });
+  return new Date(iso).toLocaleDateString(ACCOUNT_LOCALE, {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    timeZone: ACCOUNT_TIME_ZONE,
+  });
 }
 
 /** Replaces {name} placeholders; throws on a placeholder with no value so a template can never ship half-filled. */

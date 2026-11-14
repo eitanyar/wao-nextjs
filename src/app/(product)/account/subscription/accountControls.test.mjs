@@ -32,6 +32,7 @@ const copy = load(local('src/lib/payments/accountCopy.ts'));
 const deps = { ...react, '@/lib/payments/accountCopy': copy };
 const cancel = load(here('./CancelSubscriptionButton.tsx'), deps);
 const card = load(here('./CardUpdateButton.tsx'), deps);
+const requestForm = load(here('./RequestLinkForm.tsx'), deps);
 const C = copy.CANCEL_BUTTON_COPY;
 const markup = (node) => renderToStaticMarkup(node);
 const text = (value) => renderToStaticMarkup(React.createElement(React.Fragment, null, value));
@@ -84,6 +85,8 @@ test('after yes: loading label on the yes button, then the done message and the 
   assert.ok(done.includes(text(C.doneMessage)) && done.includes(text(C.doneAccessUntil)));
   assert.ok(done.includes('<bdi dir="ltr" class="font-semibold">14.12.2026</bdi>'));
   assert.ok(done.includes('data-cancel-done="end-of-period"'));
+  // Focus lands on the done message paragraph itself (it has an accessible name: its text).
+  assert.ok(done.includes(`<p tabindex="-1" class="text-green-400 text-sm outline-none" data-cancel-done-message="">${text(C.doneMessage)}</p>`));
 });
 
 test('generic error points at the support box only when it is shown; genericNoBox otherwise', () => {
@@ -92,7 +95,8 @@ test('generic error points at the support box only when it is shown; genericNoBo
   const noBox = view(error, { showMessageBox: false });
   assert.ok(withBox.includes(text(C.errorGeneric)) && !withBox.includes(text(C.errorGenericNoBox)));
   assert.ok(noBox.includes(text(C.errorGenericNoBox)) && !noBox.includes(text(C.errorGeneric)));
-  assert.ok(noBox.includes('role="alert"'));
+  assert.ok(noBox.includes('id="cancel-error" role="alert"') && noBox.includes('aria-describedby="cancel-error"'));
+  assert.ok(!view(cancel.INITIAL_CANCEL_STATE).includes('aria-describedby'), 'no describedby without an error');
   assert.equal(cancel.cancelErrorMessage('invalid_token', false), C.errorInvalidToken);
 
   const K = copy.CARD_UPDATE_BUTTON_COPY;
@@ -106,4 +110,30 @@ test('stateful components render their idle state on the server', () => {
   assert.ok(cancelHtml.includes(text(C.idle)));
   const cardHtml = markup(React.createElement(card.default, { token: 't', showMessageBox: false }));
   assert.ok(cardHtml.includes(text(copy.CARD_UPDATE_BUTTON_COPY.idle)));
+});
+
+test('touch targets: every cancel-flow button is at least 44px tall', () => {
+  for (const phase of ['idle', 'confirming', 'loading']) {
+    const html = view({ ...cancel.INITIAL_CANCEL_STATE, phase });
+    const buttons = html.match(/<button[^>]*>/g) ?? [];
+    assert.ok(buttons.length > 0 && buttons.every((b) => b.includes('min-h-11')), phase);
+  }
+  for (const prominent of [true, false]) {
+    const html = markup(React.createElement(card.default, { token: 't', showMessageBox: false, prominent }));
+    assert.ok(/<button[^>]*min-h-11/.test(html));
+  }
+});
+
+test('request form: the state notice is the h1, the status line is mounted empty, the email input is mobile-safe', () => {
+  const notice = copy.ACCOUNT_PAGE_COPY.cardUpdateCallbackError;
+  const html = markup(React.createElement(requestForm.default, { notice: { text: notice, tone: 'error' } }));
+  assert.ok(/<h1 class="[^"]*text-red-400"[^>]*>/.test(html) && html.includes(`>${text(notice)}</h1>`));
+  assert.ok(html.includes('<p role="status" class="sr-only"></p>'), 'status container mounted before success');
+  const input = html.match(/<input[^>]*>/)[0];
+  for (const attr of ['type="email"', 'dir="ltr"', 'inputMode="email"', 'autoCapitalize="none"', 'spellCheck="false"', 'min-h-11', 'text-base']) {
+    assert.ok(input.includes(attr), `${attr} in ${input}`);
+  }
+  assert.ok(/<button type="submit"[^>]*min-h-11/.test(html));
+  const bare = markup(React.createElement(requestForm.default, {}));
+  assert.ok(!bare.includes('<h1'), 'no notice, no heading');
 });

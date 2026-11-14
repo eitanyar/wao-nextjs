@@ -17,12 +17,10 @@ import {
 // English and carry their own lang="en" dir="ltr" so their punctuation does not flip.
 export const metadata = { robots: { index: false }, title: COPY.metadataTitle + ACCOUNT_TITLE_SUFFIX };
 
-// Legacy trial-engine statuses keep their English labels (out of the Hebrew pass); every other status is Hebrew.
-const STATUS_LABEL: Record<string, string> = {
-  trialing: 'Trial',
-  expired: 'Expired',
-  ...ACCOUNT_STATUS_LABEL,
-};
+// Legacy trial-engine statuses keep their English labels (out of the Hebrew pass, marked lang="en"); every other status
+// is Hebrew.
+const LEGACY_STATUS_LABEL: Record<string, string> = { trialing: 'Trial', expired: 'Expired' };
+const STATUS_LABEL: Record<string, string> = { ...LEGACY_STATUS_LABEL, ...ACCOUNT_STATUS_LABEL };
 
 export default async function SubscriptionPage({
   searchParams,
@@ -34,18 +32,18 @@ export default async function SubscriptionPage({
   // Signup-flow redirect landing (from /api/subscriptions/callback) — no token involved.
   if (!token && signup) {
     return (
-      <main className="min-h-screen flex items-center justify-center px-4">
+      <main className="min-h-dvh flex items-center justify-center px-4">
         <div className="w-full max-w-sm text-center">
           <span className="text-3xl font-black tracking-tight">WAO</span>
           {signup === 'success' ? (
-            <p className="mt-6 text-sm text-[var(--muted)]" lang="en" dir="ltr">
+            <h1 className="mt-6 text-sm font-normal text-[var(--muted)]" lang="en" dir="ltr">
               Your trial has started. Check your email for a confirmation with a link to manage or cancel your
               subscription any time.
-            </p>
+            </h1>
           ) : (
-            <p className="mt-6 text-sm text-red-400" lang="en" dir="ltr">
+            <h1 className="mt-6 text-sm font-normal text-red-400" lang="en" dir="ltr">
               We couldn&apos;t complete your signup. No charge was made. Please try again.
-            </p>
+            </h1>
           )}
         </div>
       </main>
@@ -58,11 +56,10 @@ export default async function SubscriptionPage({
   // specific reason, and never mutates state).
   if (!token && cardUpdate === 'error') {
     return (
-      <main className="min-h-screen flex items-center justify-center px-4">
+      <main className="min-h-dvh flex items-center justify-center px-4">
         <div className="w-full max-w-sm text-center">
           <span className="text-3xl font-black tracking-tight">WAO</span>
-          <p className="mt-6 text-sm text-red-400">{COPY.cardUpdateCallbackError}</p>
-          <RequestLinkForm />
+          <RequestLinkForm notice={{ text: COPY.cardUpdateCallbackError, tone: 'error' }} />
         </div>
       </main>
     );
@@ -70,11 +67,10 @@ export default async function SubscriptionPage({
 
   if (!token) {
     return (
-      <main className="min-h-screen flex items-center justify-center px-4">
+      <main className="min-h-dvh flex items-center justify-center px-4">
         <div className="w-full max-w-sm text-center">
           <span className="text-3xl font-black tracking-tight">WAO</span>
-          <p className="mt-6 text-sm text-[var(--muted)]">{COPY.noTokenIntro}</p>
-          <RequestLinkForm />
+          <RequestLinkForm notice={{ text: COPY.noTokenIntro, tone: 'muted' }} />
         </div>
       </main>
     );
@@ -92,11 +88,10 @@ export default async function SubscriptionPage({
         : COPY.linkInvalid;
 
     return (
-      <main className="min-h-screen flex items-center justify-center px-4">
+      <main className="min-h-dvh flex items-center justify-center px-4">
         <div className="w-full max-w-sm text-center">
           <span className="text-3xl font-black tracking-tight">WAO</span>
-          <p className="mt-6 text-sm text-red-400">{message}</p>
-          <RequestLinkForm />
+          <RequestLinkForm notice={{ text: message, tone: 'error' }} />
         </div>
       </main>
     );
@@ -106,11 +101,10 @@ export default async function SubscriptionPage({
 
   if (!subscription) {
     return (
-      <main className="min-h-screen flex items-center justify-center px-4">
+      <main className="min-h-dvh flex items-center justify-center px-4">
         <div className="w-full max-w-sm text-center">
           <span className="text-3xl font-black tracking-tight">WAO</span>
-          <p className="mt-6 text-sm text-red-400">{COPY.subscriptionNotFound}</p>
-          <RequestLinkForm />
+          <RequestLinkForm notice={{ text: COPY.subscriptionNotFound, tone: 'error' }} />
         </div>
       </main>
     );
@@ -128,11 +122,11 @@ export default async function SubscriptionPage({
   const confirmDate = cancelEffectiveAt ? formatAccountDate(cancelEffectiveAt) : null;
 
   return (
-    <main className="min-h-screen flex items-center justify-center px-4">
+    <main className="min-h-dvh flex items-center justify-center px-4">
       <div className={showMessageBox ? 'w-full max-w-md' : 'w-full max-w-sm'}>
         <div className="text-center mb-8">
           <span className="text-3xl font-black tracking-tight">WAO</span>
-          <p className="text-[var(--muted)] mt-1 text-sm">{COPY.headerSubtitle}</p>
+          <h1 className="text-[var(--muted)] mt-1 text-sm font-normal">{COPY.headerSubtitle}</h1>
         </div>
 
         {cardUpdate === 'success' && (
@@ -161,7 +155,9 @@ export default async function SubscriptionPage({
         <div className="rounded-2xl border border-white/10 bg-white/5 p-8 space-y-4">
           <div className="flex justify-between text-sm">
             <span className="text-[var(--muted)]">{COPY.rowStatus}</span>
-            <span className="font-semibold">{STATUS_LABEL[subscription.status] ?? subscription.status}</span>
+            <span className="font-semibold" lang={Object.hasOwn(ACCOUNT_STATUS_LABEL, subscription.status) ? undefined : 'en'}>
+              {STATUS_LABEL[subscription.status] ?? subscription.status}
+            </span>
           </div>
           <div className="flex justify-between text-sm">
             <span className="text-[var(--muted)]">{COPY.rowRecurringAmount}</span>

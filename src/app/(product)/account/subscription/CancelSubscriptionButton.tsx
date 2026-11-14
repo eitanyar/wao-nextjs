@@ -14,7 +14,8 @@ import { CANCEL_BUTTON_COPY as COPY, formatAccountDate } from '@/lib/payments/ac
  * paid period, the service-until date) is shown here instead.
  *
  * Focus: opening the question moves focus to it; "back" returns focus to the cancel button; a failure returns focus to
- * the cancel button (the error is also a role="alert"); success moves focus to the done message.
+ * the cancel button (the error is also a role="alert", linked by aria-describedby); success moves focus to the done
+ * message paragraph itself, so the focused node has an accessible name.
  */
 
 export type CancelPhase = 'idle' | 'confirming' | 'loading' | 'done' | 'error';
@@ -85,7 +86,7 @@ export interface CancelSubscriptionViewProps {
   onConfirm: () => void;
   buttonRef?: RefObject<HTMLButtonElement | null>;
   questionRef?: RefObject<HTMLParagraphElement | null>;
-  doneRef?: RefObject<HTMLDivElement | null>;
+  doneRef?: RefObject<HTMLParagraphElement | null>;
 }
 
 export function CancelSubscriptionView({
@@ -101,8 +102,10 @@ export function CancelSubscriptionView({
 }: CancelSubscriptionViewProps) {
   if (state.phase === 'done') {
     return (
-      <div ref={doneRef} tabIndex={-1} className="outline-none" data-cancel-done={state.accessUntil ? 'end-of-period' : 'now'}>
-        <p className="text-green-400 text-sm">{COPY.doneMessage}</p>
+      <div data-cancel-done={state.accessUntil ? 'end-of-period' : 'now'}>
+        <p ref={doneRef} tabIndex={-1} className="text-green-400 text-sm outline-none" data-cancel-done-message="">
+          {COPY.doneMessage}
+        </p>
         {state.accessUntil && (
           <div className="flex justify-between text-sm mt-2">
             <span className="text-[var(--muted)]">{COPY.doneAccessUntil}</span>
@@ -125,7 +128,7 @@ export function CancelSubscriptionView({
           onClick={loading ? undefined : onConfirm}
           aria-disabled={loading || undefined}
           data-cancel-confirm-yes=""
-          className="w-full rounded-lg bg-red-600 text-white font-semibold py-2.5 text-sm hover:opacity-90 transition-opacity aria-disabled:opacity-50"
+          className="min-h-11 w-full rounded-lg bg-red-600 text-white font-semibold py-2.5 text-sm hover:opacity-90 transition-opacity aria-disabled:opacity-50"
         >
           {loading ? COPY.loading : COPY.confirmYes}
         </button>
@@ -134,7 +137,7 @@ export function CancelSubscriptionView({
           onClick={loading ? undefined : onBack}
           aria-disabled={loading || undefined}
           data-cancel-confirm-back=""
-          className="w-full rounded-lg border border-white/20 text-white font-semibold py-2.5 text-sm hover:bg-white/5 transition-colors aria-disabled:opacity-50"
+          className="min-h-11 w-full rounded-lg border border-white/20 text-white font-semibold py-2.5 text-sm hover:bg-white/5 transition-colors aria-disabled:opacity-50"
         >
           {COPY.confirmBack}
         </button>
@@ -142,6 +145,7 @@ export function CancelSubscriptionView({
     );
   }
 
+  const showError = state.phase === 'error' && !!state.errorKind;
   return (
     <div>
       <button
@@ -149,12 +153,13 @@ export function CancelSubscriptionView({
         type="button"
         onClick={onOpen}
         data-cancel-open=""
-        className="w-full rounded-lg bg-red-600 text-white font-semibold py-2.5 text-sm hover:opacity-90 transition-opacity disabled:opacity-50"
+        aria-describedby={showError ? 'cancel-error' : undefined}
+        className="min-h-11 w-full rounded-lg bg-red-600 text-white font-semibold py-2.5 text-sm hover:opacity-90 transition-opacity disabled:opacity-50"
       >
         {COPY.idle}
       </button>
-      {state.phase === 'error' && state.errorKind && (
-        <p role="alert" className="text-red-400 text-sm mt-2 text-center">
+      {showError && state.errorKind && (
+        <p id="cancel-error" role="alert" className="text-red-400 text-sm mt-2 text-center">
           {cancelErrorMessage(state.errorKind, showMessageBox)}
         </p>
       )}
@@ -174,7 +179,7 @@ export default function CancelSubscriptionButton({
   const [state, dispatch] = useReducer(cancelFlowReducer, INITIAL_CANCEL_STATE);
   const buttonRef = useRef<HTMLButtonElement>(null);
   const questionRef = useRef<HTMLParagraphElement>(null);
-  const doneRef = useRef<HTMLDivElement>(null);
+  const doneRef = useRef<HTMLParagraphElement>(null);
 
   useEffect(() => {
     if (state.focus === 'question') questionRef.current?.focus();

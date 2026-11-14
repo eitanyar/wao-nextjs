@@ -114,9 +114,12 @@ test('the box pointer names the real support box heading; no placeholder, no ASC
 });
 
 test('he-IL formatting: VAT-inclusive price and Israeli calendar date', () => {
-  const price = formatAccountPrice(234.82, 'ILS');
-  assert.ok(price.includes('234.82') && price.includes('\u20aa'), price);
+  // No RLM, no no-break / narrow no-break space: one regular space before the shekel sign.
+  assert.equal(formatAccountPrice(234.82, 'ILS'), '234.82 \u20aa');
+  assert.equal(formatAccountPrice(1234.5, 'ILS'), '1,234.50 \u20aa');
+  assert.ok(!/[\u200e\u200f\u00a0\u202f]/.test(formatAccountPrice(199, 'ILS')));
   assert.equal(formatAccountDate('2026-12-13T22:30:00.000Z'), '14.12.2026'); // UTC evening = next day in Israel
+  assert.equal(formatAccountDate('2027-01-04T10:00:00.000Z'), '04.01.2027'); // zero-padded DD.MM.YYYY
   assert.equal(fillTemplate('a {x} b', { x: '1' }), 'a 1 b');
   assert.throws(() => fillTemplate('a {x}', {}), /missing value/);
 });
@@ -128,19 +131,24 @@ test('client emails: RTL HTML part, escaped and LTR-isolated values, URL on its 
   const price = formatAccountPrice(234.82, 'ILS');
   assert.ok(renewal.text.includes(fillTemplate(BILLING_EMAIL_COPY.renewalBody, { price, cardLast4: '4242' })));
   assert.deepEqual(renewal.text.split('\n').slice(-1), [url]);
-  assert.ok(renewal.html.startsWith('<div dir="rtl" lang="he">') && renewal.html.endsWith('</div>'));
-  assert.ok(renewal.html.includes('<span dir="ltr">4242</span>'));
+  const RTL = 'dir="rtl" style="direction:rtl;text-align:right"';
+  const ISO = (v: string) => `<bdi dir="ltr" style="unicode-bidi:isolate">${v}</bdi>`;
+  assert.ok(renewal.html.startsWith(`<div lang="he" ${RTL}>`) && renewal.html.endsWith('</div>'));
+  assert.ok(renewal.html.includes(ISO('4242')) && renewal.html.includes(ISO(price)));
+  assert.equal((renewal.html.match(/<p /g) ?? []).length, (renewal.html.match(new RegExp(`<p ${RTL}>`, 'g')) ?? []).length + 1, 'every text <p> is RTL, plus one URL <p>');
+  assert.ok(renewal.html.includes('<p dir="ltr" style="text-align:right"><a href='));
+  assert.ok(!renewal.html.includes('<span'));
   assert.ok(renewal.html.includes('token=ab&amp;x=&lt;1&gt;') && !renewal.html.includes('<1>'));
   assert.ok(!renewal.text.includes('{') && !renewal.html.includes('{'));
 
   const expiring = buildCardExpiringSoonEmail({ cardLast4: '<b>', cardExpiry: '12/26', updateCardUrl: url });
-  assert.ok(expiring.html.includes('<span dir="ltr">&lt;b&gt;</span>') && expiring.html.includes('<span dir="ltr">12/26</span>'));
+  assert.ok(expiring.html.includes(ISO('&lt;b&gt;')) && expiring.html.includes(ISO('12/26')));
   assert.equal(expiring.subject, BILLING_EMAIL_COPY.cardExpiringSubject);
 
   const declined = buildCardUpdateNeededEmail({ manageUrl: url });
   assert.equal(declined.text, [BILLING_EMAIL_COPY.cardUpdateNeededBody1, BILLING_EMAIL_COPY.cardUpdateNeededBody2, url].join('\n'));
 
-  assert.equal(renderClientEmail([{ blank: true }]).html, '<div dir="rtl" lang="he"></div>');
+  assert.equal(renderClientEmail([{ blank: true }]).html, `<div lang="he" ${RTL}></div>`);
 });
 
 test('manage-link email mentions support only when the support box is shown', () => {

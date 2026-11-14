@@ -63,16 +63,17 @@ export default function CardUpdateButton({
         type="button"
         onClick={handleUpdateCard}
         disabled={state === 'loading'}
+        aria-describedby={state === 'error' && errorMessage ? 'card-update-error' : undefined}
         className={
           prominent
-            ? 'w-full rounded-lg bg-amber-500 text-black font-semibold py-2.5 text-sm hover:opacity-90 transition-opacity disabled:opacity-50'
-            : 'w-full rounded-lg border border-white/20 text-white font-semibold py-2.5 text-sm hover:bg-white/5 transition-colors disabled:opacity-50'
+            ? 'min-h-11 w-full rounded-lg bg-amber-500 text-black font-semibold py-2.5 text-sm hover:opacity-90 transition-opacity disabled:opacity-50'
+            : 'min-h-11 w-full rounded-lg border border-white/20 text-white font-semibold py-2.5 text-sm hover:bg-white/5 transition-colors disabled:opacity-50'
         }
       >
         {state === 'loading' ? COPY.loading : COPY.idle}
       </button>
       {state === 'error' && errorMessage && (
-        <p role="alert" className="text-red-400 text-sm mt-2 text-center">{errorMessage}</p>
+        <p id="card-update-error" role="alert" className="text-red-400 text-sm mt-2 text-center">{errorMessage}</p>
       )}
     </div>
   );

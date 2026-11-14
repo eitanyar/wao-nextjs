@@ -37,8 +37,8 @@ export default function ClientMessageBox({ token, cancelAvailable }: { token: st
   const messageId = useRef<string | null>(null);
   const sentHeadingRef = useRef<HTMLParagraphElement>(null);
 
-  // The sent state is announced twice over: the mounted role="status" region gets the heading text, and focus moves
-  // to the heading itself (the form that had focus is gone).
+  // The sent state is announced once, by moving focus to the sent heading (the form that had focus is gone). The
+  // mounted role="status" region announces only the sending state, so the heading is not read twice.
   useEffect(() => {
     if (phase === 'sent') sentHeadingRef.current?.focus();
   }, [phase]);
@@ -85,7 +85,7 @@ export default function ClientMessageBox({ token, cancelAvailable }: { token: st
     setPhase('idle');
   };
 
-  const statusText = phase === 'sending' ? label('sending') : phase === 'sent' ? label('sentHeading') : null;
+  const statusText = phase === 'sending' ? label('sending') : null;
 
   return (
     <section aria-labelledby="client-message-heading" className="rounded-2xl border border-white/10 bg-white/5 p-6 text-start">
@@ -111,7 +111,8 @@ export default function ClientMessageBox({ token, cancelAvailable }: { token: st
             value={body}
             onChange={(e) => onChange(e.target.value)}
             aria-describedby="client-message-hint client-message-count"
-            disabled={phase === 'sending'}
+            readOnly={phase === 'sending'}
+            aria-busy={phase === 'sending' || undefined}
             className="block min-h-48 w-full rounded-lg border border-white/20 bg-transparent p-3 text-base"
           />
           <div className="flex justify-between gap-3 text-xs text-[var(--muted)]">

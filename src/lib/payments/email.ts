@@ -69,7 +69,7 @@ async function sendBillingEmail(payload: BillingEmailPayload): Promise<void> {
 
 // ---------------------------------------------------------------------------
 // Hebrew client emails: one line list renders both parts. Text lines are templates ({name} placeholders); in the HTML
-// part every interpolated value is escaped and LTR-isolated, and every URL sits on its own line.
+// part every interpolated value is escaped and LTR-isolated (<bdi>), and every URL sits on its own line.
 // ---------------------------------------------------------------------------
 
 type EmailLine =
@@ -87,10 +87,14 @@ function fillHtml(template: string, values: Readonly<Record<string, string>>): s
     .split(/(\{[A-Za-z0-9_]+\})/)
     .map((part) => {
       const name = /^\{([A-Za-z0-9_]+)\}$/.exec(part)?.[1];
-      return name ? `<span dir="ltr">${escapeEmailHtml(values[name])}</span>` : escapeEmailHtml(part);
+      return name ? `<bdi dir="ltr" style="unicode-bidi:isolate">${escapeEmailHtml(values[name])}</bdi>` : escapeEmailHtml(part);
     })
     .join('');
 }
+
+// Mail clients drop or ignore parts of the HTML direction model, so direction is set twice: the dir attribute and an
+// inline style, on the wrapper and on every paragraph.
+const RTL_ATTRS = 'dir="rtl" style="direction:rtl;text-align:right"';
 
 export function renderClientEmail(lines: readonly EmailLine[]): { text: string; html: string } {
   const text = lines
@@ -101,11 +105,11 @@ export function renderClientEmail(lines: readonly EmailLine[]): { text: string; 
       'blank' in line
         ? ''
         : 'url' in line
-        ? `<p dir="ltr"><a href="${escapeEmailHtml(line.url)}">${escapeEmailHtml(line.url)}</a></p>`
-        : `<p>${fillHtml(line.text, line.values ?? {})}</p>`
+        ? `<p dir="ltr" style="text-align:right"><a href="${escapeEmailHtml(line.url)}">${escapeEmailHtml(line.url)}</a></p>`
+        : `<p ${RTL_ATTRS}>${fillHtml(line.text, line.values ?? {})}</p>`
     )
     .join('');
-  return { text, html: `<div dir="rtl" lang="he">${body}</div>` };
+  return { text, html: `<div lang="he" ${RTL_ATTRS}>${body}</div>` };
 }
 
 /**
