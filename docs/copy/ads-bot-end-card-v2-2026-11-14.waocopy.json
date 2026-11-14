@@ -1,0 +1,36 @@
+Angle: he just watched himself pay Google blind, so he's problem-aware and fears paying first. Lead with the reversal of that fear: his own Google ad, built and on screen, before a shekel leaves his pocket.
+
+```json
+{
+  "sets": [
+    {
+      "stamp": "המודעה שלך לגוגל מוכנה לפני שאתה משלם שקל",
+      "cta": "תראה לי את המודעה שלי",
+      "why": "Turns his exact fear (paying before seeing) into the promise, and 'שלך' plus 'מוכנה' tells him it's built for him, not a sample. Strongest in one muted glance. Recommended."
+    },
+    {
+      "stamp": "הפעם אתה רואה את המודעה לגוגל לפני שאתה משלם",
+      "cta": "תבנה לי מודעה ודף",
+      "why": "'הפעם' picks up the story he just watched, where he paid for clicks and saw nothing. The button names both things he gets."
+    },
+    {
+      "stamp": "כמה שאלות, ואתה רואה מודעה לגוגל ודף משלך",
+      "cta": "אני רוצה לראות את שלי",
+      "why": "Sells the mechanism. It shows how little he has to do and that both the ad and the page are his. Best if Eitan wants the low effort on the card."
+    }
+  ],
+  "landing_cta_match": {
+    "if_set_1": "תראה לי את המודעה שלי",
+    "if_set_2": "תבנה לי מודעה ודף",
+    "if_set_3": "אני רוצה לראות את שלי",
+    "note": "Keep the landing button word for word the same as the ad button. He taps on the page the exact promise he tapped on the card."
+  }
+}
+```
+
+**Notes for Eitan:**
+- I wrote «לגוגל» and not «בגוגל» on purpose. «בגוגל» suggests the ad is already running on Google before he pays, and it isn't. «לגוגל» means it's ready to go up.
+- I left out «חינם». The facts say "before any payment", and «לפני שאתה משלם שקל» says that more strongly and stays exactly true.
+- Set 1 puts only the ad on the card. The page arrives on the landing page. If Eitan wants the page on the card, Set 2 or Set 3 carries it.
+
+→ Noa to proof. → The landing button change needs separate approval before Eitan-Dev applies it.

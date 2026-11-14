@@ -37,3 +37,4 @@ Rule changes:
 - From now on: check every keyframe for physical sense (doors, keys, the till state) before showing Eitan.
 - From now on: say "update the demo data", not "re-record".
 Next production tests: A1-30 full-screen, drawn meter + taxi clips.
+- From now on (2026-11-14, ST03): keyframe faces must be evenly lit with no cap-brim shadow. wan turned a shaded face fully dark twice; a re-lit keyframe fixed it on attempt 3.
