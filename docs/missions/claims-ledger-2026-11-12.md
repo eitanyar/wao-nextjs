@@ -101,6 +101,7 @@ Covers `SB`, Dash v2 S1–S3, Dash v1 S1–S3, `ST` and `TS`.
 |---|---|---|---|---|---|
 | B1 | ₪199 + VAT a month, no commitment, no trial | SB 5, 39, 50, 68; D1 end cards; ST B13; TS 61 | `src/lib/payments/plans.ts:41,47-48`; TS §7 | PROVEN | Not on the live page; checkout is off in production. |
 | B2 | Opens 19.11.2026 | SB 1 | `docs/missions/site-bot-full-system-launch-2026-11-19.md` | NEEDS-PROOF (decision due 19.11) | B8–B15 open. |
+| B2a | Launch moved to 29.11.2026; pilot capped at 10 businesses ("פיילוט ראשון: 10 עסקים בלבד.") | SB launch stamp; S1-15 ad end screen | `docs/missions/site-bot-launch-readiness-2026-11-12.md:9` (variant B2, Eitan-approved 2026-11-12) | PROVEN (decision) | Supersedes B2's 19.11 date. Added 2026-11-14 per Noa. |
 | B3 | Free check works now: business name only, no sign-up, result in seconds | SB 2, 8, 42; ST B12 | TRUTH rows 1–2 (`audit/page.tsx:28`, 15s ceiling); live `/site-bot/audit` returned 200 | PROVEN | Live. |
 | B4 | A page for every service, under one service tree | SB 13–14, 48; ST B05 | TRUTH (`researchedSite.ts:45-46,124,263`) | PROVEN (code) | Generated sites. |
 | B5 | The tree is built from checking what people search near you | SB 14 | `src/lib/site-bot/research/dataForSeoResearch.ts`, `runResearch.ts` | PROVEN (code) | — |

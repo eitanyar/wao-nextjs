@@ -1,0 +1,27 @@
+{
+ "raw": [
+  {
+   "category": "fact",
+   "key": "voice_lines[2]",
+   "quote": "מביא לך עוד עבודות ועוד ביקורות בגוגל",
+   "reader_consequence": "The spoken promise of more jobs and more Google reviews is ledger B29 (NEEDS-PROOF) and contradicts Site Bot terms §9 (no commitment to calls or enquiries); the review-request mechanism it rests on (B13) is not live and its copy is marked 'Do not ship'. The tradesman who taps expects delivered jobs/reviews from a product that cannot yet produce them, and the free audit he lands on cannot substantiate the promise.",
+   "severity": "must"
+  }
+ ],
+ "kept": [
+  {
+   "category": "fact",
+   "key": "voice_lines[2]",
+   "quote": "מביא לך עוד עבודות ועוד ביקורות בגוגל",
+   "reader_consequence": "The spoken promise of more jobs and more Google reviews is ledger B29 (NEEDS-PROOF) and contradicts Site Bot terms §9 (no commitment to calls or enquiries); the review-request mechanism it rests on (B13) is not live and its copy is marked 'Do not ship'. The tradesman who taps expects delivered jobs/reviews from a product that cannot yet produce them, and the free audit he lands on cannot substantiate the promise.",
+   "severity": "must"
+  }
+ ],
+ "dropped": {
+  "fabricated": 0,
+  "duplicate": 0,
+  "scope": 0
+ },
+ "seconds": 45.0,
+ "request_id": "chatcmpl-e4eff387-e85d-4a0d-9aca-de77089304b2"
+}

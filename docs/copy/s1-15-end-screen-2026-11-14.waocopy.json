@@ -1,0 +1,23 @@
+Angle: he's just laughed at himself on the roof and is now problem-aware, so the end screen skips the pitch and hands him the free check in the page's own words, so the first thing he sees after the tap is the line he just read.
+
+```json
+{
+  "stamp": "פיילוט ראשון: 10 עסקים בלבד.",
+  "cta": "בדוק את העסק שלי בחינם",
+  "url_line": "wao.co.il/site-bot",
+  "banner": "היא מחפשת בגוגל, לא ברחוב.",
+  "why": {
+    "stamp": "Byte-exact with the landing page's launch stamp, so the scarcity he reads in the ad is the first line he sees on the page. The 10-business cap is the brief's fact, and it gives him a reason to tap now, not later.",
+    "cta": "Byte-exact with the page's primary button, which keeps the message match intact. It's 5 short words (18 letters), one over the ~4 target, but 'בחינם' removes his last fear right on the button. Dropping it would cost more than the extra word.",
+    "url_line": "Confirmed. It's short, contains no www, and it's the exact landing path. Set it as its own LTR line so the RTL layout doesn't flip the slash order.",
+    "banner": "Shortened from 7 words to 5 so a muted viewer can read it in the 2-second window. Google comes first, so the contrast lands on where she actually looks instead of opening with a denial. The voice line stays as recorded, and the caption reads as a clean cut-down of it."
+  }
+}
+```
+
+Two notes before this ships:
+
+- **Date check:** I couldn't open the claims ledger from this seat. The cap of 10, the free audit and the 29.11 launch all come from the brief's fact list. Someone should confirm them against `claims-ledger-2026-11-12.md` before render.
+- **Launch date:** I left 29.11 off the stamp on purpose. It isn't on the landing page's first screen, so adding it would break the message match. If Eitan wants the date in the video, it belongs on the page stamp too, in the same words.
+
+→ Noa to proof (RTL rendering of the URL line and the comma in the banner).
