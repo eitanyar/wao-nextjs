@@ -142,7 +142,7 @@ Covers `SB`, Dash v2 S1–S3, Dash v1 S1–S3, `ST` and `TS`.
 | C3 | The stamp wording drops "anytime" from your decision ("cancel anytime, no commitment") | D2 `end_screen.options` | Option 2 keeps it; option 1 was picked | FOUNDER-CONFIRM |
 | C4 | Price on the end screen | `data/video/config.json` | Site Bot is checked against `plans.ts`; Ads Bot has `pageSource: null`, so nothing checks 249 against `plans.ts:59`. The Dash v2 end-card directions list mark, name, stamp and button, and no price. | NEEDS-PROOF |
 | C5 | Button: see a free demo (Ads) / check your business free (Site) | `docs/copy/video-end-screen-cta-2026-11-12.waocopy.json` | A31, B3 | PROVEN |
-| C6 | The page the ad lands on shows the same price | — | Live pages do not (see "State of the pages") | FALSE until round 2 is deployed |
+| C6 | The page the ad lands on shows the same price | — | Live /google-ads checked 2026-11-14: shows 249 ₪ + מע״מ management plus a minimum 1,500 ₪/month ad budget paid to Google | PROVEN (live, 2026-11-14) |
 
 ## D. Terms and legal base documents
 

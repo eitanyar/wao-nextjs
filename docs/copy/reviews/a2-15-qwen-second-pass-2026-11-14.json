@@ -1,0 +1,63 @@
+{
+ "raw": [
+  {
+   "category": "fact",
+   "key": "price_line",
+   "quote": "249 ₪ + מע״מ לחודש",
+   "reader_consequence": "Ledger C6/A1: round-2 copy is uncommitted and undeployed; the live /google-ads he lands on still sells management 'from ₪1,500' and never shows 249. He clicks from a 249 end card and meets a price six times higher, so he reads the ad as bait.",
+   "severity": "must"
+  },
+  {
+   "category": "state",
+   "key": "price_line",
+   "quote": "בלי התחייבות",
+   "reader_consequence": "A1/A27 'Today': there is no Ads Bot billing plan or checkout in code (plans.ts:55-57) and no online cancel. The card prices a monthly subscription he cannot actually start or leave online; after the demo he has no purchase path, only a contact form.",
+   "severity": "should"
+  },
+  {
+   "category": "fact",
+   "key": "voice_3",
+   "quote": "מביא לך קונים, לא טועמים",
+   "reader_consequence": "A34 is NEEDS-PROOF (no Ads Bot client results, terms §9 disclaims any commitment to enquiries) and A35 is FALSE on the literal reading: Google still bills every click, including tasters. Paired with line 1 ('everyone tastes on your dime'), the tradesman believes he stops paying for non-buyers and budget is only spent on buyers.",
+   "severity": "should"
+  },
+  {
+   "category": "fragment",
+   "key": "demo_leads",
+   "quote": "\"type\": \"phone-click\", \"real\": true",
+   "reader_consequence": "The beat is the real six-column screen (source, date, name, phone, real-or-not, deal) but the strings supply only name/type/real. Date, phone and deal are unspecified, so the renderer invents them inside a screen presented as real product UI — including a phone number that may belong to a real person.",
+   "severity": "should"
+  }
+ ],
+ "kept": [
+  {
+   "category": "fact",
+   "key": "price_line",
+   "quote": "249 ₪ + מע״מ לחודש",
+   "reader_consequence": "Ledger C6/A1: round-2 copy is uncommitted and undeployed; the live /google-ads he lands on still sells management 'from ₪1,500' and never shows 249. He clicks from a 249 end card and meets a price six times higher, so he reads the ad as bait.",
+   "severity": "must"
+  },
+  {
+   "category": "state",
+   "key": "price_line",
+   "quote": "בלי התחייבות",
+   "reader_consequence": "A1/A27 'Today': there is no Ads Bot billing plan or checkout in code (plans.ts:55-57) and no online cancel. The card prices a monthly subscription he cannot actually start or leave online; after the demo he has no purchase path, only a contact form.",
+   "severity": "should"
+  },
+  {
+   "category": "fact",
+   "key": "voice_3",
+   "quote": "מביא לך קונים, לא טועמים",
+   "reader_consequence": "A34 is NEEDS-PROOF (no Ads Bot client results, terms §9 disclaims any commitment to enquiries) and A35 is FALSE on the literal reading: Google still bills every click, including tasters. Paired with line 1 ('everyone tastes on your dime'), the tradesman believes he stops paying for non-buyers and budget is only spent on buyers.",
+   "severity": "should"
+  },
+  {
+   "category": "fragment",
+   "key": "demo_leads",
+   "quote": "\"type\": \"phone-click\", \"real\": true",
+   "reader_consequence": "The beat is the real six-column screen (source, date, name, phone, real-or-not, deal) but the strings supply only name/type/real. Date, phone and deal are unspecified, so the renderer invents them inside a screen presented as real product UI — including a phone number that may belong to a real person.",
+   "severity": "should"
+  }
+ ],
+ "seconds": 41.9
+}

@@ -1,0 +1,34 @@
+Angle: he has just watched his own story (paid for a crowd, got no buyers), so he's product-aware at the end card. His last fear is paying for another tasting stall, so the stamp lets him see his ad before he pays anything.
+
+```json
+{
+  "stamp": "תראה את המודעה שלך לפני שאתה משלם שקל",
+  "cta": "לראות דמו חינם",
+  "price_line": "249 ₪ + מע״מ לחודש · בלי התחייבות",
+  "url_line": "wao.co.il/google-ads",
+  "banner": "הקהל גדל, הקופה ריקה",
+  "demo_leads": [
+    { "name": "נועם ב.", "source": "טופס באתר", "real": false, "type": "student, fix-it-himself" },
+    { "name": "מיכל ש.", "source": "שיחה מהמודעה", "real": true, "type": "leak / emergency" },
+    { "name": "עומר ד.", "source": "וואטסאפ", "real": false, "type": "job-seeker" },
+    { "name": "רונית ק.", "source": "טופס באתר", "real": false, "type": "price-shopper" }
+  ],
+  "why": {
+    "stamp": "This answers the fear the ad just planted (paying for another crowd that doesn't buy). It's true because the demo shows his ad and landing page before he pays, which is exactly what the button opens.",
+    "cta": "It matches the landing page's secondary button byte for byte, so the click lands on the same words. It's also the low-risk step for someone who scrolled past with sound off.",
+    "price_line": "Keep it. At 249 ₪ the price is a hook, not a hurdle, for a guy who has already burned more on clicks. It also filters out tyre-kickers before they click. «בלי התחייבות» matches the landing page note word for word. Eitan decides.",
+    "url_line": "Confirmed. The short form drops https://www. so it reads in one glance on a phone.",
+    "banner": "The full spoken line, words in the same order. With sound off, four words carry the whole contrast, and 6 to 8 seconds is plenty to read it.",
+    "demo_leads": "A first name plus surname initial is how leads actually show up in a list. The real job sits in row 2 so the eye reaches the mark early. Mixed sources make the screen feel lived-in. The names are common and fictional, and there are no phone numbers.",
+    "demo_leads.type": "This is an internal note for the illustrator and engineer only, not on-screen text."
+  },
+  "flags": [
+    "With sound off, three columns don't show WHY the three are clickers. If the leads screen has a message preview, use these: מיכל ש. «יש נזילה מהתקרה, אפשר להגיע היום?» · נועם ב. «איך מחליפים ברז לבד?» · עומר ד. «מחפשים עובדים?» · רונית ק. «כמה עולה פתיחת סתימה? רק משווה מחירים». That's the beat that makes the gag land.",
+    "The source labels (טופס באתר / שיחה מהמודעה / וואטסאפ) must match the options the real Ads Bot screen actually shows. Eitan-Dev should swap in the UI's own labels if they differ.",
+    "The stamp relies on the demo showing his ad before he pays, per this brief. It needs a check against claims-ledger-2026-11-12.md and the landing page copy near the demo button. If that wording isn't there, fall back to «בלי התחייבות, עם הסכם כתוב» and drop it from price_line."
+  ]
+}
+```
+
+→ Noa to proof (gershayim in מע״מ, the banner being the same words in the same order as the spoken line, and the stamp's register).
+→ Eitan-Dev to map `real` and `source` to the live leads-screen labels.
