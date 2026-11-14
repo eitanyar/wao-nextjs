@@ -1,0 +1,22 @@
+Angle: reviewers who barely remember the visit, so each line keeps one small human detail (no mess, a call back to check, plain explanations) that reads as a real Google review on a paused frame.
+
+```json
+{
+  "reviews": [
+    { "name": "נועם", "stars": 5, "text": "הגיע בזמן, אדיב ומסודר. ממליץ!" },
+    { "name": "מיכל", "stars": 5, "text": "הייתי בטוחה שיהיה בלגן, השאיר הכול נקי." },
+    { "name": "עומר", "stars": 5, "text": "הוגן, רציני, בלי הפתעות." },
+    { "name": "רונית", "stars": 4, "text": "לקח לו קצת לחזור אליי, אבל עבודה מעולה." },
+    { "name": "אבי", "stars": 5, "text": "הסביר הכול בגובה העיניים. אינסטלטור של פעם." },
+    { "name": "שירן", "stars": 5, "text": "חזר לבדוק שהכול תקין. לא מובן מאליו." }
+  ]
+}
+```
+
+Notes:
+- **Word counts:** 5, 7, 4, 8, 7, 6.
+- **רונית's 4-star review:** it carries a small, believable complaint (he was slow to get back to her) and closes positive. That keeps the set from looking staged.
+- **Feminine form:** מיכל's review uses "בטוחה".
+- **What the set avoids:** results, numbers, prices and brand names.
+
+→ Noa to proof.
