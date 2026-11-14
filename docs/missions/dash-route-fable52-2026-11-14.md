@@ -133,3 +133,16 @@ Next production tests: does a single keyframe ref hold the cursor head through a
 2. **Story doodles: wan motion or pose-swapped stills?** The spec says pose swaps. **Recommend:** wan, behind the $0.30 keyframe gate and the 3-attempt cap. The stills fallback costs nothing extra.
 3. **What is the first production?** **Recommend:** A1 15s, 9:16 only, then the 30s. That is four beats and about two wan clips, so every rule is exercised once before the long cut. The product beat still needs the real `R-ADS-lead` recording (gate G5), and the other aspects need their own plates (16:9 needs a landscape Dash).
 **Eitan, 2026-11-14:** watched `S5a-vs-S5b-composite.mp4`. The pipeline face syncs better, so the hybrid face route is confirmed. The voice-over picks are marked in the shortlist sheet, and nothing gets produced until Eitan reviews.
+
+## Style decision (Eitan, 2026-11-14): FULL-SCREEN for all videos
+Eitan compared the phone-frame and full-screen versions of A2-15 and chose full-screen: "Full screen variant is amazing. I'de like it for all videos — the panning in and out hook the viewer to the screen."
+
+The pattern:
+- Open on Dash at the dashboard (~0.6s).
+- One continuous push THROUGH his screen into the full-frame 9:16 story.
+- Dash stays as a reaction tile, top right (~20% width, inside the safe box).
+- Cut or push back OUT to Dash full-face for the verdict/punchline line.
+- Product screens full-frame on a dark page.
+- The END card is unchanged.
+
+The reference build is `scratch/video-dash/a2-15-full/tools/a2_15_full.py`. Known cost: wan clips are enlarged about 1.5x and look softer, so keep light sharpening and pick clean takes.

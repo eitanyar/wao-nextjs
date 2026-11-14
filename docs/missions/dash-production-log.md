@@ -22,3 +22,18 @@ Rule changes:
 - From now on: glyphs, coins, meters and bubbles are pipeline overlays.
 - From now on: trim the first 0.5s; one action per 5s clip.
 Next production tests: does a single keyframe ref hold the cursor head through a 5s action?
+
+## 2026-11-14 · S1-15, A2-15, A2-30 · hybrid, phone-frame → full-screen
+Cost / time: 6 wan clips (~$1.80), every one passed first try. Each build is one engineer run plus a verifier pass.
+Worked:
+- One reference image per clip held identity every time, including arrow-cursor heads once a keyframe image existed.
+- The pipeline face plus lip-sync is stable and the evidence checks catch drift.
+- The real product screens recorded on demo or sandbox data.
+Failed:
+- The phone-in-phone frame made the story small on mobile (Eitan).
+- The image model drifted (flags on caps, keys in odd places, a missing car door). Eitan caught several by eye.
+Rule changes:
+- From now on: full-screen story with a push-in/push-out to Dash.
+- From now on: check every keyframe for physical sense (doors, keys, the till state) before showing Eitan.
+- From now on: say "update the demo data", not "re-record".
+Next production tests: A1-30 full-screen, drawn meter + taxi clips.
