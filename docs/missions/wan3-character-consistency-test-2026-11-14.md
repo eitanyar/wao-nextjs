@@ -100,3 +100,6 @@ Credits: the console shows tokens only. The plan was at 10% of $68 before the 6 
 **Cost:** ≈ $0.06/s at most (five 5s shots moved the plan 10.6% → 12.8%).
 **Proposed verdict (Eitan to confirm after watching `BEFORE-AFTER-single-ref.mp4`):** hybrid, per Fable's rule. wan renders scenes with Dash on a blank screen from 1–2 refs per shot, and the face plus lip-sync are composited by `scripts/video/build-video.mjs`, so the face stays identical across the series. wan's own lip sync (S5a) held for only the first phrase.
 **Open before the verdict is final:** (1) the S5b composited version, i.e. the pipeline face plus the Nimrod clip on S5br, for comparison with S5a; (2) one story-scene shot (S2) with a single ref, since S2 was the weakest on story content.
+
+## Route decision 2026-11-14
+Fable 5.2 (confirmed claude-fable-5-2): hybrid with a hard split. See `docs/missions/dash-route-fable52-2026-11-14.md`; log in `docs/missions/dash-production-log.md`. Pending: Eitan watches `S5a-vs-S5b-composite.mp4`.
