@@ -88,3 +88,15 @@ Spirit level stays orange in every shot, inherited from ref 09.
 **Reading:** identity is strong, 6/6 shots on-model whenever Dash is on screen. Shot control is the failure: with 10 refs, wan seems to treat the sheet as a storyboard and cycles through views and expressions, adding cuts and pans that the prompt forbids. By the acceptance rule this is No-go (0/5), but the cause looks like the reference set, not identity drift.
 **Proposed follow-up (not run):** S1 and S5b again, each with ONE reference image (01 and 02 respectively). That's 2 shots, to test the storyboard hypothesis before the final verdict.
 Credits: the console shows tokens only. The plan was at 10% of $68 before the 6 shots; the delta after = cost of 30s of wan video.
+
+## Single-reference rerun 2026-11-14 (Eitan approved)
+
+| Shot | Refs | Result |
+|---|---|---|
+| S1r (S1 prompt, setting described in text) | 01 only | PASS: one continuous take, no pan or cuts, deadpan held, one blink, case, bumpers and tape on-model every frame, no props appear or vanish. Minor: two faint diagonal streaks in the sky. |
+| S5br (blank screen) | 02 only | PASS: screen stays blank navy all 5s, static, identity marks held. Usable as the base plate for a composited face. |
+
+**Hypothesis confirmed:** the 10-image set made wan cycle through the sheet like a storyboard. With one reference per shot, shot control works.
+**Cost:** ≈ $0.06/s at most (five 5s shots moved the plan 10.6% → 12.8%).
+**Proposed verdict (Eitan to confirm after watching `BEFORE-AFTER-single-ref.mp4`):** hybrid, per Fable's rule. wan renders scenes with Dash on a blank screen from 1–2 refs per shot, and the face plus lip-sync are composited by `scripts/video/build-video.mjs`, so the face stays identical across the series. wan's own lip sync (S5a) held for only the first phrase.
+**Open before the verdict is final:** (1) the S5b composited version, i.e. the pipeline face plus the Nimrod clip on S5br, for comparison with S5a; (2) one story-scene shot (S2) with a single ref, since S2 was the weakest on story content.
