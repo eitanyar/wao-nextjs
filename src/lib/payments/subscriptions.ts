@@ -21,6 +21,7 @@ import { generateMagicLinkToken, validateAndConsumeMagicLinkToken } from './magi
 import { sendTrialChargeConfirmationEmail, sendMagicLinkCancelEmail } from './email';
 import { issueInvoiceForCharge } from './invoicing';
 import { getBillingPlan, planChargeAmount, type BillingPlan } from './plans';
+import { siteBotSupportBoxShown } from '../site-bot/supportBox';
 
 const EMAIL_ADDRESS = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -308,7 +309,7 @@ export async function requestMagicLinkForEmail(email: string): Promise<void> {
     const { token } = generateMagicLinkToken(subscription.id);
     const cancelUrl = buildCancelUrl(token);
     try {
-      await sendMagicLinkCancelEmail({ to: email, cancelUrl });
+      await sendMagicLinkCancelEmail({ to: email, cancelUrl, supportBoxShown: siteBotSupportBoxShown(subscription) });
     } catch (err) {
       console.error(`[subscriptions/magic-link] Failed to send magic-link email for subscription=${subscription.id}:`, err);
     }
@@ -357,6 +358,21 @@ export function subscriptionHasAccess(row: SubscriptionRow, now: Date = new Date
 }
 
 /**
+ * The paid-through date a cancel made at `now` would keep the service running until, or null when the cancel would be
+ * immediate (legacy rows, a plan row whose paid period has ended, a paused row). The single rule behind both
+ * cancelSubscriptionByToken and the account page's confirm question, so the question never promises a date the cancel
+ * will not honour.
+ */
+export function cancelEffectiveAtIfCanceledNow(
+  subscription: Pick<SubscriptionRow, 'plan' | 'billing_anchor_at' | 'periods_paid' | 'status'>,
+  now: Date = new Date()
+): string | null {
+  const plan = getBillingPlan(subscription.plan);
+  const paidThrough = plan && plan.cancellationEffective === 'end_of_period' ? planPaidThrough(subscription) : null;
+  return paidThrough !== null && paidThrough > now.toISOString() && subscription.status !== 'paused' ? paidThrough : null;
+}
+
+/**
  * Re-validates the magic-link token server-side (never trusts a client
  * "authorized" flag) and, if valid, cancels the subscription. Token
  * validate+consume happens first, before any other side effect — see
@@ -389,9 +405,8 @@ export async function cancelSubscriptionByToken(token: string, now: Date = new D
 
   const db = getDb();
   const timestamp = now.toISOString();
-  const plan = getBillingPlan(subscription.plan);
-  const paidThrough = plan && plan.cancellationEffective === 'end_of_period' ? planPaidThrough(subscription) : null;
-  const atPeriodEnd = paidThrough !== null && paidThrough > timestamp && subscription.status !== 'paused';
+  const paidThrough = cancelEffectiveAtIfCanceledNow(subscription, now);
+  const atPeriodEnd = paidThrough !== null;
 
   if (atPeriodEnd) {
     db.prepare(
@@ -724,7 +739,12 @@ export async function activatePlanSubscription(
   // email is stored as `site-bot:<sessionId>` and gets no email (open item: email vs WhatsApp at sign-up).
   if (EMAIL_ADDRESS.test(subscription.user_id)) {
     try {
-      await sendMagicLinkCancelEmail({ to: subscription.user_id, cancelUrl: buildCancelUrl(generateMagicLinkToken(subscriptionId).token) });
+      await sendMagicLinkCancelEmail({
+        to: subscription.user_id,
+        cancelUrl: buildCancelUrl(generateMagicLinkToken(subscriptionId).token),
+        // The row was just set active above; `subscription` is the pre-activation read.
+        supportBoxShown: siteBotSupportBoxShown({ plan: subscription.plan, status: 'active' }),
+      });
     } catch (err) {
       console.error(`[subscriptions/plan] Failed to send the manage-subscription email for subscription=${subscriptionId}:`, err);
     }

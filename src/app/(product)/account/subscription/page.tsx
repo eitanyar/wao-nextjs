@@ -1,23 +1,27 @@
 import { peekMagicLinkToken } from '@/lib/payments/magic-link';
-import { getSubscriptionById } from '@/lib/payments/subscriptions';
+import { cancelEffectiveAtIfCanceledNow, getSubscriptionById } from '@/lib/payments/subscriptions';
 import CancelSubscriptionButton from './CancelSubscriptionButton';
 import CardUpdateButton from './CardUpdateButton';
 import RequestLinkForm from './RequestLinkForm';
 import ClientMessageBox from './ClientMessageBox';
-import { SITE_BOT_PLAN } from '@/lib/payments/plans';
-import { clientMessagesEnabled } from '@/lib/site-bot/clientMessages';
-import { SITE_BOT_CLIENT_MESSAGE_COPY_PENDING } from '@/lib/site-bot/clientMessageCopy';
+import { siteBotSupportBoxShown } from '@/lib/site-bot/supportBox';
+import {
+  ACCOUNT_PAGE_COPY as COPY,
+  ACCOUNT_STATUS_LABEL,
+  ACCOUNT_TITLE_SUFFIX,
+  formatAccountDate,
+  formatAccountPrice,
+} from '@/lib/payments/accountCopy';
 
-export const metadata = { robots: { index: false }, title: 'Manage subscription | WAO' };
+// The page is Hebrew RTL (the (product) layout sets <html lang="he" dir="rtl">). Legacy trial-engine strings stay
+// English and carry their own lang="en" dir="ltr" so their punctuation does not flip.
+export const metadata = { robots: { index: false }, title: COPY.metadataTitle + ACCOUNT_TITLE_SUFFIX };
 
+// Legacy trial-engine statuses keep their English labels (out of the Hebrew pass); every other status is Hebrew.
 const STATUS_LABEL: Record<string, string> = {
-  pending: 'Pending',
   trialing: 'Trial',
-  active: 'Active',
-  past_due: 'Past due',
-  canceled: 'Canceled',
   expired: 'Expired',
-  paused: 'Paused',
+  ...ACCOUNT_STATUS_LABEL,
 };
 
 export default async function SubscriptionPage({
@@ -30,16 +34,16 @@ export default async function SubscriptionPage({
   // Signup-flow redirect landing (from /api/subscriptions/callback) — no token involved.
   if (!token && signup) {
     return (
-      <main className="min-h-screen flex items-center justify-center px-4" dir="ltr">
+      <main className="min-h-screen flex items-center justify-center px-4">
         <div className="w-full max-w-sm text-center">
           <span className="text-3xl font-black tracking-tight">WAO</span>
           {signup === 'success' ? (
-            <p className="mt-6 text-sm text-[var(--muted)]">
+            <p className="mt-6 text-sm text-[var(--muted)]" lang="en" dir="ltr">
               Your trial has started. Check your email for a confirmation with a link to manage or cancel your
               subscription any time.
             </p>
           ) : (
-            <p className="mt-6 text-sm text-red-400">
+            <p className="mt-6 text-sm text-red-400" lang="en" dir="ltr">
               We couldn&apos;t complete your signup. No charge was made. Please try again.
             </p>
           )}
@@ -54,12 +58,11 @@ export default async function SubscriptionPage({
   // specific reason, and never mutates state).
   if (!token && cardUpdate === 'error') {
     return (
-      <main className="min-h-screen flex items-center justify-center px-4" dir="ltr">
+      <main className="min-h-screen flex items-center justify-center px-4">
         <div className="w-full max-w-sm text-center">
           <span className="text-3xl font-black tracking-tight">WAO</span>
-          <p className="mt-6 text-sm text-red-400">
-            We couldn&apos;t update your card. Nothing was changed. Please request a new link and try again.
-          </p>
+          <p className="mt-6 text-sm text-red-400">{COPY.cardUpdateCallbackError}</p>
+          <RequestLinkForm />
         </div>
       </main>
     );
@@ -67,12 +70,10 @@ export default async function SubscriptionPage({
 
   if (!token) {
     return (
-      <main className="min-h-screen flex items-center justify-center px-4" dir="ltr">
+      <main className="min-h-screen flex items-center justify-center px-4">
         <div className="w-full max-w-sm text-center">
           <span className="text-3xl font-black tracking-tight">WAO</span>
-          <p className="mt-6 text-sm text-[var(--muted)]">
-            This page needs a valid link from an email we sent you. Request a new one if you&apos;ve lost it.
-          </p>
+          <p className="mt-6 text-sm text-[var(--muted)]">{COPY.noTokenIntro}</p>
           <RequestLinkForm />
         </div>
       </main>
@@ -85,13 +86,13 @@ export default async function SubscriptionPage({
   if (!peek.valid) {
     const message =
       peek.reason === 'expired'
-        ? 'This link has expired. Please request a new one.'
+        ? COPY.linkExpired
         : peek.reason === 'already_consumed'
-        ? 'This link has already been used.'
-        : 'This link is invalid.';
+        ? COPY.linkUsed
+        : COPY.linkInvalid;
 
     return (
-      <main className="min-h-screen flex items-center justify-center px-4" dir="ltr">
+      <main className="min-h-screen flex items-center justify-center px-4">
         <div className="w-full max-w-sm text-center">
           <span className="text-3xl font-black tracking-tight">WAO</span>
           <p className="mt-6 text-sm text-red-400">{message}</p>
@@ -105,10 +106,11 @@ export default async function SubscriptionPage({
 
   if (!subscription) {
     return (
-      <main className="min-h-screen flex items-center justify-center px-4" dir="ltr">
+      <main className="min-h-screen flex items-center justify-center px-4">
         <div className="w-full max-w-sm text-center">
           <span className="text-3xl font-black tracking-tight">WAO</span>
-          <p className="mt-6 text-sm text-red-400">We couldn&apos;t find that subscription.</p>
+          <p className="mt-6 text-sm text-red-400">{COPY.subscriptionNotFound}</p>
+          <RequestLinkForm />
         </div>
       </main>
     );
@@ -119,35 +121,34 @@ export default async function SubscriptionPage({
   const cancelScheduled = !isCanceled && subscription.cancel_at_period_end === 1 && !!subscription.cancel_effective_at;
   const isPastDue = subscription.status === 'past_due';
   // Site-Bot client message box: only for Site-Bot plan rows past checkout, with the feature flag on and the Hebrew
-  // copy approved. Otherwise the page is byte-for-byte what it was.
-  const showMessageBox =
-    subscription.plan === SITE_BOT_PLAN.id &&
-    subscription.status !== 'pending' &&
-    clientMessagesEnabled(process.env) &&
-    !SITE_BOT_CLIENT_MESSAGE_COPY_PENDING;
+  // copy approved (siteBotSupportBoxShown). The buttons' generic error points at the box only when it is shown.
+  const showMessageBox = siteBotSupportBoxShown(subscription, process.env);
+  // The date the confirm question promises: the same rule the cancel applies (null = the cancel takes effect at once).
+  const cancelEffectiveAt = cancelEffectiveAtIfCanceledNow(subscription);
+  const confirmDate = cancelEffectiveAt ? formatAccountDate(cancelEffectiveAt) : null;
 
   return (
-    <main className="min-h-screen flex items-center justify-center px-4" dir="ltr">
+    <main className="min-h-screen flex items-center justify-center px-4">
       <div className={showMessageBox ? 'w-full max-w-md' : 'w-full max-w-sm'}>
         <div className="text-center mb-8">
           <span className="text-3xl font-black tracking-tight">WAO</span>
-          <p className="text-[var(--muted)] mt-1 text-sm">Manage your subscription</p>
+          <p className="text-[var(--muted)] mt-1 text-sm">{COPY.headerSubtitle}</p>
         </div>
 
         {cardUpdate === 'success' && (
           <p className="mb-4 rounded-lg bg-green-500/10 border border-green-500/30 text-green-400 text-sm text-center py-2 px-3">
-            Your card was updated successfully.
+            {COPY.noticeCardUpdated}
           </p>
         )}
         {cardUpdate === 'success-recharged' && (
           <p className="mb-4 rounded-lg bg-green-500/10 border border-green-500/30 text-green-400 text-sm text-center py-2 px-3">
-            Your card was updated and your subscription is active again.
+            {COPY.noticeCardUpdatedRecharged}
           </p>
         )}
 
         {isPastDue && (
           <p className="mb-4 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-400 text-sm text-center py-2 px-3">
-            We couldn&apos;t charge your card. Please update your payment method to keep your subscription active.
+            {COPY.noticePastDue}
           </p>
         )}
 
@@ -159,43 +160,44 @@ export default async function SubscriptionPage({
 
         <div className="rounded-2xl border border-white/10 bg-white/5 p-8 space-y-4">
           <div className="flex justify-between text-sm">
-            <span className="text-[var(--muted)]">Status</span>
+            <span className="text-[var(--muted)]">{COPY.rowStatus}</span>
             <span className="font-semibold">{STATUS_LABEL[subscription.status] ?? subscription.status}</span>
           </div>
           <div className="flex justify-between text-sm">
-            <span className="text-[var(--muted)]">Recurring amount</span>
-            <span className="font-semibold">
-              {subscription.recurring_amount} {subscription.currency}
-            </span>
+            <span className="text-[var(--muted)]">{COPY.rowRecurringAmount}</span>
+            {/* VAT-inclusive recurring amount (owner decision 2026-11-14), he-IL currency format, LTR-isolated. */}
+            <bdi dir="ltr" className="font-semibold">
+              {subscription.recurring_amount != null ? formatAccountPrice(subscription.recurring_amount, subscription.currency) : ''}
+            </bdi>
           </div>
           {subscription.card_last4 && (
             <div className="flex justify-between text-sm">
-              <span className="text-[var(--muted)]">Card</span>
-              <span className="font-semibold">•••• {subscription.card_last4}</span>
+              <span className="text-[var(--muted)]">{COPY.rowCard}</span>
+              <bdi dir="ltr" className="font-semibold">•••• {subscription.card_last4}</bdi>
             </div>
           )}
           {cancelScheduled && (
             <div className="flex justify-between text-sm" data-cancel-at-period-end="true">
-              <span className="text-[var(--muted)]">Access until</span>
-              <span className="font-semibold">{new Date(subscription.cancel_effective_at as string).toLocaleDateString()}</span>
+              <span className="text-[var(--muted)]">{COPY.rowAccessUntil}</span>
+              <bdi dir="ltr" className="font-semibold">{formatAccountDate(subscription.cancel_effective_at as string)}</bdi>
             </div>
           )}
           {subscription.next_charge_at && (
             <div className="flex justify-between text-sm">
-              <span className="text-[var(--muted)]">Next charge</span>
-              <span className="font-semibold">{new Date(subscription.next_charge_at).toLocaleDateString()}</span>
+              <span className="text-[var(--muted)]">{COPY.rowNextCharge}</span>
+              <bdi dir="ltr" className="font-semibold">{formatAccountDate(subscription.next_charge_at)}</bdi>
             </div>
           )}
 
           <div className="pt-2 space-y-3">
             {isCanceled ? (
-              <p className="text-green-400 text-sm text-center">This subscription is already canceled.</p>
+              <p className="text-green-400 text-sm text-center">{COPY.stateAlreadyCanceled}</p>
             ) : cancelScheduled ? (
-              <p className="text-green-400 text-sm text-center">Your subscription has been canceled. You will not be charged again.</p>
+              <p className="text-green-400 text-sm text-center">{COPY.stateCancelScheduled}</p>
             ) : (
               <>
-                <CardUpdateButton token={token} prominent={isPastDue} />
-                <CancelSubscriptionButton token={token} />
+                <CardUpdateButton token={token} prominent={isPastDue} showMessageBox={showMessageBox} />
+                <CancelSubscriptionButton token={token} showMessageBox={showMessageBox} confirmDate={confirmDate} />
               </>
             )}
           </div>

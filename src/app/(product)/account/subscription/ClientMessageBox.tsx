@@ -1,6 +1,6 @@
 'use client';
 
-// Site-Bot client message box: an RTL island inside the (English, LTR) account page.
+// Site-Bot client message box on the (Hebrew, RTL) account page; direction and language come from the layout.
 // Every label is approved Hebrew from clientMessageCopy.ts, shown only through customerVisibleLabel(), so a
 // placeholder can never render. The page renders this box only when SITE_BOT_CLIENT_MESSAGE_COPY_PENDING is false.
 // No phone number, no mailto to a person, no founder name (spec constraint).
@@ -88,7 +88,7 @@ export default function ClientMessageBox({ token, cancelAvailable }: { token: st
   const statusText = phase === 'sending' ? label('sending') : phase === 'sent' ? label('sentHeading') : null;
 
   return (
-    <section dir="rtl" lang="he" aria-labelledby="client-message-heading" className="rounded-2xl border border-white/10 bg-white/5 p-6 text-start">
+    <section aria-labelledby="client-message-heading" className="rounded-2xl border border-white/10 bg-white/5 p-6 text-start">
       <h2 id="client-message-heading" className="text-lg font-bold">{label('boxHeading')}</h2>
       {phase === 'sent' ? (
         <div className="mt-3 space-y-3">

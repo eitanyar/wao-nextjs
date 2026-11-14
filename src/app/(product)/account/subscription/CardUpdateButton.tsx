@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { CARD_UPDATE_BUTTON_COPY as COPY } from '@/lib/payments/accountCopy';
 
 /**
  * Client component: starts the card-update tokenization flow. Sends the
@@ -8,14 +9,25 @@ import { useState } from 'react';
  * returns a hosted-tokenization `redirectUrl` — see
  * `src/lib/payments/card-update.ts` doc comment for why consumption is
  * deferred to the callback, not this step.
+ *
+ * `showMessageBox`: the generic error points at the support box only when that box is on the page.
  */
+/** The generic error points at the support box only when that box is on the page. */
+export function cardUpdateErrorMessage(kind: 'invalid_token' | 'generic', showMessageBox: boolean): string {
+  if (kind === 'invalid_token') return COPY.errorInvalidToken;
+  return showMessageBox ? COPY.errorGeneric : COPY.errorGenericNoBox;
+}
+
 export default function CardUpdateButton({
   token,
   prominent = false,
+  showMessageBox,
 }: {
   token: string;
   prominent?: boolean;
+  showMessageBox: boolean;
 }) {
+  const genericError = cardUpdateErrorMessage('generic', showMessageBox);
   const [state, setState] = useState<'idle' | 'loading' | 'error'>('idle');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -33,15 +45,15 @@ export default function CardUpdateButton({
         setState('error');
         setErrorMessage(
           data.error === 'invalid_token'
-            ? 'This link has expired or was already used. Request a new one to update your card.'
-            : 'Something went wrong. Please try again or contact us.'
+            ? cardUpdateErrorMessage('invalid_token', showMessageBox)
+            : genericError
         );
         return;
       }
       window.location.href = data.redirectUrl;
     } catch {
       setState('error');
-      setErrorMessage('Something went wrong. Please try again or contact us.');
+      setErrorMessage(genericError);
     }
   }
 
@@ -57,10 +69,10 @@ export default function CardUpdateButton({
             : 'w-full rounded-lg border border-white/20 text-white font-semibold py-2.5 text-sm hover:bg-white/5 transition-colors disabled:opacity-50'
         }
       >
-        {state === 'loading' ? 'Redirecting…' : 'Update payment method'}
+        {state === 'loading' ? COPY.loading : COPY.idle}
       </button>
       {state === 'error' && errorMessage && (
-        <p className="text-red-400 text-sm mt-2 text-center">{errorMessage}</p>
+        <p role="alert" className="text-red-400 text-sm mt-2 text-center">{errorMessage}</p>
       )}
     </div>
   );

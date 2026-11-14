@@ -2,6 +2,10 @@
  * Outbound transactional email for the billing engine (trial-charge
  * confirmation, magic-link cancel requests).
  *
+ * The four client emails (manage link, renewal receipt, card update needed, card expiring) are Hebrew from
+ * accountCopy.ts with an RTL HTML part; the legacy trial-engine emails (trial charge, trial ending, expired) stay
+ * English, plain text only.
+ *
  * Uses Resend (https://resend.com) for email sending. Requires `RESEND_API_KEY`
  * env var; silently logs locally if unset (for dev). Every email is logged to
  * the console with a `[billing-email]` tag AND appended to a local JSONL file
@@ -12,11 +16,14 @@
 import fs from 'fs';
 import path from 'path';
 import { Resend } from 'resend';
+import { BILLING_EMAIL_COPY as COPY, fillTemplate, formatAccountPrice } from './accountCopy';
 
 export interface BillingEmailPayload {
   to: string;
   subject: string;
   text: string;
+  /** Hebrew client emails also carry an RTL HTML part (plain text stays the fallback). */
+  html?: string;
   /** Present on every email that must carry a cancel link (see brief: "every receipt/charge-confirmation email"). */
   cancelUrl?: string;
 }
@@ -50,6 +57,7 @@ async function sendBillingEmail(payload: BillingEmailPayload): Promise<void> {
       to: payload.to,
       subject: payload.subject,
       text: payload.text,
+      ...(payload.html ? { html: payload.html } : {}),
     });
     logToOutbox(payload, true);
   } catch (err) {
@@ -57,6 +65,47 @@ async function sendBillingEmail(payload: BillingEmailPayload): Promise<void> {
     logToOutbox(payload, false);
     throw err;
   }
+}
+
+// ---------------------------------------------------------------------------
+// Hebrew client emails: one line list renders both parts. Text lines are templates ({name} placeholders); in the HTML
+// part every interpolated value is escaped and LTR-isolated, and every URL sits on its own line.
+// ---------------------------------------------------------------------------
+
+type EmailLine =
+  | { text: string; values?: Readonly<Record<string, string>> }
+  | { url: string }
+  | { blank: true };
+
+export function escapeEmailHtml(value: string): string {
+  return value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
+function fillHtml(template: string, values: Readonly<Record<string, string>>): string {
+  fillTemplate(template, values); // throws on a missing value, same as the text part
+  return template
+    .split(/(\{[A-Za-z0-9_]+\})/)
+    .map((part) => {
+      const name = /^\{([A-Za-z0-9_]+)\}$/.exec(part)?.[1];
+      return name ? `<span dir="ltr">${escapeEmailHtml(values[name])}</span>` : escapeEmailHtml(part);
+    })
+    .join('');
+}
+
+export function renderClientEmail(lines: readonly EmailLine[]): { text: string; html: string } {
+  const text = lines
+    .map((line) => ('url' in line ? line.url : 'blank' in line ? '' : fillTemplate(line.text, line.values ?? {})))
+    .join('\n');
+  const body = lines
+    .map((line) =>
+      'blank' in line
+        ? ''
+        : 'url' in line
+        ? `<p dir="ltr"><a href="${escapeEmailHtml(line.url)}">${escapeEmailHtml(line.url)}</a></p>`
+        : `<p>${fillHtml(line.text, line.values ?? {})}</p>`
+    )
+    .join('');
+  return { text, html: `<div dir="rtl" lang="he">${body}</div>` };
 }
 
 /**
@@ -83,19 +132,64 @@ export async function sendTrialChargeConfirmationEmail(params: {
   await sendBillingEmail({ to, subject, text, cancelUrl });
 }
 
-/** Magic-link cancel request email (self-serve, on-demand). */
+/**
+ * Magic-link manage-subscription email (sign-up and self-serve, on-demand). `supportBoxShown`: the account page shows
+ * the support box for this subscription (siteBotSupportBoxShown); only then does the body mention writing to support.
+ */
 export async function sendMagicLinkCancelEmail(params: {
   to: string;
   cancelUrl: string;
+  supportBoxShown?: boolean;
 }): Promise<void> {
   const { to, cancelUrl } = params;
-  const subject = 'WAO — Manage your subscription';
-  const text = [
-    'Use this link to view your subscription and cancel it if you want to (valid for 30 minutes):',
-    cancelUrl,
-  ].join('\n');
+  await sendBillingEmail({ to, ...buildMagicLinkEmail(params), cancelUrl });
+}
 
-  await sendBillingEmail({ to, subject, text, cancelUrl });
+export interface ClientEmailContent {
+  subject: string;
+  text: string;
+  html: string;
+}
+
+export function buildMagicLinkEmail(params: { cancelUrl: string; supportBoxShown?: boolean }): ClientEmailContent {
+  const { cancelUrl, supportBoxShown = false } = params;
+  return {
+    subject: COPY.magicLinkSubject,
+    ...renderClientEmail([{ text: supportBoxShown ? COPY.magicLinkBodyWithSupport : COPY.magicLinkBody }, { url: cancelUrl }]),
+  };
+}
+
+export function buildRenewalChargeEmail(params: { amount: number; currency: string; cardLast4: string; cancelUrl: string }): ClientEmailContent {
+  const { amount, currency, cardLast4, cancelUrl } = params;
+  // `amount` is the VAT-inclusive charge (recurring_amount); {price} is its he-IL currency format.
+  return {
+    subject: COPY.renewalSubject,
+    ...renderClientEmail([
+      { text: COPY.renewalBody, values: { price: formatAccountPrice(amount, currency), cardLast4 } },
+      { blank: true },
+      { text: COPY.renewalCancelLine },
+      { url: cancelUrl },
+    ]),
+  };
+}
+
+export function buildCardUpdateNeededEmail(params: { manageUrl: string }): ClientEmailContent {
+  return {
+    subject: COPY.cardUpdateNeededSubject,
+    ...renderClientEmail([{ text: COPY.cardUpdateNeededBody1 }, { text: COPY.cardUpdateNeededBody2 }, { url: params.manageUrl }]),
+  };
+}
+
+export function buildCardExpiringSoonEmail(params: { cardLast4: string; cardExpiry: string; updateCardUrl: string }): ClientEmailContent {
+  const { cardLast4, cardExpiry, updateCardUrl } = params;
+  return {
+    subject: COPY.cardExpiringSubject,
+    ...renderClientEmail([
+      { text: COPY.cardExpiringBody1, values: { cardExpiry, cardLast4 } },
+      { text: COPY.cardExpiringBody2 },
+      { url: updateCardUrl },
+    ]),
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -115,16 +209,8 @@ export async function sendRenewalChargeConfirmationEmail(params: {
   cardLast4: string;
   cancelUrl: string;
 }): Promise<void> {
-  const { to, amount, currency, cardLast4, cancelUrl } = params;
-  const subject = 'WAO — Your subscription renewal receipt';
-  const text = [
-    `Your WAO subscription renewal charge of ${amount} ${currency} on card ending ${cardLast4} was processed successfully.`,
-    '',
-    `Want to cancel? Use this link any time (valid for 30 minutes from now, generate a new one from the cancel page if it expires):`,
-    cancelUrl,
-  ].join('\n');
-
-  await sendBillingEmail({ to, subject, text, cancelUrl });
+  const { to, cancelUrl } = params;
+  await sendBillingEmail({ to, ...buildRenewalChargeEmail(params), cancelUrl });
 }
 
 /**
@@ -160,14 +246,7 @@ export async function sendCardUpdateNeededEmail(params: {
   manageUrl: string;
 }): Promise<void> {
   const { to, manageUrl } = params;
-  const subject = 'WAO — We could not process your subscription charge';
-  const text = [
-    'We tried to charge your card for your WAO subscription and it was declined.',
-    'This charge will not be retried automatically. Please update your card or manage your subscription here:',
-    manageUrl,
-  ].join('\n');
-
-  await sendBillingEmail({ to, subject, text, cancelUrl: manageUrl });
+  await sendBillingEmail({ to, ...buildCardUpdateNeededEmail(params), cancelUrl: manageUrl });
 }
 
 /**
@@ -198,15 +277,8 @@ export async function sendCardExpiringSoonEmail(params: {
   cardExpiry: string;
   updateCardUrl: string;
 }): Promise<void> {
-  const { to, cardLast4, cardExpiry, updateCardUrl } = params;
-  const subject = 'WAO — Your card on file is expiring soon';
-  const text = [
-    `Heads up: the card on file for your WAO subscription (ending ${cardLast4}) expires ${cardExpiry}.`,
-    'To avoid an interruption to your subscription, please update your card here:',
-    updateCardUrl,
-  ].join('\n');
-
-  await sendBillingEmail({ to, subject, text, cancelUrl: updateCardUrl });
+  const { to, updateCardUrl } = params;
+  await sendBillingEmail({ to, ...buildCardExpiringSoonEmail(params), cancelUrl: updateCardUrl });
 }
 
 /**

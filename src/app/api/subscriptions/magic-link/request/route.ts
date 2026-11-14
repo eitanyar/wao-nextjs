@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { checkRateLimit } from '@/lib/payments/rate-limit';
 import { requestMagicLinkForEmail } from '@/lib/payments/subscriptions';
+import { MAGIC_LINK_REQUEST_COPY as COPY } from '@/lib/payments/accountCopy';
 
 // Rate limit: 3 requests / 10 minutes per (normalized email + IP) pair.
 // In-memory, per-process — see `rate-limit.ts` doc comment for scope caveats.
@@ -19,7 +20,7 @@ export async function POST(req: Request) {
     const email = String(body?.email ?? '').trim().toLowerCase();
 
     if (!email || !email.includes('@')) {
-      return NextResponse.json({ success: false, error: 'A valid email is required.' }, { status: 400 });
+      return NextResponse.json({ success: false, error: COPY.invalidEmail }, { status: 400 });
     }
 
     const ip = getClientIp(req);
@@ -28,7 +29,7 @@ export async function POST(req: Request) {
 
     if (!rateLimit.allowed) {
       return NextResponse.json(
-        { success: false, error: 'Too many requests. Please try again later.' },
+        { success: false, error: COPY.rateLimited },
         { status: 429, headers: { 'Retry-After': String(Math.ceil(rateLimit.retryAfterMs / 1000)) } }
       );
     }
@@ -39,10 +40,10 @@ export async function POST(req: Request) {
 
     return NextResponse.json({
       success: true,
-      message: 'If an account exists for that email, a cancel link has been sent.',
+      message: COPY.success,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('[subscriptions/magic-link/request] Error:', error);
-    return NextResponse.json({ success: false, error: 'Failed to process request.' }, { status: 500 });
+    return NextResponse.json({ success: false, error: COPY.serverError }, { status: 500 });
   }
 }

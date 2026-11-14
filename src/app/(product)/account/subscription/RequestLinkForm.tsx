@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { REQUEST_LINK_COPY as COPY } from '@/lib/payments/accountCopy';
 
 /**
  * Client component: asks POST /api/subscriptions/magic-link/request to email a fresh manage / cancel link. Shown on the
@@ -26,27 +27,28 @@ export default function RequestLinkForm() {
       const data = await res.json();
       if (!res.ok || !data.success) {
         setState('error');
-        setMessage(typeof data.error === 'string' ? data.error : 'Something went wrong. Please try again or contact us.');
+        setMessage(typeof data.error === 'string' ? data.error : COPY.errorGeneric);
         return;
       }
       setState('done');
       setMessage(typeof data.message === 'string' ? data.message : null);
     } catch {
       setState('error');
-      setMessage('Something went wrong. Please try again or contact us.');
+      setMessage(COPY.errorGeneric);
     }
   }
 
   if (state === 'done') {
-    return <p className="mt-6 text-sm text-green-400" data-request-link="sent">{message}</p>;
+    return <p role="status" className="mt-6 text-sm text-green-400" data-request-link="sent">{message}</p>;
   }
 
   return (
     <form onSubmit={handleSubmit} className="mt-6 space-y-3 text-start" data-request-link="form">
-      <label className="block text-sm text-[var(--muted)]" htmlFor="request-link-email">Email</label>
+      <label className="block text-sm text-[var(--muted)]" htmlFor="request-link-email">{COPY.emailLabel}</label>
       <input
         id="request-link-email"
         type="email"
+        dir="ltr"
         required
         autoComplete="email"
         value={email}
@@ -58,9 +60,9 @@ export default function RequestLinkForm() {
         disabled={state === 'loading' || !email.trim()}
         className="w-full rounded-lg bg-white/10 font-semibold py-2.5 text-sm hover:opacity-90 transition-opacity disabled:opacity-50"
       >
-        Email me a new link
+        {COPY.submit}
       </button>
-      {state === 'error' && message && <p className="text-red-400 text-sm text-center">{message}</p>}
+      {state === 'error' && message && <p role="alert" className="text-red-400 text-sm text-center">{message}</p>}
     </form>
   );
 }
