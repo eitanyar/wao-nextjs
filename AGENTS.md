@@ -57,6 +57,9 @@ they always resolve to the current generation.
 
 ## Gates (non-negotiable)
 - Any Hebrew copy or script → **language-qa (Noa)** before it ships.
+- **Qwen second-pass QA (trial, from 2026-11-14):** after Noa, Qwen4 Max Preview reviews the same
+  copy once. Log each run as "added value: yes/no" in `docs/copy/reviews/qwen-second-pass-trial.md`.
+  If 4 of the first 5 runs add nothing worth applying, drop the step.
 - `knowledge.ts` → **nextjs-engineer** only, Python `str.replace`, asserted counts.
 - Keyword anchors / title formula → **seo-strategist** sign-off.
 - SERP / RTL bidi → **ux** technique + engineer template; Noa is the SERP gate.
