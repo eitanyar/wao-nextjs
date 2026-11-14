@@ -1,0 +1,13 @@
+{
+  "notes": [
+    {
+      "ad": "N1",
+      "line": "4",
+      "quote": "בבדיקה החינמית של Site Bot אתה כותב רק שם עסק, ותוך שניות רואה מה חסר לך בגוגל.",
+      "category": "tts",
+      "issue": "Unvocalized חסר can be read as the past-tense verb chasar ('was missing') instead of the intended chaser ('is missing'), the same flip already marked with niqqud in N2's identical phrase.",
+      "fix": "בבדיקה החינמית של Site Bot אתה כותב רק שם עסק, ותוך שניות רואה מה חָסֵר לך בגוגל.",
+      "severity": "should"
+    }
+  ]
+}

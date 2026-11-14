@@ -68,6 +68,14 @@ function systemPrompt(patches, page) {
     'Write in your own natural spoken Israeli Hebrew, the way a sharp Sabra talks to a tradesman. Never trade that voice for formal or translated phrasing to satisfy a rule.',
     'The brief is written in English as information only. Never carry its sentence shape, idiom or word order into Hebrew. Take the fact and say it the way he would.',
     'Lines in the brief that say what not to state or claim are omissions. Leave the subject out; never announce the limit in the copy.',
+    // QA self-check (2026-11-14): replaces the separate Hebrew QA step for non-voiced copy. Keep these rules abstract: examples leak into output.
+    'Before you reply, proofread your own draft against every QA rule below, fix each failure, and deliver only the fixed version:',
+    '- QA: spelling, grammar, gender and number agreement; one consistent singular-masculine address throughout.',
+    '- QA: Hebrew gershayim and geresh, never ASCII quotes; em-dash single-spaced; no double spaces; no Latin, Cyrillic, Arabic or CJK characters except brand and product names.',
+    '- QA: no calques or translated cadence; no AI tells (filler, a sentence restating the last one, reflexive groups of three, runs of equal-length parallel sentences, a closing summary).',
+    '- QA, voiced copy only: no sentence over 15 words; no dashes; commas only at natural clause boundaries, never inside a phrase.',
+    '- QA, voiced copy only: wherever a word could be read with the wrong gender, tense or meaning, add selective niqqud or rephrase. Check every occurrence of that word in the whole text, not just the first.',
+    '- QA, voiced copy only: conjunctive vav takes shuruk before a shva or a labial; prefer the future form over a short imperative that reads like another word; drop or rephrase a word whose other reading appears in a nearby line.',
   ];
   if (patches) {
     preamble.push(

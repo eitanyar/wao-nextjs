@@ -35,7 +35,7 @@ they always resolve to the current generation.
 | Course design | Gil | `instructional-designer` | opus | curriculum and script structure |
 | Hebrew copy | Tamar | **waocopy** (`scripts/waocopy.mjs`) | default Opus 5.5 (via `claude` CLI, headless); `--writer qwen` = Qwen4 Max Preview (DashScope; ideas/brainstorm, and auto-fallback when Opus fails; Qwen falls back to Qwen 3.8 Max) | all new Hebrew marketing / bot / narration copy |
 | Hebrew copy fallback | Tamar | `copywriter` | opus | only when DashScope is down or the edit is trivial |
-| Hebrew QA | Noa | `language-qa` | opus | correctness gate, full proofread, AI-signature removal, writing upgrades for waocopy |
+| Hebrew QA | Noa | `language-qa` | opus | fresh-context read of voiced and founder-facing copy, SERP gate, writing upgrades for waocopy |
 | UX / RTL / a11y | Maya | `ux` | sonnet | bidi technique, mobile, accessibility |
 | Runtime verifier | Roni | `verifier` | sonnet | PASS / FAIL / BLOCKED from running the app |
 | Brand design | Dana | `brand-designer` | sonnet | design tokens as TypeScript constants |
@@ -56,10 +56,11 @@ they always resolve to the current generation.
 - **Human gate:** founder-facing and voiceover Hebrew gets Eitan's spot-check before shipping.
 
 ## Gates (non-negotiable)
-- Any Hebrew copy or script → **language-qa (Noa)** before it ships.
-- **Qwen second-pass QA (trial, from 2026-11-14):** after Noa, Qwen4 Max Preview reviews the same
-  copy once. Log each run as "added value: yes/no" in `docs/copy/reviews/qwen-second-pass-trial.md`.
-  If 4 of the first 5 runs add nothing worth applying, drop the step.
+- **Hebrew copy QA (from 2026-11-14):** waocopy self-checks every draft against the QA rules in
+  its system prompt. No separate QA step for site, bot or panel copy.
+- **Voiced scripts (ads, narration, bot speech) and founder-facing copy** → one fresh-context read
+  by **language-qa (Noa)** before Eitan reads it.
+- No Qwen second-pass QA (trial closed 2026-11-14).
 - `knowledge.ts` → **nextjs-engineer** only, Python `str.replace`, asserted counts.
 - Keyword anchors / title formula → **seo-strategist** sign-off.
 - SERP / RTL bidi → **ux** technique + engineer template; Noa is the SERP gate.
