@@ -1,0 +1,13 @@
+Angle: the viewer is problem-aware (free quotes that vanish, Google charging before he sees anything), so the title leads with the reversal as a win (this time he's the customer) and the description opens on his own lived scene.
+
+```json
+{
+  "title": "הפעם אתה הלקוח. תראה את המודעה שלך לגוגל לפני שתשלם שקל",
+  "description": "כל היום אתה מודד ונותן הצעות מחיר בחינם. ואז הלקוח אומר ״אני אחשוב על זה״ ונעלם.\n{שם_המוצר} פותח לך חשבון Google Ads חדש על שמך ולומד מהפניות שאתה מסמן כאמיתיות.\nאת המודעה ואת העמוד שלך אתה רואה קודם, ורק אחר כך משלם.\nhttps://www.wao.co.il/google-ads",
+  "why": "Title (55 chars) names Google and states the reversal plainly, so it works as an ad headline without the video. It echoes the end card's 'before you pay a shekel' with the button's verb form, without copying either sentence. The description opens on the ad's own scene: measuring, the free quote, 'I'll think about it'. The product line carries the three facts the brief requires. The last line lands the flip as his gain, in different words from the title. No price, no founder, no hashtags. No digit or Latin follows a Hebrew prefix, so no maqaf was needed. FLAG: {שם_המוצר} is a placeholder. The brief requires the exact Hebrew product name from yt-st05-st03-titles-FINAL-2026-11-14.json, and I have no file access, so I left it out rather than guess. Drop the name in as written there and check that the verb פותח agrees with it."
+}
+```
+
+Handoffs:
+- **Orchestrator:** replace `{שם_המוצר}` with the exact Hebrew name from the FINAL file. If that name is feminine, change פותח to פותחת and לומד to לומדת. Also check the tone and structure against the FINAL descriptions, which I couldn't read.
+- **Noa:** please give it one fresh read, since it's founder-facing ad copy.
