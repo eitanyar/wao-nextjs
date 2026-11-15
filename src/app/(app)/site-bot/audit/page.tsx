@@ -410,10 +410,11 @@ function AuditContent() {
 
   return (
     <section className="wao-section">
-      <div className="wao-container" style={{ maxWidth: '680px' }}>
+      {/* Aligned to the header container and start-aligned like the other main pages (design review #7). */}
+      <div className="wao-container wao-audit-column">
         {state === 'form' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', gap: '14px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', textAlign: 'start', gap: '14px' }}>
               <div
                 style={{
                   display: 'inline-flex',

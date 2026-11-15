@@ -72,8 +72,11 @@ test('landing pages: title / OG / description / JSON-LD come from the copy; the 
   assert.match(ads, /const NET_PRICE = String\(ADS_BOT_MONTHLY_NET_ILS\);/);
   assert.match(ads, /description: COPY\.seo\.jsonld\.webpage_description,/);
   assert.match(ads, /description: COPY\.seo\.jsonld\.service_description,/);
-  // phases sits right after the "does" section.
-  assert.ok(ads.indexOf('COPY.does.items') < ads.indexOf('COPY.phases.h2') && ads.indexOf('COPY.phases.h2') < ads.indexOf('COPY.proof.h2'));
+  // 2026-11-15 section cuts (Yonatan redesign guardrails 1): /google-ads no longer renders scene, phases, yours, start;
+  // /site-bot no longer renders scene, claim, monthly, alternatives. The copy keys stay in the generated modules.
+  for (const key of ['COPY.scene', 'COPY.phases', 'COPY.yours', 'COPY.start']) assert.ok(!ads.includes(key), `/google-ads renders ${key}`);
+  for (const key of ['COPY.scene', 'COPY.claim', 'COPY.monthly', 'COPY.alternatives']) assert.ok(!siteBot.includes(key), `/site-bot renders ${key}`);
+  assert.ok(ads.indexOf('COPY.does.items') < ads.indexOf('COPY.proof.h2') && ads.indexOf('COPY.proof.h2') < ads.indexOf('COPY.offer.h2'));
 });
 
 test('landing copy: the old no-price FAQ is gone from the Site Bot sources (its answer opened with a call with Eitan)', () => {

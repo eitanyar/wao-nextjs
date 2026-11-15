@@ -3,6 +3,8 @@ import Link from "next/link";
 import { renderMixed } from "@/lib/bidi";
 import { SITE_BOT_PLAN } from "@/lib/payments/plans";
 import { SITE_BOT_LANDING_COPY as COPY } from "@/lib/site-bot/landingCopy";
+import FounderBlock from "@/components/home/FounderBlock";
+import finalCopy from "@/content/astra-authority-first-homepage-copy.json";
 
 const CANONICAL = "https://www.wao.co.il/site-bot";
 
@@ -33,11 +35,7 @@ const schemas = [
     name: "Site Bot — בניית אתר לעסק קטן",
     serviceType: "בניית אתר לעסק קטן",
     description: COPY.hero.h1,
-    provider: {
-      "@type": "Organization",
-      name: "WAO",
-      url: "https://www.wao.co.il",
-    },
+    provider: { "@type": "Organization", "@id": "https://www.wao.co.il/#org" },
     areaServed: "IL",
     offers: {
       "@type": "Offer",
@@ -71,18 +69,29 @@ const schemas = [
 
 const PARTS = [COPY.parts.site, COPY.parts.profile, COPY.parts.reviews];
 
+// Sizes of the encoded screenshots (scripts/build-site-bot-screens.mjs output, 2x of a 390px phone).
+const SITE_SCREENS = [
+  { name: "site-home-phone", width: 780, height: 906 },
+  { name: "site-services-phone", width: 780, height: 1520 },
+];
+
+// The proof card about the founder is replaced by the real founder block below it (design review #6, Yonatan 1).
+const FOUNDER_FIRST_NAME = finalCopy.founder_authority.name.split(" ")[0];
+const PROOF_ITEMS = COPY.proof.items.filter((item) => !item.title.startsWith(FOUNDER_FIRST_NAME));
+
 export default function SiteBotPage() {
   const bodyStyle: React.CSSProperties = {
     fontFamily: "var(--font-body), sans-serif",
-    lineHeight: 1.8,
+    lineHeight: 1.6,
     color: "var(--muted)",
     fontSize: "1rem",
     margin: 0,
+    maxWidth: "34em",
   };
 
   const h2Style: React.CSSProperties = {
     fontFamily: "var(--font-rubik), sans-serif",
-    fontWeight: 800,
+    fontWeight: 700,
     fontSize: "clamp(1.5rem,2.5vw,2rem)",
     lineHeight: 1.2,
     marginTop: 0,
@@ -107,8 +116,7 @@ export default function SiteBotPage() {
       {/* -- Hero (with the launch stamp at the top of the page) -- */}
       <section style={{ paddingTop: "clamp(110px,14vw,160px)", paddingBottom: "clamp(64px,8vw,96px)", position: "relative", overflow: "hidden" }}>
         <div aria-hidden style={{ position: "absolute", inset: 0, background: "radial-gradient(ellipse 70% 55% at 50% 0%, rgba(74,227,181,0.08) 0%, transparent 70%)", pointerEvents: "none" }} />
-        <div className="hero-grid" />
-        <div className="wao-container" style={{ position: "relative", zIndex: 1, maxWidth: "860px" }}>
+        <div className="wao-container wao-hero-copy" style={{ position: "relative", zIndex: 1 }}>
           <p
             data-launch-stamp
             style={{
@@ -123,7 +131,6 @@ export default function SiteBotPage() {
           </p>
 
           <p className="badge" style={{ marginBottom: "28px" }}>
-            <span className="badge-dot" />
             {renderMixed(COPY.hero.badge)}
           </p>
 
@@ -131,7 +138,7 @@ export default function SiteBotPage() {
             className="text-3xl sm:text-4xl md:text-5xl"
             style={{
               fontFamily: "var(--font-rubik), sans-serif",
-              fontWeight: 900,
+              fontWeight: 700,
               lineHeight: 1.15,
               letterSpacing: "-0.02em",
               marginBottom: "24px",
@@ -158,27 +165,12 @@ export default function SiteBotPage() {
         </div>
       </section>
 
-      {/* -- Scene: the customer's ten seconds -- */}
-      <section className="wao-section" style={{ paddingTop: 0 }}>
-        <div className="wao-container" style={{ maxWidth: "860px" }}>
-          <h2 style={h2Style}>{renderMixed(COPY.scene.h2)}</h2>
-          <p style={{ ...bodyStyle, fontSize: "clamp(1rem,1.8vw,1.12rem)", color: "var(--text)" }}>{renderMixed(COPY.scene.body)}</p>
-        </div>
-      </section>
-
-      {/* -- Claim: three parts, one story (the biggest type on the page after the h1) -- */}
-      <section className="wao-section" style={{ background: "var(--surface)" }}>
-        <div className="wao-container" style={{ maxWidth: "860px" }}>
-          <h2 style={{ ...h2Style, fontWeight: 900, fontSize: "clamp(1.9rem,4.2vw,3rem)", lineHeight: 1.12, marginBottom: "20px" }}>
-            <span className="text-gradient">{renderMixed(COPY.claim.h2)}</span>
-          </h2>
-          <p style={{ ...bodyStyle, fontSize: "clamp(1rem,1.8vw,1.15rem)", color: "var(--text)" }}>{renderMixed(COPY.claim.body)}</p>
-        </div>
-      </section>
-
-      {/* -- The three parts: site, Google profile, reviews -- */}
+      {/* Light body between the dark hero and the dark closing band (design review #8; Eitan: hero + close stay dark). */}
+      <div className="wao-light">
+      {/* -- The three parts: site, Google profile, reviews, next to real phone screenshots of a generated site (#5) -- */}
       <section className="wao-section">
-        <div className="wao-container" style={{ maxWidth: "860px", display: "flex", flexDirection: "column", gap: "16px" }}>
+        <div className="wao-container wao-parts-grid">
+          <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
           {PARTS.map((part, i) => (
             <div
               key={part.h2}
@@ -218,67 +210,22 @@ export default function SiteBotPage() {
               </div>
             </div>
           ))}
-        </div>
-      </section>
-
-      {/* -- Every month -- */}
-      <section className="wao-section" style={{ paddingTop: 0 }}>
-        <div className="wao-container" style={{ maxWidth: "860px" }}>
-          <h2 style={h2Style}>{renderMixed(COPY.monthly.h2)}</h2>
-          <p style={{ ...bodyStyle, fontSize: "clamp(1rem,1.8vw,1.12rem)", color: "var(--text)" }}>{renderMixed(COPY.monthly.body)}</p>
-        </div>
-      </section>
-
-      {/* -- Alternatives: each gives one piece -- */}
-      <section className="wao-section" style={{ background: "var(--surface)" }}>
-        <div className="wao-container" style={{ maxWidth: "860px" }}>
-          <h2 style={{ ...h2Style, marginBottom: "24px" }}>{renderMixed(COPY.alternatives.h2)}</h2>
-
-          <div style={{ display: "flex", flexDirection: "column", gap: "12px", marginBottom: "16px" }}>
-            {COPY.alternatives.rows.map((row) => (
-              <div key={row.option} className="rounded-xl p-4 sm:p-5" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
-                <h3
-                  style={{
-                    fontFamily: "var(--font-rubik), sans-serif",
-                    fontWeight: 700,
-                    fontSize: "1rem",
-                    margin: "0 0 8px",
-                    color: "var(--text)",
-                  }}
-                >
-                  {renderMixed(row.option)}
-                </h3>
-                <p style={{ ...bodyStyle, display: "flex", gap: "8px", alignItems: "baseline", margin: "0 0 4px" }}>
-                  <span aria-hidden style={{ color: "var(--accent)", flexShrink: 0 }}>{"\u2713"}</span>
-                  <span>{renderMixed(row.what_he_gets)}</span>
-                </p>
-                <p style={{ ...bodyStyle, display: "flex", gap: "8px", alignItems: "baseline" }}>
-                  <span aria-hidden style={{ color: "var(--muted)", flexShrink: 0 }}>{"\u2715"}</span>
-                  <span>{renderMixed(row.what_is_missing)}</span>
-                </p>
-              </div>
-            ))}
           </div>
-
-          <div
-            className="rounded-xl p-4 sm:p-5"
-            style={{
-              background: "var(--accent-dim)",
-              border: "1px solid var(--accent-border)",
-              borderInlineStartWidth: "4px",
-              borderInlineStartColor: "var(--accent)",
-            }}
-          >
-            <p style={{ fontFamily: "var(--font-rubik), sans-serif", fontWeight: 800, fontSize: "1.05rem", margin: 0, color: "var(--text)" }}>
-              {renderMixed(COPY.alternatives.verdict)}
-            </p>
+          {/* Real screens of a live Site Bot site (scripts/build-site-bot-screens.mjs), cropped above any rating. */}
+          <div className="wao-phone-shots" aria-hidden="true">
+            {SITE_SCREENS.map((shot) => (
+              <picture key={shot.name} className="wao-phone-shot">
+                <source type="image/avif" srcSet={`/images/site-bot/${shot.name}.avif`} />
+                <img src={`/images/site-bot/${shot.name}.webp`} alt="" width={shot.width} height={shot.height} loading="lazy" decoding="async" />
+              </picture>
+            ))}
           </div>
         </div>
       </section>
 
       {/* -- Price -- */}
       <section className="wao-section">
-        <div className="wao-container" style={{ maxWidth: "860px" }}>
+        <div className="wao-container wao-narrow">
           <div
             className="rounded-xl p-4 sm:p-6"
             style={{
@@ -296,10 +243,10 @@ export default function SiteBotPage() {
 
       {/* -- Proof -- */}
       <section className="wao-section" style={{ paddingTop: 0 }}>
-        <div className="wao-container" style={{ maxWidth: "860px" }}>
+        <div className="wao-container wao-narrow">
           <h2 style={{ ...h2Style, marginBottom: "24px" }}>{renderMixed(COPY.proof.h2)}</h2>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "12px" }}>
-            {COPY.proof.items.map((item) => (
+            {PROOF_ITEMS.map((item) => (
               <div key={item.title} className="rounded-xl p-4 sm:p-5" style={{ background: "var(--surface)", border: "1px solid var(--border)" }}>
                 <h3 style={{ fontFamily: "var(--font-rubik), sans-serif", fontWeight: 700, fontSize: "1rem", margin: "0 0 8px", color: "var(--text)" }}>
                   {renderMixed(item.title)}
@@ -311,14 +258,19 @@ export default function SiteBotPage() {
         </div>
       </section>
 
+      {/* -- Founder: the real face behind the service (#6) -- */}
+      <section className="astra-home astra-section astra-light">
+        <FounderBlock nameAs="h3" />
+      </section>
+
       {/* -- FAQ -- */}
       <section className="wao-section" style={{ background: "var(--surface)" }}>
-        <div className="wao-container" style={{ maxWidth: "800px" }}>
+        <div className="wao-container wao-narrow">
           <div className="eyebrow">שאלות נפוצות</div>
           <h2
             style={{
               fontFamily: "var(--font-rubik), sans-serif",
-              fontWeight: 800,
+              fontWeight: 700,
               fontSize: "clamp(1.5rem,2.5vw,2rem)",
               lineHeight: 1.2,
               marginBottom: "40px",
@@ -331,6 +283,7 @@ export default function SiteBotPage() {
             {COPY.faq.map((faq) => (
               <details
                 key={faq.q}
+                className="wao-faq"
                 style={{
                   background: "var(--surface)",
                   border: "1px solid var(--border)",
@@ -361,7 +314,7 @@ export default function SiteBotPage() {
                   >
                     {renderMixed(faq.q)}
                   </h3>
-                  <span aria-hidden style={{ fontSize: "1.2rem", color: "var(--accent)", flexShrink: 0 }}>+</span>
+                  <span aria-hidden className="wao-faq-chevron" style={{ color: "var(--accent)" }} />
                 </summary>
                 <div style={{ padding: "0 24px 22px", ...bodyStyle }}>{renderMixed(faq.a)}</div>
               </details>
@@ -370,13 +323,15 @@ export default function SiteBotPage() {
         </div>
       </section>
 
+      </div>
+
       {/* -- Close -- */}
       <section className="wao-section">
         <div className="wao-container">
           <div className="cta-banner" style={{ padding: "clamp(48px,8vw,80px) clamp(24px,6vw,64px)", textAlign: "center", position: "relative", overflow: "hidden" }}>
             <div aria-hidden style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%,-50%)", width: "60%", height: "100%", background: "radial-gradient(ellipse at center, rgba(74,227,181,0.06) 0%, transparent 70%)", pointerEvents: "none" }} />
             <div style={{ position: "relative", zIndex: 1 }}>
-              <h2 style={{ fontFamily: "var(--font-rubik), sans-serif", fontWeight: 900, fontSize: "clamp(1.6rem,3.5vw,2.6rem)", lineHeight: 1.15, margin: "0 0 16px", color: "var(--text)" }}>
+              <h2 style={{ fontFamily: "var(--font-rubik), sans-serif", fontWeight: 700, fontSize: "clamp(1.6rem,3.5vw,2.6rem)", lineHeight: 1.15, margin: "0 0 16px", color: "var(--text)" }}>
                 {renderMixed(COPY.close.h2)}
               </h2>
               <p style={{ color: "var(--muted)", fontFamily: "var(--font-body), sans-serif", maxWidth: "560px", margin: "0 auto 32px", lineHeight: 1.75 }}>

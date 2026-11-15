@@ -7,6 +7,7 @@ import { ADS_BOT_MONTHLY_NET_ILS } from "@/lib/payments/plans";
 import { GOOGLE_ADS_LANDING_COPY as COPY } from "@/lib/google-ads/landingCopy";
 import { GOOGLE_ADS_DEMO_HREF } from "@/lib/google-ads/links";
 import { HOW_IT_WORKS_COPY } from "@/lib/google-ads/howItWorksCopy";
+import FounderBlock from "@/components/home/FounderBlock";
 
 const CANONICAL = "https://www.wao.co.il/google-ads";
 
@@ -89,17 +90,16 @@ const schemas = [
 const DEMO_HREF = GOOGLE_ADS_DEMO_HREF;
 
 export default function GoogleAdsPage() {
+  // Cards on the light body: a plain bordered card (design review #8/#9; no glass blur).
   const glass: React.CSSProperties = {
-    background: "rgba(13,15,21,0.72)",
-    backdropFilter: "blur(16px)",
-    WebkitBackdropFilter: "blur(16px)",
+    background: "var(--surface)",
     border: "1px solid var(--border)",
     borderRadius: "var(--radius-md)",
   };
 
   const h2Style: React.CSSProperties = {
     fontFamily: "var(--font-rubik), sans-serif",
-    fontWeight: 800,
+    fontWeight: 700,
     fontSize: "clamp(1.6rem,3vw,2.4rem)",
     lineHeight: 1.2,
     marginBottom: "1rem",
@@ -109,10 +109,11 @@ export default function GoogleAdsPage() {
 
   const bodyStyle: React.CSSProperties = {
     fontFamily: "var(--font-body), sans-serif",
-    lineHeight: 1.8,
+    lineHeight: 1.6,
     color: "var(--muted)",
     fontSize: "1rem",
     margin: 0,
+    maxWidth: "34em",
   };
 
   const leadStyle: React.CSSProperties = { ...bodyStyle, fontSize: "clamp(1rem,1.8vw,1.12rem)", color: "var(--text)" };
@@ -128,17 +129,14 @@ export default function GoogleAdsPage() {
       {/* -- Hero -- */}
       <section style={{ paddingTop: "clamp(110px,14vw,160px)", paddingBottom: "clamp(64px,8vw,96px)", position: "relative", overflow: "hidden" }}>
         <div aria-hidden style={{ position: "absolute", inset: 0, background: "radial-gradient(ellipse 70% 55% at 50% 0%, rgba(74,227,181,0.08) 0%, transparent 70%)", pointerEvents: "none" }} />
-        <div className="hero-grid" />
-        <div className="wao-container" style={{ position: "relative", zIndex: 1, maxWidth: "860px" }}>
-          <SiloNav currentPath="/google-ads" />
+        <div className="wao-container wao-hero-copy" style={{ position: "relative", zIndex: 1 }}>
           <div className="badge" style={{ marginBottom: "28px" }}>
-            <span className="badge-dot" />
             {renderMixed(COPY.hero.badge)}
           </div>
           <h1
             style={{
               fontFamily: "var(--font-rubik), sans-serif",
-              fontWeight: 900,
+              fontWeight: 700,
               fontSize: "clamp(2.2rem,5vw,3.8rem)",
               lineHeight: 1.1,
               letterSpacing: "-0.025em",
@@ -165,31 +163,22 @@ export default function GoogleAdsPage() {
         </div>
       </section>
 
-      {/* -- Scene -- */}
-      <section style={{ background: "var(--surface)", paddingBlock: "clamp(48px,6vw,72px)" }}>
-        <div className="wao-container" style={{ maxWidth: "860px" }}>
-          <h2 style={h2Style}>{renderMixed(COPY.scene.h2)}</h2>
-          <p style={leadStyle}>{renderMixed(COPY.scene.body)}</p>
-        </div>
-      </section>
+      {/* Light body between the dark hero and the dark closing band (design review #8; Eitan: hero + close stay dark). */}
+      <div className="wao-light">
+      <div className="wao-container wao-silo-below-hero">
+        <SiloNav currentPath="/google-ads" />
+      </div>
 
       {/* -- Mechanism: three moments -- */}
       <section className="wao-section">
         <div className="wao-container">
-          <div style={{ marginBottom: "48px", maxWidth: "860px" }}>
+          <div style={{ marginBottom: "32px", maxWidth: "860px" }}>
             <h2 style={h2Style}>{renderMixed(COPY.mechanism.h2)}</h2>
             <p style={leadStyle}>{renderMixed(COPY.mechanism.intro)}</p>
           </div>
-          <ol style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: "20px" }}>
-            {COPY.mechanism.moments.map((moment, i) => (
-              <li
-                key={moment.title}
-                className="process-step"
-                style={{ display: "grid", gridTemplateColumns: "auto 1fr", gap: "clamp(16px,4vw,40px)", alignItems: "start", ...glass, padding: "clamp(24px,3vw,36px)" }}
-              >
-                <div style={{ paddingTop: "4px" }}>
-                  <span className="process-number" aria-hidden>{String(i + 1).padStart(2, "0")}</span>
-                </div>
+          <ol className="wao-steps">
+            {COPY.mechanism.moments.map((moment) => (
+              <li key={moment.title}>
                 <div>
                   <h3 style={{ fontFamily: "var(--font-rubik), sans-serif", fontWeight: 700, fontSize: "1.2rem", marginTop: 0, marginBottom: "10px" }}>{renderMixed(moment.title)}</h3>
                   <p style={bodyStyle}>{renderMixed(moment.desc)}</p>
@@ -212,7 +201,7 @@ export default function GoogleAdsPage() {
           <div style={{ marginBottom: "48px" }}>
             <h2 style={h2Style}>{renderMixed(COPY.does.h2)}</h2>
           </div>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "1px", background: "var(--border)", borderRadius: "var(--radius-md)", overflow: "hidden", border: "1px solid var(--border)" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: "1px", background: "var(--border)", borderRadius: "var(--radius-md)", overflow: "hidden", border: "1px solid var(--border)" }}>
             {COPY.does.items.map((item) => (
               <div key={item.title} className="why-cell">
                 <h3 style={{ fontFamily: "var(--font-rubik), sans-serif", fontWeight: 700, fontSize: "1.05rem", marginTop: 0, marginBottom: "8px" }}>{renderMixed(item.title)}</h3>
@@ -223,58 +212,19 @@ export default function GoogleAdsPage() {
         </div>
       </section>
 
-      {/* -- Phases (one h2, then however many steps the copy source holds) -- */}
-      <section className="wao-section" style={{ paddingBottom: 0 }}>
-        <div className="wao-container" style={{ maxWidth: "860px" }}>
-          <h2 style={{ ...h2Style, fontSize: "clamp(1.25rem,2.2vw,1.6rem)", lineHeight: 1.3, marginBottom: "20px" }}>{renderMixed(COPY.phases.h2)}</h2>
-          <ol style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: "14px" }}>
-            {COPY.phases.items.map((item, i) => (
-              <li key={item} style={{ display: "flex", alignItems: "flex-start", gap: "12px" }}>
-                <span
-                  aria-hidden
-                  style={{
-                    flexShrink: 0,
-                    width: "26px",
-                    height: "26px",
-                    borderRadius: "50%",
-                    background: "var(--accent-dim)",
-                    border: "1px solid var(--accent-border)",
-                    color: "var(--accent)",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    fontSize: "0.8rem",
-                    fontWeight: 700,
-                    marginTop: "3px",
-                  }}
-                >
-                  {i + 1}
-                </span>
-                <span style={{ ...bodyStyle, color: "var(--text)" }}>{renderMixed(item)}</span>
-              </li>
-            ))}
-          </ol>
-        </div>
-      </section>
-
       {/* -- Proof -- */}
       <section className="wao-section">
         <div className="wao-container">
           <h2 style={{ ...h2Style, marginBottom: "32px" }}>{renderMixed(COPY.proof.h2)}</h2>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: "20px" }}>
-            {COPY.proof.items.map((item) => (
-              <div key={item.title} style={{ ...glass, padding: "28px 24px" }}>
-                <h3 style={{ fontFamily: "var(--font-rubik), sans-serif", fontWeight: 700, fontSize: "1.05rem", marginTop: 0, marginBottom: "8px" }}>{renderMixed(item.title)}</h3>
-                <p style={{ ...bodyStyle, fontSize: "0.92rem" }}>{renderMixed(item.desc)}</p>
-              </div>
-            ))}
-          </div>
         </div>
+      </section>
+      <section className="astra-home astra-section astra-light" style={{ paddingTop: 0 }}>
+        <FounderBlock nameAs="h3" />
       </section>
 
       {/* -- Offer -- */}
       <section className="wao-section" style={{ background: "var(--surface)" }}>
-        <div className="wao-container" style={{ maxWidth: "860px" }}>
+        <div className="wao-container wao-narrow">
           <h2 style={{ ...h2Style, marginBottom: "20px" }}>{renderMixed(COPY.offer.h2)}</h2>
           <p style={{ ...leadStyle, marginBottom: "16px" }}>{renderMixed(COPY.offer.body)}</p>
           <p style={{ ...bodyStyle, marginBottom: "24px" }}>{renderMixed(COPY.offer.anchor)}</p>
@@ -301,44 +251,20 @@ export default function GoogleAdsPage() {
         </div>
       </section>
 
-      {/* -- Yours -- */}
-      <section className="wao-section">
-        <div className="wao-container" style={{ maxWidth: "860px" }}>
-          <h2 style={h2Style}>{renderMixed(COPY.yours.h2)}</h2>
-          <p style={leadStyle}>{renderMixed(COPY.yours.body)}</p>
-        </div>
-      </section>
-
-      {/* -- How it starts -- */}
-      <section className="wao-section" style={{ paddingTop: 0 }}>
-        <div className="wao-container">
-          <h2 style={{ ...h2Style, marginBottom: "32px" }}>{renderMixed(COPY.start.h2)}</h2>
-          <ol style={{ listStyle: "none", padding: 0, margin: 0, display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: "20px" }}>
-            {COPY.start.steps.map((step, i) => (
-              <li key={step.title} style={{ ...glass, padding: "28px 24px" }}>
-                <span className="process-number" aria-hidden style={{ display: "block", marginBottom: "12px" }}>{String(i + 1).padStart(2, "0")}</span>
-                <h3 style={{ fontFamily: "var(--font-rubik), sans-serif", fontWeight: 700, fontSize: "1.05rem", marginTop: 0, marginBottom: "8px" }}>{renderMixed(step.title)}</h3>
-                <p style={{ ...bodyStyle, fontSize: "0.92rem" }}>{renderMixed(step.desc)}</p>
-              </li>
-            ))}
-          </ol>
-        </div>
-      </section>
-
       {/* -- FAQ -- */}
       <section className="wao-section" style={{ background: "var(--surface)" }}>
-        <div className="wao-container" style={{ maxWidth: "800px" }}>
+        <div className="wao-container wao-narrow">
           <div className="eyebrow">שאלות נפוצות</div>
           <h2 style={{ ...h2Style, fontSize: "clamp(1.6rem,3vw,2.4rem)", marginBottom: "48px" }}>
             מה ששואלים אותנו לפני שמתחילים עם{" "}
-            <span className="text-gradient">Google Ads</span>
+            Google Ads
           </h2>
           <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
             {COPY.faq.map((faq) => (
-              <details key={faq.q} style={{ ...glass, padding: "0" }}>
+              <details key={faq.q} className="wao-faq" style={{ ...glass, padding: "0" }}>
                 <summary style={{ padding: "22px 24px", cursor: "pointer", fontFamily: "var(--font-rubik), sans-serif", fontWeight: 700, fontSize: "1.02rem", lineHeight: 1.4, listStyle: "none", display: "flex", justifyContent: "space-between", alignItems: "center", gap: "16px" }}>
                   <span>{renderMixed(faq.q)}</span>
-                  <span aria-hidden style={{ fontSize: "1.2rem", color: "var(--accent)", flexShrink: 0 }}>+</span>
+                  <span aria-hidden className="wao-faq-chevron" style={{ color: "var(--accent)" }} />
                 </summary>
                 <div style={{ padding: "0 24px 22px", ...bodyStyle }}>{renderMixed(faq.a)}</div>
               </details>
@@ -347,13 +273,15 @@ export default function GoogleAdsPage() {
         </div>
       </section>
 
+      </div>
+
       {/* -- Close -- */}
       <section className="wao-section">
         <div className="wao-container">
           <div className="cta-banner" style={{ padding: "clamp(48px,8vw,80px) clamp(24px,6vw,64px)", textAlign: "center", position: "relative", overflow: "hidden" }}>
             <div aria-hidden style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%,-50%)", width: "60%", height: "100%", background: "radial-gradient(ellipse at center, rgba(74,227,181,0.06) 0%, transparent 70%)", pointerEvents: "none" }} />
             <div style={{ position: "relative", zIndex: 1 }}>
-              <h2 style={{ fontFamily: "var(--font-rubik), sans-serif", fontWeight: 900, fontSize: "clamp(1.6rem,3.5vw,2.6rem)", lineHeight: 1.15, marginTop: 0, marginBottom: "16px" }}>
+              <h2 style={{ fontFamily: "var(--font-rubik), sans-serif", fontWeight: 700, fontSize: "clamp(1.6rem,3.5vw,2.6rem)", lineHeight: 1.15, marginTop: 0, marginBottom: "16px" }}>
                 {renderMixed(COPY.close.h2)}
               </h2>
               <p style={{ color: "var(--muted)", fontFamily: "var(--font-body), sans-serif", maxWidth: "560px", margin: "0 auto 32px", lineHeight: 1.75 }}>
