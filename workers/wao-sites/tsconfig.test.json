@@ -13,5 +13,5 @@
     "outDir": "../../dist/workers/wao-sites",
     "rootDir": "src"
   },
-  "files": ["src/router.ts", "src/router.test.ts"]
+  "files": ["src/router.ts", "src/router.test.ts", "src/index.ts", "src/index.test.ts"]
 }

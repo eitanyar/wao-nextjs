@@ -126,6 +126,10 @@ async function serveFile(request: Request, env: Env, ctx: ExecutionContextLike, 
   const ifNoneMatch = request.headers.get('if-none-match');
   const headers = new Headers(response.headers);
   headers.set('x-wao-cache', cacheState);
+  // A Cache API hit comes back with the zone's Browser Cache TTL (1 year on wao.co.il) in place of ours;
+  // re-apply the per-file policy so browsers never keep HTML longer than 60 s.
+  headers.set('cache-control', response.status === 200 ? cacheControlFor(rel) : 'public, max-age=60');
+  headers.delete('age');
   if (response.status === 200 && etag && ifNoneMatch && ifNoneMatch.split(',').map(v => v.trim()).includes(etag)) {
     return new Response(null, { status: 304, headers });
   }
