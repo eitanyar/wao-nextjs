@@ -373,3 +373,25 @@ first invoice. Pages for comparison costs $0 but hits the 100-project wall at cl
   message; the "your site is live on your domain" notice. Plain facts only; brief to be written by Adam.
 - **Yonatan:** confirm `www.{domain}` as the canonical form for owner domains and the 301 from `{slug}.wao.co.il`.
 - **Roni:** the "before" render of `test-core30-verify` before migration; then the Verifier section.
+
+---
+
+## Live status 2026-11-15 (Adam)
+
+- **Production on the Worker:** `.env.production` now has `SITE_HOSTING_MODE=worker`, `CLOUDFLARE_ZONE_ID`,
+  `FRAUD_BLOCKER_API_KEY`, `WAO_SITES_DIR=/home/wao/wao-runtime-data/sites`,
+  `WAO_SITE_RESEARCH_DIR=/home/wao/wao-runtime-data/site-research` (backups `.env.production.bak-20261115*`).
+  The release's `data/` is a symlink to `/home/wao/wao-runtime-data`; the deploy route's no-symlink walk rejects it
+  unless the two `WAO_*_DIR` overrides point at the real folders.
+- **Migrated:** `test-plumber-tlv` and `test-core30-verify` deployed through the admin route and DNS repointed to
+  `sites.wao.co.il`. Pages projects kept for rollback until 22.11 (removal needs Adam's go).
+  The runtime copies of both site records were older than the repo's (core30 lacked `legacyCoreThirty: true`,
+  plumber had July copy); replaced with the repo versions, the same records the Pages builds used.
+- **Before/after:** titles, H1s, canonicals, og:url, descriptions, statuses identical on all 21 core30 paths and
+  all plumber paths. Expected deltas only: `/about.html` 308 → 301, lead form → `https://www.wao.co.il/api/lead`,
+  self-hosted fonts, stock hero image gone from schema, skip link + WhatsApp link (redesign).
+- **Acceptance:** 1–2 PASS (audit PASS, main/mail hosts unchanged); 3 PASS; 4 PASS (core30 R2 ETags unchanged by a
+  plumber redeploy, new content live in 1 s); 7 PASS (rollback 0.4 s, forward 29.9 s). 5–6 wait for the test `.co.il`.
+- **Fixes found live:** R2 read-back failed on HTML (weak ETag under compression) → 9fcd972; zone Browser Cache TTL
+  (1 year) leaked onto Worker cache hits → d07886c (Worker version 9f83209a).
+- Evidence: Adam's scratchpad `runs/live-2026-11-15/` (before/after captures, cmp output, rollback-drill.txt).
