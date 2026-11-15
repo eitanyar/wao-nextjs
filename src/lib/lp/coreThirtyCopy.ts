@@ -64,7 +64,7 @@ export function voiceRuleFor(data: CollectedData): string {
 }
 
 export interface CoreThirtyPageCopy {
-  pageHeadline: string; // H1. Max 60 chars. Names service + city, not generic.
+  pageHeadline: string; // H1. Max 60 chars. Must contain node.service and node.city exactly (pageHeadlineAnchorProblems).
   narrative: string; // 3-5 sentences, grounded in real onboarding facts. Max 500 chars.
   faqItems: { q: string; a: string }[]; // 3-4 items, genuinely distinct per (service, city) — not the site-wide FAQ repeated.
   metaDescription: string; // <= 155 chars (META_DESCRIPTION_MAX_CHARS, enforced by finalizeCoreThirtyCopy), differentiated per page (must reference both service and city).
@@ -151,9 +151,16 @@ HARD RULES:
   plural, never feminine). No translated-Hebrew calques (avoid stiff formal connector words a
   native speaker would not use in speech — e.g. the equivalents of "in order to", "how", "in the
   event that", "however", "what is", "one can" — prefer plain direct spoken phrasing instead).
-- pageHeadline and metaDescription MUST each contain the literal service term ("${node.service}")
-  and the literal city term ("${node.city}") verbatim or in a natural Hebrew grammatical inflection
-  of them — this is a strict local-SEO relevance requirement, not a style preference.
+- H1 ANCHOR (binding, checked by the system): pageHeadline MUST contain the exact service term
+  "${node.service}" and the exact city term "${node.city}", each character for character as written
+  here (a Hebrew prefix letter attached in front is fine; never change, shorten, swap or inflect the
+  term itself). A pageHeadline missing either term is rejected and rewritten. pageHeadline is a headline
+  for a reader, never a label or a category name.
+- metaDescription MUST contain the literal service term ("${node.service}") and the literal city term
+  ("${node.city}") verbatim or in a natural Hebrew grammatical inflection of them — a strict local-SEO
+  relevance requirement, not a style preference.
+- The "at most once" search-term rule below covers the body only; it never applies to pageHeadline or
+  metaDescription, which always carry the anchor terms.
 - faqItems and metaDescription must be UNIQUE to this exact (service, city) pair — never content
   that could be pasted onto a different city page in this same node set with zero changes.
 ${D3B_FACT_RULES.join('\n')}
@@ -219,7 +226,7 @@ replace it with a concrete fact from BUSINESS DATA instead.
 ${buildLocationTypeInstructions(node, data)}
 
 FIELDS:
-- pageHeadline: H1. Names "${node.service}" and "${node.city}" (verbatim or natural inflection),
+- pageHeadline: H1. Contains "${node.service}" and "${node.city}" exactly (see H1 ANCHOR),
   not a generic phrase. Max 60 chars.
 - narrative: 3-5 sentences. This is the page's main body — grounded in the real onboarding facts
   from BUSINESS DATA below (USP, years, guarantee, review, exclusions, etc.), framed around
@@ -320,7 +327,8 @@ Checklist (fix silently — no explanations):
 6. Translated-Hebrew calques (stiff formal connector words, or overly digital-sounding directives)
    -> natural spoken Hebrew
 7. "pageHeadline" and "formHeadline" must each end in a noun or active verb -- remove a trailing
-   ellipsis if present
+   ellipsis if present. "pageHeadline" is the page's SEO anchor: never remove, shorten, swap or inflect
+   the page service or the page city in it (both in SOURCE FACTS), and never apply rule 20 to it
 8. "localRelevanceNote" must remain a single honest sentence -- do not let it drift into a
    storefront-implying claim; if it already avoids that, leave its substance untouched
 9. Equipment, tools, vehicles, services, methods or guarantees not stated in SOURCE FACTS -> delete that
@@ -406,46 +414,65 @@ export function finalizeCoreThirtyCopy(copy: CoreThirtyPageCopy): CoreThirtyPage
 const CORE_THIRTY_COPY_SYSTEM_PROMPT =
   'You are a Hebrew copywriter executing the exact instructions and JSON schema given in the user message. Return only the JSON object described there — no prose, no markdown fences.';
 
+/** H1 anchor check: the node's service and city terms, each verbatim, must be substrings of pageHeadline. */
+export function pageHeadlineAnchorProblems(copy: Pick<CoreThirtyPageCopy, 'pageHeadline'> | null | undefined, node: Pick<CoreThirtyNode, 'service' | 'city'>): string[] {
+  const headline = typeof copy?.pageHeadline === 'string' ? copy.pageHeadline : '';
+  const problems: string[] = [];
+  if (!headline.includes(node.service)) problems.push('service');
+  if (!headline.includes(node.city)) problems.push('city');
+  return problems;
+}
+
+export type SiteCopyJsonCall = (system: string, prompt: string, options: Parameters<typeof callSiteCopyJSON>[2]) => Promise<string>;
+
 /**
  * Generates the final QA'd Hebrew copy for one core-30 node — Tamar (write)
  * then Noa (QA), same two-pass pattern as generate/route.ts's POST handler.
  *
- * Unlike SiteCopy's route, there is no deterministic Hebrew fallback template
- * at this layer (this file must never author Hebrew literals) — if Tamar's
- * retry also fails to parse, the error propagates to the caller rather than
- * fabricating Hebrew content here.
+ * The write pass gets two attempts; an attempt counts only when it parses AND its pageHeadline carries the node's
+ * service and city verbatim (pageHeadlineAnchorProblems). After two failed attempts this throws — there is no
+ * deterministic Hebrew fallback at this layer (this file must never author Hebrew literals). If Noa's QA pass drops an
+ * anchor term from pageHeadline, the validated write-pass headline is kept.
  */
 export async function generateCoreThirtyPageCopy(
   node: CoreThirtyNode,
-  data: CollectedData
+  data: CollectedData,
+  // Default routes through the site_copy provider switch (llmProvider.parity.test.mjs checks this call site).
+  call: SiteCopyJsonCall = (system, prompt, options) => callSiteCopyJSON(system, prompt, options)
 ): Promise<CoreThirtyPageCopy> {
   const tamarPrompt = buildCoreThirtyTamarPrompt(node, data);
 
-  let tamarCopy: CoreThirtyPageCopy;
-  try {
-    const tamarRaw = await callSiteCopyJSON(CORE_THIRTY_COPY_SYSTEM_PROMPT, tamarPrompt, {
-      thinkingBudget: 1500,
-    });
-    tamarCopy = JSON.parse(tamarRaw) as CoreThirtyPageCopy;
-  } catch (e: any) {
-    console.warn(`Core-30 Tamar pass failed to parse for node ${node.id}, retrying once:`, e.message);
-    // No Hebrew fallback template exists at this layer (see doc comment above)
-    // — if this retry also fails, it throws and the caller must handle it.
-    const tamarRetryRaw = await callSiteCopyJSON(CORE_THIRTY_COPY_SYSTEM_PROMPT, tamarPrompt, {
-      thinkingBudget: 1500,
-    });
-    tamarCopy = JSON.parse(tamarRetryRaw) as CoreThirtyPageCopy;
+  let tamarCopy: CoreThirtyPageCopy | null = null;
+  let lastProblem = '';
+  for (let attempt = 1; attempt <= 2 && !tamarCopy; attempt++) {
+    try {
+      const parsed = JSON.parse(await call(CORE_THIRTY_COPY_SYSTEM_PROMPT, tamarPrompt, { thinkingBudget: 1500 })) as CoreThirtyPageCopy;
+      const missing = pageHeadlineAnchorProblems(parsed, node);
+      if (missing.length === 0) tamarCopy = parsed;
+      else lastProblem = `pageHeadline is missing the node ${missing.join(' and ')} term`;
+    } catch (e: unknown) {
+      lastProblem = `write pass did not return valid JSON (${e instanceof Error ? e.message : String(e)})`;
+    }
+    if (!tamarCopy) console.warn(`Core-30 Tamar pass attempt ${attempt} rejected for node ${node.id}: ${lastProblem}`);
+  }
+  if (!tamarCopy) {
+    throw new Error(`Core-30 copy for node ${node.id} failed after 2 write attempts: ${lastProblem}`);
   }
 
   // Noa — QA pass. If it comes back malformed, fall back to Tamar's copy
   // rather than failing the whole generation over a polish step.
   try {
-    const noaRaw = await callSiteCopyJSON(buildCoreThirtyNoaPrompt(node, data), JSON.stringify(tamarCopy), {
+    const noaRaw = await call(buildCoreThirtyNoaPrompt(node, data), JSON.stringify(tamarCopy), {
       think: false,
     });
-    return finalizeCoreThirtyCopy(JSON.parse(noaRaw) as CoreThirtyPageCopy);
-  } catch (e: any) {
-    console.warn(`Core-30 Noa QA pass failed for node ${node.id}, using unreviewed Tamar copy:`, e.message);
+    const reviewed = finalizeCoreThirtyCopy(JSON.parse(noaRaw) as CoreThirtyPageCopy);
+    if (pageHeadlineAnchorProblems(reviewed, node).length > 0) {
+      console.warn(`Core-30 Noa QA pass dropped an H1 anchor term for node ${node.id}; keeping the write-pass headline`);
+      return { ...reviewed, pageHeadline: finalizeCoreThirtyCopy(tamarCopy).pageHeadline };
+    }
+    return reviewed;
+  } catch (e: unknown) {
+    console.warn(`Core-30 Noa QA pass failed for node ${node.id}, using unreviewed Tamar copy:`, e instanceof Error ? e.message : String(e));
     return finalizeCoreThirtyCopy(tamarCopy);
   }
 }

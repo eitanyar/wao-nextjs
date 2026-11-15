@@ -170,7 +170,11 @@ import {
   finalizeCoreThirtyCopy,
   D3C_RULES,
   voiceRuleFor,
+  pageHeadlineAnchorProblems,
+  generateCoreThirtyPageCopy,
 } from './coreThirtyCopy';
+import * as fs from 'node:fs';
+import * as path from 'node:path';
 import { CORE_THIRTY_VOICE_EXAMPLE_JSON } from './coreThirtyVoiceExample.generated';
 
 const EN = '\u2013';
@@ -298,4 +302,69 @@ test('D3b polish (l-m): write prompt limits verbatim service terms and bans stif
   const hebrewInRules = buildCoreThirtyTamarPrompt(makeNode({ service: 'S', city: 'C' }), { usp: 'U' })
     .replace(CORE_THIRTY_VOICE_EXAMPLE_JSON, '').match(/[\u0590-\u05FF]/);
   assert.equal(hebrewInRules, null, 'banned fillers are described in English, never as Hebrew literals');
+});
+
+// H1 anchor (Noa on gemini-v4): pageHeadline must carry node.service and node.city verbatim; validated in code.
+const fixtureNodes: CoreThirtyNode[] = JSON.parse(
+  fs.readFileSync(path.join(process.cwd(), 'data/sites/test-core30-verify.json'), 'utf8'),
+).coreThirtyNodes;
+
+function pageJson(pageHeadline: string): string {
+  return JSON.stringify({ pageHeadline, narrative: 'n', faqItems: [{ q: 'q', a: 'a' }], metaDescription: 'm', localRelevanceNote: 'l', formHeadline: 'f', ctaLabel: 'c' });
+}
+
+test('H1 anchor: write and QA prompts require the exact node service and city in pageHeadline; rule l excludes it', () => {
+  const node = makeNode({ service: 'SERVICE_X', city: 'CITY_Y' });
+  const prompt = buildCoreThirtyTamarPrompt(node, baseData);
+  assert.match(prompt, /H1 ANCHOR \(binding, checked by the system\): pageHeadline MUST contain the exact service term\s+"SERVICE_X" and the exact city term "CITY_Y"/);
+  assert.match(prompt, /never change, shorten, swap or inflect the\s+term itself/);
+  assert.match(prompt, /never applies to pageHeadline or\s+metaDescription/);
+  assert.match(prompt, /never a label or a category name/);
+  const qa = buildCoreThirtyNoaPrompt(node, baseData);
+  assert.match(qa, /never remove, shorten, swap or inflect\s+the page service or the page city in it/);
+  assert.match(qa, /never apply rule 20 to it/);
+});
+
+test('H1 anchor: pageHeadlineAnchorProblems on the fixture nodes (strings read from data/sites/test-core30-verify.json)', () => {
+  assert.ok(fixtureNodes.length >= 2);
+  for (const node of fixtureNodes.slice(0, 4)) {
+    assert.deepEqual(pageHeadlineAnchorProblems({ pageHeadline: `${node.service} ${node.city}` }, node), []);
+    assert.deepEqual(pageHeadlineAnchorProblems({ pageHeadline: `x${node.service} | y${node.city}!` }, node), [], 'prefix letters / punctuation around the terms are fine');
+    assert.deepEqual(pageHeadlineAnchorProblems({ pageHeadline: node.city }, node), ['service']);
+    assert.deepEqual(pageHeadlineAnchorProblems({ pageHeadline: node.service }, node), ['city']);
+    assert.deepEqual(pageHeadlineAnchorProblems({ pageHeadline: '' }, node), ['service', 'city']);
+    assert.deepEqual(pageHeadlineAnchorProblems(null, node), ['service', 'city']);
+  }
+});
+
+test('H1 anchor: a write pass missing a term is retried once, and the valid retry is used', async () => {
+  const node = fixtureNodes[0];
+  const calls: string[] = [];
+  const answers = [pageJson(node.city), pageJson(`${node.service} ${node.city}`)];
+  const copy = await generateCoreThirtyPageCopy(node, baseData, async (system, prompt) => {
+    calls.push(system.startsWith('You are Noa') ? 'noa' : 'write');
+    if (system.startsWith('You are Noa')) return prompt; // QA returns the copy unchanged
+    return answers.shift() as string;
+  });
+  assert.deepEqual(calls, ['write', 'write', 'noa']);
+  assert.deepEqual(pageHeadlineAnchorProblems(copy, node), []);
+});
+
+test('H1 anchor: two write passes missing a term throw a clear error (no Hebrew composed in code)', async () => {
+  const node = fixtureNodes[1];
+  let writes = 0;
+  await assert.rejects(
+    generateCoreThirtyPageCopy(node, baseData, async () => { writes++; return pageJson(node.city); }),
+    (e: Error) => e.message.includes(`node ${node.id} failed after 2 write attempts`) && e.message.includes('missing the node service term'),
+  );
+  assert.equal(writes, 2);
+});
+
+test('H1 anchor: when QA drops an anchor term, the validated write-pass headline is kept', async () => {
+  const node = fixtureNodes[0];
+  const good = `${node.service} ${node.city}`;
+  const copy = await generateCoreThirtyPageCopy(node, baseData, async system =>
+    (system.startsWith('You are Noa') ? pageJson('LABEL_ONLY') : pageJson(good)));
+  assert.equal(copy.pageHeadline, good);
+  assert.equal(copy.narrative, 'n');
 });
