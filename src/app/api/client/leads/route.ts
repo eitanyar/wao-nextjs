@@ -4,7 +4,7 @@ import { COOKIE_NAME, verifySessionToken } from '@/lib/client-auth';
 import { loadClientGoogleAdsIndex } from '@/lib/crm/intelligence';
 import { readLeads, writeLeads, patchLead } from '@/lib/crm/leadsStore';
 import { uploadLeadConversion } from '@/lib/google-ads/conversion-upload';
-import { leadMatchesClientIndex } from '@/lib/crm/ownership';
+import { leadOwnedByClient } from '@/lib/crm/ownership';
 import { applyClientLeadFeedback } from '@/lib/crm/clientLeadsActions';
 
 /**
@@ -14,10 +14,10 @@ import { applyClientLeadFeedback } from '@/lib/crm/clientLeadsActions';
  * shape-guessing the request body). See
  * docs/specs/priority-3-lead-capture-reliability-and-client-feedback.md §1.2/§2.3.
  *
- * GET  → only leads where `leadMatchesClientIndex(lead, clientIndex)` is
- *         true (the same ownership semantics `isLeadOwnedByClient` exposes
- *         from `intelligence.ts`, checked directly against the already-loaded
- *         index to avoid reloading it per lead).
+ * GET  → only leads where `leadOwnedByClient(lead, clientId, clientIndex)` is
+ *         true (server-stamped `clientId` from /api/lead, or else
+ *         `leadMatchesClientIndex(lead, clientIndex)`, checked directly against
+ *         the already-loaded index to avoid reloading it per lead).
  * POST → restricted action vocabulary: { leadId, quality: 'GOOD'|'JUNK' } or
  *         { leadId, closed: { revenue } }. Ownership checked per-lead inside
  *         `applyClientLeadFeedback` → 403 (write path never reached) if the
@@ -34,7 +34,7 @@ export async function GET() {
 
   const clientIndex = loadClientGoogleAdsIndex(clientId);
   const leads = await readLeads();
-  const ownLeads = leads.filter((lead) => leadMatchesClientIndex(lead, clientIndex));
+  const ownLeads = leads.filter((lead) => leadOwnedByClient(lead, clientId, clientIndex));
 
   return NextResponse.json({ success: true, leads: ownLeads });
 }
@@ -73,6 +73,7 @@ export async function POST(req: Request) {
     closed: isValidClosed ? { revenue: closed!.revenue as number } : undefined,
     leads,
     clientIndex,
+    clientId,
     writeLeads,
     uploadLeadConversion,
     patchLead,

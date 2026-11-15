@@ -1,4 +1,4 @@
-import { leadMatchesClientIndex } from './ownership.js';
+import { leadOwnedByClient } from './ownership.js';
 import { planUploadsForTrigger, runLeadConversionUploads, summarizeConversionUpload } from './leadConversionUploads.js';
 
 /**
@@ -26,6 +26,7 @@ import { planUploadsForTrigger, runLeadConversionUploads, summarizeConversionUpl
  * @param {{ revenue: number } | undefined} params.closed
  * @param {Array<any>} params.leads
  * @param {{ campaigns?: Array<{slug?:string, customerId?:string}> } | null} params.clientIndex
+ * @param {string} [params.clientId] session client id; also owns leads `/api/lead` stamped with it
  * @param {(leads: Array<any>) => Promise<void>} params.writeLeads
  * @param {(args: { leadId: number, type: 'verified-lead'|'closed-deal' }) => Promise<any>} params.uploadLeadConversion
  * @param {(leadId: number, patch: object) => Promise<void>} [params.patchLead]
@@ -64,13 +65,14 @@ export async function applyClientLeadFeedback({
   closed,
   leads,
   clientIndex,
+  clientId,
   writeLeads,
   uploadLeadConversion,
   patchLead,
   now = () => new Date(),
 }) {
   const lead = leads.find((l) => l.id === leadId);
-  if (!lead || !leadMatchesClientIndex(lead, clientIndex)) {
+  if (!lead || !leadOwnedByClient(lead, clientId, clientIndex)) {
     return { status: 403, body: { success: false, error: 'This lead does not belong to your account' } };
   }
 

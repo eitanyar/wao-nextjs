@@ -246,7 +246,10 @@ test('contact destination consumes optional ref without changing the acknowledge
   assert.match(form, /"ok" in acknowledgement && acknowledgement\.ok === true/);
   assert.match(form, /if \(accepted\) \{\s*window\.dataLayer = window\.dataLayer \|\| \[\];\s*window\.dataLayer\.push\(\{ event: "lead_submit", source, ref: tracking\.ref \?\? undefined \}\);/);
   assert.match(lead, /ref: leadField\(body\.ref, 200\) \|\| undefined/);
-  assert.match(lead, /return leadResponse\(req, accepted \? 200 : 503, \{ ok: accepted \}\)/);
+  // ok = mail acknowledged, or (client-site leads only) stored in the CRM. A main-site form has no slug,
+  // so intake() returns stored: false before any store and the acknowledgement stays mail-only.
+  assert.match(lead, /if \(!input\.slug\) return \{ stored: false, created: false \};/);
+  assert.match(lead, /const ok = stored\.stored \|\| accepted;\s*return leadResponse\(req, ok \? 200 : 503, \{ ok \}\)/);
 });
 
 test('cookie banner suppresses the audit conversion route', () => {

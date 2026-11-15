@@ -23,6 +23,15 @@ export interface LeadRecord {
   source?: string;
   slug?: string;
   customerId?: string;
+  /**
+   * Owning client, stamped only by /api/lead after resolving the tenant server-side and matching
+   * the request Origin to its hosts (src/lib/crm/siteLeadIntake.ts). Never taken from a body.
+   */
+  clientId?: string;
+  /** Slug the body claimed when the tenant check failed; the lead is then WAO-only (no slug/customerId). */
+  claimedSlug?: string;
+  /** Why a slugged /api/lead submission was not assigned to a client. */
+  tenantCheck?: 'origin_mismatch' | 'unknown_tenant';
   gclid?: string | null;
   wbraid?: string | null;
   gbraid?: string | null;

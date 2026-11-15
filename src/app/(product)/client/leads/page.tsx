@@ -4,7 +4,7 @@ import Link          from 'next/link';
 import { verifySessionToken, COOKIE_NAME } from '@/lib/client-auth';
 import { loadClientGoogleAdsIndex }        from '@/lib/crm/intelligence';
 import { readLeads }                       from '@/lib/crm/leadsStore';
-import { leadMatchesClientIndex }          from '@/lib/crm/ownership';
+import { leadOwnedByClient }               from '@/lib/crm/ownership';
 import LeadsTable                          from '@/components/crm/LeadsTable';
 
 export const metadata = { robots: { index: false }, title: 'הלידים שלי | WAO' };
@@ -31,7 +31,7 @@ export default async function ClientLeadsPage({
 
   const clientIndex = loadClientGoogleAdsIndex(clientId);
   const leads = await readLeads();
-  const ownLeads = leads.filter((lead) => leadMatchesClientIndex(lead, clientIndex));
+  const ownLeads = leads.filter((lead) => leadOwnedByClient(lead, clientId, clientIndex));
 
   return (
     <main dir="rtl" style={{ paddingTop: '120px', paddingBottom: '64px', padding: '120px 20px 64px', maxWidth: '1200px', margin: '0 auto', minHeight: '100vh' }}>

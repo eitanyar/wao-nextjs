@@ -33,3 +33,26 @@ export function leadMatchesClientIndex(lead, clientIndex) {
     (lead.customerId && campaign.customerId === lead.customerId)
   );
 }
+
+/**
+ * Client ownership for the client dashboard (`/client/leads` + `/api/client/leads`).
+ *
+ * A lead belongs to `clientId` when either
+ *  - `/api/lead` stamped it with that `clientId` after resolving the tenant server-side from a
+ *    known site / LP record AND matching the request Origin to that tenant's hosts
+ *    (src/lib/crm/siteLeadIntake.ts). `clientId` is never copied from a request body; or
+ *  - it matches one of the client's bound Google Ads campaigns (`leadMatchesClientIndex`).
+ *
+ * Site Bot clients have no Google Ads index, so the first rule is the only way their site leads
+ * reach their dashboard.
+ *
+ * @param {{ clientId?: string, slug?: string, customerId?: string }} lead
+ * @param {string | null | undefined} clientId
+ * @param {{ campaigns?: Array<{ slug?: string, customerId?: string }> } | null} clientIndex
+ * @returns {boolean}
+ */
+export function leadOwnedByClient(lead, clientId, clientIndex) {
+  if (!lead) return false;
+  if (typeof clientId === 'string' && clientId && lead.clientId === clientId) return true;
+  return leadMatchesClientIndex(lead, clientIndex);
+}

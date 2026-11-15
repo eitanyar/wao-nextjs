@@ -44,6 +44,7 @@ const CALL_SITES = {
   'src/lib/client-recovery-contact.ts': ['clientsDir()', 'clientsDir()'],
   'src/lib/crm/intelligence.ts': ['clientsDir()'],
   'src/lib/crm/reviewFlywheelStore.ts': ['clientsDir()'],
+  'src/lib/crm/siteLeadTenantLookup.ts': ['sitesDir()'],
   'src/lib/fraud-blocker/store.ts': ['clientsDir()'],
   'src/lib/gbp/reviewResponderStore.ts': ['clientsDir()'],
   'src/lib/gbp/reviewStore.ts': ['clientsDir()'],
