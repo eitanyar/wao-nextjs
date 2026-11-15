@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { WAO_STATS as STATS } from "@/lib/waoStats";
 
 const CANONICAL = "https://www.wao.co.il/about";
 
@@ -64,12 +65,6 @@ const VALUES = [
   { n: "06", icon: "🛡️", title: "לשמור עליך מפני מתחרים", desc: "מתחרים יודעים להקליק על המודעות שלך כדי לשרוף לך את התקציב. אנחנו מזהים הקלקות כאלה וחוסמים אותן, כדי שהכסף שלך ילך על לקוחות אמיתיים.", tags: ["Protection", "Loyalty", "Vigilance"] },
 ];
 
-const STATS = [
-  { n: "2006", l: "שנת הקמה" },
-  { n: "20", l: "שנות ניסיון" },
-  { n: "84", l: "לקוחות שליווינו" },
-  { n: "2.2×", l: "ROI ממוצע ללקוח WAO" },
-];
 
 const TEAM = [
   {

@@ -1,9 +1,10 @@
-import Image from "next/image";
 import Link from "next/link";
 import copy from "@/content/astra-homepage-copy.json";
 import finalCopy from "@/content/astra-authority-first-homepage-copy.json";
 import AstraProofVideo from "./AstraProofVideo";
 import HeroScene from "./HeroScene";
+import FounderBlock from "./FounderBlock";
+import ProofStrip from "./ProofStrip";
 
 function ArrowIcon() {
   return (
@@ -74,6 +75,8 @@ export default function AstraHome() {
         </div>
       </section>
 
+      <ProofStrip />
+
       <section id="proof" className="astra-section astra-light">
         <div className="astra-container astra-proof-grid">
           <div className="astra-section-copy">
@@ -121,34 +124,7 @@ export default function AstraHome() {
       </section>
 
       <section id="people" className="astra-section astra-light">
-        <div className="astra-container astra-people-grid">
-          <div className="astra-person-photo">
-            <Image
-              src={finalCopy.metadata.exact_destinations.founder_photo}
-              alt={finalCopy.founder_authority.photo_alt}
-              fill
-              unoptimized
-              sizes="(max-width: 768px) 100vw, 420px"
-            />
-          </div>
-          <div>
-            <h2 className="astra-section-title">{finalCopy.founder_authority.name}</h2>
-            <p className="astra-person-role">{finalCopy.founder_authority.role}</p>
-            <p>{finalCopy.founder_authority.accountability_line}</p>
-            <Link href={finalCopy.founder_authority.about_link.href} className="astra-button astra-button-secondary astra-button-on-light">
-              {finalCopy.founder_authority.about_link.label}
-              <ArrowIcon />
-            </Link>
-            <div className="astra-partner-proof">
-              <h3>{finalCopy.partner_proof.heading}</h3>
-              <a href={finalCopy.partner_proof.directory_link.href} target="_blank" rel="noopener noreferrer" className="astra-partner-badge-link">
-                <Image src={finalCopy.partner_proof.badge_src} alt={finalCopy.partner_proof.badge_alt} width={152} height={146} unoptimized />
-              </a>
-              <p>{finalCopy.partner_proof.status_line}</p>
-              <a href={finalCopy.partner_proof.directory_link.href} target="_blank" rel="noopener noreferrer" className="astra-text-link">{finalCopy.partner_proof.directory_link.label}</a>
-            </div>
-          </div>
-        </div>
+        <FounderBlock photoLoading="eager" />
       </section>
 
       <section id="faq" className="astra-section astra-light astra-faq-section">

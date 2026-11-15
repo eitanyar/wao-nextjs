@@ -726,7 +726,7 @@ p { margin: 0; }
 }
 
 .astra-logo {
-  color: #36ddb5;
+  color: #4AE3B5; /* the glowing button green (.btn-primary); one non-button mint site-wide */
   font-family: var(--font-rubik), sans-serif;
   font-size: 1.8rem;
   font-weight: 800;
@@ -935,14 +935,14 @@ p { margin: 0; }
 .astra-eyebrow,
 .astra-card-eyebrow {
   margin-bottom: 16px;
-  color: #167d68;
+  color: #126a58;
   font-family: var(--font-rubik), sans-serif;
   font-size: 0.84rem;
   font-weight: 700;
   letter-spacing: 0.02em;
 }
 
-.astra-hero .astra-eyebrow { color: var(--astra-accent); }
+.astra-hero .astra-eyebrow { color: #4AE3B5; }
 
 .astra-hero h1 {
   color: var(--astra-light);
@@ -954,6 +954,8 @@ p { margin: 0; }
 }
 
 .astra-hero h1 span { display: block; }
+/* Phone: each H1 line wraps evenly instead of leaving an orphan word (design review #1). */
+@media (max-width: 768px) { .astra-hero h1 span { text-wrap: balance; } }
 
 .astra-lead {
   max-width: 620px;
@@ -1084,7 +1086,7 @@ p { margin: 0; }
 }
 
 .astra-demo-kicker {
-  color: #167d68;
+  color: #126a58;
   font-size: 0.72rem;
   font-weight: 700;
 }
@@ -1106,7 +1108,7 @@ p { margin: 0; }
 .astra-demo-connector {
   display: grid;
   place-items: center;
-  color: #167d68;
+  color: #126a58;
   transform: rotate(90deg);
 }
 
@@ -1203,7 +1205,7 @@ p { margin: 0; }
   font-size: 1.05rem;
 }
 
-.astra-check-list .astra-icon { color: #167d68; margin-top: 3px; }
+.astra-check-list .astra-icon { color: #126a58; margin-top: 3px; }
 
 .astra-section-intro {
   max-width: 720px;
@@ -1381,7 +1383,7 @@ p { margin: 0; }
 
 .astra-person-role {
   margin: 6px 0 16px;
-  color: #167d68;
+  color: #126a58;
   font-weight: 700;
 }
 
@@ -1397,18 +1399,75 @@ p { margin: 0; }
 .astra-faq-item { border-bottom: 1px solid #c4cec9; }
 
 .astra-faq-item summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
   padding: 22px 4px;
   color: var(--astra-ink);
   font-family: var(--font-rubik), sans-serif;
   font-size: 1.08rem;
   font-weight: 650;
   cursor: pointer;
+  list-style: none;
 }
 
 .astra-faq-item p {
   padding: 0 4px 22px;
   color: var(--astra-muted);
-  line-height: 1.7;
+  line-height: 1.6;
+  max-width: 34em;
+}
+
+/* Custom FAQ chevron (design review #9) for every <details> FAQ: no default triangle; a chevron that turns when open.
+   Mint-ink on light backgrounds (Yonatan: mint text fails AA on cream). */
+.astra-faq-item summary::-webkit-details-marker,
+.wao-faq summary::-webkit-details-marker { display: none; }
+.wao-faq summary { list-style: none; }
+.astra-faq-item summary::after,
+.wao-faq-chevron {
+  content: "";
+  flex: none;
+  width: 10px;
+  height: 10px;
+  margin-inline-end: 4px;
+  border-inline-end: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: translateY(-3px) rotate(45deg);
+  transition: transform 160ms ease;
+}
+.astra-faq-item summary::after { color: #126a58; }
+.astra-faq-item[open] summary::after,
+.wao-faq[open] .wao-faq-chevron { transform: translateY(2px) rotate(225deg); }
+
+/* Proof strip under the homepage hero (design review #2): 2006 · 84 · Google Partner. */
+.astra-proof-strip { background: #fffefa; border-bottom: 1px solid #c7d0cb; color: #14201f; }
+.astra-proof-strip ul {
+  list-style: none;
+  margin: 0 auto;
+  padding: 18px 0;
+  display: grid;
+  grid-template-columns: auto auto minmax(0, 1fr);
+  gap: 16px;
+  align-items: center;
+}
+.astra-proof-strip li { display: grid; gap: 2px; }
+.astra-proof-strip li + li { border-inline-start: 1px solid #c7d0cb; padding-inline-start: 16px; }
+.astra-proof-n { font-family: var(--font-rubik), sans-serif; font-size: 1.5rem; font-weight: 700; line-height: 1.1; }
+.astra-proof-l { font-size: 0.8125rem; color: #52605d; font-weight: 500; line-height: 1.35; }
+.astra-proof-partner { grid-template-columns: auto minmax(0, 1fr); align-items: center; column-gap: 10px; }
+.astra-proof-badge img { display: block; width: 44px; height: auto; }
+.astra-proof-gp { display: block; font-size: 0.9375rem; font-weight: 700; line-height: 1.3; }
+.astra-proof-link { display: inline-block; color: #126a58; font-size: 0.8125rem; font-weight: 500; text-decoration: underline; text-underline-offset: 3px; }
+@media (min-width: 900px) {
+  .astra-proof-strip ul { grid-template-columns: auto auto auto; justify-content: start; gap: 40px; padding: 22px 0; }
+  .astra-proof-strip li + li { padding-inline-start: 40px; }
+  .astra-proof-n { font-size: 1.9rem; }
+  .astra-proof-badge img { width: 52px; }
+}
+@media (max-width: 420px) {
+  .astra-proof-strip ul { grid-template-columns: auto auto; }
+  .astra-proof-partner { grid-column: 1 / -1; border-inline-start: 0 !important; padding-inline-start: 0 !important; border-top: 1px solid #c7d0cb; padding-top: 12px; }
 }
 
 .astra-final {
@@ -1461,18 +1520,8 @@ p { margin: 0; }
   .astra-person-photo { min-height: 340px; }
 }
 
-@media (max-width: 480px) {
-  .astra-home .astra-button { max-width: calc(100% - 60px); margin-inline-end: 60px; }
-  .astra-home .astra-section-copy,
-  .astra-home .astra-section-intro,
-  .astra-home .astra-faq-section h2 { padding-inline-end: 60px; }
-  .astra-home .astra-container,
-  .astra-home .astra-faq-item,
-  .astra-home .astra-section-copy,
-  .astra-home .astra-section-intro,
-  .astra-home .astra-owner-card,
-  footer .wao-container { padding-inline-end: 64px; }
-}
+/* (2026-11-15) The 60-64px left reservation for the floating accessibility trigger is gone: on phone the trigger
+   docks into the header row instead (see .wao-a11y-control below), so content keeps the full width. */
 
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
@@ -1495,16 +1544,17 @@ body:has(.wao-a11y-panel) .wao-a11y-control { position: static; order: -1; align
   .wao-a11y-trigger { width: 40px; height: 40px; box-shadow: none; }
   .wao-a11y-trigger svg { width: 26px; height: 26px; }
 }
-@media (min-width: 361px) and (max-width: 600px) {
-  /* Only the GBP preview page needs the collapsed control above its lower form action. */
-  body:has([data-gbp-magnet-page]) .wao-a11y-control:not(:has(.wao-a11y-panel)) {
-    top: 72px;
+@media (max-width: 767px) {
+  /* Phone: the collapsed trigger docks into the sticky header row, beside the menu icon (both centred on the
+     56px row), so it never sits over page content. Pages without the site header keep the floating trigger. */
+  body:has(.astra-header) .wao-a11y-control:not(:has(.wao-a11y-panel)) {
+    top: 8px;
+    left: 56px;
     bottom: auto !important; /* Override the banner-aware inline bottom only while collapsed. */
+    z-index: 210;
   }
 }
 @media (max-width: 360px) {
-  /* Keep the collapsed control clear of full-width hero actions at narrow widths. */
-  .wao-a11y-control:not(:has(.wao-a11y-panel)) { top: 72px; }
   /* Only the inline consulting action needs to wrap; full-width hero actions keep their geometry. */
   a.btn-primary[href="/consulting"]:not(.w-full) { max-width: 100%; white-space: normal; text-align: center; }
 }
@@ -1539,3 +1589,50 @@ html.wao-a11y-underline-links a { text-decoration: underline !important; text-un
 .wao-intake .btn-primary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .wao-intake .btn-primary:disabled,
 .wao-intake .btn-primary:disabled:hover { background: transparent; color: var(--muted); border: 1px dashed var(--muted); box-shadow: none; transform: none; cursor: not-allowed; }
+
+/* ─── Product pages (/site-bot, /google-ads) — design review 2026-11-14, approved 2026-11-15 ─── */
+/* Hero copy on the header's container edge (start-aligned), measure kept to 860px. */
+.wao-hero-copy > * { max-width: 860px; }
+.wao-narrow > * { max-width: 860px; }
+/* Light body between the dark hero and the dark closing band. Tokens re-pointed for every inline var() inside;
+   mint TEXT becomes mint-ink #126a58 (AA on cream, Yonatan rule 2). The glowing green button is pinned unchanged. */
+.wao-light {
+  --bg: #f4f1eb;
+  --surface: #fffefa;
+  --elevated: #fffefa;
+  --text: #14201f;
+  --muted: #52605d;
+  --subtle: #c7d0cb;
+  --border: #c7d0cb;
+  --accent: #126a58;
+  --accent-dim: rgba(18, 106, 88, 0.07);
+  --accent-border: rgba(18, 106, 88, 0.28);
+  background: var(--bg);
+  color: var(--text);
+}
+.wao-light .btn-primary { background: #4AE3B5; color: #060709; }
+.wao-light .btn-primary:hover { background: #3DD1A3; }
+.wao-light .why-cell { background: var(--surface); }
+.wao-light .why-cell:hover { background: var(--surface); }
+.wao-light .astra-home { background: transparent; }
+.wao-silo-below-hero { padding-top: 28px; }
+.wao-silo-below-hero + section.wao-section { padding-top: 48px; }
+/* One numbered list instead of three cards with ghost numerals (#3, #10). */
+.wao-steps { margin: 0; padding-inline-start: 1.6em; display: grid; gap: 22px; list-style: decimal; }
+.wao-steps li::marker { color: var(--accent); font-family: var(--font-rubik), sans-serif; font-weight: 700; }
+.wao-steps li h3 { margin-top: 0; }
+/* Parts next to the real phone screenshots (#5). */
+.wao-parts-grid { display: grid; gap: 32px; align-items: start; }
+.wao-phone-shots { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: start; }
+.wao-phone-shot img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  box-shadow: 0 12px 32px rgba(16, 20, 22, 0.12);
+}
+@media (min-width: 1024px) {
+  .wao-parts-grid { grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr); gap: 56px; }
+}
+.wao-audit-column > * { max-width: 680px; }

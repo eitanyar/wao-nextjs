@@ -159,15 +159,20 @@ test("final roles appear once at their assigned sections without old duplicate f
     people: ["founder_authority.name", "founder_authority.role", "founder_authority.accountability_line", "founder_authority.photo_alt", "founder_authority.about_link.label", "partner_proof.heading", "partner_proof.status_line", "partner_proof.badge_src", "partner_proof.badge_alt", "partner_proof.directory_link.label"],
     final_cta: ["final_cta.heading", "final_cta.body", "final_cta.primary_cta.label"],
   };
+  // 2026-11-15: the people section renders the shared FounderBlock (also on /site-bot and /google-ads, design review #6).
+  const founderBlock = text("src/components/home/FounderBlock.tsx");
+  assert.match(section("people"), /<FounderBlock photoLoading="eager" \/>/);
   for (const [id, paths] of Object.entries(fields)) for (const field of paths) {
     const reference = `finalCopy.${field}`;
-    assert.ok(section(id).includes(reference), `${reference} absent from ${id}`);
-    assert.equal(component.split(reference).length - 1, 1, `${reference} duplicated`);
+    const source = id === "people" ? founderBlock : section(id);
+    const whole = id === "people" ? founderBlock : component;
+    assert.ok(source.includes(reference), `${reference} absent from ${id}`);
+    assert.equal(whole.split(reference).length - 1, 1, `${reference} duplicated`);
   }
   // Optional lines may be cleared in approved copy; they render through OptionalParagraph so "" leaves no empty <p>.
   for (const field of ["video_proof.context_line", "paths.intro"]) assert.match(component, new RegExp(`<OptionalParagraph[^>]*text=\\{finalCopy\\.${field.replace(".", "\\.")}\\}`));
   assert.equal(finalCopy.metadata.exact_destinations.founder_photo, "/eitan-yariv.avif");
-  assert.match(section("people"), /finalCopy\.metadata\.exact_destinations\.founder_photo/);
+  assert.match(text("src/components/home/FounderBlock.tsx"), /finalCopy\.metadata\.exact_destinations\.founder_photo/);
   assert.equal(finalCopy.partner_proof.directory_link.href, directory);
   assert.equal(finalCopy.partner_proof.badge_src, "/google-partner-badge.svg");
   assert.deepEqual(
@@ -175,7 +180,7 @@ test("final roles appear once at their assigned sections without old duplicate f
     ["/google-ads/onboarding", "/google-ads", "/site-bot/audit", "/site-bot", "/contact#contact-form", "/about"],
   );
   for (const reference of ["google_ads.primary_cta", "google_ads.supporting_link", "business_website.primary_cta", "business_website.supporting_link", "choosing_help.link"]) assert.match(section("paths"), new RegExp(`finalCopy\\.paths\\.${reference.replaceAll(".", "\\.")}\\.href`));
-  assert.match(section("people"), /target="_blank" rel="noopener noreferrer"/);
+  assert.match(text("src/components/home/FounderBlock.tsx"), /target="_blank" rel="noopener noreferrer"/);
 });
 
 test("video is immediately embedded with secure attributes and a direct fallback", () => {

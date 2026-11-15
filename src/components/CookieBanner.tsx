@@ -66,23 +66,23 @@ export default function CookieBanner() {
         zIndex: 9999,
         background: "var(--elevated)",
         borderTop: "2px solid var(--border)",
-        padding: "16px clamp(16px,5vw,48px)",
+        padding: "8px clamp(16px,5vw,48px)",
         display: "flex",
         alignItems: "center",
-        gap: "20px",
-        flexWrap: "wrap",
+        gap: "12px",
+        flexWrap: "nowrap",
         boxShadow: "0 -4px 24px rgba(0,0,0,0.35)",
       }}
     >
       <p
         style={{
           flex: 1,
-          fontSize: "0.85rem",
+          fontSize: "0.75rem",
           color: "var(--muted)",
           fontFamily: "var(--font-body), sans-serif",
-          lineHeight: 1.65,
+          lineHeight: 1.45,
           margin: 0,
-          minWidth: "240px",
+          minWidth: 0,
         }}
       >
         אתר זה משתמש בעוגיות לניתוח תנועה (Google Analytics) ולשיפור חוויית הגלישה.
@@ -92,30 +92,11 @@ export default function CookieBanner() {
         </Link>{" "}
         שלנו.
       </p>
-      <div style={{ display: "flex", gap: "10px", flexShrink: 0, flexWrap: "wrap" }}>
-        <Link
-          href="/privacy"
-          style={{
-            display: "inline-flex",
-            alignItems: "center",
-            minHeight: "44px",
-            boxSizing: "border-box",
-            padding: "10px 18px",
-            fontSize: "0.82rem",
-            color: "var(--muted)",
-            fontFamily: "var(--font-body), sans-serif",
-            border: "1px solid var(--border)",
-            borderRadius: "var(--radius-pill)",
-            textDecoration: "none",
-            whiteSpace: "nowrap",
-          }}
-        >
-          פרטים נוספים
-        </Link>
+      <div style={{ display: "flex", flexShrink: 0 }}>
         <button
           onClick={dismiss}
           className="btn-primary"
-          style={{ minHeight: "44px", padding: "10px 24px", fontSize: "0.88rem", whiteSpace: "nowrap" }}
+          style={{ minHeight: "44px", padding: "8px 16px", fontSize: "0.82rem", whiteSpace: "nowrap" }}
         >
           הבנתי ומסכים/ת
         </button>
