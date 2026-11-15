@@ -10,6 +10,8 @@
 // Text rects (window coords) the pointer and highlights are fitted to, measured from the rendered window:
 //   ad headline x 246-921, y 82-107; ad description x 393-921, y 113-129;
 //   LP h1 line 1 x 265-928, y 345-396; line 2 x 746-928, y 396-447; LP subline x 572-928, y 459-486;
+//   results-page ad (scale 2, card-local px): headline lines top 42 / 67, 25 tall, 366 / 304 wide, right 17;
+//   card 170-479 window y, so the pointer parks under it at PARK (empty fade, and empty green once the LP is in);
 //   call button x 744.5-928, y 511-563 (its --cta #D4842A, radius 8 = the glow ring) (icon 884-904, label 769-876); LP text below it from y 575.
 // HEBREW-SAFETY: zero Hebrew bytes.
 import fs from 'node:fs';
@@ -21,6 +23,9 @@ export const DURATION_MS = 9600;
 const E = 'cubic-bezier(.22,1,.36,1)'; // entrances
 const P = 'cubic-bezier(.65,0,.35,1)'; // pointer X, collapse
 const Y = 'cubic-bezier(.5,0,.25,1)';  // pointer Y (differs from X, so hops arc)
+
+/** Where the pointer waits from the results page until the call-button hop (window coords). */
+export const PARK = [300, 512];
 
 /** Click times (ms): the three chips, then the call button. */
 export const CLICKS = [900, 2100, 3300, 8200];
@@ -49,8 +54,12 @@ export const TIMELINE = {
   readyT: ['transform', [[0, sc(0.9)], [3700, sc(0.9), E], [3950, sc(1)]]],
   // The resting layers hide once the panel is opaque (150 ms), so the collapse reveals an empty window.
   cornerO: ['opacity', [[0, 1], [150, 1], [160, 0], [4300, 0, E], [4500, 1]]],
-  adO: ['opacity', [[0, 1], [150, 1], [160, 0], [4500, 0, E], [5000, 1]]],
-  adT: ['transform', [[0, ty(0)], [150, ty(0)], [160, ty(24)], [4500, ty(24), E], [5000, ty(0)]]],
+  // Google results beat (Eitan 2026-11-15): the results page is under the chat as it collapses (search box with the
+  // query already in it), his ad rises in as the first result, then the page fades off the resting ad + LP.
+  serpO: ['opacity', [[0, 0], [4040, 0], [4050, 1], [6700, 1, E], [7000, 0]]],
+  adO: ['opacity', [[0, 0], [4500, 0, E], [5000, 1]]],
+  adT: ['transform', [[0, ty(24)], [4500, ty(24), E], [5000, ty(0)]]],
+  restAdO: ['opacity', [[0, 1], [150, 1], [160, 0], [6690, 0], [6700, 1]]],
   hlAdO: ['opacity', [[0, 1], [6500, 1, E], [6700, 0]]],
   hlAdT: ['transform', [[0, sx(0)], [4900, sx(0), E], [5500, sx(1)]]],
   lpO: ['opacity', [[0, 1], [150, 1], [160, 0], [6700, 0, E], [7300, 1]]],
@@ -59,13 +68,14 @@ export const TIMELINE = {
   hlLpT: ['transform', [[0, sx(0)], [7400, sx(0), E], [7900, sx(1)]]],
   ringO: ['opacity', [[0, 0], [8195, 0], [8200, 0.6, E], [8700, 0]]],
   ringT: ['transform', [[0, sc(1)], [8200, sc(1), E], [8700, sc(1.35)]]],
-  // Pointer: enters from below the window's bottom-left, three hops to mid-chip empty fill (text is right-aligned),
-  // drifts beside the ad (left of its text), then goes down the left of the LP headline and in to the button's left
-  // padding along the gap above it, so the arrow never covers text.
+  // Pointer: enters from below the window's bottom-left, three hops to mid-chip empty fill (text is right-aligned).
+  // During the collapse (before the ad shows) it drifts to the empty area under the results-page ad, stays there while
+  // the LP slides in (that spot is empty green under the LP subline), then glides right along the gap under the
+  // subline to the call button's left padding, so the arrow never covers text.
   ptrX: ['transform', [[0, tx(140)], [400, tx(140), P], [900, tx(430)], [1650, tx(430), P], [2100, tx(470)], [2850, tx(470), P],
-    [3300, tx(410)], [4600, tx(410), P], [5400, tx(150)], [7700, tx(150), P], [8200, tx(747)]]],
+    [3300, tx(410)], [4100, tx(410), P], [4600, tx(PARK[0])], [7500, tx(PARK[0]), P], [8200, tx(747)]]],
   ptrY: ['transform', [[0, ty(660)], [400, ty(660), Y], [900, ty(242)], [1650, ty(242), Y], [2100, ty(344)], [2850, ty(344), Y],
-    [3300, ty(446)], [4600, ty(446), Y], [5400, ty(120)], [7500, ty(120), Y], [7950, ty(498), E], [8200, ty(514)]]],
+    [3300, ty(446)], [4100, ty(446), Y], [4600, ty(PARK[1])], [7500, ty(PARK[1]), Y], [8200, ty(514)]]],
   ptrO: ['opacity', [[0, 1], [9000, 1, E], [9300, 0]]],
   press: ['transform', [[0, sc(1)], ...CLICKS.flatMap((c) => [[c, sc(1)], [c + 45, sc(0.92)], [c + 90, sc(1)]])]],
   clickO: ['opacity', [[0, 0], ...CLICKS.flatMap((c) => [[c - 5, 0], [c, 0.5, E], [c + 350, 0]])]],
@@ -88,7 +98,9 @@ const LAYERS = [
   ['.s3 .dim', ['dim3']],
   ['.ready', ['readyO', 'readyT']],
   ['.corner', ['cornerO']],
-  ['.ad', ['adO', 'adT'], 'transform,opacity'],
+  ['.serp', ['serpO'], 'opacity'],
+  ['.serpAd', ['adO', 'adT'], 'transform,opacity'],
+  ['.ad', ['restAdO']],
   ['.hlAd', ['hlAdO', 'hlAdT']],
   ['.lp', ['lpO', 'lpT'], 'transform,opacity'],
   ['.hlLp', ['hlLpO', 'hlLpT']],
@@ -117,6 +129,9 @@ function keyframes(name, [prop, stops]) {
   return `@keyframes ${name}{${body}}`;
 }
 
+/** Results-page ad: GoogleAdPreview at SERP_SCALE (its rem fonts), full results width 860 virtual. */
+const SERP_SCALE = 2;
+const STATIC_VARS = { SERP_SCALE, SERP_AD_W: +(860 / SERP_SCALE).toFixed(2), SERP_AD_TOP: 144 };
 const STATIC = `/* GENERATED by scripts/build-hero-motion-css.mjs. Do not edit by hand; re-run the script. */
 /* Homepage hero motion (docs/specs/hero-motion-spec-maya-2026-11-15.md). Virtual px inside the 960x605 window. */
 .wrap{position:relative}
@@ -137,7 +152,15 @@ const STATIC = `/* GENERATED by scripts/build-hero-motion-css.mjs. Do not edit b
 .ready svg{width:76px;height:76px}
 .hlAd,.hlLp,.ring,.ptr,.click{position:absolute;opacity:0;pointer-events:none}
 .hlAd,.hlLp{transform-origin:right;border-radius:4px;background:rgba(54,221,181,.32)}
-.hlAd{left:242px;top:56px;width:683px;height:25px}
+.serp{position:absolute;left:0;top:26px;width:960px;height:579px;opacity:0;contain:layout paint;background:#fff;direction:rtl}
+.search{position:absolute;left:50px;right:50px;top:16px;height:64px;display:flex;align-items:center;gap:18px;padding:0 26px;border:2px solid #dfe1e5;border-radius:32px;box-shadow:0 2px 8px rgba(32,33,36,.16);color:#202124;font:28px/1 Arial,sans-serif;white-space:nowrap}
+.search svg{flex:none;width:30px;height:30px;fill:none;stroke:#5f6368;stroke-width:2.4;stroke-linecap:round}
+.serpAd{position:absolute;right:50px;top:SERP_AD_TOPpx;width:SERP_AD_Wpx}
+.serpScale{position:relative;transform:scale(SERP_SCALE);transform-origin:top right}
+.fade{height:56px;background:linear-gradient(#f1f3f4,#fff)}
+.hlAd{right:16px;height:25px}
+.hlAd1{top:42px;width:368px}
+.hlAd2{top:67px;width:306px}
 .hlLp{height:51px}
 .hlLp1{left:262px;top:187px;width:669px}
 .hlLp2{left:743px;top:238px;width:188px}
@@ -168,7 +191,8 @@ export function buildCss() {
   });
   for (const n of Object.keys(TIMELINE)) if (!used.has(n)) throw new Error(`unused animation ${n}`);
   const frames = Object.entries(TIMELINE).map(([n, t]) => keyframes(n, t));
-  return `${STATIC}@media (prefers-reduced-motion:no-preference){\n${rules.join('\n')}\n}\n${frames.join('\n')}\n`;
+  const stat = STATIC.replace(/SERP_SCALE|SERP_AD_W|SERP_AD_TOP/g, (k) => String(STATIC_VARS[k]));
+  return `${stat}@media (prefers-reduced-motion:no-preference){\n${rules.join('\n')}\n}\n${frames.join('\n')}\n`;
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {

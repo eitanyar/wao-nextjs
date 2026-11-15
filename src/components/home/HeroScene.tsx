@@ -71,6 +71,36 @@ function MotionChat() {
   );
 }
 
+/** The chip the pointer taps in step i (approved strings, unchanged). */
+const tapped = (i: number) => motion.steps[i].chips[motion.steps[i].answer];
+
+/**
+ * The Google results page the chat collapses into (Eitan 2026-11-15): a plain search box holding the query (the
+ * service chip + the area chip, concatenated; no new copy), his ad as the first, sponsored result at a readable size,
+ * and the results area fading to white. No organic results, no logo.
+ */
+function MotionResults() {
+  return (
+    <div className={m.serp}>
+      <div className={m.search}>
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <circle cx="10.5" cy="10.5" r="6.5" />
+          <path d="M15.5 15.5L21 21" />
+        </svg>
+        <span>{tapped(2)} {tapped(1)}</span>
+      </div>
+      <div className={m.serpAd}>
+        <div className={m.serpScale}>
+          <GoogleAdPreview displayUrl={HERO_AD.displayUrl} headlines={HERO_AD.headlines} descriptions={HERO_AD.descriptions} />
+          <span className={`${m.hlAd} ${m.hlAd1}`} />
+          <span className={`${m.hlAd} ${m.hlAd2}`} />
+          <div className={m.fade} />
+        </div>
+      </div>
+    </div>
+  );
+}
+
 /** A standard arrow cursor, tip at (0,0). The outer layer moves X, the inner Y (two curves, so each hop arcs). */
 function MotionPointer() {
   return (
@@ -126,7 +156,6 @@ export default function HeroScene() {
             </div>
             <div className={`hero-window-serp ${m.ad}`} style={{ height: HERO_WINDOW_SERP }}>
               <GoogleAdPreview displayUrl={HERO_AD.displayUrl} headlines={HERO_AD.headlines} descriptions={HERO_AD.descriptions} />
-              <span className={m.hlAd} />
             </div>
             <div className={`hero-window-lpwrap ${m.lp}`} style={{ height: HERO_WINDOW_LP_HEIGHT }}>
               <iframe
@@ -142,6 +171,7 @@ export default function HeroScene() {
               <span className={`${m.hlLp} ${m.hlLp2}`} />
               <span className={m.ring} />
             </div>
+            <MotionResults />
             <MotionChat />
             <span className={`hero-window-chat ${m.corner}`}>
               <svg viewBox="0 0 24 24" aria-hidden="true">

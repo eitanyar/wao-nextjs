@@ -95,7 +95,9 @@ test('the scene is decorative: aria-hidden + inert, the iframe out of the tab or
 
 test('every Hebrew run in the window is verbatim demo-record data or the ad preview component', () => {
   const recordText = JSON.stringify(record.collectedData) + fs.readFileSync(local('src/content/hero-product-strings-2026-11-15.json'), 'utf8')
-    + fs.readFileSync(local('src/content/hero-motion-strings-2026-11-15.json'), 'utf8');
+    + fs.readFileSync(local('src/content/hero-motion-strings-2026-11-15.json'), 'utf8')
+    // The results-page query: two approved chips joined by a space (built in code, never typed).
+    + JSON.stringify([2, 1].map((i) => motionStrings.steps[i].chips[motionStrings.steps[i].answer]).join(' '));
   const adSource = fs.readFileSync(local('src/components/google-ads/GoogleAdPreview.tsx'), 'utf8');
   const nodes = [...markup.matchAll(/>([^<]+)</g)].map((m) => m[1].trim()).filter((t) => /[\u0590-\u05FF]/.test(t));
   assert.ok(nodes.length >= 4, `Hebrew text nodes: ${nodes.length}`);
@@ -172,6 +174,18 @@ test('motion strings are the waocopy strings byte-exact, chips in the spec displ
   assert.ok(markup.includes(`<p class="sr-only">${m.sr_description}</p>`));
   assert.ok(markup.includes(`<p class="cue" aria-hidden="true">${m.static_cue}</p>`));
   assert.ok(markup.includes(`aria-label="${m.replay_label}"`) && markup.includes(`data-skip="${m.skip_label}"`));
+});
+
+test('results-page beat: query = tapped service chip + space + tapped area chip; his ad is the only result', () => {
+  const m = motionStrings;
+  const pick = (i) => m.steps[i].chips[m.steps[i].answer];
+  const serp = windowMarkup.slice(windowMarkup.indexOf('<div class="serp">'), windowMarkup.indexOf('<div class="chat">'));
+  assert.ok(serp.length > 0);
+  assert.ok(serp.includes(`<span>${pick(2)} ${pick(1)}</span>`), 'query is the concatenation of two approved strings');
+  // Exactly one result card (the ad), no organic results, no logo image.
+  assert.equal((serp.match(/border:1px solid #DFE1E5/g) ?? []).length, 1);
+  assert.doesNotMatch(serp, /<img\b/);
+  for (const h of heroWindow.HERO_AD.headlines) assert.ok(serp.includes(h));
 });
 
 test('motion layers sit inside the window, the button and captions outside the aria-hidden scene', () => {
