@@ -170,3 +170,29 @@ test('google-ads: the clicks-to-real-leads change set (2026-11-12 FINAL, Noa + Y
   assert.ok(bot.includes(JSON.stringify(final.bot_bidding_label)), 'bot bidding label');
   assert.ok(!bot.includes('tCPA \u2014'), 'old tCPA label gone');
 });
+
+test('no-demo layer (Eitan 2026-11-15, waocopy): /google-ads secondary CTAs, onboarding title/eyebrow, intake links', () => {
+  const after = (rel: string) => { const raw = read(rel); return JSON.parse(raw.slice(raw.indexOf('{'))); };
+  const cta = after('docs/copy/google-ads-cta-secondary-2026-11-15.waocopy.json').patches as { old: string; new: string }[];
+  assert.equal(cta.length, 1);
+  const [oldKey, oldValue] = cta[0].old.split(' :: ');
+  const [newKey, newValue] = cta[0].new.split(' :: ');
+  assert.equal(oldKey, 'hero.cta_secondary');
+  assert.equal(newKey, oldKey);
+  // The same approved value on both secondary buttons; the old line is gone from the source.
+  assert.equal(GOOGLE_ADS_LANDING_COPY.hero.cta_secondary, newValue);
+  assert.equal(GOOGLE_ADS_LANDING_COPY.close.cta_secondary, newValue);
+  assert.ok(!read('docs/copy/google-ads-r2-final-candidate-2026-11-12.txt').includes(oldValue));
+  const wording = after('docs/copy/ads-bot-no-demo-wording-2026-11-15.waocopy.json') as Record<string, string>;
+  const batch2 = JSON.parse(read('docs/copy/copy-polish-approved-2026-11-13-batch2.json')) as { anchors: Record<string, { value: string }> };
+  assert.equal(batch2.anchors.onboarding_title.value, wording.onboarding_title, 'approval record carries the latest title');
+  assert.ok(read('src/app/(app)/google-ads/onboarding/layout.tsx').includes(`title: ${JSON.stringify(wording.onboarding_title)},`));
+  assert.ok(read('src/app/(app)/google-ads/onboarding/page.tsx').includes(`<div className="eyebrow">${wording.onboarding_eyebrow}</div>`));
+  // No marketing page links the example-business mode any more.
+  for (const page of ['src/app/(app)/google-ads/page.tsx', 'src/app/(app)/google-ads/how-it-works/page.tsx']) {
+    const src = read(page);
+    assert.ok(src.includes('href={GOOGLE_ADS_INTAKE_HREF}'), page);
+    assert.doesNotMatch(src, /demo=1|DEMO_HREF/, page);
+  }
+  assert.match(read('src/lib/google-ads/links.ts'), /GOOGLE_ADS_INTAKE_HREF = "\/google-ads\/onboarding";/);
+});

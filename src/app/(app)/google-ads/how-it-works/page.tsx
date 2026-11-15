@@ -3,7 +3,7 @@ import { Fragment } from "react";
 import Link from "next/link";
 import SiloNav from "@/components/SiloNav";
 import { HOW_IT_WORKS_COPY as COPY } from "@/lib/google-ads/howItWorksCopy";
-import { GOOGLE_ADS_DEMO_HREF } from "@/lib/google-ads/links";
+import { GOOGLE_ADS_INTAKE_HREF } from "@/lib/google-ads/links";
 
 // HEBREW-SAFETY: zero Hebrew bytes in this file. All copy (Noa-approved r3, 2026-11-12) is generated from docs/copy
 // by scripts/build-how-it-works-copy.mjs; never type it here.
@@ -211,7 +211,7 @@ export default function GoogleAdsHowItWorksPage() {
               <p style={{ color: "var(--muted)", fontFamily: "var(--font-body), sans-serif", maxWidth: "620px", margin: "0 auto 32px", lineHeight: 1.75 }}>
                 {renderInline(COPY.closing.body)}
               </p>
-              <Link href={GOOGLE_ADS_DEMO_HREF} className="btn-primary" style={{ fontSize: "1.05rem", padding: "16px 40px" }}>
+              <Link href={GOOGLE_ADS_INTAKE_HREF} className="btn-primary" style={{ fontSize: "1.05rem", padding: "16px 40px" }}>
                 {COPY.closing.cta}
               </Link>
             </div>

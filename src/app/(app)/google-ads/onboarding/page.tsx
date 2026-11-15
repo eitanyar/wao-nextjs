@@ -403,7 +403,7 @@ export default function OnboardingPage() {
       <div className="wao-container" style={{ width: "100%", maxWidth: "1200px" }}>
         {/* Header Section */}
         <div style={{ marginBottom: "32px", textAlign: "right" }}>
-          <div className="eyebrow">דמו חינם של בוט מודעות</div>
+          <div className="eyebrow">בוט המודעות · בחינם לעסק שלך</div>
           <h1
             style={{
               fontSize: "clamp(1.8rem, 4vw, 2.5rem)",

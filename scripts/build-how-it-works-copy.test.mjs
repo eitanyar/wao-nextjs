@@ -27,7 +27,7 @@ test('only rendered fields are emitted; discarded blocks never reach the module'
   assert.equal(out.steps.length, 8);
   assert.ok(!generated.includes(src.no_link_to));
   assert.equal(out.hub_link.href, '/google-ads/how-it-works');
-  assert.equal(out.closing.cta, src.links.find(l => l.href === 'DEMO_HREF').anchor);
+  assert.equal(out.closing.cta, src.links.find(l => l.href === 'INTAKE_HREF').anchor);
 });
 
 test('the generator fails closed', () => {
@@ -38,4 +38,12 @@ test('the generator fails closed', () => {
   assert.throws(() => pick({ ...src, closing: { ...src.closing, body: src.closing.body + ' [x](/y)' } }), /Unruled link/);
   assert.throws(() => tokenizePrice({ a: 'x 249 y 249' }, '249', 1), /Expected 1/);
   assert.deepEqual(tokenizePrice({ a: '249 2490' }, '249', 1), { a: `${NET_TOKEN} 2490` });
+});
+
+test('closing = the no-demo layer (Eitan 2026-11-15, waocopy), byte-exact; its button goes to the real intake', () => {
+  const raw = fs.readFileSync(new URL('../docs/copy/ads-bot-no-demo-wording-2026-11-15.waocopy.json', import.meta.url), 'utf8');
+  const wording = JSON.parse(raw.slice(raw.indexOf('{')));
+  const out = pick(parseSource(source));
+  assert.deepEqual(out.closing, { h2: wording.hiw_closing_h2, body: wording.hiw_closing_body, cta: wording.hiw_closing_cta });
+  assert.ok(!parseSource(source).links.some((l) => l.href === 'DEMO_HREF'));
 });

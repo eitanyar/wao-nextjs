@@ -6,7 +6,7 @@ import type { ReactNode } from "react";
 // Title from docs/copy/copy-polish-approved-2026-11-13-batch2.json (anchor onboarding_title);
 // the root template appends the RLM-anchored brand.
 export const metadata: Metadata = {
-  title: "דמו חינם: תוכנית Google Ads לעסק לדוגמה",
+  title: "תוכנית Google Ads לעסק שלך, חינם",
   robots: { index: false, follow: true },
 };
 

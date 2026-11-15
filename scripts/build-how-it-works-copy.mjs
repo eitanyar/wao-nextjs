@@ -62,7 +62,8 @@ export function pick(src) {
   if (hubLinks.length !== 1) throw new Error('Expected one hub mechanism link');
   if (src.hub_patch?.mechanism_block_link?.anchor !== hubLinks[0].anchor
     || src.hub_patch?.mechanism_block_link?.href !== PAGE_PATH) throw new Error('hub_patch link mismatch');
-  const button = src.links.filter(l => l.href === 'DEMO_HREF');
+  // The closing button goes to the real intake (Eitan 2026-11-15: no demo link); INTAKE_HREF is resolved by the page.
+  const button = src.links.filter(l => l.href === 'INTAKE_HREF');
   if (button.length !== 1 || button[0].anchor !== src.closing.cta) throw new Error('Closing button mismatch');
 
   const crumbs = src.schema.breadcrumb.items.map((c, i) => {

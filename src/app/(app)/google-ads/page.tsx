@@ -5,7 +5,7 @@ import SiloNav from "@/components/SiloNav";
 import { renderMixed } from "@/lib/bidi";
 import { ADS_BOT_MONTHLY_NET_ILS } from "@/lib/payments/plans";
 import { GOOGLE_ADS_LANDING_COPY as COPY } from "@/lib/google-ads/landingCopy";
-import { GOOGLE_ADS_DEMO_HREF } from "@/lib/google-ads/links";
+import { GOOGLE_ADS_INTAKE_HREF } from "@/lib/google-ads/links";
 import { HOW_IT_WORKS_COPY } from "@/lib/google-ads/howItWorksCopy";
 import FounderBlock from "@/components/home/FounderBlock";
 import STRINGS from "@/content/hero-product-strings-2026-11-15.json";
@@ -88,8 +88,6 @@ const schemas = [
   },
 ];
 
-const DEMO_HREF = GOOGLE_ADS_DEMO_HREF;
-
 export default function GoogleAdsPage() {
   // Cards on the light body: a plain bordered card (design review #8/#9; no glass blur).
   const glass: React.CSSProperties = {
@@ -154,7 +152,7 @@ export default function GoogleAdsPage() {
               {renderMixed(COPY.hero.cta_primary)}
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
             </a>
-            <Link href={DEMO_HREF} className="btn-outline" style={{ fontSize: "1rem" }}>
+            <Link href={GOOGLE_ADS_INTAKE_HREF} className="btn-outline" style={{ fontSize: "1rem" }}>
               {renderMixed(COPY.hero.cta_secondary)}
             </Link>
           </div>
@@ -297,7 +295,7 @@ export default function GoogleAdsPage() {
                   style={{ fontSize: "1.05rem", padding: "16px 40px" }}
                   revealText={COPY.close.cta_primary}
                 />
-                <Link href={DEMO_HREF} className="btn-outline" style={{ fontSize: "1rem" }}>
+                <Link href={GOOGLE_ADS_INTAKE_HREF} className="btn-outline" style={{ fontSize: "1rem" }}>
                   {renderMixed(COPY.close.cta_secondary)}
                 </Link>
               </div>
