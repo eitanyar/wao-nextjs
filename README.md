@@ -95,6 +95,33 @@ You can start editing the page by modifying `app/page.tsx`. The page auto-update
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
+### Adding a showcase business (homepage hero loop)
+
+The homepage hero window plays one or more showcase businesses: three taps in the intake chat, the Google results
+page with its ad, then its landing page. Entries are data in `src/content/hero-showcases.json`, typed and validated by
+`src/lib/home/heroShowcases.ts` (the build fails on an invalid entry). With one entry the hero plays once and rests;
+with two or more it loops (rest 4 s, cross-fade, next), pausing out of view or in a hidden tab.
+
+1. **Consent recorded.** A real client needs written consent to be shown; record where it is
+   (`consent: { "type": "client", "reference": "<where the consent lives>" }`). Fictional entries use `"fictional"`.
+2. **Site live on our Worker.** The landing page must be live at `https://<slug>.wao.co.il/...` on the wao-sites
+   Worker (`landingPage: { "source": "live-url", "url": ... }`). It is fetched once at build time; any other host is
+   rejected. Every page passes the same guards as the stored one: noindex, no scripts / canonical / OG, phone digits
+   and `tel:` stripped, cut below the hero, and the build fails if a rating, review markup, phone digits or a
+   test/demo domain reaches the window.
+3. **Strings from waocopy, never typed.** Needed per entry: `answers.trade`, `answers.area`, `answers.service` (the
+   tapped chips; add `chips` lists if the global ones do not hold them), `ad.headlines` (3, <= 30 chars),
+   `ad.description` (<= 90 chars), `ad.displayHost`, `tabTitle` (live-url). The results-page query is built as
+   service + " " + area. Apply them into the JSON by script, byte-exact. **Before the second entry ships:**
+   `pause_label` and `play_label` in `src/content/hero-motion-strings-2026-11-15.json` (validation enforces this), and a
+   `sr_description` that fits every entry (today's one describes the plumber).
+4. **Add the entry**, then measure its geometry with the app running:
+   `node scripts/measure-hero-showcase.mjs http://127.0.0.1:<port> <id>` and paste the printed `geometry`.
+   Regenerate the CSS (per-entry pointer paths): `node scripts/build-hero-motion-css.mjs`.
+5. **Run** `npm run test` and `npm run build -- --webpack`.
+6. **Roni check:** record the loop at 1440 and 390 (pointer never over text, headlines held, no rating / phone /
+   demo text in the window, CLS 0, LCP still the H1, pause/play and Esc work, reduced motion = first entry at rest).
+
 ## Learn More
 
 To learn more about Next.js, take a look at the following resources:

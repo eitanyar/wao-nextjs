@@ -1,45 +1,40 @@
-// The landing page inside the homepage hero window: the demo business's service page, rendered by the product's
-// own Site Bot renderer (the same call the video recorder makes, scripts/video/record/lib/site.mjs), then cut to
-// its top (header + hero) for display in a 960px-wide frame. Never deployed; served noindex by
-// src/app/hero-window/lp/route.ts. HEBREW-SAFETY: this module contains ZERO Hebrew bytes.
-import demo from "../../../data/video/demo/demo-business.json";
-import record from "../../../data/video/demo/stand-in/site-record.json";
+// The landing page inside the homepage hero window, per showcase entry (src/lib/home/heroShowcases.ts):
+// - site-record: a stored site record rendered by the product's own Site Bot renderer (the same call the video
+//   recorder makes, scripts/video/record/lib/site.mjs);
+// - live-url: a live client site on our wao-sites Worker, fetched at build time (tenant host only).
+// Both are cut to their top (header + hero) and pass the same guards (guardWindowHtml) before display in a 960px
+// frame. Served noindex by src/app/hero-window/lp/[id]/route.ts. HEBREW-SAFETY: this module contains ZERO Hebrew bytes.
 import type { CollectedData } from "@/lib/bot/prompts";
 import { renderResearchedSitePages, type ResearchedSitePage, type ResearchedSiteGraphEdge } from "@/lib/lp/researchedSite";
 import { researchedRenderInputs } from "@/lib/site-bot/researchToSite";
 import { SITE_FONT_PATHS } from "@/lib/lp/siteFonts";
 import { HERO_OWNER_PHOTO } from "@/data/heroScene";
-import { HERO_LP_SOURCE_FILE } from "./heroWindow";
+import { HERO_SITE_RECORDS } from "./heroWindow";
+import { SHOWCASES, assertWorkerUrl, type ShowcaseEntry } from "./heroShowcases";
 
 export const HERO_FONT_BASE = "/hero-window/fonts/";
 
+const BASE_CSS = "html,body{overflow:hidden;}";
 // Owner photo at the renderer's reserved hero photo slot (heroPhotoSlot, empty until GBP photos), styled like the
-// recorder's dressing (scripts/video/record/lib/dressing.mjs .demo-owner).
+// recorder's dressing (scripts/video/record/lib/dressing.mjs .demo-owner). Fictional site records only.
 const OWNER_CSS = [
-  "html,body{overflow:hidden;}",
   ".hw-owner img{display:block;width:200px;height:auto;aspect-ratio:3/4;object-fit:cover;border-radius:var(--r-md);box-shadow:0 2px 10px rgba(13,27,42,0.12);}",
   "@media (min-width:900px){.hero-grid{grid-template-columns:minmax(0,1fr) auto;align-items:center;}}",
 ].join("");
+/** Per stored record: the AI owner photo dressing (fictional entries; real clients use their GBP photos). */
+const SITE_RECORD_DRESSING: Record<string, { ownerPhoto: typeof HERO_OWNER_PHOTO }> = { "demo-plumber": { ownerPhoto: HERO_OWNER_PHOTO } };
 
 /** Characters that would put a rating, review count or result on screen (Adam's line: none in the window). */
-export const FORBIDDEN_IN_WINDOW = /\u2605|\d\.\d/;
+export const FORBIDDEN_IN_WINDOW = /★|\d\.\d/;
+/** Review / rating markup that must never reach the window. */
+export const REVIEW_MARKUP = /data-demo-reviews|rv-card|aggregateRating|reviewCount|ratingValue|itemprop="review|data-section="(?:trust|reviews)"|class="trust"/i;
+/** Test / demo / placeholder domains that must never reach the window. */
+export const TEST_DOMAIN = /\.invalid\b|demo-plumber|localhost|127\.0\.0\.1|example\.(?:com|org|net)|\.test\b|\.local\b/i;
 
 /** Body text a visitor can see (tags, styles and attributes removed). */
 export function visibleText(html: string): string {
   const body = html.slice(html.indexOf("<body"));
   return body.replace(/<style\b[\s\S]*?<\/style>/g, " ").replace(/<svg\b[\s\S]*?<\/svg>/g, " ").replace(/<[^>]+>/g, " ");
-}
-
-function renderDemoPages(): Record<string, string> {
-  const data = structuredClone(record.collectedData) as unknown as CollectedData;
-  return renderResearchedSitePages({
-    ...researchedRenderInputs(data, demo.slug),
-    siteUrl: demo.canonicalOrigin,
-    data,
-    slug: demo.slug,
-    pages: structuredClone(record.researchedPages) as unknown as ResearchedSitePage[],
-    graphEdges: structuredClone(record.researchedGraphEdges ?? []) as ResearchedSiteGraphEdge[],
-  });
 }
 
 function once(html: string, needle: string, what: string): number {
@@ -48,48 +43,104 @@ function once(html: string, needle: string, what: string): number {
   return at;
 }
 
-/** Removes the visible phone number (its <bdi> runs) and every tel: target from the window's page; throws if digits remain. */
-export function stripPhoneDigits(html: string, phone: string): string {
-  const shown = phone.trim();
-  let out = html.split(`<bdi dir="ltr" class="num">${shown}</bdi>`).join("").split(`<bdi dir="ltr">${shown}</bdi>`).join("");
+/**
+ * Removes the visible phone number (its <bdi> runs) and every tel: target; throws if digits remain. With a known
+ * phone it checks that number; without one (live sites) any run of 9+ digits in the visible text fails.
+ */
+export function stripPhoneDigits(html: string, phone?: string): string {
+  let out = html;
+  if (phone) {
+    const shown = phone.trim();
+    out = out.split(`<bdi dir="ltr" class="num">${shown}</bdi>`).join("").split(`<bdi dir="ltr">${shown}</bdi>`).join("");
+  } else {
+    out = out.replace(/<bdi dir="ltr"(?: class="num")?>[\d\s+()-]{7,}<\/bdi>/g, "");
+  }
   out = out.replace(/href="tel:[^"]*"/g, 'href="#"');
-  const digits = shown.replace(/\D/g, "");
-  const national = digits.replace(/^0/, "");
   const compact = out.replace(/[\s-]/g, "");
-  if (compact.includes(digits) || compact.includes(national)) throw new Error("hero LP: the phone number still shows in the window");
+  if (phone) {
+    const digits = phone.replace(/\D/g, "");
+    if (compact.includes(digits) || compact.includes(digits.replace(/^0/, ""))) throw new Error("hero LP: the phone number still shows in the window");
+  }
+  if (/\d{9,}/.test(visibleText(out).replace(/[\s()+-]/g, ""))) throw new Error("hero LP: phone-like digits still show in the window");
   return out;
 }
 
-/** The trimmed page as served inside the window. Throws if the renderer's structure changed. */
-export function heroLandingPageHtml(): string {
-  let html = renderDemoPages()[HERO_LP_SOURCE_FILE];
-  if (typeof html !== "string") throw new Error(`hero LP: renderer produced no ${HERO_LP_SOURCE_FILE}`);
-  html = html.replace(/<script\b[^>]*>[\s\S]*?<\/script>/g, "");
-  // Head tags for a live site (canonical, robots, social cards) point at the demo domain or say index: drop them.
-  html = html.replace(/<link rel="(?:canonical|alternate)"[^>]*>/g, "");
-  html = html.replace(/<meta (?:name="robots"|name="twitter:[^"]*"|property="og:[^"]*")[^>]*>/g, "");
-  html = html.split(SITE_FONT_PATHS.hebrew.replace(/[^/]+$/, "")).join(HERO_FONT_BASE);
-  const head = once(html, "<head>", "<head>") + "<head>".length;
-  html = `${html.slice(0, head)}<meta name="robots" content="noindex, nofollow">${html.slice(head)}`;
-  html = html.replace("</head>", `<style>${OWNER_CSS}</style></head>`);
-  // Keep header + hero only: the trust strip below carries the rating.
+/** Cuts a product-rendered page to header + hero (everything below, incl. trust / rating strips, is dropped). */
+function cutToHero(html: string, slotHtml = ""): string {
   const heroAt = once(html, '<section class="hero', "hero section");
   const heroEnd = html.indexOf("</section>", heroAt);
   if (heroEnd < 0) throw new Error("hero LP: hero section not closed");
+  if (!slotHtml) return `${html.slice(0, heroEnd)}</section></main></body></html>`;
   const slotClose = "</div></div></section>";
   if (html.slice(heroEnd - "</div></div>".length, heroEnd + "</section>".length) !== slotClose) {
     throw new Error("hero LP: hero no longer ends at the photo slot");
   }
-  const photo = `<div class="hw-owner"><picture><source type="image/avif" srcset="${HERO_OWNER_PHOTO.avif}"><img src="${HERO_OWNER_PHOTO.webp}" alt="" width="${HERO_OWNER_PHOTO.width}" height="${HERO_OWNER_PHOTO.height}" decoding="async"></picture></div>`;
   const beforeSlot = heroEnd - "</div>".length;
-  html = `${html.slice(0, beforeSlot)}${photo}</div></section></main></body></html>`;
-  if (FORBIDDEN_IN_WINDOW.test(visibleText(html)) || /data-demo-reviews|rv-card/.test(html)) {
-    throw new Error("hero LP: a rating or review reached the window");
-  }
-  // Inside the window only: call buttons keep their label and icon but show no digits (Adam 2026-11-15: a placeholder
-  // number reads as demo). The product renderer is untouched for real clients; this post-processes this page only.
-  html = stripPhoneDigits(html, record.collectedData.phone);
-  const leak = html.search(/\.invalid|demo-plumber/);
-  if (leak >= 0) throw new Error(`hero LP: the demo domain reached the window: ${html.slice(Math.max(0, leak - 80), leak + 40)}`);
+  return `${html.slice(0, beforeSlot)}${slotHtml}</div></section></main></body></html>`;
+}
+
+/**
+ * The guards every entry passes (fail closed): no scripts, no canonical / alternate / OG / Twitter / robots-index tags,
+ * noindex added, cut above anything below the hero, no rating, review markup, phone digits, tel: or test domain.
+ */
+export function guardWindowHtml(input: string, opts: { phone?: string; slotHtml?: string; extraCss?: string; base?: string } = {}): string {
+  let html = input.replace(/<script\b[^>]*>[\s\S]*?<\/script>/g, "").replace(/<script\b[^>]*\/>/g, "");
+  html = html.replace(/<link rel="(?:canonical|alternate)"[^>]*>/g, "");
+  html = html.replace(/<meta (?:name="robots"|name="twitter:[^"]*"|property="og:[^"]*")[^>]*>/g, "");
+  html = html.split(SITE_FONT_PATHS.hebrew.replace(/[^/]+$/, "")).join(HERO_FONT_BASE);
+  const head = once(html, "<head>", "<head>") + "<head>".length;
+  const base = opts.base ? `<base href="${opts.base}">` : "";
+  html = `${html.slice(0, head)}<meta name="robots" content="noindex, nofollow">${base}${html.slice(head)}`;
+  html = html.replace("</head>", `<style>${BASE_CSS}${opts.extraCss ?? ""}</style></head>`);
+  html = cutToHero(html, opts.slotHtml);
+  if (FORBIDDEN_IN_WINDOW.test(visibleText(html)) || REVIEW_MARKUP.test(html)) throw new Error("hero LP: a rating or review reached the window");
+  html = stripPhoneDigits(html, opts.phone);
+  if (/<script\b/i.test(html) || /name="robots" content="index/.test(html)) throw new Error("hero LP: script or indexable page reached the window");
+  const leak = html.search(TEST_DOMAIN);
+  if (leak >= 0) throw new Error(`hero LP: a test/demo domain reached the window: ${html.slice(Math.max(0, leak - 80), leak + 40)}`);
   return html;
+}
+
+function siteRecordHtml(slug: string, path: string): string {
+  const stored = HERO_SITE_RECORDS[slug];
+  if (!stored) throw new Error(`hero LP: no stored site record ${slug}`);
+  const { demo, record } = stored;
+  const data = structuredClone(record.collectedData) as unknown as CollectedData;
+  const pages = renderResearchedSitePages({
+    ...researchedRenderInputs(data, demo.slug),
+    siteUrl: demo.canonicalOrigin,
+    data,
+    slug: demo.slug,
+    pages: structuredClone(record.researchedPages) as unknown as ResearchedSitePage[],
+    graphEdges: structuredClone(record.researchedGraphEdges ?? []) as ResearchedSiteGraphEdge[],
+  });
+  const file = `${path.replace(/^\//, "")}.html`;
+  const html = pages[file];
+  if (typeof html !== "string") throw new Error(`hero LP: renderer produced no ${file}`);
+  const photo = SITE_RECORD_DRESSING[slug]?.ownerPhoto;
+  const slotHtml = photo
+    ? `<div class="hw-owner"><picture><source type="image/avif" srcset="${photo.avif}"><img src="${photo.webp}" alt="" width="${photo.width}" height="${photo.height}" decoding="async"></picture></div>`
+    : "";
+  // Inside the window only: call buttons keep their label and icon but show no digits (Adam 2026-11-15).
+  return guardWindowHtml(html, { phone: record.collectedData.phone, slotHtml, extraCss: photo ? OWNER_CSS : "" });
+}
+
+/** A live client page from our Worker (build time). Never a third-party host; the guards apply as for records. */
+export async function liveUrlHtml(url: string, fetchImpl?: typeof fetch): Promise<string> {
+  const u = assertWorkerUrl(url);
+  const res = await (fetchImpl ?? fetch)(u.toString(), { redirect: "error", headers: { accept: "text/html" } });
+  if (!res.ok) throw new Error(`hero LP: ${u.hostname} answered ${res.status}`);
+  if (!/^text\/html/i.test(res.headers.get("content-type") ?? "")) throw new Error("hero LP: live page is not HTML");
+  return guardWindowHtml(await res.text(), { base: `${u.origin}/` });
+}
+
+/** The trimmed page for one entry, as served inside the window. Throws if any guard fails. */
+export async function showcaseLandingHtml(e: ShowcaseEntry, fetchImpl?: typeof fetch): Promise<string> {
+  return e.landingPage.source === "site-record" ? siteRecordHtml(e.landingPage.slug, e.landingPage.path) : liveUrlHtml(e.landingPage.url, fetchImpl);
+}
+
+/** The first entry's page (site-record, synchronous): the resting frame's landing page. */
+export function heroLandingPageHtml(e: ShowcaseEntry = SHOWCASES[0]): string {
+  if (e.landingPage.source !== "site-record") throw new Error("hero LP: heroLandingPageHtml renders site-record entries only");
+  return siteRecordHtml(e.landingPage.slug, e.landingPage.path);
 }

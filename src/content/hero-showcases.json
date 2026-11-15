@@ -1,0 +1,74 @@
+{
+  "_source": "Hero showcase loop entries (Eitan 2026-11-15). Every Hebrew value is copied byte-exact by script from approved files (entry yossi-plumber: src/content/hero-motion-strings-2026-11-15.json answers, src/content/hero-product-strings-2026-11-15.json hero_ad); never typed. Schema + guards: src/lib/home/heroShowcases.ts. How to add one: README.md, 'Adding a showcase business'.",
+  "entries": [
+    {
+      "id": "yossi-plumber",
+      "consent": {
+        "type": "fictional"
+      },
+      "answers": {
+        "trade": "אינסטלטור",
+        "area": "רעננה",
+        "service": "איתור נזילות"
+      },
+      "questions": "global",
+      "ad": {
+        "displayHost": "yossi-plumber.wao.co.il",
+        "headlines": [
+          "איתור נזילות ברעננה במצלמה",
+          "יוסי מגיע אליך באותו יום",
+          "מחיר סגור לפני שמתחילים"
+        ],
+        "description": "יוסי מאתר את הנזילה דרך הקיר ומגיע ישר למקור. בלי לנחש איפה לשבור. הצעת מחיר חינם."
+      },
+      "landingPage": {
+        "source": "site-record",
+        "slug": "demo-plumber",
+        "path": "/services/leak-detection"
+      },
+      "geometry": {
+        "_measured": "2026-11-15 by scripts/measure-hero-showcase.mjs (virtual 960x605 window px)",
+        "resultsAdLines": [
+          [
+            42,
+            368
+          ],
+          [
+            67,
+            306
+          ]
+        ],
+        "lpHeadlineLines": [
+          [
+            262,
+            187,
+            669,
+            51
+          ],
+          [
+            743,
+            238,
+            188,
+            51
+          ]
+        ],
+        "callButton": [
+          744.5,
+          353.3,
+          183.5,
+          52,
+          8,
+          "#D4842A"
+        ],
+        "park": [
+          300,
+          512
+        ],
+        "callTarget": [
+          747,
+          514
+        ]
+      }
+    }
+  ]
+}

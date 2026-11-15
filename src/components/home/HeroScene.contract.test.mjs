@@ -34,18 +34,23 @@ const demo = json('data/video/demo/demo-business.json');
 const record = json('data/video/demo/stand-in/site-record.json');
 const heroScene = load('src/data/heroScene.ts', {});
 const homography = requireDist(local('dist/lib/home/homography.js'));
+const motionStrings = json('src/content/hero-motion-strings-2026-11-15.json');
+const showcasesData = json('src/content/hero-showcases.json');
+const showcases = load('src/lib/home/heroShowcases.ts', {
+  '@/content/hero-showcases.json': showcasesData,
+  '@/content/hero-motion-strings-2026-11-15.json': motionStrings,
+});
 const heroWindow = load('src/lib/home/heroWindow.ts', {
   '../../../data/video/demo/demo-business.json': demo,
   '../../../data/video/demo/stand-in/site-record.json': record,
-  '@/content/hero-product-strings-2026-11-15.json': json('src/content/hero-product-strings-2026-11-15.json'),
   '@/data/heroScene': heroScene,
   './homography': homography,
+  './heroShowcases': showcases,
 });
 const adPreview = load('src/components/google-ads/GoogleAdPreview.tsx', { 'react/jsx-runtime': jsx });
-const motionStrings = json('src/content/hero-motion-strings-2026-11-15.json');
 // CSS module stub: class name = key. The button is a client component; render a marker in its place.
 const cssModule = new Proxy({}, { get: (_, key) => String(key) });
-const HeroMotionButton = ({ skip, replay }) => React.createElement('button', { 'data-hm-button': '', 'data-skip': skip, 'aria-label': replay, hidden: true });
+const HeroMotionButton = ({ labels }) => React.createElement('button', { 'data-hm-button': '', 'data-skip': labels.skip, 'aria-label': labels.replay, hidden: true });
 const HeroScene = load('src/components/home/HeroScene.tsx', {
   'react/jsx-runtime': jsx,
   '@/content/hero-motion-strings-2026-11-15.json': motionStrings,
@@ -54,6 +59,7 @@ const HeroScene = load('src/components/home/HeroScene.tsx', {
   '@/components/google-ads/GoogleAdPreview': adPreview,
   '@/data/heroScene': heroScene,
   '@/lib/home/heroWindow': heroWindow,
+  '@/lib/home/heroShowcases': showcases,
 }).default;
 const landing = load('src/lib/home/heroLandingPage.ts', {
   '../../../data/video/demo/demo-business.json': demo,
@@ -63,6 +69,7 @@ const landing = load('src/lib/home/heroLandingPage.ts', {
   '@/lib/lp/siteFonts': requireDist(local('dist/lib/lp/siteFonts.js')),
   '@/data/heroScene': heroScene,
   './heroWindow': heroWindow,
+  './heroShowcases': showcases,
 });
 
 const markup = renderToStaticMarkup(React.createElement(HeroScene));
@@ -72,7 +79,7 @@ const textOf = (html) => html.replace(/<style\b[\s\S]*?<\/style>/g, ' ').replace
 
 test('new hero files carry no Hebrew literal (all Hebrew comes from data or the moved product component)', () => {
   for (const f of ['src/components/home/HeroScene.tsx', 'src/lib/home/heroWindow.ts', 'src/lib/home/heroLandingPage.ts', 'src/lib/home/homography.ts',
-    'src/app/hero-window/lp/route.ts', 'src/app/hero-window/fonts/[file]/route.ts', 'src/data/heroScene.ts', 'scripts/build-hero-scene.mjs',
+    'src/app/hero-window/lp/[id]/route.ts', 'src/lib/home/heroShowcases.ts', 'src/app/hero-window/fonts/[file]/route.ts', 'src/data/heroScene.ts', 'scripts/build-hero-scene.mjs',
     'src/components/home/HeroMotionButton.tsx', 'src/lib/home/heroMotion.ts', 'scripts/build-hero-motion-css.mjs', 'src/components/home/heroMotion.module.css']) {
     assert.doesNotMatch(fs.readFileSync(local(f), 'utf8'), /[\u0590-\u05FF]/, f);
   }
@@ -80,7 +87,7 @@ test('new hero files carry no Hebrew literal (all Hebrew comes from data or the 
 
 test('the scene is decorative: aria-hidden + inert, the iframe out of the tab order, images sized and low priority', () => {
   assert.match(markup, /^<div class="hero-scene-wrap wrap" data-motion="rest"><div class="hero-scene" data-hm-scene="" aria-hidden="true" inert="" style="aspect-ratio:\d+ \/ \d+;--scene-w:\d+px">/);
-  assert.match(markup, /<iframe class="hero-window-lp" src="\/hero-window\/lp"[^>]* loading="lazy" tabindex="-1"/);
+  assert.match(markup, /<iframe class="hero-window-lp" src="\/hero-window\/lp\/yossi-plumber"[^>]* loading="lazy" tabindex="-1"/);
   const imgs = markup.match(/<img [^>]+>/g) ?? [];
   assert.equal(imgs.length, heroScene.HERO_SCENE.tiles.length);
   assert.ok(imgs.length >= 6, 'the photo is split into bands smaller than a headline line');
@@ -190,7 +197,7 @@ test('results-page beat: query = tapped service chip + space + tapped area chip;
 
 test('motion layers sit inside the window, the button and captions outside the aria-hidden scene', () => {
   const scene = markup.slice(0, markup.lastIndexOf('<button'));
-  for (const cls of ['chat', 'hlAd', 'hlLp1', 'hlLp2', 'ring', 'ptr']) assert.match(windowMarkup, new RegExp(`class="[^"]*\\b${cls}\\b`), cls);
+  for (const cls of ['chat', 'hlAd', 'hlLp', 'ring', 'ptr', 'serp']) assert.match(windowMarkup, new RegExp(`class="[^"]*\\b${cls}\\b`), cls);
   assert.match(windowMarkup, /<div class="hero-window-lpwrap lp"[^>]*><iframe class="hero-window-lp"/);
   assert.ok(scene.includes('data-hm-pointer=""'));
   assert.doesNotMatch(markup.slice(markup.lastIndexOf('<button')), /aria-hidden="true" inert/);
@@ -205,7 +212,7 @@ test('no phone digits, tel: links, ratings or demo labels in the window', () => 
 });
 
 test('motion CSS: generated file in sync, transform/opacity only, every layer 9600 ms fill both, reduced motion gated', async () => {
-  const { buildCss, TIMELINE, DURATION_MS } = await import(local('scripts/build-hero-motion-css.mjs'));
+  const { buildCss, TIMELINE, DURATION_MS, POINTER_START, pointerTimeline } = await import(local('scripts/build-hero-motion-css.mjs'));
   const css = fs.readFileSync(local('src/components/home/heroMotion.module.css'), 'utf8');
   assert.equal(css, buildCss(), 'run node scripts/build-hero-motion-css.mjs');
   assert.equal(DURATION_MS, 9600);
@@ -221,6 +228,110 @@ test('motion CSS: generated file in sync, transform/opacity only, every layer 96
   assert.ok(animations.length >= 20);
   for (const a of animations) for (const part of a.split(',')) assert.match(part.trim(), /^\w+ 9600ms linear both$/);
   assert.ok(css.indexOf('animation:') > css.indexOf('@media (prefers-reduced-motion:no-preference){') && gated.length > 0);
-  assert.match(css, new RegExp(`\\.ptr\\{[^}]*transform:${TIMELINE.ptrX[1][0][1].replace(/[()]/g, '\\$&')}`), 'pointer rests at its first stop (CLS 0)');
+  assert.match(css, new RegExp(`\\.ptr\\{[^}]*transform:translateX\\(${POINTER_START}px\\)`), 'pointer rests at its first stop (CLS 0)');
+  for (const e of showcasesData.entries) {
+    const t = pointerTimeline(e.geometry);
+    assert.equal(t.X[1][0][1], `translateX(${POINTER_START}px)`);
+    assert.equal(t.X[1].at(-1)[1], `translateX(${e.geometry.callTarget[0]}px)`);
+  }
   assert.doesNotMatch(css, /box-shadow[^;}]*;?[^}]*\}[^@]*@keyframes/, 'no box-shadow animated');
+});
+
+// --- showcase entries (Task C): schema, Worker-only live pages, per-entry guards -------------------------------
+
+const chipsOf = () => motionStrings.steps.map((s) => s.chips);
+const validEntry = () => structuredClone(showcasesData.entries[0]);
+const validate = (entries, labels = {}) => showcases.validateShowcases({ entries }, chipsOf(), labels, showcases.SITE_RECORD_SLUGS);
+
+test('showcase schema: today exactly one valid entry = the current window (fictional, site-record)', () => {
+  assert.equal(showcases.SHOWCASES.length, 1);
+  const [e] = showcases.SHOWCASES;
+  assert.equal(e.consent.type, 'fictional');
+  assert.equal(e.landingPage.source, 'site-record');
+  assert.equal(showcases.SHOWCASE_LOOP, false);
+  // Answers are the approved tapped chips, the query their concatenation; the ad is the approved hero ad.
+  assert.deepEqual([e.answers.trade, e.answers.area, e.answers.service], motionStrings.steps.map((s) => s.chips[s.answer]));
+  assert.equal(showcases.showcaseQuery(e), `${e.answers.service} ${e.answers.area}`);
+  const product = json('src/content/hero-product-strings-2026-11-15.json').hero_ad;
+  assert.deepEqual([...e.ad.headlines, e.ad.description], [...product.headlines, product.description]);
+  assert.deepEqual(showcases.showcaseSteps(e).map((s) => s.answer), [0, 1, 2]);
+});
+
+test('showcase schema rejects bad entries', () => {
+  const bad = (mutate, re) => { const e = validEntry(); mutate(e); assert.throws(() => validate([e]), re); };
+  assert.doesNotThrow(() => validate([validEntry()]));
+  bad((e) => { e.id = 'Bad Id'; }, /id must be a lowercase slug/);
+  bad((e) => { e.consent = { type: 'client' }; }, /client consent needs a recorded reference/);
+  bad((e) => { e.consent = { type: 'maybe' }; }, /consent.type/);
+  bad((e) => { e.answers.area = e.answers.trade; }, /answers.area is not one of its chips/);
+  bad((e) => { e.ad.headlines[0] = 'x'.repeat(31); }, /headlines\[0\]/);
+  bad((e) => { e.ad.headlines = e.ad.headlines.slice(0, 2); }, /exactly 3 headlines/);
+  bad((e) => { e.ad.description = 'x'.repeat(91); }, /description/);
+  bad((e) => { e.ad.description = 'rated 4.9 by everyone'; }, /rating or a result/);
+  bad((e) => { e.ad.displayHost = 'demo-site.wao.co.il'; }, /displayHost/);
+  bad((e) => { e.landingPage = { source: 'site-record', slug: 'nobody', path: '/' }; }, /no stored site record/);
+  bad((e) => { e.landingPage = { source: 'live-url', url: 'https://evil.example.org/' }; e.tabTitle = 'x'; }, /wao-sites tenant host/);
+  bad((e) => { e.landingPage = { source: 'live-url', url: 'https://client-a.wao.co.il/' }; }, /tabTitle/);
+  bad((e) => { e.geometry.callTarget = [2000, 10]; }, /park \/ callTarget/);
+  bad((e) => { e.chips = { trade: ['a', 'b'], area: ['a', 'b', 'c'], service: ['a', 'b', 'c'] }; }, /chips.trade/);
+  const second = { ...validEntry(), id: 'second-entry' };
+  assert.throws(() => validate([validEntry(), second]), /NEEDED string pause_label/);
+  assert.throws(() => validate([validEntry(), validEntry()], { pause_label: 'p', play_label: 'q' }), /duplicate id/);
+  assert.doesNotThrow(() => validate([validEntry(), second], { pause_label: 'p', play_label: 'q' }));
+});
+
+test('live pages: only https://<tenant>.wao.co.il on our Worker, never a third-party or infra host', () => {
+  for (const ok of ['https://client-a.wao.co.il/', 'https://a.wao.co.il/services/x']) assert.doesNotThrow(() => showcases.assertWorkerUrl(ok));
+  for (const no of ['http://client-a.wao.co.il/', 'https://www.wao.co.il/', 'https://wao.co.il/', 'https://mail.wao.co.il/', 'https://sites.wao.co.il/',
+    'https://a.b.wao.co.il/', 'https://client-a.wao.co.il.evil.com/', 'https://client-a.wao.co.il:8443/', 'https://u:p@client-a.wao.co.il/', 'https://evil.com/']) {
+    assert.throws(() => showcases.assertWorkerUrl(no), /tenant host|not a URL/, no);
+  }
+});
+
+const FIXTURE = (hero, rest = '') => `<!doctype html><html><head><meta charset="utf-8"><link rel="canonical" href="https://client-a.wao.co.il/"><meta property="og:url" content="x"><meta name="robots" content="index, follow"><script>track()</script></head><body><main><section class="hero"><h1>Leak detection</h1>${hero}</section>${rest}</main><script src="/a.js"></script></body></html>`;
+
+test('window guards (every entry): scripts, canonical, OG and index tags go, noindex added, cut below the hero', () => {
+  const out = landing.guardWindowHtml(FIXTURE('<a class="btn" href="tel:0501234567"><bdi dir="ltr" class="num">050-123-4567</bdi></a>', '<section data-section="trust"><span>4.9</span></section>'));
+  assert.doesNotMatch(out, /<script|rel="canonical"|og:url|content="index/);
+  assert.match(out, /<meta name="robots" content="noindex, nofollow">/);
+  assert.doesNotMatch(out, /data-section="trust"|tel:|050-123-4567/);
+  assert.ok(out.endsWith('</section></main></body></html>'));
+});
+
+test('window guards fail closed on ratings, review markup, phone digits and test domains', () => {
+  assert.throws(() => landing.guardWindowHtml(FIXTURE('<p>★★★★★</p>')), /rating or review/);
+  assert.throws(() => landing.guardWindowHtml(FIXTURE('<p>4.9 stars</p>')), /rating or review/);
+  assert.throws(() => landing.guardWindowHtml(FIXTURE('<div itemprop="review">x</div>')), /rating or review/);
+  assert.throws(() => landing.guardWindowHtml(FIXTURE('<p>call 0501234567 now</p>')), /phone-like digits/);
+  assert.throws(() => landing.guardWindowHtml(FIXTURE('<a href="https://demo-plumber.invalid/">x</a>')), /test\/demo domain/);
+  assert.throws(() => landing.guardWindowHtml(FIXTURE('<img src="http://localhost:3000/x.png">')), /test\/demo domain/);
+});
+
+test('live-url pages are fetched from the Worker host only and pass the same guards', async () => {
+  const calls = [];
+  const fakeFetch = async (url, init) => { calls.push([url, init]); return new Response(FIXTURE('<p>ok</p>'), { headers: { 'content-type': 'text/html; charset=utf-8' } }); };
+  await assert.rejects(landing.liveUrlHtml('https://evil.example.org/', fakeFetch), /tenant host/);
+  assert.equal(calls.length, 0, 'a third-party URL is never fetched');
+  const html = await landing.liveUrlHtml('https://client-a.wao.co.il/services/x', fakeFetch);
+  assert.equal(calls[0][0], 'https://client-a.wao.co.il/services/x');
+  assert.equal(calls[0][1].redirect, 'error', 'no redirect off the Worker host');
+  assert.match(html, /<base href="https:\/\/client-a\.wao\.co\.il\/">/);
+  assert.doesNotMatch(html, /<script/);
+  const notHtml = async () => new Response('{}', { headers: { 'content-type': 'application/json' } });
+  await assert.rejects(landing.liveUrlHtml('https://client-a.wao.co.il/', notHtml), /not HTML/);
+  const rated = async () => new Response(FIXTURE('<p>★ 4.9</p>'), { headers: { 'content-type': 'text/html' } });
+  await assert.rejects(landing.liveUrlHtml('https://client-a.wao.co.il/', rated), /rating or review/);
+});
+
+test('every showcase entry builds its window page through the guards; the scene renders one layer per entry', async () => {
+  for (const e of showcases.SHOWCASES) {
+    const html = await landing.showcaseLandingHtml(e);
+    assert.match(html, /<meta name="robots" content="noindex, nofollow">/);
+    assert.doesNotMatch(html, /href="tel:|<script/);
+    assert.ok(markup.includes(`/hero-window/lp/${e.id}`));
+  }
+  assert.equal((markup.match(/data-hm-entry=""/g) ?? []).length, showcases.SHOWCASES.length);
+  assert.equal((markup.match(/data-active=""/g) ?? []).length, 1, 'only the first entry is active in the SSR frame');
+  assert.doesNotMatch(markup, /data-loop/, 'one entry: loop mode dormant');
+  assert.match(fs.readFileSync(local('src/app/hero-window/lp/[id]/route.ts'), 'utf8'), /dynamicParams = false/);
 });
