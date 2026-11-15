@@ -24,6 +24,18 @@ export interface ShowcaseGeometry {
   callTarget: [number, number];
 }
 
+/**
+ * A real owner photo shown beside the LP hero text. Never AI-made (Fable 5.2, 2026-11-16): aiGenerated must be
+ * explicitly false and the entry a consented client; the build fails otherwise. Without one the text takes the width.
+ */
+export interface OwnerPhoto {
+  avif: string;
+  webp: string;
+  width: number;
+  height: number;
+  aiGenerated: boolean;
+}
+
 export interface ShowcaseEntry {
   id: string;
   consent: { type: "fictional" | "client"; reference?: string };
@@ -37,6 +49,8 @@ export interface ShowcaseEntry {
   tabTitle?: string;
   ad: { displayHost: string; headlines: [string, string, string]; description: string };
   landingPage: ShowcaseLandingPage;
+  /** Optional real owner photo (site-record entries); see OwnerPhoto. */
+  ownerPhoto?: OwnerPhoto;
   geometry: ShowcaseGeometry;
 }
 
@@ -98,6 +112,15 @@ export function validateShowcases(raw: unknown, globalChips: string[][], labels:
       assertWorkerUrl(lp.url, at);
       if (!isText(e.tabTitle)) fail(at, "live-url entries need tabTitle");
     } else fail(at, "landingPage.source must be site-record or live-url");
+    if (e.ownerPhoto !== undefined) {
+      const p = e.ownerPhoto;
+      if (p?.aiGenerated !== false) fail(at, "ownerPhoto is AI-made or unflagged (aiGenerated must be false): no AI owner photo in the window");
+      if (e.consent.type !== "client") fail(at, "ownerPhoto needs a consented client entry (a real person's photo)");
+      if (lp.source !== "site-record") fail(at, "ownerPhoto applies to site-record entries only");
+      const ok = (f: unknown, ext: string) => typeof f === "string" && new RegExp(`^/images/[a-z0-9/-]+\\.${ext}$`).test(f) && !/hero-owner|demo/.test(f);
+      if (!ok(p.avif, "avif") || !ok(p.webp, "webp")) fail(at, "ownerPhoto.avif / webp must be /images/... files");
+      if (!(Number.isInteger(p.width) && p.width > 0 && Number.isInteger(p.height) && p.height > 0)) fail(at, "ownerPhoto.width / height");
+    }
     const g = e.geometry;
     const inWindow = (x: number, y: number) => Number.isFinite(x) && Number.isFinite(y) && x >= 0 && y >= 0 && x <= WINDOW.width && y <= WINDOW.height;
     if (!g || !Array.isArray(g.resultsAdLines) || !g.resultsAdLines.length || !Array.isArray(g.lpHeadlineLines) || !g.lpHeadlineLines.length) fail(at, "geometry lines");

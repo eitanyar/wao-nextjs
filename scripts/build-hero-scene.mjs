@@ -31,9 +31,6 @@ export const WIDTHS = [640, 832, 1040];
  * (cup, hose, tools) stays at the edges. Never upscaled: the largest width equals the crop width.
  */
 export const CROP = { width: 1040, height: 585, centreOnScreen: true, top: 70 };
-// The demo owner photo (AI-made, approved for the video demo 2026-11-14; data/video/demo/demo-business.json dressing).
-export const OWNER_PHOTO = path.join(root, 'data/video/demo/photos/owner.jpg');
-export const OWNER_SIZE = { width: 360, height: 480 };
 const OVERLAP = 8; // master px shared by neighbouring bands
 export const TILE_COUNT = 8;
 const SCREEN_OFF = [11, 13, 16];
@@ -158,7 +155,8 @@ async function encodeScene(data, width, height, quad) {
     const bottom = Math.min(height, Math.round((height * (i + 1)) / TILE_COUNT) + OVERLAP / 2);
     return { id: `b${i + 1}`, top, height: bottom - top };
   });
-  for (const f of fs.readdirSync(OUT_DIR)) if (f.startsWith(`${NAME}-`)) fs.rmSync(path.join(OUT_DIR, f));
+  // hero-owner.*: the retired AI owner photo (Fable 5.2, 2026-11-16: never in the window); removed if present.
+  for (const f of fs.readdirSync(OUT_DIR)) if (f.startsWith(`${NAME}-`) || f.startsWith('hero-owner.')) fs.rmSync(path.join(OUT_DIR, f));
   fs.mkdirSync(OUT_DIR, { recursive: true });
   const report = [];
   const raw = { width, height, channels: 3 };
@@ -181,14 +179,6 @@ async function encodeScene(data, width, height, quad) {
         report.push(`${name}\t${out.buf.length}\tq${quality}`);
       }
     }
-  }
-  for (const ext of ['avif', 'webp']) {
-    let img = sharp(OWNER_PHOTO).resize(OWNER_SIZE.width, OWNER_SIZE.height, { fit: 'cover', position: 'attention' }).withXmp(XMP);
-    img = ext === 'avif' ? img.avif({ quality: 55, effort: 6 }) : img.webp({ quality: 78, effort: 6 });
-    const buf = await img.toBuffer();
-    if (!buf.includes(Buffer.from(DIGITAL_SOURCE_TYPE))) throw new Error(`owner.${ext} lost XMP`);
-    fs.writeFileSync(path.join(OUT_DIR, `hero-owner.${ext}`), buf);
-    report.push(`hero-owner.${ext}\t${buf.length}`);
   }
   fs.writeFileSync(DATA_OUTPUT, renderModule({ width, height, quad, tiles }));
   return { quad, report };
@@ -219,9 +209,6 @@ export function renderModule({ width, height, quad, tiles }) {
     '  /** Overlapping horizontal bands (each smaller on screen than a headline line, so the photo is never LCP). */',
     `  tiles: ${JSON.stringify(tileData, null, 2).replace(/\n/g, '\n  ')},`,
     '} as const;',
-    '',
-    '/** The demo owner photo inside the window (AI-made), 3:4. */',
-    `export const HERO_OWNER_PHOTO = { avif: "/images/home/hero-owner.avif", webp: "/images/home/hero-owner.webp", width: ${OWNER_SIZE.width}, height: ${OWNER_SIZE.height} } as const;`,
     '',
   ].join('\n');
 }

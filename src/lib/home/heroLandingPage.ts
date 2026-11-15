@@ -8,21 +8,19 @@ import type { CollectedData } from "@/lib/bot/prompts";
 import { renderResearchedSitePages, type ResearchedSitePage, type ResearchedSiteGraphEdge } from "@/lib/lp/researchedSite";
 import { researchedRenderInputs } from "@/lib/site-bot/researchToSite";
 import { SITE_FONT_PATHS } from "@/lib/lp/siteFonts";
-import { HERO_OWNER_PHOTO } from "@/data/heroScene";
 import { HERO_SITE_RECORDS } from "./heroWindow";
-import { SHOWCASES, assertWorkerUrl, type ShowcaseEntry } from "./heroShowcases";
+import { SHOWCASES, assertWorkerUrl, type OwnerPhoto, type ShowcaseEntry } from "./heroShowcases";
 
 export const HERO_FONT_BASE = "/hero-window/fonts/";
 
 const BASE_CSS = "html,body{overflow:hidden;}";
-// Owner photo at the renderer's reserved hero photo slot (heroPhotoSlot, empty until GBP photos), styled like the
-// recorder's dressing (scripts/video/record/lib/dressing.mjs .demo-owner). Fictional site records only.
+// A real owner photo (entry.ownerPhoto: client consent, aiGenerated false, validated in heroShowcases.ts) at the
+// renderer's reserved hero photo slot (heroPhotoSlot, empty until GBP photos). Without one the product's own hero shows:
+// the text block runs the full width, no empty slot (Fable 5.2, 2026-11-16: no AI owner photo in the window).
 const OWNER_CSS = [
   ".hw-owner img{display:block;width:200px;height:auto;aspect-ratio:3/4;object-fit:cover;border-radius:var(--r-md);box-shadow:0 2px 10px rgba(13,27,42,0.12);}",
   "@media (min-width:900px){.hero-grid{grid-template-columns:minmax(0,1fr) auto;align-items:center;}}",
 ].join("");
-/** Per stored record: the AI owner photo dressing (fictional entries; real clients use their GBP photos). */
-const SITE_RECORD_DRESSING: Record<string, { ownerPhoto: typeof HERO_OWNER_PHOTO }> = { "demo-plumber": { ownerPhoto: HERO_OWNER_PHOTO } };
 
 /** Characters that would put a rating, review count or result on screen (Adam's line: none in the window). */
 export const FORBIDDEN_IN_WINDOW = /★|\d\.\d/;
@@ -30,6 +28,8 @@ export const FORBIDDEN_IN_WINDOW = /★|\d\.\d/;
 export const REVIEW_MARKUP = /data-demo-reviews|rv-card|aggregateRating|reviewCount|ratingValue|itemprop="review|data-section="(?:trust|reviews)"|class="trust"/i;
 /** Test / demo / placeholder domains that must never reach the window. */
 export const TEST_DOMAIN = /\.invalid\b|demo-plumber|localhost|127\.0\.0\.1|example\.(?:com|org|net)|\.test\b|\.local\b/i;
+/** Known AI-made people photos (the video demo owner / work photos, the retired hero owner crop) or an AI-flagged image. */
+export const AI_PHOTO = /hero-owner\.|\/video\/demo\/photos\/|demo-owner|data-ai-generated/i;
 
 /** Body text a visitor can see (tags, styles and attributes removed). */
 export function visibleText(html: string): string {
@@ -96,12 +96,13 @@ export function guardWindowHtml(input: string, opts: { phone?: string; slotHtml?
   if (FORBIDDEN_IN_WINDOW.test(visibleText(html)) || REVIEW_MARKUP.test(html)) throw new Error("hero LP: a rating or review reached the window");
   html = stripPhoneDigits(html, opts.phone);
   if (/<script\b/i.test(html) || /name="robots" content="index/.test(html)) throw new Error("hero LP: script or indexable page reached the window");
+  if (AI_PHOTO.test(html)) throw new Error("hero LP: an AI-made photo reached the window");
   const leak = html.search(TEST_DOMAIN);
   if (leak >= 0) throw new Error(`hero LP: a test/demo domain reached the window: ${html.slice(Math.max(0, leak - 80), leak + 40)}`);
   return html;
 }
 
-function siteRecordHtml(slug: string, path: string): string {
+function siteRecordHtml(slug: string, path: string, photo?: OwnerPhoto): string {
   const stored = HERO_SITE_RECORDS[slug];
   if (!stored) throw new Error(`hero LP: no stored site record ${slug}`);
   const { demo, record } = stored;
@@ -117,7 +118,6 @@ function siteRecordHtml(slug: string, path: string): string {
   const file = `${path.replace(/^\//, "")}.html`;
   const html = pages[file];
   if (typeof html !== "string") throw new Error(`hero LP: renderer produced no ${file}`);
-  const photo = SITE_RECORD_DRESSING[slug]?.ownerPhoto;
   const slotHtml = photo
     ? `<div class="hw-owner"><picture><source type="image/avif" srcset="${photo.avif}"><img src="${photo.webp}" alt="" width="${photo.width}" height="${photo.height}" decoding="async"></picture></div>`
     : "";
@@ -136,11 +136,11 @@ export async function liveUrlHtml(url: string, fetchImpl?: typeof fetch): Promis
 
 /** The trimmed page for one entry, as served inside the window. Throws if any guard fails. */
 export async function showcaseLandingHtml(e: ShowcaseEntry, fetchImpl?: typeof fetch): Promise<string> {
-  return e.landingPage.source === "site-record" ? siteRecordHtml(e.landingPage.slug, e.landingPage.path) : liveUrlHtml(e.landingPage.url, fetchImpl);
+  return e.landingPage.source === "site-record" ? siteRecordHtml(e.landingPage.slug, e.landingPage.path, e.ownerPhoto) : liveUrlHtml(e.landingPage.url, fetchImpl);
 }
 
 /** The first entry's page (site-record, synchronous): the resting frame's landing page. */
 export function heroLandingPageHtml(e: ShowcaseEntry = SHOWCASES[0]): string {
   if (e.landingPage.source !== "site-record") throw new Error("hero LP: heroLandingPageHtml renders site-record entries only");
-  return siteRecordHtml(e.landingPage.slug, e.landingPage.path);
+  return siteRecordHtml(e.landingPage.slug, e.landingPage.path, e.ownerPhoto);
 }

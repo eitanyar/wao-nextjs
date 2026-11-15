@@ -109,6 +109,9 @@ with two or more it loops (rest 4 s, cross-fade, next), pausing out of view or i
    rejected. Every page passes the same guards as the stored one: noindex, no scripts / canonical / OG, phone digits
    and `tel:` stripped, cut below the hero, and the build fails if a rating, review markup, phone digits or a
    test/demo domain reaches the window.
+   **No AI-made owner photo** (Fable 5.2, 2026-11-16): without a photo the hero text takes the full width. A real
+   owner photo (`ownerPhoto: { avif, webp, width, height, "aiGenerated": false }`) needs a consented client entry; an
+   AI-flagged or unflagged photo fails the build, and the window guard rejects known AI photo files.
 3. **Strings from waocopy, never typed.** Needed per entry: `answers.trade`, `answers.area`, `answers.service` (the
    tapped chips; add `chips` lists if the global ones do not hold them), `ad.headlines` (3, <= 30 chars),
    `ad.description` (<= 90 chars), `ad.displayHost`, `tabTitle` (live-url). The results-page query is built as

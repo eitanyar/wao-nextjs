@@ -92,6 +92,3 @@ export const HERO_SCENE = {
     }
   ],
 } as const;
-
-/** The demo owner photo inside the window (AI-made), 3:4. */
-export const HERO_OWNER_PHOTO = { avif: "/images/home/hero-owner.avif", webp: "/images/home/hero-owner.webp", width: 360, height: 480 } as const;

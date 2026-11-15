@@ -27,7 +27,7 @@
         "path": "/services/leak-detection"
       },
       "geometry": {
-        "_measured": "2026-11-15 by scripts/measure-hero-showcase.mjs (virtual 960x605 window px)",
+        "_measured": "2026-11-16 by scripts/measure-hero-showcase.mjs (virtual 960x605 window px; LP without the owner photo)",
         "resultsAdLines": [
           [
             42,
@@ -40,21 +40,15 @@
         ],
         "lpHeadlineLines": [
           [
-            262,
+            69,
             187,
-            669,
-            51
-          ],
-          [
-            743,
-            238,
-            188,
+            862,
             51
           ]
         ],
         "callButton": [
           744.5,
-          353.3,
+          302.6,
           183.5,
           52,
           8,
@@ -66,7 +60,7 @@
         ],
         "callTarget": [
           747,
-          514
+          464
         ]
       }
     }

@@ -59,13 +59,15 @@ test('every scene file the generated module lists exists, fits the budget and ca
   const mod = fs.readFileSync(DATA_OUTPUT, 'utf8');
   const files = [...mod.matchAll(/\/images\/home\/[a-z0-9.-]+\.(?:avif|webp)/g)].map((m) => m[0]);
   assert.equal(new Set(files.filter((f) => f.includes('workbench'))).size, TILE_COUNT * 2 * WIDTHS.length);
-  assert.ok(files.includes('/images/home/hero-owner.avif') && files.includes('/images/home/hero-owner.webp'));
+  // No AI owner photo is generated or listed (Fable 5.2, 2026-11-16).
+  assert.ok(!mod.includes('hero-owner') && !mod.includes('HERO_OWNER_PHOTO'));
+  assert.ok(!fs.readdirSync(path.join(repository, 'public/images/home')).some((f) => f.startsWith('hero-owner')));
   for (const f of new Set(files)) {
     const buf = fs.readFileSync(path.join(repository, 'public', f));
     assert.ok(buf.length <= 100_000, `${f} is ${buf.length} bytes`);
     assert.ok(buf.includes(Buffer.from(DIGITAL_SOURCE_TYPE)), `${f} lost the IPTC XMP`);
     const meta = await sharp(buf).metadata();
-    const w = Number(f.match(/-(\d+)\.\w+$/)?.[1] ?? 360);
+    const w = Number(f.match(/-(\d+)\.\w+$/)?.[1]);
     assert.equal(meta.width, w, `${f} width`);
   }
 });

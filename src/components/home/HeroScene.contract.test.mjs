@@ -67,7 +67,6 @@ const landing = load('src/lib/home/heroLandingPage.ts', {
   '@/lib/lp/researchedSite': requireDist(local('dist/lib/lp/researchedSite.js')),
   '@/lib/site-bot/researchToSite': requireDist(local('dist/lib/site-bot/researchToSite.js')),
   '@/lib/lp/siteFonts': requireDist(local('dist/lib/lp/siteFonts.js')),
-  '@/data/heroScene': heroScene,
   './heroWindow': heroWindow,
   './heroShowcases': showcases,
 });
@@ -150,7 +149,9 @@ test('the landing page is the product render of the demo service page, cut above
   assert.doesNotMatch(html.replace(/[\s-]/g, ''), /0500000000|500000000/);
   assert.doesNotMatch(html, /href="tel:/);
   assert.match(html, /data-hero-call><svg[^]*?<\/svg><span>[^<]+<\/span><\/a>/);
-  assert.match(html, /<div class="hw-owner"><picture><source type="image\/avif" srcset="\/images\/home\/hero-owner\.avif"><img [^>]*width="360" height="480"/);
+  // No AI owner photo (Fable 5.2, 2026-11-16): no photo slot, no image; the hero text block takes the width.
+  assert.doesNotMatch(html, /hw-owner|hero-owner|<img\b|<picture\b/);
+  assert.match(html, /<div class="hero-grid"><div class="hero-text">[^]*<\/div><\/div><\/section><\/main><\/body><\/html>$/);
   assert.doesNotMatch(html, /data-section="trust"|class="trust"/);
   assert.doesNotMatch(textOf(html.slice(html.indexOf('<body'))), /\u2605|\d\.\d/);
   assert.ok(html.includes('/hero-window/fonts/heebo-hebrew.woff2') && !html.includes('/assets/fonts/'));
@@ -274,6 +275,15 @@ test('showcase schema rejects bad entries', () => {
   bad((e) => { e.landingPage = { source: 'live-url', url: 'https://client-a.wao.co.il/' }; }, /tabTitle/);
   bad((e) => { e.geometry.callTarget = [2000, 10]; }, /park \/ callTarget/);
   bad((e) => { e.chips = { trade: ['a', 'b'], area: ['a', 'b', 'c'], service: ['a', 'b', 'c'] }; }, /chips.trade/);
+  // Owner photos: never AI-made (Fable 5.2, 2026-11-16); unflagged fails closed; only consented clients.
+  const photo = (extra) => ({ avif: '/images/clients/a/owner.avif', webp: '/images/clients/a/owner.webp', width: 360, height: 480, ...extra });
+  const client = { type: 'client', reference: 'docs/consent/a.pdf' };
+  bad((e) => { e.consent = client; e.ownerPhoto = photo({ aiGenerated: true }); }, /AI-made or unflagged/);
+  bad((e) => { e.consent = client; e.ownerPhoto = photo({}); }, /AI-made or unflagged/);
+  bad((e) => { e.ownerPhoto = photo({ aiGenerated: false }); }, /consented client/);
+  bad((e) => { e.consent = client; e.ownerPhoto = photo({ aiGenerated: false, avif: '/images/home/hero-owner.avif' }); }, /ownerPhoto.avif/);
+  assert.doesNotThrow(() => validate([{ ...validEntry(), consent: client, ownerPhoto: photo({ aiGenerated: false }) }]));
+  assert.ok(showcases.SHOWCASES.every((e) => e.ownerPhoto === undefined || e.ownerPhoto.aiGenerated === false));
   const second = { ...validEntry(), id: 'second-entry' };
   assert.throws(() => validate([validEntry(), second]), /NEEDED string pause_label/);
   assert.throws(() => validate([validEntry(), validEntry()], { pause_label: 'p', play_label: 'q' }), /duplicate id/);
@@ -305,6 +315,9 @@ test('window guards fail closed on ratings, review markup, phone digits and test
   assert.throws(() => landing.guardWindowHtml(FIXTURE('<p>call 0501234567 now</p>')), /phone-like digits/);
   assert.throws(() => landing.guardWindowHtml(FIXTURE('<a href="https://demo-plumber.invalid/">x</a>')), /test\/demo domain/);
   assert.throws(() => landing.guardWindowHtml(FIXTURE('<img src="http://localhost:3000/x.png">')), /test\/demo domain/);
+  assert.throws(() => landing.guardWindowHtml(FIXTURE('<img src="/images/home/hero-owner.webp">')), /AI-made photo/);
+  assert.throws(() => landing.guardWindowHtml(FIXTURE('<img src="/data/video/demo/photos/owner.jpg">')), /AI-made photo|test\/demo/);
+  assert.throws(() => landing.guardWindowHtml(FIXTURE('<img src="/x.webp" data-ai-generated>')), /AI-made photo/);
 });
 
 test('live-url pages are fetched from the Worker host only and pass the same guards', async () => {
