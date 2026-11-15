@@ -52,3 +52,28 @@ I opened the style sheet and judged both rows.
 - Trip-wire: do the move immediately if the project count reaches 60, or before any Ads Bot paid-onboarding push, whichever comes first.
 - Place it right after the phase-2 auto-switch in the post-launch queue.
 - No new landing-page features are built on the Pages path in the meantime.
+
+
+## D3b. Site copy provider after the blind test (2026-11-15)
+
+Blind test: real generator, 2 trades x 2 pages, Noa blind. Qwen 6.5 avg (3 of 4 pairs), Gemini 6.1; only unshippable page was Qwen's (Givatayim fact error). Pack + key: Adam's scratchpad blindtest/.
+
+**DECISION:** Site Bot site copy launches on Gemini. Adam sets `LLM_PROVIDER_SITE_COPY=gemini` in production with the next milestone deploy, no later than 19.11. Eitan does not need to open the metered DashScope key for this.
+
+**WHY**
+- **The gap is noise.** Qwen 6.5 vs Gemini 6.1 across four pairs is too small a sample to call a real quality difference.
+- **Gemini passed the bar that matters.** Every Gemini page is shippable after light fixes; the only unshippable page in the pack was Qwen's (the Givatayim error).
+- **Gemini is ready today.** It is paid, wired, and carries no terms risk. Qwen would need a billing action from Eitan, and the token plan must be gone by 26.11 anyway.
+- **The pilot covers the weakness.** Gemini's flaw is stiffness, which the staff read on all 10 sites already catches.
+
+**CONDITIONS**
+1. **Prompt fixes before 19.11**, applied to the shared write and QA prompts:
+   - No equipment, services, vehicles, or guarantees that are not in the business's input.
+   - No geography beyond the input: never name a neighbourhood or nearby city the input does not list.
+   - Em-dash only, single-spaced; never an en-dash.
+   - A hard cap on meta length.
+   - The closing call to action must match the page's real button.
+   - Ban brochure register and generic closings; add Qwen's electrician-TLV page as the voice example.
+2. **Re-run the same four pages on Gemini after the fixes, with Noa reading.** Pass means zero fact errors and no page under 6. If it fails, Eitan opens the metered key by 23.11, as in the original plan.
+3. **The staff read gets a three-line fact checklist:** services, equipment, geography.
+4. **After the pilot,** revisit Qwen on metered only if staff editing time on Gemini pages proves heavy.

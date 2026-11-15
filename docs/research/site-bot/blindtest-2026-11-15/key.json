@@ -1,0 +1,26 @@
+{
+ "pair1": {
+  "A": "gemini",
+  "B": "qwen",
+  "trade": "plumber",
+  "node": "svc0-city0"
+ },
+ "pair2": {
+  "A": "qwen",
+  "B": "gemini",
+  "trade": "plumber",
+  "node": "svc2-city1"
+ },
+ "pair3": {
+  "A": "gemini",
+  "B": "qwen",
+  "trade": "electrician",
+  "node": "svc0-city0"
+ },
+ "pair4": {
+  "A": "qwen",
+  "B": "gemini",
+  "trade": "electrician",
+  "node": "svc2-city1"
+ }
+}
