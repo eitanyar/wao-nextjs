@@ -16,6 +16,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { CNAME_TARGET, cfClient, ensureDir, errorText, parseArgs, stamp } from './lib.mjs';
+import { createRequire } from 'node:module';
 
 const args = parseArgs(process.argv.slice(2));
 const slug = typeof args.slug === 'string' ? args.slug.trim() : '';
@@ -149,6 +150,26 @@ async function precheck() {
   return { result, file };
 }
 
+async function ensurePendingHostEntry() {
+  const e = process.env;
+  if (!e.SITES_R2_ENDPOINT || !e.SITES_R2_ACCESS_KEY_ID || !e.SITES_R2_SECRET_ACCESS_KEY) return { ok: false, error: 'SITES_R2_* not set' };
+  let r2;
+  try { r2 = createRequire(path.join(process.cwd(), 'dist', 'package.json'))('./lib/site-hosting/r2.js'); }
+  catch { return { ok: false, error: 'dist/lib/site-hosting/r2.js missing: run `npx tsc -p tsconfig.site-hosting.test.json` first' }; }
+  const store = r2.createS3Store({ endpoint: e.SITES_R2_ENDPOINT, bucket: 'wao-sites', credentials: { accessKeyId: e.SITES_R2_ACCESS_KEY_ID, secretAccessKey: e.SITES_R2_SECRET_ACCESS_KEY } });
+  const key = `hosts/${www}.json`;
+  const existing = await store.get(key);
+  if (existing) {
+    let entry = null;
+    try { entry = JSON.parse(existing.toString()); } catch { entry = null; }
+    if (entry?.slug !== slug) return { ok: false, error: `${key} belongs to ${entry?.slug ?? 'an unreadable entry'}; not touching it` };
+    return { ok: true, state: `exists (role ${entry.role})` };
+  }
+  if (!(await store.get(`tenants/${slug}.json`))) return { ok: false, error: `tenant ${slug} has no pointer in R2; deploy it first` };
+  await store.put(key, new TextEncoder().encode(JSON.stringify({ slug, role: 'redirect' })), 'application/json');
+  return { ok: true, state: 'created (role redirect until the post-live redeploy)' };
+}
+
 async function attach() {
   const token = process.env.CLOUDFLARE_SITES_API_TOKEN?.trim();
   const zoneId = process.env.CLOUDFLARE_ZONE_ID?.trim();
@@ -201,9 +222,21 @@ async function attach() {
   }
   if (done.size < hostnames.length) { console.error('Timed out before every hostname was active; re-run --apply later (idempotent).'); return 1; }
 
-  const health = await httpProbe(`https://${www}/__wao/health`);
+  // The Worker answers only hosts it has an R2 entry for, and the deploy writes the canonical entry only after "live".
+  // Bridge that: a pending `redirect` entry (www -> the tenant's current canonical origin) so the health probe can
+  // prove the path end to end; the post-live redeploy replaces it with role canonical. GET-first; never takes over a
+  // host that belongs to another tenant.
+  const pending = await ensurePendingHostEntry();
+  if (!pending.ok) { console.error(`  host entry: ${pending.error}`); return 1; }
+  console.log(`  host entry hosts/${www}.json: ${pending.state}`);
+  let health = await httpProbe(`https://${www}/__wao/health`);
   let healthSlug = null;
-  try { healthSlug = JSON.parse(health.body ?? 'null')?.slug ?? null; } catch { healthSlug = null; }
+  for (let i = 0; i < 8; i++) { // the Worker caches a missing host for 30 s
+    try { healthSlug = JSON.parse(health.body ?? 'null')?.slug ?? null; } catch { healthSlug = null; }
+    if (health.status === 200 && healthSlug === slug) break;
+    await new Promise(r => setTimeout(r, 10_000));
+    health = await httpProbe(`https://${www}/__wao/health`);
+  }
   const after = await snapshot();
   const mailSame = JSON.stringify(before.mailGuard) === JSON.stringify(after.mailGuard);
   const live = health.status === 200 && healthSlug === slug && mailSame;

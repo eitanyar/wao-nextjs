@@ -191,7 +191,12 @@ export interface WeeklyDigest {
   nextActions: string[];
 }
 
-const LEADS_PATH = path.join(process.cwd(), 'src', 'data', 'leads.json');
+// Same file the leads store writes (leadsStore.ts): WAO_LEADS_FILE_PATH in production, where release folders are
+// replaced and pruned on every deploy; the in-tree default is for dev only.
+const DEFAULT_LEADS_PATH = path.join(process.cwd(), 'src', 'data', 'leads.json');
+function leadsPath(): string {
+  return process.env.WAO_LEADS_FILE_PATH?.trim() || DEFAULT_LEADS_PATH;
+}
 const DEFAULT_WINDOW_DAYS = 7;
 const CAMPAIGNS_DIR = path.join(process.cwd(), 'data', 'campaigns');
 const CLIENTS_DIR = clientsDir();
@@ -205,7 +210,7 @@ function parseDate(value: string | undefined | null): Date | null {
 
 function readLeads(): LeadRecord[] {
   try {
-    const raw = fs.readFileSync(LEADS_PATH, 'utf-8');
+    const raw = fs.readFileSync(leadsPath(), 'utf-8');
     const parsed = JSON.parse(raw);
     return Array.isArray(parsed) ? parsed as LeadRecord[] : [];
   } catch {
