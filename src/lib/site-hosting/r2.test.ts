@@ -151,3 +151,16 @@ test('rollback rewrites the pointer to the previous version and back', async () 
     assert.equal(forward.version, v2.version);
   });
 });
+
+test('S3 store: asks for identity encoding and normalises a weak ETag (R2 HEAD on compressible objects)', async () => {
+  const seen: string[] = [];
+  const fakeFetch = (async (_url: string, init: RequestInit) => {
+    seen.push(String((init.headers as Record<string, string>)['accept-encoding']));
+    const etag = init.method === 'PUT' ? '"abc"' : 'W/"abc"';
+    return new Response(null, { status: 200, headers: { etag, 'content-length': '7' } });
+  }) as unknown as typeof fetch;
+  const store = createS3Store({ endpoint: 'https://r2.example.com', bucket, credentials, fetch: fakeFetch });
+  assert.equal(await store.put('sites/a/v/index.html', new TextEncoder().encode('<html>'), 'text/html'), '"abc"');
+  assert.deepEqual(await store.head('sites/a/v/index.html'), { etag: '"abc"', size: 7 });
+  assert.deepEqual(seen, ['identity', 'identity']);
+});

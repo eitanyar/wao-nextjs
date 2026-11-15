@@ -96,6 +96,11 @@ function xmlValues(xml: string, tag: string): string[] {
   return out;
 }
 
+/** Strong form of an ETag: drops a weak `W/` prefix, which compressed responses carry for the same object. */
+export function strongEtag(etag: string): string {
+  return etag.startsWith('W/') ? etag.slice(2) : etag;
+}
+
 export function createS3Store(config: S3Config): ObjectStore {
   const endpoint = config.endpoint.replace(/\/+$/, '');
   if (!/^https?:\/\/[^/]+$/.test(endpoint)) throw new Error('S3 endpoint must be an origin (scheme + host).');
@@ -116,7 +121,8 @@ export function createS3Store(config: S3Config): ObjectStore {
       try {
         const res = await doFetch(url, {
           method,
-          headers: sendHeaders,
+          // identity: with compression negotiated, R2 answers HEAD on text objects with a weak ETag and size 0.
+          headers: { ...sendHeaders, 'accept-encoding': 'identity' },
           body: body as BodyInit | undefined,
           redirect: 'error',
           signal: AbortSignal.timeout(timeoutMs),
@@ -148,13 +154,13 @@ export function createS3Store(config: S3Config): ObjectStore {
       await res.arrayBuffer().catch(() => undefined);
       const etag = res.headers.get('etag');
       if (!etag) throw new S3Error(`PUT ${key}: no ETag`, res.status);
-      return etag;
+      return strongEtag(etag);
     },
     async head(key) {
       const res = await send('HEAD', key);
       if (res.status === 404) return null;
       if (!res.ok) return fail(res, `HEAD ${key}`);
-      return { etag: res.headers.get('etag') ?? '', size: Number(res.headers.get('content-length') ?? '0') };
+      return { etag: strongEtag(res.headers.get('etag') ?? ''), size: Number(res.headers.get('content-length') ?? '0') };
     },
     async get(key) {
       const res = await send('GET', key);
