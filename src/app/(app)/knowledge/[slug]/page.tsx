@@ -5,6 +5,12 @@ import { notFound } from "next/navigation";
 import { KNOWLEDGE_ARTICLES, CATEGORY_LABELS, type KnowledgeCategory } from "@/data/knowledge";
 import { renderMixed } from "@/lib/bidi";
 import SiloNav from "@/components/SiloNav";
+import {
+  KNOWLEDGE_ILLUSTRATIONS,
+  illustrationOgImages,
+  illustrationPaths,
+  illustrationSchemaImages,
+} from "@/data/knowledgeIllustrations";
 
 const AUTHOR_IMG = "https://www.wao.co.il/eitan-yariv.avif";
 const AUTHOR_SAME_AS = [
@@ -38,6 +44,8 @@ export async function generateMetadata({
       url: `https://www.wao.co.il/knowledge/${slug}`,
       type: "article",
       publishedTime: article.updatedDate,
+      // Pilot illustrations only; every other article keeps today's metadata (no og:image).
+      ...(illustrationOgImages(slug) ? { images: illustrationOgImages(slug) } : {}),
     },
   };
 }
@@ -223,6 +231,42 @@ function renderSourcesLine(line: string, links: { label: string; url: string }[]
   return <>{out}</>;
 }
 
+// Editorial illustration (pilot, 12 slugs). Pre-built AVIF/WebP files are served as-is (no next/image
+// re-encode, so the embedded IPTC DigitalSourceType survives). Lazy: it sits below the first H2 block,
+// so the text stays the LCP element. Explicit width/height + aspect-ratio reserve the box (no CLS).
+function ArticleIllustration({ slug }: { slug: string }) {
+  const ill = KNOWLEDGE_ILLUSTRATIONS[slug];
+  if (!ill) return null;
+  const p = illustrationPaths(slug);
+  // Article column: viewport minus .knowledge-main's 16px side padding at <=900px (globals.css);
+  // above that, 1100px max - 40px padding - sidebar min(320px, 30%) - 48px gap ~= 700px.
+  const sizes = "(max-width: 900px) calc(100vw - 32px), 700px";
+  return (
+    <figure className="knowledge-illustration" style={{ margin: 0 }}>
+      <picture>
+        <source type="image/avif" srcSet={`${p.avif800} 800w, ${p.avif1200} 1200w`} sizes={sizes} />
+        <source type="image/webp" srcSet={`${p.webp800} 800w, ${p.webp1200} 1200w`} sizes={sizes} />
+        {/* Plain <img> on purpose: next/image would re-encode and strip the IPTC XMP. */}
+        <img
+          src={p.webp1200}
+          alt={ill.alt}
+          width={ill.width}
+          height={ill.height}
+          loading="lazy"
+          decoding="async"
+          style={{
+            display: "block",
+            width: "100%",
+            height: "auto",
+            aspectRatio: "16 / 9",
+            borderRadius: "var(--radius-md)",
+          }}
+        />
+      </picture>
+    </figure>
+  );
+}
+
 function slugifyId(text: string): string {
   return text
     .toLowerCase()
@@ -249,11 +293,16 @@ export default async function KnowledgeArticlePage({
     (a) => a.category === article.category && a.slug !== article.slug
   ).slice(0, 4);
 
+  const schemaImages = illustrationSchemaImages(article.slug);
+  // The illustration follows the first section that carries an H2 (falls back to the first section).
+  const illustrationAfter = Math.max(0, article.sections.findIndex((s) => s.heading));
+
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "Article",
     headline: article.title,
     description: article.summary,
+    ...(schemaImages ? { image: schemaImages } : {}),
     dateModified: article.updatedDate,
     datePublished: article.updatedDate,
     url: `https://www.wao.co.il/knowledge/${article.slug}`,
@@ -470,7 +519,8 @@ export default async function KnowledgeArticlePage({
               {article.sections.map((section, i) => {
                 const sectionId = section.heading ? slugifyId(section.heading) : undefined;
                 return (
-                <section key={i} id={sectionId}>
+                <Fragment key={i}>
+                <section id={sectionId}>
                   {section.heading && (
                     <h2
                       id={sectionId}
@@ -536,6 +586,8 @@ export default async function KnowledgeArticlePage({
                     </div>
                   )}
                 </section>
+                {i === illustrationAfter && <ArticleIllustration slug={article.slug} />}
+                </Fragment>
                 );
               })}
             </div>
