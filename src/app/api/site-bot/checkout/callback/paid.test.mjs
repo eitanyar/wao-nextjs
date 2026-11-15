@@ -17,6 +17,7 @@ function harness({ linkThrows = false, alreadyActive = false } = {}) {
   const pending = { subscriptionId, createdAt: new Date().toISOString(), collectedData: { businessName: 'Acme Plumbing', ownerContact: { mobile: '+972501234567', email: 'owner@example.com' } } };
   fs.writeFileSync(path.join(pendingDir, `${sessionId}.json`), JSON.stringify(pending));
   const logs = recordingConsole();
+  const alerts = [];
   const store = linkThrows ? { ...s.store, linkSiteBotSession: () => { throw new Error('db locked'); } } : s.store;
   const paid = load('src/app/api/site-bot/checkout/callback/paid.ts', {
     'next/server': { NextResponse: { json: (body, init) => Response.json(body, init) } },
@@ -28,11 +29,12 @@ function harness({ linkThrows = false, alreadyActive = false } = {}) {
     '@/lib/site-bot/checkout/researchCompletion': { completePaidCheckoutResearch: async () => ({ success: true, charged: true, researchId: sessionId }) },
     '@/lib/site-bot/research/researchInput': { buildSiteResearchInput: () => ({}) },
     '@/lib/site-bot/clientMessages': store,
+    '@/lib/site-bot/paidQueueAlert': { sendPaidQueueAlert: async (input) => { alerts.push(input); return true; } },
   }, { cwd, console: logs.console });
   const call = () => paid.POST(new Request('http://localhost/api/site-bot/checkout/callback', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ sessionId }) }));
   const events = () => s.db.prepare(`SELECT metadata FROM subscription_events WHERE subscription_id = ? AND event_type = 'site_bot_session_linked'`).all(subscriptionId);
   const paidPost = (id) => paid.POST(new Request('http://localhost/api/site-bot/checkout/callback', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ sessionId: id }) }));
-  return { ...s, subscriptionId, call, paidPost, events, logs };
+  return { ...s, subscriptionId, call, paidPost, events, logs, alerts };
 }
 
 test('19: a successful activation writes exactly one site_bot_session_linked event with the business', async () => {
@@ -79,4 +81,18 @@ test('callback rejects a non-UUID sessionId before touching the filesystem', asy
     assert.equal(response.status, 400, `sessionId ${JSON.stringify(bad)}`);
   }
   assert.equal(h.events().length, 0);
+});
+
+test('launch item 8: a fresh activation sends one paid-queue alert; an already-active replay sends none', async () => {
+  const h = harness();
+  await h.call();
+  assert.equal(h.alerts.length, 1);
+  assert.equal(h.alerts[0].sessionId, sessionId);
+  assert.equal(h.alerts[0].subscriptionId, h.subscriptionId);
+  assert.equal(h.alerts[0].collectedData.businessName, 'Acme Plumbing');
+  h.cleanup();
+  const active = harness({ alreadyActive: true });
+  await active.call();
+  assert.equal(active.alerts.length, 0);
+  active.cleanup();
 });

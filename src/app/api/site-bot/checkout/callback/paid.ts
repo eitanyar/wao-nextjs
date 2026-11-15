@@ -9,6 +9,7 @@ import { runSiteResearch, type SiteResearchInput } from '@/lib/site-bot/research
 import { completePaidCheckoutResearch } from '@/lib/site-bot/checkout/researchCompletion';
 import { buildSiteResearchInput } from '@/lib/site-bot/research/researchInput';
 import { linkSiteBotSession } from '@/lib/site-bot/clientMessages';
+import { sendPaidQueueAlert } from '@/lib/site-bot/paidQueueAlert';
 
 // Site-Bot checkout callback: takes the sign-up charge of the monthly + VAT plan (SITE_BOT_PLAN) through the recurring engine
 // (activatePlanSubscription: first charge, billing anchor, next charge date, invoice), then starts the research.
@@ -82,6 +83,11 @@ export async function POST(req: Request) {
       });
     } catch {
       console.error(`[site-bot checkout] session link failed session=${sessionId}`);
+    }
+
+    // Paid-queue alert (launch item 8): once per fresh activation, before the research, never awaited or fatal.
+    if (!activation.alreadyActive) {
+      void sendPaidQueueAlert({ sessionId, subscriptionId: pending.subscriptionId, collectedData: pending.collectedData, paidAt: new Date() });
     }
 
     const manageUrl = activation.alreadyActive ? undefined : issueAccountPath(pending.subscriptionId);

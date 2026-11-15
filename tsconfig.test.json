@@ -155,6 +155,8 @@
     "src/lib/site-bot/clientMessageCopy.ts",
     "src/lib/site-bot/clientMessageEmail.ts",
     "src/lib/site-bot/clientMessages.test.ts",
+    "src/lib/site-bot/paidQueueAlert.ts",
+    "src/lib/site-bot/paidQueueAlert.test.ts",
     "src/lib/hybrid/types.ts",
     "src/lib/hybrid/snapshotStore.ts",
     "src/lib/hybrid/planner.ts",

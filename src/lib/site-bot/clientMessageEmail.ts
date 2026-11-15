@@ -32,7 +32,7 @@ export interface OutgoingEmail {
   text: string;
   html?: string;
   /** For logs and the outbox only: which sender produced it. */
-  tag: 'staff_alert' | 'client_confirmation' | 'staff_reminder';
+  tag: 'staff_alert' | 'client_confirmation' | 'staff_reminder' | 'paid_queue_alert';
   /** For logs only. */
   refIds: string[];
 }
