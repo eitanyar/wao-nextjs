@@ -22,12 +22,34 @@
 import type { CollectedData } from '../bot/prompts';
 import type { CoreThirtyNode } from './coreThirty';
 import { callSiteCopyJSON } from '../ai/workloadJson';
+import { CORE_THIRTY_VOICE_EXAMPLE_JSON } from './coreThirtyVoiceExample.generated';
+
+/** Hard cap on metaDescription (Fable 5.2 D3b): stated in both prompts and enforced in code after parsing. */
+export const META_DESCRIPTION_MAX_CHARS = 155;
+
+/**
+ * Fable 5.2 D3b rules shared by the write (Tamar) and QA (Noa) prompts. English only and abstract — no Hebrew
+ * example lines (rule examples leak into output); the only Hebrew is the generated voice example below.
+ */
+export const D3B_FACT_RULES: readonly string[] = [
+  '- NO INVENTED OFFER (binding): never name equipment, a tool, a vehicle, a service, a method or a guarantee/warranty that BUSINESS DATA does not state. If BUSINESS DATA does not name it, it does not exist for this page.',
+  '- NO GEOGRAPHY BEYOND THE INPUT (binding): the only places you may name are the page city and places written in BUSINESS DATA. Never name a neighbourhood, district, street, landmark, region or nearby city that BUSINESS DATA does not list, and never describe how places relate to each other (which borders which, which belongs to which).',
+];
+
+export const D3B_TYPOGRAPHY_RULE =
+  '- DASHES (binding): use only the em-dash (\u2014), with exactly one space on each side. Never an en-dash (\u2013) anywhere; a number range uses a plain hyphen.';
+
+export const D3B_CTA_RULE =
+  '- CTA MATCHES THE REAL ACTION (binding): the page\'s only action is a lead form (name + phone). ctaLabel is that form\'s submit button, and after submitting, the business calls the reader back. ctaLabel must say the reader sends his details / asks for a call back; formHeadline must lead into filling the form. Never wording that promises an immediate call, a live conversation, a chat or WhatsApp, or "talk to me now" — the button does not do that.';
+
+export const D3B_REGISTER_RULE =
+  '- NO BROCHURE REGISTER (binding): write the way the owner talks to one customer on the phone, not a pamphlet or an ad. No slogan lines, no stacked adjectives, no "solutions" vocabulary, no rhetorical marketing questions. Never end the narrative or an answer on a generic closing (the equivalents of "don\'t hesitate to contact us", "we are here for you", "contact us today", "we will be happy to help"); end on a concrete fact or the reader\'s situation.';
 
 export interface CoreThirtyPageCopy {
   pageHeadline: string; // H1. Max 60 chars. Names service + city, not generic.
   narrative: string; // 3-5 sentences, grounded in real onboarding facts. Max 500 chars.
   faqItems: { q: string; a: string }[]; // 3-4 items, genuinely distinct per (service, city) — not the site-wide FAQ repeated.
-  metaDescription: string; // 150-160 chars, differentiated per page (must reference both service and city).
+  metaDescription: string; // <= 155 chars (META_DESCRIPTION_MAX_CHARS, enforced by finalizeCoreThirtyCopy), differentiated per page (must reference both service and city).
   localRelevanceNote: string; // 1 sentence: the honest locationType-appropriate framing, surfaced on-page near the CTA.
   formHeadline: string; // Max 35 chars. Urgency-aware framing near the CTA — same intent as SiteCopy.formHeadline.
   ctaLabel: string; // Max 15 chars. The button label — same intent as SiteCopy.heroCta.
@@ -116,6 +138,12 @@ HARD RULES:
   of them — this is a strict local-SEO relevance requirement, not a style preference.
 - faqItems and metaDescription must be UNIQUE to this exact (service, city) pair — never content
   that could be pasted onto a different city page in this same node set with zero changes.
+${D3B_FACT_RULES.join('\n')}
+${D3B_TYPOGRAPHY_RULE}
+${D3B_CTA_RULE}
+${D3B_REGISTER_RULE}
+- metaDescription is at most ${META_DESCRIPTION_MAX_CHARS} characters, counted with spaces (hard cap — the system cuts
+  anything longer at a word boundary, so a longer one loses its ending).
 
 ANTI-GENERIC MANDATE (Eitan's hard mandate — this is exactly the failure mode Google's spam
 filters target — VISION.md Gate 1, seo-strategist sign-off, binding):
@@ -181,7 +209,7 @@ FIELDS:
   made specific to this page, plus locationType-appropriate questions (e.g. area coverage /
   response time for service-area, or travel/location questions for fixed-location or hybrid).
   Each answer: 1-2 full natural sentences, specific, max 120 chars.
-- metaDescription: 150-160 chars. Must reference both "${node.service}" and "${node.city}"
+- metaDescription: 130-${META_DESCRIPTION_MAX_CHARS} chars, never more than ${META_DESCRIPTION_MAX_CHARS}. Must reference both "${node.service}" and "${node.city}"
   explicitly, and must be textually different from what you would write for any other city or
   service in this business's set — pull in one concrete differentiating fact if space allows.
 - localRelevanceNote: exactly 1 sentence, following the locationType-specific framing instructed
@@ -189,7 +217,13 @@ FIELDS:
 - formHeadline: the lead-form section's headline, surfaced right above the CTA button. Urgency-aware
   framing tied to "${node.service}" in "${node.city}". Max 35 chars.
 - ctaLabel: the CTA button label itself (e.g. an equivalent of "Send details now" in Hebrew). Max 15
-  chars.
+  chars. It is the lead form's submit button (see CTA MATCHES THE REAL ACTION).
+
+VOICE EXAMPLE (register and rhythm ONLY): the JSON below is a page written for a DIFFERENT business, trade
+and city. Match its plain spoken register, its concrete problem-first opening and its short sentences. Never
+copy any of its facts, services, equipment, places, numbers or phrases — every fact on your page comes from
+BUSINESS DATA only, and the geography rule above applies to it too.
+${CORE_THIRTY_VOICE_EXAMPLE_JSON}
 
 BUSINESS DATA:
 Niche: ${data.businessNiche || ''}
@@ -234,7 +268,23 @@ OUTPUT (JSON only, no markdown):
  * CoreThirtyPageCopy JSON shape instead of SiteCopy. No arguments needed —
  * the checklist is fixed.
  */
-export function buildCoreThirtyNoaPrompt(): string {
+export function buildCoreThirtyNoaPrompt(node?: CoreThirtyNode, data?: CollectedData): string {
+  const source = node && data ? `
+
+SOURCE FACTS (the only facts and places this page may use — check rules 9-10 against them):
+Page service: ${node.service}
+Page city: ${node.city}
+Target Location (general): ${data.targetLocation || ''}
+Specific Cities: ${data.specificCities || ''}
+Street Address: ${data.streetAddress || ''}
+USP: ${data.usp || ''}
+Guarantee: ${data.guarantee || ''}
+License: ${data.license || ''}
+Secondary Services: ${data.secondaryServices || ''}
+Response Time: ${data.responseTime || ''}
+Pricing Notes: ${data.pricingNotes || ''}
+Exclusions: ${data.exclusions || ''}
+FAQ Questions: ${data.faqQuestions || ''}` : '';
   return `You are Noa, Hebrew language QA editor.
 Apply ONLY these corrections to the core-30 page copy JSON you receive. Return corrected JSON only.
 
@@ -251,13 +301,61 @@ Checklist (fix silently — no explanations):
    ellipsis if present
 8. "localRelevanceNote" must remain a single honest sentence -- do not let it drift into a
    storefront-implying claim; if it already avoids that, leave its substance untouched
+9. Equipment, tools, vehicles, services, methods or guarantees not stated in SOURCE FACTS -> delete that
+   clause (or the sentence, if nothing true is left); never replace it with a new claim
+10. A neighbourhood, district, street, landmark, region or city not in SOURCE FACTS (other than the page
+   city), or any claim about how places relate to each other -> delete it; never add a place
+11. Every en-dash (\u2013) -> em-dash (\u2014) with one space each side; a number range -> plain hyphen
+12. "metaDescription" longer than ${META_DESCRIPTION_MAX_CHARS} characters -> shorten it by cutting a whole idea, never
+   mid-word, keeping the service and the city in it
+13. "ctaLabel" or "formHeadline" promising an immediate call, a live conversation, a chat or WhatsApp ->
+   rephrase as sending details / asking for a call back (the button submits a lead form)
+14. Brochure or ad register, slogan lines, or a generic closing line (contact us / we're here for you
+   / don't hesitate) -> remove the closing line or rewrite the sentence as plain spoken fact
 
 Rules 2 and 3 apply ONLY inside Hebrew text content (JSON string values). Never alter the JSON
 structural characters themselves -- every property name and every string value must remain
 wrapped in exactly one pair of standard ASCII double quotes ("). The result must be syntactically
 valid JSON, parseable by JSON.parse.
 
-Return: corrected JSON object only. No prose.`;
+Return: corrected JSON object only. No prose.${source}`;
+}
+
+/** Any en-dash -> single-spaced em-dash (a digit range -> hyphen); em-dash spacing normalised to one space each side. */
+export function normalizeDashes(value: string): string {
+  return value
+    .replace(/(\d)\s*\u2013\s*(?=\d)/g, '$1-')
+    .replace(/[ \t\u00A0]*[\u2013\u2014][ \t\u00A0]*/g, ' \u2014 ')
+    .replace(/^ \u2014 /, '\u2014 ')
+    .replace(/ \u2014 $/, ' \u2014');
+}
+
+/**
+ * Cuts text to at most `max` characters at the last word boundary, never mid-word; trailing separators left
+ * by the cut (comma, colon, dash, pipe) are dropped. Text already within the cap is returned unchanged.
+ */
+export function capAtWordBoundary(value: string, max: number = META_DESCRIPTION_MAX_CHARS): string {
+  const text = value.trim();
+  if (text.length <= max) return text;
+  const cut = text.slice(0, max + 1);
+  const at = cut.lastIndexOf(' ');
+  const head = at > 0 ? cut.slice(0, at) : '';
+  return head.replace(/[\s,;:|\u2014\u2013-]+$/u, '');
+}
+
+/** Code-side D3b enforcement after parsing: dashes in every string, the metaDescription cap. */
+export function finalizeCoreThirtyCopy(copy: CoreThirtyPageCopy): CoreThirtyPageCopy {
+  const fix = (v: unknown) => (typeof v === 'string' ? normalizeDashes(v) : v);
+  return {
+    ...copy,
+    pageHeadline: fix(copy.pageHeadline) as string,
+    narrative: fix(copy.narrative) as string,
+    faqItems: Array.isArray(copy.faqItems) ? copy.faqItems.map(f => ({ ...f, q: fix(f?.q) as string, a: fix(f?.a) as string })) : copy.faqItems,
+    metaDescription: typeof copy.metaDescription === 'string' ? capAtWordBoundary(normalizeDashes(copy.metaDescription)) : copy.metaDescription,
+    localRelevanceNote: fix(copy.localRelevanceNote) as string,
+    formHeadline: fix(copy.formHeadline) as string,
+    ctaLabel: fix(copy.ctaLabel) as string,
+  };
 }
 
 // Same system-prompt convention as generate/route.ts's SITE_COPY_SYSTEM_PROMPT:
@@ -301,12 +399,12 @@ export async function generateCoreThirtyPageCopy(
   // Noa — QA pass. If it comes back malformed, fall back to Tamar's copy
   // rather than failing the whole generation over a polish step.
   try {
-    const noaRaw = await callSiteCopyJSON(buildCoreThirtyNoaPrompt(), JSON.stringify(tamarCopy), {
+    const noaRaw = await callSiteCopyJSON(buildCoreThirtyNoaPrompt(node, data), JSON.stringify(tamarCopy), {
       think: false,
     });
-    return JSON.parse(noaRaw) as CoreThirtyPageCopy;
+    return finalizeCoreThirtyCopy(JSON.parse(noaRaw) as CoreThirtyPageCopy);
   } catch (e: any) {
     console.warn(`Core-30 Noa QA pass failed for node ${node.id}, using unreviewed Tamar copy:`, e.message);
-    return tamarCopy;
+    return finalizeCoreThirtyCopy(tamarCopy);
   }
 }

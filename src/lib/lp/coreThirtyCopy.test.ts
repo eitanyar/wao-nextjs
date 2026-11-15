@@ -129,7 +129,8 @@ test('buildCoreThirtyTamarPrompt: no Hebrew authored literals leak in — only i
     reviewQuote: 'TestReview',
     license: 'TestLicense',
   };
-  const prompt = buildCoreThirtyTamarPrompt(node, dataLatin);
+  // D3b: the only Hebrew allowed is the generated voice example (byte-exact from docs/research); strip it first.
+  const prompt = buildCoreThirtyTamarPrompt(node, dataLatin).replace(CORE_THIRTY_VOICE_EXAMPLE_JSON, '');
   const hebrewMatch = prompt.match(/[֐-׿]/);
   assert.equal(hebrewMatch, null, `expected no Hebrew characters in the prompt template, found: ${hebrewMatch}`);
 });
@@ -152,4 +153,96 @@ test('buildCoreThirtyNoaPrompt takes no arguments and is deterministic', () => {
   const a = buildCoreThirtyNoaPrompt();
   const b = buildCoreThirtyNoaPrompt();
   assert.equal(a, b);
+});
+
+// ---------------------------------------------------------------------------
+// Fable 5.2 D3b (2026-11-15): shared write/QA rules, voice example, code-side meta cap and dash normalisation.
+// HEBREW-SAFETY: this block is ASCII-only; Hebrew expectations come from the generated voice-example module.
+// ---------------------------------------------------------------------------
+import {
+  D3B_FACT_RULES,
+  D3B_TYPOGRAPHY_RULE,
+  D3B_CTA_RULE,
+  D3B_REGISTER_RULE,
+  META_DESCRIPTION_MAX_CHARS,
+  capAtWordBoundary,
+  normalizeDashes,
+  finalizeCoreThirtyCopy,
+} from './coreThirtyCopy';
+import { CORE_THIRTY_VOICE_EXAMPLE_JSON } from './coreThirtyVoiceExample.generated';
+
+const EN = '\u2013';
+const EM = '\u2014';
+
+test('D3b: write prompt carries every rule (equipment, geography, dashes, meta cap, CTA, register) and the voice example', () => {
+  const prompt = buildCoreThirtyTamarPrompt(makeNode(), baseData);
+  for (const rule of [...D3B_FACT_RULES, D3B_TYPOGRAPHY_RULE, D3B_CTA_RULE, D3B_REGISTER_RULE]) assert.ok(prompt.includes(rule), rule.slice(0, 40));
+  assert.match(prompt, /equipment, a tool, a vehicle, a service, a method or a guarantee/);
+  assert.match(prompt, /Never name a neighbourhood, district, street, landmark, region or nearby city/);
+  assert.ok(prompt.includes(`Never an en-dash (${EN})`));
+  assert.ok(prompt.includes(`at most ${META_DESCRIPTION_MAX_CHARS} characters`));
+  assert.equal(META_DESCRIPTION_MAX_CHARS, 155);
+  assert.ok(!/150-160/.test(prompt), 'old 150-160 meta range is gone');
+  assert.match(prompt, /lead form \(name \+ phone\)/);
+  assert.match(prompt, /generic closing/);
+  assert.ok(prompt.includes(CORE_THIRTY_VOICE_EXAMPLE_JSON), 'voice example embedded byte-exact');
+  assert.match(prompt, /VOICE EXAMPLE \(register and rhythm ONLY\)/);
+  assert.match(prompt, /Never\s+copy any of its facts, services, equipment, places/);
+});
+
+test('D3b: voice example is the parsed qwen.json[2].copy (electrician page) with all page fields', () => {
+  const example = JSON.parse(CORE_THIRTY_VOICE_EXAMPLE_JSON);
+  for (const key of ['pageHeadline', 'narrative', 'faqItems', 'metaDescription', 'localRelevanceNote', 'formHeadline', 'ctaLabel']) {
+    assert.ok(key in example, key);
+  }
+  assert.equal(CORE_THIRTY_VOICE_EXAMPLE_JSON.includes(EN), false, 'example has no en-dash');
+});
+
+test('D3b: QA prompt adds rules 9-14 and, given the node, the source facts', () => {
+  const bare = buildCoreThirtyNoaPrompt();
+  assert.match(bare, /9\. Equipment, tools, vehicles, services, methods or guarantees not stated in SOURCE FACTS/);
+  assert.match(bare, /10\. A neighbourhood, district, street, landmark, region or city not in SOURCE FACTS/);
+  assert.ok(bare.includes(`11. Every en-dash (${EN}) -> em-dash (${EM})`));
+  assert.ok(bare.includes(`longer than ${META_DESCRIPTION_MAX_CHARS} characters`));
+  assert.match(bare, /13\. "ctaLabel" or "formHeadline" promising an immediate call/);
+  assert.match(bare, /14\. Brochure or ad register/);
+  const withFacts = buildCoreThirtyNoaPrompt(makeNode(), baseData);
+  assert.ok(withFacts.includes('SOURCE FACTS'));
+  assert.ok(withFacts.includes(`Page city: ${makeNode().city}`));
+  assert.ok(withFacts.includes(`Guarantee: ${baseData.guarantee}`));
+});
+
+test('D3b: capAtWordBoundary keeps <= 155 chars, never cuts mid-word, drops a dangling separator', () => {
+  assert.equal(capAtWordBoundary('short text'), 'short text');
+  const words = Array.from({ length: 40 }, (_, i) => `word${i}`).join(' ');
+  const capped = capAtWordBoundary(words);
+  assert.ok(capped.length <= 155);
+  assert.ok(words.startsWith(capped));
+  assert.ok(words[capped.length] === ' ', 'cut lands on a word boundary');
+  assert.equal(capAtWordBoundary(`${'a'.repeat(150)} bb, ccccccccc`), `${'a'.repeat(150)} bb`);
+  assert.equal(capAtWordBoundary(`${'a'.repeat(150)} ${EM} cccccccc`), 'a'.repeat(150));
+  const exact = 'x'.repeat(155);
+  assert.equal(capAtWordBoundary(exact), exact);
+});
+
+test('D3b: normalizeDashes turns every en-dash into a single-spaced em-dash and digit ranges into hyphens', () => {
+  assert.equal(normalizeDashes(`a ${EN} b`), `a ${EM} b`);
+  assert.equal(normalizeDashes(`a${EN}b`), `a ${EM} b`);
+  assert.equal(normalizeDashes(`a  ${EM}b`), `a ${EM} b`);
+  assert.equal(normalizeDashes(`8${EN}10`), '8-10');
+  assert.equal(normalizeDashes(`8 ${EN} 10`), '8-10');
+  assert.equal(normalizeDashes('well-known'), 'well-known');
+  assert.equal(normalizeDashes(`a ${EM} b`), `a ${EM} b`);
+});
+
+test('D3b: finalizeCoreThirtyCopy applies dashes to every string and caps metaDescription', () => {
+  const long = Array.from({ length: 30 }, (_, i) => `meta${i}`).join(' ');
+  const out = finalizeCoreThirtyCopy({
+    pageHeadline: `h ${EN} x`, narrative: `n ${EN} y`, faqItems: [{ q: `q ${EN} 1`, a: `a ${EN} 2` }],
+    metaDescription: `${long} ${EN} end`, localRelevanceNote: `l ${EN} z`, formHeadline: 'f', ctaLabel: 'c',
+  });
+  const all = JSON.stringify(out);
+  assert.equal(all.includes(EN), false);
+  assert.ok(out.metaDescription.length <= META_DESCRIPTION_MAX_CHARS);
+  assert.equal(out.faqItems[0].a, `a ${EM} 2`);
 });
