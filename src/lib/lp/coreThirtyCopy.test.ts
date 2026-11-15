@@ -280,3 +280,22 @@ test('D3b round 2: QA checklist adds items 15-19 and passes the Service Model in
   assert.match(qa, /19\. The same arrival phrase in more than two fields/);
   assert.ok(qa.includes('Service Model: field'));
 });
+
+test('D3b polish (l-m): write prompt limits verbatim service terms and bans stiff fillers; QA items 20-21', () => {
+  const prompt = buildCoreThirtyTamarPrompt(makeNode(), { ...baseData, serviceModel: 'field' });
+  assert.match(prompt, /SEARCH TERMS ONCE IN THE BODY \(binding\)/);
+  assert.match(prompt, /appears verbatim at most once in the body copy, that is every field except pageHeadline and metaDescription/);
+  assert.match(prompt, /never list the services in more than one field/);
+  assert.match(prompt, /NO STIFF FILLERS \(binding\)/);
+  assert.match(prompt, /formal preposition that means "for"/);
+  assert.match(prompt, /"in a proper \/ orderly \/ thorough manner"/);
+  assert.match(prompt, /impersonal "the work is carried out \/ focuses on"/);
+  assert.match(prompt, /Open the narrative with the customer's problem, never with a verbless fragment that lists services/);
+  assert.match(prompt, /Every verb must fit its object/);
+  const qa = buildCoreThirtyNoaPrompt(makeNode(), baseData);
+  assert.match(qa, /20\. A service name \(page service or a Secondary Service in SOURCE FACTS\) repeated verbatim/);
+  assert.match(qa, /21\. Stiff fillers -> plain spoken Hebrew/);
+  const hebrewInRules = buildCoreThirtyTamarPrompt(makeNode({ service: 'S', city: 'C' }), { usp: 'U' })
+    .replace(CORE_THIRTY_VOICE_EXAMPLE_JSON, '').match(/[\u0590-\u05FF]/);
+  assert.equal(hebrewInRules, null, 'banned fillers are described in English, never as Hebrew literals');
+});

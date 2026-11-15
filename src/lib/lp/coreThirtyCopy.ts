@@ -51,6 +51,8 @@ export const D3C_RULES: readonly string[] = [
   '- NO SPEED LANGUAGE WITHOUT A RESPONSE TIME (binding): when Response Time in BUSINESS DATA is empty, write no speed or waiting-time language at all, even without a number (the equivalents of "fast", "quick", "right away", "without delays", "no waiting", "on the spot", "immediately"). When it is set, state only that response time, in the owner\'s terms.',
   '- ONE VOICE PER PAGE (binding): pick one grammatical person for the business and keep it in every field. Never mix "we" and "I" on a page. Every FAQ answer matches the person the question addresses.',
   '- NO INTERNAL LABELS (binding): never output an internal field name, field value or system label as copy (for example the Service Model value rendered as "field service", or a label such as "service area" / "core page"). formHeadline and ctaLabel are each an imperative or a question addressed to the reader, never a verbal-noun (action-noun) label.',
+  '- SEARCH TERMS ONCE IN THE BODY (binding): each service name from BUSINESS DATA (the page service and every Secondary Service) appears verbatim at most once in the body copy, that is every field except pageHeadline and metaDescription. Everywhere else refer to the work the way the owner would say it on the phone. Never paste the service list as a sentence, and never list the services in more than one field.',
+  '- NO STIFF FILLERS (binding): never use the formal preposition that means "for" / "on behalf of" as a calque of English "for"; never the bureaucratic "gives a response/answer to" phrasing for handling something; never an adverbial "in a proper / orderly / thorough manner" construction; never an impersonal "the work is carried out / focuses on" construction (say who does what, as "I"). Open the narrative with the customer\'s problem, never with a verbless fragment that lists services. Every verb must fit its object (a fault is located, a repair is done; never "locate a repair").',
   '- PHRASE ECONOMY (binding): the same arrival phrase (how or where he comes to the reader) may appear in at most two fields of the page; say it once well instead of in every field. Prefer a plain verb over a word that reads two ways when written without vowel points.',
 ];
 
@@ -343,6 +345,14 @@ Checklist (fix silently — no explanations):
    rewrite it as an imperative or a question to the reader
 19. The same arrival phrase in more than two fields -> keep it in at most two; a word that reads two
    ways without vowel points -> a plain verb
+20. A service name (page service or a Secondary Service in SOURCE FACTS) repeated verbatim more than once
+   across the body (every field except "pageHeadline" and "metaDescription"), or the service list pasted
+   as a sentence in more than one field -> keep one verbatim mention, rephrase the rest the way the owner
+   would say it
+21. Stiff fillers -> plain spoken Hebrew: the formal preposition meaning "for" used as an English calque;
+   "gives a response/answer to" phrasing; "in a proper / orderly / thorough manner" adverbials; an
+   impersonal "the work is carried out / focuses on"; a narrative that opens with a verbless list of
+   services (open with the customer's problem instead); a verb that does not fit its object
 
 Rules 2 and 3 apply ONLY inside Hebrew text content (JSON string values). Never alter the JSON
 structural characters themselves -- every property name and every string value must remain
