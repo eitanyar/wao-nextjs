@@ -178,6 +178,35 @@ function isValidMutationPayload(action: AdminMutationAction, body: JsonRecord): 
   }
 }
 
+// Public LP capture: the page sends its own `slug`. It counts for a client only when the slug names a real LP campaign
+// and the browser says the request came from that page on wao.co.il; otherwise the lead is kept for WAO only
+// (`claimedSlug` + `tenantCheck`), the same rule as /api/lead. Unverified click stubs are not stored.
+const LP_SLUG = /^[a-z0-9][a-z0-9-]{0,62}$/;
+const LP_ORIGINS = new Set(["https://www.wao.co.il", "https://wao.co.il"]);
+
+function lpOriginAllowed(origin: string | null): boolean {
+  if (!origin) return false;
+  if (LP_ORIGINS.has(origin)) return true;
+  return process.env.NODE_ENV !== "production" && /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin);
+}
+
+function lpRefererMatches(referer: string | null, slug: string): boolean {
+  if (!referer) return true; // Referrer-Policy may strip it; Origin is still required.
+  try {
+    const url = new URL(referer);
+    return lpOriginAllowed(url.origin) && (url.pathname === `/lp/${slug}` || url.pathname.startsWith(`/lp/${slug}/`));
+  } catch {
+    return false;
+  }
+}
+
+function lpTenantCheck(req: Request, slug: unknown): "origin_mismatch" | "unknown_tenant" | null {
+  if (typeof slug !== "string" || !LP_SLUG.test(slug) || !loadCampaignConfigBySlug(slug)) return "unknown_tenant";
+  const headers = req.headers;
+  if (!headers || !lpOriginAllowed(headers.get("origin")) || !lpRefererMatches(headers.get("referer"), slug)) return "origin_mismatch";
+  return null;
+}
+
 export async function POST(req: Request) {
   let body: unknown;
   try {
@@ -271,6 +300,20 @@ export async function POST(req: Request) {
     }
 
     const leadBody = body as LeadCapturePayload;
+    // customerId also assigns a lead to a client (ownership.js) and no public page sends it: never trusted here.
+    let captureBody: LeadCapturePayload = { ...leadBody, customerId: undefined };
+    let tenantCheck: "origin_mismatch" | "unknown_tenant" | null = null;
+    const claimedSlug = typeof leadBody.slug === "string" && leadBody.slug ? leadBody.slug : undefined;
+    if (claimedSlug !== undefined) {
+      tenantCheck = lpTenantCheck(req, claimedSlug);
+      if (tenantCheck) {
+        console.warn(`[api/leads] ${tenantCheck}: slug not assigned to a client CRM`);
+        if (leadBody.type === "phone-click" || leadBody.type === "whatsapp-click") {
+          return NextResponse.json({ success: true, message: "Lead safely routed to WAO CRM" });
+        }
+        captureBody = { ...captureBody, slug: undefined };
+      }
+    }
     const leads = await readLeads();
 
     if (leadBody.orderId) {
@@ -284,8 +327,8 @@ export async function POST(req: Request) {
       }
     }
 
-    const captured = captureLead({ leads, body: leadBody });
-    const newLead = captured.lead;
+    const captured = captureLead({ leads, body: captureBody });
+    const newLead: LeadRecord = tenantCheck ? { ...captured.lead, claimedSlug: claimedSlug!.slice(0, 64), tenantCheck } : captured.lead;
     leads.push(newLead);
     await writeLeads(leads);
 

@@ -29,7 +29,7 @@ function orderedIndex(source, first, second) {
   assert.ok(firstIndex < secondIndex, `${first} must occur before ${second}`);
 }
 
-function createRouteHarness({ authorized = false, leads = [] } = {}) {
+function createRouteHarness({ authorized = false, leads = [], campaigns = [] } = {}) {
   const calls = { capture: 0, conversion: 0, notification: 0, read: 0, reviewQueue: 0, write: 0 };
   const fixtureLeads = [...leads];
   const require = (specifier) => {
@@ -58,7 +58,7 @@ function createRouteHarness({ authorized = false, leads = [] } = {}) {
       case '@/lib/google-ads/conversion-upload':
         return { uploadLeadConversion: async () => { calls.conversion += 1; return { success: true }; } };
       case '@/lib/crm/intelligence':
-        return { loadCampaignConfigBySlug: () => undefined };
+        return { loadCampaignConfigBySlug: (slug) => (campaigns.includes(slug) ? { slug } : null) };
       case '@/lib/shared/clients':
         return { loadClient: () => undefined };
       case '@/lib/crm/reviewFlywheelCopy':
@@ -79,6 +79,8 @@ function createRouteHarness({ authorized = false, leads = [] } = {}) {
   const module = { exports: {} };
   vm.runInNewContext(source, {
     console: { error: () => {}, log: () => {}, warn: () => {} },
+    URL,
+    process: { env: { NODE_ENV: 'production' } },
     exports: module.exports,
     module,
     require,
@@ -86,7 +88,11 @@ function createRouteHarness({ authorized = false, leads = [] } = {}) {
   return { calls, handler: module.exports };
 }
 
-const requestWithBody = (body) => ({ json: async () => body });
+const requestWithBody = (body, headers = {}) => ({
+  json: async () => body,
+  headers: { get: (name) => headers[name.toLowerCase()] ?? null },
+});
+const lpHeaders = (slug) => ({ origin: 'https://www.wao.co.il', referer: `https://www.wao.co.il/lp/${slug}?gclid=1` });
 
 test('GET /api/leads requires the admin cookie', () => {
   assert.match(routeCode, /verifyAdminToken/);
@@ -107,7 +113,7 @@ test('POST keeps no-action public lead capture separate from the admin gate', ()
   assert.match(post, /const hasAction = Boolean\(bodyRecord && Object\.prototype\.hasOwnProperty\.call\(bodyRecord, "action"\)\)/);
   assert.match(post, /let action: AdminMutationAction \| undefined/);
   assert.match(post, /const leadBody = body as LeadCapturePayload/);
-  assert.match(post, /const captured = captureLead\(\{ leads, body: leadBody \}\)/);
+  assert.match(post, /const captured = captureLead\(\{ leads, body: captureBody \}\)/);
   assert.match(post, /sendLeadNotificationEmail\(newLead\)/);
   orderedIndex(post, 'if (action && bodyRecord)', 'const leadBody = body as LeadCapturePayload');
 });
@@ -155,7 +161,7 @@ test('POST restores the stable operational 500 boundary after explicit client er
   assert.ok(post.indexOf('if (!(await isAdminAuthorized()))') < operationalStart);
   assert.ok(post.indexOf('if (!isValidMutationPayload(bodyRecord.action, bodyRecord))') < operationalStart);
   orderedIndex(operational, 'try {', 'const leads = await readLeads()');
-  orderedIndex(operational, 'try {', 'const captured = captureLead({ leads, body: leadBody })');
+  orderedIndex(operational, 'try {', 'const captured = captureLead({ leads, body: captureBody })');
 });
 
 test('synthetic handler: GET and known mutations reject unauthenticated callers before every side effect', async () => {
@@ -250,8 +256,8 @@ test('synthetic handler: valid contact leads and click-tracking stubs are still 
     { label: 'whatsapp-click stub', body: { orderId: 'o-3', type: 'whatsapp-click', source: 'lp-x', slug: 'x' } },
   ];
   for (const { label, body } of cases) {
-    const harness = createRouteHarness();
-    const response = await harness.handler.POST(requestWithBody(body));
+    const harness = createRouteHarness({ campaigns: ['x'] });
+    const response = await harness.handler.POST(requestWithBody(body, lpHeaders('x')));
     assert.equal(response.status, 200, label);
     assert.equal(harness.calls.capture, 1, label);
     assert.equal(harness.calls.write, 1, label);
@@ -279,4 +285,46 @@ test('A1: admin updateQuality and markClosed record qualityMarkedAt through with
   assert.match(post, /withQualityMark\(lead, quality, markedAt\)/);
   assert.match(post, /withQualityMark\(lead, "GOOD", closedAt\)/);
   assert.doesNotMatch(post, /\{ \.\.\.lead, quality \}/);
+});
+
+test('forged LP slug: kept for WAO only (claimedSlug + tenantCheck), never assigned to the client', async () => {
+  const cases = [
+    { label: 'no origin', headers: {}, check: 'origin_mismatch' },
+    { label: 'foreign origin', headers: { origin: 'https://evil.example' }, check: 'origin_mismatch' },
+    { label: 'other LP page', headers: { origin: 'https://www.wao.co.il', referer: 'https://www.wao.co.il/lp/other' }, check: 'origin_mismatch' },
+    { label: 'slug prefix trick', headers: { origin: 'https://www.wao.co.il', referer: 'https://www.wao.co.il/lp/xyz' }, check: 'origin_mismatch' },
+  ];
+  for (const { label, headers, check } of cases) {
+    const harness = createRouteHarness({ campaigns: ['x'] });
+    const response = await harness.handler.POST(requestWithBody({ name: 'N', phone: '0500000000', type: 'form', source: 'lp-x', slug: 'x' }, headers));
+    assert.equal(response.status, 200, label);
+    assert.equal(response.body.lead.slug, undefined, label);
+    assert.equal(response.body.lead.claimedSlug, 'x', label);
+    assert.equal(response.body.lead.tenantCheck, check, label);
+  }
+  for (const slug of ['unknown', '../../data/clients/x/client', 'X']) {
+    const harness = createRouteHarness({ campaigns: ['x'] });
+    const response = await harness.handler.POST(requestWithBody({ phone: '0500000000', slug }, lpHeaders(slug)));
+    assert.equal(response.body.lead.slug, undefined, slug);
+    assert.equal(response.body.lead.tenantCheck, 'unknown_tenant', slug);
+  }
+});
+
+test('forged LP click stub is not stored; verified form lead keeps its slug', async () => {
+  const stub = createRouteHarness({ campaigns: ['x'] });
+  const stubResponse = await stub.handler.POST(requestWithBody({ orderId: 'c-1', type: 'phone-click', slug: 'x' }, { origin: 'https://evil.example' }));
+  assert.equal(stubResponse.status, 200);
+  assert.deepEqual(stub.calls, { capture: 0, conversion: 0, notification: 0, read: 0, reviewQueue: 0, write: 0 });
+
+  const ok = createRouteHarness({ campaigns: ['x'] });
+  const okResponse = await ok.handler.POST(requestWithBody({ name: 'N', phone: '0500000000', type: 'form', slug: 'x' }, lpHeaders('x')));
+  assert.equal(okResponse.body.lead.slug, 'x');
+  assert.equal(okResponse.body.lead.tenantCheck, undefined);
+});
+
+test('public capture never trusts a body customerId (it would assign the lead to that client)', async () => {
+  const harness = createRouteHarness();
+  const response = await harness.handler.POST(requestWithBody({ phone: '0500000000', customerId: '123-456-7890' }, { origin: 'https://evil.example' }));
+  assert.equal(response.status, 200);
+  assert.equal(response.body.lead.customerId, undefined);
 });
