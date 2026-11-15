@@ -123,7 +123,7 @@ test('getSchemaOrgType: falls back to LocalBusiness for unknown or missing niche
 
 // ── localBusinessObject / localBusinessSchema ───────────────────────────────
 
-test('localBusinessObject returns enriched Schema.org properties', () => {
+test('localBusinessObject: owner facts only (Yonatan 2026-11-15: no invented priceRange / payment / raw hours), +972 phone', () => {
   const data: CollectedData = {
     businessName: 'Top Locksmith',
     businessNiche: '\u05de\u05e0\u05e2\u05d5\u05dc\u05df',
@@ -140,17 +140,17 @@ test('localBusinessObject returns enriched Schema.org properties', () => {
   assert.equal(obj.name, 'Top Locksmith');
   assert.equal(obj.url, 'https://locksmith.wao.co.il');
   assert.equal(obj.image, 'https://example.com/hero.jpg');
-  assert.equal(obj.priceRange, '$$');
-  assert.equal(obj.currenciesAccepted, 'ILS');
-  assert.deepEqual(obj.paymentAccepted, ['Cash', 'Credit Card', 'Bit', 'PayBox']);
-  assert.equal(obj.telephone, '050-9999999');
+  assert.equal(obj.priceRange, undefined);
+  assert.equal(obj.currenciesAccepted, undefined);
+  assert.equal(obj.paymentAccepted, undefined);
+  assert.equal(obj.telephone, '+972509999999');
   assert.deepEqual(obj.address, {
     '@type': 'PostalAddress',
     streetAddress: 'Herzl 10',
     addressLocality: 'Ramat Gan',
     addressCountry: 'IL',
   });
-  assert.equal(obj.openingHours, '24/7');
+  assert.equal(obj.openingHours, undefined);
 });
 
 test('localBusinessSchema wraps localBusinessObject in script tag with @context', () => {
@@ -169,22 +169,19 @@ test('localBusinessSchema wraps localBusinessObject in script tag with @context'
   assert.equal(parsed['@context'], 'https://schema.org');
   assert.equal(parsed['@type'], 'Plumber');
   assert.equal(parsed['@id'], 'https://plumber.wao.co.il/#business');
-  assert.equal(parsed.priceRange, '$$');
-  assert.equal(parsed.currenciesAccepted, 'ILS');
-  assert.deepEqual(parsed.paymentAccepted, ['Cash', 'Credit Card', 'Bit', 'PayBox']);
+  assert.equal(parsed.priceRange, undefined);
+  assert.equal(parsed.paymentAccepted, undefined);
 });
 
 // ── renderSitePages ─────────────────────────────────────────────────────────
 
-test('renderSitePages outputs pages with enriched LocalBusiness JSON-LD schema', () => {
+test('renderSitePages outputs pages with the owner-facts LocalBusiness JSON-LD schema', () => {
   const pages = renderSitePages(baseParams());
 
   const indexHtml = pages['index.html'];
   assert.ok(indexHtml, 'expected index.html');
   assert.ok(indexHtml.includes('"@id":"https://test-site.wao.co.il/#business"'));
-  assert.ok(indexHtml.includes('"currenciesAccepted":"ILS"'));
-  assert.ok(indexHtml.includes('"paymentAccepted":["Cash","Credit Card","Bit","PayBox"]'));
-  assert.ok(indexHtml.includes('"priceRange":"$$"'));
+  assert.ok(!/currenciesAccepted|paymentAccepted|priceRange/.test(indexHtml));
 
   const aboutHtml = pages['about.html'];
   assert.ok(aboutHtml.includes('"@id":"https://test-site.wao.co.il/#business"'));

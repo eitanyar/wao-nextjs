@@ -12,7 +12,7 @@ import type { VerticalTheme } from './verticalThemes';
 import { SITE_FONT_PATHS } from './siteFonts';
 import { SITE_DESIGN_LABELS } from './siteDesignLabels';
 import { DAY_LETTERS } from './generationData';
-import { parseBusinessHoursSegments } from './businessHours';
+import { parseBusinessHours, parseBusinessHoursSegments } from './businessHours';
 
 function esc(s: string): string {
   return (s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
@@ -57,7 +57,9 @@ export function siteFontFaceCss(): string {
 // Icons (item 3)
 // ─────────────────────────────────────────────────────────────────────────
 
-export type SiteIconName = 'phone' | 'chat' | 'check' | 'chev' | 'shield' | 'star' | 'tool';
+export type SiteIconName = 'phone' | 'chat' | 'check' | 'chev' | 'shield' | 'star' | 'tool' | ServiceIconName;
+/** Per-service card icons (design review client item 6): a small fixed set; serviceIcon() picks one or the neutral fallback. */
+export type ServiceIconName = 'drop' | 'drain' | 'sun' | 'snow' | 'bolt' | 'lock' | 'key' | 'svc';
 
 /**
  * The inline sprite, once per page right after <body>. No xmlns: inline SVG in HTML does not need it (and the local preview
@@ -71,7 +73,31 @@ export const SITE_ICON_SPRITE = '<svg width="0" height="0" style="position:absol
   + '<symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></symbol>'
   + '<symbol id="i-tool" viewBox="0 0 24 24"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></symbol>'
   + '<symbol id="i-star" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></symbol>'
+  + '<symbol id="i-drop" viewBox="0 0 24 24"><path d="M12 2.7c3.6 4.4 6 7.9 6 11.1a6 6 0 0 1-12 0c0-3.2 2.4-6.7 6-11.1z"/></symbol>'
+  + '<symbol id="i-drain" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M8 9h8M7 12h10M8 15h8"/></symbol>'
+  + '<symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></symbol>'
+  + '<symbol id="i-snow" viewBox="0 0 24 24"><path d="M12 2v20M4.2 7l15.6 10M4.2 17L19.8 7M9 4l3 2 3-2M9 20l3-2 3 2"/></symbol>'
+  + '<symbol id="i-bolt" viewBox="0 0 24 24"><path d="M13 2 4 14h7l-1 8 9-12h-7l1-8z"/></symbol>'
+  + '<symbol id="i-lock" viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></symbol>'
+  + '<symbol id="i-key" viewBox="0 0 24 24"><circle cx="8" cy="15" r="4"/><path d="m10.8 12.2 8.7-8.7M16 7l3 3M14 9l2 2"/></symbol>'
+  + '<symbol id="i-svc" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="4"/><path d="m8.5 12 2.5 2.5 4.5-5"/></symbol>'
   + '</svg>';
+
+/**
+ * The card icon for a service (client item 6), chosen from the service page's ASCII slug (opportunityId / path), never
+ * from Hebrew text. Unknown services get the neutral icon, so no trade is ever shown a wrong tool.
+ */
+export function serviceIcon(slug: string | null | undefined): ServiceIconName {
+  const key = (slug ?? '').toLowerCase();
+  if (/leak/.test(key)) return 'drop';
+  if (/drain|clog|sewer|unblock/.test(key)) return 'drain';
+  if (/water-heater|boiler|solar|heater/.test(key)) return 'sun';
+  if (/(^|[-_/])ac([-_/]|$)|air-cond|hvac|cooling/.test(key)) return 'snow';
+  if (/electric|wiring|socket|power/.test(key)) return 'bolt';
+  if (/locksmith|lock/.test(key)) return 'lock';
+  if (/key|door-open/.test(key)) return 'key';
+  return 'svc';
+}
 
 /** One sprite icon. Always aria-hidden: every icon sits beside its own text (Noa fix 4). */
 export function icon(name: SiteIconName, cls = 'ic'): string {
@@ -162,7 +188,7 @@ export function siteCss(t: VerticalTheme): string {
     '.trust .ic{color:var(--accent-text);margin-top:1px;}',
     // Service cards (item 5): whole-card links through the H3 link's ::after; unlinked cards stay plain.
     '.svc{list-style:none;display:grid;gap:12px;}',
-    '.svc-card{position:relative;display:flex;align-items:flex-start;gap:12px;min-height:56px;padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-md);box-shadow:0 1px 2px rgba(13,27,42,0.06);}',
+    '.svc-card{position:relative;height:100%;display:flex;align-items:flex-start;gap:12px;min-height:56px;padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-md);box-shadow:0 1px 2px rgba(13,27,42,0.06);}',
     '.svc-card .tile{width:40px;height:40px;flex:none;border-radius:var(--r-sm);background:var(--surface-alt);color:var(--primary);display:flex;align-items:center;justify-content:center;}',
     '.svc-body{flex:1;min-width:0;}',
     '.svc-card h3{font-size:1.125rem;font-weight:700;line-height:1.3;color:var(--primary);min-height:40px;display:flex;align-items:center;}',
@@ -307,6 +333,7 @@ export function formatSiteHours(text: string | undefined): string | null {
 
 /** The hero hours line: hero.hours.label then the hours; '' when the hours do not format. */
 export function heroHoursLine(text: string | undefined): string {
-  const hours = formatSiteHours(text);
+  // Yonatan rule 4: a visible hours row only when the schema's own parse (openingHoursSpecification) succeeds.
+  const hours = parseBusinessHours(text) ? formatSiteHours(text) : null;
   return hours ? `<p class="hero-note" data-hero-hours><strong>${esc(SITE_DESIGN_LABELS.hoursLabel)}</strong> <span>${esc(hours)}</span></p>` : '';
 }

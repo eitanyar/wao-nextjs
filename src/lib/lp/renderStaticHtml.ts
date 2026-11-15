@@ -200,9 +200,6 @@ ${trustFacts(copy.trustBarItems)}
   <!-- About -->
   <section style="padding:36px 20px;background:${t.surface};">
     <div style="max-width:600px;margin:0 auto;text-align:center;">
-      <div style="width:60px;height:60px;border-radius:50%;background:var(--cta);margin:0 auto 16px;display:flex;align-items:center;justify-content:center;color:${t.ctaText};font-weight:900;font-size:1.4rem;">
-        ${esc((data.ownerName || businessName || '?')[0])}
-      </div>
       <p style="color:${t.textMuted};font-size:0.95rem;line-height:1.6;">${esc(copy.aboutBlurb)}</p>
     </div>
   </section>

@@ -44,7 +44,10 @@ import {
 import { codeOwnedFactTemplates } from './ownerFactCopy';
 import { DEPTH_BLOCK_KEYS, DEPTH_BLOCK_LIMITS, rendersDepthBlocks } from './depthBlocks';
 import { unverifiedClaimSpec, UnverifiedClaimError, withoutUnverifiedClaims, type ClaimVerification } from './claimVerification';
-import { heroHoursLine, heroPhotoSlot, icon } from './siteDesign';
+import { heroHoursLine, heroPhotoSlot, icon, serviceIcon } from './siteDesign';
+import { israeliPhoneE164 } from './phoneE164';
+
+export { israeliPhoneE164 };
 
 const RESERVED_SEGMENTS = new Set(['api', 'assets', 'static', 'index', 'privacy', 'accessibility', 'contact', 'sitemap']);
 const RENDERABLE_CLASSES = new Set<PageClassification>([
@@ -121,7 +124,7 @@ export function researchedProfileLink(data: CollectedData, copy: ProfileLinkCopy
  */
 function profileLinkSection(page: ResearchedSitePage, link: FooterProfileLink | null, theme: RenderResearchedSitePagesParams['theme']): string {
   if (!link || page.classification !== 'homepage') return '';
-  return `<section data-section="google-profile" style="padding:20px;background:${theme.surface};text-align:center;"><a href="${esc(link.href)}" data-google-profile style="display:inline-flex;align-items:center;min-height:44px;padding:0 12px;color:${theme.accentText};text-decoration:underline;font-weight:700;">${escWithLatinIsolated(link.label)}</a></section>`;
+  return `<section data-section="google-profile" style="padding:20px;background:${theme.surface};"><div style="max-width:1120px;margin:0 auto;"><a href="${esc(link.href)}" data-google-profile style="display:inline-flex;align-items:center;min-height:44px;padding:0 12px;color:${theme.accentText};text-decoration:underline;font-weight:700;">${escWithLatinIsolated(link.label)}</a></div></section>`;
 }
 
 /** The pricing labels a render uses, and whether they are still pending (pending = render no pricing UI). */
@@ -418,7 +421,7 @@ function reviewSection(page: ResearchedSitePage, theme: RenderResearchedSitePage
   const quote = page.copy.reviewFeatured;
   if (!quote) return '';
   const context = page.copy.reviewContext ? `<div style="font-size:0.85rem;color:${theme.textMuted};margin-top:10px;">${esc(page.copy.reviewContext)}</div>` : '';
-  return `<section style="padding:28px 20px;background:${theme.surface};"><blockquote style="max-width:640px;margin:0 auto;text-align:center;"><p style="font-size:1.05rem;color:${theme.textPrimary};line-height:1.6;">\u05F4${esc(quote)}\u05F4</p>${context}</blockquote></section>`;
+  return `<section style="padding:28px 20px;background:${theme.surface};"><blockquote style="max-width:1120px;margin:0 auto;"><p style="font-size:1.05rem;color:${theme.textPrimary};line-height:1.6;">\u05F4${esc(quote)}\u05F4</p>${context}</blockquote></section>`;
 }
 
 /** The <title> of one researched page: the C1 formula when the page has SEO facts, else the legacy hook title. */
@@ -509,15 +512,6 @@ export function researchedUngeneratedFieldsFor(classification: string): readonly
   return rendersSiteSections(classification) ? [] : RESEARCHED_HOME_HUB_ONLY_FIELDS;
 }
 
-/**
- * tel: href in E.164 for an Israeli number (national 0XXXXXXXX / 0XXXXXXXXX, or +972 / 972 forms), else null
- * (the hero call button is then omitted; the header keeps its legacy link).
- */
-export function israeliPhoneE164(raw: string | undefined): string | null {
-  const compact = (raw ?? '').replace(/[^\d+]/g, '');
-  const national = compact.startsWith('+972') ? `0${compact.slice(4)}` : compact.startsWith('972') ? `0${compact.slice(3)}` : compact;
-  return /^0[1-9]\d{7,8}$/.test(national) ? `+972${national.slice(1)}` : null;
-}
 
 /**
  * Hero call button (M2b.1, Eitan-approved). Label: the page's heroCta on a phone site (it is the system call
@@ -575,7 +569,7 @@ function priceSection(page: ResearchedSitePage, data: CollectedData, theme: Rend
   const notes = faq ? [] : pricingNoteSentencesHtml(pricing, labels, esc);
   const notesHtml = notes.length ? `<p data-price-notes style="color:${theme.textPrimary};line-height:1.6;${table ? 'margin-top:12px;' : ''}">${notes.join(' ')}</p>` : '';
   if (!table && !faqHtml && !notesHtml) return '';
-  return `<section id="prices" data-section="prices" aria-labelledby="prices-heading" style="padding:32px 20px;background:${theme.surface};"><div style="max-width:700px;margin:0 auto;"><h2 id="prices-heading" style="${depthHeadingStyle(theme)}">${esc(labels.priceTableHeading)}</h2>${table}${notesHtml}${faqHtml}</div></section>`;
+  return `<section id="prices" data-section="prices" aria-labelledby="prices-heading" style="padding:32px 20px;background:${theme.surface};"><div style="max-width:1120px;margin:0 auto;"><h2 id="prices-heading" style="${depthHeadingStyle(theme)}">${esc(labels.priceTableHeading)}</h2>${table}${notesHtml}${faqHtml}</div></section>`;
 }
 
 /** Trust bar (M2b.1): the page's trustBarItems; nothing when empty. */
@@ -623,10 +617,10 @@ function hasStory(page: ResearchedSitePage): boolean {
  */
 function storySection(page: ResearchedSitePage, theme: RenderResearchedSitePagesParams['theme']): string {
   if (!hasStory(page)) return '';
-  const style = `font-size:1.35rem;font-weight:700;color:${theme.primary};margin-bottom:14px;text-align:center;`;
+  const style = `font-size:1.35rem;font-weight:700;color:${theme.primary};margin-bottom:14px;`;
   const named = nonEmpty(page.copy.storyHeadline) || nonEmpty(RESEARCHED_STORY_FALLBACK_HEADING);
   const heading = named ? sectionHeading('story-heading', page.copy.storyHeadline, RESEARCHED_STORY_FALLBACK_HEADING ?? '', style) : '';
-  return `<section id="story" data-section="story"${named ? ' aria-labelledby="story-heading"' : ''} style="padding:28px 20px;background:${theme.surfaceAlt};border-block:1px solid ${theme.border};"><div style="max-width:640px;margin:0 auto;">${heading}<p style="color:${theme.textPrimary};font-size:1.125rem;line-height:1.7;text-align:start;border-inline-start:3px solid ${theme.accent};padding-inline-start:14px;">${esc(page.copy.storyBody ?? '')}</p></div></section>`;
+  return `<section id="story" data-section="story"${named ? ' aria-labelledby="story-heading"' : ''} style="padding:28px 20px;background:${theme.surfaceAlt};border-block:1px solid ${theme.border};"><div style="max-width:1120px;margin:0 auto;">${heading}<p style="color:${theme.textPrimary};font-size:1.125rem;line-height:1.7;text-align:start;border-inline-start:3px solid ${theme.accent};padding-inline-start:14px;max-width:640px;">${esc(page.copy.storyBody ?? '')}</p></div></section>`;
 }
 
 /** Content depth: the non-empty text items of one depth list (a record without the field renders nothing). */
@@ -634,7 +628,7 @@ function depthItems<T extends object>(value: readonly T[] | null | undefined, ke
   return (Array.isArray(value) ? value : []).filter(item => item && keys.every(key => nonEmpty(item[key])));
 }
 
-const depthHeadingStyle = (theme: RenderResearchedSitePagesParams['theme']) => `font-size:1.35rem;font-weight:700;color:${theme.primary};margin-bottom:16px;text-align:center;`;
+const depthHeadingStyle = (theme: RenderResearchedSitePagesParams['theme']) => `font-size:1.35rem;font-weight:700;color:${theme.primary};margin-bottom:16px;`;
 
 /** Content depth: a block's H2, the generated headline or the approved fallback label (visible either way). */
 function depthHeading(id: string, headline: string | null | undefined, fallback: string, theme: RenderResearchedSitePagesParams['theme']): string {
@@ -647,7 +641,7 @@ function processSection(page: ResearchedSitePage, theme: RenderResearchedSitePag
   const steps = depthItems(page.copy.processSteps, ['text']);
   if (!steps.length) return '';
   const items = steps.map(step => `<li style="background:${theme.surface};border:1px solid ${theme.border};border-radius:${theme.radiusMd};padding:14px 16px;border-inline-start:3px solid ${theme.accent};color:${theme.textPrimary};line-height:1.6;">${esc(step.text)}</li>`).join('');
-  return `<section id="process" data-section="process" aria-labelledby="process-heading" style="padding:32px 20px;background:${theme.surfaceAlt};"><div style="max-width:700px;margin:0 auto;">${depthHeading('process-heading', page.copy.processHeadline, RESEARCHED_SITE_LABELS.processHeadingFallback, theme)}<ol style="display:flex;flex-direction:column;gap:10px;padding-inline-start:22px;margin:0;">${items}</ol></div></section>`;
+  return `<section id="process" data-section="process" aria-labelledby="process-heading" style="padding:32px 20px;background:${theme.surfaceAlt};"><div style="max-width:1120px;margin:0 auto;">${depthHeading('process-heading', page.copy.processHeadline, RESEARCHED_SITE_LABELS.processHeadingFallback, theme)}<ol style="display:flex;flex-direction:column;gap:10px;padding-inline-start:22px;margin:0;">${items}</ol></div></section>`;
 }
 
 /** Content depth (B6): owner-stated proof facts plus at most DEPTH_BLOCK_LIMITS.maxReviews verbatim reviews; nothing without facts. */
@@ -665,11 +659,11 @@ function proofSection(page: ResearchedSitePage, theme: RenderResearchedSitePages
   const facts = depthItems(page.copy.proofItems, ['text']).map(item => `<li style="background:${theme.surface};border:1px solid ${theme.border};border-radius:${theme.radiusSm};padding:10px 14px;font-weight:600;color:${theme.textPrimary};">${esc(item.text)}</li>`).join('');
   const reviews = proofReviews(page);
   const context = page.copy.reviewContext ? `<div style="font-size:0.85rem;color:${theme.textMuted};margin-top:10px;">${esc(page.copy.reviewContext)}</div>` : '';
-  const quotes = reviews.map((quote, index) => `<blockquote style="margin:18px 0 0;text-align:center;"><p style="font-size:1.05rem;color:${theme.textPrimary};line-height:1.6;">\u05F4${esc(quote)}\u05F4</p>${index === 0 ? context : ''}</blockquote>`).join('');
+  const quotes = reviews.map((quote, index) => `<blockquote style="margin:18px 0 0;"><p style="font-size:1.05rem;color:${theme.textPrimary};line-height:1.6;">\u05F4${esc(quote)}\u05F4</p>${index === 0 ? context : ''}</blockquote>`).join('');
   // Rerun-3 item 6c: while code owns the facts the proof items are the owner's own first-person facts, so the customers'
   // heading never sits over them: the approved facts heading is reused (a dedicated label is Tamar's, pending).
   const fallback = reviews.length && !codeOwnedFactTemplates() ? RESEARCHED_SITE_LABELS.proofHeadingReviews : RESEARCHED_SITE_LABELS.proofHeadingFactsOnly;
-  return `<section id="proof" data-section="proof" aria-labelledby="proof-heading" style="padding:32px 20px;background:${theme.surface};"><div style="max-width:700px;margin:0 auto;">${depthHeading('proof-heading', page.copy.proofHeadline, fallback, theme)}<ul role="list" style="list-style:none;display:flex;flex-direction:column;gap:8px;padding:0;margin:0;">${facts}</ul>${quotes}</div></section>`;
+  return `<section id="proof" data-section="proof" aria-labelledby="proof-heading" style="padding:32px 20px;background:${theme.surface};"><div style="max-width:1120px;margin:0 auto;">${depthHeading('proof-heading', page.copy.proofHeadline, fallback, theme)}<ul role="list" style="list-style:none;display:flex;flex-direction:column;gap:8px;padding:0;margin:0;">${facts}</ul>${quotes}</div></section>`;
 }
 
 /** Content depth (B4): the Q&A, each question an H3 with its answer; service pages only; nothing without items. */
@@ -678,7 +672,7 @@ function qaSection(page: ResearchedSitePage, theme: RenderResearchedSitePagesPar
   const items = depthItems(page.copy.qaItems, ['q', 'a']);
   if (!items.length) return '';
   const body = items.map(item => `<div style="background:${theme.surface};border:1px solid ${theme.border};border-radius:${theme.radiusMd};padding:14px 16px;"><h3 style="font-weight:700;font-size:1rem;color:${theme.primary};margin-bottom:6px;">${esc(item.q)}</h3><p style="color:${theme.textMuted};line-height:1.6;">${esc(item.a)}</p></div>`).join('');
-  return `<section id="qa" data-section="qa" aria-labelledby="qa-heading" style="padding:32px 20px;background:${theme.surfaceAlt};"><div style="max-width:700px;margin:0 auto;display:flex;flex-direction:column;gap:12px;">${depthHeading('qa-heading', page.copy.qaHeadline, RESEARCHED_SITE_LABELS.qaHeadingFallback, theme)}${body}</div></section>`;
+  return `<section id="qa" data-section="qa" aria-labelledby="qa-heading" style="padding:32px 20px;background:${theme.surfaceAlt};"><div style="max-width:1120px;margin:0 auto;display:flex;flex-direction:column;gap:12px;">${depthHeading('qa-heading', page.copy.qaHeadline, RESEARCHED_SITE_LABELS.qaHeadingFallback, theme)}${body}</div></section>`;
 }
 
 const cardKey = (value: string | null | undefined) => (value ?? '').normalize('NFC').replace(/\s+/g, ' ').trim();
@@ -715,9 +709,9 @@ function serviceDetailsSection(page: ResearchedSitePage, theme: RenderResearched
     const target = serviceCardTarget(item.name, allPages, outputs, businessName);
     const title = target ? `<a href="${target.href}">${esc(target.text)}</a>` : esc(item.name);
     const description = nonEmpty(item.description) ? `<p>${esc(item.description)}</p>` : '';
-    return `<li class="svc-card"${target ? ' data-card-link' : ''}><span class="tile">${icon('tool')}</span><div class="svc-body"><h3>${title}</h3>${description}</div>${target ? icon('chev', 'ic chev') : ''}</li>`;
+    return `<li class="svc-card"${target ? ' data-card-link' : ''}><span class="tile">${icon(serviceIcon(target ? `${target.page.opportunityId} ${target.href}` : null))}</span><div class="svc-body"><h3>${title}</h3>${description}</div>${target ? icon('chev', 'ic chev') : ''}</li>`;
   }).join('');
-  const heading = sectionHeading('services-heading', page.copy.servicesHeadline, NAV_LINK_TEXT.services, `font-size:1.35rem;color:${theme.primary};margin-bottom:20px;text-align:center;`);
+  const heading = sectionHeading('services-heading', page.copy.servicesHeadline, NAV_LINK_TEXT.services, `font-size:1.35rem;color:${theme.primary};margin-bottom:20px;`);
   return `<section id="services" data-section="service-details" aria-labelledby="services-heading" style="padding:36px 20px;background:${theme.surfaceAlt};"><div style="max-width:1120px;margin:0 auto;">${heading}<ul class="svc" role="list" style="--cols:${Math.min(items.length, 4)};">${cards}</ul></div></section>`;
 }
 
@@ -728,7 +722,7 @@ function serviceDetailsSection(page: ResearchedSitePage, theme: RenderResearched
 function aboutSection(page: ResearchedSitePage, theme: RenderResearchedSitePagesParams['theme']): string {
   if (!hasAbout(page)) return '';
   const heading = sectionHeading('about-heading', page.copy.aboutPageHeadline, NAV_LINK_TEXT.about, `font-size:1.35rem;color:${theme.primary};margin-bottom:14px;`);
-  return `<section id="about" data-section="about" aria-labelledby="about-heading" style="padding:36px 20px;background:${theme.surface};"><div style="max-width:700px;margin:0 auto;text-align:center;">${heading}<p style="color:${theme.textMuted};line-height:1.7;">${esc(page.copy.aboutPageBody)}</p></div></section>`;
+  return `<section id="about" data-section="about" aria-labelledby="about-heading" style="padding:36px 20px;background:${theme.surface};"><div style="max-width:1120px;margin:0 auto;">${heading}<p style="color:${theme.textMuted};line-height:1.7;max-width:640px;">${esc(page.copy.aboutPageBody)}</p></div></section>`;
 }
 
 const placeKey = (value: string | null | undefined) => (value ?? '').trim().normalize('NFC').toLowerCase();
@@ -749,7 +743,7 @@ function serviceAreasSection(page: ResearchedSitePage, allPages: ResearchedSiteP
     const text = target ? `<a href="${servedPath(outputs.get(target.opportunityId)!)}" style="display:inline-block;padding:12px 8px;min-height:44px;color:${theme.accentText};text-decoration:underline;">${esc(name)}</a>` : esc(name);
     return `<li style="background:${theme.surface};border:1px solid ${theme.border};border-radius:${theme.radiusSm};padding:${target ? '0 8px' : '8px 16px'};font-weight:600;color:${theme.textPrimary};">${text}</li>`;
   }).join('');
-  return `<section data-section="service-areas" aria-labelledby="service-areas-heading" style="padding:32px 20px;background:${theme.surfaceAlt};"><div style="max-width:700px;margin:0 auto;text-align:center;"><h2 id="service-areas-heading" style="font-size:1.25rem;color:${theme.primary};margin-bottom:14px;">${esc(RESEARCHED_SITE_LABELS.serviceAreasHeading)}</h2><ul role="list" style="list-style:none;display:flex;flex-wrap:wrap;gap:10px;justify-content:center;">${items}</ul></div></section>`;
+  return `<section data-section="service-areas" aria-labelledby="service-areas-heading" style="padding:32px 20px;background:${theme.surfaceAlt};"><div style="max-width:1120px;margin:0 auto;"><h2 id="service-areas-heading" style="font-size:1.25rem;color:${theme.primary};margin-bottom:14px;">${esc(RESEARCHED_SITE_LABELS.serviceAreasHeading)}</h2><ul role="list" style="list-style:none;display:flex;flex-wrap:wrap;gap:10px;">${items}</ul></div></section>`;
 }
 
 /**
@@ -799,12 +793,13 @@ function buildPageHtml(page: ResearchedSitePage, params: RenderResearchedSitePag
     ${aboutSection(page, theme)}
     ${serviceAreasSection(page, allPages, outputs, theme)}
     ${profileLinkSection(page, researchedProfileLink(data, params.profileLinkCopy), theme)}
-    ${faq ? `<section data-section="faq" aria-labelledby="faq-heading" style="padding:32px 20px;background:${theme.surfaceAlt};"><div style="max-width:700px;margin:0 auto;display:flex;flex-direction:column;gap:12px;"><h2 id="faq-heading" style="font-size:1.25rem;color:${theme.primary};text-align:center;">${esc(RESEARCHED_SITE_LABELS.faqHeading)}</h2>${faq}</div></section>` : ''}
-    ${links ? `<nav data-section="related-links" aria-labelledby="related-links-heading" style="padding:20px;background:${theme.surface};text-align:center;"><h2 id="related-links-heading" style="font-size:0.95rem;font-weight:700;color:${theme.textPrimary};margin-bottom:6px;">${esc(RESEARCHED_SITE_LABELS.relatedLinksLabel)}</h2><div style="display:flex;flex-wrap:wrap;gap:6px 14px;justify-content:center;">${links}</div></nav>` : ''}
+    ${faq ? `<section data-section="faq" aria-labelledby="faq-heading" style="padding:32px 20px;background:${theme.surfaceAlt};"><div style="max-width:1120px;margin:0 auto;display:flex;flex-direction:column;gap:12px;"><h2 id="faq-heading" style="font-size:1.25rem;color:${theme.primary};">${esc(RESEARCHED_SITE_LABELS.faqHeading)}</h2>${faq}</div></section>` : ''}
+    ${links ? `<nav data-section="related-links" aria-labelledby="related-links-heading" style="padding:20px;background:${theme.surface};"><div style="max-width:1120px;margin:0 auto;"><h2 id="related-links-heading" style="font-size:0.95rem;font-weight:700;color:${theme.textPrimary};margin-bottom:6px;">${esc(RESEARCHED_SITE_LABELS.relatedLinksLabel)}</h2><div style="display:flex;flex-wrap:wrap;gap:6px 14px;">${links}</div></div></nav>` : ''}
     ${leadFormSection(theme, page.copy.formHeadline, page.copy.heroCta, { ...RESEARCHED_LEAD_FORM, sectionId: 'contact' })}
   </main>
   ${pageScript({ slug, businessName, googleAdsCustomerId: params.googleAdsCustomerId || '', formConversionLabel: params.formConversionLabel || '', phoneConversionLabel: params.phoneConversionLabel || '', whatsappConversionLabel: params.whatsappConversionLabel || '', ctaLabel: RESEARCHED_LEAD_FORM.submitLabel ?? page.copy.heroCta, includeLeadForm: true })}`;
-  return assembleDocument(theme, head, body, params.gtagSnippet, data, researchNavOptions(home, page.classification === 'homepage', contactHref), researchedProfileLink(data, params.profileLinkCopy) ?? undefined);
+  // Footer NAP areas = the page's schema areaServed (same list, same order; Yonatan rule 4).
+  return assembleDocument(theme, head, body, params.gtagSnippet, data, researchNavOptions(home, page.classification === 'homepage', contactHref), researchedProfileLink(data, params.profileLinkCopy) ?? undefined, page.seo ? researchedServiceAreas(page) : undefined);
 }
 
 export function buildResearchedSitemapUrls(pages: ResearchedSitePage[], siteUrl = ''): string[] {

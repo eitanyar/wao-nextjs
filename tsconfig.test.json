@@ -194,6 +194,7 @@
     "src/lib/google-ads/executor.ts",
     "src/lib/google-ads/operatorPhase2.test.ts",
     "src/lib/bot/prompts.ts",
+    "src/lib/lp/redesignClient.test.ts",
     "src/lib/lp/coreThirty.ts",
     "src/lib/lp/coreThirty.test.ts",
     "src/lib/lp/duplicateCheck.ts",

@@ -13,7 +13,8 @@ import { displayBusinessHours, parseBusinessHours } from './businessHours';
 import { TEMPLATE_STRINGS } from './generationData';
 import { RESEARCHED_SITE_LABELS } from './researchedSiteLabels';
 import { SITE_DESIGN_LABELS } from './siteDesignLabels';
-import { actionBar, icon, ownerImageUrl, siteCss, siteFontHead, siteHeader, skipLink, SITE_ICON_SPRITE, trustFacts, withoutEmoji, type SiteNavLink } from './siteDesign';
+import { actionBar, formatSiteHours, icon, ownerImageUrl, siteCss, siteFontHead, siteHeader, skipLink, SITE_ICON_SPRITE, trustFacts, withoutEmoji, type SiteNavLink } from './siteDesign';
+import { israeliPhoneE164 } from './phoneE164';
 
 export interface RenderSitePagesParams extends Omit<RenderStaticHtmlParams, 'copy' | 'mode' | 'siteUrl'> {
   copy: SiteCopy;
@@ -240,9 +241,29 @@ export function footerProfileRow(t: VerticalTheme, profile?: FooterProfileLink):
     <div data-footer-profile style="margin-bottom:4px;display:flex;justify-content:center;"><a href="${esc(profile.href)}" style="display:inline-flex;align-items:center;min-height:44px;padding:0 8px;color:${t.textMuted};text-decoration:underline;">${escWithLatinIsolated(profile.label)}</a></div>` : '';
 }
 
-export function footerBadge(t: VerticalTheme, exempt: boolean, profile?: FooterProfileLink): string {
+/**
+ * Footer NAP block (design review client item 8, Yonatan rule 4): business name, phone, street address (only when the
+ * record has one, the same value as the schema address), service areas (the same list and order as the page's schema
+ * areaServed) and hours (only when the schema's own parse succeeds). Values only; the labels are existing site labels.
+ */
+export function footerNap(t: VerticalTheme, data: CollectedData, areas: readonly string[]): string {
+  const { businessName, phone } = contacts(data);
+  const e164 = israeliPhoneE164(phone);
+  const hours = parseBusinessHours(data.businessHours) ? formatSiteHours(data.businessHours) : null;
+  const row = (inner: string, attr: string) => `<p ${attr} style="margin:0 0 6px;">${inner}</p>`;
+  const rows = [
+    businessName ? row(`<strong style="color:${t.textPrimary};font-size:0.95rem;">${esc(businessName)}</strong>`, 'data-footer-name') : '',
+    phone && e164 ? row(`<a href="tel:${e164}" style="display:inline-flex;align-items:center;min-height:44px;color:${t.textPrimary};font-weight:700;"><bdi dir="ltr">${esc(phone)}</bdi></a>`, 'data-footer-phone') : '',
+    data.streetAddress ? row(esc(data.streetAddress.trim()), 'data-footer-address') : '',
+    areas.length ? row(`<strong>${esc(RESEARCHED_SITE_LABELS.serviceAreasHeading)}</strong> ${areas.map(esc).join(' \u00B7 ')}`, 'data-footer-areas') : '',
+    hours ? row(`<strong>${esc(SITE_DESIGN_LABELS.hoursLabel)}</strong> ${esc(hours)}`, 'data-footer-hours') : '',
+  ].filter(Boolean).join('');
+  return rows ? `<div class="footer-nap" data-footer-nap style="max-width:1120px;margin:0 auto 12px;text-align:start;line-height:1.5;">${rows}</div>` : '';
+}
+
+export function footerBadge(t: VerticalTheme, exempt: boolean, profile?: FooterProfileLink, nap = ''): string {
   const profileRow = footerProfileRow(t, profile);
-  return `  <footer class="site-footer" style="text-align:center;padding:24px 20px 32px;background:${t.surface};border-top:1px solid ${t.border};font-size:0.8rem;color:${t.textMuted};">${profileRow}
+  return `  <footer class="site-footer" style="text-align:center;padding:24px 20px 32px;background:${t.surface};border-top:1px solid ${t.border};font-size:0.8rem;color:${t.textMuted};">${nap}${profileRow}
     <div style="margin-bottom:4px;display:flex;flex-wrap:wrap;gap:4px 6px;justify-content:center;">
       <a href="/privacy" style="display:inline-flex;align-items:center;min-height:44px;padding:0 8px;color:${t.textMuted};">מדיניות פרטיות</a>
       ${exempt ? '' : '<a href="/accessibility" style="display:inline-flex;align-items:center;min-height:44px;padding:0 8px;color:' + t.textMuted + ';">הצהרת נגישות</a>'}
@@ -399,7 +420,8 @@ function ownerFactsLocalBusiness(data: CollectedData, businessName: string, clea
     name: businessName,
     url: cleanSiteUrl,
     ...(image ? { image } : {}),
-    ...(data.phone ? { telephone: data.phone } : {}),
+    // Google recommends telephone with the country code; the visible number stays local.
+    ...(data.phone ? { telephone: israeliPhoneE164(data.phone) ?? data.phone.trim() } : {}),
     ...(data.streetAddress ? { address: { '@type': 'PostalAddress', streetAddress: data.streetAddress, ...(data.targetLocation ? { addressLocality: data.targetLocation } : {}), addressCountry: 'IL' } } : {}),
     ...(places.length ? { areaServed: places.map(name => ({ '@type': 'City', name })) } : {}),
     ...(hours ? { openingHoursSpecification: hours } : {}),
@@ -408,34 +430,9 @@ function ownerFactsLocalBusiness(data: CollectedData, businessName: string, clea
 }
 
 export function localBusinessObject(data: CollectedData, businessName: string, siteUrl: string, ogImage: string, options: LocalBusinessSchemaOptions = {}): Record<string, unknown> {
-  const cleanSiteUrl = siteUrl.replace(/\/$/, '');
-  if (options.ownerFactsOnly) return ownerFactsLocalBusiness(data, businessName, cleanSiteUrl, ogImage, options);
-  const address = data.streetAddress
-    ? {
-        '@type': 'PostalAddress',
-        streetAddress: data.streetAddress,
-        addressLocality: data.targetLocation || undefined,
-        addressCountry: 'IL',
-      }
-    : undefined;
-  const image = ownerImageUrl(ogImage);
-
-  return {
-    '@type': getSchemaOrgType(data.businessNiche),
-    '@id': `${cleanSiteUrl}/#business`,
-    name: businessName,
-    url: cleanSiteUrl,
-    ...(image ? { image } : {}),
-    priceRange: '$$',
-    currenciesAccepted: 'ILS',
-    paymentAccepted: ['Cash', 'Credit Card', 'Bit', 'PayBox'],
-    ...(data.phone ? { telephone: data.phone } : {}),
-    ...(address ? { address } : {}),
-    ...(!address && (data.targetLocation || data.specificCities)
-      ? { areaServed: data.specificCities || data.targetLocation }
-      : {}),
-    ...(data.businessHours ? { openingHours: data.businessHours } : {}),
-  };
+  // Yonatan 2026-11-15 (redesign guardrail 4, NAP risk): every render goes through the owner-facts schema. The old branch
+  // hard-coded priceRange "$$", payment methods and raw opening hours that no owner stated; it is deleted.
+  return ownerFactsLocalBusiness(data, businessName, siteUrl.replace(/\/$/, ''), ogImage, options);
 }
 
 export function localBusinessSchema(data: CollectedData, businessName: string, siteUrl: string, ogImage: string, options: LocalBusinessSchemaOptions = {}): string {
@@ -495,10 +492,10 @@ export function leadFormSection(t: VerticalTheme, headline: string, ctaLabel: st
   const heading = options.headline === false
     ? ''
     : `
-      <h2 style="font-weight:800;font-size:1.35rem;color:${t.primary};margin-bottom:20px;text-align:center;">${esc(headline)}</h2>`;
+      <h2 style="font-weight:800;font-size:1.35rem;color:${t.primary};margin-bottom:20px;">${esc(headline)}</h2>`;
   return `  <section${options.sectionId ? ` id="${esc(options.sectionId)}"` : ''} style="padding:40px 20px;background:${t.surfaceAlt};">
-    <div style="max-width:480px;margin:0 auto;">${heading}
-      <form id="lead-form" style="display:flex;flex-direction:column;gap:14px;">
+    <div style="max-width:1120px;margin:0 auto;">${heading}
+      <form id="lead-form" style="display:flex;flex-direction:column;gap:14px;max-width:560px;">
         <div><label class="fld-label" for="f-name">שם מלא</label><input type="text" id="f-name" autocomplete="name" required style="width:100%;min-height:52px;padding:14px 16px;border-radius:${t.radiusSm};border:1px solid ${t.border};font-size:1rem;color:${t.textPrimary};background:${t.surface};" /></div>
         <div><label class="fld-label" for="f-phone">מספר טלפון</label><input type="tel" id="f-phone" placeholder="050-0000000" dir="ltr" inputmode="tel" autocomplete="tel" required style="width:100%;min-height:52px;padding:14px 16px;border-radius:${t.radiusSm};border:1px solid ${t.border};font-size:1rem;color:${t.textPrimary};background:${t.surface};text-align:right;" /></div>
         <label style="${CONSENT_LABEL_STYLE}">
@@ -633,9 +630,6 @@ function buildAboutHtml(p: RenderSitePagesParams, siteUrl: string): string {
   <!-- About Hero -->
   <section style="padding:44px 20px 36px;background:${t.surface};text-align:center;">
     <div style="max-width:600px;margin:0 auto;">
-      <div style="width:72px;height:72px;border-radius:50%;background:${t.ctaGradient};margin:0 auto 20px;display:flex;align-items:center;justify-content:center;color:${t.ctaText};font-weight:900;font-size:1.7rem;">
-        ${esc((data.ownerName || businessName || '?')[0])}
-      </div>
       <h1 style="font-weight:800;font-size:clamp(1.5rem,4.5vw,2.1rem);color:${t.primary};line-height:1.25;margin-bottom:18px;">${esc(copy.aboutPageHeadline)}</h1>
       <p style="color:${t.textMuted};font-size:1rem;line-height:1.7;">${esc(copy.aboutPageBody)}</p>
     </div>
@@ -775,7 +769,7 @@ ${pageScript({
 // Assembles <head> + <body> for the standalone pages (index.html has its own path above). Redesign A: the icon sprite, the
 // skip link, the one header (name, nav, call button from the desktop breakpoint), the page body inside <main id="main">
 // (a body that brings its own <main> gets the id there), the footer, then the mobile action bar.
-export function assembleDocument(t: VerticalTheme, head: string, bodyInner: string, gtagSnippet: string | undefined, data: CollectedData, nav?: ResearchNavOptions, profile?: FooterProfileLink): string {
+export function assembleDocument(t: VerticalTheme, head: string, bodyInner: string, gtagSnippet: string | undefined, data: CollectedData, nav?: ResearchNavOptions, profile?: FooterProfileLink, areas?: readonly string[]): string {
   const headWithGtag = gtagSnippet ? head.replace('</head>', () => `  ${gtagSnippet}\n</head>`) : head;
   const { phone, phoneHref, whatsapp, whatsappHref, businessName } = contacts(data);
   const main = /<main\b/.test(bodyInner)
@@ -791,7 +785,7 @@ ${siteHeader({ businessName, phone, phoneHref, nav: siteNav(nav), homeHref: '/' 
 
 ${main}
 
-${footerBadge(t, isAccessibilityExempt(data.vatStatus), profile)}
+${footerBadge(t, isAccessibilityExempt(data.vatStatus), profile, footerNap(t, data, areas ?? ownerStatedPlaces(data)))}
 ${actionBar({ phone, phoneHref, whatsapp, whatsappHref })}
 </body>
 </html>`;

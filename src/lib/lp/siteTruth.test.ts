@@ -247,7 +247,7 @@ test('capability 9 live label: the approved label renders on the homepage and ev
   const expected = buildPlaceIdMapsUrl(data);
   const attr = expected.replace(/&/g, '&amp;');
   const home = files['index.html'];
-  assert.ok(home.includes(`<a href="${attr}" data-google-profile`) && home.includes(`>${labelHtml}</a></section>`), 'home section');
+  assert.ok(home.includes(`<a href="${attr}" data-google-profile`) && home.includes(`>${labelHtml}</a></div></section>`), 'home section');
   for (const file of ['index.html', 'services/leak-repair.html', 'contact.html']) {
     const row = /<div data-footer-profile[^>]*><a href="([^"]+)"[^>]*>(.*?)<\/a><\/div>/.exec(files[file]);
     assert.ok(row, `${file}: footer row`);

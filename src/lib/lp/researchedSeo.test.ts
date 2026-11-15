@@ -234,10 +234,10 @@ test('C2 schema: no hard-coded priceRange/paymentAccepted, valid openingHoursSpe
   assert.equal(localBusinessObject({ ...data, googleMapsUrl: 'https://evil.example/maps/x' }, 'B', 'https://x.test', 'img', { ownerFactsOnly: true }).sameAs, undefined);
   // Unparseable hours are omitted, never passed through as free text.
   assert.equal(localBusinessObject({ ...data, businessHours: 'mornings' }, 'B', 'https://x.test', 'img', { ownerFactsOnly: true }).openingHoursSpecification, undefined);
-  // Legacy (flags unset) schema is unchanged.
+  // 2026-11-15 (Yonatan guardrail 4): the legacy branch is gone; flags unset gives the same owner-facts schema.
   const legacy = localBusinessObject(data, 'B', 'https://x.test', 'img');
-  assert.equal(legacy.priceRange, '$$');
-  assert.equal(legacy.openingHours, data.businessHours);
+  assert.equal(legacy.priceRange, undefined);
+  assert.equal(legacy.openingHours, undefined);
   // The legacy contact page on a researched site carries the owner-facts schema too.
   assert.doesNotMatch(render()['contact.html'], /priceRange|paymentAccepted/);
 });

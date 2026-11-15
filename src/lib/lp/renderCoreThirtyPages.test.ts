@@ -250,9 +250,8 @@ test('coreThirtyPageSchema produces valid JSON-LD @graph with LocalBusiness, Ser
   assert.ok(business, 'expected Plumber entity in @graph');
   assert.equal(business['@id'], 'https://test.wao.co.il/#business');
   assert.equal(business.name, 'Business Name');
-  assert.equal(business.priceRange, '$$');
-  assert.equal(business.currenciesAccepted, 'ILS');
-  assert.deepEqual(business.paymentAccepted, ['Cash', 'Credit Card', 'Bit', 'PayBox']);
+  assert.equal(business.priceRange, undefined);
+  assert.equal(business.paymentAccepted, undefined);
 
   const service = parsed['@graph'].find((e: Record<string, unknown>) => e['@type'] === 'Service');
   assert.ok(service, 'expected Service entity in @graph');
@@ -290,7 +289,7 @@ test('coreThirtyPageSchema omits FAQPage when faqItems is empty', () => {
   assert.ok(!parsed['@graph'].some((e: Record<string, unknown>) => e['@type'] === 'FAQPage'));
 });
 
-test('rendered Core-30 HTML includes linked Schema graph with payment and currency metadata', () => {
+test('rendered Core-30 HTML includes the linked Schema graph without invented payment / price metadata', () => {
   const node = makeNode({ id: 'svc0-city0' });
   const copy = makeCopy({
     faqItems: [{ q: 'Q?', a: 'A.' }],
@@ -299,8 +298,7 @@ test('rendered Core-30 HTML includes linked Schema graph with payment and curren
   const html = pages['sherut/svc0-city0.html'];
 
   assert.ok(html.includes('"@graph":['), 'expected @graph in rendered html');
-  assert.ok(html.includes('"currenciesAccepted":"ILS"'), 'expected currenciesAccepted in rendered html');
-  assert.ok(html.includes('"paymentAccepted":["Cash","Credit Card","Bit","PayBox"]'), 'expected paymentAccepted in rendered html');
+  assert.ok(!/currenciesAccepted|paymentAccepted|priceRange/.test(html), 'no invented payment / price metadata');
   assert.ok(html.includes('"@type":"Service"'), 'expected Service in rendered html');
   assert.ok(html.includes('"@type":"FAQPage"'), 'expected FAQPage in rendered html');
 });

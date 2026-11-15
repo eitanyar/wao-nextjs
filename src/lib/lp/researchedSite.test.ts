@@ -202,7 +202,7 @@ test('M2b.1b: research nav uses same-page anchors that exist, an aria-label, 44p
   assert.match(home, /<section id="contact" style=/);
   const money = pages['services.html']; // the hub: FAQ + an outgoing link
   assert.match(money, new RegExp(`<section data-section="faq" aria-labelledby="faq-heading"[^>]*><div[^>]*><h2 id="faq-heading"[^>]*>${RESEARCHED_SITE_LABELS.faqHeading}</h2>`));
-  assert.match(money, new RegExp(`<nav data-section="related-links" aria-labelledby="related-links-heading"[^>]*><h2 id="related-links-heading"[^>]*>${RESEARCHED_SITE_LABELS.relatedLinksLabel}</h2>`));
+  assert.match(money, new RegExp(`<nav data-section="related-links" aria-labelledby="related-links-heading"[^>]*>(?:<div[^>]*>)?<h2 id="related-links-heading"[^>]*>${RESEARCHED_SITE_LABELS.relatedLinksLabel}</h2>`));
   assert.ok(money.indexOf('data-section="faq"') < money.indexOf('data-section="related-links"'), 'related links below the FAQ');
   for (const [, style] of money.matchAll(/data-section="related-links"[^]*?<\/nav>/g).next().value![0].matchAll(/<a href="[^"]+" style="([^"]+)"/g)) {
     assert.match(style, /display:inline-block;padding:12px 8px;min-height:44px;color:#A82E00;text-decoration:underline;/);
