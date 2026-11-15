@@ -55,6 +55,12 @@ async function main() {
       else if (!route) { ok = false; note = `exclusion route ${c.needsRoute} MISSING`; }
       else if (route.script) { ok = false; note = `exclusion route ${c.needsRoute} runs ${route.script}`; }
       else note = `exclusion route ${c.needsRoute} present (Worker = None)`;
+    } else if (!ok && record.proxied) {
+      // Hosts excluded at provision time with --exclude (old test / ads-LP Pages hosts) are covered by their own
+      // Worker = None route even though they are not in EXCLUDED_HOSTS.
+      const pattern = `${String(record.name).toLowerCase()}/*`;
+      const route = routeByPattern.get(pattern);
+      if (routesReadable && route && !route.script) { ok = true; note = `${c.kind}: extra exclusion route ${pattern} present (Worker = None)`; }
     }
     rows.push({ name: record.name, type: record.type, content: record.content, proxied: Boolean(record.proxied), kind: c.kind, ok, note });
   }
