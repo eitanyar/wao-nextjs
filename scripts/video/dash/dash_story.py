@@ -38,7 +38,7 @@ No Hebrew in this file and none typed in story.json: every on-screen string is l
                                                   period) instead of captions
   "banner": {"from": "L4", "to": "L4|L5"},        banner window (time expressions, below)
   "no_captions": [ ],                             optional: further lines without captions
-  "endcard": "adsbot-v2" | "sitebot",
+  "endcard": "adsbot-v2" | "sitebot" | "sitebot-google",   sitebot-google = sitebot + the headline line above the button
   "end": {"at": "L8.end+0.20", "hold": 3.8},      END fade-in time and hold (default and required: END_HOLD 3.8 s)
   "blinks": "auto" | ["expr", ...], "slow_blinks": ["expr", ...],   auto = one blink in every between-line pause
   "glances": [["expr", "expr"]],                  sarcastic tile glance windows
@@ -102,6 +102,7 @@ GATE = -45.0
 PUSH2_DUR = 0.60                      # a later push back in (A1-30 push2)
 WHISPER_PY = f"{ROOT}/scratch/voice-venv/bin/python"
 WHISPER = f"{ROOT}/scripts/voice/lib/whisper_stt.py"
+SITEBOT_GOOGLE_HEADLINE = "docs/copy/site-bot-story-endcard-google-2026-11-15.waocopy.json"
 REC_DIR = f"{ROOT}/scratch/video-dash/a2-15/rec"
 REC = f"{REC_DIR}/AL1_dash.mp4"
 REC_MANIFEST = f"{REC_DIR}/recordings.manifest.json"
@@ -189,7 +190,7 @@ class Strings:
             self.SOURCES.update(product=A15.SOURCES["product"], url=A15.SOURCES["url"], demo_label=A15.SOURCES["demo_label"],
                                 stamp="ads-bot-end-card-v2 waocopy JSON sets[0].stamp (END card v2, Set 1, Noa PASS)",
                                 cta="ads-bot-end-card-v2 waocopy JSON sets[0].cta (== its landing_cta_match.if_set_1)")
-        elif kind == "sitebot":
+        elif kind in ("sitebot", "sitebot-google"):
             sys.path.insert(0, f"{ROOT}/scratch/video-dash/s1-15/build/tools")
             import strings as S1
             s = S1.load()
@@ -203,6 +204,10 @@ class Strings:
             self.SOURCES.update(product="lexicon entry config products.site-bot.nameLexiconId .clean", url="config products.site-bot.url",
                                 stamp="site-bot landingCopy.generated.ts launch_stamp (S1-15 END)", cta="site-bot landingCopy.generated.ts cta_primary (S1-15 END)",
                                 demo_label="s1-15-demo-site-patches waocopy JSON demo_label .text")
+            if kind == "sitebot-google":
+                raw = open(f"{ROOT}/{SITEBOT_GOOGLE_HEADLINE}", encoding="utf-8").read()
+                self.S["headline"] = json.loads(raw[raw.index("{"):])["headline"]
+                self.SOURCES["headline"] = f"{SITEBOT_GOOGLE_HEADLINE} .headline (waocopy Opus, names Google on the END card)"
         else:
             raise SystemExit(f"unknown endcard {kind}")
         assert "price" not in self.S
@@ -911,7 +916,7 @@ class Build:
         S = self.S.S
         o.wordmark()
         if "banner" in S: o.banner(S["banner"])
-        o.endcard(S["product"], self.S.product_dir, S["stamp"], S["cta"], S["url"], price=None)
+        o.endcard(S["product"], self.S.product_dir, S["stamp"], S["cta"], S["url"], price=None, headline=S.get("headline"))
         tdemo_job(o, S["demo_label"])
         for ov in self.overlays:
             if ov["kind"] == "bubble":
@@ -1382,7 +1387,7 @@ def evidence_cmd(story):
         st.chk(f"  card {c['name']}", m[c["name"]]["els"]["cap"]["text"], c["text"], "card split of the display line")
     if "banner" in S.S:
         st.chk("banner", m["banner"]["els"]["banner"]["text"], S.S["banner"], S.SOURCES["banner"])
-    for k in ("product", "stamp", "cta", "url"):
+    for k in ("product", "stamp", "cta", "url") + (("headline",) if "headline" in S.S else ()):
         st.chk(f"end {k}", m["endcard"]["els"][k]["text"], S.S[k], S.SOURCES[k])
     st.chk("end wordmark", m["endcard"]["els"]["wao"]["text"], "WAO", "config brand.wordmark")
     st.chk("corner wordmark", m["wordmark"]["els"]["wordmark"]["text"].strip(), "WAO", "config brand.wordmark")
@@ -1495,7 +1500,7 @@ def main():
         print("wrote", story.mp4[:-4] + "_contact_4fps.png", story.mp4[:-4] + "_strip_1fps.png")
     elif cmd == "endcard":
         b = Build(story)
-        rerender_endcard(story.ov, lambda o: o.endcard(b.S.S["product"], b.S.product_dir, b.S.S["stamp"], b.S.S["cta"], b.S.S["url"], price=None))
+        rerender_endcard(story.ov, lambda o: o.endcard(b.S.S["product"], b.S.product_dir, b.S.S["stamp"], b.S.S["cta"], b.S.S["url"], price=None, headline=b.S.S.get("headline")))
         Cut.finish(story.mp4, os.path.abspath(f"{story.ov}/endcard.png"))
     else: raise SystemExit(__doc__)
 

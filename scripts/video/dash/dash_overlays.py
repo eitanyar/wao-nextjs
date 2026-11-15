@@ -43,18 +43,19 @@ border:6px solid {NAVY};box-shadow:0 0 0 4px {OFF};transform:rotate(-2deg);white
 for(let i=0;i<30&&b.getBoundingClientRect().width>{GOOGLE_SAFE[2]-GOOGLE_SAFE[0]-24};i++){{f*=0.96;b.style.fontSize=f+'px';}}window.__font=f;}};"""
         self.job(name, W, H, f'<div id="wrap"><div id="b" dir="rtl" lang="he" data-m="banner">{E(text)}</div></div>', css, fit)
 
-    def endcard(self, product, product_dir, stamp, cta, url, price=None, name="endcard"):
+    def endcard(self, product, product_dir, stamp, cta, url, price=None, name="endcard", headline=None):
         """The S1-15 end card: logo, product, stamp, CTA pill, url (+ optional price line). Auto-fitted into the
         Google 9:16 safe zone. product_dir: "ltr" for a Latin name, "rtl" for a Hebrew one."""
         gx0, gy0, gx1, gy1 = GOOGLE_SAFE
         half = min(540 - gx0, gx1 - 540)
         k = 4.0
-        css = f"""#ec{{position:absolute;left:{540-half}px;width:{2*half}px;top:{gy0}px;height:{gy1-gy0+1}px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:{10*k}px;text-align:center}}
+        css = f"""#ec{{position:absolute;left:{540-half}px;width:{2*half}px;top:{gy0}px;height:{gy1-gy0+1}px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:{(7 if headline else 10)*k}px;text-align:center}}
 .logo{{display:flex;align-items:center;gap:{8*k}px;direction:ltr}} .logo .fav{{width:{30*k}px;height:{30*k}px}}
 .logo span{{font-weight:800;font-size:{32*k}px;letter-spacing:-.04em;color:{LOGO};line-height:1.1}}
 .prod{{font-weight:800;font-size:{24*k}px;color:{OFF};direction:{product_dir};unicode-bidi:isolate;line-height:1.15;white-space:nowrap}}
 .stamp{{font-size:{13.6*k}px;color:{MUTED};font-weight:500;direction:rtl;unicode-bidi:isolate;text-wrap:balance;line-height:1.3}}
 .price{{font-size:{13.6*k}px;color:{OFF};font-weight:500;direction:rtl;unicode-bidi:isolate}}
+.head{{font-weight:700;font-size:{16*k}px;color:{OFF};direction:rtl;unicode-bidi:isolate;text-wrap:balance;line-height:1.25;max-width:{2*half-40}px}}
 .btn{{background:{MINT};color:{NAVY};font-weight:700;border-radius:999px;padding:{9*k}px {16*k}px;font-size:{15.2*k}px;direction:rtl;unicode-bidi:isolate;white-space:nowrap}}
 .url{{font-weight:500;color:{OFF};font-size:{16*k}px;direction:ltr;unicode-bidi:isolate}}"""
         fit = f"""window.__fit=()=>{{const ec=document.getElementById('ec');let z=1;
@@ -66,6 +67,7 @@ if(!over&&!tall)break;z*=0.97;ec.style.zoom=z;}}window.__zoom=z;}};"""
 <div class="prod" dir="{product_dir}"{lang} data-m="product">{E(product)}</div>
 <div class="stamp" dir="rtl" lang="he" data-m="stamp">{E(stamp)}</div>
 {f'<div class="price" dir="rtl" lang="he" data-m="price">{E(price)}</div>' if price else ''}
+{f'<div class="head" dir="rtl" lang="he" data-m="headline">{E(headline)}</div>' if headline else ''}
 <div class="btn" dir="rtl" lang="he" data-m="cta">{E(cta)}</div>
 <div class="url" dir="ltr" data-m="url">{E(url)}</div>
 </div>"""
