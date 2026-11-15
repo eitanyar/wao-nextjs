@@ -395,3 +395,16 @@ first invoice. Pages for comparison costs $0 but hits the 100-project wall at cl
 - **Fixes found live:** R2 read-back failed on HTML (weak ETag under compression) → 9fcd972; zone Browser Cache TTL
   (1 year) leaked onto Worker cache hits → d07886c (Worker version 9f83209a).
 - Evidence: Adam's scratchpad `runs/live-2026-11-15/` (before/after captures, cmp output, rollback-drill.txt).
+
+### Own-domain test 2026-11-15 (Adam)
+- Domain: founder's `xn--6dblcab6b5bl.net` (DNS on Cloudflare, another account; mail = registrar forwarding).
+  Founder replaced `www` A/AAAA with `CNAME www → sites.wao.co.il` (DNS only).
+- Attach (`attach-domain.mjs --apply`): custom hostname active + ssl active in ~2 min (Google Trust Services WE1).
+  Found and fixed: health could never pass before the redeploy (no hosts/ entry) → the script now writes a pending
+  `redirect` entry first (73b3299). MX/TXT/NS identical to the pre-attach snapshot.
+- Record patched (ownerDomain, canonicalOrigin, customHostnameIds) on the runtime record; redeploy → canonical,
+  og:url, sitemap and schema carry `https://www.xn--6dblcab6b5bl.net`; subdomain and http 301 to it; 404/301 rules hold.
+- Lead from Origin `https://www.xn--6dblcab6b5bl.net` → stored under `test-plumber-tlv`; owner-email fallback sent
+  the staff alert (test record has no owner email). Acceptance 5 and 6: PASS.
+- Found: leads were stored inside the release folder (lost on each deploy). Fixed: WAO_LEADS_FILE_PATH +
+  WAO_PHONE_REVEALS_FILE_PATH → /home/wao/wao-runtime-data/ (founder approved), intelligence.ts reads the same path.
