@@ -45,6 +45,22 @@ export const D3B_CTA_RULE =
 export const D3B_REGISTER_RULE =
   '- NO BROCHURE REGISTER (binding): write the way the owner talks to one customer on the phone, not a pamphlet or an ad. No slogan lines, no stacked adjectives, no "solutions" vocabulary, no rhetorical marketing questions. Never end the narrative or an answer on a generic closing (the equivalents of "don\'t hesitate to contact us", "we are here for you", "contact us today", "we will be happy to help"); end on a concrete fact or the reader\'s situation.';
 
+/** D3b gate round 1 (Noa, 2026-11-15) rules g-k, shared by the write and QA prompts. English, abstract. */
+export const D3C_RULES: readonly string[] = [
+  '- NO INVENTED CUSTOMERS OR SETTINGS (binding): never name a customer type or setting (home, apartment, business, office, building, commercial, residential, and the like) unless BUSINESS DATA names it. Say what he fixes, not for whom or where, when the data does not say.',
+  '- NO SPEED LANGUAGE WITHOUT A RESPONSE TIME (binding): when Response Time in BUSINESS DATA is empty, write no speed or waiting-time language at all, even without a number (the equivalents of "fast", "quick", "right away", "without delays", "no waiting", "on the spot", "immediately"). When it is set, state only that response time, in the owner\'s terms.',
+  '- ONE VOICE PER PAGE (binding): pick one grammatical person for the business and keep it in every field. Never mix "we" and "I" on a page. Every FAQ answer matches the person the question addresses.',
+  '- NO INTERNAL LABELS (binding): never output an internal field name, field value or system label as copy (for example the Service Model value rendered as "field service", or a label such as "service area" / "core page"). formHeadline and ctaLabel are each an imperative or a question addressed to the reader, never a verbal-noun (action-noun) label.',
+  '- PHRASE ECONOMY (binding): the same arrival phrase (how or where he comes to the reader) may appear in at most two fields of the page; say it once well instead of in every field. Prefer a plain verb over a word that reads two ways when written without vowel points.',
+];
+
+/** Rule i, resolved per business: a field business is one owner, who speaks as "I". */
+export function voiceRuleFor(data: CollectedData): string {
+  return !data.serviceModel || data.serviceModel === 'field'
+    ? '- VOICE FOR THIS BUSINESS (binding): this is a one-owner field business. The owner speaks in the first person singular ("I") in every field; never "we", "us", "our" or a plural verb for the business. FAQ answers to a question addressed in the plural still answer as "I".'
+    : '- VOICE FOR THIS BUSINESS (binding): keep the single grammatical person you choose for the business in every field; never mix "we" and "I".';
+}
+
 export interface CoreThirtyPageCopy {
   pageHeadline: string; // H1. Max 60 chars. Names service + city, not generic.
   narrative: string; // 3-5 sentences, grounded in real onboarding facts. Max 500 chars.
@@ -142,6 +158,8 @@ ${D3B_FACT_RULES.join('\n')}
 ${D3B_TYPOGRAPHY_RULE}
 ${D3B_CTA_RULE}
 ${D3B_REGISTER_RULE}
+${D3C_RULES.join('\n')}
+${voiceRuleFor(data)}
 - metaDescription is at most ${META_DESCRIPTION_MAX_CHARS} characters, counted with spaces (hard cap — the system cuts
   anything longer at a word boundary, so a longer one loses its ending).
 
@@ -222,7 +240,8 @@ FIELDS:
 VOICE EXAMPLE (register and rhythm ONLY): the JSON below is a page written for a DIFFERENT business, trade
 and city. Match its plain spoken register, its concrete problem-first opening and its short sentences. Never
 copy any of its facts, services, equipment, places, numbers or phrases — every fact on your page comes from
-BUSINESS DATA only, and the geography rule above applies to it too.
+BUSINESS DATA only, and the geography rule above applies to it too. The example speaks as "we"; your page
+follows VOICE FOR THIS BUSINESS above, not the example's grammatical person.
 ${CORE_THIRTY_VOICE_EXAMPLE_JSON}
 
 BUSINESS DATA:
@@ -271,9 +290,10 @@ OUTPUT (JSON only, no markdown):
 export function buildCoreThirtyNoaPrompt(node?: CoreThirtyNode, data?: CollectedData): string {
   const source = node && data ? `
 
-SOURCE FACTS (the only facts and places this page may use — check rules 9-10 against them):
+SOURCE FACTS (the only facts and places this page may use — check rules 9-10 and 15-16 against them):
 Page service: ${node.service}
 Page city: ${node.city}
+Service Model: ${data.serviceModel || ''}
 Target Location (general): ${data.targetLocation || ''}
 Specific Cities: ${data.specificCities || ''}
 Street Address: ${data.streetAddress || ''}
@@ -312,6 +332,17 @@ Checklist (fix silently — no explanations):
    rephrase as sending details / asking for a call back (the button submits a lead form)
 14. Brochure or ad register, slogan lines, or a generic closing line (contact us / we're here for you
    / don't hesitate) -> remove the closing line or rewrite the sentence as plain spoken fact
+15. A customer type or setting (home, apartment, business, office, building, commercial, residential)
+   not named in SOURCE FACTS -> delete it
+16. Speed or waiting-time language (fast, quick, right away, without delays, no waiting, immediately)
+   while Response Time in SOURCE FACTS is empty -> delete it
+17. Mixed "we" and "I" on the page -> one voice throughout; when Service Model is "field" or empty
+   (a one-owner business) that voice is first person singular "I"; FAQ answers match the question
+18. An internal field name, field value or system label as copy (e.g. the Service Model value as
+   "field service") -> delete it; "formHeadline" or "ctaLabel" written as a verbal-noun label ->
+   rewrite it as an imperative or a question to the reader
+19. The same arrival phrase in more than two fields -> keep it in at most two; a word that reads two
+   ways without vowel points -> a plain verb
 
 Rules 2 and 3 apply ONLY inside Hebrew text content (JSON string values). Never alter the JSON
 structural characters themselves -- every property name and every string value must remain

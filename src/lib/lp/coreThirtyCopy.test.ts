@@ -168,6 +168,8 @@ import {
   capAtWordBoundary,
   normalizeDashes,
   finalizeCoreThirtyCopy,
+  D3C_RULES,
+  voiceRuleFor,
 } from './coreThirtyCopy';
 import { CORE_THIRTY_VOICE_EXAMPLE_JSON } from './coreThirtyVoiceExample.generated';
 
@@ -245,4 +247,36 @@ test('D3b: finalizeCoreThirtyCopy applies dashes to every string and caps metaDe
   assert.equal(all.includes(EN), false);
   assert.ok(out.metaDescription.length <= META_DESCRIPTION_MAX_CHARS);
   assert.equal(out.faqItems[0].a, `a ${EM} 2`);
+});
+
+test('D3b round 2 (g-k): write prompt carries customer-setting, speed, voice, label and phrase-economy rules', () => {
+  const prompt = buildCoreThirtyTamarPrompt(makeNode(), { ...baseData, serviceModel: 'field' });
+  for (const rule of D3C_RULES) assert.ok(prompt.includes(rule), rule.slice(0, 40));
+  assert.match(prompt, /never name a customer type or setting \(home, apartment, business, office, building, commercial/);
+  assert.match(prompt, /no speed or waiting-time language at all, even without a number/);
+  assert.match(prompt, /Never mix "we" and "I" on a page/);
+  assert.match(prompt, /never output an internal field name, field value or system label/);
+  assert.match(prompt, /formHeadline and ctaLabel are each an imperative or a question/);
+  assert.match(prompt, /same arrival phrase .* at most two fields/);
+  assert.match(prompt, /reads two ways when written without vowel points/);
+  assert.ok(prompt.includes(voiceRuleFor({ serviceModel: 'field' })));
+  assert.match(prompt, /one-owner field business\. The owner speaks in the first person singular/);
+  assert.match(prompt, /The example speaks as "we"; your page\s+follows VOICE FOR THIS BUSINESS/);
+});
+
+test('D3b round 2: voice rule is first person singular for field / unset, one-voice for other models', () => {
+  assert.match(voiceRuleFor({}), /first person singular/);
+  assert.match(voiceRuleFor({ serviceModel: 'field' }), /first person singular/);
+  assert.doesNotMatch(voiceRuleFor({ serviceModel: 'location' }), /first person singular/);
+  assert.match(voiceRuleFor({ serviceModel: 'location' }), /never mix "we" and "I"/);
+});
+
+test('D3b round 2: QA checklist adds items 15-19 and passes the Service Model in SOURCE FACTS', () => {
+  const qa = buildCoreThirtyNoaPrompt(makeNode(), { ...baseData, serviceModel: 'field' });
+  assert.match(qa, /15\. A customer type or setting/);
+  assert.match(qa, /16\. Speed or waiting-time language .*\n.*Response Time in SOURCE FACTS is empty/);
+  assert.match(qa, /17\. Mixed "we" and "I"/);
+  assert.match(qa, /18\. An internal field name, field value or system label/);
+  assert.match(qa, /19\. The same arrival phrase in more than two fields/);
+  assert.ok(qa.includes('Service Model: field'));
 });
