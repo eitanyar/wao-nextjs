@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import { createHash } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 
-export const SOURCE_SHA256 = '9912d5ca861767782a8a7998e6c56adffa53a81bc578408d31124557bb2d76cd';
+export const SOURCE_SHA256 = 'eeac9375400b0f9db3b9ce8a749f14166ad7f445463c35b06f5be945e7f616ad'; // 2026-11-15: Fable 5.2 clarity rewrite (waocopy), docs/copy/site-bot-audit-screens-clarity-2026-11-15.waocopy.json
 export const SOURCE_URL = new URL('../docs/copy/assisted-sitebot-pilot-microcopy-draft-2026-10-11.md', import.meta.url);
 export const OUTPUT_URL = new URL('../src/lib/site-bot/auditJourneyCopy.ts', import.meta.url);
 export const IDS = Object.freeze([

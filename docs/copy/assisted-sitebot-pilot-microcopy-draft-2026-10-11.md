@@ -135,9 +135,9 @@ Trigger/evidence: `audit-result/route.ts:GET:20–52` multi-candidate pick outco
 ambiguous or wrong-address matches require clarification, never an automatic pick (playbook
 step 1 decision).
 
-> נמצאו כמה עסקים עם שם דומה.
-> השווה את השם ואת הכתובת של כל אפשרות.
-> בחר את העסק שלך — רק אז נציג את תוצאת הבדיקה.
+> מצאנו כמה עסקים עם שם דומה.
+> תסתכל על השם והכתובת ותבחר את שלך.
+> מיד אחרי זה תקבל את התוצאות.
 
 ### SB_PICK_OPTION_BUTTON (compact, per candidate) [SOURCE]
 
@@ -149,9 +149,9 @@ Trigger/evidence: the sole-candidate GET currently returns `readyResponse` direc
 yes/no controls are a proposed interaction control layered on the source-evidenced ready seam;
 sole-match owner confirmation is a playbook operating requirement, not an evidenced UI feature.
 
-> נמצא עסק אחד בשם הזה — וצריך לוודא שזה שלך.
+> מצאנו עסק אחד בשם הזה.
 > שם: {business_name}. כתובת: {address}.
-> אם זה העסק שלך — ממשיכים לבדיקה.
+> זה העסק שלך?
 
 ### SB_CONFIRM_YES (compact) [PROPOSED]
 
@@ -175,24 +175,22 @@ alternative.
 Trigger/evidence: bridges into the available-data checklist after either the source-evidenced
 multi-candidate pick (`audit/page.tsx:141–150`) or the proposed sole-match confirmation gate.
 
-> מעולה — ממשיכים עם {business_name}.
-> הנה פרטי הפרופיל הזמינים לבדיקה, עם סימון ברור לכל סעיף.
+> מעולה, ממשיכים עם {business_name}.
+> הנה מה שבדקנו בפרופיל שלך, סעיף אחרי סעיף.
 
 ## 3. No match [SOURCE]
 
 ### SB_NOMATCH_TITLE (compact)
 
-> לא נמצא פרופיל עסקי בשם הזה
+> לא מצאנו פרופיל בשם הזה
 
 ### SB_NOMATCH_BODY
 Trigger/evidence: zero-results outcome (`audit-result/route.ts:20–52`). No match means no
 available result — not "no business" and not "no Google presence". No inferred details, no
 manufactured report (playbook step 1 decision; V2 claim-check #2).
 
-> זה לא אומר שהעסק שלך לא קיים או לא מופיע בגוגל.
-> יכול להיות שהשם רשום קצת אחרת, או שהמידע לא זמין לבדיקה.
-> שווה לנסות שוב — עם כתיב אחר או שם מלא יותר.
-> אנחנו לא מנחשים פרטים ולא ממציאים ממצאים.
+> יכול להיות שבגוגל השם רשום קצת אחרת, נגיד עם ״בע״מ״ בסוף או בלי שם המשפחה.
+> תנסה שוב עם השם המלא, או בכתיב אחר.
 
 ## 4. Check unavailable [SOURCE]
 
@@ -225,13 +223,13 @@ Trigger/evidence: scored snapshot for the confirmed business (`auditScore.ts:sco
 Six dimensions, presented as information available to this check only — not a ranking forecast,
 not local/customer visibility (playbook step 2; V2 claim-check #2, #4).
 
-> הנה תמונת מצב של פרטי הפרופיל העסקי שלך בגוגל — לפי המידע שזמין לבדיקה.
-> שישה סעיפים: קטגוריות, שעות פתיחה, תמונות, טלפון ואתר, ביקורות ותיאור.
-> לכל סעיף יש סימון אחד משלושה: מאושר, לא עבר או לא ידוע.
+> הנה מה שגוגל מראה על העסק שלך.
+> בדקנו שישה דברים: קטגוריות, שעות פתיחה, תמונות, טלפון ואתר, ביקורות ותיאור.
+> כל סעיף מקבל סימון: ״בסדר״, ״שווה תיקון״ או ״לא ראינו״.
 
 ### SB_STATUS_CONFIRMED (compact label)
 
-> מאושר ✓ — המידע הזה זמין בפרופיל, לפי הבדיקה
+> בסדר ✓ — זה מופיע בפרופיל שלך
 
 ### SB_STATUS_MISSING (compact label)
 Trigger/evidence: the label renders on a raw `fail` (`auditScore.ts:50–108`) and reports only
@@ -242,14 +240,14 @@ count threshold fail; hours fail on absent special hours; description on absent 
 — playbook §Evidence vocabulary). Owner verification remains the prerequisite for any asserted
 gap or fix (`SB_MISSING_ACTION`).
 
-> לא עבר — הסעיף לא עמד בבדיקה, אבל המידע עדיין יכול להיות קיים
+> שווה תיקון — לא מצאנו את זה בפרופיל, או שזה לא מלא
 
 ### SB_STATUS_UNKNOWN (compact label)
 Trigger/evidence: unknown means this check lacked sufficient evidence (`auditScore.ts:84` photos
 unknown when not fetched; `:53` categories unknown at count 0) — not that the information is
 inherently invisible from outside.
 
-> לא ידוע — לבדיקה הזו אין מספיק מידע על הסעיף
+> לא ראינו — גוגל לא הראה לנו את הסעיף הזה
 
 ### SB_MISSING_ACTION [SOURCE for the instruction seam; owner-correction intake PROPOSED]
 Trigger/evidence: a genuinely actionable gap gets one next step; owner verification precedes any
@@ -258,9 +256,9 @@ categories/hours/photos only. Owner-correction intake/recording is proposed/manu
 implemented record-saving feature is shown; the correction route offered here is the
 source-evidenced contact seam.
 
-> סעיף סומן כ״לא עבר״? קודם בודקים מה באמת רשום אצלך בפרופיל.
-> אם משהו באמת חסר בקטגוריות, בשעות או בתמונות — מחכות לך הוראות לתיקון עצמי.
-> אם המידע דווקא קיים — אפשר לספר לנו דרך טופס יצירת הקשר.
+> לפני שאתה מתקן סעיף ״שווה תיקון״, תיכנס לפרופיל ותראה מה רשום שם.
+> אם חסר משהו בקטגוריות, בשעות או בתמונות, השלבים לתקן לבד מחכים לך למטה.
+> ואם הכול רשום ובכל זאת סומן, תכתוב לנו בטופס יצירת הקשר.
 
 ### SB_UNKNOWN_VERIFY
 Trigger/evidence: unknown means insufficient evidence — never a proven defect; absent provider
@@ -272,16 +270,15 @@ and presence alone proves neither accuracy nor suitability (playbook :36). Raw h
 stays separate from this reviewed interpretation (playbook :40). This draft gathers no real
 evidence and creates no implemented verification control (playbook :56).
 
-> ״לא ידוע״ לא אומר שמשהו מקולקל — לבדיקה פשוט אין מספיק מידע.
-> רוצה לוודא? היכנס לפרופיל העסקי שלך בגוגל ובדוק בעצמך.
-> כדי לסגור ״לא ידוע״ צריך ביסוס מתאים: האישור שלך, מקור שתספק או בדיקה שאושרה בנפרד.
+> ״לא ראינו״ אומר רק שגוגל לא הראה לנו את הסעיף הזה. אצלך בפרופיל הוא יכול להיות מלא לגמרי.
+> אם אתה רוצה לדעת בטוח, תיכנס לפרופיל שלך בגוגל ותסתכל.
 
 ### SB_CHECKLIST_CANDOR (single quiet accuracy line)
 Trigger/evidence: one candor touch, never a lead (accepted voice direction; V2 claim-check #5–#7):
 the check writes nothing to the profile, promises no ranking, and shows unknowns honestly.
 
-> הבדיקה לא כותבת כלום בפרופיל שלך, וגם לא מבטיחה דירוג או חשיפה.
-> היא מראה בכנות מה זמין לבדיקה — ומה לא.
+> הבדיקה רק מסתכלת.
+> בפרופיל עצמו היא לא משנה כלום.
 
 ## 6. One supported self-fix — categories / hours / photos only [instruction seam SOURCE, fail-gated; completion control PROPOSED]
 
@@ -300,30 +297,30 @@ Trigger/evidence: the no-password/no-code boundary is stated for THIS workflow o
 universal future policy claim. Confirm legitimate access; no profile access leaves the self-fix
 pending (playbook step 3 and §Exceptions).
 
-> התיקון מתבצע בידיים שלך, דרך החשבון שלך בגוגל.
-> בתהליך הזה אנחנו לא נבקש ממך סיסמה או קוד אימות.
-> אין לך גישה לניהול הפרופיל? התיקון פשוט ימתין — וזה בסדר.
+> את התיקון אתה עושה לבד, מהחשבון שלך בגוגל.
+> אנחנו לא נבקש ממך סיסמה או קוד אימות.
+> אין לך גישה לניהול הפרופיל? התיקון יחכה עד שתהיה לך. אין לחץ.
 
 ### SB_FIX_CATEGORIES (steps)
 Trigger/evidence: fail-gated categories DIY instruction (`audit/page.tsx:18,161–163,219–254`).
 No minutes-based or any other update-timing expectation — existing evidence does not establish
 Google update timing; the last step asks the owner to observe the change, not presume success.
 
-> 1. נכנסים לפרופיל העסקי בגוגל — דרך החיפוש או המפות.
-> 2. בוחרים ״עריכת פרופיל״ ואז ״קטגוריות עסקיות״.
-> 3. מגדירים קטגוריה ראשית שמדויקת לעסק שלך.
-> 4. מוסיפים קטגוריות משנה רק אם באמת צריך.
-> 5. שומרים את השינוי, וחוזרים לפרופיל כדי לראות שהוא מופיע.
+> 1. תיכנס לפרופיל העסקי שלך בגוגל, מהחיפוש או מהמפות.
+> 2. תלחץ על ״עריכת פרופיל״ ואז על ״קטגוריות עסקיות״.
+> 3. תבחר קטגוריה ראשית שהיא המקצוע שלך עצמו, נגיד ״אינסטלטור״ ולא ״קבלן״.
+> 4. תוסיף עוד קטגוריה רק לשירות שאתה נותן קבוע, ולא לכל עבודה שיצא לך לעשות פעם.
+> 5. תשמור ותבדוק בפרופיל שהקטגוריה עלתה.
 
 ### SB_FIX_HOURS (steps)
 Trigger/evidence: fail-gated hours DIY instruction (same seam). No presumed save success — the
 final step is the owner's observed confirmation.
 
-> 1. נכנסים לפרופיל העסקי בגוגל.
-> 2. בוחרים ״עריכת פרופיל״ ואז ״שעות פתיחה״.
-> 3. מסמנים את ימי הפעילות ואת שעות הפתיחה המדויקות.
-> 4. יש חגים או שעות מיוחדות? כדאי לעדכן גם אותן.
-> 5. שומרים — וחוזרים לבדוק שהשינוי מופיע בפרופיל.
+> 1. תיכנס לפרופיל העסקי שלך בגוגל.
+> 2. תלחץ על ״עריכת פרופיל״ ואז על ״שעות פתיחה״.
+> 3. תסמן את הימים והשעות שבהם אתה עונה ללקוחות.
+> 4. תעדכן גם חגים ושעות מיוחדות, כדי שגוגל לא יראה ללקוח ״סגור״ ביום שאתה דווקא עובד.
+> 5. תשמור ותציץ בפרופיל שהשעות החדשות מופיעות.
 
 ### SB_FIX_PHOTOS (steps)
 Trigger/evidence: photos are presence/count data only — guidance asks for real, current photos;
@@ -331,11 +328,11 @@ nothing here validates authenticity or amplifies count as a value claim (playboo
 vocabulary; V2 claim-check #4). Completion is the owner's observed check, not a presumed upload
 success.
 
-> 1. נכנסים לפרופיל העסקי בגוגל.
-> 2. בוחרים ״תמונות״ ואז ״העלאה״.
-> 3. מעלים תמונות אמיתיות ועדכניות — חזית העסק, פנים, מוצרים או צוות.
-> 4. עדיפה תמונה ברורה עם תאורה טובה, בלי עריכה כבדה.
-> 5. שומרים ובודקים שהכול הועלה.
+> 1. תיכנס לפרופיל העסקי שלך בגוגל.
+> 2. תלחץ על ״תמונות״ ואז על ״העלאה״.
+> 3. תעלה תמונות אמיתיות מהשטח: עבודה גמורה, לפני ואחרי, הרכב שלך, אתה באמצע עבודה.
+> 4. תעדיף תמונה חדה באור טוב, ישר מהטלפון ובלי פילטרים.
+> 5. תשמור ותבדוק שכל התמונות עלו.
 
 ### SB_FIX_DONE_CONFIRM [PROPOSED on a SOURCE seam]
 Trigger/evidence: the completion-marking control and the saving of owner confirmations are
