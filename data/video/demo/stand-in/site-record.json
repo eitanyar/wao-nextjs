@@ -3,7 +3,7 @@
   "researchId": "sell-r1-eval-plumber-3",
   "approvedPageId": "home",
   "collectedData": {
-    "businessName": "TEST M2a Plumbing",
+    "businessName": "יוסי אינסטלטור ברעננה",
     "businessNiche": "plumber",
     "primaryService": "איתור נזילות",
     "secondaryServices": "פתיחת סתימות, התקנת דודים",
@@ -11,42 +11,34 @@
       "leak detection"
     ],
     "serviceModel": "field",
-    "targetLocation": "חולון",
-    "specificCities": "חולון, בת ים",
-    "travelBoundary": "עד 15 ק״מ מחולון",
-    "ownerName": "Test Owner A",
+    "targetLocation": "רעננה",
+    "specificCities": "רעננה, כפר סבא",
+    "travelBoundary": "עד 15 ק״מ מרעננה",
+    "ownerName": "יוסי לוי",
     "usp": "מתקן נזילות באותו יום עם בדיקת מצלמה, ואחריות שנתיים על כל עבודת צנרת",
     "idealClientFear": "שהאינסטלטור ישבור את האריחים בחדר האמבטיה, ישאיר בלגן וייעלם לשבוע",
     "yearsInField": "12 שנים",
     "guarantee": "אחריות שנתיים על עבודות צנרת",
-    "responseTime": "אותו יום בחולון ובבת ים",
-    "reviewQuote": "הגיע תוך שעה, איתר את הנזילה הנסתרת עם מצלמה והשאיר את חדר האמבטיה נקי.",
+    "responseTime": "אותו יום ברעננה ובכפר סבא",
     "pricingPromises": [
       "free_quote",
       "price_before_work"
     ],
-    "calloutFee": 150,
-    "startingPrices": [
-      {
-        "job": "איתור נזילות",
-        "from": 350
-      }
-    ],
-    "starRating": "5",
+    "starRating": "4.9",
+    "reviewCount": 15,
     "contactMethod": "phone",
     "phone": "050-0000000",
     "whatsappNumber": "050-0000000",
     "businessHours": "א׳–ה׳ 08:00–18:00"
   },
   "copy": {
-    "heroHeadline": "אינסטלטור בחולון: מאתר נזילות עם מצלמה ומתקן באותו יום",
+    "heroHeadline": "אינסטלטור ברעננה: מאתר נזילות עם מצלמה ומתקן באותו יום",
     "heroSubheadline": "אתה רואה את הנזילה על המסך לפני שאני נוגע בקיר",
     "heroCta": "התקשר עכשיו",
     "servicesHeadline": "במה אני מטפל",
     "formHeadline": "ספר לי מה קרה",
-    "aboutPageHeadline": "מאתר נזילות בבת ים עם מצלמה",
+    "aboutPageHeadline": "מאתר נזילות בכפר סבא עם מצלמה",
     "aboutPageBody": "אתה שומע טפטוף מאחורי הקיר בחדר האמבטיה ואין לך מושג מאיפה זה בא. אני מגיע עם מצלמה, סורק את הצנרת ומראה לך על המסך בדיוק איפה הנקודה. אתה יודע מה קורה אצלך בקיר.",
-    "reviewFeatured": "הגיע תוך שעה, איתר את הנזילה הנסתרת עם מצלמה והשאיר את חדר האמבטיה נקי.",
     "serviceItems": [
       "איתור נזילות",
       "פתיחת סתימות",
@@ -73,10 +65,10 @@
     "closeLine": "הנזילה מתוקנת היום. תגיד לי מה שמעת ואני כבר בדרך.",
     "trustBarItems": [
       "12 שנים במקצוע",
-      "חולון ובת ים",
-      "5 ★"
+      "רעננה וכפר סבא",
+      "4.9 ★"
     ],
-    "reviewContext": "5 ★",
+    "reviewContext": "4.9 ★",
     "stickyBarLine": "",
     "aboutBlurb": "",
     "guaranteeBlock": null,
@@ -93,15 +85,14 @@
         "faqCandidates": []
       },
       "copy": {
-        "heroHeadline": "אינסטלטור בחולון: מאתר נזילות עם מצלמה ומתקן באותו יום",
+        "heroHeadline": "אינסטלטור ברעננה: מאתר נזילות עם מצלמה ומתקן באותו יום",
         "heroSubheadline": "אתה רואה את הנזילה על המסך לפני שאני נוגע בקיר",
         "heroCta": "התקשר עכשיו",
         "servicesHeadline": "במה אני מטפל",
         "formHeadline": "ספר לי מה קרה",
-        "aboutPageHeadline": "מאתר נזילות בבת ים עם מצלמה",
+        "aboutPageHeadline": "מאתר נזילות בכפר סבא עם מצלמה",
         "aboutPageBody": "אתה שומע טפטוף מאחורי הקיר בחדר האמבטיה ואין לך מושג מאיפה זה בא. אני מגיע עם מצלמה, סורק את הצנרת ומראה לך על המסך בדיוק איפה הנקודה. אתה יודע מה קורה אצלך בקיר.",
-        "reviewFeatured": "הגיע תוך שעה, איתר את הנזילה הנסתרת עם מצלמה והשאיר את חדר האמבטיה נקי.",
-        "serviceItems": [
+            "serviceItems": [
           "איתור נזילות",
           "פתיחת סתימות",
           "התקנת דודים"
@@ -127,10 +118,10 @@
         "closeLine": "הנזילה מתוקנת היום. תגיד לי מה שמעת ואני כבר בדרך.",
         "trustBarItems": [
           "12 שנים במקצוע",
-          "חולון ובת ים",
-          "5 ★"
+          "רעננה וכפר סבא",
+          "4.9 ★"
         ],
-        "reviewContext": "5 ★",
+        "reviewContext": "4.9 ★",
         "stickyBarLine": "",
         "aboutBlurb": "",
         "guaranteeBlock": null,
@@ -143,10 +134,10 @@
       ],
       "seo": {
         "name": "אינסטלטור",
-        "city": "חולון",
+        "city": "רעננה",
         "serviceArea": [
-          "חולון",
-          "בת ים"
+          "רעננה",
+          "כפר סבא"
         ]
       }
     },
@@ -159,12 +150,11 @@
         "faqCandidates": []
       },
       "copy": {
-        "heroHeadline": "איתור נזילות בחולון — עם מצלמה, באותו יום",
+        "heroHeadline": "איתור נזילות ברעננה — עם מצלמה, באותו יום",
         "heroSubheadline": "מאתר את הנזילה דרך הקיר ומגיע ישירות למקור.",
         "heroCta": "התקשר עכשיו",
         "formHeadline": "ספר לי מה קרה",
-        "reviewFeatured": "הגיע תוך שעה, איתר את הנזילה הנסתרת עם מצלמה והשאיר את חדר האמבטיה נקי.",
-        "serviceItems": [
+            "serviceItems": [
           "איתור נזילות",
           "פתיחת סתימות",
           "התקנת דודים"
@@ -175,17 +165,9 @@
         "qaHeadline": null,
         "qaItems": [
           {
-            "questionId": "question-1",
-            "q": "כמה עולה איתור נזילות בחולון?",
-            "a": "אצל TEST M2a Plumbing, המחיר לאיתור נזילות בחולון מתחיל מ־350 ₪. דמי ההגעה: 150 ₪.",
-            "factIds": [
-              "system-pricing"
-            ]
-          },
-          {
             "questionId": "question-3",
             "q": "איך יודעים אם יש נזילה סמויה בדירה?",
-            "a": "אצל TEST M2a Plumbing בחולון: בדיקת מצלמה מאתרת נזילה סמויה גם כשהיא נסתרת. אני מגיע באותו יום בחולון ובבת ים.",
+            "a": "אצל יוסי אינסטלטור ברעננה, בדיקת מצלמה מאתרת נזילה סמויה גם כשהיא נסתרת. אני מגיע באותו יום ברעננה ובכפר סבא.",
             "factIds": [
               "offer",
               "proof-responseTime"
@@ -207,10 +189,10 @@
         "servicesHeadline": "במה אני מטפל",
         "trustBarItems": [
           "12 שנים במקצוע",
-          "חולון ובת ים",
-          "5 ★"
+          "רעננה וכפר סבא",
+          "4.9 ★"
         ],
-        "reviewContext": "5 ★",
+        "reviewContext": "4.9 ★",
         "stickyBarLine": "",
         "aboutBlurb": "",
         "guaranteeBlock": null,
@@ -222,10 +204,10 @@
       ],
       "seo": {
         "name": "איתור נזילות",
-        "city": "חולון",
+        "city": "רעננה",
         "serviceArea": [
-          "חולון",
-          "בת ים"
+          "רעננה",
+          "כפר סבא"
         ]
       }
     },
@@ -238,12 +220,11 @@
         "faqCandidates": []
       },
       "copy": {
-        "heroHeadline": "פתיחת סתימות בחולון — מגיע היום",
+        "heroHeadline": "פתיחת סתימות ברעננה — מגיע היום",
         "heroSubheadline": "פותח לך את הסתימה בחדר האמבטיה",
         "heroCta": "התקשר עכשיו",
         "formHeadline": "ספר לי מה קרה",
-        "reviewFeatured": "הגיע תוך שעה, איתר את הנזילה הנסתרת עם מצלמה והשאיר את חדר האמבטיה נקי.",
-        "serviceItems": [
+            "serviceItems": [
           "פתיחת סתימות",
           "איתור נזילות",
           "התקנת דודים"
@@ -268,10 +249,10 @@
         "servicesHeadline": "במה אני מטפל",
         "trustBarItems": [
           "12 שנים במקצוע",
-          "חולון ובת ים",
-          "5 ★"
+          "רעננה וכפר סבא",
+          "4.9 ★"
         ],
-        "reviewContext": "5 ★",
+        "reviewContext": "4.9 ★",
         "stickyBarLine": "",
         "aboutBlurb": "",
         "guaranteeBlock": null,
@@ -284,10 +265,10 @@
       ],
       "seo": {
         "name": "פתיחת סתימות",
-        "city": "חולון",
+        "city": "רעננה",
         "serviceArea": [
-          "חולון",
-          "בת ים"
+          "רעננה",
+          "כפר סבא"
         ]
       }
     },
@@ -300,12 +281,11 @@
         "faqCandidates": []
       },
       "copy": {
-        "heroHeadline": "התקנת דודים בחולון על הצנרת הקיימת",
+        "heroHeadline": "התקנת דודים ברעננה על הצנרת הקיימת",
         "heroSubheadline": "אני מחבר את הדוד לצנרת הקיימת, בודק כל חיבור ומשאיר את המקום נקי.",
         "heroCta": "התקשר להצעת מחיר",
         "formHeadline": "ספר לי מה אתה מתכנן",
-        "reviewFeatured": "הגיע תוך שעה, איתר את הנזילה הנסתרת עם מצלמה והשאיר את חדר האמבטיה נקי.",
-        "serviceItems": [
+            "serviceItems": [
           "התקנת דודים",
           "איתור נזילות",
           "פתיחת סתימות"
@@ -331,10 +311,10 @@
         "responseTimeBadge": null,
         "trustBarItems": [
           "12 שנים במקצוע",
-          "חולון ובת ים",
-          "5 ★"
+          "רעננה וכפר סבא",
+          "4.9 ★"
         ],
-        "reviewContext": "5 ★",
+        "reviewContext": "4.9 ★",
         "stickyBarLine": "",
         "aboutBlurb": "",
         "guaranteeBlock": null,
@@ -348,10 +328,10 @@
       ],
       "seo": {
         "name": "התקנת דודים",
-        "city": "חולון",
+        "city": "רעננה",
         "serviceArea": [
-          "חולון",
-          "בת ים"
+          "רעננה",
+          "כפר סבא"
         ]
       }
     }

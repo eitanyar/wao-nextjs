@@ -52,7 +52,11 @@ const INIT_CSS = "html{scroll-behavior:auto!important}nextjs-portal{display:none
  * Open a page for one clip. Returns the step helpers the shots use.
  * Every helper that shows something writes whole frames; `offRecord` runs steps without frames (a cut).
  */
-export async function openShot({ browser, set, outFile, policy, accent, fps = FPS, log = () => {} }) {
+/**
+ * watch = { name: selector }: per clip, the time each element is (even partly) on screen, counted per output frame;
+ * a part hidden under a sticky header does not count as off screen until it is fully under it.
+ */
+export async function openShot({ browser, set, outFile, policy, accent, fps = FPS, log = () => {}, watch = {} }) {
   const size = frameSize(set);
   mkdirSync(path.dirname(outFile), { recursive: true });
   const page = await browser.newPage();
@@ -99,15 +103,25 @@ export async function openShot({ browser, set, outFile, policy, accent, fps = FP
 
   let frames = 0;
   let last = null;
+  const exposure = Object.fromEntries(Object.keys(watch).map((k) => [k, 0]));
+  let visible = {};
   const marks = [];
   const checks = [];
   const write = async (buf, times = 1) => {
     for (let i = 0; i < times; i++) {
       if (!ff.stdin.write(buf)) await new Promise((ok) => ff.stdin.once("drain", ok));
       frames++;
+      for (const k of Object.keys(exposure)) if (visible[k]) exposure[k]++;
     }
   };
   const frame = async () => {
+    visible = await page.evaluate((w) => {
+      const header = [...document.querySelectorAll("header,nav")].filter((h) => ["sticky", "fixed"].includes(getComputedStyle(h).position)).reduce((m, h) => Math.max(m, h.getBoundingClientRect().bottom), 0);
+      return Object.fromEntries(Object.entries(w).map(([k, sel]) => [k, [...document.querySelectorAll(sel)].some((el) => {
+        const b = el.getBoundingClientRect();
+        return b.height > 0 && b.width > 0 && b.bottom > header && b.top < innerHeight && getComputedStyle(el).visibility !== "hidden";
+      })]));
+    }, watch);
     last = Buffer.from(await page.screenshot({ type: "png", captureBeyondViewport: false, optimizeForSpeed: true }));
     await write(last);
   };
@@ -155,7 +169,8 @@ export async function openShot({ browser, set, outFile, policy, accent, fps = FP
       if (n > 1) { await frame(); await write(last, n - 2); }
     },
     /** target: page Y, or a selector with { offset } px kept above it (default: just under a sticky header). */
-    async scrollTo(target, { offset = null, align = "top" } = {}) {
+    /** maxSpeed / minSeconds override the storyboard's scroll limit; only the reviews flick uses them (FLICK_MAX_PX_PER_S). */
+    async scrollTo(target, { offset = null, align = "top", maxSpeed, minSeconds } = {}) {
       const { from, to } = await page.evaluate((t, off, al) => {
         const max = Math.max(0, document.documentElement.scrollHeight - innerHeight);
         let y = t;
@@ -170,7 +185,7 @@ export async function openShot({ browser, set, outFile, policy, accent, fps = FP
         return { from: Math.round(scrollY), to: Math.round(Math.min(max, Math.max(0, y))) };
       }, target, offset, align);
       if (to === null) throw new Error(`scroll target not found: ${target}`);
-      for (const y of scrollFrames(from, to, { fps })) {
+      for (const y of scrollFrames(from, to, { fps, ...(maxSpeed ? { maxSpeed } : {}), ...(minSeconds !== undefined ? { minSeconds } : {}) })) {
         await page.evaluate((v) => scrollTo(0, v), y);
         await frame();
       }
@@ -235,7 +250,7 @@ export async function openShot({ browser, set, outFile, policy, accent, fps = FP
       await ffDone;
       const fontsFailed = await page.evaluate(() => [...document.fonts].filter((f) => f.status === "error").map((f) => f.family)).catch(() => []);
       await page.close();
-      return { frames, marks, checks, network: { mocked: [...new Set(network.mocked)], blocked: [...new Set(network.blocked)], silenced: [...new Set(network.silenced)], external: [...new Set(network.external)] }, pageErrors, fontsFailed: [...new Set(fontsFailed)] };
+      return { frames, marks, checks, exposure: Object.fromEntries(Object.entries(exposure).map(([k, n]) => [k, { frames: n, seconds: Math.round((n / fps) * 1000) / 1000 }])), network: { mocked: [...new Set(network.mocked)], blocked: [...new Set(network.blocked)], silenced: [...new Set(network.silenced)], external: [...new Set(network.external)] }, pageErrors, fontsFailed: [...new Set(fontsFailed)] };
     },
     async abort() {
       ff.stdin.destroy();

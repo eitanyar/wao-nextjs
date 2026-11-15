@@ -4,6 +4,7 @@
 
 import { existsSync, readFileSync, realpathSync } from "node:fs";
 import path from "node:path";
+import { dressingProblems, loadReviews, reviewTextProblems } from "./dressing.mjs";
 
 export const DEMO_SCHEMA = "wao.video.demo/1";
 export const AUDIT_ID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -58,16 +59,21 @@ const filled = (v) => (Array.isArray(v) ? v.length > 0 : v !== undefined && v !=
 export function storyboardProblems(record) {
   const d = record?.collectedData ?? {};
   const out = [];
-  if (["reviewQuote", "starRating", "reviewCount"].some((k) => filled(d[k]))) out.push("the record has a review quote or a star rating; the site would show it (storyboard: no review quotes, no star ratings with numbers)");
+  // Eitan, 2026-11-14: a star rating, review count and owner name are allowed on the demo business; a review quote is not.
+  if (filled(d.reviewQuote)) out.push("the record has a review quote; the site would show it (storyboard: no review quotes)");
   if (["startingPrices", "calloutFee", "pricingNotes", "avgJobValue"].some((k) => filled(d[k]))) out.push("the record has prices; a price on a demo screen breaks the rule that a price appears only on the end screen");
-  if (filled(d.ownerName)) out.push("the record has an owner name; the demo business must not name a person");
   if (/test|synthetic|eval/i.test(String(d.businessName ?? ""))) out.push("the business name is a test name");
   return out;
 }
 
-/** Why these recordings may not go into a release render. Empty = releasable. */
-export function releaseBlockers(demo, record) {
-  return [...(demo.status === "APPROVED" ? [] : ["demo business is a stand-in (copy not proofread, not approved)"]), ...storyboardProblems(record)];
+/**
+ * Why these recordings may not go into a release render. Empty = releasable. `reviews` = the dressing's review cards
+ * (loadReviews): a slot still holding REVIEW_TEXT_PENDING_n, or a line with a number or price, blocks release. Review
+ * cards are readable on purpose (Eitan, 2026-11-14); the recording keeps them on screen at most MAX_REVIEWS_ON_SCREEN_S,
+ * checked per clip in record.mjs.
+ */
+export function releaseBlockers(demo, record, reviews = null) {
+  return [...(demo.status === "APPROVED" ? [] : ["demo business is a stand-in (copy not proofread, not approved)"]), ...storyboardProblems(record), ...reviewTextProblems(reviews)];
 }
 
 const digits = (s) => String(s ?? "").replace(/\D/g, "");
@@ -117,7 +123,9 @@ export function loadDemo(file, { root }) {
   const record = JSON.parse(readFileSync(path.resolve(root, demo.siteRecord), "utf8"));
   const fiction = recordFictionProblems(record);
   if (fiction.length) throw new Error(`site record is not demo-safe:\n- ${fiction.join("\n- ")}`);
-  return { demo, record };
+  const dressing = dressingProblems(demo.dressing, { root });
+  if (dressing.length) throw new Error(`demo dressing invalid:\n- ${dressing.join("\n- ")}`);
+  return { demo, record, reviews: loadReviews(demo.dressing, { root }) };
 }
 
 /**

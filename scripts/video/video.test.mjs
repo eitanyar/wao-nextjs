@@ -165,6 +165,13 @@ test("cards: a price run and a lexicon product name are never split", () => {
   assert.deepEqual(captionUnits(`${W1} Site Bot ${W2}`).map((u) => u.text), [W1, "Site Bot", W2]);
 });
 
+test("cards: a doubled word is one unit and never split across cards", () => {
+  assert.deepEqual(captionUnits(`${W1} ${W2} ${W2}. ${W3}`).map((u) => u.text), [W1, `${W2} ${W2}.`, W3]);
+  assert.deepEqual(captionUnits(`${W2}, ${W2}`).map((u) => u.text), [`${W2},`, W2]); // a comma between = two beats
+  const line = `${W1} ${W2} ${W3} ${W4} ${W4} ${W1}.`;
+  assert.deepEqual(splitCards(line).map((c) => c.text), [`${W1} ${W2} ${W3}`, `${W4} ${W4} ${W1}.`]);
+});
+
 test("cards: every line of the approved Dash scripts splits into 2-4 word cards with no niqqud", { skip: !existsSync(path.join(ROOT, "docs/copy/video-dash-scripts-r4-final-candidate-2026-11-12.json")) }, () => {
   const doc = JSON.parse(readFileSync(path.join(ROOT, "docs/copy/video-dash-scripts-r4-final-candidate-2026-11-12.json"), "utf8"));
   const lexicon = JSON.parse(readFileSync(path.join(ROOT, "data/voice/pronunciation-lexicon.json"), "utf8"));

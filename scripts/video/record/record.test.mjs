@@ -10,8 +10,10 @@ import path from "node:path";
 import { ROOT } from "../../voice/lib/io.mjs";
 import { assertLocalBase, classifyRequest, STATIC_HOSTS } from "./lib/capture.mjs";
 import { auditReplies, htmlFictionProblems, loadDemo, recordFictionProblems, releaseBlockers, seedPathProblem, storyboardProblems, validateDemo } from "./lib/demo.mjs";
+import { MAX_REVIEWS_ON_SCREEN_S, dressingProblems, reviewTextProblems } from "./lib/dressing.mjs";
 import { FPS, MAX_SCROLL_PX_PER_S, VIEWPORTS, frameSize, graphemes, holdFrames, peakScrollSpeed, ringFrames, scrollFrames, typeFrames } from "./lib/motion.mjs";
 import { SHOTS } from "./lib/shots.mjs";
+import { MASKED_PHONE, NO_LOGIN_PIN_HASH, sandboxDirProblem, sandboxFiles, validateAdsSeed } from "./lib/adsSandbox.mjs";
 import { DIST_BUILD_COMMAND, loadProduct, renderDemoSite, resolveSiteFile, staleDist } from "./lib/site.mjs";
 import { clipName, parseArgs, siteFacts } from "./record.mjs";
 
@@ -143,10 +145,10 @@ test("stand-in data and storyboard-breaking facts block release", () => {
   assert.deepEqual(releaseBlockers(approved, clean), []);
   assert.equal(releaseBlockers(seed(), clean).length, 1);
   assert.equal(storyboardProblems({ collectedData: { reviewQuote: "q" } }).length, 1);
-  assert.equal(storyboardProblems({ collectedData: { starRating: "5" } }).length, 1);
+  assert.deepEqual(storyboardProblems({ collectedData: { starRating: "4.9", reviewCount: 15 } }), []);
   assert.equal(storyboardProblems({ collectedData: { startingPrices: [{ job: "x", from: 1 }] } }).length, 1);
   assert.equal(storyboardProblems({ collectedData: { calloutFee: 150 } }).length, 1);
-  assert.equal(storyboardProblems({ collectedData: { ownerName: "x" } }).length, 1);
+  assert.deepEqual(storyboardProblems({ collectedData: { ownerName: "x" } }), []);
   assert.equal(storyboardProblems({ collectedData: { businessName: "TEST M2a Plumbing" } }).length, 1);
   assert.deepEqual(storyboardProblems({ collectedData: { startingPrices: [], reviewQuote: " " } }), []);
   const { demo, record } = loadDemo(SEED, { root: ROOT });
@@ -170,16 +172,20 @@ test("audit replies have the API's shape and the product's own score", () => {
 // ---------------------------------------------------------------- shots and CLI
 
 test("shots cover the storyboard's real screens; S3 stays blocked with a reason", () => {
-  assert.deepEqual(Object.keys(SHOTS), ["S1", "S2", "S3", "S4"]);
-  assert.deepEqual(Object.values(SHOTS).map((s) => s.beat), ["B05", "B06", "B10", "B12"]);
+  assert.deepEqual(Object.keys(SHOTS), ["S1", "S2", "S3", "S4", "S1F", "AL1"]);
+  assert.deepEqual(Object.values(SHOTS).map((s) => s.beat), ["B05", "B06", "B10", "B12", "B05", "A2-15 PRD"]);
   assert.match(SHOTS.S3.blocked, /G4/);
   assert.equal(SHOTS.S3.run, undefined);
   for (const id of ["S1", "S2", "S4"]) assert.equal(typeof SHOTS[id].run, "function");
-  assert.deepEqual(parseArgs([]).shots, ["S1", "S2", "S4"]);
+  assert.deepEqual(parseArgs([]).shots, ["S1", "S2", "S4", "S1F"], "AL1 is opt-in");
+  assert.deepEqual(parseArgs([]).sets, ["mobile", "desktop"], "the dash set is opt-in");
+  assert.throws(() => parseArgs(["--shots", "AL1"]), /--ads-sandbox/);
+  assert.deepEqual(parseArgs(["--shots", "AL1", "--sets", "dash", "--ads-sandbox", "scratch/x"]).sets, ["dash"]);
   assert.throws(() => parseArgs(["--shots", "S9"]), /unknown shot/);
   assert.throws(() => parseArgs(["--sets", "tablet"]), /unknown viewport set/);
   assert.equal(clipName("S1", "mobile", true), "S1_mobile_DRAFT");
   assert.equal(clipName("S1", "mobile", false), "S1_mobile");
+  assert.equal(clipName(SHOTS.S1F.clip, "mobile", true, SHOTS.S1F.variant), "S1_mobile_FULLSITE_DRAFT");
 });
 
 test("S2 never clicks the call button; no shot touches checkout, fix or start routes", () => {
@@ -203,6 +209,64 @@ test("recorder source and seed contain no Hebrew (Hebrew comes only from the cop
   for (const f of [...files, path.join(ROOT, SEED)]) assert.ok(!/[\u0590-\u05FF]/.test(readFileSync(f, "utf8")), `${path.relative(ROOT, f)} contains Hebrew`);
 });
 
+// ---------------------------------------------------------------- Ads Bot leads sandbox (AL1)
+
+const BULLET3 = "\u2022".repeat(3);
+const BULLET2 = "\u2022".repeat(2);
+const NOW = new Date("2026-11-14T12:00:00Z");
+const adsSeed = () => ({
+  schema: "wao.video.ads-sandbox/1", fictional: true, clientId: "video-demo-ads", slug: "video-demo-ads-plumber", customerId: "000-000-0001", tapLeadId: 2,
+  leads: [
+    { id: 1, name: "A b.", phone: `050-${BULLET3}-${BULLET2}41`, date: "2026-11-14T08:00:00.000Z", type: "form", quality: "JUNK" },
+    { id: 2, name: "C d.", phone: `052-${BULLET3}-${BULLET2}07`, date: "2026-11-13T08:00:00.000Z", type: "phone-click", quality: "PENDING" },
+  ],
+});
+
+test("ads sandbox seed: fictional, masked, recent, non-stub, deal empty, one PENDING lead to tap", () => {
+  assert.deepEqual(validateAdsSeed(adsSeed(), { now: NOW }), []);
+  const bad = (edit) => { const s = adsSeed(); edit(s); return validateAdsSeed(s, { now: NOW }); };
+  assert.equal(bad((s) => { s.clientId = "retter"; }).length, 1, "a live-looking client id is refused");
+  assert.equal(bad((s) => { s.leads[0].phone = "050-1234567"; }).length, 1, "a dialable phone is refused");
+  assert.equal(bad((s) => { s.leads[1].name = ""; }).length, 1, "a stub (nameless) row is refused");
+  assert.equal(bad((s) => { s.leads[0].date = "2026-09-01T08:00:00.000Z"; }).length, 1, "an old date is refused");
+  assert.equal(bad((s) => { s.leads[0].revenue = 900; }).length, 1, "a filled deal is refused");
+  assert.equal(bad((s) => { s.leads[1].quality = "GOOD"; }).length, 1, "the tapped lead must start PENDING");
+  assert.equal(bad((s) => { s.leads[0].type = "email"; }).length, 1);
+  assert.ok(MASKED_PHONE.test(`053-${BULLET3}-${BULLET2}28`));
+});
+
+test("ads sandbox lives only under scratch/ or the OS temp dir, never data/", () => {
+  assert.equal(sandboxDirProblem("scratch/video-dash/a2-15/sandbox/run", ROOT), null);
+  assert.match(sandboxDirProblem("data/clients/video-demo-ads", ROOT), /data/);
+  assert.match(sandboxDirProblem("data/video/demo/sb", ROOT), /data/);
+  assert.match(sandboxDirProblem("src/data", ROOT), /scratch/);
+});
+
+test("ads sandbox files: an un-loginable auth record, the campaign index, the leads", () => {
+  const f = sandboxFiles(adsSeed(), { now: NOW });
+  assert.deepEqual(Object.keys(f).sort(), ["clients/video-demo-ads/client-auth.json", "clients/video-demo-ads/google-ads.json", "leads.json"]);
+  const auth = f["clients/video-demo-ads/client-auth.json"];
+  assert.equal(auth.pinHash, NO_LOGIN_PIN_HASH);
+  assert.ok(!/^scrypt-v1\$/.test(auth.pinHash), "never a verifiable PIN hash");
+  assert.equal(auth.mustChangePin, false);
+  assert.ok(f["leads.json"].every((l) => l.slug === "video-demo-ads-plumber" && !("revenue" in l)));
+  assert.equal(f["clients/video-demo-ads/google-ads.json"].campaigns[0].slug, "video-demo-ads-plumber");
+});
+
+test("the recorder's session cookie name matches the product's", () => {
+  const src = readFileSync(path.join(ROOT, "src/lib/client-auth.ts"), "utf8");
+  assert.match(src, /export const COOKIE_NAME = 'wao-client';/);
+  assert.match(readFileSync(path.join(ROOT, "scripts/video/record/record.mjs"), "utf8"), /const ADS_COOKIE = "wao-client";/);
+  assert.match(readFileSync(path.join(ROOT, "scripts/video/record/lib/shots.mjs"), "utf8"), /name: "wao-client"/);
+});
+
+test("the dash viewport matches the in-cab screen's story area (604x946) and is even", () => {
+  const d = VIEWPORTS.dash;
+  assert.ok(Math.abs(d.width / d.height - 604 / 946) < 0.002);
+  assert.deepEqual(frameSize(d), { width: 1360, height: 2132 });
+  assert.equal(d.optIn, true);
+});
+
 // ---------------------------------------------------------------- render (compiled product modules)
 
 test("the demo site renders through the product renderer and is demo-safe", { skip: staleDist(ROOT).length ? `compiled modules are stale; run \`${DIST_BUILD_COMMAND}\`` : false }, async () => {
@@ -221,4 +285,44 @@ test("the demo site renders through the product renderer and is demo-safe", { sk
   assert.equal(audit.result.score.total, 6);
   assert.equal(audit.result.score.dimensions.length, 6);
   assert.equal(audit.result.score.dimensions.find((d) => d.key === "phone_website").status, "pass", "the demo business has a site, so the check must not say it has none");
+});
+
+// ---------------------------------------------------------------- demo dressing (photos, reviews)
+
+test("review cards: approved text releases, a placeholder or a number blocks, the on-screen limit is 0.8s", () => {
+  const ok = { cards: [{ name: "A", stars: 5, text: "fine work" }] };
+  assert.deepEqual(reviewTextProblems(ok), []);
+  assert.equal(reviewTextProblems({ cards: [{ name: "A", stars: 5, text: "REVIEW_TEXT_PENDING_3" }] }).length, 1);
+  assert.equal(reviewTextProblems({ cards: [{ name: "A", stars: 5, text: "came in 20 minutes" }] }).length, 1);
+  const approved = { ...seed(), status: "APPROVED" };
+  assert.equal(releaseBlockers(approved, { collectedData: {} }, { cards: [{ name: "A", stars: 5, text: "REVIEW_TEXT_PENDING_1" }] }).length, 1);
+  assert.equal(MAX_REVIEWS_ON_SCREEN_S, 0.8);
+  const { reviews } = loadDemo(SEED, { root: ROOT });
+  assert.equal(reviews.cards.length, 6);
+  assert.deepEqual(reviews.cards.map((c) => c.stars), [5, 5, 5, 4, 5, 5]);
+  assert.deepEqual(reviewTextProblems(reviews), [], "every slot filled with approved copy");
+});
+
+test("dressing photos must be the approved local JPEGs, flagged AI-made", () => {
+  const d = seed().dressing;
+  assert.deepEqual(dressingProblems(d, { root: ROOT }), []);
+  assert.ok(dressingProblems({ ...d, photos: { ...d.photos, aiGenerated: false } }, { root: ROOT }).some((e) => /aiGenerated/.test(e)));
+  assert.ok(dressingProblems({ ...d, photos: { ...d.photos, owner: "https://example.com/a.jpg" } }, { root: ROOT }).some((e) => /must be a \.jpg/.test(e)));
+  assert.ok(dressingProblems({ ...d, photos: { ...d.photos, owner: "data/clients/x.jpg" } }, { root: ROOT }).length);
+});
+
+test("the dressed home page: owner photo in the about section, then plain review cards, then the gallery", { skip: staleDist(ROOT).length ? `compiled modules are stale; run \`${DIST_BUILD_COMMAND}\`` : false }, async () => {
+  const { demo, record, reviews } = loadDemo(SEED, { root: ROOT });
+  const product = await loadProduct(ROOT);
+  const files = renderDemoSite({ demo, record, product, root: ROOT });
+  const html = files["index.html"];
+  const about = html.indexOf('<section id="about"');
+  assert.ok(about > 0 && html.indexOf("data-demo-owner") > about);
+  assert.ok(html.indexOf("data-demo-reviews") > about && html.indexOf('id="gallery"') > html.indexOf("data-demo-reviews"), "about, reviews, gallery");
+  assert.equal(html.match(/data-review-card/g).length, reviews.cards.length);
+  for (const c of reviews.cards) assert.ok(html.includes(c.text) && html.includes(c.name));
+  assert.ok(!/blur\(|REVIEW_TEXT_PENDING/.test(html), "no blur, no placeholder");
+  for (const f of demo.dressing.photos.work) assert.ok(Buffer.isBuffer(files[`media/${path.basename(f)}`]));
+  assert.equal(resolveSiteFile(files, "/media/owner.jpg"), "media/owner.jpg");
+  assert.ok(!Object.entries(files).some(([f, h]) => f.endsWith(".html") && /\u05F4[^\u05F4]*\u05F4<\/p>/.test(h) && h.includes("<blockquote")), "the renderer's old verbatim quote is gone");
 });

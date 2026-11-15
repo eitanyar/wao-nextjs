@@ -6,10 +6,20 @@
   "statusNote": "STAND_IN = an existing eval record (test names, copy not proofread). Recordings come out marked DRAFT and are blocked from release. Set APPROVED only after the spec's approval chain, with the three sign-offs filled in below.",
   "approvals": { "copy": null, "languageQa": null, "founder": null },
   "siteRecord": "data/video/demo/stand-in/site-record.json",
-  "siteRecordSource": "byte-exact copy of scratch/sell-r1/eval/plumber-3/site-record.json (sha256 6f62e8da42d6bea991984083a652b49de1e97c52be5ce35a06f14d7b93d0219b)",
+  "siteRecordSource": "scratch/sell-r1/eval/plumber-3/site-record.json (sha256 6f62e8da42d6bea991984083a652b49de1e97c52be5ce35a06f14d7b93d0219b), then patched 2026-11-14 for the S1-15 Dash pilot (Eitan): business name from the approved shot plan, rating 4.9 with 15 reviews, prices and the price Q&A removed; then the 15 Noa-PASS patches of docs/copy/s1-15-demo-site-patches-2026-11-14.waocopy.json (city moved to Raanana / Kfar Saba, test owner name replaced)",
   "slug": "demo-plumber",
   "canonicalOrigin": "https://demo-plumber.invalid",
   "servicePath": "/services/leak-detection",
+  "dressing": {
+    "note": "Recorder-side additions to the rendered demo site (scripts/video/record/lib/dressing.mjs). The product renderer has no photo slot yet (heroPhotoSlot renders nothing until the GBP connection, Yonatan conditions 4/9) and no multi-review block, so these are injected into the served HTML for the video only; nothing here reaches the product. Approved by Eitan 2026-11-14.",
+    "photos": {
+      "aiGenerated": true,
+      "source": "scratch/video-dash/demo-site/photos/*-a.png (AI-made, fictional; Eitan approved 2026-11-14), compressed to JPEG",
+      "owner": "data/video/demo/photos/owner.jpg",
+      "work": ["data/video/demo/photos/camera.jpg", "data/video/demo/photos/sink.jpg", "data/video/demo/photos/bath.jpg", "data/video/demo/photos/van.jpg"]
+    },
+    "reviews": "data/video/demo/reviews.json"
+  },
   "audit": {
     "auditId": "0d3e0000-0000-4000-8000-000000000001",
     "placeId": "demo-place-0001",
@@ -22,7 +32,7 @@
       "photosFetched": true,
       "photoCount": 0,
       "hasRating": true,
-      "userRatingCount": 4,
+      "userRatingCount": 15,
       "hasEditorialSummary": false
     }
   }

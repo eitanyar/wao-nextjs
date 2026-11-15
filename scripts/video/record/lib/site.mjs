@@ -8,12 +8,14 @@ import { createServer } from "node:http";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 import { htmlFictionProblems } from "./demo.mjs";
+import { dressDemoSite, loadReviews } from "./dressing.mjs";
 
 const DIST_MODULES = {
   researchToSite: ["dist/lib/site-bot/researchToSite.js", "src/lib/site-bot/researchToSite.ts"],
   researchedSite: ["dist/lib/lp/researchedSite.js", "src/lib/lp/researchedSite.ts"],
   businessHours: ["dist/lib/lp/businessHours.js", "src/lib/lp/businessHours.ts"],
   auditScore: ["dist/lib/gbp/auditScore.js", "src/lib/gbp/auditScore.ts"],
+  siteLabels: ["dist/lib/lp/researchedSiteLabels.js", "src/lib/lp/researchedSiteLabels.ts"],
 };
 export const DIST_BUILD_COMMAND = "npx tsc -p tsconfig.test.json";
 
@@ -36,17 +38,21 @@ export async function loadProduct(root) {
     const m = await import(pathToFileURL(path.join(root, DIST_MODULES[key][0])).href);
     return m.default && typeof m.default === "object" ? { ...m.default, ...m } : m;
   };
-  const [rts, rs, bh, as] = await Promise.all(["researchToSite", "researchedSite", "businessHours", "auditScore"].map(load));
+  const [rts, rs, bh, as, sl] = await Promise.all(["researchToSite", "researchedSite", "businessHours", "auditScore", "siteLabels"].map(load));
   return {
     researchedRenderInputs: rts.researchedRenderInputs,
     renderResearchedSitePages: rs.renderResearchedSitePages,
     displayBusinessHours: bh.displayBusinessHours,
     scoreAudit: as.scoreAudit,
+    siteLabels: sl.RESEARCHED_SITE_LABELS,
   };
 }
 
-/** Render the demo site exactly as a deploy would, on the demo's own (reserved) domain. */
-export function renderDemoSite({ demo, record, product }) {
+/**
+ * Render the demo site exactly as a deploy would, on the demo's own (reserved) domain, then add the seed's
+ * video dressing (photos, reviews; lib/dressing.mjs), which the product renderer does not draw yet.
+ */
+export function renderDemoSite({ demo, record, product, root }) {
   const data = structuredClone(record.collectedData);
   const files = product.renderResearchedSitePages({
     ...product.researchedRenderInputs(data, demo.slug),
@@ -56,9 +62,12 @@ export function renderDemoSite({ demo, record, product }) {
     pages: structuredClone(record.researchedPages),
     graphEdges: structuredClone(record.researchedGraphEdges ?? []),
   });
-  const problems = htmlFictionProblems(files);
+  const dressed = demo.dressing && root
+    ? dressDemoSite(files, { dressing: demo.dressing, reviews: loadReviews(demo.dressing, { root }), reviewsHeading: product.siteLabels.proofHeadingReviews, root })
+    : files;
+  const problems = htmlFictionProblems(dressed);
   if (problems.length) throw new Error(`rendered demo site is not demo-safe:\n- ${problems.join("\n- ")}`);
-  return files;
+  return dressed;
 }
 
 /** Cloudflare-Pages-like lookup: `/x` serves x.html, `/a/` serves a/index.html. */
@@ -68,7 +77,7 @@ export function resolveSiteFile(files, pathname) {
   return [requested, `${requested}.html`, `${requested}index.html`].find((c) => c in files) ?? null;
 }
 
-const TYPES = { ".html": "text/html; charset=utf-8", ".xml": "application/xml; charset=utf-8", ".json": "application/json; charset=utf-8", ".svg": "image/svg+xml", ".txt": "text/plain; charset=utf-8" };
+const TYPES = { ".html": "text/html; charset=utf-8", ".xml": "application/xml; charset=utf-8", ".json": "application/json; charset=utf-8", ".svg": "image/svg+xml", ".txt": "text/plain; charset=utf-8", ".jpg": "image/jpeg", ".jpeg": "image/jpeg" };
 
 export async function serveFiles(files) {
   const server = createServer((req, res) => {

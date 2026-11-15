@@ -4,12 +4,15 @@
 //
 // node scripts/video/record/record.mjs [--shots S1,S2,S4] [--sets mobile,desktop]
 //      [--base-url http://127.0.0.1:3271] [--demo data/video/demo/demo-business.json]
-//      [--out scratch/video-out/recordings] [--list]
+//      [--out scratch/video-out/recordings] [--ads-sandbox <dir>] [--list]
 //
 // S1/S2 (generated demo site) need no server: the site record is rendered by the
 // product's compiled renderer and served from memory. S4 (free check) needs a LOCAL
 // dev server (--base-url, loopback only); its two API calls are answered from the
 // seed, so no Places lookup is made and nothing is written to data/.
+// AL1 (Ads Bot leads screen) is opt-in: it needs a sandbox prepared by
+// ads-sandbox.mjs and a dev server started with that sandbox's env; the page's
+// mark POST is answered by the recorder, so nothing is written anywhere.
 // Output: <out>/{shot}_{set}[_DRAFT].mp4 + .png (last frame) + recordings.manifest.json
 // HEBREW-SAFETY: this file contains ZERO Hebrew bytes.
 
@@ -22,14 +25,17 @@ import { ffprobe, sha256File } from "../lib/compose.mjs";
 import { launchBrowser } from "../lib/render.mjs";
 import { STATIC_HOSTS, assertLocalBase, openShot } from "./lib/capture.mjs";
 import { auditReplies, loadDemo, releaseBlockers } from "./lib/demo.mjs";
+import { loadAdsSandbox, sandboxSessionToken } from "./lib/adsSandbox.mjs";
+import { MAX_REVIEWS_ON_SCREEN_S, REVIEWS_SELECTOR } from "./lib/dressing.mjs";
 import { FPS, VIEWPORTS, frameSize } from "./lib/motion.mjs";
 import { SHOTS, SHOT_IDS } from "./lib/shots.mjs";
 import { loadProduct, renderDemoSite, serveFiles } from "./lib/site.mjs";
 
 const rel = (f) => path.relative(ROOT, f);
+const ADS_COOKIE = "wao-client"; // COOKIE_NAME in src/lib/client-auth.ts (asserted in record.test.mjs)
 
 export function parseArgs(argv) {
-  const o = { shots: SHOT_IDS.filter((id) => !SHOTS[id].blocked), sets: Object.keys(VIEWPORTS), baseUrl: null, demo: "data/video/demo/demo-business.json", out: path.join(ROOT, "scratch/video-out/recordings"), config: path.join(ROOT, "data/video/config.json"), list: false };
+  const o = { shots: SHOT_IDS.filter((id) => !SHOTS[id].blocked && !SHOTS[id].optIn), sets: null, adsSandbox: null, baseUrl: null, demo: "data/video/demo/demo-business.json", out: path.join(ROOT, "scratch/video-out/recordings"), config: path.join(ROOT, "data/video/config.json"), list: false };
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
     if (a === "--shots") o.shots = argv[++i].split(",");
@@ -38,15 +44,20 @@ export function parseArgs(argv) {
     else if (a === "--demo") o.demo = argv[++i];
     else if (a === "--out") o.out = path.resolve(argv[++i]);
     else if (a === "--config") o.config = path.resolve(argv[++i]);
+    else if (a === "--ads-sandbox") o.adsSandbox = argv[++i];
     else if (a === "--list") o.list = true;
     else throw new Error(`unexpected argument: ${a}`);
   }
   for (const id of o.shots) if (!SHOTS[id]) throw new Error(`unknown shot ${id} (known: ${SHOT_IDS.join(", ")})`);
+  // Default viewport sets: the storyboard's sets (mobile, desktop); opt-in sets (dash) only when asked for.
+  o.sets ??= Object.keys(VIEWPORTS).filter((s) => !VIEWPORTS[s].optIn);
+  if (o.shots.some((id) => SHOTS[id].needs === "adsSandbox") && !o.adsSandbox) throw new Error("shot AL1 needs --ads-sandbox <dir> (prepare it with scripts/video/record/ads-sandbox.mjs)");
   for (const s of o.sets) if (!VIEWPORTS[s]) throw new Error(`unknown viewport set ${s} (known: ${Object.keys(VIEWPORTS).join(", ")})`);
   return o;
 }
 
-export const clipName = (shot, set, draft) => `${shot}_${set}${draft ? "_DRAFT" : ""}`;
+/** `{clip}_{set}[_{variant}][_DRAFT]`; a shot may record under another clip id with a variant (S1F -> S1_mobile_FULLSITE). */
+export const clipName = (shot, set, draft, variant = null) => `${shot}_${set}${variant ? `_${variant}` : ""}${draft ? "_DRAFT" : ""}`;
 
 /** What the shots need to know about the rendered demo site. */
 export function siteFacts(files, record, product) {
@@ -69,11 +80,11 @@ async function main() {
     return;
   }
   const config = JSON.parse(readFileSync(o.config, "utf8"));
-  const { demo, record } = loadDemo(o.demo, { root: ROOT });
-  const blockers = releaseBlockers(demo, record);
+  const { demo, record, reviews } = loadDemo(o.demo, { root: ROOT });
+  const blockers = releaseBlockers(demo, record, reviews);
   const draft = blockers.length > 0;
   const product = await loadProduct(ROOT);
-  const files = renderDemoSite({ demo, record, product });
+  const files = renderDemoSite({ demo, record, product, root: ROOT });
   const audit = auditReplies(demo, record, product.scoreAudit);
   const wanted = o.shots.filter((id) => !SHOTS[id].blocked);
   const needsApp = wanted.some((id) => SHOTS[id].source === "app");
@@ -85,7 +96,19 @@ async function main() {
     if (res.status !== 200) throw new Error(`${baseOrigin}/site-bot/audit answered ${res.status}; is the dev server up?`);
   }
   const site = await serveFiles(files);
-  const env = { demo, record, audit, siteUrl: site.url, baseUrl: baseOrigin, ...siteFacts(files, record, product) };
+  const env = { demo, record, reviews, audit, siteUrl: site.url, baseUrl: baseOrigin, ...siteFacts(files, record, product) };
+  const extraMocks = [];
+  if (o.adsSandbox) {
+    env.adsSandbox = loadAdsSandbox(o.adsSandbox, { root: ROOT });
+    env.adsToken = await sandboxSessionToken(env.adsSandbox, { root: ROOT });
+    // Preflight: the dev server must be reading THIS sandbox (a server on the live clients dir redirects to login).
+    const res = await fetch(`${baseOrigin}/client/leads`, { redirect: "manual", headers: { cookie: `${ADS_COOKIE}=${env.adsToken}` } });
+    const html = res.status === 200 ? await res.text() : "";
+    const missing = env.adsSandbox.leads.filter((l) => !html.includes(l.name)).map((l) => l.id);
+    if (res.status !== 200 || missing.length) throw new Error(`${baseOrigin}/client/leads answered ${res.status}${missing.length ? `, leads missing: ${missing.join(",")}` : ""}; start the dev server with the sandbox env printed by ads-sandbox.mjs`);
+    // The owner's mark is a POST: answered here, never sent to the server.
+    extraMocks.push({ method: "POST", pathname: "/api/client/leads", body: { ok: true } });
+  }
   const policy = {
     localOrigins: [site.url, ...(baseOrigin ? [baseOrigin] : [])],
     staticHosts: STATIC_HOSTS,
@@ -93,6 +116,7 @@ async function main() {
     mocks: [
       { method: "POST", pathname: "/api/site-bot/audit-lookup", body: audit.lookup },
       { method: "GET", pathname: "/api/site-bot/audit-result", body: audit.result },
+      ...extraMocks,
     ],
   };
   mkdirSync(o.out, { recursive: true });
@@ -110,16 +134,19 @@ async function main() {
         console.log(`${id} BLOCKED: ${shot.blocked}`);
         continue;
       }
+      // The Site Bot demo seed's release blockers do not apply to the Ads Bot sandbox shot.
+      const shotBlockers = shot.needs === "adsSandbox" ? [] : blockers;
+      const shotDraft = shotBlockers.length > 0;
       for (const setName of o.sets) {
         const set = VIEWPORTS[setName];
-        const name = clipName(id, setName, draft);
+        const name = clipName(shot.clip ?? id, setName, shotDraft, shot.variant);
         const outFile = path.join(o.out, `${name}.mp4`);
         // A clip from an earlier run with the other status would be stale: remove it.
-        for (const stale of [clipName(id, setName, !draft)]) {
+        for (const stale of [clipName(shot.clip ?? id, setName, !shotDraft, shot.variant)]) {
           for (const ext of [".mp4", ".png"]) rmSync(path.join(o.out, `${stale}${ext}`), { force: true });
           delete clips[stale];
         }
-        const ctx = await openShot({ browser, set, outFile, policy, accent: config.brand.accent, fps: config.video?.fps ?? FPS, log: console.log });
+        const ctx = await openShot({ browser, set, outFile, policy, accent: config.brand.accent, fps: config.video?.fps ?? FPS, log: console.log, watch: { reviews: REVIEWS_SELECTOR } });
         try {
           await shot.run(ctx, env);
           await ctx.poster(path.join(o.out, `${name}.png`));
@@ -131,11 +158,13 @@ async function main() {
           if (probe.video?.fps !== `${ctx.fps}/1`) problems.push(`frame rate ${probe.video?.fps}`);
           if (Math.abs(probe.duration - done.frames / ctx.fps) > 0.05) problems.push(`duration ${probe.duration}s for ${done.frames} frames`);
           if (done.network.blocked.some((b) => b.includes("/api/"))) problems.push("the page made an API call that has no seeded reply");
+          // Eitan, 2026-11-14: the review cards are readable, so the scroll must pass them fast in every clip.
+          if (done.exposure.reviews.seconds > MAX_REVIEWS_ON_SCREEN_S) problems.push(`the reviews were on screen ${done.exposure.reviews.seconds}s (limit ${MAX_REVIEWS_ON_SCREEN_S}s)`);
           clips[name] = {
             shot: id, beat: shot.beat, title: shot.title, set: setName, aspects: set.aspects, status: problems.length ? "failed" : "ok", problems,
             file: rel(outFile), sha256: sha256File(outFile), width: size.width, height: size.height, cssViewport: `${set.width}x${set.height}@${set.dpr}`, fps: ctx.fps,
             frames: done.frames, seconds: Math.round((done.frames / ctx.fps) * 1000) / 1000, marks: done.marks, checks: done.checks,
-            network: done.network, pageErrors: done.pageErrors, fontsFailed: done.fontsFailed, draft, releaseBlockers: blockers,
+            network: done.network, exposure: done.exposure, pageErrors: done.pageErrors, fontsFailed: done.fontsFailed, draft: shotDraft, releaseBlockers: shotBlockers,
           };
           if (problems.length) failed++;
           console.log(`  ${problems.length ? "FAILED" : "ok"}  ${name}.mp4  ${clips[name].seconds}s  marks: ${done.marks.map((m) => `${m.name}@${m.t}`).join(", ") || "-"}${problems.length ? `\n    ${problems.join("\n    ")}` : ""}`);
@@ -144,7 +173,7 @@ async function main() {
           failed++;
           await ctx.abort();
           rmSync(outFile, { force: true });
-          clips[name] = { shot: id, beat: shot.beat, title: shot.title, set: setName, status: "failed", problems: [String(e.message)], draft, releaseBlockers: blockers };
+          clips[name] = { shot: id, beat: shot.beat, title: shot.title, set: setName, status: "failed", problems: [String(e.message)], draft: shotDraft, releaseBlockers: shotBlockers };
           console.log(`  FAILED  ${name}: ${e.message}`);
         }
       }

@@ -21,8 +21,8 @@
    "script_30": [
     {
      "screen": "Dashoni's dashboard screen is a taxi meter; the owner's thumb taps and each tap adds a fare; WAO mark in the corner from the first frame.",
-     "voice": "[deadpan] אתה סוֹפֵר קליקים כמו מונה של מונית, וכל קליק הוא עוד נוסע שעולה.",
-     "display": "אתה סופר קליקים כמו מונה של מונית, וכל קליק הוא עוד נוסע שעולה.",
+     "voice": "[deadpan] אתה סוֹפֵר קליקים בגוגל כמו מונה של מונית, וכל קליק הוא עוד נוסע שעולה.",
+     "display": "אתה סופר קליקים בגוגל כמו מונה של מונית, וכל קליק הוא עוד נוסע שעולה.",
      "tag_why": "flat setup, meter and passenger named for the ear"
     },
     {
@@ -86,8 +86,8 @@
   "A2": {
    "hooks": [
     {
-     "voice": "[deadpan] הקמפיין שלך הוא דוכן טעימות בשוק, וכל קליק הוא מישהו שבא לטעום.",
-     "display": "הקמפיין שלך הוא דוכן טעימות בשוק, וכל קליק הוא מישהו שבא לטעום.",
+     "voice": "[deadpan] הקמפיין שלך בגוגל הוא כמו דוכן טעימות בשוק, וכל קליק הוא מישהו שבא לטעום.",
+     "display": "הקמפיין שלך בגוגל הוא כמו דוכן טעימות בשוק, וכל קליק הוא מישהו שבא לטעום.",
      "tag_why": "flat setup, the stall is the campaign"
     },
     {
@@ -104,8 +104,8 @@
    "script_30": [
     {
      "screen": "Dashoni's screen becomes a shuk tasting stall with toothpicks and little cups; the owner hands a sample to a cursor-shaped customer; WAO mark in corner from first frame.",
-     "voice": "[deadpan] הקמפיין שלך הוא דוכן טעימות בשוק, וכל קליק הוא מישהו שבא לטעום.",
-     "display": "הקמפיין שלך הוא דוכן טעימות בשוק, וכל קליק הוא מישהו שבא לטעום.",
+     "voice": "[deadpan] הקמפיין שלך בגוגל הוא כמו דוכן טעימות בשוק, וכל קליק הוא מישהו שבא לטעום.",
+     "display": "הקמפיין שלך בגוגל הוא כמו דוכן טעימות בשוק, וכל קליק הוא מישהו שבא לטעום.",
      "tag_why": "flat setup, stall and taster named for the ear"
     },
     {
@@ -134,8 +134,8 @@
     },
     {
      "screen": "Real Ads Bot screen; the enquiry list; the owner marks one enquiry as real.",
-     "voice": "[calm] בוט מודעות מביא לך קונים, לא טועמים, והקופה שלך סוף סוף מתמלאת.",
-     "display": "בוט מודעות מביא לך קונים, לא טועמים, והקופה שלך סוף סוף מתמלאת.",
+     "voice": "[calm] בוט מודעות לומד להביא לך קונים, לא טועמים, והקופה שלך סוף סוף מתמלאת.",
+     "display": "בוט מודעות לומד להביא לך קונים, לא טועמים, והקופה שלך סוף סוף מתמלאת.",
      "tag_why": "steady payoff, the till that stayed thin finally fattens"
     },
     {
@@ -148,8 +148,8 @@
    "script_15": [
     {
      "screen": "Dashoni's screen is a shuk tasting stall; a crowd takes samples on the owner's account and brings friends; WAO mark in corner from first frame.",
-     "voice": "[deadpan] הקמפיין שלך הוא דוכן טעימות בשוק, וכולם טועמים על חשבונך ומביאים חברים.",
-     "display": "הקמפיין שלך הוא דוכן טעימות בשוק, וכולם טועמים על חשבונך ומביאים חברים.",
+     "voice": "[deadpan] הקמפיין שלך בגוגל הוא כמו דוכן טעימות בשוק, וכולם טועמים על חשבונך ומביאים חברים.",
+     "display": "הקמפיין שלך בגוגל הוא כמו דוכן טעימות בשוק, וכולם טועמים על חשבונך ומביאים חברים.",
      "tag_why": "tastes plus friends in one breath, per the cut"
     },
     {
@@ -160,8 +160,8 @@
     },
     {
      "screen": "Real Ads Bot screen; the enquiry list; the owner marks one enquiry as real.",
-     "voice": "[calm] בוט מודעות מביא לך קונים, לא טועמים, והקופה שלך סוף סוף מתמלאת.",
-     "display": "בוט מודעות מביא לך קונים, לא טועמים, והקופה שלך סוף סוף מתמלאת.",
+     "voice": "[calm] בוט מודעות לומד להביא לך קונים, לא טועמים, והקופה שלך סוף סוף מתמלאת.",
+     "display": "בוט מודעות לומד להביא לך קונים, לא טועמים, והקופה שלך סוף סוף מתמלאת.",
      "tag_why": "mechanism, buyers not tasters carried by the marking"
     },
     {

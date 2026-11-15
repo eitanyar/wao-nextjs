@@ -1,0 +1,12 @@
+{
+  "schema": "wao.video.demo-reviews/1",
+  "source": "docs/copy/demo-site-review-lines-2026-11-14.waocopy.json (waocopy, Noa PASS 2026-11-14), byte-exact; filled into REVIEW_TEXT_PENDING_1..6 slots",
+  "cards": [
+    { "name": "נועם", "stars": 5, "text": "הגיע בזמן, אדיב ומסודר. ממליץ!" },
+    { "name": "מיכל", "stars": 5, "text": "הייתי בטוחה שיהיה בלגן, השאיר הכול נקי." },
+    { "name": "עומר", "stars": 5, "text": "הוגן, רציני, בלי הפתעות." },
+    { "name": "רונית", "stars": 4, "text": "לקח לו קצת לחזור אליי, אבל עבודה מעולה." },
+    { "name": "אבי", "stars": 5, "text": "הסביר הכול בגובה העיניים. אינסטלטור של פעם." },
+    { "name": "שירן", "stars": 5, "text": "חזר לבדוק שהכול תקין. לא מובן מאליו." }
+  ]
+}
