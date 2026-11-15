@@ -5,6 +5,7 @@
 // can fail over to the next retry instead of sitting past Node's header timeout.
 
 import { extractJsonSpan } from './gemini-fast';
+import { resolveQwenEndpoint, selectLlmProvider, type LlmWorkload } from './llmProvider';
 
 export type CallQwenJSONOptions = {
   think?: boolean;
@@ -15,6 +16,10 @@ export type CallQwenJSONOptions = {
    * wants a different vendor/family from the Gemini generator it critiques,
    * not the authoring model used elsewhere in this file's call sites. */
   model?: string;
+  /** Which production workload this call belongs to; selects the Qwen endpoint and applies the
+   * production token-plan guard (src/lib/ai/llmProvider.ts). Defaults: callQwenJSON -> site_copy,
+   * callQwenChatJSON -> chat. */
+  workload?: LlmWorkload;
   signal?: AbortSignal;
   timeoutMs?: number;
   maxAttempts?: number;
@@ -66,7 +71,7 @@ export async function callQwenJSON(
   userMessage: string,
   opts: CallQwenJSONOptions = {},
 ): Promise<string> {
-  return requestQwenJSON(systemPrompt, [{ role: 'user', content: userMessage }], opts, opts.model || 'qwen3.8-max');
+  return requestQwenJSON(systemPrompt, [{ role: 'user', content: userMessage }], { ...opts, workload: opts.workload ?? 'site_copy' }, opts.model || 'qwen3.8-max');
 }
 
 export async function callQwenChatJSON(
@@ -74,7 +79,7 @@ export async function callQwenChatJSON(
   messages: { role: 'user' | 'assistant'; content: string }[],
   opts: CallQwenJSONOptions = {},
 ): Promise<string> {
-  return requestQwenJSON(systemPrompt, messages, { ...opts, think: opts.think ?? false }, opts.model || process.env.QWEN_CHAT_MODEL || DEFAULT_QWEN_CHAT_MODEL);
+  return requestQwenJSON(systemPrompt, messages, { ...opts, workload: opts.workload ?? 'chat', think: opts.think ?? false }, opts.model || process.env.QWEN_CHAT_MODEL || DEFAULT_QWEN_CHAT_MODEL);
 }
 
 async function requestQwenJSON(
@@ -84,9 +89,13 @@ async function requestQwenJSON(
   model: string,
 ): Promise<string> {
   validateOptions(opts);
-  const apiKey = process.env.QWEN_API_KEY;
-  const baseUrl = process.env.QWEN_BASE_URL;
-  if (!apiKey || !baseUrl) throw new Error('Qwen not configured');
+  const workload = opts.workload ?? 'site_copy';
+  const endpoint = resolveQwenEndpoint(workload);
+  if (!endpoint) {
+    const { provider, envVar } = selectLlmProvider(workload);
+    throw new Error(`Qwen not configured for workload "${workload}" (${envVar} -> ${provider})`);
+  }
+  const { apiKey, baseUrl } = endpoint;
 
   const payload: Record<string, unknown> = {
     model,

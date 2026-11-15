@@ -129,3 +129,6 @@ Required in `.env.local` (local dev) and `.env.production` (servers):
 Qwen is a monthly subscription (token plan), not pay-as-you-go: its key works only with the
 `token-plan` base URL and returns 401 on `dashscope-intl`. `scripts/waocopy.mjs` reads
 `.env.local` in preference to shell variables, because stale `QWEN_*` shell exports exist.
+
+Production LLM workloads select providers via `LLM_PROVIDER_{CHAT,PANEL_REWRITE,GBP_REPLY,GEO,SITE_COPY}` (`gemini` | `qwen-metered` | `qwen-token-plan`; metered = `QWEN_METERED_API_KEY` + `QWEN_METERED_BASE_URL`); table in `README.md`.
+In production the token plan is refused unless a workload's variable is explicitly `qwen-token-plan`.

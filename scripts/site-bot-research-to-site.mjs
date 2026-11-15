@@ -77,6 +77,11 @@ if (!fs.existsSync(entry)) die('dist/ build missing: run `npx tsc -p tsconfig.te
 fs.writeFileSync(path.join(root, 'dist/package.json'), JSON.stringify({ type: 'commonjs' }));
 const { runResearchToSite } = require(entry);
 const { callQwenJSON } = require(path.join(root, 'dist/lib/ai/qwen-fast.js'));
+const { selectLlmProvider } = require(path.join(root, 'dist/lib/ai/llmProvider.js'));
+// Spend accounting, prices and the egress filter above are token-plan only; refuse any other
+// LLM_PROVIDER_SITE_COPY instead of silently running unmetered or against a blocked host.
+const siteCopyProvider = selectLlmProvider('site_copy', process.env);
+if (siteCopyProvider.provider !== 'qwen-token-plan') die(`${siteCopyProvider.envVar}=${siteCopyProvider.provider}: this rehearsal script only drives the Qwen token plan.`);
 const { assertBoundedGeneratedSiteCopy, generateResearchPageCopy, gateViolations, briefGateContext, researchedRecordShapeOptions } = require(path.join(root, 'dist/lib/lp/researchPageCopy.js'));
 const { copyGateContext, copyReviewFlags } = require(path.join(root, 'dist/lib/lp/copyGates.js'));
 const { renderResearchedSitePages, researchedPageTitle, researchedPageH1 } = require(path.join(root, 'dist/lib/lp/researchedSite.js'));
@@ -108,6 +113,7 @@ async function callJson(system, user, options = {}) {
   const started = Date.now();
   return callQwenJSON(system, user, {
     ...options,
+    workload: 'site_copy',
     onUsage: u => {
       const costUsd = u.promptTokens * PRICE_IN_PER_TOKEN + u.completionTokens * PRICE_OUT_PER_TOKEN;
       spent += costUsd;

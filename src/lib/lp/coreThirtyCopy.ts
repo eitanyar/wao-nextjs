@@ -21,7 +21,7 @@
 
 import type { CollectedData } from '../bot/prompts';
 import type { CoreThirtyNode } from './coreThirty';
-import { callQwenJSON } from '../ai/qwen-fast';
+import { callSiteCopyJSON } from '../ai/workloadJson';
 
 export interface CoreThirtyPageCopy {
   pageHeadline: string; // H1. Max 60 chars. Names service + city, not generic.
@@ -284,7 +284,7 @@ export async function generateCoreThirtyPageCopy(
 
   let tamarCopy: CoreThirtyPageCopy;
   try {
-    const tamarRaw = await callQwenJSON(CORE_THIRTY_COPY_SYSTEM_PROMPT, tamarPrompt, {
+    const tamarRaw = await callSiteCopyJSON(CORE_THIRTY_COPY_SYSTEM_PROMPT, tamarPrompt, {
       thinkingBudget: 1500,
     });
     tamarCopy = JSON.parse(tamarRaw) as CoreThirtyPageCopy;
@@ -292,7 +292,7 @@ export async function generateCoreThirtyPageCopy(
     console.warn(`Core-30 Tamar pass failed to parse for node ${node.id}, retrying once:`, e.message);
     // No Hebrew fallback template exists at this layer (see doc comment above)
     // — if this retry also fails, it throws and the caller must handle it.
-    const tamarRetryRaw = await callQwenJSON(CORE_THIRTY_COPY_SYSTEM_PROMPT, tamarPrompt, {
+    const tamarRetryRaw = await callSiteCopyJSON(CORE_THIRTY_COPY_SYSTEM_PROMPT, tamarPrompt, {
       thinkingBudget: 1500,
     });
     tamarCopy = JSON.parse(tamarRetryRaw) as CoreThirtyPageCopy;
@@ -301,7 +301,7 @@ export async function generateCoreThirtyPageCopy(
   // Noa — QA pass. If it comes back malformed, fall back to Tamar's copy
   // rather than failing the whole generation over a polish step.
   try {
-    const noaRaw = await callQwenJSON(buildCoreThirtyNoaPrompt(), JSON.stringify(tamarCopy), {
+    const noaRaw = await callSiteCopyJSON(buildCoreThirtyNoaPrompt(), JSON.stringify(tamarCopy), {
       think: false,
     });
     return JSON.parse(noaRaw) as CoreThirtyPageCopy;

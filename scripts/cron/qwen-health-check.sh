@@ -1,8 +1,12 @@
 #!/bin/bash
 #
 # Daily Qwen 3.8 Max reliability check (realistic-payload health probe).
-# One structured FAQ-style generation call — NOT a trivial ping.
+# One structured FAQ-style generation call per Qwen endpoint in use — NOT a trivial ping.
 # See scripts/qwen-health-check.mjs and task 2026-08-14_019.
+#
+# Since D3 (2026-11-15) Qwen is not a production dependency by default: the probe only checks the
+# Qwen providers that LLM_PROVIDER_* switches actually select, and logs outcome=SKIPPED (exit 0)
+# when every workload is on gemini. Missing QWEN_* is no longer an abort.
 #
 # There is no managed job scheduler on this VPS (no Vercel Cron) — this is a
 # plain system crontab entry. Eitan installs it manually with `crontab -e`
@@ -33,10 +37,12 @@
 #
 # ## Secrets
 #
-# QWEN_API_KEY and QWEN_BASE_URL are sourced from an env file, never
-# hardcoded. Override QWEN_ENV_FILE if needed; defaults to the same
-# `.env.production` deploy.sh already loads. Locally, falls back to the
-# repo `.env.local` when the production path is absent.
+# LLM_PROVIDER_* and the Qwen credentials (QWEN_METERED_API_KEY/QWEN_METERED_BASE_URL,
+# QWEN_API_KEY/QWEN_BASE_URL) are sourced from an env file, never hardcoded. Override
+# QWEN_ENV_FILE if needed; defaults to the same `.env.production` deploy.sh already loads.
+# Locally, falls back to the repo `.env.local` when the production path is absent.
+# Sourcing a `.env.production` file sets NODE_ENV=production (unless already set) so the
+# production token-plan guard applies to the probe exactly as it does to the app.
 
 set -euo pipefail
 
@@ -66,11 +72,9 @@ if [[ -f "$QWEN_ENV_FILE" ]]; then
   # shellcheck disable=SC1090
   source "$QWEN_ENV_FILE"
   set +a
-fi
-
-if [[ -z "${QWEN_API_KEY:-}" || -z "${QWEN_BASE_URL:-}" ]]; then
-  echo "$(date -Iseconds) ERROR: QWEN_API_KEY and QWEN_BASE_URL must be set (checked ${QWEN_ENV_FILE}). Aborting." >&2
-  exit 1
+  if [[ "$(basename "$QWEN_ENV_FILE")" == ".env.production" ]]; then
+    export NODE_ENV="${NODE_ENV:-production}"
+  fi
 fi
 
 if [[ -z "${WAO_RUNTIME_DATA_DIR:-}" ]]; then

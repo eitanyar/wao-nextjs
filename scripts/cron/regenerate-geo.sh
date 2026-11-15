@@ -42,9 +42,15 @@
 # GEMINI_API_KEY (primary content-generation provider, per spec
 # 2026-08-15_022) is sourced from an env file, never hardcoded here. Point
 # CRON_SECRET_ENV_FILE at wherever that lives on the VPS — defaults to the
-# same .env.production deploy.sh already loads. QWEN_API_KEY/QWEN_BASE_URL
-# (the fallback provider) are optional here — if missing, this script only
-# warns; the generator degrades to Gemini-only, which is still a valid run.
+# same .env.production deploy.sh already loads.
+#
+# ## Provider switch (D3, 2026-11-15)
+#
+# LLM_PROVIDER_GEO (scripts/lib/llm-provider.mjs) decides the Qwen fallback:
+# unset / gemini = Gemini only, no fallback (the default); qwen-metered or
+# qwen-token-plan = Gemini primary with that Qwen endpoint as the fallback.
+# Sourcing .env.production sets NODE_ENV=production (unless already set), so
+# the generator's production token-plan guard applies here too.
 
 set -euo pipefail
 
@@ -66,6 +72,9 @@ if [[ -f "$CRON_SECRET_ENV_FILE" ]]; then
   # shellcheck disable=SC1090
   source "$CRON_SECRET_ENV_FILE"
   set +a
+  if [[ "$(basename "$CRON_SECRET_ENV_FILE")" == ".env.production" ]]; then
+    export NODE_ENV="${NODE_ENV:-production}"
+  fi
 fi
 
 if [[ -z "${GEMINI_API_KEY:-}" ]]; then
@@ -73,9 +82,21 @@ if [[ -z "${GEMINI_API_KEY:-}" ]]; then
   exit 1
 fi
 
-if [[ -z "${QWEN_API_KEY:-}" || -z "${QWEN_BASE_URL:-}" ]]; then
-  echo "$(date -Iseconds) WARNING: QWEN_API_KEY/QWEN_BASE_URL not set — fallback provider unavailable, generator will run Gemini-only." >&2
-fi
+GEO_PROVIDER="$(printf '%s' "${LLM_PROVIDER_GEO:-gemini}" | tr '[:upper:]' '[:lower:]' | tr -d '[:space:]')"
+case "$GEO_PROVIDER" in
+  gemini)
+    echo "$(date -Iseconds) LLM_PROVIDER_GEO=gemini: Gemini only, no Qwen fallback."
+    ;;
+  qwen-metered|qwen-token-plan)
+    # Credentials and the production token-plan guard are resolved by the generator
+    # (scripts/lib/llm-provider.mjs); a missing or refused endpoint fails only the fallback call.
+    echo "$(date -Iseconds) LLM_PROVIDER_GEO=${GEO_PROVIDER}: Gemini primary, Qwen fallback on that provider."
+    ;;
+  *)
+    echo "$(date -Iseconds) ERROR: LLM_PROVIDER_GEO='${LLM_PROVIDER_GEO:-}' is not gemini | qwen-metered | qwen-token-plan. Aborting." >&2
+    exit 1
+    ;;
+esac
 
 # Dynamic discovery: a client is GEO-entitled when client.json's
 # `entitlements` array contains "geo" AND pareto.json exists. Never hardcode

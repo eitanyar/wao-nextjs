@@ -1,22 +1,25 @@
 /**
- * Qwen 3.8 Max realistic-payload health probe.
+ * Qwen realistic-payload health probe for the Qwen providers production actually uses.
  *
- * Invoked by scripts/cron/qwen-health-check.sh. Sends ONE structured
- * FAQ-style generation request that approximates GEO load — not a
- * trivial "say OK" / max_tokens:5 ping (those pass while real
- * generation hangs; see 2026-08-14 incident).
+ * Invoked by scripts/cron/qwen-health-check.sh. Since D3 (2026-11-15) Qwen is not a production
+ * dependency by default: the probe reads the per-workload switches (scripts/lib/llm-provider.mjs,
+ * LLM_PROVIDER_*). Workloads on gemini are not probed. When no workload selects a Qwen provider it
+ * logs one `outcome=SKIPPED` line and exits 0. Otherwise it sends ONE structured FAQ-style
+ * generation request per distinct Qwen endpoint in use (not a trivial "say OK" ping; those pass
+ * while real generation hangs, see the 2026-08-14 incident).
  *
- * Request shape mirrors callQwenOnce in scripts/geo-generate-content.mjs
- * (model, temperature, response_format, messages, fetch + AbortSignal).
- * Timeout here is the health-check budget (90s), not the 180s GEO abort.
+ * A workload that selects Qwen but has no credentials (UNCONFIGURED), or whose endpoint the
+ * production token-plan guard refuses (REFUSED), is an ALERT: that workload will fail at runtime.
  *
- * Outcomes: OK | SLOW | FAIL. Trouble writes an ALERT log line and
- * exits non-zero. OK is silent to stderr (no daily-green spam).
+ * Outcomes per endpoint: OK | SLOW | FAIL. Trouble writes an ALERT log line and exits non-zero.
+ * OK / SKIPPED are silent to stderr (no daily-green spam).
  */
 
 import fs from 'fs';
 import path from 'path';
+import { pathToFileURL } from 'url';
 import { extractJsonSpan } from './lib/json-repair.mjs';
+import { LLM_WORKLOADS, TokenPlanRefusedError, resolveQwenEndpoint, selectLlmProvider } from './lib/llm-provider.mjs';
 
 const QWEN_MODEL = 'qwen3.8-max';
 
@@ -40,9 +43,9 @@ const USER_PROMPT = [
   'Each answer must be 1-2 short sentences.',
 ].join(' ');
 
-function resolveLogPath() {
-  if (process.env.QWEN_HEALTH_LOG) return process.env.QWEN_HEALTH_LOG;
-  const dir = process.env.WAO_RUNTIME_DATA_DIR || DEFAULT_RUNTIME_DIR;
+function resolveLogPath(env) {
+  if (env.QWEN_HEALTH_LOG) return env.QWEN_HEALTH_LOG;
+  const dir = env.WAO_RUNTIME_DATA_DIR || DEFAULT_RUNTIME_DIR;
   return path.join(dir, DEFAULT_LOG_NAME);
 }
 
@@ -57,28 +60,38 @@ function extractRequestId(res, data) {
   return header || body || data?.id || 'none';
 }
 
-function appendLog(line) {
-  const logPath = resolveLogPath();
-  fs.mkdirSync(path.dirname(logPath), { recursive: true });
-  fs.appendFileSync(logPath, `${line}\n`, 'utf8');
-}
-
-function classify({ httpOk, parseable }) {
-  if (!httpOk || !parseable) return 'FAIL';
-  return 'SLOW_OR_OK';
-}
-
-async function main() {
-  const apiKey = process.env.QWEN_API_KEY;
-  const baseUrl = process.env.QWEN_BASE_URL;
-  if (!apiKey || !baseUrl) {
-    console.error(
-      'ERROR: QWEN_API_KEY and QWEN_BASE_URL must be set. Aborting.',
-    );
-    process.exit(1);
+/**
+ * Which Qwen endpoints the configured workloads use. Never calls the network.
+ * Returns { probes: [{ provider, baseUrl, apiKey, workloads }], problems: [{ workload, provider, outcome }] }.
+ */
+export function planQwenProbes(env = process.env) {
+  const probes = new Map();
+  const problems = [];
+  for (const workload of LLM_WORKLOADS) {
+    const { provider } = selectLlmProvider(workload, env);
+    if (provider === 'gemini') continue;
+    let endpoint;
+    try {
+      endpoint = resolveQwenEndpoint(workload, env);
+    } catch (err) {
+      if (err instanceof TokenPlanRefusedError) {
+        problems.push({ workload, provider, outcome: 'REFUSED' });
+        continue;
+      }
+      throw err;
+    }
+    if (!endpoint) {
+      problems.push({ workload, provider, outcome: 'UNCONFIGURED' });
+      continue;
+    }
+    const key = `${endpoint.provider} ${endpoint.baseUrl}`;
+    if (!probes.has(key)) probes.set(key, { provider: endpoint.provider, baseUrl: endpoint.baseUrl, apiKey: endpoint.apiKey, workloads: [] });
+    probes.get(key).workloads.push(workload);
   }
+  return { probes: [...probes.values()], problems };
+}
 
-  const url = `${baseUrl}/chat/completions`;
+async function probeEndpoint(probe, fetchImpl) {
   const payload = {
     model: QWEN_MODEL,
     temperature: 0.7,
@@ -93,21 +106,18 @@ async function main() {
   let outcome = 'FAIL';
   let requestId = 'none';
   let latencyMs = 0;
-  let httpOk = false;
-  let parseable = false;
 
   try {
-    const res = await fetch(url, {
+    const res = await fetchImpl(`${probe.baseUrl}/chat/completions`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${apiKey}`,
+        Authorization: `Bearer ${probe.apiKey}`,
       },
       body: JSON.stringify(payload),
       signal: AbortSignal.timeout(CLIENT_TIMEOUT_MS),
     });
     latencyMs = Date.now() - started;
-    httpOk = res.ok;
 
     let data = null;
     try {
@@ -117,41 +127,77 @@ async function main() {
     }
     requestId = extractRequestId(res, data);
 
-    if (httpOk && data) {
+    let parseable = false;
+    if (res.ok && data) {
       try {
-        const raw = data?.choices?.[0]?.message?.content ?? '';
-        JSON.parse(extractJsonSpan(raw));
+        JSON.parse(extractJsonSpan(data?.choices?.[0]?.message?.content ?? ''));
         parseable = true;
       } catch {
         parseable = false;
       }
     }
 
-    if (classify({ httpOk, parseable }) === 'FAIL') {
-      outcome = 'FAIL';
-    } else if (latencyMs >= SLOW_THRESHOLD_MS) {
-      outcome = 'SLOW';
-    } else {
-      outcome = 'OK';
-    }
+    if (!res.ok || !parseable) outcome = 'FAIL';
+    else if (latencyMs >= SLOW_THRESHOLD_MS) outcome = 'SLOW';
+    else outcome = 'OK';
   } catch {
     // Timeout, network error, or abort — no request_id to claim.
     latencyMs = Date.now() - started;
     outcome = 'FAIL';
   }
-
-  const latencySec = (latencyMs / 1000).toFixed(3);
-  const ts = new Date().toISOString();
-  const line = `${ts} outcome=${outcome} latency_s=${latencySec} model=${QWEN_MODEL} request_id=${requestId}`;
-  appendLog(line);
-  console.log(line);
-
-  if (outcome !== 'OK') {
-    const alert = `${ts} ALERT outcome=${outcome} latency_s=${latencySec} model=${QWEN_MODEL} request_id=${requestId}`;
-    appendLog(alert);
-    console.error(alert);
-    process.exit(1);
-  }
+  return { outcome, latencyMs, requestId };
 }
 
-main();
+/** Runs the plan; returns the process exit code. All I/O is injectable for tests. */
+export async function runHealthCheck({
+  env = process.env,
+  fetchImpl = globalThis.fetch,
+  appendLog = line => {
+    const logPath = resolveLogPath(env);
+    fs.mkdirSync(path.dirname(logPath), { recursive: true });
+    fs.appendFileSync(logPath, `${line}\n`, 'utf8');
+  },
+  out = line => console.log(line),
+  err = line => console.error(line),
+  now = () => new Date().toISOString(),
+} = {}) {
+  const { probes, problems } = planQwenProbes(env);
+  let exitCode = 0;
+
+  if (probes.length === 0 && problems.length === 0) {
+    const line = `${now()} outcome=SKIPPED reason=no-qwen-workload (all LLM_PROVIDER_* resolve to gemini)`;
+    appendLog(line);
+    out(line);
+    return 0;
+  }
+
+  for (const problem of problems) {
+    const alert = `${now()} ALERT outcome=${problem.outcome} workload=${problem.workload} provider=${problem.provider}`;
+    appendLog(alert);
+    err(alert);
+    exitCode = 1;
+  }
+
+  for (const probe of probes) {
+    const { outcome, latencyMs, requestId } = await probeEndpoint(probe, fetchImpl);
+    const latencySec = (latencyMs / 1000).toFixed(3);
+    const fields = `outcome=${outcome} latency_s=${latencySec} model=${QWEN_MODEL} provider=${probe.provider} workloads=${probe.workloads.join(',')} request_id=${requestId}`;
+    const ts = now();
+    appendLog(`${ts} ${fields}`);
+    out(`${ts} ${fields}`);
+    if (outcome !== 'OK') {
+      const alert = `${ts} ALERT ${fields}`;
+      appendLog(alert);
+      err(alert);
+      exitCode = 1;
+    }
+  }
+  return exitCode;
+}
+
+if (process.argv[1] && import.meta.url === pathToFileURL(path.resolve(process.argv[1])).href) {
+  runHealthCheck().then(code => process.exit(code), error => {
+    console.error(`ERROR: ${error instanceof Error ? error.message : String(error)}`);
+    process.exit(1);
+  });
+}

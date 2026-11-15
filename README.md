@@ -29,6 +29,35 @@ unset QWEN_BASE_URL QWEN_API_KEY QWEN_CHAT_MODEL   # or: env -u QWEN_BASE_URL -u
 
 Production is not affected (the server reads `.env.production`).
 
+### LLM provider switches (one env line per workload)
+
+Founder-seat decision D3 (2026-11-15): nothing in production calls the Qwen token plan unless a
+workload is switched to it explicitly. Module: `src/lib/ai/llmProvider.ts` (scripts and crons use the
+mirror `scripts/lib/llm-provider.mjs`). Values: `gemini` | `qwen-metered` | `qwen-token-plan`.
+
+| Workload | Variable | Default | Callers |
+|---|---|---|---|
+| Chat bot | `LLM_PROVIDER_CHAT` | `gemini` | `src/app/api/bot/route.ts` |
+| Panel copy rewrite | `LLM_PROVIDER_PANEL_REWRITE` | `gemini` | `src/lib/operators/hebrew-rewriter.ts` |
+| GBP review replies | `LLM_PROVIDER_GBP_REPLY` | `gemini` | `src/lib/gbp/reviewResponder.ts` (`createGbpReplyDrafter`) |
+| GEO (critic + generator fallback) | `LLM_PROVIDER_GEO` | `gemini` (no Qwen fallback) | `src/lib/geo/critic.ts`, `scripts/geo-generate-content.mjs`, `scripts/cron/regenerate-geo.sh` |
+| Site Bot site copy | `LLM_PROVIDER_SITE_COPY` | `qwen-token-plan` (today's behaviour; blind test decides by 19.11) | `src/lib/lp/researchPageCopy.ts`, `src/lib/lp/coreThirtyCopy.ts`, `scripts/lib/fact-extractor.mjs` |
+
+Provider credentials:
+
+| Provider | Variables |
+|---|---|
+| `gemini` | `GEMINI_API_KEY`, optional `GEMINI_MODEL_NAME` |
+| `qwen-metered` | `QWEN_METERED_API_KEY`, `QWEN_METERED_BASE_URL` (DashScope pay-as-you-go, OpenAI-compatible, expected form `https://dashscope-intl.aliyuncs.com/compatible-mode/v1`; no default, unset = unavailable) |
+| `qwen-token-plan` | `QWEN_API_KEY`, `QWEN_BASE_URL` (interactive tools such as `scripts/waocopy.mjs` keep using these directly) |
+
+Production guard: with `NODE_ENV=production`, any Qwen call whose base-URL host contains `token-plan` throws
+`TokenPlanRefusedError` (logged once per workload) unless that workload's variable is explicitly `qwen-token-plan`.
+A default is not an opt-in, so production Site Bot copy needs `LLM_PROVIDER_SITE_COPY=qwen-token-plan` (or
+`gemini` / `qwen-metered`) in `.env.production`. The chat bot falls back to Gemini when its Qwen endpoint is
+missing or refused. `scripts/cron/qwen-health-check.sh` probes only the Qwen endpoints the switches select and
+logs `outcome=SKIPPED` when every workload is on Gemini.
+
 ### Site Bot paid-journey rehearsals
 
 `scripts/site-bot-rehearsal-dev.sh [port] [dist-dir] [data-dir]` starts an isolated dev server with the

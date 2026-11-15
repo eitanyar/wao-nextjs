@@ -1,10 +1,14 @@
 import type { GoogleAdsOperatorTask } from '../google-ads/operator';
+import { callGeminiJSON } from '../ai/gemini-fast';
+import { resolveQwenEndpoint, selectLlmProvider } from '../ai/llmProvider';
 
 /**
  * Translates operator task copy (title, whyNeeded, recommendedAction) from
  * technical English to plain Hebrew for non-technical business owners.
  *
- * Uses Qwen 3.8 Max for Hebrew quality. Falls back to original English if translation fails.
+ * Provider: LLM_PROVIDER_PANEL_REWRITE (src/lib/ai/llmProvider.ts) — gemini by default since D3
+ * (2026-11-15); qwen-metered / qwen-token-plan restore the Qwen path with the model below.
+ * Falls back to original English if translation fails.
  */
 
 const TRANSLATION_CACHE = new Map<string, GoogleAdsOperatorTask>();
@@ -14,13 +18,24 @@ const TRANSLATION_CACHE = new Map<string, GoogleAdsOperatorTask>();
 // his 2026-08-18 direction — internal-only text, no human-gate requirement.
 const DEFAULT_MODEL = 'qwen3.8-max';
 
-async function callQwenTranslator(task: GoogleAdsOperatorTask, model: string): Promise<string> {
-  const qwenApiKey = process.env.QWEN_API_KEY;
-  const qwenBaseUrl = process.env.QWEN_BASE_URL;
-
-  if (!qwenApiKey || !qwenBaseUrl) {
-    console.warn('[hebrew-rewriter] Missing QWEN_API_KEY or QWEN_BASE_URL, skipping translation');
-    return '';
+async function callTranslator(task: GoogleAdsOperatorTask, model: string): Promise<string> {
+  const selection = selectLlmProvider('panel_rewrite');
+  let qwenApiKey = '';
+  let qwenBaseUrl = '';
+  if (selection.provider !== 'gemini') {
+    let endpoint: ReturnType<typeof resolveQwenEndpoint> = null;
+    try {
+      endpoint = resolveQwenEndpoint('panel_rewrite');
+    } catch (err) {
+      console.warn('[hebrew-rewriter] Qwen provider refused, skipping translation:', err instanceof Error ? err.message : String(err));
+      return '';
+    }
+    if (!endpoint) {
+      console.warn(`[hebrew-rewriter] Missing credentials for ${selection.provider} (${selection.envVar}), skipping translation`);
+      return '';
+    }
+    qwenApiKey = endpoint.apiKey;
+    qwenBaseUrl = endpoint.baseUrl;
   }
 
   const systemPrompt = `אתה מתרגם מומחה בתוכן Google Ads לעברית טבעית.
@@ -47,6 +62,16 @@ async function callQwenTranslator(task: GoogleAdsOperatorTask, model: string): P
     originalRecommendedAction: task.recommendedAction,
     risk: task.risk,
   });
+
+  if (selection.provider === 'gemini') {
+    try {
+      // The model option names a Qwen model; Gemini uses GEMINI_MODEL_NAME / the gemini-fast default.
+      return await callGeminiJSON(systemPrompt, userMessage);
+    } catch (err) {
+      console.warn('[hebrew-rewriter] Gemini translation failed:', err instanceof Error ? err.message : String(err));
+      return '';
+    }
+  }
 
   try {
     const response = await fetch(`${qwenBaseUrl}/chat/completions`, {
@@ -99,7 +124,7 @@ export async function translateTaskToHebrew(
   }
 
   try {
-    const translatedJson = await callQwenTranslator(task, model);
+    const translatedJson = await callTranslator(task, model);
 
     if (!translatedJson) {
       // Fallback: return original task

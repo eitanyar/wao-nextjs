@@ -124,3 +124,45 @@ export async function callGeminiJSON(systemPrompt: string, userMessage: string, 
   if (typeof text !== 'string') throw new Error('Gemini API returned unexpected shape');
   return extractJsonSpan(text);
 }
+
+export type CallGeminiChatTextOptions = {
+  thinkingLevel?: 'LOW' | 'HIGH';
+  model?: string;
+  temperature?: number;
+  signal?: AbortSignal;
+  timeoutMs?: number;
+  fetch?: typeof globalThis.fetch;
+};
+
+/** Multi-turn plain-text (non-JSON) Gemini call; OpenAI-style roles map assistant -> model. */
+export async function callGeminiChatText(
+  systemPrompt: string,
+  messages: { role: 'user' | 'assistant'; content: string }[],
+  opts: CallGeminiChatTextOptions = {},
+): Promise<string> {
+  if (opts.timeoutMs !== undefined && (!Number.isFinite(opts.timeoutMs) || opts.timeoutMs <= 0)) throw new Error('Invalid Gemini timeout');
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) throw new Error('Gemini not configured');
+  if (opts.signal?.aborted) throw opts.signal.reason ?? new Error('Gemini request aborted');
+  const modelName = opts.model ?? (process.env.GEMINI_MODEL_NAME || 'gemini-3.8-flash');
+  const timeoutSignal = opts.timeoutMs === undefined ? undefined : AbortSignal.timeout(opts.timeoutMs);
+  const signal = timeoutSignal && opts.signal ? AbortSignal.any([opts.signal, timeoutSignal]) : opts.signal ?? timeoutSignal;
+  const res = await (opts.fetch ?? globalThis.fetch)(`https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'x-goog-api-key': apiKey },
+    body: JSON.stringify({
+      systemInstruction: { role: 'system', parts: [{ text: systemPrompt }] },
+      contents: messages.map(m => ({ role: m.role === 'assistant' ? 'model' : 'user', parts: [{ text: m.content }] })),
+      generationConfig: {
+        thinkingConfig: { thinkingLevel: opts.thinkingLevel || 'LOW' },
+        ...(opts.temperature === undefined ? {} : { temperature: opts.temperature }),
+      },
+    }),
+    signal,
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(`Gemini API error (${res.status})`);
+  const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+  if (typeof text !== 'string' || !text.trim()) throw new Error('Gemini API returned unexpected shape');
+  return text.trim();
+}

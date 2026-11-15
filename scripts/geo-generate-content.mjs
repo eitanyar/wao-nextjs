@@ -27,6 +27,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { extractLexicon, buildLexiconConstraint } from './lib/page-lexicon.mjs';
 import { extractJsonSpan } from './lib/json-repair.mjs';
+import { resolveQwenEndpoint, scriptEnv, selectLlmProvider } from './lib/llm-provider.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const env = {};
@@ -57,10 +58,20 @@ function envVal(name) {
   return Object.prototype.hasOwnProperty.call(process.env, name) ? process.env[name] : env[name];
 }
 
-// ── Qwen 3.8 Max (Hebrew channel) — OpenAI-compatible DashScope ───────────────
-const QWEN_API_KEY  = envVal('QWEN_API_KEY');
-const QWEN_BASE_URL = envVal('QWEN_BASE_URL');
+// ── Provider switch (D3, 2026-11-15): LLM_PROVIDER_GEO ────────────────────────
+// gemini (default) = Gemini only, no Qwen fallback. qwen-metered / qwen-token-plan = Gemini primary
+// with the Qwen fallback on that provider's endpoint (the pre-D3 chain). Endpoint credentials and the
+// production token-plan guard come from scripts/lib/llm-provider.mjs; nothing here reads QWEN_* directly.
+const SCRIPT_ENV    = scriptEnv(env);
+const GEO_PROVIDER  = selectLlmProvider('geo', SCRIPT_ENV);
 const QWEN_MODEL    = envVal('QWEN_MODEL_NAME') || 'qwen3.8-max';
+
+// Resolved lazily, only when a fallback is actually attempted.
+function qwenFallbackEndpoint() {
+  const endpoint = resolveQwenEndpoint('geo', SCRIPT_ENV);
+  if (!endpoint) throw new Error(`Qwen fallback not configured for ${GEO_PROVIDER.provider} (${GEO_PROVIDER.envVar})`);
+  return endpoint;
+}
 
 // ── Gemini 3.8 Flash (PRIMARY for unattended GEO gen) ─────────────────────────
 const GEMINI_API_KEY = envVal('GEMINI_API_KEY');
@@ -71,7 +82,8 @@ const GEMINI_MODEL   = envVal('GEMINI_MODEL_NAME') || 'gemini-3.8-flash';
 // truncated Hebrew JSON output mid-string. The `_legacyMaxTokens` param is
 // kept only so call sites don't need updating; it's intentionally unused.
 async function callQwenOnce(systemPrompt, userMessage, opts = {}) {
-  const url = `${QWEN_BASE_URL}/chat/completions`;
+  const endpoint = qwenFallbackEndpoint();
+  const url = `${endpoint.baseUrl}/chat/completions`;
   const payload = {
     model: QWEN_MODEL,
     temperature: 0.7,
@@ -87,7 +99,7 @@ async function callQwenOnce(systemPrompt, userMessage, opts = {}) {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${QWEN_API_KEY}`,
+      'Authorization': `Bearer ${endpoint.apiKey}`,
     },
     body: JSON.stringify(payload),
     signal: AbortSignal.timeout(180_000),
@@ -169,12 +181,14 @@ async function callGemini(systemPrompt, userMessage, _legacyMaxTokens = 2000, at
   throw lastErr;
 }
 
-// Gemini first (2 attempts); Qwen only after Gemini is exhausted (1 retry = 2 attempts).
+// Gemini first (2 attempts); Qwen only after Gemini is exhausted (1 retry = 2 attempts), and only
+// when LLM_PROVIDER_GEO selects a Qwen provider — the gemini default has no fallback.
 async function callGeminiThenQwen(systemPrompt, userMessage, _legacyMaxTokens = 2000, qwenAttempts = 2, opts = {}) {
   try {
     const result = await callGemini(systemPrompt, userMessage, _legacyMaxTokens, 2, opts);
     return { result, generatedVia: `primary:${GEMINI_MODEL}` };
   } catch (geminiErr) {
+    if (GEO_PROVIDER.provider === 'gemini') throw geminiErr;
     if (process.env.DEBUG_QWEN) console.error('[DEBUG_GEMINI] exhausted, falling back to Qwen:', geminiErr.message);
     const result = await callQwen(systemPrompt, userMessage, _legacyMaxTokens, qwenAttempts, opts);
     return { result, generatedVia: `fallback:${QWEN_MODEL}` };

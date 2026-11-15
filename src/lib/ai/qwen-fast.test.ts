@@ -16,10 +16,11 @@ function loadSource(file: string, dependency?: Record<string, unknown>): Record<
     () => dependency, module, module.exports, process, AbortSignal, globalThis.fetch);
   return module.exports;
 }
-const { callQwenJSON, callQwenChatJSON } = loadSource('qwen-fast.ts', loadSource('gemini-fast.ts')) as typeof import('./qwen-fast');
+const { callQwenJSON, callQwenChatJSON } = loadSource('qwen-fast.ts', { ...loadSource('gemini-fast.ts'), ...loadSource('llmProvider.ts') }) as typeof import('./qwen-fast');
 
 function response() { return new Response(JSON.stringify({ choices: [{ message: { content: '{"ok":true}' } }] }), { status: 200 }); }
-function fakeEnvironment() { process.env.QWEN_API_KEY = 'test-key'; process.env.QWEN_BASE_URL = 'https://example.test'; }
+// The chat workload defaults to Gemini since D3; these transport tests opt the chat switch into Qwen.
+function fakeEnvironment() { process.env.QWEN_API_KEY = 'test-key'; process.env.QWEN_BASE_URL = 'https://example.test'; process.env.LLM_PROVIDER_CHAT = 'qwen-token-plan'; }
 class SafetyFailure extends Error { constructor() { super('abort safety timer fired'); this.name = 'SafetyFailure'; } }
 type PendingState = { started: number; settled: number; active: number; safetyTimers: number; signals: AbortSignal[] };
 function pendingFetch(state: PendingState) {

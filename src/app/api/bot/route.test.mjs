@@ -181,10 +181,21 @@ test('DIAGNOSING state short-circuits on an upload-acknowledgment message before
 });
 
 // Execute the actual POST handler with isolated module dependencies and no network or disk writes.
+function loadLlmProvider(fakeProcess) {
+  const ts = requireModule('typescript');
+  const source = fs.readFileSync(path.resolve(baseDir, '../../../lib/ai/llmProvider.ts'), 'utf8');
+  const compiled = ts.transpileModule(source, { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 } }).outputText;
+  const mod = { exports: {} };
+  new Function('require', 'module', 'exports', 'process', 'console', compiled)(() => ({}), mod, mod.exports, fakeProcess, { error() {} });
+  return mod.exports;
+}
+
 function loadPost(environment, qwenCalls, geminiCalls) {
   const ts = requireModule('typescript');
   const compiled = ts.transpileModule(routeCode, { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 } }).outputText;
   const module = { exports: {} };
+  const fakeProcess = { env: environment, cwd: () => baseDir };
+  const llmProvider = loadLlmProvider(fakeProcess);
   const fakeRequire = name => {
     if (name === 'next/server') return { NextResponse: { json: (data, opts) => Response.json(data, opts) } };
     if (name === '@/lib/bot/prompts') return { ADAM_SYSTEM_PROMPT: 'adam', DROR_SYSTEM_PROMPT: 'dror', TAMAR_SYSTEM_PROMPT: 'tamar', T21_PHOTO_ASK_VERSION: 'test' };
@@ -198,6 +209,7 @@ function loadPost(environment, qwenCalls, geminiCalls) {
     if (name === '@/lib/ai/qwen-fast') return { callQwenChatJSON: async (...args) => {
       qwenCalls.push(args); return JSON.stringify({ response: 'qwen', currentState: 'DIAGNOSING', collectedData: {} });
     } };
+    if (name === '@/lib/ai/llmProvider') return llmProvider;
     if (name === 'fs/promises') return { mkdir: async () => {}, appendFile: async () => {} };
     if (name === 'path') return path;
     throw new Error(`Unexpected import: ${name}`);
@@ -207,7 +219,7 @@ function loadPost(environment, qwenCalls, geminiCalls) {
     return Response.json({ candidates: [{ content: { parts: [{ text: '{"response":"gemini","currentState":"DIAGNOSING","collectedData":{}}' }] } }] });
   };
   new Function('require', 'module', 'exports', 'process', 'fetch', 'console', 'Response', 'AbortSignal', compiled)(
-    fakeRequire, module, module.exports, { env: environment, cwd: () => baseDir }, fetch, { log() {}, warn() {}, error() {} }, Response, AbortSignal);
+    fakeRequire, module, module.exports, fakeProcess, fetch, { log() {}, warn() {}, error() {} }, Response, AbortSignal);
   return module.exports.POST;
 }
 
@@ -221,9 +233,32 @@ async function invokePost(post) {
   return response.json();
 }
 
-test('Qwen wins over Gemini and receives multi-turn OpenAI roles without Gemini network calls', async () => {
+test('chat defaults to Gemini even when token-plan Qwen credentials are present (D3)', async () => {
   const qwen = []; const gemini = [];
   const payload = await invokePost(loadPost({ QWEN_API_KEY: 'mock', QWEN_BASE_URL: 'https://example.test', GEMINI_API_KEY: 'mock' }, qwen, gemini));
+  assert.equal(payload.response, 'gemini'); assert.equal(payload.isSimulation, false);
+  assert.equal(qwen.length, 0); assert.equal(gemini.length, 1);
+});
+
+test('production refuses an implicit token-plan chat endpoint and falls back to Gemini', async () => {
+  const qwen = []; const gemini = [];
+  const payload = await invokePost(loadPost({ NODE_ENV: 'production', LLM_PROVIDER_CHAT: 'qwen-metered', QWEN_METERED_API_KEY: 'mock',
+    QWEN_METERED_BASE_URL: 'https://token-plan.ap-southeast-1.maas.aliyuncs.com/compatible-mode/v1', GEMINI_API_KEY: 'mock' }, qwen, gemini));
+  assert.equal(payload.response, 'gemini');
+  assert.equal(qwen.length, 0); assert.equal(gemini.length, 1);
+});
+
+test('LLM_PROVIDER_CHAT=qwen-metered uses Qwen with the chat workload', async () => {
+  const qwen = []; const gemini = [];
+  const payload = await invokePost(loadPost({ LLM_PROVIDER_CHAT: 'qwen-metered', QWEN_METERED_API_KEY: 'mock', QWEN_METERED_BASE_URL: 'https://metered.example.test', GEMINI_API_KEY: 'mock' }, qwen, gemini));
+  assert.equal(payload.response, 'qwen');
+  assert.equal(qwen.length, 1); assert.equal(gemini.length, 0);
+  assert.equal(qwen[0][2].workload, 'chat');
+});
+
+test('Qwen wins over Gemini when LLM_PROVIDER_CHAT selects it and receives multi-turn OpenAI roles without Gemini network calls', async () => {
+  const qwen = []; const gemini = [];
+  const payload = await invokePost(loadPost({ LLM_PROVIDER_CHAT: 'qwen-token-plan', QWEN_API_KEY: 'mock', QWEN_BASE_URL: 'https://example.test', GEMINI_API_KEY: 'mock' }, qwen, gemini));
   assert.equal(payload.response, 'qwen'); assert.equal(payload.isSimulation, false);
   assert.equal(qwen.length, 1); assert.equal(gemini.length, 0);
   assert.equal(qwen[0][2].timeoutMs, 12000);
@@ -232,7 +267,7 @@ test('Qwen wins over Gemini and receives multi-turn OpenAI roles without Gemini 
 
 test('Gemini remains secondary when Qwen configuration is incomplete', async () => {
   const qwen = []; const gemini = [];
-  const payload = await invokePost(loadPost({ QWEN_API_KEY: 'mock', GEMINI_API_KEY: 'mock' }, qwen, gemini));
+  const payload = await invokePost(loadPost({ LLM_PROVIDER_CHAT: 'qwen-token-plan', QWEN_API_KEY: 'mock', GEMINI_API_KEY: 'mock' }, qwen, gemini));
   assert.equal(payload.response, 'gemini'); assert.equal(payload.isSimulation, false);
   assert.equal(qwen.length, 0); assert.equal(gemini.length, 1);
   assert.match(gemini[0], /^https:\/\/generativelanguage\.googleapis\.com\//);

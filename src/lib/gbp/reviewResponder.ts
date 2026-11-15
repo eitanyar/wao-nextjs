@@ -15,6 +15,8 @@ import type { GbpReviewSnapshotItem } from './reviewStore';
 import { buildWaLink } from '../gmb/whatsapp';
 import { buildBadReviewOwnerNotification, REVIEW_REPLY_SYSTEM_PROMPT, REVIEW_REPLY_FEWSHOT } from './reviewReplyPrompt';
 import { appendReviewResponderQueueItem, type ReviewResponderQueueItem } from './reviewResponderStore';
+import { callGeminiChatText } from '../ai/gemini-fast';
+import { resolveQwenEndpoint, selectLlmProvider } from '../ai/llmProvider';
 
 export type ReplyDrafter = (
   systemPrompt: string,
@@ -92,38 +94,64 @@ export async function draftRepliesForBadReviews(
   return appended;
 }
 
+export type GbpReplyDrafterOptions = {
+  /** Injected transport for tests; production uses globalThis.fetch. */
+  fetch?: typeof globalThis.fetch;
+};
+
+type ReplyMessage = { role: 'system' | 'user' | 'assistant'; content: string };
+
+function buildReplyMessages(
+  systemPrompt: string,
+  fewshot: { review: string; reply: string }[],
+  reviewComment: string,
+  businessContext: { businessName: string; businessNiche: string }
+): ReplyMessage[] {
+  const messages: ReplyMessage[] = [
+    {
+      role: 'system',
+      content: `${systemPrompt}\n\nbusinessName: ${businessContext.businessName}\nbusinessNiche: ${businessContext.businessNiche}`,
+    },
+  ];
+
+  for (const pair of fewshot) {
+    messages.push({ role: 'user', content: pair.review });
+    messages.push({ role: 'assistant', content: pair.reply });
+  }
+
+  messages.push({ role: 'user', content: reviewComment });
+  return messages;
+}
+
 /**
- * Production drafter: qwen3.8-max via DashScope, following the fetch/call shape of
- * `callQwenTranslator` in src/lib/operators/hebrew-rewriter.ts. Never imported by tests — the
- * only place in this module with network code.
+ * Production drafter. Provider: LLM_PROVIDER_GBP_REPLY (src/lib/ai/llmProvider.ts) — gemini by
+ * default since D3 (2026-11-15); qwen-metered / qwen-token-plan keep the original qwen3.8-max
+ * request. Same system prompt, few-shot pairs and plain-text output on every provider. The only
+ * place in this module with network code; tests inject `fetch`.
  */
-export function createQwenReplyDrafter(): ReplyDrafter {
+export function createGbpReplyDrafter(options: GbpReplyDrafterOptions = {}): ReplyDrafter {
   return async (systemPrompt, fewshot, reviewComment, businessContext) => {
-    const qwenApiKey = process.env.QWEN_API_KEY;
-    const qwenBaseUrl = process.env.QWEN_BASE_URL;
+    const messages = buildReplyMessages(systemPrompt, fewshot, reviewComment, businessContext);
+    const selection = selectLlmProvider('gbp_reply');
 
-    if (!qwenApiKey || !qwenBaseUrl) {
-      throw new Error('createQwenReplyDrafter: missing QWEN_API_KEY or QWEN_BASE_URL');
+    if (selection.provider === 'gemini') {
+      const [system, ...turns] = messages;
+      return callGeminiChatText(
+        system.content,
+        turns.map(m => ({ role: m.role === 'assistant' ? 'assistant' as const : 'user' as const, content: m.content })),
+        { thinkingLevel: 'HIGH', temperature: 0.7, ...(options.fetch ? { fetch: options.fetch } : {}) },
+      );
     }
 
-    const messages: { role: 'system' | 'user' | 'assistant'; content: string }[] = [
-      {
-        role: 'system',
-        content: `${systemPrompt}\n\nbusinessName: ${businessContext.businessName}\nbusinessNiche: ${businessContext.businessNiche}`,
-      },
-    ];
-
-    for (const pair of fewshot) {
-      messages.push({ role: 'user', content: pair.review });
-      messages.push({ role: 'assistant', content: pair.reply });
+    const endpoint = resolveQwenEndpoint('gbp_reply');
+    if (!endpoint) {
+      throw new Error(`createGbpReplyDrafter: missing credentials for ${selection.provider} (${selection.envVar})`);
     }
 
-    messages.push({ role: 'user', content: reviewComment });
-
-    const response = await fetch(`${qwenBaseUrl}/chat/completions`, {
+    const response = await (options.fetch ?? globalThis.fetch)(`${endpoint.baseUrl}/chat/completions`, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${qwenApiKey}`,
+        'Authorization': `Bearer ${endpoint.apiKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
@@ -135,13 +163,13 @@ export function createQwenReplyDrafter(): ReplyDrafter {
 
     if (!response.ok) {
       const error = await response.text();
-      throw new Error(`createQwenReplyDrafter: Qwen API error ${response.status}: ${error}`);
+      throw new Error(`createGbpReplyDrafter: Qwen API error ${response.status}: ${error}`);
     }
 
     const data = await response.json();
     const text = data.choices?.[0]?.message?.content;
     if (!text) {
-      throw new Error('createQwenReplyDrafter: empty response from Qwen');
+      throw new Error('createGbpReplyDrafter: empty response from Qwen');
     }
 
     return String(text).trim();

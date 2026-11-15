@@ -6,7 +6,8 @@
 import type { CollectedData } from '../bot/prompts';
 import type { SiteCopy } from './lpCopyPrompt';
 import { buildLpCopyPrompt, buildSiteCopyPrompt, primaryCtaLabel } from './lpCopyPrompt';
-import { callQwenJSON, type CallQwenJSONOptions } from '../ai/qwen-fast';
+import { type CallQwenJSONOptions } from '../ai/qwen-fast';
+import { callSiteCopyJSON } from '../ai/workloadJson';
 import type { PageBrief } from '../site-bot/research/pageBrief';
 import type { SiteResearchDossier } from '../site-bot/research/types';
 import { CLAIM_RULES, PLURAL_ADDRESS_TOKENS, SERVICE_DESCRIPTION_MIN_CHARS, WE_FORM_TOKENS } from './copyGates.config';
@@ -2597,7 +2598,7 @@ export async function generateResearchPageCopy(
   data: CollectedData,
   dependencies: ResearchPageCopyDependencies = {},
 ): Promise<SiteCopy> {
-  const callJson = dependencies.callJson ?? callQwenJSON;
+  const callJson = dependencies.callJson ?? callSiteCopyJSON;
   const requested = dependencies.maxRepairs ?? MAX_COPY_REPAIRS;
   const version = resolvePromptVersion(brief, dependencies.promptVersion);
   const ctx: RepairContext = {

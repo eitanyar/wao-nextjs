@@ -13,6 +13,7 @@ import fs from 'fs';
 import path from 'path';
 import crypto from 'crypto';
 import { fileURLToPath } from 'url';
+import { geminiGenerateJsonText, resolveQwenEndpoint, scriptEnv, selectLlmProvider } from './llm-provider.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const FETCH_TIMEOUT_MS = 10_000;
@@ -54,12 +55,6 @@ function loadEnv() {
   });
   envCache = env;
   return envCache;
-}
-
-function envVal(name) {
-  return Object.prototype.hasOwnProperty.call(process.env, name)
-    ? process.env[name]
-    : loadEnv()[name];
 }
 
 function stripHtml(html) {
@@ -144,10 +139,29 @@ function buildUserMessage(pages) {
     .join('\n\n');
 }
 
+// Provider switch (D3, 2026-11-15): this extractor rides LLM_PROVIDER_SITE_COPY (default stays the
+// Qwen token plan). gemini sends the same prompt in Gemini JSON mode; `model` (a Qwen name) is then
+// replaced by GEMINI_MODEL_NAME / gemini-3.8-flash.
+async function callGeminiOnce(systemPrompt, userMessage) {
+  const env = scriptEnv(loadEnv());
+  const raw = await geminiGenerateJsonText({
+    apiKey: env.GEMINI_API_KEY,
+    model: env.GEMINI_MODEL_NAME || 'gemini-3.8-flash',
+    systemPrompt,
+    userMessage,
+    thinkingLevel: 'HIGH',
+    temperature: 0.2,
+    timeoutMs: LLM_TIMEOUT_MS,
+  });
+  return parseJsonObject(raw);
+}
+
 async function callQwenOnce(systemPrompt, userMessage, model) {
-  const apiKey = envVal('QWEN_API_KEY');
-  const baseUrl = envVal('QWEN_BASE_URL');
-  if (!apiKey || !baseUrl) throw new Error('Qwen not configured');
+  const env = scriptEnv(loadEnv());
+  if (selectLlmProvider('site_copy', env).provider === 'gemini') return callGeminiOnce(systemPrompt, userMessage);
+  const endpoint = resolveQwenEndpoint('site_copy', env);
+  if (!endpoint) throw new Error('Qwen not configured');
+  const { apiKey, baseUrl } = endpoint;
 
   const url = `${baseUrl}/chat/completions`;
   const payload = {

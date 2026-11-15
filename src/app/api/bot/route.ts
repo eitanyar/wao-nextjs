@@ -5,6 +5,7 @@ import { ADAM_SYSTEM_PROMPT, DROR_SYSTEM_PROMPT, TAMAR_SYSTEM_PROMPT, T21_PHOTO_
 import { getEstimatedCPC } from "@/lib/ads/keywordPlanner";
 import { resolveBoundedOnboardingResponse } from "@/lib/google-ads/onboarding-response";
 import { callQwenChatJSON } from "@/lib/ai/qwen-fast";
+import { resolveQwenEndpoint, TokenPlanRefusedError } from "@/lib/ai/llmProvider";
 
 interface Message {
   role: "user" | "assistant" | "system";
@@ -932,7 +933,7 @@ async function handleQwen(messages: Message[], currentState: string, collectedDa
     JSON.parse(await callQwenChatJSON(systemPrompt, contents.map(({ role, parts }) => ({
       role: role === "model" ? "assistant" : "user",
       content: parts[0].text,
-    })), { timeoutMs: QWEN_CHAT_TIMEOUT_MS })));
+    })), { timeoutMs: QWEN_CHAT_TIMEOUT_MS, workload: "chat" })));
 }
 
 async function handleLiveChat(
@@ -1129,6 +1130,15 @@ Present ₪${chosenBudget} as: "עם ₪${chosenBudget} תקבל בסביבות 
 
 // ── Main route ────────────────────────────────────────────────────────────────
 
+function resolveChatQwenEndpoint() {
+  try {
+    return resolveQwenEndpoint("chat", process.env);
+  } catch (error) {
+    if (error instanceof TokenPlanRefusedError) return null;
+    throw error;
+  }
+}
+
 export async function POST(req: Request) {
   try {
     const body: RequestData = await req.json();
@@ -1136,7 +1146,9 @@ export async function POST(req: Request) {
     const { messages, currentState, collectedData, sessionId } = body;
     const lastUserMessage = messages[messages.length - 1]?.content || "";
 
-    const qwenConfigured = Boolean(process.env.QWEN_API_KEY && process.env.QWEN_BASE_URL);
+    // LLM_PROVIDER_CHAT (default gemini). A Qwen provider with missing credentials, or one the
+    // production token-plan guard refuses (already logged once), falls back to Gemini as before.
+    const qwenConfigured = Boolean(resolveChatQwenEndpoint());
     const apiKey = process.env.GEMINI_API_KEY;
     const live = qwenConfigured
       ? () => handleQwen(messages, currentState, collectedData)

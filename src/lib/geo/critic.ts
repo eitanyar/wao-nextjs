@@ -1,4 +1,4 @@
-import { callQwenJSON } from '@/lib/ai/qwen-fast';
+import { callWorkloadJSON } from '@/lib/ai/workloadJson';
 import type { GeoAction } from './actions';
 
 /**
@@ -75,7 +75,8 @@ ${action.content.factualClaims?.length ? action.content.factualClaims.join('\n')
 }
 
 export async function runDistinctivenessCritic(action: GeoAction): Promise<CriticResult> {
-  const raw = await callQwenJSON(CRITIC_SYSTEM_PROMPT, buildUserMessage(action), {
+  // LLM_PROVIDER_GEO: gemini by default (D3, 2026-11-15); qwen-* restores the Qwen 3.7 Plus critic.
+  const raw = await callWorkloadJSON('geo', CRITIC_SYSTEM_PROMPT, buildUserMessage(action), {
     model: 'qwen3.7-plus',
     // Thinking left ON (no `think: false`) — deliberate, see file header.
   });

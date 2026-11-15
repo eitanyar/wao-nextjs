@@ -57,7 +57,7 @@ const responderPath = resolve(__dirname, "../src/lib/gbp/reviewResponder.ts");
 const sharedClientsPath = resolve(__dirname, "../src/lib/shared/clients.ts");
 const gbp = await import(clientPath);
 const { pollClientReviews } = await import(pollPath);
-const { draftRepliesForBadReviews, createQwenReplyDrafter } = await import(responderPath);
+const { draftRepliesForBadReviews, createGbpReplyDrafter } = await import(responderPath);
 const { loadClient } = await import(sharedClientsPath);
 
 // Fixture-mode fake drafter — zero network, mirrors task _003's unit-test fake.
@@ -71,7 +71,7 @@ async function draftAndPrintBadReviews(result) {
     console.log(`[review-poll] no client record found for "${args.client}" — skipping draft step.`);
     return;
   }
-  const drafter = args.fixture ? fixtureDrafter : createQwenReplyDrafter();
+  const drafter = args.fixture ? fixtureDrafter : createGbpReplyDrafter();
   const appended = await draftRepliesForBadReviews(client, result.badReviews, drafter);
   console.log("APPENDED QUEUE ITEMS:");
   console.log(JSON.stringify(appended, null, 2));
