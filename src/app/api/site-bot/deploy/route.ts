@@ -33,6 +33,8 @@ import { createFraudBlockerClient } from '@/lib/fraud-blocker/client';
 import { fraudBlockerFailureState, provisionFraudBlockerDomain, recordFraudBlockerTrackerInstallation } from '@/lib/fraud-blocker/deployment';
 import { readFraudBlockerState, writeFraudBlockerState } from '@/lib/fraud-blocker/store';
 import { isSafeDeploymentSlug } from '@/lib/deployment/deploy-access';
+import { originHost, subdomainOrigin, tenantCanonicalOrigin, tenantHosts, type SiteHostingFields } from '@/lib/site-hosting/tenant';
+import { deployTenantToWorker, siteHostingMode, workerHostingConfig, WorkerDeployError, type WorkerHostingConfig } from '@/lib/site-hosting/workerDeploy';
 
 interface DeployRequest {
   slug: string;
@@ -44,7 +46,7 @@ interface DeployRequest {
   testOnlyOfflineSimulationDeploy?: boolean;
 }
 
-interface SiteRecord {
+interface SiteRecord extends SiteHostingFields {
   collectedData: CollectedData;
   copy: SiteCopy;
   slug: string;
@@ -309,10 +311,22 @@ export async function POST(req: Request) {
       if (claimBlockers.length) return privateJson({ error: 'unverified_claim_in_heading', fields: claimBlockers }, 409);
     }
 
-    const apiToken = process.env.CLOUDFLARE_API_TOKEN;
-    const accountId = process.env.CLOUDFLARE_ACCOUNT_ID;
-    const zoneId = process.env.CLOUDFLARE_ZONE_ID;
-    if (!apiToken?.trim() || !accountId?.trim() || !zoneId?.trim()) {
+    // Hosting switch (docs/missions/site-bot-shared-worker-hosting-2026-11-12.md): `pages` (default) is the
+    // one-Pages-project-per-client path below, unchanged; `worker` publishes to R2 for the shared wao-sites Worker.
+    // An unknown mode or missing worker config fails here, before any provider call; never a silent fallback.
+    const hostingMode = siteHostingMode(process.env.SITE_HOSTING_MODE);
+    if (!hostingMode) return privateJson({ error: 'site_hosting_mode_invalid' }, 503);
+    let workerConfig: WorkerHostingConfig | null = null;
+    if (hostingMode === 'worker') {
+      const resolved = workerHostingConfig(process.env);
+      if (!resolved.ok) return privateJson({ error: 'worker_hosting_unconfigured', missing: resolved.missing }, 503);
+      workerConfig = resolved.config;
+    }
+    // Pages-only credentials: read in pages mode only (worker mode uses CLOUDFLARE_SITES_API_TOKEN via workerConfig).
+    const apiToken = hostingMode === 'pages' ? process.env.CLOUDFLARE_API_TOKEN ?? '' : '';
+    const accountId = hostingMode === 'pages' ? process.env.CLOUDFLARE_ACCOUNT_ID ?? '' : '';
+    const zoneId = hostingMode === 'pages' ? process.env.CLOUDFLARE_ZONE_ID ?? '' : '';
+    if (hostingMode === 'pages' && (!apiToken.trim() || !accountId.trim() || !zoneId.trim())) {
       return privateJson({ error: 'deployment_provider_unavailable' }, 503);
     }
 
@@ -321,12 +335,16 @@ export async function POST(req: Request) {
     const theme = VERTICAL_THEMES[verticalKey];
     const assets = VERTICAL_ASSETS[verticalKey];
     const heroImageUrl = collectedData.trustAssetUrls?.[0] || collectedData.profilePhotoUrl || assets.heroImages[0].url;
-    const siteUrl = `https://${slug}.wao.co.il`;
+    // Canonical origin: `https://www.{ownerDomain}` once that domain is attached and live (worker mode only; Pages
+    // cannot serve owner domains), else `https://{slug}.wao.co.il`. Canonicals, og:url, sitemap, schema, robots.txt
+    // and the fraud-tracker domain all follow it.
+    const siteUrl = hostingMode === 'worker' ? tenantCanonicalOrigin(slug, record) : subdomainOrigin(slug);
+    const fraudDomain = originHost(siteUrl);
     let fraudBlockerSid: string | undefined;
     try {
-      fraudBlockerSid = await provisionFraudBlockerDomain({ clientId: slug, domain: `${slug}.wao.co.il`, client: createFraudBlockerClient() });
+      fraudBlockerSid = await provisionFraudBlockerDomain({ clientId: slug, domain: fraudDomain, client: createFraudBlockerClient() });
     } catch (error) {
-      writeFraudBlockerState(fraudBlockerFailureState(slug, `${slug}.wao.co.il`, error));
+      writeFraudBlockerState(fraudBlockerFailureState(slug, fraudDomain, error));
       return privateJson({ error: 'fraud_blocker_provisioning_required' }, 424);
     }
 
@@ -419,11 +437,71 @@ export async function POST(req: Request) {
     }
 
     if (fraudBlockerSid && !recordFraudBlockerTrackerInstallation({
-      state: readFraudBlockerState(slug) ?? fraudBlockerFailureState(slug, `${slug}.wao.co.il`, new Error('Fraud Blocker state was not persisted.')),
+      state: readFraudBlockerState(slug) ?? fraudBlockerFailureState(slug, fraudDomain, new Error('Fraud Blocker state was not persisted.')),
       pages: allPages,
     })) {
-      writeFraudBlockerState(fraudBlockerFailureState(slug, `${slug}.wao.co.il`, new Error('Tracker verification failed.')));
+      writeFraudBlockerState(fraudBlockerFailureState(slug, fraudDomain, new Error('Tracker verification failed.')));
       return privateJson({ error: 'fraud_blocker_tracker_verification_failed' }, 424);
+    }
+
+    // ── Step 4 (both modes): Bridge to the client-dashboard record ─────────
+    const bridgeClientDashboard = async () => {
+      // Site Bot previously had no data/clients/{slug}/client.json at all, so
+      // clients had no /client/dashboard account. This creates one on first
+      // deploy only (idempotent on redeploy) and auto-logs in a brand-new
+      // client the same way geo/signup/callback does. Must never block/fail
+      // the deploy response after the mandatory domain binding succeeds.
+      try {
+        const isFirstTimeRecord = !clientRecordExists(slug);
+
+        ensureSiteBotClientRecord({
+          clientId: slug,
+          siteUrl,
+          businessNiche: collectedData.businessNiche || '',
+          topService: collectedData.secondaryServices?.split(/[,\n،]/)[0]?.trim() || undefined,
+          targetLocation: collectedData.targetLocation,
+          usp: collectedData.usp,
+          approvalContact: collectedData.ownerName || collectedData.businessName,
+          approvalWhatsapp: collectedData.whatsappNumber || collectedData.phone,
+        });
+
+        if (isFirstTimeRecord) {
+          const bootstrapPin = String(randomInt(100000, 1_000_000));
+          const auth = await provisionClientAuth(slug, bootstrapPin, undefined, { mustChangePin: true });
+          const token = await createSessionToken(slug, { sessionVersion: auth.sessionVersion, scope: 'change-pin' });
+          const jar = await cookies();
+          jar.set(COOKIE_NAME, token, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'lax',
+            maxAge: 30 * 24 * 60 * 60,
+            path: '/',
+          });
+        }
+      } catch (err) {
+        console.warn('Site Bot -> client-dashboard bridge (non-fatal):', err);
+      }
+    };
+
+    // ── Step 3 (worker mode): R2 publish + pointer flip + subdomain CNAME ──
+    if (hostingMode === 'worker') {
+      let published;
+      try {
+        published = await deployTenantToWorker({
+          config: workerConfig!,
+          slug,
+          files: { ...allPages, ...siteFontFiles() },
+          canonicalOrigin: siteUrl,
+          hosts: tenantHosts(slug, record),
+        });
+      } catch (error) {
+        console.error('Site Bot worker deploy error:', error);
+        const stage = error instanceof WorkerDeployError ? error.stage : 'publish';
+        return privateJson({ error: stage === 'dns' ? 'deployment_domain_binding_failed' : 'worker_publish_failed' }, 502);
+      }
+      await bridgeClientDashboard();
+      return privateJson({ success: true, url: siteUrl, projectName: slug, hosting: 'worker',
+        version: published.publish.version, dns: published.dns });
     }
 
     // ── Step 3: Write to a tmp dir ──────────────────────────────────────────
@@ -491,42 +569,7 @@ export async function POST(req: Request) {
       } catch {
         return privateJson({ error: 'deployment_domain_binding_failed' }, 502);
       }
-    // ── Step 4: Bridge to the client-dashboard record ──────────────────────
-    // Site Bot previously had no data/clients/{slug}/client.json at all, so
-    // clients had no /client/dashboard account. This creates one on first
-    // deploy only (idempotent on redeploy) and auto-logs in a brand-new
-    // client the same way geo/signup/callback does. Must never block/fail
-    // the deploy response after the mandatory domain binding succeeds.
-    try {
-      const isFirstTimeRecord = !clientRecordExists(slug);
-
-      ensureSiteBotClientRecord({
-        clientId: slug,
-        siteUrl,
-        businessNiche: collectedData.businessNiche || '',
-        topService: collectedData.secondaryServices?.split(/[,\n،]/)[0]?.trim() || undefined,
-        targetLocation: collectedData.targetLocation,
-        usp: collectedData.usp,
-        approvalContact: collectedData.ownerName || collectedData.businessName,
-        approvalWhatsapp: collectedData.whatsappNumber || collectedData.phone,
-      });
-
-      if (isFirstTimeRecord) {
-        const bootstrapPin = String(randomInt(100000, 1_000_000));
-        const auth = await provisionClientAuth(slug, bootstrapPin, undefined, { mustChangePin: true });
-        const token = await createSessionToken(slug, { sessionVersion: auth.sessionVersion, scope: 'change-pin' });
-        const jar = await cookies();
-        jar.set(COOKIE_NAME, token, {
-          httpOnly: true,
-          secure: process.env.NODE_ENV === 'production',
-          sameSite: 'lax',
-          maxAge: 30 * 24 * 60 * 60,
-          path: '/',
-        });
-      }
-    } catch (err) {
-      console.warn('Site Bot -> client-dashboard bridge (non-fatal):', err);
-    }
+    await bridgeClientDashboard();
 
     return privateJson({ success: true, url: siteUrl, projectName: slug });
     } finally {

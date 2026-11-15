@@ -1,0 +1,17 @@
+{
+  "//": "Compiles the pure router + its node:test suite to dist/workers/wao-sites (CommonJS) for `npm run test`.",
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "lib": ["ES2022", "DOM"],
+    "strict": true,
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "types": ["node"],
+    "typeRoots": ["../../node_modules/@types"],
+    "outDir": "../../dist/workers/wao-sites",
+    "rootDir": "src"
+  },
+  "files": ["src/router.ts", "src/router.test.ts"]
+}

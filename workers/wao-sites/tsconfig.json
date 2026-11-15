@@ -1,0 +1,16 @@
+{
+  "//": "Typecheck only (wrangler/esbuild bundles). Worker runtime types come from `wrangler types` output when present; index.ts declares the few binding shapes it uses so it also checks without them.",
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ES2022",
+    "moduleResolution": "bundler",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "strict": true,
+    "noEmit": true,
+    "skipLibCheck": true,
+    "isolatedModules": true,
+    "types": []
+  },
+  "include": ["src/**/*.ts"],
+  "exclude": ["src/**/*.test.ts"]
+}

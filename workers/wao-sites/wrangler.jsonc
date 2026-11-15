@@ -1,0 +1,21 @@
+// wao-sites: the shared Site Bot router Worker.
+// Design: docs/missions/site-bot-shared-worker-hosting-2026-11-12.md
+// Deploy (only after provisioning; needs CLOUDFLARE_SITES_API_TOKEN as CLOUDFLARE_API_TOKEN):
+//   ./node_modules/.bin/wrangler deploy -c workers/wao-sites/wrangler.jsonc
+// Local:  ./node_modules/.bin/wrangler dev -c workers/wao-sites/wrangler.jsonc --local
+{
+  "$schema": "../../node_modules/wrangler/config-schema.json",
+  "name": "wao-sites",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-06-30",
+  "workers_dev": false,
+  "preview_urls": false,
+  "r2_buckets": [
+    { "binding": "SITES", "bucket_name": "wao-sites" }
+  ],
+  // Zone routes are NOT declared here on purpose. scripts/site-hosting/provision.mjs owns them, GET-first, so the
+  // Worker = None exclusion routes (wao.co.il/*, www.wao.co.il/*, mail…, smtp…) always exist BEFORE the catch-all
+  // "*/*" route that sends tenant and custom-hostname traffic here. A wrangler deploy therefore never adds, moves
+  // or removes a route.
+  "observability": { "enabled": true }
+}

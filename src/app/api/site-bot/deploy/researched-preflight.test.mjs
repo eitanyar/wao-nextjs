@@ -55,6 +55,22 @@ vm.runInNewContext(packetCode, {
   },
 }, { filename: packetPath });
 assert.equal(typeof packetExports.matchesResearchedCopyReviewPacket, 'function');
+// Site Bot shared-Worker hosting: the real tenant rules and hosting-mode switch; R2 publish is a per-test stub.
+const transpileReal = file => ts.transpileModule(fs.readFileSync(path.resolve(file), 'utf8'), {
+  fileName: file, compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022, esModuleInterop: true },
+}).outputText;
+const tenantExports = {};
+vm.runInNewContext(transpileReal('src/lib/site-hosting/tenant.ts'), { exports: tenantExports, URL, require: name => {
+  if (name === '../deployment/deploy-access') return { RESERVED_DEPLOYMENT_SLUGS: new Set(), isSafeDeploymentSlug: value => value === 'synthetic-preflight' };
+  throw new Error(`unexpected tenant import: ${name}`);
+} }, { filename: 'tenant.ts' });
+const workerDeployReal = {};
+vm.runInNewContext(transpileReal('src/lib/site-hosting/workerDeploy.ts'), { exports: workerDeployReal, require: name => {
+  if (name === './tenant') return tenantExports;
+  if (name === './r2') return { createS3Store: () => { throw new Error('unexpected S3 store'); }, publishTenantSite: () => { throw new Error('unexpected publish'); } };
+  throw new Error(`unexpected workerDeploy import: ${name}`);
+} }, { filename: 'workerDeploy.ts' });
+const workerDeployModule = deployTenantToWorker => ({ ...workerDeployReal, deployTenantToWorker });
 assert.equal(typeof packetExports.buildResearchedCopyReviewPacket, 'function');
 const slug = 'synthetic-preflight';
 const foreignSlug = 'synthetic-foreign';
@@ -95,7 +111,7 @@ function harness({ authorized = true, record, dossier = syntheticDossier(), read
   cloudflare = syntheticCloudflare, nodeEnv = 'test', offlineSimulation = false, failWranglerDeploy = false,
   binding = null, approved = false, rawBytes, bodyApproval, siteNodes = {}, dossierNodes = {},
   siteStatSize, siteStatType = 'file', siteReadBytes, siteReadChunk, siteReadError, siteOpenError, siteStatError, dossierReadError,
-  legacyRender = false, realClaimCheck = false } = {}) {
+  legacyRender = false, realClaimCheck = false, hostingEnv = {}, workerDeploy } = {}) {
   const bytes = rawBytes ?? (record && Buffer.from(JSON.stringify(record)));
   if (approved) {
     assert.ok(dossier && bytes, 'approved fixture requires record and dossier');
@@ -104,6 +120,8 @@ function harness({ authorized = true, record, dossier = syntheticDossier(), read
     });
   }
   let credentialReads = 0;
+  const fraudDomains = [];
+  const workerDeploys = [];
   let dossierLookups = 0;
   let receiptChecks = 0;
   const calls = { body: 0, cwd: 0, site: 0, dossier: 0, readiness: 0, validation: 0, vertical: 0, client: 0, provision: 0, state: 0, forbidden: 0 };
@@ -343,8 +361,9 @@ function harness({ authorized = true, record, dossier = syntheticDossier(), read
       return new Proxy({}, { get: forbidden('FraudBlocker client access') });
     } },
     '@/lib/fraud-blocker/deployment': {
-      provisionFraudBlockerDomain: async () => {
+      provisionFraudBlockerDomain: async options => {
         calls.provision++;
+        fraudDomains.push(options?.domain);
         if (activeDeploy) return 'synthetic-sid';
         throw new Error('synthetic provision failure');
       },
@@ -359,6 +378,13 @@ function harness({ authorized = true, record, dossier = syntheticDossier(), read
       },
     },
     '@/lib/deployment/deploy-access': { isSafeDeploymentSlug: value => value === slug },
+    '@/lib/site-hosting/tenant': tenantExports,
+    '@/lib/site-hosting/workerDeploy': workerDeployModule(async input => {
+      if (!workerDeploy) return forbidden('deployTenantToWorker')(input);
+      workerDeploys.push(input);
+      deployEvents.push('worker-deploy');
+      return workerDeploy(input);
+    }),
   };
   const exports = {};
   vm.runInNewContext(code, {
@@ -367,7 +393,7 @@ function harness({ authorized = true, record, dossier = syntheticDossier(), read
       assert.ok(Object.hasOwn(modules, name), `unexpected import: ${name}`);
       return modules[name];
     },
-    process: { env: new Proxy({ ...cloudflare, NODE_ENV: nodeEnv }, {
+    process: { env: new Proxy({ ...cloudflare, ...hostingEnv, NODE_ENV: nodeEnv }, {
       get: (target, key) => {
         if (!authorized) return forbidden('config access')();
         if (typeof key === 'string' && key.startsWith('CLOUDFLARE_')) credentialReads++;
@@ -379,7 +405,7 @@ function harness({ authorized = true, record, dossier = syntheticDossier(), read
     console: { error: failWranglerDeploy ? (_message, error) => {
       assert.equal(error.message, 'synthetic Wrangler failure');
       deployEvents.push('error');
-    } : forbidden('console.error'), warn: forbidden('console.warn') },
+    } : workerDeploy ? () => deployEvents.push('error') : forbidden('console.error'), warn: forbidden('console.warn') },
   }, { filename: routePath });
   async function post() {
     const request = { get json() {
@@ -390,7 +416,7 @@ function harness({ authorized = true, record, dossier = syntheticDossier(), read
     assert.equal(response.headers.get('cache-control'), 'private, no-store');
     return { status: response.status, body: await response.json() };
   }
-  return { post, calls, io, deployEvents, get credentialReads() { return credentialReads; },
+  return { post, calls, io, deployEvents, fraudDomains, workerDeploys, get credentialReads() { return credentialReads; },
     get dossierLookups() { return dossierLookups; }, get receiptChecks() { return receiptChecks; } };
 }
 
@@ -1165,4 +1191,74 @@ test('real claim check control: the same record with no licence passes the claim
   assert.deepEqual(response, { status: 503, body: { error: 'deployment_provider_unavailable' } });
   assert.ok(setup.credentialReads > 0, 'the claim check passed, so the route went on to read the provider credentials');
   assert.deepEqual(setup.deployEvents, []);
+});
+
+// ── Site Bot shared-Worker hosting (SITE_HOSTING_MODE) ──────────────────────
+const workerEnv = { SITE_HOSTING_MODE: 'worker', CLOUDFLARE_SITES_API_TOKEN: 'synthetic-sites-token', CLOUDFLARE_ZONE_ID: 'synthetic-zone',
+  SITES_R2_ENDPOINT: 'https://synthetic-account.r2.cloudflarestorage.com', SITES_R2_ACCESS_KEY_ID: 'synthetic-key', SITES_R2_SECRET_ACCESS_KEY: 'synthetic-secret' };
+const plainRecord = extra => ({ slug, collectedData: { businessNiche: 'synthetic' }, copy: {}, ...extra });
+
+test('worker mode with missing R2/hosting env fails 503 before Fraud Blocker or any provider call (no Pages fallback)', async () => {
+  for (const missing of ['CLOUDFLARE_SITES_API_TOKEN', 'SITES_R2_ENDPOINT', 'SITES_R2_ACCESS_KEY_ID', 'SITES_R2_SECRET_ACCESS_KEY']) {
+    const env = { ...workerEnv };
+    delete env[missing];
+    const setup = harness({ record: plainRecord(), binding: {}, hostingEnv: env });
+    const response = await setup.post();
+    assert.equal(response.status, 503, missing);
+    assert.equal(response.body.error, 'worker_hosting_unconfigured');
+    assert.ok(response.body.missing.includes(missing), missing);
+    assert.equal(setup.calls.provision, 0);
+    assert.deepEqual(setup.deployEvents, []);
+  }
+});
+
+test('an unknown SITE_HOSTING_MODE fails 503 instead of silently picking a path', async () => {
+  const setup = harness({ record: plainRecord(), binding: {}, hostingEnv: { SITE_HOSTING_MODE: 'r2' } });
+  assert.deepEqual(await setup.post(), { status: 503, body: { error: 'site_hosting_mode_invalid' } });
+  assert.equal(setup.calls.provision, 0);
+  assert.equal(setup.credentialReads, 0);
+  assert.deepEqual(setup.deployEvents, []);
+});
+
+test('worker mode publishes to R2 (no wrangler, no tmpdir) and keeps the client bridge', async () => {
+  const setup = harness({ record: plainRecord(), binding: {}, hostingEnv: workerEnv,
+    workerDeploy: async () => ({ publish: { version: '20261115T100000Z-aaaaaa' }, dns: 'created' }) });
+  assert.deepEqual(await setup.post(), { status: 200, body: { success: true, url: `https://${slug}.wao.co.il`, projectName: slug,
+    hosting: 'worker', version: '20261115T100000Z-aaaaaa', dns: 'created' } });
+  assert.deepEqual(setup.deployEvents, ['render', 'worker-deploy', 'client-exists', 'client-record', 'pin', 'client-auth', 'session', 'cookie']);
+  assert.deepEqual(setup.fraudDomains, [`${slug}.wao.co.il`]);
+  const [input] = setup.workerDeploys;
+  assert.equal(input.canonicalOrigin, `https://${slug}.wao.co.il`);
+  assert.deepEqual(JSON.parse(JSON.stringify(input.hosts)), [{ host: `${slug}.wao.co.il`, role: 'canonical' }]);
+  assert.equal(input.config.apiToken, 'synthetic-sites-token');
+  assert.equal(input.config.bucket, 'wao-sites');
+  assert.deepEqual(Object.keys(input.files), ['index.html']);
+});
+
+test('worker mode: a live owner domain becomes siteUrl, the fraud-tracker domain and the canonical host', async () => {
+  const setup = harness({ record: plainRecord({ ownerDomain: 'owner.co.il', canonicalOrigin: 'https://www.owner.co.il' }), binding: {}, hostingEnv: workerEnv,
+    workerDeploy: async () => ({ publish: { version: '20261115T100000Z-aaaaaa' }, dns: 'exists' }) });
+  const response = await setup.post();
+  assert.equal(response.status, 200);
+  assert.equal(response.body.url, 'https://www.owner.co.il');
+  assert.deepEqual(setup.fraudDomains, ['www.owner.co.il']);
+  assert.deepEqual(JSON.parse(JSON.stringify(setup.workerDeploys[0].hosts)), [{ host: 'www.owner.co.il', role: 'canonical' }, { host: `${slug}.wao.co.il`, role: 'redirect' }]);
+});
+
+test('pages mode ignores a recorded owner domain (Pages cannot serve it) and stays byte-identical', async () => {
+  const setup = harness({ record: plainRecord({ ownerDomain: 'owner.co.il', canonicalOrigin: 'https://www.owner.co.il' }), binding: {} });
+  const response = await setup.post();
+  assert.equal(response.body.url, `https://${slug}.wao.co.il`);
+  assert.deepEqual(setup.fraudDomains, [`${slug}.wao.co.il`]);
+  assert.deepEqual(setup.workerDeploys, []);
+});
+
+test('worker mode: a publish or DNS failure returns 502 and never creates the client account', async () => {
+  for (const [stage, error] of [['publish', 'worker_publish_failed'], ['dns', 'deployment_domain_binding_failed']]) {
+    const setup = harness({ record: plainRecord(), binding: {}, hostingEnv: workerEnv, workerDeploy: async () => {
+      throw new workerDeployReal.WorkerDeployError(stage, new Error(`synthetic ${stage} failure`));
+    } });
+    assert.deepEqual(await setup.post(), { status: 502, body: { error } });
+    assert.ok(!setup.deployEvents.includes('client-record'));
+  }
 });

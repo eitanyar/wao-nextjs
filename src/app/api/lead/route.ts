@@ -1,12 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
+import { allowedLeadOrigin } from "@/lib/site-hosting/leadOrigins";
 
+// CORS: https wao.co.il and its subdomains, plus every attached Site Bot owner host (data/sites ownerDomain /
+// canonicalOrigin, cached 60 s). Anything else gets the fixed main-site origin, which the browser rejects.
 function corsHeaders(req: NextRequest): Record<string, string> {
   const origin = req.headers.get('origin') || '';
-  const allowed = origin.endsWith('.wao.co.il') || origin === 'https://wao.co.il';
+  const allowed = allowedLeadOrigin(origin);
   return {
-    'Access-Control-Allow-Origin': allowed ? origin : 'https://wao.co.il',
+    'Access-Control-Allow-Origin': allowed ?? 'https://wao.co.il',
     'Access-Control-Allow-Methods': 'POST, OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type',
+    'Vary': 'Origin',
   };
 }
 

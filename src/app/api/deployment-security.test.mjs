@@ -201,6 +201,25 @@ const syntheticMailEnv = {
   SMTP_PASS: 'synthetic-not-a-secret', LEAD_NOTIFY_EMAIL: syntheticRecipient,
 };
 
+function leadOriginsModule(deny) {
+  const transpile = relativePath => ts.transpileModule(read(relativePath), {
+    fileName: relativePath,
+    compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022, esModuleInterop: true },
+  }).outputText;
+  const tenant = {};
+  vm.runInNewContext(transpile('src/lib/site-hosting/tenant.ts'), { exports: tenant, URL, require: name => {
+    if (name === '../deployment/deploy-access') return { RESERVED_DEPLOYMENT_SLUGS: new Set(), isSafeDeploymentSlug: () => true };
+    return deny(`tenant import: ${name}`);
+  } });
+  const origins = {};
+  vm.runInNewContext(transpile('src/lib/site-hosting/leadOrigins.ts'), { exports: origins, Date, require: name => {
+    if (name === './tenant') return tenant;
+    if (name === 'fs' || name === 'path' || name === '../dataRoots') return new Proxy({}, { get: (_, key) => () => deny(`${name}.${String(key)}`) });
+    return deny(`leadOrigins import: ${name}`);
+  } });
+  return origins;
+}
+
 function syntheticLeadModule(env = syntheticMailEnv, sendMail = async () => ({ accepted: [syntheticRecipient], rejected: [] })) {
   const unexpected = [];
   const sends = [];
@@ -218,6 +237,9 @@ function syntheticLeadModule(env = syntheticMailEnv, sendMail = async () => ({ a
     exports,
     require: name => {
       if (name === 'next/server') return { NextResponse };
+      // The real CORS allowlist; its filesystem side (owner hosts from data/sites) is denied: the synthetic
+      // origin is https://wao.co.il, which must be decided without any read.
+      if (name === '@/lib/site-hosting/leadOrigins') return leadOriginsModule(deny);
       if (name === 'nodemailer') return { createTransport: options => {
         assert.equal(options.host, env.SMTP_HOST);
         assert.equal(options.auth.user, env.SMTP_USER);

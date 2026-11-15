@@ -31,4 +31,11 @@ test('isSafeDeploymentSlug rejects unsafe values and malformed DNS labels', () =
   }
 });
 
+test('isSafeDeploymentSlug rejects slugs reserved for wao.co.il infrastructure hosts', () => {
+  for (const value of ['sites', 'sites-origin', 'www', 'mail', 'calendar', 'chat', 'docs', 'email', 'smtp', 'alfa', 'karate', 'send']) {
+    assert.equal(isSafeDeploymentSlug(value), false, value);
+  }
+  assert.equal(isSafeDeploymentSlug('sites-plumber'), true);
+});
+
 

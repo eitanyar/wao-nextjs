@@ -1,0 +1,17 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": false,
+    "incremental": false,
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "outDir": "./dist",
+    "rootDir": "./src"
+  },
+  "//": "Site Bot shared-Worker hosting libs (src/lib/site-hosting) and their node:test suites; kept separate from tsconfig.test.json. Run by `npm run test`.",
+  "include": [
+    "src/lib/site-hosting/*.ts",
+    "src/lib/deployment/deploy-access.ts",
+    "src/lib/dataRoots.ts"
+  ]
+}

@@ -540,7 +540,7 @@ export function pageScript(opts: {
 
     function _pingClick(type) {
       var orderId = _uid();
-      fetch('https://wao.co.il/api/lead', {
+      fetch('https://www.wao.co.il/api/lead', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(Object.assign({
@@ -566,7 +566,7 @@ export function pageScript(opts: {
       errEl.style.display = 'none';
       var orderId = _uid();
       try {
-        var res = await fetch('https://wao.co.il/api/lead', {
+        var res = await fetch('https://www.wao.co.il/api/lead', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(Object.assign({
@@ -578,7 +578,8 @@ export function pageScript(opts: {
             orderId: orderId,
             slug: '${slug}',
             customerId: '${googleAdsCustomerId}',
-            type: 'form'
+            type: 'form',
+            privacyAccepted: document.getElementById('f-consent').checked
           }, _clickId))
         });
         if (!res.ok) throw new Error('server error');

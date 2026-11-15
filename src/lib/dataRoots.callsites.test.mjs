@@ -63,6 +63,7 @@ const CALL_SITES = {
   'src/lib/shared/clients.ts': ['clientsDir()'],
   'src/lib/site-bot/research/researchStore.ts': ['siteResearchDir()'],
   'src/lib/site-bot/researchToSite.ts': ['sitesDir()'],
+  'src/lib/site-hosting/leadOrigins.ts': ['sitesDir()'],
   'src/lib/vault.ts': ['clientsDir()'],
 };
 
