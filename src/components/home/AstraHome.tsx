@@ -3,6 +3,7 @@ import Link from "next/link";
 import copy from "@/content/astra-homepage-copy.json";
 import finalCopy from "@/content/astra-authority-first-homepage-copy.json";
 import AstraProofVideo from "./AstraProofVideo";
+import HeroScene from "./HeroScene";
 
 function ArrowIcon() {
   return (
@@ -69,6 +70,7 @@ export default function AstraHome() {
               </Link>
             </div>
           </div>
+          <HeroScene />
         </div>
       </section>
 

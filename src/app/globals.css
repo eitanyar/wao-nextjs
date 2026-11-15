@@ -768,6 +768,9 @@ p { margin: 0; }
 .astra-menu-button {
   width: 44px;
   height: 44px;
+  /* The 22px lines sit 11px inside the 44px hit area: pull the box past the gutter so the visible icon's
+     left edge (RTL inline-end) lands on the same side margin as the hero text. */
+  margin-inline-end: -11px;
   padding: 10px;
   border: 0;
   background: transparent;
@@ -788,6 +791,12 @@ p { margin: 0; }
 .astra-menu-line-open-one { transform: translateY(6px) rotate(45deg); }
 .astra-menu-line-open-two { opacity: 0; }
 .astra-menu-line-open-three { transform: translateY(-6px) rotate(-45deg); }
+
+/* Phone: the header CTA goes (the hero CTA is one thumb below). Unlayered, so it beats .astra-header-cta's display. */
+.astra-header-cta.wao-cta-desktop-only { display: none; }
+@media (min-width: 768px) {
+  .astra-header-cta.wao-cta-desktop-only { display: inline-flex; }
+}
 
 .astra-mobile-menu {
   padding: 8px 0 20px;
@@ -821,8 +830,10 @@ p { margin: 0; }
   overflow: clip;
 }
 
+/* Same box as the header's .wao-container content (max var(--container) minus its 24px gutters; 16px at <=420px),
+   so the logo, the hero headline, the header CTA and the hero visual share one right and one left edge. */
 .astra-container {
-  width: min(100% - 48px, 1180px);
+  width: min(100% - 48px, calc(var(--container) - 48px));
   margin-inline: auto;
 }
 
@@ -851,6 +862,75 @@ p { margin: 0; }
 }
 
 .astra-hero-copy { max-width: 650px; }
+
+/* Desktop: copy on the right, the scene in the empty left half (its left edge = the header CTA's left edge). */
+@media (min-width: 1024px) {
+  .astra-hero-grid { grid-template-columns: minmax(0, 1fr) minmax(0, 1.08fr); }
+}
+
+/* Hero scene: photo (two tiles) + the window on the laptop screen. Geometry in src/components/home/HeroScene.tsx. */
+.hero-scene {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1664 / 928;
+  container-type: inline-size;
+  overflow: hidden;
+  border-radius: 14px;
+  background: #2a2420;
+  direction: ltr;
+}
+.hero-scene-tile { position: absolute; left: 0; width: 100%; display: block; }
+.hero-scene-tile img { display: block; width: 100%; height: 100%; }
+.hero-stage { position: absolute; left: 0; top: 0; transform-origin: 0 0; display: none; }
+@supports (scale: tan(atan2(100cqw, 1664px))) {
+  .hero-stage { display: block; scale: tan(atan2(100cqw, 1664px)); }
+}
+.hero-window {
+  position: absolute;
+  left: 0;
+  top: 0;
+  transform-origin: 0 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: #fff;
+  direction: rtl;
+}
+.hero-window-tabs { display: flex; align-items: flex-end; padding-inline: 10px; background: #dee1e6; flex: none; }
+.hero-window-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 240px;
+  height: 21px;
+  padding-inline: 10px;
+  border-radius: 7px 7px 0 0;
+  background: #fff;
+  color: #3c4043;
+  font-family: Arial, sans-serif;
+  font-size: 11px;
+  white-space: nowrap;
+  overflow: hidden;
+}
+.hero-window-favicon { width: 10px; height: 10px; flex: none; border-radius: 50%; background: #2d5016; }
+.hero-window-tab-title { overflow: hidden; text-overflow: ellipsis; }
+.hero-window-serp { flex: none; padding: 14px 22px 0; background: #fff; border-bottom: 1px solid #e3e5e8; }
+.hero-window-serp > div { max-width: 700px; }
+.hero-window-lp { display: block; flex: none; border: 0; background: #fff; }
+.hero-window-chat {
+  position: absolute;
+  left: 18px;
+  bottom: 18px;
+  display: grid;
+  place-items: center;
+  width: 54px;
+  height: 54px;
+  border-radius: 50%;
+  background: #36ddb5;
+  color: #101416;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.28);
+}
+.hero-window-chat svg { width: 26px; height: 26px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linejoin: round; }
 
 .astra-eyebrow,
 .astra-card-eyebrow {
@@ -1355,7 +1435,6 @@ p { margin: 0; }
 }
 
 @media (max-width: 768px) {
-  .astra-container { width: min(100% - 32px, 1180px); }
   .astra-section { padding-block: 52px; scroll-margin-top: 72px; }
   .astra-hero { min-height: auto; padding-block: 56px; }
   .astra-hero h1 { font-size: clamp(2.3rem, 10.5vw, 2.65rem); }
@@ -1373,6 +1452,7 @@ p { margin: 0; }
 
 @media (max-width: 420px) {
   .astra-header .wao-container { padding-inline: 16px; }
+  .astra-container { width: min(100% - 32px, calc(var(--container) - 48px)); }
   .astra-logo { font-size: 1.55rem; }
   .astra-paths-section .astra-container,
   .astra-partner-proof { padding-inline-end: 48px; }
