@@ -12,6 +12,8 @@
   "include": [
     "src/lib/home/homography.ts",
     "src/lib/home/homography.test.ts",
+    "src/lib/home/heroMotion.ts",
+    "src/lib/home/heroMotion.test.ts",
     "src/lib/trainer/metrics.ts",
     "src/lib/trainer/prompts.ts",
     "src/lib/trainer/llm.ts",

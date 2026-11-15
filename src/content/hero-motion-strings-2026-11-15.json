@@ -1,0 +1,37 @@
+{
+  "_source": "waocopy (Opus) 2026-11-15: docs/copy/hero-motion-strings-2026-11-15.waocopy.json + docs/copy/hero-motion-skip-label-2026-11-15.waocopy.json; applied byte-exact by script, never retyped. Chips in the spec's display order (strings unchanged); 'answer' = index of the chip the pointer taps.",
+  "steps": [
+    {
+      "question": "מה המקצוע שלך?",
+      "chips": [
+        "אינסטלטור",
+        "חשמלאי",
+        "מנעולן"
+      ],
+      "answer": 0
+    },
+    {
+      "question": "באיזה אזור אתה עובד?",
+      "chips": [
+        "כפר סבא",
+        "רעננה",
+        "הרצליה"
+      ],
+      "answer": 1
+    },
+    {
+      "question": "על מה בא לך יותר טלפונים?",
+      "chips": [
+        "פתיחת סתימות",
+        "החלפת צנרת",
+        "איתור נזילות"
+      ],
+      "answer": 2
+    }
+  ],
+  "ready": "הכול מוכן",
+  "static_cue": "3 שאלות ויש לך מודעה ודף נחיתה",
+  "replay_label": "הפעל שוב",
+  "skip_label": "דַּלֵּג לסוף",
+  "sr_description": "אינסטלטור מרעננה עונה על שלוש שאלות, ומיד מקבל מודעה בגוגל ודף נחיתה משלו."
+}
