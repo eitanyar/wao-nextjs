@@ -284,6 +284,8 @@
     "src/lib/site-bot/placeIdRefresh.test.ts",
     "src/lib/site-bot/ownerIntake.ts",
     "src/lib/site-bot/ownerIntake.test.ts",
+    "src/lib/site-bot/paidFlowGate.ts",
+    "src/lib/site-bot/paidFlowGate.test.ts",
     "src/lib/site-bot/intakeOwnerCopy.ts",
     "src/lib/site-bot/credentialsCopy.ts",
     "src/lib/site-bot/credentialsCopy.test.ts",

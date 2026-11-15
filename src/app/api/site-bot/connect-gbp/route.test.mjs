@@ -4,7 +4,7 @@ import path from 'node:path';
 import test from 'node:test';
 import vm from 'node:vm';
 import ts from 'typescript';
-import { CLOSED_GATE_ENVS, gatedProcess } from '../paidFlowGate.testkit.mjs';
+import { GATE_MODULE, closedRequestCases, gatedProcess, loadGate } from '../paidFlowGate.testkit.mjs';
 
 const routePath = path.join(process.cwd(), 'src/app/api/site-bot/connect-gbp/route.ts');
 const source = fs.readFileSync(routePath, 'utf8');
@@ -13,15 +13,18 @@ const code = ts.transpileModule(source, {
   compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022, esModuleInterop: true },
 }).outputText;
 
-function routeHarness(processEnv = {}) {
+function routeHarness(processEnv = {}, cookie = undefined) {
   const unexpected = [];
   const deny = name => { unexpected.push(name); throw new Error(`unexpected ${name}`); };
   const exports = {};
   vm.runInNewContext(code, {
     exports,
-    require: name => name === 'next/server'
-      ? { NextResponse: { json: (body, options) => Response.json(body, options) } }
-      : deny(`import: ${name}`),
+    require: name => {
+      if (name === 'next/server') return { NextResponse: { json: (body, options) => Response.json(body, options) } };
+      // The real runtime gate (src/lib/site-bot/paidFlowGate.ts), sandboxed with the same denials.
+      if (name === GATE_MODULE) return loadGate(processEnv, deny, { cookie }).gate;
+      return deny(`import: ${name}`);
+    },
     // Only the SITE_BOT_PAID_FLOW gate keys are readable; every closed-gate env must keep the stub.
     process: gatedProcess(processEnv, deny),
     fetch: () => deny('network access'),
@@ -72,8 +75,9 @@ test('GBP connection POST ignores apparent authorization and enabling flags acro
 });
 
 test('GBP connection POST stays the audit-only stub for every closed rehearsal-flag env', async () => {
-  for (const env of CLOSED_GATE_ENVS) {
-    const harness = routeHarness(env);
+  // Closed envs (with or without a valid admin cookie) and rehearsal without a valid admin cookie.
+  for (const { env, cookie } of closedRequestCases()) {
+    const harness = routeHarness(env, cookie);
     await harness.post({ auditId: '00000000-0000-4000-8000-000000000000', gbpLocationId: 'locations/456', connectionMethod: 'manager_invite' });
   }
 });

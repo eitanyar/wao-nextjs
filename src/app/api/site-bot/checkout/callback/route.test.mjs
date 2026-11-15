@@ -4,12 +4,12 @@ import path from 'node:path';
 import test from 'node:test';
 import vm from 'node:vm';
 import ts from 'typescript';
-import { CLOSED_GATE_ENVS, gatedProcess } from '../../paidFlowGate.testkit.mjs';
+import { CLOSED_GATE_ENVS, GATE_MODULE, VALID_ADMIN_TOKEN, gatedProcess, loadGate } from '../../paidFlowGate.testkit.mjs';
 
 const routePath = path.join(process.cwd(), 'src/app/api/site-bot/checkout/callback/route.ts');
 const sessionId = '123e4567-e89b-42d3-a456-426614174000';
 
-function routeHarness(processEnv) {
+function routeHarness(processEnv, cookie) {
   const code = ts.transpileModule(fs.readFileSync(routePath, 'utf8'), {
     fileName: routePath,
     compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022, esModuleInterop: true },
@@ -19,9 +19,12 @@ function routeHarness(processEnv) {
   const exports = {};
   vm.runInNewContext(code, {
     exports,
-    require: name => name === 'next/server'
-      ? { NextResponse: { json: (body, options) => Response.json(body, options) } }
-      : deny(`import: ${name}`),
+    require: name => {
+      if (name === 'next/server') return { NextResponse: { json: (body, options) => Response.json(body, options) } };
+      // The real runtime gate (src/lib/site-bot/paidFlowGate.ts), sandboxed with the same denials.
+      if (name === GATE_MODULE) return loadGate(processEnv, deny, { cookie }).gate;
+      return deny(`import: ${name}`);
+    },
     // Only the SITE_BOT_PAID_FLOW gate keys are readable; every closed-gate env must keep the stub.
     process: gatedProcess(processEnv, deny),
     fetch: () => deny('fetch'),
@@ -53,8 +56,9 @@ function routeHarness(processEnv) {
 }
 
 test('checkout callback actual POST rejects valid and malformed inputs in every environment without effects', async () => {
-  for (const env of CLOSED_GATE_ENVS) {
-    const harness = routeHarness(env);
+  // Callback: closed envs only, with or without an admin cookie (rehearsal opens it; see route.ts).
+  for (const env of CLOSED_GATE_ENVS) for (const cookie of [undefined, VALID_ADMIN_TOKEN]) {
+    const harness = routeHarness(env, cookie);
     for (const request of [
       undefined,
       null,
@@ -68,8 +72,9 @@ test('checkout callback actual POST rejects valid and malformed inputs in every 
 });
 
 test('checkout callback actual POST never reads getter or thenable traps', async () => {
-  for (const env of CLOSED_GATE_ENVS) {
-    const harness = routeHarness(env);
+  // Callback: closed envs only, with or without an admin cookie (rehearsal opens it; see route.ts).
+  for (const env of CLOSED_GATE_ENVS) for (const cookie of [undefined, VALID_ADMIN_TOKEN]) {
+    const harness = routeHarness(env, cookie);
     await harness.post(harness.trapped({
       get json() { throw new Error('request JSON getter'); },
       get then() { throw new Error('request thenable getter'); },

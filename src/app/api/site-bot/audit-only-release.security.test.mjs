@@ -2,33 +2,39 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
-import { CLOSED_GATE_ENVS, OPEN_GATE_ENVS, gatedProcess, gatedRouteSource } from './paidFlowGate.testkit.mjs';
+import {
+  CLOSED_GATE_ENVS, GATE_MODULE, OPEN_GATE_ENVS, REHEARSAL_GATE_ENVS, VALID_ADMIN_TOKEN,
+  closedRequestCases, gatedCallbackSource, gatedProcess, gatedRouteSource, loadGate, openRequestCases,
+} from './paidFlowGate.testkit.mjs';
 
 const root = path.resolve(import.meta.dirname, '../../../..');
 const read = (relativePath) => fs.readFileSync(path.join(root, relativePath), 'utf8');
 
-// Paid-journey v2 M0: the paid routes below are re-enabled for local rehearsal ONLY behind
-// SITE_BOT_PAID_FLOW=1 on a non-production server. These checks keep the default-off state
-// identical to the audit-only release: same 503 body and headers, no request, import,
-// network, clock, console or env access beyond the two gate keys.
-async function assertGatedStub(relativePath, method, error) {
+// Paid-journey v2: the paid routes below are reachable ONLY through the runtime SITE_BOT_PAID_FLOW
+// gate (src/lib/site-bot/paidFlowGate.ts): closed by default (and for the legacy '1' in production),
+// 'rehearsal' = valid admin cookie only, 'open' = public. These checks keep the closed state identical
+// to the audit-only release: same 503 body and headers, no request, import, cookie, network, clock,
+// console or env access beyond the two gate keys.
+async function assertGatedStub(relativePath, method, error, { callback = false } = {}) {
   const { default: ts } = await import('typescript');
   const { default: vm } = await import('node:vm');
   const source = read(relativePath);
-  assert.equal(source.trim(), gatedRouteSource(method, error));
+  assert.equal(source.trim(), (callback ? gatedCallbackSource : gatedRouteSource)(method, error));
   const code = ts.transpileModule(source, {
     fileName: path.join(root, relativePath),
     compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022, esModuleInterop: true },
   }).outputText;
-  const run = async env => {
+  const run = async (env, cookie) => {
     const unexpected = [];
     const deny = name => { unexpected.push(name); throw new Error(`unexpected ${name}`); };
     const exports = {};
     vm.runInNewContext(code, {
       exports,
-      require: name => name === 'next/server'
-        ? { NextResponse: { json: (body, options) => Response.json(body, options) } }
-        : deny(`import: ${name}`),
+      require: name => {
+        if (name === 'next/server') return { NextResponse: { json: (body, options) => Response.json(body, options) } };
+        if (name === GATE_MODULE) return loadGate(env, deny, { cookie }).gate;
+        return deny(`import: ${name}`);
+      },
       process: gatedProcess(env, deny),
       fetch: () => deny('fetch'),
       console: new Proxy({}, { get: (_, name) => deny(`console.${String(name)}`) }),
@@ -47,23 +53,91 @@ async function assertGatedStub(relativePath, method, error) {
     try { response = await exports[method](request); } catch (error) { thrown = error; }
     return { response, thrown, unexpected };
   };
-  for (const env of CLOSED_GATE_ENVS) {
-    const { response, thrown, unexpected } = await run(env);
-    assert.equal(thrown, null, `${relativePath} threw with ${JSON.stringify(env)}`);
-    assert.equal(response.status, 503);
+  const withCookies = envs => envs.flatMap(env => [undefined, VALID_ADMIN_TOKEN].map(cookie => ({ env, cookie })));
+  // The provider's server callback carries no admin cookie, so for checkout/callback rehearsal opens it
+  // without one (it authenticates by its own provider check); every other paid route needs the cookie.
+  const closedCases = callback ? withCookies(CLOSED_GATE_ENVS) : closedRequestCases();
+  const openCases = callback ? withCookies([...OPEN_GATE_ENVS, ...REHEARSAL_GATE_ENVS]) : openRequestCases();
+  for (const { env, cookie } of closedCases) {
+    const label = `${relativePath} ${JSON.stringify(env)} cookie=${JSON.stringify(cookie)}`;
+    const { response, thrown, unexpected } = await run(env, cookie);
+    assert.equal(thrown, null, `${label} threw`);
+    assert.equal(response.status, 503, label);
     assert.equal(response.headers.get('Cache-Control'), 'private, no-store');
     assert.deepEqual(await response.json(), { error });
-    assert.deepEqual(unexpected, [], `${relativePath} touched ${unexpected} with ${JSON.stringify(env)}`);
+    assert.deepEqual(unexpected, [], `${label} touched ${unexpected}`);
   }
-  for (const env of OPEN_GATE_ENVS) {
+  for (const { env, cookie } of openCases) {
     // With the gate open the stub's first and only effect is loading ./paid; it still
     // must not read the request before handing it over.
-    const { thrown, unexpected } = await run(env);
-    assert.match(String(thrown?.message), /unexpected import: \.\/paid/);
-    assert.deepEqual(unexpected, ['import: ./paid']);
+    const label = `${relativePath} ${JSON.stringify(env)} cookie=${JSON.stringify(cookie)}`;
+    const { thrown, unexpected } = await run(env, cookie);
+    assert.match(String(thrown?.message), /unexpected import: \.\/paid/, label);
+    assert.deepEqual(unexpected, ['import: ./paid'], label);
   }
   const paidSibling = path.join(path.dirname(relativePath), 'paid.ts');
   assert.ok(fs.existsSync(path.join(root, paidSibling)), `${paidSibling} must exist`);
+}
+
+// Loads a gated page/layout with the real runtime gate (sandboxed). The module itself may not read
+// process at all; it may only call connection() and then the gate, in that order, so the decision
+// is made per request and never prerendered at build time. `events` records that order.
+async function loadGatedServerModule(relativePath, env, cookie, extraRequire = () => undefined) {
+  const { default: ts } = await import('typescript');
+  const { default: vm } = await import('node:vm');
+  const file = path.join(root, relativePath);
+  const code = ts.transpileModule(read(relativePath), {
+    fileName: file,
+    compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022, esModuleInterop: true, jsx: ts.JsxEmit.ReactJSX },
+  }).outputText;
+  const unexpected = [];
+  const deny = name => { unexpected.push(name); throw new Error(`unexpected ${name}`); };
+  const events = [];
+  const rendered = [];
+  const exports = {};
+  vm.runInNewContext(code, {
+    exports,
+    require: name => {
+      if (name === 'next/server') return { connection: async () => { events.push('connection'); } };
+      if (name === 'next/navigation') {
+        return {
+          redirect: url => { events.push(`redirect:${url}`); throw new Error(`NEXT_REDIRECT;${url}`); },
+          notFound: () => deny('notFound'),
+        };
+      }
+      if (name === GATE_MODULE) {
+        const { gate } = loadGate(env, deny, { cookie });
+        return { isPaidFlowAllowedForRequest: async () => { events.push('gate'); return gate.isPaidFlowAllowedForRequest(); } };
+      }
+      if (name === 'react/jsx-runtime') return { jsx: (type, props) => { rendered.push(type); return { type, props }; } };
+      const extra = extraRequire(name, deny);
+      return extra === undefined ? deny(`import: ${name}`) : extra;
+    },
+    process: new Proxy({}, { get: (_, key) => deny(`process.${String(key)}`) }),
+    fetch: () => deny('fetch'),
+    console: new Proxy({}, { get: (_, key) => deny(`console.${String(key)}`) }),
+    Date: class { constructor() { deny('clock'); } static now() { deny('clock'); } },
+    setTimeout: () => deny('setTimeout'),
+    setInterval: () => deny('setInterval'),
+  }, { filename: file });
+  return { exports, unexpected, events, rendered };
+}
+
+// Every env shape the build-time config must be indifferent to.
+const ALL_GATE_ENVS = [...CLOSED_GATE_ENVS, ...OPEN_GATE_ENVS, ...REHEARSAL_GATE_ENVS];
+
+async function nextConfigRedirects(env) {
+  const { default: ts } = await import('typescript');
+  const { default: vm } = await import('node:vm');
+  const { createRequire } = await import('node:module');
+  const req = createRequire(path.join(root, 'package.json'));
+  const compiled = ts.transpileModule(read('next.config.ts'), {
+    compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022, esModuleInterop: true },
+  }).outputText;
+  const exports = {};
+  vm.runInNewContext(compiled, { exports, require: id => req(id), __dirname: root, process: { env } }, { filename: 'next.config.ts' });
+  // JSON round-trip: the vm realm's arrays/objects have foreign prototypes.
+  return JSON.parse(JSON.stringify(await exports.default.redirects()));
 }
 
 test('paid handlers are imported only by their own gated stub', () => {
@@ -91,23 +165,20 @@ test('paid handlers are imported only by their own gated stub', () => {
   ]);
 });
 
-test('next.config keeps the /site-bot/start 307 unless the rehearsal flag opens it off-production', async () => {
-  const { default: ts } = await import('typescript');
-  const { default: vm } = await import('node:vm');
+test('next.config never redirects /site-bot/start at build time; the runtime gate in the page owns it', async () => {
   const { createRequire } = await import('node:module');
   const req = createRequire(path.join(root, 'package.json'));
-  const compiled = ts.transpileModule(read('next.config.ts'), {
-    compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022, esModuleInterop: true },
-  }).outputText;
-  const redirectsFor = async env => {
-    const exports = {};
-    vm.runInNewContext(compiled, { exports, require: id => req(id), __dirname: root, process: { env } }, { filename: 'next.config.ts' });
-    // JSON round-trip: the vm realm's arrays/objects have foreign prototypes.
-    return JSON.parse(JSON.stringify((await exports.default.redirects()).filter(entry => entry.source === '/site-bot/start')));
-  };
-  const expected = [{ source: '/site-bot/start', destination: '/site-bot', permanent: false }];
-  for (const env of CLOSED_GATE_ENVS) assert.deepEqual(await redirectsFor({ ...env }), expected, JSON.stringify(env));
-  for (const env of OPEN_GATE_ENVS) assert.deepEqual(await redirectsFor({ ...env }), []);
+  const { getPathMatch } = req('next/dist/shared/lib/router/utils/path-match');
+  for (const env of ALL_GATE_ENVS) {
+    const redirects = await nextConfigRedirects({ ...env });
+    assert.deepEqual(redirects.filter(entry => entry.source === '/site-bot/start'), [], JSON.stringify(env));
+    for (const pathname of ['/site-bot/start']) {
+      const claimed = redirects.filter(entry => getPathMatch(entry.source, { strict: true, removeUnnamedParams: true })(pathname));
+      assert.deepEqual(claimed, [], `${pathname} ${JSON.stringify(env)}`);
+    }
+  }
+  // No build-time copy of the gate is left in the config.
+  assert.doesNotMatch(read('next.config.ts'), /SITE_BOT_PAID_FLOW\s*===/);
 });
 
 test('audit page excludes grid, paid, outbound, and mutation reachability', () => {
@@ -221,7 +292,7 @@ export async function POST() {
 }`);
 });
 
-test('direct GBP connection POST stays disabled unless the off-production rehearsal flag is set', async () => {
+test('direct GBP connection POST stays disabled unless the runtime paid-flow gate allows the request', async () => {
   await assertGatedStub('src/app/api/site-bot/connect-gbp/route.ts', 'POST', 'gbp_connect_disabled');
 });
 
@@ -239,7 +310,7 @@ export async function GET() {
   }
 });
 
-test('public GBP connection status GET stays disabled unless the off-production rehearsal flag is set', async () => {
+test('public GBP connection status GET stays disabled unless the runtime paid-flow gate allows the request', async () => {
   await assertGatedStub('src/app/api/site-bot/connect-status/route.ts', 'GET', 'gbp_status_disabled');
 });
 
@@ -332,86 +403,71 @@ export default function SiteBotFixPage() {
   }
 });
 
-test('direct Site-Bot start page throws 404 before intake or checkout access unless the off-production rehearsal flag is set', async () => {
-  const { default: ts } = await import('typescript');
-  const { default: vm } = await import('node:vm');
-  const pagePath = path.join(root, 'src/app/(app)/site-bot/start/page.tsx');
+test('direct Site-Bot start page 307s to /site-bot before intake or checkout access unless the runtime paid-flow gate allows the request', async () => {
   const source = read('src/app/(app)/site-bot/start/page.tsx');
   assert.equal(source.trim(), `import type { Metadata } from 'next';
-import { notFound } from 'next/navigation';
+import { redirect } from 'next/navigation';
+import { connection } from 'next/server';
+import { isPaidFlowAllowedForRequest } from '@/lib/site-bot/paidFlowGate';
 import StartPaidFlow from './StartPaidFlow';
 
 export const metadata: Metadata = {
   robots: { index: false },
 };
 
-// Paid-journey v2 M0 dress rehearsal: the intake chat (./StartPaidFlow) renders
-// ONLY when SITE_BOT_PAID_FLOW=1 on a non-production server. With the flag unset
-// (prod default) this page 404s exactly as the audit-only release does, and
-// next.config.ts still 307s /site-bot/start -> /site-bot before it is reached.
-export default function SiteBotStartPage() {
-  if (process.env.SITE_BOT_PAID_FLOW === '1' && process.env.NODE_ENV !== 'production') {
+// Paid-journey v2: the intake chat (./StartPaidFlow) renders ONLY when the runtime
+// SITE_BOT_PAID_FLOW gate (src/lib/site-bot/paidFlowGate.ts) allows this request. Closed (the
+// production default) 307s to /site-bot, as the old next.config redirect did. connection() makes
+// the page render per request, so the gate is never answered once at build time.
+export default async function SiteBotStartPage() {
+  await connection();
+  if (await isPaidFlowAllowedForRequest()) {
     return <StartPaidFlow />;
   }
-  notFound();
+  redirect('/site-bot');
 }`);
   assert.match(read('src/app/(app)/site-bot/start/StartPaidFlow.tsx'), /^"use client";/);
-  const code = ts.transpileModule(source, {
-    fileName: pagePath,
-    compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022, esModuleInterop: true, jsx: ts.JsxEmit.ReactJSX },
-  }).outputText;
-  const load = env => {
-    const unexpected = [];
-    const deny = name => { unexpected.push(name); throw new Error(`unexpected ${name}`); };
-    const rendered = [];
-    // The client component is a reference only: any property access means it ran on the server.
-    const StartPaidFlow = new Proxy(function StartPaidFlow() {}, { get: (_, key) => key === '__esModule' ? false : deny(`StartPaidFlow.${String(key)}`) });
-    const exports = {};
-    vm.runInNewContext(code, {
-      exports,
-      require: name => {
-        if (name === 'next/navigation') return { notFound: () => { throw new Error('NEXT_HTTP_ERROR_FALLBACK;404'); } };
-        if (name === 'react/jsx-runtime') return { jsx: (type, props) => { rendered.push(type); return { type, props }; } };
-        if (name === './StartPaidFlow') return StartPaidFlow;
-        return deny(`import: ${name}`);
-      },
-      process: gatedProcess(env, deny),
-      fetch: () => deny('fetch'),
-      console: new Proxy({}, { get: (_, name) => deny(`console.${String(name)}`) }),
-      Date: class { constructor() { deny('clock'); } static now() { deny('clock'); } },
-      setTimeout: () => deny('setTimeout'),
-      setInterval: () => deny('setInterval'),
-    }, { filename: pagePath });
-    return { exports, unexpected, rendered, StartPaidFlow };
+  const load = async (env, cookie) => {
+    let StartPaidFlow = null;
+    const loaded = await loadGatedServerModule('src/app/(app)/site-bot/start/page.tsx', env, cookie, (name, deny) => {
+      if (name !== './StartPaidFlow') return undefined;
+      // The client component is a reference only: any property access means it ran on the server.
+      StartPaidFlow = new Proxy(function StartPaidFlow() {}, { get: (_, key) => key === '__esModule' ? false : deny(`StartPaidFlow.${String(key)}`) });
+      return StartPaidFlow;
+    });
+    return { ...loaded, StartPaidFlow };
   };
   const trapped = new Proxy({}, {
     get: (_, key) => { throw new Error(`unexpected props.${String(key)}`); },
     ownKeys: () => { throw new Error('unexpected props keys'); },
     getOwnPropertyDescriptor: () => { throw new Error('unexpected props descriptor'); },
   });
-  for (const env of CLOSED_GATE_ENVS) {
-    const { exports, unexpected, rendered } = load(env);
+  for (const { env, cookie } of closedRequestCases()) {
+    const label = `${JSON.stringify(env)} cookie=${JSON.stringify(cookie)}`;
+    const { exports, unexpected, rendered, events } = await load(env, cookie);
     assert.deepEqual(Object.keys(exports).sort(), ['default', 'metadata']);
     assert.equal(exports.metadata.robots.index, false);
     for (const props of [undefined, null, trapped]) {
-      assert.throws(() => exports.default(props), { message: 'NEXT_HTTP_ERROR_FALLBACK;404' });
+      await assert.rejects(exports.default(props), { message: 'NEXT_REDIRECT;/site-bot' }, label);
     }
-    assert.deepEqual(unexpected, [], JSON.stringify(env));
+    assert.deepEqual(events, ['connection', 'gate', 'redirect:/site-bot', 'connection', 'gate', 'redirect:/site-bot', 'connection', 'gate', 'redirect:/site-bot'], label);
+    assert.deepEqual(unexpected, [], label);
     assert.deepEqual(rendered, []);
   }
-  for (const env of OPEN_GATE_ENVS) {
-    const { exports, unexpected, rendered, StartPaidFlow } = load(env);
-    const element = exports.default(trapped);
-    assert.equal(element.type, StartPaidFlow);
+  for (const { env, cookie } of openRequestCases()) {
+    const label = `${JSON.stringify(env)} cookie=${JSON.stringify(cookie)}`;
+    const { exports, unexpected, rendered, events, StartPaidFlow } = await load(env, cookie);
+    const element = await exports.default(trapped);
+    assert.equal(element.type, StartPaidFlow, label);
     assert.deepEqual(rendered, [StartPaidFlow]);
-    assert.deepEqual(unexpected, []);
+    assert.deepEqual(events, ['connection', 'gate'], label);
+    assert.deepEqual(unexpected, [], label);
   }
 });
 
-test('both public checkout POSTs stay disabled unless the off-production rehearsal flag is set', async () => {
-  for (const route of ['init', 'callback']) {
-    await assertGatedStub(`src/app/api/site-bot/checkout/${route}/route.ts`, 'POST', 'checkout_unavailable');
-  }
+test('both public checkout POSTs stay disabled unless the runtime paid-flow gate allows them (callback: no admin cookie in rehearsal)', async () => {
+  await assertGatedStub('src/app/api/site-bot/checkout/init/route.ts', 'POST', 'checkout_unavailable');
+  await assertGatedStub('src/app/api/site-bot/checkout/callback/route.ts', 'POST', 'checkout_unavailable', { callback: true });
 });
 
 test('audit lookup reserves four durable provider slots before purge and search', () => {
@@ -466,102 +522,63 @@ test('audit lookup bounds streamed bytes before rate, key, reservation and store
   assert.deepEqual(accessed, []);
 });
 
-test('next.config 307s every /site-bot/pay/* path unless the rehearsal flag opens it off-production (M0.5 B16)', async () => {
-  const { default: ts } = await import('typescript');
-  const { default: vm } = await import('node:vm');
+test('next.config never redirects /site-bot/pay/* at build time; the runtime gate in the pay layout owns it (M0.5 B16)', async () => {
   const { createRequire } = await import('node:module');
   const req = createRequire(path.join(root, 'package.json'));
   const { getPathMatch } = req('next/dist/shared/lib/router/utils/path-match');
-  const compiled = ts.transpileModule(read('next.config.ts'), {
-    compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022, esModuleInterop: true },
-  }).outputText;
-  const redirectsFor = async env => {
-    const exports = {};
-    vm.runInNewContext(compiled, { exports, require: id => req(id), __dirname: root, process: { env } }, { filename: 'next.config.ts' });
-    return JSON.parse(JSON.stringify(await exports.default.redirects()));
-  };
   const payPaths = ['/site-bot/pay', '/site-bot/pay/x', '/site-bot/pay/undefined',
     '/site-bot/pay/123e4567-e89b-42d3-a456-426614174000', '/site-bot/pay/a/b'];
   const matching = (redirects, pathname) => redirects.filter(entry => getPathMatch(entry.source, { strict: true, removeUnnamedParams: true })(pathname));
-  for (const env of CLOSED_GATE_ENVS) {
-    const redirects = await redirectsFor({ ...env });
-    assert.deepEqual(redirects.filter(entry => entry.source.startsWith('/site-bot/pay')),
-      [{ source: '/site-bot/pay/:path*', destination: '/site-bot', permanent: false }], JSON.stringify(env));
-    for (const pathname of payPaths) {
-      // Exactly one redirect claims it, and it is the temporary one to the offer page.
-      assert.deepEqual(matching(redirects, pathname).map(entry => [entry.destination, entry.permanent]), [['/site-bot', false]], `${pathname} ${JSON.stringify(env)}`);
-    }
-    for (const pathname of ['/site-bot', '/site-bot/payment', '/site-bot/audit']) {
-      assert.equal(matching(redirects, pathname).some(entry => entry.source.startsWith('/site-bot/pay')), false, pathname);
-    }
-  }
-  for (const env of OPEN_GATE_ENVS) {
-    const redirects = await redirectsFor({ ...env });
-    assert.deepEqual(redirects.filter(entry => entry.source.startsWith('/site-bot/pay')), []);
-    for (const pathname of payPaths) assert.deepEqual(matching(redirects, pathname), [], pathname);
+  for (const env of ALL_GATE_ENVS) {
+    const redirects = await nextConfigRedirects({ ...env });
+    assert.deepEqual(redirects.filter(entry => entry.source.startsWith('/site-bot/pay')), [], JSON.stringify(env));
+    for (const pathname of payPaths) assert.deepEqual(matching(redirects, pathname), [], `${pathname} ${JSON.stringify(env)}`);
   }
 });
 
-test('pay layout 404s the mock card form before rendering children unless the off-production rehearsal flag is set (M0.5 B16)', async () => {
-  const { default: ts } = await import('typescript');
-  const { default: vm } = await import('node:vm');
-  const layoutPath = path.join(root, 'src/app/(product)/site-bot/pay/layout.tsx');
+test('pay layout 307s the mock card form to /site-bot before rendering children unless the runtime paid-flow gate allows the request (M0.5 B16)', async () => {
   const source = read('src/app/(product)/site-bot/pay/layout.tsx');
   assert.equal(source.trim(), `import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
-import { notFound } from 'next/navigation';
+import { redirect } from 'next/navigation';
+import { connection } from 'next/server';
+import { isPaidFlowAllowedForRequest } from '@/lib/site-bot/paidFlowGate';
 
 export const metadata: Metadata = {
   robots: { index: false },
 };
 
-// Paid-journey v2 M0.5 (B16): the mock checkout page under /site-bot/pay renders
-// ONLY when SITE_BOT_PAID_FLOW=1 on a non-production server. next.config.ts 307s
-// /site-bot/pay/:path* -> /site-bot first; this layout is the second lock, so the
-// pre-filled mock card form 404s even if that redirect is ever bypassed.
-export default function SiteBotPayLayout({ children }: { children: ReactNode }) {
-  if (process.env.SITE_BOT_PAID_FLOW === '1' && process.env.NODE_ENV !== 'production') {
+// Paid-journey v2 M0.5 (B16): the mock checkout page under /site-bot/pay renders ONLY when the
+// runtime SITE_BOT_PAID_FLOW gate (src/lib/site-bot/paidFlowGate.ts) allows this request. Closed
+// (the production default) 307s every /site-bot/pay/* path to /site-bot before any child renders,
+// as the old next.config redirect did. connection() keeps the decision per request.
+export default async function SiteBotPayLayout({ children }: { children: ReactNode }) {
+  await connection();
+  if (await isPaidFlowAllowedForRequest()) {
     return children;
   }
-  notFound();
+  redirect('/site-bot');
 }`);
   // The page itself is the only child segment; no sibling route can bypass the layout.
   assert.deepEqual(fs.readdirSync(path.join(root, 'src/app/(product)/site-bot/pay')).sort(), ['[sessionId]', 'layout.tsx']);
   assert.deepEqual(fs.readdirSync(path.join(root, 'src/app/(product)/site-bot/pay/[sessionId]')), ['page.tsx']);
-  const code = ts.transpileModule(source, {
-    fileName: layoutPath,
-    compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022, esModuleInterop: true, jsx: ts.JsxEmit.ReactJSX },
-  }).outputText;
-  const load = env => {
-    const unexpected = [];
-    const deny = name => { unexpected.push(name); throw new Error(`unexpected ${name}`); };
-    const exports = {};
-    vm.runInNewContext(code, {
-      exports,
-      require: name => name === 'next/navigation'
-        ? { notFound: () => { throw new Error('NEXT_HTTP_ERROR_FALLBACK;404'); } }
-        : deny(`import: ${name}`),
-      process: gatedProcess(env, deny),
-      fetch: () => deny('fetch'),
-      console: new Proxy({}, { get: (_, name) => deny(`console.${String(name)}`) }),
-      Date: class { constructor() { deny('clock'); } static now() { deny('clock'); } },
-      setTimeout: () => deny('setTimeout'),
-      setInterval: () => deny('setInterval'),
-    }, { filename: layoutPath });
-    return { exports, unexpected };
-  };
-  const children = new Proxy({}, { get: (_, key) => { throw new Error(`children rendered: ${String(key)}`); } });
-  for (const env of CLOSED_GATE_ENVS) {
-    const { exports, unexpected } = load(env);
+  // An async layout's return value is probed for `then` by the promise machinery; nothing else may be read.
+  const children = new Proxy({}, { get: (_, key) => { if (key === 'then') return undefined; throw new Error(`children rendered: ${String(key)}`); } });
+  for (const { env, cookie } of closedRequestCases()) {
+    const label = `${JSON.stringify(env)} cookie=${JSON.stringify(cookie)}`;
+    const { exports, unexpected, events } = await loadGatedServerModule('src/app/(product)/site-bot/pay/layout.tsx', env, cookie);
     assert.deepEqual(Object.keys(exports).sort(), ['default', 'metadata']);
     assert.equal(exports.metadata.robots.index, false);
-    assert.throws(() => exports.default({ children }), { message: 'NEXT_HTTP_ERROR_FALLBACK;404' }, JSON.stringify(env));
-    assert.deepEqual(unexpected, [], JSON.stringify(env));
+    await assert.rejects(exports.default({ children }), { message: 'NEXT_REDIRECT;/site-bot' }, label);
+    assert.deepEqual(events, ['connection', 'gate', 'redirect:/site-bot'], label);
+    assert.deepEqual(unexpected, [], label);
   }
-  for (const env of OPEN_GATE_ENVS) {
-    const { exports, unexpected } = load(env);
-    assert.equal(exports.default({ children }), children);
-    assert.deepEqual(unexpected, []);
+  for (const { env, cookie } of openRequestCases()) {
+    const label = `${JSON.stringify(env)} cookie=${JSON.stringify(cookie)}`;
+    const { exports, unexpected, events } = await loadGatedServerModule('src/app/(product)/site-bot/pay/layout.tsx', env, cookie);
+    assert.equal(await exports.default({ children }), children, label);
+    assert.deepEqual(events, ['connection', 'gate'], label);
+    assert.deepEqual(unexpected, [], label);
   }
 });
 
@@ -584,7 +601,7 @@ test('pay page and start flow gate navigation and "done" on the checked response
   assert.doesNotMatch(finish, /json\.sessionId|res\.json\(\)/);
 });
 
-test('GBP pre-fill GET stays disabled unless the off-production rehearsal flag is set (M1 B11)', async () => {
+test('GBP pre-fill GET stays disabled unless the runtime paid-flow gate allows the request (M1 B11)', async () => {
   await assertGatedStub('src/app/api/site-bot/prefill/route.ts', 'GET', 'prefill_disabled');
   // The paid handler is a thin wiring of the pure, unit-tested handler; it never writes the audit store.
   const paid = read('src/app/api/site-bot/prefill/paid.ts');
@@ -594,13 +611,12 @@ test('GBP pre-fill GET stays disabled unless the off-production rehearsal flag i
   }
 });
 
-test('audit layout renders children unchanged and never the buy-CTA provider unless the off-production rehearsal flag is set (M1 F1)', async () => {
-  const { default: ts } = await import('typescript');
-  const { default: vm } = await import('node:vm');
-  const layoutPath = path.join(root, 'src/app/(app)/site-bot/audit/layout.tsx');
+test('audit layout renders children unchanged and never the buy-CTA provider unless the runtime paid-flow gate allows the request (M1 F1)', async () => {
   const source = read('src/app/(app)/site-bot/audit/layout.tsx');
   assert.equal(source.trim(), `import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
+import { connection } from 'next/server';
+import { isPaidFlowAllowedForRequest } from '@/lib/site-bot/paidFlowGate';
 import { PaidBuyCtaProvider } from './paidBuyCta';
 import { SCORECARD_COPY } from '@/lib/site-bot/scorecardCopy';
 
@@ -611,60 +627,52 @@ export const metadata: Metadata = {
   robots: { index: false },
 };
 
-// Paid-journey v2 M1 (F1): the audit result shows the buy CTA ONLY when
-// SITE_BOT_PAID_FLOW=1 on a non-production server. With the flag unset (prod
-// default) this returns children exactly as the audit-only release does, and
-// <PaidBuyCtaSlot> on the page renders nothing.
-export default function AuditLayout({ children }: { children: ReactNode }) {
-  if (process.env.SITE_BOT_PAID_FLOW === '1' && process.env.NODE_ENV !== 'production') {
+// Paid-journey v2 M1 (F1): the audit result shows the buy CTA ONLY when the runtime
+// SITE_BOT_PAID_FLOW gate (src/lib/site-bot/paidFlowGate.ts) allows this request ('open', or
+// 'rehearsal' with a valid admin cookie). Closed (the production default) returns children
+// exactly as the audit-only release does, and <PaidBuyCtaSlot> on the page renders nothing.
+// connection() keeps the decision per request instead of baking it in at build time.
+export default async function AuditLayout({ children }: { children: ReactNode }) {
+  await connection();
+  if (await isPaidFlowAllowedForRequest()) {
     return <PaidBuyCtaProvider>{children}</PaidBuyCtaProvider>;
   }
   return children;
 }`);
-  const code = ts.transpileModule(source, {
-    fileName: layoutPath,
-    compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022, esModuleInterop: true, jsx: ts.JsxEmit.ReactJSX },
-  }).outputText;
-  const load = env => {
-    const unexpected = [];
-    const deny = name => { unexpected.push(name); throw new Error(`unexpected ${name}`); };
-    const rendered = [];
-    const PaidBuyCtaProvider = new Proxy(function PaidBuyCtaProvider() {}, { get: (_, key) => deny(`PaidBuyCtaProvider.${String(key)}`) });
-    const exports = {};
-    vm.runInNewContext(code, {
-      exports,
-      require: name => {
-        if (name === 'react/jsx-runtime') return { jsx: (type, props) => { rendered.push(type); return { type, props }; } };
-        if (name === './paidBuyCta') return { PaidBuyCtaProvider };
-        // Pure constants module, only for the metadata title (2026-11-13).
-        if (name === '@/lib/site-bot/scorecardCopy') return { SCORECARD_COPY: { FORM_TITLE: 'audit-title' } };
-        return deny(`import: ${name}`);
-      },
-      process: gatedProcess(env, deny),
-      fetch: () => deny('fetch'),
-      console: new Proxy({}, { get: (_, name) => deny(`console.${String(name)}`) }),
-      Date: class { constructor() { deny('clock'); } static now() { deny('clock'); } },
-      setTimeout: () => deny('setTimeout'),
-      setInterval: () => deny('setInterval'),
-    }, { filename: layoutPath });
-    return { exports, unexpected, rendered, PaidBuyCtaProvider };
+  const load = async (env, cookie) => {
+    let PaidBuyCtaProvider = null;
+    const loaded = await loadGatedServerModule('src/app/(app)/site-bot/audit/layout.tsx', env, cookie, (name, deny) => {
+      if (name === './paidBuyCta') {
+        PaidBuyCtaProvider = new Proxy(function PaidBuyCtaProvider() {}, { get: (_, key) => deny(`PaidBuyCtaProvider.${String(key)}`) });
+        return { PaidBuyCtaProvider };
+      }
+      // Pure constants module, only for the metadata title (2026-11-13).
+      if (name === '@/lib/site-bot/scorecardCopy') return { SCORECARD_COPY: { FORM_TITLE: 'audit-title' } };
+      return undefined;
+    });
+    return { ...loaded, PaidBuyCtaProvider };
   };
-  const children = new Proxy({}, { get: (_, key) => { throw new Error(`children inspected: ${String(key)}`); } });
-  for (const env of CLOSED_GATE_ENVS) {
-    const { exports, unexpected, rendered } = load(env);
+  // An async layout's return value is probed for `then` by the promise machinery; nothing else may be read.
+  const children = new Proxy({}, { get: (_, key) => { if (key === 'then') return undefined; throw new Error(`children inspected: ${String(key)}`); } });
+  for (const { env, cookie } of closedRequestCases()) {
+    const label = `${JSON.stringify(env)} cookie=${JSON.stringify(cookie)}`;
+    const { exports, unexpected, rendered, events } = await load(env, cookie);
     assert.deepEqual(Object.keys(exports).sort(), ['default', 'metadata']);
     assert.equal(exports.metadata.robots.index, false);
-    assert.equal(exports.default({ children }), children, JSON.stringify(env));
+    assert.equal(await exports.default({ children }), children, label);
     assert.deepEqual(rendered, []);
-    assert.deepEqual(unexpected, [], JSON.stringify(env));
+    assert.deepEqual(events, ['connection', 'gate'], label);
+    assert.deepEqual(unexpected, [], label);
   }
-  for (const env of OPEN_GATE_ENVS) {
-    const { exports, unexpected, rendered, PaidBuyCtaProvider } = load(env);
-    const element = exports.default({ children });
-    assert.equal(element.type, PaidBuyCtaProvider);
+  for (const { env, cookie } of openRequestCases()) {
+    const label = `${JSON.stringify(env)} cookie=${JSON.stringify(cookie)}`;
+    const { exports, unexpected, rendered, events, PaidBuyCtaProvider } = await load(env, cookie);
+    const element = await exports.default({ children });
+    assert.equal(element.type, PaidBuyCtaProvider, label);
     assert.equal(element.props.children, children);
     assert.deepEqual(rendered, [PaidBuyCtaProvider]);
-    assert.deepEqual(unexpected, []);
+    assert.deepEqual(events, ['connection', 'gate'], label);
+    assert.deepEqual(unexpected, [], label);
   }
 });
 

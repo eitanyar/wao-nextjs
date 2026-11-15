@@ -8,7 +8,7 @@
  * Tokens: `{net}` = the price before VAT, `{total}` = the VAT-inclusive charge, `{vatPercent}` = the VAT rate in percent.
  * Numbers are filled in by code from SITE_BOT_PLAN (plans.ts), never typed into the copy.
  * `{termsLink}` (termsConsent only) = a link to SITE_BOT_TERMS_PATH whose text is termsLinkLabel; split by siteBotTermsConsentParts.
- * The paid pages stay behind SITE_BOT_PAID_FLOW (off-production only) until go-live.
+ * The paid pages stay behind the runtime SITE_BOT_PAID_FLOW gate (src/lib/site-bot/paidFlowGate.ts) until go-live.
  */
 
 import { formatShekels, planSummary, type BillingPlan } from '../../payments/plans';

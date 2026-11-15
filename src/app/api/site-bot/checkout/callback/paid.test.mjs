@@ -31,7 +31,8 @@ function harness({ linkThrows = false, alreadyActive = false } = {}) {
   }, { cwd, console: logs.console });
   const call = () => paid.POST(new Request('http://localhost/api/site-bot/checkout/callback', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ sessionId }) }));
   const events = () => s.db.prepare(`SELECT metadata FROM subscription_events WHERE subscription_id = ? AND event_type = 'site_bot_session_linked'`).all(subscriptionId);
-  return { ...s, subscriptionId, call, events, logs };
+  const paidPost = (id) => paid.POST(new Request('http://localhost/api/site-bot/checkout/callback', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ sessionId: id }) }));
+  return { ...s, subscriptionId, call, paidPost, events, logs };
 }
 
 test('19: a successful activation writes exactly one site_bot_session_linked event with the business', async () => {
@@ -69,4 +70,13 @@ test('19: a throwing event insert still returns the normal success reply', async
   assert.equal(h.events().length, 0);
   assert.ok(h.logs.lines.some((l) => l.includes('session link failed') && l.includes(sessionId)));
   h.cleanup();
+});
+
+test('callback rejects a non-UUID sessionId before touching the filesystem', async () => {
+  const h = harness();
+  for (const bad of ['../outside', '..%2Fx', 'abc', '', 42]) {
+    const response = await h.paidPost(bad);
+    assert.equal(response.status, 400, `sessionId ${JSON.stringify(bad)}`);
+  }
+  assert.equal(h.events().length, 0);
 });

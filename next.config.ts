@@ -387,18 +387,9 @@ const nextConfig: NextConfig = {
   async redirects() {
     return [
       ...legacyRedirects,
-      // TEMPORARY (307): Site Bot checkout is offline (payment gateway not connected,
-      // checkout APIs return 503). Restore /site-bot/start by removing this entry once
-      // charging is live. Paid-journey v2 M0 rehearsal: skipped ONLY when
-      // SITE_BOT_PAID_FLOW=1 on a non-production server (prod always keeps it).
-      // M0.5 (B16): the mock pay page /site-bot/pay/<anything> is closed by the same
-      // gate, so prod never renders the pre-filled mock card form.
-      ...(process.env.SITE_BOT_PAID_FLOW === "1" && process.env.NODE_ENV !== "production"
-        ? []
-        : [
-          { source: "/site-bot/start", destination: "/site-bot", permanent: false },
-          { source: "/site-bot/pay/:path*", destination: "/site-bot", permanent: false },
-        ]),
+      // /site-bot/start and /site-bot/pay/* are NOT redirected here: a build-time redirect would
+      // freeze the paid-flow decision into the build. Their page/layout 307 to /site-bot at
+      // request time via the SITE_BOT_PAID_FLOW gate (src/lib/site-bot/paidFlowGate.ts).
     ];
   },
   async headers() {

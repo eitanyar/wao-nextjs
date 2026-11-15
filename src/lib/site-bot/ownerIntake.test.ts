@@ -217,12 +217,17 @@ describe('ownerIntake: pending copy never reaches production', () => {
   });
 
   // The copy flag going false does NOT un-gate /site-bot/start: opening it to production is a separate launch decision
-  // (Adam / Eitan). This assertion is unconditional until that decision lands, and is changed together with the gate.
-  it('the start page stays off production regardless of the copy flag (page gate and next.config 307 both in place)', () => {
+  // (Adam / Eitan), taken at runtime through SITE_BOT_PAID_FLOW (src/lib/site-bot/paidFlowGate.ts), never by this flag.
+  it('the start page stays behind the runtime paid-flow gate regardless of the copy flag (closed by default in production)', () => {
     const page = read('src/app/(app)/site-bot/start/page.tsx');
-    assert.match(page, /if \(process\.env\.SITE_BOT_PAID_FLOW === '1' && process\.env\.NODE_ENV !== 'production'\) \{\s*return <StartPaidFlow \/>;\s*\}\s*notFound\(\);/);
-    const config = read('next.config.ts');
-    assert.match(config, /process\.env\.SITE_BOT_PAID_FLOW === "1" && process\.env\.NODE_ENV !== "production"\s*\? \[\]\s*: \[\s*\{ source: "\/site-bot\/start", destination: "\/site-bot", permanent: false \}/);
+    assert.match(page, /await connection\(\);\s*if \(await isPaidFlowAllowedForRequest\(\)\) \{\s*return <StartPaidFlow \/>;\s*\}\s*redirect\('\/site-bot'\);/);
+    assert.doesNotMatch(page, /INTAKE_OWNER_COPY_PENDING|process\.env/);
+    const gate = read('src/lib/site-bot/paidFlowGate.ts');
+    assert.match(gate, /if \(value === 'open'\) return 'open';/);
+    assert.match(gate, /if \(value === 'rehearsal'\) return 'rehearsal';/);
+    assert.match(gate, /if \(value === '1' && env\.NODE_ENV !== 'production'\) return 'open';\s*return 'closed';/);
+    // No build-time copy of the gate: the config no longer redirects /site-bot/start.
+    assert.doesNotMatch(read('next.config.ts'), /source: "\/site-bot\/start"|SITE_BOT_PAID_FLOW\s*===/);
   });
 
   it('only the start-page intake imports the owner copy, so a placeholder cannot surface on another page', () => {

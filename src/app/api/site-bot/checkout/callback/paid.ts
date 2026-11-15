@@ -35,7 +35,10 @@ export async function POST(req: Request) {
   try {
     const body = await req.json();
     const sessionId: string = body?.sessionId;
-    if (!sessionId) return errorReply('invalid_input', 400);
+    // sessionId becomes a file name under data/sites-pending/ — accept only the UUIDs that checkout/init mints.
+    if (typeof sessionId !== 'string' || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(sessionId)) {
+      return errorReply('invalid_input', 400);
+    }
 
     const existingDossier = await readResearchDossier(sessionId);
     if (existingDossier) {

@@ -1,18 +1,21 @@
 import type { Metadata } from 'next';
-import { notFound } from 'next/navigation';
+import { redirect } from 'next/navigation';
+import { connection } from 'next/server';
+import { isPaidFlowAllowedForRequest } from '@/lib/site-bot/paidFlowGate';
 import StartPaidFlow from './StartPaidFlow';
 
 export const metadata: Metadata = {
   robots: { index: false },
 };
 
-// Paid-journey v2 M0 dress rehearsal: the intake chat (./StartPaidFlow) renders
-// ONLY when SITE_BOT_PAID_FLOW=1 on a non-production server. With the flag unset
-// (prod default) this page 404s exactly as the audit-only release does, and
-// next.config.ts still 307s /site-bot/start -> /site-bot before it is reached.
-export default function SiteBotStartPage() {
-  if (process.env.SITE_BOT_PAID_FLOW === '1' && process.env.NODE_ENV !== 'production') {
+// Paid-journey v2: the intake chat (./StartPaidFlow) renders ONLY when the runtime
+// SITE_BOT_PAID_FLOW gate (src/lib/site-bot/paidFlowGate.ts) allows this request. Closed (the
+// production default) 307s to /site-bot, as the old next.config redirect did. connection() makes
+// the page render per request, so the gate is never answered once at build time.
+export default async function SiteBotStartPage() {
+  await connection();
+  if (await isPaidFlowAllowedForRequest()) {
     return <StartPaidFlow />;
   }
-  notFound();
+  redirect('/site-bot');
 }

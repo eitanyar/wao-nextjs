@@ -7,9 +7,9 @@ import { INTAKE_COPY } from '@/lib/site-bot/intakeCopy';
 // Paid-journey v2 M1 (F1): the "build my site" CTA on the confirmed audit result.
 // The audit page renders <PaidBuyCtaSlot>, which renders NOTHING unless the audit
 // layout wrapped the page in <PaidBuyCtaProvider>, and the layout does that ONLY
-// when SITE_BOT_PAID_FLOW=1 on a non-production server. With the flag unset (prod
-// default) the provider is never rendered, the slot returns null and the audit
-// result markup is byte-identical to the audit-only release.
+// when the runtime SITE_BOT_PAID_FLOW gate (src/lib/site-bot/paidFlowGate.ts) allows
+// the request. Closed (prod default) the provider is never rendered, the slot returns
+// null and the audit result markup is byte-identical to the audit-only release.
 
 const PaidBuyCtaContext = createContext(false);
 
