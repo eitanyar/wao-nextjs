@@ -44,7 +44,11 @@ const DERIVED: Array<[string, string]> = [
 const derivedValues = new Set([...DERIVED.map(([d]) => d), MAGIC_LINK_REQUEST_COPY.success]);
 const allValues = Object.values(groups).flatMap((g) => Object.values(g) as string[]);
 
-const approved = new Set<string>([...Object.values(base.strings), ...Object.values(base.new), ...spans(fixesSection)]);
+// Later approved patch (Fable 5.2 clarity review item 12, 2026-11-15; waocopy): one-story patches on accountCopy.ts.
+const storyRaw = fs.readFileSync(path.join(repo, 'docs/copy/site-bot-one-story-clarity-2026-11-15.waocopy.json'), 'utf8');
+const story = (JSON.parse(storyRaw.slice(storyRaw.indexOf('{"patches"'))) as { patches: { file: string; new: string }[] }).patches
+  .filter((p) => p.file === 'src/lib/payments/accountCopy.ts').map((p) => p.new);
+const approved = new Set<string>([...Object.values(base.strings), ...Object.values(base.new), ...spans(fixesSection), ...story]);
 
 function isSingleDeletion(derived: string, full: string): boolean {
   if (derived.length >= full.length) return false;

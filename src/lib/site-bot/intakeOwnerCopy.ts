@@ -22,7 +22,7 @@ export const INTAKE_OWNER_COPY = {
   domainChoiceYes: 'כן, יש לי', // Choice: yes, I have a domain
   domainChoiceNo: 'אין לי', // Choice: no domain
   domainChoiceNotSure: 'לא בטוח', // Choice: not sure
-  domainNoNote: 'אין בעיה. תקבל מאיתנו כתובת חינם שמסתיימת ב־wao.co.il. השם המדויק תלוי במה שפנוי.', // Shown after No: we give you a free address on wao.co.il
+  domainNoNote: 'אין בעיה. תקבל מאיתנו כתובת חינם שמסתיימת ב־wao.co.il, והאתר עולה עליה תוך יום עסקים אחד אחרי התשלום. השם המדויק תלוי במה שפנוי. הכתובת שלך כל עוד אתה לקוח. מתי שתרצה לעבור לדומיין .co.il משלך, נחבר אותו בשבילך. הדומיין עצמו על חשבונך.', // Shown after No: we give you a free address on wao.co.il
   domainNotSureNote: 'בסדר גמור. אחרי ההרשמה נבדוק את זה יחד איתך.', // Shown after Not sure: fine, we check it with you after sign-up
   domainInputLabel: 'הדומיין שלך', // Label: your domain
   domainInvalid: 'זה לא נראה כמו דומיין. תכתוב רק את כתובת האתר, למשל example.co.il.', // Error: this does not look like a domain

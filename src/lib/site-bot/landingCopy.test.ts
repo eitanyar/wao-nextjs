@@ -130,6 +130,17 @@ test('google-ads: the clicks-to-real-leads change set (2026-11-12 FINAL, Noa + Y
     });
     return out;
   };
+  // Later approved patch set (Fable 5.2 clarity review, 2026-11-15; waocopy, facts unchanged): whole-line patches
+  // "key :: value" on the r2 source, applied last.
+  const clarity = (JSON.parse(read('docs/copy/google-ads-money-lines-clarity-2026-11-15.waocopy.json')) as {
+    patches: { old: string; new: string }[];
+  }).patches.map((p) => ({ key: p.old.split(' :: ')[0], old: p.old.split(' :: ').slice(1).join(' :: '), next: p.new.split(' :: ').slice(1).join(' :: ') }));
+  const applyClarity = (key: string, value: string) => {
+    const hit = clarity.find((c) => c.key === key);
+    if (!hit) return value;
+    assert.equal(value.replace(/\{net\}/g, '249'), hit.old.replace(/\{net\}/g, '249'), `${key}: clarity patch old matches the earlier approved line`);
+    return hit.next.replace(/249(?= ₪)/g, '{net}');
+  };
   for (const [key, value] of Object.entries(final.lines)) {
     let expected = value.includes(line27.old) ? value.split(line27.old).join(line27.new) : value;
     for (const p of moment3) {
@@ -141,9 +152,10 @@ test('google-ads: the clicks-to-real-leads change set (2026-11-12 FINAL, Noa + Y
     expected = applyPolish(key, expected);
     // Batch 2 (Eitan 2026-11-13, Noa-gated; anchors Yonatan-approved): the hero h1 anchor.
     if (key === 'hero.h1') expected = batch2.anchors.google_ads_h1.value;
+    expected = applyClarity(key, expected);
     assert.equal(fields.get(key), expected, key);
   }
-  assert.deepEqual([...GOOGLE_ADS_LANDING_COPY.phases.items], final['phases.items'].map((item, i) => applyPolish(`phases.items[${i}]`, item)));
+  assert.deepEqual([...GOOGLE_ADS_LANDING_COPY.phases.items], final['phases.items'].map((item, i) => applyClarity(`phases.items[${i}]`, applyPolish(`phases.items[${i}]`, item))));
   // Every polish patch on a FINAL-pinned line was consumed (none silently skipped).
   const pinned = new Set([...Object.keys(final.lines), ...final['phases.items'].map((_, i) => `phases.items[${i}]`)]);
   for (const [i, p] of polish.entries()) if (p.field !== null && pinned.has(p.field)) assert.ok(used.has(i), `polish patch on ${p.field} applied`);

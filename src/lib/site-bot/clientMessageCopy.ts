@@ -36,7 +36,7 @@ export type ClientMessageCopyKey = (typeof CLIENT_MESSAGE_COPY_KEYS)[number];
 
 export const SITE_BOT_CLIENT_MESSAGE_COPY: Readonly<Record<ClientMessageCopyKey, string> & { turnaroundLine: string }> = {
   boxHeading: 'בקשה או שאלה?',
-  boxIntro: 'כתוב מה תרצה לשנות באתר או בפרופיל בגוגל, או כל שאלה שיש לך. בן אדם מהצוות שלנו קורא כל הודעה.',
+  boxIntro: 'תכתוב כאן מה לשנות באתר או בפרופיל בגוגל, או מה תרצה לשאול. בן אדם מהצוות שלנו קורא כל הודעה.',
   textareaLabel: 'ההודעה שלך',
   textareaHint: 'למשל: לשנות שעות פתיחה או לעדכן מספר טלפון. אפשר עד 2,000 תווים.',
   submit: 'שלח הודעה',

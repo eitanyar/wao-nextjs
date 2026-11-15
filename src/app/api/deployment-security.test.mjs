@@ -242,7 +242,7 @@ function syntheticLeadModule(env = syntheticMailEnv, sendMail = async () => ({ a
       if (name === '@/lib/site-hosting/leadOrigins') return leadOriginsModule(deny);
       // Client-site CRM intake (slugged submissions only). Importable, but any use is denied: a main-site
       // lead (no slug) must be decided without touching the leads store or the tenant records.
-      if (['@/lib/crm/leadsStore', '@/lib/crm/siteLeadIntake', '@/lib/crm/siteLeadTenantLookup'].includes(name)) {
+      if (['@/lib/crm/leadsStore', '@/lib/crm/siteLeadIntake', '@/lib/crm/siteLeadTenantLookup', '@/lib/crm/ownerLeadEmail'].includes(name)) {
         return new Proxy({}, { get: (_, key) => key === '__esModule' ? undefined : (() => deny(`${name}.${String(key)}`)) });
       }
       if (name === 'nodemailer') return { createTransport: options => {
