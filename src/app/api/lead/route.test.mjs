@@ -28,7 +28,7 @@ const lookup = {
 
 function harness({ env = {}, mail = 'accept' } = {}) {
   const leadsFile = path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'wao-api-lead-')), 'leads.json');
-  const calls = { mail: 0, warn: [], error: [] };
+  const calls = { mail: 0, warn: [], error: [], owner: [] };
   const require = (specifier) => {
     switch (specifier) {
       case 'next/server':
@@ -48,6 +48,8 @@ function harness({ env = {}, mail = 'accept' } = {}) {
         return intakeModule;
       case '@/lib/crm/siteLeadTenantLookup':
         return { fileTenantLookup: lookup };
+      case '@/lib/crm/ownerLeadEmail':
+        return { notifyOwnerOfLead: async (input) => { calls.owner.push(input); return 'owner_sent'; } };
       default:
         throw new Error(`Unexpected route dependency: ${specifier}`);
     }
@@ -156,4 +158,17 @@ test('form without privacyAccepted is still rejected before any store', async ()
   assert.equal(res.status, 400);
   assert.equal(h.leads().length, 0);
   assert.equal(h.calls.mail, 0);
+});
+
+test('D2: a new verified site lead notifies the owner once; a double submit or an unverified lead does not', async () => {
+  const h = harness({ env: SMTP_ENV });
+  await h.post(request(formBody('own-1'), SITE_ORIGIN));
+  await h.post(request(formBody('own-1'), SITE_ORIGIN));
+  assert.equal(h.calls.owner.length, 1);
+  assert.equal(h.calls.owner[0].clientId, SITE);
+  assert.equal(h.calls.owner[0].name, 'Test Person');
+  assert.equal(h.calls.owner[0].phone, '050-1234567');
+  const forged = harness({ env: SMTP_ENV });
+  await forged.post(request(formBody('own-2'), 'https://other.wao.co.il'));
+  assert.equal(forged.calls.owner.length, 0);
 });

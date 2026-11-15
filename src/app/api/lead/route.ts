@@ -20,6 +20,7 @@ export async function OPTIONS(req: NextRequest) {
 import nodemailer from "nodemailer";
 import { createLeadsStore } from "@/lib/crm/leadsStore";
 import { intakeSiteLead, type ClickType, type LeadIntakeInput, type LeadIntakeResult } from "@/lib/crm/siteLeadIntake";
+import { notifyOwnerOfLead } from "@/lib/crm/ownerLeadEmail";
 import { fileTenantLookup } from "@/lib/crm/siteLeadTenantLookup";
 
 const privateHeaders = { 'Cache-Control': 'private, no-store' };
@@ -216,6 +217,11 @@ export async function POST(req: NextRequest) {
 
   // A repeat of an already stored lead is acknowledged without a second email.
   if (stored.stored && !stored.created) return leadResponse(req, 200, { ok: true });
+
+  // Fable 5.2 decision D2: the Site Bot owner hears about a new verified lead at once. Saved first; never awaited.
+  if (stored.created && stored.clientId && stored.lead) {
+    void notifyOwnerOfLead({ clientId: stored.clientId, leadId: stored.lead.id, name: leadData.name, phone: leadData.phone });
+  }
 
   const smtpHost = process.env.SMTP_HOST;
   const smtpUser = process.env.SMTP_USER;
