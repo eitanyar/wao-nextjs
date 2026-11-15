@@ -294,8 +294,10 @@ export default async function KnowledgeArticlePage({
   ).slice(0, 4);
 
   const schemaImages = illustrationSchemaImages(article.slug);
-  // The illustration follows the first section that carries an H2 (falls back to the first section).
-  const illustrationAfter = Math.max(0, article.sections.findIndex((s) => s.heading));
+  // The illustration follows the SECOND section that carries an H2 (keeps text as the LCP element on
+  // desktop); falls back to the first H2 section, then to the first section.
+  const headedSections = article.sections.flatMap((s, i) => (s.heading ? [i] : []));
+  const illustrationAfter = headedSections[1] ?? headedSections[0] ?? 0;
 
   const jsonLd = {
     "@context": "https://schema.org",

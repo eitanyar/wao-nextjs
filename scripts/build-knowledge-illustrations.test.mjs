@@ -93,22 +93,21 @@ test('metadata: og:image only on pilot slugs; title and og:title unchanged', asy
   }
 });
 
-test('page: pilot renders <picture> right after the first H2 block, JSON-LD image array; non-pilot unchanged', async () => {
+test('page: pilot renders <picture> right after the second H2 block (or the only one), JSON-LD image array; non-pilot unchanged', async () => {
   for (const slug of SLUGS) {
     const article = knowledge.KNOWLEDGE_ARTICLES.find(a => a.slug === slug);
     const html = await renderPage(slug);
     assert.equal((html.match(/<picture>/g) || []).length, 1, `${slug} picture count`);
     const pic = html.indexOf('<picture>');
     assert.ok(html.indexOf('</h1>') < pic, 'picture after H1');
+    const headed = article.sections.flatMap((s, i) => (s.heading ? [i] : []));
+    const after = headed[1] ?? headed[0] ?? 0;
     const firstH2 = html.indexOf('<h2');
     assert.ok(firstH2 > 0 && firstH2 < pic, 'picture after first H2');
-    assert.ok(html.lastIndexOf('</section>', pic) > firstH2, 'picture after the first section closes');
-    const nextSection = html.indexOf('<section', pic);
-    const firstWithHeading = article.sections.findIndex(s => s.heading);
-    if (firstWithHeading < article.sections.length - 1) {
-      assert.ok(nextSection > pic, 'a later section follows the picture');
-      assert.equal(html.slice(0, pic).split('<section').length - 1, firstWithHeading + 1, 'exactly one section before');
-    }
+    assert.ok(html.lastIndexOf('</section>', pic) > firstH2, 'picture after a section closes');
+    assert.equal(html.slice(0, pic).split('<section').length - 1, after + 1, 'sections before the picture');
+    if (headed.length >= 2) assert.ok(html.slice(0, pic).split('<h2').length - 1 >= 2, 'two H2s before the picture');
+    if (after < article.sections.length - 1) assert.ok(html.indexOf('<section', pic) > pic, 'a later section follows');
     const img = html.slice(pic, html.indexOf('</picture>', pic));
     assert.match(img, /<source type="image\/avif" srcSet="[^"]*-800\.avif 800w, [^"]*-1200\.avif 1200w"/);
     assert.match(img, /<source type="image\/webp" srcSet="[^"]*-800\.webp 800w, [^"]*-1200\.webp 1200w"/);
