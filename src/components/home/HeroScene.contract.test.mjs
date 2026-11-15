@@ -37,6 +37,7 @@ const homography = requireDist(local('dist/lib/home/homography.js'));
 const heroWindow = load('src/lib/home/heroWindow.ts', {
   '../../../data/video/demo/demo-business.json': demo,
   '../../../data/video/demo/stand-in/site-record.json': record,
+  '@/content/hero-product-strings-2026-11-15.json': json('src/content/hero-product-strings-2026-11-15.json'),
   '@/data/heroScene': heroScene,
   './homography': homography,
 });
@@ -68,7 +69,7 @@ test('new hero files carry no Hebrew literal (all Hebrew comes from data or the 
 });
 
 test('the scene is decorative: aria-hidden + inert, the iframe out of the tab order, images sized and low priority', () => {
-  assert.match(markup, /^<div class="hero-scene" aria-hidden="true" inert="">/);
+  assert.match(markup, /^<div class="hero-scene" aria-hidden="true" inert="" style="aspect-ratio:\d+ \/ \d+;--scene-w:\d+px">/);
   assert.match(markup, /<iframe class="hero-window-lp" src="\/hero-window\/lp"[^>]* loading="lazy" tabindex="-1"/);
   const imgs = markup.match(/<img [^>]+>/g) ?? [];
   assert.equal(imgs.length, heroScene.HERO_SCENE.tiles.length);
@@ -83,7 +84,7 @@ test('the scene is decorative: aria-hidden + inert, the iframe out of the tab or
 });
 
 test('every Hebrew run in the window is verbatim demo-record data or the ad preview component', () => {
-  const recordText = JSON.stringify(record.collectedData);
+  const recordText = JSON.stringify(record.collectedData) + fs.readFileSync(local('src/content/hero-product-strings-2026-11-15.json'), 'utf8');
   const adSource = fs.readFileSync(local('src/components/google-ads/GoogleAdPreview.tsx'), 'utf8');
   const nodes = [...markup.matchAll(/>([^<]+)</g)].map((m) => m[1].trim()).filter((t) => /[\u0590-\u05FF]/.test(t));
   assert.ok(nodes.length >= 4, `Hebrew text nodes: ${nodes.length}`);
@@ -93,6 +94,8 @@ test('every Hebrew run in the window is verbatim demo-record data or the ad prev
 });
 
 test('the ad keeps Google limits and shows no rating, review count or result', () => {
+  assert.equal(heroWindow.HERO_AD.displayUrl, 'yossi-plumber.wao.co.il');
+  assert.doesNotMatch(markup, /my-business|0500000000|050-0000000/);
   for (const h of heroWindow.HERO_AD.headlines) assert.ok([...h].length <= 30, `headline over 30: ${h.length}`);
   for (const d of heroWindow.HERO_AD.descriptions) assert.ok([...d].length <= 90, `description over 90: ${d.length}`);
   const visible = textOf(markup);
@@ -123,6 +126,10 @@ test('the landing page is the product render of the demo service page, cut above
   assert.equal((html.match(/<h1>/g) ?? []).length, 1);
   assert.ok(html.includes(`<h1>${page.copy.heroHeadline}</h1>`));
   assert.ok(html.includes('data-hero-call'));
+  // No phone digits anywhere in the window (Adam 2026-11-15); the call button keeps its label.
+  assert.doesNotMatch(html.replace(/[\s-]/g, ''), /0500000000|500000000/);
+  assert.doesNotMatch(html, /href="tel:/);
+  assert.match(html, /data-hero-call><svg[^]*?<\/svg><span>[^<]+<\/span><\/a>/);
   assert.match(html, /<div class="hw-owner"><picture><source type="image\/avif" srcset="\/images\/home\/hero-owner\.avif"><img [^>]*width="360" height="480"/);
   assert.doesNotMatch(html, /data-section="trust"|class="trust"/);
   assert.doesNotMatch(textOf(html.slice(html.indexOf('<body'))), /\u2605|\d\.\d/);

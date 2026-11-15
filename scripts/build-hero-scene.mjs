@@ -25,7 +25,12 @@ export const DEFAULT_MASTER = path.join(root, 'data/home/hero-scene/workbench.pn
 export const OUT_DIR = path.join(root, 'public/images/home');
 export const DATA_OUTPUT = path.join(root, 'src/data/heroScene.ts');
 export const NAME = 'hero-workbench';
-export const WIDTHS = [640, 960, 1280, 1664];
+export const WIDTHS = [640, 832, 1040];
+/**
+ * 16:9 crop around the laptop (Adam 2026-11-15: legibility). The screen spans ~71% of the visual's width; the workbench
+ * (cup, hose, tools) stays at the edges. Never upscaled: the largest width equals the crop width.
+ */
+export const CROP = { width: 1040, height: 585, centreOnScreen: true, top: 70 };
 // The demo owner photo (AI-made, approved for the video demo 2026-11-14; data/video/demo/demo-business.json dressing).
 export const OWNER_PHOTO = path.join(root, 'data/video/demo/photos/owner.jpg');
 export const OWNER_SIZE = { width: 360, height: 480 };
@@ -137,6 +142,17 @@ export async function build(master = DEFAULT_MASTER) {
   const { width, height } = info;
   const quad = findScreen(data, width, height);
   switchOffScreen(data, width, height, quad);
+  // Crop around the screen centre, clamped to the master; the quad moves into crop coordinates.
+  const cx = quad.reduce((a, p) => a + p[0], 0) / 4;
+  const left = Math.max(0, Math.min(width - CROP.width, Math.round(cx - CROP.width / 2)));
+  const top = Math.max(0, Math.min(height - CROP.height, CROP.top));
+  const cropped = Buffer.alloc(CROP.width * CROP.height * 3);
+  for (let y = 0; y < CROP.height; y++) data.copy(cropped, y * CROP.width * 3, ((top + y) * width + left) * 3, ((top + y) * width + left + CROP.width) * 3);
+  const sceneQuad = quad.map(([x, y]) => [+(x - left).toFixed(2), +(y - top).toFixed(2)]);
+  return encodeScene(cropped, CROP.width, CROP.height, sceneQuad);
+}
+
+async function encodeScene(data, width, height, quad) {
   const tiles = Array.from({ length: TILE_COUNT }, (_, i) => {
     const top = Math.max(0, Math.round((height * i) / TILE_COUNT) - OVERLAP / 2);
     const bottom = Math.min(height, Math.round((height * (i + 1)) / TILE_COUNT) + OVERLAP / 2);

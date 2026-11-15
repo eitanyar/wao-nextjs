@@ -3,6 +3,7 @@
 // selects fields, it never writes copy. HEBREW-SAFETY: this module contains ZERO Hebrew bytes.
 import demo from "../../../data/video/demo/demo-business.json";
 import record from "../../../data/video/demo/stand-in/site-record.json";
+import strings from "@/content/hero-product-strings-2026-11-15.json";
 import { HERO_SCENE } from "@/data/heroScene";
 import { growQuad, rectToQuad } from "./homography";
 
@@ -21,15 +22,14 @@ export const HERO_LP_PATH = "/hero-window/lp";
 const data = record.collectedData;
 
 /**
- * Ad strings. INTERIM until waocopy delivers the ad (see the mission report, NEEDED strings): owner facts from the
- * demo record, each within Google's limits (headline <= 30, description <= 90 characters), joined by the product's
- * own ad preview exactly as for a client.
+ * Ad strings: waocopy (Opus) 2026-11-15, applied byte-exact by script from the scratchpad hero-strings.json into
+ * src/content/hero-product-strings-2026-11-15.json. Headlines <= 30, description <= 90 characters (Google limits).
  */
 export const HERO_AD = {
-  // The product's own display URL for a client with a niche (GoogleAdPreview in onboarding). Decision pending (report).
-  displayUrl: "www.my-business.co.il",
-  headlines: [data.businessName, data.primaryService, data.responseTime],
-  descriptions: [data.usp],
+  // WAO's own free-address format for a client without a domain (we own the zone; nobody else's domain).
+  displayUrl: "yossi-plumber.wao.co.il",
+  headlines: strings.hero_ad.headlines,
+  descriptions: [strings.hero_ad.description],
 } as const;
 
 /** Tab title: the business name from the demo record. */

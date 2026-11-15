@@ -8,7 +8,7 @@
 // inside WAO's homepage. A role="img" description would need a new Hebrew string (listed as NEEDED for step 3).
 //
 // Geometry: the stage is the photo's own pixel grid (HERO_SCENE.width x height), scaled to the box with
-// scale: tan(atan2(100cqw, <width>px)) (a unitless ratio of two lengths, no JS). The window is a 960x605 virtual
+// scale: tan(atan2(100cqw, var(--scene-w))) (a unitless ratio of two lengths, no JS). The window is a 960x605 virtual
 // screen mapped onto the fitted screen corners by one matrix3d. Browsers without trig / container units skip the
 // stage and show the photo with its screen switched off (the build step paints it near-black).
 import GoogleAdPreview from "@/components/google-ads/GoogleAdPreview";
@@ -31,7 +31,12 @@ const SCENE_SIZES = "(min-width: 1024px) 560px, (max-width: 480px) calc(100vw - 
 
 export default function HeroScene() {
   return (
-    <div className="hero-scene" aria-hidden="true" inert>
+    <div
+      className="hero-scene"
+      aria-hidden="true"
+      inert
+      style={{ aspectRatio: `${HERO_SCENE.width} / ${HERO_SCENE.height}`, ["--scene-w" as string]: `${HERO_SCENE.width}px` }}
+    >
       {HERO_SCENE.tiles.map((tile) => (
         <picture key={tile.id} className="hero-scene-tile" style={{ top: pct(tile.top), height: pct(tile.height) }}>
           <source type="image/avif" srcSet={tile.avif} sizes={SCENE_SIZES} />

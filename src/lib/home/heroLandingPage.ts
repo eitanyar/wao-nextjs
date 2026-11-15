@@ -48,6 +48,18 @@ function once(html: string, needle: string, what: string): number {
   return at;
 }
 
+/** Removes the visible phone number (its <bdi> runs) and every tel: target from the window's page; throws if digits remain. */
+export function stripPhoneDigits(html: string, phone: string): string {
+  const shown = phone.trim();
+  let out = html.split(`<bdi dir="ltr" class="num">${shown}</bdi>`).join("").split(`<bdi dir="ltr">${shown}</bdi>`).join("");
+  out = out.replace(/href="tel:[^"]*"/g, 'href="#"');
+  const digits = shown.replace(/\D/g, "");
+  const national = digits.replace(/^0/, "");
+  const compact = out.replace(/[\s-]/g, "");
+  if (compact.includes(digits) || compact.includes(national)) throw new Error("hero LP: the phone number still shows in the window");
+  return out;
+}
+
 /** The trimmed page as served inside the window. Throws if the renderer's structure changed. */
 export function heroLandingPageHtml(): string {
   let html = renderDemoPages()[HERO_LP_SOURCE_FILE];
@@ -74,6 +86,9 @@ export function heroLandingPageHtml(): string {
   if (FORBIDDEN_IN_WINDOW.test(visibleText(html)) || /data-demo-reviews|rv-card/.test(html)) {
     throw new Error("hero LP: a rating or review reached the window");
   }
+  // Inside the window only: call buttons keep their label and icon but show no digits (Adam 2026-11-15: a placeholder
+  // number reads as demo). The product renderer is untouched for real clients; this post-processes this page only.
+  html = stripPhoneDigits(html, record.collectedData.phone);
   const leak = html.search(/\.invalid|demo-plumber/);
   if (leak >= 0) throw new Error(`hero LP: the demo domain reached the window: ${html.slice(Math.max(0, leak - 80), leak + 40)}`);
   return html;

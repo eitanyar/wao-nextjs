@@ -8,6 +8,7 @@ import { GOOGLE_ADS_LANDING_COPY as COPY } from "@/lib/google-ads/landingCopy";
 import { GOOGLE_ADS_DEMO_HREF } from "@/lib/google-ads/links";
 import { HOW_IT_WORKS_COPY } from "@/lib/google-ads/howItWorksCopy";
 import FounderBlock from "@/components/home/FounderBlock";
+import STRINGS from "@/content/hero-product-strings-2026-11-15.json";
 
 const CANONICAL = "https://www.wao.co.il/google-ads";
 
@@ -215,7 +216,9 @@ export default function GoogleAdsPage() {
       {/* -- Proof -- */}
       <section className="wao-section">
         <div className="wao-container">
-          <h2 style={{ ...h2Style, marginBottom: "32px" }}>{renderMixed(COPY.proof.h2)}</h2>
+          <h2 style={{ ...h2Style, marginBottom: "12px" }}>{renderMixed(COPY.proof.h2)}</h2>
+          {/* Bridge line, waocopy 2026-11-15 (src/content/hero-product-strings-2026-11-15.json). */}
+          <p style={{ ...leadStyle, marginBottom: "32px" }}>{renderMixed(STRINGS.google_ads.proof_bridge)}</p>
         </div>
       </section>
       <section className="astra-home astra-section astra-light" style={{ paddingTop: 0 }}>

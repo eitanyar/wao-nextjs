@@ -5,6 +5,7 @@ import { SITE_BOT_PLAN } from "@/lib/payments/plans";
 import { SITE_BOT_LANDING_COPY as COPY } from "@/lib/site-bot/landingCopy";
 import FounderBlock from "@/components/home/FounderBlock";
 import finalCopy from "@/content/astra-authority-first-homepage-copy.json";
+import STRINGS from "@/content/hero-product-strings-2026-11-15.json";
 
 const CANONICAL = "https://www.wao.co.il/site-bot";
 
@@ -171,6 +172,8 @@ export default function SiteBotPage() {
       <section className="wao-section">
         <div className="wao-container wao-parts-grid">
           <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+          {/* Opening line, waocopy 2026-11-15 (src/content/hero-product-strings-2026-11-15.json). */}
+          <p style={{ ...bodyStyle, fontSize: "clamp(1rem,1.8vw,1.12rem)", color: "var(--text)" }}>{renderMixed(STRINGS.site_bot.parts_intro)}</p>
           {PARTS.map((part, i) => (
             <div
               key={part.h2}
@@ -212,14 +215,17 @@ export default function SiteBotPage() {
           ))}
           </div>
           {/* Real screens of a live Site Bot site (scripts/build-site-bot-screens.mjs), cropped above any rating. */}
-          <div className="wao-phone-shots" aria-hidden="true">
-            {SITE_SCREENS.map((shot) => (
-              <picture key={shot.name} className="wao-phone-shot">
-                <source type="image/avif" srcSet={`/images/site-bot/${shot.name}.avif`} />
-                <img src={`/images/site-bot/${shot.name}.webp`} alt="" width={shot.width} height={shot.height} loading="lazy" decoding="async" />
-              </picture>
-            ))}
-          </div>
+          <figure className="wao-phone-figure">
+            <div className="wao-phone-shots">
+              {SITE_SCREENS.map((shot, i) => (
+                <picture key={shot.name} className="wao-phone-shot">
+                  <source type="image/avif" srcSet={`/images/site-bot/${shot.name}.avif`} />
+                  <img src={`/images/site-bot/${shot.name}.webp`} alt={STRINGS.site_bot.screens_alt[i]} width={shot.width} height={shot.height} loading="lazy" decoding="async" />
+                </picture>
+              ))}
+            </div>
+            <figcaption className="wao-phone-caption">{renderMixed(STRINGS.site_bot.screens_caption)}</figcaption>
+          </figure>
         </div>
       </section>
 

@@ -4,91 +4,91 @@
 export type ScenePoint = readonly [number, number];
 
 export const HERO_SCENE = {
-  width: 1664,
-  height: 928,
+  width: 1040,
+  height: 585,
   /** The laptop screen in scene px, fitted to the green master: top-left, top-right, bottom-right, bottom-left. */
-  screen: [[478, 131.94], [1216.85, 126.24], [1212.02, 591.48], [486.45, 576.34]] as readonly [ScenePoint, ScenePoint, ScenePoint, ScenePoint],
+  screen: [[150, 61.94], [888.85, 56.24], [884.02, 521.48], [158.45, 506.34]] as readonly [ScenePoint, ScenePoint, ScenePoint, ScenePoint],
   /** Overlapping horizontal bands (each smaller on screen than a headline line, so the photo is never LCP). */
   tiles: [
     {
       "id": "b1",
       "top": 0,
-      "height": 120,
-      "avif": "/images/home/hero-workbench-b1-640.avif 640w, /images/home/hero-workbench-b1-960.avif 960w, /images/home/hero-workbench-b1-1280.avif 1280w, /images/home/hero-workbench-b1-1664.avif 1664w",
-      "webp": "/images/home/hero-workbench-b1-640.webp 640w, /images/home/hero-workbench-b1-960.webp 960w, /images/home/hero-workbench-b1-1280.webp 1280w, /images/home/hero-workbench-b1-1664.webp 1664w",
-      "fallback": "/images/home/hero-workbench-b1-960.webp",
-      "fallbackWidth": 960,
-      "fallbackHeight": 69
+      "height": 77,
+      "avif": "/images/home/hero-workbench-b1-640.avif 640w, /images/home/hero-workbench-b1-832.avif 832w, /images/home/hero-workbench-b1-1040.avif 1040w",
+      "webp": "/images/home/hero-workbench-b1-640.webp 640w, /images/home/hero-workbench-b1-832.webp 832w, /images/home/hero-workbench-b1-1040.webp 1040w",
+      "fallback": "/images/home/hero-workbench-b1-832.webp",
+      "fallbackWidth": 832,
+      "fallbackHeight": 62
     },
     {
       "id": "b2",
-      "top": 112,
-      "height": 124,
-      "avif": "/images/home/hero-workbench-b2-640.avif 640w, /images/home/hero-workbench-b2-960.avif 960w, /images/home/hero-workbench-b2-1280.avif 1280w, /images/home/hero-workbench-b2-1664.avif 1664w",
-      "webp": "/images/home/hero-workbench-b2-640.webp 640w, /images/home/hero-workbench-b2-960.webp 960w, /images/home/hero-workbench-b2-1280.webp 1280w, /images/home/hero-workbench-b2-1664.webp 1664w",
-      "fallback": "/images/home/hero-workbench-b2-960.webp",
-      "fallbackWidth": 960,
-      "fallbackHeight": 72
+      "top": 69,
+      "height": 81,
+      "avif": "/images/home/hero-workbench-b2-640.avif 640w, /images/home/hero-workbench-b2-832.avif 832w, /images/home/hero-workbench-b2-1040.avif 1040w",
+      "webp": "/images/home/hero-workbench-b2-640.webp 640w, /images/home/hero-workbench-b2-832.webp 832w, /images/home/hero-workbench-b2-1040.webp 1040w",
+      "fallback": "/images/home/hero-workbench-b2-832.webp",
+      "fallbackWidth": 832,
+      "fallbackHeight": 65
     },
     {
       "id": "b3",
-      "top": 228,
-      "height": 124,
-      "avif": "/images/home/hero-workbench-b3-640.avif 640w, /images/home/hero-workbench-b3-960.avif 960w, /images/home/hero-workbench-b3-1280.avif 1280w, /images/home/hero-workbench-b3-1664.avif 1664w",
-      "webp": "/images/home/hero-workbench-b3-640.webp 640w, /images/home/hero-workbench-b3-960.webp 960w, /images/home/hero-workbench-b3-1280.webp 1280w, /images/home/hero-workbench-b3-1664.webp 1664w",
-      "fallback": "/images/home/hero-workbench-b3-960.webp",
-      "fallbackWidth": 960,
-      "fallbackHeight": 72
+      "top": 142,
+      "height": 81,
+      "avif": "/images/home/hero-workbench-b3-640.avif 640w, /images/home/hero-workbench-b3-832.avif 832w, /images/home/hero-workbench-b3-1040.avif 1040w",
+      "webp": "/images/home/hero-workbench-b3-640.webp 640w, /images/home/hero-workbench-b3-832.webp 832w, /images/home/hero-workbench-b3-1040.webp 1040w",
+      "fallback": "/images/home/hero-workbench-b3-832.webp",
+      "fallbackWidth": 832,
+      "fallbackHeight": 65
     },
     {
       "id": "b4",
-      "top": 344,
-      "height": 124,
-      "avif": "/images/home/hero-workbench-b4-640.avif 640w, /images/home/hero-workbench-b4-960.avif 960w, /images/home/hero-workbench-b4-1280.avif 1280w, /images/home/hero-workbench-b4-1664.avif 1664w",
-      "webp": "/images/home/hero-workbench-b4-640.webp 640w, /images/home/hero-workbench-b4-960.webp 960w, /images/home/hero-workbench-b4-1280.webp 1280w, /images/home/hero-workbench-b4-1664.webp 1664w",
-      "fallback": "/images/home/hero-workbench-b4-960.webp",
-      "fallbackWidth": 960,
-      "fallbackHeight": 72
+      "top": 215,
+      "height": 82,
+      "avif": "/images/home/hero-workbench-b4-640.avif 640w, /images/home/hero-workbench-b4-832.avif 832w, /images/home/hero-workbench-b4-1040.avif 1040w",
+      "webp": "/images/home/hero-workbench-b4-640.webp 640w, /images/home/hero-workbench-b4-832.webp 832w, /images/home/hero-workbench-b4-1040.webp 1040w",
+      "fallback": "/images/home/hero-workbench-b4-832.webp",
+      "fallbackWidth": 832,
+      "fallbackHeight": 66
     },
     {
       "id": "b5",
-      "top": 460,
-      "height": 124,
-      "avif": "/images/home/hero-workbench-b5-640.avif 640w, /images/home/hero-workbench-b5-960.avif 960w, /images/home/hero-workbench-b5-1280.avif 1280w, /images/home/hero-workbench-b5-1664.avif 1664w",
-      "webp": "/images/home/hero-workbench-b5-640.webp 640w, /images/home/hero-workbench-b5-960.webp 960w, /images/home/hero-workbench-b5-1280.webp 1280w, /images/home/hero-workbench-b5-1664.webp 1664w",
-      "fallback": "/images/home/hero-workbench-b5-960.webp",
-      "fallbackWidth": 960,
-      "fallbackHeight": 72
+      "top": 289,
+      "height": 81,
+      "avif": "/images/home/hero-workbench-b5-640.avif 640w, /images/home/hero-workbench-b5-832.avif 832w, /images/home/hero-workbench-b5-1040.avif 1040w",
+      "webp": "/images/home/hero-workbench-b5-640.webp 640w, /images/home/hero-workbench-b5-832.webp 832w, /images/home/hero-workbench-b5-1040.webp 1040w",
+      "fallback": "/images/home/hero-workbench-b5-832.webp",
+      "fallbackWidth": 832,
+      "fallbackHeight": 65
     },
     {
       "id": "b6",
-      "top": 576,
-      "height": 124,
-      "avif": "/images/home/hero-workbench-b6-640.avif 640w, /images/home/hero-workbench-b6-960.avif 960w, /images/home/hero-workbench-b6-1280.avif 1280w, /images/home/hero-workbench-b6-1664.avif 1664w",
-      "webp": "/images/home/hero-workbench-b6-640.webp 640w, /images/home/hero-workbench-b6-960.webp 960w, /images/home/hero-workbench-b6-1280.webp 1280w, /images/home/hero-workbench-b6-1664.webp 1664w",
-      "fallback": "/images/home/hero-workbench-b6-960.webp",
-      "fallbackWidth": 960,
-      "fallbackHeight": 72
+      "top": 362,
+      "height": 81,
+      "avif": "/images/home/hero-workbench-b6-640.avif 640w, /images/home/hero-workbench-b6-832.avif 832w, /images/home/hero-workbench-b6-1040.avif 1040w",
+      "webp": "/images/home/hero-workbench-b6-640.webp 640w, /images/home/hero-workbench-b6-832.webp 832w, /images/home/hero-workbench-b6-1040.webp 1040w",
+      "fallback": "/images/home/hero-workbench-b6-832.webp",
+      "fallbackWidth": 832,
+      "fallbackHeight": 65
     },
     {
       "id": "b7",
-      "top": 692,
-      "height": 124,
-      "avif": "/images/home/hero-workbench-b7-640.avif 640w, /images/home/hero-workbench-b7-960.avif 960w, /images/home/hero-workbench-b7-1280.avif 1280w, /images/home/hero-workbench-b7-1664.avif 1664w",
-      "webp": "/images/home/hero-workbench-b7-640.webp 640w, /images/home/hero-workbench-b7-960.webp 960w, /images/home/hero-workbench-b7-1280.webp 1280w, /images/home/hero-workbench-b7-1664.webp 1664w",
-      "fallback": "/images/home/hero-workbench-b7-960.webp",
-      "fallbackWidth": 960,
-      "fallbackHeight": 72
+      "top": 435,
+      "height": 81,
+      "avif": "/images/home/hero-workbench-b7-640.avif 640w, /images/home/hero-workbench-b7-832.avif 832w, /images/home/hero-workbench-b7-1040.avif 1040w",
+      "webp": "/images/home/hero-workbench-b7-640.webp 640w, /images/home/hero-workbench-b7-832.webp 832w, /images/home/hero-workbench-b7-1040.webp 1040w",
+      "fallback": "/images/home/hero-workbench-b7-832.webp",
+      "fallbackWidth": 832,
+      "fallbackHeight": 65
     },
     {
       "id": "b8",
-      "top": 808,
-      "height": 120,
-      "avif": "/images/home/hero-workbench-b8-640.avif 640w, /images/home/hero-workbench-b8-960.avif 960w, /images/home/hero-workbench-b8-1280.avif 1280w, /images/home/hero-workbench-b8-1664.avif 1664w",
-      "webp": "/images/home/hero-workbench-b8-640.webp 640w, /images/home/hero-workbench-b8-960.webp 960w, /images/home/hero-workbench-b8-1280.webp 1280w, /images/home/hero-workbench-b8-1664.webp 1664w",
-      "fallback": "/images/home/hero-workbench-b8-960.webp",
-      "fallbackWidth": 960,
-      "fallbackHeight": 69
+      "top": 508,
+      "height": 77,
+      "avif": "/images/home/hero-workbench-b8-640.avif 640w, /images/home/hero-workbench-b8-832.avif 832w, /images/home/hero-workbench-b8-1040.avif 1040w",
+      "webp": "/images/home/hero-workbench-b8-640.webp 640w, /images/home/hero-workbench-b8-832.webp 832w, /images/home/hero-workbench-b8-1040.webp 1040w",
+      "fallback": "/images/home/hero-workbench-b8-832.webp",
+      "fallbackWidth": 832,
+      "fallbackHeight": 62
     }
   ],
 } as const;
