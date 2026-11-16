@@ -281,6 +281,57 @@
       },
       "date": "2026-11-13",
       "note": "Eitan 2026-11-13 on S1 30s: heard 'shalat', wants 'shelet magneti'. Re-test next round."
+    },
+    {
+      "id": "shelkha",
+      "clean": "שלך",
+      "match": [
+        "שלך"
+      ],
+      "tts": "שֶׁלְּךָ",
+      "reading": "shel-KHA",
+      "meaning": "yours, addressing a man (not she-LAKH, addressing a woman)",
+      "status": "approved",
+      "allowPrefixes": true,
+      "verifiedOn": {
+        "voice": "Nimrod",
+        "voiceId": "ZiofZHcEBTn5sRySe5h8",
+        "model": "eleven_v4"
+      },
+      "date": "2026-11-15",
+      "note": "Candidate from the N1 audio check; approved by Eitan by ear 2026-11-15 (round6 #2 and #4).",
+      "source": {
+        "tts": {
+          "file": "scratch/video-dash/pron-test/round6-lines.txt",
+          "lineIndex": 1
+        }
+      }
+    },
+    {
+      "id": "modaa-achat",
+      "clean": "מודעה אחת",
+      "match": [
+        "מוֹדָעָה אחת",
+        "מודעה אחת"
+      ],
+      "tts": "מוֹדָעָה... אחת",
+      "reading": "mo-da-A... a-KHAT",
+      "meaning": "one ad; the pause stops the final 'a' merging into 'achat' (heard as 'moda')",
+      "status": "approved",
+      "allowPrefixes": false,
+      "verifiedOn": {
+        "voice": "Nimrod",
+        "voiceId": "ZiofZHcEBTn5sRySe5h8",
+        "model": "eleven_v4"
+      },
+      "date": "2026-11-15",
+      "note": "N3 L3. Round 7 spelling candidates all failed; round 8 ellipsis passed STT + 2/2 phonetics judge (229 ms gap). Approved by Fable 5.2 standing in for Eitan (delegated 2026-11-15). Line 4 (definite form) keeps the plain spelling.",
+      "source": {
+        "tts": {
+          "file": "scratch/video-dash/pron-test/round8-lines.txt",
+          "lineIndex": 1
+        }
+      }
     }
   ]
 }
