@@ -1,0 +1,20 @@
+Angle: product strings read by a visitor who already found the business, so plain checkable facts (selected, from Google, with score and count) build trust better than any pitch.
+
+{
+  "genericLeads": ["שירות", "שירותי", "חברה", "חברת", "קבוצה", "קבוצת", "בית", "מרכז", "מוקד", "סדנה", "סדנת", "עולם", "מומחי", "פתרונות"],
+  "ratingWithCount": "{rating} כוכבים בגוגל · {count} ביקורות",
+  "reviewsSelected": "ביקורות נבחרות מגוגל, מילה במילה",
+  "serviceReviewsHeading": "ביקורות בגוגל על {service}",
+  "serviceRatingRow": "{rating} כוכבים מ־{count} ביקורות בגוגל. את כולן אפשר לקרוא בפרופיל של העסק.",
+  "reviewsUpdated": "עודכן ב־{date}",
+  "reviewExpand": "קרא עוד",
+  "reviewCollapse": "הצג פחות",
+  "seeAllReviews": "לכל הביקורות בגוגל",
+  "connectionLostSubject": "הביקורות מגוגל ירדו מהאתר שלך",
+  "connectionLostBody": "החיבור לפרופיל שלך בגוגל הפסיק לעבוד, אז הורדנו את הביקורות מהאתר.\nכדי להחזיר אותן, תתחבר מחדש מעמוד החשבון:\n{accountLink}",
+  "consentReviewsTitle": "ביקורות מגוגל באתר שלך",
+  "consentReviewsBody": "כשזה פועל, האתר מציג ביקורות נבחרות של 4 ו־5 כוכבים מהפרופיל שלך בגוגל.\nהן מופיעות תמיד ליד הציון האמיתי שלך בגוגל ומספר הביקורות, עם קישור לכולן.\nאפשר לכבות את זה מתי שתרצה.",
+  "consentReviewsToggleOn": "מוצגות באתר",
+  "consentReviewsToggleOff": "לא מוצגות",
+  "why": "(1) genericLeads: the definite article ה־ is a prefix letter, so the list has none. Code should strip a leading ה before matching, so המרכז and השירות are caught. מוקד is in because it is a very common opener for locksmiths (מוקד מנעולנים). עולם, מומחי and פתרונות are frequent generic openers in plumbing and cleaning names. (2) Plural: ratingWithCount and serviceRatingRow read wrong when count is 1, for example 1 ביקורות. Engineering should switch to ביקורת אחת when count is 1. (3) reviewsUpdated: the maqaf assumes {date} starts with a digit, such as ב־16.11.2026. If the date is ever spelled out, the maqaf still works. (4) Toggle labels describe the current state, not an action. If the UI shows an action, use הצג באתר and הסתר מהאתר instead. (5) serviceReviewsHeading avoids question and claim forms so it can't echo the page's main headline. (6) The connection-lost email says the reviews come back after reconnecting. If restoring the reviews is not automatic, drop כדי להחזיר אותן and keep only the instruction. → Noa: one read of E, which is founder-facing."
+}
