@@ -286,6 +286,8 @@
     "src/lib/lp/siteLogo.ts",
     "src/lib/lp/siteLook.testkit.ts",
     "src/lib/lp/siteLook.test.ts",
+    "src/lib/lp/ratingLine.ts",
+    "src/lib/lp/ratingLine.test.ts",
     "src/lib/site-bot/siteLookImages.ts",
     "src/lib/site-bot/siteLookImages.test.ts",
     "src/lib/site-bot/siteLookStore.ts",

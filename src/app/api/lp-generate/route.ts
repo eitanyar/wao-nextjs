@@ -4,6 +4,7 @@ import path from 'path';
 import type { CollectedData } from '@/lib/bot/prompts';
 import type { LPCopy } from '@/lib/lp/lpCopyPrompt';
 import { buildLpCopyPrompt } from '@/lib/lp/lpCopyPrompt';
+import { ratingWithCountLine } from '@/lib/lp/ratingLine';
 import { callGeminiJSON } from '@/lib/ai/gemini-fast';
 
 // buildLpCopyPrompt() is a complete, self-contained instruction set — unlike
@@ -78,7 +79,7 @@ function generateFallbackCopy(collectedData: CollectedData): LPCopy {
     heroCta: contactLabel,
     trustBarItems: [
       collectedData.yearsInField ? `${collectedData.yearsInField} ניסיון` : 'ניסיון מוכח',
-      collectedData.starRating ? `${collectedData.starRating}★ בגוגל` : 'לקוחות מרוצים',
+      ratingWithCountLine(collectedData.starRating, collectedData.reviewCount) ?? 'לקוחות מרוצים',
       collectedData.license ? 'מורשה ומוסמך' : 'שירות מקצועי',
       collectedData.guarantee ? 'אחריות מלאה' : 'תמיד זמינים',
     ],
@@ -89,7 +90,7 @@ function generateFallbackCopy(collectedData: CollectedData): LPCopy {
     faqItems: [{ q: 'איך יוצרים קשר?', a: `ניתן להתקשר ל-${collectedData.phone || 'המספר שלנו'} או לשלוח וואטסאפ.` }],
     guaranteeBlock: collectedData.guarantee || `${name} מחויבים לשביעות רצון מלאה של כל לקוח.`,
     reviewFeatured: collectedData.reviewQuote || 'שירות מצוין ומקצועי, ממליץ בחום.',
-    reviewContext: collectedData.starRating ? `${collectedData.starRating} כוכבים בגוגל` : '',
+    reviewContext: ratingWithCountLine(collectedData.starRating, collectedData.reviewCount) ?? '',
     responseTimeBadge: collectedData.responseTime || 'זמינים 24/7',
     scarcityLine: null,
     formHeadline: 'השאר פרטים ונחזור אליך בהקדם',

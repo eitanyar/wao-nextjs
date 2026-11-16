@@ -18,7 +18,7 @@
  * Widths are estimates (per-character units, to be calibrated once against Heebo 800).
  *
  * The logo CSS is emitted only when a logo renders (pages without a look stay byte-identical).
- * HEBREW-SAFETY: this module contains ZERO Hebrew bytes. GENERIC_LEADS arrives as byte-exact copy (pending).
+ * HEBREW-SAFETY: this module contains ZERO Hebrew bytes. GENERIC_LEADS is byte-exact copy (\u escapes, written by script).
  */
 
 import type { VerticalKey } from './verticalThemes';
@@ -32,10 +32,19 @@ export const GENERATED_LOGO_VARIANTS: readonly GeneratedLogoVariant[] = ['lockup
 
 /**
  * Generic first words of a business name (the "services of ..." type): a name whose lead is one of these is GENERIC.
- * PENDING COPY: the ~10 Hebrew words arrive from waocopy as a byte-exact patch; until then the list is not applied.
+ * Source: docs/copy/site-bot-logo-rating-review-strings-FINAL-2026-11-16.json `genericLeads` (Noa FIX applied), written by
+ * script from the JSON bytes, never typed. Matching (Noa): a token matches as written, or with a leading he stripped only
+ * when the rest is on the list (no other prefix letter is stripped). See isGenericLeadToken.
  */
-export const GENERIC_LEADS: readonly string[] = ['__HE_TODO_generic_leads__'];
-export const GENERIC_LEADS_COPY_PENDING = true;
+export const GENERIC_LEADS: readonly string[] = ["\u05e9\u05d9\u05e8\u05d5\u05ea", "\u05e9\u05d9\u05e8\u05d5\u05ea\u05d9", "\u05e9\u05d9\u05e8\u05d5\u05ea\u05d9\u05dd", "\u05d7\u05d1\u05e8\u05d4", "\u05d7\u05d1\u05e8\u05ea", "\u05e7\u05d1\u05d5\u05e6\u05d4", "\u05e7\u05d1\u05d5\u05e6\u05ea", "\u05d1\u05d9\u05ea", "\u05de\u05e8\u05db\u05d6", "\u05de\u05d5\u05e7\u05d3", "\u05e1\u05d3\u05e0\u05d4", "\u05e1\u05d3\u05e0\u05ea", "\u05e2\u05d5\u05dc\u05dd", "\u05de\u05d5\u05de\u05d7\u05d4", "\u05de\u05d5\u05de\u05d7\u05d9", "\u05e4\u05ea\u05e8\u05d5\u05e0\u05d5\u05ea", "\u05d0\u05dc\u05d5\u05e3", "\u05d0\u05dc\u05d5\u05e4\u05d9", "\u05de\u05db\u05d5\u05df", "\u05e8\u05e9\u05ea", "\u05d0\u05d7\u05d9\u05dd", "\u05e1\u05d8\u05d5\u05d3\u05d9\u05d5", "\u05de\u05e2\u05d1\u05d3\u05d4", "\u05de\u05e2\u05d1\u05d3\u05ea"];
+export const GENERIC_LEADS_COPY_PENDING = false;
+
+const HE = '\u05D4';
+/** Noa's rule: the token as written is on the list, or it starts with he and the rest is on the list. */
+export function isGenericLeadToken(token: string): boolean {
+  if (GENERIC_LEADS.includes(token)) return true;
+  return token.startsWith(HE) && token.length > 1 && GENERIC_LEADS.includes(token.slice(HE.length));
+}
 
 /** Display height / width cap of an owner logo file in the 56px header row (the .brand line box is 48px). */
 export const LOGO_DISPLAY_HEIGHT = 40;
@@ -185,7 +194,7 @@ export function leadClass(lead: string, context: LogoContext = {}): LogoLeadClas
   if (tradeKeywordsIn(lead).length) return 'generic';
   if (sharesToken(lead, context.businessNiche) || sharesToken(lead, context.primaryService)) return 'generic';
   if (sharesToken(lead, context.targetLocation)) return 'generic';
-  if (!GENERIC_LEADS_COPY_PENDING && tokensOf(lead).some(token => GENERIC_LEADS.some(word => sameToken(token, word.toLowerCase())))) return 'generic';
+  if (!GENERIC_LEADS_COPY_PENDING && tokensOf(lead).some(isGenericLeadToken)) return 'generic';
   return 'name';
 }
 

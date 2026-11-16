@@ -10,7 +10,7 @@ import { renderResearchedSitePages } from './researchedSite';
 import { renderStaticHtml } from './renderStaticHtml';
 import { lookFixtureParams } from './siteLook.testkit';
 import { HERO_OVERLAY_TEXT_ALPHA, heroBackdropHtml, renderableHero, type SiteLook } from './siteLook';
-import { brandLogo, fitsLines, GENERIC_LEADS, GENERIC_LEADS_COPY_PENDING, generatedLogo, leadClass, LOGO_MARK_LIBRARY, pickLogo, plainStep, splitLead, textUnits, type GeneratedLogoVariant, type LogoStep } from './siteLogo';
+import { brandLogo, fitsLines, GENERIC_LEADS, GENERIC_LEADS_COPY_PENDING, generatedLogo, isGenericLeadToken, leadClass, LOGO_MARK_LIBRARY, pickLogo, plainStep, splitLead, textUnits, type GeneratedLogoVariant, type LogoStep } from './siteLogo';
 import { VERTICAL_THEMES } from './verticalThemes';
 import { VERTICAL_ASSETS } from './verticalAssets';
 import type { LPCopy } from './lpCopyPrompt';
@@ -183,9 +183,30 @@ test('logo picker: lead split, classes, layout steps, defaults (ASCII cases)', (
   assert.deepEqual(Object.keys(LOGO_MARK_LIBRARY), []);
 });
 
-test('logo picker: the generic-lead list is pending copy (placeholder only, not applied)', () => {
-  assert.equal(GENERIC_LEADS_COPY_PENDING, true);
-  assert.deepEqual([...GENERIC_LEADS], ['__HE_TODO_generic_leads__']);
+const LOGO_RATING_FINAL = JSON.parse(fs.readFileSync(path.join(ROOT, 'docs', 'copy', 'site-bot-logo-rating-review-strings-FINAL-2026-11-16.json'), 'utf8')) as Record<string, unknown>;
+// Letters by code point (this file stays free of Hebrew bytes): he, bet, and the name "Hadar" (he-dalet-resh).
+const HE = '\u05D4';
+const BET = '\u05D1';
+const HADAR = '\u05D4\u05D3\u05E8';
+
+test('logo picker: the generic-lead list is the FINAL copy, byte-exact, and applied', () => {
+  assert.equal(GENERIC_LEADS_COPY_PENDING, false);
+  assert.deepEqual([...GENERIC_LEADS], LOGO_RATING_FINAL.genericLeads);
+  for (const word of GENERIC_LEADS) assert.equal(leadClass(word), 'generic', `${word} as written`);
+});
+
+test("logo picker: Noa's he rule: strip a leading he only when the rest is on the list; no other prefix is stripped", () => {
+  for (const word of GENERIC_LEADS) {
+    assert.equal(isGenericLeadToken(word), true);
+    assert.equal(isGenericLeadToken(HE + word), true, `he + ${word}`);
+    assert.equal(isGenericLeadToken(BET + word), false, `bet + ${word}: only he is stripped`);
+  }
+  // A name starting with Hadar stays NAME: the rest after he is not on the list, and the word as written is not either.
+  assert.equal(isGenericLeadToken(HADAR), false);
+  assert.equal(leadClass(HADAR), 'name');
+  assert.equal(pickLogo(`${HADAR} AquaFix`)?.leadClass, 'name');
+  assert.equal(pickLogo(`${HE}${GENERIC_LEADS[0]} AquaFix`)?.leadClass, 'generic');
+  assert.equal(isGenericLeadToken(HE), false, 'a bare he is not generic');
 });
 
 interface LogoNameFixture {
@@ -208,7 +229,6 @@ test("logo picker: Fable's fixture table (testdata/logo-names.json)", { skip: fs
   const rows = JSON.parse(fs.readFileSync(LOGO_NAMES, 'utf8')) as LogoNameFixture[];
   assert.ok(rows.length > 0);
   for (const row of rows) {
-    if (row.dependsOnGenericList && GENERIC_LEADS_COPY_PENDING) continue;
     const result = pickLogo(row.name, { ...base, ...row });
     if (row.expectedLead === null) { assert.equal(result, null, row.name); continue; }
     assert.ok(result, row.name);

@@ -2,6 +2,7 @@
 // Input: CollectedData. Output: LPCopy JSON. No prose exploration allowed.
 
 import type { CollectedData } from '@/lib/bot/prompts';
+import { ratingWithCountLine } from './ratingLine';
 import type { DepthProcessStep, DepthProofItem, DepthQaItem } from './depthBlocks';
 
 export interface LPCopyFAQItem {
@@ -87,6 +88,8 @@ export function buildLpCopyPrompt(data: CollectedData, options: LpCopyPromptOpti
 
   const ownerFirstName = (data.ownerName || data.businessName || '').split(/[\s,]/)[0];
   const hasRealReview = hasRealReviewQuote(data);
+  // Eitan (2026-11-16): a rating is never shown without its review count (no count or 0 -> null).
+  const reviewContextLine = hasRealReview ? ratingWithCountLine(data.starRating, data.reviewCount) : null;
 
   return `You are Tamar, WAO's Sabra conversion copywriter.
 Write LP copy for a Hebrew RTL landing page. Output ONLY valid JSON. No prose, no explanation.
@@ -236,7 +239,7 @@ OUTPUT (JSON only, no markdown):
   "faqItems": [{"q": "", "a": ""}, {"q": "", "a": ""}, {"q": "", "a": ""}, {"q": "", "a": ""}],
   "guaranteeBlock": ${options.nullGuarantee ? 'null' : '""'},
   "reviewFeatured": ${hasRealReview ? `"${data.reviewQuote}"` : 'null'},
-  "reviewContext": ${hasRealReview && data.starRating ? `"${data.starRating} כוכבים בגוגל"` : 'null'},
+  "reviewContext": ${reviewContextLine ? JSON.stringify(reviewContextLine) : 'null'},
   "responseTimeBadge": ${data.responseTime ? (options.blankResponseTimeBadge ? '""' : `"${data.responseTime}"`) : 'null'},
   "scarcityLine": null,
   "formHeadline": "",
