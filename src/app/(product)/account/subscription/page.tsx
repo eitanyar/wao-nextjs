@@ -171,8 +171,9 @@ export default async function SubscriptionPage({
         <div className="rounded-2xl border border-white/10 bg-white/5 p-8 space-y-4">
           <div className="flex justify-between text-sm">
             <span className="text-[var(--muted)]">{COPY.rowStatus}</span>
-            <span className="font-semibold" lang={Object.hasOwn(ACCOUNT_STATUS_LABEL, subscription.status) ? undefined : 'en'}>
-              {STATUS_LABEL[subscription.status] ?? subscription.status}
+            {/* A scheduled cancel shows the approved "canceled" label; the access-until row below carries the date. */}
+            <span className="font-semibold" lang={Object.hasOwn(ACCOUNT_STATUS_LABEL, cancelScheduled ? 'canceled' : subscription.status) ? undefined : 'en'}>
+              {cancelScheduled ? ACCOUNT_STATUS_LABEL.canceled : STATUS_LABEL[subscription.status] ?? subscription.status}
             </span>
           </div>
           <div className="flex justify-between text-sm">
