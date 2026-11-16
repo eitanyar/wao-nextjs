@@ -5,7 +5,15 @@
 #   defaults: 4031  .next-rehearsal  scratch/rehearsal-data
 #
 # - SITE_BOT_PAID_FLOW=1 opens /site-bot/start and /site-bot/pay/* (dev only; prod ignores it).
-# - SITE_BOT_RESEARCH_PROVIDERS=fixture: research runs on synthetic fixtures, zero network.
+# - SITE_BOT_RESEARCH_PROVIDERS=fixture: research runs on synthetic fixtures (no DataForSEO / NeuronWriter calls).
+# - NOT zero network: GEMINI_API_KEY is NOT blanked (it comes from .env.local), so the support-message drafts
+#   (SITE_BOT_CLIENT_MESSAGES_ENABLED / help intake) and any other Gemini workload make real, billed Gemini calls.
+#   For a run with no LLM traffic launch it as `GEMINI_API_KEY= scripts/site-bot-rehearsal-dev.sh` (an empty value
+#   beats .env.local, see below); the drafts then fail soft.
+# - TOKEN_ENCRYPTION_KEY: when unset, a throwaway key is generated for this run (mock payment tokens are encrypted
+#   with it; they are unreadable after the run, which is fine for a rehearsal data dir).
+# - Support queue + help intake on: SITE_BOT_CLIENT_MESSAGES_ENABLED / SITE_BOT_HELP_INTAKE_ENABLED, with the help
+#   request / follow-up dirs under the rehearsal data dir.
 # - WAO_CLIENTS_DIR / WAO_SITES_DIR / WAO_SITE_RESEARCH_DIR point OUTSIDE data/ so a rehearsal
 #   never writes live client data (data/clients) or tracked dirs (data/sites).
 # - Mock payments/invoices; every other side-effect credential blanked (an empty value beats
@@ -21,13 +29,24 @@ cd "$(dirname "$0")/.."
 PORT="${1:-4031}"
 DIST="${2:-.next-rehearsal}"
 DATA="$(realpath -m "${3:-scratch/rehearsal-data}")"
-mkdir -p "$DATA/clients" "$DATA/sites" "$DATA/site-research"
+mkdir -p "$DATA/clients" "$DATA/sites" "$DATA/site-research" "$DATA/help-requests" "$DATA/help-followups"
+# The help stores refuse a root readable by group/other (helpRequestStore.ts rootInfo).
+chmod 700 "$DATA/help-requests" "$DATA/help-followups"
+
+# Throwaway per-run payment-token key when none is set (the checkout callback 500s without one).
+if [[ -z "${TOKEN_ENCRYPTION_KEY:-}" ]]; then
+  TOKEN_ENCRYPTION_KEY="$(node -e "process.stdout.write(require('crypto').randomBytes(32).toString('base64'))")"
+  echo "[rehearsal] TOKEN_ENCRYPTION_KEY unset: using a throwaway key for this run" >&2
+fi
 
 NODE_OPTS="${NODE_OPTIONS:-}"
 if [[ -n "${REHEARSAL_NODE_REQUIRE:-}" ]]; then NODE_OPTS="--require ${REHEARSAL_NODE_REQUIRE} ${NODE_OPTS}"; fi
 
 exec env -u QWEN_BASE_URL -u QWEN_API_KEY -u QWEN_CHAT_MODEL \
   SITE_BOT_PAID_FLOW=1 SITE_BOT_RESEARCH_PROVIDERS=fixture \
+  TOKEN_ENCRYPTION_KEY="$TOKEN_ENCRYPTION_KEY" \
+  SITE_BOT_CLIENT_MESSAGES_ENABLED=true SITE_BOT_HELP_INTAKE_ENABLED=true \
+  SITE_BOT_HELP_REQUEST_DIR="$DATA/help-requests" SITE_BOT_HELP_FOLLOWUP_DIR="$DATA/help-followups" \
   WAO_DEPLOY_DIST_DIR="$DIST" NEXT_TELEMETRY_DISABLED=1 \
   WAO_CLIENTS_DIR="$DATA/clients" WAO_SITES_DIR="$DATA/sites" WAO_SITE_RESEARCH_DIR="$DATA/site-research" \
   PAYMENT_PROVIDER=mock INVOICE_PROVIDER=mock TAKBULL_API_KEY= TAKBULL_API_SECRET= YAAD_TERMINAL_NUMBER= YAAD_API_KEY= \

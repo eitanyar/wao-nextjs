@@ -10,6 +10,11 @@ test('loads server-local production environment and rejects missing deployment s
   assert.match(deployScript, /source \.env\.production/);
   assert.match(deployScript, /CLIENT_PORTAL_SECRET must be set/);
   assert.match(deployScript, /NEXT_SERVER_ACTIONS_ENCRYPTION_KEY must be set/);
+  // Payment-token encryption (src/lib/payments/crypto.ts): without it the checkout callback 500s at activation.
+  assert.match(deployScript, /\[\[ -n "\$\{TOKEN_ENCRYPTION_KEY:-\}" \]\] \|\| fail 'TOKEN_ENCRYPTION_KEY must be set\.'/);
+  // ...and it is checked right after .env.production is sourced, before any git checkout or build.
+  assert.ok(deployScript.indexOf('TOKEN_ENCRYPTION_KEY must be set') > deployScript.indexOf('source .env.production'));
+  assert.ok(deployScript.indexOf('TOKEN_ENCRYPTION_KEY must be set') < deployScript.indexOf('git fetch --all --tags'));
   assert.match(deployScript, /validate_server_actions_key/);
   assert.match(deployScript, /NEXT_DEPLOYMENT_ID/);
   assert.match(deployScript, /pm2 stop wao/);

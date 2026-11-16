@@ -198,6 +198,7 @@ set +a
 
 [[ -n "${CLIENT_PORTAL_SECRET:-}" ]] || fail 'CLIENT_PORTAL_SECRET must be set.'
 [[ -n "${NEXT_SERVER_ACTIONS_ENCRYPTION_KEY:-}" ]] || fail 'NEXT_SERVER_ACTIONS_ENCRYPTION_KEY must be set.'
+[[ -n "${TOKEN_ENCRYPTION_KEY:-}" ]] || fail 'TOKEN_ENCRYPTION_KEY must be set.'
 validate_server_actions_key
 validate_build_memory_limit
 BUILD_NODE_OPTIONS="${NODE_OPTIONS:+$NODE_OPTIONS }--max-old-space-size=$BUILD_MAX_OLD_SPACE_MB"
