@@ -417,6 +417,8 @@
     "src/lib/site-bot/research/gatePresentation.test.ts",
     "src/lib/site-bot/research/ownerGates.ts",
     "src/lib/site-bot/research/ownerGates.test.ts",
+    "src/lib/site-bot/research/gateAnswers.ts",
+    "src/lib/site-bot/research/gateAnswers.test.ts",
     "src/lib/site-bot/research/contentEvaluation.ts",
     "src/lib/site-bot/research/contentEvaluation.test.ts",
     "src/lib/site-bot/research/pipelineState.ts",

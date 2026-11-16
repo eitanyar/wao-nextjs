@@ -4,6 +4,7 @@ import path from 'path';
 import { getResearchPath, readResearchDossier, writeResearchDossierAtomic } from './researchStore';
 import type { CollectedData } from '../../bot/prompts';
 import type { SiteResearchDossier } from './types';
+import { validateOwnerGateAnswer } from './ownerGates';
 
 export type ResearchGateType = 'business_boundary' | 'service_attributes' | 'geography' | 'money_services' | 'ambiguous_intent';
 
@@ -21,9 +22,14 @@ export interface ResearchGateApprovalResult {
 export interface ResearchGatePersistenceOptions {
   baseDir?: string;
   now?: () => Date;
+  /**
+   * The staff answer as submitted (admin path). When present it must validate (validateOwnerGateAnswer, same shape rules as
+   * the owner's) and is stored in dossier.staffResearchGateAnswers[gate.id], so generation applies it over an owner answer.
+   */
+  staffAnswer?: unknown;
 }
 
-type ResearchGatePersistenceResult = (ResearchGateApprovalResult & { dossier: SiteResearchDossier }) | { status: 'not_found' };
+type ResearchGatePersistenceResult = (ResearchGateApprovalResult & { dossier: SiteResearchDossier }) | { status: 'not_found' } | { status: 'invalid_answer' };
 
 function digest(value: unknown): string {
   return createHash('sha256').update(JSON.stringify(value)).digest('hex').slice(0, 24);
@@ -115,11 +121,21 @@ export async function persistResearchGateApproval(researchId: string, gateItem: 
   if (!file || !regularDossierPath(file)) return { status: 'not_found' };
   const dossier = await readResearchDossier(researchId, options.baseDir, { bounded: true });
   if (!dossier) return { status: 'not_found' };
+  const hasStaffAnswer = Object.hasOwn(options, 'staffAnswer');
+  const staffAnswer = hasStaffAnswer ? validateOwnerGateAnswer(gateItem.type, options.staffAnswer) : null;
+  if (hasStaffAnswer && staffAnswer === null) return { status: 'invalid_answer' };
   const now = options.now ?? (() => new Date());
   const approval = approveResearchGate({ ...collectedData, researchGateApprovals: dossier.researchGateApprovals }, gateItem, evidenceDigest, now().toISOString());
   if (approval.status === 'stale') return { ...approval, dossier };
   dossier.researchGateApprovals = approval.collectedData.researchGateApprovals;
   dossier.updatedAt = now().toISOString();
+  if (hasStaffAnswer) {
+    // Re-answering an already approved gate (also one the owner answered) replaces the stored staff answer.
+    dossier.staffResearchGateAnswers = {
+      ...dossier.staffResearchGateAnswers,
+      [gateItem.id]: { type: gateItem.type, evidenceDigest: gateItem.evidenceDigest, answer: staffAnswer, answeredAt: dossier.updatedAt },
+    };
+  }
   if (!await writeResearchDossierAtomic(researchId, dossier, options.baseDir)) throw new Error('Unable to persist research gate approval');
   return { ...approval, dossier };
 }

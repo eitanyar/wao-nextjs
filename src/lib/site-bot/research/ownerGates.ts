@@ -124,7 +124,7 @@ export type OwnerGateSubmitResult =
 /**
  * Approves one owner gate: the gate must be on the dossier's owner list, owner-answerable, unapproved, inside the answer
  * window and with the evidence digest it was issued with. The validated answer is stored next to the gate record,
- * together with the approval, in one atomic dossier write (nothing downstream reads `answer` yet; staff see it in the dossier).
+ * together with the approval, in one atomic dossier write; generation applies it to the site facts (gateAnswers.ts).
  */
 export async function submitOwnerResearchGate(
   researchId: string,

@@ -82,8 +82,9 @@ function routeHarness({ token, authorization = auth, dossier = null, denyReads =
         assert.equal(includeApproved, true);
         return [gate];
       },
-      persistResearchGateApproval: async (researchId, selected, answered, digest) => {
+      persistResearchGateApproval: async (researchId, selected, answered, digest, options) => {
         writes.persist++;
+        assert.deepEqual(JSON.parse(JSON.stringify(options)), { staffAnswer: { services: ['synthetic-service'] } });
         if (!gateResult) throw new Error('unexpected gate persistence');
         assert.equal(researchId, 'known-synthetic-id');
         assert.deepEqual(selected, gate);
@@ -261,6 +262,11 @@ test('authenticated POST preserves malformed, unknown, stale and approval respon
   assert.deepEqual(await missing.post({ ...body, gateId: missing.gate.id }), { status: 404, body: { error: 'not_found' }, cacheControl: 'private, no-store' });
   assert.deepEqual(missing.writes, { json: 1, derive: 1, answer: 1, persist: 1 });
   assert.deepEqual(missing.reads, { requestUrl: 0, dossier: 0 });
+
+  // 2026-11-17: the staff answer is validated and stored with the approval; a malformed one is refused, nothing stored.
+  const badAnswer = routeHarness({ token, gateResult: { digest: 'hash', status: 'invalid_answer', approvals: {} } });
+  assert.deepEqual(await badAnswer.post({ ...body, gateId: badAnswer.gate.id }), { status: 400, body: { error: 'invalid_input' }, cacheControl: 'private, no-store' });
+  assert.deepEqual(badAnswer.writes, { json: 1, derive: 1, answer: 1, persist: 1 });
 
   const stale = routeHarness({ token, gateResult: { digest: 'old-hash', status: 'stale', approvals: {} } });
   assert.deepEqual(await stale.post({ ...body, gateId: stale.gate.id, evidenceDigest: 'old-hash' }), { status: 409, body: { error: 'stale_evidence' }, cacheControl: 'private, no-store' });

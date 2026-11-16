@@ -141,8 +141,11 @@ export async function POST(req: Request) {
   const gate = gates.find(item => item.id === body.gateId);
   if (!gate) return getReply({ error: 'not_found' }, 404);
   const answered = applyResearchGateAnswer(body.collectedData, gate, body.answer);
-  const result = await persistResearchGateApproval(body.researchId, gate, answered, body.evidenceDigest);
+  // A staff answer is validated and stored with the approval, so generation applies it over the owner's (gateAnswers.ts).
+  // An approval without an answer stays as before (nothing stored).
+  const result = await persistResearchGateApproval(body.researchId, gate, answered, body.evidenceDigest, body.answer === undefined ? {} : { staffAnswer: body.answer });
   if (result.status === 'not_found') return getReply({ error: 'not_found' }, 404);
+  if (result.status === 'invalid_answer') return getReply({ error: 'invalid_input' }, 400);
   if (result.status === 'stale') return getReply({ error: 'stale_evidence' }, 409);
   return getReply({ status: result.status, collectedData: result.collectedData, approvals: result.dossier.researchGateApprovals ?? {} }, 200);
 }

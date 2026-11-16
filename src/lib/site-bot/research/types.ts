@@ -114,6 +114,14 @@ export interface OwnerResearchGate {
   answeredAt?: string;
 }
 
+/** A staff answer to a research gate (admin gates POST), validated like an owner answer; key = the gate id. */
+export interface StaffResearchGateAnswer {
+  type: OwnerResearchGate['type'];
+  evidenceDigest: string;
+  answer: unknown;
+  answeredAt: string;
+}
+
 export interface ResearchPipelineChecks {
   copy?: 'pass' | 'skip' | 'pending' | 'held';
   hebrewQa?: 'pass' | 'skip' | 'pending' | 'held';
@@ -172,6 +180,8 @@ export interface SiteResearchDossier {
   researchGateApprovals?: Record<string, ResearchGateApproval>;
   /** Gates the owner may answer from the pay page (recorded by the checkout callback). */
   ownerResearchGates?: OwnerResearchGate[];
+  /** Staff answers per gate id; at build time they win over the owner's answer of the same gate type (gateAnswers.ts). */
+  staffResearchGateAnswers?: Record<string, StaffResearchGateAnswer>;
   approvedCopyReviewPacket?: ResearchedCopyReviewPacket;
   pipelineChecks?: ResearchPipelineChecks;
   /** Set once by the copy_ready plan (M2a.1): service labels/slugs, trade and service-area labels. Never regenerated. */

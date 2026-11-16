@@ -44,6 +44,7 @@ import { buildSiteResearchInput } from './research/researchInput';
 import { readResearchDossier, writeResearchDossierAtomic } from './research/researchStore';
 import { runSiteResearch } from './research/runResearch';
 import { listedServedAreas } from './servedAreas';
+import { gateAnsweredCollectedData } from './research/gateAnswers';
 import { createPlaceIdChecker, type PlaceIdChecker } from './placeIdRefresh';
 import { transitionResearchStatus, type HumanGate, type NeuronQueryData, type PageOpportunity, type ResearchStatus, type SiteResearchDossier } from './research/types';
 import {
@@ -520,7 +521,8 @@ export type ResearchToSiteOutcome =
   | { status: 'failed'; researchId: string; step: 'input' | 'research' | 'plan' | 'preflight' | 'generate' | 'persist'; reason: string; pageId?: string; violations?: CopyViolation[] };
 
 export async function runResearchToSite(input: ResearchToSiteInput, deps: ResearchToSiteDependencies = {}): Promise<ResearchToSiteOutcome> {
-  const { slug, researchId, collectedData } = input;
+  const { slug, researchId } = input;
+  let collectedData = input.collectedData;
   if (!isSafeDeploymentSlug(slug) || typeof researchId !== 'string' || !OPAQUE_ID.test(researchId) || !collectedData?.businessNiche) {
     return { status: 'failed', researchId: String(researchId), step: 'input', reason: 'invalid_input' };
   }
@@ -547,6 +549,9 @@ export async function runResearchToSite(input: ResearchToSiteInput, deps: Resear
     return { status: 'held', researchId, dossierStatus: readiness.dossierStatus, reasons: readiness.reasons, gates: readiness.gates };
   }
 
+  // 2026-11-17: stored owner / staff research-gate answers become site facts (staff > owner > caller data) for the
+  // identity, the page briefs, the render inputs and the stored record alike.
+  collectedData = gateAnsweredCollectedData(collectedData, dossier);
   const transitioned = dossier.status === 'architecture_ready';
   let plannedDossier: SiteResearchDossier;
   try {

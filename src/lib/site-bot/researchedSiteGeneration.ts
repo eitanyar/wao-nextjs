@@ -24,6 +24,7 @@ import { assertBoundedPageBrief, type PageBrief } from './research/pageBrief';
 import type { PageClassification } from './research/pagePortfolio';
 import { refreshPlaceId, type PlaceIdChecker } from './placeIdRefresh';
 import type { SiteResearchDossier } from './research/types';
+import { gateAnsweredCollectedData } from './research/gateAnswers';
 
 const OPAQUE_ID = /^[A-Za-z0-9][A-Za-z0-9_-]*$/;
 const MAX_SITE_RECORD_BYTES = 16 * 1024 * 1024;
@@ -240,9 +241,11 @@ export async function buildResearchedSiteGeneration(
 ): Promise<ResearchedSiteGenerationRecord> {
   if (ownerContactMissing(input.collectedData)) fail(OWNER_CONTACT_MISSING_MESSAGE);
   const homepage = validatePortfolio(input);
+  // 2026-11-17: the owner's and staff's stored research-gate answers become site facts (staff > owner > caller data).
+  const answeredData = gateAnsweredCollectedData(input.collectedData, input.dossier);
   const sourceData = dependencies.checkPlaceId
-    ? (await refreshPlaceId(input.collectedData, dependencies.checkPlaceId, { force: true, now: (dependencies.now ?? (() => new Date()))() })).data
-    : input.collectedData;
+    ? (await refreshPlaceId(answeredData, dependencies.checkPlaceId, { force: true, now: (dependencies.now ?? (() => new Date()))() })).data
+    : answeredData;
   const pages: ResearchedSitePage[] = [];
   const heroFacts: HeroCapPageFacts[] = [];
 
