@@ -29,7 +29,8 @@ function load(file, imports = {}) {
 
 const react = { react: React, 'react/jsx-runtime': jsx };
 const copy = load(local('src/lib/payments/accountCopy.ts'));
-const deps = { ...react, '@/lib/payments/accountCopy': copy };
+const events = load(here('./accountEvents.ts'));
+const deps = { ...react, '@/lib/payments/accountCopy': copy, './accountEvents': events };
 const cancel = load(here('./CancelSubscriptionButton.tsx'), deps);
 const card = load(here('./CardUpdateButton.tsx'), deps);
 const requestForm = load(here('./RequestLinkForm.tsx'), deps);
@@ -136,4 +137,21 @@ test('request form: the state notice is the h1, the status line is mounted empty
   assert.ok(/<button type="submit"[^>]*min-h-11/.test(html));
   const bare = markup(React.createElement(requestForm.default, {}));
   assert.ok(!bare.includes('<h1'), 'no notice, no heading');
+});
+
+test('after an in-page cancel the message box drops its "cancel with the button" pointer line', () => {
+  // The event helper fires exactly one window event with the shared name.
+  const fired = [];
+  const file = here('./accountEvents.ts');
+  const exports = {};
+  vm.runInNewContext(ts.transpileModule(fs.readFileSync(file, 'utf8'), { compilerOptions: { module: ts.ModuleKind.CommonJS } }).outputText,
+    { exports, Event: class { constructor(type) { this.type = type; } }, window: { dispatchEvent: (event) => fired.push(event.type) } });
+  exports.announceSubscriptionCanceled();
+  assert.deepEqual(fired, [exports.SUBSCRIPTION_CANCELED_EVENT]);
+  // Wiring: the cancel button announces right after a successful cancel; the box listens and gates the pointer on it.
+  const button = fs.readFileSync(here('./CancelSubscriptionButton.tsx'), 'utf8');
+  assert.match(button, /type: 'succeeded',[\s\S]*?\}\);\s*announceSubscriptionCanceled\(\);/);
+  const box = fs.readFileSync(here('./ClientMessageBox.tsx'), 'utf8');
+  assert.match(box, /addEventListener\(SUBSCRIPTION_CANCELED_EVENT/);
+  assert.match(box, /\{cancelAvailable && !canceledHere && <p[^>]*>\{label\('cancelPointer'\)\}/);
 });

@@ -144,7 +144,15 @@ test('account card: shown only for an active Site-Bot subscription with a live s
   assert.equal(new URL(view.whatsappUrl).searchParams.get('text'), view.message);
   if (SITE_BOT_REVIEW_KIT_COPY_PENDING) assert.equal(reviewCardFor(sub(subscriptionId)), null, 'the real pending copy hides the card');
   assert.equal(reviewCardFor(sub(subscriptionId), { copy: COPY, pending: true }), null, 'pending hides the card');
-  assert.equal(reviewCardFor({ ...sub(subscriptionId), cancel_at_period_end: 1 }, READY), null, 'cancelling hides it');
+  // Cancelled (scheduled or taken effect): the site stays live until the offline date (effective date + 30 Israel days),
+  // so the card stays until then and disappears on that date.
+  const effective = '2026-12-10T08:00:00.000Z'; // offline date 2027-01-09 (Israel)
+  const scheduled = { ...sub(subscriptionId), cancel_at_period_end: 1, cancel_effective_at: effective };
+  assert.ok(reviewCardFor(scheduled, { ...READY, now: NOW }), 'scheduled cancel keeps the card');
+  const ended = { ...sub(subscriptionId), status: 'canceled' as const, cancel_at_period_end: 1, cancel_effective_at: effective, canceled_at: NOW.toISOString() };
+  assert.ok(reviewCardFor(ended, { ...READY, now: new Date('2027-01-08T20:00:00.000Z') }), 'still live the day before the offline date');
+  assert.equal(reviewCardFor(ended, { ...READY, now: new Date('2027-01-08T23:30:00.000Z') }), null, 'gone on the offline date (Israel)');
+  assert.equal(reviewCardFor({ ...sub(subscriptionId), cancel_at_period_end: 1, cancel_effective_at: null }, { ...READY, now: NOW }), null, 'no effective date: stays hidden');
   assert.equal(reviewCardFor({ ...sub(subscriptionId), status: 'past_due' }, READY), null);
   assert.equal(reviewCardFor({ ...sub(subscriptionId), plan: null }, READY), null);
 });

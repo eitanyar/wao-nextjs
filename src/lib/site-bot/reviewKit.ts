@@ -19,6 +19,7 @@ import { placeReviewUrl } from '../gbp/reviewLink';
 import { resolveClientIdentity } from './clientMessages';
 import { defaultMailTransport, israelTime, staffAlertAddress, supportFromAddress, type MailTransport } from './clientMessageEmail';
 import { fillCopy, renderLifecycleEmail } from './lifecycleEmail';
+import { cancellationEffectiveAt, pastOfflineDate } from './offlineDate';
 import {
   REVIEW_CARD_COPY_KEYS,
   REVIEW_EMAIL_COPY_KEYS,
@@ -89,14 +90,30 @@ export interface ReviewCardView {
  * The account-page card, or null when it must stay hidden: not an active Site-Bot subscription, site not live, no
  * usable Place ID, no business name, or the copy still pending.
  */
+/**
+ * Account-page card visibility: an active Site-Bot subscription, and also a cancelled one (scheduled or taken effect)
+ * until its site's offline date, because the site stays live until then. Past-due / paused rows stay hidden.
+ * (The one-time review-kit EMAIL keeps the stricter reviewKitEligible.)
+ */
+export function reviewCardEligible(
+  subscription: Pick<SubscriptionRow, 'plan' | 'status' | 'cancel_at_period_end' | 'cancel_effective_at' | 'canceled_at'>,
+  now: Date
+): boolean {
+  if (subscription.plan !== SITE_BOT_PLAN.id) return false;
+  const cancelled = subscription.status === 'canceled' || (subscription.status === 'active' && subscription.cancel_at_period_end === 1);
+  if (!cancelled) return subscription.status === 'active';
+  // No usable effective date means no known offline date: hide rather than guess.
+  return cancellationEffectiveAt(subscription) !== null && !pastOfflineDate(subscription, now);
+}
+
 export function reviewCardFor(
-  subscription: Pick<SubscriptionRow, 'id' | 'plan' | 'status' | 'cancel_at_period_end'>,
-  options: { copy?: Readonly<Record<string, string>>; pending?: boolean } = {}
+  subscription: Pick<SubscriptionRow, 'id' | 'plan' | 'status' | 'cancel_at_period_end' | 'cancel_effective_at' | 'canceled_at'>,
+  options: { copy?: Readonly<Record<string, string>>; pending?: boolean; now?: Date } = {}
 ): ReviewCardView | null {
   const copy = options.copy ?? SITE_BOT_REVIEW_KIT_COPY;
   const pending = options.pending ?? SITE_BOT_REVIEW_KIT_COPY_PENDING;
   if (!reviewKitCopyReady(REVIEW_CARD_COPY_KEYS, copy, pending)) return null;
-  if (!reviewKitEligible(subscription)) return null;
+  if (!reviewCardEligible(subscription, options.now ?? new Date())) return null;
   const site = getSiteBotSite(subscription.id);
   if (!site) return null;
   const reviewLink = placeReviewUrl(site.place_id);

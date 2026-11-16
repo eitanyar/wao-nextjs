@@ -2,6 +2,7 @@
 
 import { useEffect, useReducer, useRef, type RefObject } from 'react';
 import { CANCEL_BUTTON_COPY as COPY, formatAccountDate } from '@/lib/payments/accountCopy';
+import { announceSubscriptionCanceled } from './accountEvents';
 
 /**
  * Client component: the cancel control of the account/subscription page, in two steps. The first tap opens an in-page
@@ -204,6 +205,7 @@ export default function CancelSubscriptionButton({
         type: 'succeeded',
         accessUntil: data.cancelAtPeriodEnd === true && typeof data.effectiveAt === 'string' ? data.effectiveAt : null,
       });
+      announceSubscriptionCanceled();
     } catch {
       dispatch({ type: 'failed', errorKind: 'generic' });
     }

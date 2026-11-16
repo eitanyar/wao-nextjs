@@ -8,6 +8,7 @@ import { useEffect, useRef, useState } from 'react';
 import { renderMixed } from '@/lib/bidi';
 import { customerVisibleLabel } from '@/lib/site-bot/checkout/accountCopy';
 import { SITE_BOT_CLIENT_MESSAGE_COPY, type ClientMessageCopyKey } from '@/lib/site-bot/clientMessageCopy';
+import { SUBSCRIPTION_CANCELED_EVENT } from './accountEvents';
 
 const MAX_CHARS = 2000;
 type Phase = 'idle' | 'sending' | 'sent' | 'error';
@@ -27,7 +28,8 @@ function errorKeyFor(status: number, code: unknown): ErrorKey {
 
 /**
  * `cancelAvailable`: true when the page shows its cancel button. The cancel pointer line ("cancel with the button on
- * this page") renders only then, so it never points at a button that is not there.
+ * this page") renders only then, so it never points at a button that is not there. It also disappears the moment the
+ * owner cancels on this page (SUBSCRIPTION_CANCELED_EVENT), since the cancel button is gone from then on.
  */
 export default function ClientMessageBox({ token, cancelAvailable }: { token: string; cancelAvailable: boolean }) {
   const [body, setBody] = useState('');
@@ -36,6 +38,13 @@ export default function ClientMessageBox({ token, cancelAvailable }: { token: st
   // Minted on first input and kept until a 200, so a retry of the same message can never duplicate it.
   const messageId = useRef<string | null>(null);
   const sentHeadingRef = useRef<HTMLParagraphElement>(null);
+  const [canceledHere, setCanceledHere] = useState(false);
+
+  useEffect(() => {
+    const onCanceled = () => setCanceledHere(true);
+    window.addEventListener(SUBSCRIPTION_CANCELED_EVENT, onCanceled);
+    return () => window.removeEventListener(SUBSCRIPTION_CANCELED_EVENT, onCanceled);
+  }, []);
 
   // The sent state is announced once, by moving focus to the sent heading (the form that had focus is gone). The
   // mounted role="status" region announces only the sending state, so the heading is not read twice.
@@ -132,7 +141,7 @@ export default function ClientMessageBox({ token, cancelAvailable }: { token: st
         </form>
       )}
       <p role="status" aria-live="polite" className="sr-only">{statusText}</p>
-      {cancelAvailable && <p className="mt-4 text-xs text-[var(--muted)]">{label('cancelPointer')}</p>}
+      {cancelAvailable && !canceledHere && <p className="mt-4 text-xs text-[var(--muted)]">{label('cancelPointer')}</p>}
     </section>
   );
 }
