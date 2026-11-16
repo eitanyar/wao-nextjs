@@ -80,6 +80,19 @@ test('18: open items sort before done ones; a cancel item shows both dates and t
   assert.deepEqual(times, ['2026-12-06T08:00:00.000Z', '2027-01-06T08:00:00.000Z', '2027-02-05T08:00:00.000Z']);
 });
 
+test('18b: "Site offline on" is the Israel calendar date of the server value (DST-safe), shown without a time', () => {
+  // The server sends noon UTC of the Israel offline date (offlineDate.ts siteOfflineAtIso), here 20.11.2026, after the
+  // 25.10 DST change; the effective moment 2026-10-20T21:30Z is already 21.10 in Israel.
+  const item = ui.project({ ...base, id: id3, kind: 'cancel_notice_due', body: '', status: 'received', staff_category: 'cancel',
+    meta_json: JSON.stringify({ effectiveAt: '2026-10-20T21:30:00.000Z', siteOfflineAt: '2026-11-20T12:00:00.000Z', cancelAtPeriodEnd: true }), received_at: '2026-10-20T21:31:00.000Z' });
+  const doc = fakeDocument();
+  const root = doc.createElement('div');
+  ui.renderClientInbox(root, { status: 'records', items: [item], skipped: 0, openCount: 1, overdueCount: 0 }, { update: async () => {} });
+  const text = root.textContent;
+  assert.match(text, /Effective: 21\/10\/2026/);
+  assert.match(text, /Site offline on: 20\/11\/2026(?![,\d])/, 'date only, no time');
+});
+
 test('controls call update with the right patches; reply link is ASCII-only and carries no message text', async () => {
   const item = ui.project({ ...base, id: id1, body: 'please change my number' });
   const calls = [];

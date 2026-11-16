@@ -31,8 +31,10 @@ import {
   resolveClientIdentity,
   triageClientMessage,
   updateClientMessage,
+  withIsraelOfflineDate,
   type ClientMessageRow,
 } from './clientMessages';
+import { siteOfflineDate } from './offlineDate';
 import {
   CLIENT_MESSAGE_COPY_KEYS,
   EMAIL_COPY_KEYS,
@@ -156,18 +158,46 @@ test('3/19: resolveClientIdentity reads the session link; nulls without one; lin
 
 // ---- 4. cancel notice -----------------------------------------------------------------------
 
-test('4: createCancelNoticeItem sets siteOfflineAt = effective + 30 days, once per subscription', () => {
+test('4: createCancelNoticeItem sets siteOfflineAt = the Israel offline date (noon UTC), once per subscription', () => {
   const sub = makeSubscription();
   const first = createCancelNoticeItem({ subscriptionId: sub, effectiveAt: '2027-01-06T08:00:00.000Z', cancelAtPeriodEnd: true, now: NOW });
   assert.equal(first.created, true);
   assert.equal(first.row.kind, 'cancel_notice_due');
   assert.equal(first.row.staff_category, 'cancel');
   assert.equal(first.row.body, '');
-  assert.deepEqual(JSON.parse(first.row.meta_json as string), { effectiveAt: '2027-01-06T08:00:00.000Z', siteOfflineAt: '2027-02-05T08:00:00.000Z', cancelAtPeriodEnd: true });
+  assert.deepEqual(JSON.parse(first.row.meta_json as string), { effectiveAt: '2027-01-06T08:00:00.000Z', siteOfflineAt: '2027-02-05T12:00:00.000Z', cancelAtPeriodEnd: true });
   const second = createCancelNoticeItem({ subscriptionId: sub, effectiveAt: '2027-03-01T00:00:00.000Z', cancelAtPeriodEnd: false, now: NOW });
   assert.equal(second.created, false);
   assert.equal(listClientMessages().filter((r) => r.subscription_id === sub).length, 1);
   assert.equal(countMessagesSince(sub, '2000-01-01T00:00:00.000Z'), 0, 'system items do not count toward the client cap');
+});
+
+test('4b: the staff offline date uses the client-email Israel-date rule across the late-October DST change', () => {
+  // Israel leaves summer time on Sun 2026-10-25. 2026-10-20T21:30Z is 00:30 on 21.10 in Israel (UTC+3);
+  // the offline date is 21.10 + 30 days = 20.11. Plain "+ 30 * 24h" lands on 2026-11-19T21:30Z = 23:30 on 19.11 (UTC+2).
+  const effectiveAt = '2026-10-20T21:30:00.000Z';
+  const israelDay = (iso: string) => new Date(iso).toLocaleDateString('en-CA', { timeZone: 'Asia/Jerusalem' });
+  assert.equal(siteOfflineDate(effectiveAt), '2026-11-20', 'client-email rule');
+  assert.equal(israelDay(new Date(Date.parse(effectiveAt) + 30 * 86_400_000).toISOString()), '2026-11-19', 'the old ms rule was a day early');
+  const sub = makeSubscription();
+  const { row } = createCancelNoticeItem({ subscriptionId: sub, effectiveAt, cancelAtPeriodEnd: true, now: NOW });
+  const meta = JSON.parse(row.meta_json as string);
+  assert.equal(meta.siteOfflineAt, '2026-11-20T12:00:00.000Z');
+  assert.equal(israelDay(meta.siteOfflineAt), siteOfflineDate(effectiveAt), 'staff value = client-email date');
+  // Every hour of the DST-change day and its neighbours agrees with the client-email rule.
+  for (let hour = -48; hour <= 48; hour++) {
+    const at = new Date(Date.parse('2026-10-25T00:00:00.000Z') + hour * 3_600_000).toISOString();
+    const legacy: ClientMessageRow = { ...row, meta_json: JSON.stringify({ effectiveAt: at, siteOfflineAt: 'stale', cancelAtPeriodEnd: false }) };
+    assert.equal(israelDay(JSON.parse(withIsraelOfflineDate(legacy).meta_json as string).siteOfflineAt), siteOfflineDate(at), at);
+  }
+  // A legacy row stored with the ms rule is corrected on read; other rows and unreadable meta pass through untouched.
+  const legacyRow: ClientMessageRow = { ...row, meta_json: JSON.stringify({ effectiveAt, siteOfflineAt: '2026-11-19T21:30:00.000Z', cancelAtPeriodEnd: true }) };
+  assert.deepEqual(JSON.parse(withIsraelOfflineDate(legacyRow).meta_json as string), { effectiveAt, siteOfflineAt: '2026-11-20T12:00:00.000Z', cancelAtPeriodEnd: true });
+  assert.equal(withIsraelOfflineDate(row), row, 'already correct: same object');
+  const broken: ClientMessageRow = { ...row, meta_json: '{not json' };
+  assert.equal(withIsraelOfflineDate(broken), broken);
+  const message: ClientMessageRow = { ...row, kind: 'client_message', meta_json: null };
+  assert.equal(withIsraelOfflineDate(message), message);
 });
 
 // ---- 5. staff update ------------------------------------------------------------------------
@@ -286,7 +316,7 @@ test('cancel alert lists both dates and the hand checklist', async () => {
   const [email] = transport.calls;
   assert.match(email.subject, /^Site Bot cancel — notices due — owner-/);
   assert.match(email.text, /Effective: 06\/01\/2027/);
-  assert.match(email.text, /Site offline on: 05\/02\/2027/);
+  assert.match(email.text, /Site offline on: 05\/02\/2027 \(Israel date\)/);
   // Either branch: hand checklist while the notice copy is pending, automatic-cron wording once approved.
   assert.match(email.text, /cancel-day (notice|confirmation)[\s\S]*7 days before[\s\S]*manager access/);
 });

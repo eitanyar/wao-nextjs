@@ -47,7 +47,8 @@ export function makeStore() {
   const dbPath = path.join(dir, 'billing.db');
   const dbMod = load('src/lib/payments/db.ts', { path, fs, 'better-sqlite3': Database }, { env: { BILLING_DB_PATH: dbPath } });
   const help = load('src/lib/site-bot/helpRequest.ts', {});
-  const store = load('src/lib/site-bot/clientMessages.ts', { crypto, '../payments/db': dbMod, './helpRequest': help });
+  const offlineDate = load('src/lib/site-bot/offlineDate.ts', {});
+  const store = load('src/lib/site-bot/clientMessages.ts', { crypto, '../payments/db': dbMod, './helpRequest': help, './offlineDate': offlineDate });
   const db = dbMod.getDb();
   const now = new Date().toISOString();
   function addSubscription(overrides = {}) {

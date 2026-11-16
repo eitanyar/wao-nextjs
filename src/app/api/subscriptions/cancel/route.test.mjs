@@ -37,7 +37,7 @@ test('20: flag on + Site-Bot plan -> one cancel_notice_due item and one staff al
   const rows = h.rows();
   assert.equal(rows.length, 1);
   assert.equal(rows[0].kind, 'cancel_notice_due');
-  assert.deepEqual(JSON.parse(rows[0].meta_json), { effectiveAt: EFFECTIVE, siteOfflineAt: '2027-02-05T08:00:00.000Z', cancelAtPeriodEnd: true });
+  assert.deepEqual(JSON.parse(rows[0].meta_json), { effectiveAt: EFFECTIVE, siteOfflineAt: '2027-02-05T12:00:00.000Z', cancelAtPeriodEnd: true }); // Israel offline date, noon UTC
   assert.ok(rows[0].staff_alerted_at);
   assert.equal(h.email.calls.alert.length, 1);
   await h.cancel();

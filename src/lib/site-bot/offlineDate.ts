@@ -32,6 +32,14 @@ export function siteOfflineDate(effectiveAtIso: string): string {
   return addCalendarDays(israelDate(effectiveAtIso), SITE_OFFLINE_AFTER_DAYS);
 }
 
+/**
+ * The offline date as an instant for records and staff views: noon UTC of the Israel offline date (the same Israel date
+ * all year). Never `effectiveAt + 30 * 24h`, which lands on the wrong Israel day across a DST change.
+ */
+export function siteOfflineAtIso(effectiveAtIso: string): string {
+  return dateOnlyToNoonIso(siteOfflineDate(effectiveAtIso));
+}
+
 /** The Israel date of the "offline soon" notice: 7 days before the offline date. */
 export function offlineSoonDate(offlineDate: string): string {
   return addCalendarDays(offlineDate, -OFFLINE_SOON_DAYS_BEFORE);

@@ -13,6 +13,7 @@ import crypto from 'crypto';
 import type Database from 'better-sqlite3';
 import { getDb, insertSubscriptionEvent } from '../payments/db';
 import { UUID } from './helpRequest';
+import { SITE_OFFLINE_AFTER_DAYS as OFFLINE_AFTER_DAYS, siteOfflineAtIso } from './offlineDate';
 
 export const CLIENT_MESSAGE_KINDS = ['client_message', 'cancel_notice_due'] as const;
 export const CLIENT_MESSAGE_STATUSES = ['received', 'handling', 'done'] as const;
@@ -23,11 +24,10 @@ export type StaffCategory = (typeof STAFF_CATEGORIES)[number];
 
 export const MESSAGE_MAX_CHARS = 2000;
 export const STAFF_NOTE_MAX_CHARS = 1000;
-/** Terms §8: the site stays up 30 days after a cancellation takes effect. */
-export const SITE_OFFLINE_AFTER_DAYS = 30;
+/** Terms §8: the site stays up 30 days after a cancellation takes effect (the one constant lives in offlineDate.ts). */
+export const SITE_OFFLINE_AFTER_DAYS = OFFLINE_AFTER_DAYS;
 export const SESSION_LINK_EVENT = 'site_bot_session_linked';
 
-const DAY_MS = 86_400_000;
 const EMAIL_ADDRESS = /^[^\s@]+@[^\s@]+\.[^\s@]+$/; // same as subscriptions.ts
 
 export type ClientMessageErrorCode = 'invalid_input' | 'too_long' | 'conflict';
@@ -215,7 +215,8 @@ export function createClientMessage(params: { id: string; subscriptionId: string
 
 /**
  * Cancel hook: one "cancel notice due" item per subscription (a second call writes nothing).
- * `siteOfflineAt` = effective date + 30 days (terms §8).
+ * `siteOfflineAt` = the Israel offline date (offlineDate.ts siteOfflineDate: the Israel date the cancellation takes effect
+ * + 30 calendar days, terms §8) as noon UTC, the same rule as the client emails.
  */
 export function createCancelNoticeItem(params: {
   subscriptionId: string;
@@ -232,7 +233,7 @@ export function createCancelNoticeItem(params: {
     const effectiveMs = params.effectiveAt && Number.isFinite(Date.parse(params.effectiveAt)) ? Date.parse(params.effectiveAt) : params.now.getTime();
     const meta = {
       effectiveAt: new Date(effectiveMs).toISOString(),
-      siteOfflineAt: new Date(effectiveMs + SITE_OFFLINE_AFTER_DAYS * DAY_MS).toISOString(),
+      siteOfflineAt: siteOfflineAtIso(new Date(effectiveMs).toISOString()),
       cancelAtPeriodEnd: params.cancelAtPeriodEnd,
     };
     const identity = resolveClientIdentity(params.subscriptionId);
@@ -250,6 +251,22 @@ export function createCancelNoticeItem(params: {
 }
 
 /** Newest first, open items (status != 'done') before done ones. */
+/**
+ * A cancel item with its staff "Site offline on" value recomputed from effectiveAt by the Israel-date rule (rows written
+ * before 2026-11-16 stored effective + 30 * 24h, a day off across DST). Other rows, and unreadable meta, pass through.
+ */
+export function withIsraelOfflineDate(row: ClientMessageRow): ClientMessageRow {
+  if (row.kind !== 'cancel_notice_due' || !row.meta_json) return row;
+  try {
+    const meta = JSON.parse(row.meta_json);
+    if (!meta || typeof meta !== 'object' || typeof meta.effectiveAt !== 'string' || !Number.isFinite(Date.parse(meta.effectiveAt))) return row;
+    const siteOfflineAt = siteOfflineAtIso(meta.effectiveAt);
+    return meta.siteOfflineAt === siteOfflineAt ? row : { ...row, meta_json: JSON.stringify({ ...meta, siteOfflineAt }) };
+  } catch {
+    return row;
+  }
+}
+
 export function listClientMessages({ limit = 500 }: { limit?: number } = {}): ClientMessageRow[] {
   const bounded = Number.isSafeInteger(limit) && limit > 0 ? Math.min(limit, 2000) : 500;
   return db()

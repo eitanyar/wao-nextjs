@@ -209,6 +209,14 @@ function timeNode(doc, value) {
   return node;
 }
 
+// The offline day is an Israel calendar date (the server sends noon UTC of it, offlineDate.ts siteOfflineAtIso).
+function dateNode(doc, value) {
+  const node = doc.createElement('time');
+  node.setAttribute('datetime', value);
+  node.textContent = new Date(value).toLocaleDateString('en-GB', { timeZone: 'Asia/Jerusalem' });
+  return node;
+}
+
 function renderItem(doc, item, actions, message) {
   const li = doc.createElement('li');
   li.className = 'my-4 rounded-lg border border-white/15 p-4';
@@ -236,7 +244,7 @@ function renderItem(doc, item, actions, message) {
   }
   if (item.kind === 'cancel_notice_due') {
     li.append(line(doc, 'Effective', item.meta?.effectiveAt ? timeNode(doc, item.meta.effectiveAt) : '-'));
-    li.append(line(doc, 'Site offline on', item.meta?.siteOfflineAt ? timeNode(doc, item.meta.siteOfflineAt) : '-'));
+    li.append(line(doc, 'Site offline on', item.meta?.siteOfflineAt ? dateNode(doc, item.meta.siteOfflineAt) : '-'));
     const checklist = doc.createElement('ul');
     for (const step of ['Send the cancel-day notice.', 'Send the notice 7 days before the site goes offline.', "Remove WAO's manager access to the Google profile."]) {
       const entry = doc.createElement('li');

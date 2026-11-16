@@ -22,6 +22,7 @@ import { CANCEL_EMAIL_COPY_KEYS, cancelNoticeCopyReady, OFFLINE_SOON_COPY_KEYS }
 import {
   listUnhandledOlderThan,
   markReminded,
+  withIsraelOfflineDate,
   type ClientMessageRow,
 } from './clientMessages';
 
@@ -107,6 +108,12 @@ export function israelTime(iso: string | null | undefined): string {
   return new Date(iso).toLocaleString('en-GB', { timeZone: 'Asia/Jerusalem' });
 }
 
+/** An Israel calendar date (the offline date is a date, not a moment), en-GB DD/MM/YYYY. */
+export function israelDateOnly(iso: string | null | undefined): string {
+  if (!iso || !Number.isFinite(Date.parse(iso))) return '-';
+  return new Date(iso).toLocaleDateString('en-GB', { timeZone: 'Asia/Jerusalem' });
+}
+
 export function escapeHtml(value: string): string {
   return value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 }
@@ -117,7 +124,8 @@ function who(row: ClientMessageRow): string {
 
 function cancelMeta(row: ClientMessageRow): { effectiveAt: string | null; siteOfflineAt: string | null } {
   try {
-    const meta = row.meta_json ? JSON.parse(row.meta_json) : {};
+    const normalized = withIsraelOfflineDate(row);
+    const meta = normalized.meta_json ? JSON.parse(normalized.meta_json) : {};
     return { effectiveAt: typeof meta.effectiveAt === 'string' ? meta.effectiveAt : null, siteOfflineAt: typeof meta.siteOfflineAt === 'string' ? meta.siteOfflineAt : null };
   } catch {
     return { effectiveAt: null, siteOfflineAt: null };
@@ -144,7 +152,7 @@ export async function sendClientMessageStaffAlert(row: ClientMessageRow, transpo
     const meta = cancelMeta(row);
     lines.push(
       `Effective: ${israelTime(meta.effectiveAt)}`,
-      `Site offline on: ${israelTime(meta.siteOfflineAt)}`,
+      `Site offline on: ${israelDateOnly(meta.siteOfflineAt)} (Israel date)`,
       '',
       ...(cancelNoticeCopyReady(CANCEL_EMAIL_COPY_KEYS) && cancelNoticeCopyReady(OFFLINE_SOON_COPY_KEYS)
         ? [
