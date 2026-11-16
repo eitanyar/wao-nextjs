@@ -6,6 +6,8 @@
  */
 import type { CollectedData } from '@/lib/bot/prompts';
 import { defaultMailTransport, israelTime, staffAlertAddress, supportFromAddress, type MailTransport, type OutgoingEmail } from './clientMessageEmail';
+import { isSafeSiteSlug } from './siteSlug';
+import { siteBaseUrl } from '../siteBaseUrl';
 
 export interface PaidQueueAlertInput {
   sessionId: string;
@@ -22,17 +24,21 @@ function oneLine(value: unknown, max = 120): string {
   return clean ? clean.slice(0, max) : '-';
 }
 
-/** Where the site will live: the owner's www host (attached by hand) or a WAO sub-domain whose slug staff pick at build. */
+/** The WAO sub-domain the intake planned (collectedData.preferredSlug), or a plain line when none is known yet. */
+function plannedSubdomain(data: CollectedData | undefined): string {
+  const slug = typeof data?.preferredSlug === 'string' ? data.preferredSlug.trim() : '';
+  return isSafeSiteSlug(slug)
+    ? `${slug}.wao.co.il (WAO sub-domain from the intake; can still be changed at build)`
+    : 'a WAO sub-domain (no slug from the intake yet; pick one at build)';
+}
+
+/** Where the site will live: the owner's www host (attached by hand, sub-domain first) or a WAO sub-domain. */
 export function plannedHost(data: CollectedData | undefined): string {
   const domain = typeof data?.ownerDomain === 'string' ? data.ownerDomain.trim().toLowerCase() : '';
   if (data?.domainChoice === 'has_domain' && /^[a-z0-9.-]+\.[a-z0-9-]+$/.test(domain)) {
     return `www.${domain} (own domain: hand-run attach, up to 3 business days; sub-domain first)`;
   }
-  return `{slug}.wao.co.il (WAO sub-domain; choose the slug at build)${data?.domainChoice === 'not_sure' ? ' — owner was not sure about a domain: ask' : ''}`;
-}
-
-function base(): string {
-  return (process.env.NEXT_PUBLIC_BASE_URL || 'https://www.wao.co.il').replace(/\/+$/, '');
+  return `${plannedSubdomain(data)}${data?.domainChoice === 'not_sure' ? ' — owner was not sure about a domain: ask' : ''}`;
 }
 
 export function buildPaidQueueAlert(input: PaidQueueAlertInput, env: Record<string, string | undefined> = process.env): OutgoingEmail {
@@ -50,7 +56,7 @@ export function buildPaidQueueAlert(input: PaidQueueAlertInput, env: Record<stri
     `Subscription: ${input.subscriptionId}`,
     '',
     'Next: research runs now; then generate, review the copy and deploy.',
-    `Copy review: ${base()}/admin/site-bot-copy-review`,
+    `Copy review: ${siteBaseUrl()}/admin/site-bot-copy-review`,
   ];
   return {
     to: staffAlertAddress(env),

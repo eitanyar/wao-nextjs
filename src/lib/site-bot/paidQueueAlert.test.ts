@@ -22,10 +22,15 @@ test('alert names the business, the planned own-domain host and the ids', () => 
 });
 
 test('no domain or unsure: sub-domain host; unsure asks staff to check', () => {
-  assert.match(plannedHost({ domainChoice: 'no_domain' }), /^\{slug\}\.wao\.co\.il/);
+  assert.match(plannedHost({ domainChoice: 'no_domain', preferredSlug: 'cohen-plumbing' }), /^cohen-plumbing\.wao\.co\.il \(WAO sub-domain/);
   assert.match(plannedHost({ domainChoice: 'not_sure' }), /not sure about a domain: ask/);
-  assert.match(plannedHost({ domainChoice: 'has_domain', ownerDomain: 'bad domain' }), /^\{slug\}\.wao\.co\.il/);
-  assert.match(plannedHost(undefined), /^\{slug\}\.wao\.co\.il/);
+  assert.match(plannedHost({ domainChoice: 'has_domain', ownerDomain: 'bad domain' }), /^a WAO sub-domain \(no slug from the intake yet/);
+  assert.match(plannedHost(undefined), /^a WAO sub-domain/);
+  // An unsafe stored slug is never echoed; no host string ever carries a template placeholder.
+  assert.match(plannedHost({ domainChoice: 'no_domain', preferredSlug: 'Bad Slug!' }), /^a WAO sub-domain/);
+  for (const data of [undefined, { domainChoice: 'no_domain' as const }, { domainChoice: 'not_sure' as const }, { preferredSlug: 'abc' }]) {
+    assert.doesNotMatch(plannedHost(data), /[{}]/);
+  }
 });
 
 test('missing business name falls back to the session prefix; send never throws', async () => {
