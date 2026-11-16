@@ -44,9 +44,6 @@ export interface RenderStaticHtmlParams {
   siteNav?: { label: string; links: SiteNavLink[] };
 }
 
-/** Five decorative sprite stars (the visible review context text carries the meaning). */
-const STARS = Array.from({ length: 5 }, () => icon('star', 'ic')).join('').replace(/class="ic"/g, 'class="ic" style="width:16px;height:16px;fill:currentColor;stroke:none;"');
-
 /** Redesign A defect fix: the form button sends the form; it never repeats the call label (heroCta). */
 const SUBMIT_LABEL = TEMPLATE_STRINGS.formSubmitLabel;
 
@@ -156,11 +153,10 @@ ${siteHeader({ businessName, phone, phoneHref, nav: p.siteNav, homeHref: p.siteN
   <!-- Trust Facts (Redesign A item 8) -->
 ${trustFacts(copy.trustBarItems)}
 
-  <!-- Star Rating -->
+  <!-- Review context (rating-display rules 2026-11-16, assertion 21: no star icons; the text carries the meaning) -->
   ${copy.reviewContext ? `
   <section style="background:${t.surface};border-bottom:1px solid ${t.border};padding:14px 20px;text-align:center;">
-    <span aria-hidden="true" style="display:inline-flex;gap:2px;vertical-align:middle;color:#E8A100;">${STARS}</span>
-    <span style="font-weight:700;color:${t.textPrimary};margin-inline-start:6px;">${esc(copy.reviewContext)}</span>
+    <span style="font-weight:700;color:${t.textPrimary};">${esc(copy.reviewContext)}</span>
   </section>` : ''}
 
   <!-- Services -->
@@ -183,7 +179,7 @@ ${trustFacts(copy.trustBarItems)}
       ${copy.reviewFeatured ? `
       <div style="background:${t.trustBadgeBg};border:1px solid ${t.border};border-radius:${t.radiusMd};padding:24px 20px;border-inline-start:4px solid ${t.accent};">
         <p style="font-size:1.05rem;color:${t.textPrimary};line-height:1.6;margin-bottom:12px;">״${esc(copy.reviewFeatured)}״</p>
-        ${copy.reviewContext ? `<div style="font-size:0.85rem;color:${t.textMuted};"><span aria-hidden="true" style="display:inline-flex;gap:2px;vertical-align:middle;color:#E8A100;">${STARS}</span> ${esc(copy.reviewContext)}</div>` : ''}
+        ${copy.reviewContext ? `<div style="font-size:0.85rem;color:${t.textMuted};">${esc(copy.reviewContext)}</div>` : ''}
       </div>` : ''}
     </div>
   </section>

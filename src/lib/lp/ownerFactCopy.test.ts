@@ -236,8 +236,9 @@ test('trustBarFromFacts: B2 kind order, at most TRUST_BAR_MAX_ITEMS, area tile f
   assert.equal(bar[0], few.area?.slots.area, 'the area tile (buildAreaTile)');
   assert.deepEqual(bar.slice(1), ['4.9*/64', 'R:2h']);
   assert.deepEqual(trustBarFromFacts(few, { installPage: true }, T).slice(1), ['4.9*/64'], 'no response time on an installation page');
-  // Rating without a count; durations from the fixed set; response forms.
-  assert.deepEqual(trustBarFromFacts(ownerFacts({ starRating: '5', guarantee: '6 months' }, { ...brief(), site: undefined }, T), { installPage: false }, T), ['W:6mo', '5*']);
+  // Rating without a count: no chip (rating-display rules 2026-11-16, no star without a count); durations from the fixed set;
+  // response forms.
+  assert.deepEqual(trustBarFromFacts(ownerFacts({ starRating: '5', guarantee: '6 months' }, { ...brief(), site: undefined }, T), { installPage: false }, T), ['W:6mo']);
   assert.deepEqual(trustBarFromFacts(ownerFacts({ guarantee: '5 years', responseTime: '1 hour' }, { ...brief(), site: undefined }, T), { installPage: false }, T), ['W:5yr', 'R:1h']);
   assert.deepEqual(trustBarFromFacts(ownerFacts({ responseTime: '4 hours' }, { ...brief(), site: undefined }, T), { installPage: false }, T), ['R:4h']);
   assert.deepEqual(trustBarFromFacts(ownerFacts({ responseTime: '90 minutes' }, { ...brief(), site: undefined }, T), { installPage: false }, T), ['R:90min']);

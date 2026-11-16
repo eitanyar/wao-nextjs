@@ -1620,9 +1620,11 @@ export function trustText(fact: OwnerFact, templates: OwnerFactTemplates): strin
     case 'response': return sameDay(fact)
         ? fillTemplate(templates.trustCallbackSameDay, {})
         : fillTemplate(templates.trustCallback, { time: responseTimeText(Number(fact.slots.minutes), templates, fact.slots.form) });
+    // Rating-display rules (2026-11-16): a star never shows without a real count, so a rating with no count has no chip (and
+    // no review label); trustRatingNoCount stays in the approved template set but is never filled.
     case 'rating': return fact.slots.count
       ? fillTemplate(fact.slots.count === '1' ? templates.trustRatingOneReview : templates.trustRating, fact.slots.count === '1' ? { rating: fact.slots.rating } : fact.slots)
-      : fillTemplate(templates.trustRatingNoCount, fact.slots);
+      : null;
     case 'area': return fact.slots.area;
   }
 }
