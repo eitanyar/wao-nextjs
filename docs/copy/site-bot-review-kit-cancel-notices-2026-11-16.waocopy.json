@@ -1,0 +1,22 @@
+Angle: he's a paying client and already sold, so no pitch. The card and go-live email make asking for a review a 10-second habit after a good job. The cancel notices are short, calm and respectful, and they lead with what stays his.
+
+{
+  "reviewCardHeading": "מעבודה טובה לביקורת בגוגל",
+  "reviewCardIntro": "סיימת עבודה והלקוח מרוצה? תשלח לו את ההודעה הזאת.\n10 שניות. זהו.",
+  "reviewMessage": "היי, תודה שבחרת ב{businessName} 🙏\nאם היית מרוצה מהעבודה, אשמח מאוד לכמה מילים בגוגל. זה לוקח דקה ועוזר לי המון.\n{reviewLink}",
+  "copyButton": "העתק הודעה",
+  "copiedToast": "הועתק. עכשיו רק להדביק בצ׳אט עם הלקוח.",
+  "whatsappButton": "שלח בוואטסאפ",
+  "reviewSenderNote": "אתה שולח אותה מהטלפון שלך, ורק ללקוחות שאתה בוחר.",
+  "reviewEmailSubject": "האתר שלך עלה. וגם הודעה מוכנה לביקורות בגוגל",
+  "reviewEmailIntro": "מזל טוב. האתר שלך באוויר.\nהכנו לך קישור ישיר לכתיבת ביקורת על העסק שלך בגוגל, והודעה קצרה ששולחים ללקוח בסוף עבודה. כל ביקורת חדשה עוזרת ללקוח הבא למצוא אותך ולבחור בך.",
+  "reviewEmailMessageLabel": "ההודעה שתשלח ללקוחות:",
+  "reviewEmailOutro": "הקישור וההודעה מחכים לך תמיד באזור האישי שלך ב־WAO, עם כפתור העתקה ושליחה בוואטסאפ.",
+  "cancelEmailSubject": "הביטול שלך התקבל",
+  "cancelEmailBody": "המנוי שלך ממשיך עד {paidThrough}, סוף החודש ששילמת עליו.\nגם אחרי זה האתר נשאר באוויר, עד {offlineDate}.\nהדומיין והפרופיל העסקי בגוגל נשארים שלך, כמו שהיו מהיום הראשון.",
+  "cancelEmailOutro": "שינית את דעתך או שיש לך שאלה? תכתוב לנו בתיבת ההודעות באזור האישי שלך:\n{accountLink}",
+  "offlineSoonSubject": "עוד שבוע האתר שלך יורד מהאוויר",
+  "offlineSoonBody": "זה יקרה ב־{offlineDate}. עד אז האתר עובד כרגיל.\nהפרופיל העסקי בגוגל והדומיין נשארים שלך גם אחרי.",
+  "offlineSoonOutro": "שינית את דעתך או שיש לך שאלה? תכתוב לנו בתיבת ההודעות באזור האישי שלך:\n{accountLink}",
+  "why": "Product strings for a paying client, so there's no pitch, no prices and no reply-time promises. Review kit: the heading is a benefit, not a topic label. The intro sells the 10 seconds. The customer message is in the owner's own voice. It stays gender-neutral to the customer by using only past-tense second person and adjectives that are spelled the same for both genders (בחרת, היית, מרוצה), with one emoji. The sender note covers the fact that he sends it himself without listing three items. The go-live email uses the brief's fact (fresh reviews help him get found and chosen) as a light reason, without promising a ranking. Cancel notices: the subject carries the news so the body doesn't repeat it. The body leads with what he keeps (paid month, site live until {offlineDate}, domain and Google profile stay his) and says it with pride. No buyout, price or online undo is mentioned. The way back is only the message box. The two outros are identical on purpose, since they're separate emails with the same instruction. Maqaf before the {offlineDate} digits and before WAO. Handoff: → Noa for one fresh read, since this is client-facing transactional copy."
+}

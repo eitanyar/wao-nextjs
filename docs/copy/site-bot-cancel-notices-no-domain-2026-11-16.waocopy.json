@@ -1,0 +1,21 @@
+Angle: minimal surgical variant (Mode B). The reader is already cancelling, so the job is a calm, true reassurance about what stays his. With the domain gone, the profile carries that reassurance on its own.
+
+```json
+{
+  "cancelEmailBodyNoDomain": "המנוי שלך ממשיך עד {paidThrough}, סוף החודש ששילמת עליו.\nגם אחרי זה האתר נשאר באוויר, עד {offlineDate}.\nהפרופיל העסקי בגוגל נשאר שלך, כמו שהיה מהיום הראשון.",
+  "offlineSoonBodyNoDomain": "זה יקרה ב־{offlineDate}. עד אז האתר עובד כרגיל.\nהפרופיל העסקי בגוגל נשאר שלך גם אחרי.",
+  "why": "Removed only the domain claim, which is false for clients on a WAO sub-address. With the profile as the sole subject, the agreement moves to singular: נשארים → נשאר, היו → היה. The variables, the maqaf before {offlineDate}, the line breaks and every other word stay byte-identical to the approved strings, so the two variants differ only where the facts differ."
+}
+```
+
+**Changes, before → after**
+
+(A) Corrections:
+- **cancelEmailBody, line 3:** "הדומיין והפרופיל העסקי בגוגל נשארים שלך, כמו שהיו" → "הפרופיל העסקי בגוגל נשאר שלך, כמו שהיה". The domain claim is gone, and the verbs now agree with a single subject.
+- **offlineSoonBody, line 2:** "הפרופיל העסקי בגוגל והדומיין נשארים שלך" → "הפרופיל העסקי בגוגל נשאר שלך". Same reason.
+
+(B) Fluency and persuasion: none. The approved tone holds.
+
+(C) Positioning: none.
+
+→ Noa for a final read, since these are customer-facing notices.
