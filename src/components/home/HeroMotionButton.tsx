@@ -6,6 +6,7 @@
 // HEBREW-SAFETY: zero Hebrew bytes (labels come as props).
 import { useEffect, useRef } from "react";
 import { startHeroMotion, type HeroMotionLabels } from "@/lib/home/heroMotion";
+import { fitHeroStage } from "@/lib/home/heroStageFit";
 
 export interface HeroMotionButtonProps {
   labels: HeroMotionLabels;
@@ -16,6 +17,11 @@ export interface HeroMotionButtonProps {
 export default function HeroMotionButton({ labels, classes }: HeroMotionButtonProps) {
   const ref = useRef<HTMLButtonElement>(null);
   const { skip, replay, pause, play } = labels;
+  // Explicit stage scale for every visitor (incl. reduced motion): WebKit miscomputes the CSS atan2 fit.
+  useEffect(() => {
+    const scene = ref.current?.parentElement?.querySelector<HTMLElement>("[data-hm-scene]");
+    return scene ? fitHeroStage(scene, window) : undefined;
+  }, []);
   useEffect(() => {
     const root = ref.current?.parentElement;
     return root ? startHeroMotion(root, window, { skip, replay, pause, play }) : undefined;

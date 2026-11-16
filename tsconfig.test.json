@@ -14,6 +14,8 @@
     "src/lib/home/homography.test.ts",
     "src/lib/home/heroMotion.ts",
     "src/lib/home/heroMotion.test.ts",
+    "src/lib/home/heroStageFit.ts",
+    "src/lib/home/heroStageFit.test.ts",
     "src/lib/trainer/metrics.ts",
     "src/lib/trainer/prompts.ts",
     "src/lib/trainer/llm.ts",

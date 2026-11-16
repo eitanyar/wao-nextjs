@@ -60,6 +60,7 @@ const HeroScene = load('src/components/home/HeroScene.tsx', {
   '@/data/heroScene': heroScene,
   '@/lib/home/heroWindow': heroWindow,
   '@/lib/home/heroShowcases': showcases,
+  '@/lib/home/heroStageFit': requireDist(local('dist/lib/home/heroStageFit.js')),
 }).default;
 const landing = load('src/lib/home/heroLandingPage.ts', {
   '../../../data/video/demo/demo-business.json': demo,
@@ -74,12 +75,12 @@ const landing = load('src/lib/home/heroLandingPage.ts', {
 const markup = renderToStaticMarkup(React.createElement(HeroScene));
 /** The window alone (the laptop screen), without the button and the captions outside the scene. */
 const windowMarkup = markup.slice(markup.indexOf('<div class="hero-window"'), markup.lastIndexOf('<button'));
-const textOf = (html) => html.replace(/<style\b[\s\S]*?<\/style>/g, ' ').replace(/<svg\b[\s\S]*?<\/svg>/g, ' ').replace(/<[^>]+>/g, ' ');
+const textOf = (html) => html.replace(/<(style|script)\b[\s\S]*?<\/\1>/g, ' ').replace(/<svg\b[\s\S]*?<\/svg>/g, ' ').replace(/<[^>]+>/g, ' ');
 
 test('new hero files carry no Hebrew literal (all Hebrew comes from data or the moved product component)', () => {
   for (const f of ['src/components/home/HeroScene.tsx', 'src/lib/home/heroWindow.ts', 'src/lib/home/heroLandingPage.ts', 'src/lib/home/homography.ts',
     'src/app/hero-window/lp/[id]/route.ts', 'src/lib/home/heroShowcases.ts', 'src/app/hero-window/fonts/[file]/route.ts', 'src/data/heroScene.ts', 'scripts/build-hero-scene.mjs',
-    'src/components/home/HeroMotionButton.tsx', 'src/lib/home/heroMotion.ts', 'scripts/build-hero-motion-css.mjs', 'src/components/home/heroMotion.module.css']) {
+    'src/components/home/HeroMotionButton.tsx', 'src/lib/home/heroMotion.ts', 'src/lib/home/heroStageFit.ts', 'scripts/build-hero-motion-css.mjs', 'src/components/home/heroMotion.module.css']) {
     assert.doesNotMatch(fs.readFileSync(local(f), 'utf8'), /[\u0590-\u05FF]/, f);
   }
 });
@@ -97,6 +98,13 @@ test('the scene is decorative: aria-hidden + inert, the iframe out of the tab or
   }
   assert.equal((markup.match(/<source type="image\/avif"/g) ?? []).length, imgs.length);
   assert.doesNotMatch(markup, /<h1\b/);
+});
+
+test('the stage is fitted before first paint by an inline script inside the scene (WebKit miscomputes the CSS atan2 fit)', () => {
+  const fit = requireDist(local('dist/lib/home/heroStageFit.js'));
+  const scene = markup.match(/<div class="hero-scene"[\s\S]*?<\/script><\/div>/)?.[0] ?? '';
+  assert.ok(scene.endsWith(`<script>${fit.HERO_STAGE_FIT_INLINE}</script></div>`), 'fit script is the scene\'s last child');
+  assert.doesNotMatch(fit.HERO_STAGE_FIT_INLINE, /[<\u0590-\u05FF]/);
 });
 
 test('every Hebrew run in the window is verbatim demo-record data or the ad preview component', () => {

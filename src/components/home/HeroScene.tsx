@@ -23,6 +23,7 @@ import motion from "@/content/hero-motion-strings-2026-11-15.json";
 import HeroMotionButton from "./HeroMotionButton";
 import m from "./heroMotion.module.css";
 import { HERO_SCENE } from "@/data/heroScene";
+import { HERO_STAGE_FIT_INLINE } from "@/lib/home/heroStageFit";
 import {
   HERO_WINDOW_LP_HEIGHT,
   HERO_WINDOW_SERP,
@@ -175,6 +176,7 @@ export default function HeroScene() {
         aria-hidden="true"
         inert
         style={{ aspectRatio: `${HERO_SCENE.width} / ${HERO_SCENE.height}`, ["--scene-w" as string]: `${HERO_SCENE.width}px` }}
+        suppressHydrationWarning
       >
         {HERO_SCENE.tiles.map((tile) => (
           <picture key={tile.id} className="hero-scene-tile" style={{ top: pct(tile.top), height: pct(tile.height) }}>
@@ -192,7 +194,7 @@ export default function HeroScene() {
             />
           </picture>
         ))}
-        <div className="hero-stage" style={{ width: HERO_SCENE.width, height: HERO_SCENE.height }}>
+        <div className="hero-stage" style={{ width: HERO_SCENE.width, height: HERO_SCENE.height }} suppressHydrationWarning>
           <div
             className="hero-window"
             style={{ width: HERO_WINDOW_SIZE.width, height: HERO_WINDOW_SIZE.height, transform: heroWindowTransform() }}
@@ -202,6 +204,8 @@ export default function HeroScene() {
             ))}
           </div>
         </div>
+        {/* Sets the stage scale before first paint (WebKit miscomputes the CSS fit); heroStageFit.ts keeps it fitted. */}
+        <script dangerouslySetInnerHTML={{ __html: HERO_STAGE_FIT_INLINE }} />
       </div>
       <HeroMotionButton
         labels={{
