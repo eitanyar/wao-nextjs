@@ -1,0 +1,87 @@
+[
+ {
+  "name": "יוסי אינסטלטור ברעננה",
+  "expectedLead": "NAME",
+  "expectedDefault": "C",
+  "fable": 1
+ },
+ {
+  "name": "אינסטלציה מהירה",
+  "expectedLead": "GENERIC",
+  "expectedDefault": "A",
+  "fable": 2
+ },
+ {
+  "name": "שירותי מנעולנות 24",
+  "expectedLead": "GENERIC",
+  "expectedDefault": "A",
+  "fable": 3,
+  "dependsOnGenericList": true
+ },
+ {
+  "name": "כהן חשמל",
+  "expectedLead": "NAME",
+  "expectedDefault": "C",
+  "fable": 4
+ },
+ {
+  "name": "אקווה פרו",
+  "expectedLead": "NAME",
+  "expectedDefault": "C",
+  "fable": 5
+ },
+ {
+  "name": "AquaFix",
+  "expectedLead": "NAME",
+  "expectedDefault": "A",
+  "fable": 6
+ },
+ {
+  "name": "AquaFix אינסטלציה 24",
+  "expectedLead": "NAME",
+  "expectedDefault": "C",
+  "fable": 7
+ },
+ {
+  "name": "יוסי כהן שירותי אינסטלציה מהירה ברעננה",
+  "expectedLead": "NAME",
+  "expectedDefault": "A",
+  "fable": 8
+ },
+ {
+  "name": "יוסי",
+  "expectedLead": "NAME",
+  "expectedDefault": "A",
+  "fable": 9
+ },
+ {
+  "name": "אינסטלטור ברעננה",
+  "expectedLead": "GENERIC",
+  "expectedDefault": "A",
+  "fable": 10
+ },
+ {
+  "name": "כהן חשמל בע״מ",
+  "expectedLead": "NAME",
+  "expectedDefault": "C",
+  "fable": 11
+ },
+ {
+  "name": "כהן & כהן אינסטלציה",
+  "expectedLead": "NAME",
+  "expectedDefault": "C",
+  "fable": 12
+ },
+ {
+  "name": "24/7 מנעולן",
+  "expectedLead": "GENERIC",
+  "expectedDefault": "A",
+  "fable": 13
+ },
+ {
+  "name": "",
+  "expectedLead": null,
+  "expectedDefault": null,
+  "fable": 14
+ }
+]
