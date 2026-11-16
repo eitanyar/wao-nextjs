@@ -58,12 +58,15 @@ function captureConsole(): { lines: string[]; restore: () => void } {
 
 const okCaller = (reply = 'DRAFT REPLY TEXT', escalate = false) => async () => JSON.stringify({ reply, escalate, escalateReason: escalate ? 'billing question' : '' });
 
-test('provider: Gemini by default; the token plan is refused in production even when explicitly selected', () => {
+test('provider: Gemini by default; in production an explicit token-plan switch is served by Gemini', () => {
   assert.equal(supportDraftProvider({}), 'gemini');
   assert.equal(supportDraftProvider({ NODE_ENV: 'production' }), 'gemini');
   const tokenPlan = { NODE_ENV: 'production', LLM_PROVIDER_SUPPORT_REPLY: 'qwen-token-plan', QWEN_API_KEY: 'k', QWEN_BASE_URL: TOKEN_PLAN };
-  assert.throws(() => supportDraftProvider(tokenPlan), TokenPlanRefusedError);
-  assert.throws(() => supportDraftProvider({ ...tokenPlan, QWEN_API_KEY: undefined }), TokenPlanRefusedError, 'refused even without a key');
+  const out = captureConsole();
+  try {
+    assert.equal(supportDraftProvider(tokenPlan), 'gemini');
+    assert.equal(supportDraftProvider({ ...tokenPlan, QWEN_API_KEY: undefined }), 'gemini', 'without a key too');
+  } finally { out.restore(); }
   const meteredOnTokenPlanUrl = { NODE_ENV: 'production', LLM_PROVIDER_SUPPORT_REPLY: 'qwen-metered', QWEN_METERED_API_KEY: 'm', QWEN_METERED_BASE_URL: TOKEN_PLAN };
   assert.throws(() => supportDraftProvider(meteredOnTokenPlanUrl), TokenPlanRefusedError, 'a metered switch pointed at the token plan is refused');
   assert.equal(supportDraftProvider({ NODE_ENV: 'production', LLM_PROVIDER_SUPPORT_REPLY: 'qwen-metered', QWEN_METERED_API_KEY: 'm', QWEN_METERED_BASE_URL: METERED }), 'qwen-metered');
@@ -73,7 +76,8 @@ test('provider: Gemini by default; the token plan is refused in production even 
 test('a refused provider never calls the model and stores provider_refused', async () => {
   const row = message();
   let called = 0;
-  const env = { NODE_ENV: 'production', LLM_PROVIDER_SUPPORT_REPLY: 'qwen-token-plan', QWEN_API_KEY: 'k', QWEN_BASE_URL: TOKEN_PLAN };
+  // A metered switch pointed at the token-plan URL is still refused outright.
+  const env = { NODE_ENV: 'production', LLM_PROVIDER_SUPPORT_REPLY: 'qwen-metered', QWEN_METERED_API_KEY: 'm', QWEN_METERED_BASE_URL: TOKEN_PLAN };
   const out = captureConsole();
   try {
     const draft = await generateSupportDraft(row, { now: NOW, env, caller: async () => { called++; return '{}'; } });

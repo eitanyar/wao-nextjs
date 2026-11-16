@@ -46,9 +46,23 @@ test('selection, endpoint resolution and the production guard agree over an env 
     const envVar = scriptProvider.LLM_WORKLOAD_ENV[workload];
     for (const value of values) for (const NODE_ENV of nodeEnvs) for (const meteredUrl of meteredUrls) {
       const env = { QWEN_API_KEY: 'tp', QWEN_BASE_URL: TOKEN_PLAN, QWEN_METERED_API_KEY: 'm', QWEN_METERED_BASE_URL: meteredUrl, NODE_ENV, [envVar]: value };
-      for (const fn of [p => p.selectLlmProvider(workload, env), p => p.resolveQwenEndpoint(workload, env)]) {
+      const fns = [
+        p => { const warned = []; return { selection: p.selectLlmProvider(workload, env, m => warned.push(m)), warned }; },
+        p => { const warned = []; return { endpoint: p.resolveQwenEndpoint(workload, env, m => warned.push(m)), warned }; },
+        p => p.assertTokenPlanAllowed(workload, TOKEN_PLAN, env, () => {}) ?? 'allowed',
+      ];
+      for (const fn of fns) {
         assert.deepEqual(outcome(tsProvider, fn), outcome(scriptProvider, fn), `${workload} ${envVar}=${value} NODE_ENV=${NODE_ENV} metered=${meteredUrl}`);
         cases++;
+      }
+      // D3b invariant: in production no workload ever resolves to a token-plan endpoint, whatever its env var says.
+      if (NODE_ENV === 'production') {
+        for (const provider of [tsProvider, scriptProvider]) {
+          const result = outcome(provider, p => p.resolveQwenEndpoint(workload, env, () => {}));
+          assert.ok(result.error !== undefined || result.ok === null || !provider.isTokenPlanUrl(result.ok.baseUrl),
+            `${workload} ${envVar}=${value}: production reached the token plan`);
+          if (result.ok) assert.equal(result.ok.provider, 'qwen-metered');
+        }
       }
     }
   }

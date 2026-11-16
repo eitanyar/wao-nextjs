@@ -59,7 +59,7 @@ test('LLM_PROVIDER_GEO=qwen-metered sends the unchanged Qwen request to the mete
   assert.equal(calls[0].body.model, 'qwen3.7-plus');
 }));
 
-test('site copy keeps today\'s token-plan Qwen behaviour by default (non-production)', withEnv({}, async () => {
+test('site copy on an explicit token-plan switch (non-production) sends the Qwen request', withEnv({ LLM_PROVIDER_SITE_COPY: 'qwen-token-plan' }, async () => {
   const calls: Call[] = [];
   const out = await callSiteCopyJSON('sys', 'user', { thinkingBudget: 1500, maxAttempts: 1, fetch: recorder(calls) });
   assert.equal(out, '{"via":"qwen"}');
@@ -68,23 +68,19 @@ test('site copy keeps today\'s token-plan Qwen behaviour by default (non-product
   assert.equal(calls[0].body.thinking_budget, 1500);
 }));
 
-test('site copy moves to Gemini with one env line', withEnv({ LLM_PROVIDER_SITE_COPY: 'gemini' }, async () => {
+test('site copy defaults to Gemini (D3b)', withEnv({}, async () => {
   const calls: Call[] = [];
   assert.equal(await callSiteCopyJSON('sys', 'user', { fetch: recorder(calls) }), '{"via":"gemini"}');
   assert.equal(calls.length, 1);
   assert.match(calls[0].url, /generativelanguage\.googleapis\.com/);
 }));
 
-test('production refuses the default (implicit) site-copy token plan without calling fetch', withEnv({ NODE_ENV: 'production' }, async () => {
+test('production: an explicit LLM_PROVIDER_SITE_COPY=qwen-token-plan is served by Gemini, never the token plan', withEnv({ NODE_ENV: 'production', LLM_PROVIDER_SITE_COPY: 'qwen-token-plan' }, async () => {
   const calls: Call[] = [];
-  await assert.rejects(() => callSiteCopyJSON('sys', 'user', { fetch: recorder(calls) }), { name: 'TokenPlanRefusedError' });
-  assert.equal(calls.length, 0);
-}));
-
-test('production allows the token plan once LLM_PROVIDER_SITE_COPY=qwen-token-plan', withEnv({ NODE_ENV: 'production', LLM_PROVIDER_SITE_COPY: 'qwen-token-plan' }, async () => {
-  const calls: Call[] = [];
-  assert.equal(await callSiteCopyJSON('sys', 'user', { maxAttempts: 1, fetch: recorder(calls) }), '{"via":"qwen"}');
-  assert.equal(calls[0].url, `${TOKEN_PLAN}/chat/completions`);
+  assert.equal(await callSiteCopyJSON('sys', 'user', { maxAttempts: 1, fetch: recorder(calls) }), '{"via":"gemini"}');
+  assert.equal(calls.length, 1);
+  assert.match(calls[0].url, /generativelanguage\.googleapis\.com/);
+  assert.ok(!calls.some(call => call.url.includes('token-plan')));
 }));
 
 test('Gemini path retries unparseable output up to maxAttempts', withEnv({}, async () => {

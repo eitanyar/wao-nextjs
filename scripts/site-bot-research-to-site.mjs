@@ -5,7 +5,7 @@
 //
 //   npx tsc -p tsconfig.test.json   # builds dist/ (same build `npm run test` uses)
 //   env -u QWEN_BASE_URL -u QWEN_API_KEY -u QWEN_CHAT_MODEL \
-//     SITE_BOT_RESEARCH_PROVIDERS=fixture \
+//     SITE_BOT_RESEARCH_PROVIDERS=fixture LLM_PROVIDER_SITE_COPY=qwen-token-plan \
 //     WAO_SITES_DIR=$PWD/scratch/m2a/data/sites WAO_SITE_RESEARCH_DIR=$PWD/scratch/m2a/data/site-research \
 //     node --env-file=.env.local scripts/site-bot-research-to-site.mjs \
 //       --data <collectedData.json> --slug <slug> --research-id <id> --out <dir> [--ledger <file.jsonl>] [--cap-usd 3]

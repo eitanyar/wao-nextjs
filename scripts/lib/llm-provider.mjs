@@ -23,19 +23,30 @@ export const LLM_WORKLOAD_DEFAULT = Object.freeze({
   panel_rewrite: 'gemini',
   gbp_reply: 'gemini',
   geo: 'gemini',
-  site_copy: 'qwen-token-plan',
+  site_copy: 'gemini',
   support_reply: 'gemini',
 });
 
-export function selectLlmProvider(workload, env = process.env) {
+const warnedDowngrades = new Set();
+
+export function selectLlmProvider(workload, env = process.env, warn = message => console.warn(message)) {
   const envVar = LLM_WORKLOAD_ENV[workload];
   if (!envVar) throw new Error(`[llmProvider] unknown LLM workload: ${String(workload)}`);
   const raw = String(env[envVar] ?? '').trim().toLowerCase();
-  if (!raw) return { workload, provider: LLM_WORKLOAD_DEFAULT[workload], explicit: false, envVar };
-  if (!LLM_PROVIDERS.includes(raw)) {
+  let selection;
+  if (!raw) selection = { workload, provider: LLM_WORKLOAD_DEFAULT[workload], explicit: false, envVar };
+  else if (!LLM_PROVIDERS.includes(raw)) {
     throw new Error(`[llmProvider] ${envVar}="${raw}" is not a valid provider (expected ${LLM_PROVIDERS.join(' | ')})`);
+  } else selection = { workload, provider: raw, explicit: true, envVar };
+  if (selection.provider === 'qwen-token-plan' && env.NODE_ENV === 'production') {
+    if (!warnedDowngrades.has(workload)) {
+      warnedDowngrades.add(workload);
+      warn(`[llmProvider] workload "${workload}": ${envVar}=qwen-token-plan is refused in production `
+        + '(interactive-use-only plan); using gemini. Set it to gemini or qwen-metered.');
+    }
+    return { ...selection, provider: 'gemini', downgradedFrom: 'qwen-token-plan' };
   }
-  return { workload, provider: raw, explicit: true, envVar };
+  return selection;
 }
 
 export function isTokenPlanUrl(baseUrl) {
@@ -58,16 +69,15 @@ const loggedRefusals = new Set();
 
 export function resetTokenPlanRefusalLog() {
   loggedRefusals.clear();
+  warnedDowngrades.clear();
 }
 
 export function assertTokenPlanAllowed(workload, baseUrl, env = process.env, log = message => console.error(message)) {
   if (env.NODE_ENV !== 'production') return;
   if (!isTokenPlanUrl(baseUrl)) return;
-  const selection = selectLlmProvider(workload, env);
-  if (selection.explicit && selection.provider === 'qwen-token-plan') return;
+  const envVar = LLM_WORKLOAD_ENV[workload];
   const message = `[llmProvider] refused: workload "${workload}" tried to call the Qwen token plan in production `
-    + `(interactive-use-only plan). Set ${selection.envVar}=gemini or ${selection.envVar}=qwen-metered, `
-    + `or ${selection.envVar}=qwen-token-plan to opt in explicitly.`;
+    + `(interactive-use-only plan, no opt-in). Set ${envVar}=gemini, or ${envVar}=qwen-metered with a metered base URL.`;
   if (!loggedRefusals.has(workload)) {
     loggedRefusals.add(workload);
     log(message);
@@ -75,8 +85,8 @@ export function assertTokenPlanAllowed(workload, baseUrl, env = process.env, log
   throw new TokenPlanRefusedError(message, workload);
 }
 
-export function resolveQwenEndpoint(workload, env = process.env) {
-  const selection = selectLlmProvider(workload, env);
+export function resolveQwenEndpoint(workload, env = process.env, warn = message => console.warn(message)) {
+  const selection = selectLlmProvider(workload, env, warn);
   if (selection.provider === 'gemini') return null;
   const metered = selection.provider === 'qwen-metered';
   const apiKey = metered ? env.QWEN_METERED_API_KEY : env.QWEN_API_KEY;

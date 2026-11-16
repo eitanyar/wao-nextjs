@@ -50,7 +50,8 @@
 # unset / gemini = Gemini only, no fallback (the default); qwen-metered or
 # qwen-token-plan = Gemini primary with that Qwen endpoint as the fallback.
 # Sourcing .env.production sets NODE_ENV=production (unless already set), so
-# the generator's production token-plan guard applies here too.
+# the generator's production token-plan guard applies here too: in production
+# qwen-token-plan is served as gemini (no fallback), only qwen-metered falls back.
 
 set -euo pipefail
 

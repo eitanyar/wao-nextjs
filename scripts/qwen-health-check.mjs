@@ -68,7 +68,13 @@ export function planQwenProbes(env = process.env) {
   const probes = new Map();
   const problems = [];
   for (const workload of LLM_WORKLOADS) {
-    const { provider } = selectLlmProvider(workload, env);
+    const selection = selectLlmProvider(workload, env, () => {});
+    // Production serves a qwen-token-plan switch with Gemini (D3b); still alert so the server .env gets fixed.
+    if (selection.downgradedFrom) {
+      problems.push({ workload, provider: selection.downgradedFrom, outcome: 'REFUSED' });
+      continue;
+    }
+    const { provider } = selection;
     if (provider === 'gemini') continue;
     let endpoint;
     try {

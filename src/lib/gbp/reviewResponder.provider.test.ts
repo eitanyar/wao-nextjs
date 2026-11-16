@@ -66,7 +66,9 @@ test('production refuses an implicit token-plan GBP call before any request', ru
   assert.equal(calls.length, 0);
 }));
 
-test('explicit qwen-token-plan is allowed in production', run({ NODE_ENV: 'production', LLM_PROVIDER_GBP_REPLY: 'qwen-token-plan' }, async (calls, fetch) => {
-  assert.equal(await createGbpReplyDrafter({ fetch })('SYSTEM', FEWSHOT, 'r', CONTEXT), 'qwen reply');
-  assert.equal(calls[0].url, `${TOKEN_PLAN}/chat/completions`);
+test('production: an explicit qwen-token-plan switch is served by Gemini, never the token plan', run({ NODE_ENV: 'production', LLM_PROVIDER_GBP_REPLY: 'qwen-token-plan' }, async (calls, fetch) => {
+  await createGbpReplyDrafter({ fetch })('SYSTEM', FEWSHOT, 'r', CONTEXT);
+  assert.equal(calls.length, 1);
+  assert.match(calls[0].url, /generativelanguage\.googleapis\.com/);
+  assert.ok(!calls.some(call => call.url.includes('token-plan')));
 }));

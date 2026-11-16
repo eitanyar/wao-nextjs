@@ -2,16 +2,17 @@
  * Per-workload LLM provider switch + production token-plan guard.
  *
  * Founder-seat decision D3 (Fable 5.2, 2026-11-15, docs/missions/fable52-decisions-2026-11-15.md):
- * nothing in production may call the Alibaba Qwen *token plan* (interactive agent use only)
- * unless a workload is explicitly switched to it. Every production LLM workload has its own
- * one-line env switch:
+ * nothing in production may call the Alibaba Qwen *token plan* (interactive agent use only),
+ * not even when a workload's env var explicitly asks for it (D3b, 2026-11-15: the server's .env
+ * must not be able to keep us on the plan). Every production LLM workload has its own one-line
+ * env switch:
  *
  *   workload        env var                        default
  *   chat            LLM_PROVIDER_CHAT              gemini
  *   panel_rewrite   LLM_PROVIDER_PANEL_REWRITE     gemini
  *   gbp_reply       LLM_PROVIDER_GBP_REPLY         gemini
  *   geo             LLM_PROVIDER_GEO               gemini   (also governs the GEO Qwen fallback: none by default)
- *   site_copy       LLM_PROVIDER_SITE_COPY         qwen-token-plan (today's behaviour; blind test decides by 19.11)
+ *   site_copy       LLM_PROVIDER_SITE_COPY         gemini   (D3b blind test, 2026-11-15)
  *   support_reply   LLM_PROVIDER_SUPPORT_REPLY     gemini   (Site-Bot staff draft replies; never the token plan in
  *                                                            production, see src/lib/site-bot/supportDraft.ts)
  *
@@ -21,12 +22,15 @@
  *                      OpenAI-compatible; the expected form is the dashscope-intl compatible-mode
  *                      endpoint (https://dashscope-intl.aliyuncs.com/compatible-mode/v1). No default
  *                      is shipped: unset = provider unavailable.
- *   - qwen-token-plan  QWEN_API_KEY + QWEN_BASE_URL (the token-plan endpoint).
+ *   - qwen-token-plan  QWEN_API_KEY + QWEN_BASE_URL (the token-plan endpoint). Local/staff use only.
  *
- * Production guard: when NODE_ENV=production, any Qwen call whose base-URL host contains
- * "token-plan" is refused (TokenPlanRefusedError, logged once per workload) unless that
- * workload's env var is explicitly `qwen-token-plan`. A default is never an opt-in, so the
- * site_copy default refuses in production until LLM_PROVIDER_SITE_COPY is set.
+ * Production guard (NODE_ENV=production), two layers:
+ *   1. selectLlmProvider: a workload set to `qwen-token-plan` is served by `gemini` instead, with
+ *      one console warning per workload per process. Every caller switches on the selection, so
+ *      the request simply goes to Gemini. `qwen-metered` stays allowed.
+ *   2. assertTokenPlanAllowed / resolveQwenEndpoint: any Qwen base URL whose host contains
+ *      "token-plan" is refused (TokenPlanRefusedError, logged once per workload), whatever the
+ *      selection says. This catches a metered switch pointed at the token-plan URL.
  *
  * This file has no imports on purpose; scripts/lib/llm-provider.mjs mirrors it for the .mjs
  * scripts/crons, and src/lib/ai/llmProvider.parity.test.mjs keeps the two in lockstep.
@@ -55,7 +59,7 @@ export const LLM_WORKLOAD_DEFAULT: Readonly<Record<LlmWorkload, LlmProviderName>
   panel_rewrite: 'gemini',
   gbp_reply: 'gemini',
   geo: 'gemini',
-  site_copy: 'qwen-token-plan',
+  site_copy: 'gemini',
   support_reply: 'gemini',
 };
 
@@ -65,6 +69,8 @@ export type LlmProviderSelection = {
   /** True only when the workload's env var is set; a default is never an explicit opt-in. */
   explicit: boolean;
   envVar: string;
+  /** Set when production replaced a `qwen-token-plan` setting with `gemini`. */
+  downgradedFrom?: 'qwen-token-plan';
 };
 
 export type QwenEndpoint = {
@@ -78,15 +84,30 @@ function defaultEnv(): LlmEnv {
   return process.env as LlmEnv;
 }
 
-export function selectLlmProvider(workload: LlmWorkload, env: LlmEnv = defaultEnv()): LlmProviderSelection {
+const warnedDowngrades = new Set<LlmWorkload>();
+
+export function selectLlmProvider(
+  workload: LlmWorkload,
+  env: LlmEnv = defaultEnv(),
+  warn: (message: string) => void = message => console.warn(message),
+): LlmProviderSelection {
   const envVar = LLM_WORKLOAD_ENV[workload];
   if (!envVar) throw new Error(`[llmProvider] unknown LLM workload: ${String(workload)}`);
   const raw = (env[envVar] ?? '').trim().toLowerCase();
-  if (!raw) return { workload, provider: LLM_WORKLOAD_DEFAULT[workload], explicit: false, envVar };
-  if (!(LLM_PROVIDERS as readonly string[]).includes(raw)) {
+  let selection: LlmProviderSelection;
+  if (!raw) selection = { workload, provider: LLM_WORKLOAD_DEFAULT[workload], explicit: false, envVar };
+  else if (!(LLM_PROVIDERS as readonly string[]).includes(raw)) {
     throw new Error(`[llmProvider] ${envVar}="${raw}" is not a valid provider (expected ${LLM_PROVIDERS.join(' | ')})`);
+  } else selection = { workload, provider: raw as LlmProviderName, explicit: true, envVar };
+  if (selection.provider === 'qwen-token-plan' && env.NODE_ENV === 'production') {
+    if (!warnedDowngrades.has(workload)) {
+      warnedDowngrades.add(workload);
+      warn(`[llmProvider] workload "${workload}": ${envVar}=qwen-token-plan is refused in production `
+        + '(interactive-use-only plan); using gemini. Set it to gemini or qwen-metered.');
+    }
+    return { ...selection, provider: 'gemini', downgradedFrom: 'qwen-token-plan' };
   }
-  return { workload, provider: raw as LlmProviderName, explicit: true, envVar };
+  return selection;
 }
 
 export function isTokenPlanUrl(baseUrl: string): boolean {
@@ -109,14 +130,15 @@ export class TokenPlanRefusedError extends Error {
 
 const loggedRefusals = new Set<LlmWorkload>();
 
-/** Test-only: forget which workloads already logged a refusal. */
+/** Test-only: forget which workloads already logged a refusal or a production downgrade. */
 export function resetTokenPlanRefusalLog(): void {
   loggedRefusals.clear();
+  warnedDowngrades.clear();
 }
 
 /**
- * Throws TokenPlanRefusedError when NODE_ENV=production, the base URL is the token plan, and the
- * workload is not explicitly switched to `qwen-token-plan`. Logs once per workload per process.
+ * Throws TokenPlanRefusedError when NODE_ENV=production and the base URL is the token plan, for
+ * every workload (no opt-in). Logs once per workload per process.
  */
 export function assertTokenPlanAllowed(
   workload: LlmWorkload,
@@ -126,11 +148,9 @@ export function assertTokenPlanAllowed(
 ): void {
   if (env.NODE_ENV !== 'production') return;
   if (!isTokenPlanUrl(baseUrl)) return;
-  const selection = selectLlmProvider(workload, env);
-  if (selection.explicit && selection.provider === 'qwen-token-plan') return;
+  const envVar = LLM_WORKLOAD_ENV[workload];
   const message = `[llmProvider] refused: workload "${workload}" tried to call the Qwen token plan in production `
-    + `(interactive-use-only plan). Set ${selection.envVar}=gemini or ${selection.envVar}=qwen-metered, `
-    + `or ${selection.envVar}=qwen-token-plan to opt in explicitly.`;
+    + `(interactive-use-only plan, no opt-in). Set ${envVar}=gemini, or ${envVar}=qwen-metered with a metered base URL.`;
   if (!loggedRefusals.has(workload)) {
     loggedRefusals.add(workload);
     log(message);
@@ -143,8 +163,12 @@ export function assertTokenPlanAllowed(
  * selected Qwen provider's key/base URL is unset (provider unavailable). Applies the production
  * token-plan guard before returning, so every Qwen caller in src/ goes through it.
  */
-export function resolveQwenEndpoint(workload: LlmWorkload, env: LlmEnv = defaultEnv()): QwenEndpoint | null {
-  const selection = selectLlmProvider(workload, env);
+export function resolveQwenEndpoint(
+  workload: LlmWorkload,
+  env: LlmEnv = defaultEnv(),
+  warn: (message: string) => void = message => console.warn(message),
+): QwenEndpoint | null {
+  const selection = selectLlmProvider(workload, env, warn);
   if (selection.provider === 'gemini') return null;
   const metered = selection.provider === 'qwen-metered';
   const apiKey = metered ? env.QWEN_METERED_API_KEY : env.QWEN_API_KEY;

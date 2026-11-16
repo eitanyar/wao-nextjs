@@ -27,8 +27,15 @@ test('no Qwen workload configured: one SKIPPED line, exit 0, no network', async 
   assert.equal(h.err.length, 0);
 });
 
-test('default site_copy in production without an explicit opt-in is a REFUSED alert, never a call', async () => {
+test('default site_copy is Gemini: nothing to probe', async () => {
   const h = harness({ NODE_ENV: 'production', QWEN_API_KEY: 'tp', QWEN_BASE_URL: TOKEN_PLAN });
+  assert.equal(await h.run(), 0);
+  assert.equal(h.fetched.length, 0);
+  assert.match(h.log[0], /outcome=SKIPPED reason=no-qwen-workload/);
+});
+
+test('an explicit qwen-token-plan switch in production is a REFUSED alert, never a call', async () => {
+  const h = harness({ NODE_ENV: 'production', LLM_PROVIDER_SITE_COPY: 'qwen-token-plan', QWEN_API_KEY: 'tp', QWEN_BASE_URL: TOKEN_PLAN });
   assert.equal(await h.run(), 1);
   assert.equal(h.fetched.length, 0);
   assert.deepEqual(h.err, ['T ALERT outcome=REFUSED workload=site_copy provider=qwen-token-plan']);
@@ -43,7 +50,7 @@ test('a Qwen workload with no credentials is an UNCONFIGURED alert', async () =>
 test('probes each distinct endpoint once and lists the workloads it covers', async () => {
   const env = {
     LLM_PROVIDER_CHAT: 'qwen-metered', LLM_PROVIDER_GEO: 'qwen-metered', LLM_PROVIDER_SITE_COPY: 'qwen-token-plan',
-    QWEN_METERED_API_KEY: 'm', QWEN_METERED_BASE_URL: METERED, QWEN_API_KEY: 'tp', QWEN_BASE_URL: TOKEN_PLAN, NODE_ENV: 'production',
+    QWEN_METERED_API_KEY: 'm', QWEN_METERED_BASE_URL: METERED, QWEN_API_KEY: 'tp', QWEN_BASE_URL: TOKEN_PLAN, NODE_ENV: 'development',
   };
   const plan = planQwenProbes(env);
   assert.deepEqual(plan.problems, []);
@@ -55,7 +62,7 @@ test('probes each distinct endpoint once and lists the workloads it covers', asy
 });
 
 test('a failing endpoint is an ALERT and exits non-zero', async () => {
-  const h = harness({ QWEN_API_KEY: 'tp', QWEN_BASE_URL: TOKEN_PLAN }, async () => new Response('{}', { status: 500 }));
+  const h = harness({ LLM_PROVIDER_SITE_COPY: 'qwen-token-plan', QWEN_API_KEY: 'tp', QWEN_BASE_URL: TOKEN_PLAN }, async () => new Response('{}', { status: 500 }));
   assert.equal(await h.run(), 1);
   assert.match(h.err[0], /ALERT outcome=FAIL .*workloads=site_copy/);
 });

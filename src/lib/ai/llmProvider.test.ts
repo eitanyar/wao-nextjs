@@ -33,7 +33,7 @@ test('env table: one switch per workload with the D3 defaults', () => {
     support_reply: 'LLM_PROVIDER_SUPPORT_REPLY',
   });
   assert.deepEqual(LLM_WORKLOAD_DEFAULT, {
-    chat: 'gemini', panel_rewrite: 'gemini', gbp_reply: 'gemini', geo: 'gemini', site_copy: 'qwen-token-plan', support_reply: 'gemini',
+    chat: 'gemini', panel_rewrite: 'gemini', gbp_reply: 'gemini', geo: 'gemini', site_copy: 'gemini', support_reply: 'gemini',
   });
   for (const workload of LLM_WORKLOADS) {
     const selection = selectLlmProvider(workload, {});
@@ -64,34 +64,50 @@ test('resolveQwenEndpoint picks the credentials of the selected provider', () =>
   assert.equal(resolveQwenEndpoint('chat', creds), null, 'chat defaults to gemini');
   assert.deepEqual(resolveQwenEndpoint('chat', { ...creds, LLM_PROVIDER_CHAT: 'qwen-metered' }),
     { workload: 'chat', provider: 'qwen-metered', apiKey: 'm-key', baseUrl: METERED });
-  assert.deepEqual(resolveQwenEndpoint('site_copy', creds),
-    { workload: 'site_copy', provider: 'qwen-token-plan', apiKey: 'tp-key', baseUrl: TOKEN_PLAN });
+  assert.equal(resolveQwenEndpoint('site_copy', creds), null, 'site_copy defaults to gemini (D3b)');
+  assert.deepEqual(resolveQwenEndpoint('site_copy', { ...creds, LLM_PROVIDER_SITE_COPY: 'qwen-token-plan' }),
+    { workload: 'site_copy', provider: 'qwen-token-plan', apiKey: 'tp-key', baseUrl: TOKEN_PLAN }, 'outside production the token plan stays usable');
   assert.equal(resolveQwenEndpoint('site_copy', { LLM_PROVIDER_SITE_COPY: 'qwen-metered', QWEN_API_KEY: 'x', QWEN_BASE_URL: TOKEN_PLAN }), null,
     'metered never borrows the token-plan credentials');
   assert.equal(resolveQwenEndpoint('gbp_reply', { LLM_PROVIDER_GBP_REPLY: 'qwen-token-plan', QWEN_API_KEY: 'x' }), null);
 });
 
-test('production guard refuses an implicit token-plan call and logs once per workload', () => {
+test('production guard refuses every token-plan call, even an explicit opt-in, and logs once per workload', () => {
   resetTokenPlanRefusalLog();
   const logged: string[] = [];
-  const env = { ...creds, NODE_ENV: 'production' };
-  for (let i = 0; i < 2; i++) {
-    assert.throws(() => assertTokenPlanAllowed('site_copy', TOKEN_PLAN, env, m => logged.push(m)), (error: unknown) => {
-      assert.ok(error instanceof TokenPlanRefusedError);
-      assert.equal(error.workload, 'site_copy');
-      assert.match(error.message, /LLM_PROVIDER_SITE_COPY=qwen-token-plan to opt in explicitly/);
-      return true;
-    });
+  for (const env of [{ ...creds, NODE_ENV: 'production' }, { ...creds, NODE_ENV: 'production', LLM_PROVIDER_SITE_COPY: 'qwen-token-plan' }]) {
+    for (let i = 0; i < 2; i++) {
+      assert.throws(() => assertTokenPlanAllowed('site_copy', TOKEN_PLAN, env, m => logged.push(m)), (error: unknown) => {
+        assert.ok(error instanceof TokenPlanRefusedError);
+        assert.equal(error.workload, 'site_copy');
+        assert.match(error.message, /no opt-in/);
+        return true;
+      });
+    }
   }
   assert.equal(logged.length, 1);
-  assert.throws(() => resolveQwenEndpoint('site_copy', env), TokenPlanRefusedError);
 });
 
-test('production guard allows an explicit qwen-token-plan switch', () => {
+test('production: an explicit qwen-token-plan switch falls back to gemini with one warning per workload', () => {
   resetTokenPlanRefusalLog();
-  const env = { ...creds, NODE_ENV: 'production', LLM_PROVIDER_SITE_COPY: 'qwen-token-plan' };
-  assert.doesNotThrow(() => assertTokenPlanAllowed('site_copy', TOKEN_PLAN, env, () => assert.fail('must not log')));
-  assert.equal(resolveQwenEndpoint('site_copy', env)?.baseUrl, TOKEN_PLAN);
+  for (const workload of LLM_WORKLOADS) {
+    const warned: string[] = [];
+    const env = { ...creds, NODE_ENV: 'production', [LLM_WORKLOAD_ENV[workload]]: 'qwen-token-plan' };
+    for (let i = 0; i < 3; i++) {
+      assert.deepEqual(selectLlmProvider(workload, env, m => warned.push(m)),
+        { workload, provider: 'gemini', explicit: true, envVar: LLM_WORKLOAD_ENV[workload], downgradedFrom: 'qwen-token-plan' });
+      assert.equal(resolveQwenEndpoint(workload, env, m => warned.push(m)), null, `${workload}: no Qwen endpoint`);
+    }
+    assert.equal(warned.length, 1, `${workload}: one warning per process`);
+    assert.ok(warned[0].includes(`"${workload}"`), 'the warning names the workload');
+  }
+});
+
+test('production: qwen-metered stays allowed', () => {
+  resetTokenPlanRefusalLog();
+  const env = { ...creds, NODE_ENV: 'production', LLM_PROVIDER_GBP_REPLY: 'qwen-metered' };
+  assert.deepEqual(resolveQwenEndpoint('gbp_reply', env, () => assert.fail('must not warn')),
+    { workload: 'gbp_reply', provider: 'qwen-metered', apiKey: 'm-key', baseUrl: METERED });
 });
 
 test('production guard refuses a metered switch whose base URL is really the token plan', () => {

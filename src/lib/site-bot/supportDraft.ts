@@ -75,8 +75,8 @@ function db(): Database.Database {
 // ---------------------------------------------------------------------------
 
 /**
- * The provider a draft will use. Throws TokenPlanRefusedError when, in production, the selected Qwen provider resolves
- * to the token plan (interactive use only) — even with an explicit LLM_PROVIDER_SUPPORT_REPLY=qwen-token-plan.
+ * The provider a draft will use. In production an explicit LLM_PROVIDER_SUPPORT_REPLY=qwen-token-plan is served by Gemini
+ * (llmProvider downgrade, D3b); a Qwen switch whose base URL is the token plan throws TokenPlanRefusedError.
  */
 export function supportDraftProvider(env: LlmEnv = process.env as LlmEnv): LlmProviderName {
   const selection = selectLlmProvider('support_reply', env);
