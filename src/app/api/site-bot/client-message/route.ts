@@ -16,10 +16,11 @@ import {
   markClientConfirmed,
   markStaffAlerted,
   normalizeMessageBody,
-  triageClientMessage,
 } from '@/lib/site-bot/clientMessages';
 import { sendClientMessageConfirmation, sendClientMessageStaffAlert } from '@/lib/site-bot/clientMessageEmail';
 import { UUID } from '@/lib/site-bot/helpRequest';
+import { pastOfflineDate } from '@/lib/site-bot/offlineDate';
+import { queueSupportDraft } from '@/lib/site-bot/supportDraft';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -55,13 +56,16 @@ export async function POST(request: Request): Promise<Response> {
     const peek = input.token ? peekMagicLinkToken(input.token) : { valid: false as const };
     if (!peek.valid) return errorReply('link_expired', 401);
 
-    // 4. Site-Bot plan rows that went past checkout. Cancelled, paused and past-due clients may still write.
+    // 4. Site-Bot plan rows that went past checkout. Cancelled, paused and past-due clients may still write; a cancelled
+    //    client until his site's offline date (terms §8).
     const subscription = getSubscriptionById(peek.subscriptionId);
-    if (!subscription || subscription.plan !== SITE_BOT_PLAN.id || subscription.status === 'pending') return errorReply('not_found', 404);
+    const now = new Date();
+    if (!subscription || subscription.plan !== SITE_BOT_PLAN.id || subscription.status === 'pending' || pastOfflineDate(subscription, now)) {
+      return errorReply('not_found', 404);
+    }
 
     // 5. Rate limits (in-memory per process) plus a durable 24-hour cap.
     const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
-    const now = new Date();
     if (!checkRateLimit(`sitebot-msg-ip:${ip}`, { maxRequests: 10, windowMs: TEN_MINUTES }).allowed ||
       !checkRateLimit(`sitebot-msg-sub:${subscription.id}`, { maxRequests: 5, windowMs: TEN_MINUTES }).allowed ||
       countMessagesSince(subscription.id, new Date(now.getTime() - DAY_MS).toISOString()) >= DAILY_CAP) {
@@ -77,7 +81,7 @@ export async function POST(request: Request): Promise<Response> {
     // 7. Store (idempotent on messageId).
     const { row, created } = createClientMessage({ id: messageId, subscriptionId: subscription.id, body, now });
 
-    // 8. First insert only: both emails, each isolated; then the AI seam (a stub today).
+    // 8. First insert only: both emails, each isolated; then the staff draft reply in the background (supportDraft.ts).
     let confirmationEmailed = row.client_confirmed_at !== null;
     if (created) {
       try {
@@ -93,7 +97,7 @@ export async function POST(request: Request): Promise<Response> {
       } catch {
         console.error(`[site-bot client-message] confirmation failed id=${row.id}`);
       }
-      try { await triageClientMessage(row); } catch { /* stub; never fails the request */ }
+      try { queueSupportDraft(row); } catch { /* background; never fails the request */ }
     }
 
     // 9. Receipt.

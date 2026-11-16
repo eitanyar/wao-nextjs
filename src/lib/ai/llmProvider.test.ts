@@ -30,9 +30,10 @@ test('env table: one switch per workload with the D3 defaults', () => {
     gbp_reply: 'LLM_PROVIDER_GBP_REPLY',
     geo: 'LLM_PROVIDER_GEO',
     site_copy: 'LLM_PROVIDER_SITE_COPY',
+    support_reply: 'LLM_PROVIDER_SUPPORT_REPLY',
   });
   assert.deepEqual(LLM_WORKLOAD_DEFAULT, {
-    chat: 'gemini', panel_rewrite: 'gemini', gbp_reply: 'gemini', geo: 'gemini', site_copy: 'qwen-token-plan',
+    chat: 'gemini', panel_rewrite: 'gemini', gbp_reply: 'gemini', geo: 'gemini', site_copy: 'qwen-token-plan', support_reply: 'gemini',
   });
   for (const workload of LLM_WORKLOADS) {
     const selection = selectLlmProvider(workload, {});

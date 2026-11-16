@@ -10,6 +10,8 @@ const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
 const emailPattern = /^[^\s@<>"?&#]+@[^\s@<>"?&#]+\.[^\s@<>"?&#]+$/;
 const LIST_URL = '/api/admin/site-bot/client-messages';
 const UPDATE_URL = '/api/admin/site-bot/client-messages/update';
+const DRAFTS_URL = '/api/admin/site-bot/client-messages/drafts';
+const DRAFT_STATUSES = ['ready', 'approved', 'error'];
 const object = (x) => x !== null && typeof x === 'object' && !Array.isArray(x);
 const iso = (x) => typeof x === 'string' && Number.isFinite(Date.parse(x));
 const optString = (x, max) => x === null || (typeof x === 'string' && x.length <= max);
@@ -34,6 +36,15 @@ export function project(r) {
     business: r.business_name, email: r.contact_email, mobile: r.contact_mobile, receivedAt: r.received_at,
     staffAlerted: r.staff_alerted_at !== null, meta,
   };
+}
+
+/** Validates one AI draft row from the drafts endpoint; throws on anything unexpected. */
+export function projectDraft(d) {
+  if (!object(d) || typeof d.messageId !== 'string' || !uuid.test(d.messageId) || !DRAFT_STATUSES.includes(d.status) ||
+      !optString(d.draft, 4000) || typeof d.escalate !== 'boolean' || !optString(d.escalateReason, 300) ||
+      !optString(d.provider, 40) || !optString(d.errorCode, 60) || !(d.approvedAt === null || iso(d.approvedAt))) throw new Error('invalid draft');
+  return { messageId: d.messageId, status: d.status, draft: d.draft ?? '', escalate: d.escalate, escalateReason: d.escalateReason,
+    provider: d.provider, errorCode: d.errorCode, approvedAt: d.approvedAt };
 }
 
 /** Open items (received / handling) before done ones; newest first inside each group. */
@@ -63,6 +74,9 @@ export function createSameOriginTransport(fetchFn = globalThis.fetch) {
   return {
     list: () => fetchFn(LIST_URL, { ...base, method: 'GET' }),
     update: (id, patch) => fetchFn(UPDATE_URL, { ...base, method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ id, ...patch }) }),
+    drafts: () => fetchFn(DRAFTS_URL, { ...base, method: 'GET' }),
+    draftAction: (id, action, text) => fetchFn(DRAFTS_URL, { ...base, method: 'POST', headers: { 'content-type': 'application/json' },
+      body: JSON.stringify(text === undefined ? { id, action } : { id, action, text }) }),
   };
 }
 
@@ -90,6 +104,19 @@ export function createClientInbox({ transport, render, now = () => Date.now() })
       let skipped = 0;
       const items = [];
       for (const raw of body.messages) { try { items.push(project(raw)); } catch { skipped++; } }
+      // AI draft replies (optional: a transport without drafts, or a failed drafts read, shows the queue without them).
+      if (typeof transport.drafts === 'function') {
+        try {
+          const draftResponse = await transport.drafts();
+          if (draftResponse.status === 200) {
+            const draftBody = await draftResponse.json();
+            const byId = new Map();
+            if (object(draftBody) && Array.isArray(draftBody.drafts)) for (const raw of draftBody.drafts) { try { const d = projectDraft(raw); byId.set(d.messageId, d); } catch { /* skip */ } }
+            for (const item of items) item.draft = byId.get(item.id) ?? null;
+          }
+        } catch { /* drafts are optional */ }
+        if (disposed || id !== generation) return;
+      }
       const sorted = sortMessages(items);
       const open = sorted.filter((m) => m.status !== 'done');
       show({ status: sorted.length ? 'records' : 'empty', items: sorted, skipped, openCount: open.length,
@@ -109,6 +136,24 @@ export function createClientInbox({ transport, render, now = () => Date.now() })
         else if (response.status === 401) notice = 'Access not authorized.';
         else if (response.status === 404) notice = 'Message no longer exists.';
         else if (response.status === 400) notice = 'Update rejected (invalid value).';
+      } catch { /* keep failure notice */ }
+      await load(notice);
+    },
+    async draftAction(id, action, text) {
+      if (disposed) return;
+      let notice = 'Draft update failed.';
+      try {
+        if (typeof transport.draftAction !== 'function') throw new Error('no draft transport');
+        const response = await transport.draftAction(id, action, text);
+        if (response.status === 200) {
+          const body = await response.json().catch(() => null);
+          const status = object(body) && object(body.draft) ? body.draft.status : null;
+          notice = action === 'approve' ? 'Draft approved. Nothing was sent: copy it into your reply.'
+            : action === 'save' ? 'Draft saved.'
+            : status === 'error' ? `Draft generation failed (${body.draft.errorCode ?? 'error'}).` : 'Draft generated.';
+        } else if (response.status === 409) notice = 'Draft already approved.';
+        else if (response.status === 400) notice = 'Draft rejected (invalid text).';
+        else if (response.status === 401) notice = 'Access not authorized.';
       } catch { /* keep failure notice */ }
       await load(notice);
     },
@@ -267,5 +312,81 @@ function renderItem(doc, item, actions, message) {
     noteRow.append(link);
   }
   li.append(noteRow);
+  if (item.kind === 'client_message' && 'draft' in item) li.append(renderDraft(doc, item, actions, message));
   return li;
+}
+
+/** The AI draft reply: staff edit and approve; approval sends nothing (they copy the approved text into their reply). */
+function renderDraft(doc, item, actions, message) {
+  const draft = item.draft;
+  const box = doc.createElement('div');
+  box.className = 'mt-3 rounded border border-white/20 p-3';
+  const title = doc.createElement('p');
+  title.textContent = draft ? `AI draft reply (${draft.status}${draft.provider ? `, ${draft.provider}` : ''})` : 'AI draft reply: none yet';
+  box.append(title);
+  if (draft?.escalate) {
+    const esc = doc.createElement('p');
+    esc.className = 'text-amber-400';
+    esc.textContent = `Escalate${draft.escalateReason ? `: ${draft.escalateReason}` : ''}. Read carefully before replying.`;
+    box.append(esc);
+  }
+  if (draft?.errorCode) {
+    const err = doc.createElement('p');
+    err.className = 'text-red-400';
+    err.textContent = `Last generation failed: ${draft.errorCode}`;
+    box.append(err);
+  }
+  const approved = draft?.status === 'approved';
+  const textId = `cm-draft-${item.id}`;
+  const label = doc.createElement('label');
+  label.setAttribute('for', textId);
+  label.textContent = approved ? 'Approved reply (copy it into your email)' : 'Draft (edit before approving)';
+  const area = doc.createElement('textarea');
+  area.id = textId;
+  area.setAttribute('dir', 'rtl');
+  area.setAttribute('lang', 'he');
+  area.setAttribute('rows', '6');
+  area.maxLength = 4000;
+  area.value = draft?.draft ?? '';
+  area.disabled = approved || !draft?.draft;
+  box.append(label, area);
+  const row = doc.createElement('div');
+  row.className = 'mt-2 flex flex-wrap items-center gap-2';
+  const run = (action, text, disable) => {
+    for (const el of disable) el.disabled = true;
+    const recover = () => { for (const el of disable) el.disabled = false; message.textContent = 'Client messages - Draft update failed.'; };
+    if (typeof actions.draftAction !== 'function') { recover(); return; }
+    try { Promise.resolve(actions.draftAction(item.id, action, text)).catch(recover); } catch { recover(); }
+  };
+  const button = (text, onClick, disabled = false) => {
+    const b = doc.createElement('button');
+    b.type = 'button';
+    b.className = BUTTON_CLASS;
+    b.textContent = text;
+    b.disabled = disabled || typeof actions.draftAction !== 'function';
+    b.addEventListener('click', () => onClick(b));
+    row.append(b);
+    return b;
+  };
+  if (!approved) {
+    button(draft?.draft ? 'Regenerate draft' : 'Generate draft', (b) => run('generate', undefined, [b]));
+    button('Save edit', (b) => run('save', area.value, [b]), !draft?.draft);
+    button('Approve', (b) => run('approve', area.value, [b]), !draft?.draft);
+  } else {
+    const copy = doc.createElement('button');
+    copy.type = 'button';
+    copy.className = BUTTON_CLASS;
+    copy.textContent = 'Copy approved reply';
+    copy.addEventListener('click', () => {
+      const clip = globalThis.navigator?.clipboard;
+      if (!clip) { message.textContent = 'Client messages - Copy not available; select the text by hand.'; return; }
+      clip.writeText(area.value).then(() => { message.textContent = 'Client messages - Approved reply copied.'; }, () => { message.textContent = 'Client messages - Copy failed.'; });
+    });
+    row.append(copy);
+  }
+  const note = doc.createElement('p');
+  note.className = 'text-xs';
+  note.textContent = 'Nothing is sent automatically. Approving records the final text; you send it yourself.';
+  box.append(row, note);
+  return box;
 }

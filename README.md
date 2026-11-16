@@ -41,6 +41,7 @@ mirror `scripts/lib/llm-provider.mjs`). Values: `gemini` | `qwen-metered` | `qwe
 | Panel copy rewrite | `LLM_PROVIDER_PANEL_REWRITE` | `gemini` | `src/lib/operators/hebrew-rewriter.ts` |
 | GBP review replies | `LLM_PROVIDER_GBP_REPLY` | `gemini` | `src/lib/gbp/reviewResponder.ts` (`createGbpReplyDrafter`) |
 | GEO (critic + generator fallback) | `LLM_PROVIDER_GEO` | `gemini` (no Qwen fallback) | `src/lib/geo/critic.ts`, `scripts/geo-generate-content.mjs`, `scripts/cron/regenerate-geo.sh` |
+| Site Bot staff draft replies (support queue) | `LLM_PROVIDER_SUPPORT_REPLY` | `gemini` (`qwen-token-plan` is refused in production even when set) | `src/lib/site-bot/supportDraft.ts` |
 | Site Bot site copy | `LLM_PROVIDER_SITE_COPY` | `qwen-token-plan` (today's behaviour; blind test decides by 19.11) | `src/lib/lp/researchPageCopy.ts`, `src/lib/lp/coreThirtyCopy.ts`, `scripts/lib/fact-extractor.mjs` |
 
 Provider credentials:

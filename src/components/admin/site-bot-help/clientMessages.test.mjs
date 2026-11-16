@@ -133,3 +133,60 @@ test('one business day skips Friday and Saturday (Israel time)', () => {
   assert.equal(ui.olderThanOneBusinessDay(thursday, Date.parse('2026-12-12T20:00:00.000Z')), false, 'Saturday evening: not yet');
   assert.equal(ui.olderThanOneBusinessDay(thursday, Date.parse('2026-12-13T08:00:01.000Z')), true, 'Sunday after 10:00');
 });
+
+test('step 5: AI draft section - escalation shown, edit/approve call draftAction with the textarea text, approved is read-only', async () => {
+  const draft = ui.projectDraft({ messageId: id1, status: 'ready', draft: 'draft text', escalate: true, escalateReason: 'billing question',
+    provider: 'gemini', errorCode: null, generatedAt: '2026-12-06T08:00:00.000Z', editedAt: null, approvedAt: null });
+  const item = { ...ui.project({ ...base, id: id1 }), draft };
+  const calls = [];
+  const doc = fakeDocument();
+  const root = doc.createElement('div');
+  ui.renderClientInbox(root, { status: 'records', items: [item], skipped: 0, openCount: 1, overdueCount: 0 }, { update: async () => {}, draftAction: async (...args) => { calls.push(args); } });
+  assert.match(root.textContent, /AI draft reply \(ready, gemini\)/);
+  assert.match(root.textContent, /Escalate: billing question\./);
+  assert.match(root.textContent, /Nothing is sent automatically/);
+  const area = root.querySelectorAll('textarea').find((t) => t.id === `cm-draft-${id1}`);
+  assert.equal(area.value, 'draft text');
+  assert.equal(area.getAttribute('dir'), 'rtl');
+  area.value = 'edited';
+  const buttons = root.querySelectorAll('button');
+  buttons.find((b) => b.textContent === 'Save edit').click();
+  buttons.find((b) => b.textContent === 'Approve').click();
+  buttons.find((b) => b.textContent === 'Regenerate draft').click();
+  assert.deepEqual(calls, [[id1, 'save', 'edited'], [id1, 'approve', 'edited'], [id1, 'generate', undefined]]);
+
+  const approved = { ...item, draft: { ...draft, status: 'approved', escalate: false } };
+  const root2 = doc.createElement('div');
+  ui.renderClientInbox(root2, { status: 'records', items: [approved], skipped: 0, openCount: 1, overdueCount: 0 }, { update: async () => {}, draftAction: async () => {} });
+  const area2 = root2.querySelectorAll('textarea').find((t) => t.id === `cm-draft-${id1}`);
+  assert.equal(area2.disabled, true);
+  const labels = root2.querySelectorAll('button').map((b) => b.textContent);
+  assert.ok(labels.includes('Copy approved reply') && !labels.includes('Approve') && !labels.includes('Regenerate draft'));
+  assert.throws(() => ui.projectDraft({ messageId: 'x', status: 'ready' }), /invalid draft/);
+});
+
+test('step 5: inbox loads drafts alongside messages; a failing drafts read keeps the queue', async () => {
+  const states = [];
+  const fetches = [];
+  const transport = {
+    list: async () => Response.json({ ok: true, messages: [{ ...base, id: id1 }, { ...base, id: id2 }] }),
+    update: async () => Response.json({ ok: true }),
+    drafts: async () => Response.json({ ok: true, drafts: [{ messageId: id1, status: 'ready', draft: 'd', escalate: false, escalateReason: null, provider: 'gemini', errorCode: null, approvedAt: null }] }),
+    draftAction: async (...args) => { fetches.push(args); return Response.json({ ok: true, draft: { status: 'approved' } }); },
+  };
+  const inbox = ui.createClientInbox({ transport, render: (s) => states.push(s) });
+  await inbox.load();
+  const byId = Object.fromEntries(states.at(-1).items.map((i) => [i.id, i.draft]));
+  assert.equal(byId[id1].draft, 'd');
+  assert.equal(byId[id2], null);
+  await inbox.draftAction(id1, 'approve', 'final');
+  assert.deepEqual(fetches, [[id1, 'approve', 'final']]);
+  assert.match(states.at(-1).notice, /Nothing was sent/);
+  const failing = [];
+  await ui.createClientInbox({ transport: { ...transport, drafts: async () => { throw new Error('down'); } }, render: (s) => failing.push(s) }).load();
+  assert.equal(failing.at(-1).status, 'records');
+  const sent = [];
+  await ui.createSameOriginTransport(async (url, init) => { sent.push([url, init]); return new Response('{}'); }).draftAction(id1, 'save', 'x');
+  assert.equal(sent[0][0], '/api/admin/site-bot/client-messages/drafts');
+  assert.deepEqual(JSON.parse(sent[0][1].body), { id: id1, action: 'save', text: 'x' });
+});

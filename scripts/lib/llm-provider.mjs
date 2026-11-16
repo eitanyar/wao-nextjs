@@ -7,7 +7,7 @@
 
 export const LLM_PROVIDERS = Object.freeze(['gemini', 'qwen-metered', 'qwen-token-plan']);
 
-export const LLM_WORKLOADS = Object.freeze(['chat', 'panel_rewrite', 'gbp_reply', 'geo', 'site_copy']);
+export const LLM_WORKLOADS = Object.freeze(['chat', 'panel_rewrite', 'gbp_reply', 'geo', 'site_copy', 'support_reply']);
 
 export const LLM_WORKLOAD_ENV = Object.freeze({
   chat: 'LLM_PROVIDER_CHAT',
@@ -15,6 +15,7 @@ export const LLM_WORKLOAD_ENV = Object.freeze({
   gbp_reply: 'LLM_PROVIDER_GBP_REPLY',
   geo: 'LLM_PROVIDER_GEO',
   site_copy: 'LLM_PROVIDER_SITE_COPY',
+  support_reply: 'LLM_PROVIDER_SUPPORT_REPLY',
 });
 
 export const LLM_WORKLOAD_DEFAULT = Object.freeze({
@@ -23,6 +24,7 @@ export const LLM_WORKLOAD_DEFAULT = Object.freeze({
   gbp_reply: 'gemini',
   geo: 'gemini',
   site_copy: 'qwen-token-plan',
+  support_reply: 'gemini',
 });
 
 export function selectLlmProvider(workload, env = process.env) {

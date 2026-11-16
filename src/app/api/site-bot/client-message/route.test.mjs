@@ -13,6 +13,7 @@ function harness({ enabled = 'true', email = mockEmail(), tokens = {} } = {}) {
   const s = makeStore();
   const consumed = [];
   const logs = recordingConsole();
+  const drafts = [];
   const rateLimit = load('src/lib/payments/rate-limit.ts', {});
   const route = load('src/app/api/site-bot/client-message/route.ts', {
     '@/lib/payments/magic-link': {
@@ -26,9 +27,11 @@ function harness({ enabled = 'true', email = mockEmail(), tokens = {} } = {}) {
     '@/lib/site-bot/clientMessages': s.store,
     '@/lib/site-bot/clientMessageEmail': email.module,
     '@/lib/site-bot/helpRequest': s.help,
+    '@/lib/site-bot/offlineDate': load('src/lib/site-bot/offlineDate.ts', {}),
+    '@/lib/site-bot/supportDraft': { queueSupportDraft: (row) => { drafts.push(row.id); } },
   }, { env: enabled === 'unset' ? {} : { SITE_BOT_CLIENT_MESSAGES_ENABLED: enabled }, console: logs.console });
   const post = (body, opts = {}) => route.POST(jsonRequest(URL_, body, { headers: { 'x-forwarded-for': opts.ip ?? '10.0.0.1', ...(opts.headers ?? {}) }, raw: opts.raw }));
-  return { ...s, route, post, email, consumed, logs };
+  return { ...s, route, post, email, consumed, logs, drafts };
 }
 
 async function json(response, status) {
@@ -157,4 +160,25 @@ test('14: when the confirmation is not sent (copy placeholders), confirmationEma
   assert.deepEqual(await json(await h.post({ token: VALID, messageId, body: 'hi' }), 200), { ok: true, messageId, status: 'received', confirmationEmailed: false });
   assert.equal(email.calls.alert.length, 1);
   h.cleanup();
+});
+
+test('step 5: a new message queues one background draft; a replay queues none', async () => {
+  const { h } = setup();
+  const messageId = crypto.randomUUID();
+  const msg = { token: VALID, messageId, body: 'Change my hours please' };
+  await json(await h.post(msg), 200);
+  await json(await h.post(msg), 200);
+  assert.deepEqual(h.drafts, [messageId]);
+  h.cleanup();
+});
+
+test('step 5: a cancelled client may write until the offline date, not after it', async () => {
+  const effective = new Date(Date.now() - 10 * 86_400_000).toISOString();
+  const { h } = setup({ status: 'canceled', canceled_at: effective, cancel_effective_at: effective });
+  await json(await h.post({ token: VALID, messageId: crypto.randomUUID(), body: 'still here' }), 200);
+  h.cleanup();
+  const old = new Date(Date.now() - 40 * 86_400_000).toISOString();
+  const late = setup({ status: 'canceled', canceled_at: old, cancel_effective_at: old });
+  assert.deepEqual(await json(await late.h.post({ token: VALID, messageId: crypto.randomUUID(), body: 'too late' }), 404), { ok: false, error: 'not_found' });
+  late.h.cleanup();
 });

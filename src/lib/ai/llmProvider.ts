@@ -12,6 +12,8 @@
  *   gbp_reply       LLM_PROVIDER_GBP_REPLY         gemini
  *   geo             LLM_PROVIDER_GEO               gemini   (also governs the GEO Qwen fallback: none by default)
  *   site_copy       LLM_PROVIDER_SITE_COPY         qwen-token-plan (today's behaviour; blind test decides by 19.11)
+ *   support_reply   LLM_PROVIDER_SUPPORT_REPLY     gemini   (Site-Bot staff draft replies; never the token plan in
+ *                                                            production, see src/lib/site-bot/supportDraft.ts)
  *
  * Values: gemini | qwen-metered | qwen-token-plan.
  *   - gemini           GEMINI_API_KEY (+ optional GEMINI_MODEL_NAME), see gemini-fast.ts.
@@ -30,14 +32,14 @@
  * scripts/crons, and src/lib/ai/llmProvider.parity.test.mjs keeps the two in lockstep.
  */
 
-export type LlmWorkload = 'chat' | 'panel_rewrite' | 'gbp_reply' | 'geo' | 'site_copy';
+export type LlmWorkload = 'chat' | 'panel_rewrite' | 'gbp_reply' | 'geo' | 'site_copy' | 'support_reply';
 export type LlmProviderName = 'gemini' | 'qwen-metered' | 'qwen-token-plan';
 export type QwenProviderName = Exclude<LlmProviderName, 'gemini'>;
 export type LlmEnv = Record<string, string | undefined>;
 
 export const LLM_PROVIDERS: readonly LlmProviderName[] = ['gemini', 'qwen-metered', 'qwen-token-plan'];
 
-export const LLM_WORKLOADS: readonly LlmWorkload[] = ['chat', 'panel_rewrite', 'gbp_reply', 'geo', 'site_copy'];
+export const LLM_WORKLOADS: readonly LlmWorkload[] = ['chat', 'panel_rewrite', 'gbp_reply', 'geo', 'site_copy', 'support_reply'];
 
 export const LLM_WORKLOAD_ENV: Readonly<Record<LlmWorkload, string>> = {
   chat: 'LLM_PROVIDER_CHAT',
@@ -45,6 +47,7 @@ export const LLM_WORKLOAD_ENV: Readonly<Record<LlmWorkload, string>> = {
   gbp_reply: 'LLM_PROVIDER_GBP_REPLY',
   geo: 'LLM_PROVIDER_GEO',
   site_copy: 'LLM_PROVIDER_SITE_COPY',
+  support_reply: 'LLM_PROVIDER_SUPPORT_REPLY',
 };
 
 export const LLM_WORKLOAD_DEFAULT: Readonly<Record<LlmWorkload, LlmProviderName>> = {
@@ -53,6 +56,7 @@ export const LLM_WORKLOAD_DEFAULT: Readonly<Record<LlmWorkload, LlmProviderName>
   gbp_reply: 'gemini',
   geo: 'gemini',
   site_copy: 'qwen-token-plan',
+  support_reply: 'gemini',
 };
 
 export type LlmProviderSelection = {
