@@ -28,21 +28,21 @@ export const REVIEW_KIT_COPY_KEYS = [
 export type ReviewKitCopyKey = (typeof REVIEW_KIT_COPY_KEYS)[number];
 
 export const SITE_BOT_REVIEW_KIT_COPY: Readonly<Record<ReviewKitCopyKey, string>> = {
-  reviewCardHeading: '__HE_TODO_reviewCardHeading__',
-  reviewCardIntro: '__HE_TODO_reviewCardIntro__',
-  reviewMessage: '__HE_TODO_reviewMessage__',
-  copyButton: '__HE_TODO_copyButton__',
-  copiedToast: '__HE_TODO_copiedToast__',
-  whatsappButton: '__HE_TODO_whatsappButton__',
-  reviewSenderNote: '__HE_TODO_reviewSenderNote__',
-  reviewEmailSubject: '__HE_TODO_reviewEmailSubject__',
-  reviewEmailIntro: '__HE_TODO_reviewEmailIntro__',
-  reviewEmailMessageLabel: '__HE_TODO_reviewEmailMessageLabel__',
-  reviewEmailOutro: '__HE_TODO_reviewEmailOutro__',
+  reviewCardHeading: 'מעבודה טובה לביקורת בגוגל',
+  reviewCardIntro: 'סיימת עבודה והלקוח מרוצה? תשלח לו את ההודעה הזאת.\n10 שניות. זהו.',
+  reviewMessage: 'היי, תודה שבחרת ב{businessName} 🙏\nאם היית מרוצה מהעבודה, אשמח מאוד לכמה מילים בגוגל. זה לוקח דקה ועוזר לי המון.\n{reviewLink}',
+  copyButton: 'העתק הודעה',
+  copiedToast: 'הועתק. עכשיו רק להדביק בצ׳אט עם הלקוח.',
+  whatsappButton: 'שלח בוואטסאפ',
+  reviewSenderNote: 'אתה שולח אותה מהטלפון שלך, ורק ללקוחות שאתה בוחר.',
+  reviewEmailSubject: 'האתר שלך עלה. וגם הודעה מוכנה לביקורות בגוגל',
+  reviewEmailIntro: 'מזל טוב. האתר שלך באוויר.\nהכנו לך קישור ישיר לכתיבת ביקורת על העסק שלך בגוגל, והודעה קצרה ששולחים ללקוח בסוף עבודה. כל ביקורת חדשה עוזרת ללקוח הבא למצוא אותך ולבחור בך.',
+  reviewEmailMessageLabel: 'ההודעה שתשלח ללקוחות:',
+  reviewEmailOutro: 'הקישור וההודעה מחכים לך תמיד בעמוד החשבון שלך ב־WAO, עם כפתור העתקה ושליחה בוואטסאפ.',
 };
 
 /** True while any key above is still a placeholder. */
-export const SITE_BOT_REVIEW_KIT_COPY_PENDING = true;
+export const SITE_BOT_REVIEW_KIT_COPY_PENDING = false;
 
 export const REVIEW_CARD_COPY_KEYS = [
   'reviewCardHeading', 'reviewCardIntro', 'reviewMessage', 'copyButton', 'copiedToast', 'whatsappButton', 'reviewSenderNote',

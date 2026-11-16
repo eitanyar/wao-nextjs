@@ -287,7 +287,8 @@ test('cancel alert lists both dates and the hand checklist', async () => {
   assert.match(email.subject, /^Site Bot cancel — notices due — owner-/);
   assert.match(email.text, /Effective: 06\/01\/2027/);
   assert.match(email.text, /Site offline on: 05\/02\/2027/);
-  assert.match(email.text, /cancel-day notice[\s\S]*7 days before[\s\S]*manager access/);
+  // Either branch: hand checklist while the notice copy is pending, automatic-cron wording once approved.
+  assert.match(email.text, /cancel-day (notice|confirmation)[\s\S]*7 days before[\s\S]*manager access/);
 });
 
 test('AI seam is a stub', async () => {

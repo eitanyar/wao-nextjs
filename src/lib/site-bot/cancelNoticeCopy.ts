@@ -23,18 +23,18 @@ export const CANCEL_NOTICE_COPY_KEYS = [
 export type CancelNoticeCopyKey = (typeof CANCEL_NOTICE_COPY_KEYS)[number];
 
 export const SITE_BOT_CANCEL_NOTICE_COPY: Readonly<Record<CancelNoticeCopyKey, string>> = {
-  cancelEmailSubject: '__HE_TODO_cancelEmailSubject__',
-  cancelEmailBody: '__HE_TODO_cancelEmailBody__',
-  cancelEmailBodyNoDomain: '__HE_TODO_cancelEmailBodyNoDomain__',
-  cancelEmailOutro: '__HE_TODO_cancelEmailOutro__',
-  offlineSoonSubject: '__HE_TODO_offlineSoonSubject__',
-  offlineSoonBody: '__HE_TODO_offlineSoonBody__',
-  offlineSoonBodyNoDomain: '__HE_TODO_offlineSoonBodyNoDomain__',
-  offlineSoonOutro: '__HE_TODO_offlineSoonOutro__',
+  cancelEmailSubject: 'הביטול שלך התקבל',
+  cancelEmailBody: 'המנוי שלך ממשיך עד {paidThrough}, סוף החודש ששילמת עליו.\nגם אחרי זה האתר נשאר באוויר, עד {offlineDate}.\nהדומיין והפרופיל העסקי בגוגל נשארים שלך, כמו שהיו מהיום הראשון.',
+  cancelEmailBodyNoDomain: 'המנוי שלך ממשיך עד {paidThrough}, סוף החודש ששילמת עליו.\nגם אחרי זה האתר נשאר באוויר, עד {offlineDate}.\nהפרופיל העסקי בגוגל נשאר שלך, כמו שהיה מהיום הראשון.',
+  cancelEmailOutro: 'שינית את דעתך או שיש לך שאלה? תכתוב לנו בתיבת ההודעות בעמוד החשבון שלך:\n{accountLink}',
+  offlineSoonSubject: 'עוד שבוע האתר שלך יורד מהאוויר',
+  offlineSoonBody: 'זה יקרה ב־{offlineDate}. עד אז האתר עובד כרגיל.\nהפרופיל העסקי בגוגל והדומיין נשארים שלך גם אחרי.',
+  offlineSoonBodyNoDomain: 'זה יקרה ב־{offlineDate}. עד אז האתר עובד כרגיל.\nהפרופיל העסקי בגוגל נשאר שלך גם אחרי.',
+  offlineSoonOutro: 'שינית את דעתך או שיש לך שאלה? תכתוב לנו בתיבת ההודעות בעמוד החשבון שלך:\n{accountLink}',
 };
 
 /** True while any key above is still a placeholder. */
-export const SITE_BOT_CANCEL_NOTICE_COPY_PENDING = true;
+export const SITE_BOT_CANCEL_NOTICE_COPY_PENDING = false;
 
 export const CANCEL_EMAIL_COPY_KEYS = ['cancelEmailSubject', 'cancelEmailBody', 'cancelEmailBodyNoDomain', 'cancelEmailOutro'] as const satisfies readonly CancelNoticeCopyKey[];
 export const OFFLINE_SOON_COPY_KEYS = ['offlineSoonSubject', 'offlineSoonBody', 'offlineSoonBodyNoDomain', 'offlineSoonOutro'] as const satisfies readonly CancelNoticeCopyKey[];
