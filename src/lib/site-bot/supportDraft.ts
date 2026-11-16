@@ -104,6 +104,7 @@ export function buildSupportDraftSystemPrompt(): string {
     'Write the reply in natural, native Israeli Hebrew, addressing the owner in the singular masculine form.',
     'Short sentences, plain words, no jargon, no English unless it is a product name, a URL or an email address.',
     'Polite and direct, like a capable person on a small team. Sign off as the WAO team, without a personal name.',
+    'Never greet the owner by name: the business name is not his first name. Open with a plain greeting without a name.',
     '',
     'Hard rules:',
     '1. Use only the facts in the fact sheet below. If the answer is not in it, do not guess: say the team will check and',
