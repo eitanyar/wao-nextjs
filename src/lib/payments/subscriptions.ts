@@ -23,6 +23,7 @@ import { issueInvoiceForCharge } from './invoicing';
 import { getBillingPlan, planChargeAmount, SITE_BOT_PLAN, type BillingPlan } from './plans';
 import { siteBotSupportBoxShown } from '../site-bot/supportBox';
 import { pastOfflineDate } from '../site-bot/offlineDate';
+import { siteBaseUrl } from '../siteBaseUrl';
 
 const EMAIL_ADDRESS = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -30,13 +31,17 @@ function nowIso(): string {
   return new Date().toISOString();
 }
 
+/**
+ * Origin for payment-provider return/callback URLs: these must reach THIS server, so a local run keeps localhost.
+ * Links inside emails use siteBaseUrl() instead (one origin for the manage-link and cancel emails).
+ */
 function resolveBaseUrl(): string {
   return process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
 }
 
-/** Builds the URL the account page reads its magic-link token from. */
+/** Builds the URL the account page reads its magic-link token from (sent by email: siteBaseUrl origin). */
 export function buildCancelUrl(token: string): string {
-  return `${resolveBaseUrl()}/account/subscription?token=${encodeURIComponent(token)}`;
+  return `${siteBaseUrl()}/account/subscription?token=${encodeURIComponent(token)}`;
 }
 
 /**

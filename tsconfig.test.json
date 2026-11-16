@@ -167,6 +167,8 @@
     "src/lib/site-bot/paidQueueAlert.ts",
     "src/lib/site-bot/paidQueueAlert.test.ts",
     "src/lib/site-bot/offlineDate.ts",
+    "src/lib/siteBaseUrl.ts",
+    "src/lib/siteBaseUrl.test.ts",
     "src/lib/site-bot/reviewKitCopy.ts",
     "src/lib/site-bot/cancelNoticeCopy.ts",
     "src/lib/site-bot/lifecycleEmail.ts",

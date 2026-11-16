@@ -12,6 +12,7 @@
  * the copy is pending (cancelNoticeCopy.ts). Zero Hebrew in this module.
  */
 import { SITE_BOT_PLAN } from '../payments/plans';
+import { siteBaseUrl } from '../siteBaseUrl';
 import { getDb, type SubscriptionRow } from '../payments/db';
 import { formatAccountDate } from '../payments/accountCopy';
 import { resolveClientIdentity } from './clientMessages';
@@ -42,7 +43,7 @@ type CopyOptions = { copy?: Readonly<Record<string, string>>; pending?: boolean 
 
 /** The plain account page URL (no token). */
 export function accountPageUrl(env: Record<string, string | undefined> = process.env): string {
-  return `${(env.NEXT_PUBLIC_BASE_URL || 'https://www.wao.co.il').replace(/\/+$/, '')}/account/subscription`;
+  return `${siteBaseUrl(env)}/account/subscription`;
 }
 
 export interface CancelNoticeContext {
