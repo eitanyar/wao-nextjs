@@ -3,6 +3,7 @@ import { cancelSubscriptionByToken, getSubscriptionById } from '@/lib/payments/s
 import { SITE_BOT_PLAN } from '@/lib/payments/plans';
 import { clientMessagesEnabled, createCancelNoticeItem, markStaffAlerted } from '@/lib/site-bot/clientMessages';
 import { sendClientMessageStaffAlert } from '@/lib/site-bot/clientMessageEmail';
+import { sendCancelConfirmation } from '@/lib/site-bot/cancelNotices';
 
 /**
  * Site-Bot support queue (2026-11-13): when the client-message feature is on and the cancelled row is a Site-Bot plan,
@@ -39,6 +40,8 @@ export async function POST(req: Request) {
     }
 
     await queueSiteBotCancelNotice(outcome.subscriptionId, outcome.effectiveAt, outcome.cancelAtPeriodEnd === true);
+    // Site-Bot cancel confirmation to the owner (cancelNotices.ts): Site-Bot rows only, copy-gated, one-time, never throws.
+    await sendCancelConfirmation(outcome.subscriptionId);
 
     return NextResponse.json({
       success: true,

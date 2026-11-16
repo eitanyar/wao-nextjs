@@ -20,8 +20,9 @@ import { getPaymentProvider, paymentProviderKind } from './get-provider';
 import { generateMagicLinkToken, validateAndConsumeMagicLinkToken } from './magic-link';
 import { sendTrialChargeConfirmationEmail, sendMagicLinkCancelEmail } from './email';
 import { issueInvoiceForCharge } from './invoicing';
-import { getBillingPlan, planChargeAmount, type BillingPlan } from './plans';
+import { getBillingPlan, planChargeAmount, SITE_BOT_PLAN, type BillingPlan } from './plans';
 import { siteBotSupportBoxShown } from '../site-bot/supportBox';
+import { pastOfflineDate } from '../site-bot/offlineDate';
 
 const EMAIL_ADDRESS = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -82,6 +83,19 @@ export function getSubscriptionById(subscriptionId: string): SubscriptionRow | n
     | SubscriptionRow
     | undefined;
   return row ?? null;
+}
+
+/**
+ * The subscriptions a customer may still sign in to manage: every non-canceled row, plus canceled Site-Bot rows until
+ * their site's offline date (terms §8: the site, the account page and the message box stay 30 days after the
+ * cancellation takes effect).
+ */
+export function getManageableSubscriptionsByEmail(email: string, now: Date = new Date()): SubscriptionRow[] {
+  const db = getDb();
+  const rows = db
+    .prepare(`SELECT * FROM subscriptions WHERE user_id = ? AND (status != 'canceled' OR plan = ?) ORDER BY created_at DESC`)
+    .all(email, SITE_BOT_PLAN.id) as SubscriptionRow[];
+  return rows.filter((row) => row.status !== 'canceled' || !pastOfflineDate(row, now));
 }
 
 /** All non-canceled subscriptions for a given customer identifier (email). */
@@ -303,7 +317,7 @@ export async function applyTokenizationCallback(
  * subscription (email enumeration).
  */
 export async function requestMagicLinkForEmail(email: string): Promise<void> {
-  const subscriptions = getActiveSubscriptionsByEmail(email);
+  const subscriptions = getManageableSubscriptionsByEmail(email);
 
   for (const subscription of subscriptions) {
     const { token } = generateMagicLinkToken(subscription.id);

@@ -137,6 +137,7 @@ function harness({ authorized = true, record, dossier = syntheticDossier(), read
     return forbidden('unexpected lstat path')(file);
   };
   const deployEvents = [];
+  const goLiveCalls = [];
   const activeDeploy = failWranglerDeploy || binding !== null;
   const hostname = `${slug}.wao.co.il`;
   const dnsTarget = `${slug}.pages.dev`;
@@ -379,6 +380,7 @@ function harness({ authorized = true, record, dossier = syntheticDossier(), read
     },
     '@/lib/deployment/deploy-access': { isSafeDeploymentSlug: value => value === slug },
     '@/lib/site-hosting/tenant': tenantExports,
+    '@/lib/site-bot/reviewKit': { onSiteBotSiteLive: async input => { goLiveCalls.push(input); return 'skipped'; } },
     '@/lib/site-hosting/workerDeploy': workerDeployModule(async input => {
       if (!workerDeploy) return forbidden('deployTenantToWorker')(input);
       workerDeploys.push(input);
@@ -416,7 +418,7 @@ function harness({ authorized = true, record, dossier = syntheticDossier(), read
     assert.equal(response.headers.get('cache-control'), 'private, no-store');
     return { status: response.status, body: await response.json() };
   }
-  return { post, calls, io, deployEvents, fraudDomains, workerDeploys, get credentialReads() { return credentialReads; },
+  return { post, calls, io, deployEvents, goLiveCalls, fraudDomains, workerDeploys, get credentialReads() { return credentialReads; },
     get dossierLookups() { return dossierLookups; }, get receiptChecks() { return receiptChecks; } };
 }
 
@@ -1116,6 +1118,25 @@ test('non-researched new binding also reaches the original first-time bridge', a
   assert.deepEqual(setup.deployEvents, [...beforeProvider, domainListEvent, domainPostEvent, dnsPostEvent,
     'client-exists', 'client-record', 'pin', 'client-auth', 'session', 'cookie', 'cleanup']);
   assert.equal(setup.calls.forbidden, 0);
+});
+
+test('step 5: a successful researched deploy calls the go-live hook once, after binding, with the record identity', async () => {
+  const record = researchedRecord();
+  const setup = approvedHarness({ record, binding: {} });
+  assert.deepEqual(await setup.post(), successBody);
+  assert.equal(setup.goLiveCalls.length, 1);
+  const [call] = setup.goLiveCalls;
+  assert.equal(call.researchId, record.researchId);
+  assert.equal(call.slug, slug);
+  assert.equal(call.simulation, false);
+  assert.equal(typeof call.ownDomain, 'boolean');
+});
+
+test('step 5: a rejected deploy never calls the go-live hook', async () => {
+  const setup = harness({ record: researchedRecord() });
+  const response = await setup.post();
+  assert.notEqual(response.status, 200);
+  assert.equal(setup.goLiveCalls.length, 0);
 });
 
 // Idempotent attach: a redeploy whose hostname is already on the Pages project

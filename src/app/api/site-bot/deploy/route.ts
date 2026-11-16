@@ -35,6 +35,7 @@ import { readFraudBlockerState, writeFraudBlockerState } from '@/lib/fraud-block
 import { isSafeDeploymentSlug } from '@/lib/deployment/deploy-access';
 import { originHost, subdomainOrigin, tenantCanonicalOrigin, tenantHosts, type SiteHostingFields } from '@/lib/site-hosting/tenant';
 import { deployTenantToWorker, siteHostingMode, workerHostingConfig, WorkerDeployError, type WorkerHostingConfig } from '@/lib/site-hosting/workerDeploy';
+import { onSiteBotSiteLive } from '@/lib/site-bot/reviewKit';
 
 interface DeployRequest {
   slug: string;
@@ -483,6 +484,24 @@ export async function POST(req: Request) {
       }
     };
 
+    // ── Step 5 (both modes): go-live mark for a paid Site-Bot site ──────────
+    // Links the deploy to the subscription (researchId = checkout session), records the site as live with its Place ID
+    // and sends the one-time review-request kit email (src/lib/site-bot/reviewKit.ts). Runs only after the publish
+    // succeeded; never throws and never changes the deploy response.
+    const markSiteBotLive = async () => {
+      const ownerDomain = typeof collectedData.ownerDomain === 'string' ? collectedData.ownerDomain.trim() : '';
+      await onSiteBotSiteLive({
+        researchId: record.researchId,
+        slug,
+        siteUrl,
+        placeId: collectedData.placeId,
+        placeIdNeedsRematch: collectedData.placeIdNeedsRematch === true,
+        ownDomain: !originHost(siteUrl).endsWith('.wao.co.il') || (collectedData.domainChoice === 'has_domain' && ownerDomain !== ''),
+        businessName: collectedData.businessName,
+        simulation: record.simulation === true,
+      });
+    };
+
     // ── Step 3 (worker mode): R2 publish + pointer flip + subdomain CNAME ──
     if (hostingMode === 'worker') {
       let published;
@@ -500,6 +519,7 @@ export async function POST(req: Request) {
         return privateJson({ error: stage === 'dns' ? 'deployment_domain_binding_failed' : 'worker_publish_failed' }, 502);
       }
       await bridgeClientDashboard();
+      await markSiteBotLive();
       return privateJson({ success: true, url: siteUrl, projectName: slug, hosting: 'worker',
         version: published.publish.version, dns: published.dns });
     }
@@ -570,6 +590,7 @@ export async function POST(req: Request) {
         return privateJson({ error: 'deployment_domain_binding_failed' }, 502);
       }
     await bridgeClientDashboard();
+    await markSiteBotLive();
 
     return privateJson({ success: true, url: siteUrl, projectName: slug });
     } finally {

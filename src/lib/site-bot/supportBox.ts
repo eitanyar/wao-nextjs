@@ -7,10 +7,19 @@
 import { SITE_BOT_PLAN } from '../payments/plans';
 import { clientMessagesEnabled } from './clientMessages';
 import { SITE_BOT_CLIENT_MESSAGE_COPY_PENDING } from './clientMessageCopy';
+import { pastOfflineDate } from './offlineDate';
 
+/** A cancelled client keeps the box (and account access) until his site's offline date (terms §8: 30 days). */
 export function siteBotSupportBoxShown(
-  row: { plan?: string | null; status: string },
-  env: Record<string, string | undefined> = process.env
+  row: {
+    plan?: string | null;
+    status: string;
+    cancel_at_period_end?: number | null;
+    cancel_effective_at?: string | null;
+    canceled_at?: string | null;
+  },
+  env: Record<string, string | undefined> = process.env,
+  now: Date = new Date()
 ): boolean {
-  return row.plan === SITE_BOT_PLAN.id && row.status !== 'pending' && clientMessagesEnabled(env) && !SITE_BOT_CLIENT_MESSAGE_COPY_PENDING;
+  return row.plan === SITE_BOT_PLAN.id && row.status !== 'pending' && !pastOfflineDate(row, now) && clientMessagesEnabled(env) && !SITE_BOT_CLIENT_MESSAGE_COPY_PENDING;
 }

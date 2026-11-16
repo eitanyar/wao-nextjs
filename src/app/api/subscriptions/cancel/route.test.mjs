@@ -10,6 +10,7 @@ function harness({ enabled = 'true', plan = 'site-bot', alert = 'ok', getThrows 
   const subscriptionId = s.addSubscription({ plan });
   const email = mockEmail({ alert });
   const logs = recordingConsole();
+  const confirmations = [];
   const result = outcome ?? { ok: true, subscriptionId, cancelAtPeriodEnd: true, effectiveAt: EFFECTIVE };
   const route = load('src/app/api/subscriptions/cancel/route.ts', {
     'next/server': { NextResponse: { json: (body, init) => Response.json(body, init) } },
@@ -20,9 +21,10 @@ function harness({ enabled = 'true', plan = 'site-bot', alert = 'ok', getThrows 
     '@/lib/payments/plans': { SITE_BOT_PLAN: { id: 'site-bot' } },
     '@/lib/site-bot/clientMessages': s.store,
     '@/lib/site-bot/clientMessageEmail': email.module,
+    '@/lib/site-bot/cancelNotices': { sendCancelConfirmation: async (id) => { confirmations.push(id); return 'copy_pending'; } },
   }, { env: enabled ? { SITE_BOT_CLIENT_MESSAGES_ENABLED: enabled } : {}, console: logs.console });
   const cancel = () => route.POST(jsonRequest('http://localhost/api/subscriptions/cancel', { token: 'f'.repeat(64) }));
-  return { ...s, subscriptionId, email, logs, cancel };
+  return { ...s, subscriptionId, email, logs, cancel, confirmations };
 }
 
 const expected = (subscriptionId) => ({ success: true, subscriptionId, cancelAtPeriodEnd: true, effectiveAt: EFFECTIVE });
@@ -80,3 +82,14 @@ test('a failed cancel never touches the queue', async () => {
   h.cleanup();
 });
 
+
+test('step 5: a successful cancel asks for the owner confirmation once; a failed cancel does not', async () => {
+  const h = harness();
+  assert.equal((await h.cancel()).status, 200);
+  assert.deepEqual(h.confirmations, [h.subscriptionId]);
+  h.cleanup();
+  const failed = harness({ outcome: { ok: false, reason: 'invalid_token' } });
+  await failed.cancel();
+  assert.deepEqual(failed.confirmations, []);
+  failed.cleanup();
+});

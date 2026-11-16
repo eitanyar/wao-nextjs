@@ -51,18 +51,8 @@ export function buildReviewForwardTemplate(opts: ReviewFlywheelForwardTemplateOp
   ].join('\n');
 }
 
-/**
- * Resolve a Google "Write a review" deep link.
- * Pre-formatted shortlinks / URLs (http://, https://, g.page/) pass through untouched;
- * a raw Google Place ID (e.g. ChIJ...) becomes the canonical writereview URL.
- */
-export function buildGoogleWriteReviewUrl(placeIdOrShortLink: string): string {
-  const value = placeIdOrShortLink.trim();
-  if (value.startsWith('http://') || value.startsWith('https://') || value.startsWith('g.page/')) {
-    return value;
-  }
-  return `https://search.google.com/local/writereview?placeid=${encodeURIComponent(value)}`;
-}
+/** Google "Write a review" deep link; lives in src/lib/gbp/reviewLink.ts (shared with the Site-Bot review kit). */
+export { buildGoogleWriteReviewUrl } from '../gbp/reviewLink';
 
 /**
  * Clean an Israeli phone number for wa.me: strip non-digits and the leading trunk

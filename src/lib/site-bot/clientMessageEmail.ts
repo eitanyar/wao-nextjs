@@ -18,6 +18,7 @@ import fs from 'fs';
 import path from 'path';
 import { Resend } from 'resend';
 import { copyReady, EMAIL_COPY_KEYS, isFilledCopy, SITE_BOT_CLIENT_MESSAGE_COPY } from './clientMessageCopy';
+import { CANCEL_EMAIL_COPY_KEYS, cancelNoticeCopyReady, OFFLINE_SOON_COPY_KEYS } from './cancelNoticeCopy';
 import {
   listUnhandledOlderThan,
   markReminded,
@@ -32,7 +33,17 @@ export interface OutgoingEmail {
   text: string;
   html?: string;
   /** For logs and the outbox only: which sender produced it. */
-  tag: 'staff_alert' | 'client_confirmation' | 'staff_reminder' | 'paid_queue_alert' | 'owner_lead';
+  tag:
+    | 'staff_alert'
+    | 'client_confirmation'
+    | 'staff_reminder'
+    | 'paid_queue_alert'
+    | 'owner_lead'
+    | 'review_kit'
+    | 'review_kit_no_place'
+    | 'cancel_confirmation'
+    | 'offline_soon'
+    | 'takedown_reminder';
   /** For logs only. */
   refIds: string[];
 }
@@ -135,9 +146,19 @@ export async function sendClientMessageStaffAlert(row: ClientMessageRow, transpo
       `Effective: ${israelTime(meta.effectiveAt)}`,
       `Site offline on: ${israelTime(meta.siteOfflineAt)}`,
       '',
-      'To do by hand:',
-      '- Send the cancel-day notice.',
-      '- Send the notice 7 days before the site goes offline.',
+      ...(cancelNoticeCopyReady(CANCEL_EMAIL_COPY_KEYS) && cancelNoticeCopyReady(OFFLINE_SOON_COPY_KEYS)
+        ? [
+          'Automatic (daily lifecycle cron): the cancel-day confirmation and the "offline soon" email 7 days before go to',
+          'the owner; staff get a take-down reminder on the offline date.',
+          '',
+          'To do by hand (on the offline date):',
+        ]
+        : [
+          'To do by hand (the client notices are not approved yet, so they are not sent automatically):',
+          '- Send the cancel-day notice.',
+          '- Send the notice 7 days before the site goes offline.',
+        ]),
+      '- Take the site down on the offline date (a staff reminder is emailed that day).',
       "- Remove WAO's manager access to the Google profile."
     );
   } else {

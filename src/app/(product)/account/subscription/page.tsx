@@ -4,6 +4,8 @@ import CancelSubscriptionButton from './CancelSubscriptionButton';
 import CardUpdateButton from './CardUpdateButton';
 import RequestLinkForm from './RequestLinkForm';
 import ClientMessageBox from './ClientMessageBox';
+import ReviewKitCard from './ReviewKitCard';
+import { reviewCardFor } from '@/lib/site-bot/reviewKit';
 import { siteBotSupportBoxShown } from '@/lib/site-bot/supportBox';
 import {
   ACCOUNT_PAGE_COPY as COPY,
@@ -117,13 +119,21 @@ export default async function SubscriptionPage({
   // Site-Bot client message box: only for Site-Bot plan rows past checkout, with the feature flag on and the Hebrew
   // copy approved (siteBotSupportBoxShown). The buttons' generic error points at the box only when it is shown.
   const showMessageBox = siteBotSupportBoxShown(subscription, process.env);
+  // Site-Bot review-request kit: only for an active Site-Bot subscription whose site is live with a usable Place ID and
+  // approved copy (reviewCardFor returns null otherwise, never a broken link). A store failure hides the card.
+  let reviewCard: ReturnType<typeof reviewCardFor> = null;
+  try {
+    reviewCard = reviewCardFor(subscription);
+  } catch {
+    console.error(`[account] review card unavailable subscription=${subscription.id}`);
+  }
   // The date the confirm question promises: the same rule the cancel applies (null = the cancel takes effect at once).
   const cancelEffectiveAt = cancelEffectiveAtIfCanceledNow(subscription);
   const confirmDate = cancelEffectiveAt ? formatAccountDate(cancelEffectiveAt) : null;
 
   return (
     <main className="min-h-dvh flex items-center justify-center px-4">
-      <div className={showMessageBox ? 'w-full max-w-md' : 'w-full max-w-sm'}>
+      <div className={showMessageBox || reviewCard ? 'w-full max-w-md' : 'w-full max-w-sm'}>
         <div className="text-center mb-8">
           <span className="text-3xl font-black tracking-tight">WAO</span>
           <h1 className="text-[var(--muted)] mt-1 text-sm font-normal">{COPY.headerSubtitle}</h1>
@@ -144,6 +154,12 @@ export default async function SubscriptionPage({
           <p className="mb-4 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-400 text-sm text-center py-2 px-3">
             {COPY.noticePastDue}
           </p>
+        )}
+
+        {reviewCard && (
+          <div className="mb-6">
+            <ReviewKitCard view={reviewCard} />
+          </div>
         )}
 
         {showMessageBox && (
