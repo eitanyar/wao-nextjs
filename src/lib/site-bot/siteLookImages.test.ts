@@ -43,12 +43,14 @@ async function photo({ width = 1920, height = 1080, busy = false, bright = false
   return sharp(raw, { raw: { width, height, channels: 3 } }).jpeg({ quality: 90 }).toBuffer();
 }
 
-test('contrast maths: white over pure white under the overlay alpha is under 4.5; over black it is far above', () => {
-  assert.ok(whiteContrastOver(255, 255, 255) < 4.5);
+test('contrast maths: white over pure white under the overlay alpha clears 4.5; over black it is far above', () => {
+  assert.ok(whiteContrastOver(255, 255, 255) >= 4.5);
+  // The low_contrast gate stays as a guard: at the old 0.55 alpha a pure-white photo would fail.
+  assert.ok(whiteContrastOver(255, 255, 255, 0.55) < 4.5);
   assert.ok(whiteContrastOver(0, 0, 0) > 10);
 });
 
-test('scorer: a good synthetic photo passes; portrait, blurry, busy-text-zone and bright photos are rejected', async () => {
+test('scorer: a good synthetic photo passes; portrait, blurry and busy-text-zone photos are rejected; a bright photo clears contrast', async () => {
   const good = await photo();
   const goodScore = await scoreHeroPhoto(good);
   assert.equal(goodScore.pass, true, JSON.stringify(goodScore));
@@ -59,7 +61,8 @@ test('scorer: a good synthetic photo passes; portrait, blurry, busy-text-zone an
   const busy = await scoreHeroPhoto(await photo({ busy: true }));
   assert.ok(busy.reasons.includes('busy_text_zone'), JSON.stringify(busy));
   const bright = await scoreHeroPhoto(await photo({ bright: true }));
-  assert.ok(bright.reasons.includes('low_contrast'), JSON.stringify(bright));
+  assert.ok(bright.contrast >= 4.5, JSON.stringify(bright));
+  assert.ok(!bright.reasons.includes('low_contrast'), JSON.stringify(bright));
   const narrow = await scoreHeroPhoto(await photo({ width: 1000, height: 600 }));
   assert.ok(narrow.reasons.includes('too_narrow'));
   // None passes -> the ranked list has no passing photo (the CLI then keeps the solid hero).
@@ -77,7 +80,12 @@ test('scorer: deterministic, and orientation-aware (an EXIF-rotated landscape fi
 
 test('scorer on the repo demo photos: a quiet landscape passes, the busy street scene and the portrait fail', { skip: fs.existsSync(DEMO) ? false : 'demo photos absent' }, async () => {
   const score = async (file: string) => scoreHeroPhoto(fs.readFileSync(path.join(DEMO, file)));
-  assert.equal((await score('camera.jpg')).pass, true);
+  const camera = await score('camera.jpg');
+  assert.equal(camera.pass, true);
+  assert.ok(camera.contrast >= 4.5);
+  // Ranking among the passing demo photos: camera, then bath, then sink.
+  const ranked = rankHeroScores(await Promise.all(['sink.jpg', 'bath.jpg', 'camera.jpg'].map(async id => ({ id, score: await score(id) }))));
+  assert.deepEqual(ranked.map(row => row.id), ['camera.jpg', 'bath.jpg', 'sink.jpg']);
   assert.deepEqual((await score('van.jpg')).reasons, ['busy_text_zone']);
   assert.ok((await score('owner.jpg')).reasons.includes('not_landscape'));
 });

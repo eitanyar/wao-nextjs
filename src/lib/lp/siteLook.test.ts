@@ -10,15 +10,19 @@ import { renderResearchedSitePages } from './researchedSite';
 import { renderStaticHtml } from './renderStaticHtml';
 import { lookFixtureParams } from './siteLook.testkit';
 import { HERO_OVERLAY_TEXT_ALPHA, heroBackdropHtml, renderableHero, type SiteLook } from './siteLook';
-import { brandLogo, fitsLines, GENERIC_LEADS, GENERIC_LEADS_COPY_PENDING, leadClass, LOGO_MARK_LIBRARY, pickLogo, plainStep, splitLead, textUnits, type GeneratedLogoVariant } from './siteLogo';
+import { brandLogo, fitsLines, GENERIC_LEADS, GENERIC_LEADS_COPY_PENDING, generatedLogo, leadClass, LOGO_MARK_LIBRARY, pickLogo, plainStep, splitLead, textUnits, type GeneratedLogoVariant, type LogoStep } from './siteLogo';
 import { VERTICAL_THEMES } from './verticalThemes';
 import { VERTICAL_ASSETS } from './verticalAssets';
 import type { LPCopy } from './lpCopyPrompt';
 
 const ROOT = path.resolve(__dirname, '../../..');
 
-/** sha256 over the sorted file names + bytes of the fixture site, captured before the visual pack (2026-11-16). */
-const GOLDEN_LOOK_OFF = '058f2f6b7596dc420d3281638eaf0094f50da7c2bd737f1a5340b99e0893743a';
+/**
+ * sha256 over the sorted file names + bytes of the fixture site, captured before the visual pack (2026-11-16).
+ * Re-pinned 2026-11-16 for the removal of the unused <symbol id="i-star"> from the shared sprite: re-inserting that one
+ * symbol reproduces the previous hash 058f2f6b...743a byte for byte, so nothing else moved.
+ */
+const GOLDEN_LOOK_OFF = '9b219769fd4c832d8035f7db6bd5c3cbc5f22058066570534a6c621dea79f548';
 
 function siteHash(files: Record<string, string>): string {
   const hash = createHash('sha256');
@@ -92,6 +96,10 @@ test("hero photo: Yonatan's markup conditions", () => {
     assert.match(html, /\.hero\.has-photo \.hero-bg\{position:absolute;inset:0;z-index:-2;width:100%;height:100%;object-fit:cover;\}/);
     assert.match(html, /\.hero\{background:var\(--primary\)/);
     assert.match(html, new RegExp(`\\.hero\\.has-photo::before\\{content:"";position:absolute;inset:0;z-index:-1;background:rgba\\(13,27,42,${HERO_OVERLAY_TEXT_ALPHA}\\);\\}`));
+    // The breadcrumb over a photo carries the same text shadow as the H1 (its links inherit it).
+    assert.match(html, /\.hero\.has-photo \.wao-breadcrumb\{text-shadow/);
+    // The desktop gradient keeps the text alpha across 80% of the width, then fades to the edge alpha.
+    assert.ok(html.includes(`rgba(13,27,42,${HERO_OVERLAY_TEXT_ALPHA}) 80%, rgba(13,27,42,0.3) 100%`), 'text span 80%');
     assert.doesNotMatch(html, /100vh|100svh|100dvh/);
     assert.doesNotMatch(html, /transition|@keyframes|animation/);
   }
@@ -188,6 +196,8 @@ interface LogoNameFixture {
   primaryService?: string;
   targetLocation?: string;
   dependsOnGenericList?: boolean;
+  /** The phone size step of the default variant's layout; the name must still render whole (never cut). */
+  expectedStep?: LogoStep;
 }
 const LOGO_NAMES = path.join(ROOT, 'testdata', 'logo-names.json');
 const VARIANT_OF: Record<string, GeneratedLogoVariant> = { A: 'icon', B: 'monogram', C: 'lockup', plain: 'name' };
@@ -204,6 +214,14 @@ test("logo picker: Fable's fixture table (testdata/logo-names.json)", { skip: fs
     assert.ok(result, row.name);
     assert.equal(result.leadClass.toUpperCase(), row.expectedLead, `${row.name}: lead`);
     assert.equal(result.defaultVariant, VARIANT_OF[row.expectedDefault!], `${row.name}: default`);
+    if (row.expectedStep) {
+      const layout = result.layouts[result.defaultVariant] as { step?: LogoStep } | undefined;
+      assert.equal(layout?.step, row.expectedStep, `${row.name}: step`);
+      assert.equal(result.text, row.name, `${row.name}: the name is kept whole`);
+      const logo = generatedLogo(result.defaultVariant, row.name, { ...base, ...row });
+      assert.ok(logo?.html.includes(`<bdi>${row.name}</bdi>`), `${row.name}: the whole name renders`);
+      assert.doesNotMatch(logo!.css, /line-clamp:2/, `${row.name}: no two-line clamp`);
+    }
   }
 });
 
@@ -219,6 +237,7 @@ test('assertion 21: legacy renderStaticHtml output contains no star icons (ads L
     const html = renderStaticHtml({ theme: VERTICAL_THEMES['emergency-trades'], assets: VERTICAL_ASSETS['emergency-trades'], copy,
       data: { businessName: 'Biz', phone: '050-0000000' }, heroImageUrl: '', slug: 'x', mode, siteUrl: 'https://x.wao.co.il' });
     assert.doesNotMatch(html, /href="#i-star"/, mode);
+    assert.doesNotMatch(html, /<symbol id="i-star"/, `${mode}: the unused star symbol is gone from the shared sprite`);
     assert.doesNotMatch(html, /[★☆⭐]/u, mode);
     assert.match(html, /4\.9 \(37\)/, `${mode}: the review context text still shows`);
   }

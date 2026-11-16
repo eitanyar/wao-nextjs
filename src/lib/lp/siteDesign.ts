@@ -57,7 +57,7 @@ export function siteFontFaceCss(): string {
 // Icons (item 3)
 // ─────────────────────────────────────────────────────────────────────────
 
-export type SiteIconName = 'phone' | 'chat' | 'check' | 'chev' | 'shield' | 'star' | 'tool' | ServiceIconName;
+export type SiteIconName = 'phone' | 'chat' | 'check' | 'chev' | 'shield' | 'tool' | ServiceIconName;
 /** Per-service card icons (design review client item 6): a small fixed set; serviceIcon() picks one or the neutral fallback. */
 export type ServiceIconName = 'drop' | 'drain' | 'sun' | 'snow' | 'bolt' | 'lock' | 'key' | 'svc';
 
@@ -72,7 +72,6 @@ export const SITE_ICON_SPRITE = '<svg width="0" height="0" style="position:absol
   + '<symbol id="i-chev" viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></symbol>'
   + '<symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></symbol>'
   + '<symbol id="i-tool" viewBox="0 0 24 24"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></symbol>'
-  + '<symbol id="i-star" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></symbol>'
   + '<symbol id="i-drop" viewBox="0 0 24 24"><path d="M12 2.7c3.6 4.4 6 7.9 6 11.1a6 6 0 0 1-12 0c0-3.2 2.4-6.7 6-11.1z"/></symbol>'
   + '<symbol id="i-drain" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M8 9h8M7 12h10M8 15h8"/></symbol>'
   + '<symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></symbol>'

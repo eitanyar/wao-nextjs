@@ -63,10 +63,10 @@ export const HERO_MIN_SOURCE_WIDTH = 1200;
 export const HERO_BUDGET = { smallMaxWidth: 828, smallMaxBytes: 70_000, maxBytes: 180_000 } as const;
 /** The overlay colour (the template's dark navy) and its alpha over the text zone / at the desktop end edge. */
 export const HERO_OVERLAY_RGB: readonly [number, number, number] = [13, 27, 42];
-export const HERO_OVERLAY_TEXT_ALPHA = 0.55;
+export const HERO_OVERLAY_TEXT_ALPHA = 0.6;
 export const HERO_OVERLAY_EDGE_ALPHA = 0.3;
 /** Share of the hero width (from the start, the right edge in RTL) the desktop gradient keeps at the text alpha. */
-export const HERO_OVERLAY_TEXT_SPAN = 0.7;
+export const HERO_OVERLAY_TEXT_SPAN = 0.8;
 /** Minimum white-text contrast over the overlaid photo (WCAG AA body text). */
 export const HERO_MIN_CONTRAST = 4.5;
 /** Desktop max width of the hero text over a photo (keeps the text inside the full-alpha span). */
@@ -111,7 +111,7 @@ export function heroBackdropCss(): string {
     '.hero.has-photo{position:relative;isolation:isolate;overflow:hidden;}',
     '.hero.has-photo .hero-bg{position:absolute;inset:0;z-index:-2;width:100%;height:100%;object-fit:cover;}',
     `.hero.has-photo::before{content:"";position:absolute;inset:0;z-index:-1;background:${rgba(HERO_OVERLAY_TEXT_ALPHA)};}`,
-    '.hero.has-photo h1,.hero.has-photo .sub,.hero.has-photo .hero-note{text-shadow:0 1px 3px rgba(0,0,0,0.35);}',
+    '.hero.has-photo h1,.hero.has-photo .sub,.hero.has-photo .hero-note,.hero.has-photo .wao-breadcrumb{text-shadow:0 1px 3px rgba(0,0,0,0.35);}',
     `@media (min-width:${DESKTOP_MIN_WIDTH_PX}px){.hero.has-photo::before{background:linear-gradient(to left, ${rgba(HERO_OVERLAY_TEXT_ALPHA)} 0%, ${rgba(HERO_OVERLAY_TEXT_ALPHA)} ${start}%, ${rgba(HERO_OVERLAY_EDGE_ALPHA)} 100%);}.hero.has-photo .hero-text{max-width:${HERO_PHOTO_TEXT_MAX_PX}px;}}`,
   ].join('');
 }
