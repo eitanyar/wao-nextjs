@@ -111,7 +111,7 @@ function harness({ authorized = true, record, dossier = syntheticDossier(), read
   cloudflare = syntheticCloudflare, nodeEnv = 'test', offlineSimulation = false, failWranglerDeploy = false,
   binding = null, approved = false, rawBytes, bodyApproval, siteNodes = {}, dossierNodes = {},
   siteStatSize, siteStatType = 'file', siteReadBytes, siteReadChunk, siteReadError, siteOpenError, siteStatError, dossierReadError,
-  legacyRender = false, realClaimCheck = false, hostingEnv = {}, workerDeploy } = {}) {
+  legacyRender = false, realClaimCheck = false, hostingEnv = {}, workerDeploy, siteLook = null } = {}) {
   const bytes = rawBytes ?? (record && Buffer.from(JSON.stringify(record)));
   if (approved) {
     assert.ok(dossier && bytes, 'approved fixture requires record and dossier');
@@ -138,6 +138,8 @@ function harness({ authorized = true, record, dossier = syntheticDossier(), read
   };
   const deployEvents = [];
   const goLiveCalls = [];
+  const lookLoads = [];
+  const renderCalls = [];
   const activeDeploy = failWranglerDeploy || binding !== null;
   const hostname = `${slug}.wao.co.il`;
   const dnsTarget = `${slug}.pages.dev`;
@@ -286,7 +288,8 @@ function harness({ authorized = true, record, dossier = syntheticDossier(), read
       assert.ok(Array.isArray(pages) && data && typeof data === 'object');
       return [];
     } },
-    '@/lib/lp/researchedSite': { renderResearchedSitePages: activeDeploy ? () => {
+    '@/lib/lp/researchedSite': { renderResearchedSitePages: activeDeploy ? params => {
+      renderCalls.push(params);
       deployEvents.push('render');
       return { 'index.html': 'synthetic rendered page' };
     } : forbidden('renderResearchedSitePages') },
@@ -380,6 +383,12 @@ function harness({ authorized = true, record, dossier = syntheticDossier(), read
     },
     '@/lib/deployment/deploy-access': { isSafeDeploymentSlug: value => value === slug },
     '@/lib/site-hosting/tenant': tenantExports,
+    // Visual pack: the approved look (data/site-proof); the harness supplies it (default: none).
+    '@/lib/site-bot/siteLookStore': { loadSiteLook: id => {
+      lookLoads.push(id);
+      if (siteLook instanceof Error) throw siteLook;
+      return siteLook;
+    } },
     '@/lib/site-bot/reviewKit': { onSiteBotSiteLive: async input => { goLiveCalls.push(input); return 'skipped'; } },
     '@/lib/site-hosting/workerDeploy': workerDeployModule(async input => {
       if (!workerDeploy) return forbidden('deployTenantToWorker')(input);
@@ -418,7 +427,7 @@ function harness({ authorized = true, record, dossier = syntheticDossier(), read
     assert.equal(response.headers.get('cache-control'), 'private, no-store');
     return { status: response.status, body: await response.json() };
   }
-  return { post, calls, io, deployEvents, goLiveCalls, fraudDomains, workerDeploys, get credentialReads() { return credentialReads; },
+  return { post, calls, io, deployEvents, goLiveCalls, fraudDomains, workerDeploys, lookLoads, renderCalls, get credentialReads() { return credentialReads; },
     get dossierLookups() { return dossierLookups; }, get receiptChecks() { return receiptChecks; } };
 }
 
@@ -1254,6 +1263,36 @@ test('worker mode publishes to R2 (no wrangler, no tmpdir) and keeps the client 
   assert.equal(input.config.apiToken, 'synthetic-sites-token');
   assert.equal(input.config.bucket, 'wao-sites');
   assert.deepEqual(Object.keys(input.files), ['index.html']);
+});
+
+test('visual pack: an approved look reaches the researched renderer and its /img/ files join the worker upload set', async () => {
+  const look = { hero: { approved: true, images: [{ width: 480, height: 270, avif: '/img/hero-0123456789ab-480.avif', webp: '/img/hero-0123456789ab-480.webp' }] } };
+  const files = { 'img/hero-0123456789ab-480.avif': Buffer.from('a'), 'img/hero-0123456789ab-480.webp': Buffer.from('w') };
+  const setup = approvedHarness({ record: researchedRecord(), binding: {}, hostingEnv: workerEnv, siteLook: { look, files },
+    workerDeploy: async () => ({ publish: { version: '20261115T100000Z-aaaaaa' }, dns: 'created' }) });
+  const response = await setup.post();
+  assert.equal(response.status, 200);
+  assert.deepEqual(setup.lookLoads, [slug]);
+  assert.deepEqual(setup.renderCalls[0].look, look);
+  assert.deepEqual(Object.keys(setup.workerDeploys[0].files), ['index.html', 'img/hero-0123456789ab-480.avif', 'img/hero-0123456789ab-480.webp']);
+});
+
+test('visual pack: no look -> the render gets no look param and the upload set is unchanged', async () => {
+  const setup = approvedHarness({ record: researchedRecord(), binding: {}, hostingEnv: workerEnv,
+    workerDeploy: async () => ({ publish: { version: '20261115T100000Z-aaaaaa' }, dns: 'created' }) });
+  assert.equal((await setup.post()).status, 200);
+  assert.equal(Object.hasOwn(setup.renderCalls[0], 'look'), false);
+  assert.deepEqual(Object.keys(setup.workerDeploys[0].files), ['index.html']);
+});
+
+test('visual pack: a look whose approved files changed stops the deploy before any provider call', async () => {
+  const setup = approvedHarness({ record: researchedRecord(), binding: {}, hostingEnv: workerEnv, siteLook: new Error('site_look_invalid:changed'),
+    workerDeploy: async () => assert.fail('no publish') });
+  const response = await setup.post();
+  assert.deepEqual(response, { status: 409, body: { error: 'site_look_invalid' } });
+  assert.equal(setup.calls.provision, 0);
+  assert.deepEqual(setup.deployEvents, ['error'], 'logged, then stopped: no render, no provider call');
+  assert.deepEqual(setup.workerDeploys, []);
 });
 
 test('worker mode: a live owner domain becomes siteUrl, the fraud-tracker domain and the canonical host', async () => {

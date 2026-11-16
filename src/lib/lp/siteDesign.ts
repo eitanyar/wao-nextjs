@@ -234,12 +234,17 @@ export interface SiteHeaderOptions {
   homeHref?: string | null;
   /** Extra attributes on the call link (the ads LP's conversion onclick). */
   callAttrs?: string;
+  /**
+   * Visual pack (2026-11-16): the approved logo markup (siteLogo.brandLogo) shown inside .brand instead of the plain name;
+   * .brand gets the has-logo class (its CSS comes with the logo). Unset = today's text name, byte-identical.
+   */
+  brandHtml?: string;
 }
 
 const HEBREW_LETTER = /[א-ת]/;
 
 /** A name that is not plain Hebrew is isolated so a Latin / digit run never reorders the RTL line around it. */
-function isolatedName(name: string): string {
+export function isolatedName(name: string): string {
   return HEBREW_LETTER.test(name) && !/[A-Za-z0-9]/.test(name) ? esc(name) : `<bdi>${esc(name)}</bdi>`;
 }
 
@@ -249,8 +254,9 @@ export function skipLink(): string {
 
 /** The one header: business name, nav, and the call button (shown from the desktop breakpoint). */
 export function siteHeader(o: SiteHeaderOptions): string {
-  const name = isolatedName(o.businessName);
-  const brand = o.homeHref ? `<a class="brand" href="${esc(o.homeHref)}">${name}</a>` : `<div class="brand">${name}</div>`;
+  const name = o.brandHtml ?? isolatedName(o.businessName);
+  const cls = o.brandHtml ? 'brand has-logo' : 'brand';
+  const brand = o.homeHref ? `<a class="${cls}" href="${esc(o.homeHref)}">${name}</a>` : `<div class="${cls}">${name}</div>`;
   const nav = o.nav && o.nav.links.length
     ? `<nav class="site-nav" aria-label="${esc(o.nav.label)}">${o.nav.links.map(link => `<a${link.home ? ' class="nav-home"' : ''} href="${esc(link.href)}">${esc(link.text)}</a>`).join('')}</nav>`
     : '';

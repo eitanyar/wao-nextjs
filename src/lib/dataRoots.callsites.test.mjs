@@ -64,11 +64,12 @@ const CALL_SITES = {
   'src/lib/shared/clients.ts': ['clientsDir()'],
   'src/lib/site-bot/research/researchStore.ts': ['siteResearchDir()'],
   'src/lib/site-bot/researchToSite.ts': ['sitesDir()'],
+  'src/lib/site-bot/siteLookStore.ts': ["dataRoot('siteProof')"],
   'src/lib/site-hosting/leadOrigins.ts': ['sitesDir()'],
   'src/lib/vault.ts': ['clientsDir()'],
 };
 
-const HELPER_CALL = /\b(?:clientsDir|defaultClientsDir|sitesDir|siteResearchDir)\(\)|\bdataRoot\('(?:clients|sites|siteResearch)'\)/g;
+const HELPER_CALL = /\b(?:clientsDir|defaultClientsDir|sitesDir|siteResearchDir)\(\)|\bdataRoot\('(?:clients|sites|siteResearch|siteProof)'\)/g;
 
 function helperExpressions(source) {
   return [...source.matchAll(HELPER_CALL)].map(match => {
@@ -114,7 +115,10 @@ test('with no override every root is byte-identical to the historical expression
     assert.equal(roots.siteResearchDir(), path.resolve(cwd, path.join('data', 'site-research')));
     assert.equal(roots.dataRoot('siteResearch').dir, path.resolve(cwd, 'data', 'site-research'));
     // Symlink walks keep starting at cwd (so data/ itself is still checked).
-    for (const kind of ['clients', 'sites', 'siteResearch']) assert.equal(roots.dataRoot(kind).walkBase, cwd);
+    for (const kind of ['clients', 'sites', 'siteResearch', 'siteProof']) assert.equal(roots.dataRoot(kind).walkBase, cwd);
+    // Visual pack (2026-11-16): the owner-supplied look files live in their own root, data/site-proof.
+    assert.equal(roots.dataRoot('siteProof').dir, path.join(cwd, 'data', 'site-proof'));
+    assert.equal(loadDataRoots({ cwd, env: { WAO_SITE_PROOF_DIR: '/tmp/proof' } }).dataRoot('siteProof').dir, '/tmp/proof');
     // path.join(clientsDir(), a, b) === path.join(cwd, 'data', 'clients', a, b) for every sub-path form used.
     for (const segments of [['retter', 'client.json'], ['c', 'tasks', 'geo'], ['c', 'gmb', 'queue'], ['c', 'google-ads', 'brand-cpl-baselines.json']]) {
       assert.equal(path.join(roots.clientsDir(), ...segments), path.join(cwd, 'data', 'clients', ...segments));

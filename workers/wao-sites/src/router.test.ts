@@ -77,6 +77,13 @@ test('content types and cache headers by extension', () => {
   assert.equal(cacheControlFor('sitemap.xml'), 'public, max-age=300');
   assert.equal(cacheControlFor('fonts/heebo.woff2'), 'public, max-age=604800');
   assert.equal(cacheControlFor('a.css'), 'public, max-age=604800');
+  // Visual pack: the content-hashed hero / logo files under img/ are cached for a year, immutable; nothing else is.
+  assert.equal(cacheControlFor('img/hero-0123456789ab-480.avif'), 'public, max-age=31536000, immutable');
+  assert.equal(cacheControlFor('img/logo-0123456789ab.webp'), 'public, max-age=31536000, immutable');
+  assert.equal(contentTypeFor('img/hero-0123456789ab-480.avif'), 'image/avif');
+  assert.equal(cacheControlFor('assets/fonts/heebo-hebrew.woff2'), 'public, max-age=604800');
+  assert.equal(cacheControlFor('services/img.html'), 'public, max-age=60');
+  assert.equal(cacheControlFor('img/index.html'), 'public, max-age=60');
 });
 
 test('edge cache key is per slug/version/path (a new version never reads an old entry)', () => {

@@ -36,6 +36,7 @@ import { isSafeDeploymentSlug } from '@/lib/deployment/deploy-access';
 import { originHost, subdomainOrigin, tenantCanonicalOrigin, tenantHosts, type SiteHostingFields } from '@/lib/site-hosting/tenant';
 import { deployTenantToWorker, siteHostingMode, workerHostingConfig, WorkerDeployError, type WorkerHostingConfig } from '@/lib/site-hosting/workerDeploy';
 import { onSiteBotSiteLive } from '@/lib/site-bot/reviewKit';
+import { loadSiteLook, type LoadedSiteLook } from '@/lib/site-bot/siteLookStore';
 
 interface DeployRequest {
   slug: string;
@@ -312,6 +313,20 @@ export async function POST(req: Request) {
       if (claimBlockers.length) return privateJson({ error: 'unverified_claim_in_heading', fields: claimBlockers }, 409);
     }
 
+    // Visual pack (2026-11-16): the staff-approved hero photo / logo of a researched site, read from data/site-proof/{slug}/
+    // (never data/sites/ or data/clients/). No record or nothing approved = today's site; a recorded file that is missing or
+    // changed since approval stops the deploy here, before any provider call.
+    let siteLook: LoadedSiteLook | null = null;
+    if (isResearchedRecord) {
+      try {
+        siteLook = loadSiteLook(slug);
+      } catch (error) {
+        console.error('Site Bot look invalid:', error);
+        return privateJson({ error: 'site_look_invalid' }, 409);
+      }
+    }
+    const lookFiles: Record<string, Buffer> = siteLook?.files ?? {};
+
     // Hosting switch (docs/missions/site-bot-shared-worker-hosting-2026-11-12.md): `pages` (default) is the
     // one-Pages-project-per-client path below, unchanged; `worker` publishes to R2 for the shared wao-sites Worker.
     // An unknown mode or missing worker config fails here, before any provider call; never a silent fallback.
@@ -366,7 +381,7 @@ export async function POST(req: Request) {
 
     // ── Step 2: Render researched or explicit legacy pages ─────────────────
     const pages = isResearchedRecord
-      ? renderResearchedSitePages({ ...renderParams, pages: record.researchedPages!, graphEdges: record.researchedGraphEdges, claimVerification: dossier?.approvedCopyReviewPacket?.claimVerification })
+      ? renderResearchedSitePages({ ...renderParams, pages: record.researchedPages!, graphEdges: record.researchedGraphEdges, claimVerification: dossier?.approvedCopyReviewPacket?.claimVerification, ...(siteLook ? { look: siteLook.look } : {}) })
       : renderSitePages({ ...renderParams, copy });
 
     // ── Step 2b: Render the core-30 supplementary local-SEO pages ───────────
@@ -509,7 +524,7 @@ export async function POST(req: Request) {
         published = await deployTenantToWorker({
           config: workerConfig!,
           slug,
-          files: { ...allPages, ...siteFontFiles() },
+          files: { ...allPages, ...siteFontFiles(), ...lookFiles },
           canonicalOrigin: siteUrl,
           hosts: tenantHosts(slug, record),
         });
@@ -528,7 +543,9 @@ export async function POST(req: Request) {
     const tmpDir = mkdtempSync(path.join(tmpdir(), 'wao-site-'));
     try {
     // Redesign A (item 4): the self-hosted Heebo font files ship inside every site, next to the pages that preload them.
-    const siteFiles: Record<string, string | Buffer> = { ...allPages, ...siteFontFiles() };
+    // Visual pack: the approved /img/ files too, with a long immutable cache rule (content-hashed names) via Pages _headers.
+    const siteFiles: Record<string, string | Buffer> = { ...allPages, ...siteFontFiles(), ...lookFiles,
+      ...(Object.keys(lookFiles).length ? { _headers: '/img/*\n  Cache-Control: public, max-age=31536000, immutable\n' } : {}) };
     for (const [filename, content] of Object.entries(siteFiles)) {
       const filePath = path.join(tmpDir, filename);
       const parentPath = path.dirname(filePath);

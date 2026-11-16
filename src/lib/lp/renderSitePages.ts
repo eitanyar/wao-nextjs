@@ -15,6 +15,8 @@ import { RESEARCHED_SITE_LABELS } from './researchedSiteLabels';
 import { SITE_DESIGN_LABELS } from './siteDesignLabels';
 import { actionBar, formatSiteHours, icon, ownerImageUrl, siteCss, siteFontHead, siteHeader, skipLink, SITE_ICON_SPRITE, trustFacts, withoutEmoji, type SiteNavLink } from './siteDesign';
 import { israeliPhoneE164 } from './phoneE164';
+import type { SiteLook } from './siteLook';
+import { brandLogo, type BrandLogo } from './siteLogo';
 
 export interface RenderSitePagesParams extends Omit<RenderStaticHtmlParams, 'copy' | 'mode' | 'siteUrl'> {
   copy: SiteCopy;
@@ -36,6 +38,12 @@ export interface RenderSitePagesParams extends Omit<RenderStaticHtmlParams, 'cop
   researchNav?: ResearchNavOptions;
   /** Launch step 2 (capability 9): the footer's visible Google-profile link on the emitted standalone pages. Unset = none. */
   footerProfileLink?: FooterProfileLink;
+  /**
+   * Visual pack (2026-11-16, siteLook.ts): the staff-approved hero photo and logo from data/site-proof/{slug}/. The
+   * researched pages render both; the emitted standalone pages (contact.html) carry the logo only. Unset or unapproved =
+   * byte-identical output.
+   */
+  look?: SiteLook;
 }
 
 /** Launch step 2 (capability 9): a visible link to the business's Google profile (the same URL as the schema sameAs). */
@@ -763,14 +771,16 @@ ${pageScript({
     includeLeadForm: true,
   })}`;
 
-  return assembleDocument(t, head, body, p.gtagSnippet, data, p.researchNav, p.footerProfileLink);
+  return assembleDocument(t, head, body, p.gtagSnippet, data, p.researchNav, p.footerProfileLink, undefined,
+    brandLogo(p.look, businessName, { businessNiche: data.businessNiche, primaryService: data.primaryService, targetLocation: data.targetLocation, ownerName: data.ownerName }));
 }
 
 // Assembles <head> + <body> for the standalone pages (index.html has its own path above). Redesign A: the icon sprite, the
 // skip link, the one header (name, nav, call button from the desktop breakpoint), the page body inside <main id="main">
 // (a body that brings its own <main> gets the id there), the footer, then the mobile action bar.
-export function assembleDocument(t: VerticalTheme, head: string, bodyInner: string, gtagSnippet: string | undefined, data: CollectedData, nav?: ResearchNavOptions, profile?: FooterProfileLink, areas?: readonly string[]): string {
-  const headWithGtag = gtagSnippet ? head.replace('</head>', () => `  ${gtagSnippet}\n</head>`) : head;
+export function assembleDocument(t: VerticalTheme, head: string, bodyInner: string, gtagSnippet: string | undefined, data: CollectedData, nav?: ResearchNavOptions, profile?: FooterProfileLink, areas?: readonly string[], brand?: BrandLogo): string {
+  const headWithLogo = brand ? head.replace('</head>', () => `  <style>${brand.css}</style>\n</head>`) : head;
+  const headWithGtag = gtagSnippet ? headWithLogo.replace('</head>', () => `  ${gtagSnippet}\n</head>`) : headWithLogo;
   const { phone, phoneHref, whatsapp, whatsappHref, businessName } = contacts(data);
   const main = /<main\b/.test(bodyInner)
     ? bodyInner.replace(/<main\b(?![^>]*\bid=)/, '<main id="main"')
@@ -781,7 +791,7 @@ ${headWithGtag}
 <body>
 ${SITE_ICON_SPRITE}
 ${skipLink()}
-${siteHeader({ businessName, phone, phoneHref, nav: siteNav(nav), homeHref: '/' })}
+${siteHeader({ businessName, phone, phoneHref, nav: siteNav(nav), homeHref: '/', ...(brand ? { brandHtml: brand.html } : {}) })}
 
 ${main}
 

@@ -144,9 +144,16 @@ export function contentTypeFor(rel: string): string {
   return TYPES[extensionOf(rel)] ?? 'application/octet-stream';
 }
 
-/** HTML 60 s (the deploy-to-live budget); sitemap/robots 5 min; fonts, images, CSS, JS one week. */
+/** One year, immutable: the site-look images under img/ carry a content hash in the name (src/lib/lp/siteLook.ts). */
+export const IMMUTABLE_CACHE_CONTROL = 'public, max-age=31536000, immutable';
+
+/**
+ * HTML 60 s (the deploy-to-live budget); sitemap/robots 5 min; img/ (content-hashed hero / logo files) one year, immutable;
+ * other fonts, images, CSS, JS one week.
+ */
 export function cacheControlFor(rel: string): string {
   const ext = extensionOf(rel);
+  if (rel.startsWith('img/') && ext !== 'html') return IMMUTABLE_CACHE_CONTROL;
   if (ext === 'html') return 'public, max-age=60';
   if (ext === 'xml' || ext === 'txt' || ext === 'json' || ext === 'webmanifest') return 'public, max-age=300';
   return 'public, max-age=604800';

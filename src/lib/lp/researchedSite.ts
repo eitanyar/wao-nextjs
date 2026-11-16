@@ -45,11 +45,14 @@ import { codeOwnedFactTemplates } from './ownerFactCopy';
 import { DEPTH_BLOCK_KEYS, DEPTH_BLOCK_LIMITS, rendersDepthBlocks } from './depthBlocks';
 import { unverifiedClaimSpec, UnverifiedClaimError, withoutUnverifiedClaims, type ClaimVerification } from './claimVerification';
 import { heroHoursLine, heroPhotoSlot, icon, serviceIcon } from './siteDesign';
+import { heroBackdropCss, heroBackdropHtml, renderableHero } from './siteLook';
+import { brandLogo } from './siteLogo';
 import { israeliPhoneE164 } from './phoneE164';
 
 export { israeliPhoneE164 };
 
-const RESERVED_SEGMENTS = new Set(['api', 'assets', 'static', 'index', 'privacy', 'accessibility', 'contact', 'sitemap']);
+// 'img': the visual pack's hero / logo files (siteLook.ts) are served under /img/.
+const RESERVED_SEGMENTS = new Set(['api', 'assets', 'img', 'static', 'index', 'privacy', 'accessibility', 'contact', 'sitemap']);
 const RENDERABLE_CLASSES = new Set<PageClassification>([
   'homepage', 'service_hub', 'money_service', 'qualified_service_area', 'trust', 'process', 'pricing', 'proof', 'supporting',
 ]);
@@ -772,6 +775,8 @@ function buildPageHtml(page: ResearchedSitePage, params: RenderResearchedSitePag
     return target ? [`<a href="${servedPath(target)}" style="display:inline-block;padding:12px 8px;min-height:44px;color:${theme.accentText};text-decoration:underline;font-weight:700;">${esc(anchorText(item, businessName))}</a>`] : [];
   }).join('');
   const faq = approvedFaqs(page).map(item => `<details style="background:${theme.surface};border:1px solid ${theme.border};border-radius:${theme.radiusMd};padding:0 14px;"><summary style="min-height:44px;padding:12px 0;cursor:pointer;font-weight:700;color:${theme.primary};">${esc(item.q)}</summary><p style="color:${theme.textMuted};margin-top:-4px;padding-bottom:14px;">${esc(item.a)}</p></details>`).join('');
+  // Visual pack (2026-11-16): the staff-approved hero photo; null = the solid hero, byte-identical.
+  const photo = renderableHero(params.look);
   const head = pageHead({
     t: theme,
     title: researchedPageTitle(page, businessName),
@@ -780,13 +785,13 @@ function buildPageHtml(page: ResearchedSitePage, params: RenderResearchedSitePag
     ogImage: heroImageUrl,
     schema: schemaGraph(page, data, siteUrl, heroImageUrl, output, breadcrumb ? homeName : undefined),
     fraudBlockerSid: params.fraudBlockerSid,
-    ...(breadcrumb ? { extraCss: breadcrumbCss(theme) } : {}),
+    ...(breadcrumb || photo ? { extraCss: `${breadcrumb ? breadcrumbCss(theme) : ''}${photo ? heroBackdropCss() : ''}` } : {}),
   });
   // Redesign A item 7: the solid primary hero, start-aligned, no image; the GBP photo slot renders nothing yet. The breadcrumb
   // stays directly before the H1 (Yonatan C1); the hours line is the homepage's (hero.hours).
   const body = `
   <main>
-    <section class="hero on-dark" data-section="hero"><div class="hero-grid"><div class="hero-text">${breadcrumb ? breadcrumbNav(homeName, servicePlainName(page)) : ''}<h1>${esc(researchedPageH1(page.copy.heroHeadline, page.seo))}</h1><p class="sub">${esc(page.copy.heroSubheadline)}</p>${heroCallButton(page, data)}${pricePromiseLine(data, params.pricingCopy)}${page.classification === 'homepage' ? heroHoursLine(data.businessHours) : ''}</div>${heroPhotoSlot()}</div></section>
+    <section class="hero on-dark${photo ? ' has-photo' : ''}" data-section="hero">${photo ? heroBackdropHtml(photo) : ''}<div class="hero-grid"><div class="hero-text">${breadcrumb ? breadcrumbNav(homeName, servicePlainName(page)) : ''}<h1>${esc(researchedPageH1(page.copy.heroHeadline, page.seo))}</h1><p class="sub">${esc(page.copy.heroSubheadline)}</p>${heroCallButton(page, data)}${pricePromiseLine(data, params.pricingCopy)}${page.classification === 'homepage' ? heroHoursLine(data.businessHours) : ''}</div>${heroPhotoSlot()}</div></section>
     ${trustBar(page, theme)}${storySection(page, theme)}${processSection(page, theme)}${priceSection(page, data, theme, params.pricingCopy)}${proofSection(page, theme)}
     ${hasProof(page) ? '' : reviewSection(page, theme)}${qaSection(page, theme)}
     ${serviceDetailsSection(page, theme, allPages, outputs, businessName)}
@@ -799,7 +804,8 @@ function buildPageHtml(page: ResearchedSitePage, params: RenderResearchedSitePag
   </main>
   ${pageScript({ slug, businessName, googleAdsCustomerId: params.googleAdsCustomerId || '', formConversionLabel: params.formConversionLabel || '', phoneConversionLabel: params.phoneConversionLabel || '', whatsappConversionLabel: params.whatsappConversionLabel || '', ctaLabel: RESEARCHED_LEAD_FORM.submitLabel ?? page.copy.heroCta, includeLeadForm: true })}`;
   // Footer NAP areas = the page's schema areaServed (same list, same order; Yonatan rule 4).
-  return assembleDocument(theme, head, body, params.gtagSnippet, data, researchNavOptions(home, page.classification === 'homepage', contactHref), researchedProfileLink(data, params.profileLinkCopy) ?? undefined, page.seo ? researchedServiceAreas(page) : undefined);
+  return assembleDocument(theme, head, body, params.gtagSnippet, data, researchNavOptions(home, page.classification === 'homepage', contactHref), researchedProfileLink(data, params.profileLinkCopy) ?? undefined, page.seo ? researchedServiceAreas(page) : undefined,
+    brandLogo(params.look, businessName, { businessNiche: data.businessNiche, primaryService: data.primaryService, targetLocation: data.targetLocation, ownerName: data.ownerName, serviceKeys: allPages.filter(item => item.classification !== 'homepage').map(item => item.opportunityId) }));
 }
 
 export function buildResearchedSitemapUrls(pages: ResearchedSitePage[], siteUrl = ''): string[] {
