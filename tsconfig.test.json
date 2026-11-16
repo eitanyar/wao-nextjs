@@ -413,6 +413,8 @@
     "src/lib/site-bot/research/gates.test.ts",
     "src/lib/site-bot/research/gatePresentation.ts",
     "src/lib/site-bot/research/gatePresentation.test.ts",
+    "src/lib/site-bot/research/ownerGates.ts",
+    "src/lib/site-bot/research/ownerGates.test.ts",
     "src/lib/site-bot/research/contentEvaluation.ts",
     "src/lib/site-bot/research/contentEvaluation.test.ts",
     "src/lib/site-bot/research/pipelineState.ts",

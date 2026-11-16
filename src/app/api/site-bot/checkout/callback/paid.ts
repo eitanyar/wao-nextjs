@@ -4,6 +4,7 @@ import path from 'path';
 import type { CollectedData } from '@/lib/bot/prompts';
 import { activatePlanSubscription, issueAccountPath } from '@/lib/payments/subscriptions';
 import { deriveOpenResearchGates } from '@/lib/site-bot/research/gates';
+import { recordOwnerResearchGates } from '@/lib/site-bot/research/ownerGates';
 import { readResearchDossier } from '@/lib/site-bot/research/researchStore';
 import { runSiteResearch, type SiteResearchInput } from '@/lib/site-bot/research/runResearch';
 import { completePaidCheckoutResearch } from '@/lib/site-bot/checkout/researchCompletion';
@@ -100,6 +101,20 @@ export async function POST(req: Request) {
       openResearchGates,
       removePending: () => fs.rmSync(pendingPath, { force: true }),
     });
+    // F2: the pay page shows only the gates recorded as owner-answerable in the dossier (the public gates POST accepts
+    // nothing else). A record failure is logged and the owner goes straight to the done state; never fatal.
+    if (Array.isArray(response.openResearchGates) && response.openResearchGates.length > 0) {
+      let recorded: typeof response.openResearchGates = [];
+      try {
+        recorded = await recordOwnerResearchGates(sessionId, response.openResearchGates);
+      } catch {
+        recorded = [];
+      }
+      if (recorded.length !== response.openResearchGates.length) {
+        console.error(`[site-bot checkout] owner gates recorded ${recorded.length}/${response.openResearchGates.length} session=${sessionId}`);
+      }
+      response.openResearchGates = recorded;
+    }
     return NextResponse.json(manageUrl ? { ...response, manageUrl } : response, { headers: { 'Cache-Control': 'private, no-store' } });
   } catch (error: unknown) {
     console.error('Site Bot checkout callback error:', error);

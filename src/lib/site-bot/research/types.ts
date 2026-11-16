@@ -103,6 +103,17 @@ export interface ResearchGateApproval {
   approvedAt: string;
 }
 
+/** A research gate the checkout callback handed to the owner's pay page (see ownerGates.ts). */
+export interface OwnerResearchGate {
+  id: string;
+  type: 'business_boundary' | 'service_attributes' | 'geography' | 'money_services' | 'ambiguous_intent';
+  evidenceDigest: string;
+  issuedAt: string;
+  /** The owner's validated answer, once submitted. */
+  answer?: unknown;
+  answeredAt?: string;
+}
+
 export interface ResearchPipelineChecks {
   copy?: 'pass' | 'skip' | 'pending' | 'held';
   hebrewQa?: 'pass' | 'skip' | 'pending' | 'held';
@@ -159,6 +170,8 @@ export interface SiteResearchDossier {
   providerUsage: ProviderUsage[];
   humanGates: HumanGate[];
   researchGateApprovals?: Record<string, ResearchGateApproval>;
+  /** Gates the owner may answer from the pay page (recorded by the checkout callback). */
+  ownerResearchGates?: OwnerResearchGate[];
   approvedCopyReviewPacket?: ResearchedCopyReviewPacket;
   pipelineChecks?: ResearchPipelineChecks;
   /** Set once by the copy_ready plan (M2a.1): service labels/slugs, trade and service-area labels. Never regenerated. */

@@ -104,7 +104,8 @@ export default function SiteBotPayClient({ cardDefaults }: { cardDefaults: CardF
     try {
       const res = await fetch("/api/site-bot/research/gates", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        // The owner's capability: this checkout's session id (see the owner path in research/gates/route.ts).
+        headers: { "Content-Type": "application/json", "X-Site-Bot-Session": sessionId },
         body: JSON.stringify({
           researchId,
           collectedData,

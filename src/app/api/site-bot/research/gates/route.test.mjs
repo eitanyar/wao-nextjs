@@ -34,8 +34,10 @@ function authModule(env) {
 }
 
 const auth = authModule({ ADMIN_SECRET: secret });
+const OWNER_SESSION = '123e4567-e89b-42d3-a456-426614174000';
 
-function routeHarness({ token, authorization = auth, dossier = null, denyReads = false, gateResult, pathState = {}, dossierPath } = {}) {
+function routeHarness({ token, authorization = auth, dossier = null, denyReads = false, gateResult, pathState = {}, dossierPath, paidFlow = true, ownerResult, rateAllowed = true } = {}) {
+  const owner = { submits: [], rateKeys: [] };
   const reads = { requestUrl: 0, dossier: 0 };
   const access = { path: 0, stat: [] };
   const writes = { json: 0, derive: 0, answer: 0, persist: 0 };
@@ -92,6 +94,13 @@ function routeHarness({ token, authorization = auth, dossier = null, denyReads =
           : { status: gateResult.status, collectedData: answered, dossier: { researchGateApprovals: gateResult.approvals } };
       },
     },
+    '@/lib/site-bot/research/ownerGates': { submitOwnerResearchGate: async (...args) => {
+      owner.submits.push(args);
+      if (!ownerResult) throw new Error('unexpected owner gate submission');
+      return ownerResult;
+    } },
+    '@/lib/site-bot/paidFlowGate': { isPaidFlowCallbackAllowed: () => paidFlow },
+    '@/lib/payments/rate-limit': { checkRateLimit: key => { owner.rateKeys.push(key); return { allowed: rateAllowed }; } },
     '@/lib/site-bot/research/researchStore': { getResearchPath: id => {
       access.path++;
       if (denyReads) throw new Error('unauthorized path lookup');
@@ -102,7 +111,7 @@ function routeHarness({ token, authorization = auth, dossier = null, denyReads =
       if (denyReads || id !== 'known-synthetic-id' || customBaseDir !== undefined || options?.bounded !== true || access.stat.at(-1) !== path.relative(syntheticRoot, researchPath(id))) throw new Error('unsafe or unbounded dossier read');
       return dossier;
     } },
-  }, { URL, process: { cwd: () => syntheticRoot } });
+  }, { URL, TextDecoder, process: { cwd: () => syntheticRoot } });
   async function get(id) {
     const url = `https://example.invalid/api/site-bot/research/gates${id === undefined ? '' : `?researchId=${encodeURIComponent(id)}`}`;
     const request = { get url() {
@@ -115,8 +124,8 @@ function routeHarness({ token, authorization = auth, dossier = null, denyReads =
   }
   async function post(body, requestKind = 'valid') {
     const request = requestKind === 'throwing-body'
-      ? { get json() { throw new Error('unauthorized body access'); } }
-      : { json: () => {
+      ? { headers: new Headers(), get json() { throw new Error('unauthorized body access'); } }
+      : { headers: new Headers(), json: () => {
         writes.json++;
         if (requestKind === 'malformed') return Promise.reject(new SyntaxError('invalid JSON'));
         return Promise.resolve(body);
@@ -124,7 +133,14 @@ function routeHarness({ token, authorization = auth, dossier = null, denyReads =
     const response = await route.POST(request);
     return { status: response.status, body: await response.json(), cacheControl: response.headers.get('cache-control') };
   }
-  return { get, post, reads, access, writes, gate };
+  async function ownerPost(body, { session = OWNER_SESSION, contentType = 'application/json', raw } = {}) {
+    const headers = { 'content-type': contentType, 'x-forwarded-for': '203.0.113.9' };
+    if (session !== null) headers['x-site-bot-session'] = session;
+    const request = new Request('https://example.invalid/api/site-bot/research/gates', { method: 'POST', headers, body: raw ?? JSON.stringify(body) });
+    const response = await route.POST(request);
+    return { status: response.status, body: await response.json(), cacheControl: response.headers.get('cache-control') };
+  }
+  return { get, post, ownerPost, owner, reads, access, writes, gate };
 }
 
 test('missing, malformed, expired and unset-secret cookies return identical 401 before URL or dossier access', async () => {
@@ -262,4 +278,77 @@ test('authenticated POST preserves malformed, unknown, stale and approval respon
     assert.deepEqual(harness.writes, { json: 1, derive: 1, answer: 1, persist: 1 });
     assert.deepEqual(harness.reads, { requestUrl: 0, dossier: 0 });
   }
+});
+
+// F2 (rehearsal 2026-11-16): the paying owner answers his own gates from the pay page, without the admin cookie.
+const ownerGate = { id: `${OWNER_SESSION}:business_boundary:hash`, type: 'business_boundary', evidenceDigest: 'hash' };
+const ownerBody = { researchId: OWNER_SESSION, collectedData: { primaryService: 'synthetic-primary' }, gateId: ownerGate.id, evidenceDigest: 'hash', answer: { services: ['synthetic-service'] } };
+const reply = (status, body) => ({ status, body, cacheControl: 'private, no-store' });
+
+test('owner session -> 200 for its own open gate; collectedData echoes the applied answer, no approvals map', async () => {
+  // The stubbed applyResearchGateAnswer expects the harness gate; the real one applies by type.
+  const appliedGate = { id: 'known-synthetic-id:business_boundary:hash', evidenceDigest: 'hash' };
+  const harness = routeHarness({ gateResult: { digest: 'hash', status: 'approved', approvals: {} }, ownerResult: { status: 'approved', gate: appliedGate, answer: { services: ['synthetic-service'] }, dossier: {} } });
+  assert.deepEqual(await harness.ownerPost(ownerBody), reply(200, {
+    status: 'approved', collectedData: { primaryService: 'synthetic-primary', secondaryServices: 'synthetic-service' },
+  }));
+  // JSON round-trip: the body was parsed inside the route's VM realm.
+  assert.deepEqual(JSON.parse(JSON.stringify(harness.owner.submits)), [[OWNER_SESSION, ownerGate.id, 'hash', { services: ['synthetic-service'] }]]);
+  assert.deepEqual(harness.owner.rateKeys, ['sitebot-gates:203.0.113.9', `sitebot-gates-session:${OWNER_SESSION}`]);
+  // The owner path never derives gates from client data and never uses the admin persist function.
+  assert.deepEqual(harness.writes, { json: 0, derive: 0, answer: 1, persist: 0 });
+});
+
+test('owner: missing, malformed or gate-closed session -> 401 before the body is read', async () => {
+  for (const [label, options, harnessOptions] of [
+    ['no session header', { session: null }, {}],
+    ['not a UUID', { session: 'known-synthetic-id' }, {}],
+    ['paid flow closed', {}, { paidFlow: false }],
+  ]) {
+    const harness = routeHarness(harnessOptions);
+    assert.deepEqual(await harness.ownerPost(ownerBody, options), reply(401, { error: 'unauthorized' }), label);
+    assert.deepEqual(harness.owner, { submits: [], rateKeys: [] }, label);
+  }
+});
+
+test('owner: another research id -> 403; a session with no owner gates (wrong token) -> 403', async () => {
+  const other = routeHarness({ ownerResult: { status: 'approved', gate: ownerGate, dossier: {} } });
+  assert.deepEqual(await other.ownerPost({ ...ownerBody, researchId: 'known-synthetic-id' }), reply(403, { error: 'forbidden' }));
+  assert.deepEqual(other.owner.submits, []);
+  const wrongSession = '00000000-0000-4000-8000-000000000000';
+  const wrong = routeHarness({ ownerResult: { status: 'forbidden' } });
+  assert.deepEqual(await wrong.ownerPost({ ...ownerBody, researchId: wrongSession }, { session: wrongSession }), reply(403, { error: 'forbidden' }));
+});
+
+test('owner: closed, stale, unknown and invalid answers map to 409 / 409 / 404 / 400', async () => {
+  for (const [status, expected] of [
+    ['closed', reply(409, { error: 'gate_closed' })],
+    ['stale', reply(409, { error: 'stale_evidence' })],
+    ['not_found', reply(404, { error: 'not_found' })],
+    ['invalid_answer', reply(400, { error: 'invalid_input' })],
+  ]) {
+    const harness = routeHarness({ ownerResult: { status } });
+    assert.deepEqual(await harness.ownerPost(ownerBody), expected, status);
+  }
+});
+
+test('owner: oversized, non-JSON and malformed bodies -> 400; rate limit -> 429', async () => {
+  const harness = routeHarness({ ownerResult: { status: 'approved', gate: ownerGate, dossier: {} } });
+  const big = { ...ownerBody, collectedData: { primaryService: 'x'.repeat(40 * 1024) } };
+  assert.deepEqual(await harness.ownerPost(big), reply(400, { error: 'invalid_input' }));
+  assert.deepEqual(await harness.ownerPost(ownerBody, { contentType: 'text/plain' }), reply(400, { error: 'invalid_input' }));
+  assert.deepEqual(await harness.ownerPost(null, { raw: '{not json' }), reply(400, { error: 'invalid_input' }));
+  assert.deepEqual(await harness.ownerPost({ ...ownerBody, collectedData: [] }), reply(400, { error: 'invalid_input' }));
+  assert.deepEqual(harness.owner.submits, []);
+  const limited = routeHarness({ rateAllowed: false });
+  assert.deepEqual(await limited.ownerPost(ownerBody), reply(429, { error: 'rate_limited' }));
+});
+
+test('admin cookie still wins: a valid admin request carrying an owner header takes the admin path', async () => {
+  const token = await auth.createAdminToken();
+  const approvals = { 'known-synthetic-id:business_boundary:hash': { evidenceDigest: 'hash', approvedAt: 'synthetic-date' } };
+  const harness = routeHarness({ token, gateResult: { digest: 'hash', status: 'approved', approvals } });
+  const body = { researchId: 'known-synthetic-id', collectedData: { primaryService: 'synthetic-primary' }, gateId: harness.gate.id, evidenceDigest: 'hash', answer: { services: ['synthetic-service'] } };
+  assert.equal((await harness.post(body)).status, 200);
+  assert.deepEqual(harness.owner.submits, []);
 });

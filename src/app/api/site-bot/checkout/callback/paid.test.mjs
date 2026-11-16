@@ -8,7 +8,8 @@ import { load, makeStore, recordingConsole } from '../../client-message/clientMe
 
 const sessionId = '123e4567-e89b-42d3-a456-426614174000';
 
-function harness({ linkThrows = false, alreadyActive = false } = {}) {
+function harness({ linkThrows = false, alreadyActive = false, gates = [], record = async (_id, list) => list } = {}) {
+  const recordCalls = [];
   const s = makeStore();
   const subscriptionId = s.addSubscription();
   const cwd = fs.mkdtempSync(path.join(s.dir, 'cwd-'));
@@ -23,10 +24,11 @@ function harness({ linkThrows = false, alreadyActive = false } = {}) {
     'next/server': { NextResponse: { json: (body, init) => Response.json(body, init) } },
     fs, path,
     '@/lib/payments/subscriptions': { activatePlanSubscription: async () => ({ ok: true, alreadyActive }), issueAccountPath: () => `/account/subscription?token=${'a'.repeat(64)}` },
-    '@/lib/site-bot/research/gates': { deriveOpenResearchGates: () => [] },
+    '@/lib/site-bot/research/gates': { deriveOpenResearchGates: () => gates },
+    '@/lib/site-bot/research/ownerGates': { recordOwnerResearchGates: async (id, list) => { recordCalls.push([id, list]); return record(id, list); } },
     '@/lib/site-bot/research/researchStore': { readResearchDossier: async () => null },
     '@/lib/site-bot/research/runResearch': { runSiteResearch: async () => ({}) },
-    '@/lib/site-bot/checkout/researchCompletion': { completePaidCheckoutResearch: async () => ({ success: true, charged: true, researchId: sessionId }) },
+    '@/lib/site-bot/checkout/researchCompletion': { completePaidCheckoutResearch: async (params) => ({ success: true, charged: true, researchId: sessionId, collectedData: params.collectedData, openResearchGates: params.openResearchGates }) },
     '@/lib/site-bot/research/researchInput': { buildSiteResearchInput: () => ({}) },
     '@/lib/site-bot/clientMessages': store,
     '@/lib/site-bot/paidQueueAlert': { sendPaidQueueAlert: async (input) => { alerts.push(input); return true; } },
@@ -34,7 +36,7 @@ function harness({ linkThrows = false, alreadyActive = false } = {}) {
   const call = () => paid.POST(new Request('http://localhost/api/site-bot/checkout/callback', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ sessionId }) }));
   const events = () => s.db.prepare(`SELECT metadata FROM subscription_events WHERE subscription_id = ? AND event_type = 'site_bot_session_linked'`).all(subscriptionId);
   const paidPost = (id) => paid.POST(new Request('http://localhost/api/site-bot/checkout/callback', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ sessionId: id }) }));
-  return { ...s, subscriptionId, call, paidPost, events, logs, alerts };
+  return { ...s, subscriptionId, call, paidPost, events, logs, alerts, recordCalls };
 }
 
 test('19: a successful activation writes exactly one site_bot_session_linked event with the business', async () => {
@@ -95,4 +97,25 @@ test('launch item 8: a fresh activation sends one paid-queue alert; an already-a
   await active.call();
   assert.equal(active.alerts.length, 0);
   active.cleanup();
+});
+
+test('F2: the gates handed to the pay page are first recorded as owner gates in the dossier', async () => {
+  const gate = { id: `${sessionId}:geography:abc`, type: 'geography', evidenceDigest: 'abc' };
+  const h = harness({ gates: [gate] });
+  const body = await (await h.call()).json();
+  assert.deepEqual(h.recordCalls.map(([id, list]) => [id, list.map(item => item.id)]), [[sessionId, [gate.id]]]);
+  assert.deepEqual(body.openResearchGates.map(item => item.id), [gate.id]);
+  h.cleanup();
+});
+
+test('F2: if the owner gates cannot be recorded, the pay page gets no gates (done state) and the error is logged', async () => {
+  const gate = { id: `${sessionId}:geography:abc`, type: 'geography', evidenceDigest: 'abc' };
+  for (const record of [async () => [], async () => { throw new Error('disk full'); }]) {
+    const h = harness({ gates: [gate], record });
+    const response = await h.call();
+    assert.equal(response.status, 200);
+    assert.deepEqual((await response.json()).openResearchGates, []);
+    assert.ok(h.logs.lines.some((l) => l.includes('owner gates recorded 0/1')));
+    h.cleanup();
+  }
 });
