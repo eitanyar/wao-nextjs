@@ -28,6 +28,7 @@ import { fileURLToPath } from 'url';
 import { extractLexicon, buildLexiconConstraint } from './lib/page-lexicon.mjs';
 import { extractJsonSpan } from './lib/json-repair.mjs';
 import { resolveQwenEndpoint, scriptEnv, selectLlmProvider } from './lib/llm-provider.mjs';
+import { recordGeminiUsage } from './lib/llm-usage.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const env = {};
@@ -160,6 +161,7 @@ async function callGeminiOnce(systemPrompt, userMessage, opts = {}) {
 
   const data = await res.json();
   if (!res.ok) throw new Error(`Gemini error ${res.status}: ${JSON.stringify(data)}`);
+  recordGeminiUsage(data, GEMINI_MODEL, { workload: 'geo', clientId: CLIENT_ID }, SCRIPT_ENV); // usage ledger; never throws
   if (process.env.DEBUG_QWEN) {
     console.error('[DEBUG_GEMINI] modelVersion=', data?.modelVersion, 'usage=', JSON.stringify(data?.usageMetadata));
   }

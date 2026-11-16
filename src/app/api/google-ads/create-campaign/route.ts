@@ -229,7 +229,7 @@ async function callGeminiJSONWithRetry(systemPrompt: string, userMessage: string
   let lastError: unknown;
   for (let attempt = 0; attempt < 3; attempt += 1) {
     try {
-      const raw = await callGeminiJSON(systemPrompt, userMessage);
+      const raw = await callGeminiJSON(systemPrompt, userMessage, { usage: { workload: 'ads_campaign' } });
       JSON.parse(raw);
       return raw;
     } catch (e) {

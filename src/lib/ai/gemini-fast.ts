@@ -83,7 +83,16 @@ export function extractJsonSpan(text: string): string {
   return trimmed.slice(start, lastClose + 1);
 }
 
+import { recordGeminiUsage, type LlmUsageTag } from './llmUsage';
+
+/** Ledger line per successful call (src/lib/ai/llmUsage.ts). Never throws into the caller. */
+function noteUsage(data: unknown, model: string, tag: LlmUsageTag | undefined): void {
+  try { recordGeminiUsage(data, model, tag); } catch { /* usage recording never breaks a call */ }
+}
+
 export type CallGeminiJSONOptions = {
+  /** Usage-ledger tag: workload, plus clientId / slug when the caller knows them. */
+  usage?: LlmUsageTag;
   thinkingLevel?: 'LOW' | 'HIGH';
   model?: string;
   signal?: AbortSignal;
@@ -120,12 +129,15 @@ export async function callGeminiJSON(systemPrompt: string, userMessage: string, 
   });
   const data = await res.json();
   if (!res.ok) throw new Error(`Gemini API error (${res.status})`);
+  noteUsage(data, modelName, opts.usage);
   const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
   if (typeof text !== 'string') throw new Error('Gemini API returned unexpected shape');
   return extractJsonSpan(text);
 }
 
 export type CallGeminiChatTextOptions = {
+  /** Usage-ledger tag: workload, plus clientId / slug when the caller knows them. */
+  usage?: LlmUsageTag;
   thinkingLevel?: 'LOW' | 'HIGH';
   model?: string;
   temperature?: number;
@@ -162,6 +174,7 @@ export async function callGeminiChatText(
   });
   const data = await res.json();
   if (!res.ok) throw new Error(`Gemini API error (${res.status})`);
+  noteUsage(data, modelName, opts.usage);
   const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
   if (typeof text !== 'string' || !text.trim()) throw new Error('Gemini API returned unexpected shape');
   return text.trim();

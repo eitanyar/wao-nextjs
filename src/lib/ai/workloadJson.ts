@@ -36,6 +36,7 @@ export async function callWorkloadJSON(
         timeoutMs: opts.timeoutMs ?? GEMINI_DEFAULT_TIMEOUT_MS,
         ...(opts.signal ? { signal: opts.signal } : {}),
         ...(opts.fetch ? { fetch: opts.fetch } : {}),
+        usage: { workload, ...opts.usage },
       });
       JSON.parse(span); // validate — retry if unparseable, same contract as qwen-fast
       return span;

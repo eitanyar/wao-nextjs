@@ -5,6 +5,8 @@
  * agree, so change them together.
  */
 
+import { recordGeminiUsage } from './llm-usage.mjs';
+
 export const LLM_PROVIDERS = Object.freeze(['gemini', 'qwen-metered', 'qwen-token-plan']);
 
 export const LLM_WORKLOADS = Object.freeze(['chat', 'panel_rewrite', 'gbp_reply', 'geo', 'site_copy', 'support_reply']);
@@ -117,6 +119,8 @@ export async function geminiGenerateJsonText({
   temperature,
   timeoutMs = 180_000,
   fetchImpl = globalThis.fetch,
+  usage = {},
+  usageEnv = process.env,
 }) {
   if (!apiKey) throw new Error('Gemini not configured');
   const generationConfig = { responseMimeType: 'application/json', thinkingConfig: { thinkingLevel } };
@@ -133,6 +137,7 @@ export async function geminiGenerateJsonText({
   });
   const data = await res.json();
   if (!res.ok) throw new Error(`Gemini error ${res.status}: ${JSON.stringify(data)}`);
+  recordGeminiUsage(data, model, usage, usageEnv); // usage ledger; never throws
   const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
   if (typeof text !== 'string') throw new Error(`Gemini returned unexpected shape: ${JSON.stringify(data)}`);
   return text;

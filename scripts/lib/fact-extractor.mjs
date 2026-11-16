@@ -139,8 +139,8 @@ function buildUserMessage(pages) {
     .join('\n\n');
 }
 
-// Provider switch (D3, 2026-11-15): this extractor rides LLM_PROVIDER_SITE_COPY (default stays the
-// Qwen token plan). gemini sends the same prompt in Gemini JSON mode; `model` (a Qwen name) is then
+// Provider switch (D3, 2026-11-15): this extractor rides LLM_PROVIDER_SITE_COPY (default gemini since
+// D3b; production never uses the Qwen token plan). gemini sends the same prompt in Gemini JSON mode; `model` (a Qwen name) is then
 // replaced by GEMINI_MODEL_NAME / gemini-3.8-flash.
 async function callGeminiOnce(systemPrompt, userMessage) {
   const env = scriptEnv(loadEnv());
@@ -152,6 +152,8 @@ async function callGeminiOnce(systemPrompt, userMessage) {
     thinkingLevel: 'HIGH',
     temperature: 0.2,
     timeoutMs: LLM_TIMEOUT_MS,
+    usage: { workload: 'site_copy' },
+    usageEnv: env,
   });
   return parseJsonObject(raw);
 }

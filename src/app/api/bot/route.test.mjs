@@ -210,6 +210,7 @@ function loadPost(environment, qwenCalls, geminiCalls) {
       qwenCalls.push(args); return JSON.stringify({ response: 'qwen', currentState: 'DIAGNOSING', collectedData: {} });
     } };
     if (name === '@/lib/ai/llmProvider') return llmProvider;
+    if (name === '@/lib/ai/llmUsage') return { recordGeminiUsage: (_data, model, tag) => { geminiCalls.usage = [...(geminiCalls.usage ?? []), [model, tag]]; return true; } };
     if (name === 'fs/promises') return { mkdir: async () => {}, appendFile: async () => {} };
     if (name === 'path') return path;
     throw new Error(`Unexpected import: ${name}`);
@@ -271,6 +272,14 @@ test('Gemini remains secondary when Qwen configuration is incomplete', async () 
   assert.equal(payload.response, 'gemini'); assert.equal(payload.isSimulation, false);
   assert.equal(qwen.length, 0); assert.equal(gemini.length, 1);
   assert.match(gemini[0], /^https:\/\/generativelanguage\.googleapis\.com\//);
+});
+
+test('a Gemini chat reply records one usage-ledger line tagged with the chat workload', async () => {
+  const qwen = []; const gemini = [];
+  await invokePost(loadPost({ GEMINI_API_KEY: 'mock' }, qwen, gemini));
+  assert.equal(gemini.length, 1);
+  assert.equal(gemini.usage?.length, 1);
+  assert.deepEqual(gemini.usage[0][1], { workload: 'chat' });
 });
 
 test('without configured provider POST returns simulation without network calls', async () => {

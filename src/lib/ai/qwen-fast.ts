@@ -6,6 +6,7 @@
 
 import { extractJsonSpan } from './gemini-fast';
 import { resolveQwenEndpoint, selectLlmProvider, type LlmWorkload } from './llmProvider';
+import { openAiUsageCounts, recordLlmUsage, type LlmUsageTag } from './llmUsage';
 
 export type CallQwenJSONOptions = {
   think?: boolean;
@@ -20,6 +21,8 @@ export type CallQwenJSONOptions = {
    * production token-plan guard (src/lib/ai/llmProvider.ts). Defaults: callQwenJSON -> site_copy,
    * callQwenChatJSON -> chat. */
   workload?: LlmWorkload;
+  /** Usage-ledger tag (src/lib/ai/llmUsage.ts): clientId / slug when the caller knows them. */
+  usage?: Omit<LlmUsageTag, 'workload'>;
   signal?: AbortSignal;
   timeoutMs?: number;
   maxAttempts?: number;
@@ -127,6 +130,9 @@ async function requestQwenJSON(
       const data = await res.json();
       reportUsage(opts, model, data, res.ok);
       if (!res.ok) throw new Error(`Qwen API error (${res.status})`);
+      try {
+        recordLlmUsage({ workload, provider: endpoint.provider, model, ...openAiUsageCounts(data), clientId: opts.usage?.clientId, slug: opts.usage?.slug });
+      } catch { /* usage recording never breaks a call */ }
       const text = data?.choices?.[0]?.message?.content;
       if (typeof text !== 'string') {
         throw new Error('Qwen API returned unexpected shape');

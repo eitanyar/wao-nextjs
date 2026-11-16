@@ -66,7 +66,7 @@ async function callTranslator(task: GoogleAdsOperatorTask, model: string): Promi
   if (selection.provider === 'gemini') {
     try {
       // The model option names a Qwen model; Gemini uses GEMINI_MODEL_NAME / the gemini-fast default.
-      return await callGeminiJSON(systemPrompt, userMessage);
+      return await callGeminiJSON(systemPrompt, userMessage, { usage: { workload: 'panel_rewrite' } });
     } catch (err) {
       console.warn('[hebrew-rewriter] Gemini translation failed:', err instanceof Error ? err.message : String(err));
       return '';

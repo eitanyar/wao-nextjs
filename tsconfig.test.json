@@ -223,6 +223,8 @@
     "src/lib/ai/qwen-fast.test.ts",
     "src/lib/ai/llmProvider.ts",
     "src/lib/ai/llmProvider.test.ts",
+    "src/lib/ai/llmUsage.ts",
+    "src/lib/ai/llmUsage.test.ts",
     "src/lib/ai/workloadJson.ts",
     "src/lib/ai/workloadJson.test.ts",
     "src/lib/operators/hebrew-rewriter.ts",

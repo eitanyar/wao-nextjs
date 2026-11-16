@@ -6,6 +6,7 @@ import { getEstimatedCPC } from "@/lib/ads/keywordPlanner";
 import { resolveBoundedOnboardingResponse } from "@/lib/google-ads/onboarding-response";
 import { callQwenChatJSON } from "@/lib/ai/qwen-fast";
 import { resolveQwenEndpoint, TokenPlanRefusedError } from "@/lib/ai/llmProvider";
+import { recordGeminiUsage } from "@/lib/ai/llmUsage";
 
 interface Message {
   role: "user" | "assistant" | "system";
@@ -877,6 +878,7 @@ async function callGemini(
   if (!res.ok) {
     throw new Error(`Gemini API error (${res.status}): ${JSON.stringify(data)}`);
   }
+  try { recordGeminiUsage(data, GEMINI_MODEL_NAME, { workload: "chat" }); } catch { /* usage ledger never breaks a reply */ }
   const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
   if (typeof text !== "string") {
     throw new Error(`Gemini API returned unexpected shape: ${JSON.stringify(data)}`);

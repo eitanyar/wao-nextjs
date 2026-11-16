@@ -117,14 +117,14 @@ export async function POST(req: Request) {
       // Tamar — write the LP copy. HIGH thinking: this is final, unattended-quality
       // landing-page copy (not a live chat turn) — see [[feedback_thinking_budget_matches_workload]].
       const tamarPrompt = buildLpCopyPrompt(collectedData);
-      const tamarRaw = await callGeminiJSON(LP_COPY_SYSTEM_PROMPT, tamarPrompt, { thinkingLevel: 'HIGH' });
+      const tamarRaw = await callGeminiJSON(LP_COPY_SYSTEM_PROMPT, tamarPrompt, { thinkingLevel: 'HIGH', usage: { workload: 'lp_copy' } });
       const tamarCopy = JSON.parse(tamarRaw) as LPCopy;
 
       // Noa — QA pass. Fail-soft: fall back to Tamar's copy rather than
       // failing the whole generation over a polish step (see identical
       // fix in site-bot/generate/route.ts for why this is fail-soft).
       try {
-        const noaRaw = await callGeminiJSON(NOA_LP_QA_PROMPT, JSON.stringify(tamarCopy), { thinkingLevel: 'HIGH' });
+        const noaRaw = await callGeminiJSON(NOA_LP_QA_PROMPT, JSON.stringify(tamarCopy), { thinkingLevel: 'HIGH', usage: { workload: 'lp_copy' } });
         copy = JSON.parse(noaRaw) as LPCopy;
       } catch (e: any) {
         console.warn('LP Noa QA pass failed, using unreviewed Tamar copy:', e.message);

@@ -139,7 +139,7 @@ export function createGbpReplyDrafter(options: GbpReplyDrafterOptions = {}): Rep
       return callGeminiChatText(
         system.content,
         turns.map(m => ({ role: m.role === 'assistant' ? 'assistant' as const : 'user' as const, content: m.content })),
-        { thinkingLevel: 'HIGH', temperature: 0.7, ...(options.fetch ? { fetch: options.fetch } : {}) },
+        { thinkingLevel: 'HIGH', temperature: 0.7, usage: { workload: 'gbp_reply' }, ...(options.fetch ? { fetch: options.fetch } : {}) },
       );
     }
 
