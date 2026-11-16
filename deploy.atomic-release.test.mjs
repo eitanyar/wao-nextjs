@@ -163,6 +163,7 @@ function runFixture(options = {}, envExtra = {}) {
       WAO_REAL_NODE: process.execPath,
       CLIENT_PORTAL_SECRET: 'synthetic',
       NEXT_SERVER_ACTIONS_ENCRYPTION_KEY: Buffer.alloc(32, 7).toString('base64'),
+      TOKEN_ENCRYPTION_KEY: Buffer.alloc(32, 9).toString('base64'),
       NODE_OPTIONS: '',
       WAO_TEST_FAILURE: options.failure ?? '',
       WAO_TEST_CANDIDATE_REFUSALS: String(options.candidateRefusals ?? 0),
@@ -242,6 +243,15 @@ test('rejects missing or malformed Server Action keys before external commands',
       assert.equal(f.log, '');
     } finally { cleanup(f.root); }
   }
+});
+
+test('rejects a missing TOKEN_ENCRYPTION_KEY before external commands', () => {
+  const f = runFixture({}, { TOKEN_ENCRYPTION_KEY: '' });
+  try {
+    assert.notEqual(f.result.status, 0);
+    assert.match(f.result.stderr + f.result.stdout, /TOKEN_ENCRYPTION_KEY must be set/);
+    assert.equal(f.log, '');
+  } finally { cleanup(f.root); }
 });
 
 test('activates exactly one process with release-local entrypoint and cwd after homepage assets pass', () => {
