@@ -19,12 +19,17 @@ import { llmUsageDir } from './lib/llm-usage.mjs';
  * Tiers apply by the entry's UTC timestamp: the intro price until 2026-12-31 inclusive.
  * Thinking tokens bill at the output rate; cached tokens are part of the input count and bill at
  * the cached rate instead of the input rate.
+ * 3.6 / 3.7 / 3.8 Flash share one row (Google lists them together; per Adam's 2026-11-16 brief, not re-checked live).
+ * .env.local runs gemini-3.7-flash, so without it every local call was unpriced and the report showed $0.
  */
+const GEMINI_FLASH_TIERS = Object.freeze([
+  Object.freeze({ until: '2027-01-01T00:00:00.000Z', input: 0.75, output: 3.75, cached: 0.075 }),
+  Object.freeze({ until: null, input: 1.5, output: 7.5, cached: 0.15 }),
+]);
 export const GEMINI_PRICES_USD_PER_MTOK = Object.freeze({
-  'gemini-3.8-flash': Object.freeze([
-    Object.freeze({ until: '2027-01-01T00:00:00.000Z', input: 0.75, output: 3.75, cached: 0.075 }),
-    Object.freeze({ until: null, input: 1.5, output: 7.5, cached: 0.15 }),
-  ]),
+  'gemini-3.6-flash': GEMINI_FLASH_TIERS,
+  'gemini-3.7-flash': GEMINI_FLASH_TIERS,
+  'gemini-3.8-flash': GEMINI_FLASH_TIERS,
 });
 
 /** Fixed conversion rate for the ILS columns and the client flag. Update by hand; not a live rate. */
@@ -117,6 +122,23 @@ function parseArgs(argv) {
   return out;
 }
 
+/**
+ * The WARNING line for calls the totals leave out (no price row), naming their provider:model, or null when every call
+ * is priced. Printed so an unpriced model can never pass silently as a $0 month.
+ */
+export function unpricedWarning(entries, prices = GEMINI_PRICES_USD_PER_MTOK) {
+  const counts = new Map();
+  for (const entry of entries) {
+    if (entryCostUsd(entry, prices) !== null) continue;
+    const key = `${entry?.provider ?? '?'}:${entry?.model ?? '?'}`;
+    counts.set(key, (counts.get(key) ?? 0) + 1);
+  }
+  if (counts.size === 0) return null;
+  const total = [...counts.values()].reduce((sum, count) => sum + count, 0);
+  const detail = [...counts.entries()].map(([key, count]) => `${key} x${count}`).join(', ');
+  return `WARNING: ${total} unpriced call(s) are NOT in the totals (${detail}). Add a price row to GEMINI_PRICES_USD_PER_MTOK.`;
+}
+
 const usd = v => `$${v.toFixed(4)}`;
 const ils = v => `ILS ${v.toFixed(2)}`;
 
@@ -142,6 +164,8 @@ export function main(argv = process.argv.slice(2)) {
   console.log(`LLM usage ${args.month}  (${file}${fs.existsSync(file) ? '' : ', not found'})`);
   console.log(`Prices: GEMINI_PRICES_USD_PER_MTOK (verify against Google's page). Rate: 1 USD = ${USD_TO_ILS} ILS (fixed).`);
   console.log(`Total: calls=${report.total.calls}  ${usd(report.total.costUsd)}  ${ils(report.total.costIls)}${report.total.unpricedCalls ? `  (${report.total.unpricedCalls} unpriced calls)` : ''}${malformed ? `  (${malformed} malformed lines skipped)` : ''}`);
+  const warning = unpricedWarning(entries);
+  if (warning) console.log(warning);
   console.log(table('By workload', report.byWorkload));
   console.log(table('By client', report.byClient));
   if (report.flaggedClients.length) {

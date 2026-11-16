@@ -5,7 +5,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { createRequire } from 'node:module';
-import { CLIENT_MONTHLY_FLAG_ILS, GEMINI_PRICES_USD_PER_MTOK, USD_TO_ILS, buildReport, entryCostUsd, main, parseLedger, priceFor } from './llm-usage-report.mjs';
+import { CLIENT_MONTHLY_FLAG_ILS, GEMINI_PRICES_USD_PER_MTOK, USD_TO_ILS, buildReport, entryCostUsd, main, parseLedger, priceFor, unpricedWarning } from './llm-usage-report.mjs';
 import * as mirror from './lib/llm-usage.mjs';
 
 const close = (actual, expected, message) => assert.ok(Math.abs(actual - expected) < 1e-9, `${message ?? ''} ${actual} != ${expected}`);
@@ -104,4 +104,24 @@ test('mjs recorder mirror: same line shape and Gemini mapping as the TS module, 
   } finally { console.warn = original; }
   assert.equal(mirror.recordLlmUsage({ workload: 'geo' }, { NODE_TEST_CONTEXT: 'child' }), false, 'off under node --test without a dir');
   assert.equal(mirror.llmUsageDir({}), path.join(process.cwd(), 'data', 'llm-usage'));
+});
+
+test('3.6 / 3.7 / 3.8 Flash share the Flash rates; unpriced calls print a WARNING line', () => {
+  for (const model of ['gemini-3.6-flash', 'gemini-3.7-flash', 'gemini-3.8-flash']) {
+    close(entryCostUsd(flash('2026-11-16T00:00:00Z', { model })), 0.75 + 3.75, model);
+  }
+  assert.equal(unpricedWarning([flash('2026-11-16T00:00:00Z', { model: 'gemini-3.7-flash' })]), null);
+  const warning = unpricedWarning([
+    flash('2026-11-16T00:00:00Z', { model: 'gemini-9-ultra' }),
+    flash('2026-11-16T00:00:00Z', { model: 'gemini-9-ultra' }),
+    { ...flash('2026-11-16T00:00:00Z'), provider: 'qwen-metered', model: 'qwen3.8-max' },
+  ]);
+  assert.match(warning, /^WARNING: 3 unpriced call\(s\) are NOT in the totals \(gemini:gemini-9-ultra x2, qwen-metered:qwen3\.8-max x1\)/);
+  // The text report prints it.
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'llm-report-warn-'));
+  fs.writeFileSync(path.join(dir, '2026-11.jsonl'), `${JSON.stringify(flash('2026-11-01T00:00:00Z', { model: 'gemini-9-ultra' }))}\n`);
+  const out = [];
+  const original = console.log; console.log = line => out.push(line);
+  try { assert.equal(main(['--month', '2026-11', '--dir', dir]), 0); } finally { console.log = original; }
+  assert.ok(out.some(line => line.startsWith('WARNING: 1 unpriced call(s)')));
 });
