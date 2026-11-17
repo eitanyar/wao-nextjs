@@ -68,6 +68,8 @@ html { scroll-behavior: smooth; }
 }
 /* Remove outline only for mouse users (pointer events), keep for keyboard */
 :focus:not(:focus-visible) { outline: none; }
+/* Switches keep their pill shape when focused (the 3px radius above would square them). */
+[role="switch"]:focus-visible { border-radius: 9999px; }
 
 html { overflow-x: clip; }
 body { overflow-x: hidden; }

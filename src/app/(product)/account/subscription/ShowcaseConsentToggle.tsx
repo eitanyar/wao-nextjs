@@ -36,7 +36,7 @@ export function ShowcaseConsentView({
           aria-describedby="showcase-consent-state"
           disabled={busy}
           onClick={onToggle}
-          className={`relative inline-flex h-7 w-12 shrink-0 items-center rounded-full border transition-colors disabled:opacity-60 ${granted ? 'border-[var(--accent)] bg-[var(--accent)]' : 'border-white/30 bg-white/10'}`}
+          className={`relative inline-flex h-7 w-12 shrink-0 items-center rounded-full border transition-colors disabled:opacity-60 before:absolute before:-inset-x-1 before:-inset-y-2 before:content-[''] ${granted ? 'border-[var(--accent)] bg-[var(--accent)]' : 'border-white/45 bg-white/10'}`}
         >
           {/* Knob: start edge when off, end edge when on (logical properties keep it right in RTL). */}
           <span aria-hidden="true" className={`absolute top-1/2 h-5 w-5 -translate-y-1/2 rounded-full bg-white shadow transition-all ${granted ? 'end-1' : 'start-1'}`} />

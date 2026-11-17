@@ -40,7 +40,7 @@ export default function PrivacyPage() {
           מדיניות פרטיות
         </h1>
         <p style={{ ...P, fontSize: "0.85rem", marginBottom: "48px" }}>
-          תאריך עדכון אחרון: יוני 2026
+          תאריך עדכון אחרון: נובמבר 2026
         </p>
 
         {/* 1 */}
@@ -214,7 +214,7 @@ export default function PrivacyPage() {
           <p style={{ ...P, fontSize: "0.82rem" }}>
             מדיניות זו חלה על אתר
             <span dir="ltr" style={{ display: "inline-block" }}>www.wao.co.il</span>{" "}
-            בלבד. עודכן לאחרונה: יוני 2026.
+            בלבד. עודכן לאחרונה: נובמבר 2026.
           </p>
         </div>
 
