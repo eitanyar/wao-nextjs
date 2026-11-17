@@ -63,6 +63,7 @@ const CALL_SITES = {
   'src/lib/hybrid/planner.ts': ['clientsDir()'],
   'src/lib/hybrid/snapshotStore.ts': ['defaultClientsDir()'],
   'src/lib/shared/clients.ts': ['clientsDir()'],
+  'src/lib/showcase/consentStore.ts': ["dataRoot('showcaseConsent')"],
   'src/lib/site-bot/heroLibraryStore.ts': ['sitesDir()'],
   'src/lib/site-bot/research/researchStore.ts': ['siteResearchDir()'],
   'src/lib/site-bot/researchToSite.ts': ['sitesDir()'],
@@ -71,7 +72,7 @@ const CALL_SITES = {
   'src/lib/vault.ts': ['clientsDir()'],
 };
 
-const HELPER_CALL = /\b(?:clientsDir|defaultClientsDir|sitesDir|siteResearchDir)\(\)|\bdataRoot\('(?:clients|sites|siteResearch|siteProof|llmUsage)'\)/g;
+const HELPER_CALL = /\b(?:clientsDir|defaultClientsDir|sitesDir|siteResearchDir)\(\)|\bdataRoot\('(?:clients|sites|siteResearch|siteProof|llmUsage|showcaseConsent)'\)/g;
 
 function helperExpressions(source) {
   return [...source.matchAll(HELPER_CALL)].map(match => {
@@ -117,10 +118,13 @@ test('with no override every root is byte-identical to the historical expression
     assert.equal(roots.siteResearchDir(), path.resolve(cwd, path.join('data', 'site-research')));
     assert.equal(roots.dataRoot('siteResearch').dir, path.resolve(cwd, 'data', 'site-research'));
     // Symlink walks keep starting at cwd (so data/ itself is still checked).
-    for (const kind of ['clients', 'sites', 'siteResearch', 'siteProof', 'llmUsage']) assert.equal(roots.dataRoot(kind).walkBase, cwd);
+    for (const kind of ['clients', 'sites', 'siteResearch', 'siteProof', 'llmUsage', 'showcaseConsent']) assert.equal(roots.dataRoot(kind).walkBase, cwd);
     // LLM usage ledger (2026-11-16): its own root, data/llm-usage, never under data/clients.
     assert.equal(roots.dataRoot('llmUsage').dir, path.join(cwd, 'data', 'llm-usage'));
     assert.equal(loadDataRoots({ cwd, env: { WAO_LLM_USAGE_DIR: '/tmp/usage' } }).dataRoot('llmUsage').dir, '/tmp/usage');
+    // Showcase consent (2026-11-17): its own root, data/showcase-consent, never under data/clients.
+    assert.equal(roots.dataRoot('showcaseConsent').dir, path.join(cwd, 'data', 'showcase-consent'));
+    assert.equal(loadDataRoots({ cwd, env: { WAO_SHOWCASE_CONSENT_DIR: '/tmp/consent' } }).dataRoot('showcaseConsent').dir, '/tmp/consent');
     // Visual pack (2026-11-16): the owner-supplied look files live in their own root, data/site-proof.
     assert.equal(roots.dataRoot('siteProof').dir, path.join(cwd, 'data', 'site-proof'));
     assert.equal(loadDataRoots({ cwd, env: { WAO_SITE_PROOF_DIR: '/tmp/proof' } }).dataRoot('siteProof').dir, '/tmp/proof');

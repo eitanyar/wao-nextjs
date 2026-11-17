@@ -12,6 +12,7 @@
  *   WAO_SITE_RESEARCH_DIR  default <cwd>/data/site-research  (research dossiers)
  *   WAO_SITE_PROOF_DIR     default <cwd>/data/site-proof     (owner-supplied site photos / logo + staff approvals; untracked)
  *   WAO_LLM_USAGE_DIR      default <cwd>/data/llm-usage      (LLM usage ledger, YYYY-MM.jsonl; untracked)
+ *   WAO_SHOWCASE_CONSENT_DIR default <cwd>/data/showcase-consent (showcase consent history, <accountId>.jsonl; untracked)
  *
  * Read on every call (not cached) so a test can set the env per case. Modules
  * that historically captured the root in a module-level const still do, which
@@ -20,7 +21,7 @@
 
 import path from 'path';
 
-export type DataRootKind = 'clients' | 'sites' | 'siteResearch' | 'siteProof' | 'llmUsage';
+export type DataRootKind = 'clients' | 'sites' | 'siteResearch' | 'siteProof' | 'llmUsage' | 'showcaseConsent';
 
 export interface DataRoot {
   /** Absolute directory holding the records. */
@@ -44,7 +45,9 @@ function overrideFor(kind: DataRootKind): string | undefined {
         ? process.env.WAO_SITE_PROOF_DIR
         : kind === 'llmUsage'
           ? process.env.WAO_LLM_USAGE_DIR
-          : process.env.WAO_SITE_RESEARCH_DIR;
+          : kind === 'showcaseConsent'
+            ? process.env.WAO_SHOWCASE_CONSENT_DIR
+            : process.env.WAO_SITE_RESEARCH_DIR;
   return typeof raw === 'string' && raw.trim() !== '' ? raw.trim() : undefined;
 }
 
@@ -59,6 +62,7 @@ function defaultDir(kind: DataRootKind): string {
   if (kind === 'sites') return path.join(process.cwd(), 'data', 'sites');
   if (kind === 'siteProof') return path.join(process.cwd(), 'data', 'site-proof');
   if (kind === 'llmUsage') return path.join(process.cwd(), 'data', 'llm-usage');
+  if (kind === 'showcaseConsent') return path.join(process.cwd(), 'data', 'showcase-consent');
   return path.join(process.cwd(), 'data', 'site-research');
 }
 

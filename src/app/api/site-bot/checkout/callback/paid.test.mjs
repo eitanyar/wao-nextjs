@@ -8,8 +8,9 @@ import { load, makeStore, recordingConsole } from '../../client-message/clientMe
 
 const sessionId = '123e4567-e89b-42d3-a456-426614174000';
 
-function harness({ linkThrows = false, alreadyActive = false, gates = [], record = async (_id, list) => list } = {}) {
+function harness({ linkThrows = false, alreadyActive = false, gates = [], record = async (_id, list) => list, activation = null, consentThrows = false } = {}) {
   const recordCalls = [];
+  const consentCalls = [];
   const s = makeStore();
   const subscriptionId = s.addSubscription();
   const cwd = fs.mkdtempSync(path.join(s.dir, 'cwd-'));
@@ -23,7 +24,7 @@ function harness({ linkThrows = false, alreadyActive = false, gates = [], record
   const paid = load('src/app/api/site-bot/checkout/callback/paid.ts', {
     'next/server': { NextResponse: { json: (body, init) => Response.json(body, init) } },
     fs, path,
-    '@/lib/payments/subscriptions': { activatePlanSubscription: async () => ({ ok: true, alreadyActive }), issueAccountPath: () => `/account/subscription?token=${'a'.repeat(64)}` },
+    '@/lib/payments/subscriptions': { activatePlanSubscription: async () => (activation ?? { ok: true, alreadyActive }), issueAccountPath: () => `/account/subscription?token=${'a'.repeat(64)}` },
     '@/lib/site-bot/research/gates': { deriveOpenResearchGates: () => gates },
     '@/lib/site-bot/research/ownerGates': { recordOwnerResearchGates: async (id, list) => { recordCalls.push([id, list]); return record(id, list); } },
     '@/lib/site-bot/research/researchStore': { readResearchDossier: async () => null },
@@ -32,11 +33,12 @@ function harness({ linkThrows = false, alreadyActive = false, gates = [], record
     '@/lib/site-bot/research/researchInput': { buildSiteResearchInput: () => ({}) },
     '@/lib/site-bot/clientMessages': store,
     '@/lib/site-bot/paidQueueAlert': { sendPaidQueueAlert: async (input) => { alerts.push(input); return true; } },
+    '@/lib/showcase/consentStore': { recordShowcaseConsent: (params) => { if (consentThrows) throw new Error('disk full'); consentCalls.push(params); return { granted: true }; } },
   }, { cwd, console: logs.console });
-  const call = () => paid.POST(new Request('http://localhost/api/site-bot/checkout/callback', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ sessionId }) }));
+  const call = (extra = {}) => paid.POST(new Request('http://localhost/api/site-bot/checkout/callback', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ sessionId, ...extra }) }));
   const events = () => s.db.prepare(`SELECT metadata FROM subscription_events WHERE subscription_id = ? AND event_type = 'site_bot_session_linked'`).all(subscriptionId);
   const paidPost = (id) => paid.POST(new Request('http://localhost/api/site-bot/checkout/callback', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ sessionId: id }) }));
-  return { ...s, subscriptionId, call, paidPost, events, logs, alerts, recordCalls };
+  return { ...s, subscriptionId, call, paidPost, events, logs, alerts, recordCalls, consentCalls };
 }
 
 test('19: a successful activation writes exactly one site_bot_session_linked event with the business', async () => {
@@ -118,4 +120,38 @@ test('F2: if the owner gates cannot be recorded, the pay page gets no gates (don
     assert.ok(h.logs.lines.some((l) => l.includes('owner gates recorded 0/1')));
     h.cleanup();
   }
+});
+
+test('showcase consent: unticked (absent or false) pays normally and records nothing', async () => {
+  for (const extra of [{}, { showcaseConsent: false }, { showcaseConsent: 'true' }]) {
+    const h = harness();
+    const response = await h.call(extra);
+    assert.equal(response.status, 200);
+    const body = await response.json();
+    assert.equal(body.success, true);
+    assert.ok(body.manageUrl);
+    assert.equal(h.consentCalls.length, 0, JSON.stringify(extra));
+    h.cleanup();
+  }
+});
+
+test('showcase consent: ticked records one checkout grant for the subscription after the charge', async () => {
+  const h = harness();
+  const response = await h.call({ showcaseConsent: true });
+  assert.equal(response.status, 200);
+  assert.deepEqual(JSON.parse(JSON.stringify(h.consentCalls)), [{ accountId: h.subscriptionId, product: 'site-bot', source: 'checkout' }]);
+  h.cleanup();
+});
+
+test('showcase consent: a failed charge records nothing; a failing store never fails the checkout', async () => {
+  const failed = harness({ activation: { ok: false, reason: 'charge_failed', retryable: true } });
+  assert.equal((await failed.call({ showcaseConsent: true })).status, 402);
+  assert.equal(failed.consentCalls.length, 0);
+  failed.cleanup();
+  const throwing = harness({ consentThrows: true });
+  const response = await throwing.call({ showcaseConsent: true });
+  assert.equal(response.status, 200);
+  assert.equal((await response.json()).success, true);
+  assert.ok(throwing.logs.lines.some((l) => l.includes('showcase consent record failed') && l.includes(sessionId)));
+  throwing.cleanup();
 });

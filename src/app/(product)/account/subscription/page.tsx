@@ -5,6 +5,9 @@ import CardUpdateButton from './CardUpdateButton';
 import RequestLinkForm from './RequestLinkForm';
 import ClientMessageBox from './ClientMessageBox';
 import ReviewKitCard from './ReviewKitCard';
+import ShowcaseConsentToggle from './ShowcaseConsentToggle';
+import { SITE_BOT_PLAN } from '@/lib/payments/plans';
+import { isShowcaseConsentGranted } from '@/lib/showcase/consentStore';
 import { reviewCardFor } from '@/lib/site-bot/reviewKit';
 import { siteBotSupportBoxShown } from '@/lib/site-bot/supportBox';
 import {
@@ -127,13 +130,23 @@ export default async function SubscriptionPage({
   } catch {
     console.error(`[account] review card unavailable subscription=${subscription.id}`);
   }
+  // Showcase consent toggle (approved 2026-11-17): Site-Bot plan rows past checkout, until a cancellation is received (the
+  // cancel withdraws it). A store failure hides the toggle rather than showing a wrong state.
+  let showcaseGranted: boolean | null = null;
+  if (subscription.plan === SITE_BOT_PLAN.id && subscription.status !== 'pending' && !isCanceled && !cancelScheduled) {
+    try {
+      showcaseGranted = isShowcaseConsentGranted(subscription.id);
+    } catch {
+      console.error(`[account] showcase consent unavailable subscription=${subscription.id}`);
+    }
+  }
   // The date the confirm question promises: the same rule the cancel applies (null = the cancel takes effect at once).
   const cancelEffectiveAt = cancelEffectiveAtIfCanceledNow(subscription);
   const confirmDate = cancelEffectiveAt ? formatAccountDate(cancelEffectiveAt) : null;
 
   return (
     <main className="min-h-dvh flex items-center justify-center px-4">
-      <div className={showMessageBox || reviewCard ? 'w-full max-w-md' : 'w-full max-w-sm'}>
+      <div className={showMessageBox || reviewCard || showcaseGranted !== null ? 'w-full max-w-md' : 'w-full max-w-sm'}>
         <div className="text-center mb-8">
           <span className="text-3xl font-black tracking-tight">WAO</span>
           <h1 className="text-[var(--muted)] mt-1 text-sm font-normal">{COPY.headerSubtitle}</h1>
@@ -215,6 +228,12 @@ export default async function SubscriptionPage({
             )}
           </div>
         </div>
+
+        {showcaseGranted !== null && (
+          <div className="mt-6">
+            <ShowcaseConsentToggle token={token} initialGranted={showcaseGranted} />
+          </div>
+        )}
       </div>
     </main>
   );

@@ -12,6 +12,7 @@ import { SITE_BOT_CHECKOUT_COPY_PENDING, SITE_BOT_TERMS_PATH, siteBotCheckoutTex
 import type { CardFieldDefaults } from "@/lib/site-bot/checkout/mockCard";
 import { SITE_BOT_ACCOUNT_COPY, accountLinkHref, customerVisibleLabel } from "@/lib/site-bot/checkout/accountCopy";
 import { SITE_BOT_PLAN, formatShekels } from "@/lib/payments/plans";
+import { SHOWCASE_CONSENT_COPY } from "@/lib/showcase/consentCopy.generated";
 import {
   buildResearchGateAnswer,
   RESEARCH_PROGRESS_KEYS,
@@ -31,6 +32,9 @@ const manageLinkLabel = customerVisibleLabel(SITE_BOT_ACCOUNT_COPY.manageLink);
 
 /** Consent small print above the pay button: text, then the terms-of-use link, then text (approved 2026-11-11). */
 const termsConsent = siteBotTermsConsentParts();
+
+/** Optional showcase consent (approved 2026-11-17): its own checkbox, unticked by default, never required to pay. */
+const SHOWCASE_COPY = SHOWCASE_CONSENT_COPY.products["site-bot"];
 
 type Phase = "form" | "charging" | "gates" | "submitting_gate" | "done" | "error";
 
@@ -59,6 +63,8 @@ export default function SiteBotPayClient({ cardDefaults }: { cardDefaults: CardF
   const [answer, setAnswer] = useState("");
   const [manageHref, setManageHref] = useState<string>(() => accountLinkHref(undefined));
   const answerInputRef = useRef<HTMLInputElement>(null);
+  // Unticked by default; paying works the same either way. Sent with the callback, recorded only after a successful charge.
+  const [showcaseConsent, setShowcaseConsent] = useState(false);
 
   async function pay() {
     setPhase("charging");
@@ -67,7 +73,7 @@ export default function SiteBotPayClient({ cardDefaults }: { cardDefaults: CardF
       const res = await fetch("/api/site-bot/checkout/callback", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ sessionId }),
+        body: JSON.stringify({ sessionId, showcaseConsent }),
       });
       // M0.5 (B9): a non-2xx or non-JSON callback is an error state, never "done".
       const json = await readJsonBody(res) as Partial<CheckoutCallbackResponse> & { error?: string };
@@ -167,6 +173,24 @@ export default function SiteBotPayClient({ cardDefaults }: { cardDefaults: CardF
                 <div style={{ display: "flex", gap: "12px" }}>
                   <input placeholder="MM/YY" defaultValue={cardDefaults.expiry} inputMode="numeric" autoComplete="cc-exp" style={inputStyle} />
                   <input placeholder="CVC" defaultValue={cardDefaults.cvc} inputMode="numeric" autoComplete="cc-csc" style={inputStyle} />
+                </div>
+              </div>
+              <div data-showcase-consent="site-bot" style={{ display: "flex", gap: "10px", alignItems: "flex-start", margin: "0 0 14px" }}>
+                <input
+                  id="showcase-consent"
+                  type="checkbox"
+                  checked={showcaseConsent}
+                  onChange={(event) => setShowcaseConsent(event.target.checked)}
+                  aria-describedby="showcase-consent-help"
+                  style={{ marginTop: "4px", width: "18px", height: "18px", flexShrink: 0, accentColor: "var(--accent)" }}
+                />
+                <div>
+                  <label htmlFor="showcase-consent" style={{ fontSize: "0.88rem", lineHeight: 1.6, cursor: "pointer" }}>
+                    {renderMixed(SHOWCASE_COPY.checkboxLabel)}
+                  </label>
+                  <p id="showcase-consent-help" style={{ color: "var(--muted)", fontSize: "0.78rem", lineHeight: 1.6, margin: "4px 0 0" }}>
+                    {renderMixed(SHOWCASE_COPY.checkboxHelp)}
+                  </p>
                 </div>
               </div>
               <p data-terms-consent="site-bot" style={{ color: "var(--muted)", fontSize: "0.82rem", lineHeight: 1.6, margin: "0 0 10px" }}>

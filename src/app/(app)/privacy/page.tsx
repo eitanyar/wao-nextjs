@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { SHOWCASE_CONSENT_COPY } from "@/lib/showcase/consentCopy.generated";
 
 export const metadata: Metadata = {
   title: "מדיניות פרטיות",
@@ -102,6 +103,8 @@ export default function PrivacyPage() {
               <strong style={{ color: "var(--text)" }}>עוגיות הכרחיות</strong> — שמירת העדפות (כגון הסכמה לעוגיות). אינן כוללות מידע אישי.
             </li>
           </ul>
+          {/* Showcase consent (approved 2026-11-17; docs/legal/privacy-policy.md section 3): the approved sentence, read from the legal JSON. */}
+          <p style={P} data-showcase-privacy="true">{SHOWCASE_CONSENT_COPY.privacyPolicySentence}</p>
         </div>
 
         {/* 3 */}

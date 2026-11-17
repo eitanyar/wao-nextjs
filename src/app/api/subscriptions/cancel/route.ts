@@ -4,6 +4,7 @@ import { SITE_BOT_PLAN } from '@/lib/payments/plans';
 import { clientMessagesEnabled, createCancelNoticeItem, markStaffAlerted } from '@/lib/site-bot/clientMessages';
 import { sendClientMessageStaffAlert } from '@/lib/site-bot/clientMessageEmail';
 import { sendCancelConfirmation } from '@/lib/site-bot/cancelNotices';
+import { withdrawShowcaseConsent } from '@/lib/showcase/consentStore';
 
 /**
  * Site-Bot support queue (2026-11-13): when the client-message feature is on and the cancelled row is a Site-Bot plan,
@@ -23,6 +24,18 @@ async function queueSiteBotCancelNotice(subscriptionId: string, effectiveAt: str
   }
 }
 
+/**
+ * Showcase consent (terms §10 showcase sub-clause 6, 2026-11-17): a cancellation withdraws the consent at receipt, for
+ * every plan (a no-op when there is none). Never affects the cancel response.
+ */
+function withdrawShowcaseOnCancel(subscriptionId: string): void {
+  try {
+    withdrawShowcaseConsent({ accountId: subscriptionId, source: 'cancellation', reason: 'cancelled' });
+  } catch {
+    console.error(`[subscriptions/cancel] showcase consent withdraw failed subscription=${subscriptionId}`);
+  }
+}
+
 export async function POST(req: Request) {
   try {
     const body = await req.json();
@@ -39,6 +52,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ success: false, error: outcome.reason }, { status });
     }
 
+    withdrawShowcaseOnCancel(outcome.subscriptionId);
     await queueSiteBotCancelNotice(outcome.subscriptionId, outcome.effectiveAt, outcome.cancelAtPeriodEnd === true);
     // Site-Bot cancel confirmation to the owner (cancelNotices.ts): Site-Bot rows only, copy-gated, one-time, never throws.
     await sendCancelConfirmation(outcome.subscriptionId);

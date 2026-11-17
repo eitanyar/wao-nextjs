@@ -6,7 +6,7 @@ import fs from 'node:fs';
 import { createHash } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 
-export const SOURCE_SHA256 = '5b3986e36bf9ef02f5050dcc48d8abe062661da665b9d40e8c8f01634fdd255d';
+export const SOURCE_SHA256 = '8911f1bbabfe0eb5ce25506e16c452cd739674b293ab22816c783350920772a8';
 export const SOURCE_URL = new URL('../docs/legal/site-bot-terms-of-use.md', import.meta.url);
 export const OUTPUT_URL = new URL('../src/lib/legal/siteBotTerms.ts', import.meta.url);
 
