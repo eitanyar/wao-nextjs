@@ -1,0 +1,5466 @@
+{
+ "generatedBy": "scripts/build-logo-marks.mjs",
+ "excludes": [
+  {
+   "term": "חשמלאי רכב",
+   "source": "docs/copy/site-bot-licensed-trades-2026-11-10.json#licenseExclude[13]"
+  },
+  {
+   "term": "חשמלאי לרכב",
+   "source": "docs/copy/site-bot-licensed-trades-2026-11-10.json#licenseExclude[14]"
+  },
+  {
+   "term": "חשמל רכב",
+   "source": "docs/copy/site-bot-licensed-trades-2026-11-10.json#licenseExclude[15]"
+  },
+  {
+   "term": "חשמלאות רכב",
+   "source": "docs/copy/site-bot-licensed-trades-2026-11-10.json#licenseExclude[16]"
+  },
+  {
+   "term": "חשמלאות לרכב",
+   "source": "docs/copy/site-bot-licensed-trades-2026-11-10.json#licenseExclude[17]"
+  },
+  {
+   "term": "גזיבו",
+   "source": "docs/copy/site-bot-licensed-trades-2026-11-10.json#licenseExclude[18]"
+  },
+  {
+   "term": "גז למזג",
+   "source": "docs/copy/site-bot-licensed-trades-2026-11-10.json#licenseExclude[19]"
+  },
+  {
+   "term": "גז מזגנ",
+   "source": "docs/copy/site-bot-licensed-trades-2026-11-10.json#licenseExclude[20]"
+  },
+  {
+   "term": "שירותי פינוי שפכים וביוב",
+   "source": "src/data/gbp-categories-il.json#gcid:sewage_disposal_service.heName"
+  },
+  {
+   "term": "שאיבת בורות שומן",
+   "source": "src/data/gbp-categories-il.json#gcid:sewage_disposal_service.synonyms[0]"
+  },
+  {
+   "term": "פינוי שפכים",
+   "source": "src/data/gbp-categories-il.json#gcid:sewage_disposal_service.synonyms[1]"
+  },
+  {
+   "term": "שאיבות ביוב",
+   "source": "src/data/gbp-categories-il.json#gcid:sewage_disposal_service.synonyms[2]"
+  },
+  {
+   "term": "קבלן חימום והסקה",
+   "source": "src/data/gbp-categories-il.json#gcid:heating_contractor.heName"
+  },
+  {
+   "term": "התקנת יונקרס",
+   "source": "src/data/gbp-categories-il.json#gcid:heating_contractor.synonyms[0]"
+  },
+  {
+   "term": "משאבות חום",
+   "source": "src/data/gbp-categories-il.json#gcid:heating_contractor.synonyms[1]"
+  },
+  {
+   "term": "חימום תת רצפתי",
+   "source": "src/data/gbp-categories-il.json#gcid:heating_contractor.synonyms[2]"
+  },
+  {
+   "term": "הסקה מרכזית",
+   "source": "src/data/gbp-categories-il.json#gcid:heating_contractor.synonyms[3]"
+  },
+  {
+   "term": "שיקום נזקי מים",
+   "source": "src/data/gbp-categories-il.json#gcid:water_damage_restoration_service.heName"
+  },
+  {
+   "term": "ייבוש תת רצפתי",
+   "source": "src/data/gbp-categories-il.json#gcid:water_damage_restoration_service.synonyms[0]"
+  },
+  {
+   "term": "איתור נזילות במצלמה תרמית",
+   "source": "src/data/gbp-categories-il.json#gcid:water_damage_restoration_service.synonyms[1]"
+  },
+  {
+   "term": "שיקום מבנים מנזקי הצפה",
+   "source": "src/data/gbp-categories-il.json#gcid:water_damage_restoration_service.synonyms[2]"
+  },
+  {
+   "term": "ספק ומתקין דלתות",
+   "source": "src/data/gbp-categories-il.json#gcid:door_supplier.heName"
+  },
+  {
+   "term": "דלתות כניסה",
+   "source": "src/data/gbp-categories-il.json#gcid:door_supplier.synonyms[0]"
+  },
+  {
+   "term": "דלתות פנים",
+   "source": "src/data/gbp-categories-il.json#gcid:door_supplier.synonyms[1]"
+  },
+  {
+   "term": "התקנת דלתות",
+   "source": "src/data/gbp-categories-il.json#gcid:door_supplier.synonyms[2]"
+  },
+  {
+   "term": "דלתות פלדלת",
+   "source": "src/data/gbp-categories-il.json#gcid:door_supplier.synonyms[3]"
+  },
+  {
+   "term": "מכירה ופריצת כספות",
+   "source": "src/data/gbp-categories-il.json#gcid:safe_and_vault_shop.heName"
+  },
+  {
+   "term": "פריצת כספות",
+   "source": "src/data/gbp-categories-il.json#gcid:safe_and_vault_shop.synonyms[0]"
+  },
+  {
+   "term": "התקנת כספת",
+   "source": "src/data/gbp-categories-il.json#gcid:safe_and_vault_shop.synonyms[1]"
+  },
+  {
+   "term": "כספת ביתית",
+   "source": "src/data/gbp-categories-il.json#gcid:safe_and_vault_shop.synonyms[2]"
+  },
+  {
+   "term": "כספת למשרד",
+   "source": "src/data/gbp-categories-il.json#gcid:safe_and_vault_shop.synonyms[3]"
+  },
+  {
+   "term": "בונה דקים ופרגולות",
+   "source": "src/data/gbp-categories-il.json#gcid:deck_builder.heName"
+  },
+  {
+   "term": "בניית דק",
+   "source": "src/data/gbp-categories-il.json#gcid:deck_builder.synonyms[0]"
+  },
+  {
+   "term": "התקנת פרגולה",
+   "source": "src/data/gbp-categories-il.json#gcid:deck_builder.synonyms[1]"
+  },
+  {
+   "term": "פרגולות עץ",
+   "source": "src/data/gbp-categories-il.json#gcid:deck_builder.synonyms[2]"
+  },
+  {
+   "term": "פרגולות אלומיניום",
+   "source": "src/data/gbp-categories-il.json#gcid:deck_builder.synonyms[3]"
+  },
+  {
+   "term": "דק איפאה",
+   "source": "src/data/gbp-categories-il.json#gcid:deck_builder.synonyms[4]"
+  },
+  {
+   "term": "קבלן בידוד תרמי ואקוסטי",
+   "source": "src/data/gbp-categories-il.json#gcid:insulation_contractor.heName"
+  },
+  {
+   "term": "בידוד אקוסטי",
+   "source": "src/data/gbp-categories-il.json#gcid:insulation_contractor.synonyms[0]"
+  },
+  {
+   "term": "בידוד תרמי",
+   "source": "src/data/gbp-categories-il.json#gcid:insulation_contractor.synonyms[1]"
+  },
+  {
+   "term": "בידוד גגות",
+   "source": "src/data/gbp-categories-il.json#gcid:insulation_contractor.synonyms[2]"
+  },
+  {
+   "term": "קירות מבודדים",
+   "source": "src/data/gbp-categories-il.json#gcid:insulation_contractor.synonyms[3]"
+  },
+  {
+   "term": "מחסנים להשכרה ואחסון תכולה",
+   "source": "src/data/gbp-categories-il.json#gcid:storage_facility.heName"
+  },
+  {
+   "term": "אחסון דירות",
+   "source": "src/data/gbp-categories-il.json#gcid:storage_facility.synonyms[0]"
+  },
+  {
+   "term": "השכרת מחסן",
+   "source": "src/data/gbp-categories-il.json#gcid:storage_facility.synonyms[1]"
+  },
+  {
+   "term": "אחסון תכולת דירה",
+   "source": "src/data/gbp-categories-il.json#gcid:storage_facility.synonyms[2]"
+  },
+  {
+   "term": "מחסנים לאחסון",
+   "source": "src/data/gbp-categories-il.json#gcid:storage_facility.synonyms[3]"
+  },
+  {
+   "term": "התקנת מערכות סולאריות",
+   "source": "src/data/gbp-categories-il.json#gcid:solar_energy_contractor.heName"
+  },
+  {
+   "term": "מערכות סולאריות",
+   "source": "src/data/gbp-categories-il.json#gcid:solar_energy_contractor.synonyms[0]"
+  },
+  {
+   "term": "פאנלים סולאריים",
+   "source": "src/data/gbp-categories-il.json#gcid:solar_energy_contractor.synonyms[1]"
+  },
+  {
+   "term": "אנרגיה סולארית",
+   "source": "src/data/gbp-categories-il.json#gcid:solar_energy_contractor.synonyms[2]"
+  },
+  {
+   "term": "התקנת פאנל סולארי",
+   "source": "src/data/gbp-categories-il.json#gcid:solar_energy_contractor.synonyms[3]"
+  },
+  {
+   "term": "עורך דין",
+   "source": "src/data/gbp-categories-il.json#gcid:lawyer.heName"
+  },
+  {
+   "term": "עו\"ד",
+   "source": "src/data/gbp-categories-il.json#gcid:lawyer.synonyms[0]"
+  },
+  {
+   "term": "משרד עורכי דין",
+   "source": "src/data/gbp-categories-il.json#gcid:lawyer.synonyms[1]"
+  },
+  {
+   "term": "ייעוץ משפטי",
+   "source": "src/data/gbp-categories-il.json#gcid:lawyer.synonyms[2]"
+  },
+  {
+   "term": "עורכת דין",
+   "source": "src/data/gbp-categories-il.json#gcid:lawyer.synonyms[3]"
+  },
+  {
+   "term": "עורך דין מקרקעין ונדל\"ן",
+   "source": "src/data/gbp-categories-il.json#gcid:real_estate_attorney.heName"
+  },
+  {
+   "term": "עו\"ד נדל\"ן",
+   "source": "src/data/gbp-categories-il.json#gcid:real_estate_attorney.synonyms[0]"
+  },
+  {
+   "term": "חוזה דירה",
+   "source": "src/data/gbp-categories-il.json#gcid:real_estate_attorney.synonyms[1]"
+  },
+  {
+   "term": "קניית דירה עו\"ד",
+   "source": "src/data/gbp-categories-il.json#gcid:real_estate_attorney.synonyms[2]"
+  },
+  {
+   "term": "הסכם שכירות",
+   "source": "src/data/gbp-categories-il.json#gcid:real_estate_attorney.synonyms[3]"
+  },
+  {
+   "term": "התחדשות עירונית עו\"ד",
+   "source": "src/data/gbp-categories-il.json#gcid:real_estate_attorney.synonyms[4]"
+  },
+  {
+   "term": "מיסוי מקרקעין",
+   "source": "src/data/gbp-categories-il.json#gcid:real_estate_attorney.synonyms[5]"
+  },
+  {
+   "term": "עורך דין לענייני משפחה וגירושין",
+   "source": "src/data/gbp-categories-il.json#gcid:family_law_attorney.heName"
+  },
+  {
+   "term": "עו\"ד גירושין",
+   "source": "src/data/gbp-categories-il.json#gcid:family_law_attorney.synonyms[0]"
+  },
+  {
+   "term": "הסכם ממון",
+   "source": "src/data/gbp-categories-il.json#gcid:family_law_attorney.synonyms[1]"
+  },
+  {
+   "term": "צוואות וירושות",
+   "source": "src/data/gbp-categories-il.json#gcid:family_law_attorney.synonyms[2]"
+  },
+  {
+   "term": "ייפוי כוח מתמשך",
+   "source": "src/data/gbp-categories-il.json#gcid:family_law_attorney.synonyms[3]"
+  },
+  {
+   "term": "מזונות ומשמורת",
+   "source": "src/data/gbp-categories-il.json#gcid:family_law_attorney.synonyms[4]"
+  },
+  {
+   "term": "גישור גירושין",
+   "source": "src/data/gbp-categories-il.json#gcid:family_law_attorney.synonyms[5]"
+  },
+  {
+   "term": "עורך דין דיני עבודה",
+   "source": "src/data/gbp-categories-il.json#gcid:labor_relations_attorney.heName"
+  },
+  {
+   "term": "עו\"ד עבודה",
+   "source": "src/data/gbp-categories-il.json#gcid:labor_relations_attorney.synonyms[0]"
+  },
+  {
+   "term": "פיצויי פיטורין",
+   "source": "src/data/gbp-categories-il.json#gcid:labor_relations_attorney.synonyms[1]"
+  },
+  {
+   "term": "שימוע לפני פיטורין",
+   "source": "src/data/gbp-categories-il.json#gcid:labor_relations_attorney.synonyms[2]"
+  },
+  {
+   "term": "זכויות עובדים",
+   "source": "src/data/gbp-categories-il.json#gcid:labor_relations_attorney.synonyms[3]"
+  },
+  {
+   "term": "תביעת מעסיק",
+   "source": "src/data/gbp-categories-il.json#gcid:labor_relations_attorney.synonyms[4]"
+  },
+  {
+   "term": "עורך דין פלילי",
+   "source": "src/data/gbp-categories-il.json#gcid:criminal_defense_attorney.heName"
+  },
+  {
+   "term": "עו\"ד פלילי",
+   "source": "src/data/gbp-categories-il.json#gcid:criminal_defense_attorney.synonyms[0]"
+  },
+  {
+   "term": "עבירות תנועה",
+   "source": "src/data/gbp-categories-il.json#gcid:criminal_defense_attorney.synonyms[1]"
+  },
+  {
+   "term": "חקירה במשטרה",
+   "source": "src/data/gbp-categories-il.json#gcid:criminal_defense_attorney.synonyms[2]"
+  },
+  {
+   "term": "כתב אישום",
+   "source": "src/data/gbp-categories-il.json#gcid:criminal_defense_attorney.synonyms[3]"
+  },
+  {
+   "term": "מחיקת רישום פלילי",
+   "source": "src/data/gbp-categories-il.json#gcid:criminal_defense_attorney.synonyms[4]"
+  },
+  {
+   "term": "תעבורה",
+   "source": "src/data/gbp-categories-il.json#gcid:criminal_defense_attorney.synonyms[5]"
+  },
+  {
+   "term": "עורך דין נזקי גוף ותאונות",
+   "source": "src/data/gbp-categories-il.json#gcid:personal_injury_attorney.heName"
+  },
+  {
+   "term": "תאונות דרכים עו\"ד",
+   "source": "src/data/gbp-categories-il.json#gcid:personal_injury_attorney.synonyms[0]"
+  },
+  {
+   "term": "רשלנות רפואית",
+   "source": "src/data/gbp-categories-il.json#gcid:personal_injury_attorney.synonyms[1]"
+  },
+  {
+   "term": "תביעות ביטוח לאומי",
+   "source": "src/data/gbp-categories-il.json#gcid:personal_injury_attorney.synonyms[2]"
+  },
+  {
+   "term": "אובדן כושר עבודה",
+   "source": "src/data/gbp-categories-il.json#gcid:personal_injury_attorney.synonyms[3]"
+  },
+  {
+   "term": "נכי צה\"ל",
+   "source": "src/data/gbp-categories-il.json#gcid:personal_injury_attorney.synonyms[4]"
+  },
+  {
+   "term": "נוטריון",
+   "source": "src/data/gbp-categories-il.json#gcid:notary.heName"
+  },
+  {
+   "term": "אימות חתימה",
+   "source": "src/data/gbp-categories-il.json#gcid:notary.synonyms[0]"
+  },
+  {
+   "term": "תרגום נוטריוני",
+   "source": "src/data/gbp-categories-il.json#gcid:notary.synonyms[1]"
+  },
+  {
+   "term": "אישור נוטריוני",
+   "source": "src/data/gbp-categories-il.json#gcid:notary.synonyms[2]"
+  },
+  {
+   "term": "אפוסטיל",
+   "source": "src/data/gbp-categories-il.json#gcid:notary.synonyms[3]"
+  },
+  {
+   "term": "צוואה נוטריונית",
+   "source": "src/data/gbp-categories-il.json#gcid:notary.synonyms[4]"
+  },
+  {
+   "term": "רואה חשבון",
+   "source": "src/data/gbp-categories-il.json#gcid:accountant.heName"
+  },
+  {
+   "term": "רו\"ח",
+   "source": "src/data/gbp-categories-il.json#gcid:accountant.synonyms[0]"
+  },
+  {
+   "term": "הנהלת חשבונות",
+   "source": "src/data/gbp-categories-il.json#gcid:accountant.synonyms[1]"
+  },
+  {
+   "term": "פתיחת עוסק מורשה",
+   "source": "src/data/gbp-categories-il.json#gcid:accountant.synonyms[2]"
+  },
+  {
+   "term": "דוחות כספיים",
+   "source": "src/data/gbp-categories-il.json#gcid:accountant.synonyms[3]"
+  },
+  {
+   "term": "החזרי מס",
+   "source": "src/data/gbp-categories-il.json#gcid:accountant.synonyms[4]"
+  },
+  {
+   "term": "ייעוץ מס",
+   "source": "src/data/gbp-categories-il.json#gcid:accountant.synonyms[5]"
+  },
+  {
+   "term": "יועץ מס",
+   "source": "src/data/gbp-categories-il.json#gcid:accountant.synonyms[6]"
+  },
+  {
+   "term": "החזר מס לשכירים",
+   "source": "src/data/gbp-categories-il.json#gcid:tax_consultant.synonyms[0]"
+  },
+  {
+   "term": "תכנון מס",
+   "source": "src/data/gbp-categories-il.json#gcid:tax_consultant.synonyms[1]"
+  },
+  {
+   "term": "ייעוץ מס לפרישה",
+   "source": "src/data/gbp-categories-il.json#gcid:tax_consultant.synonyms[2]"
+  },
+  {
+   "term": "הצהרת הון",
+   "source": "src/data/gbp-categories-il.json#gcid:tax_consultant.synonyms[3]"
+  },
+  {
+   "term": "מנהל חשבונות",
+   "source": "src/data/gbp-categories-il.json#gcid:bookkeeping_service.heName"
+  },
+  {
+   "term": "הנהלת חשבונות כפולה",
+   "source": "src/data/gbp-categories-il.json#gcid:bookkeeping_service.synonyms[0]"
+  },
+  {
+   "term": "חשבות שכר",
+   "source": "src/data/gbp-categories-il.json#gcid:bookkeeping_service.synonyms[1]"
+  },
+  {
+   "term": "הפקת תלושי שכר",
+   "source": "src/data/gbp-categories-il.json#gcid:bookkeeping_service.synonyms[2]"
+  },
+  {
+   "term": "דיווח למע\"מ",
+   "source": "src/data/gbp-categories-il.json#gcid:bookkeeping_service.synonyms[3]"
+  },
+  {
+   "term": "מתכנן פיננסי ופנסיוני",
+   "source": "src/data/gbp-categories-il.json#gcid:financial_planner.heName"
+  },
+  {
+   "term": "תכנון פרישה",
+   "source": "src/data/gbp-categories-il.json#gcid:financial_planner.synonyms[0]"
+  },
+  {
+   "term": "יועץ פנסיוני",
+   "source": "src/data/gbp-categories-il.json#gcid:financial_planner.synonyms[1]"
+  },
+  {
+   "term": "ייעוץ פיננסי",
+   "source": "src/data/gbp-categories-il.json#gcid:financial_planner.synonyms[2]"
+  },
+  {
+   "term": "ניהול כלכלת המשפחה",
+   "source": "src/data/gbp-categories-il.json#gcid:financial_planner.synonyms[3]"
+  },
+  {
+   "term": "יועץ משכנתאות",
+   "source": "src/data/gbp-categories-il.json#gcid:mortgage_broker.heName"
+  },
+  {
+   "term": "ייעוץ משכנתא",
+   "source": "src/data/gbp-categories-il.json#gcid:mortgage_broker.synonyms[0]"
+  },
+  {
+   "term": "מחזור משכנתא",
+   "source": "src/data/gbp-categories-il.json#gcid:mortgage_broker.synonyms[1]"
+  },
+  {
+   "term": "משכנתא למחיר למשתכן",
+   "source": "src/data/gbp-categories-il.json#gcid:mortgage_broker.synonyms[2]"
+  },
+  {
+   "term": "חיסכון במשכנתא",
+   "source": "src/data/gbp-categories-il.json#gcid:mortgage_broker.synonyms[3]"
+  },
+  {
+   "term": "יועצת משכנתאות",
+   "source": "src/data/gbp-categories-il.json#gcid:mortgage_broker.synonyms[4]"
+  },
+  {
+   "term": "משרד תיווך ונדל\"ן",
+   "source": "src/data/gbp-categories-il.json#gcid:real_estate_agency.heName"
+  },
+  {
+   "term": "מתווך דירות",
+   "source": "src/data/gbp-categories-il.json#gcid:real_estate_agency.synonyms[0]"
+  },
+  {
+   "term": "סוכן נדל\"ן",
+   "source": "src/data/gbp-categories-il.json#gcid:real_estate_agency.synonyms[1]"
+  },
+  {
+   "term": "דירות למכירה",
+   "source": "src/data/gbp-categories-il.json#gcid:real_estate_agency.synonyms[2]"
+  },
+  {
+   "term": "דירות להשכרה",
+   "source": "src/data/gbp-categories-il.json#gcid:real_estate_agency.synonyms[3]"
+  },
+  {
+   "term": "תיווך נדל\"ן",
+   "source": "src/data/gbp-categories-il.json#gcid:real_estate_agency.synonyms[4]"
+  },
+  {
+   "term": "שמאי מקרקעין",
+   "source": "src/data/gbp-categories-il.json#gcid:real_estate_appraiser.heName"
+  },
+  {
+   "term": "שומת מקרקעין",
+   "source": "src/data/gbp-categories-il.json#gcid:real_estate_appraiser.synonyms[0]"
+  },
+  {
+   "term": "הערכת שווי דירה",
+   "source": "src/data/gbp-categories-il.json#gcid:real_estate_appraiser.synonyms[1]"
+  },
+  {
+   "term": "היטל השבחה",
+   "source": "src/data/gbp-categories-il.json#gcid:real_estate_appraiser.synonyms[2]"
+  },
+  {
+   "term": "שמאי דירות",
+   "source": "src/data/gbp-categories-il.json#gcid:real_estate_appraiser.synonyms[3]"
+  },
+  {
+   "term": "סוכן ביטוח",
+   "source": "src/data/gbp-categories-il.json#gcid:insurance_agency.heName"
+  },
+  {
+   "term": "סוכנות ביטוח",
+   "source": "src/data/gbp-categories-il.json#gcid:insurance_agency.synonyms[0]"
+  },
+  {
+   "term": "ביטוח רכב",
+   "source": "src/data/gbp-categories-il.json#gcid:insurance_agency.synonyms[1]"
+  },
+  {
+   "term": "ביטוח דירה",
+   "source": "src/data/gbp-categories-il.json#gcid:insurance_agency.synonyms[2]"
+  },
+  {
+   "term": "ביטוח בריאות",
+   "source": "src/data/gbp-categories-il.json#gcid:insurance_agency.synonyms[3]"
+  },
+  {
+   "term": "ביטוח חיים",
+   "source": "src/data/gbp-categories-il.json#gcid:insurance_agency.synonyms[4]"
+  },
+  {
+   "term": "קרן פנסיה",
+   "source": "src/data/gbp-categories-il.json#gcid:insurance_agency.synonyms[5]"
+  },
+  {
+   "term": "אדריכל",
+   "source": "src/data/gbp-categories-il.json#gcid:architect.heName"
+  },
+  {
+   "term": "אדריכלות ועיצוב",
+   "source": "src/data/gbp-categories-il.json#gcid:architect.synonyms[0]"
+  },
+  {
+   "term": "היתרי בנייה",
+   "source": "src/data/gbp-categories-il.json#gcid:architect.synonyms[1]"
+  },
+  {
+   "term": "תכנון אדריכלי",
+   "source": "src/data/gbp-categories-il.json#gcid:architect.synonyms[2]"
+  },
+  {
+   "term": "אדריכלית",
+   "source": "src/data/gbp-categories-il.json#gcid:architect.synonyms[3]"
+  },
+  {
+   "term": "תכנון בתים פרטיים",
+   "source": "src/data/gbp-categories-il.json#gcid:architect.synonyms[4]"
+  },
+  {
+   "term": "מעצב פנים",
+   "source": "src/data/gbp-categories-il.json#gcid:interior_designer.heName"
+  },
+  {
+   "term": "עיצוב פנים",
+   "source": "src/data/gbp-categories-il.json#gcid:interior_designer.synonyms[0]"
+  },
+  {
+   "term": "מעצבת פנים",
+   "source": "src/data/gbp-categories-il.json#gcid:interior_designer.synonyms[1]"
+  },
+  {
+   "term": "הום סטיילינג",
+   "source": "src/data/gbp-categories-il.json#gcid:interior_designer.synonyms[2]"
+  },
+  {
+   "term": "עיצוב דירות",
+   "source": "src/data/gbp-categories-il.json#gcid:interior_designer.synonyms[3]"
+  },
+  {
+   "term": "תכנון חללים",
+   "source": "src/data/gbp-categories-il.json#gcid:interior_designer.synonyms[4]"
+  },
+  {
+   "term": "מהנדס קונסטרוקציה ובניין",
+   "source": "src/data/gbp-categories-il.json#gcid:engineering_consultant.heName"
+  },
+  {
+   "term": "מהנדס בניין",
+   "source": "src/data/gbp-categories-il.json#gcid:engineering_consultant.synonyms[0]"
+  },
+  {
+   "term": "קונסטרוקטור",
+   "source": "src/data/gbp-categories-il.json#gcid:engineering_consultant.synonyms[1]"
+  },
+  {
+   "term": "בדיקת מבנים",
+   "source": "src/data/gbp-categories-il.json#gcid:engineering_consultant.synonyms[2]"
+  },
+  {
+   "term": "אישור מהנדס להריסת קיר",
+   "source": "src/data/gbp-categories-il.json#gcid:engineering_consultant.synonyms[3]"
+  },
+  {
+   "term": "מתרגם ושירותי תרגום",
+   "source": "src/data/gbp-categories-il.json#gcid:translator.heName"
+  },
+  {
+   "term": "תרגום מסמכים",
+   "source": "src/data/gbp-categories-il.json#gcid:translator.synonyms[0]"
+  },
+  {
+   "term": "תרגום לאנגלית",
+   "source": "src/data/gbp-categories-il.json#gcid:translator.synonyms[1]"
+  },
+  {
+   "term": "תרגום משפטי",
+   "source": "src/data/gbp-categories-il.json#gcid:translator.synonyms[2]"
+  },
+  {
+   "term": "מתורגמן",
+   "source": "src/data/gbp-categories-il.json#gcid:translator.synonyms[3]"
+  },
+  {
+   "term": "תרגום סימולטני",
+   "source": "src/data/gbp-categories-il.json#gcid:translator.synonyms[4]"
+  },
+  {
+   "term": "חוקר פרטי",
+   "source": "src/data/gbp-categories-il.json#gcid:private_investigator.heName"
+  },
+  {
+   "term": "משרד חקירות",
+   "source": "src/data/gbp-categories-il.json#gcid:private_investigator.synonyms[0]"
+  },
+  {
+   "term": "מעקבים",
+   "source": "src/data/gbp-categories-il.json#gcid:private_investigator.synonyms[1]"
+  },
+  {
+   "term": "בגידות וגירושין",
+   "source": "src/data/gbp-categories-il.json#gcid:private_investigator.synonyms[2]"
+  },
+  {
+   "term": "חקירות כלכליות",
+   "source": "src/data/gbp-categories-il.json#gcid:private_investigator.synonyms[3]"
+  },
+  {
+   "term": "גילוי האזנות",
+   "source": "src/data/gbp-categories-il.json#gcid:private_investigator.synonyms[4]"
+  },
+  {
+   "term": "משרד פרסום ושיווק דיגיטלי",
+   "source": "src/data/gbp-categories-il.json#gcid:marketing_agency.heName"
+  },
+  {
+   "term": "שיווק דיגיטלי",
+   "source": "src/data/gbp-categories-il.json#gcid:marketing_agency.synonyms[0]"
+  },
+  {
+   "term": "קידום אתרים",
+   "source": "src/data/gbp-categories-il.json#gcid:marketing_agency.synonyms[1]"
+  },
+  {
+   "term": "פרסום בגוגל",
+   "source": "src/data/gbp-categories-il.json#gcid:marketing_agency.synonyms[2]"
+  },
+  {
+   "term": "ניהול סושיאל",
+   "source": "src/data/gbp-categories-il.json#gcid:marketing_agency.synonyms[3]"
+  },
+  {
+   "term": "קמפיינר",
+   "source": "src/data/gbp-categories-il.json#gcid:marketing_agency.synonyms[4]"
+  },
+  {
+   "term": "פרסום בפייסבוק",
+   "source": "src/data/gbp-categories-il.json#gcid:marketing_agency.synonyms[5]"
+  },
+  {
+   "term": "SEO",
+   "source": "src/data/gbp-categories-il.json#gcid:marketing_agency.synonyms[6]"
+  },
+  {
+   "term": "בונה אתרים ומעצב אתרים",
+   "source": "src/data/gbp-categories-il.json#gcid:website_designer.heName"
+  },
+  {
+   "term": "בניית אתרים",
+   "source": "src/data/gbp-categories-il.json#gcid:website_designer.synonyms[0]"
+  },
+  {
+   "term": "פיתוח אתרים",
+   "source": "src/data/gbp-categories-il.json#gcid:website_designer.synonyms[1]"
+  },
+  {
+   "term": "עיצוב אתרים",
+   "source": "src/data/gbp-categories-il.json#gcid:website_designer.synonyms[2]"
+  },
+  {
+   "term": "וורדפרס",
+   "source": "src/data/gbp-categories-il.json#gcid:website_designer.synonyms[3]"
+  },
+  {
+   "term": "חנויות איקומרס",
+   "source": "src/data/gbp-categories-il.json#gcid:website_designer.synonyms[4]"
+  },
+  {
+   "term": "UI UX",
+   "source": "src/data/gbp-categories-il.json#gcid:website_designer.synonyms[5]"
+  },
+  {
+   "term": "מעצב גרפי",
+   "source": "src/data/gbp-categories-il.json#gcid:graphic_designer.heName"
+  },
+  {
+   "term": "עיצוב גרפי",
+   "source": "src/data/gbp-categories-il.json#gcid:graphic_designer.synonyms[0]"
+  },
+  {
+   "term": "מיתוג עסקי",
+   "source": "src/data/gbp-categories-il.json#gcid:graphic_designer.synonyms[1]"
+  },
+  {
+   "term": "עיצוב לוגו",
+   "source": "src/data/gbp-categories-il.json#gcid:graphic_designer.synonyms[2]"
+  },
+  {
+   "term": "עיצוב פליירים",
+   "source": "src/data/gbp-categories-il.json#gcid:graphic_designer.synonyms[3]"
+  },
+  {
+   "term": "גרפיקאי",
+   "source": "src/data/gbp-categories-il.json#gcid:graphic_designer.synonyms[4]"
+  },
+  {
+   "term": "גרפיקאית",
+   "source": "src/data/gbp-categories-il.json#gcid:graphic_designer.synonyms[5]"
+  },
+  {
+   "term": "בית דפוס",
+   "source": "src/data/gbp-categories-il.json#gcid:print_shop.heName"
+  },
+  {
+   "term": "דפוס דיגיטלי",
+   "source": "src/data/gbp-categories-il.json#gcid:print_shop.synonyms[0]"
+  },
+  {
+   "term": "הדפסת כרטיסי ביקור",
+   "source": "src/data/gbp-categories-il.json#gcid:print_shop.synonyms[1]"
+  },
+  {
+   "term": "הדפסת פוסטרים",
+   "source": "src/data/gbp-categories-il.json#gcid:print_shop.synonyms[2]"
+  },
+  {
+   "term": "הדפסה על חולצות",
+   "source": "src/data/gbp-categories-il.json#gcid:print_shop.synonyms[3]"
+  },
+  {
+   "term": "הדפסת שלטים",
+   "source": "src/data/gbp-categories-il.json#gcid:print_shop.synonyms[4]"
+  },
+  {
+   "term": "כריכיה",
+   "source": "src/data/gbp-categories-il.json#gcid:print_shop.synonyms[5]"
+  },
+  {
+   "term": "יחסי ציבור (יח\"צ)",
+   "source": "src/data/gbp-categories-il.json#gcid:public_relations_firm.heName"
+  },
+  {
+   "term": "משרד יח\"צ",
+   "source": "src/data/gbp-categories-il.json#gcid:public_relations_firm.synonyms[0]"
+  },
+  {
+   "term": "דוברות",
+   "source": "src/data/gbp-categories-il.json#gcid:public_relations_firm.synonyms[1]"
+  },
+  {
+   "term": "ניהול משברים",
+   "source": "src/data/gbp-categories-il.json#gcid:public_relations_firm.synonyms[2]"
+  },
+  {
+   "term": "יחסי תקשורת",
+   "source": "src/data/gbp-categories-il.json#gcid:public_relations_firm.synonyms[3]"
+  },
+  {
+   "term": "יועץ עסקי",
+   "source": "src/data/gbp-categories-il.json#gcid:business_management_consultant.heName"
+  },
+  {
+   "term": "ייעוץ עסקי",
+   "source": "src/data/gbp-categories-il.json#gcid:business_management_consultant.synonyms[0]"
+  },
+  {
+   "term": "פיתוח עסקי",
+   "source": "src/data/gbp-categories-il.json#gcid:business_management_consultant.synonyms[1]"
+  },
+  {
+   "term": "ליווי עסקי",
+   "source": "src/data/gbp-categories-il.json#gcid:business_management_consultant.synonyms[2]"
+  },
+  {
+   "term": "תוכנית עסקית",
+   "source": "src/data/gbp-categories-il.json#gcid:business_management_consultant.synonyms[3]"
+  },
+  {
+   "term": "ייעוץ ארגוני",
+   "source": "src/data/gbp-categories-il.json#gcid:business_management_consultant.synonyms[4]"
+  },
+  {
+   "term": "רופא שיניים",
+   "source": "src/data/gbp-categories-il.json#gcid:dentist.heName"
+  },
+  {
+   "term": "מרפאת שיניים",
+   "source": "src/data/gbp-categories-il.json#gcid:dentist.synonyms[0]"
+  },
+  {
+   "term": "השתלות שיניים",
+   "source": "src/data/gbp-categories-il.json#gcid:dentist.synonyms[1]"
+  },
+  {
+   "term": "הלבנת שיניים",
+   "source": "src/data/gbp-categories-il.json#gcid:dentist.synonyms[2]"
+  },
+  {
+   "term": "רופאת שיניים",
+   "source": "src/data/gbp-categories-il.json#gcid:dentist.synonyms[3]"
+  },
+  {
+   "term": "רופא שיניים חירום",
+   "source": "src/data/gbp-categories-il.json#gcid:dentist.synonyms[4]"
+  },
+  {
+   "term": "יישור שיניים",
+   "source": "src/data/gbp-categories-il.json#gcid:dentist.synonyms[5]"
+  },
+  {
+   "term": "מרכז לרפואת שיניים",
+   "source": "src/data/gbp-categories-il.json#gcid:dental_clinic.synonyms[0]"
+  },
+  {
+   "term": "טיפולי שיניים",
+   "source": "src/data/gbp-categories-il.json#gcid:dental_clinic.synonyms[1]"
+  },
+  {
+   "term": "שיננית",
+   "source": "src/data/gbp-categories-il.json#gcid:dental_clinic.synonyms[2]"
+  },
+  {
+   "term": "אורתודונט / יישור שיניים",
+   "source": "src/data/gbp-categories-il.json#gcid:orthodontist.heName"
+  },
+  {
+   "term": "גשר בשיניים",
+   "source": "src/data/gbp-categories-il.json#gcid:orthodontist.synonyms[0]"
+  },
+  {
+   "term": "יישור שיניים שקוף",
+   "source": "src/data/gbp-categories-il.json#gcid:orthodontist.synonyms[1]"
+  },
+  {
+   "term": "אינוויזליין",
+   "source": "src/data/gbp-categories-il.json#gcid:orthodontist.synonyms[2]"
+  },
+  {
+   "term": "רופא מומחה ליישור שיניים",
+   "source": "src/data/gbp-categories-il.json#gcid:orthodontist.synonyms[3]"
+  },
+  {
+   "term": "רופא שיניים לילדים",
+   "source": "src/data/gbp-categories-il.json#gcid:pediatric_dentist.heName"
+  },
+  {
+   "term": "מרפאת שיניים לילדים",
+   "source": "src/data/gbp-categories-il.json#gcid:pediatric_dentist.synonyms[0]"
+  },
+  {
+   "term": "טיפולי שיניים בגז צחוק",
+   "source": "src/data/gbp-categories-il.json#gcid:pediatric_dentist.synonyms[1]"
+  },
+  {
+   "term": "רפואת שיניים לפעוטות",
+   "source": "src/data/gbp-categories-il.json#gcid:pediatric_dentist.synonyms[2]"
+  },
+  {
+   "term": "פריודונט / מומחה לחניכיים",
+   "source": "src/data/gbp-categories-il.json#gcid:periodontist.heName"
+  },
+  {
+   "term": "רופא חניכיים",
+   "source": "src/data/gbp-categories-il.json#gcid:periodontist.synonyms[0]"
+  },
+  {
+   "term": "טיפול במחלות חניכיים",
+   "source": "src/data/gbp-categories-il.json#gcid:periodontist.synonyms[1]"
+  },
+  {
+   "term": "הקצעת שורשים",
+   "source": "src/data/gbp-categories-il.json#gcid:periodontist.synonyms[2]"
+  },
+  {
+   "term": "ניתוחי חניכיים",
+   "source": "src/data/gbp-categories-il.json#gcid:periodontist.synonyms[3]"
+  },
+  {
+   "term": "פיזיותרפיסט",
+   "source": "src/data/gbp-categories-il.json#gcid:physiotherapist.heName"
+  },
+  {
+   "term": "מכון פיזיותרפיה",
+   "source": "src/data/gbp-categories-il.json#gcid:physiotherapist.synonyms[0]"
+  },
+  {
+   "term": "פיזיותרפיה",
+   "source": "src/data/gbp-categories-il.json#gcid:physiotherapist.synonyms[1]"
+  },
+  {
+   "term": "שיקום מפציעות",
+   "source": "src/data/gbp-categories-il.json#gcid:physiotherapist.synonyms[2]"
+  },
+  {
+   "term": "פיזיותרפיסט מוסמך",
+   "source": "src/data/gbp-categories-il.json#gcid:physiotherapist.synonyms[3]"
+  },
+  {
+   "term": "פיזיותרפיה לשיקום",
+   "source": "src/data/gbp-categories-il.json#gcid:physiotherapist.synonyms[4]"
+  },
+  {
+   "term": "רצפת אגן פיזיותרפיה",
+   "source": "src/data/gbp-categories-il.json#gcid:physiotherapist.synonyms[5]"
+  },
+  {
+   "term": "כירופרקט",
+   "source": "src/data/gbp-categories-il.json#gcid:chiropractor.heName"
+  },
+  {
+   "term": "כירופרקטיקה",
+   "source": "src/data/gbp-categories-il.json#gcid:chiropractor.synonyms[0]"
+  },
+  {
+   "term": "טיפול בכאבי גב",
+   "source": "src/data/gbp-categories-il.json#gcid:chiropractor.synonyms[1]"
+  },
+  {
+   "term": "יישור חוליות",
+   "source": "src/data/gbp-categories-il.json#gcid:chiropractor.synonyms[2]"
+  },
+  {
+   "term": "כירופרקטור",
+   "source": "src/data/gbp-categories-il.json#gcid:chiropractor.synonyms[3]"
+  },
+  {
+   "term": "אוסטאופת",
+   "source": "src/data/gbp-categories-il.json#gcid:osteopath.heName"
+  },
+  {
+   "term": "אוסטאופתיה",
+   "source": "src/data/gbp-categories-il.json#gcid:osteopath.synonyms[0]"
+  },
+  {
+   "term": "טיפול בכאב",
+   "source": "src/data/gbp-categories-il.json#gcid:osteopath.synonyms[1]"
+  },
+  {
+   "term": "אוסטאופת מוסמך",
+   "source": "src/data/gbp-categories-il.json#gcid:osteopath.synonyms[2]"
+  },
+  {
+   "term": "פסיכולוג",
+   "source": "src/data/gbp-categories-il.json#gcid:psychologist.heName"
+  },
+  {
+   "term": "פסיכולוג קליני",
+   "source": "src/data/gbp-categories-il.json#gcid:psychologist.synonyms[0]"
+  },
+  {
+   "term": "טיפול פסיכולוגי",
+   "source": "src/data/gbp-categories-il.json#gcid:psychologist.synonyms[1]"
+  },
+  {
+   "term": "פסיכולוגית",
+   "source": "src/data/gbp-categories-il.json#gcid:psychologist.synonyms[2]"
+  },
+  {
+   "term": "טיפול בחרדות",
+   "source": "src/data/gbp-categories-il.json#gcid:psychologist.synonyms[3]"
+  },
+  {
+   "term": "פסיכותרפיה",
+   "source": "src/data/gbp-categories-il.json#gcid:psychologist.synonyms[4]"
+  },
+  {
+   "term": "טיפול CBT",
+   "source": "src/data/gbp-categories-il.json#gcid:psychologist.synonyms[5]"
+  },
+  {
+   "term": "פסיכולוג ילדים",
+   "source": "src/data/gbp-categories-il.json#gcid:psychologist.synonyms[6]"
+  },
+  {
+   "term": "פסיכותרפיסט ויועץ רגשי",
+   "source": "src/data/gbp-categories-il.json#gcid:counselor.heName"
+  },
+  {
+   "term": "מטפל רגשי",
+   "source": "src/data/gbp-categories-il.json#gcid:counselor.synonyms[0]"
+  },
+  {
+   "term": "טיפול זוגי",
+   "source": "src/data/gbp-categories-il.json#gcid:counselor.synonyms[1]"
+  },
+  {
+   "term": "ייעוץ זוגי",
+   "source": "src/data/gbp-categories-il.json#gcid:counselor.synonyms[2]"
+  },
+  {
+   "term": "הדרכת הורים",
+   "source": "src/data/gbp-categories-il.json#gcid:counselor.synonyms[3]"
+  },
+  {
+   "term": "פסיכותרפיה הוליסטית",
+   "source": "src/data/gbp-categories-il.json#gcid:counselor.synonyms[4]"
+  },
+  {
+   "term": "פסיכיאטר",
+   "source": "src/data/gbp-categories-il.json#gcid:psychiatrist.heName"
+  },
+  {
+   "term": "פסיכיאטר פרטי",
+   "source": "src/data/gbp-categories-il.json#gcid:psychiatrist.synonyms[0]"
+  },
+  {
+   "term": "אבחון פסיכיאטרי",
+   "source": "src/data/gbp-categories-il.json#gcid:psychiatrist.synonyms[1]"
+  },
+  {
+   "term": "פסיכיאטרית",
+   "source": "src/data/gbp-categories-il.json#gcid:psychiatrist.synonyms[2]"
+  },
+  {
+   "term": "פסיכיאטר ילדים ונוער",
+   "source": "src/data/gbp-categories-il.json#gcid:psychiatrist.synonyms[3]"
+  },
+  {
+   "term": "מאמן אישי ו-NLP",
+   "source": "src/data/gbp-categories-il.json#gcid:life_coach.heName"
+  },
+  {
+   "term": "קואוצ'ר",
+   "source": "src/data/gbp-categories-il.json#gcid:life_coach.synonyms[0]"
+  },
+  {
+   "term": "אימון אישי",
+   "source": "src/data/gbp-categories-il.json#gcid:life_coach.synonyms[1]"
+  },
+  {
+   "term": "אימון לקריירה",
+   "source": "src/data/gbp-categories-il.json#gcid:life_coach.synonyms[2]"
+  },
+  {
+   "term": "מטפל NLP",
+   "source": "src/data/gbp-categories-il.json#gcid:life_coach.synonyms[3]"
+  },
+  {
+   "term": "אימון להצלחה",
+   "source": "src/data/gbp-categories-il.json#gcid:life_coach.synonyms[4]"
+  },
+  {
+   "term": "וטרינר",
+   "source": "src/data/gbp-categories-il.json#gcid:veterinarian.heName"
+  },
+  {
+   "term": "מרפאה וטרינרית",
+   "source": "src/data/gbp-categories-il.json#gcid:veterinarian.synonyms[0]"
+  },
+  {
+   "term": "וטרינר חירום",
+   "source": "src/data/gbp-categories-il.json#gcid:veterinarian.synonyms[1]"
+  },
+  {
+   "term": "רופא חיות",
+   "source": "src/data/gbp-categories-il.json#gcid:veterinarian.synonyms[2]"
+  },
+  {
+   "term": "וטרינרית",
+   "source": "src/data/gbp-categories-il.json#gcid:veterinarian.synonyms[3]"
+  },
+  {
+   "term": "חיסונים לכלבים וחתולים",
+   "source": "src/data/gbp-categories-il.json#gcid:veterinarian.synonyms[4]"
+  },
+  {
+   "term": "עיקור וסירוס",
+   "source": "src/data/gbp-categories-il.json#gcid:veterinarian.synonyms[5]"
+  },
+  {
+   "term": "חנות חיות ומזון לבעלי חיים",
+   "source": "src/data/gbp-categories-il.json#gcid:pet_supply_store.heName"
+  },
+  {
+   "term": "חנות חיות",
+   "source": "src/data/gbp-categories-il.json#gcid:pet_supply_store.synonyms[0]"
+  },
+  {
+   "term": "אוכל לכלבים",
+   "source": "src/data/gbp-categories-il.json#gcid:pet_supply_store.synonyms[1]"
+  },
+  {
+   "term": "אוכל לחתולים",
+   "source": "src/data/gbp-categories-il.json#gcid:pet_supply_store.synonyms[2]"
+  },
+  {
+   "term": "ציוד לבעלי חיים",
+   "source": "src/data/gbp-categories-il.json#gcid:pet_supply_store.synonyms[3]"
+  },
+  {
+   "term": "אופטומטריסט",
+   "source": "src/data/gbp-categories-il.json#gcid:optometrist.heName"
+  },
+  {
+   "term": "בדיקת ראייה",
+   "source": "src/data/gbp-categories-il.json#gcid:optometrist.synonyms[0]"
+  },
+  {
+   "term": "אופטיקה",
+   "source": "src/data/gbp-categories-il.json#gcid:optometrist.synonyms[1]"
+  },
+  {
+   "term": "משקפי ראייה",
+   "source": "src/data/gbp-categories-il.json#gcid:optometrist.synonyms[2]"
+  },
+  {
+   "term": "עדשות מגע",
+   "source": "src/data/gbp-categories-il.json#gcid:optometrist.synonyms[3]"
+  },
+  {
+   "term": "משקפי שמש",
+   "source": "src/data/gbp-categories-il.json#gcid:optometrist.synonyms[4]"
+  },
+  {
+   "term": "אופטומטריסטית",
+   "source": "src/data/gbp-categories-il.json#gcid:optometrist.synonyms[5]"
+  },
+  {
+   "term": "רופא עיניים",
+   "source": "src/data/gbp-categories-il.json#gcid:ophthalmologist.heName"
+  },
+  {
+   "term": "מרפאת עיניים",
+   "source": "src/data/gbp-categories-il.json#gcid:ophthalmologist.synonyms[0]"
+  },
+  {
+   "term": "ניתוחי לייזר להסרת משקפיים",
+   "source": "src/data/gbp-categories-il.json#gcid:ophthalmologist.synonyms[1]"
+  },
+  {
+   "term": "בדיקת קרקעית עין",
+   "source": "src/data/gbp-categories-il.json#gcid:ophthalmologist.synonyms[2]"
+  },
+  {
+   "term": "קטרקט",
+   "source": "src/data/gbp-categories-il.json#gcid:ophthalmologist.synonyms[3]"
+  },
+  {
+   "term": "רופא עור",
+   "source": "src/data/gbp-categories-il.json#gcid:dermatologist.heName"
+  },
+  {
+   "term": "רופאת עור",
+   "source": "src/data/gbp-categories-il.json#gcid:dermatologist.synonyms[0]"
+  },
+  {
+   "term": "בדיקת נקודות חן",
+   "source": "src/data/gbp-categories-il.json#gcid:dermatologist.synonyms[1]"
+  },
+  {
+   "term": "טיפול באקנה",
+   "source": "src/data/gbp-categories-il.json#gcid:dermatologist.synonyms[2]"
+  },
+  {
+   "term": "רפואת עור אסתטית",
+   "source": "src/data/gbp-categories-il.json#gcid:dermatologist.synonyms[3]"
+  },
+  {
+   "term": "פודיאטור / מומחה כף רגל",
+   "source": "src/data/gbp-categories-il.json#gcid:podiatrist.heName"
+  },
+  {
+   "term": "פודיאטריה",
+   "source": "src/data/gbp-categories-il.json#gcid:podiatrist.synonyms[0]"
+  },
+  {
+   "term": "ציפורן חודרנית",
+   "source": "src/data/gbp-categories-il.json#gcid:podiatrist.synonyms[1]"
+  },
+  {
+   "term": "פטרת ציפורניים",
+   "source": "src/data/gbp-categories-il.json#gcid:podiatrist.synonyms[2]"
+  },
+  {
+   "term": "מדרסים אורתופדיים",
+   "source": "src/data/gbp-categories-il.json#gcid:podiatrist.synonyms[3]"
+  },
+  {
+   "term": "כף רגל סוכרתית",
+   "source": "src/data/gbp-categories-il.json#gcid:podiatrist.synonyms[4]"
+  },
+  {
+   "term": "מרפאה פרטית / מרכז רפואי",
+   "source": "src/data/gbp-categories-il.json#gcid:medical_clinic.heName"
+  },
+  {
+   "term": "רופא פרטי",
+   "source": "src/data/gbp-categories-il.json#gcid:medical_clinic.synonyms[0]"
+  },
+  {
+   "term": "מרפאת מומחים",
+   "source": "src/data/gbp-categories-il.json#gcid:medical_clinic.synonyms[1]"
+  },
+  {
+   "term": "רפואה פרטית",
+   "source": "src/data/gbp-categories-il.json#gcid:medical_clinic.synonyms[2]"
+  },
+  {
+   "term": "בדיקות רפואיות",
+   "source": "src/data/gbp-categories-il.json#gcid:medical_clinic.synonyms[3]"
+  },
+  {
+   "term": "קוסמטיקאית ומכון יופי",
+   "source": "src/data/gbp-categories-il.json#gcid:skin_care_clinic.heName"
+  },
+  {
+   "term": "טיפול פנים",
+   "source": "src/data/gbp-categories-il.json#gcid:skin_care_clinic.synonyms[0]"
+  },
+  {
+   "term": "קוסמטיקה פרא רפואית",
+   "source": "src/data/gbp-categories-il.json#gcid:skin_care_clinic.synonyms[1]"
+  },
+  {
+   "term": "הסרת שיער בלייזר",
+   "source": "src/data/gbp-categories-il.json#gcid:skin_care_clinic.synonyms[2]"
+  },
+  {
+   "term": "הזרקות בוטוקס",
+   "source": "src/data/gbp-categories-il.json#gcid:skin_care_clinic.synonyms[3]"
+  },
+  {
+   "term": "עיבוי שפתיים",
+   "source": "src/data/gbp-categories-il.json#gcid:skin_care_clinic.synonyms[4]"
+  },
+  {
+   "term": "אנטי אייג'ינג",
+   "source": "src/data/gbp-categories-il.json#gcid:skin_care_clinic.synonyms[5]"
+  },
+  {
+   "term": "סלון יופי",
+   "source": "src/data/gbp-categories-il.json#gcid:beauty_salon.heName"
+  },
+  {
+   "term": "מכון יופי",
+   "source": "src/data/gbp-categories-il.json#gcid:beauty_salon.synonyms[0]"
+  },
+  {
+   "term": "מניקור פדיקור",
+   "source": "src/data/gbp-categories-il.json#gcid:beauty_salon.synonyms[1]"
+  },
+  {
+   "term": "בניית ציפורניים",
+   "source": "src/data/gbp-categories-il.json#gcid:beauty_salon.synonyms[2]"
+  },
+  {
+   "term": "לק ג'ל",
+   "source": "src/data/gbp-categories-il.json#gcid:beauty_salon.synonyms[3]"
+  },
+  {
+   "term": "עיצוב גבות",
+   "source": "src/data/gbp-categories-il.json#gcid:beauty_salon.synonyms[4]"
+  },
+  {
+   "term": "הרמת ריסים",
+   "source": "src/data/gbp-categories-il.json#gcid:beauty_salon.synonyms[5]"
+  },
+  {
+   "term": "ספא ומרכז בריאות",
+   "source": "src/data/gbp-categories-il.json#gcid:spa.heName"
+  },
+  {
+   "term": "חבילת ספא",
+   "source": "src/data/gbp-categories-il.json#gcid:spa.synonyms[0]"
+  },
+  {
+   "term": "ספא בוטיק",
+   "source": "src/data/gbp-categories-il.json#gcid:spa.synonyms[1]"
+  },
+  {
+   "term": "סאונה וג'קוזי",
+   "source": "src/data/gbp-categories-il.json#gcid:spa.synonyms[2]"
+  },
+  {
+   "term": "ספא לזוגות",
+   "source": "src/data/gbp-categories-il.json#gcid:spa.synonyms[3]"
+  },
+  {
+   "term": "מעסה ומטפל במגע",
+   "source": "src/data/gbp-categories-il.json#gcid:massage_therapist.heName"
+  },
+  {
+   "term": "עיסוי שוודי",
+   "source": "src/data/gbp-categories-il.json#gcid:massage_therapist.synonyms[0]"
+  },
+  {
+   "term": "עיסוי רקמות עמוק",
+   "source": "src/data/gbp-categories-il.json#gcid:massage_therapist.synonyms[1]"
+  },
+  {
+   "term": "מסאז'",
+   "source": "src/data/gbp-categories-il.json#gcid:massage_therapist.synonyms[2]"
+  },
+  {
+   "term": "רפלקסולוגיה",
+   "source": "src/data/gbp-categories-il.json#gcid:massage_therapist.synonyms[3]"
+  },
+  {
+   "term": "עיסוי עד הבית",
+   "source": "src/data/gbp-categories-il.json#gcid:massage_therapist.synonyms[4]"
+  },
+  {
+   "term": "מסאג'יסט",
+   "source": "src/data/gbp-categories-il.json#gcid:massage_therapist.synonyms[5]"
+  },
+  {
+   "term": "דיקור סיני ורפואה משלימה",
+   "source": "src/data/gbp-categories-il.json#gcid:acupuncture_clinic.heName"
+  },
+  {
+   "term": "רפואה סינית",
+   "source": "src/data/gbp-categories-il.json#gcid:acupuncture_clinic.synonyms[0]"
+  },
+  {
+   "term": "מדקר סיני",
+   "source": "src/data/gbp-categories-il.json#gcid:acupuncture_clinic.synonyms[1]"
+  },
+  {
+   "term": "נטורופתיה",
+   "source": "src/data/gbp-categories-il.json#gcid:acupuncture_clinic.synonyms[2]"
+  },
+  {
+   "term": "הומיאופתיה",
+   "source": "src/data/gbp-categories-il.json#gcid:acupuncture_clinic.synonyms[3]"
+  },
+  {
+   "term": "צמחי מרפא",
+   "source": "src/data/gbp-categories-il.json#gcid:acupuncture_clinic.synonyms[4]"
+  },
+  {
+   "term": "חדר כושר ומכון כושר",
+   "source": "src/data/gbp-categories-il.json#gcid:gym.heName"
+  },
+  {
+   "term": "מכון כושר",
+   "source": "src/data/gbp-categories-il.json#gcid:gym.synonyms[0]"
+  },
+  {
+   "term": "קרוספיט",
+   "source": "src/data/gbp-categories-il.json#gcid:gym.synonyms[1]"
+  },
+  {
+   "term": "אימוני כושר",
+   "source": "src/data/gbp-categories-il.json#gcid:gym.synonyms[2]"
+  },
+  {
+   "term": "מנוי לחדר כושר",
+   "source": "src/data/gbp-categories-il.json#gcid:gym.synonyms[3]"
+  },
+  {
+   "term": "סטודיו לאימונים",
+   "source": "src/data/gbp-categories-il.json#gcid:gym.synonyms[4]"
+  },
+  {
+   "term": "סטודיו פילאטיס",
+   "source": "src/data/gbp-categories-il.json#gcid:pilates_studio.heName"
+  },
+  {
+   "term": "פילאטיס מכשירים",
+   "source": "src/data/gbp-categories-il.json#gcid:pilates_studio.synonyms[0]"
+  },
+  {
+   "term": "פילאטיס מזרן",
+   "source": "src/data/gbp-categories-il.json#gcid:pilates_studio.synonyms[1]"
+  },
+  {
+   "term": "שיעורי פילאטיס",
+   "source": "src/data/gbp-categories-il.json#gcid:pilates_studio.synonyms[2]"
+  },
+  {
+   "term": "סטודיו ליוגה",
+   "source": "src/data/gbp-categories-il.json#gcid:yoga_studio.heName"
+  },
+  {
+   "term": "שיעורי יוגה",
+   "source": "src/data/gbp-categories-il.json#gcid:yoga_studio.synonyms[0]"
+  },
+  {
+   "term": "אשטנגה יוגה",
+   "source": "src/data/gbp-categories-il.json#gcid:yoga_studio.synonyms[1]"
+  },
+  {
+   "term": "ויניאסה",
+   "source": "src/data/gbp-categories-il.json#gcid:yoga_studio.synonyms[2]"
+  },
+  {
+   "term": "יוגה לנשים בהריון",
+   "source": "src/data/gbp-categories-il.json#gcid:yoga_studio.synonyms[3]"
+  },
+  {
+   "term": "פנצ'ריה וצמיגים",
+   "source": "src/data/gbp-categories-il.json#gcid:tire_shop.heName"
+  },
+  {
+   "term": "פנצ'ריה",
+   "source": "src/data/gbp-categories-il.json#gcid:tire_shop.synonyms[0]"
+  },
+  {
+   "term": "החלפת צמיגים",
+   "source": "src/data/gbp-categories-il.json#gcid:tire_shop.synonyms[1]"
+  },
+  {
+   "term": "תיקון פנצ'ר",
+   "source": "src/data/gbp-categories-il.json#gcid:tire_shop.synonyms[2]"
+  },
+  {
+   "term": "כיוון פרונט",
+   "source": "src/data/gbp-categories-il.json#gcid:tire_shop.synonyms[3]"
+  },
+  {
+   "term": "צמיגים לרכב",
+   "source": "src/data/gbp-categories-il.json#gcid:tire_shop.synonyms[4]"
+  },
+  {
+   "term": "פנצ'ריה 24 שעות",
+   "source": "src/data/gbp-categories-il.json#gcid:tire_shop.synonyms[5]"
+  },
+  {
+   "term": "מכון פרונט וכיוון גלגלים",
+   "source": "src/data/gbp-categories-il.json#gcid:wheel_alignment_service.heName"
+  },
+  {
+   "term": "איזון גלגלים",
+   "source": "src/data/gbp-categories-il.json#gcid:wheel_alignment_service.synonyms[1]"
+  },
+  {
+   "term": "בדיקת מתלים",
+   "source": "src/data/gbp-categories-il.json#gcid:wheel_alignment_service.synonyms[2]"
+  },
+  {
+   "term": "פחחות וצבע לרכב",
+   "source": "src/data/gbp-categories-il.json#gcid:auto_body_shop.heName"
+  },
+  {
+   "term": "פחחות רכב",
+   "source": "src/data/gbp-categories-il.json#gcid:auto_body_shop.synonyms[0]"
+  },
+  {
+   "term": "צביעת רכב",
+   "source": "src/data/gbp-categories-il.json#gcid:auto_body_shop.synonyms[1]"
+  },
+  {
+   "term": "תיקון תאונות",
+   "source": "src/data/gbp-categories-il.json#gcid:auto_body_shop.synonyms[2]"
+  },
+  {
+   "term": "חידוש צבע לרכב",
+   "source": "src/data/gbp-categories-il.json#gcid:auto_body_shop.synonyms[3]"
+  },
+  {
+   "term": "הסרת שריטות ברכב",
+   "source": "src/data/gbp-categories-il.json#gcid:auto_body_shop.synonyms[4]"
+  },
+  {
+   "term": "החלפת בלמים ורפידות לרכב",
+   "source": "src/data/gbp-categories-il.json#gcid:brake_shop.heName"
+  },
+  {
+   "term": "החלפת ברקסים",
+   "source": "src/data/gbp-categories-il.json#gcid:brake_shop.synonyms[0]"
+  },
+  {
+   "term": "צלחות בלם",
+   "source": "src/data/gbp-categories-il.json#gcid:brake_shop.synonyms[1]"
+  },
+  {
+   "term": "בדיקת בלמים",
+   "source": "src/data/gbp-categories-il.json#gcid:brake_shop.synonyms[2]"
+  },
+  {
+   "term": "גרר ושירותי חילוץ רכב",
+   "source": "src/data/gbp-categories-il.json#gcid:towing_service.heName"
+  },
+  {
+   "term": "גרר",
+   "source": "src/data/gbp-categories-il.json#gcid:towing_service.synonyms[0]"
+  },
+  {
+   "term": "שירותי גרירה",
+   "source": "src/data/gbp-categories-il.json#gcid:towing_service.synonyms[1]"
+  },
+  {
+   "term": "גרר 24 שעות",
+   "source": "src/data/gbp-categories-il.json#gcid:towing_service.synonyms[2]"
+  },
+  {
+   "term": "חילוץ רכבים",
+   "source": "src/data/gbp-categories-il.json#gcid:towing_service.synonyms[3]"
+  },
+  {
+   "term": "גרירת אופנועים",
+   "source": "src/data/gbp-categories-il.json#gcid:towing_service.synonyms[4]"
+  },
+  {
+   "term": "זגגות רכב והחלפת שמשות",
+   "source": "src/data/gbp-categories-il.json#gcid:auto_glass_shop.heName"
+  },
+  {
+   "term": "החלפת שמשה לרכב",
+   "source": "src/data/gbp-categories-il.json#gcid:auto_glass_shop.synonyms[0]"
+  },
+  {
+   "term": "תיקון שמשות",
+   "source": "src/data/gbp-categories-il.json#gcid:auto_glass_shop.synonyms[1]"
+  },
+  {
+   "term": "זגג רכב",
+   "source": "src/data/gbp-categories-il.json#gcid:auto_glass_shop.synonyms[2]"
+  },
+  {
+   "term": "השכרת רכב",
+   "source": "src/data/gbp-categories-il.json#gcid:car_rental_agency.heName"
+  },
+  {
+   "term": "השכרת רכבים",
+   "source": "src/data/gbp-categories-il.json#gcid:car_rental_agency.synonyms[0]"
+  },
+  {
+   "term": "השכרת רכב ליום",
+   "source": "src/data/gbp-categories-il.json#gcid:car_rental_agency.synonyms[1]"
+  },
+  {
+   "term": "השכרת רכב לחודש",
+   "source": "src/data/gbp-categories-il.json#gcid:car_rental_agency.synonyms[2]"
+  },
+  {
+   "term": "ליסינג פרטי",
+   "source": "src/data/gbp-categories-il.json#gcid:car_rental_agency.synonyms[3]"
+  },
+  {
+   "term": "סוכנות רכב יד 2 וטרייד אין",
+   "source": "src/data/gbp-categories-il.json#gcid:used_car_dealer.heName"
+  },
+  {
+   "term": "מגרש רכבים",
+   "source": "src/data/gbp-categories-il.json#gcid:used_car_dealer.synonyms[0]"
+  },
+  {
+   "term": "קניית רכב יד שניה",
+   "source": "src/data/gbp-categories-il.json#gcid:used_car_dealer.synonyms[1]"
+  },
+  {
+   "term": "טרייד אין רכב",
+   "source": "src/data/gbp-categories-il.json#gcid:used_car_dealer.synonyms[2]"
+  },
+  {
+   "term": "סוכנות רכב",
+   "source": "src/data/gbp-categories-il.json#gcid:used_car_dealer.synonyms[3]"
+  },
+  {
+   "term": "יבואן וסוכנות רכב חדש",
+   "source": "src/data/gbp-categories-il.json#gcid:car_dealer.heName"
+  },
+  {
+   "term": "קניית רכב חדש",
+   "source": "src/data/gbp-categories-il.json#gcid:car_dealer.synonyms[0]"
+  },
+  {
+   "term": "אולם תצוגה רכב",
+   "source": "src/data/gbp-categories-il.json#gcid:car_dealer.synonyms[1]"
+  },
+  {
+   "term": "סוכנות רכבים חדשים",
+   "source": "src/data/gbp-categories-il.json#gcid:car_dealer.synonyms[2]"
+  },
+  {
+   "term": "מוסך אופנועים וקטנועים",
+   "source": "src/data/gbp-categories-il.json#gcid:motorcycle_repair_shop.heName"
+  },
+  {
+   "term": "מוסך קטנועים",
+   "source": "src/data/gbp-categories-il.json#gcid:motorcycle_repair_shop.synonyms[0]"
+  },
+  {
+   "term": "תיקון אופנוע",
+   "source": "src/data/gbp-categories-il.json#gcid:motorcycle_repair_shop.synonyms[1]"
+  },
+  {
+   "term": "טיפול לקטנוע",
+   "source": "src/data/gbp-categories-il.json#gcid:motorcycle_repair_shop.synonyms[2]"
+  },
+  {
+   "term": "צמיגים לאופנוע",
+   "source": "src/data/gbp-categories-il.json#gcid:motorcycle_repair_shop.synonyms[3]"
+  },
+  {
+   "term": "סוכנות אופנועים וקטנועים",
+   "source": "src/data/gbp-categories-il.json#gcid:motorcycle_dealer.heName"
+  },
+  {
+   "term": "מכירת קטנועים",
+   "source": "src/data/gbp-categories-il.json#gcid:motorcycle_dealer.synonyms[0]"
+  },
+  {
+   "term": "אופנוע יד 2",
+   "source": "src/data/gbp-categories-il.json#gcid:motorcycle_dealer.synonyms[1]"
+  },
+  {
+   "term": "סוכנות קטנועים",
+   "source": "src/data/gbp-categories-il.json#gcid:motorcycle_dealer.synonyms[2]"
+  },
+  {
+   "term": "התקנת מערכות שמע ומולטימדיה לרכב",
+   "source": "src/data/gbp-categories-il.json#gcid:car_stereo_store.heName"
+  },
+  {
+   "term": "מערכת מולטימדיה לרכב",
+   "source": "src/data/gbp-categories-il.json#gcid:car_stereo_store.synonyms[0]"
+  },
+  {
+   "term": "התקנת מצלמת רוורס",
+   "source": "src/data/gbp-categories-il.json#gcid:car_stereo_store.synonyms[1]"
+  },
+  {
+   "term": "רמקולים לרכב",
+   "source": "src/data/gbp-categories-il.json#gcid:car_stereo_store.synonyms[2]"
+  },
+  {
+   "term": "קודן לרכב",
+   "source": "src/data/gbp-categories-il.json#gcid:car_stereo_store.synonyms[3]"
+  },
+  {
+   "term": "אביזרי רכב",
+   "source": "src/data/gbp-categories-il.json#gcid:car_stereo_store.synonyms[4]"
+  },
+  {
+   "term": "מסעדה",
+   "source": "src/data/gbp-categories-il.json#gcid:restaurant.heName"
+  },
+  {
+   "term": "מסעדת שף",
+   "source": "src/data/gbp-categories-il.json#gcid:restaurant.synonyms[0]"
+  },
+  {
+   "term": "מסעדה בשרית",
+   "source": "src/data/gbp-categories-il.json#gcid:restaurant.synonyms[1]"
+  },
+  {
+   "term": "מסעדה חלבית",
+   "source": "src/data/gbp-categories-il.json#gcid:restaurant.synonyms[2]"
+  },
+  {
+   "term": "מסעדה כשרה",
+   "source": "src/data/gbp-categories-il.json#gcid:restaurant.synonyms[3]"
+  },
+  {
+   "term": "אוכל טוב",
+   "source": "src/data/gbp-categories-il.json#gcid:restaurant.synonyms[4]"
+  },
+  {
+   "term": "הזמנת שולחן במסעדה",
+   "source": "src/data/gbp-categories-il.json#gcid:restaurant.synonyms[5]"
+  },
+  {
+   "term": "שיפודיה ומסעדה ישראלית",
+   "source": "src/data/gbp-categories-il.json#gcid:israeli_restaurant.heName"
+  },
+  {
+   "term": "שיפודים",
+   "source": "src/data/gbp-categories-il.json#gcid:israeli_restaurant.synonyms[0]"
+  },
+  {
+   "term": "בשרים על האש",
+   "source": "src/data/gbp-categories-il.json#gcid:israeli_restaurant.synonyms[1]"
+  },
+  {
+   "term": "חומוסיה",
+   "source": "src/data/gbp-categories-il.json#gcid:israeli_restaurant.synonyms[2]"
+  },
+  {
+   "term": "פלאפל",
+   "source": "src/data/gbp-categories-il.json#gcid:israeli_restaurant.synonyms[3]"
+  },
+  {
+   "term": "שווארמה",
+   "source": "src/data/gbp-categories-il.json#gcid:israeli_restaurant.synonyms[4]"
+  },
+  {
+   "term": "אוכל מזרחי",
+   "source": "src/data/gbp-categories-il.json#gcid:israeli_restaurant.synonyms[5]"
+  },
+  {
+   "term": "מסעדה איטלקית",
+   "source": "src/data/gbp-categories-il.json#gcid:italian_restaurant.heName"
+  },
+  {
+   "term": "פיצרייה",
+   "source": "src/data/gbp-categories-il.json#gcid:italian_restaurant.synonyms[0]"
+  },
+  {
+   "term": "פסטה טרייה",
+   "source": "src/data/gbp-categories-il.json#gcid:italian_restaurant.synonyms[1]"
+  },
+  {
+   "term": "אוכל איטלקי",
+   "source": "src/data/gbp-categories-il.json#gcid:italian_restaurant.synonyms[2]"
+  },
+  {
+   "term": "פיצה",
+   "source": "src/data/gbp-categories-il.json#gcid:italian_restaurant.synonyms[3]"
+  },
+  {
+   "term": "משלוחי פיצה",
+   "source": "src/data/gbp-categories-il.json#gcid:pizza_restaurant.synonyms[1]"
+  },
+  {
+   "term": "פיצה כשרה",
+   "source": "src/data/gbp-categories-il.json#gcid:pizza_restaurant.synonyms[2]"
+  },
+  {
+   "term": "פיצה משפחתית",
+   "source": "src/data/gbp-categories-il.json#gcid:pizza_restaurant.synonyms[3]"
+  },
+  {
+   "term": "מסעדה אסייתית וסושי",
+   "source": "src/data/gbp-categories-il.json#gcid:sushi_restaurant.heName"
+  },
+  {
+   "term": "סושי",
+   "source": "src/data/gbp-categories-il.json#gcid:sushi_restaurant.synonyms[0]"
+  },
+  {
+   "term": "סושי בר",
+   "source": "src/data/gbp-categories-il.json#gcid:sushi_restaurant.synonyms[1]"
+  },
+  {
+   "term": "מסעדה סינית",
+   "source": "src/data/gbp-categories-il.json#gcid:sushi_restaurant.synonyms[2]"
+  },
+  {
+   "term": "מוקפץ",
+   "source": "src/data/gbp-categories-il.json#gcid:sushi_restaurant.synonyms[3]"
+  },
+  {
+   "term": "משלוחי סושי",
+   "source": "src/data/gbp-categories-il.json#gcid:sushi_restaurant.synonyms[4]"
+  },
+  {
+   "term": "בית קפה",
+   "source": "src/data/gbp-categories-il.json#gcid:cafe.heName"
+  },
+  {
+   "term": "קפה ומאפה",
+   "source": "src/data/gbp-categories-il.json#gcid:cafe.synonyms[0]"
+  },
+  {
+   "term": "ארוחת בוקר",
+   "source": "src/data/gbp-categories-il.json#gcid:cafe.synonyms[1]"
+  },
+  {
+   "term": "קפה שכונתי",
+   "source": "src/data/gbp-categories-il.json#gcid:cafe.synonyms[2]"
+  },
+  {
+   "term": "בית קפה בוטיק",
+   "source": "src/data/gbp-categories-il.json#gcid:cafe.synonyms[3]"
+  },
+  {
+   "term": "מאפייה",
+   "source": "src/data/gbp-categories-il.json#gcid:bakery.heName"
+  },
+  {
+   "term": "מאפיית לחמים",
+   "source": "src/data/gbp-categories-il.json#gcid:bakery.synonyms[0]"
+  },
+  {
+   "term": "לחמי מחמצת",
+   "source": "src/data/gbp-categories-il.json#gcid:bakery.synonyms[1]"
+  },
+  {
+   "term": "בורקס",
+   "source": "src/data/gbp-categories-il.json#gcid:bakery.synonyms[2]"
+  },
+  {
+   "term": "פיתות חמות",
+   "source": "src/data/gbp-categories-il.json#gcid:bakery.synonyms[3]"
+  },
+  {
+   "term": "חלות לשבת",
+   "source": "src/data/gbp-categories-il.json#gcid:bakery.synonyms[4]"
+  },
+  {
+   "term": "קונדיטוריה ועוגות מעוצבות",
+   "source": "src/data/gbp-categories-il.json#gcid:pastry_shop.heName"
+  },
+  {
+   "term": "קונדיטוריה",
+   "source": "src/data/gbp-categories-il.json#gcid:pastry_shop.synonyms[0]"
+  },
+  {
+   "term": "עוגות יום הולדת",
+   "source": "src/data/gbp-categories-il.json#gcid:pastry_shop.synonyms[1]"
+  },
+  {
+   "term": "עוגות מעוצבות",
+   "source": "src/data/gbp-categories-il.json#gcid:pastry_shop.synonyms[2]"
+  },
+  {
+   "term": "קינוחים",
+   "source": "src/data/gbp-categories-il.json#gcid:pastry_shop.synonyms[3]"
+  },
+  {
+   "term": "עוגיות בעבודת יד",
+   "source": "src/data/gbp-categories-il.json#gcid:pastry_shop.synonyms[4]"
+  },
+  {
+   "term": "חברת קייטרינג",
+   "source": "src/data/gbp-categories-il.json#gcid:catering_service.heName"
+  },
+  {
+   "term": "קייטרינג לאירועים",
+   "source": "src/data/gbp-categories-il.json#gcid:catering_service.synonyms[0]"
+  },
+  {
+   "term": "קייטרינג בשרי",
+   "source": "src/data/gbp-categories-il.json#gcid:catering_service.synonyms[1]"
+  },
+  {
+   "term": "קייטרינג חלבי",
+   "source": "src/data/gbp-categories-il.json#gcid:catering_service.synonyms[2]"
+  },
+  {
+   "term": "קייטרינג לשבת חתן",
+   "source": "src/data/gbp-categories-il.json#gcid:catering_service.synonyms[3]"
+  },
+  {
+   "term": "מגשי אירוח",
+   "source": "src/data/gbp-categories-il.json#gcid:catering_service.synonyms[4]"
+  },
+  {
+   "term": "קייטרינג כשר",
+   "source": "src/data/gbp-categories-il.json#gcid:catering_service.synonyms[5]"
+  },
+  {
+   "term": "משלוחי אוכל",
+   "source": "src/data/gbp-categories-il.json#gcid:delivery_restaurant.heName"
+  },
+  {
+   "term": "טייק אווי",
+   "source": "src/data/gbp-categories-il.json#gcid:delivery_restaurant.synonyms[0]"
+  },
+  {
+   "term": "אוכל מוכן לקחת",
+   "source": "src/data/gbp-categories-il.json#gcid:delivery_restaurant.synonyms[1]"
+  },
+  {
+   "term": "משלוחים",
+   "source": "src/data/gbp-categories-il.json#gcid:delivery_restaurant.synonyms[2]"
+  },
+  {
+   "term": "אטליז וקצביה",
+   "source": "src/data/gbp-categories-il.json#gcid:butcher_shop.heName"
+  },
+  {
+   "term": "קצביה",
+   "source": "src/data/gbp-categories-il.json#gcid:butcher_shop.synonyms[0]"
+  },
+  {
+   "term": "אטליז כשר",
+   "source": "src/data/gbp-categories-il.json#gcid:butcher_shop.synonyms[1]"
+  },
+  {
+   "term": "בשר פרימיום",
+   "source": "src/data/gbp-categories-il.json#gcid:butcher_shop.synonyms[2]"
+  },
+  {
+   "term": "בשר טרי",
+   "source": "src/data/gbp-categories-il.json#gcid:butcher_shop.synonyms[3]"
+  },
+  {
+   "term": "נתחי בשר מובחרים",
+   "source": "src/data/gbp-categories-il.json#gcid:butcher_shop.synonyms[4]"
+  },
+  {
+   "term": "חנות דגים / חנות דגי ים",
+   "source": "src/data/gbp-categories-il.json#gcid:fish_store.heName"
+  },
+  {
+   "term": "דגים טריים",
+   "source": "src/data/gbp-categories-il.json#gcid:fish_store.synonyms[0]"
+  },
+  {
+   "term": "דגי ים",
+   "source": "src/data/gbp-categories-il.json#gcid:fish_store.synonyms[1]"
+  },
+  {
+   "term": "פילוט דגים",
+   "source": "src/data/gbp-categories-il.json#gcid:fish_store.synonyms[2]"
+  },
+  {
+   "term": "חנות דגים כשרה",
+   "source": "src/data/gbp-categories-il.json#gcid:fish_store.synonyms[3]"
+  },
+  {
+   "term": "חנות פרחים",
+   "source": "src/data/gbp-categories-il.json#gcid:florist.heName"
+  },
+  {
+   "term": "משלוחי פרחים",
+   "source": "src/data/gbp-categories-il.json#gcid:florist.synonyms[0]"
+  },
+  {
+   "term": "זרי פרחים",
+   "source": "src/data/gbp-categories-il.json#gcid:florist.synonyms[1]"
+  },
+  {
+   "term": "סידורי פרחים",
+   "source": "src/data/gbp-categories-il.json#gcid:florist.synonyms[2]"
+  },
+  {
+   "term": "עציצים",
+   "source": "src/data/gbp-categories-il.json#gcid:florist.synonyms[3]"
+  },
+  {
+   "term": "זרי כלה",
+   "source": "src/data/gbp-categories-il.json#gcid:florist.synonyms[4]"
+  },
+  {
+   "term": "סופרמרקט",
+   "source": "src/data/gbp-categories-il.json#gcid:supermarket.heName"
+  },
+  {
+   "term": "סופר",
+   "source": "src/data/gbp-categories-il.json#gcid:supermarket.synonyms[0]"
+  },
+  {
+   "term": "מרכול",
+   "source": "src/data/gbp-categories-il.json#gcid:supermarket.synonyms[1]"
+  },
+  {
+   "term": "קניות לבית",
+   "source": "src/data/gbp-categories-il.json#gcid:supermarket.synonyms[2]"
+  },
+  {
+   "term": "מוצרי מזון",
+   "source": "src/data/gbp-categories-il.json#gcid:supermarket.synonyms[3]"
+  },
+  {
+   "term": "מכולת שכונתית ומינימרקט",
+   "source": "src/data/gbp-categories-il.json#gcid:grocery_store.heName"
+  },
+  {
+   "term": "מכולת",
+   "source": "src/data/gbp-categories-il.json#gcid:grocery_store.synonyms[0]"
+  },
+  {
+   "term": "מינימרקט",
+   "source": "src/data/gbp-categories-il.json#gcid:grocery_store.synonyms[1]"
+  },
+  {
+   "term": "פיצוציה",
+   "source": "src/data/gbp-categories-il.json#gcid:grocery_store.synonyms[2]"
+  },
+  {
+   "term": "קיוסק",
+   "source": "src/data/gbp-categories-il.json#gcid:grocery_store.synonyms[3]"
+  },
+  {
+   "term": "חנות יין ואלכוהול",
+   "source": "src/data/gbp-categories-il.json#gcid:wine_store.heName"
+  },
+  {
+   "term": "חנות משקאות",
+   "source": "src/data/gbp-categories-il.json#gcid:wine_store.synonyms[0]"
+  },
+  {
+   "term": "יינות בוטיק",
+   "source": "src/data/gbp-categories-il.json#gcid:wine_store.synonyms[1]"
+  },
+  {
+   "term": "בירות מיוחדות",
+   "source": "src/data/gbp-categories-il.json#gcid:wine_store.synonyms[2]"
+  },
+  {
+   "term": "אלכוהול לאירועים",
+   "source": "src/data/gbp-categories-il.json#gcid:wine_store.synonyms[3]"
+  },
+  {
+   "term": "חנות רהיטים",
+   "source": "src/data/gbp-categories-il.json#gcid:furniture_store.heName"
+  },
+  {
+   "term": "מערכות ישיבה",
+   "source": "src/data/gbp-categories-il.json#gcid:furniture_store.synonyms[0]"
+  },
+  {
+   "term": "סלונים",
+   "source": "src/data/gbp-categories-il.json#gcid:furniture_store.synonyms[1]"
+  },
+  {
+   "term": "חדרי שינה",
+   "source": "src/data/gbp-categories-il.json#gcid:furniture_store.synonyms[2]"
+  },
+  {
+   "term": "פינות אוכל",
+   "source": "src/data/gbp-categories-il.json#gcid:furniture_store.synonyms[3]"
+  },
+  {
+   "term": "מזנונים ושולחנות",
+   "source": "src/data/gbp-categories-il.json#gcid:furniture_store.synonyms[4]"
+  },
+  {
+   "term": "חנות מזרנים ומיטות",
+   "source": "src/data/gbp-categories-il.json#gcid:mattress_store.heName"
+  },
+  {
+   "term": "מזרנים אורטופדיים",
+   "source": "src/data/gbp-categories-il.json#gcid:mattress_store.synonyms[0]"
+  },
+  {
+   "term": "מיטות מתכווננות",
+   "source": "src/data/gbp-categories-il.json#gcid:mattress_store.synonyms[1]"
+  },
+  {
+   "term": "מזרן זוגי",
+   "source": "src/data/gbp-categories-il.json#gcid:mattress_store.synonyms[2]"
+  },
+  {
+   "term": "כריות אורטופדיות",
+   "source": "src/data/gbp-categories-il.json#gcid:mattress_store.synonyms[3]"
+  },
+  {
+   "term": "חנות כלי בית ועיצוב הבית",
+   "source": "src/data/gbp-categories-il.json#gcid:home_goods_store.heName"
+  },
+  {
+   "term": "כלי בית",
+   "source": "src/data/gbp-categories-il.json#gcid:home_goods_store.synonyms[0]"
+  },
+  {
+   "term": "אקססוריז לבית",
+   "source": "src/data/gbp-categories-il.json#gcid:home_goods_store.synonyms[1]"
+  },
+  {
+   "term": "טקסטיל לבית",
+   "source": "src/data/gbp-categories-il.json#gcid:home_goods_store.synonyms[2]"
+  },
+  {
+   "term": "סירים ומחבתות",
+   "source": "src/data/gbp-categories-il.json#gcid:home_goods_store.synonyms[3]"
+  },
+  {
+   "term": "מתנות לבית",
+   "source": "src/data/gbp-categories-il.json#gcid:home_goods_store.synonyms[4]"
+  },
+  {
+   "term": "חנות תאורה וגופי תאורה",
+   "source": "src/data/gbp-categories-il.json#gcid:lighting_store.heName"
+  },
+  {
+   "term": "גופי תאורה מעוצבים",
+   "source": "src/data/gbp-categories-il.json#gcid:lighting_store.synonyms[0]"
+  },
+  {
+   "term": "נברשות",
+   "source": "src/data/gbp-categories-il.json#gcid:lighting_store.synonyms[1]"
+  },
+  {
+   "term": "מנורות עומדות",
+   "source": "src/data/gbp-categories-il.json#gcid:lighting_store.synonyms[2]"
+  },
+  {
+   "term": "ספוטים",
+   "source": "src/data/gbp-categories-il.json#gcid:lighting_store.synonyms[3]"
+  },
+  {
+   "term": "חנות בגדים ובוטיק אופנה",
+   "source": "src/data/gbp-categories-il.json#gcid:clothing_store.heName"
+  },
+  {
+   "term": "בגדי נשים",
+   "source": "src/data/gbp-categories-il.json#gcid:clothing_store.synonyms[0]"
+  },
+  {
+   "term": "בגדי גברים",
+   "source": "src/data/gbp-categories-il.json#gcid:clothing_store.synonyms[1]"
+  },
+  {
+   "term": "בוטיק אופנה",
+   "source": "src/data/gbp-categories-il.json#gcid:clothing_store.synonyms[2]"
+  },
+  {
+   "term": "אופנה",
+   "source": "src/data/gbp-categories-il.json#gcid:clothing_store.synonyms[3]"
+  },
+  {
+   "term": "בגדי מעצבים",
+   "source": "src/data/gbp-categories-il.json#gcid:clothing_store.synonyms[4]"
+  },
+  {
+   "term": "חנות נעליים",
+   "source": "src/data/gbp-categories-il.json#gcid:shoe_store.heName"
+  },
+  {
+   "term": "נעלי נשים",
+   "source": "src/data/gbp-categories-il.json#gcid:shoe_store.synonyms[0]"
+  },
+  {
+   "term": "נעלי גברים",
+   "source": "src/data/gbp-categories-il.json#gcid:shoe_store.synonyms[1]"
+  },
+  {
+   "term": "נעלי ספורט",
+   "source": "src/data/gbp-categories-il.json#gcid:shoe_store.synonyms[2]"
+  },
+  {
+   "term": "נעלי נוחות",
+   "source": "src/data/gbp-categories-il.json#gcid:shoe_store.synonyms[3]"
+  },
+  {
+   "term": "סנדלים ומגפיים",
+   "source": "src/data/gbp-categories-il.json#gcid:shoe_store.synonyms[4]"
+  },
+  {
+   "term": "סלון כלות ושמלות כלה",
+   "source": "src/data/gbp-categories-il.json#gcid:bridal_shop.heName"
+  },
+  {
+   "term": "שמלות כלה",
+   "source": "src/data/gbp-categories-il.json#gcid:bridal_shop.synonyms[0]"
+  },
+  {
+   "term": "שמלות ערב",
+   "source": "src/data/gbp-categories-il.json#gcid:bridal_shop.synonyms[1]"
+  },
+  {
+   "term": "עיצוב שמלות כלה",
+   "source": "src/data/gbp-categories-il.json#gcid:bridal_shop.synonyms[2]"
+  },
+  {
+   "term": "שמלות לאירועים",
+   "source": "src/data/gbp-categories-il.json#gcid:bridal_shop.synonyms[3]"
+  },
+  {
+   "term": "חנות תכשיטים ויהלומים",
+   "source": "src/data/gbp-categories-il.json#gcid:jewelry_store.heName"
+  },
+  {
+   "term": "תכשיטי זהב",
+   "source": "src/data/gbp-categories-il.json#gcid:jewelry_store.synonyms[0]"
+  },
+  {
+   "term": "טבעות אירוסין",
+   "source": "src/data/gbp-categories-il.json#gcid:jewelry_store.synonyms[1]"
+  },
+  {
+   "term": "טבעות נישואין",
+   "source": "src/data/gbp-categories-il.json#gcid:jewelry_store.synonyms[2]"
+  },
+  {
+   "term": "יהלומים",
+   "source": "src/data/gbp-categories-il.json#gcid:jewelry_store.synonyms[3]"
+  },
+  {
+   "term": "שעוני יוקרה",
+   "source": "src/data/gbp-categories-il.json#gcid:jewelry_store.synonyms[4]"
+  },
+  {
+   "term": "תכשיטי כסף",
+   "source": "src/data/gbp-categories-il.json#gcid:jewelry_store.synonyms[5]"
+  },
+  {
+   "term": "שען ותיקון שעונים",
+   "source": "src/data/gbp-categories-il.json#gcid:watch_repair_service.heName"
+  },
+  {
+   "term": "תיקון שעוני יוקרה",
+   "source": "src/data/gbp-categories-il.json#gcid:watch_repair_service.synonyms[0]"
+  },
+  {
+   "term": "החלפת סוללה לשעון",
+   "source": "src/data/gbp-categories-il.json#gcid:watch_repair_service.synonyms[1]"
+  },
+  {
+   "term": "תיקון שעון",
+   "source": "src/data/gbp-categories-il.json#gcid:watch_repair_service.synonyms[2]"
+  },
+  {
+   "term": "שעון קיר",
+   "source": "src/data/gbp-categories-il.json#gcid:watch_repair_service.synonyms[3]"
+  },
+  {
+   "term": "חנות מתנות ומזכרות",
+   "source": "src/data/gbp-categories-il.json#gcid:gift_shop.heName"
+  },
+  {
+   "term": "מתנות לגבר",
+   "source": "src/data/gbp-categories-il.json#gcid:gift_shop.synonyms[0]"
+  },
+  {
+   "term": "מתנות לאישה",
+   "source": "src/data/gbp-categories-il.json#gcid:gift_shop.synonyms[1]"
+  },
+  {
+   "term": "מארזי שי",
+   "source": "src/data/gbp-categories-il.json#gcid:gift_shop.synonyms[2]"
+  },
+  {
+   "term": "מתנות לחג",
+   "source": "src/data/gbp-categories-il.json#gcid:gift_shop.synonyms[3]"
+  },
+  {
+   "term": "חנות ספרים ומכשירי כתיבה",
+   "source": "src/data/gbp-categories-il.json#gcid:book_store.heName"
+  },
+  {
+   "term": "ספרי קריאה",
+   "source": "src/data/gbp-categories-il.json#gcid:book_store.synonyms[0]"
+  },
+  {
+   "term": "ספרי לימוד",
+   "source": "src/data/gbp-categories-il.json#gcid:book_store.synonyms[1]"
+  },
+  {
+   "term": "ציוד משרדי",
+   "source": "src/data/gbp-categories-il.json#gcid:book_store.synonyms[2]"
+  },
+  {
+   "term": "חנות מכשירי כתיבה",
+   "source": "src/data/gbp-categories-il.json#gcid:book_store.synonyms[3]"
+  },
+  {
+   "term": "חנות צעצועים ומשחקים",
+   "source": "src/data/gbp-categories-il.json#gcid:toy_store.heName"
+  },
+  {
+   "term": "צעצועים לילדים",
+   "source": "src/data/gbp-categories-il.json#gcid:toy_store.synonyms[0]"
+  },
+  {
+   "term": "משחקי קופסא",
+   "source": "src/data/gbp-categories-il.json#gcid:toy_store.synonyms[1]"
+  },
+  {
+   "term": "לגו",
+   "source": "src/data/gbp-categories-il.json#gcid:toy_store.synonyms[2]"
+  },
+  {
+   "term": "בובות",
+   "source": "src/data/gbp-categories-il.json#gcid:toy_store.synonyms[3]"
+  },
+  {
+   "term": "משחקי חשיבה",
+   "source": "src/data/gbp-categories-il.json#gcid:toy_store.synonyms[4]"
+  },
+  {
+   "term": "חנות מוצרי תינוקות",
+   "source": "src/data/gbp-categories-il.json#gcid:baby_goods_store.heName"
+  },
+  {
+   "term": "עגלות תינוק",
+   "source": "src/data/gbp-categories-il.json#gcid:baby_goods_store.synonyms[0]"
+  },
+  {
+   "term": "חבילת לידה",
+   "source": "src/data/gbp-categories-il.json#gcid:baby_goods_store.synonyms[1]"
+  },
+  {
+   "term": "מיטות תינוק",
+   "source": "src/data/gbp-categories-il.json#gcid:baby_goods_store.synonyms[2]"
+  },
+  {
+   "term": "בגדי תינוקות",
+   "source": "src/data/gbp-categories-il.json#gcid:baby_goods_store.synonyms[3]"
+  },
+  {
+   "term": "מוצרי בטיחות לרכב לתינוק",
+   "source": "src/data/gbp-categories-il.json#gcid:baby_goods_store.synonyms[4]"
+  },
+  {
+   "term": "חנות אופטיקה ומשקפיים",
+   "source": "src/data/gbp-categories-il.json#gcid:optical_products_store.heName"
+  },
+  {
+   "term": "מסגרות למשקפיים",
+   "source": "src/data/gbp-categories-il.json#gcid:optical_products_store.synonyms[1]"
+  },
+  {
+   "term": "עדשות מולטיפוקל",
+   "source": "src/data/gbp-categories-il.json#gcid:optical_products_store.synonyms[2]"
+  },
+  {
+   "term": "חנות מוצרי חשמל ואלקטרוניקה",
+   "source": "src/data/gbp-categories-il.json#gcid:electronics_store.heName"
+  },
+  {
+   "term": "מכשירי חשמל",
+   "source": "src/data/gbp-categories-il.json#gcid:electronics_store.synonyms[0]"
+  },
+  {
+   "term": "טלוויזיות",
+   "source": "src/data/gbp-categories-il.json#gcid:electronics_store.synonyms[1]"
+  },
+  {
+   "term": "מקררים",
+   "source": "src/data/gbp-categories-il.json#gcid:electronics_store.synonyms[2]"
+  },
+  {
+   "term": "מכונות כביסה",
+   "source": "src/data/gbp-categories-il.json#gcid:electronics_store.synonyms[3]"
+  },
+  {
+   "term": "רמקולים",
+   "source": "src/data/gbp-categories-il.json#gcid:electronics_store.synonyms[4]"
+  },
+  {
+   "term": "מפיק אירועים ומארגן חתונות",
+   "source": "src/data/gbp-categories-il.json#gcid:event_planner.heName"
+  },
+  {
+   "term": "הפקת אירועים",
+   "source": "src/data/gbp-categories-il.json#gcid:event_planner.synonyms[0]"
+  },
+  {
+   "term": "ארגון חתונה",
+   "source": "src/data/gbp-categories-il.json#gcid:event_planner.synonyms[1]"
+  },
+  {
+   "term": "הפקת בר מצווה",
+   "source": "src/data/gbp-categories-il.json#gcid:event_planner.synonyms[2]"
+  },
+  {
+   "term": "אירועי חברה",
+   "source": "src/data/gbp-categories-il.json#gcid:event_planner.synonyms[3]"
+  },
+  {
+   "term": "עיצוב אירועים",
+   "source": "src/data/gbp-categories-il.json#gcid:event_planner.synonyms[4]"
+  },
+  {
+   "term": "אולם אירועים וגן אירועים",
+   "source": "src/data/gbp-categories-il.json#gcid:event_venue.heName"
+  },
+  {
+   "term": "גן אירועים",
+   "source": "src/data/gbp-categories-il.json#gcid:event_venue.synonyms[0]"
+  },
+  {
+   "term": "אולם לחינה",
+   "source": "src/data/gbp-categories-il.json#gcid:event_venue.synonyms[1]"
+  },
+  {
+   "term": "מקום לאירוע קטן",
+   "source": "src/data/gbp-categories-il.json#gcid:event_venue.synonyms[2]"
+  },
+  {
+   "term": "מתחם אירועים",
+   "source": "src/data/gbp-categories-il.json#gcid:event_venue.synonyms[3]"
+  },
+  {
+   "term": "אולם בריתות",
+   "source": "src/data/gbp-categories-il.json#gcid:event_venue.synonyms[4]"
+  },
+  {
+   "term": "צלם וידאו והפקת סרטונים",
+   "source": "src/data/gbp-categories-il.json#gcid:video_production_service.heName"
+  },
+  {
+   "term": "צילום וידאו לאירועים",
+   "source": "src/data/gbp-categories-il.json#gcid:video_production_service.synonyms[0]"
+  },
+  {
+   "term": "סרטי תדמית",
+   "source": "src/data/gbp-categories-il.json#gcid:video_production_service.synonyms[1]"
+  },
+  {
+   "term": "עריכת וידאו",
+   "source": "src/data/gbp-categories-il.json#gcid:video_production_service.synonyms[2]"
+  },
+  {
+   "term": "קליפים לאירועים",
+   "source": "src/data/gbp-categories-il.json#gcid:video_production_service.synonyms[3]"
+  },
+  {
+   "term": "תקליטן ו-DJ לאירועים",
+   "source": "src/data/gbp-categories-il.json#gcid:dj_service.heName"
+  },
+  {
+   "term": "די ג'יי לחתונה",
+   "source": "src/data/gbp-categories-il.json#gcid:dj_service.synonyms[0]"
+  },
+  {
+   "term": "תקליטן לבר מצווה",
+   "source": "src/data/gbp-categories-il.json#gcid:dj_service.synonyms[1]"
+  },
+  {
+   "term": "מוזיקה לאירועים",
+   "source": "src/data/gbp-categories-il.json#gcid:dj_service.synonyms[2]"
+  },
+  {
+   "term": "DJ",
+   "source": "src/data/gbp-categories-il.json#gcid:dj_service.synonyms[3]"
+  },
+  {
+   "term": "הרכב מוזיקלי ונגנים לאירועים",
+   "source": "src/data/gbp-categories-il.json#gcid:musician.heName"
+  },
+  {
+   "term": "להקה לחתונה",
+   "source": "src/data/gbp-categories-il.json#gcid:musician.synonyms[0]"
+  },
+  {
+   "term": "נגן סקסופון",
+   "source": "src/data/gbp-categories-il.json#gcid:musician.synonyms[1]"
+  },
+  {
+   "term": "כנריות לאירועים",
+   "source": "src/data/gbp-categories-il.json#gcid:musician.synonyms[2]"
+  },
+  {
+   "term": "זמר לאירוע",
+   "source": "src/data/gbp-categories-il.json#gcid:musician.synonyms[3]"
+  },
+  {
+   "term": "מורה למוזיקה ובית ספר לנגינה",
+   "source": "src/data/gbp-categories-il.json#gcid:music_school.heName"
+  },
+  {
+   "term": "שיעורי גיטרה",
+   "source": "src/data/gbp-categories-il.json#gcid:music_school.synonyms[0]"
+  },
+  {
+   "term": "שיעורי פסנתר",
+   "source": "src/data/gbp-categories-il.json#gcid:music_school.synonyms[1]"
+  },
+  {
+   "term": "שיעורי פיתוח קול",
+   "source": "src/data/gbp-categories-il.json#gcid:music_school.synonyms[2]"
+  },
+  {
+   "term": "לימוד תופים",
+   "source": "src/data/gbp-categories-il.json#gcid:music_school.synonyms[3]"
+  },
+  {
+   "term": "בית ספר לשפות ומורה פרטי",
+   "source": "src/data/gbp-categories-il.json#gcid:language_school.heName"
+  },
+  {
+   "term": "לימודי אנגלית",
+   "source": "src/data/gbp-categories-il.json#gcid:language_school.synonyms[0]"
+  },
+  {
+   "term": "מורה פרטי לאנגלית",
+   "source": "src/data/gbp-categories-il.json#gcid:language_school.synonyms[1]"
+  },
+  {
+   "term": "קורס עברית / אולפן",
+   "source": "src/data/gbp-categories-il.json#gcid:language_school.synonyms[2]"
+  },
+  {
+   "term": "לימוד ספרדית",
+   "source": "src/data/gbp-categories-il.json#gcid:language_school.synonyms[3]"
+  },
+  {
+   "term": "מורה פרטי",
+   "source": "src/data/gbp-categories-il.json#gcid:language_school.synonyms[4]"
+  },
+  {
+   "term": "מרכז שיעורים פרטיים והכנה לבגרויות",
+   "source": "src/data/gbp-categories-il.json#gcid:tutoring_service.heName"
+  },
+  {
+   "term": "שיעורים פרטיים במתמטיקה",
+   "source": "src/data/gbp-categories-il.json#gcid:tutoring_service.synonyms[0]"
+  },
+  {
+   "term": "הכנה לבגרות",
+   "source": "src/data/gbp-categories-il.json#gcid:tutoring_service.synonyms[1]"
+  },
+  {
+   "term": "הכנה לפסיכומטרי",
+   "source": "src/data/gbp-categories-il.json#gcid:tutoring_service.synonyms[2]"
+  },
+  {
+   "term": "מורה פרטי למתמטיקה",
+   "source": "src/data/gbp-categories-il.json#gcid:tutoring_service.synonyms[3]"
+  },
+  {
+   "term": "אמנויות לחימה וקרב מגע",
+   "source": "src/data/gbp-categories-il.json#gcid:martial_arts_school.heName"
+  },
+  {
+   "term": "קרב מגע",
+   "source": "src/data/gbp-categories-il.json#gcid:martial_arts_school.synonyms[0]"
+  },
+  {
+   "term": "חוג ג'ודו",
+   "source": "src/data/gbp-categories-il.json#gcid:martial_arts_school.synonyms[1]"
+  },
+  {
+   "term": "קראטה",
+   "source": "src/data/gbp-categories-il.json#gcid:martial_arts_school.synonyms[2]"
+  },
+  {
+   "term": "הגנה עצמית",
+   "source": "src/data/gbp-categories-il.json#gcid:martial_arts_school.synonyms[3]"
+  },
+  {
+   "term": "ג'יו ג'יטסו",
+   "source": "src/data/gbp-categories-il.json#gcid:martial_arts_school.synonyms[4]"
+  },
+  {
+   "term": "אגרוף תאילנדי",
+   "source": "src/data/gbp-categories-il.json#gcid:martial_arts_school.synonyms[5]"
+  },
+  {
+   "term": "סטודיו ובית ספר לריקוד",
+   "source": "src/data/gbp-categories-il.json#gcid:dance_school.heName"
+  },
+  {
+   "term": "חוג ריקוד",
+   "source": "src/data/gbp-categories-il.json#gcid:dance_school.synonyms[0]"
+  },
+  {
+   "term": "סלסה",
+   "source": "src/data/gbp-categories-il.json#gcid:dance_school.synonyms[1]"
+  },
+  {
+   "term": "בלט",
+   "source": "src/data/gbp-categories-il.json#gcid:dance_school.synonyms[2]"
+  },
+  {
+   "term": "היפ הופ",
+   "source": "src/data/gbp-categories-il.json#gcid:dance_school.synonyms[3]"
+  },
+  {
+   "term": "ריקוד חתן כלה",
+   "source": "src/data/gbp-categories-il.json#gcid:dance_school.synonyms[4]"
+  },
+  {
+   "term": "ריקודי עם",
+   "source": "src/data/gbp-categories-il.json#gcid:dance_school.synonyms[5]"
+  },
+  {
+   "term": "סדנאות אמנות וציור",
+   "source": "src/data/gbp-categories-il.json#gcid:art_school.heName"
+  },
+  {
+   "term": "חוג ציור",
+   "source": "src/data/gbp-categories-il.json#gcid:art_school.synonyms[0]"
+  },
+  {
+   "term": "סדנת קרמיקה",
+   "source": "src/data/gbp-categories-il.json#gcid:art_school.synonyms[1]"
+  },
+  {
+   "term": "פיסול",
+   "source": "src/data/gbp-categories-il.json#gcid:art_school.synonyms[2]"
+  },
+  {
+   "term": "סדנאות יצירה",
+   "source": "src/data/gbp-categories-il.json#gcid:art_school.synonyms[3]"
+  },
+  {
+   "term": "חנות חומרי יצירה ואמנות",
+   "source": "src/data/gbp-categories-il.json#gcid:craft_store.heName"
+  },
+  {
+   "term": "חומרי יצירה",
+   "source": "src/data/gbp-categories-il.json#gcid:craft_store.synonyms[0]"
+  },
+  {
+   "term": "ציוד לאמנות",
+   "source": "src/data/gbp-categories-il.json#gcid:craft_store.synonyms[1]"
+  },
+  {
+   "term": "צבעי שמן ואקריליק",
+   "source": "src/data/gbp-categories-il.json#gcid:craft_store.synonyms[2]"
+  },
+  {
+   "term": "בדים ותפירה",
+   "source": "src/data/gbp-categories-il.json#gcid:craft_store.synonyms[3]"
+  },
+  {
+   "term": "מכבסה וניקוי יבש",
+   "source": "src/data/gbp-categories-il.json#gcid:dry_cleaner.heName"
+  },
+  {
+   "term": "מכבסה",
+   "source": "src/data/gbp-categories-il.json#gcid:dry_cleaner.synonyms[0]"
+  },
+  {
+   "term": "ניקוי יבש לחליפות",
+   "source": "src/data/gbp-categories-il.json#gcid:dry_cleaner.synonyms[1]"
+  },
+  {
+   "term": "גיהוץ בגדים",
+   "source": "src/data/gbp-categories-il.json#gcid:dry_cleaner.synonyms[2]"
+  },
+  {
+   "term": "שירותי כביסה",
+   "source": "src/data/gbp-categories-il.json#gcid:dry_cleaner.synonyms[3]"
+  },
+  {
+   "term": "חייט ותיקון בגדים",
+   "source": "src/data/gbp-categories-il.json#gcid:tailor.heName"
+  },
+  {
+   "term": "מתפרה",
+   "source": "src/data/gbp-categories-il.json#gcid:tailor.synonyms[0]"
+  },
+  {
+   "term": "קיצור מכנסיים",
+   "source": "src/data/gbp-categories-il.json#gcid:tailor.synonyms[1]"
+  },
+  {
+   "term": "הצרת בגדים",
+   "source": "src/data/gbp-categories-il.json#gcid:tailor.synonyms[2]"
+  },
+  {
+   "term": "חייטות לפי מידה",
+   "source": "src/data/gbp-categories-il.json#gcid:tailor.synonyms[3]"
+  },
+  {
+   "term": "תופרת",
+   "source": "src/data/gbp-categories-il.json#gcid:tailor.synonyms[4]"
+  },
+  {
+   "term": "סנדלר ותיקון נעליים",
+   "source": "src/data/gbp-categories-il.json#gcid:shoe_repair_shop.heName"
+  },
+  {
+   "term": "סנדלריה",
+   "source": "src/data/gbp-categories-il.json#gcid:shoe_repair_shop.synonyms[0]"
+  },
+  {
+   "term": "תיקון מגפיים",
+   "source": "src/data/gbp-categories-il.json#gcid:shoe_repair_shop.synonyms[1]"
+  },
+  {
+   "term": "החלפת עקבים וסוליות",
+   "source": "src/data/gbp-categories-il.json#gcid:shoe_repair_shop.synonyms[2]"
+  },
+  {
+   "term": "תיקון תיקים ומעילי עור",
+   "source": "src/data/gbp-categories-il.json#gcid:shoe_repair_shop.synonyms[3]"
+  },
+  {
+   "term": "טמבוריה וחנות חומרי בניין",
+   "source": "src/data/gbp-categories-il.json#gcid:hardware_store.heName"
+  },
+  {
+   "term": "טמבוריה",
+   "source": "src/data/gbp-categories-il.json#gcid:hardware_store.synonyms[0]"
+  },
+  {
+   "term": "חומרי בניין",
+   "source": "src/data/gbp-categories-il.json#gcid:hardware_store.synonyms[1]"
+  },
+  {
+   "term": "כלי עבודה",
+   "source": "src/data/gbp-categories-il.json#gcid:hardware_store.synonyms[2]"
+  },
+  {
+   "term": "צבעים ודבקים",
+   "source": "src/data/gbp-categories-il.json#gcid:hardware_store.synonyms[3]"
+  },
+  {
+   "term": "אינסטלציה וחשמל לחובבים",
+   "source": "src/data/gbp-categories-il.json#gcid:hardware_store.synonyms[4]"
+  },
+  {
+   "term": "ספק חומרי בניין",
+   "source": "src/data/gbp-categories-il.json#gcid:building_materials_store.heName"
+  },
+  {
+   "term": "מחסן חומרי בניין",
+   "source": "src/data/gbp-categories-il.json#gcid:building_materials_store.synonyms[0]"
+  },
+  {
+   "term": "בלוקים ומלט",
+   "source": "src/data/gbp-categories-il.json#gcid:building_materials_store.synonyms[1]"
+  },
+  {
+   "term": "חול וחצץ",
+   "source": "src/data/gbp-categories-il.json#gcid:building_materials_store.synonyms[2]"
+  },
+  {
+   "term": "גבס ובידוד",
+   "source": "src/data/gbp-categories-il.json#gcid:building_materials_store.synonyms[3]"
+  },
+  {
+   "term": "בנייה ותחזוקת בריכות שחייה",
+   "source": "src/data/gbp-categories-il.json#gcid:swimming_pool_contractor.heName"
+  },
+  {
+   "term": "הקמת בריכות שחייה",
+   "source": "src/data/gbp-categories-il.json#gcid:swimming_pool_contractor.synonyms[0]"
+  },
+  {
+   "term": "בריכות ביתיות",
+   "source": "src/data/gbp-categories-il.json#gcid:swimming_pool_contractor.synonyms[1]"
+  },
+  {
+   "term": "תחזוקת בריכה",
+   "source": "src/data/gbp-categories-il.json#gcid:swimming_pool_contractor.synonyms[2]"
+  },
+  {
+   "term": "משאבות לבריכה",
+   "source": "src/data/gbp-categories-il.json#gcid:swimming_pool_contractor.synonyms[3]"
+  },
+  {
+   "term": "חיפוי בריכות",
+   "source": "src/data/gbp-categories-il.json#gcid:swimming_pool_contractor.synonyms[4]"
+  },
+  {
+   "term": "שיש למטבח ומצבות",
+   "source": "src/data/gbp-categories-il.json#gcid:countertop_store.heName"
+  },
+  {
+   "term": "שיש קיסר",
+   "source": "src/data/gbp-categories-il.json#gcid:countertop_store.synonyms[0]"
+  },
+  {
+   "term": "גרניט פורצלן למטבח",
+   "source": "src/data/gbp-categories-il.json#gcid:countertop_store.synonyms[1]"
+  },
+  {
+   "term": "שיש לאמבטיה",
+   "source": "src/data/gbp-categories-il.json#gcid:countertop_store.synonyms[2]"
+  },
+  {
+   "term": "מפעל שיש",
+   "source": "src/data/gbp-categories-il.json#gcid:countertop_store.synonyms[3]"
+  },
+  {
+   "term": "סטודיו קעקועים ופירסינג",
+   "source": "src/data/gbp-categories-il.json#gcid:tatoo_and_piercing_shop.heName"
+  },
+  {
+   "term": "קעקועים",
+   "source": "src/data/gbp-categories-il.json#gcid:tatoo_and_piercing_shop.synonyms[0]"
+  },
+  {
+   "term": "מקעקע",
+   "source": "src/data/gbp-categories-il.json#gcid:tatoo_and_piercing_shop.synonyms[1]"
+  },
+  {
+   "term": "עגילים ופירסינג",
+   "source": "src/data/gbp-categories-il.json#gcid:tatoo_and_piercing_shop.synonyms[2]"
+  },
+  {
+   "term": "קעקוע מותאם אישית",
+   "source": "src/data/gbp-categories-il.json#gcid:tatoo_and_piercing_shop.synonyms[3]"
+  },
+  {
+   "term": "בית מרקחת ופארם",
+   "source": "src/data/gbp-categories-il.json#gcid:pharmacy.heName"
+  },
+  {
+   "term": "תרופות",
+   "source": "src/data/gbp-categories-il.json#gcid:pharmacy.synonyms[0]"
+  },
+  {
+   "term": "בית מרקחת תורן",
+   "source": "src/data/gbp-categories-il.json#gcid:pharmacy.synonyms[1]"
+  },
+  {
+   "term": "מוצרי היגיינה",
+   "source": "src/data/gbp-categories-il.json#gcid:pharmacy.synonyms[2]"
+  },
+  {
+   "term": "קוסמטיקה וטיפוח",
+   "source": "src/data/gbp-categories-il.json#gcid:pharmacy.synonyms[3]"
+  },
+  {
+   "term": "תוספי תזונה וויטמינים",
+   "source": "src/data/gbp-categories-il.json#gcid:pharmacy.synonyms[4]"
+  },
+  {
+   "term": "אופטיקאי",
+   "source": "src/data/gbp-categories-il.json#gcid:optician.heName"
+  },
+  {
+   "term": "התאמת משקפיים",
+   "source": "src/data/gbp-categories-il.json#gcid:optician.synonyms[0]"
+  },
+  {
+   "term": "חיתוך עדשות",
+   "source": "src/data/gbp-categories-il.json#gcid:optician.synonyms[1]"
+  },
+  {
+   "term": "תיקון משקפיים",
+   "source": "src/data/gbp-categories-il.json#gcid:optician.synonyms[2]"
+  },
+  {
+   "term": "תחנת דלק וחנות נוחות",
+   "source": "src/data/gbp-categories-il.json#gcid:gas_station.heName"
+  },
+  {
+   "term": "תדלוק",
+   "source": "src/data/gbp-categories-il.json#gcid:gas_station.synonyms[0]"
+  },
+  {
+   "term": "חנות נוחות 24/7",
+   "source": "src/data/gbp-categories-il.json#gcid:gas_station.synonyms[1]"
+  },
+  {
+   "term": "סולר ובנזין",
+   "source": "src/data/gbp-categories-il.json#gcid:gas_station.synonyms[2]"
+  },
+  {
+   "term": "חניון מוסדר",
+   "source": "src/data/gbp-categories-il.json#gcid:parking_garage.heName"
+  },
+  {
+   "term": "חניון יומי",
+   "source": "src/data/gbp-categories-il.json#gcid:parking_garage.synonyms[0]"
+  },
+  {
+   "term": "חניה בתשלום",
+   "source": "src/data/gbp-categories-il.json#gcid:parking_garage.synonyms[1]"
+  },
+  {
+   "term": "חניון מקורה",
+   "source": "src/data/gbp-categories-il.json#gcid:parking_garage.synonyms[2]"
+  },
+  {
+   "term": "מלון ומלון בוטיק",
+   "source": "src/data/gbp-categories-il.json#gcid:hotel.heName"
+  },
+  {
+   "term": "בית מלון",
+   "source": "src/data/gbp-categories-il.json#gcid:hotel.synonyms[0]"
+  },
+  {
+   "term": "אירוח ונופש",
+   "source": "src/data/gbp-categories-il.json#gcid:hotel.synonyms[1]"
+  },
+  {
+   "term": "חדרים להשכרה",
+   "source": "src/data/gbp-categories-il.json#gcid:hotel.synonyms[2]"
+  },
+  {
+   "term": "מלון בוטיק",
+   "source": "src/data/gbp-categories-il.json#gcid:hotel.synonyms[3]"
+  },
+  {
+   "term": "צימר ואירוח כפרי",
+   "source": "src/data/gbp-categories-il.json#gcid:bed_and_breakfast.heName"
+  },
+  {
+   "term": "צימרים בצפון",
+   "source": "src/data/gbp-categories-il.json#gcid:bed_and_breakfast.synonyms[0]"
+  },
+  {
+   "term": "צימר עם בריכה",
+   "source": "src/data/gbp-categories-il.json#gcid:bed_and_breakfast.synonyms[1]"
+  },
+  {
+   "term": "בקתת עץ",
+   "source": "src/data/gbp-categories-il.json#gcid:bed_and_breakfast.synonyms[2]"
+  },
+  {
+   "term": "צימרים לזוגות",
+   "source": "src/data/gbp-categories-il.json#gcid:bed_and_breakfast.synonyms[3]"
+  },
+  {
+   "term": "אירוח כפרי",
+   "source": "src/data/gbp-categories-il.json#gcid:bed_and_breakfast.synonyms[4]"
+  },
+  {
+   "term": "סוכנות נסיעות ותיירות",
+   "source": "src/data/gbp-categories-il.json#gcid:travel_agency.heName"
+  },
+  {
+   "term": "סוכן נסיעות",
+   "source": "src/data/gbp-categories-il.json#gcid:travel_agency.synonyms[0]"
+  },
+  {
+   "term": "חבילות נופש",
+   "source": "src/data/gbp-categories-il.json#gcid:travel_agency.synonyms[1]"
+  },
+  {
+   "term": "טיסות לחו\"ל",
+   "source": "src/data/gbp-categories-il.json#gcid:travel_agency.synonyms[2]"
+  },
+  {
+   "term": "טיולים מאורגנים",
+   "source": "src/data/gbp-categories-il.json#gcid:travel_agency.synonyms[3]"
+  },
+  {
+   "term": "הזמנת מלונות בחו\"ל",
+   "source": "src/data/gbp-categories-il.json#gcid:travel_agency.synonyms[4]"
+  },
+  {
+   "term": "עורך דין תביעות ביטוח",
+   "source": "src/data/gbp-categories-il.json#gcid:insurance_attorney.heName"
+  },
+  {
+   "term": "עו\"ד ביטוח",
+   "source": "src/data/gbp-categories-il.json#gcid:insurance_attorney.synonyms[0]"
+  },
+  {
+   "term": "תביעת ביטוח סיעודי",
+   "source": "src/data/gbp-categories-il.json#gcid:insurance_attorney.synonyms[1]"
+  },
+  {
+   "term": "אובדן כושר עבודה תביעה",
+   "source": "src/data/gbp-categories-il.json#gcid:insurance_attorney.synonyms[2]"
+  },
+  {
+   "term": "דחיית תביעת ביטוח",
+   "source": "src/data/gbp-categories-il.json#gcid:insurance_attorney.synonyms[3]"
+  },
+  {
+   "term": "עורך דין מיסים",
+   "source": "src/data/gbp-categories-il.json#gcid:tax_attorney.heName"
+  },
+  {
+   "term": "עו\"ד מיסוי",
+   "source": "src/data/gbp-categories-il.json#gcid:tax_attorney.synonyms[0]"
+  },
+  {
+   "term": "עבירות מס",
+   "source": "src/data/gbp-categories-il.json#gcid:tax_attorney.synonyms[1]"
+  },
+  {
+   "term": "גילוי מרצון",
+   "source": "src/data/gbp-categories-il.json#gcid:tax_attorney.synonyms[2]"
+  },
+  {
+   "term": "חקירות מס הכנסה",
+   "source": "src/data/gbp-categories-il.json#gcid:tax_attorney.synonyms[3]"
+  },
+  {
+   "term": "תיווך נדל\"ן מסחרי",
+   "source": "src/data/gbp-categories-il.json#gcid:commercial_real_estate_agency.heName"
+  },
+  {
+   "term": "השכרת משרדים",
+   "source": "src/data/gbp-categories-il.json#gcid:commercial_real_estate_agency.synonyms[0]"
+  },
+  {
+   "term": "מבני תעשיה",
+   "source": "src/data/gbp-categories-il.json#gcid:commercial_real_estate_agency.synonyms[1]"
+  },
+  {
+   "term": "חנויות להשכרה",
+   "source": "src/data/gbp-categories-il.json#gcid:commercial_real_estate_agency.synonyms[2]"
+  },
+  {
+   "term": "נדל\"ן מניב",
+   "source": "src/data/gbp-categories-il.json#gcid:commercial_real_estate_agency.synonyms[3]"
+  },
+  {
+   "term": "פינוי אסבסט ויועץ סביבתי",
+   "source": "src/data/gbp-categories-il.json#gcid:environmental_consultant.heName"
+  },
+  {
+   "term": "פינוי אסבסט מורשה",
+   "source": "src/data/gbp-categories-il.json#gcid:environmental_consultant.synonyms[0]"
+  },
+  {
+   "term": "סקר אסבסט",
+   "source": "src/data/gbp-categories-il.json#gcid:environmental_consultant.synonyms[1]"
+  },
+  {
+   "term": "פינוי פסולת בניין",
+   "source": "src/data/gbp-categories-il.json#gcid:environmental_consultant.synonyms[2]"
+  },
+  {
+   "term": "איכות הסביבה",
+   "source": "src/data/gbp-categories-il.json#gcid:environmental_consultant.synonyms[3]"
+  },
+  {
+   "term": "מיגון לרכב ואיתוראן",
+   "source": "src/data/gbp-categories-il.json#gcid:car_security_system_installer.heName"
+  },
+  {
+   "term": "התקנת איתוראן",
+   "source": "src/data/gbp-categories-il.json#gcid:car_security_system_installer.synonyms[0]"
+  },
+  {
+   "term": "עלוקה לרכב",
+   "source": "src/data/gbp-categories-il.json#gcid:car_security_system_installer.synonyms[2]"
+  },
+  {
+   "term": "מיגון לביטוח רכב",
+   "source": "src/data/gbp-categories-il.json#gcid:car_security_system_installer.synonyms[3]"
+  },
+  {
+   "term": "מזגנים לרכב",
+   "source": "src/data/gbp-categories-il.json#gcid:auto_air_conditioning_service.heName"
+  },
+  {
+   "term": "תיקון מזגן ברכב",
+   "source": "src/data/gbp-categories-il.json#gcid:auto_air_conditioning_service.synonyms[0]"
+  },
+  {
+   "term": "מילוי גז לרכב",
+   "source": "src/data/gbp-categories-il.json#gcid:auto_air_conditioning_service.synonyms[1]"
+  },
+  {
+   "term": "מדחס למזגן רכב",
+   "source": "src/data/gbp-categories-il.json#gcid:auto_air_conditioning_service.synonyms[2]"
+  },
+  {
+   "term": "גלידריה",
+   "source": "src/data/gbp-categories-il.json#gcid:ice_cream_shop.heName"
+  },
+  {
+   "term": "גלידה איטלקית",
+   "source": "src/data/gbp-categories-il.json#gcid:ice_cream_shop.synonyms[0]"
+  },
+  {
+   "term": "פרוזן יוגורט",
+   "source": "src/data/gbp-categories-il.json#gcid:ice_cream_shop.synonyms[1]"
+  },
+  {
+   "term": "גלידה אמריקאית",
+   "source": "src/data/gbp-categories-il.json#gcid:ice_cream_shop.synonyms[2]"
+  },
+  {
+   "term": "וופל בלגי",
+   "source": "src/data/gbp-categories-il.json#gcid:ice_cream_shop.synonyms[3]"
+  },
+  {
+   "term": "חנות אופניים ואופניים חשמליים",
+   "source": "src/data/gbp-categories-il.json#gcid:bicycle_store.heName"
+  },
+  {
+   "term": "אופניים חשמליים",
+   "source": "src/data/gbp-categories-il.json#gcid:bicycle_store.synonyms[0]"
+  },
+  {
+   "term": "קורקינט חשמלי",
+   "source": "src/data/gbp-categories-il.json#gcid:bicycle_store.synonyms[1]"
+  },
+  {
+   "term": "תיקון אופניים",
+   "source": "src/data/gbp-categories-il.json#gcid:bicycle_store.synonyms[2]"
+  },
+  {
+   "term": "מעבדת קורקינטים",
+   "source": "src/data/gbp-categories-il.json#gcid:bicycle_store.synonyms[3]"
+  },
+  {
+   "term": "אופני הרים",
+   "source": "src/data/gbp-categories-il.json#gcid:bicycle_store.synonyms[4]"
+  },
+  {
+   "term": "תיקון אופניים וקורקינטים",
+   "source": "src/data/gbp-categories-il.json#gcid:bicycle_repair_shop.heName"
+  },
+  {
+   "term": "תיקון פנצ'ר באופניים",
+   "source": "src/data/gbp-categories-il.json#gcid:bicycle_repair_shop.synonyms[0]"
+  },
+  {
+   "term": "סוללה לאופניים חשמליים",
+   "source": "src/data/gbp-categories-il.json#gcid:bicycle_repair_shop.synonyms[1]"
+  },
+  {
+   "term": "כיוון הילוכים באופניים",
+   "source": "src/data/gbp-categories-il.json#gcid:bicycle_repair_shop.synonyms[2]"
+  },
+  {
+   "term": "חנות כלי נגינה",
+   "source": "src/data/gbp-categories-il.json#gcid:musical_instrument_store.heName"
+  },
+  {
+   "term": "גיטרות",
+   "source": "src/data/gbp-categories-il.json#gcid:musical_instrument_store.synonyms[0]"
+  },
+  {
+   "term": "פסנתרים",
+   "source": "src/data/gbp-categories-il.json#gcid:musical_instrument_store.synonyms[1]"
+  },
+  {
+   "term": "מערכות תופים",
+   "source": "src/data/gbp-categories-il.json#gcid:musical_instrument_store.synonyms[2]"
+  },
+  {
+   "term": "ציוד הגברה ואולפן",
+   "source": "src/data/gbp-categories-il.json#gcid:musical_instrument_store.synonyms[3]"
+  },
+  {
+   "term": "מכשירי שמיעה וקלינאי תקשורת",
+   "source": "src/data/gbp-categories-il.json#gcid:audiologist.heName"
+  },
+  {
+   "term": "בדיקת שמיעה",
+   "source": "src/data/gbp-categories-il.json#gcid:audiologist.synonyms[0]"
+  },
+  {
+   "term": "התאמת מכשירי שמיעה",
+   "source": "src/data/gbp-categories-il.json#gcid:audiologist.synonyms[1]"
+  },
+  {
+   "term": "קלינאית תקשורת",
+   "source": "src/data/gbp-categories-il.json#gcid:audiologist.synonyms[2]"
+  },
+  {
+   "term": "מכון שמיעה",
+   "source": "src/data/gbp-categories-il.json#gcid:audiologist.synonyms[3]"
+  },
+  {
+   "term": "דיאטנית ותזונאית",
+   "source": "src/data/gbp-categories-il.json#gcid:dietitian.heName"
+  },
+  {
+   "term": "ייעוץ תזונה",
+   "source": "src/data/gbp-categories-il.json#gcid:dietitian.synonyms[0]"
+  },
+  {
+   "term": "תזונאי ספורט",
+   "source": "src/data/gbp-categories-il.json#gcid:dietitian.synonyms[1]"
+  },
+  {
+   "term": "תפריט תזונה לירידה במשקל",
+   "source": "src/data/gbp-categories-il.json#gcid:dietitian.synonyms[2]"
+  },
+  {
+   "term": "דיאטנית קלינית",
+   "source": "src/data/gbp-categories-il.json#gcid:dietitian.synonyms[3]"
+  },
+  {
+   "term": "סדנת הגנה עצמית לנשים",
+   "source": "src/data/gbp-categories-il.json#gcid:self_defense_school.synonyms[0]"
+  },
+  {
+   "term": "אימוני הגנה עצמית",
+   "source": "src/data/gbp-categories-il.json#gcid:self_defense_school.synonyms[1]"
+  },
+  {
+   "term": "קרב מגן ישראלי",
+   "source": "src/data/gbp-categories-il.json#gcid:self_defense_school.synonyms[2]"
+  },
+  {
+   "term": "השכרת ציוד לאירועים",
+   "source": "src/data/gbp-categories-il.json#gcid:party_equipment_rental_service.heName"
+  },
+  {
+   "term": "השכרת שולחנות וכסאות",
+   "source": "src/data/gbp-categories-il.json#gcid:party_equipment_rental_service.synonyms[0]"
+  },
+  {
+   "term": "אוהלים לאירועים",
+   "source": "src/data/gbp-categories-il.json#gcid:party_equipment_rental_service.synonyms[1]"
+  },
+  {
+   "term": "מתנפחים להשכרה",
+   "source": "src/data/gbp-categories-il.json#gcid:party_equipment_rental_service.synonyms[2]"
+  },
+  {
+   "term": "גנרטור להשכרה",
+   "source": "src/data/gbp-categories-il.json#gcid:party_equipment_rental_service.synonyms[3]"
+  },
+  {
+   "term": "השכרת פטריות חימום",
+   "source": "src/data/gbp-categories-il.json#gcid:party_equipment_rental_service.synonyms[4]"
+  },
+  {
+   "term": "וילונות והצללה לבית",
+   "source": "src/data/gbp-categories-il.json#gcid:curtain_store.heName"
+  },
+  {
+   "term": "תפירת וילונות",
+   "source": "src/data/gbp-categories-il.json#gcid:curtain_store.synonyms[0]"
+  },
+  {
+   "term": "וילונות גלילה",
+   "source": "src/data/gbp-categories-il.json#gcid:curtain_store.synonyms[1]"
+  },
+  {
+   "term": "וילונות בהתאמה אישית",
+   "source": "src/data/gbp-categories-il.json#gcid:curtain_store.synonyms[2]"
+  },
+  {
+   "term": "נטורופת ורפואה טבעית",
+   "source": "src/data/gbp-categories-il.json#gcid:naturopathic_practitioner.heName"
+  },
+  {
+   "term": "תזונה טבעית",
+   "source": "src/data/gbp-categories-il.json#gcid:naturopathic_practitioner.synonyms[1]"
+  },
+  {
+   "term": "רפואה אלטרנטיבית",
+   "source": "src/data/gbp-categories-il.json#gcid:naturopathic_practitioner.synonyms[3]"
+  },
+  {
+   "term": "שמאי רכב ורכוש",
+   "source": "src/data/gbp-categories-il.json#gcid:appraiser.heName"
+  },
+  {
+   "term": "שמאי רכב",
+   "source": "src/data/gbp-categories-il.json#gcid:appraiser.synonyms[0]"
+  },
+  {
+   "term": "הערכת נזקי תאונות",
+   "source": "src/data/gbp-categories-il.json#gcid:appraiser.synonyms[1]"
+  },
+  {
+   "term": "שמאי ביטוח",
+   "source": "src/data/gbp-categories-il.json#gcid:appraiser.synonyms[2]"
+  },
+  {
+   "term": "שומת נזקים",
+   "source": "src/data/gbp-categories-il.json#gcid:appraiser.synonyms[3]"
+  },
+  {
+   "term": "שטיפה וניקוי פאנלים סולאריים",
+   "source": "src/data/gbp-categories-il.json#gcid:solar_panel_cleaning_service.heName"
+  },
+  {
+   "term": "ניקוי מערכות סולאריות",
+   "source": "src/data/gbp-categories-il.json#gcid:solar_panel_cleaning_service.synonyms[0]"
+  },
+  {
+   "term": "תחזוקת פאנלים סולאריים",
+   "source": "src/data/gbp-categories-il.json#gcid:solar_panel_cleaning_service.synonyms[1]"
+  },
+  {
+   "term": "שטיפת פאנלים סולאריים",
+   "source": "src/data/gbp-categories-il.json#gcid:solar_panel_cleaning_service.synonyms[2]"
+  },
+  {
+   "term": "עבודות שיש ומצבות",
+   "source": "src/data/gbp-categories-il.json#gcid:marble_contractor.heName"
+  },
+  {
+   "term": "קבלן שיש",
+   "source": "src/data/gbp-categories-il.json#gcid:marble_contractor.synonyms[0]"
+  },
+  {
+   "term": "בניית מצבות",
+   "source": "src/data/gbp-categories-il.json#gcid:marble_contractor.synonyms[1]"
+  },
+  {
+   "term": "ליטוש שיש",
+   "source": "src/data/gbp-categories-il.json#gcid:marble_contractor.synonyms[2]"
+  },
+  {
+   "term": "חיפוי שיש",
+   "source": "src/data/gbp-categories-il.json#gcid:marble_contractor.synonyms[3]"
+  },
+  {
+   "term": "בטיחות אש ומטפים",
+   "source": "src/data/gbp-categories-il.json#gcid:fire_protection_service.heName"
+  },
+  {
+   "term": "בדיקת מטפים שנתית",
+   "source": "src/data/gbp-categories-il.json#gcid:fire_protection_service.synonyms[0]"
+  },
+  {
+   "term": "אישור כיבוי אש לעסקים",
+   "source": "src/data/gbp-categories-il.json#gcid:fire_protection_service.synonyms[1]"
+  },
+  {
+   "term": "ספרינקלרים",
+   "source": "src/data/gbp-categories-il.json#gcid:fire_protection_service.synonyms[2]"
+  },
+  {
+   "term": "מערכות גילוי וכיבוי אש",
+   "source": "src/data/gbp-categories-il.json#gcid:fire_protection_service.synonyms[3]"
+  },
+  {
+   "term": "חומרי איטום ובידוד",
+   "source": "src/data/gbp-categories-il.json#gcid:insulation_materials_store.heName"
+  },
+  {
+   "term": "יריעות ביטומניות",
+   "source": "src/data/gbp-categories-il.json#gcid:insulation_materials_store.synonyms[0]"
+  },
+  {
+   "term": "חומרי איטום",
+   "source": "src/data/gbp-categories-il.json#gcid:insulation_materials_store.synonyms[1]"
+  },
+  {
+   "term": "צמר סלעים",
+   "source": "src/data/gbp-categories-il.json#gcid:insulation_materials_store.synonyms[2]"
+  },
+  {
+   "term": "פוליאוריטן מוקצף",
+   "source": "src/data/gbp-categories-il.json#gcid:insulation_materials_store.synonyms[3]"
+  },
+  {
+   "term": "בידוד אקוסטי ואקוסטיקה",
+   "source": "src/data/gbp-categories-il.json#gcid:soundproofing_contractor.heName"
+  },
+  {
+   "term": "השתקת רעשים",
+   "source": "src/data/gbp-categories-il.json#gcid:soundproofing_contractor.synonyms[0]"
+  },
+  {
+   "term": "אקוסטיקה לחדרי מוזיקה",
+   "source": "src/data/gbp-categories-il.json#gcid:soundproofing_contractor.synonyms[1]"
+  },
+  {
+   "term": "קירות מבודדי רעש",
+   "source": "src/data/gbp-categories-il.json#gcid:soundproofing_contractor.synonyms[2]"
+  },
+  {
+   "term": "פנלים אקוסטיים",
+   "source": "src/data/gbp-categories-il.json#gcid:soundproofing_contractor.synonyms[3]"
+  },
+  {
+   "term": "סוככים ופתרונות הצללה",
+   "source": "src/data/gbp-categories-il.json#gcid:awning_supplier.heName"
+  },
+  {
+   "term": "סוכך מרקיזה",
+   "source": "src/data/gbp-categories-il.json#gcid:awning_supplier.synonyms[0]"
+  },
+  {
+   "term": "סוכך זרועות",
+   "source": "src/data/gbp-categories-il.json#gcid:awning_supplier.synonyms[1]"
+  },
+  {
+   "term": "סוככים לחצר ולמרפסת",
+   "source": "src/data/gbp-categories-il.json#gcid:awning_supplier.synonyms[2]"
+  },
+  {
+   "term": "רשתות צל",
+   "source": "src/data/gbp-categories-il.json#gcid:awning_supplier.synonyms[3]"
+  },
+  {
+   "term": "ניקוי וחיטוי תעלות מיזוג אוויר",
+   "source": "src/data/gbp-categories-il.json#gcid:air_duct_cleaning_service.heName"
+  },
+  {
+   "term": "ניקוי תעלות מזגן",
+   "source": "src/data/gbp-categories-il.json#gcid:air_duct_cleaning_service.synonyms[0]"
+  },
+  {
+   "term": "חיטוי מנדפים",
+   "source": "src/data/gbp-categories-il.json#gcid:air_duct_cleaning_service.synonyms[1]"
+  },
+  {
+   "term": "ניקוי מנדפים למסעדות",
+   "source": "src/data/gbp-categories-il.json#gcid:air_duct_cleaning_service.synonyms[2]"
+  },
+  {
+   "term": "חנות פרקטים וריצוף",
+   "source": "src/data/gbp-categories-il.json#gcid:flooring_store.heName"
+  },
+  {
+   "term": "אולם תצוגה קרמיקה",
+   "source": "src/data/gbp-categories-il.json#gcid:flooring_store.synonyms[0]"
+  },
+  {
+   "term": "קניית פרקט",
+   "source": "src/data/gbp-categories-il.json#gcid:flooring_store.synonyms[1]"
+  },
+  {
+   "term": "גרניט פורצלן",
+   "source": "src/data/gbp-categories-il.json#gcid:flooring_store.synonyms[2]"
+  },
+  {
+   "term": "ריצופים",
+   "source": "src/data/gbp-categories-il.json#gcid:flooring_store.synonyms[3]"
+  },
+  {
+   "term": "חנות ואולם תצוגה מטבחים",
+   "source": "src/data/gbp-categories-il.json#gcid:kitchen_furniture_store.heName"
+  },
+  {
+   "term": "חברות מטבחים",
+   "source": "src/data/gbp-categories-il.json#gcid:kitchen_furniture_store.synonyms[0]"
+  },
+  {
+   "term": "מטבחים יוקרתיים",
+   "source": "src/data/gbp-categories-il.json#gcid:kitchen_furniture_store.synonyms[1]"
+  },
+  {
+   "term": "אי למטבח",
+   "source": "src/data/gbp-categories-il.json#gcid:kitchen_furniture_store.synonyms[2]"
+  },
+  {
+   "term": "ציפוי והשחרת חלונות למבנים ורכבים",
+   "source": "src/data/gbp-categories-il.json#gcid:window_tinting_service.heName"
+  },
+  {
+   "term": "ציפוי מגן שמש",
+   "source": "src/data/gbp-categories-il.json#gcid:window_tinting_service.synonyms[0]"
+  },
+  {
+   "term": "ציפוי ביטחון לחלונות",
+   "source": "src/data/gbp-categories-il.json#gcid:window_tinting_service.synonyms[1]"
+  },
+  {
+   "term": "הכהיית שמשות",
+   "source": "src/data/gbp-categories-il.json#gcid:window_tinting_service.synonyms[2]"
+  },
+  {
+   "term": "שירותי מנוף והרמות משא",
+   "source": "src/data/gbp-categories-il.json#gcid:crane_service.heName"
+  },
+  {
+   "term": "מנוף הרמה",
+   "source": "src/data/gbp-categories-il.json#gcid:crane_service.synonyms[0]"
+  },
+  {
+   "term": "מנוף להובלות",
+   "source": "src/data/gbp-categories-il.json#gcid:crane_service.synonyms[1]"
+  },
+  {
+   "term": "עבודות מנוף",
+   "source": "src/data/gbp-categories-il.json#gcid:crane_service.synonyms[2]"
+  },
+  {
+   "term": "הרמת רהיטים במנוף",
+   "source": "src/data/gbp-categories-il.json#gcid:crane_service.synonyms[3]"
+  },
+  {
+   "term": "אחזקה וניקוי בריכות שחייה",
+   "source": "src/data/gbp-categories-il.json#gcid:pool_cleaning_service.heName"
+  },
+  {
+   "term": "איזון כלור בבריכה",
+   "source": "src/data/gbp-categories-il.json#gcid:pool_cleaning_service.synonyms[0]"
+  },
+  {
+   "term": "רובוט לבריכה",
+   "source": "src/data/gbp-categories-il.json#gcid:pool_cleaning_service.synonyms[1]"
+  },
+  {
+   "term": "ניקוי בריכות שחיה",
+   "source": "src/data/gbp-categories-il.json#gcid:pool_cleaning_service.synonyms[2]"
+  },
+  {
+   "term": "תיקון ותחזוקת גנרטורים",
+   "source": "src/data/gbp-categories-il.json#gcid:generator_repair_service.heName"
+  },
+  {
+   "term": "גנרטור חירום",
+   "source": "src/data/gbp-categories-il.json#gcid:generator_repair_service.synonyms[0]"
+  },
+  {
+   "term": "בדיקת גנרטור לבניין",
+   "source": "src/data/gbp-categories-il.json#gcid:generator_repair_service.synonyms[1]"
+  },
+  {
+   "term": "טיפול בגנרטור",
+   "source": "src/data/gbp-categories-il.json#gcid:generator_repair_service.synonyms[2]"
+  },
+  {
+   "term": "סלילת כבישים ואספלט",
+   "source": "src/data/gbp-categories-il.json#gcid:asphalt_contractor.heName"
+  },
+  {
+   "term": "סלילת אספלט",
+   "source": "src/data/gbp-categories-il.json#gcid:asphalt_contractor.synonyms[0]"
+  },
+  {
+   "term": "ריבוד כבישים",
+   "source": "src/data/gbp-categories-il.json#gcid:asphalt_contractor.synonyms[1]"
+  },
+  {
+   "term": "תיקון בורות אספלט",
+   "source": "src/data/gbp-categories-il.json#gcid:asphalt_contractor.synonyms[2]"
+  },
+  {
+   "term": "חניות אספלט",
+   "source": "src/data/gbp-categories-il.json#gcid:asphalt_contractor.synonyms[3]"
+  },
+  {
+   "term": "ניסור וקידוח בטון",
+   "source": "src/data/gbp-categories-il.json#gcid:concrete_contractor.heName"
+  },
+  {
+   "term": "ניסור בטון ביהלום",
+   "source": "src/data/gbp-categories-il.json#gcid:concrete_contractor.synonyms[0]"
+  },
+  {
+   "term": "קידוח בטון למזגנים",
+   "source": "src/data/gbp-categories-il.json#gcid:concrete_contractor.synonyms[1]"
+  },
+  {
+   "term": "פתיחת דלת בבטון",
+   "source": "src/data/gbp-categories-il.json#gcid:concrete_contractor.synonyms[2]"
+  },
+  {
+   "term": "הריסת קירות בטון",
+   "source": "src/data/gbp-categories-il.json#gcid:concrete_contractor.synonyms[3]"
+  },
+  {
+   "term": "השכרת פיגומים",
+   "source": "src/data/gbp-categories-il.json#gcid:scaffolding_rental_service.heName"
+  },
+  {
+   "term": "פיגומים לבניין",
+   "source": "src/data/gbp-categories-il.json#gcid:scaffolding_rental_service.synonyms[0]"
+  },
+  {
+   "term": "הרכבת פיגומים",
+   "source": "src/data/gbp-categories-il.json#gcid:scaffolding_rental_service.synonyms[1]"
+  },
+  {
+   "term": "פיגומי אלומיניום",
+   "source": "src/data/gbp-categories-il.json#gcid:scaffolding_rental_service.synonyms[2]"
+  },
+  {
+   "term": "ציוד משרדי ומדפסות לעסקים",
+   "source": "src/data/gbp-categories-il.json#gcid:office_equipment_supplier.heName"
+  },
+  {
+   "term": "השכרת מדפסות",
+   "source": "src/data/gbp-categories-il.json#gcid:office_equipment_supplier.synonyms[0]"
+  },
+  {
+   "term": "מכונות צילום לעסקים",
+   "source": "src/data/gbp-categories-il.json#gcid:office_equipment_supplier.synonyms[1]"
+  },
+  {
+   "term": "ראשי דיו וטונרים",
+   "source": "src/data/gbp-categories-il.json#gcid:office_equipment_supplier.synonyms[2]"
+  },
+  {
+   "term": "אולפן הקלטות",
+   "source": "src/data/gbp-categories-il.json#gcid:recording_studio.heName"
+  },
+  {
+   "term": "הקלטת שיר במתנה",
+   "source": "src/data/gbp-categories-il.json#gcid:recording_studio.synonyms[0]"
+  },
+  {
+   "term": "הקלטת דרשה לבר מצווה",
+   "source": "src/data/gbp-categories-il.json#gcid:recording_studio.synonyms[1]"
+  },
+  {
+   "term": "מאסטרינג ומיקס",
+   "source": "src/data/gbp-categories-il.json#gcid:recording_studio.synonyms[2]"
+  },
+  {
+   "term": "אולפן פודקאסטים",
+   "source": "src/data/gbp-categories-il.json#gcid:recording_studio.synonyms[3]"
+  },
+  {
+   "term": "עיסוי ספורטאים ושיקום",
+   "source": "src/data/gbp-categories-il.json#gcid:sports_massage_therapist.heName"
+  },
+  {
+   "term": "עיסוי רפואי",
+   "source": "src/data/gbp-categories-il.json#gcid:sports_massage_therapist.synonyms[0]"
+  },
+  {
+   "term": "טיפול בפציעות ספורט",
+   "source": "src/data/gbp-categories-il.json#gcid:sports_massage_therapist.synonyms[1]"
+  },
+  {
+   "term": "שחרור שרירים תפוסים",
+   "source": "src/data/gbp-categories-il.json#gcid:sports_massage_therapist.synonyms[2]"
+  },
+  {
+   "term": "רופא ילדים פרטי",
+   "source": "src/data/gbp-categories-il.json#gcid:pediatrician.heName"
+  },
+  {
+   "term": "רופאת ילדים",
+   "source": "src/data/gbp-categories-il.json#gcid:pediatrician.synonyms[0]"
+  },
+  {
+   "term": "בדיקת התפתחות הילד",
+   "source": "src/data/gbp-categories-il.json#gcid:pediatrician.synonyms[1]"
+  },
+  {
+   "term": "מומחה לרפואת ילדים",
+   "source": "src/data/gbp-categories-il.json#gcid:pediatrician.synonyms[2]"
+  },
+  {
+   "term": "רופא נשים וגינקולוג פרטי",
+   "source": "src/data/gbp-categories-il.json#gcid:gynecologist.heName"
+  },
+  {
+   "term": "גינקולוגית",
+   "source": "src/data/gbp-categories-il.json#gcid:gynecologist.synonyms[0]"
+  },
+  {
+   "term": "מעקב הריון פרטי",
+   "source": "src/data/gbp-categories-il.json#gcid:gynecologist.synonyms[1]"
+  },
+  {
+   "term": "סקירת מערכות",
+   "source": "src/data/gbp-categories-il.json#gcid:gynecologist.synonyms[2]"
+  },
+  {
+   "term": "אולטרסאונד נשים",
+   "source": "src/data/gbp-categories-il.json#gcid:gynecologist.synonyms[3]"
+  },
+  {
+   "term": "רופאת נשים",
+   "source": "src/data/gbp-categories-il.json#gcid:gynecologist.synonyms[4]"
+  },
+  {
+   "term": "רופא אורתופד פרטי",
+   "source": "src/data/gbp-categories-il.json#gcid:orthopedic_surgeon.heName"
+  },
+  {
+   "term": "אורתופד מומחה",
+   "source": "src/data/gbp-categories-il.json#gcid:orthopedic_surgeon.synonyms[0]"
+  },
+  {
+   "term": "אורתופד ברכיים",
+   "source": "src/data/gbp-categories-il.json#gcid:orthopedic_surgeon.synonyms[1]"
+  },
+  {
+   "term": "אורתופד גב",
+   "source": "src/data/gbp-categories-il.json#gcid:orthopedic_surgeon.synonyms[2]"
+  },
+  {
+   "term": "חוות דעת אורתופדית",
+   "source": "src/data/gbp-categories-il.json#gcid:orthopedic_surgeon.synonyms[3]"
+  },
+  {
+   "term": "רופא אף אוזן גרון (אא\"ג)",
+   "source": "src/data/gbp-categories-il.json#gcid:ent_specialist.heName"
+  },
+  {
+   "term": "אא\"ג פרטי",
+   "source": "src/data/gbp-categories-il.json#gcid:ent_specialist.synonyms[0]"
+  },
+  {
+   "term": "בדיקת מיתרי קול",
+   "source": "src/data/gbp-categories-il.json#gcid:ent_specialist.synonyms[1]"
+  },
+  {
+   "term": "רופא אא\"ג",
+   "source": "src/data/gbp-categories-il.json#gcid:ent_specialist.synonyms[2]"
+  },
+  {
+   "term": "מרפאת השתלת שיער",
+   "source": "src/data/gbp-categories-il.json#gcid:hair_transplantation_clinic.heName"
+  },
+  {
+   "term": "השתלת שיער בישראל",
+   "source": "src/data/gbp-categories-il.json#gcid:hair_transplantation_clinic.synonyms[0]"
+  },
+  {
+   "term": "טיפול בנשירת שיער",
+   "source": "src/data/gbp-categories-il.json#gcid:hair_transplantation_clinic.synonyms[1]"
+  },
+  {
+   "term": "FUE השתלת שיער",
+   "source": "src/data/gbp-categories-il.json#gcid:hair_transplantation_clinic.synonyms[2]"
+  },
+  {
+   "term": "PRP לשיער",
+   "source": "src/data/gbp-categories-il.json#gcid:hair_transplantation_clinic.synonyms[3]"
+  },
+  {
+   "term": "שירותי דרך וחילוץ רכבים",
+   "source": "src/data/gbp-categories-il.json#gcid:towing_equipment_provider.heName"
+  },
+  {
+   "term": "החלפת גלגל בדרך",
+   "source": "src/data/gbp-categories-il.json#gcid:towing_equipment_provider.synonyms[0]"
+  },
+  {
+   "term": "התנעת רכב עם כבלים",
+   "source": "src/data/gbp-categories-il.json#gcid:towing_equipment_provider.synonyms[1]"
+  },
+  {
+   "term": "אספקת דלק בדרך",
+   "source": "src/data/gbp-categories-il.json#gcid:towing_equipment_provider.synonyms[2]"
+  },
+  {
+   "term": "חילוץ שטח 4X4",
+   "source": "src/data/gbp-categories-il.json#gcid:towing_equipment_provider.synonyms[3]"
+  },
+  {
+   "term": "קטנועים ואופנועים יד 2",
+   "source": "src/data/gbp-categories-il.json#gcid:used_motorcycle_dealer.heName"
+  },
+  {
+   "term": "טרייד אין קטנועים",
+   "source": "src/data/gbp-categories-il.json#gcid:used_motorcycle_dealer.synonyms[0]"
+  },
+  {
+   "term": "קניית אופנוע יד 2",
+   "source": "src/data/gbp-categories-il.json#gcid:used_motorcycle_dealer.synonyms[1]"
+  },
+  {
+   "term": "בדיקת אופנוע לפני קניה",
+   "source": "src/data/gbp-categories-il.json#gcid:used_motorcycle_dealer.synonyms[2]"
+  },
+  {
+   "term": "חנות חלקי חילוף לרכב",
+   "source": "src/data/gbp-categories-il.json#gcid:auto_part_store.heName"
+  },
+  {
+   "term": "חלפים לרכב",
+   "source": "src/data/gbp-categories-il.json#gcid:auto_part_store.synonyms[0]"
+  },
+  {
+   "term": "חלקי חילוף מפירוק",
+   "source": "src/data/gbp-categories-il.json#gcid:auto_part_store.synonyms[1]"
+  },
+  {
+   "term": "מראות ופנסים לרכב",
+   "source": "src/data/gbp-categories-il.json#gcid:auto_part_store.synonyms[2]"
+  },
+  {
+   "term": "שמנים ונוזלי קירור לרכב",
+   "source": "src/data/gbp-categories-il.json#gcid:auto_part_store.synonyms[3]"
+  },
+  {
+   "term": "תיקון שמשות וסדקים ברכב",
+   "source": "src/data/gbp-categories-il.json#gcid:windshield_repair_service.heName"
+  },
+  {
+   "term": "איטום סדק בשמשה",
+   "source": "src/data/gbp-categories-il.json#gcid:windshield_repair_service.synonyms[0]"
+  },
+  {
+   "term": "תיקון פגיעת אבן בשמשה",
+   "source": "src/data/gbp-categories-il.json#gcid:windshield_repair_service.synonyms[1]"
+  },
+  {
+   "term": "החלפת שמשה קדמית",
+   "source": "src/data/gbp-categories-il.json#gcid:windshield_repair_service.synonyms[2]"
+  },
+  {
+   "term": "עמילות מכס ושילוח בינלאומי",
+   "source": "src/data/gbp-categories-il.json#gcid:customs_broker.heName"
+  },
+  {
+   "term": "עמיל מכס",
+   "source": "src/data/gbp-categories-il.json#gcid:customs_broker.synonyms[0]"
+  },
+  {
+   "term": "שילוח ימי ואווירי",
+   "source": "src/data/gbp-categories-il.json#gcid:customs_broker.synonyms[1]"
+  },
+  {
+   "term": "יבוא אישי",
+   "source": "src/data/gbp-categories-il.json#gcid:customs_broker.synonyms[2]"
+  },
+  {
+   "term": "שחרור ממכס",
+   "source": "src/data/gbp-categories-il.json#gcid:customs_broker.synonyms[3]"
+  },
+  {
+   "term": "קופירייטר וכותב תוכן",
+   "source": "src/data/gbp-categories-il.json#gcid:copywriter.heName"
+  },
+  {
+   "term": "כתיבת תוכן לאתרים",
+   "source": "src/data/gbp-categories-il.json#gcid:copywriter.synonyms[0]"
+  },
+  {
+   "term": "קופירייטינג",
+   "source": "src/data/gbp-categories-il.json#gcid:copywriter.synonyms[1]"
+  },
+  {
+   "term": "כתיבה שיווקית",
+   "source": "src/data/gbp-categories-il.json#gcid:copywriter.synonyms[2]"
+  },
+  {
+   "term": "כתיבת דפי נחיתה",
+   "source": "src/data/gbp-categories-il.json#gcid:copywriter.synonyms[3]"
+  },
+  {
+   "term": "תוכן לרשתות חברתיות",
+   "source": "src/data/gbp-categories-il.json#gcid:copywriter.synonyms[4]"
+  },
+  {
+   "term": "עורך וידאו",
+   "source": "src/data/gbp-categories-il.json#gcid:video_editor.heName"
+  },
+  {
+   "term": "עריכת סרטונים",
+   "source": "src/data/gbp-categories-il.json#gcid:video_editor.synonyms[0]"
+  },
+  {
+   "term": "עריכת רילס וטיקטוק",
+   "source": "src/data/gbp-categories-il.json#gcid:video_editor.synonyms[1]"
+  },
+  {
+   "term": "אנימציה ומושן גרפיקס",
+   "source": "src/data/gbp-categories-il.json#gcid:video_editor.synonyms[2]"
+  },
+  {
+   "term": "עורך פטנטים וקניין רוחני",
+   "source": "src/data/gbp-categories-il.json#gcid:patent_attorney.heName"
+  },
+  {
+   "term": "רישום פטנט",
+   "source": "src/data/gbp-categories-il.json#gcid:patent_attorney.synonyms[0]"
+  },
+  {
+   "term": "סימני מסחר",
+   "source": "src/data/gbp-categories-il.json#gcid:patent_attorney.synonyms[1]"
+  },
+  {
+   "term": "זכויות יוצרים",
+   "source": "src/data/gbp-categories-il.json#gcid:patent_attorney.synonyms[2]"
+  },
+  {
+   "term": "הגנת קניין רוחני",
+   "source": "src/data/gbp-categories-il.json#gcid:patent_attorney.synonyms[3]"
+  },
+  {
+   "term": "השכרת כלי אוכל וציוד קייטרינג",
+   "source": "src/data/gbp-categories-il.json#gcid:catering_equipment_rental_service.heName"
+  },
+  {
+   "term": "השכרת כוסות וצלחות לאירועים",
+   "source": "src/data/gbp-categories-il.json#gcid:catering_equipment_rental_service.synonyms[0]"
+  },
+  {
+   "term": "שפייפינגים לחימום אוכל",
+   "source": "src/data/gbp-categories-il.json#gcid:catering_equipment_rental_service.synonyms[1]"
+  },
+  {
+   "term": "השכרת סכו\"ם",
+   "source": "src/data/gbp-categories-il.json#gcid:catering_equipment_rental_service.synonyms[2]"
+  },
+  {
+   "term": "עיצוב בלונים וקישוט אירועים",
+   "source": "src/data/gbp-categories-il.json#gcid:balloon_artist.heName"
+  },
+  {
+   "term": "סידור בלונים",
+   "source": "src/data/gbp-categories-il.json#gcid:balloon_artist.synonyms[0]"
+  },
+  {
+   "term": "קשת בלונים",
+   "source": "src/data/gbp-categories-il.json#gcid:balloon_artist.synonyms[1]"
+  },
+  {
+   "term": "בלונים לימי הולדת",
+   "source": "src/data/gbp-categories-il.json#gcid:balloon_artist.synonyms[2]"
+  },
+  {
+   "term": "משלוח בלונים",
+   "source": "src/data/gbp-categories-il.json#gcid:balloon_artist.synonyms[3]"
+  },
+  {
+   "term": "קוסם ואמן חושים לאירועים",
+   "source": "src/data/gbp-categories-il.json#gcid:magician.heName"
+  },
+  {
+   "term": "קוסם ליום הולדת",
+   "source": "src/data/gbp-categories-il.json#gcid:magician.synonyms[0]"
+  },
+  {
+   "term": "אמן חושים",
+   "source": "src/data/gbp-categories-il.json#gcid:magician.synonyms[1]"
+  },
+  {
+   "term": "מופע טלפתיה",
+   "source": "src/data/gbp-categories-il.json#gcid:magician.synonyms[2]"
+  },
+  {
+   "term": "הפעלות לילדים",
+   "source": "src/data/gbp-categories-il.json#gcid:magician.synonyms[3]"
+  },
+  {
+   "term": "מפעיל ימי הולדת ואירועי ילדים",
+   "source": "src/data/gbp-categories-il.json#gcid:party_entertainer.heName"
+  },
+  {
+   "term": "הפעלת יום הולדת",
+   "source": "src/data/gbp-categories-il.json#gcid:party_entertainer.synonyms[0]"
+  },
+  {
+   "term": "ליצן",
+   "source": "src/data/gbp-categories-il.json#gcid:party_entertainer.synonyms[1]"
+  },
+  {
+   "term": "הפעלת הישרדות לילדים",
+   "source": "src/data/gbp-categories-il.json#gcid:party_entertainer.synonyms[2]"
+  },
+  {
+   "term": "סדנאות לילדים באירוע",
+   "source": "src/data/gbp-categories-il.json#gcid:party_entertainer.synonyms[3]"
+  }
+ ],
+ "trades": {
+  "plumber": [
+   {
+    "term": "אינסטלטור",
+    "source": "src/data/gbp-categories-il.json#gcid:plumber.heName"
+   },
+   {
+    "term": "שרברב",
+    "source": "src/data/gbp-categories-il.json#gcid:plumber.synonyms[0]"
+   },
+   {
+    "term": "אינסטלציה",
+    "source": "src/data/gbp-categories-il.json#gcid:plumber.synonyms[1]"
+   },
+   {
+    "term": "תיקון נזילות",
+    "source": "src/data/gbp-categories-il.json#gcid:plumber.synonyms[2]"
+   },
+   {
+    "term": "פתיחת סתימות",
+    "source": "src/data/gbp-categories-il.json#gcid:plumber.synonyms[3]"
+   },
+   {
+    "term": "איתור נזילות",
+    "source": "src/data/gbp-categories-il.json#gcid:plumber.synonyms[4]"
+   },
+   {
+    "term": "שירותי ניקוז וביוב",
+    "source": "src/data/gbp-categories-il.json#gcid:drainage_service.heName"
+   },
+   {
+    "term": "שאיבת ביוב",
+    "source": "src/data/gbp-categories-il.json#gcid:drainage_service.synonyms[0]"
+   },
+   {
+    "term": "פתיחת סתימות ביוב",
+    "source": "src/data/gbp-categories-il.json#gcid:drainage_service.synonyms[1]"
+   },
+   {
+    "term": "ביובית",
+    "source": "src/data/gbp-categories-il.json#gcid:drainage_service.synonyms[2]"
+   },
+   {
+    "term": "צילום קווי ביוב",
+    "source": "src/data/gbp-categories-il.json#gcid:drainage_service.synonyms[3]"
+   },
+   {
+    "term": "פתיחת סתימה",
+    "source": "config/market-scanner/professions.json#plumber.terms[1]"
+   },
+   {
+    "term": "איתור נזילה",
+    "source": "config/market-scanner/professions.json#plumber.terms[2]"
+   }
+  ],
+  "electrician": [
+   {
+    "term": "חשמלאי",
+    "source": "src/data/gbp-categories-il.json#gcid:electrician.heName"
+   },
+   {
+    "term": "חשמלאי מוסמך",
+    "source": "src/data/gbp-categories-il.json#gcid:electrician.synonyms[0]"
+   },
+   {
+    "term": "עבודות חשמל",
+    "source": "src/data/gbp-categories-il.json#gcid:electrician.synonyms[1]"
+   },
+   {
+    "term": "תיקון קצר",
+    "source": "src/data/gbp-categories-il.json#gcid:electrician.synonyms[2]"
+   },
+   {
+    "term": "הגדלת חיבור חשמל",
+    "source": "src/data/gbp-categories-il.json#gcid:electrician.synonyms[3]"
+   },
+   {
+    "term": "התקנת לוח חשמל",
+    "source": "src/data/gbp-categories-il.json#gcid:electrician.synonyms[4]"
+   },
+   {
+    "term": "חשמלאי ראשי",
+    "source": "src/data/gbp-categories-il.json#gcid:electrician.synonyms[5]"
+   },
+   {
+    "term": "התקנות חשמל ותשתיות",
+    "source": "src/data/gbp-categories-il.json#gcid:electrical_installation_service.heName"
+   },
+   {
+    "term": "תשתיות חשמל",
+    "source": "src/data/gbp-categories-il.json#gcid:electrical_installation_service.synonyms[0]"
+   },
+   {
+    "term": "התקנת עמדות טעינה",
+    "source": "src/data/gbp-categories-il.json#gcid:electrical_installation_service.synonyms[1]"
+   },
+   {
+    "term": "עמדת טעינה לרכב חשמלי",
+    "source": "src/data/gbp-categories-il.json#gcid:electrical_installation_service.synonyms[2]"
+   },
+   {
+    "term": "חיווט חשמל",
+    "source": "src/data/gbp-categories-il.json#gcid:electrical_installation_service.synonyms[3]"
+   },
+   {
+    "term": "קבלן תאורה והתקנת גופי תאורה",
+    "source": "src/data/gbp-categories-il.json#gcid:lighting_contractor.heName"
+   },
+   {
+    "term": "התקנת גופי תאורה",
+    "source": "src/data/gbp-categories-il.json#gcid:lighting_contractor.synonyms[0]"
+   },
+   {
+    "term": "תאורת גינה",
+    "source": "src/data/gbp-categories-il.json#gcid:lighting_contractor.synonyms[1]"
+   },
+   {
+    "term": "תאורת לד",
+    "source": "src/data/gbp-categories-il.json#gcid:lighting_contractor.synonyms[2]"
+   },
+   {
+    "term": "עיצוב תאורה",
+    "source": "src/data/gbp-categories-il.json#gcid:lighting_contractor.synonyms[3]"
+   },
+   {
+    "term": "חשמלאות",
+    "source": "docs/copy/site-bot-licensed-trades-2026-11-10.json#licensedTrades[1]"
+   },
+   {
+    "term": "טכנאי חשמל",
+    "source": "docs/copy/site-bot-licensed-trades-2026-11-10.json#licensedTrades[3]"
+   },
+   {
+    "term": "הנדסאי חשמל",
+    "source": "docs/copy/site-bot-licensed-trades-2026-11-10.json#licensedTrades[4]"
+   }
+  ],
+  "locksmith": [
+   {
+    "term": "מנעולן",
+    "source": "src/data/gbp-categories-il.json#gcid:locksmith.heName"
+   },
+   {
+    "term": "פורץ מנעולים",
+    "source": "src/data/gbp-categories-il.json#gcid:locksmith.synonyms[0]"
+   },
+   {
+    "term": "החלפת צילינדר",
+    "source": "src/data/gbp-categories-il.json#gcid:locksmith.synonyms[1]"
+   },
+   {
+    "term": "תיקון דלתות",
+    "source": "src/data/gbp-categories-il.json#gcid:locksmith.synonyms[2]"
+   },
+   {
+    "term": "פריצת דלתות",
+    "source": "src/data/gbp-categories-il.json#gcid:locksmith.synonyms[3]"
+   },
+   {
+    "term": "שכפול מפתחות",
+    "source": "src/data/gbp-categories-il.json#gcid:locksmith.synonyms[4]"
+   },
+   {
+    "term": "פורץ רכבים",
+    "source": "src/data/gbp-categories-il.json#gcid:locksmith.synonyms[5]"
+   },
+   {
+    "term": "מנעולן מורשה",
+    "source": "src/data/gbp-categories-il.json#gcid:locksmith.synonyms[6]"
+   },
+   {
+    "term": "מנעולן רכב ושכפול מפתחות",
+    "source": "src/data/gbp-categories-il.json#gcid:car_locksmith.heName"
+   },
+   {
+    "term": "שכפול מפתחות לרכב",
+    "source": "src/data/gbp-categories-il.json#gcid:car_locksmith.synonyms[0]"
+   },
+   {
+    "term": "קידוד שלט לרכב",
+    "source": "src/data/gbp-categories-il.json#gcid:car_locksmith.synonyms[1]"
+   },
+   {
+    "term": "פריצת רכב נעול",
+    "source": "src/data/gbp-categories-il.json#gcid:car_locksmith.synonyms[2]"
+   },
+   {
+    "term": "שחזור מפתח לרכב מאובדן",
+    "source": "src/data/gbp-categories-il.json#gcid:car_locksmith.synonyms[3]"
+   },
+   {
+    "term": "פריצת דלת",
+    "source": "config/market-scanner/professions.json#locksmith.terms[1]"
+   }
+  ],
+  "cleaner": [
+   {
+    "term": "חברת ניקיון",
+    "source": "src/data/gbp-categories-il.json#gcid:cleaner.heName"
+   },
+   {
+    "term": "ניקיון בתים",
+    "source": "src/data/gbp-categories-il.json#gcid:cleaner.synonyms[0]"
+   },
+   {
+    "term": "ניקיון אחרי שיפוץ",
+    "source": "src/data/gbp-categories-il.json#gcid:cleaner.synonyms[1]"
+   },
+   {
+    "term": "ניקיון משרדים",
+    "source": "src/data/gbp-categories-il.json#gcid:cleaner.synonyms[2]"
+   },
+   {
+    "term": "פוליש וניקיון",
+    "source": "src/data/gbp-categories-il.json#gcid:cleaner.synonyms[3]"
+   },
+   {
+    "term": "חברת פוליש",
+    "source": "src/data/gbp-categories-il.json#gcid:cleaner.synonyms[4]"
+   },
+   {
+    "term": "ניקוי דירות",
+    "source": "src/data/gbp-categories-il.json#gcid:cleaner.synonyms[5]"
+   },
+   {
+    "term": "עוזרות בית וניקיון בתים",
+    "source": "src/data/gbp-categories-il.json#gcid:house_cleaning_service.heName"
+   },
+   {
+    "term": "עוזרת בית",
+    "source": "src/data/gbp-categories-il.json#gcid:house_cleaning_service.synonyms[0]"
+   },
+   {
+    "term": "מנקה לבית",
+    "source": "src/data/gbp-categories-il.json#gcid:house_cleaning_service.synonyms[1]"
+   },
+   {
+    "term": "ניקיון שוטף לבית",
+    "source": "src/data/gbp-categories-il.json#gcid:house_cleaning_service.synonyms[2]"
+   },
+   {
+    "term": "ניקוי ספות ושטיחים",
+    "source": "src/data/gbp-categories-il.json#gcid:carpet_cleaning_service.heName"
+   },
+   {
+    "term": "ניקוי ספות",
+    "source": "src/data/gbp-categories-il.json#gcid:carpet_cleaning_service.synonyms[0]"
+   },
+   {
+    "term": "ניקוי שטיחים",
+    "source": "src/data/gbp-categories-il.json#gcid:carpet_cleaning_service.synonyms[1]"
+   },
+   {
+    "term": "ניקוי מזרונים",
+    "source": "src/data/gbp-categories-il.json#gcid:carpet_cleaning_service.synonyms[2]"
+   },
+   {
+    "term": "ניקוי ריפודים",
+    "source": "src/data/gbp-categories-il.json#gcid:carpet_cleaning_service.synonyms[3]"
+   },
+   {
+    "term": "חידוש ספות",
+    "source": "src/data/gbp-categories-il.json#gcid:carpet_cleaning_service.synonyms[4]"
+   },
+   {
+    "term": "ניקוי חלונות",
+    "source": "src/data/gbp-categories-il.json#gcid:window_cleaning_service.heName"
+   },
+   {
+    "term": "ניקוי חלונות בסנפלינג",
+    "source": "src/data/gbp-categories-il.json#gcid:window_cleaning_service.synonyms[0]"
+   },
+   {
+    "term": "ניקוי חלונות לבתים",
+    "source": "src/data/gbp-categories-il.json#gcid:window_cleaning_service.synonyms[1]"
+   },
+   {
+    "term": "ניקוי חלונות ראווה",
+    "source": "src/data/gbp-categories-il.json#gcid:window_cleaning_service.synonyms[2]"
+   }
+  ],
+  "air-conditioning": [
+   {
+    "term": "טכנאי מיזוג אוויר",
+    "source": "src/data/gbp-categories-il.json#gcid:hvac_contractor.heName"
+   },
+   {
+    "term": "מתקין מזגנים",
+    "source": "src/data/gbp-categories-il.json#gcid:hvac_contractor.synonyms[0]"
+   },
+   {
+    "term": "תיקון מזגנים",
+    "source": "src/data/gbp-categories-il.json#gcid:hvac_contractor.synonyms[1]"
+   },
+   {
+    "term": "מיזוג אוויר",
+    "source": "src/data/gbp-categories-il.json#gcid:hvac_contractor.synonyms[2]"
+   },
+   {
+    "term": "מילוי גז למזגן",
+    "source": "src/data/gbp-categories-il.json#gcid:hvac_contractor.synonyms[3]"
+   },
+   {
+    "term": "התקנת מזגן",
+    "source": "src/data/gbp-categories-il.json#gcid:hvac_contractor.synonyms[4]"
+   },
+   {
+    "term": "טכנאי קירור",
+    "source": "src/data/gbp-categories-il.json#gcid:hvac_contractor.synonyms[5]"
+   },
+   {
+    "term": "שירות תיקון מזגנים",
+    "source": "src/data/gbp-categories-il.json#gcid:air_conditioning_repair_service.heName"
+   },
+   {
+    "term": "תיקון מזגן",
+    "source": "src/data/gbp-categories-il.json#gcid:air_conditioning_repair_service.synonyms[0]"
+   },
+   {
+    "term": "טכנאי מזגנים",
+    "source": "src/data/gbp-categories-il.json#gcid:air_conditioning_repair_service.synonyms[1]"
+   },
+   {
+    "term": "ניקוי מזגנים",
+    "source": "src/data/gbp-categories-il.json#gcid:air_conditioning_repair_service.synonyms[2]"
+   },
+   {
+    "term": "טיפול במזגן VRF",
+    "source": "src/data/gbp-categories-il.json#gcid:air_conditioning_repair_service.synonyms[3]"
+   },
+   {
+    "term": "מזגנים",
+    "source": "config/market-scanner/professions.json#ac-repair.trade_he"
+   }
+  ],
+  "appliance-repair": [
+   {
+    "term": "טכנאי מוצרי חשמל",
+    "source": "src/data/gbp-categories-il.json#gcid:appliance_repair_service.heName"
+   },
+   {
+    "term": "טכנאי מקררים",
+    "source": "src/data/gbp-categories-il.json#gcid:appliance_repair_service.synonyms[0]"
+   },
+   {
+    "term": "טכנאי מכונות כביסה",
+    "source": "src/data/gbp-categories-il.json#gcid:appliance_repair_service.synonyms[1]"
+   },
+   {
+    "term": "תיקון מדיח כלים",
+    "source": "src/data/gbp-categories-il.json#gcid:appliance_repair_service.synonyms[2]"
+   },
+   {
+    "term": "תיקון תנורים",
+    "source": "src/data/gbp-categories-il.json#gcid:appliance_repair_service.synonyms[3]"
+   },
+   {
+    "term": "תיקון מייבש כביסה",
+    "source": "src/data/gbp-categories-il.json#gcid:appliance_repair_service.synonyms[4]"
+   }
+  ],
+  "barber-hairdresser": [
+   {
+    "term": "מספרה ומעצב שיער",
+    "source": "src/data/gbp-categories-il.json#gcid:hair_salon.heName"
+   },
+   {
+    "term": "מספרת נשים",
+    "source": "src/data/gbp-categories-il.json#gcid:hair_salon.synonyms[0]"
+   },
+   {
+    "term": "מעצב שיער",
+    "source": "src/data/gbp-categories-il.json#gcid:hair_salon.synonyms[1]"
+   },
+   {
+    "term": "החלקת שיער",
+    "source": "src/data/gbp-categories-il.json#gcid:hair_salon.synonyms[2]"
+   },
+   {
+    "term": "צבע וגוונים",
+    "source": "src/data/gbp-categories-il.json#gcid:hair_salon.synonyms[3]"
+   },
+   {
+    "term": "תוספות שיער",
+    "source": "src/data/gbp-categories-il.json#gcid:hair_salon.synonyms[4]"
+   },
+   {
+    "term": "תסרוקות ערב וכלה",
+    "source": "src/data/gbp-categories-il.json#gcid:hair_salon.synonyms[5]"
+   },
+   {
+    "term": "מספרת גברים / ברברשופ",
+    "source": "src/data/gbp-categories-il.json#gcid:barber_shop.heName"
+   },
+   {
+    "term": "ברברשופ",
+    "source": "src/data/gbp-categories-il.json#gcid:barber_shop.synonyms[0]"
+   },
+   {
+    "term": "תספורת גברים",
+    "source": "src/data/gbp-categories-il.json#gcid:barber_shop.synonyms[1]"
+   },
+   {
+    "term": "עיצוב זקן",
+    "source": "src/data/gbp-categories-il.json#gcid:barber_shop.synonyms[2]"
+   },
+   {
+    "term": "ספר גברים",
+    "source": "src/data/gbp-categories-il.json#gcid:barber_shop.synonyms[3]"
+   }
+  ],
+  "car-detailing": [
+   {
+    "term": "דיטיילינג וציפוי ננו לרכב",
+    "source": "src/data/gbp-categories-il.json#gcid:car_detailer.heName"
+   },
+   {
+    "term": "דיטיילינג לרכב",
+    "source": "src/data/gbp-categories-il.json#gcid:car_detailer.synonyms[0]"
+   },
+   {
+    "term": "פוליש ווקס לרכב",
+    "source": "src/data/gbp-categories-il.json#gcid:car_detailer.synonyms[1]"
+   },
+   {
+    "term": "ציפוי ננו קרמי",
+    "source": "src/data/gbp-categories-il.json#gcid:car_detailer.synonyms[2]"
+   },
+   {
+    "term": "ניקוי ריפודים ברכב",
+    "source": "src/data/gbp-categories-il.json#gcid:car_detailer.synonyms[3]"
+   },
+   {
+    "term": "השחרת חלונות לרכב",
+    "source": "src/data/gbp-categories-il.json#gcid:car_detailer.synonyms[4]"
+   },
+   {
+    "term": "שטיפת רכבים",
+    "source": "src/data/gbp-categories-il.json#gcid:car_wash.heName"
+   },
+   {
+    "term": "רחיצת רכב",
+    "source": "src/data/gbp-categories-il.json#gcid:car_wash.synonyms[0]"
+   },
+   {
+    "term": "שטיפה ידנית",
+    "source": "src/data/gbp-categories-il.json#gcid:car_wash.synonyms[1]"
+   },
+   {
+    "term": "שטיפה במנהרה",
+    "source": "src/data/gbp-categories-il.json#gcid:car_wash.synonyms[2]"
+   },
+   {
+    "term": "ניקוי פנימי לרכב",
+    "source": "src/data/gbp-categories-il.json#gcid:car_wash.synonyms[3]"
+   }
+  ],
+  "car-mechanic": [
+   {
+    "term": "מוסך רכב",
+    "source": "src/data/gbp-categories-il.json#gcid:auto_repair_shop.heName"
+   },
+   {
+    "term": "מוסך",
+    "source": "src/data/gbp-categories-il.json#gcid:auto_repair_shop.synonyms[0]"
+   },
+   {
+    "term": "טיפול לרכב",
+    "source": "src/data/gbp-categories-il.json#gcid:auto_repair_shop.synonyms[1]"
+   },
+   {
+    "term": "הכנה לטסט",
+    "source": "src/data/gbp-categories-il.json#gcid:auto_repair_shop.synonyms[2]"
+   },
+   {
+    "term": "תיקון בלמים",
+    "source": "src/data/gbp-categories-il.json#gcid:auto_repair_shop.synonyms[3]"
+   },
+   {
+    "term": "מכונאות רכב",
+    "source": "src/data/gbp-categories-il.json#gcid:auto_repair_shop.synonyms[4]"
+   },
+   {
+    "term": "מוסך מורשה",
+    "source": "src/data/gbp-categories-il.json#gcid:auto_repair_shop.synonyms[5]"
+   },
+   {
+    "term": "מכונאות ותחזוקת רכב",
+    "source": "src/data/gbp-categories-il.json#gcid:car_repair_and_maintenance.heName"
+   },
+   {
+    "term": "החלפת שמנים ופילטרים",
+    "source": "src/data/gbp-categories-il.json#gcid:car_repair_and_maintenance.synonyms[0]"
+   },
+   {
+    "term": "טיפול 10,000",
+    "source": "src/data/gbp-categories-il.json#gcid:car_repair_and_maintenance.synonyms[1]"
+   },
+   {
+    "term": "החלפת רצועת טיימינג",
+    "source": "src/data/gbp-categories-il.json#gcid:car_repair_and_maintenance.synonyms[2]"
+   },
+   {
+    "term": "בדיקת חורף לרכב",
+    "source": "src/data/gbp-categories-il.json#gcid:car_repair_and_maintenance.synonyms[3]"
+   },
+   {
+    "term": "חשמלאי רכב ומיזוג אוויר לרכב",
+    "source": "src/data/gbp-categories-il.json#gcid:auto_electrical_service.heName"
+   },
+   {
+    "term": "חשמלאות רכב",
+    "source": "src/data/gbp-categories-il.json#gcid:auto_electrical_service.synonyms[0]"
+   },
+   {
+    "term": "מילוי גז למזגן ברכב",
+    "source": "src/data/gbp-categories-il.json#gcid:auto_electrical_service.synonyms[1]"
+   },
+   {
+    "term": "החלפת מצבר",
+    "source": "src/data/gbp-categories-il.json#gcid:auto_electrical_service.synonyms[2]"
+   },
+   {
+    "term": "מצבר עד הבית",
+    "source": "src/data/gbp-categories-il.json#gcid:auto_electrical_service.synonyms[3]"
+   },
+   {
+    "term": "תיקון סטרטר ואלטרנטור",
+    "source": "src/data/gbp-categories-il.json#gcid:auto_electrical_service.synonyms[4]"
+   }
+  ],
+  "carpenter": [
+   {
+    "term": "נגר",
+    "source": "src/data/gbp-categories-il.json#gcid:carpenter.heName"
+   },
+   {
+    "term": "נגריה",
+    "source": "src/data/gbp-categories-il.json#gcid:carpenter.synonyms[0]"
+   },
+   {
+    "term": "מטבחים בהתאמה אישית",
+    "source": "src/data/gbp-categories-il.json#gcid:carpenter.synonyms[1]"
+   },
+   {
+    "term": "ארונות קיר",
+    "source": "src/data/gbp-categories-il.json#gcid:carpenter.synonyms[2]"
+   },
+   {
+    "term": "נגרות בהתאמה",
+    "source": "src/data/gbp-categories-il.json#gcid:carpenter.synonyms[3]"
+   },
+   {
+    "term": "תיקון רהיטים",
+    "source": "src/data/gbp-categories-il.json#gcid:carpenter.synonyms[4]"
+   },
+   {
+    "term": "נגר רהיטים",
+    "source": "src/data/gbp-categories-il.json#gcid:carpenter.synonyms[5]"
+   },
+   {
+    "term": "יצרן רהיטים",
+    "source": "src/data/gbp-categories-il.json#gcid:furniture_maker.heName"
+   },
+   {
+    "term": "ייצור רהיטים",
+    "source": "src/data/gbp-categories-il.json#gcid:furniture_maker.synonyms[0]"
+   },
+   {
+    "term": "רהיטים לפי מידה",
+    "source": "src/data/gbp-categories-il.json#gcid:furniture_maker.synonyms[1]"
+   },
+   {
+    "term": "מזנונים",
+    "source": "src/data/gbp-categories-il.json#gcid:furniture_maker.synonyms[2]"
+   },
+   {
+    "term": "שולחנות עץ",
+    "source": "src/data/gbp-categories-il.json#gcid:furniture_maker.synonyms[3]"
+   },
+   {
+    "term": "שיפוץ מטבחים",
+    "source": "src/data/gbp-categories-il.json#gcid:kitchen_remodeler.heName"
+   },
+   {
+    "term": "חידוש מטבח",
+    "source": "src/data/gbp-categories-il.json#gcid:kitchen_remodeler.synonyms[0]"
+   },
+   {
+    "term": "החלפת דלתות מטבח",
+    "source": "src/data/gbp-categories-il.json#gcid:kitchen_remodeler.synonyms[1]"
+   },
+   {
+    "term": "תכנון מטבחים",
+    "source": "src/data/gbp-categories-il.json#gcid:kitchen_remodeler.synonyms[2]"
+   },
+   {
+    "term": "מטבחים מעוצבים",
+    "source": "src/data/gbp-categories-il.json#gcid:kitchen_remodeler.synonyms[3]"
+   },
+   {
+    "term": "נגר בהתאמה אישית",
+    "source": "config/market-scanner/professions.json#carpenter.terms[1]"
+   },
+   {
+    "term": "נגר לארונות",
+    "source": "config/market-scanner/professions.json#carpenter.terms[2]"
+   },
+   {
+    "term": "מטבחים",
+    "source": "config/market-scanner/professions.json#kitchens.trade_he"
+   }
+  ],
+  "computer-phone-repair": [
+   {
+    "term": "טכנאי מחשבים ומעבדת מחשבים",
+    "source": "src/data/gbp-categories-il.json#gcid:computer_repair_service.heName"
+   },
+   {
+    "term": "טכנאי מחשבים עד הבית",
+    "source": "src/data/gbp-categories-il.json#gcid:computer_repair_service.synonyms[0]"
+   },
+   {
+    "term": "תיקון מחשב נייד",
+    "source": "src/data/gbp-categories-il.json#gcid:computer_repair_service.synonyms[1]"
+   },
+   {
+    "term": "פרמוט מחשב",
+    "source": "src/data/gbp-categories-il.json#gcid:computer_repair_service.synonyms[2]"
+   },
+   {
+    "term": "שחזור מידע",
+    "source": "src/data/gbp-categories-il.json#gcid:computer_repair_service.synonyms[3]"
+   },
+   {
+    "term": "רשתות תקשורת",
+    "source": "src/data/gbp-categories-il.json#gcid:computer_repair_service.synonyms[4]"
+   },
+   {
+    "term": "מעבדת סלולר ומכירת סמארטפונים",
+    "source": "src/data/gbp-categories-il.json#gcid:cell_phone_store.heName"
+   },
+   {
+    "term": "תיקון אייפון",
+    "source": "src/data/gbp-categories-il.json#gcid:cell_phone_store.synonyms[0]"
+   },
+   {
+    "term": "תיקון מסך לסלולרי",
+    "source": "src/data/gbp-categories-il.json#gcid:cell_phone_store.synonyms[1]"
+   },
+   {
+    "term": "מעבדת טלפונים",
+    "source": "src/data/gbp-categories-il.json#gcid:cell_phone_store.synonyms[2]"
+   },
+   {
+    "term": "אביזרים לסלולר",
+    "source": "src/data/gbp-categories-il.json#gcid:cell_phone_store.synonyms[3]"
+   },
+   {
+    "term": "מכירת סמארטפונים",
+    "source": "src/data/gbp-categories-il.json#gcid:cell_phone_store.synonyms[4]"
+   }
+  ],
+  "dog-trainer-groomer": [
+   {
+    "term": "מאלף כלבים",
+    "source": "src/data/gbp-categories-il.json#gcid:dog_trainer.heName"
+   },
+   {
+    "term": "אילוף כלבים",
+    "source": "src/data/gbp-categories-il.json#gcid:dog_trainer.synonyms[0]"
+   },
+   {
+    "term": "פתרון בעיות התנהגות כלבים",
+    "source": "src/data/gbp-categories-il.json#gcid:dog_trainer.synonyms[1]"
+   },
+   {
+    "term": "חינוך גורים",
+    "source": "src/data/gbp-categories-il.json#gcid:dog_trainer.synonyms[2]"
+   },
+   {
+    "term": "מאלף מוסמך",
+    "source": "src/data/gbp-categories-il.json#gcid:dog_trainer.synonyms[3]"
+   },
+   {
+    "term": "מספרת כלבים וחתולים",
+    "source": "src/data/gbp-categories-il.json#gcid:pet_groomer.heName"
+   },
+   {
+    "term": "מספרת כלבים",
+    "source": "src/data/gbp-categories-il.json#gcid:pet_groomer.synonyms[0]"
+   },
+   {
+    "term": "תספורת לכלב",
+    "source": "src/data/gbp-categories-il.json#gcid:pet_groomer.synonyms[1]"
+   },
+   {
+    "term": "רחיצת כלבים",
+    "source": "src/data/gbp-categories-il.json#gcid:pet_groomer.synonyms[2]"
+   },
+   {
+    "term": "טיפוח חיות מחמד",
+    "source": "src/data/gbp-categories-il.json#gcid:pet_groomer.synonyms[3]"
+   }
+  ],
+  "driving-instructor": [
+   {
+    "term": "מורה נהיגה ובית ספר לנהיגה",
+    "source": "src/data/gbp-categories-il.json#gcid:driving_school.heName"
+   },
+   {
+    "term": "מורה נהיגה",
+    "source": "src/data/gbp-categories-il.json#gcid:driving_school.synonyms[0]"
+   },
+   {
+    "term": "לימודי נהיגה",
+    "source": "src/data/gbp-categories-il.json#gcid:driving_school.synonyms[1]"
+   },
+   {
+    "term": "מורה נהיגה על אוטומט",
+    "source": "src/data/gbp-categories-il.json#gcid:driving_school.synonyms[2]"
+   },
+   {
+    "term": "מורה נהיגה על ידני",
+    "source": "src/data/gbp-categories-il.json#gcid:driving_school.synonyms[3]"
+   },
+   {
+    "term": "טסט נהיגה",
+    "source": "src/data/gbp-categories-il.json#gcid:driving_school.synonyms[4]"
+   },
+   {
+    "term": "מורה נהיגה לאופנוע",
+    "source": "src/data/gbp-categories-il.json#gcid:motorcycle_driving_school.heName"
+   },
+   {
+    "term": "רישיון לאופנוע",
+    "source": "src/data/gbp-categories-il.json#gcid:motorcycle_driving_school.synonyms[0]"
+   },
+   {
+    "term": "לימוד נהיגה על קטנוע",
+    "source": "src/data/gbp-categories-il.json#gcid:motorcycle_driving_school.synonyms[1]"
+   },
+   {
+    "term": "רישיון A1",
+    "source": "src/data/gbp-categories-il.json#gcid:motorcycle_driving_school.synonyms[2]"
+   },
+   {
+    "term": "מורה לנהיגה",
+    "source": "docs/copy/site-bot-licensed-trades-2026-11-10.json#licensedTrades[77]"
+   },
+   {
+    "term": "מורת נהיגה",
+    "source": "docs/copy/site-bot-licensed-trades-2026-11-10.json#licensedTrades[78]"
+   },
+   {
+    "term": "בית ספר לנהיגה",
+    "source": "docs/copy/site-bot-licensed-trades-2026-11-10.json#licensedTrades[79]"
+   },
+   {
+    "term": "בית ספר נהיגה",
+    "source": "docs/copy/site-bot-licensed-trades-2026-11-10.json#licensedTrades[80]"
+   },
+   {
+    "term": "בי\"ס לנהיגה",
+    "source": "docs/copy/site-bot-licensed-trades-2026-11-10.json#licensedTrades[81]"
+   },
+   {
+    "term": "בי״ס לנהיגה",
+    "source": "docs/copy/site-bot-licensed-trades-2026-11-10.json#licensedTrades[82]"
+   },
+   {
+    "term": "שיעורי נהיגה",
+    "source": "docs/copy/site-bot-licensed-trades-2026-11-10.json#licensedTrades[83]"
+   },
+   {
+    "term": "לימוד נהיגה",
+    "source": "docs/copy/site-bot-licensed-trades-2026-11-10.json#licensedTrades[85]"
+   }
+  ],
+  "flooring-tiler": [
+   {
+    "term": "רצף",
+    "source": "src/data/gbp-categories-il.json#gcid:tile_contractor.heName"
+   },
+   {
+    "term": "עבודות ריצוף",
+    "source": "src/data/gbp-categories-il.json#gcid:tile_contractor.synonyms[0]"
+   },
+   {
+    "term": "הדבקת ריצוף",
+    "source": "src/data/gbp-categories-il.json#gcid:tile_contractor.synonyms[1]"
+   },
+   {
+    "term": "ריצוף חוץ",
+    "source": "src/data/gbp-categories-il.json#gcid:tile_contractor.synonyms[2]"
+   },
+   {
+    "term": "חיפוי קירות",
+    "source": "src/data/gbp-categories-il.json#gcid:tile_contractor.synonyms[3]"
+   },
+   {
+    "term": "התקנת פרקט",
+    "source": "src/data/gbp-categories-il.json#gcid:tile_contractor.synonyms[4]"
+   },
+   {
+    "term": "גרניט פורצלן",
+    "source": "src/data/gbp-categories-il.json#gcid:tile_contractor.synonyms[5]"
+   },
+   {
+    "term": "קבלן פרקטים ורצפות",
+    "source": "src/data/gbp-categories-il.json#gcid:flooring_contractor.heName"
+   },
+   {
+    "term": "התקנת פרקטים",
+    "source": "src/data/gbp-categories-il.json#gcid:flooring_contractor.synonyms[0]"
+   },
+   {
+    "term": "פרקט למינציה",
+    "source": "src/data/gbp-categories-il.json#gcid:flooring_contractor.synonyms[1]"
+   },
+   {
+    "term": "פרקט עץ",
+    "source": "src/data/gbp-categories-il.json#gcid:flooring_contractor.synonyms[2]"
+   },
+   {
+    "term": "דקים ופרקטים",
+    "source": "src/data/gbp-categories-il.json#gcid:flooring_contractor.synonyms[3]"
+   },
+   {
+    "term": "ליטוש פרקט",
+    "source": "src/data/gbp-categories-il.json#gcid:flooring_contractor.synonyms[4]"
+   },
+   {
+    "term": "ריצוף",
+    "source": "config/market-scanner/professions.json#tiling.trade_he"
+   },
+   {
+    "term": "קבלן ריצוף",
+    "source": "config/market-scanner/professions.json#tiling.terms[1]"
+   }
+  ],
+  "gardener": [
+   {
+    "term": "גנן",
+    "source": "src/data/gbp-categories-il.json#gcid:gardener.heName"
+   },
+   {
+    "term": "עבודות גינון",
+    "source": "src/data/gbp-categories-il.json#gcid:gardener.synonyms[0]"
+   },
+   {
+    "term": "הקמת גינות",
+    "source": "src/data/gbp-categories-il.json#gcid:gardener.synonyms[1]"
+   },
+   {
+    "term": "תחזוקת גינות",
+    "source": "src/data/gbp-categories-il.json#gcid:gardener.synonyms[2]"
+   },
+   {
+    "term": "מערכות השקיה",
+    "source": "src/data/gbp-categories-il.json#gcid:gardener.synonyms[3]"
+   },
+   {
+    "term": "גיזום עצים",
+    "source": "src/data/gbp-categories-il.json#gcid:gardener.synonyms[4]"
+   },
+   {
+    "term": "כריתת עצים",
+    "source": "src/data/gbp-categories-il.json#gcid:gardener.synonyms[5]"
+   },
+   {
+    "term": "דשא סינטטי",
+    "source": "src/data/gbp-categories-il.json#gcid:gardener.synonyms[6]"
+   },
+   {
+    "term": "אדריכל נוף ועיצוב גינות",
+    "source": "src/data/gbp-categories-il.json#gcid:landscape_designer.heName"
+   },
+   {
+    "term": "עיצוב גינות",
+    "source": "src/data/gbp-categories-il.json#gcid:landscape_designer.synonyms[0]"
+   },
+   {
+    "term": "תכנון נוף",
+    "source": "src/data/gbp-categories-il.json#gcid:landscape_designer.synonyms[1]"
+   },
+   {
+    "term": "פיתוח שטח",
+    "source": "src/data/gbp-categories-il.json#gcid:landscape_designer.synonyms[2]"
+   },
+   {
+    "term": "אדריכלות נוף",
+    "source": "src/data/gbp-categories-il.json#gcid:landscape_designer.synonyms[3]"
+   },
+   {
+    "term": "גיזום וכריתת עצים",
+    "source": "src/data/gbp-categories-il.json#gcid:tree_service.heName"
+   },
+   {
+    "term": "גוזם עצים",
+    "source": "src/data/gbp-categories-il.json#gcid:tree_service.synonyms[0]"
+   },
+   {
+    "term": "כריתת עצים באישור",
+    "source": "src/data/gbp-categories-il.json#gcid:tree_service.synonyms[1]"
+   },
+   {
+    "term": "העתקת עצים",
+    "source": "src/data/gbp-categories-il.json#gcid:tree_service.synonyms[2]"
+   },
+   {
+    "term": "כרסום גדמים",
+    "source": "src/data/gbp-categories-il.json#gcid:tree_service.synonyms[3]"
+   }
+  ],
+  "gas-technician": [
+   {
+    "term": "טכנאי גז",
+    "source": "docs/copy/site-bot-licensed-trades-2026-11-10.json#licensedTrades[5]"
+   },
+   {
+    "term": "טכנאית גז",
+    "source": "docs/copy/site-bot-licensed-trades-2026-11-10.json#licensedTrades[6]"
+   },
+   {
+    "term": "גז ביתי",
+    "source": "docs/copy/site-bot-licensed-trades-2026-11-10.json#licensedTrades[7]"
+   },
+   {
+    "term": "התקנת גז",
+    "source": "docs/copy/site-bot-licensed-trades-2026-11-10.json#licensedTrades[8]"
+   },
+   {
+    "term": "התקנות גז",
+    "source": "docs/copy/site-bot-licensed-trades-2026-11-10.json#licensedTrades[9]"
+   },
+   {
+    "term": "מתקין גז",
+    "source": "docs/copy/site-bot-licensed-trades-2026-11-10.json#licensedTrades[10]"
+   },
+   {
+    "term": "צנרת גז",
+    "source": "docs/copy/site-bot-licensed-trades-2026-11-10.json#licensedTrades[11]"
+   },
+   {
+    "term": "בודק גז",
+    "source": "docs/copy/site-bot-licensed-trades-2026-11-10.json#licensedTrades[12]"
+   },
+   {
+    "term": "בדיקת גז",
+    "source": "docs/copy/site-bot-licensed-trades-2026-11-10.json#licensedTrades[13]"
+   }
+  ],
+  "glazier": [
+   {
+    "term": "זגג",
+    "source": "src/data/gbp-categories-il.json#gcid:glazier.heName"
+   },
+   {
+    "term": "זגגות",
+    "source": "src/data/gbp-categories-il.json#gcid:glazier.synonyms[0]"
+   },
+   {
+    "term": "מקלחונים",
+    "source": "src/data/gbp-categories-il.json#gcid:glazier.synonyms[1]"
+   },
+   {
+    "term": "מעקות זכוכית",
+    "source": "src/data/gbp-categories-il.json#gcid:glazier.synonyms[2]"
+   },
+   {
+    "term": "חיפוי זכוכית למטבח",
+    "source": "src/data/gbp-categories-il.json#gcid:glazier.synonyms[3]"
+   },
+   {
+    "term": "מראות",
+    "source": "src/data/gbp-categories-il.json#gcid:glazier.synonyms[4]"
+   },
+   {
+    "term": "החלפת זכוכית לחלון",
+    "source": "src/data/gbp-categories-il.json#gcid:glazier.synonyms[5]"
+   }
+  ],
+  "handyman": [
+   {
+    "term": "הנדימן",
+    "source": "src/data/gbp-categories-il.json#gcid:handyman.heName"
+   },
+   {
+    "term": "תיקונים לבית",
+    "source": "src/data/gbp-categories-il.json#gcid:handyman.synonyms[0]"
+   },
+   {
+    "term": "איש תחזוקה",
+    "source": "src/data/gbp-categories-il.json#gcid:handyman.synonyms[1]"
+   },
+   {
+    "term": "תליית טלוויזיה",
+    "source": "src/data/gbp-categories-il.json#gcid:handyman.synonyms[2]"
+   },
+   {
+    "term": "הרכבת רהיטים",
+    "source": "src/data/gbp-categories-il.json#gcid:handyman.synonyms[3]"
+   },
+   {
+    "term": "איקאה הרכבות",
+    "source": "src/data/gbp-categories-il.json#gcid:handyman.synonyms[4]"
+   },
+   {
+    "term": "תיקונים קטנים",
+    "source": "src/data/gbp-categories-il.json#gcid:handyman.synonyms[5]"
+   }
+  ],
+  "metalwork-welder": [
+   {
+    "term": "מסגר",
+    "source": "src/data/gbp-categories-il.json#gcid:metal_fabricator.heName"
+   },
+   {
+    "term": "מסגריה",
+    "source": "src/data/gbp-categories-il.json#gcid:metal_fabricator.synonyms[0]"
+   },
+   {
+    "term": "עבודות מסגרות",
+    "source": "src/data/gbp-categories-il.json#gcid:metal_fabricator.synonyms[1]"
+   },
+   {
+    "term": "סורגים",
+    "source": "src/data/gbp-categories-il.json#gcid:metal_fabricator.synonyms[2]"
+   },
+   {
+    "term": "מעקות ברזל",
+    "source": "src/data/gbp-categories-il.json#gcid:metal_fabricator.synonyms[3]"
+   },
+   {
+    "term": "שערים מברזל",
+    "source": "src/data/gbp-categories-il.json#gcid:metal_fabricator.synonyms[4]"
+   },
+   {
+    "term": "קונסטרוקציות פלדה",
+    "source": "src/data/gbp-categories-il.json#gcid:metal_fabricator.synonyms[5]"
+   },
+   {
+    "term": "קבלן גדרות ושערים",
+    "source": "src/data/gbp-categories-il.json#gcid:fence_contractor.heName"
+   },
+   {
+    "term": "התקנת גדר",
+    "source": "src/data/gbp-categories-il.json#gcid:fence_contractor.synonyms[0]"
+   },
+   {
+    "term": "גדרות אלומיניום",
+    "source": "src/data/gbp-categories-il.json#gcid:fence_contractor.synonyms[1]"
+   },
+   {
+    "term": "גדרות עץ",
+    "source": "src/data/gbp-categories-il.json#gcid:fence_contractor.synonyms[2]"
+   },
+   {
+    "term": "שערים חשמליים",
+    "source": "src/data/gbp-categories-il.json#gcid:fence_contractor.synonyms[3]"
+   },
+   {
+    "term": "שער לחצר",
+    "source": "src/data/gbp-categories-il.json#gcid:fence_contractor.synonyms[4]"
+   },
+   {
+    "term": "מסגרות/שערים",
+    "source": "config/market-scanner/professions.json#gates-fencing.trade_he"
+   },
+   {
+    "term": "שער חשמלי",
+    "source": "config/market-scanner/professions.json#gates-fencing.terms[1]"
+   },
+   {
+    "term": "גדרות",
+    "source": "config/market-scanner/professions.json#gates-fencing.terms[2]"
+   }
+  ],
+  "movers": [
+   {
+    "term": "חברת הובלות",
+    "source": "src/data/gbp-categories-il.json#gcid:moving_company.heName"
+   },
+   {
+    "term": "הובלת דירה",
+    "source": "src/data/gbp-categories-il.json#gcid:moving_company.synonyms[0]"
+   },
+   {
+    "term": "מובילים",
+    "source": "src/data/gbp-categories-il.json#gcid:moving_company.synonyms[1]"
+   },
+   {
+    "term": "הובלות קטנות",
+    "source": "src/data/gbp-categories-il.json#gcid:moving_company.synonyms[2]"
+   },
+   {
+    "term": "הובלה עם מנוף",
+    "source": "src/data/gbp-categories-il.json#gcid:moving_company.synonyms[3]"
+   },
+   {
+    "term": "הובלת משרדים",
+    "source": "src/data/gbp-categories-il.json#gcid:moving_company.synonyms[4]"
+   },
+   {
+    "term": "אריזה והובלה",
+    "source": "src/data/gbp-categories-il.json#gcid:moving_company.synonyms[5]"
+   },
+   {
+    "term": "הובלות",
+    "source": "config/market-scanner/professions.json#movers.trade_he"
+   },
+   {
+    "term": "הובלות דירה",
+    "source": "config/market-scanner/professions.json#movers.terms[1]"
+   }
+  ],
+  "painter": [
+   {
+    "term": "צבעי",
+    "source": "src/data/gbp-categories-il.json#gcid:painter.heName"
+   },
+   {
+    "term": "צביעת דירה",
+    "source": "src/data/gbp-categories-il.json#gcid:painter.synonyms[0]"
+   },
+   {
+    "term": "עבודות צבע",
+    "source": "src/data/gbp-categories-il.json#gcid:painter.synonyms[1]"
+   },
+   {
+    "term": "צביעת בית",
+    "source": "src/data/gbp-categories-il.json#gcid:painter.synonyms[2]"
+   },
+   {
+    "term": "שפכטל אמריקאי",
+    "source": "src/data/gbp-categories-il.json#gcid:painter.synonyms[3]"
+   },
+   {
+    "term": "צביעת קירות",
+    "source": "src/data/gbp-categories-il.json#gcid:painter.synonyms[4]"
+   },
+   {
+    "term": "סיוד דירה",
+    "source": "src/data/gbp-categories-il.json#gcid:painter.synonyms[5]"
+   },
+   {
+    "term": "צבעי בניין",
+    "source": "config/market-scanner/professions.json#painter.terms[1]"
+   }
+  ],
+  "personal-trainer": [
+   {
+    "term": "מאמן כושר אישי",
+    "source": "src/data/gbp-categories-il.json#gcid:personal_trainer.heName"
+   },
+   {
+    "term": "מאמנת כושר",
+    "source": "src/data/gbp-categories-il.json#gcid:personal_trainer.synonyms[0]"
+   },
+   {
+    "term": "אימון כושר אישי",
+    "source": "src/data/gbp-categories-il.json#gcid:personal_trainer.synonyms[1]"
+   },
+   {
+    "term": "מאמן כושר עד הבית",
+    "source": "src/data/gbp-categories-il.json#gcid:personal_trainer.synonyms[2]"
+   },
+   {
+    "term": "אימונים בקבוצות קטנות",
+    "source": "src/data/gbp-categories-il.json#gcid:personal_trainer.synonyms[3]"
+   },
+   {
+    "term": "אימון פונקציונלי",
+    "source": "src/data/gbp-categories-il.json#gcid:personal_trainer.synonyms[4]"
+   }
+  ],
+  "pest-control": [
+   {
+    "term": "מדביר",
+    "source": "src/data/gbp-categories-il.json#gcid:pest_control_service.heName"
+   },
+   {
+    "term": "הדברת מזיקים",
+    "source": "src/data/gbp-categories-il.json#gcid:pest_control_service.synonyms[0]"
+   },
+   {
+    "term": "הדברה ירוקה",
+    "source": "src/data/gbp-categories-il.json#gcid:pest_control_service.synonyms[1]"
+   },
+   {
+    "term": "הדברת ג'וקים",
+    "source": "src/data/gbp-categories-il.json#gcid:pest_control_service.synonyms[2]"
+   },
+   {
+    "term": "הדברת נמלים",
+    "source": "src/data/gbp-categories-il.json#gcid:pest_control_service.synonyms[3]"
+   },
+   {
+    "term": "הדברת טרמיטים",
+    "source": "src/data/gbp-categories-il.json#gcid:pest_control_service.synonyms[4]"
+   },
+   {
+    "term": "לוכד חולדות",
+    "source": "src/data/gbp-categories-il.json#gcid:pest_control_service.synonyms[5]"
+   },
+   {
+    "term": "הדברת פשפש המיטה",
+    "source": "src/data/gbp-categories-il.json#gcid:pest_control_service.synonyms[6]"
+   },
+   {
+    "term": "הדברה",
+    "source": "config/market-scanner/professions.json#pest-control.trade_he"
+   },
+   {
+    "term": "חברת הדברה",
+    "source": "config/market-scanner/professions.json#pest-control.terms[2]"
+   },
+   {
+    "term": "הדברת",
+    "source": "docs/copy/site-bot-licensed-trades-2026-11-10.json#licensedTrades[16]"
+   },
+   {
+    "term": "הדברות",
+    "source": "docs/copy/site-bot-licensed-trades-2026-11-10.json#licensedTrades[17]"
+   }
+  ],
+  "photographer": [
+   {
+    "term": "צלם וסטודיו לצילום",
+    "source": "src/data/gbp-categories-il.json#gcid:photographer.heName"
+   },
+   {
+    "term": "צלם חתונות",
+    "source": "src/data/gbp-categories-il.json#gcid:photographer.synonyms[0]"
+   },
+   {
+    "term": "צילום אירועים",
+    "source": "src/data/gbp-categories-il.json#gcid:photographer.synonyms[1]"
+   },
+   {
+    "term": "צילומי הריון",
+    "source": "src/data/gbp-categories-il.json#gcid:photographer.synonyms[2]"
+   },
+   {
+    "term": "צילומי בוק בת מצווה",
+    "source": "src/data/gbp-categories-il.json#gcid:photographer.synonyms[3]"
+   },
+   {
+    "term": "צילום תדמית",
+    "source": "src/data/gbp-categories-il.json#gcid:photographer.synonyms[4]"
+   },
+   {
+    "term": "סטודיו לצילום",
+    "source": "src/data/gbp-categories-il.json#gcid:photographer.synonyms[5]"
+   },
+   {
+    "term": "צלם מוצרים ותדמית עסקית",
+    "source": "src/data/gbp-categories-il.json#gcid:commercial_photographer.heName"
+   },
+   {
+    "term": "צילום מוצרים לאיקומרס",
+    "source": "src/data/gbp-categories-il.json#gcid:commercial_photographer.synonyms[0]"
+   },
+   {
+    "term": "צילום אוכל למסעדות",
+    "source": "src/data/gbp-categories-il.json#gcid:commercial_photographer.synonyms[1]"
+   },
+   {
+    "term": "צילום אדריכלות ומבנים",
+    "source": "src/data/gbp-categories-il.json#gcid:commercial_photographer.synonyms[2]"
+   }
+  ],
+  "renovation-contractor": [
+   {
+    "term": "קבלן שיפוצים",
+    "source": "src/data/gbp-categories-il.json#gcid:general_contractor.heName"
+   },
+   {
+    "term": "שיפוץ דירות",
+    "source": "src/data/gbp-categories-il.json#gcid:general_contractor.synonyms[0]"
+   },
+   {
+    "term": "קבלן בניין",
+    "source": "src/data/gbp-categories-il.json#gcid:general_contractor.synonyms[1]"
+   },
+   {
+    "term": "שיפוץ כללי",
+    "source": "src/data/gbp-categories-il.json#gcid:general_contractor.synonyms[2]"
+   },
+   {
+    "term": "שיפוץ בתים",
+    "source": "src/data/gbp-categories-il.json#gcid:general_contractor.synonyms[3]"
+   },
+   {
+    "term": "עבודות בינוי",
+    "source": "src/data/gbp-categories-il.json#gcid:general_contractor.synonyms[4]"
+   },
+   {
+    "term": "קבלן רשום",
+    "source": "src/data/gbp-categories-il.json#gcid:general_contractor.synonyms[5]"
+   },
+   {
+    "term": "שיפוץ חדרי רחצה",
+    "source": "src/data/gbp-categories-il.json#gcid:bathroom_remodeler.heName"
+   },
+   {
+    "term": "שיפוץ מקלחת",
+    "source": "src/data/gbp-categories-il.json#gcid:bathroom_remodeler.synonyms[0]"
+   },
+   {
+    "term": "חידוש אמבטיה",
+    "source": "src/data/gbp-categories-il.json#gcid:bathroom_remodeler.synonyms[1]"
+   },
+   {
+    "term": "החלפת צנרת באמבטיה",
+    "source": "src/data/gbp-categories-il.json#gcid:bathroom_remodeler.synonyms[2]"
+   },
+   {
+    "term": "ריצוף חדר רחצה",
+    "source": "src/data/gbp-categories-il.json#gcid:bathroom_remodeler.synonyms[3]"
+   },
+   {
+    "term": "קבלן גבס",
+    "source": "src/data/gbp-categories-il.json#gcid:dry_wall_contractor.heName"
+   },
+   {
+    "term": "עבודות גבס",
+    "source": "src/data/gbp-categories-il.json#gcid:dry_wall_contractor.synonyms[0]"
+   },
+   {
+    "term": "בניית קירות גבס",
+    "source": "src/data/gbp-categories-il.json#gcid:dry_wall_contractor.synonyms[1]"
+   },
+   {
+    "term": "תקרות גבס",
+    "source": "src/data/gbp-categories-il.json#gcid:dry_wall_contractor.synonyms[2]"
+   },
+   {
+    "term": "מזנוני גבס",
+    "source": "src/data/gbp-categories-il.json#gcid:dry_wall_contractor.synonyms[3]"
+   },
+   {
+    "term": "הנמכת תקרת גבס",
+    "source": "src/data/gbp-categories-il.json#gcid:dry_wall_contractor.synonyms[4]"
+   },
+   {
+    "term": "טייח",
+    "source": "src/data/gbp-categories-il.json#gcid:plasterer.heName"
+   },
+   {
+    "term": "עבודות טיח",
+    "source": "src/data/gbp-categories-il.json#gcid:plasterer.synonyms[0]"
+   },
+   {
+    "term": "טיח פנים",
+    "source": "src/data/gbp-categories-il.json#gcid:plasterer.synonyms[1]"
+   },
+   {
+    "term": "טיח חוץ",
+    "source": "src/data/gbp-categories-il.json#gcid:plasterer.synonyms[2]"
+   },
+   {
+    "term": "שליכט צבעוני",
+    "source": "src/data/gbp-categories-il.json#gcid:plasterer.synonyms[3]"
+   },
+   {
+    "term": "שיפוצים",
+    "source": "config/market-scanner/professions.json#renovation.trade_he"
+   },
+   {
+    "term": "שיפוץ דירה",
+    "source": "config/market-scanner/professions.json#renovation.terms[2]"
+   },
+   {
+    "term": "שיפוץ אמבטיה",
+    "source": "config/market-scanner/professions.json#renovation.terms[3]"
+   }
+  ],
+  "security-cameras": [
+   {
+    "term": "התקנת מצלמות אבטחה ואזעקות",
+    "source": "src/data/gbp-categories-il.json#gcid:security_system_installer.heName"
+   },
+   {
+    "term": "מצלמות אבטחה",
+    "source": "src/data/gbp-categories-il.json#gcid:security_system_installer.synonyms[0]"
+   },
+   {
+    "term": "מערכות אזעקה",
+    "source": "src/data/gbp-categories-il.json#gcid:security_system_installer.synonyms[1]"
+   },
+   {
+    "term": "התקנת אינטרקום",
+    "source": "src/data/gbp-categories-il.json#gcid:security_system_installer.synonyms[2]"
+   },
+   {
+    "term": "קודן לדלת",
+    "source": "src/data/gbp-categories-il.json#gcid:security_system_installer.synonyms[3]"
+   },
+   {
+    "term": "בית חכם",
+    "source": "src/data/gbp-categories-il.json#gcid:security_system_installer.synonyms[4]"
+   }
+  ],
+  "solar-water-heater": [
+   {
+    "term": "דודי שמש וחשמל",
+    "source": "src/data/gbp-categories-il.json#gcid:solar_energy_equipment_supplier.heName"
+   },
+   {
+    "term": "תיקון דוד שמש",
+    "source": "src/data/gbp-categories-il.json#gcid:solar_energy_equipment_supplier.synonyms[0]"
+   },
+   {
+    "term": "התקנת דוד שמש",
+    "source": "src/data/gbp-categories-il.json#gcid:solar_energy_equipment_supplier.synonyms[1]"
+   },
+   {
+    "term": "דוד חשמל",
+    "source": "src/data/gbp-categories-il.json#gcid:solar_energy_equipment_supplier.synonyms[2]"
+   },
+   {
+    "term": "קולטים לדוד שמש",
+    "source": "src/data/gbp-categories-il.json#gcid:solar_energy_equipment_supplier.synonyms[3]"
+   },
+   {
+    "term": "טכנאי דודים",
+    "source": "src/data/gbp-categories-il.json#gcid:solar_energy_equipment_supplier.synonyms[4]"
+   }
+  ],
+  "upholstery": [],
+  "waterproofing-roofing": [
+   {
+    "term": "גגן וקבלן גגות",
+    "source": "src/data/gbp-categories-il.json#gcid:roofer.heName"
+   },
+   {
+    "term": "תיקון גגות",
+    "source": "src/data/gbp-categories-il.json#gcid:roofer.synonyms[0]"
+   },
+   {
+    "term": "גגות רעפים",
+    "source": "src/data/gbp-categories-il.json#gcid:roofer.synonyms[1]"
+   },
+   {
+    "term": "החלפת רעפים",
+    "source": "src/data/gbp-categories-il.json#gcid:roofer.synonyms[2]"
+   },
+   {
+    "term": "בניית גגות קלים",
+    "source": "src/data/gbp-categories-il.json#gcid:roofer.synonyms[3]"
+   },
+   {
+    "term": "מרזבים",
+    "source": "src/data/gbp-categories-il.json#gcid:roofer.synonyms[4]"
+   },
+   {
+    "term": "איטום גגות ומבנים",
+    "source": "src/data/gbp-categories-il.json#gcid:waterproofing_service.heName"
+   },
+   {
+    "term": "קבלן איטום",
+    "source": "src/data/gbp-categories-il.json#gcid:waterproofing_service.synonyms[0]"
+   },
+   {
+    "term": "איטום ביריעות ביטומניות",
+    "source": "src/data/gbp-categories-il.json#gcid:waterproofing_service.synonyms[1]"
+   },
+   {
+    "term": "זיפות גגות",
+    "source": "src/data/gbp-categories-il.json#gcid:waterproofing_service.synonyms[2]"
+   },
+   {
+    "term": "איטום מרפסות",
+    "source": "src/data/gbp-categories-il.json#gcid:waterproofing_service.synonyms[3]"
+   },
+   {
+    "term": "איטום קירות חיצוניים",
+    "source": "src/data/gbp-categories-il.json#gcid:waterproofing_service.synonyms[4]"
+   },
+   {
+    "term": "איטום גגות",
+    "source": "config/market-scanner/professions.json#roofing.trade_he"
+   },
+   {
+    "term": "קבלן איטום גגות",
+    "source": "config/market-scanner/professions.json#roofing.terms[1]"
+   },
+   {
+    "term": "גגן",
+    "source": "config/market-scanner/professions.json#roofing.terms[2]"
+   }
+  ],
+  "windows-shutters": [
+   {
+    "term": "התקנת חלונות ותריסים",
+    "source": "src/data/gbp-categories-il.json#gcid:window_installation_service.heName"
+   },
+   {
+    "term": "עבודות אלומיניום",
+    "source": "src/data/gbp-categories-il.json#gcid:window_installation_service.synonyms[0]"
+   },
+   {
+    "term": "חלונות בלגיים",
+    "source": "src/data/gbp-categories-il.json#gcid:window_installation_service.synonyms[1]"
+   },
+   {
+    "term": "תריסים חשמליים",
+    "source": "src/data/gbp-categories-il.json#gcid:window_installation_service.synonyms[2]"
+   },
+   {
+    "term": "תיקון תריסים",
+    "source": "src/data/gbp-categories-il.json#gcid:window_installation_service.synonyms[3]"
+   },
+   {
+    "term": "קליל",
+    "source": "src/data/gbp-categories-il.json#gcid:window_installation_service.synonyms[4]"
+   },
+   {
+    "term": "חלונות אלומיניום",
+    "source": "config/market-scanner/professions.json#aluminum.terms[0]"
+   },
+   {
+    "term": "תריס חשמלי",
+    "source": "config/market-scanner/professions.json#aluminum.terms[2]"
+   }
+  ]
+ }
+}

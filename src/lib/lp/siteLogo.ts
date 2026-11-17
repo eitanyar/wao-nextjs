@@ -6,15 +6,19 @@
  * Variants (stored: only the chosen one; the layout is recomputed from the name at every render):
  *   'lockup'   C: two weights, the lead (the name part) at 800 in the primary colour, the rest at 500/600 in --accent-text;
  *              inline on one line when it fits the phone budget, else stacked on two lines.
- *   'icon'     A: a trade mark tile + the name. The mark comes from the per-trade mark library (LOGO_MARK_LIBRARY, keyed
- *              '<vertical>:<id>', empty until the approved, traced marks land) or, until then, the site sprite's trade icon.
- *              Only when the trade is confident: matchedVertical(businessNiche) is one of the two trade verticals.
+ *   'icon'     A: the trade mark + the name. The mark is one of the approved per-trade marks (logoMarks.ts, Eitan
+ *              2026-11-17): offered when the trade is confident (logoTradeOf: exactly one of the 30 trades named) or the
+ *              look stores an approved mark id. It sits directly on the header bar with NO tile behind it, inked in the
+ *              site's primary / accent (darkened to 3:1 on the surface when needed) with the surface as its paper.
+ *              Without a mark, the legacy fallback stays: the sprite's trade icon in a primary tile, only when
+ *              matchedVertical(businessNiche) is one of the two trade verticals.
  *   'monogram' B: a letter tile + the name. Offered only for a NAME lead of letters; never the default.
  *   'name'     the plain fallback: the name with the accent bar.
  * Default: C when the lead is NAME, the name has 2+ tokens and the lockup fits; else A when the icon is confident; else plain.
  * Phone layout steps (the name gets ~128px beside the nav at 360px, ~82px beside a tile): one line at 18px, one line at 16px,
  * two lines at 15px, two lines at 13px, then a two-line clamp; never a single-line ellipsis. The tile stays on phones only
- * when the name fits two lines at 15px or better inside 82px. Desktop: one size up, the tile always shown.
+ * when the name fits two lines at 15px or better inside 82px (a mark: inside 128px less its own width + 10px). Desktop:
+ * one size up, the tile / mark always shown.
  * Widths are estimates (per-character units, to be calibrated once against Heebo 800).
  *
  * The logo CSS is emitted only when a logo renders (pages without a look stay byte-identical).
@@ -23,6 +27,7 @@
 
 import type { VerticalKey } from './verticalThemes';
 import { matchedVertical, tradeKeywordsIn } from './verticalDetect';
+import { approvedMarkId, chooseMarkId, LOGO_MARK_LIBRARY, logoTradeOf, markAspect, markColors, type LogoMark, type LogoTrade } from './logoMarks';
 import { PREFIX_LETTERS } from './hebrewPrefixLetters';
 import { DESKTOP_MIN_WIDTH_PX, isolatedName, serviceIcon, SITE_ICON_SPRITE, withoutEmoji } from './siteDesign';
 import type { SiteLook } from './siteLook';
@@ -53,6 +58,11 @@ export const LOGO_DISPLAY_MAX_WIDTH = 200;
 export const PHONE_NAME_PX = 128;
 export const PHONE_NAME_WITH_TILE_PX = 82;
 const TILE_PX = 36;
+/** The mark on the header bar: height (px) on desktop / phone, and the width cap of a wide mark (it then shrinks). */
+export const MARK_DESKTOP = { height: 40, maxWidth: 56 } as const;
+export const MARK_PHONE = { height: 32, maxWidth: 44 } as const;
+/** The space a mark takes from the phone name budget beyond its width (the flex gap and its slack, as for the tile). */
+const MARK_GAP_ALLOWANCE = 10;
 
 // ─────────────────────────────────────────────────────────────────────────
 // Marks: the per-trade mark library slot, and the sprite icon fallback
@@ -63,26 +73,18 @@ const TRADE_ICONS = ['tool', 'drop', 'drain', 'sun', 'snow', 'bolt', 'lock', 'ke
 export type LogoIconName = (typeof TRADE_ICONS)[number];
 const TRADE_VERTICALS: readonly VerticalKey[] = ['emergency-trades', 'skilled-trades'];
 
-export interface LogoMark {
-  vertical: VerticalKey;
-  /** viewBox of `body` (the traced SVG's own). */
-  viewBox: string;
-  /** Inner SVG, single-colour (currentColor). */
-  body: string;
-}
-
-/**
- * The per-trade mark library (AI-drawn once per trade, approved, traced to SVG, stored in the repo): '<vertical>:<id>' ->
- * mark. Empty until the library lands; an icon-variant logo whose markId is not here uses its sprite icon.
- */
-export const LOGO_MARK_LIBRARY: Readonly<Record<string, LogoMark>> = {};
+/** The approved per-trade marks, keyed by approved mark id ('plumber-3'); see logoMarks.ts. */
+export { LOGO_MARK_LIBRARY };
+export type { LogoMark, LogoTrade };
 
 export function isLogoIconName(value: unknown): value is LogoIconName {
   return typeof value === 'string' && (TRADE_ICONS as readonly string[]).includes(value);
 }
 
+/** The shape of a stored mark id: an approved id ('plumber-3') or the legacy '<group>:<id>' form. Rendering further requires
+ * the id to be approved (approvedMarkId); a well-formed id that is not approved is ignored. */
 export function isLogoMarkId(value: unknown): value is string {
-  return typeof value === 'string' && /^[a-z-]+:[a-z0-9-]{1,40}$/.test(value);
+  return typeof value === 'string' && /^(?:[a-z-]+:)?[a-z0-9-]{1,40}$/.test(value);
 }
 
 /** Inner SVG of a sprite trade icon (the sprite's own symbol body). */
@@ -163,6 +165,12 @@ export interface LogoContext {
   primaryService?: string;
   targetLocation?: string;
   serviceKeys?: readonly string[];
+  /** The site id (slug): the deterministic mark pick hashes it (else the logo text). */
+  siteId?: string;
+  /** The mark id stored in the look record (only an approved id counts). */
+  markId?: string;
+  /** The theme colours the header renders with (the mark's inks are computed from them). */
+  colors?: { primary: string; accent: string; surface: string };
 }
 
 const PREFIX = new RegExp(`^[${PREFIX_LETTERS}]`);
@@ -210,9 +218,12 @@ export interface LogoPick {
   defaultVariant: GeneratedLogoVariant;
   /** Eligible variants, the default first, the plain 'name' last. */
   options: GeneratedLogoVariant[];
-  /** The confident trade vertical (null = no icon variant) and its icon. */
+  /** The confident trade vertical and its sprite icon (the legacy icon fallback when there is no mark). */
   vertical: VerticalKey | null;
   icon: LogoIconName | null;
+  /** The confident trade (logoTradeOf) and the site's mark (stored approved id, else the deterministic pick). */
+  trade: LogoTrade | null;
+  markId: string | null;
   layouts: {
     lockup?: LockupLayout;
     icon?: TileLayout;
@@ -230,11 +241,24 @@ function lockupLayout(text: string, lead: string, rest: string): LockupLayout | 
   return null;
 }
 
-function tileLayout(text: string): TileLayout {
-  const beside = plainStep(text, PHONE_NAME_WITH_TILE_PX);
+function tileLayout(text: string, besidePx: number = PHONE_NAME_WITH_TILE_PX): TileLayout {
+  const beside = plainStep(text, besidePx);
   return beside === '18-1' || beside === '16-1' || beside === '15-2'
     ? { step: beside, tileOnPhone: true }
     : { step: plainStep(text, PHONE_NAME_PX), tileOnPhone: false };
+}
+
+/** A mark's box (px, 1 decimal) at a height, shrunk to the width cap when it is wider. */
+export function markBox(mark: Pick<LogoMark, 'viewBox'>, size: { height: number; maxWidth: number }): { width: number; height: number } {
+  const aspect = markAspect(mark);
+  const width = Math.min(size.height * aspect, size.maxWidth);
+  const round = (value: number) => Math.round(value * 10) / 10;
+  return { width: round(width), height: round(width / aspect) };
+}
+
+/** The phone layout beside a mark: the name budget is 128px less the mark's phone width and the gap allowance. */
+function markLayout(text: string, mark: LogoMark): TileLayout {
+  return tileLayout(text, PHONE_NAME_PX - markBox(mark, MARK_PHONE).width - MARK_GAP_ALLOWANCE);
 }
 
 /** The monogram letter: the lead's first letter (Latin upper-cased), or null. */
@@ -250,16 +274,20 @@ export function pickLogo(businessName: string | undefined, context: LogoContext 
   const { lead, rest } = splitLead(text);
   const cls = leadClass(lead, context);
   const vertical = confidentTradeVertical(context.businessNiche);
-  const icon = vertical ? logoIconFor(context.serviceKeys) : null;
+  const trade = logoTradeOf(context);
+  const markId = chooseMarkId(trade, context.siteId || text, context.markId);
+  const mark = markId ? LOGO_MARK_LIBRARY[markId] : undefined;
+  const icon = mark || vertical ? logoIconFor(context.serviceKeys) : null;
   const lockup = cls === 'name' ? lockupLayout(text, lead, rest) : null;
   const monogram = cls === 'name' && /^\p{L}+$/u.test(lead) && monogramOf(lead) !== null;
   const layouts: LogoPick['layouts'] = { name: { step: plainStep(text, PHONE_NAME_PX) } };
   if (lockup) layouts.lockup = lockup;
-  if (icon) layouts.icon = tileLayout(text);
+  if (mark) layouts.icon = markLayout(text, mark);
+  else if (icon) layouts.icon = tileLayout(text);
   if (monogram) layouts.monogram = tileLayout(text);
   const defaultVariant: GeneratedLogoVariant = lockup ? 'lockup' : icon ? 'icon' : 'name';
   const options = [defaultVariant, ...(['lockup', 'icon', 'monogram'] as const).filter(v => v !== defaultVariant && layouts[v]), ...(defaultVariant === 'name' ? [] : ['name' as const])];
-  return { text, lead, rest, leadClass: cls, defaultVariant, options, vertical, icon, layouts };
+  return { text, lead, rest, leadClass: cls, defaultVariant, options, vertical, icon, trade, markId, layouts };
 }
 
 // ─────────────────────────────────────────────────────────────────────────
@@ -294,11 +322,27 @@ function tileHtml(inner: string): string {
   return `<span class="logo-tile" aria-hidden="true">${inner}</span>`;
 }
 
-function markSvg(icon: LogoIconName, markId: string | undefined): string {
-  const mark = markId ? LOGO_MARK_LIBRARY[markId] : undefined;
-  return mark
-    ? `<svg viewBox="${esc(mark.viewBox)}" focusable="false">${mark.body}</svg>`
-    : `<svg viewBox="0 0 24 24" focusable="false">${logoIconBody(icon)}</svg>`;
+function spriteSvg(icon: LogoIconName): string {
+  return `<svg viewBox="0 0 24 24" focusable="false">${logoIconBody(icon)}</svg>`;
+}
+
+/**
+ * The mark's CSS: its box on phone / desktop, hidden on phones when the name does not fit beside it, and its inks. No
+ * background, border, radius or padding: the mark sits on the header bar itself. The paper is the bar's own surface.
+ */
+function markCss(mark: LogoMark, onPhone: boolean, colors: LogoContext['colors']): string {
+  const phone = markBox(mark, MARK_PHONE);
+  const desktop = markBox(mark, MARK_DESKTOP);
+  const inks = colors ? markColors(colors) : null;
+  const primary = inks ? inks.primary.color : 'var(--primary)';
+  const accent = inks ? inks.accent.color : 'var(--accent-text)';
+  return `.logo-mark{display:block;flex:none;width:${phone.width}px;height:${phone.height}px;--mark-primary:${primary};--mark-accent:${accent};--mark-paper:var(--surface);}`
+    + (onPhone ? '' : PHONE('.logo-mark{display:none;}'))
+    + DESKTOP(`.logo-mark{display:block;width:${desktop.width}px;height:${desktop.height}px;}`);
+}
+
+function markHtml(markId: string, mark: LogoMark): string {
+  return `<svg class="logo-mark" data-mark="${esc(markId)}" viewBox="${esc(mark.viewBox)}" aria-hidden="true" focusable="false">${mark.body}</svg>`;
 }
 
 /**
@@ -306,7 +350,8 @@ function markSvg(icon: LogoIconName, markId: string | undefined): string {
  * falls back to today's text name).
  */
 export function generatedLogo(variant: GeneratedLogoVariant, businessName: string, context: LogoContext = {}, stored: { icon?: LogoIconName; markId?: string } = {}): BrandLogo | null {
-  const pick = pickLogo(businessName, context);
+  const storedMark = approvedMarkId(stored.markId) ?? undefined;
+  const pick = pickLogo(businessName, storedMark ? { ...context, markId: storedMark } : context);
   if (!pick || !pick.options.includes(variant)) return null;
   const name = (inner: string, extra = '') => `<span class="logo-name${extra}">${inner}</span>`;
   if (variant === 'name') {
@@ -334,13 +379,20 @@ export function generatedLogo(variant: GeneratedLogoVariant, businessName: strin
     };
   }
   const layout = pick.layouts[variant]!;
+  const mark = variant === 'icon' && pick.markId ? LOGO_MARK_LIBRARY[pick.markId] : undefined;
+  if (mark) {
+    return {
+      html: `<span data-logo="icon" style="display:contents;">${markHtml(pick.markId!, mark)}${name(isolatedName(pick.text))}</span>`,
+      css: BASE_CSS + markCss(mark, layout.tileOnPhone, context.colors) + stepCss(layout.step),
+    };
+  }
   const tileCss = TILE_CSS + (layout.tileOnPhone ? '' : PHONE('.logo-tile{display:none;}'));
   let inner: string;
   if (variant === 'monogram') {
     inner = esc(monogramOf(pick.lead)!);
   } else {
     const icon = stored.icon && isLogoIconName(stored.icon) ? stored.icon : pick.icon!;
-    inner = markSvg(icon, stored.markId);
+    inner = spriteSvg(icon);
   }
   return {
     html: `<span data-logo="${variant}" style="display:contents;">${tileHtml(inner)}${name(isolatedName(pick.text))}</span>`,

@@ -772,7 +772,7 @@ ${pageScript({
   })}`;
 
   return assembleDocument(t, head, body, p.gtagSnippet, data, p.researchNav, p.footerProfileLink, undefined,
-    brandLogo(p.look, businessName, { businessNiche: data.businessNiche, primaryService: data.primaryService, targetLocation: data.targetLocation, ownerName: data.ownerName }));
+    brandLogo(p.look, businessName, { businessNiche: data.businessNiche, primaryService: data.primaryService, targetLocation: data.targetLocation, ownerName: data.ownerName, siteId: slug, colors: { primary: t.primary, accent: t.accent, surface: t.surface } }));
 }
 
 // Assembles <head> + <body> for the standalone pages (index.html has its own path above). Redesign A: the icon sprite, the

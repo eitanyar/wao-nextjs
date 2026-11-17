@@ -805,7 +805,7 @@ function buildPageHtml(page: ResearchedSitePage, params: RenderResearchedSitePag
   ${pageScript({ slug, businessName, googleAdsCustomerId: params.googleAdsCustomerId || '', formConversionLabel: params.formConversionLabel || '', phoneConversionLabel: params.phoneConversionLabel || '', whatsappConversionLabel: params.whatsappConversionLabel || '', ctaLabel: RESEARCHED_LEAD_FORM.submitLabel ?? page.copy.heroCta, includeLeadForm: true })}`;
   // Footer NAP areas = the page's schema areaServed (same list, same order; Yonatan rule 4).
   return assembleDocument(theme, head, body, params.gtagSnippet, data, researchNavOptions(home, page.classification === 'homepage', contactHref), researchedProfileLink(data, params.profileLinkCopy) ?? undefined, page.seo ? researchedServiceAreas(page) : undefined,
-    brandLogo(params.look, businessName, { businessNiche: data.businessNiche, primaryService: data.primaryService, targetLocation: data.targetLocation, ownerName: data.ownerName, serviceKeys: allPages.filter(item => item.classification !== 'homepage').map(item => item.opportunityId) }));
+    brandLogo(params.look, businessName, { businessNiche: data.businessNiche, primaryService: data.primaryService, targetLocation: data.targetLocation, ownerName: data.ownerName, serviceKeys: allPages.filter(item => item.classification !== 'homepage').map(item => item.opportunityId), siteId: slug, colors: { primary: theme.primary, accent: theme.accent, surface: theme.surface } }));
 }
 
 export function buildResearchedSitemapUrls(pages: ResearchedSitePage[], siteUrl = ''): string[] {

@@ -1,0 +1,265 @@
+{
+ "approvedAt": "2026-11-17",
+ "approvedBy": "Eitan (in chat: approved current picks)",
+ "source": "claude.ai/artifact/GzLXaHjxzZ3tEB4BF6S58R picks collection",
+ "trades": {
+  "plumber": [
+   "plumber-1",
+   "plumber-3",
+   "plumber-4",
+   "plumber-5",
+   "plumber-6"
+  ],
+  "electrician": [
+   "electrician-2",
+   "electrician-3",
+   "electrician-5",
+   "electrician-6"
+  ],
+  "locksmith": [
+   "locksmith-1",
+   "locksmith-2",
+   "locksmith-3",
+   "locksmith-4",
+   "locksmith-5",
+   "locksmith-6",
+   "locksmith-7",
+   "locksmith-8"
+  ],
+  "cleaner": [
+   "cleaner-1",
+   "cleaner-2",
+   "cleaner-3",
+   "cleaner-4",
+   "cleaner-5",
+   "cleaner-7",
+   "cleaner-8"
+  ],
+  "air-conditioning": [
+   "air-conditioning-1",
+   "air-conditioning-2",
+   "air-conditioning-3",
+   "air-conditioning-5",
+   "air-conditioning-6",
+   "air-conditioning-8"
+  ],
+  "appliance-repair": [
+   "appliance-repair-1",
+   "appliance-repair-2",
+   "appliance-repair-3",
+   "appliance-repair-4",
+   "appliance-repair-5",
+   "appliance-repair-6",
+   "appliance-repair-8"
+  ],
+  "barber-hairdresser": [
+   "barber-hairdresser-1",
+   "barber-hairdresser-2",
+   "barber-hairdresser-3",
+   "barber-hairdresser-4",
+   "barber-hairdresser-5",
+   "barber-hairdresser-6",
+   "barber-hairdresser-7",
+   "barber-hairdresser-8"
+  ],
+  "car-detailing": [
+   "car-detailing-1",
+   "car-detailing-2",
+   "car-detailing-3",
+   "car-detailing-6",
+   "car-detailing-8"
+  ],
+  "car-mechanic": [
+   "car-mechanic-1",
+   "car-mechanic-2",
+   "car-mechanic-3",
+   "car-mechanic-6",
+   "car-mechanic-8"
+  ],
+  "carpenter": [
+   "carpenter-1",
+   "carpenter-2",
+   "carpenter-3",
+   "carpenter-6",
+   "carpenter-8"
+  ],
+  "computer-phone-repair": [
+   "computer-phone-repair-1",
+   "computer-phone-repair-2",
+   "computer-phone-repair-3",
+   "computer-phone-repair-4",
+   "computer-phone-repair-5",
+   "computer-phone-repair-6",
+   "computer-phone-repair-8"
+  ],
+  "dog-trainer-groomer": [
+   "dog-trainer-groomer-1",
+   "dog-trainer-groomer-2",
+   "dog-trainer-groomer-3",
+   "dog-trainer-groomer-4",
+   "dog-trainer-groomer-5",
+   "dog-trainer-groomer-6",
+   "dog-trainer-groomer-8"
+  ],
+  "driving-instructor": [
+   "driving-instructor-1",
+   "driving-instructor-2",
+   "driving-instructor-3",
+   "driving-instructor-4",
+   "driving-instructor-5",
+   "driving-instructor-6",
+   "driving-instructor-8"
+  ],
+  "flooring-tiler": [
+   "flooring-tiler-1",
+   "flooring-tiler-2",
+   "flooring-tiler-3",
+   "flooring-tiler-4",
+   "flooring-tiler-5",
+   "flooring-tiler-6",
+   "flooring-tiler-8"
+  ],
+  "gardener": [
+   "gardener-1",
+   "gardener-2",
+   "gardener-3",
+   "gardener-4",
+   "gardener-5",
+   "gardener-6",
+   "gardener-8"
+  ],
+  "gas-technician": [
+   "gas-technician-1",
+   "gas-technician-2",
+   "gas-technician-3",
+   "gas-technician-4",
+   "gas-technician-5",
+   "gas-technician-6",
+   "gas-technician-7",
+   "gas-technician-8"
+  ],
+  "glazier": [
+   "glazier-1",
+   "glazier-2",
+   "glazier-3",
+   "glazier-4",
+   "glazier-5",
+   "glazier-6",
+   "glazier-8"
+  ],
+  "handyman": [
+   "handyman-1",
+   "handyman-2",
+   "handyman-3",
+   "handyman-4",
+   "handyman-5",
+   "handyman-6",
+   "handyman-8"
+  ],
+  "metalwork-welder": [
+   "metalwork-welder-1",
+   "metalwork-welder-2",
+   "metalwork-welder-3",
+   "metalwork-welder-4",
+   "metalwork-welder-6",
+   "metalwork-welder-8"
+  ],
+  "movers": [
+   "movers-1",
+   "movers-2",
+   "movers-3",
+   "movers-4",
+   "movers-5",
+   "movers-6",
+   "movers-8"
+  ],
+  "painter": [
+   "painter-1",
+   "painter-2",
+   "painter-3",
+   "painter-4",
+   "painter-5",
+   "painter-6",
+   "painter-7",
+   "painter-8"
+  ],
+  "personal-trainer": [
+   "personal-trainer-1",
+   "personal-trainer-2",
+   "personal-trainer-3",
+   "personal-trainer-4",
+   "personal-trainer-6",
+   "personal-trainer-8"
+  ],
+  "pest-control": [
+   "pest-control-1",
+   "pest-control-2",
+   "pest-control-3",
+   "pest-control-4",
+   "pest-control-5",
+   "pest-control-6",
+   "pest-control-7",
+   "pest-control-8"
+  ],
+  "photographer": [
+   "photographer-1",
+   "photographer-2",
+   "photographer-3",
+   "photographer-4",
+   "photographer-5",
+   "photographer-6",
+   "photographer-8"
+  ],
+  "renovation-contractor": [
+   "renovation-contractor-1",
+   "renovation-contractor-2",
+   "renovation-contractor-3",
+   "renovation-contractor-4",
+   "renovation-contractor-5",
+   "renovation-contractor-6",
+   "renovation-contractor-8"
+  ],
+  "security-cameras": [
+   "security-cameras-1",
+   "security-cameras-2",
+   "security-cameras-3",
+   "security-cameras-6",
+   "security-cameras-8"
+  ],
+  "solar-water-heater": [
+   "solar-water-heater-1",
+   "solar-water-heater-2",
+   "solar-water-heater-3",
+   "solar-water-heater-4",
+   "solar-water-heater-5",
+   "solar-water-heater-6",
+   "solar-water-heater-8"
+  ],
+  "upholstery": [
+   "upholstery-1",
+   "upholstery-2",
+   "upholstery-3",
+   "upholstery-4",
+   "upholstery-5",
+   "upholstery-6",
+   "upholstery-8"
+  ],
+  "waterproofing-roofing": [
+   "waterproofing-roofing-1",
+   "waterproofing-roofing-2",
+   "waterproofing-roofing-3",
+   "waterproofing-roofing-4",
+   "waterproofing-roofing-6",
+   "waterproofing-roofing-8"
+  ],
+  "windows-shutters": [
+   "windows-shutters-1",
+   "windows-shutters-2",
+   "windows-shutters-3",
+   "windows-shutters-4",
+   "windows-shutters-5",
+   "windows-shutters-6",
+   "windows-shutters-8"
+  ]
+ }
+}

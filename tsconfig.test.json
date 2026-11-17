@@ -288,6 +288,8 @@
     "src/lib/lp/siteDesign.test.ts",
     "src/lib/lp/siteLook.ts",
     "src/lib/lp/siteLogo.ts",
+    "src/lib/lp/logoMarks.ts",
+    "src/lib/lp/logoMarks.test.ts",
     "src/lib/lp/siteLook.testkit.ts",
     "src/lib/lp/siteLook.test.ts",
     "src/lib/lp/ratingLine.ts",

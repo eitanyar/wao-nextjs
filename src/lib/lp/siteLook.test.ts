@@ -179,8 +179,9 @@ test('logo picker: lead split, classes, layout steps, defaults (ASCII cases)', (
   assert.deepEqual(lockup.layouts.lockup, { kind: 'inline' });
   // A joined lead with punctuation is never a monogram.
   assert.equal(pickLogo('Cohen & Cohen Pipes', {})!.options.includes('monogram'), false);
-  // The mark library is empty until the traced marks land; the icon variant falls back to the sprite icon.
-  assert.deepEqual(Object.keys(LOGO_MARK_LIBRARY), []);
+  // The mark library holds exactly the approved marks (2026-11-17); logoMarks.test.ts covers the marks themselves.
+  const approved = JSON.parse(fs.readFileSync(path.join(ROOT, 'src', 'lib', 'lp', 'logoMarks', 'approved-picks-2026-11-17.json'), 'utf8')) as { trades: Record<string, string[]> };
+  assert.deepEqual(Object.keys(LOGO_MARK_LIBRARY).sort(), Object.values(approved.trades).flat().sort());
 });
 
 const LOGO_RATING_FINAL = JSON.parse(fs.readFileSync(path.join(ROOT, 'docs', 'copy', 'site-bot-logo-rating-review-strings-FINAL-2026-11-16.json'), 'utf8')) as Record<string, unknown>;

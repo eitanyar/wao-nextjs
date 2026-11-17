@@ -11,7 +11,8 @@
 //   --previews [dir]            write the eligible logo variants (+ the owner file) as HTML + PNG headers to a scratch dir
 //   --approve-hero <photo>      build the AVIF/WebP widths of a passing photo into img/ and record the approval
 //   --approve-logo <variant|file>   lockup | icon | monogram | name | file  (generated variants must be eligible)
-//   --mark-id <vertical:id>     with --approve-logo icon: the mark-library entry (falls back to the icon until it exists)
+//   --mark-id <id>              an approved mark (e.g. plumber-3) instead of the site's deterministic pick, for --previews
+//                               and --approve-logo icon (approving icon always stores the mark it showed)
 //   --revoke-hero / --revoke-logo
 //   --site-record <file>        read the business name / niche from this record instead of data/sites/{slug}.json
 //
@@ -27,6 +28,7 @@ const tsRequire = createTsRequire();
 const store = tsRequire('src/lib/site-bot/siteLookStore.ts');
 const images = tsRequire('src/lib/site-bot/siteLookImages.ts');
 const logos = tsRequire('src/lib/lp/siteLogo.ts');
+const marks = tsRequire('src/lib/lp/logoMarks.ts');
 const design = tsRequire('src/lib/lp/siteDesign.ts');
 const { siteFontFiles } = tsRequire('src/lib/lp/siteFonts.ts');
 const { detectVertical } = tsRequire('src/lib/lp/verticalDetect.ts');
@@ -74,7 +76,9 @@ const site = siteRecord();
 const data = site?.collectedData ?? {};
 const businessName = String(data.businessName || data.businessNiche || '');
 const serviceKeys = (site?.researchedPages ?? []).filter(page => page.classification !== 'homepage').map(page => page.opportunityId);
-const logoContext = { businessNiche: data.businessNiche, primaryService: data.primaryService, targetLocation: data.targetLocation, ownerName: data.ownerName, serviceKeys };
+const siteTheme = VERTICAL_THEMES[detectVertical(data.businessNiche || '')];
+const logoContext = { businessNiche: data.businessNiche, primaryService: data.primaryService, targetLocation: data.targetLocation, ownerName: data.ownerName, serviceKeys,
+  siteId: slug, colors: { primary: siteTheme.primary, accent: siteTheme.accent, surface: siteTheme.surface } };
 
 // ── Ingest ───────────────────────────────────────────────────────────────────
 const EXT = /\.(jpe?g|png|webp|avif|heic|heif|tiff?|svg|gif)$/i;
@@ -128,8 +132,9 @@ if (values.score || values['approve-hero']) {
 // ── Logo previews ────────────────────────────────────────────────────────────
 async function previews(outDir) {
   if (!businessName.trim()) fail('no business name in the site record (use --site-record)');
-  const theme = VERTICAL_THEMES[detectVertical(data.businessNiche || '')];
-  const pick = logos.pickLogo(businessName, logoContext);
+  const theme = siteTheme;
+  const markId = values['mark-id'];
+  const pick = logos.pickLogo(businessName, { ...logoContext, ...(markId ? { markId } : {}) });
   fs.mkdirSync(path.join(outDir, 'assets', 'fonts'), { recursive: true });
   for (const [file, bytes] of Object.entries(siteFontFiles())) fs.writeFileSync(path.join(outDir, file), bytes);
   const nav = { label: 'nav', links: [{ href: '#', text: '1', home: true }, { href: '#', text: '2' }, { href: '#', text: '3' }] };
@@ -138,7 +143,7 @@ async function previews(outDir) {
 ${design.siteHeader({ businessName, phone: data.phone || '050-0000000', phoneHref: '#', nav, homeHref: '/', ...(brand ? { brandHtml: brand.html } : {}) })}
 <section class="hero on-dark"><div class="hero-grid"><div class="hero-text"><p class="sub">${label}</p></div></div></section></body></html>`;
   const variants = [['today', undefined]];
-  for (const variant of pick?.options ?? []) variants.push([variant, logos.generatedLogo(variant, businessName, logoContext)]);
+  for (const variant of pick?.options ?? []) variants.push([variant, logos.generatedLogo(variant, businessName, logoContext, markId ? { markId } : {})]);
   const logoFile = record.logoFiles[record.logoFiles.length - 1];
   if (logoFile) {
     const built = await images.buildOwnerLogo(fs.readFileSync(path.join(dir, logoFile.file)));
@@ -174,7 +179,12 @@ ${design.siteHeader({ businessName, phone: data.phone || '050-0000000', phoneHre
   }
   console.log(`\nLogo previews in ${outDir}${puppeteer ? ' (HTML + PNG at 360 / 1440)' : ' (HTML only: puppeteer missing)'}:`);
   if (pick) {
-    console.log(`  lead "${pick.lead}" is ${pick.leadClass.toUpperCase()}; default ${pick.defaultVariant}; eligible: ${pick.options.join(', ')}${pick.icon ? `; icon ${pick.icon} (${pick.vertical})` : '; no confident trade icon'}`);
+    console.log(`  lead "${pick.lead}" is ${pick.leadClass.toUpperCase()}; default ${pick.defaultVariant}; eligible: ${pick.options.join(', ')}${pick.markId ? `; mark ${pick.markId} (trade ${pick.trade ?? 'none: stored mark'})` : pick.icon ? `; no trade mark, sprite icon ${pick.icon} (${pick.vertical})` : '; no confident trade: no icon'}`);
+    if (pick.markId) {
+      const inks = marks.markColors(logoContext.colors);
+      for (const [role, ink] of Object.entries(inks)) console.log(`  mark ${role}: ${ink.from} -> ${ink.color} (${ink.method}, ${ink.contrast}:1 on ${logoContext.colors.surface})`);
+      if (pick.trade) console.log(`  other approved ${pick.trade} marks (--mark-id): ${marks.APPROVED_MARK_IDS[pick.trade].join(', ')}`);
+    }
     if (logos.GENERIC_LEADS_COPY_PENDING) console.log('  note: the generic-lead word list is pending copy (not applied yet)');
   } else {
     console.log('  the name is empty: no generated logo');
@@ -223,13 +233,16 @@ if (values['approve-logo']) {
     console.log(`\nLogo approved: owner file ${logoFile.file} -> ${built.src} (${built.width}x${built.height} display, ${built.bytes} B)`);
   } else {
     if (!logos.GENERATED_LOGO_VARIANTS.includes(choice)) fail(`--approve-logo: unknown variant "${choice}"`);
-    const pick = logos.pickLogo(businessName, logoContext);
+    const requested = values['mark-id'];
+    if (requested && (choice !== 'icon' || !marks.approvedMarkId(requested))) fail('--mark-id needs --approve-logo icon and an approved mark id (e.g. plumber-3; see --previews)');
+    const pick = logos.pickLogo(businessName, { ...logoContext, ...(requested ? { markId: marks.approvedMarkId(requested) } : {}) });
     if (!pick || !pick.options.includes(choice)) fail(`--approve-logo: "${choice}" is not eligible for this name (eligible: ${pick ? pick.options.join(', ') : 'none'})`);
-    const markId = values['mark-id'];
-    if (markId && (choice !== 'icon' || !logos.isLogoMarkId(markId))) fail('--mark-id needs --approve-logo icon and the form <vertical>:<id>');
+    // The icon variant stores the mark it showed (the explicit --mark-id, else the deterministic pick), so the approved
+    // logo never changes under a later re-pick.
+    const markId = choice === 'icon' ? pick.markId : null;
     record.logo = { approved: true, kind: 'generated', variant: choice, ...(choice === 'icon' && pick.icon ? { icon: pick.icon } : {}), ...(markId ? { markId } : {}), approval: { by, at: now() } };
-    log('approve-logo', choice);
-    console.log(`\nLogo approved: generated ${choice}${choice === 'icon' ? ` (icon ${pick.icon}${markId ? `, mark ${markId}${logos.LOGO_MARK_LIBRARY[markId] ? '' : ' (not in the library yet: the icon shows)'}` : ''})` : ''}`);
+    log('approve-logo', markId ? `${choice} ${markId}` : choice);
+    console.log(`\nLogo approved: generated ${choice}${choice === 'icon' ? (markId ? ` (mark ${markId})` : ` (sprite icon ${pick.icon})`) : ''}`);
   }
 }
 if (values['revoke-logo']) {
