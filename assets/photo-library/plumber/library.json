@@ -1,0 +1,1291 @@
+{
+  "_generated": "scripts/build-photo-library.mjs from data/photo-library/plumber/approved-2026-11-17.json; do not edit by hand",
+  "version": 1,
+  "trade": "plumber",
+  "approval": {
+    "file": "data/photo-library/plumber/approved-2026-11-17.json",
+    "sha256": "826fb88fd8da4ce2b0882ffa40452a780f37386543fe145452891afbedab9ba2",
+    "approvedAt": "2026-11-17",
+    "approvedBy": "Eitan (hand #2 for the demo; other drops delegated to Adam)",
+    "rule": "process yes, outcomes never (Fable 5.2, 2026-11-17); hands allowed only in leak-detection-hand-2 (Eitan's request); no faces/people"
+  },
+  "use": "hero background only; never gallery, About, og:image, schema image or Google Business Profile",
+  "builtWith": {
+    "sharp": "0.34.5"
+  },
+  "services": {
+    "bathroom-renovation": {
+      "standard": [
+        "bathroom-renovation-1",
+        "bathroom-renovation-2",
+        "bathroom-renovation-3"
+      ]
+    },
+    "drain-cleaning": {
+      "standard": [
+        "drain-cleaning-1",
+        "drain-cleaning-2",
+        "drain-cleaning-3"
+      ]
+    },
+    "leak-detection": {
+      "standard": [
+        "leak-detection-2",
+        "leak-detection-3"
+      ],
+      "thermalCamera": [
+        "leak-detection-hand-2",
+        "leak-detection-1"
+      ]
+    },
+    "leak-repair": {
+      "standard": [
+        "leak-repair-1",
+        "leak-repair-2",
+        "leak-repair-3"
+      ]
+    },
+    "pipe-replacement": {
+      "standard": [
+        "pipe-replacement-2",
+        "pipe-replacement-3"
+      ]
+    },
+    "water-heater-installation": {
+      "standard": [
+        "water-heater-installation-1",
+        "water-heater-installation-2",
+        "water-heater-installation-3"
+      ]
+    }
+  },
+  "fallback": [
+    "plumber-atmo-1",
+    "plumber-atmo-5",
+    "plumber-atmo-6"
+  ],
+  "variants": {
+    "bathroom-renovation-1": {
+      "source": "bathroom-renovation-1.png",
+      "sourceSha256": "1de357d2b745b4bec97ad9f4724c40980c8106754f21b1170157d7e2e336edf8",
+      "aiGenerated": true,
+      "kind": "atmosphere",
+      "people": false,
+      "faces": false,
+      "hands": false,
+      "equipment": null,
+      "score": {
+        "contrast": 6.76,
+        "textZoneDetail": 4.75,
+        "sharpness": 14.96,
+        "advisory": []
+      },
+      "images": [
+        {
+          "width": 480,
+          "height": 268,
+          "avif": "img/hero-1de357d2b745-480.avif",
+          "webp": "img/hero-1de357d2b745-480.webp",
+          "avifBytes": 3612,
+          "webpBytes": 6788,
+          "avifSha256": "75f99e947b15247e9e9f6c9712d4fdc9aad562067617c589d0ec3a1cd78cc52f",
+          "webpSha256": "a1cb5c31896fc9a92dd1c891473ed6926f44b4bbdc3fc26a5f299257ac705adc"
+        },
+        {
+          "width": 768,
+          "height": 428,
+          "avif": "img/hero-1de357d2b745-768.avif",
+          "webp": "img/hero-1de357d2b745-768.webp",
+          "avifBytes": 6349,
+          "webpBytes": 12824,
+          "avifSha256": "fd9784523f0c825777ce7e47bdb75e815535b34a64babde12219120e7dc2cc84",
+          "webpSha256": "6cd9addda9f19f516007d6f704cc84a4f826a52b9d57d31ceedda4b240457fbe"
+        },
+        {
+          "width": 1080,
+          "height": 602,
+          "avif": "img/hero-1de357d2b745-1080.avif",
+          "webp": "img/hero-1de357d2b745-1080.webp",
+          "avifBytes": 9824,
+          "webpBytes": 21248,
+          "avifSha256": "783ea8ab9b12238de0b146bd972bd2a9e483e80a40e2ef0742f4f64e163d9b65",
+          "webpSha256": "7de76090525942e4cdfb0a7fa0dd1937928cea2f4b440d6ca949e04751451f99"
+        },
+        {
+          "width": 1440,
+          "height": 803,
+          "avif": "img/hero-1de357d2b745-1440.avif",
+          "webp": "img/hero-1de357d2b745-1440.webp",
+          "avifBytes": 14414,
+          "webpBytes": 33418,
+          "avifSha256": "33792eb03ed43ac6d1fb65b9f7e1119bd76565bfa2548a2581ec128b24da7196",
+          "webpSha256": "423d4a3532e9d463eabcdf95b9ce59a9c1e9294a08a4d63f85ae56c2369526cd"
+        }
+      ]
+    },
+    "bathroom-renovation-2": {
+      "source": "bathroom-renovation-2.png",
+      "sourceSha256": "f329f63f939f5e62fb092f4ff85a5826f78afce7f7094c8474c82184d9cda5bd",
+      "aiGenerated": true,
+      "kind": "atmosphere",
+      "people": false,
+      "faces": false,
+      "hands": false,
+      "equipment": null,
+      "score": {
+        "contrast": 7.84,
+        "textZoneDetail": 5.32,
+        "sharpness": 14.72,
+        "advisory": []
+      },
+      "images": [
+        {
+          "width": 480,
+          "height": 268,
+          "avif": "img/hero-f329f63f939f-480.avif",
+          "webp": "img/hero-f329f63f939f-480.webp",
+          "avifBytes": 2117,
+          "webpBytes": 3652,
+          "avifSha256": "1cab39042055190ed413e209e9900e6148dbd64b79af7fb780e13c351309866c",
+          "webpSha256": "3ae191abfd23d485416bbfc886f0759aad26a10ad3b186b7197b04bbb1292cb4"
+        },
+        {
+          "width": 768,
+          "height": 428,
+          "avif": "img/hero-f329f63f939f-768.avif",
+          "webp": "img/hero-f329f63f939f-768.webp",
+          "avifBytes": 4390,
+          "webpBytes": 8574,
+          "avifSha256": "aa53a8d231550edd539d2bc4957ea4f5bd88b80dd3eb00d368f6867f87f04c93",
+          "webpSha256": "5ffa8c793591736daf987f380c7396d654e5dd2304e640b186764d22cb73af8e"
+        },
+        {
+          "width": 1080,
+          "height": 602,
+          "avif": "img/hero-f329f63f939f-1080.avif",
+          "webp": "img/hero-f329f63f939f-1080.webp",
+          "avifBytes": 8345,
+          "webpBytes": 17342,
+          "avifSha256": "69c30547cb7e7507715a39728d3803ff953960ff59cbcd95f49942b1115b7e06",
+          "webpSha256": "1635b245af3874249cdc4e3bf8b64fb9e0dd110124376cd32cf827f71e042fca"
+        },
+        {
+          "width": 1440,
+          "height": 803,
+          "avif": "img/hero-f329f63f939f-1440.avif",
+          "webp": "img/hero-f329f63f939f-1440.webp",
+          "avifBytes": 14526,
+          "webpBytes": 30798,
+          "avifSha256": "89d55b2244601391341391c73178f912c82692cf29863636020b1c1d7f7bd596",
+          "webpSha256": "c4c8b44925178516ebc278fa701e2ddb20074b067d46c2cd4cd7d8cd3b11893c"
+        }
+      ]
+    },
+    "bathroom-renovation-3": {
+      "source": "bathroom-renovation-3.png",
+      "sourceSha256": "73c73d8452ac62de7e6f46c3e93e919abc457f520730641d49656dbabc19985a",
+      "aiGenerated": true,
+      "kind": "atmosphere",
+      "people": false,
+      "faces": false,
+      "hands": false,
+      "equipment": null,
+      "score": {
+        "contrast": 6.25,
+        "textZoneDetail": 5.77,
+        "sharpness": 14.76,
+        "advisory": []
+      },
+      "images": [
+        {
+          "width": 480,
+          "height": 268,
+          "avif": "img/hero-73c73d8452ac-480.avif",
+          "webp": "img/hero-73c73d8452ac-480.webp",
+          "avifBytes": 3340,
+          "webpBytes": 5728,
+          "avifSha256": "38ece18fa9dfb3864e9c4569be15833030e04b2173ba0dbfdfacdf82b0fd2a89",
+          "webpSha256": "177c2aa5564e955cce9db3bc9ed1a5c70a2c76fabf063f1d6dc02ae2e3a73c49"
+        },
+        {
+          "width": 768,
+          "height": 428,
+          "avif": "img/hero-73c73d8452ac-768.avif",
+          "webp": "img/hero-73c73d8452ac-768.webp",
+          "avifBytes": 6668,
+          "webpBytes": 12388,
+          "avifSha256": "498790364619d84dc63066a7c7f52fe237afee9b3ed49c3c0a65c3cf34ed3d95",
+          "webpSha256": "0827507439e862b381d1838ab99e933855f6cc27df7b8f2039deda86ab1f25e0"
+        },
+        {
+          "width": 1080,
+          "height": 602,
+          "avif": "img/hero-73c73d8452ac-1080.avif",
+          "webp": "img/hero-73c73d8452ac-1080.webp",
+          "avifBytes": 12310,
+          "webpBytes": 23952,
+          "avifSha256": "3435710973dbbf097f7cc60a32aa1783bbe33b8d23274a21e16f878458b6286f",
+          "webpSha256": "54430510e2637fae91f28aefe8f0293a291952521ee451410118290c29cbf903"
+        },
+        {
+          "width": 1440,
+          "height": 803,
+          "avif": "img/hero-73c73d8452ac-1440.avif",
+          "webp": "img/hero-73c73d8452ac-1440.webp",
+          "avifBytes": 20489,
+          "webpBytes": 38924,
+          "avifSha256": "15f22cce256ae78b38389f53e7d80b1ba1ec223a940ef73592319b430336e4c0",
+          "webpSha256": "c6bcc99c68f3719265d9fa2ca850ee7f3527d0748e81ca9bbe84638b7b170f25"
+        }
+      ]
+    },
+    "drain-cleaning-1": {
+      "source": "drain-cleaning-1.png",
+      "sourceSha256": "8fb0c257fee4724b906e6c826d70394ea81cf326672a3e700b47d810f238c500",
+      "aiGenerated": true,
+      "kind": "atmosphere",
+      "people": false,
+      "faces": false,
+      "hands": false,
+      "equipment": null,
+      "score": {
+        "contrast": 6.57,
+        "textZoneDetail": 7.27,
+        "sharpness": 27.73,
+        "advisory": []
+      },
+      "images": [
+        {
+          "width": 480,
+          "height": 268,
+          "avif": "img/hero-8fb0c257fee4-480.avif",
+          "webp": "img/hero-8fb0c257fee4-480.webp",
+          "avifBytes": 6473,
+          "webpBytes": 9624,
+          "avifSha256": "9f7b4abc249510b83357475082161c15ef0474c9d7f84cd9338358c79926a40c",
+          "webpSha256": "84439552d4e85a9250286adf2ecb9fcb9f8b6992b0efd5f70919ed190ee4d9d9"
+        },
+        {
+          "width": 768,
+          "height": 428,
+          "avif": "img/hero-8fb0c257fee4-768.avif",
+          "webp": "img/hero-8fb0c257fee4-768.webp",
+          "avifBytes": 12952,
+          "webpBytes": 20858,
+          "avifSha256": "64c11141b70c8d38e2fdf446bb84cc65883a8253af3450ffda593c4d293b5231",
+          "webpSha256": "6513f5fe96749181a0c00972ec98b1bc9ccf9ef052c28b8df7322ea7d31c4760"
+        },
+        {
+          "width": 1080,
+          "height": 602,
+          "avif": "img/hero-8fb0c257fee4-1080.avif",
+          "webp": "img/hero-8fb0c257fee4-1080.webp",
+          "avifBytes": 21946,
+          "webpBytes": 36292,
+          "avifSha256": "c367956c50610967f1d84b7e2b0ccd41af087bfe945477cf5d4c7220f048a02e",
+          "webpSha256": "92122a7c950367013cd1d2a2b11e012be02a842c1e3f4c171a1fa3aadf3806a5"
+        },
+        {
+          "width": 1440,
+          "height": 803,
+          "avif": "img/hero-8fb0c257fee4-1440.avif",
+          "webp": "img/hero-8fb0c257fee4-1440.webp",
+          "avifBytes": 32805,
+          "webpBytes": 56998,
+          "avifSha256": "3a562c35418fa7771e86fb0bdba9562560511cf9dd8ce2eadd51d1cd6f6a9ebb",
+          "webpSha256": "69d8394e7a7e563be5f161be300e8d9ed289d4853eafda00d7590403b2e9f2ba"
+        }
+      ]
+    },
+    "drain-cleaning-2": {
+      "source": "drain-cleaning-2.png",
+      "sourceSha256": "7deb1bc8bc84017f6b9e66d0fae56594a9200fe84ed1277011a98b6adf504aec",
+      "aiGenerated": true,
+      "kind": "atmosphere",
+      "people": false,
+      "faces": false,
+      "hands": false,
+      "equipment": null,
+      "score": {
+        "contrast": 8.98,
+        "textZoneDetail": 10.05,
+        "sharpness": 32.94,
+        "advisory": []
+      },
+      "images": [
+        {
+          "width": 480,
+          "height": 268,
+          "avif": "img/hero-7deb1bc8bc84-480.avif",
+          "webp": "img/hero-7deb1bc8bc84-480.webp",
+          "avifBytes": 4322,
+          "webpBytes": 8776,
+          "avifSha256": "b14b204e97dd78554db28d8e3cc36faffff1675385a6dd7cca2ce9ae3072d652",
+          "webpSha256": "80d433f73f5e4742e522c156cf3350605f0bb1a6e0dbea3405580dfc85e2f9ab"
+        },
+        {
+          "width": 768,
+          "height": 428,
+          "avif": "img/hero-7deb1bc8bc84-768.avif",
+          "webp": "img/hero-7deb1bc8bc84-768.webp",
+          "avifBytes": 10205,
+          "webpBytes": 22334,
+          "avifSha256": "5004374fbc2751610461093212119bc83c7e9a1bbcb18e4aef5da80dc65bb028",
+          "webpSha256": "5b64751e8ee1acc9575b62d9e0fa6d490adfbb76b975c848768abb60cff3c6a3"
+        },
+        {
+          "width": 1080,
+          "height": 602,
+          "avif": "img/hero-7deb1bc8bc84-1080.avif",
+          "webp": "img/hero-7deb1bc8bc84-1080.webp",
+          "avifBytes": 21477,
+          "webpBytes": 42632,
+          "avifSha256": "46aafabf076a388516582be68acb90babb2c9365694a850acd77a9bbd20a89ca",
+          "webpSha256": "ea25bd01950318e636ad916d2b94bc105da6f0a5a62f94295fc118c3debdb30b"
+        },
+        {
+          "width": 1440,
+          "height": 803,
+          "avif": "img/hero-7deb1bc8bc84-1440.avif",
+          "webp": "img/hero-7deb1bc8bc84-1440.webp",
+          "avifBytes": 35639,
+          "webpBytes": 68394,
+          "avifSha256": "b3d22aa9516402624ec1912f1cfd570292c045fb06652a9934d4d9fba8773b2b",
+          "webpSha256": "cce95e5de04c678cbe6128f82ef0b0f3bb735e4d48cf119b3a9e8831e423609a"
+        }
+      ]
+    },
+    "drain-cleaning-3": {
+      "source": "drain-cleaning-3.png",
+      "sourceSha256": "10bc8fa29f18a514f972a1857b0194249dfc2e007a19149e0ecd27ca56b2f494",
+      "aiGenerated": true,
+      "kind": "atmosphere",
+      "people": false,
+      "faces": false,
+      "hands": false,
+      "equipment": null,
+      "score": {
+        "contrast": 6.41,
+        "textZoneDetail": 11.76,
+        "sharpness": 41.94,
+        "advisory": []
+      },
+      "images": [
+        {
+          "width": 480,
+          "height": 268,
+          "avif": "img/hero-10bc8fa29f18-480.avif",
+          "webp": "img/hero-10bc8fa29f18-480.webp",
+          "avifBytes": 7556,
+          "webpBytes": 11960,
+          "avifSha256": "227eea8bbf094b19528b8a7533b13a6b8a09309be8f7610de5cd6da10cefa8ff",
+          "webpSha256": "dd68f2aa77572745937690949462ea60d2a917f18f77e1975337cd802c88611e"
+        },
+        {
+          "width": 768,
+          "height": 428,
+          "avif": "img/hero-10bc8fa29f18-768.avif",
+          "webp": "img/hero-10bc8fa29f18-768.webp",
+          "avifBytes": 17302,
+          "webpBytes": 28572,
+          "avifSha256": "e2faf890ae3cd654a5954cdbcb229353c72182a639c1c6847f0a9f078a95c5d2",
+          "webpSha256": "da0f7fb044e3c9c7669cd08b766a5b066ea195a6b351ca3ce7d97e3d6ebbe40b"
+        },
+        {
+          "width": 1080,
+          "height": 602,
+          "avif": "img/hero-10bc8fa29f18-1080.avif",
+          "webp": "img/hero-10bc8fa29f18-1080.webp",
+          "avifBytes": 32586,
+          "webpBytes": 54332,
+          "avifSha256": "d78468ecef211598e90717abf1e8aa46b025990af4a3040bb5d657111efe4e40",
+          "webpSha256": "2df7ac5188690bcf686759fee1c129e4716890ceda30d0178f440ba1fd2d1376"
+        },
+        {
+          "width": 1440,
+          "height": 803,
+          "avif": "img/hero-10bc8fa29f18-1440.avif",
+          "webp": "img/hero-10bc8fa29f18-1440.webp",
+          "avifBytes": 50589,
+          "webpBytes": 85298,
+          "avifSha256": "29c1971084a14c75079a90886c518b44b9bd6870aaeb1d89a135938a70229b98",
+          "webpSha256": "12da7860d5f18af0ac0b62dda4da9189868530537575728edd3075d50ecc53cb"
+        }
+      ]
+    },
+    "leak-detection-1": {
+      "source": "leak-detection-1.png",
+      "sourceSha256": "5ae8f7858a2a68ed894572dbafb83ebeca8e2772927268c2eb7efe7ace9eef01",
+      "aiGenerated": true,
+      "kind": "atmosphere",
+      "people": false,
+      "faces": false,
+      "hands": false,
+      "equipment": "thermal-camera",
+      "score": {
+        "contrast": 5.1,
+        "textZoneDetail": 3.51,
+        "sharpness": 10.98,
+        "advisory": []
+      },
+      "images": [
+        {
+          "width": 480,
+          "height": 268,
+          "avif": "img/hero-5ae8f7858a2a-480.avif",
+          "webp": "img/hero-5ae8f7858a2a-480.webp",
+          "avifBytes": 2785,
+          "webpBytes": 4994,
+          "avifSha256": "dcc757dfaf9eed5432261ff7ef4b33d6b7e26239de90f35e62d9c1d6a0b60cc4",
+          "webpSha256": "9fee3cbb3631b585c67c1b4055b9f29d503a0dca3ae09a094d2cfcda4a269472"
+        },
+        {
+          "width": 768,
+          "height": 428,
+          "avif": "img/hero-5ae8f7858a2a-768.avif",
+          "webp": "img/hero-5ae8f7858a2a-768.webp",
+          "avifBytes": 4702,
+          "webpBytes": 9524,
+          "avifSha256": "ddafae81136fb0641a4e8d2307e119d2a06515ace84e3c6bbf787e15359fbe57",
+          "webpSha256": "b5a662721d3a19134f519034ef0f5ee5da4510fccaf9f8fe3c81ec76f8a71356"
+        },
+        {
+          "width": 1080,
+          "height": 602,
+          "avif": "img/hero-5ae8f7858a2a-1080.avif",
+          "webp": "img/hero-5ae8f7858a2a-1080.webp",
+          "avifBytes": 7344,
+          "webpBytes": 15914,
+          "avifSha256": "44a7d3695ef8ab984bc7fce1ce35d6d9ab2b569878beae25b7abda3ee973145a",
+          "webpSha256": "c2aab64e9389c9180ae57ed082cb388f23973ad2dfd807fa90ac2bdd774376af"
+        },
+        {
+          "width": 1440,
+          "height": 803,
+          "avif": "img/hero-5ae8f7858a2a-1440.avif",
+          "webp": "img/hero-5ae8f7858a2a-1440.webp",
+          "avifBytes": 10655,
+          "webpBytes": 24490,
+          "avifSha256": "209dd9049ab12d1c4b8375f02698152a3404da9339d94305f418ad5f54e7757a",
+          "webpSha256": "19c51f05d05df9fd11fe7b63c3a8716579952d3abf151f1d7d79dd6aeaf0ee97"
+        }
+      ]
+    },
+    "leak-detection-2": {
+      "source": "leak-detection-2.png",
+      "sourceSha256": "7c333837ab1f0e145228d0d04865be6dcf82313d6c507bebde6ca2f70a3f1785",
+      "aiGenerated": true,
+      "kind": "atmosphere",
+      "people": false,
+      "faces": false,
+      "hands": false,
+      "equipment": null,
+      "score": {
+        "contrast": 5.76,
+        "textZoneDetail": 4.08,
+        "sharpness": 7.43,
+        "advisory": []
+      },
+      "images": [
+        {
+          "width": 480,
+          "height": 268,
+          "avif": "img/hero-7c333837ab1f-480.avif",
+          "webp": "img/hero-7c333837ab1f-480.webp",
+          "avifBytes": 989,
+          "webpBytes": 1870,
+          "avifSha256": "10c8a904eb05d3a8832767ea933d0eb25e8a55de8c9c2eb0c81230682b0ecb98",
+          "webpSha256": "fd23cc191906cf6f00cbce65a0aa8aaaa50ff02e081b2ea35e95f8793bb130a6"
+        },
+        {
+          "width": 768,
+          "height": 428,
+          "avif": "img/hero-7c333837ab1f-768.avif",
+          "webp": "img/hero-7c333837ab1f-768.webp",
+          "avifBytes": 1602,
+          "webpBytes": 3794,
+          "avifSha256": "989f4e90c1370629678a16e9c4ac07f6db40fdf63bd4636fd4e40fbd569c2044",
+          "webpSha256": "401808ab4fd85319f2ef366b33dd97f55912a77d2fcc1966b99b562a42350471"
+        },
+        {
+          "width": 1080,
+          "height": 602,
+          "avif": "img/hero-7c333837ab1f-1080.avif",
+          "webp": "img/hero-7c333837ab1f-1080.webp",
+          "avifBytes": 2567,
+          "webpBytes": 6756,
+          "avifSha256": "60999d275b00daa6618de64ec2adefa7499de52e85127759f0a671f0350d46de",
+          "webpSha256": "517368094237794f6e19ec5d170ae16687b119ba76931119c80a906a6b49f5e8"
+        },
+        {
+          "width": 1440,
+          "height": 803,
+          "avif": "img/hero-7c333837ab1f-1440.avif",
+          "webp": "img/hero-7c333837ab1f-1440.webp",
+          "avifBytes": 3907,
+          "webpBytes": 11368,
+          "avifSha256": "ef12606cb79ce9893eaf0e33ac90368a53a4e7c5c0bd473023d9371e68152de3",
+          "webpSha256": "fb7b2fbcc46996a168d0bb616d06b79385e2a334bb5d8bcc4981518109aaa6f5"
+        }
+      ]
+    },
+    "leak-detection-3": {
+      "source": "leak-detection-3.png",
+      "sourceSha256": "001d5c98121e8728cb5916e2f50f32758ea6694d014d823bc97af71eec9f3cae",
+      "aiGenerated": true,
+      "kind": "atmosphere",
+      "people": false,
+      "faces": false,
+      "hands": false,
+      "equipment": null,
+      "score": {
+        "contrast": 5.1,
+        "textZoneDetail": 1.67,
+        "sharpness": 3.37,
+        "advisory": [
+          "blurry"
+        ]
+      },
+      "images": [
+        {
+          "width": 480,
+          "height": 268,
+          "avif": "img/hero-001d5c98121e-480.avif",
+          "webp": "img/hero-001d5c98121e-480.webp",
+          "avifBytes": 1276,
+          "webpBytes": 2116,
+          "avifSha256": "30850e0dd3c065fbd7cdbd6d136b8ef76f00f34aa5483f8c0807784911759430",
+          "webpSha256": "595a0e43a0d709522ba391ab67785c7dc7fde52988410191f9406ea47bde5687"
+        },
+        {
+          "width": 768,
+          "height": 428,
+          "avif": "img/hero-001d5c98121e-768.avif",
+          "webp": "img/hero-001d5c98121e-768.webp",
+          "avifBytes": 1996,
+          "webpBytes": 3892,
+          "avifSha256": "b206d0a36a832b1aaedb228824c8f98adde7adc61ab47d8f3af026e4174f6e72",
+          "webpSha256": "6932ee4b5a8fad1ea6a499be4f47733516363d5478a26f4594406722665bab7c"
+        },
+        {
+          "width": 1080,
+          "height": 602,
+          "avif": "img/hero-001d5c98121e-1080.avif",
+          "webp": "img/hero-001d5c98121e-1080.webp",
+          "avifBytes": 2960,
+          "webpBytes": 6262,
+          "avifSha256": "69e25b0210856af477a320564a62cd8dccffc3b5257feec1daea225d326c0cb3",
+          "webpSha256": "e477e0c592c8abe11d60a83182dbe89f60a01f924ebf4e6304d9068f523d8e35"
+        },
+        {
+          "width": 1440,
+          "height": 803,
+          "avif": "img/hero-001d5c98121e-1440.avif",
+          "webp": "img/hero-001d5c98121e-1440.webp",
+          "avifBytes": 4083,
+          "webpBytes": 9520,
+          "avifSha256": "64408d0ae4bd4c0c2d442f1c33057dcd60d8ced9e971deacf575021a8d6dc7d9",
+          "webpSha256": "15d4990af41818aedecb739aae4f0fc97c28151f3fe8a8ff9e864f34ba726301"
+        }
+      ]
+    },
+    "leak-detection-hand-2": {
+      "source": "leak-detection-hand-2.png",
+      "sourceSha256": "5ab68f245cec260fa8d86eae45448c21095653727bfa9759f7dd992581b9b86f",
+      "aiGenerated": true,
+      "kind": "atmosphere",
+      "people": false,
+      "faces": false,
+      "hands": true,
+      "equipment": "thermal-camera",
+      "score": {
+        "contrast": 5.74,
+        "textZoneDetail": 3.84,
+        "sharpness": 11.16,
+        "advisory": []
+      },
+      "images": [
+        {
+          "width": 480,
+          "height": 268,
+          "avif": "img/hero-5ab68f245cec-480.avif",
+          "webp": "img/hero-5ab68f245cec-480.webp",
+          "avifBytes": 2662,
+          "webpBytes": 4256,
+          "avifSha256": "16d5450989568c895ecff8d54d2e97f6fb21d079c16eb23a7b4c0977db1ae498",
+          "webpSha256": "b6c8bc9efc6486c1bf26c167f3388e908a6933b3d64d4c38e071e9447dbdd57c"
+        },
+        {
+          "width": 768,
+          "height": 428,
+          "avif": "img/hero-5ab68f245cec-768.avif",
+          "webp": "img/hero-5ab68f245cec-768.webp",
+          "avifBytes": 4352,
+          "webpBytes": 8060,
+          "avifSha256": "6f654182970401a1c635a2fbe278768cca0bf5895ef02d916a7a03ce9470e9ee",
+          "webpSha256": "8df871dfad4295f778e66ed66b563d992480b0e0fe875c816be0dd93e96705bb"
+        },
+        {
+          "width": 1080,
+          "height": 602,
+          "avif": "img/hero-5ab68f245cec-1080.avif",
+          "webp": "img/hero-5ab68f245cec-1080.webp",
+          "avifBytes": 6714,
+          "webpBytes": 13254,
+          "avifSha256": "dc4d57c00e23c3586538679417c839996bbf10305a058a1a364ce090c3432f80",
+          "webpSha256": "ee50debe6b745198dec77b8d29548ea78ecec2f7e659c75a7eb877f8c6044537"
+        },
+        {
+          "width": 1440,
+          "height": 803,
+          "avif": "img/hero-5ab68f245cec-1440.avif",
+          "webp": "img/hero-5ab68f245cec-1440.webp",
+          "avifBytes": 9580,
+          "webpBytes": 20300,
+          "avifSha256": "b9d6f48acd59d5b73bf6f9f5ecdb9ee241d397cf242eb09615ea40d378b6a444",
+          "webpSha256": "1bae68c2dcd83d0cbf778bec7babbe36641445091126f94fced4b8a11dd32f62"
+        }
+      ]
+    },
+    "leak-repair-1": {
+      "source": "leak-repair-1.png",
+      "sourceSha256": "787cf0904a6927b667b7045b32a5782784b2251ee3d290db10c122b7d131967f",
+      "aiGenerated": true,
+      "kind": "atmosphere",
+      "people": false,
+      "faces": false,
+      "hands": false,
+      "equipment": null,
+      "score": {
+        "contrast": 5.89,
+        "textZoneDetail": 8.26,
+        "sharpness": 20.31,
+        "advisory": []
+      },
+      "images": [
+        {
+          "width": 480,
+          "height": 268,
+          "avif": "img/hero-787cf0904a69-480.avif",
+          "webp": "img/hero-787cf0904a69-480.webp",
+          "avifBytes": 5117,
+          "webpBytes": 8034,
+          "avifSha256": "cb420c4bb202f7f874895af0a078948ca005590bbdcc0d3b6eddee33f268b574",
+          "webpSha256": "ae1575b11f95a0d2c88adfe50417ebf35171aa7db7c9cf51deddd49dad3e85f8"
+        },
+        {
+          "width": 768,
+          "height": 428,
+          "avif": "img/hero-787cf0904a69-768.avif",
+          "webp": "img/hero-787cf0904a69-768.webp",
+          "avifBytes": 9694,
+          "webpBytes": 16162,
+          "avifSha256": "74118ff1791961f40bbd8b921b062de1be7fa7e3a52ea62549245e2ba7c97d7a",
+          "webpSha256": "bd980add79344b35fb0f04c285ab2eaaffc95c415e5b85725a0902379b92e6a2"
+        },
+        {
+          "width": 1080,
+          "height": 602,
+          "avif": "img/hero-787cf0904a69-1080.avif",
+          "webp": "img/hero-787cf0904a69-1080.webp",
+          "avifBytes": 15934,
+          "webpBytes": 28354,
+          "avifSha256": "13000ae8c94cf9c92e565ff533a63422ca1e20bda253df881f96a7b0566a0d99",
+          "webpSha256": "de844bec9e3f03fcffa740ecb49186fee1ca23c542beab092f860f57d83d9e0a"
+        },
+        {
+          "width": 1440,
+          "height": 803,
+          "avif": "img/hero-787cf0904a69-1440.avif",
+          "webp": "img/hero-787cf0904a69-1440.webp",
+          "avifBytes": 24563,
+          "webpBytes": 43964,
+          "avifSha256": "6989e94f2b2c4c2613318eefa7bb842237d867f655fae4df8b06b806ac38efeb",
+          "webpSha256": "9ef10d3654f40cf6a240f36857d851279f5e46227afa93a9a8f63472a9833696"
+        }
+      ]
+    },
+    "leak-repair-2": {
+      "source": "leak-repair-2.png",
+      "sourceSha256": "e4d029255159a900744b99146e2aa6b37f2df50132332a1d757d011dd00fa2cb",
+      "aiGenerated": true,
+      "kind": "atmosphere",
+      "people": false,
+      "faces": false,
+      "hands": false,
+      "equipment": null,
+      "score": {
+        "contrast": 5.81,
+        "textZoneDetail": 6.48,
+        "sharpness": 20.76,
+        "advisory": []
+      },
+      "images": [
+        {
+          "width": 480,
+          "height": 268,
+          "avif": "img/hero-e4d029255159-480.avif",
+          "webp": "img/hero-e4d029255159-480.webp",
+          "avifBytes": 4822,
+          "webpBytes": 8164,
+          "avifSha256": "3d19d5c75ae24f765ccb5ef7b5864946cccf79209fbc168669ecc6a30062970a",
+          "webpSha256": "0bfaa8a443a486f50bc1e23177020e8aa2de93cdedcc3ab2683530a4d034f3e6"
+        },
+        {
+          "width": 768,
+          "height": 428,
+          "avif": "img/hero-e4d029255159-768.avif",
+          "webp": "img/hero-e4d029255159-768.webp",
+          "avifBytes": 8783,
+          "webpBytes": 16978,
+          "avifSha256": "5cab16a50a0304ea3eb265f7346304a0b9860a5effb2f736bb8ede8c0be8fa92",
+          "webpSha256": "f07c85e53fdd1513bedc436d53ecdacb4d925dbd20c0d293de1cebeb71c8e9c9"
+        },
+        {
+          "width": 1080,
+          "height": 602,
+          "avif": "img/hero-e4d029255159-1080.avif",
+          "webp": "img/hero-e4d029255159-1080.webp",
+          "avifBytes": 15695,
+          "webpBytes": 31018,
+          "avifSha256": "c4da92b60577477827fa5fd588c2c4c7840e428e1ddb9b84bf0f9197577e0e33",
+          "webpSha256": "3dfcfd35b40b0bb901b972529bbb2230848d47b8c3fa636d4dea7dc655b8832a"
+        },
+        {
+          "width": 1440,
+          "height": 803,
+          "avif": "img/hero-e4d029255159-1440.avif",
+          "webp": "img/hero-e4d029255159-1440.webp",
+          "avifBytes": 24851,
+          "webpBytes": 49524,
+          "avifSha256": "59ba63f50fe573473f02a3e3b8db22f0f497a9eed386aff83dc438058dd169b0",
+          "webpSha256": "ae10d5ca5b0c0219804dc557cde0cc1f09a11c8d5143d2fe5e2f695dad8a1946"
+        }
+      ]
+    },
+    "leak-repair-3": {
+      "source": "leak-repair-3.png",
+      "sourceSha256": "f4916725afe04c0b197199a31729be2aa2cd3ed247eedab19d6f5bef0975d7af",
+      "aiGenerated": true,
+      "kind": "atmosphere",
+      "people": false,
+      "faces": false,
+      "hands": false,
+      "equipment": null,
+      "score": {
+        "contrast": 5.51,
+        "textZoneDetail": 3.18,
+        "sharpness": 15.43,
+        "advisory": []
+      },
+      "images": [
+        {
+          "width": 480,
+          "height": 268,
+          "avif": "img/hero-f4916725afe0-480.avif",
+          "webp": "img/hero-f4916725afe0-480.webp",
+          "avifBytes": 3423,
+          "webpBytes": 5712,
+          "avifSha256": "c532388657c8fa0c60c99dc73c585b00ab0ec12555ea50a1ded0eccae28eaaa0",
+          "webpSha256": "3203e18e7bbc98a682013be7e4eb7793c70738541dfb60066c970dc6943c7368"
+        },
+        {
+          "width": 768,
+          "height": 428,
+          "avif": "img/hero-f4916725afe0-768.avif",
+          "webp": "img/hero-f4916725afe0-768.webp",
+          "avifBytes": 7040,
+          "webpBytes": 12806,
+          "avifSha256": "f5e6ef869ea9c69d1dd2098b229c03795faaf51c1cd276dbcd6f43010dd205f7",
+          "webpSha256": "f2bb5811b75738a923647653f238188dfc697603aa0849fba9b841dbfb716673"
+        },
+        {
+          "width": 1080,
+          "height": 602,
+          "avif": "img/hero-f4916725afe0-1080.avif",
+          "webp": "img/hero-f4916725afe0-1080.webp",
+          "avifBytes": 12963,
+          "webpBytes": 22472,
+          "avifSha256": "e90de02be3e7075faaba6d52e33818f0330e7788395c80ca585f538c938b1198",
+          "webpSha256": "03ec484ee93ebbcfea1b6881fb7340e8c7ad71130c9c17a021751f15e8b8e75c"
+        },
+        {
+          "width": 1440,
+          "height": 803,
+          "avif": "img/hero-f4916725afe0-1440.avif",
+          "webp": "img/hero-f4916725afe0-1440.webp",
+          "avifBytes": 19556,
+          "webpBytes": 33652,
+          "avifSha256": "7db1853b45d8c425e66c7b5aa539423f13b235ee4aa56fb30c8842bb8c2e5ca4",
+          "webpSha256": "d86e2782cf4ede3c0fe956b1c90f01667f9df12857f7ad271212511e8b1fac5f"
+        }
+      ]
+    },
+    "pipe-replacement-2": {
+      "source": "pipe-replacement-2.png",
+      "sourceSha256": "7065522eea9ed0e2f3a02ee7469083024afc6016b654adc4f908263f98d36cf3",
+      "aiGenerated": true,
+      "kind": "atmosphere",
+      "people": false,
+      "faces": false,
+      "hands": false,
+      "equipment": null,
+      "score": {
+        "contrast": 5.46,
+        "textZoneDetail": 4.5,
+        "sharpness": 19.71,
+        "advisory": []
+      },
+      "images": [
+        {
+          "width": 480,
+          "height": 268,
+          "avif": "img/hero-7065522eea9e-480.avif",
+          "webp": "img/hero-7065522eea9e-480.webp",
+          "avifBytes": 3875,
+          "webpBytes": 6742,
+          "avifSha256": "be964e61a593502f013da3e8446e64a11dfb4d04f61797d45a7a1ba95f053492",
+          "webpSha256": "737cce06de5f4e2a128292c3b2c31b906d889eb386a1471a8ee00153ec2cb2dc"
+        },
+        {
+          "width": 768,
+          "height": 428,
+          "avif": "img/hero-7065522eea9e-768.avif",
+          "webp": "img/hero-7065522eea9e-768.webp",
+          "avifBytes": 7015,
+          "webpBytes": 13354,
+          "avifSha256": "3f9ba3340dfecaf525692a6008a9cb709f59aef55bd9181ebe3ec4fcf29fca46",
+          "webpSha256": "78631965206674646fa9beb150c2605cf57067308e2f623e6d68245f36711d4f"
+        },
+        {
+          "width": 1080,
+          "height": 602,
+          "avif": "img/hero-7065522eea9e-1080.avif",
+          "webp": "img/hero-7065522eea9e-1080.webp",
+          "avifBytes": 11037,
+          "webpBytes": 22156,
+          "avifSha256": "cd28a58f0c680ef93dd6a08f13984fe8c6a1ff35ff97ecac6a28c5a75590a810",
+          "webpSha256": "c37296b4723185bf89d8ae8dd3474627a5bc2b25c509340ce7b55b4267fafa95"
+        },
+        {
+          "width": 1440,
+          "height": 803,
+          "avif": "img/hero-7065522eea9e-1440.avif",
+          "webp": "img/hero-7065522eea9e-1440.webp",
+          "avifBytes": 16517,
+          "webpBytes": 34560,
+          "avifSha256": "214af1cf3d975a146786983ec2fa0f356ee622677fa713ab2a176cdaabdd3c63",
+          "webpSha256": "27d6354e18b9b3a19b34615b43163596f6915dddc20fca57b1b5497499a973f1"
+        }
+      ]
+    },
+    "pipe-replacement-3": {
+      "source": "pipe-replacement-3.png",
+      "sourceSha256": "03f962332ca5faef0185b26553c7f91e6dcf04642e93948f2ce69eaed59663d1",
+      "aiGenerated": true,
+      "kind": "atmosphere",
+      "people": false,
+      "faces": false,
+      "hands": false,
+      "equipment": null,
+      "score": {
+        "contrast": 6.7,
+        "textZoneDetail": 4.07,
+        "sharpness": 16.44,
+        "advisory": []
+      },
+      "images": [
+        {
+          "width": 480,
+          "height": 268,
+          "avif": "img/hero-03f962332ca5-480.avif",
+          "webp": "img/hero-03f962332ca5-480.webp",
+          "avifBytes": 4304,
+          "webpBytes": 6754,
+          "avifSha256": "f84ef40b904ef8eb5e9aa16b5cd9e94a59c1f760bf3584dd57ac36c42b7a7d28",
+          "webpSha256": "7b550dbcd385a910e92451004683e9128e5381a3e1c0d5228bd2425a4a2347ef"
+        },
+        {
+          "width": 768,
+          "height": 428,
+          "avif": "img/hero-03f962332ca5-768.avif",
+          "webp": "img/hero-03f962332ca5-768.webp",
+          "avifBytes": 7444,
+          "webpBytes": 12772,
+          "avifSha256": "18f8d3f53bbf5fc5cb7dae137d0788670fbd2a050d31065956bbc5e5a92bec12",
+          "webpSha256": "9a119fa8eaf1f9dcfc8391d0c8e95f1af45e284d3fc59ad596d6fdaebb6b88f2"
+        },
+        {
+          "width": 1080,
+          "height": 602,
+          "avif": "img/hero-03f962332ca5-1080.avif",
+          "webp": "img/hero-03f962332ca5-1080.webp",
+          "avifBytes": 11158,
+          "webpBytes": 20258,
+          "avifSha256": "a9c07745c97ec3e0c6666153a333a4fe785e263aab472f5ee116a053f1f4b71b",
+          "webpSha256": "7d54fdac3619f8bd4563183877b925f82e376ef3911f13e0cd1b817a8dba5d31"
+        },
+        {
+          "width": 1440,
+          "height": 803,
+          "avif": "img/hero-03f962332ca5-1440.avif",
+          "webp": "img/hero-03f962332ca5-1440.webp",
+          "avifBytes": 15239,
+          "webpBytes": 28634,
+          "avifSha256": "24e6137815e07f3d8ec064f7410fe2c0bc1a6341960a69e2967ab87fcb9cb851",
+          "webpSha256": "90b643ce4f7084c900f93bd1248b861097cda08a93ed522a7606c6e03dc4d302"
+        }
+      ]
+    },
+    "plumber-atmo-1": {
+      "source": "plumber-atmo-1.png",
+      "sourceSha256": "383afe70c2b88078346683fd8574b6677cf270670ec9c1e77d7b91ed5fc89a4c",
+      "aiGenerated": true,
+      "kind": "atmosphere",
+      "people": false,
+      "faces": false,
+      "hands": false,
+      "equipment": null,
+      "score": {
+        "contrast": 4.93,
+        "textZoneDetail": 1.34,
+        "sharpness": 14.68,
+        "advisory": []
+      },
+      "images": [
+        {
+          "width": 480,
+          "height": 268,
+          "avif": "img/hero-383afe70c2b8-480.avif",
+          "webp": "img/hero-383afe70c2b8-480.webp",
+          "avifBytes": 2774,
+          "webpBytes": 4056,
+          "avifSha256": "3f64666ce27655ee8cf98c6a8b5be078be7c957a4f065429b17633c554c64b20",
+          "webpSha256": "c1f29049ac1b36164f7e7ebe80c3eace66c6e471f187f2a068394d820f4c1f4c"
+        },
+        {
+          "width": 768,
+          "height": 428,
+          "avif": "img/hero-383afe70c2b8-768.avif",
+          "webp": "img/hero-383afe70c2b8-768.webp",
+          "avifBytes": 4794,
+          "webpBytes": 7814,
+          "avifSha256": "6aa54528bf47855803d9d2c1e5e504e85f5f349dc2355ac24e2678de3a9d13bb",
+          "webpSha256": "8c0789748ad4ccc38d62e6c905f8c6b3ff8a851e1e45c453c51705eb8c2d7636"
+        },
+        {
+          "width": 1080,
+          "height": 602,
+          "avif": "img/hero-383afe70c2b8-1080.avif",
+          "webp": "img/hero-383afe70c2b8-1080.webp",
+          "avifBytes": 7194,
+          "webpBytes": 12652,
+          "avifSha256": "d41511276a564386428fe43d677c8408513b942e963fc041c7efb066df59aafa",
+          "webpSha256": "e36cabd35ab6e9ff639a612500aa87200ce973525603f24ca2524ab8d9dd0e78"
+        },
+        {
+          "width": 1440,
+          "height": 803,
+          "avif": "img/hero-383afe70c2b8-1440.avif",
+          "webp": "img/hero-383afe70c2b8-1440.webp",
+          "avifBytes": 9783,
+          "webpBytes": 18532,
+          "avifSha256": "62f5c5392886db3b83d8e1fd991bd5fc452e1dfae59c1a08b5fd10f2f4eed003",
+          "webpSha256": "a4a21dde6ecc05521f829c4ba09f604957095b954447e445146e6f82cfb6d5e8"
+        }
+      ]
+    },
+    "plumber-atmo-5": {
+      "source": "plumber-atmo-5.png",
+      "sourceSha256": "415aef56215007169d5c33081d75424807887b9d151a7f47ecbd25175ecc250c",
+      "aiGenerated": true,
+      "kind": "atmosphere",
+      "people": false,
+      "faces": false,
+      "hands": false,
+      "equipment": null,
+      "score": {
+        "contrast": 6.89,
+        "textZoneDetail": 4.75,
+        "sharpness": 13.19,
+        "advisory": []
+      },
+      "images": [
+        {
+          "width": 480,
+          "height": 268,
+          "avif": "img/hero-415aef562150-480.avif",
+          "webp": "img/hero-415aef562150-480.webp",
+          "avifBytes": 3702,
+          "webpBytes": 5556,
+          "avifSha256": "88da63345f37ba5537ebaad532fb524be4e1f824c28d675222d0d50d23b6c16d",
+          "webpSha256": "ee2e8b76b888a5bbe5ef69da93c0dbd25ae0e475913645ba33aec534c5d2a3bd"
+        },
+        {
+          "width": 768,
+          "height": 428,
+          "avif": "img/hero-415aef562150-768.avif",
+          "webp": "img/hero-415aef562150-768.webp",
+          "avifBytes": 6400,
+          "webpBytes": 10614,
+          "avifSha256": "201a7696cb2e69345e208bb5c24a866b87ae4fa2ae7eae0385ab305569431682",
+          "webpSha256": "84142e4c743c3ff38ace03f6d92efe78e88ab46aaee3e3b74d8697be9b187c34"
+        },
+        {
+          "width": 1080,
+          "height": 602,
+          "avif": "img/hero-415aef562150-1080.avif",
+          "webp": "img/hero-415aef562150-1080.webp",
+          "avifBytes": 9856,
+          "webpBytes": 16768,
+          "avifSha256": "a581a1663bdcaa829d344d649649362d32e4503211367dde34c5ae96608bb856",
+          "webpSha256": "2d1b6c99cb735a43da6c954973eb5d964549ad7f1281ebe4a73eb019923877c8"
+        },
+        {
+          "width": 1440,
+          "height": 803,
+          "avif": "img/hero-415aef562150-1440.avif",
+          "webp": "img/hero-415aef562150-1440.webp",
+          "avifBytes": 13329,
+          "webpBytes": 23904,
+          "avifSha256": "5bb9855cfea607040a83be2c40c3603506674956045b82b5469f9f38875ec25f",
+          "webpSha256": "f5479d9bb041aeeb094f8981f7714e2cbf7f396f82e3a0226152508127498862"
+        }
+      ]
+    },
+    "plumber-atmo-6": {
+      "source": "plumber-atmo-6.png",
+      "sourceSha256": "80dcfa326f8b3caa4c3491e725ec71a7a5fdc2073d938790a4c6969c30e3a261",
+      "aiGenerated": true,
+      "kind": "atmosphere",
+      "people": false,
+      "faces": false,
+      "hands": false,
+      "equipment": null,
+      "score": {
+        "contrast": 6.33,
+        "textZoneDetail": 3.4,
+        "sharpness": 19.21,
+        "advisory": []
+      },
+      "images": [
+        {
+          "width": 480,
+          "height": 268,
+          "avif": "img/hero-80dcfa326f8b-480.avif",
+          "webp": "img/hero-80dcfa326f8b-480.webp",
+          "avifBytes": 3129,
+          "webpBytes": 5428,
+          "avifSha256": "41ceef29ef6837c87c1cf447a0b5591e5f5c05eae31088fb536bc542a2ee3cdd",
+          "webpSha256": "fadf63645a3528fe038b17c3e6eef00ba973fac86e4170503ccbe97a96a2c3e1"
+        },
+        {
+          "width": 768,
+          "height": 428,
+          "avif": "img/hero-80dcfa326f8b-768.avif",
+          "webp": "img/hero-80dcfa326f8b-768.webp",
+          "avifBytes": 5456,
+          "webpBytes": 10936,
+          "avifSha256": "ed5c75a70a100c98a7bd7f57c77ee0124de5dca9072333d4a179a53f60854c67",
+          "webpSha256": "a52b9b5d62601837d33f07a1e4cb558e6a1c39f60869ce2751e8cb8313c72abc"
+        },
+        {
+          "width": 1080,
+          "height": 602,
+          "avif": "img/hero-80dcfa326f8b-1080.avif",
+          "webp": "img/hero-80dcfa326f8b-1080.webp",
+          "avifBytes": 8742,
+          "webpBytes": 18620,
+          "avifSha256": "752ab96fcf71e02dd70a678d9a473019fff5d624e511eb9e271583d349ed28b4",
+          "webpSha256": "636286457f3abd21e7af7f8f9b4a78904061258109f3ccdb5077f0b2b33dc48a"
+        },
+        {
+          "width": 1440,
+          "height": 803,
+          "avif": "img/hero-80dcfa326f8b-1440.avif",
+          "webp": "img/hero-80dcfa326f8b-1440.webp",
+          "avifBytes": 13045,
+          "webpBytes": 28486,
+          "avifSha256": "13d14df1efe7ab8486fa9265b99bc8d3978c58b3c47580b8ed5c5870e2877df9",
+          "webpSha256": "29a66f9e2faf25593323ce5d26e954a3a0d380d9c0283e77553909fed316f036"
+        }
+      ]
+    },
+    "water-heater-installation-1": {
+      "source": "water-heater-installation-1.png",
+      "sourceSha256": "93d15b34c1ab62960d7062b4202deaed4b72722ffdf0386d4e2993cbfd93ff12",
+      "aiGenerated": true,
+      "kind": "atmosphere",
+      "people": false,
+      "faces": false,
+      "hands": false,
+      "equipment": null,
+      "score": {
+        "contrast": 5.04,
+        "textZoneDetail": 2.73,
+        "sharpness": 3.97,
+        "advisory": [
+          "blurry"
+        ]
+      },
+      "images": [
+        {
+          "width": 480,
+          "height": 268,
+          "avif": "img/hero-93d15b34c1ab-480.avif",
+          "webp": "img/hero-93d15b34c1ab-480.webp",
+          "avifBytes": 1668,
+          "webpBytes": 2526,
+          "avifSha256": "e5326279aa75ce209710e805da5f31fedf3ef9d332cebf3b34db80b8f71c04fb",
+          "webpSha256": "add6d5b45a17f23ad951d79ab3165eac29f4becf6ca5bade998b3665447c7a9b"
+        },
+        {
+          "width": 768,
+          "height": 428,
+          "avif": "img/hero-93d15b34c1ab-768.avif",
+          "webp": "img/hero-93d15b34c1ab-768.webp",
+          "avifBytes": 2720,
+          "webpBytes": 4778,
+          "avifSha256": "46e0a5cf18bc6791802675101ff2ea5151cfd3646b398eef8754f94339c793bd",
+          "webpSha256": "e16416e2e78c5bfac91274acdaf55212c9c9cbf056685279d4709af7d206fa8e"
+        },
+        {
+          "width": 1080,
+          "height": 602,
+          "avif": "img/hero-93d15b34c1ab-1080.avif",
+          "webp": "img/hero-93d15b34c1ab-1080.webp",
+          "avifBytes": 3939,
+          "webpBytes": 7626,
+          "avifSha256": "d7b0e4e9f16c4c370b32f21236c3f86edc94eee508d9422c20dce0953485b842",
+          "webpSha256": "4cad9035a1e92cad9333eab6a0cfb5927fa0063b9e1c9c245c7a52400a6f6481"
+        },
+        {
+          "width": 1440,
+          "height": 803,
+          "avif": "img/hero-93d15b34c1ab-1440.avif",
+          "webp": "img/hero-93d15b34c1ab-1440.webp",
+          "avifBytes": 5351,
+          "webpBytes": 11504,
+          "avifSha256": "510b5b4fe37cc6f760f7d87290c835620f7af28d37754401cfcee4d1e842f0ed",
+          "webpSha256": "c50bc66cd4fccdade21f0a2d2c2b380ef6fdfa1d36deb39df820245ce0784135"
+        }
+      ]
+    },
+    "water-heater-installation-2": {
+      "source": "water-heater-installation-2.png",
+      "sourceSha256": "d9fe8b542508e25e20e017bd522ec0f9d16af30c52033c99c86e09822d6e317a",
+      "aiGenerated": true,
+      "kind": "atmosphere",
+      "people": false,
+      "faces": false,
+      "hands": false,
+      "equipment": null,
+      "score": {
+        "contrast": 6.63,
+        "textZoneDetail": 3.11,
+        "sharpness": 10.9,
+        "advisory": []
+      },
+      "images": [
+        {
+          "width": 480,
+          "height": 268,
+          "avif": "img/hero-d9fe8b542508-480.avif",
+          "webp": "img/hero-d9fe8b542508-480.webp",
+          "avifBytes": 2828,
+          "webpBytes": 4508,
+          "avifSha256": "bc0291806e8291b249483a110e2cfac9da054e523f982343e5712c9151899dbc",
+          "webpSha256": "882f8b9200d4dd939da81b0305d280c6fb9cd9faf8c858d40b09171b1a81798c"
+        },
+        {
+          "width": 768,
+          "height": 428,
+          "avif": "img/hero-d9fe8b542508-768.avif",
+          "webp": "img/hero-d9fe8b542508-768.webp",
+          "avifBytes": 4867,
+          "webpBytes": 8644,
+          "avifSha256": "538810d69ff464c26d16255c254df00cae47eed7d2835a05f25a462da8af3cf9",
+          "webpSha256": "79abe97632db93a2c422056471b1d2c42a2111726cea8ecac1ec3adda2ff79d6"
+        },
+        {
+          "width": 1080,
+          "height": 602,
+          "avif": "img/hero-d9fe8b542508-1080.avif",
+          "webp": "img/hero-d9fe8b542508-1080.webp",
+          "avifBytes": 7619,
+          "webpBytes": 13708,
+          "avifSha256": "2bb79b85b776a40977bae1a8b959e3321cf067391fdead2e5450bd942e7df3ef",
+          "webpSha256": "3fd601e258dce4e160247e597dd749cf6fabdfd5d9f5b025a7b07270947eb934"
+        },
+        {
+          "width": 1440,
+          "height": 803,
+          "avif": "img/hero-d9fe8b542508-1440.avif",
+          "webp": "img/hero-d9fe8b542508-1440.webp",
+          "avifBytes": 10759,
+          "webpBytes": 20526,
+          "avifSha256": "1e3d016db3fc0a595923a3e8e3d2a8928214caf47d6cc02f528976dd15b72541",
+          "webpSha256": "eab7e2cae007373d9f3c2bb8eab6432055cc89b067161b8f72db081f914c65d1"
+        }
+      ]
+    },
+    "water-heater-installation-3": {
+      "source": "water-heater-installation-3.png",
+      "sourceSha256": "fe6ba13b041a98c869e2293a3eaa967a533a8b46f1df809f0b74efdb7e9d7f38",
+      "aiGenerated": true,
+      "kind": "atmosphere",
+      "people": false,
+      "faces": false,
+      "hands": false,
+      "equipment": null,
+      "score": {
+        "contrast": 5.56,
+        "textZoneDetail": 6.07,
+        "sharpness": 15.49,
+        "advisory": []
+      },
+      "images": [
+        {
+          "width": 480,
+          "height": 268,
+          "avif": "img/hero-fe6ba13b041a-480.avif",
+          "webp": "img/hero-fe6ba13b041a-480.webp",
+          "avifBytes": 4528,
+          "webpBytes": 8234,
+          "avifSha256": "c318bbd0bb19a2e3621014f962f1c8e285c6ab156c25d8b4f34a9faa1ef2bb6c",
+          "webpSha256": "2bf1b26d1e2f30df9fa13c95d7c3934ebbd37c7a551d7acf0f73c729a84a877c"
+        },
+        {
+          "width": 768,
+          "height": 428,
+          "avif": "img/hero-fe6ba13b041a-768.avif",
+          "webp": "img/hero-fe6ba13b041a-768.webp",
+          "avifBytes": 8286,
+          "webpBytes": 16802,
+          "avifSha256": "d1def39c4d4dff39dad5f500c8e5166c3f64956455652e4a34ecb0a06d43a9f5",
+          "webpSha256": "2f722b59338d4287ff7e51ea979841d77f02afb87393a9af07340580bfaa4254"
+        },
+        {
+          "width": 1080,
+          "height": 602,
+          "avif": "img/hero-fe6ba13b041a-1080.avif",
+          "webp": "img/hero-fe6ba13b041a-1080.webp",
+          "avifBytes": 13835,
+          "webpBytes": 28498,
+          "avifSha256": "b5fc86ab6d4ddfeb0a2280430101b18e63addee9ec41a2338eeb5cb221608487",
+          "webpSha256": "bc3d233a2e24a37b8135434691f75a7e119d3c894d408734ea17bb6b5ccdc9d5"
+        },
+        {
+          "width": 1440,
+          "height": 803,
+          "avif": "img/hero-fe6ba13b041a-1440.avif",
+          "webp": "img/hero-fe6ba13b041a-1440.webp",
+          "avifBytes": 20247,
+          "webpBytes": 44570,
+          "avifSha256": "892778f5f1efc35ad832c325f17d5f63835554f9c38e5856e183954c30a8a63a",
+          "webpSha256": "69f4a55a2eda3c3dfc6bf1c26d21ab4e5a5e9ef86a297c7cec38ddb20f2a69f0"
+        }
+      ]
+    }
+  }
+}

@@ -30,11 +30,13 @@
         "kind": "atmosphere",
         "aiGenerated": true,
         "people": false,
+        "faces": false,
+        "hands": true,
         "work": false,
-        "approval": "Eitan 2026-11-17: plumber-atmo-4 (AI atmosphere, no people, no work shown); applied with scripts/site-bot-look.mjs into data/video/demo/site-proof/demo-plumber"
+        "approval": "Eitan 2026-11-17: leak-detection-hand-2 (AI atmosphere, thermal camera variant: a plumber's hand holding a thermal camera at damp tiles; hands allowed in this photo only, no people, no faces, no work result) replaces plumber-atmo-4 (dripping tap, retired); applied with scripts/site-bot-look.mjs into data/video/demo/site-proof/demo-plumber"
       },
       "geometry": {
-        "_measured": "2026-11-17 by scripts/measure-hero-showcase.mjs (virtual 960x605 window px; LP with the approved atmosphere hero photo and icon logo; results-ad lines unchanged)",
+        "_measured": "2026-11-17 by scripts/measure-hero-showcase.mjs (virtual 960x605 window px; LP with the approved atmosphere hero photo and icon logo; results-ad lines unchanged). Re-measured 2026-11-17 after the hero swap to leak-detection-hand-2: LP lines, call button and targets unchanged; lpDocHeight added (the cut page height for the scroll beat).",
         "resultsAdLines": [
           [
             42,
@@ -74,7 +76,8 @@
         "callTarget": [
           747,
           514
-        ]
+        ],
+        "lpDocHeight": 919
       }
     }
   ]

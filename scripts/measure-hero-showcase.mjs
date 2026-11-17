@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Measures a hero showcase entry's geometry (src/content/hero-showcases.json -> entries[].geometry) from a running
-// server: the results-page ad headline lines, the LP headline lines, the call button, and suggested pointer park /
-// call-target points. Prints JSON to paste into the entry (numbers only; no copy). Verify with Roni's recording.
+// server: the results-page ad headline lines, the LP headline lines, the call button, suggested pointer park /
+// call-target points, and the cut page's height (lpDocHeight: the iframe height and the scroll beat's distance). Prints JSON to paste into the entry (numbers only; no copy). Verify with Roni's recording.
 //
 //   node scripts/measure-hero-showcase.mjs http://127.0.0.1:3312 <entry-id>
 // HEBREW-SAFETY: zero Hebrew bytes.
@@ -34,6 +34,7 @@ try {
     const call = document.querySelector('[data-hero-call]') ?? document.querySelector('a.btn-call');
     const c = call?.getBoundingClientRect();
     return {
+      lpDocHeight: Math.ceil(document.documentElement.scrollHeight),
       lpHeadlineLines: merged.map((m, i) => [Math.round(m.left - 3), Math.round(box.top + i * lh), Math.round(m.right - m.left + 6), Math.round(lh)]),
       callButton: c ? [+c.left.toFixed(1), +c.top.toFixed(1), +c.width.toFixed(1), +c.height.toFixed(1), parseFloat(getComputedStyle(call).borderRadius) || 0, getComputedStyle(call).backgroundColor] : null,
     };
@@ -76,6 +77,7 @@ try {
     callButton: lp.callButton ? [...lp.callButton.slice(0, 5), hex] : null,
     park: [300, Math.max(512, Math.round(ad.cardBottom) + 30)],
     callTarget: [Math.round(bl + 2.5), Math.round(bt + LP_TOP + 3)],
+    lpDocHeight: lp.lpDocHeight,
   };
   console.log(JSON.stringify({ id, geometry, notes: { resultsCardBottom: Math.round(ad.cardBottom), scaleRight: SCALE_RIGHT } }, null, 2));
 } finally {

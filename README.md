@@ -101,6 +101,22 @@ You can start editing the page by modifying `app/page.tsx`. The page auto-update
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
+### Site Bot per-service hero photos (AI atmosphere library)
+
+Pages without an approved owner photo get a hero backdrop from the trade library (Eitan 2026-11-17; Fable 5.2: process
+yes, outcomes never): the photo for the page's service (`svc-<service-id>`), else the trade fallback, else the solid hero.
+An approved owner photo (`scripts/site-bot-look.mjs`) wins on every page. Library photos are **hero background only**:
+flagged `data-ai-generated="atmosphere"`, never a gallery / About image, og:image, schema image or anything sent to GBP.
+Leak detection's thermal-camera photos are used only when the owner's usp or a confirmed service attribute names a
+thermal camera. Two approved sites in one city never share a service's photo while the pool has an unused one (least-used
+when it cannot be avoided); picks are deterministic and never change when a later site is added.
+
+- Sources + approval: `data/photo-library/<trade>/approved-<date>.json` and the PNGs it lists (never served or traced).
+- Build (deterministic): `node scripts/build-photo-library.mjs` writes `assets/photo-library/<trade>/library.json` and
+  `img/` (AVIF + WebP at the hero widths and budget); `--check` rebuilds in memory and fails on any difference.
+- Code: resolver `src/lib/lp/heroLibrary.ts`, loader + peer scan `src/lib/site-bot/heroLibraryStore.ts`, wired in
+  `src/app/api/site-bot/deploy/route.ts` (sha256-checked; a changed file stops the deploy with `hero_library_invalid`).
+
 ### Adding a showcase business (homepage hero loop)
 
 The homepage hero window plays one or more showcase businesses: three taps in the intake chat, the Google results
@@ -124,10 +140,13 @@ with two or more it loops (rest 4 s, cross-fade, next), pausing out of view or i
    `WAO_SITE_PROOF_DIR=data/video/demo/site-proof node scripts/site-bot-look.mjs --slug demo-plumber --by <name>
    --site-record data/video/demo/stand-in/site-record.json --add-photo <file> --approve-hero <photos/...> [--approve-logo icon]`.
    The entry must flag the photo: `heroPhoto: { "kind": "atmosphere", "aiGenerated": true|false, "people": false,
-   "work": false, "approval": "<who, when>" }` (an AI atmosphere photo only: no people, no job shown). An approved photo
-   without the flag, a flag without a photo, or any other AI flag fails the build. Images are served from
-   `/hero-window/img/<file>`. The window drops the record's rating (no rating, review count or result is shown).
-   After a photo or logo change, re-measure (step 4).
+   "faces": false, "hands": true|false, "work": false, "approval": "<who, when>" }` (an AI atmosphere photo only: no
+   people, no face, no job result shown; a hand is allowed only where Eitan approved one, today the demo's
+   leak-detection-hand-2). An approved photo without the flag, a flag without a photo, or any other AI flag fails the
+   build. Images are served from `/hero-window/img/<file>`. The window drops the record's rating (no rating, review
+   count or result is shown). To swap the photo: `--add-photo` + `--approve-hero` as above, delete the old
+   `photos/<sha12>.png` and `img/hero-<sha12>-*` files and its `photos` entry in `look.json` (with a history line), update
+   `heroPhoto`, then re-measure (step 4).
 3. **Strings from waocopy, never typed.** Needed per entry: `answers.trade`, `answers.area`, `answers.service` (the
    tapped chips; add `chips` lists if the global ones do not hold them), `ad.headlines` (3, <= 30 chars),
    `ad.description` (<= 90 chars), `ad.displayHost`, `tabTitle` (live-url). The results-page query is built as
@@ -136,7 +155,10 @@ with two or more it loops (rest 4 s, cross-fade, next), pausing out of view or i
    `sr_description` that fits every entry (today's one describes the plumber).
 4. **Add the entry**, then measure its geometry with the app running:
    `node scripts/measure-hero-showcase.mjs http://127.0.0.1:<port> <id>` and paste the printed `geometry`.
-   Regenerate the CSS (per-entry pointer paths): `node scripts/build-hero-motion-css.mjs`.
+   Regenerate the CSS (per-entry pointer paths and LP scroll): `node scripts/build-hero-motion-css.mjs`.
+   `geometry.lpDocHeight` is the cut page's height: the iframe is that tall, and after the call-button moment the motion
+   scrolls it to the sections below the hero and back to the top (the resting frame). Re-measure after any change to
+   the record's copy or look; never hand-set it.
 5. **Run** `npm run test` and `npm run build -- --webpack`.
 6. **Roni check:** record the loop at 1440 and 390 (pointer never over text, headlines held, no rating / phone /
    demo text in the window, CLS 0, LCP still the H1, pause/play and Esc work, reduced motion = first entry at rest).

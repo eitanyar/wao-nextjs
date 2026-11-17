@@ -46,7 +46,7 @@ import { codeOwnedFactTemplates } from './ownerFactCopy';
 import { DEPTH_BLOCK_KEYS, DEPTH_BLOCK_LIMITS, rendersDepthBlocks } from './depthBlocks';
 import { unverifiedClaimSpec, UnverifiedClaimError, withoutUnverifiedClaims, type ClaimVerification } from './claimVerification';
 import { heroHoursLine, heroPhotoSlot, icon, serviceIcon } from './siteDesign';
-import { heroBackdropCss, heroBackdropHtml, renderableHero } from './siteLook';
+import { heroBackdropCss, heroBackdropHtml, renderableHero, type SiteLookHero } from './siteLook';
 import { brandLogo } from './siteLogo';
 import { israeliPhoneE164 } from './phoneE164';
 
@@ -101,6 +101,12 @@ export interface RenderResearchedSitePagesParams extends Omit<RenderSitePagesPar
   claimVerification?: ClaimVerification;
   /** Launch step 2 (capability 9): the profile-link label and its pending flag (default the module's; tests inject a stand-in). */
   profileLinkCopy?: ProfileLinkCopy;
+  /**
+   * Per-service AI atmosphere hero photos (heroLibrary.ts, Eitan 2026-11-17), by page opportunity id: the hero backdrop of a
+   * page without an approved owner photo (look.hero wins on every page), flagged data-ai-generated="atmosphere". Hero
+   * backdrop only: never og:image, schema image, About or a gallery. Absent = byte-identical output.
+   */
+  libraryHeroes?: Readonly<Record<string, SiteLookHero>>;
 }
 
 /** The Google-profile link label a render uses, and whether it is still pending (pending = no profile link at all). */
@@ -784,8 +790,11 @@ function buildPageHtml(page: ResearchedSitePage, params: RenderResearchedSitePag
     return target ? [`<a href="${servedPath(target)}" style="display:inline-block;padding:12px 8px;min-height:44px;color:${theme.accentText};text-decoration:underline;font-weight:700;">${esc(anchorText(item, businessName))}</a>`] : [];
   }).join('');
   const faq = approvedFaqs(page).map(item => `<details style="background:${theme.surface};border:1px solid ${theme.border};border-radius:${theme.radiusMd};padding:0 14px;"><summary style="min-height:44px;padding:12px 0;cursor:pointer;font-weight:700;color:${theme.primary};">${esc(item.q)}</summary><p style="color:${theme.textMuted};margin-top:-4px;padding-bottom:14px;">${esc(item.a)}</p></details>`).join('');
-  // Visual pack (2026-11-16): the staff-approved hero photo; null = the solid hero, byte-identical.
-  const photo = renderableHero(params.look);
+  // Visual pack (2026-11-16): the staff-approved hero photo; else (2026-11-17) the page's trade-library atmosphere photo,
+  // flagged as AI-made; null = the solid hero, byte-identical.
+  const ownerPhoto = renderableHero(params.look);
+  const libraryPhoto = ownerPhoto ? null : renderableHero({ hero: params.libraryHeroes?.[page.opportunityId] });
+  const photo = ownerPhoto ?? libraryPhoto;
   const head = pageHead({
     t: theme,
     title: researchedPageTitle(page, businessName),
@@ -800,7 +809,7 @@ function buildPageHtml(page: ResearchedSitePage, params: RenderResearchedSitePag
   // stays directly before the H1 (Yonatan C1); the hours line is the homepage's (hero.hours).
   const body = `
   <main>
-    <section class="hero on-dark${photo ? ' has-photo' : ''}" data-section="hero">${photo ? heroBackdropHtml(photo) : ''}<div class="hero-grid"><div class="hero-text">${breadcrumb ? breadcrumbNav(homeName, servicePlainName(page)) : ''}<h1>${esc(researchedPageH1(page.copy.heroHeadline, page.seo))}</h1><p class="sub">${esc(page.copy.heroSubheadline)}</p>${heroCallButton(page, data)}${pricePromiseLine(data, params.pricingCopy)}${page.classification === 'homepage' ? heroHoursLine(data.businessHours) : ''}</div>${heroPhotoSlot()}</div></section>
+    <section class="hero on-dark${photo ? ' has-photo' : ''}" data-section="hero">${photo ? heroBackdropHtml(photo, { aiAtmosphere: libraryPhoto !== null }) : ''}<div class="hero-grid"><div class="hero-text">${breadcrumb ? breadcrumbNav(homeName, servicePlainName(page)) : ''}<h1>${esc(researchedPageH1(page.copy.heroHeadline, page.seo))}</h1><p class="sub">${esc(page.copy.heroSubheadline)}</p>${heroCallButton(page, data)}${pricePromiseLine(data, params.pricingCopy)}${page.classification === 'homepage' ? heroHoursLine(data.businessHours) : ''}</div>${heroPhotoSlot()}</div></section>
     ${trustBar(page, theme)}${storySection(page, theme)}${processSection(page, theme)}${priceSection(page, data, theme, params.pricingCopy)}${proofSection(page, theme)}
     ${hasProof(page) ? '' : reviewSection(page, theme)}${qaSection(page, theme)}
     ${serviceDetailsSection(page, theme, allPages, outputs, businessName)}

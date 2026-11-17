@@ -1,0 +1,56 @@
+{
+ "trade": "plumber",
+ "approvedAt": "2026-11-17",
+ "approvedBy": "Eitan (hand #2 for the demo; other drops delegated to Adam)",
+ "rule": "process yes, outcomes never (Fable 5.2, 2026-11-17); hands allowed only in leak-detection-hand-2 (Eitan's request); no faces/people",
+ "services": {
+  "leak-detection": {
+   "camera": [
+    "leak-detection-hand-2.png",
+    "leak-detection-1.png"
+   ],
+   "noCamera": [
+    "leak-detection-2.png",
+    "leak-detection-3.png"
+   ]
+  },
+  "leak-repair": [
+   "leak-repair-1.png",
+   "leak-repair-2.png",
+   "leak-repair-3.png"
+  ],
+  "drain-cleaning": [
+   "drain-cleaning-1.png",
+   "drain-cleaning-2.png",
+   "drain-cleaning-3.png"
+  ],
+  "water-heater-installation": [
+   "water-heater-installation-1.png",
+   "water-heater-installation-2.png",
+   "water-heater-installation-3.png"
+  ],
+  "bathroom-renovation": [
+   "bathroom-renovation-1.png",
+   "bathroom-renovation-2.png",
+   "bathroom-renovation-3.png"
+  ],
+  "pipe-replacement": [
+   "pipe-replacement-2.png",
+   "pipe-replacement-3.png"
+  ]
+ },
+ "tradeFallback": [
+  "plumber-atmo-1.png",
+  "plumber-atmo-5.png",
+  "plumber-atmo-6.png"
+ ],
+ "dropped": {
+  "pipe-replacement-1.png": "old rusted pipe beside new reads as before/after",
+  "plumber-atmo-4.png": "dripping tap anchors low (retired as hero)",
+  "plumber-atmo-2.png": "fake tool",
+  "plumber-atmo-3.png": "odd pipe stub",
+  "leak-detection-hand-4.png": "heat colours on wall",
+  "leak-detection-hand-5.png": "blue stain reads as paint"
+ },
+ "demoHero": "leak-detection-hand-2.png"
+}

@@ -380,6 +380,11 @@ const nextConfig: NextConfig = {
     // `contains: true`, so "data/**/*" also matches node_modules/next/dist/lib/metadata/
     // and strips Next's own runtime from the standalone (MODULE_NOT_FOUND on boot).
   },
+  // Site Bot per-service AI atmosphere hero photos (scripts/build-photo-library.mjs): the deploy route uploads the built
+  // widths with each site. Only the built files are included; the approved PNG sources stay under data/ (excluded above).
+  outputFileTracingIncludes: {
+    "/api/site-bot/deploy": ["assets/photo-library/*/library.json", "assets/photo-library/*/img/*"],
+  },
   // Tailscale IPs/hostname used to reach the dev server remotely (not localhost) —
   // without this, Next 16 dev mode silently blocks HMR/RSC dev-asset requests from
   // that origin, which breaks client hydration (buttons render but onClick never wires up).

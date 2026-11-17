@@ -22,6 +22,14 @@ export interface ShowcaseGeometry {
   park: [number, number];
   /** The pointer tip on the call button (window px), off its label text. */
   callTarget: [number, number];
+  /**
+   * Height of the cut landing page (LP px, measured by scripts/measure-hero-showcase.mjs: header, hero and the sections
+   * the product renders below it). The iframe is this tall inside the LP-height clip; after the call-button moment the
+   * motion scrolls it (a transform) by lpDocHeight - HERO_WINDOW_LP_HEIGHT so the sections below the hero come into view,
+   * then back to the top. MEASURED, never hand-set: re-measure after any change to the record's copy or look (README
+   * step 4); a stale value cuts the page bottom (too small) or shows white below it (too large).
+   */
+  lpDocHeight: number;
 }
 
 /**
@@ -47,7 +55,14 @@ export interface HeroPhotoFlag {
   aiGenerated: boolean;
   /** Must be explicitly false: no person in the photo. */
   people: false;
-  /** Must be explicitly false: no job / work result shown. */
+  /** Must be explicitly false: no face (not even a partial or reflected one). */
+  faces: false;
+  /**
+   * Must be flagged true or false. A hand is not a person or a face: Eitan 2026-11-17 allowed one in the demo photo only
+   * (leak-detection-hand-2, a hand holding a thermal camera at damp tiles); people / faces still fail.
+   */
+  hands: boolean;
+  /** Must be explicitly false: no job result shown (Fable 5.2 2026-11-17: process yes, outcomes never). */
   work: false;
   /** Who approved it and when (recorded decision). */
   approval: string;
@@ -88,6 +103,10 @@ export const WORKER_TENANT_HOST = /^(?!(?:www|mail|smtp|sites|sites-origin)\.)[a
 export const PLACEHOLDER = /\bdemo\b|\bexample\b|\btest\b|\.invalid\b|localhost|lorem/i;
 
 const WINDOW = { width: 960, height: 605 };
+/** The LP area of the window (heroWindow.HERO_WINDOW_LP_HEIGHT: window minus tab bar 26 and ad strip 132; the contract test pins it). */
+export const LP_HEIGHT = WINDOW.height - 26 - 132;
+/** A cut page longer than this many LP heights would scroll too far for the motion; the validation rejects it. */
+const LP_MAX_SCREENS = 4;
 
 const isText = (v: unknown): v is string => typeof v === "string" && v.length > 0 && v === v.trim() && !/\s{2}/.test(v);
 
@@ -145,6 +164,8 @@ export function validateShowcases(raw: unknown, globalChips: string[][], labels:
       if (h?.kind !== "atmosphere") fail(at, "heroPhoto.kind must be atmosphere: no AI owner / people / work photo in the window");
       if (typeof h.aiGenerated !== "boolean") fail(at, "heroPhoto.aiGenerated must be flagged true or false");
       if (h.people !== false) fail(at, "heroPhoto shows people or is unflagged (people must be false)");
+      if (h.faces !== false) fail(at, "heroPhoto shows a face or is unflagged (faces must be false)");
+      if (typeof h.hands !== "boolean") fail(at, "heroPhoto.hands must be flagged true or false");
       if (h.work !== false) fail(at, "heroPhoto shows a job or is unflagged (work must be false)");
       if (!isText(h.approval)) fail(at, "heroPhoto.approval (who approved it, when)");
       if (lp.source !== "site-record") fail(at, "heroPhoto applies to site-record entries only");
@@ -157,6 +178,9 @@ export function validateShowcases(raw: unknown, globalChips: string[][], labels:
     const [bl, bt, bw, bh, br, bc] = g.callButton ?? [];
     if (!inWindow(bl, bt) || !inWindow(bl + bw, bt + bh) || !(br >= 0) || !/^#[0-9a-fA-F]{6}$/.test(String(bc))) fail(at, "geometry.callButton");
     if (!inWindow(...g.park) || !inWindow(...g.callTarget)) fail(at, "geometry.park / callTarget");
+    if (!Number.isInteger(g.lpDocHeight) || g.lpDocHeight < LP_HEIGHT || g.lpDocHeight > LP_HEIGHT * LP_MAX_SCREENS) {
+      fail(at, `geometry.lpDocHeight must be the measured page height: an integer from ${LP_HEIGHT} to ${LP_HEIGHT * LP_MAX_SCREENS}`);
+    }
   });
   return list;
 }

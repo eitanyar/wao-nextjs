@@ -90,7 +90,7 @@ test('new hero files carry no Hebrew literal (all Hebrew comes from data or the 
 
 test('the scene is decorative: aria-hidden + inert, the iframe out of the tab order, images sized and low priority', () => {
   assert.match(markup, /^<div class="hero-scene-wrap wrap" data-motion="rest"><div class="hero-scene" data-hm-scene="" aria-hidden="true" inert="" style="aspect-ratio:\d+ \/ \d+;--scene-w:\d+px">/);
-  assert.match(markup, /<iframe class="hero-window-lp" src="\/hero-window\/lp\/yossi-plumber"[^>]* loading="lazy" tabindex="-1"/);
+  assert.match(markup, /<iframe class="hero-window-lp lpDoc" src="\/hero-window\/lp\/yossi-plumber"[^>]* loading="lazy" tabindex="-1"/);
   const imgs = markup.match(/<img [^>]+>/g) ?? [];
   assert.equal(imgs.length, heroScene.HERO_SCENE.tiles.length);
   assert.ok(imgs.length >= 6, 'the photo is split into bands smaller than a headline line');
@@ -227,7 +227,11 @@ test('results-page beat: query = tapped service chip + space + tapped area chip;
 test('motion layers sit inside the window, the button and captions outside the aria-hidden scene', () => {
   const scene = markup.slice(0, markup.lastIndexOf('<button'));
   for (const cls of ['chat', 'hlAd', 'hlLp', 'ring', 'ptr', 'serp']) assert.match(windowMarkup, new RegExp(`class="[^"]*\\b${cls}\\b`), cls);
-  assert.match(windowMarkup, /<div class="hero-window-lpwrap lp"[^>]*><iframe class="hero-window-lp"/);
+  assert.match(windowMarkup, /<div class="hero-window-lpwrap lp"[^>]*><iframe class="hero-window-lp lpDoc"/);
+  // The wrap is the LP area; the iframe is the whole measured page (the scroll beat moves it, the wrap clips it).
+  const g = showcasesData.entries[0].geometry;
+  assert.match(windowMarkup, new RegExp(`<div class="hero-window-lpwrap lp" style="height:${heroWindow.HERO_WINDOW_LP_HEIGHT}px"><iframe class="hero-window-lp lpDoc" src="[^"]+" title="[^"]+" width="960" height="${g.lpDocHeight}"`));
+  assert.ok(g.lpDocHeight > heroWindow.HERO_WINDOW_LP_HEIGHT, 'the cut page is longer than the LP area (there is something to scroll to)');
   assert.ok(scene.includes('data-hm-pointer=""'));
   assert.doesNotMatch(markup.slice(markup.lastIndexOf('<button')), /aria-hidden="true" inert/);
 });
@@ -240,11 +244,11 @@ test('no phone digits, tel: links, ratings or demo labels in the window', () => 
   assert.doesNotMatch(visible.toLowerCase(), /demo|example|placeholder|lorem/);
 });
 
-test('motion CSS: generated file in sync, transform/opacity only, every layer 9600 ms fill both, reduced motion gated', async () => {
-  const { buildCss, TIMELINE, DURATION_MS, POINTER_START, pointerTimeline } = await import(local('scripts/build-hero-motion-css.mjs'));
+test('motion CSS: generated file in sync, transform/opacity only, every layer 12600 ms fill both, reduced motion gated', async () => {
+  const { buildCss, TIMELINE, DURATION_MS, POINTER_START, pointerTimeline, CLICKS, LP_SCROLL, LP_HEIGHT, lpScrollTimeline } = await import(local('scripts/build-hero-motion-css.mjs'));
   const css = fs.readFileSync(local('src/components/home/heroMotion.module.css'), 'utf8');
   assert.equal(css, buildCss(), 'run node scripts/build-hero-motion-css.mjs');
-  assert.equal(DURATION_MS, 9600);
+  assert.equal(DURATION_MS, 12600);
   for (const [name, [prop]] of Object.entries(TIMELINE)) assert.ok(prop === 'transform' || prop === 'opacity', name);
   for (const kf of css.match(/@keyframes [^{]+\{(?:[^{}]*\{[^}]*\})*\}/g)) {
     const props = [...kf.matchAll(/[{;]([a-z-]+):/g)].map((x) => x[1]).filter((p) => p !== 'animation-timing-function');
@@ -255,7 +259,7 @@ test('motion CSS: generated file in sync, transform/opacity only, every layer 96
   const gated = css.slice(css.indexOf('@media (prefers-reduced-motion:no-preference){'));
   const animations = [...css.matchAll(/animation:([^;}]+)/g)].map((x) => x[1]);
   assert.ok(animations.length >= 20);
-  for (const a of animations) for (const part of a.split(',')) assert.match(part.trim(), /^\w+ 9600ms linear both$/);
+  for (const a of animations) for (const part of a.split(',')) assert.match(part.trim(), /^\w+ 12600ms linear both$/);
   assert.ok(css.indexOf('animation:') > css.indexOf('@media (prefers-reduced-motion:no-preference){') && gated.length > 0);
   assert.match(css, new RegExp(`\\.ptr\\{[^}]*transform:translateX\\(${POINTER_START}px\\)`), 'pointer rests at its first stop (CLS 0)');
   for (const e of showcasesData.entries) {
@@ -264,6 +268,25 @@ test('motion CSS: generated file in sync, transform/opacity only, every layer 96
     assert.equal(t.X[1].at(-1)[1], `translateX(${e.geometry.callTarget[0]}px)`);
   }
   assert.doesNotMatch(css, /box-shadow[^;}]*;?[^}]*\}[^@]*@keyframes/, 'no box-shadow animated');
+  // LP scroll beat (Eitan 2026-11-17): after the call-button moment, to the end of the cut page and back to the resting top.
+  assert.equal(LP_HEIGHT, heroWindow.HERO_WINDOW_LP_HEIGHT);
+  assert.equal(showcases.LP_HEIGHT, heroWindow.HERO_WINDOW_LP_HEIGHT);
+  const ringEnd = 8700, pointerGone = 9300;
+  assert.ok(CLICKS.at(-1) < ringEnd && LP_SCROLL.down[0] >= pointerGone, 'the scroll starts only after the click, the ring and the pointer fade');
+  assert.ok(LP_SCROLL.back[1] <= DURATION_MS && LP_SCROLL.down[1] < LP_SCROLL.back[0], 'down, hold, back within the run');
+  const [hlStart] = TIMELINE.hlLpO[1].at(-1);
+  assert.ok(hlStart <= LP_SCROLL.down[0], 'the headline highlight is gone before the page moves');
+  assert.equal(TIMELINE.icoIn[1].at(-1)[0], LP_SCROLL.back[1], 'the replay icon shows once the page is back at rest');
+  assert.match(css, /\.lp\{flex:none;overflow:hidden\}/, 'the LP area clips the full-height iframe');
+  assert.doesNotMatch(css.slice(0, css.indexOf('@media (prefers-reduced-motion:no-preference)')), /\.lpDoc\{[^}]*transform/, 'resting frame = the top of the page');
+  for (const [i, e] of showcasesData.entries.entries()) {
+    const [, stops] = lpScrollTimeline(e.geometry);
+    assert.equal(stops[0][1], 'translateY(0px)');
+    assert.equal(stops.at(-1)[1], 'translateY(0px)', 'ends on the resting frame (no jump at animationend)');
+    assert.equal(Math.min(...stops.map(([, v]) => Number(/-?[\d.]+/.exec(v)[0]))), -(e.geometry.lpDocHeight - LP_HEIGHT));
+    assert.match(css, new RegExp(`\\.e${i}\\[data-active\\] \\.lpDoc\\{animation:lpScroll${i} 12600ms linear both`));
+  }
+  assert.throws(() => lpScrollTimeline({ lpDocHeight: LP_HEIGHT - 1 }), /lpDocHeight/);
 });
 
 // --- showcase entries (Task C): schema, Worker-only live pages, per-entry guards -------------------------------
@@ -313,7 +336,7 @@ test('showcase schema rejects bad entries', () => {
   assert.doesNotThrow(() => validate([{ ...validEntry(), consent: client, ownerPhoto: photo({ aiGenerated: false }) }]));
   assert.ok(showcases.SHOWCASES.every((e) => e.ownerPhoto === undefined || e.ownerPhoto.aiGenerated === false));
   // Hero photo flag (Eitan 2026-11-17): an AI atmosphere photo only, explicitly no people / no work; unflagged fails.
-  const atmo = (extra) => ({ kind: 'atmosphere', aiGenerated: true, people: false, work: false, approval: 'Eitan 2026-11-17', ...extra });
+  const atmo = (extra) => ({ kind: 'atmosphere', aiGenerated: true, people: false, faces: false, hands: false, work: false, approval: 'Eitan 2026-11-17', ...extra });
   assert.doesNotThrow(() => validate([{ ...validEntry(), heroPhoto: atmo({}) }]));
   assert.doesNotThrow(() => validate([{ ...validEntry(), heroPhoto: atmo({ aiGenerated: false }) }]));
   bad((e) => { e.heroPhoto = atmo({ kind: 'owner' }); }, /heroPhoto.kind must be atmosphere/);
@@ -322,6 +345,15 @@ test('showcase schema rejects bad entries', () => {
   bad((e) => { e.heroPhoto = atmo({ people: true }); }, /shows people/);
   bad((e) => { e.heroPhoto = atmo({ people: undefined }); }, /shows people or is unflagged/);
   bad((e) => { e.heroPhoto = atmo({ work: true }); }, /shows a job/);
+  // A hand is not a person or a face (Eitan 2026-11-17, the demo photo only); faces / people still fail, unflagged fails.
+  assert.doesNotThrow(() => validate([{ ...validEntry(), heroPhoto: atmo({ hands: true }) }]));
+  bad((e) => { e.heroPhoto = atmo({ hands: true, faces: true }); }, /shows a face/);
+  bad((e) => { e.heroPhoto = atmo({ faces: undefined }); }, /shows a face or is unflagged/);
+  bad((e) => { e.heroPhoto = atmo({ hands: undefined }); }, /heroPhoto.hands must be flagged/);
+  bad((e) => { e.heroPhoto = atmo({ hands: true, people: true }); }, /shows people/);
+  assert.deepEqual(
+    [showcasesData.entries[0].heroPhoto.hands, showcasesData.entries[0].heroPhoto.faces, showcasesData.entries[0].heroPhoto.people],
+    [true, false, false], 'the demo photo: a hand with a thermal camera, no face, no people');
   bad((e) => { e.heroPhoto = atmo({ approval: '' }); }, /heroPhoto.approval/);
   bad((e) => { e.heroPhoto = atmo({}); e.landingPage = { source: 'live-url', url: 'https://client-a.wao.co.il/' }; e.tabTitle = 'x'; }, /site-record entries only/);
   const second = { ...validEntry(), id: 'second-entry' };

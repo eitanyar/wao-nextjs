@@ -111,7 +111,7 @@ function harness({ authorized = true, record, dossier = syntheticDossier(), read
   cloudflare = syntheticCloudflare, nodeEnv = 'test', offlineSimulation = false, failWranglerDeploy = false,
   binding = null, approved = false, rawBytes, bodyApproval, siteNodes = {}, dossierNodes = {},
   siteStatSize, siteStatType = 'file', siteReadBytes, siteReadChunk, siteReadError, siteOpenError, siteStatError, dossierReadError,
-  legacyRender = false, realClaimCheck = false, hostingEnv = {}, workerDeploy, siteLook = null } = {}) {
+  legacyRender = false, realClaimCheck = false, hostingEnv = {}, workerDeploy, siteLook = null, heroLibrary = null } = {}) {
   const bytes = rawBytes ?? (record && Buffer.from(JSON.stringify(record)));
   if (approved) {
     assert.ok(dossier && bytes, 'approved fixture requires record and dossier');
@@ -139,6 +139,7 @@ function harness({ authorized = true, record, dossier = syntheticDossier(), read
   const deployEvents = [];
   const goLiveCalls = [];
   const lookLoads = [];
+  const heroLibraryCalls = [];
   const renderCalls = [];
   const activeDeploy = failWranglerDeploy || binding !== null;
   const hostname = `${slug}.wao.co.il`;
@@ -389,6 +390,12 @@ function harness({ authorized = true, record, dossier = syntheticDossier(), read
       if (siteLook instanceof Error) throw siteLook;
       return siteLook;
     } },
+    // Per-service AI atmosphere hero photos (2026-11-17): the harness supplies the resolution (default: none).
+    '@/lib/site-bot/heroLibraryStore': { resolveSiteLibraryHeroes: async (value, ownerPhoto) => {
+      heroLibraryCalls.push({ slug: value.slug, ownerPhoto });
+      if (heroLibrary instanceof Error) throw heroLibrary;
+      return heroLibrary ?? { libraryHeroes: {}, picks: {}, files: {}, trade: null };
+    } },
     '@/lib/site-bot/reviewKit': { onSiteBotSiteLive: async input => { goLiveCalls.push(input); return 'skipped'; } },
     '@/lib/site-hosting/workerDeploy': workerDeployModule(async input => {
       if (!workerDeploy) return forbidden('deployTenantToWorker')(input);
@@ -427,7 +434,7 @@ function harness({ authorized = true, record, dossier = syntheticDossier(), read
     assert.equal(response.headers.get('cache-control'), 'private, no-store');
     return { status: response.status, body: await response.json() };
   }
-  return { post, calls, io, deployEvents, goLiveCalls, fraudDomains, workerDeploys, lookLoads, renderCalls, get credentialReads() { return credentialReads; },
+  return { post, calls, io, deployEvents, goLiveCalls, fraudDomains, workerDeploys, lookLoads, heroLibraryCalls, renderCalls, get credentialReads() { return credentialReads; },
     get dossierLookups() { return dossierLookups; }, get receiptChecks() { return receiptChecks; } };
 }
 
@@ -1283,6 +1290,37 @@ test('visual pack: no look -> the render gets no look param and the upload set i
   assert.equal((await setup.post()).status, 200);
   assert.equal(Object.hasOwn(setup.renderCalls[0], 'look'), false);
   assert.deepEqual(Object.keys(setup.workerDeploys[0].files), ['index.html']);
+});
+
+test('hero library: per-page atmosphere heroes reach the renderer and their /img/ files join the upload set', async () => {
+  const hero = { approved: true, images: [{ width: 480, height: 268, avif: '/img/hero-aaaaaaaaaaaa-480.avif', webp: '/img/hero-aaaaaaaaaaaa-480.webp' }] };
+  const heroLibrary = { libraryHeroes: { home: hero }, picks: { home: 'plumber-atmo-1' }, trade: 'plumber',
+    files: { 'img/hero-aaaaaaaaaaaa-480.avif': Buffer.from('a'), 'img/hero-aaaaaaaaaaaa-480.webp': Buffer.from('w') } };
+  const setup = approvedHarness({ record: researchedRecord(), binding: {}, hostingEnv: workerEnv, heroLibrary,
+    workerDeploy: async () => ({ publish: { version: '20261115T100000Z-aaaaaa' }, dns: 'created' }) });
+  assert.equal((await setup.post()).status, 200);
+  assert.deepEqual(setup.heroLibraryCalls, [{ slug, ownerPhoto: false }]);
+  assert.deepEqual(setup.renderCalls[0].libraryHeroes, { home: hero });
+  assert.equal(setup.renderCalls[0].heroImageUrl, 'https://example.invalid/hero', 'og:image / schema image source unchanged');
+  assert.deepEqual(Object.keys(setup.workerDeploys[0].files), ['index.html', 'img/hero-aaaaaaaaaaaa-480.avif', 'img/hero-aaaaaaaaaaaa-480.webp']);
+});
+
+test('hero library: an approved owner photo is passed as such; no library heroes = no render param', async () => {
+  const look = { hero: { approved: true, images: [{ width: 480, height: 270, avif: '/img/hero-0123456789ab-480.avif', webp: '/img/hero-0123456789ab-480.webp' }] } };
+  const setup = approvedHarness({ record: researchedRecord(), binding: {}, hostingEnv: workerEnv, siteLook: { look, files: {} },
+    workerDeploy: async () => ({ publish: { version: '20261115T100000Z-aaaaaa' }, dns: 'created' }) });
+  assert.equal((await setup.post()).status, 200);
+  assert.deepEqual(setup.heroLibraryCalls, [{ slug, ownerPhoto: true }]);
+  assert.equal(Object.hasOwn(setup.renderCalls[0], 'libraryHeroes'), false);
+});
+
+test('hero library: a changed library file stops the deploy before any provider call', async () => {
+  const setup = approvedHarness({ record: researchedRecord(), binding: {}, hostingEnv: workerEnv, heroLibrary: new Error('hero_library_invalid:changed:img/x'),
+    workerDeploy: async () => assert.fail('no publish') });
+  assert.deepEqual(await setup.post(), { status: 409, body: { error: 'hero_library_invalid' } });
+  assert.equal(setup.calls.provision, 0);
+  assert.deepEqual(setup.deployEvents, ['error']);
+  assert.deepEqual(setup.workerDeploys, []);
 });
 
 test('visual pack: a look whose approved files changed stops the deploy before any provider call', async () => {

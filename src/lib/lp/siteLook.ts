@@ -90,15 +90,19 @@ export function renderableHero(look: SiteLook | undefined | null): SiteLookHero 
   return { approved: true, images };
 }
 
+/** The marker on a library (AI-made atmosphere) hero backdrop; the same attribute the homepage window guard checks. */
+export const AI_ATMOSPHERE_ATTR = 'data-ai-generated="atmosphere"';
+
 /**
  * The hero backdrop: the first child of section.hero. AVIF source, then WebP source, then the WebP <img> (the widest WebP up
  * to 1080px as src). width/height = the widest variant; fetchpriority="high"; no loading / decoding attributes; alt="".
+ * `aiAtmosphere` (a trade-library photo, heroLibrary.ts) flags the <img> with AI_ATMOSPHERE_ATTR right after its class.
  */
-export function heroBackdropHtml(hero: SiteLookHero): string {
+export function heroBackdropHtml(hero: SiteLookHero, options: { aiAtmosphere?: boolean } = {}): string {
   const set = (format: 'avif' | 'webp') => hero.images.map(image => `${image[format]} ${image.width}w`).join(', ');
   const widest = hero.images[hero.images.length - 1];
   const fallback = [...hero.images].reverse().find(image => image.width <= 1080) ?? hero.images[0];
-  return `<picture><source type="image/avif" srcset="${set('avif')}" sizes="100vw" /><source type="image/webp" srcset="${set('webp')}" sizes="100vw" /><img class="hero-bg" src="${fallback.webp}" srcset="${set('webp')}" sizes="100vw" width="${widest.width}" height="${widest.height}" alt="" fetchpriority="high" /></picture>`;
+  return `<picture><source type="image/avif" srcset="${set('avif')}" sizes="100vw" /><source type="image/webp" srcset="${set('webp')}" sizes="100vw" /><img class="hero-bg" ${options.aiAtmosphere ? `${AI_ATMOSPHERE_ATTR} ` : ''}src="${fallback.webp}" srcset="${set('webp')}" sizes="100vw" width="${widest.width}" height="${widest.height}" alt="" fetchpriority="high" /></picture>`;
 }
 
 /**

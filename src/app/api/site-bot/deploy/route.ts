@@ -37,6 +37,7 @@ import { originHost, subdomainOrigin, tenantCanonicalOrigin, tenantHosts, type S
 import { deployTenantToWorker, siteHostingMode, workerHostingConfig, WorkerDeployError, type WorkerHostingConfig } from '@/lib/site-hosting/workerDeploy';
 import { onSiteBotSiteLive } from '@/lib/site-bot/reviewKit';
 import { loadSiteLook, type LoadedSiteLook } from '@/lib/site-bot/siteLookStore';
+import { resolveSiteLibraryHeroes, type SiteHeroResolution } from '@/lib/site-bot/heroLibraryStore';
 
 interface DeployRequest {
   slug: string;
@@ -52,6 +53,7 @@ interface SiteRecord extends SiteHostingFields {
   collectedData: CollectedData;
   copy: SiteCopy;
   slug: string;
+  createdAt?: string;
   researchId?: string;
   approvedPageId?: string;
   researchedPages?: ResearchedSitePage[];
@@ -325,7 +327,20 @@ export async function POST(req: Request) {
         return privateJson({ error: 'site_look_invalid' }, 409);
       }
     }
-    const lookFiles: Record<string, Buffer> = siteLook?.files ?? {};
+    // Per-service AI atmosphere hero photos (Eitan 2026-11-17): pages without an approved owner photo get the trade library's
+    // photo for their service (else the trade fallback), flagged as AI-made, hero backdrop only. A library file that is
+    // missing or changed since the build stops the deploy here, before any provider call.
+    let heroLibrary: SiteHeroResolution | null = null;
+    if (isResearchedRecord) {
+      try {
+        heroLibrary = await resolveSiteLibraryHeroes(record, Boolean(siteLook?.look.hero));
+      } catch (error) {
+        console.error('Site Bot hero library invalid:', error);
+        return privateJson({ error: 'hero_library_invalid' }, 409);
+      }
+    }
+    const libraryHeroes = heroLibrary && Object.keys(heroLibrary.libraryHeroes).length ? heroLibrary.libraryHeroes : null;
+    const lookFiles: Record<string, Buffer> = { ...(heroLibrary?.files ?? {}), ...(siteLook?.files ?? {}) };
 
     // Hosting switch (docs/missions/site-bot-shared-worker-hosting-2026-11-12.md): `pages` (default) is the
     // one-Pages-project-per-client path below, unchanged; `worker` publishes to R2 for the shared wao-sites Worker.
@@ -381,7 +396,7 @@ export async function POST(req: Request) {
 
     // ── Step 2: Render researched or explicit legacy pages ─────────────────
     const pages = isResearchedRecord
-      ? renderResearchedSitePages({ ...renderParams, pages: record.researchedPages!, graphEdges: record.researchedGraphEdges, claimVerification: dossier?.approvedCopyReviewPacket?.claimVerification, ...(siteLook ? { look: siteLook.look } : {}) })
+      ? renderResearchedSitePages({ ...renderParams, pages: record.researchedPages!, graphEdges: record.researchedGraphEdges, claimVerification: dossier?.approvedCopyReviewPacket?.claimVerification, ...(siteLook ? { look: siteLook.look } : {}), ...(libraryHeroes ? { libraryHeroes } : {}) })
       : renderSitePages({ ...renderParams, copy });
 
     // ── Step 2b: Render the core-30 supplementary local-SEO pages ───────────
