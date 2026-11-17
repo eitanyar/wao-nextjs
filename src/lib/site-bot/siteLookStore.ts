@@ -20,7 +20,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { dataRoot } from '../dataRoots';
 import type { SiteLook } from '../lp/siteLook';
-import { GENERATED_LOGO_VARIANTS, isLogoIconName, isLogoMarkId, LOGO_DISPLAY_HEIGHT, LOGO_DISPLAY_MAX_WIDTH, type GeneratedLogoVariant, type LogoIconName } from '../lp/siteLogo';
+import { cleanDisplayOverrides, GENERATED_LOGO_VARIANTS, isLogoIconName, isLogoMarkId, LOGO_DISPLAY_HEIGHT, LOGO_DISPLAY_MAX_WIDTH, type GeneratedLogoVariant, type LogoIconName } from '../lp/siteLogo';
 
 export const LOOK_RECORD_VERSION = 1;
 const SLUG = /^[a-z0-9](?:[a-z0-9-]{0,62}[a-z0-9])?$/;
@@ -75,6 +75,11 @@ export interface LookRecord {
   logoFiles: LookSourceEntry[];
   hero?: LookHeroRecord;
   logo?: LookLogoRecord;
+  /**
+   * Staff display overrides of the header logo (2026-11-17 pilot review): descriptor on / off and the bold-lead word count.
+   * Separate from the logo approval (survives a re-approval) and from businessName (never altered). Header display only.
+   */
+  logoDisplay?: { descriptor?: boolean; leadWords?: number; by: string; at: string };
   history: Array<{ at: string; by: string; action: string; detail?: string }>;
 }
 
@@ -211,6 +216,9 @@ export function loadSiteLook(slug: string): LoadedSiteLook | null {
     } else {
       throw new SiteLookError('logo_kind');
     }
+    // Display overrides ride along only with an approved logo (no logo = no header change, byte-identical).
+    const display = cleanDisplayOverrides(record.logoDisplay);
+    if (display) look.logoDisplay = display;
   }
 
   return look.hero || look.logo ? { look, files } : null;

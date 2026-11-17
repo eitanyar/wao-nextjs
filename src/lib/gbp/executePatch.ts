@@ -24,6 +24,8 @@ export interface GbpLocationPatchParams {
   };
 }
 
+import { GbpNameEditBlockedError, gbpLocationPatchRequest } from './locationUpdateGuard';
+
 const BUSINESS_INFO_BASE = 'https://mybusinessbusinessinformation.googleapis.com/v1';
 
 export function buildPatchPayloadAndMask(fixItem: {
@@ -183,17 +185,23 @@ export async function executeGbpLocationPatch(
     ? params.gbpLocationId
     : `locations/${params.gbpLocationId}`;
 
-  const url = `${BUSINESS_INFO_BASE}/${locationPath}?updateMask=${encodeURIComponent(updateMask)}`;
+  // The business name is never edited on Google (locationUpdateGuard): a fix carrying title / name / locationName fails here.
+  let request: ReturnType<typeof gbpLocationPatchRequest>;
+  try {
+    request = gbpLocationPatchRequest({
+      base: BUSINESS_INFO_BASE,
+      locationPath,
+      updateMask,
+      body: patchPayload,
+      headers: { Authorization: `Bearer ${params.accessToken}` },
+    });
+  } catch (error) {
+    if (error instanceof GbpNameEditBlockedError) return { success: false, updatedFields: [], error: error.message };
+    throw error;
+  }
 
   try {
-    const res = await fetch(url, {
-      method: 'PATCH',
-      headers: {
-        Authorization: `Bearer ${params.accessToken}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(patchPayload),
-    });
+    const res = await fetch(request.url, request.init);
 
     if (!res.ok) {
       const errText = await res.text().catch(() => '');

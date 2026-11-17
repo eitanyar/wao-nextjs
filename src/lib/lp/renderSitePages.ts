@@ -417,9 +417,17 @@ function ownerStatedPlaces(data: CollectedData): string[] {
     .filter(value => value && !seen.has(value.toLowerCase()) && Boolean(seen.add(value.toLowerCase())));
 }
 
+/**
+ * The places the LocalBusiness schema declares as areaServed, in order. One source: the schema reads it, and the header
+ * logo's trade descriptor takes its city from [0] (siteLogo LogoContext.city), so the two never differ.
+ */
+export function schemaAreaServedPlaces(data: CollectedData, options: LocalBusinessSchemaOptions = {}): string[] {
+  return (options.areaServed ?? ownerStatedPlaces(data)).map(name => name.trim()).filter(Boolean);
+}
+
 function ownerFactsLocalBusiness(data: CollectedData, businessName: string, cleanSiteUrl: string, ogImage: string, options: LocalBusinessSchemaOptions): Record<string, unknown> {
   const hours = parseBusinessHours(data.businessHours);
-  const places = (options.areaServed ?? ownerStatedPlaces(data)).map(name => name.trim()).filter(Boolean);
+  const places = schemaAreaServedPlaces(data, options);
   const mapsUrl = googleProfileUrl(data);
   const image = ownerImageUrl(ogImage);
   return {
@@ -772,7 +780,7 @@ ${pageScript({
   })}`;
 
   return assembleDocument(t, head, body, p.gtagSnippet, data, p.researchNav, p.footerProfileLink, undefined,
-    brandLogo(p.look, businessName, { businessNiche: data.businessNiche, primaryService: data.primaryService, targetLocation: data.targetLocation, ownerName: data.ownerName, siteId: slug, colors: { primary: t.primary, accent: t.accent, surface: t.surface } }));
+    brandLogo(p.look, businessName, { businessNiche: data.businessNiche, primaryService: data.primaryService, targetLocation: data.targetLocation, ownerName: data.ownerName, siteId: slug, city: schemaAreaServedPlaces(data, p.schemaOptions)[0], colors: { primary: t.primary, accent: t.accent, surface: t.surface, muted: t.textMuted } }));
 }
 
 // Assembles <head> + <body> for the standalone pages (index.html has its own path above). Redesign A: the icon sprite, the

@@ -27,6 +27,8 @@
  * scope per docs/specs/gmb-bot-scope.md §1 ("explicitly deferred, not in v1").
  */
 
+import { gbpLocationPatchRequest } from './locationUpdateGuard';
+
 const TOKEN_URL = 'https://oauth2.googleapis.com/token';
 const ACCOUNT_MGMT_BASE = 'https://mybusinessaccountmanagement.googleapis.com/v1';
 const BUSINESS_INFO_BASE = 'https://mybusinessbusinessinformation.googleapis.com/v1';
@@ -130,15 +132,9 @@ export async function updateLocation(
   patch: GbpLocationPatch,
   fieldMask: string
 ) {
-  return gbpFetch(
-    `${BUSINESS_INFO_BASE}/locations/${locationId}?updateMask=${fieldMask}`,
-    token,
-    {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(patch),
-    }
-  );
+  // Throws GbpNameEditBlockedError on a business-name field (locationUpdateGuard): the name is never edited on Google.
+  const request = gbpLocationPatchRequest({ base: BUSINESS_INFO_BASE, locationPath: `locations/${locationId}`, updateMask: fieldMask, body: { ...patch } });
+  return gbpFetch(request.url, token, request.init);
 }
 
 // ── Scope smoke test (docs/specs/gmb-bot-scope.md §5) ──────────────────────────

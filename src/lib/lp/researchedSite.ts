@@ -25,6 +25,7 @@ import {
   pageHead,
   pageScript,
   renderSitePages,
+  schemaAreaServedPlaces,
   trustBarSection,
   type ResearchNavOptions,
   servedPath,
@@ -318,6 +319,14 @@ export const RESEARCHED_SERVICE_AREA_CAP = 6;
  * The page's service areas (M2b.1b, Yonatan): page.seo.serviceArea (ownerPlaces order: base city, specificCities,
  * owner-named; deduped there and again here), capped at RESEARCHED_SERVICE_AREA_CAP. Empty without page.seo.
  */
+/**
+ * The header descriptor's city on every page of a researched site: the homepage LocalBusiness schema's areaServed[0] (the
+ * same options schemaGraph passes for the homepage), so the business's one entity and its header city never differ.
+ */
+export function researchedBrandCity(home: Pick<ResearchedSitePage, 'seo'>, data: CollectedData): string | undefined {
+  return schemaAreaServedPlaces(data, home.seo ? { areaServed: researchedServiceAreas(home) } : {})[0];
+}
+
 export function researchedServiceAreas(page: Pick<ResearchedSitePage, 'seo'>): string[] {
   const seen = new Set<string>();
   const out: string[] = [];
@@ -805,7 +814,7 @@ function buildPageHtml(page: ResearchedSitePage, params: RenderResearchedSitePag
   ${pageScript({ slug, businessName, googleAdsCustomerId: params.googleAdsCustomerId || '', formConversionLabel: params.formConversionLabel || '', phoneConversionLabel: params.phoneConversionLabel || '', whatsappConversionLabel: params.whatsappConversionLabel || '', ctaLabel: RESEARCHED_LEAD_FORM.submitLabel ?? page.copy.heroCta, includeLeadForm: true })}`;
   // Footer NAP areas = the page's schema areaServed (same list, same order; Yonatan rule 4).
   return assembleDocument(theme, head, body, params.gtagSnippet, data, researchNavOptions(home, page.classification === 'homepage', contactHref), researchedProfileLink(data, params.profileLinkCopy) ?? undefined, page.seo ? researchedServiceAreas(page) : undefined,
-    brandLogo(params.look, businessName, { businessNiche: data.businessNiche, primaryService: data.primaryService, targetLocation: data.targetLocation, ownerName: data.ownerName, serviceKeys: allPages.filter(item => item.classification !== 'homepage').map(item => item.opportunityId), siteId: slug, colors: { primary: theme.primary, accent: theme.accent, surface: theme.surface } }));
+    brandLogo(params.look, businessName, { businessNiche: data.businessNiche, primaryService: data.primaryService, targetLocation: data.targetLocation, ownerName: data.ownerName, serviceKeys: allPages.filter(item => item.classification !== 'homepage').map(item => item.opportunityId), siteId: slug, city: researchedBrandCity(home, data), colors: { primary: theme.primary, accent: theme.accent, surface: theme.surface, muted: theme.textMuted } }));
 }
 
 export function buildResearchedSitemapUrls(pages: ResearchedSitePage[], siteUrl = ''): string[] {

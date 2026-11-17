@@ -99,6 +99,11 @@ function excludedSpans(text: string): Array<{ start: number; end: number }> {
   return spans;
 }
 
+/** The trade's detection terms (copied by script from the repo sources; read-only). */
+export function tradeTermsOf(trade: LogoTrade): string[] {
+  return (TERMS[trade] ?? []).map(entry => entry.term);
+}
+
 /** Every trade a text names after subsumption and exclusions (sorted, unique). */
 export function tradesNamedIn(text: string | undefined): LogoTrade[] {
   const clean = normalise(text ?? '');

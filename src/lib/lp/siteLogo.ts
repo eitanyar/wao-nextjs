@@ -21,13 +21,22 @@
  * one size up, the tile / mark always shown.
  * Widths are estimates (per-character units, to be calibrated once against Heebo 800).
  *
+ * Trade descriptor (Eitan 2026-11-17; Yonatan's SEO conditions): a small second line under the name, inside the logo link:
+ * the trade label (docs/copy/logo-trade-descriptor-FINAL-2026-11-17.json, copied by script) + an aria-hidden separator + the
+ * city (the LocalBusiness schema's areaServed[0], passed in by the renderer). Only for a confident trade (logoTradeOf), only
+ * when the name does not already name that trade or carry the label; the city part is dropped when the name has it. Visible
+ * header text only: never in the title, meta, og:site_name, JSON-LD or a heading. Phone drop order (the name is never
+ * re-laid out for it): the city part first, then the whole descriptor; the mark keeps its own rule (tileOnPhone).
+ * Staff display overrides (look.logoDisplay): descriptor on / off, and the number of lead words (splitLead).
+ *
  * The logo CSS is emitted only when a logo renders (pages without a look stay byte-identical).
  * HEBREW-SAFETY: this module contains ZERO Hebrew bytes. GENERIC_LEADS is byte-exact copy (\u escapes, written by script).
  */
 
 import type { VerticalKey } from './verticalThemes';
 import { matchedVertical, tradeKeywordsIn } from './verticalDetect';
-import { approvedMarkId, chooseMarkId, LOGO_MARK_LIBRARY, logoTradeOf, markAspect, markColors, type LogoMark, type LogoTrade } from './logoMarks';
+import { approvedMarkId, chooseMarkId, LOGO_MARK_LIBRARY, logoTradeOf, markAspect, markColors, markInk, tradesNamedIn, tradeTermsOf, type LogoMark, type LogoTrade } from './logoMarks';
+import descriptorCopy from './logoMarks/trade-descriptors.generated.json';
 import { PREFIX_LETTERS } from './hebrewPrefixLetters';
 import { DESKTOP_MIN_WIDTH_PX, isolatedName, serviceIcon, SITE_ICON_SPRITE, withoutEmoji } from './siteDesign';
 import type { SiteLook } from './siteLook';
@@ -169,8 +178,30 @@ export interface LogoContext {
   siteId?: string;
   /** The mark id stored in the look record (only an approved id counts). */
   markId?: string;
-  /** The theme colours the header renders with (the mark's inks are computed from them). */
-  colors?: { primary: string; accent: string; surface: string };
+  /** The theme colours the header renders with (the mark's inks are computed from them; muted = the descriptor's ink). */
+  colors?: { primary: string; accent: string; surface: string; muted?: string };
+  /** The descriptor's city: the LocalBusiness schema's areaServed[0] (schemaAreaServedPlaces), never another field. */
+  city?: string;
+  /** Staff display overrides (look.logoDisplay): header display only, never the business name. */
+  display?: LogoDisplayOverrides;
+}
+
+/** Staff display overrides of the generated header logo (stored in the look record, separate from businessName). */
+export interface LogoDisplayOverrides {
+  /** true: show the descriptor whenever the trade is confident (even when the name names it); false: never; unset: automatic. */
+  descriptor?: boolean;
+  /** How many leading words form the bold lead (overrides splitLead's default; 1 .. words - 1). */
+  leadWords?: number;
+}
+
+/** A well-formed override object (unknown keys dropped), or null. */
+export function cleanDisplayOverrides(value: unknown): LogoDisplayOverrides | null {
+  if (!value || typeof value !== 'object') return null;
+  const raw = value as Record<string, unknown>;
+  const out: LogoDisplayOverrides = {};
+  if (typeof raw.descriptor === 'boolean') out.descriptor = raw.descriptor;
+  if (Number.isInteger(raw.leadWords) && (raw.leadWords as number) >= 1) out.leadWords = raw.leadWords as number;
+  return Object.keys(out).length ? out : null;
 }
 
 const PREFIX = new RegExp(`^[${PREFIX_LETTERS}]`);
@@ -189,10 +220,19 @@ function sharesToken(lead: string, other: string | undefined): boolean {
 
 export type LogoLeadClass = 'name' | 'generic';
 
-/** Splits the name into lead and rest: the first token, or tokens 1-3 when the second is '&' / '+'. */
-export function splitLead(text: string): { lead: string; rest: string } {
+/** The staff lead override when it leaves a non-empty rest, else null. */
+function leadWordsOverride(text: string, leadWords: number | undefined): number | null {
+  const count = text.split(' ').filter(Boolean).length;
+  return Number.isInteger(leadWords) && leadWords! >= 1 && leadWords! < count ? leadWords! : null;
+}
+
+/**
+ * Splits the name into lead and rest: the first token, or tokens 1-3 when the second is '&' / '+'. A staff override
+ * (leadWords, 1 .. words - 1) takes that many words instead.
+ */
+export function splitLead(text: string, leadWords?: number): { lead: string; rest: string } {
   const tokens = text.split(' ').filter(Boolean);
-  const take = tokens.length >= 3 && (tokens[1] === '&' || tokens[1] === '+') ? 3 : 1;
+  const take = leadWordsOverride(text, leadWords) ?? (tokens.length >= 3 && (tokens[1] === '&' || tokens[1] === '+') ? 3 : 1);
   return { lead: tokens.slice(0, take).join(' '), rest: tokens.slice(take).join(' ') };
 }
 
@@ -224,6 +264,9 @@ export interface LogoPick {
   /** The confident trade (logoTradeOf) and the site's mark (stored approved id, else the deterministic pick). */
   trade: LogoTrade | null;
   markId: string | null;
+  /** The trade descriptor line (null = none), and the staff-review flags of the name. */
+  descriptor: LogoDescriptor | null;
+  flags: LogoNameFlag[];
   layouts: {
     lockup?: LockupLayout;
     icon?: TileLayout;
@@ -271,8 +314,10 @@ export function monogramOf(lead: string): string | null {
 export function pickLogo(businessName: string | undefined, context: LogoContext = {}): LogoPick | null {
   const text = logoText(businessName);
   if (!text) return null;
-  const { lead, rest } = splitLead(text);
-  const cls = leadClass(lead, context);
+  const override = leadWordsOverride(text, context.display?.leadWords);
+  const { lead, rest } = splitLead(text, override ?? undefined);
+  // A staff-chosen lead is the name part by decision (display only).
+  const cls = override ? 'name' : leadClass(lead, context);
   const vertical = confidentTradeVertical(context.businessNiche);
   const trade = logoTradeOf(context);
   const markId = chooseMarkId(trade, context.siteId || text, context.markId);
@@ -287,7 +332,116 @@ export function pickLogo(businessName: string | undefined, context: LogoContext 
   if (monogram) layouts.monogram = tileLayout(text);
   const defaultVariant: GeneratedLogoVariant = lockup ? 'lockup' : icon ? 'icon' : 'name';
   const options = [defaultVariant, ...(['lockup', 'icon', 'monogram'] as const).filter(v => v !== defaultVariant && layouts[v]), ...(defaultVariant === 'name' ? [] : ['name' as const])];
-  return { text, lead, rest, leadClass: cls, defaultVariant, options, vertical, icon, trade, markId, layouts };
+  const descriptor = logoDescriptor(text, trade, context.city, context.display);
+  return { text, lead, rest, leadClass: cls, defaultVariant, options, vertical, icon, trade, markId, descriptor, flags: logoNameFlags(text, context), layouts };
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// Trade descriptor and the weak-name flags
+// ─────────────────────────────────────────────────────────────────────────
+
+/** Trade -> descriptor label: docs/copy/logo-trade-descriptor-FINAL-2026-11-17.json, copied byte-exact by script. */
+export const TRADE_DESCRIPTORS: Readonly<Record<LogoTrade, string>> = descriptorCopy.descriptors as Record<LogoTrade, string>;
+
+export interface LogoDescriptor {
+  label: string;
+  /** null when there is no city or the name already has it. */
+  city: string | null;
+}
+
+/** True when the words of `phrase` appear in order in `text` (one Hebrew prefix letter allowed on each word). */
+export function containsPhrase(text: string, phrase: string): boolean {
+  const hay = tokensOf(text);
+  const needle = tokensOf(phrase);
+  if (!needle.length) return false;
+  for (let start = 0; start + needle.length <= hay.length; start++) {
+    if (needle.every((token, k) => sameToken(hay[start + k], token))) return true;
+  }
+  return false;
+}
+
+/**
+ * Does the name already say the trade? The trade-term detection (tradesNamedIn: whole terms of that trade), or a trade
+ * keyword stem of the existing detector (tradeKeywordsIn, the stems leadClass uses) that is part of one of that trade's
+ * terms or its label (so a craft noun such as the electricity stem counts for the electrician). No new word lists.
+ */
+export function nameNamesTrade(text: string, trade: LogoTrade): boolean {
+  if (tradesNamedIn(text).includes(trade)) return true;
+  const forms = [TRADE_DESCRIPTORS[trade], ...tradeTermsOf(trade)].map(form => form.toLowerCase());
+  return tradeKeywordsIn(text).some(stem => forms.some(form => form.includes(stem.toLowerCase())));
+}
+
+/** Does the name say any trade at all (whole trade terms or a trade keyword stem)? */
+function namesAnyTrade(text: string): boolean {
+  return tradesNamedIn(text).length > 0 || tradeKeywordsIn(text).length > 0;
+}
+
+/**
+ * The descriptor of a name: the confident trade's label and the city, or null. Skipped when the name already names the
+ * trade (nameNamesTrade) or carries the label; the city part is dropped when the name has it.
+ * Overrides: descriptor false = never; true = also when the name names the trade (the city rule still applies).
+ */
+export function logoDescriptor(text: string, trade: LogoTrade | null, city: string | undefined, display: LogoDisplayOverrides = {}): LogoDescriptor | null {
+  if (display.descriptor === false || !trade) return null;
+  const label = TRADE_DESCRIPTORS[trade];
+  if (!label) return null;
+  const named = nameNamesTrade(text, trade) || containsPhrase(text, label);
+  if (named && display.descriptor !== true) return null;
+  const place = (city ?? '').replace(/\s+/g, ' ').trim();
+  return { label, city: place && !containsPhrase(text, place) ? place : null };
+}
+
+/**
+ * Staff-review flags of a name (pilot): deterministic, from the name (and the trade context) only.
+ *   single-short-token  one word of at most SHORT_TOKEN_MAX_LETTERS letters that names no trade (a first name, a coined word)
+ *   english-only        no Hebrew letter
+ *   vague               the lead is a generic word (GENERIC_LEADS) and the name names no trade
+ *   very-long           the name does not fit two lines at 15px in the 128px phone budget (it drops to 13px / the clamp)
+ *   no-trade-shown      the name names no trade and no descriptor can say it (no confident trade)
+ */
+export type LogoNameFlag = 'single-short-token' | 'english-only' | 'vague' | 'very-long' | 'no-trade-shown';
+export const SHORT_TOKEN_MAX_LETTERS = 8;
+/** very-long: the name does not fit two lines at this size in PHONE_NAME_PX. */
+export const VERY_LONG_FONT_PX = 15;
+
+export function logoNameFlags(businessName: string | undefined, context: LogoContext = {}): LogoNameFlag[] {
+  const text = logoText(businessName);
+  if (!text) return [];
+  const tokens = text.split(' ');
+  const named = namesAnyTrade(text);
+  const flags: LogoNameFlag[] = [];
+  if (tokens.length === 1 && [...tokens[0]].length <= SHORT_TOKEN_MAX_LETTERS && !named) flags.push('single-short-token');
+  if (!/[\u05D0-\u05EA]/.test(text)) flags.push('english-only');
+  if (!named && tokensOf(splitLead(text).lead).some(isGenericLeadToken)) flags.push('vague');
+  if (!fitsLines(text, VERY_LONG_FONT_PX, PHONE_NAME_PX, 2)) flags.push('very-long');
+  if (!named && !logoTradeOf(context)) flags.push('no-trade-shown');
+  return flags;
+}
+
+/** The descriptor's font size (px) on phone / desktop, and its minimum contrast on the header surface (WCAG AA text). */
+export const DESCRIPTOR_PX = { phone: 12, desktop: 14 } as const;
+export const DESCRIPTOR_MIN_CONTRAST = 4.5;
+/** Width the 'name' variant's accent bar takes from the phone budget (4px border + 10px padding). */
+const NAME_BAR_PX = 14;
+
+export type DescriptorPhoneFit = 'full' | 'label' | 'none';
+
+/**
+ * What of the descriptor shows on a phone. The name's own layout is fixed first and never changes for the descriptor:
+ * when the name already needs the 13px two-line step or the clamp, the descriptor is dropped (the header row has no third
+ * line to give); else the whole line when it fits one line at 12px in the name's width, else the label alone, else nothing.
+ */
+export function descriptorPhoneFit(descriptor: LogoDescriptor, nameStep: LogoStep, budgetPx: number): DescriptorPhoneFit {
+  if (nameStep === '13-2' || nameStep === 'clamp') return 'none';
+  const full = descriptor.city ? `${descriptor.label} \u00B7 ${descriptor.city}` : descriptor.label;
+  if (fitsLines(full, DESCRIPTOR_PX.phone, budgetPx, 1)) return 'full';
+  if (descriptor.city && fitsLines(descriptor.label, DESCRIPTOR_PX.phone, budgetPx, 1)) return 'label';
+  return 'none';
+}
+
+/** The descriptor's ink: the theme's muted text colour, darkened (same hue) to 4.5:1 on the surface when short of it. */
+export function descriptorInk(colors: LogoContext['colors']): string {
+  return colors?.muted ? markInk(colors.muted, colors.surface, DESCRIPTOR_MIN_CONTRAST).color : 'var(--text)';
 }
 
 // ─────────────────────────────────────────────────────────────────────────
@@ -316,6 +470,18 @@ function stepCss(step: LogoStep): string {
   const clamp = step === 'clamp' ? 'display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;line-clamp:2;overflow:hidden;' : '';
   return `.logo-name{display:block;min-width:0;font-weight:800;color:var(--primary);font-size:${px}px;${lines}${clamp}}`
     + DESKTOP(`.logo-name{font-size:${STEP_PX['18-1'] + 2}px;white-space:normal;display:block;-webkit-line-clamp:unset;line-clamp:none;overflow:visible;}`);
+}
+
+/** The descriptor line: plain visible text; only the separator is aria-hidden. A leading space keeps it a separate word. */
+function descriptorHtml(descriptor: LogoDescriptor): string {
+  const city = descriptor.city ? `<span class="logo-desc-city"><span aria-hidden="true"> \u00B7 </span>${isolatedName(descriptor.city)}</span>` : '';
+  return ` <span class="logo-desc">${isolatedName(descriptor.label)}${city}</span>`;
+}
+
+function descriptorCss(fit: DescriptorPhoneFit, colors: LogoContext['colors']): string {
+  return `.logo-words{display:block;min-width:0;}.logo-desc{display:block;margin-top:2px;font-size:${DESCRIPTOR_PX.phone}px;font-weight:500;line-height:1.2;color:${descriptorInk(colors)};white-space:nowrap;overflow:hidden;}`
+    + (fit === 'none' ? PHONE('.logo-desc{display:none;}') : fit === 'label' ? PHONE('.logo-desc-city{display:none;}') : '')
+    + DESKTOP(`.logo-desc{display:block;font-size:${DESCRIPTOR_PX.desktop}px;white-space:normal;overflow:visible;}.logo-desc-city{display:inline;}`);
 }
 
 function tileHtml(inner: string): string {
@@ -354,10 +520,15 @@ export function generatedLogo(variant: GeneratedLogoVariant, businessName: strin
   const pick = pickLogo(businessName, storedMark ? { ...context, markId: storedMark } : context);
   if (!pick || !pick.options.includes(variant)) return null;
   const name = (inner: string, extra = '') => `<span class="logo-name${extra}">${inner}</span>`;
+  const desc = pick.descriptor;
+  const descHtml = desc ? descriptorHtml(desc) : '';
+  const descCss = (step: LogoStep, budgetPx: number) => (desc ? descriptorCss(descriptorPhoneFit(desc, step, budgetPx), context.colors) : '');
+  /** The name and the descriptor stacked in one block (a flex item beside the mark / tile); the name alone otherwise. */
+  const words = (nameHtml: string) => (desc ? `<span class="logo-words">${nameHtml}${descHtml}</span>` : nameHtml);
   if (variant === 'name') {
     return {
-      html: `<span data-logo="name" style="display:block;min-width:0;border-inline-start:4px solid var(--cta);padding-inline-start:10px;">${name(isolatedName(pick.text))}</span>`,
-      css: BASE_CSS + stepCss(pick.layouts.name.step),
+      html: `<span data-logo="name" style="display:block;min-width:0;border-inline-start:4px solid var(--cta);padding-inline-start:10px;">${name(isolatedName(pick.text))}${descHtml}</span>`,
+      css: BASE_CSS + stepCss(pick.layouts.name.step) + descCss(pick.layouts.name.step, PHONE_NAME_PX - NAME_BAR_PX),
     };
   }
   if (variant === 'lockup') {
@@ -367,23 +538,26 @@ export function generatedLogo(variant: GeneratedLogoVariant, businessName: strin
     const tone = '.logo-lead{font-weight:800;color:var(--primary);}.logo-rest{font-weight:500;color:var(--accent-text);}';
     if (layout.kind === 'inline') {
       return {
-        html: `<span data-logo="lockup">${name(`<bdi>${lead} ${rest}</bdi>`)}</span>`,
-        css: `${BASE_CSS}.logo-name{display:block;min-width:0;font-size:18px;white-space:nowrap;}${tone}${DESKTOP('.logo-name{font-size:20px;}')}`,
+        html: `<span data-logo="lockup">${name(`<bdi>${lead} ${rest}</bdi>`)}${descHtml}</span>`,
+        css: `${BASE_CSS}.logo-name{display:block;min-width:0;font-size:18px;white-space:nowrap;}${tone}${DESKTOP('.logo-name{font-size:20px;}')}${descCss('18-1', PHONE_NAME_PX)}`,
       };
     }
+    // The stacked lockup is two lines (18 or 16 + 13px): the 15px two-line step's height, for the descriptor rule.
     return {
-      html: `<span data-logo="lockup">${name(`<bdi class="logo-lead">${esc(pick.lead)}</bdi> <bdi class="logo-rest">${esc(pick.rest)}</bdi>`, ' stacked')}</span>`,
+      html: `<span data-logo="lockup">${name(`<bdi class="logo-lead">${esc(pick.lead)}</bdi> <bdi class="logo-rest">${esc(pick.rest)}</bdi>`, ' stacked')}${descHtml}</span>`,
       css: `${BASE_CSS}.logo-name{display:block;min-width:0;}${tone}`
         + `.logo-name.stacked .logo-lead{display:block;font-size:${layout.leadPx}px;white-space:nowrap;}.logo-name.stacked .logo-rest{display:block;font-size:13px;font-weight:600;white-space:nowrap;}`
-        + DESKTOP('.logo-name.stacked .logo-lead,.logo-name.stacked .logo-rest{display:inline;font-size:20px;}.logo-name.stacked .logo-rest{font-weight:500;}'),
+        + DESKTOP('.logo-name.stacked .logo-lead,.logo-name.stacked .logo-rest{display:inline;font-size:20px;}.logo-name.stacked .logo-rest{font-weight:500;}')
+        + descCss('15-2', PHONE_NAME_PX),
     };
   }
   const layout = pick.layouts[variant]!;
   const mark = variant === 'icon' && pick.markId ? LOGO_MARK_LIBRARY[pick.markId] : undefined;
   if (mark) {
+    const budget = layout.tileOnPhone ? PHONE_NAME_PX - markBox(mark, MARK_PHONE).width - MARK_GAP_ALLOWANCE : PHONE_NAME_PX;
     return {
-      html: `<span data-logo="icon" style="display:contents;">${markHtml(pick.markId!, mark)}${name(isolatedName(pick.text))}</span>`,
-      css: BASE_CSS + markCss(mark, layout.tileOnPhone, context.colors) + stepCss(layout.step),
+      html: `<span data-logo="icon" style="display:contents;">${markHtml(pick.markId!, mark)}${words(name(isolatedName(pick.text)))}</span>`,
+      css: BASE_CSS + markCss(mark, layout.tileOnPhone, context.colors) + stepCss(layout.step) + descCss(layout.step, budget),
     };
   }
   const tileCss = TILE_CSS + (layout.tileOnPhone ? '' : PHONE('.logo-tile{display:none;}'));
@@ -395,16 +569,22 @@ export function generatedLogo(variant: GeneratedLogoVariant, businessName: strin
     inner = spriteSvg(icon);
   }
   return {
-    html: `<span data-logo="${variant}" style="display:contents;">${tileHtml(inner)}${name(isolatedName(pick.text))}</span>`,
-    css: BASE_CSS + tileCss + stepCss(layout.step),
+    html: `<span data-logo="${variant}" style="display:contents;">${tileHtml(inner)}${words(name(isolatedName(pick.text)))}</span>`,
+    css: BASE_CSS + tileCss + stepCss(layout.step) + descCss(layout.step, layout.tileOnPhone ? PHONE_NAME_WITH_TILE_PX : PHONE_NAME_PX),
   };
 }
 
-/** The owner's logo file: an inline <svg role="img"> wrapping the WebP (the hero photo stays the first <img>; never the uploaded SVG). */
-export function fileLogo(src: string, width: number, height: number, businessName: string): BrandLogo {
+/**
+ * The owner's logo file: an inline <svg role="img"> wrapping the WebP (the hero photo stays the first <img>; never the uploaded
+ * SVG). Its aria-label stays the business name; the descriptor (when any) follows as real text under it.
+ */
+export function fileLogo(src: string, width: number, height: number, businessName: string, context: LogoContext = {}): BrandLogo {
+  const svg = `<svg data-logo="file" role="img" aria-label="${esc(logoText(businessName))}" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" style="display:block;flex:none;max-width:100%;height:auto;"><image href="${esc(src)}" width="${width}" height="${height}"/></svg>`;
+  const desc = logoDescriptor(logoText(businessName), logoTradeOf(context), context.city, context.display);
+  if (!desc) return { html: svg, css: BASE_CSS };
   return {
-    html: `<svg data-logo="file" role="img" aria-label="${esc(logoText(businessName))}" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" style="display:block;flex:none;max-width:100%;height:auto;"><image href="${esc(src)}" width="${width}" height="${height}"/></svg>`,
-    css: BASE_CSS,
+    html: `<span class="logo-words">${svg}${descriptorHtml(desc)}</span>`,
+    css: BASE_CSS + descriptorCss(descriptorPhoneFit(desc, '18-1', PHONE_NAME_PX), context.colors),
   };
 }
 
@@ -417,10 +597,12 @@ const LOGO_SRC = /^\/img\/[a-z0-9][a-z0-9-]*\.webp$/;
 export function brandLogo(look: SiteLook | undefined | null, businessName: string, context: LogoContext = {}): BrandLogo | undefined {
   const logo = look?.logo;
   if (!logo || logo.approved !== true || !logoText(businessName)) return undefined;
+  const display = cleanDisplayOverrides(look?.logoDisplay);
+  if (display) context = { ...context, display };
   if (logo.kind === 'file') {
     const ok = LOGO_SRC.test(logo.src) && Number.isInteger(logo.width) && Number.isInteger(logo.height)
       && logo.width > 0 && logo.height > 0 && logo.width <= LOGO_DISPLAY_MAX_WIDTH && logo.height <= LOGO_DISPLAY_HEIGHT;
-    return ok ? fileLogo(logo.src, logo.width, logo.height, businessName) : undefined;
+    return ok ? fileLogo(logo.src, logo.width, logo.height, businessName, context) : undefined;
   }
   if (logo.kind === 'generated' && GENERATED_LOGO_VARIANTS.includes(logo.variant)) {
     return generatedLogo(logo.variant, businessName, context, { icon: logo.icon, markId: logo.markId }) ?? undefined;

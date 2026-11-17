@@ -14,6 +14,9 @@
 //   --mark-id <id>              an approved mark (e.g. plumber-3) instead of the site's deterministic pick, for --previews
 //                               and --approve-logo icon (approving icon always stores the mark it showed)
 //   --revoke-hero / --revoke-logo
+//   --descriptor <on|off|auto>  staff display override of the header's trade descriptor line (auto = the rule)
+//   --lead-words <n|auto>       staff display override: how many leading words are the bold lead (lockup); header only
+//                               (both stored as logoDisplay in look.json, never in the business name; run before --previews)
 //   --site-record <file>        read the business name / niche from this record instead of data/sites/{slug}.json
 //
 // Writes only under data/site-proof/{slug}/ (WAO_SITE_PROOF_DIR) and the preview dir. Reads data/sites/{slug}.json
@@ -34,6 +37,7 @@ const { siteFontFiles } = tsRequire('src/lib/lp/siteFonts.ts');
 const { detectVertical } = tsRequire('src/lib/lp/verticalDetect.ts');
 const { VERTICAL_THEMES } = tsRequire('src/lib/lp/verticalThemes.ts');
 const { dataRoot } = tsRequire('src/lib/dataRoots.ts');
+const { researchedBrandCity } = tsRequire('src/lib/lp/researchedSite.ts');
 
 const { values } = parseArgs({
   options: {
@@ -42,6 +46,7 @@ const { values } = parseArgs({
     score: { type: 'boolean' }, previews: { type: 'string' }, 'previews-default': { type: 'boolean' },
     'approve-hero': { type: 'string' }, 'approve-logo': { type: 'string' }, 'mark-id': { type: 'string' },
     'revoke-hero': { type: 'boolean' }, 'revoke-logo': { type: 'boolean' },
+    descriptor: { type: 'string' }, 'lead-words': { type: 'string' },
     'site-record': { type: 'string' }, help: { type: 'boolean' },
   },
 });
@@ -52,12 +57,13 @@ function fail(message) {
 }
 
 if (values.help || !values.slug) {
-  console.log(fs.readFileSync(new URL(import.meta.url), 'utf8').split('\n').filter(line => line.startsWith('//')).slice(0, 20).join('\n'));
+  console.log(fs.readFileSync(new URL(import.meta.url), 'utf8').split('\n').filter(line => line.startsWith('//')).slice(0, 24).join('\n'));
   process.exit(values.help ? 0 : 1);
 }
 const slug = values.slug;
 if (!store.isSafeLookSlug(slug)) fail('invalid slug');
-const writes = Boolean(values['add-photo']?.length || values['add-logo'] || values['approve-hero'] || values['approve-logo'] || values['revoke-hero'] || values['revoke-logo'] || values.score);
+const writes = Boolean(values['add-photo']?.length || values['add-logo'] || values['approve-hero'] || values['approve-logo'] || values['revoke-hero'] || values['revoke-logo'] || values.score
+  || values.descriptor !== undefined || values['lead-words'] !== undefined);
 const by = (values.by ?? '').trim();
 if (writes && !by) fail('--by <staff name> is required for any step that records something');
 
@@ -77,8 +83,37 @@ const data = site?.collectedData ?? {};
 const businessName = String(data.businessName || data.businessNiche || '');
 const serviceKeys = (site?.researchedPages ?? []).filter(page => page.classification !== 'homepage').map(page => page.opportunityId);
 const siteTheme = VERTICAL_THEMES[detectVertical(data.businessNiche || '')];
+// The descriptor city: the homepage LocalBusiness schema's areaServed[0], the renderer's own helper (one source).
+const homePage = (site?.researchedPages ?? []).find(page => page.classification === 'homepage');
+const brandCity = researchedBrandCity(homePage ?? {}, data);
 const logoContext = { businessNiche: data.businessNiche, primaryService: data.primaryService, targetLocation: data.targetLocation, ownerName: data.ownerName, serviceKeys,
-  siteId: slug, colors: { primary: siteTheme.primary, accent: siteTheme.accent, surface: siteTheme.surface } };
+  siteId: slug, city: brandCity, colors: { primary: siteTheme.primary, accent: siteTheme.accent, surface: siteTheme.surface, muted: siteTheme.textMuted } };
+
+// ── Display overrides (header only; the business name is never changed) ─────
+if (values.descriptor !== undefined || values['lead-words'] !== undefined) {
+  const next = { ...(record.logoDisplay ?? {}) };
+  delete next.by; delete next.at;
+  if (values.descriptor !== undefined) {
+    if (!['on', 'off', 'auto'].includes(values.descriptor)) fail('--descriptor must be on, off or auto');
+    if (values.descriptor === 'auto') delete next.descriptor; else next.descriptor = values.descriptor === 'on';
+  }
+  if (values['lead-words'] !== undefined) {
+    const raw = values['lead-words'];
+    if (raw === 'auto') delete next.leadWords;
+    else {
+      const count = logos.logoText(businessName).split(' ').filter(Boolean).length;
+      const n = Number(raw);
+      if (!Number.isInteger(n) || n < 1 || n >= count) fail(`--lead-words must be auto or 1..${Math.max(1, count - 1)} for this name (${count} words)`);
+      next.leadWords = n;
+    }
+  }
+  const clean = logos.cleanDisplayOverrides(next);
+  if (clean) record.logoDisplay = { ...clean, by, at: now() }; else delete record.logoDisplay;
+  log('logo-display', clean ? JSON.stringify(clean) : 'auto');
+  console.log(`Logo display overrides: ${clean ? JSON.stringify(clean) : 'none (automatic)'}`);
+}
+const display = logos.cleanDisplayOverrides(record.logoDisplay);
+if (display) logoContext.display = display;
 
 // ── Ingest ───────────────────────────────────────────────────────────────────
 const EXT = /\.(jpe?g|png|webp|avif|heic|heif|tiff?|svg|gif)$/i;
@@ -150,7 +185,7 @@ ${design.siteHeader({ businessName, phone: data.phone || '050-0000000', phoneHre
     fs.mkdirSync(path.join(outDir, 'img'), { recursive: true });
     fs.writeFileSync(path.join(outDir, built.src), built.files[built.src]);
     fs.writeFileSync(path.join(outDir, 'logo-file.png'), built.png);
-    variants.push(['file', logos.fileLogo(`/${built.src}`, built.width, built.height, businessName)]);
+    variants.push(['file', logos.fileLogo(`/${built.src}`, built.width, built.height, businessName, logoContext)]);
   }
   const written = [];
   for (const [name, brand] of variants) {
@@ -185,6 +220,8 @@ ${design.siteHeader({ businessName, phone: data.phone || '050-0000000', phoneHre
       for (const [role, ink] of Object.entries(inks)) console.log(`  mark ${role}: ${ink.from} -> ${ink.color} (${ink.method}, ${ink.contrast}:1 on ${logoContext.colors.surface})`);
       if (pick.trade) console.log(`  other approved ${pick.trade} marks (--mark-id): ${marks.APPROVED_MARK_IDS[pick.trade].join(', ')}`);
     }
+    console.log(`  descriptor: ${pick.descriptor ? `"${pick.descriptor.label}"${pick.descriptor.city ? ` + city "${pick.descriptor.city}"` : ' (no city part)'}` : 'none'}${display ? `  (overrides ${JSON.stringify(display)})` : ''}`);
+    console.log(`  name flags (staff review): ${pick.flags.length ? pick.flags.join(', ') : 'none'}`);
     if (logos.GENERIC_LEADS_COPY_PENDING) console.log('  note: the generic-lead word list is pending copy (not applied yet)');
   } else {
     console.log('  the name is empty: no generated logo');

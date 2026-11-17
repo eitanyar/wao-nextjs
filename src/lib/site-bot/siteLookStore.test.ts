@@ -100,3 +100,14 @@ test('slug and record shape are validated', () => {
     assert.throws(() => readLookRecord('plumber'), SiteLookError);
   });
 });
+
+test('logo display overrides ride along only with an approved logo; unknown keys and the name never pass', () => {
+  withProofDir(() => {
+    const logo = { approved: true, kind: 'generated' as const, variant: 'lockup' as const, approval };
+    const logoDisplay = { descriptor: false, leadWords: 2, by: 'staff', at: approval.at, businessName: 'Other' } as LookRecord['logoDisplay'];
+    writeLookRecord({ ...emptyLookRecord('plumber'), logo, logoDisplay });
+    assert.deepEqual(loadSiteLook('plumber'), { look: { logo: { approved: true, kind: 'generated', variant: 'lockup' }, logoDisplay: { descriptor: false, leadWords: 2 } }, files: {} });
+    writeLookRecord({ ...emptyLookRecord('plumber'), logo: { ...logo, approved: false }, logoDisplay });
+    assert.equal(loadSiteLook('plumber'), null);
+  });
+});

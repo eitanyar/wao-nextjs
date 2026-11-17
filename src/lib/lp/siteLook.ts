@@ -15,7 +15,7 @@
  */
 
 import { DESKTOP_MIN_WIDTH_PX } from './siteDesign';
-import type { GeneratedLogoVariant, LogoIconName } from './siteLogo';
+import type { GeneratedLogoVariant, LogoDisplayOverrides, LogoIconName } from './siteLogo';
 
 // ─────────────────────────────────────────────────────────────────────────
 // Types
@@ -49,6 +49,8 @@ export type SiteLookLogo =
 export interface SiteLook {
   hero?: SiteLookHero;
   logo?: SiteLookLogo;
+  /** Staff display overrides of the header logo (descriptor on / off, lead words); header display only, never the name. */
+  logoDisplay?: LogoDisplayOverrides;
 }
 
 // ─────────────────────────────────────────────────────────────────────────
