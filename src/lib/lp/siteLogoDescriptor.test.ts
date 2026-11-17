@@ -105,6 +105,34 @@ test('phone: the descriptor never changes the name layout; city dropped first, t
   assert.match(clamped.css, /@media \(max-width:\d+px\)\{\.logo-desc\{display:none;\}\}/);
 });
 
+test('phone tiers (verifier FAIL on ddc6f38): the name bar is in the budget; a 320px tier only hides more of the descriptor', () => {
+  // The plain variant's 14px accent bar comes out of the 128px budget: these names wrapped / overflowed at 360px.
+  assert.equal(pickLogo(fable(2), {})!.layouts.name.step, '15-2');
+  assert.equal(pickLogo(fable(11), {})!.layouts.name.step, '16-1');
+  // Three lines at 13px / four at 12px come before the clamp: a long name renders whole instead of being cut.
+  assert.equal(pickLogo(fable(15), {})!.layouts.name.step, '13-3');
+  assert.equal(pickLogo(fable(8), {})!.layouts.name.step, '13-3');
+  const context = { businessNiche: niche('plumber'), city: TLV, siteId: 's' };
+  let tiers = 0;
+  for (const row of NAMES.filter(item => item.name)) {
+    for (const variant of ['lockup', 'icon', 'monogram', 'name'] as GeneratedLogoVariant[]) {
+      for (const display of [{}, { descriptor: true }, { descriptor: false }]) {
+        const logo = generatedLogo(variant, row.name, { ...context, display });
+        if (!logo) continue;
+        const where = `${row.fable}/${variant}/${JSON.stringify(display)}`;
+        assert.match(logo.css, /@media \(max-width:899px\)\{\.brand\.has-logo\{container-type:inline-size;\}\}/, `${where}: the brand box is the container`);
+        assert.doesNotMatch(logo.css, /</, `${where}: no '<' in the CSS (the style block stays parseable)`);
+        for (const block of logo.css.match(/@container \(max-width:129\.98px\)\{(?:[^{}]*\{[^{}]*\})*\}/g) ?? []) {
+          tiers += 1;
+          assert.doesNotMatch(block, /\.logo-desc(?:-city)?\{display:(?:block|inline)/, `${where}: a narrower tier never shows more of the descriptor`);
+          if (!logoNameFlags(row.name).includes('very-long')) assert.doesNotMatch(block, /line-clamp:2/, `${where}: the 320px tier clamps only a very-long name (13px / 12px multi-line steps first)`);
+        }
+      }
+    }
+  }
+  assert.ok(tiers > 20, `tier blocks seen: ${tiers}`);
+});
+
 test('desktop: the descriptor ink reaches 4.5:1 on the header surface in every theme', () => {
   for (const [key, theme] of Object.entries(VERTICAL_THEMES)) {
     const ink = descriptorInk({ primary: theme.primary, accent: theme.accent, surface: theme.surface, muted: theme.textMuted });

@@ -9,6 +9,7 @@ import path from 'node:path';
 import { renderResearchedSitePages } from './researchedSite';
 import { renderStaticHtml } from './renderStaticHtml';
 import { lookFixtureParams } from './siteLook.testkit';
+import { SITE_FONT_PATHS, siteFontFiles } from './siteFonts';
 import { HERO_OVERLAY_TEXT_ALPHA, heroBackdropHtml, renderableHero, type SiteLook } from './siteLook';
 import { brandLogo, fitsLines, GENERIC_LEADS, GENERIC_LEADS_COPY_PENDING, generatedLogo, isGenericLeadToken, leadClass, LOGO_MARK_LIBRARY, pickLogo, plainStep, splitLead, textUnits, type GeneratedLogoVariant, type LogoStep } from './siteLogo';
 import { VERTICAL_THEMES } from './verticalThemes';
@@ -163,7 +164,18 @@ test('logo picker: lead split, classes, layout steps, defaults (ASCII cases)', (
   assert.equal(leadClass('Plumbing', { businessNiche: 'plumbing' }), 'generic');
   assert.equal(leadClass('Haifa', { targetLocation: 'Haifa' }), 'generic');
   assert.equal(leadClass('AquaFix', { businessNiche: 'plumbing' }), 'name');
-  assert.ok(Math.abs(textUnits('Ab 1') - (0.66 + 0.55 + 0.25 + 0.55)) < 1e-9);
+  // Heebo's measured advances (heeboWidths.generated.json); an unknown character errs wide.
+  const units = (JSON.parse(fs.readFileSync(path.join(ROOT, 'src', 'lib', 'lp', 'heeboWidths.generated.json'), 'utf8')) as { units: Record<string, number> }).units;
+  assert.ok(Math.abs(textUnits('Ab 1') - (0.66 + 0.55 + 0.25 + 0.55)) < 1e-9, 'Latin / digits / space: Fable units');
+  assert.ok(Math.abs(textUnits('\u05F4') - Math.max(units[0x5f4], 0.35)) < 1e-9, 'other: the wider of measured and 0.35');
+  assert.ok(Math.abs(textUnits('\u05D0\u05D5') - (units[0x5d0] + units[0x5d5])) < 1e-9, 'Hebrew letters: the measured advance');
+  assert.ok(textUnits('\u00C9') >= 0.9, 'unknown letter: wide');
+  // The widths were measured from the fonts the sites ship (re-run scripts/build-heebo-widths.mjs when they change).
+  const widthsFile = JSON.parse(fs.readFileSync(path.join(ROOT, 'src', 'lib', 'lp', 'heeboWidths.generated.json'), 'utf8')) as { fonts: { hebrew: string; latin: string } };
+  const fonts = siteFontFiles();
+  const sha = (bytes: Buffer) => createHash('sha256').update(bytes).digest('hex');
+  assert.equal(widthsFile.fonts.hebrew, sha(fonts[SITE_FONT_PATHS.hebrew.slice(1)]));
+  assert.equal(widthsFile.fonts.latin, sha(fonts[SITE_FONT_PATHS.latin.slice(1)]));
   assert.equal(fitsLines('aaaa aaaa', 10, 30, 2), true);
   assert.equal(fitsLines('aaaa aaaa aaaa', 10, 30, 2), false);
   assert.equal(plainStep('Ab', 128), '18-1');

@@ -24,6 +24,16 @@ test('runtime guard: a name field (or a wildcard) in the updateMask is refused, 
   }
 });
 
+test('runtime guard: field names are compared case-insensitively (mask and body)', () => {
+  for (const mask of ['Title', 'TITLE', 'websiteUri,Title', 'NAME', 'LocationName', 'locationname.x', encodeURIComponent('websiteUri, Title')]) {
+    assert.throws(() => assertNoGbpNameEdit({ websiteUri: 'https://x.example' }, mask), GbpNameEditBlockedError, mask);
+  }
+  for (const key of ['Title', 'NAME', 'LOCATIONNAME']) {
+    assert.throws(() => assertNoGbpNameEdit({ [key]: 'X' }, 'websiteUri'), GbpNameEditBlockedError, key);
+  }
+  assert.doesNotThrow(() => assertNoGbpNameEdit({ websiteUri: 'u' }, 'WebsiteUri'), 'other fields in any case still pass');
+});
+
 test('runtime guard: ordinary updates pass; nested category ids named "name" are not the business name', () => {
   assert.doesNotThrow(() => assertNoGbpNameEdit({ categories: { primaryCategory: { name: 'gcid:plumber' } } }, 'categories'));
   assert.doesNotThrow(() => assertNoGbpNameEdit({ profile: { description: 'x' } }, 'profile.description'));

@@ -4,7 +4,7 @@
  * builder throws when the body or the updateMask carries a name field:
  *   - v1 Business Information: `title` (the business name);
  *   - older shapes: `name`, `locationName`.
- * Only top-level body keys and the first segment of each updateMask path are names of Location fields (nested keys such as
+ * Field names are compared case-insensitively. Only top-level body keys and the first segment of each updateMask path are names of Location fields (nested keys such as
  * categories.primaryCategory.name are category ids, not the business name). A wildcard mask ('*') is refused too, since
  * it would update every field the body carries.
  * Reading the name (GET with readMask=title) stays allowed; this module only builds updates.
@@ -16,6 +16,9 @@
 
 /** Location fields that hold (or in older API shapes held) the business name. */
 export const GBP_NAME_FIELDS: readonly string[] = ['title', 'name', 'locationName'];
+const NAME_FIELDS_LOWER = new Set(GBP_NAME_FIELDS.map(field => field.toLowerCase()));
+/** A name field in any letter case ('Title', 'LOCATIONNAME'): the API's own field matching is not relied on. */
+const isNameField = (field: string) => NAME_FIELDS_LOWER.has(field.trim().toLowerCase());
 
 export class GbpNameEditBlockedError extends Error {
   constructor(public readonly field: string, public readonly where: 'body' | 'updateMask') {
@@ -28,7 +31,7 @@ export class GbpNameEditBlockedError extends Error {
 export function assertNoGbpNameEdit(body: unknown, updateMask: string): void {
   if (body && typeof body === 'object' && !Array.isArray(body)) {
     for (const key of Object.keys(body)) {
-      if (GBP_NAME_FIELDS.includes(key)) throw new GbpNameEditBlockedError(key, 'body');
+      if (isNameField(key)) throw new GbpNameEditBlockedError(key, 'body');
     }
   }
   const mask = decodeURIComponent(String(updateMask ?? ''));
@@ -36,7 +39,7 @@ export function assertNoGbpNameEdit(body: unknown, updateMask: string): void {
     const path = raw.trim();
     if (!path) continue;
     const head = path.split('.')[0];
-    if (head === '*' || GBP_NAME_FIELDS.includes(head)) throw new GbpNameEditBlockedError(head, 'updateMask');
+    if (head.trim() === '*' || isNameField(head)) throw new GbpNameEditBlockedError(head, 'updateMask');
   }
 }
 

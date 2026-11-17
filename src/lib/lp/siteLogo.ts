@@ -15,11 +15,15 @@
  *   'monogram' B: a letter tile + the name. Offered only for a NAME lead of letters; never the default.
  *   'name'     the plain fallback: the name with the accent bar.
  * Default: C when the lead is NAME, the name has 2+ tokens and the lockup fits; else A when the icon is confident; else plain.
- * Phone layout steps (the name gets ~128px beside the nav at 360px, ~82px beside a tile): one line at 18px, one line at 16px,
- * two lines at 15px, two lines at 13px, then a two-line clamp; never a single-line ellipsis. The tile stays on phones only
- * when the name fits two lines at 15px or better inside 82px (a mark: inside 128px less its own width + 10px). Desktop:
- * one size up, the tile / mark always shown.
- * Widths are estimates (per-character units, to be calibrated once against Heebo 800).
+ * Phone layout steps (the name gets ~128px beside the nav at 360px, ~82px beside a tile; the plain variant's accent bar
+ * takes 14px more): one line at 18px, one line at 16px, two lines at 15px, two lines at 13px, three at 13px, four at 12px,
+ * then (a name that cannot render whole in the header row) a two-line clamp; never a single-line ellipsis. The tile stays
+ * on phones only when the name fits two lines at 15px or better inside 82px (a mark: inside 128px less its own width +
+ * 10px). Desktop: one size up, the tile / mark always shown.
+ * Phone tiers (PHONE_NAME_TIERS_PX): the whole phone layout (name step, tile / mark, descriptor) is computed once per tier
+ * and switched by a container query on the .brand box, so a 320px phone (a 90px box) gets its own layout instead of the
+ * 360px one overflowing. Widths are estimates (textUnits: Heebo's measured advances at weight 800 for Hebrew letters,
+ * heeboWidths.generated.json); scripts/site-bot-logo-layout.test.mjs checks the real layout in Chromium.
  *
  * Trade descriptor (Eitan 2026-11-17; Yonatan's SEO conditions): a small second line under the name, inside the logo link:
  * the trade label (docs/copy/logo-trade-descriptor-FINAL-2026-11-17.json, copied by script) + an aria-hidden separator + the
@@ -37,6 +41,7 @@ import type { VerticalKey } from './verticalThemes';
 import { matchedVertical, tradeKeywordsIn } from './verticalDetect';
 import { approvedMarkId, chooseMarkId, LOGO_MARK_LIBRARY, logoTradeOf, markAspect, markColors, markInk, tradesNamedIn, tradeTermsOf, type LogoMark, type LogoTrade } from './logoMarks';
 import descriptorCopy from './logoMarks/trade-descriptors.generated.json';
+import heeboWidths from './heeboWidths.generated.json';
 import { PREFIX_LETTERS } from './hebrewPrefixLetters';
 import { DESKTOP_MIN_WIDTH_PX, isolatedName, serviceIcon, SITE_ICON_SPRITE, withoutEmoji } from './siteDesign';
 import type { SiteLook } from './siteLook';
@@ -67,6 +72,21 @@ export const LOGO_DISPLAY_MAX_WIDTH = 200;
 export const PHONE_NAME_PX = 128;
 export const PHONE_NAME_WITH_TILE_PX = 82;
 const TILE_PX = 36;
+/** The space a tile takes from the phone name budget beyond its width (the 8px flex gap and its slack). */
+const TILE_GAP_ALLOWANCE = PHONE_NAME_PX - PHONE_NAME_WITH_TILE_PX - TILE_PX;
+/** Width the 'name' variant's accent bar takes from the name budget (4px border + 10px padding). */
+const NAME_BAR_PX = 14;
+/**
+ * Phone tiers: name budgets (px), widest first. On phones the .brand box is a size container; a tier's layout applies while
+ * the box is at least its budget + PHONE_BRAND_SLACK_PX wide, so the next tier starts below that width:
+ *   128  the box at a 360px phone (130px). The base layout: no query (also where container queries are unsupported).
+ *    88  the box at a 320px phone (90px): @container (max-width:129.98px).
+ * The box width is the viewport less the header padding, the gap and the nav (four links, the home link hidden below
+ * 480px; measured 2026-11-17: 90 / 130 / 160px at 320 / 360 / 390). The container query reads the box itself, so a nav
+ * of another length moves the switch point with it. Under a 90px box (viewports under 320px) the 88px layout stays.
+ */
+export const PHONE_NAME_TIERS_PX: readonly number[] = [PHONE_NAME_PX, 88];
+const PHONE_BRAND_SLACK_PX = 2;
 /** The mark on the header bar: height (px) on desktop / phone, and the width cap of a wide mark (it then shrinks). */
 export const MARK_DESKTOP = { height: 40, maxWidth: 56 } as const;
 export const MARK_PHONE = { height: 32, maxWidth: 44 } as const;
@@ -127,15 +147,33 @@ export function logoText(businessName: string | undefined): string {
   return withoutEmoji(businessName ?? '').replace(/\s+/g, ' ').trim();
 }
 
-/** Width of a text in em (Fable's units: Hebrew letter 0.53, Latin capital 0.66, Latin lowercase / digit 0.55, space 0.25, other 0.35). */
+/** Heebo advance widths (em, weight 800) by decimal code point: scripts/build-heebo-widths.mjs. */
+const HEEBO_UNITS: Readonly<Record<string, number>> = heeboWidths.units;
+
+/** Fable's original per-class units (Latin capital 0.66, Latin lowercase / digit 0.55, space 0.25, other 0.35). */
+function fableUnits(ch: string): number {
+  if (/[A-Z]/.test(ch)) return 0.66;
+  if (/[a-z0-9]/.test(ch)) return 0.55;
+  if (ch === ' ') return 0.25;
+  return 0.35;
+}
+
+/**
+ * Width of a text in em.
+ *   Hebrew letter         Heebo's measured advance at weight 800 (Fable's flat 0.53 was short of Heebo's 0.57 average, and
+ *                         the letters range 0.33 to 0.88: Hebrew names overflowed).
+ *   Latin letter / digit  Fable's units, unchanged (on average wider than Heebo's: Latin layouts and defaults stay as set).
+ *   space                 0.25 (Heebo's advance).
+ *   anything else         the wider of the measured advance and Fable's 0.35 (the gershayim is 0.48 in Heebo 800).
+ *   outside the table     errs wide: a letter 0.9, anything else 0.6.
+ */
 export function textUnits(text: string): number {
   let units = 0;
   for (const ch of text) {
-    if (/[\u05D0-\u05EA]/.test(ch)) units += 0.53;
-    else if (/[A-Z]/.test(ch)) units += 0.66;
-    else if (/[a-z0-9]/.test(ch)) units += 0.55;
-    else if (ch === ' ') units += 0.25;
-    else units += 0.35;
+    const measured = HEEBO_UNITS[String(ch.codePointAt(0))];
+    if (/[A-Za-z0-9 ]/.test(ch)) units += fableUnits(ch);
+    else if (measured !== undefined) units += /[\u05D0-\u05EA]/.test(ch) ? measured : Math.max(measured, fableUnits(ch));
+    else units += /[\u0590-\u05FF]|\p{L}/u.test(ch) ? 0.9 : 0.6;
   }
   return units;
 }
@@ -156,8 +194,12 @@ export function fitsLines(text: string, fontPx: number, maxPx: number, lines: nu
   return true;
 }
 
-export type LogoStep = '18-1' | '16-1' | '15-2' | '13-2' | 'clamp';
-const STEP_PX: Record<LogoStep, number> = { '18-1': 18, '16-1': 16, '15-2': 15, '13-2': 13, clamp: 13 };
+/**
+ * '13-3' and '12-4' (three lines at 13px, four at 12px: 45 / 55px, inside the 56px header row; no descriptor) come before
+ * the clamp, so the clamp is only for a name that cannot render whole in the header row (Adam 2026-11-17: never clip).
+ */
+export type LogoStep = '18-1' | '16-1' | '15-2' | '13-2' | '13-3' | '12-4' | 'clamp';
+const STEP_PX: Record<LogoStep, number> = { '18-1': 18, '16-1': 16, '15-2': 15, '13-2': 13, '13-3': 13, '12-4': 12, clamp: 13 };
 
 /** The first plain size step whose text fits the width. */
 export function plainStep(text: string, maxPx: number): LogoStep {
@@ -165,6 +207,8 @@ export function plainStep(text: string, maxPx: number): LogoStep {
   if (fitsLines(text, 16, maxPx, 1)) return '16-1';
   if (fitsLines(text, 15, maxPx, 2)) return '15-2';
   if (fitsLines(text, 13, maxPx, 2)) return '13-2';
+  if (fitsLines(text, 13, maxPx, 3)) return '13-3';
+  if (fitsLines(text, 12, maxPx, 4)) return '12-4';
   return 'clamp';
 }
 
@@ -275,20 +319,20 @@ export interface LogoPick {
   };
 }
 
-function lockupLayout(text: string, lead: string, rest: string): LockupLayout | null {
+function lockupLayout(text: string, lead: string, rest: string, namePx: number = PHONE_NAME_PX): LockupLayout | null {
   if (!rest) return null;
-  if (fitsLines(text, 18, PHONE_NAME_PX, 1)) return { kind: 'inline' };
-  if (!fitsLines(rest, 13, PHONE_NAME_PX, 1)) return null;
-  if (fitsLines(lead, 18, PHONE_NAME_PX, 1)) return { kind: 'stacked', leadPx: 18 };
-  if (fitsLines(lead, 16, PHONE_NAME_PX, 1)) return { kind: 'stacked', leadPx: 16 };
+  if (fitsLines(text, 18, namePx, 1)) return { kind: 'inline' };
+  if (!fitsLines(rest, 13, namePx, 1)) return null;
+  if (fitsLines(lead, 18, namePx, 1)) return { kind: 'stacked', leadPx: 18 };
+  if (fitsLines(lead, 16, namePx, 1)) return { kind: 'stacked', leadPx: 16 };
   return null;
 }
 
-function tileLayout(text: string, besidePx: number = PHONE_NAME_WITH_TILE_PX): TileLayout {
+function tileLayout(text: string, besidePx: number = PHONE_NAME_WITH_TILE_PX, alonePx: number = PHONE_NAME_PX): TileLayout {
   const beside = plainStep(text, besidePx);
   return beside === '18-1' || beside === '16-1' || beside === '15-2'
     ? { step: beside, tileOnPhone: true }
-    : { step: plainStep(text, PHONE_NAME_PX), tileOnPhone: false };
+    : { step: plainStep(text, alonePx), tileOnPhone: false };
 }
 
 /** A mark's box (px, 1 decimal) at a height, shrunk to the width cap when it is wider. */
@@ -299,9 +343,9 @@ export function markBox(mark: Pick<LogoMark, 'viewBox'>, size: { height: number;
   return { width: round(width), height: round(width / aspect) };
 }
 
-/** The phone layout beside a mark: the name budget is 128px less the mark's phone width and the gap allowance. */
-function markLayout(text: string, mark: LogoMark): TileLayout {
-  return tileLayout(text, PHONE_NAME_PX - markBox(mark, MARK_PHONE).width - MARK_GAP_ALLOWANCE);
+/** The phone layout beside a mark: the name budget less the mark's phone width and the gap allowance. */
+function markLayout(text: string, mark: LogoMark, namePx: number = PHONE_NAME_PX): TileLayout {
+  return tileLayout(text, namePx - markBox(mark, MARK_PHONE).width - MARK_GAP_ALLOWANCE, namePx);
 }
 
 /** The monogram letter: the lead's first letter (Latin upper-cased), or null. */
@@ -325,7 +369,7 @@ export function pickLogo(businessName: string | undefined, context: LogoContext 
   const icon = mark || vertical ? logoIconFor(context.serviceKeys) : null;
   const lockup = cls === 'name' ? lockupLayout(text, lead, rest) : null;
   const monogram = cls === 'name' && /^\p{L}+$/u.test(lead) && monogramOf(lead) !== null;
-  const layouts: LogoPick['layouts'] = { name: { step: plainStep(text, PHONE_NAME_PX) } };
+  const layouts: LogoPick['layouts'] = { name: { step: plainStep(text, PHONE_NAME_PX - NAME_BAR_PX) } };
   if (lockup) layouts.lockup = lockup;
   if (mark) layouts.icon = markLayout(text, mark);
   else if (icon) layouts.icon = tileLayout(text);
@@ -421,18 +465,16 @@ export function logoNameFlags(businessName: string | undefined, context: LogoCon
 /** The descriptor's font size (px) on phone / desktop, and its minimum contrast on the header surface (WCAG AA text). */
 export const DESCRIPTOR_PX = { phone: 12, desktop: 14 } as const;
 export const DESCRIPTOR_MIN_CONTRAST = 4.5;
-/** Width the 'name' variant's accent bar takes from the phone budget (4px border + 10px padding). */
-const NAME_BAR_PX = 14;
 
 export type DescriptorPhoneFit = 'full' | 'label' | 'none';
 
 /**
  * What of the descriptor shows on a phone. The name's own layout is fixed first and never changes for the descriptor:
- * when the name already needs the 13px two-line step or the clamp, the descriptor is dropped (the header row has no third
+ * when the name already needs a 13px / 12px multi-line step or the clamp, the descriptor is dropped (the header row has no third
  * line to give); else the whole line when it fits one line at 12px in the name's width, else the label alone, else nothing.
  */
 export function descriptorPhoneFit(descriptor: LogoDescriptor, nameStep: LogoStep, budgetPx: number): DescriptorPhoneFit {
-  if (nameStep === '13-2' || nameStep === 'clamp') return 'none';
+  if (nameStep === '13-2' || nameStep === '13-3' || nameStep === '12-4' || nameStep === 'clamp') return 'none';
   const full = descriptor.city ? `${descriptor.label} \u00B7 ${descriptor.city}` : descriptor.label;
   if (fitsLines(full, DESCRIPTOR_PX.phone, budgetPx, 1)) return 'full';
   if (descriptor.city && fitsLines(descriptor.label, DESCRIPTOR_PX.phone, budgetPx, 1)) return 'label';
@@ -460,16 +502,27 @@ export interface BrandLogo {
 }
 
 const BASE_CSS = '.brand.has-logo{display:flex;align-items:center;gap:8px;min-width:0;line-height:1.15;white-space:normal;overflow:visible;text-overflow:clip;}';
+/** On phones the .brand box is the size container the tier queries read (never on desktop: there it sizes to its content). */
+const CONTAINER_CSS = `@media (max-width:${DESKTOP_MIN_WIDTH_PX - 1}px){.brand.has-logo{container-type:inline-size;}}`;
 const TILE_CSS = `.logo-tile{display:inline-flex;align-items:center;justify-content:center;flex:none;width:${TILE_PX}px;height:${TILE_PX}px;border-radius:8px;background:var(--primary);color:#fff;font-weight:800;font-size:1.25rem;line-height:1;}.logo-tile svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}`;
 const DESKTOP = (rules: string) => `@media (min-width:${DESKTOP_MIN_WIDTH_PX}px){${rules}}`;
 const PHONE = (rules: string) => `@media (max-width:${DESKTOP_MIN_WIDTH_PX - 1}px){${rules}}`;
+/** The rules of phone tier i (i >= 1): the .brand box narrower than the previous tier's budget + slack (no '<' in the CSS). */
+const TIER = (i: number, rules: string) => (rules ? `@container (max-width:${PHONE_NAME_TIERS_PX[i - 1] + PHONE_BRAND_SLACK_PX - 0.02}px){${rules}}` : '');
+
+/** The phone declarations of a plain size step (complete, so a tier can switch any step to any other). */
+function stepDeclarations(step: LogoStep): string {
+  const lines = step === '18-1' || step === '16-1' ? 'white-space:nowrap;' : 'white-space:normal;text-wrap:balance;';
+  const box = step === 'clamp'
+    ? 'display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;line-clamp:2;overflow:hidden;overflow-wrap:anywhere;'
+    : 'display:block;-webkit-line-clamp:unset;line-clamp:none;overflow:visible;';
+  return `font-size:${STEP_PX[step]}px;${lines}${box}`;
+}
+
+const STEP_DESKTOP = DESKTOP(`.logo-name{font-size:${STEP_PX['18-1'] + 2}px;white-space:normal;display:block;-webkit-line-clamp:unset;line-clamp:none;overflow:visible;}`);
 
 function stepCss(step: LogoStep): string {
-  const px = STEP_PX[step];
-  const lines = step === '18-1' || step === '16-1' ? 'white-space:nowrap;' : 'text-wrap:balance;';
-  const clamp = step === 'clamp' ? 'display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;line-clamp:2;overflow:hidden;' : '';
-  return `.logo-name{display:block;min-width:0;font-weight:800;color:var(--primary);font-size:${px}px;${lines}${clamp}}`
-    + DESKTOP(`.logo-name{font-size:${STEP_PX['18-1'] + 2}px;white-space:normal;display:block;-webkit-line-clamp:unset;line-clamp:none;overflow:visible;}`);
+  return `.logo-name{min-width:0;font-weight:800;color:var(--primary);${stepDeclarations(step)}}`;
 }
 
 /** The descriptor line: plain visible text; only the separator is aria-hidden. A leading space keeps it a separate word. */
@@ -478,10 +531,25 @@ function descriptorHtml(descriptor: LogoDescriptor): string {
   return ` <span class="logo-desc">${isolatedName(descriptor.label)}${city}</span>`;
 }
 
-function descriptorCss(fit: DescriptorPhoneFit, colors: LogoContext['colors']): string {
+const FIT_RANK: Record<DescriptorPhoneFit, number> = { none: 0, label: 1, full: 2 };
+const fitRules = (fit: DescriptorPhoneFit) => (fit === 'none' ? '.logo-desc{display:none;}' : fit === 'label' ? '.logo-desc-city{display:none;}' : '');
+
+/**
+ * The descriptor CSS. `fits` is the phone fit per tier (widest first); a narrower tier never shows more than a wider one
+ * (city first, then the whole line), so a tier only adds what it hides.
+ */
+function descriptorCss(fits: readonly DescriptorPhoneFit[], colors: LogoContext['colors']): string {
+  let shown = fits[0];
+  let tiers = '';
+  fits.slice(1).forEach((fit, k) => {
+    const next = FIT_RANK[fit] < FIT_RANK[shown] ? fit : shown;
+    if (next !== shown) tiers += TIER(k + 1, fitRules(next));
+    shown = next;
+  });
   return `.logo-words{display:block;min-width:0;}.logo-desc{display:block;margin-top:2px;font-size:${DESCRIPTOR_PX.phone}px;font-weight:500;line-height:1.2;color:${descriptorInk(colors)};white-space:nowrap;overflow:hidden;}`
-    + (fit === 'none' ? PHONE('.logo-desc{display:none;}') : fit === 'label' ? PHONE('.logo-desc-city{display:none;}') : '')
-    + DESKTOP(`.logo-desc{display:block;font-size:${DESCRIPTOR_PX.desktop}px;white-space:normal;overflow:visible;}.logo-desc-city{display:inline;}`);
+    + (fitRules(fits[0]) ? PHONE(fitRules(fits[0])) : '')
+    + DESKTOP(`.logo-desc{display:block;font-size:${DESCRIPTOR_PX.desktop}px;white-space:normal;overflow:visible;}.logo-desc-city{display:inline;}`)
+    + tiers;
 }
 
 function tileHtml(inner: string): string {
@@ -511,9 +579,68 @@ function markHtml(markId: string, mark: LogoMark): string {
   return `<svg class="logo-mark" data-mark="${esc(markId)}" viewBox="${esc(mark.viewBox)}" aria-hidden="true" focusable="false">${mark.body}</svg>`;
 }
 
+/** The name part of a variant's phone layout: a plain size step, or the lockup's own inline / stacked layout. */
+type PhoneName = { kind: 'step'; step: LogoStep } | LockupLayout;
+
+/** A variant's phone layout at one tier: the name, whether the tile / mark shows, and the descriptor's fit. */
+interface PhoneLayout {
+  name: PhoneName;
+  tile: boolean;
+  fit: DescriptorPhoneFit | null;
+}
+
+/**
+ * The phone layout of a variant for a name budget (one tier). The lockup keeps its markup across tiers: an inline lockup
+ * that no longer fits one line, or a stacked one whose lines no longer fit, becomes a plain size step of the whole name.
+ */
+function phoneLayout(pick: LogoPick, variant: GeneratedLogoVariant, mark: LogoMark | undefined, namePx: number): PhoneLayout {
+  const desc = pick.descriptor;
+  const fit = (step: LogoStep, budgetPx: number) => (desc ? descriptorPhoneFit(desc, step, budgetPx) : null);
+  if (variant === 'name') {
+    const step = plainStep(pick.text, namePx - NAME_BAR_PX);
+    return { name: { kind: 'step', step }, tile: false, fit: fit(step, namePx - NAME_BAR_PX) };
+  }
+  if (variant === 'lockup') {
+    const base = pick.layouts.lockup!;
+    const own = lockupLayout(pick.text, pick.lead, pick.rest, namePx);
+    if (own && (own.kind === base.kind)) return { name: own, tile: false, fit: fit(own.kind === 'inline' ? '18-1' : '15-2', namePx) };
+    const step = plainStep(pick.text, namePx);
+    return { name: { kind: 'step', step }, tile: false, fit: fit(step, namePx) };
+  }
+  const beside = mark ? namePx - markBox(mark, MARK_PHONE).width - MARK_GAP_ALLOWANCE : namePx - TILE_PX - TILE_GAP_ALLOWANCE;
+  const layout = tileLayout(pick.text, beside, namePx);
+  return { name: { kind: 'step', step: layout.step }, tile: layout.tileOnPhone, fit: fit(layout.step, layout.tileOnPhone ? beside : namePx) };
+}
+
+/** The phone CSS of a layout's name (complete declarations; `stacked` = the lockup's two-line markup). */
+function phoneNameRules(name: PhoneName, stacked: boolean): string {
+  if (name.kind === 'inline') return '.logo-name{font-size:18px;white-space:nowrap;}';
+  if (name.kind === 'stacked') return `.logo-name.stacked .logo-lead{display:block;font-size:${name.leadPx}px;white-space:nowrap;}.logo-name.stacked .logo-rest{display:block;font-size:13px;white-space:nowrap;}`;
+  const lines = stacked ? '.logo-name.stacked .logo-lead,.logo-name.stacked .logo-rest{display:inline;font-size:inherit;white-space:inherit;}' : '';
+  return `.logo-name{${stepDeclarations(name.step)}}${lines}`;
+}
+
+/** The tier blocks of the name / tile / mark (only where a tier differs from the one before it). */
+function nameTierCss(layouts: readonly PhoneLayout[], tileClass: string | null, stacked: boolean): string {
+  let css = '';
+  for (let i = 1; i < layouts.length; i++) {
+    const [prev, cur] = [layouts[i - 1], layouts[i]];
+    let rules = JSON.stringify(cur.name) === JSON.stringify(prev.name) ? '' : phoneNameRules(cur.name, stacked);
+    if (tileClass && cur.tile !== prev.tile) rules += `.${tileClass}{display:${cur.tile ? (tileClass === 'logo-tile' ? 'inline-flex' : 'block') : 'none'};}`;
+    css += TIER(i, rules);
+  }
+  return css;
+}
+
+/** The descriptor fits per tier, or '' when there is no descriptor. */
+function tiersDescCss(layouts: readonly PhoneLayout[], colors: LogoContext['colors']): string {
+  return layouts[0].fit ? descriptorCss(layouts.map(layout => layout.fit!), colors) : '';
+}
+
 /**
  * A generated logo for the name, or null when the variant is not eligible for it (a name changed after approval: the header
- * falls back to today's text name).
+ * falls back to today's text name). The CSS is the name / mark CSS first and the descriptor CSS after it, so the logo with
+ * the descriptor off is a prefix of the logo with it on.
  */
 export function generatedLogo(variant: GeneratedLogoVariant, businessName: string, context: LogoContext = {}, stored: { icon?: LogoIconName; markId?: string } = {}): BrandLogo | null {
   const storedMark = approvedMarkId(stored.markId) ?? undefined;
@@ -522,13 +649,18 @@ export function generatedLogo(variant: GeneratedLogoVariant, businessName: strin
   const name = (inner: string, extra = '') => `<span class="logo-name${extra}">${inner}</span>`;
   const desc = pick.descriptor;
   const descHtml = desc ? descriptorHtml(desc) : '';
-  const descCss = (step: LogoStep, budgetPx: number) => (desc ? descriptorCss(descriptorPhoneFit(desc, step, budgetPx), context.colors) : '');
+  const mark = variant === 'icon' && pick.markId ? LOGO_MARK_LIBRARY[pick.markId] : undefined;
+  const layouts = PHONE_NAME_TIERS_PX.map(namePx => phoneLayout(pick, variant, mark, namePx));
+  const base = layouts[0];
+  const descCss = tiersDescCss(layouts, context.colors);
   /** The name and the descriptor stacked in one block (a flex item beside the mark / tile); the name alone otherwise. */
   const words = (nameHtml: string) => (desc ? `<span class="logo-words">${nameHtml}${descHtml}</span>` : nameHtml);
+  const head = BASE_CSS + CONTAINER_CSS;
   if (variant === 'name') {
+    const step = (base.name as { step: LogoStep }).step;
     return {
       html: `<span data-logo="name" style="display:block;min-width:0;border-inline-start:4px solid var(--cta);padding-inline-start:10px;">${name(isolatedName(pick.text))}${descHtml}</span>`,
-      css: BASE_CSS + stepCss(pick.layouts.name.step) + descCss(pick.layouts.name.step, PHONE_NAME_PX - NAME_BAR_PX),
+      css: head + stepCss(step) + STEP_DESKTOP + nameTierCss(layouts, null, false) + descCss,
     };
   }
   if (variant === 'lockup') {
@@ -539,28 +671,27 @@ export function generatedLogo(variant: GeneratedLogoVariant, businessName: strin
     if (layout.kind === 'inline') {
       return {
         html: `<span data-logo="lockup">${name(`<bdi>${lead} ${rest}</bdi>`)}${descHtml}</span>`,
-        css: `${BASE_CSS}.logo-name{display:block;min-width:0;font-size:18px;white-space:nowrap;}${tone}${DESKTOP('.logo-name{font-size:20px;}')}${descCss('18-1', PHONE_NAME_PX)}`,
+        css: `${head}.logo-name{display:block;min-width:0;font-size:18px;white-space:nowrap;}${tone}${DESKTOP('.logo-name{font-size:20px;}')}`
+          + nameTierCss(layouts, null, false) + descCss,
       };
     }
     // The stacked lockup is two lines (18 or 16 + 13px): the 15px two-line step's height, for the descriptor rule.
     return {
       html: `<span data-logo="lockup">${name(`<bdi class="logo-lead">${esc(pick.lead)}</bdi> <bdi class="logo-rest">${esc(pick.rest)}</bdi>`, ' stacked')}${descHtml}</span>`,
-      css: `${BASE_CSS}.logo-name{display:block;min-width:0;}${tone}`
+      css: `${head}.logo-name{display:block;min-width:0;}${tone}`
         + `.logo-name.stacked .logo-lead{display:block;font-size:${layout.leadPx}px;white-space:nowrap;}.logo-name.stacked .logo-rest{display:block;font-size:13px;font-weight:600;white-space:nowrap;}`
         + DESKTOP('.logo-name.stacked .logo-lead,.logo-name.stacked .logo-rest{display:inline;font-size:20px;}.logo-name.stacked .logo-rest{font-weight:500;}')
-        + descCss('15-2', PHONE_NAME_PX),
+        + nameTierCss(layouts, null, true) + descCss,
     };
   }
-  const layout = pick.layouts[variant]!;
-  const mark = variant === 'icon' && pick.markId ? LOGO_MARK_LIBRARY[pick.markId] : undefined;
+  const step = (base.name as { step: LogoStep }).step;
   if (mark) {
-    const budget = layout.tileOnPhone ? PHONE_NAME_PX - markBox(mark, MARK_PHONE).width - MARK_GAP_ALLOWANCE : PHONE_NAME_PX;
     return {
       html: `<span data-logo="icon" style="display:contents;">${markHtml(pick.markId!, mark)}${words(name(isolatedName(pick.text)))}</span>`,
-      css: BASE_CSS + markCss(mark, layout.tileOnPhone, context.colors) + stepCss(layout.step) + descCss(layout.step, budget),
+      css: head + markCss(mark, base.tile, context.colors) + stepCss(step) + STEP_DESKTOP + nameTierCss(layouts, 'logo-mark', false) + descCss,
     };
   }
-  const tileCss = TILE_CSS + (layout.tileOnPhone ? '' : PHONE('.logo-tile{display:none;}'));
+  const tileCss = TILE_CSS + (base.tile ? '' : PHONE('.logo-tile{display:none;}'));
   let inner: string;
   if (variant === 'monogram') {
     inner = esc(monogramOf(pick.lead)!);
@@ -570,7 +701,7 @@ export function generatedLogo(variant: GeneratedLogoVariant, businessName: strin
   }
   return {
     html: `<span data-logo="${variant}" style="display:contents;">${tileHtml(inner)}${words(name(isolatedName(pick.text)))}</span>`,
-    css: BASE_CSS + tileCss + stepCss(layout.step) + descCss(layout.step, layout.tileOnPhone ? PHONE_NAME_WITH_TILE_PX : PHONE_NAME_PX),
+    css: head + tileCss + stepCss(step) + STEP_DESKTOP + nameTierCss(layouts, 'logo-tile', false) + descCss,
   };
 }
 
@@ -584,7 +715,7 @@ export function fileLogo(src: string, width: number, height: number, businessNam
   if (!desc) return { html: svg, css: BASE_CSS };
   return {
     html: `<span class="logo-words">${svg}${descriptorHtml(desc)}</span>`,
-    css: BASE_CSS + descriptorCss(descriptorPhoneFit(desc, '18-1', PHONE_NAME_PX), context.colors),
+    css: BASE_CSS + CONTAINER_CSS + descriptorCss(PHONE_NAME_TIERS_PX.map(namePx => descriptorPhoneFit(desc, '18-1', namePx)), context.colors),
   };
 }
 
