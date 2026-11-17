@@ -94,10 +94,13 @@ export function isSafeLookSlug(slug: unknown): slug is string {
   return typeof slug === 'string' && SLUG.test(slug);
 }
 
-/** The slug's directory (slug validated; never resolved through a dynamic path.resolve). */
-export function siteProofDir(slug: string): string {
+/**
+ * The slug's directory (slug validated; never resolved through a dynamic path.resolve). `root` overrides the siteProof data
+ * root for a fixed, tracked look (the homepage hero window's demo business, src/lib/home/heroLandingPage.ts).
+ */
+export function siteProofDir(slug: string, root?: string): string {
   if (!isSafeLookSlug(slug)) throw new SiteLookError('slug');
-  return path.join(dataRoot('siteProof').dir, slug);
+  return path.join(root ?? dataRoot('siteProof').dir, slug);
 }
 
 export function emptyLookRecord(slug: string): LookRecord {
@@ -127,8 +130,8 @@ const isApproval = (value: unknown): value is LookApproval =>
   && typeof (value as LookApproval).at === 'string' && !Number.isNaN(Date.parse((value as LookApproval).at));
 
 /** Parses look.json; null when absent. Throws SiteLookError on a malformed record. */
-export function readLookRecord(slug: string): LookRecord | null {
-  const dir = siteProofDir(slug);
+export function readLookRecord(slug: string, root?: string): LookRecord | null {
+  const dir = siteProofDir(slug, root);
   if (!fs.existsSync(path.join(dir, 'look.json'))) return null;
   let parsed: unknown;
   try {
@@ -179,10 +182,10 @@ export interface LoadedSiteLook {
  * The approved look of a site for the deploy: null when there is no record or nothing approved. Only approved pieces are
  * returned (an unapproved hero / logo contributes neither markup nor files).
  */
-export function loadSiteLook(slug: string): LoadedSiteLook | null {
-  const record = readLookRecord(slug);
+export function loadSiteLook(slug: string, root?: string): LoadedSiteLook | null {
+  const record = readLookRecord(slug, root);
   if (!record) return null;
-  const dir = siteProofDir(slug);
+  const dir = siteProofDir(slug, root);
   const look: SiteLook = {};
   const files: Record<string, Buffer> = {};
 

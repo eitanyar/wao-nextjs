@@ -36,6 +36,23 @@ export interface OwnerPhoto {
   aiGenerated: boolean;
 }
 
+/**
+ * The flag for the hero photo backdrop of a site-record entry (the product's hero photo, from the stored record's approved
+ * look). Eitan 2026-11-17: an AI-made ATMOSPHERE photo (no people, no work shown) is allowed, as on Site Bot sites without
+ * owner photos (2026-11-15 rule). An AI photo of a person (owner / staff / customers) or of a job stays banned (1e0a5b9),
+ * and a look photo without this flag fails the build (unflagged fails closed).
+ */
+export interface HeroPhotoFlag {
+  kind: "atmosphere";
+  aiGenerated: boolean;
+  /** Must be explicitly false: no person in the photo. */
+  people: false;
+  /** Must be explicitly false: no job / work result shown. */
+  work: false;
+  /** Who approved it and when (recorded decision). */
+  approval: string;
+}
+
 export interface ShowcaseEntry {
   id: string;
   consent: { type: "fictional" | "client"; reference?: string };
@@ -51,6 +68,8 @@ export interface ShowcaseEntry {
   landingPage: ShowcaseLandingPage;
   /** Optional real owner photo (site-record entries); see OwnerPhoto. */
   ownerPhoto?: OwnerPhoto;
+  /** Flags the stored look's hero photo (site-record entries); see HeroPhotoFlag. */
+  heroPhoto?: HeroPhotoFlag;
   geometry: ShowcaseGeometry;
 }
 
@@ -120,6 +139,15 @@ export function validateShowcases(raw: unknown, globalChips: string[][], labels:
       const ok = (f: unknown, ext: string) => typeof f === "string" && new RegExp(`^/images/[a-z0-9/-]+\\.${ext}$`).test(f) && !/hero-owner|demo/.test(f);
       if (!ok(p.avif, "avif") || !ok(p.webp, "webp")) fail(at, "ownerPhoto.avif / webp must be /images/... files");
       if (!(Number.isInteger(p.width) && p.width > 0 && Number.isInteger(p.height) && p.height > 0)) fail(at, "ownerPhoto.width / height");
+    }
+    if (e.heroPhoto !== undefined) {
+      const h = e.heroPhoto;
+      if (h?.kind !== "atmosphere") fail(at, "heroPhoto.kind must be atmosphere: no AI owner / people / work photo in the window");
+      if (typeof h.aiGenerated !== "boolean") fail(at, "heroPhoto.aiGenerated must be flagged true or false");
+      if (h.people !== false) fail(at, "heroPhoto shows people or is unflagged (people must be false)");
+      if (h.work !== false) fail(at, "heroPhoto shows a job or is unflagged (work must be false)");
+      if (!isText(h.approval)) fail(at, "heroPhoto.approval (who approved it, when)");
+      if (lp.source !== "site-record") fail(at, "heroPhoto applies to site-record entries only");
     }
     const g = e.geometry;
     const inWindow = (x: number, y: number) => Number.isFinite(x) && Number.isFinite(y) && x >= 0 && y >= 0 && x <= WINDOW.width && y <= WINDOW.height;

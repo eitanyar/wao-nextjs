@@ -113,11 +113,21 @@ with two or more it loops (rest 4 s, cross-fade, next), pausing out of view or i
 2. **Site live on our Worker.** The landing page must be live at `https://<slug>.wao.co.il/...` on the wao-sites
    Worker (`landingPage: { "source": "live-url", "url": ... }`). It is fetched once at build time; any other host is
    rejected. Every page passes the same guards as the stored one: noindex, no scripts / canonical / OG, phone digits
-   and `tel:` stripped, cut below the hero, and the build fails if a rating, review markup, phone digits or a
-   test/demo domain reaches the window.
+   and `tel:` stripped, cut above the contact form (header, hero and the product's sections below it stay), and the
+   build fails if a rating, review markup, phone digits, a test/demo domain or an image not flagged by the entry
+   reaches the window.
    **No AI-made owner photo** (Fable 5.2, 2026-11-16): without a photo the hero text takes the full width. A real
    owner photo (`ownerPhoto: { avif, webp, width, height, "aiGenerated": false }`) needs a consented client entry; an
    AI-flagged or unflagged photo fails the build, and the window guard rejects known AI photo files.
+   **Hero photo + logo of a stored record** (Eitan 2026-11-17): the product's own look (approved hero photo backdrop and
+   generated logo), applied with the staff CLI into the tracked look dir `data/video/demo/site-proof/<slug>/`:
+   `WAO_SITE_PROOF_DIR=data/video/demo/site-proof node scripts/site-bot-look.mjs --slug demo-plumber --by <name>
+   --site-record data/video/demo/stand-in/site-record.json --add-photo <file> --approve-hero <photos/...> [--approve-logo icon]`.
+   The entry must flag the photo: `heroPhoto: { "kind": "atmosphere", "aiGenerated": true|false, "people": false,
+   "work": false, "approval": "<who, when>" }` (an AI atmosphere photo only: no people, no job shown). An approved photo
+   without the flag, a flag without a photo, or any other AI flag fails the build. Images are served from
+   `/hero-window/img/<file>`. The window drops the record's rating (no rating, review count or result is shown).
+   After a photo or logo change, re-measure (step 4).
 3. **Strings from waocopy, never typed.** Needed per entry: `answers.trade`, `answers.area`, `answers.service` (the
    tapped chips; add `chips` lists if the global ones do not hold them), `ad.headlines` (3, <= 30 chars),
    `ad.description` (<= 90 chars), `ad.displayHost`, `tabTitle` (live-url). The results-page query is built as

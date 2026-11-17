@@ -1,0 +1,132 @@
+{
+  "version": 1,
+  "slug": "demo-plumber",
+  "photos": [
+    {
+      "file": "photos/12a12933a413.png",
+      "sha256": "12a12933a413978cc7c7b35bdae87804d958d2b2a066b83aed2ae56998ef0c93",
+      "originalName": "plumber-atmo-4.png",
+      "addedAt": "2026-11-17T00:49:19.253Z",
+      "addedBy": "Eitan (approved 2026-11-17, applied by Eitan-Dev)",
+      "score": {
+        "width": 1664,
+        "height": 928,
+        "landscape": true,
+        "sharpness": 8.01,
+        "textZoneDetail": 2.21,
+        "contrast": 6.07,
+        "pass": true,
+        "reasons": [],
+        "rank": 30.2
+      }
+    }
+  ],
+  "logoFiles": [],
+  "history": [
+    {
+      "at": "2026-11-17T00:49:19.253Z",
+      "by": "Eitan (approved 2026-11-17, applied by Eitan-Dev)",
+      "action": "add-photo",
+      "detail": "photos/12a12933a413.png"
+    },
+    {
+      "at": "2026-11-17T00:49:19.374Z",
+      "by": "Eitan (approved 2026-11-17, applied by Eitan-Dev)",
+      "action": "score",
+      "detail": "1 photos"
+    },
+    {
+      "at": "2026-11-17T00:49:35.547Z",
+      "by": "Eitan (approved 2026-11-17, applied by Eitan-Dev)",
+      "action": "approve-hero",
+      "detail": "photos/12a12933a413.png"
+    },
+    {
+      "at": "2026-11-17T00:49:35.560Z",
+      "by": "Eitan (approved 2026-11-17, applied by Eitan-Dev)",
+      "action": "approve-logo",
+      "detail": "icon plumber-4"
+    }
+  ],
+  "hero": {
+    "approved": true,
+    "source": "photos/12a12933a413.png",
+    "sourceSha256": "12a12933a413978cc7c7b35bdae87804d958d2b2a066b83aed2ae56998ef0c93",
+    "approval": {
+      "by": "Eitan (approved 2026-11-17, applied by Eitan-Dev)",
+      "at": "2026-11-17T00:49:35.546Z"
+    },
+    "score": {
+      "width": 1664,
+      "height": 928,
+      "landscape": true,
+      "sharpness": 8.01,
+      "textZoneDetail": 2.21,
+      "contrast": 6.07,
+      "pass": true,
+      "reasons": [],
+      "rank": 30.2
+    },
+    "images": [
+      {
+        "width": 480,
+        "height": 268,
+        "avif": "img/hero-12a12933a413-480.avif",
+        "webp": "img/hero-12a12933a413-480.webp",
+        "avifBytes": 2272,
+        "webpBytes": 3898,
+        "avifSha256": "6263d3e34ec605b11ae51e0add2844e02839626181c5655748253d1d9df751c2",
+        "webpSha256": "eebed8548977bd1a91b935963645cf852b387a6ca06518509fb40eed57b9ad8d",
+        "avifQuality": 50,
+        "webpQuality": 72
+      },
+      {
+        "width": 768,
+        "height": 428,
+        "avif": "img/hero-12a12933a413-768.avif",
+        "webp": "img/hero-12a12933a413-768.webp",
+        "avifBytes": 3633,
+        "webpBytes": 6858,
+        "avifSha256": "996f7508887bcba90b506ee2353232f39765694c77794160adc5756c74ce34db",
+        "webpSha256": "e997f2344d6ce0374067dbb9a6436072a7a89e410a2278c52ec5ffdec8eeb9a0",
+        "avifQuality": 50,
+        "webpQuality": 72
+      },
+      {
+        "width": 1080,
+        "height": 602,
+        "avif": "img/hero-12a12933a413-1080.avif",
+        "webp": "img/hero-12a12933a413-1080.webp",
+        "avifBytes": 5234,
+        "webpBytes": 10996,
+        "avifSha256": "bd223b22424b5fb72212b6a830448d5fee195ca6066254405703a1a7680c9101",
+        "webpSha256": "060fc74c62d79ec1d9c9194013923292ddc8fdacc714594b3b73a36f187418db",
+        "avifQuality": 50,
+        "webpQuality": 72
+      },
+      {
+        "width": 1440,
+        "height": 803,
+        "avif": "img/hero-12a12933a413-1440.avif",
+        "webp": "img/hero-12a12933a413-1440.webp",
+        "avifBytes": 6928,
+        "webpBytes": 15620,
+        "avifSha256": "ef31ffe0a204d757f7182b234232ec25649b3555d2e0f9d987232ab7aeaa463c",
+        "webpSha256": "d9d07557089c023c8e11bc3fbfcc482160f10b48b3292dc255215c3f032e7bac",
+        "avifQuality": 50,
+        "webpQuality": 72
+      }
+    ]
+  },
+  "logo": {
+    "approved": true,
+    "kind": "generated",
+    "variant": "icon",
+    "icon": "drop",
+    "markId": "plumber-4",
+    "approval": {
+      "by": "Eitan (approved 2026-11-17, applied by Eitan-Dev)",
+      "at": "2026-11-17T00:49:35.560Z"
+    }
+  }
+}

@@ -3,6 +3,7 @@
 // Needs the compiled product modules (npx tsc -p tsconfig.test.json, the first step of npm run test).
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 import test from 'node:test';
 import vm from 'node:vm';
@@ -23,7 +24,7 @@ function load(relative, imports) {
   const exports = {};
   const code = ts.transpileModule(fs.readFileSync(file, 'utf8'), { fileName: file,
     compilerOptions: { jsx: ts.JsxEmit.ReactJSX, module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022, esModuleInterop: true } }).outputText;
-  vm.runInNewContext(code, { exports, URL, Buffer, structuredClone, require(name) {
+  vm.runInNewContext(code, { exports, URL, Buffer, structuredClone, process, require(name) {
     assert.ok(Object.hasOwn(imports, name), `unexpected import in ${relative}: ${name}`);
     return imports[name];
   } }, { filename: file });
@@ -68,6 +69,8 @@ const landing = load('src/lib/home/heroLandingPage.ts', {
   '@/lib/lp/researchedSite': requireDist(local('dist/lib/lp/researchedSite.js')),
   '@/lib/site-bot/researchToSite': requireDist(local('dist/lib/site-bot/researchToSite.js')),
   '@/lib/lp/siteFonts': requireDist(local('dist/lib/lp/siteFonts.js')),
+  '@/lib/site-bot/siteLookStore': requireDist(local('dist/lib/site-bot/siteLookStore.js')),
+  'node:path': path,
   './heroWindow': heroWindow,
   './heroShowcases': showcases,
 });
@@ -79,7 +82,7 @@ const textOf = (html) => html.replace(/<(style|script)\b[\s\S]*?<\/\1>/g, ' ').r
 
 test('new hero files carry no Hebrew literal (all Hebrew comes from data or the moved product component)', () => {
   for (const f of ['src/components/home/HeroScene.tsx', 'src/lib/home/heroWindow.ts', 'src/lib/home/heroLandingPage.ts', 'src/lib/home/homography.ts',
-    'src/app/hero-window/lp/[id]/route.ts', 'src/lib/home/heroShowcases.ts', 'src/app/hero-window/fonts/[file]/route.ts', 'src/data/heroScene.ts', 'scripts/build-hero-scene.mjs',
+    'src/app/hero-window/lp/[id]/route.ts', 'src/lib/home/heroShowcases.ts', 'src/app/hero-window/fonts/[file]/route.ts', 'src/app/hero-window/img/[file]/route.ts', 'src/data/heroScene.ts', 'scripts/build-hero-scene.mjs',
     'src/components/home/HeroMotionButton.tsx', 'src/lib/home/heroMotion.ts', 'src/lib/home/heroStageFit.ts', 'scripts/build-hero-motion-css.mjs', 'src/components/home/heroMotion.module.css']) {
     assert.doesNotMatch(fs.readFileSync(local(f), 'utf8'), /[\u0590-\u05FF]/, f);
   }
@@ -143,7 +146,7 @@ test('the window transform maps the virtual screen onto the photo screen with th
   assert.equal(heroWindow.HERO_WINDOW_LP_HEIGHT + heroWindow.HERO_WINDOW_TAB_BAR + heroWindow.HERO_WINDOW_SERP, H);
 });
 
-test('the landing page is the product render of the demo service page, cut above the trust strip, noindex', () => {
+test('the landing page is the product render of the demo service page, cut above the contact form, noindex', () => {
   const html = landing.heroLandingPageHtml();
   const page = record.researchedPages.find((p) => p.targetPath === demo.servicePath);
   assert.ok(page);
@@ -157,11 +160,28 @@ test('the landing page is the product render of the demo service page, cut above
   assert.doesNotMatch(html.replace(/[\s-]/g, ''), /0500000000|500000000/);
   assert.doesNotMatch(html, /href="tel:/);
   assert.match(html, /data-hero-call><svg[^]*?<\/svg><span>[^<]+<\/span><\/a>/);
-  // No AI owner photo (Fable 5.2, 2026-11-16): no photo slot, no image; the hero text block takes the width.
-  assert.doesNotMatch(html, /hw-owner|hero-owner|<img\b|<picture\b/);
-  assert.match(html, /<div class="hero-grid"><div class="hero-text">[^]*<\/div><\/div><\/section><\/main><\/body><\/html>$/);
-  assert.doesNotMatch(html, /data-section="trust"|class="trust"/);
-  assert.doesNotMatch(textOf(html.slice(html.indexOf('<body'))), /\u2605|\d\.\d/);
+  // No AI owner photo (Fable 5.2, 2026-11-16). The hero photo is the approved AI atmosphere photo (Eitan 2026-11-17),
+  // the product's backdrop, flagged in the DOM and served by the window's image route.
+  assert.doesNotMatch(html, /hw-owner|hero-owner/);
+  assert.equal((html.match(/<img\b/g) ?? []).length, 1, 'one image: the hero backdrop');
+  assert.match(html, /<section class="hero on-dark has-photo" data-section="hero"><picture>/);
+  assert.match(html, /<img class="hero-bg" data-ai-generated="atmosphere" src="\/hero-window\/img\/hero-[a-f0-9]{12}-\d+\.webp"/);
+  for (const url of landing.imageUrls(html)) assert.match(url, /^\/hero-window\/img\/hero-[a-f0-9]{12}-\d+\.(?:avif|webp)$/);
+  assert.doesNotMatch(html, /"\/img\//);
+  // The approved generated logo: the per-trade mark beside the name, no descriptor (the name already says trade + city).
+  assert.match(html, /class="brand has-logo"/);
+  assert.match(html, /data-mark="plumber-\d+"/);
+  // The product's sections below the hero: trust facts (no rating item), Q&A, related services; no form, no footer.
+  const tail = html.slice(html.indexOf('</section>', html.indexOf('<section class="hero')));
+  assert.match(tail, /<section class="trust" data-section="trust"/);
+  assert.match(tail, /data-section="qa"/);
+  assert.match(tail, /data-section="related-links"/);
+  assert.doesNotMatch(html, /id="contact"|<form\b|<input\b|site-footer/);
+  const visible = textOf(html.slice(html.indexOf('<body')));
+  assert.doesNotMatch(visible, /\u2605|\d\.\d/);
+  assert.doesNotMatch(visible, new RegExp(`(^|\\D)${record.collectedData.reviewCount}(\\D|$)`), 'no review count');
+  assert.doesNotMatch(visible, new RegExp(String(record.collectedData.starRating).replace('.', '\\.')), 'no star rating');
+  for (const item of page.copy.trustBarItems.filter((t) => !/\u2605|\d\.\d/.test(t))) assert.ok(tail.includes(`<span>${item}</span>`), 'trust facts are the record copy');
   assert.ok(html.includes('/hero-window/fonts/heebo-hebrew.woff2') && !html.includes('/assets/fonts/'));
   assert.ok(html.trimEnd().endsWith('</main></body></html>'));
 });
@@ -292,6 +312,18 @@ test('showcase schema rejects bad entries', () => {
   bad((e) => { e.consent = client; e.ownerPhoto = photo({ aiGenerated: false, avif: '/images/home/hero-owner.avif' }); }, /ownerPhoto.avif/);
   assert.doesNotThrow(() => validate([{ ...validEntry(), consent: client, ownerPhoto: photo({ aiGenerated: false }) }]));
   assert.ok(showcases.SHOWCASES.every((e) => e.ownerPhoto === undefined || e.ownerPhoto.aiGenerated === false));
+  // Hero photo flag (Eitan 2026-11-17): an AI atmosphere photo only, explicitly no people / no work; unflagged fails.
+  const atmo = (extra) => ({ kind: 'atmosphere', aiGenerated: true, people: false, work: false, approval: 'Eitan 2026-11-17', ...extra });
+  assert.doesNotThrow(() => validate([{ ...validEntry(), heroPhoto: atmo({}) }]));
+  assert.doesNotThrow(() => validate([{ ...validEntry(), heroPhoto: atmo({ aiGenerated: false }) }]));
+  bad((e) => { e.heroPhoto = atmo({ kind: 'owner' }); }, /heroPhoto.kind must be atmosphere/);
+  bad((e) => { e.heroPhoto = atmo({ kind: 'people' }); }, /heroPhoto.kind must be atmosphere/);
+  bad((e) => { e.heroPhoto = atmo({ aiGenerated: undefined }); }, /heroPhoto.aiGenerated/);
+  bad((e) => { e.heroPhoto = atmo({ people: true }); }, /shows people/);
+  bad((e) => { e.heroPhoto = atmo({ people: undefined }); }, /shows people or is unflagged/);
+  bad((e) => { e.heroPhoto = atmo({ work: true }); }, /shows a job/);
+  bad((e) => { e.heroPhoto = atmo({ approval: '' }); }, /heroPhoto.approval/);
+  bad((e) => { e.heroPhoto = atmo({}); e.landingPage = { source: 'live-url', url: 'https://client-a.wao.co.il/' }; e.tabTitle = 'x'; }, /site-record entries only/);
   const second = { ...validEntry(), id: 'second-entry' };
   assert.throws(() => validate([validEntry(), second]), /NEEDED string pause_label/);
   assert.throws(() => validate([validEntry(), validEntry()], { pause_label: 'p', play_label: 'q' }), /duplicate id/);
@@ -308,12 +340,55 @@ test('live pages: only https://<tenant>.wao.co.il on our Worker, never a third-p
 
 const FIXTURE = (hero, rest = '') => `<!doctype html><html><head><meta charset="utf-8"><link rel="canonical" href="https://client-a.wao.co.il/"><meta property="og:url" content="x"><meta name="robots" content="index, follow"><script>track()</script></head><body><main><section class="hero"><h1>Leak detection</h1>${hero}</section>${rest}</main><script src="/a.js"></script></body></html>`;
 
-test('window guards (every entry): scripts, canonical, OG and index tags go, noindex added, cut below the hero', () => {
-  const out = landing.guardWindowHtml(FIXTURE('<a class="btn" href="tel:0501234567"><bdi dir="ltr" class="num">050-123-4567</bdi></a>', '<section data-section="trust"><span>4.9</span></section>'));
+test('window guards (every entry): scripts, canonical, OG and index tags go, noindex added, cut above the contact form', () => {
+  const rest = '<section class="trust" data-section="trust"><span>x</span></section><section id="contact"><form><input type="tel"></form></section>';
+  const out = landing.guardWindowHtml(FIXTURE('<a class="btn" href="tel:0501234567"><bdi dir="ltr" class="num">050-123-4567</bdi></a>', rest).replace('</main>', '</main><footer>f</footer>'));
   assert.doesNotMatch(out, /<script|rel="canonical"|og:url|content="index/);
   assert.match(out, /<meta name="robots" content="noindex, nofollow">/);
-  assert.doesNotMatch(out, /data-section="trust"|tel:|050-123-4567/);
+  assert.doesNotMatch(out, /tel:|050-123-4567|id="contact"|<form|<footer/);
+  assert.match(out, /data-section="trust"/);
   assert.ok(out.endsWith('</section></main></body></html>'));
+  // A rating in a kept section below the hero fails closed.
+  assert.throws(() => landing.guardWindowHtml(FIXTURE('<p>x</p>', '<section data-section="trust"><span>4.9</span></section>')), /rating or review/);
+  assert.throws(() => landing.guardWindowHtml(FIXTURE('<p>x</p>', '<section data-section="reviews"><p>x</p></section>')), /rating or review/);
+});
+
+test('window photo guard: AI atmosphere hero allowed only when flagged; AI people photos and unflagged images fail', () => {
+  const src = '/hero-window/img/hero-0123456789ab-1080.webp';
+  const atmo = `<picture><img class="hero-bg" data-ai-generated="atmosphere" src="${src}" alt=""></picture>`;
+  assert.doesNotThrow(() => landing.guardWindowHtml(FIXTURE(atmo), { atmosphereAi: true, images: [src] }));
+  // The entry did not flag an AI atmosphere photo.
+  assert.throws(() => landing.guardWindowHtml(FIXTURE(atmo), { images: [src] }), /AI-made photo/);
+  // Any other AI flag (an owner / person photo), a second flagged image, or a flag off the hero backdrop.
+  assert.throws(() => landing.guardWindowHtml(FIXTURE(`<img class="hero-bg" data-ai-generated="owner" src="${src}">`), { atmosphereAi: true, images: [src] }), /AI-made photo/);
+  assert.throws(() => landing.guardWindowHtml(FIXTURE(atmo + `<img data-ai-generated="atmosphere" src="${src}">`), { atmosphereAi: true, images: [src] }), /AI-made photo/);
+  assert.throws(() => landing.guardWindowHtml(FIXTURE(atmo + `<img class="hero-bg" data-ai-generated="atmosphere" src="${src}">`), { atmosphereAi: true, images: [src] }), /AI-made photo/);
+  // Known AI people photos fail even when flagged as atmosphere.
+  assert.throws(() => landing.guardWindowHtml(FIXTURE('<img class="hero-bg" data-ai-generated="atmosphere" src="/images/home/hero-owner.webp">'), { atmosphereAi: true, images: ['/images/home/hero-owner.webp'] }), /AI-made photo/);
+  // Unflagged images: an <img>, a srcset entry, an svg <image>, a CSS background.
+  assert.throws(() => landing.guardWindowHtml(FIXTURE('<img src="/x.webp" alt="">')), /unflagged image/);
+  assert.throws(() => landing.guardWindowHtml(FIXTURE(atmo.replace('alt=""', 'srcset="/other.webp 480w" alt=""')), { atmosphereAi: true, images: [src] }), /unflagged image reached the window: \/other\.webp/);
+  assert.throws(() => landing.guardWindowHtml(FIXTURE('<svg><image href="/logo.webp"/></svg>')), /unflagged image/);
+  assert.throws(() => landing.guardWindowHtml(FIXTURE('<div style="background:url(/bg.png)"></div>')), /unflagged image/);
+  assert.equal(landing.imageUrls('<style>@font-face{src:url(/hero-window/fonts/heebo-hebrew.woff2)}</style>').length, 0);
+});
+
+test('stored look: an approved hero photo needs the entry flag; a flag needs an approved photo', () => {
+  const [e] = showcases.SHOWCASES;
+  assert.equal(e.heroPhoto.kind, 'atmosphere');
+  assert.equal(e.heroPhoto.people, false);
+  assert.throws(() => landing.heroWindowLook(e.landingPage.slug, undefined), /does not flag it/);
+  const empty = fs.mkdtempSync(path.join(fs.realpathSync(os.tmpdir()), 'hero-look-'));
+  try {
+    assert.throws(() => landing.heroWindowLook(e.landingPage.slug, e.heroPhoto, empty), /has none approved/);
+    assert.equal(landing.heroWindowLook(e.landingPage.slug, undefined, empty), null);
+  } finally { fs.rmSync(empty, { recursive: true, force: true }); }
+  const loaded = landing.heroWindowLook(e.landingPage.slug, e.heroPhoto);
+  assert.equal(loaded.look.logo.kind, 'generated');
+  assert.equal(loaded.look.logo.variant, 'icon');
+  const served = landing.heroWindowImages();
+  assert.ok(Object.keys(served).length >= 4);
+  for (const [file, bytes] of Object.entries(served)) { assert.match(file, /^hero-[a-f0-9]{12}-\d+\.(?:avif|webp)$/); assert.ok(bytes.length > 0); }
 });
 
 test('window guards fail closed on ratings, review markup, phone digits and test domains', () => {
@@ -326,6 +401,7 @@ test('window guards fail closed on ratings, review markup, phone digits and test
   assert.throws(() => landing.guardWindowHtml(FIXTURE('<img src="/images/home/hero-owner.webp">')), /AI-made photo/);
   assert.throws(() => landing.guardWindowHtml(FIXTURE('<img src="/data/video/demo/photos/owner.jpg">')), /AI-made photo|test\/demo/);
   assert.throws(() => landing.guardWindowHtml(FIXTURE('<img src="/x.webp" data-ai-generated>')), /AI-made photo/);
+  assert.throws(() => landing.guardWindowHtml(FIXTURE('<img src="/x.webp" data-ai-generated>'), { atmosphereAi: true, images: ['/x.webp'] }), /AI-made photo/);
 });
 
 test('live-url pages are fetched from the Worker host only and pass the same guards', async () => {

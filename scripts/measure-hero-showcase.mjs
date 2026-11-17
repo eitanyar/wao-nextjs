@@ -46,6 +46,8 @@ try {
     const win = document.querySelector('.hero-window');
     win.style.transform = 'none';
     const W = win.getBoundingClientRect();
+    // Any ancestor scale left over (the stage fit is set from JS since e38e93a): measure in the window's own px.
+    const k = W.width / 960;
     const layer = [...document.querySelectorAll('[data-hm-entry]')].find((e) => e.querySelector(`iframe[src$="/${id}"],iframe[data-src$="/${id}"]`));
     if (!layer) return null;
     const card = layer.querySelector('[class*="serpScale"]').firstElementChild;
@@ -54,12 +56,13 @@ try {
     r.selectNodeContents(headline);
     const rows = [];
     for (const x of r.getClientRects()) {
-      const top = Math.round(x.top - W.top);
+      const top = Math.round((x.top - W.top) / k);
+      const [left, right] = [(x.left - W.left) / k, (x.right - W.left) / k];
       const row = rows.find((m) => Math.abs(m.top - top) < 10);
-      if (row) { row.left = Math.min(row.left, x.left - W.left); row.right = Math.max(row.right, x.right - W.left); } else rows.push({ top, left: x.left - W.left, right: x.right - W.left });
+      if (row) { row.left = Math.min(row.left, left); row.right = Math.max(row.right, right); } else rows.push({ top, left, right });
     }
     const cardBox = card.getBoundingClientRect();
-    return { rows, cardTop: cardBox.top - W.top, cardBottom: cardBox.bottom - W.top, headlineTop: headline.offsetTop };
+    return { rows, cardTop: (cardBox.top - W.top) / k, cardBottom: (cardBox.bottom - W.top) / k, headlineTop: headline.offsetTop };
   }, id);
   if (!ad) throw new Error(`entry ${id} not found on the homepage`);
   const lineH = 25;
