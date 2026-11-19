@@ -25,7 +25,7 @@ import { recordShowcaseConsent } from '@/lib/showcase/consentStore';
 // Charge state on every error reply (2026-11-20, post-payment screen): `chargeState` tells the pay page which error text
 // it may show. 'not_charged' = this call provably took no money (rejected before the charge, or the provider declined it),
 // so a retry is safe; 'charged' = the sign-up charge succeeded and a later step failed (never offer a retry);
-// 'unknown' = an exception inside the activation itself (the page treats it as charged).
+// 'unknown' = an exception inside the activation itself (the page shows the unknown-state text, no retry).
 
 interface PendingRecord {
   collectedData: CollectedData;

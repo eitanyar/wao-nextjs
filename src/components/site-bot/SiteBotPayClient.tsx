@@ -20,7 +20,8 @@ import { buildResearchGateAnswer } from "@/lib/site-bot/research/gatePresentatio
 // from a hosted tokenization page instead (see TAKBULL SWAP POINT in subscriptions.ts); this page's job (call
 // /api/site-bot/checkout/callback with the sessionId once the user confirms) doesn't change when that swap happens.
 // Errors: the customer only ever sees the approved post-payment texts (postPayCopy.generated.ts, 2026-11-20): a pay error
-// says whether the card was charged (checkoutPayErrorKind; a retry only when it provably was not), a gate error says the
+// says whether the card was charged, was not, or may have been (checkoutPayErrorKind; a retry only when it provably was
+// not; the account link stays otherwise), a gate error says the
 // answer was not saved. Server error codes / exception text are logged, never shown.
 
 /** The pay-page question of each owner gate type (ambiguous_intent is staff-only and never reaches this page). */
@@ -103,7 +104,7 @@ export default function SiteBotPayClient({ cardDefaults }: { cardDefaults: CardF
       }
     } catch (e: unknown) {
       console.error("[site-bot pay]", e);
-      // A thrown fetch (network) leaves body null: the charge state is unknown, so it is treated as charged.
+      // A thrown fetch (network, no response) leaves body null: the charge state is unknown (pay_error_unknown).
       setPayError(checkoutPayErrorKind(body));
       setPhase("error");
     }
@@ -248,7 +249,7 @@ export default function SiteBotPayClient({ cardDefaults }: { cardDefaults: CardF
 
           {phase === "error" && (
             <>
-              <p role="alert" style={{ color: "#e05555", marginBottom: "16px" }}>{renderMixed(payError === "not_charged" ? COPY.pay_error_not_charged : COPY.pay_error_after_charge)}</p>
+              <p role="alert" style={{ color: "#e05555", marginBottom: "16px" }}>{renderMixed(payError === "not_charged" ? COPY.pay_error_not_charged : payError === "after_charge" ? COPY.pay_error_after_charge : COPY.pay_error_unknown)}</p>
               {payError === "not_charged" && (<button onClick={pay} className="btn-outline" style={{ width: "100%", padding: "14px" }}>
                 נסה שוב
               </button>)}
@@ -266,7 +267,7 @@ export default function SiteBotPayClient({ cardDefaults }: { cardDefaults: CardF
 
         {/* Self-serve cancel (approved terms: online, effective at the end of the paid month): shown as soon as the
             sign-up charge succeeded (the research gates, the done state, and a pay error after the charge). */}
-        {manageLinkLabel && (phase === "gates" || phase === "submitting_gate" || phase === "done" || (phase === "error" && payError === "after_charge")) && (
+        {manageLinkLabel && (phase === "gates" || phase === "submitting_gate" || phase === "done" || (phase === "error" && payError !== null && payError !== "not_charged")) && (
           <p style={{ marginTop: "16px", textAlign: "center" }}>
             <Link href={manageHref} prefetch={false} data-account-link="site-bot" className="btn-outline" style={{ display: "inline-block", padding: "10px 20px" }}>
               {renderMixed(manageLinkLabel)}

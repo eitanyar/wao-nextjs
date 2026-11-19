@@ -55,15 +55,16 @@ test('non-JSON and non-object bodies read as an empty object', async () => {
   assert.deepEqual(await readJsonBody(response('{"error":"checkout_unavailable"}')), { error: 'checkout_unavailable' });
 });
 
-test('pay error (2026-11-20): not-charged only when the server proves it; everything else is after-charge (no retry)', () => {
+test('pay error (2026-11-20): not-charged only when the server proves it; after-charge only when confirmed; else unknown', () => {
   assert.equal(checkoutPayErrorKind({ error: 'charge_failed', chargeState: 'not_charged' }), 'not_charged');
   assert.equal(checkoutPayErrorKind({ error: 'session_not_found', chargeState: 'not_charged' }), 'not_charged');
   assert.equal(checkoutPayErrorKind({ error: 'checkout_unavailable' }), 'not_charged', 'the closed gate answers before any handler');
   assert.equal(checkoutPayErrorKind({ error: 'checkout_failed', chargeState: 'charged' }), 'after_charge');
-  assert.equal(checkoutPayErrorKind({ error: 'checkout_failed', chargeState: 'unknown' }), 'after_charge');
-  assert.equal(checkoutPayErrorKind({}), 'after_charge', 'no JSON body / network failure');
-  assert.equal(checkoutPayErrorKind(null), 'after_charge');
-  assert.equal(checkoutPayErrorKind({ error: 'checkout_unavailable', chargeState: 'unknown' }), 'after_charge');
+  assert.equal(checkoutPayErrorKind({ error: 'checkout_failed', chargeState: 'unknown' }), 'unknown');
+  assert.equal(checkoutPayErrorKind({}), 'unknown', 'no JSON body (an HTML error page)');
+  assert.equal(checkoutPayErrorKind(null), 'unknown', 'a network / fetch failure: no response at all');
+  assert.equal(checkoutPayErrorKind({ error: 'checkout_failed' }), 'unknown', 'an error without a charge state');
+  assert.equal(checkoutPayErrorKind({ error: 'checkout_unavailable', chargeState: 'unknown' }), 'unknown');
 });
 
 test('done screen domain line: own domain only with has_domain and a domain; unknown on a replay', () => {

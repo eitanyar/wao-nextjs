@@ -65,19 +65,21 @@ export function checkoutInitSessionId(ok: boolean, body: { sessionId?: unknown }
 }
 
 /** Which pay-error text the pay page may show (2026-11-20). */
-export type CheckoutPayErrorKind = 'not_charged' | 'after_charge';
+export type CheckoutPayErrorKind = 'not_charged' | 'after_charge' | 'unknown';
 
 /**
  * The pay error for a failed checkout callback. 'not_charged' (the retry button stays) only when the server says this call
  * provably took no money (`chargeState: 'not_charged'`, paid.ts) or the paid flow is closed (`checkout_unavailable`, the
- * route gate answers before any handler runs). Everything else (charged, unknown, no JSON body, a network failure) is
- * 'after_charge': retrying is not provably idempotent there (the live provider's idempotency-key handling is unproven),
- * so the page never offers a second payment.
+ * route gate answers before any handler runs). 'after_charge' only for a confirmed charge (`chargeState: 'charged'`).
+ * Everything else ('unknown' from the server, no JSON body, a network / fetch failure with no response) is 'unknown'.
+ * Neither 'after_charge' nor 'unknown' offers a retry: retrying is not provably idempotent there (the live provider's
+ * idempotency-key handling is unproven), so the page never offers a second payment.
  */
 export function checkoutPayErrorKind(body: { chargeState?: unknown; error?: unknown } | null | undefined): CheckoutPayErrorKind {
   if (body?.chargeState === 'not_charged') return 'not_charged';
   if (body?.error === 'checkout_unavailable' && body.chargeState === undefined) return 'not_charged';
-  return 'after_charge';
+  if (body?.chargeState === 'charged') return 'after_charge';
+  return 'unknown';
 }
 
 /**

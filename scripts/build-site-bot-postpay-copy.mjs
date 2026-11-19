@@ -9,11 +9,11 @@ import { fileURLToPath } from 'node:url';
 export const SOURCE_URL = new URL('../docs/copy/site-bot-postpay-FINAL-2026-11-20.json', import.meta.url);
 export const OUTPUT_URL = new URL('../src/lib/site-bot/postPayCopy.generated.ts', import.meta.url);
 
-/** The 15 keys the pay page reads, in source order. */
+/** The 16 keys the pay page reads, in source order (pay_error_unknown added 2026-11-20). */
 export const POSTPAY_KEYS = [
   'intro', 'gate_business_boundary', 'gate_service_attributes', 'gate_geography', 'gate_money_services', 'send', 'sending',
   'answer_error', 'done_paid', 'done_next_own_domain', 'done_next_no_domain', 'done_answers_saved', 'pay_error_not_charged',
-  'pay_error_after_charge', 'charging',
+  'pay_error_after_charge', 'charging', 'pay_error_unknown',
 ];
 
 export function buildModel(source) {

@@ -17,7 +17,8 @@ export const SITE_BOT_POSTPAY_COPY = {
   "done_answers_saved": "התשובות שלך שמורות אצלנו, והן הבסיס לכל טקסט באתר.",
   "pay_error_not_charged": "התשלום לא עבר. לא ירד לך שקל מהכרטיס. נסה שוב.",
   "pay_error_after_charge": "התשלום עבר, אבל משהו נתקע אצלנו. אל תשלם שוב. אנחנו ממשיכים ונעדכן אותך במייל.",
-  "charging": "מעבירים את התשלום…"
+  "charging": "מעבירים את התשלום…",
+  "pay_error_unknown": "החיבור נפל, ואנחנו עוד לא יודעים אם התשלום עבר. אל תשלם שוב. אם הוא עבר, מחכה לך מאיתנו אישור במייל, ואם לא הגיע כלום, היכנס לחשבון מהקישור למטה או כתוב לנו."
 } as const;
 
 export type SiteBotPostPayCopyKey = keyof typeof SITE_BOT_POSTPAY_COPY;

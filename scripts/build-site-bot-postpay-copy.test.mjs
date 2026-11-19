@@ -9,7 +9,7 @@ test('postPayCopy.generated.ts is the generator output of the FINAL source (no h
   assert.equal(fs.readFileSync(OUTPUT_URL, 'utf8'), generate(fs.readFileSync(SOURCE_URL, 'utf8')));
 });
 
-test('every value is byte-exact from the source; the key set is the 15 approved keys', () => {
+test('every value is byte-exact from the source; the key set is the 16 approved keys', () => {
   const source = JSON.parse(fs.readFileSync(SOURCE_URL, 'utf8'));
   assert.deepEqual(Object.keys(source).sort(), [...POSTPAY_KEYS].sort());
   const generated = fs.readFileSync(OUTPUT_URL, 'utf8');
