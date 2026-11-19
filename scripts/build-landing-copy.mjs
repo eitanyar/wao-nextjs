@@ -19,8 +19,8 @@ export const PAGES = [
     source: new URL('../docs/copy/site-bot-r2-final-candidate-2026-11-12.txt', import.meta.url),
     output: new URL('../src/lib/site-bot/landingCopy.generated.ts', import.meta.url),
     price: '199',
-    // hero.badge, price.body, faq[1].a, seo.description
-    priceCount: 4,
+    // hero.badge, monthly.body, price.body, faq[1].a, seo.description
+    priceCount: 5,
   },
   {
     id: 'google-ads',
@@ -28,7 +28,7 @@ export const PAGES = [
     source: new URL('../docs/copy/google-ads-r2-final-candidate-2026-11-12.txt', import.meta.url),
     output: new URL('../src/lib/google-ads/landingCopy.generated.ts', import.meta.url),
     price: '249',
-    // hero.subhead, offer.h2, offer.body, faq[0].q, faq[0].a, faq[3].a, faq[8].a, seo.title, seo.description,
+    // hero.subhead, offer.h2, offer.body, faq[1].q, faq[1].a, faq[4].a, faq[9].a, seo.title, seo.description,
     // seo.jsonld.webpage_description, seo.jsonld.service_description
     priceCount: 11,
   },

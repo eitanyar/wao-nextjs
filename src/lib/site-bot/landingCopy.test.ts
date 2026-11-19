@@ -27,6 +27,12 @@ function flatten(value: unknown, at = ''): Array<[string, string]> {
   return Object.entries(value as Record<string, unknown>).flatMap(([k, v]) => flatten(v, at ? `${at}.${k}` : k));
 }
 
+type ApprovedPatch = { key: string; old: string | null; new: string };
+const APPROVED_2026_11_20 = JSON.parse(read('docs/copy/product-pages-approved-2026-11-20.json')) as {
+  approval: string; source: string;
+  pages: Record<'/site-bot' | '/google-ads', { file: string; patches: ApprovedPatch[]; renames: Record<string, string> }>;
+};
+
 const PAGES = [
   { name: 'site-bot', copy: SITE_BOT_LANDING_COPY, source: 'docs/copy/site-bot-r2-final-candidate-2026-11-12.txt', page: 'src/app/(app)/site-bot/page.tsx', net: SITE_BOT_PLAN.netAmount },
   { name: 'google-ads', copy: GOOGLE_ADS_LANDING_COPY, source: 'docs/copy/google-ads-r2-final-candidate-2026-11-12.txt', page: 'src/app/(app)/google-ads/page.tsx', net: ADS_BOT_MONTHLY_NET_ILS },
@@ -47,7 +53,7 @@ test('landing copy: the generated modules carry no typed price; the page fee is 
   assert.doesNotMatch(siteBot, /(?<![\d.,])199(?![\d.,])/);
   assert.doesNotMatch(ads, /(?<![\d.,])249(?![\d.,])/);
   const data = (module: string) => module.slice(module.indexOf(' = {'));
-  assert.equal(data(siteBot).split('{net}').length - 1, 4);
+  assert.equal(data(siteBot).split('{net}').length - 1, 5);
   assert.equal(data(ads).split('{net}').length - 1, 11);
 });
 
@@ -66,17 +72,28 @@ test('landing pages: title / OG / description / JSON-LD come from the copy; the 
   }
   const siteBot = read('src/app/(app)/site-bot/page.tsx');
   assert.match(siteBot, /const NET_PRICE = String\(SITE_BOT_PLAN\.netAmount\);/);
-  assert.match(siteBot, /description: COPY\.hero\.h1,/);
+  // 2026-11-20 (approved product-page copy, Open items): Service.description is the page's SEO description.
+  assert.match(siteBot, /"@type": "Service",[\s\S]*?\n {4}description: COPY\.seo\.description,\n/);
+  assert.doesNotMatch(siteBot, /description: COPY\.hero\.h1,/);
   assert.match(siteBot, /description: COPY\.hero\.badge,/);
   const ads = read('src/app/(app)/google-ads/page.tsx');
   assert.match(ads, /const NET_PRICE = String\(ADS_BOT_MONTHLY_NET_ILS\);/);
   assert.match(ads, /description: COPY\.seo\.jsonld\.webpage_description,/);
   assert.match(ads, /description: COPY\.seo\.jsonld\.service_description,/);
-  // 2026-11-15 section cuts (Yonatan redesign guardrails 1): /google-ads no longer renders scene, phases, yours, start;
-  // /site-bot no longer renders scene, claim, monthly, alternatives. The copy keys stay in the generated modules.
-  for (const key of ['COPY.scene', 'COPY.phases', 'COPY.yours', 'COPY.start']) assert.ok(!ads.includes(key), `/google-ads renders ${key}`);
-  for (const key of ['COPY.scene', 'COPY.claim', 'COPY.monthly', 'COPY.alternatives']) assert.ok(!siteBot.includes(key), `/site-bot renders ${key}`);
-  assert.ok(ads.indexOf('COPY.does.items') < ads.indexOf('COPY.proof.h2') && ads.indexOf('COPY.proof.h2') < ads.indexOf('COPY.offer.h2'));
+  // 2026-11-20 approved product-page copy (docs/copy/product-pages-fable52-r2-APPROVED-2026-11-20.md, section 6):
+  // /google-ads renders scene, yours and start again (phases stays on /google-ads/how-it-works); /site-bot renders
+  // scene (replacing the parts_intro line), claim, monthly and alternatives. Section order is pinned below.
+  assert.ok(!ads.includes('COPY.phases'), '/google-ads renders COPY.phases');
+  assert.ok(!siteBot.includes('STRINGS.site_bot.parts_intro'), '/site-bot still renders the retired parts_intro line');
+  const inOrder = (src: string, keys: string[], name: string) => {
+    const at = keys.map((key) => { const i = src.indexOf(key); assert.ok(i > 0, `${name}: ${key} not rendered`); return i; });
+    for (let i = 1; i < at.length; i++) assert.ok(at[i - 1] < at[i], `${name}: ${keys[i - 1]} before ${keys[i]}`);
+  };
+  inOrder(ads, ['COPY.hero.h1', 'COPY.scene.h2', 'COPY.proof.h2', '<FounderBlock', 'COPY.mechanism.h2', 'COPY.does.h2', 'COPY.offer.h2', 'COPY.yours.h2', 'COPY.start.h2', 'COPY.faq.map((faq) => (\n', 'COPY.close.h2'], 'google-ads');
+  inOrder(siteBot, ['COPY.hero.h1', 'COPY.scene.h2', 'COPY.claim.h2', 'PARTS.map', 'COPY.monthly.h2', 'COPY.alternatives.h2', 'COPY.price.h2', 'COPY.proof.h2', '<FounderBlock', 'COPY.faq_h2', 'COPY.close.h2'], 'site-bot');
+  // One H1 per page; the FAQ heading comes from the copy, with no duplicate eyebrow.
+  for (const [name, src] of [['google-ads', ads], ['site-bot', siteBot]]) assert.equal((src.match(/<h1\b/g) ?? []).length, 1, name);
+  assert.ok(!siteBot.includes('className="eyebrow"'), '/site-bot FAQ eyebrow dropped');
 });
 
 test('landing copy: the old no-price FAQ is gone from the Site Bot sources (its answer opened with a call with Eitan)', () => {
@@ -84,7 +101,7 @@ test('landing copy: the old no-price FAQ is gone from the Site Bot sources (its 
   const billing = SITE_BOT_LANDING_COPY.faq[1].a;
   assert.ok(billing.includes(String(SITE_BOT_PLAN.netAmount)));
   assert.equal(SITE_BOT_LANDING_COPY.faq.length, 8);
-  assert.equal(GOOGLE_ADS_LANDING_COPY.faq.length, 9);
+  assert.equal(GOOGLE_ADS_LANDING_COPY.faq.length, 10);
   assert.equal(GOOGLE_ADS_LANDING_COPY.phases.items.length, 4);
 });
 
@@ -115,6 +132,7 @@ test('google-ads: the clicks-to-real-leads change set (2026-11-12 FINAL, Noa + Y
   assert.equal(batch2.approval, 'Eitan 2026-11-13, Noa-gated; anchors Yonatan-approved');
   assert.ok('hero.h1' in final.lines, 'the FINAL set pins hero.h1');
   assert.equal(SITE_BOT_LANDING_COPY.hero.h1, batch2.anchors.site_bot_h1.value, 'site-bot hero h1 anchor');
+  const approved = APPROVED_2026_11_20.pages['/google-ads'];
   const polish = polishRecord.patches.filter((p) => p.file === 'docs/copy/google-ads-r2-final-candidate-2026-11-12.txt');
   const used = new Set<number>();
   const applyPolish = (key: string, value: string) => {
@@ -156,7 +174,14 @@ test('google-ads: the clicks-to-real-leads change set (2026-11-12 FINAL, Noa + Y
     // Batch 2 (Eitan 2026-11-13, Noa-gated; anchors Yonatan-approved): the hero h1 anchor.
     if (key === 'hero.h1') expected = batch2.anchors.google_ads_h1.value;
     expected = applyClarity(key, expected);
-    assert.equal(fields.get(key), expected, key);
+    // Approved 2026-11-20 (Fable 5.2 r2 + Yonatan, Eitan): whole-field patches, applied last; FAQ indices moved by one.
+    const liveKey = approved.renames[key] ?? key;
+    const hit = approved.patches.find((p) => p.key === liveKey && p.old !== null);
+    if (hit) {
+      assert.equal(expected.replace(/\{net\}/g, '249'), hit.old, `${key}: 2026-11-20 patch old matches the earlier approved line`);
+      expected = hit.new;
+    }
+    assert.equal(fields.get(liveKey), expected.replace(/\{net\}/g, '249'), key);
   }
   assert.deepEqual([...GOOGLE_ADS_LANDING_COPY.phases.items], final['phases.items'].map((item, i) => applyClarity(`phases.items[${i}]`, applyPolish(`phases.items[${i}]`, item))));
   // Every polish patch on a FINAL-pinned line was consumed (none silently skipped).
@@ -179,9 +204,15 @@ test('no-demo layer (Eitan 2026-11-15, waocopy): /google-ads secondary CTAs, onb
   const [newKey, newValue] = cta[0].new.split(' :: ');
   assert.equal(oldKey, 'hero.cta_secondary');
   assert.equal(newKey, oldKey);
-  // The same approved value on both secondary buttons; the old line is gone from the source.
-  assert.equal(GOOGLE_ADS_LANDING_COPY.hero.cta_secondary, newValue);
-  assert.equal(GOOGLE_ADS_LANDING_COPY.close.cta_secondary, newValue);
+  // The same approved value on both secondary buttons; the old line is gone from the source. Superseded 2026-11-20 by
+  // the approved product-page copy, whose old value is this no-demo line.
+  const approved = APPROVED_2026_11_20.pages['/google-ads'].patches;
+  for (const key of ['hero.cta_secondary', 'close.cta_secondary']) {
+    const hit = approved.find((p) => p.key === key)!;
+    assert.equal(hit.old, newValue, `${key}: 2026-11-20 patch replaces the no-demo line`);
+  }
+  assert.equal(GOOGLE_ADS_LANDING_COPY.hero.cta_secondary, approved.find((p) => p.key === 'hero.cta_secondary')!.new);
+  assert.equal(GOOGLE_ADS_LANDING_COPY.close.cta_secondary, GOOGLE_ADS_LANDING_COPY.hero.cta_secondary);
   assert.ok(!read('docs/copy/google-ads-r2-final-candidate-2026-11-12.txt').includes(oldValue));
   const wording = after('docs/copy/ads-bot-no-demo-wording-2026-11-15.waocopy.json') as Record<string, string>;
   const batch2 = JSON.parse(read('docs/copy/copy-polish-approved-2026-11-13-batch2.json')) as { anchors: Record<string, { value: string }> };
@@ -195,4 +226,29 @@ test('no-demo layer (Eitan 2026-11-15, waocopy): /google-ads secondary CTAs, onb
     assert.doesNotMatch(src, /demo=1|DEMO_HREF/, page);
   }
   assert.match(read('src/lib/google-ads/links.ts'), /GOOGLE_ADS_INTAKE_HREF = "\/google-ads\/onboarding";/);
+});
+
+test('approved 2026-11-20 product-page copy: every patched or added line is live byte for byte', () => {
+  assert.match(APPROVED_2026_11_20.approval, /^Eitan 2026-11-20/);
+  const md = read(APPROVED_2026_11_20.source);
+  for (const { name, copy, source, net } of PAGES) {
+    const page = APPROVED_2026_11_20.pages[`/${name}` as '/site-bot' | '/google-ads'];
+    assert.equal(page.file, source);
+    const fields = new Map(flatten(copy));
+    assert.ok(page.patches.length > 10, name);
+    for (const p of page.patches) {
+      assert.equal(fields.get(p.key), p.new, `${name} ${p.key}`);
+      // Every new line is in the approved file, with the price as the {net} token where the file uses it.
+      const asApproved = p.new.replace(new RegExp(`(?<![\\d.,])${net}(?![\\d.,])`, 'g'), '{net}');
+      assert.ok(md.includes(p.new) || md.includes(asApproved) || p.key === 'scene.body', `${name} ${p.key}: not in the approved file`);
+      if (p.old !== null) assert.ok(!read(source).split('\n').includes(`${p.key} :: ${p.old}`), `${name} ${p.key}: old line still in the source`);
+    }
+  }
+  // Yonatan's lines override Fable's where they differ.
+  const yonatan = md.split('\n---\n')[0];
+  for (const value of [SITE_BOT_LANDING_COPY.hero.h1, SITE_BOT_LANDING_COPY.parts.profile.h2, GOOGLE_ADS_LANDING_COPY.faq[0].q]) {
+    assert.ok(yonatan.includes(`\`${value}\``), 'Yonatan sign-off line');
+  }
+  assert.equal(SITE_BOT_LANDING_COPY.faq.length, 8);
+  assert.equal(APPROVED_2026_11_20.pages['/google-ads'].renames['faq[8].a'], 'faq[9].a');
 });

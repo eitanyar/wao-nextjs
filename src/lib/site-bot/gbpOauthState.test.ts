@@ -47,7 +47,10 @@ test('verifyGbpOAuthState rejects tampered signature or payload', () => {
   assert.equal(verifyGbpOAuthState(tamperedState2, TEST_SECRET).valid, false);
 
   // Tamper with signature
-  const tamperedSig = parts[2].slice(0, -2) + '00';
+  // Flip the last hex character so the tamper is never a no-op (a fixed '00' suffix matched 1 in 256 signatures).
+  const last = parts[2].slice(-1);
+  const tamperedSig = parts[2].slice(0, -1) + (last === '0' ? '1' : '0');
+  assert.notEqual(tamperedSig, parts[2]);
   const tamperedState3 = `${parts[0]}:${parts[1]}:${tamperedSig}`;
   assert.equal(verifyGbpOAuthState(tamperedState3, TEST_SECRET).valid, false);
 

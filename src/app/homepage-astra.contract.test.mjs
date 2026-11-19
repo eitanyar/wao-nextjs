@@ -18,12 +18,12 @@ const headerPath = "src/components/Header.tsx";
 const footerPath = "src/components/Footer.tsx";
 const cssPath = "src/app/globals.css";
 // 2026-11-11: human rewrite (FAQ answers + footer blurb), docs/copy/homepage-human-rewrite-2026-11-11.json.
-const expectedHash = "1acadb1f8f01697fc0b50cc23ef61bb3b91320b4d4fc476d66198e8f00410534"; // re-pinned 2026-11-13: copy polish + batch 2 home title anchor (Yonatan; docs/copy/copy-polish-approved-2026-11-13-batch2.json)
+const expectedHash = "d5b949805f8ef9718390c048a2358f1773fd98e7679ae34ff4a72773b3ed47e7"; // re-pinned 2026-11-20: approved product-page copy (docs/copy/product-pages-approved-2026-11-20.json)
 const finalSourcePath = "docs/copy/astra-authority-first-homepage-copy.qwen38-v3-2026-09-30.json";
 const finalContentPath = "src/content/astra-authority-first-homepage-copy.json";
 // 2026-11-11: Site-Bot path CTA -> free audit (docs/copy/homepage-sitebot-audit-cta-2026-11-11.json, Noa-approved).
 // 2026-11-11: human rewrite, 15 patches (docs/copy/homepage-human-rewrite-2026-11-11.json, Eitan-approved).
-const finalHash = "5c2be25f77dc8088d391198bb7b7432ba708a020e204d7d1d17d4d1b7ddc3da6"; // re-pinned 2026-11-13: approved copy polish
+const finalHash = "f7c49c6c174da127fe769bdbce07a717a9e9e7741fd11baf8df152464b58caf9"; // re-pinned 2026-11-20: approved product-page copy (docs/copy/product-pages-approved-2026-11-20.json)
 const finalBytes = read(finalSourcePath);
 const finalCopy = JSON.parse(finalBytes.toString("utf8"));
 
@@ -40,7 +40,7 @@ const css = text(cssPath);
 test("approved base copy changes only in navigation links; final copy is byte-for-byte", () => {
   assert.equal(sha256(sourceBytes), expectedHash);
   assert.deepEqual(activeCopy.navigation.links.map(({ href }) => href), ["/google-ads", "/site-bot", "/about"]);
-  assert.deepEqual({ ...activeCopy, navigation: { ...activeCopy.navigation, links: copy.navigation.links } }, { ...copy, faq: { ...copy.faq, items: copy.faq.items.filter((_, index) => index !== 4) } });
+  assert.deepEqual({ ...activeCopy, navigation: { ...activeCopy.navigation, links: copy.navigation.links } }, { ...copy, faq: { ...copy.faq, items: copy.faq.items.filter((_, index) => index !== 6) } });
   assert.equal(sha256(finalBytes), finalHash);
   assert.equal(sha256(read(finalContentPath)), finalHash);
   assert.deepEqual(read(finalContentPath), finalBytes);
@@ -53,7 +53,9 @@ test("the homepage renders the Astra component without legacy sales modules", ()
   }
   assert.equal((component.match(/<h1\b/g) ?? []).length, 1);
   assert.match(page, /title: \{ absolute: copy\.metadata\.seo\.homepage_title_tag_current \}/);
-  assert.match(page, /description: finalCopy\.hero\.body/);
+  // 2026-11-20: the homepage meta description is its own field (Yonatan's shorter line), not the on-page lead.
+  assert.match(page, /description: copy\.metadata\.seo\.homepage_meta_description,/);
+  assert.doesNotMatch(page, /finalCopy\.hero\.body/);
   for (const field of ["eyebrow", "h1_line1", "h1_line2"]) assert.match(component, new RegExp(`copy\\.hero\\.${field}`));
   assert.deepEqual(finalCopy.metadata.seo_anchors_preserved_by_reference, {
     title: `${sourcePath}#/metadata/seo/homepage_title_tag_current`,
@@ -153,7 +155,7 @@ test("final roles appear once at their assigned sections without old duplicate f
   assert.doesNotMatch(component, /admin\/astra-copy-review|astra-copy-review/);
   const section = (id) => component.split(`<section id="${id}"`)[1].split("</section>")[0];
   const fields = {
-    hero: ["hero.body", "hero.primary_cta.label"],
+    hero: ["hero.body", "hero.primary_cta.label", "hero.cta_note"],
     proof: ["video_proof.heading", "video_proof.context_line"],
     paths: ["paths.heading", "paths.intro", "paths.google_ads.heading", "paths.google_ads.description", "paths.google_ads.demo_status", "paths.google_ads.primary_cta.label", "paths.google_ads.supporting_link.label", "paths.business_website.heading", "paths.business_website.description", "paths.business_website.primary_cta.label", "paths.business_website.supporting_link.label", "paths.choosing_help.line", "paths.choosing_help.link.label"],
     people: ["founder_authority.name", "founder_authority.role", "founder_authority.accountability_line", "founder_authority.photo_alt", "founder_authority.about_link.label", "partner_proof.heading", "partner_proof.status_line", "partner_proof.badge_src", "partner_proof.badge_alt", "partner_proof.directory_link.label"],
@@ -231,4 +233,32 @@ test("local accessibility control mounts once with storage, focus and cookie coe
   assert.doesNotMatch(cookie, /SUPPRESS_ON = \[[^\]]*"\/"/);
   assert.match(accessibility, /\.wao-cookie-banner/);
   assert.match(css, /\.wao-a11y-control :focus-visible/);
+});
+
+test("approved 2026-11-20 homepage copy is live byte for byte, and Yonatan's lines win", () => {
+  const record = JSON.parse(text("docs/copy/product-pages-approved-2026-11-20.json"));
+  const md = text(record.source);
+  const yonatan = md.split("\n---\n")[0];
+  const home = record.pages["/"];
+  const get = (object, at) => at.split(".").reduce((node, key) => node[key], object);
+  for (const p of home.base.patches) {
+    if (p.at === "faq.items") {
+      assert.deepEqual(activeCopy.faq.items, p.new);
+      for (const item of p.new) assert.ok(md.includes(`\`${item.q}\``) && md.includes(`\`${item.a}\``), item.q);
+      continue;
+    }
+    assert.equal(get(activeCopy, p.at), p.new, p.at);
+    assert.ok(md.includes(`\`${p.new}\``), `${p.at}: not in the approved file`);
+  }
+  assert.equal(finalCopy.hero.cta_note, home.final.patches.find((p) => p.at === "hero.cta_note").new);
+  for (const p of home.final.patches) {
+    assert.ok(finalBytes.toString("utf8").includes(JSON.stringify(p.new)), p.at);
+    if (p.old) assert.ok(!finalBytes.toString("utf8").includes(JSON.stringify(p.old)), `${p.at}: old line still present`);
+    assert.ok(md.includes(`\`${p.new}\``), `${p.at}: not in the approved file`);
+  }
+  assert.ok(yonatan.includes(`\`${activeCopy.hero.h1_line2}\``), "H1 line 2 is Yonatan's line");
+  assert.ok(yonatan.includes(`\`${activeCopy.metadata.seo.homepage_meta_description}\``), "meta description is Yonatan's line");
+  assert.notEqual(activeCopy.metadata.seo.homepage_meta_description, finalCopy.hero.body);
+  assert.match(component, /<p className="astra-cta-note">\{finalCopy\.hero\.cta_note\}<\/p>/);
+  assert.match(css, /\.astra-cta-note \{/);
 });

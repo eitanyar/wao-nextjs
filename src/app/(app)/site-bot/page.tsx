@@ -35,7 +35,7 @@ const schemas = [
     "@id": `${CANONICAL}#service`,
     name: "Site Bot — בניית אתר לעסק קטן",
     serviceType: "בניית אתר לעסק קטן",
-    description: COPY.hero.h1,
+    description: COPY.seo.description,
     provider: { "@type": "Organization", "@id": "https://www.wao.co.il/#org" },
     areaServed: "IL",
     offers: {
@@ -163,17 +163,34 @@ export default function SiteBotPage() {
 
           <p style={{ ...noteStyle, marginTop: "18px" }}>{renderMixed(COPY.launch_stamp_cta_note)}</p>
           <p style={{ ...noteStyle, marginTop: "6px" }}>{renderMixed(COPY.hero.cta_note)}</p>
+          <p style={{ ...noteStyle, marginTop: "6px" }}>{renderMixed(COPY.hero.fit_note)}</p>
         </div>
       </section>
 
       {/* Light body between the dark hero and the dark closing band (design review #8; Eitan: hero + close stay dark). */}
       <div className="wao-light">
+      {/* -- Scene: the customer's ten seconds (approved 2026-11-20; replaces the old parts_intro line) -- */}
+      <section className="wao-section">
+        <div className="wao-container wao-narrow">
+          <h2 style={h2Style}>{renderMixed(COPY.scene.h2)}</h2>
+          <p style={{ ...bodyStyle, fontSize: "clamp(1rem,1.8vw,1.12rem)", color: "var(--text)" }}>{renderMixed(COPY.scene.body)}</p>
+        </div>
+      </section>
+
+      {/* -- Claim: three parts, one story -- */}
+      <section className="wao-section" style={{ background: "var(--surface)" }}>
+        <div className="wao-container wao-narrow">
+          <h2 style={{ ...h2Style, fontWeight: 900, fontSize: "clamp(1.9rem,4.2vw,3rem)", lineHeight: 1.12, marginBottom: "20px" }}>
+            <span className="text-gradient">{renderMixed(COPY.claim.h2)}</span>
+          </h2>
+          <p style={{ ...bodyStyle, fontSize: "clamp(1rem,1.8vw,1.15rem)", color: "var(--text)" }}>{renderMixed(COPY.claim.body)}</p>
+        </div>
+      </section>
+
       {/* -- The three parts: site, Google profile, reviews, next to real phone screenshots of a generated site (#5) -- */}
       <section className="wao-section">
         <div className="wao-container wao-parts-grid">
           <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-          {/* Opening line, waocopy 2026-11-15 (src/content/hero-product-strings-2026-11-15.json). */}
-          <p style={{ ...bodyStyle, fontSize: "clamp(1rem,1.8vw,1.12rem)", color: "var(--text)" }}>{renderMixed(STRINGS.site_bot.parts_intro)}</p>
           {PARTS.map((part, i) => (
             <div
               key={part.h2}
@@ -229,6 +246,51 @@ export default function SiteBotPage() {
         </div>
       </section>
 
+      {/* -- Every month -- */}
+      <section className="wao-section" style={{ paddingTop: 0 }}>
+        <div className="wao-container wao-narrow">
+          <h2 style={h2Style}>{renderMixed(COPY.monthly.h2)}</h2>
+          <p style={{ ...bodyStyle, fontSize: "clamp(1rem,1.8vw,1.12rem)", color: "var(--text)" }}>{renderMixed(COPY.monthly.body)}</p>
+        </div>
+      </section>
+
+      {/* -- Alternatives: each gives one piece -- */}
+      <section className="wao-section" style={{ background: "var(--surface)" }}>
+        <div className="wao-container wao-narrow">
+          <h2 style={{ ...h2Style, marginBottom: "24px" }}>{renderMixed(COPY.alternatives.h2)}</h2>
+          <div style={{ display: "flex", flexDirection: "column", gap: "12px", marginBottom: "16px" }}>
+            {COPY.alternatives.rows.map((row) => (
+              <div key={row.option} className="rounded-xl p-4 sm:p-5" style={{ background: "var(--bg)", border: "1px solid var(--border)" }}>
+                <h3 style={{ fontFamily: "var(--font-rubik), sans-serif", fontWeight: 700, fontSize: "1rem", margin: "0 0 8px", color: "var(--text)" }}>
+                  {renderMixed(row.option)}
+                </h3>
+                <p style={{ ...bodyStyle, display: "flex", gap: "8px", alignItems: "baseline", margin: "0 0 4px" }}>
+                  <span aria-hidden style={{ color: "var(--accent)", flexShrink: 0 }}>{"\u2713"}</span>
+                  <span>{renderMixed(row.what_he_gets)}</span>
+                </p>
+                <p style={{ ...bodyStyle, display: "flex", gap: "8px", alignItems: "baseline" }}>
+                  <span aria-hidden style={{ color: "var(--muted)", flexShrink: 0 }}>{"\u2715"}</span>
+                  <span>{renderMixed(row.what_is_missing)}</span>
+                </p>
+              </div>
+            ))}
+          </div>
+          <div
+            className="rounded-xl p-4 sm:p-5"
+            style={{
+              background: "var(--accent-dim)",
+              border: "1px solid var(--accent-border)",
+              borderInlineStartWidth: "4px",
+              borderInlineStartColor: "var(--accent)",
+            }}
+          >
+            <p style={{ fontFamily: "var(--font-rubik), sans-serif", fontWeight: 800, fontSize: "1.05rem", margin: 0, color: "var(--text)" }}>
+              {renderMixed(COPY.alternatives.verdict)}
+            </p>
+          </div>
+        </div>
+      </section>
+
       {/* -- Price -- */}
       <section className="wao-section">
         <div className="wao-container wao-narrow">
@@ -272,7 +334,6 @@ export default function SiteBotPage() {
       {/* -- FAQ -- */}
       <section className="wao-section" style={{ background: "var(--surface)" }}>
         <div className="wao-container wao-narrow">
-          <div className="eyebrow">שאלות נפוצות</div>
           <h2
             style={{
               fontFamily: "var(--font-rubik), sans-serif",
@@ -283,7 +344,7 @@ export default function SiteBotPage() {
               color: "var(--text)",
             }}
           >
-            שאלות נפוצות
+            {renderMixed(COPY.faq_h2)}
           </h2>
           <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
             {COPY.faq.map((faq) => (

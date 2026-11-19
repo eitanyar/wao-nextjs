@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import PhoneReveal from "@/components/PhoneReveal";
+import TrackedLink from "@/components/TrackedLink";
 import SiloNav from "@/components/SiloNav";
 import { renderMixed } from "@/lib/bidi";
 import { ADS_BOT_MONTHLY_NET_ILS } from "@/lib/payments/plans";
 import { GOOGLE_ADS_LANDING_COPY as COPY } from "@/lib/google-ads/landingCopy";
-import { GOOGLE_ADS_INTAKE_HREF } from "@/lib/google-ads/links";
+import { GOOGLE_ADS_CONTACT_HREF, GOOGLE_ADS_CTA_EVENTS, GOOGLE_ADS_INTAKE_HREF } from "@/lib/google-ads/links";
 import { HOW_IT_WORKS_COPY } from "@/lib/google-ads/howItWorksCopy";
 import FounderBlock from "@/components/home/FounderBlock";
 import STRINGS from "@/content/hero-product-strings-2026-11-15.json";
@@ -148,13 +148,13 @@ export default function GoogleAdsPage() {
             {renderMixed(COPY.hero.subhead)}
           </p>
           <div style={{ display: "flex", gap: "14px", flexWrap: "wrap" }}>
-            <a href="tel:0526148860" className="btn-primary" style={{ fontSize: "1.05rem", padding: "15px 36px" }}>
+            <TrackedLink href={GOOGLE_ADS_INTAKE_HREF} event={GOOGLE_ADS_CTA_EVENTS.heroPrimary} className="btn-primary" style={{ fontSize: "1.05rem", padding: "15px 36px" }}>
               {renderMixed(COPY.hero.cta_primary)}
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
-            </a>
-            <Link href={GOOGLE_ADS_INTAKE_HREF} className="btn-outline" style={{ fontSize: "1rem" }}>
+            </TrackedLink>
+            <TrackedLink href={GOOGLE_ADS_CONTACT_HREF} event={GOOGLE_ADS_CTA_EVENTS.heroSecondary} className="btn-outline" style={{ fontSize: "1rem" }}>
               {renderMixed(COPY.hero.cta_secondary)}
-            </Link>
+            </TrackedLink>
           </div>
           <p style={{ marginTop: "18px", marginBottom: 0, fontSize: "0.85rem", color: "var(--muted)", fontFamily: "var(--font-body), sans-serif" }}>
             {renderMixed(COPY.hero.cta_note)}
@@ -167,6 +167,26 @@ export default function GoogleAdsPage() {
       <div className="wao-container wao-silo-below-hero">
         <SiloNav currentPath="/google-ads" />
       </div>
+
+      {/* -- Scene (approved 2026-11-20: right after the hero) -- */}
+      <section className="wao-section">
+        <div className="wao-container wao-narrow">
+          <h2 style={h2Style}>{renderMixed(COPY.scene.h2)}</h2>
+          <p style={leadStyle}>{renderMixed(COPY.scene.body)}</p>
+        </div>
+      </section>
+
+      {/* -- Proof -- */}
+      <section className="wao-section">
+        <div className="wao-container">
+          <h2 style={{ ...h2Style, marginBottom: "12px" }}>{renderMixed(COPY.proof.h2)}</h2>
+          {/* Bridge line, waocopy 2026-11-15 (src/content/hero-product-strings-2026-11-15.json). */}
+          <p style={{ ...leadStyle, marginBottom: "32px" }}>{renderMixed(STRINGS.google_ads.proof_bridge)}</p>
+        </div>
+      </section>
+      <section className="astra-home astra-section astra-light" style={{ paddingTop: 0 }}>
+        <FounderBlock nameAs="h3" />
+      </section>
 
       {/* -- Mechanism: three moments -- */}
       <section className="wao-section">
@@ -211,18 +231,6 @@ export default function GoogleAdsPage() {
         </div>
       </section>
 
-      {/* -- Proof -- */}
-      <section className="wao-section">
-        <div className="wao-container">
-          <h2 style={{ ...h2Style, marginBottom: "12px" }}>{renderMixed(COPY.proof.h2)}</h2>
-          {/* Bridge line, waocopy 2026-11-15 (src/content/hero-product-strings-2026-11-15.json). */}
-          <p style={{ ...leadStyle, marginBottom: "32px" }}>{renderMixed(STRINGS.google_ads.proof_bridge)}</p>
-        </div>
-      </section>
-      <section className="astra-home astra-section astra-light" style={{ paddingTop: 0 }}>
-        <FounderBlock nameAs="h3" />
-      </section>
-
       {/* -- Offer -- */}
       <section className="wao-section" style={{ background: "var(--surface)" }}>
         <div className="wao-container wao-narrow">
@@ -249,6 +257,30 @@ export default function GoogleAdsPage() {
             <p style={smallStyle}>{renderMixed(COPY.offer.refund_terms)}</p>
           </div>
           <p style={smallStyle}>{renderMixed(COPY.offer.policy_line)}</p>
+        </div>
+      </section>
+
+      {/* -- Yours -- */}
+      <section className="wao-section">
+        <div className="wao-container wao-narrow">
+          <h2 style={h2Style}>{renderMixed(COPY.yours.h2)}</h2>
+          <p style={leadStyle}>{renderMixed(COPY.yours.body)}</p>
+        </div>
+      </section>
+
+      {/* -- How it starts: three steps -- */}
+      <section className="wao-section" style={{ paddingTop: 0 }}>
+        <div className="wao-container">
+          <h2 style={{ ...h2Style, marginBottom: "32px" }}>{renderMixed(COPY.start.h2)}</h2>
+          <ol style={{ listStyle: "none", padding: 0, margin: 0, display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: "20px" }}>
+            {COPY.start.steps.map((step, i) => (
+              <li key={step.title} style={{ ...glass, padding: "28px 24px" }}>
+                <span className="process-number" aria-hidden style={{ display: "block", marginBottom: "12px" }}>{String(i + 1).padStart(2, "0")}</span>
+                <h3 style={{ fontFamily: "var(--font-rubik), sans-serif", fontWeight: 700, fontSize: "1.05rem", marginTop: 0, marginBottom: "8px" }}>{renderMixed(step.title)}</h3>
+                <p style={{ ...bodyStyle, fontSize: "0.92rem" }}>{renderMixed(step.desc)}</p>
+              </li>
+            ))}
+          </ol>
         </div>
       </section>
 
@@ -289,15 +321,12 @@ export default function GoogleAdsPage() {
                 {renderMixed(COPY.close.body)}
               </p>
               <div style={{ display: "flex", gap: "16px", justifyContent: "center", flexWrap: "wrap" }}>
-                <PhoneReveal
-                  source="google-ads-bottom-cta"
-                  className="btn-primary"
-                  style={{ fontSize: "1.05rem", padding: "16px 40px" }}
-                  revealText={COPY.close.cta_primary}
-                />
-                <Link href={GOOGLE_ADS_INTAKE_HREF} className="btn-outline" style={{ fontSize: "1rem" }}>
+                <TrackedLink href={GOOGLE_ADS_INTAKE_HREF} event={GOOGLE_ADS_CTA_EVENTS.closePrimary} className="btn-primary" style={{ fontSize: "1.05rem", padding: "16px 40px" }}>
+                  {renderMixed(COPY.close.cta_primary)}
+                </TrackedLink>
+                <TrackedLink href={GOOGLE_ADS_CONTACT_HREF} event={GOOGLE_ADS_CTA_EVENTS.closeSecondary} className="btn-outline" style={{ fontSize: "1rem" }}>
                   {renderMixed(COPY.close.cta_secondary)}
-                </Link>
+                </TrackedLink>
               </div>
             </div>
           </div>

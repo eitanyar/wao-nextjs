@@ -978,6 +978,19 @@ p { margin: 0; }
 
 .astra-actions-centered { justify-content: center; }
 
+/* The proof line under the hero CTA (approved copy 2026-11-20): small and muted, under the button. */
+.astra-cta-note {
+  margin-top: 14px;
+  max-width: 620px;
+  color: #aeb8b4;
+  font-size: 0.92rem;
+  line-height: 1.5;
+}
+
+/* Onboarding first-ad panel: visible ring only for keyboard focus (Maya 2026-11-20). */
+.first-ad-target:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; border-radius: 8px; }
+.first-ad-target:focus:not(:focus-visible) { outline: none; }
+
 .astra-button {
   display: inline-flex;
   min-height: 50px;

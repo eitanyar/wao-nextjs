@@ -70,6 +70,7 @@ export default function AstraHome() {
                 <ArrowIcon />
               </Link>
             </div>
+            <p className="astra-cta-note">{finalCopy.hero.cta_note}</p>
           </div>
           <HeroScene />
         </div>

@@ -779,7 +779,7 @@
    "target": "src/app/(app)/google-ads/onboarding/page.tsx h1 (gradient on \"Google Ads\")"
   },
   "site_bot_h1": {
-   "value": "בניית אתר לעסק קטן שמחובר לפרופיל גוגל ולביקורות",
+   "value": "בניית אתר לעסק קטן שמחובר לפרופיל גוגל, ובנוי לדבר אחד: שיתקשרו אליך",
    "target": "docs/copy/site-bot-r2-final-candidate-2026-11-12.txt hero.h1 -> regenerated landingCopy.generated.ts"
   },
   "audit_title": {
