@@ -4,6 +4,10 @@ import { NextResponse } from "next/server";
 import { ADAM_SYSTEM_PROMPT, DROR_SYSTEM_PROMPT, TAMAR_SYSTEM_PROMPT, T21_PHOTO_ASK_VERSION, CollectedData } from "@/lib/bot/prompts";
 import { getEstimatedCPC } from "@/lib/ads/keywordPlanner";
 import { resolveBoundedOnboardingResponse } from "@/lib/google-ads/onboarding-response";
+import { allowFirstAdGeneration, carryFirstAdPreviewFlag, pendingQuickIntakeStep, runQuickIntakeTurn, type QuickIntakeStep } from "@/lib/google-ads/first-ad-preview";
+import { guardAdCopy, type TemplateAd } from "@/lib/google-ads/ad-claims-guard";
+import { ADMIN_COOKIE_NAME, verifyAdminToken } from "@/lib/admin-auth";
+import { deliveryModelFollowUp } from "@/lib/bot/delivery-model";
 import { callQwenChatJSON } from "@/lib/ai/qwen-fast";
 import { resolveQwenEndpoint, TokenPlanRefusedError } from "@/lib/ai/llmProvider";
 import { recordGeminiUsage } from "@/lib/ai/llmUsage";
@@ -291,6 +295,27 @@ function inferServiceModel(niche: string): InferredServiceModel {
 
 // ── Simulation handler ────────────────────────────────────────────────────────
 
+// Synthetic upload acknowledgement posted by page.tsx handleUpload(): never an answer.
+const UPLOAD_ACK_PATTERN = /^העלאתי (\d+ תמונות|תמונת פרופיל)$/;
+
+// T5 wording per serviceModel. Shared by the regular intake and the three-question gate.
+const LOCATION_QUESTIONS: Record<string, string> = {
+  field: "באילו ערים ושכונות ספציפיות אתה נותן שירות?\n(ככל שתפרט יותר, כך גוגל ידרג אותך טוב יותר)",
+  location: "מה הכתובת המדויקת של העסק?",
+  event: "לאילו אזורים אתה מגיע לאירועים? (לדוגמה: גוש דן, השרון)",
+  remote: "אתה עובד עם לקוחות מכל הארץ, או מאזור מסוים בלבד?",
+  mixed: "לאן אתה מגיע, ואיפה הסטודיו/הסדנה/המשרד שלך?",
+};
+
+// Stores the T1 main-service answer. Shared by the regular intake and the three-question gate.
+function storeMainServiceAnswer(data: CollectedData, text: string) {
+  data.primaryService = text;
+  data.businessNiche = text;
+  // Turn-0 keyword-extraction seam — city isn't known yet at this turn,
+  // so we skip the {niche} {city} variant here (natural variant per spec).
+  data.extractedKeywords = [text, `${text} מחיר`].filter(Boolean);
+}
+
 function handleSimulation(
   lastUserMessage: string,
   currentState: string,
@@ -319,7 +344,7 @@ function handleSimulation(
     // profilePhotoUrl are already merged into `collectedData` client-side
     // before this request is sent, so there is nothing to store here — just
     // acknowledge and re-ask the still-pending question without consuming a turn.
-    if (/^העלאתי (\d+ תמונות|תמונת פרופיל)$/.test(text.trim())) {
+    if (UPLOAD_ACK_PATTERN.test(text.trim())) {
       return NextResponse.json({
         response: `קיבלתי, תודה! ${TURN_QUESTIONS[turn] || ""}`.trim(),
         currentState: nextState,
@@ -335,11 +360,7 @@ function handleSimulation(
           response = TURN_QUESTIONS[0];
           return NextResponse.json({ response, currentState: nextState, collectedData: data, isSimulation: true });
         }
-        data.primaryService = text;
-        data.businessNiche = text;
-        // Turn-0 keyword-extraction seam — city isn't known yet at this turn,
-        // so we skip the {niche} {city} variant here (natural variant per spec).
-        data.extractedKeywords = [text, `${text} מחיר`].filter(Boolean);
+        storeMainServiceAnswer(data, text);
         data.turnIndex = 1;
         return NextResponse.json({
           response: `יופי, ${text} — קלטתי. ${TURN_QUESTIONS[1]}`,
@@ -358,6 +379,11 @@ function handleSimulation(
         const inferredServiceModel = data.serviceModel || inferServiceModel(data.businessNiche || "");
         if (inferredServiceModel) {
           data.serviceModel = inferredServiceModel;
+          if (data.targetLocation) {
+            // The area was answered in the three-question gate (first-ad-preview.ts): skip T5.
+            data.turnIndex = 6;
+            return NextResponse.json({ response: TURN_QUESTIONS[6], currentState: nextState, collectedData: data, isSimulation: true });
+          }
           data.turnIndex = 5;
           const nextQuestion = inferredServiceModel === "field"
             ? "מעולה. אצלך השירות הוא בבית או בעסק של הלקוח. באילו ערים ושכונות ספציפיות אתה נותן שירות?"
@@ -442,7 +468,7 @@ function handleSimulation(
         console.log('DEBUG: data =', data);
         if (data.businessNiche && data.specificCities && data.usp) {
           const fallback = generateFallbackStrategyAndCopy(data);
-          copy = fallback.copy;
+          copy = guardAdCopy(fallback.copy, data, adTemplate(data));
           console.log('DEBUG: copy generated =', copy);
         } else {
           console.log('DEBUG: missing fields — businessNiche:', !!data.businessNiche, 'specificCities:', !!data.specificCities, 'usp:', !!data.usp);
@@ -661,7 +687,7 @@ function handleSimulation(
         // All done — generate campaign
         const generated = generateMockCampaign(data);
         strategy = generated.strategy;
-        copy = generated.copy;
+        copy = guardAdCopy(generated.copy, data, adTemplate(data));
         data.turnIndex = 25;
 
         return NextResponse.json({
@@ -681,14 +707,7 @@ function handleSimulation(
 
     // Adapt location question (T5) based on service model
     if (nextTurn === 5 && data.serviceModel) {
-      const locationQ: Record<string, string> = {
-        field: "באילו ערים ושכונות ספציפיות אתה נותן שירות?\n(ככל שתפרט יותר, כך גוגל ידרג אותך טוב יותר)",
-        location: "מה הכתובת המדויקת של העסק?",
-        event: "לאילו אזורים אתה מגיע לאירועים? (לדוגמה: גוש דן, השרון)",
-        remote: "אתה עובד עם לקוחות מכל הארץ, או מאזור מסוים בלבד?",
-        mixed: "לאן אתה מגיע, ואיפה הסטודיו/הסדנה/המשרד שלך?",
-      };
-      response = locationQ[data.serviceModel] || TURN_QUESTIONS[5];
+      response = LOCATION_QUESTIONS[data.serviceModel] || TURN_QUESTIONS[5];
     } else {
       response = TURN_QUESTIONS[nextTurn] || "תודה! נמשיך לשלב הבא.";
     }
@@ -837,6 +856,12 @@ function generateMockCampaign(data: CollectedData) {
   };
 }
 
+// Deterministic template ad, used to top up copy after unbacked-claim lines are dropped (ad-claims-guard.ts).
+function adTemplate(data: CollectedData): TemplateAd {
+  const { strategy, copy } = generateMockCampaign(data);
+  return { copy: { headlines: copy.headlines, descriptions: copy.descriptions }, keywords: strategy.keywords };
+}
+
 // ── Gemini handler ─────────────────────────────────────────────────────────────
 //
 // Gemini's generateContent API differs structurally from Azure/OpenAI Chat
@@ -925,27 +950,29 @@ async function callGemini(
 
 type LiveChat = (systemPrompt: string, messages: { role: "user" | "model"; parts: { text: string }[] }[]) => Promise<any>;
 
+const geminiLiveChat = (apiKey: string): LiveChat =>
+  (systemPrompt, contents) => callGemini(apiKey, systemPrompt, contents);
+
+const qwenLiveChat: LiveChat = async (systemPrompt, contents) =>
+  JSON.parse(await callQwenChatJSON(systemPrompt, contents.map(({ role, parts }) => ({
+    role: role === "model" ? "assistant" : "user",
+    content: parts[0].text,
+  })), { timeoutMs: QWEN_CHAT_TIMEOUT_MS, workload: "chat" }));
+
 async function handleGemini(messages: Message[], currentState: string, collectedData: CollectedData, apiKey: string) {
-  return handleLiveChat(messages, currentState, collectedData,
-    (systemPrompt, contents) => callGemini(apiKey, systemPrompt, contents));
+  return handleLiveChat(messages, currentState, collectedData, geminiLiveChat(apiKey));
 }
 
 async function handleQwen(messages: Message[], currentState: string, collectedData: CollectedData) {
-  return handleLiveChat(messages, currentState, collectedData, async (systemPrompt, contents) =>
-    JSON.parse(await callQwenChatJSON(systemPrompt, contents.map(({ role, parts }) => ({
-      role: role === "model" ? "assistant" : "user",
-      content: parts[0].text,
-    })), { timeoutMs: QWEN_CHAT_TIMEOUT_MS, workload: "chat" })));
+  return handleLiveChat(messages, currentState, collectedData, qwenLiveChat);
 }
 
-async function handleLiveChat(
-  messages: Message[],
-  currentState: string,
-  collectedData: CollectedData,
-  liveChat: LiveChat
-) {
-  if (currentState === "STRATEGIZING") {
-    const brief = `
+// Dror (strategy) + Tamar (ad copy) in parallel from the intake so far. Unknown fields are left out of the
+// brief, so the three-question first ad does not hand the models a wall of "undefined".
+type SpecialistFallback = (data: CollectedData) => { strategy: unknown; copy: unknown };
+
+async function runSpecialists(collectedData: CollectedData, liveChat: LiveChat, fallback: SpecialistFallback) {
+  const brief = `
 Business Details:
 Primary Service: ${collectedData.primaryService}
 Niche: ${collectedData.businessNiche}
@@ -976,24 +1003,91 @@ Review Quote: ${collectedData.reviewQuote}
 Star Rating: ${collectedData.starRating}
 Contact Method: ${collectedData.contactMethod}
 Phone: ${collectedData.phone}
-`;
+`.split("\n").filter(line => !/: (undefined|null|)$/.test(line)).join("\n");
 
-    let drorData: Record<string, any>;
-    let tamarData: Record<string, any>;
-    try {
-      [drorData, tamarData] = await Promise.all([
-        liveChat(DROR_SYSTEM_PROMPT, [{ role: "user", parts: [{ text: brief }] }]),
-        liveChat(TAMAR_SYSTEM_PROMPT, [{ role: "user", parts: [{ text: brief }] }]),
-      ]);
-    } catch {
-      const fallback = generateFallbackStrategyAndCopy(collectedData);
-      drorData = fallback.strategy as unknown as Record<string, any>;
-      tamarData = fallback.copy as unknown as Record<string, any>;
-    }
-    // The strategy model may still emit bare "free": drop it (and clean notation) before the panel shows it.
-    if (Array.isArray(drorData.negativeKeywords)) {
-      drorData.negativeKeywords = normalizeNegativeKeywords(drorData.negativeKeywords);
-    }
+  let drorData: Record<string, any>;
+  let tamarData: Record<string, any>;
+  try {
+    [drorData, tamarData] = await Promise.all([
+      liveChat(DROR_SYSTEM_PROMPT, [{ role: "user", parts: [{ text: brief }] }]),
+      liveChat(TAMAR_SYSTEM_PROMPT, [{ role: "user", parts: [{ text: brief }] }]),
+    ]);
+  } catch {
+    const generated = fallback(collectedData);
+    drorData = generated.strategy as Record<string, any>;
+    tamarData = generated.copy as Record<string, any>;
+  }
+  // The strategy model may still emit bare "free": drop it (and clean notation) before the panel shows it.
+  if (Array.isArray(drorData.negativeKeywords)) {
+    drorData.negativeKeywords = normalizeNegativeKeywords(drorData.negativeKeywords);
+  }
+  return { drorData, tamarData };
+}
+
+// ── Three-question gate (first-ad-preview.ts) ─────────────────────────────────
+// Deterministic on every provider: answers 2 and 3 (main service, area) are stored here, and answer 3
+// returns the first ad. State stays DIAGNOSING: approval (REVIEWING) and payment still need the full intake.
+
+const FIRST_AD_READY = "זהו, המודעה שלך מוכנה. היא מחכה לך בתוכנית הקמפיין, יחד עם דף הנחיתה, כמו שלקוח יראה אותה בגוגל. כל תשובה שתוסיף כאן תחדד את שניהם עוד יותר לעסק שלך, ואם בא לך רק להסתכל, גם זה בסדר.\nאיך קוראים לעסק, ואם אין לו שם, איך קוראים לך?";
+
+function requestClientKey(request: Request): string {
+  return request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || request.headers.get("x-real-ip")?.trim() || "unknown";
+}
+
+// wao-admin staff (same cookie as the onboarding layout) skip the first-ad cost limit.
+async function isStaffRequest(request: Request): Promise<boolean> {
+  const cookie = request.headers.get("cookie") ?? "";
+  const token = cookie.split(";").map(part => part.trim()).find(part => part.startsWith(`${ADMIN_COOKIE_NAME}=`));
+  if (!token) return false;
+  try {
+    return await verifyAdminToken(decodeURIComponent(token.slice(ADMIN_COOKIE_NAME.length + 1)));
+  } catch {
+    return false;
+  }
+}
+
+// The panel renders these fields unguarded (strategy.keywords.map, ...): a partial model reply falls back.
+function isUsableFirstAd(strategy: Record<string, unknown>, copy: Record<string, unknown>): boolean {
+  return typeof strategy?.targetLocation === "string" && Number.isFinite(Number(strategy?.suggestedDailyBudget))
+    && Array.isArray(strategy?.keywords) && Array.isArray(strategy?.negativeKeywords)
+    && Array.isArray(copy?.headlines) && copy.headlines.length > 0 && Array.isArray(copy?.descriptions);
+}
+
+async function handleQuickIntake(step: QuickIntakeStep, lastUserMessage: string, collectedData: CollectedData, liveChat: LiveChat | null, request: Request) {
+  const result = await runQuickIntakeTurn(step, lastUserMessage, collectedData, {
+    isNonAnswer: text => UPLOAD_ACK_PATTERN.test(text),
+    storeMainService: storeMainServiceAnswer,
+    askMainService: data => deliveryModelFollowUp(data.serviceModel),
+    askServiceArea: data => (data.serviceModel && LOCATION_QUESTIONS[data.serviceModel]) || TURN_QUESTIONS[5],
+    firstAdReady: FIRST_AD_READY,
+    buildFirstAd: async data => {
+      const template = generateMockCampaign(data);
+      const templateAd = { strategy: template.strategy, copy: guardAdCopy(template.copy, data, adTemplate(data)) };
+      // Over the per-IP limit: template ad only, no model calls and no landing-page build.
+      if (!allowFirstAdGeneration(requestClientKey(request), await isStaffRequest(request))) {
+        return { ...templateAd, landingPreview: false };
+      }
+      if (liveChat) {
+        const { drorData, tamarData } = await runSpecialists(data, liveChat, generateMockCampaign);
+        const copy = guardAdCopy(tamarData, data, adTemplate(data));
+        if (isUsableFirstAd(drorData, copy)) return { strategy: drorData, copy };
+      }
+      return templateAd;
+    },
+  });
+  return NextResponse.json({ ...result, isSimulation: !liveChat });
+}
+
+async function handleLiveChat(
+  messages: Message[],
+  currentState: string,
+  collectedData: CollectedData,
+  liveChat: LiveChat
+) {
+  if (currentState === "STRATEGIZING") {
+    const specialists = await runSpecialists(collectedData, liveChat, generateFallbackStrategyAndCopy);
+    const drorData = specialists.drorData;
+    const tamarData = guardAdCopy(specialists.tamarData, collectedData, adTemplate(collectedData));
 
     const presentPrompt = `
 Present this Google Ads campaign plan to the business owner in warm, expert Sabra Hebrew.
@@ -1156,8 +1250,12 @@ export async function POST(req: Request) {
       ? () => handleQwen(messages, currentState, collectedData)
       : apiKey ? () => handleGemini(messages, currentState, collectedData, apiKey) : null;
     const timeoutMs = qwenConfigured ? QWEN_CHAT_TIMEOUT_MS : GEMINI_TIMEOUT_MS;
+    const quickStep = pendingQuickIntakeStep(currentState, collectedData);
 
-    const result = live && currentState === "DIAGNOSING"
+    const result = quickStep
+      ? await handleQuickIntake(quickStep, lastUserMessage, collectedData,
+          qwenConfigured ? qwenLiveChat : apiKey ? geminiLiveChat(apiKey) : null, req)
+      : live && currentState === "DIAGNOSING"
       ? await resolveBoundedOnboardingResponse({
           live,
           fallback: () => handleSimulation(lastUserMessage, currentState, collectedData),
@@ -1187,6 +1285,9 @@ export async function POST(req: Request) {
 
     // Ensure clean JSON serialization — avoid partial writes
     const jsonResponse = await result.json();
+    if (jsonResponse?.collectedData) {
+      jsonResponse.collectedData = carryFirstAdPreviewFlag(collectedData, jsonResponse.collectedData);
+    }
     return NextResponse.json(jsonResponse);
   } catch (error: any) {
     console.error("Bot API error:", error);

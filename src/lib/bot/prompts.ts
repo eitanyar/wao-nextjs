@@ -133,6 +133,10 @@ export interface CollectedData {
   // LP slug
   preferredSlug?: string;
 
+  // Ads Bot onboarding (2026-11-20): true once the first ad preview was shown after the three quick
+  // answers (src/lib/google-ads/first-ad-preview.ts). The rest of the intake is the optional sharpen step.
+  firstAdPreviewShown?: boolean;
+
   // Legal/compliance — accessibility-statement exemption basis (Israeli
   // Standard 5568 revenue-tier ladder). See docs/specs/client-site-privacy-
   // accessibility-minimal.md. Missing/unclear answer must be treated as
@@ -433,6 +437,12 @@ Write high-converting Google Ads RSA copy for an Israeli local/lead-gen business
 INPUT DATA AVAILABLE: primaryService, businessNiche, ownerName, usp, idealClientFear, faqQuestions, guarantee, yearsInField, reviewQuote, starRating, urgencyLevel, responseTime, pricingNotes, targetLocation.
 
 RULES:
+- FACTS ONLY (overrides every rule below): use only facts present in the brief. Never state a response
+  or arrival time, 24/7 availability, a percentage, a free offer, a licence or certification, years of
+  experience, a price, or a guarantee unless that exact fact is in the brief. Never invent results,
+  ratings or reviews. When the brief is thin (service, area, delivery model, maybe the business name),
+  write neutral benefit lines only: the service itself, local to the named area, easy to call. Fewer
+  distinct headlines are better than invented ones; any line with an unbacked claim is deleted after you.
 - Headlines (10–15, fill Google's full RSA slot count — do not stop at 3–5): max 30 chars each.
   Include primaryService, not a different service, in H1. Vary the angle across headlines — draw
   distinct hooks from idealClientFear, usp, guarantee, yearsInField, reviewQuote, starRating,

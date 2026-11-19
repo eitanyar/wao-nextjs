@@ -28,11 +28,16 @@ function load(file, imports) {
 }
 
 const staff = load(path.join(dir, 'staff-context.tsx'), { react: React, 'react/jsx-runtime': jsx });
+const firstAdPreview = load(path.join(dir, '../../../../lib/google-ads/first-ad-preview.ts'), {
+  '../payments/rate-limit': load(path.join(dir, '../../../../lib/payments/rate-limit.ts'), {}),
+});
 const page = load(path.join(dir, 'page.tsx'), {
   react: React, 'react/jsx-runtime': jsx,
   'next/link': { __esModule: true, default: (props) => React.createElement('a', { href: props.href }, props.children) },
   '@/lib/bot/delivery-model': { deliveryModelOptions: [], deliveryModelFollowUp: () => '' },
   '@/lib/google-ads/onboarding-demo': { resolveOnboardingDemoEntry: () => ({ isDemo: false, mode: 'test' }) },
+  '@/lib/google-ads/first-ad-preview': firstAdPreview,
+  '@/content/astra-homepage-copy.json': JSON.parse(fs.readFileSync(path.join(dir, '../../../../content/astra-homepage-copy.json'), 'utf8')),
   '@/components/google-ads/GoogleAdPreview': { __esModule: true, default: () => null },
   './staff-context': staff,
 });
@@ -64,4 +69,24 @@ test('public render carries no internal sandbox / test labels', () => {
 test('staff render still shows the mode indicator', () => {
   const html = render(true);
   for (const label of [badgeHebrew, testNotice, 'Live (locked)']) assert.ok(html.includes(label), `staff render missing: ${label}`);
+});
+
+// 2026-11-20: the first ad comes after three answers, so the opening counter reads "1 of 3", never "of 25".
+test('opening progress counter is question 1 of 3', () => {
+  const html = render(false);
+  assert.ok(html.includes('width:33%'), 'progress bar must be one third on the first question');
+  assert.match(html, />[^<>\d]*1 [^<>\d]* 3<\/div>/, 'counter must read 1 of 3');
+  assert.doesNotMatch(source, /progressTotal = 25/);
+});
+
+test('the mobile jump-to-ad label is the homepage CTA, imported, never retyped', () => {
+  assert.match(source, /import homepageCopy from "@\/content\/astra-homepage-copy\.json";/);
+  assert.match(source, /\{homepageCopy\.hero\.primary_cta\.label\}/);
+  const jump = source.slice(source.indexOf('{firstAdShown && i === firstAdMessageIndex && ('));
+  const wrapper = jump.slice(0, 600).match(/<div className="([^"]*lg:hidden[^"]*)"([^>]*)>/);
+  assert.ok(wrapper, 'jump button wrapper must carry lg:hidden');
+  assert.doesNotMatch(wrapper[2], /display/, 'an inline display would override lg:hidden on desktop');
+  assert.match(jump.slice(0, 600), /type="button"/);
+  assert.match(jump.slice(0, 600), /minHeight: "44px"/);
+  assert.match(jump.slice(0, 600), /onClick=\{jumpToAd\}/);
 });

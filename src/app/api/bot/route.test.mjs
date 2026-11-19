@@ -14,9 +14,11 @@ const promptPath = path.resolve(baseDir, '../../../lib/bot/prompts.ts');
 const promptCode = fs.readFileSync(promptPath, 'utf8');
 
 async function loadHandleSimulation() {
-  const start = routeCode.indexOf('function handleSimulation(');
+  // Starts at the shared simulation helpers (upload guard, T5 wording, T1 storage) that sit right above it.
+  const start = routeCode.indexOf('const UPLOAD_ACK_PATTERN');
   const end = routeCode.indexOf('function generateMockCampaign', start);
-  assert.notEqual(start, -1, 'handleSimulation function not found');
+  assert.notEqual(start, -1, 'simulation helpers not found');
+  assert.ok(routeCode.indexOf('function handleSimulation(') > start, 'handleSimulation must follow its helpers');
   assert.notEqual(end, -1, 'generateMockCampaign boundary not found');
 
   const typescript = await import('typescript');
@@ -24,6 +26,8 @@ async function loadHandleSimulation() {
     const TURN_QUESTIONS = new Proxy({}, { get: (_, key) => \`question-\${key}\` });
     const NextResponse = { json: (payload) => payload };
     const generateFallbackStrategyAndCopy = () => ({ copy: { marker: 'generated-copy' } });
+    const guardAdCopy = (copy) => copy;
+    const adTemplate = () => undefined;
     ${routeCode.slice(start, end)}
     module.exports = { handleSimulation };
   `;
@@ -172,8 +176,11 @@ test('DIAGNOSING state short-circuits on an upload-acknowledgment message before
     /if \(currentState === "DIAGNOSING"\) \{([\s\S]*?)\/\/ ── Store this turn's answer/
   );
   assert.ok(diagnosingBlock, 'DIAGNOSING branch not found');
+  assert.match(diagnosingBlock[1], /UPLOAD_ACK_PATTERN\.test\(text\.trim\(\)\)/, 'guard must run before the turn-consuming switch');
+  const uploadPattern = routeCode.match(/const UPLOAD_ACK_PATTERN = ([^\n]+);/);
+  assert.ok(uploadPattern, 'UPLOAD_ACK_PATTERN definition not found');
   assert.match(
-    diagnosingBlock[1],
+    uploadPattern[1],
     /העלאתי \(\\d\+ תמונות\|תמונת פרופיל\)/,
     'upload-acknowledgment guard regex not found before the turn-consuming switch'
   );
@@ -190,12 +197,31 @@ function loadLlmProvider(fakeProcess) {
   return mod.exports;
 }
 
-function loadPost(environment, qwenCalls, geminiCalls) {
+function transpileLocal(relPath, imports = {}) {
+  const ts = requireModule('typescript');
+  const code = ts.transpileModule(fs.readFileSync(path.resolve(baseDir, relPath), 'utf8'), { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 } }).outputText;
+  const mod = { exports: {} };
+  new Function('require', 'module', 'exports', code)((name) => {
+    if (Object.hasOwn(imports, name)) return imports[name];
+    throw new Error(`Unexpected import: ${name}`);
+  }, mod, mod.exports);
+  return mod.exports;
+}
+
+const claimsGuard = transpileLocal('../../../lib/google-ads/ad-claims-guard.ts');
+const T = claimsGuard.CLAIM_TOKENS;
+const assertNoUnbackedClaims = (copy, data) => {
+  for (const line of [...copy.headlines, ...copy.descriptions]) assert.deepEqual(claimsGuard.unbackedClaims(line, data), [], `unbacked claim shown: ${line}`);
+};
+
+function loadPost(environment, qwenCalls, geminiCalls, geminiReply = '{"response":"gemini","currentState":"DIAGNOSING","collectedData":{}}') {
   const ts = requireModule('typescript');
   const compiled = ts.transpileModule(routeCode, { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 } }).outputText;
   const module = { exports: {} };
   const fakeProcess = { env: environment, cwd: () => baseDir };
   const llmProvider = loadLlmProvider(fakeProcess);
+  // Fresh rate-limit state per loaded route (one module instance, like one server process).
+  const firstAdPreview = transpileLocal('../../../lib/google-ads/first-ad-preview.ts', { '../payments/rate-limit': transpileLocal('../../../lib/payments/rate-limit.ts') });
   const fakeRequire = name => {
     if (name === 'next/server') return { NextResponse: { json: (data, opts) => Response.json(data, opts) } };
     if (name === '@/lib/bot/prompts') return { ADAM_SYSTEM_PROMPT: 'adam', DROR_SYSTEM_PROMPT: 'dror', TAMAR_SYSTEM_PROMPT: 'tamar', T21_PHOTO_ASK_VERSION: 'test' };
@@ -210,6 +236,10 @@ function loadPost(environment, qwenCalls, geminiCalls) {
       qwenCalls.push(args); return JSON.stringify({ response: 'qwen', currentState: 'DIAGNOSING', collectedData: {} });
     } };
     if (name === '@/lib/ai/llmProvider') return llmProvider;
+    if (name === '@/lib/google-ads/first-ad-preview') return firstAdPreview;
+    if (name === '@/lib/google-ads/ad-claims-guard') return claimsGuard;
+    if (name === '@/lib/admin-auth') return { ADMIN_COOKIE_NAME: 'wao-admin', verifyAdminToken: async (token) => token === 'staff-ok' };
+    if (name === '@/lib/bot/delivery-model') return transpileLocal('../../../lib/bot/delivery-model.ts');
     if (name === '@/lib/ai/llmUsage') return { recordGeminiUsage: (_data, model, tag) => { geminiCalls.usage = [...(geminiCalls.usage ?? []), [model, tag]]; return true; } };
     if (name === 'fs/promises') return { mkdir: async () => {}, appendFile: async () => {} };
     if (name === 'path') return path;
@@ -217,17 +247,20 @@ function loadPost(environment, qwenCalls, geminiCalls) {
   };
   const fetch = async url => {
     geminiCalls.push(url);
-    return Response.json({ candidates: [{ content: { parts: [{ text: '{"response":"gemini","currentState":"DIAGNOSING","collectedData":{}}' }] } }] });
+    return Response.json({ candidates: [{ content: { parts: [{ text: geminiReply }] } }] });
   };
   new Function('require', 'module', 'exports', 'process', 'fetch', 'console', 'Response', 'AbortSignal', compiled)(
     fakeRequire, module, module.exports, fakeProcess, fetch, { log() {}, warn() {}, error() {} }, Response, AbortSignal);
   return module.exports.POST;
 }
 
-async function invokePost(post) {
-  const request = new Request('https://example.test/api/bot', { method: 'POST', body: JSON.stringify({
-    messages: [{ role: 'user', content: 'business' }, { role: 'assistant', content: 'question' }, { role: 'user', content: 'answer' }],
-    currentState: 'DIAGNOSING', collectedData: {},
+// Default: a session already past the three-question gate, so the provider routing below is exercised.
+const PAST_GATE = { serviceModel: 'field', businessNiche: 'service', targetLocation: 'area', firstAdPreviewShown: true, turnIndex: 1 };
+
+async function invokePost(post, { collectedData = PAST_GATE, currentState = 'DIAGNOSING', answer = 'answer', headers = {} } = {}) {
+  const request = new Request('https://example.test/api/bot', { method: 'POST', headers, body: JSON.stringify({
+    messages: [{ role: 'user', content: 'business' }, { role: 'assistant', content: 'question' }, { role: 'user', content: answer }],
+    currentState, collectedData,
   }) });
   const response = await post(request);
   assert.equal(response.status, 200);
@@ -287,4 +320,154 @@ test('without configured provider POST returns simulation without network calls'
   const payload = await invokePost(loadPost({}, qwen, gemini));
   assert.equal(payload.isSimulation, true);
   assert.equal(qwen.length, 0); assert.equal(gemini.length, 0);
+});
+
+// ── Three-question gate: the first ad after exactly three answers (2026-11-20) ──
+// Q1 = the delivery-model button (client-side: collectedData { serviceModel, turnIndex: 0 }).
+const FIRST_AD_READY = JSON.parse(routeCode.match(/const FIRST_AD_READY = ("[^\n]*");/)[1]);
+
+async function runGate(post, headers = {}) {
+  const afterQ1 = { serviceModel: 'field', turnIndex: 0 };
+  const q2 = await invokePost(post, { collectedData: afterQ1, answer: 'leak repair', headers });
+  const q3 = await invokePost(post, { collectedData: q2.collectedData, answer: 'north district', headers });
+  return { q2, q3 };
+}
+
+test('simulation: answer 2 asks the area, answer 3 returns the first ad and stays in DIAGNOSING', async () => {
+  const post = loadPost({}, [], []);
+  const { q2, q3 } = await runGate(post);
+  assert.equal(q2.currentState, 'DIAGNOSING');
+  assert.equal(q2.collectedData.businessNiche, 'leak repair');
+  assert.equal(q2.collectedData.primaryService, 'leak repair');
+  assert.ok(Array.isArray(q2.collectedData.extractedKeywords));
+  assert.equal(q2.copy, undefined, 'no ad before answer 3');
+  assert.equal(q2.firstAdPreview, undefined);
+
+  assert.equal(q3.firstAdPreview, true);
+  assert.equal(q3.response, FIRST_AD_READY);
+  assert.equal(q3.currentState, 'DIAGNOSING', 'the preview is not REVIEWING: no approval or payment step opens');
+  assert.equal(q3.callSpecialists, undefined);
+  assert.ok(q3.copy.headlines.length > 0 && q3.copy.descriptions.length > 0);
+  assert.ok(Array.isArray(q3.strategy.keywords) && Array.isArray(q3.strategy.negativeKeywords));
+  assert.equal(q3.collectedData.targetLocation, 'north district');
+  assert.equal(q3.collectedData.firstAdPreviewShown, true);
+  assert.equal(q3.collectedData.turnIndex, 1, 'sharpening resumes at the business-name question');
+});
+
+test('sharpening is optional and ordinary: an approval word after the preview is just the next answer', async () => {
+  const post = loadPost({}, [], []);
+  const { q3 } = await runGate(post);
+  const next = await invokePost(post, { collectedData: q3.collectedData, answer: 'yes' });
+  assert.equal(next.currentState, 'DIAGNOSING', 'nothing is approved from the first preview');
+  assert.equal(next.collectedData.businessName, 'yes');
+  assert.equal(next.collectedData.firstAdPreviewShown, true);
+  assert.equal(next.firstAdPreview, undefined, 'the gate does not run twice');
+});
+
+test('approval still lives only in REVIEWING, reached after the full intake', async () => {
+  const post = loadPost({}, [], []);
+  const reviewing = await invokePost(post, { currentState: 'REVIEWING', collectedData: { ...PAST_GATE, phone: '050-1234567' }, answer: 'yes' });
+  assert.equal(reviewing.currentState, 'REVIEWING', 'approval waits for the payment callback, unchanged');
+  assert.match(routeCode, /currentState: "REVIEWING",\n\s*collectedData: data,\n\s*strategy,\n\s*copy,/, 'REVIEWING is still entered only from the phone turn');
+});
+
+test('simulation sharpening skips the area question already answered in the gate', async () => {
+  const post = loadPost({}, [], []);
+  const res = await invokePost(post, { collectedData: { ...PAST_GATE, turnIndex: 3 }, answer: 'more services' });
+  assert.equal(res.collectedData.secondaryServices, 'more services');
+  assert.equal(res.collectedData.turnIndex, 6);
+});
+
+test('live: answer 3 asks Dror + Tamar once each and falls back to the deterministic ad when their JSON is unusable', async () => {
+  const gemini = [];
+  const post = loadPost({ GEMINI_API_KEY: 'mock' }, [], gemini);
+  const { q2, q3 } = await runGate(post);
+  assert.equal(q2.response.length > 0, true);
+  assert.equal(gemini.length, 2, 'answer 2 is deterministic; answer 3 makes the two specialist calls only');
+  assert.equal(q3.isSimulation, false);
+  assert.equal(q3.currentState, 'DIAGNOSING');
+  assert.ok(q3.copy.headlines.length > 0);
+});
+
+test('live: specialist output is used for the first ad when it has the panel fields', async () => {
+  const gemini = [];
+  const reply = JSON.stringify({ targetLocation: 'north', suggestedDailyBudget: 40, keywords: ['k1'], negativeKeywords: ['n1'], headlines: ['h1'], descriptions: ['d1'] });
+  const post = loadPost({ GEMINI_API_KEY: 'mock' }, [], gemini, reply);
+  const { q3 } = await runGate(post);
+  assert.equal(q3.copy.headlines[0], 'h1', 'specialist line first; template tops up to the RSA minimum of 3');
+  assert.equal(q3.copy.headlines.length, 3);
+  assert.deepEqual(q3.strategy.keywords, ['k1']);
+});
+
+test('live: the preview flag survives a model reply that drops it', async () => {
+  const post = loadPost({ GEMINI_API_KEY: 'mock' }, [], []);
+  const res = await invokePost(post);
+  assert.equal(res.response, 'gemini');
+  assert.equal(res.collectedData.firstAdPreviewShown, true);
+});
+
+// ── No invented claims (standing rule) + first-ad cost guard ──
+
+const CLAIMY_REPLY = JSON.stringify({
+  response: 'adam', targetLocation: 'north', suggestedDailyBudget: 40, keywords: ['k1'], negativeKeywords: ['n1'],
+  headlines: ['h-safe-1', `arrive in 30 ${T.minutes}`, 'h-safe-2', 'open 24/7', `20 ${T.yearsOf} x`],
+  descriptions: ['d-safe-1', '100% happy', `call ${T.free}`, `plumber ${T.licensed}`],
+});
+
+test('first ad: specialist lines with unbacked claims are dropped and the set is topped up from the template', async () => {
+  const post = loadPost({ GEMINI_API_KEY: 'mock' }, [], [], CLAIMY_REPLY);
+  const { q3 } = await runGate(post);
+  assert.deepEqual(q3.copy.headlines.slice(0, 2), ['h-safe-1', 'h-safe-2']);
+  assert.ok(q3.copy.headlines.length >= 3, 'topped up to the RSA minimum');
+  assert.ok(q3.copy.descriptions.includes('d-safe-1') && q3.copy.descriptions.length >= 2);
+  assertNoUnbackedClaims(q3.copy, q3.collectedData);
+});
+
+test('first ad: the template fallback is guarded too (simulation)', async () => {
+  const { q3 } = await runGate(loadPost({}, [], []));
+  assertNoUnbackedClaims(q3.copy, q3.collectedData);
+});
+
+test('REVIEWING path (live STRATEGIZING) drops unbacked claims as well', async () => {
+  const post = loadPost({ GEMINI_API_KEY: 'mock' }, [], [], CLAIMY_REPLY);
+  const res = await invokePost(post, { currentState: 'STRATEGIZING' });
+  assert.equal(res.currentState, 'REVIEWING');
+  assert.ok(res.copy.headlines.includes('h-safe-1'));
+  assertNoUnbackedClaims(res.copy, PAST_GATE);
+});
+
+test('REVIEWING path (simulation phone turn) shows no unbacked claims', async () => {
+  const data = { ...PAST_GATE, primaryService: undefined, businessNiche: 'plumber', turnIndex: 24 };
+  const res = await invokePost(loadPost({}, [], []), { collectedData: data, answer: '050-1234567' });
+  assert.equal(res.currentState, 'REVIEWING');
+  assertNoUnbackedClaims(res.copy, res.collectedData);
+});
+
+test('cost guard: the 6th first ad from one IP in an hour makes no model calls and builds no page', async () => {
+  const gemini = [];
+  const post = loadPost({ GEMINI_API_KEY: 'mock' }, [], gemini, CLAIMY_REPLY);
+  const ip = { 'x-forwarded-for': '203.0.113.7, 10.0.0.1' };
+  for (let i = 0; i < 5; i++) {
+    const { q3 } = await runGate(post, ip);
+    assert.equal(q3.landingPreview, true);
+  }
+  assert.equal(gemini.length, 10, 'two specialist calls per allowed first ad');
+  const { q3 } = await runGate(post, ip);
+  assert.equal(gemini.length, 10, 'no specialist calls once limited');
+  assert.equal(q3.firstAdPreview, true, 'the owner still gets an ad');
+  assert.equal(q3.landingPreview, false, 'no landing-page build once limited');
+  assert.ok(q3.copy.headlines.length >= 3);
+  assertNoUnbackedClaims(q3.copy, q3.collectedData);
+  const other = await runGate(post, { 'x-forwarded-for': '198.51.100.2' });
+  assert.equal(other.q3.landingPreview, true, 'other IPs are not affected');
+});
+
+test('cost guard: wao-admin staff are exempt', async () => {
+  const gemini = [];
+  const post = loadPost({ GEMINI_API_KEY: 'mock' }, [], gemini, CLAIMY_REPLY);
+  const headers = { 'x-forwarded-for': '203.0.113.9', cookie: 'a=b; wao-admin=staff-ok' };
+  for (let i = 0; i < 7; i++) await runGate(post, headers);
+  assert.equal(gemini.length, 14);
+  const forged = await runGate(post, { 'x-forwarded-for': '203.0.113.9', cookie: 'wao-admin=forged' });
+  assert.equal(forged.q3.landingPreview, true, 'a forged cookie is a normal visitor; staff runs never consumed this IP quota');
 });

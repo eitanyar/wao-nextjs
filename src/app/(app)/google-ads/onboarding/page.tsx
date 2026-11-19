@@ -5,7 +5,10 @@ import Link from "next/link";
 import type { CollectedData } from "@/lib/bot/prompts";
 import { deliveryModelFollowUp, deliveryModelOptions } from "@/lib/bot/delivery-model";
 import { resolveOnboardingDemoEntry } from "@/lib/google-ads/onboarding-demo";
+import { hasFirstAdPreview, quickIntakeProgress } from "@/lib/google-ads/first-ad-preview";
 import GoogleAdPreview from "@/components/google-ads/GoogleAdPreview";
+// The homepage CTA label, reused verbatim for the mobile jump-to-ad button (single source, never retyped).
+import homepageCopy from "@/content/astra-homepage-copy.json";
 import { useOnboardingStaff } from "./staff-context";
 
 interface Message {
@@ -153,9 +156,21 @@ export default function OnboardingPage() {
         : currentState === "REVIEWING"
           ? "אם יש עוד תיקון קטן לפני ההפעלה, תכתוב אותו עכשיו."
           : "אם משהו השתנה, תכתוב ונעדכן יחד.";
-  const progressTotal = 25;
-  const progressTurn = Math.min((collectedData.turnIndex ?? 0) + 1, progressTotal);
+  // Three questions to the first ad (src/lib/google-ads/first-ad-preview.ts). The counter only exists
+  // for those three; it is hidden during the optional sharpen continuation that follows the preview.
+  const quickProgress = quickIntakeProgress(currentState, collectedData);
+  const firstAdShown = currentState === "DIAGNOSING" && hasFirstAdPreview(collectedData) && !!copy;
   const fileInputRef = useRef<HTMLInputElement>(null);
+  // Mobile (below lg) the plan panel sits under the chat: a button after the ready message jumps to the ad.
+  const [firstAdMessageIndex, setFirstAdMessageIndex] = useState<number | null>(null);
+  const adPreviewRef = useRef<HTMLDivElement>(null);
+  const jumpToAd = () => {
+    const el = adPreviewRef.current;
+    if (!el) return;
+    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    el.scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "start" });
+    el.focus({ preventScroll: true });
+  };
 
   const messagesContainerRef = useRef<HTMLDivElement>(null);
 
@@ -228,6 +243,28 @@ export default function OnboardingPage() {
     el.scrollTop = el.scrollHeight;
   }, [messages, currentState]);
 
+  // Internal landing-page preview (never deployed): built for the first ad and again at REVIEWING.
+  const generateLandingPreview = async (previewData: CollectedData) => {
+    if (!queryReady || isDemo) return;
+    setLpGenerating(true);
+    try {
+      const lpRes = await fetch("/api/lp-generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          collectedData: previewData,
+          slug: previewData.preferredSlug || undefined,
+        }),
+      });
+      const lpData = await lpRes.json();
+      if (lpRes.ok && lpData.success && lpData.url) setLpUrl(lpData.url);
+    } catch {
+      // non-fatal: the ad preview stands on its own
+    } finally {
+      setLpGenerating(false);
+    }
+  };
+
   const handleSendMessage = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     if (!queryReady || isDemo) return;
@@ -269,6 +306,12 @@ export default function OnboardingPage() {
       if (data.budgetRecommendation) setBudgetRecommendation(data.budgetRecommendation as BudgetRecommendation);
       if (typeof data.awaitingProfilePhoto === "boolean") setAwaitingProfilePhoto(data.awaitingProfilePhoto);
 
+      // Answer 3 returns the first ad. Its page preview builds in the background so the owner can keep
+      // answering (or just look) meanwhile. Nothing is deployed or charged from here.
+      // landingPreview === false: the per-IP cost limit was hit, so the ad is the template and no page is built.
+      if (data.firstAdPreview) setFirstAdMessageIndex(updatedMessages.length);
+      if (data.firstAdPreview && data.landingPreview !== false && data.collectedData) void generateLandingPreview(data.collectedData);
+
       // Auto-fire STRATEGIZING when Adam signals callSpecialists
       if (data.currentState === "STRATEGIZING" && data.callSpecialists) {
         setIsSubmitting(true);
@@ -295,21 +338,7 @@ export default function OnboardingPage() {
           // operator must be able to inspect the full ad-to-page journey before
           // payment, Google Ads account creation, or any deployment occurs.
           if ((stratData.currentState ?? "REVIEWING") === "REVIEWING") {
-            setLpGenerating(true);
-            try {
-              const lpRes = await fetch("/api/lp-generate", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                  collectedData: data.collectedData,
-                  slug: data.collectedData.preferredSlug || undefined,
-                }),
-              });
-              const lpData = await lpRes.json();
-              if (lpRes.ok && lpData.success && lpData.url) setLpUrl(lpData.url);
-            } finally {
-              setLpGenerating(false);
-            }
+            await generateLandingPreview(data.collectedData);
           }
         } catch {
           // non-fatal — user can still proceed to payment
@@ -647,9 +676,9 @@ export default function OnboardingPage() {
                 }}
               >
               {messages.map((msg, i) => (
+                <React.Fragment key={i}>
                 <div
                   data-chat-role={msg.role}
-                  key={i}
                   style={{
                     display: "flex",
                     justifyContent: msg.role === "user" ? "flex-start" : "flex-end",
@@ -690,6 +719,20 @@ export default function OnboardingPage() {
                     )}
                   </div>
                 </div>
+                {firstAdShown && i === firstAdMessageIndex && (
+                  // No inline display here: an inline style would override lg:hidden and show the button on desktop.
+                  <div className="flex justify-end lg:hidden">
+                    <button
+                      type="button"
+                      onClick={jumpToAd}
+                      className="btn-primary"
+                      style={{ minHeight: "44px", padding: "10px 20px", fontSize: "0.9rem", borderRadius: "var(--radius-pill)" }}
+                    >
+                      {homepageCopy.hero.primary_cta.label}
+                    </button>
+                  </div>
+                )}
+                </React.Fragment>
               ))}
               {!deliveryModelSelected && (
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 180px), 1fr))", gap: "10px", direction: "rtl" }}>
@@ -731,14 +774,15 @@ export default function OnboardingPage() {
                 background: "rgba(13, 15, 21, 0.4)",
               }}
             >
+              {quickProgress && (
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "12px" }}>
                 <div style={{ fontSize: "0.78rem", color: "var(--muted)" }}>
-                  שאלה {progressTurn} מתוך {progressTotal}
+                  שאלה {quickProgress.current} מתוך {quickProgress.total}
                 </div>
                 <div style={{ flex: 1, height: "6px", background: "rgba(255,255,255,0.06)", borderRadius: "999px", overflow: "hidden" }}>
                   <div
                     style={{
-                      width: `${Math.round((progressTurn / progressTotal) * 100)}%`,
+                      width: `${Math.round((quickProgress.current / quickProgress.total) * 100)}%`,
                       height: "100%",
                       background: "linear-gradient(135deg, #4AE3B5, #00C3FF)",
                       borderRadius: "999px",
@@ -746,6 +790,7 @@ export default function OnboardingPage() {
                   />
                 </div>
               </div>
+              )}
               <div style={{ fontSize: "0.82rem", color: "var(--text)", lineHeight: 1.5 }}>
                 {inputHelperText}
               </div>
@@ -933,7 +978,7 @@ export default function OnboardingPage() {
                 </div>
               )}
 
-              {currentState === "DIAGNOSING" && !budgetRecommendation && (
+              {currentState === "DIAGNOSING" && !budgetRecommendation && !firstAdShown && (
                 <div
                   style={{
                     flex: 1,
@@ -951,13 +996,18 @@ export default function OnboardingPage() {
                     התוכנית מחכה לתשובות שלך בצ׳אט
                   </p>
                   <p style={{ fontSize: "0.85rem", maxWidth: "260px" }}>
-                    כשנסיים את השאלות, התוכנית שלך תופיע כאן: אזור, תקציב, מילות חיפוש ומודעה.
+                    שלוש תשובות בצ׳אט, והמודעה שלך כאן, עם החיפושים בגוגל שבהם היא תופיע.
                   </p>
                 </div>
               )}
 
-              {(currentState === "REVIEWING" || currentState === "COMPLETED") && (
+              {(currentState === "REVIEWING" || currentState === "COMPLETED" || firstAdShown) && (
                 <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+                  {firstAdShown && (
+                    <p style={{ fontSize: "0.85rem", color: "var(--accent)", fontWeight: 600, lineHeight: 1.5 }}>
+                      המודעה הזו יצאה משלוש התשובות שלך. כל תשובה נוספת בצ׳אט מחדדת אותה.
+                    </p>
+                  )}
                   {/* Location & Budget Info */}
                   <div
                     style={{
@@ -1037,8 +1087,8 @@ export default function OnboardingPage() {
                   </div>
 
                   {/* Ad Live Preview */}
-                  <div>
-                    <h4 style={{ fontSize: "0.9rem", fontWeight: 700, marginBottom: "8px" }}>
+                  <div ref={adPreviewRef} tabIndex={-1} role="region" aria-labelledby="first-ad-heading" className="first-ad-target" style={{ scrollMarginTop: "96px" }}>
+                    <h4 id="first-ad-heading" style={{ fontSize: "0.9rem", fontWeight: 700, marginBottom: "8px" }}>
                       ככה המודעה שלך תיראה בגוגל
                     </h4>
                     <GoogleAdPreview

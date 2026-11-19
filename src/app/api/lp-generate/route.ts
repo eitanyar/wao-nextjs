@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import fs from 'fs';
 import path from 'path';
+import { randomBytes } from 'crypto';
 import type { CollectedData } from '@/lib/bot/prompts';
 import type { LPCopy } from '@/lib/lp/lpCopyPrompt';
 import { buildLpCopyPrompt } from '@/lib/lp/lpCopyPrompt';
@@ -57,9 +58,19 @@ function slugify(name: string, phone?: string): string {
     .slice(0, 40)
     .replace(/^-|-$/g, '');
   if (latin.length >= 3) return latin;
-  // Hebrew/non-Latin name — use timestamp + last-4 of phone for uniqueness
-  const suffix = (phone || '').replace(/\D/g, '').slice(-4) || Date.now().toString(36).slice(-4);
-  return `wao-client-${suffix}`;
+  // Hebrew/non-Latin name: 10 random hex chars. The old phone-last-4 / time-last-4 suffix collided and
+  // silently overwrote another visitor's preview once the first ad arrived after three answers.
+  void phone;
+  return `wao-client-${randomSuffix()}`;
+}
+
+function randomSuffix(): string {
+  return randomBytes(5).toString('hex');
+}
+
+/** Auto-derived slugs never overwrite another record: append a random suffix when the file exists. */
+function uniqueAutoSlug(slug: string, lpsDir: string): string {
+  return fs.existsSync(path.join(lpsDir, `${slug}.json`)) ? `${slug}-${randomSuffix()}`.slice(0, 51) : slug;
 }
 
 function generateFallbackCopy(collectedData: CollectedData): LPCopy {
@@ -108,9 +119,11 @@ export async function POST(req: Request) {
     }
 
     const rawSlug = body.slug || collectedData.preferredSlug;
+    const lpsDir = path.join(process.cwd(), 'data', 'lps');
+    const autoSlug = () => uniqueAutoSlug(slugify(collectedData.businessName || collectedData.businessNiche || 'my-business', collectedData.phone), lpsDir);
     const slug = rawSlug
-      ? rawSlug.toLowerCase().replace(/[^a-z0-9-]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '').slice(0, 40) || slugify(collectedData.businessName || collectedData.businessNiche || 'my-business', collectedData.phone)
-      : slugify(collectedData.businessName || collectedData.businessNiche || 'my-business', collectedData.phone);
+      ? rawSlug.toLowerCase().replace(/[^a-z0-9-]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '').slice(0, 40) || autoSlug()
+      : autoSlug();
     let copy: LPCopy;
 
     if (process.env.GEMINI_API_KEY) {
@@ -136,7 +149,6 @@ export async function POST(req: Request) {
     }
 
     // Persist to filesystem
-    const lpsDir = path.join(process.cwd(), 'data', 'lps');
     fs.mkdirSync(lpsDir, { recursive: true });
     const record = { slug, collectedData, copy, createdAt: new Date().toISOString() };
     fs.writeFileSync(path.join(lpsDir, `${slug}.json`), JSON.stringify(record, null, 2));
