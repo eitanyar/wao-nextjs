@@ -19,7 +19,7 @@ import type { CollectedData } from '../../bot/prompts';
 import { ISRAELI_LOCALITIES } from '../israeliLocalities';
 import { listedServedAreas, withServedAreaNames } from '../servedAreas';
 import { applyResearchGateAnswer, type ResearchGateType } from './gates';
-import { OWNER_ANSWERABLE_GATE_TYPES, validateOwnerGateAnswer } from './ownerGates';
+import { STORED_ANSWER_GATE_TYPES, validateOwnerGateAnswer } from './ownerGates';
 import type { SiteResearchDossier } from './types';
 
 interface StoredAnswer {
@@ -40,7 +40,7 @@ function usable(dossier: SiteResearchDossier, candidate: unknown, idOverride?: s
   const id = idOverride ?? candidate.id;
   const { type, evidenceDigest, answeredAt } = candidate;
   if (typeof id !== 'string' || typeof evidenceDigest !== 'string' || typeof answeredAt !== 'string') return null;
-  if (typeof type !== 'string' || !OWNER_ANSWERABLE_GATE_TYPES.includes(type as ResearchGateType)) return null;
+  if (typeof type !== 'string' || !STORED_ANSWER_GATE_TYPES.includes(type as ResearchGateType)) return null;
   if (id !== `${dossier.researchId}:${type}:${evidenceDigest}`) return null;
   const approvals = plainObject(dossier.researchGateApprovals) ? dossier.researchGateApprovals : {};
   const approval: unknown = Object.hasOwn(approvals, id) ? approvals[id] : undefined;

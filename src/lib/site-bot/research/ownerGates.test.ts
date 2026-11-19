@@ -5,8 +5,10 @@ import os from 'os';
 import path from 'path';
 import { readResearchDossier, writeResearchDossierAtomic } from './researchStore';
 import type { SiteResearchDossier } from './types';
-import { deriveOpenResearchGates } from './gates';
-import { OWNER_GATE_WINDOW_MS, recordOwnerResearchGates, submitOwnerResearchGate, validateOwnerGateAnswer } from './ownerGates';
+import { deriveOpenResearchGates, persistResearchGateApproval } from './gates';
+import { OWNER_ANSWERABLE_GATE_TYPES, OWNER_GATE_WINDOW_MS, recordOwnerResearchGates, STORED_ANSWER_GATE_TYPES, submitOwnerResearchGate, validateOwnerGateAnswer } from './ownerGates';
+import { gateAnsweredCollectedData } from './gateAnswers';
+import { assertDeployReady, deriveNextPipelineAction } from './pipelineState';
 
 const A = '123e4567-e89b-42d3-a456-426614174000';
 const B = '00000000-0000-4000-8000-000000000000';
@@ -77,4 +79,35 @@ test('validateOwnerGateAnswer enforces shape and size per gate type', () => {
   assert.equal(validateOwnerGateAnswer('service_attributes', { serviceAttributes: {} }), null);
   assert.equal(validateOwnerGateAnswer('ambiguous_intent', 'y'.repeat(1001)), null);
   assert.equal(validateOwnerGateAnswer('ambiguous_intent', 'Alpha'), 'Alpha');
+});
+
+// 2026-11-20 (post-payment screen): ambiguous_intent is staff-only. The pay page never shows it, the owner path refuses it,
+// staff answer it through the admin path and generation applies that answer; an unanswered one never blocks the research.
+test('ambiguous_intent: hidden from the owner pay path, staff-answerable, never blocking', async () => {
+  assert.ok(!OWNER_ANSWERABLE_GATE_TYPES.includes('ambiguous_intent'));
+  assert.ok(STORED_ANSWER_GATE_TYPES.includes('ambiguous_intent'));
+  const { baseDir, remove } = await store();
+  const data = { primaryService: 'Service Alpha', researchGateAnswers: { ambiguous_intent: { candidates: ['Alpha', 'Beta'] } } };
+  const gates = deriveOpenResearchGates(A, data);
+  const ambiguous = gates.find(gate => gate.type === 'ambiguous_intent')!;
+  assert.ok(ambiguous, 'the gate exists for this research');
+  // Recorded for the pay page: every gate except ambiguous_intent (the callback hands the pay page only these).
+  const recorded = await recordOwnerResearchGates(A, gates, { baseDir, now: at(0) });
+  assert.deepEqual(recorded.map(gate => gate.type), gates.filter(gate => gate.type !== 'ambiguous_intent').map(gate => gate.type));
+  assert.ok(!(await readResearchDossier(A, baseDir))!.ownerResearchGates!.some(gate => gate.type === 'ambiguous_intent'));
+  // The owner path refuses it even when it is injected.
+  const injected = await readResearchDossier(A, baseDir);
+  injected!.ownerResearchGates = [...injected!.ownerResearchGates!, { id: ambiguous.id, type: 'ambiguous_intent', evidenceDigest: ambiguous.evidenceDigest, issuedAt: T0.toISOString() }];
+  assert.ok(await writeResearchDossierAtomic(A, injected!, baseDir));
+  assert.equal((await submitOwnerResearchGate(A, ambiguous.id, ambiguous.evidenceDigest, 'Alpha', { baseDir, now: at(1000) })).status, 'not_found');
+  // Unanswered, it blocks nothing: the pipeline reads humanGates only.
+  const open = (await readResearchDossier(A, baseDir))!;
+  assert.equal(deriveNextPipelineAction({ charged: true, researchId: A, dossier: { ...open, status: 'architecture_ready' } }).reasons.includes('approval_not_granted'), false);
+  assert.equal(assertDeployReady({ ...open, status: 'deploy_ready', pipelineChecks: { copy: 'pass', hebrewQa: 'pass', neuronEvaluation: 'pass', duplicateCannibalization: 'pass' } }).ready, true);
+  // Staff answer it through the admin path; generation applies the stored staff answer.
+  const staff = await persistResearchGateApproval(A, ambiguous, data, ambiguous.evidenceDigest, { baseDir, now: at(2000), staffAnswer: 'Alpha' });
+  assert.equal(staff.status, 'approved');
+  const applied = gateAnsweredCollectedData(data, await readResearchDossier(A, baseDir));
+  assert.equal(applied.researchGateAnswers?.ambiguous_intent, 'Alpha');
+  remove();
 });

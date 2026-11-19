@@ -1,31 +1,35 @@
 "use client";
 
 import Link from "next/link";
-import { useRef, useState } from "react";
+import { useState } from "react";
 import { useParams } from "next/navigation";
 import { renderMixed } from "@/lib/bidi";
 import type { CollectedData } from "@/lib/bot/prompts";
 import type { ResearchGate } from "@/lib/site-bot/research/gates";
-import { RESEARCH_COPY } from "@/lib/site-bot/researchCopy";
-import { checkoutCallbackOutcome, readJsonBody } from "@/lib/site-bot/checkout/customerError";
+import { SITE_BOT_POSTPAY_COPY as COPY, type SiteBotPostPayCopyKey } from "@/lib/site-bot/postPayCopy.generated";
+import { checkoutCallbackOutcome, checkoutPayErrorKind, doneDomainLine, readJsonBody, type CheckoutPayErrorKind } from "@/lib/site-bot/checkout/customerError";
 import { SITE_BOT_CHECKOUT_COPY_PENDING, SITE_BOT_TERMS_PATH, siteBotCheckoutText, siteBotTermsConsentParts } from "@/lib/site-bot/checkout/checkoutCopy";
 import type { CardFieldDefaults } from "@/lib/site-bot/checkout/mockCard";
 import { SITE_BOT_ACCOUNT_COPY, accountLinkHref, customerVisibleLabel } from "@/lib/site-bot/checkout/accountCopy";
 import { SITE_BOT_PLAN, formatShekels } from "@/lib/payments/plans";
 import { SHOWCASE_CONSENT_COPY } from "@/lib/showcase/consentCopy.generated";
-import {
-  buildResearchGateAnswer,
-  RESEARCH_PROGRESS_KEYS,
-  researchGateCopyKey,
-} from "@/lib/site-bot/research/gatePresentation";
+import { buildResearchGateAnswer } from "@/lib/site-bot/research/gatePresentation";
 
 // Site-Bot pay page (client part; page.tsx decides the card-field defaults on the server). The plan's price and terms
 // (SITE_BOT_PLAN: monthly, + VAT) are shown above the pay action. The real Takbull integration will redirect here
 // from a hosted tokenization page instead (see TAKBULL SWAP POINT in subscriptions.ts); this page's job (call
 // /api/site-bot/checkout/callback with the sessionId once the user confirms) doesn't change when that swap happens.
-// Errors: the customer only ever sees the generic message; server error codes / exception text are logged, not shown.
-/** The generic customer-facing error (the existing copy, moved from the old customerErrorText fallback). */
-const GENERIC_ERROR = "משהו השתבש";
+// Errors: the customer only ever sees the approved post-payment texts (postPayCopy.generated.ts, 2026-11-20): a pay error
+// says whether the card was charged (checkoutPayErrorKind; a retry only when it provably was not), a gate error says the
+// answer was not saved. Server error codes / exception text are logged, never shown.
+
+/** The pay-page question of each owner gate type (ambiguous_intent is staff-only and never reaches this page). */
+const GATE_COPY_KEYS: Partial<Record<ResearchGate["type"], SiteBotPostPayCopyKey>> = {
+  business_boundary: "gate_business_boundary",
+  service_attributes: "gate_service_attributes",
+  geography: "gate_geography",
+  money_services: "gate_money_services",
+};
 
 /** The manage / cancel link label; null (link hidden) while it is still a copy placeholder. */
 const manageLinkLabel = customerVisibleLabel(SITE_BOT_ACCOUNT_COPY.manageLink);
@@ -53,8 +57,9 @@ interface CheckoutCallbackResponse {
 export default function SiteBotPayClient({ cardDefaults }: { cardDefaults: CardFieldDefaults }) {
   const { sessionId } = useParams<{ sessionId: string }>();
   const [phase, setPhase] = useState<Phase>("form");
-  const [error, setError] = useState<string | null>(null);
-  const [researchStatus, setResearchStatus] = useState<string | null>(null);
+  const [payError, setPayError] = useState<CheckoutPayErrorKind | null>(null);
+  const [gateError, setGateError] = useState(false);
+  const [domainLine, setDomainLine] = useState<"own" | "wao" | null>(null);
   const [gatesFinished, setGatesFinished] = useState(false);
   const [researchId, setResearchId] = useState<string | null>(null);
   const [collectedData, setCollectedData] = useState<CollectedData | null>(null);
@@ -62,13 +67,13 @@ export default function SiteBotPayClient({ cardDefaults }: { cardDefaults: CardF
   const [gateIndex, setGateIndex] = useState(0);
   const [answer, setAnswer] = useState("");
   const [manageHref, setManageHref] = useState<string>(() => accountLinkHref(undefined));
-  const answerInputRef = useRef<HTMLInputElement>(null);
   // Unticked by default; paying works the same either way. Sent with the callback, recorded only after a successful charge.
   const [showcaseConsent, setShowcaseConsent] = useState(false);
 
   async function pay() {
     setPhase("charging");
-    setError(null);
+    setPayError(null);
+    let body: Record<string, unknown> | null = null;
     try {
       const res = await fetch("/api/site-bot/checkout/callback", {
         method: "POST",
@@ -76,25 +81,30 @@ export default function SiteBotPayClient({ cardDefaults }: { cardDefaults: CardF
         body: JSON.stringify({ sessionId, showcaseConsent }),
       });
       // M0.5 (B9): a non-2xx or non-JSON callback is an error state, never "done".
-      const json = await readJsonBody(res) as Partial<CheckoutCallbackResponse> & { error?: string };
+      const json = await readJsonBody(res) as Partial<CheckoutCallbackResponse> & { error?: string; chargeState?: string };
+      body = json;
       const outcome = checkoutCallbackOutcome(res.ok, json);
       if (outcome.kind === "error") throw new Error(`checkout callback ${res.status}: ${String(json.error ?? "")}`);
-      setResearchStatus(json.status ?? null);
+      setDomainLine(doneDomainLine(json.collectedData));
       setManageHref(accountLinkHref(json.manageUrl));
       setGatesFinished(false);
       if (outcome.kind === "gates") {
         setResearchId(outcome.researchId);
         setCollectedData(outcome.collectedData);
-        setOpenResearchGates(outcome.openResearchGates);
+        // Only the gate types this page asks (the callback already hands over owner-answerable gates only).
+        const askable = outcome.openResearchGates.filter((gate) => GATE_COPY_KEYS[gate.type] !== undefined);
+        setOpenResearchGates(askable);
         setGateIndex(0);
         setAnswer("");
-        setPhase("gates");
+        setGateError(false);
+        setPhase(askable.length ? "gates" : "done");
       } else {
         setPhase("done");
       }
     } catch (e: unknown) {
       console.error("[site-bot pay]", e);
-      setError(GENERIC_ERROR);
+      // A thrown fetch (network) leaves body null: the charge state is unknown, so it is treated as charged.
+      setPayError(checkoutPayErrorKind(body));
       setPhase("error");
     }
   }
@@ -106,7 +116,7 @@ export default function SiteBotPayClient({ cardDefaults }: { cardDefaults: CardF
     if (!normalizedAnswer) return;
 
     setPhase("submitting_gate");
-    setError(null);
+    setGateError(false);
     try {
       const res = await fetch("/api/site-bot/research/gates", {
         method: "POST",
@@ -136,7 +146,7 @@ export default function SiteBotPayClient({ cardDefaults }: { cardDefaults: CardF
       }
     } catch (e: unknown) {
       console.error("[site-bot pay] gate", e);
-      setError(GENERIC_ERROR);
+      setGateError(true);
       setPhase("gates");
     }
   }
@@ -208,72 +218,55 @@ export default function SiteBotPayClient({ cardDefaults }: { cardDefaults: CardF
           )}
 
           {phase === "charging" && (
-            <p style={{ color: "var(--muted)", textAlign: "center" }}>{renderMixed("התשלום מתקבל עכשיו — ובאותו רגע אנחנו מתחילים לחקור את העסק שלך לעומק.")}</p>
+            <p style={{ color: "var(--muted)", textAlign: "center" }}>{renderMixed(COPY.charging)}</p>
           )}
 
           {(phase === "gates" || phase === "submitting_gate") && openResearchGates[gateIndex] && (
             <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-              <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-                {RESEARCH_PROGRESS_KEYS.map((key) => (
-                  <p key={key} style={{ color: "var(--muted)", margin: 0 }}>
-                    {renderMixed(RESEARCH_COPY[key])}
-                  </p>
-                ))}
-              </div>
+              <p style={{ color: "var(--muted)", margin: 0 }}>{renderMixed(COPY.intro)}</p>
               <p style={{ margin: 0 }}>
-                {renderMixed(RESEARCH_COPY[researchGateCopyKey(openResearchGates[gateIndex].type)])}
+                {renderMixed(COPY[GATE_COPY_KEYS[openResearchGates[gateIndex].type] ?? "intro"])}
               </p>
-              {error && <p style={{ color: "#e05555", margin: 0 }}>{renderMixed(error)}</p>}
+              {gateError && <p role="alert" style={{ color: "#e05555", margin: 0 }}>{renderMixed(COPY.answer_error)}</p>}
               <input
-                ref={answerInputRef}
                 value={answer}
                 onChange={(event) => setAnswer(event.target.value)}
                 disabled={phase === "submitting_gate"}
                 style={inputStyle}
               />
-              <div style={{ display: "flex", gap: "12px" }}>
-                <button
-                  type="button"
-                  onClick={() => answerInputRef.current?.focus()}
-                  className="btn-outline"
-                  style={{ flex: 1, padding: "14px" }}
-                >
-                  {RESEARCH_COPY.action_edit}
-                </button>
-                <button
-                  type="button"
-                  onClick={submitGate}
-                  disabled={!answer.trim() || phase === "submitting_gate"}
-                  className="btn-primary"
-                  style={{ flex: 1, padding: "14px" }}
-                >
-                  {phase === "submitting_gate" ? RESEARCH_COPY.action_continue : RESEARCH_COPY.action_approve}
-                </button>
-              </div>
+              <button
+                type="button"
+                onClick={submitGate}
+                disabled={!answer.trim() || phase === "submitting_gate"}
+                className="btn-primary"
+                style={{ width: "100%", padding: "14px" }}
+              >
+                {phase === "submitting_gate" ? COPY.sending : COPY.send}
+              </button>
             </div>
           )}
 
           {phase === "error" && (
             <>
-              <p style={{ color: "#e05555", marginBottom: "16px" }}>{renderMixed(`קרתה תקלה: ${error}`)}</p>
-              <button onClick={pay} className="btn-outline" style={{ width: "100%", padding: "14px" }}>
+              <p role="alert" style={{ color: "#e05555", marginBottom: "16px" }}>{renderMixed(payError === "not_charged" ? COPY.pay_error_not_charged : COPY.pay_error_after_charge)}</p>
+              {payError === "not_charged" && (<button onClick={pay} className="btn-outline" style={{ width: "100%", padding: "14px" }}>
                 נסה שוב
-              </button>
+              </button>)}
             </>
           )}
 
           {phase === "done" && (
             <div style={{ textAlign: "center" }}>
-              <p style={{ marginBottom: "16px" }}>{renderMixed("קיבלנו את התשלום שלך — הכל עבר חלק.")}</p>
-              <p>{renderMixed((researchStatus === "architecture_ready" || researchStatus === "copy_ready" || researchStatus === "deploy_ready") ? "המחקר הושלם. הצוות של WAO בונה את האתר מהתשובות שלך — ונחזור אליך לפרטים שמסרת." : "המחקר עדיין רץ ברקע. הצוות של WAO משלים אותו, בונה את האתר — ונחזור אליך.")}</p>
-              {gatesFinished && <p>{renderMixed("התשובות שלך נשמרו — הן הבסיס שהצוות בונה ממנו את האתר.")}</p>}
+              <p style={{ marginBottom: "16px" }}>{renderMixed(COPY.done_paid)}</p>
+              {domainLine && <p style={{ marginBottom: "16px" }}>{renderMixed(domainLine === "own" ? COPY.done_next_own_domain : COPY.done_next_no_domain)}</p>}
+              {gatesFinished && <p>{renderMixed(COPY.done_answers_saved)}</p>}
             </div>
           )}
         </div>
 
         {/* Self-serve cancel (approved terms: online, effective at the end of the paid month): shown as soon as the
-            sign-up charge succeeded (the research gates and the done state). */}
-        {manageLinkLabel && (phase === "gates" || phase === "submitting_gate" || phase === "done") && (
+            sign-up charge succeeded (the research gates, the done state, and a pay error after the charge). */}
+        {manageLinkLabel && (phase === "gates" || phase === "submitting_gate" || phase === "done" || (phase === "error" && payError === "after_charge")) && (
           <p style={{ marginTop: "16px", textAlign: "center" }}>
             <Link href={manageHref} prefetch={false} data-account-link="site-bot" className="btn-outline" style={{ display: "inline-block", padding: "10px 20px" }}>
               {renderMixed(manageLinkLabel)}

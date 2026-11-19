@@ -34,8 +34,8 @@ const pay = load('src/components/site-bot/SiteBotPayClient.tsx', {
   'next/link': { __esModule: true, default: (props) => React.createElement('a', { href: props.href }, props.children) },
   'next/navigation': { useParams: () => ({ sessionId: '123e4567-e89b-42d3-a456-426614174000' }) },
   '@/lib/bidi': { renderMixed: identity },
-  '@/lib/site-bot/researchCopy': { RESEARCH_COPY: {} },
-  '@/lib/site-bot/checkout/customerError': { checkoutCallbackOutcome: () => ({ kind: 'done' }), readJsonBody: async () => ({}) },
+  '@/lib/site-bot/postPayCopy.generated': { SITE_BOT_POSTPAY_COPY: {} },
+  '@/lib/site-bot/checkout/customerError': { checkoutCallbackOutcome: () => ({ kind: 'done' }), checkoutPayErrorKind: () => 'after_charge', doneDomainLine: () => null, readJsonBody: async () => ({}) },
   '@/lib/site-bot/checkout/checkoutCopy': {
     SITE_BOT_CHECKOUT_COPY_PENDING: false, SITE_BOT_TERMS_PATH: '/site-bot/terms',
     siteBotCheckoutText: (key) => `[${key}]`, siteBotTermsConsentParts: () => ({ before: '[b]', linkLabel: '[l]', after: '[a]' }),
@@ -43,7 +43,7 @@ const pay = load('src/components/site-bot/SiteBotPayClient.tsx', {
   '@/lib/site-bot/checkout/accountCopy': { SITE_BOT_ACCOUNT_COPY: { manageLink: 'x' }, accountLinkHref: () => '/account', customerVisibleLabel: identity },
   '@/lib/payments/plans': { SITE_BOT_PLAN: { netAmount: 1 }, formatShekels: String },
   '@/lib/showcase/consentCopy.generated': copy,
-  '@/lib/site-bot/research/gatePresentation': { buildResearchGateAnswer: identity, RESEARCH_PROGRESS_KEYS: [], researchGateCopyKey: identity },
+  '@/lib/site-bot/research/gatePresentation': { buildResearchGateAnswer: identity },
 });
 
 const html = renderToStaticMarkup(React.createElement(pay.default, { cardDefaults: { number: '', expiry: '', cvc: '' } }));

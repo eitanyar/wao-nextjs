@@ -22,6 +22,10 @@ import { recordShowcaseConsent } from '@/lib/showcase/consentStore';
 // Showcase consent (2026-11-17): optional `showcaseConsent: true` from the pay page's unticked-by-default checkbox. It is
 // recorded (source 'checkout') only after the charge succeeded and never affects the charge or the reply; anything but
 // `true` records nothing (no record = not granted).
+// Charge state on every error reply (2026-11-20, post-payment screen): `chargeState` tells the pay page which error text
+// it may show. 'not_charged' = this call provably took no money (rejected before the charge, or the provider declined it),
+// so a retry is safe; 'charged' = the sign-up charge succeeded and a later step failed (never offer a retry);
+// 'unknown' = an exception inside the activation itself (the page treats it as charged).
 
 interface PendingRecord {
   collectedData: CollectedData;
@@ -33,17 +37,20 @@ function researchInput(sessionId: string, collectedData: CollectedData): SiteRes
   return buildSiteResearchInput(`checkout:${sessionId}`, collectedData, () => new Date(), sessionId);
 }
 
-function errorReply(error: string, status: number, extra: Record<string, unknown> = {}) {
-  return NextResponse.json({ error, ...extra }, { status, headers: { 'Cache-Control': 'private, no-store' } });
+export type CheckoutChargeState = 'not_charged' | 'charged' | 'unknown';
+
+function errorReply(error: string, status: number, chargeState: CheckoutChargeState, extra: Record<string, unknown> = {}) {
+  return NextResponse.json({ error, chargeState, ...extra }, { status, headers: { 'Cache-Control': 'private, no-store' } });
 }
 
 export async function POST(req: Request) {
+  let chargeState: CheckoutChargeState = 'not_charged';
   try {
     const body = await req.json();
     const sessionId: string = body?.sessionId;
     // sessionId becomes a file name under data/sites-pending/ — accept only the UUIDs that checkout/init mints.
     if (typeof sessionId !== 'string' || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(sessionId)) {
-      return errorReply('invalid_input', 400);
+      return errorReply('invalid_input', 400, 'not_charged');
     }
 
     const existingDossier = await readResearchDossier(sessionId);
@@ -61,19 +68,22 @@ export async function POST(req: Request) {
     try {
       pending = JSON.parse(fs.readFileSync(pendingPath, 'utf-8'));
     } catch {
-      return errorReply('session_not_found', 404);
+      return errorReply('session_not_found', 404, 'not_charged');
     }
     if (!pending.subscriptionId) {
       console.error(`[site-bot checkout] session=${sessionId} has no subscriptionId (pre-plan pending record)`);
-      return errorReply('session_not_found', 404);
+      return errorReply('session_not_found', 404, 'not_charged');
     }
 
+    chargeState = 'unknown';
     const activation = await activatePlanSubscription(pending.subscriptionId, { sessionId });
+    // A non-ok activation took no money in this call (callback rejected, no pending subscription, or charge declined).
+    chargeState = activation.ok ? 'charged' : 'not_charged';
     if (!activation.ok) {
       console.error(`[site-bot checkout] activation failed session=${sessionId} subscription=${pending.subscriptionId}:`, activation);
-      if (activation.reason === 'charge_failed') return errorReply('charge_failed', 402, { retryable: activation.retryable === true });
-      if (activation.reason === 'callback_invalid') return errorReply('payment_verification_failed', 402);
-      return errorReply('checkout_failed', 409);
+      if (activation.reason === 'charge_failed') return errorReply('charge_failed', 402, 'not_charged', { retryable: activation.retryable === true });
+      if (activation.reason === 'callback_invalid') return errorReply('payment_verification_failed', 402, 'not_charged');
+      return errorReply('checkout_failed', 409, 'not_charged');
     }
 
     // Support queue (2026-11-13): remember which business this subscription is for, once (fresh and alreadyActive paths).
@@ -130,6 +140,6 @@ export async function POST(req: Request) {
     return NextResponse.json(manageUrl ? { ...response, manageUrl } : response, { headers: { 'Cache-Control': 'private, no-store' } });
   } catch (error: unknown) {
     console.error('Site Bot checkout callback error:', error);
-    return errorReply('checkout_failed', 500);
+    return errorReply('checkout_failed', 500, chargeState);
   }
 }

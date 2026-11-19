@@ -11,16 +11,20 @@ import type { OwnerResearchGate, SiteResearchDossier } from './types';
 // The client-supplied collectedData is never used to decide which gates exist.
 
 /**
- * Gate types the owner may answer from the pay page. Every current type is owner-facing (the pay page renders each one).
- * A future staff-only type must stay OUT of this list; the admin path is unaffected by it.
+ * Gate types the owner may answer from the pay page. ambiguous_intent is staff-only (2026-11-20, post-payment screen): the
+ * owner cannot answer "which of these do you mean" without the candidates in front of him, so staff answer it through the
+ * admin gates path. The admin path is unaffected by this list. Research gates never block the research or generation
+ * (completion reads dossier.humanGates only), so an unanswered staff-only gate cannot stall a paid site.
  */
 export const OWNER_ANSWERABLE_GATE_TYPES: readonly ResearchGateType[] = [
   'business_boundary',
   'service_attributes',
   'geography',
   'money_services',
-  'ambiguous_intent',
 ];
+
+/** Every gate type whose stored answer (owner or staff) generation applies (gateAnswers.ts); a superset of the owner list. */
+export const STORED_ANSWER_GATE_TYPES: readonly ResearchGateType[] = [...OWNER_ANSWERABLE_GATE_TYPES, 'ambiguous_intent'];
 
 /** How long after the checkout the owner may still answer from the pay page (the page state is lost on reload). */
 export const OWNER_GATE_WINDOW_MS = 24 * 60 * 60 * 1000;

@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { checkoutCallbackOutcome, checkoutInitSessionId, customerErrorText, readJsonBody } from './customerError';
+import { checkoutCallbackOutcome, checkoutInitSessionId, checkoutPayErrorKind, customerErrorText, doneDomainLine, readJsonBody } from './customerError';
 
 // Synthetic Hebrew-letter test string built from code points (not copy).
 const HEBREW_SAMPLE = '\u05D0\u05D1\u05D2';
@@ -53,4 +53,24 @@ test('non-JSON and non-object bodies read as an empty object', async () => {
   assert.deepEqual(await readJsonBody(response('[1]')), {});
   assert.deepEqual(await readJsonBody(response('null')), {});
   assert.deepEqual(await readJsonBody(response('{"error":"checkout_unavailable"}')), { error: 'checkout_unavailable' });
+});
+
+test('pay error (2026-11-20): not-charged only when the server proves it; everything else is after-charge (no retry)', () => {
+  assert.equal(checkoutPayErrorKind({ error: 'charge_failed', chargeState: 'not_charged' }), 'not_charged');
+  assert.equal(checkoutPayErrorKind({ error: 'session_not_found', chargeState: 'not_charged' }), 'not_charged');
+  assert.equal(checkoutPayErrorKind({ error: 'checkout_unavailable' }), 'not_charged', 'the closed gate answers before any handler');
+  assert.equal(checkoutPayErrorKind({ error: 'checkout_failed', chargeState: 'charged' }), 'after_charge');
+  assert.equal(checkoutPayErrorKind({ error: 'checkout_failed', chargeState: 'unknown' }), 'after_charge');
+  assert.equal(checkoutPayErrorKind({}), 'after_charge', 'no JSON body / network failure');
+  assert.equal(checkoutPayErrorKind(null), 'after_charge');
+  assert.equal(checkoutPayErrorKind({ error: 'checkout_unavailable', chargeState: 'unknown' }), 'after_charge');
+});
+
+test('done screen domain line: own domain only with has_domain and a domain; unknown on a replay', () => {
+  assert.equal(doneDomainLine({ domainChoice: 'has_domain', ownerDomain: 'example.co.il' }), 'own');
+  assert.equal(doneDomainLine({ domainChoice: 'has_domain', ownerDomain: '' }), 'wao');
+  assert.equal(doneDomainLine({ domainChoice: 'no_domain' }), 'wao');
+  assert.equal(doneDomainLine({ domainChoice: 'not_sure' }), 'wao');
+  assert.equal(doneDomainLine({}), 'wao');
+  assert.equal(doneDomainLine(undefined), null);
 });

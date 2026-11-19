@@ -63,3 +63,29 @@ export function checkoutCallbackOutcome(ok: boolean, body: CheckoutCallbackBody)
 export function checkoutInitSessionId(ok: boolean, body: { sessionId?: unknown }): string | null {
   return ok && typeof body.sessionId === 'string' && SESSION_ID.test(body.sessionId) ? body.sessionId : null;
 }
+
+/** Which pay-error text the pay page may show (2026-11-20). */
+export type CheckoutPayErrorKind = 'not_charged' | 'after_charge';
+
+/**
+ * The pay error for a failed checkout callback. 'not_charged' (the retry button stays) only when the server says this call
+ * provably took no money (`chargeState: 'not_charged'`, paid.ts) or the paid flow is closed (`checkout_unavailable`, the
+ * route gate answers before any handler runs). Everything else (charged, unknown, no JSON body, a network failure) is
+ * 'after_charge': retrying is not provably idempotent there (the live provider's idempotency-key handling is unproven),
+ * so the page never offers a second payment.
+ */
+export function checkoutPayErrorKind(body: { chargeState?: unknown; error?: unknown } | null | undefined): CheckoutPayErrorKind {
+  if (body?.chargeState === 'not_charged') return 'not_charged';
+  if (body?.error === 'checkout_unavailable' && body.chargeState === undefined) return 'not_charged';
+  return 'after_charge';
+}
+
+/**
+ * The done screen's "what happens next" line: 'own' when the owner chose his own domain and gave it at checkout, 'wao' for
+ * no domain or not sure (staff follow up; the site goes live on the free WAO address first), null when the reply carried
+ * no checkout data (a replayed callback): then the line is left out rather than guessed.
+ */
+export function doneDomainLine(collectedData: Pick<CollectedData, 'domainChoice' | 'ownerDomain'> | null | undefined): 'own' | 'wao' | null {
+  if (!collectedData || typeof collectedData !== 'object') return null;
+  return collectedData.domainChoice === 'has_domain' && typeof collectedData.ownerDomain === 'string' && collectedData.ownerDomain.trim() !== '' ? 'own' : 'wao';
+}
