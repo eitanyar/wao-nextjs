@@ -6,9 +6,9 @@
  *   model. When the page has that owner fact, the question becomes a CODE-BUILT item: q = the pool question verbatim,
  *   a = the code-rendered fact (the existing B6 proof sentence, or the cost FAQ answer for the price). Zero model text.
  *   No fact -> no question (never a "depends on the job" filler). One item per topic, in QA_TOPIC_PRIORITY.
- * - Every other pool question goes to the model, which writes only `a`: `q` is the pool question verbatim when it is
- *   Hebrew, and the code puts the qaAnswerLead ("At {business} in {city}:") in front of `a` after the final gates, in the
- *   same string (so the renderer shows lead and answer in one paragraph).
+ * - Every other pool question goes to the model, which writes only `a`, in the owner's first person: `q` is the pool
+ *   question verbatim when it is Hebrew. (The code-built third-person answer lead was removed 2026-11-20, Fable 5.2 report
+ *   rule C: it flipped the answer's voice.)
  * - Code-built items sit first in qaItems; their paths and every model item's `q` are code-owned (no gate hit, never
  *   dropped by the repetition budget: the gates and the budget read QaCodeOwnership).
  *
@@ -33,11 +33,10 @@
 import type { CollectedData } from '../bot/prompts';
 import type { BriefQuestion, PageBrief } from '../site-bot/research/pageBrief';
 import { CLAIM_RULES } from './copyGates.config';
-import { withoutQaLead as withoutLead, type QaCodeOwnership } from './copyGates';
 import { DEPTH_BLOCK_LIMITS, wordCount, type DepthQaItem } from './depthBlocks';
 import { CLAIM_TOKENS } from './generationData';
 import { PREFIX_LETTERS } from './hebrewPrefixLetters';
-import { fillTemplate, licenseDocumentNouns, ownerFacts, proofText, responseQaAnswer, type FactOptionalListKey, type OwnerFactTemplates } from './ownerFactCopy';
+import { licenseDocumentNouns, ownerFacts, proofText, responseQaAnswer, type FactOptionalListKey, type OwnerFactTemplates } from './ownerFactCopy';
 import { costFaq, ownerPricing } from './researchedPricing';
 
 export type QaFactTopic = 'price' | 'license' | 'callback' | 'warranty' | 'years';
@@ -249,20 +248,13 @@ function mostlyHebrew(value: string): boolean {
   return he > 0 && he > latin;
 }
 
-/** The answer lead of a page ("At {business} in {city}:"), or null without a business name or a city. */
-export function qaAnswerLead(brief: PageBrief, data: CollectedData, templates: OwnerFactTemplates): string | null {
-  const business = (typeof data.businessName === 'string' && data.businessName.trim()) || brief.site?.businessName?.trim() || '';
-  const city = brief.site?.city?.trim() ?? '';
-  return business && city ? fillTemplate(templates.qaAnswerLead, { business, city }) : null;
-}
-
 /**
  * The qaItems of a code-owned page, before the gates: the code-built items first, then the model's items on non-topic pool
- * questions (q = the pool question verbatim when it is Hebrew; a lead already in `a` is removed), at most maxItems. A model
+ * questions (q = the pool question verbatim when it is Hebrew), at most maxItems. A model
  * item on a topic question, an unknown question or a repeated question is dropped. Returns the list, or the model value
  * unchanged (null / absent) when there is nothing to add.
  */
-export function assembleQaItems(model: unknown, plan: QaPlan, lead: string | null): unknown {
+export function assembleQaItems(model: unknown, plan: QaPlan): unknown {
   const pool = new Map(plan.modelPool.map(item => [item.id, item.question]));
   const used = new Set(plan.codeItems.map(item => item.questionId));
   const mine: Record<string, unknown>[] = [];
@@ -271,11 +263,7 @@ export function assembleQaItems(model: unknown, plan: QaPlan, lead: string | nul
       if (!isPlain(item) || typeof item.questionId !== 'string' || !pool.has(item.questionId) || used.has(item.questionId)) continue;
       used.add(item.questionId);
       const question = pool.get(item.questionId) ?? '';
-      mine.push({
-        ...item,
-        q: mostlyHebrew(question) ? question : item.q,
-        ...(typeof item.a === 'string' ? { a: withoutLead(item.a, lead) } : {}),
-      });
+      mine.push({ ...item, q: mostlyHebrew(question) ? question : item.q });
     }
   }
   if (!plan.codeItems.length && !Array.isArray(model)) return model;
@@ -283,28 +271,3 @@ export function assembleQaItems(model: unknown, plan: QaPlan, lead: string | nul
   return items.length ? items : (Array.isArray(model) ? [] : model);
 }
 
-/**
- * After the final gates: the lead goes in front of every model-written answer (same string = same rendered paragraph). An
- * answer that no longer fits the limits with its lead is dropped (never cut); a block left under its minimum becomes null
- * with its headline. Code-built items are never touched. Returns the fix notes.
- */
-export function applyQaAnswerLeads(copy: Record<string, unknown>, ownership: QaCodeOwnership, lead: string | null): string[] {
-  const items = copy.qaItems;
-  if (!Array.isArray(items) || !lead) return [];
-  const notes: string[] = [];
-  const kept: unknown[] = [];
-  items.forEach((item, index) => {
-    if (index < ownership.codeItems || !isPlain(item) || typeof item.a !== 'string') { kept.push(item); return; }
-    const answer = `${lead} ${withoutLead(item.a, lead)}`;
-    if (!qaItemFits(typeof item.q === 'string' ? item.q : '', answer)) { notes.push(`qa_lead_drop_item:qaItems[${index}]`); return; }
-    kept.push({ ...item, a: answer });
-  });
-  if (kept.length < DEPTH_BLOCK_LIMITS.qa.minItems) {
-    notes.push(`qa_lead_drop_depth_block:qaItems:${items.length}->0`);
-    copy.qaItems = null;
-    if ('qaHeadline' in copy) copy.qaHeadline = null;
-    return notes;
-  }
-  copy.qaItems = kept;
-  return notes;
-}

@@ -203,8 +203,9 @@ test('3 license: an English owner grade never authorises a Hebrew grade; only th
   // Prompt: owner wording only, never a mapped grade; the legacy license-grade example is cut from the research prompt.
   const prompt = buildResearchPageGenerationPrompt(briefWithSite(), { businessNiche: 'electrician', license: 'Master electrician license' });
   assert.match(prompt, /never translate or map it to a license grade/);
-  assert.doesNotMatch(prompt, /Example 2 \u2014 aboutBlurb opener/);
-  assert.match(prompt, /Example 3 \u2014/);
+  // 2026-11-20 (Fable 5.2 rule E): the examples are abstract English entries; the aboutBlurb-opener entry is still cut.
+  assert.doesNotMatch(prompt, /- aboutBlurb opener: /);
+  assert.match(prompt, /- Trust bar item: /);
   for (const grade of grades) assert.ok(!prompt.includes(grade), grade);
 });
 

@@ -57,6 +57,7 @@ import {
   SUBJECT_CARRY_PREFIXES,
   VOICE_PROMPT_RULES,
 } from './generationData';
+import { NAME_INTRO_TOKEN } from './generationData';
 import { CLAIM_RULES, FACT_PHRASE_REPEAT_MAX, FACT_REPEAT_MAX, PLURAL_ADDRESS_TOKENS, SERVICE_DESCRIPTION_MIN_CHARS, WAO_SERVICE_TERMS_HE, WE_FORM_TOKENS } from './copyGates.config';
 import {
   claimTokenPattern,
@@ -68,7 +69,6 @@ import {
   serviceAreaHits,
   fixTimeScope,
   GATE_RULES,
-  NAME_OPENER,
   pagePhrases,
   runCopyGates,
   sameDayFinishScope,
@@ -104,7 +104,7 @@ import { formatBusinessHoursHebrew } from './businessHours';
 import { icon, withoutEmoji } from './siteDesign';
 import { VERTICAL_THEMES } from './verticalThemes';
 import { VERTICAL_ASSETS } from './verticalAssets';
-import type { SiteCopy } from './lpCopyPrompt';
+import { buildLpCopyPrompt, type SiteCopy } from './lpCopyPrompt';
 import type { PageBrief } from '../site-bot/research/pageBrief';
 import type { CollectedData } from '../bot/prompts';
 import { setOwnerFactTemplatesForTests } from './ownerFactCopy';
@@ -540,7 +540,10 @@ test('M2a.4 4: a reduplicated word joined by a hyphen or en-dash is a hit; the m
 });
 
 test('M2a.4 5: the self-introduction must use the owner name exactly as in the facts (no transliteration)', () => {
-  assert.ok(NAME_OPENER.length > 0 && !/[A-Za-z]/.test(NAME_OPENER), 'opener read from the prompt template');
+  // 2026-11-20 (Fable 5.2 rule G): the prompt no longer mandates the opener; the gate keys on Noa's NAME_INTRO_TOKEN.
+  const NAME_OPENER = NAME_INTRO_TOKEN;
+  assert.ok(NAME_OPENER.length > 0 && !/[A-Za-z]/.test(NAME_OPENER), 'opener token from generationData');
+  assert.ok(!buildLpCopyPrompt({ ownerName: 'ZQXOWNERPROBE' }).includes('Open with: '), 'no mandated opener in the prompt');
   const latin = copyGateContext({ ownerName: 'Test Owner A' }, []);
   const hits = (value: string, gates: CopyGateContext) => runCopyGates(loose({ aboutBlurb: value }), gates).filter(item => item.rule === GATE_RULES.nameSpelling).length;
   assert.equal(hits(`${NAME_OPENER} Test, ${HE_WORD}`, latin), 0);

@@ -17,7 +17,7 @@ import { buildFearPromiseSpec, buildSameDayScopeSpec, pageHasSameDayGrant, sameD
 import { costFaq, formatShekels, ownerPricing, pricingPromisePhrases } from './researchedPricing';
 import { proseSentences, restatementMatches, type FactRestatementSpec, type RestatementFact } from './factRestatement';
 import { budgetStrings, repetitionBudgetDecisions, type BudgetOptions, type BudgetString } from './repetitionBudget';
-import { applyQaAnswerLeads, assembleQaItems, planQa, qaAnswerLead, type QaPlan } from './qaCodeOwned';
+import { assembleQaItems, planQa, type QaPlan } from './qaCodeOwned';
 import {
   DEPTH_BLOCK_KEYS,
   DEPTH_BLOCK_LIMITS,
@@ -604,6 +604,23 @@ export const PITCH_FIRST_PROOF_POINT_RULE = '- Every proof point you put in trus
  */
 export const LICENSE_RULE_CODE_OWNED = '- LICENSE (binding): if the owner\'s license wording is in Hebrew, name it exactly in that wording, with one consistent term on every page. Never translate a license or map it to a license grade, level or title (for example "master"), and never add a grade the owner did not state in Hebrew.';
 
+/**
+ * Fable 5.2 Hebrew report 2026-11-20, section 4 rules A and D (English only; no Hebrew examples). A: one separator style
+ * across the hero headlines of a site, with the headlines already written shown to the model. D: a service page whose owner
+ * facts hold nothing specific to its service gets a plain service + city + one true general fact headline, never an
+ * invented angle.
+ */
+export function siteHeadlineRules(brief: Pick<PageBrief, 'site' | 'page'>, priorHeroHeadlines: readonly string[] = []): string[] {
+  if (!brief.site) return [];
+  const prior = priorHeroHeadlines.map(item => (typeof item === 'string' ? item.trim() : '')).filter(Boolean);
+  return [
+    `- HEADLINE STYLE (binding): every page of this site writes heroHeadline in one separator style: the same punctuation between its parts (or none), never a colon on one page and a dash on another. ${prior.length
+      ? `The heroHeadlines already written for this site, in order: ${JSON.stringify(prior)}. Use the same separator style they use; never reuse their wording.`
+      : 'This is the first page of the site: use one plain style the other pages can repeat.'}`,
+    ...(brief.page.pageClass === 'homepage' ? [] : ['- THIN FACTS (binding): when the owner facts hold no fact specific to this page\'s service (for example his usp or his proof is about another service), never invent an angle, a detail or a technical claim for it. Then heroHeadline is the service name, the city and one true general fact from the owner facts (one the other binding rules allow on this page), and every other field stays on general owner facts.']),
+  ];
+}
+
 export function buildResearchCopyRules(brief: PageBrief, data: CollectedData = {}, siteTerms?: readonly string[]): string[] {
   const site = brief.site;
   const codeOwns = codeOwnsFacts(brief);
@@ -917,7 +934,7 @@ export function buildVoiceRules(brief: PageBrief, data: CollectedData = {}): str
   ];
 }
 
-export function buildResearchPageCopyPrompt(brief: PageBrief, data: CollectedData = {}, siteTerms?: readonly string[]): string {
+export function buildResearchPageCopyPrompt(brief: PageBrief, data: CollectedData = {}, siteTerms?: readonly string[], priorHeroHeadlines: readonly string[] = []): string {
   const codeOwns = codeOwnsFacts(brief);
   // Copy v2 slice 2: an owner answer that is English non-numeric text (droppedOwnerFactKeys) is never shown to the model.
   const hidden = modelHiddenProofIds(brief, data);
@@ -958,7 +975,7 @@ RESEARCH RULES:
 - Keep required internal-link targets limited to links.
 
 COPY RULES (binding):
-${buildResearchCopyRules(brief, data, siteTerms).join('\n')}
+${[...buildResearchCopyRules(brief, data, siteTerms), ...siteHeadlineRules(brief, priorHeroHeadlines)].join('\n')}
 ${pitchFirstPage(brief) ? `\n${buildPitchFirstSection(brief)}\n` : ''}${depthPage(brief) ? `\n${buildDepthSection(brief)}\n` : ''}
 The following owner-fact prompt provides the required SiteCopy JSON schema. Treat its owner facts as context only; use a fact in output only when the research brief authorizes it. Its HARD RULES, BANNED PHRASES, address and voice rules are NOT context: they are binding, together with the COPY RULES above.`;
 }
@@ -1022,7 +1039,7 @@ export function buildDepthSection(brief: PageBrief, data?: CollectedData): strin
     ...(enabled?.qa && data && codeOwnedQa(brief, data) ? codeOwnedQaRules(brief, data) : []),
     ...(enabled?.qa && !(data && codeOwnedQa(brief, data)) ? [
       `- qaItems (B4): ${promptQaMinItems()} to ${limits.qa.maxItems} questions from questionPool that the owner's facts answer. Each item: "questionId" (the id of the question in questionPool), "q" (that question in natural Hebrew, addressed to one person in the singular, keeping its meaning), "a" (the answer, at most ${limits.qa.maxAnswerWords} words) and "factIds".`,
-      `- Each answer's first sentence answers the question directly and names the business (${business})${city ? ` and the base city (${city})` : ''}. Answer only from the owner facts: skip every question his facts do not answer, and never guess. If fewer than ${promptQaMinItems()} questions can be answered, output null for qaItems and qaHeadline.`,
+      `- Each answer's first sentence answers the question directly (yes or no, or the fact itself) and names the business (${business})${city ? ` and the base city (${city})` : ''}. Answer only from the owner facts: when his facts do not answer a question, leave the question out, and never guess. If fewer than ${promptQaMinItems()} questions can be answered, output null for qaItems and qaHeadline.`,
       `- qaHeadline: the heading of the questions, at most ${limits.headlineMaxChars} characters, or null.`,
     ] : []),
     ...(enabled?.proof && !codeOwnsFacts(brief) ? [
@@ -1828,7 +1845,7 @@ export function withSystemFields(value: Loose, brief: PageBrief, data: Collected
   // Copy v2 slice 6: code-built Q&A items first (owner facts on pool questions), then the model's items on the other pool
   // questions with the pool wording as q (the lead goes in front of each answer after the final gates).
   const qa = codeOwnedQa(brief, data);
-  if (qa && ('qaItems' in next || qa.plan.codeItems.length)) next.qaItems = assembleQaItems(next.qaItems, qa.plan, qa.lead);
+  if (qa && ('qaItems' in next || qa.plan.codeItems.length)) next.qaItems = assembleQaItems(next.qaItems, qa.plan);
   // Content depth: the blocks stay only on a service page that may generate them (settleDepthBlocks drops the rest).
   settleDepthBlocks(next, depthPage(brief) ? brief.blocksEnabled ?? null : null, brief.site?.pageName ?? null);
   if (!brief.site) return next;
@@ -1933,11 +1950,16 @@ function fieldStrings(copy: Loose, name: string): Array<{ field: string; value: 
 
 /**
  * M2b.1g (section 23.2, Noa's slip 3): SENTENCE_FINAL_PERIOD_FIELDS end with "." unless they already end with . ! or ?;
- * NO_FINAL_PERIOD_FIELDS lose a trailing ".". Punctuation only; heroSubheadline is untouched (Noa owns it).
+ * NO_FINAL_PERIOD_FIELDS lose a trailing ".". Punctuation only.
  */
 /** M2b.1h: the story body is a sentence field and its headline a label field (engineer extension of the section 23.2 lists). */
 export const M2B1H_SENTENCE_FIELDS: readonly string[] = ['storyBody'];
-export const M2B1H_LABEL_FIELDS: readonly string[] = ['storyHeadline'];
+/**
+ * Fable 5.2 report 2026-11-20 rule B: heroSubheadline (also the meta description) was the one hero field with no rule, so
+ * pages of one site shipped with and without a final period. It joins the label list: a trailing period goes, so the field
+ * never grows past its limit (a "?" or "!" stays).
+ */
+export const M2B1H_LABEL_FIELDS: readonly string[] = ['storyHeadline', 'heroSubheadline'];
 const sentenceFields = () => [...SENTENCE_FINAL_PERIOD_FIELDS, ...M2B1H_SENTENCE_FIELDS];
 const labelFields = () => [...NO_FINAL_PERIOD_FIELDS, ...M2B1H_LABEL_FIELDS];
 
@@ -2097,15 +2119,18 @@ const RESEARCH_PERSONA_LINE = 'You are Tamar, a Sabra conversion copywriter writ
 const SOLO_EXAMPLE_START = '   (banned only BARE';
 const SOLO_EXAMPLE_END = ')\n';
 
-/** The legacy prompt's invented license-grade example (aboutBlurb opener); cut from the research prompt (item 3). */
-const LICENSE_EXAMPLE_START = 'Example 2 \u2014 aboutBlurb opener';
-const LICENSE_EXAMPLE_END = 'Example 3 \u2014';
+/**
+ * The legacy prompt's aboutBlurb-opener example (credential wording); cut from the research prompt (item 3). 2026-11-20
+ * (Fable 5.2 rule E): the examples are abstract English descriptions now; the same entry is still cut.
+ */
+const LICENSE_EXAMPLE_START = '- aboutBlurb opener: ';
+const LICENSE_EXAMPLE_END = '- Trust bar item: ';
 
 function ownerFactText(data: CollectedData): string {
   return Object.values(data).filter((value): value is string => typeof value === 'string').join('\n');
 }
 
-export function buildResearchPageGenerationPrompt(brief: PageBrief, data: CollectedData, siteTerms?: readonly string[]): string {
+export function buildResearchPageGenerationPrompt(brief: PageBrief, data: CollectedData, siteTerms?: readonly string[], priorHeroHeadlines: readonly string[] = []): string {
   // M2a.2: a quote that is not mostly Hebrew never reaches the model (never translated, item 8),
   // and with no owner guarantee the schema shows guaranteeBlock as null (item 7).
   const quoteData: CollectedData = brief.site && !effectiveReviewQuote(data) ? { ...data, reviewQuote: '' } : data;
@@ -2143,7 +2168,7 @@ export function buildResearchPageGenerationPrompt(brief: PageBrief, data: Collec
     }
   }
   if (pitchFirstPage(brief)) clientSchema = pitchFirstSchema(clientSchema, storyPage(brief));
-  return `${buildResearchPageCopyPrompt(brief, data, siteTerms)}\n\nOWNER FACTS AND SITE COPY SCHEMA:\n${clientSchema}\n\n${buildSiteCopyHardLimitsBlock('HARD LIMITS', omit, layoutFor(brief))}`;
+  return `${buildResearchPageCopyPrompt(brief, data, siteTerms, priorHeroHeadlines)}\n\nOWNER FACTS AND SITE COPY SCHEMA:\n${clientSchema}\n\n${buildSiteCopyHardLimitsBlock('HARD LIMITS', omit, layoutFor(brief))}`;
 }
 
 // ---------------------------------------------------------------------------
@@ -2154,28 +2179,19 @@ export function buildResearchPageGenerationPrompt(brief: PageBrief, data: Collec
 // ---------------------------------------------------------------------------
 
 /**
- * Copy v2 slice 6: the Q&A plan and answer lead of a code-owned service page with a Q&A block (null otherwise: pending
- * templates, no depth page, Q&A off).
+ * Copy v2 slice 6: the Q&A plan of a code-owned service page with a Q&A block (null otherwise: pending templates, no depth
+ * page, Q&A off).
  */
-export function codeOwnedQa(brief: PageBrief, data: CollectedData): { plan: QaPlan; lead: string | null } | null {
+export function codeOwnedQa(brief: PageBrief, data: CollectedData): { plan: QaPlan } | null {
   const templates = brief.site ? codeOwnedFactTemplates() : null;
   if (!templates || !depthPage(brief) || !brief.blocksEnabled?.qa) return null;
-  return { plan: planQa(brief, data, templates, { installPage: isInstallPage(brief) }), lead: qaAnswerLead(brief, data, templates) };
+  return { plan: planQa(brief, data, templates, { installPage: isInstallPage(brief) }) };
 }
 
 /** Copy v2 slice 6: how many leading qaItems of a page are code-built (rescore / diagnostics). */
 export function codeQaItemCount(copy: Loose, brief: PageBrief, data: CollectedData): number {
   const qa = codeOwnedQa(brief, data);
   return qa && Array.isArray(copy.qaItems) ? Math.min(qa.plan.codeItems.length, copy.qaItems.length) : 0;
-}
-
-/**
- * Copy v2 slice 6, after the final gates: the qaAnswerLead in front of every model-written answer (in the same string, so
- * it renders in the same paragraph). Returns the fix notes; nothing on other pages.
- */
-export function withQaAnswerLeads(copy: Loose, brief: PageBrief, data: CollectedData): string[] {
-  const qa = codeOwnedQa(brief, data);
-  return qa ? applyQaAnswerLeads(copy, { codeItems: qa.plan.codeItems.length }, qa.lead) : [];
 }
 
 /** The code-built strings of one page (what the reader already sees from the system), or null while the templates are pending. */
@@ -2225,7 +2241,7 @@ export function alreadyOnPageRule(strings: CodeBuiltFactStrings | null): string 
 }
 
 /** Copy v2: the rules of one page, by section (the count is asserted in the tests). */
-export function buildResearchCopyRulesV2(brief: PageBrief, data: CollectedData = {}): PromptV2Section[] {
+export function buildResearchCopyRulesV2(brief: PageBrief, data: CollectedData = {}, priorHeroHeadlines: readonly string[] = []): PromptV2Section[] {
   const site = brief.site;
   const sections = rendersSiteSections(brief.page.pageClass) && Boolean(site);
   const story = storyPage(brief);
@@ -2265,6 +2281,7 @@ export function buildResearchCopyRulesV2(brief: PageBrief, data: CollectedData =
   const fields: string[] = [
     heroAnchorRule(brief),
     ...(pitch ? ['- heroHeadline carries the one big promise. It has no fixed shape: no required hook, question, dash or clause order.'] : []),
+    ...siteHeadlineRules(brief, priorHeroHeadlines),
     cutContractRules(brief)[0],
     ...(story ? [
       `- storyBody: the story section right below the hero, ${STORY_MIN_SENTENCES} to ${STORY_MAX_SENTENCES} sentences (at most ${limits.storyBody} characters): the felt scene of the reader's problem, his highest-tension moment, the owner's mechanism stated once, and an ending on the reader's outcome, never on the tool or the owner.`,
@@ -2363,10 +2380,10 @@ export function v2OutputSkeleton(brief: PageBrief, data: CollectedData): string 
 }
 
 /** Copy v2: the whole Tamar prompt of a page whose facts are code-built (resolvePromptVersion === 'v2'). */
-export function buildResearchPageGenerationPromptV2(brief: PageBrief, data: CollectedData): string {
+export function buildResearchPageGenerationPromptV2(brief: PageBrief, data: CollectedData, priorHeroHeadlines: readonly string[] = []): string {
   if (!codeOwnsFacts(brief)) throw new Error('copy v2 prompt needs code-owned facts (fact templates pending)');
   const hidden = modelHiddenProofIds(brief, data);
-  const sections = buildResearchCopyRulesV2(brief, data);
+  const sections = buildResearchCopyRulesV2(brief, data, priorHeroHeadlines);
   const brief2 = {
     page: brief.page,
     persona: brief.persona,
@@ -2423,7 +2440,7 @@ export function codeOwnedQaRules(brief: PageBrief, data: CollectedData): string[
   return [
     `- qaItems (B4): at most ${room} questions from questionPool that the owner's facts answer${built ? ` (the system adds ${built} more itself, on the facts it shows)` : ''}. Each item: "questionId" (the id of the question in questionPool), "q" (that question exactly as written in questionPool; the system keeps the pool wording), "a" (the answer, in the owner's first person, at most ${limits.qa.maxAnswerWords} words) and "factIds".`,
     '- Answer the question directly in the first sentence: yes or no, or the fact itself. Write each answer self-contained: never a pointer such as "as above", "see below" or "as I said".',
-    `- Never name the business in an answer: the system puts ${JSON.stringify(qa?.lead ?? '')} in front of every answer. Answer only from the owner facts: skip every question his facts do not answer, and never guess.${need ? ` If fewer than ${need} questions can be answered, output null for qaItems and qaHeadline.` : ' If none can be answered, output an empty list for qaItems.'}`,
+    `- Never name the business in an answer: the owner answers as "I". Answer only from the owner facts: when his facts do not answer a question, leave the question out, and never guess.${need ? ` If fewer than ${need} questions can be answered, output null for qaItems and qaHeadline.` : ' If none can be answered, output an empty list for qaItems.'}`,
     `- qaHeadline: the heading of the questions, at most ${limits.headlineMaxChars} characters, or null.`,
   ];
 }
@@ -2548,10 +2565,10 @@ export function briefGateContext(brief: PageBrief, data: CollectedData): CopyGat
     ...(site && codeOwnsFacts(brief) ? { ...claimScopeSpecs(brief, data, codeOwnedFactTemplates() as OwnerFactTemplates), claimScopeFields: researchedRenderedFieldsFor(brief.page.pageClass) } : {}),
     // M2b.1h: pitch-first pages may restate the promise in fresh words; every research page blocks verbatim repeats.
     ...(site ? { promiseRestatement: pitchFirstPage(brief), phraseRepeatFields: researchedRenderedFieldsFor(brief.page.pageClass) } : {}),
-    // Copy v2 slice 6: the code-built Q&A items and every pool question are code-owned; the lead is not the model's.
+    // Copy v2 slice 6: the code-built Q&A items and every pool question are code-owned.
     ...(() => {
       const qa = codeOwnedQa(brief, data);
-      return qa ? { qaCodeOwnership: { codeItems: qa.plan.codeItems.length }, qaAnswerLead: qa.lead } : {};
+      return qa ? { qaCodeOwnership: { codeItems: qa.plan.codeItems.length } } : {};
     })(),
     // Content depth: the fact-trace and term-density inputs of a service page with depth blocks.
     ...(depthPage(brief) ? { depth: {
@@ -2622,7 +2639,8 @@ export async function generateResearchPageCopy(
     promptVersion: version,
     ...(dependencies.priorMechanismKeys?.length ? { priorMechanismKeys: [...dependencies.priorMechanismKeys] } : {}),
   };
-  const prompt = version === 'v2' ? buildResearchPageGenerationPromptV2(brief, data) : buildResearchPageGenerationPrompt(brief, data, dependencies.siteTerms);
+  const priorHeadlines = dependencies.priorHeroHeadlines ?? [];
+  const prompt = version === 'v2' ? buildResearchPageGenerationPromptV2(brief, data, priorHeadlines) : buildResearchPageGenerationPrompt(brief, data, dependencies.siteTerms, priorHeadlines);
   const tamarSystem = !brief.site ? COPY_SYSTEM_PROMPT : version === 'v2' ? SITE_COPY_SYSTEM_PROMPT_V2 : SITE_COPY_SYSTEM_PROMPT;
   const tamarCopy = await settleStage(ctx, 'tamar', () => callJson(tamarSystem, prompt, { thinkingBudget: pitchFirstPage(brief) ? PITCH_FIRST_THINKING_BUDGET : 1500 }));
   // Content depth: Tamar's factIds / questionId go back into Noa's raw answer before it is settled (Noa edits text only).
@@ -2636,10 +2654,6 @@ export async function generateResearchPageCopy(
   if (finalFixes.length) ctx.emit({ stage: 'final', kind: 'deterministic_fix', fixes: finalFixes });
   assertCopyAt('final', finalCopy, shapeOptions(brief));
   assertGatesAt('final', finalCopy as unknown as Loose, ctx.gates, ctx.emit);
-  // Copy v2 slice 6: the answer lead goes in after the final gates (it names the business; the gates read the model's words).
-  const leadFixes = withQaAnswerLeads(finalCopy as unknown as Loose, brief, data);
-  if (leadFixes.length) ctx.emit({ stage: 'final', kind: 'deterministic_fix', fixes: leadFixes });
-  assertCopyAt('final', finalCopy, shapeOptions(brief));
   const gap = depthLengthNote(finalCopy as unknown as Loose, brief);
   if (gap) ctx.emit({ stage: 'final', kind: 'warnings', violations: [gap] });
   // 2026-11-10 (reviewQuote bug): an owner quote the site cannot show is logged, never silently dropped.

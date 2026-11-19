@@ -23,7 +23,11 @@ const ROOT = path.resolve(__dirname, '../../..');
  * Re-pinned 2026-11-16 for the removal of the unused <symbol id="i-star"> from the shared sprite: re-inserting that one
  * symbol reproduces the previous hash 058f2f6b...743a byte for byte, so nothing else moved.
  */
-const GOLDEN_LOOK_OFF = '9b219769fd4c832d8035f7db6bd5c3cbc5f22058066570534a6c621dea79f548';
+/**
+ * Re-pinned 2026-11-20 for the related-links link rows (Fable 14.11 item 7): rewriting only the related-links <nav> back to
+ * its previous inline-link markup reproduces the previous hash 9b219769...f548 byte for byte, so nothing else moved.
+ */
+const GOLDEN_LOOK_OFF = 'df9a18230b3cdb3200daf7fa07769e18bee9dc1c74bf906459466a24186b3cd4';
 
 function siteHash(files: Record<string, string>): string {
   const hash = createHash('sha256');

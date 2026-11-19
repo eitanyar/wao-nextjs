@@ -310,6 +310,19 @@ export function heroPhotoSlot(): string {
   return '';
 }
 
+type SectionTheme = Pick<VerticalTheme, 'surface' | 'border' | 'textPrimary' | 'accentText'>;
+
+/**
+ * Related links as tidy link rows (Fable 14.11 item 7): a list of block links, each at least 48px tall, start-aligned text
+ * with the sprite chevron at the end (it points left, "forward" in RTL), a hairline between rows. Labelled by its visible H2.
+ * '' without links.
+ */
+export function relatedLinksNav(t: SectionTheme, heading: string, links: ReadonlyArray<{ href: string; text: string }>): string {
+  if (!links.length) return '';
+  const rows = links.map(link => `<li style="border-bottom:1px solid ${t.border};"><a href="${esc(link.href)}" style="display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:48px;padding:12px 4px;color:${t.accentText};font-weight:700;text-align:start;"><span>${esc(link.text)}</span>${icon('chev', 'ic chev')}</a></li>`).join('');
+  return `<nav data-section="related-links" aria-labelledby="related-links-heading" style="padding:24px 20px;background:${t.surface};"><div style="max-width:1120px;margin:0 auto;"><h2 id="related-links-heading" style="font-size:0.95rem;font-weight:700;color:${t.textPrimary};margin-bottom:6px;">${esc(heading)}</h2><ul role="list" style="list-style:none;margin:0;padding:0;max-width:640px;border-top:1px solid ${t.border};">${rows}</ul></div></nav>`;
+}
+
 /**
  * The owner's hours for display (hero.hours): day groups from Noa's day letters, en-dash ranges with no spaces, 24h times,
  * a day the owner did not list shown with hours.closedDay, one ", " between day groups, in week order. Null when the hours

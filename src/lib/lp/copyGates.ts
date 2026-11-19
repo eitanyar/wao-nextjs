@@ -9,7 +9,6 @@
  */
 
 import type { CollectedData } from '../bot/prompts';
-import { buildLpCopyPrompt } from './lpCopyPrompt';
 import {
   AC_SEGMENT_KEYWORD,
   AC_VERTICAL_SLUG_KEYWORDS,
@@ -326,8 +325,6 @@ export interface CopyGateContext {
    * every item's `q` is the pool question (code-owned); no gate hit lands on them. Set only while code owns the facts.
    */
   qaCodeOwnership?: QaCodeOwnership;
-  /** Copy v2 slice 6: the page's qaAnswerLead (removed before gate_qa_brand_in_answer reads an answer). */
-  qaAnswerLead?: string | null;
   /** Rerun-3 item 4: gate_fear_promise inputs (unset = off). */
   fearPromise?: FearPromiseSpec;
   /** Rerun-3 item 5: gate_same_day_scope inputs (unset = off: the owner has a response fact). */
@@ -812,15 +809,8 @@ function sameDayHits(value: string, ctx: CopyGateContext, finishScope: 'all' | S
 /** A reduplicated Hebrew word joined by a hyphen or en-dash (the line-by-line form takes a maqaf). */
 const REDUPLICATION_DASH_PATTERN = new RegExp(`(?<!${HEB_CLASS})(${HEB_CLASS}{2,})\\s*[-\u2013]\\s*\\1(?!${HEB_CLASS})`, 'u');
 
-const OPENER_PROBE = 'ZQXOWNERPROBE';
-/**
- * The self-introduction opener word ("my name is", the first of the legacy prompt's two openers), read
- * from the prompt template at load time so the gate and the prompt never drift. Empty if the template changed.
- */
-export const NAME_OPENER: string = (() => {
-  const match = new RegExp(`Open with: "(\\S+) ${OPENER_PROBE}," or "(\\S+) ${OPENER_PROBE},"`).exec(buildLpCopyPrompt({ ownerName: OPENER_PROBE }));
-  return match ? match[1] : '';
-})();
+// 2026-11-20 (Fable 5.2 rule G): the legacy prompt no longer mandates a self-introduction opener, so the opener word is no
+// longer read from the prompt template; the gate keys on Noa's NAME_INTRO_TOKEN (generationData) alone.
 /**
  * M2a.7 (Noa section 21): the name opener is a homograph, so it is a name intro only at a sentence start (the start of
  * the field, or right after ". ", "? " or "! ") or right after a NAME_INTRO_LEAD_INS entry (a whole word) plus ", ".
@@ -1102,13 +1092,6 @@ export function isCodeOwnedQaField(field: string, ownership: QaCodeOwnership | u
   return Number(match[1]) < ownership.codeItems || match[2] === 'q';
 }
 
-/** An answer without a leading qaAnswerLead (a record that already carries it, settled again). */
-export function withoutQaLead(answer: string, lead: string | null | undefined): string {
-  if (!lead) return answer;
-  const text = answer.trimStart();
-  return text.startsWith(lead) ? text.slice(lead.length).trimStart() : answer;
-}
-
 /** Copy v2 slice 6: gate_qa_brand_in_answer on the model-written answers (code-built items are skipped). */
 function qaBrandHits(copy: Record<string, unknown>, ctx: CopyGateContext): GateViolation[] {
   const name = (ctx.businessName ?? '').normalize('NFC').trim().toLowerCase();
@@ -1119,7 +1102,7 @@ function qaBrandHits(copy: Record<string, unknown>, ctx: CopyGateContext): GateV
   items.forEach((item, index) => {
     if (index < ownership.codeItems || !item || typeof item !== 'object') return;
     const answer = (item as Record<string, unknown>).a;
-    if (typeof answer === 'string' && withoutQaLead(answer, ctx.qaAnswerLead).normalize('NFC').toLowerCase().includes(name)) {
+    if (typeof answer === 'string' && answer.normalize('NFC').toLowerCase().includes(name)) {
       out.push({ field: `qaItems[${index}].a`, rule: GATE_RULES.qaBrandInAnswer });
     }
   });
@@ -2532,9 +2515,8 @@ export interface CopyGatePageOptions {
   depth?: CopyGateDepth;
   /** Copy v2 slice 4: see CopyGateContext.factRestatement. */
   factRestatement?: FactRestatementSpec;
-  /** Copy v2 slice 6: see CopyGateContext.qaCodeOwnership / qaAnswerLead. */
+  /** Copy v2 slice 6: see CopyGateContext.qaCodeOwnership. */
   qaCodeOwnership?: QaCodeOwnership;
-  qaAnswerLead?: string | null;
   /** Rerun-3 items 4-5: see CopyGateContext.fearPromise / sameDayScope. */
   fearPromise?: FearPromiseSpec;
   sameDayScope?: SameDayScopeSpec;
@@ -2580,7 +2562,6 @@ export function copyGateContext(data: CollectedData, serviceLabels: readonly str
     ...(page.depth ? { depth: page.depth } : {}),
     ...(page.factRestatement ? { factRestatement: page.factRestatement } : {}),
     ...(page.qaCodeOwnership ? { qaCodeOwnership: { ...page.qaCodeOwnership } } : {}),
-    ...(page.qaAnswerLead ? { qaAnswerLead: page.qaAnswerLead } : {}),
     ...(page.fearPromise ? { fearPromise: page.fearPromise } : {}),
     ...(page.sameDayScope ? { sameDayScope: page.sameDayScope } : {}),
     ...(page.claimScopeFields ? { claimScopeFields: [...page.claimScopeFields] } : {}),

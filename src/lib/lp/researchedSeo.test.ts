@@ -84,7 +84,7 @@ const render = () => renderResearchedSitePages({
 function navHrefs(html: string): string[] {
   // M2b.1b: the related-links block is labelled by its visible heading (data-section="related-links").
   const nav = /<nav data-section="related-links"[^>]*>([\s\S]*?)<\/nav>/.exec(html)?.[1] ?? '';
-  return [...nav.matchAll(/href="([^"]+)"/g)].map(match => match[1]);
+  return [...nav.matchAll(/<a href="([^"]+)"/g)].map(match => match[1]);
 }
 
 test('C3 clean URLs: files services/<slug>.html, served URL /services/<slug> (M4 step 0), no opportunity-ID suffix; canonical, og:url and sitemap match', () => {
@@ -110,7 +110,8 @@ test('C1 rendered <title> uses the formula; Service.name and link anchors are th
   assert.ok(money.includes(`<title>${HE_SERVICE} ${BET}${HE_CITY}${RLM} | TEST M2a Plumbing</title>`));
   assert.ok(money.includes(`>${HE_SERVICE} ${BET}${HE_CITY}</h1>`), 'hook lacks name+city -> H1 is name + city');
   assert.ok(site['index.html'].includes(`<title>plumber-he ${BET}${HE_CITY}${RLM} | TEST M2a Plumbing</title>`));
-  assert.ok(site['index.html'].includes(`>${HE_SERVICE}</a>`));
+  // 2026-11-20: related links are link rows, the anchor text in a <span> before the chevron.
+  assert.ok(site['index.html'].includes(`<span>${HE_SERVICE}</span><svg class="ic chev"`));
   const schema = JSON.parse(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/.exec(money)![1]);
   const service = schema['@graph'].find((item: Record<string, unknown>) => item['@type'] === 'Service');
   assert.equal(service.name, HE_SERVICE);

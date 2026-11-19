@@ -301,7 +301,7 @@ test('M2b.1g 8: code-built place lists: trust tile (no prefix, in place / append
   assert.equal(filled.responseTimeBadge, `${W4} ${BET}${W1} ${VAV}${BET}${W2}`);
 });
 
-test('M2b.1g 9: sentence-final periods (cards, about body) and no final period on labels; heroSubheadline untouched; the invariant', () => {
+test('M2b.1g 9: sentence-final periods (cards, about body) and no final period on labels (heroSubheadline too, Fable 5.2 rule B); the invariant', () => {
   const copy = loose({
     aboutPageBody: `${W1} ${W2}`, serviceDetails: [{ name: `${LABEL}.`, description: `${W1} ${W2}` }, { name: LABEL, description: `${W3}?` }],
     trustBarItems: [`${W4}.`], heroHeadline: `${W5}.`, aboutPageHeadline: `${W6}.`, heroSubheadline: `${W1}. ${W2}`,
@@ -313,6 +313,10 @@ test('M2b.1g 9: sentence-final periods (cards, about body) and no final period o
   assert.equal(copy.heroHeadline, W5);
   assert.equal(copy.aboutPageHeadline, W6);
   assert.equal(copy.heroSubheadline, `${W1}. ${W2}`);
+  // Rule B (2026-11-20): heroSubheadline is a label field: a trailing period goes, a question mark stays.
+  assert.equal(normalizeFinalPeriods(loose({ heroSubheadline: `${W1} ${W2}.` })).heroSubheadline, `${W1} ${W2}`);
+  assert.equal(normalizeFinalPeriods(loose({ heroSubheadline: `${W1} ${W2}?` })).heroSubheadline, `${W1} ${W2}?`);
+  assert.throws(() => assertFinalPeriods(loose({ heroSubheadline: `${W1}.` })), /heroSubheadline/);
   assert.doesNotThrow(() => assertFinalPeriods(copy));
   assert.throws(() => assertFinalPeriods(loose({ aboutPageBody: W1 })), /aboutPageBody/);
   assert.throws(() => assertFinalPeriods(loose({ stickyBarLine: `${W1}.` })), /stickyBarLine/);

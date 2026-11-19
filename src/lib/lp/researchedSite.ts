@@ -45,7 +45,7 @@ import {
 import { codeOwnedFactTemplates } from './ownerFactCopy';
 import { DEPTH_BLOCK_KEYS, DEPTH_BLOCK_LIMITS, rendersDepthBlocks } from './depthBlocks';
 import { unverifiedClaimSpec, UnverifiedClaimError, withoutUnverifiedClaims, type ClaimVerification } from './claimVerification';
-import { heroHoursLine, heroPhotoSlot, icon, serviceIcon } from './siteDesign';
+import { heroHoursLine, heroPhotoSlot, icon, relatedLinksNav, serviceIcon } from './siteDesign';
 import { heroBackdropCss, heroBackdropHtml, renderableHero, type SiteLookHero } from './siteLook';
 import { brandLogo } from './siteLogo';
 import { israeliPhoneE164 } from './phoneE164';
@@ -787,8 +787,8 @@ function buildPageHtml(page: ResearchedSitePage, params: RenderResearchedSitePag
   // Breadcrumb pages: the breadcrumb draws the edge to the homepage, so the related links are the siblings only.
   const links = navigationLinks(page, allPages, outputs, params.graphEdges ?? []).filter(item => !(breadcrumb && item.classification === 'homepage') && !cardLinked.has(item.opportunityId)).flatMap(item => {
     const target = outputs.get(item.opportunityId);
-    return target ? [`<a href="${servedPath(target)}" style="display:inline-block;padding:12px 8px;min-height:44px;color:${theme.accentText};text-decoration:underline;font-weight:700;">${esc(anchorText(item, businessName))}</a>`] : [];
-  }).join('');
+    return target ? [{ href: servedPath(target), text: anchorText(item, businessName) }] : [];
+  });
   const faq = approvedFaqs(page).map(item => `<details style="background:${theme.surface};border:1px solid ${theme.border};border-radius:${theme.radiusMd};padding:0 14px;"><summary style="min-height:44px;padding:12px 0;cursor:pointer;font-weight:700;color:${theme.primary};">${esc(item.q)}</summary><p style="color:${theme.textMuted};margin-top:-4px;padding-bottom:14px;">${esc(item.a)}</p></details>`).join('');
   // Visual pack (2026-11-16): the staff-approved hero photo; else (2026-11-17) the page's trade-library atmosphere photo,
   // flagged as AI-made; null = the solid hero, byte-identical.
@@ -817,7 +817,7 @@ function buildPageHtml(page: ResearchedSitePage, params: RenderResearchedSitePag
     ${serviceAreasSection(page, allPages, outputs, theme)}
     ${profileLinkSection(page, researchedProfileLink(data, params.profileLinkCopy), theme)}
     ${faq ? `<section data-section="faq" aria-labelledby="faq-heading" style="padding:32px 20px;background:${theme.surfaceAlt};"><div style="max-width:1120px;margin:0 auto;display:flex;flex-direction:column;gap:12px;"><h2 id="faq-heading" style="font-size:1.25rem;color:${theme.primary};">${esc(RESEARCHED_SITE_LABELS.faqHeading)}</h2>${faq}</div></section>` : ''}
-    ${links ? `<nav data-section="related-links" aria-labelledby="related-links-heading" style="padding:20px;background:${theme.surface};"><div style="max-width:1120px;margin:0 auto;"><h2 id="related-links-heading" style="font-size:0.95rem;font-weight:700;color:${theme.textPrimary};margin-bottom:6px;">${esc(RESEARCHED_SITE_LABELS.relatedLinksLabel)}</h2><div style="display:flex;flex-wrap:wrap;gap:6px 14px;">${links}</div></div></nav>` : ''}
+    ${relatedLinksNav(theme, RESEARCHED_SITE_LABELS.relatedLinksLabel, links)}
     ${leadFormSection(theme, page.copy.formHeadline, page.copy.heroCta, { ...RESEARCHED_LEAD_FORM, sectionId: 'contact' })}
   </main>
   ${pageScript({ slug, businessName, googleAdsCustomerId: params.googleAdsCustomerId || '', formConversionLabel: params.formConversionLabel || '', phoneConversionLabel: params.phoneConversionLabel || '', whatsappConversionLabel: params.whatsappConversionLabel || '', ctaLabel: RESEARCHED_LEAD_FORM.submitLabel ?? page.copy.heroCta, includeLeadForm: true })}`;

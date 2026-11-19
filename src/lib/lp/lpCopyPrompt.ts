@@ -86,7 +86,6 @@ export interface LpCopyPromptOptions {
 export function buildLpCopyPrompt(data: CollectedData, options: LpCopyPromptOptions = {}): string {
   const contactLabel = primaryCtaLabel(data);
 
-  const ownerFirstName = (data.ownerName || data.businessName || '').split(/[\s,]/)[0];
   const hasRealReview = hasRealReviewQuote(data);
   // Eitan (2026-11-16): a rating is never shown without its review count (no count or 0 -> null).
   const reviewContextLine = hasRealReview ? ratingWithCountLine(data.starRating, data.reviewCount) : null;
@@ -140,7 +139,7 @@ stop and replace it with a concrete detail from the BUSINESS DATA:
 - הלקוח במרכז / השירות שלנו מתחיל בכם
 - שירות ללא פשרות
 - יחס אישי לכל לקוח   (banned only BARE — allowed when anchored to a concrete mechanism,
-  e.g. "יחס אישי — אני עונה לך בעצמו, לא מוקד")
+  e.g. "יחס אישי — אני עונה לך בעצמי, לא מוקד")
 - הצוות המקצועי שלנו
 - שנות ניסיון רבות   (say the actual number)
 - מגוון רחב של שירותים   (name the services)
@@ -159,35 +158,26 @@ stop and replace it with a concrete detail from the BUSINESS DATA:
 Also banned (translated-Hebrew cadence, already partly above): על מנת, כיצד, במידה ו,
 עם זאת, מהו, ניתן ל.
 
-BEFORE → AFTER (generic → sharp). Invented data shown so the transformation is unambiguous;
-apply the SAME move to the real BUSINESS DATA:
+BEFORE → AFTER (generic → sharp), described in the abstract. Apply the same move to the real BUSINESS DATA;
+never copy wording, punctuation or sentence shape from these descriptions:
 
-Example 1 — hero headline (fear: "אינסטלטור שפירק והשאיר הצפה"; data: מגיע תוך שעה):
-  GENERIC: "פתרונות אינסטלציה מקצועיים ואמינים באזורך"
-  SHARP:   "נתקעת עם הצפה? אינסטלטור אצלך תוך שעה — בלי להשאיר אחריו בלגן"
-
-Example 2 — aboutBlurb opener (owner: יוסי; 15 שנה; רישיון חשמלאי):
-  GENERIC: "אנחנו צוות מקצועי עם שנות ניסיון רבות ומחויבות למצוינות."
-  SHARP:   "שמי יוסי, 15 שנה חשמלאי מוסמך, ואני זה שמגיע אליך — לא שוליה ולא קבלן משנה."
-
-Example 3 — trust bar item (data: 10 שנות אחריות; חלקים מקוריים):
-  GENERIC: "איכות ללא פשרות"
-  SHARP:   "10 שנות אחריות, חלקים מקוריים בלבד"
-
-Example 4 — USP subheadline (data: היחיד באזור שמתקן דודי שמש תעשייתיים):
-  GENERIC: "שירות מהיר ואמין במחירים הוגנים"
-  SHARP:   "היחיד באזור שמתקן גם דודי שמש תעשייתיים — לא רק ביתיים"
+- Hero headline: GENERIC = a vague promise of professional, reliable service "in your area". SHARP = the
+  reader's concrete situation plus the one stated owner fact that solves it (for example his stated response time).
+- aboutBlurb opener: GENERIC = a "we are a professional, experienced team" line built on adjectives. SHARP = the
+  owner speaking as "I", with his stated years and credential, and the fact that he is the one who comes.
+- Trust bar item: GENERIC = an abstract quality slogan. SHARP = the owner's stated warranty or parts fact, with its number.
+- USP subheadline: GENERIC = fast, reliable, fair prices. SHARP = the one thing the owner states only he does in his
+  area, written as a plain fact.
 
 The move in every case: delete the adjective, promote the fact.
 
 ABOUT SECTION (aboutBlurb) — most important field:
-- First-person voice. Open with: "שמי ${ownerFirstName}," or "אני ${ownerFirstName},"
+- First-person voice.
 - 3-4 sentences. Follow this arc:
   1. Who I am + primary credential (years of experience, license if provided)
   2. How I work — one specific trait that sets me apart (NOT generic "שירות מקצועי")
   3. What the client gets when they call — a concrete, personal promise
   4. A brief human touch or closing hook (optional but preferred)
-- If a license number is provided, embed it naturally: "בעל רישיון מספר X"
 - Max 320 chars. Zero generic filler phrases like "אנו מחויבים ללקוח" or "שירות מקצועי ואיכותי".
 
 HERO:

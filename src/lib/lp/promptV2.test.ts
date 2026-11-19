@@ -32,7 +32,7 @@ const T: OwnerFactTemplates = {
   warrantyLamedSixMonths: 'l6mo', warrantyLamedOneYear: 'l1yr', warrantyLamedTwoYears: 'l2yr', warrantyLamedNYears: 'l{n}yr',
   responseMinutes: '{n}min', responseOneHour: '1h', responseTwoHours: '2h', responseHours: '{n}h',
   trustYearsOne: 'Y:1', trustYearsTwo: 'Y:2', trustResponseSameDay: 'R:sameday', trustRatingOneReview: '{rating}*/1', proofYearsOne: 'I have one year.', proofYearsTwo: 'I have two years.', proofLicenseVerbatim: '{license}.', proofResponseSameDay: 'I arrive the same day.', warrantyBareOneMonth: '1mo', warrantyBareTwoMonths: '2mo', warrantyBareNMonths: '{n}mo', warrantyBareOneAndHalfYears: '18mo', warrantyLamedOneMonth: 'l1mo', warrantyLamedTwoMonths: 'l2mo', warrantyLamedNMonths: 'l{n}mo', warrantyLamedOneAndHalfYears: 'l18mo', responseOneMinute: '1min!', responseHalfHour: 'half-h',
-  proofWarrantyScoped: 'You get a warranty for {duration} {scope}.', proofResponseScoped: 'I arrive within {time} {scope}.', proofResponseSameDayScoped: 'I arrive the same day {scope}.', trustCallback: 'R:{time}', trustCallbackSameDay: 'R:sameday', proofCallback: 'I call back within {time}.', proofCallbackSameDay: 'I call back the same day.', qaAnswerLead: 'At {business} in {city}:',
+  proofWarrantyScoped: 'You get a warranty for {duration} {scope}.', proofResponseScoped: 'I arrive within {time} {scope}.', proofResponseSameDayScoped: 'I arrive the same day {scope}.', trustCallback: 'R:{time}', trustCallbackSameDay: 'R:sameday', proofCallback: 'I call back within {time}.', proofCallbackSameDay: 'I call back the same day.',
   proofCallbackArrival: 'I call back within {time} and book a visit.', proofCallbackArrivalSameDay: 'I call back the same day and book a visit.', trustContractorRegistered: 'RC', proofContractorRegistered: 'I am in the register.', proofContractorRegisteredDetail: 'I am in the register, {detail}.',
   ...Object.fromEntries([...FACT_PARSE_TOKEN_KEYS, ...FACT_RULE_TOKEN_KEYS].map(key => [key, [`zz${key}`]])),
 } as OwnerFactTemplates;
@@ -141,7 +141,8 @@ test('v2 prompt: rule count (about 30, down from about 90) and a pinned snapshot
     const home = brief('homepage');
     const service = brief('money_service');
     const counts = { home: promptV2RuleCount(home, data), service: promptV2RuleCount(service, data) };
-    assert.deepEqual(counts, { home: 39, service: 27 });
+    // 2026-11-20 (Fable 5.2 rules A + D): +1 HEADLINE STYLE rule on every page, +1 THIN FACTS rule on service pages.
+    assert.deepEqual(counts, { home: 40, service: 29 });
     for (const section of [...buildResearchCopyRulesV2(home, data), ...buildResearchCopyRulesV2(service, data)]) {
       for (const rule of section.rules) assert.ok(rule.startsWith('- '), `${section.heading}: every rule is one bullet`);
     }
@@ -153,7 +154,8 @@ test('v2 prompt: rule count (about 30, down from about 90) and a pinned snapshot
 });
 
 /** Re-pin deliberately when a v2 rule changes (print the new values with the assert message). */
-const PINNED_V2 = { home: '5ed13a9c5d8cb10e', service: 'f80a59b051660889' };
+// Re-pinned 2026-11-20: Fable 5.2 rules A (HEADLINE STYLE) and D (THIN FACTS), and rule C (no system answer lead).
+const PINNED_V2 = { home: 'bbbde24075c0bcab', service: '613c9f69fe78edca' };
 
 test('rerun-3 item 3: no code-gate token list reaches a v2 prompt (user prompt, Tamar / repair / Noa system prompts)', async () => {
   await codeOwned(() => {
@@ -211,5 +213,28 @@ test('v2 end to end (mocked model): Tamar gets the v2 prompt and the short syste
       callJson: async (system, user) => { calls.push(user); return JSON.stringify(/^You are Noa/.test(system) ? JSON.parse(user.slice(0, user.indexOf('\n\nHARD LIMITS'))) : modelCopy()); },
     });
     assert.equal(calls[0], buildResearchPageGenerationPrompt(page, data), 'pending: v1, byte-identical');
+  });
+});
+
+// Fable 5.2 Hebrew report 2026-11-20, section 4 rules A and D (rules B, C: voiceRulesM2b1g / qaCodeOwned tests).
+test('rule A: one headline separator style per site; the model sees the headlines already written (v1 and v2)', async () => {
+  await codeOwned(() => {
+    const prior = ['Prior headline one: alpha', 'Prior headline two: beta'];
+    for (const prompt of [buildResearchPageGenerationPromptV2(brief('money_service'), data, prior), buildResearchPageGenerationPrompt(brief('money_service'), data, undefined, prior)]) {
+      assert.ok(prompt.includes('- HEADLINE STYLE (binding): every page of this site writes heroHeadline in one separator style'));
+      assert.ok(prompt.includes(`The heroHeadlines already written for this site, in order: ${JSON.stringify(prior)}.`));
+    }
+    const first = buildResearchPageGenerationPromptV2(brief('homepage'), data);
+    assert.ok(first.includes('This is the first page of the site: use one plain style the other pages can repeat.'));
+    assert.equal(first.includes('already written for this site'), false);
+  });
+});
+
+test('rule D: a service page with no service-specific fact gets the plain service + city + one true general fact headline', async () => {
+  await codeOwned(() => {
+    const rule = '- THIN FACTS (binding): when the owner facts hold no fact specific to this page\'s service';
+    assert.ok(buildResearchPageGenerationPromptV2(brief('money_service'), data).includes(rule));
+    assert.ok(buildResearchPageGenerationPrompt(brief('money_service'), data).includes(rule));
+    assert.equal(buildResearchPageGenerationPromptV2(brief('homepage'), data).includes(rule), false, 'service pages only');
   });
 });

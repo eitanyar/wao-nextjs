@@ -41,7 +41,6 @@ import {
   heroCapGroups,
   heroSignatureCapGroups,
   isWarningHit,
-  NAME_OPENER,
   runCopyGates,
   tradeTermHits,
   tripledLetterHit,
@@ -115,7 +114,6 @@ test('M2a.7 1: generationData carries the M2a.7 data byte-exact and counted; R8 
   same(WRONG_PREPOSITION_TOKENS, data.wrongPrepositionTokens);
   same(NAME_INTRO_LEAD_INS, data.nameIntroLeadIns);
   assert.equal(NAME_INTRO_TOKEN, data.nameIntroToken);
-  assert.equal(NAME_INTRO_TOKEN, NAME_OPENER, 'section 21 opener is the prompt template opener');
   assert.deepEqual([Object.keys(HERO_CAP_CONCEPT_ADDITIONS).length, Object.values(HERO_CAP_CONCEPT_ADDITIONS).flat().length, HERO_CAP_AC_ONLY.length], [5, 17, 5]);
   assert.deepEqual([Object.keys(DIFFERENTIATOR_USP_KEYWORDS).length, Object.values(DIFFERENTIATOR_USP_KEYWORDS).flat().length], [8, 62]);
   assert.deepEqual([PREPOSITION_SKIP_ADVERBS.length, WRONG_PREPOSITION_TOKENS.length, NAME_INTRO_LEAD_INS.length], [3, 3, 5]);

@@ -18,7 +18,6 @@ import {
 } from './ownerFactCopy';
 import { optionalList, planQa, qaQuestionDisposition, qaTopicsPending, qaTopicTokens, questionTopic, QA_TOPIC_EXCLUDE_KEYS, QA_TOPIC_PRIORITY } from './qaCodeOwned';
 import { PREFIX_LETTERS } from './hebrewPrefixLetters';
-import { DEPTH_BLOCK_LIMITS } from './depthBlocks';
 import { FACT_OPTIONAL_LIST_KEYS, responseTimeText } from './ownerFactCopy';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -29,7 +28,6 @@ import {
   codeOwnedQa,
   dropQaBrandAnswers,
   repetitionBudgetInputs,
-  withQaAnswerLeads,
   withSystemFields,
 } from './researchPageCopy';
 import { costFaq } from './researchedPricing';
@@ -52,7 +50,7 @@ const T = {
   warrantyLamedSixMonths: 'l6mo', warrantyLamedOneYear: 'l1yr', warrantyLamedTwoYears: 'l2yr', warrantyLamedNYears: 'l{n}yr',
   responseMinutes: '{n}min', responseOneHour: '1h', responseTwoHours: '2h', responseHours: '{n}h',
   trustYearsOne: 'Y:1', trustYearsTwo: 'Y:2', trustResponseSameDay: 'R:sameday', trustRatingOneReview: '{rating}*/1', proofYearsOne: 'I have one year.', proofYearsTwo: 'I have two years.', proofLicenseVerbatim: '{license}.', proofResponseSameDay: 'I arrive the same day.', warrantyBareOneMonth: '1mo', warrantyBareTwoMonths: '2mo', warrantyBareNMonths: '{n}mo', warrantyBareOneAndHalfYears: '18mo', warrantyLamedOneMonth: 'l1mo', warrantyLamedTwoMonths: 'l2mo', warrantyLamedNMonths: 'l{n}mo', warrantyLamedOneAndHalfYears: 'l18mo', responseOneMinute: '1min!', responseHalfHour: 'half-h',
-  proofWarrantyScoped: 'You get a warranty for {duration} {scope}.', proofResponseScoped: 'I arrive within {time} {scope}.', proofResponseSameDayScoped: 'I arrive the same day {scope}.', trustCallback: 'C:{time}', trustCallbackSameDay: 'C:sameday', proofCallback: 'I call back within {time}.', proofCallbackSameDay: 'I call back the same day.', qaAnswerLead: 'At {business} in {city}:',
+  proofWarrantyScoped: 'You get a warranty for {duration} {scope}.', proofResponseScoped: 'I arrive within {time} {scope}.', proofResponseSameDayScoped: 'I arrive the same day {scope}.', trustCallback: 'C:{time}', trustCallbackSameDay: 'C:sameday', proofCallback: 'I call back within {time}.', proofCallbackSameDay: 'I call back the same day.',
   proofCallbackArrival: 'I call back within {time} and book a visit.', proofCallbackArrivalSameDay: 'I call back the same day and book a visit.', trustContractorRegistered: 'RC', proofContractorRegistered: 'I am in the register.', proofContractorRegisteredDetail: 'I am in the register, {detail}.',
   ...Object.fromEntries([...FACT_PARSE_TOKEN_KEYS, ...FACT_RULE_TOKEN_KEYS].map(key => [key, [`zz${key}`]])),
   costQuestionTokens: ['cost'],
@@ -194,16 +192,13 @@ test('gates: code-built items and every q are code-owned (no restatement hit); a
   });
 });
 
-test('brand gate: the business name inside a model answer is a hit and the item is dropped; the lead alone is not', async () => {
+test('brand gate: the business name inside a model answer is a hit and the item is dropped (no lead exempts it any more)', async () => {
   await codeOwned(() => {
     const page = brief(['What does it cost?', 'Do you open walls?', 'What happens first?', 'How long does it take?']);
     const gates = briefGateContext(page, data);
-    const qa = codeOwnedQa(page, data)!;
-    const lead = qa.lead!;
-    assert.equal(lead, `At TEST Biz in ${CITY}:`);
     const copy = withSystemFields({ qaItems: [
       { questionId: 'question-2', q: 'x', a: 'TEST Biz never opens a wall first.', factIds: ['offer'] },
-      { questionId: 'question-3', q: 'x', a: `${lead} I call you back and listen.`, factIds: ['service-walkthrough'] },
+      { questionId: 'question-3', q: 'x', a: 'I call you back and listen.', factIds: ['service-walkthrough'] },
       { questionId: 'question-4', q: 'x', a: 'I come and find the leak first.', factIds: ['service-walkthrough'] },
     ] }, page, data);
     const hits = runCopyGates(copy, gates).filter(hit => hit.rule === GATE_RULES.qaBrandInAnswer);
@@ -239,20 +234,15 @@ const baseCopy = (): SiteCopy => ({
   aboutPageHeadline: '', aboutPageBody: '', serviceDetails: [],
 });
 
-test('lead: in front of every model answer, in the same rendered paragraph; code-built items untouched; JSON-LD never splits it', async () => {
+test('no answer lead (Fable 5.2 report rule C, 2026-11-20): model answers stand as written, in the owner\'s voice, one <p> each', async () => {
   await codeOwned(() => {
     const page = brief();
-    const copy = withSystemFields({ qaHeadline: 'Questions', qaItems: modelItems() }, page, data);
-    const before = (copy.qaItems as Loose[]).map(item => item.a);
-    const notes = withQaAnswerLeads(copy, page, data);
-    assert.deepEqual(notes, []);
-    const lead = codeOwnedQa(page, data)!.lead!;
+    assert.deepEqual(Object.keys(codeOwnedQa(page, data)!), ['plan'], 'the plan carries no lead');
+    const raw = modelItems();
+    const copy = withSystemFields({ qaHeadline: 'Questions', qaItems: raw }, page, data);
     const items = copy.qaItems as Loose[];
-    assert.deepEqual(items.slice(0, 5).map(item => item.a), before.slice(0, 5), 'code-built answers carry no lead');
-    assert.equal(items[5].a, `${lead} ${before[5]}`);
-    // Idempotent on a re-run (a record settled again).
-    withQaAnswerLeads(copy, page, data);
-    assert.equal((copy.qaItems as Loose[])[5].a, `${lead} ${before[5]}`);
+    const own = raw.find(item => item.questionId === items[5].questionId)!;
+    assert.equal(items[5].a, own.a, 'the model answer is kept byte for byte (no third-person lead in front)');
     const files = renderResearchedSitePages({
       theme: VERTICAL_THEMES['emergency-trades'], assets: VERTICAL_ASSETS['emergency-trades'], data,
       heroImageUrl: 'https://example.test/hero.jpg', slug: 'qa-test', siteUrl: 'https://qa.wao.co.il',
@@ -263,39 +253,8 @@ test('lead: in front of every model answer, in the same rendered paragraph; code
       graphEdges: [{ fromId: 'home', toId: 'svc-leak-repair' }],
     });
     const html = files[Object.keys(files).find(name => name.startsWith('services/') && name.endsWith('.html')) ?? ''] ?? '';
-    const answer = String(before[5]);
-    const paragraph = new RegExp(`<p[^>]*>${lead.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')} ${answer.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}</p>`);
-    assert.ok(paragraph.test(html), 'lead and answer in one <p>');
-    const jsonLd = [...html.matchAll(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/g)].map(match => match[1]).join('\n');
-    for (const at of [...jsonLd.matchAll(new RegExp(answer.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g'))]) {
-      assert.ok(jsonLd.slice(0, at.index).endsWith(`${lead} `), 'an answer in the FAQPage JSON-LD carries its lead');
-    }
-  });
-});
-
-test('lead: an answer that no longer fits with its lead is dropped (never cut); under the minimum the block goes', async () => {
-  await codeOwned(() => {
-    const page = brief(['Do you open walls?', 'What happens first?', 'How long does it take?']);
-    const long = Array.from({ length: 58 }, () => 'word').join(' ');
-    const copy = withSystemFields({ qaHeadline: 'Q', qaItems: [
-      { questionId: 'question-1', q: 'x', a: long, factIds: ['offer'] },
-      { questionId: 'question-2', q: 'x', a: 'I come and find the leak first.', factIds: ['offer'] },
-      { questionId: 'question-3', q: 'x', a: 'About an hour for a simple leak.', factIds: ['offer'] },
-    ] }, page, data);
-    const notes = withQaAnswerLeads(copy, page, data);
-    assert.ok(notes.includes('qa_lead_drop_item:qaItems[0]'));
-    // Adam (2026-11-10, d): the minimum is 2: two items left keep the block.
-    assert.equal(DEPTH_BLOCK_LIMITS.qa.minItems, 2);
-    assert.equal((copy.qaItems as Loose[]).length, 2);
-    // One item left: under the minimum, the block and its headline go.
-    const short = withSystemFields({ qaHeadline: 'Q', qaItems: [
-      { questionId: 'question-1', q: 'x', a: long, factIds: ['offer'] },
-      { questionId: 'question-2', q: 'x', a: 'I come and find the leak first.', factIds: ['offer'] },
-    ] }, page, data);
-    const shortNotes = withQaAnswerLeads(short, page, data);
-    assert.ok(shortNotes.some(note => note.startsWith('qa_lead_drop_depth_block')));
-    assert.equal(short.qaItems, null);
-    assert.equal(short.qaHeadline, null);
+    const answer = String(own.a).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    assert.ok(new RegExp(`<p[^>]*>${answer}</p>`).test(html), 'the answer alone in its <p>');
   });
 });
 
@@ -307,7 +266,9 @@ test('prompt: the model sees only the non-fact questions, the two answer rules, 
     assert.deepEqual(pool.map(item => item.question), QUESTIONS.slice(5));
     assert.ok(prompt.includes('Answer the question directly in the first sentence: yes or no, or the fact itself.'));
     assert.ok(prompt.includes('Write each answer self-contained'));
-    assert.ok(prompt.includes('Never name the business in an answer'));
+    assert.ok(prompt.includes('Never name the business in an answer: the owner answers as "I".'));
+    assert.ok(prompt.includes('when his facts do not answer a question, leave the question out'));
+    assert.equal(prompt.includes('in front of every answer'), false, 'no system lead is promised');
     assert.ok(prompt.includes('the system adds 5 more itself'));
     assert.equal(prompt.includes('names the business ('), false, 'the v1 "names the business" rule is gone');
     const home = buildResearchPageGenerationPromptV2(brief(QUESTIONS, 'homepage'), data);

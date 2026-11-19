@@ -204,8 +204,15 @@ test('M2b.1b: research nav uses same-page anchors that exist, an aria-label, 44p
   assert.match(money, new RegExp(`<section data-section="faq" aria-labelledby="faq-heading"[^>]*><div[^>]*><h2 id="faq-heading"[^>]*>${RESEARCHED_SITE_LABELS.faqHeading}</h2>`));
   assert.match(money, new RegExp(`<nav data-section="related-links" aria-labelledby="related-links-heading"[^>]*>(?:<div[^>]*>)?<h2 id="related-links-heading"[^>]*>${RESEARCHED_SITE_LABELS.relatedLinksLabel}</h2>`));
   assert.ok(money.indexOf('data-section="faq"') < money.indexOf('data-section="related-links"'), 'related links below the FAQ');
-  for (const [, style] of money.matchAll(/data-section="related-links"[^]*?<\/nav>/g).next().value![0].matchAll(/<a href="[^"]+" style="([^"]+)"/g)) {
-    assert.match(style, /display:inline-block;padding:12px 8px;min-height:44px;color:#A82E00;text-decoration:underline;/);
+  // Fable 14.11 item 7 (2026-11-20, deliberate change): related links are tidy link rows: block links >= 48px tall,
+  // start-aligned text, the sprite chevron at the end, one <li> per link.
+  const relatedNav = money.matchAll(/data-section="related-links"[^]*?<\/nav>/g).next().value![0];
+  assert.match(relatedNav, /<ul role="list" style="list-style:none;[^"]*">/);
+  const rows = [...relatedNav.matchAll(/<li[^>]*><a href="[^"]+" style="([^"]+)"><span>[^<]+<\/span><svg class="ic chev" aria-hidden="true" focusable="false"><use href="#i-chev"\/><\/svg><\/a><\/li>/g)];
+  assert.ok(rows.length > 0, 'at least one link row');
+  assert.equal(rows.length, [...relatedNav.matchAll(/<a /g)].length, 'every related link is a row');
+  for (const [, style] of rows) {
+    assert.match(style, /display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:48px;padding:12px 4px;color:#A82E00;font-weight:700;text-align:start;/);
   }
   // Redesign A: the header call button (shown from the desktop breakpoint; the action bar owns the call on mobile).
   assert.match(home, /<a class="btn btn-call hdr-call" href="tel:050-0000000"><svg class="ic" aria-hidden="true"[^>]*><use href="#i-phone"\/><\/svg><span class="sr-only">[^<]+ <\/span><bdi dir="ltr">050-0000000<\/bdi><\/a>/);

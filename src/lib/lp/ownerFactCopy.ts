@@ -110,8 +110,6 @@ export const FACT_TEMPLATE_SLOTS = {
   trustCallbackSameDay: [],
   proofCallback: ['{time}'],
   proofCallbackSameDay: [],
-  /** Slice 6: the code-built lead in front of a model-written Q&A answer ("At {business} in {city}:"). */
-  qaAnswerLead: ['{business}', '{city}'],
   /**
    * Noa r3: the Q&A answer to an arrival-shaped (or neutral) response question when the owner fact is a callback time:
    * "I will call you back within {time} and set an arrival time with you." It never states an arrival time.
@@ -282,7 +280,6 @@ export const OWNER_FACT_TEMPLATES: OwnerFactTemplates = {
   "trustCallbackSameDay": "מענה באותו יום",
   "proofCallback": "אחזור אליך תוך {time}.",
   "proofCallbackSameDay": "אחזור אליך עוד באותו יום.",
-  "qaAnswerLead": "אצל {business} ב{city}:",
   "proofCallbackArrival": "אחזור אליך תוך {time} ואתאם איתך מועד הגעה.",
   "proofCallbackArrivalSameDay": "אחזור אליך עוד באותו יום ואתאם איתך מועד הגעה.",
   "trustContractorRegistered": "קבלן רשום",
