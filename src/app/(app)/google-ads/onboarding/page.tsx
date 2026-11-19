@@ -6,6 +6,7 @@ import type { CollectedData } from "@/lib/bot/prompts";
 import { deliveryModelFollowUp, deliveryModelOptions } from "@/lib/bot/delivery-model";
 import { resolveOnboardingDemoEntry } from "@/lib/google-ads/onboarding-demo";
 import GoogleAdPreview from "@/components/google-ads/GoogleAdPreview";
+import { useOnboardingStaff } from "./staff-context";
 
 interface Message {
   role: "user" | "assistant" | "system";
@@ -79,6 +80,7 @@ const DEMO_PROFILE: CollectedData = {
 };
 
 export default function OnboardingPage() {
+  const isStaff = useOnboardingStaff();
   const [mode, setMode] = useState<"test" | "live">("test");
   const [isDemo, setIsDemo] = useState(false);
   const [queryReady, setQueryReady] = useState(false);
@@ -417,11 +419,13 @@ export default function OnboardingPage() {
           <p style={{ color: "var(--muted)", fontSize: "0.88rem", marginBottom: "8px" }}>
             ההקמה לוקחת דקות, לא שבועות — אבל תן לתוצאות כמה שבועות להבשיל.
           </p>
-          {isDemo && (
+          {isStaff && isDemo && (
             <p style={{ color: "#FFAA00", fontSize: "0.9rem", fontWeight: 700, marginBottom: "6px" }}>
               מצב הדגמה פעיל. הכנסתי לך עסק לדוגמה, כדי שתוכל לראות את הזרימה בלי חשבון אמיתי.
             </p>
           )}
+          {isStaff && (
+          <>
           <p style={{ color: "var(--muted)", fontSize: "0.95rem" }}>
             {mode === "test" || isSimulation ? (
               <span
@@ -522,6 +526,8 @@ export default function OnboardingPage() {
               {sandboxVerificationMessage}
             </p>
           )}
+          </>
+          )}
 
           {/* Value block + price anchor */}
           <div style={{
@@ -534,7 +540,7 @@ export default function OnboardingPage() {
             flexDirection: "column",
             gap: "14px",
           }}>
-            {(mode === "test"
+            {isStaff && (mode === "test"
               ? [
                   "מצב Sandbox מבודד. כל הבדיקות נשארות בחשבון הבדיקה של WAO.",
                   "אין מודעות פעילות, חיובים או נתוני לקוחות אמיתיים.",
@@ -550,9 +556,9 @@ export default function OnboardingPage() {
               </div>
             ))}
             <div style={{
-              marginTop: "6px",
-              paddingTop: "16px",
-              borderTop: "1px solid var(--border)",
+              marginTop: isStaff ? "6px" : 0,
+              paddingTop: isStaff ? "16px" : 0,
+              borderTop: isStaff ? "1px solid var(--border)" : "none",
               fontSize: "0.88rem",
               color: "var(--muted)",
               lineHeight: 1.6,
