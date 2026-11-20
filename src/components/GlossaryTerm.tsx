@@ -51,6 +51,7 @@ export default function GlossaryTerm({
     <span style={{ position: "relative", display: "inline" }}>
       <span
         role="button"
+        data-term={term}
         tabIndex={0}
         aria-describedby={id}
         onMouseEnter={show}

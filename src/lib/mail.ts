@@ -189,3 +189,50 @@ export async function sendGeoLeadNotificationEmail(params: {
     console.error("[WAO Mail] Error sending geo lead notification email:", error);
   }
 }
+
+function escapeHtml(value: string): string {
+  return value.replace(/[&<>"']/g, ch => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[ch] as string);
+}
+
+/**
+ * Internal notice to Eitan: an Ads Bot owner approved his campaign plan in the chat. WAO follows up by email or
+ * WhatsApp to arrange payment, so the notice carries the contact details. Labels are English (internal only).
+ * Never throws; a skipped send (no RESEND_API_KEY) returns false.
+ */
+export async function sendAdsBotApprovalEmail(params: {
+  businessName?: string;
+  service?: string;
+  area?: string;
+  phone?: string;
+  email?: string;
+  sessionId?: string;
+}): Promise<boolean> {
+  const row = (label: string, value?: string) => `<p><strong>${label}:</strong> ${value ? escapeHtml(value) : "-"}</p>`;
+  const html = `
+    <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+      <h2 style="color: #2c3e50;">Ads Bot: campaign plan approved</h2>
+      <p>An owner approved the plan in the Ads Bot chat. Next step: contact him to arrange payment and open the new Google Ads account.</p>
+      <div dir="auto" style="background-color: #f8f9fa; padding: 15px; border-radius: 5px; border: 1px solid #e9ecef;">
+        ${row("Business", params.businessName)}
+        ${row("Service", params.service)}
+        ${row("Area", params.area)}
+        ${row("Phone", params.phone)}
+        ${row("Email", params.email)}
+        ${row("Session id", params.sessionId)}
+      </div>
+    </div>
+  `;
+  try {
+    const sent = await sendResendEmail({
+      from: "WAO Ads Bot <ads@wao.co.il>",
+      to: ["eitan@wao.co.il", "leads@wao.co.il"],
+      subject: `Ads Bot plan approved: ${params.businessName || params.phone || "new owner"}`.replace(/[\r\n]+/g, " ").slice(0, 160),
+      html,
+    });
+    if (sent) console.log("[WAO Mail] Ads Bot approval email sent successfully!");
+    return sent;
+  } catch (error) {
+    console.error("[WAO Mail] Error sending Ads Bot approval email:", error);
+    return false;
+  }
+}

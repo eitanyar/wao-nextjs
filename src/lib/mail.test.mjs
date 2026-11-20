@@ -159,9 +159,9 @@ test('sendLeadNotificationEmail: logs success only when sendResendEmail reports 
 
 test('every mail.ts success line is guarded by the sent flag, and sendResendEmail returns false on the missing-key early return', () => {
   const successLines = mailCode.split('\n').filter(line => /email sent successfully!/.test(line));
-  assert.equal(successLines.length, 3);
+  assert.equal(successLines.length, 4);
   for (const line of successLines) assert.match(line, /^\s*if \(sent\) console\.log\(/);
-  assert.equal((mailCode.match(/const sent = await sendResendEmail\(/g) ?? []).length, 3);
+  assert.equal((mailCode.match(/const sent = await sendResendEmail\(/g) ?? []).length, 4);
 
   const start = mailCode.indexOf('async function sendResendEmail(');
   const end = mailCode.indexOf('\n}\n', start);

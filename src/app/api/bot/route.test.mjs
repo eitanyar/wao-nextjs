@@ -214,7 +214,7 @@ const assertNoUnbackedClaims = (copy, data) => {
   for (const line of [...copy.headlines, ...copy.descriptions]) assert.deepEqual(claimsGuard.unbackedClaims(line, data), [], `unbacked claim shown: ${line}`);
 };
 
-function loadPost(environment, qwenCalls, geminiCalls, geminiReply = '{"response":"gemini","currentState":"DIAGNOSING","collectedData":{}}') {
+function loadPost(environment, qwenCalls, geminiCalls, geminiReply = '{"response":"gemini","currentState":"DIAGNOSING","collectedData":{}}', mailCalls = []) {
   const ts = requireModule('typescript');
   const compiled = ts.transpileModule(routeCode, { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 } }).outputText;
   const module = { exports: {} };
@@ -241,6 +241,7 @@ function loadPost(environment, qwenCalls, geminiCalls, geminiReply = '{"response
     if (name === '@/lib/admin-auth') return { ADMIN_COOKIE_NAME: 'wao-admin', verifyAdminToken: async (token) => token === 'staff-ok' };
     if (name === '@/lib/bot/delivery-model') return transpileLocal('../../../lib/bot/delivery-model.ts');
     if (name === '@/lib/ai/llmUsage') return { recordGeminiUsage: (_data, model, tag) => { geminiCalls.usage = [...(geminiCalls.usage ?? []), [model, tag]]; return true; } };
+    if (name === '@/lib/mail') return { sendAdsBotApprovalEmail: async (params) => { mailCalls.push(params); return true; } };
     if (name === 'fs/promises') return { mkdir: async () => {}, appendFile: async () => {} };
     if (name === 'path') return path;
     throw new Error(`Unexpected import: ${name}`);
@@ -257,10 +258,10 @@ function loadPost(environment, qwenCalls, geminiCalls, geminiReply = '{"response
 // Default: a session already past the three-question gate, so the provider routing below is exercised.
 const PAST_GATE = { serviceModel: 'field', businessNiche: 'service', targetLocation: 'area', firstAdPreviewShown: true, turnIndex: 1 };
 
-async function invokePost(post, { collectedData = PAST_GATE, currentState = 'DIAGNOSING', answer = 'answer', headers = {} } = {}) {
+async function invokePost(post, { collectedData = PAST_GATE, currentState = 'DIAGNOSING', answer = 'answer', headers = {}, sessionId, isDemo } = {}) {
   const request = new Request('https://example.test/api/bot', { method: 'POST', headers, body: JSON.stringify({
     messages: [{ role: 'user', content: 'business' }, { role: 'assistant', content: 'question' }, { role: 'user', content: answer }],
-    currentState, collectedData,
+    currentState, collectedData, sessionId, isDemo,
   }) });
   const response = await post(request);
   assert.equal(response.status, 200);
@@ -481,4 +482,85 @@ test('cost guard: wao-admin staff are exempt', async () => {
   assert.equal(gemini.length, 14);
   const forged = await runGate(post, { 'x-forwarded-for': '203.0.113.9', cookie: 'wao-admin=forged' });
   assert.equal(forged.q3.landingPreview, true, 'a forged cookie is a normal visitor; staff runs never consumed this IP quota');
+});
+
+// ── Ads Bot chat ending (2026-11-20): approved copy, whole-word approval, live-path approval, owner notice ──
+const END_COPY = JSON.parse(fs.readFileSync(path.resolve(baseDir, '../../../../docs/copy/seo-guide-cta-and-ads-bot-end-fable52-2026-11-20.json'), 'utf8')).strings;
+const REVIEW_DATA = { ...PAST_GATE, businessName: 'Biz Ltd', primaryService: 'leak repair', specificCities: 'north', phone: '050-1234567' };
+const tick = () => new Promise(resolve => setImmediate(resolve));
+
+test('end of intake and the approved reply carry the approved copy byte-exact, with no 9.9 price', async () => {
+  const post = loadPost({}, [], []);
+  const data = { ...PAST_GATE, businessNiche: 'plumber', turnIndex: 24 };
+  const done = await invokePost(post, { collectedData: data, answer: '050-1234567' });
+  assert.equal(done.currentState, 'REVIEWING');
+  assert.equal(done.response, END_COPY.bot_intake_done);
+  const approved = await invokePost(post, { currentState: 'REVIEWING', collectedData: REVIEW_DATA, answer: 'yes' });
+  assert.equal(approved.response, END_COPY.bot_approved);
+  assert.ok(END_COPY.bot_approved.includes('\n'), 'JSON \\n is a real newline');
+  assert.doesNotMatch(routeCode, /9\.9/);
+});
+
+test('approval words match whole words only', async () => {
+  const post = loadPost({}, [], []);
+  for (const answer of ['ok', 'OK!', 'yes, go', 'Approve.']) {
+    const res = await invokePost(post, { currentState: 'REVIEWING', collectedData: REVIEW_DATA, answer });
+    assert.equal(res.approved, true, answer);
+  }
+  for (const answer of ['book a call first', 'token', 'yesterday was busy', 'approved budget is too high']) {
+    const res = await invokePost(post, { currentState: 'REVIEWING', collectedData: REVIEW_DATA, answer });
+    assert.equal(res.approved, undefined, answer);
+  }
+});
+
+test('live: an approval in REVIEWING is decided server-side (no model call) and notifies the owner once per session', async () => {
+  const gemini = []; const mail = [];
+  const post = loadPost({ GEMINI_API_KEY: 'mock' }, [], gemini, undefined, mail);
+  const res = await invokePost(post, { currentState: 'REVIEWING', collectedData: REVIEW_DATA, answer: 'yes', sessionId: 's-1' });
+  await tick();
+  assert.equal(res.approved, true);
+  assert.equal(res.isSimulation, false);
+  assert.equal(res.response, END_COPY.bot_approved);
+  assert.equal(gemini.length, 0, 'the model is not asked to judge the approval');
+  assert.equal(mail.length, 1);
+  assert.deepEqual(mail[0], { businessName: 'Biz Ltd', service: 'leak repair', area: 'north', phone: '050-1234567', email: undefined, sessionId: 's-1' });
+  await invokePost(post, { currentState: 'REVIEWING', collectedData: REVIEW_DATA, answer: 'ok', sessionId: 's-1' });
+  await tick();
+  assert.equal(mail.length, 1, 'a second approval in the same session does not notify again');
+  await invokePost(post, { currentState: 'REVIEWING', collectedData: REVIEW_DATA, answer: 'ok', sessionId: 's-2' });
+  await tick();
+  assert.equal(mail.length, 2, 'a new session notifies');
+});
+
+test('live: a non-approval in REVIEWING still goes to the model and notifies nobody', async () => {
+  const gemini = []; const mail = [];
+  const post = loadPost({ GEMINI_API_KEY: 'mock' }, [], gemini, undefined, mail);
+  const res = await invokePost(post, { currentState: 'REVIEWING', collectedData: REVIEW_DATA, answer: 'change the budget', sessionId: 's-3' });
+  await tick();
+  assert.equal(res.response, 'gemini');
+  assert.equal(res.approved, undefined);
+  assert.equal(gemini.length, 1);
+  assert.equal(mail.length, 0);
+});
+
+test('owner notice: skipped for staff and demo sessions', async () => {
+  const mail = [];
+  const post = loadPost({ GEMINI_API_KEY: 'mock' }, [], [], undefined, mail);
+  const staff = await invokePost(post, { currentState: 'REVIEWING', collectedData: REVIEW_DATA, answer: 'yes', sessionId: 's-4', headers: { cookie: 'wao-admin=staff-ok' } });
+  const demo = await invokePost(post, { currentState: 'REVIEWING', collectedData: REVIEW_DATA, answer: 'yes', sessionId: 's-5', isDemo: true });
+  await tick();
+  assert.equal(staff.approved, true);
+  assert.equal(demo.approved, true);
+  assert.equal(mail.length, 0);
+});
+
+test('a negation anywhere means the reply is not an approval', async () => {
+  const post = loadPost({}, [], []);
+  const approves = 'מאשר';
+  const cases = [[`לא ${approves}`, undefined], [approves, true], ['no ok', undefined], ["don't approve", undefined], ['don’t approve', undefined], ['not yes', undefined]];
+  for (const [answer, expected] of cases) {
+    const res = await invokePost(post, { currentState: 'REVIEWING', collectedData: REVIEW_DATA, answer });
+    assert.equal(res.approved, expected, answer);
+  }
+  assert.ok(routeCode.includes(`const NEGATION_WORDS: readonly string[] = ["לא", "אל", "no", "not", "dont", "don't"];`));
 });

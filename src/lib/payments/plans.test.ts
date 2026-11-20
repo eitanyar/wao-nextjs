@@ -70,7 +70,6 @@ const PRICE_LITERAL = /SITE_BOT_PRICE|(?<![\d.])(?:9\.90?|199|234\.82)(?![\d.])/
 const RETIRED_PRICE_ALLOWED: Readonly<Record<string, string>> = {
   // Not Site-Bot: the Google Ads onboarding bot has its own 9.9 activation price.
   'src/components/OnboardingSidebar.tsx': 'Google Ads bot',
-  'src/app/api/bot/route.ts': 'Google Ads bot',
 };
 /** A shekel price of 9.9 / 9.90, either side of the sign. */
 const RETIRED_SHEKEL_PRICE = /\u20AA\s?9\.90?(?!\d|\.\d)|(?<![\d.])9\.90?\s?\u20AA/;

@@ -11,6 +11,7 @@ import { deliveryModelFollowUp } from "@/lib/bot/delivery-model";
 import { callQwenChatJSON } from "@/lib/ai/qwen-fast";
 import { resolveQwenEndpoint, TokenPlanRefusedError } from "@/lib/ai/llmProvider";
 import { recordGeminiUsage } from "@/lib/ai/llmUsage";
+import { sendAdsBotApprovalEmail } from "@/lib/mail";
 
 interface Message {
   role: "user" | "assistant" | "system";
@@ -21,6 +22,8 @@ interface RequestData {
   messages: Message[];
   currentState: "DIAGNOSING" | "STRATEGIZING" | "REVIEWING" | "COMPLETED";
   collectedData: CollectedData;
+  // Never sent today (the demo UI disables every request); honoured so a demo run can never notify the owner.
+  isDemo?: boolean;
   // Client-generated UUID, created once per chat session and carried on every
   // /api/bot turn. Used only for session-level instrumentation (log.jsonl) —
   // never persisted as PII, never echoed back to the client.
@@ -314,6 +317,28 @@ function storeMainServiceAnswer(data: CollectedData, text: string) {
   // Turn-0 keyword-extraction seam — city isn't known yet at this turn,
   // so we skip the {niche} {city} variant here (natural variant per spec).
   data.extractedKeywords = [text, `${text} מחיר`].filter(Boolean);
+}
+
+// End of the Ads Bot chat (docs/copy/seo-guide-cta-and-ads-bot-end-fable52-2026-11-20.json, bot_intake_done / bot_approved).
+const BOT_INTAKE_DONE = "זהו, יש לי כל מה שצריך.\nבניתי לך תוכנית קמפיין בגוגל ודף נחיתה, שניהם ממה שסיפרת לי. הם מחכים לך בחלונית שליד הצ׳אט.\nכל זה ב-249 ₪ + מע״מ לחודש, ושום דבר לא עולה לאוויר בלי אישור שלך.\n\nמאשר את התוכנית?";
+const BOT_APPROVED = "מעולה, התוכנית מאושרת.\nמכאן זה עלינו: פותחים לך חשבון Google Ads חדש מאפס, ומכינים את הקמפיין ואת דף הנחיתה לעלייה לאוויר.\nנכתוב לך במייל או בוואטסאפ למספר שהשארת, כדי לסדר תשלום ולצאת לדרך.\nהתוכנית והדף נשארים כאן, בחלונית שליד הצ׳אט.";
+
+// Approval words for the REVIEWING turn, matched as whole words only ("ok" must not match inside "book").
+const APPROVAL_WORDS: readonly string[] = ["כן", "מאשר", "סבבה", "אישור", "אוקיי", "תעלה", "יאללה", "yes", "ok", "approve"];
+
+// Built at runtime: the tsconfig target (ES2017) rejects a /u property-escape literal. Splits on anything that is
+// not a letter, mark or digit in any script.
+const NON_WORD = new RegExp("[^\\p{L}\\p{M}\\p{N}]+", "u");
+
+// A negation anywhere in the reply means it is not an approval ("no ok", a negated approval word).
+const NEGATION_WORDS: readonly string[] = ["לא", "אל", "no", "not", "dont", "don't"];
+
+function isApprovalText(text: string): boolean {
+  // Apostrophes are dropped before splitting so "don't" / "don’t" arrive as one token ("dont").
+  const words = text.toLowerCase().replace(/['\u2019]/g, "").split(NON_WORD).filter(word => word !== "");
+  const negations = NEGATION_WORDS.map(word => word.replace(/['\u2019]/g, ""));
+  if (words.some(word => negations.includes(word))) return false;
+  return words.some(word => APPROVAL_WORDS.includes(word));
 }
 
 function handleSimulation(
@@ -693,7 +718,7 @@ function handleSimulation(
         data.turnIndex = 25;
 
         return NextResponse.json({
-          response: `מצוין! אספתי את כל הפרטים שצריך.\nהכנתי לך תוכנית קמפיין מותאמת אישית — כולל דף נחיתה שמבוסס על כל מה שסיפרת לי.\nאתה יכול לראות את כל הפרטים בכרטיסייה.\n\nהכל נראה לך טוב? אתה מאשר להמשיך לתשלום של 9.9 ש״ח?`,
+          response: BOT_INTAKE_DONE,
           currentState: "REVIEWING",
           collectedData: data,
           strategy,
@@ -714,13 +739,12 @@ function handleSimulation(
       response = TURN_QUESTIONS[nextTurn] || "תודה! נמשיך לשלב הבא.";
     }
   } else if (currentState === "REVIEWING") {
-    const approvals = ["כן", "מאשר", "סבבה", "אישור", "אוקיי", "תעלה", "יאללה", "yes", "ok", "approve"];
-    const isApproved = approvals.some(w => text.toLowerCase().includes(w));
+    const isApproved = isApprovalText(text);
 
     if (isApproved) {
-      nextState = "REVIEWING"; // stays REVIEWING until Ya'ad payment callback fires
+      nextState = "REVIEWING"; // stays REVIEWING: WAO follows up by email / WhatsApp to arrange payment
       approved = true;
-      response = `מצוין — הכל נראה טוב.\n\nרוצה להפעיל את הקמפיין ולהעלות את דף הנחיתה? לחץ על כפתור **"🚀 לתשלום (9.9 ₪)"** שמופיע בצד ימין של המסך.\n\nזה מה שמתניע את הכל — החשבון, הקמפיין, והדף.`;
+      response = BOT_APPROVED;
     } else {
       response = "הבנתי. אם תרצה לשנות משהו — תקציב, מיקוד, נוסח המודעה — פשוט תגיד לי. אם הכל בסדר, תגיד ״אישור״ כדי שנתקדם.";
     }
@@ -1228,6 +1252,32 @@ Present ₪${chosenBudget} as: "עם ₪${chosenBudget} תקבל בסביבות 
   return NextResponse.json({ ...content, isSimulation: false });
 }
 
+// ── Owner notice on approval (once per session, never for staff or demo) ─────────
+// In-memory per server process; the approved reply is deterministic, so a repeat approval in the same session
+// (double send, second "yes") is the only duplicate source and this set covers it.
+const notifiedApprovalSessions = new Set<string>();
+const MAX_NOTIFIED_SESSIONS = 5_000;
+
+function approvalSessionKey(sessionId: string | undefined, data: CollectedData): string {
+  return sessionId?.trim() || `anon:${data.phone ?? data.whatsappNumber ?? ""}:${data.businessName ?? ""}`;
+}
+
+async function notifyOwnerOfApproval(req: Request, body: RequestData, data: CollectedData): Promise<void> {
+  if (body.isDemo === true || await isStaffRequest(req)) return;
+  const key = approvalSessionKey(body.sessionId, data);
+  if (notifiedApprovalSessions.has(key)) return;
+  if (notifiedApprovalSessions.size >= MAX_NOTIFIED_SESSIONS) notifiedApprovalSessions.clear();
+  notifiedApprovalSessions.add(key);
+  await sendAdsBotApprovalEmail({
+    businessName: data.businessName || data.ownerName,
+    service: data.primaryService || data.businessNiche,
+    area: data.specificCities || data.targetLocation,
+    phone: data.phone || data.whatsappNumber,
+    email: data.email,
+    sessionId: body.sessionId,
+  });
+}
+
 // ── Main route ────────────────────────────────────────────────────────────────
 
 function resolveChatQwenEndpoint() {
@@ -1255,10 +1305,15 @@ export async function POST(req: Request) {
       : apiKey ? () => handleGemini(messages, currentState, collectedData, apiKey) : null;
     const timeoutMs = qwenConfigured ? QWEN_CHAT_TIMEOUT_MS : GEMINI_TIMEOUT_MS;
     const quickStep = pendingQuickIntakeStep(currentState, collectedData);
+    // An approval in REVIEWING is decided here on every provider (never by the model), so approved: true
+    // and the owner notice fire in the live path too.
+    const approvalTurn = !quickStep && currentState === "REVIEWING" && isApprovalText(lastUserMessage);
 
     const result = quickStep
       ? await handleQuickIntake(quickStep, lastUserMessage, collectedData,
           qwenConfigured ? qwenLiveChat : apiKey ? geminiLiveChat(apiKey) : null, req)
+      : approvalTurn
+      ? handleSimulation(lastUserMessage, currentState, collectedData)
       : live && currentState === "DIAGNOSING"
       ? await resolveBoundedOnboardingResponse({
           live,
@@ -1291,6 +1346,11 @@ export async function POST(req: Request) {
     const jsonResponse = await result.json();
     if (jsonResponse?.collectedData) {
       jsonResponse.collectedData = carryFirstAdPreviewFlag(collectedData, jsonResponse.collectedData);
+    }
+    if (approvalTurn && live) jsonResponse.isSimulation = false;
+    if (jsonResponse?.approved === true) {
+      void notifyOwnerOfApproval(req, body, jsonResponse.collectedData ?? collectedData ?? {}).catch(err =>
+        console.warn("ads-bot approval notice failed (non-fatal):", err));
     }
     return NextResponse.json(jsonResponse);
   } catch (error: any) {

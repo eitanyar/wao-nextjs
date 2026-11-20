@@ -1,9 +1,13 @@
 import type { Metadata } from "next";
+import { Fragment } from "react";
 import { renderMixed } from "@/lib/bidi";
 import Link from "next/link";
 import SiloNav from "@/components/SiloNav";
 import GT from "@/components/GlossaryTerm";
 import { WithGlossaryDeep } from "@/lib/WithGlossaryDeep";
+import TrackedLink from "@/components/TrackedLink";
+import { KNOWLEDGE_ARTICLES } from "@/data/knowledge";
+import { SEO_GUIDE_MODIFIED } from "@/data/seo-guide-meta";
 
 const STATIC_META = {
   title: "מדריך קידום אתרים אורגני בגוגל 2026/2027 — המדריך המלא",
@@ -25,7 +29,7 @@ export const metadata: Metadata = {
 };
 
 const PUBLISHED   = "2024-03-01";
-const MODIFIED    = "2026-06-04";
+const MODIFIED    = SEO_GUIDE_MODIFIED;
 const CANONICAL   = "https://www.wao.co.il/seo/guide";
 const AUTHOR_NAME = "איתן יריב";
 const AUTHOR_URL  = "https://www.wao.co.il/about";
@@ -91,35 +95,45 @@ const breadcrumbSchema = {
   ],
 };
 
+const FAQ: { q: string; a: string }[] = [
+  {
+    q: "כמה זמן לוקח קידום אתרים להראות תוצאות?",
+    a: "תוצאות ראשונות (שיפור מיקומים) מורגשות בדרך כלל תוך 3–4 חודשים. צמיחה משמעותית בתנועה מגיעה תוך 6–12 חודשים. תחומים תחרותיים עשויים לדרוש 12–18 חודשים. מי שמתחיל מהפרופיל העסקי בגוגל ומביטויים מקומיים מתחיל מהמקום שבו התחרות קטנה יותר.",
+  },
+  {
+    q: "מה זה Topical Authority ולמה זה חשוב ב-2026?",
+    a: "Topical Authority היא הסמכות הנושאית שגוגל מייחסת לאתר בתחום מסוים. אתר שמכסה נושא לעומק (Content Clusters, Pillar Pages) מדורג גבוה יותר מאתר עם מאמרים מפוזרים. ב-2026 זה קריטי גם לציטוט ב-AI Overviews. בפשטות: עדיף להיות המומחה של נושא אחד מאשר לכתוב קצת על הכול.",
+  },
+  {
+    q: "האם SEO עדיין רלוונטי עם AI Overviews?",
+    a: "יותר מאי פעם. AI Overviews מצטטים מקורות ספציפיים — ואתרים עם Topical Authority, E-E-A-T חזק ו-Structured Data מלא מופיעים בציטוטים. זו חשיפה כפולה: גם בתוצאה האורגנית וגם ב-AI Overview. ה-AI צריך מקורות. השאלה היחידה היא אם המקור יהיה אתה או המתחרה.",
+  },
+  {
+    q: "אפשר לעשות קידום אתרים לבד?",
+    a: "כן. בעל עסק יכול לעשות לבד את רוב מה שמשפיע: פרופיל עסקי מלא בגוגל, כותרות טובות, דפי שירות שעונים על שאלות של לקוחות, וביקורות. לחלק הטכני כדאי להיעזר במי שבנה את האתר. המחיר האמיתי הוא זמן: שעתיים בשבוע, בהתמדה.",
+  },
+  {
+    q: "מה ההבדל בין קידום אורגני (SEO) לקידום ממומן (PPC)?",
+    a: "בממומן משלמים לגוגל על כל קליק. התוצאות מיידיות, ונעלמות כשמפסיקים לשלם. באורגני לא משלמים על קליקים. התוצאות נבנות בחודשים, ונשארות. הרבה עסקים משלבים: ממומן ללקוחות של היום, אורגני ללקוחות של השנה הבאה.",
+  },
+  {
+    q: "למה האתר שלי לא מופיע בגוגל?",
+    a: "שלוש סיבות נפוצות. גוגל עדיין לא מכירה את האתר: בדוק עם site: ועם Google Search Console. הדפים חסומים לסריקה בטעות, ב-noindex או ב-robots.txt. או שהאתר מופיע, אבל בעמוד חמש, כי התוכן לא עונה על מה שאנשים מחפשים.",
+  },
+  {
+    q: "צריך לדעת לתכנת כדי לקדם אתר?",
+    a: "לא. רוב העבודה היא כתיבה, סדר והתמדה: מה לכתוב, איך לקרוא לדפים ואיך לקשר ביניהם. את הסעיפים הטכניים — מהירות, Schema, הפניות — מעבירים פעם אחת למי שבנה את האתר, עם רשימה ברורה.",
+  },
+];
+
 const faqSchema = {
   "@context": "https://schema.org",
   "@type": "FAQPage",
-  mainEntity: [
-    {
-      "@type": "Question",
-      name: "כמה זמן לוקח קידום אתרים להראות תוצאות?",
-      acceptedAnswer: {
-        "@type": "Answer",
-        text: "תוצאות ראשונות (שיפור מיקומים) מורגשות בדרך כלל תוך 3–4 חודשים. צמיחה משמעותית בתנועה מגיעה תוך 6–12 חודשים. תחומים תחרותיים עשויים לדרוש 12–18 חודשים.",
-      },
-    },
-    {
-      "@type": "Question",
-      name: "מה זה Topical Authority ולמה זה חשוב ב-2026?",
-      acceptedAnswer: {
-        "@type": "Answer",
-        text: "Topical Authority היא הסמכות הנושאית שגוגל מייחס לאתר בתחום מסוים. אתר שמכסה נושא לעומק (Content Clusters, Pillar Pages) מדורג גבוה יותר מאשר אתר עם מאמרים מפוזרים. ב-2026 זה קריטי גם לציטוט ב-AI Overviews.",
-      },
-    },
-    {
-      "@type": "Question",
-      name: "האם SEO עדיין רלוונטי עם AI Overviews?",
-      acceptedAnswer: {
-        "@type": "Answer",
-        text: "יותר מאי פעם. AI Overviews מצטטים מקורות ספציפיים — ואתרים עם Topical Authority, E-E-A-T חזק ו-Structured Data מלא מופיעים בציטוטים. זה חשיפה כפולה: גם בתוצאה האורגנית וגם ב-AI Overview.",
-      },
-    },
-  ],
+  mainEntity: FAQ.map(({ q, a }) => ({
+    "@type": "Question",
+    name: q,
+    acceptedAnswer: { "@type": "Answer", text: a },
+  })),
 };
 
 const TOC = [
@@ -137,6 +151,7 @@ const TOC = [
   { id: "measurement",       label: "מדידה וכלים" },
   { id: "timeline",          label: "כמה זמן לוקח?" },
   { id: "mistakes",          label: "10 טעויות נפוצות" },
+  { id: "faq",               label: "שאלות נפוצות" },
 ];
 
 const HEADING: React.CSSProperties = {
@@ -176,6 +191,28 @@ const SURFACE: React.CSSProperties = {
   padding: "24px 28px",
   marginBlock: "1.6rem",
 };
+
+const SUNDAY: React.CSSProperties = {
+  ...SURFACE,
+  borderInlineStart: "4px solid var(--accent)",
+  fontFamily: "var(--font-body), sans-serif",
+  lineHeight: 1.8,
+  fontSize: "0.97rem",
+  color: "var(--text)",
+};
+
+const START_HERE: React.CSSProperties = {
+  ...SURFACE,
+  background: "var(--accent-dim)",
+  border: "1px solid var(--accent-border)",
+  marginTop: 0,
+};
+
+// Like renderMixed, but brackets stay in the RTL flow (only the Latin run inside is isolated), so a
+// Latin parenthetical such as "(Name, Address, Phone)" mirrors correctly and the bidi grep stays 0.
+function mixedKeepBrackets(text: string): React.ReactNode {
+  return text.split(/([()])/).map((part, i) => (part === "(" || part === ")" ? part : <Fragment key={i}>{renderMixed(part)}</Fragment>));
+}
 
 function StaticGuide() {
   return (
@@ -217,7 +254,7 @@ function StaticGuide() {
 
           <div className="badge" style={{ marginBottom: "24px" }}>
             <span className="badge-dot" />
-            מדריך — עודכן יוני 2026
+            מדריך — עודכן נובמבר 2026
           </div>
 
           <h1
@@ -244,8 +281,7 @@ function StaticGuide() {
               marginBottom: "32px",
             }}
           >
-            כל מה שאתם חייבים לדעת על SEO מודרני בעידן של <GT term="AI Overviews">AI Overviews</GT> וסמכות נושאית
-            (<GT term="Topical Authority">Topical Authority</GT>). מדריך פרקטי לחוקי המשחק החדשים ב-2026/2027.
+            כל מה שבעל עסק צריך לדעת על קידום אתרים ו-SEO בעידן של <GT term="AI Overviews">AI Overviews</GT> וסמכות נושאית (<GT term="Topical Authority">Topical Authority</GT>) — בעברית של בני אדם. כל מונח מקצועי מקבל הסבר פשוט, וכל פרק נגמר במה שעושים ביום ראשון בבוקר. מדריך פרקטי לחוקי המשחק של 2026/2027.
           </p>
 
           <div
@@ -256,7 +292,7 @@ function StaticGuide() {
             }}
           >
             <span>
-              נכתב ע&quot;י{" "}
+              נכתב ע״י{" "}
               <Link
                 href="/about"
                 style={{ color: "var(--accent)", fontWeight: 600 }}
@@ -268,10 +304,10 @@ function StaticGuide() {
             <span aria-hidden>·</span>
             <span>
               עודכן:{" "}
-              <time dateTime={MODIFIED}>יוני 2026</time>
+              <time dateTime={MODIFIED}>נובמבר 2026</time>
             </span>
             <span aria-hidden>·</span>
-            <span>זמן קריאה: ~25 דקות</span>
+            <span>זמן קריאה: ~18 דקות</span>
           </div>
         </div>
       </header>
@@ -292,29 +328,60 @@ function StaticGuide() {
             <meta itemProp="datePublished" content={PUBLISHED} />
             <meta itemProp="dateModified"  content={MODIFIED} />
 
+            {/* ── Start here (aside, no heading: H2 outline unchanged) ── */}
+            <aside aria-label={"יש לך עסק קטן ורק רבע שעה? התחל כאן."} style={START_HERE}>
+              <p style={{ fontFamily: "var(--font-rubik), sans-serif", fontWeight: 800, fontSize: "1.05rem", color: "var(--text)", marginBottom: "10px" }}>
+                יש לך עסק קטן ורק רבע שעה? התחל כאן.
+              </p>
+              <ol style={{ ...BODY, color: "var(--text)", listStyle: "decimal", paddingInlineStart: "1.4rem", marginBottom: "12px" }}>
+                <li style={{ marginBottom: "6px" }}>
+                  <a href="#what-is-seo" style={{ color: "var(--text)", textDecoration: "none" }}>חפש את עצמך כמו לקוח: השירות שלך והעיר שלך. איפה אתה? (2 דקות)</a>
+                </li>
+                <li style={{ marginBottom: "6px" }}>
+                  הקלד בגוגל site: ואת כתובת האתר. גוגל מכירה את הדפים שלך? (2 דקות){" "}
+                  <a href="#technical-seo" style={{ color: "var(--accent)", fontWeight: 600, textDecoration: "none", whiteSpace: "nowrap" }}>← Technical SEO</a>
+                </li>
+                <li style={{ marginBottom: "6px" }}>
+                  פתח את הפרופיל העסקי שלך בגוגל. שעות, טלפון ותמונות מעודכנים? (4 דקות){" "}
+                  <a href="#local-seo" style={{ color: "var(--accent)", fontWeight: 600, textDecoration: "none", whiteSpace: "nowrap" }}>← קידום מקומי</a>
+                </li>
+                <li style={{ marginBottom: "6px" }}>
+                  הרץ את דף הבית ב-PageSpeed Insights, בלשונית המובייל. (2 דקות){" "}
+                  <a href="#core-web-vitals" style={{ color: "var(--accent)", fontWeight: 600, textDecoration: "none", whiteSpace: "nowrap" }}>← Core Web Vitals</a>
+                </li>
+                <li>
+                  תקן את ה-Title Tag של דף הבית: שירות, עיר, שם העסק. (5 דקות){" "}
+                  <a href="#on-page-seo" style={{ color: "var(--accent)", fontWeight: 600, textDecoration: "none", whiteSpace: "nowrap" }}>← On-Page SEO</a>
+                </li>
+              </ol>
+              <p style={{ ...BODY, marginBottom: 0 }}>
+                סיימת? עכשיו קרא את המדריך לפי הסדר. כל פרק נגמר במשימה אחת ליום ראשון בבוקר.
+              </p>
+            </aside>
+
             {/* ── 1. מה זה SEO ── */}
             <section id="what-is-seo">
               <h2 style={{ ...HEADING, fontSize: "clamp(1.5rem,2.5vw,2rem)" }}>
                 מה זה קידום אתרים (SEO)?
               </h2>
               <p style={BODY}>
-                <strong style={{ color: "var(--text)" }}>קידום אתרים (SEO)</strong>{" "}
-                הוא אוסף המהלכים שמקפיצים את האתר שלכם לראש התוצאות האורגניות
-                של גוגל – בלי לשלם אגורה על קליקים.
+                <strong style={{ color: "var(--text)" }}>קידום אתרים (SEO)</strong> הוא אוסף הפעולות שמביאות את האתר שלך לראש התוצאות האורגניות של גוגל — התוצאות הרגילות, אלה שלא משלמים עליהן. בלי לשלם אגורה על קליק.
               </p>
               <p style={BODY}>
-                בניגוד לממומן שמביא קליקים מהר אבל נעלם ברגע שסגרתם את הברז התקציבי,
-                SEO בונה לכם <strong style={{ color: "var(--text)" }}>נכס נדל״ני דיגיטלי</strong>. אתר
-                שממוקם טוב היום ימשיך להזרים לכם לידים בחינם גם בשנה הבאה.
+                פרסום ממומן הוא שכירות: שילמת — אתה למעלה. הפסקת לשלם — נעלמת באותו יום. SEO הוא דירה בבעלותך, <strong style={{ color: "var(--text)" }}>נכס נדל״ני דיגיטלי</strong>. עמוד שמדורג טוב היום ימשיך להביא לך פניות גם בשנה הבאה, בלי חשבונית מגוגל על כל קליק.
+              </p>
+              <p style={BODY}>
+                תחשוב על אינסטלטור ברעננה. בעשר בלילה מישהו עם הצפה במטבח מקליד ״אינסטלטור ברעננה״. הוא לא מדפדף. הוא מתקשר לאחד משלושת הראשונים. SEO הוא העבודה שמכניסה אותך לשלושה האלה.
               </p>
               <div style={CALLOUT}>
-                <strong>📌 בקצרה:</strong> SEO = להופיע ראשון כשלקוח מחפש מה שאתם מוכרים — בלי לשלם לגוגל על כל קליק.
+                <strong>📌 בקצרה:</strong> SEO = להופיע ראשון כשלקוח מחפש את מה שאתה מוכר — בלי לשלם לגוגל על כל קליק.
               </div>
               <p style={BODY}>
-                ב-2026 חוקי המשחק השתנו. גוגל מפעילה את מודל ה-AI שלה (Gemini) כדי להבין
-                מה הגולש באמת מחפש, ומציגה תשובות ישירות (<strong style={{ color: "var(--text)" }}>AI Overviews</strong>)
-                מעל הכל. SEO מודרני פשוט חייב לפצח גם את הבלוק הזה.
+                ב-2026 חוקי המשחק השתנו. גוגל מפעילה את מודל ה-AI שלה (Gemini) כדי להבין מה הגולש באמת מחפש, ומציגה מעל כל התוצאות תשובה מוכנה — <strong style={{ color: "var(--text)" }}>AI Overviews</strong>. התשובה הזאת נשענת על אתרים, ומצטטת אותם. SEO של היום הוא גם לדרג גבוה וגם להיות האתר שגוגל מצטטת.
               </p>
+              <div style={SUNDAY}>
+                <strong>☕ ביום ראשון בבוקר:</strong>{" "}פתח חלון גלישה בסתר וחפש את השירות הראשי שלך ואת העיר שלך, כמו שלקוח היה מקליד. רשום מי מופיע בשלושת המקומות הראשונים, ואיפה אתה. זו נקודת הפתיחה שלך, ואליה תחזור בעוד שלושה חודשים.
+              </div>
             </section>
 
             {/* ── 2. איך גוגל עובד ── */}
@@ -323,44 +390,40 @@ function StaticGuide() {
                 איך גוגל מדרג אתרים ב-2026/2027
               </h2>
               <p style={BODY}>
-                גוגל מצהירה על מאות גורמי דירוג, אבל בפועל, ב-2026/2027 הכל מתנקז
-                ל-<strong style={{ color: "var(--text)" }}>5 מערכות ליבה</strong> מרכזיות:
+                גוגל מדברת על מאות גורמי דירוג. אין לך זמן למאות, וגם לא צריך. בפועל, ב-2026/2027 הכול מתנקז ל-<strong style={{ color: "var(--text)" }}>5 מערכות ליבה</strong>. תכיר אותן, ותבין כמעט כל החלטה שגוגל מקבלת על האתר שלך:
               </p>
               <ol style={{ ...BODY, paddingInlineStart: "1.4rem", marginBottom: "1.6rem" }}>
                 <li style={{ marginBottom: "12px" }}>
-                  <strong style={{ color: "var(--text)" }}><GT term="RankBrain">RankBrain</GT> + <GT term="BERT">BERT</GT> + <GT term="MUM">MUM</GT></strong> —
-                  מערכות AI שמבינות את <em>כוונת</em> החיפוש, לא רק את מילות המפתח.
+                  <strong style={{ color: "var(--text)" }}><GT term="RankBrain">RankBrain</GT> + <GT term="BERT">BERT</GT> + <GT term="MUM">MUM</GT></strong> — מערכות ה-AI שמבינות את <em>כוונת</em> החיפוש, לא רק את המילים. מי שמקליד ״נזילה מתחת לכיור״ מחפש אינסטלטור, גם אם לא כתב את המילה. לכן כותבים בשפה של הלקוח, לא בשפה של המקצוע.
                 </li>
                 <li style={{ marginBottom: "12px" }}>
-                  <strong style={{ color: "var(--text)" }}><GT term="Helpful Content System">Helpful Content System</GT></strong> —
-                  גוגל מעדיפה תוכן שנכתב <em>לאנשים</em>, לא למנועי חיפוש. תוכן AI-only
-                  ללא ערך נענש.
+                  <strong style={{ color: "var(--text)" }}><GT term="Helpful Content System">Helpful Content System</GT></strong> — גוגל מעדיפה תוכן שנכתב <em>לאנשים</em>, לא למנועי חיפוש. עמוד שנכתב רק כדי לדרג, בלי לעזור לאף אחד, יורד. זה נכון במיוחד לטקסט AI שהועלה כמו שהוא, בלי ידע אמיתי מאחוריו.
                 </li>
                 <li style={{ marginBottom: "12px" }}>
-                  <strong style={{ color: "var(--text)" }}><GT term="E-E-A-T">E-E-A-T</GT> Signals</strong> —
-                  ניסיון, מומחיות, סמכות ואמינות. גוגל בוחנת מי כתב את התוכן ועד כמה
-                  הוא מהימן.
+                  <strong style={{ color: "var(--text)" }}><GT term="E-E-A-T">E-E-A-T</GT> Signals</strong> — ניסיון, מומחיות, סמכות ואמינות. גוגל בודקת מי עומד מאחורי התוכן: אדם עם שם, ותק ולקוחות, או אתר אנונימי.
                 </li>
                 <li style={{ marginBottom: "12px" }}>
-                  <strong style={{ color: "var(--text)" }}><bdi dir="ltr">Page Experience</bdi></strong> —
-                  <bdi dir="ltr"><GT term="Core Web Vitals">Core Web Vitals</GT></bdi>, מהירות, מובייל ו-HTTPS.
+                  <strong style={{ color: "var(--text)" }}><bdi dir="ltr">Page Experience</bdi></strong> — <bdi dir="ltr"><GT term="Core Web Vitals">Core Web Vitals</GT></bdi>, מהירות, מובייל ו-HTTPS. בעברית: האתר נטען מהר, נוח בטלפון ומאובטח.
                 </li>
                 <li style={{ marginBottom: "12px" }}>
-                  <strong style={{ color: "var(--text)" }}>Link Authority</strong> —
-                  קישורים נכנסים מאתרים אמינים ורלוונטיים עדיין קריטיים ב-2026.
+                  <strong style={{ color: "var(--text)" }}>Link Authority</strong> — קישורים נכנסים מאתרים אמינים ורלוונטיים עדיין קריטיים ב-2026. כל קישור כזה הוא המלצה: אתר אחר אומר לגוגל שאפשר לסמוך עליך.
                 </li>
               </ol>
               <div style={SURFACE}>
                 <h3 style={{ ...HEADING, fontSize: "1.05rem", marginTop: 0 }}>
-                  שינויי האלגוריתם החשובים ב-2025–2026
+                  שינויי האלגוריתם החשובים ב-2024–2026
                 </h3>
                 <ul style={{ ...BODY, paddingInlineStart: "1.4rem", marginBottom: 0 }}>
-                  <li style={{ marginBottom: "8px" }}><strong style={{ color: "var(--text)" }}>AI Overviews expansion</strong> — הורחב ל-100+ מדינות, עכשיו בעברית</li>
-                  <li style={{ marginBottom: "8px" }}><strong style={{ color: "var(--text)" }}>Site Reputation Abuse</strong> — ענישה על Parasite SEO וספאם תוכן</li>
-                  <li style={{ marginBottom: "8px" }}><strong style={{ color: "var(--text)" }}>Helpful Content integration</strong> — נמזג עם הCore Algorithm</li>
-                  <li style={{ marginBottom: "8px" }}><strong style={{ color: "var(--text)" }}>Spam policies update</strong> — AI-generated spam, expired domains</li>
-                  <li><strong style={{ color: "var(--text)" }}>INP replaces FID</strong> — Interaction to Next Paint הפך ל-Core Web Vital רשמי</li>
+                  <li style={{ marginBottom: "8px" }}><strong style={{ color: "var(--text)" }}>AI Overviews expansion</strong> — זמין ביותר מ-200 מדינות וטריטוריות, כולל בישראל ובעברית. התשובה של גוגל מופיעה היום גם ללקוחות שלך.</li>
+                  <li style={{ marginBottom: "8px" }}><strong style={{ color: "var(--text)" }}>Site Reputation Abuse</strong> — ענישה על Parasite SEO: אתרים גדולים שמשכירים את השם שלהם לתוכן של אחרים. חדשות טובות לעסק קטן שכותב על התחום שלו.</li>
+                  <li style={{ marginBottom: "8px" }}><strong style={{ color: "var(--text)" }}>Helpful Content integration</strong> — המערכת נמזגה לתוך ה-Core Algorithm (מרץ 2024). איכות התוכן נבדקת כל הזמן, לא רק בעדכון מיוחד.</li>
+                  <li style={{ marginBottom: "8px" }}><strong style={{ color: "var(--text)" }}>Spam policies update</strong> — ענישה על AI-generated spam ועל expired domains: תוכן בייצור המוני, ודומיינים ישנים שנקנו רק בשביל המוניטין שלהם.</li>
+                  <li style={{ marginBottom: "8px" }}><strong style={{ color: "var(--text)" }}>INP replaces FID</strong> — Interaction to Next Paint הפך ל-Core Web Vital רשמי (מרץ 2024). גוגל מודדת כמה מהר האתר מגיב ללחיצה.</li>
+                  <li><strong style={{ color: "var(--text)" }}>FAQ rich results</strong> — מאז מאי 2026 גוגל לא מציגה שאלות ותשובות מתחת לתוצאה. השאלות והתשובות בעמוד עצמו נשארות חשובות.</li>
                 </ul>
+              </div>
+              <div style={SUNDAY}>
+                <strong>☕ ביום ראשון בבוקר:</strong>{" "}פתח את העמוד החשוב ביותר באתר שלך ושאל חמש שאלות. הוא עונה על מה שהלקוח חיפש? רואים מי עומד מאחוריו? הוא נטען מהר בטלפון? יש אתר אחר שמקשר אליו? הוא כתוב לבני אדם? כל ״לא״ הוא משימה.
               </div>
               <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", alignItems: "center", marginTop: "20px", paddingTop: "16px", borderTop: "1px solid var(--border)" }}>
                 <span style={{ fontSize: "0.72rem", color: "var(--muted)", fontFamily: "var(--font-body), sans-serif", fontWeight: 600 }}>מאגר ידע:</span>
@@ -384,39 +447,33 @@ function StaticGuide() {
                 <span className="text-gradient">המהפכה של 2026</span>
               </h2>
               <p style={BODY}>
-                בלוק ה-<strong style={{ color: "var(--text)" }}>AI Overviews</strong> כבר מזמן לא ניסוי
-                טכנולוגי. ב-2026 הוא מופיע ביותר מ-63% מהחיפושים ומספק לגולשים תשובה מיידית,
-                והמספרים האלה רק ימשיכו לצמוח.
+                בלוק ה-<strong style={{ color: "var(--text)" }}>AI Overviews</strong> כבר מזמן לא ניסוי טכנולוגי. זו התשובה המוכנה שגוגל כותבת בעצמה ומציגה מעל כל התוצאות. כמה היא נפוצה? בארה״ב היא הופיעה באמצע 2026 בכ-43% מהחיפושים בגוגל, לפי <a href="https://www.advancedwebranking.com/seo/organic-ctr" target="_blank" rel="noopener" style={{ color: "var(--accent)" }}>Advanced Web Ranking</a> (יולי 2026). בשאלות ובחיפושים של ״איך עושים״ היא מופיעה לעתים קרובות עוד יותר.
               </p>
               <p style={BODY}>
-                אל תטעו: ה-AI לא <em>הורג</em> את ה-SEO, הוא פשוט הופך אותו{" "}
-                <strong style={{ color: "var(--text)" }}>לחשוב פי כמה</strong>.
-                גוגל חייבת לבסס את התשובות שלה על אתרים סמכותיים, ומי שמצוטט שם
-                זוכה לחשיפת מותג מטורפת בחינם.
+                אל תטעה: ה-AI לא <em>הורג</em> את ה-SEO, הוא הופך אותו <strong style={{ color: "var(--text)" }}>לחשוב פי כמה</strong>. גוגל לא ממציאה תשובות. היא חייבת לבסס אותן על אתרים שהיא סומכת עליהם, ומציגה אותם כמקורות. מי שמצוטט שם מקבל את המקום הכי טוב בעמוד, בחינם. מי שלא מצוטט נדחק למטה, גם אם הוא מדורג ראשון.
               </p>
               <div style={CALLOUT}>
                 <strong>🤖 איך להופיע ב-AI Overviews:</strong>
                 <ul style={{ marginTop: "10px", paddingInlineStart: "1.2rem" }}>
-                  <li style={{ marginBottom: "6px" }}>כתבו <strong>Direct Answers</strong> ברורים לשאלות נפוצות</li>
-                  <li style={{ marginBottom: "6px" }}>הוסיפו <strong>סיכום קצר (בקצרה)</strong> בתחילת כל מאמר</li>
-                  <li style={{ marginBottom: "6px" }}>השתמשו ב-<strong>FAQ Schema</strong> עם שאלות ותשובות מבוססות</li>
-                  <li style={{ marginBottom: "6px" }}>בנו <strong><bdi dir="ltr">Topical Authority</bdi></strong> — <bdi dir="ltr">AI</bdi> מצטט מקורות שהוא מזהה כסמכותיים</li>
-                  <li>חזקו <strong>E-E-A-T</strong> — מחבר מומחה + מקורות ממוספרים</li>
+                  <li style={{ marginBottom: "6px" }}>כתוב <strong>Direct Answers</strong>: תשובה ישירה של שניים-שלושה משפטים, מיד אחרי השאלה. בלי הקדמות.</li>
+                  <li style={{ marginBottom: "6px" }}>הוסף <strong>סיכום קצר (בקצרה)</strong> בתחילת כל מאמר. ה-AI אוהב לצטט משפט שעומד בפני עצמו.</li>
+                  <li style={{ marginBottom: "6px" }}>הוסף לעמוד שאלות ותשובות אמיתיות, אלה שלקוחות שואלים אותך בטלפון, וסמן אותן ב-<strong>FAQ Schema</strong>. גוגל כבר לא מציגה אותן מתחת לתוצאה, אבל הסימון עדיין עוזר לה להבין את העמוד.</li>
+                  <li style={{ marginBottom: "6px" }}>בנה <strong><bdi dir="ltr">Topical Authority</bdi></strong> — ה-<bdi dir="ltr">AI</bdi> מצטט מקורות שהוא מזהה כסמכותיים בנושא, לא עמוד בודד שהצליח.</li>
+                  <li>חזק <strong>E-E-A-T</strong> — מחבר מומחה עם שם ופנים, ומקור לכל מספר.</li>
                 </ul>
               </div>
               <p style={BODY}>
-                רוצים שהעסק שלכם יופיע שם?{" "}
+                רוצה שהעסק שלך יופיע שם?{" "}
                 <Link href="/geo" style={{ color: "var(--accent)", fontWeight: 600 }}>
-                  בדקו אם GEO Bot מתאים לעסק שלכם
+                  בדוק אם GEO Bot מתאים לעסק שלך
                 </Link>.
               </p>
               <p style={BODY}>
-                מנועי AI נוספים שמשפיעים על תנועה ב-2026:{" "}
-                <strong style={{ color: "var(--text)" }}>Perplexity AI</strong> (מצטט מקורות
-                ישירות, מביא תנועה), <strong style={{ color: "var(--text)" }}>ChatGPT Search</strong>,
-                ו-<strong style={{ color: "var(--text)" }}>Microsoft Copilot</strong>. כל אחד
-                מהם מתגמל תוכן עם Topical Authority ו-E-E-A-T.
+                גוגל לא לבד. מנועי AI נוספים שמשפיעים על תנועה ב-2026: <strong style={{ color: "var(--text)" }}>Perplexity AI</strong> (מצטט מקורות ישירות, מביא תנועה), <strong style={{ color: "var(--text)" }}>ChatGPT Search</strong> ו-<strong style={{ color: "var(--text)" }}>Microsoft Copilot</strong>. לקוחות כבר שואלים אותם ״מי האינסטלטור הכי טוב באזור״ ו״כמה עולה טיפול שורש״. כולם מתגמלים את אותו דבר: תוכן עם Topical Authority ו-E-E-A-T. עבודה אחת, כמה מנועים.
               </p>
+              <div style={SUNDAY}>
+                <strong>☕ ביום ראשון בבוקר:</strong>{" "}כתוב את חמש השאלות שלקוחות שואלים אותך הכי הרבה. חפש כל אחת בגוגל, ובדוק אם מופיעה תשובת AI ומי מצוטט בה. אחר כך כתוב באתר שלך תשובה טובה יותר לכל שאלה: שניים-שלושה משפטים ישירים, ואז הפירוט.
+              </div>
               <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", alignItems: "center", marginTop: "20px", paddingTop: "16px", borderTop: "1px solid var(--border)" }}>
                 <span style={{ fontSize: "0.72rem", color: "var(--muted)", fontFamily: "var(--font-body), sans-serif", fontWeight: 600 }}>מאגר ידע:</span>
                 {[
@@ -440,40 +497,28 @@ function StaticGuide() {
                 מחקר מילות מפתח וכוונת חיפוש
               </h2>
               <p style={BODY}>
-                לפני שנוגעים במקלדת, אתם חייבים לדעת מה הלקוחות שלכם באמת מקלידים – ומה עובר להם בראש.{" "}
-                <strong style={{ color: "var(--text)" }}>מחקר מילות מפתח</strong> הוא הגשר שמחבר
-                בין השירות שלכם לשאלות האמיתיות של האנשים.
+                לפני שנוגעים במקלדת, אתה חייב לדעת מה הלקוחות שלך באמת מקלידים — ומה עובר להם בראש. אתה קורא לזה ״איטום גגות ביריעות״. הלקוח מקליד ״נזילה מהתקרה מה עושים״. <strong style={{ color: "var(--text)" }}>מחקר מילות מפתח</strong> הוא הגשר בין השירות שלך לבין המילים של הלקוח.
               </p>
-              <h3 style={{ ...HEADING, fontSize: "1.2rem" }}>כוונת חיפוש — ה-Why מאחורי הביטוי</h3>
+              <h3 style={{ ...HEADING, fontSize: "1.2rem" }}>כוונת חיפוש — ה״למה״ שמאחורי הביטוי</h3>
               <p style={BODY}>
-                <strong style={{ color: "var(--text)" }}><GT term="Search Intent">כוונת חיפוש (Search Intent)</GT></strong>{" "}
-                היא הגורם הקריטי ביותר בבחירת מילות מפתח. גוגל מסווגת חיפושים לארבעה סוגים:{" "}
-                <strong style={{ color: "var(--text)" }}>מידעי</strong> (מה זה X?),{" "}
-                <strong style={{ color: "var(--text)" }}>ניווטי</strong> (חיפוש אתר ספציפי),{" "}
-                <strong style={{ color: "var(--text)" }}>מסחרי</strong> (השוואת אפשרויות לפני רכישה),{" "}
-                ו<strong style={{ color: "var(--text)" }}>עסקאי</strong> (מוכן לרכוש כעת).
-                תוכן שאינו תואם לכוונת החיפוש לא יידרג — גם אם הוא מכיל את מילת המפתח.
+                <strong style={{ color: "var(--text)" }}><GT term="Search Intent">כוונת חיפוש (Search Intent)</GT></strong> היא הגורם הקריטי ביותר בבחירת מילות מפתח: מה האדם רוצה שיקרה אחרי החיפוש. מקובל לחלק חיפושים לארבעה סוגים: <strong style={{ color: "var(--text)" }}>מידעי</strong> (״למה הדוד מטפטף״), <strong style={{ color: "var(--text)" }}>ניווטי</strong> (חיפוש אתר ספציפי, כמו ״כללית זימון תורים״), <strong style={{ color: "var(--text)" }}>מסחרי</strong> (השוואה לפני רכישה, כמו ״דוד שמש או דוד חשמל״) ו<strong style={{ color: "var(--text)" }}>עסקאי</strong> (מוכן לפעול עכשיו: ״טכנאי דודים בחיפה״). תוכן שלא תואם את כוונת החיפוש לא ידורג — גם אם מילת המפתח מופיעה בו עשר פעמים. למי ששואל ״למה״ נותנים הסבר. למי שמחפש טכנאי נותנים טלפון ואזור שירות.
               </p>
               <h3 style={{ ...HEADING, fontSize: "1.2rem" }}>
                 Long-Tail מול ביטויי ראש
               </h3>
               <p style={BODY}>
-                ביטויי Long-Tail — ארוכים וספציפיים — מביאים תנועה מצומצמת יותר, אך כוונת
-                הרכישה שמאחוריהם גבוהה יותר. על הביטוי &quot;קידום אתרים&quot; מתחרים אלפי אתרים;
-                על &quot;קידום אתרים למסעדות בתל אביב&quot; — הרבה פחות. אתרים חדשים מתחילים
-                ב-Long-Tail ומחזקים את עמדתם לביטויים תחרותיים יותר בהדרגה.
+                ביטויי Long-Tail — ארוכים וספציפיים — מביאים פחות גולשים, אבל גולשים שקרובים הרבה יותר לקנייה. על הביטוי ״קידום אתרים״ מתחרים אלפי אתרים; על ״קידום אתרים למסעדות בתל אביב״ — הרבה פחות. אותו דבר אצלך: על ״רופא שיניים״ תתחרה מול רשתות ענק. על ״השתלת שיניים ביום אחד בנתניה״ אתה יכול לנצח. אתר חדש מתחיל ב-Long-Tail, צובר שם ניצחונות, ועולה משם בהדרגה לביטויי הראש.
               </p>
               <h3 style={{ ...HEADING, fontSize: "1.2rem" }}>Keyword Clustering — ביטויים לדפים, לא דף לכל ביטוי</h3>
               <p style={BODY}>
-                Keyword Clustering — קיבוץ ביטויים לפי כוונת חיפוש משותפת — מונע{" "}
-                <GT term="Keyword Cannibalization">קניבליזציה</GT>{" "}
-                ובונה דפים עמוקים שגוגל מעדיפה על פני ריבוי דפים רדודים.
-                הכלל הפשוט: ביטויים עם אותה כוונת חיפוש שייכים לאותו דף.
+                Keyword Clustering — קיבוץ ביטויים לפי כוונת חיפוש משותפת — מונע <GT term="Keyword Cannibalization">קניבליזציה</GT>: מצב ששני דפים שלך מתחרים זה בזה על אותו חיפוש, ושניהם מפסידים. ״מחיר ניקוי ספות״, ״כמה עולה ניקוי ספה״ ו״ניקוי ספות מחירון״ הם אותה שאלה, ולכן דף אחד. כך נבנה דף עמוק אחד, שגוגל מעדיפה על פני שלושה דפים רדודים. הכלל הפשוט: ביטויים עם אותה כוונת חיפוש שייכים לאותו דף.
               </p>
               <div style={CALLOUT}>
-                <strong>🔎 לפני כל כתיבה — נתחו את ה-<GT term="SERP">SERP</GT>:</strong>{" "}
-                מה מדורג בראש עבור הביטוי שבחרתם? מה סוג התוכן שגוגל מחזירה — מאמרים,
-                דפי מוצר, וידאו? התשובה חושפת את כוונת החיפוש האמיתית.
+                <strong>🔎 לפני כל כתיבה — נתח את ה-<GT term="SERP">SERP</GT> (עמוד התוצאות):</strong>{" "}
+                חפש את הביטוי שבחרת והסתכל מה גוגל מחזירה. מאמרים? דפי שירות? מפה עם עסקים? וידאו? זו התשובה של גוגל לשאלה ״מה אנשים רוצים כאן״. אם כל העמוד מלא בדפי שירות, מאמר לא ידורג שם.
+              </div>
+              <div style={SUNDAY}>
+                <strong>☕ ביום ראשון בבוקר:</strong>{" "}רשום עשרים שאלות ובקשות ששמעת מלקוחות החודש, במילים שלהם. הקלד כל אחת בגוגל, והסתכל על ההשלמות האוטומטיות ועל ״חיפושים קשורים״ בתחתית העמוד. סמן חמישה ביטויים ארוכים שנשמעים כמו לקוח עם יד על הארנק, ותן לכל אחד דף משלו.
               </div>
               <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", alignItems: "center", marginTop: "20px", paddingTop: "16px", borderTop: "1px solid var(--border)" }}>
                 <span style={{ fontSize: "0.72rem", color: "var(--muted)", fontFamily: "var(--font-body), sans-serif", fontWeight: 600 }}>מאגר ידע:</span>
@@ -496,23 +541,18 @@ function StaticGuide() {
             {/* ── 5. Topical Authority ── */}
             <section id="topical-authority">
               <h2 style={{ ...HEADING, fontSize: "clamp(1.5rem,2.5vw,2rem)" }}>
-                Topical Authority — הדרך לסמכות בנישה שלכם
+                Topical Authority — הדרך לסמכות בנישה שלך
               </h2>
               <p style={BODY}>
-                <strong style={{ color: "var(--text)" }}><GT term="Topical Authority">Topical Authority</GT></strong> היא
-                הסמכות הנושאית שגוגל מייחס לאתר בתחום מסוים. אתר שמכסה נושא לעומק
-                ומכל הזוויות — מדורג גבוה יותר מאשר אתר עם מאמר יחיד על אותו נושא,
-                גם אם המאמר הוא "טוב יותר".
+                <strong style={{ color: "var(--text)" }}><GT term="Topical Authority">Topical Authority</GT></strong> היא הסמכות הנושאית שגוגל מייחסת לאתר בתחום מסוים. אתר שמכסה נושא לעומק ומכל הזוויות מדורג גבוה יותר מאתר עם מאמר יחיד על אותו נושא — גם אם המאמר היחיד ״טוב יותר״. זה כמו בחיים: למי היית מתקשר על בעיית רטיבות, לשיפוצניק שעושה הכול או למי שעושה רק איטום כבר עשרים שנה? גוגל חושבת כמוך.
               </p>
-              <h3 style={{ ...HEADING, fontSize: "1.2rem" }}>Content Clusters — האדריכלות שגוגל מחשיבה</h3>
+              <h3 style={{ ...HEADING, fontSize: "1.2rem" }}>Content Clusters — המבנה שגוגל מעריכה</h3>
               <p style={BODY}>
-                <GT term="Content Cluster">Content Cluster</GT> = <strong style={{ color: "var(--text)" }}><GT term="Pillar Page">Pillar Page</GT> מרכזי</strong> שמכסה
-                נושא ברמה גבוהה, ו-<strong style={{ color: "var(--text)" }}>Cluster Pages</strong> שמכסים
-                כל תת-נושא לעומק. כל הדפים מקושרים זה לזה עם <GT term="Internal Linking">Internal Links</GT> רלוונטיים.
+                <GT term="Content Cluster">Content Cluster</GT> = <strong style={{ color: "var(--text)" }}><GT term="Pillar Page">Pillar Page</GT> מרכזי</strong>, דף אב שמכסה את הנושא כולו במבט מלמעלה, ו-<strong style={{ color: "var(--text)" }}>Cluster Pages</strong> שמכסים כל תת-נושא לעומק. כל הדפים מקושרים זה לזה עם <GT term="Internal Linking">Internal Links</GT> (קישורים פנימיים). תחשוב על ספר: דף האב הוא תוכן העניינים, וכל דף משנה הוא פרק.
               </p>
               <div style={SURFACE}>
                 <h4 style={{ ...HEADING, fontSize: "0.95rem", marginTop: 0, marginBottom: "12px" }}>
-                  דוגמה — Cluster לנושא &quot;קידום אתרים&quot;:
+                  דוגמה — Cluster לנושא ״קידום אתרים״:
                 </h4>
                 <ul style={{ ...BODY, paddingInlineStart: "1.2rem", marginBottom: 0, fontSize: "0.92rem" }}>
                   <li style={{ marginBottom: "6px" }}>🏛️ <strong style={{ color: "var(--text)" }}>Pillar:</strong> מדריך קידום אתרים מקיף (דף זה)</li>
@@ -528,10 +568,21 @@ function StaticGuide() {
                   <li>📄 Cluster: Core Web Vitals — כל מה שצריך לדעת</li>
                 </ul>
               </div>
+              <div style={SURFACE}>
+                <h4 style={{ ...HEADING, fontSize: "0.95rem", marginTop: 0, marginBottom: "12px" }}>
+                  דוגמה — Cluster למרפאת שיניים ברחובות:
+                </h4>
+                <ul style={{ ...BODY, paddingInlineStart: "1.2rem", marginBottom: 0, fontSize: "0.92rem" }}>
+                  <li style={{ marginBottom: "6px" }}>🏛️ <strong style={{ color: "var(--text)" }}>Pillar:</strong> השתלות שיניים ברחובות — המדריך המלא למטופל</li>
+                  <li style={{ marginBottom: "6px" }}>📄 Cluster: כמה עולה השתלת שיניים, וממה המחיר מורכב</li>
+                  <li style={{ marginBottom: "6px" }}>📄 Cluster: השתלה ביום אחד — למי זה מתאים</li>
+                  <li style={{ marginBottom: "6px" }}>📄 Cluster: כאבים אחרי השתלה — מה תקין ומתי מתקשרים</li>
+                  <li style={{ marginBottom: "6px" }}>📄 Cluster: השתלה או גשר — איך בוחרים</li>
+                  <li>📄 Cluster: כמה זמן מחזיק שתל, ואיך שומרים עליו</li>
+                </ul>
+              </div>
               <p style={BODY}>
-                בניית Topical Authority דורשת זמן — בדרך כלל 6–12 חודשים לראות השפעה
-                משמעותית. אבל ברגע שגוגל מזהה אתכם כסמכות בנישה, הדירוגים יציבים ועמידים
-                לשינויי אלגוריתם.
+                בניית Topical Authority דורשת זמן — בדרך כלל 6–12 חודשים עד שרואים השפעה משמעותית. אבל ברגע שגוגל מזהה אותך כסמכות בנישה, הדירוגים יציבים ועמידים הרבה יותר לשינויי אלגוריתם. ויש כאן יתרון לעסק קטן: אתה לא צריך להיות הסמכות של האינטרנט. מספיק להיות הסמכות של התחום שלך, בעיר שלך.
               </p>
               <div style={CALLOUT}>
                 <strong>📖 מדריכים מעמיקים לבניית Topical Authority:</strong>
@@ -549,6 +600,9 @@ function StaticGuide() {
                     — Hub &amp; Spoke, Content Silos, URL Architecture ו-Internal Linking
                   </li>
                 </ul>
+              </div>
+              <div style={SUNDAY}>
+                <strong>☕ ביום ראשון בבוקר:</strong>{" "}בחר שירות אחד, זה שמביא לך הכי הרבה כסף. כתוב לו דף אב אחד, ועוד חמישה דפים קצרים שכל אחד עונה על שאלה אחת של לקוחות: כמה זה עולה, כמה זמן זה לוקח, איך בוחרים, מה יכול להשתבש, ומה עושים אחרי. קשר את כולם לדף האב, וממנו אליהם. זה ה-Cluster הראשון שלך.
               </div>
               <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", alignItems: "center", marginTop: "20px", paddingTop: "16px", borderTop: "1px solid var(--border)" }}>
                 <span style={{ fontSize: "0.72rem", color: "var(--muted)", fontFamily: "var(--font-body), sans-serif", fontWeight: 600 }}>מאגר ידע:</span>
@@ -573,21 +627,19 @@ function StaticGuide() {
                 Technical SEO — הבסיס שלא רואים
               </h2>
               <p style={BODY}>
-                Technical SEO הוא כל הפעולות הטכניות שמאפשרות לגוגל לסרוק, להבין
-                ולהציג את האתר שלכם כראוי. בלי בסיס טכני תקין — שאר מאמצי ה-SEO
-                מאבדים חלק ניכר מיעילותם.
+                Technical SEO הוא כל הפעולות הטכניות שמאפשרות לגוגל לסרוק, להבין ולהציג את האתר שלך כמו שצריך. זו הצנרת בתוך הקיר: אף לקוח לא רואה אותה, אבל כשהיא סתומה שום דבר לא זורם. תוכן מעולה באתר שגוגל לא מצליחה לקרוא הוא שלט יפה בחדר נעול. רוב הסעיפים כאן הם עבודה של מי שבנה לך את האתר. התפקיד שלך הוא לדעת מה לבקש ממנו.
               </p>
               <h3 style={{ ...HEADING, fontSize: "1.2rem" }}>רשימת ה-Technical SEO החיוניים ב-2026</h3>
               <div className="content-2col" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginBottom: "1.6rem" }}>
                 {[
-                  ["✅ Crawlability", "robots.txt, sitemap.xml, Crawl Budget"],
-                  ["✅ Indexability", "Canonical, noindex, href-lang"],
-                  ["✅ Mobile-First", "Responsive design, AMP (אופציונלי)"],
-                  ["✅ HTTPS", "SSL, Mixed Content, Redirects נכונים"],
-                  ["✅ Core Web Vitals", "LCP, CLS, INP — ירוק בכולם"],
-                  ["✅ Structured Data", "Schema.org JSON-LD לכל סוג דף"],
-                  ["✅ Site Architecture", "URL Structure נקי, Internal Linking"],
-                  ["✅ Duplicate Content", "Canonical Tags, Parameter Handling"],
+                  ["✅ Crawlability", "robots.txt, sitemap.xml, Crawl Budget — גוגל מצליחה להיכנס לכל דף שחשוב לך"],
+                  ["✅ Indexability", "Canonical, noindex, hreflang — הדפים הנכונים נכנסים לאינדקס, והמיותרים נשארים בחוץ"],
+                  ["✅ Mobile-First", "Responsive design — גוגל שופטת את האתר לפי הגרסה בטלפון"],
+                  ["✅ HTTPS", "SSL, Mixed Content, Redirects נכונים — מנעול ליד הכתובת, בכל דף"],
+                  ["✅ Core Web Vitals", "LCP, CLS, INP — ירוק בכולם. נטען מהר, לא קופץ, מגיב מיד"],
+                  ["✅ Structured Data", "Schema.org JSON-LD לכל סוג דף — תוויות שמסבירות לגוגל מה יש בעמוד"],
+                  ["✅ Site Architecture", "URL Structure נקי, Internal Linking — כל דף חשוב במרחק של עד שלוש לחיצות מדף הבית"],
+                  ["✅ Duplicate Content", "Canonical Tags, Parameter Handling — אותו תוכן לא מופיע בשתי כתובות"],
                 ].map(([title, desc]) => (
                   <div
                     key={title}
@@ -608,12 +660,11 @@ function StaticGuide() {
                 ))}
               </div>
               <p style={BODY}>
-                כלים מומלצים לבדיקת Technical SEO:{" "}
-                <GT term="Google Search Console">Google Search Console</GT>{" "}
-                (חינם, הכי מדויק),{" "}
-                <strong style={{ color: "var(--text)" }}>Screaming Frog</strong> לסריקת אתר מלאה,
-                ו-<strong style={{ color: "var(--text)" }}>PageSpeed Insights</strong> ל-Core Web Vitals.
+                כלים מומלצים לבדיקת Technical SEO: <GT term="Google Search Console">Google Search Console</GT> (חינם, הכי מדויק — גוגל עצמה מספרת לך מה היא רואה באתר), <strong style={{ color: "var(--text)" }}>Screaming Frog</strong> לסריקת אתר מלאה, ו-<strong style={{ color: "var(--text)" }}>PageSpeed Insights</strong> ל-Core Web Vitals. לעסק קטן, הראשון והשלישי מספיקים כדי להתחיל.
               </p>
+              <div style={SUNDAY}>
+                <strong>☕ ביום ראשון בבוקר:</strong>{" "}הקלד בגוגל site: ומיד אחריו את כתובת האתר שלך, בלי רווח. דפים חשובים לא מופיעים? גוגל לא מכירה אותם. אחר כך פתח Google Search Console (חינם), אמת בעלות על האתר, והגש את מפת האתר (sitemap.xml). לא יודע איך? שלח את השורות האלה למי שבנה לך את האתר.
+              </div>
               <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", alignItems: "center", marginTop: "20px", paddingTop: "16px", borderTop: "1px solid var(--border)" }}>
                 <span style={{ fontSize: "0.72rem", color: "var(--muted)", fontFamily: "var(--font-body), sans-serif", fontWeight: 600 }}>מאגר ידע:</span>
                 {[
@@ -641,33 +692,36 @@ function StaticGuide() {
                 On-Page SEO — אופטימיזציה של כל דף
               </h2>
               <p style={BODY}>
-                On-Page SEO הוא כל מה שניתן לשלוט בו ישירות בתוך הדף עצמו:
-                כותרות, תוכן, URL, מטא תגים ו-Schema.
+                On-Page SEO הוא כל מה שבשליטה שלך בתוך הדף עצמו: כותרות, תוכן, URL, מטא תגים ו-Schema. זה החלק הכי משתלם לבעל עסק, כי לא צריך בשבילו מתכנת, תקציב או אישור מאף אחד. רק לשבת ולתקן.
               </p>
               {[
                 {
                   title: "Title Tag — הכותרת ב-Google",
-                  content: "מקסימום 60 תווים. כלול את מילת המפתח הראשית בתחילה. הוסף את שם המותג בסוף. עשה אותה אטרקטיבית — CTR גבוה = דירוג גבוה יותר.",
+                  content: "זו השורה הכחולה שהלקוח רואה בגוגל, והשלט מעל החנות שלך. עד 60 תווים בערך, אחרת גוגל חותכת. מילת המפתח הראשית בהתחלה, שם העסק בסוף. ״אינסטלטור ברעננה — זמין 24/7 | אבי אינסטלציה״ עובד. ״דף הבית״ לא. כותרת טובה מעלה את ה-CTR, שיעור ההקלקה, ומביאה יותר לקוחות מאותו מיקום.",
                 },
                 {
                   title: "Meta Description",
-                  content: "מקסימום 155 תווים. לא גורם דירוג ישיר, אבל משפיע על CTR. כלול את הערך הייחודי ו-CTA. גוגל לפעמים מחליף אותה — אבל שווה לכתוב גרסה מדויקת.",
+                  content: "שתי השורות האפורות מתחת לכותרת. עד 155 תווים בערך. זה לא גורם דירוג ישיר, אבל זה מה שמשכנע ללחוץ, ולכן משפיע על ה-CTR. כתוב מה הלקוח מקבל ומה הצעד הבא (CTA): ״מגיעים תוך שעה לכל השרון. מחיר סגור לפני שמתחילים. התקשר עכשיו.״ גוגל לפעמים מחליפה את התיאור בטקסט משלה — ועדיין שווה לכתוב גרסה מדויקת.",
                 },
                 {
                   title: "H1 — הכותרת הראשית",
-                  content: "H1 אחד בלבד לכל דף. כלול את מילת המפתח הראשית. H2 ו-H3 לכותרות משניות — בנה היררכיה ברורה שגם גוגל וגם הקורא מבינים.",
+                  content: "הכותרת הגדולה בראש הדף. H1 אחד בלבד לכל דף, עם מילת המפתח הראשית. H2 ו-H3 הן כותרות המשנה. המבחן פשוט: מי שקורא רק את הכותרות צריך להבין על מה הדף. אם הוא מבין, גם גוגל מבינה.",
                 },
                 {
                   title: "URL Structure",
-                  content: "URL קצר, תיאורי, עם מילת המפתח. מספרים: רע (/p=123). מילים תיאוריות: טוב (/seo-guide). ללא תווים מיוחדים. קיצור מילים מיותר: גרוע.",
+                  content: "הכתובת של הדף. URL קצר, תיאורי, עם מילת המפתח. מספרים: רע (/p=123). מילים תיאוריות: טוב (/seo-guide). בלי תווים מיוחדים ובלי קיצורים שרק אתה מבין. וכלל ברזל: URL שכבר מדורג לא משנים. אם חייבים, רק עם Redirect 301.",
                 },
                 {
                   title: "Content Depth & Length",
-                  content: "אין אורך מושלם — אבל תוכן שמכסה נושא לעומק תמיד מדורג גבוה יותר. הנוסחה פשוטה: בדקו מה יש בדפים המתחרים, מצאו מה חסר בהם, וכתבו את הדף המקיף והטוב ביותר ברשת.",
+                  content: "אין אורך מושלם. יש שאלה אחת: הלקוח קיבל תשובה מלאה, או שהוא צריך לחזור לגוגל? תוכן שמכסה נושא לעומק מנצח תוכן שטחי. הנוסחה פשוטה: בדוק מה יש בדפים שמדורגים מעליך, מצא מה חסר בהם, וכתוב את הדף המקיף והטוב ביותר על הנושא. יש לך יתרון שאין לאף כותב תוכן: אתה מכיר את העבודה מבפנים.",
                 },
                 {
                   title: "Internal Linking",
-                  content: "קשרו דפים רלוונטיים זה לזה עם Anchor Text תיאורי. Internal Links מחלקים PageRank, עוזרים לגוגל להבין את מבנה האתר ומאריכים את זמן השהייה באתר.",
+                  content: "קשר דפים רלוונטיים זה לזה עם Anchor Text תיאורי, הטקסט שעליו לוחצים: ״מחירון ניקוי ספות״ ולא ״לחץ כאן״. Internal Links מחלקים PageRank, כלומר מעבירים כוח מהדפים החזקים לחלשים. הם עוזרים לגוגל להבין את מבנה האתר, ומשאירים את הלקוח אצלך עוד דף אחד.",
+                },
+                {
+                  title: "Image SEO — תמונות ו-Alt Text",
+                  content: "גוגל לא רואה תמונות, היא קוראת עליהן. תן לקובץ שם שמתאר מה בתמונה, וכתוב Alt Text — משפט קצר שמתאר אותה: ״החלפת דוד שמש על גג בפתח תקווה״. כווץ את התמונה לפני שאתה מעלה אותה. ותמונות אמיתיות מהעבודה שלך עדיפות על תמונות מאגר.",
                 },
               ].map((item) => (
                 <div key={item.title} style={SURFACE}>
@@ -675,6 +729,9 @@ function StaticGuide() {
                   <p style={{ ...BODY, marginBottom: 0, fontSize: "0.95rem" }}>{item.content}</p>
                 </div>
               ))}
+              <div style={SUNDAY}>
+                <strong>☕ ביום ראשון בבוקר:</strong>{" "}בחר את שלושת הדפים שמביאים לך הכי הרבה כסף. לכל אחד כתוב Title Tag חדש עם השירות ועם העיר, Meta Description עם סיבה ללחוץ, ו-H1 אחד ברור. הוסף מכל דף שני קישורים פנימיים לדפים קרובים. שעה אחת, שלושה דפים.
+              </div>
               <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", alignItems: "center", marginTop: "20px", paddingTop: "16px", borderTop: "1px solid var(--border)" }}>
                 <span style={{ fontSize: "0.72rem", color: "var(--muted)", fontFamily: "var(--font-body), sans-serif", fontWeight: 600 }}>מאגר ידע:</span>
                 {[
@@ -699,27 +756,25 @@ function StaticGuide() {
                 E-E-A-T — ניסיון, מומחיות, סמכות ואמינות
               </h2>
               <p style={BODY}>
-                <strong style={{ color: "var(--text)" }}>E-E-A-T</strong> (Experience,
-                Expertise, Authoritativeness, Trustworthiness) הוא המסגרת שגוגל משתמשת
-                בה כדי להעריך איכות תוכן. כפול חשוב במיוחד לנושאי <GT term="YMYL">YMYL</GT>
-                (Your Money or Your Life) — בריאות, פיננסים, משפטים ועסקים.
+                <strong style={{ color: "var(--text)" }}>E-E-A-T</strong> (Experience, Expertise, Authoritativeness, Trustworthiness) הוא המסגרת שגוגל משתמשת בה כדי להעריך איכות תוכן: ניסיון, מומחיות, סמכות ואמינות. במילים פשוטות, גוגל שואלת את מה שכל לקוח שואל: מי אתה, ולמה שאסמוך עליך? זה חשוב כפליים בנושאי <GT term="YMYL">YMYL</GT> (Your Money or Your Life) — בריאות, כסף, משפט ובטיחות. מרפאה, רואה חשבון וחשמלאי נמדדים כאן בסרגל מחמיר יותר מבלוג מתכונים.
               </p>
               <p style={BODY}>
-                האות הכפול <strong style={{ color: "var(--text)" }}>Experience</strong> (ניסיון)
-                נוסף ב-2022 כדי להדגיש ניסיון אישי ומעשי — לא רק מומחיות תיאורטית.
-                גוגל מחפשת ראיות שהמחבר <em>חווה</em> את הנושא, לא רק כותב עליו.
+                ה-E הראשונה, <strong style={{ color: "var(--text)" }}>Experience</strong> (ניסיון), נוספה ב-2022 כדי להדגיש ניסיון אישי ומעשי — לא רק מומחיות תיאורטית. גוגל מחפשת ראיות שהמחבר עשה את הדבר בעצמו, לא רק כתב עליו. וכאן בעל המקצוע מנצח כל כותב תוכן: את השיפוץ הזה אתה עשית, ויש לך תמונות.
               </p>
-              <h3 style={{ ...HEADING, fontSize: "1.2rem" }}>כיצד לבנות E-E-A-T חזק:</h3>
+              <h3 style={{ ...HEADING, fontSize: "1.2rem" }}>איך בונים E-E-A-T חזק:</h3>
               <ul style={{ ...BODY, paddingInlineStart: "1.4rem" }}>
-                <li style={{ marginBottom: "10px" }}><strong style={{ color: "var(--text)" }}>Author Pages:</strong> דף מחבר עם ביוגרפיה, תפקיד, ניסיון, ותמונה</li>
-                <li style={{ marginBottom: "10px" }}><strong style={{ color: "var(--text)" }}>Entity Reconciliation:</strong> sameAs links ל-LinkedIn, AskPavel, Wikipedia</li>
-                <li style={{ marginBottom: "10px" }}><strong style={{ color: "var(--text)" }}>Citations & Sources:</strong> קישורים למקורות אמינים, מחקרים, נתונים</li>
-                <li style={{ marginBottom: "10px" }}><strong style={{ color: "var(--text)" }}>Reviews & Testimonials:</strong> Google Reviews, Trustpilot, עדויות לקוחות</li>
-                <li style={{ marginBottom: "10px" }}><strong style={{ color: "var(--text)" }}>Press Mentions:</strong> ציטוטים ומאמרים בפרסומים ידועים</li>
-                <li><strong style={{ color: "var(--text)" }}>About Page חזק:</strong> תאריך הקמה, צוות, שליחות, כתובת, טלפון</li>
+                <li style={{ marginBottom: "10px" }}><strong style={{ color: "var(--text)" }}>Author Pages:</strong> דף מחבר עם ביוגרפיה, תפקיד, ניסיון ותמונה. אצל עסק קטן זה אתה: שם מלא, ותק, רישיון או תעודה, ותמונה אמיתית שלך.</li>
+                <li style={{ marginBottom: "10px" }}><strong style={{ color: "var(--text)" }}>Entity Reconciliation:</strong> sameAs links ל-LinkedIn, AskPavel, Wikipedia. בעברית: קישורים מהאתר לפרופילים שלך ברשת, כדי שגוגל תבין שכל אלה הם אותו אדם ואותו עסק.</li>
+                <li style={{ marginBottom: "10px" }}><strong style={{ color: "var(--text)" }}>Citations & Sources:</strong> קישורים למקורות אמינים, מחקרים ונתונים. כתבת מספר? תראה מאיפה הוא.</li>
+                <li style={{ marginBottom: "10px" }}><strong style={{ color: "var(--text)" }}>Reviews & Testimonials:</strong> Google Reviews, Trustpilot, עדויות לקוחות. ביקורות אמיתיות בגוגל הן ההוכחה הכי חזקה שיש לעסק מקומי.</li>
+                <li style={{ marginBottom: "10px" }}><strong style={{ color: "var(--text)" }}>Press Mentions:</strong> ציטוטים ומאמרים בפרסומים ידועים. גם כתבה במקומון או אזכור באתר של איגוד מקצועי נחשבים.</li>
+                <li><strong style={{ color: "var(--text)" }}>About Page חזק:</strong> תאריך הקמה, צוות, שליחות, כתובת, טלפון. עסק שלא מסתתר.</li>
               </ul>
               <div style={CALLOUT}>
-                <strong>🔑 E-E-A-T ב-2026:</strong> עם עליית ה-AI Content, גוגל מחפשת ראיות לניסיון אנושי אמיתי. "ניסיתי את זה ב-50 פרויקטים" חזק יותר מ"מחקרים מראים שX".
+                <strong>🔑 E-E-A-T ב-2026:</strong> כשכל אחד יכול לייצר AI Content בלחיצה, גוגל מחפשת ראיות לניסיון אנושי אמיתי. ״החלפתי 50 דודים כאלה, וזה מה שמתקלקל בהם״ חזק יותר מ״מחקרים מראים ש…״. את המשפט הראשון AI לא יכול לכתוב. אתה כן.
+              </div>
+              <div style={SUNDAY}>
+                <strong>☕ ביום ראשון בבוקר:</strong>{" "}עדכן את דף ״אודות״: שם מלא, תמונה שלך, שנת הקמה, רישיון או הסמכה, כתובת וטלפון. הוסף לדף שירות אחד שלוש תמונות מעבודה אמיתית, עם שורה על מה שנעשה שם. ושלח לשלושה לקוחות מרוצים קישור לכתיבת ביקורת בגוגל.
               </div>
               <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", alignItems: "center", marginTop: "20px", paddingTop: "16px", borderTop: "1px solid var(--border)" }}>
                 <span style={{ fontSize: "0.72rem", color: "var(--muted)", fontFamily: "var(--font-body), sans-serif", fontWeight: 600 }}>מאגר ידע:</span>
@@ -743,18 +798,16 @@ function StaticGuide() {
                 Link Building — בניית קישורים נכונה ב-2026
               </h2>
               <p style={BODY}>
-                קישורים נכנסים (<GT term="Backlinks">Backlinks</GT>) הם עדיין אחד מגורמי הדירוג החזקים ביותר.
-                אבל ב-2026, <strong style={{ color: "var(--text)" }}>איכות &gt;&gt; כמות</strong>.
-                10 קישורים מאתרים רלוונטיים ואמינים שווים יותר מ-1,000 קישורים מספאם.
+                קישורים נכנסים (<GT term="Backlinks">Backlinks</GT>) הם עדיין אחד מגורמי הדירוג החזקים ביותר. קישור מאתר אחר הוא המלצה: מישהו אומר לגוגל ״על העסק הזה אפשר לסמוך״. וכמו בהמלצות, חשוב מי ממליץ. ב-2026, <strong style={{ color: "var(--text)" }}>איכות &gt;&gt; כמות</strong>. 10 קישורים מאתרים רלוונטיים ואמינים שווים יותר מ-1,000 קישורים מספאם. קישור אחד מאתר העירייה או מאיגוד מקצועי שווה יותר מערימת קישורים מאתרים שאף אחד לא קורא.
               </p>
               <h3 style={{ ...HEADING, fontSize: "1.2rem" }}>שיטות Link Building שעובדות ב-2026:</h3>
               <div style={{ display: "flex", flexDirection: "column", gap: "12px", marginBottom: "1.6rem" }}>
                 {[
-                  { method: "Digital PR", desc: "יצירת תוכן ראוי-ציטוט (מחקרים, סקרים, נתונים ייחודיים) שעיתונאים ומדיה מקשרים אליו." },
-                  { method: "Guest Posting אסטרטגי", desc: "מאמרי אורח על אתרים מוסמכים בנישה שלכם — עם ביוגרפיה ו-Anchor Text נכון." },
-                  { method: "Resource Link Building", desc: "יצירת דף משאבים שאתרים אחרים ירצו לקשר אליו: כלים, מדריכים מקיפים, סטטיסטיקות." },
-                  { method: "HARO / Connectively", desc: "מענה לשאלות עיתונאים וקבלת ציטוטים עם קישורים ממדיה גדולה." },
-                  { method: "Broken Link Building", desc: "מציאת קישורים שבורים באתרי נישה ודחיית תוכן חלופי לבעל האתר." },
+                  { method: "Digital PR", desc: "יצירת תוכן ראוי-ציטוט (מחקרים, סקרים, נתונים ייחודיים) שעיתונאים ומדיה מקשרים אליו. לעסק קטן: נתון שרק לך יש. מוסך שמפרסם את עשר התקלות הנפוצות שראה השנה נותן למקומון סיבה לכתוב עליו." },
+                  { method: "Guest Posting אסטרטגי", desc: "מאמרי אורח באתרים מוכרים בנישה שלך — עם ביוגרפיה ו-Anchor Text נכון. פיזיותרפיסט שכותב טור באתר של מועדון ריצה מקבל גם קישור וגם מטופלים." },
+                  { method: "Resource Link Building", desc: "יצירת דף משאבים שאתרים אחרים ירצו לקשר אליו: כלים, מדריכים מקיפים, סטטיסטיקות. מחשבון, מחירון שקוף או צ׳קליסט להורדה. דף כזה מושך קישורים שנים." },
+                  { method: "HARO", desc: "מענה לשאלות של עיתונאים וקבלת ציטוט עם קישור מכלי תקשורת גדולים. השירות פועל בעיקר באנגלית. הגרסה הישראלית: להיות בעל המקצוע שהכתב של המקומון מתקשר אליו כשהוא צריך ציטוט." },
+                  { method: "Broken Link Building", desc: "מציאת קישורים שבורים באתרי נישה והצעת תוכן חלופי לבעל האתר. אתה עוזר לו לתקן תקלה, והוא מקשר אליך." },
                 ].map((s) => (
                   <div
                     key={s.method}
@@ -772,10 +825,11 @@ function StaticGuide() {
                 ))}
               </div>
               <p style={BODY}>
-                <strong style={{ color: "var(--text)" }}>להימנע:</strong> קניית קישורים,
-                Link Farms, <GT term="PBNs">PBNs</GT>, שחלופי קישורים (Link Exchanges) מסיביים. גוגל <GT term="Penguin">Penguin</GT>
-                מזהה את כולם ב-2026 — ועונש יכול למחוק שנים של עבודה.
+                <strong style={{ color: "var(--text)" }}>להימנע:</strong> קניית קישורים, Link Farms, <GT term="PBNs">PBNs</GT> וחילופי קישורים (Link Exchanges) מסיביים. SpamBrain, מערכת הספאם הנוכחית של גוגל, נבנתה כדי לזהות בדיוק את הדפוסים האלה — ועונש יכול למחוק שנים של עבודה. <GT term="Penguin">Penguin</GT> הוותיק? נטמע באלגוריתם הליבה כבר ב-2016. מישהו מציע לך ״חבילת 500 קישורים״ במחיר מבצע? תברח.
               </p>
+              <div style={SUNDAY}>
+                <strong>☕ ביום ראשון בבוקר:</strong>{" "}רשום חמישה גופים שכבר מכירים אותך: ספק, יבואן, איגוד מקצועי, לשכת המסחר, לקוח עסקי עם אתר. בקש מכל אחד קישור לאתר שלך מדף ״שותפים״, ״נותני שירות מורשים״ או ״לקוחות ממליצים״. טלפון אחד לכל אחד. אלה הקישורים הכי קלים והכי אמיתיים שתשיג.
+              </div>
               <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", alignItems: "center", marginTop: "20px", paddingTop: "16px", borderTop: "1px solid var(--border)" }}>
                 <span style={{ fontSize: "0.72rem", color: "var(--muted)", fontFamily: "var(--font-body), sans-serif", fontWeight: 600 }}>מאגר ידע:</span>
                 {[
@@ -798,15 +852,13 @@ function StaticGuide() {
                 Core Web Vitals ו-Page Experience
               </h2>
               <p style={BODY}>
-                Core Web Vitals הם מדדי חוויית המשתמש שגוגל כולל כגורמי דירוג רשמיים.
-                ב-2024 <strong style={{ color: "var(--text)" }}><GT term="INP">INP (Interaction to Next Paint)</GT></strong>{" "}
-                החליף את <GT term="FID">FID</GT> כמדד השלישי.
+                Core Web Vitals הם מדדי חוויית המשתמש שגוגל כוללת כגורמי דירוג רשמיים. שלושה מספרים שעונים על שלוש שאלות: כמה מהר רואים את הדף, האם הוא קופץ בזמן הטעינה, וכמה מהר הוא מגיב ללחיצה. ב-2024 <strong style={{ color: "var(--text)" }}><GT term="INP">INP (Interaction to Next Paint)</GT></strong> החליף את <GT term="FID">FID</GT> כמדד השלישי. ולמה זה מעניין אותך? כי לקוח שמחכה לאתר שלך בטלפון לא מחכה הרבה. המתחרה נמצא במרחק לחיצה אחת אחורה.
               </p>
               <div className="content-3col" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "12px", marginBottom: "1.6rem" }}>
                 {[
-                  { metric: "LCP", full: "Largest Contentful Paint", good: "≤ 2.5s", desc: "מהירות טעינת הרכיב הגדול ביותר" },
-                  { metric: "CLS", full: "Cumulative Layout Shift", good: "≤ 0.1", desc: "יציבות ויזואלית — האם הדף קופץ?" },
-                  { metric: "INP", full: "Interaction to Next Paint", good: "≤ 200ms", desc: "תגובתיות לקלט משתמש" },
+                  { metric: "LCP", full: "Largest Contentful Paint", good: "≤ 2.5s", desc: "תוך כמה זמן רואים את החלק המרכזי של הדף, בדרך כלל התמונה הראשית" },
+                  { metric: "CLS", full: "Cumulative Layout Shift", good: "≤ 0.1", desc: "האם הדף קופץ בזמן הטעינה? רצית ללחוץ על ״התקשר״ והכפתור ברח" },
+                  { metric: "INP", full: "Interaction to Next Paint", good: "≤ 200ms", desc: "לחצת על כפתור. כמה זמן עובר עד שהאתר מגיב?" },
                 ].map((v) => (
                   <div
                     key={v.metric}
@@ -831,11 +883,11 @@ function StaticGuide() {
                 ))}
               </div>
               <p style={BODY}>
-                לשיפור Core Web Vitals:{" "}
-                <GT term="Next.js">Next.js</GT> מספק ציוני ירוק
-                מחוץ לקופסה — Image Optimization, Lazy Loading, SSG/SSR. WordPress עם
-                תמונות לא מאופטמות ו-12 פלאגינים פעילים = ציונים אדומים.
+                לשיפור Core Web Vitals: אתרים שנבנו ב-<GT term="Next.js">Next.js</GT> מקבלים ציונים ירוקים כמעט מחוץ לקופסה — Image Optimization, Lazy Loading, SSG/SSR. האתר שלך על WordPress או Wix? אפשר להגיע לירוק גם שם. שני האשמים הרגילים הם תמונות כבדות ותוספים (פלאגינים) מיותרים. תמונה שצולמה בטלפון ועלתה לאתר כמו שהיא שוקלת הרבה יותר ממה שצריך.
               </p>
+              <div style={SUNDAY}>
+                <strong>☕ ביום ראשון בבוקר:</strong>{" "}היכנס ל-PageSpeed Insights (חינם), הדבק את כתובת דף הבית ובדוק את לשונית המובייל. אדום או כתום? צלם את המסך ושלח למי שבנה את האתר, עם שתי בקשות: לכווץ את התמונות ולהסיר תוספים שלא בשימוש. משם מתחילים.
+              </div>
               <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", alignItems: "center", marginTop: "20px", paddingTop: "16px", borderTop: "1px solid var(--border)" }}>
                 <span style={{ fontSize: "0.72rem", color: "var(--muted)", fontFamily: "var(--font-body), sans-serif", fontWeight: 600 }}>מאגר ידע:</span>
                 {[
@@ -855,33 +907,39 @@ function StaticGuide() {
             {/* ── 10. Local SEO ── */}
             <section id="local-seo">
               <h2 style={{ ...HEADING, fontSize: "clamp(1.5rem,2.5vw,2rem)" }}>
-                קידום מקומי — להופיע בחיפוש &quot;קרוב אליי&quot;
+                קידום מקומי — להופיע בחיפוש ״קרוב אליי״
               </h2>
               <p style={BODY}>
-                לעסקים עם פעילות פיזית — מסעדות, קליניקות, חנויות, נותני שירות —{" "}
-                <strong style={{ color: "var(--text)" }}><GT term="Local SEO">קידום מקומי</GT></strong> הוא לרוב
-                ערוץ ה-ROI הגבוה ביותר. חיפושים כמו &quot;אינסטלטור בתל אביב&quot; או &quot;טיפולי שיניים
-                קרוב אליי&quot; הם עסקאיים במהותם — המחפש מוכן לפעולה.
+                אם יש לך עסק עם כתובת או אזור שירות — מסעדה, קליניקה, חנות, נותן שירות — זה הפרק הכי חשוב במדריך. <strong style={{ color: "var(--text)" }}><GT term="Local SEO">קידום מקומי</GT></strong> (Local SEO) הוא לרוב ערוץ ה-ROI הגבוה ביותר, כלומר הכי הרבה לקוחות על כל שקל ושעה שהשקעת. חיפושים כמו ״אינסטלטור בתל אביב״ או ״טיפולי שיניים קרוב אליי״ הם עסקאיים במהותם: מי שמקליד אותם לא עושה מחקר. הוא רוצה להתקשר למישהו עכשיו. בחיפושים האלה גוגל מציגה קודם כול מפה עם שלושה עסקים, ה-Local Pack. שם אתה רוצה להיות.
               </p>
               <div className="content-2col" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginBottom: "1.6rem" }}>
                 {[
                   {
                     id: "gbp",
                     title: "Google Business Profile",
-                    desc: "הפרופיל העסקי שמופיע בתיבת המפה ובחיפושים מקומיים. יש לוודא עדכניות של שעות, כתובת, קטגוריות ותמונות — ולצבור ביקורות לקוחות אמיתיות.",
+                    desc: "הפרופיל העסקי שמופיע בתיבת המפה ובחיפושים מקומיים. הוא חינמי, ולעסק מקומי הוא חשוב לא פחות מהאתר. מלא אותו עד הסוף: קטגוריה ראשית מדויקת, שעות פתיחה כולל חגים, טלפון, אתר ותמונות אמיתיות מהעבודה. ובקש ביקורת מכל לקוח מרוצה, כשהעבודה עוד טרייה.",
                   },
                   {
                     id: "nap",
                     title: <><GT term="NAP">עקביות NAP</GT></>,
-                    desc: "שם, כתובת וטלפון (Name, Address, Phone) חייבים להיות זהים בכל הרשת: אתר, Google Business Profile, Facebook ודפי עסקים. חוסר עקביות מבלבל את גוגל ופוגע בדירוג המקומי.",
+                    desc: "שם, כתובת וטלפון (Name, Address, Phone) חייבים להיות זהים בכל הרשת: אתר, Google Business Profile, Facebook ודפי עסקים. באתר כתוב ״אבי אינסטלציה״, בפייסבוק ״א.ב. אינסטלציה ושיפוצים״, ובאינדקס ישן מופיע טלפון שהחלפת מזמן? גוגל לא בטוחה שזה אותו עסק, והדירוג המקומי נפגע.",
                   },
                 ].map((item) => (
                   <div key={item.id} style={SURFACE}>
                     <h3 style={{ ...HEADING, fontSize: "1rem", marginTop: 0 }}>{item.title}</h3>
-                    <p style={{ ...BODY, marginBottom: 0, fontSize: "0.95rem" }}>{item.desc}</p>
+                    <p style={{ ...BODY, marginBottom: 0, fontSize: "0.95rem" }}>{mixedKeepBrackets(item.desc)}</p>
                   </div>
                 ))}
               </div>
+              <div style={SUNDAY}>
+                <strong>☕ ביום ראשון בבוקר:</strong>{" "}חפש את שם העסק שלך בגוגל והסתכל על הפרופיל כמו לקוח. השעות נכונות? הטלפון נכון? יש תמונות מהחודשים האחרונים? תקן מה שחסר, העלה שלוש תמונות חדשות מהטלפון, ושלח לשני לקוחות מרוצים קישור לביקורת. חצי שעה.
+              </div>
+              <p style={BODY}>
+                רוצה לדעת מה חסר בפרופיל שלך?{" "}
+                <Link href="/site-bot/audit" style={{ color: "var(--accent)", fontWeight: 600 }}>
+                  הבדיקה החינמית שלנו עוברת עליו בדקה.
+                </Link>
+              </p>
               <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", alignItems: "center", marginTop: "20px", paddingTop: "16px", borderTop: "1px solid var(--border)" }}>
                 <span style={{ fontSize: "0.72rem", color: "var(--muted)", fontFamily: "var(--font-body), sans-serif", fontWeight: 600 }}>מאגר ידע:</span>
                 {[
@@ -903,25 +961,25 @@ function StaticGuide() {
                 מדידה וכלים — איך יודעים שה-SEO עובד?
               </h2>
               <p style={BODY}>
-                לעשות SEO בלי למדוד נתונים זה פשוט לירות באפילה. ארבעה כלים חיוניים שכל מי שעוסק ב-SEO צריך להכיר:
+                SEO בלי מדידה הוא ירייה באפלה: אתה משקיע שעות ולא יודע מה עבד. ארבעה כלים חיוניים שכל מי שעוסק ב-SEO צריך להכיר — ולעסק קטן, הראשון מספיק כדי להתחיל:
               </p>
               <div style={{ display: "flex", flexDirection: "column", gap: "12px", marginBottom: "1.6rem" }}>
                 {[
                   {
                     tool: "Google Search Console",
-                    desc: "הכלי הרשמי של גוגל — חינם ומדויק יותר מכל כלי אחר. מציג אילו דפים מאונדקסים, על אילו ביטויים מופיעים, מה שיעור ההקלקה (CTR) ומה שגיאות הסריקה. הראשון לפתוח בכל פרויקט SEO.",
+                    desc: "הכלי הרשמי של גוגל — חינם ומדויק יותר מכל כלי אחר. הוא מראה אילו דפים מאונדקסים (נמצאים במאגר של גוגל), על אילו ביטויים אתה מופיע, מה שיעור ההקלקה (CTR) ואילו שגיאות סריקה יש. הראשון שפותחים בכל פרויקט SEO. אם תפתח רק כלי אחד, שיהיה זה.",
                   },
                   {
                     tool: "Rank Tracking",
-                    desc: "מעקב אחר מיקום מילות המפתח לאורך זמן. כלים כמו Semrush, Ahrefs ו-SERPWatch מראים תנועות דירוג. חשוב למדוד מגמות לאורך שבועות — לא תנודות יומיות.",
+                    desc: "מעקב אחר המיקום של מילות המפתח לאורך זמן. כלים כמו Semrush, Ahrefs ו-SERPWatch מראים את התנועה בדירוג. מודדים מגמה של שבועות, לא תנודות של יום. ירדת מקום אחד ביום שלישי? זה רעש. ירדת חמישה מקומות בחודש? זה סימן.",
                   },
                   {
                     tool: "SEO Audit",
-                    desc: "ביקורת תקופתית של האתר: בעיות טכניות, פערי תוכן, קניבליזציה וקישורים שבורים. מומלץ לבצע אחת לרבעון ולאחר כל עדכון ליבה משמעותי.",
+                    desc: "ביקורת תקופתית של האתר: בעיות טכניות, פערי תוכן, קניבליזציה וקישורים שבורים. כמו טסט לרכב. עושים אחת לרבעון, ואחרי כל עדכון ליבה (Core Update) משמעותי של גוגל.",
                   },
                   {
                     tool: "Competitive Analysis",
-                    desc: "ניתוח מתחרי ה-SEO שלכם — לא בהכרח המתחרים העסקיים. מי מדורג מעלינו בביטויים המרכזיים? מה מבנה הקישורים שלו? מה פערי התוכן? ניתוח מתחרים מספק מפת דרכים מובנית.",
+                    desc: "ניתוח מתחרי ה-SEO שלך — לא בהכרח המתחרים העסקיים. המתחרה שלך בגוגל הוא מי שמדורג מעליך, גם אם זה אינדקס ארצי ולא העסק ממול. מה הוא כתב שאתה לא? מי מקשר אליו? התשובות הן תוכנית העבודה שלך.",
                   },
                 ].map((s) => (
                   <div
@@ -938,6 +996,9 @@ function StaticGuide() {
                     <p style={{ ...BODY, marginBottom: 0, fontSize: "0.92rem" }}>{s.desc}</p>
                   </div>
                 ))}
+              </div>
+              <div style={SUNDAY}>
+                <strong>☕ ביום ראשון בבוקר:</strong>{" "}פתח Google Search Console, לשונית ״ביצועים״, שלושה חודשים אחורה. חפש ביטויים שבהם אתה במיקום 5 עד 15 עם הרבה חשיפות. אלה הלקוחות שכמעט הגיעו אליך. חזק את הדפים האלה קודם: כותרת טובה יותר, תשובה מלאה יותר, קישור פנימי נוסף. ושים תזכורת ביומן לבדוק שוב בעוד חודש.
               </div>
               <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", alignItems: "center", marginTop: "20px", paddingTop: "16px", borderTop: "1px solid var(--border)" }}>
                 <span style={{ fontSize: "0.72rem", color: "var(--muted)", fontFamily: "var(--font-body), sans-serif", fontWeight: 600 }}>מאגר ידע:</span>
@@ -960,15 +1021,14 @@ function StaticGuide() {
                 כמה זמן לוקח קידום אתרים לראות תוצאות?
               </h2>
               <p style={BODY}>
-                SEO הוא <strong style={{ color: "var(--text)" }}>ריצת מרתון</strong>, לא ספרינט.
-                אלה ציפיות ריאליות לפי שלבים:
+                SEO הוא <strong style={{ color: "var(--text)" }}>ריצת מרתון</strong>, לא ספרינט. מי שמבטיח לך מקום ראשון תוך חודש מוכר לך משהו אחר. אבל מי שמתמיד בונה נכס שלמתחרים קשה לקחת ממנו. אלה ציפיות ריאליות לפי שלבים:
               </p>
               <div style={{ display: "flex", flexDirection: "column", gap: "2px", marginBottom: "1.6rem" }}>
                 {[
-                  { period: "חודשים 1–3", label: "איסוף מידע", color: "var(--muted)", desc: "גוגל סורק ומאנדקס את השינויים. ייתכן ירידה קלה לפני עלייה (Sandbox Effect). מתמקדים ב-Technical SEO ו-Content." },
-                  { period: "חודשים 3–6", label: "תנועה ראשונה", color: "#f59e0b", desc: "שיפור ראשון במיקומים למילות מפתח ארוכות (Long-Tail). עלייה ב-Impressions ב-Search Console." },
-                  { period: "חודשים 6–12", label: "צמיחה משמעותית", color: "#10b981", desc: "עלייה ב-Organic Traffic. מילות מפתח תחרותיות מתחילות לעלות. לידים אורגניים ראשונים." },
-                  { period: "שנה 1–2", label: "Topical Authority מלאה", color: "var(--accent)", desc: "דירוגים יציבים, תנועה צומחת, Topical Authority מוכר. ROI מלא על השקעת ה-SEO." },
+                  { period: "חודשים 1–3", label: "איסוף מידע", color: "var(--muted)", desc: "גוגל סורקת ומאנדקסת את השינויים. בחוץ עוד לא רואים כלום, וזה תקין. ייתכנו תנודות, ואתר חדש לפעמים מחכה בצד (מקדמי אתרים קוראים לזה Sandbox Effect). מתמקדים ב-Technical SEO וב-Content. בשלב הזה רוב האנשים מתייאשים. אל תהיה אחד מהם." },
+                  { period: "חודשים 3–6", label: "תנועה ראשונה", color: "#f59e0b", desc: "שיפור ראשון במיקומים למילות מפתח ארוכות (Long-Tail). עלייה ב-Impressions (חשיפות) ב-Search Console. הטלפון עוד לא מצלצל יותר, אבל הגרף כבר זז." },
+                  { period: "חודשים 6–12", label: "צמיחה משמעותית", color: "#10b981", desc: "עלייה ב-Organic Traffic, התנועה שמגיעה מגוגל בלי תשלום. מילות מפתח תחרותיות מתחילות לעלות. מגיעים הלידים האורגניים הראשונים: לקוח שאומר ״מצאתי אותך בגוגל״." },
+                  { period: "שנה 1–2", label: "Topical Authority מלאה", color: "var(--accent)", desc: "דירוגים יציבים, תנועה צומחת, Topical Authority מוכר. ROI מלא על השקעת ה-SEO: העבודה של השנה שעברה ממשיכה להביא לקוחות." },
                 ].map((s) => (
                   <div
                     key={s.period}
@@ -988,6 +1048,9 @@ function StaticGuide() {
                   </div>
                 ))}
               </div>
+              <div style={SUNDAY}>
+                <strong>☕ ביום ראשון בבוקר:</strong>{" "}קבע ביומן שעתיים קבועות בשבוע ל-SEO, ותתייחס אליהן כמו לפגישה עם לקוח. רשום היום שלושה מספרים: כמה פניות הגיעו מגוגל החודש, כמה חשיפות יש לך ב-Search Console, ובאיזה מקום אתה בביטוי הראשי שלך. בדוק אותם שוב כל חודש. בלי המספרים האלה לא תדע אם אתה מתקדם.
+              </div>
             </section>
 
             {/* ── 11. Mistakes ── */}
@@ -997,16 +1060,16 @@ function StaticGuide() {
               </h2>
               <ol style={{ ...BODY, paddingInlineStart: "1.4rem" }}>
                 {[
-                  ["תוכן AI-Only ללא ניסיון אנושי", "גוגל מזהה ומוריד תוכן AI שטחי. AI + מומחיות אנושית = עובד. AI בלבד = ענישה."],
-                  ["זניחת ה-Technical SEO", "תוכן מצוין על אתר עם Crawl Issues = בזבוז. Technical הוא הבסיס."],
-                  ["Keyword Stuffing — עדיין קיים", "שימוש מוגזם במילות מפתח פוגע בדירוג ובחוויית משתמש."],
-                  ["קניית קישורים", "Penguin מזהה קישורים קנויים. רק קישורים אמיתיים ורלוונטיים בונים סמכות."],
-                  ["זניחת ה-Mobile-First", "60%+ מהגלישה היא ממובייל. גוגל מאנדקס Mobile-First. אתר לא מותאם = ענישה."],
-                  ["חוסר ב-E-E-A-T", "תוכן ללא מחבר מזוהה, ללא ביוגרפיה, ללא מקורות = דירוג נמוך בנושאי YMYL."],
-                  ["זניחת ה-Internal Linking", "Internal Links מחלקים PageRank ועוזרים לגוגל להבין מבנה האתר."],
-                  ["Core Web Vitals אדומים", "דף שנטען ב-5+ שניות מפסיד דירוג ומשתמשים כאחד."],
-                  ["תוכן ללא עדכון", "גוגל מתגמלת תוכן עדכני. עדכן מאמרים ישנים — תאריך, נתונים, פנייה ל-AI Overviews."],
-                  ["מדידת ה-Wrong KPIs", "דירוג גבוה ≠ הצלחה. מדדו: תנועה אורגנית, לידים מ-SEO, Revenue — לא רק מיקום."],
+                  ["תוכן AI-Only ללא ניסיון אנושי", "ביקשת מ-ChatGPT עשרה מאמרים והעלית אותם כמו שהם? גוגל מורידה תוכן שטחי שנכתב רק כדי לדרג. AI + הניסיון שלך = עובד. AI בלבד = נפילה. תן ל-AI לנסח, ואת הידע תביא אתה."],
+                  ["זניחת ה-Technical SEO", "תוכן מצוין באתר עם Crawl Issues (בעיות סריקה) הוא בזבוז: גוגל לא יכולה לדרג מה שהיא לא מצליחה לקרוא. Technical הוא הבסיס."],
+                  ["Keyword Stuffing — עדיין קיים", "לדחוף ״אינסטלטור בחיפה״ עשרים פעמים לאותו דף לא עובד כבר שנים. זה פוגע בדירוג ומבריח את הלקוח. כתוב כמו שאתה מדבר."],
+                  ["קניית קישורים", "SpamBrain, מערכת הספאם הנוכחית של גוגל, נבנתה כדי לזהות קישורים קנויים. רק קישורים אמיתיים ורלוונטיים בונים סמכות. חסכת זמן, סיכנת את האתר."],
+                  ["זניחת ה-Mobile-First", "יותר מחצי מהגלישה בישראל היא מהטלפון (Statcounter, 2026). גוגל מאנדקסת Mobile-First: היא שופטת את האתר לפי הגרסה בנייד. אתר שלא נוח בטלפון מפסיד פעמיים — בדירוג ואצל הלקוח."],
+                  ["חוסר ב-E-E-A-T", "תוכן בלי מחבר מזוהה, בלי ביוגרפיה ובלי מקורות = דירוג נמוך, במיוחד בנושאי YMYL. אתר בלי שם ובלי פנים נראה לגוגל כמו עסק בלי שלט."],
+                  ["זניחת ה-Internal Linking", "Internal Links מחלקים PageRank ועוזרים לגוגל להבין את מבנה האתר. דף שאף דף אחר לא מקשר אליו הוא חדר בלי דלת."],
+                  ["Core Web Vitals אדומים", "דף שנטען ב-5 שניות ויותר מפסיד גם דירוג וגם לקוחות. אף אחד לא מחכה לאתר של אינסטלטור כשהמים כבר על הרצפה."],
+                  ["תוכן ללא עדכון", "גוגל מתגמלת תוכן עדכני. עדכן מאמרים ישנים: תאריך, נתונים, מחירים, ותשובה ישירה בראש הדף בשביל ה-AI Overviews. מחירון של 2022 באתר אומר ללקוח שאף אחד לא בבית."],
+                  ["מדידת ה-KPIs הלא נכונים", "דירוג גבוה ≠ הצלחה. מקום ראשון בביטוי שאף אחד לא מחפש לא משלם משכורות. מדוד: תנועה אורגנית, לידים מ-SEO, Revenue (הכנסות) — לא רק מיקום."],
                 ].map(([title, desc], i) => (
                   <li key={title} style={{ marginBottom: "14px" }}>
                     <strong style={{ color: "var(--text)" }}>{i + 1}. {title}</strong>
@@ -1014,6 +1077,22 @@ function StaticGuide() {
                   </li>
                 ))}
               </ol>
+              <div style={SUNDAY}>
+                <strong>☕ ביום ראשון בבוקר:</strong>{" "}עבור על הרשימה וסמן בכנות אילו טעויות קיימות אצלך. בחר שתיים בלבד, ותקן אותן החודש. שתיים שתוקנו שוות יותר מעשר שסומנו.
+              </div>
+            </section>
+
+            {/* ── 15. FAQ (visible; same strings as faqSchema) ── */}
+            <section id="faq">
+              <h2 style={{ ...HEADING, fontSize: "clamp(1.5rem,2.5vw,2rem)" }}>
+                שאלות נפוצות על קידום אתרים
+              </h2>
+              {FAQ.map(({ q, a }) => (
+                <div key={q} style={SURFACE}>
+                  <h3 style={{ ...HEADING, fontSize: "1.05rem", marginTop: 0 }}>{q}</h3>
+                  <p style={{ ...BODY, marginBottom: 0, fontSize: "0.95rem" }}>{a}</p>
+                </div>
+              ))}
             </section>
 
             {/* ── Author bio ── */}
@@ -1033,7 +1112,7 @@ function StaticGuide() {
               </div>
                   <p className="author-text" itemProp="description">
                     מלווה עסקים ישראלים בצמיחה דיגיטלית מאז ראשית ימי ה-SEO בארץ.
-                    מדריך זה מבוסס על ניסיון מעשי עם מאות פרויקטי קידום לאורך מעל 20 שנה —
+                    מדריך זה מבוסס על 20 שנות עבודה מעשית עם 84 לקוחות, מאז 2006 —
                     מימי האינדקסים הראשונים ועד לעידן ה-AI Overviews.
                   </p>
                   <div style={{ display: "flex", gap: "14px", marginTop: "12px", flexWrap: "wrap" }}>
@@ -1052,7 +1131,7 @@ function StaticGuide() {
                 </div>
               </div>
               <p style={{ marginTop: "16px", fontSize: "0.8rem", color: "var(--muted)", fontFamily: "var(--font-body), sans-serif" }}>
-                <time dateTime={MODIFIED}>עודכן לאחרונה: יוני 2026</time>
+                <time dateTime={MODIFIED}>עודכן לאחרונה: נובמבר 2026</time>
               </p>
             </section>
 
@@ -1072,10 +1151,10 @@ function StaticGuide() {
             >
               <div style={{ flex: 1, minWidth: "200px" }}>
                 <p style={{ fontFamily: "var(--font-rubik), sans-serif", fontWeight: 700, fontSize: "0.95rem", marginBottom: "4px", color: "var(--text)" }}>
-                  81 מדריכים ב<Link href="/knowledge" style={{ color: "var(--accent)", textDecoration: "none" }}>מאגר הידע</Link> שלנו
+                  {KNOWLEDGE_ARTICLES.length} מדריכים ב<Link href="/knowledge" style={{ color: "var(--accent)", textDecoration: "none" }}>מאגר הידע</Link> שלנו
                 </p>
                 <p style={{ fontFamily: "var(--font-body), sans-serif", fontSize: "0.82rem", color: "var(--muted)", margin: 0 }}>
-                  כל נושא מהמדריך — robots.txt, Core Web Vitals, E-E-A-T, hreflang ועוד — מוסבר לעומק.
+                  נתקעת על מונח? כל נושא מהמדריך — robots.txt, Core Web Vitals, E-E-A-T, hreflang ועוד — מוסבר שם לעומק, בעמוד משלו.
                 </p>
               </div>
               <Link
@@ -1105,29 +1184,30 @@ function StaticGuide() {
             >
               <div aria-hidden style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%,-50%)", width: "60%", height: "100%", background: "radial-gradient(ellipse at center, rgba(74,227,181,0.06) 0%, transparent 70%)", pointerEvents: "none" }} />
               <div style={{ position: "relative", zIndex: 1 }}>
-                <div className="eyebrow" style={{ justifyContent: "center" }}>רוצים שמישהו יעשה את זה בשבילכם?</div>
                 <h2 style={{ fontFamily: "var(--font-rubik), sans-serif", fontWeight: 900, fontSize: "clamp(1.4rem,2.8vw,2.2rem)", lineHeight: 1.15, marginBottom: "12px" }}>
-                  שירות ה-SEO המלא של WAO —{" "}
-                  <span className="text-gradient">ייעוץ ראשון חינם</span>
+                  רוצה לדעת איפה אתה עומד בגוגל?
+                  <br />
+                  <span className="text-gradient">בדיקת נוכחות בגוגל — חינם, בערך דקה</span>
                 </h2>
                 <p style={{ color: "var(--muted)", fontFamily: "var(--font-body), sans-serif", marginBottom: "28px", fontSize: "0.97rem", lineHeight: 1.7 }}>
-                  עברתם את המדריך. עכשיו הגיע הזמן ליישם. צוות WAO יבנה לכם אסטרטגיית SEO מלאה ויוציא אותה לפועל.
+                  קראת את המדריך, ועכשיו אתה יודע מה צריך לקרות. נשאר לראות מה מזה כבר קורה אצלך. הבדיקה עוברת על פרופיל העסק שלך בגוגל ועל האתר, ומראה לך מה חסר. אין לך זמן לתקן לבד? בשביל זה יש שירות קידום אתרים.
                 </p>
                 <div style={{ display: "flex", gap: "14px", justifyContent: "center", flexWrap: "wrap" }}>
-                  <a href="tel:0526148860" className="btn-primary" style={{ fontSize: "1rem" }}>
-                    📞 052-614-8860
-                  </a>
-                  <Link href="/seo" className="btn-outline" style={{ fontSize: "1rem" }}>
+                  <TrackedLink href="/site-bot/audit" event="seo_guide_banner_audit_click" className="btn-primary" style={{ fontSize: "1rem" }}>
+                    לבדיקה החינמית ←
+                  </TrackedLink>
+                  <TrackedLink href="/seo" event="seo_guide_banner_seo_click" className="btn-outline" style={{ fontSize: "1rem" }}>
                     שירות קידום אתרים ←
-                  </Link>
+                  </TrackedLink>
                 </div>
               </div>
             </div>
           </article>
 
-          {/* ── Sticky TOC ── */}
+          {/* ── Sticky TOC ── maxHeight: TOC (15 items) + CTA box is ~750px tall and overflowed a 1280x720 viewport,
+              so the aside scrolls inside itself. Not tied to the item count. */}
           <aside
-            style={{ position: "sticky", top: "90px" }}
+            style={{ position: "sticky", top: "90px", maxHeight: "calc(100vh - 106px)", overflowY: "auto" }}
             aria-label="תוכן עניינים"
             className="guide-toc"
           >
@@ -1178,14 +1258,14 @@ function StaticGuide() {
               }}
             >
               <p style={{ fontFamily: "var(--font-rubik), sans-serif", fontWeight: 700, fontSize: "0.88rem", marginBottom: "8px" }}>
-                רוצים שנעשה את זה בשבילכם?
+                איפה אתה עומד בגוגל?
               </p>
               <p style={{ fontFamily: "var(--font-body), sans-serif", fontSize: "0.8rem", color: "var(--muted)", lineHeight: 1.6, marginBottom: "14px" }}>
-                ייעוץ SEO ראשון — חינם וללא התחייבות.
+                בדיקה חינמית של פרופיל העסק והאתר. בערך דקה, ורואים מה חסר.
               </p>
-              <a href="tel:0526148860" className="btn-primary" style={{ fontSize: "0.85rem", padding: "10px 16px", width: "100%", justifyContent: "center" }}>
-                052-614-8860
-              </a>
+              <TrackedLink href="/site-bot/audit" event="seo_guide_side_audit_click" className="btn-primary" style={{ fontSize: "0.85rem", padding: "10px 16px", width: "100%", justifyContent: "center" }}>
+                בדוק עכשיו ←
+              </TrackedLink>
             </div>
           </aside>
         </div>

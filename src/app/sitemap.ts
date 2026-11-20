@@ -2,6 +2,7 @@ import type { MetadataRoute } from "next";
 import { readFileSync } from "fs";
 import { join } from "path";
 import { KNOWLEDGE_ARTICLES } from "@/data/knowledge";
+import { SEO_GUIDE_MODIFIED } from "@/data/seo-guide-meta";
 
 const BASE = "https://www.wao.co.il";
 
@@ -29,7 +30,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
   const staticPages: MetadataRoute.Sitemap = [
     { url: BASE,                            lastModified: now, changeFrequency: "weekly",  priority: 1.0 },
     { url: `${BASE}/seo`,                   lastModified: now, changeFrequency: "weekly",  priority: 0.9 },
-    { url: `${BASE}/seo/guide`,             lastModified: now, changeFrequency: "monthly", priority: 0.9 },
+    { url: `${BASE}/seo/guide`,             lastModified: SEO_GUIDE_MODIFIED, changeFrequency: "monthly", priority: 0.9 },
     { url: `${BASE}/seo/consulting`,        lastModified: now, changeFrequency: "monthly", priority: 0.85 },
     { url: `${BASE}/seo/international`,     lastModified: now, changeFrequency: "monthly", priority: 0.8 },
     { url: `${BASE}/google-ads`,            lastModified: now, changeFrequency: "weekly",  priority: 0.9 },
