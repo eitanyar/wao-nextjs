@@ -1,0 +1,12 @@
+{
+  "note": "Fable 5.2, 2026-11-20: replaces unsourced 63% AIO stat",
+  "strings": {
+    "glossary_aio": "בלוק שגוגל מציג בראש תוצאות החיפוש עם תשובת AI לפני התוצאות האורגניות. בארה״ב הוא הופיע באמצע 2026 בכ-43% מהחיפושים (Advanced Web Ranking, יולי 2026), ואתר שמצוטט בו נחשף לגולשים גם בלי קליק.",
+    "content_p": "עסקים שמצוטטים בסיכומים האלה מקבלים חשיפת מותג גם אצל אנשים שלא לחצו על שום קישור. וזה כבר מזמן לא פינה שולית: בארה״ב הופיע סיכום כזה באמצע 2026 בכ-43% מהחיפושים בגוגל, לפי Advanced Web Ranking (יולי 2026). לישראל עדיין אין נתון מדוד.",
+    "content_stat1": "43%",
+    "content_stat1_label": "מהחיפושים בגוגל בארה״ב מציגים סיכום AI (Advanced Web Ranking, יולי 2026)",
+    "content_stat2": "+120%",
+    "content_stat2_label": "יותר קליקים אורגניים למותג שמצוטט בסיכום AI, לעומת מותג שלא צוטט באותו חיפוש (Seer Interactive, אפריל 2026)",
+    "content_stat2_source": "https://seerinteractive.com/insights/aio-impact-on-google-ctr-2026-update — Seer Interactive, published 24 Apr 2026, read 2026-11-20. Exact wording: 'Being cited in the AIO delivers +120% more organic clicks per impression versus when you are not cited. But it still underperforms No AIO by -38% in informational queries.' Dataset: 53 brands, 5.47M queries, 2.43B organic impressions, Jan 2025–Feb 2026; 2025 informational-query averages 2.07% organic CTR cited vs 0.94% not cited vs 3.35% with no AI Overview. Caveats: Seer states 'We cannot claim causation', and the 0.94% is skewed by one account holding 47% of that segment's impressions. The old '40%+' tile has no source I could find; Seer's earlier update (4 Nov 2025) reported 35% (0.70% vs 0.52%, Q3 2025)."
+  }
+}
