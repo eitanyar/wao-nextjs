@@ -516,6 +516,10 @@
     "src/lib/rank-rent/proof.ts",
     "src/lib/rank-rent/proof.test.ts",
     "src/lib/rank-rent/leads.ts",
-    "src/lib/rank-rent/leads.test.ts"
+    "src/lib/rank-rent/leads.test.ts",
+    "src/lib/tracking/attribution.ts",
+    "src/lib/tracking/attribution.test.ts",
+    "src/lib/tracking/conversions.ts",
+    "src/lib/tracking/conversions.test.ts"
   ]
 }

@@ -2,6 +2,8 @@
 import { useState } from "react";
 import PrivacyConsent from "./PrivacyConsent";
 import { useLeadTracking } from "@/lib/useLeadTracking";
+import { attributionFields } from "@/lib/tracking/attribution";
+import { leadSubmitEvent, pushToDataLayer } from "@/lib/tracking/conversions";
 
 const SERVICES = [
   { value: "seo", label: "קידום אתרים (SEO)" },
@@ -72,8 +74,9 @@ export default function ContactForm({ source = "contact-page", defaultService = 
       const accepted = res.ok && acknowledgement !== null && typeof acknowledgement === "object"
         && !Array.isArray(acknowledgement) && "ok" in acknowledgement && acknowledgement.ok === true;
       if (accepted) {
-        window.dataLayer = window.dataLayer || [];
-        window.dataLayer.push({ event: "lead_submit", source, ref: tracking.ref ?? undefined });
+        // lead_submit: same event name; now carries first-touch ref/utm_*, value and currency (user_data stays off
+        // behind ENHANCED_CONVERSIONS_USER_DATA until the privacy page discloses it).
+        pushToDataLayer(leadSubmitEvent(source, attributionFields(tracking), { phone: form.phone, email: form.email }));
       }
       setStatus(accepted ? "success" : "error");
     } catch {

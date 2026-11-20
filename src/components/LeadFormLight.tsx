@@ -3,6 +3,8 @@ import { useState } from "react";
 import PrivacyConsent from "./PrivacyConsent";
 import PhoneReveal from "./PhoneReveal";
 import { useLeadTracking } from "@/lib/useLeadTracking";
+import { attributionFields } from "@/lib/tracking/attribution";
+import { leadSubmitEvent, pushToDataLayer } from "@/lib/tracking/conversions";
 
 const inputStyle: React.CSSProperties = {
   width: "100%",
@@ -70,8 +72,9 @@ export default function LeadFormLight({ source = "geo-audit-light" }: { source?:
       const accepted = res.ok && acknowledgement !== null && typeof acknowledgement === "object"
         && !Array.isArray(acknowledgement) && "ok" in acknowledgement && acknowledgement.ok === true;
       if (accepted) {
-        window.dataLayer = window.dataLayer || [];
-        window.dataLayer.push({ event: "lead_submit", source, ref: tracking.ref ?? undefined });
+        // lead_submit: same event name; now carries first-touch ref/utm_*, value and currency (user_data stays off
+        // behind ENHANCED_CONVERSIONS_USER_DATA until the privacy page discloses it).
+        pushToDataLayer(leadSubmitEvent(source, attributionFields(tracking), { phone: form.contact, email: form.contact }));
       }
       setStatus(accepted ? "success" : "error");
     } catch {

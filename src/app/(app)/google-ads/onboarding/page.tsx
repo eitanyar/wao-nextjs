@@ -10,6 +10,8 @@ import GoogleAdPreview from "@/components/google-ads/GoogleAdPreview";
 // The homepage CTA label, reused verbatim for the mobile jump-to-ad button (single source, never retyped).
 import homepageCopy from "@/content/astra-homepage-copy.json";
 import { useOnboardingStaff } from "./staff-context";
+import { getAttribution } from "@/lib/useLeadTracking";
+import { createOnboardingConversions, pushToDataLayer, type OnboardingConversions, type OnboardingTrackingContext } from "@/lib/tracking/conversions";
 
 interface Message {
   role: "user" | "assistant" | "system";
@@ -112,6 +114,8 @@ export default function OnboardingPage() {
   const [sandboxVerificationStatus, setSandboxVerificationStatus] = useState<"idle" | "checking" | "ready" | "error">("idle");
   const [sandboxVerificationMessage, setSandboxVerificationMessage] = useState<string | null>(null);
   const sessionIdRef = useRef("");
+  // Once-per-session guards for the ads_bot_* conversion pushes (Dror 2026-11-20). Created with the session id.
+  const conversionsRef = useRef<OnboardingConversions | null>(null);
   const inputPlaceholder =
     currentState === "COMPLETED"
       ? ""
@@ -178,6 +182,7 @@ export default function OnboardingPage() {
   useEffect(() => {
     const entry = resolveOnboardingDemoEntry(window.location.search);
     sessionIdRef.current = `s-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    conversionsRef.current = createOnboardingConversions();
     // Query state must settle before any request-producing control becomes active.
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setMode(entry.mode);
@@ -265,6 +270,14 @@ export default function OnboardingPage() {
     }
   };
 
+  // Demo mode and staff sessions never push conversions (they would train Google Ads bidding on fake outcomes).
+  const trackingContext = (): OnboardingTrackingContext => ({
+    push: pushToDataLayer,
+    sessionId: sessionIdRef.current,
+    attribution: getAttribution(),
+    suppressed: isDemo || isStaff,
+  });
+
   const handleSendMessage = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     if (!queryReady || isDemo) return;
@@ -294,6 +307,7 @@ export default function OnboardingPage() {
       }
 
       const data = await response.json();
+      const previousState = currentState;
 
       // Update states
       setMessages((prev) => [...prev, { role: "assistant", content: data.response }]);
@@ -310,6 +324,9 @@ export default function OnboardingPage() {
       // answering (or just look) meanwhile. Nothing is deployed or charged from here.
       // landingPreview === false: the per-IP cost limit was hit, so the ad is the template and no page is built.
       if (data.firstAdPreview) setFirstAdMessageIndex(updatedMessages.length);
+      if (data.firstAdPreview) conversionsRef.current?.firstAdShown(trackingContext());
+      conversionsRef.current?.stateChanged(trackingContext(), previousState, data.currentState, data.collectedData);
+      if (data.approved === true) conversionsRef.current?.approved(trackingContext());
       if (data.firstAdPreview && data.landingPreview !== false && data.collectedData) void generateLandingPreview(data.collectedData);
 
       // Auto-fire STRATEGIZING when Adam signals callSpecialists
@@ -331,6 +348,7 @@ export default function OnboardingPage() {
             setMessages((prev) => [...prev, { role: "assistant", content: stratData.response }]);
           }
           setCurrentState(stratData.currentState ?? "REVIEWING");
+          conversionsRef.current?.stateChanged(trackingContext(), data.currentState, stratData.currentState ?? "REVIEWING", stratData.collectedData ?? data.collectedData);
           if (stratData.strategy) setStrategy(stratData.strategy);
           if (stratData.copy) setCopy(stratData.copy);
 
@@ -400,6 +418,7 @@ export default function OnboardingPage() {
       if (data.response) setMessages(prev => [...prev, { role: "assistant", content: data.response }]);
       if (data.collectedData) setCollectedData(data.collectedData);
       if (data.currentState) setCurrentState(data.currentState);
+      if (data.currentState) conversionsRef.current?.stateChanged(trackingContext(), currentState, data.currentState, data.collectedData ?? updatedData);
       if (typeof data.awaitingProfilePhoto === "boolean") setAwaitingProfilePhoto(data.awaitingProfilePhoto);
       else if (isProfile) setAwaitingProfilePhoto(false); // auto-clear after profile upload
     } finally {

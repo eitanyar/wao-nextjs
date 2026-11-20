@@ -2,6 +2,7 @@ import type { Viewport } from "next";
 import "../offline-fonts.css";
 import { preload } from "react-dom";
 import Script from "next/script";
+import AttributionCapture from "@/components/AttributionCapture";
 import "../globals.css";
 
 // Product/authenticated route group — GEO Bot & GMB Bot action pages,
@@ -41,6 +42,7 @@ export default function ProductLayout({
           />
         </noscript>
         {children}
+        <AttributionCapture />
         <Script
           id="gtm-product"
           strategy="afterInteractive"

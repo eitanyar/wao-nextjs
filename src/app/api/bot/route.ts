@@ -327,6 +327,8 @@ function handleSimulation(
   let nextState = currentState;
   let strategy = null;
   let copy = null;
+  // True only on the reply to an approval in REVIEWING; the client pushes ads_bot_approved once on it.
+  let approved = false;
 
   if (currentState === "DIAGNOSING") {
     const turn = data.turnIndex ?? 0;
@@ -717,6 +719,7 @@ function handleSimulation(
 
     if (isApproved) {
       nextState = "REVIEWING"; // stays REVIEWING until Ya'ad payment callback fires
+      approved = true;
       response = `מצוין — הכל נראה טוב.\n\nרוצה להפעיל את הקמפיין ולהעלות את דף הנחיתה? לחץ על כפתור **"🚀 לתשלום (9.9 ₪)"** שמופיע בצד ימין של המסך.\n\nזה מה שמתניע את הכל — החשבון, הקמפיין, והדף.`;
     } else {
       response = "הבנתי. אם תרצה לשנות משהו — תקציב, מיקוד, נוסח המודעה — פשוט תגיד לי. אם הכל בסדר, תגיד ״אישור״ כדי שנתקדם.";
@@ -732,6 +735,7 @@ function handleSimulation(
     strategy,
     copy,
     isSimulation: true,
+    ...(approved ? { approved: true } : {}),
   });
 }
 

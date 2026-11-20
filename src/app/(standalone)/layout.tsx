@@ -2,6 +2,7 @@ import type { Viewport } from "next";
 import "../offline-fonts.css";
 import { preload } from "react-dom";
 import Script from "next/script";
+import AttributionCapture from "@/components/AttributionCapture";
 import "../globals.css";
 
 // viewport-fit=cover required for iOS safe-area-inset-bottom on the sticky CTA bar
@@ -24,6 +25,7 @@ export default function StandaloneLayout({
     <html lang="he" dir="rtl">
       <body>
         {children}
+        <AttributionCapture />
         <Script
           id="gtm-lp"
           strategy="afterInteractive"

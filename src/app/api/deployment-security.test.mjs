@@ -394,6 +394,23 @@ test('shared lead form transmits checked consent without losing attribution or n
   assert.match(source, /disabled=\{status === "loading" \|\| !form\.name\.trim\(\) \|\| !form\.phone\.trim\(\) \|\| !privacyAccepted\}/);
 });
 
+// Pure tracking modules (src/lib/tracking/*) loaded for real into the form harness, bound to the harness window so
+// pushToDataLayer lands in the captured events. They import nothing at runtime.
+function pureTrackingModule(name, sandboxWindow, deny) {
+  const relativePath = `src/lib/tracking/${name}.ts`;
+  const code = ts.transpileModule(read(relativePath), {
+    fileName: relativePath,
+    compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022, esModuleInterop: true },
+  }).outputText;
+  const moduleExports = {};
+  vm.runInNewContext(code, { exports: moduleExports, window: sandboxWindow, require: dep => deny(`import: ${dep}`),
+    URLSearchParams, JSON }, { filename: relativePath });
+  return moduleExports;
+}
+
+const SYNTHETIC_LEAD_CONVERSION = { utm_source: 'synthetic-source', utm_medium: 'synthetic-medium',
+  utm_campaign: 'synthetic-campaign', value: 60, currency: 'ILS' };
+
 function syntheticContactForm(reply) {
   const relativePath = 'src/components/ContactForm.tsx';
   const code = ts.transpileModule(read(relativePath), {
@@ -412,6 +429,7 @@ function syntheticContactForm(reply) {
   const exports = {};
   const tracking = { ref: 'synthetic-ref', utm_source: 'synthetic-source',
     utm_medium: 'synthetic-medium', utm_campaign: 'synthetic-campaign' };
+  const sandboxWindow = { dataLayer: events };
   vm.runInNewContext(code, {
     exports,
     require: name => {
@@ -423,6 +441,8 @@ function syntheticContactForm(reply) {
       if (name === 'react/jsx-runtime') return { jsx: element, jsxs: element };
       if (name === './PrivacyConsent') return { __esModule: true, default: privacyComponent };
       if (name === '@/lib/useLeadTracking') return { useLeadTracking: () => tracking };
+      if (name === '@/lib/tracking/attribution') return pureTrackingModule('attribution', sandboxWindow, deny);
+      if (name === '@/lib/tracking/conversions') return pureTrackingModule('conversions', sandboxWindow, deny);
       return deny(`import: ${name}`);
     },
     fetch: (url, options) => {
@@ -431,7 +451,7 @@ function syntheticContactForm(reply) {
       posts.push(JSON.parse(options.body));
       return reply();
     },
-    window: { dataLayer: events },
+    window: sandboxWindow,
     console: new Proxy({}, { get: (_, name) => deny(`console.${String(name)}`) }),
     WebSocket: function () { deny('WebSocket'); },
     XMLHttpRequest: function () { deny('XMLHttpRequest'); },
@@ -483,7 +503,7 @@ test('contact form actual submit requires parsed 2xx lead acknowledgement for co
     assert.equal(harness.states[2], fixture.success ? 'success' : 'error', fixture.label);
     assert.equal(harness.events.length, fixture.success ? 1 : 0, fixture.label);
     if (fixture.success) assert.deepEqual({ ...harness.events[0] }, {
-      event: 'lead_submit', source: 'synthetic-contact', ref: 'synthetic-ref',
+      event: 'lead_submit', source: 'synthetic-contact', ref: 'synthetic-ref', ...SYNTHETIC_LEAD_CONVERSION,
     }, fixture.label);
     assert.equal(harness.posts.length, 1, fixture.label);
     assert.deepEqual({ ...harness.posts[0] }, {
@@ -514,6 +534,7 @@ function syntheticLightForm(reply) {
   const exports = {};
   const tracking = { ref: 'synthetic-ref', utm_source: 'synthetic-source',
     utm_medium: 'synthetic-medium', utm_campaign: 'synthetic-campaign' };
+  const sandboxWindow = { dataLayer: events };
   vm.runInNewContext(code, {
     exports,
     require: name => {
@@ -526,6 +547,8 @@ function syntheticLightForm(reply) {
       if (name === './PrivacyConsent') return { __esModule: true, default: privacyComponent };
       if (name === './PhoneReveal') return { __esModule: true, default: function PhoneReveal() {} };
       if (name === '@/lib/useLeadTracking') return { useLeadTracking: () => tracking };
+      if (name === '@/lib/tracking/attribution') return pureTrackingModule('attribution', sandboxWindow, deny);
+      if (name === '@/lib/tracking/conversions') return pureTrackingModule('conversions', sandboxWindow, deny);
       return deny(`import: ${name}`);
     },
     fetch: (url, options) => {
@@ -536,7 +559,7 @@ function syntheticLightForm(reply) {
       posts.push(body);
       return reply(body);
     },
-    window: { dataLayer: events },
+    window: sandboxWindow,
     console: new Proxy({}, { get: (_, name) => deny(`console.${String(name)}`) }),
     WebSocket: function () { deny('WebSocket'); },
     XMLHttpRequest: function () { deny('XMLHttpRequest'); },
@@ -578,7 +601,7 @@ test('light form actual submit reaches POST for phone and email only after ackno
     assert.equal(harness.states[3], 'success');
     assert.equal(harness.render().type === 'form', false);
     assert.deepEqual(harness.events.map(event => ({ ...event })), [
-      { event: 'lead_submit', source: 'synthetic-light', ref: 'synthetic-ref' },
+      { event: 'lead_submit', source: 'synthetic-light', ref: 'synthetic-ref', ...SYNTHETIC_LEAD_CONVERSION },
     ]);
     assert.equal(harness.posts.length, 1);
     assert.deepEqual({ ...harness.posts[0], message: undefined }, {
@@ -640,7 +663,7 @@ test('light form actual submit requires parsed 2xx acknowledgement for both mode
       assert.equal(harness.render().type === 'form', !fixture.success, fixture.label);
       assert.equal(harness.events.length, fixture.success ? 1 : 0, fixture.label);
       if (fixture.success) assert.deepEqual({ ...harness.events[0] }, {
-        event: 'lead_submit', source: 'synthetic-light', ref: 'synthetic-ref',
+        event: 'lead_submit', source: 'synthetic-light', ref: 'synthetic-ref', ...SYNTHETIC_LEAD_CONVERSION,
       }, fixture.label);
       assert.equal(harness.posts.length, 1, fixture.label);
       assert.deepEqual(harness.unexpected, [], fixture.label);

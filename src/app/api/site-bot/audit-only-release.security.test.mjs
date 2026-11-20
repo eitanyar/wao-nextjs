@@ -240,11 +240,15 @@ test('contact destination consumes optional ref without changing the acknowledge
   assert.match(contact, /<ContactForm source="contact-page"\s*\/>/);
   assert.doesNotMatch(contact, /site-bot-audit/);
   assert.equal(new URL('/contact', 'https://example.invalid').searchParams.get('ref'), null);
-  assert.match(tracking, /new URLSearchParams\(window\.location\.search\)/);
-  assert.match(tracking, /ref: params\.get\("ref"\)/);
+  // 2026-11-20: first-touch attribution moved to src/lib/tracking/attribution.ts (sessionStorage, per field).
+  const attribution = read('src/lib/tracking/attribution.ts');
+  assert.match(tracking, /readLeadTracking/);
+  assert.match(attribution, /new URLSearchParams\(search\)/);
+  assert.match(attribution, /resolveFirstTouchAttribution\(window\.location\.search, sessionStorageOrNull\(\)\)/);
+  assert.match(attribution, /ref: clean\(params\.get\("ref"\)\)/);
   assert.match(form, /ref: tracking\.ref \?\? undefined/);
   assert.match(form, /"ok" in acknowledgement && acknowledgement\.ok === true/);
-  assert.match(form, /if \(accepted\) \{\s*window\.dataLayer = window\.dataLayer \|\| \[\];\s*window\.dataLayer\.push\(\{ event: "lead_submit", source, ref: tracking\.ref \?\? undefined \}\);/);
+  assert.match(form, /if \(accepted\) \{[^}]*pushToDataLayer\(leadSubmitEvent\(source, attributionFields\(tracking\), /);
   assert.match(lead, /ref: leadField\(body\.ref, 200\) \|\| undefined/);
   // ok = mail acknowledged, or (client-site leads only) stored in the CRM. A main-site form has no slug,
   // so intake() returns stored: false before any store and the acknowledgement stays mail-only.

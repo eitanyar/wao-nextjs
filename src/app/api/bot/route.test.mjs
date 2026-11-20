@@ -371,6 +371,17 @@ test('approval still lives only in REVIEWING, reached after the full intake', as
   assert.match(routeCode, /currentState: "REVIEWING",\n\s*collectedData: data,\n\s*strategy,\n\s*copy,/, 'REVIEWING is still entered only from the phone turn');
 });
 
+// Dror 2026-11-20: the client pushes ads_bot_approved once when the reply carries approved: true.
+test('simulation: an approval in REVIEWING carries approved: true; anything else does not', async () => {
+  const post = loadPost({}, [], []);
+  const approved = await invokePost(post, { currentState: 'REVIEWING', collectedData: { ...PAST_GATE, phone: '050-1234567' }, answer: 'yes' });
+  assert.equal(approved.approved, true);
+  const other = await invokePost(post, { currentState: 'REVIEWING', collectedData: { ...PAST_GATE, phone: '050-1234567' }, answer: 'change budget' });
+  assert.equal(other.approved, undefined);
+  const diagnosing = await invokePost(post, { currentState: 'DIAGNOSING', collectedData: { ...PAST_GATE }, answer: 'yes' });
+  assert.equal(diagnosing.approved, undefined, 'an approval word outside REVIEWING is just an answer');
+});
+
 test('simulation sharpening skips the area question already answered in the gate', async () => {
   const post = loadPost({}, [], []);
   const res = await invokePost(post, { collectedData: { ...PAST_GATE, turnIndex: 3 }, answer: 'more services' });

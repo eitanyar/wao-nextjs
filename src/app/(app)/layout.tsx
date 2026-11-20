@@ -6,6 +6,7 @@ import "../globals.css";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import CookieBanner from "@/components/CookieBanner";
+import AttributionCapture from "@/components/AttributionCapture";
 import ExitSurveyPopup from "@/components/ExitSurveyPopup";
 import AccessibilityControl from "@/components/AccessibilityControl";
 import proof from "@/content/astra-real-proof-eeat-copy.json";
@@ -128,6 +129,7 @@ export default function RootLayout({
         <main id="main-content" style={{ flex: 1 }}>{children}</main>
         <Footer />
         <CookieBanner />
+        <AttributionCapture />
         <AccessibilityControl labels={proof.accessibility.basic_toolbar} />
         <ExitSurveyPopup />
         {/* Google Tag Manager */}

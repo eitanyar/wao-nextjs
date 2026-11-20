@@ -40,6 +40,8 @@ const page = load(path.join(dir, 'page.tsx'), {
   '@/content/astra-homepage-copy.json': JSON.parse(fs.readFileSync(path.join(dir, '../../../../content/astra-homepage-copy.json'), 'utf8')),
   '@/components/google-ads/GoogleAdPreview': { __esModule: true, default: () => null },
   './staff-context': staff,
+  '@/lib/useLeadTracking': { getAttribution: () => ({}) },
+  '@/lib/tracking/conversions': load(path.join(dir, '../../../../lib/tracking/conversions.ts'), {}),
 });
 
 function render(isStaff) {
@@ -89,4 +91,15 @@ test('the mobile jump-to-ad label is the homepage CTA, imported, never retyped',
   assert.match(jump.slice(0, 600), /type="button"/);
   assert.match(jump.slice(0, 600), /minHeight: "44px"/);
   assert.match(jump.slice(0, 600), /onClick=\{jumpToAd\}/);
+});
+
+// Dror 2026-11-20: ads_bot_* conversion pushes go through the once-per-session tracker, suppressed for demo and staff.
+test('onboarding conversion pushes are wired through the guarded tracker', () => {
+  assert.match(source, /suppressed: isDemo \|\| isStaff,/);
+  assert.match(source, /conversionsRef\.current = createOnboardingConversions\(\);/);
+  assert.match(source, /if \(data\.firstAdPreview\) conversionsRef\.current\?\.firstAdShown\(trackingContext\(\)\);/);
+  assert.match(source, /conversionsRef\.current\?\.stateChanged\(trackingContext\(\), previousState, data\.currentState, data\.collectedData\);/);
+  assert.match(source, /if \(data\.approved === true\) conversionsRef\.current\?\.approved\(trackingContext\(\)\);/);
+  assert.doesNotMatch(source, /dataLayer\.push/, 'no unguarded direct pushes');
+  assert.doesNotMatch(source, /purchase/, 'no purchase event while checkout is 503');
 });
