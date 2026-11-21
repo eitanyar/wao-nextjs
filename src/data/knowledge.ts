@@ -6368,7 +6368,7 @@ export const KNOWLEDGE_ARTICLES: KnowledgeArticle[] = [
         { label: "מודעות חיפוש רספונסיביות", url: "https://support.google.com/google-ads/answer/7684791" },
       ],
     },
-    cta: { button: "תראה דמו של בוט מודעות", href: "/google-ads", support: "דמו חינם על עסק לדוגמה: אזור, תקציב, ביטויי חיפוש ומודעה מוכנה." },
+    cta: { button: "תראה לי איך זה נראה על העסק שלי", href: "/google-ads", support: "דמו חינם על עסק לדוגמה: אזור, תקציב, ביטויי חיפוש ומודעה מוכנה." },
     pillarLinks: [
       { label: "פרסום בגוגל", href: "/google-ads" },
       { label: "איך זה עובד", href: "/google-ads/how-it-works" },

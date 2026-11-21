@@ -353,3 +353,16 @@ Everything else new (ringing phone, full week, "no room in the diary", "evenings
 - Site Bot monthly report, review message, reply drafts, profile matching, one-message updates: ledger B11–B15, B17.
 - Ads Bot account ownership, budget straight to Google, and the weekly report: ledger A16, A17, A14.
 - Agency price comparison "about six times ours": ledger A20, no market source.
+
+---
+
+## Amendment 2026-11-22 (Eitan): count and CTA wording
+
+"שלוש" becomes "כמה" (the count is not fixed), and the Ads CTA says קמפיין instead of מודעה. Live lines:
+
+- `הלקוח לא תמיד מקליד ״אינסטלטור״. הרבה פעמים הוא מקליד את הצרה: סתימה, דוד שלא מחמם, נזילה. לכן כל שירות שלך מקבל עמוד משלו, אחרי שבדקנו מה באמת מחפשים באזור שלך. מי שנכנס רואה שעות פתיחה וכפתור שיחה, ומתקשר בלחיצה. מהצד שלך זה כמה שאלות בצ׳אט.`
+- `תראה לי את הקמפיין שלי`
+- `כמה שאלות`
+- `אתה עונה על כמה שאלות על העסק, ורואה את המודעה ואת דף הנחיתה שלך. חינם.`
+- `אתה באמצע עבודה, הידיים מלאות, והטלפון מצלצל. עוד מישהו חיפש בגוגל בדיוק את מה שאתה עושה, ומצא אותך. ככה מתמלא שבוע: בלי לרדוף אחרי עבודה, ובלי לשלם למשרד על דוחות. כמה שאלות, והמודעה שלך מולך.`
+- `שימצא אותך. כמה שאלות, והכול מולך: המודעה, דף הנחיתה והחיפושים שתופיע בהם. לא אהבת? לא שילמת שקל.`
