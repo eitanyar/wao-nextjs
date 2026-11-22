@@ -86,10 +86,9 @@ test('bot fallback strategy object has no negativeKeywords (the route merges the
   assert.doesNotMatch(bot, /Local Services Ads/);
   const prompts = fs.readFileSync(path.join(path.dirname(routePath), '..', '..', '..', '..', 'lib', 'bot', 'prompts.ts'), 'utf8');
   for (const gone of [/auto-switches/, /Manual CPC/, /avgJobValue × closeRate × 0\.3/, /LOCKSMITH REDIRECT RULE/, /Local Services Ads/, /9\.9/]) assert.doesNotMatch(prompts, gone);
+  // 2026-11-23: the budget table is generated from src/lib/google-ads/cpc-cap.ts (one source of truth; the 1,500 floor
+  // and the rows are tested in cpc-cap.test.ts). No hand-written row may come back.
+  assert.ok(prompts.includes('${tradeBudgetPromptTable()}'));
   const rows = prompts.split('\n').filter((l) => /^\| .+\|\s*[\d,]+\s*\|\s*[\d,]+\s*\|\s*\d+\s*\|$/.test(l));
-  assert.ok(rows.length >= 15);
-  for (const row of rows) {
-    const [, , min, rec] = row.split('|').map((c) => Number(c.trim().replace(/,/g, '')));
-    assert.ok(min >= 1500 && rec >= min, row);
-  }
+  assert.equal(rows.length, 0);
 });

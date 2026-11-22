@@ -1,5 +1,6 @@
 import { GoogleAdsApi, enums } from 'google-ads-api';
 import type { CampaignConfig } from '../crm/intelligence';
+import { dailyBudgetMicros } from './daily-budget';
 
 export interface MutationResult {
   success: boolean;
@@ -117,7 +118,8 @@ export async function setCampaignDailyBudget(params: {
       return { success: false, error: `Could not resolve campaign budget resource name for campaign ID ${params.campaignId}` };
     }
 
-    const amountMicros = Math.round(params.dailyBudgetIls * 1_000_000);
+    // Whole agorot -> micros (daily-budget.ts): the API wants a multiple of the currency's minimum unit.
+    const amountMicros = dailyBudgetMicros(params.dailyBudgetIls);
     const res = await customer.campaignBudgets.update([
       {
         resource_name: budgetResourceName,

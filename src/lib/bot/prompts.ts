@@ -6,6 +6,7 @@
 /** Pricing default (2026-11-10): the fixed owner-checkable pricing promises. */
 import { DEFAULT_GENERIC_NEGATIVES, NEVER_BLOCK_NEGATIVES } from "../google-ads/default-negatives";
 import { buildUploadTurnsPrompt } from "../google-ads/intakeUploads";
+import { cpcCapPromptSentence, tradeBudgetPromptTable } from "../google-ads/cpc-cap";
 
 export type PricingPromiseId = 'free_quote' | 'price_before_work' | 'price_by_phone_before_leaving' | 'no_callout_fee' | 'no_hidden_costs';
 
@@ -343,31 +344,12 @@ T27: "ולדף שלך — תבחר כתובת קצרה באנגלית. לדוג�
   → HARD GATE: DO NOT set callSpecialists: true or transition to STRATEGIZING until preferredSlug is explicitly set (even if null).
   → set currentState: STRATEGIZING, callSpecialists: true
 
-### VERTICAL BUDGET TABLE (use these numbers DIRECTLY — do not compute from CPC):
-| Vertical (keywords)                        | Min ₪/mo | Recommended ₪/mo | CPC ₪ |
-|--------------------------------------------|----------|-----------------|-------|
-| עורך דין נזיקין                            | 2,500    | 4,000           | 35    |
-| עורך דין / עו"ד / משפט / פלילי / גירושין  | 2,000    | 3,500           | 28    |
-| רופא שיניים / אורתודונט / דנטל             | 1,500    | 2,500           | 20    |
-| קוסמטיק / אסתטיק / בוטוקס / לייזר         | 1,500    | 2,500           | 14    |
-| מנעולן                                     | 1,500    | 2,000           | 20    |
-| אינסטלטור / שרברב                          | 1,500    | 2,000           | 15    |
-| חשמלאי                                     | 1,500    | 2,000           | 14    |
-| מדביר                                      | 1,500    | 1,500           | 10    |
-| גנן / גינון                                | 1,500    | 1,500           | 12    |
-| שיפוצניק / קבלן                            | 1,500    | 1,500           | 11    |
-| מכונאי / מוסך                              | 1,500    | 1,500           | 10    |
-| פסיכולוג / קואצ'ר / טיפול נפש              | 1,500    | 1,500           | 13    |
-| רואה חשבון                                 | 2,000    | 3,500           | 15    |
-| צלם / צלמת                                 | 1,500    | 1,500           | 20    |
-| מאמן כושר / פילאטיס / יוגה                 | 1,500    | 1,500           | 8     |
-| מורה פרטי / שיעורים פרטיים                 | 1,500    | 1,500           | 8     |
-| טכנאי מחשב / IT                            | 1,500    | 1,500           | 9     |
-| ברירת מחדל                                 | 1,500    | 1,500           | 15    |
+### VERTICAL BUDGET TABLE (generated from src/lib/google-ads/cpc-cap.ts, the one source of truth; use these numbers DIRECTLY, do not compute them):
+${tradeBudgetPromptTable()}
 
 ### BUDGET LOGIC:
-- Use the Recommended value from the table above as your recommendation. Do NOT compute it from CPC.
-- expectedLeads ≈ Recommended ÷ CPC × 0.06. Round to nearest integer, minimum 1.
+- Use the Recommended value from the table above as your recommendation. Do NOT compute it from CPC. Never quote a minimum below the table's Min (never below 1,500).
+- expectedLeads ≈ Recommended ÷ (0.8 × CPC cap) × 0.06. Round to nearest integer, minimum 1.
 - clientsPerMonth ≈ expectedLeads × (closeRate × 0.8) — paid traffic closes ~20% lower than warm referrals. Minimum 0.2.
 - If hasRepeatClients=true: effective LTV ≈ avgJobValue × 2.5. Note this in your message.
 - breakEvenClients ≈ ceil(Recommended ÷ avgJobValue) — total clients needed to recover one month's ad spend
@@ -418,7 +400,7 @@ RULES:
 6. Generic negatives (phrase match): ${DEFAULT_GENERIC_NEGATIVES.join(", ")}. Never add the bare word "${NEVER_BLOCK_NEGATIVES[0]}" or "${NEVER_BLOCK_NEGATIVES[1]}" as a negative: free-quote and free-consultation searches are buyers.
 7. If noDigitalFootprint=true → note: client needs Google Business Profile set up first.
 8. BIDDING STRATEGY — cold-start rule (no conversion data):
-   - Default for ALL cold-start accounts: Maximize Clicks with a max CPC cap. The system sets that cap per trade (lawyers ~₪28–35, dentists and locksmiths ~₪20, everything else ~₪15); do not compute or promise a different cap.
+   - Default for ALL cold-start accounts: Maximize Clicks with a max CPC cap. ${cpcCapPromptSentence()}
    - Target Impression Share is NOT appropriate for cold-start — it optimizes for position, not leads, and burns budget.
    - Phase 1 is Maximize Clicks with a CPC cap; the owner's real-lead marks are the only primary conversion from day one.
    - Target CPA only at ~30 verified leads/month.

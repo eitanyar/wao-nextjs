@@ -139,8 +139,9 @@ test('carryUploadFields restores upload fields a live model dropped, and nothing
 
 test('bot script: no strings = no new turns and the exact previous ADAM_SYSTEM_PROMPT', () => {
   assert.deepEqual(buildUploadTurnsPrompt(resolveUploadStrings({})), { workPhotosTurn: '', logoTurn: '', outputFields: '' });
-  // sha256 of ADAM_SYSTEM_PROMPT captured before the logo / work-photo change (2026-11-22).
-  assert.equal(createHash('sha256').update(ADAM_SYSTEM_PROMPT).digest('hex'), 'a36706d7ecfe21a3a61824924c69c897324ea4b4ceba9219584b65d86bd607d9');
+  // sha256 of ADAM_SYSTEM_PROMPT with empty upload strings. Was a36706d7... before 2026-11-23; re-pinned when the
+  // budget table became generated from src/lib/google-ads/cpc-cap.ts (the only change: that table + BUDGET LOGIC lines).
+  assert.equal(createHash('sha256').update(ADAM_SYSTEM_PROMPT).digest('hex'), 'de3be679dee5c0528abf2561fa6d2ce1cbd32f2af1f4ca26241ab536652c537b');
 });
 
 test('bot script: with strings, the turns carry the ask verbatim and the awaiting flags', () => {

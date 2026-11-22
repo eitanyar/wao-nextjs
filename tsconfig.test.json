@@ -225,6 +225,7 @@
     "src/lib/google-ads/whatsapp-digest.ts",
     "src/lib/google-ads/whatsapp-digest.test.ts",
     "src/lib/google-ads/cpc-cap.ts",
+    "src/lib/google-ads/daily-budget.ts",
     "src/lib/google-ads/cpc-cap.test.ts",
     "src/lib/google-ads/campaign-setup-readback.ts",
     "src/lib/google-ads/campaign-setup-readback.test.ts",

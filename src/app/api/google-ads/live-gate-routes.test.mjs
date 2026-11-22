@@ -141,6 +141,7 @@ function setup({ record, liveFlag, campaignMode = 'live', sessionClientId = CLIE
     '@/lib/google-ads/access-policy': accessPolicy,
     '@/lib/google-ads/live-readiness-store': store,
     '@/lib/google-ads/ownership': ownership,
+    '@/lib/google-ads/daily-budget': plain('lib/google-ads/daily-budget.ts'),
     '@/lib/crm/intelligence': {
       loadClientGoogleAdsIndex: () => index,
       loadCampaignConfigBySlug: () => campaignConfig,

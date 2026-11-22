@@ -209,6 +209,8 @@ function transpileLocal(relPath, imports = {}) {
 }
 
 const claimsGuard = transpileLocal('../../../lib/google-ads/ad-claims-guard.ts');
+const cpcCap = transpileLocal('../../../lib/google-ads/cpc-cap.ts');
+const dailyBudget = transpileLocal('../../../lib/google-ads/daily-budget.ts');
 const T = claimsGuard.CLAIM_TOKENS;
 const assertNoUnbackedClaims = (copy, data) => {
   for (const line of [...copy.headlines, ...copy.descriptions]) assert.deepEqual(claimsGuard.unbackedClaims(line, data), [], `unbacked claim shown: ${line}`);
@@ -227,6 +229,8 @@ function loadPost(environment, qwenCalls, geminiCalls, geminiReply = '{"response
     if (name === '@/lib/bot/prompts') return { ADAM_SYSTEM_PROMPT: 'adam', DROR_SYSTEM_PROMPT: 'dror', TAMAR_SYSTEM_PROMPT: 'tamar', T21_PHOTO_ASK_VERSION: 'test' };
     if (name === '@/lib/ads/keywordPlanner') return { getEstimatedCPC: async () => null };
     if (name === '@/lib/google-ads/default-negatives') return { DEFAULT_GENERIC_NEGATIVES: [] };
+    if (name === '@/lib/google-ads/cpc-cap') return cpcCap;
+    if (name === '@/lib/google-ads/daily-budget') return dailyBudget;
     if (name === '@/lib/google-ads/keyword-normalize') return { normalizeNegativeKeywords: (list) => list };
     if (name === '@/lib/google-ads/onboarding-response') return { resolveBoundedOnboardingResponse: async ({ live, timeoutMs }) => {
       assert.equal(timeoutMs, 12000);

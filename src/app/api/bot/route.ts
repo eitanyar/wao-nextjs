@@ -1,4 +1,6 @@
 import { DEFAULT_GENERIC_NEGATIVES } from "@/lib/google-ads/default-negatives";
+import { BUDGET_FLOOR_ILS, forecastCpcIlsForNiche, tradeMoneyForNiche } from "@/lib/google-ads/cpc-cap";
+import { dailyBudgetFromMonthly } from "@/lib/google-ads/daily-budget";
 import { normalizeNegativeKeywords } from "@/lib/google-ads/keyword-normalize";
 import { NextResponse } from "next/server";
 import { ADAM_SYSTEM_PROMPT, DROR_SYSTEM_PROMPT, TAMAR_SYSTEM_PROMPT, T21_PHOTO_ASK_VERSION, CollectedData } from "@/lib/bot/prompts";
@@ -73,19 +75,23 @@ function detectQuestionVersions(responseText: string): Record<string, string> | 
   return undefined;
 }
 
-// ── Industry cluster budgets (Dror-verified, WordStream/LocaliQ 2025-2026) ────
-// CPCs: US benchmark × ~0.5 IL factor × ₪3.0/$ (USD/ILS 30 Jun 2026).
-// Budgets sized for Phase 1 Maximize Clicks (~20 leads/month = meaningful signal).
-// Smart Bidding optimization phase requires 3× budget (see VISION.md Option B gate).
+// ── Industry cluster rates (Dror-verified, WordStream/LocaliQ 2025-2026) ──────
+// Landing-page conversion, close rate and LTV per cluster. Budgets (min / recommended) and the forecast click price
+// live in the one trade table, src/lib/google-ads/cpc-cap.ts (Dror 2026-11-23); clusters no longer carry money.
 
-interface VerticalBudget {
-  min: number;
-  recommended: number;
-  aggressive: number;
-  cpc: number;
+/** Conversion / close / LTV assumptions per industry cluster. Budgets and click prices are NOT here: they come from
+ * the one trade table in src/lib/google-ads/cpc-cap.ts (Dror 2026-11-23). */
+interface ClusterRates {
   lpCvr: number;
   closeRateDefault: number;
   ltvMultiplier: number;
+}
+
+/** What the budget turns use: cluster rates + the trade's min / recommended + the forecast click price (0.8 x cap). */
+interface VerticalBudget extends ClusterRates {
+  min: number;
+  recommended: number;
+  cpc: number;
 }
 
 // Dror's cluster-precision audit (2026-08-03, "lior-mission-doubts" mission):
@@ -99,33 +105,32 @@ type ClusterKey =
   | "academicTutoring" | "fitnessTraining"
   | "businessProfessionalSvc" | "creativeVisualSvc";
 
-const BUDGET_CLUSTERS: Record<ClusterKey, VerticalBudget> = {
-  // cpc × 20 leads = recommended;  cpc × 10 leads = min
-  emergencyTrades:  { cpc: 11, lpCvr: 0.09, min: 1500, recommended: 2500, aggressive: 5000, closeRateDefault: 0.40, ltvMultiplier: 1.3 },
-  medicalRehab:     { cpc: 8,  lpCvr: 0.10, min: 1000, recommended: 2000, aggressive: 3500, closeRateDefault: 0.35, ltvMultiplier: 2.5 },
-  wellnessTherapy:  { cpc: 9,  lpCvr: 0.06, min: 1500, recommended: 3000, aggressive: 6000, closeRateDefault: 0.25, ltvMultiplier: 3.0 },
-  legal:            { cpc: 22, lpCvr: 0.05, min: 2500, recommended: 4000, aggressive: 8000, closeRateDefault: 0.25, ltvMultiplier: 1.8 },
-  beautyAesthetics: { cpc: 8,  lpCvr: 0.08, min: 1200, recommended: 2000, aggressive: 4000, closeRateDefault: 0.30, ltvMultiplier: 3.0 },
-  homeImprovement:  { cpc: 10, lpCvr: 0.06, min: 1800, recommended: 3500, aggressive: 7000, closeRateDefault: 0.20, ltvMultiplier: 2.0 },
+const BUDGET_CLUSTERS: Record<ClusterKey, ClusterRates> = {
+  emergencyTrades:  { lpCvr: 0.09, closeRateDefault: 0.40, ltvMultiplier: 1.3 },
+  medicalRehab:     { lpCvr: 0.10, closeRateDefault: 0.35, ltvMultiplier: 2.5 },
+  wellnessTherapy:  { lpCvr: 0.06, closeRateDefault: 0.25, ltvMultiplier: 3.0 },
+  legal:            { lpCvr: 0.05, closeRateDefault: 0.25, ltvMultiplier: 1.8 },
+  beautyAesthetics: { lpCvr: 0.08, closeRateDefault: 0.30, ltvMultiplier: 3.0 },
+  homeImprovement:  { lpCvr: 0.06, closeRateDefault: 0.20, ltvMultiplier: 2.0 },
   // Split off homeImprovement (auto repair + waste removal — unrelated buyer
   // intent/urgency/deal size). min/recommended/aggressive inherited unchanged
   // from the parent bucket, same as lpCvr's low-confidence status below —
   // flag for future revisit once this vertical gets real volume.
-  autoServices:     { cpc: 10, lpCvr: 0.07, min: 1800, recommended: 3500, aggressive: 7000, closeRateDefault: 0.20, ltvMultiplier: 2.0 },
+  autoServices:     { lpCvr: 0.07, closeRateDefault: 0.20, ltvMultiplier: 2.0 },
   // Split off education (academic tutoring side) — values carried over unchanged
   // from the former `education` cluster (cpc ₪7 / lpCvr 0.10 matches WordStream
   // "Education & Instruction" benchmark well).
-  academicTutoring: { cpc: 7,  lpCvr: 0.10, min: 800,  recommended: 1500, aggressive: 3000, closeRateDefault: 0.35, ltvMultiplier: 3.0 },
+  academicTutoring: { lpCvr: 0.10, closeRateDefault: 0.35, ltvMultiplier: 3.0 },
   // Split off education (fitness/training side) — membership sale, not a
   // one-off session, so closeRateDefault and ltvMultiplier differ from
   // academicTutoring even though cpc/lpCvr/budget tier are similar in shape.
-  fitnessTraining:  { cpc: 10, lpCvr: 0.11, min: 800,  recommended: 1500, aggressive: 3000, closeRateDefault: 0.20, ltvMultiplier: 4.0 },
+  fitnessTraining:  { lpCvr: 0.11, closeRateDefault: 0.20, ltvMultiplier: 4.0 },
   // Split off professionalSvc (transactional/urgency-driven side) — values
   // carried over unchanged from the former `professionalSvc` cluster.
-  businessProfessionalSvc: { cpc: 9, lpCvr: 0.05, min: 1800, recommended: 3500, aggressive: 7000, closeRateDefault: 0.30, ltvMultiplier: 2.5 },
+  businessProfessionalSvc: { lpCvr: 0.05, closeRateDefault: 0.30, ltvMultiplier: 2.5 },
   // Split off professionalSvc (portfolio-driven/comparison-shopping side) —
   // mostly one-off jobs, hence the lower ltvMultiplier vs. businessProfessionalSvc.
-  creativeVisualSvc: { cpc: 8, lpCvr: 0.09, min: 1800, recommended: 3500, aggressive: 7000, closeRateDefault: 0.25, ltvMultiplier: 1.5 },
+  creativeVisualSvc: { lpCvr: 0.09, closeRateDefault: 0.25, ltvMultiplier: 1.5 },
 };
 
 const CLUSTER_KEYWORDS: Record<ClusterKey, string[]> = {
@@ -155,37 +160,12 @@ function detectCluster(niche: string): ClusterKey {
   return "businessProfessionalSvc";
 }
 
-// ── City-tier CPC multiplier (stopgap, directional estimate — sourced from an
-// Israeli PPC-agency blog, not Google-official) ───────────────────────────────
-// Applies ONLY to cpc; lpCvr/closeRateDefault/ltvMultiplier are offer/UX-driven,
-// not geography-driven, and must stay untouched. Structured as a single narrow
-// multiplier + one city→tier lookup so it's a clean no-op swap once live
-// per-geo Keyword Planner data (Option B, VISION.md:317-335) lands — do not
-// build a second parallel table.
-const CITY_TIER_CPC_MULTIPLIER: Record<1 | 2 | 3, number> = { 1: 1.20, 2: 1.00, 3: 0.80 };
-
-const CITY_TIER_LOOKUP: Record<string, 1 | 2 | 3> = {
-  "תל אביב": 1, "תל אביב יפו": 1, "גוש דן": 1, "הרצליה": 1, "רמת גן": 1, "נתניה": 1,
-  "חיפה": 2, "ירושלים": 2,
-  "דימונה": 3, "שדרות": 3, "קרית שמונה": 3, "קריית שמונה": 3, "אופקים": 3, "ירוחם": 3,
-};
-
-function cityTier(city: string): 1 | 2 | 3 {
-  const normalized = (city || "").trim();
-  for (const [name, tier] of Object.entries(CITY_TIER_LOOKUP)) {
-    if (normalized.includes(name)) return tier;
-  }
-  return 2; // baseline/default for unlisted cities (Haifa/Jerusalem-tier)
-}
-
-function applyCityCpc(cpc: number, city: string): number {
-  return cpc * CITY_TIER_CPC_MULTIPLIER[cityTier(city)];
-}
-
-function detectVerticalBudget(niche: string, city?: string): VerticalBudget {
-  const base = BUDGET_CLUSTERS[detectCluster(niche)];
-  if (!city) return base;
-  return { ...base, cpc: applyCityCpc(base.cpc, city) };
+// Budgets and the forecast click price come from the one trade table (src/lib/google-ads/cpc-cap.ts): min / recommended
+// per trade, and lead forecasts at 0.8 x the trade's cap until real data (Keyword Planner) replaces it. The former
+// city-tier CPC multiplier is gone with the per-cluster CPCs (2026-11-23).
+function detectVerticalBudget(niche: string): VerticalBudget {
+  const money = tradeMoneyForNiche(niche);
+  return { ...BUDGET_CLUSTERS[detectCluster(niche)], min: money.min, recommended: money.recommended, cpc: forecastCpcIlsForNiche(niche) };
 }
 
 function getClusterCloseRateDefault(niche: string): number {
@@ -231,8 +211,8 @@ function isPlausiblePhoneAnswer(text: string): boolean {
 }
 
 function generateFallbackStrategyAndCopy(data: CollectedData) {
-  const budget = data.monthlyBudget ?? 1000;
-  const daily = Math.round(budget / 30);
+  const budget = data.monthlyBudget ?? BUDGET_FLOOR_ILS;
+  const daily = dailyBudgetFromMonthly(budget);
   const location = Array.isArray(data.specificCities) ? data.specificCities.join(", ") : (data.specificCities ?? "ישראל");
   const niche = data.businessNiche ?? data.businessName ?? "שירות";
   return {
@@ -565,7 +545,7 @@ function handleSimulation(
         }
 
         // Compute budget recommendation adjusted for organic presence
-        const vb = detectVerticalBudget(data.businessNiche || "", data.specificCities);
+        const vb = detectVerticalBudget(data.businessNiche || "");
         let lpCvr = vb.lpCvr;
         const reviewCount16 = data.reviewCount || 0;
         const starRating16 = parseFloat(data.starRating || "0");
@@ -610,7 +590,9 @@ function handleSimulation(
       }
       case 19: {
         // Budget confirmation / adjustment — never terminate
-        const vb17 = detectVerticalBudget(data.businessNiche || "", data.specificCities);
+        const vb17 = detectVerticalBudget(data.businessNiche || "");
+        // The minimum the bot quotes is never below the floor (Dror 2026-11-23), whatever a table row says.
+        const minimumToQuote17 = Math.max(BUDGET_FLOOR_ILS, vb17.min);
         const isApproval = ["כן", "בסדר", "סבבה", "מסכים", "אוקיי", "בטח", "יאללה", "מעולה"].some(w => text.includes(w));
         let budget17 = parseNumber(text);
 
@@ -619,7 +601,7 @@ function handleSimulation(
             budget17 = vb17.recommended;
           } else {
             return NextResponse.json({
-              response: `כמה בחודש אתה חושב להשקיע? (גם ₪${vb17.min.toLocaleString()} — אני אסביר מה אפשר לצפות ממנו)`,
+              response: `כמה בחודש אתה חושב להשקיע? (גם ₪${minimumToQuote17.toLocaleString()} — אני אסביר מה אפשר לצפות ממנו)`,
               currentState,
               collectedData: data,
               isSimulation: true,
@@ -641,12 +623,12 @@ function handleSimulation(
         if (budget17 >= vb17.recommended) {
           data.feasibilityBranch = "A";
           budgetResponse = `מעולה — ₪${budget17.toLocaleString()} זה תקציב שעובד בתחום שלך. עם הקצב הזה, תחזיר את עלות הפרסום תוך כ-${paybackStr17} — וכל שאר הלקוחות רווח נקי.`;
-        } else if (budget17 >= vb17.min) {
+        } else if (budget17 >= minimumToQuote17) {
           data.feasibilityBranch = "B";
           budgetResponse = `אוקי, ₪${budget17.toLocaleString()} — צמוד אבל אפשרי. תקבל פחות פניות, אז כל אחת חשובה. נתכנן קמפיין מאוד ממוקד.`;
         } else {
           data.feasibilityBranch = "B";
-          budgetResponse = `הבנתי, ₪${budget17.toLocaleString()}. זה מתחת למינימום שאני ממליץ בתחום שלך (₪${vb17.min.toLocaleString()}). אבל בוא נצא לדרך — נתכנן קמפיין מאוד סלקטיבי ונבדוק אם זה מביא תוצאות.`;
+          budgetResponse = `הבנתי, ₪${budget17.toLocaleString()}. זה מתחת למינימום שאני ממליץ בתחום שלך (₪${minimumToQuote17.toLocaleString()}). אבל בוא נצא לדרך — נתכנן קמפיין מאוד סלקטיבי ונבדוק אם זה מביא תוצאות.`;
         }
 
         data.turnIndex = 20;
@@ -769,8 +751,8 @@ function handleSimulation(
 function generateMockCampaign(data: CollectedData) {
   const niche = data.primaryService || data.businessNiche || "";
   const location = data.targetLocation || "אזור המרכז";
-  const budget = data.monthlyBudget || 1500;
-  const dailyBudget = Math.round(budget / 30.4);
+  const budget = data.monthlyBudget || BUDGET_FLOOR_ILS;
+  const dailyBudget = dailyBudgetFromMonthly(budget);
   const usp = data.usp || "";
   const urgency = data.urgencyLevel || "deliberate";
 
@@ -1153,7 +1135,7 @@ IMPORTANT: End your message with EXACTLY this sentence (no variation):
   let budgetHint = "";
   if (collectedData.avgJobValue) {
     const citySeed = (collectedData.specificCities || collectedData.targetLocation || "ישראל").split(/[,،\n]/)[0].trim();
-    const vbHint = detectVerticalBudget(collectedData.businessNiche || "", citySeed);
+    const vbHint = detectVerticalBudget(collectedData.businessNiche || "");
     let lpCvrHint = vbHint.lpCvr;
     const rc = collectedData.reviewCount || 0;
     const sr = parseFloat(collectedData.starRating || "0");
@@ -1171,7 +1153,7 @@ IMPORTANT: End your message with EXACTLY this sentence (no variation):
     const effectiveCpc = liveCpc && liveCpc > 0 ? liveCpc : vbHint.cpc;
     const cpcLabel = liveCpc
       ? `Live Keyword Planner CPC ≈ ₪${liveCpc.toFixed(2)}`
-      : `Cluster CPC ≈ ₪${vbHint.cpc}`;
+      : `Forecast CPC (0.8 x trade cap) ≈ ₪${vbHint.cpc}`;
 
     const hintLeads = Math.max(1, Math.round((vbHint.recommended * lpCvrHint) / effectiveCpc));
     const hintPaidClose = Math.max(0.05, Math.min(hintCloseRate * 0.8, 0.35));

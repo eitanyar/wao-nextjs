@@ -6,9 +6,12 @@ import { resolveGoogleAdsMutationAccess } from '@/lib/google-ads/access-policy';
 import { loadLiveReadinessRecord } from '@/lib/google-ads/live-readiness-store';
 import { setCampaignDailyBudget } from '@/lib/google-ads/mutations';
 import { appendGoogleAdsDirectActionAudit } from '@/lib/google-ads/direct-action-audit';
+import { campaignDailyBudgetIls } from '@/lib/google-ads/daily-budget';
 
 interface BudgetRequest {
-  dailyBudgetIls: number;
+  dailyBudgetIls?: number;
+  /** Alternative to dailyBudgetIls: a monthly budget, turned into daily = monthly / 30.4 (daily-budget.ts). Wins when both are sent. */
+  monthlyBudgetIls?: number;
   /** §8.3 point 5 — see the identical field's doc comment in negative-keywords/route.ts:
    * explicit target campaign, falls back to the legacy `index.primaryCampaignId` when omitted. */
   campaignId?: string;
@@ -50,10 +53,12 @@ export async function POST(req: Request) {
     }
 
     const body = (await req.json().catch(() => ({}))) as BudgetRequest;
-    const dailyBudgetIls = Number(body.dailyBudgetIls);
-    if (!Number.isFinite(dailyBudgetIls) || dailyBudgetIls <= 0) {
+    const requestedDaily = Number(body.dailyBudgetIls);
+    const hasMonthly = Number.isFinite(Number(body.monthlyBudgetIls)) && Number(body.monthlyBudgetIls) > 0;
+    if (!hasMonthly && (!Number.isFinite(requestedDaily) || requestedDaily <= 0)) {
       return NextResponse.json({ error: 'Invalid daily budget value' }, { status: 400 });
     }
+    const dailyBudgetIls = campaignDailyBudgetIls(hasMonthly ? body.monthlyBudgetIls : undefined, requestedDaily);
 
     if (dailyBudgetIls < 5) {
       return NextResponse.json({ error: 'Daily budget must be at least ₪5.' }, { status: 400 });

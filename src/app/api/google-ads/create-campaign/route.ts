@@ -44,6 +44,7 @@ import {
 } from '@/lib/google-ads/geo-targeting';
 import { ISRAELI_LOCALITIES } from '@/lib/site-bot/israeliLocalities';
 import { cpcCapIlsForNiche, cpcCapTradeForNiche } from '@/lib/google-ads/cpc-cap';
+import { campaignDailyBudgetIls, campaignMonthlyBudgetIls, dailyBudgetMicros } from '@/lib/google-ads/daily-budget';
 import { evaluateCampaignSetup, readCampaignSetup, type CampaignSetupVerdict } from '@/lib/google-ads/campaign-setup-readback';
 
 export interface CampaignConfig {
@@ -527,6 +528,9 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: strategyCheck.error }, { status: 400 });
     }
     const normalizedKeywords: NormalizedKeyword[] = strategyCheck.keywords;
+    // Daily budget = the owner's monthly budget / 30.4 when intake has it (the one rule, daily-budget.ts); otherwise
+    // the strategy's daily figure, on whole agorot.
+    const dailyBudgetIls = campaignDailyBudgetIls(collectedData.monthlyBudget, strategyCheck.dailyBudgetIls);
     // The day-one defaults are always merged in (so a campaign built on the fallback strategy
     // still starts with them), minus any default that collides with this trade's own words.
     const campaignNegatives = buildCampaignNegatives({
@@ -549,7 +553,7 @@ export async function POST(req: Request) {
       commercialSeeds,
       demand: null,
       minMonthlySearches: Number(process.env.GOOGLE_ADS_MIN_MONTHLY_SEARCHES),
-      dailyBudgetIls: strategy.suggestedDailyBudget,
+      dailyBudgetIls,
       estimatedLeadConversionRate: strategy.estimatedLeadConversionRate,
       cplCeilingIls,
     });
@@ -565,7 +569,7 @@ export async function POST(req: Request) {
       commercialSeeds,
       demand,
       minMonthlySearches: Number(process.env.GOOGLE_ADS_MIN_MONTHLY_SEARCHES),
-      dailyBudgetIls: strategy.suggestedDailyBudget,
+      dailyBudgetIls,
       estimatedLeadConversionRate: strategy.estimatedLeadConversionRate,
       cplCeilingIls,
     });
@@ -776,7 +780,7 @@ export async function POST(req: Request) {
 
     const budgetRes = await newCustomer.campaignBudgets.create([{
       name: `${campaignName} — Budget`,
-      amount_micros: Math.round(strategy.suggestedDailyBudget * 1_000_000),
+      amount_micros: dailyBudgetMicros(dailyBudgetIls),
       delivery_method: enums.BudgetDeliveryMethod.STANDARD,
     }]);
     const budgetResourceName = budgetRes.results[0].resource_name!;
@@ -906,8 +910,8 @@ export async function POST(req: Request) {
       businessName,
       businessNiche: collectedData.businessNiche,
       targetLocation: strategy.targetLocation,
-      targetDailyBudget: strategy.suggestedDailyBudget,
-      targetMonthlyBudget: strategy.suggestedDailyBudget * 30.4,
+      targetDailyBudget: dailyBudgetIls,
+      targetMonthlyBudget: campaignMonthlyBudgetIls(collectedData.monthlyBudget, dailyBudgetIls),
       avgJobValue,
       closeRateEstimate,
       verifiedLeadConversionResourceName,
@@ -935,7 +939,7 @@ export async function POST(req: Request) {
         autonomyConsent: body.autonomyConsent,
         autonomyConsentTimestamp: body.autonomyConsentTimestamp,
         autonomyTermsVersion: body.autonomyTermsVersion,
-        dailyBudgetIls: strategy.suggestedDailyBudget,
+        dailyBudgetIls,
         authorizedBy: actor ?? sessionClientId ?? effectiveClientId,
         legalTermsVersion: process.env.GOOGLE_ADS_AUTONOMY_LEGAL_VERSION,
       });
@@ -960,7 +964,7 @@ export async function POST(req: Request) {
         message: [
           `עסק: ${businessName}`,
           `ענף: ${collectedData.businessNiche}`,
-          `תקציב יומי: ₪${strategy.suggestedDailyBudget}`,
+          `תקציב יומי: ₪${dailyBudgetIls}`,
           `חשבון: ${newCustomerId}`,
           `קמפיין: ${campaignId}`,
           `LP: ${finalUrl}`,
@@ -977,7 +981,7 @@ export async function POST(req: Request) {
         actorClientId: actor ?? sessionClientId ?? effectiveClientId,
         campaignId,
         status: 'success',
-        metadata: { customerId: newCustomerId, slug, businessName, dailyBudgetIls: strategy.suggestedDailyBudget },
+        metadata: { customerId: newCustomerId, slug, businessName, dailyBudgetIls },
         createdAt: new Date().toISOString(),
       });
     }
