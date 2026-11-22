@@ -6,7 +6,7 @@ import { ADS_BOT_PLAN, formatShekels, planChargeAmount } from "@/lib/payments/pl
 import { planPaidThrough } from "@/lib/payments/subscriptions";
 import { adsBotClientForSubscription } from "@/lib/google-ads/billing/adsBotBilling";
 import { adsBotCheckoutEnabled } from "@/lib/google-ads/billing/adsBotCheckoutFlag";
-import { recordManualChargeAction, sendPayLinkAction } from "./action";
+import { recordManualChargeAction, sendPayLinkAction, sendVerificationGuideAction } from "./action";
 
 // Staff-only Ads Bot billing (mission item 3). English for now (staff-facing; Hebrew labels can come from waocopy later).
 export const metadata = { robots: { index: false }, title: "Ads Bot billing | WAO" };
@@ -42,6 +42,7 @@ export default async function AdsBotBillingPage({ searchParams }: { searchParams
       {params.recorded && <p style={{ color: "#4ade80" }}>Charge recorded on subscription {params.recorded}. Readiness feePaid set.</p>}
       {params.amountWarning && <p style={{ color: "#fbbf24" }}>Warning: the amount differs from the plan total {formatShekels(planChargeAmount(ADS_BOT_PLAN))}.</p>}
       {params.sent && <p style={{ color: "#4ade80" }}>Pay link sent.</p>}
+      {params.guideSent && <p style={{ color: "#4ade80" }}>Verification guide sent.</p>}
 
       <section>
         <h2 style={{ fontWeight: 700, marginBottom: 8 }}>Record a charge taken in Takbull (pilot)</h2>
@@ -64,6 +65,14 @@ export default async function AdsBotBillingPage({ searchParams }: { searchParams
           <button type="submit" disabled={!checkoutOn} style={{ gridColumn: "1 / -1", padding: "8px 12px", fontWeight: 700 }}>
             {checkoutOn ? "Send pay link" : "Send pay link (disabled: checkout flag off)"}
           </button>
+        </form>
+      </section>
+
+      <section>
+        <h2 style={{ fontWeight: 700, marginBottom: 8 }}>Send the advertiser-verification guide (after Google opens the task)</h2>
+        <form action={sendVerificationGuideAction} style={{ display: "grid", gap: 8, gridTemplateColumns: "1fr" }}>
+          <label>Owner email<input name="email" type="email" required style={input} /></label>
+          <button type="submit" style={{ padding: "8px 12px", fontWeight: 700 }}>Send verification guide</button>
         </form>
       </section>
 

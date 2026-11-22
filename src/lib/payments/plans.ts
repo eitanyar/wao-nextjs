@@ -12,6 +12,8 @@
  * any price literal outside this file.
  */
 
+import adsBotBillingStrings from '../google-ads/billing/adsBotBillingStrings.json';
+
 export type BillingPlanId = 'site-bot' | 'ads-bot';
 
 export interface BillingPlan {
@@ -66,7 +68,8 @@ export const ADS_BOT_MONTHLY_NET_ILS = 249;
  * (3 retries over 7 days, then pause). The 30-day money-back clock starts at the first ad impression, which is NOT a
  * billing date: it is recorded separately (readiness / poll job), never derived from this plan.
  * Checkout is behind ADS_BOT_CHECKOUT_ENABLED (src/lib/google-ads/billing/adsBotCheckoutFlag.ts).
- * chargeDescription is English for now (provider / invoice line; Hebrew wording pending waocopy).
+ * chargeDescription comes from the approved copy (adsBotBillingStrings.json checkout.charge_description, waocopy
+ * 2026-11-23); adsBotBilling.test.ts keeps it within 100 characters (a safety bound until Takbull's field limit is known).
  */
 export const ADS_BOT_PLAN: BillingPlan = Object.freeze({
   id: 'ads-bot',
@@ -80,7 +83,7 @@ export const ADS_BOT_PLAN: BillingPlan = Object.freeze({
   minimumCommitmentMonths: 0,
   cancellationEffective: 'end_of_period',
   dunning: SITE_BOT_PLAN.dunning,
-  chargeDescription: 'WAO Ads Bot - monthly management',
+  chargeDescription: adsBotBillingStrings.checkout.charge_description,
 } as const);
 
 const PLANS: Readonly<Record<BillingPlanId, BillingPlan>> = Object.freeze({ 'site-bot': SITE_BOT_PLAN, 'ads-bot': ADS_BOT_PLAN });

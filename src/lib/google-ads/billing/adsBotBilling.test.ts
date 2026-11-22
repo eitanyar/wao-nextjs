@@ -27,7 +27,7 @@ import { generateMagicLinkToken } from '../../payments/magic-link';
 import { loadLiveReadinessRecord } from '../live-readiness-store';
 import { isTermsConsentComplete, missingReadinessKeys } from '../live-readiness.js';
 import { adsBotCheckoutEnabled } from './adsBotCheckoutFlag';
-import { ADS_BOT_CHECKOUT_COPY, ADS_BOT_PAY_LINK_EMAIL_COPY, ADS_BOT_TERMS_PATH, adsBotConsentParts, buildAdsBotPayLinkEmail } from './adsBotCheckoutCopy';
+import { ADS_BOT_CHECKOUT_COPY, ADS_BOT_PAY_LINK_EMAIL_COPY, ADS_BOT_TERMS_PATH, ADS_BOT_VERIFICATION_GUIDE_COPY, adsBotConsentParts, buildAdsBotPayLinkEmail, buildAdsBotVerificationGuideEmail } from './adsBotCheckoutCopy';
 import { ADS_BOT_TERMS_SHA256, ADS_BOT_TERMS_VERSION } from './adsBotTerms';
 import { ADS_BOT_PAY_PATH, buildPayLinkUrl, createPayLinkToken, verifyPayLinkToken } from './adsBotPayLink';
 import {
@@ -107,6 +107,25 @@ test('copy: byte-exact from docs/copy/ads-bot-new-strings-2026-11-22.json; its q
   assert.equal(email.subject, ADS_BOT_PAY_LINK_EMAIL_COPY.subject);
   assert.ok(email.text.includes('Dana') && email.text.includes('https://wao.co.il/google-ads/pay?t=x'));
   assert.doesNotMatch(email.text, /\{first_name\}|\{pay_link\}/);
+});
+
+test('copy (2026-11-23): the verification guide, invalid-link text and charge description come from the same source', () => {
+  const source = JSON.parse(fs.readFileSync(path.join(root, 'docs/copy/ads-bot-new-strings-2026-11-22.json'), 'utf8'));
+  const local = JSON.parse(fs.readFileSync(path.join(root, 'src/lib/google-ads/billing/adsBotBillingStrings.json'), 'utf8'));
+  assert.deepEqual(local.advertiser_verification_guide, source.advertiser_verification_guide);
+  assert.deepEqual(Object.keys(local).sort(), ['_source', 'advertiser_verification_guide', 'checkout', 'pay_link_email']);
+  assert.deepEqual({ title: ADS_BOT_VERIFICATION_GUIDE_COPY.title, intro: ADS_BOT_VERIFICATION_GUIDE_COPY.intro, steps: [...ADS_BOT_VERIFICATION_GUIDE_COPY.steps] }, source.advertiser_verification_guide);
+  const guide = buildAdsBotVerificationGuideEmail();
+  assert.equal(guide.subject, source.advertiser_verification_guide.title);
+  assert.equal(guide.text, [source.advertiser_verification_guide.intro, ...source.advertiser_verification_guide.steps.map((step: string, i: number) => `${i + 1}. ${step}`)].join('\n\n'));
+  // The plan's provider / invoice line is the approved charge description, within a 100-character safety bound.
+  assert.equal(ADS_BOT_PLAN.chargeDescription, source.checkout.charge_description);
+  assert.ok(ADS_BOT_PLAN.chargeDescription.length <= 100, `charge description is ${ADS_BOT_PLAN.chargeDescription.length} chars`);
+  // No English placeholder is left on the pay page.
+  const client = fs.readFileSync(path.join(root, 'src/components/google-ads/AdsBotPayClient.tsx'), 'utf8');
+  assert.doesNotMatch(client, /PLACEHOLDER/);
+  assert.match(client, /\{COPY\.invalid_link\}/);
+  assert.equal(ADS_BOT_CHECKOUT_COPY.invalid_link, source.checkout.invalid_link);
 });
 
 test('terms version is pinned to the exact bytes of the Ads Bot terms (bump both constants when the terms change)', () => {

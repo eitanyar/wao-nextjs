@@ -9,8 +9,6 @@ import { ADS_BOT_CHECKOUT_COPY as COPY, ADS_BOT_TERMS_PATH, adsBotConsentParts }
 // hosted-page provider (Takbull, later) gets redirectUrl from init instead.
 // PRESENTATION IS MINIMAL ON PURPOSE: layout / RTL polish is Maya's (ux) pass.
 
-/** English placeholder: no approved Hebrew string exists for an invalid / expired pay link yet (waocopy pending). */
-export const ADS_BOT_PAY_INVALID_LINK_PLACEHOLDER = "This payment link is invalid or has expired.";
 
 const consent = adsBotConsentParts();
 
@@ -22,8 +20,8 @@ export default function AdsBotPayClient({ token }: { token: string | null }) {
 
   if (!token) {
     return (
-      <main dir="ltr" style={{ maxWidth: 560, margin: "48px auto", padding: "0 16px" }}>
-        <p>{ADS_BOT_PAY_INVALID_LINK_PLACEHOLDER}</p>
+      <main dir="rtl" style={{ maxWidth: 560, margin: "48px auto", padding: "0 16px" }}>
+        <p>{COPY.invalid_link}</p>
       </main>
     );
   }

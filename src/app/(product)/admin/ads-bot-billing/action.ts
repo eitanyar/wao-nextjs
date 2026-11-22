@@ -5,7 +5,8 @@ import { redirect } from 'next/navigation';
 import { ADMIN_COOKIE_NAME, verifyAdminToken } from '@/lib/admin-auth';
 import { buildAdsBotPayLinkMessage, recordManualAdsBotCharge } from '@/lib/google-ads/billing/adsBotBilling';
 import { adsBotCheckoutEnabled } from '@/lib/google-ads/billing/adsBotCheckoutFlag';
-import { sendAdsBotPayLinkEmail } from '@/lib/payments/email';
+import { sendAdsBotPayLinkEmail, sendAdsBotVerificationGuideEmail } from '@/lib/payments/email';
+import { buildAdsBotVerificationGuideEmail } from '@/lib/google-ads/billing/adsBotCheckoutCopy';
 
 const PAGE = '/admin/ads-bot-billing';
 
@@ -52,4 +53,19 @@ export async function sendPayLinkAction(formData: FormData) {
   }
   await sendAdsBotPayLinkEmail({ to: email, subject: message.subject, text: message.text });
   redirect(`${PAGE}?sent=1`);
+}
+
+const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+/**
+ * Emails the advertiser-verification guide (approved copy, advertiser_verification_guide) to the owner, after Google
+ * opens his verification task. Admin-only; not behind ADS_BOT_CHECKOUT_ENABLED (the pilot is provisioned by hand).
+ */
+export async function sendVerificationGuideAction(formData: FormData) {
+  await requireAdmin();
+  const email = field(formData, 'email');
+  if (!EMAIL.test(email)) redirect(`${PAGE}?error=invalid_email`);
+  const message = buildAdsBotVerificationGuideEmail();
+  await sendAdsBotVerificationGuideEmail({ to: email, subject: message.subject, text: message.text });
+  redirect(`${PAGE}?guideSent=1`);
 }

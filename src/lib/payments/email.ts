@@ -336,3 +336,8 @@ export async function sendBillingStaffAlertEmail(params: { subject: string; text
 export async function sendAdsBotPayLinkEmail(params: { to: string; subject: string; text: string }): Promise<void> {
   await sendBillingEmail({ to: params.to, subject: params.subject, text: params.text });
 }
+
+/** The Ads Bot advertiser-verification guide email (copy from adsBotCheckoutCopy.ts, plain text). Staff-sent. */
+export async function sendAdsBotVerificationGuideEmail(params: { to: string; subject: string; text: string }): Promise<void> {
+  await sendBillingEmail({ to: params.to, subject: params.subject, text: params.text });
+}
