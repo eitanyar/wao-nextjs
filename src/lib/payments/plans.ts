@@ -12,8 +12,10 @@
  * any price literal outside this file.
  */
 
+export type BillingPlanId = 'site-bot' | 'ads-bot';
+
 export interface BillingPlan {
-  readonly id: 'site-bot';
+  readonly id: BillingPlanId;
   /** Price before VAT, in `currency` major units. This is the number the customer is quoted ("199 + VAT"). */
   readonly netAmount: number;
   readonly currency: 'ILS';
@@ -53,12 +55,35 @@ export const SITE_BOT_PLAN: BillingPlan = Object.freeze({
 
 /**
  * Ads Bot (Google Ads management): the monthly management fee before VAT, in ILS, as quoted on /google-ads
- * ("249 + VAT a month"; the ad budget is paid to Google separately). Not a BillingPlan yet: Ads Bot checkout is not
- * built on this module. The /google-ads copy and JSON-LD read the price from here (src/lib/google-ads/landingCopy.ts).
+ * ("249 + VAT a month"; the ad budget is paid to Google separately). The /google-ads copy and JSON-LD read the price
+ * from here (src/lib/google-ads/landingCopy.ts); ADS_BOT_PLAN below is built on it.
  */
 export const ADS_BOT_MONTHLY_NET_ILS = 249;
 
-const PLANS: Readonly<Record<BillingPlan['id'], BillingPlan>> = Object.freeze({ 'site-bot': SITE_BOT_PLAN });
+/**
+ * Ads Bot plan (mission 2026-11-22, Decision C): same billing shape as Site-Bot. First charge on the sign-up day, then
+ * monthly on the same calendar day; month-to-month; cancel effective at the end of the paid month; Site-Bot dunning
+ * (3 retries over 7 days, then pause). The 30-day money-back clock starts at the first ad impression, which is NOT a
+ * billing date: it is recorded separately (readiness / poll job), never derived from this plan.
+ * Checkout is behind ADS_BOT_CHECKOUT_ENABLED (src/lib/google-ads/billing/adsBotCheckoutFlag.ts).
+ * chargeDescription is English for now (provider / invoice line; Hebrew wording pending waocopy).
+ */
+export const ADS_BOT_PLAN: BillingPlan = Object.freeze({
+  id: 'ads-bot',
+  netAmount: ADS_BOT_MONTHLY_NET_ILS,
+  currency: 'ILS',
+  vat: SITE_BOT_PLAN.vat,
+  interval: 'month',
+  intervalCount: 1,
+  billingAnchor: 'signup_date',
+  trialDays: 0,
+  minimumCommitmentMonths: 0,
+  cancellationEffective: 'end_of_period',
+  dunning: SITE_BOT_PLAN.dunning,
+  chargeDescription: 'WAO Ads Bot - monthly management',
+} as const);
+
+const PLANS: Readonly<Record<BillingPlanId, BillingPlan>> = Object.freeze({ 'site-bot': SITE_BOT_PLAN, 'ads-bot': ADS_BOT_PLAN });
 
 export function getBillingPlan(id: string | null | undefined): BillingPlan | null {
   return id && Object.prototype.hasOwnProperty.call(PLANS, id) ? PLANS[id as BillingPlan['id']] : null;
@@ -69,7 +94,12 @@ function roundMoney(value: number): number {
   return Math.round((value + Number.EPSILON) * 100) / 100;
 }
 
-/** The VAT amount added to one period's net price. */
+/**
+ * The VAT amount added to one period's net price. THE ONLY place VAT is computed (every total derives from it).
+ * ASSUMPTION (still OPEN, Takbull question 8): WAO quotes net, adds VAT itself and charges the gross total; whether
+ * Takbull's CreateDocument expects the gross or net + VAT is unconfirmed. If Takbull computes VAT itself, change only
+ * this function and the invoice mapping (providers/takbull-fields.ts).
+ */
 export function planVatAmount(plan: BillingPlan): number {
   return roundMoney(plan.netAmount * plan.vat.rate);
 }

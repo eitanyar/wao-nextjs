@@ -94,7 +94,7 @@ function setup({ record, liveFlag, campaignMode = 'live', sessionClientId = CLIE
     name => {
       if (name === 'fs') return fs;
       if (name === 'path') return path;
-      if (name === '@/lib/dataRoots') return dataRoots;
+      if (name === '../dataRoots') return dataRoots;
       throw new Error(`unexpected store import: ${name}`);
     },
     {},
@@ -424,5 +424,7 @@ test('the readiness gate never reads or writes the real data/clients during this
   // Every harness points WAO_CLIENTS_DIR at a temp dir; the store resolves only through clientsDir().
   const storeSrc = fs.readFileSync(path.join(srcDir, 'lib', 'google-ads', 'live-readiness-store.ts'), 'utf8');
   assert.match(storeSrc, /path\.join\(clientsDir\(\), clientId, 'live-readiness\.json'\)/);
-  assert.doesNotMatch(storeSrc, /writeFileSync|appendFileSync|renameSync/);
+  // The gate's read path never writes (the billing write helper lives below it in the same store).
+  const readFn = storeSrc.slice(storeSrc.indexOf('export function loadLiveReadinessRecord'), storeSrc.indexOf('export type SystemReadinessKey'));
+  assert.doesNotMatch(readFn, /writeFileSync|appendFileSync|renameSync|mkdirSync/);
 });

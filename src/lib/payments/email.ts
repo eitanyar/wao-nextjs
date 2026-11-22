@@ -316,3 +316,23 @@ export async function sendBillingAdminAlertEmail(params: {
 
   await sendBillingEmail({ to, subject, text });
 }
+
+/**
+ * Generic staff alert on the billing-alert channel (BILLING_ADMIN_ALERT_EMAIL, same as sendBillingAdminAlertEmail).
+ * Used by the Ads Bot cancel hook (adsBotBilling.ts). English, plain text. No-ops (logs) when the env var is unset.
+ * Returns true when an email was handed to the transport.
+ */
+export async function sendBillingStaffAlertEmail(params: { subject: string; text: string }): Promise<boolean> {
+  const to = process.env.BILLING_ADMIN_ALERT_EMAIL;
+  if (!to) {
+    console.warn('[billing-email] BILLING_ADMIN_ALERT_EMAIL not configured — skipping staff alert:', params.subject);
+    return false;
+  }
+  await sendBillingEmail({ to, subject: params.subject, text: params.text });
+  return true;
+}
+
+/** The Ads Bot pay-link email (copy from adsBotCheckoutCopy.ts, plain text). */
+export async function sendAdsBotPayLinkEmail(params: { to: string; subject: string; text: string }): Promise<void> {
+  await sendBillingEmail({ to: params.to, subject: params.subject, text: params.text });
+}

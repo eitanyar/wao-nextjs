@@ -12,6 +12,7 @@ function harness({ enabled = 'true', plan = 'site-bot', alert = 'ok', getThrows 
   const email = mockEmail({ alert });
   const logs = recordingConsole();
   const confirmations = [];
+  const adsBotCancels = [];
   const result = outcome ?? { ok: true, subscriptionId, cancelAtPeriodEnd: true, effectiveAt: EFFECTIVE };
   const route = load('src/app/api/subscriptions/cancel/route.ts', {
     'next/server': { NextResponse: { json: (body, init) => Response.json(body, init) } },
@@ -23,10 +24,11 @@ function harness({ enabled = 'true', plan = 'site-bot', alert = 'ok', getThrows 
     '@/lib/site-bot/clientMessages': s.store,
     '@/lib/site-bot/clientMessageEmail': email.module,
     '@/lib/site-bot/cancelNotices': { sendCancelConfirmation: async (id) => { confirmations.push(id); return 'copy_pending'; } },
+    '@/lib/google-ads/billing/adsBotBilling': { notifyAdsBotCancellation: async (id, effectiveAt) => { adsBotCancels.push({ id, effectiveAt }); return plan === 'ads-bot'; } },
     '@/lib/showcase/consentStore': { withdrawShowcaseConsent: (params) => { if (withdrawThrows) throw new Error('disk full'); withdrawals.push(JSON.parse(JSON.stringify(params))); return null; } },
   }, { env: enabled ? { SITE_BOT_CLIENT_MESSAGES_ENABLED: enabled } : {}, console: logs.console });
   const cancel = () => route.POST(jsonRequest('http://localhost/api/subscriptions/cancel', { token: 'f'.repeat(64) }));
-  return { ...s, subscriptionId, email, logs, cancel, confirmations, withdrawals };
+  return { ...s, subscriptionId, email, logs, cancel, confirmations, withdrawals, adsBotCancels };
 }
 
 const expected = (subscriptionId) => ({ success: true, subscriptionId, cancelAtPeriodEnd: true, effectiveAt: EFFECTIVE });
@@ -112,4 +114,14 @@ test('showcase consent: a received cancel withdraws it with reason "cancelled"; 
   assert.equal((await refused.cancel()).status, 401);
   assert.equal(refused.withdrawals.length, 0, 'a refused cancel withdraws nothing');
   refused.cleanup();
+});
+
+test('Ads Bot (2026-11-22): every successful cancel hands its id and effective date to the Ads Bot hook; response unchanged', async () => {
+  for (const plan of ['ads-bot', 'site-bot']) {
+    const h = harness({ plan, enabled: '' });
+    const response = await h.cancel();
+    assert.deepEqual(await response.json(), expected(h.subscriptionId));
+    assert.deepEqual(h.adsBotCancels, [{ id: h.subscriptionId, effectiveAt: EFFECTIVE }]);
+    h.cleanup();
+  }
 });

@@ -5,6 +5,7 @@ import { clientMessagesEnabled, createCancelNoticeItem, markStaffAlerted } from 
 import { sendClientMessageStaffAlert } from '@/lib/site-bot/clientMessageEmail';
 import { sendCancelConfirmation } from '@/lib/site-bot/cancelNotices';
 import { withdrawShowcaseConsent } from '@/lib/showcase/consentStore';
+import { notifyAdsBotCancellation } from '@/lib/google-ads/billing/adsBotBilling';
 
 /**
  * Site-Bot support queue (2026-11-13): when the client-message feature is on and the cancelled row is a Site-Bot plan,
@@ -56,6 +57,9 @@ export async function POST(req: Request) {
     await queueSiteBotCancelNotice(outcome.subscriptionId, outcome.effectiveAt, outcome.cancelAtPeriodEnd === true);
     // Site-Bot cancel confirmation to the owner (cancelNotices.ts): Site-Bot rows only, copy-gated, one-time, never throws.
     await sendCancelConfirmation(outcome.subscriptionId);
+    // Ads Bot (2026-11-22): staff alert to pause the campaigns, take the landing page down 30 days later and unlink
+    // the MCC. Ads Bot rows only; never throws, never affects the response.
+    await notifyAdsBotCancellation(outcome.subscriptionId, outcome.effectiveAt);
 
     return NextResponse.json({
       success: true,

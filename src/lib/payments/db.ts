@@ -328,7 +328,11 @@ export interface SubscriptionEventRow {
     | 'cancellation_effective'
     // Site-Bot support box (2026-11-13): links a subscription to the business it was bought for
     // (`{ sessionId, businessName, ownerMobile }` in metadata). Written once at checkout. Additive only.
-    | 'site_bot_session_linked';
+    | 'site_bot_session_linked'
+    // Ads Bot billing (2026-11-22): links a subscription to its Ads Bot client (`{ clientId }`), and records a charge
+    // taken by hand in Takbull's back office (`{ takbullReference, amount, chargedAt }`). Additive only.
+    | 'ads_bot_client_linked'
+    | 'manual_charge_recorded';
   metadata: string | null;
   created_at: string;
 }

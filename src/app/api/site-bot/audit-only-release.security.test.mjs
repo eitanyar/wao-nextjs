@@ -157,6 +157,9 @@ test('paid handlers are imported only by their own gated stub', () => {
   walk('src');
   assert.deepEqual(offenders.sort(), [
     'src/app/(app)/site-bot/start/page.tsx',
+    // Ads Bot checkout (2026-11-22): gated by ADS_BOT_CHECKOUT_ENABLED, covered by google-ads/checkout/checkout-flag.test.mjs.
+    'src/app/api/google-ads/checkout/callback/route.ts',
+    'src/app/api/google-ads/checkout/init/route.ts',
     'src/app/api/site-bot/checkout/callback/route.ts',
     'src/app/api/site-bot/checkout/init/route.ts',
     'src/app/api/site-bot/connect-gbp/route.ts',
