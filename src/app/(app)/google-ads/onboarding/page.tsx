@@ -6,6 +6,7 @@ import type { CollectedData } from "@/lib/bot/prompts";
 import { deliveryModelFollowUp, deliveryModelOptions } from "@/lib/bot/delivery-model";
 import { resolveOnboardingDemoEntry } from "@/lib/google-ads/onboarding-demo";
 import { hasFirstAdPreview, quickIntakeProgress } from "@/lib/google-ads/first-ad-preview";
+import { applyUpload, isSingleImageUpload, uploadFeatures, uploadKindFor, UPLOAD_STRINGS } from "@/lib/google-ads/intakeUploads";
 import GoogleAdPreview from "@/components/google-ads/GoogleAdPreview";
 // The homepage CTA label, reused verbatim for the mobile jump-to-ad button (single source, never retyped).
 import homepageCopy from "@/content/astra-homepage-copy.json";
@@ -84,6 +85,8 @@ const DEMO_PROFILE: CollectedData = {
   turnIndex: 12,
 };
 
+const UPLOAD_FEATURES = uploadFeatures();
+
 export default function OnboardingPage() {
   const isStaff = useOnboardingStaff();
   const [mode, setMode] = useState<"test" | "live">("test");
@@ -111,6 +114,14 @@ export default function OnboardingPage() {
   const [lpGenerating, setLpGenerating] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [awaitingProfilePhoto, setAwaitingProfilePhoto] = useState(false);
+  // The logo / work-photo turns exist only once their strings do (intakeUploads.ts); until then these stay false.
+  const [awaitingLogo, setAwaitingLogo] = useState(false);
+  const [awaitingWorkPhotos, setAwaitingWorkPhotos] = useState(false);
+  const uploadKind = uploadKindFor({
+    awaitingLogo: awaitingLogo && UPLOAD_FEATURES.logoTurn,
+    awaitingProfilePhoto,
+    awaitingWorkPhotos: awaitingWorkPhotos && UPLOAD_FEATURES.workPhotosTurn,
+  });
   const [sandboxVerificationStatus, setSandboxVerificationStatus] = useState<"idle" | "checking" | "ready" | "error">("idle");
   const [sandboxVerificationMessage, setSandboxVerificationMessage] = useState<string | null>(null);
   const sessionIdRef = useRef("");
@@ -319,6 +330,8 @@ export default function OnboardingPage() {
       if (data.copy) setCopy(data.copy);
       if (data.budgetRecommendation) setBudgetRecommendation(data.budgetRecommendation as BudgetRecommendation);
       if (typeof data.awaitingProfilePhoto === "boolean") setAwaitingProfilePhoto(data.awaitingProfilePhoto);
+      if (typeof data.awaitingLogo === "boolean") setAwaitingLogo(data.awaitingLogo);
+      if (typeof data.awaitingWorkPhotos === "boolean") setAwaitingWorkPhotos(data.awaitingWorkPhotos);
 
       // Answer 3 returns the first ad. Its page preview builds in the background so the owner can keep
       // answering (or just look) meanwhile. Nothing is deployed or charged from here.
@@ -385,26 +398,22 @@ export default function OnboardingPage() {
       const { urls } = await res.json();
       if (!urls?.length) return;
 
-      const isProfile = awaitingProfilePhoto;
-      const profileUrl = isProfile ? urls[0] : undefined;
+      // Tagged by the turn it was uploaded in (logo / profile / work / trust): intakeUploads.ts.
+      const kind = uploadKind;
+      const isProfile = kind === "profile";
+      const single = isSingleImageUpload(kind);
 
       // Show thumbnails as a user message
       const uploadMsg: Message = {
         role: "user",
         content: isProfile ? "העלאתי תמונת פרופיל" : `העלאתי ${urls.length} תמונות`,
-        images: isProfile ? [urls[0]] : urls,
+        images: single ? [urls[0]] : urls,
       };
       const updatedMessages = [...messages, uploadMsg];
       setMessages(updatedMessages);
 
-      // Store in collectedData — profile photo gets its own field
-      const updatedData: CollectedData = isProfile
-        ? { ...collectedData, profilePhotoUrl: profileUrl }
-        : {
-            ...collectedData,
-            trustAssetUrls: [...(collectedData.trustAssetUrls || []), ...urls],
-            hasTrustAssets: true,
-          };
+      // Store in collectedData — logo, profile photo and work photos get their own fields
+      const updatedData: CollectedData = applyUpload(collectedData, kind, single ? [urls[0]] : urls);
       setCollectedData(updatedData);
 
       // Let the bot acknowledge the upload
@@ -421,6 +430,10 @@ export default function OnboardingPage() {
       if (data.currentState) conversionsRef.current?.stateChanged(trackingContext(), currentState, data.currentState, data.collectedData ?? updatedData);
       if (typeof data.awaitingProfilePhoto === "boolean") setAwaitingProfilePhoto(data.awaitingProfilePhoto);
       else if (isProfile) setAwaitingProfilePhoto(false); // auto-clear after profile upload
+      if (typeof data.awaitingLogo === "boolean") setAwaitingLogo(data.awaitingLogo);
+      else if (kind === "logo") setAwaitingLogo(false);
+      if (typeof data.awaitingWorkPhotos === "boolean") setAwaitingWorkPhotos(data.awaitingWorkPhotos);
+      else if (kind === "work") setAwaitingWorkPhotos(false);
     } finally {
       setIsUploading(false);
       setIsSubmitting(false);
@@ -814,13 +827,13 @@ export default function OnboardingPage() {
                 {inputHelperText}
               </div>
               <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
-                {/* Hidden file input — single file for profile photo, multi otherwise */}
+                {/* Hidden file input — single file for profile photo / logo, multi otherwise */}
                 <input
                   ref={fileInputRef}
                   type="file"
                   disabled={!queryReady || isDemo}
                   accept="image/jpeg,image/png,image/webp,image/gif"
-                  multiple={!awaitingProfilePhoto}
+                  multiple={!isSingleImageUpload(uploadKind)}
                   style={{ display: "none" }}
                   onChange={handleUpload}
                 />
@@ -829,7 +842,7 @@ export default function OnboardingPage() {
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
                   disabled={!queryReady || isDemo || isSubmitting || isUploading || currentState === "COMPLETED"}
-                  title={awaitingProfilePhoto ? "העלה תמונה מקצועית אחת שלך" : "העלה תמונות וצילומי מסך"}
+                  title={uploadKind === "logo" && UPLOAD_STRINGS.logoUploadTitle ? UPLOAD_STRINGS.logoUploadTitle : uploadKind === "work" && UPLOAD_STRINGS.workPhotosUploadTitle ? UPLOAD_STRINGS.workPhotosUploadTitle : awaitingProfilePhoto ? "העלה תמונה מקצועית אחת שלך" : "העלה תמונות וצילומי מסך"}
                   style={{
                     background: "var(--subtle)",
                     border: "1px solid var(--border)",

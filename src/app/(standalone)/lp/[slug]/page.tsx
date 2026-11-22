@@ -8,6 +8,7 @@ import { VERTICAL_ASSETS } from '@/lib/lp/verticalAssets';
 import type { CollectedData } from '@/lib/bot/prompts';
 import type { LPCopy } from '@/lib/lp/lpCopyPrompt';
 import type { Metadata } from 'next';
+import { galleryImageAlt, galleryPhotoUrls, logoUpload, pickHeroImageUrl, uploadFeatures, UPLOAD_STRINGS } from '@/lib/google-ads/intakeUploads';
 
 interface LPRecord {
   collectedData: CollectedData;
@@ -54,11 +55,20 @@ export default async function LPPage({ params }: Props) {
   const verticalKey = detectVertical(collectedData.businessNiche || '');
   const theme = VERTICAL_THEMES[verticalKey];
   const assets = VERTICAL_ASSETS[verticalKey];
-  // Prefer the client's own photo (trust asset first — usually the strongest
-  // "real local provider" shot per Dror's audit — then profile photo) over
-  // generic vertical stock. Stock stays as the non-blocking fallback so the
+  // Prefer the client's own photo (the first WORK photo — the strongest "real
+  // local provider" shot per Dror's audit — then the profile photo) over
+  // generic vertical stock. Never a T21 upload (it may be a WhatsApp / Google
+  // screenshot) and never the logo: intakeUploads.ts pickHeroImageUrl, shared
+  // with cloudflare-pages/deploy. Stock stays the non-blocking fallback so the
   // LP never stalls on a missing upload.
-  const heroImageUrl = collectedData.trustAssetUrls?.[0] || collectedData.profilePhotoUrl || assets.heroImages[0].url;
+  const heroImageUrl = pickHeroImageUrl(collectedData, assets.heroImages[0].url);
+  // Ads Bot logo (header) + work-photo gallery (3-6). The gallery waits for its strings (intakeUploadStrings.json).
+  const businessName = collectedData.businessName || collectedData.businessNiche || '';
+  const logoUrl = logoUpload(collectedData);
+  const galleryUrls = uploadFeatures().gallery ? galleryPhotoUrls(collectedData) : [];
+  const gallery = galleryUrls.length
+    ? { heading: UPLOAD_STRINGS.galleryHeading as string, photos: galleryUrls.map((src, i) => ({ src, alt: galleryImageAlt(UPLOAD_STRINGS.galleryImageAlt as string, businessName, i + 1) })) }
+    : undefined;
 
   // Pass only the fields LandingPage actually renders — it's a client
   // component, so the full CollectedData record (capacityUnit, avgJobValue,
@@ -80,6 +90,8 @@ export default async function LPPage({ params }: Props) {
       data={publicData}
       heroImageUrl={heroImageUrl}
       slug={slug}
+      {...(logoUrl ? { logoUrl } : {})}
+      {...(gallery ? { gallery } : {})}
     />
   );
 }

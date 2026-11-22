@@ -160,14 +160,19 @@ test('reviewing consent keeps desktop allocation and reserves measured mobile ca
 });
 
 test('LP hero image wiring is identical (real photo > stock fallback) across active render/deploy call sites', () => {
-  const expected = /collectedData\.trustAssetUrls\?\.\[0\]\s*\|\|\s*collectedData\.profilePhotoUrl\s*\|\|\s*assets\.heroImages\[0\]\.url/;
+  // Ads Bot pages (2026-11-22): one shared rule, the first WORK photo > profile photo > stock; never a T21 upload (may be a
+  // screenshot) and never the logo (src/lib/google-ads/intakeUploads.ts pickHeroImageUrl).
+  const adsExpected = /const heroImageUrl = pickHeroImageUrl\(collectedData, assets\.heroImages\[0\]\.url\);/;
   for (const [name, code] of [
     ['cloudflare-pages/deploy', cloudflarePagesDeploy],
-    ['site-bot/deploy', siteBotDeploy],
     ['lp/[slug]/page.tsx', lpSlugPage],
   ]) {
-    assert.match(code, expected, `${name} must use the real-photo-first fallback chain`);
+    assert.match(code, adsExpected, `${name} must use the shared work-photo-first hero pick`);
+    assert.doesNotMatch(code, /trustAssetUrls\?\.\[0\]/, `${name} must never pick a T21 upload as the hero`);
   }
+  // Site Bot keeps its own chain, unchanged by the Ads Bot work.
+  const siteBotExpected = /collectedData\.trustAssetUrls\?\.\[0\]\s*\|\|\s*collectedData\.profilePhotoUrl\s*\|\|\s*assets\.heroImages\[0\]\.url/;
+  assert.match(siteBotDeploy, siteBotExpected, 'site-bot/deploy must use the real-photo-first fallback chain');
 });
 
 test('legacy site-bot edit route has no edit/publish imports and is fixed disabled', () => {

@@ -27,6 +27,10 @@ interface LandingPageProps {
   heroImageUrl: string;
   /** Used as `source: 'lp-<slug>'` on lead records and passed through to /api/leads. */
   slug?: string;
+  /** The owner's logo upload (intakeUploads.ts logoUpload), shown in the header instead of the text name. */
+  logoUrl?: string;
+  /** 3-6 work photos with their heading and alt texts (strings from intakeUploadStrings.json). Unset = no section. */
+  gallery?: { heading: string; photos: ReadonlyArray<{ src: string; alt: string }> };
 }
 
 // Click identifier captured from the URL — gclid (desktop/Android) or wbraid/gbraid
@@ -45,7 +49,7 @@ function uid() {
   return Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
 }
 
-export default function LandingPage({ theme, assets, copy, data, heroImageUrl, slug = '' }: LandingPageProps) {
+export default function LandingPage({ theme, assets, copy, data, heroImageUrl, slug = '', logoUrl, gallery }: LandingPageProps) {
   const phone = data.phone || '';
   const whatsapp = data.whatsappNumber || data.phone || '';
   const whatsappHref = `https://wa.me/972${whatsapp.replace(/^0/, '').replace(/[^0-9]/g, '')}`;
@@ -214,7 +218,10 @@ export default function LandingPage({ theme, assets, copy, data, heroImageUrl, s
         }}
       >
         <div style={{ fontFamily: t.fontHeading, fontWeight: t.headingWeight, fontSize: '1rem', color: t.primary, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-          {businessName}
+          {logoUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element -- raw intake upload of unknown size; internal preview only
+            <img src={logoUrl} alt={businessName} style={{ display: 'block', height: '40px', width: 'auto', maxWidth: '200px', objectFit: 'contain' }} />
+          ) : businessName}
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '2px' }}>
@@ -383,6 +390,25 @@ export default function LandingPage({ theme, assets, copy, data, heroImageUrl, s
           </div>
         </div>
       </section>
+
+      {/* ── Work photos (3-6, Ads Bot work-photo turn) ───────────── */}
+      {gallery && gallery.photos.length > 0 && (
+        <section id="gallery" aria-labelledby="gallery-heading" style={{ padding: '40px 20px', backgroundColor: t.surface, borderBottom: `1px solid ${t.border}` }}>
+          <div style={{ maxWidth: '700px', margin: '0 auto' }}>
+            <h2 id="gallery-heading" style={{ fontFamily: t.fontHeading, fontWeight: t.headingWeight, fontSize: '1.4rem', color: t.primary, marginBottom: '20px', textAlign: 'center' }}>
+              {gallery.heading}
+            </h2>
+            <ul role="list" style={{ listStyle: 'none', margin: 0, padding: 0, display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '10px' }}>
+              {gallery.photos.map((photo) => (
+                <li key={photo.src}>
+                  {/* eslint-disable-next-line @next/next/no-img-element -- raw intake upload of unknown size; internal preview only */}
+                  <img src={photo.src} alt={photo.alt} loading="lazy" decoding="async" style={{ display: 'block', width: '100%', aspectRatio: '4 / 3', objectFit: 'cover', borderRadius: t.radiusSm }} />
+                </li>
+              ))}
+            </ul>
+          </div>
+        </section>
+      )}
 
       {/* ── Why Us / Guarantee ──────────────────────────────────── */}
       <section id="reviews" style={{ padding: '40px 20px', backgroundColor: t.surface }}>

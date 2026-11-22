@@ -37,6 +37,9 @@ const page = load(path.join(dir, 'page.tsx'), {
   '@/lib/bot/delivery-model': { deliveryModelOptions: [], deliveryModelFollowUp: () => '' },
   '@/lib/google-ads/onboarding-demo': { resolveOnboardingDemoEntry: () => ({ isDemo: false, mode: 'test' }) },
   '@/lib/google-ads/first-ad-preview': firstAdPreview,
+  '@/lib/google-ads/intakeUploads': load(path.join(dir, '../../../../lib/google-ads/intakeUploads.ts'), {
+    './intakeUploadStrings.json': JSON.parse(fs.readFileSync(path.join(dir, '../../../../lib/google-ads/intakeUploadStrings.json'), 'utf8')),
+  }),
   '@/content/astra-homepage-copy.json': JSON.parse(fs.readFileSync(path.join(dir, '../../../../content/astra-homepage-copy.json'), 'utf8')),
   '@/components/google-ads/GoogleAdPreview': { __esModule: true, default: () => null },
   './staff-context': staff,

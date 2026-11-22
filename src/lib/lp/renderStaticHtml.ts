@@ -6,6 +6,7 @@ import { buildFraudBlockerTrackerHtml } from '../fraud-blocker/tracker';
 import { TEMPLATE_STRINGS } from './generationData';
 import { SITE_DESIGN_LABELS } from './siteDesignLabels';
 import { actionBar, heroHoursLine, heroPhotoSlot, icon, ownerImageUrl, siteCss, siteFontHead, siteHeader, skipLink, SITE_ICON_SPRITE, trustFacts, type SiteNavLink } from './siteDesign';
+import { ADS_LP_GALLERY_CSS, adsLpBrandLogo, adsLpGalleryHtml, renderableGallery, type AdsLpGallery, type AdsLpImage } from './adsLpUploads';
 
 /**
  * M2b.1c: consent row tap targets. The whole <label> is the checkbox hit area (>= 44px tall), the checkbox itself is
@@ -42,6 +43,10 @@ export interface RenderStaticHtmlParams {
   fraudBlockerSid?: string;
   /** Redesign A (item 1): the nav of the one header ('site' mode, from renderSitePages). Unset = no nav (the ads LP). */
   siteNav?: { label: string; links: SiteNavLink[] };
+  /** Ads LP only (ignored in 'site' mode): the owner's prepared logo (adsLpImages.ts), shown in the header. Unset = text name. */
+  logo?: AdsLpImage;
+  /** Ads LP only (ignored in 'site' mode): 3-6 prepared work photos + heading. Unset / too few = no section. */
+  gallery?: AdsLpGallery;
 }
 
 /** Redesign A defect fix: the form button sends the form; it never repeats the call label (heroCta). */
@@ -69,6 +74,10 @@ export function renderStaticHtml(p: RenderStaticHtmlParams): string {
   const formConvLabel = p.formConversionLabel || '';
   // Redesign A (item 7): no stock photo anywhere (not the hero, not og:image).
   const ogImage = ownerImageUrl(heroImageUrl);
+  // Ads Bot logo + work-photo gallery (adsLpUploads.ts). Neither = byte-identical output to the page before them.
+  const brandLogo = isSite ? undefined : adsLpBrandLogo(p.logo, businessName);
+  const gallery = isSite ? null : renderableGallery(p.gallery);
+  const uploadsCss = `${brandLogo ? brandLogo.css : ''}${gallery ? ADS_LP_GALLERY_CSS : ''}`;
 
   const faqHtml = copy.faqItems.map(item => `
     <div style="background:${t.surface};border:1px solid ${t.border};border-radius:${t.radiusMd};padding:16px 18px;">
@@ -123,7 +132,7 @@ ${ogImage ? `  <meta property="og:image" content="${ogImage}" />\n` : ''}  <meta
     #form-error { display: none; text-align: center; color: #e53e3e; font-size: 0.9rem; padding: 8px; }
     .submit-btn { min-height: 52px; padding: 15px; background: var(--cta); color: ${t.ctaText}; border: none; border-radius: ${t.radiusSm}; font-weight: 800; font-size: 1.05rem; cursor: pointer; width: 100%; }
     .submit-btn:disabled { opacity: 0.6; cursor: not-allowed; }
-    ${siteCss(t)}
+    ${siteCss(t)}${uploadsCss ? `\n    ${uploadsCss}` : ''}
   </style>
 </head>
 <body>
@@ -131,7 +140,7 @@ ${SITE_ICON_SPRITE}
 ${skipLink()}
 
   <!-- Header -->
-${siteHeader({ businessName, phone, phoneHref, nav: p.siteNav, homeHref: p.siteNav ? '/' : null, callAttrs: phoneClick })}
+${siteHeader({ businessName, phone, phoneHref, nav: p.siteNav, homeHref: p.siteNav ? '/' : null, callAttrs: phoneClick, ...(brandLogo ? { brandHtml: brandLogo.html } : {}) })}
 
   <main id="main">
   <section class="hero on-dark" data-section="hero">
@@ -167,7 +176,7 @@ ${trustFacts(copy.trustBarItems)}
         ${serviceHtml}
       </ul>
     </div>
-  </section>
+  </section>${gallery ? adsLpGalleryHtml(t, gallery) : ''}
 
   <!-- Guarantee + Review -->
   <section id="reviews" style="padding:40px 20px;background:${t.surface};">

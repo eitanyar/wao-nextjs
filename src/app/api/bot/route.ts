@@ -5,6 +5,7 @@ import { ADAM_SYSTEM_PROMPT, DROR_SYSTEM_PROMPT, TAMAR_SYSTEM_PROMPT, T21_PHOTO_
 import { getEstimatedCPC } from "@/lib/ads/keywordPlanner";
 import { resolveBoundedOnboardingResponse } from "@/lib/google-ads/onboarding-response";
 import { allowFirstAdGeneration, carryFirstAdPreviewFlag, pendingQuickIntakeStep, runQuickIntakeTurn, type QuickIntakeStep } from "@/lib/google-ads/first-ad-preview";
+import { carryUploadFields } from "@/lib/google-ads/intakeUploads";
 import { guardAdCopy, type TemplateAd } from "@/lib/google-ads/ad-claims-guard";
 import { ADMIN_COOKIE_NAME, verifyAdminToken } from "@/lib/admin-auth";
 import { deliveryModelFollowUp } from "@/lib/bot/delivery-model";
@@ -1230,6 +1231,8 @@ Present ₪${chosenBudget} as: "עם ₪${chosenBudget} תקבל בסביבות 
   if (enrichedData.email) alreadyCollected.push(`email = "${enrichedData.email}"`);
   if (enrichedData.trustAssetUrls?.length) alreadyCollected.push(`uploadedImages = ${enrichedData.trustAssetUrls.length} images uploaded`);
   if (enrichedData.profilePhotoUrl) alreadyCollected.push(`profilePhotoUrl = uploaded`);
+  if (enrichedData.workPhotoUrls?.length) alreadyCollected.push(`workPhotos = ${enrichedData.workPhotoUrls.length} work photos uploaded`);
+  if (enrichedData.logoUrl) alreadyCollected.push(`logoUrl = uploaded`);
   const alreadyGuard = alreadyCollected.length > 0
     ? `\n\n[ALREADY COLLECTED — do NOT ask about these again: ${alreadyCollected.join(", ")}]`
     : "";
@@ -1345,7 +1348,7 @@ export async function POST(req: Request) {
     // Ensure clean JSON serialization — avoid partial writes
     const jsonResponse = await result.json();
     if (jsonResponse?.collectedData) {
-      jsonResponse.collectedData = carryFirstAdPreviewFlag(collectedData, jsonResponse.collectedData);
+      jsonResponse.collectedData = carryUploadFields(collectedData, carryFirstAdPreviewFlag(collectedData, jsonResponse.collectedData));
     }
     if (approvalTurn && live) jsonResponse.isSimulation = false;
     if (jsonResponse?.approved === true) {

@@ -373,6 +373,9 @@ const nextConfig: NextConfig = {
       // (the distDir) and must stay traced, so only these two shapes are excluded.
       "releases/release-*/**",
       "releases/current/**",
+      // Intake uploads are written at runtime (api/upload) and read from disk at request time (api/cloudflare-pages/deploy);
+      // a build-time snapshot of them in a route trace is dead weight that grows with every upload.
+      "public/uploads/**",
     ],
     // The root route does not match /* in Next's picomatch call.
     "/": ["data/**/*", "releases/release-*/**", "releases/current/**"],

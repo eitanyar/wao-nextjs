@@ -1,0 +1,9 @@
+{
+  "_doc": "Ads Bot logo turn + work-photo turn + landing-page gallery strings. Each value is filled ONLY by a byte-exact patch from waocopy (the engineer never types Hebrew). An empty value (or one with no Hebrew letter) switches its feature off: see intakeUploads.ts resolveUploadStrings. Placeholders: galleryImageAlt may use {businessName} and {index}; no other {placeholder} is allowed.",
+  "logoTurnAsk": "",
+  "logoUploadTitle": "",
+  "workPhotosTurnAsk": "",
+  "workPhotosUploadTitle": "",
+  "galleryHeading": "",
+  "galleryImageAlt": ""
+}

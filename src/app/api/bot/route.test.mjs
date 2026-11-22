@@ -237,6 +237,7 @@ function loadPost(environment, qwenCalls, geminiCalls, geminiReply = '{"response
     } };
     if (name === '@/lib/ai/llmProvider') return llmProvider;
     if (name === '@/lib/google-ads/first-ad-preview') return firstAdPreview;
+    if (name === '@/lib/google-ads/intakeUploads') return transpileLocal('../../../lib/google-ads/intakeUploads.ts', { './intakeUploadStrings.json': { __esModule: true, default: JSON.parse(fs.readFileSync(path.resolve(baseDir, '../../../lib/google-ads/intakeUploadStrings.json'), 'utf8')) } });
     if (name === '@/lib/google-ads/ad-claims-guard') return claimsGuard;
     if (name === '@/lib/admin-auth') return { ADMIN_COOKIE_NAME: 'wao-admin', verifyAdminToken: async (token) => token === 'staff-ok' };
     if (name === '@/lib/bot/delivery-model') return transpileLocal('../../../lib/bot/delivery-model.ts');

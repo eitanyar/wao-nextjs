@@ -5,6 +5,7 @@
 
 /** Pricing default (2026-11-10): the fixed owner-checkable pricing promises. */
 import { DEFAULT_GENERIC_NEGATIVES, NEVER_BLOCK_NEGATIVES } from "../google-ads/default-negatives";
+import { buildUploadTurnsPrompt } from "../google-ads/intakeUploads";
 
 export type PricingPromiseId = 'free_quote' | 'price_before_work' | 'price_by_phone_before_leaving' | 'no_callout_fee' | 'no_hidden_costs';
 
@@ -111,6 +112,11 @@ export interface CollectedData {
   starRating?: string;
   trustAssetUrls?: string[];
   profilePhotoUrl?: string;
+  // Ads Bot uploads tagged by turn (src/lib/google-ads/intakeUploads.ts, 2026-11-22). logoUrl: the optional logo turn
+  // (T21L), shown in the landing-page header only: never the hero, never a Google ad image. workPhotoUrls: the work-photo
+  // turn (T21w), also appended to trustAssetUrls; the only uploads that may be the hero or a gallery photo.
+  logoUrl?: string;
+  workPhotoUrls?: string[];
 
   // Capacity & contact
   capacityAvailable?: boolean;
@@ -158,6 +164,9 @@ export interface OnboardingState {
 // v2 = fold-into-T21 wording (van/storefront + before/after in one ask, 2026-08-01).
 // v1 was the original single-photo-type ask.
 export const T21_PHOTO_ASK_VERSION = 'v2';
+
+// The optional work-photo / logo turns: '' until their strings exist (intakeUploadStrings.json), so the script is unchanged.
+const UPLOAD_TURNS = buildUploadTurnsPrompt();
 
 export const ADAM_SYSTEM_PROMPT = `
 You are Adam, WAO's Google Ads Onboarding Bot for Israeli local/service businesses (lead-gen ONLY, no e-commerce).
@@ -299,13 +308,13 @@ T21: "נשמע שאתה עושה עבודה טובה — אז בטוח יש לך
   → if the user uploads images: acknowledge ("קיבלתי X תמונות"), set hasTrustAssets: true, move on
   → if NO trust assets: continue anyway, set hasTrustAssets: false (use fallback copy on LP, do NOT stop)
   → collect: hasTrustAssets
-
+${UPLOAD_TURNS.workPhotosTurn}
 T21c [OPTIONAL — skip if profession has no natural personal brand (e.g. locksmith, plumber, exterminator)]:
   "ומה עם תמונה מקצועית שלך?\nתמונה אחת טובה בונה המון אמון. אם יש — אפשר להעלות אותה.",
   → accept ONE image only. If user skips/says no — move on immediately, do NOT press.
   → collect: profilePhotoUrl (set awaitingProfilePhoto: true in JSON output when asking this turn)
   → once uploaded or skipped: set awaitingProfilePhoto: false
-
+${UPLOAD_TURNS.logoTurn}
 T22: "מעולה, קיבלתי. אם עדיין אין צילום — תכתוב לי משפט אחד שלקוח מרוצה אמר עליך."
   → If starRating is NOT yet in collectedData, also ask: "ומה הדירוג שלך בגוגל? (לדוגמה: 4.9 כוכבים, 64 ביקורות)"
   → NEVER ask for starRating again if it was already collected at T19.
@@ -390,7 +399,7 @@ CRITICAL: Never say you already created an account or sent an email — nothing 
   "currentState": "DIAGNOSING" | "STRATEGIZING" | "REVIEWING" | "COMPLETED",
   "collectedData": { ...all fields as collected so far },
   "callSpecialists": true | false,
-  "awaitingProfilePhoto": true | false
+  "awaitingProfilePhoto": true | false${UPLOAD_TURNS.outputFields}
 }
 `;
 

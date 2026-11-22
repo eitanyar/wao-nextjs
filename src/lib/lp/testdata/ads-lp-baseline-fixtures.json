@@ -1,0 +1,33 @@
+{
+  "//": "Ads LP byte-identity fixtures (no logoUrl, no workPhotoUrls). expectedSha256 was captured from renderStaticHtml BEFORE the logo + gallery change (2026-11-22); adsLpUploads.test.ts asserts the renderer still produces exactly these bytes.",
+  "copy": {
+    "heroHeadline": "Headline", "heroSubheadline": "Subheadline", "heroCta": "Contact", "trustBarItems": ["Trusted", "Licensed"],
+    "aboutBlurb": "About", "servicesHeadline": "Services", "serviceItems": ["Service A", "Service B"], "faqHeadline": "FAQ",
+    "faqItems": [{ "q": "Question?", "a": "Answer." }], "guaranteeBlock": "Guarantee. Full.", "reviewFeatured": "Great work",
+    "reviewContext": "4.9 rating", "responseTimeBadge": "Fast", "scarcityLine": "Few slots", "formHeadline": "Form", "stickyBarLine": "Sticky"
+  },
+  "cases": [
+    {
+      "name": "minimal",
+      "expectedSha256": "91a9b65a85c4883fafdfb0f83ffed594faaf2917ca210a81ccb85e05ce30165b",
+      "vertical": "emergency-trades",
+      "params": { "data": { "businessName": "Fixture Business", "businessNiche": "plumber", "phone": "050-0000000" }, "heroImageUrl": "https://images.unsplash.com/stock.jpg", "slug": "fixture" }
+    },
+    {
+      "name": "legacy-uploads-and-tracking",
+      "expectedSha256": "fb5bbf6b30bf137b04417b0bd895a197d2f8b2e8131023c1e0c4896d6b448405",
+      "vertical": "emergency-trades",
+      "params": {
+        "data": {
+          "businessName": "Fixture Business", "businessNiche": "plumber", "phone": "050-0000000", "whatsappNumber": "052-1111111",
+          "primaryService": "Leak repair", "targetLocation": "Tel Aviv", "businessHours": "Sun-Thu 08:00-18:00",
+          "hasTrustAssets": true, "trustAssetUrls": ["/uploads/s-1/a.png", "/uploads/s-1/b.jpg", "/uploads/s-1/c.jpg", "/uploads/s-1/d.jpg"],
+          "profilePhotoUrl": "/uploads/s-1/p.jpg"
+        },
+        "heroImageUrl": "/uploads/s-1/a.png", "slug": "fixture-two", "googleAdsCustomerId": "1234567890",
+        "gtagSnippet": "<script>/*gtag*/</script>", "formConversionLabel": "AW-1/form", "phoneConversionLabel": "AW-1/phone", "whatsappConversionLabel": "AW-1/wa",
+        "fraudBlockerSid": "sid_fixture"
+      }
+    }
+  ]
+}

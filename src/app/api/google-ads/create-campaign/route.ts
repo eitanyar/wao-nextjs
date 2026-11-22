@@ -14,6 +14,7 @@ import { writeAutonomyPolicy } from '@/lib/google-ads/autonomy';
 import { appendGoogleAdsDirectActionAudit } from '@/lib/google-ads/direct-action-audit';
 import { callGeminiJSON } from '@/lib/ai/gemini-fast';
 import { buildImageAssetCrops } from '@/lib/google-ads/imageCrop';
+import { adImageSourceUrls } from '@/lib/google-ads/intakeUploads';
 import { getKeywordDemand } from '@/lib/ads/keywordPlanner';
 import {
   evaluatePaidSearchReadiness,
@@ -399,10 +400,9 @@ async function createSitelinkAssets(newCustomer: ReturnType<GoogleAdsApi['Custom
 
 async function createImageAssets(newCustomer: ReturnType<GoogleAdsApi['Customer']>, campaignResourceName: string, collectedData: CollectedData) {
   try {
-    const sourceUrls = [
-      ...(collectedData.trustAssetUrls ?? []),
-      ...(collectedData.profilePhotoUrl ? [collectedData.profilePhotoUrl] : []),
-    ].slice(0, 4); // Google recommends 4+ for full serving eligibility; cap the intake ask covers this
+    // Google recommends 4+ for full serving eligibility; cap the intake ask covers this. Work photos first when tagged;
+    // the logo (collectedData.logoUrl) is never an ad image (intakeUploads.ts).
+    const sourceUrls = adImageSourceUrls(collectedData, 4);
     if (!sourceUrls.length) return;
 
     const assetOperations: Array<{ type: number; image_asset: { data: Buffer; mime_type: number } }> = [];

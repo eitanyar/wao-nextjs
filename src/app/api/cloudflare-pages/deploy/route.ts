@@ -18,6 +18,9 @@ import { ADMIN_COOKIE_NAME, verifyAdminToken } from '@/lib/admin-auth';
 import { COOKIE_NAME, verifySessionToken } from '@/lib/client-auth';
 import { loadCampaignConfigBySlug } from '@/lib/crm/intelligence';
 import { isSafeDeploymentSlug } from '@/lib/deployment/deploy-access';
+import { galleryPhotoUrls, logoUpload, pickHeroImageUrl, uploadFeatures } from '@/lib/google-ads/intakeUploads';
+import { adsLpGalleryFromPhotos } from '@/lib/lp/adsLpUploads';
+import { prepareLogo, prepareWorkPhotos } from '@/lib/lp/adsLpImages';
 
 interface DeployRequest {
   slug: string;
@@ -96,10 +99,17 @@ export async function POST(req: Request) {
     const verticalKey = detectVertical(collectedData.businessNiche || '');
     const theme = VERTICAL_THEMES[verticalKey];
     const assets = VERTICAL_ASSETS[verticalKey];
-    // Prefer the client's own photo over generic vertical stock — see the
-    // identical fix in app/(standalone)/lp/[slug]/page.tsx (internal preview).
-    // Stock stays the non-blocking fallback when no upload exists.
-    const heroImageUrl = collectedData.trustAssetUrls?.[0] || collectedData.profilePhotoUrl || assets.heroImages[0].url;
+    // Prefer the client's own photo over generic vertical stock — the same rule as app/(standalone)/lp/[slug]/page.tsx
+    // (internal preview): the first WORK photo, else the profile photo, never a T21 upload (may be a screenshot) or the
+    // logo (intakeUploads.ts pickHeroImageUrl). Stock stays the non-blocking fallback when no upload exists.
+    const heroImageUrl = pickHeroImageUrl(collectedData, assets.heroImages[0].url);
+    // Ads Bot logo + work-photo gallery: raw uploads -> resized WebP under /img/ in the deploy dir (adsLpImages.ts).
+    // No logo and no gallery = the same page as before.
+    const uploadsRoot = path.join(process.cwd(), 'public', 'uploads');
+    const preparedLogo = await prepareLogo(uploadsRoot, logoUpload(collectedData));
+    const preparedPhotos = uploadFeatures().gallery ? await prepareWorkPhotos(uploadsRoot, galleryPhotoUrls(collectedData)) : [];
+    const gallery = adsLpGalleryFromPhotos(preparedPhotos, collectedData.businessName || collectedData.businessNiche || '');
+    const preparedFiles = [...(preparedLogo ? [preparedLogo] : []), ...(gallery ? preparedPhotos.slice(0, gallery.photos.length) : [])];
     const fraudDomain = `${slug}.wao.co.il`;
     let fraudBlockerSid: string | undefined;
     if (googleAdsCustomerId) {
@@ -125,12 +135,18 @@ export async function POST(req: Request) {
       phoneConversionLabel,
       whatsappConversionLabel,
       fraudBlockerSid,
+      ...(preparedLogo ? { logo: { src: preparedLogo.src, width: preparedLogo.width, height: preparedLogo.height } } : {}),
+      ...(gallery ? { gallery } : {}),
     });
 
     // ── Step 3: Ensure CF Pages project exists, then deploy ──────────────────
     const tmpDir = mkdtempSync(path.join(tmpdir(), 'wao-lp-'));
     try {
     writeFileSync(path.join(tmpDir, 'index.html'), htmlContent, 'utf-8');
+    for (const image of preparedFiles) {
+      mkdirSync(path.dirname(path.join(tmpDir, image.src)), { recursive: true });
+      writeFileSync(path.join(tmpDir, image.src), image.bytes);
+    }
 
     // Legal disclosure pages — same requirement as Site Bot's 5-page output.
     // Privacy has no exemption; accessibility is gated on vatStatus. M4 step 0: plus a real 404.html (unknown paths
