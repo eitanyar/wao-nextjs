@@ -100,6 +100,20 @@ function setup({ record, liveFlag, campaignMode = 'live', sessionClientId = CLIE
     {},
   );
 
+  const plain = (rel, deps = {}) => runCommonJs(path.join(srcDir, rel), name => {
+    if (name in deps) return deps[name];
+    throw new Error(`unexpected import ${name} in ${rel}`);
+  }, {});
+  const ownership = runCommonJs(path.join(srcDir, 'lib', 'google-ads', 'ownership.ts'), name => {
+    if (name === 'fs') return fs;
+    if (name === 'path') return path;
+    if (name === '../dataRoots') return dataRoots;
+    if (name === './live-readiness-store') return store;
+    if (name === '../site-bot/offlineDate') return plain('lib/site-bot/offlineDate.ts');
+    if (name === './ownership-client') return plain('lib/google-ads/ownership-client.ts');
+    throw new Error(`unexpected ownership import: ${name}`);
+  }, { process: { pid: 1, env } });
+
   const googleAdsCalls = [];
   const campaignConfig = {
     clientId: CLIENT,
@@ -126,6 +140,7 @@ function setup({ record, liveFlag, campaignMode = 'live', sessionClientId = CLIE
     },
     '@/lib/google-ads/access-policy': accessPolicy,
     '@/lib/google-ads/live-readiness-store': store,
+    '@/lib/google-ads/ownership': ownership,
     '@/lib/crm/intelligence': {
       loadClientGoogleAdsIndex: () => index,
       loadCampaignConfigBySlug: () => campaignConfig,
@@ -418,6 +433,31 @@ test('campaign-status: resume with incomplete readiness -> 403, with complete ->
     const result = await call(good, 'campaign-status', { action: 'resume' });
     assert.deepEqual(result.body, { success: true, campaignId: '555', status: 'ENABLED' });
   } finally { good.cleanup(); }
+});
+
+test('create-campaign (D2): live without any client email -> 400 client_email_required before any Google call', async () => {
+  const h = setup({ record: PRE_ACCOUNT_ONLY_RECORD, liveFlag: true });
+  h.jar['wao-admin'] = ADMIN_COOKIE;
+  try {
+    const result = await call(h, 'create-campaign', { ...CREATE_BODY, collectedData: { businessNiche: 'plumber', email: 'not-an-email' } });
+    assert.equal(result.status, 400);
+    assert.equal(result.body.error, 'client_email_required');
+    assert.deepEqual(h.googleAdsCalls, []);
+  } finally { h.cleanup(); }
+});
+
+test('create-campaign (D2): the email check precedes every Google call; the account is created with the client invited as ADMIN and recorded', () => {
+  const src = fs.readFileSync(path.join(apiDir, 'create-campaign', 'route.ts'), 'utf8');
+  const emailCheck = src.indexOf("error: 'client_email_required'");
+  assert.ok(emailCheck > src.indexOf('if (!access.allowed)'), 'after the live gate');
+  for (const googleCall of ['getKeywordDemand(', 'buildClient()', 'resolveGeoTargeting(', 'createCustomerClient(']) {
+    const idx = src.indexOf(googleCall, src.indexOf('export async function POST('));
+    assert.ok(idx > emailCheck, `${googleCall} comes after the email check`);
+  }
+  assert.match(src, /buildCreateCustomerClientRequest\(\{ mccId: adsAccount\.mccId, businessName, email: inviteEmail, adminRole: enums\.AccessRole\.ADMIN \}\)/);
+  assert.match(src, /createCustomerClient\(new services\.CreateCustomerClientRequest\(createRequest\)\)/);
+  const created = src.indexOf("if (!newCustomerId) throw new Error('Account creation returned no customer ID');");
+  assert.ok(src.indexOf('recordAccountCreation({ clientId: effectiveClientId, customerId: newCustomerId, mode, email: inviteEmail', created) > created);
 });
 
 test('the readiness gate never reads or writes the real data/clients during this suite', () => {

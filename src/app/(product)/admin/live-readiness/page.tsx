@@ -5,7 +5,9 @@ import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { ADMIN_COOKIE_NAME, verifyAdminToken } from '@/lib/admin-auth';
 import { assessLiveReadiness, READINESS_REQUIREMENTS } from '@/lib/google-ads/live-readiness';
-import { updateLiveReadinessAction } from './action';
+import { overrideLiveReadinessAction, pollNowAction, updateLiveReadinessAction } from './action';
+import { firstCompletedAt } from '@/lib/google-ads/live-readiness-store';
+import { loadOwnershipRecord, ownershipWarning, OWNERSHIP_WARNING_DAYS } from '@/lib/google-ads/ownership';
 import { BOOLEAN_READINESS_KEYS, VERIFICATION_STATUSES, type BooleanReadinessKey, type LiveReadinessRecord } from './shared';
 
 export const metadata = { robots: { index: false }, title: 'מוכנות להפעלה חיה | WAO' };
@@ -84,6 +86,8 @@ function managerCredentialsConfigured(): boolean {
 }
 
 const ERROR_MESSAGES: Record<string, string> = {
+  no_account: 'No Google Ads account recorded for this client yet (create-campaign writes it).',
+  invalid_client: 'Invalid client id.',
   'invalid-client': 'מזהה לקוח לא תקין.',
   'unknown-client': 'לא נמצאה תיקיית לקוח תואמת תחת data/clients.',
   'invalid-verification-status': 'Invalid verification status.',
@@ -93,7 +97,7 @@ const ERROR_MESSAGES: Record<string, string> = {
 export default async function LiveReadinessPage({
   searchParams,
 }: {
-  searchParams: Promise<{ error?: string; clientId?: string; success?: string }>;
+  searchParams: Promise<{ error?: string; clientId?: string; success?: string; polled?: string }>;
 }) {
   const jar = await cookies();
   const isAdmin = await verifyAdminToken(jar.get(ADMIN_COOKIE_NAME)?.value ?? '');
@@ -101,7 +105,7 @@ export default async function LiveReadinessPage({
     redirect('/admin/login?next=%2Fadmin%2Flive-readiness');
   }
 
-  const { error, clientId: errorClientId, success } = await searchParams;
+  const { error, clientId: errorClientId, success, polled } = await searchParams;
   const clients = loadClients();
   const liveModeEnabled = process.env.GOOGLE_ADS_ENABLE_LIVE_MODE === 'true';
 
@@ -129,6 +133,12 @@ export default async function LiveReadinessPage({
         {success && (
           <p className="text-green-400 text-sm text-center mb-4">
             העדכון נשמר בהצלחה עבור הלקוח {success}.
+          </p>
+        )}
+
+        {polled && (
+          <p className="text-green-400 text-sm text-center mb-4" dir="ltr">
+            Polled Google for client {polled}.
           </p>
         )}
 
@@ -170,7 +180,34 @@ export default async function LiveReadinessPage({
 
                 <p className="text-[var(--muted)] text-xs mb-4">{verdict.nextAction}</p>
 
-                <form action={updateLiveReadinessAction} className="space-y-3">
+                <OwnershipPanel clientId={client.clientId} record={client.record} />
+
+                {/* Normal save: the admin-owned key only (polled / billing keys are never written from here). */}
+                <form action={updateLiveReadinessAction} className="space-y-3 mb-4">
+                  <input type="hidden" name="clientId" value={client.clientId} />
+                  <label className="flex items-start gap-3 rounded-lg border border-white/10 bg-white/5 px-4 py-3 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      name="approvalContactConfirmed"
+                      defaultChecked={client.record.approvalContactConfirmed === true}
+                      className="mt-1 shrink-0"
+                    />
+                    <span className="text-sm">{requirementLabel('approvalContactConfirmed')}</span>
+                  </label>
+                  <button
+                    type="submit"
+                    className="w-full rounded-lg bg-[var(--accent)] text-white font-semibold py-2.5 text-sm hover:opacity-90 transition-opacity"
+                    dir="ltr"
+                  >
+                    Save approval contact
+                  </button>
+                </form>
+
+                <details className="rounded-lg border border-amber-400/30 px-4 py-3">
+                <summary className="text-sm cursor-pointer" dir="ltr">
+                  Manual override: sets every key below by hand (audit source admin-manual-override; the next poll may change the polled keys again)
+                </summary>
+                <form action={overrideLiveReadinessAction} className="space-y-3 mt-3">
                   <input type="hidden" name="clientId" value={client.clientId} />
 
                   {BOOLEAN_READINESS_KEYS.map((key: BooleanReadinessKey) => (
@@ -254,6 +291,7 @@ export default async function LiveReadinessPage({
                     שמירת עדכון
                   </button>
                 </form>
+                </details>
               </div>
             );
           })}
@@ -261,5 +299,47 @@ export default async function LiveReadinessPage({
 
       </div>
     </main>
+  );
+}
+
+/** Ownership (Decision D2) for one client: polled values, last poll, first impression, day-14 warning, Poll now. English. */
+function OwnershipPanel({ clientId, record }: { clientId: string; record: LiveReadinessRecord }) {
+  const ownership = loadOwnershipRecord(clientId);
+  const warning = ownershipWarning({
+    now: new Date(),
+    accountCreatedAt: ownership?.accountCreatedAt ?? null,
+    feePaidAt: firstCompletedAt(clientId, 'feePaid'),
+    record,
+  });
+  const yesNo = (value: unknown) => (value === true ? 'yes' : value === false ? 'no' : '-');
+  const errors = Object.entries(ownership?.lastPollErrors ?? {});
+  return (
+    <div className="rounded-lg border border-white/10 bg-white/5 px-4 py-3 mb-4 text-xs space-y-1" dir="ltr">
+      <p className="font-semibold text-sm">Google Ads ownership (polled)</p>
+      {ownership ? (
+        <>
+          <p>Account {ownership.customerId} ({ownership.mode}), created {ownership.accountCreatedAt.slice(0, 10)}, client invited as ADMIN: {ownership.invitedEmail}</p>
+          <p>Invite accepted: {yesNo(record.clientAdminInviteAccepted)} (invitation: {ownership.inviteStatus ?? '-'})</p>
+          <p>Billing approved: {yesNo(record.billingApproved)}</p>
+          <p>Verification: {record.verificationStatus ?? '-'}{ownership.verification ? ` (checked ${ownership.verification.checkedAt.slice(0, 16).replace('T', ' ')} UTC)` : ''}</p>
+          <p>First impression: {ownership.firstImpressionAt ?? 'not yet'}</p>
+          <p>Last polled: {ownership.lastPolledAt ? `${ownership.lastPolledAt.slice(0, 16).replace('T', ' ')} UTC` : 'never'}</p>
+          {errors.length > 0 && <p className="text-red-400">Last poll errors: {errors.map(([check, text]) => `${check}: ${text}`).join('; ')}</p>}
+        </>
+      ) : (
+        <p className="text-[var(--muted)]">No account created yet.</p>
+      )}
+      {warning.warn && (
+        <p className="text-amber-400 font-semibold">
+          Day {warning.days}: Google checks still open after {OWNERSHIP_WARNING_DAYS} days ({warning.openChecks.join(', ')}). The 21-day Google-checks refund window is close.
+        </p>
+      )}
+      {ownership && (
+        <form action={pollNowAction}>
+          <input type="hidden" name="clientId" value={clientId} />
+          <button type="submit" className="mt-2 rounded border border-white/20 px-3 py-1">Poll now</button>
+        </form>
+      )}
+    </div>
   );
 }

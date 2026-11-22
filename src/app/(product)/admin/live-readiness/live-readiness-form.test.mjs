@@ -55,3 +55,34 @@ test('ignores any field outside the readiness keys', () => {
   assert.equal(result.ok, true);
   assert.deepEqual(Object.keys(result.patch).sort(), [...READINESS_KEYS].sort());
 });
+
+// ── mission item 4: polled keys survive an admin save ─────────────────────────────────────────────────────────
+import { ADMIN_SAVE_KEYS, mergeReadinessPatch, parseAdminSaveSubmission } from './live-readiness-form.js';
+
+test('the normal admin save carries only approvalContactConfirmed, whatever else is on the form', () => {
+  assert.deepEqual(ADMIN_SAVE_KEYS, ['approvalContactConfirmed']);
+  const fd = formData({ clientId: 'pilot', approvalContactConfirmed: 'on', billingApproved: 'on', feePaid: 'on', verificationStatus: 'verified' });
+  assert.deepEqual(parseAdminSaveSubmission(fd), { ok: true, clientId: 'pilot', patch: { approvalContactConfirmed: true } });
+  assert.deepEqual(parseAdminSaveSubmission(formData({ clientId: '../x' })), { ok: false, error: 'invalid-client' });
+});
+
+test('polled, billing and legacy keys survive an admin save byte for byte', () => {
+  const existing = {
+    accountCreatedWithClientAdmin: true,
+    clientAdminInviteAccepted: true,
+    billingApproved: true,
+    verificationStatus: 'not-required',
+    feePaid: true,
+    termsConsent: { termsVersion: 'v1', consentedAt: '2026-11-22T10:00:00.000Z' },
+    approvalContactConfirmed: false,
+    clientAccountOwned: true,
+  };
+  const parsed = parseAdminSaveSubmission(formData({ clientId: 'pilot' }));
+  const { next, changes } = mergeReadinessPatch(existing, { ...parsed.patch, approvalContactConfirmed: true }, ADMIN_SAVE_KEYS);
+  assert.deepEqual(next, { ...existing, approvalContactConfirmed: true });
+  assert.deepEqual(changes, [{ key: 'approvalContactConfirmed', from: false, to: true }]);
+  // An unticked box on a plain save clears only the admin key.
+  const cleared = mergeReadinessPatch(existing, parseAdminSaveSubmission(formData({ clientId: 'pilot' })).patch, ADMIN_SAVE_KEYS);
+  assert.deepEqual(cleared.next, existing);
+  assert.deepEqual(cleared.changes, []);
+});

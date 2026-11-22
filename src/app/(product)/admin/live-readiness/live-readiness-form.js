@@ -64,3 +64,50 @@ export function parseLiveReadinessSubmission(formData) {
 
   return { ok: true, clientId, patch };
 }
+
+/**
+ * Keys the normal admin save writes (mission item 4, 2026-11-22). Polled keys (invite, billing, verification,
+ * account created) are written only by the ownership poll job and the system keys (feePaid, termsConsent) only by
+ * billing; an admin can still set any of them, but only through the separate manual-override form
+ * (parseLiveReadinessSubmission + source 'admin-manual-override').
+ */
+export const ADMIN_SAVE_KEYS = ['approvalContactConfirmed'];
+
+/**
+ * The normal admin save: clientId + the admin-owned keys only. Any other field on the form is ignored, so a save
+ * can never clobber a polled or system-set key.
+ *
+ * @param {FormData} formData
+ * @returns {{ ok: true, clientId: string, patch: Record<string, unknown> } | { ok: false, error: 'invalid-client' }}
+ */
+export function parseAdminSaveSubmission(formData) {
+  const clientId = (formData.get('clientId') ?? '').toString().trim();
+  if (!clientId || !/^[a-z0-9-]+$/i.test(clientId)) {
+    return { ok: false, error: 'invalid-client' };
+  }
+  /** @type {Record<string, unknown>} */
+  const patch = {};
+  for (const key of ADMIN_SAVE_KEYS) patch[key] = formData.get(key) === 'on';
+  return { ok: true, clientId, patch };
+}
+
+/**
+ * Applies `patch` for `keys` only onto `existing`. Every other key on the record (polled, system, legacy) is kept
+ * byte-for-byte. Returns the next record and the audit changes.
+ *
+ * @param {Record<string, unknown>} existing
+ * @param {Record<string, unknown>} patch
+ * @param {readonly string[]} keys
+ * @returns {{ next: Record<string, unknown>, changes: Array<{ key: string, from: unknown, to: unknown }> }}
+ */
+export function mergeReadinessPatch(existing, patch, keys) {
+  const next = { ...existing };
+  const changes = [];
+  for (const key of keys) {
+    const before = existing[key] ?? null;
+    const after = patch[key] ?? null;
+    if (JSON.stringify(before) !== JSON.stringify(after)) changes.push({ key, from: before, to: after });
+    next[key] = after;
+  }
+  return { next, changes };
+}

@@ -11,6 +11,7 @@ import { COOKIE_NAME, verifySessionToken } from '@/lib/client-auth';
 import { ADMIN_COOKIE_NAME, verifyAdminToken } from '@/lib/admin-auth';
 import { resolveGoogleAdsMutationAccess } from '@/lib/google-ads/access-policy';
 import { loadLiveReadinessRecord } from '@/lib/google-ads/live-readiness-store';
+import { buildCreateCustomerClientRequest, recordAccountCreation, resolveClientInviteEmail } from '@/lib/google-ads/ownership';
 import { buildOnboardingAutonomyPolicy } from '@/lib/google-ads/autonomy-consent';
 import { writeAutonomyPolicy } from '@/lib/google-ads/autonomy';
 import { appendGoogleAdsDirectActionAudit } from '@/lib/google-ads/direct-action-audit';
@@ -100,6 +101,8 @@ interface CreateCampaignRequest {
   autonomyTermsVersion?: string;
   clientId?: string;
   mode?: CampaignMode;
+  /** Admin-provided email the client's ADMIN invitation goes to (Decision D2); else the intake owner / business email. */
+  clientEmail?: string;
 }
 
 interface ConversionTagSnippet {
@@ -507,6 +510,16 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'collectedData.businessNiche is required' }, { status: 400 });
     }
 
+    // Decision D2: WAO creates the account under its MCC and invites the CLIENT as ADMIN. Live mode refuses to start
+    // (before any Google call) when there is no address to invite; test mode invites only when one is given.
+    const inviteEmail = resolveClientInviteEmail(body.clientEmail, collectedData);
+    if (mode === 'live' && !inviteEmail) {
+      return NextResponse.json(
+        { error: 'client_email_required', details: 'Live account creation invites the client as ADMIN: pass clientEmail or collect ownerContact.email / email.' },
+        { status: 400 },
+      );
+    }
+
     // Fix 3 (2026-11-12): validate before any Google Ads write. Keywords become plain text with
     // EXACT/PHRASE, strategy negatives default to [] (the bot's fallback strategy has none).
     const strategyCheck = validateCampaignStrategy(strategy);
@@ -591,19 +604,28 @@ export async function POST(req: Request) {
 
     // ── Step 1: Create sub-account under MCC ─────────────────────────────────
 
-    const createResult = await mccCustomer.customers.createCustomerClient(
-      new services.CreateCustomerClientRequest({
-        customer_id: adsAccount.mccId,
-        customer_client: {
-          descriptive_name: businessName,
-          currency_code: 'ILS',
-          time_zone: 'Asia/Jerusalem',
-        },
-      })
-    );
+    const createRequest = inviteEmail
+      ? buildCreateCustomerClientRequest({ mccId: adsAccount.mccId, businessName, email: inviteEmail, adminRole: enums.AccessRole.ADMIN })
+      : {
+          customer_id: adsAccount.mccId,
+          customer_client: { descriptive_name: businessName, currency_code: 'ILS', time_zone: 'Asia/Jerusalem' },
+        };
+    const createResult = await mccCustomer.customers.createCustomerClient(new services.CreateCustomerClientRequest(createRequest));
 
     const newCustomerId = createResult.resource_name.split('/')[1];
     if (!newCustomerId) throw new Error('Account creation returned no customer ID');
+
+    // Store the account + invitation and set readiness accountCreatedWithClientAdmin (system-set). Non-fatal: the
+    // account exists either way; a failed write is logged and the admin can set it by manual override.
+    if (inviteEmail && effectiveClientId) {
+      try {
+        if (!recordAccountCreation({ clientId: effectiveClientId, customerId: newCustomerId, mode, email: inviteEmail, invitationLink: createResult.invitation_link ?? null })) {
+          console.error('[create-campaign] ownership record not written for client', effectiveClientId);
+        }
+      } catch (e) {
+        console.error('[create-campaign] ownership record failed for client', effectiveClientId, e);
+      }
+    }
 
     const newCustomer = client.Customer({
       customer_id: newCustomerId,

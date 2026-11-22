@@ -44,16 +44,18 @@ export function loadLiveReadinessRecord(clientId: string | null | undefined): Li
 }
 
 export type SystemReadinessKey = 'feePaid' | 'termsConsent';
+/** Keys only the ownership poll job sets (mission item 4); admins change them only through the manual override. */
+export type PolledReadinessKey = 'accountCreatedWithClientAdmin' | 'clientAdminInviteAccepted' | 'billingApproved' | 'verificationStatus';
 
 /**
- * Sets system-owned readiness keys for `clientId` and appends one audit line
+ * Sets system-owned (billing) or polled (ownership poll / account creation) readiness keys for `clientId` and appends one audit line
  * (live-readiness.audit.jsonl, same format as the admin action). Atomic write (temp file + rename).
  * Creates the client directory when missing (pilot clients are provisioned by hand). Returns false on
  * an invalid client id; throws on an I/O failure so the caller can decide.
  */
 export function updateLiveReadinessRecord(
   clientId: string,
-  patch: Partial<Pick<LiveReadinessRecord, SystemReadinessKey>>,
+  patch: Partial<Pick<LiveReadinessRecord, SystemReadinessKey | PolledReadinessKey>>,
   options: { source: string; now?: Date },
 ): boolean {
   if (!clientId || !CLIENT_ID_PATTERN.test(clientId)) return false;
@@ -80,4 +82,25 @@ export function updateLiveReadinessRecord(
     );
   }
   return true;
+}
+
+/** When `key` was first set to a complete value according to the audit log (ISO), or null. */
+export function firstCompletedAt(clientId: string, key: string): string | null {
+  if (!clientId || !CLIENT_ID_PATTERN.test(clientId)) return null;
+  let text: string;
+  try {
+    text = fs.readFileSync(path.join(clientsDir(), clientId, 'live-readiness.audit.jsonl'), 'utf8');
+  } catch {
+    return null;
+  }
+  for (const line of text.split('\n')) {
+    if (!line.trim()) continue;
+    try {
+      const entry = JSON.parse(line) as { timestamp?: string; changes?: Array<{ key?: string; to?: unknown }> };
+      if (entry.changes?.some(change => change.key === key && change.to !== null && change.to !== false)) return entry.timestamp ?? null;
+    } catch {
+      // a torn line is skipped
+    }
+  }
+  return null;
 }

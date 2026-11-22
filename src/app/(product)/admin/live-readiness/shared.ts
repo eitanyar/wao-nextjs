@@ -10,7 +10,10 @@
  * ./live-readiness-form.test.mjs. This file just layers types on top.
  */
 import {
+  ADMIN_SAVE_KEYS as ADMIN_SAVE_KEYS_UNTYPED,
   BOOLEAN_READINESS_KEYS as BOOLEAN_READINESS_KEYS_UNTYPED,
+  mergeReadinessPatch as mergeReadinessPatchUntyped,
+  parseAdminSaveSubmission as parseAdminSaveSubmissionUntyped,
   READINESS_KEYS as READINESS_KEYS_UNTYPED,
   VERIFICATION_STATUSES as VERIFICATION_STATUSES_UNTYPED,
   parseLiveReadinessSubmission as parseLiveReadinessSubmissionUntyped,
@@ -38,6 +41,24 @@ export type ParsedLiveReadinessSubmission =
 export const READINESS_KEYS = READINESS_KEYS_UNTYPED as readonly ReadinessKey[];
 export const BOOLEAN_READINESS_KEYS = BOOLEAN_READINESS_KEYS_UNTYPED as readonly BooleanReadinessKey[];
 export const VERIFICATION_STATUSES = VERIFICATION_STATUSES_UNTYPED as readonly VerificationStatus[];
+
+export const ADMIN_SAVE_KEYS = ADMIN_SAVE_KEYS_UNTYPED as readonly ReadinessKey[];
+
+export type ParsedAdminSave =
+  | { ok: true; clientId: string; patch: Partial<LiveReadinessRecord> }
+  | { ok: false; error: 'invalid-client' };
+
+export function parseAdminSaveSubmission(formData: FormData): ParsedAdminSave {
+  return parseAdminSaveSubmissionUntyped(formData) as ParsedAdminSave;
+}
+
+export function mergeReadinessPatch(
+  existing: Record<string, unknown>,
+  patch: Record<string, unknown>,
+  keys: readonly string[],
+): { next: Record<string, unknown>; changes: Array<{ key: string; from: unknown; to: unknown }> } {
+  return mergeReadinessPatchUntyped(existing, patch, keys);
+}
 
 /** Typed wrapper — all actual parsing/validation logic runs in the .js file (single source of truth). */
 export function parseLiveReadinessSubmission(formData: FormData): ParsedLiveReadinessSubmission {
