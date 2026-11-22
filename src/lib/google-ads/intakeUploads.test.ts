@@ -1,5 +1,7 @@
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
+import fs from 'node:fs';
+import path from 'node:path';
 import test from 'node:test';
 
 import { ADAM_SYSTEM_PROMPT, type CollectedData } from '../bot/prompts';
@@ -104,14 +106,24 @@ test('logo upload must be an intake upload URL', () => {
   assert.equal(isIntakeUploadUrl('/uploads/s 1/a.jpg'), false);
 });
 
-test('Google ad images: legacy order unchanged, work photos first when tagged, the logo never', () => {
-  const legacy: CollectedData = { trustAssetUrls: [u('1'), u('2'), u('3'), u('4'), u('5')], profilePhotoUrl: u('p') };
-  assert.deepEqual(adImageSourceUrls(legacy), [u('1'), u('2'), u('3'), u('4')]);
-  assert.deepEqual(adImageSourceUrls({ trustAssetUrls: [u('1')], profilePhotoUrl: u('p') }), [u('1'), u('p')]);
-  assert.deepEqual(adImageSourceUrls({ trustAssetUrls: [u('s'), u('w')], workPhotoUrls: [u('w')], profilePhotoUrl: u('p') }), [u('w'), u('s'), u('p')]);
+test('Google ad images: never a trust upload (may be a screenshot); work photos first, then the profile photo, never the logo', () => {
+  // T21 trust uploads alone (review / WhatsApp screenshots) never become ad images.
+  assert.deepEqual(adImageSourceUrls({ trustAssetUrls: [u('1'), u('2'), u('3'), u('4'), u('5')] }), []);
+  assert.deepEqual(adImageSourceUrls({ trustAssetUrls: [u('1'), u('2'), u('3'), u('4'), u('5')], profilePhotoUrl: u('p') }), [u('p')]);
+  // A work photo is also mirrored into trustAssetUrls; it qualifies through workPhotoUrls, the screenshot next to it does not.
+  assert.deepEqual(adImageSourceUrls({ trustAssetUrls: [u('s'), u('w')], workPhotoUrls: [u('w')], profilePhotoUrl: u('p') }), [u('w'), u('p')]);
+  assert.deepEqual(adImageSourceUrls({ workPhotoUrls: [u('1'), u('2'), u('3'), u('4'), u('5')], profilePhotoUrl: u('p') }), [u('1'), u('2'), u('3'), u('4')]);
   const withLogo: CollectedData = { trustAssetUrls: [u('l'), u('1')], logoUrl: u('l'), profilePhotoUrl: u('l') };
-  assert.deepEqual(adImageSourceUrls(withLogo), [u('1')]);
+  assert.deepEqual(adImageSourceUrls(withLogo), []);
+  assert.deepEqual(adImageSourceUrls({ profilePhotoUrl: 'https://evil.example/x.jpg' }), [], 'only /api/upload URLs');
   assert.deepEqual(adImageSourceUrls({}), []);
+});
+
+test('create-campaign builds ad images only through adImageSourceUrls (no inline trust/screenshot fallback)', () => {
+  const route = fs.readFileSync(path.join(process.cwd(), 'src/app/api/google-ads/create-campaign/route.ts'), 'utf8');
+  assert.doesNotMatch(route, /trustAssetUrls/);
+  assert.doesNotMatch(route, /screenshot/i);
+  assert.match(route, /const sourceUrls = adImageSourceUrls\(collectedData, 4\);/);
 });
 
 test('carryUploadFields restores upload fields a live model dropped, and nothing else', () => {

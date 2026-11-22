@@ -1,38 +1,55 @@
 import { NextRequest, NextResponse } from "next/server";
 import { writeFile, mkdir } from "fs/promises";
 import path from "path";
+import {
+  MAX_UPLOAD_FILES,
+  MAX_UPLOAD_REQUEST_BYTES,
+  acceptedUploadExtension,
+  resolveUploadDir,
+} from "@/lib/uploads/intakeUploadPolicy";
 
-const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
-const MAX_SIZE_BYTES = 10 * 1024 * 1024; // 10MB
-const MAX_FILES = 6;
-
+// Called by the public Ads Bot onboarding page with no client session (see
+// src/lib/uploads/intakeUploadPolicy.js): the write is made safe here; whether it must also
+// be authenticated is an open decision.
 export async function POST(req: NextRequest) {
   try {
+    const declaredLength = Number(req.headers.get("content-length") ?? "0");
+    if (Number.isFinite(declaredLength) && declaredLength > MAX_UPLOAD_REQUEST_BYTES) {
+      return NextResponse.json({ error: "Upload too large" }, { status: 413 });
+    }
+
     const formData = await req.formData();
-    const sessionId = (formData.get("sessionId") as string) || "default";
-    const files = formData.getAll("files") as File[];
+    const sessionId = formData.get("sessionId");
+    const uploadDir = resolveUploadDir(process.cwd(), sessionId);
+    if (!uploadDir || typeof sessionId !== "string") {
+      return NextResponse.json({ error: "Invalid sessionId" }, { status: 400 });
+    }
+
+    const files = formData.getAll("files").filter((f): f is File => typeof f !== "string");
 
     if (!files.length) return NextResponse.json({ error: "No files" }, { status: 400 });
-    if (files.length > MAX_FILES) return NextResponse.json({ error: `Max ${MAX_FILES} files` }, { status: 400 });
-
-    const uploadDir = path.join(process.cwd(), "public", "uploads", sessionId);
-    await mkdir(uploadDir, { recursive: true });
+    if (files.length > MAX_UPLOAD_FILES) return NextResponse.json({ error: `Max ${MAX_UPLOAD_FILES} files` }, { status: 400 });
 
     const urls: string[] = [];
+    let dirReady = false;
 
     for (const file of files) {
-      if (!ALLOWED_TYPES.includes(file.type)) continue;
-      if (file.size > MAX_SIZE_BYTES) continue;
-
-      const ext = file.type.split("/")[1].replace("jpeg", "jpg");
-      const filename = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
       const buffer = Buffer.from(await file.arrayBuffer());
+      const ext = acceptedUploadExtension({ type: file.type, size: buffer.length }, buffer);
+      if (!ext) continue;
+
+      if (!dirReady) {
+        await mkdir(uploadDir, { recursive: true });
+        dirReady = true;
+      }
+      const filename = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
       await writeFile(path.join(uploadDir, filename), buffer);
       urls.push(`/uploads/${sessionId}/${filename}`);
     }
 
     return NextResponse.json({ urls });
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 });
+  } catch (err: unknown) {
+    console.error("[upload] error:", err);
+    return NextResponse.json({ error: "Upload failed" }, { status: 500 });
   }
 }

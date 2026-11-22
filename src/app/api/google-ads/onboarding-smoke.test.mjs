@@ -231,3 +231,25 @@ test('demo mode disables every onboarding mutation control', () => {
   assert.match(onboardingPage, /disabled=\{!queryReady \|\| isDemo \|\| isSubmitting \|\| !inputValue\.trim\(\) \|\| currentState === "COMPLETED"\}/);
   assert.doesNotMatch(onboardingPage, /onClick=\{(?:handleApprove|triggerCampaignLaunch)\}|!acceptedTerms/);
 });
+
+test('fully booked (capacityAvailable === false) shows no COMPLETED banner at all (2026-11-22)', () => {
+  const gate = 'currentState === "COMPLETED" && collectedData.capacityAvailable !== false && (';
+  assert.equal(onboardingPage.split(gate).length - 1, 1, 'the COMPLETED banner block is gated on capacity');
+  assert.equal(onboardingPage.split('currentState === "COMPLETED" && (').length - 1, 0, 'no ungated COMPLETED render remains');
+  const start = onboardingPage.indexOf(gate);
+  const block = onboardingPage.slice(start, onboardingPage.indexOf('{/* Back Link */}', start));
+  // All three completion banners (preparing, finished-your-part + preview URL, details-with-us) live inside the gate.
+  assert.match(block, /\{lpGenerating && \(/);
+  assert.match(block, /\{lpUrl && \(/);
+  assert.match(block, /\{!lpGenerating && !lpUrl && \(/);
+  // Every party-popper banner on the page is inside the gated block.
+  const party = '\u{1F389}';
+  assert.equal(onboardingPage.split(party).length - 1, block.split(party).length - 1);
+  // The finished-your-part line is plain text, never a link to an unbuilt page.
+  assert.doesNotMatch(block, /<a\b/);
+  // The bot's "fully booked" branch is what sets capacityAvailable = false and ends in COMPLETED.
+  const bot = read('src/app/api/bot/route.ts');
+  const booked = bot.slice(bot.indexOf('case 22: {'), bot.indexOf('case 23:'));
+  assert.match(booked, /data\.capacityAvailable = !booked;/);
+  assert.match(booked, /currentState: "COMPLETED"/);
+});

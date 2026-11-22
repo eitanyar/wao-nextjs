@@ -162,6 +162,11 @@ test('google-ads: the clicks-to-real-leads change set (2026-11-12 FINAL, Noa + Y
     assert.equal(value.replace(/\{net\}/g, '249'), hit.old.replace(/\{net\}/g, '249'), `${key}: clarity patch old matches the earlier approved line`);
     return hit.next.replace(/249(?= ₪)/g, '{net}');
   };
+  const pilot2 = (JSON.parse(read('docs/copy/ads-bot-pilot-patches-2-2026-11-22.waocopy.json')) as {
+    patches: { file: string; old: string; new: string }[];
+  }).patches.filter((p) => p.file === 'docs/copy/google-ads-r2-final-candidate-2026-11-12.txt');
+  assert.equal(pilot2.length, 1);
+  const pilotUsed = new Set<string>();
   for (const [key, value] of Object.entries(final.lines)) {
     let expected = value.includes(line27.old) ? value.split(line27.old).join(line27.new) : value;
     for (const p of moment3) {
@@ -181,8 +186,17 @@ test('google-ads: the clicks-to-real-leads change set (2026-11-12 FINAL, Noa + Y
       assert.equal(expected.replace(/\{net\}/g, '249'), hit.old, `${key}: 2026-11-20 patch old matches the earlier approved line`);
       expected = hit.new;
     }
+    // Ads Bot pilot safety batch (2026-11-22, waocopy, Adam): substring patches on the r2 source, applied last
+    // (the flat 15-shekel click cap became a per-trade cap).
+    for (const p of pilot2) {
+      if (expected.replace(/\{net\}/g, '249').includes(p.old)) {
+        expected = expected.replace(/\{net\}/g, '249').replace(p.old, p.new);
+        pilotUsed.add(p.old);
+      }
+    }
     assert.equal(fields.get(liveKey), expected.replace(/\{net\}/g, '249'), key);
   }
+  assert.equal(pilotUsed.size, pilot2.length, 'every 2026-11-22 pilot patch on a pinned line was applied');
   assert.deepEqual([...GOOGLE_ADS_LANDING_COPY.phases.items], final['phases.items'].map((item, i) => applyClarity(`phases.items[${i}]`, applyPolish(`phases.items[${i}]`, item))));
   // Every polish patch on a FINAL-pinned line was consumed (none silently skipped).
   const pinned = new Set([...Object.keys(final.lines), ...final['phases.items'].map((_, i) => `phases.items[${i}]`)]);

@@ -1174,31 +1174,31 @@ export default function OnboardingPage() {
                       fontSize: "0.85rem",
                     }}>
                       <span>🖥️</span>
-                      <span>הדף ייבנה אוטומטית לאחר התשלום</span>
+                      <span>נכין לך את הדף אחרי שנאשר יחד את הפרטים</span>
                     </div>
                   )}
 
-                  {currentState === "COMPLETED" && (
+                  {/* "Fully booked" (bot T22) also ends in COMPLETED with nothing built or being prepared:
+                      show no completion banner at all then (2026-11-22). */}
+                  {currentState === "COMPLETED" && collectedData.capacityAvailable !== false && (
                     <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
                       {lpGenerating && (
                         <div style={{ background: "rgba(74,227,181,0.06)", border: "1px solid var(--accent-border)", borderRadius: "var(--radius-sm)", padding: "16px", textAlign: "center", color: "var(--muted)", fontSize: "0.9rem" }}>
                           <div style={{ marginBottom: "8px", fontSize: "1.2rem" }}>⚙️</div>
-                          בונה את הדף שלך... זה ייקח כמה שניות
+                          קיבלנו את הפרטים. אנחנו מכינים עכשיו את הדף ואת הקמפיין, ועוברים על כל פרט לפני שמשהו יעלה לאוויר.
                         </div>
                       )}
                       {lpUrl && (
                         <div style={{ background: "rgba(74,227,181,0.10)", border: "1px solid var(--accent-border)", borderRadius: "var(--radius-sm)", padding: "20px", display: "flex", flexDirection: "column", gap: "12px" }}>
                           <div style={{ color: "var(--accent)", fontWeight: 800, fontSize: "1rem", textAlign: "center" }}>
-                            🎉 הדף שלך מוכן!
+                            🎉 סיימת את החלק שלך!
                           </div>
-                          <a
-                            href={lpUrl || '#'}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            style={{ background: "var(--accent)", color: "var(--bg)", padding: "12px 20px", borderRadius: "var(--radius-pill)", fontWeight: 700, fontSize: "0.95rem", textAlign: "center", textDecoration: "none", display: "block" }}
+                          {/* Plain text, not a link: nothing is live yet, so there is nothing to open (2026-11-22). */}
+                          <div
+                            style={{ color: "var(--text)", fontWeight: 600, fontSize: "0.95rem", textAlign: "center" }}
                           >
-                            👉 צפה בדף הנחיתה שלך
-                          </a>
+                            👉 כשנצטרך את האישור שלך, נכתוב לך במייל
+                          </div>
                           <div style={{ fontSize: "0.75rem", color: "var(--muted)", textAlign: "center", wordBreak: "break-all" }}>
                             {lpUrl}
                           </div>
@@ -1206,7 +1206,7 @@ export default function OnboardingPage() {
                       )}
                       {!lpGenerating && !lpUrl && (
                         <div style={{ background: "rgba(74,227,181,0.08)", border: "1px solid var(--accent-border)", borderRadius: "var(--radius-sm)", padding: "16px", color: "var(--accent)", textAlign: "center", fontWeight: "bold", fontSize: "0.95rem" }}>
-                          🎉 הקמפיין באוויר! בדוק את תיבת המייל שלך לסיכום ופרטים על מה קורה עכשיו.
+                          🎉 הפרטים אצלנו. עכשיו אנחנו מכינים את הקמפיין ובודקים אותו, ונכתוב לך במייל כשנצטרך את האישור שלך.
                         </div>
                       )}
                     </div>

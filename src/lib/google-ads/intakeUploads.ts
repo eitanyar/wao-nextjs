@@ -181,16 +181,15 @@ export function logoUpload(data: CollectedData): string | null {
 }
 
 /**
- * Source images for the Google Ads image assets. Without work photos this is the previous list (trust uploads, then the
- * profile photo, first 4); work photos, when tagged, go first. The logo is never included.
+ * Source images for the Google Ads image assets: tagged work photos first, then the profile photo, first 4.
+ * Trust uploads (T21, trustAssetUrls) are NEVER used: they may be review / WhatsApp screenshots, and a screenshot is
+ * never an ad image (2026-11-22). A work photo also sits in trustAssetUrls, but it qualifies through workPhotoUrls.
+ * The logo is never included. No work photo and no profile photo = no image assets.
  */
 export function adImageSourceUrls(data: CollectedData, max = 4): string[] {
   const work = workPhotos(data);
-  const rest = [
-    ...(data.trustAssetUrls ?? []),
-    ...(data.profilePhotoUrl ? [data.profilePhotoUrl] : []),
-  ];
-  return unique([...work, ...rest]).filter(url => !data.logoUrl || url !== data.logoUrl).slice(0, max);
+  const profile = isIntakeUploadUrl(data.profilePhotoUrl) ? [data.profilePhotoUrl] : [];
+  return unique([...work, ...profile]).filter(url => !data.logoUrl || url !== data.logoUrl).slice(0, max);
 }
 
 // ─────────────────────────────────────────────────────────────────────────

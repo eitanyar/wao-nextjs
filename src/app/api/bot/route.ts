@@ -619,7 +619,7 @@ function handleSimulation(
             budget17 = vb17.recommended;
           } else {
             return NextResponse.json({
-              response: `כמה בחודש אתה חושב להשקיע? (גם ₪${vb17.min.toLocaleString()} — אני אشرح מה אפשר לצפות ממנו)`,
+              response: `כמה בחודש אתה חושב להשקיע? (גם ₪${vb17.min.toLocaleString()} — אני אסביר מה אפשר לצפות ממנו)`,
               currentState,
               collectedData: data,
               isSimulation: true,
@@ -750,7 +750,7 @@ function handleSimulation(
       response = "הבנתי. אם תרצה לשנות משהו — תקציב, מיקוד, נוסח המודעה — פשוט תגיד לי. אם הכל בסדר, תגיד ״אישור״ כדי שנתקדם.";
     }
   } else if (currentState === "COMPLETED") {
-    response = "הקמפיין כבר הוגדר והחשבון ממתין לך במייל. אם תרצה להקים קמפיין חדש, אני כאן.";
+    response = "הפרטים שלך אצלנו. שום דבר לא עולה לאוויר בלי שנכתוב לך קודם במייל. השתנה משהו? תכתוב לנו כאן.";
   }
 
   return NextResponse.json({
