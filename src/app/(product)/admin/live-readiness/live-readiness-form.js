@@ -4,36 +4,33 @@
  * dependency here — pure form parsing/validation only. Consumed by
  * `./shared.ts`, which layers TypeScript types on top for the page/action.
  *
- * See docs/specs/priority-5-live-readiness-consent-ui.md.
+ * Keys follow the Decision D2 readiness model in
+ * src/lib/google-ads/live-readiness.js (single source of truth). Until the
+ * poll job (mission item 4) and checkout exist, every key — polled, system
+ * and admin — is admin-settable here.
  */
+import {
+  BOOLEAN_READINESS_KEYS,
+  READINESS_KEYS,
+  VERIFICATION_STATUSES,
+} from '../../../../lib/google-ads/live-readiness.js';
 
-/**
- * The six attestation keys `assessLiveReadiness()` reads from
- * `data/clients/{clientId}/live-readiness.json`. This is the ONLY set of
- * keys ever read from a submitted form or written to disk — per spec §1.4,
- * any other field on the form is ignored.
- */
-export const READINESS_KEYS = [
-  'clientAccountOwned',
-  'clientBillingAccepted',
-  'mccInvitationAccepted',
-  'approvalContactConfirmed',
-  'liveConsentRecorded',
-  'auditLogEnabled',
-];
+export { BOOLEAN_READINESS_KEYS, READINESS_KEYS, VERIFICATION_STATUSES };
 
 /**
  * Pure parsing/validation of a submitted live-readiness form. Enforces:
  *  - clientId must match /^[a-z0-9-]+$/i (existence of the client dir is
  *    checked separately by the caller, since that needs fs access).
- *  - setting liveConsentRecorded=true requires a non-empty free-text
- *    evidence note (spec §1.3).
- *  - only the six known keys above are ever read off the form (spec §1.4).
+ *  - boolean keys are checkboxes ('on' = true, absent = false).
+ *  - verificationStatus must be one of VERIFICATION_STATUSES (absent = 'unknown').
+ *  - termsConsent needs BOTH a terms version and a parseable timestamp, or
+ *    neither (= cleared). The timestamp is normalized to ISO-8601 UTC.
+ *  - only the readiness keys are ever read off the form; any other field is ignored.
  *
  * @param {FormData} formData
- * @returns {{ ok: true, clientId: string, patch: Record<string, boolean>, evidenceNote: string }
+ * @returns {{ ok: true, clientId: string, patch: Record<string, unknown> }
  *          | { ok: false, error: 'invalid-client' }
- *          | { ok: false, error: 'missing-consent-evidence', clientId: string }}
+ *          | { ok: false, error: 'invalid-verification-status' | 'invalid-terms-consent', clientId: string }}
  */
 export function parseLiveReadinessSubmission(formData) {
   const clientId = (formData.get('clientId') ?? '').toString().trim();
@@ -41,16 +38,29 @@ export function parseLiveReadinessSubmission(formData) {
     return { ok: false, error: 'invalid-client' };
   }
 
+  /** @type {Record<string, unknown>} */
   const patch = {};
-  for (const key of READINESS_KEYS) {
+  for (const key of BOOLEAN_READINESS_KEYS) {
     patch[key] = formData.get(key) === 'on';
   }
 
-  const evidenceNote = (formData.get('liveConsentEvidence') ?? '').toString().trim();
+  const verificationStatus = (formData.get('verificationStatus') ?? '').toString().trim() || 'unknown';
+  if (!VERIFICATION_STATUSES.includes(verificationStatus)) {
+    return { ok: false, error: 'invalid-verification-status', clientId };
+  }
+  patch.verificationStatus = verificationStatus;
 
-  if (patch.liveConsentRecorded && !evidenceNote) {
-    return { ok: false, error: 'missing-consent-evidence', clientId };
+  const termsVersion = (formData.get('termsConsentVersion') ?? '').toString().trim();
+  const consentedAtRaw = (formData.get('termsConsentAt') ?? '').toString().trim();
+  if (!termsVersion && !consentedAtRaw) {
+    patch.termsConsent = null;
+  } else {
+    const consentedAtMs = Date.parse(consentedAtRaw);
+    if (!termsVersion || !consentedAtRaw || !Number.isFinite(consentedAtMs)) {
+      return { ok: false, error: 'invalid-terms-consent', clientId };
+    }
+    patch.termsConsent = { termsVersion, consentedAt: new Date(consentedAtMs).toISOString() };
   }
 
-  return { ok: true, clientId, patch, evidenceNote };
+  return { ok: true, clientId, patch };
 }

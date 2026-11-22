@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { COOKIE_NAME, verifySessionToken } from '@/lib/client-auth';
 import { resolveGoogleAdsMutationAccess } from '@/lib/google-ads/access-policy';
+import { loadLiveReadinessRecord } from '@/lib/google-ads/live-readiness-store';
 import { loadCampaignConfigBySlug } from '@/lib/crm/intelligence';
 import { readLeads, findLeadById } from '@/lib/crm/leadsStore';
 import { uploadLeadConversion, type ConversionType } from '@/lib/google-ads/conversion-upload';
@@ -61,8 +62,9 @@ export async function POST(req: Request) {
       mode,
       sandboxClientId,
       liveModeEnabled: process.env.GOOGLE_ADS_ENABLE_LIVE_MODE === 'true',
+      liveReadinessRecord: mode === 'live' ? loadLiveReadinessRecord(config.clientId) : undefined,
     });
-    if (!access.allowed) return NextResponse.json({ error: access.error }, { status: access.status });
+    if (!access.allowed) return NextResponse.json({ error: access.error, code: access.code, missing: access.missing }, { status: access.status });
 
     // ── Delegate the actual upload mechanics ──────────────────────────────────
     const result = await uploadLeadConversion({ leadId, type });

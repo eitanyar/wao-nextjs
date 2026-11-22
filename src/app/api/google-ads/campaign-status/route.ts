@@ -3,6 +3,7 @@ import { cookies } from 'next/headers';
 import { COOKIE_NAME, verifySessionToken } from '@/lib/client-auth';
 import { loadCampaignConfigBySlug, loadClientGoogleAdsIndex } from '@/lib/crm/intelligence';
 import { resolveGoogleAdsMutationAccess } from '@/lib/google-ads/access-policy';
+import { loadLiveReadinessRecord } from '@/lib/google-ads/live-readiness-store';
 import { setCampaignStatus } from '@/lib/google-ads/mutations';
 import { appendGoogleAdsDirectActionAudit } from '@/lib/google-ads/direct-action-audit';
 
@@ -35,19 +36,24 @@ export async function POST(req: Request) {
     const sandboxClientId = process.env.GOOGLE_ADS_SANDBOX_CLIENT_ID || 'google-ads-sandbox';
     const requestedClientId = campaignConfig.clientId || (mode === 'test' ? sandboxClientId : '');
 
+    // Read the body before the gate: pausing must always be possible (no readiness check);
+    // resume/enable needs the full readiness record. Action validation stays after the gate.
+    const body = (await req.json().catch(() => ({}))) as CampaignStatusRequest;
+
     const access = resolveGoogleAdsMutationAccess({
       sessionClientId,
       requestedClientId,
       mode,
       sandboxClientId,
       liveModeEnabled: process.env.GOOGLE_ADS_ENABLE_LIVE_MODE === 'true',
+      liveReadinessRecord: mode === 'live' ? loadLiveReadinessRecord(requestedClientId) : undefined,
+      liveReadinessStage: body?.action === 'pause' ? 'none' : 'full',
     });
 
     if (!access.allowed) {
-      return NextResponse.json({ error: access.error }, { status: access.status });
+      return NextResponse.json({ error: access.error, code: access.code, missing: access.missing }, { status: access.status });
     }
 
-    const body = (await req.json().catch(() => ({}))) as CampaignStatusRequest;
     if (body.action !== 'pause' && body.action !== 'resume') {
       return NextResponse.json({ error: "Action must be either 'pause' or 'resume'" }, { status: 400 });
     }

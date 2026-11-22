@@ -1,28 +1,8 @@
-import fs from 'fs';
-import path from 'path';
-import { clientsDir } from '@/lib/dataRoots';
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { COOKIE_NAME, verifySessionToken } from '@/lib/client-auth';
 import { assessLiveReadiness } from '@/lib/google-ads/live-readiness';
-
-interface LiveReadinessRecord {
-  clientAccountOwned?: boolean;
-  clientBillingAccepted?: boolean;
-  mccInvitationAccepted?: boolean;
-  approvalContactConfirmed?: boolean;
-  liveConsentRecorded?: boolean;
-  auditLogEnabled?: boolean;
-}
-
-function loadReadinessRecord(clientId: string): LiveReadinessRecord {
-  const recordPath = path.join(clientsDir(), clientId, 'live-readiness.json');
-  try {
-    return JSON.parse(fs.readFileSync(recordPath, 'utf8')) as LiveReadinessRecord;
-  } catch {
-    return {};
-  }
-}
+import { loadLiveReadinessRecord } from '@/lib/google-ads/live-readiness-store';
 
 export async function GET() {
   const jar = await cookies();
@@ -45,7 +25,7 @@ export async function GET() {
 
   return NextResponse.json(assessLiveReadiness({
     clientId,
-    record: loadReadinessRecord(clientId),
+    record: loadLiveReadinessRecord(clientId) ?? {},
     managerCredentialsConfigured,
     liveModeEnabled: process.env.GOOGLE_ADS_ENABLE_LIVE_MODE === 'true',
   }));

@@ -8,7 +8,9 @@ import { TAMAR_CALLOUT_SYSTEM_PROMPT, TAMAR_STRUCTURED_SNIPPET_SYSTEM_PROMPT } f
 import { detectVertical } from '@/lib/lp/verticalDetect';
 import { bindCampaignToClient } from '@/lib/crm/intelligence';
 import { COOKIE_NAME, verifySessionToken } from '@/lib/client-auth';
+import { ADMIN_COOKIE_NAME, verifyAdminToken } from '@/lib/admin-auth';
 import { resolveGoogleAdsMutationAccess } from '@/lib/google-ads/access-policy';
+import { loadLiveReadinessRecord } from '@/lib/google-ads/live-readiness-store';
 import { buildOnboardingAutonomyPolicy } from '@/lib/google-ads/autonomy-consent';
 import { writeAutonomyPolicy } from '@/lib/google-ads/autonomy';
 import { appendGoogleAdsDirectActionAudit } from '@/lib/google-ads/direct-action-audit';
@@ -84,6 +86,9 @@ interface CampaignCopy {
 }
 
 type CampaignMode = 'test' | 'live';
+
+/** Actor marker recorded when a WAO admin creates a live campaign on behalf of a client. */
+const ADMIN_ACTOR = 'wao-admin';
 
 interface CreateCampaignRequest {
   collectedData: CollectedData;
@@ -473,17 +478,30 @@ export async function POST(req: Request) {
     const requestedClientId = body.clientId?.trim() || (mode === 'test' ? sandboxClientId : '');
     const jar = await cookies();
     const sessionClientId = await verifySessionToken(jar.get(COOKIE_NAME)?.value ?? '');
+    // Live creation (Decision D): admin cookie + the pre-account readiness keys. With the admin
+    // cookie the request may act on behalf of requestedClientId without that client's session
+    // (a new pilot client has none); the actor is then recorded as ADMIN_ACTOR. The account
+    // does not exist yet, so the post-account keys (invite, billing, verification) cannot be
+    // complete here; the campaign is created PAUSED and every later live mutation
+    // (incl. resume via campaign-status) needs the full record.
+    const isAdmin = mode === 'live' ? await verifyAdminToken(jar.get(ADMIN_COOKIE_NAME)?.value ?? '') : false;
     const access = resolveGoogleAdsMutationAccess({
       sessionClientId,
       requestedClientId,
       mode,
       sandboxClientId,
       liveModeEnabled: process.env.GOOGLE_ADS_ENABLE_LIVE_MODE === 'true',
+      liveReadinessRecord: mode === 'live' ? loadLiveReadinessRecord(requestedClientId) : undefined,
+      liveReadinessStage: 'pre-account',
+      requireAdminForLive: true,
+      isAdmin,
     });
 
     if (!access.allowed) {
-      return NextResponse.json({ error: access.error }, { status: access.status });
+      return NextResponse.json({ error: access.error, code: access.code, missing: access.missing }, { status: access.status });
     }
+
+    const actor = access.actingAsAdmin ? ADMIN_ACTOR : undefined;
 
     if (!collectedData?.businessNiche) {
       return NextResponse.json({ error: 'collectedData.businessNiche is required' }, { status: 400 });
@@ -896,7 +914,7 @@ export async function POST(req: Request) {
         autonomyConsentTimestamp: body.autonomyConsentTimestamp,
         autonomyTermsVersion: body.autonomyTermsVersion,
         dailyBudgetIls: strategy.suggestedDailyBudget,
-        authorizedBy: sessionClientId ?? effectiveClientId,
+        authorizedBy: actor ?? sessionClientId ?? effectiveClientId,
         legalTermsVersion: process.env.GOOGLE_ADS_AUTONOMY_LEGAL_VERSION,
       });
       if (autonomyPolicy && !writeAutonomyPolicy(autonomyPolicy)) {
@@ -934,7 +952,7 @@ export async function POST(req: Request) {
       appendGoogleAdsDirectActionAudit({
         clientId: effectiveClientId,
         actionType: 'campaign_creation',
-        actorClientId: sessionClientId ?? effectiveClientId,
+        actorClientId: actor ?? sessionClientId ?? effectiveClientId,
         campaignId,
         status: 'success',
         metadata: { customerId: newCustomerId, slug, businessName, dailyBudgetIls: strategy.suggestedDailyBudget },

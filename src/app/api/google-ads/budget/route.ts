@@ -3,6 +3,7 @@ import { cookies } from 'next/headers';
 import { COOKIE_NAME, verifySessionToken } from '@/lib/client-auth';
 import { loadCampaignConfigBySlug, loadClientGoogleAdsIndex } from '@/lib/crm/intelligence';
 import { resolveGoogleAdsMutationAccess } from '@/lib/google-ads/access-policy';
+import { loadLiveReadinessRecord } from '@/lib/google-ads/live-readiness-store';
 import { setCampaignDailyBudget } from '@/lib/google-ads/mutations';
 import { appendGoogleAdsDirectActionAudit } from '@/lib/google-ads/direct-action-audit';
 
@@ -41,10 +42,11 @@ export async function POST(req: Request) {
       mode,
       sandboxClientId,
       liveModeEnabled: process.env.GOOGLE_ADS_ENABLE_LIVE_MODE === 'true',
+      liveReadinessRecord: mode === 'live' ? loadLiveReadinessRecord(requestedClientId) : undefined,
     });
 
     if (!access.allowed) {
-      return NextResponse.json({ error: access.error }, { status: access.status });
+      return NextResponse.json({ error: access.error, code: access.code, missing: access.missing }, { status: access.status });
     }
 
     const body = (await req.json().catch(() => ({}))) as BudgetRequest;

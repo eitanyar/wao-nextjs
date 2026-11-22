@@ -10,6 +10,7 @@ import {
 } from '@/lib/crm/intelligence';
 import { COOKIE_NAME, verifySessionToken } from '@/lib/client-auth';
 import { resolveGoogleAdsMutationAccess } from '@/lib/google-ads/access-policy';
+import { loadLiveReadinessRecord } from '@/lib/google-ads/live-readiness-store';
 
 interface LinkClientRequest {
   clientId: string;
@@ -36,16 +37,18 @@ export async function POST(req: Request) {
 
     const jar = await cookies();
     const sessionClientId = await verifySessionToken(jar.get(COOKIE_NAME)?.value ?? '');
+    const mode = campaign.mode === 'test' ? 'test' : 'live';
     const access = resolveGoogleAdsMutationAccess({
       sessionClientId,
       requestedClientId: clientId,
-      mode: campaign.mode === 'test' ? 'test' : 'live',
+      mode,
       sandboxClientId: process.env.GOOGLE_ADS_SANDBOX_CLIENT_ID || 'google-ads-sandbox',
       liveModeEnabled: process.env.GOOGLE_ADS_ENABLE_LIVE_MODE === 'true',
+      liveReadinessRecord: mode === 'live' ? loadLiveReadinessRecord(clientId) : undefined,
     });
 
     if (!access.allowed) {
-      return NextResponse.json({ error: access.error }, { status: access.status });
+      return NextResponse.json({ error: access.error, code: access.code, missing: access.missing }, { status: access.status });
     }
 
     if (body.customerId && body.customerId !== campaign.customerId) {

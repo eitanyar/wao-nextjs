@@ -55,15 +55,15 @@ export async function updateLiveReadinessAction(formData: FormData) {
 
   const parsed = parseLiveReadinessSubmission(formData);
   if (!parsed.ok) {
-    if (parsed.error === 'missing-consent-evidence') {
+    if (parsed.error === 'invalid-verification-status' || parsed.error === 'invalid-terms-consent') {
       redirect(
-        `/admin/live-readiness?error=missing-consent-evidence&clientId=${encodeURIComponent(parsed.clientId)}`,
+        `/admin/live-readiness?error=${parsed.error}&clientId=${encodeURIComponent(parsed.clientId)}`,
       );
     }
     redirect('/admin/live-readiness?error=invalid-client');
   }
 
-  const { clientId, patch, evidenceNote } = parsed;
+  const { clientId, patch } = parsed;
   const clientDir = path.join(CLIENTS_DIR, clientId);
 
   if (!fs.existsSync(clientDir) || !fs.statSync(clientDir).isDirectory()) {
@@ -73,32 +73,28 @@ export async function updateLiveReadinessAction(formData: FormData) {
   const recordPath = path.join(clientDir, 'live-readiness.json');
   const existing = loadRecord(recordPath);
 
-  const nextRecord: LiveReadinessRecord = { ...existing };
-  const changes: Array<{ key: ReadinessKey; from: boolean; to: boolean }> = [];
+  // Keys outside READINESS_KEYS (e.g. the pre-D2 attestation keys on older records) are kept
+  // as history but are never read by the gate.
+  const nextRecord: Record<string, unknown> = { ...existing };
+  const changes: Array<{ key: ReadinessKey; from: unknown; to: unknown }> = [];
 
   for (const key of READINESS_KEYS) {
-    const before = existing[key] === true;
-    const after = patch[key] === true;
-    if (before !== after) {
+    const before = (existing as Record<string, unknown>)[key] ?? null;
+    const after = patch[key] ?? null;
+    if (JSON.stringify(before) !== JSON.stringify(after)) {
       changes.push({ key, from: before, to: after });
     }
     nextRecord[key] = after;
   }
 
-  const evidenceChanged = patch.liveConsentRecorded && evidenceNote !== (existing.liveConsentEvidence ?? '');
-  if (patch.liveConsentRecorded) {
-    nextRecord.liveConsentEvidence = evidenceNote;
-  }
-
   atomicWriteJson(recordPath, nextRecord);
 
-  if (changes.length > 0 || evidenceChanged) {
+  if (changes.length > 0) {
     appendAuditEntry(clientDir, {
       timestamp: new Date().toISOString(),
       source: 'admin-ui',
       clientId,
       changes,
-      ...(patch.liveConsentRecorded ? { liveConsentEvidence: evidenceNote } : {}),
     });
   }
 

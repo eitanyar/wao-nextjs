@@ -4,26 +4,34 @@ import { clientsDir } from '@/lib/dataRoots';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { ADMIN_COOKIE_NAME, verifyAdminToken } from '@/lib/admin-auth';
-import { assessLiveReadiness } from '@/lib/google-ads/live-readiness';
+import { assessLiveReadiness, READINESS_REQUIREMENTS } from '@/lib/google-ads/live-readiness';
 import { updateLiveReadinessAction } from './action';
-import { READINESS_KEYS, type ReadinessKey, type LiveReadinessRecord } from './shared';
+import { BOOLEAN_READINESS_KEYS, VERIFICATION_STATUSES, type BooleanReadinessKey, type LiveReadinessRecord } from './shared';
 
 export const metadata = { robots: { index: false }, title: 'מוכנות להפעלה חיה | WAO' };
 
 const CLIENTS_DIR = clientsDir();
 
-// Hebrew labels for every requirement `assessLiveReadiness()` can report,
-// including the read-only `managerCredentialsConfigured` one (env-driven,
-// not staff-writable) so the verdict panel below is fully legible.
+// Hebrew labels for requirements `assessLiveReadiness()` can report, incl. the
+// read-only env-driven `managerCredentialsConfigured`. Keys added by the D2
+// model (2026-11-22) have no Hebrew label yet and fall back to the English
+// label from src/lib/google-ads/live-readiness.js (waocopy patch pending).
 const REQUIREMENT_LABELS: Record<string, string> = {
   managerCredentialsConfigured: 'פרטי OAuth ו-MCC של מנהל WAO מוגדרים בסביבה (לא ניתן לעריכה כאן)',
-  clientAccountOwned: 'אומת חשבון Google Ads בבעלות הלקוח',
-  clientBillingAccepted: 'פרופיל חיוב בבעלות הלקוח ואישור תנאי החיוב של Google',
-  mccInvitationAccepted: 'אושרה הזמנת מנהל ה-MCC של WAO',
+  billingApproved: 'פרופיל חיוב בבעלות הלקוח ואישור תנאי החיוב של Google',
   approvalContactConfirmed: 'אומת איש קשר מאשר מטעם הלקוח',
-  liveConsentRecorded: 'תועדה הסכמה מפורשת של הלקוח לפיילוט חי',
-  auditLogEnabled: 'מופעל יומן ביקורת/אישורים בלתי ניתן לשינוי',
 };
+
+const ENGLISH_REQUIREMENT_LABELS: Record<string, string> = Object.fromEntries(
+  READINESS_REQUIREMENTS.map(requirement => [requirement.key, requirement.label]),
+);
+const REQUIREMENT_SOURCES: Record<string, string> = Object.fromEntries(
+  READINESS_REQUIREMENTS.map(requirement => [requirement.key, requirement.source]),
+);
+
+function requirementLabel(key: string): string {
+  return REQUIREMENT_LABELS[key] ?? ENGLISH_REQUIREMENT_LABELS[key] ?? key;
+}
 
 type ClientEntry = {
   clientId: string;
@@ -78,8 +86,8 @@ function managerCredentialsConfigured(): boolean {
 const ERROR_MESSAGES: Record<string, string> = {
   'invalid-client': 'מזהה לקוח לא תקין.',
   'unknown-client': 'לא נמצאה תיקיית לקוח תואמת תחת data/clients.',
-  'missing-consent-evidence':
-    'כדי לסמן ״תועדה הסכמה מפורשת לפיילוט חי״ יש לפרט הערת אימות — מי אישר, מתי ובאיזה ערוץ.',
+  'invalid-verification-status': 'Invalid verification status.',
+  'invalid-terms-consent': 'Terms consent needs both a terms version and a valid timestamp (or leave both empty).',
 };
 
 export default async function LiveReadinessPage({
@@ -165,7 +173,7 @@ export default async function LiveReadinessPage({
                 <form action={updateLiveReadinessAction} className="space-y-3">
                   <input type="hidden" name="clientId" value={client.clientId} />
 
-                  {READINESS_KEYS.map((key: ReadinessKey) => (
+                  {BOOLEAN_READINESS_KEYS.map((key: BooleanReadinessKey) => (
                     <label
                       key={key}
                       className="flex items-start gap-3 rounded-lg border border-white/10 bg-white/5 px-4 py-3 cursor-pointer"
@@ -176,23 +184,52 @@ export default async function LiveReadinessPage({
                         defaultChecked={client.record[key] === true}
                         className="mt-1 shrink-0"
                       />
-                      <span className="text-sm">{REQUIREMENT_LABELS[key]}</span>
+                      <span className="text-sm">
+                        {requirementLabel(key)}
+                        <span className="text-[var(--muted)] text-xs" dir="ltr"> ({REQUIREMENT_SOURCES[key]})</span>
+                      </span>
                     </label>
                   ))}
 
-                  <div>
+                  <div className="rounded-lg border border-white/10 bg-white/5 px-4 py-3" dir="ltr">
                     <label
-                      htmlFor={`liveConsentEvidence-${client.clientId}`}
-                      className="block text-xs font-medium mb-1.5 text-[var(--muted)]"
+                      htmlFor={`verificationStatus-${client.clientId}`}
+                      className="block text-sm mb-1.5"
                     >
-                      הערת אימות הסכמה (חובה כדי לסמן ״תועדה הסכמה מפורשת לפיילוט חי״) — מי אישר, מתי ובאיזה ערוץ
+                      {requirementLabel('verificationStatus')}
+                      <span className="text-[var(--muted)] text-xs"> ({REQUIREMENT_SOURCES.verificationStatus})</span>
                     </label>
-                    <textarea
-                      id={`liveConsentEvidence-${client.clientId}`}
-                      name="liveConsentEvidence"
-                      defaultValue={client.record.liveConsentEvidence ?? ''}
-                      rows={2}
-                      placeholder='לדוגמה: הבעלים דנה אישרה בטופס הסכמה בקליטה, 20/07/2026'
+                    <select
+                      id={`verificationStatus-${client.clientId}`}
+                      name="verificationStatus"
+                      defaultValue={client.record.verificationStatus ?? 'unknown'}
+                      className="w-full rounded-lg bg-white/8 border border-white/15 px-3 py-2 text-sm outline-none focus:border-[var(--accent)] transition-colors"
+                    >
+                      {VERIFICATION_STATUSES.map(status => (
+                        <option key={status} value={status}>{status}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="rounded-lg border border-white/10 bg-white/5 px-4 py-3 space-y-2" dir="ltr">
+                    <p className="text-sm">
+                      {requirementLabel('termsConsent')}
+                      <span className="text-[var(--muted)] text-xs"> ({REQUIREMENT_SOURCES.termsConsent})</span>
+                    </p>
+                    <input
+                      type="text"
+                      name="termsConsentVersion"
+                      aria-label="Terms version"
+                      placeholder="Terms version"
+                      defaultValue={client.record.termsConsent?.termsVersion ?? ''}
+                      className="w-full rounded-lg bg-white/8 border border-white/15 px-3 py-2 text-sm outline-none focus:border-[var(--accent)] transition-colors"
+                    />
+                    <input
+                      type="text"
+                      name="termsConsentAt"
+                      aria-label="Consent timestamp (ISO-8601)"
+                      placeholder="Consent timestamp, ISO-8601 (2026-11-22T10:00:00Z)"
+                      defaultValue={client.record.termsConsent?.consentedAt ?? ''}
                       className="w-full rounded-lg bg-white/8 border border-white/15 px-3 py-2 text-sm outline-none focus:border-[var(--accent)] transition-colors"
                     />
                   </div>
@@ -202,7 +239,7 @@ export default async function LiveReadinessPage({
                       .filter(r => r.key === 'managerCredentialsConfigured')
                       .map(r => (
                         <p key={r.key}>
-                          {r.complete ? '✓' : '✗'} {REQUIREMENT_LABELS[r.key]}
+                          {r.complete ? '✓' : '✗'} {requirementLabel(r.key)}
                         </p>
                       ))}
                     <p className="mt-1">

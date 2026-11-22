@@ -88,14 +88,14 @@ test('§1.2 — this UI never touches live-mode flags or any mutation/executor r
   assert.match(pageSrc, /GOOGLE_ADS_ENABLE_LIVE_MODE\s*===/); // confirms it's a read-only comparison
 });
 
-test('§1.3 — setting liveConsentRecorded=true without an evidence note is rejected before any write', () => {
-  assert.match(actionSrc, /missing-consent-evidence/);
-  const missingEvidenceIdx = actionBody.indexOf('missing-consent-evidence');
+test('D2 — invalid verification status / terms consent submissions redirect before any write', () => {
+  const invalidIdx = actionBody.indexOf("parsed.error === 'invalid-verification-status' || parsed.error === 'invalid-terms-consent'");
   const atomicWriteCallIdx = actionBody.indexOf('atomicWriteJson(recordPath, nextRecord)');
-  assert.ok(missingEvidenceIdx < atomicWriteCallIdx);
+  assert.notEqual(invalidIdx, -1);
+  assert.ok(invalidIdx < atomicWriteCallIdx);
 });
 
-test('the six readiness keys are the only fields ever assigned onto the persisted record', () => {
+test('the readiness keys are the only fields ever assigned onto the persisted record', () => {
   assert.match(actionSrc, /for \(const key of READINESS_KEYS\)/);
 });
 
@@ -108,5 +108,5 @@ test('writes are atomic (temp file + rename) and the audit log is append-only', 
 
 test('page.tsx never indexes the admin route and reuses assessLiveReadiness rather than re-deriving it', () => {
   assert.match(pageSrc, /robots:\s*\{\s*index:\s*false\s*\}/);
-  assert.match(pageSrc, /import\s*\{\s*assessLiveReadiness\s*\}\s*from\s*'@\/lib\/google-ads\/live-readiness'/);
+  assert.match(pageSrc, /import\s*\{\s*assessLiveReadiness\b[^}]*\}\s*from\s*'@\/lib\/google-ads\/live-readiness'/);
 });

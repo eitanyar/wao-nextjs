@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test   from 'node:test';
-import { READINESS_KEYS, parseLiveReadinessSubmission } from './live-readiness-form.js';
+import { BOOLEAN_READINESS_KEYS, READINESS_KEYS, parseLiveReadinessSubmission } from './live-readiness-form.js';
 
 function formData(fields) {
   const fd = new FormData();
@@ -10,60 +10,33 @@ function formData(fields) {
   return fd;
 }
 
-test('rejects liveConsentRecorded=true with an empty evidence note (spec §1.3)', () => {
-  const result = parseLiveReadinessSubmission(formData({
-    clientId: 'test-plumber-tlv',
-    liveConsentRecorded: 'on',
-    liveConsentEvidence: '   ',
-  }));
-
-  assert.equal(result.ok, false);
-  assert.equal(result.error, 'missing-consent-evidence');
-});
-
-test('rejects liveConsentRecorded=true when the evidence note is entirely absent', () => {
-  const result = parseLiveReadinessSubmission(formData({
-    clientId: 'test-plumber-tlv',
-    liveConsentRecorded: 'on',
-  }));
-
-  assert.equal(result.ok, false);
-  assert.equal(result.error, 'missing-consent-evidence');
-});
-
-test('accepts liveConsentRecorded=true with a non-empty evidence note', () => {
-  const result = parseLiveReadinessSubmission(formData({
-    clientId: 'test-plumber-tlv',
-    liveConsentRecorded: 'on',
-    liveConsentEvidence: 'Owner Dana signed onboarding consent form 2026-07-20',
-  }));
-
+test('boolean keys are checkboxes; absent parses as false', () => {
+  const result = parseLiveReadinessSubmission(formData({ clientId: 'test-plumber-tlv', feePaid: 'on' }));
   assert.equal(result.ok, true);
-  assert.equal(result.clientId, 'test-plumber-tlv');
-  assert.equal(result.patch.liveConsentRecorded, true);
-  assert.equal(result.evidenceNote, 'Owner Dana signed onboarding consent form 2026-07-20');
+  assert.equal(result.patch.feePaid, true);
+  for (const key of BOOLEAN_READINESS_KEYS.filter(k => k !== 'feePaid')) {
+    assert.equal(result.patch[key], false, key);
+  }
 });
 
-test('the other five fields are plain toggles that never require an evidence note', () => {
-  const result = parseLiveReadinessSubmission(formData({
-    clientId: 'test-plumber-tlv',
-    clientAccountOwned: 'on',
-    clientBillingAccepted: 'on',
-    mccInvitationAccepted: 'on',
-    approvalContactConfirmed: 'on',
-    auditLogEnabled: 'on',
-  }));
-
-  assert.equal(result.ok, true);
-  assert.equal(result.patch.clientAccountOwned, true);
-  assert.equal(result.patch.clientBillingAccepted, true);
-  assert.equal(result.patch.mccInvitationAccepted, true);
-  assert.equal(result.patch.approvalContactConfirmed, true);
-  assert.equal(result.patch.auditLogEnabled, true);
-  assert.equal(result.patch.liveConsentRecorded, false);
+test('verificationStatus defaults to unknown and rejects unknown values', () => {
+  assert.equal(parseLiveReadinessSubmission(formData({ clientId: 'c' })).patch.verificationStatus, 'unknown');
+  assert.equal(parseLiveReadinessSubmission(formData({ clientId: 'c', verificationStatus: 'verified' })).patch.verificationStatus, 'verified');
+  const bad = parseLiveReadinessSubmission(formData({ clientId: 'c', verificationStatus: 'approved' }));
+  assert.deepEqual(bad, { ok: false, error: 'invalid-verification-status', clientId: 'c' });
 });
 
-test('rejects an invalid clientId (path-traversal / crafted input hardening, spec §1.4)', () => {
+test('terms consent: both fields -> normalized ISO record; neither -> null; one or bad date -> rejected', () => {
+  const ok = parseLiveReadinessSubmission(formData({ clientId: 'c', termsConsentVersion: ' v1 ', termsConsentAt: '2026-11-22T12:00:00+02:00' }));
+  assert.deepEqual(ok.patch.termsConsent, { termsVersion: 'v1', consentedAt: '2026-11-22T10:00:00.000Z' });
+  assert.equal(parseLiveReadinessSubmission(formData({ clientId: 'c' })).patch.termsConsent, null);
+  for (const fields of [{ termsConsentVersion: 'v1' }, { termsConsentAt: '2026-11-22T10:00:00Z' }, { termsConsentVersion: 'v1', termsConsentAt: 'soon' }]) {
+    const result = parseLiveReadinessSubmission(formData({ clientId: 'c', ...fields }));
+    assert.deepEqual(result, { ok: false, error: 'invalid-terms-consent', clientId: 'c' }, JSON.stringify(fields));
+  }
+});
+
+test('rejects an invalid clientId (path-traversal / crafted input hardening)', () => {
   for (const badId of ['../../etc', 'client id with spaces', '', 'client/../x', 'client;rm -rf']) {
     const result = parseLiveReadinessSubmission(formData({ clientId: badId }));
     assert.equal(result.ok, false, `expected ${JSON.stringify(badId)} to be rejected`);
@@ -71,42 +44,14 @@ test('rejects an invalid clientId (path-traversal / crafted input hardening, spe
   }
 });
 
-test('accepts a well-formed clientId', () => {
-  const result = parseLiveReadinessSubmission(formData({ clientId: 'Test-Plumber-TLV-2' }));
-  assert.equal(result.ok, true);
-});
-
-test('ignores any field outside the six known keys (spec §1.4)', () => {
-  const fd = formData({
-    clientId: 'test-plumber-tlv',
-    clientAccountOwned: 'on',
-  });
+test('ignores any field outside the readiness keys', () => {
+  const fd = formData({ clientId: 'test-plumber-tlv', feePaid: 'on' });
   fd.set('GOOGLE_ADS_ENABLE_LIVE_MODE', 'true');
   fd.set('isAdmin', 'true');
-  fd.set('role', 'admin');
+  fd.set('clientAccountOwned', 'on');
 
   const result = parseLiveReadinessSubmission(fd);
 
   assert.equal(result.ok, true);
   assert.deepEqual(Object.keys(result.patch).sort(), [...READINESS_KEYS].sort());
-});
-
-test('an unchecked box (absent from the form) parses as false, not true', () => {
-  const result = parseLiveReadinessSubmission(formData({ clientId: 'test-plumber-tlv' }));
-
-  assert.equal(result.ok, true);
-  for (const key of READINESS_KEYS) {
-    assert.equal(result.patch[key], false, `expected ${key} to default to false`);
-  }
-});
-
-test('READINESS_KEYS exposes exactly the six keys assessLiveReadiness() reads', () => {
-  assert.deepEqual(READINESS_KEYS, [
-    'clientAccountOwned',
-    'clientBillingAccepted',
-    'mccInvitationAccepted',
-    'approvalContactConfirmed',
-    'liveConsentRecorded',
-    'auditLogEnabled',
-  ]);
 });
