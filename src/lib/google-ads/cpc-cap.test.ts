@@ -102,6 +102,49 @@ test('niche -> trade row, most specific first', () => {
   assert.deepEqual({ ...tradeMoneyForNiche(beauty[0]) }, { cap: 15, min: 1500, recommended: 2000 });
 });
 
+// GBP category data (src/data/gbp-categories-il.json) supplies the accident / injury phrases, by primaryType.
+const gbp = JSON.parse(read('src/data/gbp-categories-il.json')) as unknown;
+const categories: Array<{ primaryType?: string; heName?: string; synonyms?: string[] }> = [];
+const collect = (node: unknown): void => {
+  if (Array.isArray(node)) node.forEach(collect);
+  else if (node && typeof node === 'object') {
+    const o = node as Record<string, unknown>;
+    if (typeof o.primaryType === 'string') categories.push(o as { primaryType: string });
+    Object.values(o).forEach(collect);
+  }
+};
+collect(gbp);
+const category = (type: string) => categories.find((c) => c.primaryType === type)!;
+const injury = category('personal_injury_attorney');
+const bodyShop = category('auto_body_shop');
+const garage = category('auto_repair_shop');
+const lawOffice = category('lawyer').synonyms!.find((x) => x.split(' ').length === 3 && x.endsWith(legal[0].split(' ')[1]))!; // "law office"
+const roadAccidents = injury.synonyms![0].split(' ').slice(0, 2).join(' '); // "road accidents"
+const accidents = roadAccidents.split(' ')[0]; // "accidents"
+const bodilyInjury = injury.heName!.split(' ').slice(2, 4).join(' '); // "bodily injuries"
+
+test('injury law (Adam 2026-11-23): accident / bodily-injury words count only next to a lawyer word', () => {
+  const injuryMoney = { cap: 35, min: 2500, recommended: 4000 };
+  for (const niche of [`${legal[0]} ${accidents}`, `${legal[1]} ${roadAccidents}`, `${legal[0]} ${bodilyInjury}`, injury.heName!, injury.synonyms![0], `${lawOffice} ${accidents}`]) {
+    assert.equal(cpcCapTradeForNiche(niche), 'injury_lawyer', niche);
+    assert.deepEqual({ ...tradeMoneyForNiche(niche) }, injuryMoney, niche);
+  }
+  // The singular bodily-injury form also counts (with a lawyer word).
+  const singular = bodilyInjury.replace(/\u05D9 /, ' ');
+  assert.notEqual(singular, bodilyInjury);
+  assert.equal(cpcCapTradeForNiche(`${legal[0]} ${singular}`), 'injury_lawyer');
+  // Plain lawyer unchanged; a plain law office (plural 'lawyers', GBP synonym) is on the lawyer row too.
+  for (const niche of [legal[0], legal[1], lawOffice]) {
+    assert.equal(cpcCapTradeForNiche(niche), 'lawyer', niche);
+    assert.deepEqual({ ...tradeMoneyForNiche(niche) }, { cap: 28, min: 2000, recommended: 3500 }, niche);
+  }
+  // No lawyer word: an accident garage / body shop is NOT injury law.
+  for (const niche of [`${garage.synonyms![0]} ${accidents}`, bodyShop.heName!, bodyShop.synonyms![0], ...bodyShop.synonyms!.filter((x) => x.includes(accidents)), accidents, bodilyInjury]) {
+    assert.notEqual(cpcCapTradeForNiche(niche), 'injury_lawyer', niche);
+    assert.equal(cpcCapIlsForNiche(niche), 15, niche);
+  }
+});
+
 test('lead forecasts price clicks at 0.8 x the trade cap', () => {
   assert.equal(FORECAST_CPC_SHARE_OF_CAP, 0.8);
   assert.equal(forecastCpcIlsForNiche(emergency[4]), 20);

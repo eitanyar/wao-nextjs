@@ -74,8 +74,15 @@ export const TRADE_LABELS: Readonly<Record<CpcCapTrade, string>> = Object.freeze
   default: 'Everything else',
 });
 
-const LAWYER_TOKENS = ['\u05E2\u05D5\u05E8\u05DA \u05D3\u05D9\u05DF', '\u05E2\u05D5\"\u05D3'];
+// Lawyer, abbreviation, and the plural 'lawyers' (law office; GBP synonym in src/data/gbp-categories-il.json).
+const LAWYER_TOKENS = ['\u05E2\u05D5\u05E8\u05DA \u05D3\u05D9\u05DF', '\u05E2\u05D5\"\u05D3', '\u05E2\u05D5\u05E8\u05DB\u05D9 \u05D3\u05D9\u05DF'];
 const INJURY_TOKENS = ['\u05E0\u05D6\u05D9\u05E7\u05D9\u05DF'];
+// Accident / bodily-injury words (Adam 2026-11-23; the first two are in src/data/gbp-categories-il.json, the singular
+// bodily-injury form comes from Adam's brief). They count as injury law
+// ONLY next to a lawyer word: alone they also describe garages / body shops (an accident garage is not a lawyer).
+const INJURY_WITH_LAWYER_TOKENS = ['\u05EA\u05D0\u05D5\u05E0\u05D5\u05EA', '\u05E0\u05D6\u05E7\u05D9 \u05D2\u05D5\u05E3', '\u05E0\u05D6\u05E7 \u05D2\u05D5\u05E3'];
+// Lawyer words that make the accident words injury law: the plain-lawyer tokens (incl. the plural 'lawyers').
+const LAWYER_CONTEXT_TOKENS = LAWYER_TOKENS;
 const DENTIST_TOKENS = ['\u05E9\u05D9\u05E0\u05D9\u05D9\u05DD', '\u05D3\u05E0\u05D8\u05DC', '\u05D0\u05D5\u05E8\u05EA\u05D5\u05D3\u05D5\u05E0\u05D8'];
 // Locksmith (unchanged tokens) + plumber / leak detection + roof waterproofing + movers.
 const URGENT_HOME_TOKENS = [...['\u05DE\u05E0\u05E2\u05D5\u05DC\u05DF', '\u05DE\u05E0\u05E2\u05D5\u05DC', '\u05E4\u05E8\u05D9\u05E6\u05D4'], ...['\u05D0\u05D9\u05E0\u05E1\u05D8\u05DC', '\u05E9\u05E8\u05D1\u05E8\u05D1', '\u05E0\u05D6\u05D9\u05DC', '\u05E1\u05EA\u05D9\u05DE\u05D4', '\u05D0\u05D9\u05D8\u05D5\u05DD', '\u05D2\u05D2\u05DF', '\u05D4\u05D5\u05D1\u05DC\u05D5\u05EA', '\u05E4\u05E8\u05D9\u05E6\u05EA']];
@@ -95,10 +102,14 @@ export const TRADE_TOKENS: ReadonlyArray<readonly [CpcCapTrade, readonly string[
 
 const has = (text: string, tokens: readonly string[]) => tokens.some((token) => text.includes(token));
 
+/** Injury law: the injury token alone, or an accident / bodily-injury word together with a lawyer word. */
+const isInjuryLaw = (text: string) => has(text, INJURY_TOKENS) || (has(text, INJURY_WITH_LAWYER_TOKENS) && has(text, LAWYER_CONTEXT_TOKENS));
+
 /** Which row a business niche falls in. */
 export function cpcCapTradeForNiche(niche: string | undefined | null): CpcCapTrade {
   const text = (niche ?? '').normalize('NFC').replace(/\u05F4/g, '"').toLowerCase();
   if (!text.trim()) return 'default';
+  if (isInjuryLaw(text)) return 'injury_lawyer';
   for (const [trade, tokens] of TRADE_TOKENS) if (has(text, tokens)) return trade;
   return 'default';
 }
@@ -131,7 +142,8 @@ export function tradeBudgetPromptTable(): string {
   for (const trade of Object.keys(TRADE_MONEY) as CpcCapTrade[]) {
     const money = TRADE_MONEY[trade];
     const words = tokens.get(trade);
-    const label = words ? `${TRADE_LABELS[trade]}: ${words.join(' / ')}` : TRADE_LABELS[trade];
+    const extra = trade === 'injury_lawyer' ? ` / ${INJURY_WITH_LAWYER_TOKENS.join(' / ')} (only together with a lawyer word)` : '';
+    const label = words ? `${TRADE_LABELS[trade]}: ${words.join(' / ')}${extra}` : TRADE_LABELS[trade];
     lines.push(`| ${label} | ${fmt(money.min)} | ${fmt(money.recommended)} | ${money.cap} |`);
   }
   return lines.join('\n');
