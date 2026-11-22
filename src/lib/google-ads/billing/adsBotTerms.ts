@@ -5,5 +5,5 @@
  * without a version bump (update both constants together). The version is always set by the server, never by the client.
  * Zero Hebrew in this module.
  */
-export const ADS_BOT_TERMS_SHA256 = '91f38f3cd223ecbb5a04cfba8dc057f8d6157cec25fd05dd680e9f1a5335e2bc';
-export const ADS_BOT_TERMS_VERSION = 'ads-bot-terms-2026-11-22-91f38f3c';
+export const ADS_BOT_TERMS_SHA256 = '6ba5e1c47f28cdc0b999c952b07ba1316ae1c169335b56611fccbdcd73f0c29f';
+export const ADS_BOT_TERMS_VERSION = 'ads-bot-terms-2026-11-23-6ba5e1c4';

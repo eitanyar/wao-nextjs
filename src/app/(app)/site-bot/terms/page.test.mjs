@@ -30,10 +30,14 @@ const react = { react: React, 'react/jsx-runtime': jsx };
 const bidi = load(local('src/lib/bidi.tsx'), react);
 const termsModule = load(local('src/lib/legal/siteBotTerms.ts'));
 const TERMS = termsModule.SITE_BOT_TERMS;
-const termsText = load(here('./termsText.tsx'), { ...react, '@/lib/bidi': bidi });
+const termsText = load(local('src/components/legal/termsText.tsx'), { ...react, '@/lib/bidi': bidi });
 const cssModule = { __esModule: true, default: new Proxy({}, { get: (_, key) => (typeof key === 'string' ? `css-${key}` : undefined) }) };
+// The renderer was extracted to src/components/legal/TermsDocument.tsx (2026-11-23, shared with /google-ads/terms).
+const termsDocument = load(local('src/components/legal/TermsDocument.tsx'), {
+  ...react, '@/lib/bidi': bidi, './terms.module.css': cssModule, './termsText': termsText,
+});
 const page = load(here('./page.tsx'), {
-  ...react, '@/lib/bidi': bidi, '@/lib/legal/siteBotTerms': termsModule, './terms.module.css': cssModule, './termsText': termsText,
+  ...react, '@/lib/legal/siteBotTerms': termsModule, '@/components/legal/TermsDocument': termsDocument,
 });
 const html = renderToStaticMarkup(React.createElement(page.default));
 const markup = node => renderToStaticMarkup(React.createElement(React.Fragment, null, node));
@@ -86,7 +90,7 @@ test('tables: keyboard-focusable scroll region named by its section heading, wit
   });
   assert.equal((html.match(/<span aria-hidden="true" class="css-fade css-fadeStart"><\/span>/g) ?? []).length, 2);
   assert.equal((html.match(/<span aria-hidden="true" class="css-fade css-fadeEnd"><\/span>/g) ?? []).length, 2);
-  const css = fs.readFileSync(here('./terms.module.css'), 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
+  const css = fs.readFileSync(local('src/components/legal/terms.module.css'), 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
   assert.ok(!/#fff|white/i.test(css), 'fade colors come from var(--bg)');
   assert.ok(!/(^|[^-])(left|right)\s*:/m.test(css), 'logical insets only');
   assert.match(css, /min-width: 520px;/);

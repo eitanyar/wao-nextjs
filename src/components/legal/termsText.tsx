@@ -1,8 +1,8 @@
 import { Fragment } from "react";
 import { renderMixed } from "@/lib/bidi";
 
-// Text rendering for the Site-Bot terms page (src/app/(app)/site-bot/terms/page.tsx).
-// HEBREW-SAFETY: zero Hebrew bytes; it only wraps text that comes from SITE_BOT_TERMS, never changes it.
+// Text rendering for the terms pages (TermsDocument.tsx: /site-bot/terms, /google-ads/terms).
+// HEBREW-SAFETY: zero Hebrew bytes; it only wraps text that comes from the generated LegalDoc, never changes it.
 
 const LINK: React.CSSProperties = { color: "var(--accent)", textDecoration: "underline" };
 

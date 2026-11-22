@@ -102,20 +102,40 @@ export function serializeTerms(doc) {
 
 const stripBlank = blocks => blocks.filter(b => b.type !== 'blank');
 
-export function generateTerms(source) {
-  if (createHash('sha256').update(source).digest('hex') !== SOURCE_SHA256) throw new Error('Terms source digest changed');
+/** sha256 hex of a legal source: the one digest every terms generator and pin uses. */
+export function legalSourceDigest(source) {
+  return createHash('sha256').update(source).digest('hex');
+}
+
+/**
+ * The generated LegalDoc module for any terms source in this dialect (Site-Bot, Ads Bot: scripts/build-ads-bot-terms.mjs).
+ * Fails closed when the digest differs from the pin or the round trip does not reproduce the source.
+ */
+export function generateLegalModule({ source, sha256, sourceRel, scriptRel, testRel, exportName }) {
+  if (legalSourceDigest(source) !== sha256) throw new Error('Terms source digest changed');
   const doc = parseTerms(source);
   if (serializeTerms(doc) !== source) throw new Error('Round trip does not reproduce the source');
   const emitted = { title: doc.title, intro: stripBlank(doc.intro), sections: doc.sections.map(s => ({ ...s, blocks: stripBlank(s.blocks) })) };
   return [
-    '// AUTO-GENERATED from docs/legal/site-bot-terms-of-use.md (approved legal text). Do not edit by hand;',
-    '// run `node scripts/build-site-bot-terms.mjs`. scripts/build-site-bot-terms.test.mjs checks it byte for byte.',
-    `// Source SHA256: ${SOURCE_SHA256}`,
+    `// AUTO-GENERATED from ${sourceRel} (approved legal text). Do not edit by hand;`,
+    `// run \`node ${scriptRel}\`. ${testRel} checks it byte for byte.`,
+    `// Source SHA256: ${sha256}`,
     "import type { LegalDoc } from './legalDoc';",
     '',
-    `export const SITE_BOT_TERMS: LegalDoc = ${JSON.stringify(emitted, null, 2)};`,
+    `export const ${exportName}: LegalDoc = ${JSON.stringify(emitted, null, 2)};`,
     '',
   ].join('\n');
+}
+
+export function generateTerms(source) {
+  return generateLegalModule({
+    source,
+    sha256: SOURCE_SHA256,
+    sourceRel: 'docs/legal/site-bot-terms-of-use.md',
+    scriptRel: 'scripts/build-site-bot-terms.mjs',
+    testRel: 'scripts/build-site-bot-terms.test.mjs',
+    exportName: 'SITE_BOT_TERMS',
+  });
 }
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
