@@ -33,6 +33,16 @@ const APPROVED_2026_11_20 = JSON.parse(read('docs/copy/product-pages-approved-20
   pages: Record<'/site-bot' | '/google-ads', { file: string; patches: ApprovedPatch[]; renames: Record<string, string> }>;
 };
 
+// Approved 2026-11-24 (Eitan): supersedes single 2026-11-20 lines; each superseded key is skipped by the 11-20 test and
+// pinned by the 11-24 test below (old = the 11-20 line, new = live).
+const APPROVED_2026_11_24 = JSON.parse(read('docs/copy/product-pages-approved-2026-11-24.json')) as {
+  approval: string; source: string; brief: string; supersedes: string;
+  pages: Partial<Record<'/site-bot' | '/google-ads', { file: string; patches: ApprovedPatch[] }>>;
+};
+const SUPERSEDED_2026_11_24 = new Set(
+  Object.entries(APPROVED_2026_11_24.pages).flatMap(([page, entry]) => entry!.patches.map((p) => `${page} ${p.key}`)),
+);
+
 const PAGES = [
   { name: 'site-bot', copy: SITE_BOT_LANDING_COPY, source: 'docs/copy/site-bot-r2-final-candidate-2026-11-12.txt', page: 'src/app/(app)/site-bot/page.tsx', net: SITE_BOT_PLAN.netAmount },
   { name: 'google-ads', copy: GOOGLE_ADS_LANDING_COPY, source: 'docs/copy/google-ads-r2-final-candidate-2026-11-12.txt', page: 'src/app/(app)/google-ads/page.tsx', net: ADS_BOT_MONTHLY_NET_ILS },
@@ -251,6 +261,8 @@ test('approved 2026-11-20 product-page copy: every patched or added line is live
     const fields = new Map(flatten(copy));
     assert.ok(page.patches.length > 10, name);
     for (const p of page.patches) {
+      // Superseded 2026-11-24 by product-pages-approved-2026-11-24.json (pinned in the next test); every other key stays checked.
+      if (SUPERSEDED_2026_11_24.has(`/${name} ${p.key}`)) continue;
       assert.equal(fields.get(p.key), p.new, `${name} ${p.key}`);
       // Every new line is in the approved file, with the price as the {net} token where the file uses it.
       const asApproved = p.new.replace(new RegExp(`(?<![\\d.,])${net}(?![\\d.,])`, 'g'), '{net}');
@@ -265,4 +277,30 @@ test('approved 2026-11-20 product-page copy: every patched or added line is live
   }
   assert.equal(SITE_BOT_LANDING_COPY.faq.length, 8);
   assert.equal(APPROVED_2026_11_20.pages['/google-ads'].renames['faq[8].a'], 'faq[9].a');
+});
+
+test('approved 2026-11-24 copy: each superseding line is live byte for byte and replaces the 2026-11-20 line', () => {
+  assert.match(APPROVED_2026_11_24.approval, /^Eitan 2026-11-24/);
+  assert.equal(APPROVED_2026_11_24.supersedes, 'docs/copy/product-pages-approved-2026-11-20.json');
+  const raw = read(APPROVED_2026_11_24.source);
+  const waocopy = JSON.parse(raw.slice(raw.indexOf('{'))) as { patches: { file: string; old: string; new: string }[] };
+  assert.ok(read(APPROVED_2026_11_24.brief).length > 0, 'brief kept with the record');
+  let checked = 0;
+  for (const { name, copy, source } of PAGES) {
+    const page = APPROVED_2026_11_24.pages[`/${name}` as '/site-bot' | '/google-ads'];
+    if (!page) continue;
+    assert.equal(page.file, source);
+    const fields = new Map(flatten(copy));
+    const lines = read(source).split('\n');
+    for (const p of page.patches) {
+      const older = APPROVED_2026_11_20.pages[`/${name}` as '/site-bot' | '/google-ads'].patches.find((q) => q.key === p.key);
+      assert.equal(older?.new, p.old, `${name} ${p.key}: old is the 2026-11-20 line`);
+      assert.ok(waocopy.patches.some((w) => w.file === source && w.old === p.old && w.new === p.new), `${name} ${p.key}: byte-exact from the waocopy file`);
+      assert.equal(fields.get(p.key), p.new, `${name} ${p.key}`);
+      assert.ok(lines.includes(`${p.key} :: ${p.new}`), `${name} ${p.key}: new line in the source`);
+      assert.ok(!lines.includes(`${p.key} :: ${p.old}`), `${name} ${p.key}: old line gone from the source`);
+      checked++;
+    }
+  }
+  assert.equal(checked, 1);
 });

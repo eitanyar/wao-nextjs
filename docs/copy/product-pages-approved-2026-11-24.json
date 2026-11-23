@@ -1,0 +1,19 @@
+{
+  "approval": "Eitan 2026-11-24: draft review replies are off the page until they are built (docs/reviews/site-bot-product-truth-check-2026-11-24.md, row \"Draft reply to each new review\")",
+  "source": "docs/copy/site-bot-faq-no-reply-drafts-2026-11-24.waocopy.json",
+  "brief": "docs/copy/briefs/site-bot-faq-no-reply-drafts-2026-11-24.md",
+  "generatedBy": "Python json copy of the waocopy patch old/new (byte-exact; zero Hebrew typed)",
+  "supersedes": "docs/copy/product-pages-approved-2026-11-20.json",
+  "pages": {
+    "/site-bot": {
+      "file": "docs/copy/site-bot-r2-final-candidate-2026-11-12.txt",
+      "patches": [
+        {
+          "key": "faq[6].a",
+          "old": "כמעט כלום, וזה כל הרעיון: אתה בעבודה, והגוגל שלך מטופל. יש לך שתי פעולות קטנות: להעביר ללקוח הודעת ביקורת מוכנה אחרי עבודה טובה, ולאשר טיוטת תשובה כשנכנסת ביקורת. אנחנו לא פונים ללקוחות שלך. השתנה משהו או יש שאלה? תכתוב לנו בעמוד החשבון שלך או במייל, ובן אדם מהצוות קורא כל הודעה.",
+          "new": "כמעט כלום, וזה כל הרעיון: אתה בעבודה, והגוגל שלך מטופל. בהתחלה, פעם אחת, אתה מדבר איתנו 10 דקות ושולח לפחות 3 תמונות אמיתיות מהעבודה. אחר כך נשאר דבר קטן אחד: להעביר ללקוח הודעת ביקורת מוכנה אחרי עבודה טובה. אנחנו לא פונים ללקוחות שלך. השתנה משהו או יש שאלה? תכתוב לנו בעמוד החשבון שלך או במייל, ובן אדם מהצוות קורא כל הודעה."
+        }
+      ]
+    }
+  }
+}
