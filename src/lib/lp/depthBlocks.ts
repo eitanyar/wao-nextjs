@@ -402,9 +402,14 @@ export function dropDepthItems(next: Loose, drop: ReadonlyMap<DepthBlockId, Read
 // Cross-client similarity (warn only; offline helper)
 // ---------------------------------------------------------------------------
 
+/** The normalised word sequence the n-gram helpers compare (punctuation edges stripped, NFC, lowercase). */
+export function normalizedWords(text: string): string[] {
+  return textWords(text).map(bareWord).filter(Boolean);
+}
+
 /** Word 5-grams of a text (prefix-insensitive bare words). */
 export function wordNgrams(text: string, n = 5): Set<string> {
-  const words = textWords(text).map(bareWord).filter(Boolean);
+  const words = normalizedWords(text);
   const grams = new Set<string>();
   for (let at = 0; at + n <= words.length; at++) grams.add(words.slice(at, at + n).join(' '));
   return grams;

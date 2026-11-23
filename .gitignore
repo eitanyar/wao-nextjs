@@ -153,3 +153,6 @@ data/market-scan/
 # local QA screenshot dumps
 /qa-screenshots-*/
 scripts/voice/lib/__pycache__/
+
+# Site Bot review pre-flight sheets (scripts/site-bot/review-preflight.mjs): per-client data, never committed
+/docs/reviews/site-preflight/

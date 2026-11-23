@@ -336,6 +336,8 @@
     "src/lib/site-bot/research/researchInput.ts",
     "src/lib/site-bot/localPreview.ts",
     "src/lib/site-bot/localPreview.test.ts",
+    "src/lib/site-bot/reviewPreflight.ts",
+    "src/lib/site-bot/reviewPreflight.test.ts",
     "src/lib/dataRoots.ts",
     "src/lib/dataRoots.test.ts",
     "src/lib/showcase/consentCopy.generated.ts",
