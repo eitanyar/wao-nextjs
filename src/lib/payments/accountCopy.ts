@@ -81,12 +81,18 @@ export const MAGIC_LINK_REQUEST_COPY = {
   serverError: "לא הצלחנו לשלוח את הקישור. נסה שוב בעוד כמה דקות.",
 } as const;
 
+/** PENDING COPY switch for BILLING_EMAIL_COPY.gbpDisclosureLine: true = the line is not sent. */
+export const GBP_DISCLOSURE_EMAIL_LINE_PENDING = false;
+
 export const BILLING_EMAIL_COPY = {
   magicLinkSubject: "WAO — ניהול המנוי שלך",
   /** Mentions writing to support: only for a subscription whose account page shows the support box. */
   magicLinkBodyWithSupport: "הקישור הזה פותח את עמוד החשבון שלך. שם אפשר לראות את פרטי המנוי, לעדכן כרטיס, לכתוב לתמיכה ולבטל. הקישור תקף ל־30 דקות:",
   /** DERIVED (deletion only): magicLinkBodyWithSupport without the support clause. */
   magicLinkBody: "הקישור הזה פותח את עמוד החשבון שלך. שם אפשר לראות את פרטי המנוי, לעדכן כרטיס ולבטל. הקישור תקף ל־30 דקות:",
+  /** Site-Bot sign-up email only: the Google third-party (agency) disclosure, its own paragraph after the link.
+   *  Byte-exact emailLine from docs/copy/gbp-third-party-disclosure-2026-11-24.waocopy.json. */
+  gbpDisclosureLine: "בתחתית האתר שלנו יש קישור לכללים של Google לסוכנויות. הפרופיל נשאר שלך, ואנחנו מנהלים אותו רק בהזמנה שלך.",
   renewalSubject: "WAO — אישור על חידוש המנוי",
   /** {price} = formatAccountPrice(amount, currency), {cardLast4}. */
   renewalBody: "חידשנו את המנוי שלך ב־WAO וחייבנו {price} בכרטיס שמסתיים ב־{cardLast4}.",

@@ -16,7 +16,7 @@
 import fs from 'fs';
 import path from 'path';
 import { Resend } from 'resend';
-import { BILLING_EMAIL_COPY as COPY, fillTemplate, formatAccountPrice } from './accountCopy';
+import { BILLING_EMAIL_COPY as COPY, GBP_DISCLOSURE_EMAIL_LINE_PENDING, fillTemplate, formatAccountPrice } from './accountCopy';
 
 export interface BillingEmailPayload {
   to: string;
@@ -139,11 +139,13 @@ export async function sendTrialChargeConfirmationEmail(params: {
 /**
  * Magic-link manage-subscription email (sign-up and self-serve, on-demand). `supportBoxShown`: the account page shows
  * the support box for this subscription (siteBotSupportBoxShown); only then does the body mention writing to support.
+ * `gbpDisclosure`: the Site-Bot sign-up email (after payment) adds the Google third-party disclosure paragraph.
  */
 export async function sendMagicLinkCancelEmail(params: {
   to: string;
   cancelUrl: string;
   supportBoxShown?: boolean;
+  gbpDisclosure?: boolean;
 }): Promise<void> {
   const { to, cancelUrl } = params;
   await sendBillingEmail({ to, ...buildMagicLinkEmail(params), cancelUrl });
@@ -155,11 +157,13 @@ export interface ClientEmailContent {
   html: string;
 }
 
-export function buildMagicLinkEmail(params: { cancelUrl: string; supportBoxShown?: boolean }): ClientEmailContent {
-  const { cancelUrl, supportBoxShown = false } = params;
+export function buildMagicLinkEmail(params: { cancelUrl: string; supportBoxShown?: boolean; gbpDisclosure?: boolean }): ClientEmailContent {
+  const { cancelUrl, supportBoxShown = false, gbpDisclosure = false } = params;
+  const lines: EmailLine[] = [{ text: supportBoxShown ? COPY.magicLinkBodyWithSupport : COPY.magicLinkBody }, { url: cancelUrl }];
+  if (gbpDisclosure && !GBP_DISCLOSURE_EMAIL_LINE_PENDING) lines.push({ blank: true }, { text: COPY.gbpDisclosureLine });
   return {
     subject: COPY.magicLinkSubject,
-    ...renderClientEmail([{ text: supportBoxShown ? COPY.magicLinkBodyWithSupport : COPY.magicLinkBody }, { url: cancelUrl }]),
+    ...renderClientEmail(lines),
   };
 }
 

@@ -20,6 +20,11 @@ function LocationIcon() {
   );
 }
 
+/** Google third-party disclosure (GBP agency policy); label byte-exact from
+ *  docs/copy/gbp-third-party-disclosure-2026-11-24.waocopy.json (footerLabel). */
+const GBP_AGENCY_POLICY_URL = "https://support.google.com/business/answer/7163406?hl=iw";
+const GBP_AGENCY_POLICY_LABEL = "הכללים של Google לסוכנויות";
+
 const footerLinks = [
   {
     title: "שירותים",
@@ -180,7 +185,16 @@ export default function Footer() {
           >
             © {year} WAO. כל הזכויות שמורות.
           </p>
-          <div style={{ display: "flex", gap: "24px", alignItems: "center" }}>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "4px 24px", alignItems: "center" }}>
+            <a
+              href={GBP_AGENCY_POLICY_URL}
+              target="_blank"
+              rel="noopener"
+              className="footer-link"
+              style={{ fontSize: "0.82rem" }}
+            >
+              {renderMixed(GBP_AGENCY_POLICY_LABEL)}
+            </a>
             <Link href="/privacy" className="footer-link" style={{ fontSize: "0.82rem" }}>
               מדיניות פרטיות
             </Link>

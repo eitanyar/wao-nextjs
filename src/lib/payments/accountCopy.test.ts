@@ -10,6 +10,7 @@ import {
   ACCOUNT_STATUS_LABEL,
   ACCOUNT_TITLE_SUFFIX,
   BILLING_EMAIL_COPY,
+  GBP_DISCLOSURE_EMAIL_LINE_PENDING,
   CANCEL_BUTTON_COPY,
   CARD_UPDATE_BUTTON_COPY,
   MAGIC_LINK_REQUEST_COPY,
@@ -48,7 +49,10 @@ const allValues = Object.values(groups).flatMap((g) => Object.values(g) as strin
 const storyRaw = fs.readFileSync(path.join(repo, 'docs/copy/site-bot-one-story-clarity-2026-11-15.waocopy.json'), 'utf8');
 const story = (JSON.parse(storyRaw.slice(storyRaw.indexOf('{"patches"'))) as { patches: { file: string; new: string }[] }).patches
   .filter((p) => p.file === 'src/lib/payments/accountCopy.ts').map((p) => p.new);
-const approved = new Set<string>([...Object.values(base.strings), ...Object.values(base.new), ...spans(fixesSection), ...story]);
+// Later approved line (waocopy 2026-11-24): the Google third-party disclosure in the Site-Bot sign-up email.
+const gbpRaw = fs.readFileSync(path.join(repo, 'docs/copy/gbp-third-party-disclosure-2026-11-24.waocopy.json'), 'utf8');
+const gbpCopy = JSON.parse((gbpRaw.match(/```json\n([\s\S]*?)\n```/) as RegExpMatchArray)[1]) as { footerLabel: string; emailLine: string };
+const approved = new Set<string>([...Object.values(base.strings), ...Object.values(base.new), ...spans(fixesSection), ...story, gbpCopy.emailLine]);
 
 function isSingleDeletion(derived: string, full: string): boolean {
   if (derived.length >= full.length) return false;
@@ -162,6 +166,18 @@ test('manage-link email mentions support only when the support box is shown', ()
   assert.equal(withBox.text, `${BILLING_EMAIL_COPY.magicLinkBodyWithSupport}\n${url}`);
   assert.equal(noBox.text, `${BILLING_EMAIL_COPY.magicLinkBody}\n${url}`);
   assert.equal(noBox.subject, BILLING_EMAIL_COPY.magicLinkSubject);
+});
+
+test('Site-Bot sign-up email: the Google disclosure is its own last paragraph, byte-exact; other manage links omit it', () => {
+  const url = 'https://www.wao.co.il/account/subscription?token=1';
+  assert.equal(BILLING_EMAIL_COPY.gbpDisclosureLine, gbpCopy.emailLine);
+  assert.equal(GBP_DISCLOSURE_EMAIL_LINE_PENDING, false);
+  const welcome = buildMagicLinkEmail({ cancelUrl: url, gbpDisclosure: true });
+  assert.equal(welcome.text, `${BILLING_EMAIL_COPY.magicLinkBody}\n${url}\n\n${gbpCopy.emailLine}`);
+  assert.ok(welcome.html.endsWith(`<p dir="rtl" style="direction:rtl;text-align:right">${gbpCopy.emailLine}</p></div>`), welcome.html);
+  assert.ok(!buildMagicLinkEmail({ cancelUrl: url }).text.includes(gbpCopy.emailLine));
+  const src = fs.readFileSync(path.join(repo, 'src/lib/payments/subscriptions.ts'), 'utf8');
+  assert.equal((src.match(/gbpDisclosure: subscription\.plan === SITE_BOT_PLAN\.id/g) ?? []).length, 1);
 });
 
 test('legacy trial-engine emails stay English (out of the Hebrew pass)', () => {

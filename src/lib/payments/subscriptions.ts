@@ -763,6 +763,8 @@ export async function activatePlanSubscription(
         cancelUrl: buildCancelUrl(generateMagicLinkToken(subscriptionId).token),
         // The row was just set active above; `subscription` is the pre-activation read.
         supportBoxShown: siteBotSupportBoxShown({ plan: subscription.plan, status: 'active' }),
+        // The welcome (sign-up) email of a Site-Bot client carries the Google third-party disclosure; on-demand links do not.
+        gbpDisclosure: subscription.plan === SITE_BOT_PLAN.id,
       });
     } catch (err) {
       console.error(`[subscriptions/plan] Failed to send the manage-subscription email for subscription=${subscriptionId}:`, err);
