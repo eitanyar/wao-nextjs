@@ -5,7 +5,7 @@ Abstract rules Noa (language-qa) derives from recurring patterns in waocopy outp
 
 Rules must stay abstract — never quote an example sentence or a concrete phrase (examples leak into output).
 Add a rule only after Eitan or Adam approves it; record where it came from under "## Log".
-Cap: 35 rules. Selling rules come from the strategist (Fable 5.2) with Eitan's approval; Noa proposes craft rules only. Before adding any rule ask: could this rule have made a great sales page worse?
+Cap: 37 rules (raised from 35 on 2026-11-24, Eitan). Selling rules come from the strategist (Fable 5.2) with Eitan's approval; Noa proposes craft rules only. Before adding any rule ask: could this rule have made a great sales page worse?
 
 ## Approved rules
 
@@ -49,6 +49,8 @@ Cap: 35 rules. Selling rules come from the strategist (Fable 5.2) with Eitan's a
 - Tags, pills and labels use the reader's own words and name only what the text beside them describes.
 - One verb form per CTA role across a page. Prefer concrete nouns to category words in button labels.
 - A string that also serves as the meta description fits about 155 characters, with the hook early enough to survive truncation.
+- In intake and interview scripts, never offer a menu of answers when a "yes" would become a public claim on the client's site; ask for his own sentence instead.
+- Every follow-up asking why, or what he does differently, must ask for one concrete time it happened, so the answer is proof, not an adjective.
 
 ## Proposed rules (not sent to the model until approved)
 
@@ -63,3 +65,4 @@ Cap: 35 rules. Selling rules come from the strategist (Fable 5.2) with Eitan's a
 - 2026-11-12: round-2 tweak from Fable 5.2 (docs/copy/strategy/assess-r2-fable52-2026-11-12.md §3): body-vs-FAQ craft rule; count stays 35.
 - 2026-11-13: Eitan's complaints after the Fable 5.2 anti-slop pass ("stop being over protective… features that arrive after some time are fine… state benefits, not that the client reached the right place… be bold") plus Noa's recurring fixes and the anti-slop rulebook (github.com/miqdadbadjuber/anti-slop, copywriting skill): amended checkable line (sell roadmap features), dramatise the mechanism (felt gains), proof (platform + industry evidence makes claims bigger), colons/dashes → machine-patterns ban, active voice (subject can do the verb; tense after "before"). Eitan asked for it ("make waocopy write better copy taking into account the last complaints"); count stays 35. Check on the next copy run. Same day, Eitan added "and no AI slop": the machine-patterns rule became the full no-AI-slop rule.
 - 2026-11-13: Noa's proposed voiced-text rule (one obvious reading without vowels, understood by ear alone) merged into the spoken-voice craft rule; Eitan approved after repeated TTS homograph misreads (סופר, שלט). Count stays 35.
+- 2026-11-24: two craft rules from Noa's read of the Site Bot pilot intake call script (no answer menus that become public claims; "why" follow-ups ask for one concrete time). Eitan approved; count 35 → 37.
