@@ -1,0 +1,30 @@
+Angle: the reader is his customer, mid-hero and unaware of the format, so each frame plainly tells him who is talking and what kind of fact follows, in the short attribution style of a news quote.
+
+```json
+{
+  "QUOTE_FRAME_REFUSAL": "{name} על עבודה שסירב לקחת:",
+  "QUOTE_FRAME_JOB": "{name} מספר מהשטח:",
+  "QUOTE_FRAME_NUMBER": "{name} על המספרים שלו:",
+  "QUOTE_FRAME_CREDENTIAL": "{name} על ההסמכה שלו:",
+  "QUOTE_FRAME_PRICE_RULE": "{name} על המחירים שלו:",
+  "QUOTE_NAME_FALLBACK": "בעל העסק"
+}
+```
+
+**How each one reads on the page, with the test quotes:**
+- `בעל העסק על עבודה שסירב לקחת: ״מישהו רצה שאחבר לו את המטבח החדש בלי ברז ניתוק״`. The words "שסירב לקחת" remove the risk that the reader thinks he did the job.
+- `יוסי מספר מהשטח: ״פתחתי סתימה בבניין ישן ברחוב אחוזה עם מצלמה״`. "מהשטח" also fits a tool or method fact that isn't a single job, for example ״אני עובד עם מצלמה תרמית״.
+- `יוסי על המספרים שלו: ״ב־90 אחוז מהמקרים אני מגיע באותו יום״`
+- `יוסי על ההסמכה שלו: ״אני אינסטלטור מוסמך עם תעודה ממשרד העבודה״`. "הסמכה" also covers a license, certification or registration in any trade.
+- `בעל העסק על המחירים שלו: ״ההגעה והצעת המחיר בחינם״`
+
+**Checks:**
+- Every frame is 3 to 5 words with the two-word fallback, which stays inside the 2–6 limit.
+- Every frame is third person, singular masculine, and has no praise or review wording.
+- "בעל העסק" fits grammatically in every slot, including the ones with "שלו".
+
+**Notes:**
+- Keep `OWNER_QUOTE_ARIA_LABEL` from the existing attribution file unchanged, as the brief asks. The rest of that file's plain signature is replaced.
+- A code note: the frames end in a colon. If the component adds its own colon, remove it from the strings.
+
+**Handoff:** → Noa, for one read. This is customer-facing copy that goes on every client page.

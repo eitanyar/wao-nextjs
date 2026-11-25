@@ -42,19 +42,40 @@ An eligible owner who holds a spot goes through these steps, with no human and n
   - The callback generates the remaining pages after payment.
   - Photographers get studio vs on-location framing (VISION.md "locationType conditional"; it is missing today, so Yonatan flagged it): the work-location answer drives it.
   - The waiting screen copy while generation runs.
-  - **First-screen fact** (Fable 5.2 on Koray K-01; Yonatan sign-off 2026-11-25). Home page only.
-    - (a) The hero subheadline carries at least one eligible owner fact and records its fact id (`firstScreenFactId`). If no eligible fact fits, a code-built trust-bar item rendered from an interview `credential` fact (linked to its `cred-*` id) satisfies the rule. Fact words in the title or H1 never count, and this rule never changes the title formula or the H1 gate.
-    - (b) Eligible facts have status `confirmed`, or `edited` (use `ownerText`). Priority:
-      1. job (no serviceId, or the homepage trade / a homepage service)
-      2. tool
-      3. local (every place it names is in `researchedServiceAreas(home)`)
-      4. non-money price_rule (no digits, no ₪)
-      5. number (the owner's exact digits, not one the trust bar shows)
+  - **First-screen fact** (Fable 5.2 on Koray K-01; Yonatan re-sign-off 2026-11-25 after Noa found the in-subheadline version unpublishable; replaces the earlier (a)–(e)). Home page only.
+    - **(a) Subheadline.** A free USP sentence in the H1's grammatical person (third person about the business, no first- or second-person forms). At most 90 characters, one verb sentence, all truth gates in force. It doesn't repeat service and city together, and it must not quote or paraphrase an owner fact. Fact words in the title, H1 or subheadline never satisfy this rule. The title formula and H1 gate are unchanged.
+    - **(b) Owner quote line.** Rendered by code, inside the hero, directly under the subheadline: `{frame(type)} ״{quote}״`.
+      - Frames come from `docs/copy/site-bot-owner-quote-frames-2026-11-25.waocopy.json`, byte-exact, one per type: refusal, job/tool, number, credential, price_rule.
+      - `{name}` is the owner's first name if it is all Hebrew letters and 2–15 characters long. Otherwise it is `QUOTE_NAME_FALLBACK`.
+      - The aria label is `OWNER_QUOTE_ARIA_LABEL` from `docs/copy/site-bot-owner-quote-attribution-2026-11-25.waocopy.json`.
+      - The LLM never writes, rewrites or picks wording for this line. Record `firstScreenFactId` and `source: "quote_line"`.
+    - **(c) Eligibility and cleanup.** Checked in order; record the first failing reason.
+      1. Status is `confirmed`, or `edited` (then use `ownerText`), and the text is an exact substring of his answer or ownerText.
+      2. Cleanup may only trim whitespace, collapse double spaces, strip trailing `.,;:!?`, and remove ASCII `"` and `'`. It never adds, swaps or re-spells a word.
+      3. Relative time words come from a closed list in code (לפני חודש/שבוע/שנה/יומיים, שבוע שעבר, חודש שעבר, אתמול, השבוע, החודש, השנה, לאחרונה, עכשיו, היום; build it from existing code lists or as `\u` escapes, never by typing Hebrew). If the time phrase opens the quote, take the exact contiguous substring after it (and after a following comma or space) and re-run every check. A time word anywhere else rejects the fact (`time_word`).
+      4. 4–12 words and at most 80 characters after cleanup. Never cut to fit (`too_long` / `too_short`).
+      5. At least 85% of letters are Hebrew. No Latin letters in v1. No ₪, no digit group of 7 or more, no URL or @.
+      6. Gibberish: a token of 3+ letters with no Hebrew vowel-letter pattern that fails a check for English typed on a Hebrew keyboard, or a letter repeated 3+ times in a row (`gibberish`).
+      7. A fact with a `condition` qualifies only if the condition is inside the quoted substring.
+      8. Not a trust-bar duplicate: a number or credential the trust bar already shows is not eligible.
+    - **(d) Priority.**
+      1. refusal (in the refusal frame)
+      2. job (no serviceId, or the homepage trade or a homepage service)
+      3. tool
+      4. number with its condition
+      5. credential as a sentence
+      6. non-money price_rule
 
-      A credential goes in the trust bar only. A refusal is never used. A fact with a `condition` is used only with that condition stated.
-    - (c) The subheadline stays at most 90 characters, one verb sentence, with every truth gate in force. It does not repeat service and city together.
-    - (d) The homepage meta description and og:description = `pageNameWithCity(trade, city) + " — " + heroSubheadline`. If the subheadline already contains both, use it alone. Hard cap `META_DESCRIPTION_MAX_CHARS` (155), target 120 or fewer. If it's over 155, use the subheadline alone and never cut mid-word. `Service.description` stays `heroSubheadline`. Other page types are unchanged.
-    - (e) If no eligible fact fits, the preview still renders, and `first_screen_fact_missing` is logged for step 3's gate.
+      `local` facts are never eligible here; they go to the service-area section. Ties go by answer order.
+    - **(e) No-fact path.** If nothing passes, render no quote line and no placeholder. A trust-bar credential from an interview `credential` fact satisfies the rule (`source: "trust_bar"`). Otherwise the preview still renders, and code logs `first_screen_fact_missing` with every candidate id and its reason. The pre-payment preview is the owner's consent gate for his words.
+    - **(f) Meta description.** Homepage meta description and og:description = `pageNameWithCity(trade, city) + " — " + heroSubheadline`. If the subheadline already contains both service and city, use it alone. Cap 155 (`META_DESCRIPTION_MAX_CHARS`), target 120 or under. If it's over 155, use the subheadline alone, never cut mid-word. The quote line is never included. `Service.description` stays `heroSubheadline`. Other page types are unchanged.
+    - **(g) Structured data.** The quote line is in no JSON-LD or microdata: not Review, not Quotation, not LocalBusiness.description, not Person. Mark it up as `<figure><blockquote>` + `<figcaption>`, or `<p><q>`. No itemprop, no rating, no stars.
+    - **(h) Bidi.** The line inherits rtl. The quote marks are always U+05F4 ״, never ASCII or «». Maya checks:
+      - digits at the quote's edges, digit ranges and decimals
+      - mobile wrapping: frame and name never alone on a line, and the closing ״ never alone
+      - contrast over the hero photo
+      - the name fallback
+      - bdi bracket grep = 0
 
 ## Constraints
 - All new Hebrew comes from waocopy and is applied byte-exact. One waocopy brief per run, written before the engineer starts. The briefs cover:
@@ -79,7 +100,7 @@ An eligible owner who holds a spot goes through these steps, with no human and n
 - Focused tests per run, then `npm run test`, then `npm run build -- --webpack`, serially.
 - Dev run, gate open, fixture business: start → card → location → interview → gates → facts → preview → mock pay. The research runs once (check the dossier and `providerUsage`).
 - The preview is refused for another session.
-- In the fixture run, the homepage `firstScreenFactId` resolves to a confirmed or edited fact of an eligible type. The homepage meta description starts with the plain anchor, is 155 characters or fewer, and differs from every other page's. The title and H1 are byte-identical to a run without facts.
+- In the fixture run, the homepage quote line renders `{frame} ״{quote}״` from an eligible fact (on the 2026-11-25 synthetic plumber: a1-2 in the refusal frame, after its opening time phrase is cut; a1-1 and a1-4 rejected; cred-years excluded as a trust-bar duplicate). No JSON-LD contains the quote. The meta description equals rule (f). The subheadline has no first- or second-person forms. The title and H1 are byte-identical to a run without facts. A no-fact preview renders with `first_screen_fact_missing` logged.
 - An abandoned session releases its spot after the expiry (time is injected).
 - Screenshots on desktop and mobile of the interview, facts and preview screens.
 

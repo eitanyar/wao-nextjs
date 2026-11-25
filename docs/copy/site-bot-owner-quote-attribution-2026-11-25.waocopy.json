@@ -1,0 +1,11 @@
+Angle: the reader is the owner's prospective customer reading the owner's own line, so the signature names him and his business by role ("the owner of") and stays distinct from a customer-review byline.
+
+```json
+{
+  "OWNER_QUOTE_ATTRIBUTION_NAMED": "— {ownerFirstName}, הבעלים של {businessName}",
+  "OWNER_QUOTE_ATTRIBUTION_ANON": "— הבעלים של {businessName}",
+  "OWNER_QUOTE_ARIA_LABEL": "בעל העסק, במילים שלו"
+}
+```
+
+→ Noa: one read, since this is client-facing.
