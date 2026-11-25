@@ -9,6 +9,7 @@ import { createPendingPlanSubscription } from '@/lib/payments/subscriptions';
 import { withServedAreaNames } from '@/lib/site-bot/servedAreas';
 import { ISRAELI_LOCALITIES } from '@/lib/site-bot/israeliLocalities';
 import { withValidatedOwnerIntake } from '@/lib/site-bot/ownerIntake';
+import { interviewSpotHeld } from '@/lib/site-bot/offerState';
 
 // Site-Bot checkout init: the monthly + VAT plan (SITE_BOT_PLAN, the one config source for its price), routed through the
 // recurring engine (subscriptions.ts createPendingPlanSubscription). Nothing is charged here: the row is 'pending'
@@ -31,6 +32,8 @@ export async function POST(req: Request) {
     const body = await req.json();
     const submitted: CollectedData = body?.collectedData;
     if (!submitted?.businessNiche) return errorReply('invalid_input', 400);
+    // Launch step 1: the launch cap is enforced here too, so a direct POST cannot skip the interview-start claim.
+    if (!(await interviewSpotHeld(body?.auditId, body?.placeId))) return errorReply('no_interview_spot', 409);
     // M1: served-area localities are derived here from travelBoundary, never trusted from the client.
     // Launch step 1: ownerContact / domainChoice / ownerDomain are re-normalised here; invalid values are dropped.
     const collectedData = withValidatedOwnerIntake(withServedAreaNames(submitted, ISRAELI_LOCALITIES));

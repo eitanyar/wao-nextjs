@@ -542,6 +542,19 @@
     "src/lib/tracking/attribution.ts",
     "src/lib/tracking/attribution.test.ts",
     "src/lib/tracking/conversions.ts",
-    "src/lib/tracking/conversions.test.ts"
+    "src/lib/tracking/conversions.test.ts",
+    "src/lib/tracking/siteBotConversions.ts",
+    "src/lib/tracking/siteBotConversions.test.ts",
+    "src/lib/site-bot/launchTrades.ts",
+    "src/lib/site-bot/launchTrades.test.ts",
+    "src/lib/site-bot/eligibility.ts",
+    "src/lib/site-bot/eligibility.test.ts",
+    "src/lib/site-bot/launchStore.ts",
+    "src/lib/site-bot/launchStore.test.ts",
+    "src/lib/site-bot/offerState.ts",
+    "src/lib/site-bot/offerState.test.ts",
+    "src/lib/site-bot/waitlist.ts",
+    "src/lib/site-bot/waitlistAlert.ts",
+    "src/lib/site-bot/waitlist.test.ts"
   ]
 }

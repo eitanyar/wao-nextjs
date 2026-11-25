@@ -1,0 +1,29 @@
+Angle: he just ran the free check and is most-aware and close to acting, so each state keeps the check's value in his hands, and the waitlist sells "a human reads your site" as the reason spots are few. Formula: FAB with risk reversal. The checkable facts (10 businesses, about 3 a week, a human reads every site) all come from the brief.
+
+```json
+{
+  "NOT_ELIGIBLE_HAS_SITE": "יש לך כבר אתר בפרופיל בגוגל, ולקוחות מגיעים אליו בלחיצה. Site Bot בונה אתרים לעסקים שעוד אין להם אחד. אתה לא צריך אותו. את מה שהבדיקה מצאה בפרופיל שלך אתה יכול לתקן בעצמך, בחינם, עם השלבים שבעמוד הזה.",
+  "NOT_ELIGIBLE_TRADE": "Site Bot עוד לא בונה אתרים לתחום שלך. עוד לא. תשאיר פרטים, ונודיע לך כשנפתח גם לתחום שלך.",
+  "NOT_ELIGIBLE_PROFILE": "לפני שבונים לך אתר, הפרופיל שלך בגוגל צריך להיות תקין. כרגע הוא לא.\nהפרופיל מושעה? תגיש לגוגל בקשה להחזיר אותו.\nהוא עוד לא מאומת? תשלים את האימות בניהול הפרופיל.\nאין לך ביקורות? תשלח ללקוח מרוצה הודעה קצרה ותבקש ממנו לדרג אותך.\nכשזה מסודר, תחזור ותריץ את הבדיקה שוב.",
+  "WAITLIST_FULL_HEAD": "העסק שלך מתאים בול ל-Site Bot",
+  "WAITLIST_FULL_BODY": "אנחנו מקבלים רק עשרה עסקים בהתחלה, בערך שלושה בשבוע. כרגע כל המקומות תפוסים. זה בכוונה. ככה אנחנו קוראים בעצמנו כל אתר, מההתחלה עד הסוף, לפני שהוא עולה לאוויר. גם את שלך. תשאיר פרטים, ונודיע לך כשמתפנה לך מקום.",
+  "WAITLIST_PREOPEN_HEAD": "העסק שלך מתאים. תקדים את כולם.",
+  "WAITLIST_PREOPEN_BODY": "ההרשמה ל-Site Bot עוד לא נפתחה, ובהתחלה ייכנסו רק עשרה עסקים. ככה אחד מאיתנו יכול לקרוא כל אתר לפני שהוא עולה לאוויר. תשאיר פרטים עכשיו, ותהיה מהראשונים לשמוע.",
+  "WAITLIST_NAME_LABEL": "השם שלך",
+  "WAITLIST_PHONE_LABEL": "מספר טלפון",
+  "WAITLIST_EMAIL_LABEL": "אימייל (לא חובה)",
+  "WAITLIST_SUBMIT": "שמור לי מקום ברשימה",
+  "WAITLIST_CONSENT": "נשתמש בפרטים שלך רק כדי להודיע לך כשיש לך מקום, ואפשר לבקש שנמחק אותם בכל רגע דרך טופס יצירת הקשר.",
+  "WAITLIST_THANKS": "אתה ברשימה. כשיהיה לך מקום, תשמע מאיתנו. בינתיים, כל מה שהבדיקה מצאה נשאר בעמוד הזה.",
+  "WAITLIST_ERROR": "הפרטים לא נשלחו. תנסה שוב בעוד רגע."
+}
+```
+
+**Flags**
+- **`NOT_ELIGIBLE_PROFILE`:** This is one string for three different problems. If the code knows which one he has (suspended, unverified or no ratings), splitting it into three keys would be sharper. He would only read his own fix.
+- **`WAITLIST_THANKS` and `NOT_ELIGIBLE_HAS_SITE`:** Both assume the check results stay visible on the same page after this block and after submit. If they don't, drop the last sentence of each.
+- **`NOT_ELIGIBLE_TRADE`:** This state uses the same waitlist form and button. "מקום ברשימה" fits both cases.
+- **SEO and pages:** No SEO anchors were touched, and no head-term was changed.
+
+**Handoffs**
+- → Noa: one read before this goes live, since it's founder-facing UI.

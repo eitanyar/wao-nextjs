@@ -30,6 +30,10 @@ export interface AuditCandidateSnapshot {
   hasRating: boolean;
   userRatingCount?: number;
   hasEditorialSummary: boolean;
+  /** Places primaryType (the primary GBP category for the launch-scope check, launchTrades.ts). Absent on older records. */
+  primaryType?: string;
+  /** Places businessStatus (OPERATIONAL / CLOSED_TEMPORARILY / CLOSED_PERMANENTLY). Absent on older records. */
+  businessStatus?: string;
 }
 
 export interface AuditRecord {

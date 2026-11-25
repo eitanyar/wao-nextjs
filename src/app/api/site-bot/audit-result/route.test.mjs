@@ -13,7 +13,7 @@ const candidates = [
   { placeId: 'synthetic-place-2', displayName: 'Synthetic Two', formattedAddress: 'Synthetic Address 2', privateProviderField: 'must-not-leak' },
 ];
 
-function routeHarness({ record = null, allowed = true, throwAt = null } = {}) {
+function routeHarness({ record = null, allowed = true, throwAt = null, offer = 'waitlist_preopen' } = {}) {
   const calls = [];
   const errors = [];
   const imports = {
@@ -31,6 +31,13 @@ function routeHarness({ record = null, allowed = true, throwAt = null } = {}) {
       assert.ok(candidates.includes(candidate));
       if (throwAt === 'score') throw new Error('synthetic raw score error');
       return { total: 77 };
+    } },
+    // Launch step 1: the offer (eligibility block / waiting list / CTA) is decided server-side per ready candidate.
+    '@/lib/site-bot/offerState': { resolveOffer: async candidate => {
+      calls.push('offer');
+      assert.ok(candidates.includes(candidate));
+      if (throwAt === 'offer') throw new Error('synthetic raw offer error');
+      return offer;
     } },
     '@/lib/site-bot/auditStore': {
       UUID_REGEX: /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i,
@@ -74,7 +81,7 @@ function routeHarness({ record = null, allowed = true, throwAt = null } = {}) {
   return { get, calls, errors };
 }
 
-const ready = candidate => ({ status: 'ready', businessName: candidate.displayName, formattedAddress: candidate.formattedAddress, score: { total: 77 }, placeId: candidate.placeId });
+const ready = (candidate, offer = 'waitlist_preopen') => ({ status: 'ready', businessName: candidate.displayName, formattedAddress: candidate.formattedAddress, score: { total: 77 }, placeId: candidate.placeId, offer });
 
 test('invalid or absent audit ID returns original 400 before rate limit and storage', async () => {
   for (const id of [null, '', 'outside', '../outside', `${auditId}extra`]) {
@@ -112,13 +119,13 @@ test('empty candidate list returns original 200 not_found shape without scoring'
 test('single candidate returns minimized ready result with scoring after storage', async () => {
   const harness = routeHarness({ record: { candidates: [candidates[0]], privateRecordField: 'must-not-leak' } });
   assert.deepEqual(await harness.get(), { status: 200, body: ready(candidates[0]) });
-  assert.deepEqual(harness.calls, ['url', 'headers', 'rate', 'read', 'score']);
+  assert.deepEqual(harness.calls, ['url', 'headers', 'rate', 'read', 'score', 'offer']);
 });
 
 test('selected candidate among multiple returns only selected ready result', async () => {
   const harness = routeHarness({ record: { candidates } });
   assert.deepEqual(await harness.get({ placeId: candidates[1].placeId }), { status: 200, body: ready(candidates[1]) });
-  assert.deepEqual(harness.calls, ['url', 'headers', 'rate', 'read', 'score']);
+  assert.deepEqual(harness.calls, ['url', 'headers', 'rate', 'read', 'score', 'offer']);
 });
 
 test('multiple candidates return minimized pick fields and never score', async () => {
@@ -136,10 +143,21 @@ test('malformed URL and throwing adapters return private 500 with bounded code-o
     ['rate', ['url', 'headers', 'rate'], {}],
     ['read', ['url', 'headers', 'rate', 'read'], {}],
     ['score', ['url', 'headers', 'rate', 'read', 'score'], {}],
+    ['offer', ['url', 'headers', 'rate', 'read', 'score', 'offer'], {}],
   ]) {
     const harness = routeHarness({ record: { candidates: [candidates[0]] }, throwAt });
     assert.deepEqual(await harness.get(request), { status: 500, body: { error: 'server_error' } });
     assert.deepEqual(harness.calls, expectedCalls);
     assert.deepEqual(harness.errors, [['AUDIT_RESULT_FAILED']]);
   }
+});
+
+test('launch step 1: every server offer passes through unchanged on the ready result; pick and not_found carry none', async () => {
+  for (const offer of ['not_eligible_has_site', 'not_eligible_trade', 'not_eligible_profile', 'waitlist_preopen', 'waitlist_full', 'eligible']) {
+    const harness = routeHarness({ record: { candidates: [candidates[0]] }, offer });
+    assert.deepEqual(await harness.get(), { status: 200, body: ready(candidates[0], offer) });
+  }
+  const pick = routeHarness({ record: { candidates } });
+  assert.equal('offer' in (await pick.get()).body, false);
+  assert.ok(!pick.calls.includes('offer'));
 });

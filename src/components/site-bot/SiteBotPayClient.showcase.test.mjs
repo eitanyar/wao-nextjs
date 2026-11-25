@@ -44,6 +44,7 @@ const pay = load('src/components/site-bot/SiteBotPayClient.tsx', {
   '@/lib/payments/plans': { SITE_BOT_PLAN: { netAmount: 1 }, formatShekels: String },
   '@/lib/showcase/consentCopy.generated': copy,
   '@/lib/site-bot/research/gatePresentation': { buildResearchGateAnswer: identity },
+  '@/lib/tracking/siteBotConversions': { browserSiteBotTracking: () => null, trackPaidSignup: () => false },
 });
 
 const html = renderToStaticMarkup(React.createElement(pay.default, { cardDefaults: { number: '', expiry: '', cvc: '' } }));
@@ -70,4 +71,12 @@ test('the pay request sends the checkbox value; paying does not depend on it', (
   assert.match(source, /useState\(false\);\n/);
   assert.match(source, /JSON\.stringify\(\{ sessionId, showcaseConsent \}\)/);
   assert.doesNotMatch(source, /disabled=\{!showcaseConsent/);
+});
+
+test('launch step 1: site_bot_paid_signup fires only after a successful callback that reports a fresh sign-up', () => {
+  const source = fs.readFileSync(path.join(repo, 'src/components/site-bot/SiteBotPayClient.tsx'), 'utf8');
+  const pay = source.slice(source.indexOf('async function pay()'), source.indexOf('async function submitGate()'));
+  assert.match(pay, /if \(json\.paidSignup === true && sessionId\) \{\s*const tracking = browserSiteBotTracking\(\);\s*if \(tracking\) trackPaidSignup\(tracking, \{ sessionId \}\);/);
+  assert.ok(pay.indexOf('if (outcome.kind === "error") throw') < pay.indexOf('trackPaidSignup('));
+  assert.equal(source.split('trackPaidSignup(').length - 1, 1);
 });

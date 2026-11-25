@@ -8,7 +8,7 @@ import { load, makeStore, recordingConsole } from '../../client-message/clientMe
 
 const sessionId = '123e4567-e89b-42d3-a456-426614174000';
 
-function harness({ linkThrows = false, alreadyActive = false, gates = [], record = async (_id, list) => list, activation = null, consentThrows = false, activationThrows = false, researchThrows = false, dossier = null } = {}) {
+function harness({ launchCount = 'recorded', linkThrows = false, alreadyActive = false, gates = [], record = async (_id, list) => list, activation = null, consentThrows = false, activationThrows = false, researchThrows = false, dossier = null } = {}) {
   const activationCalls = [];
   const recordCalls = [];
   const consentCalls = [];
@@ -21,6 +21,7 @@ function harness({ linkThrows = false, alreadyActive = false, gates = [], record
   fs.writeFileSync(path.join(pendingDir, `${sessionId}.json`), JSON.stringify(pending));
   const logs = recordingConsole();
   const alerts = [];
+  const launchCounts = [];
   const store = linkThrows ? { ...s.store, linkSiteBotSession: () => { throw new Error('db locked'); } } : s.store;
   const paid = load('src/app/api/site-bot/checkout/callback/paid.ts', {
     'next/server': { NextResponse: { json: (body, init) => Response.json(body, init) } },
@@ -34,12 +35,17 @@ function harness({ linkThrows = false, alreadyActive = false, gates = [], record
     '@/lib/site-bot/research/researchInput': { buildSiteResearchInput: () => ({}) },
     '@/lib/site-bot/clientMessages': store,
     '@/lib/site-bot/paidQueueAlert': { sendPaidQueueAlert: async (input) => { alerts.push(input); return true; } },
+    // Launch step 1: fresh activations count toward the launch cap (stubbed store; launchStore.test.ts covers the real one).
+    '@/lib/site-bot/launchStore': {
+      withLaunchStore: (fn, fallback) => { try { return fn({ synthetic: true }); } catch { return fallback; } },
+      recordPaidSignup: (_store, id) => { launchCounts.push(id); if (launchCount === 'throw') throw new Error('db locked'); return { status: launchCount }; },
+    },
     '@/lib/showcase/consentStore': { recordShowcaseConsent: (params) => { if (consentThrows) throw new Error('disk full'); consentCalls.push(params); return { granted: true }; } },
   }, { cwd, console: logs.console });
   const call = (extra = {}) => paid.POST(new Request('http://localhost/api/site-bot/checkout/callback', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ sessionId, ...extra }) }));
   const events = () => s.db.prepare(`SELECT metadata FROM subscription_events WHERE subscription_id = ? AND event_type = 'site_bot_session_linked'`).all(subscriptionId);
   const paidPost = (id) => paid.POST(new Request('http://localhost/api/site-bot/checkout/callback', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ sessionId: id }) }));
-  return { ...s, subscriptionId, call, paidPost, events, logs, alerts, recordCalls, consentCalls, activationCalls };
+  return { ...s, subscriptionId, call, paidPost, events, logs, alerts, recordCalls, consentCalls, activationCalls, launchCounts };
 }
 
 test('19: a successful activation writes exactly one site_bot_session_linked event with the business', async () => {
@@ -195,5 +201,26 @@ test('a second callback for a session that already has a dossier never reaches t
   assert.equal(response.status, 200);
   assert.deepEqual(await response.json(), { success: true, charged: true, researchId: sessionId, status: 'architecture_ready' });
   assert.equal(h.activationCalls.length, 0, 'no activation, no charge');
+  h.cleanup();
+});
+
+test('launch step 1: a fresh activation counts one paid sign-up and flags paidSignup; a replay does neither', async () => {
+  const fresh = harness();
+  const body = await (await fresh.call()).json();
+  assert.equal(body.paidSignup, true);
+  assert.deepEqual(fresh.launchCounts, [sessionId]);
+  fresh.cleanup();
+  const replay = harness({ alreadyActive: true });
+  const replayBody = await (await replay.call()).json();
+  assert.equal('paidSignup' in replayBody, false);
+  assert.deepEqual(replay.launchCounts, []);
+  replay.cleanup();
+});
+
+test('launch step 1: a failed cap count is logged and never fails the paid checkout', async () => {
+  const h = harness({ launchCount: 'throw' });
+  const response = await h.call();
+  assert.equal(response.status, 200);
+  assert.equal((await response.json()).paidSignup, true);
   h.cleanup();
 });

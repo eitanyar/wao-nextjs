@@ -22,7 +22,7 @@ const snapshot = {
 };
 
 function routeHarness({ allowed = true, key = true, stored = true, candidates = [place], throwAt = null,
-  budget = 'reserved', ceiling = '8', dbPath = '/synthetic/budget.sqlite' } = {}) {
+  budget = 'reserved', ceiling = '8', dbPath = '/synthetic/budget.sqlite', expected = snapshot } = {}) {
   const calls = [];
   const errors = [];
   const streamState = { reads: 0, cancelled: false };
@@ -82,7 +82,7 @@ function routeHarness({ allowed = true, key = true, stored = true, candidates = 
         assert.equal(id, auditId);
         assert.equal(record.query.businessName, saved);
         assert.ok(!Number.isNaN(Date.parse(record.fetchedAt)));
-        assert.deepEqual(JSON.parse(JSON.stringify(record.candidates)), candidates.map(() => snapshot));
+        assert.deepEqual(JSON.parse(JSON.stringify(record.candidates)), candidates.map(() => expected));
         fail('write');
         return stored;
       },
@@ -292,4 +292,12 @@ test('empty, invalid UTF-8, malformed JSON and stream errors reject before adapt
     assert.deepEqual(harness.calls, ['body']);
     assert.deepEqual(harness.errors, []);
   }
+});
+
+test('launch step 1: the primary category and business status are kept (well-formed only) for the eligibility block', async () => {
+  const kept = routeHarness({ candidates: [{ ...place, primaryType: 'plumber', businessStatus: 'CLOSED_TEMPORARILY' }],
+    expected: { ...snapshot, primaryType: 'plumber', businessStatus: 'CLOSED_TEMPORARILY' } });
+  assert.deepEqual(await kept.post(), { status: 200, body: { auditId, candidateCount: 1 } });
+  const dropped = routeHarness({ candidates: [{ ...place, primaryType: 'Plumber <b>', businessStatus: 'closed; x' }] });
+  assert.deepEqual(await dropped.post(), { status: 200, body: { auditId, candidateCount: 1 } });
 });

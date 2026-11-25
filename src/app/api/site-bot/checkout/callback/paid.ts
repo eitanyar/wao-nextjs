@@ -12,6 +12,7 @@ import { buildSiteResearchInput } from '@/lib/site-bot/research/researchInput';
 import { linkSiteBotSession } from '@/lib/site-bot/clientMessages';
 import { sendPaidQueueAlert } from '@/lib/site-bot/paidQueueAlert';
 import { recordShowcaseConsent } from '@/lib/showcase/consentStore';
+import { recordPaidSignup, withLaunchStore } from '@/lib/site-bot/launchStore';
 
 // Site-Bot checkout callback: takes the sign-up charge of the monthly + VAT plan (SITE_BOT_PLAN) through the recurring engine
 // (activatePlanSubscription: first charge, billing anchor, next charge date, invoice), then starts the research.
@@ -111,6 +112,9 @@ export async function POST(req: Request) {
     // Paid-queue alert (launch item 8): once per fresh activation, before the research, never awaited or fatal.
     if (!activation.alreadyActive) {
       void sendPaidQueueAlert({ sessionId, subscriptionId: pending.subscriptionId, collectedData: pending.collectedData, paidAt: new Date() });
+      // Launch step 1: the paid sign-up counts toward the launch cap (SITE_BOT_CAP_TOTAL), once per session. Never fatal.
+      const counted = withLaunchStore(store => recordPaidSignup(store, sessionId), { status: 'unavailable' as const });
+      if (counted.status === 'unavailable') console.error(`[site-bot checkout] launch cap count failed session=${sessionId}`);
     }
 
     const manageUrl = activation.alreadyActive ? undefined : issueAccountPath(pending.subscriptionId);
@@ -137,7 +141,8 @@ export async function POST(req: Request) {
       }
       response.openResearchGates = recorded;
     }
-    return NextResponse.json(manageUrl ? { ...response, manageUrl } : response, { headers: { 'Cache-Control': 'private, no-store' } });
+    // paidSignup: a fresh activation, so the pay page fires site_bot_paid_signup (once per session; replays carry none).
+    return NextResponse.json(manageUrl ? { ...response, manageUrl, paidSignup: true } : response, { headers: { 'Cache-Control': 'private, no-store' } });
   } catch (error: unknown) {
     console.error('Site Bot checkout callback error:', error);
     return errorReply('checkout_failed', 500, chargeState);

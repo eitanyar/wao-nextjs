@@ -220,7 +220,10 @@ describe('ownerIntake: pending copy never reaches production', () => {
   // (Adam / Eitan), taken at runtime through SITE_BOT_PAID_FLOW (src/lib/site-bot/paidFlowGate.ts), never by this flag.
   it('the start page stays behind the runtime paid-flow gate regardless of the copy flag (closed by default in production)', () => {
     const page = read('src/app/(app)/site-bot/start/page.tsx');
-    assert.match(page, /await connection\(\);\s*if \(await isPaidFlowAllowedForRequest\(\)\) \{\s*return <StartPaidFlow \/>;\s*\}\s*redirect\('\/site-bot'\);/);
+    // Launch step 1 (2026-11-25): inside the gated branch the page also checks the launch cap before rendering the intake;
+    // the intake still renders only inside that branch, and the closed path still 307s to /site-bot.
+    assert.match(page, /await connection\(\);\s*if \(await isPaidFlowAllowedForRequest\(\)\) \{[^}]*return <StartPaidFlow \/>;[^}]*\}\s*redirect\('\/site-bot'\);/);
+    assert.equal(page.split('<StartPaidFlow />').length - 1, 1);
     assert.doesNotMatch(page, /INTAKE_OWNER_COPY_PENDING|process\.env/);
     const gate = read('src/lib/site-bot/paidFlowGate.ts');
     assert.match(gate, /if \(value === 'open'\) return 'open';/);

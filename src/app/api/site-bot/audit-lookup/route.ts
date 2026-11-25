@@ -66,6 +66,9 @@ function minimizeCandidate(place: NormalizedPlace): AuditCandidateSnapshot {
     hasRating: place.rating !== undefined,
     ...(place.userRatingCount !== undefined ? { userRatingCount: place.userRatingCount } : {}),
     hasEditorialSummary: Boolean(place.editorialSummary?.trim()),
+    // Launch step 1 (eligibility block): the primary category and operating status, both already in the search field mask.
+    ...(typeof place.primaryType === 'string' && /^[a-z][a-z0-9_]{1,80}$/.test(place.primaryType) ? { primaryType: place.primaryType } : {}),
+    ...(typeof place.businessStatus === 'string' && /^[A-Z_]{1,40}$/.test(place.businessStatus) ? { businessStatus: place.businessStatus } : {}),
   };
 }
 

@@ -145,6 +145,8 @@ data/expired-domain-research/
 data/rank-rent/
 data/audits/*
 !data/audits/.gitkeep
+# Site Bot launch cap + waiting list (src/lib/site-bot/launchStore.ts): runtime data, never committed
+data/site-bot-launch/
 
 # Site-bot market scanner — raw DataForSEO cache, scraped business rows, run ledgers.
 # Private, minimal fields; never committed (mission: docs/missions/site-bot-market-scanner-2026-11-07.md)

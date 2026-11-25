@@ -14,6 +14,7 @@ import { SITE_BOT_ACCOUNT_COPY, accountLinkHref, customerVisibleLabel } from "@/
 import { SITE_BOT_PLAN, formatShekels } from "@/lib/payments/plans";
 import { SHOWCASE_CONSENT_COPY } from "@/lib/showcase/consentCopy.generated";
 import { buildResearchGateAnswer } from "@/lib/site-bot/research/gatePresentation";
+import { browserSiteBotTracking, trackPaidSignup } from "@/lib/tracking/siteBotConversions";
 
 // Site-Bot pay page (client part; page.tsx decides the card-field defaults on the server). The plan's price and terms
 // (SITE_BOT_PLAN: monthly, + VAT) are shown above the pay action. The real Takbull integration will redirect here
@@ -53,6 +54,8 @@ interface CheckoutCallbackResponse {
   openResearchGates?: ResearchGate[];
   /** Fresh magic-link path to /account/subscription (manage / cancel), on a fresh activation only. */
   manageUrl?: string;
+  /** Launch step 1: true on a fresh activation only (fires site_bot_paid_signup once per session). */
+  paidSignup?: boolean;
 }
 
 export default function SiteBotPayClient({ cardDefaults }: { cardDefaults: CardFieldDefaults }) {
@@ -86,6 +89,10 @@ export default function SiteBotPayClient({ cardDefaults }: { cardDefaults: CardF
       body = json;
       const outcome = checkoutCallbackOutcome(res.ok, json);
       if (outcome.kind === "error") throw new Error(`checkout callback ${res.status}: ${String(json.error ?? "")}`);
+      if (json.paidSignup === true && sessionId) {
+        const tracking = browserSiteBotTracking();
+        if (tracking) trackPaidSignup(tracking, { sessionId });
+      }
       setDomainLine(doneDomainLine(json.collectedData));
       setManageHref(accountLinkHref(json.manageUrl));
       setGatesFinished(false);

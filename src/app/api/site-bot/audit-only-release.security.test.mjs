@@ -164,6 +164,8 @@ test('paid handlers are imported only by their own gated stub', () => {
     'src/app/api/site-bot/checkout/init/route.ts',
     'src/app/api/site-bot/connect-gbp/route.ts',
     'src/app/api/site-bot/connect-status/route.ts',
+    // Launch step 1 (2026-11-25): the interview-start claim, the same gated-stub shape (asserted below).
+    'src/app/api/site-bot/interview-start/route.ts',
     'src/app/api/site-bot/prefill/route.ts',
   ]);
 });
@@ -413,12 +415,16 @@ export default function SiteBotFixPage() {
   }
 });
 
+// Launch step 1 (2026-11-25), deliberate change: with the gate OPEN the page now also reads searchParams and asks
+// offerState.interviewStartDecision (audit exists + eligible + launch-cap spot, read-only) before rendering the intake.
+// The closed-gate contract is unchanged: no props, offerState or StartPaidFlow access, 307 to /site-bot.
 test('direct Site-Bot start page 307s to /site-bot before intake or checkout access unless the runtime paid-flow gate allows the request', async () => {
   const source = read('src/app/(app)/site-bot/start/page.tsx');
   assert.equal(source.trim(), `import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import { connection } from 'next/server';
 import { isPaidFlowAllowedForRequest } from '@/lib/site-bot/paidFlowGate';
+import { auditResultPath, interviewStartDecision } from '@/lib/site-bot/offerState';
 import StartPaidFlow from './StartPaidFlow';
 
 export const metadata: Metadata = {
@@ -429,23 +435,41 @@ export const metadata: Metadata = {
 // SITE_BOT_PAID_FLOW gate (src/lib/site-bot/paidFlowGate.ts) allows this request. Closed (the
 // production default) 307s to /site-bot, as the old next.config redirect did. connection() makes
 // the page render per request, so the gate is never answered once at build time.
-export default async function SiteBotStartPage() {
+// Launch step 1: with the gate open the interview also needs a confirmed, eligible free check and a
+// launch-cap spot (src/lib/site-bot/offerState.ts, read-only here; the spot is claimed by
+// POST /api/site-bot/interview-start). Otherwise 307 to the audit result, which shows the owner his
+// waiting list or block; no audit at all goes to the free check. Props are read only after the gate.
+export default async function SiteBotStartPage(props: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   await connection();
   if (await isPaidFlowAllowedForRequest()) {
-    return <StartPaidFlow />;
+    const query = await props.searchParams;
+    const auditId = typeof query.auditId === 'string' ? query.auditId : undefined;
+    const placeId = typeof query.placeId === 'string' ? query.placeId : undefined;
+    const decision = await interviewStartDecision(auditId, placeId);
+    if (decision.kind === 'allowed') return <StartPaidFlow />;
+    redirect(decision.kind === 'blocked' && auditId && placeId ? auditResultPath(auditId, placeId) : '/site-bot/audit');
   }
   redirect('/site-bot');
 }`);
   assert.match(read('src/app/(app)/site-bot/start/StartPaidFlow.tsx'), /^"use client";/);
-  const load = async (env, cookie) => {
+  const auditId = '123e4567-e89b-42d3-a456-426614174000';
+  const placeId = 'ChIJ-synthetic-place';
+  const load = async (env, cookie, decision = { kind: 'allowed' }) => {
     let StartPaidFlow = null;
+    const decisions = [];
     const loaded = await loadGatedServerModule('src/app/(app)/site-bot/start/page.tsx', env, cookie, (name, deny) => {
+      if (name === '@/lib/site-bot/offerState') {
+        return {
+          interviewStartDecision: async (...args) => { decisions.push(args); return decision; },
+          auditResultPath: (a, p) => `/site-bot/audit?${new URLSearchParams({ auditId: a, placeId: p }).toString()}`,
+        };
+      }
       if (name !== './StartPaidFlow') return undefined;
       // The client component is a reference only: any property access means it ran on the server.
       StartPaidFlow = new Proxy(function StartPaidFlow() {}, { get: (_, key) => key === '__esModule' ? false : deny(`StartPaidFlow.${String(key)}`) });
       return StartPaidFlow;
     });
-    return { ...loaded, StartPaidFlow };
+    return { ...loaded, StartPaidFlow, decisions };
   };
   const trapped = new Proxy({}, {
     get: (_, key) => { throw new Error(`unexpected props.${String(key)}`); },
@@ -454,7 +478,7 @@ export default async function SiteBotStartPage() {
   });
   for (const { env, cookie } of closedRequestCases()) {
     const label = `${JSON.stringify(env)} cookie=${JSON.stringify(cookie)}`;
-    const { exports, unexpected, rendered, events } = await load(env, cookie);
+    const { exports, unexpected, rendered, events, decisions } = await load(env, cookie);
     assert.deepEqual(Object.keys(exports).sort(), ['default', 'metadata']);
     assert.equal(exports.metadata.robots.index, false);
     for (const props of [undefined, null, trapped]) {
@@ -463,16 +487,72 @@ export default async function SiteBotStartPage() {
     assert.deepEqual(events, ['connection', 'gate', 'redirect:/site-bot', 'connection', 'gate', 'redirect:/site-bot', 'connection', 'gate', 'redirect:/site-bot'], label);
     assert.deepEqual(unexpected, [], label);
     assert.deepEqual(rendered, []);
+    assert.deepEqual(decisions, [], `${label}: a closed gate never asks the launch cap`);
   }
+  const props = query => ({ searchParams: Promise.resolve(query) });
   for (const { env, cookie } of openRequestCases()) {
     const label = `${JSON.stringify(env)} cookie=${JSON.stringify(cookie)}`;
-    const { exports, unexpected, rendered, events, StartPaidFlow } = await load(env, cookie);
-    const element = await exports.default(trapped);
-    assert.equal(element.type, StartPaidFlow, label);
-    assert.deepEqual(rendered, [StartPaidFlow]);
-    assert.deepEqual(events, ['connection', 'gate'], label);
-    assert.deepEqual(unexpected, [], label);
+    // Eligible with a spot: the intake renders.
+    const allowed = await load(env, cookie);
+    const element = await allowed.exports.default(props({ auditId, placeId }));
+    assert.equal(element.type, allowed.StartPaidFlow, label);
+    assert.deepEqual(allowed.rendered, [allowed.StartPaidFlow]);
+    assert.deepEqual(allowed.events, ['connection', 'gate'], label);
+    assert.deepEqual(allowed.decisions, [[auditId, placeId]]);
+    assert.deepEqual(allowed.unexpected, [], label);
+    // A crafted URL past a full cap (or a not-eligible business) lands on the audit result, never the intake.
+    for (const offer of ['waitlist_full', 'not_eligible_has_site']) {
+      const blocked = await load(env, cookie, { kind: 'blocked', offer });
+      const target = `/site-bot/audit?auditId=${auditId}&placeId=${placeId}`;
+      await assert.rejects(blocked.exports.default(props({ auditId, placeId })), { message: `NEXT_REDIRECT;${target}` }, label);
+      assert.deepEqual(blocked.events, ['connection', 'gate', `redirect:${target}`], label);
+      assert.deepEqual(blocked.rendered, []);
+    }
+    // No audit (absent, repeated or foreign params): the free check.
+    for (const query of [{}, { auditId: [auditId, auditId], placeId }, { auditId: 'x', placeId: 'y' }]) {
+      const none = await load(env, cookie, { kind: 'no_audit' });
+      await assert.rejects(none.exports.default(props(query)), { message: 'NEXT_REDIRECT;/site-bot/audit' }, label);
+      assert.deepEqual(none.rendered, []);
+    }
+    const repeated = await load(env, cookie, { kind: 'no_audit' });
+    await assert.rejects(repeated.exports.default(props({ auditId: [auditId], placeId: [placeId] })));
+    assert.deepEqual(repeated.decisions, [[undefined, undefined]], 'array params are never passed on');
   }
+});
+
+// Launch step 1 (2026-11-25): the interview-start claim is a paid route with the standard gated stub.
+test('interview-start POST stays disabled unless the runtime paid-flow gate allows the request (launch step 1)', async () => {
+  await assertGatedStub('src/app/api/site-bot/interview-start/route.ts', 'POST', 'interview_unavailable');
+  const paid = read('src/app/api/site-bot/interview-start/paid.ts');
+  assert.match(paid, /checkRateLimit\(`sitebot-interview-start:\$\{ip\}`/);
+  assert.match(paid, /claimInterviewStart\(auditId, placeId\)/);
+  // The claim happens in the POST only; the start page's GET is read-only.
+  assert.doesNotMatch(read('src/app/(app)/site-bot/start/page.tsx'), /claimInterviewStart|reserveInterviewStart/);
+  const init = read('src/app/api/site-bot/checkout/init/paid.ts');
+  assert.ok(init.indexOf('interviewSpotHeld(body?.auditId, body?.placeId)') > 0, 'checkout init enforces the launch-cap spot');
+  assert.ok(init.indexOf('interviewSpotHeld(') < init.indexOf('createPendingPlanSubscription('));
+});
+
+// Launch step 1 (2026-11-25): the waiting list is a DELIBERATE new public surface of the closed release. It must never
+// open the paid flow: it only stores a contact and emails staff, and only for a real audit whose offer shows the form.
+test('waitlist POST: bounded JSON, per-IP rate limit, strict validation, server-derived context, no paid-flow seam', () => {
+  const route = read('src/app/api/site-bot/waitlist/route.ts');
+  const post = route.slice(route.indexOf('export async function POST('));
+  assert.match(route, /MAX_BODY_BYTES = 4096/);
+  assert.match(route, /application\/json/);
+  assert.match(post, /checkRateLimit\(`sitebot-waitlist:\$\{ip\}`, WAITLIST_RATE_LIMIT\)/);
+  assert.ok(post.indexOf('checkRateLimit(') < post.indexOf('boundedJson(req)'));
+  assert.ok(post.indexOf('normalizeWaitlistSubmission(') < post.indexOf('submitWaitlist('));
+  assert.doesNotMatch(route, /req\.(?:json|text)\(/);
+  for (const forbidden of ['./paid', 'StartPaidFlow', 'checkout', 'reserveInterviewStart', 'claimInterviewStart', 'data/clients', 'console.log']) {
+    assert.equal(route.includes(forbidden), false, `unexpected waitlist seam: ${forbidden}`);
+  }
+  const lib = read('src/lib/site-bot/waitlist.ts');
+  // Business name, category and reason come from the audit record + server offer, never from the request body.
+  assert.match(lib, /const ALLOWED_KEYS = new Set\(\['auditId', 'placeId', 'name', 'phone', 'email'\]\)/);
+  assert.match(lib, /const reason = waitlistReason\(await deps\.offerFor\(candidate\)\)/);
+  assert.match(lib, /businessName: candidate\.displayName/);
+  assert.equal(read('src/lib/site-bot/launchStore.ts').includes("'data', 'clients'"), false);
 });
 
 test('both public checkout POSTs stay disabled unless the runtime paid-flow gate allows them (callback: no admin cookie in rehearsal)', async () => {
@@ -735,5 +815,7 @@ test('buy CTA renders nothing without the gated provider; only the audit layout 
   // The page holds only the slot; the start URL lives in the gated CTA module.
   const page = read('src/app/(app)/site-bot/audit/page.tsx');
   assert.match(page, /<PaidBuyCtaSlot auditId=\{identity\?\.auditId\} placeId=\{identity\?\.placeId\} \/>/);
+  // Launch step 1: the slot renders only for the server's 'eligible' offer (still inside the gated provider).
+  assert.match(page, /\{offer === 'eligible' && <PaidBuyCtaSlot auditId=\{identity\?\.auditId\} placeId=\{identity\?\.placeId\} \/>\}/);
   assert.equal(page.includes('/site-bot/start'), false);
 });

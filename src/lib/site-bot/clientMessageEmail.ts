@@ -44,7 +44,8 @@ export interface OutgoingEmail {
     | 'review_kit_no_place'
     | 'cancel_confirmation'
     | 'offline_soon'
-    | 'takedown_reminder';
+    | 'takedown_reminder'
+    | 'waitlist_joined';
   /** For logs only. */
   refIds: string[];
 }

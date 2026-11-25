@@ -4,6 +4,7 @@ import { Suspense, useEffect, useRef, useState, type CSSProperties } from "react
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { checkoutInitSessionId, customerErrorText, readJsonBody } from "@/lib/site-bot/checkout/customerError";
+import { browserSiteBotTracking, trackInterviewStarted } from "@/lib/tracking/siteBotConversions";
 import type { CollectedData } from "@/lib/bot/prompts";
 import { renderMixed } from "@/lib/bidi";
 import { RESEARCH_COPY } from "@/lib/site-bot/researchCopy";
@@ -221,8 +222,36 @@ function SiteBotStartContent() {
     if (!prefillRequested || !auditId || !placeId || fetchedRef.current) return;
     fetchedRef.current = true;
     const query = new URLSearchParams({ auditId, placeId });
-    fetch(`/api/site-bot/prefill?${query.toString()}`)
+    // Launch step 1: claim the interview spot on the server first (POST /api/site-bot/interview-start). Anything but
+    // started / resumed (cap full, not eligible, gate closed, network) goes back to the audit result, which shows the
+    // owner his waiting list or block. site_bot_interview_started fires only on a fresh claim, once.
+    const fallback = `/site-bot/audit?${query.toString()}`;
+    let claimed = false;
+    fetch("/api/site-bot/interview-start", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ auditId, placeId }),
+    })
       .then(async (res) => {
+        const json = await readJsonBody(res);
+        if (res.ok && (json.status === "started" || json.status === "resumed")) {
+          if (json.status === "started") {
+            const tracking = browserSiteBotTracking();
+            if (tracking) trackInterviewStarted(tracking, { auditId, placeId });
+          }
+          claimed = true;
+          return true;
+        }
+        const target = typeof json.redirect === "string" && json.redirect.startsWith("/site-bot/audit") ? json.redirect : fallback;
+        router.replace(target);
+        return false;
+      }, () => {
+        router.replace(fallback);
+        return false;
+      })
+      .then((started) => (started ? fetch(`/api/site-bot/prefill?${query.toString()}`) : null))
+      .then(async (res) => {
+        if (!res) return;
         const json = await readJsonBody(res);
         const snapshot = json.snapshot as PrefillSnapshot | undefined;
         if (!res.ok || json.status !== "ready" || !snapshot || typeof snapshot !== "object" || snapshot.placeId !== placeId) return;
@@ -234,8 +263,9 @@ function SiteBotStartContent() {
       .catch(() => {
         // Silent degradation: the card stays empty and editable.
       })
-      .finally(() => setPhase((current) => (current === "loading" ? "card" : current)));
-  }, [prefillRequested, auditId, placeId]);
+      // Not claimed: stay on the loading state while the router leaves for the audit result (the card never flashes).
+      .finally(() => { if (claimed) setPhase((current) => (current === "loading" ? "card" : current)); });
+  }, [prefillRequested, auditId, placeId, router]);
 
   function scrollDown() {
     requestAnimationFrame(() => scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" }));
@@ -307,7 +337,8 @@ function SiteBotStartContent() {
       const res = await fetch("/api/site-bot/checkout/init", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ collectedData: data }),
+        // Launch step 1: checkout init accepts only an audit + place that hold an interview spot (launch cap).
+        body: JSON.stringify({ collectedData: data, auditId, placeId }),
       });
       // M0.5 (B10): a non-2xx, non-JSON or malformed init never navigates to /site-bot/pay/undefined.
       const json = await readJsonBody(res);

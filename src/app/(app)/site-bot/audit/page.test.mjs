@@ -39,6 +39,20 @@ const paidBuyCta = load(fileURLToPath(new URL('./paidBuyCta.tsx', import.meta.ur
   react: React, 'react/jsx-runtime': jsx, 'next/link': { __esModule: true, default: props => React.createElement('a', props) },
   '@/lib/site-bot/intakeCopy': intakeCopy,
 });
+// Launch step 1: the real offer modules (eligibility decision, generated waocopy, bidi, waiting-list form, events).
+const launchTrades = load(local('src/lib/site-bot/launchTrades.ts'));
+const eligibility = load(local('src/lib/site-bot/eligibility.ts'), { './launchTrades': launchTrades });
+const eligibilityCopy = load(local('src/lib/site-bot/eligibilityCopy.generated.ts')).SITE_BOT_ELIGIBILITY_COPY;
+const bidi = load(local('src/lib/bidi.tsx'), { react: React, 'react/jsx-runtime': jsx });
+const waitlistLib = load(local('src/lib/site-bot/waitlist.ts'), { '../tracking/conversions': load(local('src/lib/tracking/conversions.ts')),
+  './eligibility': eligibility, './launchTrades': launchTrades });
+const trackingPath = local('src/lib/tracking/siteBotConversions.ts');
+/** One page session's tracking module, bound to that harness's window (its own in-memory guard, like a page load). */
+const trackingFor = win => load(trackingPath, {}, { window: win });
+const offerBlockFor = (tracking, globals = {}, react = React) => load(fileURLToPath(new URL('./offerBlock.tsx', import.meta.url)), {
+  react, 'react/jsx-runtime': jsx, '@/lib/bidi': bidi, '@/lib/site-bot/eligibilityCopy.generated': { SITE_BOT_ELIGIBILITY_COPY: eligibilityCopy },
+  '@/lib/site-bot/eligibility': eligibility, '@/lib/site-bot/waitlist': waitlistLib, '@/lib/tracking/siteBotConversions': tracking,
+}, globals);
 const fakeDocument = { elements: {}, getElementById(key) { return this.elements[key] ?? null; } };
 const privacyStub = props => React.createElement('input', { type: 'checkbox', checked: props.checked, onChange: props.onChange });
 const id = '123e4567-e89b-42d3-a456-426614174000';
@@ -47,8 +61,9 @@ const keys = ['categories', 'hours', 'phone_website', 'photos', 'reviews', 'desc
 const score = (status = 'pass') => ({ total: 6, passed: status === 'pass' ? 6 : 0, failed: status === 'fail' ? 6 : 0,
   unknown: status === 'unknown' ? 6 : 0, dimensions: keys.map(key => ({ key, status, evidence: 'synthetic internal only', copyToken: `DIM_${key.toUpperCase()}_TITLE` })) });
 const candidate = n => ({ placeId: `place-${n}`, displayName: `Synthetic Business ${n}`, formattedAddress: `Synthetic Address ${n}` });
-const ready = (n = 1, status = 'pass') => ({ status: 'ready', placeId: candidate(n).placeId, businessName: candidate(n).displayName,
-  formattedAddress: candidate(n).formattedAddress, score: score(status) });
+// Launch step 1: audit-result now carries the server's offer; 'eligible' keeps the pre-launch page output (CTA slot only).
+const ready = (n = 1, status = 'pass', offer = 'eligible') => ({ status: 'ready', placeId: candidate(n).placeId, businessName: candidate(n).displayName,
+  formattedAddress: candidate(n).formattedAddress, score: score(status), offer });
 const response = (data, status = 200) => ({ ok: status >= 200 && status < 300, status, json: async () => data });
 const tick = () => new Promise(resolve => setImmediate(resolve));
 function deferred() {
@@ -94,6 +109,10 @@ function harness(initial = '', adapter = () => fail('unplanned fetch'), storage 
       }
     },
   };
+  const win = { location,
+    sessionStorage: { getItem: key => storage.get(key) ?? null, setItem: (key, value) => storage.set(key, value) },
+    history: { replaceState(_state, _unused, url) { location.href = String(url); dirty = true; } } };
+  const tracking = trackingFor(win);
   const page = load(pagePath, { react: hooks, 'react/jsx-runtime': jsx,
     'next/navigation': { useSearchParams: () => new URL(location.href).searchParams },
     'next/link': { __esModule: true, default: props => React.createElement('a', props) },
@@ -105,9 +124,10 @@ function harness(initial = '', adapter = () => fail('unplanned fetch'), storage 
     '@/components/PrivacyConsent': { __esModule: true, default: privacyStub },
     '@/content/site-bot-help-form-copy.json': helpCopy,
     './paidBuyCta': paidBuyCta,
-  }, { document: fakeDocument, crypto: { randomUUID: () => otherId }, window: { location,
-    sessionStorage: { getItem: key => storage.get(key) ?? null, setItem: (key, value) => storage.set(key, value) },
-    history: { replaceState(_state, _unused, url) { location.href = String(url); dirty = true; } } },
+    './offerBlock': offerBlockFor(tracking),
+    '@/lib/site-bot/eligibility': eligibility,
+    '@/lib/tracking/siteBotConversions': tracking,
+  }, { document: fakeDocument, crypto: { randomUUID: () => otherId }, window: win,
     fetch(url, options) {
       assert.ok(url === '/api/site-bot/audit-lookup' || url.startsWith('/api/site-bot/audit-result?') || url === '/api/site-bot/help-request' || url === '/api/site-bot/help-request/recover');
       if (url === '/api/site-bot/audit-lookup') {
@@ -124,7 +144,7 @@ function harness(initial = '', adapter = () => fail('unplanned fetch'), storage 
     return tree;
   }
   const view = {
-    calls, location,
+    calls, location, window: win,
     tree: render,
     html: () => renderToStaticMarkup(render()),
     all: () => nodes(render()),
@@ -235,7 +255,8 @@ test('uncertain customer form locks edits, but explicit retry after reload keeps
   await view.all().find(node => node.props?.['data-help-form']).props.onSubmit({ preventDefault() {} }); await view.flush();
   assert.equal(view.calls.length, 2);
   const originalId = JSON.parse(view.calls[1].options.body).requestId;
-  assert.equal(storage.size, 1);
+  // (launch step 1: the one-shot event marks share sessionStorage; only the help attempt is counted here)
+  assert.equal([...storage.keys()].filter(key => !key.startsWith('wao-sb-event:')).length, 1);
   assert.ok(!view.all().some(node => node.props?.href === '/contact?ref=site-bot-audit#contact-form'));
   const reload = harness(`&auditId=${id}&placeId=place-1`, adapter, storage);
   await reload.flush(); await confirm(reload);
@@ -631,4 +652,142 @@ test('help errors split by state: lost receipt and retry use RETRY, blocked uses
   assert.ok(!done.all().some(node => node.props?.['data-help-form']));
   assert.ok(!done.all().some(node => node.props?.['data-help-jump']), 'jump link only while the form is shown');
   assert.ok(nodes(liveRegion(done)[0]).some(node => node.props?.['data-help-received']));
+});
+
+// ---- Launch step 1 (2026-11-25): the eligibility block / waiting list in place of the buy CTA. ----
+const mixed = text => renderToStaticMarkup(React.createElement(React.Fragment, null, bidi.renderMixed(text)));
+async function offerView(offer, storage = new Map()) {
+  const result = ready(1, 'fail', offer);
+  if (offer === 'missing') delete result.offer;
+  const view = harness('', async url => response(url === '/api/site-bot/audit-lookup' ? { auditId: id } : result), storage);
+  await view.flush(); await view.submit(); await view.flush(); await confirm(view); report(view);
+  return view;
+}
+// The tracking module runs in its own vm realm: compare dataLayer contents structurally.
+const plain = value => (value === undefined ? undefined : JSON.parse(JSON.stringify(value)));
+const hasSlot = view => view.all().some(node => node.type === paidBuyCta.PaidBuyCtaSlot);
+
+test('launch step 1: each server offer renders exactly its block; the check results stay on the page', async () => {
+  const C = eligibilityCopy;
+  const expectations = {
+    not_eligible_has_site: { texts: [C.NOT_ELIGIBLE_HAS_SITE], form: null },
+    not_eligible_trade: { texts: [C.NOT_ELIGIBLE_TRADE], form: 'trade' },
+    not_eligible_profile: { texts: C.NOT_ELIGIBLE_PROFILE.split('\n'), form: null },
+    waitlist_preopen: { texts: [C.WAITLIST_PREOPEN_HEAD, C.WAITLIST_PREOPEN_BODY], form: 'preopen' },
+    waitlist_full: { texts: [C.WAITLIST_FULL_HEAD, C.WAITLIST_FULL_BODY], form: 'full' },
+  };
+  for (const [offer, { texts, form }] of Object.entries(expectations)) {
+    const view = await offerView(offer);
+    const html = view.html();
+    assert.ok(html.includes(`data-offer="${offer}"`), offer);
+    for (const text of texts) assert.ok(html.includes(`>${mixed(text)}</`), `${offer}: ${text.slice(0, 12)}`);
+    assert.equal(hasSlot(view), false, `${offer}: no CTA slot`);
+    assert.doesNotMatch(html, /data-paid-buy-cta|\/site-bot\/start/);
+    assert.equal(html.includes(intakeCopy.INTAKE_COPY.M1_CTA_LABEL), false);
+    if (form) {
+      assert.ok(html.includes(`data-waitlist-reason="${form}"`), offer);
+      for (const key of ['WAITLIST_NAME_LABEL', 'WAITLIST_PHONE_LABEL', 'WAITLIST_EMAIL_LABEL', 'WAITLIST_SUBMIT', 'WAITLIST_CONSENT']) {
+        assert.ok(html.includes(escaped(C[key])), `${offer}: ${key}`);
+      }
+      assert.match(html, /id="waitlist-phone"[^>]*type="tel"/);
+    } else {
+      assert.doesNotMatch(html, /data-waitlist/, `${offer}: no form`);
+    }
+    // The six findings and the help form are still there (two strings point back to them).
+    assert.equal(view.all().filter(node => node.props?.['data-dimension']).length, 6);
+    assert.ok(view.all().some(node => node.props?.['data-help-form']));
+  }
+  // The profile string's line breaks are separate lines, never one run with raw \n.
+  const profile = (await offerView('not_eligible_profile')).html();
+  assert.equal(profile.includes(escaped(C.NOT_ELIGIBLE_PROFILE)), false);
+  assert.equal(C.NOT_ELIGIBLE_PROFILE.split('\n').length, (profile.match(/data-offer="not_eligible_profile"[\s\S]*?<\/section>/)[0].match(/<p /g) || []).length);
+});
+
+test('launch step 1: "Site Bot" inside Hebrew copy is an LTR isolate', async () => {
+  for (const offer of ['not_eligible_has_site', 'not_eligible_trade', 'waitlist_preopen']) {
+    assert.ok((await offerView(offer)).html().includes('<bdi dir="ltr">Site Bot</bdi>'), offer);
+  }
+});
+
+test('launch step 1: only the eligible offer keeps the CTA slot; an unknown or missing offer shows neither', async () => {
+  const eligible = await offerView('eligible');
+  assert.equal(hasSlot(eligible), true);
+  assert.doesNotMatch(eligible.html(), /data-offer=|data-waitlist/);
+  for (const offer of ['bogus', 'missing']) {
+    const view = await offerView(offer);
+    assert.equal(hasSlot(view), false);
+    assert.doesNotMatch(view.html(), /data-offer=|data-waitlist/);
+  }
+});
+
+test('launch step 1: site_bot_check_completed fires once, only on the confirmed result, with the offer; not again on reload', async () => {
+  const storage = new Map();
+  const view = harness('', async url => response(url === '/api/site-bot/audit-lookup' ? { auditId: id } : ready(1, 'pass', 'waitlist_full')), storage);
+  await view.flush(); await view.submit(); await view.flush();
+  assert.equal(view.window.dataLayer, undefined, 'nothing on the confirm question');
+  await confirm(view); await view.flush(); await view.flush();
+  view.commitEffects(); await view.flush();
+  assert.deepEqual(plain(view.window.dataLayer), [{ event: 'site_bot_check_completed', offer: 'waitlist_full' }]);
+  const reload = harness(`&auditId=${id}&placeId=place-1`, async () => response(ready(1, 'pass', 'waitlist_full')), storage);
+  await reload.flush(); await confirm(reload); await reload.flush();
+  assert.equal(reload.window.dataLayer, undefined);
+  // A different business in a fresh tab is its own event.
+  const other = harness(`&auditId=${id}&placeId=place-2`, async () => response(ready(2, 'pass', 'eligible')));
+  await other.flush(); await confirm(other);
+  assert.deepEqual(plain(other.window.dataLayer), [{ event: 'site_bot_check_completed', offer: 'eligible' }]);
+});
+
+function waitlistFormHarness(adapter, storage = new Map()) {
+  const slots = [];
+  let cursor = 0;
+  const hooks = { ...React, useState(initial) {
+    const i = cursor++;
+    if (!(i in slots)) slots[i] = typeof initial === 'function' ? initial() : initial;
+    return [slots[i], value => { slots[i] = typeof value === 'function' ? value(slots[i]) : value; }];
+  } };
+  const win = { sessionStorage: { getItem: key => storage.get(key) ?? null, setItem: (key, value) => storage.set(key, value) } };
+  const calls = [];
+  const block = offerBlockFor(trackingFor(win), { fetch: async (url, options) => { calls.push({ url, options }); return adapter(url, options); } }, hooks);
+  const tree = () => { cursor = 0; return block.WaitlistForm({ auditId: id, placeId: 'ChIJ-synthetic-1', reason: 'preopen' }); };
+  const type = (name, value) => nodes(tree()).find(node => node.type === 'input' && node.props.name === name).props.onChange({ target: { value } });
+  const submitButton = () => nodes(tree()).find(node => node.type === 'button' && node.props.type === 'submit');
+  const submit = async () => { await nodes(tree()).find(node => node.type === 'form').props.onSubmit({ preventDefault() {} }); await tick(); };
+  return { tree, type, submitButton, submit, calls, win };
+}
+
+test('launch step 1: the waiting-list form sends only typed fields + audit ids, thanks once, fires site_bot_waitlist_joined once', async () => {
+  const h = waitlistFormHarness(async () => response({ ok: true, reason: 'preopen' }));
+  assert.equal(h.submitButton().props.disabled, true);
+  h.type('name', 'Synthetic Owner');
+  h.type('phone', '12345');
+  assert.equal(h.submitButton().props.disabled, true, 'a non-Israeli phone keeps the button off');
+  await h.submit();
+  assert.equal(h.calls.length, 0);
+  h.type('phone', '050-123-4567');
+  assert.equal(h.submitButton().props.disabled, false);
+  assert.equal(h.submitButton().props.style.minHeight, '48px');
+  await h.submit();
+  assert.equal(h.calls.length, 1);
+  assert.equal(h.calls[0].url, '/api/site-bot/waitlist');
+  assert.deepEqual(JSON.parse(h.calls[0].options.body), { auditId: id, placeId: 'ChIJ-synthetic-1', name: 'Synthetic Owner', phone: '050-123-4567' });
+  const after = renderToStaticMarkup(h.tree());
+  assert.ok(after.includes(escaped(eligibilityCopy.WAITLIST_THANKS)));
+  assert.doesNotMatch(after, /data-waitlist-form/);
+  assert.deepEqual(plain(h.win.dataLayer), [{ event: 'site_bot_waitlist_joined', reason: 'preopen' }]);
+});
+
+test('launch step 1: a rejected waiting-list request shows the error, fires nothing, and can be retried', async () => {
+  let fail = true;
+  const h = waitlistFormHarness(async () => (fail ? response({ ok: false, error: 'unavailable' }, 503) : response({ ok: true, reason: 'full' })));
+  h.type('name', 'Synthetic Owner'); h.type('phone', '0501234567'); h.type('email', 'o@example.com');
+  await h.submit();
+  const failed = renderToStaticMarkup(h.tree());
+  assert.ok(failed.includes(escaped(eligibilityCopy.WAITLIST_ERROR)));
+  assert.match(failed, /role="alert"/);
+  assert.equal(h.win.dataLayer, undefined);
+  fail = false;
+  await h.submit();
+  assert.equal(JSON.parse(h.calls[1].options.body).email, 'o@example.com');
+  // The event carries the reason the server stored.
+  assert.deepEqual(plain(h.win.dataLayer), [{ event: 'site_bot_waitlist_joined', reason: 'full' }]);
 });

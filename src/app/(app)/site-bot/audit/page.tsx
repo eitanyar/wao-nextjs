@@ -13,6 +13,9 @@ import { createHelpSubmission, helpAttemptKey } from '@/lib/site-bot/helpSubmiss
 import PrivacyConsent from '@/components/PrivacyConsent';
 import HELP_COPY from '@/content/site-bot-help-form-copy.json';
 import { PaidBuyCtaSlot } from './paidBuyCta';
+import { SiteBotOfferBlock } from './offerBlock';
+import { isSiteBotOffer } from '@/lib/site-bot/eligibility';
+import { browserSiteBotTracking, trackCheckCompleted } from '@/lib/tracking/siteBotConversions';
 
 type PageState = 'form' | 'loading' | 'pick' | 'confirm' | 'ready' | 'not_found' | 'recovery';
 interface Operation { generation: number; controller: AbortController; urlKey: string }
@@ -59,6 +62,8 @@ function AuditContent() {
   const state = viewKey === urlKey ? phase : 'loading';
   const auditResult = identity?.score;
   const businessName = identity?.businessName;
+  // Launch step 1: the server's offer for the confirmed business (eligibility block / waiting list / CTA). Unknown -> nothing.
+  const offer = identity && isSiteBotOffer(identity.offer) ? identity.offer : undefined;
   const invalidate = useCallback(() => {
     generation.current++;
     active.current?.controller.abort();
@@ -177,6 +182,13 @@ function AuditContent() {
   }, [urlKey, clear, fetchResult, invalidate]);
 
   useEffect(() => () => { invalidate(); }, [invalidate]);
+
+  // site_bot_check_completed: once per confirmed audit + place, when the result is on screen (siteBotConversions.ts).
+  useEffect(() => {
+    if (state !== 'ready' || !identity || !offer) return;
+    const tracking = browserSiteBotTracking();
+    if (tracking) trackCheckCompleted(tracking, { auditId: identity.auditId, placeId: identity.placeId, offer });
+  }, [state, identity, offer]);
 
   useEffect(() => {
     if (!identity) return;
@@ -709,8 +721,10 @@ function AuditContent() {
             </div>
             <p style={{ whiteSpace: 'pre-line' }}>{COPY.SB_CHECKLIST_CANDOR}</p>
 
-            {/* M1 (F1): renders nothing unless the audit layout opened the paid-flow gate. */}
-            <PaidBuyCtaSlot auditId={identity?.auditId} placeId={identity?.placeId} />
+            {/* M1 (F1): renders nothing unless the audit layout opened the paid-flow gate. Launch step 1: and only for the
+                'eligible' offer; every other offer gets its eligibility block / waiting list instead, the results above stay. */}
+            {offer === 'eligible' && <PaidBuyCtaSlot auditId={identity?.auditId} placeId={identity?.placeId} />}
+            {identity && <SiteBotOfferBlock offer={offer} auditId={identity.auditId} placeId={identity.placeId} />}
 
             {renderHelpForm()}
           </div>

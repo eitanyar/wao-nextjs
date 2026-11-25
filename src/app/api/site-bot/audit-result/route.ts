@@ -3,18 +3,23 @@ import { checkRateLimit } from '@/lib/payments/rate-limit';
 import { scoreAudit } from '@/lib/gbp/auditScore';
 import { readAuditRecord, UUID_REGEX } from '@/lib/site-bot/auditStore';
 import type { AuditCandidateSnapshot } from '@/lib/site-bot/auditStore';
+import { resolveOffer } from '@/lib/site-bot/offerState';
 
 function getReply(body: object, status: number) {
   return NextResponse.json(body, { status, headers: { 'Cache-Control': 'private, no-store' } });
 }
 
-function readyResponse(candidate: AuditCandidateSnapshot) {
+// Launch step 1: `offer` = what the confirmed result shows where the buy CTA sat (src/lib/site-bot/eligibility.ts).
+// Decided here, on the server, from the stored candidate, the runtime paid-flow gate and the launch cap.
+async function readyResponse(candidate: AuditCandidateSnapshot) {
+  const score = scoreAudit(candidate);
   return {
     status: 'ready',
     businessName: candidate.displayName,
     formattedAddress: candidate.formattedAddress,
-    score: scoreAudit(candidate),
+    score,
     placeId: candidate.placeId,
+    offer: await resolveOffer(candidate),
   };
 }
 
@@ -37,12 +42,12 @@ export async function GET(req: Request) {
     if (placeId) {
       const candidate = record.candidates.find((value) => value.placeId === placeId);
       return candidate
-        ? getReply(readyResponse(candidate), 200)
+        ? getReply(await readyResponse(candidate), 200)
         : getReply({ error: 'not_found' }, 404);
     }
 
     if (record.candidates.length === 0) return getReply({ status: 'not_found' }, 200);
-    if (record.candidates.length === 1) return getReply(readyResponse(record.candidates[0]), 200);
+    if (record.candidates.length === 1) return getReply(await readyResponse(record.candidates[0]), 200);
     return getReply({
       status: 'pick',
       candidates: record.candidates.map(({ placeId, displayName, formattedAddress }) => ({

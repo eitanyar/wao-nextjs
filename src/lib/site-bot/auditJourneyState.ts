@@ -1,4 +1,5 @@
 import type { AuditResult } from '@/lib/gbp/auditScore';
+import type { SiteBotOffer } from '@/lib/site-bot/eligibility';
 
 export interface ReadyIdentity {
   auditId: string;
@@ -6,6 +7,8 @@ export interface ReadyIdentity {
   businessName: string;
   formattedAddress: string;
   score: AuditResult;
+  /** Launch step 1: the server's offer (audit-result). Unvalidated here; the page renders it only via isSiteBotOffer. */
+  offer?: SiteBotOffer | string;
 }
 export interface Candidate {
   placeId: string;
@@ -36,7 +39,8 @@ export function readyIdentity(data: unknown, auditId: string, requestedPlace?: s
     score.passed !== score.dimensions.filter(d => d.status === 'pass').length ||
     score.failed !== score.dimensions.filter(d => d.status === 'fail').length ||
     score.unknown !== score.dimensions.filter(d => d.status === 'unknown').length) throw new Error('Invalid score');
-  return { auditId, placeId: value.placeId, businessName: value.businessName, formattedAddress: value.formattedAddress, score };
+  return { auditId, placeId: value.placeId, businessName: value.businessName, formattedAddress: value.formattedAddress, score,
+    ...(typeof value.offer === 'string' ? { offer: value.offer } : {}) };
 }
 export function identityQuery(url: string): string {
   const params = new URL(url).searchParams;
