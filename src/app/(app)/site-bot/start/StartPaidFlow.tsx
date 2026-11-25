@@ -3,9 +3,8 @@
 import { Suspense, useEffect, useRef, useState, type CSSProperties } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { checkoutInitSessionId, customerErrorText, readJsonBody } from "@/lib/site-bot/checkout/customerError";
+import { customerErrorText, readJsonBody } from "@/lib/site-bot/checkout/customerError";
 import { browserSiteBotTracking, trackInterviewStarted } from "@/lib/tracking/siteBotConversions";
-import type { CollectedData } from "@/lib/bot/prompts";
 import { renderMixed } from "@/lib/bidi";
 import { RESEARCH_COPY } from "@/lib/site-bot/researchCopy";
 import { seedFromPrefillSnapshot } from "@/lib/site-bot/seedPrefill";
@@ -18,6 +17,15 @@ import { startVoiceNote, VOICE_NOTE_CONTROL_LABELS, voiceNoteStepAvailable, type
 import { ISRAELI_LOCALITIES } from "@/lib/site-bot/israeliLocalities";
 import { MAX_LISTED_SERVED_AREAS, servedAreaCandidates } from "@/lib/site-bot/servedAreas";
 import { chatBubbleDir } from "@/lib/site-bot/chatBubbleDir";
+import { SITE_BOT_STEP2A_COPY as STEP2A_COPY } from "@/lib/site-bot/step2aCopy.generated";
+import {
+  isWorkLocationTrade,
+  WORK_LOCATION_OPTION_KEY,
+  WORK_LOCATION_OPTIONS,
+  WORK_LOCATION_QUESTION_KEY,
+  type WorkLocation,
+  type WorkLocationTrade,
+} from "@/lib/site-bot/workLocation";
 import { CREDENTIALS_COPY, credentialTier, licenseQuestionCopy, showsLicenseQuestions, WARRANTY_CHOICE_COPY_KEY, WARRANTY_CHOICES, type CredentialsAnswers } from "@/lib/site-bot/credentialsCopy";
 import {
   buildIntakeCollectedData,
@@ -65,9 +73,14 @@ import {
 // validated in src/lib/site-bot/ownerIntake.ts and land on collectedData as ownerContact / domainChoice / ownerDomain,
 // apart from the public business phone. Their strings are slots in src/lib/site-bot/intakeOwnerCopy.ts.
 //
-// Payment: once the questions are done, collected data is handed to
-// /api/site-bot/checkout/init and the user is routed to /site-bot/pay/[sessionId],
-// which owns charging + triggering research (see that route).
+// Step 2a (2026-11-25, docs/missions/site-bot-step2-interview-preview-2026-11-25.md): the interview is a server-side
+// session (POST /api/site-bot/interview-start sets its httpOnly cookie). The browser saves its step snapshot to the
+// session while it answers (POST /api/site-bot/interview-step { step: 'progress' }), so a reload resumes where it stopped.
+// The contact step sends the record to the session (research starts there, in the background, unless the work-location
+// question is asked), the domain step merges the domain answer, and tutors / photographers / solar suppliers then answer
+// the work-location question (src/lib/site-bot/workLocation.ts): studio-only or online-only exits to the waiting list.
+// The flow then stops on the holding screen. Payment moves after the interview and the home-page preview (steps 2b / 2c);
+// this page no longer calls the checkout init route (2c hands the confirmed session to checkout).
 
 interface Message {
   role: "assistant" | "user";
@@ -91,7 +104,6 @@ function isGenericUsp(text: string): boolean {
 // Tamar's one-shot anti-generic probe on the differentiator (kept from the pre-M1 intake).
 // A still-generic second answer is accepted as-is: one nudge, never a loop.
 const USP_PROBE = "תפסתי, אבל “מקצועי ואמין” הלקוח שומע מכל אחד. תן לי דבר אחד קונקרטי שאתה עושה אחרת — משהו שמתחרה ממול לא באמת יגיד על עצמו. מספר, זמן תגובה, אחריות, איך אתה עובד בשטח. מה גורם ללקוח להגיד “אה, זה שונה”?";
-const DONE_MESSAGE = "מעולה, יש לי כל מה שצריך. עוד רגע נעבור לתשלום מאובטח, ואז האתר שלך ייבנה בזמן אמת.";
 
 const FIELD_LABEL: Record<IntakeCardField, string> = {
   businessName: INTAKE_COPY.M1_FIELD_BUSINESS_NAME,
@@ -165,7 +177,72 @@ function questionText(key: IntakeQuestionKey, card: IntakeCard): string {
 // buildIntakeCollectedData (yearsInField / license / guarantee).
 // Content depth: "voice" is the optional voice-note step after the 3 questions. voiceNoteStepAvailable() is false
 // (src/lib/site-bot/voiceNote.ts: no safe storage / transcription / control labels yet), so the flow never enters it today.
-type Phase = "loading" | "card" | "chat" | "credentials" | "contact" | "domain" | "voice" | "routing" | "error";
+// Step 2a: "location" (work-location question), "holding" (after the owner steps), "exited" (location exit, waiting list)
+// and "expired" (the spot was released after 72 h) come from the interview session.
+type Phase = "loading" | "card" | "chat" | "credentials" | "contact" | "domain" | "location" | "holding" | "exited" | "expired" | "voice" | "routing" | "error";
+
+/** The error fallback of a failed interview request (the same text the checkout handoff used). */
+const STEP_ERROR_FALLBACK = "משהו השתבש";
+
+/**
+ * HOLDING_CTA starts the interview, which step 2b adds. Until then the button is not rendered (it would promise a step
+ * that does not exist yet). TODO(step 2b): flip to true when the interview v1 screen exists.
+ */
+const INTERVIEW_V1_AVAILABLE = false;
+
+/** The browser's step snapshot saved on the interview session (resume only; the server never trusts it). */
+interface IntakeProgress {
+  v: 1;
+  phase: "chat" | "credentials" | "contact";
+  card: IntakeCard;
+  evidence: IntakeEvidence;
+  prefilled: boolean;
+  hoursEdited: boolean;
+  questions: IntakeQuestionKey[];
+  stepIndex: number;
+  answers: IntakeAnswers;
+  messages: Message[];
+  probed: boolean;
+  pendingAnswer: string | null;
+  credentials: CredentialsAnswers;
+  credentialsCard: IntakeCard | null;
+}
+
+function isIntakeProgress(value: unknown): value is IntakeProgress {
+  if (!value || typeof value !== "object") return false;
+  const p = value as Partial<IntakeProgress>;
+  return p.v === 1 && (p.phase === "chat" || p.phase === "credentials" || p.phase === "contact")
+    && Boolean(p.card) && typeof p.card === "object" && Array.isArray(p.questions) && Array.isArray(p.messages)
+    && typeof p.stepIndex === "number" && Boolean(p.answers) && typeof p.answers === "object";
+}
+
+interface InterviewSessionView {
+  phase: "intake" | "domain" | "location" | "holding" | "exited" | "expired" | "paid" | "superseded";
+  progress: unknown;
+  locationTrade: WorkLocationTrade | null;
+  workLocation: WorkLocation | null;
+}
+
+function sessionViewOf(value: unknown): InterviewSessionView | null {
+  if (!value || typeof value !== "object") return null;
+  const view = value as Partial<InterviewSessionView>;
+  return typeof view.phase === "string" ? { phase: view.phase, progress: view.progress ?? null, locationTrade: isWorkLocationTrade(view.locationTrade) ? view.locationTrade : null, workLocation: view.workLocation ?? null } : null;
+}
+
+async function postInterviewStep(body: Record<string, unknown>): Promise<{ ok: boolean; status?: string; session: InterviewSessionView | null }> {
+  const res = await fetch("/api/site-bot/interview-step", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  const json = await readJsonBody(res);
+  return { ok: res.ok, status: typeof json.status === "string" ? json.status : undefined, session: sessionViewOf(json.session) };
+}
+
+/** Each line of a multi-line copy string as its own paragraph. */
+function copyLines(text: string): string[] {
+  return text.split("\n").filter((line) => line.trim() !== "");
+}
 
 const DOMAIN_CHOICE_LABEL: Record<DomainChoice, string> = {
   has_domain: INTAKE_OWNER_COPY.domainChoiceYes,
@@ -200,7 +277,6 @@ function SiteBotStartContent() {
   const [probed, setProbed] = useState(false);
   const [pendingAnswer, setPendingAnswer] = useState<string | null>(null);
   const [areaChoice, setAreaChoice] = useState<AreaChoice | null>(null);
-  const [voiceData, setVoiceData] = useState<CollectedData | null>(null);
   const [recording, setRecording] = useState<VoiceNoteRecording | null>(null);
   const [credentials, setCredentials] = useState<CredentialsAnswers>({});
   const [credentialsCard, setCredentialsCard] = useState<IntakeCard | null>(null);
@@ -209,6 +285,10 @@ function SiteBotStartContent() {
   const [mobilePrefilled, setMobilePrefilled] = useState(false);
   const [contactErrors, setContactErrors] = useState<{ mobile: boolean; email: boolean }>({ mobile: false, email: false });
   const [domainError, setDomainError] = useState<OwnerDomainRejection | null>(null);
+  const [sessionReady, setSessionReady] = useState(false);
+  const [locationTrade, setLocationTrade] = useState<WorkLocationTrade | null>(null);
+  const [locationChoice, setLocationChoice] = useState<WorkLocation | null>(null);
+  const [submitting, setSubmitting] = useState(false);
   const ownerHeadingRef = useRef<HTMLHeadingElement>(null);
   const mobileInputRef = useRef<HTMLInputElement>(null);
   const emailInputRef = useRef<HTMLInputElement>(null);
@@ -217,6 +297,38 @@ function SiteBotStartContent() {
   const firstAreaRef = useRef<HTMLButtonElement>(null);
   const chatInputRef = useRef<HTMLInputElement>(null);
   const firstChoiceRef = useRef<HTMLButtonElement>(null);
+
+  /** Restores the session's phase (and, inside the intake, this browser's saved snapshot). True when it resumed. */
+  function resumeFrom(view: InterviewSessionView): boolean {
+    if (view.locationTrade) setLocationTrade(view.locationTrade);
+    if (view.phase === "domain" || view.phase === "location" || view.phase === "holding") {
+      setPhase(view.phase);
+      return true;
+    }
+    if (view.phase === "intake" && isIntakeProgress(view.progress)) {
+      const saved = view.progress;
+      setCard(saved.card);
+      setEvidence(saved.evidence ?? {});
+      setPrefilled(Boolean(saved.prefilled));
+      setHoursEdited(Boolean(saved.hoursEdited));
+      setQuestions(saved.questions);
+      setStepIndex(saved.stepIndex);
+      setAnswers(saved.answers);
+      setMessages(saved.messages);
+      setProbed(Boolean(saved.probed));
+      setPendingAnswer(saved.pendingAnswer ?? null);
+      setCredentials(saved.credentials ?? {});
+      setCredentialsCard(saved.credentialsCard ?? null);
+      if (saved.phase === "contact" && saved.credentialsCard) {
+        const prefill = mobilePrefillFromListing(saved.credentialsCard.phone);
+        setOwner((prev) => ({ ...prev, mobile: prev.mobile ?? prefill }));
+        setMobilePrefilled(prefill !== "");
+      }
+      setPhase(saved.phase);
+      return true;
+    }
+    return false;
+  }
 
   useEffect(() => {
     if (!prefillRequested || !auditId || !placeId || fetchedRef.current) return;
@@ -227,6 +339,7 @@ function SiteBotStartContent() {
     // owner his waiting list or block. site_bot_interview_started fires only on a fresh claim, once.
     const fallback = `/site-bot/audit?${query.toString()}`;
     let claimed = false;
+    let resumed = false;
     fetch("/api/site-bot/interview-start", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -234,13 +347,22 @@ function SiteBotStartContent() {
     })
       .then(async (res) => {
         const json = await readJsonBody(res);
-        if (res.ok && (json.status === "started" || json.status === "resumed")) {
+        const view = sessionViewOf(json.session);
+        // Step 2a: this browser's session for this check already ended (location exit / 72 h expiry): show its end state,
+        // never a fresh start.
+        if (res.ok && json.status === "closed" && view && (view.phase === "exited" || view.phase === "expired")) {
+          setPhase(view.phase);
+          return false;
+        }
+        if (res.ok && (json.status === "started" || json.status === "resumed") && view) {
           if (json.status === "started") {
             const tracking = browserSiteBotTracking();
             if (tracking) trackInterviewStarted(tracking, { auditId, placeId });
           }
           claimed = true;
-          return true;
+          setSessionReady(true);
+          resumed = resumeFrom(view);
+          return !resumed;
         }
         const target = typeof json.redirect === "string" && json.redirect.startsWith("/site-bot/audit") ? json.redirect : fallback;
         router.replace(target);
@@ -264,8 +386,21 @@ function SiteBotStartContent() {
         // Silent degradation: the card stays empty and editable.
       })
       // Not claimed: stay on the loading state while the router leaves for the audit result (the card never flashes).
-      .finally(() => { if (claimed) setPhase((current) => (current === "loading" ? "card" : current)); });
+      .finally(() => { if (claimed && !resumed) setPhase((current) => (current === "loading" ? "card" : current)); });
   }, [prefillRequested, auditId, placeId, router]);
+
+  // Step 2a: the browser's step snapshot goes to the interview session at every step of the intake, so a reload (or the
+  // reminder link) resumes here. Fire-and-forget: a failed save only costs the resume point.
+  useEffect(() => {
+    if (!sessionReady || (phase !== "chat" && phase !== "credentials" && phase !== "contact")) return;
+    const progress: IntakeProgress = {
+      v: 1, phase, card, evidence, prefilled, hoursEdited, questions, stepIndex, answers, messages, probed, pendingAnswer,
+      credentials, credentialsCard,
+    };
+    postInterviewStep({ step: "progress", progress }).catch(() => undefined);
+    // Saved on step changes only (not on every keystroke of a draft answer).
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sessionReady, phase, stepIndex, messages.length]);
 
   function scrollDown() {
     requestAnimationFrame(() => scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" }));
@@ -301,7 +436,7 @@ function SiteBotStartContent() {
 
   // The contact and domain steps take focus on their heading when they open, like the credentials step.
   useEffect(() => {
-    if (phase !== "contact" && phase !== "domain") return;
+    if (phase !== "contact" && phase !== "domain" && phase !== "location" && phase !== "holding" && phase !== "exited" && phase !== "expired") return;
     // Touch users get no focus-scroll, so bring the step's top into view explicitly (scroll-padding keeps it off the banner).
     const timer = setTimeout(() => {
       ownerHeadingRef.current?.focus();
@@ -329,26 +464,6 @@ function SiteBotStartContent() {
     setStepIndex(0);
     setMessages([{ role: "assistant", content: questionText(steps[0], card) }]);
     setPhase("chat");
-  }
-
-  async function finish(data: CollectedData) {
-    setPhase("routing");
-    try {
-      const res = await fetch("/api/site-bot/checkout/init", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        // Launch step 1: checkout init accepts only an audit + place that hold an interview spot (launch cap).
-        body: JSON.stringify({ collectedData: data, auditId, placeId }),
-      });
-      // M0.5 (B10): a non-2xx, non-JSON or malformed init never navigates to /site-bot/pay/undefined.
-      const json = await readJsonBody(res);
-      const sessionId = checkoutInitSessionId(res.ok, json);
-      if (!sessionId) throw new Error(customerErrorText(json.error, "יצירת התשלום נכשלה"));
-      router.push(`/site-bot/pay/${sessionId}`);
-    } catch (err: unknown) {
-      setErrorMessage(customerErrorText(err instanceof Error ? err.message : undefined, "משהו השתבש"));
-      setPhase("error");
-    }
   }
 
   function handleSend() {
@@ -455,13 +570,28 @@ function SiteBotStartContent() {
     setContactErrors(errors);
     if (errors.mobile) { mobileInputRef.current?.focus(); return; }
     if (errors.email) { emailInputRef.current?.focus(); return; }
-    setDomainError(null);
-    setPhase("domain");
+    if (!credentialsCard || submitting) return;
+    // Step 2a: the record goes to the interview session now (research starts in the background unless the work-location
+    // question is asked). The domain answer follows in the next step.
+    const data = buildIntakeCollectedData(credentialsCard, evidence, { ...answers, owner: { mobile: owner.mobile, email: owner.email } });
+    setSubmitting(true);
+    postInterviewStep({ step: "contact", collectedData: data })
+      .then((result) => {
+        if (!result.ok || !result.session) throw new Error("contact");
+        setLocationTrade(result.session.locationTrade);
+        setDomainError(null);
+        setPhase("domain");
+      })
+      .catch(() => {
+        setErrorMessage(customerErrorText(undefined, STEP_ERROR_FALLBACK));
+        setPhase("error");
+      })
+      .finally(() => setSubmitting(false));
   }
 
   /** Domain step: a choice is required; "yes" also needs a registrable domain. Then the record is built. */
   function submitDomain() {
-    if (phase !== "domain" || !credentialsCard || !owner.domainChoice) return;
+    if (phase !== "domain" || !owner.domainChoice || submitting) return;
     if (owner.domainChoice === "has_domain") {
       const result = normalizeOwnerDomain(owner.domain);
       if (!result.ok) {
@@ -470,35 +600,61 @@ function SiteBotStartContent() {
         return;
       }
     }
-    const nextAnswers: IntakeAnswers = { ...answers, owner };
-    setAnswers(nextAnswers);
-    const data = buildIntakeCollectedData(credentialsCard, evidence, nextAnswers);
-    setCredentialsCard(null);
-    afterQuestions(data);
+    setSubmitting(true);
+    postInterviewStep({ step: "domain", owner: { domainChoice: owner.domainChoice, domain: owner.domain } })
+      .then((result) => {
+        if (!result.ok || !result.session) throw new Error("domain");
+        setCredentialsCard(null);
+        if (result.session.phase === "location" && result.session.locationTrade) {
+          setLocationTrade(result.session.locationTrade);
+          setLocationChoice(null);
+          setPhase("location");
+          return;
+        }
+        afterOwnerSteps();
+      })
+      .catch(() => {
+        setErrorMessage(customerErrorText(undefined, STEP_ERROR_FALLBACK));
+        setPhase("error");
+      })
+      .finally(() => setSubmitting(false));
   }
 
-  function afterQuestions(data: CollectedData) {
+  /** Step 2a: the work-location answer. OWN_PLACE / ONLINE end the interview (waiting list); HOME / MIX continue. */
+  function submitLocation() {
+    if (phase !== "location" || !locationChoice || submitting) return;
+    setSubmitting(true);
+    postInterviewStep({ step: "location", workLocation: locationChoice })
+      .then((result) => {
+        if (!result.ok || !result.session) throw new Error("location");
+        if (result.status === "exited") {
+          setPhase("exited");
+          return;
+        }
+        afterOwnerSteps();
+      })
+      .catch(() => {
+        setErrorMessage(customerErrorText(undefined, STEP_ERROR_FALLBACK));
+        setPhase("error");
+      })
+      .finally(() => setSubmitting(false));
+  }
+
+  function afterOwnerSteps() {
     // Content depth: the optional voice note, only when it is available (it is off; see voiceNote.ts).
     if (voiceNoteStepAvailable(typeof window === "undefined" ? {} : { MediaRecorder: window.MediaRecorder, mediaDevices: navigator.mediaDevices })) {
-      setVoiceData(data);
       setMessages((prev) => [...prev, { role: "assistant", content: INTAKE_COPY.M1_VOICE_NOTE_PROMPT }]);
       setPhase("voice");
       scrollDown();
       return;
     }
-    setMessages((prev) => [...prev, { role: "assistant", content: DONE_MESSAGE }]);
-    scrollDown();
-    finish(data);
+    setPhase("holding");
   }
 
   // Content depth: leaves the voice-note step. The recording is never uploaded or stored (no safe path yet).
   function finishVoiceStep() {
-    if (phase !== "voice" || !voiceData) return;
-    const data = voiceData;
-    setVoiceData(null);
-    setMessages((prev) => [...prev, { role: "assistant", content: DONE_MESSAGE }]);
-    scrollDown();
-    finish(data);
+    if (phase !== "voice") return;
+    setPhase("holding");
   }
 
   async function toggleVoiceRecording() {
@@ -644,7 +800,7 @@ function SiteBotStartContent() {
           </div>
         )}
 
-        {phase !== "loading" && phase !== "card" && (
+        {phase !== "loading" && phase !== "card" && phase !== "holding" && phase !== "exited" && phase !== "expired" && (messages.length > 0 || phase === "error" || phase === "routing") && (
         <div
           ref={scrollRef}
           role="log"
@@ -1004,7 +1160,7 @@ function SiteBotStartContent() {
               )}
             </div>
 
-            <button type="submit" className="btn-primary" data-intake-owner-contact-continue="true" style={{ padding: "12px 24px", minHeight: "44px", justifyContent: "center" }}>
+            <button type="submit" className="btn-primary" data-intake-owner-contact-continue="true" disabled={submitting} style={{ padding: "12px 24px", minHeight: "44px", justifyContent: "center" }}>
               {renderMixed(INTAKE_OWNER_COPY.contactContinue)}
             </button>
           </form>
@@ -1096,10 +1252,87 @@ function SiteBotStartContent() {
               </div>
             )}
 
-            <button type="submit" className="btn-primary" data-intake-owner-domain-continue="true" disabled={!owner.domainChoice} style={{ padding: "12px 24px", minHeight: "44px", justifyContent: "center" }}>
-              {renderMixed(INTAKE_OWNER_COPY.domainContinue)}
+            <button type="submit" className="btn-primary" data-intake-owner-domain-continue="true" disabled={!owner.domainChoice || submitting} style={{ padding: "12px 24px", minHeight: "44px", justifyContent: "center" }}>
+              {renderMixed(INTAKE_OWNER_COPY.contactContinue)}
             </button>
           </form>
+        )}
+
+        {phase === "location" && locationTrade && (
+          <form
+            data-intake-work-location={locationTrade}
+            aria-labelledby="intake-work-location-title"
+            noValidate
+            onSubmit={(e) => {
+              e.preventDefault();
+              submitLocation();
+            }}
+            style={ownerStepStyle}
+          >
+            <fieldset style={{ border: "none", margin: 0, padding: 0, display: "flex", flexDirection: "column", gap: "10px" }}>
+              <legend style={{ padding: 0, marginBottom: "8px" }}>
+                <h2 id="intake-work-location-title" ref={ownerHeadingRef} tabIndex={-1} style={ownerHeadingStyle}>
+                  {renderMixed(STEP2A_COPY[WORK_LOCATION_QUESTION_KEY[locationTrade]])}
+                </h2>
+              </legend>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: "10px" }}>
+                {WORK_LOCATION_OPTIONS[locationTrade].map((choice) => {
+                  const selected = locationChoice === choice;
+                  return (
+                    <button
+                      key={choice}
+                      type="button"
+                      className="wao-intake-choice"
+                      aria-pressed={selected}
+                      data-intake-work-location-choice={choice}
+                      onClick={() => setLocationChoice(choice)}
+                      style={{ minHeight: "44px", background: selected ? "var(--accent)" : "transparent", color: selected ? "#0a0a0a" : "var(--text)" }}
+                    >
+                      {renderMixed(STEP2A_COPY[WORK_LOCATION_OPTION_KEY[choice]])}
+                    </button>
+                  );
+                })}
+              </div>
+            </fieldset>
+            <button type="submit" className="btn-primary" data-intake-work-location-continue="true" disabled={!locationChoice || submitting} style={{ padding: "12px 24px", minHeight: "44px", justifyContent: "center" }}>
+              {renderMixed(INTAKE_OWNER_COPY.contactContinue)}
+            </button>
+          </form>
+        )}
+
+        {phase === "holding" && (
+          <div data-interview-holding="true" style={ownerStepStyle}>
+            <h2 ref={ownerHeadingRef} tabIndex={-1} style={ownerHeadingStyle}>{renderMixed(STEP2A_COPY.HOLDING_HEAD)}</h2>
+            {copyLines(STEP2A_COPY.HOLDING_BODY).map((line, index) => (
+              <p key={index} style={{ ...ownerNoteStyle, color: "var(--text)" }}>{renderMixed(line)}</p>
+            ))}
+            {INTERVIEW_V1_AVAILABLE && (
+              <button type="button" className="btn-primary" data-interview-holding-cta="true" style={{ padding: "12px 24px", minHeight: "44px", justifyContent: "center" }}>
+                {renderMixed(STEP2A_COPY.HOLDING_CTA)}
+              </button>
+            )}
+          </div>
+        )}
+
+        {phase === "exited" && (
+          <div data-interview-exited="location" style={ownerStepStyle}>
+            <h2 ref={ownerHeadingRef} tabIndex={-1} style={ownerHeadingStyle}>{renderMixed(STEP2A_COPY.LOCATION_EXIT_HEAD)}</h2>
+            {copyLines(STEP2A_COPY.LOCATION_EXIT_BODY).map((line, index) => (
+              <p key={index} style={{ ...ownerNoteStyle, color: "var(--text)" }}>{renderMixed(line)}</p>
+            ))}
+          </div>
+        )}
+
+        {phase === "expired" && (
+          <div data-interview-expired="true" style={ownerStepStyle}>
+            <h2 ref={ownerHeadingRef} tabIndex={-1} style={ownerHeadingStyle}>{renderMixed(STEP2A_COPY.EXPIRED_HEAD)}</h2>
+            {copyLines(STEP2A_COPY.EXPIRED_BODY).map((line, index) => (
+              <p key={index} style={{ ...ownerNoteStyle, color: "var(--text)" }}>{renderMixed(line)}</p>
+            ))}
+            <Link href="/site-bot/audit" className="btn-primary" data-interview-expired-cta="true" style={{ padding: "12px 24px", minHeight: "44px", justifyContent: "center", textAlign: "center" }}>
+              {renderMixed(STEP2A_COPY.EXPIRED_CTA)}
+            </Link>
+          </div>
         )}
 
         {phase === "voice" && VOICE_NOTE_CONTROL_LABELS.record && VOICE_NOTE_CONTROL_LABELS.stop && (

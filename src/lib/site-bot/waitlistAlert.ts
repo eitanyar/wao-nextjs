@@ -19,6 +19,7 @@ const REASON_LINE: Record<WaitlistEntry['reason'], string> = {
   preopen: 'pre-open (eligible; the paid flow is not open yet)',
   full: 'full (eligible; the launch cap is reached)',
   trade: 'trade (category outside launch scope; tell him when his trade opens)',
+  location: 'location (left the interview: works at his own place or online only; tell him when that site type opens)',
 };
 
 export function buildWaitlistAlert(entry: WaitlistEntry, env: Record<string, string | undefined> = process.env): OutgoingEmail {
@@ -28,7 +29,9 @@ export function buildWaitlistAlert(entry: WaitlistEntry, env: Record<string, str
     from: supportFromAddress(env),
     subject: `Site Bot waiting list (${entry.reason}) — ${business}`,
     text: [
-      'A business joined the Site Bot waiting list from the free check.',
+      entry.reason === 'location'
+        ? 'A business left the Site Bot interview at the work-location question and joined the waiting list.'
+        : 'A business joined the Site Bot waiting list from the free check.',
       '',
       `Reason: ${REASON_LINE[entry.reason]}`,
       `Business: ${business}`,

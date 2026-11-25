@@ -30,7 +30,12 @@ export const SITE_BOT_OFFERS = [
 
 export type SiteBotOffer = (typeof SITE_BOT_OFFERS)[number];
 
-export type WaitlistReason = 'preopen' | 'full' | 'trade';
+/**
+ * Why a business is on the waiting list. 'location' (step 2a) is never an audit offer: it is written only by the interview
+ * session's work-location exit (interviewSession.ts), with the contact the owner already gave, so waitlistReason() never
+ * returns it and the public waiting-list POST can never pick it.
+ */
+export type WaitlistReason = 'preopen' | 'full' | 'trade' | 'location';
 
 /** Why the profile block shows: the business is marked closed (any non-OPERATIONAL status), or it has no ratings. */
 export type ProfileBlockCause = 'closed' | 'no_ratings';

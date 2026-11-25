@@ -4,7 +4,8 @@ import path from 'node:path';
 import test from 'node:test';
 
 import {
-  isLaunchTrade, LAUNCH_TRADE_CATEGORIES, launchTradeGroup, PLACES_TYPE_ALIASES, primaryCategoryId, toGbpCategoryId,
+  GENERIC_PLACES_TYPES, isLaunchTrade, LAUNCH_TRADE_CATEGORIES, launchTradeGroup, PLACES_MUST_PASS, PLACES_PRIMARY_TYPE_BLOCK,
+  PLACES_TYPE_ALIASES, primaryCategoryId, toGbpCategoryId,
 } from './launchTrades';
 
 const taxonomy = JSON.parse(fs.readFileSync(path.join(process.cwd(), 'src/data/gbp-categories-il.json'), 'utf8')) as Array<{ categoryId: string }>;
@@ -59,4 +60,20 @@ test('the primary category is primaryType, else the first non-generic type (olde
   assert.equal(primaryCategoryId({ types: ['store', 'point_of_interest'] }), null);
   assert.equal(primaryCategoryId({ types: [] }), null);
   assert.equal(primaryCategoryId({ primaryType: '!!', types: ['locksmith'] }), 'gcid:locksmith');
+});
+
+test('Places block list (Yonatan 2026-11-25): disjoint from MUST-PASS, from the launch list and from the generic types', () => {
+  for (const type of PLACES_PRIMARY_TYPE_BLOCK) {
+    assert.equal(PLACES_MUST_PASS.has(type), false, type);
+    assert.equal(GENERIC_PLACES_TYPES.has(type), false, type);
+    assert.equal(isLaunchTrade(toGbpCategoryId(type)), false, type);
+    assert.match(type, /^[a-z][a-z0-9_]+$/, type);
+  }
+  // Hard-coded MUST-PASS: general_contractor is legacy (not in current Table A) but live for handymen and gardeners.
+  for (const type of ['general_contractor', 'laundry', 'educational_institution', 'art_studio', 'transportation_service', 'manufacturer', 'supplier']) {
+    assert.equal(PLACES_MUST_PASS.has(type), true, type);
+  }
+  for (const type of ['restaurant', 'hair_salon', 'dentist', 'dental_clinic', 'beauty_salon', 'taxi_service', 'gym', 'sports_coaching', 'car_wash', 'consultant']) {
+    assert.equal(PLACES_PRIMARY_TYPE_BLOCK.has(type), true, type);
+  }
 });

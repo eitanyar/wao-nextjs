@@ -291,22 +291,11 @@ const ownerGate = { id: `${OWNER_SESSION}:business_boundary:hash`, type: 'busine
 const ownerBody = { researchId: OWNER_SESSION, collectedData: { primaryService: 'synthetic-primary' }, gateId: ownerGate.id, evidenceDigest: 'hash', answer: { services: ['synthetic-service'] } };
 const reply = (status, body) => ({ status, body, cacheControl: 'private, no-store' });
 
-test('owner session -> 200 for its own open gate; collectedData echoes the applied answer, no approvals map', async () => {
-  // The stubbed applyResearchGateAnswer expects the harness gate; the real one applies by type.
-  const appliedGate = { id: 'known-synthetic-id:business_boundary:hash', evidenceDigest: 'hash' };
-  const harness = routeHarness({ gateResult: { digest: 'hash', status: 'approved', approvals: {} }, ownerResult: { status: 'approved', gate: appliedGate, answer: { services: ['synthetic-service'] }, dossier: {} } });
-  assert.deepEqual(await harness.ownerPost(ownerBody), reply(200, {
-    status: 'approved', collectedData: { primaryService: 'synthetic-primary', secondaryServices: 'synthetic-service' },
-  }));
-  // JSON round-trip: the body was parsed inside the route's VM realm.
-  assert.deepEqual(JSON.parse(JSON.stringify(harness.owner.submits)), [[OWNER_SESSION, ownerGate.id, 'hash', { services: ['synthetic-service'] }]]);
-  assert.deepEqual(harness.owner.rateKeys, ['sitebot-gates:203.0.113.9', `sitebot-gates-session:${OWNER_SESSION}`]);
-  // The owner path never derives gates from client data and never uses the admin persist function.
-  assert.deepEqual(harness.writes, { json: 0, derive: 0, answer: 1, persist: 0 });
-});
-
-test('owner: missing, malformed or gate-closed session -> 401 before the body is read', async () => {
+// Step 2a (2026-11-25): the owner path is re-keyed to the interview session (POST /api/site-bot/interview-gates, cookie
+// bound; interviewFlow.test.ts). The pay page's X-Site-Bot-Session header no longer opens anything here.
+test('step 2a: the checkout-session owner header is gone; without the admin cookie every POST is 401 and touches nothing', async () => {
   for (const [label, options, harnessOptions] of [
+    ['valid owner header', {}, { ownerResult: { status: 'approved', gate: ownerGate, dossier: {} } }],
     ['no session header', { session: null }, {}],
     ['not a UUID', { session: 'known-synthetic-id' }, {}],
     ['paid flow closed', {}, { paidFlow: false }],
@@ -314,40 +303,8 @@ test('owner: missing, malformed or gate-closed session -> 401 before the body is
     const harness = routeHarness(harnessOptions);
     assert.deepEqual(await harness.ownerPost(ownerBody, options), reply(401, { error: 'unauthorized' }), label);
     assert.deepEqual(harness.owner, { submits: [], rateKeys: [] }, label);
+    assert.deepEqual(harness.writes, { json: 0, derive: 0, answer: 0, persist: 0 }, label);
   }
-});
-
-test('owner: another research id -> 403; a session with no owner gates (wrong token) -> 403', async () => {
-  const other = routeHarness({ ownerResult: { status: 'approved', gate: ownerGate, dossier: {} } });
-  assert.deepEqual(await other.ownerPost({ ...ownerBody, researchId: 'known-synthetic-id' }), reply(403, { error: 'forbidden' }));
-  assert.deepEqual(other.owner.submits, []);
-  const wrongSession = '00000000-0000-4000-8000-000000000000';
-  const wrong = routeHarness({ ownerResult: { status: 'forbidden' } });
-  assert.deepEqual(await wrong.ownerPost({ ...ownerBody, researchId: wrongSession }, { session: wrongSession }), reply(403, { error: 'forbidden' }));
-});
-
-test('owner: closed, stale, unknown and invalid answers map to 409 / 409 / 404 / 400', async () => {
-  for (const [status, expected] of [
-    ['closed', reply(409, { error: 'gate_closed' })],
-    ['stale', reply(409, { error: 'stale_evidence' })],
-    ['not_found', reply(404, { error: 'not_found' })],
-    ['invalid_answer', reply(400, { error: 'invalid_input' })],
-  ]) {
-    const harness = routeHarness({ ownerResult: { status } });
-    assert.deepEqual(await harness.ownerPost(ownerBody), expected, status);
-  }
-});
-
-test('owner: oversized, non-JSON and malformed bodies -> 400; rate limit -> 429', async () => {
-  const harness = routeHarness({ ownerResult: { status: 'approved', gate: ownerGate, dossier: {} } });
-  const big = { ...ownerBody, collectedData: { primaryService: 'x'.repeat(40 * 1024) } };
-  assert.deepEqual(await harness.ownerPost(big), reply(400, { error: 'invalid_input' }));
-  assert.deepEqual(await harness.ownerPost(ownerBody, { contentType: 'text/plain' }), reply(400, { error: 'invalid_input' }));
-  assert.deepEqual(await harness.ownerPost(null, { raw: '{not json' }), reply(400, { error: 'invalid_input' }));
-  assert.deepEqual(await harness.ownerPost({ ...ownerBody, collectedData: [] }), reply(400, { error: 'invalid_input' }));
-  assert.deepEqual(harness.owner.submits, []);
-  const limited = routeHarness({ rateAllowed: false });
-  assert.deepEqual(await limited.ownerPost(ownerBody), reply(429, { error: 'rate_limited' }));
 });
 
 test('admin cookie still wins: a valid admin request carrying an owner header takes the admin path', async () => {

@@ -80,7 +80,8 @@ test('generic / missing primary types reach the waiting list, not the trade bloc
     // The waiting-list category: the scope match, else the first non-generic type, else null.
     assert.equal(waitlistCategoryFor(candidate('ChIJ-place-1', { primaryType: 'service', types: ['manufacturer', 'general_contractor', 'service'] })),
       'gcid:general_contractor');
-    assert.equal(waitlistCategoryFor(candidate('ChIJ-place-1', { primaryType: 'restaurant', types: ['restaurant'] })), 'gcid:restaurant');
+    // A blocked primaryType records its block id (Yonatan's Places block list, 2026-11-25), not a gcid.
+    assert.equal(waitlistCategoryFor(candidate('ChIJ-place-1', { primaryType: 'restaurant', types: ['restaurant'] })), 'places:restaurant');
     assert.equal(waitlistCategoryFor(noType), null);
   } finally { h.close(); }
 });

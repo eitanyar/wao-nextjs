@@ -9,18 +9,22 @@
  * no primaryType at all, gardeners and handymen as 'general_contractor'. The rule is therefore:
  *
  *   1. primaryType names a launch category                                        -> in scope
- *   2. primaryType names a taxonomy category that is NOT on the launch list       -> out of scope (the ONLY trade block)
- *   3. primaryType missing, generic, or unknown to the taxonomy: match the Places primaryTypeDisplayName against the
- *      launch categories' heName / enName / synonyms, then `types` against the launch list       -> in scope on a match
+ *   2. primaryType is on PLACES_PRIMARY_TYPE_BLOCK (launchTrades.ts, Yonatan's 2026-11-25 Table A sign-off)
+ *                                                                                  -> out of scope, id `places:<type>`
+ *                                                                                     (the ONLY trade block)
+ *   3. otherwise (missing, generic, unlisted): match the Places primaryTypeDisplayName against the launch categories'
+ *      heName / enName / synonyms, then `types` against the launch list            -> in scope on a match
  *   4. still unknown                                                               -> eligible (the interview screens it)
  *
- * Secondary `types` never block; they can only put a business in scope.
+ * A primaryType on neither list passes (step 3), so a new Google type is never blocked until it is listed. Secondary
+ * `types` never block; they can only put a business in scope. PLACES_MUST_PASS types (general_contractor, laundry, ...)
+ * are never blocked (asserted in launchTrades.test.ts).
  * HEBREW-SAFETY: this module contains ZERO Hebrew bytes (Hebrew punctuation is written as \u escapes; the names come
  * from the taxonomy JSON at runtime).
  */
 import { getCategoryById } from '../gbp/categoryTaxonomy';
 import { hasRatings, isNotOperational, type EligibilityCandidate, type ProfileEligibility } from './eligibility';
-import { GENERIC_PLACES_TYPES, isLaunchTrade, LAUNCH_TRADE_CATEGORIES, toGbpCategoryId } from './launchTrades';
+import { GENERIC_PLACES_TYPES, isLaunchTrade, LAUNCH_TRADE_CATEGORIES, PLACES_MUST_PASS, PLACES_PRIMARY_TYPE_BLOCK, toGbpCategoryId } from './launchTrades';
 
 export type TradeScopeVia = 'primary_type' | 'display_name' | 'types';
 
@@ -68,9 +72,10 @@ const UNKNOWN: TradeScope = { scope: 'unknown', categoryId: null, via: null };
 export function tradeScope(candidate: Pick<EligibilityCandidate, 'primaryType' | 'primaryTypeDisplayName' | 'types'>): TradeScope {
   const rawPrimary = typeof candidate.primaryType === 'string' ? candidate.primaryType.trim().toLowerCase() : '';
   const primary = rawPrimary && !GENERIC_PLACES_TYPES.has(rawPrimary) ? toGbpCategoryId(rawPrimary) : null;
-  if (primary) {
-    if (isLaunchTrade(primary)) return { scope: 'in_scope', categoryId: primary, via: 'primary_type' };
-    if (getCategoryById(primary)) return { scope: 'out_of_scope', categoryId: primary, via: 'primary_type' };
+  if (primary && isLaunchTrade(primary)) return { scope: 'in_scope', categoryId: primary, via: 'primary_type' };
+  // The block runs before the display-name and `types` branches: a blocked primaryType is never rescued by them.
+  if (rawPrimary && PLACES_PRIMARY_TYPE_BLOCK.has(rawPrimary) && !PLACES_MUST_PASS.has(rawPrimary)) {
+    return { scope: 'out_of_scope', categoryId: `places:${rawPrimary}`, via: 'primary_type' };
   }
   if (typeof candidate.primaryTypeDisplayName === 'string') {
     const match = launchCategoryNameIndex().get(normalizeCategoryName(candidate.primaryTypeDisplayName));

@@ -1,0 +1,18 @@
+**Angle:** He's most-aware and already committed, so the holding screen gives relief that it's moving and on his side. The expired screen states the fact blunt and without shame, then opens a short way back to a spot.
+
+```json
+{
+  "HOLDING_HEAD": "הפרטים אצלנו. המקום שלך שמור.",
+  "HOLDING_BODY": "עכשיו אנחנו בודקים מה אנשים באזור שלך מחפשים בגוגל כשהם צריכים מישהו מהמקצוע שלך. זה רץ ברקע, דקה או שתיים.\nבשלב הבא תענה על כמה שאלות קצרות על עבודות אמיתיות שעשית. ככה האתר יישמע כמוך, ולא כמו כל המתחרים שלך.\nבסוף אתה מאשר את הפרטים ורואה את דף הבית שלך.\nרק אז אתה משלם.\nצריך לזוז? תסגור בשקט. כל מה שענית נשמר, והקישור שנשלח לך במייל יחזיר אותך לכאן.",
+  "HOLDING_CTA": "אני מוכן לשאלות",
+  "EXPIRED_HEAD": "המקום שלך עבר לעסק הבא בתור",
+  "EXPIRED_BODY": "כמו שכתבנו לך בתזכורת. לא חייבנו אותך בכלום.\nעדיין רוצה אתר? תריץ שוב את הבדיקה החינמית של הפרופיל שלך בגוגל. אם יש מקום פנוי, הוא שלך. ואם אין, תיכנס לרשימה.",
+  "EXPIRED_CTA": "בדוק את העסק שלי בגוגל, בחינם"
+}
+```
+
+**Flags:**
+- **`HOLDING_CTA` placement:** Before the interview exists, this button should be hidden. Otherwise it promises a step he can't take yet. The body copy works in both states without it. → Maya / Eitan-Dev.
+- **The word "שאלות":** I used it throughout instead of "ראיון", because it's lighter for a tradesman. If the next screen is labeled "ראיון", one of the two screens needs to change so they use the same word.
+- **`EXPIRED_CTA` wording:** It follows the existing CTA for the free check, with "בגוגל" added. If the live check button has a different label, they should be aligned.
+- **Handoff:** → Noa for one fresh read (founder-facing copy, not voiced).

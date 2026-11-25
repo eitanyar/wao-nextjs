@@ -10,6 +10,8 @@ export interface CheckoutResearchResult {
 
 export interface CompletePaidCheckoutResearchParams {
   sessionId: string;
+  /** Step 2a: the research id when it is not the checkout session id (the interview session's research). */
+  researchId?: string;
   runResearch: () => Promise<CheckoutResearchResult>;
   openResearchGateCount: number;
   collectedData?: CollectedData;
@@ -19,6 +21,7 @@ export interface CompletePaidCheckoutResearchParams {
 
 export async function completePaidCheckoutResearch({
   sessionId,
+  researchId,
   runResearch,
   openResearchGateCount,
   collectedData,
@@ -30,7 +33,7 @@ export async function completePaidCheckoutResearch({
   return {
     success: true,
     charged: true,
-    researchId: sessionId,
+    researchId: researchId ?? sessionId,
     status: result.dossier.status,
     openGateCount: openResearchGateCount + result.dossier.humanGates.filter(gate => gate.status !== 'approved').length,
     ...(collectedData !== undefined ? { collectedData } : {}),

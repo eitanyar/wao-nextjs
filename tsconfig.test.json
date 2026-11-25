@@ -557,6 +557,15 @@
     "src/lib/site-bot/offerState.test.ts",
     "src/lib/site-bot/waitlist.ts",
     "src/lib/site-bot/waitlistAlert.ts",
-    "src/lib/site-bot/waitlist.test.ts"
+    "src/lib/site-bot/waitlist.test.ts",
+    "src/lib/site-bot/workLocation.ts",
+    "src/lib/site-bot/step2aCopy.generated.ts",
+    "src/lib/site-bot/interviewSession.ts",
+    "src/lib/site-bot/interviewFlow.ts",
+    "src/lib/site-bot/interviewDeps.ts",
+    "src/lib/site-bot/interviewGates.ts",
+    "src/lib/site-bot/interviewResearch.ts",
+    "src/lib/site-bot/interviewReminder.ts",
+    "src/lib/site-bot/interviewFlow.test.ts"
   ]
 }

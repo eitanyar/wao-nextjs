@@ -165,7 +165,10 @@ test('paid handlers are imported only by their own gated stub', () => {
     'src/app/api/site-bot/connect-gbp/route.ts',
     'src/app/api/site-bot/connect-status/route.ts',
     // Launch step 1 (2026-11-25): the interview-start claim, the same gated-stub shape (asserted below).
+    'src/app/api/site-bot/interview-gates/route.ts',
+    'src/app/api/site-bot/interview-resume/route.ts',
     'src/app/api/site-bot/interview-start/route.ts',
+    'src/app/api/site-bot/interview-step/route.ts',
     'src/app/api/site-bot/prefill/route.ts',
   ]);
 });
@@ -525,12 +528,45 @@ test('interview-start POST stays disabled unless the runtime paid-flow gate allo
   await assertGatedStub('src/app/api/site-bot/interview-start/route.ts', 'POST', 'interview_unavailable');
   const paid = read('src/app/api/site-bot/interview-start/paid.ts');
   assert.match(paid, /checkRateLimit\(`sitebot-interview-start:\$\{ip\}`/);
-  assert.match(paid, /claimInterviewStart\(auditId, placeId\)/);
+  // Step 2a (2026-11-25): the claim moved behind startInterview (interviewFlow.ts), which claims through the same
+  // claimInterviewStart (interviewDeps.ts) and then opens the cookie-bound interview session.
+  assert.ok(paid.indexOf('checkRateLimit(') < paid.indexOf('startInterview('));
+  assert.match(paid, /cookieValue: cookieFromHeader\(req\.headers\.get\('cookie'\)\)/);
+  assert.match(read('src/lib/site-bot/interviewDeps.ts'), /claimSpot: \(auditId, placeId\) => claimInterviewStart\(auditId, placeId\)/);
   // The claim happens in the POST only; the start page's GET is read-only.
   assert.doesNotMatch(read('src/app/(app)/site-bot/start/page.tsx'), /claimInterviewStart|reserveInterviewStart/);
   const init = read('src/app/api/site-bot/checkout/init/paid.ts');
   assert.ok(init.indexOf('interviewSpotHeld(body?.auditId, body?.placeId)') > 0, 'checkout init enforces the launch-cap spot');
   assert.ok(init.indexOf('interviewSpotHeld(') < init.indexOf('createPendingPlanSubscription('));
+  // Step 2a: checkout init also needs the open, ready interview session (cookie) and uses ITS record, not the body's.
+  assert.ok(init.indexOf("errorReply('no_interview_session', 409)") > 0);
+  assert.ok(init.indexOf('openSessionFromCookie(') < init.indexOf('createPendingPlanSubscription('));
+  assert.match(init, /const submitted: CollectedData \| null = interview\.collectedData;/);
+  assert.doesNotMatch(init, /body\?\.collectedData/);
+});
+
+// Step 2a (2026-11-25): three new pre-payment routes, each the standard gated stub (closed = the audit-only 503, no
+// request / cookie / import access). Their paid handlers take the session from the httpOnly cookie only: no session or
+// research id is ever read from the body or the query (except the signed resume token), and each is rate limited.
+test('step 2a: interview-step, interview-gates and interview-resume stay disabled unless the paid-flow gate allows them', async () => {
+  await assertGatedStub('src/app/api/site-bot/interview-step/route.ts', 'POST', 'interview_unavailable');
+  await assertGatedStub('src/app/api/site-bot/interview-gates/route.ts', 'POST', 'interview_unavailable');
+  await assertGatedStub('src/app/api/site-bot/interview-resume/route.ts', 'GET', 'interview_unavailable');
+  for (const [route, key] of [['interview-step', 'sitebot-interview-step'], ['interview-gates', 'sitebot-interview-gates'], ['interview-resume', 'sitebot-interview-resume']]) {
+    const paid = read(`src/app/api/site-bot/${route}/paid.ts`);
+    assert.ok(paid.includes(`checkRateLimit(\`${key}:\${clientIp(req)}\``), `${route} rate limit`);
+    for (const forbidden of ['data/clients', 'researchId', 'sessionId', 'req.json(', 'console.log']) {
+      assert.equal(paid.includes(forbidden), false, `unexpected ${route} seam: ${forbidden}`);
+    }
+  }
+  for (const route of ['interview-step', 'interview-gates']) {
+    assert.match(read(`src/app/api/site-bot/${route}/paid.ts`), /cookieFromHeader\(req\.headers\.get\('cookie'\)\)/);
+  }
+  // The gates handler refuses any research / session id in the body: the capability is the cookie alone.
+  assert.match(read('src/lib/site-bot/interviewGates.ts'), /if \('researchId' in body \|\| 'sessionId' in body\) return \{ status: 400/);
+  // The old checkout-session owner header no longer opens the research gates route.
+  const gates = read('src/app/api/site-bot/research/gates/route.ts');
+  assert.doesNotMatch(gates, /x-site-bot-session|ownerPOST|submitOwnerResearchGate/);
 });
 
 // Launch step 1 (2026-11-25): the waiting list is a DELIBERATE new public surface of the closed release. It must never
@@ -684,11 +720,14 @@ test('pay page and start flow gate navigation and "done" on the checked response
   assert.match(pay_, /await readJsonBody\(res\)/);
   assert.doesNotMatch(pay_, /res\.json\(\)/);
   assert.ok(pay_.indexOf('outcome.kind === "error"') < pay_.indexOf('setPhase("done")'));
+  // Step 2a (2026-11-25): the start flow no longer hands off to checkout (payment moves after the interview + preview,
+  // steps 2b / 2c), so it never calls checkout/init nor navigates to /site-bot/pay. Its interview requests read the
+  // checked response helper only.
   const start = read('src/app/(app)/site-bot/start/StartPaidFlow.tsx');
-  const finish = start.slice(start.indexOf('async function finish('), start.indexOf('function handleSend('));
-  assert.match(finish, /const sessionId = checkoutInitSessionId\(res\.ok, json\);\s*if \(!sessionId\) throw/);
-  assert.match(finish, /router\.push\(`\/site-bot\/pay\/\$\{sessionId\}`\)/);
-  assert.doesNotMatch(finish, /json\.sessionId|res\.json\(\)/);
+  assert.doesNotMatch(start, /checkout\/init|\/site-bot\/pay\/|checkoutInitSessionId/);
+  const step = start.slice(start.indexOf('async function postInterviewStep('), start.indexOf('function copyLines('));
+  assert.match(step, /const json = await readJsonBody\(res\);/);
+  assert.doesNotMatch(step, /res\.json\(\)/);
 });
 
 test('GBP pre-fill GET stays disabled unless the runtime paid-flow gate allows the request (M1 B11)', async () => {

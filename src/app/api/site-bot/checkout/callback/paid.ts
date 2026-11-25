@@ -3,8 +3,6 @@ import fs from 'fs';
 import path from 'path';
 import type { CollectedData } from '@/lib/bot/prompts';
 import { activatePlanSubscription, issueAccountPath } from '@/lib/payments/subscriptions';
-import { deriveOpenResearchGates } from '@/lib/site-bot/research/gates';
-import { recordOwnerResearchGates } from '@/lib/site-bot/research/ownerGates';
 import { readResearchDossier } from '@/lib/site-bot/research/researchStore';
 import { runSiteResearch, type SiteResearchInput } from '@/lib/site-bot/research/runResearch';
 import { completePaidCheckoutResearch } from '@/lib/site-bot/checkout/researchCompletion';
@@ -13,6 +11,8 @@ import { linkSiteBotSession } from '@/lib/site-bot/clientMessages';
 import { sendPaidQueueAlert } from '@/lib/site-bot/paidQueueAlert';
 import { recordShowcaseConsent } from '@/lib/showcase/consentStore';
 import { recordPaidSignup, withLaunchStore } from '@/lib/site-bot/launchStore';
+import { markInterviewPaid, sessionForCheckout } from '@/lib/site-bot/interviewSession';
+import { inFlightInterviewResearch } from '@/lib/site-bot/interviewResearch';
 
 // Site-Bot checkout callback: takes the sign-up charge of the monthly + VAT plan (SITE_BOT_PLAN) through the recurring engine
 // (activatePlanSubscription: first charge, billing anchor, next charge date, invoice), then starts the research.
@@ -27,11 +27,33 @@ import { recordPaidSignup, withLaunchStore } from '@/lib/site-bot/launchStore';
 // it may show. 'not_charged' = this call provably took no money (rejected before the charge, or the provider declined it),
 // so a retry is safe; 'charged' = the sign-up charge succeeded and a later step failed (never offer a retry);
 // 'unknown' = an exception inside the activation itself (the page shows the unknown-state text, no retry).
+// Step 2a (2026-11-25): the research runs BEFORE payment, keyed by the interview session (interviewResearch.ts). A pending
+// record from checkout/init names that session and its research id; after the charge the callback REUSES it (awaits this
+// process's in-flight run, else reads the dossier) and never starts a second runSiteResearch for it. The post-pay
+// research start below stays only as the fallback for a session with no research id. The owner research gates are asked
+// inside the interview now (interview-gates), so the reply no longer hands any gate to the pay page. A replay of a
+// completed interview checkout (pending file gone) is answered from the interview session the checkout is bound to.
 
 interface PendingRecord {
   collectedData: CollectedData;
   subscriptionId?: string;
   createdAt: string;
+  /** Step 2a: the interview session this checkout came from, and its research id (null: research never started). */
+  interviewSessionId?: string;
+  researchId?: string | null;
+}
+
+const OPAQUE_ID = /^[A-Za-z0-9][A-Za-z0-9_-]*$/;
+
+/** The interview's research, reused: this process's in-flight run settles first, then the dossier is read. */
+async function reuseInterviewResearch(researchId: string, collectedData: CollectedData) {
+  await inFlightInterviewResearch(researchId);
+  const dossier = await readResearchDossier(researchId);
+  if (dossier) return { dossier };
+  // The pre-payment run left no dossier at all (the process stopped before its first write): the same research id is
+  // resumed, never a new one (runSiteResearch is resumable and its usage ledger de-duplicates).
+  console.error(`[site-bot checkout] interview research had no dossier; resuming research=${researchId}`);
+  return runSiteResearch(researchId, buildSiteResearchInput(`interview:${researchId}`, collectedData, () => new Date(), researchId));
 }
 
 function researchInput(sessionId: string, collectedData: CollectedData): SiteResearchInput {
@@ -69,6 +91,12 @@ export async function POST(req: Request) {
     try {
       pending = JSON.parse(fs.readFileSync(pendingPath, 'utf-8'));
     } catch {
+      // Step 2a replay: a completed interview checkout removed its pending file; the interview session remembers it.
+      const paidInterview = withLaunchStore(store => sessionForCheckout(store, sessionId), null);
+      if (paidInterview?.status === 'paid' && paidInterview.researchId) {
+        const dossier = await readResearchDossier(paidInterview.researchId);
+        if (dossier) return NextResponse.json({ success: true, charged: true, researchId: paidInterview.researchId, status: dossier.status });
+      }
       return errorReply('session_not_found', 404, 'not_charged');
     }
     if (!pending.subscriptionId) {
@@ -117,30 +145,27 @@ export async function POST(req: Request) {
       if (counted.status === 'unavailable') console.error(`[site-bot checkout] launch cap count failed session=${sessionId}`);
     }
 
+    // Step 2a: the interview is paid (no expiry, no reminder from here on). Never fatal.
+    if (typeof pending.interviewSessionId === 'string') {
+      const interviewId = pending.interviewSessionId;
+      if (!withLaunchStore(store => markInterviewPaid(store, interviewId), false)) {
+        console.error(`[site-bot checkout] interview not marked paid interview=${interviewId} session=${sessionId}`);
+      }
+    }
+
     const manageUrl = activation.alreadyActive ? undefined : issueAccountPath(pending.subscriptionId);
-    const openResearchGates = deriveOpenResearchGates(sessionId, pending.collectedData);
+    const interviewResearchId = typeof pending.researchId === 'string' && OPAQUE_ID.test(pending.researchId) ? pending.researchId : null;
     const response = await completePaidCheckoutResearch({
       sessionId,
-      runResearch: () => runSiteResearch(sessionId, researchInput(sessionId, pending.collectedData)),
-      openResearchGateCount: openResearchGates.length,
+      ...(interviewResearchId ? { researchId: interviewResearchId } : {}),
+      runResearch: interviewResearchId
+        ? () => reuseInterviewResearch(interviewResearchId, pending.collectedData)
+        // Fallback: a session with no research (none started before payment), the pre-2a post-pay start.
+        : () => runSiteResearch(sessionId, researchInput(sessionId, pending.collectedData)),
+      openResearchGateCount: 0,
       collectedData: pending.collectedData,
-      openResearchGates,
       removePending: () => fs.rmSync(pendingPath, { force: true }),
     });
-    // F2: the pay page shows only the gates recorded as owner-answerable in the dossier (the public gates POST accepts
-    // nothing else). A record failure is logged and the owner goes straight to the done state; never fatal.
-    if (Array.isArray(response.openResearchGates) && response.openResearchGates.length > 0) {
-      let recorded: typeof response.openResearchGates = [];
-      try {
-        recorded = await recordOwnerResearchGates(sessionId, response.openResearchGates);
-      } catch {
-        recorded = [];
-      }
-      if (recorded.length !== response.openResearchGates.length) {
-        console.error(`[site-bot checkout] owner gates recorded ${recorded.length}/${response.openResearchGates.length} session=${sessionId}`);
-      }
-      response.openResearchGates = recorded;
-    }
     // paidSignup: a fresh activation, so the pay page fires site_bot_paid_signup (once per session; replays carry none).
     return NextResponse.json(manageUrl ? { ...response, manageUrl, paidSignup: true } : response, { headers: { 'Cache-Control': 'private, no-store' } });
   } catch (error: unknown) {

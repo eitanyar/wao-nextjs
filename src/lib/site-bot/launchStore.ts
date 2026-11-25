@@ -8,6 +8,11 @@
  *     derived). Purged after SITE_BOT_WAITLIST_RETENTION_DAYS days (default 90, parseWaitlistRetentionMs). The cap rows
  *     above are never purged.
  *
+ *   - site_bot_interview_sessions: step 2a, the pre-payment interview session (interviewSession.ts owns the logic; the
+ *     table lives here so one file holds the launch state). A released spot (location exit, 72 h expiry) keeps its
+ *     interview_start row for the weekly count: the row's ref is renamed to 'released:<sessionId>' (place_id keeps the
+ *     place, released_at the time), so the place no longer holds a spot and a later start claims a fresh one.
+ *
  * The cap is full when paid sign-ups >= SITE_BOT_CAP_TOTAL (default 10), or interview starts in the current week >=
  * SITE_BOT_CAP_WEEKLY (default 3). The week is the ISRAELI week: Sunday 00:00 to Saturday 23:59, Asia/Jerusalem time
  * (israelWeekKey; not the Monday-based ISO week).
@@ -51,7 +56,7 @@ const CREATE_EVENTS = `CREATE TABLE IF NOT EXISTS site_bot_launch_events (
 const CREATE_WAITLIST = `CREATE TABLE IF NOT EXISTS site_bot_waitlist (
   id TEXT PRIMARY KEY,
   created_at TEXT NOT NULL,
-  reason TEXT NOT NULL CHECK (reason IN ('preopen', 'full', 'trade')),
+  reason TEXT NOT NULL CHECK (reason IN ('preopen', 'full', 'trade', 'location')),
   audit_id TEXT NOT NULL,
   place_id TEXT NOT NULL,
   business_name TEXT NOT NULL,
@@ -61,6 +66,55 @@ const CREATE_WAITLIST = `CREATE TABLE IF NOT EXISTS site_bot_waitlist (
   email TEXT,
   UNIQUE (place_id, phone)
 )`;
+
+const CREATE_SESSIONS = `CREATE TABLE IF NOT EXISTS site_bot_interview_sessions (
+  id TEXT PRIMARY KEY CHECK (length(id) = 36),
+  token_hash TEXT NOT NULL CHECK (length(token_hash) = 64),
+  place_id TEXT NOT NULL CHECK (length(place_id) BETWEEN 1 AND 256),
+  audit_id TEXT NOT NULL,
+  status TEXT NOT NULL CHECK (status IN ('open', 'exited', 'expired', 'paid', 'superseded')),
+  created_at TEXT NOT NULL,
+  expires_at TEXT NOT NULL,
+  closed_at TEXT,
+  progress_json TEXT,
+  collected_json TEXT,
+  business_name TEXT,
+  owner_email TEXT,
+  contact_at TEXT,
+  domain_at TEXT,
+  location_trade TEXT CHECK (location_trade IS NULL OR location_trade IN ('tutor', 'photographer', 'solar')),
+  work_location TEXT CHECK (work_location IS NULL OR work_location IN ('HOME', 'OWN_PLACE', 'ONLINE', 'MIX')),
+  research_id TEXT,
+  research_started_at TEXT,
+  reminder_sent_at TEXT,
+  checkout_session_id TEXT
+)`;
+const CREATE_SESSION_INDEXES = [
+  // One open session per business: the spot is per placeId.
+  "CREATE UNIQUE INDEX IF NOT EXISTS site_bot_interview_sessions_open_place ON site_bot_interview_sessions (place_id) WHERE status = 'open'",
+  'CREATE INDEX IF NOT EXISTS site_bot_interview_sessions_checkout ON site_bot_interview_sessions (checkout_session_id)',
+];
+
+/**
+ * Additive migrations of a store created by step 1 (idempotent; every open runs them):
+ *   - site_bot_launch_events gains place_id / released_at (the released-spot rows).
+ *   - site_bot_waitlist's reason CHECK gains 'location' (SQLite cannot alter a CHECK: the table is rebuilt, rows kept).
+ */
+function migrate(db: Database.Database): void {
+  const eventColumns = new Set((db.prepare('PRAGMA table_info(site_bot_launch_events)').all() as Array<{ name: string }>).map(column => column.name));
+  if (!eventColumns.has('place_id')) db.exec('ALTER TABLE site_bot_launch_events ADD COLUMN place_id TEXT');
+  if (!eventColumns.has('released_at')) db.exec('ALTER TABLE site_bot_launch_events ADD COLUMN released_at TEXT');
+  const waitlist = db.prepare("SELECT sql FROM sqlite_master WHERE type = 'table' AND name = 'site_bot_waitlist'").get() as { sql: string } | undefined;
+  if (waitlist && !waitlist.sql.includes("'location'")) {
+    db.transaction(() => {
+      db.exec('ALTER TABLE site_bot_waitlist RENAME TO site_bot_waitlist_step1');
+      db.exec(CREATE_WAITLIST);
+      db.exec(`INSERT INTO site_bot_waitlist (id, created_at, reason, audit_id, place_id, business_name, category, name, phone, email)
+        SELECT id, created_at, reason, audit_id, place_id, business_name, category, name, phone, email FROM site_bot_waitlist_step1`);
+      db.exec('DROP TABLE site_bot_waitlist_step1');
+    }).immediate();
+  }
+}
 
 /** Strict operator input: unset -> the default; set but not a positive integer -> null (callers fail closed). */
 export function parseLaunchCapLimits(env: Record<string, string | undefined> = process.env): LaunchCapLimits | null {
@@ -102,6 +156,9 @@ export function openLaunchStore(dbPath: string, now: () => Date = () => new Date
     db.pragma('journal_mode = WAL');
     db.exec(CREATE_EVENTS);
     db.exec(CREATE_WAITLIST);
+    db.exec(CREATE_SESSIONS);
+    for (const sql of CREATE_SESSION_INDEXES) db.exec(sql);
+    migrate(db);
     return { db, now };
   } catch (error) {
     db.close();
@@ -197,6 +254,17 @@ export function reserveInterviewStart(store: LaunchStore, placeId: string, audit
   }
 }
 
+/**
+ * Releases the spot a business holds (step 2a: location exit, 72 h expiry), keeping its interview_start row for the
+ * weekly count: ref -> 'released:<sessionId>', place_id = the place, released_at = now. Returns true when a held spot
+ * was released, false when the place held none (already released: a replay is a no-op). Call inside the caller's
+ * transaction when it must be atomic with a session change.
+ */
+export function releaseInterviewSpot(store: LaunchStore, placeId: string, sessionId: string): boolean {
+  return store.db.prepare(`UPDATE site_bot_launch_events SET ref = ?, place_id = ref, released_at = ?
+    WHERE kind = 'interview_start' AND ref = ?`).run(`released:${sessionId}`, store.now().toISOString(), placeId).changes > 0;
+}
+
 export type PaidSignupRecord = { status: 'recorded' | 'already' | 'unavailable' };
 
 /** One row per checkout session; a replayed callback is 'already' and never counts twice. */
@@ -219,7 +287,7 @@ export function recordPaidSignup(store: LaunchStore, sessionId: string): PaidSig
 }
 
 export interface WaitlistEntryInput {
-  reason: 'preopen' | 'full' | 'trade';
+  reason: 'preopen' | 'full' | 'trade' | 'location';
   auditId: string;
   placeId: string;
   businessName: string;

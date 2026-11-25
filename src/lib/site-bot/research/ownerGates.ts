@@ -4,11 +4,14 @@ import { getResearchPath, readResearchDossier, writeResearchDossierAtomic } from
 import type { ResearchGate, ResearchGateType } from './gates';
 import type { OwnerResearchGate, SiteResearchDossier } from './types';
 
-// Owner-answerable research gates (F2, rehearsal 2026-11-16). After the sign-up charge the pay page asks the owner the
-// research gates itself. The checkout callback records WHICH gates it handed to the owner (id, type, evidence digest)
-// in that research's dossier; the public gates POST may then approve only a gate from that server-side list, only
-// while it is open (not approved, not expired), and only for the research whose checkout session the caller holds.
-// The client-supplied collectedData is never used to decide which gates exist.
+// Owner-answerable research gates (F2, rehearsal 2026-11-16; re-keyed in Site Bot step 2a, 2026-11-25). The research now
+// runs BEFORE payment, keyed by the interview session (research id = interview session id), and the owner answers the
+// gates inside the interview (2b UI), no longer on the pay page. The interview research run (interviewResearch.ts)
+// records WHICH gates it hands to the owner (id, type, evidence digest) in that research's dossier; the public
+// interview-gates POST may then list / approve only a gate from that server-side list, only while it is open (not
+// approved, not expired), and only for the research of the interview session whose cookie the caller holds (the route
+// takes the research id from the session, never from the request). The client-supplied collectedData is never used to
+// decide which gates exist.
 
 /**
  * Gate types the owner may answer from the pay page. ambiguous_intent is staff-only (2026-11-20, post-payment screen): the
@@ -26,8 +29,12 @@ export const OWNER_ANSWERABLE_GATE_TYPES: readonly ResearchGateType[] = [
 /** Every gate type whose stored answer (owner or staff) generation applies (gateAnswers.ts); a superset of the owner list. */
 export const STORED_ANSWER_GATE_TYPES: readonly ResearchGateType[] = [...OWNER_ANSWERABLE_GATE_TYPES, 'ambiguous_intent'];
 
-/** How long after the checkout the owner may still answer from the pay page (the page state is lost on reload). */
-export const OWNER_GATE_WINDOW_MS = 24 * 60 * 60 * 1000;
+/**
+ * How long after the gates were issued the owner may still answer them: the spot lifetime (Eitan 2026-11-25: 3 days,
+ * SITE_BOT_SPOT_TTL_HOURS default 72; the interview route passes the configured value as `windowMs`). The interview
+ * session itself closes at the spot expiry, so the route refuses earlier than this whenever the session is gone.
+ */
+export const OWNER_GATE_WINDOW_MS = 72 * 60 * 60 * 1000;
 
 const MAX_LIST_ITEMS = 20;
 const MAX_ITEM_CHARS = 200;
@@ -121,6 +128,18 @@ export async function recordOwnerResearchGates(researchId: string, gates: Resear
   return await writeResearchDossierAtomic(researchId, dossier, options.baseDir) ? ownerGates : [];
 }
 
+/** The owner gates of a research that are still open (not answered, not approved, inside the window). */
+export async function listOpenOwnerResearchGates(researchId: string, options: { baseDir?: string; now?: () => Date; windowMs?: number } = {}): Promise<ResearchGate[]> {
+  const dossier = await readDossier(researchId, options.baseDir);
+  if (!dossier || !Array.isArray(dossier.ownerResearchGates)) return [];
+  const now = (options.now ?? (() => new Date()))().getTime();
+  const windowMs = options.windowMs ?? OWNER_GATE_WINDOW_MS;
+  return dossier.ownerResearchGates
+    .filter(gate => OWNER_ANSWERABLE_GATE_TYPES.includes(gate.type) && !gate.answeredAt && !dossier.researchGateApprovals?.[gate.id]
+      && Number.isFinite(Date.parse(gate.issuedAt)) && now - Date.parse(gate.issuedAt) <= windowMs)
+    .map(gate => ({ id: gate.id, type: gate.type, evidenceDigest: gate.evidenceDigest }));
+}
+
 export type OwnerGateSubmitResult =
   | { status: 'approved'; gate: ResearchGate; answer: unknown; dossier: SiteResearchDossier }
   | { status: 'forbidden' | 'not_found' | 'closed' | 'stale' | 'invalid_answer' };
@@ -135,7 +154,7 @@ export async function submitOwnerResearchGate(
   gateId: string,
   evidenceDigest: string,
   answer: unknown,
-  options: { baseDir?: string; now?: () => Date } = {},
+  options: { baseDir?: string; now?: () => Date; windowMs?: number } = {},
 ): Promise<OwnerGateSubmitResult> {
   const dossier = await readDossier(researchId, options.baseDir);
   if (!dossier || !Array.isArray(dossier.ownerResearchGates) || dossier.ownerResearchGates.length === 0) return { status: 'forbidden' };
@@ -144,7 +163,7 @@ export async function submitOwnerResearchGate(
   if (!record || !OWNER_ANSWERABLE_GATE_TYPES.includes(record.type)) return { status: 'not_found' };
   const now = (options.now ?? (() => new Date()))();
   const issued = Date.parse(record.issuedAt);
-  if (record.answeredAt || dossier.researchGateApprovals?.[record.id] || !Number.isFinite(issued) || now.getTime() - issued > OWNER_GATE_WINDOW_MS) {
+  if (record.answeredAt || dossier.researchGateApprovals?.[record.id] || !Number.isFinite(issued) || now.getTime() - issued > (options.windowMs ?? OWNER_GATE_WINDOW_MS)) {
     return { status: 'closed' };
   }
   if (evidenceDigest !== record.evidenceDigest) return { status: 'stale' };

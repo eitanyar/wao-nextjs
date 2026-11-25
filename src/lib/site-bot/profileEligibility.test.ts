@@ -78,8 +78,11 @@ test('branch 2, explicitly out of scope: a taxonomy category off the launch list
     assert.equal(scope.scope, 'out_of_scope', `${response.placeId} ${response.probe}`);
     assert.equal(profileEligibility(candidate(response)), 'trade', response.placeId);
   }
-  // dental_clinic is the Places id of gcid:dentist (PLACES_TYPE_ALIASES).
-  assert.deepEqual(tradeScope(candidate(byId('fixture-35'))), { scope: 'out_of_scope', categoryId: 'gcid:dentist', via: 'primary_type' });
+  // The block list is keyed by the raw Places primaryType: a block carries a `places:<type>` id, never a gcid.
+  assert.deepEqual(tradeScope(candidate(byId('fixture-35'))), { scope: 'out_of_scope', categoryId: 'places:dental_clinic', via: 'primary_type' });
+  assert.deepEqual(tradeScope(candidate(byId('fixture-30'))), { scope: 'out_of_scope', categoryId: 'places:restaurant', via: 'primary_type' });
+  assert.deepEqual(tradeScope(candidate(byId('fixture-32'))), { scope: 'out_of_scope', categoryId: 'places:hair_salon', via: 'primary_type' });
+  assert.deepEqual(tradeScope(candidate(byId('fixture-37'))), { scope: 'out_of_scope', categoryId: 'places:dentist', via: 'primary_type' });
   // The website check still runs first: every recorded control has a site.
   assert.equal(profileEligibility(candidate(byId('fixture-30'), { hasWebsite: true })), 'has_site');
 });
@@ -137,4 +140,55 @@ test('the profile checks still apply after the trade check', () => {
   assert.equal(profileEligibility(candidate(ac, { businessStatus: 'CLOSED_TEMPORARILY' })), 'profile');
   assert.equal(profileEligibility(candidate(ac, { userRatingCount: 0 })), 'profile');
   assert.equal(profileEligibility(candidate(ac, { hasWebsite: true })), 'has_site');
+});
+
+// Yonatan's Places primaryType block list (docs/reviews/site-bot-places-type-block-list-yonatan-2026-11-25.md).
+test('block list: one decision per recorded fixture probe (every response of the probe agrees)', () => {
+  const expected: Record<string, ReadonlyArray<'in_scope' | 'unknown'> | 'out_of_scope'> = {
+    ac_tech: ['in_scope', 'unknown'], ac_tech2: ['in_scope', 'unknown'], handyman: ['in_scope'], gardener: ['in_scope'],
+    cleaner: ['unknown'], house_cleaning: ['unknown'], tutor: ['unknown'], photographer: ['unknown'], pest_control: ['unknown'],
+    mover: ['in_scope'], plumber: ['in_scope'], electrician: ['in_scope'], noise_route: ['unknown'],
+    restaurant: 'out_of_scope', hair_salon: 'out_of_scope', dentist: 'out_of_scope',
+  };
+  const probes = [...new Set(responses.map(response => response.probe))].sort();
+  assert.deepEqual(probes, Object.keys(expected).sort(), 'every fixture probe has a decision');
+  for (const probe of probes) {
+    const want = expected[probe];
+    for (const response of responses.filter(r => r.probe === probe)) {
+      const scope = tradeScope(candidate(response));
+      const label = `${probe} ${response.placeId}`;
+      if (want === 'out_of_scope') {
+        assert.equal(scope.scope, 'out_of_scope', label);
+        assert.equal(scope.categoryId, `places:${response.primaryType}`, label);
+        assert.equal(profileEligibility(candidate(response)), 'trade', label);
+      } else {
+        assert.ok(want.includes(scope.scope as 'in_scope' | 'unknown'), `${label} got ${scope.scope}`);
+        assert.equal(profileEligibility(candidate(response)), 'eligible', label);
+      }
+    }
+  }
+});
+
+test('block list: laundry as primaryType passes (cleaners carry it); beauty_salon as primaryType is the trade block', () => {
+  assert.notEqual(tradeScope({ primaryType: 'laundry', types: ['laundry'] }).scope, 'out_of_scope');
+  assert.equal(profileEligibility({ hasWebsite: false, primaryType: 'laundry', types: ['laundry'], businessStatus: 'OPERATIONAL', hasRating: true, userRatingCount: 5 }), 'eligible');
+  assert.deepEqual(tradeScope({ primaryType: 'beauty_salon', types: ['beauty_salon'] }), { scope: 'out_of_scope', categoryId: 'places:beauty_salon', via: 'primary_type' });
+  assert.equal(profileEligibility({ hasWebsite: false, primaryType: 'beauty_salon', types: ['beauty_salon'], businessStatus: 'OPERATIONAL', hasRating: true, userRatingCount: 5 }), 'trade');
+});
+
+test('block list: a blocked primaryType is never rescued by the display name or a launch trade among the types', () => {
+  // A hair salon whose types list a plumber and whose display name is the plumber's English name: still blocked.
+  const plumber = byId('fixture-18');
+  const rescued = { primaryType: 'hair_salon', types: ['plumber', 'hair_salon'], primaryTypeDisplayName: plumber.primaryTypeDisplayName!.en };
+  assert.deepEqual(tradeScope(rescued), { scope: 'out_of_scope', categoryId: 'places:hair_salon', via: 'primary_type' });
+});
+
+test('block list: secondary types never block; an unlisted taxonomy type passes; general_contractor always passes', () => {
+  assert.notEqual(tradeScope({ primaryType: 'service', types: ['restaurant', 'beauty_salon', 'dentist'] }).scope, 'out_of_scope');
+  // Before the block list, any taxonomy category off the launch list blocked; now only a listed primaryType does.
+  for (const type of ['hardware_store', 'electronics_store', 'storage', 'manufacturer', 'art_studio', 'educational_institution', 'some_new_google_type']) {
+    assert.notEqual(tradeScope({ primaryType: type, types: [type] }).scope, 'out_of_scope', type);
+  }
+  assert.deepEqual(tradeScope({ primaryType: 'general_contractor', types: ['general_contractor'] }),
+    { scope: 'in_scope', categoryId: 'gcid:general_contractor', via: 'primary_type' });
 });

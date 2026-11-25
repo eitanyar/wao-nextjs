@@ -45,7 +45,8 @@ export interface OutgoingEmail {
     | 'cancel_confirmation'
     | 'offline_soon'
     | 'takedown_reminder'
-    | 'waitlist_joined';
+    | 'waitlist_joined'
+    | 'interview_reminder';
   /** For logs only. */
   refIds: string[];
 }
