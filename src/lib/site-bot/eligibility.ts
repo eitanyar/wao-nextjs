@@ -3,20 +3,20 @@
  * "build my site" CTA. Exactly one of:
  *
  *   not_eligible_has_site   the picked GBP already links a website (Places websiteUri)          no CTA
- *   not_eligible_trade      the primary category is outside launch scope (launchTrades.ts)      trade waiting list
- *   not_eligible_profile    Places says the business is not OPERATIONAL, or it has zero ratings no CTA
+ *   not_eligible_trade      the primary category is EXPLICITLY outside launch scope              trade waiting list
+ *   not_eligible_profile    Places says the business is not OPERATIONAL, or it has zero ratings no CTA (one cause shown)
  *   waitlist_preopen        eligible, but the SITE_BOT_PAID_FLOW gate is closed (prod default)  waiting list
  *   waitlist_full           eligible, gate open, but the launch cap is reached (launchStore.ts) waiting list
  *   eligible                eligible, gate open, a spot is free                                 the existing CTA
  *
  * Checks run in that order, so a business with a website never sees the trade or profile block. Only data the audit
- * lookup already stores is used. "Unverified" is NOT a signal here: Places does not expose GBP verification, so the
+ * lookup already stores is used. The per-business part (profileEligibility) lives in profileEligibility.ts, because the
+ * trade-scope match reads the GBP taxonomy JSON and this module ships to the browser.
+ * The profile block shows ONE cause (profileBlockCause): 'closed' when not OPERATIONAL (wins), else 'no_ratings'. "Unverified" is NOT a signal here: Places does not expose GBP verification, so the
  * profile block never claims it. A missing businessStatus (records written before it was kept) is no signal either.
  *
  * Pure and browser-safe. HEBREW-SAFETY: this module contains ZERO Hebrew bytes.
  */
-import { isLaunchTrade, primaryCategoryId } from './launchTrades';
-
 export type ProfileEligibility = 'has_site' | 'trade' | 'profile' | 'eligible';
 
 export const SITE_BOT_OFFERS = [
@@ -32,11 +32,16 @@ export type SiteBotOffer = (typeof SITE_BOT_OFFERS)[number];
 
 export type WaitlistReason = 'preopen' | 'full' | 'trade';
 
+/** Why the profile block shows: the business is marked closed (any non-OPERATIONAL status), or it has no ratings. */
+export type ProfileBlockCause = 'closed' | 'no_ratings';
+
 /** The audit snapshot fields the decision reads (AuditCandidateSnapshot in auditStore.ts). */
 export interface EligibilityCandidate {
   hasWebsite: boolean;
   types: readonly string[];
   primaryType?: string;
+  /** Places primaryTypeDisplayName (the audit asks for languageCode=he). Absent on older records. */
+  primaryTypeDisplayName?: string;
   businessStatus?: string;
   hasRating: boolean;
   userRatingCount?: number;
@@ -58,12 +63,17 @@ export function isNotOperational(candidate: Pick<EligibilityCandidate, 'business
     && candidate.businessStatus !== 'OPERATIONAL';
 }
 
-/** The part of the decision that depends on the business alone (no gate, no cap). */
-export function profileEligibility(candidate: EligibilityCandidate): ProfileEligibility {
-  if (candidate.hasWebsite === true) return 'has_site';
-  if (!isLaunchTrade(primaryCategoryId(candidate))) return 'trade';
-  if (isNotOperational(candidate) || !hasRatings(candidate)) return 'profile';
-  return 'eligible';
+export function isProfileBlockCause(value: unknown): value is ProfileBlockCause {
+  return value === 'closed' || value === 'no_ratings';
+}
+
+/** The one cause the profile block names, or null when the profile is fine. Closed wins when both apply. */
+export function profileBlockCause(
+  candidate: Pick<EligibilityCandidate, 'businessStatus' | 'hasRating' | 'userRatingCount'>,
+): ProfileBlockCause | null {
+  if (isNotOperational(candidate)) return 'closed';
+  if (!hasRatings(candidate)) return 'no_ratings';
+  return null;
 }
 
 /**

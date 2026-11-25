@@ -9,6 +9,7 @@ import {
   addWaitlistEntry, capSnapshot, closeLaunchStore, DEFAULT_CAP_LIMITS, hasInterviewSpot, interviewSpotAvailable,
   israelWeekKey, launchDbPath, listWaitlist, openLaunchStore, parseLaunchCapLimits, purgeExpiredWaitlist, recordPaidSignup,
   reserveInterviewStart, WAITLIST_RETENTION_MS, withLaunchStore, type WaitlistEntryInput,
+  DEFAULT_WAITLIST_RETENTION_DAYS, parseWaitlistRetentionMs,
 } from './launchStore';
 
 function tempDb(): string {
@@ -137,6 +138,33 @@ test('concurrent increments: 8 workers on separate connections race for 3 weekly
   assert.equal(results.filter(status => status === 'full').length, 5, results.join(','));
   const store = openLaunchStore(file, () => new Date('2026-12-01T10:00:00Z'));
   try { assert.equal(capSnapshot(store, limits).weekStarts, 3); } finally { closeLaunchStore(store); }
+});
+
+test('waiting-list retention: SITE_BOT_WAITLIST_RETENTION_DAYS, default 90 days; malformed falls back to the default', () => {
+  const day = 24 * 60 * 60 * 1000;
+  assert.equal(DEFAULT_WAITLIST_RETENTION_DAYS, 90);
+  assert.equal(WAITLIST_RETENTION_MS, 90 * day);
+  assert.equal(parseWaitlistRetentionMs({}), 90 * day);
+  assert.equal(parseWaitlistRetentionMs({ SITE_BOT_WAITLIST_RETENTION_DAYS: '' }), 90 * day);
+  assert.equal(parseWaitlistRetentionMs({ SITE_BOT_WAITLIST_RETENTION_DAYS: '30' }), 30 * day);
+  assert.equal(parseWaitlistRetentionMs({ SITE_BOT_WAITLIST_RETENTION_DAYS: ' 120 ' }), 120 * day);
+  for (const bad of ['0', '-5', '1.5', 'abc', '90d', '3651', '00030']) {
+    assert.equal(parseWaitlistRetentionMs({ SITE_BOT_WAITLIST_RETENTION_DAYS: bad }), 90 * day, bad);
+  }
+});
+
+test('waiting-list retention: a 60-day-old entry survives the default purge; cap rows are never purged', () => {
+  const t = clock('2026-12-06T08:00:00Z');
+  const store = openLaunchStore(tempDb(), t.now);
+  try {
+    assert.equal(addWaitlistEntry(store, entry()).status, 'added');
+    assert.equal(reserveInterviewStart(store, 'place-cap-1', audit, { total: 10, weekly: 3 }).status, 'reserved');
+    t.set('2027-02-04T08:00:00Z'); // 60 days later
+    assert.equal(purgeExpiredWaitlist(store), 0);
+    t.set('2027-03-07T08:00:01Z'); // 91 days later
+    assert.equal(purgeExpiredWaitlist(store), 1);
+    assert.equal(hasInterviewSpot(store, 'place-cap-1'), true);
+  } finally { closeLaunchStore(store); }
 });
 
 const entry = (over: Partial<WaitlistEntryInput> = {}): WaitlistEntryInput => ({

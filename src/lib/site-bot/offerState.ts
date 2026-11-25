@@ -12,7 +12,9 @@
  */
 import { readAuditRecord, UUID_REGEX } from './auditStore';
 import type { AuditCandidateSnapshot, AuditRecord } from './auditStore';
-import { profileEligibility, siteBotOffer, type SiteBotOffer } from './eligibility';
+import { profileBlockCause, siteBotOffer, type ProfileBlockCause, type SiteBotOffer } from './eligibility';
+import { profileEligibility, tradeScope } from './profileEligibility';
+import { primaryCategoryId } from './launchTrades';
 import { isPaidFlowAllowedForRequest } from './paidFlowGate';
 import {
   hasInterviewSpot, interviewSpotAvailable, parseLaunchCapLimits, reserveInterviewStart, withLaunchStore,
@@ -48,6 +50,16 @@ export async function resolveOffer(candidate: AuditCandidateSnapshot, deps: Offe
   if (profile !== 'eligible') return siteBotOffer(profile, { open: false, hasSpot: () => false });
   const open = await deps.gateOpen();
   return siteBotOffer(profile, { open, hasSpot: () => spotFor(candidate.placeId, deps) });
+}
+
+/** The one cause the not_eligible_profile block names (closed wins), or undefined for every other offer. */
+export function profileCauseFor(offer: SiteBotOffer, candidate: AuditCandidateSnapshot): ProfileBlockCause | undefined {
+  return offer === 'not_eligible_profile' ? profileBlockCause(candidate) ?? undefined : undefined;
+}
+
+/** The category a waiting-list entry records: the scope match, else the first non-generic Places type (or null). */
+export function waitlistCategoryFor(candidate: AuditCandidateSnapshot): string | null {
+  return tradeScope(candidate).categoryId ?? primaryCategoryId(candidate);
 }
 
 export type CandidateLookup = { kind: 'found'; record: AuditRecord; candidate: AuditCandidateSnapshot } | { kind: 'no_audit' };

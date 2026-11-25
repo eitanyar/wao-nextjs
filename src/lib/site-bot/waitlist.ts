@@ -56,6 +56,11 @@ export function israeliPhone(value: unknown): string | null {
   return toE164IL(value);
 }
 
+/** The email rule the server applies (after trim + lower case); the form uses it to flag a malformed address. */
+export function isWaitlistEmail(value: string): boolean {
+  return EMAIL.test(value.trim().toLowerCase());
+}
+
 /** Strict: unknown keys, wrong types, control characters, a non-Israeli phone or a bad email -> invalid_input. */
 export function normalizeWaitlistSubmission(body: unknown): WaitlistSubmission {
   if (!body || typeof body !== 'object' || Array.isArray(body)) throw new WaitlistError('invalid_input');
@@ -77,6 +82,8 @@ export interface WaitlistDeps {
   add: (input: WaitlistEntryInput) => WaitlistAdd;
   /** Never throws (sendWaitlistAlert). Not awaited by the caller's reply. */
   alert: (entry: WaitlistEntry) => Promise<unknown>;
+  /** The category stored with the entry (server: offerState.waitlistCategoryFor). Default: the first non-generic type. */
+  categoryFor?: (candidate: AuditCandidateSnapshot) => string | null;
 }
 
 export type WaitlistResult = { ok: true; reason: WaitlistReason };
@@ -91,7 +98,7 @@ export async function submitWaitlist(submission: WaitlistSubmission, deps: Waitl
     auditId: submission.auditId,
     placeId: submission.placeId,
     businessName: candidate.displayName.slice(0, 200),
-    category: primaryCategoryId(candidate),
+    category: (deps.categoryFor ?? primaryCategoryId)(candidate),
     name: submission.name,
     phone: submission.phone,
     email: submission.email,

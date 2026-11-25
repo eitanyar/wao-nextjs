@@ -19,6 +19,12 @@ test('launch scope = field trades (plumber, electrician class), in-home tutor, p
   for (const id of ['gcid:plumber', 'gcid:electrician', 'gcid:locksmith', 'gcid:hvac_contractor', 'gcid:painter', 'gcid:handyman']) {
     assert.equal(launchTradeGroup(id), 'field_trade', id);
   }
+  // Added on seo-strategist sign-off 2026-11-25.
+  for (const id of ['gcid:cleaner', 'gcid:deck_builder', 'gcid:metal_fabricator', 'gcid:kitchen_remodeler',
+    'gcid:landscape_designer', 'gcid:swimming_pool_contractor', 'gcid:solar_energy_equipment_supplier']) {
+    assert.equal(launchTradeGroup(id), 'field_trade', id);
+  }
+  assert.equal(Object.keys(LAUNCH_TRADE_CATEGORIES).length, 50);
   assert.equal(launchTradeGroup('gcid:tutoring_service'), 'in_home_tutor');
   assert.equal(launchTradeGroup('gcid:photographer'), 'photographer');
   const groups = new Set(Object.values(LAUNCH_TRADE_CATEGORIES));
@@ -41,6 +47,7 @@ test('Places type ids map to gcids (aliases for the ids that differ); malformed 
   assert.equal(toGbpCategoryId('gcid:electrician'), 'gcid:electrician');
   assert.equal(toGbpCategoryId(' Plumber '), 'gcid:plumber');
   assert.equal(toGbpCategoryId('roofing_contractor'), 'gcid:roofer');
+  assert.equal(toGbpCategoryId('dental_clinic'), 'gcid:dentist');
   for (const bad of ['', 'a', 'plumber; drop', '../x', 'gcid:', 'x'.repeat(90), null, undefined]) {
     assert.equal(toGbpCategoryId(bad as string | null | undefined), null, String(bad));
   }

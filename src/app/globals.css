@@ -17,6 +17,8 @@
   --muted: #8892A4;
   --subtle: #252836;
   --border: #181B27;
+  /* Error text / invalid-field border: 6.9:1 on --surface, 7.3:1 on --bg (AA text). */
+  --error: #F87171;
 
   --font-heading: var(--font-rubik);
   --font-body: var(--font-assistant);
@@ -1623,6 +1625,8 @@ html.wao-a11y-underline-links a { text-decoration: underline !important; text-un
   --accent: #126a58;
   --accent-dim: rgba(18, 106, 88, 0.07);
   --accent-border: rgba(18, 106, 88, 0.28);
+  /* Error on cream: 6.5:1 on --surface, 5.8:1 on --bg (AA text). */
+  --error: #B42318;
   background: var(--bg);
   color: var(--text);
 }

@@ -9,6 +9,8 @@ export interface ReadyIdentity {
   score: AuditResult;
   /** Launch step 1: the server's offer (audit-result). Unvalidated here; the page renders it only via isSiteBotOffer. */
   offer?: SiteBotOffer | string;
+  /** The profile block's one cause (audit-result, only with not_eligible_profile). Rendered only via isProfileBlockCause. */
+  profileCause?: string;
 }
 export interface Candidate {
   placeId: string;
@@ -40,7 +42,8 @@ export function readyIdentity(data: unknown, auditId: string, requestedPlace?: s
     score.failed !== score.dimensions.filter(d => d.status === 'fail').length ||
     score.unknown !== score.dimensions.filter(d => d.status === 'unknown').length) throw new Error('Invalid score');
   return { auditId, placeId: value.placeId, businessName: value.businessName, formattedAddress: value.formattedAddress, score,
-    ...(typeof value.offer === 'string' ? { offer: value.offer } : {}) };
+    ...(typeof value.offer === 'string' ? { offer: value.offer } : {}),
+    ...(typeof value.profileCause === 'string' ? { profileCause: value.profileCause } : {}) };
 }
 export function identityQuery(url: string): string {
   const params = new URL(url).searchParams;

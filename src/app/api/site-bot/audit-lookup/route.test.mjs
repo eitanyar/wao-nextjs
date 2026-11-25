@@ -301,3 +301,13 @@ test('launch step 1: the primary category and business status are kept (well-for
   const dropped = routeHarness({ candidates: [{ ...place, primaryType: 'Plumber <b>', businessStatus: 'closed; x' }] });
   assert.deepEqual(await dropped.post(), { status: 200, body: { auditId, candidateCount: 1 } });
 });
+
+test('trade-scope fallback: the primary type display name is kept bounded, without control or bidi characters', async () => {
+  const kept = routeHarness({ candidates: [{ ...place, primaryType: 'service', primaryTypeDisplayName: ' Services ' }],
+    expected: { ...snapshot, primaryType: 'service', primaryTypeDisplayName: 'Services' } });
+  assert.deepEqual(await kept.post(), { status: 200, body: { auditId, candidateCount: 1 } });
+  for (const bad of ['Plumber‮', 'line\nbreak', 'x'.repeat(81), '   ', 7]) {
+    const dropped = routeHarness({ candidates: [{ ...place, primaryTypeDisplayName: bad }] });
+    assert.deepEqual(await dropped.post(), { status: 200, body: { auditId, candidateCount: 1 } }, String(bad));
+  }
+});

@@ -1,6 +1,6 @@
 import { checkRateLimit } from '@/lib/payments/rate-limit';
-import { addWaitlistEntry, withLaunchStore } from '@/lib/site-bot/launchStore';
-import { findAuditCandidate, resolveOffer } from '@/lib/site-bot/offerState';
+import { addWaitlistEntry, parseWaitlistRetentionMs, withLaunchStore } from '@/lib/site-bot/launchStore';
+import { findAuditCandidate, resolveOffer, waitlistCategoryFor } from '@/lib/site-bot/offerState';
 import { normalizeWaitlistSubmission, submitWaitlist, WaitlistError } from '@/lib/site-bot/waitlist';
 import { sendWaitlistAlert } from '@/lib/site-bot/waitlistAlert';
 
@@ -52,8 +52,9 @@ export async function POST(req: Request): Promise<Response> {
         return found.kind === 'found' ? found.candidate : null;
       },
       offerFor: candidate => resolveOffer(candidate),
-      add: input => withLaunchStore(store => addWaitlistEntry(store, input), { status: 'unavailable' }),
+      add: input => withLaunchStore(store => addWaitlistEntry(store, input, parseWaitlistRetentionMs()), { status: 'unavailable' }),
       alert: entry => sendWaitlistAlert(entry),
+      categoryFor: waitlistCategoryFor,
     });
     return reply(result, 200);
   } catch (error) {

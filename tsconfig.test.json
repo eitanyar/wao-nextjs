@@ -549,6 +549,8 @@
     "src/lib/site-bot/launchTrades.test.ts",
     "src/lib/site-bot/eligibility.ts",
     "src/lib/site-bot/eligibility.test.ts",
+    "src/lib/site-bot/profileEligibility.ts",
+    "src/lib/site-bot/profileEligibility.test.ts",
     "src/lib/site-bot/launchStore.ts",
     "src/lib/site-bot/launchStore.test.ts",
     "src/lib/site-bot/offerState.ts",

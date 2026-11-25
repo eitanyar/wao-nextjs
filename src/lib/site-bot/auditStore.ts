@@ -32,6 +32,8 @@ export interface AuditCandidateSnapshot {
   hasEditorialSummary: boolean;
   /** Places primaryType (the primary GBP category for the launch-scope check, launchTrades.ts). Absent on older records. */
   primaryType?: string;
+  /** Places primaryTypeDisplayName (languageCode=he), the trade-scope fallback when primaryType is generic. Absent on older records. */
+  primaryTypeDisplayName?: string;
   /** Places businessStatus (OPERATIONAL / CLOSED_TEMPORARILY / CLOSED_PERMANENTLY). Absent on older records. */
   businessStatus?: string;
 }

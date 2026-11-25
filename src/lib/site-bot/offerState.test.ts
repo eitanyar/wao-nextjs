@@ -7,7 +7,8 @@ import test from 'node:test';
 import type { AuditCandidateSnapshot, AuditRecord } from './auditStore';
 import { openLaunchStore, recordPaidSignup, type LaunchStore } from './launchStore';
 import {
-  auditResultPath, claimInterviewStart, interviewSpotHeld, interviewStartDecision, PLACE_ID, resolveOffer, type OfferDeps,
+  auditResultPath, claimInterviewStart, interviewSpotHeld, interviewStartDecision, PLACE_ID, profileCauseFor, resolveOffer,
+  waitlistCategoryFor, type OfferDeps,
 } from './offerState';
 import { PLACE_ID as INTAKE_PLACE_ID } from './startIntake';
 
@@ -52,6 +53,35 @@ test('not-eligible offers are decided before the gate (no gate, no store access)
     assert.equal(await resolveOffer(candidate('ChIJ-place-1', { primaryType: 'restaurant', types: ['restaurant'] }), h.deps), 'not_eligible_trade');
     assert.equal(await resolveOffer(candidate('ChIJ-place-1', { userRatingCount: 0 }), h.deps), 'not_eligible_profile');
     assert.deepEqual(h.calls, []);
+  } finally { h.close(); }
+});
+
+test('profile block cause: only with not_eligible_profile; closed (incl. temporarily) wins over no ratings', async () => {
+  const h = harness();
+  try {
+    const closed = candidate('ChIJ-place-1', { businessStatus: 'CLOSED_TEMPORARILY', userRatingCount: 0, hasRating: false });
+    const noRatings = candidate('ChIJ-place-1', { userRatingCount: 0, hasRating: false });
+    assert.equal(profileCauseFor(await resolveOffer(closed, h.deps), closed), 'closed');
+    assert.equal(profileCauseFor(await resolveOffer(noRatings, h.deps), noRatings), 'no_ratings');
+    // Any other offer carries no cause, even for a closed business (a website is checked first).
+    const closedWithSite = candidate('ChIJ-place-1', { businessStatus: 'CLOSED_PERMANENTLY', hasWebsite: true });
+    assert.equal(profileCauseFor(await resolveOffer(closedWithSite, h.deps), closedWithSite), undefined);
+    assert.equal(profileCauseFor('waitlist_preopen', closed), undefined);
+  } finally { h.close(); }
+});
+
+test('generic / missing primary types reach the waiting list, not the trade block (AC tech as "service")', async () => {
+  const h = harness({ open: false });
+  try {
+    const ac = candidate('ChIJ-place-1', { primaryType: 'service', types: ['point_of_interest', 'service', 'establishment'] });
+    assert.equal(await resolveOffer(ac, h.deps), 'waitlist_preopen');
+    const noType = candidate('ChIJ-place-1', { primaryType: undefined, types: ['point_of_interest', 'establishment'] });
+    assert.equal(await resolveOffer(noType, h.deps), 'waitlist_preopen');
+    // The waiting-list category: the scope match, else the first non-generic type, else null.
+    assert.equal(waitlistCategoryFor(candidate('ChIJ-place-1', { primaryType: 'service', types: ['manufacturer', 'general_contractor', 'service'] })),
+      'gcid:general_contractor');
+    assert.equal(waitlistCategoryFor(candidate('ChIJ-place-1', { primaryType: 'restaurant', types: ['restaurant'] })), 'gcid:restaurant');
+    assert.equal(waitlistCategoryFor(noType), null);
   } finally { h.close(); }
 });
 

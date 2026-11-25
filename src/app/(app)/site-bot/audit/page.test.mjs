@@ -656,9 +656,10 @@ test('help errors split by state: lost receipt and retry use RETRY, blocked uses
 
 // ---- Launch step 1 (2026-11-25): the eligibility block / waiting list in place of the buy CTA. ----
 const mixed = text => renderToStaticMarkup(React.createElement(React.Fragment, null, bidi.renderMixed(text)));
-async function offerView(offer, storage = new Map()) {
+async function offerView(offer, storage = new Map(), profileCause = 'no_ratings') {
   const result = ready(1, 'fail', offer);
   if (offer === 'missing') delete result.offer;
+  if (offer === 'not_eligible_profile' && profileCause !== null) result.profileCause = profileCause;
   const view = harness('', async url => response(url === '/api/site-bot/audit-lookup' ? { auditId: id } : result), storage);
   await view.flush(); await view.submit(); await view.flush(); await confirm(view); report(view);
   return view;
@@ -672,7 +673,6 @@ test('launch step 1: each server offer renders exactly its block; the check resu
   const expectations = {
     not_eligible_has_site: { texts: [C.NOT_ELIGIBLE_HAS_SITE], form: null },
     not_eligible_trade: { texts: [C.NOT_ELIGIBLE_TRADE], form: 'trade' },
-    not_eligible_profile: { texts: C.NOT_ELIGIBLE_PROFILE.split('\n'), form: null },
     waitlist_preopen: { texts: [C.WAITLIST_PREOPEN_HEAD, C.WAITLIST_PREOPEN_BODY], form: 'preopen' },
     waitlist_full: { texts: [C.WAITLIST_FULL_HEAD, C.WAITLIST_FULL_BODY], form: 'full' },
   };
@@ -697,10 +697,27 @@ test('launch step 1: each server offer renders exactly its block; the check resu
     assert.equal(view.all().filter(node => node.props?.['data-dimension']).length, 6);
     assert.ok(view.all().some(node => node.props?.['data-help-form']));
   }
-  // The profile string's line breaks are separate lines, never one run with raw \n.
-  const profile = (await offerView('not_eligible_profile')).html();
-  assert.equal(profile.includes(escaped(C.NOT_ELIGIBLE_PROFILE)), false);
-  assert.equal(C.NOT_ELIGIBLE_PROFILE.split('\n').length, (profile.match(/data-offer="not_eligible_profile"[\s\S]*?<\/section>/)[0].match(/<p /g) || []).length);
+});
+
+test('launch step 1: the profile block shows only the cause the server detected; an unknown cause shows nothing', async () => {
+  const C = eligibilityCopy;
+  assert.equal(Object.hasOwn(C, 'NOT_ELIGIBLE_PROFILE'), false, 'the old combined string is no longer generated');
+  for (const [cause, shown, hidden] of [['closed', C.NOT_ELIGIBLE_PROFILE_CLOSED, C.NOT_ELIGIBLE_PROFILE_NO_RATINGS],
+    ['no_ratings', C.NOT_ELIGIBLE_PROFILE_NO_RATINGS, C.NOT_ELIGIBLE_PROFILE_CLOSED]]) {
+    const view = await offerView('not_eligible_profile', new Map(), cause);
+    const html = view.html();
+    const block = html.match(/data-offer="not_eligible_profile"[\s\S]*?<\/section>/)[0];
+    assert.match(block, new RegExp(`data-profile-cause="${cause}"`));
+    assert.ok(block.includes(`>${mixed(shown)}</`), cause);
+    assert.equal(block.includes(mixed(hidden)), false, `${cause}: the other cause is not shown`);
+    assert.equal((block.match(/<p /g) || []).length, 1);
+    assert.doesNotMatch(html, /data-waitlist/);
+    assert.equal(hasSlot(view), false);
+  }
+  for (const cause of [null, 'bogus']) {
+    const html = (await offerView('not_eligible_profile', new Map(), cause)).html();
+    assert.doesNotMatch(html, /data-offer=|data-waitlist/, String(cause));
+  }
 });
 
 test('launch step 1: "Site Bot" inside Hebrew copy is an LTR isolate', async () => {
@@ -739,11 +756,18 @@ test('launch step 1: site_bot_check_completed fires once, only on the confirmed 
 
 function waitlistFormHarness(adapter, storage = new Map()) {
   const slots = [];
+  const effects = [];
   let cursor = 0;
+  const same = (a, b) => a && b && a.length === b.length && a.every((value, i) => Object.is(value, b[i]));
   const hooks = { ...React, useState(initial) {
     const i = cursor++;
     if (!(i in slots)) slots[i] = typeof initial === 'function' ? initial() : initial;
     return [slots[i], value => { slots[i] = typeof value === 'function' ? value(slots[i]) : value; }];
+  },
+  useRef(value) { const i = cursor++; return slots[i] ??= { current: value }; },
+  useEffect(fn, deps) {
+    const i = cursor++;
+    if (!same(slots[i]?.deps, deps)) { slots[i] = { deps }; effects.push(fn); }
   } };
   const win = { sessionStorage: { getItem: key => storage.get(key) ?? null, setItem: (key, value) => storage.set(key, value) } };
   const calls = [];
@@ -752,19 +776,31 @@ function waitlistFormHarness(adapter, storage = new Map()) {
   const type = (name, value) => nodes(tree()).find(node => node.type === 'input' && node.props.name === name).props.onChange({ target: { value } });
   const submitButton = () => nodes(tree()).find(node => node.type === 'button' && node.props.type === 'submit');
   const submit = async () => { await nodes(tree()).find(node => node.type === 'form').props.onSubmit({ preventDefault() {} }); await tick(); };
-  return { tree, type, submitButton, submit, calls, win };
+  const input = name => nodes(tree()).find(node => node.type === 'input' && node.props.name === name);
+  // Stand-ins for the DOM nodes React would attach: every focus() call is recorded by name.
+  const focused = [];
+  const attach = () => {
+    for (const node of nodes(tree())) {
+      const ref = node.props?.ref;
+      if (ref && typeof ref === 'object' && 'current' in ref) {
+        const label = node.type === 'input' ? node.props.name : node.props['data-waitlist-joined'] ? 'thanks' : node.props['data-waitlist-error'] ? 'error' : node.type;
+        ref.current = { focus: () => focused.push(label) };
+      }
+    }
+  };
+  const runEffects = () => { tree(); attach(); for (const fn of effects.splice(0)) fn(); };
+  return { tree, type, submitButton, submit, calls, win, input, focused, attach, runEffects };
 }
 
 test('launch step 1: the waiting-list form sends only typed fields + audit ids, thanks once, fires site_bot_waitlist_joined once', async () => {
   const h = waitlistFormHarness(async () => response({ ok: true, reason: 'preopen' }));
-  assert.equal(h.submitButton().props.disabled, true);
+  assert.equal(h.submitButton().props.disabled, undefined, 'the button is never disabled before sending');
   h.type('name', 'Synthetic Owner');
   h.type('phone', '12345');
-  assert.equal(h.submitButton().props.disabled, true, 'a non-Israeli phone keeps the button off');
   await h.submit();
-  assert.equal(h.calls.length, 0);
+  assert.equal(h.calls.length, 0, 'a non-Israeli phone is not sent');
   h.type('phone', '050-123-4567');
-  assert.equal(h.submitButton().props.disabled, false);
+  assert.equal(h.submitButton().props.disabled, undefined);
   assert.equal(h.submitButton().props.style.minHeight, '48px');
   await h.submit();
   assert.equal(h.calls.length, 1);
@@ -772,6 +808,9 @@ test('launch step 1: the waiting-list form sends only typed fields + audit ids, 
   assert.deepEqual(JSON.parse(h.calls[0].options.body), { auditId: id, placeId: 'ChIJ-synthetic-1', name: 'Synthetic Owner', phone: '050-123-4567' });
   const after = renderToStaticMarkup(h.tree());
   assert.ok(after.includes(escaped(eligibilityCopy.WAITLIST_THANKS)));
+  assert.match(after, /<p tabindex="-1" data-waitlist-joined="true"/);
+  h.runEffects();
+  assert.equal(h.focused.at(-1), 'thanks', 'focus moves to the thanks paragraph');
   assert.doesNotMatch(after, /data-waitlist-form/);
   assert.deepEqual(plain(h.win.dataLayer), [{ event: 'site_bot_waitlist_joined', reason: 'preopen' }]);
 });
@@ -784,10 +823,98 @@ test('launch step 1: a rejected waiting-list request shows the error, fires noth
   const failed = renderToStaticMarkup(h.tree());
   assert.ok(failed.includes(escaped(eligibilityCopy.WAITLIST_ERROR)));
   assert.match(failed, /role="alert"/);
+  assert.match(failed, /<p tabindex="-1" role="alert" data-waitlist-error="true" style="[^"]*color:var\(--error\)/);
+  h.runEffects();
+  assert.equal(h.focused.at(-1), 'error', 'focus moves to the error paragraph');
   assert.equal(h.win.dataLayer, undefined);
   fail = false;
   await h.submit();
   assert.equal(JSON.parse(h.calls[1].options.body).email, 'o@example.com');
   // The event carries the reason the server stored.
   assert.deepEqual(plain(h.win.dataLayer), [{ event: 'site_bot_waitlist_joined', reason: 'full' }]);
+});
+
+test('waiting-list a11y: a bad submit marks the bad fields, describes them with their error, and focuses the first one', async () => {
+  const C = eligibilityCopy;
+  const h = waitlistFormHarness(async () => fail('no request for invalid input'));
+  h.type('name', 'Synthetic Owner'); h.type('phone', '12345');
+  // Before any submit attempt nothing is marked invalid.
+  for (const name of ['name', 'phone', 'email']) {
+    assert.equal(h.input(name).props['aria-invalid'], undefined, name);
+    assert.equal(h.input(name).props['aria-describedby'], undefined, name);
+  }
+  h.attach();
+  await h.submit();
+  assert.equal(h.calls.length, 0);
+  assert.deepEqual(h.focused, ['phone'], 'focus on the phone field');
+  const phone = h.input('phone');
+  assert.equal(phone.props['aria-invalid'], true);
+  assert.equal(phone.props['aria-describedby'], 'waitlist-phone-error');
+  const html = renderToStaticMarkup(h.tree());
+  assert.match(html, /<p id="waitlist-phone-error" data-waitlist-field-error="phone" style="[^"]*color:var\(--error\)/);
+  assert.ok(html.includes(`>${mixed(C.WAITLIST_INVALID_PHONE)}</p>`));
+  assert.doesNotMatch(html, /waitlist-(name|email)-error/, 'only the bad field has an error');
+  assert.equal(h.input('name').props['aria-invalid'], undefined);
+  assert.equal(h.input('email').props['aria-invalid'], undefined, 'an empty email is fine');
+
+  // All three bad: errors in form order, focus on the first (name). Email only when filled and malformed.
+  h.type('name', '   '); h.type('email', 'not-an-email');
+  h.attach(); h.focused.length = 0;
+  await h.submit();
+  assert.deepEqual(h.focused, ['name']);
+  const all = renderToStaticMarkup(h.tree());
+  for (const [field, key] of [['name', 'WAITLIST_INVALID_NAME'], ['phone', 'WAITLIST_INVALID_PHONE'], ['email', 'WAITLIST_INVALID_EMAIL']]) {
+    assert.match(all, new RegExp(`id="waitlist-${field}"[^>]*aria-invalid="true"[^>]*aria-describedby="waitlist-${field}-error"`), field);
+    assert.ok(all.includes(`>${mixed(C[key])}</p>`), key);
+  }
+  // Fixing a field clears its own error live.
+  h.type('name', 'Synthetic Owner');
+  assert.equal(h.input('name').props['aria-invalid'], undefined);
+  assert.equal(h.input('phone').props['aria-invalid'], true);
+});
+
+test('waiting-list a11y: while sending the fields are readOnly + aria-disabled (never disabled); email input hints', async () => {
+  let release;
+  const h = waitlistFormHarness(() => new Promise(resolve => { release = () => resolve(response({ ok: true, reason: 'preopen' })); }));
+  const email = h.input('email');
+  assert.equal(email.props.autoCapitalize, 'none');
+  assert.equal(email.props.spellCheck, false);
+  assert.equal(email.props.enterKeyHint, 'send');
+  assert.equal(h.input('name').props.enterKeyHint, 'next');
+  h.type('name', 'Synthetic Owner'); h.type('phone', '0501234567');
+  const pending = nodes(h.tree()).find(node => node.type === 'form').props.onSubmit({ preventDefault() {} });
+  await tick();
+  for (const name of ['name', 'phone', 'email']) {
+    const props = h.input(name).props;
+    assert.equal(props.readOnly, true, name);
+    assert.equal(props['aria-disabled'], true, name);
+    assert.equal(props.disabled, undefined, name);
+  }
+  assert.equal(h.submitButton().props.disabled, undefined);
+  assert.equal(h.submitButton().props['aria-disabled'], true);
+  // A second submit while sending sends nothing.
+  await nodes(h.tree()).find(node => node.type === 'form').props.onSubmit({ preventDefault() {} });
+  assert.equal(h.calls.length, 1);
+  release(); await pending; await tick();
+  assert.ok(renderToStaticMarkup(h.tree()).includes(escaped(eligibilityCopy.WAITLIST_THANKS)));
+});
+
+test('waiting-list a11y: input borders use --muted, error text uses the --error theme token (both themes)', () => {
+  const source = fs.readFileSync(fileURLToPath(new URL('./offerBlock.tsx', import.meta.url)), 'utf8');
+  assert.match(source, /border: '1px solid var\(--muted\)'/);
+  assert.doesNotMatch(source, /#ef4444|[^-]disabled=\{/);
+  const css = fs.readFileSync(local('src/app/globals.css'), 'utf8');
+  const token = block => (css.match(new RegExp(`${block} \\{[\\s\\S]*?\\n\\}`))[0].match(/--error: (#[0-9A-Fa-f]{6});/) || [])[1];
+  const toLinear = hex => [1, 3, 5].map(i => parseInt(hex.slice(i, i + 2), 16) / 255).map(c => (c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4));
+  const luminance = hex => { const [r, g, b] = toLinear(hex); return 0.2126 * r + 0.7152 * g + 0.0722 * b; };
+  const ratio = (a, b) => { const [x, y] = [luminance(a), luminance(b)].sort((m, n) => n - m); return (x + 0.05) / (y + 0.05); };
+  const value = (block, name) => css.match(new RegExp(`${block} \\{[\\s\\S]*?--${name}: (#[0-9A-Fa-f]{6});`))[1];
+  for (const block of [':root', '\\.wao-light']) {
+    const error = token(block);
+    assert.ok(error, `${block} defines --error`);
+    for (const surface of ['surface', 'bg']) {
+      assert.ok(ratio(error, value(block, surface)) >= 4.5, `${block} --error on --${surface}`);
+      assert.ok(ratio(value(block, 'muted'), value(block, surface)) >= 3, `${block} --muted border on --${surface}`);
+    }
+  }
 });

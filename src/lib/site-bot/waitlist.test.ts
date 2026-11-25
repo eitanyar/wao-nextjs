@@ -8,7 +8,7 @@ import type { AuditCandidateSnapshot } from './auditStore';
 import type { OutgoingEmail } from './clientMessageEmail';
 import type { SiteBotOffer } from './eligibility';
 import { addWaitlistEntry, listWaitlist, openLaunchStore, type WaitlistEntry } from './launchStore';
-import { israeliPhone, normalizeWaitlistSubmission, submitWaitlist, WaitlistError } from './waitlist';
+import { israeliPhone, isWaitlistEmail, normalizeWaitlistSubmission, submitWaitlist, WaitlistError } from './waitlist';
 import { buildWaitlistAlert, sendWaitlistAlert } from './waitlistAlert';
 
 const auditId = '123e4567-e89b-42d3-a456-426614174000';
@@ -72,6 +72,22 @@ test('storage: the server derives business, category and reason; one alert per n
       assert.equal(h.alerts.length, 1);
       assert.equal(h.alerts[0].id, rows[0].id);
     } finally { h.store.db.close(); }
+  }
+});
+
+test('storage: the category comes from the injected categoryFor (server: scope match), else the first non-generic type', async () => {
+  const h = storeDeps('waitlist_preopen', candidate);
+  try {
+    await submitWaitlist(normalizeWaitlistSubmission(valid), { ...h.deps, categoryFor: () => 'gcid:hvac_contractor' });
+    assert.equal(listWaitlist(h.store)[0].category, 'gcid:hvac_contractor');
+  } finally { h.store.db.close(); }
+});
+
+test('the browser email rule is the server one', () => {
+  for (const ok of ['o@example.com', ' O@Example.COM ', 'a.b+c@sub.example.co.il']) assert.equal(isWaitlistEmail(ok), true, ok);
+  for (const bad of ['o@', 'o@example', 'o example@x.com', '@x.com', 'o@x.c']) assert.equal(isWaitlistEmail(bad), false, bad);
+  for (const ok of ['o@example.com', 'a.b+c@sub.example.co.il']) {
+    assert.equal(normalizeWaitlistSubmission({ ...valid, email: ok }).email, ok.toLowerCase());
   }
 });
 

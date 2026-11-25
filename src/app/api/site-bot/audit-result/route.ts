@@ -3,7 +3,7 @@ import { checkRateLimit } from '@/lib/payments/rate-limit';
 import { scoreAudit } from '@/lib/gbp/auditScore';
 import { readAuditRecord, UUID_REGEX } from '@/lib/site-bot/auditStore';
 import type { AuditCandidateSnapshot } from '@/lib/site-bot/auditStore';
-import { resolveOffer } from '@/lib/site-bot/offerState';
+import { profileCauseFor, resolveOffer } from '@/lib/site-bot/offerState';
 
 function getReply(body: object, status: number) {
   return NextResponse.json(body, { status, headers: { 'Cache-Control': 'private, no-store' } });
@@ -13,13 +13,17 @@ function getReply(body: object, status: number) {
 // Decided here, on the server, from the stored candidate, the runtime paid-flow gate and the launch cap.
 async function readyResponse(candidate: AuditCandidateSnapshot) {
   const score = scoreAudit(candidate);
+  const offer = await resolveOffer(candidate);
+  // The profile block names one cause (closed wins over no ratings); sent only with that offer.
+  const profileCause = profileCauseFor(offer, candidate);
   return {
     status: 'ready',
     businessName: candidate.displayName,
     formattedAddress: candidate.formattedAddress,
     score,
     placeId: candidate.placeId,
-    offer: await resolveOffer(candidate),
+    offer,
+    ...(profileCause ? { profileCause } : {}),
   };
 }
 

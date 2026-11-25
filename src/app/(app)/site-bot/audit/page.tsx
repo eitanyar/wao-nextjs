@@ -724,7 +724,7 @@ function AuditContent() {
             {/* M1 (F1): renders nothing unless the audit layout opened the paid-flow gate. Launch step 1: and only for the
                 'eligible' offer; every other offer gets its eligibility block / waiting list instead, the results above stay. */}
             {offer === 'eligible' && <PaidBuyCtaSlot auditId={identity?.auditId} placeId={identity?.placeId} />}
-            {identity && <SiteBotOfferBlock offer={offer} auditId={identity.auditId} placeId={identity.placeId} />}
+            {identity && <SiteBotOfferBlock offer={offer} profileCause={identity.profileCause} auditId={identity.auditId} placeId={identity.placeId} />}
 
             {renderHelpForm()}
           </div>

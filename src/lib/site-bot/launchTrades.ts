@@ -5,9 +5,10 @@
  * electrician class: the van / service-radius model), in-home tutors, and photographer. Everything else (storefronts,
  * clinics, restaurants, offices, schools, online-only services) is outside launch scope and gets the trade waiting list.
  *
- * The ids are the ones in src/data/gbp-categories-il.json. A picked GBP is matched on its PRIMARY category only. The audit
- * stores the Places `primaryType` (for local trades the Places type id equals the gcid suffix, e.g. 'plumber' ->
- * gcid:plumber), with PLACES_TYPE_ALIASES for the Places ids that differ from the GBP id.
+ * The ids are the ones in src/data/gbp-categories-il.json. The audit stores the Places `primaryType` (for the trades that
+ * ARE Places types the id equals the gcid suffix, e.g. 'plumber' -> gcid:plumber), with PLACES_TYPE_ALIASES for the Places
+ * ids that differ from the GBP id. Most launch gcids are NOT Places types (Places reports them as 'service' or nothing),
+ * so the scope decision is profileEligibility.ts tradeScope(): block only on an explicitly out-of-scope primary category.
  *
  * Changing the list is a positioning call (owner: seo-strategist / Adam), not an engineering one: edit only on sign-off,
  * and keep launchTrades.test.ts in step.
@@ -64,6 +65,14 @@ export const LAUNCH_TRADE_CATEGORIES = {
   'gcid:pool_cleaning_service': 'field_trade',
   'gcid:solar_energy_contractor': 'field_trade',
   'gcid:solar_panel_cleaning_service': 'field_trade',
+  // Field trades added on seo-strategist sign-off 2026-11-25 (Yonatan)
+  'gcid:cleaner': 'field_trade',
+  'gcid:deck_builder': 'field_trade',
+  'gcid:metal_fabricator': 'field_trade',
+  'gcid:kitchen_remodeler': 'field_trade',
+  'gcid:landscape_designer': 'field_trade',
+  'gcid:swimming_pool_contractor': 'field_trade',
+  'gcid:solar_energy_equipment_supplier': 'field_trade',
   // In-home tutors (storefront and online-only tutoring are out of this wave)
   'gcid:tutoring_service': 'in_home_tutor',
   // Photographer (studio + on-location hybrid)
@@ -75,10 +84,12 @@ export type LaunchTradeCategoryId = keyof typeof LAUNCH_TRADE_CATEGORIES;
 /** Places type ids that are not the gcid suffix of the same GBP category. */
 export const PLACES_TYPE_ALIASES: Readonly<Record<string, string>> = {
   roofing_contractor: 'gcid:roofer',
+  // Seen live 2026-11-25 (fixtures/places-trade-scope-2026-11-25.json): Israeli dentists report primaryType dental_clinic.
+  dental_clinic: 'gcid:dentist',
 };
 
 /** Places types that say nothing about the trade; never treated as a primary category. */
-const GENERIC_PLACES_TYPES = new Set(['point_of_interest', 'establishment', 'store', 'service', 'premise', 'food', 'health']);
+export const GENERIC_PLACES_TYPES: ReadonlySet<string> = new Set(['point_of_interest', 'establishment', 'store', 'service', 'premise', 'food', 'health']);
 
 const TYPE_ID = /^[a-z][a-z0-9_]{1,80}$/;
 

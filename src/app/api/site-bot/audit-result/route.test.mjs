@@ -13,7 +13,7 @@ const candidates = [
   { placeId: 'synthetic-place-2', displayName: 'Synthetic Two', formattedAddress: 'Synthetic Address 2', privateProviderField: 'must-not-leak' },
 ];
 
-function routeHarness({ record = null, allowed = true, throwAt = null, offer = 'waitlist_preopen' } = {}) {
+function routeHarness({ record = null, allowed = true, throwAt = null, offer = 'waitlist_preopen', profileCause = 'no_ratings' } = {}) {
   const calls = [];
   const errors = [];
   const imports = {
@@ -38,6 +38,12 @@ function routeHarness({ record = null, allowed = true, throwAt = null, offer = '
       assert.ok(candidates.includes(candidate));
       if (throwAt === 'offer') throw new Error('synthetic raw offer error');
       return offer;
+    },
+    // The profile block's one cause, passed through only when the offer is not_eligible_profile (offerState.ts).
+    profileCauseFor: (resolved, candidate) => {
+      calls.push('cause');
+      assert.ok(candidates.includes(candidate));
+      return resolved === 'not_eligible_profile' ? profileCause : undefined;
     } },
     '@/lib/site-bot/auditStore': {
       UUID_REGEX: /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i,
@@ -119,13 +125,13 @@ test('empty candidate list returns original 200 not_found shape without scoring'
 test('single candidate returns minimized ready result with scoring after storage', async () => {
   const harness = routeHarness({ record: { candidates: [candidates[0]], privateRecordField: 'must-not-leak' } });
   assert.deepEqual(await harness.get(), { status: 200, body: ready(candidates[0]) });
-  assert.deepEqual(harness.calls, ['url', 'headers', 'rate', 'read', 'score', 'offer']);
+  assert.deepEqual(harness.calls, ['url', 'headers', 'rate', 'read', 'score', 'offer', 'cause']);
 });
 
 test('selected candidate among multiple returns only selected ready result', async () => {
   const harness = routeHarness({ record: { candidates } });
   assert.deepEqual(await harness.get({ placeId: candidates[1].placeId }), { status: 200, body: ready(candidates[1]) });
-  assert.deepEqual(harness.calls, ['url', 'headers', 'rate', 'read', 'score', 'offer']);
+  assert.deepEqual(harness.calls, ['url', 'headers', 'rate', 'read', 'score', 'offer', 'cause']);
 });
 
 test('multiple candidates return minimized pick fields and never score', async () => {
@@ -155,8 +161,15 @@ test('malformed URL and throwing adapters return private 500 with bounded code-o
 test('launch step 1: every server offer passes through unchanged on the ready result; pick and not_found carry none', async () => {
   for (const offer of ['not_eligible_has_site', 'not_eligible_trade', 'not_eligible_profile', 'waitlist_preopen', 'waitlist_full', 'eligible']) {
     const harness = routeHarness({ record: { candidates: [candidates[0]] }, offer });
-    assert.deepEqual(await harness.get(), { status: 200, body: ready(candidates[0], offer) });
+    const expected = ready(candidates[0], offer);
+    if (offer === 'not_eligible_profile') expected.profileCause = 'no_ratings';
+    assert.deepEqual(await harness.get(), { status: 200, body: expected });
   }
+  for (const profileCause of ['closed', 'no_ratings']) {
+    const harness = routeHarness({ record: { candidates: [candidates[0]] }, offer: 'not_eligible_profile', profileCause });
+    assert.equal((await harness.get()).body.profileCause, profileCause);
+  }
+  assert.equal('profileCause' in (await routeHarness({ record: { candidates: [candidates[0]] }, offer: 'eligible' }).get()).body, false);
   const pick = routeHarness({ record: { candidates } });
   assert.equal('offer' in (await pick.get()).body, false);
   assert.ok(!pick.calls.includes('offer'));

@@ -51,6 +51,15 @@ async function readBoundedAuditLookupBody(req: Request): Promise<
   }
 }
 
+// C0/C1 controls and bidi embedding / override / isolate controls (written as escapes: this file stays ASCII).
+const DISPLAY_NAME_CONTROLS = /[\u0000-\u001f\u007f-\u009f\u200e\u200f\u202a-\u202e\u2066-\u2069]/;
+
+function displayNameOf(value: unknown): string | undefined {
+  if (typeof value !== 'string' || DISPLAY_NAME_CONTROLS.test(value)) return undefined;
+  const trimmed = value.trim();
+  return trimmed && trimmed.length <= 80 ? trimmed : undefined;
+}
+
 function minimizeCandidate(place: NormalizedPlace): AuditCandidateSnapshot {
   return {
     placeId: place.placeId,
@@ -68,6 +77,8 @@ function minimizeCandidate(place: NormalizedPlace): AuditCandidateSnapshot {
     hasEditorialSummary: Boolean(place.editorialSummary?.trim()),
     // Launch step 1 (eligibility block): the primary category and operating status, both already in the search field mask.
     ...(typeof place.primaryType === 'string' && /^[a-z][a-z0-9_]{1,80}$/.test(place.primaryType) ? { primaryType: place.primaryType } : {}),
+    // Trade-scope fallback (profileEligibility.ts): Google's own display name of the primary type, bounded, no controls.
+    ...(displayNameOf(place.primaryTypeDisplayName) ? { primaryTypeDisplayName: displayNameOf(place.primaryTypeDisplayName) } : {}),
     ...(typeof place.businessStatus === 'string' && /^[A-Z_]{1,40}$/.test(place.businessStatus) ? { businessStatus: place.businessStatus } : {}),
   };
 }

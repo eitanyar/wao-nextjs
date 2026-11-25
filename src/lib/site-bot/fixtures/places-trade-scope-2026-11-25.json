@@ -1,0 +1,720 @@
+{
+ "_about": "Live Places API (New) searchText responses, 2026-11-25, languageCode=he regionCode=IL (en display name from Place Details languageCode=en). Queries were taxonomy heName + city (Haifa, Beer Sheva). Business names and place ids removed; fields are the audit-lookup subset. Evidence for the trade-scope rule in src/lib/site-bot/profileEligibility.ts.",
+ "responses": [
+  {
+   "probe": "ac_tech",
+   "queriedCategory": "gcid:air_conditioning_repair_service",
+   "placeId": "fixture-01",
+   "primaryType": "service",
+   "types": [
+    "manufacturer",
+    "general_contractor",
+    "point_of_interest",
+    "service",
+    "establishment"
+   ],
+   "primaryTypeDisplayName": {
+    "he": "שירותים",
+    "en": "Services"
+   },
+   "businessStatus": "OPERATIONAL",
+   "hasWebsite": true,
+   "userRatingCount": 54
+  },
+  {
+   "probe": "ac_tech",
+   "queriedCategory": "gcid:air_conditioning_repair_service",
+   "placeId": "fixture-02",
+   "primaryType": "service",
+   "types": [
+    "point_of_interest",
+    "service",
+    "establishment"
+   ],
+   "primaryTypeDisplayName": {
+    "he": "שירותים",
+    "en": "Services"
+   },
+   "businessStatus": "OPERATIONAL",
+   "hasWebsite": true,
+   "userRatingCount": 36
+  },
+  {
+   "probe": "ac_tech2",
+   "queriedCategory": "gcid:hvac_contractor",
+   "placeId": "fixture-03",
+   "primaryType": "service",
+   "types": [
+    "point_of_interest",
+    "service",
+    "establishment"
+   ],
+   "primaryTypeDisplayName": {
+    "he": "שירותים",
+    "en": "Services"
+   },
+   "businessStatus": "OPERATIONAL",
+   "hasWebsite": true,
+   "userRatingCount": 36
+  },
+  {
+   "probe": "ac_tech2",
+   "queriedCategory": "gcid:hvac_contractor",
+   "placeId": "fixture-04",
+   "primaryType": "service",
+   "types": [
+    "general_contractor",
+    "point_of_interest",
+    "service",
+    "store",
+    "establishment"
+   ],
+   "primaryTypeDisplayName": {
+    "he": "שירותים",
+    "en": "Services"
+   },
+   "businessStatus": "OPERATIONAL",
+   "hasWebsite": false,
+   "userRatingCount": 9
+  },
+  {
+   "probe": "handyman",
+   "queriedCategory": "gcid:handyman",
+   "placeId": "fixture-05",
+   "primaryType": "general_contractor",
+   "types": [
+    "painter",
+    "plumber",
+    "electrician",
+    "locksmith",
+    "general_contractor",
+    "manufacturer",
+    "point_of_interest",
+    "service",
+    "establishment"
+   ],
+   "primaryTypeDisplayName": {
+    "he": "קבלן כללי",
+    "en": "General contractor"
+   },
+   "businessStatus": "OPERATIONAL",
+   "hasWebsite": true,
+   "userRatingCount": 44
+  },
+  {
+   "probe": "gardener",
+   "queriedCategory": "gcid:gardener",
+   "placeId": "fixture-06",
+   "primaryType": "general_contractor",
+   "types": [
+    "general_contractor",
+    "point_of_interest",
+    "service",
+    "establishment"
+   ],
+   "primaryTypeDisplayName": {
+    "he": "קבלן כללי",
+    "en": "General contractor"
+   },
+   "businessStatus": "OPERATIONAL",
+   "hasWebsite": true,
+   "userRatingCount": 63
+  },
+  {
+   "probe": "cleaner",
+   "queriedCategory": "gcid:cleaner",
+   "placeId": "fixture-07",
+   "primaryType": "service",
+   "types": [
+    "laundry",
+    "point_of_interest",
+    "service",
+    "establishment"
+   ],
+   "primaryTypeDisplayName": {
+    "he": "שירותים",
+    "en": "Services"
+   },
+   "businessStatus": "OPERATIONAL",
+   "hasWebsite": true,
+   "userRatingCount": 142
+  },
+  {
+   "probe": "cleaner",
+   "queriedCategory": "gcid:cleaner",
+   "placeId": "fixture-08",
+   "primaryType": "service",
+   "types": [
+    "point_of_interest",
+    "service",
+    "establishment"
+   ],
+   "primaryTypeDisplayName": {
+    "he": "שירותים",
+    "en": "Services"
+   },
+   "businessStatus": "OPERATIONAL",
+   "hasWebsite": true,
+   "userRatingCount": 79
+  },
+  {
+   "probe": "house_cleaning",
+   "queriedCategory": "gcid:house_cleaning_service",
+   "placeId": "fixture-09",
+   "primaryType": "service",
+   "types": [
+    "point_of_interest",
+    "service",
+    "establishment"
+   ],
+   "primaryTypeDisplayName": {
+    "he": "שירותים",
+    "en": "Services"
+   },
+   "businessStatus": "OPERATIONAL",
+   "hasWebsite": false,
+   "userRatingCount": 3
+  },
+  {
+   "probe": "house_cleaning",
+   "queriedCategory": "gcid:house_cleaning_service",
+   "placeId": "fixture-10",
+   "primaryType": "service",
+   "types": [
+    "laundry",
+    "point_of_interest",
+    "service",
+    "establishment"
+   ],
+   "primaryTypeDisplayName": {
+    "he": "שירותים",
+    "en": "Services"
+   },
+   "businessStatus": "OPERATIONAL",
+   "hasWebsite": true,
+   "userRatingCount": 142
+  },
+  {
+   "probe": "tutor",
+   "queriedCategory": "gcid:tutoring_service",
+   "placeId": "fixture-11",
+   "primaryType": "educational_institution",
+   "types": [
+    "educational_institution",
+    "point_of_interest",
+    "establishment"
+   ],
+   "primaryTypeDisplayName": {
+    "he": "מוסד חינוכי",
+    "en": "Educational institution"
+   },
+   "businessStatus": "OPERATIONAL",
+   "hasWebsite": true,
+   "userRatingCount": 32
+  },
+  {
+   "probe": "tutor",
+   "queriedCategory": "gcid:tutoring_service",
+   "placeId": "fixture-12",
+   "primaryType": "service",
+   "types": [
+    "point_of_interest",
+    "service",
+    "establishment"
+   ],
+   "primaryTypeDisplayName": {
+    "he": "שירותים",
+    "en": "Services"
+   },
+   "businessStatus": "OPERATIONAL",
+   "hasWebsite": true,
+   "userRatingCount": 13
+  },
+  {
+   "probe": "photographer",
+   "queriedCategory": "gcid:photographer",
+   "placeId": "fixture-13",
+   "primaryType": "service",
+   "types": [
+    "point_of_interest",
+    "service",
+    "establishment"
+   ],
+   "primaryTypeDisplayName": {
+    "he": "שירותים",
+    "en": "Services"
+   },
+   "businessStatus": "OPERATIONAL",
+   "hasWebsite": true,
+   "userRatingCount": 123
+  },
+  {
+   "probe": "photographer",
+   "queriedCategory": "gcid:photographer",
+   "placeId": "fixture-14",
+   "primaryType": "store",
+   "types": [
+    "point_of_interest",
+    "service",
+    "store",
+    "establishment"
+   ],
+   "primaryTypeDisplayName": {
+    "he": "חנות",
+    "en": "Store"
+   },
+   "businessStatus": "OPERATIONAL",
+   "hasWebsite": true,
+   "userRatingCount": 5
+  },
+  {
+   "probe": "pest_control",
+   "queriedCategory": "gcid:pest_control_service",
+   "placeId": "fixture-15",
+   "primaryType": "service",
+   "types": [
+    "point_of_interest",
+    "service",
+    "establishment"
+   ],
+   "primaryTypeDisplayName": {
+    "he": "שירותים",
+    "en": "Services"
+   },
+   "businessStatus": "OPERATIONAL",
+   "hasWebsite": true,
+   "userRatingCount": 88
+  },
+  {
+   "probe": "mover",
+   "queriedCategory": "gcid:moving_company",
+   "placeId": "fixture-16",
+   "primaryType": "moving_company",
+   "types": [
+    "storage",
+    "shipping_service",
+    "moving_company",
+    "transportation_service",
+    "point_of_interest",
+    "service",
+    "establishment"
+   ],
+   "primaryTypeDisplayName": {
+    "he": "שירות הובלה",
+    "en": "Moving service"
+   },
+   "businessStatus": "OPERATIONAL",
+   "hasWebsite": true,
+   "userRatingCount": 249
+  },
+  {
+   "probe": "mover",
+   "queriedCategory": "gcid:moving_company",
+   "placeId": "fixture-17",
+   "primaryType": "moving_company",
+   "types": [
+    "moving_company",
+    "transportation_service",
+    "point_of_interest",
+    "service",
+    "establishment"
+   ],
+   "primaryTypeDisplayName": {
+    "he": "שירות הובלה",
+    "en": "Moving service"
+   },
+   "businessStatus": "OPERATIONAL",
+   "hasWebsite": false,
+   "userRatingCount": 57
+  },
+  {
+   "probe": "plumber",
+   "queriedCategory": "gcid:plumber",
+   "placeId": "fixture-18",
+   "primaryType": "plumber",
+   "types": [
+    "plumber",
+    "general_contractor",
+    "point_of_interest",
+    "service",
+    "establishment"
+   ],
+   "primaryTypeDisplayName": {
+    "he": "שרברב",
+    "en": "Plumber"
+   },
+   "businessStatus": "OPERATIONAL",
+   "hasWebsite": true,
+   "userRatingCount": 129
+  },
+  {
+   "probe": "electrician",
+   "queriedCategory": "gcid:electrician",
+   "placeId": "fixture-19",
+   "primaryType": "electrician",
+   "types": [
+    "electrician",
+    "point_of_interest",
+    "service",
+    "establishment"
+   ],
+   "primaryTypeDisplayName": {
+    "he": "חשמלאי",
+    "en": "Electrician"
+   },
+   "businessStatus": "OPERATIONAL",
+   "hasWebsite": true,
+   "userRatingCount": 89
+  },
+  {
+   "probe": "ac_tech",
+   "queriedCategory": "gcid:air_conditioning_repair_service",
+   "placeId": "fixture-20",
+   "primaryType": "service",
+   "types": [
+    "locksmith",
+    "point_of_interest",
+    "service",
+    "establishment"
+   ],
+   "primaryTypeDisplayName": {
+    "he": "שירותים",
+    "en": "Services"
+   },
+   "businessStatus": "OPERATIONAL",
+   "hasWebsite": true,
+   "userRatingCount": 65
+  },
+  {
+   "probe": "ac_tech",
+   "queriedCategory": "gcid:air_conditioning_repair_service",
+   "placeId": "fixture-21",
+   "primaryType": "service",
+   "types": [
+    "general_contractor",
+    "point_of_interest",
+    "service",
+    "establishment"
+   ],
+   "primaryTypeDisplayName": {
+    "he": "שירותים",
+    "en": "Services"
+   },
+   "businessStatus": "OPERATIONAL",
+   "hasWebsite": false,
+   "userRatingCount": 7
+  },
+  {
+   "probe": "ac_tech",
+   "queriedCategory": "gcid:air_conditioning_repair_service",
+   "placeId": "fixture-22",
+   "primaryType": "general_contractor",
+   "types": [
+    "general_contractor",
+    "point_of_interest",
+    "service",
+    "establishment"
+   ],
+   "primaryTypeDisplayName": {
+    "he": "קבלן כללי",
+    "en": "General contractor"
+   },
+   "businessStatus": "OPERATIONAL",
+   "hasWebsite": true,
+   "userRatingCount": 56
+  },
+  {
+   "probe": "ac_tech2",
+   "queriedCategory": "gcid:hvac_contractor",
+   "placeId": "fixture-23",
+   "primaryType": "general_contractor",
+   "types": [
+    "general_contractor",
+    "point_of_interest",
+    "service",
+    "establishment"
+   ],
+   "primaryTypeDisplayName": {
+    "he": "קבלן כללי",
+    "en": "General contractor"
+   },
+   "businessStatus": "OPERATIONAL",
+   "hasWebsite": true,
+   "userRatingCount": 56
+  },
+  {
+   "probe": "handyman",
+   "queriedCategory": "gcid:handyman",
+   "placeId": "fixture-24",
+   "primaryType": "general_contractor",
+   "types": [
+    "general_contractor",
+    "point_of_interest",
+    "service",
+    "establishment"
+   ],
+   "primaryTypeDisplayName": {
+    "he": "קבלן כללי",
+    "en": "General contractor"
+   },
+   "businessStatus": "OPERATIONAL",
+   "hasWebsite": false,
+   "userRatingCount": 0
+  },
+  {
+   "probe": "noise_route",
+   "queriedCategory": "gcid:gardener",
+   "placeId": "fixture-25",
+   "types": [
+    "route"
+   ],
+   "hasWebsite": false,
+   "userRatingCount": 0
+  },
+  {
+   "probe": "house_cleaning",
+   "queriedCategory": "gcid:house_cleaning_service",
+   "placeId": "fixture-26",
+   "primaryType": "service",
+   "types": [
+    "shopping_mall",
+    "point_of_interest",
+    "service",
+    "establishment"
+   ],
+   "primaryTypeDisplayName": {
+    "he": "שירותים",
+    "en": "Services"
+   },
+   "businessStatus": "OPERATIONAL",
+   "hasWebsite": false,
+   "userRatingCount": 9
+  },
+  {
+   "probe": "tutor",
+   "queriedCategory": "gcid:tutoring_service",
+   "placeId": "fixture-27",
+   "types": [
+    "point_of_interest",
+    "establishment"
+   ],
+   "businessStatus": "OPERATIONAL",
+   "hasWebsite": true,
+   "userRatingCount": 3
+  },
+  {
+   "probe": "photographer",
+   "queriedCategory": "gcid:photographer",
+   "placeId": "fixture-28",
+   "primaryType": "service",
+   "types": [
+    "electronics_store",
+    "home_goods_store",
+    "manufacturer",
+    "point_of_interest",
+    "service",
+    "store",
+    "establishment"
+   ],
+   "primaryTypeDisplayName": {
+    "he": "שירותים",
+    "en": "Services"
+   },
+   "businessStatus": "OPERATIONAL",
+   "hasWebsite": true,
+   "userRatingCount": 1105
+  },
+  {
+   "probe": "plumber",
+   "queriedCategory": "gcid:plumber",
+   "placeId": "fixture-29",
+   "primaryType": "plumber",
+   "types": [
+    "plumber",
+    "point_of_interest",
+    "service",
+    "establishment"
+   ],
+   "primaryTypeDisplayName": {
+    "he": "שרברב",
+    "en": "Plumber"
+   },
+   "businessStatus": "OPERATIONAL",
+   "hasWebsite": false,
+   "userRatingCount": 14
+  },
+  {
+   "probe": "restaurant",
+   "queriedCategory": "gcid:restaurant",
+   "placeId": "fixture-30",
+   "primaryType": "restaurant",
+   "types": [
+    "restaurant",
+    "mediterranean_restaurant",
+    "lebanese_restaurant",
+    "coffee_shop",
+    "cafe",
+    "book_store",
+    "food_store",
+    "food",
+    "point_of_interest",
+    "store",
+    "establishment"
+   ],
+   "primaryTypeDisplayName": {
+    "he": "מסעדה",
+    "en": "Restaurant"
+   },
+   "businessStatus": "OPERATIONAL",
+   "hasWebsite": true,
+   "userRatingCount": 6936
+  },
+  {
+   "probe": "restaurant",
+   "queriedCategory": "gcid:restaurant",
+   "placeId": "fixture-31",
+   "primaryType": "restaurant",
+   "types": [
+    "restaurant",
+    "food",
+    "point_of_interest",
+    "establishment"
+   ],
+   "primaryTypeDisplayName": {
+    "he": "מסעדה",
+    "en": "Restaurant"
+   },
+   "businessStatus": "OPERATIONAL",
+   "hasWebsite": true,
+   "userRatingCount": 4213
+  },
+  {
+   "probe": "hair_salon",
+   "queriedCategory": "gcid:hair_salon",
+   "placeId": "fixture-32",
+   "primaryType": "hair_salon",
+   "types": [
+    "hair_salon",
+    "beauty_salon",
+    "hair_care",
+    "point_of_interest",
+    "service",
+    "establishment"
+   ],
+   "primaryTypeDisplayName": {
+    "he": "מספרה",
+    "en": "Hair salon"
+   },
+   "businessStatus": "OPERATIONAL",
+   "hasWebsite": true,
+   "userRatingCount": 769
+  },
+  {
+   "probe": "hair_salon",
+   "queriedCategory": "gcid:hair_salon",
+   "placeId": "fixture-33",
+   "primaryType": "hair_salon",
+   "types": [
+    "hair_salon",
+    "hair_care",
+    "educational_institution",
+    "point_of_interest",
+    "service",
+    "establishment"
+   ],
+   "primaryTypeDisplayName": {
+    "he": "מספרה",
+    "en": "Hair salon"
+   },
+   "businessStatus": "OPERATIONAL",
+   "hasWebsite": true,
+   "userRatingCount": 1264
+  },
+  {
+   "probe": "hair_salon",
+   "queriedCategory": "gcid:hair_salon",
+   "placeId": "fixture-34",
+   "primaryType": "hair_salon",
+   "types": [
+    "hair_salon",
+    "beauty_salon",
+    "hair_care",
+    "medical_clinic",
+    "health",
+    "point_of_interest",
+    "service",
+    "establishment"
+   ],
+   "primaryTypeDisplayName": {
+    "he": "מספרה",
+    "en": "Hair salon"
+   },
+   "businessStatus": "OPERATIONAL",
+   "hasWebsite": true,
+   "userRatingCount": 153
+  },
+  {
+   "probe": "dentist",
+   "queriedCategory": "gcid:dentist",
+   "placeId": "fixture-35",
+   "primaryType": "dental_clinic",
+   "types": [
+    "dental_clinic",
+    "dentist",
+    "medical_clinic",
+    "health",
+    "point_of_interest",
+    "establishment"
+   ],
+   "primaryTypeDisplayName": {
+    "he": "מרפאת שיניים",
+    "en": "Dental clinic"
+   },
+   "businessStatus": "OPERATIONAL",
+   "hasWebsite": true,
+   "userRatingCount": 580
+  },
+  {
+   "probe": "dentist",
+   "queriedCategory": "gcid:dentist",
+   "placeId": "fixture-36",
+   "primaryType": "dental_clinic",
+   "types": [
+    "dental_clinic",
+    "dentist",
+    "medical_clinic",
+    "doctor",
+    "health",
+    "point_of_interest",
+    "establishment"
+   ],
+   "primaryTypeDisplayName": {
+    "he": "מרפאת שיניים",
+    "en": "Dental clinic"
+   },
+   "businessStatus": "OPERATIONAL",
+   "hasWebsite": true,
+   "userRatingCount": 31
+  },
+  {
+   "probe": "dentist",
+   "queriedCategory": "gcid:dentist",
+   "placeId": "fixture-37",
+   "primaryType": "dentist",
+   "types": [
+    "dentist",
+    "doctor",
+    "health",
+    "point_of_interest",
+    "establishment"
+   ],
+   "primaryTypeDisplayName": {
+    "he": "רופא שיניים",
+    "en": "Dentist"
+   },
+   "businessStatus": "OPERATIONAL",
+   "hasWebsite": true,
+   "userRatingCount": 59
+  }
+ ]
+}

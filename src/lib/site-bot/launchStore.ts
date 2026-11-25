@@ -5,7 +5,8 @@
  *   - site_bot_launch_events: one row per interview start (ref = placeId, so one business holds one spot however many
  *     times it re-runs the check) and per paid sign-up (ref = checkout sessionId). Rows are never purged: they ARE the cap.
  *   - site_bot_waitlist: the waiting-list entries (name, phone, optional email, plus the audit context the server
- *     derived). Purged after WAITLIST_RETENTION_MS, the audit-record convention (auditStore.ts AUDIT_RETENTION_MS).
+ *     derived). Purged after SITE_BOT_WAITLIST_RETENTION_DAYS days (default 90, parseWaitlistRetentionMs). The cap rows
+ *     above are never purged.
  *
  * The cap is full when paid sign-ups >= SITE_BOT_CAP_TOTAL (default 10), or interview starts in the current week >=
  * SITE_BOT_CAP_WEEKLY (default 3). The week is the ISRAELI week: Sunday 00:00 to Saturday 23:59, Asia/Jerusalem time
@@ -34,7 +35,9 @@ export interface LaunchStore {
 }
 
 export const DEFAULT_CAP_LIMITS: LaunchCapLimits = { total: 10, weekly: 3 };
-export const WAITLIST_RETENTION_MS = 30 * 24 * 60 * 60 * 1000;
+export const DEFAULT_WAITLIST_RETENTION_DAYS = 90;
+const DAY_MS = 24 * 60 * 60 * 1000;
+export const WAITLIST_RETENTION_MS = DEFAULT_WAITLIST_RETENTION_DAYS * DAY_MS;
 const BUSY_TIMEOUT_MS = 5000;
 
 const CREATE_EVENTS = `CREATE TABLE IF NOT EXISTS site_bot_launch_events (
@@ -69,6 +72,16 @@ export function parseLaunchCapLimits(env: Record<string, string | undefined> = p
   const total = read(env.SITE_BOT_CAP_TOTAL, DEFAULT_CAP_LIMITS.total);
   const weekly = read(env.SITE_BOT_CAP_WEEKLY, DEFAULT_CAP_LIMITS.weekly);
   return total === null || weekly === null ? null : { total, weekly };
+}
+
+/**
+ * SITE_BOT_WAITLIST_RETENTION_DAYS -> ms. Unset, empty or malformed -> the 90-day default (a typo never purges early or
+ * keeps contacts forever); otherwise a whole number of days, 1 to 3650.
+ */
+export function parseWaitlistRetentionMs(env: Record<string, string | undefined> = process.env): number {
+  const value = env.SITE_BOT_WAITLIST_RETENTION_DAYS?.trim();
+  if (!value || !/^[1-9][0-9]{0,3}$/.test(value) || Number(value) > 3650) return WAITLIST_RETENTION_MS;
+  return Number(value) * DAY_MS;
 }
 
 export function launchDbPath(env: Record<string, string | undefined> = process.env): string {
