@@ -591,6 +591,8 @@
     "src/lib/site-bot/firstScreenV2.test.ts",
     "src/lib/site-bot/ownerQuoteCopy.generated.ts",
     "src/lib/site-bot/subheadlinePerson.ts",
-    "src/lib/site-bot/subheadlinePerson.test.ts"
+    "src/lib/site-bot/subheadlinePerson.test.ts",
+    "src/lib/site-bot/pageRepeatWords.ts",
+    "src/lib/site-bot/pageRepeatWords.test.ts"
   ]
 }

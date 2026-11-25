@@ -1,5 +1,5 @@
 {
-  "//": "Ads LP byte-identity fixtures (no logoUrl, no workPhotoUrls). expectedSha256 was captured from renderStaticHtml BEFORE the logo + gallery change (2026-11-22); adsLpUploads.test.ts asserts the renderer still produces exactly these bytes.",
+  "//": "Ads LP byte-identity fixtures (no logoUrl, no workPhotoUrls). expectedSha256 was captured from renderStaticHtml BEFORE the logo + gallery change (2026-11-22); The legacy-uploads-and-tracking hash was re-captured 2026-11-26 after the hero hours line took isolateRanges (Maya: only that line changed). adsLpUploads.test.ts asserts the renderer still produces exactly these bytes.",
   "copy": {
     "heroHeadline": "Headline", "heroSubheadline": "Subheadline", "heroCta": "Contact", "trustBarItems": ["Trusted", "Licensed"],
     "aboutBlurb": "About", "servicesHeadline": "Services", "serviceItems": ["Service A", "Service B"], "faqHeadline": "FAQ",
@@ -15,7 +15,7 @@
     },
     {
       "name": "legacy-uploads-and-tracking",
-      "expectedSha256": "fb5bbf6b30bf137b04417b0bd895a197d2f8b2e8131023c1e0c4896d6b448405",
+      "expectedSha256": "74854d54330b1d0539d1dfeb724ab642de6b159bdd007034ce78479f121cd1bb",
       "vertical": "emergency-trades",
       "params": {
         "data": {

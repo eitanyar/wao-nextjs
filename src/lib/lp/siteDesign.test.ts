@@ -98,7 +98,10 @@ test('hours markup (Maya / Noa 2026-11-26): each time range an ltr isolate that 
   assert.doesNotMatch(html!, /<bdi dir="ltr"[^>]*>\(/, 'never a bracket in an isolate');
   assert.equal(formatSiteHoursHtml('whenever'), null);
   assert.ok(heroHoursLine('Sun-Thu 08:00-18:00', { isolateRanges: true }).includes(iso('08:00\u201318:00')));
-  assert.ok(!heroHoursLine('Sun-Thu 08:00-18:00').includes('<bdi'), 'the ads LP keeps its pinned plain hours');
+  assert.ok(!heroHoursLine('Sun-Thu 08:00-18:00').includes('<bdi'), 'the default stays plain');
+  // 2026-11-26 (Maya): the ads LP hero hours isolate each range too (renderStaticHtml calls it with isolateRanges).
+  const adsLp = renderStaticHtml({ theme: VERTICAL_THEMES['emergency-trades'], assets: VERTICAL_ASSETS['emergency-trades'], copy: latinCopy('Ads hook'), data: { businessName: 'Fixture', phone: '050-0000000', businessHours: 'Sun-Thu 08:00-18:00' }, heroImageUrl: 'https://example.test/x.jpg', slug: 'lp' } as never);
+  assert.ok(adsLp.includes(heroHoursLine('Sun-Thu 08:00-18:00', { isolateRanges: true })), 'ads LP hero hours isolated');
   // The footer hours row uses the same markup.
   const footer = researchedFixture()['index.html'];
   assert.ok(footer.includes(`<p data-footer-hours style="margin:0 0 6px;"><strong>${SITE_DESIGN_LABELS.hoursLabel}</strong> ${html}</p>`), 'footer hours');

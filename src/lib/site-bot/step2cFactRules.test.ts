@@ -85,6 +85,8 @@ test('first screen: the real place+time job is no longer an eligible job; a call
   // v2: a local fact is never a first-screen fact (it belongs to the service-area section).
   assert.equal(reason('a1-4'), 'local_not_first_screen');
   assert.equal(firstScreenCheck({ ...modelFact('y', 'local', LAST_WEEK_IN_KFAR_SABA, 'areaPattern'), status: 'confirmed' }, CONTEXT).reason, 'local_not_first_screen');
+  // Fable 5.2 2026-11-26: the real refusal a1-2 is never the owner quote in v1 (it needs its reason first).
+  assert.equal(reason('a1-2'), 'refusal_no_reason');
 });
 
 test('carry check: an overlap on place or time words alone never counts as carrying the fact', () => {

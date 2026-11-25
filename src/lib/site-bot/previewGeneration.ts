@@ -7,8 +7,10 @@
  *   (gateAnsweredCollectedData) -> the interview facts and the work-location framing (interviewGeneration.ts) -> the
  *   copy_ready plan (persisted once; the post-pay run reuses it) -> buildPageBriefs (homepage brief with the facts and the
  *   first-screen constraint: a free USP subheadline) -> generateResearchPageCopy (Tamar -> Noa -> gates, unchanged) ->
- *   the owner quote line, chosen and built by code before the model runs (firstScreenFact.ts selectFirstScreen, rule v2
- *   a-h) and set on the page (page.ownerQuote). Nothing is written to the sites dir and nothing deploys: the generation record lives
+ *   the subheadline person gate and the page-wide repeated-word lint -> the hero rating line (GBP manager access only,
+ *   firstScreenFact.ts heroRatingLine; none before payment) and the about-section owner quote line, both chosen and built
+ *   by code (selectOwnerQuote, rule v2 a-h as changed 2026-11-26), set on the page (page.heroRating, page.ownerQuote). The
+ *   story section renders only when the owner confirmed a job fact (Fable 5.2 2026-11-26). Nothing is written to the sites dir and nothing deploys: the generation record lives
  *   next to the dossier (<research>/<id>/preview-home.json) and only the cookie-gated preview route reads it.
  *
  * Remaining pages (generateRemainingPages, from the paid checkout callback): the same plan and the same generation data
@@ -39,10 +41,12 @@ import { runCopyGates } from '../lp/copyGates';
 import { pageNameWithCity, renderResearchedSitePages, type ResearchedSitePage } from '../lp/researchedSite';
 import { flashCostUsd } from './factExtraction';
 import {
-  anchorExclusions, firstScreenMissingLine, renderedFactIds, selectFirstScreen, subheadlineCarriesFact, trustBarNumbers, usableFacts,
-  withoutTrustBarFallback, type CredentialTrustItem, type FirstScreenAnswer, type FirstScreenOutcome, type UsableFact,
+  anchorExclusions, firstScreenMissingLine, firstScreenOutcome, heroRatingLine, ownerQuoteMissingLine, renderedFactIds, selectOwnerQuote,
+  subheadlineCarriesFact, trustBarNumbers, usableFacts, type CredentialTrustItem, type FirstScreenAnswer, type FirstScreenOutcome,
+  type GbpRatingSnapshot, type UsableFact,
 } from './firstScreenFact';
 import { SITE_BOT_OWNER_QUOTE_COPY } from './ownerQuoteCopy.generated';
+import { gatePageRepeatWords, type PageRepeatResult } from './pageRepeatWords';
 import { interviewGenerationData, writerFacts } from './interviewGeneration';
 import { isInterviewFactSet, type InterviewFactSet } from './interviewFacts';
 import { ISRAELI_LOCALITIES } from './israeliLocalities';
@@ -67,7 +71,12 @@ export const PREVIEW_RECORD_FILE = 'preview-home.json';
 export const PREVIEW_USAGE_OPERATION = 'site_bot_preview_copy';
 export const SITE_USAGE_OPERATION = 'site_bot_site_copy';
 const MAX_PREVIEW_RECORD_BYTES = 4 * 1024 * 1024;
-const GEMINI_TIMEOUT_MS = 180_000;
+/**
+ * Per-call Gemini timeout of the site-copy caller. 2026-11-26: 180 s -> 300 s. With Noa's round-2 rules the homepage Tamar
+ * call (pitch-first, HIGH thinking) measured 183.6 s (24.8k thinking tokens) and every attempt of the live preview timed
+ * out at 180 s. The preview attempt keeps its own 12-minute cap (interviewPreview.ts PREVIEW_ATTEMPT_TIMEOUT_MS).
+ */
+const GEMINI_TIMEOUT_MS = 300_000;
 const GEMINI_ATTEMPTS = 3;
 /** Qwen token-plan list price (scripts/site-bot-research-to-site.mjs), US$ per token. */
 const QWEN_PRICE_IN = 2 / 1e6;
@@ -101,7 +110,7 @@ export interface PreviewHomeRecord {
   /** The generation data (gate answers, framing, facts applied); the post-pay run generates from the same data. */
   collectedData: CollectedData;
   page: ResearchedSitePage;
-  /** First-screen fact v2: the quote line's fact (else a credential trust-bar item), with every candidate's reason. */
+  /** First-screen rule 2026-11-26: the hero rating decision (source google_rating) and the about quote, with every candidate's reason. */
   firstScreen: FirstScreenOutcome;
   /** The interview facts that truly appear in the rendered homepage (firstScreenFact.ts renderedFactIds). */
   usedFactIds: string[];
@@ -109,6 +118,8 @@ export interface PreviewHomeRecord {
   briefFactIds: string[];
   /** Rule (a) watch: facts the subheadline appears to carry (word overlap); it should be empty. */
   subheadlineFactIds: string[];
+  /** Noa 2026-11-26: the page-wide repeated-word lint (pageRepeatWords.ts), field names and counts only. Absent on older records. */
+  pageRepeatWords?: Pick<PageRepeatResult, 'outcome' | 'before' | 'after'>;
   generation: { model: PreviewModelMode; ms: number; calls: number; costUsd: number };
 }
 
@@ -405,6 +416,28 @@ export interface PreviewGenerationInput {
   publishedAddress: string | null;
   /** His answers (interviewQuestions.answerTexts), for the quote line's substring check; absent = no answer quote. */
   answers?: readonly FirstScreenAnswer[] | null;
+  /**
+   * First-screen rule (b): his own GBP rating through WAO's manager access (after his sign-in). Never Places data. No caller
+   * has it before payment, so the pre-payment preview renders no hero proof line (first_screen_fact_missing no_gbp_rating).
+   */
+  gbpRating?: GbpRatingSnapshot | null;
+}
+
+/** With a hero rating line, the owner-entered rating leaves the generation data, so the trust bar never shows a second one. */
+export function withoutOwnerRating(data: CollectedData): CollectedData {
+  if (data.starRating === undefined && data.reviewCount === undefined) return data;
+  const next: CollectedData = { ...data };
+  delete next.starRating;
+  delete next.reviewCount;
+  return next;
+}
+
+/** Fable 5.2 2026-11-26: the story section renders only when it is built on a confirmed job fact; else it is omitted. */
+export function withoutUnfoundedStory(copy: SiteCopy, usable: readonly UsableFact[]): SiteCopy {
+  if (usable.some(fact => fact.type === 'job')) return copy;
+  const loose = copy as unknown as Record<string, unknown>;
+  if (!('storyBody' in loose) && !('storyHeadline' in loose)) return copy;
+  return { ...copy, storyHeadline: null, storyBody: null } as unknown as SiteCopy;
 }
 
 export interface PreviewGenerationDeps {
@@ -450,7 +483,10 @@ export async function generatePreviewHomepage(input: PreviewGenerationInput, dep
     const readiness = generationReadiness(dossier);
     if (!readiness.ready) return failed(`held:${readiness.reasons.join(',')}`);
     const prepared = interviewInputs(dossier, input);
-    const { data, usable, writer } = prepared;
+    const { usable, writer } = prepared;
+    // Rule (b): the hero rating line from his GBP via manager access only (none before payment).
+    const rating = heroRatingLine(input.gbpRating ?? null, deps.now());
+    const data = rating.line ? withoutOwnerRating(prepared.data) : prepared.data;
 
     // The copy_ready plan, persisted once (the regeneration and the post-pay run reuse it).
     let planned = dossier;
@@ -464,15 +500,15 @@ export async function generatePreviewHomepage(input: PreviewGenerationInput, dep
     const plainHome = buildPageBriefs(planned, data).find(brief => brief.page.pageClass === 'homepage');
     if (!plainHome?.site) return failed('no_homepage');
     const credentialItems = credentialTrustItems(plainHome, data, usable);
-    // First-screen fact v2 (b-e): code picks the quote line before the model runs; the model never sees or words it.
-    const selected = selectFirstScreen(prepared.set, {
+    // First-screen rule (b2-e): code picks the about quote line before the model runs; the model never sees or words it.
+    const selected = selectOwnerQuote(prepared.set, {
       // The homepage covers every owner-confirmed service (interviewFactsFlow.dossierServices ids).
       homeServiceIds: planned.businessTruth.assertions.filter(assertion => assertion.id.startsWith('owner-service:')).map(assertion => assertion.id),
       localities: ISRAELI_LOCALITIES,
       trustBarNumbers: trustBarNumbers(codeBuiltTrustBar(plainHome, data) ?? []),
       trustBarCredentialIds: credentialItems.filter(entry => entry.item).map(entry => entry.factId),
       answers: input.answers ?? null,
-    }, { ownerName: data.ownerName, copy: SITE_BOT_OWNER_QUOTE_COPY, credentialItems });
+    }, { ownerName: data.ownerName, copy: SITE_BOT_OWNER_QUOTE_COPY });
     const home = buildPageBriefs(planned, data, { facts: writer, firstScreen: true, workLocation: input.workLocation })
       .find(brief => brief.page.pageClass === 'homepage')!;
     const briefFactIds = home.firstPartyProof.filter(item => item.id.startsWith('interview-')).map(item => item.id.slice('interview-'.length));
@@ -484,21 +520,43 @@ export async function generatePreviewHomepage(input: PreviewGenerationInput, dep
     const written = await writeCopy(home, structuredClone(data), siteGenerationContext([], []));
     assertBoundedGeneratedSiteCopy(written, shapeOptions(home));
     // Rule (a): the subheadline's person gate (one repair round, else no subheadline).
-    const { copy } = await gateSubheadlinePerson(written, home, data, {
-      callJson: mode === 'live' || deps.callJson ? callJson : null, log, sessionId: input.sessionId, round: input.round,
+    const repairCall = mode === 'live' || deps.callJson ? callJson : null;
+    const { copy: personGated } = await gateSubheadlinePerson(written, home, data, {
+      callJson: repairCall, log, sessionId: input.sessionId, round: input.round,
     });
-    const page: ResearchedSitePage = { ...researchedPageFromCopy(home, copy), ...(selected.quoteLine ? { ownerQuote: { ...selected.quoteLine } } : {}) };
+    // Noa 2026-11-26: the page-wide repeated-word lint (one repair round on the later fields, else logged and shipped).
+    const repeat = await gatePageRepeatWords(personGated, home, data, {
+      callJson: repairCall, log, sessionId: input.sessionId, round: input.round, localities: ISRAELI_LOCALITIES,
+    });
+    const copy = withoutUnfoundedStory(repeat.copy, usable);
+    if (copy !== repeat.copy) log(`[site-bot preview] story_omitted_no_job_fact session=${input.sessionId} round=${input.round}`);
+    let page: ResearchedSitePage = {
+      ...researchedPageFromCopy(home, copy),
+      ...(rating.line ? { heroRating: rating.line } : {}),
+      ...(selected.quoteLine ? { ownerQuote: { ...selected.quoteLine } } : {}),
+    };
 
     const slug = deriveSiteSlug(data);
     if (!isSafeSiteSlug(slug)) return failed('slug_invalid');
-    const html = renderResearchedSitePages({ ...researchedRenderInputs(data, slug), data, slug, pages: [page], graphEdges: [] })['index.html'];
+    const render = (value: ResearchedSitePage) => renderResearchedSitePages({ ...researchedRenderInputs(data, slug), data, slug, pages: [value], graphEdges: [] })['index.html'];
+    let html = render(page);
     if (!html) return failed('render_failed');
-
+    let quote = selected;
+    // Rule (b2): the quote renders only inside the about section; a page without one shows no quote (never moved elsewhere).
+    if (quote.quoteLine && !html.includes('data-section="owner-quote"')) {
+      log(`[site-bot preview] owner_quote_not_rendered session=${input.sessionId} round=${input.round} fact=${quote.quoteFactId} reason=no_about_section`);
+      const { ownerQuote: _dropped, ...rest } = page;
+      void _dropped;
+      page = rest;
+      quote = { ...quote, quoteFactId: null, quoteLine: null };
+      html = render(page);
+      if (!html) return failed('render_failed');
+    }
+    const firstScreen = firstScreenOutcome(rating, quote);
     const shown = shownCredentials(credentialItems, html);
-    // Rule (e): the trust-bar fallback counts only when its item is in the rendered page.
-    const firstScreen = selected.source === 'trust_bar' && !shown.includes(selected.firstScreenFactId ?? '') ? withoutTrustBarFallback(selected) : selected;
-    // Rule (e): the preview still renders; step 3's gate reads this line.
+    // Rules (b) and (e): the preview still renders; step 3's gate reads these lines.
     if (firstScreen.missing) log(firstScreenMissingLine(input.sessionId, input.round, firstScreen));
+    if (!firstScreen.quoteLine) log(ownerQuoteMissingLine(input.sessionId, input.round, firstScreen));
     const usedFactIds = renderedFactIds(usable, visibleText(html), firstScreen, shown);
     // Rule (a) watch: the subheadline should carry no owner fact (word overlap; anchors, places and time words never count).
     const exclude = anchorExclusions(home.site!.pageName, home.site!.city, home.site!.businessName);
@@ -509,6 +567,7 @@ export async function generatePreviewHomepage(input: PreviewGenerationInput, dep
       version: 1, researchId: input.researchId, round: input.round, slug, createdAt: deps.now().toISOString(),
       answersVersion: input.answersVersion, factsConfirmedAt: prepared.set?.confirmedAt ?? null, workLocation: input.workLocation,
       collectedData: data, page, firstScreen, usedFactIds, briefFactIds, subheadlineFactIds,
+      pageRepeatWords: { outcome: repeat.outcome, before: repeat.before, after: repeat.after },
       generation: {
         model: mode, ms: Date.now() - started, calls: usage.length,
         costUsd: Number(usage.reduce((sum, row) => sum + (row.estimatedCostUsd ?? 0), 0).toFixed(6)),
@@ -544,8 +603,10 @@ export type RemainingPagesOutcome =
  */
 export interface InterviewFactUse {
   previewRound: number;
-  firstScreenFactId: string | null;
+  /** The hero proof line's source (google_rating), else null. */
   firstScreenSource: FirstScreenOutcome['source'];
+  /** The about-section quote line's fact, else null. */
+  quoteFactId: string | null;
   usedFactIds: string[];
 }
 
@@ -605,8 +666,8 @@ export async function generateRemainingPages(preview: PreviewHomeRecord, deps: R
     const shown = shownCredentials(credentialTrustItems(plainHome, data, usable), rendered);
     record.interviewFactUse = {
       previewRound: preview.round,
-      firstScreenFactId: preview.firstScreen.firstScreenFactId,
-      firstScreenSource: preview.firstScreen.source,
+      firstScreenSource: preview.firstScreen.source ?? null,
+      quoteFactId: preview.firstScreen.quoteFactId ?? null,
       usedFactIds: renderedFactIds(usable, visibleText(rendered), preview.firstScreen, shown),
     };
     await persistResearchedSiteRecordAtomic(record, {

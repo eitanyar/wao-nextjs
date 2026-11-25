@@ -662,7 +662,20 @@ export const INTERVIEW_WRITING_RULES: readonly string[] = [
   '- SIBLING CARDS: no two serviceDetails descriptions share one sentence template. Vary the opening verb and the shape of the sentence from card to card.',
   '- BODY WORDS: never use the same body part or sense word in more than one section of the page.',
   '- PLAIN VERBS: say what happens with plain spoken verbs. Never a translated adjective-noun pair (a fault or safety adjective glued to a noun) and never a manner adverb tacked onto the end of a sentence.',
+  // Noa's live-preview fixes 2026-11-26 (second round). English and abstract: no example wording.
+  '- NO ADDED QUALIFIER (binding): never add a location, scope or depth qualifier (where in the house or the system the work happens, how far it reaches, how deep it goes, how much of it is done) that no confirmed owner fact or verified service names.',
+  '- FIXED STATE (binding): describe the end state after the work with words that could not also describe the fault itself.',
+  '- HOME WORDS (binding): name each fault and each part with the word the customer uses at home, not a trade term. When the work replaces a part, the part installed is the same kind of part as the part removed.',
+  '- EVERY NARRATIVE FIELD (binding): every rule in this list, and every scene, method and sensation rule of these copy rules, applies to every narrative field (pitch, storyHeadline, storyBody, aboutPageHeadline, aboutPageBody and every serviceDetails description), never only to the story section.',
+  '- ABOUT FROM OWNER FACTS (binding; it overrides any other aboutPageBody instruction): aboutPageBody is built from the owner\'s own facts (who he is in his trade, how he works, what he does on the job). A hypothetical customer scene (the reader at the moment of the problem) belongs only in the story section, never in aboutPageBody.',
+  '- STORY ON HIS JOB (binding): when the owner facts include a job he did (an interview fact about a recent job), storyHeadline and storyBody are built on that job, and they never re-tell what a serviceDetails card already says about its service.',
+  '- ONE WORD, ONE SECTION (binding): across the whole page (heroSubheadline, the story section, the serviceDetails cards and the about section), never reuse a content verb or adjective that another section already uses. Only a deliberate echo of the heroHeadline promise may repeat. The system checks it.',
 ];
+/** The interview rules Noa's edit stage keeps (the narrative rules only; ONE PERSON is hers already via the first-screen note). */
+export function interviewEditorNote(brief: Pick<PageBrief, 'constraints'> | undefined): string | null {
+  const rules = brief ? interviewWritingRules(brief) : [];
+  return rules.length ? `WRITING RULES FOR THIS OWNER (binding on every narrative field; never break them when you correct):\n${rules.join('\n')}` : null;
+}
 export function interviewWritingRules(brief: Pick<PageBrief, 'constraints'>): string[] {
   return brief.constraints.some(item => item.id === INTERVIEW_BRIEF_MARKER_ID) ? [...INTERVIEW_WRITING_RULES] : [];
 }
@@ -2353,7 +2366,9 @@ export function buildResearchCopyRulesV2(brief: PageBrief, data: CollectedData =
     ] : []),
     ...(sections ? [
       `- aboutPageHeadline: introduces the man who will knock on the door: what he does with his tool or his hands in the first person, or one town from his area with his trade (prefer a neighbouring town over the hero's city). At most 7 words, no number, never a list of towns, a signature phrase, a "before" construction or a quality adjective.`,
-      `- aboutPageBody: ${STORY_MIN_SENTENCES} or 4 sentences: one scene in the second person and present tense of the problem itself, set at a different moment from ${story ? 'storyBody' : 'the hero'}; then what the owner physically does when he arrives, naming the tool or method of his usp; then something the reader can check after he leaves. Never open it with a self-introduction by name.`,
+      interviewWritingRules(brief).length
+        ? `- aboutPageBody: ${STORY_MIN_SENTENCES} or 4 sentences built from the owner facts (see ABOUT FROM OWNER FACTS), in the first person: what he does with his hands and his tools on the job, naming the tool or method of his usp, and something the reader can check after he leaves. No customer scene. Never open it with a self-introduction by name.`
+        : `- aboutPageBody: ${STORY_MIN_SENTENCES} or 4 sentences: one scene in the second person and present tense of the problem itself, set at a different moment from ${story ? 'storyBody' : 'the hero'}; then what the owner physically does when he arrives, naming the tool or method of his usp; then something the reader can check after he leaves. Never open it with a self-introduction by name.`,
       `- ${M2B_PROMPT_RULES_AFTER_M2B2.find(rule => rule.id === 'B3')?.text ?? 'B3: use one entry of servicesHeadlineOptions, word for word.'}`,
       `- serviceDetails: at most one card per service, each name exactly one of ${JSON.stringify(site?.serviceLabels ?? [])}, character for character. Each description is one full first-person sentence of 8 to 14 words (at least ${SERVICE_DESCRIPTION_MIN_CHARS} characters): present-tense verbs in the order he works, one physical detail that belongs only to that service, ending on a result the homeowner can check. Never the differentiator, a fact the system shows, a price or a "before" construction, and no two cards start with the same three words.`,
     ] : []),
@@ -2673,7 +2688,9 @@ export function buildNoaQaMessage(copy: SiteCopy, brief?: PageBrief): string {
   const depthNote = layout.depth?.length ? `\n\n${DEPTH_NOA_NOTE}` : '';
   // 2026-11-26: Noa's system prompt says the owner speaks in the first person; the first-screen subheadline is exempt.
   const firstScreen = firstScreenEditorNote(brief);
-  return `${JSON.stringify(shown)}\n\n${buildSiteCopyHardLimitsBlock('HARD LIMITS FOR YOUR CORRECTIONS (never lengthen a field past its limit)', omit, layout)}${fixed}${depthNote}${firstScreen ? `\n\n${firstScreen}` : ''}`;
+  // 2026-11-26 (Noa, live preview round 2): the interview writing rules reach her edit of every narrative field too.
+  const interview = interviewEditorNote(brief);
+  return `${JSON.stringify(shown)}\n\n${buildSiteCopyHardLimitsBlock('HARD LIMITS FOR YOUR CORRECTIONS (never lengthen a field past its limit)', omit, layout)}${fixed}${depthNote}${interview ? `\n\n${interview}` : ''}${firstScreen ? `\n\n${firstScreen}` : ''}`;
 }
 
 export async function generateResearchPageCopy(

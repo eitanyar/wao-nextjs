@@ -42,13 +42,18 @@ An eligible owner who holds a spot goes through these steps, with no human and n
   - The callback generates the remaining pages after payment.
   - Photographers get studio vs on-location framing (VISION.md "locationType conditional"; it is missing today, so Yonatan flagged it): the work-location answer drives it.
   - The waiting screen copy while generation runs.
-  - **First-screen fact** (Fable 5.2 on Koray K-01; Yonatan re-sign-off 2026-11-25 after Noa found the in-subheadline version unpublishable; replaces the earlier (a)–(e)). Home page only.
+  - **First-screen fact** (Fable 5.2 on Koray K-01; Yonatan re-sign-off 2026-11-25 after Noa found the in-subheadline version unpublishable; replaces the earlier (a)–(e)). Home page only. Changed 2026-11-26 by Fable 5.2 (docs/reviews/site-bot-first-screen-rating-fable52-2026-11-26.md, with Adam's source correction): the hero proof is the Google rating, and the owner quote moves to the about section.
     - **(a) Subheadline.** A free USP sentence in the H1's grammatical person (third person about the business, no first- or second-person forms). At most 90 characters, one verb sentence, all truth gates in force. It doesn't repeat service and city together, and it must not quote or paraphrase an owner fact. Fact words in the title, H1 or subheadline never satisfy this rule. The title formula and H1 gate are unchanged.
-    - **(b) Owner quote line.** Rendered by code, inside the hero, directly under the subheadline: `{frame(type)} ״{quote}״`.
+    - **(b) Hero proof line.** Directly under the subheadline, code renders the approved rating string (`ratingWithCountLine(rating, count)`). Plain text: no star icons, no link, so the hero keeps one action (call). Record `firstScreen.source = "google_rating"`.
+      - Source: the owner's own Google Business Profile through WAO's manager access only (reviews.list `averageRating` and `totalReviewCount`, one snapshot, at most 30 days old). Never Places data: Places content is never stored or republished on client sites (`placePrefill.ts` header).
+      - Shown only when the rating is at least 4.5 and the count at least 5, with the average exactly as Google returns it, to one decimal. Otherwise there is no line and no placeholder, and code logs `first_screen_fact_missing` with the reason.
+      - Before payment there is no manager access, so the pre-payment preview has no proof line (reason `no_gbp_rating`). That is expected.
+      - If the trust bar would also show a rating, it is dropped from the trust bar, so the rating never appears twice.
+    - **(b2) Owner quote line.** Rendered by code at the top of the about section, never in the hero: `{frame(type)} ״{quote}״`. If the page has no about section, there is no quote line.
       - Frames come from `docs/copy/site-bot-owner-quote-frames-2026-11-25.waocopy.json`, byte-exact, one per type: refusal, job/tool, number, credential, price_rule.
       - `{name}` is the owner's first name if it is all Hebrew letters and 2–15 characters long. Otherwise it is `QUOTE_NAME_FALLBACK`.
       - The aria label is `OWNER_QUOTE_ARIA_LABEL` from `docs/copy/site-bot-owner-quote-attribution-2026-11-25.waocopy.json`.
-      - The LLM never writes, rewrites or picks wording for this line. Record `firstScreenFactId` and `source: "quote_line"`.
+      - The LLM never writes, rewrites or picks wording for this line. Record `quoteFactId`.
     - **(c) Eligibility and cleanup.** Checked in order; record the first failing reason. The (d) type gate and check 8 run right after check 1 (Yonatan, 2026-11-25), so a trust-bar duplicate logs `trust_bar_duplicate`, not a length reason.
       1. Status is `confirmed`, or `edited` (then use `ownerText`), and the text is an exact substring of his answer or ownerText.
       2. Cleanup may only trim whitespace, collapse double spaces, strip trailing `.,;:!?`, and remove ASCII `"` and `'`. It never adds, swaps or re-spells a word.
@@ -58,24 +63,24 @@ An eligible owner who holds a spot goes through these steps, with no human and n
       6. Gibberish: a Hebrew token of 3+ letters with a final-form letter before its last letter, or a letter repeated 3+ times in a row (`gibberish`). (Yonatan, 2026-11-25: no vowel-letter condition, since English typed on a Hebrew keyboard often yields vowel letters.)
       7. A fact with a `condition` qualifies only if the condition is inside the quoted substring.
       8. Not a trust-bar duplicate: a number or credential the trust bar already shows is not eligible.
-    - **(d) Priority.**
-      1. refusal (in the refusal frame)
-      2. job (no serviceId, or the homepage trade or a homepage service)
-      3. tool
-      4. number with its condition
+    - **(d) Priority** (owner quote, 2026-11-26).
+      1. number with its condition
+      2. non-money price_rule
+      3. job (no serviceId, or the homepage trade or a homepage service)
+      4. tool
       5. credential as a sentence
-      6. non-money price_rule
 
-      `local` facts are never eligible here; they go to the service-area section. Ties go by answer order.
-    - **(e) No-fact path.** If nothing passes, render no quote line and no placeholder. A trust-bar credential from an interview `credential` fact satisfies the rule (`source: "trust_bar"`). Otherwise the preview still renders, and code logs `first_screen_fact_missing` with every candidate id and its reason. The pre-payment preview is the owner's consent gate for his words.
+      A refusal is ineligible in v1 (`refusal_no_reason`). It stays stored and out of generation, and `QUOTE_FRAME_REFUSAL` stays in the copy file, unused. Post-launch: a follow-up question on the refusal's reason; a refusal then becomes eligible in about only together with that reason. `local` facts are never eligible here; they go to the service-area section. Ties go by answer order.
+    - **(e) No-fact path.** If no quote passes, render no quote line and no placeholder in about; the preview still renders, and code logs `owner_quote_missing` with every candidate id and its reason. The trust-bar credential no longer counts as the first-screen fact; the rating does. The pre-payment preview is the owner's consent gate for his words.
     - **(f) Meta description.** Homepage meta description and og:description = `pageNameWithCity(trade, city) + " — " + heroSubheadline`. If the subheadline already contains both service and city, use it alone. Cap 155 (`META_DESCRIPTION_MAX_CHARS`), target 120 or under. If it's over 155, use the subheadline alone, never cut mid-word. The quote line is never included. `Service.description` stays `heroSubheadline`. Other page types are unchanged.
-    - **(g) Structured data.** The quote line is in no JSON-LD or microdata: not Review, not Quotation, not LocalBusiness.description, not Person. Mark it up as `<figure><blockquote>` + `<figcaption>`, or `<p><q>`. No itemprop, no rating, no stars.
+    - **(g) Structured data.** The quote line is in no JSON-LD or microdata: not Review, not Quotation, not LocalBusiness.description, not Person. Mark it up as `<figure><blockquote>` + `<figcaption>`, or `<p><q>`. No itemprop, no rating, no stars. The hero rating line is in no JSON-LD either (the existing no-AggregateRating rule).
     - **(h) Bidi.** The line inherits rtl. The quote marks are always U+05F4 ״, never ASCII or «». Maya checks:
       - digits at the quote's edges, digit ranges and decimals
       - mobile wrapping: frame and name never alone on a line, and the closing ״ never alone
       - contrast over the hero photo
       - the name fallback
       - bdi bracket grep = 0
+      - the hero rating line: the decimal rating and the `·` separator at 390px, and that the call button stays in the first screen
 
 ## Constraints
 - All new Hebrew comes from waocopy and is applied byte-exact. One waocopy brief per run, written before the engineer starts. The briefs cover:
@@ -100,7 +105,7 @@ An eligible owner who holds a spot goes through these steps, with no human and n
 - Focused tests per run, then `npm run test`, then `npm run build -- --webpack`, serially.
 - Dev run, gate open, fixture business: start → card → location → interview → gates → facts → preview → mock pay. The research runs once (check the dossier and `providerUsage`).
 - The preview is refused for another session.
-- In the fixture run, the homepage quote line renders `{frame} ״{quote}״` from an eligible fact (on the 2026-11-25 synthetic plumber: a1-2 in the refusal frame, after its opening time phrase is cut; a1-1 and a1-4 rejected; cred-years excluded as a trust-bar duplicate). No JSON-LD contains the quote. The meta description equals rule (f). The subheadline has no first- or second-person forms. The title and H1 are byte-identical to a run without facts. A no-fact preview renders with `first_screen_fact_missing` logged.
+- In the fixture run, the about section opens with the quote line `{frame} ״{quote}״` from an eligible fact (on the 2026-11-25 synthetic plumber: a1-2 is a refusal, so ineligible as `refusal_no_reason`; a1-1 and a1-4 rejected; cred-years excluded as a trust-bar duplicate; with no other eligible fact, no quote line). The hero shows the rating line only from a GBP manager-access rating of at least 4.5 with at least 5 reviews; the pre-payment preview and a below-threshold rating show no proof line, with `first_screen_fact_missing` logged. No JSON-LD contains the quote or the rating. The meta description equals rule (f). The subheadline has no first- or second-person forms. The title and H1 are byte-identical to a run without facts. A no-fact preview renders with `first_screen_fact_missing` logged.
 - An abandoned session releases its spot after the expiry (time is injected).
 - Screenshots on desktop and mobile of the interview, facts and preview screens.
 

@@ -153,7 +153,7 @@ ${siteHeader({ businessName, phone, phoneHref, nav: p.siteNav, homeHref: p.siteN
         ${phone ? `<a class="btn btn-call" href="${phoneHref}" ${phoneClick}>${icon('phone')}<span>${esc(copy.heroCta)}</span><bdi dir="ltr" class="num">${esc(phone)}</bdi></a>` : ''}
         ${whatsapp ? `<a class="btn btn-wa" href="${whatsappHref}" target="_blank" rel="noopener noreferrer" ${waClick}>${icon('chat')}<span>${esc(SITE_DESIGN_LABELS.heroWhatsapp)}</span></a>` : ''}
       </div>
-      ${heroHoursLine(data.businessHours)}
+      ${heroHoursLine(data.businessHours, { isolateRanges: true })}
       ${copy.scarcityLine ? `<p class="hero-note">${esc(copy.scarcityLine)}</p>` : ''}
       </div>${heroPhotoSlot()}
     </div>

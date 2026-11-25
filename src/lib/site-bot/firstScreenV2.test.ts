@@ -11,14 +11,15 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 
 import {
-  afterOpeningTimePhrase, cleanQuote, containsTimePhrase, FIRST_SCREEN_PRIORITY, FIRST_SCREEN_TIME_PHRASES, firstScreenCheck, firstScreenChecks,
-  firstScreenMissingLine, isGibberish, ownerQuoteLine, quoteName, renderedFactIds, selectFirstScreen, withoutTrustBarFallback,
-  type FirstScreenContext,
+  afterOpeningTimePhrase, cleanQuote, containsTimePhrase, FIRST_SCREEN_TIME_PHRASES, firstScreenCheck, firstScreenChecks, firstScreenMissingLine,
+  firstScreenOutcome, GBP_RATING_MAX_AGE_MS, heroRatingLine, isGibberish, OWNER_QUOTE_PRIORITY, ownerQuoteLine, ownerQuoteMissingLine, quoteName,
+  renderedFactIds, selectOwnerQuote, type FirstScreenContext, type GbpRatingSnapshot,
 } from './firstScreenFact';
+import { ratingWithCountLine } from '../lp/ratingLine';
 import type { InterviewFact, InterviewFactSet } from './interviewFacts';
 import { ISRAELI_LOCALITIES } from './israeliLocalities';
 import { SITE_BOT_OWNER_QUOTE_COPY as COPY } from './ownerQuoteCopy.generated';
-import { homepageMetaDescription, ownerQuoteCss, ownerQuoteHtml, pageNameWithCity } from '../lp/researchedSite';
+import { heroRatingCss, heroRatingHtml, homepageMetaDescription, ownerQuoteCss, ownerQuoteHtml, pageNameWithCity } from '../lp/researchedSite';
 import { firstScreenRule, interviewWritingRules, INTERVIEW_WRITING_RULES } from '../lp/researchPageCopy';
 import { firstScreenConstraint, INTERVIEW_WRITER_CONSTRAINTS } from './interviewGeneration';
 
@@ -33,7 +34,8 @@ const REFUSAL_CUT = REFUSAL_WORDS.slice(2).join(' ');
 const MARK = '\u05F4';
 
 function fact(id: string, type: InterviewFact['type'], quote: string, extra: Partial<InterviewFact> = {}): InterviewFact {
-  const questionKey = type === 'refusal' ? 'turnedDown' : type === 'local' ? 'areaPattern' : 'recentJob';
+  // The (c) tests run on tool facts sourced from the turned-down answer: a refusal now stops at the type gate (d).
+  const questionKey = type === 'refusal' || type === 'tool' ? 'turnedDown' : type === 'local' ? 'areaPattern' : 'recentJob';
   return { id, type, quote, status: 'confirmed', source: { kind: 'answer', questionKey, part: 'answer' }, ...extra };
 }
 
@@ -56,22 +58,22 @@ function context(over: Partial<FirstScreenContext> = {}): FirstScreenContext {
     ...over,
   };
 }
-const credentialItems = [{ factId: 'cred-years', item: '15 years' }];
 
-test('synthetic plumber: a1-2 in the refusal frame after its opening time phrase is cut; a1-1, a1-4 and cred-years rejected', () => {
-  const outcome = selectFirstScreen(set(PLUMBER), context(), { copy: COPY, credentialItems });
-  assert.equal(outcome.firstScreenFactId, 'a1-2');
-  assert.equal(outcome.source, 'quote_line');
-  assert.equal(outcome.missing, false);
-  assert.deepEqual(outcome.quoteLine, { frame: COPY.QUOTE_FRAME_REFUSAL.replace('{name}', COPY.QUOTE_NAME_FALLBACK), quote: REFUSAL_CUT });
+test('synthetic plumber (Fable 5.2 2026-11-26): the refusal a1-2 is ineligible; a1-1, a1-4 and cred-years rejected; no quote', () => {
+  const outcome = selectOwnerQuote(set(PLUMBER), context(), { copy: COPY });
+  assert.equal(outcome.quoteFactId, null);
+  assert.equal(outcome.quoteLine, null);
   assert.deepEqual(outcome.candidates, [
-    { id: 'a1-2', type: 'refusal', reason: null },
     { id: 'cred-years', type: 'credential', reason: 'trust_bar_duplicate' },
     { id: 'a1-1', type: 'local', reason: 'local_not_first_screen' },
+    { id: 'a1-2', type: 'refusal', reason: 'refusal_no_reason' },
     { id: 'a1-4', type: 'local', reason: 'local_not_first_screen' },
   ]);
   // As a job (its extraction type before C3 retyping), a1-1 is still never eligible.
   assert.equal(firstScreenCheck(fact('a1-1', 'job', LAST_WEEK_IN_KFAR_SABA), context()).reason, 'job_without_work');
+  // A refusal is ineligible even when its words would pass every other check; QUOTE_FRAME_REFUSAL stays in the copy file.
+  assert.equal(firstScreenCheck({ ...fact('e', 'refusal', 'x'), status: 'edited', ownerText: REFUSAL_CUT }, context()).reason, 'refusal_no_reason');
+  assert.ok(COPY.QUOTE_FRAME_REFUSAL.length > 0);
 });
 
 test('(b) frames and the name: his first name when all Hebrew letters and 2-15 long, else the waocopy fallback', () => {
@@ -89,24 +91,24 @@ test('(b) frames and the name: his first name when all Hebrew letters and 2-15 l
     assert.deepEqual(ownerQuoteLine(type as InterviewFact['type'], 'q', RAANANA, COPY), { frame: frame.replace('{name}', RAANANA), quote: 'q' }, type);
   }
   assert.equal(ownerQuoteLine('local', 'q', RAANANA, COPY), null);
-  const named = selectFirstScreen(set(PLUMBER), context(), { ownerName: RAANANA, copy: COPY, credentialItems });
-  assert.equal(named.quoteLine?.frame, COPY.QUOTE_FRAME_REFUSAL.replace('{name}', RAANANA));
+  const named = selectOwnerQuote(set([fact('j1', 'job', REFUSAL_CUT)]), context(), { ownerName: RAANANA, copy: COPY });
+  assert.equal(named.quoteLine?.frame, COPY.QUOTE_FRAME_JOB.replace('{name}', RAANANA));
 });
 
 test('(c1)-(c2) status, his exact words, and the cleanup that never changes a word', () => {
   const ctx = context();
-  assert.equal(firstScreenCheck({ ...fact('p', 'refusal', REFUSAL), status: 'pending' }, ctx).reason, 'status_pending');
-  assert.equal(firstScreenCheck({ ...fact('r', 'refusal', REFUSAL), status: 'removed' }, ctx).reason, 'status_removed');
+  assert.equal(firstScreenCheck({ ...fact('p', 'tool', REFUSAL), status: 'pending' }, ctx).reason, 'status_pending');
+  assert.equal(firstScreenCheck({ ...fact('r', 'tool', REFUSAL), status: 'removed' }, ctx).reason, 'status_removed');
   // Edited: his ownerText is the text (no answer needed).
-  const edited = firstScreenCheck({ ...fact('e', 'refusal', 'x'), status: 'edited', ownerText: ` ${REFUSAL_CUT}.` }, context({ answers: [] }));
+  const edited = firstScreenCheck({ ...fact('e', 'tool', 'x'), status: 'edited', ownerText: ` ${REFUSAL_CUT}.` }, context({ answers: [] }));
   assert.deepEqual([edited.reason, edited.quote], [null, REFUSAL_CUT]);
   // Not in his answer, or no answers at all: never eligible.
-  assert.equal(firstScreenCheck(fact('n', 'refusal', REFUSAL), context({ answers: [{ key: 'turnedDown', part: 'answer', text: MOST_WORK_LOCAL }] })).reason, 'not_in_answer');
-  assert.equal(firstScreenCheck(fact('n', 'refusal', REFUSAL), context({ answers: null })).reason, 'answer_unavailable');
+  assert.equal(firstScreenCheck(fact('n', 'tool', REFUSAL), context({ answers: [{ key: 'turnedDown', part: 'answer', text: MOST_WORK_LOCAL }] })).reason, 'not_in_answer');
+  assert.equal(firstScreenCheck(fact('n', 'tool', REFUSAL), context({ answers: null })).reason, 'answer_unavailable');
   // Cleanup: whitespace, trailing marks and ASCII quotes only.
   assert.equal(cleanQuote(`  ${REFUSAL_WORDS[2]}  "${REFUSAL_WORDS[3]}" ${REFUSAL_WORDS[4]}!?. `), `${REFUSAL_WORDS[2]} ${REFUSAL_WORDS[3]} ${REFUSAL_WORDS[4]}`);
   const messy = `${REFUSAL_WORDS.slice(2, 6).join('  ')} "${REFUSAL_WORDS[6]}";`;
-  const cleaned = firstScreenCheck(fact('m', 'refusal', messy), context({ answers: [{ key: 'turnedDown', part: 'answer', text: messy }] }));
+  const cleaned = firstScreenCheck(fact('m', 'tool', messy), context({ answers: [{ key: 'turnedDown', part: 'answer', text: messy }] }));
   assert.deepEqual([cleaned.reason, cleaned.quote], [null, REFUSAL_WORDS.slice(2, 7).join(' ')]);
 });
 
@@ -119,16 +121,16 @@ test('(c3) the closed time list: an opening phrase is cut (then every check re-r
   // A one-letter prefix (bet) on the phrase's first word is the same phrase.
   assert.ok(containsTimePhrase(`${REFUSAL_CUT} \u05D1${FIRST_SCREEN_TIME_PHRASES[4]}`));
   const middle = `${REFUSAL_WORDS.slice(2, 5).join(' ')} ${FIRST_SCREEN_TIME_PHRASES[6]} ${REFUSAL_WORDS.slice(5).join(' ')}`;
-  assert.equal(firstScreenCheck(fact('t', 'refusal', middle), context({ answers: [{ key: 'turnedDown', part: 'answer', text: middle }] })).reason, 'time_word');
-  // a1-1: cut "last week", left with a place only: too short (as a refusal, to pass the type gate).
-  assert.equal(firstScreenCheck(fact('a', 'refusal', LAST_WEEK_IN_KFAR_SABA), context({ answers: [{ key: 'turnedDown', part: 'answer', text: LAST_WEEK_IN_KFAR_SABA }] })).reason, 'too_short');
+  assert.equal(firstScreenCheck(fact('t', 'tool', middle), context({ answers: [{ key: 'turnedDown', part: 'answer', text: middle }] })).reason, 'time_word');
+  // a1-1: cut "last week", left with a place only: too short (as a tool, to pass the type gate).
+  assert.equal(firstScreenCheck(fact('a', 'tool', LAST_WEEK_IN_KFAR_SABA), context({ answers: [{ key: 'turnedDown', part: 'answer', text: LAST_WEEK_IN_KFAR_SABA }] })).reason, 'too_short');
   // The cut text is re-checked: a second opening phrase is cut too.
   const twice = `${FIRST_SCREEN_TIME_PHRASES[6]} ${REFUSAL}`;
-  assert.equal(firstScreenCheck(fact('b', 'refusal', twice), context({ answers: [{ key: 'turnedDown', part: 'answer', text: twice }] })).quote, REFUSAL_CUT);
+  assert.equal(firstScreenCheck(fact('b', 'tool', twice), context({ answers: [{ key: 'turnedDown', part: 'answer', text: twice }] })).quote, REFUSAL_CUT);
 });
 
 test('(c4)-(c7) length, script, gibberish and condition; never cut to fit', () => {
-  const check = (text: string, extra: Partial<InterviewFact> = {}) => firstScreenCheck(fact('x', 'refusal', text, extra), context({ answers: [{ key: 'turnedDown', part: 'answer', text }] })).reason;
+  const check = (text: string, extra: Partial<InterviewFact> = {}) => firstScreenCheck(fact('x', 'tool', text, extra), context({ answers: [{ key: 'turnedDown', part: 'answer', text }] })).reason;
   assert.equal(check(REFUSAL_WORDS.slice(2, 5).join(' ')), 'too_short', '3 words');
   assert.equal(check(REFUSAL_WORDS.slice(2, 6).join(' ')), null, '4 words');
   assert.equal(check([...REFUSAL_WORDS.slice(2), ...REFUSAL_WORDS.slice(2, 6)].join(' ')), 'too_long', '13 words');
@@ -161,8 +163,8 @@ test('(c4)-(c7) length, script, gibberish and condition; never cut to fit', () =
   assert.equal(check(REFUSAL_CUT, { condition: REFUSAL_WORDS.slice(0, 2).join(' ') }), 'condition_outside');
 });
 
-test('(c8) and (d): trust-bar duplicates, the type gate, priority refusal > job > tool > number > credential > price_rule, ties by answer order', () => {
-  assert.deepEqual(FIRST_SCREEN_PRIORITY, ['refusal', 'job', 'tool', 'number', 'credential', 'price_rule']);
+test('(c8) and (d): trust-bar duplicates, the type gate, priority number > price_rule > job > tool > credential, refusal ineligible, ties by answer order', () => {
+  assert.deepEqual(OWNER_QUOTE_PRIORITY, ['number', 'price_rule', 'job', 'tool', 'credential']);
   const text = REFUSAL_CUT;
   const answers = [
     { key: 'recentJob' as const, part: 'answer' as const, text },
@@ -184,37 +186,67 @@ test('(c8) and (d): trust-bar duplicates, the type gate, priority refusal > job 
     fact('l1', 'local', text),
   ];
   const checks = firstScreenChecks(set(facts), ctx);
-  assert.deepEqual(checks.map(item => item.id), ['r1', 'j1', 'j3', 'j2', 't1', 'n1', 'c1', 'p1', 'p2', 'l1']);
+  assert.deepEqual(checks.map(item => item.id), ['n1', 'p1', 'p2', 'j1', 'j3', 'j2', 't1', 'c1', 'r1', 'l1']);
   const reasons = Object.fromEntries(checks.map(item => [item.id, item.reason]));
   assert.deepEqual(reasons, {
-    r1: null, j1: null, j2: null, j3: 'job_other_service', t1: null, n1: 'trust_bar_duplicate', c1: null, p1: null, p2: 'price_rule_money', l1: 'local_not_first_screen',
+    r1: 'refusal_no_reason', j1: null, j2: null, j3: 'job_other_service', t1: null, n1: 'trust_bar_duplicate', c1: null, p1: null, p2: 'price_rule_money', l1: 'local_not_first_screen',
   });
-  const pick = (ids: string[]) => selectFirstScreen(set(facts.filter(item => ids.includes(item.id))), ctx, { copy: COPY, credentialItems: [] });
-  assert.equal(pick(['r1', 'j1', 't1', 'c1', 'p1']).firstScreenFactId, 'r1');
-  assert.equal(pick(['j2', 'j1', 't1']).firstScreenFactId, 'j1', 'answer before follow-up');
-  assert.equal(pick(['t1', 'c1', 'p1']).firstScreenFactId, 't1');
-  assert.equal(pick(['t1', 'c1', 'p1']).quoteLine?.frame, COPY.QUOTE_FRAME_JOB.replace('{name}', COPY.QUOTE_NAME_FALLBACK), 'a tool takes the job frame');
-  assert.equal(pick(['c1', 'p1']).firstScreenFactId, 'c1');
+  const pick = (ids: string[]) => selectOwnerQuote(set(facts.filter(item => ids.includes(item.id))), ctx, { copy: COPY });
+  assert.equal(pick(['r1', 'j1', 't1', 'c1', 'p1']).quoteFactId, 'p1');
+  assert.equal(pick(['r1', 'j1', 't1', 'c1']).quoteFactId, 'j1');
+  assert.equal(pick(['j2', 'j1', 't1']).quoteFactId, 'j1', 'answer before follow-up');
+  assert.equal(pick(['t1', 'c1']).quoteFactId, 't1');
+  assert.equal(pick(['t1', 'c1']).quoteLine?.frame, COPY.QUOTE_FRAME_JOB.replace('{name}', COPY.QUOTE_NAME_FALLBACK), 'a tool takes the job frame');
+  assert.equal(pick(['c1']).quoteFactId, 'c1');
+  assert.equal(pick(['r1']).quoteFactId, null, 'a refusal is never the quote');
   assert.equal(pick(['p1']).quoteLine?.frame, COPY.QUOTE_FRAME_PRICE_RULE.replace('{name}', COPY.QUOTE_NAME_FALLBACK));
-  // A number the trust bar does not show is eligible (with its own digits) in the number frame.
-  const number = selectFirstScreen(set([fact('n2', 'number', `${text} 40`, { source: { kind: 'answer', questionKey: 'callerQuestion', part: 'answer' } })]), context({ answers }), { copy: COPY, credentialItems: [] });
-  assert.deepEqual([number.firstScreenFactId, number.quoteLine?.quote], ['n2', `${text} 40`]);
+  // A number the trust bar does not show is eligible (with its own digits) in the number frame, ahead of everything.
+  const number = selectOwnerQuote(set([fact('n2', 'number', `${text} 40`, { source: { kind: 'answer', questionKey: 'callerQuestion', part: 'answer' } }), fact('j1', 'job', text)]), context({ answers }), { copy: COPY });
+  assert.deepEqual([number.quoteFactId, number.quoteLine?.quote], ['n2', `${text} 40`]);
   assert.equal(firstScreenCheck(fact('n3', 'number', text), ctx).reason, 'number_without_digits');
 });
 
-test('(e) no quote line: a shown credential satisfies the rule (trust_bar); else missing, logged with every candidate and reason', () => {
-  const onlyLocals = set([PLUMBER[0], PLUMBER[2], PLUMBER[3]]);
-  const viaBar = selectFirstScreen(onlyLocals, context(), { copy: COPY, credentialItems });
-  assert.deepEqual([viaBar.firstScreenFactId, viaBar.source, viaBar.quoteLine, viaBar.missing], ['cred-years', 'trust_bar', null, false]);
-  const notRendered = withoutTrustBarFallback(viaBar);
-  assert.deepEqual([notRendered.firstScreenFactId, notRendered.source, notRendered.missing], [null, null, true]);
+const NOW = Date.parse('2026-12-01T08:00:00.000Z');
+const gbp = (over: Partial<GbpRatingSnapshot> = {}): GbpRatingSnapshot => ({ source: 'gbp_manager', averageRating: 4.8, totalReviewCount: 12, fetchedAt: new Date(NOW - 864e5).toISOString(), ...over });
+
+test('(e) no quote line: none and no placeholder, logged with every candidate and reason; the trust bar no longer counts', () => {
   const removed = set([PLUMBER[0], PLUMBER[2], { ...PLUMBER[3], status: 'removed' }]);
-  const missing = selectFirstScreen(removed, context(), { copy: COPY, credentialItems });
-  assert.equal(missing.missing, true);
-  assert.equal(firstScreenMissingLine('s-1', 1, missing),
-    '[site-bot preview] first_screen_fact_missing session=s-1 round=1 candidates=cred-years:status_removed,a1-1:local_not_first_screen,a1-4:local_not_first_screen');
-  assert.equal(firstScreenMissingLine('s-1', 2, selectFirstScreen(set([]), context(), { copy: COPY, credentialItems: [] })),
-    '[site-bot preview] first_screen_fact_missing session=s-1 round=2 candidates=none');
+  const quote = selectOwnerQuote(removed, context(), { copy: COPY });
+  assert.deepEqual([quote.quoteFactId, quote.quoteLine], [null, null]);
+  assert.equal(ownerQuoteMissingLine('s-1', 1, quote),
+    '[site-bot preview] owner_quote_missing session=s-1 round=1 candidates=cred-years:status_removed,a1-1:local_not_first_screen,a1-4:local_not_first_screen');
+  assert.equal(ownerQuoteMissingLine('s-1', 2, selectOwnerQuote(set([]), context(), { copy: COPY })),
+    '[site-bot preview] owner_quote_missing session=s-1 round=2 candidates=none');
+  // A shown trust-bar credential is not a first-screen fact any more: without a rating the hero has no proof line.
+  const outcome = firstScreenOutcome(heroRatingLine(null, new Date(NOW)), selectOwnerQuote(set([PLUMBER[0], PLUMBER[2], PLUMBER[3]]), context(), { copy: COPY }));
+  assert.deepEqual([outcome.source, outcome.heroRating, outcome.ratingReason, outcome.missing], [null, null, 'no_gbp_rating', true]);
+  assert.equal(firstScreenMissingLine('s-1', 1, outcome), '[site-bot preview] first_screen_fact_missing session=s-1 round=1 reason=no_gbp_rating');
+});
+
+test('(b) hero rating line: his GBP via manager access only, exact one-decimal average, >= 4.5 and >= 5 reviews, else no line', () => {
+  const now = new Date(NOW);
+  assert.deepEqual(heroRatingLine(gbp(), now), { line: ratingWithCountLine('4.8', 12), reason: null });
+  assert.deepEqual(heroRatingLine(gbp({ averageRating: 5 }), now).line, ratingWithCountLine('5.0', 12), 'one decimal, never rounded');
+  assert.equal(heroRatingLine(gbp({ averageRating: 4.5, totalReviewCount: 5 }), now).reason, null, 'the thresholds are inclusive');
+  const reason = (over: Partial<GbpRatingSnapshot> | null) => heroRatingLine(over === null ? null : gbp(over), now).reason;
+  assert.equal(reason(null), 'no_gbp_rating');
+  assert.equal(reason({ source: 'places' as never }), 'not_gbp_source', 'never Places data');
+  assert.equal(reason({ averageRating: 4.4 }), 'rating_below_threshold');
+  assert.equal(reason({ averageRating: 3.2 }), 'rating_below_threshold');
+  assert.equal(reason({ totalReviewCount: 4 }), 'count_below_threshold');
+  assert.equal(reason({ totalReviewCount: 0 }), 'no_review_count');
+  assert.equal(reason({ averageRating: 4.75 }), 'rating_precision', 'more decimals than one: hidden, never rounded');
+  assert.equal(reason({ averageRating: 6 }), 'rating_precision');
+  assert.equal(reason({ fetchedAt: new Date(NOW - GBP_RATING_MAX_AGE_MS - 1).toISOString() }), 'gbp_rating_stale');
+  assert.equal(reason({ fetchedAt: 'yesterday' }), 'gbp_rating_stale');
+  const shown = firstScreenOutcome(heroRatingLine(gbp(), now), selectOwnerQuote(set([]), context(), { copy: COPY }));
+  assert.deepEqual([shown.source, shown.missing, shown.ratingReason], ['google_rating', false, null]);
+  // Plain text: no star, no link, no microdata; empty without a line.
+  const html = heroRatingHtml(shown.heroRating!);
+  assert.equal(html, `<p class="hero-rating" data-hero-rating>${shown.heroRating}</p>`);
+  assert.doesNotMatch(html, /<a\b|itemprop|itemscope|\u2605|<svg/u);
+  assert.equal(heroRatingHtml(undefined), '');
+  assert.match(heroRatingCss(), /^\.hero \.hero-rating\{/);
 });
 
 test('(b, g, h) the quote line markup: figure + figcaption + blockquote, U+05F4 marks, named by its frame, no microdata; empty without a line', () => {
@@ -228,9 +260,11 @@ test('(b, g, h) the quote line markup: figure + figcaption + blockquote, U+05F4 
   assert.doesNotMatch(html, /\sdir=/, 'inherits rtl');
   assert.equal(ownerQuoteHtml(undefined), '');
   assert.equal(ownerQuoteHtml({ ...line, frame: ' ' }), '');
-  assert.match(ownerQuoteCss(), /figcaption\{display:inline;white-space:nowrap;/);
-  // Maya 2026-11-26: contrast over the hero photo.
-  assert.ok(ownerQuoteCss().includes('.hero .owner-quote{margin:14px 0 0;max-width:46ch;color:#FFFFFF;font-size:1rem;line-height:1.6;text-shadow:0 1px 3px rgba(0,0,0,0.35);}'));
+  const theme = { primary: '#123456', textPrimary: '#654321' };
+  assert.match(ownerQuoteCss(theme), /figcaption\{display:inline;white-space:nowrap;font-weight:700;color:#123456;\}/);
+  // Fable 5.2 2026-11-26: the line sits at the top of the about section, in the about text colours.
+  assert.ok(ownerQuoteCss(theme).startsWith('#about .owner-quote{margin:0 0 14px;max-width:46ch;color:#654321;'));
+  assert.doesNotMatch(ownerQuoteCss(theme), /\.hero/);
 });
 
 test('(h) Maya 2026-11-26: number ranges and phone-like numbers in the quote are ltr isolates that never wrap; brackets never', () => {
@@ -261,8 +295,10 @@ test('(a) prompt: the free-USP subheadline rule and Noa\'s two writing upgrades 
   assert.match(rule, /Never name a specific method, technique, tool or part of the work in heroSubheadline unless it is one of the owner's verified services\.$/);
   const labelled = firstScreenRule({ ...home, site: { serviceLabels: ['leak detection'] } } as never) ?? '';
   assert.ok(labelled.endsWith('verified services: ["leak detection"].'));
-  assert.equal(INTERVIEW_WRITING_RULES.length, 8);
-  for (const [index, head] of ['ONE SCENE (binding)', 'NO INVENTED METHOD (binding)', 'NO UNVERIFIABLE SENSATIONS (binding)', 'SIBLING CARDS', 'BODY WORDS', 'PLAIN VERBS'].entries()) {
+  assert.equal(INTERVIEW_WRITING_RULES.length, 15);
+  for (const [index, head] of ['ONE SCENE (binding)', 'NO INVENTED METHOD (binding)', 'NO UNVERIFIABLE SENSATIONS (binding)', 'SIBLING CARDS', 'BODY WORDS', 'PLAIN VERBS',
+    'NO ADDED QUALIFIER (binding)', 'FIXED STATE (binding)', 'HOME WORDS (binding)', 'EVERY NARRATIVE FIELD (binding)',
+    'ABOUT FROM OWNER FACTS (binding; it overrides any other aboutPageBody instruction)', 'STORY ON HIS JOB (binding)', 'ONE WORD, ONE SECTION (binding)'].entries()) {
     assert.ok(INTERVIEW_WRITING_RULES[index + 2].startsWith(`- ${head}: `), head);
   }
   assert.doesNotMatch(INTERVIEW_WRITING_RULES.join('\n'), /[\u0590-\u05FF]/, 'English only');
@@ -281,9 +317,9 @@ test('usedFactIds: only facts that truly appear in the rendered output (the quot
     { id: 'a1-4', type: 'local' as const, text: MOST_WORK_LOCAL },
     { id: 'cred-years', type: 'credential' as const, text: '15' },
   ];
-  const outcome = { firstScreenFactId: 'a1-2', source: 'quote_line' as const };
+  const outcome = { quoteFactId: 'a1-2' };
   // The 2026-11-25 bug: a1-1 was listed because the brief carried it; the output never showed it.
   assert.deepEqual(renderedFactIds(usable, `hero ${REFUSAL_CUT} about text`, outcome, []), ['a1-2']);
   assert.deepEqual(renderedFactIds(usable, `x ${MOST_WORK_LOCAL}  y`, outcome, ['cred-years']), ['a1-2', 'a1-4', 'cred-years']);
-  assert.deepEqual(renderedFactIds(usable, 'nothing', { firstScreenFactId: null, source: null }, []), []);
+  assert.deepEqual(renderedFactIds(usable, 'nothing', { quoteFactId: null }, []), []);
 });

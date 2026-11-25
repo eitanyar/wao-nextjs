@@ -1,0 +1,9 @@
+# Brief: revision of 5 strings in docs/copy/site-bot-home-blocks-preview-lines-2026-11-26.waocopy.json (2026-11-26)
+
+Same persona and placement as docs/copy/briefs/site-bot-home-blocks-preview-lines-2026-11-26.md. Noa's fresh read flagged five keys. Return ONLY these keys, as plain JSON key → string:
+
+- `BLOCK_QA_H2` and `BLOCK_QA_H2_PLAIN` (one matching pair, same meaning): the current pair says "before he arrives" vs "before calling", and "before calling" breaks logic (you ask the pro on the call). Frame it as the questions people have before they book/hire, or what's worth asking when you call; pick one meaning for both. The `{trade}` slot is the bare singular noun (no ה, no את, no prefix letter); mirror the shape of the existing `BLOCK_PRICE_DRIVERS_H2` ("מה קובע את המחיר כשמזמינים {trade}") so the three blocks read as a set.
+- `BLOCK_OWNER_LEAD`: shown before the owner's own words at the top of any of the three blocks (`{lead} ״{quote}״`). "הוא" has no antecedent under the plain H2s. Give two keys: `BLOCK_OWNER_LEAD_NAMED` with a `{name}` slot (his first name, or the existing fallback "בעל העסק" — must read naturally with both), and `BLOCK_OWNER_LEAD` that needs no antecedent and no name. Third person, singular male, 2–5 words.
+- `PREVIEW_ADDED_SERVICE_PAGES`: fix the translated word order of the first sentence; don't say the visitor "finds" the page (implies a search result); make the page the subject of the outcome (it's about exactly his job, so nothing sends the visitor elsewhere), not a guaranteed visitor reaction.
+- `PREVIEW_ADDED_REVIEWS`: avoid "דירוג" next to Google (it can read as search ranking) — say stars/score; replace "מתקשר אליך כבר רגוע" (only true with good reviews, and the feeling is trust, not calm) with an outcome that holds whatever the score and still sells.
+Constraints unchanged: singular male, no praise words, no rankings/traffic/timeframe promises, works for plumbers and electricians.

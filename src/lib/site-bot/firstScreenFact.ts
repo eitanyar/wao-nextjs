@@ -1,24 +1,31 @@
 /**
- * Site Bot step 2c: the first-screen fact rule v2, (a)-(h) of docs/missions/site-bot-step2-interview-preview-2026-11-25.md
- * (Fable 5.2 on Koray K-01; Yonatan re-sign-off 2026-11-25 after Noa found the in-subheadline version unpublishable).
- * Home page only. Pure.
+ * Site Bot step 2c: the first-screen rule v2, (a)-(h) of docs/missions/site-bot-step2-interview-preview-2026-11-25.md, as
+ * changed by Fable 5.2 on 2026-11-26 (docs/reviews/site-bot-first-screen-rating-fable52-2026-11-26.md, with Adam's source
+ * correction of the same day). Home page only. Pure.
  *
  * (a) The hero subheadline is a free USP sentence in the H1's grammatical person (the prompt rule lives in
  *     researchPageCopy.ts firstScreenRule); it never quotes an owner fact. Nothing here reads or changes the title or H1.
- * (b) The owner's fact is a code-rendered quote line under the subheadline: `{frame(type)} \u05F4{quote}\u05F4`. The frame
+ * (b) Hero proof line: code renders the approved rating string (lp/ratingLine.ts ratingWithCountLine) under the
+ *     subheadline, from the owner's own Google Business Profile through WAO's manager access ONLY (GbpRatingSnapshot,
+ *     after his sign-in). Never Places data: Places content is never stored or republished on client sites
+ *     (placePrefill.ts header). Shown only when the average is >= 4.5 and the count >= 5; otherwise no line and no
+ *     placeholder (the caller logs first_screen_fact_missing with the reason). Before payment there is no manager access,
+ *     so the preview has no proof line (reason no_gbp_rating). Plain text: no stars, no link, no JSON-LD.
+ *     Record source google_rating.
+ * (b2) Owner quote line: `{frame(type)} \u05F4{quote}\u05F4`, at the top of the about section, never in the hero. The frame
  *     and the name fallback come byte-exact from the waocopy files (ownerQuoteCopy.generated.ts); `{name}` is his first
  *     name when it is all Hebrew letters and 2-15 long, else QUOTE_NAME_FALLBACK. The LLM never writes, rewrites or picks
  *     wording for this line: the quote is his own text after the cleanup of (c) only.
  * (c) Eligibility and cleanup, checked in order; the first failing reason is recorded (firstScreenCheck). The type gate of
- *     (d) (local never, job scope, money price rules) and the trust-bar duplicate check of (c8) run right after (c1): both
- *     are about what the fact is, not its wording, so a trust-bar credential such as "12" is recorded as a duplicate
- *     rather than as too short.
- * (d) Priority: refusal, job, tool, number (with its condition), credential as a sentence, non-money price_rule; ties by
- *     answer order. `local` is never eligible here.
- * (e) No quote line: a credential the code-built trust bar shows satisfies the rule (source trust_bar); otherwise the
- *     caller logs `first_screen_fact_missing` with every candidate and its reason.
- * (f), (g), (h): the renderer (lp/researchedSite.ts ownerQuoteHtml, homepageMetaDescription): the quote line is in no
- *     meta description and no structured data, and its marks are always U+05F4.
+ *     (d) (local never, refusal never in v1, job scope, money price rules) and the trust-bar duplicate check of (c8) run
+ *     right after (c1): both are about what the fact is, not its wording.
+ * (d) Quote priority: number (with its condition), non-money price_rule, job, tool, credential as a sentence; ties by
+ *     answer order. `local` is never eligible here. A refusal is ineligible in v1 (`refusal_no_reason`); it stays stored
+ *     and out of generation, and QUOTE_FRAME_REFUSAL stays in the copy file, unused.
+ * (e) No eligible quote: no quote and no placeholder in about (the caller logs owner_quote_missing with every candidate and
+ *     its reason). The trust-bar credential no longer counts as the first-screen fact; the rating does.
+ * (f), (g), (h): the renderer (lp/researchedSite.ts heroRatingHtml, ownerQuoteHtml, homepageMetaDescription): neither line is
+ *     in a meta description or any structured data, and the quote marks are always U+05F4.
  *
  * Yonatan C3 (2026-11-25) stays: a callerQuestion answer is never a job, and a job needs the work or the problem in it.
  *
@@ -26,6 +33,7 @@
  * from the mission doc by a script; the other time words come from lp/generationData.ts).
  */
 import { BEFORE_TIME_WORD_EXCLUSIONS, BEFORE_TOKENS, STORY_TIME_ANCHORS } from '../lp/generationData';
+import { ratingLineReviewCount, ratingWithCountLine } from '../lp/ratingLine';
 import type { InterviewTextQuestionKey } from './interviewQuestions';
 import type { InterviewFact, InterviewFactSet, InterviewFactType } from './interviewFacts';
 import { localitiesNamedIn, type Locality } from './servedAreas';
@@ -79,8 +87,11 @@ export interface FirstScreenContext {
   answers: readonly FirstScreenAnswer[] | null;
 }
 
-/** Rule (d) priority. `local` is never eligible here (it belongs to the service-area section). */
-export const FIRST_SCREEN_PRIORITY: readonly InterviewFactType[] = ['refusal', 'job', 'tool', 'number', 'credential', 'price_rule'];
+/**
+ * Rule (d) owner-quote priority (Fable 5.2, 2026-11-26). `local` is never eligible (it belongs to the service-area
+ * section) and a refusal is ineligible in v1 (refusal_no_reason), so neither is listed.
+ */
+export const OWNER_QUOTE_PRIORITY: readonly InterviewFactType[] = ['number', 'price_rule', 'job', 'tool', 'credential'];
 const DIGITS = /\d+/g;
 const SHEKEL_SIGN = /\u20AA/;
 const SHEKEL = /[\u20AA]|\u05E9["\u05F4]\u05D7/;
@@ -202,7 +213,9 @@ function typeReason(fact: InterviewFact, text: string, context: FirstScreenConte
       return !fact.serviceId || context.homeServiceIds.includes(fact.serviceId) ? null : 'job_other_service';
     case 'price_rule': return /\d/.test(text) || SHEKEL.test(text) ? 'price_rule_money' : null;
     case 'number': return (text.match(DIGITS) ?? []).length ? null : 'number_without_digits';
-    case 'refusal': case 'tool': case 'credential': return null;
+    // Fable 5.2 2026-11-26: a refusal needs its reason to help a caller; the follow-up probe comes after launch.
+    case 'refusal': return 'refusal_no_reason';
+    case 'tool': case 'credential': return null;
     default: return 'unknown_type';
   }
 }
@@ -276,8 +289,8 @@ export function firstScreenCheck(fact: InterviewFact, context: FirstScreenContex
 export function firstScreenChecks(set: InterviewFactSet | null | undefined, context: FirstScreenContext): FirstScreenCheck[] {
   const facts = set && Array.isArray(set.facts) ? set.facts : [];
   const rank = (fact: InterviewFact) => {
-    const at = FIRST_SCREEN_PRIORITY.indexOf(fact.type);
-    return at < 0 ? FIRST_SCREEN_PRIORITY.length : at;
+    const at = OWNER_QUOTE_PRIORITY.indexOf(fact.type);
+    return at < 0 ? OWNER_QUOTE_PRIORITY.length : at;
   };
   return facts
     .map((fact, index) => ({ fact, index }))
@@ -398,9 +411,56 @@ export function subheadlineCarriesFact(subheadline: string, fact: Pick<UsableFac
 }
 
 // ---------------------------------------------------------------------------------------------------------------------
-// (b) The quote line and (e) the outcome
+// (b) The hero proof line
 
-export type FirstScreenSource = 'quote_line' | 'trust_bar';
+/** Rule (b) thresholds (Fable 5.2, 2026-11-26). */
+export const HERO_RATING_MIN = 4.5;
+export const HERO_REVIEW_COUNT_MIN = 5;
+/** Google-sourced content older than this renders nothing (Business Profile API policies: stored content at most 30 days). */
+export const GBP_RATING_MAX_AGE_MS = 30 * 24 * 60 * 60 * 1000;
+
+/**
+ * The owner's own rating from his Google Business Profile, read through WAO's manager access (reviews.list averageRating
+ * and totalReviewCount, one snapshot, one fetchedAt). The only source the hero rating line accepts. Never Places data.
+ */
+export interface GbpRatingSnapshot {
+  source: 'gbp_manager';
+  averageRating: number;
+  totalReviewCount: number;
+  fetchedAt: string;
+}
+
+export interface HeroRatingDecision {
+  /** The rendered line, or null. */
+  line: string | null;
+  /** Null when the line is shown; else why not (logged with first_screen_fact_missing). */
+  reason: string | null;
+}
+
+/**
+ * Rule (b): the hero proof line from a GBP manager-access snapshot. The average is shown exactly as Google returns it, to
+ * one decimal; a value with more decimals hides the line (2026-11-16 rating rules: never a rounded score).
+ */
+export function heroRatingLine(snapshot: GbpRatingSnapshot | null | undefined, now: Date): HeroRatingDecision {
+  const no = (reason: string): HeroRatingDecision => ({ line: null, reason });
+  if (!snapshot) return no('no_gbp_rating');
+  if (snapshot.source !== 'gbp_manager') return no('not_gbp_source');
+  const fetched = Date.parse(snapshot.fetchedAt);
+  if (!Number.isFinite(fetched) || fetched > now.getTime() || now.getTime() - fetched > GBP_RATING_MAX_AGE_MS) return no('gbp_rating_stale');
+  const value = snapshot.averageRating;
+  if (typeof value !== 'number' || !Number.isFinite(value) || value < 1 || value > 5 || Math.abs(value * 10 - Math.round(value * 10)) >= 0.001) return no('rating_precision');
+  const count = ratingLineReviewCount(snapshot.totalReviewCount);
+  if (count === null) return no('no_review_count');
+  if (value < HERO_RATING_MIN) return no('rating_below_threshold');
+  if (count < HERO_REVIEW_COUNT_MIN) return no('count_below_threshold');
+  const line = ratingWithCountLine(value.toFixed(1), count);
+  return line ? { line, reason: null } : no('no_rating_line');
+}
+
+// ---------------------------------------------------------------------------------------------------------------------
+// (b2) The owner quote line and (e) the outcome
+
+export type FirstScreenSource = 'google_rating';
 
 /** The code-rendered quote line: the frame (its name filled) and his cleaned words, never model-written. */
 export interface OwnerQuoteLine {
@@ -408,14 +468,23 @@ export interface OwnerQuoteLine {
   quote: string;
 }
 
-export interface FirstScreenOutcome {
-  firstScreenFactId: string | null;
-  source: FirstScreenSource | null;
+export interface OwnerQuoteOutcome {
+  /** The fact the about-section quote line is built from, else null. */
+  quoteFactId: string | null;
+  /** The rendered quote line, else null. */
+  quoteLine: OwnerQuoteLine | null;
   /** Every fact of the set with its (c) reason (null = eligible), in rule (d) order. */
   candidates: Array<{ id: string; type: InterviewFactType; reason: string | null }>;
-  /** The rendered quote line (source quote_line), else null. */
-  quoteLine: OwnerQuoteLine | null;
-  /** Rule (e): nothing satisfies the rule (the caller logs first_screen_fact_missing). */
+}
+
+export interface FirstScreenOutcome extends OwnerQuoteOutcome {
+  /** The hero proof line's source (google_rating), else null. */
+  source: FirstScreenSource | null;
+  /** The hero rating line, else null. */
+  heroRating: string | null;
+  /** Why the hero has no proof line (null when it has one). */
+  ratingReason: string | null;
+  /** Rule (b): the hero has no proof line (the caller logs first_screen_fact_missing). */
   missing: boolean;
 }
 
@@ -427,6 +496,7 @@ export interface CredentialTrustItem {
 
 /** The frame copy the quote line uses (ownerQuoteCopy.generated.ts, injected so this module stays copy-free). */
 export interface QuoteFrameCopy {
+  /** Kept in the copy file, unused in v1 (a refusal is ineligible). */
   QUOTE_FRAME_REFUSAL: string;
   QUOTE_FRAME_JOB: string;
   QUOTE_FRAME_NUMBER: string;
@@ -440,7 +510,7 @@ const FRAME_KEY: Readonly<Record<InterviewFactType, keyof QuoteFrameCopy | null>
   credential: 'QUOTE_FRAME_CREDENTIAL', price_rule: 'QUOTE_FRAME_PRICE_RULE', local: null,
 };
 
-/** Rule (b): his first name when it is all Hebrew letters and 2-15 long, else the fallback. */
+/** Rule (b2): his first name when it is all Hebrew letters and 2-15 long, else the fallback. */
 export function quoteName(ownerName: string | null | undefined, copy: Pick<QuoteFrameCopy, 'QUOTE_NAME_FALLBACK'>): string {
   const first = nfc(typeof ownerName === 'string' ? ownerName : '').trim().split(/\s+/)[0] ?? '';
   return /^[\u05D0-\u05EA]{2,15}$/u.test(first) ? first : copy.QUOTE_NAME_FALLBACK;
@@ -453,38 +523,36 @@ export function ownerQuoteLine(type: InterviewFactType, quote: string, ownerName
   return { frame: copy[key].split('{name}').join(quoteName(ownerName, copy)), quote };
 }
 
-/**
- * The first-screen decision, before generation (the quote line never depends on the model): the first eligible fact in
- * rule (d) order gets the quote line; else (e) a confirmed / edited credential whose code-built trust-bar item exists
- * (the caller confirms it is rendered); else missing.
- */
-export function selectFirstScreen(
+/** Rule (b2) / (d): the first eligible fact in priority order gets the about-section quote line, before generation. */
+export function selectOwnerQuote(
   set: InterviewFactSet | null | undefined,
   context: FirstScreenContext,
-  options: { ownerName?: string | null; copy: QuoteFrameCopy; credentialItems: readonly CredentialTrustItem[] },
-): FirstScreenOutcome {
+  options: { ownerName?: string | null; copy: QuoteFrameCopy },
+): OwnerQuoteOutcome {
   const checks = firstScreenChecks(set, context);
   const candidates = checks.map(({ id, type, reason }) => ({ id, type, reason }));
   for (const check of checks) {
     if (check.reason !== null || check.quote === null) continue;
     const line = ownerQuoteLine(check.type, check.quote, options.ownerName, options.copy);
-    if (line) return { firstScreenFactId: check.id, source: 'quote_line', candidates, quoteLine: line, missing: false };
+    if (line) return { quoteFactId: check.id, quoteLine: line, candidates };
   }
-  const usable = new Set(usableFacts(set).filter(fact => fact.type === 'credential').map(fact => fact.id));
-  const credential = options.credentialItems.find(entry => entry.item && usable.has(entry.factId));
-  if (credential) return { firstScreenFactId: credential.factId, source: 'trust_bar', candidates, quoteLine: null, missing: false };
-  return { firstScreenFactId: null, source: null, candidates, quoteLine: null, missing: true };
+  return { quoteFactId: null, quoteLine: null, candidates };
 }
 
-/** The outcome when the trust-bar item it relies on is not in the rendered page (rule e: then it is missing). */
-export function withoutTrustBarFallback(outcome: FirstScreenOutcome): FirstScreenOutcome {
-  return outcome.source === 'trust_bar' ? { ...outcome, firstScreenFactId: null, source: null, missing: true } : outcome;
+/** The whole first-screen outcome: the hero rating decision and the about-section quote. */
+export function firstScreenOutcome(rating: HeroRatingDecision, quote: OwnerQuoteOutcome): FirstScreenOutcome {
+  return { ...quote, source: rating.line ? 'google_rating' : null, heroRating: rating.line, ratingReason: rating.reason, missing: !rating.line };
 }
 
-/** The rule (e) log line: every candidate id and its reason. */
-export function firstScreenMissingLine(sessionId: string, round: number, outcome: Pick<FirstScreenOutcome, 'candidates'>): string {
+/** The rule (b) log line: the reason the hero has no proof line. */
+export function firstScreenMissingLine(sessionId: string, round: number, outcome: Pick<FirstScreenOutcome, 'ratingReason'>): string {
+  return `[site-bot preview] first_screen_fact_missing session=${sessionId} round=${round} reason=${outcome.ratingReason ?? 'unknown'}`;
+}
+
+/** The rule (e) log line: every quote candidate id and its reason. */
+export function ownerQuoteMissingLine(sessionId: string, round: number, outcome: Pick<OwnerQuoteOutcome, 'candidates'>): string {
   const list = outcome.candidates.map(item => `${item.id}:${item.reason ?? 'eligible_without_frame'}`).join(',');
-  return `[site-bot preview] first_screen_fact_missing session=${sessionId} round=${round} candidates=${list || 'none'}`;
+  return `[site-bot preview] owner_quote_missing session=${sessionId} round=${round} candidates=${list || 'none'}`;
 }
 
 /** The digit runs of the code-built trust bar (rule c8). */
@@ -493,20 +561,20 @@ export function trustBarNumbers(items: readonly string[]): string[] {
 }
 
 /**
- * The facts that truly appear in the rendered output: the quote line's fact (or the trust-bar credential of rule e), a
- * credential whose trust-bar item is shown, and any usable fact whose whole text (NFC, whitespace folded, ASCII quotes
+ * The facts that truly appear in the rendered output: the about quote line's fact, a credential whose trust-bar item is
+ * shown, and any usable fact whose whole text (NFC, whitespace folded, ASCII quotes
  * dropped) is in the rendered visible text. A fact the brief handed to the writer but the output does not show is never
  * listed (step 3's ledger adds sentence-to-fact links for paraphrases).
  */
 export function renderedFactIds(
   usable: readonly UsableFact[],
   visibleText: string,
-  outcome: Pick<FirstScreenOutcome, 'firstScreenFactId' | 'source'>,
+  outcome: Pick<OwnerQuoteOutcome, 'quoteFactId'>,
   shownCredentialIds: readonly string[],
 ): string[] {
   const text = matchForm(visibleText);
   const ids = new Set<string>();
-  if (outcome.firstScreenFactId && outcome.source) ids.add(outcome.firstScreenFactId);
+  if (outcome.quoteFactId) ids.add(outcome.quoteFactId);
   for (const fact of usable) {
     if (fact.type === 'credential') {
       if (shownCredentialIds.includes(fact.id)) ids.add(fact.id);

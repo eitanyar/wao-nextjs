@@ -74,11 +74,18 @@ export interface ResearchedSitePage {
    */
   pitch?: string;
   /**
-   * Site Bot step 2c, first-screen fact v2 (b): the owner quote line under the homepage subheadline, code-built from his
-   * confirmed words and a waocopy frame (site-bot/firstScreenFact.ts). Rendered only by ownerQuoteHtml; never in a meta
-   * description or structured data (rules f, g). Absent = no line.
+   * Site Bot step 2c, first-screen rule (b2, Fable 5.2 2026-11-26): the owner quote line at the top of the homepage about
+   * section (never the hero), code-built from his confirmed words and a waocopy frame (site-bot/firstScreenFact.ts).
+   * Rendered only by ownerQuoteHtml, and only where the about section renders; never in a meta description or structured
+   * data (rules f, g). Absent = no line.
    */
   ownerQuote?: { frame: string; quote: string };
+  /**
+   * First-screen rule (b): the hero proof line under the homepage subheadline, the approved rating string built by code from
+   * the owner's own GBP rating via manager access (firstScreenFact.ts heroRatingLine). Plain text: no stars, no link, no
+   * JSON-LD. Absent = no line.
+   */
+  heroRating?: string;
 }
 
 export interface ResearchedPageSeo {
@@ -444,14 +451,29 @@ export function ownerQuoteHtml(line: { frame: string; quote: string } | undefine
   return `<figure class="owner-quote" data-section="owner-quote" aria-labelledby="${OWNER_QUOTE_FRAME_ID}"><figcaption id="${OWNER_QUOTE_FRAME_ID}">${esc(line.frame)}</figcaption>\u00A0<blockquote><p>${QUOTE_MARK}${quote}${QUOTE_MARK}</p></blockquote></figure>`;
 }
 
-/** The quote line's CSS (only on a page that renders one, so every other page stays byte-identical). */
-export function ownerQuoteCss(): string {
+/**
+ * The quote line's CSS (only on a page that renders one, so every other page stays byte-identical). Fable 5.2 2026-11-26:
+ * the line sits at the top of the about section, on the page surface, in the about text colours (Maya to confirm).
+ */
+export function ownerQuoteCss(theme: Pick<RenderResearchedSitePagesParams['theme'], 'primary' | 'textPrimary'>): string {
   return [
-    // Maya 2026-11-26 (h, contrast over the hero photo): full white with a soft shadow.
-    '.hero .owner-quote{margin:14px 0 0;max-width:46ch;color:#FFFFFF;font-size:1rem;line-height:1.6;text-shadow:0 1px 3px rgba(0,0,0,0.35);}',
-    '.hero .owner-quote figcaption{display:inline;white-space:nowrap;font-weight:700;color:#FFFFFF;}',
-    '.hero .owner-quote blockquote,.hero .owner-quote blockquote p{display:inline;margin:0;}',
+    `#about .owner-quote{margin:0 0 14px;max-width:46ch;color:${theme.textPrimary};font-size:1.0625rem;line-height:1.6;}`,
+    `#about .owner-quote figcaption{display:inline;white-space:nowrap;font-weight:700;color:${theme.primary};}`,
+    '#about .owner-quote blockquote,#about .owner-quote blockquote p{display:inline;margin:0;}',
   ].join('');
+}
+
+/**
+ * First-screen rule (b): the hero proof line, plain text under the subheadline: no stars, no link, no itemprop and no
+ * structured data, so the hero keeps one action (call). Decimal and count inherit the rtl flow (Maya checks at 390px).
+ */
+export function heroRatingHtml(line: string | undefined): string {
+  return line && line.trim() ? `<p class="hero-rating" data-hero-rating>${esc(line)}</p>` : '';
+}
+
+/** The hero proof line's CSS (only on a page that renders one). Full white with a soft shadow, as over the hero photo. */
+export function heroRatingCss(): string {
+  return '.hero .hero-rating{margin:10px 0 0;color:#FFFFFF;font-weight:700;font-size:1rem;line-height:1.5;text-shadow:0 1px 3px rgba(0,0,0,0.35);}';
 }
 
 function schemaGraph(page: ResearchedSitePage, data: CollectedData, siteUrl: string, heroImageUrl: string, output: string, homeName?: string): string {
@@ -815,10 +837,10 @@ function serviceDetailsSection(page: ResearchedSitePage, theme: RenderResearched
  * About (M2b.1): aboutPageHeadline as the H2, aboutPageBody; nothing without a body. M2b.1b: homepage and service
  * hub only (Yonatan), id="about" (nav target), labelled by its H2 (fallback: hidden nav-text H2).
  */
-function aboutSection(page: ResearchedSitePage, theme: RenderResearchedSitePagesParams['theme']): string {
+function aboutSection(page: ResearchedSitePage, theme: RenderResearchedSitePagesParams['theme'], quoteLine = ''): string {
   if (!hasAbout(page)) return '';
   const heading = sectionHeading('about-heading', page.copy.aboutPageHeadline, NAV_LINK_TEXT.about, `font-size:1.35rem;color:${theme.primary};margin-bottom:14px;`);
-  return `<section id="about" data-section="about" aria-labelledby="about-heading" style="padding:36px 20px;background:${theme.surface};"><div style="max-width:1120px;margin:0 auto;">${heading}<p style="color:${theme.textMuted};line-height:1.7;max-width:640px;">${esc(page.copy.aboutPageBody)}</p></div></section>`;
+  return `<section id="about" data-section="about" aria-labelledby="about-heading" style="padding:36px 20px;background:${theme.surface};"><div style="max-width:1120px;margin:0 auto;">${heading}${quoteLine}<p style="color:${theme.textMuted};line-height:1.7;max-width:640px;">${esc(page.copy.aboutPageBody)}</p></div></section>`;
 }
 
 const placeKey = (value: string | null | undefined) => (value ?? '').trim().normalize('NFC').toLowerCase();
@@ -873,8 +895,9 @@ function buildPageHtml(page: ResearchedSitePage, params: RenderResearchedSitePag
   const ownerPhoto = renderableHero(params.look);
   const libraryPhoto = ownerPhoto ? null : renderableHero({ hero: params.libraryHeroes?.[page.opportunityId] });
   const photo = ownerPhoto ?? libraryPhoto;
-  // First-screen fact v2 (b): homepage only.
-  const quoteLine = page.classification === 'homepage' ? ownerQuoteHtml(page.ownerQuote) : '';
+  // First-screen rule (b) hero rating, (b2) about quote: homepage only; the quote only where the about section renders.
+  const quoteLine = page.classification === 'homepage' && hasAbout(page) ? ownerQuoteHtml(page.ownerQuote) : '';
+  const ratingLine = page.classification === 'homepage' ? heroRatingHtml(page.heroRating) : '';
   const head = pageHead({
     t: theme,
     title: researchedPageTitle(page, businessName),
@@ -883,17 +906,17 @@ function buildPageHtml(page: ResearchedSitePage, params: RenderResearchedSitePag
     ogImage: heroImageUrl,
     schema: schemaGraph(page, data, siteUrl, heroImageUrl, output, breadcrumb ? homeName : undefined),
     fraudBlockerSid: params.fraudBlockerSid,
-    ...(breadcrumb || photo || quoteLine ? { extraCss: `${breadcrumb ? breadcrumbCss(theme) : ''}${photo ? heroBackdropCss() : ''}${quoteLine ? ownerQuoteCss() : ''}` } : {}),
+    ...(breadcrumb || photo || quoteLine || ratingLine ? { extraCss: `${breadcrumb ? breadcrumbCss(theme) : ''}${photo ? heroBackdropCss() : ''}${ratingLine ? heroRatingCss() : ''}${quoteLine ? ownerQuoteCss(theme) : ''}` } : {}),
   });
   // Redesign A item 7: the solid primary hero, start-aligned, no image; the GBP photo slot renders nothing yet. The breadcrumb
   // stays directly before the H1 (Yonatan C1); the hours line is the homepage's (hero.hours).
   const body = `
   <main>
-    <section class="hero on-dark${photo ? ' has-photo' : ''}" data-section="hero">${photo ? heroBackdropHtml(photo, { aiAtmosphere: libraryPhoto !== null }) : ''}<div class="hero-grid"><div class="hero-text">${breadcrumb ? breadcrumbNav(homeName, servicePlainName(page)) : ''}<h1>${esc(researchedPageH1(page.copy.heroHeadline, page.seo))}</h1>${nonEmpty(page.copy.heroSubheadline) ? `<p class="sub">${esc(page.copy.heroSubheadline)}</p>` : ''}${quoteLine}${heroCallButton(page, data)}${pricePromiseLine(data, params.pricingCopy)}${page.classification === 'homepage' ? heroHoursLine(data.businessHours, { isolateRanges: true }) : ''}</div>${heroPhotoSlot()}</div></section>
+    <section class="hero on-dark${photo ? ' has-photo' : ''}" data-section="hero">${photo ? heroBackdropHtml(photo, { aiAtmosphere: libraryPhoto !== null }) : ''}<div class="hero-grid"><div class="hero-text">${breadcrumb ? breadcrumbNav(homeName, servicePlainName(page)) : ''}<h1>${esc(researchedPageH1(page.copy.heroHeadline, page.seo))}</h1>${nonEmpty(page.copy.heroSubheadline) ? `<p class="sub">${esc(page.copy.heroSubheadline)}</p>` : ''}${ratingLine}${heroCallButton(page, data)}${pricePromiseLine(data, params.pricingCopy)}${page.classification === 'homepage' ? heroHoursLine(data.businessHours, { isolateRanges: true }) : ''}</div>${heroPhotoSlot()}</div></section>
     ${trustBar(page, theme)}${storySection(page, theme)}${processSection(page, theme)}${priceSection(page, data, theme, params.pricingCopy)}${proofSection(page, theme)}
     ${hasProof(page) ? '' : reviewSection(page, theme)}${qaSection(page, theme)}
     ${serviceDetailsSection(page, theme, allPages, outputs, businessName)}
-    ${aboutSection(page, theme)}
+    ${aboutSection(page, theme, quoteLine)}
     ${serviceAreasSection(page, allPages, outputs, theme)}
     ${profileLinkSection(page, researchedProfileLink(data, params.profileLinkCopy), theme)}
     ${faq ? `<section data-section="faq" aria-labelledby="faq-heading" style="padding:32px 20px;background:${theme.surfaceAlt};"><div style="max-width:1120px;margin:0 auto;display:flex;flex-direction:column;gap:12px;"><h2 id="faq-heading" style="font-size:1.25rem;color:${theme.primary};">${esc(RESEARCHED_SITE_LABELS.faqHeading)}</h2>${faq}</div></section>` : ''}
