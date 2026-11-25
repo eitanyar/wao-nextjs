@@ -20,8 +20,14 @@
  * "Carries" is a deterministic word-overlap check (Hebrew one- and two-letter prefixes folded, the page's own anchor
  * words never count): step 3's ledger replaces it with sentence-to-fact links.
  *
- * HEBREW-SAFETY: this module contains ZERO Hebrew bytes (the prefix letters are \u escapes).
+ * Facts of place and time words only (Yonatan C3, 2026-11-25): a job needs the work or the problem (hasWorkContent), a
+ * callerQuestion answer is never a job, and place / time words never count toward carrying a fact.
+ *
+ * HEBREW-SAFETY: this module contains ZERO Hebrew bytes (the prefix letters are \u escapes; time words come from
+ * lp/generationData.ts).
  */
+import { BEFORE_TIME_WORD_EXCLUSIONS, BEFORE_TOKENS, STORY_TIME_ANCHORS } from '../lp/generationData';
+import type { InterviewTextQuestionKey } from './interviewQuestions';
 import type { InterviewFact, InterviewFactSet, InterviewFactType } from './interviewFacts';
 import { localitiesNamedIn, type Locality } from './servedAreas';
 
@@ -34,6 +40,8 @@ export interface UsableFact {
   serviceId?: string;
   /** True when the text is his correction (status edited). */
   edited?: boolean;
+  /** The interview question the fact was taken from (model-extracted facts only). */
+  questionKey?: InterviewTextQuestionKey;
 }
 
 /** Confirmed and edited facts only (pending and removed are never used). Edited -> ownerText. */
@@ -48,6 +56,7 @@ export function usableFacts(set: InterviewFactSet | null | undefined): UsableFac
       ...(fact.condition && fact.status !== 'edited' ? { condition: fact.condition } : {}),
       ...(fact.serviceId ? { serviceId: fact.serviceId } : {}),
       ...(fact.status === 'edited' && fact.ownerText ? { edited: true } : {}),
+      ...(fact.source?.kind === 'answer' ? { questionKey: fact.source.questionKey } : {}),
     }];
   });
 }
@@ -79,9 +88,17 @@ export function firstScreenIneligibility(fact: UsableFact, context: FirstScreenC
   switch (fact.type) {
     case 'credential': return 'credential_trust_bar_only';
     case 'refusal': return 'refusal_never_used';
-    case 'job': return !fact.serviceId || context.homeServiceIds.includes(fact.serviceId) ? null : 'job_other_service';
+    case 'job':
+      // Yonatan C3 (2026-11-25): a caller's question is never a job, and a job needs the work or the problem in it
+      // (place + time words alone, e.g. "last week in <town>", say nothing about the work).
+      if (fact.questionKey === 'callerQuestion') return 'job_caller_question';
+      if (!hasWorkContent(fact.text, context.localities)) return 'job_without_work';
+      return !fact.serviceId || context.homeServiceIds.includes(fact.serviceId) ? null : 'job_other_service';
     case 'tool': return null;
-    case 'local': return localNamesOnlyHomeAreas(`${fact.text} ${fact.condition ?? ''}`, context) ? null : 'local_outside_area';
+    case 'local':
+      if (!localNamesOnlyHomeAreas(`${fact.text} ${fact.condition ?? ''}`, context)) return 'local_outside_area';
+      // Consistent with the carry check: a fact of only place and time words can never count as carried.
+      return hasWorkContent(fact.text, context.localities) ? null : 'local_place_time_only';
     case 'price_rule': return /\d/.test(fact.text) || SHEKEL.test(fact.text) ? 'price_rule_money' : null;
     case 'number': {
       const digits = fact.text.match(DIGITS) ?? [];
@@ -124,11 +141,55 @@ function stems(text: string): Set<string> {
   return new Set(tokens(text).flatMap(variants));
 }
 
-/** The content words of a fact text: three letters or more, minus the page's own anchor words (name, city, business). */
-function contentTokens(text: string, exclude: ReadonlySet<string>): string[] {
+/**
+ * Time words (never content): moved from the existing generation-data lists (lp/generationData.ts: the story time
+ * anchors, the "before" tokens and the time words after them), split into words. A story-anchor word that starts with a
+ * bet prefix ("in the ...") also adds its unprefixed form; nothing else is folded on the list side (folding the shin of
+ * "that passed" or of a number word would turn work words into time words). A token is a time word when any of its
+ * prefix-folded variants is in this set.
+ */
+const BET = '\u05D1';
+const TIME_WORDS: ReadonlySet<string> = new Set([
+  ...STORY_TIME_ANCHORS.flatMap(tokens).flatMap(token => (token.length > 3 && token.startsWith(BET) ? [token, token.slice(1)] : [token])),
+  ...BEFORE_TOKENS.flatMap(tokens),
+  ...BEFORE_TIME_WORD_EXCLUSIONS.flatMap(tokens),
+]);
+
+export function isTimeWord(token: string): boolean {
+  return variants(token).some(item => TIME_WORDS.has(item));
+}
+
+/** The text with every locality name it names removed (the prefix letters left behind are too short to count). */
+function withoutPlaces(text: string, localities: readonly Locality[] | undefined): string {
+  if (!localities?.length) return text;
+  let out = text.normalize('NFC');
+  for (const place of localitiesNamedIn(out, localities)) {
+    for (const name of [place.he_name, ...(place.he_aliases ?? [])].map(item => item.normalize('NFC').trim()).filter(Boolean)) {
+      out = out.split(name).join(' ');
+    }
+  }
+  return out;
+}
+
+/** The words of a fact beyond place and time words (three letters or more, no bare digits). */
+export function workContentTokens(text: string, localities?: readonly Locality[]): string[] {
+  return tokens(withoutPlaces(text, localities)).filter(token => token.length >= 3 && !/^\d+$/.test(token) && !isTimeWord(token));
+}
+
+/** True when the fact says something beyond where and when: the work or the problem (Yonatan C3). */
+export function hasWorkContent(text: string, localities?: readonly Locality[]): boolean {
+  return workContentTokens(text, localities).length > 0;
+}
+
+/**
+ * The content words of a fact text: three letters or more, minus the page's own anchor words (name, city, business),
+ * time words, and (with `localities`) every place the fact names.
+ */
+function contentTokens(text: string, exclude: ReadonlySet<string>, localities?: readonly Locality[]): string[] {
   const seen = new Set<string>();
-  return tokens(text).filter(token => {
+  return tokens(withoutPlaces(text, localities)).filter(token => {
     if (token.length < 3 || /^\d+$/.test(token)) return false;
+    if (isTimeWord(token)) return false;
     if (variants(token).some(item => exclude.has(item))) return false;
     if (seen.has(token)) return false;
     seen.add(token);
@@ -144,21 +205,22 @@ export function anchorExclusions(...texts: Array<string | null | undefined>): Se
 /**
  * True when `subheadline` carries `fact`: every digit run of the fact (and of its condition) appears in it, and enough of
  * the fact's content words do (2 for a short fact, up to 3 for a long one; all of them for a fact of one or two words);
- * a condition needs at least one of its own words too.
+ * a condition needs at least one of its own words too. Place words (with `localities`) and time words are never content
+ * (Yonatan 2026-11-25): an overlap on them alone never counts as carrying the fact.
  */
-export function subheadlineCarriesFact(subheadline: string, fact: Pick<UsableFact, 'text' | 'condition'>, exclude: ReadonlySet<string> = new Set()): boolean {
+export function subheadlineCarriesFact(subheadline: string, fact: Pick<UsableFact, 'text' | 'condition'>, exclude: ReadonlySet<string> = new Set(), localities?: readonly Locality[]): boolean {
   const sub = stems(subheadline);
   const subDigits = new Set(subheadline.match(DIGITS) ?? []);
   const factDigits = [...(fact.text.match(DIGITS) ?? []), ...((fact.condition ?? '').match(DIGITS) ?? [])];
   if (factDigits.some(run => !subDigits.has(run))) return false;
   const hit = (token: string) => variants(token).some(item => sub.has(item));
-  const words = contentTokens(fact.text, exclude);
+  const words = contentTokens(fact.text, exclude, localities);
   const matched = words.filter(hit).length;
   const need = words.length <= 2 ? words.length : Math.min(3, Math.max(2, Math.ceil(words.length * 0.3)));
   if (words.length === 0 && factDigits.length === 0) return false;
   if (matched < need) return false;
   if (fact.condition) {
-    const conditionWords = contentTokens(fact.condition, exclude);
+    const conditionWords = contentTokens(fact.condition, exclude, localities);
     if (conditionWords.length && !conditionWords.some(hit)) return false;
   }
   return true;
@@ -194,9 +256,10 @@ export function resolveFirstScreen(
   credentialItems: readonly CredentialTrustItem[],
   renderedTrustBar: readonly string[],
   exclude: ReadonlySet<string> = new Set(),
+  localities?: readonly Locality[],
 ): FirstScreenOutcome {
   const candidateIds = candidates.map(fact => fact.id);
-  const carried = candidates.find(fact => subheadlineCarriesFact(heroSubheadline, fact, exclude));
+  const carried = candidates.find(fact => subheadlineCarriesFact(heroSubheadline, fact, exclude, localities));
   if (carried) return { firstScreenFactId: carried.id, source: 'subheadline', candidateIds, missing: false };
   const shown = new Set(renderedTrustBar.map(item => item.normalize('NFC').trim()));
   const credential = credentialItems.find(entry => entry.item && shown.has(entry.item.normalize('NFC').trim()));

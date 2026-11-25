@@ -9,7 +9,7 @@
  * Uses Resend (https://resend.com) for email sending. Requires `RESEND_API_KEY`
  * env var; silently logs locally if unset (for dev). Every email is logged to
  * the console with a `[billing-email]` tag AND appended to a local JSONL file
- * (`data/payments/email-outbox.jsonl`) so its content — including any links —
+ * (`SITE_BOT_EMAIL_OUTBOX_PATH`, default `data/payments/email-outbox.jsonl`) so its content — including any links —
  * is inspectable in dev/test.
  */
 
@@ -28,14 +28,23 @@ export interface BillingEmailPayload {
   cancelUrl?: string;
 }
 
+/**
+ * The dev outbox file: `SITE_BOT_EMAIL_OUTBOX_PATH` when it is an absolute path (the same override the Site Bot client
+ * messages use, so a QA run never writes under data/), else data/payments/email-outbox.jsonl.
+ */
+export function billingOutboxPath(): string {
+  const configured = process.env.SITE_BOT_EMAIL_OUTBOX_PATH;
+  return configured && path.isAbsolute(configured) ? configured : path.join(process.cwd(), 'data', 'payments', 'email-outbox.jsonl');
+}
+
 function logToOutbox(payload: BillingEmailPayload, sent: boolean): void {
   const record = { ...payload, sent, timestamp: new Date().toISOString() };
   console.log(`[billing-email] ${sent ? 'sent via SMTP' : 'STUBBED (no SMTP configured)'} →`, record);
 
   try {
-    const dir = path.join(process.cwd(), 'data', 'payments');
-    fs.mkdirSync(dir, { recursive: true });
-    fs.appendFileSync(path.join(dir, 'email-outbox.jsonl'), JSON.stringify(record) + '\n');
+    const file = billingOutboxPath();
+    fs.mkdirSync(path.dirname(file), { recursive: true });
+    fs.appendFileSync(file, JSON.stringify(record) + '\n');
   } catch (err) {
     console.warn('[billing-email] Failed to append to local email-outbox log:', err);
   }

@@ -46,7 +46,7 @@ import { runSiteResearch } from './research/runResearch';
 import { listedServedAreas } from './servedAreas';
 import { gateAnsweredCollectedData } from './research/gateAnswers';
 import { createPlaceIdChecker, type PlaceIdChecker } from './placeIdRefresh';
-import { factEvidence, firstScreenConstraint, MAX_BRIEF_INTERVIEW_FACTS, workLocationConstraint, type InterviewBriefOptions } from './interviewGeneration';
+import { factEvidence, firstScreenConstraint, INTERVIEW_WRITER_CONSTRAINTS, MAX_BRIEF_INTERVIEW_FACTS, workLocationConstraint, type InterviewBriefOptions } from './interviewGeneration';
 import { transitionResearchStatus, type HumanGate, type NeuronQueryData, type PageOpportunity, type ResearchStatus, type SiteResearchDossier } from './research/types';
 import {
   assembleSiteIdentity,
@@ -300,7 +300,8 @@ export function serviceFactsFor(data: CollectedData, subject: string, label: str
  * Pure. One brief per ready planned page, homepage first. Requires a planned copy_ready dossier.
  * Site Bot step 2c: `interview` adds the owner's confirmed / edited interview facts as approved first-party proof (the
  * homepage gets every writer fact, a service page the facts about its own service), the work-location constraint on every
- * page, and on the homepage the first-screen constraint (firstScreenFact.ts). Without it the briefs are unchanged.
+ * page, the interview writer constraints on every page (no relative time words, no fact-to-claim links), and on the
+ * homepage the first-screen constraint (firstScreenFact.ts). Without it the briefs are unchanged.
  */
 export function buildPageBriefs(dossier: SiteResearchDossier, data: CollectedData, interview?: InterviewBriefOptions): PageBrief[] {
   if (dossier.status !== 'copy_ready' || !planned(dossier)) throw new Error('Dossier has no copy_ready plan.');
@@ -392,6 +393,7 @@ export function buildPageBriefs(dossier: SiteResearchDossier, data: CollectedDat
         ...(isHome ? [] : [approved('constraint-page-topic', `This page is about ${subject}; other services appear only as secondary links.`)]),
         ...(framing ? [framing] : []),
         ...(firstScreen ? [firstScreen] : []),
+        ...(interview ? INTERVIEW_WRITER_CONSTRAINTS : []),
       ],
       links,
       informationGainGaps: gaps(data),

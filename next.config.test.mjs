@@ -64,3 +64,19 @@ test('shared next-server trace keeps Next runtime internals (e.g. lib/metadata)'
     'node_modules/next/dist/server/lib/router-utils/filesystem.js',
   ]) assert.equal(isMatch(file), false, `next-server trace must keep ${file}`);
 });
+
+test('the Site Bot preview frame route gets Referrer-Policy no-referrer (a later entry than the global rule wins)', async () => {
+  const rules = await config.headers();
+  const pathToRegexp = require('next/dist/compiled/path-to-regexp');
+  const valueFor = (pathname) => {
+    let value;
+    for (const rule of rules) {
+      if (!pathToRegexp.pathToRegexp(rule.source, [], {}).test(pathname)) continue;
+      for (const header of rule.headers) if (header.key.toLowerCase() === 'referrer-policy') value = header.value;
+    }
+    return value;
+  };
+  assert.equal(valueFor('/api/site-bot/interview-preview-frame'), 'no-referrer');
+  assert.equal(valueFor('/site-bot/start'), 'strict-origin-when-cross-origin');
+  assert.equal(valueFor('/api/site-bot/interview-preview'), 'strict-origin-when-cross-origin');
+});

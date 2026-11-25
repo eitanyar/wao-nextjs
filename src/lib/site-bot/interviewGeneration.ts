@@ -52,6 +52,17 @@ export function isPublishedAddress(streetAddress: string | undefined, publishedA
   return Boolean(street && published) && addressKey(street) === addressKey(published);
 }
 
+/** Yonatan sign-off 2026-11-25: appended to both MIX constraints. */
+const MIX_HOME_STATES_BOTH = 'The home page states both: that he comes to the customer, and that he also works at his own place.';
+
+/**
+ * Writer constraints on every interview-generated page (Yonatan sign-off 2026-11-25, C2 and C3 iii). English prompt text.
+ */
+export const INTERVIEW_WRITER_CONSTRAINTS: readonly BriefEvidence[] = [
+  { id: 'constraint-no-relative-time', status: 'approved', value: 'Never carry a relative time word from a fact (last week, yesterday, a month ago, this month) into site copy; state what happened without when.' },
+  { id: 'constraint-fact-claim-link', status: 'approved', value: 'Do not link a fact to a USP or tool claim unless the fact itself states it.' },
+];
+
 /** The work-location framing of the generation data (see the header). */
 export function frameWorkLocation(data: CollectedData, workLocation: WorkLocation | null | undefined, publishedAddress: string | null | undefined): CollectedData {
   if (workLocation !== 'HOME' && workLocation !== 'MIX') return data;
@@ -69,8 +80,8 @@ export function workLocationConstraint(workLocation: WorkLocation | null | undef
     return {
       id: 'constraint-work-location', status: 'approved',
       value: clean(data.streetAddress)
-        ? 'Work location (owner-stated): he works both at the customer\'s place and at his own place. Name his own place only by the street address in the owner facts.'
-        : 'Work location (owner-stated): he works both at the customer\'s place and at his own place. No address is published: never state an address or invite walk-in visits.',
+        ? `Work location (owner-stated): he works both at the customer's place and at his own place. Name his own place only by the street address in the owner facts. ${MIX_HOME_STATES_BOTH}`
+        : `Work location (owner-stated): he works both at the customer's place and at his own place. No address is published: never state an address or invite walk-in visits. ${MIX_HOME_STATES_BOTH} Present his own place as by appointment only.`,
     };
   }
   return null;

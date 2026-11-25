@@ -234,8 +234,8 @@ test('first-screen eligibility: rule (b) types, statuses and priority (job > too
     ],
   };
   assert.deepEqual(usableFacts(set), [
-    { id: 'a1-1', type: 'job', text: 'q1', condition: 'on weekdays' },
-    { id: 'a1-2', type: 'job', text: 'his text', edited: true },
+    { id: 'a1-1', type: 'job', text: 'q1', condition: 'on weekdays', questionKey: 'recentJob' },
+    { id: 'a1-2', type: 'job', text: 'his text', edited: true, questionKey: 'recentJob' },
   ]);
 });
 
@@ -281,6 +281,12 @@ test('work-location framing: HOME = on location only, MIX keeps only the publish
   assert.match(workLocationConstraint('HOME', home)!.value, /Never imply a studio/);
   assert.match(workLocationConstraint('MIX', mixTyped)!.value, /never state an address/);
   assert.match(workLocationConstraint('MIX', mixPublished)!.value, /only by the street address/);
+  // Yonatan 2026-11-25: both MIX variants state both places; the no-address one adds "by appointment only"; HOME unchanged.
+  const both = 'The home page states both: that he comes to the customer, and that he also works at his own place.';
+  assert.ok(workLocationConstraint('MIX', mixPublished)!.value.endsWith(both));
+  assert.ok(workLocationConstraint('MIX', mixTyped)!.value.endsWith(`${both} Present his own place as by appointment only.`));
+  assert.doesNotMatch(workLocationConstraint('MIX', mixPublished)!.value, /appointment/);
+  assert.equal(workLocationConstraint('HOME', home)!.value, 'Work location (owner-stated): he works only at the customer\'s place, on location. Never imply a studio, a shop, an office or any place customers come to, and never invite a visit.');
   assert.equal(workLocationConstraint(null, data), null);
   // Removed credential facts leave the generation data; refusals never reach it.
   const generated = interviewGenerationData(data, {
@@ -365,6 +371,12 @@ test('first-screen fact (a): the generation record keeps firstScreenFactId of an
     const usable = { id: fact.id, type: fact.type, text: fact.quote };
     const brief = buildPageBriefs(dossier, record.collectedData, { facts: [usable], firstScreen: [usable], workLocation: null })[0];
     assert.ok(brief.constraints.some(item => item.id === 'first-screen-fact' && item.value.includes(`interview-${fact.id}`)));
+    // Yonatan C2 + C3 (iii): the writer constraints reach every interview brief, and only interview briefs.
+    for (const page of buildPageBriefs(dossier, record.collectedData, { facts: [usable], firstScreen: [], workLocation: null })) {
+      assert.ok(page.constraints.some(item => item.id === 'constraint-no-relative-time' && /Never carry a relative time word/.test(item.value)), page.page.id);
+      assert.ok(page.constraints.some(item => item.id === 'constraint-fact-claim-link' && /unless the fact itself states it/.test(item.value)), page.page.id);
+    }
+    assert.ok(!buildPageBriefs(dossier, record.collectedData)[0].constraints.some(item => item.id === 'constraint-no-relative-time'));
     assert.match(firstScreenRule(brief) ?? '', /FIRST SCREEN \(binding\)/);
     assert.equal(firstScreenRule(buildPageBriefs(dossier, record.collectedData)[0]), null, 'no interview: prompt unchanged');
 
@@ -459,6 +471,11 @@ test('preview access: only the session cookie reads its own ready preview; the f
     assert.doesNotMatch(html, /\/img\/hero-/);
     assert.match(html, /<form\b/);
     assert.doesNotMatch(html, /<form\b[^>]*action=/);
+    // Never indexable even when saved: the live site's robots meta is replaced with noindex,nofollow.
+    assert.doesNotMatch(html, /index,follow/);
+    assert.equal((html.match(/<meta name="robots"[^>]*>/g) ?? []).length, 1);
+    assert.match(html, /<meta name="robots" content="noindex,nofollow" \/>/);
+    assert.equal(PREVIEW_FRAME_HEADERS['Referrer-Policy'], 'no-referrer');
   } finally {
     h.close();
   }

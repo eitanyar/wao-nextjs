@@ -69,6 +69,12 @@ export function inertPreviewHtml(html: string, files: Readonly<Record<string, Bu
     .replace(/<script\b(?![^>]*\btype=(['"])application\/ld\+json\1)[^>]*>[\s\S]*?<\/script\s*>/gi, '')
     .replace(/<link\b[^>]*\brel=(['"])preload\1[^>]*>\s*/gi, '')
     .replace(/<link\b[^>]*\bhref=(['"])(?:https?:)?\/\/[^'"]*\1[^>]*>\s*/gi, '');
+  // Never indexable, even if the document is saved or the X-Robots-Tag header is lost: the live site's robots meta
+  // (index,follow) becomes noindex,nofollow, and one is added when the page carries none.
+  out = out.replace(/<meta\b[^>]*\bname=(['"])robots\1[^>]*>\s*/gi, '');
+  out = /<head\b[^>]*>/i.test(out)
+    ? out.replace(/<head\b[^>]*>/i, (head) => `${head}\n  <meta name="robots" content="noindex,nofollow" />`)
+    : `<meta name="robots" content="noindex,nofollow" />${out}`;
   for (const key of ['hebrew', 'latin'] as const) {
     const served = SITE_FONT_PATHS[key];
     const bytes = fonts[served.slice(1)];
@@ -95,6 +101,7 @@ export function assertPreviewInert(html: string): void {
   if (/<form\b[^>]*\saction=/i.test(html)) throw new Error('preview: form action');
   if (/\b(?:src|srcset)=(['"])(?!data:)/i.test(html)) throw new Error('preview: external source');
   if (/url\((['"]?)(?!data:|#)[^)]/i.test(html)) throw new Error('preview: external url()');
+  if (/<meta\b[^>]*\bname=(['"])robots\1(?![^>]*noindex)[^>]*>/i.test(html)) throw new Error('preview: indexable robots meta');
 }
 
 /** The full, inert preview document of a stored preview record. */

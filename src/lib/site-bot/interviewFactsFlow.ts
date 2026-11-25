@@ -26,6 +26,7 @@ import type { CollectedData } from '../bot/prompts';
 import { parseContractorLicense } from './contractorRegistration';
 import { CREDENTIALS_COPY, licenseQuestionCopy, NO_WARRANTY_VALUE, WARRANTY_PICKER_VALUES } from './credentialsCopy';
 import { defaultModelCall, extractFactCandidates, type ModelCall } from './factExtraction';
+import { retypeModelFacts } from './factRetype';
 import {
   allFactsReviewed, factsFromCredentials, factsFromModel, factsFromPriceChips, isFactId, isInterviewFactSet, parseFactDecision,
   reviewFact, type CredentialField, type InterviewFact, type InterviewFactSet, type QuoteSource,
@@ -35,7 +36,9 @@ import { answerTexts, PRICE_CHIP_COPY_KEY, secondPassState, tickedPriceChips } f
 import {
   claimFactExtraction, interviewPhase, markInterviewFactsConfirmed, returnInterviewToQuestions, type InterviewSession,
 } from './interviewSession';
+import { ISRAELI_LOCALITIES } from './israeliLocalities';
 import { getResearchPath, readResearchDossier, writeResearchDossierAtomic } from './research/researchStore';
+import { listedServedAreas } from './servedAreas';
 import type { SiteResearchDossier } from './research/types';
 import { SITE_BOT_STEP2B_COPY } from './step2bCopy.generated';
 
@@ -180,7 +183,12 @@ async function extractSet(session: InterviewSession, dossier: SiteResearchDossie
     }, { call: deps.modelCall ?? defaultModelCall(), now: deps.now, recordId: `${session.id}:v${session.answersVersion}`, timeoutMs: deps.timeoutMs });
     usage = outcome.usage;
     if (outcome.ok) {
-      modelFacts = factsFromModel(outcome.candidates, sources, services.map(service => service.id), session.answersVersion);
+      // Yonatan C3: a job needs the work in it, and a caller's question is never a job (factRetype.ts).
+      const data = session.collectedData ?? {};
+      const serviceAreaTexts = [data.targetLocation, data.specificCities, ...listedServedAreas(data)]
+        .filter((item): item is string => typeof item === 'string' && item.trim() !== '');
+      modelFacts = retypeModelFacts(factsFromModel(outcome.candidates, sources, services.map(service => service.id), session.answersVersion),
+        { localities: ISRAELI_LOCALITIES, serviceAreaTexts });
       extraction = 'model';
     }
   }

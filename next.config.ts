@@ -411,6 +411,18 @@ const nextConfig: NextConfig = {
           },
         ],
       },
+      // Site Bot step 2c: the owner's preview frame must not leak the start page as a referrer. Next applies config
+      // headers over a route handler's own headers and the LAST matching entry wins, so this entry must stay after the
+      // global one above (the route also sets no-referrer itself, src/lib/site-bot/previewFrame.ts).
+      {
+        source: "/api/site-bot/interview-preview-frame",
+        headers: [
+          {
+            key: "Referrer-Policy",
+            value: "no-referrer",
+          },
+        ],
+      },
     ];
   },
 };

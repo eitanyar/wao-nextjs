@@ -56,6 +56,7 @@
     "src/lib/payments/magic-link.test.ts",
     "src/lib/payments/get-provider.ts",
     "src/lib/payments/email.ts",
+    "src/lib/payments/email-outbox.test.ts",
     "src/lib/payments/subscriptions.ts",
     "src/lib/payments/subscriptions.test.ts",
     "src/lib/payments/cron-auth.ts",
@@ -585,6 +586,7 @@
     "src/lib/site-bot/previewGeneration.ts",
     "src/lib/site-bot/previewFrame.ts",
     "src/lib/site-bot/previewFrameSandbox.ts",
-    "src/lib/site-bot/previewStep2c.test.ts"
+    "src/lib/site-bot/previewStep2c.test.ts",
+    "src/lib/site-bot/step2cFactRules.test.ts"
   ]
 }

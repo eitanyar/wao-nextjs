@@ -400,7 +400,7 @@ export async function generatePreviewHomepage(input: PreviewGenerationInput, dep
 
     const rendered = (page.copy.trustBarItems ?? []).filter(item => html.includes(htmlText(item)));
     const firstScreen = resolveFirstScreen(page.copy.heroSubheadline, candidates, credentialTrustItems(home, data, usable), rendered,
-      anchorExclusions(home.site!.pageName, home.site!.city, home.site!.businessName));
+      anchorExclusions(home.site!.pageName, home.site!.city, home.site!.businessName), context.localities);
     // Rule (e): the preview still renders; step 3's gate reads this line.
     if (firstScreen.missing) log(`[site-bot preview] first_screen_fact_missing session=${input.sessionId} round=${input.round} candidates=${firstScreen.candidateIds.length}`);
 

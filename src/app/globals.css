@@ -1604,8 +1604,10 @@ html.wao-a11y-underline-links a { text-decoration: underline !important; text-un
 /* --- Site Bot intake (/site-bot/start, paid-journey v2 M1) --- */
 .wao-intake .wao-intake-choice { flex: 1 1 160px; min-height: 44px; padding: 10px 16px; border: 1px solid var(--accent); border-radius: var(--radius-pill); background: transparent; color: var(--text); font: inherit; cursor: pointer; }
 .wao-intake .wao-intake-choice:hover { background: rgba(74, 222, 128, 0.08); }
+.wao-intake .wao-intake-choice[aria-disabled="true"] { opacity: .55; cursor: not-allowed; border-style: dashed; }
 .wao-intake .wao-intake-choice:focus-visible,
 .wao-intake .wao-intake-field:focus-visible,
+.wao-intake .wao-intake-preview-fix:focus-visible,
 .wao-intake .btn-primary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .wao-intake .btn-primary:disabled,
 .wao-intake .btn-primary:disabled:hover,

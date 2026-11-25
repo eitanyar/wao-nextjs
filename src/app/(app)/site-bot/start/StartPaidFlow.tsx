@@ -2065,10 +2065,12 @@ function SiteBotStartContent() {
 
         {phase === "facts_confirmed" && (preview === null || preview.status === "none" || preview.status === "generating") && (
           <div data-interview-facts-confirmed="true" data-interview-preview="generating" aria-busy="true" style={ownerStepStyle}>
-            <h2 ref={ownerHeadingRef} tabIndex={-1} style={ownerHeadingStyle}>{renderMixed(STEP2C_COPY.GENERATING_HEAD)}</h2>
-            {copyLines(STEP2C_COPY.GENERATING_BODY).map((line, index) => (
-              <p key={index} style={{ ...ownerNoteStyle, color: "var(--text)" }}>{renderMixed(line)}</p>
-            ))}
+            <h2 ref={ownerHeadingRef} tabIndex={-1} aria-describedby="interview-preview-generating-body" style={ownerHeadingStyle}>{renderMixed(STEP2C_COPY.GENERATING_HEAD)}</h2>
+            <div id="interview-preview-generating-body">
+              {copyLines(STEP2C_COPY.GENERATING_BODY).map((line, index) => (
+                <p key={index} style={{ ...ownerNoteStyle, color: "var(--text)" }}>{renderMixed(line)}</p>
+              ))}
+            </div>
           </div>
         )}
 
@@ -2097,10 +2099,10 @@ function SiteBotStartContent() {
               referrerPolicy="no-referrer"
               loading="eager"
               data-interview-preview-frame="true"
-              style={{ width: "100%", height: "min(70vh, 720px)", border: "1px solid var(--border)", borderRadius: "var(--radius-md)", background: "#fff" }}
+              style={{ width: "100%", height: "min(70dvh, 720px)", minHeight: "420px", border: "1px solid var(--border)", borderRadius: "var(--radius-md)", background: "#fff" }}
             />
             {preview.fixAvailable ? (
-              <button type="button" data-interview-preview-fix="true" aria-disabled={submitting || undefined} onClick={startPreviewFix} style={{ minHeight: "44px", textAlign: "start", background: "transparent", border: "none", padding: "8px 0", color: "var(--accent)", textDecoration: "underline", cursor: "pointer", font: "inherit", lineHeight: 1.6 }}>
+              <button type="button" className="wao-intake-preview-fix" data-interview-preview-fix="true" aria-disabled={submitting || undefined} onClick={startPreviewFix} style={{ minHeight: "44px", textAlign: "start", background: "transparent", border: "none", padding: "8px 0", color: "var(--accent)", textDecoration: "underline", cursor: "pointer", font: "inherit", lineHeight: 1.6 }}>
                 {renderMixed(STEP2C_COPY.PREVIEW_FIX_LINK)}
               </button>
             ) : preview.fixUsed ? (
