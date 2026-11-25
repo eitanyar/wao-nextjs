@@ -19,7 +19,7 @@ import { deriveOpenResearchGates } from './research/gates';
 import { recordOwnerResearchGates } from './research/ownerGates';
 import { buildSiteResearchInput } from './research/researchInput';
 import { runSiteResearch } from './research/runResearch';
-import { claimInterviewResearch, type InterviewSession } from './interviewSession';
+import { claimInterviewResearch, markInterviewResearchDone, type InterviewSession } from './interviewSession';
 import { withLaunchStore, type LaunchStore } from './launchStore';
 
 const inFlight = new Map<string, Promise<void>>();
@@ -54,7 +54,11 @@ export function startInterviewResearch(session: InterviewSession, deps: Intervie
   const run = Promise.resolve()
     .then(() => deps.run(researchId, session.collectedData!))
     .catch(() => deps.log(`[site-bot interview] research failed research=${researchId}`))
-    .finally(() => inFlight.delete(researchId));
+    .finally(() => {
+      inFlight.delete(researchId);
+      // Step 2b: the gates step waits for this (interviewResearchSettled), success or failure alike.
+      if (!deps.withStore(store => markInterviewResearchDone(store, researchId), false)) deps.log(`[site-bot interview] research end not recorded research=${researchId}`);
+    });
   inFlight.set(researchId, run);
   return 'started';
 }

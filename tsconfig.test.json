@@ -566,6 +566,13 @@
     "src/lib/site-bot/interviewGates.ts",
     "src/lib/site-bot/interviewResearch.ts",
     "src/lib/site-bot/interviewReminder.ts",
-    "src/lib/site-bot/interviewFlow.test.ts"
+    "src/lib/site-bot/interviewFlow.test.ts",
+    "src/lib/site-bot/step2bCopy.generated.ts",
+    "src/lib/site-bot/interviewQuestions.ts",
+    "src/lib/site-bot/interviewProbe.ts",
+    "src/lib/site-bot/interviewFacts.ts",
+    "src/lib/site-bot/factExtraction.ts",
+    "src/lib/site-bot/interviewFactsFlow.ts",
+    "src/lib/site-bot/interviewV1.test.ts"
   ]
 }

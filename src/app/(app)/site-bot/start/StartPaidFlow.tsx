@@ -18,6 +18,22 @@ import { ISRAELI_LOCALITIES } from "@/lib/site-bot/israeliLocalities";
 import { MAX_LISTED_SERVED_AREAS, servedAreaCandidates } from "@/lib/site-bot/servedAreas";
 import { chatBubbleDir } from "@/lib/site-bot/chatBubbleDir";
 import { SITE_BOT_STEP2A_COPY as STEP2A_COPY } from "@/lib/site-bot/step2aCopy.generated";
+import { SITE_BOT_STEP2B_COPY as STEP2B_COPY } from "@/lib/site-bot/step2bCopy.generated";
+import { SITE_BOT_POSTPAY_COPY as POSTPAY_COPY } from "@/lib/site-bot/postPayCopy.generated";
+import {
+  INTERVIEW_QUESTION_KEYS,
+  isPriceChipId,
+  MAX_INTERVIEW_ANSWER_CHARS,
+  PRICE_CHIP_COPY_KEY,
+  PRICE_CHIP_IDS,
+  QUESTION_COPY_KEY,
+  QUESTION_HINT_COPY_KEY,
+  type InterviewQuestionsView,
+  type PriceChipId,
+} from "@/lib/site-bot/interviewQuestions";
+import { FACT_TYPE_COPY_KEY, INTERVIEW_FACT_TYPES, MAX_OWNER_TEXT_CHARS, type InterviewFact } from "@/lib/site-bot/interviewFacts";
+import { researchGateCopyKey } from "@/lib/site-bot/research/gatePresentation";
+import type { ResearchGateType } from "@/lib/site-bot/research/gates";
 import {
   isWorkLocationTrade,
   WORK_LOCATION_OPTION_KEY,
@@ -81,6 +97,13 @@ import {
 // the work-location question (src/lib/site-bot/workLocation.ts): studio-only or online-only exits to the waiting list.
 // The flow then stops on the holding screen. Payment moves after the interview and the home-page preview (steps 2b / 2c);
 // this page no longer calls the checkout init route (2c hands the confirmed session to checkout).
+//
+// Step 2b (2026-11-25): HOLDING_CTA starts interview v1 in the same session: five questions, one per screen
+// (src/lib/site-bot/interviewQuestions.ts; the server applies every answer, so a reload resumes on the same question,
+// and shows the vague-answer probe at most once per question), then the open owner research gates (interview-gates,
+// once the research settled; the holding text is the waiting state), then the confirm-facts screen (interview-facts,
+// src/lib/site-bot/interviewFactsFlow.ts). FACTS_DONE lands on the holding text until 2c adds the home-page preview.
+// Every new string comes from src/lib/site-bot/step2bCopy.generated.ts (waocopy).
 
 interface Message {
   role: "assistant" | "user";
@@ -179,16 +202,16 @@ function questionText(key: IntakeQuestionKey, card: IntakeCard): string {
 // (src/lib/site-bot/voiceNote.ts: no safe storage / transcription / control labels yet), so the flow never enters it today.
 // Step 2a: "location" (work-location question), "holding" (after the owner steps), "exited" (location exit, waiting list)
 // and "expired" (the spot was released after 72 h) come from the interview session.
-type Phase = "loading" | "card" | "chat" | "credentials" | "contact" | "domain" | "location" | "holding" | "exited" | "expired" | "voice" | "routing" | "error";
+// Step 2b: "questions" (interview v1), "gates" (owner research gates), "facts" (confirm facts), "facts_confirmed"
+// (2c adds the preview there) and "elsewhere" (the session is open in another browser).
+type Phase = "loading" | "card" | "chat" | "credentials" | "contact" | "domain" | "location" | "holding" | "questions" | "gates" | "facts" | "facts_confirmed" | "exited" | "expired" | "elsewhere" | "voice" | "routing" | "error";
 
 /** The error fallback of a failed interview request (the same text the checkout handoff used). */
 const STEP_ERROR_FALLBACK = "משהו השתבש";
 
-/**
- * HOLDING_CTA starts the interview, which step 2b adds. Until then the button is not rendered (it would promise a step
- * that does not exist yet). TODO(step 2b): flip to true when the interview v1 screen exists.
- */
-const INTERVIEW_V1_AVAILABLE = false;
+/** How often the gates step asks whether the research settled, and the facts step whether the extraction finished. */
+const RESEARCH_POLL_MS = 8000;
+const FACTS_POLL_MS = 3000;
 
 /** The browser's step snapshot saved on the interview session (resume only; the server never trusts it). */
 interface IntakeProgress {
@@ -217,16 +240,68 @@ function isIntakeProgress(value: unknown): value is IntakeProgress {
 }
 
 interface InterviewSessionView {
-  phase: "intake" | "domain" | "location" | "holding" | "exited" | "expired" | "paid" | "superseded";
+  phase: "intake" | "domain" | "location" | "holding" | "questions" | "gates" | "facts" | "facts_confirmed" | "exited" | "expired" | "paid" | "superseded";
   progress: unknown;
   locationTrade: WorkLocationTrade | null;
   workLocation: WorkLocation | null;
+  questions: InterviewQuestionsView | null;
+  researchReady: boolean;
+}
+
+function questionsViewOf(value: unknown): InterviewQuestionsView | null {
+  if (!value || typeof value !== "object") return null;
+  const view = value as Partial<InterviewQuestionsView>;
+  if (typeof view.index !== "number" || (view.key !== null && !(INTERVIEW_QUESTION_KEYS as readonly unknown[]).includes(view.key))) return null;
+  return {
+    pass: view.pass === 2 ? 2 : 1,
+    index: view.index,
+    key: view.key ?? null,
+    probing: view.probing === true,
+    drafts: view.drafts && typeof view.drafts === "object" ? view.drafts : {},
+    chips: Array.isArray(view.chips) ? view.chips.filter(isPriceChipId) : [],
+  };
 }
 
 function sessionViewOf(value: unknown): InterviewSessionView | null {
   if (!value || typeof value !== "object") return null;
   const view = value as Partial<InterviewSessionView>;
-  return typeof view.phase === "string" ? { phase: view.phase, progress: view.progress ?? null, locationTrade: isWorkLocationTrade(view.locationTrade) ? view.locationTrade : null, workLocation: view.workLocation ?? null } : null;
+  return typeof view.phase === "string"
+    ? {
+        phase: view.phase, progress: view.progress ?? null, locationTrade: isWorkLocationTrade(view.locationTrade) ? view.locationTrade : null,
+        workLocation: view.workLocation ?? null, questions: questionsViewOf(view.questions), researchReady: view.researchReady === true,
+      }
+    : null;
+}
+
+/** One open owner gate (interview-gates list). */
+interface OwnerGate {
+  id: string;
+  type: ResearchGateType;
+  evidenceDigest: string;
+}
+
+/** One fact as the confirm-facts screen gets it (interview-facts). */
+interface FactItem extends InterviewFact {
+  serviceName?: string;
+  contextLabel?: string;
+}
+
+interface FactsScreen {
+  facts: FactItem[];
+  empty: boolean;
+  canReturn: boolean;
+  canFinish: boolean;
+}
+
+async function postInterviewJson(url: string, body: Record<string, unknown>): Promise<{ ok: boolean; status: number; json: Record<string, unknown> }> {
+  const res = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+  const json = await readJsonBody(res);
+  return { ok: res.ok, status: res.status, json };
+}
+
+function factsScreenOf(json: Record<string, unknown>): FactsScreen | null {
+  if (!Array.isArray(json.facts)) return null;
+  return { facts: json.facts as FactItem[], empty: json.empty === true, canReturn: json.canReturn === true, canFinish: json.canFinish === true };
 }
 
 async function postInterviewStep(body: Record<string, unknown>): Promise<{ ok: boolean; status?: string; session: InterviewSessionView | null }> {
@@ -289,6 +364,18 @@ function SiteBotStartContent() {
   const [locationTrade, setLocationTrade] = useState<WorkLocationTrade | null>(null);
   const [locationChoice, setLocationChoice] = useState<WorkLocation | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  // Step 2b: interview v1, owner gates, confirm facts.
+  const [questionsView, setQuestionsView] = useState<InterviewQuestionsView | null>(null);
+  const [answerDraft, setAnswerDraft] = useState("");
+  const [chipDraft, setChipDraft] = useState<PriceChipId[]>([]);
+  const [researchReady, setResearchReady] = useState(false);
+  const [gates, setGates] = useState<OwnerGate[] | null>(null);
+  const [gateIndex, setGateIndex] = useState(0);
+  const [gateDraft, setGateDraft] = useState("");
+  const [gateError, setGateError] = useState(false);
+  const [factsScreen, setFactsScreen] = useState<FactsScreen | null>(null);
+  const [editingFact, setEditingFact] = useState<string | null>(null);
+  const [factEdit, setFactEdit] = useState("");
   const ownerHeadingRef = useRef<HTMLHeadingElement>(null);
   const mobileInputRef = useRef<HTMLInputElement>(null);
   const emailInputRef = useRef<HTMLInputElement>(null);
@@ -301,8 +388,18 @@ function SiteBotStartContent() {
   /** Restores the session's phase (and, inside the intake, this browser's saved snapshot). True when it resumed. */
   function resumeFrom(view: InterviewSessionView): boolean {
     if (view.locationTrade) setLocationTrade(view.locationTrade);
-    if (view.phase === "domain" || view.phase === "location" || view.phase === "holding") {
+    if (view.phase === "domain" || view.phase === "location" || view.phase === "holding" || view.phase === "facts" || view.phase === "facts_confirmed") {
       setPhase(view.phase);
+      return true;
+    }
+    if (view.phase === "questions" && view.questions) {
+      showQuestions(view.questions);
+      return true;
+    }
+    if (view.phase === "gates") {
+      setResearchReady(view.researchReady);
+      setGates(null);
+      setPhase("gates");
       return true;
     }
     if (view.phase === "intake" && isIntakeProgress(view.progress)) {
@@ -354,6 +451,11 @@ function SiteBotStartContent() {
           setPhase(view.phase);
           return false;
         }
+        // Step 2b: the session is open in another browser (after its contact step): say so, never bounce to the audit.
+        if (res.status === 409 && json.status === "elsewhere") {
+          setPhase("elsewhere");
+          return false;
+        }
         if (res.ok && (json.status === "started" || json.status === "resumed") && view) {
           if (json.status === "started") {
             const tracking = browserSiteBotTracking();
@@ -387,6 +489,8 @@ function SiteBotStartContent() {
       })
       // Not claimed: stay on the loading state while the router leaves for the audit result (the card never flashes).
       .finally(() => { if (claimed && !resumed) setPhase((current) => (current === "loading" ? "card" : current)); });
+    // One-shot (fetchedRef): resumeFrom only sets state; step 2b's showQuestions made the linter see it as a changing dep.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [prefillRequested, auditId, placeId, router]);
 
   // Step 2a: the browser's step snapshot goes to the interview session at every step of the intake, so a reload (or the
@@ -434,16 +538,87 @@ function SiteBotStartContent() {
     return () => clearTimeout(timer);
   }, [phase]);
 
+  const questionIndex = questionsView?.index;
+  const questionProbing = questionsView?.probing;
+  const gatesListed = gates !== null;
+  const factsLoaded = factsScreen !== null;
+
   // The contact and domain steps take focus on their heading when they open, like the credentials step.
   useEffect(() => {
-    if (phase !== "contact" && phase !== "domain" && phase !== "location" && phase !== "holding" && phase !== "exited" && phase !== "expired") return;
+    if (phase !== "contact" && phase !== "domain" && phase !== "location" && phase !== "holding" && phase !== "exited" && phase !== "expired"
+      && phase !== "questions" && phase !== "gates" && phase !== "facts" && phase !== "facts_confirmed" && phase !== "elsewhere") return;
     // Touch users get no focus-scroll, so bring the step's top into view explicitly (scroll-padding keeps it off the banner).
     const timer = setTimeout(() => {
       ownerHeadingRef.current?.focus();
       ownerHeadingRef.current?.scrollIntoView({ block: "start" });
     }, 0);
     return () => clearTimeout(timer);
-  }, [phase]);
+    // Step 2b: every new question, the probe, each gate and the facts loading -> list switch move focus to the heading too.
+  }, [phase, questionIndex, questionProbing, gateIndex, gatesListed, factsLoaded]);
+
+  // Step 2b, gates step: until the research settled, poll the session status (the holding text is the waiting state);
+  // then list the open owner gates once. No gates -> straight on to the facts.
+  useEffect(() => {
+    if (phase !== "gates" || gates !== null) return;
+    let cancelled = false;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const listGates = async () => {
+      const result = await postInterviewJson("/api/site-bot/interview-gates", { action: "list" });
+      if (cancelled) return;
+      if (result.status === 409 && result.json.error === "research_pending") { setResearchReady(false); timer = setTimeout(check, RESEARCH_POLL_MS); return; }
+      if (!result.ok || !Array.isArray(result.json.gates)) throw new Error("gates");
+      const listed = result.json.gates as OwnerGate[];
+      setGateIndex(0);
+      setGateDraft("");
+      setGateError(false);
+      if (listed.length === 0) { await finishGates(); return; }
+      setGates(listed);
+    };
+    const check = async () => {
+      try {
+        if (!researchReady) {
+          const status = await postInterviewStep({ step: "status" });
+          if (cancelled) return;
+          if (!status.ok || !status.session) throw new Error("status");
+          if (!status.session.researchReady) { timer = setTimeout(check, RESEARCH_POLL_MS); return; }
+          setResearchReady(true);
+        }
+        await listGates();
+      } catch {
+        if (cancelled) return;
+        setErrorMessage(customerErrorText(undefined, STEP_ERROR_FALLBACK));
+        setPhase("error");
+      }
+    };
+    void check();
+    return () => { cancelled = true; if (timer) clearTimeout(timer); };
+    // finishGates is stable enough for this one-shot effect (it only posts and sets the phase).
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [phase, gates, researchReady]);
+
+  // Step 2b, facts step: load the fact set (the server extracts it once); while another request extracts, poll.
+  useEffect(() => {
+    if ((phase !== "facts" && phase !== "facts_confirmed") || factsScreen !== null) return;
+    if (phase === "facts_confirmed") return;
+    let cancelled = false;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const load = async () => {
+      try {
+        const result = await postInterviewJson("/api/site-bot/interview-facts", { action: "load" });
+        if (cancelled) return;
+        if (result.status === 409 && result.json.error === "extracting") { timer = setTimeout(load, FACTS_POLL_MS); return; }
+        const screen = result.ok ? factsScreenOf(result.json) : null;
+        if (!screen) throw new Error("facts");
+        setFactsScreen(screen);
+      } catch {
+        if (cancelled) return;
+        setErrorMessage(customerErrorText(undefined, STEP_ERROR_FALLBACK));
+        setPhase("error");
+      }
+    };
+    void load();
+    return () => { cancelled = true; if (timer) clearTimeout(timer); };
+  }, [phase, factsScreen]);
 
   function fieldValue(field: IntakeCardField): string {
     // Display only: time ranges are isolated LTR so the RTL input shows 08:00-18:00, not 18:00-08:00.
@@ -672,6 +847,149 @@ function SiteBotStartContent() {
     }
   }
 
+  // ---- Step 2b: interview v1 -------------------------------------------------------------------------------------
+
+  /** Shows a question screen from the server's view (pre-filling his own earlier answer; the probe screen starts empty). */
+  function showQuestions(view: InterviewQuestionsView) {
+    setQuestionsView(view);
+    setAnswerDraft(view.probing || !view.key || view.key === "priceStyle" ? "" : view.drafts[view.key] ?? "");
+    setChipDraft(view.chips);
+    setPhase("questions");
+  }
+
+  /** Moves on from a step-2b server view (questions -> gates -> facts). */
+  function followView(view: InterviewSessionView) {
+    if (view.phase === "questions" && view.questions) { showQuestions(view.questions); return; }
+    if (view.phase === "gates") { setResearchReady(view.researchReady); setGates(null); setPhase("gates"); return; }
+    if (view.phase === "facts") { setFactsScreen(null); setPhase("facts"); return; }
+    if (view.phase === "facts_confirmed") { setPhase("facts_confirmed"); return; }
+    throw new Error("phase");
+  }
+
+  function stepFailed() {
+    setErrorMessage(customerErrorText(undefined, STEP_ERROR_FALLBACK));
+    setPhase("error");
+  }
+
+  function beginQuestions() {
+    if (phase !== "holding" || submitting) return;
+    setSubmitting(true);
+    postInterviewStep({ step: "questions_begin" })
+      .then((result) => {
+        if (!result.ok || !result.session) throw new Error("questions_begin");
+        followView(result.session);
+      })
+      .catch(stepFailed)
+      .finally(() => setSubmitting(false));
+  }
+
+  function submitAnswer(skip: boolean) {
+    const key = questionsView?.key;
+    if (phase !== "questions" || !key || submitting) return;
+    const body: Record<string, unknown> = { step: "answer", key };
+    if (skip) body.skip = true;
+    else if (key === "priceStyle") body.chips = chipDraft;
+    else body.text = answerDraft.trim();
+    if (!skip && key !== "priceStyle" && !answerDraft.trim()) return;
+    if (!skip && key === "priceStyle" && chipDraft.length === 0) return;
+    setSubmitting(true);
+    postInterviewStep(body)
+      .then((result) => {
+        // ok, or out_of_order (a second tab or a double submit won): both carry the state the server kept.
+        if (!result.session) throw new Error("answer");
+        followView(result.session);
+      })
+      .catch(() => {
+        // Re-read the session state once; an out_of_order reply still carries the winning view.
+        postInterviewStep({ step: "status" })
+          .then((status) => { if (!status.ok || !status.session) throw new Error("status"); followView(status.session); })
+          .catch(stepFailed);
+      })
+      .finally(() => setSubmitting(false));
+  }
+
+  function toggleChip(chip: PriceChipId) {
+    setChipDraft((prev) => (prev.includes(chip) ? prev.filter((item) => item !== chip) : PRICE_CHIP_IDS.filter((id) => id === chip || prev.includes(id))));
+  }
+
+  // ---- Step 2b: owner research gates -----------------------------------------------------------------------------
+
+  async function finishGates() {
+    const result = await postInterviewStep({ step: "gates_done" });
+    if (!result.ok || !result.session) throw new Error("gates_done");
+    followView(result.session);
+  }
+
+  function nextGate() {
+    if (!gates) return;
+    setGateDraft("");
+    setGateError(false);
+    if (gateIndex + 1 < gates.length) { setGateIndex(gateIndex + 1); return; }
+    setSubmitting(true);
+    finishGates().catch(stepFailed).finally(() => setSubmitting(false));
+  }
+
+  function submitGate(skip: boolean) {
+    const gate = gates?.[gateIndex];
+    if (phase !== "gates" || !gate || submitting) return;
+    if (skip) { nextGate(); return; }
+    if (!gateDraft.trim()) return;
+    setSubmitting(true);
+    setGateError(false);
+    postInterviewJson("/api/site-bot/interview-gates", { action: "answer", gateId: gate.id, evidenceDigest: gate.evidenceDigest, text: gateDraft.trim() })
+      .then((result) => {
+        // A gate closed meanwhile (answered in another tab) needs no second answer.
+        if (!result.ok && result.json.error !== "gate_closed") throw new Error("gate");
+        setSubmitting(false);
+        nextGate();
+      })
+      .catch(() => { setGateError(true); setSubmitting(false); });
+  }
+
+  // ---- Step 2b: confirm facts ------------------------------------------------------------------------------------
+
+  function reviewFactItem(factId: string, decision: "confirm" | "remove" | "fix", text?: string) {
+    if (phase !== "facts" || submitting) return;
+    setSubmitting(true);
+    postInterviewJson("/api/site-bot/interview-facts", { action: "review", factId, decision, ...(text === undefined ? {} : { text }) })
+      .then((result) => {
+        const screen = result.ok ? factsScreenOf(result.json) : null;
+        if (!screen) throw new Error("review");
+        setFactsScreen(screen);
+        setEditingFact(null);
+        setFactEdit("");
+      })
+      .catch(stepFailed)
+      .finally(() => setSubmitting(false));
+  }
+
+  function finishFacts() {
+    if (phase !== "facts" || !factsScreen?.canFinish || submitting) return;
+    setSubmitting(true);
+    postInterviewJson("/api/site-bot/interview-facts", { action: "done" })
+      .then((result) => {
+        if (!result.ok || result.json.phase !== "facts_confirmed") throw new Error("done");
+        setPhase("facts_confirmed");
+      })
+      .catch(stepFailed)
+      .finally(() => setSubmitting(false));
+  }
+
+  function returnToQuestions() {
+    if (phase !== "facts" || !factsScreen?.canReturn || submitting) return;
+    setSubmitting(true);
+    postInterviewJson("/api/site-bot/interview-facts", { action: "return" })
+      .then(async (result) => {
+        if (!result.ok) throw new Error("return");
+        setFactsScreen(null);
+        const status = await postInterviewStep({ step: "status" });
+        if (!status.ok || !status.session) throw new Error("status");
+        followView(status.session);
+      })
+      .catch(stepFailed)
+      .finally(() => setSubmitting(false));
+  }
+
   const visibleSteps = questions;
   const currentVisibleIndex = stepIndex;
   const isProbing = currentKey === "usp" && probed && pendingAnswer !== null;
@@ -800,7 +1118,9 @@ function SiteBotStartContent() {
           </div>
         )}
 
-        {phase !== "loading" && phase !== "card" && phase !== "holding" && phase !== "exited" && phase !== "expired" && (messages.length > 0 || phase === "error" || phase === "routing") && (
+        {phase !== "loading" && phase !== "card" && phase !== "holding" && phase !== "exited" && phase !== "expired"
+          && phase !== "questions" && phase !== "gates" && phase !== "facts" && phase !== "facts_confirmed" && phase !== "elsewhere"
+          && (messages.length > 0 || phase === "error" || phase === "routing") && (
         <div
           ref={scrollRef}
           role="log"
@@ -810,6 +1130,8 @@ function SiteBotStartContent() {
             borderRadius: "var(--radius-md)",
             background: "var(--surface)",
             padding: "20px",
+            // Maya: the last bubble scrolls clear of the floating accessibility button.
+            paddingBottom: "56px",
             maxHeight: "480px",
             overflowY: "auto",
             display: "flex",
@@ -848,7 +1170,7 @@ function SiteBotStartContent() {
           )}
 
           {phase === "error" && (
-            <div style={{ color: "#e05555", fontFamily: "var(--font-body), sans-serif", padding: "0 4px" }}>
+            <div role="alert" style={{ color: "#e05555", fontFamily: "var(--font-body), sans-serif", padding: "0 4px" }}>
               {renderMixed(`קרתה תקלה: ${errorMessage}. אפשר לרענן ולנסות שוב.`)}
             </div>
           )}
@@ -1253,7 +1575,7 @@ function SiteBotStartContent() {
             )}
 
             <button type="submit" className="btn-primary" data-intake-owner-domain-continue="true" disabled={!owner.domainChoice || submitting} style={{ padding: "12px 24px", minHeight: "44px", justifyContent: "center" }}>
-              {renderMixed(INTAKE_OWNER_COPY.contactContinue)}
+              {renderMixed(STEP2B_COPY.STEP_CONTINUE)}
             </button>
           </form>
         )}
@@ -1295,7 +1617,7 @@ function SiteBotStartContent() {
               </div>
             </fieldset>
             <button type="submit" className="btn-primary" data-intake-work-location-continue="true" disabled={!locationChoice || submitting} style={{ padding: "12px 24px", minHeight: "44px", justifyContent: "center" }}>
-              {renderMixed(INTAKE_OWNER_COPY.contactContinue)}
+              {renderMixed(STEP2B_COPY.STEP_CONTINUE)}
             </button>
           </form>
         )}
@@ -1306,11 +1628,237 @@ function SiteBotStartContent() {
             {copyLines(STEP2A_COPY.HOLDING_BODY).map((line, index) => (
               <p key={index} style={{ ...ownerNoteStyle, color: "var(--text)" }}>{renderMixed(line)}</p>
             ))}
-            {INTERVIEW_V1_AVAILABLE && (
-              <button type="button" className="btn-primary" data-interview-holding-cta="true" style={{ padding: "12px 24px", minHeight: "44px", justifyContent: "center" }}>
-                {renderMixed(STEP2A_COPY.HOLDING_CTA)}
-              </button>
+            <button type="button" className="btn-primary" data-interview-holding-cta="true" onClick={beginQuestions} disabled={submitting} style={{ padding: "12px 24px", minHeight: "44px", justifyContent: "center" }}>
+              {renderMixed(STEP2A_COPY.HOLDING_CTA)}
+            </button>
+          </div>
+        )}
+
+        {phase === "questions" && questionsView?.key && (
+          <form
+            data-interview-question={questionsView.key}
+            data-interview-probe={questionsView.probing ? "true" : undefined}
+            aria-labelledby="interview-question-title"
+            noValidate
+            onSubmit={(e) => {
+              e.preventDefault();
+              submitAnswer(false);
+            }}
+            style={ownerStepStyle}
+          >
+            {questionsView.index === 0 && !questionsView.probing && (
+              <p data-interview-intro="true" style={{ ...ownerNoteStyle, color: "var(--text)" }}>{renderMixed(STEP2B_COPY.Q_INTRO)}</p>
             )}
+            <h2 id="interview-question-title" ref={ownerHeadingRef} tabIndex={-1} style={ownerHeadingStyle}>
+              {renderMixed(STEP2B_COPY[QUESTION_COPY_KEY[questionsView.key]])}
+            </h2>
+            {questionsView.probing ? (
+              <p id="interview-question-hint" data-interview-probe-text="true" style={{ ...ownerNoteStyle, color: "var(--text)", borderInlineStart: "3px solid var(--accent)", paddingInlineStart: "12px" }}>
+                {renderMixed(STEP2B_COPY.PROBE_GENERIC)}
+              </p>
+            ) : (
+              <p id="interview-question-hint" style={ownerNoteStyle}>{renderMixed(STEP2B_COPY[QUESTION_HINT_COPY_KEY[questionsView.key]])}</p>
+            )}
+            {questionsView.key === "priceStyle" ? (
+              <div role="group" aria-labelledby="interview-question-title" aria-describedby="interview-question-hint" style={{ display: "flex", flexWrap: "wrap", gap: "10px" }}>
+                {PRICE_CHIP_IDS.map((chip) => {
+                  const selected = chipDraft.includes(chip);
+                  return (
+                    <button
+                      key={chip}
+                      type="button"
+                      className="wao-intake-choice"
+                      aria-pressed={selected}
+                      data-interview-price-chip={chip}
+                      onClick={() => toggleChip(chip)}
+                      style={{ minHeight: "44px", background: selected ? "var(--accent)" : "transparent", color: selected ? "#0a0a0a" : "var(--text)" }}
+                    >
+                      {renderMixed(STEP2B_COPY[PRICE_CHIP_COPY_KEY[chip]])}
+                    </button>
+                  );
+                })}
+              </div>
+            ) : (
+              <textarea
+                id="interview-answer"
+                name="interviewAnswer"
+                className="wao-intake-field"
+                aria-labelledby="interview-question-title"
+                aria-describedby="interview-question-hint"
+                maxLength={MAX_INTERVIEW_ANSWER_CHARS}
+                rows={5}
+                value={answerDraft}
+                onChange={(e) => setAnswerDraft(e.target.value)}
+                style={{ ...fieldInputStyle, minHeight: "120px", resize: "vertical", lineHeight: 1.6 }}
+              />
+            )}
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "10px" }}>
+              <button
+                type="submit"
+                className="btn-primary"
+                data-interview-next="true"
+                disabled={submitting || (questionsView.key === "priceStyle" ? chipDraft.length === 0 : !answerDraft.trim())}
+                style={{ padding: "12px 24px", minHeight: "44px", justifyContent: "center" }}
+              >
+                {renderMixed(questionsView.index === INTERVIEW_QUESTION_KEYS.length - 1 ? STEP2B_COPY.Q_SUBMIT_LAST : STEP2B_COPY.Q_NEXT)}
+              </button>
+              <button type="button" className="wao-intake-choice" data-interview-skip="true" disabled={submitting} onClick={() => submitAnswer(true)} style={{ minHeight: "44px" }}>
+                {renderMixed(STEP2B_COPY.Q_SKIP)}
+              </button>
+            </div>
+          </form>
+        )}
+
+        {phase === "gates" && gates === null && (
+          <div data-interview-gates-waiting="true" aria-busy="true" style={ownerStepStyle}>
+            <h2 ref={ownerHeadingRef} tabIndex={-1} style={ownerHeadingStyle}>{renderMixed(STEP2A_COPY.HOLDING_HEAD)}</h2>
+            {copyLines(STEP2A_COPY.HOLDING_BODY).map((line, index) => (
+              <p key={index} style={{ ...ownerNoteStyle, color: "var(--text)" }}>{renderMixed(line)}</p>
+            ))}
+          </div>
+        )}
+
+        {phase === "gates" && gates !== null && gates[gateIndex] && (
+          <form
+            data-interview-gate={gates[gateIndex].type}
+            aria-labelledby="interview-gate-title"
+            noValidate
+            onSubmit={(e) => {
+              e.preventDefault();
+              submitGate(false);
+            }}
+            style={ownerStepStyle}
+          >
+            <p style={{ ...ownerNoteStyle, color: "var(--text)" }}>{renderMixed(STEP2B_COPY.GATES_INTRO)}</p>
+            <h2 id="interview-gate-title" ref={ownerHeadingRef} tabIndex={-1} style={ownerHeadingStyle}>
+              {renderMixed(RESEARCH_COPY[researchGateCopyKey(gates[gateIndex].type)])}
+            </h2>
+            {gateError && <p role="alert" style={ownerErrorStyle}>{renderMixed(POSTPAY_COPY.answer_error)}</p>}
+            <textarea
+              id="interview-gate-answer"
+              name="gateAnswer"
+              className="wao-intake-field"
+              aria-labelledby="interview-gate-title"
+              maxLength={1000}
+              rows={3}
+              value={gateDraft}
+              onChange={(e) => setGateDraft(e.target.value)}
+              style={{ ...fieldInputStyle, minHeight: "88px", resize: "vertical", lineHeight: 1.6 }}
+            />
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "10px" }}>
+              <button type="submit" className="btn-primary" data-interview-gate-next="true" disabled={submitting || !gateDraft.trim()} style={{ padding: "12px 24px", minHeight: "44px", justifyContent: "center" }}>
+                {renderMixed(STEP2B_COPY.Q_NEXT)}
+              </button>
+              <button type="button" className="wao-intake-choice" data-interview-gate-skip="true" disabled={submitting} onClick={() => submitGate(true)} style={{ minHeight: "44px" }}>
+                {renderMixed(STEP2B_COPY.Q_SKIP)}
+              </button>
+            </div>
+          </form>
+        )}
+
+        {phase === "facts" && (
+          <div data-interview-facts={factsScreen === null ? "loading" : factsScreen.empty ? "empty" : "list"} aria-busy={factsScreen === null || undefined} style={ownerStepStyle}>
+            <h2 ref={ownerHeadingRef} tabIndex={-1} style={ownerHeadingStyle}>{renderMixed(STEP2B_COPY.FACTS_HEAD)}</h2>
+            {factsScreen?.empty && factsScreen.canReturn ? (
+              <>
+                <p style={{ ...ownerNoteStyle, color: "var(--text)" }}>{renderMixed(STEP2B_COPY.FACTS_EMPTY)}</p>
+                <button type="button" className="btn-primary" data-interview-facts-return="true" disabled={submitting} onClick={returnToQuestions} style={{ padding: "12px 24px", minHeight: "44px", justifyContent: "center" }}>
+                  {renderMixed(STEP2A_COPY.HOLDING_CTA)}
+                </button>
+              </>
+            ) : (
+              <>
+                <p style={{ ...ownerNoteStyle, color: "var(--text)" }}>{renderMixed(STEP2B_COPY.FACTS_BODY)}</p>
+                {factsScreen && INTERVIEW_FACT_TYPES.map((type) => {
+                  const group = factsScreen.facts.filter((fact) => fact.type === type);
+                  if (group.length === 0) return null;
+                  return (
+                    <section key={type} data-interview-fact-group={type} aria-labelledby={`interview-fact-group-${type}`} style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                      <h3 id={`interview-fact-group-${type}`} style={{ margin: 0, fontSize: "0.95rem", fontWeight: 700, color: "var(--text)" }}>
+                        {renderMixed(STEP2B_COPY[FACT_TYPE_COPY_KEY[type]])}
+                      </h3>
+                      <ul style={{ listStyle: "none", margin: 0, padding: 0, display: "flex", flexDirection: "column", gap: "10px" }}>
+                        {group.map((fact) => (
+                          <li
+                            key={fact.id}
+                            data-interview-fact={fact.id}
+                            data-interview-fact-status={fact.status}
+                            style={{ border: "1px solid var(--border)", borderRadius: "var(--radius-md)", background: "var(--bg)", padding: "12px 14px", display: "flex", flexDirection: "column", gap: "8px", opacity: fact.status === "removed" ? 0.6 : 1 }}
+                          >
+                            {fact.contextLabel && <p style={{ ...ownerNoteStyle, fontSize: "0.82rem" }}>{renderMixed(fact.contextLabel)}</p>}
+                            <p id={`interview-fact-text-${fact.id}`} style={{ margin: 0, lineHeight: 1.6, color: "var(--text)", textDecoration: fact.status === "removed" ? "line-through" : undefined }}>
+                              {renderMixed(fact.status === "edited" && fact.ownerText ? fact.ownerText : fact.quote)}
+                            </p>
+                            {fact.serviceName && <p data-interview-fact-service="true" style={{ ...ownerNoteStyle, fontSize: "0.82rem" }}>{renderMixed(fact.serviceName)}</p>}
+                            {fact.condition && <p data-interview-fact-condition="true" style={{ ...ownerNoteStyle, fontSize: "0.82rem" }}>{renderMixed(fact.condition)}</p>}
+                            {editingFact === fact.id ? (
+                              <form
+                                noValidate
+                                onSubmit={(e) => {
+                                  e.preventDefault();
+                                  if (factEdit.trim()) reviewFactItem(fact.id, "fix", factEdit.trim());
+                                }}
+                                style={{ display: "flex", flexDirection: "column", gap: "8px" }}
+                              >
+                                <textarea
+                                  id={`interview-fact-edit-${fact.id}`}
+                                  className="wao-intake-field"
+                                  aria-labelledby={`interview-fact-text-${fact.id}`}
+                                  maxLength={MAX_OWNER_TEXT_CHARS}
+                                  rows={3}
+                                  autoFocus
+                                  value={factEdit}
+                                  onChange={(e) => setFactEdit(e.target.value)}
+                                  style={{ ...fieldInputStyle, minHeight: "80px", resize: "vertical", lineHeight: 1.6 }}
+                                />
+                                <button type="submit" className="btn-primary" data-interview-fact-save={fact.id} disabled={submitting || !factEdit.trim()} style={{ padding: "10px 20px", minHeight: "44px", justifyContent: "center" }}>
+                                  {renderMixed(STEP2B_COPY.FACT_FIX_SAVE)}
+                                </button>
+                              </form>
+                            ) : (
+                              <div role="group" aria-labelledby={`interview-fact-text-${fact.id}`} style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
+                                <button type="button" className="wao-intake-choice" aria-pressed={fact.status === "confirmed" || fact.status === "edited"} data-interview-fact-confirm={fact.id} disabled={submitting} onClick={() => reviewFactItem(fact.id, "confirm")}
+                                  style={{ minHeight: "44px", flex: "1 1 90px", background: fact.status === "confirmed" || fact.status === "edited" ? "var(--accent)" : "transparent", color: fact.status === "confirmed" || fact.status === "edited" ? "#0a0a0a" : "var(--text)" }}>
+                                  {renderMixed(STEP2B_COPY.FACT_CONFIRM)}
+                                </button>
+                                <button type="button" className="wao-intake-choice" data-interview-fact-fix={fact.id} disabled={submitting} onClick={() => { setEditingFact(fact.id); setFactEdit(fact.ownerText ?? fact.quote); }} style={{ minHeight: "44px", flex: "1 1 90px" }}>
+                                  {renderMixed(STEP2B_COPY.FACT_FIX)}
+                                </button>
+                                <button type="button" className="wao-intake-choice" aria-pressed={fact.status === "removed"} data-interview-fact-remove={fact.id} disabled={submitting} onClick={() => reviewFactItem(fact.id, "remove")}
+                                  style={{ minHeight: "44px", flex: "1 1 90px", background: fact.status === "removed" ? "var(--accent)" : "transparent", color: fact.status === "removed" ? "#0a0a0a" : "var(--text)" }}>
+                                  {renderMixed(STEP2B_COPY.FACT_REMOVE)}
+                                </button>
+                              </div>
+                            )}
+                          </li>
+                        ))}
+                      </ul>
+                    </section>
+                  );
+                })}
+                {factsScreen && (
+                  <button type="button" className="btn-primary" data-interview-facts-done="true" disabled={submitting || !factsScreen.canFinish} onClick={finishFacts} style={{ padding: "12px 24px", minHeight: "44px", justifyContent: "center" }}>
+                    {renderMixed(STEP2B_COPY.FACTS_DONE)}
+                  </button>
+                )}
+              </>
+            )}
+          </div>
+        )}
+
+        {phase === "facts_confirmed" && (
+          <div data-interview-facts-confirmed="true" style={ownerStepStyle}>
+            <h2 ref={ownerHeadingRef} tabIndex={-1} style={ownerHeadingStyle}>{renderMixed(STEP2A_COPY.HOLDING_HEAD)}</h2>
+            {copyLines(STEP2A_COPY.HOLDING_BODY).map((line, index) => (
+              <p key={index} style={{ ...ownerNoteStyle, color: "var(--text)" }}>{renderMixed(line)}</p>
+            ))}
+          </div>
+        )}
+
+        {phase === "elsewhere" && (
+          <div data-interview-elsewhere="true" style={ownerStepStyle}>
+            <h2 ref={ownerHeadingRef} tabIndex={-1} style={ownerHeadingStyle}>{renderMixed(STEP2B_COPY.SESSION_ELSEWHERE_HEAD)}</h2>
+            <p style={{ ...ownerNoteStyle, color: "var(--text)" }}>{renderMixed(STEP2B_COPY.SESSION_ELSEWHERE_BODY)}</p>
           </div>
         )}
 
@@ -1381,7 +1929,7 @@ function SiteBotStartContent() {
         )}
 
         <p style={{ marginTop: "24px", fontSize: "0.85rem", color: "var(--muted)", fontFamily: "var(--font-body), sans-serif" }}>
-          {renderMixed("בסיום השיחה תועבר לדף תשלום מאובטח. ")}
+          {renderMixed(`${STEP2B_COPY.START_FOOTER_NOTE} `)}
           <Link href="/site-bot" style={{ color: "var(--accent)" }}>
             חזרה לעמוד Site Bot
           </Link>

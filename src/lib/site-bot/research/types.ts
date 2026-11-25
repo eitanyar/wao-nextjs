@@ -4,6 +4,7 @@
  */
 import type { ResearchedCopyReviewPacket } from './copyReviewPacket';
 import type { SiteIdentity } from '../siteIdentity';
+import type { InterviewFactSet } from '../interviewFacts';
 
 export const RESEARCH_STATUSES = [
   'pending',
@@ -193,6 +194,11 @@ export interface SiteResearchDossier {
    * budget (status neuron_pending). Pages are generated without that data; the monthly refresh re-reads queryId.
    */
   neuronPending?: NeuronPendingKeyword[];
+  /**
+   * Site Bot step 2b (2026-11-25): the owner facts taken from his interview answers and his review of them
+   * (interviewFacts.ts; step 3's fact ledger extends this schema). Written by the interview-facts route only.
+   */
+  interviewFacts?: InterviewFactSet;
 }
 
 export interface NeuronPendingKeyword {

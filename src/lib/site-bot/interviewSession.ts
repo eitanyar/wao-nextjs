@@ -14,6 +14,12 @@
  * over the domain-separated payload with CLIENT_PORTAL_SECRET (dev fallback outside production, like gbpOauthState.ts).
  * The link expires with the spot. Redeeming it rotates the cookie secret (the session moves to that browser).
  *
+ * Step 2b (interview v1 + facts): after the holding screen the owner answers the five questions (interview_json, the
+ * server-applied state of interviewQuestions.ts; answers_version counts the submitted answer sets), then the open
+ * research gates (gates_done_at), then confirms the facts taken from his answers (facts_confirmed_at; the facts live in
+ * the research dossier, interviewFacts.ts). One fact extraction per answer-set version (facts_extracted_version), and at
+ * most one return from an empty facts screen to the questions (facts_returns).
+ *
  * Lifecycle: open -> exited (work-location exit: spot released, waiting list 'location') | expired (72 h without
  * payment: spot released) | paid (checkout callback) | superseded (a second browser started over before the owner gave
  * his contact; the spot passes to the new session). A released spot keeps its weekly-count row (releaseInterviewSpot).
@@ -25,6 +31,7 @@ import crypto from 'crypto';
 import type { CollectedData } from '../bot/prompts';
 import { addWaitlistEntry, releaseInterviewSpot, WAITLIST_RETENTION_MS, type LaunchStore, type WaitlistAdd } from './launchStore';
 import { isWorkLocationTrade, type WorkLocation, type WorkLocationTrade } from './workLocation';
+import { initialInterviewState, parseInterviewState, type InterviewState } from './interviewQuestions';
 
 export const INTERVIEW_COOKIE_NAME = 'wao_sb_interview';
 export const INTERVIEW_COOKIE_PATH = '/api/site-bot';
@@ -34,6 +41,13 @@ export const REMINDER_AFTER_MS = 24 * HOUR_MS;
 /** Saved progress is the browser's own step snapshot (resume only); bounded and never trusted for a decision. */
 export const MAX_PROGRESS_BYTES = 48 * 1024;
 export const MAX_COLLECTED_BYTES = 48 * 1024;
+/** The interview v1 state: five answers of at most 1500 characters each (plus probe follow-ups), comfortably bounded. */
+export const MAX_INTERVIEW_STATE_BYTES = 64 * 1024;
+/**
+ * A research run that started this long ago without recording its end (the process stopped mid-run) counts as settled,
+ * so the gates step never waits forever; the paid callback resumes such a research (checkout/callback/paid.ts).
+ */
+export const RESEARCH_SETTLE_MS = 15 * 60 * 1000;
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
 const SECRET = /^[A-Za-z0-9_-]{43}$/;
@@ -67,17 +81,41 @@ export interface InterviewSession {
   researchStartedAt: string | null;
   reminderSentAt: string | null;
   checkoutSessionId: string | null;
+  researchDoneAt: string | null;
+  /** Null until the owner pressed HOLDING_CTA (or when the stored state is malformed). */
+  interviewState: InterviewState | null;
+  interviewDoneAt: string | null;
+  answersVersion: number;
+  gatesDoneAt: string | null;
+  factsExtractedVersion: number;
+  factsClaimedAt: string | null;
+  factsReturns: number;
+  factsConfirmedAt: string | null;
 }
 
 /** Where the owner stands, derived on the server (the browser restores its own step snapshot inside 'intake'). */
-export type InterviewPhase = 'intake' | 'domain' | 'location' | 'holding' | 'exited' | 'expired' | 'paid' | 'superseded';
+export type InterviewPhase =
+  | 'intake' | 'domain' | 'location' | 'holding' | 'questions' | 'gates' | 'facts' | 'facts_confirmed'
+  | 'exited' | 'expired' | 'paid' | 'superseded';
 
 export function interviewPhase(session: InterviewSession): InterviewPhase {
   if (session.status !== 'open') return session.status;
   if (!session.contactAt) return 'intake';
   if (!session.domainAt) return 'domain';
   if (session.locationTrade && !session.workLocation) return 'location';
+  if (session.factsConfirmedAt) return 'facts_confirmed';
+  if (session.interviewDoneAt && session.gatesDoneAt) return 'facts';
+  if (session.interviewDoneAt) return 'gates';
+  if (session.interviewState) return 'questions';
   return 'holding';
+}
+
+/** The research run ended (recorded), or started so long ago that it can no longer be running. */
+export function interviewResearchSettled(session: InterviewSession, now: Date): boolean {
+  if (!session.researchId) return false;
+  if (session.researchDoneAt) return true;
+  const started = session.researchStartedAt ? Date.parse(session.researchStartedAt) : NaN;
+  return Number.isFinite(started) && now.getTime() - started >= RESEARCH_SETTLE_MS;
 }
 
 /** Contact given, and the work-location question passed when it was asked: research may start, checkout may bind. */
@@ -92,6 +130,7 @@ function parseJson(text: unknown): unknown {
 
 function rowToSession(row: Record<string, unknown>): InterviewSession {
   const str = (key: string) => (typeof row[key] === 'string' ? row[key] as string : null);
+  const int = (key: string) => (typeof row[key] === 'number' && Number.isSafeInteger(row[key]) ? row[key] as number : 0);
   const trade = str('location_trade');
   return {
     id: String(row.id), placeId: String(row.place_id), auditId: String(row.audit_id), status: row.status as InterviewStatus,
@@ -101,6 +140,10 @@ function rowToSession(row: Record<string, unknown>): InterviewSession {
     locationTrade: isWorkLocationTrade(trade) ? trade : null, workLocation: str('work_location') as WorkLocation | null,
     researchId: str('research_id'), researchStartedAt: str('research_started_at'), reminderSentAt: str('reminder_sent_at'),
     checkoutSessionId: str('checkout_session_id'),
+    researchDoneAt: str('research_done_at'), interviewState: parseInterviewState(parseJson(row.interview_json)),
+    interviewDoneAt: str('interview_done_at'), answersVersion: int('answers_version'), gatesDoneAt: str('gates_done_at'),
+    factsExtractedVersion: int('facts_extracted_version'), factsClaimedAt: str('facts_claimed_at'), factsReturns: int('facts_returns'),
+    factsConfirmedAt: str('facts_confirmed_at'),
   };
 }
 
@@ -373,6 +416,91 @@ export function recordInterviewLocation(
 export function claimInterviewResearch(store: LaunchStore, sessionId: string): boolean {
   return store.db.prepare(`UPDATE site_bot_interview_sessions SET research_id = id, research_started_at = ?
     WHERE id = ? AND status = 'open' AND research_id IS NULL`).run(store.now().toISOString(), sessionId).changes > 0;
+}
+
+/** The research run of the session ended (success or failure; interviewResearch.ts). Idempotent. */
+export function markInterviewResearchDone(store: LaunchStore, sessionId: string): boolean {
+  return store.db.prepare('UPDATE site_bot_interview_sessions SET research_done_at = COALESCE(research_done_at, ?) WHERE id = ? AND research_id IS NOT NULL')
+    .run(store.now().toISOString(), sessionId).changes > 0;
+}
+
+// ---------------------------------------------------------------------------------------------------------------------
+// Step 2b: interview v1, gates, facts
+
+function stateJson(state: InterviewState): string | null {
+  const text = JSON.stringify(state);
+  return Buffer.byteLength(text, 'utf8') <= MAX_INTERVIEW_STATE_BYTES ? text : null;
+}
+
+/** HOLDING_CTA: the questions start (once; a replay keeps the saved state). Needs the owner steps done. */
+export function beginInterviewQuestions(store: LaunchStore, sessionId: string): InterviewSession | null {
+  return tx(store, () => {
+    const session = readInterviewSession(store, sessionId);
+    if (!session || session.status !== 'open' || !interviewReadyForResearch(session) || !session.domainAt) return null;
+    if (session.interviewState) return session;
+    store.db.prepare("UPDATE site_bot_interview_sessions SET interview_json = ? WHERE id = ? AND status = 'open' AND interview_json IS NULL")
+      .run(stateJson(initialInterviewState()), sessionId);
+    return readInterviewSession(store, sessionId);
+  });
+}
+
+/**
+ * Stores the state after one answer, only if the stored state is still `previous` (a double submit or a second tab
+ * loses, never overwrites). `done` = the last question was answered: interview_done_at is set and the answer-set
+ * version goes up by one (one fact extraction per version).
+ */
+export function saveInterviewAnswers(store: LaunchStore, sessionId: string, previous: InterviewState, next: InterviewState, done: boolean): InterviewSession | null {
+  const before = stateJson(previous);
+  const after = stateJson(next);
+  if (before === null || after === null) return null;
+  return tx(store, () => {
+    const row = store.db.prepare('SELECT interview_json FROM site_bot_interview_sessions WHERE id = ?').get(sessionId) as { interview_json?: unknown } | undefined;
+    if (!row || typeof row.interview_json !== 'string' || JSON.stringify(parseJson(row.interview_json)) !== before) return null;
+    const changed = store.db.prepare(`UPDATE site_bot_interview_sessions SET interview_json = ?,
+      interview_done_at = CASE WHEN ? THEN ? ELSE NULL END, answers_version = answers_version + ?
+      WHERE id = ? AND status = 'open' AND interview_done_at IS NULL AND facts_confirmed_at IS NULL`)
+      .run(after, done ? 1 : 0, store.now().toISOString(), done ? 1 : 0, sessionId).changes;
+    return changed ? readInterviewSession(store, sessionId) : null;
+  });
+}
+
+/** The gates step is over (every open gate answered or skipped, or none). After the questions only. */
+export function markInterviewGatesDone(store: LaunchStore, sessionId: string): InterviewSession | null {
+  return tx(store, () => {
+    store.db.prepare(`UPDATE site_bot_interview_sessions SET gates_done_at = COALESCE(gates_done_at, ?)
+      WHERE id = ? AND status = 'open' AND interview_done_at IS NOT NULL`).run(store.now().toISOString(), sessionId);
+    const session = readInterviewSession(store, sessionId);
+    return session && session.gatesDoneAt ? session : null;
+  });
+}
+
+/** Claims the one fact extraction of the current answer-set version. True for the one caller that claimed it. */
+export function claimFactExtraction(store: LaunchStore, sessionId: string): boolean {
+  return store.db.prepare(`UPDATE site_bot_interview_sessions SET facts_extracted_version = answers_version, facts_claimed_at = ?
+    WHERE id = ? AND status = 'open' AND interview_done_at IS NOT NULL AND gates_done_at IS NOT NULL AND facts_confirmed_at IS NULL
+    AND facts_extracted_version < answers_version`).run(store.now().toISOString(), sessionId).changes > 0;
+}
+
+/** The one return from an empty facts screen: back to question 1 (second pass), the answers kept for the pre-fill. */
+export function returnInterviewToQuestions(store: LaunchStore, sessionId: string, secondPass: InterviewState): InterviewSession | null {
+  const text = stateJson(secondPass);
+  if (text === null) return null;
+  return tx(store, () => {
+    const changed = store.db.prepare(`UPDATE site_bot_interview_sessions SET interview_json = ?, interview_done_at = NULL,
+      facts_returns = facts_returns + 1 WHERE id = ? AND status = 'open' AND facts_returns = 0 AND interview_done_at IS NOT NULL
+      AND facts_confirmed_at IS NULL`).run(text, sessionId).changes;
+    return changed ? readInterviewSession(store, sessionId) : null;
+  });
+}
+
+/** FACTS_DONE: the owner reviewed every fact. Idempotent. */
+export function markInterviewFactsConfirmed(store: LaunchStore, sessionId: string): InterviewSession | null {
+  return tx(store, () => {
+    store.db.prepare(`UPDATE site_bot_interview_sessions SET facts_confirmed_at = COALESCE(facts_confirmed_at, ?)
+      WHERE id = ? AND status = 'open' AND interview_done_at IS NOT NULL AND gates_done_at IS NOT NULL`).run(store.now().toISOString(), sessionId);
+    const session = readInterviewSession(store, sessionId);
+    return session && session.factsConfirmedAt ? session : null;
+  });
 }
 
 /** checkout/init: the latest checkout session minted for this interview (open sessions only). */

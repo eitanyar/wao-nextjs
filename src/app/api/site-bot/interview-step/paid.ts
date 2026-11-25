@@ -11,9 +11,13 @@ import { cookieFromHeader } from '@/lib/site-bot/interviewSession';
 //   { step: 'domain', owner: { domainChoice, domain? } }
 //   { step: 'location', workLocation }        tutor / photographer / solar only; OWN_PLACE / ONLINE exit to the
 //                                             waiting list (reason 'location'), a replayed exit answers 'exited' again
+//   Step 2b (interviewFlow.ts): { step: 'status' } (read-only, polled while the research settles),
+//   { step: 'questions_begin' }, { step: 'answer', key, text | chips | skip }, { step: 'gates_done' }
 //   200 { status: 'ok' | 'exited', session }   401 no_session   409 session_closed / out_of_order   400 invalid_input
 
-export const INTERVIEW_STEP_RATE_LIMIT = { maxRequests: 60, windowMs: 10 * 60 * 1000 } as const;
+// Step 2b: 60 -> 120. One interview now takes ~5 answers (+1 probe), the gates and a status poll every 8 s while the
+// research settles, all from one IP (and mobile carriers share IPs).
+export const INTERVIEW_STEP_RATE_LIMIT = { maxRequests: 120, windowMs: 10 * 60 * 1000 } as const;
 
 function reply(body: object, status: number) {
   return NextResponse.json(body, { status, headers: { 'Cache-Control': 'private, no-store' } });

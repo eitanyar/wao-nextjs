@@ -83,7 +83,7 @@ export function extractJsonSpan(text: string): string {
   return trimmed.slice(start, lastClose + 1);
 }
 
-import { recordGeminiUsage, type LlmUsageTag } from './llmUsage';
+import { geminiUsageCounts, recordGeminiUsage, type LlmUsageEntry, type LlmUsageTag } from './llmUsage';
 
 /** Ledger line per successful call (src/lib/ai/llmUsage.ts). Never throws into the caller. */
 function noteUsage(data: unknown, model: string, tag: LlmUsageTag | undefined): void {
@@ -99,10 +99,15 @@ export type CallGeminiJSONOptions = {
   timeoutMs?: number;
   fetch?: typeof globalThis.fetch;
   responseJsonSchema?: Record<string, unknown>;
+  /** generationConfig.maxOutputTokens (includes thinking tokens on thinking models). */
+  maxOutputTokens?: number;
+  /** Token counts of a successful response, for a caller that prices the call itself (never throws into the call). */
+  onUsage?: (counts: Pick<LlmUsageEntry, 'inputTokens' | 'outputTokens' | 'cachedTokens' | 'thinkingTokens'>, model: string) => void;
 };
 
 function validateOptions(opts: CallGeminiJSONOptions) {
   if (opts.timeoutMs !== undefined && (!Number.isFinite(opts.timeoutMs) || opts.timeoutMs <= 0)) throw new Error('Invalid Gemini timeout');
+  if (opts.maxOutputTokens !== undefined && (!Number.isSafeInteger(opts.maxOutputTokens) || opts.maxOutputTokens <= 0)) throw new Error('Invalid Gemini maxOutputTokens');
 }
 
 export async function callGeminiJSON(systemPrompt: string, userMessage: string, opts: CallGeminiJSONOptions = {}): Promise<string> {
@@ -123,6 +128,7 @@ export async function callGeminiJSON(systemPrompt: string, userMessage: string, 
         responseMimeType: 'application/json',
         thinkingConfig: { thinkingLevel: opts.thinkingLevel || 'LOW' },
         ...(opts.responseJsonSchema === undefined ? {} : { responseJsonSchema: opts.responseJsonSchema }),
+        ...(opts.maxOutputTokens === undefined ? {} : { maxOutputTokens: opts.maxOutputTokens }),
       },
     }),
     signal,
@@ -130,6 +136,9 @@ export async function callGeminiJSON(systemPrompt: string, userMessage: string, 
   const data = await res.json();
   if (!res.ok) throw new Error(`Gemini API error (${res.status})`);
   noteUsage(data, modelName, opts.usage);
+  if (opts.onUsage) {
+    try { opts.onUsage(geminiUsageCounts(data), modelName); } catch { /* a usage callback never breaks a call */ }
+  }
   const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
   if (typeof text !== 'string') throw new Error('Gemini API returned unexpected shape');
   return extractJsonSpan(text);

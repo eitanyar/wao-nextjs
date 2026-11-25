@@ -5,7 +5,9 @@
  * replayed exit) are unit-tested against a real store (interviewFlow.test.ts).
  *
  * Flow on /site-bot/start: confirm card -> 3 questions -> credentials (optional) -> owner contact -> domain ->
- * work-location question (tutor / photographer / solar only) -> holding screen (2b puts the interview here).
+ * work-location question (tutor / photographer / solar only) -> holding screen -> (step 2b) the five interview questions
+ * (HOLDING_CTA, interviewQuestions.ts) -> the open owner research gates (interview-gates, once the research settled)
+ * -> the confirm-facts screen (interview-facts, interviewFactsFlow.ts) -> facts_confirmed (2c generates the preview).
  * Research starts once the contact is in (and the location question passed, when asked), keyed by the session id.
  *
  * Server-only. HEBREW-SAFETY: this module contains ZERO Hebrew bytes.
@@ -15,11 +17,16 @@ import type { AuditCandidateSnapshot } from './auditStore';
 import type { InterviewClaim } from './offerState';
 import type { LaunchStore } from './launchStore';
 import {
-  beginInterviewSession, expireDueSessions, interviewPhase, interviewReadyForResearch, readInterviewSession, recordInterviewContact,
-  recordInterviewDomain, recordInterviewLocation, resumePath, rotateInterviewCookie, saveInterviewProgress, sessionFromCookie,
-  signResumeToken, updateInterviewCollectedData, verifyResumeToken,
+  beginInterviewQuestions, beginInterviewSession, expireDueSessions, interviewPhase, interviewReadyForResearch, interviewResearchSettled,
+  markInterviewGatesDone, readInterviewSession, recordInterviewContact, recordInterviewDomain, recordInterviewLocation, resumePath,
+  rotateInterviewCookie, saveInterviewAnswers, saveInterviewProgress, sessionFromCookie, signResumeToken, updateInterviewCollectedData,
+  verifyResumeToken,
   type InterviewPhase, type InterviewSession,
 } from './interviewSession';
+import {
+  applyInterviewAnswer, interviewComplete, interviewQuestionsView, parseAnswerSubmission, type InterviewQuestionsView,
+} from './interviewQuestions';
+import { isGenericOnlyAnswer } from './interviewProbe';
 import { ownerIntakeFields, withValidatedOwnerIntake, type DomainChoice } from './ownerIntake';
 import {
   isWorkLocationAnswer, workLocationExits, workLocationTradeOfCategory, WORK_LOCATION_TRADE_CATEGORY,
@@ -59,9 +66,13 @@ export interface InterviewView {
   locationTrade: WorkLocationTrade | null;
   workLocation: WorkLocation | null;
   businessName: string | null;
+  /** Step 2b: the interview questions (current question, probe, his own drafts), in the questions phase only. */
+  questions: InterviewQuestionsView | null;
+  /** Step 2b: the research run settled (the gates step lists the gates once this is true). */
+  researchReady: boolean;
 }
 
-export function interviewView(session: InterviewSession): InterviewView {
+export function interviewView(session: InterviewSession, now: Date = new Date()): InterviewView {
   const phase = interviewPhase(session);
   return {
     phase,
@@ -69,7 +80,16 @@ export function interviewView(session: InterviewSession): InterviewView {
     locationTrade: session.locationTrade,
     workLocation: session.workLocation,
     businessName: session.businessName,
+    questions: phase === 'questions' && session.interviewState ? interviewQuestionsView(session.interviewState) : null,
+    researchReady: interviewResearchSettled(session, now),
   };
+}
+
+/** The owner's own service and trade names: a concrete marker for the probe (interviewProbe.ts). */
+export function ownProbeTerms(data: CollectedData | null): string[] {
+  if (!data) return [];
+  const list = [data.businessNiche, data.primaryService, ...(Array.isArray(data.priorityServices) ? data.priorityServices : [])];
+  return list.filter((value): value is string => typeof value === 'string' && value.trim().length >= 2).map(value => value.trim());
 }
 
 export type StartOutcome =
@@ -94,7 +114,7 @@ export async function startInterview(input: { auditId: unknown; placeId: unknown
   deps.withStore(store => expireDueSessions(store), 0);
   const own = deps.withStore(store => sessionFromCookie(store, input.cookieValue), null);
   if (own && own.status !== 'open' && own.status !== 'superseded' && own.placeId === placeId && own.auditId === audit) {
-    return { kind: 'closed', view: interviewView(own) };
+    return { kind: 'closed', view: interviewView(own, deps.now()) };
   }
   const claim = await deps.claimSpot(audit, placeId);
   if (claim.kind === 'no_audit') return { kind: 'no_audit' };
@@ -108,7 +128,7 @@ export async function startInterview(input: { auditId: unknown; placeId: unknown
   return {
     kind: 'session',
     status: claim.status === 'reserved' ? 'started' : 'resumed',
-    view: interviewView(begun.session),
+    view: interviewView(begun.session, deps.now()),
     cookie: begun.kind === 'created' ? begun.cookie : null,
     expiresAt: begun.session.expiresAt,
   };
@@ -144,7 +164,13 @@ export async function locationTradeFor(session: InterviewSession, niche: string 
   return typeof niche === 'string' && niche.trim() ? workLocationTradeOfCategory(deps.categoryOfNiche(niche)) : null;
 }
 
-/** POST /api/site-bot/interview-step: { step: 'progress' | 'contact' | 'domain' | 'location', ... }. */
+/**
+ * POST /api/site-bot/interview-step: { step: 'progress' | 'contact' | 'domain' | 'location', ... } (step 2a), and step 2b:
+ *   { step: 'status' }                               read-only: the current view (the gates step polls researchReady)
+ *   { step: 'questions_begin' }                      HOLDING_CTA: the questions start (idempotent)
+ *   { step: 'answer', key, text | chips | skip }     the current question's answer; the probe may show once
+ *   { step: 'gates_done' }                           the gates step is over (after the research settled)
+ */
 export async function interviewStep(cookieValue: unknown, body: unknown, deps: InterviewDeps): Promise<StepOutcome> {
   if (!plainObject(body) || typeof body.step !== 'string') return { kind: 'invalid_input' };
   const session = deps.withStore(store => {
@@ -153,16 +179,16 @@ export async function interviewStep(cookieValue: unknown, body: unknown, deps: I
   }, null);
   if (!session) return { kind: 'no_session' };
   // A replayed exit answers with the exit state again (idempotent), before the closed-session refusal.
-  if (session.status !== 'open') return session.status === 'exited' && body.step === 'location' ? { kind: 'exited', view: interviewView(session) } : { kind: 'closed', view: interviewView(session) };
+  if (session.status !== 'open') return session.status === 'exited' && body.step === 'location' ? { kind: 'exited', view: interviewView(session, deps.now()) } : { kind: 'closed', view: interviewView(session, deps.now()) };
 
   switch (body.step) {
     case 'progress': {
-      if (session.contactAt) return { kind: 'out_of_order', view: interviewView(session) };
+      if (session.contactAt) return { kind: 'out_of_order', view: interviewView(session, deps.now()) };
       const saved = deps.withStore(store => saveInterviewProgress(store, session.id, body.progress), false);
-      return saved ? { kind: 'ok', view: interviewView({ ...session, progress: body.progress }) } : { kind: 'invalid_input' };
+      return saved ? { kind: 'ok', view: interviewView({ ...session, progress: body.progress }, deps.now()) } : { kind: 'invalid_input' };
     }
     case 'contact': {
-      if (session.domainAt) return { kind: 'out_of_order', view: interviewView(session) };
+      if (session.domainAt) return { kind: 'out_of_order', view: interviewView(session, deps.now()) };
       if (!plainObject(body.collectedData) || typeof body.collectedData.businessNiche !== 'string' || !body.collectedData.businessNiche.trim()) {
         return { kind: 'invalid_input' };
       }
@@ -181,10 +207,10 @@ export async function interviewStep(cookieValue: unknown, body: unknown, deps: I
       }), null);
       if (!updated) return { kind: 'unavailable' };
       if (interviewReadyForResearch(updated)) deps.startResearch(updated);
-      return { kind: 'ok', view: interviewView(updated) };
+      return { kind: 'ok', view: interviewView(updated, deps.now()) };
     }
     case 'domain': {
-      if (!session.contactAt || session.workLocation) return { kind: 'out_of_order', view: interviewView(session) };
+      if (!session.contactAt || session.workLocation) return { kind: 'out_of_order', view: interviewView(session, deps.now()) };
       if (!plainObject(body.owner) || !session.collectedData?.ownerContact) return { kind: 'invalid_input' };
       const contact = session.collectedData.ownerContact;
       const fields = ownerIntakeFields({
@@ -198,11 +224,11 @@ export async function interviewStep(cookieValue: unknown, body: unknown, deps: I
       Object.assign(merged, fields);
       const updated = deps.withStore(store => recordInterviewDomain(store, session.id, merged), null);
       if (!updated) return { kind: 'unavailable' };
-      return { kind: 'ok', view: interviewView(updated) };
+      return { kind: 'ok', view: interviewView(updated, deps.now()) };
     }
     case 'location': {
       const trade = session.locationTrade;
-      if (!trade || !session.domainAt || session.workLocation) return { kind: 'out_of_order', view: interviewView(session) };
+      if (!trade || !session.domainAt || session.workLocation) return { kind: 'out_of_order', view: interviewView(session, deps.now()) };
       if (!isWorkLocationAnswer(trade, body.workLocation)) return { kind: 'invalid_input' };
       const answer = body.workLocation;
       const exits = workLocationExits(answer);
@@ -221,10 +247,44 @@ export async function interviewStep(cookieValue: unknown, body: unknown, deps: I
       if (!result || result.kind === 'refused') return { kind: 'unavailable' };
       if (result.kind === 'exited') {
         if (result.waitlist?.status === 'added') deps.alertWaitlist(result.waitlist.entry);
-        return { kind: 'exited', view: interviewView(result.session) };
+        return { kind: 'exited', view: interviewView(result.session, deps.now()) };
       }
       if (interviewReadyForResearch(result.session)) deps.startResearch(result.session);
-      return { kind: 'ok', view: interviewView(result.session) };
+      return { kind: 'ok', view: interviewView(result.session, deps.now()) };
+    }
+    case 'status':
+      // Read-only: the gates step polls this until researchReady (no write, no state change).
+      return { kind: 'ok', view: interviewView(session, deps.now()) };
+    case 'questions_begin': {
+      const phase = interviewPhase(session);
+      if (phase === 'questions') return { kind: 'ok', view: interviewView(session, deps.now()) };
+      if (phase !== 'holding') return { kind: 'out_of_order', view: interviewView(session, deps.now()) };
+      const begun = deps.withStore(store => beginInterviewQuestions(store, session.id), null);
+      return begun ? { kind: 'ok', view: interviewView(begun, deps.now()) } : { kind: 'unavailable' };
+    }
+    case 'answer': {
+      const state = session.interviewState;
+      if (interviewPhase(session) !== 'questions' || !state) return { kind: 'out_of_order', view: interviewView(session, deps.now()) };
+      const submission = parseAnswerSubmission(body);
+      if (!submission) return { kind: 'invalid_input' };
+      const terms = ownProbeTerms(session.collectedData);
+      const result = applyInterviewAnswer(state, submission, text => isGenericOnlyAnswer(text, { ownTerms: terms }));
+      if (result.kind === 'out_of_order') return { kind: 'out_of_order', view: interviewView(session, deps.now()) };
+      const done = result.kind === 'advanced' && interviewComplete(result.state);
+      const saved = deps.withStore(store => saveInterviewAnswers(store, session.id, state, result.state, done), null);
+      if (!saved) {
+        // Lost a race with another submit (double click, second tab): answer with the state that won.
+        const current = deps.withStore(store => readInterviewSession(store, session.id), null);
+        return current ? { kind: 'out_of_order', view: interviewView(current, deps.now()) } : { kind: 'unavailable' };
+      }
+      return { kind: 'ok', view: interviewView(saved, deps.now()) };
+    }
+    case 'gates_done': {
+      const phase = interviewPhase(session);
+      if (phase === 'facts') return { kind: 'ok', view: interviewView(session, deps.now()) };
+      if (phase !== 'gates' || !interviewResearchSettled(session, deps.now())) return { kind: 'out_of_order', view: interviewView(session, deps.now()) };
+      const done = deps.withStore(store => markInterviewGatesDone(store, session.id), null);
+      return done ? { kind: 'ok', view: interviewView(done, deps.now()) } : { kind: 'unavailable' };
     }
     default:
       return { kind: 'invalid_input' };

@@ -27,7 +27,6 @@ export const INTAKE_OWNER_COPY = {
   domainInputLabel: 'הדומיין שלך', // Label: your domain
   domainInvalid: 'זה לא נראה כמו דומיין. תכתוב רק את כתובת האתר, למשל example.co.il.', // Error: this does not look like a domain
   domainSubdomain: 'תכתוב רק את הדומיין הראשי, בלי תוספת לפניו. למשל example.co.il.', // Error: enter the main domain, without a prefix before it
-  domainContinue: 'המשך לתשלום', // Button: continue to payment
 } as const;
 
 export type IntakeOwnerCopyKey = keyof typeof INTAKE_OWNER_COPY;

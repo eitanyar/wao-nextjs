@@ -165,6 +165,8 @@ test('paid handlers are imported only by their own gated stub', () => {
     'src/app/api/site-bot/connect-gbp/route.ts',
     'src/app/api/site-bot/connect-status/route.ts',
     // Launch step 1 (2026-11-25): the interview-start claim, the same gated-stub shape (asserted below).
+    // Step 2b (2026-11-25): interview-facts (the confirm-facts screen) joins them, same stub (asserted below).
+    'src/app/api/site-bot/interview-facts/route.ts',
     'src/app/api/site-bot/interview-gates/route.ts',
     'src/app/api/site-bot/interview-resume/route.ts',
     'src/app/api/site-bot/interview-start/route.ts',
@@ -569,6 +571,30 @@ test('step 2a: interview-step, interview-gates and interview-resume stay disable
   assert.doesNotMatch(gates, /x-site-bot-session|ownerPOST|submitOwnerResearchGate/);
 });
 
+// Step 2b (2026-11-25): ONE new pre-payment route, interview-facts (load / review / done / return of the owner's facts).
+// It is the standard gated stub (closed = the audit-only 503, no request / cookie / import access). Its paid handler takes
+// the session from the httpOnly cookie only, never a session / research id from the body (the logic refuses a body that
+// names one), and is rate limited per IP; the extraction itself is bounded per answer-set version on the session.
+// interview-step gained only new step names (questions_begin / answer / gates_done / status) behind its existing stub.
+test('step 2b: interview-facts stays disabled unless the paid-flow gate allows it; cookie-only capability', async () => {
+  await assertGatedStub('src/app/api/site-bot/interview-facts/route.ts', 'POST', 'interview_unavailable');
+  const paid = read('src/app/api/site-bot/interview-facts/paid.ts');
+  assert.ok(paid.includes('checkRateLimit(`sitebot-interview-facts:${clientIp(req)}`'), 'interview-facts rate limit');
+  assert.ok(paid.indexOf('checkRateLimit(') < paid.indexOf('interviewFacts('));
+  assert.match(paid, /cookieFromHeader\(req\.headers\.get\('cookie'\)\)/);
+  for (const forbidden of ['data/clients', 'researchId', 'sessionId', 'req.json(', 'console.log']) {
+    assert.equal(paid.includes(forbidden), false, `unexpected interview-facts seam: ${forbidden}`);
+  }
+  const flow = read('src/lib/site-bot/interviewFactsFlow.ts');
+  assert.match(flow, /if \('researchId' in body \|\| 'sessionId' in body\) return \{ status: 400/);
+  // The research is the session's own; a review names a fact id that must exist in THAT set (else 404).
+  assert.match(flow, /const session = openSessionFromCookie\(cookieValue, deps\);/);
+  assert.match(flow, /if \(!next\) return \{ status: 404, body: \{ error: 'not_found' \} \};/);
+  assert.match(flow, /claimFactExtraction\(store, session\.id\)/);
+  // The model never gets the owner's contact: the extraction input redacts it.
+  assert.match(flow, /redact: \[contact\?\.mobile/);
+});
+
 // Launch step 1 (2026-11-25): the waiting list is a DELIBERATE new public surface of the closed release. It must never
 // open the paid flow: it only stores a contact and emails staff, and only for a real audit whose offer shows the form.
 test('waitlist POST: bounded JSON, per-IP rate limit, strict validation, server-derived context, no paid-flow seam', () => {
@@ -715,7 +741,9 @@ test('pay page and start flow gate navigation and "done" on the checked response
   assert.doesNotMatch(payPage, /4242/);
   const pay = read('src/components/site-bot/SiteBotPayClient.tsx');
   assert.doesNotMatch(pay, /4242|defaultValue="/, 'no test card value in the client bundle');
-  const pay_ = pay.slice(pay.indexOf('async function pay()'), pay.indexOf('async function submitGate()'));
+  // Step 2b (2026-11-25): the unreachable pay-page gate UI (submitGate) was removed; pay() now runs up to the render.
+  const pay_ = pay.slice(pay.indexOf('async function pay()'), pay.indexOf('\n  return (\n'));
+  assert.ok(pay_.length > 0 && !pay.includes('submitGate'));
   assert.match(pay_, /const outcome = checkoutCallbackOutcome\(res\.ok, json\);\s*if \(outcome\.kind === "error"\) throw/);
   assert.match(pay_, /await readJsonBody\(res\)/);
   assert.doesNotMatch(pay_, /res\.json\(\)/);

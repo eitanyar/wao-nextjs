@@ -87,8 +87,30 @@ const CREATE_SESSIONS = `CREATE TABLE IF NOT EXISTS site_bot_interview_sessions 
   research_id TEXT,
   research_started_at TEXT,
   reminder_sent_at TEXT,
-  checkout_session_id TEXT
+  checkout_session_id TEXT,
+  research_done_at TEXT,
+  interview_json TEXT,
+  interview_done_at TEXT,
+  answers_version INTEGER NOT NULL DEFAULT 0,
+  gates_done_at TEXT,
+  facts_extracted_version INTEGER NOT NULL DEFAULT 0,
+  facts_claimed_at TEXT,
+  facts_returns INTEGER NOT NULL DEFAULT 0,
+  facts_confirmed_at TEXT
 )`;
+
+/** Step 2b (2026-11-25): the interview v1 + facts columns, added to a step-2a store by migrate() (name -> column DDL). */
+const STEP2B_SESSION_COLUMNS: ReadonlyArray<[string, string]> = [
+  ['research_done_at', 'research_done_at TEXT'],
+  ['interview_json', 'interview_json TEXT'],
+  ['interview_done_at', 'interview_done_at TEXT'],
+  ['answers_version', 'answers_version INTEGER NOT NULL DEFAULT 0'],
+  ['gates_done_at', 'gates_done_at TEXT'],
+  ['facts_extracted_version', 'facts_extracted_version INTEGER NOT NULL DEFAULT 0'],
+  ['facts_claimed_at', 'facts_claimed_at TEXT'],
+  ['facts_returns', 'facts_returns INTEGER NOT NULL DEFAULT 0'],
+  ['facts_confirmed_at', 'facts_confirmed_at TEXT'],
+];
 const CREATE_SESSION_INDEXES = [
   // One open session per business: the spot is per placeId.
   "CREATE UNIQUE INDEX IF NOT EXISTS site_bot_interview_sessions_open_place ON site_bot_interview_sessions (place_id) WHERE status = 'open'",
@@ -99,8 +121,13 @@ const CREATE_SESSION_INDEXES = [
  * Additive migrations of a store created by step 1 (idempotent; every open runs them):
  *   - site_bot_launch_events gains place_id / released_at (the released-spot rows).
  *   - site_bot_waitlist's reason CHECK gains 'location' (SQLite cannot alter a CHECK: the table is rebuilt, rows kept).
+ *   - step 2b: site_bot_interview_sessions gains the interview v1 + facts columns (STEP2B_SESSION_COLUMNS).
  */
 function migrate(db: Database.Database): void {
+  const sessionColumns = new Set((db.prepare('PRAGMA table_info(site_bot_interview_sessions)').all() as Array<{ name: string }>).map(column => column.name));
+  if (sessionColumns.size > 0) {
+    for (const [name, ddl] of STEP2B_SESSION_COLUMNS) if (!sessionColumns.has(name)) db.exec(`ALTER TABLE site_bot_interview_sessions ADD COLUMN ${ddl}`);
+  }
   const eventColumns = new Set((db.prepare('PRAGMA table_info(site_bot_launch_events)').all() as Array<{ name: string }>).map(column => column.name));
   if (!eventColumns.has('place_id')) db.exec('ALTER TABLE site_bot_launch_events ADD COLUMN place_id TEXT');
   if (!eventColumns.has('released_at')) db.exec('ALTER TABLE site_bot_launch_events ADD COLUMN released_at TEXT');

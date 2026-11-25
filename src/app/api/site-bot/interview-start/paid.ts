@@ -16,7 +16,9 @@ import { cookieFromHeader, interviewSetCookie } from '@/lib/site-bot/interviewSe
 //   200 { status: 'closed', session }   this browser's session for THIS check ended (exited / expired / paid): no claim
 //   409 { status: 'blocked', offer, redirect }   409 { status: 'elsewhere', redirect }   404 { error: 'not_found', redirect }
 
-export const INTERVIEW_START_RATE_LIMIT = { maxRequests: 10, windowMs: 10 * 60 * 1000 } as const;
+// Step 2b: 10 -> 30. Every reload of /site-bot/start resumes through this POST, and the interview now spans ~12 screens;
+// a new spot is still claimed at most once per business (the cap is per placeId, launchStore), whatever this limit is.
+export const INTERVIEW_START_RATE_LIMIT = { maxRequests: 30, windowMs: 10 * 60 * 1000 } as const;
 
 function reply(body: object, status: number, setCookie?: string) {
   const headers: Record<string, string> = { 'Cache-Control': 'private, no-store' };
