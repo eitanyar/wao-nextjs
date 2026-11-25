@@ -120,3 +120,12 @@ Sources:
 - [Google Ads: Demand Gen performance guide](https://support.google.com/google-ads/answer/16797388?hl=en)
 - [Keywords Everywhere: November 2026 core update](https://keywordseverywhere.com/news/google-algorithm-updates/november-2026-core-update/)
 - [Search Engine Roundtable: November 2026 core update](https://www.seroundtable.com/google-november-2026-core-update-42504.html)
+---
+
+## Eitan's decisions (2026-11-25), these replace section 5
+
+1. **REVERSED. WAO becomes the GBP manager through Google sign-in.** The API is approved. The 503 is our own paid-flow switch (`SITE_BOT_PAID_FLOW`), not Google. So the full monthly report and the profile-management promise stay. The "owner adds the link himself" design is dropped.
+2. **REVERSED. Interview before payment.** The new order is: free check → eligibility block → agent interview + confirm facts + home-page preview → pay → build. There is no 72-hour fallback site and no refund offer beyond the legal minimum. Lawyer question added: what is the legal minimum cancellation/refund for a monthly digital subscription that was sold online (Consumer Protection Law, distance-sale cancellation)?
+3. **Not stated. Adam assumes yes:** the ₪50–100/day ad test to the free check around 6.12, with a waiting list, before the paid flow opens. Step 1 needs the waiting list either way.
+
+**Effect on build step 1.** The cap and weekly limit gate the **start of the interview**, not only the buy button. If they didn't, people would finish an interview and then find no free spot. Before the paid flow opens, every eligible business goes to the waiting list.
