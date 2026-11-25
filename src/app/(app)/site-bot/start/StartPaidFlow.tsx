@@ -33,6 +33,13 @@ import {
 } from "@/lib/site-bot/interviewQuestions";
 import { FACT_TYPE_COPY_KEY, INTERVIEW_FACT_TYPES, MAX_OWNER_TEXT_CHARS, type InterviewFact } from "@/lib/site-bot/interviewFacts";
 import { researchGateCopyKey } from "@/lib/site-bot/research/gatePresentation";
+
+// Owner gate questions use the owner-facing wording approved 2026-11-20 (postPayCopy gate_*), falling back to the
+// research copy for a type it lacks (ambiguous_intent is staff-only and never shown here).
+function ownerGateQuestion(type: Parameters<typeof researchGateCopyKey>[0]): string {
+  const key = researchGateCopyKey(type);
+  return (POSTPAY_COPY as Record<string, string>)[key] ?? RESEARCH_COPY[key];
+}
 import type { ResearchGateType } from "@/lib/site-bot/research/gates";
 import {
   isWorkLocationTrade,
@@ -1731,7 +1738,7 @@ function SiteBotStartContent() {
           >
             <p style={{ ...ownerNoteStyle, color: "var(--text)" }}>{renderMixed(STEP2B_COPY.GATES_INTRO)}</p>
             <h2 id="interview-gate-title" ref={ownerHeadingRef} tabIndex={-1} style={ownerHeadingStyle}>
-              {renderMixed(RESEARCH_COPY[researchGateCopyKey(gates[gateIndex].type)])}
+              {renderMixed(ownerGateQuestion(gates[gateIndex].type))}
             </h2>
             {gateError && <p role="alert" style={ownerErrorStyle}>{renderMixed(POSTPAY_COPY.answer_error)}</p>}
             <textarea

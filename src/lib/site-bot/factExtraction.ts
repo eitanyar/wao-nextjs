@@ -2,8 +2,8 @@
  * Site Bot step 2b: the ONE model call that turns the owner's interview answers into fact candidates
  * (interviewFacts.ts validates every candidate; this module never decides what is a fact).
  *
- * Bounded: Gemini via gemini-fast.ts (callGeminiJSON), thinking FACTS_THINKING_LEVEL (HIGH: a batch-like extraction run
- * in the background, not a real-time reply), maxOutputTokens FACTS_MAX_OUTPUT_TOKENS, a timeout per attempt, ONE retry.
+ * Bounded: Gemini via gemini-fast.ts (callGeminiJSON), thinking FACTS_THINKING_LEVEL (LOW, Adam 2026-11-25: the owner waits on the
+ * facts screen; LOW 4.7 s / $0.002 vs HIGH 41-73 s / $0.031 kept the same quotes, and the substring rule guards accuracy), maxOutputTokens FACTS_MAX_OUTPUT_TOKENS, a timeout per attempt, ONE retry.
  * Every attempt that returned usage is priced and handed back as a providerUsage row (the caller writes it to the
  * dossier). Failure of both attempts returns { ok: false }: the caller falls back to the code-only facts.
  *
@@ -28,7 +28,7 @@ import type { ProviderUsage } from './research/types';
  * HIGH 41 s and 73 s on two runs (~$0.03), 6 facts kept; LOW 4.7 s (~$0.002), 5 facts kept, the same quotes in substance.
  * One-line switch if the owner's wait matters more.
  */
-export const FACTS_THINKING_LEVEL: 'LOW' | 'HIGH' = 'HIGH';
+export const FACTS_THINKING_LEVEL: 'LOW' | 'HIGH' = 'LOW';
 /** Per attempt: above the slowest HIGH run measured (73 s). Two attempts stay inside FACTS_CLAIM_STALE_MS. */
 export const FACTS_TIMEOUT_MS = 100_000;
 export const FACTS_MAX_OUTPUT_TOKENS = 8192;
