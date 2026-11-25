@@ -1,5 +1,6 @@
 // AUTO-GENERATED (waocopy, 2026-11-25) from:
 //   docs/copy/site-bot-step2b-interview-facts-2026-11-25.waocopy.json
+//   docs/copy/site-bot-step2b-facts-a11y-keys-2026-11-25.waocopy.json
 // Do not edit by hand; run `node scripts/build-site-bot-step2b-copy.mjs`.
 // scripts/build-site-bot-step2b-copy.test.mjs checks it byte for byte against the source.
 
@@ -43,7 +44,11 @@ export const SITE_BOT_STEP2B_COPY = {
   "SESSION_ELSEWHERE_HEAD": "ההרשמה שלך פתוחה במכשיר אחר",
   "SESSION_ELSEWHERE_BODY": "התחלת את ההרשמה בטלפון או בדפדפן אחר. כדי להמשיך, תפתח את הקישור ששלחנו לך במייל ותמשיך משם.",
   "START_FOOTER_NOTE": "תענה על כמה שאלות, תאשר את הפרטים ותראה את דף הבית שלך. רק אחרי זה תשלם.",
-  "STEP_CONTINUE": "להמשיך"
+  "STEP_CONTINUE": "להמשיך",
+  "FACT_FIX_CANCEL": "לבטל את התיקון",
+  "FACT_STATUS_CONFIRMED": "אישרתָּ",
+  "FACT_STATUS_EDITED": "תיקנתָּ",
+  "FACT_STATUS_REMOVED": "לא יעלה לאתר"
 } as const;
 
 export type SiteBotStep2bCopyKey = keyof typeof SITE_BOT_STEP2B_COPY;

@@ -40,7 +40,6 @@ interface CheckoutCallbackResponse {
   charged?: boolean;
   researchId: string;
   status?: string;
-  openGateCount?: number;
   collectedData?: CollectedData;
   /** Fresh magic-link path to /account/subscription (manage / cancel), on a fresh activation only. */
   manageUrl?: string;

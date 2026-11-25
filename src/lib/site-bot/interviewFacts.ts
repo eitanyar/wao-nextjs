@@ -69,6 +69,13 @@ export const FACT_TYPE_COPY_KEY: Readonly<Record<InterviewFactType, SiteBotStep2
   credential: 'FACT_TYPE_CREDENTIAL',
 };
 
+/** The visually hidden role="status" text of a reviewed fact (the confirm-facts screen announces his tap's result). */
+export const FACT_STATUS_COPY_KEY: Readonly<Record<Exclude<InterviewFactStatus, 'pending'>, SiteBotStep2bCopyKey>> = {
+  confirmed: 'FACT_STATUS_CONFIRMED',
+  edited: 'FACT_STATUS_EDITED',
+  removed: 'FACT_STATUS_REMOVED',
+};
+
 export const MAX_QUOTE_CHARS = 300;
 export const MIN_QUOTE_CHARS = 2;
 export const MAX_OWNER_TEXT_CHARS = 300;
