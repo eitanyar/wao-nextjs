@@ -1,0 +1,18 @@
+Angle: he's mid-action and slightly stuck, so each line names the snag in his words and hands him the one fix. No scolding, no explaining the system.
+
+```json
+{
+  "WAITLIST_INVALID_NAME": "תכתוב את השם שלך, ככה נדע למי לחזור.",
+  "WAITLIST_INVALID_PHONE": "משהו במספר לא מסתדר. תכתוב נייד או קווי, למשל 0501234567, גם בלי מקפים.",
+  "WAITLIST_INVALID_EMAIL": "יש טעות באימייל. תתקן אותו או תשאיר את השדה ריק.",
+  "NOT_ELIGIBLE_PROFILE_CLOSED": "בגוגל העסק שלך מסומן כסגור, ומי שמחפש אותך חושב שאתה לא עובד. תעדכן את הסטטוס בפרופיל ותבדוק שוב.",
+  "NOT_ELIGIBLE_PROFILE_NO_RATINGS": "עוד אין לך דירוגים בגוגל, ו־Site Bot בנוי על ביקורות אמיתיות. תשלח לכמה לקוחות מרוצים הודעה קצרה ותבקש שידרגו אותך, ואז תריץ את הבדיקה שוב."
+}
+```
+
+Notes:
+- `NOT_ELIGIBLE_PROFILE_CLOSED` covers both "closed" and "temporarily closed" with one word, סגור. It doesn't guess why. It names only what his customers see.
+- The two profile strings end on different verbs (תבדוק שוב / תריץ את הבדיקה שוב). Only one of them shows at a time, but this keeps the file from repeating the same line.
+- These strings are on-screen only and won't be voiced, so the voiced-copy rules don't apply.
+
+→ Noa, for one fresh read before merge.
