@@ -42,7 +42,19 @@ An eligible owner who holds a spot goes through these steps, with no human and n
   - The callback generates the remaining pages after payment.
   - Photographers get studio vs on-location framing (VISION.md "locationType conditional"; it is missing today, so Yonatan flagged it): the work-location answer drives it.
   - The waiting screen copy while generation runs.
-  - **First-screen fact** (Fable 5.2 on Koray K-01, 2026-11-25). The home page's first phone screen (hero subheadline or trust bar; never the title or H1) must carry at least one confirmed owner fact, linked to its fact id. If no confirmed fact fits, the preview still shows and the gap is logged for step 3's gate. Yonatan signs off the subheadline rule, because the subheadline is also the meta description (`researchedSite.ts:452`).
+  - **First-screen fact** (Fable 5.2 on Koray K-01; Yonatan sign-off 2026-11-25). Home page only.
+    - (a) The hero subheadline carries at least one eligible owner fact and records its fact id (`firstScreenFactId`). If no eligible fact fits, a code-built trust-bar item rendered from an interview `credential` fact (linked to its `cred-*` id) satisfies the rule. Fact words in the title or H1 never count, and this rule never changes the title formula or the H1 gate.
+    - (b) Eligible facts have status `confirmed`, or `edited` (use `ownerText`). Priority:
+      1. job (no serviceId, or the homepage trade / a homepage service)
+      2. tool
+      3. local (every place it names is in `researchedServiceAreas(home)`)
+      4. non-money price_rule (no digits, no ₪)
+      5. number (the owner's exact digits, not one the trust bar shows)
+
+      A credential goes in the trust bar only. A refusal is never used. A fact with a `condition` is used only with that condition stated.
+    - (c) The subheadline stays at most 90 characters, one verb sentence, with every truth gate in force. It does not repeat service and city together.
+    - (d) The homepage meta description and og:description = `pageNameWithCity(trade, city) + " — " + heroSubheadline`. If the subheadline already contains both, use it alone. Hard cap `META_DESCRIPTION_MAX_CHARS` (155), target 120 or fewer. If it's over 155, use the subheadline alone and never cut mid-word. `Service.description` stays `heroSubheadline`. Other page types are unchanged.
+    - (e) If no eligible fact fits, the preview still renders, and `first_screen_fact_missing` is logged for step 3's gate.
 
 ## Constraints
 - All new Hebrew comes from waocopy and is applied byte-exact. One waocopy brief per run, written before the engineer starts. The briefs cover:
@@ -67,7 +79,7 @@ An eligible owner who holds a spot goes through these steps, with no human and n
 - Focused tests per run, then `npm run test`, then `npm run build -- --webpack`, serially.
 - Dev run, gate open, fixture business: start → card → location → interview → gates → facts → preview → mock pay. The research runs once (check the dossier and `providerUsage`).
 - The preview is refused for another session.
-- In the fixture run, the preview's hero block contains text traced to a confirmed fact id.
+- In the fixture run, the homepage `firstScreenFactId` resolves to a confirmed or edited fact of an eligible type. The homepage meta description starts with the plain anchor, is 155 characters or fewer, and differs from every other page's. The title and H1 are byte-identical to a run without facts.
 - An abandoned session releases its spot after the expiry (time is injected).
 - Screenshots on desktop and mobile of the interview, facts and preview screens.
 

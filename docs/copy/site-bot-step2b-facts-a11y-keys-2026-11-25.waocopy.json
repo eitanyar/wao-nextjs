@@ -1,0 +1,16 @@
+Angle: he just tapped and needs to hear what happened to that fact, so each status names his action or its result on the site, with niqqud where a screen reader could misread gender.
+
+```json
+{
+  "FACT_FIX_CANCEL": "לבטל את התיקון",
+  "FACT_STATUS_CONFIRMED": "אישרתָּ",
+  "FACT_STATUS_EDITED": "תיקנתָּ",
+  "FACT_STATUS_REMOVED": "לא יעלה לאתר"
+}
+```
+
+Notes:
+- **FACT_FIX_CANCEL:** I used "לבטל את התיקון" instead of a bare "לבטל". Next to "להוריד", a bare "לבטל" could sound like cancelling the fact itself. This version also pairs cleanly with "לשמור את התיקון".
+- **Statuses:** I avoided "אושר", which a screen reader may read as "אוֹשֶׁר". The qamats on the final tav keeps "אישרתָּ" and "תיקנתָּ" masculine when read aloud.
+
+→ Noa: one listening pass with the screen reader, since these strings are voiced.
