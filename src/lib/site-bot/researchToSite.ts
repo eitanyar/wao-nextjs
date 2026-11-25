@@ -46,6 +46,7 @@ import { runSiteResearch } from './research/runResearch';
 import { listedServedAreas } from './servedAreas';
 import { gateAnsweredCollectedData } from './research/gateAnswers';
 import { createPlaceIdChecker, type PlaceIdChecker } from './placeIdRefresh';
+import { factEvidence, firstScreenConstraint, MAX_BRIEF_INTERVIEW_FACTS, workLocationConstraint, type InterviewBriefOptions } from './interviewGeneration';
 import { transitionResearchStatus, type HumanGate, type NeuronQueryData, type PageOpportunity, type ResearchStatus, type SiteResearchDossier } from './research/types';
 import {
   assembleSiteIdentity,
@@ -140,6 +141,11 @@ export function safeOpportunityIdentity(opportunity: PageOpportunity): { id: str
   const slug = LATIN_NAME.test(name) ? latinSlug(name) : '';
   const base = slug.length >= 3 && !RESERVED_SEGMENTS.has(slug) ? slug : `svc-${shortHash(opportunity.id)}`;
   return { id: base.startsWith('svc-') ? base : `svc-${base}`, targetPath: `/services/${base}` };
+}
+
+/** True when the dossier carries the copy_ready generation plan (homepage + opaque ids). */
+export function isPlannedDossier(dossier: SiteResearchDossier): boolean {
+  return planned(dossier);
 }
 
 function planned(dossier: SiteResearchDossier): boolean {
@@ -290,8 +296,13 @@ export function serviceFactsFor(data: CollectedData, subject: string, label: str
   return out;
 }
 
-/** Pure. One brief per ready planned page, homepage first. Requires a planned copy_ready dossier. */
-export function buildPageBriefs(dossier: SiteResearchDossier, data: CollectedData): PageBrief[] {
+/**
+ * Pure. One brief per ready planned page, homepage first. Requires a planned copy_ready dossier.
+ * Site Bot step 2c: `interview` adds the owner's confirmed / edited interview facts as approved first-party proof (the
+ * homepage gets every writer fact, a service page the facts about its own service), the work-location constraint on every
+ * page, and on the homepage the first-screen constraint (firstScreenFact.ts). Without it the briefs are unchanged.
+ */
+export function buildPageBriefs(dossier: SiteResearchDossier, data: CollectedData, interview?: InterviewBriefOptions): PageBrief[] {
   if (dossier.status !== 'copy_ready' || !planned(dossier)) throw new Error('Dossier has no copy_ready plan.');
   const ready = dossier.pageOpportunities.filter(item => item.status === 'ready');
   const services = dossier.businessTruth.assertions.filter(item => item.assertionStatus === 'verified');
@@ -358,6 +369,13 @@ export function buildPageBriefs(dossier: SiteResearchDossier, data: CollectedDat
     const depth: PageBriefDepthInput | undefined = !isHome && rendersDepthBlocks(page.pageClass ?? 'money_service')
       ? depthInputFor(dossier, data, { subject, pageLabel, pageQueries, serviceLabels, places, primary: norm(subject) === norm(clean(data.primaryService) || readyServices[0]?.opportunity || '') })
       : undefined;
+    const interviewProof = interview
+      ? interview.facts.filter(fact => isHome || (service !== undefined && fact.serviceId === service.id))
+        .slice(0, MAX_BRIEF_INTERVIEW_FACTS).flatMap(fact => factEvidence(fact) ?? [])
+      : [];
+    const proofIds = new Set(interviewProof.map(item => item.id));
+    const firstScreen = isHome && interview ? firstScreenConstraint(interview.firstScreen.filter(fact => proofIds.has(`interview-${fact.id}`))) : null;
+    const framing = interview ? workLocationConstraint(interview.workLocation, data) : null;
     return compilePageBrief({
       page: { id: page.id, targetPath: page.targetPath, pageClass: page.pageClass ?? 'money_service' },
       persona: approved('persona', isHome
@@ -366,12 +384,14 @@ export function buildPageBriefs(dossier: SiteResearchDossier, data: CollectedDat
       waoOffer: approved('offer', `${dossier.businessTruth.businessName}: ${offerValue}`),
       targetQueries: [...new Set(pageQueries)].map((value, index) => approved(`query-${index + 1}`, value)),
       entityAnchors: orderedEntities,
-      firstPartyProof: proof,
+      firstPartyProof: [...proof, ...interviewProof],
       localFacts,
       customerDecisions: decisions,
       constraints: [
         ...constraints,
         ...(isHome ? [] : [approved('constraint-page-topic', `This page is about ${subject}; other services appear only as secondary links.`)]),
+        ...(framing ? [framing] : []),
+        ...(firstScreen ? [firstScreen] : []),
       ],
       links,
       informationGainGaps: gaps(data),
@@ -461,7 +481,7 @@ function briefIdentity(dossier: SiteResearchDossier, data: CollectedData): SiteI
   return assembleSiteIdentity(siteIdentityInput(serviceNamesFor(dossier), data), null, () => new Date(dossier.updatedAt));
 }
 
-function serviceNamesFor(dossier: SiteResearchDossier): string[] {
+export function serviceNamesFor(dossier: SiteResearchDossier): string[] {
   return dossier.businessTruth.assertions.filter(item => item.assertionStatus === 'verified').map(item => item.claim);
 }
 

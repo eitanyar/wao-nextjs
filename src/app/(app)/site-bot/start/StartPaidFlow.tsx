@@ -3,7 +3,7 @@
 import { Suspense, useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { customerErrorText, readJsonBody } from "@/lib/site-bot/checkout/customerError";
+import { checkoutInitSessionId, customerErrorText, readJsonBody } from "@/lib/site-bot/checkout/customerError";
 import { browserSiteBotTracking, trackInterviewStarted } from "@/lib/tracking/siteBotConversions";
 import { renderMixed } from "@/lib/bidi";
 import { RESEARCH_COPY } from "@/lib/site-bot/researchCopy";
@@ -20,6 +20,9 @@ import { chatBubbleDir } from "@/lib/site-bot/chatBubbleDir";
 import { SITE_BOT_STEP2A_COPY as STEP2A_COPY } from "@/lib/site-bot/step2aCopy.generated";
 import { SITE_BOT_STEP2B_COPY as STEP2B_COPY } from "@/lib/site-bot/step2bCopy.generated";
 import { SITE_BOT_POSTPAY_COPY as POSTPAY_COPY } from "@/lib/site-bot/postPayCopy.generated";
+import { SITE_BOT_STEP2C_COPY as STEP2C_COPY } from "@/lib/site-bot/step2cCopy.generated";
+import { payCtaSub } from "@/lib/site-bot/step2cCopy";
+import { PREVIEW_IFRAME_SANDBOX } from "@/lib/site-bot/previewFrameSandbox";
 import {
   INTERVIEW_QUESTION_KEYS,
   isPriceChipId,
@@ -110,8 +113,15 @@ import {
 // (src/lib/site-bot/interviewQuestions.ts; the server applies every answer, so a reload resumes on the same question,
 // and shows the vague-answer probe at most once per question), then the open owner research gates (interview-gates,
 // once the research settled; the holding text is the waiting state), then the confirm-facts screen (interview-facts,
-// src/lib/site-bot/interviewFactsFlow.ts). FACTS_DONE lands on the holding text until 2c adds the home-page preview.
-// Every new string comes from src/lib/site-bot/step2bCopy.generated.ts (waocopy).
+// src/lib/site-bot/interviewFactsFlow.ts). Every new string comes from src/lib/site-bot/step2bCopy.generated.ts (waocopy).
+//
+// Step 2c (2026-11-25): FACTS_DONE starts the home-page preview on the server (src/lib/site-bot/interviewPreview.ts). The
+// facts_confirmed phase polls /api/site-bot/interview-preview: GENERATING_* while it runs, then PREVIEW_* above an
+// <iframe sandbox> (no tokens) of /api/site-bot/interview-preview-frame (cookie-gated, inert), the one fix round
+// (PREVIEW_FIX_LINK -> back to the facts screen -> one regeneration; then PREVIEW_FIX_USED), the after-payment list and
+// PAY_CTA, which hands the confirmed session to the checkout init route and the pay page. Two failed attempts:
+// PREVIEW_FAILED (staff are alerted; the page keeps polling slowly and moves on once staff re-trigger it).
+// Every new string comes from src/lib/site-bot/step2cCopy.generated.ts (waocopy).
 
 interface Message {
   role: "assistant" | "user";
@@ -220,6 +230,9 @@ const STEP_ERROR_FALLBACK = "משהו השתבש";
 /** How often the gates step asks whether the research settled, and the facts step whether the extraction finished. */
 const RESEARCH_POLL_MS = 8000;
 const FACTS_POLL_MS = 3000;
+/** Step 2c: the preview poll while it generates, and (slower) after a failure, while staff re-trigger it. */
+const PREVIEW_POLL_MS = 4000;
+const PREVIEW_FAILED_POLL_MS = 30000;
 
 /** The browser's step snapshot saved on the interview session (resume only; the server never trusts it). */
 interface IntakeProgress {
@@ -254,6 +267,26 @@ interface InterviewSessionView {
   workLocation: WorkLocation | null;
   questions: InterviewQuestionsView | null;
   researchReady: boolean;
+}
+
+/** Step 2c: the home-page preview state (interview-preview status). */
+interface PreviewState {
+  status: "none" | "generating" | "ready" | "failed";
+  round: number;
+  fixAvailable: boolean;
+  fixUsed: boolean;
+  frameUrl: string | null;
+}
+
+function previewStateOf(value: unknown): PreviewState | null {
+  if (!value || typeof value !== "object") return null;
+  const view = value as Partial<PreviewState>;
+  if (view.status !== "none" && view.status !== "generating" && view.status !== "ready" && view.status !== "failed") return null;
+  const frameUrl = typeof view.frameUrl === "string" && view.frameUrl.startsWith("/api/site-bot/interview-preview-frame?") ? view.frameUrl : null;
+  return {
+    status: view.status, round: typeof view.round === "number" ? view.round : 0, fixAvailable: view.fixAvailable === true,
+    fixUsed: view.fixUsed === true, frameUrl,
+  };
 }
 
 function questionsViewOf(value: unknown): InterviewQuestionsView | null {
@@ -387,6 +420,10 @@ function SiteBotStartContent() {
   const [gateDraft, setGateDraft] = useState("");
   const [gateError, setGateError] = useState(false);
   const [factsScreen, setFactsScreen] = useState<FactsScreen | null>(null);
+  // Step 2c: the home-page preview.
+  const [preview, setPreview] = useState<PreviewState | null>(null);
+  // The poll's own fix-round marker: a fix round finished (FACTS_DONE again) restarts the poll for the new round.
+  const [previewRoundSeen, setPreviewRoundSeen] = useState(0);
   const [editingFact, setEditingFact] = useState<string | null>(null);
   const [factEdit, setFactEdit] = useState("");
   // Set synchronously before every step-2b request (interviewSubmitGuard.runExclusive); `submitting` mirrors it for render.
@@ -560,6 +597,7 @@ function SiteBotStartContent() {
   const questionProbing = questionsView?.probing;
   const gatesListed = gates !== null;
   const factsLoaded = factsScreen !== null;
+  const previewStatus = preview?.status ?? null;
 
   // The contact and domain steps take focus on their heading when they open, like the credentials step.
   useEffect(() => {
@@ -572,7 +610,8 @@ function SiteBotStartContent() {
     }, 0);
     return () => clearTimeout(timer);
     // Step 2b: every new question, the probe, each gate and the facts loading -> list switch move focus to the heading too.
-  }, [phase, questionIndex, questionProbing, gateIndex, gatesListed, factsLoaded]);
+    // Step 2c: generating -> preview / failed moves focus to the new screen's heading.
+  }, [phase, questionIndex, questionProbing, gateIndex, gatesListed, factsLoaded, previewStatus]);
 
   // Step 2b, confirm facts: after save / Cancel / Escape the fix field unmounts; focus returns to that fact's Fix button
   // (never to body). The Fix button is aria-disabled, not disabled, while a request is in flight, so it can take focus.
@@ -654,6 +693,40 @@ function SiteBotStartContent() {
     void load();
     return () => { cancelled = true; if (timer) clearTimeout(timer); };
   }, [phase, factsScreen]);
+
+  // Step 2c, facts_confirmed: poll the preview (the first status request also starts the due round on the server) until it
+  // is ready; after a failure keep polling slowly so a staff re-trigger moves the screen on by itself. A failed request
+  // never throws out of the timer (no unhandled rejection): it is retried on the next tick.
+  useEffect(() => {
+    if (phase !== "facts_confirmed") return;
+    let cancelled = false;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const poll = async () => {
+      let next = PREVIEW_POLL_MS;
+      try {
+        const result = await postInterviewJson("/api/site-bot/interview-preview", { action: "status" });
+        if (cancelled) return;
+        if (result.status === 409 && result.json.error === "out_of_order") {
+          const status = await postInterviewStep({ step: "status" });
+          if (cancelled) return;
+          if (status.session && status.session.phase !== "facts_confirmed") { followView(status.session); return; }
+        }
+        const state = result.ok ? previewStateOf(result.json.preview) : null;
+        if (state) {
+          setPreview(state);
+          if (state.status === "ready") return;
+          if (state.status === "failed") next = PREVIEW_FAILED_POLL_MS;
+        }
+      } catch {
+        // Network blip: try again on the next tick.
+      }
+      if (!cancelled) timer = setTimeout(() => { void poll(); }, next);
+    };
+    void poll();
+    return () => { cancelled = true; if (timer) clearTimeout(timer); };
+    // followView only sets state; the poll restarts per facts_confirmed entry (previewRoundSeen bumps after the fix round).
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [phase, previewRoundSeen]);
 
   function fieldValue(field: IntakeCardField): string {
     // Display only: time ranges are isolated LTR so the RTL input shows 08:00-18:00, not 18:00-08:00.
@@ -897,8 +970,15 @@ function SiteBotStartContent() {
     if (view.phase === "questions" && view.questions) { showQuestions(view.questions); return; }
     if (view.phase === "gates") { setResearchReady(view.researchReady); setGates(null); setPhase("gates"); return; }
     if (view.phase === "facts") { setFactsScreen(null); setPhase("facts"); return; }
-    if (view.phase === "facts_confirmed") { setPhase("facts_confirmed"); return; }
+    if (view.phase === "facts_confirmed") { enterFactsConfirmed(); return; }
     throw new Error("phase");
+  }
+
+  /** Step 2c: the facts are confirmed; the preview poll (re)starts from the generating state. */
+  function enterFactsConfirmed() {
+    setPreview(null);
+    setPreviewRoundSeen((count) => count + 1);
+    setPhase("facts_confirmed");
   }
 
   function stepFailed() {
@@ -1021,7 +1101,7 @@ function SiteBotStartContent() {
       try {
         // A 409 out_of_order already at facts_confirmed (the same-tick second click, a second tab) is the same success.
         await requestFactsDone(postInterviewJson);
-        setPhase("facts_confirmed");
+        enterFactsConfirmed();
       } catch {
         stepFailed();
       }
@@ -1039,6 +1119,46 @@ function SiteBotStartContent() {
         followView(status.session);
       } catch {
         stepFailed();
+      }
+    });
+  }
+
+  // ---- Step 2c: preview, fix round, pay ----------------------------------------------------------------------------
+
+  /** PREVIEW_FIX_LINK: the one fix round, back to the facts screen (FACTS_DONE then regenerates the home page once). */
+  function startPreviewFix() {
+    if (phase !== "facts_confirmed" || !preview?.fixAvailable) return;
+    runExclusive(interviewInFlightRef, setSubmitting, async () => {
+      try {
+        const result = await postInterviewJson("/api/site-bot/interview-preview", { action: "fix" });
+        if (!result.ok || result.json.phase !== "facts") throw new Error("fix");
+        setFactsScreen(null);
+        setPreview(null);
+        setPhase("facts");
+      } catch {
+        stepFailed();
+      }
+    });
+  }
+
+  /** PAY_CTA: the confirmed session (with its ready preview) goes to checkout init, then to the pay page. */
+  function goToPayment() {
+    if (phase !== "facts_confirmed" || preview?.status !== "ready" || !auditId || !placeId) return;
+    runExclusive(interviewInFlightRef, setSubmitting, async () => {
+      try {
+        const res = await fetch("/api/site-bot/checkout/init", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ auditId, placeId }),
+        });
+        // A non-2xx, non-JSON or malformed init never navigates to the pay page with an undefined session.
+        const json = await readJsonBody(res);
+        const sessionId = checkoutInitSessionId(res.ok, json);
+        if (!sessionId) throw new Error(typeof json.error === "string" ? json.error : "checkout_init_failed");
+        router.push(`/site-bot/pay/${sessionId}`);
+      } catch (err: unknown) {
+        setErrorMessage(customerErrorText(err instanceof Error ? err.message : undefined, STEP_ERROR_FALLBACK));
+        setPhase("error");
       }
     });
   }
@@ -1695,7 +1815,7 @@ function SiteBotStartContent() {
             {copyLines(STEP2A_COPY.HOLDING_BODY).map((line, index) => (
               <p key={index} style={{ ...ownerNoteStyle, color: "var(--text)" }}>{renderMixed(line)}</p>
             ))}
-            <button type="button" className="btn-primary" data-interview-holding-cta="true" onClick={beginQuestions} disabled={submitting} style={{ padding: "12px 24px", minHeight: "44px", justifyContent: "center" }}>
+            <button type="button" className="btn-primary" data-interview-holding-cta="true" onClick={beginQuestions} aria-disabled={submitting || undefined} style={{ padding: "12px 24px", minHeight: "44px", justifyContent: "center" }}>
               {renderMixed(STEP2A_COPY.HOLDING_CTA)}
             </button>
           </div>
@@ -1766,12 +1886,12 @@ function SiteBotStartContent() {
                 type="submit"
                 className="btn-primary"
                 data-interview-next="true"
-                disabled={submitting || (questionsView.key === "priceStyle" ? chipDraft.length === 0 : !answerDraft.trim())}
+                aria-disabled={submitting || (questionsView.key === "priceStyle" ? chipDraft.length === 0 : !answerDraft.trim()) || undefined}
                 style={{ padding: "12px 24px", minHeight: "44px", justifyContent: "center" }}
               >
                 {renderMixed(questionsView.index === INTERVIEW_QUESTION_KEYS.length - 1 ? STEP2B_COPY.Q_SUBMIT_LAST : STEP2B_COPY.Q_NEXT)}
               </button>
-              <button type="button" className="wao-intake-choice" data-interview-skip="true" disabled={submitting} onClick={() => submitAnswer(true)} style={{ minHeight: "44px" }}>
+              <button type="button" className="wao-intake-choice" data-interview-skip="true" aria-disabled={submitting || undefined} onClick={() => submitAnswer(true)} style={{ minHeight: "44px" }}>
                 {renderMixed(STEP2B_COPY.Q_SKIP)}
               </button>
             </div>
@@ -1818,10 +1938,10 @@ function SiteBotStartContent() {
               style={{ ...fieldInputStyle, minHeight: "88px", resize: "vertical", lineHeight: 1.6 }}
             />
             <div style={{ display: "flex", flexWrap: "wrap", gap: "10px" }}>
-              <button type="submit" className="btn-primary" data-interview-gate-next="true" disabled={submitting || !gateDraft.trim()} style={{ padding: "12px 24px", minHeight: "44px", justifyContent: "center" }}>
+              <button type="submit" className="btn-primary" data-interview-gate-next="true" aria-disabled={submitting || !gateDraft.trim() || undefined} style={{ padding: "12px 24px", minHeight: "44px", justifyContent: "center" }}>
                 {renderMixed(STEP2B_COPY.Q_NEXT)}
               </button>
-              <button type="button" className="wao-intake-choice" data-interview-gate-skip="true" disabled={submitting} onClick={() => submitGate(true)} style={{ minHeight: "44px" }}>
+              <button type="button" className="wao-intake-choice" data-interview-gate-skip="true" aria-disabled={submitting || undefined} onClick={() => submitGate(true)} style={{ minHeight: "44px" }}>
                 {renderMixed(STEP2B_COPY.Q_SKIP)}
               </button>
             </div>
@@ -1839,12 +1959,14 @@ function SiteBotStartContent() {
                 </button>
               </>
             ) : factsScreen?.empty ? (
-              // No facts and the one return already used: FACTS_EMPTY's text asks him to go back to the questions, and
-              // FACTS_BODY talks about a list, so under FACTS_HEAD only FACTS_DONE (enabled: canFinish) is shown.
-              // Copy gap reported 2026-11-25: a FACTS_EMPTY variant without the way back.
-              <button type="button" className="btn-primary" data-interview-facts-done="true" disabled={!factsScreen.canFinish} aria-disabled={submitting || undefined} onClick={finishFacts} style={{ padding: "12px 24px", minHeight: "44px", justifyContent: "center" }}>
-                {renderMixed(STEP2B_COPY.FACTS_DONE)}
-              </button>
+              // No facts and no way back (the one return used, or the preview's fix round): FACTS_EMPTY_FINAL (step 2c
+              // waocopy, the variant without the way back) above FACTS_DONE (enabled: canFinish).
+              <>
+                <p data-interview-facts-empty-final="true" style={{ ...ownerNoteStyle, color: "var(--text)" }}>{renderMixed(STEP2C_COPY.FACTS_EMPTY_FINAL)}</p>
+                <button type="button" className="btn-primary" data-interview-facts-done="true" disabled={!factsScreen.canFinish} aria-disabled={submitting || undefined} onClick={finishFacts} style={{ padding: "12px 24px", minHeight: "44px", justifyContent: "center" }}>
+                  {renderMixed(STEP2B_COPY.FACTS_DONE)}
+                </button>
+              </>
             ) : (
               <>
                 <p style={{ ...ownerNoteStyle, color: "var(--text)" }}>{renderMixed(STEP2B_COPY.FACTS_BODY)}</p>
@@ -1941,12 +2063,61 @@ function SiteBotStartContent() {
           </div>
         )}
 
-        {phase === "facts_confirmed" && (
-          <div data-interview-facts-confirmed="true" style={ownerStepStyle}>
-            <h2 ref={ownerHeadingRef} tabIndex={-1} style={ownerHeadingStyle}>{renderMixed(STEP2A_COPY.HOLDING_HEAD)}</h2>
-            {copyLines(STEP2A_COPY.HOLDING_BODY).map((line, index) => (
+        {phase === "facts_confirmed" && (preview === null || preview.status === "none" || preview.status === "generating") && (
+          <div data-interview-facts-confirmed="true" data-interview-preview="generating" aria-busy="true" style={ownerStepStyle}>
+            <h2 ref={ownerHeadingRef} tabIndex={-1} style={ownerHeadingStyle}>{renderMixed(STEP2C_COPY.GENERATING_HEAD)}</h2>
+            {copyLines(STEP2C_COPY.GENERATING_BODY).map((line, index) => (
               <p key={index} style={{ ...ownerNoteStyle, color: "var(--text)" }}>{renderMixed(line)}</p>
             ))}
+          </div>
+        )}
+
+        {phase === "facts_confirmed" && preview?.status === "failed" && (
+          <div data-interview-facts-confirmed="true" data-interview-preview="failed" role="status" style={ownerStepStyle}>
+            {copyLines(STEP2C_COPY.PREVIEW_FAILED).map((line, index) => (
+              index === 0
+                ? <h2 key={index} ref={ownerHeadingRef} tabIndex={-1} style={ownerHeadingStyle}>{renderMixed(line)}</h2>
+                : <p key={index} style={{ ...ownerNoteStyle, color: "var(--text)" }}>{renderMixed(line)}</p>
+            ))}
+          </div>
+        )}
+
+        {phase === "facts_confirmed" && preview?.status === "ready" && preview.frameUrl && (
+          <div data-interview-facts-confirmed="true" data-interview-preview="ready" style={ownerStepStyle}>
+            <h2 ref={ownerHeadingRef} tabIndex={-1} style={ownerHeadingStyle}>{renderMixed(STEP2C_COPY.PREVIEW_HEAD)}</h2>
+            {copyLines(STEP2C_COPY.PREVIEW_BODY).map((line, index) => (
+              <p key={index} style={{ ...ownerNoteStyle, color: "var(--text)" }}>{renderMixed(line)}</p>
+            ))}
+            {/* sandbox with no tokens: no scripts, no same-origin, no forms, no popups, no navigation (previewFrame.ts). */}
+            <iframe
+              key={preview.frameUrl}
+              src={preview.frameUrl}
+              title={STEP2C_COPY.PREVIEW_FRAME_LABEL}
+              sandbox={PREVIEW_IFRAME_SANDBOX}
+              referrerPolicy="no-referrer"
+              loading="eager"
+              data-interview-preview-frame="true"
+              style={{ width: "100%", height: "min(70vh, 720px)", border: "1px solid var(--border)", borderRadius: "var(--radius-md)", background: "#fff" }}
+            />
+            {preview.fixAvailable ? (
+              <button type="button" data-interview-preview-fix="true" aria-disabled={submitting || undefined} onClick={startPreviewFix} style={{ minHeight: "44px", textAlign: "start", background: "transparent", border: "none", padding: "8px 0", color: "var(--accent)", textDecoration: "underline", cursor: "pointer", font: "inherit", lineHeight: 1.6 }}>
+                {renderMixed(STEP2C_COPY.PREVIEW_FIX_LINK)}
+              </button>
+            ) : preview.fixUsed ? (
+              <p data-interview-preview-fix-used="true" style={ownerNoteStyle}>{renderMixed(STEP2C_COPY.PREVIEW_FIX_USED)}</p>
+            ) : null}
+            <section aria-labelledby="interview-preview-next-head" style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+              <h3 id="interview-preview-next-head" style={{ margin: 0, fontSize: "0.95rem", fontWeight: 700, color: "var(--text)" }}>{renderMixed(STEP2C_COPY.PREVIEW_NEXT_HEAD)}</h3>
+              <ul style={{ margin: 0, paddingInlineStart: "20px", display: "flex", flexDirection: "column", gap: "6px" }}>
+                {copyLines(STEP2C_COPY.PREVIEW_NEXT_LIST).map((line, index) => (
+                  <li key={index} style={{ ...ownerNoteStyle, color: "var(--text)" }}>{renderMixed(line)}</li>
+                ))}
+              </ul>
+            </section>
+            <button type="button" className="btn-primary" data-interview-pay="true" aria-disabled={submitting || undefined} aria-describedby="interview-pay-sub" onClick={goToPayment} style={{ padding: "12px 24px", minHeight: "44px", justifyContent: "center" }}>
+              {renderMixed(STEP2C_COPY.PAY_CTA)}
+            </button>
+            <p id="interview-pay-sub" style={ownerNoteStyle}>{renderMixed(payCtaSub())}</p>
           </div>
         )}
 

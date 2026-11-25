@@ -228,6 +228,32 @@ export function researchedContactDescription(trade: string, city: string | null,
 }
 
 /**
+ * Site Bot step 2c, first-screen fact rule (d) (Yonatan sign-off 2026-11-25): the homepage meta description and
+ * og:description = `pageNameWithCity(trade, city) + " \u2014 " + heroSubheadline`; a subheadline that already contains both
+ * the trade and the city stands alone. Hard cap RESEARCHED_META_DESCRIPTION_MAX_CHARS (= coreThirtyCopy
+ * META_DESCRIPTION_MAX_CHARS, 155; equality asserted in researchedSite.test.ts), target <= RESEARCHED_META_DESCRIPTION_TARGET_CHARS:
+ * over the cap, the subheadline alone (never cut mid-word: the subheadline is at most 90 characters). Service.description stays
+ * the heroSubheadline; other page types keep heroSubheadline as their description.
+ */
+export const RESEARCHED_META_DESCRIPTION_MAX_CHARS = 155;
+export const RESEARCHED_META_DESCRIPTION_TARGET_CHARS = 120;
+export function homepageMetaDescription(name: string, city: string | null, heroSubheadline: string): string {
+  const sub = heroSubheadline.trim();
+  const anchor = pageNameWithCity(name, city);
+  if (!sub) return anchor;
+  if (!heroAnchorMissing(sub, name, city)) return sub;
+  const joined = `${anchor} \u2014 ${sub}`;
+  return joined.length <= RESEARCHED_META_DESCRIPTION_MAX_CHARS ? joined : sub;
+}
+
+/** The meta / og description of one researched page: the homepage rule (d) above, else the heroSubheadline. */
+export function researchedPageDescription(page: Pick<ResearchedSitePage, 'classification' | 'seo' | 'copy'>): string {
+  return page.classification === 'homepage' && page.seo
+    ? homepageMetaDescription(page.seo.name, page.seo.city, page.copy.heroSubheadline)
+    : page.copy.heroSubheadline;
+}
+
+/**
  * H1 (C1): the hero hook only if it contains the page name and the city; otherwise name + city.
  * M2a.6 (Yonatan): the containment check is the H1 anchor gate's own (heroAnchorMissing: NFC + whitespace
  * normalisation), so a hook that passes the gate is never swapped; the swap stays as the safety net.
@@ -798,7 +824,7 @@ function buildPageHtml(page: ResearchedSitePage, params: RenderResearchedSitePag
   const head = pageHead({
     t: theme,
     title: researchedPageTitle(page, businessName),
-    description: page.copy.heroSubheadline,
+    description: researchedPageDescription(page),
     canonicalUrl: pageUrl(siteUrl, output),
     ogImage: heroImageUrl,
     schema: schemaGraph(page, data, siteUrl, heroImageUrl, output, breadcrumb ? homeName : undefined),

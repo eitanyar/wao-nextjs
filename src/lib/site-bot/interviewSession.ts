@@ -20,6 +20,13 @@
  * the research dossier, interviewFacts.ts). One fact extraction per answer-set version (facts_extracted_version), and at
  * most one return from an empty facts screen to the questions (facts_returns).
  *
+ * Step 2c (home-page preview): after facts_confirmed the server generates the home page in the background
+ * (interviewPreview.ts). preview_round counts the generation rounds (1 = the first preview, 2 = the one regeneration after
+ * the one fix round, preview_fix_at); preview_attempts the attempts inside the round (at most PREVIEW_MAX_ATTEMPTS, then
+ * preview_status 'failed' and a staff alert; staff may re-trigger). Every transition is one conditional UPDATE keyed on the
+ * round + attempt it expects, so a replayed poll, a reload or a second process never starts a second run.
+ * site_generation_claimed_at: the one post-payment generation of the remaining pages (checkout callback).
+ *
  * Lifecycle: open -> exited (work-location exit: spot released, waiting list 'location') | expired (72 h without
  * payment: spot released) | paid (checkout callback) | superseded (a second browser started over before the owner gave
  * his contact; the spot passes to the new session). A released spot keeps its weekly-count row (releaseInterviewSpot).
@@ -91,7 +98,25 @@ export interface InterviewSession {
   factsClaimedAt: string | null;
   factsReturns: number;
   factsConfirmedAt: string | null;
+  /** Step 2c: the home-page preview (see the header). */
+  previewRound: number;
+  previewAttempts: number;
+  previewStatus: PreviewStatus | null;
+  previewClaimedAt: string | null;
+  previewRoundStartedAt: string | null;
+  previewReadyAt: string | null;
+  previewFailedAt: string | null;
+  previewFixAt: string | null;
+  previewEmailedRound: number;
+  previewPolledAt: string | null;
+  siteGenerationClaimedAt: string | null;
 }
+
+export type PreviewStatus = 'generating' | 'ready' | 'failed';
+/** One first preview plus one regeneration after the fix round. */
+export const PREVIEW_MAX_ROUNDS = 2;
+/** Attempts per round: "if generation fails twice, show PREVIEW_FAILED". */
+export const PREVIEW_MAX_ATTEMPTS = 2;
 
 /** Where the owner stands, derived on the server (the browser restores its own step snapshot inside 'intake'). */
 export type InterviewPhase =
@@ -144,6 +169,12 @@ function rowToSession(row: Record<string, unknown>): InterviewSession {
     interviewDoneAt: str('interview_done_at'), answersVersion: int('answers_version'), gatesDoneAt: str('gates_done_at'),
     factsExtractedVersion: int('facts_extracted_version'), factsClaimedAt: str('facts_claimed_at'), factsReturns: int('facts_returns'),
     factsConfirmedAt: str('facts_confirmed_at'),
+    previewRound: int('preview_round'), previewAttempts: int('preview_attempts'),
+    previewStatus: (['generating', 'ready', 'failed'] as const).find(value => value === row.preview_status) ?? null,
+    previewClaimedAt: str('preview_claimed_at'), previewRoundStartedAt: str('preview_round_started_at'),
+    previewReadyAt: str('preview_ready_at'), previewFailedAt: str('preview_failed_at'), previewFixAt: str('preview_fix_at'),
+    previewEmailedRound: int('preview_emailed_round'), previewPolledAt: str('preview_polled_at'),
+    siteGenerationClaimedAt: str('site_generation_claimed_at'),
   };
 }
 
@@ -486,9 +517,10 @@ export function returnInterviewToQuestions(store: LaunchStore, sessionId: string
   const text = stateJson(secondPass);
   if (text === null) return null;
   return tx(store, () => {
+    // Step 2c: never during the preview's fix round (that round reviews the same facts; no new answer set).
     const changed = store.db.prepare(`UPDATE site_bot_interview_sessions SET interview_json = ?, interview_done_at = NULL,
       facts_returns = facts_returns + 1 WHERE id = ? AND status = 'open' AND facts_returns = 0 AND interview_done_at IS NOT NULL
-      AND facts_confirmed_at IS NULL`).run(text, sessionId).changes;
+      AND facts_confirmed_at IS NULL AND preview_fix_at IS NULL`).run(text, sessionId).changes;
     return changed ? readInterviewSession(store, sessionId) : null;
   });
 }
@@ -501,6 +533,94 @@ export function markInterviewFactsConfirmed(store: LaunchStore, sessionId: strin
     const session = readInterviewSession(store, sessionId);
     return session && session.factsConfirmedAt ? session : null;
   });
+}
+
+// ---------------------------------------------------------------------------------------------------------------------
+// Step 2c: home-page preview
+
+/** The round the session is due: 1 after the first FACTS_DONE, 2 after the fix round's FACTS_DONE; 0 = none due. */
+export function previewRoundDue(session: InterviewSession): number {
+  if (session.status !== 'open' || !session.factsConfirmedAt) return 0;
+  return session.previewFixAt ? 2 : 1;
+}
+
+/** The preview is ready for the round the session is in (checkout/init, the preview frame). */
+export function previewReady(session: InterviewSession): boolean {
+  const due = previewRoundDue(session);
+  return due > 0 && session.previewRound === due && session.previewStatus === 'ready';
+}
+
+/** Claims a new generation round (attempt 1). True for the one caller that claimed it. */
+export function claimPreviewRound(store: LaunchStore, sessionId: string, round: number): boolean {
+  if (!Number.isInteger(round) || round < 1 || round > PREVIEW_MAX_ROUNDS) return false;
+  const now = store.now().toISOString();
+  return store.db.prepare(`UPDATE site_bot_interview_sessions SET preview_round = ?, preview_attempts = 1, preview_status = 'generating',
+    preview_claimed_at = ?, preview_round_started_at = ?, preview_ready_at = NULL, preview_failed_at = NULL
+    WHERE id = ? AND status = 'open' AND facts_confirmed_at IS NOT NULL AND preview_round < ?
+    AND (CASE WHEN ? = 1 THEN preview_fix_at IS NULL ELSE preview_fix_at IS NOT NULL END)`)
+    .run(round, now, now, sessionId, round, round).changes > 0;
+}
+
+/** Claims the next attempt of the current round (after a failed or stale attempt). */
+export function claimPreviewAttempt(store: LaunchStore, sessionId: string, round: number, attempts: number): boolean {
+  if (attempts >= PREVIEW_MAX_ATTEMPTS) return false;
+  return store.db.prepare(`UPDATE site_bot_interview_sessions SET preview_attempts = preview_attempts + 1, preview_status = 'generating',
+    preview_claimed_at = ? WHERE id = ? AND status = 'open' AND preview_round = ? AND preview_attempts = ? AND preview_status = 'generating'`)
+    .run(store.now().toISOString(), sessionId, round, attempts).changes > 0;
+}
+
+/** The attempt (round, attempts) ended: 'ready' or 'failed'. Only the attempt that is still current may settle. */
+export function settlePreviewAttempt(store: LaunchStore, sessionId: string, round: number, attempts: number, outcome: 'ready' | 'failed'): boolean {
+  const now = store.now().toISOString();
+  return store.db.prepare(`UPDATE site_bot_interview_sessions SET preview_status = ?,
+    preview_ready_at = CASE WHEN ? = 'ready' THEN ? ELSE preview_ready_at END,
+    preview_failed_at = CASE WHEN ? = 'failed' THEN ? ELSE preview_failed_at END
+    WHERE id = ? AND preview_round = ? AND preview_attempts = ? AND preview_status = 'generating'`)
+    .run(outcome, outcome, now, outcome, now, sessionId, round, attempts).changes > 0;
+}
+
+/** Staff re-trigger of a failed round: a fresh attempt 1 of the same round (admin endpoint only). */
+export function staffRetryPreview(store: LaunchStore, sessionId: string): InterviewSession | null {
+  return tx(store, () => {
+    const changed = store.db.prepare(`UPDATE site_bot_interview_sessions SET preview_attempts = 1, preview_status = 'generating',
+      preview_claimed_at = ?, preview_failed_at = NULL WHERE id = ? AND status = 'open' AND preview_status = 'failed'`)
+      .run(store.now().toISOString(), sessionId).changes;
+    return changed ? readInterviewSession(store, sessionId) : null;
+  });
+}
+
+/**
+ * PREVIEW_FIX_LINK: the one fix round. Back to the facts screen (facts_confirmed_at cleared), only from the ready first
+ * preview, once per session.
+ */
+export function beginPreviewFix(store: LaunchStore, sessionId: string): InterviewSession | null {
+  return tx(store, () => {
+    const changed = store.db.prepare(`UPDATE site_bot_interview_sessions SET preview_fix_at = ?, facts_confirmed_at = NULL
+      WHERE id = ? AND status = 'open' AND facts_confirmed_at IS NOT NULL AND preview_round = 1 AND preview_status = 'ready'
+      AND preview_fix_at IS NULL`).run(store.now().toISOString(), sessionId).changes;
+    return changed ? readInterviewSession(store, sessionId) : null;
+  });
+}
+
+/** The one "your home page is ready" email of a round. True for the one caller that claimed it. */
+export function claimPreviewEmail(store: LaunchStore, sessionId: string, round: number): boolean {
+  return store.db.prepare('UPDATE site_bot_interview_sessions SET preview_emailed_round = ? WHERE id = ? AND preview_emailed_round < ?')
+    .run(round, sessionId, round).changes > 0;
+}
+
+/** The page asked for the preview status (the owner is still on the page). */
+export function touchPreviewPoll(store: LaunchStore, sessionId: string): void {
+  store.db.prepare('UPDATE site_bot_interview_sessions SET preview_polled_at = ? WHERE id = ?').run(store.now().toISOString(), sessionId);
+}
+
+/** The one post-payment generation of the remaining pages. releaseSiteGeneration undoes a claim whose run failed. */
+export function claimSiteGeneration(store: LaunchStore, sessionId: string): boolean {
+  return store.db.prepare("UPDATE site_bot_interview_sessions SET site_generation_claimed_at = ? WHERE id = ? AND status = 'paid' AND site_generation_claimed_at IS NULL")
+    .run(store.now().toISOString(), sessionId).changes > 0;
+}
+
+export function releaseSiteGeneration(store: LaunchStore, sessionId: string): void {
+  store.db.prepare('UPDATE site_bot_interview_sessions SET site_generation_claimed_at = NULL WHERE id = ?').run(sessionId);
 }
 
 /** checkout/init: the latest checkout session minted for this interview (open sessions only). */

@@ -289,8 +289,9 @@ test('contact meta (2026-11-11): its own description, built from the contact tit
 });
 
 test('site-wide meta uniqueness covers every indexable page (homepage, service pages, contact); noindex pages are out of scope', () => {
-  // The fixture copy gives every page the same heroSubheadline: home and the three service pages collide, contact does not.
-  assert.deepEqual(duplicateIndexableMetaDescriptions(render()), [['index.html', 'services/leak-detection.html', 'services/drain-unblocking.html', 'services/water-heater.html']]);
+  // The fixture copy gives every page the same heroSubheadline: the three service pages collide, contact does not. Step 2c
+  // rule (d) (2026-11-25): the homepage description is the plain anchor + the subheadline, so it no longer collides.
+  assert.deepEqual(duplicateIndexableMetaDescriptions(render()), [['services/leak-detection.html', 'services/drain-unblocking.html', 'services/water-heater.html']]);
   const unique = renderResearchedSitePages({
     theme: VERTICAL_THEMES['emergency-trades'], assets: VERTICAL_ASSETS['emergency-trades'], data,
     heroImageUrl: 'https://example.test/hero.jpg', slug: 'test-client', siteUrl: 'https://test.wao.co.il',

@@ -168,6 +168,9 @@ test('paid handlers are imported only by their own gated stub', () => {
     // Step 2b (2026-11-25): interview-facts (the confirm-facts screen) joins them, same stub (asserted below).
     'src/app/api/site-bot/interview-facts/route.ts',
     'src/app/api/site-bot/interview-gates/route.ts',
+    // Step 2c (2026-11-25): the home-page preview status / fix round and the preview frame, same stub (asserted below).
+    'src/app/api/site-bot/interview-preview-frame/route.ts',
+    'src/app/api/site-bot/interview-preview/route.ts',
     'src/app/api/site-bot/interview-resume/route.ts',
     'src/app/api/site-bot/interview-start/route.ts',
     'src/app/api/site-bot/interview-step/route.ts',
@@ -595,6 +598,42 @@ test('step 2b: interview-facts stays disabled unless the paid-flow gate allows i
   assert.match(flow, /redact: \[contact\?\.mobile/);
 });
 
+// Step 2c (2026-11-25): TWO new pre-payment routes, both the standard gated stub (closed = the audit-only 503, no request /
+// cookie / import access): interview-preview (POST status / fix of the home-page preview) and interview-preview-frame (GET
+// the preview HTML for the sandboxed iframe). Both take the session from the httpOnly cookie only, never an id from the
+// body or the URL, and are rate limited per IP; generation is bounded on the session (rounds + attempts). The frame is
+// never indexed or cached and carries the sandbox CSP. The staff re-trigger is an ADMIN route (admin cookie + same origin),
+// outside the paid-flow gate by design: it only restarts a failed generation of an existing session.
+test('step 2c: interview-preview and interview-preview-frame stay disabled unless the paid-flow gate allows them', async () => {
+  await assertGatedStub('src/app/api/site-bot/interview-preview/route.ts', 'POST', 'interview_unavailable');
+  await assertGatedStub('src/app/api/site-bot/interview-preview-frame/route.ts', 'GET', 'interview_unavailable');
+  const paid = read('src/app/api/site-bot/interview-preview/paid.ts');
+  assert.ok(paid.includes('checkRateLimit(`sitebot-interview-preview:${clientIp(req)}`'));
+  assert.ok(paid.indexOf('checkRateLimit(') < paid.indexOf('interviewPreview('));
+  assert.match(paid, /cookieFromHeader\(req\.headers\.get\('cookie'\)\)/);
+  const frame = read('src/app/api/site-bot/interview-preview-frame/paid.ts');
+  assert.ok(frame.includes('checkRateLimit(`sitebot-interview-preview-frame:${clientIp(req)}`'));
+  assert.ok(frame.indexOf('checkRateLimit(') < frame.indexOf('previewForFrame('));
+  assert.match(frame, /previewForFrame\(cookieFromHeader\(req\.headers\.get\('cookie'\)\), defaultInterviewDeps\(\)\)/);
+  assert.match(frame, /headers: PREVIEW_FRAME_HEADERS/);
+  for (const [name, source] of [['interview-preview', paid], ['interview-preview-frame', frame]]) {
+    for (const forbidden of ['data/clients', 'researchId', 'sessionId', 'searchParams', 'req.json(', 'console.log']) {
+      assert.equal(source.includes(forbidden), false, `unexpected ${name} seam: ${forbidden}`);
+    }
+  }
+  const flow = read('src/lib/site-bot/interviewPreview.ts');
+  assert.match(flow, /if \('researchId' in body \|\| 'sessionId' in body\) return \{ status: 400/);
+  assert.match(flow, /const session = openSessionFromCookie\(cookieValue, deps\);/);
+  assert.match(flow, /claimPreviewRound\(store, session\.id, due\)/);
+  const headers = read('src/lib/site-bot/previewFrame.ts');
+  assert.match(headers, /'X-Robots-Tag': 'noindex, nofollow'/);
+  assert.match(headers, /'Cache-Control': 'private, no-store'/);
+  assert.match(headers, /'sandbox', "default-src 'none'"/);
+  const retry = read('src/app/api/admin/site-bot/interview-preview-retry/route.ts');
+  assert.ok(retry.indexOf('requireAdmin()') > 0 && retry.indexOf('requireAdmin()') < retry.indexOf('staffRetry('));
+  assert.ok(retry.indexOf('sameOrigin(req)') < retry.indexOf('staffRetry('));
+});
+
 // Launch step 1 (2026-11-25): the waiting list is a DELIBERATE new public surface of the closed release. It must never
 // open the paid flow: it only stores a contact and emails staff, and only for a real audit whose offer shows the form.
 test('waitlist POST: bounded JSON, per-IP rate limit, strict validation, server-derived context, no paid-flow seam', () => {
@@ -748,11 +787,19 @@ test('pay page and start flow gate navigation and "done" on the checked response
   assert.match(pay_, /await readJsonBody\(res\)/);
   assert.doesNotMatch(pay_, /res\.json\(\)/);
   assert.ok(pay_.indexOf('outcome.kind === "error"') < pay_.indexOf('setPhase("done")'));
-  // Step 2a (2026-11-25): the start flow no longer hands off to checkout (payment moves after the interview + preview,
-  // steps 2b / 2c), so it never calls checkout/init nor navigates to /site-bot/pay. Its interview requests read the
-  // checked response helper only.
+  // Step 2a (2026-11-25) removed the start flow's checkout handoff; step 2c (2026-11-25) brings it back DELIBERATELY, after
+  // the interview and the ready home-page preview: exactly one checkout/init call, inside PAY_CTA's handler (goToPayment),
+  // which posts only the audit + place (init takes the record from the interview session, never the body), reads the
+  // checked helpers, and navigates only to the init-minted pay session (never /site-bot/pay/undefined).
   const start = read('src/app/(app)/site-bot/start/StartPaidFlow.tsx');
-  assert.doesNotMatch(start, /checkout\/init|\/site-bot\/pay\/|checkoutInitSessionId/);
+  assert.equal(start.split('/api/site-bot/checkout/init').length - 1, 1);
+  const pay2c = start.slice(start.indexOf('function goToPayment()'), start.indexOf('/** Opens the fix field of one fact. */'));
+  assert.ok(pay2c.includes('/api/site-bot/checkout/init'), 'the one init call is in goToPayment');
+  assert.match(pay2c, /if \(phase !== "facts_confirmed" \|\| preview\?\.status !== "ready" \|\| !auditId \|\| !placeId\) return;/);
+  assert.match(pay2c, /body: JSON\.stringify\(\{ auditId, placeId \}\)/);
+  assert.match(pay2c, /const json = await readJsonBody\(res\);\s*const sessionId = checkoutInitSessionId\(res\.ok, json\);\s*if \(!sessionId\) throw/);
+  assert.ok(pay2c.indexOf('if (!sessionId) throw') < pay2c.indexOf('router.push(`/site-bot/pay/${sessionId}`)'));
+  assert.equal(start.split('/site-bot/pay/').length - 1, 1, 'no other pay navigation');
   const step = start.slice(start.indexOf('async function postInterviewStep('), start.indexOf('function copyLines('));
   assert.match(step, /const json = await readJsonBody\(res\);/);
   assert.doesNotMatch(step, /res\.json\(\)/);

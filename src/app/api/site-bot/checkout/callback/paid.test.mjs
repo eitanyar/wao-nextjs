@@ -14,6 +14,7 @@ function harness({ launchCount = 'recorded', linkThrows = false, alreadyActive =
   const researchRuns = [];
   const paidMarks = [];
   const awaited = [];
+  const siteStarts = [];
   const s = makeStore();
   const subscriptionId = s.addSubscription();
   const cwd = fs.mkdtempSync(path.join(s.dir, 'cwd-'));
@@ -51,12 +52,14 @@ function harness({ launchCount = 'recorded', linkThrows = false, alreadyActive =
       sessionForCheckout: (_store, id) => (boundInterview && id === sessionId ? boundInterview : null),
     },
     '@/lib/site-bot/interviewResearch': { inFlightInterviewResearch: (id) => { if (inFlight[id]) { awaited.push(id); return inFlight[id](); } return undefined; } },
+    // Step 2c: the remaining pages start in the background (stubbed; previewStep2c.test.ts covers the real run).
+    '@/lib/site-bot/interviewPreview': { startPaidSiteGeneration: (id, round) => { siteStarts.push([id, round, paidMarks.includes(id)]); return 'started'; } },
     '@/lib/showcase/consentStore': { recordShowcaseConsent: (params) => { if (consentThrows) throw new Error('disk full'); consentCalls.push(params); return { granted: true }; } },
   }, { cwd, console: logs.console });
   const call = (extra = {}) => paid.POST(new Request('http://localhost/api/site-bot/checkout/callback', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ sessionId, ...extra }) }));
   const events = () => s.db.prepare(`SELECT metadata FROM subscription_events WHERE subscription_id = ? AND event_type = 'site_bot_session_linked'`).all(subscriptionId);
   const paidPost = (id) => paid.POST(new Request('http://localhost/api/site-bot/checkout/callback', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ sessionId: id }) }));
-  return { ...s, subscriptionId, call, paidPost, events, logs, alerts, consentCalls, activationCalls, launchCounts, researchRuns, paidMarks, awaited };
+  return { ...s, subscriptionId, call, paidPost, events, logs, alerts, consentCalls, activationCalls, launchCounts, researchRuns, paidMarks, awaited, siteStarts };
 }
 
 test('19: a successful activation writes exactly one site_bot_session_linked event with the business', async () => {
@@ -280,4 +283,21 @@ test('launch step 1: a failed cap count is logged and never fails the paid check
   assert.equal(response.status, 200);
   assert.equal((await response.json()).paidSignup, true);
   h.cleanup();
+});
+
+test('step 2c: a paid interview checkout with a preview starts the remaining pages once, after the session is marked paid', async () => {
+  const h = harness({
+    pendingExtra: { interviewSessionId: interviewId, researchId: interviewId, preview: { round: 2, createdAt: '2026-11-25T00:00:00Z' } },
+    dossiers: { [interviewId]: { status: 'copy_ready', humanGates: [] } },
+  });
+  const response = await h.call();
+  assert.equal(response.status, 200);
+  const body = await response.json();
+  assert.equal(body.paidSignup, true, 'paid_signup still fires once');
+  assert.deepEqual(h.siteStarts, [[interviewId, 2, true]]);
+  h.cleanup();
+  const none = harness({ pendingExtra: { interviewSessionId: interviewId, researchId: interviewId }, dossiers: { [interviewId]: { status: 'copy_ready', humanGates: [] } } });
+  await none.call();
+  assert.deepEqual(none.siteStarts, [], 'no preview recorded: nothing starts');
+  none.cleanup();
 });

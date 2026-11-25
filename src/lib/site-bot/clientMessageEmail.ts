@@ -46,7 +46,9 @@ export interface OutgoingEmail {
     | 'offline_soon'
     | 'takedown_reminder'
     | 'waitlist_joined'
-    | 'interview_reminder';
+    | 'interview_reminder'
+    | 'interview_preview_ready'
+    | 'interview_preview_failed';
   /** For logs only. */
   refIds: string[];
 }

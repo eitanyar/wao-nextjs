@@ -55,6 +55,8 @@ export interface InterviewFactsDeps extends Pick<InterviewDeps, 'withStore' | 'n
   modelCall?: ModelCall;
   /** Test seam: the per-attempt timeout. */
   timeoutMs?: number;
+  /** Step 2c: called once FACTS_DONE moved the session to facts_confirmed (starts the home-page preview). Never awaited. */
+  onConfirmed?: (session: InterviewSession) => void;
 }
 
 export interface FactsReply {
@@ -132,8 +134,9 @@ function factsView(set: InterviewFactSet, session: InterviewSession, dossier: Si
     facts,
     extraction: set.extraction,
     empty: !usable,
-    // FACTS_EMPTY offers the way back once; on the second pass whatever comes is accepted.
-    canReturn: !usable && session.factsReturns === 0,
+    // FACTS_EMPTY offers the way back once; on the second pass whatever comes is accepted. Step 2c: never in the preview's
+    // fix round (it reviews the same facts; FACTS_EMPTY_FINAL shows instead).
+    canReturn: !usable && session.factsReturns === 0 && !session.previewFixAt,
     canFinish: allFactsReviewed(set) && (usable || session.factsReturns > 0),
     confirmed: Boolean(set.confirmedAt),
   };
@@ -245,7 +248,7 @@ export async function interviewFacts(cookieValue: unknown, body: unknown, deps: 
   }
 
   if (body.action === 'return') {
-    if (set.facts.length > 0 || session.factsReturns > 0 || !session.interviewState) return { status: 409, body: { error: 'return_unavailable' } };
+    if (set.facts.length > 0 || session.factsReturns > 0 || session.previewFixAt || !session.interviewState) return { status: 409, body: { error: 'return_unavailable' } };
     const returned = deps.withStore(store => returnInterviewToQuestions(store, session.id, secondPassState(session.interviewState!)), null);
     if (!returned) return { status: 409, body: { error: 'return_unavailable' } };
     return { status: 200, body: { phase: interviewPhase(returned) } };
@@ -260,5 +263,6 @@ export async function interviewFacts(cookieValue: unknown, body: unknown, deps: 
   }
   const confirmed = deps.withStore(store => markInterviewFactsConfirmed(store, session.id), null);
   if (!confirmed) return { status: 500, body: { error: 'server_error' } };
+  try { deps.onConfirmed?.(confirmed); } catch { /* the page's status poll starts it anyway */ }
   return { status: 200, body: { phase: interviewPhase(confirmed) } };
 }

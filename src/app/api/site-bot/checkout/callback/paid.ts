@@ -13,6 +13,7 @@ import { recordShowcaseConsent } from '@/lib/showcase/consentStore';
 import { recordPaidSignup, withLaunchStore } from '@/lib/site-bot/launchStore';
 import { markInterviewPaid, sessionForCheckout } from '@/lib/site-bot/interviewSession';
 import { inFlightInterviewResearch } from '@/lib/site-bot/interviewResearch';
+import { startPaidSiteGeneration } from '@/lib/site-bot/interviewPreview';
 
 // Site-Bot checkout callback: takes the sign-up charge of the monthly + VAT plan (SITE_BOT_PLAN) through the recurring engine
 // (activatePlanSubscription: first charge, billing anchor, next charge date, invoice), then starts the research.
@@ -33,6 +34,11 @@ import { inFlightInterviewResearch } from '@/lib/site-bot/interviewResearch';
 // research start below stays only as the fallback for a session with no research id. The owner research gates are asked
 // inside the interview now (interview-gates), so the reply no longer hands any gate to the pay page. A replay of a
 // completed interview checkout (pending file gone) is answered from the interview session the checkout is bound to.
+// Step 2c (2026-11-25): after the research is reused, the callback starts the generation of the REMAINING pages in the
+// background (interviewPreview.startSiteGeneration: once per session, claimed on the session). The homepage is the preview
+// the owner saw and paid on (pending.preview.round), reused byte for byte and never regenerated. The record goes to the
+// existing review path (sites dir, no approved review packet): deploy/route.ts refuses it until staff approve the packet.
+// The reply never waits for it; paidSignup still fires once (fresh activation only).
 
 interface PendingRecord {
   collectedData: CollectedData;
@@ -41,6 +47,8 @@ interface PendingRecord {
   /** Step 2a: the interview session this checkout came from, and its research id (null: research never started). */
   interviewSessionId?: string;
   researchId?: string | null;
+  /** Step 2c: the home-page preview round the owner paid on. */
+  preview?: { round: number; createdAt: string };
 }
 
 const OPAQUE_ID = /^[A-Za-z0-9][A-Za-z0-9_-]*$/;
@@ -166,6 +174,15 @@ export async function POST(req: Request) {
       collectedData: pending.collectedData,
       removePending: () => fs.rmSync(pendingPath, { force: true }),
     });
+    // Step 2c: the remaining pages, in the background (never awaited, never fatal; a failure alerts staff).
+    if (typeof pending.interviewSessionId === 'string' && pending.preview && Number.isInteger(pending.preview.round)) {
+      try {
+        const started = startPaidSiteGeneration(pending.interviewSessionId, pending.preview.round);
+        if (started === 'not_ready') console.error(`[site-bot checkout] remaining pages not started session=${sessionId}`);
+      } catch {
+        console.error(`[site-bot checkout] remaining pages start failed session=${sessionId}`);
+      }
+    }
     // paidSignup: a fresh activation, so the pay page fires site_bot_paid_signup (once per session; replays carry none).
     return NextResponse.json(manageUrl ? { ...response, manageUrl, paidSignup: true } : response, { headers: { 'Cache-Control': 'private, no-store' } });
   } catch (error: unknown) {

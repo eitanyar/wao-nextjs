@@ -12,7 +12,8 @@ import { withValidatedOwnerIntake } from '@/lib/site-bot/ownerIntake';
 import { interviewSpotHeld } from '@/lib/site-bot/offerState';
 import { openSessionFromCookie } from '@/lib/site-bot/interviewFlow';
 import { defaultInterviewDeps } from '@/lib/site-bot/interviewDeps';
-import { bindInterviewCheckout, cookieFromHeader, interviewReadyForResearch } from '@/lib/site-bot/interviewSession';
+import { bindInterviewCheckout, cookieFromHeader, interviewReadyForResearch, previewReady } from '@/lib/site-bot/interviewSession';
+import { readPreviewRecord } from '@/lib/site-bot/previewGeneration';
 
 // Site-Bot checkout init: the monthly + VAT plan (SITE_BOT_PLAN, the one config source for its price), routed through the
 // recurring engine (subscriptions.ts createPendingPlanSubscription). Nothing is charged here: the row is 'pending'
@@ -21,6 +22,8 @@ import { bindInterviewCheckout, cookieFromHeader, interviewReadyForResearch } fr
 // contact step (and the work-location question, when asked). The record is the SESSION's server-held collected data, not
 // the body's, and the pending file names the session and its research id, so the callback reuses the research that ran
 // before payment instead of starting a second one. The session remembers this checkout (bindInterviewCheckout).
+// Step 2c (2026-11-25): the session must also have a READY home-page preview for its current round (the owner pays on the
+// page he saw); the pending file names that preview round, and the callback generates the remaining pages around it.
 
 /** Per-IP fixed window, same limiter as help-request. */
 export const CHECKOUT_INIT_RATE_LIMIT = { maxRequests: 5, windowMs: 10 * 60 * 1000 } as const;
@@ -45,6 +48,8 @@ export async function POST(req: Request) {
       || !interviewReadyForResearch(interview) || !interview.domainAt) {
       return errorReply('no_interview_session', 409);
     }
+    const preview = previewReady(interview) && interview.researchId ? readPreviewRecord(interview.researchId) : null;
+    if (!preview || preview.round !== interview.previewRound) return errorReply('preview_not_ready', 409);
     const submitted: CollectedData | null = interview.collectedData;
     if (!submitted?.businessNiche) return errorReply('invalid_input', 400);
     // M1: served-area localities are derived here from travelBoundary, never trusted from the client.
@@ -69,6 +74,7 @@ export async function POST(req: Request) {
       JSON.stringify({
         collectedData, subscriptionId, plan: SITE_BOT_PLAN.id, createdAt: new Date().toISOString(),
         interviewSessionId: interview.id, researchId: interview.researchId,
+        preview: { round: preview.round, createdAt: preview.createdAt },
       }, null, 2)
     );
     if (!deps.withStore(store => bindInterviewCheckout(store, interview.id, sessionId), false)) {

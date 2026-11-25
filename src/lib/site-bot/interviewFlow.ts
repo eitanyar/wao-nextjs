@@ -33,6 +33,8 @@ import {
   type WorkLocation, type WorkLocationTrade,
 } from './workLocation';
 import type { WaitlistEntry } from './launchStore';
+import { previewView, type PreviewView } from './interviewPreviewView';
+import { frameWorkLocation } from './interviewGeneration';
 
 export interface InterviewDeps {
   /** Runs fn on the launch store (its clock is the injected one); any failure returns fallback. */
@@ -70,6 +72,8 @@ export interface InterviewView {
   questions: InterviewQuestionsView | null;
   /** Step 2b: the research run settled (the gates step lists the gates once this is true). */
   researchReady: boolean;
+  /** Step 2c: the home-page preview (status, fix round) in the facts / facts_confirmed phases; null before. */
+  preview: PreviewView | null;
 }
 
 export function interviewView(session: InterviewSession, now: Date = new Date()): InterviewView {
@@ -82,6 +86,7 @@ export function interviewView(session: InterviewSession, now: Date = new Date())
     businessName: session.businessName,
     questions: phase === 'questions' && session.interviewState ? interviewQuestionsView(session.interviewState) : null,
     researchReady: interviewResearchSettled(session, now),
+    preview: phase === 'facts' || phase === 'facts_confirmed' ? previewView(session) : null,
   };
 }
 
@@ -249,8 +254,19 @@ export async function interviewStep(cookieValue: unknown, body: unknown, deps: I
         if (result.waitlist?.status === 'added') deps.alertWaitlist(result.waitlist.entry);
         return { kind: 'exited', view: interviewView(result.session, deps.now()) };
       }
-      if (interviewReadyForResearch(result.session)) deps.startResearch(result.session);
-      return { kind: 'ok', view: interviewView(result.session, deps.now()) };
+      // Step 2c: HOME / MIX frame the record before the research starts (on-location only: no street address; MIX keeps
+      // it only when it is the published Google address). Generation applies the same framing again (interviewGeneration.ts).
+      let continued = result.session;
+      if (continued.collectedData) {
+        const published = (await deps.findCandidate(session.auditId, session.placeId).catch(() => null))?.formattedAddress ?? null;
+        const framed = frameWorkLocation(continued.collectedData, answer, published);
+        if (JSON.stringify(framed) !== JSON.stringify(continued.collectedData)
+          && deps.withStore(store => updateInterviewCollectedData(store, session.id, framed), false)) {
+          continued = { ...continued, collectedData: framed };
+        }
+      }
+      if (interviewReadyForResearch(continued)) deps.startResearch(continued);
+      return { kind: 'ok', view: interviewView(continued, deps.now()) };
     }
     case 'status':
       // Read-only: the gates step polls this until researchReady (no write, no state change).

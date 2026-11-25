@@ -34,6 +34,11 @@ export interface CollectedData {
   serviceAttributes?: Record<string, string>;
   /** Content depth: the owner's own walkthrough of a typical job (the intake voice note, once transcribed). Not collected yet. */
   jobWalkthrough?: string;
+  /**
+   * Site Bot step 2c: the owner's confirmed / edited interview facts (his own words; edited = his correction), set on the
+   * generation data only (interviewGeneration.ts), so the copy gates count them as owner facts. Never asked directly.
+   */
+  interviewFacts?: string[];
 
   // Pricing default (2026-11-10; no intake UI yet: it arrives with the market-norm prompt). Owner facts only; never guessed.
   /** The pricing promises the owner checked, from the fixed set (researchedPricing.ts PRICING_PROMISE_IDS). */

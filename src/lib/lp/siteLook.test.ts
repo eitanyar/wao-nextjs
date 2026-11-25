@@ -27,7 +27,12 @@ const ROOT = path.resolve(__dirname, '../../..');
  * Re-pinned 2026-11-20 for the related-links link rows (Fable 14.11 item 7): rewriting only the related-links <nav> back to
  * its previous inline-link markup reproduces the previous hash 9b219769...f548 byte for byte, so nothing else moved.
  */
-const GOLDEN_LOOK_OFF = 'df9a18230b3cdb3200daf7fa07769e18bee9dc1c74bf906459466a24186b3cd4';
+/**
+ * Re-pinned 2026-11-25 for Site Bot step 2c rule (d) (Yonatan): the homepage meta description and og:description are now
+ * `pageNameWithCity(trade, city) + " \u2014 " + heroSubheadline`. Rewriting only those two attributes of index.html back to
+ * the heroSubheadline reproduces the previous hash df9a1823...b3cd4 byte for byte, so nothing else moved.
+ */
+const GOLDEN_LOOK_OFF = '4f7b5716bcb92492d2783fcc20b8abd2aff24713dd90652ef61183b99b2ce03e';
 
 function siteHash(files: Record<string, string>): string {
   const hash = createHash('sha256');

@@ -201,5 +201,8 @@ test('GBP and non-hero code never touch the library', () => {
     'src/lib/lp/researchedSite.ts',
     'src/lib/lp/siteLook.ts',
     'src/lib/site-bot/heroLibraryStore.ts',
-  ].sort(), 'only the resolver, the renderer hook, the backdrop flag, the loader and the deploy route');
+    // Site Bot step 2c (2026-11-25): the owner's pre-payment preview shows the same library hero the deploy would pick
+    // (resolveSiteLibraryHeroes, read-only, inlined into the sandboxed frame).
+    'src/lib/site-bot/previewFrame.ts',
+  ].sort(), 'only the resolver, the renderer hook, the backdrop flag, the loader, the deploy route and the preview frame');
 });

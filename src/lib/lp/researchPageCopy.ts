@@ -621,6 +621,17 @@ export function siteHeadlineRules(brief: Pick<PageBrief, 'site' | 'page'>, prior
   ];
 }
 
+/**
+ * Site Bot step 2c, first-screen fact rule (c) (Yonatan sign-off 2026-11-25): the homepage brief of an interviewed owner
+ * names the candidate facts in its FIRST_SCREEN_CONSTRAINT_ID constraint (interviewGeneration.ts), and this rule binds
+ * heroSubheadline to carry one. Null for every other brief, so their prompts stay byte-identical.
+ */
+export const FIRST_SCREEN_CONSTRAINT_ID = 'first-screen-fact';
+export function firstScreenRule(brief: Pick<PageBrief, 'constraints' | 'page'>): string | null {
+  if (brief.page.pageClass !== 'homepage' || !brief.constraints.some(item => item.id === FIRST_SCREEN_CONSTRAINT_ID)) return null;
+  return `- FIRST SCREEN (binding): heroSubheadline carries one owner fact named in the constraint ${FIRST_SCREEN_CONSTRAINT_ID}: the first listed fact that fits, in the owner's own words (keep its key words and every number exactly as he wrote them) and with its condition when it has one. It stays at most ${SITE_COPY_STRING_LIMITS.heroSubheadline} characters, one sentence built on a verb, and every other rule still applies. Never name the page's service together with the city in heroSubheadline (the title and the H1 carry them), and never move that fact into heroHeadline instead.`;
+}
+
 export function buildResearchCopyRules(brief: PageBrief, data: CollectedData = {}, siteTerms?: readonly string[]): string[] {
   const site = brief.site;
   const codeOwns = codeOwnsFacts(brief);
@@ -656,6 +667,8 @@ export function buildResearchCopyRules(brief: PageBrief, data: CollectedData = {
     '- SAME DAY (binding): promise a same-day arrival only when the owner gave a response time. Promise to finish or fix a job the same day only when the owner\'s USP or guarantee says so, and only for the service it names.',
     `- ${REDUPLICATION_RULE}`,
   ];
+  const firstScreen = firstScreenRule(brief);
+  if (firstScreen) rules.push(firstScreen);
   if (site) {
     const scope = fixTimeScope(briefGateContext(brief, data));
     if (isInstallPage(brief)) {
@@ -1906,6 +1919,17 @@ export function withSystemFields(value: Loose, brief: PageBrief, data: Collected
 }
 
 /**
+ * Site Bot step 2c: the code-built trust bar of one page, exactly as withSystemFields builds it (null while the fact
+ * templates are pending, or without site facts). The first-screen credential fallback compares it with and without one
+ * credential field (firstScreenFact.ts).
+ */
+export function codeBuiltTrustBar(brief: PageBrief, data: CollectedData): string[] | null {
+  const templates = codeOwnedFactTemplates();
+  if (!templates || !brief.site) return null;
+  return trustBarFromFacts(ownerFacts(data, brief, templates), { installPage: isInstallPage(brief) }, templates);
+}
+
+/**
  * M2b.1g (section 23.2 e): the trust bar with the system-built area tile. A model-written area tile (an item that is only
  * owner places) is replaced in place by the built one (and any second one dropped); otherwise the tile is appended while the
  * bar has room. Other items are never edited.
@@ -2283,6 +2307,7 @@ export function buildResearchCopyRulesV2(brief: PageBrief, data: CollectedData =
     ...(pitch ? ['- heroHeadline carries the one big promise. It has no fixed shape: no required hook, question, dash or clause order.'] : []),
     ...siteHeadlineRules(brief, priorHeroHeadlines),
     cutContractRules(brief)[0],
+    ...(firstScreenRule(brief) ? [firstScreenRule(brief)!] : []),
     ...(story ? [
       `- storyBody: the story section right below the hero, ${STORY_MIN_SENTENCES} to ${STORY_MAX_SENTENCES} sentences (at most ${limits.storyBody} characters): the felt scene of the reader's problem, his highest-tension moment, the owner's mechanism stated once, and an ending on the reader's outcome, never on the tool or the owner.`,
       `- storyHeadline: the story's heading (at most ${limits.storyHeadline} characters) or null. It names the scene or the mechanism in words of its own: never the hero's promise and never a sentence of storyBody.`,

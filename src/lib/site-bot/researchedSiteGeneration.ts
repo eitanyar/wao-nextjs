@@ -123,6 +123,28 @@ export interface ResearchedSiteGenerationDependencies {
    * record. Unset = no check (tests, local re-renders).
    */
   checkPlaceId?: PlaceIdChecker;
+  /**
+   * Site Bot step 2c: pages generated before (the owner-approved home-page preview), by opportunity id. Such a brief is
+   * never sent to generateCopy: the stored page is reused byte for byte (its class and path must match the brief).
+   */
+  reusedPages?: Readonly<Record<string, ResearchedSitePage>>;
+}
+
+/** The stored page of one brief and its generated copy (the pitch moves to the page record, stored, never rendered). */
+export function researchedPageFromCopy(brief: PageBrief, generatedCopy: SiteCopy): ResearchedSitePage {
+  const { pitch, ...pageCopy } = generatedCopy;
+  return {
+    opportunityId: brief.page.id,
+    classification: brief.page.pageClass as PageClassification,
+    targetPath: brief.page.targetPath,
+    brief: {
+      faqPolicy: brief.faqPolicy,
+      faqCandidates: structuredClone(brief.faqCandidates),
+    },
+    copy: structuredClone(pageCopy),
+    ...(typeof pitch === 'string' && pitch.trim() ? { pitch } : {}),
+    ...(brief.site ? { seo: { name: brief.site.pageName, city: brief.site.city, serviceArea: [...brief.site.serviceArea] } } : {}),
+  };
 }
 
 type AtomicFileSystem = Pick<
@@ -251,23 +273,22 @@ export async function buildResearchedSiteGeneration(
 
   for (const sourceBrief of input.pageBriefs) {
     const brief = structuredClone(sourceBrief);
+    const reused = dependencies.reusedPages?.[brief.page.id];
+    if (reused) {
+      // Step 2c: the approved preview page, never regenerated (and still bound to this plan's page).
+      if (reused.opportunityId !== brief.page.id || reused.classification !== brief.page.pageClass || reused.targetPath !== brief.page.targetPath) {
+        fail('Reused page does not match its brief.');
+      }
+      assertBoundedGeneratedSiteCopy({ ...reused.copy, ...(reused.pitch ? { pitch: reused.pitch } : {}) }, shapeOptions(brief));
+      heroFacts.push(heroCapFacts(brief, reused.copy));
+      pages.push(structuredClone(reused));
+      continue;
+    }
     const generatedCopy = await dependencies.generateCopy(brief, structuredClone(sourceData), siteGenerationContext(pages, heroFacts));
     assertBoundedGeneratedSiteCopy(generatedCopy, shapeOptions(brief));
     heroFacts.push(heroCapFacts(brief, generatedCopy));
     // M2b.1h: the pitch moves from the copy to the page record (stored, never rendered).
-    const { pitch, ...pageCopy } = generatedCopy;
-    pages.push({
-      opportunityId: brief.page.id,
-      classification: brief.page.pageClass as PageClassification,
-      targetPath: brief.page.targetPath,
-      brief: {
-        faqPolicy: brief.faqPolicy,
-        faqCandidates: structuredClone(brief.faqCandidates),
-      },
-      copy: structuredClone(pageCopy),
-      ...(typeof pitch === 'string' && pitch.trim() ? { pitch } : {}),
-      ...(brief.site ? { seo: { name: brief.site.pageName, city: brief.site.city, serviceArea: [...brief.site.serviceArea] } } : {}),
-    });
+    pages.push(researchedPageFromCopy(brief, generatedCopy));
   }
 
   const graphEdges = structuredClone(input.graphEdges);

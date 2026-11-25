@@ -66,6 +66,8 @@ const CALL_SITES = {
   'src/lib/shared/clients.ts': ['clientsDir()'],
   'src/lib/showcase/consentStore.ts': ["dataRoot('showcaseConsent')"],
   'src/lib/site-bot/heroLibraryStore.ts': ['sitesDir()'],
+  // Site Bot step 2c: the post-payment run writes the remaining pages' record into the sites root (the review path).
+  'src/lib/site-bot/interviewPreview.ts': ['sitesDir()'],
   'src/lib/site-bot/research/researchStore.ts': ['siteResearchDir()'],
   'src/lib/site-bot/researchToSite.ts': ['sitesDir()'],
   'src/lib/site-bot/siteLookStore.ts': ["dataRoot('siteProof')"],

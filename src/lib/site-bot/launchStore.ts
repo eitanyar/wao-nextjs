@@ -96,7 +96,18 @@ const CREATE_SESSIONS = `CREATE TABLE IF NOT EXISTS site_bot_interview_sessions 
   facts_extracted_version INTEGER NOT NULL DEFAULT 0,
   facts_claimed_at TEXT,
   facts_returns INTEGER NOT NULL DEFAULT 0,
-  facts_confirmed_at TEXT
+  facts_confirmed_at TEXT,
+  preview_round INTEGER NOT NULL DEFAULT 0,
+  preview_attempts INTEGER NOT NULL DEFAULT 0,
+  preview_status TEXT CHECK (preview_status IS NULL OR preview_status IN ('generating', 'ready', 'failed')),
+  preview_claimed_at TEXT,
+  preview_round_started_at TEXT,
+  preview_ready_at TEXT,
+  preview_failed_at TEXT,
+  preview_fix_at TEXT,
+  preview_emailed_round INTEGER NOT NULL DEFAULT 0,
+  preview_polled_at TEXT,
+  site_generation_claimed_at TEXT
 )`;
 
 /** Step 2b (2026-11-25): the interview v1 + facts columns, added to a step-2a store by migrate() (name -> column DDL). */
@@ -111,6 +122,20 @@ const STEP2B_SESSION_COLUMNS: ReadonlyArray<[string, string]> = [
   ['facts_returns', 'facts_returns INTEGER NOT NULL DEFAULT 0'],
   ['facts_confirmed_at', 'facts_confirmed_at TEXT'],
 ];
+/** Step 2c (2026-11-25): the home-page preview + post-pay site generation columns, added by migrate() (name -> DDL). */
+const STEP2C_SESSION_COLUMNS: ReadonlyArray<[string, string]> = [
+  ['preview_round', 'preview_round INTEGER NOT NULL DEFAULT 0'],
+  ['preview_attempts', 'preview_attempts INTEGER NOT NULL DEFAULT 0'],
+  ['preview_status', "preview_status TEXT CHECK (preview_status IS NULL OR preview_status IN ('generating', 'ready', 'failed'))"],
+  ['preview_claimed_at', 'preview_claimed_at TEXT'],
+  ['preview_round_started_at', 'preview_round_started_at TEXT'],
+  ['preview_ready_at', 'preview_ready_at TEXT'],
+  ['preview_failed_at', 'preview_failed_at TEXT'],
+  ['preview_fix_at', 'preview_fix_at TEXT'],
+  ['preview_emailed_round', 'preview_emailed_round INTEGER NOT NULL DEFAULT 0'],
+  ['preview_polled_at', 'preview_polled_at TEXT'],
+  ['site_generation_claimed_at', 'site_generation_claimed_at TEXT'],
+];
 const CREATE_SESSION_INDEXES = [
   // One open session per business: the spot is per placeId.
   "CREATE UNIQUE INDEX IF NOT EXISTS site_bot_interview_sessions_open_place ON site_bot_interview_sessions (place_id) WHERE status = 'open'",
@@ -122,11 +147,12 @@ const CREATE_SESSION_INDEXES = [
  *   - site_bot_launch_events gains place_id / released_at (the released-spot rows).
  *   - site_bot_waitlist's reason CHECK gains 'location' (SQLite cannot alter a CHECK: the table is rebuilt, rows kept).
  *   - step 2b: site_bot_interview_sessions gains the interview v1 + facts columns (STEP2B_SESSION_COLUMNS).
+ *   - step 2c: and the home-page preview + post-pay generation columns (STEP2C_SESSION_COLUMNS).
  */
 function migrate(db: Database.Database): void {
   const sessionColumns = new Set((db.prepare('PRAGMA table_info(site_bot_interview_sessions)').all() as Array<{ name: string }>).map(column => column.name));
   if (sessionColumns.size > 0) {
-    for (const [name, ddl] of STEP2B_SESSION_COLUMNS) if (!sessionColumns.has(name)) db.exec(`ALTER TABLE site_bot_interview_sessions ADD COLUMN ${ddl}`);
+    for (const [name, ddl] of [...STEP2B_SESSION_COLUMNS, ...STEP2C_SESSION_COLUMNS]) if (!sessionColumns.has(name)) db.exec(`ALTER TABLE site_bot_interview_sessions ADD COLUMN ${ddl}`);
   }
   const eventColumns = new Set((db.prepare('PRAGMA table_info(site_bot_launch_events)').all() as Array<{ name: string }>).map(column => column.name));
   if (!eventColumns.has('place_id')) db.exec('ALTER TABLE site_bot_launch_events ADD COLUMN place_id TEXT');

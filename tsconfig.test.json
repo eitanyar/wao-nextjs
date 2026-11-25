@@ -575,6 +575,16 @@
     "src/lib/site-bot/interviewFactsFlow.ts",
     "src/lib/site-bot/interviewV1.test.ts",
     "src/lib/site-bot/interviewSubmitGuard.ts",
-    "src/lib/site-bot/interviewSubmitGuard.test.ts"
+    "src/lib/site-bot/interviewSubmitGuard.test.ts",
+    "src/lib/site-bot/step2cCopy.generated.ts",
+    "src/lib/site-bot/step2cCopy.ts",
+    "src/lib/site-bot/firstScreenFact.ts",
+    "src/lib/site-bot/interviewGeneration.ts",
+    "src/lib/site-bot/interviewPreviewView.ts",
+    "src/lib/site-bot/interviewPreview.ts",
+    "src/lib/site-bot/previewGeneration.ts",
+    "src/lib/site-bot/previewFrame.ts",
+    "src/lib/site-bot/previewFrameSandbox.ts",
+    "src/lib/site-bot/previewStep2c.test.ts"
   ]
 }
