@@ -42,6 +42,7 @@ An eligible owner who holds a spot goes through these steps, with no human and n
   - The callback generates the remaining pages after payment.
   - Photographers get studio vs on-location framing (VISION.md "locationType conditional"; it is missing today, so Yonatan flagged it): the work-location answer drives it.
   - The waiting screen copy while generation runs.
+  - **First-screen fact** (Fable 5.2 on Koray K-01, 2026-11-25). The home page's first phone screen (hero subheadline or trust bar; never the title or H1) must carry at least one confirmed owner fact, linked to its fact id. If no confirmed fact fits, the preview still shows and the gap is logged for step 3's gate. Yonatan signs off the subheadline rule, because the subheadline is also the meta description (`researchedSite.ts:452`).
 
 ## Constraints
 - All new Hebrew comes from waocopy and is applied byte-exact. One waocopy brief per run, written before the engineer starts. The briefs cover:
@@ -57,7 +58,7 @@ An eligible owner who holds a spot goes through these steps, with no human and n
 ## Out of scope for step 2
 - GBP manager sign-in: after payment, its own step (was step 5).
 - Photos: after payment, before go-live (decision 2).
-- The fact ledger's sentence-to-fact links and the publish/shrink gate: step 3.
+- The fact ledger's sentence-to-fact links and the publish/shrink gate: step 3. Step 3 also adds a same-trade comparison of the code-built fields (FAQ questions, service items), which `reviewPreflight.ts:126-131` skips today (Koray K-01 review).
 - Eitan's review screen: step 4.
 - Real voice recording: after launch (decision 1).
 - Adaptive per-service questions: cut for v1 (Fable 5.2).
@@ -66,6 +67,7 @@ An eligible owner who holds a spot goes through these steps, with no human and n
 - Focused tests per run, then `npm run test`, then `npm run build -- --webpack`, serially.
 - Dev run, gate open, fixture business: start → card → location → interview → gates → facts → preview → mock pay. The research runs once (check the dossier and `providerUsage`).
 - The preview is refused for another session.
+- In the fixture run, the preview's hero block contains text traced to a confirmed fact id.
 - An abandoned session releases its spot after the expiry (time is injected).
 - Screenshots on desktop and mobile of the interview, facts and preview screens.
 

@@ -1,0 +1,26 @@
+Angle: he's mid-signup and holding a spot, so the question stays light and in his trade's words, the exit thanks him and leaves him somewhere to stand, and the reminder simply hands him his spot back.
+
+```json
+{
+  "LOCATION_Q_TUTOR": "איפה אתה נותן את השיעורים?",
+  "LOCATION_Q_PHOTOGRAPHER": "איפה אתה מצלם בדרך כלל?",
+  "LOCATION_Q_SOLAR": "אתה מתקין ומתקן אצל הלקוחות בבית, או בעיקר מוכר בחנות?",
+  "LOCATION_OPT_HOME": "אצל הלקוח",
+  "LOCATION_OPT_OWN_PLACE": "במקום שלי",
+  "LOCATION_OPT_ONLINE": "רק אונליין",
+  "LOCATION_OPT_MIX": "גם וגם",
+  "LOCATION_EXIT_HEAD": "אתה ברשימת ההמתנה שלנו",
+  "LOCATION_EXIT_BODY": "האתרים שלנו בנויים לבעלי מקצוע שיוצאים ללקוחות בכל האזור. עסק שהלקוחות באים אליו, או שעובד רק אונליין, צריך אתר מסוג אחר. אותו אנחנו עוד לא בונים.\nהפרטים שנתת כבר שמורים אצלנו. לא צריך למלא שום דבר, ולא תחויב בכלום.\nתודה שענית לנו.",
+  "REMINDER_SUBJECT": "המקום שלך עדיין שמור",
+  "REMINDER_BODY": "היי,\nאתמול התחלת להקים את האתר של {businessName} ועצרת באמצע.\nאנחנו מחזיקים לך את המקום שלושה ימים מהרגע שהתחלת. אחר כך הוא עובר לעסק הבא ברשימה.\nהפרטים מגוגל והתשובות שלך כבר אצלנו. תחזור ישר לשאלה שעצרת בה.",
+  "REMINDER_CTA": "המשך מאיפה שעצרתי"
+}
+```
+
+**Flags**
+- `LOCATION_OPT_HOME` is shared across trades. For a tutor, "הלקוח" is really a student or a parent. "אצל התלמיד" would read better on the tutor screen. If the key can split per trade, I'll send a tutor variant.
+- `REMINDER_BODY` leaves out `{continueUrl}` because the button already carries it, and repeating the link would duplicate the CTA. If the email template needs a plain-text fallback link, add it as the last line: `{continueUrl}`.
+
+**Handoffs**
+- → Noa for one fresh read.
+- → Eitan-Dev to wire `REMINDER_CTA` to `{continueUrl}` and to show `LOCATION_OPT_ONLINE` on the tutor screen only.
