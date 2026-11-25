@@ -15,7 +15,7 @@ import { detectVertical } from './verticalDetect';
 import { DAY_LETTERS } from './generationData';
 import { SITE_DESIGN_LABELS } from './siteDesignLabels';
 import { SITE_FONT_PATHS, siteFontFiles } from './siteFonts';
-import { EMOJI_PATTERN, formatSiteHours, heroHoursLine, isStockImageUrl, ownerImageUrl, withoutEmoji } from './siteDesign';
+import { EMOJI_PATTERN, formatSiteHours, formatSiteHoursHtml, heroHoursLine, isStockImageUrl, ownerImageUrl, withoutEmoji } from './siteDesign';
 import type { SiteCopy } from './lpCopyPrompt';
 import type { CoreThirtyNode } from './coreThirty';
 import type { CoreThirtyPageCopy } from './coreThirtyCopy';
@@ -86,6 +86,24 @@ test('hours: day groups with en-dash ranges, 24h, closed days in week order, one
   assert.ok(heroHoursLine('Sun-Thu 08:00-18:00').startsWith(`<p class="hero-note" data-hero-hours><strong>${SITE_DESIGN_LABELS.hoursLabel}</strong> `));
 });
 
+test('hours markup (Maya / Noa 2026-11-26): each time range an ltr isolate that never wraps, each day group on one line', () => {
+  const d = DAY_LETTERS;
+  const iso = (run: string) => `<bdi dir="ltr" style="white-space:nowrap">${run}</bdi>`;
+  const group = (inner: string) => `<span style="white-space:nowrap">${inner}</span>`;
+  const html = formatSiteHoursHtml('Sun-Thu 08:00-18:00, Fri 08:00-13:00');
+  assert.equal(html, [
+    group(`${d[0]}\u2013${d[4]} ${iso('08:00\u201318:00')}`), group(`${d[5]} ${iso('08:00\u201313:00')}`), group(`${d[6]} ${SITE_DESIGN_LABELS.closedDay}`),
+  ].join(', '));
+  assert.equal(html!.replace(/<[^>]+>/g, ''), formatSiteHours('Sun-Thu 08:00-18:00, Fri 08:00-13:00'), 'the visible text is unchanged');
+  assert.doesNotMatch(html!, /<bdi dir="ltr"[^>]*>\(/, 'never a bracket in an isolate');
+  assert.equal(formatSiteHoursHtml('whenever'), null);
+  assert.ok(heroHoursLine('Sun-Thu 08:00-18:00', { isolateRanges: true }).includes(iso('08:00\u201318:00')));
+  assert.ok(!heroHoursLine('Sun-Thu 08:00-18:00').includes('<bdi'), 'the ads LP keeps its pinned plain hours');
+  // The footer hours row uses the same markup.
+  const footer = researchedFixture()['index.html'];
+  assert.ok(footer.includes(`<p data-footer-hours style="margin:0 0 6px;"><strong>${SITE_DESIGN_LABELS.hoursLabel}</strong> ${html}</p>`), 'footer hours');
+});
+
 test('fonts: Heebo ships inside the site (two woff2 subsets + OFL), preloaded, never from Google Fonts', () => {
   const files = siteFontFiles();
   assert.deepEqual(Object.keys(files).sort(), [SITE_FONT_PATHS.hebrew, SITE_FONT_PATHS.latin, SITE_FONT_PATHS.licence].map(p => p.slice(1)).sort());
@@ -150,7 +168,7 @@ test('hero (item 7) and trust facts (item 8): solid primary hero, no image; chec
   assert.match(home, /<section class="hero on-dark" data-section="hero"><div class="hero-grid"><div class="hero-text"><h1>/);
   assert.match(home, /\.hero\{background:var\(--primary\);color:#fff;/);
   assert.doesNotMatch(home, /background-image|<img\b/, 'no image anywhere');
-  assert.ok(home.includes(`<strong>${SITE_DESIGN_LABELS.hoursLabel}</strong> <span>${formatSiteHours('Sun-Thu 08:00-18:00, Fri 08:00-13:00')}</span>`), 'hero hours');
+  assert.ok(home.includes(`<strong>${SITE_DESIGN_LABELS.hoursLabel}</strong> <span>${formatSiteHoursHtml('Sun-Thu 08:00-18:00, Fri 08:00-13:00')}</span>`), 'hero hours');
   assert.match(home, new RegExp(`<section class="trust" data-section="trust" aria-label="${SITE_DESIGN_LABELS.trustLabel}"><ul role="list"><li><svg class="ic" aria-hidden="true"[^>]*><use href="#i-check"/></svg><span>Fact one</span></li><li>`));
   assert.match(home, /@media \(min-width:900px\)\{[^\n]*\.trust ul\{grid-template-columns:repeat\(4, 1fr\);/);
 });
@@ -158,8 +176,10 @@ test('hero (item 7) and trust facts (item 8): solid primary hero, no image; chec
 test('service cards (item 5, Yonatan C3): exact-match cards link as <h3><a> to the real page (in the sitemap); others plain; home drops covered related links', () => {
   const files = researchedFixture();
   const home = files['index.html'];
-  assert.match(home, /<li class="svc-card" data-card-link><span class="tile">[^]*?<h3><a href="\/services\/alpha-repair">Alpha Repair<\/a><\/h3><p>Alpha description\.<\/p><\/div><svg class="ic chev"/);
-  assert.match(home, /<li class="svc-card"><span class="tile">[^]*?<h3>Beta Work<\/h3><p>Beta description\.<\/p><\/div><\/li>/, 'no page, no link');
+  // Fable 5.2 anti-slop P1 (2026-11-25): a card whose icon would be the neutral one renders no tile.
+  assert.match(home, /<li class="svc-card" data-card-link><div class="svc-body"><h3><a href="\/services\/alpha-repair">Alpha Repair<\/a><\/h3><p>Alpha description\.<\/p><\/div><svg class="ic chev"/);
+  assert.match(home, /<li class="svc-card"><div class="svc-body"><h3>Beta Work<\/h3><p>Beta description\.<\/p><\/div><\/li>/, 'no page, no link');
+  assert.doesNotMatch(home, /href="#i-svc"/);
   assert.doesNotMatch(home, /class="svc"[^]*href="\/services"[^/]/, 'never the /services stand-in');
   assert.ok(files['sitemap.xml'].includes('<loc>https://test-biz.wao.co.il/services/alpha-repair</loc>'));
   assert.ok(files['services/alpha-repair.html']);

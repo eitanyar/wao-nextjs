@@ -18,7 +18,7 @@ import {
   homepageMetaDescription, pageNameWithCity, RESEARCHED_META_DESCRIPTION_MAX_CHARS, renderResearchedSitePages, researchedPageH1,
   researchedPageTitle,
 } from '../lp/researchedSite';
-import { firstScreenRule } from '../lp/researchPageCopy';
+import { buildNoaQaMessage, firstScreenEditorNote, firstScreenRule, PROMPT_V2_SYSTEM_PROMPTS } from '../lp/researchPageCopy';
 import type { AuditCandidateSnapshot, AuditRecord } from './auditStore';
 import type { MailTransport, OutgoingEmail } from './clientMessageEmail';
 import { claimInterviewStart, type OfferDeps } from './offerState';
@@ -34,15 +34,16 @@ import {
   ensurePreview, inFlightPreview, inFlightSiteGeneration, interviewPreview, previewForFrame, startSiteGeneration, staffRetry,
   type PreviewDeps,
 } from './interviewPreview';
-import {
-  anchorExclusions, firstScreenCandidates, firstScreenIneligibility, resolveFirstScreen, subheadlineCarriesFact, usableFacts,
-  type FirstScreenContext, type UsableFact,
-} from './firstScreenFact';
+import { anchorExclusions, subheadlineCarriesFact, usableFacts } from './firstScreenFact';
+import { SITE_BOT_OWNER_QUOTE_COPY } from './ownerQuoteCopy.generated';
 import { frameWorkLocation, interviewGenerationData, workLocationConstraint } from './interviewGeneration';
 import { ISRAELI_LOCALITIES } from './israeliLocalities';
 import {
-  fixtureCopyWriter, generatePreviewHomepage, generateRemainingPages, readPreviewRecord, type PreviewGenerationOutcome,
+  copyEventLine, fixtureCopyWriter, gateSubheadlinePerson, generatePreviewHomepage, generateRemainingPages, readPreviewRecord, SUBHEADLINE_PERSON_REPAIR_SYSTEM,
+  type PreviewGenerationOutcome,
 } from './previewGeneration';
+import { isTradeOrPlaceName } from './researchToSite';
+import { SUBJECT_CARRY_TOKENS } from '../lp/generationData';
 import { assertPreviewInert, PREVIEW_FRAME_HEADERS, previewFrameHtml } from './previewFrame';
 import { PREVIEW_IFRAME_SANDBOX } from './previewFrameSandbox';
 import { fixtureResearchProviders } from './research/fixtureProviders';
@@ -54,6 +55,7 @@ import { buildPageBriefs } from './researchToSite';
 import { researchedRenderInputs } from './researchToSite';
 import { SITE_BOT_STEP2C_COPY } from './step2cCopy.generated';
 import { payCtaSub } from './step2cCopy';
+import { answerTexts } from './interviewQuestions';
 
 const T0 = Date.parse('2026-12-01T08:00:00.000Z');
 const auditId = '123e4567-e89b-42d3-a456-426614174000';
@@ -162,7 +164,8 @@ async function facts(h: H, cookie: string, body: Record<string, unknown>) {
 }
 
 /** start -> contact -> domain -> 5 answers -> gates -> facts (reviewed by `review`) -> FACTS_DONE. Returns the cookie. */
-async function throughFacts(h: H, options: { placeId?: string; over?: Partial<CollectedData>; review?: (id: string, type: string) => Record<string, unknown> } = {}): Promise<string> {
+async function throughFacts(h: H, options: { placeId?: string; over?: Partial<CollectedData>; review?: (id: string, type: string) => Record<string, unknown>; answers?: typeof ANSWERS } = {}): Promise<string> {
+  const answers = options.answers ?? ANSWERS;
   const started = await startInterview({ auditId, placeId: options.placeId ?? PLACE, cookieValue: undefined }, h.deps);
   assert.equal(started.kind, 'session');
   const cookie = (started as Extract<typeof started, { kind: 'session' }>).cookie!;
@@ -170,9 +173,9 @@ async function throughFacts(h: H, options: { placeId?: string; over?: Partial<Co
   assert.equal((await interviewStep(cookie, { step: 'domain', owner: { domainChoice: 'no_domain' } }, h.deps)).kind, 'ok');
   await inFlightInterviewResearch(parseInterviewCookie(cookie)!.id);
   assert.equal((await interviewStep(cookie, { step: 'questions_begin' }, h.deps)).kind, 'ok');
-  for (const key of ['recentJob', 'turnedDown', 'callerQuestion'] as const) assert.equal((await interviewStep(cookie, { step: 'answer', key, text: ANSWERS[key] }, h.deps)).kind, 'ok');
+  for (const key of ['recentJob', 'turnedDown', 'callerQuestion'] as const) assert.equal((await interviewStep(cookie, { step: 'answer', key, text: answers[key] }, h.deps)).kind, 'ok');
   assert.equal((await interviewStep(cookie, { step: 'answer', key: 'priceStyle', chips: ['afterVisit'] }, h.deps)).kind, 'ok');
-  assert.equal((await interviewStep(cookie, { step: 'answer', key: 'areaPattern', text: ANSWERS.areaPattern }, h.deps)).kind, 'ok');
+  assert.equal((await interviewStep(cookie, { step: 'answer', key: 'areaPattern', text: answers.areaPattern }, h.deps)).kind, 'ok');
   assert.equal((await interviewStep(cookie, { step: 'gates_done' }, h.deps)).kind, 'ok');
   const loaded = await facts(h, cookie, { action: 'load' });
   assert.equal(loaded.status, 200, JSON.stringify(loaded.body));
@@ -195,36 +198,16 @@ const sessionOf = (h: H, cookie: string) => readInterviewSession(h.store, parseI
 // Pure rules
 
 const LOCALS = ISRAELI_LOCALITIES.filter(item => item.he_name.length >= 3).slice(0, 2);
-const CONTEXT: FirstScreenContext = {
-  homeServiceIds: ['owner-service:leak detection'], serviceAreas: [LOCALS[0].he_name], localities: ISRAELI_LOCALITIES, trustBarNumbers: ['12'],
-};
+// Hebrew answers for the quote-line flow: the 2026-11-25 synthetic plumber's facts (step2cFactRules.test.ts), as escapes.
+const HE_REFUSAL = '\u05DC\u05E4\u05E0\u05D9 \u05D7\u05D5\u05D3\u05E9 \u05DE\u05D9\u05E9\u05D4\u05D5 \u05E8\u05E6\u05D4 \u05E9\u05D0\u05D7\u05D1\u05E8 \u05DC\u05D5 \u05D0\u05EA \u05D4\u05DE\u05D8\u05D1\u05D7 \u05D4\u05D7\u05D3\u05E9 \u05D1\u05DC\u05D9 \u05D1\u05E8\u05D6 \u05E0\u05D9\u05EA\u05D5\u05E7';
+const HE_REFUSAL_CUT = HE_REFUSAL.split(' ').slice(2).join(' ');
+const HE_ANSWERS = { ...ANSWERS, turnedDown: HE_REFUSAL };
+/** The 2026-11-25 live Gemini preview's first-person subheadline (the verifier's rule (a) FAIL), byte-exact as escapes. */
+const LIVE_SUB = '\u05D0\u05E0\u05D9 \u05DE\u05D0\u05EA\u05E8 \u05D0\u05EA \u05DE\u05E7\u05D5\u05E8 \u05D4\u05E8\u05D8\u05D9\u05D1\u05D5\u05EA \u05D1\u05D7\u05D9\u05D1\u05D5\u05E8\u05D9 \u05D4\u05E6\u05E0\u05E8\u05EA \u05D5\u05DE\u05E9\u05D0\u05D9\u05E8 \u05D1\u05D9\u05EA \u05D9\u05D1\u05E9 \u05D5\u05EA\u05E7\u05D9\u05DF';
+/** The same sentence without its subject pronoun (person-neutral present tense). */
+const LIVE_SUB_NEUTRAL = LIVE_SUB.split(' ').slice(1).join(' ');
 
-test('first-screen eligibility: rule (b) types, statuses and priority (job > tool > local > non-money price > number)', () => {
-  const fact = (id: string, type: UsableFact['type'], text: string, extra: Partial<UsableFact> = {}): UsableFact => ({ id, type, text, ...extra });
-  const all: UsableFact[] = [
-    fact('n1', 'number', 'arrive within 40 minutes'),
-    fact('n2', 'number', '12 years'),
-    fact('p1', 'price_rule', 'price only after a visit'),
-    fact('p2', 'price_rule', 'visit costs 150'),
-    fact('l1', 'local', `old buildings in ${LOCALS[0].he_name}`),
-    fact('l2', 'local', `old buildings in ${LOCALS[1].he_name}`),
-    fact('t1', 'tool', 'Grohe mixer'),
-    fact('j1', 'job', 'replaced a burst pipe'),
-    fact('j2', 'job', 'fixed a drain', { serviceId: 'owner-service:other' }),
-    fact('j3', 'job', 'found a leak', { serviceId: 'owner-service:leak detection' }),
-    fact('r1', 'refusal', 'refused a rooftop job'),
-    fact('c1', 'credential', '12'),
-  ];
-  assert.deepEqual(firstScreenCandidates(all, CONTEXT).map(item => item.id), ['j1', 'j3', 't1', 'l1', 'p1', 'n1']);
-  assert.equal(firstScreenIneligibility(all.find(item => item.id === 'r1')!, CONTEXT), 'refusal_never_used');
-  assert.equal(firstScreenIneligibility(all.find(item => item.id === 'c1')!, CONTEXT), 'credential_trust_bar_only');
-  assert.equal(firstScreenIneligibility(all.find(item => item.id === 'j2')!, CONTEXT), 'job_other_service');
-  assert.equal(firstScreenIneligibility(all.find(item => item.id === 'l2')!, CONTEXT), 'local_outside_area');
-  assert.equal(firstScreenIneligibility(all.find(item => item.id === 'p2')!, CONTEXT), 'price_rule_money');
-  assert.equal(firstScreenIneligibility(fact('p3', 'price_rule', 'no charge for the visit \u20AA'), CONTEXT), 'price_rule_money');
-  assert.equal(firstScreenIneligibility(all.find(item => item.id === 'n2')!, CONTEXT), 'number_on_trust_bar');
-
-  // Statuses: pending and removed never; edited uses his ownerText (and drops the original condition).
+test('fact statuses: pending and removed never; edited uses his ownerText (and drops the original condition)', () => {
   const set = {
     version: 1 as const, answersVersion: 1, extractedAt: '2026-12-01T00:00:00Z', extraction: 'model' as const, facts: [
       { id: 'a1-1', type: 'job' as const, quote: 'q1', status: 'confirmed' as const, condition: 'on weekdays', source: { kind: 'answer' as const, questionKey: 'recentJob' as const, part: 'answer' as const } },
@@ -239,7 +222,7 @@ test('first-screen eligibility: rule (b) types, statuses and priority (job > too
   ]);
 });
 
-test('carry check: the subheadline must keep the fact words (and its condition); anchor words never count', () => {
+test('rule (a) watch: the carry check finds fact words in a subheadline (and its condition); anchor words never count', () => {
   const exclude = anchorExclusions('plumber', 'Holon', 'Step2c Plumbing');
   const job = { text: 'replaced a burst Grohe mixer under the sink' };
   assert.equal(subheadlineCarriesFact('I replaced a burst Grohe mixer in two hours', job, exclude), true);
@@ -249,10 +232,6 @@ test('carry check: the subheadline must keep the fact words (and its condition);
   assert.equal(subheadlineCarriesFact('I arrive within 30 minutes', { text: 'arrive within 40 minutes' }, exclude), false, 'his exact digits');
   assert.equal(subheadlineCarriesFact('I replaced a burst Grohe mixer', { ...job, condition: 'on weekdays only' }, exclude), false, 'condition dropped');
   assert.equal(subheadlineCarriesFact('I replaced a burst Grohe mixer on weekdays', { ...job, condition: 'on weekdays only' }, exclude), true);
-  // Credential fallback: a rendered trust-bar item built from a credential fact.
-  const outcome = resolveFirstScreen('Generic line', [{ id: 'a1-1', type: 'job', ...job }], [{ factId: 'cred-years', item: '12 years' }], ['12 years']);
-  assert.deepEqual(outcome, { firstScreenFactId: 'cred-years', source: 'trust_bar', candidateIds: ['a1-1'], missing: false });
-  assert.equal(resolveFirstScreen('Generic line', [], [{ factId: 'cred-years', item: '12 years' }], []).missing, true, 'not rendered = missing (e)');
 });
 
 test('meta description (d): anchor + em-dash + subheadline, the subheadline alone when it has both or the join passes 155', () => {
@@ -352,58 +331,92 @@ test('generation runs once per round; the fix round regenerates once; a third ro
   }
 });
 
-test('first-screen fact (a): the generation record keeps firstScreenFactId of an eligible confirmed fact; rule (e) logs a miss', async () => {
+test('first-screen fact v2: the quote line of an eligible confirmed fact (code-built, in no JSON-LD or meta); rule (e) logs a miss', async () => {
   const h = harness();
   try {
-    const cookie = await throughFacts(h);
+    // Latin answers (every answer fact fails c4/c5) and the price chip removed: the trust-bar credential satisfies rule (e).
+    const latin = await throughFacts(h, { review: (_id, type) => (type === 'price_rule' ? { decision: 'remove' } : { decision: 'confirm' }) });
+    await settle(latin);
+    const plain = readPreviewRecord(sessionOf(h, latin).researchId!, h.researchBaseDir)!;
+    assert.equal(plain.firstScreen.source, 'trust_bar', JSON.stringify(plain.firstScreen));
+    assert.equal(plain.firstScreen.firstScreenFactId, 'cred-years');
+    assert.equal(plain.firstScreen.quoteLine, null);
+    assert.equal(plain.page.ownerQuote, undefined);
+    assert.ok(plain.firstScreen.candidates.some(item => item.type === 'number' && item.reason === 'latin'), JSON.stringify(plain.firstScreen.candidates));
+    assert.ok(plain.firstScreen.candidates.some(item => item.type === 'price_rule' && item.reason === 'status_removed'));
+    assert.ok(plain.firstScreen.candidates.some(item => item.id === 'cred-years' && item.reason === 'trust_bar_duplicate'));
+
+    // Hebrew refusal answer: the refusal frame, his words after the opening time phrase is cut.
+    const cookie = await throughFacts(h, { placeId: PLACE2, answers: HE_ANSWERS });
     await settle(cookie);
     const record = readPreviewRecord(sessionOf(h, cookie).researchId!, h.researchBaseDir)!;
     const dossier = (await readResearchDossier(record.researchId, h.researchBaseDir))!;
     const fact = dossier.interviewFacts!.facts.find(item => item.id === record.firstScreen.firstScreenFactId)!;
     assert.ok(fact, JSON.stringify(record.firstScreen));
-    assert.equal(record.firstScreen.source, 'subheadline');
-    assert.ok(['confirmed', 'edited'].includes(fact.status));
-    assert.ok(['job', 'tool', 'local', 'price_rule', 'number'].includes(fact.type));
-    assert.notEqual(fact.type, 'refusal');
-    assert.ok(record.usedFactIds.length > 0 && !record.usedFactIds.some(id => dossier.interviewFacts!.facts.find(item => item.id === id)?.type === 'refusal'));
-    assert.ok(record.page.copy.heroSubheadline.length <= 90);
-    // The homepage brief named the candidates and the prompt carries the first-screen rule.
-    const usable = { id: fact.id, type: fact.type, text: fact.quote };
-    const brief = buildPageBriefs(dossier, record.collectedData, { facts: [usable], firstScreen: [usable], workLocation: null })[0];
-    assert.ok(brief.constraints.some(item => item.id === 'first-screen-fact' && item.value.includes(`interview-${fact.id}`)));
+    assert.deepEqual([fact.type, fact.status, record.firstScreen.source], ['refusal', 'confirmed', 'quote_line']);
+    const frame = SITE_BOT_OWNER_QUOTE_COPY.QUOTE_FRAME_REFUSAL.replace('{name}', SITE_BOT_OWNER_QUOTE_COPY.QUOTE_NAME_FALLBACK);
+    assert.deepEqual(record.page.ownerQuote, { frame, quote: HE_REFUSAL_CUT });
+    assert.deepEqual(record.firstScreen.quoteLine, record.page.ownerQuote);
+    // usedFactIds: only what is rendered (the quote line's fact and the shown credential); the brief's list is separate.
+    // (The fixture writer copies the writer facts into the about body verbatim, so those truly appear too.)
+    assert.ok(record.usedFactIds.includes(fact.id) && record.usedFactIds.includes('cred-years'));
+    assert.ok(record.briefFactIds.length > 0);
+    assert.ok(!record.briefFactIds.includes(fact.id), 'a refusal never reaches the writer');
+    assert.deepEqual(record.subheadlineFactIds, []);
+    // (a) the fixture subheadline carries no fact; the homepage brief carries the first-screen constraint and rule.
+    assert.equal(record.page.copy.heroSubheadline, 'Step2c Plumbing');
+    const usable = { id: 'a1-1', type: 'job' as const, text: 'x' };
+    const brief = buildPageBriefs(dossier, record.collectedData, { facts: [usable], firstScreen: true, workLocation: null })[0];
+    assert.ok(brief.constraints.some(item => item.id === 'first-screen-fact' && !item.value.includes('interview-')));
     // Yonatan C2 + C3 (iii): the writer constraints reach every interview brief, and only interview briefs.
-    for (const page of buildPageBriefs(dossier, record.collectedData, { facts: [usable], firstScreen: [], workLocation: null })) {
+    for (const page of buildPageBriefs(dossier, record.collectedData, { facts: [usable], firstScreen: false, workLocation: null })) {
       assert.ok(page.constraints.some(item => item.id === 'constraint-no-relative-time' && /Never carry a relative time word/.test(item.value)), page.page.id);
       assert.ok(page.constraints.some(item => item.id === 'constraint-fact-claim-link' && /unless the fact itself states it/.test(item.value)), page.page.id);
+      assert.ok(!page.constraints.some(item => item.id === 'first-screen-fact'), 'post-pay pages: no first-screen rule');
     }
     assert.ok(!buildPageBriefs(dossier, record.collectedData)[0].constraints.some(item => item.id === 'constraint-no-relative-time'));
-    assert.match(firstScreenRule(brief) ?? '', /FIRST SCREEN \(binding\)/);
+    assert.match(firstScreenRule(brief) ?? '', /FIRST SCREEN \(binding/);
     assert.equal(firstScreenRule(buildPageBriefs(dossier, record.collectedData)[0]), null, 'no interview: prompt unchanged');
 
-    // (d) on the rendered homepage: the meta and og:description start with the plain anchor, <= 155, unique on the site.
+    // (b, f, g) on the rendered homepage.
     const html = renderResearchedSitePages({ ...researchedRenderInputs(record.collectedData, record.slug), data: record.collectedData, slug: record.slug, pages: [record.page], graphEdges: [] });
-    const meta = /<meta name="description" content="([^"]*)"/.exec(html['index.html'])![1];
-    const og = /<meta property="og:description" content="([^"]*)"/.exec(html['index.html'])?.[1];
+    const index = html['index.html'];
+    assert.ok(index.includes(`<p class="sub">Step2c Plumbing</p><figure class="owner-quote" data-section="owner-quote" aria-labelledby="owner-quote-frame"><figcaption id="owner-quote-frame">${frame}</figcaption>\u00A0<blockquote><p>\u05F4${HE_REFUSAL_CUT}\u05F4</p></blockquote></figure>`));
+    for (const json of index.match(/<script type="application\/ld\+json">[\s\S]*?<\/script>/g) ?? []) assert.ok(!json.includes(HE_REFUSAL_CUT.split(' ')[2]), 'no JSON-LD carries the quote');
+    assert.doesNotMatch(index, /itemprop/);
+    const meta = /<meta name="description" content="([^"]*)"/.exec(index)![1];
+    const og = /<meta property="og:description" content="([^"]*)"/.exec(index)?.[1];
     const anchor = pageNameWithCity(record.page.seo!.name, record.page.seo!.city);
+    assert.equal(meta, homepageMetaDescription(record.page.seo!.name, record.page.seo!.city, record.page.copy.heroSubheadline));
     assert.ok(meta.startsWith(anchor), meta);
+    assert.ok(!meta.includes(HE_REFUSAL_CUT));
     assert.ok(meta.length <= 155);
     if (og !== undefined) assert.equal(og, meta);
     const contact = /<meta name="description" content="([^"]*)"/.exec(html['contact.html'] ?? '')?.[1];
     if (contact !== undefined) assert.notEqual(contact, meta);
+    // Only the homepage renders the line.
+    assert.ok(!Object.entries(html).some(([file, page]) => file !== 'index.html' && page.includes('owner-quote')));
 
-    // (e): every fact removed -> the preview still renders and the miss is logged.
+    // (e): every fact removed -> no quote line, no placeholder, the preview still renders and the miss is logged.
     const lines: string[] = [];
     const h2 = harness({});
     try {
-      const cookie2 = await throughFacts(h2, { review: (_id, type) => (type === 'credential' ? { decision: 'confirm' } : { decision: 'remove' }) });
+      const cookie2 = await throughFacts(h2, { answers: HE_ANSWERS, review: (_id, type) => (type === 'credential' ? { decision: 'confirm' } : { decision: 'remove' }) });
       const session = sessionOf(h2, cookie2);
       await settle(cookie2);
       const outcome = await generatePreviewHomepage({
         sessionId: session.id, researchId: session.researchId!, round: 1, answersVersion: session.answersVersion, collectedData: { ...session.collectedData!, yearsInField: undefined },
-        workLocation: null, publishedAddress: null,
+        workLocation: null, publishedAddress: null, answers: answerTexts(session.interviewState!),
       }, { now: h2.now, researchBaseDir: h2.researchBaseDir, mode: 'fixture', log: line => lines.push(line) });
-      assert.equal(outcome.ok, true);
-      assert.ok(lines.some(line => line.startsWith('[site-bot preview] first_screen_fact_missing')), lines.join('\n'));
+      assert.ok(outcome.ok);
+      assert.equal(outcome.record.page.ownerQuote, undefined);
+      assert.equal(outcome.record.firstScreen.missing, true);
+      const line = lines.find(item => item.startsWith('[site-bot preview] first_screen_fact_missing'));
+      assert.ok(line, lines.join('\n'));
+      for (const item of outcome.record.firstScreen.candidates) assert.ok(line!.includes(`${item.id}:${item.reason}`), line);
+      assert.match(line!, /status_removed/);
+      const frameHtml = renderResearchedSitePages({ ...researchedRenderInputs(outcome.record.collectedData, outcome.record.slug), data: outcome.record.collectedData, slug: outcome.record.slug, pages: [outcome.record.page], graphEdges: [] })['index.html'];
+      assert.doesNotMatch(frameHtml, /owner-quote/);
     } finally {
       h2.close();
     }
@@ -412,21 +425,27 @@ test('first-screen fact (a): the generation record keeps firstScreenFactId of an
   }
 });
 
-test('title and H1 are byte-identical to a run without facts (the rule never touches the title formula or the H1 gate)', async () => {
+test('title, H1 and hero badge are byte-identical to a run without facts (the quote line never touches the anchors)', async () => {
   const h = harness();
   try {
-    const cookie = await throughFacts(h);
+    const cookie = await throughFacts(h, { answers: HE_ANSWERS });
     await settle(cookie);
     const session = sessionOf(h, cookie);
-    // The same writer for both runs: a hook built from the brief (as a model's would be), the subheadline from the facts.
     const seen: PageBrief[] = [];
-    const writer = async (brief: PageBrief, data: CollectedData): Promise<SiteCopy> => { seen.push(brief); return fixtureCopyWriter([], [])(brief, data); };
+    const writer = async (brief: PageBrief, data: CollectedData): Promise<SiteCopy> => { seen.push(brief); return fixtureCopyWriter([])(brief, data); };
     const run = (answersVersion: number) => generatePreviewHomepage({
       sessionId: session.id, researchId: session.researchId!, round: 1, answersVersion, collectedData: session.collectedData!, workLocation: null, publishedAddress: null,
+      answers: answerTexts(session.interviewState!),
     }, { now: h.now, researchBaseDir: h.researchBaseDir, mode: 'fixture', generateCopy: writer });
     const withFacts = await run(session.answersVersion) as Extract<PreviewGenerationOutcome, { ok: true }>;
     const noFacts = await run(session.answersVersion + 99) as Extract<PreviewGenerationOutcome, { ok: true }>;
     assert.ok(withFacts.ok && noFacts.ok);
+    assert.ok(withFacts.record.page.ownerQuote, 'the with-facts run renders the quote line');
+    // usedFactIds bug (2026-11-25): the brief handed the writer a1-1, the output never showed it, so it is not listed.
+    assert.ok(withFacts.record.briefFactIds.includes('a1-1'), JSON.stringify(withFacts.record.briefFactIds));
+    assert.deepEqual(withFacts.record.usedFactIds, [withFacts.record.firstScreen.firstScreenFactId, 'cred-years']);
+    assert.deepEqual(noFacts.record.usedFactIds, []);
+    assert.equal(noFacts.record.page.ownerQuote, undefined);
     assert.ok(seen[0].firstPartyProof.some(item => item.id.startsWith('interview-')));
     assert.ok(!seen[1].firstPartyProof.some(item => item.id.startsWith('interview-')));
     assert.deepEqual(seen[0].site, seen[1].site, 'page name, city and service area are the same');
@@ -434,6 +453,11 @@ test('title and H1 are byte-identical to a run without facts (the rule never tou
     assert.equal(researchedPageTitle(withFacts.record.page, name), researchedPageTitle(noFacts.record.page, name));
     assert.equal(researchedPageH1(withFacts.record.page.copy.heroHeadline, withFacts.record.page.seo), researchedPageH1(noFacts.record.page.copy.heroHeadline, noFacts.record.page.seo));
     assert.deepEqual(withFacts.record.page.seo, noFacts.record.page.seo);
+    const render = (record: typeof withFacts.record) => renderResearchedSitePages({ ...researchedRenderInputs(record.collectedData, record.slug), data: record.collectedData, slug: record.slug, pages: [record.page], graphEdges: [] })['index.html'];
+    const [a, b] = [render(withFacts.record), render(noFacts.record)];
+    const pick = (page: string, pattern: RegExp) => pattern.exec(page)?.[0] ?? null;
+    for (const pattern of [/<title>[^<]*<\/title>/, /<h1>[^<]*<\/h1>/, /<[^>]*class="hero-badge"[^>]*>[^<]*</]) assert.equal(pick(a, pattern), pick(b, pattern), String(pattern));
+    assert.ok(pick(a, /<title>[^<]*<\/title>/) && pick(a, /<h1>[^<]*<\/h1>/));
   } finally {
     h.close();
   }
@@ -563,7 +587,7 @@ test('after payment: the homepage is reused byte for byte, every other page is g
     const briefs: string[] = [];
     const again = await generateRemainingPages(preview, {
       now: h.now, researchBaseDir: h.researchBaseDir, sitesRoot: h.sitesRoot, mode: 'fixture', checkPlaceId: null,
-      generateCopy: async (brief, data) => { briefs.push(brief.page.pageClass); return fixtureCopyWriter([], [])(brief, data); },
+      generateCopy: async (brief, data) => { briefs.push(brief.page.pageClass); return fixtureCopyWriter([])(brief, data); },
     });
     assert.equal(again.ok, true);
     assert.ok(briefs.length > 0 && !briefs.includes('homepage'), briefs.join(','));
@@ -593,4 +617,143 @@ test('PAY_CTA_SUB shows the plan price from plans.ts, byte-identical to the waoc
   const source = JSON.parse(/^```json\n([\s\S]*?)\n```$/m.exec(text)![1]) as Record<string, string>;
   assert.equal(payCtaSub(), source.PAY_CTA_SUB);
   assert.ok(SITE_BOT_STEP2C_COPY.PAY_CTA_SUB.includes('{net}'));
+});
+
+// ---------------------------------------------------------------------------------------------------------------------
+// 2026-11-26 fix-up: rule (a) person gate, the empty subheadline, the card-name guard, the editor notes
+
+test('rule (a) person gate: a first-person subheadline gets one repair round, else no subheadline and subheadline_person_fail', async () => {
+  const h = harness();
+  try {
+    const cookie = await throughFacts(h, { answers: HE_ANSWERS });
+    await settle(cookie);
+    const session = sessionOf(h, cookie);
+    const record = readPreviewRecord(session.researchId!, h.researchBaseDir)!;
+    const dossier = (await readResearchDossier(record.researchId, h.researchBaseDir))!;
+    const home = buildPageBriefs(dossier, record.collectedData, { facts: [], firstScreen: true, workLocation: null }).find(brief => brief.page.pageClass === 'homepage')!;
+    const data = record.collectedData;
+    const first: SiteCopy = { ...record.page.copy, heroSubheadline: LIVE_SUB };
+    const lines: string[] = [];
+    const log = (line: string) => lines.push(line);
+    const calls: Array<{ system: string; user: string }> = [];
+    const answering = (value: unknown) => async (system: string, user: string) => { calls.push({ system, user }); return JSON.stringify({ heroSubheadline: value }); };
+
+    // Clean: untouched, no call.
+    const clean = await gateSubheadlinePerson(record.page.copy, home, data, { callJson: answering('x'), log, sessionId: 's', round: 1 });
+    assert.deepEqual([clean.outcome, clean.copy, calls.length], ['ok', record.page.copy, 0]);
+
+    // One repair round: the third-person rewrite is kept.
+    const repaired = await gateSubheadlinePerson(first, home, data, { callJson: answering(`${LIVE_SUB_NEUTRAL}.`), log, sessionId: 's', round: 1 });
+    assert.equal(repaired.outcome, 'repaired');
+    assert.equal(repaired.copy.heroSubheadline, LIVE_SUB_NEUTRAL, 'trailing period dropped');
+    assert.equal(calls.length, 1);
+    assert.equal(calls[0].system, SUBHEADLINE_PERSON_REPAIR_SYSTEM);
+    assert.doesNotMatch(calls[0].system, /first-person singular/, 'no owner-voice rule in the repair prompt');
+    assert.ok(calls[0].user.includes(JSON.stringify([SUBJECT_CARRY_TOKENS[0]])), 'the found form is named');
+    assert.ok(calls[0].user.includes(firstScreenRule(home)!), 'the first-screen rule travels with the repair');
+    assert.ok(calls[0].user.includes(JSON.stringify(first.heroHeadline)));
+    assert.ok(lines.some(line => line === '[site-bot preview] subheadline_person_repaired session=s round=1 forms=1'), lines.join('\n'));
+
+    // Still first person after the repair, too long, a bad answer, a failed call or no model: no subheadline, logged.
+    for (const callJson of [answering(LIVE_SUB), answering('x'.repeat(91)), answering(42), async () => { throw new Error('down'); }, null]) {
+      lines.length = 0;
+      const dropped = await gateSubheadlinePerson(first, home, data, { callJson, log, sessionId: 's', round: 2 });
+      assert.equal(dropped.outcome, 'dropped');
+      assert.equal(dropped.copy.heroSubheadline, '');
+      assert.deepEqual(lines, ['[site-bot preview] subheadline_person_fail session=s round=2 forms=1 persons=first']);
+    }
+
+    // The rendered homepage without a subheadline: no sub line, the meta / og description is the anchor alone, no Service
+    // description; the quote line still renders.
+    const page = { ...record.page, copy: { ...record.page.copy, heroSubheadline: '' } };
+    const index = renderResearchedSitePages({ ...researchedRenderInputs(data, record.slug), data, slug: record.slug, pages: [page], graphEdges: [] })['index.html'];
+    assert.doesNotMatch(index, /<p class="sub">/);
+    assert.match(index, /<\/h1><figure class="owner-quote"/);
+    const anchor = pageNameWithCity(record.page.seo!.name, record.page.seo!.city);
+    assert.equal(/<meta name="description" content="([^"]*)"/.exec(index)![1], anchor);
+    const og = /<meta property="og:description" content="([^"]*)"/.exec(index)?.[1];
+    if (og !== undefined) assert.equal(og, anchor);
+    const service = (index.match(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/g) ?? []).map(block => block.replace(/<[^>]+>/g, '')).join('\n');
+    assert.ok(service.includes('"@type":"Service"'));
+    assert.doesNotMatch(service, /"@type":"Service"[^}]*"description"/);
+
+    // The same gate inside the preview run: the record, and so every surface, carries the gated value.
+    const live = await generatePreviewHomepage({
+      sessionId: session.id, researchId: session.researchId!, round: 1, answersVersion: session.answersVersion, collectedData: session.collectedData!, workLocation: null,
+      publishedAddress: null, answers: answerTexts(session.interviewState!),
+    }, {
+      now: h.now, researchBaseDir: h.researchBaseDir, mode: 'fixture', log,
+      generateCopy: async (brief, pageData) => ({ ...(await fixtureCopyWriter([])(brief, pageData)), heroSubheadline: LIVE_SUB }),
+      callJson: answering(LIVE_SUB),
+    }) as Extract<PreviewGenerationOutcome, { ok: true }>;
+    assert.ok(live.ok);
+    assert.equal(live.record.page.copy.heroSubheadline, '');
+
+    // After payment: the reused homepage with no subheadline passes the shape and graph checks.
+    const site = await generateRemainingPages(live.record, { now: h.now, researchBaseDir: h.researchBaseDir, sitesRoot: h.sitesRoot, mode: 'fixture', checkPlaceId: null });
+    assert.equal(site.ok, true, JSON.stringify(site));
+    const stored = JSON.parse(fs.readFileSync(path.join(h.sitesRoot, `${(site as { slug: string }).slug}.json`), 'utf8'));
+    assert.equal(stored.researchedPages.find((item: { classification: string }) => item.classification === 'homepage').copy.heroSubheadline, '');
+  } finally {
+    h.close();
+  }
+});
+
+test('Noa and the repair stage get the first-screen person note on a first-screen homepage brief only; copy events log ids only', async () => {
+  const h = harness();
+  try {
+    const cookie = await throughFacts(h, { answers: HE_ANSWERS });
+    await settle(cookie);
+    const record = readPreviewRecord(sessionOf(h, cookie).researchId!, h.researchBaseDir)!;
+    const dossier = (await readResearchDossier(record.researchId, h.researchBaseDir))!;
+    const [first] = buildPageBriefs(dossier, record.collectedData, { facts: [], firstScreen: true, workLocation: null });
+    const [plain] = buildPageBriefs(dossier, record.collectedData);
+    const note = firstScreenEditorNote(first)!;
+    assert.match(note, /^FIRST SCREEN \(binding\): heroSubheadline is written in the third person about the business/);
+    assert.equal(firstScreenEditorNote(plain), null);
+    assert.ok(buildNoaQaMessage(record.page.copy, first).endsWith(`\n\n${note}`));
+    assert.ok(!buildNoaQaMessage(record.page.copy, plain).includes('FIRST SCREEN'));
+    // The shared repair / Noa system prompts still carry the owner-voice rule; the note is what exempts the field.
+    assert.match(PROMPT_V2_SYSTEM_PROMPTS.repair, /first-person singular/);
+    assert.equal(copyEventLine('home', { stage: 'tamar', kind: 'repair', attempt: 1, fields: ['heroSubheadline'], violations: [{ field: 'heroSubheadline', rule: 'max_length', limit: 90, actual: 95 }] }),
+      '[site-bot copy] page=home stage=tamar kind=repair attempt=1 fields=heroSubheadline rules=heroSubheadline:max_length');
+  } finally {
+    h.close();
+  }
+});
+
+test('card-name guard: the trade or a service-area place is never a homepage card heading (brief labels and the renderer)', async () => {
+  const HOLON = ISRAELI_LOCALITIES.find(item => item.slug === 'holon')!.he_name;
+  const BAT_YAM = ISRAELI_LOCALITIES.find(item => item.slug === 'bat-yam')!.he_name;
+  assert.equal(isTradeOrPlaceName(` ${HOLON} `, ['plumber'], [HOLON]), true);
+  assert.equal(isTradeOrPlaceName('Plumber', ['plumber'], []), true);
+  assert.equal(isTradeOrPlaceName('leak detection', ['plumber'], [HOLON]), false);
+  const h = harness();
+  try {
+    // The 2026-11-25 harness typed the place names into the services question: the services list holds the trade and places.
+    const cookie = await throughFacts(h, { answers: HE_ANSWERS, over: { targetLocation: HOLON, specificCities: `${HOLON}, ${BAT_YAM}`, priorityServices: ['leak detection', 'plumber', HOLON, BAT_YAM], secondaryServices: `leak detection, plumber, ${HOLON}, ${BAT_YAM}` } });
+    await settle(cookie);
+    const record = readPreviewRecord(sessionOf(h, cookie).researchId!, h.researchBaseDir)!;
+    const dossier = (await readResearchDossier(record.researchId, h.researchBaseDir))!;
+    const briefs = buildPageBriefs(dossier, record.collectedData);
+    const home = briefs.find(brief => brief.page.pageClass === 'homepage')!;
+    const places = [home.site!.city, ...home.site!.serviceArea];
+    assert.ok(places.includes(HOLON) && places.includes(BAT_YAM), JSON.stringify(places));
+    assert.ok(home.site!.serviceLabels.length >= 1, JSON.stringify(home.site!.serviceLabels));
+    for (const label of home.site!.serviceLabels) assert.equal(isTradeOrPlaceName(label, [home.site!.pageName], places), false, label);
+    assert.ok(briefs.filter(brief => brief.page.pageClass !== 'homepage').length > home.site!.serviceLabels.length, 'the place pages still exist; only the home cards drop them');
+
+    // The renderer drops a card named like the trade or a place even when the copy carries one.
+    const seo = record.page.seo!;
+    const description = 'A full card description of the service, long enough.';
+    const page = { ...record.page, copy: { ...record.page.copy, serviceDetails: [{ name: seo.name, description }, { name: HOLON, description }, { name: BAT_YAM, description }, { name: 'leak detection', description }] } };
+    const index = renderResearchedSitePages({ ...researchedRenderInputs(record.collectedData, record.slug), data: record.collectedData, slug: record.slug, pages: [page], graphEdges: [] })['index.html'];
+    const headings = [...index.matchAll(/<li class="svc-card"[^>]*>[\s\S]*?<h3>([\s\S]*?)<\/h3>/g)].map(match => match[1].replace(/<[^>]+>/g, ''));
+    assert.deepEqual(headings, ['leak detection']);
+    const none = { ...page, copy: { ...page.copy, serviceDetails: [{ name: HOLON, description }] } };
+    const bare = renderResearchedSitePages({ ...researchedRenderInputs(record.collectedData, record.slug), data: record.collectedData, slug: record.slug, pages: [none], graphEdges: [] })['index.html'];
+    assert.doesNotMatch(bare, /data-section="service-details"/, 'no cards left: no services section');
+  } finally {
+    h.close();
+  }
 });

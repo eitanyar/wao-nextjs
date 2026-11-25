@@ -350,6 +350,11 @@ export interface SiteCopyShapeOptions {
    * fixed limit.
    */
   serviceLabels?: readonly string[];
+  /**
+   * First-screen fact v2 rule (a): heroSubheadline may be exactly '' (the person gate dropped it; site-bot/previewGeneration.ts
+   * gateSubheadlinePerson). Set only for the stored preview homepage (relaxation only).
+   */
+  emptySubheadline?: boolean;
 }
 
 /** The keys of one pair list that may be '' under these shape options. */
@@ -418,7 +423,7 @@ function stringPair(value: unknown, keys: readonly string[], limits: readonly nu
 
 /** M2b.1d: an ungenerated required string field may be exactly empty. */
 function allowedEmpty(key: string, value: unknown, options: SiteCopyShapeOptions): boolean {
-  return value === '' && (options.ungenerated ?? []).includes(key);
+  return value === '' && ((options.ungenerated ?? []).includes(key) || (key === 'heroSubheadline' && options.emptySubheadline === true));
 }
 
 /** Content depth: the optional-presence keys of the bounded validator (pitch / story, and the depth blocks). */
@@ -622,14 +627,44 @@ export function siteHeadlineRules(brief: Pick<PageBrief, 'site' | 'page'>, prior
 }
 
 /**
- * Site Bot step 2c, first-screen fact rule (c) (Yonatan sign-off 2026-11-25): the homepage brief of an interviewed owner
- * names the candidate facts in its FIRST_SCREEN_CONSTRAINT_ID constraint (interviewGeneration.ts), and this rule binds
- * heroSubheadline to carry one. Null for every other brief, so their prompts stay byte-identical.
+ * Site Bot step 2c, first-screen fact v2 rule (a) (Yonatan re-sign-off 2026-11-25): on the homepage of an interviewed owner
+ * (the FIRST_SCREEN_CONSTRAINT_ID constraint, interviewGeneration.ts) heroSubheadline is a free USP sentence in the H1's
+ * grammatical person and never carries an owner fact: the system renders his fact as a quote line under it
+ * (site-bot/firstScreenFact.ts). Null for every other brief, so their prompts stay byte-identical.
  */
 export const FIRST_SCREEN_CONSTRAINT_ID = 'first-screen-fact';
-export function firstScreenRule(brief: Pick<PageBrief, 'constraints' | 'page'>): string | null {
+export function firstScreenRule(brief: Pick<PageBrief, 'constraints' | 'page'> & { site?: Pick<NonNullable<PageBrief['site']>, 'serviceLabels'> }): string | null {
   if (brief.page.pageClass !== 'homepage' || !brief.constraints.some(item => item.id === FIRST_SCREEN_CONSTRAINT_ID)) return null;
-  return `- FIRST SCREEN (binding): heroSubheadline carries one owner fact named in the constraint ${FIRST_SCREEN_CONSTRAINT_ID}: the first listed fact that fits, in the owner's own words (keep its key words and every number exactly as he wrote them) and with its condition when it has one. It stays at most ${SITE_COPY_STRING_LIMITS.heroSubheadline} characters, one sentence built on a verb, and every other rule still applies. Never name the page's service together with the city in heroSubheadline (the title and the H1 carry them), and never move that fact into heroHeadline instead.`;
+  const labels = brief.site?.serviceLabels ?? [];
+  // 2026-11-26 (live preview FAIL on rule a; Noa): the override names every first-person instruction it beats, and the
+  // subheadline names no method the owner's verified services do not name.
+  return `- FIRST SCREEN (binding; for heroSubheadline it overrides every first-person instruction: the owner-voice rule, the pitch and the subject-pronoun pattern A): heroSubheadline is a free USP sentence written in the same grammatical person as heroHeadline: the third person about the business, with no first-person and no second-person forms (no "I", "my", "me", no "you", "your", in pronouns, verb forms or suffixes). Never add a first-person subject pronoun to it. At most ${SITE_COPY_STRING_LIMITS.heroSubheadline} characters, one sentence built on a verb, and every other rule still applies. Never name the page's service together with the city in heroSubheadline (the title and the H1 carry them). Never quote or paraphrase an owner fact from the interview in heroSubheadline or heroHeadline: the system shows one of his facts, in his exact words, in its own quote line under the subheadline. Never name a specific method, technique, tool or part of the work in heroSubheadline unless it is one of the owner's verified services${labels.length ? `: ${JSON.stringify(labels)}` : ''}.`;
+}
+
+/** Noa and the repair stage see heroSubheadline too: on a first-screen brief they get the same person rule (null elsewhere). */
+export function firstScreenEditorNote(brief: Pick<PageBrief, 'constraints' | 'page'> | undefined): string | null {
+  if (!brief || brief.page.pageClass !== 'homepage' || !brief.constraints.some(item => item.id === FIRST_SCREEN_CONSTRAINT_ID)) return null;
+  return 'FIRST SCREEN (binding): heroSubheadline is written in the third person about the business, in the same grammatical person as heroHeadline, by design. Never add a first-person or second-person form to it (no subject pronoun, possessive, object form, verb form or suffix of "I", "we", "you"). The owner-voice and subject-pronoun rules do not apply to this field.';
+}
+
+/**
+ * Noa's writing upgrades (2026-11-25), on every page of an interviewed owner (the interview writer constraints are on the
+ * brief, interviewGeneration.ts INTERVIEW_WRITER_CONSTRAINTS). Empty for every other brief (prompts byte-identical).
+ */
+export const INTERVIEW_BRIEF_MARKER_ID = 'constraint-fact-claim-link';
+export const INTERVIEW_WRITING_RULES: readonly string[] = [
+  '- ONE PERSON (binding): Keep one grammatical person across the H1 and the subheadline. Never put first-person owner words inside a sentence written in the page\'s voice. Quotes stay allowed only when presented as quotes.',
+  '- HONEST JOINS (binding): Don\'t join a fact to a claim with \'when\', \'because\', \'just like\' or \'so\' unless the fact itself states that relationship. If you can\'t join them honestly, keep them in separate sentences.',
+  // Noa's writing upgrades 2026-11-26 (live preview review). English and abstract: no example wording (rule examples leak).
+  '- ONE SCENE (binding): a story section\'s heading and its body name the same place, the same object and the same symptom.',
+  '- NO INVENTED METHOD (binding): never describe a method, tool or way of finding or diagnosing the problem that is not in the owner\'s facts or his verified services. Sensory detail may describe only the customer\'s experience, never the owner\'s technique.',
+  '- NO UNVERIFIABLE SENSATIONS (binding): no sounds, smells or textures the reader cannot check, unless the owner said them.',
+  '- SIBLING CARDS: no two serviceDetails descriptions share one sentence template. Vary the opening verb and the shape of the sentence from card to card.',
+  '- BODY WORDS: never use the same body part or sense word in more than one section of the page.',
+  '- PLAIN VERBS: say what happens with plain spoken verbs. Never a translated adjective-noun pair (a fault or safety adjective glued to a noun) and never a manner adverb tacked onto the end of a sentence.',
+];
+export function interviewWritingRules(brief: Pick<PageBrief, 'constraints'>): string[] {
+  return brief.constraints.some(item => item.id === INTERVIEW_BRIEF_MARKER_ID) ? [...INTERVIEW_WRITING_RULES] : [];
 }
 
 export function buildResearchCopyRules(brief: PageBrief, data: CollectedData = {}, siteTerms?: readonly string[]): string[] {
@@ -669,6 +704,7 @@ export function buildResearchCopyRules(brief: PageBrief, data: CollectedData = {
   ];
   const firstScreen = firstScreenRule(brief);
   if (firstScreen) rules.push(firstScreen);
+  rules.push(...interviewWritingRules(brief));
   if (site) {
     const scope = fixTimeScope(briefGateContext(brief, data));
     if (isInstallPage(brief)) {
@@ -2008,7 +2044,9 @@ async function repairFields(ctx: RepairContext, stage: CopyValidationStage, valu
   ctx.used++;
   ctx.emit({ stage, kind: 'repair', attempt: ctx.used, fields, violations });
   const system = !ctx.brief.site ? REPAIR_SYSTEM_PROMPT : ctx.promptVersion === 'v2' ? SITE_REPAIR_SYSTEM_PROMPT_V2 : SITE_REPAIR_SYSTEM_PROMPT;
-  const raw = await ctx.callJson(system, buildCopyRepairPrompt(value, violations, fields, ctx.gates), { thinkingBudget: 1000 });
+  // 2026-11-26: the repair system prompt carries the owner-voice and subject-pronoun rules; a first-screen subheadline is exempt.
+  const firstScreen = fields.includes('heroSubheadline') ? firstScreenEditorNote(ctx.brief) : null;
+  const raw = await ctx.callJson(system, `${buildCopyRepairPrompt(value, violations, fields, ctx.gates)}${firstScreen ? `\n\n${firstScreen}` : ''}`, { thinkingBudget: 1000 });
   const parsed = parseLoose(raw, rawMaxBytes(ctx.brief));
   if (!parsed.value) return value;
   const merged: Loose = { ...value };
@@ -2308,6 +2346,7 @@ export function buildResearchCopyRulesV2(brief: PageBrief, data: CollectedData =
     ...siteHeadlineRules(brief, priorHeroHeadlines),
     cutContractRules(brief)[0],
     ...(firstScreenRule(brief) ? [firstScreenRule(brief)!] : []),
+    ...interviewWritingRules(brief),
     ...(story ? [
       `- storyBody: the story section right below the hero, ${STORY_MIN_SENTENCES} to ${STORY_MAX_SENTENCES} sentences (at most ${limits.storyBody} characters): the felt scene of the reader's problem, his highest-tension moment, the owner's mechanism stated once, and an ending on the reader's outcome, never on the tool or the owner.`,
       `- storyHeadline: the story's heading (at most ${limits.storyHeadline} characters) or null. It names the scene or the mechanism in words of its own: never the hero's promise and never a sentence of storyBody.`,
@@ -2632,7 +2671,9 @@ export function buildNoaQaMessage(copy: SiteCopy, brief?: PageBrief): string {
   const labels = brief?.site?.serviceLabels ?? [];
   const layout: CopyLayout = brief ? { story: storyPage(brief), depth: depthLayout(brief), ...(longServiceLabelChars(labels) ? { serviceLabels: [...labels] } : {}) } : {};
   const depthNote = layout.depth?.length ? `\n\n${DEPTH_NOA_NOTE}` : '';
-  return `${JSON.stringify(shown)}\n\n${buildSiteCopyHardLimitsBlock('HARD LIMITS FOR YOUR CORRECTIONS (never lengthen a field past its limit)', omit, layout)}${fixed}${depthNote}`;
+  // 2026-11-26: Noa's system prompt says the owner speaks in the first person; the first-screen subheadline is exempt.
+  const firstScreen = firstScreenEditorNote(brief);
+  return `${JSON.stringify(shown)}\n\n${buildSiteCopyHardLimitsBlock('HARD LIMITS FOR YOUR CORRECTIONS (never lengthen a field past its limit)', omit, layout)}${fixed}${depthNote}${firstScreen ? `\n\n${firstScreen}` : ''}`;
 }
 
 export async function generateResearchPageCopy(

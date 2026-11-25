@@ -49,13 +49,13 @@ An eligible owner who holds a spot goes through these steps, with no human and n
       - `{name}` is the owner's first name if it is all Hebrew letters and 2–15 characters long. Otherwise it is `QUOTE_NAME_FALLBACK`.
       - The aria label is `OWNER_QUOTE_ARIA_LABEL` from `docs/copy/site-bot-owner-quote-attribution-2026-11-25.waocopy.json`.
       - The LLM never writes, rewrites or picks wording for this line. Record `firstScreenFactId` and `source: "quote_line"`.
-    - **(c) Eligibility and cleanup.** Checked in order; record the first failing reason.
+    - **(c) Eligibility and cleanup.** Checked in order; record the first failing reason. The (d) type gate and check 8 run right after check 1 (Yonatan, 2026-11-25), so a trust-bar duplicate logs `trust_bar_duplicate`, not a length reason.
       1. Status is `confirmed`, or `edited` (then use `ownerText`), and the text is an exact substring of his answer or ownerText.
       2. Cleanup may only trim whitespace, collapse double spaces, strip trailing `.,;:!?`, and remove ASCII `"` and `'`. It never adds, swaps or re-spells a word.
       3. Relative time words come from a closed list in code (לפני חודש/שבוע/שנה/יומיים, שבוע שעבר, חודש שעבר, אתמול, השבוע, החודש, השנה, לאחרונה, עכשיו, היום; build it from existing code lists or as `\u` escapes, never by typing Hebrew). If the time phrase opens the quote, take the exact contiguous substring after it (and after a following comma or space) and re-run every check. A time word anywhere else rejects the fact (`time_word`).
       4. 4–12 words and at most 80 characters after cleanup. Never cut to fit (`too_long` / `too_short`).
       5. At least 85% of letters are Hebrew. No Latin letters in v1. No ₪, no digit group of 7 or more, no URL or @.
-      6. Gibberish: a token of 3+ letters with no Hebrew vowel-letter pattern that fails a check for English typed on a Hebrew keyboard, or a letter repeated 3+ times in a row (`gibberish`).
+      6. Gibberish: a Hebrew token of 3+ letters with a final-form letter before its last letter, or a letter repeated 3+ times in a row (`gibberish`). (Yonatan, 2026-11-25: no vowel-letter condition, since English typed on a Hebrew keyboard often yields vowel letters.)
       7. A fact with a `condition` qualifies only if the condition is inside the quoted substring.
       8. Not a trust-bar duplicate: a number or credential the trust bar already shows is not eligible.
     - **(d) Priority.**

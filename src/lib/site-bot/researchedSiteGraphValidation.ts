@@ -22,7 +22,8 @@ function requireSiteCopy(value: SiteCopy, classification: string): void {
   ];
   // M2b.1d: a page type that does not render the about section does not generate it (an empty about pair is valid there).
   // Copy v2 slice 2: the strings a research site never renders may be empty on every page type.
-  const mayBeEmpty: readonly string[] = [...(ABOUT_SECTION_CLASSES.has(classification) ? [] : ABOUT_PAIR), ...UNRENDERED_STRINGS];
+  // First-screen fact v2 rule (a): a homepage subheadline the person gate dropped is '' (no subheadline renders).
+  const mayBeEmpty: readonly string[] = [...(ABOUT_SECTION_CLASSES.has(classification) ? [] : ABOUT_PAIR), ...UNRENDERED_STRINGS, ...(classification === 'homepage' ? ['heroSubheadline'] : [])];
   if (requiredStrings.some(key => typeof value[key] !== 'string' || (!(value[key] as string).trim() && !(mayBeEmpty.includes(key) && value[key] === '')))) {
     throw new Error('Research page copy is malformed.');
   }

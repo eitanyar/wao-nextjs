@@ -42,6 +42,7 @@ import {
 import { readResearchDossier, writeResearchDossierAtomic } from './research/researchStore';
 import { defaultInterviewDeps } from './interviewDeps';
 import { isInterviewFactSet } from './interviewFacts';
+import { answerTexts } from './interviewQuestions';
 import { SITE_BOT_STEP2C_COPY as COPY } from './step2cCopy.generated';
 
 /**
@@ -207,6 +208,7 @@ function startRun(session: InterviewSession, round: number, firstAttempt: number
       const outcome = await withTimeout(signal => deps.generate({
         sessionId: session.id, researchId, round, answersVersion: fresh.answersVersion, collectedData: fresh.collectedData ?? session.collectedData!,
         workLocation: fresh.workLocation, publishedAddress: candidate?.formattedAddress ?? null,
+        answers: fresh.interviewState ? answerTexts(fresh.interviewState) : null,
       }, signal), deps.timeoutMs).catch((): PreviewGenerationOutcome => ({ ok: false, reason: 'generation_error', usage: [] }));
       if (!await appendProviderUsage(researchId, outcome.usage, deps.now(), deps.researchBaseDir)) {
         if (outcome.usage.length) deps.log(`[site-bot preview] usage not recorded session=${session.id} round=${round}`);

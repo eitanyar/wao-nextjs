@@ -1,3 +1,5 @@
+// First: WAO_CLIENTS_DIR -> a scratch dir (client.ts reads clientsDir() at load), never data/clients/.
+import { SCRATCH_CLIENTS_DIR } from '../scratchClientsDir.testkit';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'fs';
@@ -11,15 +13,11 @@ import {
   type GeoClientRecord,
 } from './client';
 
-// Test-hygiene note: CLIENTS_DIR in client.ts resolves via
-// `path.join(process.cwd(), 'data', 'clients')` with no env/param seam to
-// redirect it to a temp directory. Rather than force a seam into existence
-// for this task, this suite operates against a throwaway, self-cleaning
-// clientId under the REAL data/clients dir. Cleanup is unconditional
-// (try/finally, and swept once more up front in case a prior run crashed
-// mid-test) so no synthetic data ever lingers as stray client data.
+// Test-hygiene note (2026-11-25): client.ts resolves CLIENTS_DIR through dataRoots.clientsDir(), so this suite runs
+// against a scratch WAO_CLIENTS_DIR (scratchClientsDir.testkit.ts), never the real data/clients dir. Cleanup stays
+// unconditional (try/finally, and swept once more up front).
 const TEST_CLIENT_ID = '__test-sitebot-bridge__';
-const CLIENTS_DIR = path.join(process.cwd(), 'data', 'clients');
+const CLIENTS_DIR = SCRATCH_CLIENTS_DIR;
 const TEST_CLIENT_DIR = path.join(CLIENTS_DIR, TEST_CLIENT_ID);
 
 function cleanup() {

@@ -30,3 +30,11 @@ test('billing outbox: SITE_BOT_EMAIL_OUTBOX_PATH (absolute) wins; a relative or 
     fs.rmSync(dir, { recursive: true, force: true });
   }
 });
+
+// `npm run test` sources scripts/test-scratch-env.sh: the outbox is a scratch file, never under data/.
+test('npm run test points SITE_BOT_EMAIL_OUTBOX_PATH at a scratch file outside data/', { skip: process.env.npm_lifecycle_event !== 'test' }, () => {
+  const configured = process.env.SITE_BOT_EMAIL_OUTBOX_PATH ?? '';
+  assert.ok(path.isAbsolute(configured), configured);
+  assert.ok(!path.resolve(configured).startsWith(path.join(process.cwd(), 'data') + path.sep), configured);
+  assert.equal(billingOutboxPath(), configured);
+});

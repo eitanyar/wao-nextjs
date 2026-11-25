@@ -6,8 +6,9 @@
  *   research dossier (must be copy_ready-able: researchToSite.generationReadiness) -> owner gate answers
  *   (gateAnsweredCollectedData) -> the interview facts and the work-location framing (interviewGeneration.ts) -> the
  *   copy_ready plan (persisted once; the post-pay run reuses it) -> buildPageBriefs (homepage brief with the facts and the
- *   first-screen constraint) -> generateResearchPageCopy (Tamar -> Noa -> gates, unchanged) -> the first-screen
- *   resolution (firstScreenFact.ts). Nothing is written to the sites dir and nothing deploys: the generation record lives
+ *   first-screen constraint: a free USP subheadline) -> generateResearchPageCopy (Tamar -> Noa -> gates, unchanged) ->
+ *   the owner quote line, chosen and built by code before the model runs (firstScreenFact.ts selectFirstScreen, rule v2
+ *   a-h) and set on the page (page.ownerQuote). Nothing is written to the sites dir and nothing deploys: the generation record lives
  *   next to the dossier (<research>/<id>/preview-home.json) and only the cookie-gated preview route reads it.
  *
  * Remaining pages (generateRemainingPages, from the paid checkout callback): the same plan and the same generation data
@@ -31,15 +32,17 @@ import { selectLlmProvider } from '../ai/llmProvider';
 import type { SiteCopy } from '../lp/lpCopyPrompt';
 import { CTA_LABEL_SETS } from '../lp/generationData';
 import {
-  assertBoundedGeneratedSiteCopy, codeBuiltTrustBar, generateResearchPageCopy, GeneratedCopyValidationError, shapeOptions, withSystemFields,
-  type QwenJsonCaller,
+  assertBoundedGeneratedSiteCopy, briefGateContext, codeBuiltTrustBar, emDashText, firstScreenRule, generateResearchPageCopy, GeneratedCopyValidationError,
+  REDUPLICATION_RULE, shapeOptions, SITE_COPY_STRING_LIMITS, TYPOGRAPHY_RULE, withSystemFields, type CopyRepairEvent, type QwenJsonCaller,
 } from '../lp/researchPageCopy';
-import { pageNameWithCity, renderResearchedSitePages, researchedServiceAreas, type ResearchedSitePage } from '../lp/researchedSite';
+import { runCopyGates } from '../lp/copyGates';
+import { pageNameWithCity, renderResearchedSitePages, type ResearchedSitePage } from '../lp/researchedSite';
 import { flashCostUsd } from './factExtraction';
 import {
-  anchorExclusions, firstScreenCandidates, resolveFirstScreen, trustBarNumbers, usableFacts,
-  type CredentialTrustItem, type FirstScreenOutcome, type UsableFact,
+  anchorExclusions, firstScreenMissingLine, renderedFactIds, selectFirstScreen, subheadlineCarriesFact, trustBarNumbers, usableFacts,
+  withoutTrustBarFallback, type CredentialTrustItem, type FirstScreenAnswer, type FirstScreenOutcome, type UsableFact,
 } from './firstScreenFact';
+import { SITE_BOT_OWNER_QUOTE_COPY } from './ownerQuoteCopy.generated';
 import { interviewGenerationData, writerFacts } from './interviewGeneration';
 import { isInterviewFactSet, type InterviewFactSet } from './interviewFacts';
 import { ISRAELI_LOCALITIES } from './israeliLocalities';
@@ -57,6 +60,7 @@ import {
 import { createPlaceIdChecker, type PlaceIdChecker } from './placeIdRefresh';
 import { resolveSiteIdentity, siteIdentityInput, type SiteIdentityModelCall } from './siteIdentity';
 import { deriveSiteSlug, isSafeSiteSlug } from './siteSlug';
+import { personExemptNames, subheadlinePersonHits } from './subheadlinePerson';
 import type { WorkLocation } from './workLocation';
 
 export const PREVIEW_RECORD_FILE = 'preview-home.json';
@@ -97,10 +101,14 @@ export interface PreviewHomeRecord {
   /** The generation data (gate answers, framing, facts applied); the post-pay run generates from the same data. */
   collectedData: CollectedData;
   page: ResearchedSitePage;
-  /** Rule (a): the fact the first screen carries (subheadline, else a credential trust-bar item). */
+  /** First-screen fact v2: the quote line's fact (else a credential trust-bar item), with every candidate's reason. */
   firstScreen: FirstScreenOutcome;
-  /** The interview facts the brief handed to the writer (the input side of step 3's ledger). */
+  /** The interview facts that truly appear in the rendered homepage (firstScreenFact.ts renderedFactIds). */
   usedFactIds: string[];
+  /** The interview facts the brief handed to the writer (the input side of step 3's ledger), rendered or not. */
+  briefFactIds: string[];
+  /** Rule (a) watch: facts the subheadline appears to carry (word overlap); it should be empty. */
+  subheadlineFactIds: string[];
   generation: { model: PreviewModelMode; ms: number; calls: number; costUsd: number };
 }
 
@@ -192,10 +200,21 @@ export function recordingSiteCopyCaller(rows: ProviderUsage[], options: { now: (
   };
 }
 
+/**
+ * The pipeline's diagnostic events as one log line each: stage, kind, attempt, field names and rule ids only (never copy
+ * text), so a run's repairs can be traced afterwards (the 2026-11-25 live preview had a repair round and no record of it).
+ */
+export function copyEventLine(pageId: string, event: CopyRepairEvent): string {
+  const rules = [...new Set((event.violations ?? []).map(violation => `${violation.field}:${violation.rule}`))].join(',');
+  return `[site-bot copy] page=${pageId} stage=${event.stage} kind=${event.kind}${event.attempt ? ` attempt=${event.attempt}` : ''}`
+    + `${event.fields?.length ? ` fields=${event.fields.join(',')}` : ''}${rules ? ` rules=${rules}` : ''}${event.fixes?.length ? ` fixes=${event.fixes.length}` : ''}`;
+}
+
 /** The default page writer of the researched path (the same options runResearchToSite passes). */
-export function researchedCopyWriter(callJson: QwenJsonCaller) {
+export function researchedCopyWriter(callJson: QwenJsonCaller, log: (line: string) => void = line => console.error(line)) {
   return (brief: PageBrief, data: CollectedData, site?: ResearchedSiteGenerationContext): Promise<SiteCopy> => generateResearchPageCopy(brief, data, {
     callJson,
+    onEvent: event => log(copyEventLine(brief.page.id, event)),
     ...(site ? {
       priorHeroHeadlines: site.priorHeroHeadlines, priorAboutPageHeadlines: site.priorAboutPageHeadlines, priorAboutPageBodies: site.priorAboutPageBodies,
       ...(site.priorHeroSubheadlines ? { priorHeroSubheadlines: site.priorHeroSubheadlines } : {}), priorHeroFacts: site.priorHeroFacts,
@@ -215,13 +234,16 @@ function clipWords(text: string, max: number): string {
   return (space > 0 ? cut.slice(0, space) : clean.slice(0, max)).trim();
 }
 
-/** A deterministic, zero-network homepage / service copy for rehearsals: never used in production (previewModelMode). */
-export function fixtureCopyWriter(firstScreen: readonly UsableFact[], writer: readonly UsableFact[]) {
+/**
+ * A deterministic, zero-network homepage / service copy for rehearsals: never used in production (previewModelMode).
+ * First-screen fact v2 (a): the subheadline never carries an owner fact or his first-person usp; the fixture has no
+ * model to write a third-person USP sentence, so it shows the business name.
+ */
+export function fixtureCopyWriter(writer: readonly UsableFact[]) {
   return async (brief: PageBrief, data: CollectedData): Promise<SiteCopy> => {
     const site = brief.site;
     if (!site) throw new Error('fixture writer needs site facts');
-    const lead = brief.page.pageClass === 'homepage' ? firstScreen[0]?.text : undefined;
-    const sub = clipWords(lead ?? (typeof data.usp === 'string' && data.usp.trim() ? data.usp : site.businessName), 90);
+    const sub = clipWords(site.businessName, 90);
     const body = clipWords([...writer.map(fact => fact.text), typeof data.usp === 'string' ? data.usp : ''].filter(Boolean).join('. ') || site.businessName, 380);
     const copy: Record<string, unknown> = {
       heroHeadline: clipWords(pageNameWithCity(site.pageName, site.city), 68),
@@ -261,16 +283,72 @@ function fixtureDelay(value: string | undefined, signal?: AbortSignal): Promise<
 }
 
 // ---------------------------------------------------------------------------------------------------------------------
+// First-screen fact v2 rule (a): the subheadline's person gate
+
+/** The one-field repair's system prompt: no owner-voice rule (the shared prompts' "the owner speaks in the first person"). */
+export const SUBHEADLINE_PERSON_REPAIR_SYSTEM = `You are Tamar, a Hebrew conversion copywriter. You are rewriting one field of a site-copy JSON object. Return only a JSON object with exactly the key heroSubheadline, with no prose or markdown.\n\n${TYPOGRAPHY_RULE} ${REDUPLICATION_RULE}`;
+
+/** The one-field repair request (English; the Hebrew in it is the page's own copy and the forms the gate found). */
+export function subheadlinePersonRepairPrompt(brief: PageBrief, copy: SiteCopy, found: readonly string[]): string {
+  const rule = firstScreenRule(brief);
+  return `heroSubheadline breaks the first-screen person rule: it uses first-person or second-person forms (found: ${JSON.stringify(found)}). Rewrite it.
+
+RULES:
+- Write it in the same grammatical person as heroHeadline: the third person about the business. No first-person and no second-person form anywhere: no pronoun, possessive, object form, verb form or suffix of "I", "we", "my", "our", "me", "us", "you" or "your".
+${rule ? `${rule}\n` : ''}- Keep its meaning and its facts. Never add a claim, number, name, place, method or promise that is not already in the current value or in heroHeadline.
+- At most ${SITE_COPY_STRING_LIMITS.heroSubheadline} characters (aim for 75), one sentence built on a verb, with no final period.
+
+heroHeadline (never change it; match its grammatical person): ${JSON.stringify(copy.heroHeadline)}
+Current heroSubheadline: ${JSON.stringify(copy.heroSubheadline)}`;
+}
+
+export type SubheadlinePersonOutcome = 'ok' | 'repaired' | 'dropped';
+
+/**
+ * Rule (a)'s code gate (Adam 2026-11-26, after the live preview shipped a first-person subheadline into the H2 line, the
+ * meta description, og:description and the JSON-LD description): a subheadline with a first- or second-person form gets one
+ * repair round (SUBHEADLINE_PERSON_REPAIR_SYSTEM; the fixture mode has no model and skips it). A repaired value must pass
+ * this gate, the length limit and every copy gate on the field. Otherwise the subheadline is dropped: '' renders no
+ * subheadline, the meta description falls back to the trade + city anchor alone, and `subheadline_person_fail` is logged.
+ * Never a placeholder. Every surface that reads the subheadline (the hero line, the meta and og descriptions, the
+ * Service JSON-LD description) reads the gated value, since the page is built from the returned copy.
+ */
+export async function gateSubheadlinePerson(
+  copy: SiteCopy,
+  brief: PageBrief,
+  data: CollectedData,
+  options: { callJson: QwenJsonCaller | null; log: (line: string) => void; sessionId: string; round: number },
+): Promise<{ copy: SiteCopy; outcome: SubheadlinePersonOutcome }> {
+  const exempt = personExemptNames(data.ownerName, brief.site?.businessName ?? data.businessName);
+  const hits = subheadlinePersonHits(copy.heroSubheadline, exempt);
+  if (!hits.length) return { copy, outcome: 'ok' };
+  const where = `session=${options.sessionId} round=${options.round}`;
+  if (options.callJson) {
+    try {
+      const raw = await options.callJson(SUBHEADLINE_PERSON_REPAIR_SYSTEM, subheadlinePersonRepairPrompt(brief, copy, hits.map(hit => hit.token)));
+      const parsed: unknown = JSON.parse(raw);
+      const value = parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? (parsed as Record<string, unknown>).heroSubheadline : undefined;
+      const next = typeof value === 'string' ? emDashText(value.replace(/\s+/gu, ' ').trim()).replace(/\.+$/u, '').trim() : '';
+      const candidate: SiteCopy = { ...copy, heroSubheadline: next };
+      if (next && next.length <= SITE_COPY_STRING_LIMITS.heroSubheadline && !subheadlinePersonHits(next, exempt).length
+        && !runCopyGates(candidate as unknown as Record<string, unknown>, briefGateContext(brief, data)).some(hit => hit.field === 'heroSubheadline')) {
+        options.log(`[site-bot preview] subheadline_person_repaired ${where} forms=${hits.length}`);
+        return { copy: candidate, outcome: 'repaired' };
+      }
+    } catch {
+      // A failed or unparseable repair call drops the subheadline like a failed repair.
+    }
+  }
+  options.log(`[site-bot preview] subheadline_person_fail ${where} forms=${hits.length} persons=${[...new Set(hits.map(hit => hit.person))].join(',')}`);
+  return { copy: { ...copy, heroSubheadline: '' }, outcome: 'dropped' };
+}
+
+// ---------------------------------------------------------------------------------------------------------------------
 // Shared preparation
 
 function currentFactSet(dossier: SiteResearchDossier, answersVersion: number): InterviewFactSet | null {
   const set = dossier.interviewFacts;
   return isInterviewFactSet(set) && set.answersVersion === answersVersion ? set : null;
-}
-
-function priorityOrdered(candidates: readonly UsableFact[], writer: readonly UsableFact[]): UsableFact[] {
-  const ids = new Set(candidates.map(fact => fact.id));
-  return [...candidates, ...writer.filter(fact => !ids.has(fact.id))];
 }
 
 /** Appends usage rows to the dossier on a FRESH read (a concurrent writer is never overwritten). */
@@ -302,6 +380,17 @@ function credentialTrustItems(brief: PageBrief, data: CollectedData, usable: rea
 
 const htmlText = (value: string) => value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
+/** The visible text of rendered pages (scripts, styles and tags dropped, the renderer's entities decoded). */
+export function visibleText(html: string): string {
+  return html.replace(/<script\b[\s\S]*?<\/script>/gi, ' ').replace(/<style\b[\s\S]*?<\/style>/gi, ' ').replace(/<[^>]*>/g, ' ')
+    .replace(/&nbsp;|\u00A0/g, ' ').replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&');
+}
+
+/** The credential facts whose code-built trust-bar item is in the rendered html. */
+function shownCredentials(items: readonly CredentialTrustItem[], html: string): string[] {
+  return items.filter(entry => entry.item && html.includes(htmlText(entry.item))).map(entry => entry.factId);
+}
+
 // ---------------------------------------------------------------------------------------------------------------------
 // The preview
 
@@ -314,6 +403,8 @@ export interface PreviewGenerationInput {
   workLocation: WorkLocation | null;
   /** The business's published Google address (audit candidate formattedAddress), for the MIX framing. */
   publishedAddress: string | null;
+  /** His answers (interviewQuestions.answerTexts), for the quote line's substring check; absent = no answer quote. */
+  answers?: readonly FirstScreenAnswer[] | null;
 }
 
 export interface PreviewGenerationDeps {
@@ -372,42 +463,52 @@ export async function generatePreviewHomepage(input: PreviewGenerationInput, dep
 
     const plainHome = buildPageBriefs(planned, data).find(brief => brief.page.pageClass === 'homepage');
     if (!plainHome?.site) return failed('no_homepage');
-    const context = {
+    const credentialItems = credentialTrustItems(plainHome, data, usable);
+    // First-screen fact v2 (b-e): code picks the quote line before the model runs; the model never sees or words it.
+    const selected = selectFirstScreen(prepared.set, {
       // The homepage covers every owner-confirmed service (interviewFactsFlow.dossierServices ids).
       homeServiceIds: planned.businessTruth.assertions.filter(assertion => assertion.id.startsWith('owner-service:')).map(assertion => assertion.id),
-      serviceAreas: researchedServiceAreas({ seo: { name: plainHome.site.pageName, city: plainHome.site.city, serviceArea: plainHome.site.serviceArea } }),
       localities: ISRAELI_LOCALITIES,
       trustBarNumbers: trustBarNumbers(codeBuiltTrustBar(plainHome, data) ?? []),
-    };
-    const candidates = firstScreenCandidates(usable, context);
-    const ordered = priorityOrdered(candidates, writer);
-    const home = buildPageBriefs(planned, data, { facts: ordered, firstScreen: candidates, workLocation: input.workLocation })
+      trustBarCredentialIds: credentialItems.filter(entry => entry.item).map(entry => entry.factId),
+      answers: input.answers ?? null,
+    }, { ownerName: data.ownerName, copy: SITE_BOT_OWNER_QUOTE_COPY, credentialItems });
+    const home = buildPageBriefs(planned, data, { facts: writer, firstScreen: true, workLocation: input.workLocation })
       .find(brief => brief.page.pageClass === 'homepage')!;
-    const usedFactIds = home.firstPartyProof.filter(item => item.id.startsWith('interview-')).map(item => item.id.slice('interview-'.length));
+    const briefFactIds = home.firstPartyProof.filter(item => item.id.startsWith('interview-')).map(item => item.id.slice('interview-'.length));
 
-    const writeCopy = deps.generateCopy ?? (mode === 'fixture' ? fixtureCopyWriter(candidates, ordered) : researchedCopyWriter(callJson));
+    const writeCopy = deps.generateCopy ?? (mode === 'fixture' ? fixtureCopyWriter(writer) : researchedCopyWriter(callJson, log));
     // Rehearsals only (fixture mode never runs in production): SITE_BOT_PREVIEW_FIXTURE_DELAY_MS keeps the generating
     // screen up long enough to see and poll it (capped at 2 minutes).
     if (mode === 'fixture' && !deps.generateCopy) await fixtureDelay(process.env.SITE_BOT_PREVIEW_FIXTURE_DELAY_MS, deps.signal);
-    const copy = await writeCopy(home, structuredClone(data), siteGenerationContext([], []));
-    assertBoundedGeneratedSiteCopy(copy, shapeOptions(home));
-    const page = researchedPageFromCopy(home, copy);
+    const written = await writeCopy(home, structuredClone(data), siteGenerationContext([], []));
+    assertBoundedGeneratedSiteCopy(written, shapeOptions(home));
+    // Rule (a): the subheadline's person gate (one repair round, else no subheadline).
+    const { copy } = await gateSubheadlinePerson(written, home, data, {
+      callJson: mode === 'live' || deps.callJson ? callJson : null, log, sessionId: input.sessionId, round: input.round,
+    });
+    const page: ResearchedSitePage = { ...researchedPageFromCopy(home, copy), ...(selected.quoteLine ? { ownerQuote: { ...selected.quoteLine } } : {}) };
 
     const slug = deriveSiteSlug(data);
     if (!isSafeSiteSlug(slug)) return failed('slug_invalid');
     const html = renderResearchedSitePages({ ...researchedRenderInputs(data, slug), data, slug, pages: [page], graphEdges: [] })['index.html'];
     if (!html) return failed('render_failed');
 
-    const rendered = (page.copy.trustBarItems ?? []).filter(item => html.includes(htmlText(item)));
-    const firstScreen = resolveFirstScreen(page.copy.heroSubheadline, candidates, credentialTrustItems(home, data, usable), rendered,
-      anchorExclusions(home.site!.pageName, home.site!.city, home.site!.businessName), context.localities);
+    const shown = shownCredentials(credentialItems, html);
+    // Rule (e): the trust-bar fallback counts only when its item is in the rendered page.
+    const firstScreen = selected.source === 'trust_bar' && !shown.includes(selected.firstScreenFactId ?? '') ? withoutTrustBarFallback(selected) : selected;
     // Rule (e): the preview still renders; step 3's gate reads this line.
-    if (firstScreen.missing) log(`[site-bot preview] first_screen_fact_missing session=${input.sessionId} round=${input.round} candidates=${firstScreen.candidateIds.length}`);
+    if (firstScreen.missing) log(firstScreenMissingLine(input.sessionId, input.round, firstScreen));
+    const usedFactIds = renderedFactIds(usable, visibleText(html), firstScreen, shown);
+    // Rule (a) watch: the subheadline should carry no owner fact (word overlap; anchors, places and time words never count).
+    const exclude = anchorExclusions(home.site!.pageName, home.site!.city, home.site!.businessName);
+    const subheadlineFactIds = writer.filter(fact => subheadlineCarriesFact(page.copy.heroSubheadline, fact, exclude, ISRAELI_LOCALITIES)).map(fact => fact.id);
+    if (subheadlineFactIds.length) log(`[site-bot preview] first_screen_subheadline_carries_fact session=${input.sessionId} round=${input.round} facts=${subheadlineFactIds.join(',')}`);
 
     const record: PreviewHomeRecord = {
       version: 1, researchId: input.researchId, round: input.round, slug, createdAt: deps.now().toISOString(),
       answersVersion: input.answersVersion, factsConfirmedAt: prepared.set?.confirmedAt ?? null, workLocation: input.workLocation,
-      collectedData: data, page, firstScreen, usedFactIds,
+      collectedData: data, page, firstScreen, usedFactIds, briefFactIds, subheadlineFactIds,
       generation: {
         model: mode, ms: Date.now() - started, calls: usage.length,
         costUsd: Number(usage.reduce((sum, row) => sum + (row.estimatedCostUsd ?? 0), 0).toFixed(6)),
@@ -437,7 +538,10 @@ export type RemainingPagesOutcome =
   | { ok: true; slug: string; pages: string[]; generatedPageIds: string[]; usage: ProviderUsage[] }
   | { ok: false; reason: string; usage: ProviderUsage[] };
 
-/** The site record also carries what step 3's ledger reads: the first-screen fact and the facts the writer got. */
+/**
+ * The site record also carries what step 3's ledger reads: the first-screen fact and the facts that truly appear in the
+ * rendered site (every page, firstScreenFact.ts renderedFactIds), never merely the facts the briefs handed to the writer.
+ */
 export interface InterviewFactUse {
   previewRound: number;
   firstScreenFactId: string | null;
@@ -465,8 +569,9 @@ export async function generateRemainingPages(preview: PreviewHomeRecord, deps: R
     if (!generationReadiness(dossier).ready || dossier.status !== 'copy_ready' || !isPlannedDossier(dossier)) return failed('plan_missing');
     const data = preview.collectedData;
     const set = currentFactSet(dossier, preview.answersVersion);
-    const writer = writerFacts(usableFacts(set));
-    const briefs = buildPageBriefs(dossier, data, { facts: writer, firstScreen: [], workLocation: preview.workLocation });
+    const usable = usableFacts(set);
+    const writer = writerFacts(usable);
+    const briefs = buildPageBriefs(dossier, data, { facts: writer, firstScreen: false, workLocation: preview.workLocation });
     const home = briefs.find(brief => brief.page.pageClass === 'homepage');
     if (!home || home.page.id !== preview.page.opportunityId) return failed('home_mismatch');
     const graphEdges = buildGraphEdges(briefs);
@@ -484,7 +589,7 @@ export async function generateRemainingPages(preview: PreviewHomeRecord, deps: R
     if (!slug) return failed('slug_conflict');
 
     const generated: string[] = [];
-    const writeCopy = deps.generateCopy ?? (mode === 'fixture' ? fixtureCopyWriter([], writer) : researchedCopyWriter(callJson));
+    const writeCopy = deps.generateCopy ?? (mode === 'fixture' ? fixtureCopyWriter(writer) : researchedCopyWriter(callJson));
     const record: ResearchedSiteGenerationRecord & { interviewFactUse?: InterviewFactUse } = await buildResearchedSiteGeneration(
       { slug, researchId: preview.researchId, collectedData: data, dossier, pageBriefs: briefs, graphEdges },
       {
@@ -495,11 +600,14 @@ export async function generateRemainingPages(preview: PreviewHomeRecord, deps: R
         ...(deps.checkPlaceId === null ? {} : { checkPlaceId: deps.checkPlaceId ?? createPlaceIdChecker() }),
       },
     );
+    const rendered = Object.values(renderResearchedSitePages({ ...researchedRenderInputs(data, slug), data, slug, pages: record.researchedPages, graphEdges })).join('\n');
+    const plainHome = buildPageBriefs(dossier, data).find(brief => brief.page.pageClass === 'homepage') ?? home;
+    const shown = shownCredentials(credentialTrustItems(plainHome, data, usable), rendered);
     record.interviewFactUse = {
       previewRound: preview.round,
       firstScreenFactId: preview.firstScreen.firstScreenFactId,
       firstScreenSource: preview.firstScreen.source,
-      usedFactIds: preview.usedFactIds,
+      usedFactIds: renderedFactIds(usable, visibleText(rendered), preview.firstScreen, shown),
     };
     await persistResearchedSiteRecordAtomic(record, {
       sitesRoot: deps.sitesRoot,

@@ -32,7 +32,12 @@ const ROOT = path.resolve(__dirname, '../../..');
  * `pageNameWithCity(trade, city) + " \u2014 " + heroSubheadline`. Rewriting only those two attributes of index.html back to
  * the heroSubheadline reproduces the previous hash df9a1823...b3cd4 byte for byte, so nothing else moved.
  */
-const GOLDEN_LOOK_OFF = '4f7b5716bcb92492d2783fcc20b8abd2aff24713dd90652ef61183b99b2ce03e';
+/**
+ * Re-pinned 2026-11-25 for the Fable 5.2 anti-slop P1 (no neutral-icon tile on a service card): re-inserting the
+ * `<span class="tile">` with the #i-svc icon into the 4 tileless cards reproduces the previous hash 4f7b5716...ce03e byte
+ * for byte, so nothing else moved.
+ */
+const GOLDEN_LOOK_OFF = '147a5f840fbeed281eeeb0472a686321d94029dbef4a13801b910ac350b4cfd5';
 
 function siteHash(files: Record<string, string>): string {
   const hash = createHash('sha256');

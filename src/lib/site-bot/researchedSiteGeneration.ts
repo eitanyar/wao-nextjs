@@ -279,7 +279,8 @@ export async function buildResearchedSiteGeneration(
       if (reused.opportunityId !== brief.page.id || reused.classification !== brief.page.pageClass || reused.targetPath !== brief.page.targetPath) {
         fail('Reused page does not match its brief.');
       }
-      assertBoundedGeneratedSiteCopy({ ...reused.copy, ...(reused.pitch ? { pitch: reused.pitch } : {}) }, shapeOptions(brief));
+      // First-screen fact v2 rule (a): the preview homepage's subheadline may be '' (dropped by the person gate).
+      assertBoundedGeneratedSiteCopy({ ...reused.copy, ...(reused.pitch ? { pitch: reused.pitch } : {}) }, { ...shapeOptions(brief), ...(brief.page.pageClass === 'homepage' ? { emptySubheadline: true } : {}) });
       heroFacts.push(heroCapFacts(brief, reused.copy));
       pages.push(structuredClone(reused));
       continue;

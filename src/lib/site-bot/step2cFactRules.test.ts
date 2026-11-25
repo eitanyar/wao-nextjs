@@ -1,6 +1,7 @@
 /**
  * Site Bot step 2c fix (Yonatan sign-off 2026-11-25, C3 + first-screen check): a job needs the work in it, a callerQuestion
  * answer is never a job, and place / time words never count as carrying a fact.
+ * (v2: the carry check is now only the rule (a) watch; the first-screen eligibility is firstScreenFact.ts firstScreenCheck.)
  * The Hebrew strings are the real-run facts and subheadline of the 2026-11-25 live run, copied byte-exact as \u escapes.
  * HEBREW-SAFETY: this file contains ZERO Hebrew bytes.
  */
@@ -9,8 +10,7 @@ import test from 'node:test';
 
 import { retypeModelFacts } from './factRetype';
 import {
-  firstScreenCandidates, firstScreenIneligibility, hasWorkContent, isTimeWord, resolveFirstScreen, subheadlineCarriesFact, usableFacts,
-  type FirstScreenContext,
+  firstScreenCheck, hasWorkContent, isTimeWord, subheadlineCarriesFact, type FirstScreenContext,
 } from './firstScreenFact';
 import type { InterviewFact } from './interviewFacts';
 import { ISRAELI_LOCALITIES } from './israeliLocalities';
@@ -30,7 +30,13 @@ const REFUSAL = '\u05DC\u05E4\u05E0\u05D9 \u05D7\u05D5\u05D3\u05E9 \u05DE\u05D9\
 const REAL_SUBHEADLINE = '\u05EA\u05E8\u05D0\u05D4 \u05D1\u05E6\u05D2 \u05DE\u05D4 \u05E4\u05D5\u05D2\u05E2 \u05D1\u05E6\u05D9\u05E0\u05D5\u05E8, \u05D1\u05D3\u05D9\u05D5\u05E7 \u05DB\u05DE\u05D5 \u05D1\u05E9\u05D1\u05D5\u05E2 \u05E9\u05E2\u05D1\u05E8 \u05D1\u05DB\u05E4\u05E8 \u05E1\u05D1\u05D0';
 
 const CONTEXT: FirstScreenContext = {
-  homeServiceIds: [], serviceAreas: [RAANANA, KFAR_SABA], localities: ISRAELI_LOCALITIES, trustBarNumbers: ['15'],
+  homeServiceIds: [], localities: ISRAELI_LOCALITIES, trustBarNumbers: ['15'], trustBarCredentialIds: [],
+  answers: [
+    { key: 'recentJob', part: 'answer', text: LAST_WEEK_IN_KFAR_SABA },
+    { key: 'callerQuestion', part: 'answer', text: CALLER_QUESTION },
+    { key: 'areaPattern', part: 'answer', text: MOST_WORK_LOCAL },
+    { key: 'turnedDown', part: 'answer', text: REFUSAL },
+  ],
 };
 
 function modelFact(id: string, type: InterviewFact['type'], quote: string, questionKey: 'recentJob' | 'callerQuestion' | 'areaPattern' | 'turnedDown'): InterviewFact {
@@ -71,19 +77,19 @@ test('C3 (i)+(ii) at extraction: the place+time job becomes local (its town is a
 
 test('first screen: the real place+time job is no longer an eligible job; a callerQuestion answer is never a job', () => {
   const confirmed = REAL_FACTS.map(fact => ({ ...fact, status: 'confirmed' as const }));
-  const usable = usableFacts({ version: 1, answersVersion: 1, extractedAt: '2026-11-25T00:00:00Z', extraction: 'model', facts: confirmed });
-  assert.equal(usable.find(fact => fact.id === 'a1-3')!.questionKey, 'callerQuestion');
-  assert.equal(firstScreenIneligibility(usable.find(fact => fact.id === 'a1-1')!, CONTEXT), 'job_without_work');
-  assert.equal(firstScreenIneligibility(usable.find(fact => fact.id === 'a1-3')!, CONTEXT), 'job_caller_question');
-  assert.equal(firstScreenIneligibility({ id: 'x', type: 'job', text: 'replaced a burst pipe', questionKey: 'callerQuestion' }, CONTEXT), 'job_caller_question', 'even with work in it');
-  assert.equal(firstScreenIneligibility({ id: 'y', type: 'local', text: LAST_WEEK_IN_KFAR_SABA }, CONTEXT), 'local_place_time_only');
-  assert.deepEqual(firstScreenCandidates(usable, CONTEXT).map(fact => fact.id), ['a1-4']);
+  const reason = (id: string) => firstScreenCheck(confirmed.find(fact => fact.id === id)!, CONTEXT).reason;
+  assert.equal(reason('a1-1'), 'job_without_work');
+  assert.equal(reason('a1-3'), 'job_caller_question');
+  const callerJob: InterviewFact = { ...modelFact('x', 'job', CALLER_QUESTION, 'callerQuestion'), status: 'confirmed' };
+  assert.equal(firstScreenCheck(callerJob, CONTEXT).reason, 'job_caller_question', 'even with work in it');
+  // v2: a local fact is never a first-screen fact (it belongs to the service-area section).
+  assert.equal(reason('a1-4'), 'local_not_first_screen');
+  assert.equal(firstScreenCheck({ ...modelFact('y', 'local', LAST_WEEK_IN_KFAR_SABA, 'areaPattern'), status: 'confirmed' }, CONTEXT).reason, 'local_not_first_screen');
 });
 
 test('carry check: an overlap on place or time words alone never counts as carrying the fact', () => {
   const fact = { text: LAST_WEEK_IN_KFAR_SABA };
   assert.equal(subheadlineCarriesFact(REAL_SUBHEADLINE, fact, new Set(), ISRAELI_LOCALITIES), false, 'the real run');
-  assert.equal(resolveFirstScreen(REAL_SUBHEADLINE, [{ id: 'a1-1', type: 'job', ...fact }], [], [], new Set(), ISRAELI_LOCALITIES).missing, true);
   // A fact with content: the place words do not count toward the needed matches, the content words do.
   assert.equal(subheadlineCarriesFact(`${KFAR_SABA} ${RAANANA}`, { text: MOST_WORK_LOCAL }, new Set(), ISRAELI_LOCALITIES), false);
   assert.equal(subheadlineCarriesFact(MOST_WORK_LOCAL, { text: MOST_WORK_LOCAL }, new Set(), ISRAELI_LOCALITIES), true);

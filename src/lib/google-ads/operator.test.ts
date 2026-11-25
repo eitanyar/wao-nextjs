@@ -1,3 +1,6 @@
+// First: WAO_CLIENTS_DIR -> a scratch dir, so the brand-CPL baseline store (cpl-ceiling.ts, through
+// dataRoots.clientsDir()) never writes under data/clients (live production data).
+import '../scratchClientsDir.testkit';
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { buildGoogleAdsOperatorTasks as buildRawGoogleAdsOperatorTasks } from './operator';
@@ -80,10 +83,9 @@ test('a broken non-brand campaign breaches its ceiling even when a healthy brand
   // breach (brand campaigns have no absolute ceiling, §4A.0.1), and with no persisted
   // baseline yet (first-cycle bootstrap), must not fire BRAND_CPL_BASELINE_WATCH either.
   // Unique per test run to avoid colliding with any previous run's persisted baseline record
-  // — this test writes a real baseline-bootstrap record to
-  // data/clients/aasada/google-ads/brand-cpl-baselines.json (evaluateBrandCplBaselineWatch's
-  // documented, intentional persistence), so it's cleaned up via resetBrandCplBaseline in a
-  // `finally` below rather than left polluting real client data.
+  // — this test writes a baseline-bootstrap record to <WAO_CLIENTS_DIR>/aasada/google-ads/brand-cpl-baselines.json
+  // (evaluateBrandCplBaselineWatch's documented, intentional persistence; the scratch clients dir above, never
+  // data/clients), cleaned up via resetBrandCplBaseline in a `finally` below.
   const testCampaignId = `test-brand-${Date.now()}`;
   try {
     const brandDigest = digestFixture({ cpl: 5.46, verifiedLeads: 5, spendIls: 24.57, pacingStatus: 'under' } as any);

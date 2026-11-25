@@ -1,3 +1,5 @@
+// First: WAO_CLIENTS_DIR -> a scratch copy of the designated test client (reviewStore.ts reads clientsDir() at load).
+import { SCRATCH_CLIENTS_DIR } from '../scratchClientsDir.testkit';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'fs';
@@ -6,12 +8,11 @@ import path from 'path';
 import { normalizeGbpReview, pollClientReviews } from './reviewPoll';
 
 /**
- * Uses the repo's designated test client (`data/clients/test-plumber-tlv`) for the
- * fs-round-trip cases — the one client this task's execution scope explicitly permits
- * touching (handoff/pending/2026-08-23_002_*.md banner). Its gbp-reviews.json snapshot is
- * cleaned up before/after so test order/reruns don't leak state between cases.
+ * Uses a scratch copy of the repo's designated test client (`test-plumber-tlv`, scratchClientsDir.testkit.ts) for the
+ * fs-round-trip cases, never data/clients/ (2026-11-25: tests must not touch live client data). Its gbp-reviews.json
+ * snapshot is cleaned up before/after so test order/reruns don't leak state between cases.
  */
-const SNAPSHOT_PATH = path.join(process.cwd(), 'data', 'clients', 'test-plumber-tlv', 'gbp-reviews.json');
+const SNAPSHOT_PATH = path.join(SCRATCH_CLIENTS_DIR, 'test-plumber-tlv', 'gbp-reviews.json');
 
 function cleanSnapshot() {
   if (fs.existsSync(SNAPSHOT_PATH)) fs.unlinkSync(SNAPSHOT_PATH);

@@ -73,6 +73,12 @@ export interface ResearchedSitePage {
    * and later re-cuts; never rendered. Absent on records generated before M2b.1h.
    */
   pitch?: string;
+  /**
+   * Site Bot step 2c, first-screen fact v2 (b): the owner quote line under the homepage subheadline, code-built from his
+   * confirmed words and a waocopy frame (site-bot/firstScreenFact.ts). Rendered only by ownerQuoteHtml; never in a meta
+   * description or structured data (rules f, g). Absent = no line.
+   */
+  ownerQuote?: { frame: string; quote: string };
 }
 
 export interface ResearchedPageSeo {
@@ -418,6 +424,36 @@ function breadcrumbNav(homeName: string, serviceName: string): string {
   return `<nav data-section="breadcrumb" class="wao-breadcrumb" aria-label="${esc(BREADCRUMB_ARIA_LABEL)}"><ol role="list"><li><a href="/">${home}</a></li><li><span aria-current="page">${esc(serviceName)}</span></li></ol></nav>`;
 }
 
+/** U+05F4 (gershayim): the owner quote line's marks, always (rule h). */
+const QUOTE_MARK = '\u05F4';
+
+/**
+ * First-screen fact v2 (b, g, h): `{frame} \u05F4{quote}\u05F4` as `<figure><figcaption>` + `<blockquote>`, named by the
+ * waocopy aria label; no itemprop, no rating, no structured data. The line inherits rtl. The frame never breaks inside
+ * (nowrap) and is glued to the quote's first word by a no-break space, so the frame and the name are never alone on a
+ * line; the closing mark sits on the last word with no space, so it never wraps alone.
+ */
+/** Maya 2026-11-26 (h): a number range or a phone-like number (digits joined by a dash) inside the quote. Never a bracket. */
+export const QUOTE_NUMBER_RUN = /\d+(?:[.,:]\d+)*(?:[\u2013-]\d+(?:[.,:]\d+)*)+/g;
+/** The figcaption's id: the figure is named by its visible frame (aria-labelledby), so a screen reader hears it once. */
+export const OWNER_QUOTE_FRAME_ID = 'owner-quote-frame';
+
+export function ownerQuoteHtml(line: { frame: string; quote: string } | undefined): string {
+  if (!line || !line.frame.trim() || !line.quote.trim()) return '';
+  const quote = esc(line.quote).replace(QUOTE_NUMBER_RUN, run => `<bdi dir="ltr" style="white-space:nowrap">${run}</bdi>`);
+  return `<figure class="owner-quote" data-section="owner-quote" aria-labelledby="${OWNER_QUOTE_FRAME_ID}"><figcaption id="${OWNER_QUOTE_FRAME_ID}">${esc(line.frame)}</figcaption>\u00A0<blockquote><p>${QUOTE_MARK}${quote}${QUOTE_MARK}</p></blockquote></figure>`;
+}
+
+/** The quote line's CSS (only on a page that renders one, so every other page stays byte-identical). */
+export function ownerQuoteCss(): string {
+  return [
+    // Maya 2026-11-26 (h, contrast over the hero photo): full white with a soft shadow.
+    '.hero .owner-quote{margin:14px 0 0;max-width:46ch;color:#FFFFFF;font-size:1rem;line-height:1.6;text-shadow:0 1px 3px rgba(0,0,0,0.35);}',
+    '.hero .owner-quote figcaption{display:inline;white-space:nowrap;font-weight:700;color:#FFFFFF;}',
+    '.hero .owner-quote blockquote,.hero .owner-quote blockquote p{display:inline;margin:0;}',
+  ].join('');
+}
+
 function schemaGraph(page: ResearchedSitePage, data: CollectedData, siteUrl: string, heroImageUrl: string, output: string, homeName?: string): string {
   const { businessName } = contacts(data);
   const areas = researchedServiceAreas(page);
@@ -428,7 +464,8 @@ function schemaGraph(page: ResearchedSitePage, data: CollectedData, siteUrl: str
     '@id': `${pageUrl(cleanUrl, output)}#service`,
     name: servicePlainName(page),
     provider: { '@id': `${cleanUrl}/#business` },
-    description: page.copy.heroSubheadline,
+    // First-screen fact v2 rule (a): a subheadline the person gate dropped leaves no description.
+    ...(nonEmpty(page.copy.heroSubheadline) ? { description: page.copy.heroSubheadline } : {}),
     ...(areas.length
       ? { areaServed: areas.map(name => ({ '@type': 'City', name })) }
       : page.areaServed ? { areaServed: { '@type': page.areaServed.type ?? 'Place', name: page.areaServed.name } } : {}),
@@ -634,7 +671,7 @@ function sectionHeading(id: string, headline: string | null | undefined, fallbac
 
 /** True when serviceDetailsSection renders cards for this page (the nav's #services target). */
 function hasServiceCards(page: ResearchedSitePage): boolean {
-  return rendersSiteSections(page.classification) && (page.copy.serviceDetails ?? []).some(item => item && nonEmpty(item.name));
+  return rendersSiteSections(page.classification) && serviceCards(page).length > 0;
 }
 
 /** True when aboutSection renders for this page (the nav's #about target). */
@@ -736,8 +773,20 @@ export function serviceCardTarget(name: string, allPages: ResearchedSitePage[], 
 }
 
 /** The non-empty service cards of a page (serviceDetails with a name). */
+/**
+ * 2026-11-26 (Noa, live preview): a card named exactly like a service-area place, or like the trade on the homepage, is
+ * never a card (place names reached the service list through the intake). Trimmed, spaces collapsed, case-insensitive.
+ */
+function cardNameBlocked(page: ResearchedSitePage, name: string): boolean {
+  const key = (value: string | null | undefined) => (value ?? '').replace(/\s+/gu, ' ').trim().toLowerCase();
+  const own = key(name);
+  const seo = page.seo;
+  if (!own || !seo) return false;
+  return [seo.city, ...seo.serviceArea, ...(page.classification === 'homepage' ? [seo.name] : [])].some(value => key(value) === own);
+}
+
 function serviceCards(page: ResearchedSitePage): Array<{ name: string; description?: string }> {
-  return (page.copy.serviceDetails ?? []).filter(item => item && nonEmpty(item.name));
+  return (page.copy.serviceDetails ?? []).filter(item => item && nonEmpty(item.name) && !cardNameBlocked(page, item.name));
 }
 
 /**
@@ -753,7 +802,10 @@ function serviceDetailsSection(page: ResearchedSitePage, theme: RenderResearched
     const target = serviceCardTarget(item.name, allPages, outputs, businessName);
     const title = target ? `<a href="${target.href}">${esc(target.text)}</a>` : esc(item.name);
     const description = nonEmpty(item.description) ? `<p>${esc(item.description)}</p>` : '';
-    return `<li class="svc-card"${target ? ' data-card-link' : ''}><span class="tile">${icon(serviceIcon(target ? `${target.page.opportunityId} ${target.href}` : null))}</span><div class="svc-body"><h3>${title}</h3>${description}</div>${target ? icon('chev', 'ic chev') : ''}</li>`;
+    // Fable 5.2 anti-slop P1 (2026-11-25): the neutral icon on every unmatched card reads as filler; no tile then.
+    const iconName = serviceIcon(target ? `${target.page.opportunityId} ${target.href}` : null);
+    const tile = iconName === 'svc' ? '' : `<span class="tile">${icon(iconName)}</span>`;
+    return `<li class="svc-card"${target ? ' data-card-link' : ''}>${tile}<div class="svc-body"><h3>${title}</h3>${description}</div>${target ? icon('chev', 'ic chev') : ''}</li>`;
   }).join('');
   const heading = sectionHeading('services-heading', page.copy.servicesHeadline, NAV_LINK_TEXT.services, `font-size:1.35rem;color:${theme.primary};margin-bottom:20px;`);
   return `<section id="services" data-section="service-details" aria-labelledby="services-heading" style="padding:36px 20px;background:${theme.surfaceAlt};"><div style="max-width:1120px;margin:0 auto;">${heading}<ul class="svc" role="list" style="--cols:${Math.min(items.length, 4)};">${cards}</ul></div></section>`;
@@ -821,6 +873,8 @@ function buildPageHtml(page: ResearchedSitePage, params: RenderResearchedSitePag
   const ownerPhoto = renderableHero(params.look);
   const libraryPhoto = ownerPhoto ? null : renderableHero({ hero: params.libraryHeroes?.[page.opportunityId] });
   const photo = ownerPhoto ?? libraryPhoto;
+  // First-screen fact v2 (b): homepage only.
+  const quoteLine = page.classification === 'homepage' ? ownerQuoteHtml(page.ownerQuote) : '';
   const head = pageHead({
     t: theme,
     title: researchedPageTitle(page, businessName),
@@ -829,13 +883,13 @@ function buildPageHtml(page: ResearchedSitePage, params: RenderResearchedSitePag
     ogImage: heroImageUrl,
     schema: schemaGraph(page, data, siteUrl, heroImageUrl, output, breadcrumb ? homeName : undefined),
     fraudBlockerSid: params.fraudBlockerSid,
-    ...(breadcrumb || photo ? { extraCss: `${breadcrumb ? breadcrumbCss(theme) : ''}${photo ? heroBackdropCss() : ''}` } : {}),
+    ...(breadcrumb || photo || quoteLine ? { extraCss: `${breadcrumb ? breadcrumbCss(theme) : ''}${photo ? heroBackdropCss() : ''}${quoteLine ? ownerQuoteCss() : ''}` } : {}),
   });
   // Redesign A item 7: the solid primary hero, start-aligned, no image; the GBP photo slot renders nothing yet. The breadcrumb
   // stays directly before the H1 (Yonatan C1); the hours line is the homepage's (hero.hours).
   const body = `
   <main>
-    <section class="hero on-dark${photo ? ' has-photo' : ''}" data-section="hero">${photo ? heroBackdropHtml(photo, { aiAtmosphere: libraryPhoto !== null }) : ''}<div class="hero-grid"><div class="hero-text">${breadcrumb ? breadcrumbNav(homeName, servicePlainName(page)) : ''}<h1>${esc(researchedPageH1(page.copy.heroHeadline, page.seo))}</h1><p class="sub">${esc(page.copy.heroSubheadline)}</p>${heroCallButton(page, data)}${pricePromiseLine(data, params.pricingCopy)}${page.classification === 'homepage' ? heroHoursLine(data.businessHours) : ''}</div>${heroPhotoSlot()}</div></section>
+    <section class="hero on-dark${photo ? ' has-photo' : ''}" data-section="hero">${photo ? heroBackdropHtml(photo, { aiAtmosphere: libraryPhoto !== null }) : ''}<div class="hero-grid"><div class="hero-text">${breadcrumb ? breadcrumbNav(homeName, servicePlainName(page)) : ''}<h1>${esc(researchedPageH1(page.copy.heroHeadline, page.seo))}</h1>${nonEmpty(page.copy.heroSubheadline) ? `<p class="sub">${esc(page.copy.heroSubheadline)}</p>` : ''}${quoteLine}${heroCallButton(page, data)}${pricePromiseLine(data, params.pricingCopy)}${page.classification === 'homepage' ? heroHoursLine(data.businessHours, { isolateRanges: true }) : ''}</div>${heroPhotoSlot()}</div></section>
     ${trustBar(page, theme)}${storySection(page, theme)}${processSection(page, theme)}${priceSection(page, data, theme, params.pricingCopy)}${proofSection(page, theme)}
     ${hasProof(page) ? '' : reviewSection(page, theme)}${qaSection(page, theme)}
     ${serviceDetailsSection(page, theme, allPages, outputs, businessName)}

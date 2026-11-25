@@ -13,7 +13,7 @@ import { displayBusinessHours, parseBusinessHours } from './businessHours';
 import { TEMPLATE_STRINGS } from './generationData';
 import { RESEARCHED_SITE_LABELS } from './researchedSiteLabels';
 import { SITE_DESIGN_LABELS } from './siteDesignLabels';
-import { actionBar, formatSiteHours, icon, ownerImageUrl, siteCss, siteFontHead, siteHeader, skipLink, SITE_ICON_SPRITE, trustFacts, withoutEmoji, type SiteNavLink } from './siteDesign';
+import { actionBar, formatSiteHoursHtml, icon, ownerImageUrl, siteCss, siteFontHead, siteHeader, skipLink, SITE_ICON_SPRITE, trustFacts, withoutEmoji, type SiteNavLink } from './siteDesign';
 import { israeliPhoneE164 } from './phoneE164';
 import type { SiteLook } from './siteLook';
 import { brandLogo, type BrandLogo } from './siteLogo';
@@ -257,14 +257,14 @@ export function footerProfileRow(t: VerticalTheme, profile?: FooterProfileLink):
 export function footerNap(t: VerticalTheme, data: CollectedData, areas: readonly string[]): string {
   const { businessName, phone } = contacts(data);
   const e164 = israeliPhoneE164(phone);
-  const hours = parseBusinessHours(data.businessHours) ? formatSiteHours(data.businessHours) : null;
+  const hours = parseBusinessHours(data.businessHours) ? formatSiteHoursHtml(data.businessHours) : null;
   const row = (inner: string, attr: string) => `<p ${attr} style="margin:0 0 6px;">${inner}</p>`;
   const rows = [
     businessName ? row(`<strong style="color:${t.textPrimary};font-size:0.95rem;">${esc(businessName)}</strong>`, 'data-footer-name') : '',
     phone && e164 ? row(`<a href="tel:${e164}" style="display:inline-flex;align-items:center;min-height:44px;color:${t.textPrimary};font-weight:700;"><bdi dir="ltr">${esc(phone)}</bdi></a>`, 'data-footer-phone') : '',
     data.streetAddress ? row(esc(data.streetAddress.trim()), 'data-footer-address') : '',
     areas.length ? row(`<strong>${esc(RESEARCHED_SITE_LABELS.serviceAreasHeading)}</strong> ${areas.map(esc).join(' \u00B7 ')}`, 'data-footer-areas') : '',
-    hours ? row(`<strong>${esc(SITE_DESIGN_LABELS.hoursLabel)}</strong> ${esc(hours)}`, 'data-footer-hours') : '',
+    hours ? row(`<strong>${esc(SITE_DESIGN_LABELS.hoursLabel)}</strong> ${hours}`, 'data-footer-hours') : '',
   ].filter(Boolean).join('');
   return rows ? `<div class="footer-nap" data-footer-nap style="max-width:1120px;margin:0 auto 12px;text-align:start;line-height:1.5;">${rows}</div>` : '';
 }

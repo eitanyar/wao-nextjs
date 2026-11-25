@@ -363,7 +363,11 @@ export function buildPageBriefs(dossier: SiteResearchDossier, data: CollectedDat
       ];
     const pageLabel = isHome ? (identity.trade || niche || dossier.businessTruth.businessName) : labelFor(subject);
     const ownLabels = readyServices.map(item => labelFor(item.opportunity));
-    const serviceLabels = isHome ? ownLabels : [pageLabel, ...ownLabels.filter(label => label !== pageLabel)];
+    // 2026-11-26 (Noa, live preview): a service name equal to the trade or to a service-area place is never a homepage
+    // card (the intake accepted place names as services, and the trade is the page's own name).
+    const serviceLabels = isHome
+      ? ownLabels.filter(label => !isTradeOrPlaceName(label, [pageLabel, identity.trade, niche], [identity.baseCity, ...identity.serviceArea]))
+      : [pageLabel, ...ownLabels.filter(label => label !== pageLabel)];
     // Content depth (2026-11-10): service pages get NeuronWriter's word target, filtered terms and questions, and the
     // owner's service facts. The homepage and other page types are unchanged.
     const places = [...new Set([...(identity.baseCity ? [identity.baseCity] : []), ...identity.serviceArea])];
@@ -374,8 +378,7 @@ export function buildPageBriefs(dossier: SiteResearchDossier, data: CollectedDat
       ? interview.facts.filter(fact => isHome || (service !== undefined && fact.serviceId === service.id))
         .slice(0, MAX_BRIEF_INTERVIEW_FACTS).flatMap(fact => factEvidence(fact) ?? [])
       : [];
-    const proofIds = new Set(interviewProof.map(item => item.id));
-    const firstScreen = isHome && interview ? firstScreenConstraint(interview.firstScreen.filter(fact => proofIds.has(`interview-${fact.id}`))) : null;
+    const firstScreen = isHome && interview?.firstScreen ? firstScreenConstraint() : null;
     const framing = interview ? workLocationConstraint(interview.workLocation, data) : null;
     return compilePageBrief({
       page: { id: page.id, targetPath: page.targetPath, pageClass: page.pageClass ?? 'money_service' },
@@ -481,6 +484,13 @@ function briefIdentity(dossier: SiteResearchDossier, data: CollectedData): SiteI
   // M2a.2: label pins apply to persisted identities too (labels only; slugs are stable).
   if (isSiteIdentity(dossier.siteIdentity)) return withPinnedLabels(dossier.siteIdentity);
   return assembleSiteIdentity(siteIdentityInput(serviceNamesFor(dossier), data), null, () => new Date(dossier.updatedAt));
+}
+
+/** True when a service label is exactly the trade or a place name (trimmed, spaces collapsed, case-insensitive). */
+export function isTradeOrPlaceName(label: string, trades: ReadonlyArray<string | null | undefined>, places: ReadonlyArray<string | null | undefined>): boolean {
+  const key = (value: string | null | undefined) => (value ?? '').replace(/\s+/gu, ' ').trim().toLowerCase();
+  const own = key(label);
+  return Boolean(own) && [...trades, ...places].some(value => key(value) === own);
 }
 
 export function serviceNamesFor(dossier: SiteResearchDossier): string[] {

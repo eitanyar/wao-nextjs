@@ -329,6 +329,12 @@ export function relatedLinksNav(t: SectionTheme, heading: string, links: Readonl
  * do not parse or a segment is not a contiguous day run (then the row is hidden; hero.hours.missing never ships).
  */
 export function formatSiteHours(text: string | undefined): string | null {
+  const groups = siteHoursGroups(text);
+  return groups ? groups.join(', ') : null;
+}
+
+/** The day groups of formatSiteHours, in week order (null when the hours do not format). */
+function siteHoursGroups(text: string | undefined): string[] | null {
   const segments = parseBusinessHoursSegments(text);
   if (!segments) return null;
   const contiguous = (days: number[]) => days.every((day, index) => index === 0 || day === days[index - 1] + 1);
@@ -346,12 +352,31 @@ export function formatSiteHours(text: string | undefined): string | null {
     groups.push({ start: day, text: `${span(day, end)} ${SITE_DESIGN_LABELS.closedDay}` });
     day = end;
   }
-  return groups.sort((a, b) => a.start - b.start).map(group => group.text).join(', ');
+  return groups.sort((a, b) => a.start - b.start).map(group => group.text);
 }
 
-/** The hero hours line: hero.hours.label then the hours; '' when the hours do not format. */
-export function heroHoursLine(text: string | undefined): string {
+/** A clock-time range (HH:MM, an en dash or hyphen, HH:MM). */
+const TIME_RANGE_RUN = /\d{1,2}:\d{2}[\u2013-]\d{1,2}:\d{2}/g;
+
+/**
+ * Maya / Noa 2026-11-26: the hours as markup. In the RTL flow a bare "08:00\u201318:00" reads reversed, so every time range
+ * is an ltr isolate that never wraps, and each day group (day label + range, or day label + the closed label) stays on one
+ * line. The text is formatSiteHours' text, unchanged; null when the hours do not format.
+ */
+export function formatSiteHoursHtml(text: string | undefined): string | null {
+  const groups = siteHoursGroups(text);
+  if (!groups) return null;
+  return groups.map(group => `<span style="white-space:nowrap">${esc(group).replace(TIME_RANGE_RUN, run => `<bdi dir="ltr" style="white-space:nowrap">${run}</bdi>`)}</span>`).join(', ');
+}
+
+/**
+ * The hero hours line: hero.hours.label then the hours; '' when the hours do not format. `isolateRanges` (Site Bot sites,
+ * Maya / Noa 2026-11-26) renders formatSiteHoursHtml; without it the plain text stays, so the ads LP stays byte-identical
+ * to its pinned baseline (adsLpUploads.test.ts).
+ */
+export function heroHoursLine(text: string | undefined, options: { isolateRanges?: boolean } = {}): string {
   // Yonatan rule 4: a visible hours row only when the schema's own parse (openingHoursSpecification) succeeds.
-  const hours = parseBusinessHours(text) ? formatSiteHours(text) : null;
-  return hours ? `<p class="hero-note" data-hero-hours><strong>${esc(SITE_DESIGN_LABELS.hoursLabel)}</strong> <span>${esc(hours)}</span></p>` : '';
+  const hours = parseBusinessHours(text) ? (options.isolateRanges ? formatSiteHoursHtml(text) : formatSiteHours(text)) : null;
+  if (!hours) return '';
+  return `<p class="hero-note" data-hero-hours><strong>${esc(SITE_DESIGN_LABELS.hoursLabel)}</strong> <span>${options.isolateRanges ? hours : esc(hours)}</span></p>`;
 }

@@ -133,14 +133,15 @@ export function factEvidence(fact: UsableFact): BriefEvidence | null {
   return value.length <= MAX_FACT_EVIDENCE_CHARS ? { id: interviewEvidenceId(fact.id), value, status: 'approved' } : null;
 }
 
-/** The homepage's first-screen instruction (a brief constraint naming the candidate evidence ids in priority order). */
-export function firstScreenConstraint(candidates: readonly UsableFact[]): BriefEvidence | null {
-  const ids = candidates.map(fact => interviewEvidenceId(fact.id)).slice(0, 5);
-  if (!ids.length) return null;
+/**
+ * The homepage's first-screen instruction (first-screen fact v2, rule a): the subheadline is a free USP sentence and the
+ * system renders the owner's fact as a quote line (firstScreenFact.ts). It names no fact: the writer never picks it.
+ */
+export function firstScreenConstraint(): BriefEvidence {
   return {
     id: FIRST_SCREEN_CONSTRAINT_ID,
     status: 'approved',
-    value: `First screen: heroSubheadline carries one of these owner facts, the first that fits, in his own words and with its condition when it has one: ${ids.join(', ')}.`,
+    value: 'First screen: heroSubheadline is a free USP sentence in the third person about the business; it never quotes or paraphrases an owner fact. The system shows one owner fact as a quote line under it.',
   };
 }
 
@@ -148,7 +149,7 @@ export function firstScreenConstraint(candidates: readonly UsableFact[]): BriefE
 export interface InterviewBriefOptions {
   /** Writer facts, priority-ordered, as brief evidence. */
   facts: readonly UsableFact[];
-  /** Homepage only: the first-screen candidates (rule b order). */
-  firstScreen: readonly UsableFact[];
+  /** Homepage only: the first-screen rule applies (the preview's homepage generation). */
+  firstScreen: boolean;
   workLocation: WorkLocation | null;
 }

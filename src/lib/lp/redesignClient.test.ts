@@ -62,6 +62,8 @@ test('client item 6: per-service icons from a fixed set, neutral fallback; never
   const home = render()['index.html'];
   const icons = [...home.matchAll(/<span class="tile"><svg[^>]*><use href="#i-([a-z]+)"/g)].map((m) => m[1]);
   assert.deepEqual(icons, ['drop', 'drain', 'sun']);
+  // Anti-slop P1: the neutral icon is never drawn on a card (no tile instead).
+  assert.doesNotMatch(home, /<use href="#i-svc"/);
   for (const name of icons) assert.ok(home.includes(`<symbol id="i-${name}"`), `sprite has ${name}`);
   assert.match(home, /\.svc-card\{position:relative;height:100%;/);
 });
