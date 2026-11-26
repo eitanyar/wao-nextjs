@@ -297,6 +297,11 @@ export default function SeoPage() {
               </div>
             ))}
           </div>
+          <p style={{ ...bodyStyle, marginTop: "32px", maxWidth: "720px" }}>
+            {"יש לך כבר מפתח או כותב תוכן, וחסר רק מי שיכוון אותם? תקבל "}
+            <Link href="/seo/consulting" style={{ color: "var(--accent)", fontWeight: 600 }}>ייעוץ קידום אתרים</Link>
+            {" מאיתן, מייסד WAO, ב־950 ₪ לחודש ובלי חוזה."}
+          </p>
         </div>
       </section>
 

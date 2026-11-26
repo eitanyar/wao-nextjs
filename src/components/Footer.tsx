@@ -30,6 +30,7 @@ const footerLinks = [
     title: "שירותים",
     links: [
       { label: "קידום אתרים (SEO)", href: "/seo" },
+      { label: "יועץ קידום אתרים", href: "/seo/consulting" },
       { label: "פרסום בגוגל", href: "/google-ads" },
       { label: "שיווק תוכן", href: "/content" },
       { label: "יועץ שיווקי", href: "/consulting" },
@@ -140,7 +141,7 @@ export default function Footer() {
           {/* Link columns */}
           {footerLinks.map((col) => (
             <div key={col.title}>
-              <h3
+              <div
                 style={{
                   fontFamily: "var(--font-rubik), sans-serif",
                   fontWeight: 700,
@@ -151,7 +152,7 @@ export default function Footer() {
                 }}
               >
                 {col.title}
-              </h3>
+              </div>
               <nav aria-label={col.title}>
                 {col.links.map((link) => (
                   <Link key={link.href} href={link.href} className="footer-link">

@@ -13,9 +13,9 @@ const SAME_AS = [
 
 // ── Static metadata fallback ────────────────────────────────────────────────
 const STATIC_META = {
-  title: "יועץ קידום אתרים מנוסה — 20 שנות ניסיון",
+  title: "יועץ קידום אתרים – ייעוץ SEO אישי, 20 שנות ניסיון",
   description:
-    "איתן יריב — יועץ SEO עם 20 שנות ניסיון. ייעוץ אישי ומעשי: Topical Authority, Core Web Vitals, AI Overviews ו-Technical SEO. מנטורינג חודשי ב-950 ₪ ללא חוזה.",
+    "איתן יריב, יועץ קידום אתרים עם 20 שנות ניסיון בקידום אורגני בגוגל ובמנועי AI. ייעוץ SEO אישי ומעשי, מנטורינג ב-950 ₪ ללא חוזה.",
 };
 
 // ── Metadata ────────────────────────────────────────────────────────────────
@@ -87,32 +87,72 @@ const consultingServiceSchema = {
   },
 };
 
-const productSchema = {
-  "@context": "https://schema.org",
-  "@type": "Product",
-  "@id": `${CANONICAL}#product`,
-  name: "מנטורינג SEO — 950 ₪ לחודש",
-  description:
-    "מנטורינג SEO אישי חודשי עם יועץ בכיר: מפגש אסטרטגיה, Roadmap עדכני, בדיקת ב-Technical SEO ומעקב KPIs. ללא חוזה.",
-  brand: { "@type": "Brand", name: "WAO" },
-  offers: {
-    "@type": "Offer",
-    price: "950",
-    priceCurrency: "ILS",
-    availability: "https://schema.org/InStock",
-    url: CANONICAL,
-  },
-};
-
 const breadcrumbSchema = {
   "@context": "https://schema.org",
   "@type": "BreadcrumbList",
   itemListElement: [
     { "@type": "ListItem", position: 1, name: "דף הבית",     item: "https://www.wao.co.il" },
     { "@type": "ListItem", position: 2, name: "קידום אתרים", item: "https://www.wao.co.il/seo" },
-    { "@type": "ListItem", position: 3, name: "יועץ SEO",    item: CANONICAL },
+    { "@type": "ListItem", position: 3, name: "יועץ קידום אתרים", item: CANONICAL },
   ],
 };
+
+// ── FAQ (copy byte-exact from seo-consulting.MD.txt; placeholder answers omitted) ──
+const FAQ: { q: string; a: string; link?: { href: string; label: string } }[] = [
+  {
+    q: "מה עושה יועץ קידום אתרים?",
+    a: "מאבחן את האתר, בונה אסטרטגיית קידום אורגני ומלווה את הביצוע עד שרואים תוצאות.",
+  },
+  {
+    q: "כמה עולה ייעוץ קידום אתרים?",
+    a: "מנטורינג חודשי עולה 950 ₪, ללא חוזה.",
+  },
+  {
+    q: "מה ההבדל בין יועץ קידום אתרים אורגני, מקדם אתרים וחברת קידום?",
+    a: "חברה לקידום אתרים מנהלת בשבילך את העבודה, ולרוב גם את התקציב והקישורים. מקדם אתרים פרילנסר מבצע בעצמו. מומחה SEO הוא יועץ חיצוני שבונה את האסטרטגיה ומלווה את מי שמבצע, כך שהידע נשאר אצלך.",
+    link: { href: "#compare", label: "← השוואה" },
+  },
+  {
+    q: "האם יועץ קידום אתרים בגוגל יכול לעזור כשהתנועה ירדה או כשהאתר נענש?",
+    a: "כן. ראה Case B: ניקוי האינדוקס החזיר 68% תנועה אורגנית.",
+  },
+  {
+    q: "האם כדאי לקחת יועץ SEO לפני בניית אתר חדש או לפני מעבר אתר?",
+    a: "כן. זה השלב שבו הכי זול למנוע נזק (הפניות, מבנה, מהירות).",
+  },
+];
+
+const faqSchema = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "@id": `${CANONICAL}#faq`,
+  mainEntity: FAQ.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: { "@type": "Answer", text: f.a },
+  })),
+};
+
+// ── Process / compare / choose (copy byte-exact from seo-consulting.MD.txt) ──
+const PROCESS_STEPS = [
+  { n: "01", title: "אבחון", desc: "בפגישת ייעוץ ראשונה אני עובר על האתר, על Search Console ועל המתחרים שלך בגוגל, ומסמן איפה הקידום נתקע: SEO טכני, תוכן, קישורים או מילות מפתח." },
+  { n: "02", title: "תוכנית עבודה", desc: "אתה מקבל אסטרטגיית קידום כתובה, מתועדפת לפי ההשפעה על תנועה ולידים." },
+  { n: "03", title: "ביצוע מלווה", desc: "אני עובד יד ביד עם הצוות שלך, עם המפתח או עם איש SEO פנימי, ובודק שכל שינוי באמת עלה לאוויר." },
+  { n: "04", title: "מדידה", desc: "כל חודש בודקים יחד מה זז ומעדכנים את תהליך הקידום." },
+];
+
+const COMPARE = [
+  { icon: "🎯", title: "יועץ קידום אתרים", desc: "יועץ קידום אורגני הוא יועץ חיצוני שבונה את האסטרטגיה ומלווה את מי שמבצע, כך שהידע נשאר אצלך.", highlight: true },
+  { icon: "🛠️", title: "מקדם אתרים", desc: "מקדם אתרים פרילנסר מבצע בעצמו.", highlight: false },
+  { icon: "🏢", title: "חברת קידום אתרים", desc: "חברה לקידום אתרים מנהלת בשבילך את העבודה, ולרוב גם את התקציב והקישורים.", highlight: false },
+];
+
+const CHOOSE = [
+  { icon: "📊", title: "ניסיון מוכח", desc: "בקש מקרי בוחן עם מספרים, לא רק לוגואים." },
+  { icon: "🔍", title: "שקיפות", desc: "יועץ מקצועי מסביר מה הוא עושה ולמה." },
+  { icon: "🚩", title: "דגלים אדומים", desc: "הבטחה למקום ראשון בזמן קצר, חבילות קישורים זולות או תוכן כפול שמיוצר בכמויות." },
+  { icon: "🤖", title: "התאמה ל-AI", desc: "האם היועץ יודע לקדם אותך גם בגוגל ובמנועי AI, ולא רק בתוצאות הכחולות?" },
+];
 
 // ── Shared header (breadcrumb + SiloNav) ───────────────────────────────────
 function PageHeader() {
@@ -123,7 +163,7 @@ function PageHeader() {
         <span className="breadcrumb-sep" aria-hidden>›</span>
         <Link href="/seo">קידום אתרים</Link>
         <span className="breadcrumb-sep" aria-hidden>›</span>
-        <span aria-current="page">יועץ SEO</span>
+        <span aria-current="page">יועץ קידום אתרים</span>
       </nav>
       <SiloNav currentPath="/seo/consulting" />
     </div>
@@ -136,8 +176,8 @@ function Schemas() {
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(webPageSchema) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(consultingServiceSchema) }} />
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(productSchema) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }} />
     </>
   );
 }
@@ -210,7 +250,7 @@ function StaticPage() {
             <span className="text-gradient">מנוסה</span>
             {" "}—{" "}
             <br className="hidden md:block" />
-            שיודע לסגור פערים אמיתיים בשטח
+            ייעוץ SEO וקידום אורגני שסוגר פערים בשטח
           </h1>
 
           <p
@@ -258,13 +298,14 @@ function StaticPage() {
               בקצרה — סיכום ל-AI ולקורא הממהר
             </span>
           </div>
-          <ul style={{ ...bodyStyle, paddingInlineStart: "1.3rem", display: "flex", flexDirection: "column", gap: "8px", margin: 0 }}>
-            <li><strong style={{ color: "var(--text)" }}>יועץ SEO</strong> = שותף שטח שמגיע עם אסטרטגיה, מפקח על ביצוע, ומוביל לתוצאות מדידות — לא מסמך PDF ועדכון חודשי.</li>
-            <li>איתן יריב ניהל SEO עבור מותגים גדולים בישראל ובחו״ל — דפי זהב, בנק לאומי, למטייל — ומאז 2006 מוביל לקוחות <GT term="B2C">B2C</GT> לצמיחה אורגנית.</li>
-            <li><strong style={{ color: "var(--text)" }}>2026:</strong> <GT term="AI Overviews">AI Overviews</GT>, <GT term="Topical Authority">Topical Authority</GT> ו-<GT term="Core Web Vitals">Core Web Vitals</GT> הפכו לדרישת מינימום. יועץ שלא שולט בהם — מוביל אתכם לאחור.</li>
-            <li><strong style={{ color: "var(--text)" }}>מנטורינג חודשי ב-950 ₪</strong> — מפגש אסטרטגיה, Roadmap עדכני, בדיקת <GT term="Technical SEO">Technical SEO</GT>. ללא חוזה, תשלום מראש לכל חודש.</li>
-            <li>שלושה תחומי עומק: ביצועי <GT term="Next.js">Next.js</GT> ו-<GT term="Core Web Vitals">Core Web Vitals</GT>, ניקוי <GT term="Indexing Bloat">Indexing Bloat</GT> וקאניבליזציה, אופטימיזציה <GT term="Mobile-First">מובייל-ראשית</GT> לדפי נחיתה.</li>
-          </ul>
+          <p style={{ ...bodyStyle }}>
+            אני איתן יריב, יועץ קידום אתרים ומומחה SEO עם ניסיון בקידום אתרים בגוגל מאז 2006. ייעוץ קידום אתרים אצלי הוא
+            לא מצגת שנשארת במגירה: אנחנו בונים יחד אסטרטגיית קידום אורגני בגוגל ובמנועי AI כמו ChatGPT
+            ו-<GT term="AI Overviews">AI Overviews</GT>, מתעדפים לפי <GT term="ROI">ROI</GT> ומוודאים שהצוות שלך מבצע.
+          </p>
+          <p style={{ ...bodyStyle, marginTop: "12px" }}>
+            עבדתי עם דפי זהב, בנק לאומי, למטייל ואולסייל, וגם עם עסקים קטנים שרוצים לצמוח בלי להתחייב לחברת קידום אתרים.
+          </p>
         </div>
       </div>
 
@@ -275,7 +316,7 @@ function StaticPage() {
             <div>
               <div className="eyebrow">מה שרוב יועצי SEO לא עושים</div>
               <h2 style={h2Style}>
-                שותפות מעשית —{" "}
+                ייעוץ קידום אתרים מעשי —{" "}
                 <span className="text-gradient">לא ייעוץ מהצד</span>
               </h2>
               <p style={{ ...bodyStyle, marginBottom: "18px" }}>
@@ -295,17 +336,17 @@ function StaticPage() {
 
             <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
               {[
-                { icon: "🎯", title: "Prioritized Roadmap",   desc: "כל פעולה מדורגת לפי ROI צפוי — לפי עקרון פארטו: 20% הפעולות שמביאות 80% מהתוצאות." },
-                { icon: "⚙️", title: "Technical SEO Hands-On", desc: "לא רק מה לתקן — גם איך. Schema Markup, Canonical tags, Crawl Budget, Core Web Vitals — עם ביצוע בפועל." },
-                { icon: "🤖", title: "AI-Era Strategy",        desc: "AI Overviews, Topical Authority ו-Generative Search מוטמעים בכל תכנית עבודה מ-2025." },
-                { icon: "📊", title: "KPIs שזזים",            desc: "מדידה אמיתית: תנועה אורגנית, לידים מ-SEO, הכנסה — לא מיקומי מילות מפתח בלבד." },
+                { icon: "🎯", title: "אסטרטגיית קידום ותוכנית עבודה לפי ROI", desc: "כל פעולה מדורגת לפי ROI צפוי — לפי עקרון פארטו: 20% הפעולות שמביאות 80% מהתוצאות." },
+                { icon: "⚙️", title: "SEO טכני — יד ביד עם הצוות שלך", desc: "לא רק מה לתקן — גם איך. Schema Markup, Canonical tags, Crawl Budget, Core Web Vitals — עם ביצוע בפועל." },
+                { icon: "🤖", title: "קידום אורגני בגוגל ובמנועי AI", desc: "AI Overviews, Topical Authority ו-Generative Search מוטמעים בכל תכנית עבודה מ-2025." },
+                { icon: "📊", title: "מדדים שזזים: תנועה, לידים ולקוחות", desc: "מדידה אמיתית: תנועה אורגנית, לידים מ-SEO, הכנסה — לא מיקומי מילות מפתח בלבד." },
               ].map((item) => (
                 <div key={item.title} style={{ ...glass, padding: "18px 20px", display: "flex", gap: "14px", alignItems: "flex-start" }}>
                   <span style={{ fontSize: "1.3rem", flexShrink: 0, lineHeight: 1.3 }}>{item.icon}</span>
                   <div>
-                    <div style={{ fontFamily: "var(--font-rubik), sans-serif", fontWeight: 700, fontSize: "0.95rem", marginBottom: "4px" }}>
-                      {item.title}
-                    </div>
+                    <h3 style={{ fontFamily: "var(--font-rubik), sans-serif", fontWeight: 700, fontSize: "0.95rem", margin: "0 0 4px" }}>
+                      {renderMixed(item.title)}
+                    </h3>
                     <p style={{ ...bodyStyle, fontSize: "0.87rem" }}>{item.desc}</p>
                   </div>
                 </div>
@@ -315,13 +356,35 @@ function StaticPage() {
         </div>
       </section>
 
+      {/* ── Process: what happens in an SEO consulting session ── */}
+      <section className="wao-section" aria-labelledby="process-h">
+        <div className="wao-container">
+          <div className="eyebrow">התהליך</div>
+          <h2 id="process-h" style={{ ...h2Style, fontSize: "clamp(1.6rem,3vw,2.4rem)", marginBottom: "40px", maxWidth: "720px" }}>
+            {renderMixed("מה קורה בפגישת ייעוץ SEO?")}{" "}
+            <span className="text-gradient">התהליך שלב אחרי שלב</span>
+          </h2>
+          <ol style={{ listStyle: "none", padding: 0, margin: 0, display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "20px" }}>
+            {PROCESS_STEPS.map((step) => (
+              <li key={step.n} style={{ ...glass, padding: "24px 22px" }}>
+                <span className="process-number" aria-hidden style={{ fontSize: "2.6rem" }}>{step.n}</span>
+                <h3 style={{ fontFamily: "var(--font-rubik), sans-serif", fontWeight: 700, fontSize: "1.1rem", margin: "10px 0 8px", color: "var(--text)" }}>
+                  {step.title}
+                </h3>
+                <p style={{ ...bodyStyle, fontSize: "0.92rem" }}>{renderMixed(step.desc)}</p>
+              </li>
+            ))}
+          </ol>
+        </div>
+      </section>
+
       {/* ── Case studies ── */}
-      <section className="wao-section">
+      <section className="wao-section" style={{ background: "var(--surface)" }}>
         <div className="wao-container">
           <div className="eyebrow">מקרי בוחן</div>
           <h2 style={{ ...h2Style, fontSize: "clamp(1.6rem,3vw,2.4rem)", marginBottom: "48px", maxWidth: "540px" }}>
-            תוצאות מדידות —{" "}
-            <span className="text-gradient">לא סיפורים</span>
+            תוצאות מדידות מליווי של{" "}
+            <span className="text-gradient">יועץ קידום אתרים</span>
           </h2>
 
           <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
@@ -449,13 +512,60 @@ function StaticPage() {
         </div>
       </section>
 
+      {/* ── Consultant vs. freelancer vs. agency ── */}
+      <section id="compare" className="wao-section" aria-labelledby="compare-h" style={{ scrollMarginTop: "72px" }}>
+        <div className="wao-container">
+          <div className="eyebrow">השוואה</div>
+          <h2 id="compare-h" style={{ ...h2Style, fontSize: "clamp(1.6rem,3vw,2.4rem)", marginBottom: "40px", maxWidth: "720px" }}>
+            יועץ קידום אתרים, מקדם אתרים{" "}
+            <span className="text-gradient">או חברת קידום אתרים?</span>
+          </h2>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: "20px", marginBottom: "28px" }}>
+            {COMPARE.map((c) => (
+              <div key={c.title} style={{ ...glass, padding: "24px 22px", borderColor: c.highlight ? "var(--accent-border)" : "var(--border)" }}>
+                <span aria-hidden style={{ fontSize: "1.4rem" }}>{c.icon}</span>
+                <h3 style={{ fontFamily: "var(--font-rubik), sans-serif", fontWeight: 700, fontSize: "1.1rem", margin: "10px 0 8px", color: c.highlight ? "var(--accent)" : "var(--text)" }}>
+                  {c.title}
+                </h3>
+                <p style={{ ...bodyStyle, fontSize: "0.92rem" }}>{c.desc}</p>
+              </div>
+            ))}
+          </div>
+          <p style={{ ...bodyStyle, maxWidth: "760px" }}>
+            {renderMixed("יועץ מקצועי מתאים במיוחד לעסקים שיש להם מפתח, כותב תוכן או איש SEO פנימי ושרוצים מישהו מנוסה שיכוון אותם. אם אין לך אף אחד שמבצע, חברת קידום אתרים עשויה להתאים יותר, ואגיד לך את זה כבר בפגישה הראשונה.")}
+          </p>
+        </div>
+      </section>
+
+      {/* ── How to choose ── */}
+      <section className="wao-section" aria-labelledby="choose-h" style={{ background: "var(--surface)" }}>
+        <div className="wao-container" style={{ maxWidth: "820px" }}>
+          <div className="eyebrow">איך בוחרים</div>
+          <h2 id="choose-h" style={{ ...h2Style, fontSize: "clamp(1.6rem,3vw,2.4rem)", marginBottom: "32px" }}>
+            איך בוחרים{" "}
+            <span className="text-gradient">מומחה קידום אתרים?</span>
+          </h2>
+          <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: "14px" }}>
+            {CHOOSE.map((item) => (
+              <li key={item.title} style={{ ...glass, padding: "18px 20px", display: "flex", gap: "14px", alignItems: "flex-start" }}>
+                <span aria-hidden style={{ fontSize: "1.3rem", flexShrink: 0, lineHeight: 1.3 }}>{item.icon}</span>
+                <p style={{ ...bodyStyle }}>
+                  <strong style={{ color: "var(--text)" }}>{renderMixed(item.title)}:</strong>{" "}
+                  {renderMixed(item.desc)}
+                </p>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </section>
+
       {/* ── Mentorship offer ── */}
-      <section id="offer" className="wao-section" style={{ background: "var(--surface)" }}>
+      <section id="offer" className="wao-section">
         <div className="wao-container" style={{ maxWidth: "760px" }}>
           <div className="eyebrow">ההצעה</div>
           <h2 style={{ ...h2Style, fontSize: "clamp(1.6rem,3vw,2.4rem)", marginBottom: "40px" }}>
-            מנטורינג SEO אישי —{" "}
-            <span className="text-gradient">950 ₪/חודש</span>
+            ייעוץ SEO אישי —{" "}
+            <span className="text-gradient">מנטורינג ב-950 ₪ לחודש</span>
           </h2>
 
           <div
@@ -550,7 +660,7 @@ function StaticPage() {
       </section>
 
       {/* ── Author bio ── */}
-      <section className="wao-section" aria-labelledby="author-bio-h">
+      <section className="wao-section" aria-labelledby="author-bio-h" style={{ background: "var(--surface)" }}>
         <div className="wao-container" style={{ maxWidth: "800px" }}>
           <div className="eyebrow" id="author-bio-h">הסמכות המקצועית</div>
           <div className="author-bio" itemScope itemType="https://schema.org/Person">
@@ -581,6 +691,36 @@ function StaticPage() {
                 </a>
               </div>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── FAQ (closed accordion; mirrors faqSchema) ── */}
+      <section className="wao-section" aria-labelledby="faq-h">
+        <div className="wao-container" style={{ maxWidth: "820px" }}>
+          <div className="eyebrow">שאלות נפוצות</div>
+          <h2 id="faq-h" style={{ ...h2Style, fontSize: "clamp(1.6rem,3vw,2.4rem)", marginBottom: "32px" }}>
+            שאלות נפוצות על{" "}
+            <span className="text-gradient">ייעוץ קידום אתרים</span>
+          </h2>
+          <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+            {FAQ.map((f) => (
+              <details key={f.q} className="wao-faq" style={{ ...glass, padding: 0 }}>
+                <summary style={{ padding: "22px 24px", cursor: "pointer", fontFamily: "var(--font-rubik), sans-serif", fontWeight: 700, fontSize: "1.02rem", lineHeight: 1.4, listStyle: "none", display: "flex", justifyContent: "space-between", alignItems: "center", gap: "16px" }}>
+                  <span>{renderMixed(f.q)}</span>
+                  <span aria-hidden className="wao-faq-chevron" style={{ color: "var(--accent)" }} />
+                </summary>
+                <div style={{ padding: "0 24px 22px", ...bodyStyle }}>
+                  {renderMixed(f.a)}
+                  {f.link && (
+                    <>
+                      {" "}
+                      <a href={f.link.href} style={{ color: "var(--accent)" }}>{f.link.label}</a>
+                    </>
+                  )}
+                </div>
+              </details>
+            ))}
           </div>
         </div>
       </section>

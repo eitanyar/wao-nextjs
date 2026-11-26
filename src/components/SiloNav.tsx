@@ -23,7 +23,7 @@ export const SILOS: Record<string, Silo> = {
       { label: "מחקר מילות מפתח",      href: "/seo/keyword-research",   icon: "🔍", badge: "מדריך" },
       { label: "Topical Authority",    href: "/seo/topical-authority",  icon: "🏛️", badge: "מדריך" },
       { label: "SEO בינלאומי",         href: "/seo/international",      icon: "🌍", badge: "שירות" },
-      { label: "יועץ SEO",             href: "/seo/consulting",         icon: "🎯", badge: "ייעוץ"  },
+      { label: "יועץ קידום אתרים",     href: "/seo/consulting",         icon: "🎯", badge: "ייעוץ"  },
     ],
   },
   "/geo": {

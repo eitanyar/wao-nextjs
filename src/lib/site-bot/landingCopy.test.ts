@@ -43,6 +43,35 @@ const SUPERSEDED_2026_11_24 = new Set(
   Object.entries(APPROVED_2026_11_24.pages).flatMap(([page, entry]) => entry!.patches.map((p) => `${page} ${p.key}`)),
 );
 
+// Approved 2026-11-27 (Eitan): the nav-pivot heads (/google-ads «ניהול קמפיין בגוגל», /site-bot «קידום עסק בגוגל»).
+// Supersedes earlier lines on the keys it lists; those keys are skipped by the older tests and pinned by its own test.
+const APPROVED_2026_11_27 = JSON.parse(read('docs/copy/product-pages-approved-2026-11-27.json')) as {
+  approval: string; source: string; brief: string; supersedes: string;
+  pages: Partial<Record<'/site-bot' | '/google-ads', { file: string; patches: ApprovedPatch[] }>>;
+};
+const SUPERSEDED_2026_11_27 = new Set(
+  Object.entries(APPROVED_2026_11_27.pages).flatMap(([page, entry]) => entry!.patches.map((p) => `${page} ${p.key}`)),
+);
+
+// Approved 2026-11-27, second layer (Eitan): the /site-bot H1 + badge by Fable 5.2 and the site-section H2 anchor.
+// Supersedes the first 2026-11-27 layer and older records on the keys it lists.
+const APPROVED_2026_11_27B = JSON.parse(read('docs/copy/product-pages-approved-2026-11-27b.json')) as {
+  approval: string; supersedes: string;
+  pages: Partial<Record<'/site-bot' | '/google-ads', { file: string; patches: (ApprovedPatch & { from: string })[] }>>;
+};
+const SUPERSEDED_2026_11_27B = new Set(
+  Object.entries(APPROVED_2026_11_27B.pages).flatMap(([page, entry]) => entry!.patches.map((p) => `${page} ${p.key}`)),
+);
+// Approved 2026-11-27, third layer (Eitan): Fable 5.2 coverage pass (Maps, organic vs ads, no-site, timing FAQs).
+const APPROVED_2026_11_27C = JSON.parse(read('docs/copy/product-pages-approved-2026-11-27c.json')) as {
+  approval: string; supersedes: string;
+  pages: Partial<Record<'/site-bot' | '/google-ads', { file: string; patches: { key: string; old: string | null; new: string; from: string }[] }>>;
+};
+const SUPERSEDED_2026_11_27C = new Set(
+  Object.entries(APPROVED_2026_11_27C.pages).flatMap(([page, entry]) => entry!.patches.map((p) => `${page} ${p.key}`)),
+);
+const SITE_BOT_H1_27B = APPROVED_2026_11_27B.pages['/site-bot']!.patches.find((p) => p.key === 'hero.h1')!;
+
 const PAGES = [
   { name: 'site-bot', copy: SITE_BOT_LANDING_COPY, source: 'docs/copy/site-bot-r2-final-candidate-2026-11-12.txt', page: 'src/app/(app)/site-bot/page.tsx', net: SITE_BOT_PLAN.netAmount },
   { name: 'google-ads', copy: GOOGLE_ADS_LANDING_COPY, source: 'docs/copy/google-ads-r2-final-candidate-2026-11-12.txt', page: 'src/app/(app)/google-ads/page.tsx', net: ADS_BOT_MONTHLY_NET_ILS },
@@ -110,7 +139,7 @@ test('landing copy: the old no-price FAQ is gone from the Site Bot sources (its 
   // The r2 billing FAQ states the price; the page has no FAQ literals of its own.
   const billing = SITE_BOT_LANDING_COPY.faq[1].a;
   assert.ok(billing.includes(String(SITE_BOT_PLAN.netAmount)));
-  assert.equal(SITE_BOT_LANDING_COPY.faq.length, 8);
+  assert.equal(SITE_BOT_LANDING_COPY.faq.length, 12); // 8 + 4 added 2026-11-27 (third layer)
   assert.equal(GOOGLE_ADS_LANDING_COPY.faq.length, 10);
   assert.equal(GOOGLE_ADS_LANDING_COPY.phases.items.length, 4);
 });
@@ -141,7 +170,9 @@ test('google-ads: the clicks-to-real-leads change set (2026-11-12 FINAL, Noa + Y
   };
   assert.equal(batch2.approval, 'Eitan 2026-11-13, Noa-gated; anchors Yonatan-approved');
   assert.ok('hero.h1' in final.lines, 'the FINAL set pins hero.h1');
-  assert.equal(SITE_BOT_LANDING_COPY.hero.h1, batch2.anchors.site_bot_h1.value, 'site-bot hero h1 anchor');
+  // The batch-2 site-bot H1 anchor was superseded 2026-11-27 (second layer); its old value is that anchor.
+  assert.equal(SITE_BOT_H1_27B.old, batch2.anchors.site_bot_h1.value, 'site-bot hero h1: 2026-11-27b old is the batch-2 anchor');
+  assert.equal(SITE_BOT_LANDING_COPY.hero.h1, SITE_BOT_H1_27B.new, 'site-bot hero h1 anchor');
   const approved = APPROVED_2026_11_20.pages['/google-ads'];
   const polish = polishRecord.patches.filter((p) => p.file === 'docs/copy/google-ads-r2-final-candidate-2026-11-12.txt');
   const used = new Set<number>();
@@ -204,6 +235,12 @@ test('google-ads: the clicks-to-real-leads change set (2026-11-12 FINAL, Noa + Y
         pilotUsed.add(p.old);
       }
     }
+    // Approved 2026-11-27 nav-pivot heads: whole-field patches, applied last.
+    const nav27 = APPROVED_2026_11_27.pages['/google-ads']?.patches.find((p) => p.key === liveKey);
+    if (nav27) {
+      assert.equal(expected.replace(/\{net\}/g, '249'), nav27.old, `${key}: 2026-11-27 patch old matches the earlier approved line`);
+      expected = nav27.new;
+    }
     assert.equal(fields.get(liveKey), expected.replace(/\{net\}/g, '249'), key);
   }
   assert.equal(pilotUsed.size, pilot2.length, 'every 2026-11-22 pilot patch on a pinned line was applied');
@@ -262,7 +299,7 @@ test('approved 2026-11-20 product-page copy: every patched or added line is live
     assert.ok(page.patches.length > 10, name);
     for (const p of page.patches) {
       // Superseded 2026-11-24 by product-pages-approved-2026-11-24.json (pinned in the next test); every other key stays checked.
-      if (SUPERSEDED_2026_11_24.has(`/${name} ${p.key}`)) continue;
+      if ([SUPERSEDED_2026_11_24, SUPERSEDED_2026_11_27, SUPERSEDED_2026_11_27B, SUPERSEDED_2026_11_27C].some((s) => s.has(`/${name} ${p.key}`))) continue;
       assert.equal(fields.get(p.key), p.new, `${name} ${p.key}`);
       // Every new line is in the approved file, with the price as the {net} token where the file uses it.
       const asApproved = p.new.replace(new RegExp(`(?<![\\d.,])${net}(?![\\d.,])`, 'g'), '{net}');
@@ -272,10 +309,12 @@ test('approved 2026-11-20 product-page copy: every patched or added line is live
   }
   // Yonatan's lines override Fable's where they differ.
   const yonatan = md.split('\n---\n')[0];
-  for (const value of [SITE_BOT_LANDING_COPY.hero.h1, SITE_BOT_LANDING_COPY.parts.profile.h2, GOOGLE_ADS_LANDING_COPY.faq[0].q]) {
+  // The site-bot H1 left this list 2026-11-27 (Fable 5.2 + Yonatan re-sign-off; pinned by the 2026-11-27b test).
+  // parts.profile.h2 also left 2026-11-27 (third layer, Yonatan re-sign-off; pinned by the 2026-11-27c test).
+  for (const value of [GOOGLE_ADS_LANDING_COPY.faq[0].q]) {
     assert.ok(yonatan.includes(`\`${value}\``), 'Yonatan sign-off line');
   }
-  assert.equal(SITE_BOT_LANDING_COPY.faq.length, 8);
+  assert.equal(SITE_BOT_LANDING_COPY.faq.length, 12); // 8 + 4 added 2026-11-27 (third layer)
   assert.equal(APPROVED_2026_11_20.pages['/google-ads'].renames['faq[8].a'], 'faq[9].a');
 });
 
@@ -303,4 +342,88 @@ test('approved 2026-11-24 copy: each superseding line is live byte for byte and 
     }
   }
   assert.equal(checked, 1);
+});
+
+test('approved 2026-11-27 nav-pivot heads: every line is live byte for byte, from the waocopy file, old line gone', () => {
+  assert.match(APPROVED_2026_11_27.approval, /^Eitan 2026-11-27/);
+  const raw = read(APPROVED_2026_11_27.source);
+  const waocopy = JSON.parse(raw.slice(raw.indexOf('{'), raw.lastIndexOf('}') + 1)) as { patches: { file: string; old: string; new: string }[] };
+  assert.ok(read(APPROVED_2026_11_27.brief).length > 0, 'brief kept with the record');
+  let checked = 0;
+  for (const { name, copy, source } of PAGES) {
+    const page = APPROVED_2026_11_27.pages[`/${name}` as '/site-bot' | '/google-ads'];
+    if (!page) continue;
+    assert.equal(page.file, source);
+    const fields = new Map(flatten(copy));
+    const lines = read(source).split('\n');
+    for (const p of page.patches) {
+      assert.ok(waocopy.patches.some((w) => w.file === source && w.old === `${p.key} :: ${p.old}` && w.new === `${p.key} :: ${p.new}`), `${name} ${p.key}: byte-exact from the waocopy file`);
+      checked++;
+      if (SUPERSEDED_2026_11_27B.has(`/${name} ${p.key}`) || SUPERSEDED_2026_11_27C.has(`/${name} ${p.key}`)) continue; // pinned by a later 2026-11-27 test
+      assert.equal(fields.get(p.key), p.new, `${name} ${p.key}`);
+      assert.ok(lines.includes(`${p.key} :: ${p.new}`), `${name} ${p.key}: new line in the source`);
+      assert.ok(!lines.includes(`${p.key} :: ${p.old}`), `${name} ${p.key}: old line gone from the source`);
+    }
+  }
+  assert.equal(checked, 9);
+  // The nav labels that link to these pages.
+  const nav = (JSON.parse(read('src/content/astra-homepage-copy.json')) as { navigation: { links: { label: string; href: string }[] } }).navigation.links;
+  const label = (href: string) => nav.find((l) => l.href === href)?.label ?? '';
+  assert.ok(GOOGLE_ADS_LANDING_COPY.seo.title.startsWith(label('/google-ads')), '/google-ads title leads with its nav label');
+  assert.ok(SITE_BOT_LANDING_COPY.seo.title.startsWith(label('/site-bot')), '/site-bot title leads with its nav label');
+});
+
+test('approved 2026-11-27b /site-bot H1, badge and site H2: live byte for byte, copied from their decision files, old lines gone', () => {
+  assert.match(APPROVED_2026_11_27B.approval, /^Eitan 2026-11-27/);
+  assert.equal(APPROVED_2026_11_27B.supersedes, 'docs/copy/product-pages-approved-2026-11-27.json');
+  const page = APPROVED_2026_11_27B.pages['/site-bot']!;
+  const source = 'docs/copy/site-bot-r2-final-candidate-2026-11-12.txt';
+  assert.equal(page.file, source);
+  const fields = new Map(flatten(SITE_BOT_LANDING_COPY));
+  const lines = read(source).split('\n');
+  for (const p of page.patches) {
+    // Each new string is byte-exact in the file it came from (Fable decision markdown or waocopy patch JSON).
+    assert.ok(read(p.from).includes(p.new), `${p.key}: new string is in ${p.from}`);
+    assert.equal(fields.get(p.key), p.new, `site-bot ${p.key}`);
+    assert.ok(lines.includes(`${p.key} :: ${p.new}`), `site-bot ${p.key}: new line in the source`);
+    assert.ok(!lines.includes(`${p.key} :: ${p.old}`), `site-bot ${p.key}: old line gone from the source`);
+  }
+  assert.equal(page.patches.length, 3);
+  // The H1 leads with the nav label that links here; the H2 carries the site phrase that left the H1.
+  const nav = (JSON.parse(read('src/content/astra-homepage-copy.json')) as { navigation: { links: { label: string; href: string }[] } }).navigation.links;
+  const navLabel = nav.find((l) => l.href === '/site-bot')!.label;
+  assert.ok(SITE_BOT_LANDING_COPY.hero.h1.startsWith(navLabel), '/site-bot H1 leads with its nav label');
+  assert.ok(SITE_BOT_LANDING_COPY.seo.description.startsWith(SITE_BOT_LANDING_COPY.parts.site.h2.split(' \u2014 ')[0]), 'site H2 phrase also opens the meta description');
+});
+
+test('approved 2026-11-27c coverage pass: every line is live byte for byte, copied from the Fable decision file', () => {
+  assert.match(APPROVED_2026_11_27C.approval, /^Eitan 2026-11-27/);
+  assert.equal(APPROVED_2026_11_27C.supersedes, 'docs/copy/product-pages-approved-2026-11-27b.json');
+  const page = APPROVED_2026_11_27C.pages['/site-bot']!;
+  const source = 'docs/copy/site-bot-r2-final-candidate-2026-11-12.txt';
+  assert.equal(page.file, source);
+  const fields = new Map(flatten(SITE_BOT_LANDING_COPY));
+  const lines = read(source).split('\n');
+  for (const p of page.patches) {
+    assert.ok(read(p.from).includes(p.new), `${p.key}: new string is in ${p.from}`);
+    assert.equal(fields.get(p.key), p.new.replace(/\{net\}/g, String(SITE_BOT_PLAN.netAmount)), `site-bot ${p.key}`);
+    assert.ok(lines.includes(`${p.key} :: ${p.new}`), `site-bot ${p.key}: new line in the source`);
+    if (p.old !== null) assert.ok(!lines.includes(`${p.key} :: ${p.old}`), `site-bot ${p.key}: old line gone from the source`);
+  }
+  assert.equal(page.patches.length, 16);
+  assert.equal(page.patches.filter((p) => p.old === null).length, 8, 'four new FAQ items (q + a)');
+});
+
+test('site-bot FAQ links (Yonatan 2026-11-27): each anchor is in its answer once, the question exists, and the page renders them', () => {
+  const data = JSON.parse(read('src/content/site-bot-faq-links.json')) as { links: { q: string; anchor: string; href: string }[] };
+  assert.equal(data.links.length, 3);
+  for (const l of data.links) {
+    const faq = SITE_BOT_LANDING_COPY.faq.find((f) => f.q === l.q);
+    assert.ok(faq, `question exists: ${l.href}`);
+    assert.ok(faq!.a.includes(l.anchor), `anchor in its answer: ${l.href}`);
+    assert.ok(['/google-ads', '/google-business'].includes(l.href));
+  }
+  const page = read('src/app/(app)/site-bot/page.tsx');
+  assert.ok(page.includes('{faqAnswer(faq.q, faq.a)}'), 'FAQ answers render through faqAnswer');
+  assert.ok(!page.includes('{renderMixed(faq.a)}'), 'no plain-text FAQ answer render left');
 });

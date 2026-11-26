@@ -1,0 +1,20 @@
+{
+ "_note": "Yonatan 2026-11-27, Eitan approved: internal links inside /site-bot FAQ answers. Anchors are substrings cut by script from docs/copy/site-bot-r2-final-candidate-2026-11-12.txt (zero Hebrew typed).",
+ "links": [
+  {
+   "q": "קידום אורגני או מודעות בגוגל, מה עדיף לי?",
+   "anchor": "מודעות",
+   "href": "/google-ads"
+  },
+  {
+   "q": "איך עולים גבוה יותר בגוגל מפות?",
+   "anchor": "פרופיל מלא ומדויק",
+   "href": "/google-business"
+  },
+  {
+   "q": "אפשר לקדם עסק בגוגל בלי אתר?",
+   "anchor": "הפרופיל לבד",
+   "href": "/google-business"
+  }
+ ]
+}

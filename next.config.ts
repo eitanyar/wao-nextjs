@@ -30,8 +30,8 @@ const legacyRedirects = [
   { source: "/%d7%90%d7%a4%d7%99%d7%95%d7%9f-%d7%a6%d7%a8%d7%9b%d7%99-%d7%9c%d7%a7%d7%95%d7%97/",                       destination: "/consulting", permanent: true },
   { source: "/%d7%99%d7%95%d7%a2%d7%a5-%d7%a9%d7%99%d7%95%d7%95%d7%a7",                              destination: "/consulting", permanent: true },
   { source: "/%d7%99%d7%95%d7%a2%d7%a5-%d7%a9%d7%99%d7%95%d7%95%d7%a7/",                             destination: "/consulting", permanent: true },
-  { source: "/%d7%99%d7%95%d7%a2%d7%a5-%d7%a7%d7%99%d7%93%d7%95%d7%9d-%d7%90%d7%aa%d7%a8%d7%99%d7%9d",                        destination: "/seo/consulting", permanent: true },
-  { source: "/%d7%99%d7%95%d7%a2%d7%a5-%d7%a7%d7%99%d7%93%d7%95%d7%9d-%d7%90%d7%aa%d7%a8%d7%99%d7%9d/",                       destination: "/seo/consulting", permanent: true },
+  { source: "/%d7%99%d7%95%d7%a2%d7%a5-%d7%a7%d7%99%d7%93%d7%95%d7%9d-%d7%90%d7%aa%d7%a8%d7%99%d7%9d",                        destination: "/seo/consulting", statusCode: 301 },
+  { source: "/%d7%99%d7%95%d7%a2%d7%a5-%d7%a7%d7%99%d7%93%d7%95%d7%9d-%d7%90%d7%aa%d7%a8%d7%99%d7%9d/",                       destination: "/seo/consulting", statusCode: 301 },
   { source: "/%d7%a4%d7%a8%d7%a1%d7%95%d7%9d-%d7%91%d7%92%d7%95%d7%92%d7%9c",                             destination: "/google-ads", permanent: true },
   { source: "/%d7%a4%d7%a8%d7%a1%d7%95%d7%9d-%d7%91%d7%92%d7%95%d7%92%d7%9c/",                            destination: "/google-ads", permanent: true },
   { source: "/%d7%a4%d7%a8%d7%a1%d7%95%d7%9d-%d7%91%d7%99%d7%95%d7%98%d7%99%d7%95%d7%91",                           destination: "/google-ads", permanent: true },
@@ -331,9 +331,9 @@ const legacyRedirects = [
   { source: '/training/google-tag-manager/%d7%90%d7%99%d7%9a-%d7%9c%d7%94%d7%a2%d7%9c%d7%99%d7%9d-%d7%90%d7%9c%d7%9e%d7%a0%d7%98%d7%99%d7%9d-%d7%91%d7%93%d7%a3-%d7%91%d7%90%d7%9e%d7%a6%d7%a2%d7%95%d7%aa-%d7%92%d7%95%d7%92%d7%9c-%d7%aa%d7%92', destination: '/training/google-tag-manager/gtm-hide-page-elements', permanent: true },
   // google-ads-course
   { source: '/training/google-ads-course/%d7%aa%d7%95%d7%a1%d7%a4%d7%99-%d7%9e%d7%95%d7%93%d7%a2%d7%95%d7%aa-%d7%91%d7%9e%d7%95%d7%93%d7%a2%d7%95%d7%aa-%d7%92%d7%95%d7%92%d7%9c-%d7%aa%d7%95%d7%a1%d7%a3-%d7%94%d7%aa%d7%a7%d7%a9%d7%a8%d7%95', destination: '/training/google-ads-course/google-ads-extensions-call-button', permanent: true },
-  { source: '/training/google-ads-course/%d7%90%d7%99%d7%9a-%d7%9c%d7%94%d7%a7%d7%99%d7%9d-%d7%a7%d7%9e%d7%a4%d7%99%d7%99%d7%9f-%d7%91%d7%9e%d7%95%d7%93%d7%a2%d7%95%d7%aa-%d7%92%d7%95%d7%92%d7%9c-%d7%9e-%d7%90-%d7%aa-%d7%a7%d7%9e%d7%a4', destination: '/training/google-ads-course/google-ads-campaign-setup', permanent: true },
-  { source: '/training/google-ads-course/%d7%99%d7%95%d7%9d-6-%d7%9e%d7%95%d7%93%d7%a2%d7%95%d7%aa-%d7%92%d7%95%d7%92%d7%9c-google-ads-%d7%9e%d7%97%d7%a7%d7%a8-%d7%9e%d7%99%d7%9c%d7%95%d7%aa-%d7%9e%d7%a4%d7%97-%d7%9c%d7%a2%d7%a1%d7%a7', destination: '/training/google-ads-course/google-ads-day6-keyword-research', permanent: true },
-  { source: '/training/google-ads-course/%d7%a4%d7%a8%d7%a1%d7%95%d7%9d-%d7%9c%d7%99%d7%9c%d7%93%d7%99%d7%9d-%d7%95%d7%a0%d7%95%d7%a2%d7%a8-%d7%91%d7%90%d7%99%d7%a0%d7%98%d7%a8%d7%a0%d7%98-%d7%9e%d7%95%d7%93%d7%9c-2014', destination: '/training/google-ads-course/advertising-to-children-online', permanent: true },
+  { source: '/training/google-ads-course/%d7%90%d7%99%d7%9a-%d7%9c%d7%94%d7%a7%d7%99%d7%9d-%d7%a7%d7%9e%d7%a4%d7%99%d7%99%d7%9f-%d7%91%d7%9e%d7%95%d7%93%d7%a2%d7%95%d7%aa-%d7%92%d7%95%d7%92%d7%9c-%d7%9e-%d7%90-%d7%aa-%d7%a7%d7%9e%d7%a4', destination: '/training/google-ads-course/google-ads-campaign-building', permanent: true },
+  { source: '/training/google-ads-course/%d7%99%d7%95%d7%9d-6-%d7%9e%d7%95%d7%93%d7%a2%d7%95%d7%aa-%d7%92%d7%95%d7%92%d7%9c-google-ads-%d7%9e%d7%97%d7%a7%d7%a8-%d7%9e%d7%99%d7%9c%d7%95%d7%aa-%d7%9e%d7%a4%d7%97-%d7%9c%d7%a2%d7%a1%d7%a7', destination: '/training/google-ads-course/google-ads-keyword-match-types', permanent: true },
+  { source: '/training/google-ads-course/%d7%a4%d7%a8%d7%a1%d7%95%d7%9d-%d7%9c%d7%99%d7%9c%d7%93%d7%99%d7%9d-%d7%95%d7%a0%d7%95%d7%a2%d7%a8-%d7%91%d7%90%d7%99%d7%a0%d7%98%d7%a8%d7%a0%d7%98-%d7%9e%d7%95%d7%93%d7%9c-2014', destination: '/training/google-ads-course', permanent: true },
   { source: '/main', destination: '/', permanent: true },
   { source: '/%d7%a9%d7%99%d7%95%d7%95%d7%a7-%d7%a9%d7%95%d7%aa%d7%a4%d7%99%d7%9d-%d7%9e%d7%94-%d7%97%d7%9d-2023', destination: '/training/affiliate-marketing/affiliate-marketing-whats-hot-2026', permanent: true },
 
@@ -342,8 +342,26 @@ const legacyRedirects = [
   { source: "/geo/onboarding", destination: "/geo", permanent: true },
 ] as const;
 
+// One hop for old URLs: each legacy source answers both with and without the trailing slash.
+// Next's built-in slash-strip redirect is disabled (skipTrailingSlashRedirect) because it runs
+// before these rules and would add its own hop; the catch-all at the end of redirects() restores it.
+const legacyRedirectsOneHop = (() => {
+  const seen = new Set<string>();
+  const out: (typeof legacyRedirects)[number][] = [];
+  for (const rule of legacyRedirects) {
+    const bare = rule.source.replace(/\/+$/, "");
+    for (const source of [bare, `${bare}/`]) {
+      if (seen.has(source)) continue;
+      seen.add(source);
+      out.push({ ...rule, source } as (typeof legacyRedirects)[number]);
+    }
+  }
+  return out;
+})();
+
 const nextConfig: NextConfig = {
   output: "standalone",
+  skipTrailingSlashRedirect: true,
   experimental: {
     webpackMemoryOptimizations: true,
   },
@@ -394,10 +412,12 @@ const nextConfig: NextConfig = {
   allowedDevOrigins: ["100.102.160.114", "100.83.177.51", "msi-1.tailc496b2.ts.net"],
   async redirects() {
     return [
-      ...legacyRedirects,
+      ...legacyRedirectsOneHop,
       // /site-bot/start and /site-bot/pay/* are NOT redirected here: a build-time redirect would
       // freeze the paid-flow decision into the build. Their page/layout 307 to /site-bot at
       // request time via the SITE_BOT_PAID_FLOW gate (src/lib/site-bot/paidFlowGate.ts).
+      // Must stay last: strips the trailing slash for every other URL (what Next did by default).
+      { source: "/:path+/", destination: "/:path+", permanent: true },
     ];
   },
   async headers() {

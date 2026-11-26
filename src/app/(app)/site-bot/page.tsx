@@ -6,6 +6,7 @@ import { SITE_BOT_LANDING_COPY as COPY } from "@/lib/site-bot/landingCopy";
 import FounderBlock from "@/components/home/FounderBlock";
 import finalCopy from "@/content/astra-authority-first-homepage-copy.json";
 import STRINGS from "@/content/hero-product-strings-2026-11-15.json";
+import FAQ_LINKS from "@/content/site-bot-faq-links.json";
 
 const CANONICAL = "https://www.wao.co.il/site-bot";
 
@@ -70,6 +71,20 @@ const schemas = [
 
 const PARTS = [COPY.parts.site, COPY.parts.profile, COPY.parts.reviews];
 
+// FAQ answers with one internal link (Yonatan 2026-11-27): the first occurrence of the anchor becomes the link.
+function faqAnswer(q: string, a: string) {
+  const link = FAQ_LINKS.links.find((l) => l.q === q);
+  const at = link ? a.indexOf(link.anchor) : -1;
+  if (!link || at < 0) return renderMixed(a);
+  return (
+    <>
+      {renderMixed(a.slice(0, at))}
+      <Link href={link.href} style={{ color: "var(--accent)", textDecoration: "underline" }}>{link.anchor}</Link>
+      {renderMixed(a.slice(at + link.anchor.length))}
+    </>
+  );
+}
+
 // Sizes of the encoded screenshots (scripts/build-site-bot-screens.mjs output, 2x of a 390px phone).
 const SITE_SCREENS = [
   { name: "site-home-phone", width: 780, height: 906 },
@@ -114,23 +129,10 @@ export default function SiteBotPage() {
         <script key={i} type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(s).replace(/</g, "\\u003c") }} />
       ))}
 
-      {/* -- Hero (with the launch stamp at the top of the page) -- */}
+      {/* -- Hero (pilot launch stamp removed 2026-11-27, Eitan: ads launch, no pilot; fields kept for video end cards) -- */}
       <section style={{ paddingTop: "clamp(110px,14vw,160px)", paddingBottom: "clamp(64px,8vw,96px)", position: "relative", overflow: "hidden" }}>
         <div aria-hidden style={{ position: "absolute", inset: 0, background: "radial-gradient(ellipse 70% 55% at 50% 0%, rgba(74,227,181,0.08) 0%, transparent 70%)", pointerEvents: "none" }} />
         <div className="wao-container wao-hero-copy" style={{ position: "relative", zIndex: 1 }}>
-          <p
-            data-launch-stamp
-            style={{
-              fontFamily: "var(--font-rubik), sans-serif",
-              fontWeight: 700,
-              fontSize: "0.95rem",
-              color: "var(--accent)",
-              margin: "0 0 16px",
-            }}
-          >
-            {renderMixed(COPY.launch_stamp)}
-          </p>
-
           <p className="badge" style={{ marginBottom: "28px" }}>
             {renderMixed(COPY.hero.badge)}
           </p>
@@ -161,8 +163,7 @@ export default function SiteBotPage() {
             </Link>
           </div>
 
-          <p style={{ ...noteStyle, marginTop: "18px" }}>{renderMixed(COPY.launch_stamp_cta_note)}</p>
-          <p style={{ ...noteStyle, marginTop: "6px" }}>{renderMixed(COPY.hero.cta_note)}</p>
+          <p style={{ ...noteStyle, marginTop: "18px" }}>{renderMixed(COPY.hero.cta_note)}</p>
           <p style={{ ...noteStyle, marginTop: "6px" }}>{renderMixed(COPY.hero.fit_note)}</p>
         </div>
       </section>
@@ -383,7 +384,7 @@ export default function SiteBotPage() {
                   </h3>
                   <span aria-hidden className="wao-faq-chevron" style={{ color: "var(--accent)" }} />
                 </summary>
-                <div style={{ padding: "0 24px 22px", ...bodyStyle }}>{renderMixed(faq.a)}</div>
+                <div style={{ padding: "0 24px 22px", ...bodyStyle }}>{faqAnswer(faq.q, faq.a)}</div>
               </details>
             ))}
           </div>

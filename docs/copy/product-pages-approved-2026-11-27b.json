@@ -1,0 +1,30 @@
+{
+ "approval": "Eitan 2026-11-27: /site-bot H1 and badge decided by Fable 5.2 (goal over means: the site is the way, a ringing phone is the goal), site-section H2 carries «בניית אתר לעסק קטן»; Yonatan anchor sign-off",
+ "supersedes": "docs/copy/product-pages-approved-2026-11-27.json",
+ "generatedBy": "Python copy from the Fable decision file and the waocopy patch file (byte-exact; zero Hebrew typed)",
+ "pages": {
+  "/site-bot": {
+   "file": "docs/copy/site-bot-r2-final-candidate-2026-11-12.txt",
+   "patches": [
+    {
+     "key": "hero.h1",
+     "old": "בניית אתר לעסק קטן שמחובר לפרופיל גוגל, ובנוי לדבר אחד: שיתקשרו אליך",
+     "new": "קידום עסק בגוגל עם מטרה אחת: שהטלפון שלך יצלצל",
+     "from": "docs/reviews/site-bot-h1-fable52-2026-11-27.md"
+    },
+    {
+     "key": "hero.badge",
+     "old": "קידום עסק בגוגל · בלי פרסום ממומן",
+     "new": "אתר, פרופיל וביקורות · בלי פרסום ממומן",
+     "from": "docs/reviews/site-bot-h1-fable52-2026-11-27.md"
+    },
+    {
+     "key": "parts.site.h2",
+     "old": "שימצאו אותך גם כשמחפשים ״החלפת דוד״",
+     "new": "בניית אתר לעסק קטן — שגם מי שמחפש ״החלפת דוד״ יתקשר אליך",
+     "from": "docs/copy/site-bot-site-h2-anchor-2026-11-27.waocopy.json"
+    }
+   ]
+  }
+ }
+}

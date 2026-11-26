@@ -234,6 +234,11 @@ export default function ConsultingPage() {
               </div>
             ))}
           </div>
+          <p style={{ ...bodyStyle, marginTop: "32px", maxWidth: "720px" }}>
+            {"אתה צריך רק שגוגל יביא לך לקוחות, ולא את כל ניהול השיווק? איתן, מייסד WAO, ילווה אותך אישית בתור "}
+            <Link href="/seo/consulting" style={{ color: "var(--accent)", fontWeight: 600 }}>יועץ קידום אתרים</Link>
+            {", בלי חוזה."}
+          </p>
         </div>
       </section>
 

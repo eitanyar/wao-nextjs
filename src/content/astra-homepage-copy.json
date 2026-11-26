@@ -39,8 +39,8 @@
   "navigation": {
     "separator_display": " · ",
     "links": [
-      { "label": "פרסום בגוגל", "href": "/google-ads" },
-      { "label": "אתר ונוכחות מקומית", "href": "/site-bot" },
+      { "label": "ניהול קמפיין בגוגל", "href": "/google-ads" },
+      { "label": "קידום עסק בגוגל", "href": "/site-bot" },
       { "label": "מי אנחנו", "href": "/about" }
     ],
     "primary_cta": { "label": "תראה לי את הקמפיין שלי", "href": "/google-ads/onboarding" },
